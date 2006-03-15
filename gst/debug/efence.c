@@ -180,10 +180,8 @@ gst_efence_class_init (GstEFenceClass * klass)
 static void
 gst_efence_init (GstEFence * filter)
 {
-  GstPadTemplate *tmpl;
-
-  tmpl = gst_static_pad_template_get (&gst_efence_sink_factory);
-  filter->sinkpad = gst_pad_new_from_template (tmpl, "sink");
+  filter->sinkpad =
+      gst_pad_new_from_static_template (&gst_efence_sink_factory, "sink");
   gst_pad_set_getcaps_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_setcaps_function (filter->sinkpad,
@@ -193,10 +191,9 @@ gst_efence_init (GstEFence * filter)
   gst_pad_set_bufferalloc_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_efence_buffer_alloc));
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
-  gst_object_unref (tmpl);
 
-  tmpl = gst_static_pad_template_get (&gst_efence_src_factory);
-  filter->srcpad = gst_pad_new_from_template (tmpl, "src");
+  filter->srcpad =
+      gst_pad_new_from_static_template (&gst_efence_src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_setcaps_function (filter->srcpad,
@@ -209,7 +206,6 @@ gst_efence_init (GstEFence * filter)
       GST_DEBUG_FUNCPTR (gst_efence_activate_src_pull));
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-  gst_object_unref (tmpl);
 
   filter->fence_top = TRUE;
 }

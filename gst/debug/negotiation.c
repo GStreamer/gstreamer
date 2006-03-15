@@ -179,13 +179,11 @@ static void
 gst_negotiation_init (GstNegotiation * filter)
 {
   filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_negotiation_sink_factory), "sink");
+      gst_pad_new_from_static_template (&gst_negotiation_sink_factory, "sink");
   gst_pad_set_getcaps_function (filter->sinkpad, gst_negotiation_getcaps);
   gst_pad_set_link_function (filter->sinkpad, gst_negotiation_pad_link);
   filter->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_negotiation_src_factory), "src");
+      gst_pad_new_from_static_template (&gst_negotiation_src_factory, "src");
   gst_pad_set_getcaps_function (filter->srcpad, gst_negotiation_getcaps);
   gst_pad_set_link_function (filter->srcpad, gst_negotiation_pad_link);
 

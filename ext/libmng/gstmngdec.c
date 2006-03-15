@@ -149,12 +149,12 @@ gst_mngdec_sinklink (GstPad * pad, const GstCaps * caps)
 static void
 gst_mngdec_init (GstMngDec * mngdec)
 {
-  mngdec->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_mngdec_sink_pad_template), "sink");
+  mngdec->sinkpad =
+      gst_pad_new_from_static_template (&gst_mngdec_sink_pad_template, "sink");
   gst_element_add_pad (GST_ELEMENT (mngdec), mngdec->sinkpad);
 
-  mngdec->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_mngdec_src_pad_template), "src");
+  mngdec->srcpad =
+      gst_pad_new_from_static_template (&gst_mngdec_src_pad_template, "src");
   gst_element_add_pad (GST_ELEMENT (mngdec), mngdec->srcpad);
 
   gst_pad_set_link_function (mngdec->sinkpad, gst_mngdec_sinklink);
@@ -229,6 +229,7 @@ gst_mngdec_src_getcaps (GstPad * pad)
   }
 
   gst_object_unref (mngdec);
+  gst_object_unref (templ);
 
   return caps;
 }

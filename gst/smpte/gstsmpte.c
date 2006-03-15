@@ -262,20 +262,17 @@ static void
 gst_smpte_init (GstSMPTE * smpte)
 {
   smpte->sinkpad1 =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_smpte_sink1_template), "sink1");
+      gst_pad_new_from_static_template (&gst_smpte_sink1_template, "sink1");
   gst_pad_set_setcaps_function (smpte->sinkpad1, gst_smpte_setcaps);
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->sinkpad1);
 
   smpte->sinkpad2 =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_smpte_sink2_template), "sink2");
+      gst_pad_new_from_static_template (&gst_smpte_sink2_template, "sink2");
   gst_pad_set_setcaps_function (smpte->sinkpad2, gst_smpte_setcaps);
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->sinkpad2);
 
   smpte->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_smpte_src_template), "src");
+      gst_pad_new_from_static_template (&gst_smpte_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (smpte), smpte->srcpad);
 
   smpte->collect = gst_collect_pads_new ();

@@ -129,15 +129,13 @@ static void
 gst_speex_dec_init (GstSpeexDec * dec, GstSpeexDecClass * g_class)
 {
   dec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&speex_dec_sink_factory), "sink");
+      gst_pad_new_from_static_template (&speex_dec_sink_factory, "sink");
   gst_pad_set_chain_function (dec->sinkpad, speex_dec_chain);
   gst_pad_set_event_function (dec->sinkpad, speex_dec_event);
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&speex_dec_src_factory), "src");
+      gst_pad_new_from_static_template (&speex_dec_src_factory, "src");
   gst_pad_use_fixed_caps (dec->srcpad);
   gst_pad_set_event_function (dec->srcpad, speex_dec_src_event);
   gst_pad_set_query_type_function (dec->srcpad, speex_get_query_types);

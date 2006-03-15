@@ -156,12 +156,8 @@ static void
 gst_goom_init (GstGoom * goom)
 {
   /* create the sink and src pads */
-  goom->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
-  goom->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
+  goom->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
+  goom->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_element_add_pad (GST_ELEMENT (goom), goom->sinkpad);
   gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
 

@@ -186,8 +186,8 @@ static void
 gst_pngenc_init (GstPngEnc * pngenc, GstPngEncClass * g_class)
 {
   /* sinkpad */
-  pngenc->sinkpad = gst_pad_new_from_template
-      (gst_static_pad_template_get (&pngenc_sink_template), "sink");
+  pngenc->sinkpad = gst_pad_new_from_static_template
+      (&pngenc_sink_template, "sink");
   gst_pad_set_chain_function (pngenc->sinkpad, gst_pngenc_chain);
   /*   gst_pad_set_link_function (pngenc->sinkpad, gst_pngenc_sinklink); */
   /*   gst_pad_set_getcaps_function (pngenc->sinkpad, gst_pngenc_sink_getcaps); */
@@ -195,8 +195,8 @@ gst_pngenc_init (GstPngEnc * pngenc, GstPngEncClass * g_class)
   gst_element_add_pad (GST_ELEMENT (pngenc), pngenc->sinkpad);
 
   /* srcpad */
-  pngenc->srcpad = gst_pad_new_from_template
-      (gst_static_pad_template_get (&pngenc_src_template), "src");
+  pngenc->srcpad = gst_pad_new_from_static_template
+      (&pngenc_src_template, "src");
   /*   pngenc->srcpad = gst_pad_new ("src", GST_PAD_SRC); */
   /*   gst_pad_set_getcaps_function (pngenc->srcpad, gst_pngenc_src_getcaps); */
   /*   gst_pad_set_setcaps_function (pngenc->srcpad, gst_pngenc_setcaps); */

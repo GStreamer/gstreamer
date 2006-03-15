@@ -112,13 +112,12 @@ static void
 gst_au_parse_init (GstAuParse * auparse, GstAuParseClass * klass)
 {
   auparse->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_au_parse_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_au_parse_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->sinkpad);
   gst_pad_set_chain_function (auparse->sinkpad, gst_au_parse_chain);
 
-  auparse->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_au_parse_src_template), "src");
+  auparse->srcpad =
+      gst_pad_new_from_static_template (&gst_au_parse_src_template, "src");
   gst_pad_use_fixed_caps (auparse->srcpad);
   gst_element_add_pad (GST_ELEMENT (auparse), auparse->srcpad);
 

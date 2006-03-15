@@ -205,16 +205,14 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
 {
   /* create the sink and src pads */
   jpegenc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_jpegenc_sink_pad_template), "sink");
+      gst_pad_new_from_static_template (&gst_jpegenc_sink_pad_template, "sink");
   gst_pad_set_chain_function (jpegenc->sinkpad, gst_jpegenc_chain);
   gst_pad_set_getcaps_function (jpegenc->sinkpad, gst_jpegenc_getcaps);
   gst_pad_set_setcaps_function (jpegenc->sinkpad, gst_jpegenc_setcaps);
   gst_element_add_pad (GST_ELEMENT (jpegenc), jpegenc->sinkpad);
 
   jpegenc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_jpegenc_src_pad_template), "src");
+      gst_pad_new_from_static_template (&gst_jpegenc_src_pad_template, "src");
   gst_pad_set_getcaps_function (jpegenc->sinkpad, gst_jpegenc_getcaps);
   /*gst_pad_set_setcaps_function (jpegenc->sinkpad, gst_jpegenc_setcaps); */
   gst_pad_use_fixed_caps (jpegenc->sinkpad);

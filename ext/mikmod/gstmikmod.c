@@ -208,11 +208,9 @@ static void
 gst_mikmod_init (GstMikMod * filter)
 {
   filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&mikmod_sink_factory), "sink");
+      gst_pad_new_from_static_template (&mikmod_sink_factory, "sink");
   filter->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&mikmod_src_factory), "src");
+      gst_pad_new_from_static_template (&mikmod_src_factory, "src");
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);

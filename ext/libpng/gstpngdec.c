@@ -127,8 +127,8 @@ gst_pngdec_class_init (GstPngDecClass * klass)
 static void
 gst_pngdec_init (GstPngDec * pngdec)
 {
-  pngdec->sinkpad = gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_pngdec_sink_pad_template), "sink");
+  pngdec->sinkpad =
+      gst_pad_new_from_static_template (&gst_pngdec_sink_pad_template, "sink");
   gst_pad_set_activate_function (pngdec->sinkpad, gst_pngdec_sink_activate);
   gst_pad_set_activatepush_function (pngdec->sinkpad,
       gst_pngdec_sink_activate_push);
@@ -138,8 +138,8 @@ gst_pngdec_init (GstPngDec * pngdec)
   gst_pad_set_event_function (pngdec->sinkpad, gst_pngdec_sink_event);
   gst_element_add_pad (GST_ELEMENT (pngdec), pngdec->sinkpad);
 
-  pngdec->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_pngdec_src_pad_template), "src");
+  pngdec->srcpad =
+      gst_pad_new_from_static_template (&gst_pngdec_src_pad_template, "src");
   gst_pad_use_fixed_caps (pngdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (pngdec), pngdec->srcpad);
 
@@ -364,6 +364,7 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   res = gst_caps_intersect (caps, gst_pad_template_get_caps (templ));
 
   gst_caps_unref (caps);
+  gst_object_unref (templ);
 
   if (!gst_pad_set_caps (pngdec->srcpad, res)) {
     ret = GST_FLOW_ERROR;

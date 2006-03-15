@@ -137,11 +137,9 @@ static void
 gst_rtpL16pay_init (GstRtpL16Pay * rtpL16enc)
 {
   rtpL16enc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpL16pay_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_rtpL16pay_sink_template, "sink");
   rtpL16enc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpL16pay_src_template), "src");
+      gst_pad_new_from_static_template (&gst_rtpL16pay_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (rtpL16enc), rtpL16enc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (rtpL16enc), rtpL16enc->srcpad);
   gst_pad_set_chain_function (rtpL16enc->sinkpad, gst_rtpL16pay_chain);

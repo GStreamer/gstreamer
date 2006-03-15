@@ -215,9 +215,7 @@ gst_dvdemux_init (GstDVDemux * dvdemux, GstDVDemuxClass * g_class)
 {
   gint i;
 
-  dvdemux->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_temp),
-      "sink");
+  dvdemux->sinkpad = gst_pad_new_from_static_template (&sink_temp, "sink");
   /* we can operate in pull and push mode so we install
    * a custom activate function */
   gst_pad_set_activate_function (dvdemux->sinkpad,
@@ -297,8 +295,7 @@ static void
 gst_dvdemux_add_pads (GstDVDemux * dvdemux)
 {
   dvdemux->videosrcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&video_src_temp),
-      "video");
+      gst_pad_new_from_static_template (&video_src_temp, "video");
   gst_pad_set_query_function (dvdemux->videosrcpad,
       GST_DEBUG_FUNCPTR (gst_dvdemux_src_query));
   gst_pad_set_query_type_function (dvdemux->videosrcpad,
@@ -309,8 +306,7 @@ gst_dvdemux_add_pads (GstDVDemux * dvdemux)
   gst_element_add_pad (GST_ELEMENT (dvdemux), dvdemux->videosrcpad);
 
   dvdemux->audiosrcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&audio_src_temp),
-      "audio");
+      gst_pad_new_from_static_template (&audio_src_temp, "audio");
   gst_pad_set_query_function (dvdemux->audiosrcpad,
       GST_DEBUG_FUNCPTR (gst_dvdemux_src_query));
   gst_pad_set_query_type_function (dvdemux->audiosrcpad,

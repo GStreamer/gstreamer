@@ -137,11 +137,9 @@ static void
 gst_cutter_init (GstCutter * filter, GstCutterClass * g_class)
 {
   filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&cutter_sink_factory), "sink");
+      gst_pad_new_from_static_template (&cutter_sink_factory, "sink");
   filter->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&cutter_src_factory), "src");
+      gst_pad_new_from_static_template (&cutter_src_factory, "src");
 
   filter->threshold_level = CUTTER_DEFAULT_THRESHOLD_LEVEL;
   filter->threshold_length = CUTTER_DEFAULT_THRESHOLD_LENGTH;

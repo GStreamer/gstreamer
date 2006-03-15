@@ -158,13 +158,12 @@ static void
 gst_asteriskh263_init (GstAsteriskh263 * asteriskh263)
 {
   asteriskh263->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_asteriskh263_src_template), "src");
+      gst_pad_new_from_static_template (&gst_asteriskh263_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (asteriskh263), asteriskh263->srcpad);
 
   asteriskh263->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_asteriskh263_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_asteriskh263_sink_template,
+      "sink");
   gst_pad_set_chain_function (asteriskh263->sinkpad, gst_asteriskh263_chain);
   gst_element_add_pad (GST_ELEMENT (asteriskh263), asteriskh263->sinkpad);
 

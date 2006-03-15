@@ -168,16 +168,15 @@ gst_smokeenc_init (GstSmokeEnc * smokeenc)
 {
   /* create the sink and src pads */
   smokeenc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_smokeenc_sink_pad_template), "sink");
+      gst_pad_new_from_static_template (&gst_smokeenc_sink_pad_template,
+      "sink");
   gst_pad_set_chain_function (smokeenc->sinkpad, gst_smokeenc_chain);
   gst_pad_set_getcaps_function (smokeenc->sinkpad, gst_smokeenc_getcaps);
   gst_pad_set_setcaps_function (smokeenc->sinkpad, gst_smokeenc_setcaps);
   gst_element_add_pad (GST_ELEMENT (smokeenc), smokeenc->sinkpad);
 
   smokeenc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_smokeenc_src_pad_template), "src");
+      gst_pad_new_from_static_template (&gst_smokeenc_src_pad_template, "src");
   gst_pad_set_getcaps_function (smokeenc->sinkpad, gst_smokeenc_getcaps);
   gst_pad_use_fixed_caps (smokeenc->sinkpad);
   /*gst_pad_set_link_function (smokeenc->sinkpad, gst_smokeenc_link); */

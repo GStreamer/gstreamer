@@ -227,8 +227,7 @@ static void
 gst_gdk_pixbuf_init (GstGdkPixbuf * filter, GstGdkPixbufClass * klass)
 {
   filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_gdk_pixbuf_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_gdk_pixbuf_sink_template, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad, gst_gdk_pixbuf_sink_setcaps);
   gst_pad_set_getcaps_function (filter->sinkpad, gst_gdk_pixbuf_sink_getcaps);
 
@@ -241,8 +240,8 @@ gst_gdk_pixbuf_init (GstGdkPixbuf * filter, GstGdkPixbufClass * klass)
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
 
-  filter->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_gdk_pixbuf_src_template), "src");
+  filter->srcpad =
+      gst_pad_new_from_static_template (&gst_gdk_pixbuf_src_template, "src");
 
   gst_pad_use_fixed_caps (filter->srcpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);

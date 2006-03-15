@@ -211,8 +211,8 @@ gst_text_overlay_init (GstCairoTextOverlay * overlay,
 {
   /* video sink */
   overlay->video_sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&video_sink_template_factory), "video_sink");
+      gst_pad_new_from_static_template (&video_sink_template_factory,
+      "video_sink");
   gst_pad_set_getcaps_function (overlay->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_text_overlay_getcaps));
   gst_pad_set_setcaps_function (overlay->video_sinkpad,
@@ -221,8 +221,8 @@ gst_text_overlay_init (GstCairoTextOverlay * overlay,
 
   /* text sink */
   overlay->text_sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&text_sink_template_factory), "text_sink");
+      gst_pad_new_from_static_template (&text_sink_template_factory,
+      "text_sink");
   gst_pad_set_link_function (overlay->text_sinkpad,
       GST_DEBUG_FUNCPTR (gst_text_overlay_text_pad_linked));
   gst_pad_set_unlink_function (overlay->text_sinkpad,
@@ -231,8 +231,8 @@ gst_text_overlay_init (GstCairoTextOverlay * overlay,
 
   /* (video) source */
   overlay->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&cairo_text_overlay_src_template_factory), "src");
+      gst_pad_new_from_static_template
+      (&cairo_text_overlay_src_template_factory, "src");
   gst_pad_set_getcaps_function (overlay->srcpad,
       GST_DEBUG_FUNCPTR (gst_text_overlay_getcaps));
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);

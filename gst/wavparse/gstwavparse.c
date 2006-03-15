@@ -221,8 +221,7 @@ gst_wavparse_init (GstWavParse * wavparse)
 
   /* sink */
   wavparse->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&sink_template_factory), "sink");
+      gst_pad_new_from_static_template (&sink_template_factory, "sink");
   gst_pad_set_activate_function (wavparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavparse_sink_activate));
   gst_pad_set_activatepull_function (wavparse->sinkpad,
@@ -242,15 +241,12 @@ gst_wavparse_destroy_sourcepad (GstWavParse * wavparse)
 static void
 gst_wavparse_create_sourcepad (GstWavParse * wavparse)
 {
-  GstPadTemplate *templ;
-
   /* destroy previous one */
   gst_wavparse_destroy_sourcepad (wavparse);
 
   /* source */
-  templ = gst_static_pad_template_get (&src_template_factory);
-  wavparse->srcpad = gst_pad_new_from_template (templ, "src");
-  gst_object_unref (templ);
+  wavparse->srcpad =
+      gst_pad_new_from_static_template (&src_template_factory, "src");
   gst_pad_use_fixed_caps (wavparse->srcpad);
   gst_pad_set_query_type_function (wavparse->srcpad,
       GST_DEBUG_FUNCPTR (gst_wavparse_get_query_types));

@@ -267,15 +267,13 @@ gst_alpha_init (GstAlpha * alpha)
 {
   /* create the sink and src pads */
   alpha->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_alpha_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_alpha_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (alpha), alpha->sinkpad);
   gst_pad_set_chain_function (alpha->sinkpad, gst_alpha_chain);
   gst_pad_set_setcaps_function (alpha->sinkpad, gst_alpha_sink_setcaps);
 
   alpha->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_alpha_src_template), "src");
+      gst_pad_new_from_static_template (&gst_alpha_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (alpha), alpha->srcpad);
 
   alpha->alpha = DEFAULT_ALPHA;

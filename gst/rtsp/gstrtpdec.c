@@ -151,30 +151,29 @@ gst_rtpdec_init (GstRTPDec * rtpdec)
 {
   /* the input rtp pad */
   rtpdec->sink_rtp =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpdec_sink_rtp_template), "sinkrtp");
+      gst_pad_new_from_static_template (&gst_rtpdec_sink_rtp_template,
+      "sinkrtp");
   gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->sink_rtp);
   gst_pad_set_getcaps_function (rtpdec->sink_rtp, gst_rtpdec_getcaps);
   gst_pad_set_chain_function (rtpdec->sink_rtp, gst_rtpdec_chain_rtp);
 
   /* the input rtcp pad */
   rtpdec->sink_rtcp =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpdec_sink_rtcp_template), "sinkrtcp");
+      gst_pad_new_from_static_template (&gst_rtpdec_sink_rtcp_template,
+      "sinkrtcp");
   gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->sink_rtcp);
   gst_pad_set_chain_function (rtpdec->sink_rtcp, gst_rtpdec_chain_rtcp);
 
   /* the output rtp pad */
   rtpdec->src_rtp =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpdec_src_rtp_template), "srcrtp");
+      gst_pad_new_from_static_template (&gst_rtpdec_src_rtp_template, "srcrtp");
   gst_pad_set_getcaps_function (rtpdec->src_rtp, gst_rtpdec_getcaps);
   gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->src_rtp);
 
   /* the output rtcp pad */
   rtpdec->src_rtcp =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtpdec_src_rtcp_template), "srcrtcp");
+      gst_pad_new_from_static_template (&gst_rtpdec_src_rtcp_template,
+      "srcrtcp");
   gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->src_rtcp);
 }
 

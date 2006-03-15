@@ -131,14 +131,13 @@ gst_smokedec_init (GstSmokeDec * smokedec)
   /* create the sink and src pads */
 
   smokedec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_smokedec_sink_pad_template), "sink");
+      gst_pad_new_from_static_template (&gst_smokedec_sink_pad_template,
+      "sink");
   gst_pad_set_chain_function (smokedec->sinkpad, gst_smokedec_chain);
   gst_element_add_pad (GST_ELEMENT (smokedec), smokedec->sinkpad);
 
   smokedec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_smokedec_src_pad_template), "src");
+      gst_pad_new_from_static_template (&gst_smokedec_src_pad_template, "src");
   gst_pad_use_fixed_caps (smokedec->srcpad);
   gst_element_add_pad (GST_ELEMENT (smokedec), smokedec->srcpad);
 

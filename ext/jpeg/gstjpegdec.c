@@ -232,8 +232,8 @@ gst_jpeg_dec_init (GstJpegDec * dec)
 
   /* create the sink and src pads */
   dec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_jpeg_dec_sink_pad_template), "sink");
+      gst_pad_new_from_static_template (&gst_jpeg_dec_sink_pad_template,
+      "sink");
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
   gst_pad_set_setcaps_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_setcaps));
@@ -241,8 +241,7 @@ gst_jpeg_dec_init (GstJpegDec * dec)
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_chain));
 
   dec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_jpeg_dec_src_pad_template), "src");
+      gst_pad_new_from_static_template (&gst_jpeg_dec_src_pad_template, "src");
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   /* setup jpeglib */
@@ -606,6 +605,9 @@ gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps)
   /* do not extract width/height here. we do that in the chain
    * function on a per-frame basis (including the line[] array
    * setup) */
+
+  /* But we can take the framerate values and set them on the src pad */
+
   return TRUE;
 }
 

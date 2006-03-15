@@ -134,13 +134,12 @@ static void
 gst_rtp_mpa_depay_init (GstRtpMPADepay * rtpmpadepay)
 {
   rtpmpadepay->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtp_mpa_depay_src_template), "src");
+      gst_pad_new_from_static_template (&gst_rtp_mpa_depay_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (rtpmpadepay), rtpmpadepay->srcpad);
 
   rtpmpadepay->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rtp_mpa_depay_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_rtp_mpa_depay_sink_template,
+      "sink");
   gst_pad_set_chain_function (rtpmpadepay->sinkpad, gst_rtp_mpa_depay_chain);
   gst_element_add_pad (GST_ELEMENT (rtpmpadepay), rtpmpadepay->sinkpad);
 }

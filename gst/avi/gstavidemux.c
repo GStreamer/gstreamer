@@ -144,9 +144,7 @@ gst_avi_demux_class_init (GstAviDemuxClass * klass)
 static void
 gst_avi_demux_init (GstAviDemux * avi)
 {
-  avi->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_templ),
-      "sink");
+  avi->sinkpad = gst_pad_new_from_static_template (&sink_templ, "sink");
   gst_pad_set_activate_function (avi->sinkpad, gst_avi_demux_sink_activate);
   gst_pad_set_activatepull_function (avi->sinkpad,
       gst_avi_demux_sink_activate_pull);
@@ -561,6 +559,7 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
 done:
   gst_event_unref (event);
 
+  GST_DEBUG_OBJECT (avi, "returning %d", res);
   return res;
 }
 
@@ -1128,6 +1127,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
   if (stream->pad)
     gst_object_unref (stream->pad);
   pad = stream->pad = gst_pad_new_from_template (templ, padname);
+  gst_object_unref (templ);
   stream->last_flow = GST_FLOW_OK;
   stream->idx_duration = GST_CLOCK_TIME_NONE;
   g_free (padname);
