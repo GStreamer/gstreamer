@@ -1,3 +1,13 @@
+2006-03-15  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_class_init),
+	(gst_qtdemux_init), (gst_qtdemux_dispose),
+	(gst_qtdemux_add_stream), (qtdemux_parse_trak):
+	Series of memleak fixes:
+	- Unref the GstAdapter in finalize.
+	- Use gst_pad_new_from_static_template(), shorter and safer.
+	- Free unused QtDemuxStream when not used.
+
 2006-03-14  Edward Hervey  <edward@fluendo.com>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_base_init),

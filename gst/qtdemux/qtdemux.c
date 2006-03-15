@@ -231,6 +231,7 @@ static const guint32 ff_qt_grayscale_palette_256[256] = {
 static void gst_qtdemux_class_init (GstQTDemuxClass * klass);
 static void gst_qtdemux_base_init (GstQTDemuxClass * klass);
 static void gst_qtdemux_init (GstQTDemux * quicktime_demux);
+static void gst_qtdemux_dispose (GObject * object);
 static GstStateChangeReturn gst_qtdemux_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_qtdemux_loop (GstPad * pad);
@@ -309,6 +310,8 @@ gst_qtdemux_class_init (GstQTDemuxClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->dispose = gst_qtdemux_dispose;
+
   gstelement_class->change_state = gst_qtdemux_change_state;
 }
 
@@ -316,8 +319,7 @@ static void
 gst_qtdemux_init (GstQTDemux * qtdemux)
 {
   qtdemux->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_qtdemux_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_qtdemux_sink_template, "sink");
   gst_pad_set_activate_function (qtdemux->sinkpad, qtdemux_sink_activate);
   gst_pad_set_activatepull_function (qtdemux->sinkpad,
       qtdemux_sink_activate_pull);
@@ -336,6 +338,17 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->offset = 0;
   qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
   qtdemux->mdatbuffer = NULL;
+}
+
+static void
+gst_qtdemux_dispose (GObject * object)
+{
+  GstQTDemux *qtdemux = GST_QTDEMUX (object);
+
+  if (qtdemux->adapter) {
+    g_object_unref (G_OBJECT (qtdemux->adapter));
+    qtdemux->adapter = NULL;
+  }
 }
 
 #if 0
@@ -1173,12 +1186,10 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GstTagList * list)
 {
   if (stream->subtype == GST_MAKE_FOURCC ('v', 'i', 'd', 'e')) {
-    GstPadTemplate *templ;
     gchar *name = g_strdup_printf ("video_%02d", qtdemux->n_video_streams);
 
-    templ = gst_static_pad_template_get (&gst_qtdemux_videosrc_template);
-    stream->pad = gst_pad_new_from_template (templ, name);
-    gst_object_unref (templ);
+    stream->pad =
+        gst_pad_new_from_static_template (&gst_qtdemux_videosrc_template, name);
     g_free (name);
     if ((stream->n_samples == 1) && (stream->samples[0].duration == 0)) {
       stream->fps_n = 0;
@@ -1220,8 +1231,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     gchar *name = g_strdup_printf ("audio_%02d", qtdemux->n_audio_streams);
 
     stream->pad =
-        gst_pad_new_from_template (gst_static_pad_template_get
-        (&gst_qtdemux_audiosrc_template), name);
+        gst_pad_new_from_static_template (&gst_qtdemux_audiosrc_template, name);
     g_free (name);
     if (stream->caps) {
       gst_caps_set_simple (stream->caps,
@@ -2374,8 +2384,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GstTagList *list = NULL;
   const gchar *codec = NULL;
 
-  stream = g_new0 (QtDemuxStream, 1);
-
   tkhd = qtdemux_tree_get_child_by_type (trak, FOURCC_tkhd);
   g_return_if_fail (tkhd);
 
@@ -2389,6 +2397,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   mdhd = qtdemux_tree_get_child_by_type (mdia, FOURCC_mdhd);
   g_assert (mdhd);
+
+  stream = g_new0 (QtDemuxStream, 1);
 
   stream->timescale = QTDEMUX_GUINT32_GET (mdhd->data + 20);
   GST_LOG ("track timescale: %d", stream->timescale);
@@ -2405,6 +2415,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         "found, assuming preview image or something; skipping track",
         QTDEMUX_GUINT32_GET (mdhd->data + 24), stream->timescale,
         qtdemux->duration, qtdemux->timescale);
+    g_free (stream);
     return;
   }
 
@@ -2666,6 +2677,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   } else {
     GST_INFO ("unknown subtype %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (stream->subtype));
+    g_free (stream);
     return;
   }
 
