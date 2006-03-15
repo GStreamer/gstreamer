@@ -246,8 +246,7 @@ static GstTagEntryMatch user_tag_matches[] = {
   {GST_TAG_MUSICBRAINZ_ARTISTID, "TXXX|MusicBrainz Artist Id"},
   {GST_TAG_MUSICBRAINZ_ALBUMID, "TXXX|MusicBrainz Album Id"},
   {GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "TXXX|MusicBrainz Album Artist Id"},
-  {GST_TAG_MUSICBRAINZ_TRMID, "TXXX|MusicBrainz TRM Id"},
-  {NULL, NULL}
+  {GST_TAG_MUSICBRAINZ_TRMID, "TXXX|MusicBrainz TRM Id"}
 };
 
 /**

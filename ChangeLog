@@ -1,3 +1,8 @@
+2006-03-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/gstid3tag.c:
+	  Don't crash on unknown ID3v2 TXXX frames.
+	  
 2006-03-15  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/alsa/gstalsasink.c: (gst_alsasink_finalise):
