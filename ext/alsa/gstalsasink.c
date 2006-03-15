@@ -115,6 +115,12 @@ static GstStaticPadTemplate alsasink_sink_factory =
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "endianness = (int) { " ALSA_SINK_FACTORY_ENDIANNESS " }, "
         "signed = (boolean) { TRUE, FALSE }, "
+        "width = (int) 32, "
+        "depth = (int) 32, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 8 ]; "
+        "audio/x-raw-int, "
+        "endianness = (int) { " ALSA_SINK_FACTORY_ENDIANNESS " }, "
+        "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 16, "
         "depth = (int) 16, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 8 ]; "
@@ -166,6 +172,8 @@ gst_alsasink_finalise (GObject * object)
 
   g_free (sink->device);
   g_mutex_free (sink->alsa_lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

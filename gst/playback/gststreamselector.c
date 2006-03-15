@@ -68,6 +68,8 @@ static void gst_stream_selector_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_stream_selector_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static GstFlowReturn gst_stream_selector_bufferalloc (GstPad * pad,
+    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 
 static GstElementClass *parent_class = NULL;
 
@@ -284,6 +286,35 @@ gst_stream_selector_getcaps (GstPad * pad)
   return gst_pad_peer_get_caps (otherpad);
 }
 
+static GstFlowReturn
+gst_stream_selector_bufferalloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf)
+{
+  GstStreamSelector *sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
+  GstFlowReturn result;
+  GstPad *active_sinkpad;
+
+  GST_OBJECT_LOCK (sel);
+  active_sinkpad = sel->active_sinkpad;
+  GST_OBJECT_UNLOCK (sel);
+
+  /* Ignore buffers from pads except the selected one */
+  if (pad != active_sinkpad) {
+    GST_DEBUG_OBJECT (sel,
+        "Returning not-linked for buffer alloc from pad %s:%s",
+        GST_DEBUG_PAD_NAME (pad));
+
+    result = GST_FLOW_NOT_LINKED;
+  } else {
+    result = gst_pad_alloc_buffer_and_set_caps (sel->srcpad, offset,
+        size, caps, buf);
+  }
+
+  gst_object_unref (sel);
+
+  return result;
+}
+
 static GList *
 gst_stream_selector_get_linked_pads (GstPad * pad)
 {
@@ -322,6 +353,9 @@ gst_stream_selector_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_stream_selector_chain));
   gst_pad_set_internal_link_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_selector_get_linked_pads));
+  gst_pad_set_bufferalloc_function (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_stream_selector_bufferalloc));
+
   gst_element_add_pad (GST_ELEMENT (sel), sinkpad);
 
   return sinkpad;

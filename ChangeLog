@@ -1,3 +1,26 @@
+2006-03-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_finalise):
+	  Chain up to the parent finalize method.
+	  Add 32-bit sample size to the template caps.
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_video_template_caps):
+	  Add the fourcc that the VMWare codec uses.
+	  
+	* gst/playback/gststreamselector.c:
+	(gst_stream_selector_set_property),
+	(gst_stream_selector_bufferalloc),
+	(gst_stream_selector_request_new_pad):
+	  For the active pad, forward buffer-alloc requests, otherwise
+	  return GST_FLOW_NOT_LINKED. This also prevents xvimagesink
+	  having to memcpy every frame when used by playbin.
+
+	* gst/tcp/gstmultifdsink.c:
+	(gst_multi_fd_sink_handle_client_write):
+	  Get negotiated caps from the sink pad, rather than the sink
+	  pad's peer.
+
 2006-03-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>

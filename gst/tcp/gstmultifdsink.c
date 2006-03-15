@@ -1074,9 +1074,13 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
         GST_WARNING_OBJECT (sink, "pad has no peer");
         return FALSE;
       }
-
-      caps = gst_pad_get_negotiated_caps (peer);
       gst_object_unref (peer);
+
+      caps = gst_pad_get_negotiated_caps (GST_BASE_SINK_PAD (sink));
+      if (!caps) {
+        GST_WARNING_OBJECT (sink, "pad caps not yet negotiated");
+        return FALSE;
+      }
 
       /* queue caps for sending */
       res = gst_multi_fd_sink_client_queue_caps (sink, client, caps);
