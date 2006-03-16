@@ -41,6 +41,7 @@ static gchar *parse_user_text_identification_frame (ID3TagsWorking * work,
     const gchar ** tag_name);
 static gchar *parse_unique_file_identifier (ID3TagsWorking * work,
     const gchar ** tag_name);
+static gboolean parse_relative_volume_adjustment_two (ID3TagsWorking * work);
 static gboolean id3v2_tag_to_taglist (ID3TagsWorking * work,
     const gchar * tag_name, const gchar * tag_str);
 /* Parse a single string into an array of gchar* */
@@ -90,6 +91,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
 
   tag_name = gst_tag_from_id3_tag (work->frame_id);
   if (tag_name == NULL &&
+      strncmp (work->frame_id, "RVA2", 4) != 0 &&
       strncmp (work->frame_id, "TXXX", 4) != 0 &&
       strncmp (work->frame_id, "UFID", 4) != 0) {
     return FALSE;
@@ -156,6 +158,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     /* Attached picture */
   } else if (!strcmp (work->frame_id, "RVA2")) {
     /* Relative volume */
+    result = parse_relative_volume_adjustment_two (work);
   } else if (!strcmp (work->frame_id, "UFID")) {
     /* Unique file identifier */
     tag_str = parse_unique_file_identifier (work, &tag_name);
@@ -305,16 +308,14 @@ parse_user_text_identification_frame (ID3TagsWorking * work,
   return ret;
 }
 
-static gchar *
-parse_unique_file_identifier (ID3TagsWorking * work, const gchar ** tag_name)
+static gboolean
+parse_id_string (ID3TagsWorking * work, gchar ** p_str, gint * p_len,
+    gint * p_datalen)
 {
   gint len, datalen;
-  gchar *owner_id, *data, *ret = NULL;
 
   if (work->parse_size < 2)
-    return NULL;
-
-  GST_LOG ("parsing UFID frame of size %d", work->parse_size);
+    return FALSE;
 
   for (len = 0; len < work->parse_size - 1; ++len) {
     if (work->parse_data[len] == '\0')
@@ -322,10 +323,27 @@ parse_unique_file_identifier (ID3TagsWorking * work, const gchar ** tag_name)
   }
 
   datalen = work->parse_size - (len + 1);
-  if (datalen <= 0)
+  if (len == 0 || datalen <= 0)
+    return FALSE;
+
+  *p_str = g_strndup ((gchar *) work->parse_data, len);
+  *p_len = len;
+  *p_datalen = datalen;
+
+  return TRUE;
+}
+
+static gchar *
+parse_unique_file_identifier (ID3TagsWorking * work, const gchar ** tag_name)
+{
+  gint len, datalen;
+  gchar *owner_id, *data, *ret = NULL;
+
+  GST_LOG ("parsing UFID frame of size %d", work->parse_size);
+
+  if (!parse_id_string (work, &owner_id, &len, &datalen))
     return NULL;
 
-  owner_id = g_strndup ((gchar *) work->parse_data, len);
   data = (gchar *) work->parse_data + len + 1;
   GST_LOG ("UFID owner ID: %s (+ %d bytes of data)", owner_id, datalen);
 
@@ -339,6 +357,81 @@ parse_unique_file_identifier (ID3TagsWorking * work, const gchar ** tag_name)
   g_free (owner_id);
 
   return ret;
+}
+
+static gboolean
+parse_relative_volume_adjustment_two (ID3TagsWorking * work)
+{
+  const gchar *gain_tag_name = NULL;
+  const gchar *peak_tag_name = NULL;
+  gdouble gain_dB, peak_val;
+  guint64 peak;
+  guint8 *data, chan, peak_bits;
+  gchar *id;
+  gint len, datalen, i;
+
+  if (!parse_id_string (work, &id, &len, &datalen))
+    return FALSE;
+
+  if (datalen < (1 + 2 + 1)) {
+    GST_WARNING ("broken RVA2 frame, data size only %d bytes", datalen);
+    g_free (id);
+    return FALSE;
+  }
+
+  data = work->parse_data + len + 1;
+  chan = GST_READ_UINT8 (data);
+  gain_dB = (gdouble) ((gint16) GST_READ_UINT16_BE (data + 1)) / 512.0;
+  /* The meaning of the peak value is not defined in the ID3v2 spec. However,
+   * the first/only implementation of this seems to have been in XMMS, and
+   * other libs (like mutagen) seem to follow that implementation as well:
+   * see http://bugs.xmms.org/attachment.cgi?id=113&action=view */
+  peak_bits = GST_READ_UINT8 (data + 1 + 2);
+  if (peak_bits > 64) {
+    GST_WARNING ("silly peak precision of %d bits, ignoring", (gint) peak_bits);
+    peak_bits = 0;
+  }
+  data += 1 + 2 + 1;
+  datalen -= 1 + 2 + 1;
+  if (peak_bits == 16) {
+    peak = GST_READ_UINT16_BE (data);
+  } else {
+    peak = 0;
+    for (i = 0; i < (GST_ROUND_UP_8 (peak_bits) / 8) && datalen > 0; ++i) {
+      peak = peak << 8;
+      peak |= GST_READ_UINT8 (data);
+      ++data;
+      --datalen;
+    }
+  }
+
+  peak = peak << (64 - GST_ROUND_UP_8 (peak_bits));
+  peak_val = (gdouble) peak / gst_util_guint64_to_gdouble (G_MAXINT64);
+  GST_LOG ("RVA2 frame: id=%s, chan=%u, adj=%.2fdB, peak_bits=%u, peak=%.2f",
+      id, chan, gain_dB, (guint) peak_bits, peak_val);
+
+  if (strcmp (id, "track") == 0) {
+    gain_tag_name = GST_TAG_TRACK_GAIN;
+    peak_tag_name = GST_TAG_TRACK_PEAK;
+  } else if (strcmp (id, "album") == 0) {
+    gain_tag_name = GST_TAG_ALBUM_GAIN;
+    peak_tag_name = GST_TAG_ALBUM_PEAK;
+  } else {
+    GST_INFO ("Unhandled RVA2 frame id '%s'", id);
+  }
+
+  if (gain_tag_name) {
+    gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
+        gain_tag_name, gain_dB, NULL);
+  }
+  if (peak_tag_name && peak_bits > 0) {
+    gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
+        peak_tag_name, peak_val, NULL);
+  }
+
+  g_free (id);
+
+  return (gain_tag_name != NULL || peak_tag_name != NULL);
 }
 
 static gboolean
@@ -442,6 +535,13 @@ id3v2_tag_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
       if (g_value_transform (&src, &dest)) {
         gst_tag_list_add_values (tag_list, GST_TAG_MERGE_APPEND,
             tag_name, &dest, NULL);
+      } else if (tag_type == G_TYPE_DOUBLE) {
+        /* replaygain tags in TXXX frames ... */
+        g_value_set_double (&dest, g_strtod (tag_str, NULL));
+        gst_tag_list_add_values (tag_list, GST_TAG_MERGE_KEEP,
+            tag_name, &dest, NULL);
+        GST_LOG ("Converted string '%s' to double %f", tag_str,
+            g_value_get_double (&dest));
       } else {
         GST_WARNING ("Failed to transform tag from string to type '%s'",
             g_type_name (tag_type));
