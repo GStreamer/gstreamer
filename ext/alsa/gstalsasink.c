@@ -117,18 +117,29 @@ static GstStaticPadTemplate alsasink_sink_factory =
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 32, "
         "depth = (int) 32, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 8 ]; "
+        "rate = (int) [ 1, MAX ], channels = (int) [ 1, 8 ]; "
+        "audio/x-raw-int, "
+        "endianness = (int) { " ALSA_SINK_FACTORY_ENDIANNESS " }, "
+        "signed = (boolean) { TRUE, FALSE }, "
+        "width = (int) 24, "
+        "depth = (int) { 24, 20, 18 }, "
+        "rate = (int) [ 1, MAX ], channels = (int) [ 1, 8 ]; "
         "audio/x-raw-int, "
         "endianness = (int) { " ALSA_SINK_FACTORY_ENDIANNESS " }, "
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 16, "
         "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 8 ]; "
+        "rate = (int) [ 1, MAX ], channels = (int) [ 1, 8 ]; "
         "audio/x-raw-int, "
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 8, "
         "depth = (int) 8, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 8 ]")
+        "rate = (int) [ 1, MAX ], channels = (int) [ 1, 8 ]; "
+        "audio/x-alaw, rate = (int) [ 1, MAX ], channels = (int) [ 1, 8 ]; "
+        "audio/x-mulaw, rate = (int) [ 1, MAX ], channels = (int) [ 1, 8 ]; "
+        "audio/x-raw-float, width = (int) { 32, 64 }, "
+        "endianness = (int) { " ALSA_SINK_FACTORY_ENDIANNESS " }, "
+        "rate = (int) [ 1, MAX ], channels = (int) [ 1, 8 ]")
     );
 
 static GstElementClass *parent_class = NULL;
@@ -312,6 +323,56 @@ get_channel_free_structure (const GstStructure * in_structure)
   return s;
 }
 
+/* Get the GStreamer caps for a given Alsa format. NULL if we
+ * don't have a mapping */
+static GstCaps *
+gst_alsa_get_caps_for_format (snd_pcm_format_t format)
+{
+  if (format == SND_PCM_FORMAT_A_LAW) {
+    return gst_caps_new_simple ("audio/x-alaw", NULL);
+  } else if (format == SND_PCM_FORMAT_MU_LAW) {
+    return gst_caps_new_simple ("audio/x-mulaw", NULL);
+  } else if (snd_pcm_format_linear (format)) {
+    /* int */
+    GstStructure *structure = gst_structure_new ("audio/x-raw-int",
+        "width", G_TYPE_INT, (gint) snd_pcm_format_physical_width (format),
+        "depth", G_TYPE_INT, (gint) snd_pcm_format_width (format),
+        "signed", G_TYPE_BOOLEAN,
+        snd_pcm_format_signed (format) == 1 ? TRUE : FALSE,
+        NULL);
+
+    /* endianness */
+    if (snd_pcm_format_physical_width (format) > 8) {
+      switch (snd_pcm_format_little_endian (format)) {
+        case 0:
+          gst_structure_set (structure, "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+              NULL);
+          break;
+        case 1:
+          gst_structure_set (structure, "endianness", G_TYPE_INT,
+              G_LITTLE_ENDIAN, NULL);
+          break;
+        default:
+          GST_WARNING
+              ("Unknown byte order in sound driver. Continuing by assuming system byte order.");
+          gst_structure_set (structure, "endianness", G_TYPE_INT, G_BYTE_ORDER,
+              NULL);
+          break;
+      }
+    }
+    return gst_caps_new_full (structure, NULL);
+  } else if (snd_pcm_format_float (format)) {
+    /* no float with non-platform endianness */
+    if (!snd_pcm_format_cpu_endian (format))
+      return NULL;
+
+    return gst_caps_new_simple ("audio/x-raw-float",
+        "width", G_TYPE_INT, (gint) snd_pcm_format_width (format),
+        "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
+  }
+  return NULL;
+}
+
 static void
 caps_add_channel_configuration (GstCaps * caps,
     const GstStructure * in_structure, gint min_channels, gint max_channels)
@@ -384,7 +445,7 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
   GstElementClass *element_class;
   GstPadTemplate *pad_template;
   GstAlsaSink *sink = GST_ALSA_SINK (bsink);
-  GstCaps *tmpl_caps;
+  GstCaps *avail_caps;
   GstCaps *caps = NULL;
   guint min, max;
   gint i, err, min_channels, max_channels;
@@ -433,22 +494,52 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
   GST_LOG_OBJECT (sink, "Min. channels = %d (%d)", min_channels, min);
   GST_LOG_OBJECT (sink, "Max. channels = %d (%d)", max_channels, max);
 
+  /* Get the list of formats that this sound device supports and
+   * generate caps from it */
+  avail_caps = gst_caps_new_empty ();
+
   snd_pcm_format_mask_alloca (&mask);
   snd_pcm_hw_params_get_format_mask (hw_params, mask);
 
-  element_class = GST_ELEMENT_GET_CLASS (sink);
-  pad_template = gst_element_class_get_pad_template (element_class, "sink");
+  for (i = 0; i <= SND_PCM_FORMAT_LAST; i++) {
+    if (snd_pcm_format_mask_test (mask, i)) {
+      GstCaps *cur_caps = gst_alsa_get_caps_for_format (i);
 
-  g_return_val_if_fail (pad_template != NULL, NULL);
+      GST_DEBUG_OBJECT (sink, "supported format: %02d %s", i,
+          snd_pcm_format_name (i));
 
-  tmpl_caps = gst_pad_template_get_caps (pad_template);
+      if (cur_caps != NULL)
+        gst_caps_append (avail_caps, cur_caps);
+    }
+  }
 
+  /* Template caps represents the caps we want to allow, intersect those
+     with what the sound device supports */
+  {
+    GstCaps *tmp_caps;
+
+    element_class = GST_ELEMENT_GET_CLASS (sink);
+    pad_template = gst_element_class_get_pad_template (element_class, "sink");
+
+    tmp_caps = gst_caps_intersect (avail_caps,
+        gst_pad_template_get_caps (pad_template));
+
+    gst_caps_unref (avail_caps);
+    avail_caps = tmp_caps;
+  }
+
+  GST_LOG_OBJECT (sink, "Sound device supports formats %" GST_PTR_FORMAT,
+      avail_caps);
+
+  /* Now prepare the caps we'll return */
   caps = gst_caps_new_empty ();
 
-  for (i = 0; i < gst_caps_get_size (tmpl_caps); ++i) {
+  for (i = 0; i < gst_caps_get_size (avail_caps); ++i) {
     caps_add_channel_configuration (caps,
-        gst_caps_get_structure (tmpl_caps, i), min_channels, max_channels);
+        gst_caps_get_structure (avail_caps, i), min_channels, max_channels);
   }
+
+  gst_caps_unref (avail_caps);
 
   sink->cached_caps = gst_caps_ref (caps);
 

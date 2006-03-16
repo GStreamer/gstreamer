@@ -306,8 +306,20 @@ gst_stream_selector_bufferalloc (GstPad * pad, guint64 offset,
 
     result = GST_FLOW_NOT_LINKED;
   } else {
-    result = gst_pad_alloc_buffer_and_set_caps (sel->srcpad, offset,
-        size, caps, buf);
+    result = gst_pad_alloc_buffer (sel->srcpad, offset, size, caps, buf);
+
+    /* FIXME: HACK. If buffer alloc returns not-linked, perform a fallback
+     * allocation.  This should NOT be necessary, because playbin should
+     * properly block the source pad from running until it's finished hooking 
+     * everything up, but playbin needs refactoring first. */
+    if (result == GST_FLOW_NOT_LINKED) {
+      GST_DEBUG_OBJECT (sel,
+          "No peer pad yet - performing fallback allocation for pad %s:%s",
+          GST_DEBUG_PAD_NAME (pad));
+
+      *buf = NULL;
+      result = GST_FLOW_OK;
+    }
   }
 
   gst_object_unref (sel);

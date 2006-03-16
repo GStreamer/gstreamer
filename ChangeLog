@@ -1,3 +1,15 @@
+2006-03-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gststreamselector.c:
+	(gst_stream_selector_set_property),
+	(gst_stream_selector_bufferalloc):
+	  Preserve the existing buggy streamselector behaviour by performing
+	  a fallback buffer allocation when downstream isn't linked yet.
+	  This should really be fixed in playbin by blocking pads until it's
+	  linked them.
+	  Also, use gst_pad_alloc_buffer instead of
+	  gst_pad_alloc_buffer_and_set.
+
 2006-03-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gstid3tag.c:

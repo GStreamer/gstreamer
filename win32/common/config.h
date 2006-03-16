@@ -42,7 +42,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Base Plug-ins source release"
+#define GST_PACKAGE_NAME "GStreamer Base Plug-ins CVS/prerelease"
 
 /* Define the version */
 #define GST_VERSION "@GST_VERSION@"
@@ -250,7 +250,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.5"
+#define VERSION "0.10.5.1"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
