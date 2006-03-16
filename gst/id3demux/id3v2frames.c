@@ -359,6 +359,8 @@ parse_unique_file_identifier (ID3TagsWorking * work, const gchar ** tag_name)
   return ret;
 }
 
+#define ID3V2_RVA2_CHANNEL_MASTER  1
+
 static gboolean
 parse_relative_volume_adjustment_two (ID3TagsWorking * work)
 {
@@ -410,14 +412,14 @@ parse_relative_volume_adjustment_two (ID3TagsWorking * work)
   GST_LOG ("RVA2 frame: id=%s, chan=%u, adj=%.2fdB, peak_bits=%u, peak=%.2f",
       id, chan, gain_dB, (guint) peak_bits, peak_val);
 
-  if (strcmp (id, "track") == 0) {
+  if (chan == ID3V2_RVA2_CHANNEL_MASTER && strcmp (id, "track") == 0) {
     gain_tag_name = GST_TAG_TRACK_GAIN;
     peak_tag_name = GST_TAG_TRACK_PEAK;
-  } else if (strcmp (id, "album") == 0) {
+  } else if (chan == ID3V2_RVA2_CHANNEL_MASTER && strcmp (id, "album") == 0) {
     gain_tag_name = GST_TAG_ALBUM_GAIN;
     peak_tag_name = GST_TAG_ALBUM_PEAK;
   } else {
-    GST_INFO ("Unhandled RVA2 frame id '%s'", id);
+    GST_INFO ("Unhandled RVA2 frame id '%s' for channel %d", id, chan);
   }
 
   if (gain_tag_name) {
