@@ -1,3 +1,10 @@
+2006-03-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame),
+	(parse_id_string), (parse_unique_file_identifier),
+	(parse_relative_volume_adjustment_two), (id3v2_tag_to_taglist):
+	  Read replay gain tags (#323721).
+
 2006-03-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
