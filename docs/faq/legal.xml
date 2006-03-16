@@ -12,7 +12,7 @@ in order to obtain clear and quotable answers.  These answers were certified
 by the FSF lawyer team and verified by FSF lawyer and law professor Eben Moglen.
   </para>
 
-  <qandaset>
+  <qandaset defaultlabel="qanda">
 
     <qandaentry>
       <question id="legal-distribute-three">

@@ -1,6 +1,6 @@
 <sect1 id="chapter-dependencies">
   <title id="title-dependencies">Dependencies</title>
-  <qandaset>
+  <qandaset defaultlabel="qanda">
 
     <qandaentry>
       <question id="dependencies-why-so-many">
@@ -18,7 +18,7 @@ the code others have written.
         <para>
 However, do realize that in no way you are forced to have all dependencies
 installed.  None of the core developers has all of them installed.  GStreamer
-has only a few obligate dependencies : GLib 2.0, popt >= 1.6.0, and very
+has only a few obligate dependencies : GLib 2.0, liboil, and very
 common stuff like glibc, a C compiler, and so on.  All of the other
 dependencies are optional.
         </para>

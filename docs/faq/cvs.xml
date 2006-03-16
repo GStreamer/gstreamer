@@ -1,6 +1,6 @@
 <sect1 id="chapter-cvs">
   <title id="title-cvs">Building GStreamer from CVS</title>
-  <qandaset>
+  <qandaset defaultlabel="qanda">
 
     <qandaentry>
       <question id="cvs-anon">
@@ -18,11 +18,15 @@ the core, and "gst-plugins", containing the basic set of plugins.
         <para>
 To check out the HEAD version of the core, use
 <programlisting>
- cvs -d:pserver:anoncvs@cvs.freedesktop.org:/cvs/gstreamer co gstreamer
+ cvs -d:pserver:anoncvs@anoncvs.freedesktop.org:/cvs/gstreamer co gstreamer
 </programlisting>
 This will create a directory "gstreamer" in your current directory.
 If you want to get another module, replace the last "gstreamer" with the
 name of the module.
+        </para>
+        <para>
+The <ulink url="http://gstreamer.freedesktop.org/modules/">modules page</ulink>
+has a list of active ones together with a short description.
         </para>
       </answer>
     </qandaentry>
@@ -61,8 +65,8 @@ Once you have all these items, see <ulink url="http://freedesktop.org/wiki/Accou
 
     <qandaentry>
       <question id="autogen-libtool">
+        <label>I ran autogen.sh, but it fails with aclocal errors. What's wrong ?</label>
         <para>
-I ran autogen.sh, but it fails with something like this:
 <programlisting>
 + running aclocal -I m4 -I common/m4 ...
 aclocal: configure.ac: 8: macro `AM_DISABLE_STATIC' not found in library

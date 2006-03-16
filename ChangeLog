@@ -1,3 +1,16 @@
+2006-03-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/faq/cvs.xml:
+	* docs/faq/dependencies.xml:
+	* docs/faq/developing.xml:
+	* docs/faq/faq.xml:
+	* docs/faq/general.xml:
+	* docs/faq/getting.xml:
+	* docs/faq/legal.xml:
+	* docs/faq/troubleshooting.xml:
+	* docs/faq/using.xml:
+	Faq review and update.
+
 2006-03-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstpad.c: (gst_pad_accept_caps), (gst_pad_alloc_buffer_full),

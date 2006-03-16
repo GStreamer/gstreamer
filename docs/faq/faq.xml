@@ -36,6 +36,12 @@
     
     <revhistory>
       <revision>
+        <revnumber>0.2.0</revnumber>
+        <date>2006-03-16</date>
+        <revremark>Review and update whole document.</revremark>
+      </revision>
+
+      <revision>
         <revnumber>0.1.1</revnumber>
         <date>2003-04-24</date>
         <revremark>Added Q&amp;A about developing with uninstalled copy.</revremark>

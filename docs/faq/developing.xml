@@ -1,7 +1,6 @@
 <sect1 id="chapter-developing">
   <title id="title-developing">Developing applications with GStreamer</title>
-
-  <qandaset>
+  <qandaset defaultlabel="qanda">
 
     <qandaentry>
       <question id="developing-compile-programs">
@@ -52,8 +51,8 @@ The easiest way to do this is to use a script like this (for bash):
 &gst-uninstalled;
 </programlisting>
 If you put this script in your path, and symlink it to gst-cvs (if you want
-to develop against cvs HEAD) or to gst-0.6 (if you want to develop against the
-0.6 branch), it will automatically use the uninstalled version from that
+to develop against cvs HEAD) or to gst-0.8 (if you want to develop against the
+0.8 branch), it will automatically use the uninstalled version from that
 directory.
         </para>
         <para>
@@ -70,8 +69,7 @@ before any installed copies.
       </answer>
     </qandaentry>
 
-     
-     <qandaentry>
+    <qandaentry>
       <question id="developing-gconf">
         <para>How can I use GConf to get the system-wide defaults ?</para>
       </question>
@@ -121,7 +119,7 @@ When you link a program against uninstalled GStreamer using libtool,
 funny shell scripts are made to modify your shared object search path 
 and then run your program. For instance, to debug gst-launch, try 
 <programlisting>
-libtool gdb /path/to/gstreamer-launch
+libtool --mode=execute gdb /path/to/gst-launch
 </programlisting>. 
 If this does not work, you're probably using a broken version of libtool. 
         </para>
@@ -136,7 +134,7 @@ If this does not work, you're probably using a broken version of libtool.
       <answer>
         <para>
 Our main arena for coordination and discussion is IRC, not email. 
-Join us in #gstreamer on irc.freenode.net
+Join us in <ulink url="irc://irc.freenode.net/#gstreamer">#gstreamer on irc.freenode.net</ulink>
 For larger picture questions or getting more input from more persons,
 a mail to gstreamer-devel is never a bad idea.
 However, we do archive our IRC discussions, which you may find in the 

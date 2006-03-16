@@ -1,6 +1,6 @@
 <sect1 id="chapter-general">
   <title id="title-general">General</title>
-  <qandaset>
+  <qandaset defaultlabel="qanda">
 
     <qandaentry>
       <question id="general-media-player">
@@ -57,12 +57,14 @@ not, don't bother us; we're working :-)
       </question>
       <answer>
         <para>
-GStreamer is still very early in its development, but already we see some 
-really nice applications being developed in parallel with GStreamer. 
-Both gst-player and gst-editor are very closely linked to GStreamer itself
-for obvious reasons.
-<!-- For a list of some of the more advanced projects, look at the list
-in our <ulink url="http://gstreamer.net/status/">Status table</ulink>. -->
+Many media player applications have chosen GStreamer for their backend. 
+Also a couple of media format conversion tools have been written using the powers of GStreamer.
+With the advent of GStreamer-0.10 several media editing applications have been started.
+        </para>
+        <para>
+For a list of projects, look at the
+<ulink url="http://gstreamer.freedesktop.org/apps/">application list</ulink>
+on the GStreamer project website.
         </para>
       </answer>
     </qandaentry>
@@ -139,8 +141,9 @@ Will GStreamer be available for platforms other than Unix ?
       </question>
       <answer>
         <para>
-Depends. Our main target is the Unix platform. That said, interest has been 
-expressed in porting GStreamer to other platforms and the GStreamer core 
+Depends. Our main target is the Unix platform. It also works on Win32 and Mac OS X,
+but it may still be a bit challenging to get everything up and running.  
+That said, interest has been expressed in porting GStreamer to other platforms and the GStreamer core 
 team will gladly accept patches to accomplish this.
 <!-- Please refer to the
 <ulink url="http://gstreamer.net/status/?category=7">
@@ -157,10 +160,10 @@ platform support status table</ulink> -->
         <para>
 While GStreamer is operated as an independent project, we do have a close 
 relationship with the GNOME community. Many of our hackers consider 
-themselves also to be members of the GNOME community. There are plans to 
-make (some part of) GStreamer an official part of the development framework 
-of GNOME.  This does not exclude use of GStreamer by other communities at
-all, of course.
+themselves also to be members of the GNOME community.
+GStreamer is officialy bundled with the GNOME desktop, as lots of packages
+(like gnome-media, totem and rhythmbox) are using it.
+This does not exclude use of GStreamer by other communities at all, of course.
         </para>
       </answer>
     </qandaentry>
@@ -173,11 +176,11 @@ all, of course.
         <para>
 The GStreamer community wants to have as good a relationship as possible 
 with KDE, and we hope that someday KDE decides to adopt GStreamer as their 
-multimedia API, just like the GNOME community plans on doing. 
+multimedia API (planned for KDE 4). 
 There have been contacts from time to time between the GStreamer community 
 and KDE and we do already have support for the aRTSd sound server used by KDE.
-Also, some of the KDE hackers have created Qt bindings of GStreamer 
-and made a simple video player.
+Also, some of the KDE hackers have created Qt bindings of GStreamer, 
+made a simple video player and using it in some audio players (JuK and AmaroK).
         </para>
       </answer>
     </qandaentry>

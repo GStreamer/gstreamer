@@ -1,6 +1,6 @@
 <sect1 id="chapter-using">
   <title id="title-using">Using GStreamer</title>
-  <qandaset>
+  <qandaset defaultlabel="qanda">
 
     <qandaentry>
       <question id="using-getting-started">

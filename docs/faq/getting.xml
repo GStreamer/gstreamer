@@ -1,6 +1,6 @@
 <sect1 id="chapter-getting">
   <title id="title-getting">Getting GStreamer</title>
-  <qandaset>
+  <qandaset defaultlabel="qanda">
 
     <qandaentry>
       <question id="getting-gstreamer">
