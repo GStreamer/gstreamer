@@ -1,3 +1,11 @@
+2006-03-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstpad.c: (gst_pad_accept_caps), (gst_pad_alloc_buffer_full),
+	(gst_pad_push):
+	Don't pound the cpu to pieces by checking get_caps when accept_caps
+	is called with the same caps as the pad already has.
+	Use GST_DEBUG_OBJECT when outputting caps change information.
+
 2006-03-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstclock.c: (gst_clock_class_init):
