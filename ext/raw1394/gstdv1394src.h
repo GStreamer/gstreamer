@@ -72,6 +72,8 @@ struct _GstDV1394Src {
   int control_sock[2];
 
   gchar *uri;
+
+  gboolean connected;
 };
 
 struct _GstDV1394SrcClass {

@@ -450,6 +450,16 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
   return 0;
 }
 
+/*
+ * When an ieee1394 bus reset happens, usually a device has been removed
+ * or added.  We send a message on the message bus with the node count 
+ * and whether the capture device used in this element connected, disconnected 
+ * or was unchanged
+ * Message structure:
+ * nodecount - integer with number of nodes on bus
+ * current-device-change - integer (1 if device connected, 0 if no change to
+ *                         current device status, -1 if device disconnected)
+ */
 static int
 gst_dv1394src_bus_reset (raw1394handle_t handle, unsigned int generation)
 {
@@ -457,15 +467,43 @@ gst_dv1394src_bus_reset (raw1394handle_t handle, unsigned int generation)
   gint nodecount;
   GstMessage *message;
   GstStructure *structure;
+  gint current_device_change;
+  gint i;
 
   src = GST_DV1394SRC (raw1394_get_userdata (handle));
 
   GST_INFO_OBJECT (src, "have bus reset");
 
+  /* update generation - told to do so by docs */
+  raw1394_update_generation (handle, generation);
   nodecount = raw1394_get_nodecount (handle);
+  /* allocate memory for portinfo */
+
+  /* current_device_change is -1 if camera disconnected, 0 if other device
+   * connected or 1 if camera has now connected */
+  current_device_change = -1;
+  for (i = 0; i < nodecount; i++) {
+    if (src->guid == rom1394_get_guid (handle, i)) {
+      /* Camera is with us */
+      GST_DEBUG ("Camera is with us");
+      if (!src->connected) {
+        current_device_change = 1;
+        src->connected = TRUE;
+      } else
+        current_device_change = 0;
+    }
+  }
+  if (src->connected && current_device_change == -1) {
+    GST_DEBUG ("Camera has disconnected");
+    src->connected = FALSE;
+  } else if (!src->connected && current_device_change == -1) {
+    GST_DEBUG ("Camera is still not with us");
+    current_device_change = 0;
+  }
 
   structure = gst_structure_new ("ieee1394-bus-reset", "nodecount", G_TYPE_INT,
-      nodecount, NULL);
+      nodecount, "current-device-change", G_TYPE_INT, current_device_change,
+      NULL);
   message = gst_message_new_element (GST_OBJECT (src), structure);
   gst_element_post_message (GST_ELEMENT (src), message);
 
@@ -597,6 +635,7 @@ gst_dv1394src_discover_avc_node (GstDV1394Src * src)
             avc1394_check_subunit_type (handle, i, AVC1394_SUBUNIT_TYPE_VCR)) {
           node = i;
           src->port = j;
+          src->guid = rom1394_get_guid (handle, i);
           g_free (src->uri);
           src->uri = g_strdup_printf ("dv://%d", src->port);
           break;
@@ -614,6 +653,8 @@ gst_dv1394src_start (GstBaseSrc * bsrc)
 {
   GstDV1394Src *src = GST_DV1394SRC (bsrc);
   int control_sock[2];
+
+  src->connected = FALSE;
 
   if (socketpair (PF_UNIX, SOCK_STREAM, 0, control_sock) < 0)
     goto socket_pair;
@@ -647,7 +688,7 @@ gst_dv1394src_start (GstBaseSrc * bsrc)
   raw1394_set_bus_reset_handler (src->handle, gst_dv1394src_bus_reset);
 
   GST_DEBUG_OBJECT (src, "successfully opened up 1394 connection");
-
+  src->connected = TRUE;
   if (raw1394_start_iso_rcv (src->handle, src->channel) < 0)
     goto cannot_start;
 

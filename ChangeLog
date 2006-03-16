@@ -1,3 +1,11 @@
+2006-03-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_bus_reset),
+	(gst_dv1394src_discover_avc_node), (gst_dv1394src_start):
+	* ext/raw1394/gstdv1394src.h:
+	  Change bus reset handler so it reports useful information such as
+          whether the device being used connected or disconnected
+
 2006-03-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/id3v2frames.c:
