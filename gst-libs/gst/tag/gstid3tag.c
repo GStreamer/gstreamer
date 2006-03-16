@@ -246,7 +246,13 @@ static GstTagEntryMatch user_tag_matches[] = {
   {GST_TAG_MUSICBRAINZ_ARTISTID, "TXXX|MusicBrainz Artist Id"},
   {GST_TAG_MUSICBRAINZ_ALBUMID, "TXXX|MusicBrainz Album Id"},
   {GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "TXXX|MusicBrainz Album Artist Id"},
-  {GST_TAG_MUSICBRAINZ_TRMID, "TXXX|MusicBrainz TRM Id"}
+  {GST_TAG_MUSICBRAINZ_TRMID, "TXXX|MusicBrainz TRM Id"},
+  /* foobar2000 uses these identifiers to store gain/peak information in
+   * ID3v2 tags <= v2.3.0. In v2.4.0 there's the RVA2 frame for that */
+  {GST_TAG_TRACK_GAIN, "TXXX|replaygain_track_gain"},
+  {GST_TAG_TRACK_PEAK, "TXXX|replaygain_track_peak"},
+  {GST_TAG_ALBUM_GAIN, "TXXX|replaygain_album_gain"},
+  {GST_TAG_ALBUM_PEAK, "TXXX|replaygain_album_peak"}
 };
 
 /**
