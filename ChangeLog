@@ -1,5 +1,13 @@
 2006-03-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Michal Benes  <michal dot benes at xeris dot cz>
+
+	* tests/Makefile.am:
+	  Don't try to build tests in tests/icles if we
+	  don't have X (#323852)
+
+2006-03-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/tag/gstid3tag.c:
 	  Add TXXX frame identifiers for replaygain stuff as used
 	  by some taggers (see #323721).
