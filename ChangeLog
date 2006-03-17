@@ -1,3 +1,10 @@
+2006-03-17  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/ximagesrc/ximagesrc.c: (gst_ximagesrc_open_display),
+	(gst_ximagesrc_set_property), (gst_ximagesrc_get_property),
+	(gst_ximagesrc_class_init), (gst_ximagesrc_init):
+	Have a show mouse pointer property and use it if we can
+
 2006-03-15  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_dispose):
