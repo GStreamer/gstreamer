@@ -1077,6 +1077,10 @@ wait_segment (GstRingBuffer * buf)
   /* buffer must be started now or we deadlock since nobody is reading */
   if (G_UNLIKELY (g_atomic_int_get (&buf->state) !=
           GST_RING_BUFFER_STATE_STARTED)) {
+    /* see if we are allowed to start it */
+    if (G_UNLIKELY (g_atomic_int_get (&buf->abidata.ABI.may_start) == FALSE))
+      goto no_start;
+
     GST_DEBUG_OBJECT (buf, "start!");
     gst_ring_buffer_start (buf);
   }
@@ -1118,6 +1122,11 @@ flushing:
     g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0);
     GST_DEBUG_OBJECT (buf, "flushing");
     GST_OBJECT_UNLOCK (buf);
+    return FALSE;
+  }
+no_start:
+  {
+    GST_DEBUG_OBJECT (buf, "not allowed to start");
     return FALSE;
   }
 }
@@ -1454,4 +1463,23 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
   GST_LOG ("clear segment %d @%p", segment, data);
 
   memcpy (data, buf->empty_seg, buf->spec.segsize);
+}
+
+/**
+ * gst_ring_buffer_may_start:
+ * @buf: the #GstRingBuffer
+ * @allowed: the new value
+ *
+ * Tell the ringbuffer that it is allowed to start playback when
+ * the ringbuffer is filled with samples. 
+ *
+ * Since: 0.10.6
+ *
+ * MT safe.
+ */
+void
+gst_ring_buffer_may_start (GstRingBuffer * buf, gboolean allowed)
+{
+  GST_LOG_OBJECT (buf, "may start: %d", allowed);
+  gst_atomic_int_set (&buf->abidata.ABI.may_start, allowed);
 }

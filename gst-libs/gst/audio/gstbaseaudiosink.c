@@ -707,13 +707,16 @@ gst_base_audio_sink_change_state (GstElement * element,
         goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       sink->next_sample = -1;
+      gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
+      gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
       GstClock *clock;
       GstClockTime time, base;
+
+      gst_ring_buffer_may_start (sink->ringbuffer, TRUE);
 
       GST_OBJECT_LOCK (sink);
       clock = GST_ELEMENT_CLOCK (sink);
@@ -746,6 +749,8 @@ gst_base_audio_sink_change_state (GstElement * element,
       break;
     }
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      /* ringbuffer cannot start anymore */
+      gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
       gst_ring_buffer_pause (sink->ringbuffer);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:

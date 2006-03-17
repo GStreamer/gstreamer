@@ -1,3 +1,13 @@
+2006-03-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_change_state):
+	* gst-libs/gst/audio/gstringbuffer.c: (wait_segment),
+	(gst_ring_buffer_may_start):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Only start playback if we are playing.
+	should fix #330748.
+
 2006-03-17  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/alsa/gstalsasink.c: (gst_alsasink_getcaps):

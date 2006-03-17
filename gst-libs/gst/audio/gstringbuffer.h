@@ -243,6 +243,8 @@ struct _GstRingBuffer {
   union {
     struct {
       gboolean           flushing;
+      /* ATOMIC */
+      gint               may_start;
     } ABI;
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING + 0];
@@ -334,6 +336,9 @@ gboolean        gst_ring_buffer_prepare_write   (GstRingBuffer *buf, gint *segme
 gboolean        gst_ring_buffer_prepare_read    (GstRingBuffer *buf, gint *segment, guint8 **readptr, gint *len);
 void            gst_ring_buffer_clear           (GstRingBuffer *buf, gint segment);
 void            gst_ring_buffer_advance         (GstRingBuffer *buf, guint advance);
+
+void            gst_ring_buffer_may_start       (GstRingBuffer *buf, gboolean allowed);
+
 
 G_END_DECLS
 
