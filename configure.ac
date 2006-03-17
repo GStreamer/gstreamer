@@ -111,6 +111,18 @@ AC_ARG_WITH(plugins,
     done],
     [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
 
+dnl disable gst plugins we might not be able to build on this
+dnl platform: udp and rtsp (ugly but minimally invasive)
+AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
+AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
+
+if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
+  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $(SED) -e s/udp//`
+  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $(SED) -e s/rtsp//`
+  GST_PLUGINS_NO="\tudp\n$GST_PLUGINS_NO"
+  GST_PLUGINS_NO="\trtsp\n$GST_PLUGINS_NO"
+fi
+
 AC_SUBST(GST_PLUGINS_SELECTED)
 
 dnl ext plug-ins; plug-ins that have external dependencies

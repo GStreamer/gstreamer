@@ -1,3 +1,9 @@
+2006-03-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Don't compile udp and rtsp plugins on win32 (mingw) or other
+	  systems that don't have <sys/socket.h> for some reason (#316203).
+
 2006-03-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_bus_reset),
