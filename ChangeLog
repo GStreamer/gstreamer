@@ -1,3 +1,9 @@
+2006-03-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_accept_caps), (gst_pad_alloc_buffer_full),
+	(gst_pad_push):
+	Don't leak buffers, caps and pads on negotiation errors.
+
 2006-03-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/faq/cvs.xml:

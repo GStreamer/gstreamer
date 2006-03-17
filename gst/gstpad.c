@@ -2113,8 +2113,11 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
   GST_OBJECT_UNLOCK (pad);
 
   /* The current caps on a pad are trivially acceptable */
-  if (existing && (caps == existing || gst_caps_is_equal (caps, existing)))
-    goto is_same_caps;
+  if (existing) {
+    if (caps == existing || gst_caps_is_equal (caps, existing))
+      goto is_same_caps;
+    gst_caps_unref (existing);
+  }
 
   if (G_LIKELY (acceptfunc)) {
     /* we can call the function */
@@ -2582,6 +2585,8 @@ fallback:
   }
 not_negotiated:
   {
+    gst_buffer_unref (*buf);
+    *buf = NULL;
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "alloc function returned unacceptable buffer");
     return GST_FLOW_NOT_NEGOTIATED;
@@ -3351,6 +3356,8 @@ not_linked:
   }
 not_negotiated:
   {
+    gst_buffer_unref (buffer);
+    gst_object_unref (peer);
     GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
         "element pushed buffer then refused to accept the caps");
     return GST_FLOW_NOT_NEGOTIATED;
