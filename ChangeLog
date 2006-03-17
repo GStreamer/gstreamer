@@ -1,3 +1,9 @@
+2006-03-17  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_getcaps):
+	* win32/common/config.h:
+	  Revert accidental commits to these files.
+
 2006-03-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Michal Benes  <michal dot benes at xeris dot cz>
