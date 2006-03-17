@@ -36,7 +36,8 @@ GST_ELEMENT_DETAILS ("Ximage video source",
     "Source/Video",
     "Creates a screenshot video stream",
     "Lutz Mueller <lutz@users.sourceforge.net>"
-    "Jan Schmidt <thaytan@mad.scientist.com>");
+    "Jan Schmidt <thaytan@mad.scientist.com>"
+    "Zaheer Merali <zaheerabbas at merali dot org>");
 
 static GstStaticPadTemplate t =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -48,7 +49,8 @@ enum
 {
   PROP_0,
   PROP_DISPLAY_NAME,
-  PROP_SCREEN_NUM
+  PROP_SCREEN_NUM,
+  PROP_SHOW_POINTER
 };
 
 GST_BOILERPLATE (GstXImageSrc, gst_ximagesrc, GstPushSrc, GST_TYPE_PUSH_SRC);
@@ -107,6 +109,7 @@ gst_ximagesrc_open_display (GstXImageSrc * s, const gchar * name)
       s->have_xfixes = TRUE;
       GST_DEBUG_OBJECT (s, "X Server supports XFixes");
     } else {
+
       GST_DEBUG_OBJECT (s, "X Server does not support XFixes");
     }
   }
@@ -541,6 +544,9 @@ gst_ximagesrc_set_property (GObject * object, guint prop_id,
       src->screen_num = g_value_get_uint (value);
       // src->screen_num = MIN (src->screen_num, ScreenCount (src->display) - 1);
       break;
+    case PROP_SHOW_POINTER:
+      src->show_pointer = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -562,6 +568,9 @@ gst_ximagesrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SCREEN_NUM:
       g_value_set_uint (value, src->screen_num);
+      break;
+    case PROP_SHOW_POINTER:
+      g_value_set_boolean (value, src->show_pointer);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -700,6 +709,10 @@ gst_ximagesrc_class_init (GstXImageSrcClass * klass)
   g_object_class_install_property (gc, PROP_SCREEN_NUM,
       g_param_spec_uint ("screen_num", "Screen number", "X Screen number",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gc, PROP_SHOW_POINTER,
+      g_param_spec_boolean ("show_pointer", "Show Mouse Pointer",
+          "Show mouse pointer if XFixes extension enabled", TRUE,
+          G_PARAM_READWRITE));
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
@@ -720,6 +733,7 @@ gst_ximagesrc_init (GstXImageSrc * ximagesrc, GstXImageSrcClass * klass)
 
   ximagesrc->pool_lock = g_mutex_new ();
   ximagesrc->x_lock = g_mutex_new ();
+  ximagesrc->show_pointer = TRUE;
 }
 
 static gboolean
