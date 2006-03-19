@@ -27,7 +27,7 @@
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstbasesrc.h>
 
-static void
+static gboolean
 eos_event_counter (GstObject * pad, GstEvent * event, guint * p_num_eos)
 {
   fail_unless (event != NULL);
@@ -35,6 +35,8 @@ eos_event_counter (GstObject * pad, GstEvent * event, guint * p_num_eos)
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
     *p_num_eos += 1;
+
+  return TRUE;
 }
 
 /* basesrc_eos_events_push_live_op:

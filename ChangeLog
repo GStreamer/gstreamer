@@ -1,3 +1,8 @@
+2006-03-19  Wim Taymans  <wim@fluendo.com>
+
+	* tests/check/libs/basesrc.c: (eos_event_counter):
+	Use proper return value for probe.
+
 2006-03-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_pad_accept_caps), (gst_pad_alloc_buffer_full),
