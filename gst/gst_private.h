@@ -45,36 +45,42 @@ gboolean __gst_in_valgrind (void);
 
 #ifndef GST_DISABLE_GST_DEBUG
 
+#ifndef WIN32
+#define IMPORT_SYMBOL
+#else
+#define IMPORT_SYMBOL __declspec(dllimport)
+#endif
+
 #include <gst/gstinfo.h>
 
-extern GstDebugCategory *GST_CAT_GST_INIT;
-extern GstDebugCategory *GST_CAT_AUTOPLUG;
-extern GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT;
-extern GstDebugCategory *GST_CAT_PARENTAGE;
-extern GstDebugCategory *GST_CAT_STATES;
-extern GstDebugCategory *GST_CAT_SCHEDULING;
-extern GstDebugCategory *GST_CAT_BUFFER;
-extern GstDebugCategory *GST_CAT_BUS;
-extern GstDebugCategory *GST_CAT_CAPS;
-extern GstDebugCategory *GST_CAT_CLOCK;
-extern GstDebugCategory *GST_CAT_ELEMENT_PADS;
-extern GstDebugCategory *GST_CAT_PADS;
-extern GstDebugCategory *GST_CAT_PIPELINE;
-extern GstDebugCategory *GST_CAT_PLUGIN_LOADING;
-extern GstDebugCategory *GST_CAT_PLUGIN_INFO;
-extern GstDebugCategory *GST_CAT_PROPERTIES;
-extern GstDebugCategory *GST_CAT_XML;
-extern GstDebugCategory *GST_CAT_NEGOTIATION;
-extern GstDebugCategory *GST_CAT_REFCOUNTING;
-extern GstDebugCategory *GST_CAT_ERROR_SYSTEM;
-extern GstDebugCategory *GST_CAT_EVENT;
-extern GstDebugCategory *GST_CAT_MESSAGE;
-extern GstDebugCategory *GST_CAT_PARAMS;
-extern GstDebugCategory *GST_CAT_CALL_TRACE;
-extern GstDebugCategory *GST_CAT_SIGNAL;
-extern GstDebugCategory *GST_CAT_PROBE;
-extern GstDebugCategory *GST_CAT_REGISTRY;
-extern GstDebugCategory *GST_CAT_QOS;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_GST_INIT;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_AUTOPLUG;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_AUTOPLUG_ATTEMPT;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PARENTAGE;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_STATES;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_SCHEDULING;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_BUFFER;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_BUS;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_CAPS;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_CLOCK;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_ELEMENT_PADS;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PADS;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PIPELINE;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PLUGIN_LOADING;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PLUGIN_INFO;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PROPERTIES;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_XML;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_NEGOTIATION;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_REFCOUNTING;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_ERROR_SYSTEM;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_EVENT;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_MESSAGE;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PARAMS;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_CALL_TRACE;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_SIGNAL;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_PROBE;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_REGISTRY;
+extern IMPORT_SYMBOL GstDebugCategory *GST_CAT_QOS;
 
 #else
 

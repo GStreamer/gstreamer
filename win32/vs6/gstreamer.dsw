@@ -3,7 +3,7 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "grammar"=.\grammar.dsp - Package Owner=<4>
+Project: "grammar"=".\grammar.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -15,22 +15,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "gst_inspect"=.\gst_inspect.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name libgstreamer
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "gst_launch"=.\gst_launch.dsp - Package Owner=<4>
+Project: "gst_inspect"=".\gst_inspect.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -45,7 +30,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libgstbase"=.\libgstbase.dsp - Package Owner=<4>
+Project: "gst_launch"=".\gst_launch.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -60,7 +45,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libgstcontroller"=.\libgstcontroller.dsp - Package Owner=<4>
+Project: "libgstbase"=".\libgstbase.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -75,7 +60,22 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libgstcoreelements"=.\libgstcoreelements.dsp - Package Owner=<4>
+Project: "libgstcontroller"=".\libgstcontroller.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libgstreamer
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "libgstcoreelements"=".\libgstcoreelements.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -93,7 +93,37 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libgstreamer"=.\libgstreamer.dsp - Package Owner=<4>
+Project: "libgstdataprotocol"=".\libgstdataprotocol.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libgstreamer
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "libgstnet"=".\libgstnet.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libgstreamer
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "libgstreamer"=".\libgstreamer.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

@@ -1,3 +1,18 @@
+2006-03-19  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/gst_private.h:
+	  add win32 specific import decoration(__declspec(dllimport)) 
+	  for all extern GstDebugCategory * variables
+	* win32/common/libgstbase.def:
+	* win32/common/libgstcontroller.def:
+	* win32/common/libgstreamer.def:
+	  Add some exports, remove empty lines
+	* win32/common/libgstdataprotocol.def:
+	* win32/common/libgstdataprotocol.dsp:
+	* win32/common/libgstnet.def:
+	* win32/common/libgstnet.dsp:
+	  new project files and exportation files added
+	
 2006-03-19  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/libs/basesrc.c: (eos_event_counter):
