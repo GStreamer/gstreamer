@@ -1,3 +1,13 @@
+2006-03-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (id3v2_type_find),
+	(id3v1_type_find), (apetag_type_find), (plugin_init):
+	  Can't do tag preferences via probability, as tags would then
+	  lose against types that are recognised with MAXIMUM probability
+	  (like .wav); so let all tag typefinders return MAXIMUM themselves
+	  and order them via the rank. Split ID3v1 and ID3v2 typefinders so
+	  that we can prefer APE to ID3v1 (fixes #335028).
+	  
 2006-03-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

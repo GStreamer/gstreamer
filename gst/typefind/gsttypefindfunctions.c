@@ -297,24 +297,25 @@ static GstStaticCaps id3_caps = GST_STATIC_CAPS ("application/x-id3");
 
 #define ID3_CAPS gst_static_caps_get(&id3_caps)
 static void
-id3_type_find (GstTypeFind * tf, gpointer unused)
+id3v2_type_find (GstTypeFind * tf, gpointer unused)
 {
-  /* detect ID3v2 first */
   guint8 *data = gst_type_find_peek (tf, 0, 10);
 
-  if (data) {
-    /* detect valid header */
-    if (memcmp (data, "ID3", 3) == 0 &&
-        data[3] != 0xFF && data[4] != 0xFF &&
-        (data[6] & 0x80) == 0 && (data[7] & 0x80) == 0 &&
-        (data[8] & 0x80) == 0 && (data[9] & 0x80) == 0) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, ID3_CAPS);
-      return;
-    }
+  if (data && memcmp (data, "ID3", 3) == 0 &&
+      data[3] != 0xFF && data[4] != 0xFF &&
+      (data[6] & 0x80) == 0 && (data[7] & 0x80) == 0 &&
+      (data[8] & 0x80) == 0 && (data[9] & 0x80) == 0) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, ID3_CAPS);
   }
-  data = gst_type_find_peek (tf, -128, 3);
+}
+
+static void
+id3v1_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, -128, 3);
+
   if (data && memcmp (data, "TAG", 3) == 0) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 3, ID3_CAPS);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, ID3_CAPS);
   }
 }
 
@@ -331,14 +332,14 @@ apetag_type_find (GstTypeFind * tf, gpointer unused)
   /* APEv1/2 at start of file */
   data = gst_type_find_peek (tf, 0, 8);
   if (data && !memcmp (data, "APETAGEX", 8)) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, APETAG_CAPS);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, APETAG_CAPS);
     return;
   }
 
   /* APEv1/2 at end of file */
   data = gst_type_find_peek (tf, -32, 8);
   if (data && !memcmp (data, "APETAGEX", 8)) {
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 2, APETAG_CAPS);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, APETAG_CAPS);
     return;
   }
 }
@@ -2271,9 +2272,11 @@ plugin_init (GstPlugin * plugin)
       flac_exts, "fLaC", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "video/x-fli", GST_RANK_MARGINAL, flx_type_find,
       flx_exts, FLX_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "application/x-id3", GST_RANK_PRIMARY + 2,
-      id3_type_find, id3_exts, ID3_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "application/x-apetag", GST_RANK_PRIMARY + 1,
+  TYPE_FIND_REGISTER (plugin, "application/x-id3v2", GST_RANK_PRIMARY + 3,
+      id3v2_type_find, id3_exts, ID3_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-id3v1", GST_RANK_PRIMARY + 1,
+      id3v1_type_find, id3_exts, ID3_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-apetag", GST_RANK_PRIMARY + 2,
       apetag_type_find, apetag_exts, APETAG_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-ttafile", GST_RANK_PRIMARY,
       tta_type_find, tta_exts, TTA_CAPS, NULL, NULL);
