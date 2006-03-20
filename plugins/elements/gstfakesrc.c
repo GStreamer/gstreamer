@@ -215,6 +215,7 @@ gst_fake_src_filltype_get_type (void)
 GST_BOILERPLATE_FULL (GstFakeSrc, gst_fake_src, GstBaseSrc, GST_TYPE_BASE_SRC,
     _do_init);
 
+static void gst_fake_src_finalize (GObject * object);
 static void gst_fake_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_fake_src_get_property (GObject * object, guint prop_id,
@@ -253,6 +254,8 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbase_src_class = (GstBaseSrcClass *) klass;
+
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_fake_src_finalize);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fake_src_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fake_src_get_property);
@@ -365,6 +368,22 @@ gst_fake_src_init (GstFakeSrc * fakesrc, GstFakeSrcClass * g_class)
   fakesrc->last_message = NULL;
   fakesrc->datarate = DEFAULT_DATARATE;
   fakesrc->sync = DEFAULT_SYNC;
+}
+
+static void
+gst_fake_src_finalize (GObject * object)
+{
+  GstFakeSrc *src;
+
+  src = GST_FAKE_SRC (object);
+
+  g_free (src->last_message);
+  if (src->parent) {
+    gst_buffer_unref (src->parent);
+    src->parent = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean

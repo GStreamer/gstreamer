@@ -143,6 +143,7 @@ GST_START_TEST (test_launch_lines2)
   fail_unless (strcmp (s, "donald") == 0, "fakesrc name was not 'donald'");
   fail_unless (i == 27, "num-buffers was not 27");
   fail_unless (b == TRUE, "silent was not TRUE");
+  g_free (s);
 
   g_object_get (G_OBJECT (cur), "sizetype", &i, NULL);
   fail_unless (i == 3, "sizetype != 3");
@@ -190,6 +191,7 @@ GST_START_TEST (test_launch_lines2)
   g_object_get (G_OBJECT (cur), "name", &s, NULL);
   fail_if (s == NULL, "name was NULL");
   fail_unless (strcmp (s, "john") == 0, "Name was not 'john'");
+  g_free (s);
   check_pipeline_runs (cur);
   gst_object_unref (cur);
 

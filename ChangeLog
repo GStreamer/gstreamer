@@ -1,3 +1,12 @@
+2006-03-20  Wim Taymans  <wim@fluendo.com>
+
+	* plugins/elements/gstfakesrc.c: (gst_fake_src_class_init),
+	(gst_fake_src_finalize):
+	Fix leaks in fakesrc.
+
+	* tests/check/pipelines/parse-launch.c: (GST_START_TEST):
+	Fix leaks in the testcase.
+
 2006-03-19  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/gst_private.h:
