@@ -1,3 +1,9 @@
+2006-03-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* testsuite/test_ghostpad.py:
+	Add while loop in teardown to wait for the pipeline state
+	to hit NULL. Hopefully this will ensure the refcount has always hit 1.
+
 2006-03-14  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:
