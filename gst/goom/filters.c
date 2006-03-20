@@ -413,8 +413,13 @@ zoomFilterSetResolution (GoomData * gd, ZoomFilterData * zf)
 void
 zoomFilterDestroy (ZoomFilterData * zf)
 {
-  if (zf)
+  if (zf) {
+    if (zf->firedec)
+      free (zf->firedec);
+    if (zf->buffer)
+      free (zf->buffer);
     free (zf);
+  }
 }
 
 /*===============================================================*/

@@ -1,3 +1,9 @@
+2006-03-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/goom/filters.c: (zoomFilterDestroy):
+	* gst/goom/goom_core.c: (goom_close):
+	  Free filter data when cleaning up. (Fixes: #334995)
+
 2006-03-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

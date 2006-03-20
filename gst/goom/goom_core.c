@@ -368,8 +368,7 @@ goom_update (GoomData * goomdata, gint16 data[2][512])
 
   /* si on est dans un goom : afficher les lignes... */
   if (goomdata->agoom > 15)
-    goom_lines
-        (goomdata, data, ((pzfd->middleX == resolx / 2)
+    goom_lines (goomdata, data, ((pzfd->middleX == resolx / 2)
             && (pzfd->middleY == resoly / 2)
             && (pzfd->mode != WATER_MODE))
         ? (goomdata->lineMode / 10) : 0, goomdata->p2, goomdata->agoom - 15);
@@ -404,6 +403,10 @@ goom_close (GoomData * goomdata)
     free (goomdata->pixel);
   if (goomdata->back != NULL)
     free (goomdata->back);
+  if (goomdata->zfd != NULL) {
+    zoomFilterDestroy (goomdata->zfd);
+    goomdata->zfd = NULL;
+  }
   goomdata->pixel = goomdata->back = NULL;
   RAND_CLOSE (goomdata);
 }
