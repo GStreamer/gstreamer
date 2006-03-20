@@ -1550,6 +1550,7 @@ gst_xvimagesink_get_format_from_caps (GstXvImageSink * xvimagesink,
         gst_caps_unref (icaps);
         return format->format;
       }
+      gst_caps_unref (icaps);
     }
     list = g_list_next (list);
   }

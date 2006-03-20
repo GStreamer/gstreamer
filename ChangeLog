@@ -1,3 +1,9 @@
+2006-03-20  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/xvimage/xvimagesink.c:
+	(gst_xvimagesink_get_format_from_caps): Fix a memleak reported
+	by Jan Schmidt.
+
 2006-03-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/typefind/gsttypefindfunctions.c: (id3v2_type_find),
