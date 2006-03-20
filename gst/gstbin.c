@@ -2203,10 +2203,10 @@ typedef struct
 typedef void (*QueryInitFunction) (GstBin * bin, QueryFold * fold);
 typedef void (*QueryDoneFunction) (GstBin * bin, QueryFold * fold);
 
-/* for duration we collect all durations and take the MAX of
- * all valid results */
+/* for duration/position we collect all durations/positions and take 
+ * the MAX of all valid results */
 static void
-bin_query_duration_init (GstBin * bin, QueryFold * fold)
+bin_query_max_init (GstBin * bin, QueryFold * fold)
 {
   fold->max = -1;
 }
@@ -2248,6 +2248,37 @@ bin_query_duration_done (GstBin * bin, QueryFold * fold)
       gst_message_new_duration (GST_OBJECT_CAST (bin), format, fold->max));
   GST_OBJECT_UNLOCK (bin);
 #endif
+}
+
+static gboolean
+bin_query_position_fold (GstElement * item, GValue * ret, QueryFold * fold)
+{
+  if (gst_element_query (item, fold->query)) {
+    gint64 position;
+
+    g_value_set_boolean (ret, TRUE);
+
+    gst_query_parse_position (fold->query, NULL, &position);
+
+    GST_DEBUG_OBJECT (item, "got position %" G_GINT64_FORMAT, position);
+
+    if (position > fold->max)
+      fold->max = position;
+  }
+
+  gst_object_unref (item);
+  return TRUE;
+}
+static void
+bin_query_position_done (GstBin * bin, QueryFold * fold)
+{
+  GstFormat format;
+
+  gst_query_parse_position (fold->query, &format, NULL);
+  /* store max in query result */
+  gst_query_set_position (fold->query, format, fold->max);
+
+  GST_DEBUG_OBJECT (bin, "max position %" G_GINT64_FORMAT, fold->max);
 }
 
 /* generic fold, return first valid result */
@@ -2315,8 +2346,15 @@ gst_bin_query (GstElement * element, GstQuery * query)
       GST_OBJECT_UNLOCK (bin);
 #endif
       fold_func = (GstIteratorFoldFunction) bin_query_duration_fold;
-      fold_init = bin_query_duration_init;
+      fold_init = bin_query_max_init;
       fold_done = bin_query_duration_done;
+      break;
+    }
+    case GST_QUERY_POSITION:
+    {
+      fold_func = (GstIteratorFoldFunction) bin_query_position_fold;
+      fold_init = bin_query_max_init;
+      fold_done = bin_query_position_done;
       break;
     }
     default:

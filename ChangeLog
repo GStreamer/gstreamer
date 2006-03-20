@@ -1,5 +1,12 @@
 2006-03-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (gst_bin_handle_message_func),
+	(bin_query_max_init), (bin_query_position_fold),
+	(bin_query_position_done), (gst_bin_query):
+	Position query should also take max of all streams.
+
+2006-03-20  Wim Taymans  <wim@fluendo.com>
+
 	* plugins/elements/gstfakesrc.c: (gst_fake_src_class_init),
 	(gst_fake_src_finalize):
 	Fix leaks in fakesrc.
