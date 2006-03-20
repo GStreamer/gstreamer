@@ -1,5 +1,11 @@
 2006-03-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/matroska/ebml-write.c: (gst_ebml_write_element_push):
+	  Ensure that we set correct caps on buffers that are transferred
+	  direct from the input.
+
+2006-03-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/goom/filters.c: (zoomFilterDestroy):
 	* gst/goom/goom_core.c: (goom_close):
 	  Free filter data when cleaning up. (Fixes: #334995)

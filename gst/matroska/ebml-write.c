@@ -367,6 +367,8 @@ gst_ebml_write_element_push (GstEbmlWrite * ebml, GstBuffer * buf)
       if (gst_pad_push_event (ebml->srcpad, ev))
         ebml->need_newsegment = FALSE;
     }
+    buf = gst_buffer_make_metadata_writable (buf);
+    gst_buffer_set_caps (buf, GST_PAD_CAPS (ebml->srcpad));
     ebml->last_write_result = gst_pad_push (ebml->srcpad, buf);
   }
 }
