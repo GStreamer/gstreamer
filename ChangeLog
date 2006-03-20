@@ -1,3 +1,11 @@
+2006-03-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstutils.h:
+	Add G_UNLIKELY to our boilerplate to optimise the 'already registered
+	the type' case. (Closes: #335195 for now). In the future, when we
+	depend on GLib 2.10, we could also intern the type name using
+	g_intern_static_string()
+
 2006-03-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_handle_message_func),

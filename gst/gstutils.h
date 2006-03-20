@@ -116,7 +116,7 @@ GType									\
 type_as_function ## _get_type (void)					\
 {									\
   static GType object_type = 0;						\
-  if (object_type == 0) {						\
+  if (G_UNLIKELY (object_type == 0)) {					\
     static const GTypeInfo object_info = {				\
       sizeof (type ## Class),						\
       type_as_function ## _base_init,					\
