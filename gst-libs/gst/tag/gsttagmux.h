@@ -55,7 +55,7 @@ typedef struct _GstTagLibMuxClass {
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TAGLIB_MUX))
 
 /* Standard function returning type information. */
-GType gst_my_filter_get_type (void);
+GType gst_tag_lib_mux_get_type (void);
 
 G_END_DECLS
 
