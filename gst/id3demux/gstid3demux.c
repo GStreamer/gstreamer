@@ -182,14 +182,17 @@ gst_id3demux_class_init (GstID3DemuxClass * klass)
 static void
 gst_id3demux_reset (GstID3Demux * id3demux)
 {
+  GstBuffer **buffer_p = &id3demux->collect;
+  GstCaps **caps_p = &id3demux->src_caps;
+
   id3demux->strip_start = 0;
   id3demux->strip_end = 0;
   id3demux->upstream_size = -1;
   id3demux->state = GST_ID3DEMUX_READID3V2;
   id3demux->send_tag_event = FALSE;
 
-  gst_buffer_replace (&(id3demux->collect), NULL);
-  gst_caps_replace (&(id3demux->src_caps), NULL);
+  gst_buffer_replace (buffer_p, NULL);
+  gst_caps_replace (caps_p, NULL);
 
   gst_id3demux_remove_srcpad (id3demux);
 

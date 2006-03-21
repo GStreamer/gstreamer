@@ -214,14 +214,17 @@ gst_tag_demux_class_init (gpointer klass, gpointer d)
 static void
 gst_tag_demux_reset (GstTagDemux * tagdemux)
 {
+  GstBuffer **buffer_p = &tagdemux->priv->collect;
+  GstCaps **caps_p = &tagdemux->priv->src_caps;
+
   tagdemux->priv->strip_start = 0;
   tagdemux->priv->strip_end = 0;
   tagdemux->priv->upstream_size = -1;
   tagdemux->priv->state = GST_TAG_DEMUX_READ_START_TAG;
   tagdemux->priv->send_tag_event = FALSE;
 
-  gst_buffer_replace (&(tagdemux->priv->collect), NULL);
-  gst_caps_replace (&(tagdemux->priv->src_caps), NULL);
+  gst_buffer_replace (buffer_p, NULL);
+  gst_caps_replace (caps_p, NULL);
 
   gst_tag_demux_remove_srcpad (tagdemux);
 

@@ -871,6 +871,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   GstCaps *caps;
   gint64 duration;
   gchar *codec_name = NULL;
+  GstEvent **event_p;
 
   /* The header start with a 'fmt ' tag */
   if ((res = gst_riff_read_chunk (GST_ELEMENT (wav), wav->sinkpad,
@@ -987,7 +988,8 @@ gst_wavparse_stream_headers (GstWavParse * wav)
    * the right newsegment event downstream. */
   gst_wavparse_perform_seek (wav, wav->seek_event);
   /* remove pending event */
-  gst_event_replace (&wav->seek_event, NULL);
+  event_p = &wav->seek_event;
+  gst_event_replace (event_p, NULL);
 
   return GST_FLOW_OK;
 
@@ -1066,6 +1068,7 @@ gst_wavparse_send_event (GstElement * element, GstEvent * event)
 {
   GstWavParse *wav = GST_WAVPARSE (element);
   gboolean res = FALSE;
+  GstEvent **event_p;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -1075,7 +1078,8 @@ gst_wavparse_send_event (GstElement * element, GstEvent * event)
       } else {
         GST_DEBUG_OBJECT (wav, "queuing seek for later");
 
-        gst_event_replace (&wav->seek_event, event);
+        event_p = &wav->seek_event;
+        gst_event_replace (event_p, event);
 
         /* we always return true */
         res = TRUE;
@@ -1517,10 +1521,13 @@ gst_wavparse_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:{
+      GstEvent **event_p = &wav->seek_event;
+
       gst_wavparse_destroy_sourcepad (wav);
-      gst_event_replace (&wav->seek_event, NULL);
+      gst_event_replace (event_p, NULL);
       gst_wavparse_reset (wav);
+    }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
