@@ -257,11 +257,12 @@ static void
 gst_pipeline_dispose (GObject * object)
 {
   GstPipeline *pipeline = GST_PIPELINE (object);
+  GstClock **clock_p = &pipeline->fixed_clock;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, pipeline, "dispose");
 
   /* clear and unref any fixed clock */
-  gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
+  gst_object_replace ((GstObject **) clock_p, NULL);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -705,13 +706,15 @@ gst_pipeline_get_clock (GstPipeline * pipeline)
 void
 gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
 {
+  GstClock **clock_p;
+
   g_return_if_fail (GST_IS_PIPELINE (pipeline));
 
   GST_OBJECT_LOCK (pipeline);
   GST_OBJECT_FLAG_SET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK);
 
-  gst_object_replace ((GstObject **) & pipeline->fixed_clock,
-      (GstObject *) clock);
+  clock_p = &pipeline->fixed_clock;
+  gst_object_replace ((GstObject **) clock_p, (GstObject *) clock);
   GST_OBJECT_UNLOCK (pipeline);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using fixed clock %p (%s)", clock,
@@ -757,13 +760,16 @@ gst_pipeline_set_clock (GstPipeline * pipeline, GstClock * clock)
 void
 gst_pipeline_auto_clock (GstPipeline * pipeline)
 {
+  GstClock **clock_p;
+
   g_return_if_fail (pipeline != NULL);
   g_return_if_fail (GST_IS_PIPELINE (pipeline));
 
   GST_OBJECT_LOCK (pipeline);
   GST_OBJECT_FLAG_UNSET (pipeline, GST_PIPELINE_FLAG_FIXED_CLOCK);
 
-  gst_object_replace ((GstObject **) & pipeline->fixed_clock, NULL);
+  clock_p = &pipeline->fixed_clock;
+  gst_object_replace ((GstObject **) clock_p, NULL);
   GST_OBJECT_UNLOCK (pipeline);
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "pipeline using automatic clock");

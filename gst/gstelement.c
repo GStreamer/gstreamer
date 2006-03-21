@@ -399,6 +399,7 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
 {
   GstElementClass *oclass;
   gboolean res = TRUE;
+  GstClock **clock_p;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
@@ -411,7 +412,8 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
 
   if (res) {
     GST_OBJECT_LOCK (element);
-    gst_object_replace ((GstObject **) & element->clock, (GstObject *) clock);
+    clock_p = &element->clock;
+    gst_object_replace ((GstObject **) clock_p, (GstObject *) clock);
     GST_OBJECT_UNLOCK (element);
   }
   return res;
@@ -2416,6 +2418,8 @@ static void
 gst_element_dispose (GObject * object)
 {
   GstElement *element = GST_ELEMENT (object);
+  GstClock **clock_p;
+  GstBus **bus_p;
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose");
 
@@ -2441,8 +2445,10 @@ gst_element_dispose (GObject * object)
   }
 
   GST_OBJECT_LOCK (element);
-  gst_object_replace ((GstObject **) & element->clock, NULL);
-  gst_object_replace ((GstObject **) & element->bus, NULL);
+  clock_p = &element->clock;
+  bus_p = &element->bus;
+  gst_object_replace ((GstObject **) clock_p, NULL);
+  gst_object_replace ((GstObject **) bus_p, NULL);
   GST_OBJECT_UNLOCK (element);
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "parent class dispose");
@@ -2610,13 +2616,15 @@ gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
 static void
 gst_element_set_bus_func (GstElement * element, GstBus * bus)
 {
+  GstBus **bus_p;
+
   g_return_if_fail (GST_IS_ELEMENT (element));
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_PARENTAGE, element, "setting bus to %p", bus);
 
   GST_OBJECT_LOCK (element);
-  gst_object_replace ((GstObject **) & GST_ELEMENT_BUS (element),
-      GST_OBJECT_CAST (bus));
+  bus_p = &GST_ELEMENT_BUS (element);
+  gst_object_replace ((GstObject **) bus_p, GST_OBJECT_CAST (bus));
   GST_OBJECT_UNLOCK (element);
 }
 

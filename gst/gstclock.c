@@ -622,9 +622,11 @@ static void
 gst_clock_dispose (GObject * object)
 {
   GstClock *clock = GST_CLOCK (object);
+  GstClock **master_p;
 
   GST_OBJECT_LOCK (clock);
-  gst_object_replace ((GstObject **) & clock->master, NULL);
+  master_p = &clock->master;
+  gst_object_replace ((GstObject **) master_p, NULL);
   GST_OBJECT_UNLOCK (clock);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -938,6 +940,8 @@ gst_clock_slave_callback (GstClock * master, GstClockTime time,
 gboolean
 gst_clock_set_master (GstClock * clock, GstClock * master)
 {
+  GstClock **master_p;
+
   g_return_val_if_fail (GST_IS_CLOCK (clock), FALSE);
   g_return_val_if_fail (master != clock, FALSE);
 
@@ -947,7 +951,8 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
     goto not_supported;
 
   GST_DEBUG_OBJECT (clock, "slaving to master clock %p", master);
-  gst_object_replace ((GstObject **) & clock->master, (GstObject *) master);
+  master_p = &clock->master;
+  gst_object_replace ((GstObject **) master_p, (GstObject *) master);
   GST_OBJECT_UNLOCK (clock);
 
   GST_CLOCK_SLAVE_LOCK (clock);

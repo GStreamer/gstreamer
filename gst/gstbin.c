@@ -417,14 +417,17 @@ static void
 gst_bin_dispose (GObject * object)
 {
   GstBin *bin = GST_BIN (object);
+  GstBus **child_bus_p = &bin->child_bus;
+  GstClock **provided_clock_p = &bin->provided_clock;
+  GstElement **clock_provider_p = &bin->clock_provider;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
   bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
 
-  gst_object_replace ((GstObject **) & bin->child_bus, NULL);
-  gst_object_replace ((GstObject **) & bin->provided_clock, NULL);
-  gst_object_replace ((GstObject **) & bin->clock_provider, NULL);
+  gst_object_replace ((GstObject **) child_bus_p, NULL);
+  gst_object_replace ((GstObject **) provided_clock_p, NULL);
+  gst_object_replace ((GstObject **) clock_provider_p, NULL);
 
   while (bin->children) {
     gst_bin_remove (bin, GST_ELEMENT_CAST (bin->children->data));
@@ -517,6 +520,8 @@ gst_bin_provide_clock_func (GstElement * element)
   GstBin *bin;
   GstIterator *it;
   gpointer val;
+  GstClock **provided_clock_p;
+  GstElement **clock_provider_p;
 
   bin = GST_BIN (element);
 
@@ -546,10 +551,11 @@ gst_bin_provide_clock_func (GstElement * element)
       gst_object_unref (child);
     }
   }
-  gst_object_replace ((GstObject **) & bin->provided_clock,
-      (GstObject *) result);
-  gst_object_replace ((GstObject **) & bin->clock_provider,
-      (GstObject *) provider);
+
+  provided_clock_p = &bin->provided_clock;
+  clock_provider_p = &bin->clock_provider;
+  gst_object_replace ((GstObject **) provided_clock_p, (GstObject *) result);
+  gst_object_replace ((GstObject **) clock_provider_p, (GstObject *) provider);
   bin->clock_dirty = FALSE;
   GST_DEBUG_OBJECT (bin,
       "provided new clock %" GST_PTR_FORMAT " by provider %" GST_PTR_FORMAT,
@@ -2131,6 +2137,8 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
     }
     case GST_MESSAGE_CLOCK_LOST:
     {
+      GstClock **provided_clock_p;
+      GstElement **clock_provider_p;
       gboolean playing, provided, forward;
       GstClock *clock;
 
@@ -2147,8 +2155,10 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
         GST_DEBUG_OBJECT (bin,
             "Lost clock %" GST_PTR_FORMAT " provided by %" GST_PTR_FORMAT,
             bin->provided_clock, bin->clock_provider);
-        gst_object_replace ((GstObject **) & bin->provided_clock, NULL);
-        gst_object_replace ((GstObject **) & bin->clock_provider, NULL);
+        provided_clock_p = &bin->provided_clock;
+        clock_provider_p = &bin->clock_provider;
+        gst_object_replace ((GstObject **) provided_clock_p, NULL);
+        gst_object_replace ((GstObject **) clock_provider_p, NULL);
       }
       GST_DEBUG_OBJECT (bin, "provided %d, playing %d, forward %d",
           provided, playing, forward);

@@ -472,6 +472,7 @@ GstBuffer *
 gst_collect_pads_pop (GstCollectPads * pads, GstCollectData * data)
 {
   GstBuffer *result;
+  GstBuffer **buffer_p;
 
   g_return_val_if_fail (pads != NULL, NULL);
   g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), NULL);
@@ -479,7 +480,8 @@ gst_collect_pads_pop (GstCollectPads * pads, GstCollectData * data)
 
   result = data->buffer;
   if (result) {
-    gst_buffer_replace (&data->buffer, NULL);
+    buffer_p = &data->buffer;
+    gst_buffer_replace (buffer_p, NULL);
     data->pos = 0;
     pads->queuedpads--;
   }
@@ -768,6 +770,7 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
   GstCollectPads *pads;
   guint64 size;
   GstFlowReturn ret;
+  GstBuffer **buffer_p;
 
   GST_DEBUG ("Got buffer for pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
@@ -793,7 +796,8 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
 
   /* One more pad has data queued */
   pads->queuedpads++;
-  gst_buffer_replace (&data->buffer, buffer);
+  buffer_p = &data->buffer;
+  gst_buffer_replace (buffer_p, buffer);
 
   if (data->segment.format == GST_FORMAT_TIME
       && GST_BUFFER_TIMESTAMP_IS_VALID (buffer))

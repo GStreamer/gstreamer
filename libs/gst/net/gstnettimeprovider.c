@@ -291,6 +291,7 @@ gst_net_time_provider_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstNetTimeProvider *self = GST_NET_TIME_PROVIDER (object);
+  GstClock **clock_p = &self->clock;
 
   switch (prop_id) {
     case PROP_PORT:
@@ -304,7 +305,7 @@ gst_net_time_provider_set_property (GObject * object, guint prop_id,
         self->address = g_strdup (g_value_get_string (value));
       break;
     case PROP_CLOCK:
-      gst_object_replace ((GstObject **) & self->clock,
+      gst_object_replace ((GstObject **) clock_p,
           (GstObject *) g_value_get_object (value));
       break;
     case PROP_ACTIVE:

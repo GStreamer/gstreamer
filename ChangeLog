@@ -1,3 +1,25 @@
+2006-03-21  Edward Hervey  <edward@fluendo.com>
+
+	reviewed by: <delete if not using a buddy>
+
+	* gst/gstbin.c: (gst_bin_dispose), (gst_bin_provide_clock_func),
+	(gst_bin_handle_message_func):
+	* gst/gstclock.c: (gst_clock_dispose), (gst_clock_set_master):
+	* gst/gstelement.c: (gst_element_set_clock), (gst_element_dispose),
+	(gst_element_set_bus_func):
+	* gst/gstghostpad.c: (gst_proxy_pad_dispose):
+	* gst/gstminiobject.c: (gst_value_set_mini_object),
+	(gst_value_take_mini_object):
+	* gst/gstpad.c: (gst_pad_set_pad_template):
+	* gst/gstpipeline.c: (gst_pipeline_dispose),
+	(gst_pipeline_use_clock), (gst_pipeline_auto_clock):
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_pop),
+	(gst_collect_pads_chain):
+	* libs/gst/net/gstnettimeprovider.c:
+	(gst_net_time_provider_set_property):
+	Series of fixes for dereferenced pointers that gcc 4.1 complains about.
+	It's in fact all issues with gst_*object_replace().
+
 2006-03-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Loïc Minier  <lool + gnome at via dot ecp dot fr>

@@ -1780,10 +1780,13 @@ prepare_failed:
 static void
 gst_pad_set_pad_template (GstPad * pad, GstPadTemplate * templ)
 {
+  GstPadTemplate **template_p;
+
   /* this function would need checks if it weren't static */
 
   GST_OBJECT_LOCK (pad);
-  gst_object_replace ((GstObject **) & pad->padtemplate, (GstObject *) templ);
+  template_p = &pad->padtemplate;
+  gst_object_replace ((GstObject **) template_p, (GstObject *) templ);
   GST_OBJECT_UNLOCK (pad);
 
   if (templ)

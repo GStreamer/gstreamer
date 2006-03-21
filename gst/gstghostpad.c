@@ -383,9 +383,11 @@ static void
 gst_proxy_pad_dispose (GObject * object)
 {
   GstPad *pad = GST_PAD (object);
+  GstPad **target_p;
 
   GST_PROXY_LOCK (pad);
-  gst_object_replace ((GstObject **) & GST_PROXY_PAD_TARGET (pad), NULL);
+  target_p = &GST_PROXY_PAD_TARGET (pad);
+  gst_object_replace ((GstObject **) target_p, NULL);
   GST_PROXY_UNLOCK (pad);
 
   G_OBJECT_CLASS (gst_proxy_pad_parent_class)->dispose (object);
