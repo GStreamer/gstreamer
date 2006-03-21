@@ -1,6 +1,13 @@
 2006-03-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/Makefile.am:
+	* tools/gst-launch.1.in:
+	  Add FILES section and correct entry about GST_REGISTRY_PATH
+	  environment variable (#133495; #133494).
+
+2006-03-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/Makefile.am:
 	* tools/gst-md5sum.1.in:
 	* tools/gst-md5sum.c:
 	  Remove gst-md5sum and man page (the md5sink element

@@ -390,7 +390,7 @@ GST_DEBUG=totem:4,typefind:5
 When this environment variable is set, coloured debug output is disabled.
 .TP
 \fBGST_REGISTRY\fR
-Path of the registry file. Default is ~/.gstreamer-0.9/registry.xml.
+Path of the registry file. Default is ~/.gstreamer-GST_MAJORMINOR/registry-HOST_CPU.xml.
 .TP
 \fBGST_PLUGIN_PATH\fR
 Specifies a list of directories to scan for additional plugins.
@@ -413,6 +413,12 @@ occurs. This is useful if you want to find out which part of the code caused
 that warning to be triggered and under what circumstances. Simply set G_DEBUG
 as mentioned above and run the program in gdb (or let it core dump). Then get
 a stack trace in the usual way.
+.
+.SH FILES
+.TP 8
+~/.gstreamer-GST_MAJORMINOR/registry-*.xml
+The xml plugin database; can be deleted at any time, will be re-created
+automatically when it does not exist yet or plugins change.
 .
 .SH "SEE ALSO"
 .BR gst\-feedback (1),
