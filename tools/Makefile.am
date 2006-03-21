@@ -13,10 +13,8 @@ if GST_DISABLE_PARSE
 GST_PARSE_SRC = 
 GST_PARSE_SRC_V = 
 else
-GST_PARSE_SRC = gst-launch gst-md5sum
-GST_PARSE_SRC_V = \
-	gst-launch-@GST_MAJORMINOR@ \
-	gst-md5sum-@GST_MAJORMINOR@
+GST_PARSE_SRC = gst-launch
+GST_PARSE_SRC_V = gst-launch-@GST_MAJORMINOR@
 endif
 
 
@@ -48,9 +46,6 @@ if !GST_DISABLE_PARSE
 gst_launch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
 gst_launch_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_launch_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
-gst_md5sum_@GST_MAJORMINOR@_SOURCES = gst-md5sum.c
-gst_md5sum_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
-gst_md5sum_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 endif
 
 gst_inspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c
@@ -74,7 +69,6 @@ endif
 
 if !GST_DISABLE_PARSE
 gst_launch_SOURCES = gst-run.c
-gst_md5sum_SOURCES = gst-run.c
 endif
 
 gst_feedback_SOURCES = gst-run.c
@@ -100,8 +94,7 @@ if GST_DISABLE_PARSE
 GST_PARSE_MAN=
 else
 GST_PARSE_MAN = \
-	gst-launch-@GST_MAJORMINOR@.1 \
-	gst-md5sum-@GST_MAJORMINOR@.1
+	gst-launch-@GST_MAJORMINOR@.1
 endif
 
 
@@ -124,7 +117,6 @@ EXTRA_DIST = \
 	gst-feedback.1.in \
 	gst-inspect.1.in \
 	gst-launch.1.in \
-	gst-md5sum.1.in \
 	gst-typefind.1.in \
 	gst-xmlinspect.1.in \
 	gst-xmllaunch.1.in \
@@ -135,7 +127,6 @@ EXTRA_DIST = \
 		-e s,gst-feedback,gst-feedback-@GST_MAJORMINOR@,g \
 		-e s,gst-inspect,gst-inspect-@GST_MAJORMINOR@,g \
 		-e s,gst-launch,gst-launch-@GST_MAJORMINOR@,g \
-		-e s,gst-md5sum,gst-md5sum-@GST_MAJORMINOR@,g \
 		-e s,gst-typefind,gst-typefind-@GST_MAJORMINOR@,g \
 		-e s,gst-xmlinspect,gst-xmlinspect-@GST_MAJORMINOR@,g \
 		-e s,gst-xmllaunch,gst-xmllaunch-@GST_MAJORMINOR@,g \
