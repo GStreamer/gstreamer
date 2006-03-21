@@ -287,7 +287,14 @@ G_STMT_START {						\
  *
  * Increases the refcount of the given buffer by one.
  */
-#define		gst_buffer_ref(buf)		GST_BUFFER_CAST (gst_mini_object_ref (GST_MINI_OBJECT (buf)))
+static inline GstBuffer *
+gst_buffer_ref (GstBuffer * buf)
+{
+  /* not using a macro here because gcc-4.1 will complain
+   * if the return value isn't used (because of the cast) */
+  return (GstBuffer *) gst_mini_object_ref (GST_MINI_OBJECT (buf));
+}
+
 /**
  * gst_buffer_unref:
  * @buf: a #GstBuffer.

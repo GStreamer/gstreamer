@@ -1,3 +1,14 @@
+2006-03-21  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstbuffer.h:
+	* gst/gstevent.h:
+	* gst/gstmessage.h:
+	gst_[buffer|event|message]_ref() macros are replaced by a static
+	inline functions because gcc-4.1 will about if the return value
+	isn't used.
+	* tests/check/gst/gstevent.c: (event_probe):
+	gst_event_ref now has to be given a GstEvent* , fix check accordingly.
+
 2006-03-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstutils.h:

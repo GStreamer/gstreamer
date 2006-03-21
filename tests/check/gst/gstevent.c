@@ -208,7 +208,7 @@ event_probe (GstPad * pad, GstMiniObject ** data, gpointer user_data)
       case GST_EVENT_CUSTOM_BOTH_OOB:
         if (got_event_before_q != NULL)
           break;
-        gst_event_ref (data);
+        gst_event_ref ((GstEvent *) data);
         g_get_current_time (&got_event_time);
         got_event_before_q = GST_EVENT (data);
         break;
@@ -223,7 +223,7 @@ event_probe (GstPad * pad, GstMiniObject ** data, gpointer user_data)
       case GST_EVENT_CUSTOM_BOTH_OOB:
         if (got_event_after_q != NULL)
           break;
-        gst_event_ref (data);
+        gst_event_ref ((GstEvent *) data);
         g_get_current_time (&got_event_time);
         got_event_after_q = GST_EVENT (data);
         break;

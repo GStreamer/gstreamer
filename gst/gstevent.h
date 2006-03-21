@@ -325,7 +325,14 @@ GType		gst_event_get_type		(void);
  *
  * Increase the refcount of this event.
  */
-#define         gst_event_ref(ev)		GST_EVENT (gst_mini_object_ref (GST_MINI_OBJECT (ev)))
+static inline GstEvent *
+gst_event_ref (GstEvent * ev)
+{
+  /* not using a macro here because gcc-4.1 will complain
+   * if the return value isn't used (because of the cast) */
+  return (GstEvent *) gst_mini_object_ref (GST_MINI_OBJECT (ev));
+}
+
 /**
  * gst_event_unref:
  * @ev: The event to refcount
