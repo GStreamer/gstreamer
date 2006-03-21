@@ -10,7 +10,7 @@ information that is useful to GStreamer developers to help diagnose
 user problem.
 .PP
 Depending on the type of bug report, it may be useful to attach the
-output of \fIgst\-feeback\fP when you contact the developers.
+output of \fIgst\-feedback\fP when you contact the developers.
 .PP
 NOTE: The current version of this script scans many dirs:
 /usr/lib /usr/local/lib /home /usr/include /usr/local/include /home (again)

@@ -1,5 +1,10 @@
 2006-03-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tools/gst-feedback.1.in:
+	  Fix typo: s/feeback/feedback/ (#133494).
+
+2006-03-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tools/Makefile.am:
 	* tools/gst-launch.1.in:
 	  Add FILES section and correct entry about GST_REGISTRY_PATH
