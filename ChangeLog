@@ -1,6 +1,11 @@
-2006-03-21  Edward Hervey  <edward@fluendo.com>
+2006-03-21  Tim-Philipp Müller  <tim at centricular dot net>
 
-	reviewed by: <delete if not using a buddy>
+	* gst/gststructure.c: (gst_structure_id_set_value):
+	  Make sure that string fields in structures/taglists
+	  contain valid UTF-8 - we don't want to pass rubbish to
+	  applications because of a buggy plugin (cp. #334167).
+
+2006-03-21  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_dispose), (gst_bin_provide_clock_func),
 	(gst_bin_handle_message_func):
