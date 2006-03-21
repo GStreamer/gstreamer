@@ -1,3 +1,10 @@
+=== release 0.10.3 ===
+
+2006-03-21  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.3, "Maybe not today. Maybe not tomorrow, but soon..."
+
 2006-03-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* testsuite/test_ghostpad.py:

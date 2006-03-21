@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Python bindings 0.10.2 "And if the devil is six"
+GStreamer: Release notes for GStreamer Python bindings 0.10.3 "Maybe not today. Maybe not tomorrow, but soon..."
         
 
 
@@ -18,12 +18,16 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * allow fractions in structures
-      * added vmethods for base classes
+      * Backwards compatibility with older GStreamer installations
+      * Wrapping of new API in GStreamer
+      * Bug-fixes and enhancements
 
 Bugs fixed in this release
     
-      * 325459 : Fractions cannot be used as values for gst.Structure fileds
+      * 329110 : gst-python sets RTLD_GLOBAL when importing, but doesn't s...
+      * 332586 : pygst.require should raise an error based on StandardErro...
+      * 333055 : PYGIL_API_IS_BUGGY is already defined in pygobect.h
+      * 331616 : gst.version and gst.gst_version differ
 
 Download
 
@@ -53,6 +57,11 @@ Applications
   
 Contributors to this release
     
+      * Andy Wingo
       * Edward Hervey
-      * Martin Soto
+      * Jan Schmidt
+      * Joe Wreschnig
+      * Michael Smith
+      * Thomas Vander Stichele
+      * Zaheer Abbas Merali
  

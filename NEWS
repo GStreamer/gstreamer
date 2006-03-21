@@ -1,4 +1,16 @@
-This is GStreamer Python Bindings 0.10.2, "And if the devil is six"
+This is GStreamer Python Bindings 0.10.3, "Maybe not today. Maybe not tomorrow, but soon..."
+Changes since 0.10.2:
+
+      * Backwards compatibility with older GStreamer installations
+      * Wrapping of new API in GStreamer
+      * Bug-fixes and enhancements
+
+Bugs fixed since 0.10.2:
+
+      * 329110 : gst-python sets RTLD_GLOBAL when importing, but doesn't s...
+      * 332586 : pygst.require should raise an error based on StandardErro...
+      * 333055 : PYGIL_API_IS_BUGGY is already defined in pygobect.h
+      * 331616 : gst.version and gst.gst_version differ
   
 Changes since 0.10.1:
     
