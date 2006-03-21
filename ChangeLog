@@ -1,5 +1,13 @@
 2006-03-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* tests/check/Makefile.am:
+	  disable some tests when we don't have a registry
+	* tests/check/gst/gstutils.c: (gst_utils_suite):
+	  don't build the part that needs parsing
+
+2006-03-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/Makefile.am
 	* tests/examples/Makefile.am:
 	  fix --disable-parse build

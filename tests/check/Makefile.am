@@ -33,41 +33,50 @@ else
 PARSE_CHECKS = pipelines/simple-launch-lines pipelines/cleanup pipelines/parse-launch
 endif
 
-check_PROGRAMS =				\
+# if it's calling gst_element_factory_make(), it will probably not work without
+# a registry
+if GST_DISABLE_REGISTRY
+REGISTRY_CHECKS =
+else
+REGISTRY_CHECKS =				\
 	gst/gst				     	\
-	gst/gstabi			     	\
 	gst/gstbin			     	\
-        gst/gstbuffer				\
-        gst/gstbus				\
-	gst/gstcaps     			\
 	gst/gstelement				\
 	gst/gstevent				\
 	gst/gstghostpad				\
+	gst/gstplugin				\
+	gst/gstquery				\
+	gst/gstutils				\
+	generic/sinks				\
+	elements/fakesink			\
+	elements/fakesrc			\
+	elements/fdsrc		          	\
+	elements/identity			\
+	libs/basesrc				\
+	libs/controller				\
+	pipelines/stress
+endif
+
+check_PROGRAMS =				\
+	gst/gstabi			     	\
+        gst/gstbuffer				\
+        gst/gstbus				\
+	gst/gstcaps     			\
 	gst/gstiterator 			\
 	gst/gstmessage	 			\
 	gst/gstminiobject 			\
 	gst/gstobject				\
 	gst/gstpad				\
-	gst/gstplugin				\
-	gst/gstquery				\
 	gst/gstsegment				\
 	gst/gstsystemclock			\
 	gst/gststructure			\
 	gst/gsttag				\
 	gst/gsttask				\
-	gst/gstutils				\
 	gst/gstvalue				\
-	elements/fakesink			\
-	elements/fakesrc			\
-	elements/fdsrc		          	\
-	elements/identity			\
-	generic/sinks				\
 	generic/states				\
 	$(PARSE_CHECKS)				\
-	pipelines/stress			\
+	$(REGISTRY_CHECKS)			\
 	libs/libsabi				\
-	libs/basesrc				\
-	libs/controller				\
 	libs/gdp				\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider

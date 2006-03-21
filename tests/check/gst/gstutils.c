@@ -332,6 +332,7 @@ GST_START_TEST (test_gdouble_to_guint64)
 
 GST_END_TEST;
 
+#ifndef GST_DISABLE_PARSE
 GST_START_TEST (test_parse_bin_from_description)
 {
   struct
@@ -409,6 +410,7 @@ GST_START_TEST (test_parse_bin_from_description)
 }
 
 GST_END_TEST;
+#endif
 
 Suite *
 gst_utils_suite (void)
@@ -424,7 +426,9 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_math_scale_random);
   tcase_add_test (tc_chain, test_guint64_to_gdouble);
   tcase_add_test (tc_chain, test_gdouble_to_guint64);
+#ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_parse_bin_from_description);
+#endif
   return s;
 }
 

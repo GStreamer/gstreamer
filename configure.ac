@@ -74,6 +74,10 @@ fi
 AC_SUBST(GST_LOADSAVE_DOC_TYPES)
 GST_CHECK_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
 AM_CONDITIONAL(GST_DISABLE_PARSE, test "x$GST_DISABLE_PARSE" = "xyes")
+if test "x$GST_DISABLE_PARSE" = xyes; then
+  AC_DEFINE(GST_DISABLE_PARSE, 1,
+    [Define if pipeline parsing code is disabled])
+fi
 GST_CHECK_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
 AM_CONDITIONAL(GST_DISABLE_TRACE, test "x$GST_DISABLE_TRACE" = "xyes")
 GST_CHECK_SUBSYSTEM_DISABLE(ALLOC_TRACE,[allocation tracing])
