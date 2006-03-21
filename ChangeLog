@@ -1,3 +1,9 @@
+2006-03-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_open):
+	the OPTIONS request result is optional so don't
+	fail on it.
+
 2006-03-21  Edward Hervey  <edward@fluendo.com>
 
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_reset):

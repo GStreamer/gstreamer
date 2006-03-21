@@ -873,6 +873,10 @@ gst_rtspsrc_open (GstRTSPSrc * src)
       /* Then maybe Public Header... */
       rtsp_message_get_header (&response, RTSP_HDR_PUBLIC, &respoptions);
       if (!respoptions) {
+        /* this field is not required, assume the server supports
+         * DESCRIBE and SETUP*/
+        GST_DEBUG_OBJECT (src, "could not get OPTIONS");
+        src->options = RTSP_DESCRIBE | RTSP_SETUP;
         goto no_options;
       }
     }
@@ -897,6 +901,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     }
     g_strfreev (options);
 
+  no_options:
     /* we need describe and setup */
     if (!(src->options & RTSP_DESCRIBE))
       goto no_describe;
@@ -1083,12 +1088,6 @@ send_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
         ("Could not send message."), (NULL));
-    return FALSE;
-  }
-no_options:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
-        ("Invalid OPTIONS response."), (NULL));
     return FALSE;
   }
 no_describe:
