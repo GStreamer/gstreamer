@@ -1,3 +1,8 @@
+2006-03-20  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  pre-release 0.10.2.2
+
 2006-03-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* testsuite/test_ghostpad.py:
