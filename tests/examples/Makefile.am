@@ -4,10 +4,15 @@ else
 GST_LOADSAVE_DIRS = xml typefind
 endif
 
-dirs = \
+if GST_DISABLE_PARSE
+GST_PARSE_DIRS = 
+else
+GST_PARSE_DIRS = launch
+endif
+
+always_dirs = \
 	controller			\
 	helloworld			\
-	launch				\
 	metadata                        \
 	queue
 
@@ -27,7 +32,9 @@ dirs = \
 #retag
 #thread
 
-SUBDIRS = $(dirs)			\
+SUBDIRS = 				\
+	$(always_dirs)			\
+	$(GST_PARSE_DIRS)		\
 	$(GST_LOADSAVE_DIRS)
 
-DIST_SUBDIRS = $(dirs) xml typefind
+DIST_SUBDIRS = $(always_dirs) xml typefind launch

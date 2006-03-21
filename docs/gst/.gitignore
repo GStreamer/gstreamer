@@ -35,3 +35,5 @@ html-build.stamp
 *.ps
 gtkdoc-fixxref
 xml
+
+gstreamer.types
