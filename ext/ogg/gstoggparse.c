@@ -164,10 +164,10 @@ gst_ogg_parse_new_stream (GstOggParse * parser, guint32 serialno)
 static GstOggStream *
 gst_ogg_parse_find_stream (GstOggParse * parser, guint32 serialno)
 {
-  gint i;
+  GSList *l;
 
-  for (i = 0; i < g_slist_length (parser->oggstreams); i++) {
-    GstOggStream *stream = g_slist_nth_data (parser->oggstreams, i);
+  for (l = parser->oggstreams; l != NULL; l = l->next) {
+    GstOggStream *stream = (GstOggStream *) l->data;
 
     if (stream->serialno == serialno)
       return stream;
@@ -504,13 +504,14 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
             GstCaps *caps;
             GstStructure *structure;
             GValue array = { 0 };
-            gint i, count = 0;
+            gint count = 0;
             gboolean found_pending_headers = FALSE;
+            GSList *l;
 
             g_value_init (&array, GST_TYPE_ARRAY);
 
-            for (i = 0; i < g_slist_length (ogg->oggstreams); i++) {
-              GstOggStream *stream = g_slist_nth_data (ogg->oggstreams, i);
+            for (l = ogg->oggstreams; l != NULL; l = l->next) {
+              GstOggStream *stream = (GstOggStream *) l->data;
 
               if (g_slist_length (stream->headers) == 0) {
                 GST_LOG_OBJECT (ogg, "No primary header found for stream %u",
@@ -523,8 +524,8 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               count++;
             }
 
-            for (i = 0; i < g_slist_length (ogg->oggstreams); i++) {
-              GstOggStream *stream = g_slist_nth_data (ogg->oggstreams, i);
+            for (l = ogg->oggstreams; l != NULL; l = l->next) {
+              GstOggStream *stream = (GstOggStream *) l->data;
               int j;
 
               for (j = 1; j < g_slist_length (stream->headers); j++) {
@@ -550,16 +551,16 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
                 "(one per page)", count);
 
             /* Now, we do the same thing, but push buffers... */
-            for (i = 0; i < g_slist_length (ogg->oggstreams); i++) {
-              GstOggStream *stream = g_slist_nth_data (ogg->oggstreams, i);
+            for (l = ogg->oggstreams; l != NULL; l = l->next) {
+              GstOggStream *stream = (GstOggStream *) l->data;
 
               result = gst_pad_push (ogg->srcpad,
                   GST_BUFFER (stream->headers->data));
               if (result != GST_FLOW_OK)
                 return result;
             }
-            for (i = 0; i < g_slist_length (ogg->oggstreams); i++) {
-              GstOggStream *stream = g_slist_nth_data (ogg->oggstreams, i);
+            for (l = ogg->oggstreams; l != NULL; l = l->next) {
+              GstOggStream *stream = (GstOggStream *) l->data;
               int j;
 
               for (j = 1; j < g_slist_length (stream->headers); j++) {
@@ -573,24 +574,27 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
             ogg->in_headers = 0;
 
             /* And finally the pending data pages */
-            for (i = 0; i < g_slist_length (ogg->oggstreams); i++) {
-              GstOggStream *stream = g_slist_nth_data (ogg->oggstreams, i);
-              int j;
+            for (l = ogg->oggstreams; l != NULL; l = l->next) {
+              GstOggStream *stream = (GstOggStream *) l->data;
+              GSList *k;
 
-              if (g_slist_length (stream->unknown_pages) > 0) {
-                if (found_pending_headers) {
-                  GST_WARNING_OBJECT (ogg, "Incorrectly muxed headers found at "
-                      "approximate offset %lld", ogg->offset);
-                }
-                found_pending_headers = TRUE;
-              } else
+              if (stream->unknown_pages == NULL)
                 continue;
+
+              if (found_pending_headers) {
+                GST_WARNING_OBJECT (ogg, "Incorrectly muxed headers found at "
+                    "approximate offset %lld", ogg->offset);
+              }
+              found_pending_headers = TRUE;
 
               GST_LOG_OBJECT (ogg, "Pushing %d pending pages after headers",
                   g_slist_length (stream->unknown_pages) + 1);
-              for (j = 0; j < g_slist_length (stream->unknown_pages); j++) {
-                result = gst_pad_push (ogg->srcpad,
-                    GST_BUFFER (g_slist_nth_data (stream->unknown_pages, j)));
+
+              for (k = stream->unknown_pages; k != NULL; k = k->next) {
+                GstBuffer *buf;
+
+                buf = GST_BUFFER (k->data);
+                result = gst_pad_push (ogg->srcpad, buf);
                 if (result != GST_FLOW_OK)
                   return result;
               }
