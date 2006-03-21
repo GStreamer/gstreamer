@@ -43,8 +43,8 @@ static GstElementDetails esdsink_details = {
 
 enum
 {
-  ARG_0,
-  ARG_HOST
+  PROP_0,
+  PROP_HOST
 };
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -67,7 +67,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static void gst_esdsink_base_init (gpointer g_class);
 static void gst_esdsink_class_init (GstEsdSinkClass * klass);
 static void gst_esdsink_init (GstEsdSink * esdsink);
-static void gst_esdsink_dispose (GObject * object);
+static void gst_esdsink_finalize (GObject * object);
 
 static GstCaps *gst_esdsink_getcaps (GstBaseSink * bsink);
 
@@ -138,7 +138,7 @@ gst_esdsink_class_init (GstEsdSinkClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_AUDIO_SINK);
 
-  gobject_class->dispose = gst_esdsink_dispose;
+  gobject_class->finalize = gst_esdsink_finalize;
 
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_esdsink_getcaps);
 
@@ -153,9 +153,10 @@ gst_esdsink_class_init (GstEsdSinkClass * klass)
   gobject_class->set_property = gst_esdsink_set_property;
   gobject_class->get_property = gst_esdsink_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_HOST,
-      g_param_spec_string ("host", "host", "host", NULL, G_PARAM_READWRITE));
-
+  /* default value is filled in the _init method */
+  g_object_class_install_property (gobject_class, PROP_HOST,
+      g_param_spec_string ("host", "Host",
+          "The host running the esound daemon", NULL, G_PARAM_READWRITE));
 }
 
 static void
@@ -163,17 +164,17 @@ gst_esdsink_init (GstEsdSink * esdsink)
 {
   esdsink->fd = -1;
   esdsink->ctrl_fd = -1;
-  esdsink->host = g_strdup (getenv ("ESPEAKER"));
+  esdsink->host = g_strdup (g_getenv ("ESPEAKER"));
 }
 
 static void
-gst_esdsink_dispose (GObject * object)
+gst_esdsink_finalize (GObject * object)
 {
   GstEsdSink *esdsink = GST_ESDSINK (object);
 
   g_free (esdsink->host);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
@@ -192,25 +193,31 @@ gst_esdsink_getcaps (GstBaseSink * bsink)
   pad_template = gst_static_pad_template_get (&sink_factory);
   caps = gst_caps_copy (gst_pad_template_get_caps (pad_template));
 
-  if (esdsink->ctrl_fd < 0) {
-    return caps;
-  }
+  /* no fd, we're done with the template caps */
+  if (esdsink->ctrl_fd < 0)
+    goto done;
 
+  /* get server info */
   server_info = esd_get_server_info (esdsink->ctrl_fd);
-  if (server_info) {
-    GST_DEBUG ("got server info rate: %i", server_info->rate);
+  if (!server_info)
+    goto no_info;
 
-    for (i = 0; i < caps->structs->len; i++) {
-      GstStructure *s;
+  GST_DEBUG ("got server info rate: %i", server_info->rate);
 
-      s = gst_caps_get_structure (caps, i);
-      gst_structure_set (s, "rate", G_TYPE_INT, server_info->rate, NULL);
-    }
+  for (i = 0; i < caps->structs->len; i++) {
+    GstStructure *s;
 
-    esd_free_server_info (server_info);
+    s = gst_caps_get_structure (caps, i);
+    gst_structure_set (s, "rate", G_TYPE_INT, server_info->rate, NULL);
+  }
+  esd_free_server_info (server_info);
 
-    return caps;
-  } else {
+done:
+  return caps;
+
+  /* ERRORS */
+no_info:
+  {
     GST_WARNING_OBJECT (esdsink, "couldn't get server info!");
     gst_caps_unref (caps);
     return NULL;
@@ -223,12 +230,12 @@ gst_esdsink_open (GstAudioSink * asink)
   GstEsdSink *esdsink = GST_ESDSINK (asink);
 
   esdsink->ctrl_fd = esd_open_sound (esdsink->host);
-
   if (esdsink->ctrl_fd < 0)
     goto couldnt_connect;
 
   return TRUE;
 
+  /* ERRORS */
 couldnt_connect:
   {
     GST_ELEMENT_ERROR (esdsink, RESOURCE, OPEN_WRITE, (NULL),
@@ -243,6 +250,7 @@ gst_esdsink_close (GstAudioSink * asink)
   GstEsdSink *esdsink = GST_ESDSINK (asink);
 
   esd_close (esdsink->ctrl_fd);
+  esdsink->ctrl_fd = -1;
 
   return TRUE;
 }
@@ -274,14 +282,20 @@ gst_esdsink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   esdsink->fd =
       esd_play_stream (esdformat, spec->rate, esdsink->host, connname);
 
-  if ((esdsink->fd < 0) || (esdsink->ctrl_fd < 0)) {
+  if ((esdsink->fd < 0) || (esdsink->ctrl_fd < 0))
+    goto cannot_open;
+
+  GST_INFO ("successfully opened connection to esound server");
+
+  return TRUE;
+
+  /* ERRORS */
+cannot_open:
+  {
     GST_ELEMENT_ERROR (esdsink, RESOURCE, OPEN_WRITE, (NULL),
         ("can't open connection to esound server"));
     return FALSE;
   }
-  GST_INFO ("successfully opened connection to esound server");
-
-  return TRUE;
 }
 
 static gboolean
@@ -313,16 +327,21 @@ gst_esdsink_write (GstAudioSink * asink, gpointer data, guint length)
 
     done = write (esdsink->fd, data, to_write);
 
-    if (done < 0) {
-      GST_ELEMENT_ERROR (esdsink, RESOURCE, WRITE,
-          ("Failed to write data to the esound daemon"), GST_ERROR_SYSTEM);
-      return 0;
-    }
+    if (done < 0)
+      goto write_error;
 
     to_write -= done;
     data += done;
   }
   return length;
+
+  /* ERRORS */
+write_error:
+  {
+    GST_ELEMENT_ERROR (esdsink, RESOURCE, WRITE,
+        ("Failed to write data to the esound daemon"), GST_ERROR_SYSTEM);
+    return 0;
+  }
 }
 
 static guint
@@ -348,12 +367,9 @@ gst_esdsink_set_property (GObject * object, guint prop_id, const GValue * value,
   GstEsdSink *esdsink = GST_ESDSINK (object);
 
   switch (prop_id) {
-    case ARG_HOST:
+    case PROP_HOST:
       g_free (esdsink->host);
-      if (g_value_get_string (value) == NULL)
-        esdsink->host = NULL;
-      else
-        esdsink->host = g_strdup (g_value_get_string (value));
+      esdsink->host = g_value_dup_string (value);
       break;
     default:
       break;
@@ -367,7 +383,7 @@ gst_esdsink_get_property (GObject * object, guint prop_id, GValue * value,
   GstEsdSink *esdsink = GST_ESDSINK (object);
 
   switch (prop_id) {
-    case ARG_HOST:
+    case PROP_HOST:
       g_value_set_string (value, esdsink->host);
       break;
     default:

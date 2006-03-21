@@ -1,5 +1,14 @@
 2006-03-21  Wim Taymans  <wim@fluendo.com>
 
+	* ext/esd/esdsink.c: (gst_esdsink_class_init), (gst_esdsink_init),
+	(gst_esdsink_finalize), (gst_esdsink_getcaps), (gst_esdsink_open),
+	(gst_esdsink_close), (gst_esdsink_prepare), (gst_esdsink_write),
+	(gst_esdsink_set_property), (gst_esdsink_get_property):
+	Some cleanups.
+	Reset fd to -1 when we close them.
+
+2006-03-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_open):
 	the OPTIONS request result is optional so don't
 	fail on it.
