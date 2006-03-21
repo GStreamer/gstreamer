@@ -1,3 +1,11 @@
+2006-03-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Loïc Minier  <lool + gnome at via dot ecp dot fr>
+	
+	* pkgconfig/gstreamer-check-uninstalled.pc.in:
+	* pkgconfig/gstreamer-check.pc.in:
+	  Use @CHECK_LIBS@ here instead of hard-coding -lcheck (#334109).
+
 2006-03-21  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstbuffer.h:

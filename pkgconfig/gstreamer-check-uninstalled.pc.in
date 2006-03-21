@@ -9,5 +9,5 @@ Description: Unit testing helper library for GStreamer modules, Not Installed
 Requires: gstreamer-@GST_MAJORMINOR@ = @VERSION@
 Version: @VERSION@
 
-Libs: ${libdir}/libgstcheck-@GST_MAJORMINOR@.la -lcheck
+Libs: ${libdir}/libgstcheck-@GST_MAJORMINOR@.la @CHECK_LIBS@
 Cflags: -I${includedir}
