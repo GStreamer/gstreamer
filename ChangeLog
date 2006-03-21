@@ -1,3 +1,14 @@
+2006-03-21  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_dispose):
+	* gst/playback/gstplaybin.c: (handoff):
+	* gst/playback/gststreamselector.c:
+	(gst_stream_selector_set_property):
+	gcc 4.1 unreferenced pointer fixes.
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_put):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_put):
+	gst_buffer_ref() now takes a GstBuffer*.
+
 2006-03-20  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/xvimage/xvimagesink.c:

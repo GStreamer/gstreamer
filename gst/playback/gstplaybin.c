@@ -546,8 +546,9 @@ static void
 handoff (GstElement * identity, GstBuffer * frame, gpointer data)
 {
   GstPlayBin *play_bin = GST_PLAY_BIN (data);
+  GstBuffer **frame_p = &play_bin->frame;
 
-  gst_mini_object_replace ((GstMiniObject **) & play_bin->frame,
+  gst_mini_object_replace ((GstMiniObject **) frame_p,
       GST_MINI_OBJECT_CAST (frame));
 
   /* applications need to know the buffer caps,

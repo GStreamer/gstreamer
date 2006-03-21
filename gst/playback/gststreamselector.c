@@ -181,6 +181,7 @@ gst_stream_selector_set_property (GObject * object, guint prop_id,
     case PROP_ACTIVE_PAD:{
       const gchar *pad_name = g_value_get_string (value);
       GstPad *pad = NULL;
+      GstPad **active_pad_p;
 
       if (strcmp (pad_name, "") != 0) {
         pad = gst_element_get_pad (GST_ELEMENT (object), pad_name);
@@ -201,8 +202,8 @@ gst_stream_selector_set_property (GObject * object, guint prop_id,
       }
 #endif
 
-      gst_object_replace ((GstObject **) (&sel->active_sinkpad),
-          GST_OBJECT_CAST (pad));
+      active_pad_p = &sel->active_sinkpad;
+      gst_object_replace ((GstObject **) active_pad_p, GST_OBJECT_CAST (pad));
       if (pad)
         gst_object_unref (pad);
 

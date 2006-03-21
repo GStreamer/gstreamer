@@ -293,13 +293,19 @@ static void
 gst_ogg_pad_dispose (GObject * object)
 {
   GstOggPad *pad = GST_OGG_PAD (object);
+  GstPad **elem_pad_p;
+  GstElement **element_p;
+  GstPad **elem_out_p;
 
   if (pad->element)
     gst_element_set_state (pad->element, GST_STATE_NULL);
 
-  gst_object_replace ((GstObject **) (&pad->elem_pad), NULL);
-  gst_object_replace ((GstObject **) (&pad->element), NULL);
-  gst_object_replace ((GstObject **) (&pad->elem_out), NULL);
+  elem_pad_p = &pad->elem_pad;
+  element_p = &pad->element;
+  elem_out_p = &pad->elem_out;
+  gst_object_replace ((GstObject **) elem_pad_p, NULL);
+  gst_object_replace ((GstObject **) element_p, NULL);
+  gst_object_replace ((GstObject **) elem_out_p, NULL);
 
   pad->chain = NULL;
   pad->ogg = NULL;

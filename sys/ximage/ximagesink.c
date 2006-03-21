@@ -606,7 +606,8 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
       gst_buffer_unref (ximagesink->cur_image);
     }
     GST_LOG_OBJECT (ximagesink, "reffing %p as our current image", ximage);
-    ximagesink->cur_image = GST_XIMAGE_BUFFER (gst_buffer_ref (ximage));
+    ximagesink->cur_image =
+        GST_XIMAGE_BUFFER (gst_buffer_ref (GST_BUFFER (ximage)));
   }
 
   /* Expose sends a NULL image, we take the latest frame */
