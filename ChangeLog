@@ -1,3 +1,9 @@
+2006-03-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* testsuite/test_ghostpad.py:
+	* testsuite/test_pad.py:
+	Another attempt at making the tests deterministic on the buildbots
+
 2006-03-20  Jan Schmidt <thaytan@mad.scientist.com>
 
 	* configure.ac:

@@ -264,7 +264,10 @@ class PadProbePipeTest(TestCase):
         self.assertEquals(sys.getrefcount(self.fakesink), 3)
 
     def tearDown(self):
-        self.assertEquals(self.pipeline.__gstrefcount__, 1)
+        # Refcount must be either 1 or 2, to allow for a possibly still running
+        # state-recalculation thread
+        self.assertTrue (self.pipeline.__gstrefcount__ >= 1 and self.pipeline.__gstrefcount__ <= 2)
+
         self.assertEquals(sys.getrefcount(self.pipeline), 3)
         self.assertEquals(self.fakesrc.__gstrefcount__, 2)
         self.assertEquals(sys.getrefcount(self.fakesrc), 3)

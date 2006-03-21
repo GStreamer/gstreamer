@@ -71,11 +71,7 @@ class PipeTest(TestCase):
 
     def tearDown(self):
         gst.info("tearDown")
-        while True:
-            (ret, cur, pen) = self.pipeline.get_state()
-            if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_NULL:
-                break
-        self.assertEquals(self.pipeline.__gstrefcount__, 1)
+        self.assertTrue (self.pipeline.__gstrefcount__ >= 1 and self.pipeline.__gstrefcount__ <= 2)
         self.assertEquals(sys.getrefcount(self.pipeline), 3)
         self.assertEquals(self.src.__gstrefcount__, 2)
         self.assertEquals(sys.getrefcount(self.src), 3)
