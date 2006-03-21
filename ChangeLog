@@ -1,3 +1,11 @@
+2006-03-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek):
+	  Fix block alignment calculation. Alignment should be done before
+	  adding the byte offset where the data starts (#335231).
+
 2006-03-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/matroska/ebml-write.c: (gst_ebml_write_element_push):

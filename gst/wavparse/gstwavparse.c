@@ -792,15 +792,15 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   if (cur_type != GST_SEEK_TYPE_NONE) {
     wav->offset =
         gst_util_uint64_scale_int (seeksegment.last_stop, wav->bps, GST_SECOND);
-    wav->offset += wav->datastart;
     wav->offset -= wav->offset % wav->bytes_per_sample;
+    wav->offset += wav->datastart;
   }
 
   if (stop != -1) {
     wav->end_offset = gst_util_uint64_scale_int (stop, wav->bps, GST_SECOND);
-    wav->end_offset += wav->datastart;
     wav->end_offset +=
         wav->bytes_per_sample - (wav->end_offset % wav->bytes_per_sample);
+    wav->end_offset += wav->datastart;
   } else {
     wav->end_offset = wav->datasize + wav->datastart;
   }
