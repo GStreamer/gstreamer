@@ -1,6 +1,14 @@
 2006-03-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/modplug/libmodplug/Makefile.am:
+	* gst/modplug/libmodplug/load_it.cpp:
+	  Try that again (not only should it be MODPLUG_ instead
+	  of MODFILE, also that define is already set in stdafx.h;
+	  what we really need is some more #ifndefs).
+
+2006-03-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/modplug/libmodplug/Makefile.am:
 	  More gcc-4.1 fixes (we don't need file saving, so just
 	  define MODPLUG_NO_FILESAVE. That way, the compiler won't
 	  complain about modplug ignoring the return value of fwrite

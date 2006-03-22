@@ -1290,6 +1290,7 @@ void ITUnpack16Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dw
 	}
 }
 
+#ifndef MODPLUG_NO_FILESAVE
 
 UINT CSoundFile::SaveMixPlugins(FILE *f, BOOL bUpdate)
 //----------------------------------------------------
@@ -1357,6 +1358,7 @@ UINT CSoundFile::SaveMixPlugins(FILE *f, BOOL bUpdate)
 	return nTotalSize;
 }
 
+#endif /* MODPLUG_NO_FILESAVE */
 
 UINT CSoundFile::LoadMixPlugins(const void *pData, UINT nLen)
 //-----------------------------------------------------------
