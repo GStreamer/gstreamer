@@ -112,6 +112,11 @@ rm -rf $RPM_BUILD_ROOT
 # @USE_JACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstjack.so
 # @USE_NAS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstnassink.so
 # @USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
+%{_libdir}/gstreamer-0.10/libgstmodplug.so
+%{_libdir}/gstreamer-0.10/libgsttaglib.so
+%{_libdir}/gstreamer-0.10/libgstvideo4linux2.so
+%{_libdir}/gstreamer-0.10/libgstximagesrc.so
+%{_libdir}/gstreamer-0.10/libgstxingheader.so
 
 %changelog
 * Sun Nov 27 2005 Thomas Vander Stichele <thomas at apestaart dot org>
