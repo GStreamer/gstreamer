@@ -167,10 +167,17 @@ id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
         version >> 8, version & 0xff, ID3V2_VERSION >> 8, ID3V2_VERSION & 0xff);
     return ID3TAGS_READ_TAG;
   }
-  GST_DEBUG ("ID3v2 tag with revision 2.%d.%d\n", version >> 8, version & 0xff);
 
-  if (GST_BUFFER_SIZE (buffer) < read_size)
+  if (GST_BUFFER_SIZE (buffer) < read_size) {
+    GST_DEBUG
+        ("Found ID3v2 tag with revision 2.%d.%d - need %u more bytes to read",
+        version >> 8, version & 0xff,
+        (guint) (read_size - GST_BUFFER_SIZE (buffer)));
     return ID3TAGS_MORE_DATA;   /* Need more data to decode with */
+  }
+
+  GST_DEBUG ("Reading ID3v2 tag with revision 2.%d.%d of size %u", version >> 8,
+      version & 0xff, read_size);
 
   g_return_val_if_fail (tags != NULL, ID3TAGS_READ_TAG);
 
