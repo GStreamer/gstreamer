@@ -1,3 +1,12 @@
+2006-03-22  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_close),
+	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_change_state):
+	make _open and _close as functions that should be
+	called with the object lock instead of them taking a
+	lock themselves. This fixes a deadlock when 
+	_open fails.
+
 2006-03-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):

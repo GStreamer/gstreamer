@@ -370,13 +370,12 @@ gst_ffmpegdec_event (GstPad * pad, GstEvent * event)
   return FALSE;                 /* .. */
 }
 
+/* with LOCK */
 static void
 gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
 {
-  GST_OBJECT_LOCK (ffmpegdec);
-
   if (!ffmpegdec->opened)
-    goto done;
+    return;
 
   if (ffmpegdec->par) {
     g_free (ffmpegdec->par);
@@ -408,11 +407,9 @@ gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
 
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
-
-done:
-  GST_OBJECT_UNLOCK (ffmpegdec);
 }
 
+/* with LOCK */
 static gboolean
 gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
 {
@@ -478,10 +475,10 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (pad, "setcaps called");
 
+  GST_OBJECT_LOCK (ffmpegdec);
+
   /* close old session */
   gst_ffmpegdec_close (ffmpegdec);
-
-  GST_OBJECT_LOCK (ffmpegdec);
 
   /* set defaults */
   avcodec_get_context_defaults (ffmpegdec->context);
@@ -1291,11 +1288,13 @@ gst_ffmpegdec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_OBJECT_LOCK (ffmpegdec);
       gst_ffmpegdec_close (ffmpegdec);
       if (ffmpegdec->last_buffer != NULL) {
         gst_buffer_unref (ffmpegdec->last_buffer);
         ffmpegdec->last_buffer = NULL;
       }
+      GST_OBJECT_UNLOCK (ffmpegdec);
       break;
     default:
       break;
