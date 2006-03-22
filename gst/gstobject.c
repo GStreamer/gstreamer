@@ -501,9 +501,13 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
 static void
 gst_object_dispose (GObject * object)
 {
+  GstObject *parent;
+
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "dispose");
 
   GST_OBJECT_LOCK (object);
+  if ((parent = GST_OBJECT_PARENT (object)))
+    goto have_parent;
   GST_OBJECT_PARENT (object) = NULL;
   GST_OBJECT_UNLOCK (object);
 
@@ -511,6 +515,20 @@ gst_object_dispose (GObject * object)
   PATCH_REFCOUNT1 (object);
 
   parent_class->dispose (object);
+
+  return;
+
+  /* ERRORS */
+have_parent:
+  {
+    g_critical ("\nTrying to dispose object \"%s\", but it still has a "
+        "parent \"%s\".\nYou need to let the parent manage the "
+        "object instead of unreffing the object directly.\n",
+        GST_OBJECT_NAME (object), GST_OBJECT_NAME (parent));
+    GST_OBJECT_UNLOCK (object);
+    object = gst_object_ref (object);
+    return;
+  }
 }
 
 /* finalize is called when the object has to free its resources */

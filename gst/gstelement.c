@@ -2423,14 +2423,9 @@ gst_element_dispose (GObject * object)
 
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "dispose");
 
-  if (GST_STATE (element) != GST_STATE_NULL) {
-    g_critical
-        ("\nTrying to dispose element %s, but it is not in the NULL state.\n"
-        "You need to explicitly set elements to the NULL state before\n"
-        "dropping the final reference, to allow them to clean up.\n",
-        GST_OBJECT_NAME (element));
-    return;
-  }
+  if (GST_STATE (element) != GST_STATE_NULL)
+    goto not_null;
+
   g_return_if_fail (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING);
 
   GST_DEBUG ("removing %d pads", g_list_length (element->pads));
@@ -2454,6 +2449,19 @@ gst_element_dispose (GObject * object)
   GST_CAT_INFO_OBJECT (GST_CAT_REFCOUNTING, element, "parent class dispose");
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+
+  return;
+
+  /* ERRORS */
+not_null:
+  {
+    g_critical
+        ("\nTrying to dispose element %s, but it is not in the NULL state.\n"
+        "You need to explicitly set elements to the NULL state before\n"
+        "dropping the final reference, to allow them to clean up.\n",
+        GST_OBJECT_NAME (element));
+    return;
+  }
 }
 
 static void

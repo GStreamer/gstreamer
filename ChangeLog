@@ -1,3 +1,14 @@
+2006-03-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstelement.c: (gst_element_set_locked_state),
+	(gst_element_dispose):
+	Cleanup the error case.
+
+	* gst/gstobject.c: (gst_object_dispose):
+	print a critical when some object was disposed with
+	a parent, also revive the object since it might
+	crash the parent.
+
 2006-03-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-launch.1.in:
