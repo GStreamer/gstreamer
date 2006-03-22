@@ -1,5 +1,12 @@
 2006-03-22  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_dispose):
+	Since we _parent the ringbuffer, we also need to
+	_unparent instead of a plain _unref.
+
+2006-03-22  Wim Taymans  <wim@fluendo.com>
+
 	* tests/examples/seek/seek.c: (end_scrub), (do_seek), (seek_cb),
 	(stop_seek), (scrub_toggle_cb), (main):
 	Add scrub checkbox.

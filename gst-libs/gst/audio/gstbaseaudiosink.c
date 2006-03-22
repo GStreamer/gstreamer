@@ -166,9 +166,10 @@ gst_base_audio_sink_dispose (GObject * object)
     gst_object_unref (sink->provided_clock);
   sink->provided_clock = NULL;
 
-  if (sink->ringbuffer)
-    gst_object_unref (sink->ringbuffer);
-  sink->ringbuffer = NULL;
+  if (sink->ringbuffer) {
+    gst_object_unparent (GST_OBJECT_CAST (sink->ringbuffer));
+    sink->ringbuffer = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
