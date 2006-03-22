@@ -1,3 +1,9 @@
+2006-03-22  Wim Taymans  <wim@fluendo.com>
+
+	* tests/examples/seek/seek.c: (end_scrub), (do_seek), (seek_cb),
+	(stop_seek), (scrub_toggle_cb), (main):
+	Add scrub checkbox.
+
 2006-03-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ogg/gstoggparse.c: (gst_ogg_parse_find_stream),
