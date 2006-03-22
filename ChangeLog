@@ -3,7 +3,7 @@
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_chain):
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain):
 	Don't attempt typefinding on too-short buffers that have been
-	completely trimmed away.
+	completely trimmed away. (Fixes #330239)
 
 	* gst/id3demux/id3tags.c: (id3demux_read_id3v2_tag):
 	Improve the debug output
