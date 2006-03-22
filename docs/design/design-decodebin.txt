@@ -77,7 +77,7 @@ fine-tune the process.
 
   _ and raw video : video/x-raw-rgb, video/x-raw-yuv
 
-  _ and Text : text/plain
+  _ and Text : text/plain, text/x-pango-markup
 
 
 * media chain/group handling

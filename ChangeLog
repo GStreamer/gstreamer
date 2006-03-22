@@ -2,6 +2,7 @@
 
 	* docs/design/design-decodebin.txt:
 	Added design document for new decodebin
+	(Target Caps): text/x-pango-markup is also a default target caps.
 
 2006-03-22  Wim Taymans  <wim@fluendo.com>
 
