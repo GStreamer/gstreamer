@@ -540,6 +540,18 @@ GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink sdlaudiosink, [
     AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
 ])
 
+dnl *** soundtouch ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SOUNDTOUCH, true)
+GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
+  PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch, HAVE_SOUNDTOUCH=yes, HAVE_SOUNDTOUCH=no)
+  AC_SUBST(SOUNDTOUCH_CFLAGS)
+  AC_SUBST(SOUNDTOUCH_LIBS)
+  if test "x$HAVE_CXX" != "xyes"; then
+    USE_SOUNDTOUCH=false
+    AC_MSG_NOTICE([Not building soundtouch plugin: no C++ compiler found])
+  fi
+])
+
 dnl *** swfdec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
 GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
@@ -814,6 +826,7 @@ ext/bz2/Makefile
 ext/directfb/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
+ext/soundtouch/Makefile
 ext/wavpack/Makefile
 ext/ivorbis/Makefile
 ext/gsm/Makefile

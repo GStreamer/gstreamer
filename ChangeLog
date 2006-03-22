@@ -1,3 +1,14 @@
+2006-03-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Wouter Paeson  <wouter at kangaroot dot net>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/soundtouch/Makefile.am:
+	* ext/soundtouch/gstpitch.cc:
+	* ext/soundtouch/gstpitch.hh:
+	  Add new libsoundtouch-based pitch plugin (#331335).
+
 2006-03-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/modplug/libmodplug/load_ptm.cpp:

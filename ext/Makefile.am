@@ -184,6 +184,12 @@ SMOOTHWAVE_DIR=
 SNDFILE_DIR=
 # endif
 
+if USE_SOUNDTOUCH
+SOUNDTOUCH_DIR=soundtouch
+else
+SOUNDTOUCH_DIR=
+endif
+
 if USE_SWFDEC
 SWFDEC_DIR=swfdec
 else
@@ -245,6 +251,7 @@ SUBDIRS=\
 	$(SHOUT_DIR) \
 	$(SMOOTHWAVE_DIR) \
 	$(SNDFILE_DIR) \
+	$(SOUNDTOUCH_DIR) \
 	$(SWFDEC_DIR) \
 	$(TAGLIB_DIR) \
 	$(TARKIN_DIR) \
@@ -266,6 +273,7 @@ DIST_SUBDIRS= \
 	neon \
 	sdl \
 	swfdec \
+	soundtouch \
 	taglib \
 	wavpack \
 	xvid
