@@ -166,7 +166,7 @@ NAME\fI[:TYPE]\fR=VALUE
 .br
 in lists and ranges: [TYPE=]VALUE
 
-Sets the requested property in capabilites. The name is an alphanumeric value
+Sets the requested property in capabilities. The name is an alphanumeric value
 and the type can have the following case-insensitive values:
 .br
 - \fBi\fR or \fBint\fR for integer values or ranges
