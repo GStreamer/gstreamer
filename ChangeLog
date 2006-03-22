@@ -1,5 +1,13 @@
 2006-03-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/modplug/libmodplug/Makefile.am:
+	  More gcc-4.1 fixes (we don't need file saving, so just
+	  define MODPLUG_NO_FILESAVE. That way, the compiler won't
+	  complain about modplug ignoring the return value of fwrite
+	  any longer and we might even save a few bytes as well).
+
+2006-03-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Wouter Paeson  <wouter at kangaroot dot net>
 
 	* configure.ac:
