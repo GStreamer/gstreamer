@@ -1,3 +1,13 @@
+2006-03-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_chain):
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain):
+	Don't attempt typefinding on too-short buffers that have been
+	completely trimmed away.
+
+	* gst/id3demux/id3tags.c: (id3demux_read_id3v2_tag):
+	Improve the debug output
+
 2006-03-21  Wim Taymans  <wim@fluendo.com>
 
 	* ext/esd/esdsink.c: (gst_esdsink_class_init), (gst_esdsink_init),

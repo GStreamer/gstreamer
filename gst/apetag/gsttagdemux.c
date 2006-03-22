@@ -543,7 +543,8 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
       GstBuffer *typefind_buf = NULL;
       GstCaps *caps;
 
-      if (GST_BUFFER_SIZE (demux->priv->collect) < TYPE_FIND_MIN_SIZE)
+      if (GST_BUFFER_SIZE (demux->priv->collect) <
+          TYPE_FIND_MIN_SIZE + demux->priv->strip_start)
         break;                  /* Go get more data first */
 
       GST_DEBUG_OBJECT (demux, "Typefinding with size %d",
@@ -554,6 +555,9 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
       gst_buffer_ref (typefind_buf);
       if (!gst_tag_demux_trim_buffer (demux, &typefind_buf))
         return GST_FLOW_ERROR;
+
+      if (typefind_buf == NULL)
+        break;                  /* Still need more data */
 
       caps = gst_type_find_helper_for_buffer (GST_OBJECT (demux),
           typefind_buf, &probability);
