@@ -1,0 +1,194 @@
+Decodebin design
+
+GstDecodeBin
+------------
+
+Description:
+
+  Autoplug and decode to raw media
+
+  Input : single pad with ANY caps Output : Dynamic pads
+
+* Contents
+
+  _ a GstTypeFindElement connected to the single sink pad
+
+  _ optionnaly a demuxer/parser
+
+  _ optionnaly one or more DecodeGroup
+
+* Autoplugging
+
+  The goal is to reach 'target' caps (by default raw media).
+
+  This is done by using the GstCaps of a source pad and finding the available
+demuxers/decoders GstElement that can be linked to that pad.
+
+  The process starts with the source pad of typefind and stops when no more
+non-target caps are left. It is commonly done while pre-rolling, but can also
+happen whenever a new pad appears on any element.
+
+  Once a target caps has been found, that pad is ghosted and the
+'new-decoded-pad' signal is emitted.
+
+  If no compatible elements can be found for a GstCaps, the pad is ghosted and
+the 'unknown-type' signal is emitted.
+
+
+* Assisted auto-plugging
+
+  When starting the auto-plugging process for a given GstCaps, two signals are
+emitted in the following way in order to allow the application/user to assist or
+fine-tune the process.
+
+  _ 'autoplug-continue' :
+
+    gboolean user_function (GstElement * decodebin, GstCaps * caps)
+
+    This signal is fired at the very beginning with the source pad GstCaps. If
+  the callback returns TRUE, the process continues normally. If the callback
+  returns FALSE, then the GstCaps are considered as a target caps and the
+  autoplugging process stops.
+
+  - 'autoplug-sort' :
+
+    gboolean user_function (GstElement * decodebin, GstCaps * caps, GList
+    **list)
+
+    This signal is fired once autoplugging has got a list of compatible
+  GstElementFactory. The signal is emitted with the GstCaps of the source pad
+  and a pointer on the GList* of compatible factories.
+
+    The callback can re-order the given list of factories in order to put the
+  preferred factory at the beginning of the GList *.
+
+    If the callback returns TRUE, then the autoplugging process will create an
+  element to link using the first GstElementFactory of that list. If the
+  callback returns FALSE, then the autoplugging process will stop as if no
+  compatible factories was found.
+
+* Target Caps
+
+  The target caps are a read/write GObject property of decodebin.
+
+  By default the target caps are:
+
+  _ Raw audio : audio/x-raw-int, audio/x-raw-float
+
+  _ and raw video : video/x-raw-rgb, video/x-raw-yuv
+
+  _ and Text : text/plain
+
+
+* media chain/group handling
+
+  When autoplugging, all streams coming out of a demuxer will be grouped in a
+DecodeGroup.
+
+  All new source pads created on that demuxer after it has emitted the
+'no-more-pads' signal will be put in another DecodeGroup.
+
+  Only one decodegroup can be active at any given time. If a new decodegroup is
+created while another one exists, that decodegroup will be set as blocking until
+the existing one has drained.
+
+
+
+DecodeGroup
+-----------
+
+Description:
+
+  Streams belonging to the same group/chain of a media file.
+
+* Contents
+
+  The DecodeGroup contains:
+
+  _ a GstMultiQueue to which all streams of a the media group are connected.
+
+  _ the eventual decoders which are autoplugged in order to produce the
+  requested target pads.
+
+* Proper group draining
+
+  The DecodeGroup takes care that all the streams in the group are completely
+drained (EOS has come through all source ghost pads).
+
+* Pre-roll and block
+
+  The DecodeGroup has a global blocking feature. If enabled, all the ghosted
+source pads for that group will be blocked.
+
+  A method is available to unblock all blocked pads for that group.
+ 
+
+
+GstMultiQueue
+-------------
+
+Description:
+
+  Multiple input-output data queue
+  
+  The GstMultiQueue achieves the same functionnality as GstQueue, with a few
+differences:
+
+  * Multiple streams handling.
+
+    The element handles queueing data on more than one stream at once. To
+  achieve such a feature it has request sink pads (sink_%d) and 'sometimes' src
+  pads (src_%d).
+
+    When requesting a given sinkpad, the associated srcpad for that stream will
+  be created. Ex: requesting sink_1 will generate src_1.
+
+
+  * Non-starvation on multiple streams.
+
+    If more than one stream is used with the element, the streams' queues will
+  be dynamically grown (up to a limit), in order to ensure that no stream is
+  risking data starvation. This guarantees that at any given time there are at
+  least N bytes queued and available for each individual stream.
+
+    If an EOS event comes through a srcpad, the associated queue should be
+  considered as 'not-empty' in the queue-size-growing algorithm.
+
+
+  * Non-linked srcpads graceful handling.
+
+    A GstTask is started for all srcpads when going to GST_STATE_PAUSED.
+
+    The task are blocking against a GCondition which will be fired in two
+  different cases:
+
+    _ When the associated queue has received a buffer.
+
+    _ When the associated queue was previously declared as 'not-linked' and the
+    first buffer of the queue is scheduled to be pushed synchronously in
+    relation to the order in which it arrived globally in the element (see
+    'Synchronous data pushing' below).
+
+    When woken up by the GCondition, the GstTask will try to push the next
+  GstBuffer/GstEvent on the queue. If pushing the GstBuffer/GstEvent returns
+  GST_FLOW_NOT_LINKED, then the associated queue is marked as 'not-linked'. If
+  pushing the GstBuffer/GstEvent succeeded the queue will no longer be marked as
+  'not-linked'.
+
+    If pushing on all srcpads returns GstFlowReturn different from GST_FLOW_OK,
+  then all the srcpads' tasks are stopped and subsequent pushes on sinkpads will
+  return GST_FLOW_NOT_LINKED.
+
+  * Synchronous data pushing for non-linked pads.
+
+    In order to better support dynamic switching between streams, the multiqueue
+  (unlike the current GStreamer queue) continues to push buffers on non-linked
+  pads rather than shutting down. 
+
+    In addition, to prevent a non-linked stream from very quickly consuming all
+  available buffers and thus 'racing ahead' of the other streams, the element
+  must ensure that buffers and inlined events for a non-linked stream are pushed
+  in the same order as they were received, relative to the other streams
+  controlled by the element. This means that a buffer cannot be pushed to a
+  non-linked pad any sooner than buffers in any other stream which were received
+  before it.

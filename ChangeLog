@@ -1,3 +1,8 @@
+2006-03-22  Edward Hervey  <edward@fluendo.com>
+
+	* docs/design/design-decodebin.txt:
+	Added design document for new decodebin
+
 2006-03-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
