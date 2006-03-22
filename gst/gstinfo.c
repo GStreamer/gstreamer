@@ -189,8 +189,10 @@ static GSList *__log_functions = NULL;
 static gint __default_level;
 static gint __use_color;
 
-/* enabled by default */
-gboolean __gst_debug_enabled = TRUE;
+/* disabled by default, as soon as some threshold is set > NONE,
+ * it becomes enabled. */
+gboolean __gst_debug_enabled = FALSE;
+static gboolean __gst_debug_min = GST_LEVEL_NONE;
 
 
 GstDebugCategory *GST_CAT_DEFAULT = NULL;
@@ -793,6 +795,10 @@ void
 gst_debug_set_active (gboolean active)
 {
   __gst_debug_enabled = active;
+  if (active)
+    __gst_debug_min = GST_LEVEL_NONE;
+  else
+    __gst_debug_min = GST_LEVEL_COUNT;
 }
 
 /**
@@ -1007,6 +1013,9 @@ gst_debug_category_set_threshold (GstDebugCategory * category,
     GstDebugLevel level)
 {
   g_return_if_fail (category != NULL);
+
+  if (level > __gst_debug_min)
+    __gst_debug_enabled = TRUE;
 
   gst_atomic_int_set (&category->threshold, level);
 }

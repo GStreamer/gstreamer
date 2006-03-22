@@ -1,5 +1,12 @@
 2006-03-22  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstinfo.c: (gst_debug_set_active),
+	(gst_debug_category_set_threshold):
+	Disable debugging unless explicitly activated.
+	Fixes #335480.
+
+2006-03-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstelement.c: (gst_element_set_locked_state),
 	(gst_element_dispose):
 	Cleanup the error case.
