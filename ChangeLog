@@ -1,5 +1,10 @@
 2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/libpng/gstpngdec.c: (gst_pngdec_change_state):
+	  Make state change function thread-safe.
+
+2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_get_upstream_size),
 	(gst_wavparse_stream_headers), (gst_wavparse_stream_data):
 	  Don't try to read beyond the end of the file just because

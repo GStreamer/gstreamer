@@ -592,8 +592,8 @@ beach:
 static GstStateChangeReturn
 gst_pngdec_change_state (GstElement * element, GstStateChange transition)
 {
-  GstStateChangeReturn ret = GST_STATE_CHANGE_FAILURE;
-  GstPngDec *pngdec = NULL;
+  GstStateChangeReturn ret;
+  GstPngDec *pngdec;
 
   pngdec = GST_PNGDEC (element);
 
@@ -601,14 +601,21 @@ gst_pngdec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_pngdec_libpng_init (pngdec);
       break;
+    default:
+      break;
+  }
+
+  ret = parent_class->change_state (element, transition);
+  if (ret != GST_STATE_CHANGE_SUCCESS)
+    return ret;
+
+  switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_pngdec_libpng_clear (pngdec);
       break;
     default:
       break;
   }
-
-  ret = parent_class->change_state (element, transition);
 
   return ret;
 }
