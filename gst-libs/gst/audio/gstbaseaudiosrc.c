@@ -417,6 +417,7 @@ gst_base_audio_src_change_state (GstElement * element,
       gst_ring_buffer_set_flushing (src->ringbuffer, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      gst_ring_buffer_may_start (src->ringbuffer, TRUE);
       break;
     default:
       break;
@@ -426,6 +427,7 @@ gst_base_audio_src_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      gst_ring_buffer_may_start (src->ringbuffer, FALSE);
       gst_ring_buffer_pause (src->ringbuffer);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
