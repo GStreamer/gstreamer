@@ -1,3 +1,13 @@
+2006-03-23  Wim Taymans  <wim@fluendo.com>
+
+	* ext/esd/esdsink.c: (gst_esdsink_class_init),
+	(gst_esdsink_getcaps), (gst_esdsink_open), (gst_esdsink_close),
+	(gst_esdsink_prepare), (gst_esdsink_unprepare),
+	(gst_esdsink_delay), (gst_esdsink_reset):
+	* ext/esd/esdsink.h:
+	Fix esd choppy playback by configuring audiosink
+	correctly. Fixes #325191
+
 2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/libpng/gstpngdec.c: (gst_pngdec_change_state):

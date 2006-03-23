@@ -186,9 +186,9 @@ gst_esdsink_getcaps (GstBaseSink * bsink)
   gint i;
   esd_server_info_t *server_info;
 
-  GST_DEBUG ("getcaps called");
-
   esdsink = GST_ESDSINK (bsink);
+
+  GST_DEBUG_OBJECT (esdsink, "getcaps called");
 
   pad_template = gst_static_pad_template_get (&sink_factory);
   caps = gst_caps_copy (gst_pad_template_get_caps (pad_template));
@@ -202,7 +202,7 @@ gst_esdsink_getcaps (GstBaseSink * bsink)
   if (!server_info)
     goto no_info;
 
-  GST_DEBUG ("got server info rate: %i", server_info->rate);
+  GST_DEBUG_OBJECT (esdsink, "got server info rate: %i", server_info->rate);
 
   for (i = 0; i < caps->structs->len; i++) {
     GstStructure *s;
@@ -229,6 +229,8 @@ gst_esdsink_open (GstAudioSink * asink)
 {
   GstEsdSink *esdsink = GST_ESDSINK (asink);
 
+  GST_DEBUG_OBJECT (esdsink, "open");
+
   esdsink->ctrl_fd = esd_open_sound (esdsink->host);
   if (esdsink->ctrl_fd < 0)
     goto couldnt_connect;
@@ -249,6 +251,8 @@ gst_esdsink_close (GstAudioSink * asink)
 {
   GstEsdSink *esdsink = GST_ESDSINK (asink);
 
+  GST_DEBUG_OBJECT (esdsink, "close");
+
   esd_close (esdsink->ctrl_fd);
   esdsink->ctrl_fd = -1;
 
@@ -259,37 +263,78 @@ static gboolean
 gst_esdsink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 {
   GstEsdSink *esdsink = GST_ESDSINK (asink);
+  esd_format_t esdformat;
 
   /* Name used by esound for this connection. */
   const char connname[] = "GStreamer";
+  guint latency;
+
+  GST_DEBUG_OBJECT (esdsink, "prepare");
 
   /* Bitmap describing audio format. */
-  esd_format_t esdformat = ESD_STREAM | ESD_PLAY;
+  esdformat = ESD_STREAM | ESD_PLAY;
 
-  if (spec->depth == 16)
-    esdformat |= ESD_BITS16;
-  else if (spec->depth == 8) {
-    esdformat |= ESD_BITS8;
+  switch (spec->depth) {
+    case 8:
+      esdformat |= ESD_BITS8;
+      break;
+    case 16:
+      esdformat |= ESD_BITS16;
+      break;
+    default:
+      goto unsupported_depth;
   }
 
-  if (spec->channels == 2)
-    esdformat |= ESD_STEREO;
-  else if (spec->channels == 1) {
-    esdformat |= ESD_MONO;
+  switch (spec->channels) {
+    case 1:
+      esdformat |= ESD_MONO;
+      break;
+    case 2:
+      esdformat |= ESD_STEREO;
+      break;
+    default:
+      goto unsupported_channels;
   }
 
-  GST_INFO ("attempting to open data connection to esound server");
+  GST_INFO_OBJECT (esdsink,
+      "attempting to open data connection to esound server");
+
   esdsink->fd =
       esd_play_stream (esdformat, spec->rate, esdsink->host, connname);
 
   if ((esdsink->fd < 0) || (esdsink->ctrl_fd < 0))
     goto cannot_open;
 
-  GST_INFO ("successfully opened connection to esound server");
+  esdsink->rate = spec->rate;
+
+  latency = esd_get_latency (esdsink->ctrl_fd);
+  latency = latency * 44100LL / esdsink->rate;
+
+  spec->segsize = 256 * spec->bytes_per_sample;
+  spec->segtotal = (latency / 256);
+  spec->silence_sample[0] = 0;
+  spec->silence_sample[1] = 0;
+  spec->silence_sample[2] = 0;
+  spec->silence_sample[3] = 0;
+
+  GST_INFO_OBJECT (esdsink, "successfully opened connection to esound server");
 
   return TRUE;
 
   /* ERRORS */
+unsupported_depth:
+  {
+    GST_ELEMENT_ERROR (esdsink, STREAM, WRONG_TYPE, (NULL),
+        ("can't handle sample depth of %d, only 8 or 16 supported",
+            spec->depth));
+    return FALSE;
+  }
+unsupported_channels:
+  {
+    GST_ELEMENT_ERROR (esdsink, STREAM, WRONG_TYPE, (NULL),
+        ("can't handle %d channels, only 1 or 2 supported", spec->channels));
+    return FALSE;
+  }
 cannot_open:
   {
     GST_ELEMENT_ERROR (esdsink, RESOURCE, OPEN_WRITE, (NULL),
@@ -309,7 +354,8 @@ gst_esdsink_unprepare (GstAudioSink * asink)
   close (esdsink->fd);
   esdsink->fd = -1;
 
-  GST_INFO ("esdsink: closed sound device");
+  GST_INFO_OBJECT (esdsink, "closed sound device");
+
   return TRUE;
 }
 
@@ -348,16 +394,22 @@ static guint
 gst_esdsink_delay (GstAudioSink * asink)
 {
   GstEsdSink *esdsink = GST_ESDSINK (asink);
-  guint latency = esd_get_latency (esdsink->ctrl_fd);
+  guint latency;
 
-  GST_DEBUG ("got latency: %u", latency);
+  latency = esd_get_latency (esdsink->ctrl_fd);
+
+  /* latency is measured in samples at a rate of 44100 */
+  latency = latency * 44100LL / esdsink->rate;
+
+  GST_DEBUG_OBJECT (asink, "got latency: %u", latency);
+
   return latency;
 }
 
 static void
 gst_esdsink_reset (GstAudioSink * asink)
 {
-  GST_DEBUG ("reset called");
+  GST_DEBUG_OBJECT (asink, "reset called");
 }
 
 static void
