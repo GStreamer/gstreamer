@@ -383,8 +383,12 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
           switch (dest_fmt) {
             case GST_FORMAT_TIME:
               /* frames to time */
-              dest_val = gst_util_uint64_scale (src_val,
-                  src->rate_denominator * GST_SECOND, src->rate_numerator);
+              if (src->rate_numerator) {
+                dest_val = gst_util_uint64_scale (src_val,
+                    src->rate_denominator * GST_SECOND, src->rate_numerator);
+              } else {
+                dest_val = 0;
+              }
               break;
             default:
               goto error;
@@ -394,8 +398,12 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
           switch (dest_fmt) {
             case GST_FORMAT_DEFAULT:
               /* time to frames */
-              dest_val = gst_util_uint64_scale (src_val,
-                  src->rate_numerator, src->rate_denominator * GST_SECOND);
+              if (src->rate_numerator) {
+                dest_val = gst_util_uint64_scale (src_val,
+                    src->rate_numerator, src->rate_denominator * GST_SECOND);
+              } else {
+                dest_val = 0;
+              }
               break;
             default:
               goto error;
@@ -456,10 +464,19 @@ gst_video_test_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
   time = segment->time = segment->start;
 
   /* now move to the time indicated */
-  src->n_frames = gst_util_uint64_scale (time,
-      src->rate_numerator, src->rate_denominator * GST_SECOND);
-  src->running_time = gst_util_uint64_scale (src->n_frames,
-      src->rate_denominator * GST_SECOND, src->rate_numerator);
+  if (src->rate_numerator) {
+    src->n_frames = gst_util_uint64_scale (time,
+        src->rate_numerator, src->rate_denominator * GST_SECOND);
+  } else {
+    src->n_frames = 0;
+  }
+  if (src->rate_numerator) {
+    src->running_time = gst_util_uint64_scale (src->n_frames,
+        src->rate_denominator * GST_SECOND, src->rate_numerator);
+  } else {
+    /* FIXME : Not sure what to set here */
+    src->running_time = 0;
+  }
 
   g_assert (src->running_time <= time);
 
@@ -484,7 +501,7 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
 
   src = GST_VIDEO_TEST_SRC (psrc);
 
-  if (src->fourcc == NULL || src->rate_numerator == 0)
+  if (src->fourcc == NULL)
     goto not_negotiated;
 
   newsize = gst_video_test_src_get_size (src, src->width, src->height);
@@ -513,9 +530,15 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   GST_BUFFER_OFFSET (outbuf) = src->n_frames;
   src->n_frames++;
   GST_BUFFER_OFFSET_END (outbuf) = src->n_frames;
-  next_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
-      src->rate_denominator, src->rate_numerator);
-  GST_BUFFER_DURATION (outbuf) = next_time - src->running_time;
+  if (src->rate_numerator) {
+    next_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
+        src->rate_denominator, src->rate_numerator);
+    GST_BUFFER_DURATION (outbuf) = next_time - src->running_time;
+  } else {
+    next_time = src->timestamp_offset;
+    /* NONE means forever */
+    GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+  }
 
   src->running_time = next_time;
 

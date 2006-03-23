@@ -1,5 +1,14 @@
 2006-03-23  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Julien MOUTTE <julien at moutte dot net>
+
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_video_test_src_query),
+	(gst_video_test_src_do_seek), (gst_video_test_src_create):
+	Partially handle 0 framerate, only EOS after the first frame
+	is missing.
+
+2006-03-23  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Fabrizio Gennari <fabrizio dot ge at tiscali dot it>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
