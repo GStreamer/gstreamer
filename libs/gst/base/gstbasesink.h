@@ -46,6 +46,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstBaseSink GstBaseSink;
 typedef struct _GstBaseSinkClass GstBaseSinkClass;
+typedef struct _GstBaseSinkPrivate GstBaseSinkPrivate;
 
 /**
  * GstBaseSink:
@@ -88,6 +89,8 @@ struct _GstBaseSink {
   gboolean       flushing;
 
   /*< private >*/
+  GstBaseSinkPrivate *priv;
+
   union {
     struct {
       /* segment used for clipping incomming buffers */
@@ -95,8 +98,7 @@ struct _GstBaseSink {
       /* max amount of time a buffer can be late, -1 no limit. */
       gint64	     max_lateness;
     } ABI;
-    /* adding + 0 to mark ABI change to be undone later */
-    gpointer _gst_reserved[GST_PADDING_LARGE + 0];
+    gpointer _gst_reserved[GST_PADDING_LARGE - 1];
   } abidata;
 
 };
@@ -130,8 +132,13 @@ struct _GstBaseSinkClass {
   GstFlowReturn (*preroll)      (GstBaseSink *sink, GstBuffer *buffer);
   GstFlowReturn (*render)       (GstBaseSink *sink, GstBuffer *buffer);
 
+  /* ABI additions */
+
+  /* when an ASYNC state change to PLAYING happens */ /* with LOCK */
+  GstStateChangeReturn (*async_play)   (GstBaseSink *sink);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-1];
 };
 
 GType gst_base_sink_get_type(void);
@@ -141,6 +148,9 @@ gboolean	gst_base_sink_get_sync 		(GstBaseSink *sink);
 
 void		gst_base_sink_set_max_lateness 	(GstBaseSink *sink, gint64 max_lateness);
 gint64		gst_base_sink_get_max_lateness 	(GstBaseSink *sink);
+
+void		gst_base_sink_set_qos_enabled 	(GstBaseSink *sink, gboolean enabled);
+gboolean	gst_base_sink_is_qos_enabled 	(GstBaseSink *sink);
 
 G_END_DECLS
 
