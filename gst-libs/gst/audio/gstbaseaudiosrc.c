@@ -435,7 +435,7 @@ gst_base_audio_src_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_ring_buffer_close_device (src->ringbuffer);
-      gst_object_unref (src->ringbuffer);
+      gst_object_unparent (GST_OBJECT_CAST (src->ringbuffer));
       src->ringbuffer = NULL;
       break;
     default:
