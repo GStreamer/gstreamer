@@ -1,5 +1,12 @@
 2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_get_upstream_size),
+	(gst_wavparse_stream_headers), (gst_wavparse_stream_data):
+	  Don't try to read beyond the end of the file just because
+	  the header claims a bigger size (like with truncated files).
+
+2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
 	(gst_wavparse_stream_headers), (gst_wavparse_add_src_pad),
 	(gst_wavparse_stream_data), (gst_wavparse_loop):

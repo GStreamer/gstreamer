@@ -868,6 +868,21 @@ no_format:
   }
 }
 
+static gboolean
+gst_wavparse_get_upstream_size (GstWavParse * wav, gint64 * len)
+{
+  gboolean res = FALSE;
+  GstFormat fmt = GST_FORMAT_BYTES;
+  GstPad *peer;
+
+  if ((peer = gst_pad_get_peer (wav->sinkpad))) {
+    res = gst_pad_query_duration (peer, &fmt, len);
+    gst_object_unref (peer);
+  }
+
+  return res;
+}
+
 static GstFlowReturn
 gst_wavparse_stream_headers (GstWavParse * wav)
 {
@@ -925,6 +940,11 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   if (!caps)
     goto unknown_format;
 
+  GST_DEBUG_OBJECT (wav, "blockalign = %u", (guint) wav->blockalign);
+  GST_DEBUG_OBJECT (wav, "width      = %u", (guint) wav->width);
+  GST_DEBUG_OBJECT (wav, "depth      = %u", (guint) wav->depth);
+  GST_DEBUG_OBJECT (wav, "bps        = %u", (guint) wav->bps);
+
   /* create pad later so we can sniff the first few bytes
    * of the real data and correct our caps if necessary */
   gst_caps_replace (&wav->caps, caps);
@@ -961,19 +981,27 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
     switch (tag) {
         /* TODO : Implement the various cases */
-      case GST_RIFF_TAG_data:
+      case GST_RIFF_TAG_data:{
+        gint64 upstream_size;
+
         GST_DEBUG_OBJECT (wav, "Got 'data' TAG, size : %d", size);
         gotdata = TRUE;
         wav->offset += 8;
         wav->datastart = wav->offset;
+        /* file might be truncated */
+        if (gst_wavparse_get_upstream_size (wav, &upstream_size)) {
+          size = MIN (size, (upstream_size - wav->datastart));
+        }
         wav->datasize = size;
         wav->dataleft = size;
         wav->end_offset = size + wav->datastart;
         break;
+      }
       default:
         GST_DEBUG_OBJECT (wav, "Ignoring tag %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (tag));
         wav->offset += 8 + ((size + 1) & ~1);
+        break;
     }
     gst_buffer_unref (buf);
   }
@@ -1145,7 +1173,7 @@ gst_wavparse_stream_data (GstWavParse * wav, gboolean first)
       wav->offset, wav->end_offset);
 
   /* Get the next n bytes and output them */
-  if (wav->dataleft == 0)
+  if (wav->dataleft == 0 || wav->dataleft < wav->blockalign)
     goto found_eos;
 
   /* scale the amount of data by the segment rate so we get equal
@@ -1228,8 +1256,8 @@ found_eos:
   }
 pull_error:
   {
-    GST_DEBUG_OBJECT (wav, "Error getting %ldd bytes from the sinkpad!",
-        desired);
+    GST_DEBUG_OBJECT (wav, "Error getting %" G_GINT64_FORMAT " bytes from the "
+        "sinkpad (dataleft = %" G_GINT64_FORMAT ")", desired, wav->dataleft);
     return res;
   }
 push_error:
