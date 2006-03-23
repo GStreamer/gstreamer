@@ -1,3 +1,10 @@
+2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstregistryxml.c: (gst_registry_xml_read_cache):
+	  If compiling against GLib-2.8 or newer, try to read the
+	  registry file using GMappedFile first before falling back
+	  to fopen() + fread() (#332151).
+
 2006-03-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstinfo.c: (gst_debug_set_active),

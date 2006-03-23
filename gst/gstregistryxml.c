@@ -466,12 +466,15 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
 gboolean
 gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
 {
+#if GLIB_CHECK_VERSION(2,8,0)
+  GMappedFile *mapped = NULL;
+#endif
   GTimer *timer;
   gdouble seconds;
-  xmlTextReaderPtr reader;
+  xmlTextReaderPtr reader = NULL;
   int ret;
   gboolean in_registry = FALSE;
-  FILE *file;
+  FILE *file = NULL;
 
   /* make sure these types exist */
   GST_TYPE_ELEMENT_FACTORY;
@@ -480,17 +483,31 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
 
   timer = g_timer_new ();
 
-  file = fopen (location, "r");
-  if (file == NULL) {
-    g_timer_destroy (timer);
-    return FALSE;
+#if GLIB_CHECK_VERSION(2,8,0)
+  mapped = g_mapped_file_new (location, FALSE, NULL);
+  if (mapped) {
+    reader = xmlReaderForMemory (g_mapped_file_get_contents (mapped),
+        g_mapped_file_get_length (mapped), NULL, NULL, 0);
+    if (reader == NULL) {
+      g_mapped_file_free (mapped);
+      mapped = NULL;
+    }
   }
+#endif
 
-  reader = xmlReaderForFd (fileno (file), NULL, NULL, 0);
-  if (!reader) {
-    fclose (file);
-    g_timer_destroy (timer);
-    return FALSE;
+  if (reader == NULL) {
+    file = fopen (location, "r");
+    if (file == NULL) {
+      g_timer_destroy (timer);
+      return FALSE;
+    }
+
+    reader = xmlReaderForFd (fileno (file), NULL, NULL, 0);
+    if (!reader) {
+      fclose (file);
+      g_timer_destroy (timer);
+      return FALSE;
+    }
   }
 
   while ((ret = xmlTextReaderRead (reader)) == 1) {
@@ -523,7 +540,12 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
   xmlFreeTextReader (reader);
   if (ret != 0) {
     GST_ERROR ("parsing registry cache: %s", location);
-    fclose (file);
+#if GLIB_CHECK_VERSION(2,8,0)
+    if (mapped)
+      g_mapped_file_free (mapped);
+#endif
+    if (file)
+      fclose (file);
     g_timer_destroy (timer);
     return FALSE;
   }
@@ -534,7 +556,13 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
 
   GST_INFO ("loaded %s in %f seconds", location, seconds);
 
-  fclose (file);
+#if GLIB_CHECK_VERSION(2,8,0)
+  if (mapped)
+    g_mapped_file_free (mapped);
+#endif
+
+  if (file)
+    fclose (file);
 
   return TRUE;
 }
