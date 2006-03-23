@@ -1,3 +1,10 @@
+2006-03-23  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/common/libgstinterfaces.def:
+	Add a lot of export functions for gst-python
+	* win32/vs6/libgstinterfaces.dsp:
+	Add a missing include folder in the project configuration
+	
 2006-03-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:
