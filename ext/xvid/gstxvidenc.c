@@ -234,7 +234,7 @@ gst_xvidenc_init (GstXvidEnc * xvidenc)
   xvidenc->width = xvidenc->height = xvidenc->csp = xvidenc->stride = -1;
   xvidenc->profile = XVID_PROFILE_S_L0;
   xvidenc->bitrate = 512;
-  xvidenc->max_b_frames = 2;
+  xvidenc->max_b_frames = 0;
   xvidenc->max_key_interval = -1;       /* default - 2*fps */
   xvidenc->buffer_size = 512;
 
@@ -259,8 +259,9 @@ gst_xvidenc_setup (GstXvidEnc * xvidenc)
   xenc.max_bframes = xvidenc->max_b_frames;
   xenc.global = XVID_GLOBAL_PACKED;
 
-  xenc.fbase = 1000000;
-  xenc.fincr = (int) (xenc.fbase / xvidenc->fps_n / xvidenc->fps_d);    /* FIX? */
+  /* frame duration = fincr/fbase, is inverse of framerate */
+  xenc.fincr = xvidenc->fps_d;
+  xenc.fbase = xvidenc->fps_n;
   xenc.max_key_interval = (xvidenc->max_key_interval == -1) ?
       (2 * xenc.fbase / xenc.fincr) : xvidenc->max_key_interval;
   xenc.handle = NULL;
@@ -339,6 +340,10 @@ gst_xvidenc_chain (GstPad * pad, GstBuffer * buf)
   }
 
   GST_BUFFER_SIZE (outbuf) = xstats.length;
+
+  /* mark whether key-frame = !delta-unit or not */
+  if (!(xframe.out_flags & XVID_KEYFRAME))
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   /* go out, multiply! */
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (xvidenc->srcpad));

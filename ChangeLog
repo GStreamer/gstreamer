@@ -1,3 +1,18 @@
+2006-03-23  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
+
+	* ext/xvid/gstxvidenc.c: (gst_xvidenc_init), (gst_xvidenc_setup),
+	(gst_xvidenc_chain):
+	Patch to mark outgoing encoded buffers as delta-units (or not).
+	Note that this patch also patches:
+	- the setting of fincr and fbase in xvid-encoder creation based on
+	  caps framerate
+	- makes 0, rather than 2, the default max_b_frames, as the current
+	  xvidenc does not seem "fully prepared" to handle b-frame 
+	  "effects", such as encoder returning 0 encoded bytes, etc.
+	Fixes #335585
+
 2006-03-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/modplug/libmodplug/Makefile.am:
