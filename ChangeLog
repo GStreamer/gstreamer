@@ -1,5 +1,11 @@
 2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* win32/common/libgstbase.def:
+	* win32/common/libgstreamer.def:
+	  Update, add recently added functions.
+
+2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstutils.c: (gst_pad_query_peer_position),
 	(gst_pad_query_peer_duration), (gst_pad_query_peer_convert):

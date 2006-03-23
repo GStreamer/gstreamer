@@ -426,6 +426,9 @@ EXPORTS
 	gst_pad_query_default
 	gst_pad_query_duration
 	gst_pad_query_position
+	gst_pad_query_peer_convert
+	gst_pad_query_peer_duration
+	gst_pad_query_peer_position
 	gst_pad_remove_buffer_probe
 	gst_pad_remove_data_probe
 	gst_pad_remove_event_probe
