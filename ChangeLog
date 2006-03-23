@@ -1,5 +1,16 @@
 2006-03-23  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_class_init), (gst_base_audio_sink_async_play),
+	(gst_base_audio_sink_do_play), (gst_base_audio_sink_change_state):
+	Implement new async_play vmethod to start slaving and allow
+	playback start in case of async PLAY state changes. 
+
+	* gst-libs/gst/video/gstvideosink.c: (gst_video_sink_init):
+	Enable QoS with new method in base class.
+
+2006-03-23  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Julien MOUTTE <julien at moutte dot net>
 
 	* gst/videotestsrc/gstvideotestsrc.c: (gst_video_test_src_query),

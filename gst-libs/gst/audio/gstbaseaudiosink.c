@@ -64,6 +64,8 @@ static void gst_base_audio_sink_set_property (GObject * object, guint prop_id,
 static void gst_base_audio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstStateChangeReturn gst_base_audio_sink_async_play (GstBaseSink *
+    basesink);
 static GstStateChangeReturn gst_base_audio_sink_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -141,6 +143,8 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
   gstbasesink_class->get_times =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_times);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_base_audio_sink_setcaps);
+  gstbasesink_class->async_play =
+      GST_DEBUG_FUNCPTR (gst_base_audio_sink_async_play);
 }
 
 static void
@@ -690,6 +694,62 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
   //GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (data);
 }
 
+/* should be called with the LOCK */
+static GstStateChangeReturn
+gst_base_audio_sink_async_play (GstBaseSink * basesink)
+{
+  GstClock *clock;
+  GstClockTime time, base;
+  GstBaseAudioSink *sink;
+
+  sink = GST_BASE_AUDIO_SINK (basesink);
+
+  GST_DEBUG_OBJECT (sink, "ringbuffer may start now");
+  gst_ring_buffer_may_start (sink->ringbuffer, TRUE);
+
+  clock = GST_ELEMENT_CLOCK (sink);
+  if (clock == NULL)
+    goto no_clock;
+
+  /* FIXME, only start slaving when we really start the ringbuffer */
+  /* if we are slaved to a clock, we need to set the initial
+   * calibration */
+  if (clock != sink->provided_clock) {
+    GstClockTime rate_num, rate_denom;
+
+    base = GST_ELEMENT_CAST (sink)->base_time;
+    time = gst_clock_get_internal_time (sink->provided_clock);
+
+    GST_DEBUG_OBJECT (sink,
+        "time: %" GST_TIME_FORMAT " base: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (time), GST_TIME_ARGS (base));
+
+    /* FIXME, this is not yet accurate enough for smooth playback */
+    gst_clock_get_calibration (sink->provided_clock, NULL, NULL, &rate_num,
+        &rate_denom);
+    /* Does not work yet. */
+    gst_clock_set_calibration (sink->provided_clock, time, base,
+        rate_num, rate_denom);
+
+    gst_clock_set_master (sink->provided_clock, clock);
+  }
+
+no_clock:
+  return GST_STATE_CHANGE_SUCCESS;
+}
+
+static GstStateChangeReturn
+gst_base_audio_sink_do_play (GstBaseAudioSink * sink)
+{
+  GstStateChangeReturn ret;
+
+  GST_OBJECT_LOCK (sink);
+  ret = gst_base_audio_sink_async_play (GST_BASE_SINK_CAST (sink));
+  GST_OBJECT_UNLOCK (sink);
+
+  return ret;
+}
+
 static GstStateChangeReturn
 gst_base_audio_sink_change_state (GstElement * element,
     GstStateChange transition)
@@ -713,46 +773,16 @@ gst_base_audio_sink_change_state (GstElement * element,
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-    {
-      GstClock *clock;
-      GstClockTime time, base;
-
-      gst_ring_buffer_may_start (sink->ringbuffer, TRUE);
-
-      GST_OBJECT_LOCK (sink);
-      clock = GST_ELEMENT_CLOCK (sink);
-      if (clock == NULL)
-        goto no_clock;
-
-      /* FIXME, only start slaving when we really start the ringbuffer */
-      /* if we are slaved to a clock, we need to set the initial
-       * calibration */
-      if (clock != sink->provided_clock) {
-        GstClockTime rate_num, rate_denom;
-
-        base = element->base_time;
-        time = gst_clock_get_internal_time (sink->provided_clock);
-
-        GST_DEBUG_OBJECT (sink,
-            "time: %" GST_TIME_FORMAT " base: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (time), GST_TIME_ARGS (base));
-
-        gst_clock_set_master (sink->provided_clock, clock);
-        /* FIXME, this is not yet accurate enough for smooth playback */
-        gst_clock_get_calibration (sink->provided_clock, NULL, NULL, &rate_num,
-            &rate_denom);
-        /* Does not work yet. */
-        gst_clock_set_calibration (sink->provided_clock,
-            time, element->base_time, rate_num, rate_denom);
-      }
-    no_clock:
-      GST_OBJECT_UNLOCK (sink);
+      gst_base_audio_sink_do_play (sink);
       break;
-    }
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      /* need to take the lock so we don't interfere with an
+       * async play */
+      GST_OBJECT_LOCK (sink);
       /* ringbuffer cannot start anymore */
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
       gst_ring_buffer_pause (sink->ringbuffer);
+      GST_OBJECT_UNLOCK (sink);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
