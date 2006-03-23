@@ -126,7 +126,12 @@ gst_wavenc_get_type (void)
 static GstStateChangeReturn
 gst_wavenc_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstWavEnc *wavenc = GST_WAVENC (element);
+
+  ret = parent_class->change_state (element, transition);
+  if (ret != GST_STATE_CHANGE_SUCCESS)
+    return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -137,11 +142,7 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  if (parent_class->change_state) {
-    return parent_class->change_state (element, transition);
-  }
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }
 
 static void

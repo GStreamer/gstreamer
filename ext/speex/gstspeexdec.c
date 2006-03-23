@@ -574,15 +574,22 @@ gst_speexdec_set_property (GObject * object, guint prop_id,
 static GstStateChangeReturn
 speex_dec_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn ret;
   GstSpeexDec *vd = GST_SPEEXDEC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    default:
       break;
+  }
+
+  ret = parent_class->change_state (element, transition);
+  if (ret != GST_STATE_CHANGE_SUCCESS)
+    return ret;
+
+  switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -595,5 +602,5 @@ speex_dec_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  return parent_class->change_state (element, transition);
+  return ret;
 }

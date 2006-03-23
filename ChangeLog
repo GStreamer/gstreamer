@@ -1,3 +1,11 @@
+2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/speex/gstspeexdec.c: (speex_dec_change_state):
+	* gst/interleave/deinterleave.c: (deinterleave_change_state):
+	* gst/interleave/interleave.c: (interleave_change_state):
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_change_state):
+	  More state change function fixes.
+
 2006-03-23  Wim Taymans  <wim@fluendo.com>
 
 	* ext/esd/esdsink.c: (gst_esdsink_class_init),
