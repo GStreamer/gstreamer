@@ -1,3 +1,16 @@
+2006-03-23  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Fabrizio Gennari <fabrizio dot ge at tiscali dot it>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_video_template_caps):
+	* gst/ffmpegcolorspace/avcodec.h:
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_pixfmt),
+	(gst_ffmpegcsp_avpicture_fill):
+	* gst/ffmpegcolorspace/imgconvert.c:
+	Patch for support of YVU9 AVI files (#334822)
+
 2006-03-22  Edward Hervey  <edward@fluendo.com>
 
 	* docs/design/design-decodebin.txt:

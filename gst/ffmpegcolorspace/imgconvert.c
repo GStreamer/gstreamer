@@ -119,6 +119,17 @@ static PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
         /* .y_chroma_shift = */ 2,
         /* .depth          = */ 8,
       },
+  /* [PIX_FMT_YVU410P] = */ {
+        /* .format         = */ PIX_FMT_YVU410P,
+        /* .name           = */ "yvu410p",
+        /* .nb_channels    = */ 3,
+        /* .color_type     = */ FF_COLOR_YUV,
+        /* .pixel_type     = */ FF_PIXEL_PLANAR,
+        /* .is_alpha       = */ 0,
+        /* .x_chroma_shift = */ 2,
+        /* .y_chroma_shift = */ 2,
+        /* .depth          = */ 8,
+      },
   /* [PIX_FMT_YUV411P] = */ {
         /* .format         = */ PIX_FMT_YUV411P,
         /* .name           = */ "yuv411p",
