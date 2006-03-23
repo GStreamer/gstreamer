@@ -21,6 +21,7 @@
 	position in EOS/PLAYING/PAUSED/READY/NULL.
 	Refactor QoS/frame dropping and other measurements.
 	API: GstBaseSrc::qos
+	Fixes #326311
 
 	* libs/gst/base/gstbasesink.h:
 	Added Private struct.
