@@ -1,3 +1,14 @@
+2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
+	(gst_wavparse_stream_headers), (gst_wavparse_add_src_pad),
+	(gst_wavparse_stream_data), (gst_wavparse_loop):
+	* gst/wavparse/gstwavparse.h:
+	  Delay source pad creation until we have the first chunk of
+	  media data, so the we can examine the data and adjust the
+	  caps accordingly if required. This makes playback of .wav
+	  files with DTS-declared-as-PCM content work (#313266).
+
 2006-03-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_chain):

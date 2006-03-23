@@ -33,10 +33,10 @@ G_BEGIN_DECLS
 #define GST_WAVPARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_WAVPARSE,GstWavParse))
 #define GST_WAVPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_WAVPARSE,GstWavParse))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_WAVPARSE,GstWavParseClass))
 #define GST_IS_WAVPARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WAVPARSE))
-#define GST_IS_WAVPARSE_CLASS(obj) \
+#define GST_IS_WAVPARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WAVPARSE))
 
 typedef enum {
@@ -58,6 +58,13 @@ struct _GstWavParse {
 
   /* pads */
   GstPad *sinkpad,*srcpad;
+
+  /* for delayed source pad creation for when
+   * we have the first chunk of data and know
+   * the format for sure */
+  GstCaps     *caps;
+  GstTagList  *tags;
+  GstEvent    *newsegment;
 
   /* WAVE decoding state */
   GstWavParseState state;

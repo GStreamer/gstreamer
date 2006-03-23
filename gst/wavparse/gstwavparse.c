@@ -119,7 +119,7 @@ static GstStaticPadTemplate src_template_factory =
         "block_align = (int) [ 1, 8192 ], "
         "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ];"
         "audio/x-vnd.sony.atrac3;"
-        "audio/x-wma, " "wmaversion = (int) [ 1, 2 ]")
+        "audio/x-dts;" "audio/x-wma, " "wmaversion = (int) [ 1, 2 ]")
     );
 
 
@@ -731,6 +731,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
 {
   gboolean res;
   gdouble rate;
+  GstEvent *newsegment;
   GstFormat format;
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
@@ -839,10 +840,17 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   GST_DEBUG_OBJECT (wav, "Sending newsegment from %" G_GINT64_FORMAT
       " to %" G_GINT64_FORMAT, wav->segment.start, stop);
 
-  gst_pad_push_event (wav->srcpad,
-      gst_event_new_new_segment (FALSE,
-          wav->segment.rate, wav->segment.format,
-          wav->segment.last_stop, stop, wav->segment.time));
+  newsegment =
+      gst_event_new_new_segment (FALSE, wav->segment.rate,
+      wav->segment.format, wav->segment.last_stop, stop, wav->segment.time);
+
+  if (wav->srcpad) {
+    gst_pad_push_event (wav->srcpad, newsegment);
+  } else {
+    /* send later when we actually create the source pad */
+    g_assert (wav->newsegment == NULL);
+    wav->newsegment = newsegment;
+  }
 
   wav->segment_running = TRUE;
   gst_pad_start_task (wav->sinkpad, (GstTaskFunction) gst_wavparse_loop,
@@ -917,22 +925,16 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   if (!caps)
     goto unknown_format;
 
-  gst_wavparse_create_sourcepad (wav);
-  gst_pad_set_active (wav->srcpad, TRUE);
-  gst_pad_set_caps (wav->srcpad, caps);
-  gst_caps_unref (caps);
-  caps = NULL;
-
-  gst_element_add_pad (GST_ELEMENT (wav), wav->srcpad);
-  gst_element_no_more_pads (GST_ELEMENT (wav));
+  /* create pad later so we can sniff the first few bytes
+   * of the real data and correct our caps if necessary */
+  gst_caps_replace (&wav->caps, caps);
+  gst_caps_replace (&caps, NULL);
 
   if (codec_name) {
-    GstTagList *tags = gst_tag_list_new ();
+    wav->tags = gst_tag_list_new ();
 
-    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_AUDIO_CODEC, codec_name, NULL);
-
-    gst_element_found_tags_for_pad (GST_ELEMENT (wav), wav->srcpad, tags);
 
     g_free (codec_name);
     codec_name = NULL;
@@ -1092,10 +1094,46 @@ gst_wavparse_send_event (GstElement * element, GstEvent * event)
   return res;
 }
 
+static void
+gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
+{
+  GstStructure *s;
+  const guint8 dts_marker[] = { 0xFF, 0x1F, 0x00, 0xE8, 0xF1, 0x07 };
+
+  s = gst_caps_get_structure (wav->caps, 0);
+  if (gst_structure_has_name (s, "audio/x-raw-int") &&
+      GST_BUFFER_SIZE (buf) > 6 &&
+      memcmp (GST_BUFFER_DATA (buf), dts_marker, 6) == 0) {
+
+    GST_WARNING_OBJECT (wav, "Found DTS marker in file marked as raw PCM");
+    gst_caps_unref (wav->caps);
+    wav->caps = gst_caps_from_string ("audio/x-dts");
+
+    gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
+        GST_TAG_AUDIO_CODEC, "dts", NULL);
+  }
+
+  gst_wavparse_create_sourcepad (wav);
+  gst_pad_set_active (wav->srcpad, TRUE);
+  gst_pad_set_caps (wav->srcpad, wav->caps);
+  gst_caps_replace (&wav->caps, NULL);
+
+  gst_element_add_pad (GST_ELEMENT (wav), wav->srcpad);
+  gst_element_no_more_pads (GST_ELEMENT (wav));
+
+  gst_pad_push_event (wav->srcpad, wav->newsegment);
+  wav->newsegment = NULL;
+
+  if (wav->tags) {
+    gst_element_found_tags_for_pad (GST_ELEMENT (wav), wav->srcpad, wav->tags);
+    wav->tags = NULL;
+  }
+}
+
 #define MAX_BUFFER_SIZE 4096
 
 static GstFlowReturn
-gst_wavparse_stream_data (GstWavParse * wav)
+gst_wavparse_stream_data (GstWavParse * wav, gboolean first)
 {
   GstBuffer *buf = NULL;
   GstFlowReturn res = GST_FLOW_OK;
@@ -1103,8 +1141,8 @@ gst_wavparse_stream_data (GstWavParse * wav)
   GstClockTime timestamp, next_timestamp;
   guint64 pos, nextpos;
 
-  GST_DEBUG_OBJECT (wav, "offset : %lld , end : %lld", wav->offset,
-      wav->end_offset);
+  GST_LOG_OBJECT (wav, "offset: %" G_GINT64_FORMAT " , end: %" G_GINT64_FORMAT,
+      wav->offset, wav->end_offset);
 
   /* Get the next n bytes and output them */
   if (wav->dataleft == 0)
@@ -1116,14 +1154,20 @@ gst_wavparse_stream_data (GstWavParse * wav)
   if (desired >= wav->blockalign && wav->blockalign > 0)
     desired -= (desired % wav->blockalign);
 
-  GST_DEBUG_OBJECT (wav, "Fetching %lld bytes of data from the sinkpad.",
-      desired);
+  GST_LOG_OBJECT (wav, "Fetching %" G_GINT64_FORMAT " bytes of data "
+      "from the sinkpad", desired);
 
   if ((res = gst_pad_pull_range (wav->sinkpad, wav->offset,
               desired, &buf)) != GST_FLOW_OK)
     goto pull_error;
 
   obtained = GST_BUFFER_SIZE (buf);
+
+  /* first chunk of data? create the source pad. We do this only here so
+   * we can detect broken .wav files with dts disguised as raw PCM (sigh) */
+  if (first) {
+    gst_wavparse_add_src_pad (wav, buf);
+  }
 
   /* our positions */
   pos = wav->offset - wav->datastart;
@@ -1214,9 +1258,11 @@ gst_wavparse_loop (GstPad * pad)
         goto pause;
 
       wav->state = GST_WAVPARSE_DATA;
-      /* fall-through */
+      if ((ret = gst_wavparse_stream_data (wav, TRUE)) != GST_FLOW_OK)
+        goto pause;
+      break;
     case GST_WAVPARSE_DATA:
-      if ((ret = gst_wavparse_stream_data (wav)) != GST_FLOW_OK)
+      if ((ret = gst_wavparse_stream_data (wav, FALSE)) != GST_FLOW_OK)
         goto pause;
       break;
     default:
