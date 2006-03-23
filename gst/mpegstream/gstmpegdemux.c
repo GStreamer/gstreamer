@@ -225,6 +225,8 @@ gst_mpeg_demux_init (GstMPEGDemux * mpeg_demux, GstMPEGDemuxClass * klass)
 
   mpeg_demux->max_gap = GST_CLOCK_TIME_NONE;
   mpeg_demux->max_gap_tolerance = GST_CLOCK_TIME_NONE;
+
+  mpeg_demux->last_pts = -1;
 }
 
 static GstFlowReturn
@@ -682,6 +684,15 @@ done:
       headerlen, datalen);
 
   if (pts != -1) {
+    /* Check for pts overflow */
+    if (mpeg_demux->last_pts != -1) {
+      gint32 diff = pts - mpeg_demux->last_pts;
+
+      if (diff > -4 * CLOCK_FREQ && diff < 4 * CLOCK_FREQ)
+        pts = mpeg_demux->last_pts + diff;
+    }
+    mpeg_demux->last_pts = pts;
+
     timestamp = PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
         MPEGTIME_TO_GSTTIME (pts));
 
@@ -779,6 +790,15 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
       pts |= ((guint64) (*buf++ & 0xFE)) << 14;
       pts |= ((guint64) * buf++) << 7;
       pts |= ((guint64) (*buf++ & 0xFE)) >> 1;
+
+      /* Check for pts overflow */
+      if (mpeg_demux->last_pts != -1) {
+        gint32 diff = pts - mpeg_demux->last_pts;
+
+        if (diff > -4 * CLOCK_FREQ && diff < 4 * CLOCK_FREQ)
+          pts = mpeg_demux->last_pts + diff;
+      }
+      mpeg_demux->last_pts = pts;
 
       timestamp = PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
           MPEGTIME_TO_GSTTIME (pts));
@@ -904,6 +924,7 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + offset;
+  GST_BUFFER_CAPS (outbuf) = gst_caps_ref (outstream->caps);
   ret = gst_pad_push (outstream->pad, outbuf);
 
   if (GST_CLOCK_TIME_IS_VALID (mpeg_demux->max_gap) &&
@@ -1197,6 +1218,7 @@ gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux)
   mpeg_demux->total_size_bound = 0LL;
 
   mpeg_demux->index = NULL;
+  mpeg_demux->last_pts = -1;
 
   /*
    * Don't adjust things that are only for subclass use

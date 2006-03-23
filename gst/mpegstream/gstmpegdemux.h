@@ -123,6 +123,7 @@ struct _GstMPEGDemux {
   gboolean       packet_rate_restriction;
   gint64         total_size_bound;
 
+  gint64         last_pts;
   GstIndex      *index;
 
   /* stream output */

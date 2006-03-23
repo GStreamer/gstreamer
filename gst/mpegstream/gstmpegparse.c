@@ -526,6 +526,16 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   }
   new_rate *= MP_MUX_RATE_MULT;
 
+  /* Deal with SCR overflow */
+  if (mpeg_parse->current_scr != MP_INVALID_SCR) {
+    guint32 diff;
+
+    diff = scr - mpeg_parse->current_scr;
+    if (diff < 4 * CLOCK_FREQ)
+      scr = mpeg_parse->current_scr + diff;
+  }
+
+
   prev_scr = mpeg_parse->current_scr;
   mpeg_parse->current_scr = scr;
 

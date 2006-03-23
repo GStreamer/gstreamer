@@ -1,3 +1,19 @@
+2006-03-23  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Michal Benes <michal dot benes at xeris dot cz>
+
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_init),
+	(gst_mpeg_demux_parse_packet), (gst_mpeg_demux_parse_pes),
+	(gst_mpeg_demux_send_subbuffer), (gst_mpeg_demux_reset):
+	* gst/mpegstream/gstmpegdemux.h:
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_parse_packhead):
+	Timestamps in mpeg stream are 32-bit numbers. Therefore, with a
+	clock_freq of 90kHz this timestamp overflows every ~13 hours. This 
+	situation really happens when grabbing DVB streams. Current 
+	mpegdemuxer can not handle this situation correctly and it 
+	restarts counting gstreamer timestamps from zero.
+	Fixes #326598.
+
 2006-03-15  Michael Smith  <msmith@fluendo.com>
 
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_sink_event),
