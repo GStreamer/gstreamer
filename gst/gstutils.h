@@ -567,6 +567,13 @@ gboolean                gst_pad_query_duration          (GstPad *pad, GstFormat 
 gboolean                gst_pad_query_convert           (GstPad *pad, GstFormat src_format, gint64 src_val,
 		                                         GstFormat *dest_format, gint64 *dest_val);
 
+gboolean                gst_pad_query_peer_position     (GstPad *pad, GstFormat *format,
+		                                         gint64 *cur);
+gboolean                gst_pad_query_peer_duration     (GstPad *pad, GstFormat *format,
+		                                         gint64 *duration);
+gboolean                gst_pad_query_peer_convert      (GstPad *pad, GstFormat src_format, gint64 src_val,
+		                                         GstFormat *dest_format, gint64 *dest_val);
+
 /* bin functions */
 void                    gst_bin_add_many                (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;
 void                    gst_bin_remove_many             (GstBin *bin, GstElement *element_1, ...) G_GNUC_NULL_TERMINATED;

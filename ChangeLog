@@ -1,3 +1,14 @@
+2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstutils.c: (gst_pad_query_peer_position),
+	(gst_pad_query_peer_duration), (gst_pad_query_peer_convert):
+	* gst/gstutils.h:
+	  API: add some new utility functions:
+	   - gst_pad_query_peer_position
+	   - gst_pad_query_peer_duration
+	   - gst_pad_query_peer_convert
+	  
 2006-03-23  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init),

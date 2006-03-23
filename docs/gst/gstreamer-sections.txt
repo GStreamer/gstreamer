@@ -1224,6 +1224,9 @@ gst_pad_query_default
 gst_pad_query_position
 gst_pad_query_duration
 gst_pad_query_convert
+gst_pad_query_peer_position
+gst_pad_query_peer_duration
+gst_pad_query_peer_convert
 gst_pad_set_query_function
 GstPadQueryFunction
 gst_pad_set_query_type_function

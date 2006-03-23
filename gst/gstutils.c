@@ -2532,6 +2532,37 @@ gst_pad_query_position (GstPad * pad, GstFormat * format, gint64 * cur)
 }
 
 /**
+ * gst_pad_query_peer_position:
+ * @pad: a #GstPad on whose peer to invoke the position query on.
+ *       Must be a sink pad.
+ * @format: a pointer to the #GstFormat asked for.
+ *          On return contains the #GstFormat used.
+ * @cur: A location in which to store the current position, or NULL.
+ *
+ * Queries the peer of a given sink pad for the stream position.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query_peer_position (GstPad * pad, GstFormat * format, gint64 * cur)
+{
+  gboolean ret = FALSE;
+  GstPad *peer;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_PAD_IS_SINK (pad), FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
+
+  peer = gst_pad_get_peer (pad);
+  if (peer) {
+    ret = gst_pad_query_position (peer, format, cur);
+    gst_object_unref (peer);
+  }
+
+  return ret;
+}
+
+/**
  * gst_pad_query_duration:
  * @pad: a #GstPad to invoke the duration query on.
  * @format: a pointer to the #GstFormat asked for.
@@ -2558,6 +2589,38 @@ gst_pad_query_duration (GstPad * pad, GstFormat * format, gint64 * duration)
     gst_query_parse_duration (query, format, duration);
 
   gst_query_unref (query);
+
+  return ret;
+}
+
+/**
+ * gst_pad_query_peer_duration:
+ * @pad: a #GstPad on whose peer pad to invoke the duration query on.
+ *       Must be a sink pad.
+ * @format: a pointer to the #GstFormat asked for.
+ *          On return contains the #GstFormat used.
+ * @duration: A location in which to store the total duration, or NULL.
+ *
+ * Queries the peer pad of a given sink pad for the total stream duration.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query_peer_duration (GstPad * pad, GstFormat * format,
+    gint64 * duration)
+{
+  gboolean ret = FALSE;
+  GstPad *peer;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_PAD_IS_SINK (pad), FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
+
+  peer = gst_pad_get_peer (pad);
+  if (peer) {
+    ret = gst_pad_query_duration (peer, format, duration);
+    gst_object_unref (peer);
+  }
 
   return ret;
 }
@@ -2598,6 +2661,43 @@ gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
     gst_query_parse_convert (query, NULL, NULL, dest_format, dest_val);
 
   gst_query_unref (query);
+
+  return ret;
+}
+
+/**
+ * gst_pad_query_peer_convert:
+ * @pad: a #GstPad, on whose peer pad to invoke the convert query on.
+ *       Must be a sink pad.
+ * @src_format: a #GstFormat to convert from.
+ * @src_val: a value to convert.
+ * @dest_format: a pointer to the #GstFormat to convert to.
+ * @dest_val: a pointer to the result.
+ *
+ * Queries the peer pad of a given sink pad to convert @src_val in @src_format
+ * to @dest_format.
+ *
+ * Returns: TRUE if the query could be performed.
+ */
+gboolean
+gst_pad_query_peer_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
+    GstFormat * dest_format, gint64 * dest_val)
+{
+  gboolean ret = FALSE;
+  GstPad *peer;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_PAD_IS_SINK (pad), FALSE);
+  g_return_val_if_fail (src_val >= 0, FALSE);
+  g_return_val_if_fail (dest_format != NULL, FALSE);
+  g_return_val_if_fail (dest_val != NULL, FALSE);
+
+  peer = gst_pad_get_peer (pad);
+  if (peer) {
+    ret = gst_pad_query_convert (peer, src_format, src_val, dest_format,
+        dest_val);
+    gst_object_unref (peer);
+  }
 
   return ret;
 }
