@@ -206,14 +206,18 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
   /* create the sink and src pads */
   jpegenc->sinkpad =
       gst_pad_new_from_static_template (&gst_jpegenc_sink_pad_template, "sink");
-  gst_pad_set_chain_function (jpegenc->sinkpad, gst_jpegenc_chain);
-  gst_pad_set_getcaps_function (jpegenc->sinkpad, gst_jpegenc_getcaps);
-  gst_pad_set_setcaps_function (jpegenc->sinkpad, gst_jpegenc_setcaps);
+  gst_pad_set_chain_function (jpegenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_jpegenc_chain));
+  gst_pad_set_getcaps_function (jpegenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_jpegenc_getcaps));
+  gst_pad_set_setcaps_function (jpegenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_jpegenc_setcaps));
   gst_element_add_pad (GST_ELEMENT (jpegenc), jpegenc->sinkpad);
 
   jpegenc->srcpad =
       gst_pad_new_from_static_template (&gst_jpegenc_src_pad_template, "src");
-  gst_pad_set_getcaps_function (jpegenc->sinkpad, gst_jpegenc_getcaps);
+  gst_pad_set_getcaps_function (jpegenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_jpegenc_getcaps));
   /*gst_pad_set_setcaps_function (jpegenc->sinkpad, gst_jpegenc_setcaps); */
   gst_pad_use_fixed_caps (jpegenc->sinkpad);
   gst_element_add_pad (GST_ELEMENT (jpegenc), jpegenc->srcpad);
@@ -402,7 +406,7 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   gulong size;
   GstBuffer *outbuf;
   guint height, width;
-  guchar *base[3];
+  guchar *base[3], *end[3];
   gint i, j, k;
 
   jpegenc = GST_JPEGENC (GST_OBJECT_PARENT (pad));
@@ -429,6 +433,10 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   base[1] = data + I420_U_OFFSET (width, height);
   base[2] = data + I420_V_OFFSET (width, height);
 
+  end[0] = base[0] + height * I420_Y_ROWSTRIDE (width);
+  end[1] = base[1] + (height / 2) * I420_U_ROWSTRIDE (width);
+  end[2] = base[2] + (height / 2) * I420_V_ROWSTRIDE (width);
+
   jpegenc->jdest.next_output_byte = GST_BUFFER_DATA (outbuf);
   jpegenc->jdest.free_in_buffer = GST_BUFFER_SIZE (outbuf);
 
@@ -442,13 +450,17 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
     /*g_print ("next scanline: %d\n", jpegenc->cinfo.next_scanline); */
     for (j = 0, k = 0; j < (2 * DCTSIZE); j += 2, k++) {
       jpegenc->line[0][j] = base[0];
-      base[0] += I420_Y_ROWSTRIDE (width);
+      if (base[0] + I420_Y_ROWSTRIDE (width) < end[0])
+        base[0] += I420_Y_ROWSTRIDE (width);
       jpegenc->line[0][j + 1] = base[0];
-      base[0] += I420_Y_ROWSTRIDE (width);
+      if (base[0] + I420_Y_ROWSTRIDE (width) < end[0])
+        base[0] += I420_Y_ROWSTRIDE (width);
       jpegenc->line[1][k] = base[1];
-      base[1] += I420_U_ROWSTRIDE (width);
+      if (base[1] + I420_U_ROWSTRIDE (width) < end[1])
+        base[1] += I420_U_ROWSTRIDE (width);
       jpegenc->line[2][k] = base[2];
-      base[2] += I420_V_ROWSTRIDE (width);
+      if (base[2] + I420_V_ROWSTRIDE (width) < end[2])
+        base[2] += I420_V_ROWSTRIDE (width);
     }
     jpeg_write_raw_data (&jpegenc->cinfo, jpegenc->line, 2 * DCTSIZE);
   }

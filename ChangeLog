@@ -1,3 +1,9 @@
+2006-03-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_init), (gst_jpegenc_chain):
+	  Don't crash when encoding images where the number of rows isn't
+	  a multiple of 2*DCTSIZE. Add some GST_DEBUG_FUNCPTR.
+
 2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/speex/gstspeexdec.c: (speex_dec_change_state):
