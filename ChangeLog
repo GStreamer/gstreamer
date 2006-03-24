@@ -1,3 +1,11 @@
+2006-03-24  Michael Smith  <msmith@fluendo.com>
+
+	* docs/faq/gst-uninstalled:
+	  Set up LD_LIBRARY_PATH to point at all the gstreamer libs. This will
+	  allow you to correctly run intalled applications built against old 
+	  core, using plugins that require updated core (e.g. running
+	  installed totem against a full uninstalled gstreamer stack)
+
 2006-03-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_is_collected):
