@@ -2,7 +2,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *               <2005> Wim Taymans <wim@fluendo.com>
- *               <2005> Tim-Philipp Müller <tim centricular net>
+ *               <2005> Tim-Philipp M??ller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -68,12 +68,11 @@ static gboolean gst_cd_paranoia_src_open (GstCddaBaseSrc * src,
     const gchar * device);
 static void gst_cd_paranoia_src_close (GstCddaBaseSrc * src);
 
-static GstElementDetails cdparanoia_details = {
-  "CD Audio (cdda) Source, Paranoia IV",
-  "Source/File",
-  "Read audio from CD in paranoid mode",
-  "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>"
-};
+static GstElementDetails cdparanoia_details =
+GST_ELEMENT_DETAILS ("CD Audio (cdda) Source, Paranoia IV",
+    "Source/File",
+    "Read audio from CD in paranoid mode",
+    "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
 
 /* We use these to serialize calls to paranoia_read() among several
  * cdparanoiasrc instances. We do this because it's the only reasonably

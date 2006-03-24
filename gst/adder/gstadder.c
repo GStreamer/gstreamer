@@ -20,6 +20,21 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-adder
+ *
+ * <refsect2>
+ * The Adder allows to mix several streams into one by adding the data.
+ * Mixed data is clamped to the min/max values of the data format.
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch audiotestsrc freq=100 ! adder name=mix ! audioconvert ! alsasink audiotestsrc freq=500 ! mix.
+ * </programlisting>
+ * This pipeline produces two sine waves mixed together.
+ * </para>
+ * </refsect2>
+ */
 /* Element-Checklist-Version: 5 */
 
 #ifdef HAVE_CONFIG_H
@@ -90,7 +105,7 @@ gst_adder_get_type (void)
 {
   static GType adder_type = 0;
 
-  if (!adder_type) {
+  if (G_UNLIKELY (adder_type == 0)) {
     static const GTypeInfo adder_info = {
       sizeof (GstAdderClass), NULL, NULL,
       (GClassInitFunc) gst_adder_class_init, NULL, NULL,

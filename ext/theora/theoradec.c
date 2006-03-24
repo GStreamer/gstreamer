@@ -58,13 +58,11 @@ enum
   ARG_CROP
 };
 
-static GstElementDetails theora_dec_details = {
-  "TheoraDec",
-  "Codec/Decoder/Video",
-  "decode raw theora streams to raw YUV video",
-  "Benjamin Otte <in7y118@public.uni-hamburg.de>, "
-      "Wim Taymans <wim@fluendo.com>",
-};
+static GstElementDetails theora_dec_details = GST_ELEMENT_DETAILS ("TheoraDec",
+    "Codec/Decoder/Video",
+    "decode raw theora streams to raw YUV video",
+    "Benjamin Otte <in7y118@public.uni-hamburg.de>, "
+    "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate theora_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",

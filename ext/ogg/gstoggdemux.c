@@ -27,6 +27,12 @@
 #include <string.h>
 #include <gst/gst-i18n-plugin.h>
 
+static GstElementDetails gst_ogg_demux_details =
+GST_ELEMENT_DETAILS ("ogg demuxer",
+    "Codec/Demuxer",
+    "demux ogg streams (info about ogg: http://xiph.org)",
+    "Wim Taymand <wim@fluendo.com>");
+
 #define CHUNKSIZE (8500)        /* this is out of vorbisfile */
 #define SKELETON_FISHEAD_SIZE 64
 #define SKELETON_FISBONE_MIN_SIZE 52
@@ -1277,11 +1283,6 @@ static void
 gst_ogg_demux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  static GstElementDetails gst_ogg_demux_details =
-      GST_ELEMENT_DETAILS ("ogg demuxer",
-      "Codec/Demuxer",
-      "demux ogg streams (info about ogg: http://xiph.org)",
-      "Wim Taymand <wim@fluendo.com>");
 
   gst_element_class_set_details (element_class, &gst_ogg_demux_details);
 

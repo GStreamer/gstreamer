@@ -74,10 +74,10 @@ IGNORE_CFILES = utils.c mem.c imgconvert.c
 # the registry won't have the element
 
 EXTRA_HFILES = \
-	$(top_srcdir)/ext/cdparanoia/gstcdparanoiasrc.h \
 	$(top_srcdir)/ext/alsa/gstalsamixerelement.h \
 	$(top_srcdir)/ext/alsa/gstalsasink.h \
 	$(top_srcdir)/ext/alsa/gstalsasrc.h \
+	$(top_srcdir)/ext/cdparanoia/gstcdparanoiasrc.h \
 	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.h \
 	$(top_srcdir)/ext/gnomevfs/gstgnomevfssrc.h \
 	$(top_srcdir)/ext/pango/gstclockoverlay.h \
@@ -89,6 +89,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/vorbis/vorbisdec.h \
 	$(top_srcdir)/ext/vorbis/vorbisenc.h \
 	$(top_srcdir)/ext/vorbis/vorbisparse.h \
+	$(top_srcdir)/gst/adder/gstadder.h \
 	$(top_srcdir)/gst/audioconvert/gstaudioconvert.h \
 	$(top_srcdir)/gst/audioresample/gstaudioresample.h \
 	$(top_srcdir)/gst/audiotestsrc/gstaudiotestsrc.h \

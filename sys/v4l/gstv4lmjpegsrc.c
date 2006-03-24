@@ -31,12 +31,11 @@ GST_DEBUG_CATEGORY (v4lmjpegsrc_debug);
 #define GST_CAT_DEFAULT v4lmjpegsrc_debug
 
 /* elementfactory information */
-static GstElementDetails gst_v4lmjpegsrc_details = {
-  "Video (video4linux/MJPEG) Source",
-  "Source/Video",
-  "Reads MJPEG-encoded frames from a zoran MJPEG/video4linux device",
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-};
+static GstElementDetails gst_v4lmjpegsrc_details =
+GST_ELEMENT_DETAILS ("Video (video4linux/MJPEG) Source",
+    "Source/Video",
+    "Reads MJPEG-encoded frames from a zoran MJPEG/video4linux device",
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
 /* V4lMjpegSrc signals and args */
 enum

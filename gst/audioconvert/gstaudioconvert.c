@@ -74,12 +74,11 @@ GST_DEBUG_CATEGORY (audio_convert_debug);
 
 /*** DEFINITIONS **************************************************************/
 
-static GstElementDetails audio_convert_details = {
-  "Audio Conversion",
-  "Filter/Converter/Audio",
-  "Convert audio to different formats",
-  "Benjamin Otte <in7y118@public.uni-hamburg.de>",
-};
+static GstElementDetails audio_convert_details =
+GST_ELEMENT_DETAILS ("Audio Conversion",
+    "Filter/Converter/Audio",
+    "Convert audio to different formats",
+    "Benjamin Otte <in7y118@public.uni-hamburg.de>");
 
 /* type functions */
 static void gst_audio_convert_dispose (GObject * obj);

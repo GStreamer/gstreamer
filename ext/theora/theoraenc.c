@@ -149,12 +149,10 @@ granulepos_to_timestamp (GstTheoraEnc * theoraenc, ogg_int64_t granulepos)
       theoraenc->info.fps_numerator);
 }
 
-static GstElementDetails theora_enc_details = {
-  "TheoraEnc",
-  "Codec/Encoder/Video",
-  "encode raw YUV video to a theora stream",
-  "Wim Taymans <wim@fluendo.com>",
-};
+static GstElementDetails theora_enc_details = GST_ELEMENT_DETAILS ("TheoraEnc",
+    "Codec/Encoder/Video",
+    "encode raw YUV video to a theora stream",
+    "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate theora_enc_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",

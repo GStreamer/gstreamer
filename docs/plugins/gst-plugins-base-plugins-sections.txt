@@ -1,4 +1,20 @@
 <SECTION>
+<FILE>element-adder</FILE>
+<TITLE>adder</TITLE>
+GstAdder
+<SUBSECTION Standard>
+GST_ADDER
+GST_IS_ADDER
+GST_TYPE_ADDER
+gst_adder_factory_init
+gst_adder_get_type
+GST_ADDER_CLASS
+GST_IS_ADDER_CLASS
+GstAdderClass
+GstAdderFormat
+</SECTION>
+
+<SECTION>
 <FILE>element-alsamixer</FILE>
 GstAlsaMixerElement
 <TITLE>alsamixer</TITLE>

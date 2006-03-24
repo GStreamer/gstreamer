@@ -64,12 +64,11 @@
 
 #define M_PI_M2 ( M_PI + M_PI )
 
-GstElementDetails gst_audio_test_src_details = {
-  "Audio test source",
-  "Source/Audio",
-  "Creates audio test signals of given frequency and volume",
-  "Stefan Kost <ensonic@users.sf.net>"
-};
+static GstElementDetails gst_audio_test_src_details =
+GST_ELEMENT_DETAILS ("Audio test source",
+    "Source/Audio",
+    "Creates audio test signals of given frequency and volume",
+    "Stefan Kost <ensonic@users.sf.net>");
 
 
 enum
@@ -116,7 +115,7 @@ gst_audiostestsrc_wave_get_type (void)
     {0, NULL, NULL},
   };
 
-  if (!audiostestsrc_wave_type) {
+  if (G_UNLIKELY (audiostestsrc_wave_type == 0)) {
     audiostestsrc_wave_type = g_enum_register_static ("GstAudioTestSrcWave",
         audiostestsrc_waves);
   }
@@ -140,8 +139,10 @@ static gboolean gst_audio_test_src_query (GstBaseSrc * basesrc,
 
 static void gst_audio_test_src_change_wave (GstAudioTestSrc * src);
 
+/*
 static void gst_audio_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
+*/
 static GstFlowReturn gst_audio_test_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
 
@@ -195,8 +196,10 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_test_src_is_seekable);
   gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_audio_test_src_do_seek);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_audio_test_src_query);
-  gstbasesrc_class->get_times =
-      GST_DEBUG_FUNCPTR (gst_audio_test_src_get_times);
+  /*
+     gstbasesrc_class->get_times =
+     GST_DEBUG_FUNCPTR (gst_audio_test_src_get_times);
+   */
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_audio_test_src_create);
 }
 
@@ -576,6 +579,7 @@ gst_audio_test_src_change_volume (GstAudioTestSrc * src)
   }
 }
 
+#ifdef __DISABLE_NO_LIVE__
 static void
 gst_audio_test_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
@@ -598,6 +602,7 @@ gst_audio_test_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
     *end = -1;
   }
 }
+#endif
 
 static gboolean
 gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
@@ -636,6 +641,7 @@ static GstFlowReturn
 gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     guint length, GstBuffer ** buffer)
 {
+  GstFlowReturn res;
   GstAudioTestSrc *src;
   GstBuffer *buf;
   GstClockTime next_time;
@@ -646,6 +652,7 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   if (src->eos_reached)
     return GST_FLOW_UNEXPECTED;
 
+  /* example for tagging generated data */
   if (!src->tags_pushed) {
     GstTagList *taglist;
     GstEvent *event;
@@ -660,6 +667,7 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     src->tags_pushed = TRUE;
   }
 
+  /* check for eos */
   if (src->check_seek_stop &&
       (src->n_samples_stop > src->n_samples) &&
       (src->n_samples_stop < src->n_samples + src->samples_per_buffer)
@@ -673,15 +681,17 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
     src->generate_samples_per_buffer = src->samples_per_buffer;
     n_samples = src->n_samples + src->samples_per_buffer;
   }
-  next_time = n_samples * GST_SECOND / src->samplerate;
+  next_time = gst_util_uint64_scale (n_samples, GST_SECOND,
+      (guint64) src->samplerate);
 
-  buf =
-      gst_buffer_new_and_alloc (src->generate_samples_per_buffer *
-      sizeof (gint16));
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (basesrc->srcpad));
+  /* allocate a new buffer suitable for this pad */
+  if ((res = gst_pad_alloc_buffer (basesrc->srcpad, src->n_samples,
+              src->generate_samples_per_buffer * sizeof (gint16),
+              GST_PAD_CAPS (basesrc->srcpad), &buf)) != GST_FLOW_OK) {
+    return res;
+  }
 
   GST_BUFFER_TIMESTAMP (buf) = src->timestamp_offset + src->running_time;
-  GST_BUFFER_OFFSET (buf) = src->n_samples;
   GST_BUFFER_OFFSET_END (buf) = n_samples;
   GST_BUFFER_DURATION (buf) = next_time - src->running_time;
 

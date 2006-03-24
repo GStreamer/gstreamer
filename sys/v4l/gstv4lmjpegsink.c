@@ -31,12 +31,11 @@ GST_DEBUG_CATEGORY (v4lmjpegsink_debug);
 #define GST_CAT_DEFAULT v4lmjpegsink_debug
 
 /* elementfactory information */
-static GstElementDetails gst_v4lmjpegsink_details = {
-  "Video (video4linux/MJPEG) sink",
-  "Sink/Video",
-  "Writes MJPEG-encoded frames to a zoran MJPEG/video4linux device",
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-};
+static GstElementDetails gst_v4lmjpegsink_details =
+GST_ELEMENT_DETAILS ("Video (video4linux/MJPEG) sink",
+    "Sink/Video",
+    "Writes MJPEG-encoded frames to a zoran MJPEG/video4linux device",
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
 /* v4lmjpegsink signals and args */
 enum

@@ -2,7 +2,7 @@
  *
  * unit test for cddabasesrc
  *
- * Copyright (C) <2005> Tim-Philipp Müller  <tim centricular net>
+ * Copyright (C) <2005> Tim-Philipp M??ller  <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -184,12 +184,11 @@ static gboolean gst_cd_foo_src_open (GstCddaBaseSrc * src,
     const gchar * device);
 static void gst_cd_foo_src_close (GstCddaBaseSrc * src);
 
-static GstElementDetails cdfoo_details = {
-  "CD Audio (cdda) Source, FooBar",
-  "Source/File",
-  "Read audio from CD",
-  "Foo Bar <foo@bar.com>"
-};
+static GstElementDetails cdfoo_details =
+GST_ELEMENT_DETAILS ("CD Audio (cdda) Source, FooBar",
+    "Source/File",
+    "Read audio from CD",
+    "Foo Bar <foo@bar.com>");
 
 static void
 gst_cd_foo_src_base_init (gpointer g_class)

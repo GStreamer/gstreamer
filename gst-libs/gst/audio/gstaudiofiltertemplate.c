@@ -34,6 +34,12 @@
 #include <gst/audio/gstaudiofilter.h>
 #include <string.h>
 
+static GstElementDetails audio_filter_template_details =
+GST_ELEMENT_DETAILS ("Audio filter template",
+    "Filter/Effect/Audio",
+    "Filters audio",
+    "David Schleef <ds@schleef.org>");
+
 typedef struct _GstAudioFilterTemplate GstAudioFilterTemplate;
 typedef struct _GstAudioFilterTemplateClass GstAudioFilterTemplateClass;
 
@@ -117,12 +123,6 @@ gst_audio_filter_template_get_type (void)
 static void
 gst_audio_filter_template_base_init (gpointer g_class)
 {
-  static GstElementDetails audio_filter_template_details = {
-    "Audio filter template",
-    "Filter/Effect/Audio",
-    "Filters audio",
-    "David Schleef <ds@schleef.org>"
-  };
   GstAudioFilterTemplateClass *klass = (GstAudioFilterTemplateClass *) g_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 

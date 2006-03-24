@@ -1,3 +1,47 @@
+2006-03-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* ext/cdparanoia/gstcdparanoiasrc.c:
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnome_vfs_sink_base_init),
+	(gst_gnome_vfs_sink_class_init):
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_base_init):
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_base_init):
+	* ext/ogg/gstoggmux.c:
+	* ext/ogg/gstoggparse.c: (gst_ogg_parse_base_init):
+	* ext/ogg/gstogmparse.c: (gst_ogm_audio_parse_base_init),
+	(gst_ogm_video_parse_base_init), (gst_ogm_text_parse_base_init):
+	* ext/pango/gsttextoverlay.c:
+	* ext/pango/gsttextrender.c:
+	* ext/theora/theoradec.c:
+	* ext/theora/theoraenc.c:
+	* ext/vorbis/vorbisdec.c:
+	* ext/vorbis/vorbisenc.c:
+	* gst-libs/gst/audio/gstaudiofilter.c:
+	(gst_audio_filter_base_init):
+	* gst-libs/gst/audio/gstaudiofiltertemplate.c:
+	(gst_audio_filter_template_base_init):
+	* gst/adder/gstadder.c: (gst_adder_get_type):
+	* gst/adder/gstadder.h:
+	* gst/audioconvert/gstaudioconvert.c:
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	(gst_audiostestsrc_wave_get_type), (gst_audio_test_src_class_init),
+	(gst_audio_test_src_create):
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	* gst/playback/gstdecodebin.c:
+	* gst/playback/gstplaybin.c:
+	* gst/playback/gststreamselector.c:
+	(gst_stream_selector_base_init):
+	* gst/subparse/gstsubparse.c: (gst_sub_parse_base_init):
+	* gst/volume/gstvolume.c:
+	* sys/v4l/gstv4lmjpegsink.c:
+	* sys/v4l/gstv4lmjpegsrc.c:
+	* tests/check/libs/cddabasesrc.c:
+	* tests/old/examples/gob/gst-identity2.gob:
+        Add docs for adder, use GST_ELEMENT_DETAILS macro,
+        define GstElementDetails at the top
+
 2006-03-23  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/common/libgstinterfaces.def:

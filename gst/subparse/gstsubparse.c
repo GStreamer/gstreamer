@@ -33,6 +33,13 @@
 GST_DEBUG_CATEGORY_STATIC (sub_parse_debug);
 #define GST_CAT_DEFAULT sub_parse_debug
 
+static GstElementDetails sub_parse_details =
+GST_ELEMENT_DETAILS ("Subtitle parsers",
+    "Codec/Parser/Subtitle",
+    "Parses subtitle (.sub) files into text streams",
+    "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>\n"
+    "Ronald S. Bultje <rbultje@ronald.bitfreak.net>");
+
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -88,13 +95,6 @@ static void
 gst_sub_parse_base_init (GstSubParseClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  static GstElementDetails sub_parse_details = {
-    "Subtitle parsers",
-    "Codec/Parser/Subtitle",
-    "Parses subtitle (.sub) files into text streams",
-    "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>\n"
-        "Ronald S. Bultje <rbultje@ronald.bitfreak.net>"
-  };
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_templ));

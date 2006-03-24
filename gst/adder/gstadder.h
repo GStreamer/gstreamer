@@ -28,8 +28,6 @@
 
 G_BEGIN_DECLS
 
-extern GstElementDetails gst_adder_details;
-
 #define GST_TYPE_ADDER \
   (gst_adder_get_type())
 #define GST_ADDER(obj) \

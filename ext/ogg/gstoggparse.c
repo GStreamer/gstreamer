@@ -36,6 +36,12 @@
 #include <ogg/ogg.h>
 #include <string.h>
 
+static GstElementDetails gst_ogg_parse_details =
+GST_ELEMENT_DETAILS ("ogg parser",
+    "Codec/Parser",
+    "parse ogg streams into pages (info about ogg: http://xiph.org)",
+    "Michael Smith <msmith@fluendo.com>");
+
 GST_DEBUG_CATEGORY_STATIC (gst_ogg_parse_debug);
 #define GST_CAT_DEFAULT gst_ogg_parse_debug
 
@@ -211,11 +217,6 @@ static void
 gst_ogg_parse_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  static GstElementDetails gst_ogg_parse_details =
-      GST_ELEMENT_DETAILS ("ogg parser",
-      "Codec/Parser",
-      "parse ogg streams into pages (info about ogg: http://xiph.org)",
-      "Michael Smith <msmith@fluendo.com>");
 
   gst_element_class_set_details (element_class, &gst_ogg_parse_details);
 

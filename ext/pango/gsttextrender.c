@@ -54,13 +54,12 @@
 GST_DEBUG_CATEGORY_EXTERN (pango_debug);
 #define GST_CAT_DEFAULT pango_debug
 
-static GstElementDetails text_render_details = {
-  "Text Render",
-  "Filter/Editor/Video",
-  "Renders a text string to an image bitmap",
-  "David Schleef <ds@schleef.org>, "
-      "Ronald S. Bultje <rbultje@ronald.bitfreak.net>"
-};
+static GstElementDetails text_render_details =
+GST_ELEMENT_DETAILS ("Text Render",
+    "Filter/Editor/Video",
+    "Renders a text string to an image bitmap",
+    "David Schleef <ds@schleef.org>, "
+    "Ronald S. Bultje <rbultje@ronald.bitfreak.net>");
 
 enum
 {

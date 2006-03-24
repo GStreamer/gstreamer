@@ -27,6 +27,11 @@
 
 #include <string.h>
 
+static GstElementDetails audio_filter_details =
+GST_ELEMENT_DETAILS ("Audio filter base class",
+    "Filter/Effect/Audio",
+    "Filters audio",
+    "David Schleef <ds@schleef.org>");
 
 /* GstAudioFilter signals and args */
 enum
@@ -83,12 +88,6 @@ gst_audio_filter_get_type (void)
 static void
 gst_audio_filter_base_init (gpointer g_class)
 {
-  static GstElementDetails audio_filter_details = {
-    "Audio filter base class",
-    "Filter/Effect/Audio",
-    "Filters audio",
-    "David Schleef <ds@schleef.org>"
-  };
   GstAudioFilterClass *klass = (GstAudioFilterClass *) g_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 

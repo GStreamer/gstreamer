@@ -128,12 +128,11 @@ static GstElementClass *parent_class;
 
 //static guint gst_play_bin_signals[LAST_SIGNAL] = { 0 };
 
-static GstElementDetails gst_play_bin_details = {
-  "Player Bin",
-  "Generic/Bin/Player",
-  "Autoplug and play media from an uri",
-  "Wim Taymans <wim@fluendo.com>"
-};
+static GstElementDetails gst_play_bin_details =
+GST_ELEMENT_DETAILS ("Player Bin",
+    "Generic/Bin/Player",
+    "Autoplug and play media from an uri",
+    "Wim Taymans <wim@fluendo.com>");
 
 static GType
 gst_play_bin_get_type (void)

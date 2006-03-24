@@ -66,12 +66,10 @@ GST_DEBUG_CATEGORY_EXTERN (vorbisenc_debug);
 static GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
 
 /* elementfactory information */
-GstElementDetails vorbisenc_details = {
-  "Vorbis encoder",
-  "Codec/Encoder/Audio",
-  "Encodes audio in Vorbis format",
-  "Monty <monty@xiph.org>, " "Wim Taymans <wim@fluendo.com>",
-};
+GstElementDetails vorbisenc_details = GST_ELEMENT_DETAILS ("Vorbis encoder",
+    "Codec/Encoder/Audio",
+    "Encodes audio in Vorbis format",
+    "Monty <monty@xiph.org>, " "Wim Taymans <wim@fluendo.com>");
 
 /* GstVorbisEnc signals and args */
 enum

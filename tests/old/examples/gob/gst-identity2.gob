@@ -11,14 +11,12 @@ class Gst:Identity2 from Gst:Element {
   private gboolean
   plugin_init (GModule *module, GstPlugin *plugin)
   {
-    static GstElementDetails identity2_details = {
+    static GstElementDetails identity2_details =
+    GST_ELEMENT_DETAILS (
       "GOB Identity",
       "Filter/Effect",
       "Does nothing",
-      "1.0",
-      "Wim Taymans <wim.taymans@chello.be>",
-      "(C) 2001",
-    };
+      "Wim Taymans <wim.taymans@chello.be>");
     GstElementFactory *factory;
 
     factory = gst_elementfactory_new ("identity2", TYPE_SELF,

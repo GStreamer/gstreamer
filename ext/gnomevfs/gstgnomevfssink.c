@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2001 Bastien Nocera <hadess@hadess.net>
  *                    2003 Colin Walters <walters@verbum.org>
- *                    2005 Tim-Philipp Müller <tim centricular net>
+ *                    2005 Tim-Philipp M??ller <tim centricular net>
  *
  * gstgnomevfssink.c: 
  *
@@ -73,6 +73,12 @@
 #include <string.h>
 #include <errno.h>
 
+static GstElementDetails gst_gnome_vfs_sink_details =
+GST_ELEMENT_DETAILS ("GnomeVFS Sink",
+    "Sink/File",
+    "Write a stream to a GnomeVFS URI",
+    "Bastien Nocera <hadess@hadess.net>");
+
 enum
 {
   SIGNAL_ERASE_ASK,
@@ -139,11 +145,6 @@ static void
 gst_gnome_vfs_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  static GstElementDetails gst_gnome_vfs_sink_details =
-      GST_ELEMENT_DETAILS ("GnomeVFS Sink",
-      "Sink/File",
-      "Write a stream to a GnomeVFS URI",
-      "Bastien Nocera <hadess@hadess.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
