@@ -89,8 +89,6 @@ struct _GstBaseSink {
   gboolean       flushing;
 
   /*< private >*/
-  GstBaseSinkPrivate *priv;
-
   union {
     struct {
       /* segment used for clipping incomming buffers */
@@ -101,6 +99,7 @@ struct _GstBaseSink {
     gpointer _gst_reserved[GST_PADDING_LARGE - 1];
   } abidata;
 
+  GstBaseSinkPrivate *priv;
 };
 
 struct _GstBaseSinkClass {
