@@ -26,10 +26,7 @@
 
 #include <FLAC/all.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_FLAC_DEC gst_flac_dec_get_type()
 #define GST_FLAC_DEC(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_FLAC_DEC, GstFlacDec)
@@ -75,9 +72,6 @@ struct _GstFlacDecClass {
 
 GType gst_flac_dec_get_type (void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_FLAC_DEC_H__ */

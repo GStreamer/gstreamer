@@ -1,5 +1,15 @@
 2006-03-24  Wim Taymans  <wim@fluendo.com>
 
+	* ext/flac/gstflacdec.c: (gst_flac_dec_handle_seek_event):
+	* ext/flac/gstflacdec.h:
+	* ext/flac/gstflacenc.h:
+	Spifify a bit.
+	Fix deadly lock order error in seeking code, STREAM_LOCK
+	cannot be taken within LOCK and the streaming variables are
+	protected with the STREAM_LOCK anyway.
+
+2006-03-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_index),
 	(gst_avi_demux_stream_index), (gst_avi_demux_stream_scan),
 	(gst_avi_demux_massage_index), (gst_avi_demux_handle_seek):

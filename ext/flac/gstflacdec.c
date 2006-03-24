@@ -920,14 +920,6 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
 
   flush = ((seek_flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
 
-  GST_OBJECT_LOCK (flacdec);
-
-  /* operate on segment copy until we know the seek worked */
-  segment = flacdec->segment;
-
-  gst_segment_set_seek (&segment, rate, GST_FORMAT_DEFAULT,
-      seek_flags, start_type, start, stop_type, stop, &only_update);
-
   if (flush) {
     gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_start ());
   } else {
@@ -936,13 +928,11 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
 
   GST_PAD_STREAM_LOCK (flacdec->sinkpad);
 
-#if 0
-  if (only_update) {
-    flacdec->segment = segment;
-    gst_flac_dec_send_newsegment (flacdec, TRUE);
-    goto done;
-  }
-#endif
+  /* operate on segment copy until we know the seek worked */
+  segment = flacdec->segment;
+
+  gst_segment_set_seek (&segment, rate, GST_FORMAT_DEFAULT,
+      seek_flags, start_type, start, stop_type, stop, &only_update);
 
   GST_DEBUG ("configured segment: [%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT
       "] = [%" GST_TIME_FORMAT "-%" GST_TIME_FORMAT "]",
@@ -960,38 +950,25 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
 
   flacdec->seeking = FALSE;
 
-  gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_stop ());
+  /* FIXME: support segment seeks */
+  if (flush) {
+    gst_pad_push_event (flacdec->srcpad, gst_event_new_flush_stop ());
+  }
 
   if (seek_ok) {
     flacdec->segment = segment;
     gst_flac_dec_send_newsegment (flacdec, FALSE);
     flacdec->segment.last_stop = segment.start;
 
-/* FIXME: support segment seeks
-    if ((seek_flags & GST_SEEK_FLAG_SEGMENT) != 0) {
-      GST_DEBUG_OBJECT (flacdec, "posting SEGMENT_START message");
-      GST_OBJECT_UNLOCK (flacdec);
-      gst_element_post_message (GST_ELEMENT (flacdec),
-          gst_message_new_segment_start (GST_OBJECT (flacdec),
-              GST_FORMAT_DEFAULT, flacdec->segment.start));
-      GST_OBJECT_LOCK (flacdec);
-    }
-*/
     GST_DEBUG_OBJECT (flacdec, "seek successful");
   } else {
     GST_WARNING_OBJECT (flacdec, "seek failed");
   }
 
-#if 0
-done:
-#endif
-
-  GST_PAD_STREAM_UNLOCK (flacdec->sinkpad);
-
   gst_pad_start_task (flacdec->sinkpad,
       (GstTaskFunction) gst_flac_dec_loop, flacdec->sinkpad);
 
-  GST_OBJECT_UNLOCK (flacdec);
+  GST_PAD_STREAM_UNLOCK (flacdec->sinkpad);
 
   return TRUE;
 }
