@@ -1,3 +1,9 @@
+2006-03-24  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  update core requirement to 0.10.4.1 because of async_playback
+	  vmethod on GstBaseSink
+
 2006-03-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init):
