@@ -24,20 +24,17 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_RMDEMUX \
   (gst_rmdemux_get_type())
 #define GST_RMDEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RMDEMUX,GstRMDemux))
 #define GST_RMDEMUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RMDEMUX,GstRMDemux))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RMDEMUX,GstRMDemuxClass))
 #define GST_IS_RMDEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RMDEMUX))
-#define GST_IS_RMDEMUX_CLASS(obj) \
+#define GST_IS_RMDEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RMDEMUX))
 
 #define GST_RMDEMUX_MAX_STREAMS         8
@@ -148,8 +145,6 @@ struct _GstRMDemuxClass {
 #define GST_RM_AUD_xRA4 GST_MAKE_FOURCC('.','r','a','4') // Not a real audio codec
 #define GST_RM_AUD_xRA5 GST_MAKE_FOURCC('.','r','a','5') // Not a real audio codec
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_RMDEMUX_H__ */

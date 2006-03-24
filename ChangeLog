@@ -1,3 +1,14 @@
+2006-03-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_perform_seek),
+	(gst_rmdemux_loop), (gst_rmdemux_chain), (gst_rmdemux_send_event),
+	(gst_rmdemux_all_source_pads_unlinked),
+	(gst_rmdemux_at_least_one_stream_flowok), (gst_rmdemux_add_stream),
+	(gst_rmdemux_parse_packet):
+	* gst/realmedia/rmdemux.h:
+	  Handle unlinked source pads properly and stop if all source pads
+	  are unlinked (#323023).
+
 2006-03-23  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Michal Benes <michal dot benes at xeris dot cz>

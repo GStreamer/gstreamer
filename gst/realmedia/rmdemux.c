@@ -47,6 +47,7 @@ struct _GstRMDemuxStream
   int id;
   GstCaps *caps;
   GstPad *pad;
+  GstFlowReturn last_flow;
   int timescale;
 
   int sample_index;
@@ -131,7 +132,7 @@ static gboolean gst_rmdemux_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
 static gboolean gst_rmdemux_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_rmdemux_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event);
+static void gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event);
 static const GstQueryType *gst_rmdemux_src_query_types (GstPad * pad);
 static gboolean gst_rmdemux_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush);
@@ -152,6 +153,8 @@ static GstFlowReturn gst_rmdemux_parse_packet (GstRMDemux * rmdemux,
     const void *data, guint16 version, guint16 length);
 static void gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux, const void *data,
     int length);
+static gboolean gst_rmdemux_all_source_pads_unlinked (GstRMDemux * rmdemux);
+static gboolean gst_rmdemux_at_least_one_stream_flowok (GstRMDemux * rmdemux);
 
 static GstCaps *gst_rmdemux_src_getcaps (GstPad * pad);
 
@@ -527,10 +530,7 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, gboolean flush)
       GST_WARNING_OBJECT (rmdemux, "Failed to push event upstream!");
     }
 
-    res = gst_rmdemux_send_event (rmdemux, gst_event_new_flush_start ());
-    if (!res) {
-      GST_WARNING_OBJECT (rmdemux, "Failed to push event downstream!");
-    }
+    gst_rmdemux_send_event (rmdemux, gst_event_new_flush_start ());
   } else {
     gst_pad_pause_task (rmdemux->sinkpad);
   }
@@ -837,7 +837,8 @@ gst_rmdemux_loop (GstPad * pad)
   /* Defer to the chain function */
   ret = gst_rmdemux_chain (pad, buffer);
   if (ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (rmdemux, "Chain flow failed at %p", rmdemux->offset);
+    GST_DEBUG_OBJECT (rmdemux, "Chain flow failed at offset 0x%08x: %s",
+        rmdemux->offset, gst_flow_get_name (ret));
     goto need_pause;
   }
 
@@ -1155,6 +1156,16 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
   }
 
 unlock:
+
+  if (gst_rmdemux_all_source_pads_unlinked (rmdemux)) {
+    GST_WARNING_OBJECT (rmdemux, "all source pads unlinked");
+    ret = GST_FLOW_NOT_LINKED;
+  } else if (gst_rmdemux_at_least_one_stream_flowok (rmdemux)) {
+    ret = GST_FLOW_OK;
+  } else {
+    /* just return last flow return value we got */
+  }
+
   return ret;
 }
 
@@ -1175,27 +1186,55 @@ gst_rmdemux_get_stream_by_id (GstRMDemux * rmdemux, int id)
   return NULL;
 }
 
-static gboolean
+static void
 gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event)
 {
   int i;
-  gboolean ret = TRUE;
 
   for (i = 0; i < rmdemux->n_streams; i++) {
     GstRMDemuxStream *stream;
 
     stream = rmdemux->streams[i];
 
-    GST_DEBUG_OBJECT (rmdemux, "Pushing event to stream %d", i);
+    GST_DEBUG_OBJECT (rmdemux, "Pushing %s event on pad %s",
+        GST_EVENT_TYPE_NAME (event), GST_PAD_NAME (stream->pad));
 
     gst_event_ref (event);
-    ret = gst_pad_push_event (stream->pad, event);
-    if (!ret)
-      break;
+    gst_pad_push_event (stream->pad, event);
   }
   gst_event_unref (event);
+}
 
-  return ret;
+static gboolean
+gst_rmdemux_all_source_pads_unlinked (GstRMDemux * rmdemux)
+{
+  gint i;
+
+  if (rmdemux->n_streams == 0)
+    return FALSE;               /* haven't parsed the headers yet */
+
+  for (i = 0; i < rmdemux->n_streams; ++i) {
+    if (gst_pad_is_linked (rmdemux->streams[i]->pad))
+      return FALSE;
+    /* ignore unlinked state if we haven't tried to push on this pad yet */
+    if (rmdemux->streams[i]->last_flow == GST_FLOW_OK)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_rmdemux_at_least_one_stream_flowok (GstRMDemux * rmdemux)
+{
+  gint i;
+
+  for (i = 0; i < rmdemux->n_streams; ++i) {
+    if (rmdemux->streams[i]->last_flow == GST_FLOW_OK)
+      return TRUE;
+  }
+
+  return FALSE;
 }
 
 GstFlowReturn
@@ -1208,8 +1247,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     char *name = g_strdup_printf ("video_%02d", rmdemux->n_video_streams);
 
     stream->pad =
-        gst_pad_new_from_template (gst_static_pad_template_get
-        (&gst_rmdemux_videosrc_template), name);
+        gst_pad_new_from_static_template (&gst_rmdemux_videosrc_template, name);
     g_free (name);
 
     switch (stream->fourcc) {
@@ -1251,8 +1289,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     char *name = g_strdup_printf ("audio_%02d", rmdemux->n_audio_streams);
 
     stream->pad =
-        gst_pad_new_from_template (gst_static_pad_template_get
-        (&gst_rmdemux_audiosrc_template), name);
+        gst_pad_new_from_static_template (&gst_rmdemux_audiosrc_template, name);
     GST_LOG_OBJECT (rmdemux, "Created audio pad \"%s\"", name);
     g_free (name);
     switch (stream->fourcc) {
@@ -1341,6 +1378,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   rmdemux->n_streams++;
   GST_LOG_OBJECT (rmdemux, "n_streams is now %d", rmdemux->n_streams);
 
+  stream->last_flow = GST_FLOW_OK;
+
   if (stream->pad && stream->caps) {
     GST_DEBUG_OBJECT (rmdemux, "setting caps: %p", stream->caps);
 
@@ -1356,8 +1395,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     gst_pad_set_query_function (stream->pad,
         GST_DEBUG_FUNCPTR (gst_rmdemux_src_query));
 
-    GST_DEBUG_OBJECT (rmdemux, "adding pad %p to rmdemux %p", stream->pad,
-        rmdemux);
+    GST_DEBUG_OBJECT (rmdemux, "adding pad %s with caps %" GST_PTR_FORMAT
+        ", stream_id=%d", GST_PAD_NAME (stream->pad), stream->caps, stream->id);
     gst_element_add_pad (GST_ELEMENT (rmdemux), stream->pad);
 
     gst_pad_push_event (stream->pad,
@@ -1743,20 +1782,23 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
 
   if ((rmdemux->offset + packet_size) > stream->seek_offset &&
       stream && stream->pad) {
-    if ((ret =
-            gst_pad_alloc_buffer_and_set_caps (stream->pad,
-                GST_BUFFER_OFFSET_NONE, packet_size, stream->caps,
-                &buffer)) != GST_FLOW_OK) {
-      GST_WARNING_OBJECT (rmdemux, "failed to alloc src buffer for stream %d",
-          id);
-      return ret;
+
+    ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
+        GST_BUFFER_OFFSET_NONE, packet_size, stream->caps, &buffer);
+
+    if (ret == GST_FLOW_OK) {
+      memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, packet_size);
+      GST_BUFFER_TIMESTAMP (buffer) = rmdemux->cur_timestamp;
+
+      GST_LOG_OBJECT (rmdemux, "Pushing buffer of size %d to pad %s",
+          GST_BUFFER_SIZE (buffer), GST_PAD_NAME (stream->pad));
+
+      ret = gst_pad_push (stream->pad, buffer);
+    } else if (ret != GST_FLOW_NOT_LINKED) {
+      GST_WARNING_OBJECT (rmdemux, "alloc_buffer failed for pad %s: %s",
+          GST_PAD_NAME (stream->pad), gst_flow_get_name (ret));
     }
-
-    memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, packet_size);
-    GST_BUFFER_TIMESTAMP (buffer) = rmdemux->cur_timestamp;
-
-    GST_DEBUG_OBJECT (rmdemux, "Pushing buffer of size %d to pad", packet_size);
-    ret = gst_pad_push (stream->pad, buffer);
+    stream->last_flow = ret;
   } else {
     GST_DEBUG_OBJECT (rmdemux,
         "Stream %d is skipping: seek_offset=%d, offset=%d, packet_size",
