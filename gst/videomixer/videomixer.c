@@ -558,7 +558,8 @@ gst_videomixer_init (GstVideoMixer * mix)
   mix->fps_n = mix->fps_d = 0;
 
   gst_collect_pads_set_function (mix->collect,
-      (GstCollectPadsFunction) gst_videomixer_collected, mix);
+      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_videomixer_collected),
+      mix);
 }
 
 static GstCaps *

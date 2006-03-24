@@ -229,7 +229,8 @@ gst_multipart_mux_init (GstMultipartMux * multipart_mux)
 
   multipart_mux->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (multipart_mux->collect,
-      (GstCollectPadsFunction) gst_multipart_mux_collected, multipart_mux);
+      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_multipart_mux_collected),
+      multipart_mux);
 }
 
 static void

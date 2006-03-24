@@ -1,3 +1,11 @@
+2006-03-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_init):
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_init):
+	* gst/smpte/gstsmpte.c: (gst_smpte_init):
+	* gst/videomixer/videomixer.c: (gst_videomixer_init):
+	use DEBUG_FUNCPTR for collectpads
+
 2006-03-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_init), (gst_jpegenc_chain):

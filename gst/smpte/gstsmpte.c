@@ -277,7 +277,7 @@ gst_smpte_init (GstSMPTE * smpte)
 
   smpte->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (smpte->collect,
-      (GstCollectPadsFunction) gst_smpte_collected, smpte);
+      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_smpte_collected), smpte);
   gst_collect_pads_start (smpte->collect);
 
   gst_collect_pads_add_pad (smpte->collect, smpte->sinkpad1,

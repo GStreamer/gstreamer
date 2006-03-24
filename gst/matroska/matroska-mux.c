@@ -232,7 +232,8 @@ gst_matroska_mux_init (GstMatroskaMux * mux, GstMatroskaMuxClass * g_class)
 
   mux->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (mux->collect,
-      (GstCollectPadsFunction) gst_matroska_mux_collected, mux);
+      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_matroska_mux_collected),
+      mux);
 
   mux->ebml_write = gst_ebml_write_new (mux->srcpad);
 
