@@ -1,3 +1,17 @@
+2006-03-24  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	Fixes in how we figure out what API to ignore
+	* gst/Makefile.am:
+	* gst/gst-0.10.5.ignore:
+	* gst/gstversion.override.in:
+	Added file for handling API additions for gstreamer 0.10.5
+	* gst/base.defs:
+	* gst/gst.defs:
+	New API
+	* gst/gstpad.override:
+	Overrides for gst.Pad.query_peer_*()
+
 === release 0.10.3 ===
 
 2006-03-21  Jan Schmidt <thaytan@mad.scientist.com>

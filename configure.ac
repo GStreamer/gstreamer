@@ -62,6 +62,7 @@ AC_SUBST(GST_LIBS)
 
 dnl get the installed GStreamer core version
 GST_MINOR_VERSION=`$PKG_CONFIG --modversion gstreamer-$GST_MAJORMINOR | cut -f 3 -d.`
+GST_CVS_VERSION=`$PKG_CONFIG --modversion gstreamer-$GST_MAJORMINOR | cut -f 4 -d.`
 
 echo "Building against GStreamer core 0.10.$GST_MINOR_VERSION , ignoring API additions if needed"
 
@@ -73,21 +74,36 @@ dnl The following lines should be updated whenever:
 dnl _ GST_REQ is up-ed (remove obsolete lines + gst-0.10.MINOR.ignore)
 dnl _ new core/base is released (add lines + gst-0.10.MINOR.ignore)
 
-if test $GST_MINOR_VERSION -lt "3"
+if test $GST_CVS_VERSION -eq ""
 then
-  IGNORE_GST_0_10_3="gst-0.10.3.ignore"
+  if test $GST_MINOR_VERSION -lt "3"
+  then
+    IGNORE_GST_0_10_3="gst-0.10.3.ignore"
+  else
+    IGNORE_GST_0_10_3=""
+  fi
+
+  if test $GST_MINOR_VERSION -lt "4"
+  then
+    IGNORE_GST_0_10_4="gst-0.10.4.ignore"
+  else
+    IGNORE_GST_0_10_4=""
+  fi
+  
+  if test $GST_MINOR_VERSION -lt "5"
+  then
+    IGNORE_GST_0_10_5="gst-0.10.5.ignore"
+  else
+    IGNORE_GST_0_10_5=""
+  fi
 else
   IGNORE_GST_0_10_3=""
+  IGNORE_GST_0_10_4=""
+  IGNORE_GST_0_10_5=""
 fi
 AC_SUBST(IGNORE_GST_0_10_3)
-
-if test $GST_MINOR_VERSION -lt "4"
-then
-  IGNORE_GST_0_10_4="gst-0.10.4.ignore"
-else
-  IGNORE_GST_0_10_4=""
-fi
 AC_SUBST(IGNORE_GST_0_10_4)
+AC_SUBST(IGNORE_GST_0_10_5)
 
 dnl check for gstreamer-base; uninstalled is selected preferentially
 PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,

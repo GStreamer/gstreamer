@@ -4054,6 +4054,21 @@
   (return-type "none")
 )
 
+(define-method set_delay
+  (of-object "GstPipeline")
+  (c-name "gst_pipeline_set_delay")
+  (return-type "none")
+  (parameters
+    '("GstClockTime" "delay")
+  )
+)
+
+(define-method get_delay
+  (of-object "GstPipeline")
+  (c-name "gst_pipeline_get_delay")
+  (return-type "GstClockTime")
+)
+
 (define-method set_auto_flush_bus
   (of-object "GstPipeline")
   (c-name "gst_pipeline_set_auto_flush_bus")
@@ -6539,6 +6554,38 @@
     '("GstFormat" "src_format")
     '("gint64" "src_val")
     '("GstFormat*" "dest_fmt")
+    '("gint64*" "dest_val")
+  )
+)
+
+(define-method query_peer_position
+  (of-object "GstPad")
+  (c-name "gst_pad_query_peer_position")
+  (return-type "gboolean")
+  (parameters
+    '("GstFormat*" "format")
+    '("gint64*" "cur")
+  )
+)
+
+(define-method query_peer_duration
+  (of-object "GstPad")
+  (c-name "gst_pad_query_peer_duration")
+  (return-type "gboolean")
+  (parameters
+    '("GstFormat*" "format")
+    '("gint64*" "duration")
+  )
+)
+
+(define-method query_peer_convert
+  (of-object "GstPad")
+  (c-name "gst_pad_query_peer_convert")
+  (return-type "gboolean")
+  (parameters
+    '("GstFormat" "src_format")
+    '("gint64" "src_val")
+    '("GstFormat*" "dest_format")
     '("gint64*" "dest_val")
   )
 )

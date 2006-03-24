@@ -1063,3 +1063,97 @@ _wrap_gst_pad_set_caps(PyGObject *self, PyObject *args, PyObject *kwargs)
     return PyBool_FromLong(ret);
 
 }
+%%
+override gst_pad_query_peer_position args
+static PyObject *
+_wrap_gst_pad_query_peer_position (PyGObject *self, PyObject *args)
+{
+    gint64    cur;
+    gint    format;
+    PyObject    *pformat;
+    PyObject    *ret;
+
+    pformat = (PyObject*)PyTuple_GetItem(args, 0);
+    if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
+        PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+        return NULL;
+    }
+
+    if ((gst_pad_query_peer_position(GST_PAD (self->obj), (GstFormat*) &format, &cur))) {
+        ret = PyList_New(2);
+        PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
+        PyList_SetItem(ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
+    } else {
+        Py_INCREF(Py_None);
+        ret = Py_None;
+    }
+
+    return ret;
+}
+%%
+override gst_pad_query_peer_duration args
+static PyObject *
+_wrap_gst_pad_query_peer_duration (PyGObject *self, PyObject *args)
+{
+    gint64    cur;
+    gint    format;
+    PyObject    *pformat;
+    PyObject    *ret;
+
+    pformat = (PyObject*)PyTuple_GetItem(args, 0);
+    if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
+        PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+        return NULL;
+    }
+
+    if ((gst_pad_query_peer_duration(GST_PAD (self->obj), (GstFormat*) &format, &cur))) {
+        ret = PyList_New(2);
+        PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
+        PyList_SetItem(ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
+    } else {
+        Py_INCREF(Py_None);
+        ret = Py_None;
+    }
+
+    return ret;
+}
+%%
+override gst_pad_query_peer_convert kwargs
+static PyObject *
+_wrap_gst_pad_query_peer_convert (PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "fromformat", "fromvalue", "destformat", NULL };
+    PyObject    *pfromformat, *pdestformat;
+    GstFormat    srcformat, destformat;
+    gint64    fromval, dstval;
+    PyObject    *ret;
+
+    /* Input : src_format, src_val, dst_format */
+    /* Returns : dst_format, dst_val OR None */
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                     "0L0:GstPad.query_peer_convert",
+                     kwlist, &pfromformat, &fromval, &pdestformat))
+    return NULL;
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, pfromformat, (gint *) &srcformat)) {
+    PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+    return NULL;
+    }
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, pdestformat, (gint *) &destformat)) {
+    PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
+    return NULL;
+    }
+
+    if (!(gst_pad_query_peer_convert (GST_PAD(self->obj),
+                 srcformat, fromval,
+                 &destformat, &dstval))) {
+    Py_INCREF(Py_None);
+    return Py_None;
+    }
+    
+    ret = PyList_New(2);
+    PyList_SetItem(ret, 0, pyg_enum_from_gtype (GST_TYPE_FORMAT, destformat));
+    PyList_SetItem(ret, 1, PyLong_FromLongLong(dstval));
+
+    return ret;
+}

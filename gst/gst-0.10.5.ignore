@@ -1,0 +1,13 @@
+%%
+ignore
+  gst_pad_query_peer_position
+  gst_pad_query_peer_duration
+  gst_pad_query_peer_convert
+  gst_base_sink_set_qos_enabled
+  gst_base_sink_is_qos_enabled
+  gst_base_transform_update_qos
+  gst_base_transform_set_qos_enabled
+  gst_base_transform_is_qos_enabled
+  gst_pipeline_set_delay
+  gst_pipeline_get_delay
+%%

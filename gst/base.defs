@@ -162,6 +162,21 @@
   (return-type "gint64")
 )
 
+(define-method set_qos_enabled
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_set_qos_enabled")
+  (return-type "none")
+  (parameters
+    '("gboolean" "enabled")
+  )
+)
+
+(define-method is_qos_enabled
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_is_qos_enabled")
+  (return-type "gboolean")
+)
+
 (define-virtual get_caps
   (of-object "GstBaseSink")
   (return-type "GstCaps*")
@@ -400,6 +415,32 @@
 (define-method is_in_place
   (of-object "GstBaseTransform")
   (c-name "gst_base_transform_is_in_place")
+  (return-type "gboolean")
+)
+
+(define-method update_qos
+  (of-object "GstBaseTransform")
+  (c-name "gst_base_transform_update_qos")
+  (return-type "none")
+  (parameters
+    '("gdouble" "proportion")
+    '("GstClockTimeDiff" "diff")
+    '("GstClockTime" "timestamp")
+  )
+)
+
+(define-method set_qos_enabled
+  (of-object "GstBaseTransform")
+  (c-name "gst_base_transform_set_qos_enabled")
+  (return-type "none")
+  (parameters
+    '("gboolean" "enabled")
+  )
+)
+
+(define-method is_qos_enabled
+  (of-object "GstBaseTransform")
+  (c-name "gst_base_transform_is_qos_enabled")
   (return-type "gboolean")
 )
 
