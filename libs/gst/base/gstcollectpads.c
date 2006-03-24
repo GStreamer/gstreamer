@@ -628,8 +628,8 @@ gst_collect_pads_is_collected (GstCollectPads * pads, GstFlowReturn * ret)
 
   /* If all our pads are EOS just collect once */
   if (pads->eospads == pads->numpads) {
-    GST_DEBUG ("All active pads are EOS, calling %s",
-        GST_DEBUG_FUNCPTR_NAME (pads->func));
+    GST_DEBUG ("All active pads (%d) are EOS, calling %s",
+        pads->numpads, GST_DEBUG_FUNCPTR_NAME (pads->func));
     flow_ret = pads->func (pads, pads->user_data);
     res = TRUE;
     goto beach;
@@ -640,8 +640,8 @@ gst_collect_pads_is_collected (GstCollectPads * pads, GstFlowReturn * ret)
      we can get a busy loop here if the element does not pop from the collect
      function */
   while (((pads->queuedpads + pads->eospads) >= pads->numpads) && pads->func) {
-    GST_DEBUG ("All active pads have data, calling %s",
-        GST_DEBUG_FUNCPTR_NAME (pads->func));
+    GST_DEBUG ("All active pads (%d) have data, calling %s",
+        pads->numpads, GST_DEBUG_FUNCPTR_NAME (pads->func));
     flow_ret = pads->func (pads, pads->user_data);
     res = TRUE;
 
