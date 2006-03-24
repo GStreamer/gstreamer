@@ -60,14 +60,14 @@ struct _GstRMDemuxStream
   guint16 width;
   guint16 height;
   guint16 flavor;
-  guint16 rate;                 // samplerate
-  guint16 n_channels;           // channels
-  guint16 sample_width;         // bits_per_sample
-  guint16 leaf_size;            // subpacket_size
-  guint32 packet_size;          // coded_frame_size
+  guint16 rate;                 /* samplerate         */
+  guint16 n_channels;           /* channels           */
+  guint16 sample_width;         /* bits_per_sample    */
+  guint16 leaf_size;            /* subpacket_size     */
+  guint32 packet_size;          /* coded_frame_size   */
   guint16 version;
-  guint32 extra_data_size;      // codec_data_length
-  guint8 *extra_data;           // extras
+  guint32 extra_data_size;      /* codec_data_length  */
+  guint8 *extra_data;           /* extras             */
 };
 
 struct _GstRMDemuxIndex
@@ -234,14 +234,16 @@ gst_rmdemux_init (GstRMDemux * rmdemux)
   rmdemux->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_rmdemux_sink_template), "sink");
-  gst_pad_set_event_function (rmdemux->sinkpad, gst_rmdemux_sink_event);
-  gst_pad_set_chain_function (rmdemux->sinkpad, gst_rmdemux_chain);
-  gst_pad_set_activate_function (rmdemux->sinkpad, gst_rmdemux_sink_activate);
+  gst_pad_set_event_function (rmdemux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_rmdemux_sink_event));
+  gst_pad_set_chain_function (rmdemux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_rmdemux_chain));
+  gst_pad_set_activate_function (rmdemux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_rmdemux_sink_activate));
   gst_pad_set_activatepull_function (rmdemux->sinkpad,
-      gst_rmdemux_sink_activate_pull);
+      GST_DEBUG_FUNCPTR (gst_rmdemux_sink_activate_pull));
   gst_pad_set_activatepush_function (rmdemux->sinkpad,
-      gst_rmdemux_sink_activate_push);
-
+      GST_DEBUG_FUNCPTR (gst_rmdemux_sink_activate_push));
 
   gst_element_add_pad (GST_ELEMENT (rmdemux), rmdemux->sinkpad);
 
@@ -397,9 +399,9 @@ gst_rmdemux_validate_offset (GstRMDemux * rmdemux)
         rmdemux->offset);
     return FALSE;
   }
-  // TODO: Can we also be seeking to a 'DATA' chunk header? Check this.
-  // Also, for the case we currently handle, can we check any more? It's pretty
-  // sucky to not be validating a little more heavily than this...
+  /* TODO: Can we also be seeking to a 'DATA' chunk header? Check this.
+   * Also, for the case we currently handle, can we check any more? It's pretty
+   * sucky to not be validating a little more heavily than this... */
   /* This should now be the start of a data packet header. That begins with
    * a 2-byte 'version' field, which has to be 0 or 1, then a length. I'm not
    * certain what values are valid for length, but it must always be at least
@@ -414,7 +416,7 @@ gst_rmdemux_validate_offset (GstRMDemux * rmdemux)
   }
 
   length = RMDEMUX_GUINT16_GET (GST_BUFFER_DATA (buffer) + 2);
-  // TODO: Also check against total stream length
+  /* TODO: Also check against total stream length */
   if (length < 4) {
     GST_DEBUG_OBJECT (rmdemux, "Expected length >= 4, got %d", (int) length);
     ret = FALSE;
@@ -791,7 +793,7 @@ gst_rmdemux_loop (GstPad * pad)
 
   rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
 
-  GST_DEBUG_OBJECT (rmdemux, "loop with state=%d and offset=0x%x",
+  GST_LOG_OBJECT (rmdemux, "loop with state=%d and offset=0x%x",
       rmdemux->loop_state, rmdemux->offset);
 
   switch (rmdemux->state) {
@@ -875,13 +877,21 @@ gst_rmdemux_loop (GstPad * pad)
 
 need_pause:
   {
-    GST_LOG_OBJECT (rmdemux, "pausing task");
+    GST_DEBUG_OBJECT (rmdemux, "pausing task");
     gst_pad_pause_task (pad);
-    if (GST_FLOW_IS_FATAL (ret)) {
+    if (ret == GST_FLOW_NOT_LINKED) {
+      /* playbin should already have posted a better message in this
+       * case when it got the no-more-pads signal and realised there
+       * are no suitable decoders */
+      GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED,
+          ("Internal data flow error."),
+          ("streaming task paused, reason: all source pads unlinked"));
+    } else if (GST_FLOW_IS_FATAL (ret)) {
       gst_rmdemux_send_event (rmdemux, gst_event_new_eos ());
       if (ret != GST_FLOW_UNEXPECTED) {
-        GST_ELEMENT_ERROR (rmdemux, CORE, EVENT, (NULL),
-            ("gst_rmdemux_send_event() failed with return value %d", ret));
+        GST_ELEMENT_ERROR (rmdemux, STREAM, FAILED,
+            ("Internal data flow error."),
+            ("streaming task paused, reason: %s", gst_flow_get_name (ret)));
       }
     }
     return;
@@ -1519,7 +1529,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
   int stream_type;
   int offset;
 
-  //re_hexdump_bytes ((guint8 *) data, length, 0);
+  /* re_hexdump_bytes ((guint8 *) data, length, 0); */
 
   stream = g_new0 (GstRMDemuxStream, 1);
 
@@ -1762,8 +1772,8 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
       "Parsing a packet for stream=%d, timestamp=%" GST_TIME_FORMAT
       ", version=%d", id, GST_TIME_ARGS (rmdemux->cur_timestamp), version);
 
-  // TODO: We read 6 bytes previously; this is skipping over either 2 or 3 
-  // bytes (version dependent) // without even reading it. What are these for?
+  /* TODO: We read 6 bytes previously; this is skipping over either 2 or 3 
+   * bytes (version dependent) without even reading it. What are these for? */
   if (version == 0) {
     data += 8;
     packet_size = length - 8;

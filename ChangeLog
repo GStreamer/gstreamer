@@ -1,5 +1,15 @@
 2006-03-24  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_init),
+	(gst_rmdemux_validate_offset), (gst_rmdemux_loop),
+	(gst_rmdemux_parse_mdpr), (gst_rmdemux_parse_packet):
+	  When operating in pull mode, post an error message on the
+	  bus when all source pads are unlinked or some other fatal
+	  error occured (#323023). Regrade some recurring debug messages
+	  to LOG level. Convert c++-style comments into C-style ones.
+
+2006-03-24  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_perform_seek),
 	(gst_rmdemux_loop), (gst_rmdemux_chain), (gst_rmdemux_send_event),
 	(gst_rmdemux_all_source_pads_unlinked),
