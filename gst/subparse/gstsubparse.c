@@ -230,38 +230,45 @@ beach:
 static gchar *
 convert_encoding (GstSubParse * self, const gchar * str, gsize len)
 {
-  gsize bytes_read, bytes_written;
-  gchar *rv;
-  GString *converted;
+  const gchar *encoding;
+  GError *err = NULL;
+  gchar *ret;
 
-  converted = g_string_new (NULL);
-  while (len) {
-#ifndef GST_DISABLE_GST_DEBUG
-    gchar *dbg = g_strndup (str, len);
-
-    GST_DEBUG ("Trying to convert '%s'", dbg);
-    g_free (dbg);
-#endif
-
-    rv = g_locale_to_utf8 (str, len, &bytes_read, &bytes_written, NULL);
-    if (rv) {
-      g_string_append_len (converted, rv, bytes_written);
-      g_free (rv);
-
-      len -= bytes_read;
-      str += bytes_read;
+  if (self->valid_utf8) {
+    if (g_utf8_validate (str, len, NULL)) {
+      GST_LOG_OBJECT (self, "valid UTF-8, no conversion needed");
+      return g_strndup (str, len);
     }
-    if (len) {
-      /* conversion error ocurred => skip one char */
-      len--;
-      str++;
-      g_string_append_c (converted, '?');
+    GST_INFO_OBJECT (self, "invalid UTF-8!");
+    self->valid_utf8 = FALSE;
+  }
+
+  encoding = g_getenv ("GST_SUBTITLE_ENCODING");
+  if (encoding == NULL || *encoding == '\0') {
+    /* if local encoding is UTF-8 and no encoding specified
+     * via the environment variable, assume ISO-8859-15 */
+    if (g_get_charset (&encoding)) {
+      encoding = "ISO-8859-15";
     }
   }
-  rv = converted->str;
-  g_string_free (converted, FALSE);
-  GST_DEBUG ("Converted to '%s'", rv);
-  return rv;
+
+  ret = g_convert_with_fallback (str, len, "UTF-8", encoding, "*", NULL,
+      NULL, &err);
+
+  if (err) {
+    GST_WARNING_OBJECT (self, "could not convert string from '%s' to UTF-8: %s",
+        encoding, err->message);
+    g_error_free (err);
+
+    /* invalid input encoding, fall back to ISO-8859-15 (always succeeds) */
+    ret = g_convert_with_fallback (str, len, "UTF-8", "ISO-8859-15", "*",
+        NULL, NULL, NULL);
+  }
+
+  GST_LOG_OBJECT (self, "successfully converted %d characters from %s to UTF-8"
+      "%s", len, encoding, (err) ? " , using ISO-8859-15 as fallback" : "");
+
+  return ret;
 }
 
 static gchar *
@@ -833,6 +840,7 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
       /* format detection will init the parser state */
       self->offset = self->next_offset = 0;
       self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
+      self->valid_utf8 = TRUE;
       break;
     default:
       break;

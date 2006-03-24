@@ -1,3 +1,20 @@
+2006-03-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/subparse/gstsubparse.c: (convert_encoding),
+	(gst_sub_parse_change_state):
+	* gst/subparse/gstsubparse.h:
+	  Text subtitle files may or may not be UTF-8. If it's not, we
+	  don't really want to see '?' characters in place of non-ASCII
+	  characters like accented characters. So let's assume the input
+	  is UTF-8 until we come across text that is clearly not. If it's
+	  not UTF-8, we don't really know what it is, so try the following:
+	  (a) see whether the GST_SUBTITLE_ENCODING environment variable
+	  is set; if not, check (b) if the current locale encoding is
+	  non-UTF-8 and use that if it is, or (c) assume ISO-8859-15 if
+	  the current locale encoding is UTF-8 and the environment variable
+	  was not set to any particular encoding. Not perfect, but better
+	  than nothing (and better than before, I think) (fixes #172848).
+
 2006-03-24  Thomas Vander Stichele <thomas at apestaart dot org>
 
 	* configure.ac:

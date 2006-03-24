@@ -81,6 +81,7 @@ struct _GstSubParse {
   gboolean need_segment;
   
   gboolean flushing;
+  gboolean valid_utf8;
 };
 
 struct _GstSubParseClass {
