@@ -308,7 +308,8 @@ gst_ogg_mux_init (GstOggMux * ogg_mux)
 
   ogg_mux->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (ogg_mux->collect,
-      (GstCollectPadsFunction) gst_ogg_mux_collected, ogg_mux);
+      (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_ogg_mux_collected),
+      ogg_mux);
 
   gst_ogg_mux_clear (ogg_mux);
 }

@@ -1,5 +1,11 @@
 2006-03-24  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_init):
+	* gst/adder/gstadder.c: (gst_adder_init):
+	use DEBUG_FUNCPTR for collectpads
+
+2006-03-24  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-base-plugins-sections.txt:

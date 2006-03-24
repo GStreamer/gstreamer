@@ -306,7 +306,8 @@ gst_adder_init (GstAdder * adder)
 
   /* keep track of the sinkpads requested */
   adder->collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (adder->collect, gst_adder_collected, adder);
+  gst_collect_pads_set_function (adder->collect,
+      GST_DEBUG_FUNCPTR (gst_adder_collected), adder);
 }
 
 static void
