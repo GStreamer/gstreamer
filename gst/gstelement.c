@@ -1054,6 +1054,8 @@ gst_element_class_add_pad_template (GstElementClass * klass,
  *
  * Sets the detailed information for a #GstElementClass.
  * <note>This function is for use in _base_init functions only.</note>
+ *
+ * The @details are copied.
  */
 void
 gst_element_class_set_details (GstElementClass * klass,

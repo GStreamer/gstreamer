@@ -1,5 +1,10 @@
 2006-03-24  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstelement.c:
+        Little clarification in the docs
+
+2006-03-24  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/README:
 	formatting fix
 	* plugins/elements/gstidentity.c:
