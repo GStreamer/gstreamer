@@ -1250,6 +1250,8 @@ gst_rmdemux_at_least_one_stream_flowok (GstRMDemux * rmdemux)
 GstFlowReturn
 gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 {
+  const gchar *codec_tag = NULL;
+  const gchar *codec_name = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   int version = 0;
 
@@ -1260,17 +1262,23 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         gst_pad_new_from_static_template (&gst_rmdemux_videosrc_template, name);
     g_free (name);
 
+    codec_tag = GST_TAG_VIDEO_CODEC;
+
     switch (stream->fourcc) {
       case GST_RM_VDO_RV10:
+        codec_name = "Real Video 1.0";
         version = 1;
         break;
       case GST_RM_VDO_RV20:
+        codec_name = "Real Video 2.0";
         version = 2;
         break;
       case GST_RM_VDO_RV30:
+        codec_name = "Real Video 3.0";
         version = 3;
         break;
       case GST_RM_VDO_RV40:
+        codec_name = "Real Video 4.0";
         version = 4;
         break;
       default:
@@ -1302,18 +1310,24 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         gst_pad_new_from_static_template (&gst_rmdemux_audiosrc_template, name);
     GST_LOG_OBJECT (rmdemux, "Created audio pad \"%s\"", name);
     g_free (name);
+
+    codec_tag = GST_TAG_AUDIO_CODEC;
+
     switch (stream->fourcc) {
         /* Older RealAudio Codecs */
       case GST_RM_AUD_14_4:
+        codec_name = "Real Audio 14.4kbps";
         version = 1;
         break;
 
       case GST_RM_AUD_28_8:
+        codec_name = "Real Audio 28.8kbps";
         version = 2;
         break;
 
         /* DolbyNet (Dolby AC3, low bitrate) */
       case GST_RM_AUD_DNET:
+        codec_name = "AC-3 audio";
         stream->caps =
             gst_caps_new_simple ("audio/x-ac3", "rate", G_TYPE_INT,
             (int) stream->rate, NULL);
@@ -1321,11 +1335,13 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
         /* RealAudio 10 (AAC) */
       case GST_RM_AUD_RAAC:
+        codec_name = "Real Audio 10 (AAC)";
         version = 10;
         break;
 
         /* MPEG-4 based */
       case GST_RM_AUD_RACP:
+        /* FIXME: codec_name = */
         stream->caps =
             gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT,
             (int) 4, NULL);
@@ -1333,22 +1349,26 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
         /* Sony ATRAC3 */
       case GST_RM_AUD_ATRC:
+        codec_name = "Sony ATRAC3";
         stream->caps = gst_caps_new_simple ("audio/x-vnd.sony.atrac3", NULL);
         break;
 
         /* RealAudio G2 audio */
       case GST_RM_AUD_COOK:
+        codec_name = "Real Audio G2 (Cook)";
         version = 8;
         break;
 
         /* RALF is lossless */
       case GST_RM_AUD_RALF:
+        /* FIXME: codec_name = */
         GST_DEBUG_OBJECT (rmdemux, "RALF");
         stream->caps = gst_caps_new_simple ("audio/x-ralf-mpeg4-generic", NULL);
         break;
 
         /* Sipro/ACELP.NET Voice Codec (MIME unknown) */
       case GST_RM_AUD_SIPR:
+        /* FIXME: codec_name = */
         stream->caps = gst_caps_new_simple ("audio/x-sipro", NULL);
         break;
 
@@ -1428,6 +1448,14 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     gst_pad_push_event (stream->pad,
         gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, (gint64) 0,
             (gint64) - 1, 0));
+
+    if (codec_name && codec_tag) {
+      GstTagList *tags = NULL;
+
+      tags = gst_tag_list_new ();
+      gst_tag_list_add (tags, GST_TAG_MERGE_KEEP, codec_tag, codec_name, NULL);
+      gst_element_found_tags_for_pad (GST_ELEMENT (rmdemux), stream->pad, tags);
+    }
   }
 
 beach:
@@ -1745,10 +1773,54 @@ gst_rmdemux_parse_data (GstRMDemux * rmdemux, const void *data, int length)
 static void
 gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const void *data, int length)
 {
-  gchar *title = (gchar *) re_get_pascal_string (data);
+  const gchar *gst_tags[] = { GST_TAG_TITLE, GST_TAG_ARTIST,
+    GST_TAG_COPYRIGHT, GST_TAG_COMMENT
+  };
+  GstTagList *tags;
+  guint i;
 
-  GST_DEBUG_OBJECT (rmdemux, "File Content : (CONT) %s", title);
-  g_free (title);
+  GST_DEBUG_OBJECT (rmdemux, "File Content : (CONT) len = %d", length);
+
+  tags = gst_tag_list_new ();
+
+  for (i = 0; i < G_N_ELEMENTS (gst_tags); ++i) {
+    if (length > 2) {
+      gchar *str;
+      guint str_length;
+
+      str = (gchar *) re_get_pascal_string (data);
+      str_length = (str != NULL) ? strlen (str) : 0;
+      data += 2 + str_length;
+      length -= 2 + str_length;
+
+      if (str != NULL && !g_utf8_validate (str, -1, NULL)) {
+        const gchar *encoding;
+        gchar *tmp;
+
+        encoding = g_getenv ("GST_TAG_ENCODING");
+        if (encoding == NULL || *encoding == '\0') {
+          if (g_get_charset (&encoding))
+            encoding = "ISO-8859-15";
+        }
+        GST_DEBUG_OBJECT (rmdemux, "converting tag from %s to UTF-8", encoding);
+        tmp = g_convert_with_fallback (str, -1, "UTF-8", encoding, "*",
+            NULL, NULL, NULL);
+        g_free (str);
+        str = tmp;
+      }
+
+      GST_DEBUG_OBJECT (rmdemux, "%s = %s", gst_tags[i], GST_STR_NULL (str));
+      if (str != NULL && *str != '\0') {
+        gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, gst_tags[i], str, NULL);
+      }
+    }
+  }
+
+  if (gst_structure_n_fields ((GstStructure *) tags) > 0) {
+    gst_element_found_tags (GST_ELEMENT (rmdemux), tags);
+  } else {
+    gst_tag_list_free (tags);
+  }
 }
 
 static void
