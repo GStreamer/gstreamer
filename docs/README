@@ -299,9 +299,6 @@ RANDOM THINGS I'VE LEARNED
   For now, we need to hack around it by copying xml to the build dir.
 
 
-Building GStreamer documentation
-
-
 (old) DOCUMENTATION BUILDING NOTES
 ----------------------------------
 

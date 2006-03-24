@@ -1,3 +1,13 @@
+2006-03-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/README:
+	formatting fix
+	* plugins/elements/gstidentity.c:
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gsttee.c:
+	* plugins/elements/gsttypefindelement.c:
+	GST_ELEMENT_DETAILS formatting
+
 2006-03-24  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesink.h:
