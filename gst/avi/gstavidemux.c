@@ -1353,9 +1353,10 @@ gst_avi_demux_parse_index (GstElement * element,
     stream->total_bytes += target->size;
     stream->total_frames++;
 
-    GST_DEBUG ("Adding index entry %d (%d) for stream %d of size %u "
+    GST_DEBUG_OBJECT (avi,
+        "Adding index entry %d (%d) flags %08x for stream %d of size %u "
         "at offset %" G_GUINT64_FORMAT " and time %" GST_TIME_FORMAT,
-        target->index_nr, stream->total_frames - 1,
+        target->index_nr, stream->total_frames - 1, target->flags,
         target->stream_nr, target->size, target->offset,
         GST_TIME_ARGS (target->ts));
     entries_list = g_list_prepend (entries_list, target);
@@ -1403,13 +1404,8 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
   if (gst_riff_read_chunk (GST_ELEMENT (avi),
           avi->sinkpad, &offset, &tag, &buf) != GST_FLOW_OK)
     return;
-  else if (tag != GST_RIFF_TAG_idx1) {
-    GST_ERROR_OBJECT (avi,
-        "No index data after movi chunk, but %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (tag));
-    gst_buffer_unref (buf);
-    return;
-  }
+  else if (tag != GST_RIFF_TAG_idx1)
+    goto no_index;
 
   gst_avi_demux_parse_index (GST_ELEMENT (avi), buf, index);
   if (*index)
@@ -1425,6 +1421,15 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
   }
 
   return;
+
+no_index:
+  {
+    GST_ERROR_OBJECT (avi,
+        "No index data after movi chunk, but %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (tag));
+    gst_buffer_unref (buf);
+    return;
+  }
 }
 
 #if 0
@@ -1675,10 +1680,9 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
       pos++;
 
     if (pos < length) {
-      GST_LOG ("Incomplete index, seeking to last valid entry @ %"
+      GST_LOG_OBJECT (avi, "Incomplete index, seeking to last valid entry @ %"
           G_GUINT64_FORMAT " of %" G_GUINT64_FORMAT " (%"
           G_GUINT64_FORMAT "+%u)", pos, length, entry->offset, entry->size);
-
     } else {
       return TRUE;
     }
@@ -1850,29 +1854,33 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
 {
   gst_avi_index_entry *entry;
   avi_stream_context *stream;
+  guint32 avih_init_frames;
   gint i;
   GList *one;
 
-  GST_LOG ("Starting index massage");
+  GST_LOG_OBJECT (avi, "Starting index massage");
+
+  avih_init_frames = avi->avih->init_frames;
 
   /* init frames */
   for (i = 0; i < avi->num_streams; i++) {
     GstFormat fmt = GST_FORMAT_TIME;
     gint64 delay = 0;
+    guint32 init_frames;
 
     stream = &avi->stream[i];
-    if (stream->strh->type == GST_RIFF_FCC_vids) {
-      if (!gst_avi_demux_src_convert (stream->pad,
-              GST_FORMAT_DEFAULT, stream->strh->init_frames, &fmt, &delay)) {
-        delay = 0;
-      }
-    } else {
-      if (!gst_avi_demux_src_convert (stream->pad,
-              GST_FORMAT_DEFAULT, stream->strh->init_frames, &fmt, &delay)) {
-        delay = 0;
-      }
+
+    init_frames = stream->strh->init_frames;
+
+    if (init_frames >= avih_init_frames)
+      init_frames -= avih_init_frames;
+
+    if (!gst_avi_demux_src_convert (stream->pad,
+            GST_FORMAT_DEFAULT, init_frames, &fmt, &delay)) {
+      delay = 0;
     }
-    GST_LOG ("Adding init_time=%" GST_TIME_FORMAT " to stream %d",
+
+    GST_LOG_OBJECT (avi, "Adding init_time=%" GST_TIME_FORMAT " to stream %d",
         GST_TIME_ARGS (delay), i);
 
     for (one = list; one != NULL; one = one->next) {
@@ -1883,7 +1891,7 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
     }
   }
 
-  GST_LOG ("I'm now going to cut large chunks into smaller pieces");
+  GST_LOG_OBJECT (avi, "I'm now going to cut large chunks into smaller pieces");
 
   /* cut chunks in small (seekable) pieces */
   for (i = 0; i < avi->num_streams; i++) {
@@ -1955,12 +1963,12 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
     }
   }
 
-  GST_LOG ("I'm now going to reorder the index entries for time");
+  GST_LOG_OBJECT (avi, "I'm now going to reorder the index entries for time");
 
   /* re-order for time */
   list = g_list_sort (list, (GCompareFunc) sort);
 
-  GST_LOG ("Filling in index array");
+  GST_LOG_OBJECT (avi, "Filling in index array");
 
   avi->index_size = g_list_length (list);
   avi->index_entries = g_new (gst_avi_index_entry, avi->index_size);
@@ -1970,18 +1978,18 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
     avi->index_entries[i].index_nr = i;
   }
 
-  GST_LOG ("Freeing original index list");
+  GST_LOG_OBJECT (avi, "Freeing original index list");
 
   g_list_foreach (alloc_list, (GFunc) g_free, NULL);
   g_list_free (alloc_list);
   g_list_free (list);
 
   for (i = 0; i < avi->num_streams; i++) {
-    GST_LOG ("Stream %d, %d frames, %" G_GUINT64_FORMAT " bytes", i,
+    GST_LOG_OBJECT (avi, "Stream %d, %d frames, %" G_GUINT64_FORMAT " bytes", i,
         avi->stream[i].total_frames, avi->stream[i].total_bytes);
   }
 
-  GST_LOG ("Index massaging done");
+  GST_LOG_OBJECT (avi, "Index massaging done");
 }
 
 static void
@@ -2317,7 +2325,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, gboolean update)
     }
   }
 
-  GST_DEBUG ("seek: %" GST_TIME_FORMAT " -- %" GST_TIME_FORMAT
+  GST_DEBUG_OBJECT (avi, "seek: %" GST_TIME_FORMAT " -- %" GST_TIME_FORMAT
       " keyframe seeking:%d update:%d", GST_TIME_ARGS (avi->segment_start),
       GST_TIME_ARGS (avi->segment_stop), keyframe, update);
 

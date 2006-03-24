@@ -1,3 +1,13 @@
+2006-03-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_index),
+	(gst_avi_demux_stream_index), (gst_avi_demux_stream_scan),
+	(gst_avi_demux_massage_index), (gst_avi_demux_handle_seek):
+	this patch combines the global init_frames with the stream
+	init_frames. Rationale being that the global delay should 
+	be subtracted from any stream delay.
+	Fixes #335858.
+
 2006-03-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_init):
