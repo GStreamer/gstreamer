@@ -1,5 +1,14 @@
 2006-03-24  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream),
+	(gst_rmdemux_fill_audio_packet), (gst_rmdemux_parse_packet):
+	  Extra data usually goes into the caps as 'codec_data', not
+	  as first buffer into the stream.
+	  Need to byte swap AC3 content in realmedia files for some
+	  reason (fixes #331588).
+
+2006-03-24  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_init),
 	(gst_rmdemux_validate_offset), (gst_rmdemux_loop),
 	(gst_rmdemux_parse_mdpr), (gst_rmdemux_parse_packet):

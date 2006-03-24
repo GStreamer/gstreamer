@@ -1391,7 +1391,23 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   stream->last_flow = GST_FLOW_OK;
 
   if (stream->pad && stream->caps) {
-    GST_DEBUG_OBJECT (rmdemux, "setting caps: %p", stream->caps);
+
+    GST_LOG_OBJECT (rmdemux, "%d bytes of extra data for stream %s",
+        stream->extra_data_size, GST_PAD_NAME (stream->pad));
+
+    /* add codec_data if there is any */
+    if (stream->extra_data_size > 0) {
+      GstBuffer *buffer;
+
+      buffer = gst_buffer_new_and_alloc (stream->extra_data_size);
+      memcpy (GST_BUFFER_DATA (buffer), stream->extra_data,
+          stream->extra_data_size);
+
+      gst_caps_set_simple (stream->caps, "codec_data", GST_TYPE_BUFFER,
+          buffer, NULL);
+
+      gst_buffer_unref (buffer);
+    }
 
     gst_pad_set_caps (stream->pad, stream->caps);
     gst_caps_unref (stream->caps);
@@ -1412,26 +1428,6 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     gst_pad_push_event (stream->pad,
         gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, (gint64) 0,
             (gint64) - 1, 0));
-
-    /* If there's some extra data then send it as the first packet */
-    if (stream->extra_data_size > 0) {
-      GstBuffer *buffer;
-
-      if ((ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
-                  GST_BUFFER_OFFSET_NONE, stream->extra_data_size,
-                  stream->caps, &buffer)) == GST_FLOW_OK) {
-        memcpy (GST_BUFFER_DATA (buffer), stream->extra_data,
-            stream->extra_data_size);
-
-        GST_DEBUG_OBJECT (rmdemux, "Pushing extra_data of size %d to pad %s",
-            stream->extra_data_size, GST_PAD_NAME (stream->pad));
-        ret = gst_pad_push (stream->pad, buffer);
-      } else {
-        GST_WARNING_OBJECT (rmdemux, "failed to alloc extra_data src "
-            "buffer for stream %d (%s)", stream->id, gst_flow_get_name (ret));
-        ret = GST_FLOW_OK;      /* one unlinked pad doesn't mean an error */
-      }
-    }
   }
 
 beach:
@@ -1755,6 +1751,35 @@ gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const void *data, int length)
   g_free (title);
 }
 
+static void
+gst_rmdemux_fill_audio_packet (GstRMDemux * rmdemux, GstBuffer * buf,
+    GstRMDemuxStream * stream, const void *in_data, guint size)
+{
+  switch (stream->fourcc) {
+    case GST_RM_AUD_DNET:{
+      guint8 *data, *end;
+
+      data = (guint8 *) GST_BUFFER_DATA (buf);
+      end = (guint8 *) GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
+      while (data < (end - 1)) {
+        *((guint16 *) data) = GUINT16_SWAP_LE_BE (*((guint16 *) in_data));
+        data += 2;
+        in_data += 2;
+      }
+      break;
+    }
+    case GST_RM_AUD_28_8:
+    case GST_RM_AUD_COOK:
+      /* FIXME: might need to descramble packet */
+      /* fallthrough for now */
+    default:{
+      /* nothing to do, just do a copy */
+      memcpy (GST_BUFFER_DATA (buf), in_data, size);
+      break;
+    }
+  }
+}
+
 static GstFlowReturn
 gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
     guint16 version, guint16 length)
@@ -1797,7 +1822,13 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
         GST_BUFFER_OFFSET_NONE, packet_size, stream->caps, &buffer);
 
     if (ret == GST_FLOW_OK) {
-      memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, packet_size);
+      if (stream->subtype == GST_RMDEMUX_STREAM_AUDIO) {
+        gst_rmdemux_fill_audio_packet (rmdemux, buffer, stream, data,
+            packet_size);
+      } else {
+        memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, packet_size);
+      }
+
       GST_BUFFER_TIMESTAMP (buffer) = rmdemux->cur_timestamp;
 
       GST_LOG_OBJECT (rmdemux, "Pushing buffer of size %d to pad %s",
