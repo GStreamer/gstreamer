@@ -223,9 +223,10 @@ gst_mimenc_setcaps (GstPad *pad, GstCaps *caps)
   filter->res = (width == 320) ? MIMIC_RES_HIGH : MIMIC_RES_LOW;
   GST_DEBUG ("Got info from caps w : %d, h : %d", filter->width, filter->height);
   if (!ret) {
+      gst_object_unref(filter);
       return FALSE;
   }
-
+  gst_object_unref(filter);
   return TRUE;
 }
 
