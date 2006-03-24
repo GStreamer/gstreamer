@@ -12,7 +12,7 @@
 2006-03-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstelement.c:
-        Little clarification in the docs
+	  Little clarification in the docs
 
 2006-03-24  Stefan Kost  <ensonic@users.sf.net>
 
@@ -63,6 +63,7 @@
 	(gst_base_sink_query), (gst_base_sink_change_state):
 	Decouple max-lateness and the fact that QoS messages are generated
 	with a new property (qos).
+	added API: GstBaseSink::async_play()
 	Add vmethod so subclasses can be notified of ASYNC playing
 	state changes.
 	Collect timestamp start and stop to report better current
