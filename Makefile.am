@@ -45,8 +45,13 @@ include $(top_srcdir)/common/po.mak
 check-valgrind:
 	cd tests/check && make check-valgrind
 
+if HAVE_CHECK
 check-torture:
 	cd tests/check && make torture
+else
+check-torture:
+	true
+endif
 
 WIN32_COPY = \
 	$(top_builddir)/gst-libs/gst/*/*-enumtypes.[ch] \
