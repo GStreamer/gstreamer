@@ -36,6 +36,7 @@ GST_START_TEST (test_add)
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "could not set to READY");
 
   /* cleanup */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
 }
 

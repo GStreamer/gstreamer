@@ -1,3 +1,12 @@
+2006-03-24  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* tests/check/generic/clock-selection.c: (GST_START_TEST):
+	  set to NULL before unreffing, fixes a valgrind leak.
+	  Why was this not triggering the error that an object needs to
+	  be NULL before unreffing ?
+	* win32/common/config.h:
+	  update
+
 2006-03-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/subparse/gstsubparse.c: (convert_encoding),
