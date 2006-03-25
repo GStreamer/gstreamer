@@ -1,3 +1,10 @@
+2006-03-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/v4l2/gstv4l2src.c:
+	  Older kernels don't seem to have this particular v4l2 format,
+	  so comment out until this gets fixed properly (and make
+	  buildbots happy).
+
 2006-03-25  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2colorbalance.c:
