@@ -149,14 +149,11 @@ static void
 gst_tag_lib_mux_init (GstTagLibMux * taglib,
     GstTagLibMuxClass * taglibmux_class)
 {
-  GstElementClass *klass = GST_ELEMENT_CLASS (taglibmux_class);
+  GstCaps *srccaps;
 
   /* pad through which data comes in to the element */
   taglib->sinkpad =
-      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-          "sink"), "sink");
-  gst_pad_set_setcaps_function (taglib->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
+      gst_pad_new_from_static_template (&gst_tag_lib_mux_sink_template, "sink");
   gst_pad_set_chain_function (taglib->sinkpad,
       GST_DEBUG_FUNCPTR (gst_tag_lib_mux_chain));
   gst_pad_set_event_function (taglib->sinkpad,
@@ -165,8 +162,10 @@ gst_tag_lib_mux_init (GstTagLibMux * taglib,
 
   /* pad through which data goes out of the element */
   taglib->srcpad =
-      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-          "src"), "src");
+      gst_pad_new_from_static_template (&gst_tag_lib_mux_src_template, "src");
+  srccaps = gst_static_pad_template_get_caps (&gst_tag_lib_mux_src_template);
+  gst_pad_use_fixed_caps (taglib->srcpad);
+  gst_pad_set_caps (taglib->srcpad, srccaps);
   gst_element_add_pad (GST_ELEMENT (taglib), taglib->srcpad);
 
   taglib->render_tag = TRUE;
@@ -309,10 +308,11 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
         tag_str = g_strdup_printf ("%d", volume_number);
       }
 
+      GST_DEBUG ("Setting album number to %s", tag_str);
+
       id3v2tag->addFrame (frame);
       frame->setText (tag_str);
       g_free (tag_str);
-      GST_DEBUG ("Setting album number to %s", tag_str);
     }
   } else if (strcmp (tag, GST_TAG_COPYRIGHT) == 0) {
     gchar *copyright;
@@ -322,12 +322,13 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
     if (result != FALSE) {
       ID3v2::TextIdentificationFrame * frame;
 
+      GST_DEBUG ("Setting copyright to %s", copyright);
+
       frame = new ID3v2::TextIdentificationFrame ("TCOP", String::UTF8);
 
       id3v2tag->addFrame (frame);
       frame->setText (copyright);
       g_free (copyright);
-      GST_DEBUG ("Setting copyright to %s", copyright);
     }
   } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_ARTISTID) == 0) {
     gchar *id_str;
@@ -417,6 +418,8 @@ gst_tag_lib_mux_render_tag (GstTagLibMux * taglib)
   event = gst_event_new_tag (taglist);
   gst_pad_push_event (taglib->srcpad, event);
 
+  GST_BUFFER_OFFSET (buffer) = 0;
+
   return buffer;
 }
 
@@ -429,13 +432,20 @@ gst_tag_lib_mux_chain (GstPad * pad, GstBuffer * buffer)
   if (taglib->render_tag) {
     GstFlowReturn ret;
 
-    GST_INFO ("Adding tags to stream");
+    GST_INFO_OBJECT (taglib, "Adding tags to stream");
     ret = gst_pad_push (taglib->srcpad, gst_tag_lib_mux_render_tag (taglib));
     if (ret != GST_FLOW_OK) {
       gst_buffer_unref (buffer);
       return ret;
     }
     taglib->render_tag = FALSE;
+  }
+
+  if (GST_BUFFER_OFFSET (buffer) != GST_BUFFER_OFFSET_NONE) {
+    GST_LOG_OBJECT (taglib, "Adjusting buffer offset from %" G_GINT64_FORMAT
+        " to %" G_GINT64_FORMAT, GST_BUFFER_OFFSET (buffer),
+        GST_BUFFER_OFFSET (buffer) + taglib->tag_size);
+    GST_BUFFER_OFFSET (buffer) += taglib->tag_size;
   }
 
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (taglib->srcpad));
