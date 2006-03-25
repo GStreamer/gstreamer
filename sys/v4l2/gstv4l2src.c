@@ -115,9 +115,8 @@ static void gst_v4l2src_fixate (GstPad * pad, GstCaps * caps);
 static void
 gst_v4l2src_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void
-gst_v4l2src_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
+static void gst_v4l2src_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_v4l2src_get_all_caps (void);
 
@@ -270,6 +269,7 @@ gst_v4l2src_fixate (GstPad * pad, GstCaps * caps)
 
     gst_structure_fixate_field_nearest_int (structure, "width", G_MAXINT);
     gst_structure_fixate_field_nearest_int (structure, "height", G_MAXINT);
+    gst_structure_fixate_field_nearest_fraction (structure, "framerate", 15, 2);
 
     v = gst_structure_get_value (structure, "format");
     if (v && G_VALUE_TYPE (v) != GST_TYPE_FOURCC) {
@@ -597,7 +597,10 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
   /* build our own capslist */
   caps = gst_caps_new_empty ();
   walk = v4l2src->formats;
-  gst_v4l2src_get_fps (v4l2src, &fps_n, &fps_d);
+  if (!gst_v4l2src_get_fps (v4l2src, &fps_n, &fps_d)) {
+    fps_n = 0;
+    fps_d = 1;
+  }
   while (walk) {
     format = (struct v4l2_fmtdesc *) walk->data;
     walk = g_slist_next (walk);
@@ -619,10 +622,19 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
     if (structure) {
       gst_structure_set (structure,
           "width", GST_TYPE_INT_RANGE, min_w, max_w,
-          "height", GST_TYPE_INT_RANGE, min_h, max_h,
-          "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+          "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
+      if (fps_n > 0) {
+        gst_structure_set (structure, "framerate", GST_TYPE_FRACTION,
+            fps_n, fps_d, NULL);
+      }
 
       gst_caps_append_structure (caps, structure);
+
+      if (fps_n <= 0) {
+        gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION_RANGE,
+            1, 1, 100, 1, NULL);
+      }
+
     }
   }
 
