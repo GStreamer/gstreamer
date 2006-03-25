@@ -1,5 +1,13 @@
 2006-03-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/taglib/gsttaglib.cc:
+	  We do not want to proxy the caps on the sink pad; our 
+	  source pad should have application/x-id3 caps; also,
+	  don't use already-freed strings in debug messages;
+	  finally, adjust buffer offsets on buffers sent out.
+
+2006-03-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* sys/v4l2/gstv4l2src.c:
 	  Older kernels don't seem to have this particular v4l2 format,
 	  so comment out until this gets fixed properly (and make
