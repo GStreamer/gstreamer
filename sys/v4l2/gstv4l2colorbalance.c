@@ -79,7 +79,7 @@ gst_v4l2_color_balance_channel_class_init (GstV4l2ColorBalanceChannelClass *
 static void
 gst_v4l2_color_balance_channel_init (GstV4l2ColorBalanceChannel * channel)
 {
-  channel->index = 0;
+  channel->id = (guint32) - 1;
 }
 
 void
@@ -125,7 +125,7 @@ gst_v4l2_color_balance_set_value (GstColorBalance * balance,
   g_return_if_fail (gst_v4l2_color_balance_contains_channel (v4l2element,
           v4l2channel));
 
-  gst_v4l2_set_attribute (v4l2element, v4l2channel->index, value);
+  gst_v4l2_set_attribute (v4l2element, v4l2channel->id, value);
 }
 
 static gint
@@ -142,7 +142,7 @@ gst_v4l2_color_balance_get_value (GstColorBalance * balance,
   g_return_val_if_fail (gst_v4l2_color_balance_contains_channel (v4l2element,
           v4l2channel), 0);
 
-  if (!gst_v4l2_get_attribute (v4l2element, v4l2channel->index, &value))
+  if (!gst_v4l2_get_attribute (v4l2element, v4l2channel->id, &value))
     return 0;
 
   return value;

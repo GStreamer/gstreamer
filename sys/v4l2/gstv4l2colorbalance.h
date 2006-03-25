@@ -44,7 +44,7 @@ G_BEGIN_DECLS
 typedef struct _GstV4l2ColorBalanceChannel {
   GstColorBalanceChannel parent;
 
-  guint32 index;
+  guint32 id;
 } GstV4l2ColorBalanceChannel;
 
 typedef struct _GstV4l2ColorBalanceChannelClass {

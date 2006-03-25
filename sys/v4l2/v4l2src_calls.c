@@ -144,8 +144,11 @@ gint
 gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
 {
   struct v4l2_buffer buffer;
+  gint32 trials = 100;
 
+  memset (&buffer, 0x00, sizeof (buffer));
   buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  buffer.memory = v4l2src->breq.memory;
   while (ioctl (GST_V4L2ELEMENT (v4l2src)->video_fd, VIDIOC_DQBUF, &buffer) < 0) {
     /* if the sync() got interrupted, we can retry */
     switch (errno) {
@@ -168,13 +171,13 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
                 GST_V4L2ELEMENT (v4l2src)->videodev, g_strerror (errno)));
         break;
       case EIO:
-        GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC, (NULL),
-            ("VIDIOC_DQBUF failed due to an internal error."
-                " Can also indicate temporary problems like signal loss."
-                " Note the driver might dequeue an (empty) buffer despite"
-                " returning an error, or even stop capturing."
-                " device %s: %s",
-                GST_V4L2ELEMENT (v4l2src)->videodev, g_strerror (errno)));
+        GST_WARNING_OBJECT (v4l2src,
+            "VIDIOC_DQBUF failed due to an internal error."
+            " Can also indicate temporary problems like signal loss."
+            " Note the driver might dequeue an (empty) buffer despite"
+            " returning an error, or even stop capturing."
+            " device %s: %s",
+            GST_V4L2ELEMENT (v4l2src)->videodev, g_strerror (errno));
         break;
       case EINTR:
         GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC, (NULL),
@@ -186,7 +189,14 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
         break;
     }
 
-    return -1;
+    if (--trials == -1) {
+      return -1;
+    } else {
+      ioctl (GST_V4L2ELEMENT (v4l2src)->video_fd, VIDIOC_QBUF, &buffer);
+      memset (&buffer, 0x00, sizeof (buffer));
+      buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+      buffer.memory = v4l2src->breq.memory;
+    }
 
   }
 
@@ -292,8 +302,8 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
       GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
           (_("Could not get buffers from device \"%s\"."),
               GST_V4L2ELEMENT (v4l2src)->videodev),
-          ("error requesting %d buffers: %s", v4l2src->breq.count,
-              g_strerror (errno)));
+          ("error requesting %d buffers: %s",
+              v4l2src->breq.count, g_strerror (errno)));
       return FALSE;
     }
     GST_LOG_OBJECT (v4l2src, "using default mmap method");
@@ -314,8 +324,8 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
       GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
           (_("Could not get enough buffers from device \"%s\"."),
               GST_V4L2ELEMENT (v4l2src)->videodev),
-          ("we received %d, we want at least %d", v4l2src->breq.count,
-              GST_V4L2_MIN_BUFFERS));
+          ("we received %d, we want at least %d",
+              v4l2src->breq.count, GST_V4L2_MIN_BUFFERS));
       v4l2src->breq.count = buffers;
       return FALSE;
     }
@@ -347,8 +357,8 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
       if (ioctl (GST_V4L2ELEMENT (v4l2src)->video_fd, VIDIOC_QUERYBUF,
               &buffer->buffer) < 0) {
         GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ, (NULL),
-            ("Could not get buffer properties of buffer %d: %s", n,
-                g_strerror (errno)));
+            ("Could not get buffer properties of buffer %d: %s",
+                n, g_strerror (errno)));
         gst_v4l2src_capture_deinit (v4l2src);
         return FALSE;
       }
@@ -772,7 +782,10 @@ gst_v4l2src_buffer_new (GstV4l2Src * v4l2src, guint size, guint8 * data,
 
   GST_DEBUG_OBJECT (v4l2src, "creating buffer %d");
 
-  g_return_val_if_fail (gst_v4l2src_get_fps (v4l2src, &fps_n, &fps_d), NULL);
+  if (!gst_v4l2src_get_fps (v4l2src, &fps_n, &fps_d)) {
+    fps_n = 0;
+    fps_d = 1;
+  }
 
   buf = (GstBuffer *) gst_mini_object_new (GST_TYPE_V4L2SRC_BUFFER);
 
@@ -790,8 +803,12 @@ gst_v4l2src_buffer_new (GstV4l2Src * v4l2src, guint size, guint8 * data,
   GST_BUFFER_TIMESTAMP (buf) -= GST_ELEMENT (v4l2src)->base_time;
 
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
-  GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (GST_SECOND,
-      fps_n, fps_d);
+  if (fps_n > 0) {
+    GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (GST_SECOND,
+        fps_n, fps_d);
+  } else {
+    GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
+  }
 
   /* the negotiate() method already set caps on the source pad */
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (v4l2src)));

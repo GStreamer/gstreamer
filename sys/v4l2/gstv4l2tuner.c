@@ -91,9 +91,9 @@ gst_v4l2_tuner_channel_class_init (GstV4l2TunerChannelClass * klass)
 static void
 gst_v4l2_tuner_channel_init (GstV4l2TunerChannel * channel)
 {
-  channel->index = 0;
-  channel->tuner = 0;
-  channel->audio = 0;
+  channel->index = (guint32) - 1;
+  channel->tuner = (guint32) - 1;
+  channel->audio = (guint32) - 1;
 }
 
 GType
@@ -314,8 +314,8 @@ gst_v4l2_tuner_get_frequency (GstTuner * mixer, GstTunerChannel * channel)
   g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2element), 0);
   g_return_val_if_fail (GST_TUNER_CHANNEL_HAS_FLAG (channel,
           GST_TUNER_CHANNEL_FREQUENCY), 0);
-  g_return_val_if_fail (gst_v4l2_tuner_contains_channel (v4l2element,
-          v4l2channel), 0);
+  g_return_val_if_fail (gst_v4l2_tuner_contains_channel
+      (v4l2element, v4l2channel), 0);
 
   gst_v4l2_get_input (v4l2element, &chan);
   if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&
@@ -338,8 +338,8 @@ gst_v4l2_tuner_signal_strength (GstTuner * mixer, GstTunerChannel * channel)
   g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2element), 0);
   g_return_val_if_fail (GST_TUNER_CHANNEL_HAS_FLAG (channel,
           GST_TUNER_CHANNEL_FREQUENCY), 0);
-  g_return_val_if_fail (gst_v4l2_tuner_contains_channel (v4l2element,
-          v4l2channel), 0);
+  g_return_val_if_fail (gst_v4l2_tuner_contains_channel
+      (v4l2element, v4l2channel), 0);
 
   gst_v4l2_get_input (v4l2element, &chan);
   if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&

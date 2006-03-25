@@ -1,3 +1,16 @@
+2006-03-25  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* sys/v4l2/gstv4l2colorbalance.c:
+	* sys/v4l2/gstv4l2colorbalance.h:
+	* sys/v4l2/gstv4l2element.c:
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2src.h:
+	* sys/v4l2/gstv4l2tuner.c:
+	* sys/v4l2/v4l2_calls.c:
+	* sys/v4l2/v4l2src_calls.c:
+	* sys/v4l2/v4l2src_calls.h:
+	Just make few things more robust and also some identation.
+
 2006-03-23  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Mark Nauwelaerts <manauw at skynet dot be>

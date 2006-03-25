@@ -252,7 +252,7 @@ gst_v4l2_fill_lists (GstV4l2Element * v4l2element)
     v4l2channel = g_object_new (GST_TYPE_V4L2_COLOR_BALANCE_CHANNEL, NULL);
     channel = GST_COLOR_BALANCE_CHANNEL (v4l2channel);
     channel->label = g_strdup ((const gchar *) control.name);
-    v4l2channel->index = n;
+    v4l2channel->id = n;
 
 #if 0
     if (control.type == V4L2_CTRL_TYPE_MENU) {
@@ -335,9 +335,11 @@ gst_v4l2_set_defaults (GstV4l2Element * v4l2element)
     gst_tuner_set_norm (tuner, norm);
   } else {
     norm = GST_TUNER_NORM (gst_tuner_get_norm (GST_TUNER (v4l2element)));
-    v4l2element->std = g_strdup (norm->label);
-    gst_tuner_norm_changed (tuner, norm);
-    g_object_notify (G_OBJECT (v4l2element), "std");
+    if (norm) {
+      v4l2element->std = g_strdup (norm->label);
+      gst_tuner_norm_changed (tuner, norm);
+      g_object_notify (G_OBJECT (v4l2element), "std");
+    }
   }
 
   if (v4l2element->input)
@@ -377,6 +379,8 @@ gst_v4l2_set_defaults (GstV4l2Element * v4l2element)
 gboolean
 gst_v4l2_open (GstV4l2Element * v4l2element)
 {
+  struct stat st;
+
   GST_DEBUG ("Trying to open device %s", v4l2element->videodev);
   GST_V4L2_CHECK_NOT_OPEN (v4l2element);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2element);
@@ -385,8 +389,21 @@ gst_v4l2_open (GstV4l2Element * v4l2element)
   if (!v4l2element->videodev)
     v4l2element->videodev = g_strdup ("/dev/video");
 
+  /* check if it is a device */
+  if (-1 == stat (v4l2element->videodev, &st)) {
+    GST_ERROR ("Cannot identify '%s': %d, %s\n",
+        v4l2element->videodev, errno, strerror (errno));
+    goto error;
+  }
+  if (!S_ISCHR (st.st_mode)) {
+    GST_ERROR ("%s is no device\n", v4l2element->videodev);
+    goto error;
+  }
+
   /* open the device */
-  v4l2element->video_fd = open (v4l2element->videodev, O_RDWR);
+  v4l2element->video_fd = open (v4l2element->videodev,
+      O_RDWR /* | O_NONBLOCK */ );
+
   if (!GST_V4L2_IS_OPEN (v4l2element)) {
     GST_ELEMENT_ERROR (v4l2element, RESOURCE, OPEN_READ_WRITE,
         (_("Could not open device \"%s\" for reading and writing."),
@@ -403,8 +420,9 @@ gst_v4l2_open (GstV4l2Element * v4l2element)
   if (GST_IS_V4L2SRC (v4l2element) &&
       !(v4l2element->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
     GST_ELEMENT_ERROR (v4l2element, RESOURCE, NOT_FOUND,
-        (_("Device \"%s\" is not a capture device."), v4l2element->videodev),
-        ("Capabilities: 0x%x", v4l2element->vcap.capabilities));
+        (_("Device \"%s\" is not a capture device."),
+            v4l2element->videodev), ("Capabilities: 0x%x",
+            v4l2element->vcap.capabilities));
     goto error;
   }
 
@@ -524,8 +542,8 @@ gst_v4l2_get_input (GstV4l2Element * v4l2element, gint * input)
 
   if (ioctl (v4l2element->video_fd, VIDIOC_G_INPUT, &n) < 0) {
     GST_WARNING_OBJECT (v4l2element,
-        "Failed to get current input on device %s: %s", v4l2element->videodev,
-        g_strerror (errno));
+        "Failed to get current input on device %s: %s",
+        v4l2element->videodev, g_strerror (errno));
     return FALSE;
   }
 
@@ -577,8 +595,8 @@ gst_v4l2_get_output (GstV4l2Element * v4l2element, gint * output)
 
   if (ioctl (v4l2element->video_fd, VIDIOC_G_OUTPUT, &n) < 0) {
     GST_WARNING_OBJECT (v4l2element,
-        "Failed to get current output on device %s: %s", v4l2element->videodev,
-        g_strerror (errno));
+        "Failed to get current output on device %s: %s",
+        v4l2element->videodev, g_strerror (errno));
     return FALSE;
   }
 
@@ -735,8 +753,8 @@ gst_v4l2_get_attribute (GstV4l2Element * v4l2element,
 
   if (ioctl (v4l2element->video_fd, VIDIOC_G_CTRL, &control) < 0) {
     GST_WARNING_OBJECT (v4l2element,
-        "Failed to get value for control %d on device %s: %s", attribute_num,
-        v4l2element->videodev, g_strerror (errno));
+        "Failed to get value for control %d on device %s: %s",
+        attribute_num, v4l2element->videodev, g_strerror (errno));
     return FALSE;
   }
 
@@ -768,8 +786,8 @@ gst_v4l2_set_attribute (GstV4l2Element * v4l2element,
 
   if (ioctl (v4l2element->video_fd, VIDIOC_S_CTRL, &control) < 0) {
     GST_WARNING_OBJECT (v4l2element,
-        "Failed to set value %d for control %d on device %s: %s", value,
-        attribute_num, v4l2element->videodev, g_strerror (errno));
+        "Failed to set value %d for control %d on device %s: %s",
+        value, attribute_num, v4l2element->videodev, g_strerror (errno));
     return FALSE;
   }
 
