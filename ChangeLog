@@ -1,3 +1,8 @@
+2006-03-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_add_srcpad):
+	  Create source pad without leaking.
+
 2006-03-24  Wim Taymans  <wim@fluendo.com>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_handle_seek_event):

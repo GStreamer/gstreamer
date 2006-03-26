@@ -254,9 +254,7 @@ gst_id3demux_add_srcpad (GstID3Demux * id3demux, GstCaps * new_caps)
   }
 
   if (id3demux->srcpad == NULL) {
-    id3demux->srcpad =
-        gst_pad_new_from_template (gst_element_class_get_pad_template
-        (GST_ELEMENT_GET_CLASS (id3demux), "src"), "src");
+    id3demux->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
     g_return_val_if_fail (id3demux->srcpad != NULL, FALSE);
 
     gst_pad_set_query_type_function (id3demux->srcpad,
