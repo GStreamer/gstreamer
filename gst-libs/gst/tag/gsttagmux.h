@@ -28,13 +28,15 @@ typedef struct _GstTagLibMuxPriv GstTagLibMuxPriv;
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstTagLibMux {
-  GstElement element;
+  GstElement    element;
 
-  GstPad *sinkpad, *srcpad;
-  GstTagList *tags;
-  gsize tag_size;
-  gboolean render_tag;
+  GstPad       *srcpad;
+  GstPad       *sinkpad;
+  GstTagList   *event_tags; /* tags received from upstream elements */
+  gsize         tag_size;
+  gboolean      render_tag;
 
+  GstEvent     *newsegment_ev; /* cached newsegment event from upstream */
 } GstTagLibMux;
 
 /* Standard definition defining a class for this element. */
