@@ -61,6 +61,26 @@ using namespace TagLib;
 GST_DEBUG_CATEGORY_STATIC (gst_tag_lib_mux_debug);
 #define GST_CAT_DEFAULT gst_tag_lib_mux_debug
 
+static const GstElementDetails gst_tag_lib_mux_details =
+GST_ELEMENT_DETAILS ("TagLib ID3 Muxer",
+    "Formatter/Metadata",
+    "Adds an ID3v2 header to the beginning of MP3 files",
+    "Christophe Fergeau <teuf@gnome.org>");
+
+static GstStaticPadTemplate gst_tag_lib_mux_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/mpeg"));
+
+
+static GstStaticPadTemplate gst_tag_lib_mux_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-id3"));
+
+
 static void
 gst_tag_lib_mux_iface_init (GType taglib_type)
 {
@@ -83,46 +103,28 @@ gst_tag_lib_mux_change_state (GstElement * element, GstStateChange transition);
 static GstFlowReturn gst_tag_lib_mux_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_tag_lib_mux_sink_event (GstPad * pad, GstEvent * event);
 
-
 static void
 gst_tag_lib_mux_finalize (GObject * obj)
 {
   GstTagLibMux *taglib = GST_TAGLIB_MUX (obj);
 
-  if (taglib->tags) {
-    gst_tag_list_free (taglib->tags);
-    taglib->tags = NULL;
+  if (taglib->newsegment_ev) {
+    gst_event_unref (taglib->newsegment_ev);
+    taglib->newsegment_ev = NULL;
   }
+
+  if (taglib->event_tags) {
+    gst_tag_list_free (taglib->event_tags);
+    taglib->event_tags = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
-
-
-static GstStaticPadTemplate gst_tag_lib_mux_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg"));
-
-
-static GstStaticPadTemplate gst_tag_lib_mux_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-id3"));
-
 
 static void
 gst_tag_lib_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  static GstElementDetails gst_tag_lib_mux_details = {
-    "TagLib ID3 Muxer",
-    "Formatter/Metadata",
-    "Adds an ID3v2 header to the beginning of MP3 files",
-    "Christophe Fergeau <teuf@gnome.org>"
-  };
-
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_tag_lib_mux_src_template));
@@ -380,7 +382,6 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
   }
 }
 
-
 static GstBuffer *
 gst_tag_lib_mux_render_tag (GstTagLibMux * taglib)
 {
@@ -388,30 +389,46 @@ gst_tag_lib_mux_render_tag (GstTagLibMux * taglib)
   ByteVector rendered_tag;
   GstBuffer *buffer;
   GstTagSetter *tagsetter = GST_TAG_SETTER (taglib);
+  const GstTagList *tagsetter_tags;
   GstTagList *taglist;
   GstEvent *event;
 
-  if (taglib->tags != NULL) {
-    taglist = gst_tag_list_copy (taglib->tags);
+  if (taglib->event_tags != NULL) {
+    taglist = gst_tag_list_copy (taglib->event_tags);
   } else {
     taglist = gst_tag_list_new ();
   }
 
-  if (gst_tag_setter_get_tag_list (tagsetter)) {
-    gst_tag_list_insert (taglist,
-        gst_tag_setter_get_tag_list (tagsetter),
-        gst_tag_setter_get_tag_merge_mode (tagsetter));
+  tagsetter_tags = gst_tag_setter_get_tag_list (tagsetter);
+  if (tagsetter_tags) {
+    GstTagMergeMode merge_mode;
+
+    merge_mode = gst_tag_setter_get_tag_merge_mode (tagsetter);
+    GST_LOG_OBJECT (taglib, "merging tags, merge mode = %d", merge_mode);
+    GST_LOG_OBJECT (taglib, "event tags: %" GST_PTR_FORMAT, taglist);
+    GST_LOG_OBJECT (taglib, "set   tags: %" GST_PTR_FORMAT, tagsetter_tags);
+    gst_tag_list_insert (taglist, tagsetter_tags, merge_mode);
   }
 
+  GST_LOG_OBJECT (taglib, "final tags: %" GST_PTR_FORMAT, taglist);
 
   /* Render the tag */
   gst_tag_list_foreach (taglist, add_one_tag, &id3v2tag);
+
   rendered_tag = id3v2tag.render ();
   taglib->tag_size = rendered_tag.size ();
-  buffer = gst_buffer_new_and_alloc (rendered_tag.size ());
-  memcpy (GST_BUFFER_DATA (buffer), rendered_tag.data (), rendered_tag.size ());
+
+  GST_LOG_OBJECT (taglib, "tag size = %d bytes", taglib->tag_size);
+
+  /* Create buffer with tag */
+  buffer = gst_buffer_new_and_alloc (taglib->tag_size);
+  memcpy (GST_BUFFER_DATA (buffer), rendered_tag.data (), taglib->tag_size);
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (taglib->srcpad));
-  /*  gst_util_dump_mem (GST_BUFFER_DATA (buffer), rendered_tag.size()); */
+
+  /* Send newsegment event from byte position 0, so the tag really gets
+   * written to the start of the file, independent of the upstream segment */
+  gst_pad_push_event (taglib->srcpad,
+      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
 
   /* Send an event about the new tags to downstream elements */
   /* gst_event_new_tag takes ownership of the list, so no need to unref it */
@@ -423,6 +440,31 @@ gst_tag_lib_mux_render_tag (GstTagLibMux * taglib)
   return buffer;
 }
 
+static GstEvent *
+gst_tag_lib_mux_adjust_event_offsets (GstTagLibMux * taglib,
+    const GstEvent * newsegment_event)
+{
+  GstFormat format;
+  gint64 start, stop, cur;
+
+  gst_event_parse_new_segment ((GstEvent *) newsegment_event, NULL, NULL,
+      &format, &start, &stop, &cur);
+
+  g_assert (format == GST_FORMAT_BYTES);
+
+  if (start != -1)
+    start += taglib->tag_size;
+  if (stop != -1)
+    stop += taglib->tag_size;
+  if (cur != -1)
+    cur += taglib->tag_size;
+
+  GST_DEBUG_OBJECT (taglib, "adjusting newsegment event offsets to start=%"
+      G_GINT64_FORMAT ", stop=%" G_GINT64_FORMAT ", cur=%" G_GINT64_FORMAT
+      " (delta = +%u)", start, stop, cur, taglib->tag_size);
+
+  return gst_event_new_new_segment (TRUE, 1.0, format, start, stop, cur);
+}
 
 static GstFlowReturn
 gst_tag_lib_mux_chain (GstPad * pad, GstBuffer * buffer)
@@ -435,11 +477,26 @@ gst_tag_lib_mux_chain (GstPad * pad, GstBuffer * buffer)
     GST_INFO_OBJECT (taglib, "Adding tags to stream");
     ret = gst_pad_push (taglib->srcpad, gst_tag_lib_mux_render_tag (taglib));
     if (ret != GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (taglib, "flow: %s", gst_flow_get_name (ret));
       gst_buffer_unref (buffer);
       return ret;
     }
+
+    /* Now send the cached newsegment event that we got from upstream */
+    if (taglib->newsegment_ev) {
+      GST_DEBUG_OBJECT (taglib, "sending cached newsegment event");
+      gst_pad_push_event (taglib->srcpad,
+          gst_tag_lib_mux_adjust_event_offsets (taglib, taglib->newsegment_ev));
+      gst_event_unref (taglib->newsegment_ev);
+      taglib->newsegment_ev = NULL;
+    } else {
+      /* upstream sent no newsegment event or only one in a non-BYTE format */
+    }
+
     taglib->render_tag = FALSE;
   }
+
+  buffer = gst_buffer_make_metadata_writable (buffer);
 
   if (GST_BUFFER_OFFSET (buffer) != GST_BUFFER_OFFSET_NONE) {
     GST_LOG_OBJECT (taglib, "Adjusting buffer offset from %" G_GINT64_FORMAT
@@ -462,59 +519,68 @@ gst_tag_lib_mux_sink_event (GstPad * pad, GstEvent * event)
   result = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:
-    {
+    case GST_EVENT_TAG:{
       GstTagList *tags;
 
-      GST_INFO ("Got tag event");
-
       gst_event_parse_tag (event, &tags);
-      if (taglib->tags != NULL) {
-        /* FIXME: which policy is the best here? PREPEND or something else? */
-        gst_tag_list_insert (taglib->tags, tags, GST_TAG_MERGE_PREPEND);
+
+      GST_INFO_OBJECT (taglib, "Got tag event: %" GST_PTR_FORMAT, tags);
+
+      if (taglib->event_tags != NULL) {
+        gst_tag_list_insert (taglib->event_tags, tags, GST_TAG_MERGE_REPLACE);
       } else {
-        taglib->tags = gst_tag_list_copy (tags);
+        taglib->event_tags = gst_tag_list_copy (tags);
       }
-      /* We'll push a new tag event in render_tag */
+
+      GST_INFO_OBJECT (taglib, "Event tags are now: %" GST_PTR_FORMAT,
+          taglib->event_tags);
+
+      /* just drop the event, we'll push a new tag event in render_tag */
       gst_event_unref (event);
       result = TRUE;
       break;
     }
-    case GST_EVENT_NEWSEGMENT:
-      if (taglib->tag_size == 0) {
-        result = gst_pad_push_event (taglib->srcpad, event);
-      } else {
-        gboolean update;
-        gdouble rate;
-        GstFormat format;
-        gint64 value, end_value, base;
+    case GST_EVENT_NEWSEGMENT:{
+      GstFormat fmt;
 
-        gst_event_parse_new_segment (event, &update, &rate, &format,
-            &value, &end_value, &base);
+      gst_event_parse_new_segment (event, NULL, NULL, &fmt, NULL, NULL, NULL);
+
+      if (fmt != GST_FORMAT_BYTES) {
+        GST_WARNING_OBJECT (taglib, "dropping newsegment event in %s format",
+            gst_format_get_name (fmt));
         gst_event_unref (event);
-        if (format == GST_FORMAT_BYTES && gst_pad_is_linked (taglib->srcpad)) {
-          GstEvent *new_event;
-
-          GST_INFO ("Adjusting NEW_SEGMENT event by %d", taglib->tag_size);
-          value += taglib->tag_size;
-          if (end_value != -1) {
-            end_value += taglib->tag_size;
-          }
-
-          new_event = gst_event_new_new_segment (update, rate, format,
-              value, end_value, base);
-          result = gst_pad_push_event (taglib->srcpad, new_event);
-        } else {
-          result = FALSE;
-        }
+        break;
       }
-      break;
 
+      if (taglib->render_tag) {
+        /* we have not rendered the tag yet, which means that we don't know
+         * how large it is going to be yet, so we can't adjust the offsets
+         * here at this point and need to cache the newsegment event for now
+         * (also, there could be tag events coming after this newsegment event
+         *  and before the first buffer). */
+        if (taglib->newsegment_ev) {
+          GST_WARNING_OBJECT (taglib, "discarding old cached newsegment event");
+          gst_event_unref (taglib->newsegment_ev);
+        }
+
+        GST_LOG_OBJECT (taglib, "caching newsegment event for later");
+        taglib->newsegment_ev = event;
+      } else {
+        GST_DEBUG_OBJECT (taglib, "got newsegment event, adjusting offsets");
+        gst_pad_push_event (taglib->srcpad,
+            gst_tag_lib_mux_adjust_event_offsets (taglib, event));
+        gst_event_unref (event);
+      }
+      event = NULL;
+      result = TRUE;
+      break;
+    }
     default:
       result = gst_pad_event_default (pad, event);
       break;
   }
-  gst_object_unref (GST_OBJECT (taglib));
+
+  gst_object_unref (taglib);
 
   return result;
 }
@@ -534,14 +600,19 @@ gst_tag_lib_mux_change_state (GstElement * element, GstStateChange transition)
   }
 
   switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (taglib->tags) {
-        gst_tag_list_free (taglib->tags);
-        taglib->tags = NULL;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:{
+      if (taglib->newsegment_ev) {
+        gst_event_unref (taglib->newsegment_ev);
+        taglib->newsegment_ev = NULL;
+      }
+      if (taglib->event_tags) {
+        gst_tag_list_free (taglib->event_tags);
+        taglib->event_tags = NULL;
       }
       taglib->tag_size = 0;
       taglib->render_tag = TRUE;
       break;
+    }
     default:
       break;
   }

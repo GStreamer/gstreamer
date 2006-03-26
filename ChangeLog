@@ -1,3 +1,14 @@
+2006-03-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/taglib/gsttaglib.cc:
+	* ext/taglib/gsttaglib.h:
+	  Fix newsegment event handling a bit. We need to
+	  cache the first newsegment event, because we can't
+	  adjust offsets yet when we get it, as we don't
+	  know the size of the tag yet for sure at that point.
+	  Also do some minor cleaning up here and there and add
+	  some debug statements.
+
 2006-03-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/taglib/gsttaglib.cc:
