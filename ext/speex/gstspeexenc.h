@@ -28,10 +28,7 @@
 #include <speex/speex.h>
 #include <speex/speex_header.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_SPEEXENC \
   (gst_speexenc_get_type())
@@ -122,10 +119,6 @@ struct _GstSpeexEncClass {
 
 GType gst_speexenc_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_SPEEXENC_H__ */

@@ -1,3 +1,14 @@
+2006-03-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/speex/gstspeexenc.c: (gst_speexenc_class_init),
+	(gst_speexenc_finalize), (gst_speexenc_sink_setcaps),
+	(gst_speexenc_chain):
+	* ext/speex/gstspeexenc.h:
+	Don't leak adapter.
+	A push *always* takes ownership of the buffer, even on
+	errors.
+	Small cleanups.
+
 2006-03-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_add_srcpad):

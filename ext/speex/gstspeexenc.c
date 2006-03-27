@@ -98,6 +98,7 @@ gst_speexenc_get_formats (GstPad * pad)
 static void gst_speexenc_base_init (gpointer g_class);
 static void gst_speexenc_class_init (GstSpeexEncClass * klass);
 static void gst_speexenc_init (GstSpeexEnc * speexenc);
+static void gst_speexenc_finalize (GObject * object);
 
 static gboolean gst_speexenc_sinkevent (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_speexenc_chain (GstPad * pad, GstBuffer * buf);
@@ -232,7 +233,22 @@ gst_speexenc_class_init (GstSpeexEncClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
-  gstelement_class->change_state = gst_speexenc_change_state;
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_speexenc_finalize);
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_speexenc_change_state);
+}
+
+static void
+gst_speexenc_finalize (GObject * object)
+{
+  GstSpeexEnc *speexenc;
+
+  speexenc = GST_SPEEXENC (object);
+
+  g_object_unref (speexenc->adapter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -241,7 +257,7 @@ gst_speexenc_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstSpeexEnc *speexenc;
   GstStructure *structure;
 
-  speexenc = GST_SPEEXENC (GST_PAD_PARENT (pad));
+  speexenc = GST_SPEEXENC (gst_pad_get_parent (pad));
   speexenc->setup = FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
@@ -250,10 +266,9 @@ gst_speexenc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   gst_speexenc_setup (speexenc);
 
-  if (speexenc->setup)
-    return TRUE;
+  gst_object_unref (speexenc);
 
-  return FALSE;
+  return speexenc->setup;
 }
 
 static gboolean
@@ -897,13 +912,8 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
 
   speexenc = GST_SPEEXENC (gst_pad_get_parent (pad));
 
-  if (!speexenc->setup) {
-    gst_buffer_unref (buf);
-    GST_ELEMENT_ERROR (speexenc, CORE, NEGOTIATION, (NULL),
-        ("encoder not initialized (input is not audio?)"));
-    ret = GST_FLOW_UNEXPECTED;
-    goto error;
-  }
+  if (!speexenc->setup)
+    goto not_setup;
 
   if (!speexenc->header_sent) {
     /* Speex streams begin with two headers; the initial header (with
@@ -943,17 +953,16 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
     ret = gst_speexenc_push_buffer (speexenc, buf1);
 
     if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret)) {
-      gst_buffer_unref (buf1);
-      goto error;
+      /* unref buf2 as we are not going to push it anymore */
+
+      gst_buffer_unref (buf2);
+      goto done;
     }
 
     ret = gst_speexenc_push_buffer (speexenc, buf2);
 
-    if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret)) {
-
-      gst_buffer_unref (buf2);
-      goto error;
-    }
+    if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret))
+      goto done;
 
     speex_bits_init (&speexenc->bits);
     speex_bits_reset (&speexenc->bits);
@@ -1000,9 +1009,8 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
           GST_BUFFER_OFFSET_NONE, outsize, GST_PAD_CAPS (speexenc->srcpad),
           &outbuf);
 
-      if ((GST_FLOW_OK != ret)) {
-        goto error;
-      }
+      if ((GST_FLOW_OK != ret))
+        goto done;
 
       written = speex_bits_write (&speexenc->bits,
           (gchar *) GST_BUFFER_DATA (outbuf), outsize);
@@ -1010,29 +1018,38 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
       speex_bits_reset (&speexenc->bits);
 
       GST_BUFFER_TIMESTAMP (outbuf) =
-          (speexenc->frameno * frame_size -
-          speexenc->lookahead) * GST_SECOND / speexenc->rate;
-      GST_BUFFER_DURATION (outbuf) = frame_size * GST_SECOND / speexenc->rate;
+          gst_util_uint64_scale_int (speexenc->frameno * frame_size -
+          speexenc->lookahead, GST_SECOND, speexenc->rate);
+      GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (frame_size,
+          GST_SECOND, speexenc->rate);
       /* set gp time and granulepos; see gst-plugins-base/ext/ogg/README */
       GST_BUFFER_OFFSET_END (outbuf) =
           ((speexenc->frameno + 1) * frame_size - speexenc->lookahead);
       GST_BUFFER_OFFSET (outbuf) =
-          gst_util_uint64_scale (GST_BUFFER_OFFSET_END (outbuf), GST_SECOND,
+          gst_util_uint64_scale_int (GST_BUFFER_OFFSET_END (outbuf), GST_SECOND,
           speexenc->rate);
 
       ret = gst_speexenc_push_buffer (speexenc, outbuf);
 
-      if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret)) {
-        gst_buffer_unref (outbuf);
-        goto error;
-      }
+      if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret))
+        goto done;
     }
   }
 
-error:
-
+done:
   gst_object_unref (speexenc);
   return ret;
+
+  /* ERRORS */
+not_setup:
+  {
+    gst_buffer_unref (buf);
+    GST_ELEMENT_ERROR (speexenc, CORE, NEGOTIATION, (NULL),
+        ("encoder not initialized (input is not audio?)"));
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
+
 }
 
 
