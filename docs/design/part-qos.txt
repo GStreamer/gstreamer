@@ -1,0 +1,165 @@
+Quality-of-Service
+------------------
+
+Quality of service is about measuring and adjusting the real-time
+performance of a pipeline.
+
+The real-time performance is always measured relative to the pipeline
+clock and typically happens in the sinks when they synchronize buffers
+against the clock.
+
+The measurements result in QOS events that aim to adjust the datarate
+in one or more upstream elements. Two types of adjustements can be
+made:
+
+  - short time "emergency" corrections based on latest observation
+    in the sinks.
+  - long term rate corrections based on trends observed in the sinks.
+
+
+QoS event
+---------
+
+The QoS event travels upstream and contains the following fields:
+
+ - timestamp:  The timestamp on the buffer that generated the QoS
+               event
+ - jitter:     The difference of that timestamp against the clock.
+
+ - proportion: Long term prediction of the ideal rate relative to
+               normal rate to get optimal quality.
+
+The rest of this document deals with how these values can be calculated
+in a sink.
+
+
+Collecting statistics
+---------------------
+
+A buffer with timestamp B1 arrives in the sink at time T1. The buffer
+timestamp is then synchronized against the clock which yields a jitter J1
+return value from the clock.
+
+If the jitter is positive, the entry arrived in time and can be rendered.
+
+If the jitter is negative however, the entry arrived too late in the sink 
+and should therefore be dropped. A dropped buffer should generate a QoS
+event upstream.
+
+Using the jitter we can calculate the time when the buffer arrived in the
+sink: 
+     
+  T1 = B1 - J1.                                (1)
+
+The time the buffer leaves the sink after synchronisation is measured as:
+
+  T2 = B1 - (J1 < 0 : J1 : 0)                  (2)
+
+For buffers that arrive in time (J1 >= 0) the buffer leaves after synchronisation
+which is exactly B1. Late buffers (J1 < 0) leave the sink when they arrive,
+whithout any synchronisation, which is T1 = B1 - J1.
+
+Using a previous T0 and a new T1, we can calculate the time it took for
+upstream to generate a buffer with timestamp B1.
+
+  PT1 = T0 - T1                                (3)
+
+We call PT1 the processing time needed to generate buffer with timestamp B1.
+
+Moreover, given the duration of the buffer D1, the current data rate (DR1) of 
+the upstream element is given as:
+
+       PT1   T1 - T0
+ DR1 = --- = -------                           (4)
+       D1      D1
+
+For values 0.0 < DR1 <= 1.0 the upstream element is producing faster than
+real-time. If DR1 is exactly 1.0, the element is running at a perfect speed.
+
+Values DR1 > 1.0 means that the upstream element cannot produce buffers of
+duration D1 in real-time. It is exactly DR1 that tells the amount of speedup
+we require from upstream to regain real-time performance.
+
+
+Short term correction
+---------------------
+
+The timestamp and jitter serve as short term correction information
+for upstream elements. Indeed, given arrival time T1 as given in (1)
+we can be certain that buffers with a timestamp B2 < T1 will be too late
+in the sink.
+
+In case of a negative jitter we can therefore send a QoS message with
+a timestamp B1, jitter J1 and proportion given by (4).
+
+This allows an upstream element to not generate any data with a timestamps
+B2 < T1, where the element can derive T1 as B1 - J1.
+
+This will effectively result in frame drops.
+
+The element can even do a better estimation of the next valid timestamp it
+should output.
+
+Indeed, given the element generate a buffer with timestamp B1 that arrived
+in time in the sink but then received a QoS message stating B2 arrived J2
+too late. This means generating B2 took (B2 - J2) - B1 = T1 - T0 = PT1, as 
+given in (3). Given the buffer B2 had a duration D2 and assuming that
+generating a new buffer B3 will take the same amount of processing time,
+a better estimation for B3 would then be:
+
+  B3 = T1 + D3 * DR2
+
+ expanding gives:
+
+  B3 = (B2 - J2) + D3 * (B2 - J2 - B1)
+                        --------------  
+		             D2
+
+ assuming the durations of the frames are equal and thus D2 = D3:
+
+  B3 = (B2 - J2) + (B2 - J2 - B1)
+
+  B3 =  2 * (B2 - J2) - B1
+
+ also:
+
+  B1 = B2 - D2
+
+ so:
+
+  B3 =  2 * (B2 - J2) - (B2 - D2)
+
+Which yields a more accurate prediction for the next buffer given as:
+
+  B3 =  B2 - 2 * J2 + D2                          (5)
+
+
+Long term correction
+--------------------
+
+The datarate used to calculate (5) for the short term prediction is based
+on a single observation. A more accurate datarate can be obtained by
+creating a running average over multiple datarate observations.
+
+This average is less susceptible to sudden changes that would only influence
+the datarate for a very short period.
+
+A running average is calculated over the observations given in (4) and is
+used as the proportion member in the QoS message that is sent upstream.
+
+Receivers of the QoS message should permanently reduce their datarate 
+as given by the proportion member. Failure to do so will certainly lead to
+dropped frames and worse a QoS.
+
+
+QoS strategies
+--------------
+
+ - lowering quality
+   - dropping frames
+   - switch to a lower decoding/encoding quality
+   - switch to a lower quality source
+
+QoS implementations
+-------------------
+

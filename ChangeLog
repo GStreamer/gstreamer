@@ -1,5 +1,10 @@
 2006-03-27  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-qos.txt:
+	First QoS ideas.
+
+2006-03-27  Wim Taymans  <wim@fluendo.com>
+
 	Inspired by a patch of: Lutz Mueller <lutz at topfrose dot de>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_finalize),
