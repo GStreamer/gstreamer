@@ -828,6 +828,7 @@ gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
   stream->frag_offset = 0;
   stream->sequence = 0;
   stream->delay = 0;
+  stream->first_pts = GST_CLOCK_TIME_NONE;
   stream->last_pts = GST_CLOCK_TIME_NONE;
   stream->fps_known = !is_video;        /* bit hacky for audio */
   stream->is_video = is_video;
@@ -1812,7 +1813,10 @@ gst_asf_demux_process_chunk (GstASFDemux * demux,
   if (segment_info->frag_offset == 0) {
     /* new packet */
     stream->sequence = segment_info->sequence;
-    demux->pts = segment_info->frag_timestamp - demux->preroll;
+    if (!GST_CLOCK_TIME_IS_VALID (stream->first_pts))
+      stream->first_pts = segment_info->frag_timestamp - demux->preroll;
+    demux->pts =
+        segment_info->frag_timestamp - demux->preroll - stream->first_pts;
 
     /*
        if (stream->is_video) {
@@ -1871,7 +1875,8 @@ gst_asf_demux_process_chunk (GstASFDemux * demux,
 #endif
         stream->frag_offset = 0;
       }
-      demux->pts = segment_info->frag_timestamp - demux->preroll;
+      demux->pts =
+          segment_info->frag_timestamp - demux->preroll - stream->first_pts;
 
       /*
          if (stream->is_video) {

@@ -1,5 +1,16 @@
 2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Fabrizio Gennari  <fabrizio dot ge at tiscali dot it>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_setup_pad),
+	(gst_asf_demux_process_chunk):
+	* gst/asfdemux/gstasfdemux.h:
+	  Subtract first timestamp from timestamps, so that
+	  stream starts from 0; makes live streams that don't
+	  start at 0 work again (fixes #317310, #336097).
+
+2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Christian Kirbach
 
 	* configure.ac:

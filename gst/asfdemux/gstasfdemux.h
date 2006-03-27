@@ -47,6 +47,7 @@ typedef struct
   guint32     frag_offset;
   guint32     sequence;
   guint64     delay;
+  guint64     first_pts;
   guint64     last_pts;
   GstBuffer  *payload;
 
