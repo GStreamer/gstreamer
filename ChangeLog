@@ -1,5 +1,14 @@
 2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Jürg Billeter  <j at bitron dot ch>
+
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_set_property):
+	  Fix wrong check for started flag when setting the 'device' property.
+	  We want to allow it when the source is NOT started yet and ignore it
+	  when the source is running.
+
+2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Fabrizio Gennari  <fabrizio dot ge at tiscali dot it>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_setup_pad),

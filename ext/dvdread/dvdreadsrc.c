@@ -718,7 +718,7 @@ gst_dvd_read_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_DEVICE:{
-      if (!started) {
+      if (started) {
         g_warning ("%s: property '%s' needs to be set before the device is "
             "opened", GST_ELEMENT_NAME (src), pspec->name);
         break;;
