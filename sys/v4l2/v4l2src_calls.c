@@ -352,8 +352,11 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
 
       gst_atomic_int_set (&buffer->refcount, 1);
       buffer->pool = v4l2src->pool;
+      memset (&buffer->buffer, 0x00, sizeof (buffer->buffer));
       buffer->buffer.index = n;
-      buffer->buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+      buffer->buffer.type = v4l2src->breq.type;
+      buffer->buffer.memory = v4l2src->breq.memory;
+
       if (ioctl (GST_V4L2ELEMENT (v4l2src)->video_fd, VIDIOC_QUERYBUF,
               &buffer->buffer) < 0) {
         GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ, (NULL),
@@ -624,7 +627,6 @@ gst_v4l2src_get_fps (GstV4l2Src * v4l2src, gint * fps_n, gint * fps_d)
       return TRUE;
     }
   }
-
   return FALSE;
 
 }
