@@ -1,3 +1,12 @@
+2006-03-27  Wim Taymans  <wim@fluendo.com>
+
+	Inspired by a patch of: Lutz Mueller <lutz at topfrose dot de>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_finalize),
+	(gst_base_src_send_event), (gst_base_src_change_state):
+	Handle element seek correctly when we are streaming.
+	Fixes #326998.
+
 2006-03-24  Michael Smith  <msmith@fluendo.com>
 
 	* docs/faq/gst-uninstalled:

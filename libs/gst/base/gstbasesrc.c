@@ -388,6 +388,7 @@ gst_base_src_finalize (GObject * object)
 
   g_mutex_free (basesrc->live_lock);
   g_cond_free (basesrc->live_cond);
+  gst_event_replace (&basesrc->data.ABI.pending_seek, NULL);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -877,30 +878,64 @@ static gboolean
 gst_base_src_send_event (GstElement * element, GstEvent * event)
 {
   GstBaseSrc *src;
-  gboolean result;
+  gboolean result = FALSE;
 
   src = GST_BASE_SRC (element);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
+      break;
+    case GST_EVENT_EOS:
+    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_TAG:
+    case GST_EVENT_BUFFERSIZE:
+      break;
+    case GST_EVENT_QOS:
+      break;
     case GST_EVENT_SEEK:
     {
-      GST_OBJECT_LOCK (src);
-      /* gst_event_replace? */
-      if (src->data.ABI.pending_seek)
-        gst_event_unref (src->data.ABI.pending_seek);
-      gst_event_ref (event);
-      src->data.ABI.pending_seek = event;
-      GST_OBJECT_UNLOCK (src);
-      result = TRUE;
+      gboolean started;
+
+      GST_OBJECT_LOCK (src->srcpad);
+      if (GST_PAD_ACTIVATE_MODE (src->srcpad) == GST_ACTIVATE_PULL)
+        goto wrong_mode;
+      started = GST_PAD_ACTIVATE_MODE (src->srcpad) == GST_ACTIVATE_PUSH;
+      GST_OBJECT_UNLOCK (src->srcpad);
+
+      if (started) {
+        /* when we are running in push mode, we can execute the
+         * seek right now, we need to unlock. */
+        result = gst_base_src_perform_seek (src, event, TRUE);
+      } else {
+        /* else we store the event and execute the seek when we
+         * get activated */
+        GST_OBJECT_LOCK (src);
+        gst_event_replace (&src->data.ABI.pending_seek, event);
+        GST_OBJECT_UNLOCK (src);
+        /* assume the seek will work */
+        result = TRUE;
+      }
       break;
     }
+    case GST_EVENT_NAVIGATION:
+      break;
     default:
-      result = FALSE;
       break;
   }
+done:
   gst_event_unref (event);
 
   return result;
+
+  /* ERRORS */
+wrong_mode:
+  {
+    GST_DEBUG_OBJECT (src, "cannot perform seek when operating in pull mode");
+    GST_OBJECT_UNLOCK (src->srcpad);
+    result = FALSE;
+    goto done;
+  }
 }
 
 static gboolean
@@ -1833,6 +1868,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
         gst_pad_push_event (basesrc->srcpad, gst_event_new_eos ());
         basesrc->priv->last_sent_eos = TRUE;
       }
+      gst_event_replace (&basesrc->data.ABI.pending_seek, NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
