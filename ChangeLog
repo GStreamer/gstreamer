@@ -1,3 +1,10 @@
+2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Remove CXX tag from AS_LIBTOOL_TAGS, just like we
+	  did for -good and -ugly. Fixes build on some systems
+	  and doesn't seem to be required for C++ code.
+
 2006-03-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/taglib/gsttaglib.cc:

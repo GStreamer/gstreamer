@@ -23,7 +23,7 @@ dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
 
-AS_LIBTOOL_TAGS([CXX])
+AS_LIBTOOL_TAGS
 AM_PROG_LIBTOOL
 
 AC_CONFIG_SRCDIR([gst/qtdemux/qtdemux.c])
