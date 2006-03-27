@@ -299,11 +299,10 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
       filter->image_size, GST_PAD_CAPS (filter->srcpad), &outbuf);
 
   if (ret != GST_FLOW_OK) {
-    GST_DEBUG ("Failed to create outbuffer - %d", ret);
+    GST_DEBUG ("Failed to create outbuffer - %s", gst_flow_get_name (ret));
     return GST_FLOW_ERROR;
   }
 
-  gst_caps_unref (caps);
   caps = gst_pad_get_negotiated_caps (filter->srcpad);
   GST_DEBUG ("Caps negotiated %s", gst_caps_to_string (caps));
   gst_caps_unref (caps);
@@ -339,6 +338,7 @@ gst_gdk_pixbuf_event (GstPad * pad, GstEvent * event)
       gdk_pixbuf_loader_close (pixbuf->pixbuf_loader, NULL);
       res = gst_gdk_pixbuf_flush (pixbuf);
       g_object_unref (G_OBJECT (pixbuf->pixbuf_loader));
+      pixbuf->pixbuf_loader = NULL;
       break;
     case GST_EVENT_NEWSEGMENT:
     case GST_EVENT_FLUSH_STOP:

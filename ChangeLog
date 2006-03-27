@@ -1,3 +1,10 @@
+2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_flush),
+	(gst_gdk_pixbuf_event):
+	  Fix two crashers: don't unref the same caps twice, and
+	  set pixbuf loader to NULL after freeing it.
+
 2006-03-27  Wim Taymans  <wim@fluendo.com>
 
 	* ext/speex/gstspeexenc.c: (gst_speexenc_class_init),
