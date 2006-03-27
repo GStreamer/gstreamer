@@ -314,10 +314,20 @@ gst_gnome_vfs_src_finalize (GObject * object)
     src->uri = NULL;
   }
 
-  if (src->uri_name) {
-    g_free (src->uri_name);
-    src->uri_name = NULL;
-  }
+  g_free (src->uri_name);
+  src->uri_name = NULL;
+
+  g_free (src->iradio_name);
+  src->iradio_name = NULL;
+
+  g_free (src->iradio_genre);
+  src->iradio_genre = NULL;
+
+  g_free (src->iradio_url);
+  src->iradio_url = NULL;
+
+  g_free (src->iradio_title);
+  src->iradio_title = NULL;
 
   g_mutex_free (src->audiocast_udpdata_mutex);
   g_mutex_free (src->audiocast_queue_mutex);
@@ -933,6 +943,7 @@ gst_gnome_vfs_src_get_icy_metadata (GstGnomeVFSSrc * src)
   }
 
   g_strfreev (tags);
+  g_free (data);
 }
 
 /* end of icecast/audiocast metadata extraction support code */

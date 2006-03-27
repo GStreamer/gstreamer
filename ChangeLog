@@ -1,5 +1,13 @@
 2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_finalize),
+	(gst_gnome_vfs_src_get_icy_metadata):
+	  Fix some minor memory leaks (#336194).
+
+2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gnomevfs/gstgnomevfs.c:
 	(gst_gnome_vfs_location_to_uri_string):
 	* ext/gnomevfs/gstgnomevfs.h:
