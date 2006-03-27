@@ -267,6 +267,8 @@ gst_gnome_vfs_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_LOCATION:{
+      const gchar *new_location;
+
       if (sink->uri) {
         gnome_vfs_uri_unref (sink->uri);
         sink->uri = NULL;
@@ -275,8 +277,10 @@ gst_gnome_vfs_sink_set_property (GObject * object, guint prop_id,
         g_free (sink->uri_name);
         sink->uri_name = NULL;
       }
-      if (g_value_get_string (value)) {
-        sink->uri_name = g_value_dup_string (value);
+
+      new_location = g_value_get_string (value);
+      if (new_location) {
+        sink->uri_name = gst_gnome_vfs_location_to_uri_string (new_location);
         sink->uri = gnome_vfs_uri_new (sink->uri_name);
       }
       break;

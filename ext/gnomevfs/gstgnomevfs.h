@@ -31,6 +31,8 @@ G_BEGIN_DECLS
 GType gst_gnome_vfs_uri_get_type (void);
 GType gst_gnome_vfs_handle_get_type (void);
 
+gchar * gst_gnome_vfs_location_to_uri_string (const gchar * location);
+
 G_END_DECLS
 
 #endif /* __GST_GNOME_VFS_H__ */

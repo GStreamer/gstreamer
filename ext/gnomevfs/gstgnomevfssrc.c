@@ -384,12 +384,13 @@ gst_gnome_vfs_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstGnomeVFSSrc *src;
-  gchar cwd[PATH_MAX];
 
   src = GST_GNOME_VFS_SRC (object);
 
   switch (prop_id) {
-    case ARG_LOCATION:
+    case ARG_LOCATION:{
+      const gchar *new_location;
+
       /* the element must be stopped or paused in order to do this */
       if (GST_STATE (src) == GST_STATE_PLAYING ||
           GST_STATE (src) == GST_STATE_PAUSED)
@@ -404,25 +405,13 @@ gst_gnome_vfs_src_set_property (GObject * object, guint prop_id,
         src->uri_name = NULL;
       }
 
-      if (g_value_get_string (value)) {
-        const gchar *location = g_value_get_string (value);
-
-        if (!strchr (location, ':')) {
-          gchar *newloc = gnome_vfs_escape_path_string (location);
-
-          if (*newloc == '/')
-            src->uri_name = g_strdup_printf ("file://%s", newloc);
-          else
-            src->uri_name =
-                g_strdup_printf ("file://%s/%s", getcwd (cwd, PATH_MAX),
-                newloc);
-          g_free (newloc);
-        } else
-          src->uri_name = g_strdup (location);
-
+      new_location = g_value_get_string (value);
+      if (new_location) {
+        src->uri_name = gst_gnome_vfs_location_to_uri_string (new_location);
         src->uri = gnome_vfs_uri_new (src->uri_name);
       }
       break;
+    }
     case ARG_HANDLE:
       if (GST_STATE (src) == GST_STATE_NULL ||
           GST_STATE (src) == GST_STATE_READY) {

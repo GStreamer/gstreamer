@@ -1,3 +1,15 @@
+2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gnomevfs/gstgnomevfs.c:
+	(gst_gnome_vfs_location_to_uri_string):
+	* ext/gnomevfs/gstgnomevfs.h:
+	* ext/gnomevfs/gstgnomevfssink.c:
+	(gst_gnome_vfs_sink_set_property):
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_set_property):
+	  Make gnomevfssink accept filenames as well as URIs for the
+	  "location" property, just like gnomevfssrc does (and
+	  filesrc/filesink do) (#336190).
+
 2006-03-24  Thomas Vander Stichele <thomas at apestaart dot org>
 
 	* tests/check/generic/clock-selection.c: (GST_START_TEST):
