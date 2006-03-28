@@ -1027,7 +1027,7 @@ gst_mpeg_demux_sync_stream_to_time (GstMPEGDemux * mpeg_demux,
 
   if (filler) {
     GST_LOG ("Advancing %s from %llu by %lld to %llu (diff %lld)",
-        gst_pad_get_name (stream->pad), stream->cur_ts,
+        GST_PAD_NAME (stream->pad), stream->cur_ts,
         gst_event_filler_get_duration (filler), last_ts,
         GST_CLOCK_DIFF (last_ts, stream->cur_ts));
 

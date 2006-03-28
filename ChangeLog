@@ -1,5 +1,15 @@
 2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_process_event),
+	(gst_dvd_demux_handle_dvd_event), (gst_dvd_demux_get_audio_stream),
+	(gst_dvd_demux_get_subpicture_stream):
+	* gst/mpegstream/gstmpegdemux.c:
+	(gst_mpeg_demux_sync_stream_to_time):
+	  Don't leak element and pad names in error messages, use
+	  GST_DEBUG_PAD_NAME instead. Add some more debug code.
+
+2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_init),
 	(gst_dvd_read_src_goto_title), (gst_dvd_read_src_read):
 	  Name the structure in the custom event with the

@@ -329,8 +329,8 @@ gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
       break;
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
-      if (gst_structure_has_name (gst_event_get_structure (event),
-              "application/x-gst-dvd")) {
+      if (event->structure != NULL &&
+          gst_structure_has_name (event->structure, "application/x-gst-dvd")) {
         ret = gst_dvd_demux_handle_dvd_event (dvd_demux, event);
       } else {
         ret = GST_MPEG_PARSE_CLASS (parent_class)->process_event (mpeg_parse,
@@ -356,14 +356,7 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
 
   g_return_val_if_fail (event != NULL, FALSE);
 
-#ifndef GST_DISABLE_GST_DEBUG
-  {
-    gchar *text = gst_structure_to_string (structure);
-
-    GST_LOG_OBJECT (dvd_demux, "processing event \"%s\"", text);
-    g_free (text);
-  }
-#endif
+  GST_LOG_OBJECT (dvd_demux, "dvd event %" GST_PTR_FORMAT, structure);
 
   if (strcmp (event_type, "dvd-audio-stream-change") == 0) {
     gint stream_nr;
@@ -631,8 +624,8 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
 
     if (!gst_pad_set_caps (str->pad, str->caps)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
-          CORE, NEGOTIATION, (NULL), ("failed to set caps on pad %s:%s",
-              gst_element_get_name (dvd_demux), gst_pad_get_name (str->pad)));
+          CORE, NEGOTIATION, (NULL),
+          ("failed to set caps on pad %s:%s", GST_DEBUG_PAD_NAME (str->pad)));
       gst_caps_unref (str->caps);
       str->caps = NULL;
       return str;
@@ -643,8 +636,7 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
       if (!gst_pad_set_caps (dvd_demux->cur_audio, str->caps)) {
         GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
             CORE, NEGOTIATION, (NULL), ("failed to set caps on pad %s:%s",
-                gst_element_get_name (dvd_demux),
-                gst_pad_get_name (dvd_demux->cur_audio)));
+                GST_DEBUG_PAD_NAME (dvd_demux->cur_audio)));
       }
     }
 
@@ -658,6 +650,9 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
                 langcodes), t);
         g_free (t);
       }
+
+      GST_DEBUG_OBJECT (mpeg_demux, "adding pad %s with language = %s",
+          GST_PAD_NAME (str->pad), (lang_code) ? lang_code : "(unknown)");
 
       gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
 
@@ -723,8 +718,8 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
 
     if (!gst_pad_set_caps (str->pad, str->caps)) {
       GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
-          CORE, NEGOTIATION, (NULL), ("failed to set caps on pad %s:%s",
-              gst_element_get_name (dvd_demux), gst_pad_get_name (str->pad)));
+          CORE, NEGOTIATION, (NULL),
+          ("failed to set caps on pad %s:%s", GST_DEBUG_PAD_NAME (str->pad)));
       gst_caps_unref (str->caps);
       str->caps = NULL;
       return str;
@@ -734,8 +729,8 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
       /* This is the current subpicture stream.  Use the same caps. */
       if (!gst_pad_set_caps (dvd_demux->cur_subpicture, str->caps)) {
         GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_demux),
-            CORE, NEGOTIATION, (NULL), ("failed to set caps on pad %s:%s",
-                gst_element_get_name (dvd_demux), gst_pad_get_name (str->pad)));
+            CORE, NEGOTIATION, (NULL),
+            ("failed to set caps on pad %s:%s", GST_DEBUG_PAD_NAME (str->pad)));
       }
     }
 
