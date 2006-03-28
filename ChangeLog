@@ -1,5 +1,13 @@
 2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybin.c: (gen_video_element),
+	(gen_text_element), (gen_audio_element), (gen_vis_element):
+	  Error out gracefully when we can't create any of the usual
+	  conversion elements for some reason. Also, don't try to
+	  create an audioscale (sic) element that's not used anyway.
+
+2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstplaybasebin.c: (setup_source):
 	  Don't post RESOURCE_NOT_FOUND error when we can't find a source
 	  element for a particular protocol, that's confusing for users.

@@ -619,9 +619,13 @@ gen_video_element (GstPlayBin * play_bin)
   identity = gst_element_factory_make ("identity", "id");
   g_object_set (identity, "silent", TRUE, NULL);
   g_signal_connect (identity, "handoff", G_CALLBACK (handoff), play_bin);
-  conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
-  scale = gst_element_factory_make ("videoscale", "vscale");
   gst_bin_add (GST_BIN (element), identity);
+  conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
+  if (conv == NULL)
+    goto no_colorspace;
+  scale = gst_element_factory_make ("videoscale", "vscale");
+  if (scale == NULL)
+    goto no_videoscale;
   gst_bin_add (GST_BIN (element), conv);
   gst_bin_add (GST_BIN (element), scale);
   gst_bin_add (GST_BIN (element), sink);
@@ -641,6 +645,24 @@ gen_video_element (GstPlayBin * play_bin)
   g_hash_table_insert (play_bin->cache, "vbin", element);
 
   return element;
+
+no_colorspace:
+  {
+    GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "ffmpegcolorspace"), (NULL));
+    gst_object_unref (element);
+    return NULL;
+  }
+
+no_videoscale:
+  {
+    GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "videoscale"), ("possibly a liboil version mismatch?"));
+    gst_object_unref (element);
+    return NULL;
+  }
 }
 
 /* make an element for playback of video with subtitles embedded.
@@ -686,6 +708,7 @@ gen_text_element (GstPlayBin * play_bin)
   /* Take a ref */
   play_bin->textoverlay_element = GST_ELEMENT (gst_object_ref (overlay));
 
+  /* we know this will succeed, as the video bin already created one before */
   csp = gst_element_factory_make ("ffmpegcolorspace", "subtitlecsp");
 
   /* Add our elements */
@@ -730,7 +753,8 @@ gen_audio_element (GstPlayBin * play_bin)
   GstElement *conv;
   GstElement *sink;
   GstElement *volume;
-  GstElement *scale;
+
+  /* GstElement *scale; */
   GstPad *pad;
 
   element = g_hash_table_lookup (play_bin->cache, "abin");
@@ -739,8 +763,13 @@ gen_audio_element (GstPlayBin * play_bin)
   }
   element = gst_bin_new ("abin");
   conv = gst_element_factory_make ("audioconvert", "aconv");
-  scale = gst_element_factory_make ("audioscale", "ascale");
-
+  if (conv == NULL)
+    goto no_audioconvert;
+/*
+  scale = gst_element_factory_make ("audioresample", "aresample");
+  if (scale == NULL)
+    goto no_audioresample;
+*/
   volume = gst_element_factory_make ("volume", "volume");
   g_object_set (G_OBJECT (volume), "volume", play_bin->volume, NULL);
   play_bin->volume_element = volume;
@@ -764,7 +793,7 @@ gen_audio_element (GstPlayBin * play_bin)
   g_hash_table_insert (play_bin->cache, "audio_sink", sink);
 
   gst_bin_add (GST_BIN (element), conv);
-  //gst_bin_add (GST_BIN (element), scale);
+  /* gst_bin_add (GST_BIN (element), scale); */
   gst_bin_add (GST_BIN (element), volume);
   gst_bin_add (GST_BIN (element), sink);
 
@@ -784,6 +813,26 @@ gen_audio_element (GstPlayBin * play_bin)
   g_hash_table_insert (play_bin->cache, "abin", element);
 
   return element;
+
+no_audioconvert:
+  {
+    GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "audioconvert"), ("possibly a liboil version mismatch?"));
+    gst_object_unref (element);
+    return NULL;
+  }
+/*
+no_audioresample:
+  {
+    GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+         "audioresample"),
+        ("possibly a liboil version mismatch?"));
+    gst_object_unref (element);
+    return NULL;
+  }
+*/
 }
 
 /* make the element (bin) that contains the elements needed to perform
@@ -843,6 +892,9 @@ gen_vis_element (GstPlayBin * play_bin)
   gst_bin_add (GST_BIN (element), tee);
 
   conv = gst_element_factory_make ("audioconvert", "aconv");
+  if (conv == NULL)
+    goto no_audioconvert;
+
   if (play_bin->visualisation) {
     gst_object_ref (play_bin->visualisation);
     vis = play_bin->visualisation;
@@ -875,6 +927,15 @@ gen_vis_element (GstPlayBin * play_bin)
   gst_object_unref (pad);
 
   return element;
+
+no_audioconvert:
+  {
+    GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "audioconvert"), ("possibly a liboil version mismatch?"));
+    gst_object_unref (element);
+    return NULL;
+  }
 }
 
 /* get rid of all installed sinks */
