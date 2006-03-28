@@ -1363,7 +1363,7 @@ no_source:
     }
     prot = gst_uri_get_protocol (play_base_bin->uri);
     if (prot) {
-      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, NOT_FOUND,
+      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, FAILED,
           (_("No URI handler implemented for \"%s\"."), prot), (NULL));
       g_free (prot);
     } else {

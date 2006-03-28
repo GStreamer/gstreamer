@@ -1,3 +1,11 @@
+2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybasebin.c: (setup_source):
+	  Don't post RESOURCE_NOT_FOUND error when we can't find a source
+	  element for a particular protocol, that's confusing for users.
+	  Instead, post a RESOURCE_FAILED error, so that our own error
+	  message is actually shown in totem etc. (#336303).
+
 2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>
