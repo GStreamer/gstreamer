@@ -134,6 +134,10 @@ gst_dvd_read_src_init (GstDvdReadSrc * src, GstDvdReadSrcClass * klass)
   src->seek_pend_fmt = GST_FORMAT_UNDEFINED;
   src->title_lang_event_pending = NULL;
   src->pending_clut_event = NULL;
+
+  gst_pad_use_fixed_caps (GST_BASE_SRC_PAD (src));
+  gst_pad_set_caps (GST_BASE_SRC_PAD (src),
+      gst_static_pad_template_get_caps (&srctemplate));
 }
 
 static void
@@ -417,7 +421,7 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
     src->title_lang_event_pending = NULL;
   }
 
-  s = gst_structure_new ("application/x-gst-event",
+  s = gst_structure_new ("application/x-gst-dvd",
       "event", G_TYPE_STRING, "dvd-lang-codes", NULL);
 
   /* audio */
@@ -612,6 +616,8 @@ nav_retry:
 
   GST_BUFFER_SIZE (buf) = cur_output_size * DVD_VIDEO_LB_LEN;
   /* GST_BUFFER_OFFSET (buf) = priv->cur_pack * DVD_VIDEO_LB_LEN; */
+
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
 
   *p_buf = buf;
 

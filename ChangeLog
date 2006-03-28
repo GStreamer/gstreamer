@@ -1,5 +1,14 @@
 2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_init),
+	(gst_dvd_read_src_goto_title), (gst_dvd_read_src_read):
+	  Name the structure in the custom event with the
+	  language codes for the audio and subtitle streams
+	  actually like dvddemux expects it to be named.
+	  Set caps on source pad and outgoing buffers.
+
+2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/lame/gstlame.c: (gst_lame_init), (gst_lame_set_property),
 	(gst_lame_get_property), (gst_lame_setup):
 	* ext/lame/gstlame.h:
