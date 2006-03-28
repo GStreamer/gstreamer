@@ -217,10 +217,10 @@ enum
   ARG_EMPHASIS,
   ARG_VBR_QUALITY,
 #ifdef GSTLAME_PRESET
-  ARG_XINGHEADER,
+  ARG_XINGHEADER,               /* FIXME: remove in 0.11 */
   ARG_PRESET
 #else
-  ARG_XINGHEADER
+  ARG_XINGHEADER                /* FIXME: remove in 0.11 */
 #endif
 };
 
@@ -582,7 +582,6 @@ gst_lame_init (GstLame * lame)
   lame->allow_diff_short = lame_get_allow_diff_short (lame->lgf);
   lame->no_short_blocks = TRUE; /* lame_get_no_short_blocks (lame->lgf); */
   lame->emphasis = lame_get_emphasis (lame->lgf);
-  lame->xingheader = FALSE;
   lame->preset = 0;
   lame_close (lame->lgf);
   lame->lgf = NULL;
@@ -813,7 +812,6 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
       lame->emphasis = g_value_get_boolean (value);
       break;
     case ARG_XINGHEADER:
-      lame->xingheader = g_value_get_boolean (value);
       break;
 #ifdef GSTLAME_PRESET
     case ARG_PRESET:
@@ -931,7 +929,6 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, lame->emphasis);
       break;
     case ARG_XINGHEADER:
-      g_value_set_boolean (value, lame->xingheader);
       break;
 #ifdef GSTLAME_PRESET
     case ARG_PRESET:
@@ -1184,7 +1181,6 @@ gst_lame_setup (GstLame * lame)
   CHECK_ERROR (lame_set_allow_diff_short (lame->lgf, lame->allow_diff_short));
   CHECK_ERROR (lame_set_no_short_blocks (lame->lgf, lame->no_short_blocks));
   CHECK_ERROR (lame_set_emphasis (lame->lgf, lame->emphasis));
-  CHECK_ERROR (lame_set_bWriteVbrTag (lame->lgf, lame->xingheader ? 1 : 0));
 #ifdef GSTLAME_PRESET
   if (lame->preset > 0) {
     CHECK_ERROR (lame_set_preset (lame->lgf, lame->preset));
