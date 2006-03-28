@@ -24,9 +24,7 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #include <lame/lame.h>
 
@@ -38,7 +36,7 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_LAME,GstLameClass))
 #define GST_IS_LAME(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_LAME))
-#define GST_IS_LAME_CLASS(obj) \
+#define GST_IS_LAME_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LAME))
 
 typedef enum {
@@ -91,7 +89,6 @@ struct _GstLame {
   gboolean allow_diff_short;
   gboolean no_short_blocks;
   gboolean emphasis;
-  gboolean xingheader;
   gint preset;
 
   lame_global_flags *lgf;
@@ -110,9 +107,7 @@ struct _GstLameClass {
 
 GType gst_lame_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
 #endif /* __GST_LAME_H__ */

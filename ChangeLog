@@ -1,5 +1,13 @@
 2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/lame/gstlame.c: (gst_lame_init), (gst_lame_set_property),
+	(gst_lame_get_property), (gst_lame_setup):
+	* ext/lame/gstlame.h:
+	  Make xingheader property non-functional, it's broken anyway
+	  after all (use xingmux instead).
+
+2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/lame/gstlame.c: (gst_lame_sink_event):
 	  On EOS, flush encoder and send remaining data. Fix
 	  return value handling in sink event function.
