@@ -1,3 +1,9 @@
+2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/lame/gstlame.c: (gst_lame_sink_event):
+	  On EOS, flush encoder and send remaining data. Fix
+	  return value handling in sink event function.
+
 2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Jürg Billeter  <j at bitron dot ch>

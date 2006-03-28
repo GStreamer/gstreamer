@@ -947,22 +947,36 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 gst_lame_sink_event (GstPad * pad, GstEvent * event)
 {
+  gboolean ret;
   GstLame *lame;
 
   lame = GST_LAME (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
-      GST_DEBUG_OBJECT (lame, "handling EOS event");
-      /* FIXME, push last data packet */
+    case GST_EVENT_EOS:{
+      GstBuffer *buf;
+      gint size;
 
-      gst_pad_push_event (lame->srcpad, event);
+      GST_DEBUG_OBJECT (lame, "handling EOS event");
+      buf = gst_buffer_new_and_alloc (7200);
+      size = lame_encode_flush (lame->lgf, GST_BUFFER_DATA (buf), 7200);
+      if (size > 0) {
+        GST_BUFFER_SIZE (buf) = size;
+        GST_DEBUG_OBJECT (lame, "pushing final packet of %u bytes", size);
+        gst_buffer_set_caps (buf, GST_PAD_CAPS (lame->srcpad));
+        gst_pad_push (lame->srcpad, buf);
+      } else {
+        GST_DEBUG_OBJECT (lame, "no final packet (size=%d)", size);
+        gst_buffer_unref (buf);
+      }
+
+      ret = gst_pad_event_default (pad, event);
       break;
+    }
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (lame, "handling FLUSH start event");
       /* forward event */
-      gst_pad_push_event (lame->srcpad, event);
-
+      ret = gst_pad_push_event (lame->srcpad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
     {
@@ -976,7 +990,7 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
       mp3_data = g_malloc (mp3_buffer_size);
       mp3_size = lame_encode_flush (lame->lgf, mp3_data, mp3_buffer_size);
 
-      gst_pad_push_event (lame->srcpad, event);
+      ret = gst_pad_push_event (lame->srcpad, event);
       break;
     }
     case GST_EVENT_TAG:
@@ -990,14 +1004,14 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
       } else {
         g_assert_not_reached ();
       }
-      gst_pad_push_event (lame->srcpad, event);
+      ret = gst_pad_push_event (lame->srcpad, event);
       break;
     default:
-      gst_pad_push_event (lame->srcpad, event);
+      ret = gst_pad_event_default (pad, event);
       break;
   }
   gst_object_unref (lame);
-  return TRUE;
+  return ret;
 }
 
 static GstFlowReturn
