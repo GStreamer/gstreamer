@@ -924,7 +924,6 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + offset;
-  GST_BUFFER_CAPS (outbuf) = gst_caps_ref (outstream->caps);
   ret = gst_pad_push (outstream->pad, outbuf);
 
   if (GST_CLOCK_TIME_IS_VALID (mpeg_demux->max_gap) &&

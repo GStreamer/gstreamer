@@ -1,5 +1,11 @@
 2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_send_subbuffer):
+	  Don't ref NULL caps (private streams have NULL caps) (#336387);
+	  also, no need to set caps on the same buffer twice.
+
+2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_process_event),
 	(gst_dvd_demux_handle_dvd_event), (gst_dvd_demux_get_audio_stream),
 	(gst_dvd_demux_get_subpicture_stream):
