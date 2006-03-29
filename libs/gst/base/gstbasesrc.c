@@ -383,12 +383,15 @@ static void
 gst_base_src_finalize (GObject * object)
 {
   GstBaseSrc *basesrc;
+  GstEvent **event_p;
 
   basesrc = GST_BASE_SRC (object);
 
   g_mutex_free (basesrc->live_lock);
   g_cond_free (basesrc->live_cond);
-  gst_event_replace (&basesrc->data.ABI.pending_seek, NULL);
+
+  event_p = &basesrc->data.ABI.pending_seek;
+  gst_event_replace ((GstEvent **) event_p, NULL);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -908,10 +911,13 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
          * seek right now, we need to unlock. */
         result = gst_base_src_perform_seek (src, event, TRUE);
       } else {
+        GstEvent **event_p;
+
         /* else we store the event and execute the seek when we
          * get activated */
         GST_OBJECT_LOCK (src);
-        gst_event_replace (&src->data.ABI.pending_seek, event);
+        event_p = &src->data.ABI.pending_seek;
+        gst_event_replace ((GstEvent **) event_p, event);
         GST_OBJECT_UNLOCK (src);
         /* assume the seek will work */
         result = TRUE;
@@ -1355,6 +1361,9 @@ gst_base_src_loop (GstPad * pad)
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
   gint64 position;
+  gboolean eos;
+
+  eos = FALSE;
 
   src = GST_BASE_SRC (gst_pad_get_parent (pad));
 
@@ -1404,8 +1413,15 @@ gst_base_src_loop (GstPad * pad)
       position = -1;
       break;
   }
-  if (position != -1)
+  if (position != -1) {
+    if (src->segment.stop != -1) {
+      if (position >= src->segment.stop) {
+        eos = TRUE;
+        position = src->segment.stop;
+      }
+    }
     gst_segment_set_last_stop (&src->segment, src->segment.format, position);
+  }
 
   if (G_UNLIKELY (src->priv->discont)) {
     buf = gst_buffer_make_metadata_writable (buf);
@@ -1416,6 +1432,9 @@ gst_base_src_loop (GstPad * pad)
   ret = gst_pad_push (pad, buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto pause;
+
+  if (eos)
+    goto eos;
 
 done:
   gst_object_unref (src);
@@ -1860,6 +1879,9 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       GST_LIVE_UNLOCK (element);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    {
+      GstEvent **event_p;
+
       if (!gst_base_src_stop (basesrc))
         goto error_stop;
 
@@ -1868,8 +1890,10 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
         gst_pad_push_event (basesrc->srcpad, gst_event_new_eos ());
         basesrc->priv->last_sent_eos = TRUE;
       }
-      gst_event_replace (&basesrc->data.ABI.pending_seek, NULL);
+      event_p = &basesrc->data.ABI.pending_seek;
+      gst_event_replace (event_p, NULL);
       break;
+    }
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:

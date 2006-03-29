@@ -1,5 +1,13 @@
 2006-03-29  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_finalize),
+	(gst_base_src_send_event), (gst_base_src_loop),
+	(gst_base_src_change_state):
+	Perform the EOS logic when we reach the segment stop position.
+	Fix compilation on gcc4.1
+
+2006-03-29  Wim Taymans  <wim@fluendo.com>
+
 	Patch by Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
 
 	* plugins/elements/gstqueue.c: (gst_queue_init),
