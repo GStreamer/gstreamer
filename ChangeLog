@@ -1,3 +1,15 @@
+2006-03-29  Wim Taymans  <wim@fluendo.com>
+
+	From a patch by: Michael Dominic K. <mdk at mdk dot org dot pl>
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_class_init),
+	(gst_dvdemux_reset), (gst_dvdemux_src_convert),
+	(gst_dvdemux_send_event), (gst_dvdemux_flush), (gst_dvdemux_loop),
+	(gst_dvdemux_sink_activate_pull), (gst_dvdemux_change_state):
+	* ext/dv/gstdvdemux.h:
+	Seek in READY patch. Only works for pull based mode.
+	Fixes #323880
+
 2006-03-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_flush),

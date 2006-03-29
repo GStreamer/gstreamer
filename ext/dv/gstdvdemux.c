@@ -160,6 +160,7 @@ static gboolean gst_dvdemux_src_convert (GstDVDemux * demux, GstPad * pad,
     gint64 * dest_value);
 
 /* event functions */
+static gboolean gst_dvdemux_send_event (GstElement * element, GstEvent * event);
 static gboolean gst_dvdemux_handle_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_dvdemux_handle_sink_event (GstPad * pad, GstEvent * event);
 
@@ -204,7 +205,9 @@ gst_dvdemux_class_init (GstDVDemuxClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_dvdemux_finalize);
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_dvdemux_change_state);
+  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_dvdemux_send_event);
 
   /* table initialization, only do once */
   dv_init (0, 0);
@@ -277,7 +280,7 @@ gst_dvdemux_reset (GstDVDemux * dvdemux)
   dvdemux->audio_offset = 0;
   dvdemux->video_offset = 0;
   dvdemux->framecount = 0;
-  dvdemux->found_header = FALSE;
+  gst_atomic_int_set (&dvdemux->found_header, 0);
   dvdemux->frame_len = -1;
   dvdemux->need_segment = FALSE;
   dvdemux->new_media = FALSE;
@@ -331,7 +334,7 @@ gst_dvdemux_src_convert (GstDVDemux * dvdemux, GstPad * pad,
     goto done;
   }
 
-  if (dvdemux->frame_len == -1)
+  if (dvdemux->frame_len <= 0)
     goto error;
 
   if (dvdemux->decoder == NULL)
@@ -1103,6 +1106,44 @@ no_format:
   }
 }
 
+static gboolean
+gst_dvdemux_send_event (GstElement * element, GstEvent * event)
+{
+  GstDVDemux *dvdemux = GST_DVDEMUX (element);
+  gboolean res = FALSE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      /* checking header and configuring the seek must be atomic */
+      GST_OBJECT_LOCK (dvdemux);
+      if (g_atomic_int_get (&dvdemux->found_header) == 0) {
+        GstEvent **event_p;
+
+        event_p = &dvdemux->seek_event;
+
+        /* We don't have pads yet. Keep the event. */
+        GST_INFO_OBJECT (dvdemux, "Keeping the seek event for later");
+
+        gst_event_replace (event_p, event);
+        GST_OBJECT_UNLOCK (dvdemux);
+
+        res = TRUE;
+      } else {
+        GST_OBJECT_UNLOCK (dvdemux);
+
+        if (dvdemux->seek_handler)
+          res = dvdemux->seek_handler (dvdemux, dvdemux->videosrcpad, event);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  return res;
+}
+
 /* handle an event on the source pad, it's most likely a seek */
 static gboolean
 gst_dvdemux_handle_src_event (GstPad * pad, GstEvent * event)
@@ -1372,7 +1413,7 @@ segment_error:
   }
 }
 
-/* flush any remaining data in the adapter */
+/* flush any remaining data in the adapter, used in chain based scheduling mode */
 static GstFlowReturn
 gst_dvdemux_flush (GstDVDemux * dvdemux)
 {
@@ -1389,8 +1430,6 @@ gst_dvdemux_flush (GstDVDemux * dvdemux)
     if (G_UNLIKELY (dv_parse_header (dvdemux->decoder, data) < 0))
       goto parse_header_error;
 
-    dvdemux->found_header = TRUE;
-
     /* after parsing the header we know the length of the data */
     dvdemux->PAL = dv_system_50_fields (dvdemux->decoder);
     length = dvdemux->frame_len = (dvdemux->PAL ? PAL_BUFFER : NTSC_BUFFER);
@@ -1401,6 +1440,8 @@ gst_dvdemux_flush (GstDVDemux * dvdemux)
       dvdemux->framerate_numerator = NTSC_FRAMERATE_NUMERATOR;
       dvdemux->framerate_denominator = NTSC_FRAMERATE_DENOMINATOR;
     }
+    gst_atomic_int_set (&dvdemux->found_header, 1);
+
     /* let demux_video set the height, it needs to detect when things change so
      * it can reset caps */
 
@@ -1491,7 +1532,7 @@ gst_dvdemux_loop (GstPad * pad)
 
   dvdemux = GST_DVDEMUX (gst_pad_get_parent (pad));
 
-  if (G_UNLIKELY (!dvdemux->found_header)) {
+  if (G_UNLIKELY (g_atomic_int_get (&dvdemux->found_header) == 0)) {
     /* add pads.. why is this again? */
     if (!dvdemux->videosrcpad)
       gst_dvdemux_add_pads (dvdemux);
@@ -1514,9 +1555,6 @@ gst_dvdemux_loop (GstPad * pad)
     if (G_UNLIKELY (dv_parse_header (dvdemux->decoder, data) < 0))
       goto parse_header_error;
 
-    /* got header now */
-    dvdemux->found_header = TRUE;
-
     /* after parsing the header we know the length of the data */
     dvdemux->PAL = dv_system_50_fields (dvdemux->decoder);
     dvdemux->frame_len = (dvdemux->PAL ? PAL_BUFFER : NTSC_BUFFER);
@@ -1533,6 +1571,36 @@ gst_dvdemux_loop (GstPad * pad)
     if (dvdemux->frame_len != NTSC_BUFFER) {
       gst_buffer_unref (buffer);
       buffer = NULL;
+    }
+
+    {
+      GstEvent *event;
+
+      /* setting header and prrforming the seek must be atomic */
+      GST_OBJECT_LOCK (dvdemux);
+      /* got header now */
+      gst_atomic_int_set (&dvdemux->found_header, 1);
+
+      /* now perform pending seek if any. */
+      event = dvdemux->seek_event;
+      if (event)
+        gst_event_ref (event);
+      GST_OBJECT_UNLOCK (dvdemux);
+
+      if (event) {
+        if (!gst_dvdemux_handle_pull_seek (dvdemux, dvdemux->videosrcpad,
+                event)) {
+          GST_ELEMENT_WARNING (dvdemux, STREAM, DECODE, (NULL),
+              ("Error perfoming initial seek"));
+        }
+        gst_event_unref (event);
+
+        /* and we need to pull a new buffer in all cases. */
+        if (buffer) {
+          gst_buffer_unref (buffer);
+          buffer = NULL;
+        }
+      }
     }
   }
   if (G_LIKELY (buffer == NULL)) {
@@ -1622,8 +1690,8 @@ gst_dvdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
     gst_pad_start_task (sinkpad, (GstTaskFunction) gst_dvdemux_loop, sinkpad);
   } else {
     demux->seek_handler = NULL;
-    demux->running = FALSE;
     gst_pad_stop_task (sinkpad);
+    demux->running = FALSE;
   }
 
   gst_object_unref (demux);
@@ -1676,7 +1744,13 @@ gst_dvdemux_change_state (GstElement * element, GstStateChange transition)
       dvdemux->decoder = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+    {
+      GstEvent **event_p;
+
+      event_p = &dvdemux->seek_event;
+      gst_event_replace (event_p, NULL);
       break;
+    }
     default:
       break;
   }
