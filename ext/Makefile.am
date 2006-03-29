@@ -1,3 +1,10 @@
+
+if USE_AMRWB
+ AMRWB_DIR = amrwb
+else
+ AMRWB_DIR =
+endif
+
 # if USE_ARTS
 # ARTS_DIR=arts
 # else
@@ -221,6 +228,7 @@ XVID_DIR=
 endif
 
 SUBDIRS=\
+	$(AMRWB_DIR) \
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
 	$(AUDIOFILE_DIR) \
@@ -260,6 +268,7 @@ SUBDIRS=\
 	$(XVID_DIR)
 
 DIST_SUBDIRS= \
+	amrwb \
 	bz2 \
 	directfb \
 	faac \

@@ -1,3 +1,35 @@
+2006-03-29  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Renato Araujo Oliveira Filho <renatox at gmail dot com>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/amrwb/Makefile.am:
+	* ext/amrwb/README:
+	* ext/amrwb/amrwb-code/Makefile.am:
+	* ext/amrwb/amrwb-code/run.sh:
+	* ext/amrwb/gstamrwb.c: (plugin_init):
+	* ext/amrwb/gstamrwbdec.c: (gst_amrwbdec_base_init),
+	(gst_amrwbdec_class_init), (gst_amrwbdec_init),
+	(gst_amrwbdec_setcaps), (gst_amrwbdec_event), (gst_amrwbdec_chain),
+	(gst_amrwbdec_state_change):
+	* ext/amrwb/gstamrwbdec.h:
+	* ext/amrwb/gstamrwbenc.c: (gst_amrwbenc_base_init),
+	(gst_amrwbenc_class_init), (gst_amrwbenc_init),
+	(gst_amrwbenc_finalize), (gst_amrwbenc_setcaps),
+	(gst_amrwbenc_chain), (gst_amrwbenc_state_change):
+	* ext/amrwb/gstamrwbenc.h:
+	* ext/amrwb/gstamrwbparse.c: (gst_amrwbparse_base_init),
+	(gst_amrwbparse_class_init), (gst_amrwbparse_init),
+	(gst_amrwbparse_querytypes), (gst_amrwbparse_query),
+	(gst_amrwbparse_chain), (gst_amrwbparse_read_header),
+	(gst_amrwbparse_loop), (gst_amrwbparse_sink_activate),
+	(gst_amrwbparse_sink_activate_pull), (gst_amrwbparse_state_change):
+	* ext/amrwb/gstamrwbparse.h:
+	Added new plugin amrwb parse.
+	Renamed audio/AMR to audio/AMR-WB as per spec.
+	Fixes #333307
+
 2006-03-27  Edgard Lima <edgard.lima@indt.org.br>
 
 	* gst-plugins-bad/sys/v4l2/v4l2src_calls.c: (gst_v4l2src_capture_init):

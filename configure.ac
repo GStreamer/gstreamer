@@ -433,6 +433,19 @@ GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], [ximagesrc w/ xshm], [
   AC_SUBST(XSHM_LIBS)
 ] )
 
+dnl *** amrwb ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
+GST_CHECK_FEATURE(AMRWB, [amrwb code], amrwb, [
+  if test -f "ext/amrwb/amrwb-code/readme.txt"; then
+    HAVE_AMRWB="yes"
+  else
+    AC_MSG_WARN(Not amrwb code found. See README at ext/amrwb/)
+    HAVE_AMRWB="no"
+  fi
+  AC_SUBST(HAVE_AMRWB)
+])
+
+
 dnl *** BZ2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_BZ2, true)
 GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
@@ -822,6 +835,8 @@ sys/v4l2/Makefile
 examples/Makefile
 examples/directfb/Makefile
 ext/Makefile
+ext/amrwb/Makefile
+ext/amrwb/amrwb-code/Makefile
 ext/bz2/Makefile
 ext/directfb/Makefile
 ext/faac/Makefile

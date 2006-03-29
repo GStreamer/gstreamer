@@ -1,0 +1,12 @@
+Compiling AMRWB codec:
+======================
+
+To compile the amrwb codec, you need to download the source code from 
+"http://www.3gpp.org/ftp/Specs/html-info/26204.htm" and uncompress the 
+files inside an amrwb-code directory;
+
+or execute this commands:
+$cd amrwb-code
+$sh ./run.sh
+
+and run the "autogen" script again.
