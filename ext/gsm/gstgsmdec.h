@@ -21,6 +21,7 @@
 #define __GST_GSMDEC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 #ifdef GSM_HEADER_IN_SUBDIR
 #include <gsm/gsm.h>
@@ -54,6 +55,10 @@ struct _GstGSMDec
   gsm state;
   gint64 next_of;
   GstClockTime next_ts;
+
+  GstAdapter *adapter;
+
+  GstSegment segment;
 };
 
 struct _GstGSMDecClass

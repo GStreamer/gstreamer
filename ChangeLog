@@ -1,5 +1,16 @@
 2006-03-29  Wim Taymans  <wim@fluendo.com>
 
+	* ext/gsm/gstgsmdec.c: (gst_gsmdec_class_init), (gst_gsmdec_init),
+	(gst_gsmdec_finalize), (gst_gsmdec_sink_event), (gst_gsmdec_chain):
+	* ext/gsm/gstgsmdec.h:
+	* ext/gsm/gstgsmenc.c: (gst_gsmenc_class_init), (gst_gsmenc_init),
+	(gst_gsmenc_finalize), (gst_gsmenc_chain):
+	Cleanups, fix leaks.
+	Handle events and DISCONT.
+	Use adapter in the decoder.
+
+2006-03-29  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Renato Araujo Oliveira Filho <renatox at gmail dot com>
 
 	* configure.ac:

@@ -54,6 +54,7 @@ enum
 static void gst_gsmenc_base_init (gpointer g_class);
 static void gst_gsmenc_class_init (GstGSMEnc * klass);
 static void gst_gsmenc_init (GstGSMEnc * gsmenc);
+static void gst_gsmenc_finalize (GObject * object);
 
 static GstFlowReturn gst_gsmenc_chain (GstPad * pad, GstBuffer * buf);
 
@@ -122,7 +123,9 @@ gst_gsmenc_class_init (GstGSMEnc * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->finalize = gst_gsmenc_finalize;
 
   GST_DEBUG_CATEGORY_INIT (gsmenc_debug, "gsmenc", 0, "GSM Encoder");
 }
@@ -130,6 +133,8 @@ gst_gsmenc_class_init (GstGSMEnc * klass)
 static void
 gst_gsmenc_init (GstGSMEnc * gsmenc)
 {
+  gint use_wav49;
+
   /* create the sink and src pads */
   gsmenc->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
@@ -143,14 +148,26 @@ gst_gsmenc_init (GstGSMEnc * gsmenc)
   gst_element_add_pad (GST_ELEMENT (gsmenc), gsmenc->srcpad);
 
   gsmenc->state = gsm_create ();
-  // turn on WAN49 handling
-  gint use_wav49 = 0;
 
+  /* turn on WAV49 handling */
+  use_wav49 = 0;
   gsm_option (gsmenc->state, GSM_OPT_WAV49, &use_wav49);
 
   gsmenc->adapter = gst_adapter_new ();
-
   gsmenc->next_ts = 0;
+}
+
+static void
+gst_gsmenc_finalize (GObject * object)
+{
+  GstGSMEnc *gsmenc;
+
+  gsmenc = GST_GSMENC (object);
+
+  g_object_unref (gsmenc->adapter);
+  gsm_destroy (gsmenc->state);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstFlowReturn
@@ -161,24 +178,31 @@ gst_gsmenc_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
 
   gsmenc = GST_GSMENC (gst_pad_get_parent (pad));
+
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+    gst_adapter_clear (gsmenc->adapter);
+  }
   gst_adapter_push (gsmenc->adapter, buf);
 
   while (gst_adapter_available (gsmenc->adapter) >= 320) {
     GstBuffer *outbuf;
 
     outbuf = gst_buffer_new_and_alloc (33 * sizeof (gsm_byte));
+
     GST_BUFFER_TIMESTAMP (outbuf) = gsmenc->next_ts;
     GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
     gsmenc->next_ts += 20 * GST_MSECOND;
 
-    // encode 160 16-bit samples into 33 bytes
+    /* encode 160 16-bit samples into 33 bytes */
     data = (gsm_signal *) gst_adapter_peek (gsmenc->adapter, 320);
     gsm_encode (gsmenc->state, data, (gsm_byte *) GST_BUFFER_DATA (outbuf));
     gst_adapter_flush (gsmenc->adapter, 320);
 
-    gst_buffer_set_caps (outbuf, gst_pad_get_caps (gsmenc->srcpad));
-    GST_DEBUG ("Pushing buffer of size %d", GST_BUFFER_SIZE (outbuf));
-    //gst_util_dump_mem (GST_BUFFER_DATA(outbuf), GST_BUFFER_SIZE (outbuf));
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (gsmenc->srcpad));
+
+    GST_DEBUG_OBJECT (gsmenc, "Pushing buffer of size %d",
+        GST_BUFFER_SIZE (outbuf));
+
     ret = gst_pad_push (gsmenc->srcpad, outbuf);
   }
 
