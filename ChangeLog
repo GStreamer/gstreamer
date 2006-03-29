@@ -1,3 +1,12 @@
+2006-03-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_handle_src_event):
+	  Don't unref event unconditionally after giving away ownership
+	  (gst_pad_push_event(), gst_pad_send_event() and
+	  gst_pad_event_default() take ownership of the event
+	  passed to them). Fixes warnings/crashes caused by
+	  navigation events.
+
 2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_send_subbuffer):

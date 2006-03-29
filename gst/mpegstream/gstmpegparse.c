@@ -1181,12 +1181,11 @@ gst_mpeg_parse_handle_src_event (GstPad * pad, GstEvent * event)
 
   GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (gst_pad_get_parent (pad));
 
-  GST_INFO_OBJECT (mpeg_parse, "Event received");
+  GST_LOG_OBJECT (mpeg_parse, "got %s event", GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      GST_INFO_OBJECT (mpeg_parse, "Seek event received");
-
 #ifdef FIXME
       /* First try to use the index if we have one. */
       if (mpeg_parse->index) {
@@ -1200,12 +1199,12 @@ gst_mpeg_parse_handle_src_event (GstPad * pad, GstEvent * event)
       }
 
       if (!upstream) {
+        gst_event_unref (event);
         res = FALSE;
         goto done;
       }
 
-      gst_pad_push_event (pad, upstream);
-
+      res = gst_pad_event_default (pad, upstream);
       break;
     }
     case GST_EVENT_NAVIGATION:
@@ -1213,14 +1212,13 @@ gst_mpeg_parse_handle_src_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (mpeg_parse->sinkpad, event);
       break;
     default:
-      res = FALSE;
+      res = gst_pad_event_default (pad, event);
       break;
   }
 
 done:
   gst_object_unref (mpeg_parse);
 
-  gst_event_unref (event);
   return res;
 }
 
