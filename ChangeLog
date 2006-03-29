@@ -1,3 +1,21 @@
+2006-03-29  Wim Taymans  <wim@fluendo.com>
+
+	Patch by Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
+
+	* plugins/elements/gstqueue.c: (gst_queue_init),
+	(gst_queue_locked_flush), (gst_queue_handle_sink_event),
+	(gst_queue_set_property):
+	* plugins/elements/gstqueue.h:
+	In queue, when EOS is received, if minimum threshold > max_size -
+	current_level, there is chance that queue blocks forever in conditional item
+	del wait. This is because the queue is not emptied completely due to minimum
+	threshold.
+	Here is another approach. Instead of setting cur_levels to max in EOS, just
+	zero all minimum threshold levels. This should make sure that queue gives out
+	all data. When going to READY (stop) state, just reset the original minimum
+	threshold levels.
+	Fixes #336336.
+
 2006-03-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gsttypefindelement.c: (stop_typefinding),

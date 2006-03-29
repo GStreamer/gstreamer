@@ -84,7 +84,8 @@ struct _GstQueue {
   GstQueueSize
     cur_level,		/* currently in the queue */
     max_size,		/* max. amount of data allowed in the queue */
-    min_threshold;	/* min. amount of data required to wake reader */
+    min_threshold,	/* min. amount of data required to wake reader */
+    orig_min_threshold; /* Original min.threshold, for reset in EOS */
 
   /* whether we leak data, and at which end */
   gint leaky;

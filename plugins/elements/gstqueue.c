@@ -374,6 +374,9 @@ gst_queue_init (GstQueue * queue)
   queue->min_threshold.buffers = 0;     /* no threshold */
   queue->min_threshold.bytes = 0;       /* no threshold */
   queue->min_threshold.time = 0;        /* no threshold */
+  queue->orig_min_threshold.buffers = 0;
+  queue->orig_min_threshold.bytes = 0;
+  queue->orig_min_threshold.time = 0;
 
   queue->leaky = GST_QUEUE_NO_LEAK;
   queue->srcresult = GST_FLOW_WRONG_STATE;
@@ -494,6 +497,9 @@ gst_queue_locked_flush (GstQueue * queue)
   queue->cur_level.buffers = 0;
   queue->cur_level.bytes = 0;
   queue->cur_level.time = 0;
+  queue->min_threshold.buffers = queue->orig_min_threshold.buffers;
+  queue->min_threshold.bytes = queue->orig_min_threshold.bytes;
+  queue->min_threshold.time = queue->orig_min_threshold.time;
 
   /* we deleted something... */
   g_cond_signal (queue->item_del);
@@ -562,10 +568,11 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
 
   GST_QUEUE_MUTEX_LOCK (queue);
   if (have_eos) {
-    /* FIXME, abusing the cur_level */
-    queue->cur_level.buffers = queue->max_size.buffers;
-    queue->cur_level.bytes = queue->max_size.bytes;
-    queue->cur_level.time = queue->max_size.time;
+    /* Zero the thresholds, this makes sure the queue is completely
+     * filled and we can read all data from the queue. */
+    queue->min_threshold.buffers = 0;
+    queue->min_threshold.bytes = 0;
+    queue->min_threshold.time = 0;
   }
   g_queue_push_tail (queue->queue, event);
   g_cond_signal (queue->item_add);
@@ -1060,12 +1067,15 @@ gst_queue_set_property (GObject * object,
       break;
     case ARG_MIN_THRESHOLD_BYTES:
       queue->min_threshold.bytes = g_value_get_uint (value);
+      queue->orig_min_threshold.bytes = queue->min_threshold.bytes;
       break;
     case ARG_MIN_THRESHOLD_BUFFERS:
       queue->min_threshold.buffers = g_value_get_uint (value);
+      queue->orig_min_threshold.buffers = queue->min_threshold.buffers;
       break;
     case ARG_MIN_THRESHOLD_TIME:
       queue->min_threshold.time = g_value_get_uint64 (value);
+      queue->orig_min_threshold.time = queue->min_threshold.time;
       break;
     case ARG_LEAKY:
       queue->leaky = g_value_get_enum (value);
