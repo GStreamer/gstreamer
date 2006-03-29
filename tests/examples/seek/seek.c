@@ -1004,6 +1004,7 @@ static void do_seek (GtkWidget * widget);
 static gboolean
 end_scrub (GtkWidget * widget)
 {
+  GST_DEBUG ("end scrub, PAUSE");
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
   seek_timeout_id = 0;
 
@@ -1087,12 +1088,15 @@ seek_cb (GtkWidget * widget)
 {
   /* If the timer hasn't expired yet, then the pipeline is running */
   if (scrub && seek_timeout_id != 0) {
+    GST_DEBUG ("do scrub seek, PAUSED");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
   }
 
+  GST_DEBUG ("do seek");
   do_seek (widget);
 
   if (scrub) {
+    GST_DEBUG ("do scrub seek, PLAYING");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
     if (seek_timeout_id == 0) {
@@ -1121,8 +1125,13 @@ set_update_scale (gboolean active)
 static gboolean
 start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 {
-  if (state == GST_STATE_PLAYING && flush_seek)
+  if (event->type != GDK_BUTTON_PRESS)
+    return FALSE;
+
+  if (state == GST_STATE_PLAYING && flush_seek) {
+    GST_DEBUG ("start scrub seek, PAUSE");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  }
 
   set_update_scale (FALSE);
 
@@ -1143,6 +1152,7 @@ stop_seek (GtkWidget * widget, gpointer user_data)
   }
 
   if (!flush_seek) {
+    GST_DEBUG ("do final seek");
     do_seek (widget);
   }
 
@@ -1152,6 +1162,7 @@ stop_seek (GtkWidget * widget, gpointer user_data)
     /* Still scrubbing, so the pipeline is already playing */
   } else {
     if (state == GST_STATE_PLAYING) {
+      GST_DEBUG ("stop scrub seek, PLAYING");
       gst_element_set_state (pipeline, GST_STATE_PLAYING);
     }
   }

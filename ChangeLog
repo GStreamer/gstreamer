@@ -1,3 +1,9 @@
+2006-03-29  Wim Taymans  <wim@fluendo.com>
+
+	* tests/examples/seek/seek.c: (end_scrub), (seek_cb), (start_seek),
+	(stop_seek):
+	Don't let double and tripple clicks mess up our state.
+
 2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybin.c: (gen_video_element),
