@@ -59,7 +59,7 @@
 
 /* elementfactory information */
 static GstElementDetails gst_alsasink_details =
-GST_ELEMENT_DETAILS ("Audio Sink (ALSA)",
+GST_ELEMENT_DETAILS ("Audio sink (ALSA)",
     "Sink/Audio",
     "Output to a sound card via ALSA",
     "Wim Taymans <wim@fluendo.com>");

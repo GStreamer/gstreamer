@@ -28,7 +28,7 @@
 #include <gst/gst-i18n-plugin.h>
 
 static GstElementDetails gst_ogg_demux_details =
-GST_ELEMENT_DETAILS ("ogg demuxer",
+GST_ELEMENT_DETAILS ("Ogg demuxer",
     "Codec/Demuxer",
     "demux ogg streams (info about ogg: http://xiph.org)",
     "Wim Taymand <wim@fluendo.com>");

@@ -75,7 +75,7 @@ GST_DEBUG_CATEGORY (audio_convert_debug);
 /*** DEFINITIONS **************************************************************/
 
 static GstElementDetails audio_convert_details =
-GST_ELEMENT_DETAILS ("Audio Conversion",
+GST_ELEMENT_DETAILS ("Audio converter",
     "Filter/Converter/Audio",
     "Convert audio to different formats",
     "Benjamin Otte <in7y118@public.uni-hamburg.de>");

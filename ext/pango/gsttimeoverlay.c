@@ -58,7 +58,7 @@
 #include <gsttimeoverlay.h>
 
 static GstElementDetails time_overlay_details =
-GST_ELEMENT_DETAILS ("Time Overlay",
+GST_ELEMENT_DETAILS ("Time overlay",
     "Filter/Editor/Video",
     "Overlays buffer time stamps on a video stream",
     "Tim-Philipp Müller <tim@centricular.net>");

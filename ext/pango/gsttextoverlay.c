@@ -94,7 +94,7 @@ GST_DEBUG_CATEGORY (pango_debug);
 #define GST_CAT_DEFAULT pango_debug
 
 static GstElementDetails text_overlay_details =
-GST_ELEMENT_DETAILS ("Text Overlay",
+GST_ELEMENT_DETAILS ("Text overlay",
     "Filter/Editor/Video",
     "Adds text strings on top of a video buffer",
     "David Schleef <ds@schleef.org>");

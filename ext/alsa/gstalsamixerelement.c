@@ -37,7 +37,7 @@ enum
 
 
 static GstElementDetails gst_alsa_mixer_element_details =
-GST_ELEMENT_DETAILS ("Alsa Mixer",
+GST_ELEMENT_DETAILS ("Alsa mixer",
     "Generic/Audio",
     "Control sound input and output levels with ALSA",
     "Leif Johnson <leif@ambient.2y.net>");

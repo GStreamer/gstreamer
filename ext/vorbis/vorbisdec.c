@@ -54,7 +54,8 @@
 GST_DEBUG_CATEGORY_EXTERN (vorbisdec_debug);
 #define GST_CAT_DEFAULT vorbisdec_debug
 
-static GstElementDetails vorbis_dec_details = GST_ELEMENT_DETAILS ("VorbisDec",
+static GstElementDetails vorbis_dec_details =
+GST_ELEMENT_DETAILS ("Vorbis audio decoder",
     "Codec/Decoder/Audio",
     "decode raw vorbis streams to float audio",
     "Benjamin Otte <in7y118@public.uni-hamburg.de>");

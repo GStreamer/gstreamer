@@ -57,7 +57,7 @@ GST_DEBUG_CATEGORY (tcpclientsrc_debug);
 
 
 static GstElementDetails gst_tcp_client_src_details =
-GST_ELEMENT_DETAILS ("TCP Client source",
+GST_ELEMENT_DETAILS ("TCP client source",
     "Source/Network",
     "Receive data as a client over the network via TCP",
     "Thomas Vander Stichele <thomas at apestaart dot org>");

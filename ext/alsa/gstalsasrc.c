@@ -57,7 +57,7 @@
 
 /* elementfactory information */
 static GstElementDetails gst_alsasrc_details =
-GST_ELEMENT_DETAILS ("Audio Src (ALSA)",
+GST_ELEMENT_DETAILS ("Audio source (ALSA)",
     "Source/Audio",
     "Read from a sound card via ALSA",
     "Wim Taymans <wim@fluendo.com>");

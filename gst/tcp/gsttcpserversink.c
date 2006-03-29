@@ -45,7 +45,7 @@
 
 /* elementfactory information */
 static GstElementDetails gst_tcp_server_sink_details =
-GST_ELEMENT_DETAILS ("TCP Server sink",
+GST_ELEMENT_DETAILS ("TCP server sink",
     "Sink/Network",
     "Send data as a server over the network via TCP",
     "Thomas Vander Stichele <thomas at apestaart dot org>");

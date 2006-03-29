@@ -1,5 +1,34 @@
 2006-03-29  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: j^ <j at bootlab dot org>
+
+	* ext/alsa/gstalsamixerelement.c:
+	(gst_alsa_mixer_element_class_init):
+	* ext/alsa/gstalsasink.c:
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_class_init):
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggmux.c:
+	* ext/ogg/gstoggparse.c:
+	* ext/pango/gstclockoverlay.c:
+	* ext/pango/gsttextoverlay.c:
+	* ext/pango/gsttextrender.c:
+	* ext/pango/gsttimeoverlay.c:
+	* ext/theora/theoradec.c:
+	* ext/theora/theoraenc.c:
+	* ext/vorbis/vorbisdec.c:
+	* ext/vorbis/vorbisenc.c:
+	* gst/audioconvert/gstaudioconvert.c:
+	* gst/subparse/gstsubparse.c:
+	* gst/tcp/gstmultifdsink.c:
+	* gst/tcp/gsttcpclientsink.c:
+	* gst/tcp/gsttcpclientsrc.c:
+	* gst/tcp/gsttcpserversink.c:
+	* gst/tcp/gsttcpserversrc.c:
+	  better/unified long descriptions
+	  Fixes #336477
+
+2006-03-29  Wim Taymans  <wim@fluendo.com>
+
 	* tests/examples/seek/seek.c: (end_scrub), (seek_cb), (start_seek),
 	(stop_seek):
 	Don't let double and tripple clicks mess up our state.

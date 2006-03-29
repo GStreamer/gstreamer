@@ -58,7 +58,7 @@
 #include <time.h>
 
 static GstElementDetails clock_overlay_details =
-GST_ELEMENT_DETAILS ("Clock Overlay",
+GST_ELEMENT_DETAILS ("Clock overlay",
     "Filter/Editor/Video",
     "Overlays the current clock time on a video stream",
     "Tim-Philipp Müller <tim@centricular.net>");

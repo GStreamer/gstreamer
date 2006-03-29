@@ -58,7 +58,8 @@ enum
   ARG_CROP
 };
 
-static GstElementDetails theora_dec_details = GST_ELEMENT_DETAILS ("TheoraDec",
+static GstElementDetails theora_dec_details =
+GST_ELEMENT_DETAILS ("Theora video decoder",
     "Codec/Decoder/Video",
     "decode raw theora streams to raw YUV video",
     "Benjamin Otte <in7y118@public.uni-hamburg.de>, "
