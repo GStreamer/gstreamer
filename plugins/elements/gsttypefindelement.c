@@ -145,6 +145,8 @@ static gboolean
 gst_type_find_element_activate_src_pull (GstPad * pad, gboolean active);
 static GstFlowReturn
 gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind);
+static void
+gst_type_find_element_send_cached_events (GstTypeFindElement * typefind);
 
 static guint gst_type_find_element_signals[LAST_SIGNAL] = { 0 };
 
@@ -440,6 +442,7 @@ stop_typefinding (GstTypeFindElement * typefind)
                 GST_DEBUG_PAD_NAME (peer)));
         typefind->mode = MODE_ERROR;    /* make the chain function error out */
       } else {
+        gst_type_find_element_send_cached_events (typefind);
         gst_pad_push (typefind->src, typefind->store);
       }
 
@@ -488,19 +491,16 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
           break;
         }
         default:
-          gst_event_unref (event);
+          GST_DEBUG_OBJECT (typefind, "Saving %s event to send later",
+              GST_EVENT_TYPE_NAME (event));
+          typefind->cached_events =
+              g_list_append (typefind->cached_events, event);
           res = TRUE;
           break;
       }
       break;
     case MODE_NORMAL:
-      if (FALSE) {              // GST_EVENT_TYPE (event) == GST_EVENT_DISCONTINUOUS) {
-        start_typefinding (typefind);
-        gst_event_unref (event);
-        res = TRUE;
-      } else {
-        res = gst_pad_event_default (pad, event);
-      }
+      res = gst_pad_event_default (pad, event);
       break;
     case MODE_ERROR:
       break;
@@ -508,6 +508,22 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
       g_assert_not_reached ();
   }
   return res;
+}
+
+static void
+gst_type_find_element_send_cached_events (GstTypeFindElement * typefind)
+{
+  GList *l;
+
+  for (l = typefind->cached_events; l != NULL; l = l->next) {
+    GstEvent *event = GST_EVENT (l->data);
+
+    GST_DEBUG_OBJECT (typefind, "sending cached %s event",
+        GST_EVENT_TYPE_NAME (event));
+    gst_pad_push_event (typefind->src, event);
+  }
+  g_list_free (typefind->cached_events);
+  typefind->cached_events = NULL;
 }
 
 static GstFlowReturn
@@ -726,6 +742,10 @@ gst_type_find_element_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_caps_replace (&typefind->caps, NULL);
+      g_list_foreach (typefind->cached_events,
+          (GFunc) gst_mini_object_unref, NULL);
+      g_list_free (typefind->cached_events);
+      typefind->cached_events = NULL;
       break;
     default:
       break;

@@ -1,3 +1,17 @@
+2006-03-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gsttypefindelement.c: (stop_typefinding),
+	(gst_type_find_element_handle_event),
+	(gst_type_find_element_send_cached_events),
+	(gst_type_find_element_change_state):
+	* plugins/elements/gsttypefindelement.h:
+	  When typefinding is done in push mode, we should cache
+	  events we receive during typefinding instead of just
+	  dropping them (e.g. newsegment, custom events from
+	  dvdreadsrc etc.) and then send them out once we've
+	  determined the type of the stream (and decodebin
+	  has had a chance to plug in a decoder/demuxer).
+	  
 2006-03-27  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-qos.txt:

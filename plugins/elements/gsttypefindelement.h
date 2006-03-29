@@ -58,6 +58,8 @@ struct _GstTypeFindElement {
 
   guint			mode;
   GstBuffer *		store;
+
+  GList *               cached_events;
 };
 
 struct _GstTypeFindElementClass {
