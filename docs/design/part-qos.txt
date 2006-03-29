@@ -17,6 +17,13 @@ made:
   - long term rate corrections based on trends observed in the sinks.
 
 
+Sources of quality problems
+---------------------------
+
+ - High CPU load
+ - 
+
+
 QoS event
 ---------
 
@@ -38,13 +45,19 @@ Collecting statistics
 
 A buffer with timestamp B1 arrives in the sink at time T1. The buffer
 timestamp is then synchronized against the clock which yields a jitter J1
-return value from the clock.
+return value from the clock. The jitter J1 is simply calculated as
 
-If the jitter is positive, the entry arrived in time and can be rendered.
+  J1 = B1 - CT
+
+Where CT is the clock time when the entry arrives in the sink. This value
+is calculated inside the clock when we perform gst_clock_entry_wait().
+
+If the jitter is positive, the entry arrived in time and can be rendered
+after waiting for the clock to reach time B1 (which is also CT + J1).
 
 If the jitter is negative however, the entry arrived too late in the sink 
 and should therefore be dropped. A dropped buffer should generate a QoS
-event upstream.
+event upstream. J1 is the amount of time the entry was late.
 
 Using the jitter we can calculate the time when the buffer arrived in the
 sink: 
@@ -53,7 +66,7 @@ sink:
 
 The time the buffer leaves the sink after synchronisation is measured as:
 
-  T2 = B1 - (J1 < 0 : J1 : 0)                  (2)
+  T2 = B1 - (J1 < 0 ? J1 : 0)                  (2)
 
 For buffers that arrive in time (J1 >= 0) the buffer leaves after synchronisation
 which is exactly B1. Late buffers (J1 < 0) leave the sink when they arrive,
@@ -62,7 +75,7 @@ whithout any synchronisation, which is T1 = B1 - J1.
 Using a previous T0 and a new T1, we can calculate the time it took for
 upstream to generate a buffer with timestamp B1.
 
-  PT1 = T0 - T1                                (3)
+  PT1 = T1 - T0                                (3)
 
 We call PT1 the processing time needed to generate buffer with timestamp B1.
 
@@ -149,7 +162,7 @@ used as the proportion member in the QoS message that is sent upstream.
 
 Receivers of the QoS message should permanently reduce their datarate 
 as given by the proportion member. Failure to do so will certainly lead to
-dropped frames and worse a QoS.
+more dropped frames and a generally worse QoS.
 
 
 QoS strategies
@@ -159,6 +172,7 @@ QoS strategies
    - dropping frames
    - switch to a lower decoding/encoding quality
    - switch to a lower quality source
+
 
 QoS implementations
 -------------------

@@ -1,5 +1,11 @@
 2006-03-29  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-qos.txt:
+	* gst/gstclock.c:
+	Small documentation updates and additions.
+
+2006-03-29  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_finalize),
 	(gst_base_src_send_event), (gst_base_src_loop),
 	(gst_base_src_change_state):

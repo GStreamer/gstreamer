@@ -339,9 +339,10 @@ gst_clock_id_get_time (GstClockID id)
  * If the @jitter argument is not NULL and this function returns #GST_CLOCK_OK
  * or #GST_CLOCK_EARLY, it will contain the difference
  * against the clock and the time of @id when this method was
- * called. Negative values means @id was scheduled too late (and this
- * function will return #GST_CLOCK_EARLY). Positive values indicate how
- * early @id was scheduled. 
+ * called. Negative values indicate how late @id was relative to the clock
+ * (in which case this function will return #GST_CLOCK_EARLY). 
+ * Positive values indicate how much time was spent waiting on the clock 
+ * before this function returned.
  *
  * Returns: the result of the blocking wait. #GST_CLOCK_EARLY will be returned
  * if the current clock time is past the time of @id, #GST_CLOCK_OK if 
