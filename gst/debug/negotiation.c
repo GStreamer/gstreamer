@@ -60,13 +60,11 @@ struct _GstNegotiationClass
 GType gst_gst_negotiation_get_type (void);
 
 
-static GstElementDetails plugin_details = {
-  "Negotiation",
-  "Testing",
-  "This element acts like identity, except that one can control how "
-      "negotiation works",
-  "David A. Schleef <ds@schleef.org>",
-};
+static GstElementDetails plugin_details = GST_ELEMENT_DETAILS ("Negotiation",
+    "Testing",
+    "This element acts like identity, except that one can control how "
+    "negotiation works",
+    "David A. Schleef <ds@schleef.org>");
 
 /* Filter signals and args */
 enum

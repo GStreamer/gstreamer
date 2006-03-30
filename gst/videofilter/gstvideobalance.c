@@ -57,7 +57,7 @@
 #include <gst/interfaces/colorbalance.h>
 
 static GstElementDetails video_balance_details =
-GST_ELEMENT_DETAILS ("Video Balance Control",
+GST_ELEMENT_DETAILS ("Video balance",
     "Filter/Effect/Video",
     "Adjusts brightness, contrast, hue, saturation on a video stream",
     "David Schleef <ds@schleef.org>");

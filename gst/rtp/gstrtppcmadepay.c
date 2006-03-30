@@ -23,12 +23,11 @@
 #include "gstrtppcmadepay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_pcmadepay_details = {
-  "RTP packet parser",
-  "Codec/Depayr/Network",
-  "Extracts PCMA audio from RTP packets",
-  "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>"
-};
+static GstElementDetails gst_rtp_pcmadepay_details =
+GST_ELEMENT_DETAILS ("RTP packet parser",
+    "Codec/Depayr/Network",
+    "Extracts PCMA audio from RTP packets",
+    "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>");
 
 /* RtpPcmaDepay signals and args */
 enum

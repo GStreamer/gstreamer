@@ -34,12 +34,11 @@ GST_DEBUG_CATEGORY_EXTERN (esd_debug);
 #define GST_CAT_DEFAULT esd_debug
 
 /* elementfactory information */
-static GstElementDetails esdsink_details = {
-  "Esound audio sink",
-  "Sink/Audio",
-  "Plays audio to an esound server",
-  "Arwed von Merkatz <v.merkatz@gmx.net>",
-};
+static GstElementDetails esdsink_details =
+GST_ELEMENT_DETAILS ("Esound audio sink",
+    "Sink/Audio",
+    "Plays audio to an esound server",
+    "Arwed von Merkatz <v.merkatz@gmx.net>");
 
 enum
 {

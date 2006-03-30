@@ -26,12 +26,11 @@ GST_DEBUG_CATEGORY (rtpmp4vpay_debug);
 #define GST_CAT_DEFAULT (rtpmp4vpay_debug)
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_mp4vpay_details = {
-  "RTP packet parser",
-  "Codec/Payloader/Network",
-  "Payode MPEG4 video as RTP packets (RFC 3016)",
-  "Wim Taymans <wim@fluendo.com>"
-};
+static GstElementDetails gst_rtp_mp4vpay_details =
+GST_ELEMENT_DETAILS ("RTP packet parser",
+    "Codec/Payloader/Network",
+    "Payode MPEG4 video as RTP packets (RFC 3016)",
+    "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate gst_rtp_mp4v_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",

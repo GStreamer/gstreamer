@@ -31,12 +31,10 @@
 #include "flac_compat.h"
 
 
-GstElementDetails flacenc_details = {
-  "FLAC encoder",
-  "Codec/Encoder/Audio",
-  "Encodes audio with the FLAC lossless audio encoder",
-  "Wim Taymans <wim.taymans@chello.be>",
-};
+GstElementDetails flacenc_details = GST_ELEMENT_DETAILS ("FLAC audio encoder",
+    "Codec/Encoder/Audio",
+    "Encodes audio with the FLAC lossless audio encoder",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 #define FLAC_SINK_CAPS \
   "audio/x-raw-int, "               \

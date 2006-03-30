@@ -62,7 +62,8 @@ struct _GstEdgeTVClass
 
 GType gst_edgetv_get_type (void);
 
-static GstElementDetails gst_edgetv_details = GST_ELEMENT_DETAILS ("EdgeTV",
+static GstElementDetails gst_edgetv_details =
+GST_ELEMENT_DETAILS ("EdgeTV effect",
     "Filter/Effect/Video",
     "Apply edge detect on video",
     "Wim Taymans <wim.taymans@chello.be>");

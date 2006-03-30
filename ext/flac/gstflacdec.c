@@ -58,12 +58,11 @@ GST_DEBUG_CATEGORY_STATIC (flacdec_debug);
 
 static GstPadTemplate *src_template, *sink_template;
 
-static GstElementDetails flacdec_details = {
-  "FLAC decoder",
-  "Codec/Decoder/Audio",
-  "Decodes FLAC lossless audio streams",
-  "Wim Taymans <wim.taymans@chello.be>",
-};
+static GstElementDetails flacdec_details =
+GST_ELEMENT_DETAILS ("FLAC audio decoder",
+    "Codec/Decoder/Audio",
+    "Decodes FLAC lossless audio streams",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 
 static void gst_flac_dec_finalize (GObject * object);

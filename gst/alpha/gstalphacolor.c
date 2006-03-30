@@ -60,7 +60,7 @@ struct _GstAlphaColorClass
 
 /* elementfactory information */
 static GstElementDetails gst_alpha_color_details =
-GST_ELEMENT_DETAILS ("alpha color filter",
+GST_ELEMENT_DETAILS ("Alpha color filter",
     "Filter/Effect/Video",
     "RGB->YUV colorspace conversion preserving the alpha channels",
     "Wim Taymans <wim@fluendo.com>");

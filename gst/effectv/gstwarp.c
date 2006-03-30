@@ -85,7 +85,7 @@ static void initSinTable (GstWarpTV * filter);
 static void initOffsTable (GstWarpTV * filter);
 static void initDistTable (GstWarpTV * filter);
 
-static GstElementDetails warptv_details = GST_ELEMENT_DETAILS ("WarpTV",
+static GstElementDetails warptv_details = GST_ELEMENT_DETAILS ("WarpTV effect",
     "Filter/Effect/Video",
     "WarpTV does realtime goo'ing of the video input",
     "Sam Lantinga <slouken@devolution.com>");

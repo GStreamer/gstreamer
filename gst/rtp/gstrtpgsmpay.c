@@ -29,12 +29,11 @@
 #include "gstrtpgsmpay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_gsm_pay_details = {
-  "RTP GSM Audio Payloader",
-  "Codec/Payloader/Network",
-  "Payload-encodes GSM audio into a RTP packet",
-  "Zeeshan Ali <zeenix@gmail.com>"
-};
+static GstElementDetails gst_rtp_gsm_pay_details =
+GST_ELEMENT_DETAILS ("RTP GSM audio payloader",
+    "Codec/Payloader/Network",
+    "Payload-encodes GSM audio into a RTP packet",
+    "Zeeshan Ali <zeenix@gmail.com>");
 
 static GstStaticPadTemplate gst_rtp_gsm_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",

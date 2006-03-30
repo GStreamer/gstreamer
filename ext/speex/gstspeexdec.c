@@ -28,12 +28,11 @@
 GST_DEBUG_CATEGORY (speexdec_debug);
 #define GST_CAT_DEFAULT speexdec_debug
 
-static GstElementDetails speex_dec_details = {
-  "SpeexDec",
-  "Codec/Decoder/Audio",
-  "decode speex streams to audio",
-  "Wim Taymans <wim@fluendo.com>",
-};
+static GstElementDetails speex_dec_details =
+GST_ELEMENT_DETAILS ("Speex audio decoder",
+    "Codec/Decoder/Audio",
+    "decode speex streams to audio",
+    "Wim Taymans <wim@fluendo.com>");
 
 #define DEFAULT_ENH             TRUE
 

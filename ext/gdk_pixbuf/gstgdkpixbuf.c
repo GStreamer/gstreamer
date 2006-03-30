@@ -33,12 +33,11 @@
 GST_DEBUG_CATEGORY_STATIC (gst_gdk_pixbuf_debug);
 #define GST_CAT_DEFAULT gst_gdk_pixbuf_debug
 
-static GstElementDetails plugin_details = {
-  "GdkPixbuf image decoder",
-  "Codec/Decoder/Image",
-  "Decodes images in a video stream using GdkPixbuf",
-  "David A. Schleef <ds@schleef.org>, Renato Filho <renato.filho@indt.org.br>",
-};
+static GstElementDetails plugin_details =
+GST_ELEMENT_DETAILS ("GdkPixbuf image decoder",
+    "Codec/Decoder/Image",
+    "Decodes images in a video stream using GdkPixbuf",
+    "David A. Schleef <ds@schleef.org>, Renato Filho <renato.filho@indt.org.br>");
 
 /* Filter signals and args */
 enum

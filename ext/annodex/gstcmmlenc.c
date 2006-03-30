@@ -65,11 +65,11 @@ enum
   LAST_SIGNAL
 };
 
-static GstElementDetails gst_cmml_enc_details = {
-  "cmmlenc: Encodes CMML streams", "Codec/Encoder",
-  "Encodes CMML streams",
-  "Alessandro Decina <alessandro@nnva.org>",
-};
+static GstElementDetails gst_cmml_enc_details =
+GST_ELEMENT_DETAILS ("CMML streams encoder",
+    "Codec/Encoder",
+    "Encodes CMML streams",
+    "Alessandro Decina <alessandro@nnva.org>");
 
 static GstStaticPadTemplate gst_cmml_enc_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",

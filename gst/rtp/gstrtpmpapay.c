@@ -23,12 +23,11 @@
 #include "gstrtpmpapay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_mpapay_details = {
-  "RTP packet parser",
-  "Codec/Payloader/Network",
-  "Payode MPEG audio as RTP packets (RFC 2038)",
-  "Wim Taymans <wim@fluendo.com>"
-};
+static GstElementDetails gst_rtp_mpapay_details =
+GST_ELEMENT_DETAILS ("RTP packet parser",
+    "Codec/Payloader/Network",
+    "Payode MPEG audio as RTP packets (RFC 2038)",
+    "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate gst_rtp_mpa_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",

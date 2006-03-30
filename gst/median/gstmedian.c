@@ -25,12 +25,10 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-static GstElementDetails median_details = {
-  "Median effect",
-  "Filter/Effect/Video",
-  "Apply a median filter to an image",
-  "Wim Taymans <wim.taymans@chello.be>"
-};
+static GstElementDetails median_details = GST_ELEMENT_DETAILS ("Median effect",
+    "Filter/Effect/Video",
+    "Apply a median filter to an image",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 static GstStaticPadTemplate median_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

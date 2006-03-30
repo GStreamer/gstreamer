@@ -21,12 +21,11 @@
 #include "gstrtpspeexdepay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_speexdepay_details = {
-  "RTP packet parser",
-  "Codec/Depayr/Network",
-  "Extracts Speex audio from RTP packets",
-  "Edgard Lima <edgard.lima@indt.org.br>"
-};
+static GstElementDetails gst_rtp_speexdepay_details =
+GST_ELEMENT_DETAILS ("RTP packet parser",
+    "Codec/Depayr/Network",
+    "Extracts Speex audio from RTP packets",
+    "Edgard Lima <edgard.lima@indt.org.br>");
 
 /* RtpSPEEXDepay signals and args */
 enum

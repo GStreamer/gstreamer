@@ -25,12 +25,11 @@
 #include "gstrtpL16pay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtpL16pay_details = {
-  "RTP RAW Audio Payloader",
-  "Codec/Payloader/Network",
-  "Payload-encodes Raw Audio into a RTP packet",
-  "Zeeshan Ali <zak147@yahoo.com>"
-};
+static GstElementDetails gst_rtpL16pay_details =
+GST_ELEMENT_DETAILS ("RTP RAW audio payloader",
+    "Codec/Payloader/Network",
+    "Payload-encodes Raw Audio into a RTP packet",
+    "Zeeshan Ali <zak147@yahoo.com>");
 
 /* RtpL16Pay signals and args */
 enum

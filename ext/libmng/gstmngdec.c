@@ -21,12 +21,11 @@
 #include "gstmngdec.h"
 #include <gst/video/video.h>
 
-static GstElementDetails gst_mngdec_details = {
-  "MNG decoder",
-  "Codec/Decoder/Image",
-  "Decode a mng video to raw images",
-  "Wim Taymans <wim@fluendo.com>",
-};
+static GstElementDetails gst_mngdec_details =
+GST_ELEMENT_DETAILS ("MNG video decoder",
+    "Codec/Decoder/Video",
+    "Decode a mng video to raw images",
+    "Wim Taymans <wim@fluendo.com>");
 
 
 /* Filter signals and args */

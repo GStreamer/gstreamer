@@ -40,12 +40,11 @@ static void
 gst_gconf_video_src_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  GstElementDetails gst_gconf_video_src_details = {
-    "GConf video source",
-    "Source/Video",
-    "Video source embedding the GConf-settings for video input",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-  };
+  GstElementDetails gst_gconf_video_src_details =
+      GST_ELEMENT_DETAILS ("GConf video source",
+      "Source/Video",
+      "Video source embedding the GConf-settings for video input",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
   GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,

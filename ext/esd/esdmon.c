@@ -29,12 +29,11 @@
 
 
 /* elementfactory information */
-static GstElementDetails esdmon_details = {
-  "Esound audio monitor",
-  "Source/Audio",
-  "Monitors audio from an esound server",
-  "Richard Boulton <richard-gst@tartarus.org>",
-};
+static GstElementDetails esdmon_details =
+GST_ELEMENT_DETAILS ("Esound audio monitor",
+    "Source/Audio",
+    "Monitors audio from an esound server",
+    "Richard Boulton <richard-gst@tartarus.org>");
 
 /* Signals and args */
 enum

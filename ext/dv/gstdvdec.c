@@ -52,9 +52,9 @@
 
 
 static GstElementDetails dvdec_details =
-GST_ELEMENT_DETAILS ("DV (smpte314) decoder plugin",
+GST_ELEMENT_DETAILS ("DV video decoder",
     "Codec/Decoder/Video",
-    "Uses libdv to decode DV video (libdv.sourceforge.net)",
+    "Uses libdv to decode DV video (smpte314) (libdv.sourceforge.net)",
     "Erik Walthinsen <omega@cse.ogi.edu>," "Wim Taymans <wim@fluendo.com>");
 
 /* sizes of one input buffer */

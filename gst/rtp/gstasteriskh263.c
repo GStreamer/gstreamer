@@ -43,12 +43,11 @@ typedef struct _GstAsteriskH263Header
 #define GST_ASTERISKH263_HEADER_LENGTH(buf) (((GstAsteriskH263Header *)(GST_BUFFER_DATA (buf)))->length)
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_h263p_depaydetails = {
-  "RTP packet parser",
-  "Codec/Depayr/Network",
-  "Extracts H263 video from RTP and encodes in Asterisk H263 format",
-  "Neil Stratford <neils@vipadia.com>"
-};
+static GstElementDetails gst_rtp_h263p_depaydetails =
+GST_ELEMENT_DETAILS ("RTP packet parser",
+    "Codec/Depayr/Network",
+    "Extracts H263 video from RTP and encodes in Asterisk H263 format",
+    "Neil Stratford <neils@vipadia.com>");
 
 /* Asteriskh263 signals and args */
 enum

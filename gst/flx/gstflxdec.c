@@ -32,12 +32,11 @@ GST_DEBUG_CATEGORY_STATIC (flxdec_debug);
 #define GST_CAT_DEFAULT flxdec_debug
 
 /* flx element information */
-static GstElementDetails flxdec_details = {
-  "FLX Decoder",
-  "Codec/Decoder/Audio",
-  "FLX decoder",
-  "Sepp Wijnands <mrrazz@garbage-coderz.net>, Zeeshan Ali <zeenix@gmail.com>"
-};
+static GstElementDetails flxdec_details =
+GST_ELEMENT_DETAILS ("FLX audio decoder",
+    "Codec/Decoder/Audio",
+    "FLX decoder",
+    "Sepp Wijnands <mrrazz@garbage-coderz.net>, Zeeshan Ali <zeenix@gmail.com>");
 
 /* Flx signals and args */
 enum

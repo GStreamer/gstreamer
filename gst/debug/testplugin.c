@@ -79,7 +79,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS_ANY);
 
 
-static GstElementDetails details = GST_ELEMENT_DETAILS ("gsttestsink",
+static GstElementDetails details = GST_ELEMENT_DETAILS ("Test plugin",
     "Testing",
     "perform a number of tests",
     "Benjamin Otte <otte@gnome>");

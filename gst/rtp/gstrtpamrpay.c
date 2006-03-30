@@ -33,12 +33,11 @@ GST_DEBUG_CATEGORY (rtpamrpay_debug);
  */
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_amrpay_details = {
-  "RTP packet parser",
-  "Codec/Payloader/Network",
-  "Payload-encode AMR audio into RTP packets (RFC 3267)",
-  "Wim Taymans <wim@fluendo.com>"
-};
+static GstElementDetails gst_rtp_amrpay_details =
+GST_ELEMENT_DETAILS ("RTP packet parser",
+    "Codec/Payloader/Network",
+    "Payload-encode AMR audio into RTP packets (RFC 3267)",
+    "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate gst_rtp_amr_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",

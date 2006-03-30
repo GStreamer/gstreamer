@@ -41,7 +41,7 @@ GST_DEBUG_CATEGORY (pixbufscale_debug);
 
 /* elementfactory information */
 static GstElementDetails pixbufscale_details =
-GST_ELEMENT_DETAILS ("Gdk Pixbuf scaler",
+GST_ELEMENT_DETAILS ("GdkPixbuf image scaler",
     "Filter/Effect/Video",
     "Resizes video",
     "Jan Schmidt <thaytan@mad.scientist.com>\n"

@@ -26,12 +26,11 @@
 #include "paint.h"
 
 /* elementfactory information */
-static GstElementDetails smpte_details = {
-  "SMPTE transitions",
-  "Filter/Editor/Video",
-  "Apply the standard SMPTE transitions on video images",
-  "Wim Taymans <wim.taymans@chello.be>"
-};
+static GstElementDetails smpte_details =
+GST_ELEMENT_DETAILS ("SMPTE transitions",
+    "Filter/Editor/Video",
+    "Apply the standard SMPTE transitions on video images",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 static GstStaticPadTemplate gst_smpte_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",

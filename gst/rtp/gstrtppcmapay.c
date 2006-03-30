@@ -25,12 +25,11 @@
 #include "gstrtppcmapay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_pcma_pay_details = {
-  "RTP packet parser",
-  "Codec/Payloader/Network",
-  "Payload-encodes PCMA audio into a RTP packet",
-  "Edgard Lima <edgard.lima@indt.org.br>"
-};
+static GstElementDetails gst_rtp_pcma_pay_details =
+GST_ELEMENT_DETAILS ("RTP packet parser",
+    "Codec/Payloader/Network",
+    "Payload-encodes PCMA audio into a RTP packet",
+    "Edgard Lima <edgard.lima@indt.org.br>");
 
 static GstStaticPadTemplate gst_rtp_pcma_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",

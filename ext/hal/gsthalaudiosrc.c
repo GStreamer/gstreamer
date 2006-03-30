@@ -75,12 +75,11 @@ static void
 gst_hal_audio_src_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  GstElementDetails gst_hal_audio_src_details = {
-    "HAL audio source",
-    "Source/Audio",
-    "Audio source for sound device access via HAL",
-    "Jürg Billeter <j@bitron.ch>"
-  };
+  GstElementDetails gst_hal_audio_src_details =
+      GST_ELEMENT_DETAILS ("HAL audio source",
+      "Source/Audio",
+      "Audio source for sound device access via HAL",
+      "Jürg Billeter <j@bitron.ch>");
   GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,

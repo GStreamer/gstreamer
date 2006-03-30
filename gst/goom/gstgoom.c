@@ -45,12 +45,11 @@ GST_DEBUG_CATEGORY_STATIC (goom_debug);
 #define GST_CAT_DEFAULT goom_debug
 
 /* elementfactory information */
-static GstElementDetails gst_goom_details = {
-  "GOOM: what a GOOM!",
-  "Visualization",
-  "Takes frames of data and outputs video frames using the GOOM filter",
-  "Wim Taymans <wim.taymans@chello.be>"
-};
+static GstElementDetails gst_goom_details =
+GST_ELEMENT_DETAILS ("GOOM: what a GOOM!",
+    "Visualization",
+    "Takes frames of data and outputs video frames using the GOOM filter",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 /* signals and args */
 enum

@@ -27,12 +27,11 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-GstElementDetails gst_jpegenc_details = {
-  "JPEG image encoder",
-  "Codec/Encoder/Image",
-  "Encode images in JPEG format",
-  "Wim Taymans <wim.taymans@tvd.be>",
-};
+GstElementDetails gst_jpegenc_details =
+GST_ELEMENT_DETAILS ("JPEG image encoder",
+    "Codec/Encoder/Image",
+    "Encode images in JPEG format",
+    "Wim Taymans <wim.taymans@tvd.be>");
 
 GST_DEBUG_CATEGORY (jpegenc_debug);
 #define GST_CAT_DEFAULT jpegenc_debug

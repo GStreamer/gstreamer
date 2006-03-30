@@ -28,12 +28,11 @@
 #include "gst/gst-i18n-plugin.h"
 #include <jerror.h>
 
-GstElementDetails gst_jpeg_dec_details = {
-  "JPEG image decoder",
-  "Codec/Decoder/Image",
-  "Decode images from JPEG format",
-  "Wim Taymans <wim.taymans@tvd.be>",
-};
+GstElementDetails gst_jpeg_dec_details =
+GST_ELEMENT_DETAILS ("JPEG image decoder",
+    "Codec/Decoder/Image",
+    "Decode images from JPEG format",
+    "Wim Taymans <wim.taymans@tvd.be>");
 
 #define MIN_WIDTH  16
 #define MAX_WIDTH  4096

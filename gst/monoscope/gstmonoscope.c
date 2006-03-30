@@ -69,12 +69,11 @@ GType gst_monoscope_get_type (void);
 
 
 /* elementfactory information */
-static GstElementDetails gst_monoscope_details = {
-  "Monoscope",
-  "Visualization",
-  "Displays a highly stabilised waveform of audio input",
-  "Richard Boulton <richard@tartarus.org>"
-};
+static GstElementDetails gst_monoscope_details =
+GST_ELEMENT_DETAILS ("Monoscope",
+    "Visualization",
+    "Displays a highly stabilised waveform of audio input",
+    "Richard Boulton <richard@tartarus.org>");
 
 /* signals and args */
 enum

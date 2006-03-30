@@ -46,7 +46,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_multifilesrc_debug);
 #define GST_CAT_DEFAULT gst_multifilesrc_debug
 
 GstElementDetails gst_multifilesrc_details =
-GST_ELEMENT_DETAILS ("Multi File Source",
+GST_ELEMENT_DETAILS ("Multi file source",
     "Source/File",
     "Read from multiple files in order",
     "Dominic Ludlam <dom@openfx.org>");

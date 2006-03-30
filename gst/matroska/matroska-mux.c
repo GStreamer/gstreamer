@@ -166,12 +166,11 @@ static void
 gst_matroska_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  static GstElementDetails gst_matroska_mux_details = {
-    "Matroska muxer",
-    "Codec/Muxer",
-    "Muxes video/audio/subtitle streams into a matroska stream",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-  };
+  static GstElementDetails gst_matroska_mux_details =
+      GST_ELEMENT_DETAILS ("Matroska muxer",
+      "Codec/Muxer",
+      "Muxes video/audio/subtitle streams into a matroska stream",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&videosink_templ));

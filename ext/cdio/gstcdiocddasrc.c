@@ -91,12 +91,11 @@ enum
   PROP_READ_SPEED
 };
 
-static GstElementDetails gst_cdio_cdda_src_details = {
-  "CD Audio (cdda) Source",
-  "Source/File",
-  "Read audio from CD using libcdio",
-  "Tim-Philipp Müller <tim centricular net>",
-};
+static GstElementDetails gst_cdio_cdda_src_details =
+GST_ELEMENT_DETAILS ("CD audio source (CDDA)",
+    "Source/File",
+    "Read audio from CD using libcdio",
+    "Tim-Philipp Müller <tim centricular net>");
 
 GST_BOILERPLATE (GstCdioCddaSrc, gst_cdio_cdda_src, GstCddaBaseSrc,
     GST_TYPE_CDDA_BASE_SRC);

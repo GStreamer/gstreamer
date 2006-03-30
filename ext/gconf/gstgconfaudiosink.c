@@ -51,12 +51,11 @@ static void
 gst_gconf_audio_sink_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  GstElementDetails gst_gconf_audio_sink_details = {
-    "GConf audio sink",
-    "Sink/Audio",
-    "Audio sink embedding the GConf-settings for audio output",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-  };
+  GstElementDetails gst_gconf_audio_sink_details =
+      GST_ELEMENT_DETAILS ("GConf audio sink",
+      "Sink/Audio",
+      "Audio sink embedding the GConf-settings for audio output",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
   GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,

@@ -161,12 +161,11 @@ static void
 gst_mulawenc_base_init (GstMuLawEncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails mulawenc_details = {
-    "PCM to Mu Law conversion",
-    "Codec/Encoder/Audio",
-    "Convert 16bit PCM to 8bit mu law",
-    "Zaheer Abbas Merali <zaheerabbas at merali dot org>"
-  };
+  GstElementDetails mulawenc_details =
+      GST_ELEMENT_DETAILS ("Mu Law audio encoder",
+      "Codec/Encoder/Audio",
+      "Convert 16bit PCM to 8bit mu law",
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
   gst_element_class_add_pad_template (element_class, mulawenc_src_template);
   gst_element_class_add_pad_template (element_class, mulawenc_sink_template);

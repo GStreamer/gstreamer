@@ -78,7 +78,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS_ANY);
 
 static GstElementDetails progress_report_details =
-GST_ELEMENT_DETAILS ("Progress Report",
+GST_ELEMENT_DETAILS ("Progress report",
     "Testing",
     "Periodically query and report on processing progress",
     "Jan Schmidt <thaytan@mad.scientist.com>");

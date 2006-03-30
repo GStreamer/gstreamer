@@ -29,12 +29,11 @@
  */
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_amrdepay_details = {
-  "RTP packet parser",
-  "Codec/Depayr/Network",
-  "Extracts AMR audio from RTP packets (RFC 3267)",
-  "Wim Taymans <wim@fluendo.com>"
-};
+static GstElementDetails gst_rtp_amrdepay_details =
+GST_ELEMENT_DETAILS ("RTP packet parser",
+    "Codec/Depayr/Network",
+    "Extracts AMR audio from RTP packets (RFC 3267)",
+    "Wim Taymans <wim@fluendo.com>");
 
 /* RtpAMRDepay signals and args */
 enum

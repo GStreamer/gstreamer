@@ -23,12 +23,11 @@
 #include "gstrtph263ppay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_h263ppay_details = {
-  "RTP packet parser",
-  "Codec/Payloader/Network",
-  "Payload-encodes H263+ video in RTP packets (RFC 2429)",
-  "Wim Taymans <wim@fluendo.com>"
-};
+static GstElementDetails gst_rtp_h263ppay_details =
+GST_ELEMENT_DETAILS ("RTP packet parser",
+    "Codec/Payloader/Network",
+    "Payload-encodes H263+ video in RTP packets (RFC 2429)",
+    "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate gst_rtp_h263p_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",

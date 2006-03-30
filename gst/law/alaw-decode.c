@@ -191,12 +191,11 @@ static void
 gst_alawdec_base_init (GstALawDecClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails alawdec_details = {
-    "A Law to PCM conversion",
-    "Codec/Decoder/Audio",
-    "Convert 8bit A law to 16bit PCM",
-    "Zaheer Abbas Merali <zaheerabbas at merali dot org>"
-  };
+  GstElementDetails alawdec_details =
+      GST_ELEMENT_DETAILS ("A Law audio decoder",
+      "Codec/Decoder/Audio",
+      "Convert 8bit A law to 16bit PCM",
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
   gst_element_class_add_pad_template (element_class, alawdec_src_template);
   gst_element_class_add_pad_template (element_class, alawdec_sink_template);

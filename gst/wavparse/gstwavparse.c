@@ -157,7 +157,7 @@ gst_wavparse_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstPadTemplate *templ;
   static GstElementDetails gst_wavparse_details =
-      GST_ELEMENT_DETAILS (".wav demuxer",
+      GST_ELEMENT_DETAILS ("WAV audio demuxer",
       "Codec/Demuxer/Audio",
       "Parse a .wav file into raw audio",
       "Erik Walthinsen <omega@cse.ogi.edu>");

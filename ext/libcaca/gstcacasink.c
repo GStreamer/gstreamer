@@ -27,12 +27,11 @@
 #include "gstcacasink.h"
 
 /* elementfactory information */
-static GstElementDetails gst_cacasink_details = {
-  "CACA sink",
-  "Sink/Video",
-  "A colored ASCII art videosink",
-  "Zeeshan Ali <zak147@yahoo.com>"
-};
+static GstElementDetails gst_cacasink_details =
+GST_ELEMENT_DETAILS ("A colored ASCII art video sink",
+    "Sink/Video",
+    "A colored ASCII art videosink",
+    "Zeeshan Ali <zak147@yahoo.com>");
 
 /* cacasink signals and args */
 enum

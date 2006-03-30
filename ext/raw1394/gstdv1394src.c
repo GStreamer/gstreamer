@@ -94,7 +94,7 @@ enum
 };
 
 static GstElementDetails gst_dv1394src_details =
-GST_ELEMENT_DETAILS ("Firewire (1394) DV Source",
+GST_ELEMENT_DETAILS ("Firewire (1394) DV video source",
     "Source/Video",
     "Source for DV video data from firewire port",
     "Erik Walthinsen <omega@temple-baptist.com>\n"

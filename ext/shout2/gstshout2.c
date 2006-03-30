@@ -28,13 +28,13 @@ GST_DEBUG_CATEGORY (shout2_debug);
 #define GST_CAT_DEFAULT shout2_debug
 
 /* elementfactory information */
-static GstElementDetails shout2send_details = {
-  "An Icecast plugin",
-  "Sink/Network",
-  "Sends data to an icecast server",
-  "Wim Taymans <wim.taymans@chello.be>\n" "Pedro Corte-Real <typo@netcabo.pt>\n"
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>"
-};
+static GstElementDetails shout2send_details =
+GST_ELEMENT_DETAILS ("Icecast network sink",
+    "Sink/Network",
+    "Sends data to an icecast server",
+    "Wim Taymans <wim.taymans@chello.be>\n"
+    "Pedro Corte-Real <typo@netcabo.pt>\n"
+    "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
 
 /* Shout2send signals and args */

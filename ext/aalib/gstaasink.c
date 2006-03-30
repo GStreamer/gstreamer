@@ -28,12 +28,11 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-static GstElementDetails gst_aasink_details = {
-  "AA sink",
-  "Sink/Video",
-  "An ASCII art videosink",
-  "Wim Taymans <wim.taymans@chello.be>"
-};
+static GstElementDetails gst_aasink_details =
+GST_ELEMENT_DETAILS ("ASCII art video sink",
+    "Sink/Video",
+    "An ASCII art videosink",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 /* aasink signals and args */
 enum

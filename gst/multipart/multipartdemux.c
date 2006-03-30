@@ -123,7 +123,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_multipart_demux_debug);
 
 /* elementfactory information */
 static GstElementDetails gst_multipart_demux_details =
-GST_ELEMENT_DETAILS ("multipart demuxer",
+GST_ELEMENT_DETAILS ("Multipart demuxer",
     "Codec/Demuxer",
     "demux multipart streams",
     "Wim Taymans <wim@fluendo.com>");

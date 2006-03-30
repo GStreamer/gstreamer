@@ -138,7 +138,7 @@ static void
 gst_gamma_base_init (gpointer g_class)
 {
   static GstElementDetails gamma_details =
-      GST_ELEMENT_DETAILS ("Video Gamma Correction",
+      GST_ELEMENT_DETAILS ("Video gamma correction",
       "Filter/Effect/Video",
       "Adjusts gamma on a video stream",
       "Arwed v. Merkatz <v.merkatz@gmx.net");

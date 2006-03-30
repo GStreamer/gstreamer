@@ -28,12 +28,11 @@
 #define MAX_HEIGHT              4096
 
 
-static GstElementDetails gst_pngenc_details = {
-  "PNG encoder",
-  "Codec/Encoder/Image",
-  "Encode a video frame to a .png image",
-  "Jeremy SIMON <jsimon13@yahoo.fr>",
-};
+static GstElementDetails gst_pngenc_details =
+GST_ELEMENT_DETAILS ("PNG image encoder",
+    "Codec/Encoder/Image",
+    "Encode a video frame to a .png image",
+    "Jeremy SIMON <jsimon13@yahoo.fr>");
 
 GST_DEBUG_CATEGORY (pngenc_debug);
 #define GST_CAT_DEFAULT pngenc_debug

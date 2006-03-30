@@ -50,7 +50,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_pipefilter_debug);
 #define GST_CAT_DEFAULT gst_pipefilter_debug
 
-GstElementDetails gst_pipefilter_details = GST_ELEMENT_DETAILS ("Pipefilter",
+GstElementDetails gst_pipefilter_details = GST_ELEMENT_DETAILS ("Pipe filter",
     "Filter",
     "Interoperate with an external program using stdin and stdout",
     "Erik Walthinsen <omega@cse.ogi.edu>, "

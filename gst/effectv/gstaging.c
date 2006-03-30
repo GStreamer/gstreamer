@@ -93,7 +93,8 @@ struct _GstAgingTVClass
 
 GType gst_agingtv_get_type (void);
 
-static GstElementDetails agingtv_details = GST_ELEMENT_DETAILS ("AgingTV",
+static GstElementDetails agingtv_details =
+GST_ELEMENT_DETAILS ("AgingTV effect",
     "Filter/Effect/Video",
     "AgingTV adds age to video input using scratches and dust",
     "Sam Lantinga <slouken@devolution.com>");

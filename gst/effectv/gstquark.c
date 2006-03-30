@@ -76,7 +76,8 @@ GType gst_quarktv_get_type (void);
 
 static void gst_quarktv_planetable_clear (GstQuarkTV * filter);
 
-static GstElementDetails quarktv_details = GST_ELEMENT_DETAILS ("QuarkTV",
+static GstElementDetails quarktv_details =
+GST_ELEMENT_DETAILS ("QuarkTV effect",
     "Filter/Effect/Video",
     "Motion dissolver",
     "FUKUCHI, Kentarou <fukuchi@users.sourceforge.net>");

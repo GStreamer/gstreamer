@@ -43,12 +43,11 @@
 GST_DEBUG_CATEGORY_EXTERN (cairo_debug);
 #define GST_CAT_DEFAULT cairo_debug
 
-static GstElementDetails cairo_text_overlay_details = {
-  "Text Overlay",
-  "Filter/Editor/Video",
-  "Adds text strings on top of a video buffer",
-  "David Schleef <ds@schleef.org>"
-};
+static GstElementDetails cairo_text_overlay_details =
+GST_ELEMENT_DETAILS ("Text overlay",
+    "Filter/Editor/Video",
+    "Adds text strings on top of a video buffer",
+    "David Schleef <ds@schleef.org>");
 
 enum
 {

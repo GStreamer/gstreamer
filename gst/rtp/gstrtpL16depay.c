@@ -20,12 +20,11 @@
 #include "gstrtp-common.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_L16depay_details = {
-  "RTP packet parser",
-  "Codec/Depayr/Network",
-  "Extracts raw audio from RTP packets",
-  "Zeeshan Ali <zak147@yahoo.com>"
-};
+static GstElementDetails gst_rtp_L16depay_details =
+GST_ELEMENT_DETAILS ("RTP packet parser",
+    "Codec/Depayr/Network",
+    "Extracts raw audio from RTP packets",
+    "Zeeshan Ali <zak147@yahoo.com>");
 
 /* RtpL16Depay signals and args */
 enum

@@ -95,7 +95,7 @@ struct _GstAlphaClass
 
 /* elementfactory information */
 static GstElementDetails gst_alpha_details =
-GST_ELEMENT_DETAILS ("alpha filter",
+GST_ELEMENT_DETAILS ("Alpha filter",
     "Filter/Effect/Video",
     "Adds an alpha channel to video",
     "Wim Taymans <wim@fluendo.com>");

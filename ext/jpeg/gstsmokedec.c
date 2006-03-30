@@ -28,12 +28,11 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-GstElementDetails gst_smokedec_details = {
-  "Smoke video decoder",
-  "Codec/Decoder/Image",
-  "Decode video from Smoke format",
-  "Wim Taymans <wim@fluendo.com>",
-};
+GstElementDetails gst_smokedec_details =
+GST_ELEMENT_DETAILS ("Smoke video decoder",
+    "Codec/Decoder/Video",
+    "Decode video from Smoke format",
+    "Wim Taymans <wim@fluendo.com>");
 
 GST_DEBUG_CATEGORY (smokedec_debug);
 #define GST_CAT_DEFAULT smokedec_debug

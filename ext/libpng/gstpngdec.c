@@ -23,12 +23,11 @@
 #include <gst/video/video.h>
 #include <gst/gst-i18n-plugin.h>
 
-static GstElementDetails gst_pngdec_details = {
-  "PNG decoder",
-  "Codec/Decoder/Image",
-  "Decode a png video frame to a raw image",
-  "Wim Taymans <wim@fluendo.com>",
-};
+static GstElementDetails gst_pngdec_details =
+GST_ELEMENT_DETAILS ("PNG image decoder",
+    "Codec/Decoder/Image",
+    "Decode a png video frame to a raw image",
+    "Wim Taymans <wim@fluendo.com>");
 
 GST_DEBUG_CATEGORY (pngdec_debug);
 #define GST_CAT_DEFAULT pngdec_debug

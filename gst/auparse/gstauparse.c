@@ -34,7 +34,7 @@
 
 /* elementfactory information */
 static GstElementDetails gst_au_parse_details =
-GST_ELEMENT_DETAILS (".au parser",
+GST_ELEMENT_DETAILS ("AU audio demuxer",
     "Codec/Demuxer/Audio",
     "Parse an .au file into raw audio",
     "Erik Walthinsen <omega@cse.ogi.edu>");
@@ -113,8 +113,8 @@ gst_au_parse_init (GstAuParse * auparse, GstAuParseClass * klass)
 {
   auparse->sinkpad =
       gst_pad_new_from_static_template (&gst_au_parse_sink_template, "sink");
-  gst_element_add_pad (GST_ELEMENT (auparse), auparse->sinkpad);
   gst_pad_set_chain_function (auparse->sinkpad, gst_au_parse_chain);
+  gst_element_add_pad (GST_ELEMENT (auparse), auparse->sinkpad);
 
   auparse->srcpad =
       gst_pad_new_from_static_template (&gst_au_parse_src_template, "src");
@@ -153,7 +153,6 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
   gint law = 0, depth = 0, ieee = 0;
   gchar layout[7];
   GstBuffer *databuf;
-  GstEvent *event;
 
   layout[0] = 0;
 
@@ -168,6 +167,8 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
   if (auparse->size == 0) {
     guint32 *head = (guint32 *) data;
 
+    /* FIXME, check if we have enough data (with adapter?) instead of
+     * crashing. */
     /* normal format is big endian (au is a Sparc format) */
     if (GST_READ_UINT32_BE (head) == 0x2e736e64) {      /* ".snd" */
       head++;
@@ -202,10 +203,7 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
       head++;
 
     } else {
-      GST_ELEMENT_ERROR (auparse, STREAM, WRONG_TYPE, (NULL), (NULL));
-      gst_buffer_unref (buf);
-      gst_object_unref (auparse);
-      return GST_FLOW_ERROR;
+      goto unknown_header;
     }
 
     GST_DEBUG
@@ -289,10 +287,7 @@ Samples :
       case 22:                 /* Music kit DSP commands samples */
 
       default:
-        GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL), (NULL));
-        gst_buffer_unref (buf);
-        gst_object_unref (auparse);
-        return GST_FLOW_ERROR;
+        goto unknown_format;
     }
 
     if (law) {
@@ -324,14 +319,18 @@ Samples :
       auparse->sample_size = auparse->channels * depth / 8;
     }
 
-    gst_pad_use_fixed_caps (auparse->srcpad);
     gst_pad_set_caps (auparse->srcpad, tempcaps);
-    gst_pad_set_active (auparse->srcpad, TRUE);
 
-    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_DEFAULT,
-        0, GST_CLOCK_TIME_NONE, 0);
+#if 0
+    {
+      GstEvent *event;
 
-    gst_pad_push_event (auparse->srcpad, event);
+      event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_DEFAULT,
+          0, GST_CLOCK_TIME_NONE, 0);
+
+      gst_pad_push_event (auparse->srcpad, event);
+    }
+#endif
 
     databuf = gst_buffer_create_sub (buf, auparse->offset,
         size - auparse->offset);
@@ -381,6 +380,22 @@ Samples :
   gst_object_unref (auparse);
 
   return ret;
+
+  /* ERRORS */
+unknown_header:
+  {
+    GST_ELEMENT_ERROR (auparse, STREAM, WRONG_TYPE, (NULL), (NULL));
+    gst_buffer_unref (buf);
+    gst_object_unref (auparse);
+    return GST_FLOW_ERROR;
+  }
+unknown_format:
+  {
+    GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL), (NULL));
+    gst_buffer_unref (buf);
+    gst_object_unref (auparse);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstStateChangeReturn

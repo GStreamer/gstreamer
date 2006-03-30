@@ -22,12 +22,11 @@
 #include "gstrtpmpadepay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_mpadepay_details = {
-  "RTP packet parser",
-  "Codec/Depayr/Network",
-  "Extracts MPEG audio from RTP packets (RFC 2038)",
-  "Wim Taymans <wim@fluendo.com>"
-};
+static GstElementDetails gst_rtp_mpadepay_details =
+GST_ELEMENT_DETAILS ("RTP packet parser",
+    "Codec/Depayr/Network",
+    "Extracts MPEG audio from RTP packets (RFC 2038)",
+    "Wim Taymans <wim@fluendo.com>");
 
 /* RtpMPADepay signals and args */
 enum

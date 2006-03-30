@@ -83,7 +83,7 @@ static GstFlowReturn gst_break_my_data_transform_ip (GstBaseTransform * trans,
 static gboolean gst_break_my_data_stop (GstBaseTransform * trans);
 static gboolean gst_break_my_data_start (GstBaseTransform * trans);
 
-static GstElementDetails details = GST_ELEMENT_DETAILS ("breakmydata",
+static GstElementDetails details = GST_ELEMENT_DETAILS ("Break my data",
     "Testing",
     "randomly change data in the stream",
     "Benjamin Otte <otte@gnome>");

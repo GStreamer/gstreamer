@@ -49,7 +49,7 @@
 #include <gst/video/video.h>
 
 static GstElementDetails cairo_time_overlay_details =
-GST_ELEMENT_DETAILS ("Time Overlay",
+GST_ELEMENT_DETAILS ("Time overlay",
     "Filter/Editor/Video",
     "Overlays the time on a video stream",
     "David Schleef <ds@schleef.org>");

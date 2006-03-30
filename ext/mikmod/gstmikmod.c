@@ -25,12 +25,10 @@
 #include <stdlib.h>
 
 /* elementfactory information */
-GstElementDetails mikmod_details = {
-  "MikMod",
-  "Codec/Decoder/Audio",
-  "Module decoder based on libmikmod",
-  "Jeremy SIMON <jsimon13@yahoo.fr>",
-};
+GstElementDetails mikmod_details = GST_ELEMENT_DETAILS ("MikMod audio decoder",
+    "Codec/Decoder/Audio",
+    "Module decoder based on libmikmod",
+    "Jeremy SIMON <jsimon13@yahoo.fr>");
 
 
 /* Filter signals and args */
