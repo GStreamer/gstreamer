@@ -74,7 +74,7 @@ dnl The following lines should be updated whenever:
 dnl _ GST_REQ is up-ed (remove obsolete lines + gst-0.10.MINOR.ignore)
 dnl _ new core/base is released (add lines + gst-0.10.MINOR.ignore)
 
-if test $GST_CVS_VERSION -eq ""
+if test "x$GST_CVS_VERSION" = "x"
 then
   if test $GST_MINOR_VERSION -lt "3"
   then

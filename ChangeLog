@@ -1,3 +1,9 @@
+2006-03-29  David I. Lehn  <dlehn@users.sourceforge.net>
+
+	* configure.ac:
+	Better empty string test fix for "Fixes to how we figure out what API
+	to ignore"
+
 2006-03-24  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:
