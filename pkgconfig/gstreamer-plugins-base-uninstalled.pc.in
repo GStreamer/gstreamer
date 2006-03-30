@@ -11,4 +11,4 @@ Requires: gstreamer-@GST_MAJORMINOR@
 Libs: -L${libdir}/audio -L${libdir}/cdda -L${libdir}/floatcast -L${libdir}/interfaces -L${libdir}/netbuffer -L${libdir}/riff -L${libdir}/rtp -L${libdir}/tag -L${libdir}/video
 Cflags: -I${includedir}
 
-libraries=audio floatcast interfaces netbuffer riff tag video
+libraries=audio cdda floatcast interfaces netbuffer riff tag video
