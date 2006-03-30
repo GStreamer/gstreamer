@@ -1,3 +1,18 @@
+2006-03-30  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),
+	(gst_base_sink_finalize), (gst_base_sink_set_qos_enabled),
+	(gst_base_sink_is_qos_enabled), (gst_base_sink_do_sync),
+	(gst_base_sink_record_qos_observation),
+	(gst_base_sink_perform_qos), (gst_base_sink_reset_qos),
+	(gst_base_sink_is_too_late), (gst_base_sink_render_object),
+	(gst_base_sink_change_state):
+	More QoS measurements as described in the design doc.
+	Get rid of ringbuffer with observations, running average is
+	more simple and equally good.
+	Calculates valid proportion now.
+	Added beginning of flood measurement.
+
 2006-03-29  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-qos.txt:

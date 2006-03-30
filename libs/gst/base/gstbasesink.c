@@ -142,21 +142,38 @@ GST_DEBUG_CATEGORY_STATIC (gst_base_sink_debug);
  */
 struct _GstBaseSinkPrivate
 {
-  gboolean qos_enabled;
+  gint qos_enabled;             /* ATOMIC */
 
   /* last position */
   GstClockTime last_cstart;
   GstClockTime last_cstop;
 
-  /* for the linear regression when doing QoS */
-  gboolean filling;
-  gint window_size;
-  gint window_threshold;
-  gint time_index;
-  gint64 *times;
+  /* start, stop and jitter of current buffer, stream time */
+  GstClockTime current_start;
+  GstClockTime current_stop;
+  GstClockTimeDiff current_jitter;
 
-  /* stats go here. */
+  /* last buffer that arrived in time, stream time */
+  GstClockTime last_in_time;
+  /* when the last buffer left the sink, stream time */
+  GstClockTime last_left;
+
+  /* running averages go here these are done on stream time */
+  GstClockTime avg_pt;
+  GstClockTime avg_duration;
+  gdouble avg_rate;
+
+  /* these are done on system time. avg_jitter and avg_render are 
+   * compared to eachother to see if the rendering time takes a
+   * huge amount of the processing, If so we are flooded with 
+   * buffers. */
+  GstClockTime last_left_systime;
+  GstClockTime avg_jitter;
+  GstClockTime avg_render;
 };
+
+#define RUNNING_AVG_WINDOW	8
+#define UPDATE_RUNNING_AVG(avg,val) ((val) + (RUNNING_AVG_WINDOW-1) * (avg)) / RUNNING_AVG_WINDOW
 
 /* BaseSink signals and properties */
 enum
@@ -174,10 +191,6 @@ enum
 #define DEFAULT_SYNC 			TRUE
 #define DEFAULT_MAX_LATENESS		-1
 #define DEFAULT_QOS			FALSE
-
-/* for QoS, no properties yet */
-#define DEFAULT_WINDOW_SIZE             32
-#define DEFAULT_WINDOW_THRESHOLD        4
 
 enum
 {
@@ -253,8 +266,8 @@ static gboolean gst_base_sink_is_too_late (GstBaseSink * basesink,
     GstClockReturn status, GstClockTimeDiff jitter);
 
 /* QoS */
-static void gst_base_sink_add_qos_observation (GstBaseSink * sink,
-    GstClockTime time, GstClockTimeDiff jitter);
+static void gst_base_sink_record_qos_observation (GstBaseSink * sink,
+    GstClockTime start, GstClockTime stop, GstClockTimeDiff jitter);
 
 static void
 gst_base_sink_base_init (gpointer g_class)
@@ -420,13 +433,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
 
   basesink->sync = DEFAULT_SYNC;
   basesink->abidata.ABI.max_lateness = DEFAULT_MAX_LATENESS;
-  priv->qos_enabled = DEFAULT_QOS;
-
-  priv->window_size = DEFAULT_WINDOW_SIZE;
-  priv->window_threshold = DEFAULT_WINDOW_THRESHOLD;
-  priv->filling = TRUE;
-  priv->time_index = 0;
-  priv->times = g_new0 (gint64, 4 * priv->window_size);
+  gst_atomic_int_set (&priv->qos_enabled, DEFAULT_QOS);
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
 }
@@ -440,7 +447,6 @@ gst_base_sink_finalize (GObject * object)
 
   g_queue_free (basesink->preroll_queue);
   gst_segment_free (basesink->abidata.ABI.clip_segment);
-  g_free (basesink->priv->times);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -546,9 +552,7 @@ gst_base_sink_get_max_lateness (GstBaseSink * sink)
 void
 gst_base_sink_set_qos_enabled (GstBaseSink * sink, gboolean enabled)
 {
-  GST_OBJECT_LOCK (sink);
-  sink->priv->qos_enabled = enabled;
-  GST_OBJECT_UNLOCK (sink);
+  gst_atomic_int_set (&sink->priv->qos_enabled, enabled);
 }
 
 /**
@@ -567,9 +571,7 @@ gst_base_sink_is_qos_enabled (GstBaseSink * sink)
 {
   gboolean res;
 
-  GST_OBJECT_LOCK (sink);
-  res = sink->priv->qos_enabled;
-  GST_OBJECT_UNLOCK (sink);
+  res = g_atomic_int_get (&sink->priv->qos_enabled);
 
   return res;
 }
@@ -1032,6 +1034,8 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
 
   start = stop = cstart = cstop = -1;
 
+  basesink->priv->current_start = -1;
+
   /* update timing information for this object */
   syncable = gst_base_sink_get_sync_times (basesink, obj,
       &start, &stop, &cstart, &cstop, &do_sync);
@@ -1109,8 +1113,8 @@ again:
     goto again;
   }
 
-  /* successful syncing done, add observation */
-  gst_base_sink_add_qos_observation (basesink, cstart, jitter);
+  /* successful syncing done, record observation */
+  gst_base_sink_record_qos_observation (basesink, cstart, cstop, jitter);
 
   /* check if the object should be dropped */
   *late = gst_base_sink_is_too_late (basesink, obj, start, stop,
@@ -1137,27 +1141,26 @@ stopping:
   }
 }
 
-/* add a qos observation to the ringbuffer of observations */
+/* record a qos observation for later processing */
 static void
-gst_base_sink_add_qos_observation (GstBaseSink * sink, GstClockTime time,
-    GstClockTimeDiff jitter)
+gst_base_sink_record_qos_observation (GstBaseSink * sink, GstClockTime start,
+    GstClockTime stop, GstClockTimeDiff jitter)
 {
   GstBaseSinkPrivate *priv;
-  gint index;
 
   priv = sink->priv;
 
-  if (!priv->qos_enabled || time == -1)
+  if (!g_atomic_int_get (&priv->qos_enabled))
     return;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, sink,
-      "adding QoS observation time: %" G_GUINT64_FORMAT ", jitter %"
-      G_GINT64_FORMAT, time, jitter);
+      "recording QoS observation start: %" GST_TIME_FORMAT ", stop %"
+      GST_TIME_FORMAT ", jitter %" G_GINT64_FORMAT,
+      GST_TIME_ARGS (start), GST_TIME_ARGS (stop), jitter);
 
-  index = priv->time_index << 2;
-
-  priv->times[index] = time;
-  priv->times[index + 2] = jitter;
+  priv->current_start = start;
+  priv->current_stop = stop;
+  priv->current_jitter = jitter;
 }
 
 static gboolean
@@ -1184,38 +1187,89 @@ static void
 gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
 {
   GstBaseSinkPrivate *priv;
-  gdouble proportion;
+  GstClockTime start, stop;
+  GstClockTimeDiff jitter;
+  GstClockTime pt, entered, left;
+  GstClockTime duration;
+  gdouble rate;
 
   priv = sink->priv;
 
+  start = priv->current_start;
+
   /* if QoS disabled, do nothing */
-  if (!priv->qos_enabled)
+  if (!g_atomic_int_get (&priv->qos_enabled) || start == -1)
     return;
 
-  /* no proportion yet */
-  proportion = 0.0;
+  stop = priv->current_stop;
+  jitter = priv->current_jitter;
 
-  /* last observation caused a drop, send Qos */
-  if (dropped) {
-    GstClockTime time;
-    GstClockTimeDiff diff;
-    gint index;
+  /* this is the time the buffer entered the sink */
+  entered = start + jitter;
+  /* this is the time the buffer left the sink */
+  left = start + (jitter < 0 ? 0 : jitter);
 
-    index = priv->time_index << 2;
+  /* calculate duration of the buffer */
+  if (stop != -1)
+    duration = stop - start;
+  else
+    duration = -1;
 
-    time = priv->times[index];
-    diff = priv->times[index + 2];
-
-    gst_base_sink_send_qos (sink, proportion, time, diff);
+  /* if we have the time when the last buffer left us, calculate
+   * processing time */
+  if (priv->last_left != -1 && entered > priv->last_left) {
+    pt = entered - priv->last_left;
+  } else {
+    pt = 0;
   }
 
-  /* move to next observation */
-  priv->time_index++;
-  if (G_UNLIKELY (priv->time_index == priv->window_size)) {
-    priv->filling = FALSE;
-    priv->time_index = 0;
-  }
-  return;
+  GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, sink, "start: %" GST_TIME_FORMAT
+      ", entered %" GST_TIME_FORMAT ", left %" GST_TIME_FORMAT ", pt: %"
+      GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ",jitter %"
+      G_GINT64_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (entered),
+      GST_TIME_ARGS (left), GST_TIME_ARGS (pt), GST_TIME_ARGS (duration),
+      jitter);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, sink, "avg_duration: %" GST_TIME_FORMAT
+      ", avg_pt: %" GST_TIME_FORMAT ", avg_rate: %g",
+      GST_TIME_ARGS (priv->avg_duration), GST_TIME_ARGS (priv->avg_pt),
+      priv->avg_rate);
+
+  /* record when this buffer will leave us */
+  priv->last_left = left;
+
+  /* collect running averages. for first observations, we copy the
+   * values */
+  if (priv->avg_duration == -1)
+    priv->avg_duration = duration;
+  else
+    priv->avg_duration = UPDATE_RUNNING_AVG (priv->avg_duration, duration);
+
+  if (priv->avg_pt == -1)
+    priv->avg_pt = pt;
+  else
+    priv->avg_pt = UPDATE_RUNNING_AVG (priv->avg_pt, pt);
+
+  if (priv->avg_duration != 0)
+    rate = ((gdouble) priv->avg_pt) / priv->avg_duration;
+  else
+    rate = 1.0;
+
+  priv->avg_rate = UPDATE_RUNNING_AVG (priv->avg_rate, rate);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, sink,
+      "updated: avg_duration: %" GST_TIME_FORMAT ", avg_pt: %" GST_TIME_FORMAT
+      ", avg_rate: %g", GST_TIME_ARGS (priv->avg_duration),
+      GST_TIME_ARGS (priv->avg_pt), priv->avg_rate);
+
+
+  /* last observation did not cause a drop, no need to send
+   * a QoS event */
+  if (G_LIKELY (!dropped))
+    return;
+
+  gst_base_sink_send_qos (sink, priv->avg_rate, priv->current_start,
+      priv->current_jitter);
 }
 
 /* reset all qos measuring */
@@ -1225,8 +1279,13 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
   GstBaseSinkPrivate *priv;
 
   priv = sink->priv;
-  priv->filling = TRUE;
-  priv->time_index = 0;
+
+  priv->last_in_time = -1;
+  priv->last_left = -1;
+  priv->avg_duration = -1;
+  priv->avg_pt = -1;
+  priv->avg_rate = 1.0;
+  priv->avg_render = -1;
 }
 
 /* Checks if the object was scheduled too late.
@@ -1245,6 +1304,11 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
 {
   gboolean late;
   gint64 max_lateness;
+  GstBaseSinkPrivate *priv;
+
+  priv = basesink->priv;
+
+  late = FALSE;
 
   /* only for objects that were too late */
   if (G_LIKELY (status != GST_CLOCK_EARLY))
@@ -1265,23 +1329,30 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
     goto no_timestamp;
 
   /* if the jitter bigger than duration and lateness we are too late */
-  if (G_LIKELY (stop != -1))
-    late = start + jitter > stop + max_lateness;
-  else
-    late = FALSE;
+  if (G_LIKELY (stop != -1)) {
+    if ((late = start + jitter > stop + max_lateness)) {
+      if (priv->last_in_time && start - priv->last_in_time > GST_SECOND) {
+        late = FALSE;
+      }
+    }
+  }
 
+done:
+  if (!late) {
+    priv->last_in_time = start;
+  }
   return late;
 
   /* all is fine */
 in_time:
   {
     GST_DEBUG_OBJECT (basesink, "object was scheduled in time");
-    return FALSE;
+    goto done;
   }
 no_drop:
   {
     GST_DEBUG_OBJECT (basesink, "frame dropping disabled");
-    return FALSE;
+    goto done;
   }
 not_buffer:
   {
@@ -1317,15 +1388,47 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
 
   /* and now render, event or buffer. */
   if (G_LIKELY (GST_IS_BUFFER (obj))) {
+    GTimeVal start, stop;
+
     /* drop late buffers unconditionally, let's hope it's unlikely */
     if (G_UNLIKELY (late))
       goto dropped;
 
     bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
-    GST_DEBUG_OBJECT (basesink, "rendering buffer %p", obj);
-    if (G_LIKELY (bclass->render))
+    if (G_LIKELY (bclass->render)) {
+      gint do_qos;
+      GstBaseSinkPrivate *priv;
+
+      priv = basesink->priv;
+
+      /* read once, to get same value before and after */
+      do_qos = g_atomic_int_get (&priv->qos_enabled);
+
+      GST_DEBUG_OBJECT (basesink, "rendering buffer %p", obj);
+
+      /* record rendering time for QoS and stats */
+      if (do_qos)
+        g_get_current_time (&start);
+
       ret = bclass->render (basesink, GST_BUFFER_CAST (obj));
+
+      if (do_qos) {
+        GstClockTime elapsed;
+
+        g_get_current_time (&stop);
+
+        elapsed = GST_TIMEVAL_TO_TIME (stop) - GST_TIMEVAL_TO_TIME (start);
+
+        if (priv->avg_render == -1)
+          priv->avg_render = elapsed;
+        else
+          priv->avg_render = UPDATE_RUNNING_AVG (priv->avg_render, elapsed);
+
+        GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
+            "avg_render: %" GST_TIME_FORMAT, GST_TIME_ARGS (priv->avg_render));
+      }
+    }
 
   } else {
     GstEvent *event = GST_EVENT_CAST (obj);
@@ -2347,6 +2450,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         basesink->playing_async = TRUE;
         ret = GST_STATE_CHANGE_ASYNC;
       }
+      gst_base_sink_reset_qos (basesink);
       GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
