@@ -1178,7 +1178,9 @@ gst_wavparse_stream_data (GstWavParse * wav, gboolean first)
 
   /* scale the amount of data by the segment rate so we get equal
    * amounts of data regardless of the playback rate */
-  desired = MIN (wav->dataleft, MAX_BUFFER_SIZE * ABS (wav->segment.rate));
+  desired =
+      MIN (gst_guint64_to_gdouble (wav->dataleft),
+      MAX_BUFFER_SIZE * ABS (wav->segment.rate));
   if (desired >= wav->blockalign && wav->blockalign > 0)
     desired -= (desired % wav->blockalign);
 

@@ -36,8 +36,15 @@
 #include "smokecodec.h"
 #include "smokeformat.h"
 
+#ifndef WIN32
 //#define DEBUG(a...)   printf( a );
 #define DEBUG(a,...)
+#else
+#include <gst/gstinfo.h>
+#define DEBUG GST_DEBUG
+#endif
+
+
 
 struct _SmokeCodecInfo
 {

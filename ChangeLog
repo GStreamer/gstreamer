@@ -1,3 +1,30 @@
+2006-03-31  Sebastien Moutte  <sebastien@moutte.net>
+
+	* ext\jpeg\smokecodec.c:
+	  use of GST_DEBUG instead of DEBUG(a...) for WIN32
+	* ext\speex\gstspeexenc.c: (gst_speexenc_set_header_on_caps):
+	  move first instruction after all variables declarations
+	* gst\alpha\gstalpha.c:
+	* gst\effectv\gstshagadelic.c:
+	* gst\smpte\paint.c:
+	* gst\videofilter\gstvideobalance.c:
+	  define M_PI if it's not defined (it's not defined on WIN32)
+	* gst\cutter\gstcutter.c: (gst_cutter_chain):
+	* gst\id3demux\id3v2frames.c: (parse_relative_volume_adjustment_two):
+	* gst\level\gstlevel.c: (gst_level_set_property), (gst_level_transform_ip):
+	* gst\matroska\matroska-demux.c: (gst_matroska_demux_parse_info), 
+	(gst_matroska_demux_video_caps):
+	* gst\matroska\matroska-mux.c: (gst_matroska_mux_start), (gst_matroska_mux_finish):
+	* gst\wavparse\gstwavparse.c: (gst_wavparse_stream_data):
+	  use gst_guint64_to_gdouble for conversions
+	* gst\goom\filters.c: (setPixelRGB_):
+	  fix a debug which was using undefined variable
+	* gst\level\gstlevel.c: (gst_level_set_caps), (gst_level_transform_ip):
+	* gst\matroska\ebml-read.c: (gst_ebml_read_sint):
+	  replace LL suffix with L suffix (LL isn't supported by MSVC6.0)
+	* win32/vs6:
+	  add vs6 projects files for most of plugins-good
+	
 2006-03-30  j^  <j@bootlab.org>
 
 	* ext/aalib/gstaasink.c:

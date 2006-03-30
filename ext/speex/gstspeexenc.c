@@ -841,10 +841,12 @@ static GstCaps *
 gst_speexenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
     GstBuffer * buf2)
 {
-  caps = gst_caps_make_writable (caps);
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  GstStructure *structure = NULL;
   GValue array = { 0 };
   GValue value = { 0 };
+
+  caps = gst_caps_make_writable (caps);
+  structure = gst_caps_get_structure (caps, 0);
 
   /* mark buffers */
   GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_FLAG_IN_CAPS);

@@ -25,6 +25,10 @@
 #include <stdlib.h>
 #include "paint.h"
 
+#ifndef M_PI
+#define M_PI  3.14159265358979323846
+#endif
+
 void
 gst_smpte_paint_vbox (guint32 * dest, gint stride,
     gint x0, gint y0, gint c0, gint x1, gint y1, gint c1)

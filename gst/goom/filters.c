@@ -237,7 +237,8 @@ setPixelRGB_ (Uint * buffer, Uint x, Color c, guint32 resolx, guint32 resoly)
 {
 #ifdef _DEBUG
   if (x >= resolx * resoly) {
-    printf ("setPixel ERROR : hors du tableau... %i, %i\n", x, y);
+    printf ("setPixel ERROR : hors du tableau... %i >= %i*%i (%i)\n", x, resolx,
+        resoly, resolx * resoly);
     exit (1);
   }
 #endif

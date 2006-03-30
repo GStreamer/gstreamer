@@ -56,6 +56,10 @@
 #include <gst/video/video.h>
 #include <gst/interfaces/colorbalance.h>
 
+#ifndef M_PI
+#define M_PI  3.14159265358979323846
+#endif
+
 static GstElementDetails video_balance_details =
 GST_ELEMENT_DETAILS ("Video balance",
     "Filter/Effect/Video",

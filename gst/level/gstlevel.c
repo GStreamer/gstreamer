@@ -238,10 +238,11 @@ gst_level_set_property (GObject * object, guint prop_id,
       filter->message = g_value_get_boolean (value);
       break;
     case PROP_SIGNAL_INTERVAL:
-      filter->interval = g_value_get_uint64 (value);
+      filter->interval = gst_guint64_to_gdouble (g_value_get_uint64 (value));
       break;
     case PROP_PEAK_TTL:
-      filter->decay_peak_ttl = g_value_get_uint64 (value);
+      filter->decay_peak_ttl =
+          gst_guint64_to_gdouble (g_value_get_uint64 (value));
       break;
     case PROP_PEAK_FALLOFF:
       filter->decay_peak_falloff = g_value_get_double (value);
@@ -321,7 +322,7 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   for (i = 0; i < filter->channels; ++i) {
     filter->CS[i] = filter->peak[i] = filter->last_peak[i] =
         filter->decay_peak[i] = filter->decay_peak_base[i] = 0.0;
-    filter->decay_peak_age[i] = 0LL;
+    filter->decay_peak_age[i] = 0L;
   }
 
   return TRUE;
@@ -476,14 +477,15 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       filter->last_peak[i] = filter->peak[i];
 
     /* make decay peak fall off if too old */
-    if (filter->decay_peak_age[i] > filter->decay_peak_ttl) {
+    if (gst_guint64_to_gdouble (filter->decay_peak_age[i]) >
+        filter->decay_peak_ttl) {
       double falloff_dB;
       double falloff;
       GstClockTimeDiff falloff_time;
       double length;            /* length of falloff time in seconds */
 
       falloff_time = GST_CLOCK_DIFF (filter->decay_peak_ttl,
-          filter->decay_peak_age[i]);
+          gst_guint64_to_gdouble (filter->decay_peak_age[i]));
       length = (gdouble) falloff_time / GST_SECOND;
       falloff_dB = filter->decay_peak_falloff * length;
       falloff = pow (10, falloff_dB / -20.0);
@@ -507,7 +509,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       GST_LOG_OBJECT (filter, "new peak, %f", filter->peak[i]);
       filter->decay_peak[i] = filter->peak[i];
       filter->decay_peak_base[i] = filter->peak[i];
-      filter->decay_peak_age[i] = 0LL;
+      filter->decay_peak_age[i] = 0L;
     }
   }
 

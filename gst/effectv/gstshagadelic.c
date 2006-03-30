@@ -33,6 +33,10 @@
 
 #include <gst/video/video.h>
 
+#ifndef M_PI
+#define M_PI  3.14159265358979323846
+#endif
+
 #define GST_TYPE_SHAGADELICTV \
   (gst_shagadelictv_get_type())
 #define GST_SHAGADELICTV(obj) \

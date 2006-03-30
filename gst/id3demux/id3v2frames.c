@@ -408,7 +408,8 @@ parse_relative_volume_adjustment_two (ID3TagsWorking * work)
   }
 
   peak = peak << (64 - GST_ROUND_UP_8 (peak_bits));
-  peak_val = (gdouble) peak / gst_util_guint64_to_gdouble (G_MAXINT64);
+  peak_val =
+      gst_guint64_to_gdouble (peak) / gst_util_guint64_to_gdouble (G_MAXINT64);
   GST_LOG ("RVA2 frame: id=%s, chan=%u, adj=%.2fdB, peak_bits=%u, peak=%.2f",
       id, chan, gain_dB, (guint) peak_bits, peak_val);
 

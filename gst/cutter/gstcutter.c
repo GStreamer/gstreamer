@@ -263,7 +263,8 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
       NMS, RMS, gst_audio_duration_from_pad_buffer (filter->sinkpad, buf));
   if (RMS < filter->threshold_level)
     filter->silent_run_length +=
-        gst_audio_duration_from_pad_buffer (filter->sinkpad, buf);
+        gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer (filter->
+            sinkpad, buf));
   else {
     filter->silent_run_length = 0 * GST_SECOND;
     filter->silent = FALSE;
@@ -307,13 +308,15 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
   if (filter->silent) {
     filter->pre_buffer = g_list_append (filter->pre_buffer, buf);
     filter->pre_run_length +=
-        gst_audio_duration_from_pad_buffer (filter->sinkpad, buf);
+        gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer (filter->
+            sinkpad, buf));
     while (filter->pre_run_length > filter->pre_length) {
       prebuf = (g_list_first (filter->pre_buffer))->data;
       g_assert (GST_IS_BUFFER (prebuf));
       filter->pre_buffer = g_list_remove (filter->pre_buffer, prebuf);
       filter->pre_run_length -=
-          gst_audio_duration_from_pad_buffer (filter->sinkpad, prebuf);
+          gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer (filter->
+              sinkpad, prebuf));
       /* only pass buffers if we don't leak */
       if (!filter->leaky)
         gst_pad_push (filter->srcpad, prebuf);
@@ -349,11 +352,12 @@ gst_cutter_set_property (GObject * object, guint prop_id,
       break;
     case PROP_RUN_LENGTH:
       /* set the minimum length of the silent run required */
-      filter->threshold_length = g_value_get_uint64 (value);
+      filter->threshold_length =
+          gst_guint64_to_gdouble (g_value_get_uint64 (value));
       break;
     case PROP_PRE_LENGTH:
       /* set the length of the pre-record block */
-      filter->pre_length = g_value_get_uint64 (value);
+      filter->pre_length = gst_guint64_to_gdouble (g_value_get_uint64 (value));
       break;
     case PROP_LEAKY:
       /* set if the pre-record buffer is leaky or not */

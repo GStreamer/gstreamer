@@ -507,7 +507,7 @@ gst_ebml_read_sint (GstEbmlRead * ebml, guint32 * id, gint64 * num)
 
   /* make signed */
   if (negative) {
-    *num = *num - (1LL << ((8 * size) - 1));
+    *num = *num - (1L << ((8 * size) - 1));
   }
 
   gst_buffer_unref (buf);

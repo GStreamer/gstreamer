@@ -1584,7 +1584,7 @@ gst_matroska_demux_parse_info (GstMatroskaDemux * demux)
           res = FALSE;
           break;
         }
-        demux->duration = num * demux->time_scale;
+        demux->duration = num * gst_guint64_to_gdouble (demux->time_scale);
         break;
       }
 
@@ -3088,7 +3088,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
           g_value_init (&fps_double, G_TYPE_DOUBLE);
           g_value_init (&fps_fraction, GST_TYPE_FRACTION);
           g_value_set_double (&fps_double,
-              GST_SECOND / context->default_duration);
+              gst_guint64_to_gdouble (GST_SECOND / context->default_duration));
           g_value_transform (&fps_double, &fps_fraction);
 
           gst_structure_set_value (structure, "framerate", &fps_fraction);
