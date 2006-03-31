@@ -1,5 +1,8 @@
 2006-03-31  Andy Wingo  <wingo@pobox.com>
 
+	* ext/vorbis/vorbisparse.c (vorbis_parse_drain_queue): Fix
+	uninitialized variable return that would never happen.
+
 	* ext/vorbis/vorbisparse.c (gst_vorbis_parse_init) 
 	(vorbis_parse_sink_event): Add an event function to flush our
 	state on a seek, and to drain buffers on a premature EOS.

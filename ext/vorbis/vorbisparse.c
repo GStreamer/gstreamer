@@ -289,7 +289,7 @@ done:
 static GstFlowReturn
 vorbis_parse_drain_queue (GstVorbisParse * parse, gint64 granulepos)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   GList *walk;
   gint64 cur = granulepos;
   gint64 gp;
