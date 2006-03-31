@@ -1,5 +1,8 @@
 2006-03-31  Andy Wingo  <wingo@pobox.com>
 
+	* ext/vorbis/vorbisparse.c (vorbis_parse_sink_event): Fix
+	uninitialized variable return that would happen.
+	
 	* ext/vorbis/vorbisparse.c (vorbis_parse_drain_queue): Fix
 	uninitialized variable return that would never happen.
 

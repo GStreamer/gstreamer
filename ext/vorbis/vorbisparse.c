@@ -396,6 +396,7 @@ vorbis_parse_sink_event (GstPad * pad, GstEvent * event)
       vorbis_parse_clear_queue (parse);
       parse->prev_granulepos = -1;
       parse->prev_blocksize = -1;
+      ret = gst_pad_event_default (pad, event);
       break;
     case GST_EVENT_EOS:
       vorbis_parse_drain_queue_prematurely (parse);
