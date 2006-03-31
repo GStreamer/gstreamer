@@ -1,3 +1,18 @@
+2006-03-31  Andy Wingo  <wingo@pobox.com>
+
+	* ext/vorbis/vorbisparse.c (gst_vorbis_parse_init) 
+	(vorbis_parse_sink_event): Add an event function to flush our
+	state on a seek, and to drain buffers on a premature EOS.
+	(vorbis_parse_push_headers, vorbis_parse_clear_queue) 
+	(vorbis_parse_push_buffer, vorbis_parse_drain_queue_prematurely) 
+	(vorbis_parse_chain, vorbis_parse_queue_buffer) 
+	(vorbis_parse_drain_queue): Queue up buffers until we can set
+	their timestamps and granulepos values.
+
+	* ext/vorbis/vorbisparse.h: Include the vorbis decoder headers,
+	and keep track of data needed for deriving granulepos and
+	timestamps for buffers.
+
 2006-03-29  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: j^ <j at bootlab dot org>

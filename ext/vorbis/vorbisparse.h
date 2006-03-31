@@ -24,6 +24,7 @@
 
 
 #include <gst/gst.h>
+#include <vorbis/codec.h>
 
 G_BEGIN_DECLS
 
@@ -55,6 +56,15 @@ struct _GstVorbisParse {
   guint                 packetno;
   gboolean              streamheader_sent;
   GList *               streamheader;
+
+  GQueue *		buffer_queue;
+
+  vorbis_info		vi;
+  vorbis_comment	vc;
+
+  gint64		prev_granulepos;
+  gint32		prev_blocksize;
+  guint32		sample_rate;
 };
 
 struct _GstVorbisParseClass {
