@@ -1,3 +1,11 @@
+2006-03-31  Andy Wingo  <wingo@pobox.com>
+
+	* examples/remuxer.py: Example GUI for a remuxer, unfinished --
+	dropping it here while I hack on it. Based on player.py.
+
+	* examples/Makefile.am (examples_DATA): Add remuxer.py, reorder
+	list.
+
 2006-03-29  David I. Lehn  <dlehn@users.sourceforge.net>
 
 	* configure.ac:
