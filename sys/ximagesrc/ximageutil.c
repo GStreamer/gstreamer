@@ -140,12 +140,11 @@ ximageutil_xcontext_get (GstElement * parent, const gchar * display_name)
   xcontext = g_new0 (GstXContext, 1);
 
   xcontext->disp = XOpenDisplay (display_name);
-
+  GST_DEBUG_OBJECT (parent, "opened display 0x%x", xcontext->disp);
   if (!xcontext->disp) {
     g_free (xcontext);
     return NULL;
   }
-
   xcontext->screen = DefaultScreenOfDisplay (xcontext->disp);
   xcontext->screen_num = DefaultScreen (xcontext->disp);
   xcontext->visual = DefaultVisual (xcontext->disp, xcontext->screen_num);
@@ -164,7 +163,6 @@ ximageutil_xcontext_get (GstElement * parent, const gchar * display_name)
 
   GST_DEBUG_OBJECT (parent, "X reports %dx%d pixels and %d mm x %d mm",
       xcontext->width, xcontext->height, xcontext->widthmm, xcontext->heightmm);
-
   ximageutil_calculate_pixel_aspect_ratio (xcontext);
 
   /* We get supported pixmap formats at supported depth */
@@ -288,7 +286,7 @@ ximageutil_calculate_pixel_aspect_ratio (GstXContext * xcontext)
   xcontext->par = g_new0 (GValue, 1);
   g_value_init (xcontext->par, GST_TYPE_FRACTION);
   gst_value_set_fraction (xcontext->par, par[index][0], par[index][1]);
-  GST_DEBUG ("set xcontext PAR to %d/%d",
+  GST_DEBUG ("set xcontext PAR to %d/%d\n",
       gst_value_get_fraction_numerator (xcontext->par),
       gst_value_get_fraction_denominator (xcontext->par));
 }

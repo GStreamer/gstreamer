@@ -68,7 +68,8 @@ static GstStaticPadTemplate t =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
         "framerate = (fraction) [ 0, MAX ], "
-        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ] "));
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ], "
+        "pixel-aspect-ratio = (fraction) [ 0, MAX ]"));
 
 enum
 {
@@ -369,7 +370,9 @@ gst_ximagesrc_ximage_get (GstXImageSrc * ximagesrc)
         "width", G_TYPE_INT, xcontext->width,
         "height", G_TYPE_INT, xcontext->height,
         "framerate", GST_TYPE_FRACTION, ximagesrc->fps_n, ximagesrc->fps_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, xcontext->par, NULL);
+        "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        gst_value_get_fraction_numerator (xcontext->par),
+        gst_value_get_fraction_denominator (xcontext->par), NULL);
 
     gst_buffer_set_caps (GST_BUFFER (ximage), caps);
     g_mutex_unlock (ximagesrc->x_lock);
@@ -717,7 +720,9 @@ gst_ximagesrc_get_caps (GstBaseSrc * bs)
       "blue_mask", G_TYPE_INT, xcontext->b_mask_output,
       "width", G_TYPE_INT, xcontext->width,
       "height", G_TYPE_INT, xcontext->height,
-      "framerate", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+      "framerate", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1,
+      NULL);
 }
 
 static gboolean

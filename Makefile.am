@@ -8,11 +8,11 @@ endif
 
 SUBDIRS = \
 	gst gst-libs sys ext \
-	m4 common docs \
+	m4 common docs tests \
 	$(SUBDIRS_EXAMPLES)
 
 DIST_SUBDIRS = \
-	gst gst-libs sys ext m4 common docs examples
+	gst gst-libs sys ext m4 common docs examples tests
 
 EXTRA_DIST = \
 	gst-plugins-bad.spec depcomp \

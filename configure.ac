@@ -260,8 +260,8 @@ GST_PLUGINS_ALL="\
 		speed   \
 		qtdemux \
 		xingheader \
-		tta     \
-                "
+		tta 	\
+		"
 
 dnl see if we can build C++ plug-ins
 if test "x$HAVE_CXX" = "xyes"; then
@@ -869,6 +869,8 @@ docs/version.entities
 common/Makefile
 common/m4/Makefile
 m4/Makefile
+tests/Makefile
+tests/icles/Makefile
 )
 AC_OUTPUT
 
