@@ -1,3 +1,14 @@
+2006-03-31  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/ximagesrc/ximagesrc.c: (composite_pixel),
+	(gst_ximagesrc_ximage_get), (gst_ximagesrc_set_property),
+	(gst_ximagesrc_get_caps), (gst_ximagesrc_class_init):
+	* sys/ximagesrc/ximagesrc.h:
+	* sys/ximagesrc/ximageutil.c: (ximageutil_xcontext_get):
+	* sys/ximagesrc/ximageutil.h:
+	  Fix ximagesrc so a) the cursor doesnt trail and b) there are no
+	  yellow rectangles with the cursor
+
 2006-03-31  Michael Smith  <msmith@fluendo.com>
 
 	* configure.ac:

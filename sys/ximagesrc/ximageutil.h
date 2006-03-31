@@ -89,6 +89,12 @@ struct _GstXContext {
 
   gint width, height;
   gint widthmm, heightmm;
+
+  /* these are the output masks 
+   * for buffers from ximagesrc
+   * and are in big endian */
+  guint32 r_mask_output, g_mask_output, b_mask_output;
+  
   GValue *par;                  /* calculated pixel aspect ratio */
 
   gboolean use_xshm;

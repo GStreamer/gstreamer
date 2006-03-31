@@ -43,7 +43,7 @@ static GstStaticPadTemplate t =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
         "framerate = (fraction) [ 0, MAX ], "
-        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]"));
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ] "));
 
 enum
 {
@@ -221,11 +221,11 @@ composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
   guint8 g = src[1];
   guint8 b = src[0];
   guint8 a = src[3];
-  gint dr, dg, db;
+  guint8 dr, dg, db;
   guint32 color;
-  gint r_shift, r_max;
-  gint g_shift, g_max;
-  gint b_shift, b_max;
+  gint r_shift, r_max, r_shift_out;
+  gint g_shift, g_max, g_shift_out;
+  gint b_shift, b_max, b_shift_out;
 
   switch (xcontext->bpp) {
     case 8:
@@ -242,11 +242,20 @@ composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
       color = 0;
   }
 
+
   /* FIXME: move the code that finds shift and max in the _link function */
   for (r_shift = 0; !(xcontext->visual->red_mask & (1 << r_shift)); r_shift++);
   for (g_shift = 0; !(xcontext->visual->green_mask & (1 << g_shift));
       g_shift++);
   for (b_shift = 0; !(xcontext->visual->blue_mask & (1 << b_shift)); b_shift++);
+
+  for (r_shift_out = 0; !(xcontext->visual->red_mask & (1 << r_shift_out));
+      r_shift_out++);
+  for (g_shift_out = 0; !(xcontext->visual->green_mask & (1 << g_shift_out));
+      g_shift_out++);
+  for (b_shift_out = 0; !(xcontext->visual->blue_mask & (1 << b_shift_out));
+      b_shift_out++);
+
 
   r_max = (xcontext->visual->red_mask >> r_shift);
   b_max = (xcontext->visual->blue_mask >> b_shift);
@@ -264,8 +273,9 @@ composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
   dg = (g * a + (0xff - a) * dg) / 0xff;
   db = (b * a + (0xff - a) * db) / 0xff;
 
-  color = (((dr * r_max) / 255) << r_shift) +
-      (((dg * g_max) / 255) << g_shift) + (((db * b_max) / 255) << b_shift);
+  color = (((dr * r_max) / 255) << r_shift_out) +
+      (((dg * g_max) / 255) << g_shift_out) +
+      (((db * b_max) / 255) << b_shift_out);
 
   switch (xcontext->bpp) {
     case 8:
@@ -289,6 +299,7 @@ static GstXImageSrcBuffer *
 gst_ximagesrc_ximage_get (GstXImageSrc * ximagesrc)
 {
   GstXImageSrcBuffer *ximage = NULL;
+  GstCaps *caps = NULL;
 
   g_mutex_lock (ximagesrc->pool_lock);
   while (ximagesrc->buffer_pool != NULL) {
@@ -323,19 +334,19 @@ gst_ximagesrc_ximage_get (GstXImageSrc * ximagesrc)
 
     xcontext = ximagesrc->xcontext;
 
-    /* FIXME: Include the PAR */
-    gst_buffer_set_caps (GST_BUFFER (ximage),
-        gst_caps_new_simple ("video/x-raw-rgb",
-            "bpp", G_TYPE_INT, xcontext->bpp,
-            "depth", G_TYPE_INT, xcontext->depth,
-            "endianness", G_TYPE_INT, xcontext->endianness,
-            "red_mask", G_TYPE_INT, xcontext->visual->red_mask,
-            "green_mask", G_TYPE_INT, xcontext->visual->green_mask,
-            "blue_mask", G_TYPE_INT, xcontext->visual->blue_mask,
-            "width", G_TYPE_INT, xcontext->width,
-            "height", G_TYPE_INT, xcontext->height,
-            "framerate", GST_TYPE_FRACTION, ximagesrc->fps_n, ximagesrc->fps_d,
-            NULL));
+    caps = gst_caps_new_simple ("video/x-raw-rgb",
+        "bpp", G_TYPE_INT, xcontext->bpp,
+        "depth", G_TYPE_INT, xcontext->depth,
+        "endianness", G_TYPE_INT, xcontext->endianness,
+        "red_mask", G_TYPE_INT, xcontext->r_mask_output,
+        "green_mask", G_TYPE_INT, xcontext->g_mask_output,
+        "blue_mask", G_TYPE_INT, xcontext->b_mask_output,
+        "width", G_TYPE_INT, xcontext->width,
+        "height", G_TYPE_INT, xcontext->height,
+        "framerate", GST_TYPE_FRACTION, ximagesrc->fps_n, ximagesrc->fps_d,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, xcontext->par, NULL);
+
+    gst_buffer_set_caps (GST_BUFFER (ximage), caps);
     g_mutex_unlock (ximagesrc->x_lock);
   }
 
@@ -379,6 +390,35 @@ gst_ximagesrc_ximage_get (GstXImageSrc * ximagesrc)
       }
     } while (XPending (ximagesrc->xcontext->disp));
     XDamageSubtract (ximagesrc->xcontext->disp, ximagesrc->damage, None, None);
+#ifdef HAVE_XFIXES
+    /* re-get area where last mouse pointer was */
+    if (ximagesrc->cursor_image) {
+      gint x, y, width, height;
+
+      x = ximagesrc->cursor_image->x - ximagesrc->cursor_image->xhot;
+      y = ximagesrc->cursor_image->y - ximagesrc->cursor_image->yhot;
+      width = ximagesrc->cursor_image->width;
+      height = ximagesrc->cursor_image->height;
+
+      /* bounds checking */
+      if (x < 0)
+        x = 0;
+      if (y < 0)
+        y = 0;
+      if (x + width > ximagesrc->width)
+        width = ximagesrc->width - x;
+      if (y + height > ximagesrc->height)
+        height = ximagesrc->height - y;
+      g_assert (x >= 0);
+      g_assert (y >= 0);
+
+      GST_DEBUG_OBJECT (ximagesrc, "Removing cursor from %d,%d", x, y);
+      XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
+          x, y, width, height, AllPlanes, ZPixmap, ximage->ximage, x, y);
+    }
+#endif
+
+
   } else {
 #endif
 
@@ -401,29 +441,33 @@ gst_ximagesrc_ximage_get (GstXImageSrc * ximagesrc)
 
 #ifdef HAVE_XFIXES
   if (ximagesrc->show_pointer && ximagesrc->have_xfixes) {
-    XFixesCursorImage *cursor_image;
 
     GST_DEBUG_OBJECT (ximagesrc, "Using XFixes to draw cursor");
     /* get cursor */
-    cursor_image = XFixesGetCursorImage (ximagesrc->xcontext->disp);
-    if (cursor_image != NULL) {
+    ximagesrc->cursor_image = XFixesGetCursorImage (ximagesrc->xcontext->disp);
+    if (ximagesrc->cursor_image != NULL) {
       int cx, cy, i, j, count;
 
-      cx = cursor_image->x - cursor_image->xhot;
-      cy = cursor_image->y - cursor_image->yhot;
+      cx = ximagesrc->cursor_image->x - ximagesrc->cursor_image->xhot;
+      cy = ximagesrc->cursor_image->y - ximagesrc->cursor_image->yhot;
       //count = image->width * image->height;
-      count = cursor_image->width * cursor_image->height;
+      count = ximagesrc->cursor_image->width * ximagesrc->cursor_image->height;
       for (i = 0; i < count; i++)
-        cursor_image->pixels[i] = GUINT_TO_LE (cursor_image->pixels[i]);
+        ximagesrc->cursor_image->pixels[i] =
+            GUINT_TO_LE (ximagesrc->cursor_image->pixels[i]);
 
       /* copy those pixels across */
-      for (j = cy; j < cy + cursor_image->height && j < ximagesrc->height; j++) {
-        for (i = cx; i < cx + cursor_image->width && i < ximagesrc->width; i++) {
+      for (j = cy;
+          j < cy + ximagesrc->cursor_image->height && j < ximagesrc->height;
+          j++) {
+        for (i = cx;
+            i < cx + ximagesrc->cursor_image->width && i < ximagesrc->width;
+            i++) {
           guint8 *src, *dest;
 
           src =
-              (guint8 *) & (cursor_image->pixels[((j -
-                          cy) * cursor_image->width + (i - cx))]);
+              (guint8 *) & (ximagesrc->cursor_image->pixels[((j -
+                          cy) * ximagesrc->cursor_image->width + (i - cx))]);
           dest =
               (guint8 *) & (ximage->ximage->data[(j * ximagesrc->width +
                       i) * (ximagesrc->xcontext->bpp / 8)]);
@@ -639,14 +683,13 @@ gst_ximagesrc_get_caps (GstBaseSrc * bs)
 
   xcontext = s->xcontext;
 
-  /* FIXME: Add PAR */
   return gst_caps_new_simple ("video/x-raw-rgb",
       "bpp", G_TYPE_INT, xcontext->bpp,
       "depth", G_TYPE_INT, xcontext->depth,
       "endianness", G_TYPE_INT, xcontext->endianness,
-      "red_mask", G_TYPE_INT, xcontext->visual->red_mask,
-      "green_mask", G_TYPE_INT, xcontext->visual->green_mask,
-      "blue_mask", G_TYPE_INT, xcontext->visual->blue_mask,
+      "red_mask", G_TYPE_INT, xcontext->r_mask_output,
+      "green_mask", G_TYPE_INT, xcontext->g_mask_output,
+      "blue_mask", G_TYPE_INT, xcontext->b_mask_output,
       "width", G_TYPE_INT, xcontext->width,
       "height", G_TYPE_INT, xcontext->height,
       "framerate", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
