@@ -1,3 +1,24 @@
+2006-03-31  Michael Smith  <msmith@fluendo.com>
+
+	* configure.ac:
+	  Add autoconfery for theoradec.
+	* ext/Makefile.am:
+	  Add theora directory.
+	* ext/theora/Makefile.am:
+	* ext/theora/theoradec.c: (gst_theoradec_base_init),
+	(gst_theoradec_class_init), (gst_theoradec_init),
+	(gst_theoradec_reset), (inc_granulepos), (theora_get_query_types),
+	(gst_theoradec_granule_clocktime), (theora_dec_src_convert),
+	(theora_dec_sink_convert), (theora_dec_src_query),
+	(theora_dec_sink_query), (theora_dec_src_event),
+	(theora_dec_sink_event), (theora_handle_comment_packet),
+	(theora_handle_type_packet), (theora_handle_header_packet),
+	(theora_dec_push), (theora_handle_data_packet), (theora_dec_chain),
+	(theora_dec_change_state), (plugin_init):
+	* ext/theora/theoradec.h:
+	  Add theora plugin for theora-exp decoder. Very heavily based on the
+	  existing theora decoder plugin.
+
 2006-03-29  Wim Taymans  <wim@fluendo.com>
 
 	* ext/gsm/gstgsmdec.c: (gst_gsmdec_class_init), (gst_gsmdec_init),

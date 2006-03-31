@@ -706,6 +706,14 @@ GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
   fi
 ])
 
+dnl *** theora ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_THEORADEC, true)
+GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoradec, [
+  PKG_CHECK_MODULES(THEORADEC, theoradec, HAVE_THEORADEC="yes", HAVE_THEORADEC="no")
+  AC_SUBST(THEORADEC_LIBS)
+  AC_SUBST(THEORADEC_CFLAGS)
+])
+
 dnl *** Video 4 Linux 2 ***
 dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
 dnl renamed to GST_V4L2 because of some conflict with kernel headers
@@ -853,6 +861,7 @@ ext/musepack/Makefile
 ext/sdl/Makefile
 ext/swfdec/Makefile
 ext/taglib/Makefile
+ext/theora/Makefile
 ext/xvid/Makefile
 docs/Makefile
 docs/plugins/Makefile

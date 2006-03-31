@@ -209,6 +209,13 @@ else
 TAGLIB_DIR =
 endif
 
+if USE_THEORADEC
+THEORA_DIR = theora
+else
+THEORA_DIR =
+endif
+
+
 # if USE_TARKIN
 # TARKIN_DIR=tarkin
 # else
@@ -263,6 +270,7 @@ SUBDIRS=\
 	$(SWFDEC_DIR) \
 	$(TAGLIB_DIR) \
 	$(TARKIN_DIR) \
+	$(THEORA_DIR) \
 	$(WAVPACK_DIR) \
 	$(XINE_DIR) \
 	$(XVID_DIR)
