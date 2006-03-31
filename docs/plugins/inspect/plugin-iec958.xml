@@ -3,7 +3,7 @@
   <description>Convert raw AC3 into IEC958 (S/PDIF) frames</description>
   <filename>../../gst/iec958/.libs/libgstiec958.so</filename>
   <basename>libgstiec958.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.3</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer source release</package>
@@ -12,7 +12,7 @@
     <element>
       <name>ac3iec958</name>
       <longname>AC3 to IEC958 filter</longname>
-      <class>audio/x-private1-ac3</class>
+      <class>Codec/Muxer/Audio</class>
       <description>Pads AC3 frames into IEC958 frames suitable for a raw S/PDIF interface</description>
       <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;</author>
     </element>

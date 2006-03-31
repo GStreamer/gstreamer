@@ -1,3 +1,10 @@
+=== release 0.10.3 ===
+
+2006-03-31  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.3, "Late Plane"
+
 2006-03-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_handle_src_event):
@@ -162,9 +169,10 @@
 
 2006-03-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Alex Lancaster
 	* ext/mad/gstid3tag.c: (tag_list_to_id3_tag_foreach):
 	  Add support for writing the GST_TAG_ALBUM_VOLUME_NUMBER
-	  tag (#333683, patch by: Alex Lancaster).
+	  tag (#333683)
 	  
 2006-03-02  Wim Taymans  <wim@fluendo.com>
 
@@ -196,16 +204,20 @@
 
 2006-03-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Jens Granseuer
+
 	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_pad_added),
 	(gst_mpeg_parse_handle_src_query):
 	  Declare variables at the beginning of a block and make
-	  gcc-2.9x happy (fixes #328957; patch by: Jens Granseuer).
+	  gcc-2.9x happy (fixes #328957)
 
 2006-03-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Fabrizio Gennari
+
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_handle_data):
 	  Read packet size, sequence and padsize in right order again
-	  (fixes #332796; patch by: Fabrizio Gennari).
+	  (fixes #332796)
 
 2006-02-28  Edward Hervey  <edward@fluendo.com>
 

@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Ugly Plug-ins 0.10.2 "Season to Taste"
+GStreamer: Release notes for GStreamer Ugly Plug-ins 0.10.3 "Late Plane"
         
 
 The GStreamer team is proud to announce a new release
@@ -56,29 +56,27 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * DVD Title source (dvdreadsrc) ported (DVD Menus in a future release)
-      * ASF demuxer ported
-      * Fixes for MPEG demuxing
-      * Fixes for the MAD MP3 decoder
-      * Fixes for the LAME MP3 encoder
-      * ID3 tag reading has moved to id3demux in gst-plugins-good
-      * Fixes for the Real Media demuxer
-      * Various other fixes
+      * dvdsubdec ported
+      * fixes in mpeg2dec, asfdemux, mpegdemux, dvddemux, rmdemux, mpegparse, amrnb, mad, lame, a52dec
 
 Bugs fixed in this release
     
-      * 311679 : [lame] doesn't write GST_TAG_DATE correctly
-      * 326734 : [mad] Add 24-bit output support
-      * 171528 : SIGFPE in gstasf with http://joule.via.ecp.fr/~lool/debia...
-      * 313838 : totem hangs after playing an amazon sample
-      * 317872 : Cannot demux ASF/WMV files with auxillary (non-audio/vide...
-      * 319782 : Lame encoding is broken with vbr=vbr-new and vbr-quality=9
-      * 326711 : [mpegdemux] does not negotiate source pads
-      * 329575 : misc bugfixes for mad from 0.8
-      * 331035 : [asfdemux] port to 0.10
-      * 331301 : [mpeg2dec] strides issues when cropping
-      * 331579 : Set asfdemux rank to secondary
-      * 330844 : mpeg2dec crashes with " cropped " MPEG videos
+      * 300682 : [mpeg2dec] fails to play mpgtx -j joined files to the end
+      * 317310 : Cant play swedish radio station " P3 " 
+      * 320022 : [asfdemux] borks on a particular mms asf stream
+      * 323023 : [rmdemux] stops immediately if there are unlinked source ...
+      * 326598 : [mpegstream] does not handle timestamp overflow correctly
+      * 327356 : gst-plugins-ugly fails to build with GCC 4.1
+      * 328957 : [mpegstream] fix build with gcc 2.95
+      * 331588 : [rmdemux] realmedia files with AC3 don't work
+      * 331838 : build problem caused by AS_LIBTOOL_TAGS([CXX])
+      * 331842 : should check for mad and id3tag headers, not libs
+      * 332796 : [asfdemux] cannot play an ASF stream
+      * 333345 : [lame] fix some memory leaks
+      * 333683 : [id3mux] patch to add support for GST_TAG_ALBUM_VOLUME_NU...
+      * 334550 : Some ac3 files fail to play
+      * 336097 : [asfdemux] live ASF streams do not work
+      * 336387 : [mpegdemux] reffing null caps
 
 Download
 
@@ -108,13 +106,18 @@ Applications
   
 Contributors to this release
     
-      * Christian Schaller
-      * Edgard Lima
+      * Alex Lancaster
+      * Christian Kirbach
+      * Christophe Fergeau
       * Edward Hervey
+      * Fabrizio Gennari
       * Jan Schmidt
-      * Martin Soto
-      * Stefan Kost
-      * Thomas Vander Stichele
+      * Jens Granseuer
+      * Julien MOUTTE
+      * Jürg Billeter
+      * Luca Ognibene
+      * Michael Smith
+      * Michal Benes
       * Tim-Philipp Müller
       * Wim Taymans
  

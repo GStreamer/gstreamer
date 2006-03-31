@@ -1,9 +1,33 @@
-This is GStreamer Ugly Plug-ins 0.10.2, "Season to Taste".
+This is GStreamer Ugly Plug-ins 0.10.3, "Late Plane".
+
+Features since 0.10.2:
+
+      * dvdsubdec ported
+      * fixes in mpeg2dec, asfdemux, mpegdemux, dvddemux, rmdemux,
+        mpegparse, amrnb, mad, lame, a52dec
+
+Bugs fixed since 0.10.2:
+    
+      * 300682 : [mpeg2dec] fails to play mpgtx -j joined files to the end
+      * 317310 : Cant play swedish radio station " P3 " 
+      * 320022 : [asfdemux] borks on a particular mms asf stream
+      * 323023 : [rmdemux] stops immediately if there are unlinked source ...
+      * 326598 : [mpegstream] does not handle timestamp overflow correctly
+      * 327356 : gst-plugins-ugly fails to build with GCC 4.1
+      * 328957 : [mpegstream] fix build with gcc 2.95
+      * 331588 : [rmdemux] realmedia files with AC3 don't work
+      * 331838 : build problem caused by AS_LIBTOOL_TAGS([CXX])
+      * 331842 : should check for mad and id3tag headers, not libs
+      * 332796 : [asfdemux] cannot play an ASF stream
+      * 333345 : [lame] fix some memory leaks
+      * 333683 : [id3mux] patch to add support for GST_TAG_ALBUM_VOLUME_NU...
+      * 334550 : Some ac3 files fail to play
+      * 336097 : [asfdemux] live ASF streams do not work
+      * 336387 : [mpegdemux] reffing null caps
+
 
 Features since 0.10.1:
 
-      * Parallel installability with 0.8.x series
-      * Threadsafe design and API
       * DVD Title source (dvdreadsrc) ported (DVD Menus in a future release)
       * ASF demuxer ported
       * Fixes for MPEG demuxing
