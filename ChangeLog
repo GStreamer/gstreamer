@@ -1,5 +1,10 @@
 2006-03-31  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* sys/ximagesrc/ximagesrc.c: 
+	  Add docs to ximagesrc
+
+2006-03-31  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* sys/ximagesrc/ximagesrc.c: (composite_pixel),
 	(gst_ximagesrc_ximage_get), (gst_ximagesrc_set_property),
 	(gst_ximagesrc_get_caps), (gst_ximagesrc_class_init):

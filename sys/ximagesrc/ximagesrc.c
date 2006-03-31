@@ -16,6 +16,31 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-ximagesrc
+ * @short_description: a source that captures your X Display
+ *
+ * <refsect2>
+ * <para>
+ * This element captures your X Display and creates raw RGB video.  It uses
+ * the XDamage extension if available to only capture areas of the screen that
+ * have changed since the last frame.  It uses the XFixes extension if
+ * available to also cpature your mouse pointer
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * Encode your X display to an Ogg theora video
+ * </para>
+ * <programlisting>
+ * gst-launch -v ximagesrc ! ffmpegcolorspace ! theoraenc ! oggmux ! filesink location=desktop.ogg
+ * </programlisting>
+ * <para>
+ * </refsect2>
+ *
+ */
+
+
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
