@@ -382,7 +382,6 @@ gst_ffmpegdemux_src_event (GstPad * pad, GstEvent * event)
   GstFFMpegDemux *demux = (GstFFMpegDemux *) gst_pad_get_parent (pad);
   AVStream *stream = gst_ffmpegdemux_stream_from_pad (pad);
   gboolean res = TRUE;
-  gint64 offset;
 
   if (!stream)
     return FALSE;
@@ -680,6 +679,8 @@ my_safe_copy (gchar * input)
   } else {
     output = g_strdup (input);
   }
+
+  return output;
 }
 
 static GstTagList *
@@ -810,9 +811,9 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   
   /* Send newsegment on all src pads */
   for (res = 0; res < demux->context->nb_streams; res++) {
-    AVStream *stream;
     
-    GST_DEBUG_OBJECT (demux, "sending newsegment start:%"GST_TIME_FORMAT" duration:%"GST_TIME_FORMAT,
+    GST_DEBUG_OBJECT (demux, "sending newsegment start:%" GST_TIME_FORMAT
+      " duration:%"  GST_TIME_FORMAT,
 		      GST_TIME_ARGS (demux->segment_start),
 		      GST_TIME_ARGS (demux->segment_stop));
     
@@ -1012,6 +1013,8 @@ gst_ffmpegdemux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ffmpegdemux_close (demux);
+      break;
+    default:
       break;
   }
 

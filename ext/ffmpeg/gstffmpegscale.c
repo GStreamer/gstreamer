@@ -161,7 +161,6 @@ static GstCaps *
 gst_ffmpegscale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps)
 {
-  GstFFMpegScale *scale = GST_FFMPEGSCALE (trans);
   GstCaps *retcaps;
   int i;
 
@@ -375,7 +374,7 @@ gst_ffmpegscale_handle_src_event (GstPad * pad, GstEvent * event)
       event =
           GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
 
-      structure = gst_event_get_structure (event);
+      structure = (GstStructure *) gst_event_get_structure (event);
       if (gst_structure_get_double (structure, "pointer_x", &pointer)) {
         gst_structure_set (structure,
             "pointer_x", G_TYPE_DOUBLE,

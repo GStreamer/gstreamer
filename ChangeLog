@@ -1,3 +1,18 @@
+2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	* ext/ffmpeg/gstffmpegdec.c:
+	(gst_ffmpegdec_add_pixel_aspect_ratio), (gst_ffmpegdec_frame):
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_seek):
+	* ext/ffmpeg/gstffmpegscale.c: (gst_ffmpegscale_transform_caps),
+	(gst_ffmpegscale_handle_src_event):
+	  various compiler fixes
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_src_event),
+	(my_safe_copy), (gst_ffmpegdemux_open),
+	(gst_ffmpegdemux_change_state):
+	  actually return the result.  Tee hee.
+
 2006-03-31  Thomas Vander Stichele <thomas at apestaart dot org>
 
 	* configure.ac:

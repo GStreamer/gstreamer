@@ -739,7 +739,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_RA_288:
     case CODEC_ID_COOK:
       {
-        gint version;
+        gint version = 0;
         switch (codec_id) {
           case CODEC_ID_RA_144:
             version = 1;
@@ -749,6 +749,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
             break;
           case CODEC_ID_COOK:
             version = 8;
+            break;
+          default:
             break;
         }
 

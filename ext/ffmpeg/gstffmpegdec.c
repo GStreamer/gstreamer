@@ -645,8 +645,8 @@ gst_ffmpegdec_add_pixel_aspect_ratio (GstFFMpegDec * ffmpegdec,
 {
   gboolean demuxer_par_set = FALSE;
   gboolean decoder_par_set = FALSE;
-  gint demuxer_num, demuxer_denom;
-  gint decoder_num, decoder_denom;
+  gint demuxer_num = 1, demuxer_denom = 1;
+  gint decoder_num = 1, decoder_denom = 1;
 
   GST_OBJECT_LOCK (ffmpegdec);
 
@@ -965,9 +965,9 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
       } else if (ffmpegdec->picture->pict_type != -1 &&
           oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
         /* update time for skip-frame */
-        if ((!have_data) || 
-	    (iskeyframe || !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts))
-            && GST_CLOCK_TIME_IS_VALID (*in_ts)) {
+        if ((have_data == 0) ||
+	    ((iskeyframe || !GST_CLOCK_TIME_IS_VALID (ffmpegdec->next_ts))
+            && GST_CLOCK_TIME_IS_VALID (*in_ts))) {
           GST_DEBUG_OBJECT (ffmpegdec, "setting next_ts to *in_ts");
           ffmpegdec->next_ts = *in_ts;
           *in_ts = GST_CLOCK_TIME_NONE;

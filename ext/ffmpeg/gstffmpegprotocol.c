@@ -167,7 +167,6 @@ gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
 static offset_t
 gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
 {
-  GstSeekType seek_type = 0;
   GstProtocolInfo *info;
   guint64 newpos;
 
