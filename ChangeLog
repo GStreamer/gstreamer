@@ -1,3 +1,10 @@
+2006-03-31  Michael Smith  <msmith@fluendo.com>
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_chain):
+	  Do not typefind content if the buffers already have caps.
+	  Neccesary for icydemux (#333657), and the right thing to do anyway.
+
 2006-03-30  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),

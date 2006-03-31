@@ -534,6 +534,30 @@ gst_type_find_element_chain (GstPad * pad, GstBuffer * buffer)
 
   typefind = GST_TYPE_FIND_ELEMENT (GST_PAD_PARENT (pad));
 
+  /* Shortcircuit typefinding if we already have non-any caps */
+  if (typefind->mode == MODE_TYPEFIND) {
+    GstCaps *caps = gst_buffer_get_caps (buffer);
+
+    if (caps) {
+      if (gst_caps_is_any (caps)) {
+        gst_caps_unref (caps);
+      } else {
+        typefind->mode = MODE_NORMAL;
+        g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE], 0,
+            GST_TYPE_FIND_MAXIMUM, caps);
+
+        if (typefind->store) {
+          GST_DEBUG_OBJECT (typefind, "Pushing store: %d",
+              GST_BUFFER_SIZE (typefind->store));
+          gst_type_find_element_send_cached_events (typefind);
+          gst_buffer_set_caps (typefind->store, typefind->caps);
+          gst_pad_push (typefind->src, typefind->store);
+          typefind->store = NULL;
+        }
+      }
+    }
+  }
+
   switch (typefind->mode) {
     case MODE_ERROR:
       /* we should already have called GST_ELEMENT_ERROR */
