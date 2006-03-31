@@ -204,13 +204,13 @@ ximageutil_xcontext_get (GstElement * parent, const gchar * display_name)
   if ((xcontext->bpp == 24 || xcontext->bpp == 32) &&
       xcontext->endianness == G_LITTLE_ENDIAN) {
     xcontext->endianness = G_BIG_ENDIAN;
-    xcontext->visual->red_mask = GUINT32_TO_BE (xcontext->visual->red_mask);
-    xcontext->visual->green_mask = GUINT32_TO_BE (xcontext->visual->green_mask);
-    xcontext->visual->blue_mask = GUINT32_TO_BE (xcontext->visual->blue_mask);
+    xcontext->r_mask_output = GUINT32_TO_BE (xcontext->visual->red_mask);
+    xcontext->g_mask_output = GUINT32_TO_BE (xcontext->visual->green_mask);
+    xcontext->b_mask_output = GUINT32_TO_BE (xcontext->visual->blue_mask);
     if (xcontext->bpp == 24) {
-      xcontext->visual->red_mask >>= 8;
-      xcontext->visual->green_mask >>= 8;
-      xcontext->visual->blue_mask >>= 8;
+      xcontext->r_mask_output >>= 8;
+      xcontext->g_mask_output >>= 8;
+      xcontext->b_mask_output >>= 8;
     }
   }
 
@@ -283,7 +283,8 @@ ximageutil_calculate_pixel_aspect_ratio (GstXContext * xcontext)
   GST_DEBUG ("Decided on index %d (%d/%d)", index,
       par[index][0], par[index][1]);
 
-  g_free (xcontext->par);
+  if (xcontext->par)
+    g_free (xcontext->par);
   xcontext->par = g_new0 (GValue, 1);
   g_value_init (xcontext->par, GST_TYPE_FRACTION);
   gst_value_set_fraction (xcontext->par, par[index][0], par[index][1]);
