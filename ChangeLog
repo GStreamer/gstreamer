@@ -1,3 +1,10 @@
+=== release 0.10.1 ===
+
+2006-03-31  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.1, "Late Train"
+
 2006-03-22  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_close),
@@ -56,11 +63,11 @@
 	(gst_ffmpeg_set_palette):
 	  Use AVPALETTE_SIZE macro instead of magic value for clarity.
 
+	Based on patch by: Fabrizio Gennari
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame):
 	  In GStreamer, the size of the palette is not part of
 	  GST_BUFFER_SIZE, so adjust buffer size of outgoing buffers
-	  accordingly if there's a palette (fixes #327028, based on 
-	  patch by: Fabrizio Gennari).
+	  accordingly if there's a palette (fixes #327028)
 
 2006-02-21  Edward Hervey  <edward@fluendo.com>
 
@@ -316,6 +323,8 @@
 
 2005-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Sebastien Cote
+	Patch by: Luca Ognibene
 	* ext/ffmpeg/gstffmpeg.c: (gst_ffmpeg_avcodec_open),
 	(gst_ffmpeg_avcodec_close):
 	* ext/ffmpeg/gstffmpeg.h:
@@ -325,7 +334,7 @@
 	(gst_ffmpegenc_getcaps), (gst_ffmpegenc_setcaps),
 	(gst_ffmpegenc_change_state):
 	  Do proper locking around avcodec_open() and avcodec_close()
-	  (fixes #322254, patch by: Sebastien Cote and Luca Ognibene).
+	  (fixes #322254)
 
 2005-12-10  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -340,8 +349,8 @@
 	This should handle the case where AVFrame->reference is set to 1 (which
 	is the equivalent of a keyframe).
 	Also fixes #323286.
-	I tried a truckload of other files with this modification and it didn't seem
-	to break playback.
+	I tried a truckload of other files with this modification and it didn't
+	seem to break playback.
 
 2005-12-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 

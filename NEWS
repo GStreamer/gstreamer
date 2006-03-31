@@ -1,4 +1,34 @@
-This is GStreamer FFmpeg Plug-ins 0.10.0, "Rocamadour"
+This is GStreamer FFmpeg Plug-ins 0.10.1, "Late Train"
+
+Changes since 0.10.0:
+
+      * ffvideoscale ported
+      * ffdeinterlace ported
+      * demuxer wrapper works pull-based
+      * disabled mpeg2 video and mp3 audio autoplugging
+      * fixes for Indeo3, PNG, smc, H264 HD, H263, FLV1, G2
+
+Bugs fixed since 0.10.0:
+    
+      * 162833 : [ffdemux_mp3] ffmpeg mp3 decoder miss seeking
+      * 311272 : Reading mpeg-ts stream from standard input does not work
+      * 319248 : configure script doesn't accept --with-pkg-config-path ar...
+      * 320238 : Fails to build under powerpc
+      * 322254 : avcodec_open()/close() aren't thread-safe
+      * 323286 : [ffdec_cinepak] chef.avi causes gstreamer to hang in preroll
+      * 326372 : Indeo AVI files do not play with 0.10
+      * 326704 : [ffdec] Memory leak when joining pcache
+      * 327028 : MS Video 1 palettized AVI doesn't work
+      * 327224 : ffdeinterlace port to 0.10
+      * 327861 : [ffmpegenc] FFMpeg audio encoders do not set caps to buffers
+      * 329963 : gstreamer CVS doesn't work with ffmpeg codecs
+      * 330634 : Wrap the ffmpeg demuxers
+      * 331209 : [ffdec_h264] seeking in " IntoTheBlue_Cin_AVC.mp4 " crashes...
+      * 332072 : Too fast playback of h263p encoded file
+      * 332557 : FFmpeg video scale port to 0.10
+      * 332995 : segfault in ffmpeg enc
+      * 333001 : Memory leak in ffmpegenc
+      * 324209 : [CVE-2005-4048] avcodec_default_get_buffer heap overflow
 
 Changes since 0.9.6:
 
