@@ -66,6 +66,7 @@
     <xi:include href="xml/plugin-halelements.xml" />
     <xi:include href="xml/plugin-id3demux.xml" />
     <xi:include href="xml/plugin-jpeg.xml" />
+    <xi:include href="xml/plugin-ladspa.xml" />
     <xi:include href="xml/plugin-level.xml" />
     <xi:include href="xml/plugin-matroska.xml" />
     <xi:include href="xml/plugin-mulaw.xml" />

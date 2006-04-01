@@ -34,7 +34,11 @@ dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
 
-AS_LIBTOOL_TAGS
+dnl FIXME: this macro doesn't actually work;
+dnl the generated libtool script has no support for the listed tags.
+dnl So this needs to be fixed first if we want to use this
+dnl AS_LIBTOOL_TAGS
+
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
