@@ -14,5 +14,6 @@ Makefile.in
 
 html
 sgml
+tmpl
 xml
 *.stamp
