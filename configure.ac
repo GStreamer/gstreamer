@@ -1,24 +1,33 @@
--*- mode: m4 -*-
-AC_PREREQ(2.57)
+AC_PREREQ(2.52)
 
-AC_INIT
-AC_CANONICAL_TARGET
+dnl initialize autoconf
+dnl when going to/from release please set the nano (fourth number) right !
+dnl releases only do Wall, cvs and prerelease does Werror too
+AC_INIT(GStreamer Python Bindings, 0.10.3.1,
+    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
+    gst-python)
+
+dnl initialize automake
+AM_INIT_AUTOMAKE
+
+dnl define PACKAGE_VERSION_* variables
+AS_VERSION
+
+dnl check if this is a release version
+AS_NANO(GST_CVS="no", GST_CVS="yes")
+
+dnl can autoconf find the source ?
+AC_CONFIG_SRCDIR([gst/gstmodule.c])
+
+dnl define the output header for config
+AM_CONFIG_HEADER([config.h])
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE
-                                                                                
-dnl when going to/from release please set the nano (fourth number) right !
-AS_VERSION(gst-python, PYGST_VERSION, 0, 10, 3, 1,
-    GST_CVS="no", GST_CVS="yes")
 
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
-
-AC_DEFINE_UNQUOTED(PYGST_MAJOR_VERSION, $PYGST_VERSION_MAJOR, [PyGst major version])
-AC_DEFINE_UNQUOTED(PYGST_MINOR_VERSION, $PYGST_VERSION_MINOR, [PyGst minor version])
-AC_DEFINE_UNQUOTED(PYGST_MICRO_VERSION, $PYGST_VERSION_MICRO, [PyGst macro version])
-
-AC_CONFIG_SRCDIR([gst/gstmodule.c])
-AM_CONFIG_HEADER(config.h)
+AC_DEFINE_UNQUOTED(PYGST_MAJOR_VERSION, $PACKAGE_VERSION_MAJOR, [PyGst major version])
+AC_DEFINE_UNQUOTED(PYGST_MINOR_VERSION, $PACKAGE_VERSION_MINOR, [PyGst minor version])
+AC_DEFINE_UNQUOTED(PYGST_MICRO_VERSION, $PACKAGE_VERSION_MICRO, [PyGst macro version])
 
 dnl Add parameters for aclocal
 AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4")
