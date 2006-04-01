@@ -251,20 +251,7 @@ gst_rmdemux_init (GstRMDemux * rmdemux)
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "rmdemux",
-      GST_RANK_PRIMARY, GST_TYPE_RMDEMUX);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "rmdemux",
-    "Realmedia stream demuxer",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
-
-
-     static gboolean gst_rmdemux_sink_event (GstPad * pad, GstEvent * event)
+gst_rmdemux_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret = TRUE;
 
@@ -1921,3 +1908,16 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
 beach:
   return ret;
 }
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return gst_element_register (plugin, "rmdemux",
+      GST_RANK_PRIMARY, GST_TYPE_RMDEMUX);
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "rmdemux",
+    "Realmedia stream demuxer",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

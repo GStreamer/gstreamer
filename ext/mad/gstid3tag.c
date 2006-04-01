@@ -1523,4 +1523,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "mad",
     "id3 tag manipulation and mp3 decoding based on the mad library",
-    plugin_init, VERSION, "GPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, "GPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

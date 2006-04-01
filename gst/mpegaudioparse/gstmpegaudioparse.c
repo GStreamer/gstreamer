@@ -615,4 +615,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "mpegaudioparse",
     "MPEG-1 layer 1/2/3 audio parser",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

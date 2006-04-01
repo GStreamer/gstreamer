@@ -1,3 +1,24 @@
+2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  rework similarly to other modules
+	* ext/a52dec/gsta52dec.c:
+	* ext/amrnb/amrnb.c:
+	* ext/dvdnav/dvdnavsrc.c:
+	* ext/dvdread/dvdreadsrc.c:
+	* ext/lame/gstlame.c:
+	* ext/mad/gstid3tag.c:
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/sidplay/gstsiddec.cc:
+	* gst/asfdemux/gstasf.c:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/dvdsub/gstdvdsubdec.c:
+	* gst/iec958/ac3iec.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegstream/gstmpegstream.c:
+	* gst/realmedia/rmdemux.c: (plugin_init):
+	  use the correct defines
+
 2006-03-31  Thomas Vander Stichele <thomas at apestaart dot org>
 
 	* configure.ac:

@@ -2188,4 +2188,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "dvdnav",
     "Access a DVD with navigation features using libdvdnav",
-    plugin_init, VERSION, "GPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, "GPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

@@ -633,4 +633,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "dvdlpcmdec",
     "Decode DVD LPCM frames into standard PCM",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
