@@ -1,8 +1,9 @@
-100% symbol docs coverage.
-9 symbols documented.
+92% symbol docs coverage.
+11 symbols documented.
 0 symbols incomplete.
-0 not documented.
+1 not documented.
 
 
+GstTagLibMux
 
 

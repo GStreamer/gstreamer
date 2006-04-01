@@ -6,3 +6,11 @@ GstDfbVideoSink
 GstDfbVideoSinkClass
 </SECTION>
 
+<SECTION>
+<FILE>element-tagid3v2mux</FILE>
+GstTagLibMux
+<TITLE>tagid3v2mux</TITLE>
+<SUBSECTION Standard>
+GstTagLibMuxClass
+</SECTION>
+

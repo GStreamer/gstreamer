@@ -58,7 +58,7 @@ MKDB_OPTIONS=--sgml-mode
 
 # Used for dependencies.
 HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.h
-CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c
+CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c $(DOC_SOURCE_DIR)/*/*/*.cc
 
 # this is a wingo addition
 # thomasvs: another nice wingo addition would be an explanation on why
@@ -86,7 +86,8 @@ EXAMPLE_CFILES = \
         $(top_srcdir)/ext/directfb/dfb-example.c
 
 EXTRA_HFILES = \
-	$(top_srcdir)/ext/directfb/dfbvideosink.h
+	$(top_srcdir)/ext/directfb/dfbvideosink.h \
+	$(top_srcdir)/ext/taglib/gsttaglib.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

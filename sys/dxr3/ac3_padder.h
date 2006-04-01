@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2003 Martin Soto <martinsoto@users.sourceforge.net>
  *
- * ac3_padder.h: Pad AC3 frames for use with an SPDIF interface. 
+ * ac3_padder.h: Pad AC3 frames for use with an SPDIF interface.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -109,7 +109,7 @@ extern int
 ac3p_parse(ac3_padder *padder);
 
 
-/**
+/*
  * ac3p_frame
  * @padder The padder structure.
  *
@@ -117,7 +117,7 @@ ac3p_parse(ac3_padder *padder);
  */
 #define ac3p_frame(padder) ((guint *) &((padder)->frame))
 
-/**
+/*
  * ac3p_frame_size
  * @padder The padder structure.
  *

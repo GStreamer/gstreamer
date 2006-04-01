@@ -133,3 +133,56 @@ void
 <RETURNS>GType </RETURNS>
 void
 </FUNCTION>
+<STRUCT>
+<NAME>GstTagLibMuxPriv</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstTagLibMux</NAME>
+typedef struct _GstTagLibMux {
+  GstElement    element;
+
+  GstPad       *srcpad;
+  GstPad       *sinkpad;
+  GstTagList   *event_tags; /* tags received from upstream elements */
+  gsize         tag_size;
+  gboolean      render_tag;
+
+  GstEvent     *newsegment_ev; /* cached newsegment event from upstream */
+} GstTagLibMux;
+</STRUCT>
+<STRUCT>
+<NAME>GstTagLibMuxClass</NAME>
+typedef struct _GstTagLibMuxClass {
+  GstElementClass parent_class;
+} GstTagLibMuxClass;
+</STRUCT>
+<MACRO>
+<NAME>GST_TYPE_TAGLIB_MUX</NAME>
+#define GST_TYPE_TAGLIB_MUX \
+  (gst_tag_lib_mux_get_type())
+</MACRO>
+<MACRO>
+<NAME>GST_TAGLIB_MUX</NAME>
+#define GST_TAGLIB_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TAGLIB_MUX,GstTagLibMux))
+</MACRO>
+<MACRO>
+<NAME>GST_TAGLIB_MUX_CLASS</NAME>
+#define GST_TAGLIB_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TAGLIB_MUX,GstTagLibMuxClass))
+</MACRO>
+<MACRO>
+<NAME>GST_IS_TAGLIB_MUX</NAME>
+#define GST_IS_TAGLIB_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TAGLIB_MUX))
+</MACRO>
+<MACRO>
+<NAME>GST_IS_TAGLIB_MUX_CLASS</NAME>
+#define GST_IS_TAGLIB_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TAGLIB_MUX))
+</MACRO>
+<FUNCTION>
+<NAME>gst_tag_lib_mux_get_type</NAME>
+<RETURNS>GType </RETURNS>
+void
+</FUNCTION>

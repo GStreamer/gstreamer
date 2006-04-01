@@ -121,6 +121,11 @@ dnl *** checks for programs ***
 dnl find a compiler
 AC_PROG_CC
 
+dnl determine c++ compiler
+AC_PROG_CXX
+dnl determine if c++ is available on this system
+AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
+
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
@@ -157,6 +162,9 @@ AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
 AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
 
 GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ], no)
+GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_MAJORMINOR --variable pluginsdir`
+AC_SUBST(GSTPB_PLUGINS_DIR)
+AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
 dnl set license and copyright notice
 GST_LICENSE="LGPL"
@@ -697,6 +705,7 @@ common/Makefile
 common/m4/Makefile
 m4/Makefile
 tests/Makefile
+tests/check/Makefile
 tests/icles/Makefile
 )
 AC_OUTPUT
