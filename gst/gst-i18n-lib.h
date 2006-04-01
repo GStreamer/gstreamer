@@ -23,7 +23,7 @@
 #ifndef __GST_I18N_LIB_H__
 #define __GST_I18N_LIB_H__
 
-#ifndef GST_VERSION
+#ifndef PACKAGE_NAME
 #error You must include config.h before including this header.
 #endif
 

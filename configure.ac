@@ -1,13 +1,20 @@
 AC_PREREQ(2.52)
 
 dnl initialize autoconf
-dnl we don't specify PACKAGE and VERSION because AS_VERSION puts it together
-AC_INIT
-
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gstreamer, GST_VERSION, 0, 10, 4, 1,
-    GST_CVS="no", GST_CVS="yes")
+AC_INIT(GStreamer, 0.10.4.1,
+    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
+    gstreamer)
+
+dnl initialize automake
+AM_INIT_AUTOMAKE
+
+dnl define PACKAGE_VERSION_* variables
+AS_VERSION
+
+dnl check if this is a release version
+AS_NANO(GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
 AC_CONFIG_SRCDIR([gst/gst.c])
@@ -21,13 +28,8 @@ AM_MAINTAINER_MODE
 dnl sets host_* variables
 AC_CANONICAL_HOST
 
-dnl initialize automake
-dnl FIXME: this is deprecated use, we should move PACKAGE and VERSION to
-dnl AC_INIT, but then we need to parse the version to pass to AS_VERSION
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
-
 dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$GST_VERSION_MAJOR.$GST_VERSION_MINOR
+GST_MAJORMINOR=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
 dnl we override it here for release candidates for a new series
 GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
@@ -111,7 +113,7 @@ GST_ARG_GCOV
 GST_ARG_EXAMPLES
 
 GST_ARG_WITH_PKG_CONFIG_PATH
-GST_ARG_WITH_PACKAGE_NAME([GStreamer])
+GST_ARG_WITH_PACKAGE_NAME
 GST_ARG_WITH_PACKAGE_ORIGIN
 
 dnl use a cache dir for storing element registry info.

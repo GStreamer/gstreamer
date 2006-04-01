@@ -756,7 +756,7 @@ parse_one_option (gint opt, const gchar * arg, GError ** err)
 {
   switch (opt) {
     case ARG_VERSION:
-      g_print ("GStreamer Core Library version %s\n", GST_VERSION);
+      g_print ("GStreamer Core Library version %s\n", PACKAGE_VERSION);
       exit (0);
     case ARG_FATAL_WARNINGS:{
       GLogLevelFlags fatal_mask;

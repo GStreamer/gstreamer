@@ -1,3 +1,15 @@
+2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  use new AS_VERSION and AS_NANO macros
+	* gst/gst-i18n-lib.h:
+	* gst/gst.c:
+	* gst/gsterror.c:
+	* gst/gstversion.h.in:
+	* win32/common/config.h:
+	* win32/common/config.h.in:
+	  update accordingly
+
 2006-03-31  Michael Smith  <msmith@fluendo.com>
 
 	* plugins/elements/gsttypefindelement.c:

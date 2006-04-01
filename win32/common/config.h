@@ -14,11 +14,14 @@
 /* Location of registry */
 #define GST_CACHE_DIR PREFIX "\\var\\cache"
 
+/* Define if pipeline parsing code is disabled */
+/* #undef GST_DISABLE_PARSE */
+
 /* macro to use to show function name */
 #define GST_FUNCTION "(function)"
 
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
-#undef GST_GCOV_ENABLED
+/* #undef GST_GCOV_ENABLED */
 
 /* Default errorlevel to use */
 #define GST_LEVEL_DEFAULT GST_LEVEL_ERROR
@@ -26,20 +29,11 @@
 /* GStreamer license */
 #define GST_LICENSE "LGPL"
 
-/* package origin */
-#define GST_PACKAGE_ORIGIN "Unknown package origin"
-
 /* package name in plugins */
 #define GST_PACKAGE_NAME "GStreamer CVS/prerelease"
 
-/* Define the version */
-#define GST_VERSION "0.10.4.1"
-
-/* Define the MAJOR.MINOR version */
-#define GST_MAJORMINOR "0.10"
-
-/* Define host CPU */
-#define HOST_CPU "i686"
+/* package origin */
+#define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
@@ -174,6 +168,9 @@
 /* Defined if compiling for Windows */
 #define HAVE_WIN32 1
 
+/* Define host CPU */
+#define HOST_CPU "i686"
+
 /* library dir */
 #ifdef _DEBUG
 #  define LIBDIR PREFIX "\\debug\\lib"
@@ -188,19 +185,19 @@
 #define PACKAGE "gstreamer"
 
 /* Define to the address where bug reports for this package should be sent. */
-#undef PACKAGE_BUGREPORT
+#define PACKAGE_BUGREPORT "http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME
+#define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
+#undef PACKAGE_STRING "GStreamer 0.10.4.1"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME
+#undef PACKAGE_TARNAME "gstreamer"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION
+#undef PACKAGE_VERSION "0.10.4.1"
 
 /* Define the plugin directory */
 #ifdef _DEBUG

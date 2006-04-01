@@ -117,8 +117,7 @@ gst_g_error_get_type (void)
   return type;
 }
 
-#define FILE_A_BUG "  Please file a bug at "\
-    "http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer."
+#define FILE_A_BUG "  Please file a bug at " PACKAGE_BUGREPORT " ."
 
 /* initialize the dynamic table of translated core errors */
 static gchar **
