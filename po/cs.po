@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-25 19:58+0100\n"
+"POT-Creation-Date: 2006-03-17 16:42+0100\n"
 "PO-Revision-Date: 2004-08-08 22:58+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -18,12 +18,12 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
 "10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/libpng/gstpngdec.c:275 ext/libpng/gstpngdec.c:438
-#: gst/wavparse/gstwavparse.c:1149
+#: ext/libpng/gstpngdec.c:275 ext/libpng/gstpngdec.c:458
+#: gst/wavparse/gstwavparse.c:1231
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/avi/gstavimux.c:1009
+#: gst/avi/gstavimux.c:1019
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Žádný nebo neplatný vstup zvuku, proud AVI bude poškozen."
 

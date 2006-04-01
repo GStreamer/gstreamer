@@ -1,3 +1,25 @@
+2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  clean up, use AS_VERSION and AS_NANO
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_start):
+	  use PACKAGE_VERSION define
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	  updated
+
 2006-03-31  Sebastien Moutte  <sebastien@moutte.net>
 
 	* ext\jpeg\smokecodec.c:

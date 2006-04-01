@@ -1,13 +1,20 @@
 AC_PREREQ(2.52)
 
 dnl initialize autoconf
-dnl we don't specify PACKAGE and VERSION because AS_VERSION puts it together
-AC_INIT
-
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-good, GST_PLUGINS_GOOD_VERSION, 0, 10, 2, 1,
-    GST_CVS="no", GST_CVS="yes")
+AC_INIT(GStreamer Good Plug-ins, 0.10.2.1,
+    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
+    gst-plugins-good)
+
+dnl initialize automake
+AM_INIT_AUTOMAKE
+
+dnl define PACKAGE_VERSION_* variables
+AS_VERSION
+
+dnl check if this is a release version
+AS_NANO(GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
@@ -21,13 +28,8 @@ AM_MAINTAINER_MODE
 dnl sets host_* variables
 AC_CANONICAL_HOST
 
-dnl initialize automake
-dnl FIXME: this is deprecated use, we should move PACKAGE and VERSION to
-dnl AC_INIT, but then we need to parse the version to pass to AS_VERSION
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
-
 dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$GST_PLUGINS_GOOD_VERSION_MAJOR.$GST_PLUGINS_GOOD_VERSION_MINOR
+GST_MAJORMINOR=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
@@ -63,7 +65,7 @@ GST_ARG_GCOV
 GST_ARG_EXAMPLES
 
 GST_ARG_WITH_PKG_CONFIG_PATH
-GST_ARG_WITH_PACKAGE_NAME([GStreamer Good Plug-ins])
+GST_ARG_WITH_PACKAGE_NAME
 GST_ARG_WITH_PACKAGE_ORIGIN
 
 dnl these are all the gst plug-ins, compilable without additional libs
@@ -113,6 +115,7 @@ AC_ARG_WITH(plugins,
 
 dnl disable gst plugins we might not be able to build on this
 dnl platform: udp and rtsp (ugly but minimally invasive)
+dnl FIXME: maybe move to sys
 AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 
@@ -145,8 +148,6 @@ dnl common/m4/gst-arch.m4
 dnl check CPU type
 GST_ARCH
 
-AC_SUBST(GST_CTRL_LIBS)
-
 dnl Determine endianness
 AC_C_BIGENDIAN
 
@@ -177,6 +178,8 @@ dnl check for documentation tools
 GTK_DOC_CHECK([1.3])
 AS_PATH_PYTHON([2.1])
 
+dnl *** checks for libraries ***
+
 dnl *** checks for header files ***
 
 dnl check if we have ANSI C header files
@@ -187,9 +190,13 @@ AC_CHECK_HEADERS([netinet/in.h])
 AC_CHECK_HEADERS([winsock2.h])
 AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
 
+dnl *** checks for types/defines ***
+
 dnl Check for FIONREAD ioctl declaration.  This check is needed
 dnl for the UDP plugin to build on Solaris 
-GST_CHECK_FIONREAD()
+GST_CHECK_FIONREAD
+
+dnl *** checks for structures ***
 
 dnl *** checks for compiler characteristics ***
 
@@ -688,15 +695,4 @@ gst-plugins-good.spec
 )
 AC_OUTPUT
 
-echo "configure: *** Core plug-ins, always built:"
-( for i in $GST_PLUGINS_ALL; do echo -e '\t'$i; done ) | sort
-echo
-echo -n "configure: *** Plug-ins relying on libraries that will be built:"
-echo -e "$GST_PLUGINS_YES" | sort
-echo
-echo -n "configure: *** Plug-ins relying on libraries that will NOT be built:"
-echo -e "$GST_PLUGINS_NO" | sort
-echo
-if test "x$BUILD_EXTERNAL" = "xno"; then
-  echo "configure: *** No external plug-ins will be built"
-fi
+GST_OUTPUT_PLUGINS

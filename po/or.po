@@ -2,13 +2,13 @@
 # Copyright (C) 2004, Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-0.8.3 package.
 # Gora Mohanty <gora_mohanty@yahoo.co.in>, 2004.
-# $Id: or.po,v 1.20 2006/02/08 17:35:05 thaytan Exp $
+# $Id: or.po,v 1.21 2006/02/25 19:07:41 dolphy Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-02-25 19:58+0100\n"
+"POT-Creation-Date: 2006-03-17 16:42+0100\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -16,12 +16,12 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/libpng/gstpngdec.c:275 ext/libpng/gstpngdec.c:438
-#: gst/wavparse/gstwavparse.c:1149
+#: ext/libpng/gstpngdec.c:275 ext/libpng/gstpngdec.c:458
+#: gst/wavparse/gstwavparse.c:1231
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/avi/gstavimux.c:1009
+#: gst/avi/gstavimux.c:1019
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "ନିବେଶ ଧ୍ବନି ନାହିଁ ବା ଅବୈଧ ଅଛି. ଏ.ଭି.ଆଇ. ଧାରା ଭ୍ରଷ୍ଟ ହୋଇଯିବ."
 
