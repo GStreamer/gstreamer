@@ -1,5 +1,5 @@
 if USE_X
-X_TESTS = ximagesrc_test
+X_TESTS = ximagesrc-test
 
 ximagesrc_test_SOURCES = ximagesrc-test.c
 ximagesrc_test_CFLAGS = $(GST_CFLAGS)
