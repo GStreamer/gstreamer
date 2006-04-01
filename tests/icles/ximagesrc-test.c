@@ -54,8 +54,8 @@ main (int argc, char **argv)
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  /* We want to get out after */
-  g_timeout_add (500, (GSourceFunc) terminate_playback, pipeline);
+  /* We want to get out after 5 seconds */
+  g_timeout_add (5000, (GSourceFunc) terminate_playback, pipeline);
 
   g_main_loop_run (loop);
 
