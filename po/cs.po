@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-26 15:32+0200\n"
+"POT-Creation-Date: 2006-03-31 23:33+0200\n"
 "PO-Revision-Date: 2004-08-08 22:58+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -18,64 +18,68 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
 "10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/sndfile/gstsf.c:586
-msgid "No filename specified."
-msgstr "Nezadán název souboru."
-
-#: ext/sndfile/gstsf.c:625
+#: sys/v4l2/v4l2_calls.c:409
 #, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Nemohu otevřít soubor \"%s\" pro zápis."
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Nemohu otevřít zařízení \"%s\" pro čtení a zápis."
 
-#: ext/sndfile/gstsf.c:839
+#: sys/v4l2/v4l2_calls.c:423
 #, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Nemohu zapisovat do souboru \"%s\"."
+msgid "Device \"%s\" is not a capture device."
+msgstr "Zařízení \"%s\" není zachytávací zařízení."
 
-#: sys/dxr3/dxr3audiosink.c:298
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Nemohu otevřít zařízení zvuku \"%s\" pro zápis."
-
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Nemohu otevřít řídicí zařízení \"%s\" pro zápis."
-
-#: sys/dxr3/dxr3audiosink.c:343
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Nemohu nastavit zařízení zvuku \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Nemohu nastavit zařízení zvuku \"%s\" na %d Hz."
-
-#: sys/dxr3/dxr3audiosink.c:422
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Nemohu zavřít zařízení zvuku \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Nemohu zavřít řídicí zařízení \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:271
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Nemohu otevřít zařízení videa \"%s\" pro zápis."
-
-#: sys/dxr3/dxr3videosink.c:301
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Nemohu zavřít zařízení videa \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:453
+#: sys/v4l2/v4l2src_calls.c:127
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Nemohu zapisovat do zařízení \"%s\"."
+
+#: sys/v4l2/v4l2src_calls.c:303
+#, c-format
+msgid "Could not get buffers from device \"%s\"."
+msgstr "Nemohu od zařízení \"%s\" získat vyrovnávací paměti."
+
+#: sys/v4l2/v4l2src_calls.c:315
+#, c-format
+msgid "the driver of device \"%s\" is broken."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:325
+#, c-format
+msgid "Could not get enough buffers from device \"%s\"."
+msgstr "Nemohu od zařízení \"%s\" získat dost vyrovnávacích pamětí."
+
+#~ msgid "No filename specified."
+#~ msgstr "Nezadán název souboru."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Nemohu otevřít soubor \"%s\" pro zápis."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Nemohu zapisovat do souboru \"%s\"."
+
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Nemohu otevřít zařízení zvuku \"%s\" pro zápis."
+
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "Nemohu otevřít řídicí zařízení \"%s\" pro zápis."
+
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Nemohu nastavit zařízení zvuku \"%s\"."
+
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "Nemohu nastavit zařízení zvuku \"%s\" na %d Hz."
+
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "Nemohu zavřít zařízení zvuku \"%s\"."
+
+#~ msgid "Could not close control device \"%s\"."
+#~ msgstr "Nemohu zavřít řídicí zařízení \"%s\"."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "Nemohu otevřít zařízení videa \"%s\" pro zápis."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "Nemohu zavřít zařízení videa \"%s\"."
 
 #~ msgid "Error closing file \"%s\"."
 #~ msgstr "Chyba při zavírání souboru \"%s\"."
@@ -209,23 +213,11 @@ msgstr "Nemohu zapisovat do zařízení \"%s\"."
 #~ msgid "No device specified."
 #~ msgstr "Nezadáno zařízení."
 
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Nemohu otevřít zařízení \"%s\" pro čtení a zápis."
-
 #~ msgid "Device is not open."
 #~ msgstr "Zařízení není otevřeno."
 
 #~ msgid "Device is open."
 #~ msgstr "Zařízení je otevřeno."
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Zařízení \"%s\" není zachytávací zařízení."
-
-#~ msgid "Could not get buffers from device \"%s\"."
-#~ msgstr "Nemohu od zařízení \"%s\" získat vyrovnávací paměti."
-
-#~ msgid "Could not get enough buffers from device \"%s\"."
-#~ msgstr "Nemohu od zařízení \"%s\" získat dost vyrovnávacích pamětí."
 
 #~ msgid ""
 #~ "The %s element could not be found. This element is essential for "

@@ -1,3 +1,94 @@
+2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  rework like the other configure.ac files
+	* Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-decl-list.txt:
+	* ext/amrwb/gstamrwb.c:
+	* ext/arts/gst_arts.c:
+	* ext/artsd/gstartsdsink.c:
+	* ext/audiofile/gstaf.c:
+	* ext/audioresample/gstaudioresample.c:
+	* ext/bz2/gstbz2.c:
+	* ext/cdaudio/gstcdaudio.c:
+	* ext/directfb/dfbvideosink.c:
+	* ext/dts/gstdtsdec.c:
+	* ext/faac/gstfaac.c:
+	* ext/faad/gstfaad.c:
+	* ext/hermes/gsthermescolorspace.c:
+	* ext/ivorbis/vorbis.c:
+	* ext/jack/gstjack.c:
+	* ext/lcs/gstcolorspace.c:
+	* ext/musepack/gstmusepackdec.c:
+	* ext/musicbrainz/gsttrm.c:
+	* ext/nas/nassink.c:
+	* ext/sdl/gstsdl.c:
+	* ext/snapshot/gstsnapshot.c:
+	* ext/sndfile/gstsf.c:
+	* ext/swfdec/gstswfdec.c:
+	* ext/tarkin/gsttarkin.c:
+	* ext/xine/xine.c:
+	* ext/xvid/gstxvid.c:
+	* gst/cdxaparse/gstcdxaparse.c:
+	* gst/chart/gstchart.c:
+	* gst/colorspace/gstcolorspace.c:
+	* gst/deinterlace/gstdeinterlace.c:
+	* gst/equalizer/gstiirequalizer.c:
+	* gst/festival/gstfestival.c:
+	* gst/filter/gstfilter.c:
+	* gst/freeze/gstfreeze.c:
+	* gst/games/gstpuzzle.c:
+	* gst/librfb/gstrfbsrc.c:
+	* gst/mixmatrix/mixmatrix.c:
+	* gst/mpeg1sys/gstmpeg1systemencode.c:
+	* gst/mpeg1videoparse/gstmp1videoparse.c:
+	* gst/mpeg2sub/gstmpeg2subt.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/multifilesink/gstmultifilesink.c:
+	* gst/overlay/gstoverlay.c:
+	* gst/passthrough/gstpassthrough.c:
+	* gst/playondemand/gstplayondemand.c:
+	* gst/qtdemux/qtdemux.c:
+	* gst/rtjpeg/gstrtjpeg.c:
+	* gst/smooth/gstsmooth.c:
+	* gst/smoothwave/gstsmoothwave.c:
+	* gst/spectrum/gstspectrum.c:
+	* gst/speed/gstspeed.c:
+	* gst/stereo/gststereo.c:
+	* gst/switch/gstswitch.c:
+	* gst/vbidec/gstvbidec.c:
+	* gst/videocrop/gstvideocrop.c:
+	* gst/videodrop/gstvideodrop.c:
+	* gst/virtualdub/gstvirtualdub.c:
+	* gst/xingheader/gstxingmux.c:
+	* gst/y4m/gsty4mencode.c:
+	* sys/cdrom/gstcdplayer.c:
+	* sys/directdraw/gstdirectdrawplugin.c:
+	* sys/directsound/gstdirectsoundplugin.c:
+	* sys/dxr3/dxr3init.c:
+	* sys/glsink/glimagesink.c:
+	* sys/qcam/gstqcamsrc.c:
+	* sys/v4l2/gstv4l2.c:
+	* sys/vcd/vcdsrc.c:
+	* sys/ximagesrc/ximagesrc.c:
+	  update to use correct defines
+	* po/POTFILES.in:
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	  v4l2 has translations, pick them up
+
 2006-03-31  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/ximagesrc/ximagesrc.c: 

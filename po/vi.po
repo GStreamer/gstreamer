@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-26 15:32+0200\n"
+"POT-Creation-Date: 2006-03-31 23:33+0200\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -16,64 +16,68 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/sndfile/gstsf.c:586
-msgid "No filename specified."
-msgstr "Chưa ghi rõ tên tập tin."
-
-#: ext/sndfile/gstsf.c:625
+#: sys/v4l2/v4l2_calls.c:409
 #, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Đã không mở được tập tin \"%s\" để ghi."
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Đã không mở được thiết bị \"%s\" để đọc và ghi."
 
-#: ext/sndfile/gstsf.c:839
+#: sys/v4l2/v4l2_calls.c:423
 #, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Đã không ghi được vào tập tin \"%s\"."
+msgid "Device \"%s\" is not a capture device."
+msgstr "Thiết bị \"%s\" không bắt gì được."
 
-#: sys/dxr3/dxr3audiosink.c:298
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Đã không mở được thiết bị âm thanh \"%s\" để ghi."
-
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Đã không mở được thiết bị điều khiển \"%s\" để ghi."
-
-#: sys/dxr3/dxr3audiosink.c:343
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Đã không định cầu hình được thiết bị âm thanh \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Đã không đặt được thiết bị âm thanh \"%s\" thành %d Hz."
-
-#: sys/dxr3/dxr3audiosink.c:422
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Đã không đóng được thiết bị âm thanh \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Đã không đóng được thiết bị điều khiển \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:271
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Đã không mở được thiết bị ảnh động \"%s\" để ghi."
-
-#: sys/dxr3/dxr3videosink.c:301
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Đã không đóng được thiết bị ảnh động \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:453
+#: sys/v4l2/v4l2src_calls.c:127
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Đã không ghi được vào thiết bị \"%s\"."
+
+#: sys/v4l2/v4l2src_calls.c:303
+#, c-format
+msgid "Could not get buffers from device \"%s\"."
+msgstr "Đã không gọi được bộ đệm nào từ thiết bị \"%s\"."
+
+#: sys/v4l2/v4l2src_calls.c:315
+#, c-format
+msgid "the driver of device \"%s\" is broken."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:325
+#, c-format
+msgid "Could not get enough buffers from device \"%s\"."
+msgstr "Đã không gọi được đủ bộ đệm từ thiết bị \"%s\"."
+
+#~ msgid "No filename specified."
+#~ msgstr "Chưa ghi rõ tên tập tin."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Đã không mở được tập tin \"%s\" để ghi."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Đã không ghi được vào tập tin \"%s\"."
+
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Đã không mở được thiết bị âm thanh \"%s\" để ghi."
+
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "Đã không mở được thiết bị điều khiển \"%s\" để ghi."
+
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Đã không định cầu hình được thiết bị âm thanh \"%s\"."
+
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "Đã không đặt được thiết bị âm thanh \"%s\" thành %d Hz."
+
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "Đã không đóng được thiết bị âm thanh \"%s\"."
+
+#~ msgid "Could not close control device \"%s\"."
+#~ msgstr "Đã không đóng được thiết bị điều khiển \"%s\"."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "Đã không mở được thiết bị ảnh động \"%s\" để ghi."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "Đã không đóng được thiết bị ảnh động \"%s\"."
 
 #~ msgid "Error closing file \"%s\"."
 #~ msgstr "Lỗi khi đóng tập tin \"%s\"."
@@ -209,23 +213,11 @@ msgstr "Đã không ghi được vào thiết bị \"%s\"."
 #~ msgid "No device specified."
 #~ msgstr "Chưa ghi rõ thiết bị nào"
 
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Đã không mở được thiết bị \"%s\" để đọc và ghi."
-
 #~ msgid "Device is not open."
 #~ msgstr "Thiết bị chưa mở"
 
 #~ msgid "Device is open."
 #~ msgstr "Thiết bị mở rồi"
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Thiết bị \"%s\" không bắt gì được."
-
-#~ msgid "Could not get buffers from device \"%s\"."
-#~ msgstr "Đã không gọi được bộ đệm nào từ thiết bị \"%s\"."
-
-#~ msgid "Could not get enough buffers from device \"%s\"."
-#~ msgstr "Đã không gọi được đủ bộ đệm từ thiết bị \"%s\"."
 
 #~ msgid ""
 #~ "The %s element could not be found. This element is essential for "

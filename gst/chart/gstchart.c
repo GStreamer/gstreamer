@@ -401,4 +401,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "chart",
     "Takes frames of data and outputs video frames of a chart of data",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

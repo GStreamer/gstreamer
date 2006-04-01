@@ -912,4 +912,4 @@ GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "swfdec",
     "Uses libswfdec to decode Flash video streams",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

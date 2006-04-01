@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-26 15:32+0200\n"
+"POT-Creation-Date: 2006-03-31 23:33+0200\n"
 "PO-Revision-Date: 2004-08-03 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -15,64 +15,68 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/sndfile/gstsf.c:586
-msgid "No filename specified."
-msgstr "Не вказаний файл."
-
-#: ext/sndfile/gstsf.c:625
+#: sys/v4l2/v4l2_calls.c:409
 #, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Не вдається відкрити файл \"%s\" для запису."
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Не вдається відкрити пристрій \"%s\" для читання чи запису."
 
-#: ext/sndfile/gstsf.c:839
+#: sys/v4l2/v4l2_calls.c:423
 #, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Не вдається записати у файл \"%s\"."
+msgid "Device \"%s\" is not a capture device."
+msgstr "Пристрій \"%s\" не є пристроєм захоплення."
 
-#: sys/dxr3/dxr3audiosink.c:298
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Не вдається відкрити звуковий пристрій \"%s\" для запису."
-
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Не вдається відкрити пристрій керування \"%s\" для запису."
-
-#: sys/dxr3/dxr3audiosink.c:343
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Не вдається настроїти звуковий пристрій \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Не вдається встановити частоту \"%s\" у %d Гц."
-
-#: sys/dxr3/dxr3audiosink.c:422
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Не вдається закрити звуковий пристрій \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Не вдається закрити пристрій керування \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:271
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Не вдається відкрити відео пристрій \"%s\" для запису."
-
-#: sys/dxr3/dxr3videosink.c:301
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Не вдається закрити відео пристрій \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:453
+#: sys/v4l2/v4l2src_calls.c:127
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Не вдається записати у пристрій \"%s\"."
+
+#: sys/v4l2/v4l2src_calls.c:303
+#, c-format
+msgid "Could not get buffers from device \"%s\"."
+msgstr "Не вдається отримати буфери від пристрою \"%s\"."
+
+#: sys/v4l2/v4l2src_calls.c:315
+#, c-format
+msgid "the driver of device \"%s\" is broken."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:325
+#, c-format
+msgid "Could not get enough buffers from device \"%s\"."
+msgstr "Не вдається отримати достатньо буферів від пристрою \"%s\"."
+
+#~ msgid "No filename specified."
+#~ msgstr "Не вказаний файл."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Не вдається відкрити файл \"%s\" для запису."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Не вдається записати у файл \"%s\"."
+
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Не вдається відкрити звуковий пристрій \"%s\" для запису."
+
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "Не вдається відкрити пристрій керування \"%s\" для запису."
+
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Не вдається настроїти звуковий пристрій \"%s\"."
+
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "Не вдається встановити частоту \"%s\" у %d Гц."
+
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "Не вдається закрити звуковий пристрій \"%s\"."
+
+#~ msgid "Could not close control device \"%s\"."
+#~ msgstr "Не вдається закрити пристрій керування \"%s\"."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "Не вдається відкрити відео пристрій \"%s\" для запису."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "Не вдається закрити відео пристрій \"%s\"."
 
 #~ msgid "Error closing file \"%s\"."
 #~ msgstr "Помилка закривання файлу \"%s\"."
@@ -212,20 +216,8 @@ msgstr "Не вдається записати у пристрій \"%s\"."
 #~ msgid "No device specified."
 #~ msgstr "Пристрій не вказано."
 
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Не вдається відкрити пристрій \"%s\" для читання чи запису."
-
 #~ msgid "Device is not open."
 #~ msgstr "Пристрій не відкритий."
 
 #~ msgid "Device is open."
 #~ msgstr "Пристрій відкритий."
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Пристрій \"%s\" не є пристроєм захоплення."
-
-#~ msgid "Could not get buffers from device \"%s\"."
-#~ msgstr "Не вдається отримати буфери від пристрою \"%s\"."
-
-#~ msgid "Could not get enough buffers from device \"%s\"."
-#~ msgstr "Не вдається отримати достатньо буферів від пристрою \"%s\"."

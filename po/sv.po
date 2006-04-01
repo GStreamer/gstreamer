@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.25 2005/10/26 13:40:33 thomasvs Exp $
+# $Id: sv.po,v 1.26 2006/04/01 10:09:11 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-26 15:32+0200\n"
+"POT-Creation-Date: 2006-03-31 23:33+0200\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -16,64 +16,68 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/sndfile/gstsf.c:586
-msgid "No filename specified."
-msgstr "Inget filnamn angivet."
-
-#: ext/sndfile/gstsf.c:625
+#: sys/v4l2/v4l2_calls.c:409
 #, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Kunde inte öppna filen \"%s\" för skrivning."
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 
-#: ext/sndfile/gstsf.c:839
+#: sys/v4l2/v4l2_calls.c:423
 #, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Kunde inte skriva till filen \"%s\"."
+msgid "Device \"%s\" is not a capture device."
+msgstr "Enheten \"%s\" är ingen fångstenhet."
 
-#: sys/dxr3/dxr3audiosink.c:298
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Kunde inte öppna ljudenheten \"%s\" för skrivning."
-
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Kunde inte öppna styrenheten \"%s\" för skrivning."
-
-#: sys/dxr3/dxr3audiosink.c:343
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Kunde inte konfigurera ljudenheten \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Kan inte ställa in ljudenheten \"%s\" till %d Hz."
-
-#: sys/dxr3/dxr3audiosink.c:422
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Kunde inte stänga ljudenheten \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Kunde inte stänga styrenheten \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:271
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Kunde inte öppna videoenheten \"%s\" för skrivning."
-
-#: sys/dxr3/dxr3videosink.c:301
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Kunde inte stänga vidoeenheten \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:453
+#: sys/v4l2/v4l2src_calls.c:127
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Kunde inte skriva till enheten \"%s\"."
+
+#: sys/v4l2/v4l2src_calls.c:303
+#, c-format
+msgid "Could not get buffers from device \"%s\"."
+msgstr "Kunde inte få tag i buffertar från enheten \"%s\"."
+
+#: sys/v4l2/v4l2src_calls.c:315
+#, c-format
+msgid "the driver of device \"%s\" is broken."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:325
+#, c-format
+msgid "Could not get enough buffers from device \"%s\"."
+msgstr "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"."
+
+#~ msgid "No filename specified."
+#~ msgstr "Inget filnamn angivet."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Kunde inte öppna filen \"%s\" för skrivning."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Kunde inte skriva till filen \"%s\"."
+
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Kunde inte öppna ljudenheten \"%s\" för skrivning."
+
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "Kunde inte öppna styrenheten \"%s\" för skrivning."
+
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Kunde inte konfigurera ljudenheten \"%s\"."
+
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "Kan inte ställa in ljudenheten \"%s\" till %d Hz."
+
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "Kunde inte stänga ljudenheten \"%s\"."
+
+#~ msgid "Could not close control device \"%s\"."
+#~ msgstr "Kunde inte stänga styrenheten \"%s\"."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "Kunde inte öppna videoenheten \"%s\" för skrivning."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "Kunde inte stänga vidoeenheten \"%s\"."
 
 #~ msgid "Error closing file \"%s\"."
 #~ msgstr "Fel vid stängning av filen \"%s\"."
@@ -222,24 +226,11 @@ msgstr "Kunde inte skriva till enheten \"%s\"."
 #~ msgid "No device specified."
 #~ msgstr "Ingen enheten angiven."
 
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
-
 #~ msgid "Device is not open."
 #~ msgstr "Enheten är inte öppen."
 
 #~ msgid "Device is open."
 #~ msgstr "Enheten är öppen."
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Enheten \"%s\" är ingen fångstenhet."
-
-#~ msgid "Could not get buffers from device \"%s\"."
-#~ msgstr "Kunde inte få tag i buffertar från enheten \"%s\"."
-
-#~ msgid "Could not get enough buffers from device \"%s\"."
-#~ msgstr ""
-#~ "Kunde inte få tag i tillräckligt många buffertar från enheten \"%s\"."
 
 #~ msgid ""
 #~ "The %s element could not be found. This element is essential for "

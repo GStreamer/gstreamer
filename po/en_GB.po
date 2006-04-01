@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-10-26 15:32+0200\n"
+"POT-Creation-Date: 2006-03-31 23:33+0200\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -14,64 +14,68 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/sndfile/gstsf.c:586
-msgid "No filename specified."
-msgstr "No filename specified."
-
-#: ext/sndfile/gstsf.c:625
+#: sys/v4l2/v4l2_calls.c:409
 #, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Could not open file \"%s\" for writing."
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Could not open device \"%s\" for reading and writing."
 
-#: ext/sndfile/gstsf.c:839
+#: sys/v4l2/v4l2_calls.c:423
 #, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Could not write to file \"%s\"."
+msgid "Device \"%s\" is not a capture device."
+msgstr "Device \"%s\" is not a capture device."
 
-#: sys/dxr3/dxr3audiosink.c:298
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Could not open audio device \"%s\" for writing."
-
-#: sys/dxr3/dxr3audiosink.c:310 sys/dxr3/dxr3videosink.c:283
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Could not open control device \"%s\" for writing."
-
-#: sys/dxr3/dxr3audiosink.c:343
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Could not configure audio device \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:357 sys/dxr3/dxr3audiosink.c:394
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Could not set audio device \"%s\" to %d Hz."
-
-#: sys/dxr3/dxr3audiosink.c:422
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Could not close audio device \"%s\"."
-
-#: sys/dxr3/dxr3audiosink.c:429 sys/dxr3/dxr3videosink.c:308
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Could not close control device \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:271
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Could not open video device \"%s\" for writing."
-
-#: sys/dxr3/dxr3videosink.c:301
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Could not close video device \"%s\"."
-
-#: sys/dxr3/dxr3videosink.c:453
+#: sys/v4l2/v4l2src_calls.c:127
 #, c-format
 msgid "Could not write to device \"%s\"."
 msgstr "Could not write to device \"%s\"."
+
+#: sys/v4l2/v4l2src_calls.c:303
+#, c-format
+msgid "Could not get buffers from device \"%s\"."
+msgstr "Could not get buffers from device \"%s\"."
+
+#: sys/v4l2/v4l2src_calls.c:315
+#, c-format
+msgid "the driver of device \"%s\" is broken."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:325
+#, c-format
+msgid "Could not get enough buffers from device \"%s\"."
+msgstr "Could not get enough buffers from device \"%s\"."
+
+#~ msgid "No filename specified."
+#~ msgstr "No filename specified."
+
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Could not open file \"%s\" for writing."
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Could not write to file \"%s\"."
+
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Could not open audio device \"%s\" for writing."
+
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "Could not open control device \"%s\" for writing."
+
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Could not configure audio device \"%s\"."
+
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "Could not set audio device \"%s\" to %d Hz."
+
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "Could not close audio device \"%s\"."
+
+#~ msgid "Could not close control device \"%s\"."
+#~ msgstr "Could not close control device \"%s\"."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "Could not open video device \"%s\" for writing."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "Could not close video device \"%s\"."
 
 #~ msgid "Error closing file \"%s\"."
 #~ msgstr "Error closing file \"%s\"."
@@ -207,20 +211,8 @@ msgstr "Could not write to device \"%s\"."
 #~ msgid "No device specified."
 #~ msgstr "No device specified."
 
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Could not open device \"%s\" for reading and writing."
-
 #~ msgid "Device is not open."
 #~ msgstr "Device is not open."
 
 #~ msgid "Device is open."
 #~ msgstr "Device is open."
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Device \"%s\" is not a capture device."
-
-#~ msgid "Could not get buffers from device \"%s\"."
-#~ msgstr "Could not get buffers from device \"%s\"."
-
-#~ msgid "Could not get enough buffers from device \"%s\"."
-#~ msgstr "Could not get enough buffers from device \"%s\"."

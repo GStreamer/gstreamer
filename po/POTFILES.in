@@ -4,3 +4,6 @@
 # sys/dxr3/dxr3audiosink.c
 # sys/dxr3/dxr3audiosink.c
 # sys/dxr3/dxr3videosink.c
+
+sys/v4l2/v4l2_calls.c
+sys/v4l2/v4l2src_calls.c

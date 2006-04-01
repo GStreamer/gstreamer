@@ -123,4 +123,5 @@ plugin_init (GModule * module, GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "virtualdub",
-    "VirtualDub", plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN);
+    "VirtualDub", plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME,
+    GST_PACKAGE_ORIGIN);
