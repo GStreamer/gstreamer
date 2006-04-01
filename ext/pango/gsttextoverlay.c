@@ -44,7 +44,7 @@
  * </programlisting>
  * </para>
  * <para>
- * Here is another pipeline that displays subtitles from an .srt subtitle 
+ * Here is another pipeline that displays subtitles from an .srt subtitle
  * file, centered at the bottom of the picture and with a rectangular shading
  * around the text in the background:
  * <programlisting>
@@ -56,12 +56,12 @@
  * 1
  * 00:00:03,000 --> 00:00:05,000
  * Hello? (3-5s)
- * 
+ *  
  * 2
  * 00:00:08,000 --> 00:00:13,000
  * Yes, this is a subtitle. Don&apos;t
  * you like it? (8-13s)
- * 
+ *  
  * 3
  * 00:00:18,826 --> 00:01:02,886
  * Uh? What are you talking about?
