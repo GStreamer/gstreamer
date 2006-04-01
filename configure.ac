@@ -1,13 +1,20 @@
 AC_PREREQ(2.52)
 
 dnl initialize autoconf
-dnl we don't specify PACKAGE and VERSION because AS_VERSION puts it together
-AC_INIT
-
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AS_VERSION(gst-plugins-base, GST_PLUGINS_BASE_VERSION, 0, 10, 5, 1,
-    GST_CVS="no", GST_CVS="yes")
+AC_INIT(GStreamer Base Plug-ins, 0.10.5.1,
+    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
+    gst-plugins-base)
+
+dnl initialize automake
+AM_INIT_AUTOMAKE
+
+dnl define PACKAGE_VERSION_* variables
+AS_VERSION
+
+dnl check if this is a release version
+AS_NANO(GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
 AC_CONFIG_SRCDIR([gst/audiotestsrc/gstaudiotestsrc.c])
@@ -21,13 +28,8 @@ AM_MAINTAINER_MODE
 dnl sets host_* variables
 AC_CANONICAL_HOST
 
-dnl initialize automake
-dnl FIXME: this is deprecated use, we should move PACKAGE and VERSION to
-dnl AC_INIT, but then we need to parse the version to pass to AS_VERSION
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION)
-
 dnl our libraries and install dirs use major.minor as a version
-GST_MAJORMINOR=$GST_PLUGINS_BASE_VERSION_MAJOR.$GST_PLUGINS_BASE_VERSION_MINOR
+GST_MAJORMINOR=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
 GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
@@ -69,7 +71,7 @@ GST_ARG_GCOV
 GST_ARG_EXAMPLES
 
 GST_ARG_WITH_PKG_CONFIG_PATH
-GST_ARG_WITH_PACKAGE_NAME([GStreamer Base Plug-ins])
+GST_ARG_WITH_PACKAGE_NAME
 GST_ARG_WITH_PACKAGE_ORIGIN
 
 dnl these are all the gst plug-ins, compilable without additional libs
@@ -205,7 +207,8 @@ GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.6, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
-if test "x${HAVE_LIBOIL}" != xyes ; then
+if test "x$HAVE_LIBOIL" != "xyes"
+then
   AC_ERROR([liboil-0.3.6 or later is required])
 fi
 
@@ -299,47 +302,12 @@ GST_CHECK_FEATURE(X, [X libraries and plugins],
   CPPFLAGS="$ac_cppflags_save"
 ])
   
-dnl *** XVideo ***
-dnl Look for the PIC library first, Debian requires it.
-dnl Check debian-devel archives for gory details.
-dnl 20020110:
-dnl At the moment XFree86 doesn't distribute shared libXv due
-dnl to unstable API.  On many platforms you CAN NOT link a shared
-dnl lib to a static non-PIC lib.  This is what the xvideo GStreamer
-dnl plug-in wants to do.  So Debian distributes a PIC compiled
-dnl version of the static lib for plug-ins to link to when it is
-dnl inappropriate to link the main application to libXv directly.
-dnl FIXME: add check if this platform can support linking to a
-dnl        non-PIC libXv, if not then don not use Xv.
-dnl FIXME: perhaps warn user if they have a shared libXv since
-dnl        this is an error until XFree86 starts shipping one
-   
+  
 dnl Check for Xv extension
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
                   [xvimagesink], [
-  if test x$HAVE_X = xyes; then
-    AC_CHECK_LIB(Xv_pic, XvQueryExtension,
-		 HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
-		 $X_LIBS -lXext)
-
-    if test x$HAVE_XVIDEO = xyes; then
-      XVIDEO_LIBS="-lXv_pic -lXext"
-      AC_SUBST(XVIDEO_LIBS)
-    else
-      dnl try again using something else if we didn't find it first
-      if test x$HAVE_XVIDEO = xno; then
-        AC_CHECK_LIB(Xv, XvQueryExtension,
-		   HAVE_XVIDEO="yes", HAVE_XVIDEO="no",
-		   $X_LIBS -lXext)
-
-        if test x$HAVE_XVIDEO = xyes; then
-          XVIDEO_LIBS="-lXv -lXext"
-          AC_SUBST(XVIDEO_LIBS)
-        fi
-      fi
-    fi
-  fi
+  GST_CHECK_XV
 ])
 
 dnl check for X Shm
@@ -435,16 +403,6 @@ GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
 dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
-GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
-  [HAVE_EXTERNAL=yes], enabled,
-  [
-    AC_MSG_NOTICE(building external plug-ins)
-    BUILD_EXTERNAL="yes"
-  ],[
-    AC_MSG_NOTICE(all plug-ins with external dependencies will not be built)
-    BUILD_EXTERNAL="no"
-  ])
-
 
 dnl *** Gnome VFS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
@@ -655,15 +613,4 @@ m4/Makefile
 )
 AC_OUTPUT
 
-echo "configure: *** Core plug-ins, always built:"
-( for i in $GST_PLUGINS_ALL; do echo -e '\t'$i; done ) | sort
-echo
-echo -n "configure: *** Plug-ins relying on libraries that will be built:"
-echo -e "$GST_PLUGINS_YES" | sort
-echo
-echo -n "configure: *** Plug-ins relying on libraries that will NOT be built:"
-echo -e "$GST_PLUGINS_NO" | sort
-echo
-if test "x$BUILD_EXTERNAL" = "xno"; then
-  echo "configure: *** No external plug-ins will be built"
-fi
+GST_OUTPUT_PLUGINS

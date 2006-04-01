@@ -38,20 +38,11 @@
 /* GStreamer license */
 #define GST_LICENSE "LGPL"
 
-/* package origin */
-#define GST_PACKAGE_ORIGIN "Unknown package origin"
-
 /* package name in plugins */
 #define GST_PACKAGE_NAME "GStreamer Base Plug-ins CVS/prerelease"
 
-/* Define the version */
-#define GST_VERSION "@GST_VERSION@"
-
-/* Define the MAJOR.MINOR version */
-#define GST_MAJORMINOR "0.10"
-
-/* Define host CPU */
-#define HOST_CPU "@HOST_CPU@"
+/* package origin */
+#define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* support for features: gstalsa */
 #undef HAVE_ALSA
@@ -214,19 +205,19 @@
 #define PACKAGE "gst-plugins-base"
 
 /* Define to the address where bug reports for this package should be sent. */
-#undef PACKAGE_BUGREPORT
+#define PACKAGE_BUGREPORT "http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME
+#undef PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
+#undef PACKAGE_STRING "GStreamer Base Plug-ins 0.10.5.1"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME
+#undef PACKAGE_TARNAME "gst-plugins-base"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION
+#undef PACKAGE_VERSION "0.10.5.1"
 
 /* directory where plugins are located */
 #undef PLUGINDIR

@@ -38,20 +38,11 @@
 /* GStreamer license */
 #define GST_LICENSE "@GST_LICENSE@"
 
-/* package origin */
-#define GST_PACKAGE_ORIGIN "@GST_PACKAGE_ORIGIN@"
-
 /* package name in plugins */
 #define GST_PACKAGE_NAME "@GST_PACKAGE_NAME@"
 
-/* Define the version */
-#define GST_VERSION "@GST_VERSION@"
-
-/* Define the MAJOR.MINOR version */
-#define GST_MAJORMINOR "@GST_MAJORMINOR@"
-
-/* Define host CPU */
-#define HOST_CPU "@HOST_CPU@"
+/* package origin */
+#define GST_PACKAGE_ORIGIN "@GST_PACKAGE_ORIGIN@"
 
 /* support for features: gstalsa */
 #undef HAVE_ALSA
@@ -214,19 +205,19 @@
 #define PACKAGE "@PACKAGE@"
 
 /* Define to the address where bug reports for this package should be sent. */
-#undef PACKAGE_BUGREPORT
+#define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME
+#undef PACKAGE_NAME "@PACKAGE_NAME@"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
+#undef PACKAGE_STRING "@PACKAGE_STRING@"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME
+#undef PACKAGE_TARNAME "@PACKAGE_TARNAME@"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION
+#undef PACKAGE_VERSION "@PACKAGE_VERSION@"
 
 /* directory where plugins are located */
 #undef PLUGINDIR
