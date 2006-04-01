@@ -3,15 +3,15 @@
   <description>parses au streams</description>
   <filename>../../gst/auparse/.libs/libgstauparse.so</filename>
   <basename>libgstauparse.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>auparse</name>
-      <longname>.au parser</longname>
+      <longname>AU audio demuxer</longname>
       <class>Codec/Demuxer/Audio</class>
       <description>Parse an .au file into raw audio</description>
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>

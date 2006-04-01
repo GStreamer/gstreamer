@@ -3,10 +3,10 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -27,29 +27,15 @@
       <name>rtpamrpay</name>
       <longname>RTP packet parser</longname>
       <class>Codec/Payloader/Network</class>
-      <description>Payode AMR audio into RTP packets (RFC 3267)</description>
+      <description>Payload-encode AMR audio into RTP packets (RFC 3267)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpdepay</name>
-      <longname>RTP Payloader</longname>
+      <longname>RTP payloader</longname>
       <class>Codec/Depayr/Network</class>
       <description>Accepts raw RTP and RTCP packets and sends them forward</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
-    </element>
-    <element>
-      <name>rtpg711depay</name>
-      <longname>RTP packet parser</longname>
-      <class>Codec/Depayr/Network</class>
-      <description>Extracts PCMU/PCMA audio from RTP packets</description>
-      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
-    </element>
-    <element>
-      <name>rtpg711pay</name>
-      <longname>RTP packet parser</longname>
-      <class>Codec/Payloader/Network</class>
-      <description>Payload-encodes PCMU/PCMA audio into a RTP packet</description>
-      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
     </element>
     <element>
       <name>rtpgsmdepay</name>
@@ -60,7 +46,7 @@
     </element>
     <element>
       <name>rtpgsmpay</name>
-      <longname>RTP GSM Audio Payloader</longname>
+      <longname>RTP GSM audio payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload-encodes GSM audio into a RTP packet</description>
       <author>Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
@@ -84,6 +70,13 @@
       <longname>RTP packet parser</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload-encodes H263+ video in RTP packets (RFC 2429)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpmp4gpay</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload MPEG4 elementary streams as RTP packets (RFC 3640)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
@@ -113,6 +106,34 @@
       <class>Codec/Payloader/Network</class>
       <description>Payode MPEG audio as RTP packets (RFC 2038)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtppcmadepay</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Depayr/Network</class>
+      <description>Extracts PCMA audio from RTP packets</description>
+      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
+    </element>
+    <element>
+      <name>rtppcmapay</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload-encodes PCMA audio into a RTP packet</description>
+      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
+    </element>
+    <element>
+      <name>rtppcmudepay</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Depayr/Network</class>
+      <description>Extracts PCMU audio from RTP packets</description>
+      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
+    </element>
+    <element>
+      <name>rtppcmupay</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload-encodes PCMU audio into a RTP packet</description>
+      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
     </element>
     <element>
       <name>rtpspeexdepay</name>

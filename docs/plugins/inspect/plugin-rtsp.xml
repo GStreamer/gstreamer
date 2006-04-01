@@ -3,17 +3,24 @@
   <description>transfer data via RTSP</description>
   <filename>../../gst/rtsp/.libs/libgstrtsp.so</filename>
   <basename>libgstrtsp.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
+    <element>
+      <name>rtpdec</name>
+      <longname>RTP Decoder</longname>
+      <class>Codec/Parser/Network</class>
+      <description>Accepts raw RTP and RTCP packets and sends them forward</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
     <element>
       <name>rtspsrc</name>
       <longname>RTSP packet receiver</longname>
       <class>Source/Network</class>
-      <description>Receive data over the network via RTSP</description>
+      <description>Receive data over the network via RTSP (RFC 2326)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
   </elements>

@@ -3,15 +3,15 @@
   <description>adds an alpha channel to video</description>
   <filename>../../gst/alpha/.libs/libgstalpha.so</filename>
   <basename>libgstalpha.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>alpha</name>
-      <longname>alpha filter</longname>
+      <longname>Alpha filter</longname>
       <class>Filter/Effect/Video</class>
       <description>Adds an alpha channel to video</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>

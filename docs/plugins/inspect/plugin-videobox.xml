@@ -3,15 +3,15 @@
   <description>resizes a video by adding borders or cropping</description>
   <filename>../../gst/videobox/.libs/libgstvideobox.so</filename>
   <basename>libgstvideobox.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>videobox</name>
-      <longname>video box filter</longname>
+      <longname>Video box filter</longname>
       <class>Filter/Effect/Video</class>
       <description>Resizes a video by adding borders or cropping</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>

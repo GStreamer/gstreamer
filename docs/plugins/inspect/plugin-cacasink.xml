@@ -3,15 +3,15 @@
   <description>Colored ASCII Art video sink</description>
   <filename>../../ext/libcaca/.libs/libgstcacasink.so</filename>
   <basename>libgstcacasink.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>cacasink</name>
-      <longname>CACA sink</longname>
+      <longname>A colored ASCII art video sink</longname>
       <class>Sink/Video</class>
       <description>A colored ASCII art videosink</description>
       <author>Zeeshan Ali &lt;zak147@yahoo.com&gt;</author>

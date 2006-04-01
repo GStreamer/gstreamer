@@ -3,24 +3,24 @@
   <description>DV demuxer and decoder based on libdv (libdv.sf.net)</description>
   <filename>../../ext/dv/.libs/libgstdv.so</filename>
   <basename>libgstdv.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>dvdec</name>
-      <longname>DV (smpte314) decoder plugin</longname>
+      <longname>DV video decoder</longname>
       <class>Codec/Decoder/Video</class>
-      <description>Uses libdv to decode DV video (libdv.sourceforge.net)</description>
+      <description>Uses libdv to decode DV video (smpte314) (libdv.sourceforge.net)</description>
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;,Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>dvdemux</name>
       <longname>DV system stream demuxer</longname>
       <class>Codec/Demuxer</class>
-      <description>Uses libdv to separate DV audio from DV video</description>
+      <description>Uses libdv to separate DV audio from DV video (libdv.sourceforge.net)</description>
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
   </elements>

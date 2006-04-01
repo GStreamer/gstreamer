@@ -1,0 +1,20 @@
+<plugin>
+  <name>videobalance</name>
+  <description>Changes hue, saturation, brightness etc. on video images</description>
+  <filename>../../gst/videofilter/.libs/libgstvideobalance.so</filename>
+  <basename>libgstvideobalance.so</basename>
+  <version>0.10.2.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>videobalance</name>
+      <longname>Video balance</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Adjusts brightness, contrast, hue, saturation on a video stream</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+    </element>
+  </elements>
+</plugin>

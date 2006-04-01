@@ -1,0 +1,29 @@
+<plugin>
+  <name>gdkpixbuf</name>
+  <description>GDK Pixbuf decoder &amp; scaler</description>
+  <filename>../../ext/gdk_pixbuf/.libs/libgstgdkpixbuf.so</filename>
+  <basename>libgstgdkpixbuf.so</basename>
+  <version>0.10.2.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>gdkpixbufdec</name>
+      <longname>GdkPixbuf image decoder</longname>
+      <class>Codec/Decoder/Image</class>
+      <description>Decodes images in a video stream using GdkPixbuf</description>
+      <author>David A. Schleef &lt;ds@schleef.org&gt;, Renato Filho &lt;renato.filho@indt.org.br&gt;</author>
+    </element>
+    <element>
+      <name>gdkpixbufscale</name>
+      <longname>GdkPixbuf image scaler</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Resizes video</description>
+      <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;
+    Wim Taymans &lt;wim.taymans@chello.be&gt;
+    Renato Filho &lt;renato.filho@indt.org.br&gt;</author>
+    </element>
+  </elements>
+</plugin>

@@ -3,15 +3,15 @@
   <description>Encode raw audio into WAV</description>
   <filename>../../gst/wavenc/.libs/libgstwavenc.so</filename>
   <basename>libgstwavenc.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>wavenc</name>
-      <longname>WAV encoder</longname>
+      <longname>WAV audio muxer</longname>
       <class>Codec/Muxer/Audio</class>
       <description>Encode raw audio into WAV</description>
       <author>Iain Holmes &lt;iain@prettypeople.org&gt;</author>

@@ -3,22 +3,22 @@
   <description>Speex plugin library</description>
   <filename>../../ext/speex/.libs/libgstspeex.so</filename>
   <basename>libgstspeex.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>speexdec</name>
-      <longname>SpeexDec</longname>
+      <longname>Speex audio decoder</longname>
       <class>Codec/Decoder/Audio</class>
       <description>decode speex streams to audio</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>speexenc</name>
-      <longname>Speex encoder</longname>
+      <longname>Speex audio encoder</longname>
       <class>Codec/Encoder/Audio</class>
       <description>Encodes audio in Speex format</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>

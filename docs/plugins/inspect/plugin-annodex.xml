@@ -1,0 +1,27 @@
+<plugin>
+  <name>annodex</name>
+  <description>annodex stream manipulation (info about annodex: http://www.annodex.net)</description>
+  <filename>../../ext/annodex/.libs/libgstannodex.so</filename>
+  <basename>libgstannodex.so</basename>
+  <version>0.10.2.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>cmmldec</name>
+      <longname>CMML stream decoder</longname>
+      <class>Codec/Decoder</class>
+      <description>Decodes CMML streams</description>
+      <author>Alessandro Decina &lt;alessandro@nnva.org&gt;</author>
+    </element>
+    <element>
+      <name>cmmlenc</name>
+      <longname>CMML streams encoder</longname>
+      <class>Codec/Encoder</class>
+      <description>Encodes CMML streams</description>
+      <author>Alessandro Decina &lt;alessandro@nnva.org&gt;</author>
+    </element>
+  </elements>
+</plugin>

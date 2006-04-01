@@ -3,15 +3,15 @@
   <description>Parse a .wav file into raw audio</description>
   <filename>../../gst/wavparse/.libs/libgstwavparse.so</filename>
   <basename>libgstwavparse.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>wavparse</name>
-      <longname>.wav demuxer</longname>
+      <longname>WAV audio demuxer</longname>
       <class>Codec/Demuxer/Audio</class>
       <description>Parse a .wav file into raw audio</description>
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>

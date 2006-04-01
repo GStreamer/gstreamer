@@ -1,0 +1,27 @@
+<plugin>
+  <name>halelements</name>
+  <description>elements wrapping the GStreamer/HAL audio input/output devices</description>
+  <filename>../../ext/hal/.libs/libgsthalelements.so</filename>
+  <basename>libgsthalelements.so</basename>
+  <version>0.10.2.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>halaudiosink</name>
+      <longname>HAL audio sink</longname>
+      <class>Sink/Audio</class>
+      <description>Audio sink for sound device access via HAL</description>
+      <author>Jürg Billeter &lt;j@bitron.ch&gt;</author>
+    </element>
+    <element>
+      <name>halaudiosrc</name>
+      <longname>HAL audio source</longname>
+      <class>Source/Audio</class>
+      <description>Audio source for sound device access via HAL</description>
+      <author>Jürg Billeter &lt;j@bitron.ch&gt;</author>
+    </element>
+  </elements>
+</plugin>

@@ -3,22 +3,22 @@
   <description>PNG plugin library</description>
   <filename>../../ext/libpng/.libs/libgstpng.so</filename>
   <basename>libgstpng.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>pngdec</name>
-      <longname>PNG decoder</longname>
+      <longname>PNG image decoder</longname>
       <class>Codec/Decoder/Image</class>
       <description>Decode a png video frame to a raw image</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>pngenc</name>
-      <longname>PNG encoder</longname>
+      <longname>PNG image encoder</longname>
       <class>Codec/Encoder/Image</class>
       <description>Encode a video frame to a .png image</description>
       <author>Jeremy SIMON &lt;jsimon13@yahoo.fr&gt;</author>

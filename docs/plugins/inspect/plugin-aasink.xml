@@ -3,15 +3,15 @@
   <description>ASCII Art video sink</description>
   <filename>../../ext/aalib/.libs/libgstaasink.so</filename>
   <basename>libgstaasink.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>aasink</name>
-      <longname>AA sink</longname>
+      <longname>ASCII art video sink</longname>
       <class>Sink/Video</class>
       <description>An ASCII art videosink</description>
       <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>

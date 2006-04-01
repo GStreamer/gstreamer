@@ -3,15 +3,15 @@
   <description>Flips and rotates video</description>
   <filename>../../gst/videofilter/.libs/libgstvideoflip.so</filename>
   <basename>libgstvideoflip.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>videoflip</name>
-      <longname>Video Flipper</longname>
+      <longname>Video flipper</longname>
       <class>Filter/Effect/Video</class>
       <description>Flips and rotates video</description>
       <author>David Schleef &lt;ds@schleef.org&gt;</author>
