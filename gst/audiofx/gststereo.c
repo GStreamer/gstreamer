@@ -233,4 +233,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "stereo",
     "Muck with the stereo signal, enhance it's 'stereo-ness'",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
