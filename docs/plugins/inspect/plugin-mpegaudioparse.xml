@@ -3,11 +3,11 @@
   <description>MPEG-1 layer 1/2/3 audio parser</description>
   <filename>../../gst/mpegaudioparse/.libs/libgstmpegaudioparse.so</filename>
   <basename>libgstmpegaudioparse.so</basename>
-  <version>0.10.3</version>
+  <version>0.10.3.1</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer source release</package>
-  <origin>http://gstreamer.freedesktop.org/</origin>
+  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>mp3parse</name>

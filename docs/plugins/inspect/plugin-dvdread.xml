@@ -1,0 +1,20 @@
+<plugin>
+  <name>dvdread</name>
+  <description>Access a DVD with dvdread</description>
+  <filename>../../ext/dvdread/.libs/libgstdvdread.so</filename>
+  <basename>libgstdvdread.so</basename>
+  <version>0.10.3.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dvdreadsrc</name>
+      <longname>DVD Source</longname>
+      <class>Source/File/DVD</class>
+      <description>Access a DVD title/chapter/angle using libdvdread</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+    </element>
+  </elements>
+</plugin>

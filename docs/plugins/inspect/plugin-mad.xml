@@ -3,11 +3,11 @@
   <description>id3 tag manipulation and mp3 decoding based on the mad library</description>
   <filename>../../ext/mad/.libs/libgstmad.so</filename>
   <basename>libgstmad.so</basename>
-  <version>0.10.2</version>
+  <version>0.10.3.1</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer source release</package>
-  <origin>http://gstreamer.freedesktop.org/</origin>
+  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>id3mux</name>

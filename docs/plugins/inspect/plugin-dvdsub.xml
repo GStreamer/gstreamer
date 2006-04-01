@@ -1,0 +1,20 @@
+<plugin>
+  <name>dvdsub</name>
+  <description>Decode DVD subtitles to AYUV video frames</description>
+  <filename>../../gst/dvdsub/.libs/libgstdvdsub.so</filename>
+  <basename>libgstdvdsub.so</basename>
+  <version>0.10.3.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dvdsubdec</name>
+      <longname>DVD subtitle Decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>Decodes DVD subtitles into AYUV video frames</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

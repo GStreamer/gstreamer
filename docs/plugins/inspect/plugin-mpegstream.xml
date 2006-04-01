@@ -1,0 +1,36 @@
+<plugin>
+  <name>mpegstream</name>
+  <description>MPEG system stream parser</description>
+  <filename>../../gst/mpegstream/.libs/libgstmpegstream.so</filename>
+  <basename>libgstmpegstream.so</basename>
+  <version>0.10.3.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dvddemux</name>
+      <longname>DVD Demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demultiplexes DVD (VOB) MPEG2 streams</description>
+      <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;</author>
+    </element>
+    <element>
+      <name>mpegdemux</name>
+      <longname>MPEG Demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demultiplexes MPEG1 and MPEG2 System Streams</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
+    Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+    <element>
+      <name>mpegparse</name>
+      <longname>MPEG System Parser</longname>
+      <class>Codec/Parser</class>
+      <description>Parses MPEG1 and MPEG2 System Streams</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;
+    Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+    </element>
+  </elements>
+</plugin>
