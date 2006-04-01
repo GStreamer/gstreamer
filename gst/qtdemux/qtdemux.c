@@ -569,7 +569,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "qtdemux",
     "Quicktime stream demuxer",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN);
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
 static gboolean
 gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
