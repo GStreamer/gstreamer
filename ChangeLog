@@ -1,5 +1,10 @@
 2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	  Fixed the sample pipeline (see #323798)
+
+2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	* win32/common/config.h:
 	* win32/common/config.h.in:

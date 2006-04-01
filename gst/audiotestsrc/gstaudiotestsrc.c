@@ -33,7 +33,7 @@
  * </para>
  * <para>
  * <programlisting>
- * gst-launch audiotestsrc wave=2 freq=200 ! audioconvert ! tee name=t ! alsasink t. ! libvisual_lv_scope ! ffmpegcolorspace ! xvimagesink
+ * gst-launch audiotestsrc wave=2 freq=200 ! audioconvert ! tee name=t ! queue ! alsasink t. ! queue ! libvisual_lv_scope ! ffmpegcolorspace ! xvimagesink
  * </programlisting>
  * In this example a saw wave is generated. The wave is shown using a
  * scope visualizer from libvisual, allowing you to visually verify that
