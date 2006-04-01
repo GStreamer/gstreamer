@@ -15,4 +15,8 @@ Makefile.in
 html
 sgml
 xml
+tmpl
 *.stamp
+
+gst-plugins-ugly-plugins-overrides.txt
+
