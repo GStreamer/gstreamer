@@ -62,7 +62,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_tag_lib_mux_debug);
 #define GST_CAT_DEFAULT gst_tag_lib_mux_debug
 
 static const GstElementDetails gst_tag_lib_mux_details =
-GST_ELEMENT_DETAILS ("TagLib ID3 Muxer",
+GST_ELEMENT_DETAILS ("TagLib ID3v2 Muxer",
     "Formatter/Metadata",
     "Adds an ID3v2 header to the beginning of MP3 files",
     "Christophe Fergeau <teuf@gnome.org>");
@@ -640,4 +640,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "taglib",
     "Tag-writing plug-in based on taglib",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE, GST_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
