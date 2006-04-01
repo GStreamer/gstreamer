@@ -1,5 +1,13 @@
 2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	  add siddec
+	* ext/dvdnav/dvdnavsrc.c:
+	  doc fixes
+
+2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  rework similarly to other modules
 	* ext/a52dec/gsta52dec.c:

@@ -645,7 +645,7 @@ gst_dvd_nav_src_update_streaminfo (GstDvdNavSrc * src)
 #endif
 }
 
-/**
+/*
  * Check for a new DVD domain area, and update the structure if
  * necessary.
  */
@@ -670,7 +670,7 @@ gst_dvd_nav_src_set_domain (GstDvdNavSrc * src)
   src->domain = domain;
 }
 
-/**
+/*
  * Check for a new highlighted area, and send an spu highlight event if
  * necessary.
  */

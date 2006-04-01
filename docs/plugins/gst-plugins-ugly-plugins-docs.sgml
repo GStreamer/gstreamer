@@ -23,6 +23,7 @@
     <xi:include href="xml/plugin-mpegaudioparse.xml" />
     <xi:include href="xml/plugin-mpegstream.xml" />
     <xi:include href="xml/plugin-rmdemux.xml" />
+    <xi:include href="xml/plugin-siddec.xml" />
 
   </chapter>
 </book>
