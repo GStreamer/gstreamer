@@ -186,74 +186,23 @@ GST_SET_ERROR_CFLAGS($GST_CVS)
 dnl define correct level for debugging messages
 GST_SET_LEVEL_DEFAULT($GST_CVS)
 
-dnl *** ext plug-ins ***
-dnl keep this list sorted alphabetically !
+dnl *** sys plug-ins ***
 
-if test "x$BUILD_EXTERNAL" = "xyes"; then
-
-#dnl *** cairo ***
-#translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO, true)
-#GST_CHECK_FEATURE(CAIRO, [cairo plug-in], cairo, [
-#  PKG_CHECK_MODULES(CAIRO, cairo >= 1.0 glitz-glx, HAVE_CAIRO=yes, HAVE_CAIRO=no)
-#  AC_SUBST(CAIRO_CFLAGS)
-#  AC_SUBST(CAIRO_LIBS)
-#])
-
-dnl **** DirectFB ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
-GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
-  PKG_CHECK_MODULES(DIRECTFB, directfb >= 0.9.24, [
-    HAVE_DIRECTFB="yes"
-    AC_SUBST(DIRECTFB_CFLAGS)
-    AC_SUBST(DIRECTFB_LIBS)
-  ], [
-    HAVE_DIRECTFB="no"
-  ])
+dnl OpenGL
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENGL, true)
+save_CPPFLAGS="$CPPFLAGS"
+save_LIBS="$LIBS"
+CPPFLAGS="$CPPFLAGS $X_CFLAGS"
+LIBS="$LIBS $X_LIBS"
+GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
+  GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,,
+                      GL/gl.h, HAVE_OPENGL="yes", HAVE_OPENGL="no")
 ])
+CPPFLAGS="$save_CPPFLAGS"
+LIBS="$save_LIBS"
 
-dnl **** Free AAC Encoder (FAAC) ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_FAAC, true)
-GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
-  GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, -lm, faac.h, FAAC_LIBS="-lfaac -lm")
-  AS_SCRUB_INCLUDE(FAAC_CFLAGS)
-  AC_SUBST(FAAC_LIBS)
-])
-
-dnl **** Free AAC Decoder (FAAD) ****
-translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
-GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
-  HAVE_FAAD="yes"
-  GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h, FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
-  if test $HAVE_FAAD = "yes"; then
-    AC_MSG_CHECKING([Checking for FAAD >= 2])
-    AC_TRY_RUN([
-
-#include <faad.h>
-#if !defined(FAAD2_VERSION) || !defined(FAAD_FMT_DOUBLE)
-#error Not faad2
-#else
-#include <string.h>
-
-int main()
-{
-char version[9] = FAAD2_VERSION;
-// a release candidate of 2.0 is not enought for us
-if ( strstr( version, "2.0 RC" ) ) { return 1; }
-
-return 0;
-}
-
-#endif
-    ],
-       [ HAVE_FAAD="yes" && AC_MSG_RESULT(yes)],
-       [ HAVE_FAAD="no"  && AC_MSG_RESULT(no)])
-  fi;
-  AS_SCRUB_INCLUDE(FAAD_CFLAGS)
-  AC_SUBST(FAAD_LIBS)
-])
 
 dnl Check for X11
-dnl *** X11 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesrc], [
@@ -301,9 +250,11 @@ GST_CHECK_FEATURE(X, [X libraries and plugins],
   CPPFLAGS="$ac_cppflags_save"
 ])
 
+dnl FIXME: this should be rolled into the test above, it's just an additional
+dnl feature of the ximagesrc plug-in
 dnl check for X Shm
 translit(dnm, m, l) AM_CONDITIONAL(USE_XSHM, true)
-GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], [ximagesrc w/ xshm], [
+GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], [], [
   if test x$HAVE_X = xyes; then
     AC_CHECK_LIB(Xext, XShmAttach,
                  HAVE_XSHM="yes", HAVE_XSHM="no",
@@ -320,10 +271,72 @@ GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], [ximagesrc w/ xshm], [
       fi
     fi
   fi
-], , [
+], ,[
   AC_SUBST(HAVE_XSHM)
   AC_SUBST(XSHM_LIBS)
-] )
+])
+
+dnl *** Video 4 Linux 2 ***
+dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
+dnl renamed to GST_V4L2 because of some conflict with kernel headers
+translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L2, true)
+GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
+  AC_MSG_CHECKING([Checking for uptodate v4l2 installation])
+  AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <linux/types.h>
+#define _LINUX_TIME_H
+#define __user
+#include <linux/videodev2.h>
+#if defined(V4L2_MAJOR_VERSION) || defined(V4L2_MINOR_VERSION)
+#error too early v4l2 version or no v4l2 at all
+#endif
+    ], [
+return 0;
+    ], [
+      HAVE_GST_V4L2="yes"
+      AC_MSG_RESULT(yes)
+    ], [
+      HAVE_GST_V4L2="no"
+      AC_MSG_RESULT(no)
+      AC_CHECK_HEADER(linux/videodev2.h,
+      [
+        AC_MSG_WARN([video4linux2 headers were found, but they're old.])
+        AC_MSG_WARN([Please update v4l2 to compile the v4l2 plugins])
+      ], [
+        AC_MSG_WARN([video4linux2 was not found])
+      ])
+    ])
+
+  if [ test x$HAVE_GST_V4L2 = xyes ]; then
+    dnl check for missing v4l2_buffer declaration (see #135919)
+    MISSING_DECL=0
+    AC_MSG_CHECKING(struct v4l2_buffer declaration)
+    AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <linux/types.h>
+#define _LINUX_TIME_H
+#define __user
+#include <linux/videodev2.h>
+    ],[
+struct v4l2_buffer buf;
+buf.index = 0;
+return 0;
+    ], [ AC_MSG_RESULT(yes) ], [ MISSING_DECL=1 && AC_MSG_RESULT(no) ])
+    if [ test x$MISSING_DECL = x1 ]; then
+      AC_DEFINE(GST_V4L2_MISSING_BUFDECL, 1, [struct v4l2_buffer missing])
+    fi
+
+    dnl check for XOverlay libraries
+    GST_CHECK_XV
+  fi
+])
+AM_CONDITIONAL(USE_XVIDEO, test "x$HAVE_XVIDEO" = "xyes")
+
+dnl *** ext plug-ins ***
+dnl keep this list sorted alphabetically !
+
+if test "x$BUILD_EXTERNAL" = "xyes"; then
 
 dnl *** amrwb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
@@ -337,12 +350,31 @@ GST_CHECK_FEATURE(AMRWB, [amrwb code], amrwb, [
   AC_SUBST(HAVE_AMRWB)
 ])
 
-
 dnl *** BZ2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_BZ2, true)
 GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
   GST_CHECK_LIBHEADER(BZ2, bz2, BZ2_bzCompress, ,bzlib.h, BZ2_LIBS="-lbz2")
   AC_SUBST(BZ2_LIBS)
+])
+
+#dnl *** cairo ***
+#translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO, true)
+#GST_CHECK_FEATURE(CAIRO, [cairo plug-in], cairo, [
+#  PKG_CHECK_MODULES(CAIRO, cairo >= 1.0 glitz-glx, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+#  AC_SUBST(CAIRO_CFLAGS)
+#  AC_SUBST(CAIRO_LIBS)
+#])
+
+dnl **** DirectFB ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
+GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
+  PKG_CHECK_MODULES(DIRECTFB, directfb >= 0.9.24, [
+    HAVE_DIRECTFB="yes"
+    AC_SUBST(DIRECTFB_CFLAGS)
+    AC_SUBST(DIRECTFB_LIBS)
+  ], [
+    HAVE_DIRECTFB="no"
+  ])
 ])
 
 dnl *** DTS ***
@@ -409,6 +441,81 @@ return 0;
   fi
 ])
 
+dnl **** Free AAC Encoder (FAAC) ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_FAAC, true)
+GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
+  GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, -lm, faac.h, FAAC_LIBS="-lfaac -lm")
+  AS_SCRUB_INCLUDE(FAAC_CFLAGS)
+  AC_SUBST(FAAC_LIBS)
+])
+
+dnl **** Free AAC Decoder (FAAD) ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
+GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
+  HAVE_FAAD="yes"
+  GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h, FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
+  if test $HAVE_FAAD = "yes"; then
+    AC_MSG_CHECKING([Checking for FAAD >= 2])
+    AC_TRY_RUN([
+
+#include <faad.h>
+#if !defined(FAAD2_VERSION) || !defined(FAAD_FMT_DOUBLE)
+#error Not faad2
+#else
+#include <string.h>
+
+int main()
+{
+char version[9] = FAAD2_VERSION;
+// a release candidate of 2.0 is not enought for us
+if ( strstr( version, "2.0 RC" ) ) { return 1; }
+
+return 0;
+}
+
+#endif
+    ],
+       [ HAVE_FAAD="yes" && AC_MSG_RESULT(yes)],
+       [ HAVE_FAAD="no"  && AC_MSG_RESULT(no)])
+  fi;
+  AS_SCRUB_INCLUDE(FAAD_CFLAGS)
+  AC_SUBST(FAAD_LIBS)
+])
+
+dnl *** gsm ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
+GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
+  GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm.h, GSM_LIBS="-lgsm")
+  if test $HAVE_GSM != "yes"; then
+    GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm/gsm.h, GSM_LIBS="-lgsm")
+    if test $HAVE_GSM = "yes"; then 
+      AC_DEFINE(GSM_HEADER_IN_SUBDIR, 1, [Define if GSM header in gsm/ subdir])
+    fi
+  fi
+  AC_SUBST(GSM_LIBS)
+])
+
+dnl *** ivorbis ***
+dnl AM_PATH_IVORBIS only takes two options
+translit(dnm, m, l) AM_CONDITIONAL(USE_IVORBIS, true)
+GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
+  IVORBIS_LIBS=
+  IVORBIS_CFLAGS=
+  AC_CHECK_LIB(vorbisidec, vorbis_block_init,
+    [IVORBIS_LIBS=-lvorbisidec
+     HAVE_IVORBIS=yes],
+    HAVE_IVORBIS=no)
+  AC_SUBST(IVORBIS_LIBS)
+  AC_SUBST(IVORBIS_CFLAGS)
+])
+
+dnl *** libmms ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
+GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
+  dnl check with pkg-config first
+  PKG_CHECK_MODULES(LIBMMS, libmms >= 0.2, HAVE_LIBMMS="yes", HAVE_LIBMMS="no")
+])
+AC_SUBST(LIBMMS_LIBS)
 
 dnl *** musepack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MUSEPACK, true)
@@ -429,15 +536,6 @@ GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
   AC_SUBST(NEON_CFLAGS)
   AC_SUBST(NEON_LIBS)
 ])
-
-dnl *** libmms ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
-GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
-  dnl check with pkg-config first
-  PKG_CHECK_MODULES(LIBMMS, libmms >= 0.2, HAVE_LIBMMS="yes", HAVE_LIBMMS="no")
-])
-AC_SUBST(LIBMMS_LIBS)
-
 
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
@@ -465,54 +563,26 @@ GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
   AC_SUBST(SWFDEC_LIBS)
 ])
 
-dnl *** wavpack ***
-dnl We ship our own version of the library
-translit(dnm, m, l) AM_CONDITIONAL(USE_WAVPACK, true)
-GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
-  PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.2, HAVE_WAVPACK=yes, HAVE_WAVPACK=no)
-  AC_SUBST(WAVPACK_CFLAGS)
-  AC_SUBST(WAVPACK_LIBS)
-])
 
-dnl *** ivorbis ***
-dnl AM_PATH_IVORBIS only takes two options
-translit(dnm, m, l) AM_CONDITIONAL(USE_IVORBIS, true)
-GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
-  IVORBIS_LIBS=
-  IVORBIS_CFLAGS=
-  AC_CHECK_LIB(vorbisidec, vorbis_block_init,
-    [IVORBIS_LIBS=-lvorbisidec
-     HAVE_IVORBIS=yes],
-    HAVE_IVORBIS=no)
-  AC_SUBST(IVORBIS_LIBS)
-  AC_SUBST(IVORBIS_CFLAGS)
-])
-
-dnl *** gsm ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
-GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
-  GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm.h, GSM_LIBS="-lgsm")
-  if test $HAVE_GSM != "yes"; then
-    GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm/gsm.h, GSM_LIBS="-lgsm")
-    if test $HAVE_GSM = "yes"; then 
-      AC_DEFINE(GSM_HEADER_IN_SUBDIR, 1, [Define if GSM header in gsm/ subdir])
-    fi
+dnl *** taglib ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_TAGLIB, true)
+GST_CHECK_FEATURE(TAGLIB, [taglib ID3v2 tag writer], taglib, [
+  PKG_CHECK_MODULES(TAGLIB, taglib >= 1.4, HAVE_TAGLIB="yes", HAVE_TAGLIB="no")
+  AC_SUBST(TAGLIB_CFLAGS)
+  AC_SUBST(TAGLIB_LIBS)
+  if test "x$HAVE_CXX" != "xyes"; then
+    USE_TAGLIB=false
+    AC_MSG_NOTICE([Not building taglib plugin: no C++ compiler found])
   fi
-  AC_SUBST(GSM_LIBS)
 ])
 
-dnl *** OpenGL ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_OPENGL, true)
-save_CPPFLAGS="$CPPFLAGS"
-save_LIBS="$LIBS"
-CPPFLAGS="$CPPFLAGS $X_CFLAGS"
-LIBS="$LIBS $X_LIBS"
-GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
-  GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,,
-                      GL/gl.h, HAVE_OPENGL="yes", HAVE_OPENGL="no")
+dnl *** theora ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_THEORADEC, true)
+GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoraexpdec, [
+  PKG_CHECK_MODULES(THEORADEC, theoradec, HAVE_THEORADEC="yes", HAVE_THEORADEC="no")
+  AC_SUBST(THEORADEC_LIBS)
+  AC_SUBST(THEORADEC_CFLAGS)
 ])
-CPPFLAGS="$save_CPPFLAGS"
-LIBS="$save_LIBS"
 
 dnl *** XVID ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
@@ -543,82 +613,13 @@ int main () { return 0; }
   ], )
 ])
 
-dnl *** taglib ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_TAGLIB, true)
-GST_CHECK_FEATURE(TAGLIB, [taglib ID3v2 tag writer], taglib, [
-  PKG_CHECK_MODULES(TAGLIB, taglib >= 1.4, HAVE_TAGLIB="yes", HAVE_TAGLIB="no")
-  AC_SUBST(TAGLIB_CFLAGS)
-  AC_SUBST(TAGLIB_LIBS)
-  if test "x$HAVE_CXX" != "xyes"; then
-    USE_TAGLIB=false
-    AC_MSG_NOTICE([Not building taglib plugin: no C++ compiler found])
-  fi
+dnl *** wavpack ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_WAVPACK, true)
+GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
+  PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.2, HAVE_WAVPACK=yes, HAVE_WAVPACK=no)
+  AC_SUBST(WAVPACK_CFLAGS)
+  AC_SUBST(WAVPACK_LIBS)
 ])
-
-dnl *** theora ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_THEORADEC, true)
-GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoraexpdec, [
-  PKG_CHECK_MODULES(THEORADEC, theoradec, HAVE_THEORADEC="yes", HAVE_THEORADEC="no")
-  AC_SUBST(THEORADEC_LIBS)
-  AC_SUBST(THEORADEC_CFLAGS)
-])
-
-dnl *** Video 4 Linux 2 ***
-dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
-dnl renamed to GST_V4L2 because of some conflict with kernel headers
-translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L2, true)
-GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
-  AC_MSG_CHECKING([Checking for uptodate v4l2 installation])
-  AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <linux/types.h>
-#define _LINUX_TIME_H
-#define __user
-#include <linux/videodev2.h>
-#if defined(V4L2_MAJOR_VERSION) || defined(V4L2_MINOR_VERSION)
-#error too early v4l2 version or no v4l2 at all
-#endif
-    ], [
-return 0;
-    ], [
-      HAVE_GST_V4L2="yes"
-      AC_MSG_RESULT(yes)
-    ], [
-      HAVE_GST_V4L2="no"
-      AC_MSG_RESULT(no)
-      AC_CHECK_HEADER(linux/videodev2.h,
-      [
-        AC_MSG_WARN([video4linux2 headers were found, but they're old.])
-        AC_MSG_WARN([Please update v4l2 to compile the v4l2 plugins])
-      ], [
-        AC_MSG_WARN([video4linux2 was not found])
-      ])
-    ])
-
-  if [ test x$HAVE_GST_V4L2 = xyes ]; then
-    dnl check for missing v4l2_buffer declaration (see #135919)
-    MISSING_DECL=0
-    AC_MSG_CHECKING(struct v4l2_buffer declaration)
-    AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <linux/types.h>
-#define _LINUX_TIME_H
-#define __user
-#include <linux/videodev2.h>
-    ],[
-struct v4l2_buffer buf;
-buf.index = 0;
-return 0;
-    ], [ AC_MSG_RESULT(yes) ], [ MISSING_DECL=1 && AC_MSG_RESULT(no) ])
-    if [ test x$MISSING_DECL = x1 ]; then
-      AC_DEFINE(GST_V4L2_MISSING_BUFDECL, 1, [struct v4l2_buffer missing])
-    fi
-
-    dnl check for XOverlay libraries
-    GST_CHECK_XV
-  fi
-])
-AM_CONDITIONAL(USE_XVIDEO, test "x$HAVE_XVIDEO" = "xyes")
 
 fi dnl of EXT plugins
 
@@ -682,26 +683,26 @@ sys/ximagesrc/Makefile
 sys/v4l2/Makefile
 examples/Makefile
 examples/directfb/Makefile
-ext/Makefile
-ext/amrwb/Makefile
 ext/amrwb/amrwb-code/Makefile
+ext/amrwb/Makefile
 ext/bz2/Makefile
 ext/directfb/Makefile
+ext/divx/Makefile
+ext/dts/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
-ext/soundtouch/Makefile
-ext/wavpack/Makefile
-ext/ivorbis/Makefile
 ext/gsm/Makefile
-ext/neon/Makefile
+ext/ivorbis/Makefile
 ext/libmms/Makefile
-ext/dts/Makefile
-ext/divx/Makefile
+ext/Makefile
 ext/musepack/Makefile
+ext/neon/Makefile
 ext/sdl/Makefile
+ext/soundtouch/Makefile
 ext/swfdec/Makefile
 ext/taglib/Makefile
 ext/theora/Makefile
+ext/wavpack/Makefile
 ext/xvid/Makefile
 po/Makefile.in
 docs/Makefile
