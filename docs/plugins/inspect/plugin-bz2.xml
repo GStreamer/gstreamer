@@ -1,0 +1,27 @@
+<plugin>
+  <name>bz2</name>
+  <description>Compress or decompress streams</description>
+  <filename>../../ext/bz2/.libs/libgstbz2.so</filename>
+  <basename>libgstbz2.so</basename>
+  <version>0.10.2.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>bz2dec</name>
+      <longname>BZ2 decoder</longname>
+      <class>Codec/Decoder</class>
+      <description>Decodes compressed streams</description>
+      <author>Lutz Mueller &lt;lutz@users.sourceforge.net&gt;</author>
+    </element>
+    <element>
+      <name>bz2enc</name>
+      <longname>BZ2 encoder</longname>
+      <class>Codec/Encoder</class>
+      <description>Compresses streams</description>
+      <author>Lutz Mueller &lt;lutz@users.sourceforge.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

@@ -20,14 +20,24 @@
   <chapter>
     <title>gst-plugins-bad Plugins</title>
 
+    <xi:include href="xml/plugin-bz2.xml" />
+    <xi:include href="xml/plugin-cdxaparse.xml" />
     <xi:include href="xml/plugin-dfbvideosink.xml" />
     <xi:include href="xml/plugin-faad.xml" />
+    <xi:include href="xml/plugin-freeze.xml" />
+    <xi:include href="xml/plugin-glimagesink.xml" />
     <xi:include href="xml/plugin-gsm.xml" />
+    <xi:include href="xml/plugin-modplug.xml" />
+    <xi:include href="xml/plugin-neon.xml" />
     <xi:include href="xml/plugin-qtdemux.xml" />
     <xi:include href="xml/plugin-sdlvideosink.xml" />
+    <xi:include href="xml/plugin-sdl.xml" />
     <xi:include href="xml/plugin-speed.xml" />
     <xi:include href="xml/plugin-taglib.xml" />
     <xi:include href="xml/plugin-tta.xml" />
+    <xi:include href="xml/plugin-video4linux2.xml" />
+    <xi:include href="xml/plugin-ximagesrc.xml" />
+    <xi:include href="xml/plugin-xingheader.xml" />
 
   </chapter>
 </book>

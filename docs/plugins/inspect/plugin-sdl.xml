@@ -1,0 +1,27 @@
+<plugin>
+  <name>sdl</name>
+  <description>SDL (Simple DirectMedia Layer) support for GStreamer</description>
+  <filename>../../ext/sdl/.libs/libgstsdlvideosink.so</filename>
+  <basename>libgstsdlvideosink.so</basename>
+  <version>0.10.2.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>sdlaudiosink</name>
+      <longname>Audio Sink (SDLAUDIO)</longname>
+      <class>Sink/Audio</class>
+      <description>Output to a sound card via SDLAUDIO</description>
+      <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
+    </element>
+    <element>
+      <name>sdlvideosink</name>
+      <longname>Video sink</longname>
+      <class>Sink/Video</class>
+      <description>An SDL-based videosink</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;Edgard Lima &lt;edgard.lima@indt.org.br&gt;Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

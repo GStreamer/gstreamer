@@ -1,3 +1,18 @@
+2006-04-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-cdxaparse.xml:
+	* docs/plugins/inspect/plugin-freeze.xml:
+	* docs/plugins/inspect/plugin-glimagesink.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-neon.xml:
+	* docs/plugins/inspect/plugin-sdl.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-xingheader.xml:
+	  add more plugins to docs
+
 2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/dxr3/ac3_padder.h:

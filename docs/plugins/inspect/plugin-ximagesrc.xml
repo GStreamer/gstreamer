@@ -1,0 +1,20 @@
+<plugin>
+  <name>ximagesrc</name>
+  <description>XFree86 video input plugin based on standard Xlib calls</description>
+  <filename>../../sys/ximagesrc/.libs/libgstximagesrc.so</filename>
+  <basename>libgstximagesrc.so</basename>
+  <version>0.10.2.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>ximagesrc</name>
+      <longname>Ximage video source</longname>
+      <class>Source/Video</class>
+      <description>Creates a screenshot video stream</description>
+      <author>Lutz Mueller &lt;lutz@users.sourceforge.net&gt;Jan Schmidt &lt;thaytan@mad.scientist.com&gt;Zaheer Merali &lt;zaheerabbas at merali dot org&gt;</author>
+    </element>
+  </elements>
+</plugin>

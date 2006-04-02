@@ -1,0 +1,20 @@
+<plugin>
+  <name>modplug</name>
+  <description>.MOD audio decoding</description>
+  <filename>../../gst/modplug/.libs/libgstmodplug.so</filename>
+  <basename>libgstmodplug.so</basename>
+  <version>0.10.1.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer CVS/prerelease</package>
+  <origin>http://gstreamer.freedesktop.org/</origin>
+  <elements>
+    <element>
+      <name>modplug</name>
+      <longname>ModPlug</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Module decoder based on modplug engine</description>
+      <author>Jeremy SIMON &lt;jsimon13@yahoo.fr&gt;</author>
+    </element>
+  </elements>
+</plugin>

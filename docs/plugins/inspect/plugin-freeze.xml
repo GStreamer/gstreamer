@@ -1,0 +1,20 @@
+<plugin>
+  <name>freeze</name>
+  <description>Stream freezer</description>
+  <filename>../../gst/freeze/.libs/libgstfreeze.so</filename>
+  <basename>libgstfreeze.so</basename>
+  <version>0.10.2.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>freeze</name>
+      <longname>Stream freezer</longname>
+      <class>Generic</class>
+      <description>Makes a stream from buffers of data</description>
+      <author>Gergely Nagy &lt;gergely.nagy@neteyes.hu&gt;, Renato Filho &lt;renato.filho@indt.org.br&gt;</author>
+    </element>
+  </elements>
+</plugin>
