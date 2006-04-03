@@ -1,5 +1,11 @@
 2006-04-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	  Add AX_CREATE_STDINT_H to create _stdint.h, needed by
+	  the dts plugin.
+
+2006-04-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/soundtouch/gstpitch.cc:
 	* ext/theora/theoradec.c:
 	* gst/modplug/gstmodplug.cc:

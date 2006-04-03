@@ -137,6 +137,9 @@ dnl *** checks for libraries ***
 
 dnl *** checks for header files ***
 
+dnl used by ext/dts
+AX_CREATE_STDINT_H
+
 dnl *** checks for types/defines ***
 
 dnl *** checks for structures ***
