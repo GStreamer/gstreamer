@@ -1,3 +1,12 @@
+2006-04-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* configure.ac:
+	* pkgconfig/.cvsignore:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-plugins-good-uninstalled.pc.in:
+	  add a .pc file so other modules can use good plugins in tests
+
 2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

@@ -695,6 +695,8 @@ tests/examples/level/Makefile
 common/Makefile
 common/m4/Makefile
 m4/Makefile
+pkgconfig/Makefile
+pkgconfig/gstreamer-plugins-good-uninstalled.pc
 gst-plugins-good.spec
 )
 AC_OUTPUT

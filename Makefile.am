@@ -11,7 +11,9 @@ ALWAYS_SUBDIRS =		\
 	tests			\
 	docs			\
 	po			\
-	m4 common
+	common			\
+	m4			\
+	pkgconfig
 
 SUBDIRS = 			\
 	$(ALWAYS_SUBDIRS)	\
