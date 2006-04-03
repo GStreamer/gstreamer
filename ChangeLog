@@ -1,5 +1,11 @@
 2006-04-03  Andy Wingo  <wingo@pobox.com>
 
+	* ext/theora/theora.c (plugin_init): Register theoraparse.
+
+	* ext/theora/gsttheoraparse.h: 
+	* ext/theora/theoraparse.c: New files implementing a theora
+	parser. Now we can properly remux ogg/theora+vorbis, yay.
+
 	* ext/vorbis/vorbisparse.c: Add some docs and a copyright.
 
 2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>

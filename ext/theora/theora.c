@@ -25,6 +25,7 @@
 
 extern GType gst_theora_dec_get_type (void);
 extern GType gst_theora_enc_get_type (void);
+extern GType gst_theora_parse_get_type (void);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -35,6 +36,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "theoraenc", GST_RANK_NONE,
           gst_theora_enc_get_type ()))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "theoraparse", GST_RANK_NONE,
+          gst_theora_parse_get_type ()))
     return FALSE;
 
   return TRUE;
