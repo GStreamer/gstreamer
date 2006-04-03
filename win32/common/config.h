@@ -191,13 +191,13 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING "GStreamer 0.10.4.1"
+#define PACKAGE_STRING "GStreamer 0.10.4.1"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME "gstreamer"
+#define PACKAGE_TARNAME "gstreamer"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION "0.10.4.1"
+#define PACKAGE_VERSION "0.10.4.1"
 
 /* Define the plugin directory */
 #ifdef _DEBUG
