@@ -768,7 +768,23 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
         }
       } else {
         GST_DEBUG_OBJECT (data->pad, "EOS on pad");
-        pad->eos = TRUE;
+        if (!pad->eos) {
+          ogg_page page;
+          GstFlowReturn ret;
+
+          /* Just gone to EOS. Flush existing page(s) */
+          pad->eos = TRUE;
+
+          while (ogg_stream_flush (&pad->stream, &page)) {
+            /* Place page into the per-pad queue */
+            ret = gst_ogg_mux_pad_queue_page (ogg_mux, pad, &page,
+                pad->first_delta);
+            /* increment the page number counter */
+            pad->pageno++;
+            /* mark other pages as delta */
+            pad->first_delta = TRUE;
+          }
+        }
       }
 
       pad->buffer = buf;

@@ -1,3 +1,10 @@
+2006-04-03  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_queue_pads):
+	  Oggmux sucks.
+	  Make it suck slightly less by writing out the final page.
+	  Still can't encode a vorbis-in-ogg file correctly, though.
+
 2006-04-03  Andy Wingo  <wingo@pobox.com>
 
 	* ext/theora/theoraparse.c (theora_parse_drain_queue): Um, remove
