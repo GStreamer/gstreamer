@@ -1,5 +1,8 @@
 2006-04-03  Andy Wingo  <wingo@pobox.com>
 
+	* ext/theora/theoraparse.c (theora_parse_drain_queue): Um, remove
+	a g_print.
+
 	* ext/theora/theora.c (plugin_init): Register theoraparse.
 
 	* ext/theora/gsttheoraparse.h: 

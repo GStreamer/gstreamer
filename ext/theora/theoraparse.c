@@ -326,10 +326,8 @@ theora_parse_drain_queue (GstTheoraParse * parse, gint64 granulepos)
 
   parse_granulepos (granulepos, parse->shift, &keyframe, &frame);
 
-  g_print ("%lld %lld / %lld %lld / %d\n", keyframe, frame,
-      parse->prev_keyframe, parse->prev_frame, parse->buffer_queue->length);
-  parse->prev_frame =
-      MAX (parse->prev_frame, frame - g_queue_get_length (parse->buffer_queue));
+  parse->prev_frame = MAX (parse->prev_frame,
+      frame - g_queue_get_length (parse->buffer_queue));
 
   while (!g_queue_is_empty (parse->buffer_queue)) {
     GstBuffer *buf;
