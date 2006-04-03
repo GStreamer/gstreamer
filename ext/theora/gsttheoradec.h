@@ -80,7 +80,7 @@ struct _GstTheoraDec
   GstSegment segment;
 
   /* QoS stuff */ /* with LOCK*/
-  gboolean proportion;
+  gdouble proportion;
   GstClockTime earliest_time;
 };
 

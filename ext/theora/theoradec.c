@@ -565,6 +565,7 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
           &stop_type, &stop);
+      gst_event_unref (event);
 
       /* we have to ask our peer to seek to time here as we know
        * nothing about how to generate a granulepos from the src
@@ -584,7 +585,6 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
 
       res = gst_pad_push_event (dec->sinkpad, real_seek);
 
-      gst_event_unref (event);
       break;
     }
     case GST_EVENT_QOS:
@@ -597,17 +597,18 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
 
       /* we cannot randomly skip frame decoding since we don't have
        * B frames. we can however use the timestamp and diff to not
-       * push late frames. */
+       * push late frames. This would at least save us the time to
+       * crop/memcpy the data. */
       GST_OBJECT_LOCK (dec);
       dec->proportion = proportion;
       dec->earliest_time = timestamp + diff;
       GST_OBJECT_UNLOCK (dec);
 
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (dec->sinkpad, event);
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (dec->sinkpad, event);
       break;
   }
 done:
@@ -619,7 +620,6 @@ done:
 convert_error:
   {
     GST_DEBUG_OBJECT (dec, "could not convert format");
-    gst_event_unref (event);
     goto done;
   }
 }
