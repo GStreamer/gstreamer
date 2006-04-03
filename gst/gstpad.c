@@ -3866,7 +3866,7 @@ gst_pad_get_element_private (GstPad * pad)
  *
  * Starts a task that repeadedly calls @func with @data. This function
  * is nostly used in the pad activation function to start the
- * dataflow. This function will automatically acauire the STREAM_LOCK of
+ * dataflow. This function will automatically acquire the STREAM_LOCK of
  * the pad before calling @func.
  *
  * Returns: a TRUE if the task could be started.
