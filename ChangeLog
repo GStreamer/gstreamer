@@ -1,5 +1,13 @@
 2006-04-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/swfdec/Makefile.am:
+	  Don't set plugindir.
+
+	* ext/swfdec/gstswfdec.c:
+	  GST_PLUGIN_DEFINE_STATIC isn't a good idea for installed plugins.
+
+2006-04-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Add AX_CREATE_STDINT_H to create _stdint.h, needed by
 	  the dts plugin.

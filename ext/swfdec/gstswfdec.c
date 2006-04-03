@@ -908,7 +908,7 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_SWFDEC);
 }
 
-GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "swfdec",
     "Uses libswfdec to decode Flash video streams",
