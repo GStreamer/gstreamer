@@ -26,8 +26,15 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
 clean-local: clean-local-check
 
-check_PROGRAMS =				\
-	elements/tagid3v2mux
+
+if USE_TAGLIB
+check_taglib = elements/tagid3v2mux
+else
+check_taglib =
+endif
+
+check_PROGRAMS = $(check_taglib)
+
 TESTS = $(check_PROGRAMS)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)

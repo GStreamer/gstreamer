@@ -1,5 +1,11 @@
 2006-04-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	  Only run the id3v2mux check if taglib is available and
+	  the taglib plugin has been built.
+
+2006-04-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/swfdec/Makefile.am:
 	  Don't set plugindir.
 
