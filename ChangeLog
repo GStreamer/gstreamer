@@ -1,3 +1,11 @@
+2006-04-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/soundtouch/gstpitch.cc:
+	* ext/theora/theoradec.c:
+	* gst/modplug/gstmodplug.cc:
+	  GST_ORIGIN => GST_PACKAGE_ORIGIN
+	  GST_PACKAGE => GST_PACKAGE_NAME
+
 2006-04-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
