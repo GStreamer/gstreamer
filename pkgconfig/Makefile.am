@@ -18,8 +18,10 @@ all-local: $(pcverfiles_uninstalled)
 # pkgconfig_DATA = $(pcverfiles)
 
 CLEANFILES = $(pcverfiles) $(pcverfiles_uninstalled)
+# pcinfiles = \
+#           gstreamer-plugins-good.pc.in gstreamer-plugins-good-uninstalled.pc.in
 pcinfiles = \
-           gstreamer-plugins-good.pc.in gstreamer-plugins-good-uninstalled.pc.in
+           gstreamer-plugins-good-uninstalled.pc.in
 
 DISTCLEANFILES = $(pcinfiles:.in=)
 EXTRA_DIST = $(pcinfiles)
