@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
+ * Copyright (C) 2006 Andy Wingo <wingo@pobox.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,7 +21,7 @@
 /**
  * SECTION:element-vorbisparse
  * @short_description: parses vorbis streams 
- * @see_also: vorbisdec, oggdemux
+ * @see_also: vorbisdec, oggdemux, theoraparse
  *
  * <refsect2>
  * <para>
@@ -30,16 +31,31 @@
  * clients, each client has to receive the streamheaders first before they can
  * consume the vorbis packets.
  * </para>
+ * <para>
+ * This element also makes sure that the buffers that it pushes out are properly
+ * timestamped and that their offset and offset_end are set. The buffers that
+ * vorbisparse outputs have all of the metadata that oggmux expects to receive,
+ * which allows you to (for example) remux an ogg/vorbis file.
+ * </para>
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
  * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisparse ! fakesink
  * </programlisting>
- * This pipeline shows that the streamheader is set in the caps.
+ * This pipeline shows that the streamheader is set in the caps, and that each
+ * buffer has the timestamp, duration, offset, and offset_end set.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=sine.ogg ! oggdemux ! vorbisparse \
+ *            ! oggmux ! filesink location=sine-remuxed.ogg
+ * </programlisting>
+ * This pipeline shows remuxing. sine-remuxed.ogg might not be exactly the same
+ * as sine.ogg, but they should produce exactly the same decoded data.
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2006-03-01 (0.10.4)
+ * Last reviewed on 2006-04-01 (0.10.4.1)
  */
 
 #ifdef HAVE_CONFIG_H

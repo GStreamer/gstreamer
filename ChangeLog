@@ -1,3 +1,7 @@
+2006-04-03  Andy Wingo  <wingo@pobox.com>
+
+	* ext/vorbis/vorbisparse.c: Add some docs and a copyright.
+
 2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c:
