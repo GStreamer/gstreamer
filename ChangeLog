@@ -1,5 +1,16 @@
 2006-04-04  Wim Taymans  <wim@fluendo.com>
 
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_go_back),
+	(gst_qtdemux_perform_seek), (gst_qtdemux_do_seek),
+	(gst_qtdemux_loop_state_movie), (gst_qtdemux_loop),
+	(gst_qtdemux_chain), (qtdemux_parse_tree), (qtdemux_parse_trak):
+	More cleanups, added comments.
+	Mark discontinuities on outgoing buffers.
+	Post better errors when something goes wrong.
+	Handle EOS and segment end properly.
+
+2006-04-04  Wim Taymans  <wim@fluendo.com>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),
 	(gst_qtdemux_push_event), (gst_qtdemux_go_back),
 	(gst_qtdemux_perform_seek), (gst_qtdemux_do_seek),
