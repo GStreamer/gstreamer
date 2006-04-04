@@ -1,6 +1,9 @@
 2006-04-04  Andy Wingo  <wingo@pobox.com>
 
 	* gst/videorate/gstvideorate.c (gst_video_rate_flush_prev):
+	Whoops, fix bug introduced. Bad hacker!
+	
+	* gst/videorate/gstvideorate.c (gst_video_rate_flush_prev):
 	Properly handle the case where you get EOS before any buffers are
 	received. Use gst_buffer_make_metadata_writable where appropriate.
 

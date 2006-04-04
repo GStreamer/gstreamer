@@ -409,7 +409,8 @@ gst_video_rate_flush_prev (GstVideoRate * videorate)
     goto eos_before_buffers;
 
   /* make sure we can write to the metadata */
-  outbuf = gst_buffer_make_metadata_writable (videorate->prevbuf);
+  outbuf = gst_buffer_make_metadata_writable
+      (gst_buffer_ref (videorate->prevbuf));
 
   /* this is the timestamp we put on the buffer */
   push_ts = videorate->next_ts;
