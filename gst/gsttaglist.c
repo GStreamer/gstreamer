@@ -1256,6 +1256,9 @@ TAG_MERGE_FUNCS (pointer, gpointer)
  *
  * Copies the contents for the given tag into the value, merging multiple values
  * into one if multiple values are associated with the tag.
+ * 
+ * The resulting string in @value should be freed by the caller using g_free 
+ * when no longer needed
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.
@@ -1269,6 +1272,9 @@ TAG_MERGE_FUNCS (pointer, gpointer)
  *
  * Gets the value that is at the given index for the given tag in the given
  * list.
+ *
+ * The resulting string in @value should be freed by the caller using g_free 
+ * when no longer needed
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
  *              given list.

@@ -117,8 +117,31 @@ struct _GstBaseSrc {
 
 /**
  * GstBaseSrcClass:
- * @create: ask the subclass to create a buffer with offset and size
- * @start: start processing
+ * @parent_class: Element parent class
+ * @get_caps: Called to get the caps to report
+ * @set_caps: Notify subclass of changed output caps
+ * @negotiate: Negotiated the caps with the peer.
+ * @newsegment: Generate and send a new_segment event.
+ * @start: Start processing. Subclasses should open resources and prepare
+ *    to produce data.
+ * @stop: Stop processing. Subclasses should use this to close resources.
+ * @get_times: Given a buffer, return the start and stop time when it 
+ *    should be pushed out. The base class will sync on the clock using 
+ *    these times. 
+ * @get_size: Return the total size of the resource, in the configured format.
+ * @is_seekable: Check if the source can seek
+ * @unlock: Unlock any pending access to the resource. Subclasses should
+ *    unblock any blocked function ASAP
+ * @event: Override this to implement custom event handling.
+ * @create: Ask the subclass to create a buffer with offset and size.
+ * @do_seek: Perform seeking on the resource to the indicated segment.
+ * @query: Handle a requested query. 
+ * @check_get_range: Check whether the source would support pull-based 
+ *   operation if it were to be opened now. This vfunc is optional, but 
+ *   should be implemented if possible to avoid unnecessary start/stop 
+ *   cycles. The default implementation will open and close the resource 
+ *   to find out whether get_range is supported, and that is usually 
+ *   undesirable. 
  */
 struct _GstBaseSrcClass {
   GstElementClass parent_class;

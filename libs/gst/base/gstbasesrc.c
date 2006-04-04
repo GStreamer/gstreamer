@@ -35,23 +35,25 @@
  *
  * <refsect2>
  * <para>
- * The source can be configured to operate in a any #GstFormat with the
- * gst_base_src_set_format(). This format determines the format of the
- * internal #GstSegment and the #GST_EVENT_NEW_SEGMENT. The default format for
- * #GstBaseSrc is GST_FORMAT_BYTES.
+ * The source can be configured to operate in any #GstFormat with the
+ * gst_base_src_set_format() method. The currently set format determines 
+ * the format of the internal #GstSegment and any #GST_EVENT_NEW_SEGMENT 
+ * events. The default format for #GstBaseSrc is #GST_FORMAT_BYTES.
  * </para>
  * <para>
- * #GstBaseSrc always supports the push mode scheduling. If the following
+ * #GstBaseSrc always supports push mode scheduling. If the following
  * conditions are met, it also supports pull mode scheduling:
  * <itemizedlist>
- *   <listitem><para>the format is set to GST_FORMAT_BYTES (default).</para></listitem>
- *   <listitem><para>#GstBaseSrc::is_seekable returns TRUE.</para></listitem>
+ *   <listitem><para>The format is set to GST_FORMAT_BYTES (default).</para>
+ *   </listitem>
+ *   <listitem><para>#GstBaseSrc::is_seekable returns TRUE.</para>
+ *   </listitem>
  * </itemizedlist>
  * </para>
  * <para>
  * If all the conditions are met for operating in pull mode, #GstBaseSrc is
- * automatically seekable in push mode as well. The following conditions must be
- * met to make the element seekable in push mode when the format is not
+ * automatically seekable in push mode as well. The following conditions must 
+ * be met to make the element seekable in push mode when the format is not
  * GST_FORMAT_BYTES:
  * <itemizedlist>
  *   <listitem><para>
@@ -67,37 +69,39 @@
  * </itemizedlist>
  * </para>
  * <para>
- * When the default format is not GST_FORMAT_BYTES, the element should ignore the
- * offset and length in the #GstBaseSrc::create method. It is recommended to subclass
- * #GstPushSrc instead in this situation.
+ * When the default format is not GST_FORMAT_BYTES, the subclass should ignore 
+ * the offset and length in the #GstBaseSrc::create method. It is recommended 
+ * to subclass #GstPushSrc instead in this situation.
  * </para>
  * <para>
- * #GstBaseSrc has support for live sources. Live sources are sources that produce
- * data at a fixed rate, such as audio or video capture. A typical live source also
- * provides a clock to export the rate at which they produce data.
+ * #GstBaseSrc has support for live sources. Live sources are sources that 
+ * produce data at a fixed rate, such as audio or video capture devices. A 
+ * typical live source also provides a clock to publish the rate at which 
+ * they produce data.
  * Use gst_base_src_set_live() to activate the live source mode.
  * </para>
  * <para>
- * A live source does not produce data in the PAUSED state, this means that the 
+ * A live source does not produce data in the PAUSED state. This means that the 
  * #GstBaseSrc::create method will not be called in PAUSED but only in PLAYING.
- * To signal the pipeline that the element will not produce data, its return
+ * To signal the pipeline that the element will not produce data, the return
  * value from the READY to PAUSED state will be GST_STATE_CHANGE_NO_PREROLL.
  * </para>
  * <para>
- * A typical live source will timestamp the buffers they create with the current
- * stream time of the pipeline. This is why they can only produce data in PLAYING,
- * when the clock is actually distributed and running.
+ * A typical live source will timestamp the buffers they create with the 
+ * current stream time of the pipeline. This is one reason that they can only 
+ * produce data in PLAYING, when the clock is actually distributed and running.
  * </para>
  * <para>
- * The #GstBaseSrc::get_times method can be used to implement pseudo-live sources.
- * The base source will wait for the specified stream time returned in 
- * #GstBaseSrc::get_times before pushing out the buffer. It only makes sense to implement
- * the ::get_times function if the source is a live source.
+ * The #GstBaseSrc::get_times method can be used to implement pseudo-live 
+ * sources. The base source will wait for the specified stream time returned in 
+ * #GstBaseSrc::get_times before pushing out the buffer. 
+ * It only makes sense to implement the ::get_times function if the source is 
+ * a live source.
  * </para>
  * <para>
- * There is only support in GstBaseSrc for one source pad, which should be named
- * "src". A source implementation (subclass of GstBaseSrc) should install a pad
- * template in its base_init function, like so:
+ * There is only support in GstBaseSrc for exactly one source pad, which 
+ * should be named "src". A source implementation (subclass of GstBaseSrc) 
+ * should install a pad template in its base_init function, like so:
  * </para>
  * <para>
  * <programlisting>
@@ -118,7 +122,7 @@
  * <para>
  * Applications that record from a live source may want to stop recording
  * in a controlled way, so that the recording is stopped, but the data
- * already in the pipeline processed to the end (remember that many live
+ * already in the pipeline is processed to the end (remember that many live
  * sources would go on recording forever otherwise). For that to happen the
  * application needs to make the source stop recording and send an EOS
  * event down the pipeline. The application would then wait for an
@@ -150,7 +154,7 @@
  * </programlisting>
  * </para>
  * <para>
- * Last reviewed on 2006-03-07 (0.10.4)
+ * Last reviewed on 2006-03-31 (0.10.5)
  * </para>
  * </refsect2>
  */

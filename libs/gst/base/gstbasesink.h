@@ -102,6 +102,31 @@ struct _GstBaseSink {
   GstBaseSinkPrivate *priv;
 };
 
+/**
+ * GstBaseSinkClass:
+ * @parent_class: Element parent class
+ * @get_caps: Called to get sink pad caps from the subclass 
+ * @set_caps: Notify subclass of changed caps
+ * @buffer_alloc: Subclasses can override to perform custom buffer allocations
+ * @get_times: Called to get the start and end times for synchronising 
+ *             the passed buffer to the clock
+ * @start: Start processing. Ideal for opening resources in the subclass
+ * @stop: Stop processing. Subclasses should use this to close resources.
+ * @unlock: Unlock any pending access to the resource. Subclasses should 
+ *          unblock any blocked function ASAP
+ * @event: Override this to handle events arriving on the sink pad
+ * @preroll: Called to present the preroll buffer if desired
+ * @render: Called when a buffer should be presented or output, at the
+ *          correct moment if the #GstBaseSink has been set to sync to 
+ *          the clock.
+ * @async_play: Subclasses should override this when they need to perform
+ *          special processing when changing to the PLAYING state asynchronously.
+ *          Called with the OBJECT_LOCK held. 
+ *
+ * Subclasses can override any of the available virtual methods or not, as 
+ * needed. At the minimum, the render method should be overridden to 
+ * output/present buffers
+ */
 struct _GstBaseSinkClass {
   GstElementClass parent_class;
 

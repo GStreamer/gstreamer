@@ -129,6 +129,7 @@ gst_adapter_get_type
 <TITLE>GstBaseSrc</TITLE>
 <INCLUDE>gst/base/gstbasesrc.h</INCLUDE>
 GstBaseSrc
+GstBaseSrcClass
 GstBaseSrcFlags
 
 gst_base_src_is_live
@@ -137,7 +138,6 @@ gst_base_src_set_format
 
 GST_BASE_SRC_PAD
 <SUBSECTION Standard>
-GstBaseSrcClass
 GstBaseSrcPrivate
 GST_BASE_SRC
 GST_BASE_SRC_CAST
@@ -156,6 +156,7 @@ gst_base_src_get_type
 <TITLE>GstBaseSink</TITLE>
 <INCLUDE>gst/base/gstbasesink.h</INCLUDE>
 GstBaseSink
+GstBaseSinkClass
 
 GST_BASE_SINK_PAD
 
@@ -165,7 +166,6 @@ gst_base_sink_set_max_lateness
 gst_base_sink_get_max_lateness
 
 <SUBSECTION Standard>
-GstBaseSinkClass
 GST_BASE_SINK
 GST_BASE_SINK_CAST
 GST_IS_BASE_SINK

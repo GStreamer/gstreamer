@@ -1,3 +1,15 @@
+2006-04-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* gst/gsttaglist.c:
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesink.h:
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasesrc.h:
+	  Documentation updates. Make BaseSink and BaseSrc docs contain the
+	  class structure so that people can actually see the prototypes for
+	  virtual functions they're supposed to be overriding.
+
 2006-04-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gsttypefindelement.c:
