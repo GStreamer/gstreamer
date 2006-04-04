@@ -1,3 +1,13 @@
+2006-04-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Paolo Borelli  <pborelli at katamail dot com>
+
+	* gst/gstplugin.c: (gst_plugin_finalize), (gst_plugin_class_init),
+	(gst_plugin_check_license):
+	  minor clean-ups: G_DEFINE_TYPE already takes care of the
+	  parent_class stuff, no need to do it twice. Mark array of
+	  license strings as constant. (#337103)
+	  
 2006-04-04  Michael Smith  <msmith@fluendo.com>
 
 	* tools/gst-inspect.c: (print_element_list):

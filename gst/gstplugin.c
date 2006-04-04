@@ -95,7 +95,7 @@ static gboolean _gst_plugin_fault_handler_is_setup = FALSE;
  * QPL: http://www.trolltech.com/licenses/qpl.html
  * MPL: http://www.opensource.org/licenses/mozilla1.1.php
  */
-static gchar *valid_licenses[] = {
+static const gchar *valid_licenses[] = {
   "LGPL",                       /* GNU Lesser General Public License */
   "GPL",                        /* GNU General Public License */
   "QPL",                        /* Trolltech Qt Public License */
@@ -114,8 +114,6 @@ static void gst_plugin_desc_free (GstPluginDesc * desc);
 
 
 G_DEFINE_TYPE (GstPlugin, gst_plugin, GST_TYPE_OBJECT);
-
-static GstObjectClass *parent_class = NULL;
 
 static void
 gst_plugin_init (GstPlugin * plugin)
@@ -140,14 +138,12 @@ gst_plugin_finalize (GObject * object)
   g_free (plugin->basename);
   gst_plugin_desc_free (&plugin->desc);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_plugin_parent_class)->finalize (object);
 }
 
 static void
 gst_plugin_class_init (GstPluginClass * klass)
 {
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
-
   G_OBJECT_CLASS (klass)->finalize = GST_DEBUG_FUNCPTR (gst_plugin_finalize);
 }
 
@@ -206,7 +202,7 @@ _gst_plugin_initialize (void)
 static gboolean
 gst_plugin_check_license (const gchar * license)
 {
-  gchar **check_license = valid_licenses;
+  const gchar **check_license = valid_licenses;
 
   g_assert (check_license);
 
