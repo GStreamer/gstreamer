@@ -1,3 +1,20 @@
+2006-04-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),
+	(gst_qtdemux_push_event), (gst_qtdemux_go_back),
+	(gst_qtdemux_perform_seek), (gst_qtdemux_do_seek),
+	(gst_qtdemux_handle_src_event), (plugin_init),
+	(gst_qtdemux_change_state), (gst_qtdemux_loop_state_movie),
+	(gst_qtdemux_loop), (gst_qtdemux_chain),
+	(qtdemux_sink_activate_pull), (gst_qtdemux_add_stream),
+	(qtdemux_parse), (qtdemux_parse_tree), (qtdemux_parse_trak),
+	(qtdemux_parse_udta), (qtdemux_tag_add_str), (qtdemux_tag_add_num),
+	(qtdemux_tag_add_gnre), (gst_qtdemux_handle_esds):
+	* gst/qtdemux/qtdemux.h:
+	Handle stss boxes so we can mark and find keyframes.
+	Implement correct accurate and keyframe seeking.
+	Use _DEBUG_OBJECT when possible.
+
 2006-04-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:

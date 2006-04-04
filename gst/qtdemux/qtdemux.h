@@ -50,9 +50,9 @@ struct _GstQTDemux {
   GstPad *sinkpad;
 
   QtDemuxStream *streams[GST_QTDEMUX_MAX_STREAMS];
-  int n_streams;
-  int n_video_streams;
-  int n_audio_streams;
+  gint n_streams;
+  gint n_video_streams;
+  gint n_audio_streams;
 
   GNode *moov_node;
   GNode *moov_node_compressed;
@@ -60,7 +60,7 @@ struct _GstQTDemux {
   guint32 timescale;
   guint32 duration;
 
-  int state;
+  gint state;
 
   gboolean pullbased;
 
@@ -81,7 +81,9 @@ struct _GstQTDemux {
 
   guint64 last_ts;
 
+  /* configured playback region */
   GstSegment segment;
+  gboolean segment_running;
 };
 
 struct _GstQTDemuxClass {
