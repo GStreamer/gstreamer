@@ -1,3 +1,9 @@
+2006-04-04  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	gst_element_post_message: Adding keep-refcount tag to the message since
+	the function will unref it.
+
 2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

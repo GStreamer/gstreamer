@@ -1185,7 +1185,7 @@
   (c-name "gst_element_post_message")
   (return-type "gboolean")
   (parameters
-    '("GstMessage*" "message")
+    '("GstMessage*" "message" (keep-refcount))
   )
 )
 
