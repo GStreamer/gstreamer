@@ -1,3 +1,10 @@
+2006-04-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_chain):
+	  More debug info; when skipping typefinding, send cached
+	  events in all cases.
+
 2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
