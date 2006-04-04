@@ -1,3 +1,10 @@
+2006-04-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts  <manauw at skynet dot be>
+
+	* plugins/elements/gstfilesink.c: (gst_file_sink_render):
+	  Don't error out on empty buffers (#336945).
+	  
 2006-04-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/libs/gstreamer-libs-sections.txt:

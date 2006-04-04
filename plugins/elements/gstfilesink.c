@@ -412,10 +412,12 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   GST_DEBUG_OBJECT (filesink, "writing %u bytes at %" G_GUINT64_FORMAT,
       size, cur_pos);
 
-  if (fwrite (GST_BUFFER_DATA (buffer), size, 1, filesink->file) != 1)
-    goto handle_error;
+  if (size > 0 && GST_BUFFER_DATA (buffer) != NULL) {
+    if (fwrite (GST_BUFFER_DATA (buffer), size, 1, filesink->file) != 1)
+      goto handle_error;
 
-  filesink->data_written += size - back_pending;
+    filesink->data_written += size - back_pending;
+  }
 
   return GST_FLOW_OK;
 
