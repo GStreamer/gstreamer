@@ -1,3 +1,9 @@
+2006-04-04  Andy Wingo  <wingo@pobox.com>
+
+	* ext/theora/theoradec.c (theora_handle_data_packet): This value
+	is often negative -- make it signed so as not to wrap around.
+	Fixes segfaults introduced on 9 March.
+
 2006-04-03  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/gsttheoradec.h:

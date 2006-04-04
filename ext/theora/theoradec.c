@@ -969,7 +969,7 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
     guchar *dest_y, *src_y;
     guchar *dest_u, *src_u;
     guchar *dest_v, *src_v;
-    guint offset;
+    gint offset;
 
     dest_y = GST_BUFFER_DATA (out);
     dest_u = dest_y + stride_y * height;
