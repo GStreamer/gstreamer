@@ -14,6 +14,7 @@
 	Handle stss boxes so we can mark and find keyframes.
 	Implement correct accurate and keyframe seeking.
 	Use _DEBUG_OBJECT when possible.
+	Fixes #332155
 
 2006-04-03  Tim-Philipp Müller  <tim at centricular dot net>
 
