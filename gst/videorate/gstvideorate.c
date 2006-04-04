@@ -405,10 +405,11 @@ gst_video_rate_flush_prev (GstVideoRate * videorate)
   GstBuffer *outbuf;
   GstClockTime push_ts;
 
+  if (!videorate->prevbuf)
+    goto eos_before_buffers;
+
   /* make sure we can write to the metadata */
-  outbuf =
-      gst_buffer_create_sub (videorate->prevbuf, 0,
-      GST_BUFFER_SIZE (videorate->prevbuf));
+  outbuf = gst_buffer_make_metadata_writable (videorate->prevbuf);
 
   /* this is the timestamp we put on the buffer */
   push_ts = videorate->next_ts;
@@ -436,6 +437,12 @@ gst_video_rate_flush_prev (GstVideoRate * videorate)
 
   return res;
 
+  /* WARNINGS */
+eos_before_buffers:
+  {
+    GST_INFO_OBJECT (videorate, "got EOS before any buffer was received");
+    return GST_FLOW_OK;
+  }
   /* ERRORS */
 push_error:
   {
