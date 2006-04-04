@@ -914,7 +914,7 @@ print_element_list (gboolean print_all)
     gst_plugin_feature_list_free (orig_features);
   }
 
-  gst_plugin_list_free (plugins);
+  gst_plugin_list_free (orig_plugins);
 
   g_print ("\nTotal plugins: %d\nTotal features: %d\n",
       plugincount, featurecount);

@@ -1,3 +1,8 @@
+2006-04-04  Michael Smith  <msmith@fluendo.com>
+
+	* tools/gst-inspect.c: (print_element_list):
+	  Free the right plugin list; fixes a memory leak.
+
 2006-04-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Mark Nauwelaerts  <manauw at skynet dot be>
