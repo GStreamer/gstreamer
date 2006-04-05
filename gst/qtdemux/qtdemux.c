@@ -581,6 +581,11 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
     segment->last_stop = min;
     segment->time = min;
   }
+
+  /* and we stop at the end */
+  if (segment->stop == -1)
+    segment->stop = segment->duration;
+
   return TRUE;
 }
 
@@ -687,8 +692,9 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   }
 
   /* send the newsegment */
-  GST_DEBUG_OBJECT (qtdemux, "Sending newsegment from %" G_GINT64_FORMAT
-      " to %" G_GINT64_FORMAT, qtdemux->segment.start, stop);
+  GST_DEBUG_OBJECT (qtdemux, "Sending newsegment from %" GST_TIME_FORMAT
+      " to %" GST_TIME_FORMAT, GST_TIME_ARGS (qtdemux->segment.start),
+      GST_TIME_ARGS (qtdemux->segment.stop));
 
   newsegment =
       gst_event_new_new_segment (FALSE, qtdemux->segment.rate,
@@ -952,12 +958,12 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
       }
     }
   }
-  if (index == -1) {
-    GST_DEBUG_OBJECT (qtdemux, "No samples left for any streams - EOS");
-    gst_pad_event_default (qtdemux->sinkpad, gst_event_new_eos ());
-    ret = GST_FLOW_UNEXPECTED;
-    goto beach;
-  }
+  if (index == -1)
+    goto eos;
+
+  /* check for segment end */
+  if (qtdemux->segment.stop != -1 && qtdemux->segment.stop < min_time)
+    goto eos;
 
   stream = qtdemux->streams[index];
 
@@ -1036,6 +1042,14 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
 beach:
   return ret;
+
+  /* special cases */
+eos:
+  {
+    GST_DEBUG_OBJECT (qtdemux, "No samples left for any streams - EOS");
+    ret = GST_FLOW_UNEXPECTED;
+    goto beach;
+  }
 }
 
 static void
@@ -1076,7 +1090,7 @@ gst_qtdemux_loop (GstPad * pad)
   GST_LOG_OBJECT (qtdemux, "pausing task, reason %s", gst_flow_get_name (ret));
 
   qtdemux->segment_running = FALSE;
-  gst_pad_pause_task (qtdemux->sinkpad);
+  gst_pad_pause_task (pad);
 
   /* fatal errors need special actions */
   if (GST_FLOW_IS_FATAL (ret)) {
@@ -1108,7 +1122,7 @@ invalid_state:
     GST_ELEMENT_ERROR (qtdemux, STREAM, FAILED,
         (NULL), ("streaming stopped, invalid state"));
     qtdemux->segment_running = FALSE;
-    gst_pad_pause_task (qtdemux->sinkpad);
+    gst_pad_pause_task (pad);
     gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
     goto done;
   }
