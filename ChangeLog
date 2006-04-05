@@ -1,3 +1,12 @@
+2006-04-05  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_perform_seek),
+	(gst_qtdemux_do_seek), (gst_qtdemux_loop_state_movie),
+	(gst_qtdemux_loop):
+	Use duration as segment stop position if none is
+	explicitly configured.
+	Also perform EOS when we run past the segment stop.
+
 2006-04-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_go_back),
