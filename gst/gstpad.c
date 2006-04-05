@@ -939,7 +939,8 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
 had_right_state:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pad %s:%s was in right state", GST_DEBUG_PAD_NAME (pad));
+        "pad %s:%s was in right state (%d)", GST_DEBUG_PAD_NAME (pad),
+        was_blocked);
     GST_OBJECT_UNLOCK (pad);
 
     if (was_ghost) {

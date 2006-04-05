@@ -1150,6 +1150,7 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       trans->priv->earliest_time = -1;
       GST_OBJECT_UNLOCK (trans);
       /* we need new segment info after the flush. */
+      trans->have_newsegment = FALSE;
       gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
       break;
     case GST_EVENT_EOS:

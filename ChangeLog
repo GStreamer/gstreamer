@@ -1,3 +1,12 @@
+2006-04-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.c (gst_pad_set_blocked_async): More debug.
+
+	* libs/gst/base/gstbasetransform.c
+	(gst_base_transform_sink_eventfunc): When resetting our segment on
+	FLUSH_STOP, also update the flag saying we haven't seen a
+	newsegment.
+
 2006-04-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Paolo Borelli  <pborelli at katamail dot com>
