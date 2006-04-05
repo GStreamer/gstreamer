@@ -1,3 +1,8 @@
+2006-04-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.override (_wrap_gst_pad_set_blocked_async):
+	PyObject_IsTrue, not PyBool_Check. Grr.
+
 2006-04-04  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs:

@@ -1017,7 +1017,7 @@ _wrap_gst_pad_set_blocked_async (PyGObject *self, PyObject *args)
     return NULL;
     }
     pblocked = PySequence_GetItem(args, 0);
-    blocked = PyBool_Check(pblocked) ? TRUE : FALSE;
+    blocked = PyObject_IsTrue(pblocked);
 
     callback = PySequence_GetItem(args, 1);
     if (!PyCallable_Check(callback)) {
