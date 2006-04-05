@@ -406,6 +406,8 @@ GST_START_TEST (test_parse_bin_from_description)
           bin_tests[i].pad_names, s->str, bin_tests[i].bin_desc);
     }
     g_string_free (s, TRUE);
+
+    gst_object_unref (bin);
   }
 }
 

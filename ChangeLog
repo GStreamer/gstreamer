@@ -1,5 +1,12 @@
 2006-04-05  Michael Smith  <msmith@fluendo.com>
 
+	* tests/check/gst/gstghostpad.c: (GST_START_TEST):
+	  Unref a pad we reffed.
+	* tests/check/gst/gstutils.c: (GST_START_TEST):
+	  Unref bins
+
+2006-04-05  Michael Smith  <msmith@fluendo.com>
+
 	* gst/gstquery.c: (gst_query_set_formats),
 	(gst_query_set_formatsv):
 	  Fix leaking GValues in queries, as shown by valgrind/testsuite.
