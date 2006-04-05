@@ -472,7 +472,7 @@ gst_element_set_base_time (GstElement * element, GstClockTime time)
  *
  * Returns the base time of the element. The base time is the
  * absolute time of the clock when this element was last put to
- * PLAYING. Substracting the base time from the clock time gives
+ * PLAYING. Subtracting the base time from the clock time gives
  * the stream time of the element.
  *
  * Returns: the base time of the element.

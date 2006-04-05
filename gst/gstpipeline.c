@@ -248,6 +248,10 @@ gst_pipeline_init (GTypeInstance * instance, gpointer g_class)
 
   /* create and set a default bus */
   bus = gst_bus_new ();
+  /* Start our bus in flushing if appropriate */
+  if (pipeline->priv->auto_flush_bus)
+    gst_bus_set_flushing (bus, TRUE);
+
   gst_element_set_bus (GST_ELEMENT_CAST (pipeline), bus);
   GST_DEBUG_OBJECT (pipeline, "set bus %" GST_PTR_FORMAT " on pipeline", bus);
   gst_object_unref (bus);

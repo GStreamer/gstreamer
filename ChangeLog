@@ -1,5 +1,15 @@
 2006-04-05  Michael Smith  <msmith@fluendo.com>
 
+	* gst/gstpipeline.c: (gst_pipeline_init):
+	  When we create a pipeline bus, initially create it in flushing mode.
+	  Fixes leaks in at least one test, and makes a new pipeline work the
+	  same as one that has gone to READY and then back to NULL.
+
+	* gst/gstelement.c:
+	  Typo fix in docs.
+
+2006-04-05  Michael Smith  <msmith@fluendo.com>
+
 	* tests/check/gst/gstghostpad.c: (GST_START_TEST):
 	  Unref a pad we reffed.
 	* tests/check/gst/gstutils.c: (GST_START_TEST):
