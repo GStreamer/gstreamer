@@ -1,5 +1,18 @@
 2006-04-05  Andy Wingo  <wingo@pobox.com>
 
+	* configure.ac (PYGST_MICRO_VERSION): Doc fix.
+	(PYGST_NANO_VERSION): New define.
+
+	* gst/__init__.py (version): Add as an alias for get_gst_version.
+	Should use the deprecation infrastructure here.
+
+	* gst/gst.defs: Add defs for the new wrapped functions.
+
+	* gst/gst.override (_wrap_gst_get_pygst_version) 
+	(_wrap_gst_get_gst_version): New overrides, functions to access
+	the gstreamer and pygst versions. The first used to be called
+	gst_version(); we ignore gst_version now.
+
 	* gst/gstpad.override (_wrap_gst_pad_set_blocked_async):
 	PyObject_IsTrue, not PyBool_Check. Grr.
 

@@ -90,6 +90,8 @@ sys.setdlopenflags(DLFCN.RTLD_LAZY | DLFCN.RTLD_GLOBAL)
 from _gst import *
 import interfaces
 
+version = get_gst_version
+
 sys.setdlopenflags(dlsave)
 del DLFCN, sys
 

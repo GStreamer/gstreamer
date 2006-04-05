@@ -307,6 +307,7 @@ ignore
   gst_implements_interface_check
   gst_plugin_get_module
   gst_object_sink
+  gst_version
 %%
 /*
   Magic to be able to use bugfixes of new releases without having to use
@@ -911,9 +912,9 @@ _wrap_gst_type_find_factory_get_list (PyObject *self)
     return py_list;
 }
 %%
-override gst_version noargs
+override gst_get_gst_version noargs
 static PyObject *
-_wrap_gst_version (PyObject *self)
+_wrap_gst_get_gst_version (PyObject *self)
 {
     guint	major, minor, micro, nano;
     PyObject	*py_tuple;
@@ -924,6 +925,18 @@ _wrap_gst_version (PyObject *self)
     PyTuple_SetItem(py_tuple, 1, PyInt_FromLong(minor));
     PyTuple_SetItem(py_tuple, 2, PyInt_FromLong(micro));
     PyTuple_SetItem(py_tuple, 3, PyInt_FromLong(nano));
+
+    return py_tuple;
+}
+%%
+override gst_get_pygst_version noargs
+static PyObject *
+_wrap_gst_get_pygst_version (PyObject *self)
+{
+    PyObject	*py_tuple;
+
+    py_tuple = Py_BuildValue ("(iiii)", PYGST_MAJOR_VERSION, PYGST_MINOR_VERSION,
+                              PYGST_MICRO_VERSION, PYGST_NANO_VERSION);
 
     return py_tuple;
 }

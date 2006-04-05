@@ -52,6 +52,15 @@
   (return-type "gchar*")
 )
 
+(define-function get_gst_version
+  (c-name "gst_get_gst_version")
+  (return-type "none")
+)
+
+(define-function get_pygst_version
+  (c-name "gst_get_pygst_version")
+  (return-type "none")
+)
 
 
 ;; From ../gstreamer/gst/gstbin.h
