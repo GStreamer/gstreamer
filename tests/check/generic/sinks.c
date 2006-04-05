@@ -178,6 +178,7 @@ GST_START_TEST (test_livesrc_remove)
   g_object_set (G_OBJECT (src), "is-live", TRUE, NULL);
   sink = gst_element_factory_make ("fakesink", "sink");
 
+  gst_object_ref (src);
   gst_bin_add (GST_BIN (pipeline), src);
   gst_bin_add (GST_BIN (pipeline), sink);
 
@@ -198,11 +199,17 @@ GST_START_TEST (test_livesrc_remove)
 
   gst_bin_remove (GST_BIN (pipeline), src);
 
+  ret = gst_element_set_state (src, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "async going to null");
+  gst_object_unref (src);
+
   ret = gst_element_get_state (pipeline, &current, &pending, 0);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC, "not async");
   fail_unless (current == GST_STATE_PAUSED, "not paused");
   fail_unless (pending == GST_STATE_PAUSED, "not paused");
 
+  ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "async going to null");
   gst_object_unref (pipeline);
 }
 
@@ -396,6 +403,11 @@ GST_START_TEST (test_livesrc2_sink)
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "not success");
   fail_unless (current == GST_STATE_READY, "not ready");
   fail_unless (pending == GST_STATE_VOID_PENDING, "not ready");
+
+  /* And destroy. Must be NULL */
+  ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "no success state return");
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST;
@@ -433,6 +445,7 @@ GST_START_TEST (test_livesrc3_sink)
   /* and back down */
   ret = gst_element_set_state (pipeline, GST_STATE_NULL);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "no success state return");
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST;
