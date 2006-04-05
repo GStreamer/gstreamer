@@ -1,3 +1,28 @@
+2006-04-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_class_init),
+	(gst_vorbis_dec_init), (vorbis_dec_finalize):
+	* ext/vorbis/vorbisdec.h:
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_add_interfaces),
+	(gst_vorbis_enc_base_init), (gst_vorbis_enc_class_init),
+	(gst_vorbis_enc_sink_setcaps), (gst_vorbis_enc_convert_src),
+	(gst_vorbis_enc_convert_sink), (gst_vorbis_enc_get_query_types),
+	(gst_vorbis_enc_src_query), (gst_vorbis_enc_sink_query),
+	(gst_vorbis_enc_init), (gst_vorbis_enc_get_tag_value),
+	(gst_vorbis_enc_metadata_set1), (gst_vorbis_enc_set_metadata),
+	(gst_vorbis_enc_setup), (gst_vorbis_enc_clear),
+	(gst_vorbis_enc_buffer_from_packet),
+	(gst_vorbis_enc_buffer_from_header_packet),
+	(gst_vorbis_enc_push_buffer), (gst_vorbis_enc_push_packet),
+	(gst_vorbis_enc_set_header_on_caps), (gst_vorbis_enc_sink_event),
+	(gst_vorbis_enc_chain), (gst_vorbis_enc_output_buffers),
+	(gst_vorbis_enc_get_property), (gst_vorbis_enc_set_property),
+	(gst_vorbis_enc_change_state):
+	* ext/vorbis/vorbisenc.h:
+	  Remove left-over 0.8 cruft; use GST_DEBUG_FUNCPTR; make
+	  vorbisenc adhere to the official nomenclature; use boilerplate
+	  macro.
+
 2006-04-04  Andy Wingo  <wingo@pobox.com>
 
 	* gst/videorate/gstvideorate.c (gst_video_rate_flush_prev):

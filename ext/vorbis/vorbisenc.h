@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __VORBISENC_H__
-#define __VORBISENC_H__
+#ifndef __GST_VORBIS_ENC_H__
+#define __GST_VORBIS_ENC_H__
 
 
 #include <gst/gst.h>
@@ -29,14 +29,14 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_VORBISENC \
-  (vorbisenc_get_type())
+  (gst_vorbis_enc_get_type())
 #define GST_VORBISENC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VORBISENC,GstVorbisEnc))
 #define GST_VORBISENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VORBISENC,GstVorbisEncClass))
 #define GST_IS_VORBISENC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VORBISENC))
-#define GST_IS_VORBISENC_CLASS(obj) \
+#define GST_IS_VORBISENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VORBISENC))
 
 typedef struct _GstVorbisEnc GstVorbisEnc;
@@ -87,8 +87,8 @@ struct _GstVorbisEncClass {
   GstElementClass parent_class;
 };
 
-GType vorbisenc_get_type(void);
+GType gst_vorbis_enc_get_type(void);
 
 G_END_DECLS
 
-#endif /* __VORBISENC_H__ */
+#endif /* __GST_VORBIS_ENC_H__ */

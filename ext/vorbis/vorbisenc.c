@@ -63,7 +63,8 @@
 GST_DEBUG_CATEGORY_EXTERN (vorbisenc_debug);
 #define GST_CAT_DEFAULT vorbisenc_debug
 
-static GstPadTemplate *gst_vorbisenc_src_template, *gst_vorbisenc_sink_template;
+static GstPadTemplate *gst_vorbis_enc_src_template,
+    *gst_vorbis_enc_sink_template;
 
 /* elementfactory information */
 GstElementDetails vorbisenc_details =
@@ -71,13 +72,6 @@ GST_ELEMENT_DETAILS ("Vorbis audio encoder",
     "Codec/Encoder/Audio",
     "Encodes audio in Vorbis format",
     "Monty <monty@xiph.org>, " "Wim Taymans <wim@fluendo.com>");
-
-/* GstVorbisEnc signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
 
 enum
 {
@@ -90,7 +84,7 @@ enum
   ARG_LAST_MESSAGE
 };
 
-static GstFlowReturn gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc);
+static GstFlowReturn gst_vorbis_enc_output_buffers (GstVorbisEnc * vorbisenc);
 
 /* this function takes into account the granulepos_offset and the subgranule
  * time offset */
@@ -115,26 +109,6 @@ granulepos_to_timestamp (GstVorbisEnc * vorbisenc, ogg_int64_t granulepos)
   return GST_CLOCK_TIME_NONE;
 }
 
-#if 0
-static const GstFormat *
-gst_vorbisenc_get_formats (GstPad * pad)
-{
-  static const GstFormat src_formats[] = {
-    GST_FORMAT_BYTES,
-    GST_FORMAT_TIME,
-    0
-  };
-  static const GstFormat sink_formats[] = {
-    GST_FORMAT_BYTES,
-    GST_FORMAT_DEFAULT,
-    GST_FORMAT_TIME,
-    0
-  };
-
-  return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
-}
-#endif
-
 #define MAX_BITRATE_DEFAULT     -1
 #define BITRATE_DEFAULT         -1
 #define MIN_BITRATE_DEFAULT     -1
@@ -142,56 +116,28 @@ gst_vorbisenc_get_formats (GstPad * pad)
 #define LOWEST_BITRATE          6000    /* lowest allowed for a 8 kHz stream */
 #define HIGHEST_BITRATE         250001  /* highest allowed for a 44 kHz stream */
 
-static void gst_vorbisenc_base_init (gpointer g_class);
-static void gst_vorbisenc_class_init (GstVorbisEncClass * klass);
-static void gst_vorbisenc_init (GstVorbisEnc * vorbisenc);
+static gboolean gst_vorbis_enc_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_vorbis_enc_setup (GstVorbisEnc * vorbisenc);
 
-static gboolean gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_vorbisenc_setup (GstVorbisEnc * vorbisenc);
-
-static void gst_vorbisenc_get_property (GObject * object, guint prop_id,
+static void gst_vorbis_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_vorbisenc_set_property (GObject * object, guint prop_id,
+static void gst_vorbis_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static GstStateChangeReturn gst_vorbisenc_change_state (GstElement * element,
+static GstStateChangeReturn gst_vorbis_enc_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_vorbis_enc_add_interfaces (GType vorbisenc_type);
 
-static GstElementClass *parent_class = NULL;
+GST_BOILERPLATE_FULL (GstVorbisEnc, gst_vorbis_enc, GstElement,
+    GST_TYPE_ELEMENT, gst_vorbis_enc_add_interfaces);
 
-/*static guint gst_vorbisenc_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-vorbisenc_get_type (void)
+static void
+gst_vorbis_enc_add_interfaces (GType vorbisenc_type)
 {
-  static GType vorbisenc_type = 0;
+  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
 
-  if (!vorbisenc_type) {
-    static const GTypeInfo vorbisenc_info = {
-      sizeof (GstVorbisEncClass),
-      gst_vorbisenc_base_init,
-      NULL,
-      (GClassInitFunc) gst_vorbisenc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstVorbisEnc),
-      0,
-      (GInstanceInitFunc) gst_vorbisenc_init,
-    };
-    static const GInterfaceInfo tag_setter_info = {
-      NULL,
-      NULL,
-      NULL
-    };
-
-    vorbisenc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstVorbisEnc",
-        &vorbisenc_info, 0);
-
-    g_type_add_interface_static (vorbisenc_type, GST_TYPE_TAG_SETTER,
-        &tag_setter_info);
-  }
-  return vorbisenc_type;
+  g_type_add_interface_static (vorbisenc_type, GST_TYPE_TAG_SETTER,
+      &tag_setter_info);
 }
 
 static GstCaps *
@@ -213,7 +159,7 @@ raw_caps_factory (void)
 }
 
 static void
-gst_vorbisenc_base_init (gpointer g_class)
+gst_vorbis_enc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstCaps *raw_caps, *vorbis_caps;
@@ -221,19 +167,19 @@ gst_vorbisenc_base_init (gpointer g_class)
   raw_caps = raw_caps_factory ();
   vorbis_caps = vorbis_caps_factory ();
 
-  gst_vorbisenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
+  gst_vorbis_enc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
       GST_PAD_ALWAYS, raw_caps);
-  gst_vorbisenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC,
+  gst_vorbis_enc_src_template = gst_pad_template_new ("src", GST_PAD_SRC,
       GST_PAD_ALWAYS, vorbis_caps);
   gst_element_class_add_pad_template (element_class,
-      gst_vorbisenc_sink_template);
+      gst_vorbis_enc_sink_template);
   gst_element_class_add_pad_template (element_class,
-      gst_vorbisenc_src_template);
+      gst_vorbis_enc_src_template);
   gst_element_class_set_details (element_class, &vorbisenc_details);
 }
 
 static void
-gst_vorbisenc_class_init (GstVorbisEncClass * klass)
+gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -241,8 +187,8 @@ gst_vorbisenc_class_init (GstVorbisEncClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->set_property = gst_vorbisenc_set_property;
-  gobject_class->get_property = gst_vorbisenc_get_property;
+  gobject_class->set_property = gst_vorbis_enc_set_property;
+  gobject_class->get_property = gst_vorbis_enc_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_BITRATE,
       g_param_spec_int ("max-bitrate", "Maximum Bitrate",
@@ -271,13 +217,12 @@ gst_vorbisenc_class_init (GstVorbisEncClass * klass)
       g_param_spec_string ("last-message", "last-message",
           "The last status message", NULL, G_PARAM_READABLE));
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
-
-  gstelement_class->change_state = gst_vorbisenc_change_state;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_vorbis_enc_change_state);
 }
 
 static gboolean
-gst_vorbisenc_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_vorbis_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVorbisEnc *vorbisenc;
   GstStructure *structure;
@@ -289,7 +234,7 @@ gst_vorbisenc_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "channels", &vorbisenc->channels);
   gst_structure_get_int (structure, "rate", &vorbisenc->frequency);
 
-  gst_vorbisenc_setup (vorbisenc);
+  gst_vorbis_enc_setup (vorbisenc);
 
   if (vorbisenc->setup)
     return TRUE;
@@ -298,8 +243,8 @@ gst_vorbisenc_sink_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static gboolean
-gst_vorbisenc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
+gst_vorbis_enc_convert_src (GstPad * pad, GstFormat src_format,
+    gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
   GstVorbisEnc *vorbisenc;
@@ -342,7 +287,7 @@ gst_vorbisenc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
 }
 
 static gboolean
-gst_vorbisenc_convert_sink (GstPad * pad, GstFormat src_format,
+gst_vorbis_enc_convert_sink (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
@@ -414,20 +359,20 @@ gst_vorbisenc_convert_sink (GstPad * pad, GstFormat src_format,
 }
 
 static const GstQueryType *
-gst_vorbisenc_get_query_types (GstPad * pad)
+gst_vorbis_enc_get_query_types (GstPad * pad)
 {
-  static const GstQueryType gst_vorbisenc_src_query_types[] = {
+  static const GstQueryType gst_vorbis_enc_src_query_types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
     GST_QUERY_CONVERT,
     0
   };
 
-  return gst_vorbisenc_src_query_types;
+  return gst_vorbis_enc_src_query_types;
 }
 
 static gboolean
-gst_vorbisenc_src_query (GstPad * pad, GstQuery * query)
+gst_vorbis_enc_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
   GstVorbisEnc *vorbisenc;
@@ -484,7 +429,7 @@ gst_vorbisenc_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (!(res =
-              gst_vorbisenc_convert_src (pad, src_fmt, src_val, &dest_fmt,
+              gst_vorbis_enc_convert_src (pad, src_fmt, src_val, &dest_fmt,
                   &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -502,7 +447,7 @@ error:
 }
 
 static gboolean
-gst_vorbisenc_sink_query (GstPad * pad, GstQuery * query)
+gst_vorbis_enc_sink_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
   GstVorbisEnc *vorbisenc;
@@ -517,7 +462,7 @@ gst_vorbisenc_sink_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (!(res =
-              gst_vorbisenc_convert_sink (pad, src_fmt, src_val, &dest_fmt,
+              gst_vorbis_enc_convert_sink (pad, src_fmt, src_val, &dest_fmt,
                   &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -533,23 +478,26 @@ error:
 }
 
 static void
-gst_vorbisenc_init (GstVorbisEnc * vorbisenc)
+gst_vorbis_enc_init (GstVorbisEnc * vorbisenc, GstVorbisEncClass * klass)
 {
   vorbisenc->sinkpad =
-      gst_pad_new_from_template (gst_vorbisenc_sink_template, "sink");
-  gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->sinkpad);
-  gst_pad_set_event_function (vorbisenc->sinkpad, gst_vorbisenc_sink_event);
-  gst_pad_set_chain_function (vorbisenc->sinkpad, gst_vorbisenc_chain);
-  gst_pad_set_setcaps_function (vorbisenc->sinkpad, gst_vorbisenc_sink_setcaps);
+      gst_pad_new_from_template (gst_vorbis_enc_sink_template, "sink");
+  gst_pad_set_event_function (vorbisenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_event));
+  gst_pad_set_chain_function (vorbisenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_vorbis_enc_chain));
+  gst_pad_set_setcaps_function (vorbisenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_setcaps));
   gst_pad_set_query_function (vorbisenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_vorbisenc_sink_query));
+      GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_query));
+  gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->sinkpad);
 
   vorbisenc->srcpad =
-      gst_pad_new_from_template (gst_vorbisenc_src_template, "src");
+      gst_pad_new_from_template (gst_vorbis_enc_src_template, "src");
   gst_pad_set_query_function (vorbisenc->srcpad,
-      GST_DEBUG_FUNCPTR (gst_vorbisenc_src_query));
+      GST_DEBUG_FUNCPTR (gst_vorbis_enc_src_query));
   gst_pad_set_query_type_function (vorbisenc->srcpad,
-      GST_DEBUG_FUNCPTR (gst_vorbisenc_get_query_types));
+      GST_DEBUG_FUNCPTR (gst_vorbis_enc_get_query_types));
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->srcpad);
 
   vorbisenc->channels = -1;
@@ -566,7 +514,7 @@ gst_vorbisenc_init (GstVorbisEnc * vorbisenc)
 
 
 static gchar *
-gst_vorbisenc_get_tag_value (const GstTagList * list, const gchar * tag,
+gst_vorbis_enc_get_tag_value (const GstTagList * list, const gchar * tag,
     int index)
 {
   GType tag_type;
@@ -607,7 +555,7 @@ gst_vorbisenc_get_tag_value (const GstTagList * list, const gchar * tag,
 }
 
 static void
-gst_vorbisenc_metadata_set1 (const GstTagList * list, const gchar * tag,
+gst_vorbis_enc_metadata_set1 (const GstTagList * list, const gchar * tag,
     gpointer vorbisenc)
 {
   const gchar *vorbistag = NULL;
@@ -622,7 +570,7 @@ gst_vorbisenc_metadata_set1 (const GstTagList * list, const gchar * tag,
 
   count = gst_tag_list_get_tag_size (list, tag);
   for (i = 0; i < count; i++) {
-    vorbisvalue = gst_vorbisenc_get_tag_value (list, tag, i);
+    vorbisvalue = gst_vorbis_enc_get_tag_value (list, tag, i);
 
     if (vorbisvalue != NULL) {
       gchar *tmptag = g_strdup (vorbistag);
@@ -635,7 +583,7 @@ gst_vorbisenc_metadata_set1 (const GstTagList * list, const gchar * tag,
 }
 
 static void
-gst_vorbisenc_set_metadata (GstVorbisEnc * vorbisenc)
+gst_vorbis_enc_set_metadata (GstVorbisEnc * vorbisenc)
 {
   GstTagList *copy;
   const GstTagList *user_tags;
@@ -648,7 +596,7 @@ gst_vorbisenc_set_metadata (GstVorbisEnc * vorbisenc)
       gst_tag_list_merge (user_tags, vorbisenc->tags,
       gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (vorbisenc)));
   vorbis_comment_init (&vorbisenc->vc);
-  gst_tag_list_foreach (copy, gst_vorbisenc_metadata_set1, vorbisenc);
+  gst_tag_list_foreach (copy, gst_vorbis_enc_metadata_set1, vorbisenc);
   gst_tag_list_free (copy);
 }
 
@@ -717,7 +665,7 @@ update_start_message (GstVorbisEnc * vorbisenc)
 }
 
 static gboolean
-gst_vorbisenc_setup (GstVorbisEnc * vorbisenc)
+gst_vorbis_enc_setup (GstVorbisEnc * vorbisenc)
 {
   vorbisenc->setup = FALSE;
 
@@ -794,13 +742,13 @@ gst_vorbisenc_setup (GstVorbisEnc * vorbisenc)
 }
 
 static GstFlowReturn
-gst_vorbisenc_clear (GstVorbisEnc * vorbisenc)
+gst_vorbis_enc_clear (GstVorbisEnc * vorbisenc)
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (vorbisenc->setup) {
     vorbis_analysis_wrote (&vorbisenc->vd, 0);
-    ret = gst_vorbisenc_output_buffers (vorbisenc);
+    ret = gst_vorbis_enc_output_buffers (vorbisenc);
 
     vorbisenc->setup = FALSE;
   }
@@ -817,7 +765,8 @@ gst_vorbisenc_clear (GstVorbisEnc * vorbisenc)
 
 /* prepare a buffer for transmission by passing data through libvorbis */
 static GstBuffer *
-gst_vorbisenc_buffer_from_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
+gst_vorbis_enc_buffer_from_packet (GstVorbisEnc * vorbisenc,
+    ogg_packet * packet)
 {
   GstBuffer *outbuf;
 
@@ -846,7 +795,7 @@ gst_vorbisenc_buffer_from_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
 /* the same as above, but different logic for setting timestamp and granulepos
  * */
 static GstBuffer *
-gst_vorbisenc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
+gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
     ogg_packet * packet)
 {
   GstBuffer *outbuf;
@@ -865,7 +814,7 @@ gst_vorbisenc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
 
 /* push out the buffer and do internal bookkeeping */
 static GstFlowReturn
-gst_vorbisenc_push_buffer (GstVorbisEnc * vorbisenc, GstBuffer * buffer)
+gst_vorbis_enc_push_buffer (GstVorbisEnc * vorbisenc, GstBuffer * buffer)
 {
   vorbisenc->bytes_out += GST_BUFFER_SIZE (buffer);
 
@@ -873,16 +822,16 @@ gst_vorbisenc_push_buffer (GstVorbisEnc * vorbisenc, GstBuffer * buffer)
 }
 
 static GstFlowReturn
-gst_vorbisenc_push_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
+gst_vorbis_enc_push_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
 {
   GstBuffer *outbuf;
 
-  outbuf = gst_vorbisenc_buffer_from_packet (vorbisenc, packet);
-  return gst_vorbisenc_push_buffer (vorbisenc, outbuf);
+  outbuf = gst_vorbis_enc_buffer_from_packet (vorbisenc, packet);
+  return gst_vorbis_enc_push_buffer (vorbisenc, outbuf);
 }
 
 static GstCaps *
-gst_vorbisenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
+gst_vorbis_enc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
     GstBuffer * buf2, GstBuffer * buf3)
 {
   GstStructure *structure;
@@ -918,7 +867,7 @@ gst_vorbisenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
 }
 
 static gboolean
-gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
+gst_vorbis_enc_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
   GstVorbisEnc *vorbisenc;
@@ -930,7 +879,7 @@ gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
       /* Tell the library we're at end of stream so that it can handle
        * the last frame and mark end of stream in the output properly */
       GST_DEBUG_OBJECT (vorbisenc, "EOS, clearing state and sending event on");
-      gst_vorbisenc_clear (vorbisenc);
+      gst_vorbis_enc_clear (vorbisenc);
 
       res = gst_pad_push_event (vorbisenc->srcpad, event);
       break;
@@ -954,7 +903,7 @@ gst_vorbisenc_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
+gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstVorbisEnc *vorbisenc;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -987,19 +936,19 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
     vorbisenc->subgranule_offset = 0;
 
     GST_DEBUG_OBJECT (vorbisenc, "creating and sending header packets");
-    gst_vorbisenc_set_metadata (vorbisenc);
+    gst_vorbis_enc_set_metadata (vorbisenc);
     vorbis_analysis_headerout (&vorbisenc->vd, &vorbisenc->vc, &header,
         &header_comm, &header_code);
     vorbis_comment_clear (&vorbisenc->vc);
 
     /* create header buffers */
-    buf1 = gst_vorbisenc_buffer_from_header_packet (vorbisenc, &header);
-    buf2 = gst_vorbisenc_buffer_from_header_packet (vorbisenc, &header_comm);
-    buf3 = gst_vorbisenc_buffer_from_header_packet (vorbisenc, &header_code);
+    buf1 = gst_vorbis_enc_buffer_from_header_packet (vorbisenc, &header);
+    buf2 = gst_vorbis_enc_buffer_from_header_packet (vorbisenc, &header_comm);
+    buf3 = gst_vorbis_enc_buffer_from_header_packet (vorbisenc, &header_code);
 
     /* mark and put on caps */
     caps = gst_pad_get_caps (vorbisenc->srcpad);
-    caps = gst_vorbisenc_set_header_on_caps (caps, buf1, buf2, buf3);
+    caps = gst_vorbis_enc_set_header_on_caps (caps, buf1, buf2, buf3);
 
     /* negotiate with these caps */
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
@@ -1010,11 +959,11 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_set_caps (buf3, caps);
 
     /* push out buffers */
-    if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf1)) != GST_FLOW_OK)
+    if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf1)) != GST_FLOW_OK)
       goto failed_header_push;
-    if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf2)) != GST_FLOW_OK)
+    if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf2)) != GST_FLOW_OK)
       goto failed_header_push;
-    if ((ret = gst_vorbisenc_push_buffer (vorbisenc, buf3)) != GST_FLOW_OK)
+    if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf3)) != GST_FLOW_OK)
       goto failed_header_push;
 
 
@@ -1051,7 +1000,7 @@ gst_vorbisenc_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_buffer_unref (buffer);
 
-  ret = gst_vorbisenc_output_buffers (vorbisenc);
+  ret = gst_vorbis_enc_output_buffers (vorbisenc);
 
   return ret;
 
@@ -1071,7 +1020,7 @@ failed_header_push:
 }
 
 static GstFlowReturn
-gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc)
+gst_vorbis_enc_output_buffers (GstVorbisEnc * vorbisenc)
 {
   GstFlowReturn ret;
 
@@ -1089,7 +1038,7 @@ gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc)
 
     while (vorbis_bitrate_flushpacket (&vorbisenc->vd, &op)) {
       GST_LOG_OBJECT (vorbisenc, "pushing out a data packet");
-      ret = gst_vorbisenc_push_packet (vorbisenc, &op);
+      ret = gst_vorbis_enc_push_packet (vorbisenc, &op);
 
       if (ret != GST_FLOW_OK)
         return ret;
@@ -1100,7 +1049,7 @@ gst_vorbisenc_output_buffers (GstVorbisEnc * vorbisenc)
 }
 
 static void
-gst_vorbisenc_get_property (GObject * object, guint prop_id, GValue * value,
+gst_vorbis_enc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstVorbisEnc *vorbisenc;
@@ -1135,7 +1084,7 @@ gst_vorbisenc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_vorbisenc_set_property (GObject * object, guint prop_id,
+gst_vorbis_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVorbisEnc *vorbisenc;
@@ -1207,7 +1156,7 @@ gst_vorbisenc_set_property (GObject * object, guint prop_id,
 }
 
 static GstStateChangeReturn
-gst_vorbisenc_change_state (GstElement * element, GstStateChange transition)
+gst_vorbis_enc_change_state (GstElement * element, GstStateChange transition)
 {
   GstVorbisEnc *vorbisenc = GST_VORBISENC (element);
   GstStateChangeReturn res;

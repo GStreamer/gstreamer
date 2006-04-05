@@ -60,18 +60,6 @@ GST_ELEMENT_DETAILS ("Vorbis audio decoder",
     "decode raw vorbis streams to float audio",
     "Benjamin Otte <in7y118@public.uni-hamburg.de>");
 
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-};
-
 static GstStaticPadTemplate vorbis_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -96,15 +84,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 GST_BOILERPLATE (GstVorbisDec, gst_vorbis_dec, GstElement, GST_TYPE_ELEMENT);
 
-static void vorbisdec_finalize (GObject * object);
+static void vorbis_dec_finalize (GObject * object);
 static gboolean vorbis_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn vorbis_dec_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn vorbis_dec_change_state (GstElement * element,
     GstStateChange transition);
-
-#if 0
-static const GstFormat *vorbis_dec_get_formats (GstPad * pad);
-#endif
 
 static gboolean vorbis_dec_src_event (GstPad * pad, GstEvent * event);
 static gboolean vorbis_dec_src_query (GstPad * pad, GstQuery * query);
@@ -135,44 +119,10 @@ gst_vorbis_dec_class_init (GstVorbisDecClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  gobject_class->finalize = vorbisdec_finalize;
+  gobject_class->finalize = vorbis_dec_finalize;
 
-  gstelement_class->change_state = vorbis_dec_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (vorbis_dec_change_state);
 }
-
-#if 0
-static const GstFormat *
-vorbis_dec_get_formats (GstPad * pad)
-{
-  static GstFormat src_formats[] = {
-    GST_FORMAT_BYTES,
-    GST_FORMAT_DEFAULT,         /* samples in the audio case */
-    GST_FORMAT_TIME,
-    0
-  };
-  static GstFormat sink_formats[] = {
-    /*GST_FORMAT_BYTES, */
-    GST_FORMAT_TIME,
-    GST_FORMAT_DEFAULT,         /* granulepos or samples */
-    0
-  };
-
-  return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
-}
-#endif
-
-#if 0
-static const GstEventMask *
-vorbis_get_event_masks (GstPad * pad)
-{
-  static const GstEventMask vorbis_dec_src_event_masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET | GST_SEEK_FLAG_FLUSH},
-    {0,}
-  };
-
-  return vorbis_dec_src_event_masks;
-}
-#endif
 
 static const GstQueryType *
 vorbis_get_query_types (GstPad * pad)
@@ -191,17 +141,23 @@ gst_vorbis_dec_init (GstVorbisDec * dec, GstVorbisDecClass * g_class)
   dec->sinkpad = gst_pad_new_from_static_template (&vorbis_dec_sink_factory,
       "sink");
 
-  gst_pad_set_event_function (dec->sinkpad, vorbis_dec_sink_event);
-  gst_pad_set_chain_function (dec->sinkpad, vorbis_dec_chain);
-  gst_pad_set_query_function (dec->sinkpad, vorbis_dec_sink_query);
+  gst_pad_set_event_function (dec->sinkpad,
+      GST_DEBUG_FUNCPTR (vorbis_dec_sink_event));
+  gst_pad_set_chain_function (dec->sinkpad,
+      GST_DEBUG_FUNCPTR (vorbis_dec_chain));
+  gst_pad_set_query_function (dec->sinkpad,
+      GST_DEBUG_FUNCPTR (vorbis_dec_sink_query));
   gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   dec->srcpad = gst_pad_new_from_static_template (&vorbis_dec_src_factory,
       "src");
 
-  gst_pad_set_event_function (dec->srcpad, vorbis_dec_src_event);
-  gst_pad_set_query_type_function (dec->srcpad, vorbis_get_query_types);
-  gst_pad_set_query_function (dec->srcpad, vorbis_dec_src_query);
+  gst_pad_set_event_function (dec->srcpad,
+      GST_DEBUG_FUNCPTR (vorbis_dec_src_event));
+  gst_pad_set_query_type_function (dec->srcpad,
+      GST_DEBUG_FUNCPTR (vorbis_get_query_types));
+  gst_pad_set_query_function (dec->srcpad,
+      GST_DEBUG_FUNCPTR (vorbis_dec_src_query));
   gst_pad_use_fixed_caps (dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
@@ -209,7 +165,7 @@ gst_vorbis_dec_init (GstVorbisDec * dec, GstVorbisDecClass * g_class)
 }
 
 static void
-vorbisdec_finalize (GObject * object)
+vorbis_dec_finalize (GObject * object)
 {
   /* Release any possibly allocated libvorbis data.
    * _clear functions can safely be called multiple times
