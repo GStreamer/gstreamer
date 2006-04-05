@@ -5,7 +5,7 @@
 
 Name: 		%{gstreamer}-plugins-ugly
 Version: 	@VERSION@
-Release: 	@GST_PLUGINS_UGLY_VERSION_RELEASE@.gst
+Release: 	@PACKAGE_VERSION_RELEASE@.gst
 Summary: 	GStreamer streaming media framework "ugly" plug-ins
 
 Group: 		Applications/Multimedia
