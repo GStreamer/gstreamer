@@ -1,3 +1,9 @@
+2006-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/raw1394/gstdv1394src.c:
+	  distinguish between device not found and could not open for
+	  reading
+
 2006-04-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

@@ -667,8 +667,14 @@ gst_dv1394src_start (GstBaseSrc * bsrc)
 
   src->handle = raw1394_new_handle ();
 
-  if (!src->handle)
-    goto no_handle;
+  if (!src->handle) {
+    if (errno == EACCES)
+      goto permission_denied;
+    else if (errno == ENOENT)
+      goto not_found;
+    else
+      goto no_handle;
+  }
 
   raw1394_set_userdata (src->handle, src);
 
@@ -708,10 +714,20 @@ socket_pair:
         GST_ERROR_SYSTEM);
     return FALSE;
   }
+permission_denied:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL), GST_ERROR_SYSTEM);
+    return FALSE;
+  }
+not_found:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), GST_ERROR_SYSTEM);
+    return FALSE;
+  }
 no_handle:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
-        ("can't get raw1394 handle"));
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("can't get raw1394 handle (%s)", g_strerror (errno)));
     return FALSE;
   }
 no_ports:
