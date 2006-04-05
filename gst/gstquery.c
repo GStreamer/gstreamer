@@ -884,6 +884,9 @@ gst_query_set_formats (GstQuery * query, gint n_formats, ...)
 
   structure = gst_query_get_structure (query);
   gst_structure_set_value (structure, "formats", &list);
+
+  g_value_unset (&list);
+
 }
 
 /**
@@ -912,6 +915,8 @@ gst_query_set_formatsv (GstQuery * query, gint n_formats, GstFormat * formats)
   }
   structure = gst_query_get_structure (query);
   gst_structure_set_value (structure, "formats", &list);
+
+  g_value_unset (&list);
 }
 
 /**
