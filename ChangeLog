@@ -1,3 +1,19 @@
+2006-04-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/speex/gstspeex.c: (plugin_init):
+	* ext/speex/gstspeexdec.c: (gst_speex_dec_class_init),
+	(gst_speex_dec_reset), (gst_speex_dec_init), (speex_dec_convert),
+	(speex_get_sink_query_types), (speex_dec_sink_query),
+	(speex_get_src_query_types), (speex_dec_src_query),
+	(speex_dec_src_event), (speex_dec_sink_event),
+	(speex_dec_chain_parse_header), (speex_dec_chain_parse_comments),
+	(speex_dec_chain_parse_data), (speex_dec_chain),
+	(gst_speex_dec_get_property), (gst_speex_dec_set_property),
+	(speex_dec_change_state):
+	* ext/speex/gstspeexdec.h:
+	  Fix seeking and duration queries (#337033); clean up and
+	  refactor a bit.
+
 2006-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/raw1394/gstdv1394src.c:

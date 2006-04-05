@@ -34,7 +34,7 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_element_register (plugin, "speexdec", GST_RANK_PRIMARY,
-          GST_TYPE_SPEEXDEC))
+          GST_TYPE_SPEEX_DEC))
     return FALSE;
 
   gst_tag_register_musicbrainz_tags ();
