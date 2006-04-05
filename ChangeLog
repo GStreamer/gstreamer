@@ -1,3 +1,9 @@
+2006-04-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/version.entities.in:
+	  Fix the substituted entity name after thomas' changes on the
+	  weekend.
+
 2006-04-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/gstinfo.c: (__gst_in_valgrind): Use printf instead of
