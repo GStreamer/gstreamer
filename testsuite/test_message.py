@@ -46,9 +46,12 @@ class NewTest(TestCase):
 
         struc = gst.Structure("foo")
         msg = gst.message_new_application(bin, struc)
+        # the bus is flushing in NULL, so we need to set the pipeline to READY
+        bin.set_state(gst.STATE_READY)
         bus.post(msg)
         self.loop.run()
         bus.remove_signal_watch()
+        bin.set_state(gst.STATE_NULL)
         self.failUnless(self.got_message == True)
         self.gccollect()
 
