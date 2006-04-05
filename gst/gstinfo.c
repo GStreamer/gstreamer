@@ -244,11 +244,9 @@ __gst_in_valgrind (void)
 #ifdef HAVE_VALGRIND
     if (RUNNING_ON_VALGRIND) {
       GST_CAT_INFO (GST_CAT_GST_INIT, "we're running inside valgrind");
-      VALGRIND_PRINTF
-          ("GStreamer has detected that it is running inside valgrind.");
-      VALGRIND_PRINTF
-          ("It might now take different code paths to ease debugging.");
-      VALGRIND_PRINTF ("Of course, this may also lead to different bugs.");
+      printf ("GStreamer has detected that it is running inside valgrind.");
+      printf ("It might now take different code paths to ease debugging.");
+      printf ("Of course, this may also lead to different bugs.");
       in_valgrind = GST_VG_INSIDE;
     } else {
       GST_CAT_LOG (GST_CAT_GST_INIT, "not doing extra valgrind stuff");
