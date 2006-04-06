@@ -31,19 +31,15 @@
 #include "gstsf.h"
 
 
-static GstElementDetails sfsrc_details = {
-  "Sndfile Source",
-  "Source/Audio",
-  "Read audio streams from disk using libsndfile",
-  "Andy Wingo <wingo at pobox dot com>",
-};
+static GstElementDetails sfsrc_details = GST_ELEMENT_DETAILS ("Sndfile source",
+    "Source/Audio",
+    "Read audio streams from disk using libsndfile",
+    "Andy Wingo <wingo at pobox dot com>");
 
-static GstElementDetails sfsink_details = {
-  "Sndfile Sink",
-  "Sink/Audio",
-  "Write audio streams to disk using libsndfile",
-  "Andy Wingo <wingo at pobox dot com>",
-};
+static GstElementDetails sfsink_details = GST_ELEMENT_DETAILS ("Sndfile sink",
+    "Sink/Audio",
+    "Write audio streams to disk using libsndfile",
+    "Andy Wingo <wingo at pobox dot com>");
 
 enum
 {

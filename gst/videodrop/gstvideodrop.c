@@ -26,9 +26,9 @@
 
 /* elementfactory information */
 static GstElementDetails videodrop_details =
-GST_ELEMENT_DETAILS ("Video frame dropper",
+GST_ELEMENT_DETAILS ("Frame dropper",
     "Filter/Effect/Video",
-    "Re-FPS'es video",
+    "Re-FPS'es video by dropping frames",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
 /* GstVideodrop signals and args */

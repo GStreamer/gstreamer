@@ -41,12 +41,11 @@
 #define GST_POD_BUFPOOL_NUM  6
 
 
-static GstElementDetails play_on_demand_details = {
-  "Play On Demand",
-  "Filter/Editor/Audio",
-  "Schedule a stream to play at specific times, or when a signal is received",
-  "Leif Morgan Johnson <leif@ambient.2y.net>",
-};
+static GstElementDetails play_on_demand_details =
+GST_ELEMENT_DETAILS ("Play On Demand",
+    "Filter/Editor/Audio",
+    "Schedule a stream to play at specific times, or when a signal is received",
+    "Leif Morgan Johnson <leif@ambient.2y.net>");
 
 
 static GstStaticPadTemplate play_on_demand_sink_template =

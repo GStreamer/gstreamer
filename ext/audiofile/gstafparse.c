@@ -30,12 +30,11 @@
 #include "gstafparse.h"
 
 /* elementfactory information */
-static GstElementDetails afparse_details = {
-  "Audiofile Parse",
-  "Codec/Demuxer/Audio",
-  "Audiofile parser for audio/raw",
-  "Steve Baker <stevebaker_org@yahoo.co.uk>",
-};
+static GstElementDetails afparse_details =
+GST_ELEMENT_DETAILS ("Audiofile demuxer",
+    "Codec/Demuxer/Audio",
+    "Audiofile parser for audio/raw",
+    "Steve Baker <stevebaker_org@yahoo.co.uk>");
 
 
 /* AFParse signals and args */

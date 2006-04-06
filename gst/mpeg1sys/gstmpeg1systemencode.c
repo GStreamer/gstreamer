@@ -31,12 +31,11 @@
 /*#define GST_DEBUG (b...) g_print (##b) */
 
 /* elementfactory information */
-static GstElementDetails system_encode_details = {
-  "MPEG1 Multiplexer",
-  "Codec/Muxer",
-  "Multiplexes MPEG-1 Streams",
-  "Wim Taymans <wim.taymans@chello.be>"
-};
+static GstElementDetails system_encode_details =
+GST_ELEMENT_DETAILS ("MPEG-1 muxer",
+    "Codec/Muxer",
+    "Multiplexes MPEG-1 Streams",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 /* GstMPEG1SystemEncode signals and args */
 enum

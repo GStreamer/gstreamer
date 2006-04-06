@@ -115,12 +115,11 @@ gst_musicbrainz_get_type (void)
 static void
 gst_musicbrainz_base_init (GstMusicBrainzClass * klass)
 {
-  GstElementDetails gst_musicbrainz_details = {
-    "Compute TRM Id",
-    "Filter/Analyzer/Audio",
-    "Compute TRM Id from muscibrainz",
-    "Jeremy Simon <jsimon13@yahoo.fr>",
-  };
+  GstElementDetails gst_musicbrainz_details =
+      GST_ELEMENT_DETAILS ("Musicbrainz TRM generator",
+      "Filter/Analyzer/Audio",
+      "Compute TRM Id from muscibrainz",
+      "Jeremy Simon <jsimon13@yahoo.fr>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,

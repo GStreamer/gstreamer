@@ -63,12 +63,11 @@ gst_polypsink_base_init (gpointer g_class)
       )
       );
 
-  static const GstElementDetails details = {
-    "Polypaudio Audio Sink",
-    "Sink/Audio",
-    "Plays audio to a Polypaudio server",
-    "Lennart Poettering",
-  };
+  static const GstElementDetails details =
+      GST_ELEMENT_DETAILS ("Polypaudio audio sink",
+      "Sink/Audio",
+      "Plays audio to a Polypaudio server",
+      "Lennart Poettering");
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 

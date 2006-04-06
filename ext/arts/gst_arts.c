@@ -43,13 +43,11 @@
 #include "gst_artsio_impl.h"
 
 /* elementfactory information */
-static GstElementDetails gst_arts_details = {
-  "aRts plugin",
-  "Filter/Audio",
-  "aRts wrapper filter",
-  "Erik Walthinsen <omega@temple-baptist.com,\n"
-      "Stefan Westerfeld <stefan@space.twc.de>",
-};
+static GstElementDetails gst_arts_details = GST_ELEMENT_DETAILS ("aRts plugin",
+    "Filter/Audio",
+    "aRts wrapper filter",
+    "Erik Walthinsen <omega@temple-baptist.com,\n"
+    "Stefan Westerfeld <stefan@space.twc.de>");
 
 
 static GstStaticPadTemplate sink_temp = GST_STATIC_PAD_TEMPLATE ("sink",

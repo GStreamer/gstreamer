@@ -29,12 +29,11 @@
 #include "gstxvidenc.h"
 
 /* elementfactory information */
-GstElementDetails gst_xvidenc_details = {
-  "Xvid encoder",
-  "Codec/Encoder/Video",
-  "Xvid encoder based on xvidcore",
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-};
+GstElementDetails gst_xvidenc_details =
+GST_ELEMENT_DETAILS ("XviD video encoder",
+    "Codec/Encoder/Video",
+    "XviD encoder based on xvidcore",
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

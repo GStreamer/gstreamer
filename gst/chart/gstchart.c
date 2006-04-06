@@ -64,12 +64,11 @@ GType gst_chart_get_type (void);
 
 
 /* elementfactory information */
-static GstElementDetails gst_chart_details = {
-  "chart drawer",
-  "Visualization",
-  "Takes frames of data and outputs video frames of a chart of data",
-  "Richard Boulton <richard@tartarus.org>",
-};
+static GstElementDetails gst_chart_details =
+GST_ELEMENT_DETAILS ("Chart drawer",
+    "Visualization",
+    "Takes frames of data and outputs video frames of a chart of data",
+    "Richard Boulton <richard@tartarus.org>");
 
 /* signals and args */
 enum

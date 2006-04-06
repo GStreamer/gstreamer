@@ -27,12 +27,11 @@
 #include <encore2.h>
 
 /* elementfactory information */
-GstElementDetails gst_divxenc_details = {
-  "Divx4linux encoder",
-  "Codec/Encoder/Video",
-  "Divx encoder based on divxencore",
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-};
+GstElementDetails gst_divxenc_details =
+GST_ELEMENT_DETAILS ("Divx4linux video encoder",
+    "Codec/Encoder/Video",
+    "Divx encoder based on divxencore",
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

@@ -100,12 +100,11 @@ static GstHermesColorspaceFormat gst_hermes_colorspace_formats[] = {
   {GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_16)},
 };
 
-static GstElementDetails colorspace_details = {
-  "Colorspace converter",
-  "Filter/Converter/Video",
-  "Converts video from one colorspace to another using libhermes",
-  "Wim Taymans <wim.taymans@chello.be>",
-};
+static GstElementDetails colorspace_details =
+GST_ELEMENT_DETAILS ("Colorspace converter",
+    "Filter/Converter/Video",
+    "Converts video from one colorspace to another using libhermes",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 
 /* Stereo signals and args */

@@ -23,12 +23,11 @@
 #include "gstshout.h"
 
 /* elementfactory information */
-static GstElementDetails icecastsend_details = {
-  "An Icecast plugin",
-  "Sink/Network",
-  "Sends data to an icecast server using libshout",
-  "Wim Taymans <wim.taymans@chello.be>"
-};
+static GstElementDetails icecastsend_details =
+GST_ELEMENT_DETAILS ("Icecast network sink",
+    "Sink/Network",
+    "Sends data to an icecast server using libshout",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 static char *SHOUT_ERRORS[] = {
   "ok",

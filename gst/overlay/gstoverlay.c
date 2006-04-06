@@ -25,12 +25,10 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-static GstElementDetails overlay_details = {
-  "Video Overlay",
-  "Filter/Editor/Video",
-  "Overlay multiple video streams",
-  "David Schleef <ds@schleef.org>"
-};
+static GstElementDetails overlay_details = GST_ELEMENT_DETAILS ("Video overlay",
+    "Filter/Editor/Video",
+    "Overlay multiple video streams",
+    "David Schleef <ds@schleef.org>");
 
 static GstStaticPadTemplate overlay_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",

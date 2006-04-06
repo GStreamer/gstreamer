@@ -121,7 +121,7 @@ static void
 gst_puzzle_base_init (gpointer g_class)
 {
   static GstElementDetails puzzle_details =
-      GST_ELEMENT_DETAILS ("a simple puzzle",
+      GST_ELEMENT_DETAILS ("A simple puzzle",
       "Filter/Effect/Video/Games",
       "A simple puzzle, use arrow keys and space to restart/solve",
       "Benjamin Otte <otte@gnome.org>");

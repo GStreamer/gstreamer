@@ -103,7 +103,7 @@ GST_DEBUG_CATEGORY (dfbvideosink_debug);
 
 /* ElementFactory information */
 static GstElementDetails gst_dfbvideosink_details =
-GST_ELEMENT_DETAILS ("Video sink",
+GST_ELEMENT_DETAILS ("DirectFB video sink",
     "Sink/Video",
     "A DirectFB based videosink",
     "Julien Moutte <julien@moutte.net>");

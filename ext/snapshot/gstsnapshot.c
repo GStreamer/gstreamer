@@ -29,12 +29,10 @@
 #define MAX_HEIGHT      2048
 
 /* elementfactory information */
-static GstElementDetails snapshot_details = {
-  "snapshot",
-  "Filter/Editor/Video",
-  "Dump a frame to a png file",
-  "Jeremy SIMON <jsimon13@yahoo.fr>",
-};
+static GstElementDetails snapshot_details = GST_ELEMENT_DETAILS ("Snapshot",
+    "Filter/Editor/Video",
+    "Dump a frame to a png file",
+    "Jeremy SIMON <jsimon13@yahoo.fr>");
 
 static GstStaticPadTemplate snapshot_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",

@@ -68,12 +68,11 @@ struct _GstMixMatrixClass
 };
 
 /* elementfactory information */
-static GstElementDetails mixmatrix_details = {
-  "Mixing Matrix",
-  "Filter/Editor/Audio",
-  "Mix N audio channels together into M channels",
-  "Erik Walthinsen <omega@temple-baptist.com>"
-};
+static GstElementDetails mixmatrix_details =
+GST_ELEMENT_DETAILS ("Mixing Matrix",
+    "Filter/Editor/Audio",
+    "Mix N audio channels together into M channels",
+    "Erik Walthinsen <omega@temple-baptist.com>");
 
 enum
 {

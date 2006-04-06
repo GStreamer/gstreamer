@@ -91,7 +91,7 @@ static char *client_accept_s_expr (int fd);
 
 /* elementfactory information */
 static GstElementDetails gst_festival_details =
-GST_ELEMENT_DETAILS ("Festival synthesizer",
+GST_ELEMENT_DETAILS ("Festival Text-to-Speech synthesizer",
     "Filter/Effect/Audio",
     "Synthesizes plain text into audio",
     "Wim Taymans <wim.taymans@chello.be>");

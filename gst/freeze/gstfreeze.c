@@ -33,12 +33,11 @@ enum
 };
 
 
-static GstElementDetails freeze_details = { "Stream freezer",
-  "Generic",
-  "Makes a stream from buffers of data",
-  "Gergely Nagy <gergely.nagy@neteyes.hu>,"
-      " Renato Filho <renato.filho@indt.org.br>"
-};
+static GstElementDetails freeze_details = GST_ELEMENT_DETAILS ("Stream freezer",
+    "Generic",
+    "Makes a stream from buffers of data",
+    "Gergely Nagy <gergely.nagy@neteyes.hu>,"
+    " Renato Filho <renato.filho@indt.org.br>");
 
 static GstStaticPadTemplate gst_freeze_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",

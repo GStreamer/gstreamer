@@ -110,12 +110,10 @@ static GstFormat sector_format;
 static GstBinClass *parent_class;
 static guint gst_cdaudio_signals[LAST_SIGNAL] = { 0 };
 
-static GstElementDetails gst_cdaudio_details = {
-  "CD Player",
-  "Generic/Bin",
-  "Play CD audio through the CD Drive",
-  "Wim Taymans <wim@fluendo.com>",
-};
+static GstElementDetails gst_cdaudio_details = GST_ELEMENT_DETAILS ("CD player",
+    "Generic/Bin",
+    "Play CD audio through the CD Drive",
+    "Wim Taymans <wim@fluendo.com>");
 
 
 static void

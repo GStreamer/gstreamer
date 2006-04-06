@@ -30,12 +30,11 @@
 #define FAMEENC_BUFFER_SIZE (300 * 1024)
 
 /* elementfactory information */
-static GstElementDetails gst_fameenc_details = {
-  "MPEG1 and MPEG4 video encoder using the libfame library",
-  "Codec/Encoder/Video",
-  "Uses fameenc to encode MPEG video streams",
-  "Thomas Vander Stichele <thomas@apestaart.org>"
-};
+static GstElementDetails gst_fameenc_details =
+GST_ELEMENT_DETAILS ("MPEG-1 and MPEG-4 video encoder",
+    "Codec/Encoder/Video",
+    "Uses fameenc to encode MPEG video streams",
+    "Thomas Vander Stichele <thomas@apestaart.org>");
 
 static GQuark fame_object_name;
 

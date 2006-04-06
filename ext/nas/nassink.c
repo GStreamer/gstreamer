@@ -125,13 +125,12 @@ gst_nassink_get_type (void)
 static void
 gst_nassink_base_init (gpointer g_class)
 {
-  static GstElementDetails nassink_details = {
-    "NAS sink",
-    "Sink/Audio",
-    "Plays audio to a Network Audio Server",
-    "Laurent Vivier <Laurent.Vivier@bull.net>, "
-        "Arwed v. Merkatz <v.merkatz@gmx.net>"
-  };
+  static GstElementDetails nassink_details =
+      GST_ELEMENT_DETAILS ("NAS audio sink",
+      "Sink/Audio",
+      "Plays audio to a Network Audio Server",
+      "Laurent Vivier <Laurent.Vivier@bull.net>, "
+      "Arwed v. Merkatz <v.merkatz@gmx.net>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,

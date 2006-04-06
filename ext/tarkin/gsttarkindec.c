@@ -29,12 +29,11 @@
 static GstPadTemplate *dec_src_template, *dec_sink_template;
 
 /* elementfactory information */
-GstElementDetails tarkindec_details = {
-  "Ogg Tarkin decoder",
-  "Codec/Decoder/Video",
-  "Decodes video in OGG Tarkin format",
-  "Monty <monty@xiph.org>, " "Wim Taymans <wim.taymans@chello.be>",
-};
+GstElementDetails tarkindec_details =
+GST_ELEMENT_DETAILS ("Tarkin video decoder",
+    "Codec/Decoder/Video",
+    "Decodes video in OGG Tarkin format",
+    "Monty <monty@xiph.org>, " "Wim Taymans <wim.taymans@chello.be>");
 
 /* TarkinDec signals and args */
 enum

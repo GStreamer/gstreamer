@@ -49,14 +49,13 @@ GST_DEBUG_CATEGORY_EXTERN (sdl_debug);
 #define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
 /* elementfactory information */
-static GstElementDetails gst_sdlvideosink_details = {
-  "Video sink",
-  "Sink/Video",
-  "An SDL-based videosink",
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-      "Edgard Lima <edgard.lima@indt.org.br>"
-      "Jan Schmidt <thaytan@mad.scientist.com>"
-};
+static GstElementDetails gst_sdlvideosink_details =
+GST_ELEMENT_DETAILS ("SDL video sink",
+    "Sink/Video",
+    "An SDL-based videosink",
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>"
+    "Edgard Lima <edgard.lima@indt.org.br>"
+    "Jan Schmidt <thaytan@mad.scientist.com>");
 
 
 enum

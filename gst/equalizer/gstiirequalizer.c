@@ -129,12 +129,11 @@ gst_iir_equalizer_get_type (void)
 static void
 gst_iir_equalizer_base_init (gpointer g_class)
 {
-  static GstElementDetails iir_equalizer_details = {
-    "Equalizer",
-    "Filter/Effect/Audio",
-    "Direct Form IIR equalizer",
-    "Benjamin Otte <otte@gnome.org>"
-  };
+  static GstElementDetails iir_equalizer_details =
+      GST_ELEMENT_DETAILS ("Equalizer",
+      "Filter/Effect/Audio",
+      "Direct Form IIR equalizer",
+      "Benjamin Otte <otte@gnome.org>");
   GstIirEqualizerClass *klass = (GstIirEqualizerClass *) g_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *caps;

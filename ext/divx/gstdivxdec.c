@@ -26,12 +26,11 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-GstElementDetails gst_divxdec_details = {
-  "Divx4linux decoder",
-  "Codec/Decoder/Video",
-  "Divx decoder based on divxdecore",
-  "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-};
+GstElementDetails gst_divxdec_details =
+GST_ELEMENT_DETAILS ("Divx4linux video decoder",
+    "Codec/Decoder/Video",
+    "Divx decoder based on divxdecore",
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

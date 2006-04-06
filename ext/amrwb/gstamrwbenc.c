@@ -23,12 +23,11 @@
 
 #include "gstamrwbenc.h"
 
-static GstElementDetails gst_amrwbenc_details = {
-  "AMR-WB encoder",
-  "Codec/Encoder/Audio",
-  "Adaptive Multi-Rate Wideband audio encoder",
-  "Renato Araujo <renato.filho@indt.org.br>"
-};
+static GstElementDetails gst_amrwbenc_details =
+GST_ELEMENT_DETAILS ("AMR-WB audio encoder",
+    "Codec/Encoder/Audio",
+    "Adaptive Multi-Rate Wideband audio encoder",
+    "Renato Araujo <renato.filho@indt.org.br>");
 
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",

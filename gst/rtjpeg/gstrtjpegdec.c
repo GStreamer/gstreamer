@@ -26,12 +26,11 @@
 
 
 /* elementfactory information */
-GstElementDetails gst_rtjpegdec_details = {
-  "RTjpeg decoder",
-  "Codec/Decoder/Video",
-  "Decodes video in RTjpeg format",
-  "Erik Walthinsen <omega@cse.ogi.edu>"
-};
+GstElementDetails gst_rtjpegdec_details =
+GST_ELEMENT_DETAILS ("RTjpeg video decoder",
+    "Codec/Decoder/Video",
+    "Decodes video in RTjpeg format",
+    "Erik Walthinsen <omega@cse.ogi.edu>");
 
 /* GstRTJpegDec signals and args */
 enum

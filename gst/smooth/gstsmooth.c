@@ -25,12 +25,10 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-static GstElementDetails smooth_details = {
-  "Smooth effect",
-  "Filter/Effect/Video",
-  "Apply a smooth filter to an image",
-  "Wim Taymans <wim.taymans@chello.be>"
-};
+static GstElementDetails smooth_details = GST_ELEMENT_DETAILS ("Smooth effect",
+    "Filter/Effect/Video",
+    "Apply a smooth filter to an image",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 
 /* Smooth signals and args */

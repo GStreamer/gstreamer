@@ -53,14 +53,12 @@ struct _GstXsharpenClass
   GstElementClass parent_class;
 };
 
-GstElementDetails gst_xsharpen_details = {
-  "",
-  "Filter/Video/Effect",
-  "LGPL",
-  "Apply a sharpen effect on video" VERSION,
-  "Jeremy SIMON <jsimon13@yahoo.fr>",
-  "(C) 2000 Donald Graft",
-};
+GstElementDetails gst_xsharpen_details = GST_ELEMENT_DETAILS ("Sharpen",
+    "Filter/Video/Effect",
+    "LGPL",
+    "Apply a sharpen effect on video" VERSION,
+    "Jeremy SIMON <jsimon13@yahoo.fr>",
+    "(C) 2000 Donald Graft");
 
 
 /* Filter signals and args */

@@ -101,12 +101,11 @@ static void
 gst_dtsdec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  static GstElementDetails gst_dtsdec_details = {
-    "DTS audio decoder",
-    "Codec/Decoder/Audio",
-    "Decodes DTS audio streams",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-  };
+  static GstElementDetails gst_dtsdec_details =
+      GST_ELEMENT_DETAILS ("DTS audio decoder",
+      "Codec/Decoder/Audio",
+      "Decodes DTS audio streams",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));

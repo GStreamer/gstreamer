@@ -77,12 +77,11 @@ GST_BOILERPLATE_FULL (GstMMS, gst_mms, GstPushSrc, GST_TYPE_PUSH_SRC,
 static void
 gst_mms_base_init (gpointer g_class)
 {
-  static GstElementDetails plugin_details = {
-    "MMS streaming protocol support",
-    "Source/Network",
-    "Receive data streamed via MSFT Multi Media Server protocol",
-    "Maciej Katafiasz <mathrick@users.sourceforge.net>"
-  };
+  static GstElementDetails plugin_details =
+      GST_ELEMENT_DETAILS ("MMS streaming source",
+      "Source/Network",
+      "Receive data streamed via MSFT Multi Media Server protocol",
+      "Maciej Katafiasz <mathrick@users.sourceforge.net>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,

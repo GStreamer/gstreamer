@@ -87,7 +87,7 @@ gst_cdxastrip_base_init (GstCDXAStripClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   static GstElementDetails gst_cdxastrip_details =
-      GST_ELEMENT_DETAILS ("vcd parser",
+      GST_ELEMENT_DETAILS ("(S)VCD stream parser",
       "Codec/Parser",
       "Strip (S)VCD stream from its syncheaders",
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");

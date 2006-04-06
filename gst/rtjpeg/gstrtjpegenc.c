@@ -24,12 +24,11 @@
 #include "gstrtjpegenc.h"
 
 /* elementfactory information */
-GstElementDetails gst_rtjpegenc_details = {
-  "RTjpeg encoder",
-  "Codec/Encoder/Video",
-  "Encodes video in RTjpeg format",
-  "Erik Walthinsen <omega@cse.ogi.edu>"
-};
+GstElementDetails gst_rtjpegenc_details =
+GST_ELEMENT_DETAILS ("RTjpeg video encoder",
+    "Codec/Encoder/Video",
+    "Encodes video in RTjpeg format",
+    "Erik Walthinsen <omega@cse.ogi.edu>");
 
 /* GstRTJpegEnc signals and args */
 enum

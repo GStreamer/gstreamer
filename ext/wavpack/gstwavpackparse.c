@@ -72,12 +72,11 @@ GST_BOILERPLATE (GstWavpackParse, gst_wavpack_parse, GstElement,
 
      static void gst_wavpack_parse_base_init (gpointer klass)
 {
-  static GstElementDetails plugin_details = {
-    "Wavpack file parser",
-    "Codec/Demuxer/Audio",
-    "Parses Wavpack files",
-    "Arwed v. Merkatz <v.merkatz@gmx.net>"
-  };
+  static GstElementDetails plugin_details =
+      GST_ELEMENT_DETAILS ("WavePack parser",
+      "Codec/Demuxer/Audio",
+      "Parses Wavpack files",
+      "Arwed v. Merkatz <v.merkatz@gmx.net>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
@@ -332,7 +331,8 @@ gst_wavpack_parse_scan_to_find_sample (GstWavpackParse * parse,
   /* now scan forward until we find the chunk we're looking for or hit EOS */
   do {
     WavpackHeader header = { {0,}
-    , 0, };
+    , 0,
+    };
     GstBuffer *buf;
 
     buf = gst_wavpack_parse_pull_buffer (parse, off, sizeof (WavpackHeader),

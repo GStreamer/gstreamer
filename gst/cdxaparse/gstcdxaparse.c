@@ -62,9 +62,9 @@ GST_BOILERPLATE (GstCDXAParse, gst_cdxa_parse, GstElement, GST_TYPE_ELEMENT)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   static GstElementDetails gst_cdxa_parse_details =
-      GST_ELEMENT_DETAILS (".dat parser",
+      GST_ELEMENT_DETAILS ("(S)VCD parser",
       "Codec/Parser",
-      "Parse a .dat file (VCD) into raw mpeg1",
+      "Parse a .dat file from (S)VCD into raw MPEG-1",
       "Wim Taymans <wim.taymans@tvd.be>");
 
   gst_element_class_set_details (element_class, &gst_cdxa_parse_details);

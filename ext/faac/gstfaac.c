@@ -122,12 +122,10 @@ gst_faac_get_type (void)
 static void
 gst_faac_base_init (GstFaacClass * klass)
 {
-  GstElementDetails gst_faac_details = {
-    "Free AAC Encoder (FAAC)",
-    "Codec/Encoder/Audio",
-    "Free MPEG-2/4 AAC encoder",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>",
-  };
+  GstElementDetails gst_faac_details = GST_ELEMENT_DETAILS ("AAC audio encoder",
+      "Codec/Encoder/Audio",
+      "Free MPEG-2/4 AAC encoder",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,

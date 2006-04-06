@@ -34,12 +34,11 @@
 #include "gstafsrc.h"
 
 /* elementfactory information */
-static GstElementDetails afsrc_details = {
-  "Audiofile Src",
-  "Source/Audio",
-  "Read audio files from disk using libaudiofile",
-  "Thomas <thomas@apestaart.org>",
-};
+static GstElementDetails afsrc_details =
+GST_ELEMENT_DETAILS ("Audiofile source",
+    "Source/Audio",
+    "Read audio files from disk using libaudiofile",
+    "Thomas <thomas@apestaart.org>");
 
 
 /* AFSrc signals and args */

@@ -53,13 +53,12 @@ static void gst_setup_palette (GstMpeg2Subt * mpeg2subt, guchar * indexes,
 static void gst_update_still_frame (GstMpeg2Subt * mpeg2subt);
 
 /* elementfactory information */
-static GstElementDetails mpeg2subt_details = {
-  "MPEG2 subtitle Decoder",
-  "Codec/Decoder/Video",
-  "Decodes and merges MPEG2 subtitles into a video frame",
-  "Wim Taymans <wim.taymans@chello.be>\n"
-      "Jan Schmidt <thaytan@mad.scientist.com>"
-};
+static GstElementDetails mpeg2subt_details =
+GST_ELEMENT_DETAILS ("MPEG-2 subtitle decoder",
+    "Codec/Decoder/Video",
+    "Decodes and merges MPEG2 subtitles into a video frame",
+    "Wim Taymans <wim.taymans@chello.be>\n"
+    "Jan Schmidt <thaytan@mad.scientist.com>");
 
 static GstStaticPadTemplate video_template = GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SINK,

@@ -25,7 +25,8 @@
 #include "gstfilter.h"
 #include "iir.h"
 
-static GstElementDetails gst_iir_details = GST_ELEMENT_DETAILS ("IIR",
+static GstElementDetails gst_iir_details =
+GST_ELEMENT_DETAILS ("Infinite Impulse Response(IIR) filter",
     "Filter/Effect/Audio",
     "IIR filter based on vorbis code",
     "Monty <monty@xiph.org>, " "Thomas <thomas@apestaart.org>");

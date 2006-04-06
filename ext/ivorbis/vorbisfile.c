@@ -85,14 +85,13 @@ GType ivorbisfile_get_type (void);
 static GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template;
 
 /* elementfactory information */
-GstElementDetails ivorbisfile_details = {
-  "Ogg Vorbis decoder",
-  "Codec/Decoder/Audio",
-  "Decodes OGG Vorbis audio using the Tremor vorbisfile API",
-  "Monty <monty@xiph.org>\n"
-      "Wim Taymans <wim.taymans@chello.be>\n"
-      "Amaury Jacquot <sxpert@esitcom.org>",
-};
+GstElementDetails ivorbisfile_details =
+GST_ELEMENT_DETAILS ("Ogg Vorbis audio decoder",
+    "Codec/Decoder/Audio",
+    "Decodes OGG Vorbis audio using the Tremor vorbisfile API",
+    "Monty <monty@xiph.org>\n"
+    "Wim Taymans <wim.taymans@chello.be>\n"
+    "Amaury Jacquot <sxpert@esitcom.org>");
 
 /* Ivorbisfile signals and args */
 enum

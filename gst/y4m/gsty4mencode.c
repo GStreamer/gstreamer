@@ -26,7 +26,8 @@
 #include <gst/video/video.h>
 #include "gsty4mencode.h"
 
-static GstElementDetails y4mencode_details = GST_ELEMENT_DETAILS ("Y4mEncode",
+static GstElementDetails y4mencode_details =
+GST_ELEMENT_DETAILS ("YUV4MPEG video encoder",
     "Codec/Encoder/Video",
     "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
     "Wim Taymans <wim.taymans@chello.be>");

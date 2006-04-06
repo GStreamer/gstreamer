@@ -31,9 +31,9 @@ GST_DEBUG_CATEGORY (neonhttpsrc_debug);
 
 
 static GstElementDetails gst_neonhttp_src_details =
-GST_ELEMENT_DETAILS ("NEON HTTP Client source",
+GST_ELEMENT_DETAILS ("HTTP client source",
     "Source/Network",
-    "Receive data as a client over the network via HTTP",
+    "Receive data as a client over the network via HTTP using NEON",
     "Edgard Lima <edgard.lima@indt.org.br>");
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",

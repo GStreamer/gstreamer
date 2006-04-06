@@ -31,12 +31,11 @@
 GST_DEBUG_CATEGORY_STATIC (amrwbparse_debug);
 #define GST_CAT_DEFAULT amrwbparse_debug
 
-static GstElementDetails gst_amrwbparse_details = {
-  "AMR-WB parser",
-  "Codec/Parser/Audio",
-  "Adaptive Multi-Rate WideBand audio parser",
-  "Renato Filho <renato.filho@indt.org.br>"
-};
+static GstElementDetails gst_amrwbparse_details =
+GST_ELEMENT_DETAILS ("AMR-WB parser",
+    "Codec/Parser/Audio",
+    "Adaptive Multi-Rate WideBand audio parser",
+    "Renato Filho <renato.filho@indt.org.br>");
 
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",

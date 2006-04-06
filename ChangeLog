@@ -1,5 +1,78 @@
 2006-04-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: j^  <j at bootlab dot org>
+
+	* ext/amrwb/gstamrwbdec.c:
+	* ext/amrwb/gstamrwbenc.c:
+	* ext/amrwb/gstamrwbparse.c:
+	* ext/arts/gst_arts.c:
+	* ext/artsd/gstartsdsink.c:
+	* ext/audiofile/gstafparse.c:
+	* ext/audiofile/gstafsink.c:
+	* ext/audiofile/gstafsrc.c:
+	* ext/cdaudio/gstcdaudio.c:
+	* ext/directfb/dfbvideosink.c:
+	* ext/divx/gstdivxdec.c:
+	* ext/divx/gstdivxenc.c:
+	* ext/dts/gstdtsdec.c: (gst_dtsdec_base_init):
+	* ext/faac/gstfaac.c: (gst_faac_base_init):
+	* ext/faad/gstfaad.c:
+	* ext/gsm/gstgsmdec.c:
+	* ext/gsm/gstgsmenc.c:
+	* ext/hermes/gsthermescolorspace.c:
+	* ext/ivorbis/vorbisfile.c:
+	* ext/lcs/gstcolorspace.c:
+	* ext/libfame/gstlibfame.c:
+	* ext/libmms/gstmms.c: (gst_mms_base_init):
+	* ext/musicbrainz/gsttrm.c: (gst_musicbrainz_base_init):
+	* ext/nas/nassink.c: (gst_nassink_base_init):
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/polyp/polypsink.c: (gst_polypsink_base_init):
+	* ext/sdl/sdlaudiosink.c:
+	* ext/sdl/sdlvideosink.c:
+	* ext/shout/gstshout.c:
+	* ext/snapshot/gstsnapshot.c:
+	* ext/sndfile/gstsf.c:
+	* ext/tarkin/gsttarkindec.c:
+	* ext/tarkin/gsttarkinenc.c:
+	* ext/theora/theoradec.c:
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_base_init):
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_base_init):
+	* ext/xvid/gstxviddec.c:
+	* ext/xvid/gstxvidenc.c:
+	* gst/cdxaparse/gstcdxaparse.c: (gst_cdxa_parse_base_init):
+	* gst/cdxaparse/gstcdxastrip.c: (gst_cdxastrip_base_init):
+	* gst/chart/gstchart.c:
+	* gst/equalizer/gstiirequalizer.c: (gst_iir_equalizer_base_init):
+	* gst/festival/gstfestival.c:
+	* gst/filter/gstiir.c:
+	* gst/filter/gstlpwsinc.c:
+	* gst/freeze/gstfreeze.c:
+	* gst/games/gstpuzzle.c: (gst_puzzle_base_init):
+	* gst/mixmatrix/mixmatrix.c:
+	* gst/mpeg1sys/gstmpeg1systemencode.c:
+	* gst/mpeg1videoparse/gstmp1videoparse.c:
+	* gst/mpeg2sub/gstmpeg2subt.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/multifilesink/gstmultifilesink.c:
+	* gst/overlay/gstoverlay.c:
+	* gst/passthrough/gstpassthrough.c:
+	* gst/playondemand/gstplayondemand.c:
+	* gst/qtdemux/qtdemux.c:
+	* gst/rtjpeg/gstrtjpegdec.c:
+	* gst/rtjpeg/gstrtjpegenc.c:
+	* gst/smooth/gstsmooth.c:
+	* gst/tta/gstttadec.c: (gst_tta_dec_base_init):
+	* gst/tta/gstttaparse.c: (gst_tta_parse_base_init):
+	* gst/videocrop/gstvideocrop.c:
+	* gst/videodrop/gstvideodrop.c:
+	* gst/virtualdub/gstxsharpen.c:
+	* gst/xingheader/gstxingmux.c: (gst_xing_mux_base_init):
+	* gst/y4m/gsty4mencode.c:
+	  Unify the long descriptions in the plugin details (#337263).
+
+2006-04-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_class_init),
 	(gst_neonhttp_src_set_property), (gst_neonhttp_src_get_property):
 	  Add back "uri" property and mark it as deprecated; undoes
