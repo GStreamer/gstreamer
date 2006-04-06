@@ -874,6 +874,8 @@ _gst_parse_launch (const gchar *str, GError **error)
       if (l->src_name) {
         if (bin) {
           l->src = gst_bin_get_by_name_recurse_up (bin, l->src_name);
+          if (l->src)
+            gst_object_unref (l->src);
         } else {
           l->src = strcmp (GST_ELEMENT_NAME (ret), l->src_name) == 0 ? ret : NULL;
         }
@@ -889,6 +891,8 @@ _gst_parse_launch (const gchar *str, GError **error)
       if (l->sink_name) {
         if (bin) {
           l->sink = gst_bin_get_by_name_recurse_up (bin, l->sink_name);
+          if (l->sink)
+            gst_object_unref (l->sink);
         } else {
           l->sink = strcmp (GST_ELEMENT_NAME (ret), l->sink_name) == 0 ? ret : NULL;
         }

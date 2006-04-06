@@ -51,6 +51,10 @@ expected_fail_pipe (const gchar * pipe_descr)
   pipeline = gst_parse_launch (pipe_descr, &error);
   fail_unless (error != NULL, "Expected failure pipeline %s: succeeded!");
   g_error_free (error);
+
+  /* We get a pipeline back even when parsing has failed, sometimes! */
+  if (pipeline)
+    gst_object_unref (pipeline);
 }
 
 static void
