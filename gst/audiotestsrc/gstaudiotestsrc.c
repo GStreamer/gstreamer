@@ -139,10 +139,8 @@ static gboolean gst_audio_test_src_query (GstBaseSrc * basesrc,
 
 static void gst_audio_test_src_change_wave (GstAudioTestSrc * src);
 
-/*
 static void gst_audio_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
-*/
 static GstFlowReturn gst_audio_test_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
 
@@ -196,10 +194,8 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_test_src_is_seekable);
   gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_audio_test_src_do_seek);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_audio_test_src_query);
-  /*
-     gstbasesrc_class->get_times =
-     GST_DEBUG_FUNCPTR (gst_audio_test_src_get_times);
-   */
+  gstbasesrc_class->get_times =
+      GST_DEBUG_FUNCPTR (gst_audio_test_src_get_times);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_audio_test_src_create);
 }
 
@@ -579,7 +575,6 @@ gst_audio_test_src_change_volume (GstAudioTestSrc * src)
   }
 }
 
-#ifdef __DISABLE_NO_LIVE__
 static void
 gst_audio_test_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
@@ -602,7 +597,6 @@ gst_audio_test_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
     *end = -1;
   }
 }
-#endif
 
 static gboolean
 gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)

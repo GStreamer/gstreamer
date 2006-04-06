@@ -1,5 +1,16 @@
 2006-04-06  Andy Wingo  <wingo@pobox.com>
 
+	* gst/videorate/gstvideorate.c (gst_video_rate_reset) 
+	(gst_video_rate_init): Caps-related parameters should not be reset
+	by a flush -- move their inits to the instance init function.
+	(gst_video_rate_flush_prev): Don't complain if gst_pad_push
+	is not OK, just return the result.
+
+	* gst/audiotestsrc/gstaudiotestsrc.c
+	(gst_audio_test_src_class_init)
+	(gst_audio_test_src_get_times): Re-enable is-live=true, as was
+	broken by Stefan's commit on 24 March.
+
 	* ext/ogg/gstoggmux.c (gst_ogg_mux_push_buffer): Set caps on
 	buffers being pushed out. Fixes oggmux ! multifdsink.
 

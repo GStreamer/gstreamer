@@ -360,10 +360,6 @@ gst_video_rate_reset (GstVideoRate * videorate)
 {
   GST_DEBUG ("resetting data");
 
-  videorate->from_rate_numerator = 0;
-  videorate->from_rate_denominator = 0;
-  videorate->to_rate_numerator = 0;
-  videorate->to_rate_denominator = 0;
   videorate->in = 0;
   videorate->out = 0;
   videorate->drop = 0;
@@ -395,6 +391,11 @@ gst_video_rate_init (GstVideoRate * videorate)
   gst_video_rate_reset (videorate);
   videorate->silent = DEFAULT_SILENT;
   videorate->new_pref = DEFAULT_NEW_PREF;
+
+  videorate->from_rate_numerator = 0;
+  videorate->from_rate_denominator = 0;
+  videorate->to_rate_numerator = 0;
+  videorate->to_rate_denominator = 0;
 }
 
 /* flush the oldest buffer */
@@ -433,8 +434,7 @@ gst_video_rate_flush_prev (GstVideoRate * videorate)
       "old is best, dup, pushing buffer outgoing ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (push_ts));
 
-  if ((res = gst_pad_push (videorate->srcpad, outbuf)) != GST_FLOW_OK)
-    goto push_error;
+  res = gst_pad_push (videorate->srcpad, outbuf);
 
   return res;
 
@@ -443,13 +443,6 @@ eos_before_buffers:
   {
     GST_INFO_OBJECT (videorate, "got EOS before any buffer was received");
     return GST_FLOW_OK;
-  }
-  /* ERRORS */
-push_error:
-  {
-    GST_WARNING_OBJECT (videorate, "couldn't push buffer on srcpad, reason %s",
-        gst_flow_get_name (res));
-    return res;
   }
 }
 
