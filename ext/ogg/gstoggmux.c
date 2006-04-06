@@ -507,10 +507,16 @@ gst_ogg_mux_buffer_from_page (GstOggMux * mux, ogg_page * page, gboolean delta)
 static GstFlowReturn
 gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer)
 {
+  GstCaps *caps;
+
   /* fix up OFFSET and OFFSET_END again */
   GST_BUFFER_OFFSET (buffer) = mux->offset;
   mux->offset += GST_BUFFER_SIZE (buffer);
   GST_BUFFER_OFFSET_END (buffer) = mux->offset;
+
+  caps = gst_pad_get_negotiated_caps (mux->srcpad);
+  gst_buffer_set_caps (buffer, caps);
+  gst_caps_unref (caps);
 
   return gst_pad_push (mux->srcpad, buffer);
 }

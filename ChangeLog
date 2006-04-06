@@ -1,3 +1,8 @@
+2006-04-06  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ogg/gstoggmux.c (gst_ogg_mux_push_buffer): Set caps on
+	buffers being pushed out. Fixes oggmux ! multifdsink.
+
 2006-04-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_class_init),
