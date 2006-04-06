@@ -1,3 +1,12 @@
+2006-04-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	  Register id3 demuxer, avi demuxer and ogg demuxer with
+	  a rank of GST_RANK_NONE so that they don't get
+	  autoplugged accidentally. We want people to install
+	  the demuxers that are known to work well rather than
+	  mostly untested stuff like ffdemux_*.
+
 2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpeg.c:

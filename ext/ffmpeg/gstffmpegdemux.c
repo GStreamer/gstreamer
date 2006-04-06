@@ -1060,6 +1060,14 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mjpeg"))
       goto next;
 
+    /* these are known to be buggy or broken or not
+     * tested enough to let them be autoplugged */
+    if (!strcmp (in_plugin->name, "mp3") || /* = application/x-id3 */
+        !strcmp (in_plugin->name, "avi") ||
+        !strcmp (in_plugin->name, "ogg")) {
+      rank = GST_RANK_NONE;
+    }
+
     if (!strcmp (in_plugin->name, "mov,mp4,m4a,3gp,3g2") ||
         !strcmp (in_plugin->name, "avi") ||
         !strcmp (in_plugin->name, "asf") ||
