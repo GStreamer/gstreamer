@@ -184,31 +184,6 @@ gst_sunaudiosink_init (GstSunAudioSink * sunaudiosink)
 
   GST_DEBUG_OBJECT (sunaudiosink, "initializing sunaudiosink");
 
-  /*
-   * According to the Sun audio man page, this value can't be set and
-   * will be ignored for playback, but setting it the same way that
-   * esound does.  Probably not necessary, but doesn't hurt.
-   */
-  sunaudiosink->buffer_size = 8180;
-
-  /*
-   * Reset the buffer-time to 5ms instead of the normal default of 500us
-   * (10 times larger, in other words).  
-   *
-   * Setting a larger buffer causes the sinesrc to not stutter with this
-   * sink.  The fact that SunAudio requires a larger buffer should be
-   * investigated further to see if this is needed due to limitations of
-   * SunAudio itself or because of a more serious problem with the
-   * GStreamer engine on Solaris.
-   */
-  g_value_init (&gvalue, G_TYPE_INT64);
-  g_object_get_property (G_OBJECT (sunaudiosink), "buffer-time", &gvalue);
-  buffer_time = g_value_get_int64 (&gvalue);
-  if (buffer_time < 5000000) {
-    g_value_set_int64 (&gvalue, 5000000);
-    g_object_set_property (G_OBJECT (sunaudiosink), "buffer-time", &gvalue);
-  }
-
   audiodev = g_getenv ("AUDIODEV");
   if (audiodev == NULL)
     audiodev = DEFAULT_DEVICE;
@@ -364,8 +339,22 @@ gst_sunaudiosink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   ainfo.play.precision = spec->width;
   ainfo.play.encoding = AUDIO_ENCODING_LINEAR;
   ainfo.play.port = ports;
-  ainfo.play.buffer_size = sunaudiosink->buffer_size;
   ainfo.output_muted = 0;
+
+  /*
+   * SunAudio doesn't really give access to buffer size, these values work.  Setting
+   * the buffer so large (512K) is a bit annoying because this causes the volume
+   * control in audio players to be slow in responding since the audio volume won't
+   * change until the buffer empties.  SunAudio doesn't seem to allow changing the
+   * audio output buffer size to anything smaller, though.  I notice setting the
+   * values smaller causes the audio to stutter, which is worse.
+   */
+  spec->segsize = 4096;
+  spec->segtotal = 128;
+  spec->silence_sample[0] = 0;
+  spec->silence_sample[1] = 0;
+  spec->silence_sample[2] = 0;
+  spec->silence_sample[3] = 0;
 
   ret = ioctl (sunaudiosink->fd, AUDIO_SETINFO, &ainfo);
   if (ret == -1) {
@@ -388,10 +377,7 @@ gst_sunaudiosink_write (GstAudioSink * asink, gpointer data, guint length)
 {
   GstSunAudioSink *sunaudiosink = GST_SUNAUDIO_SINK (asink);
 
-  if (length > sunaudiosink->buffer_size)
-    return write (sunaudiosink->fd, data, sunaudiosink->buffer_size);
-  else
-    return write (sunaudiosink->fd, data, length);
+  return write (sunaudiosink->fd, data, length);
 }
 
 /*

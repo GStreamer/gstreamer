@@ -1,5 +1,16 @@
 2006-04-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Brian Cameron  <brian dot cameron at sun dot com>
+
+	* sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_init),
+	(gst_sunaudiosink_prepare), (gst_sunaudiosink_write):
+	* sys/sunaudio/gstsunaudiosink.h:
+	  Use spec->segsize and spec->segtotal in the prepare function
+	  to initialise the ring buffer instead of using the buffer-time
+	  property (#337421).
+
+2006-04-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Bump core requirements to CVS for gst_pad_query_peer_duration()
 	  which is used by speexdec.

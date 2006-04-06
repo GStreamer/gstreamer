@@ -48,7 +48,6 @@ struct _GstSunAudioSink {
   audio_info_t info;
 
   gint   bytes_per_sample;
-  gint   buffer_size;
 };
 
 struct _GstSunAudioSinkClass {
