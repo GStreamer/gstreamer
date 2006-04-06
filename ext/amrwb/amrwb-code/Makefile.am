@@ -1,6 +1,6 @@
 noinst_LTLIBRARIES = libamrwb.la 
 
-libamrwb_la_SOURCES = 	\
+nodist_libamrwb_la_SOURCES = 	\
 	enc_acelp.c \
 	enc_dtx.c \
 	enc_gain.c \
@@ -23,7 +23,7 @@ libamrwb_la_CFLAGS = -I./amrwb-code/c-code
 libamrwb_la_LIBADD = $(GST_BASE_LIBS) $(AMRWB_LIBS) 
 libamrwb_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS =	\
+nodist_noinst_HEADERS =	\
 	dec_acelp.h \
 	dec_dtx.h \
 	dec_gain.h \

@@ -1,3 +1,9 @@
+2006-04-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/Makefile.am:
+	* ext/amrwb/amrwb-code/Makefile.am:
+	  don't dist amr wb source code
+
 2006-04-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: j^  <j at bootlab dot org>

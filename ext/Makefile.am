@@ -1,8 +1,7 @@
-
 if USE_AMRWB
- AMRWB_DIR = amrwb
+AMRWB_DIR = amrwb
 else
- AMRWB_DIR =
+AMRWB_DIR =
 endif
 
 # if USE_ARTS
