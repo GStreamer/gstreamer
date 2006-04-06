@@ -1,3 +1,18 @@
+2006-04-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),
+	(gst_qtdemux_handle_src_query), (gst_qtdemux_find_index),
+	(gst_qtdemux_find_keyframe), (gst_qtdemux_find_segment),
+	(gst_qtdemux_move_stream), (gst_qtdemux_perform_seek),
+	(gst_qtdemux_do_seek), (gst_qtdemux_change_state),
+	(gst_qtdemux_activate_segment),
+	(gst_qtdemux_prepare_current_sample), (gst_qtdemux_advance_sample),
+	(gst_qtdemux_loop_state_movie), (gst_qtdemux_loop),
+	(qtdemux_parse_trak):
+	Added full edit list support.
+	Avoid overflows in prologue image detection code.
+	Avoid roundoff errors in timestamp calculations.
+
 2006-04-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
