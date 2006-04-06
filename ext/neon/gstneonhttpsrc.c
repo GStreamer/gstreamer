@@ -46,6 +46,7 @@ enum
 {
   PROP_0,
   PROP_LOCATION,
+  PROP_URI,
   PROP_PROXY
 };
 
@@ -128,6 +129,11 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
           "\n\t\t\thttp:///file.txt - default host '" HTTP_DEFAULT_HOST "'",
           "", G_PARAM_READWRITE));
 
+  g_object_class_install_property
+      (G_OBJECT_CLASS (klass), PROP_URI,
+      g_param_spec_string ("uri", "Uri",
+          "The location in form of a URI (deprecated; use location)",
+          "", G_PARAM_READWRITE));
 
   g_object_class_install_property
       (G_OBJECT_CLASS (klass), PROP_PROXY,
@@ -201,7 +207,7 @@ gst_neonhttp_src_finalize (GObject * gobject)
 
 }
 
-int
+static int
 request_dispatch (GstNeonhttpSrc * src, GstBuffer * outbuf, gboolean * eos)
 {
   int ret;
@@ -554,6 +560,7 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
     }
 
       break;
+    case PROP_URI:
     case PROP_LOCATION:
     {
       if (!g_value_get_string (value)) {
@@ -602,6 +609,8 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
       }
     }
       break;
+
+    case PROP_URI:
     case PROP_LOCATION:
     {
       char *str;

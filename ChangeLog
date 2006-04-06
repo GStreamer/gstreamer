@@ -1,3 +1,10 @@
+2006-04-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_class_init),
+	(gst_neonhttp_src_set_property), (gst_neonhttp_src_get_property):
+	  Add back "uri" property and mark it as deprecated; undoes
+	  API/ABI breakage from 2006-02-24.
+
 2006-04-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_perform_seek),
