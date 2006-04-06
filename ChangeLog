@@ -1,5 +1,11 @@
 2006-04-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	  clean up so report properly on missing stuff
+	  fix modplug detection
+
+2006-04-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* ext/Makefile.am:
 	* ext/amrwb/amrwb-code/Makefile.am:
 	  don't dist amr wb source code

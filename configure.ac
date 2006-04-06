@@ -78,24 +78,14 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
   cdxaparse \
   freeze \
+  modplug \
   speed \
   qtdemux \
   xingheader \
   tta \
   "
 
-dnl see if we can build C++ plug-ins
-if test "x$HAVE_CXX" = "xyes"; then
-  GST_PLUGINS_ALL="$GST_PLUGINS_ALL \
-    modplug \
-    "
-else
-  AC_MSG_WARN([Not compiling plug-ins requiring C++ compiler])
-fi
-
 AC_SUBST(GST_PLUGINS_ALL)
-
-GST_PLUGINS_SELECTED=""
 
 GST_ARG_WITH_PLUGINS
 
@@ -188,6 +178,16 @@ GST_SET_ERROR_CFLAGS($GST_CVS)
 
 dnl define correct level for debugging messages
 GST_SET_LEVEL_DEFAULT($GST_CVS)
+
+dnl *** plug-ins to exclude ***
+
+dnl see if we can build C++ plug-ins
+if test "x$HAVE_CXX" != "xyes"; then
+  AC_MSG_WARN([Not compiling plug-ins requiring C++ compiler])
+  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | sed 's/modplug//g'`
+fi
+AC_SUBST(GST_PLUGINS_SELECTED)
+
 
 dnl *** sys plug-ins ***
 
@@ -363,7 +363,10 @@ GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
 #dnl *** cairo ***
 #translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO, true)
 #GST_CHECK_FEATURE(CAIRO, [cairo plug-in], cairo, [
-#  PKG_CHECK_MODULES(CAIRO, cairo >= 1.0 glitz-glx, HAVE_CAIRO=yes, HAVE_CAIRO=no)
+#  PKG_CHECK_MODULES(CAIRO, cairo >= 1.0 glitz-glx, HAVE_CAIRO=yes, [
+#    HAVE_CAIRO=no
+#    AC_MSG_RESULT(no)
+#  ])
 #  AC_SUBST(CAIRO_CFLAGS)
 #  AC_SUBST(CAIRO_LIBS)
 #])
@@ -371,19 +374,17 @@ GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
 dnl **** DirectFB ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
 GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
-  PKG_CHECK_MODULES(DIRECTFB, directfb >= 0.9.24, [
-    HAVE_DIRECTFB="yes"
-    AC_SUBST(DIRECTFB_CFLAGS)
-    AC_SUBST(DIRECTFB_LIBS)
-  ], [
+  PKG_CHECK_MODULES(DIRECTFB, directfb >= 0.9.24, HAVE_DIRECTFB="yes", [
     HAVE_DIRECTFB="no"
+    AC_MSG_RESULT(no)
   ])
 ])
 
 dnl *** DTS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DTS, true)
 GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
-  GST_CHECK_LIBHEADER(DTS, dts_pic, dts_init, -lm, dts.h, DTS_LIBS="-ldts_pic -lm")
+  GST_CHECK_LIBHEADER(DTS, dts_pic, dts_init, -lm, dts.h,
+    DTS_LIBS="-ldts_pic -lm")
   AC_SUBST(DTS_LIBS)
 ])
 
@@ -391,9 +392,10 @@ dnl *** DIVX ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIVX, true)
 GST_CHECK_FEATURE(DIVX, [divx plugins], divx, [
   HAVE_DIVX=yes
-  AC_CHECK_HEADER(encore2.h, ,
-                  [ AC_MSG_WARN([Divx4linux encore headers not found]) &&
-                    HAVE_DIVX=no ] )
+  AC_CHECK_HEADER(encore2.h, , [
+    AC_MSG_WARN([Divx4linux encore headers not found])
+    HAVE_DIVX=no
+  ])
   if [ test x$HAVE_DIVX = xyes ]; then
     AC_MSG_CHECKING([Checking for valid divx4linux encore version])
     AC_TRY_COMPILE([
@@ -403,14 +405,20 @@ GST_CHECK_FEATURE(DIVX, [divx plugins], divx, [
 #endif
     ], [
 return 0;
-    ], [ HAVE_DIVX=yes && AC_MSG_RESULT(yes)],
-       [ HAVE_DIVX=no  && AC_MSG_RESULT(no) &&
-         AC_MSG_WARN([Wrong version of divx4linux installed]) ])
+    ], [
+      HAVE_DIVX=yes
+      AC_MSG_RESULT(yes)
+    ], [
+      HAVE_DIVX=no
+      AC_MSG_RESULT(no)
+      AC_MSG_WARN([Wrong version of divx4linux installed])
+    ])
   fi
   if [ test x$HAVE_DIVX = xyes ]; then
-    AC_CHECK_HEADER(decore.h, ,
-                    [ AC_MSG_WARN([Divx4linux decoder headers not found]) &&
-                      HAVE_DIVX=no ] )
+    AC_CHECK_HEADER(decore.h, , [
+      AC_MSG_WARN([Divx4linux decoder headers not found])
+      HAVE_DIVX=no
+    ])
   fi
   if [ test x$HAVE_DIVX = xyes ]; then
     AC_MSG_CHECKING([Checking for valid divx4linux decore version])
@@ -421,20 +429,27 @@ return 0;
 #endif
     ], [
 return 0;
-    ], [ HAVE_DIVX=yes && AC_MSG_RESULT(yes)],
-       [ HAVE_DIVX=no  && AC_MSG_RESULT(no) &&
-         AC_MSG_WARN([Wrong version of divx4linux installed]) ])
+    ], [
+      HAVE_DIVX=yes
+      AC_MSG_RESULT(yes)
+    ], [
+      HAVE_DIVX=no
+      AC_MSG_RESULT(no)
+      AC_MSG_WARN([Wrong version of divx4linux installed])
+    ])
   fi
   LIBS="-lm"
   if test x$HAVE_DIVX = xyes; then
-    AC_CHECK_LIB(divxencore, encore, ,
-                 [ AC_MSG_WARN([Divx4linux encore libs not found]) &&
-                   HAVE_DIVX=no ] )
+    AC_CHECK_LIB(divxencore, encore, , [
+      AC_MSG_WARN([Divx4linux encore libs not found])
+      HAVE_DIVX=no
+    ])
   fi
   if test x$HAVE_DIVX = xyes; then
-    AC_CHECK_LIB(divxdecore, decore, ,
-                 [ AC_MSG_WARN([Divx4linux decore libs not found]) &&
-                   HAVE_DIVX=no ] )
+    AC_CHECK_LIB(divxdecore, decore, , [
+      AC_MSG_WARN([Divx4linux decore libs not found])
+      HAVE_DIVX=no
+  ])
   fi
   if test x$HAVE_DIVX = xyes; then
     DIVXENC_LIBS="-ldivxencore -lm"
@@ -447,7 +462,8 @@ return 0;
 dnl **** Free AAC Encoder (FAAC) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAC, true)
 GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
-  GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, -lm, faac.h, FAAC_LIBS="-lfaac -lm")
+  GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, -lm, faac.h,
+    FAAC_LIBS="-lfaac -lm")
   AS_SCRUB_INCLUDE(FAAC_CFLAGS)
   AC_SUBST(FAAC_LIBS)
 ])
@@ -456,7 +472,8 @@ dnl **** Free AAC Decoder (FAAD) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
 GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
   HAVE_FAAD="yes"
-  GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h, FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
+  GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h,
+    FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
   if test $HAVE_FAAD = "yes"; then
     AC_MSG_CHECKING([Checking for FAAD >= 2])
     AC_TRY_RUN([
@@ -477,10 +494,14 @@ return 0;
 }
 
 #endif
-    ],
-       [ HAVE_FAAD="yes" && AC_MSG_RESULT(yes)],
-       [ HAVE_FAAD="no"  && AC_MSG_RESULT(no)])
-  fi;
+    ], [
+      HAVE_FAAD="yes"
+      AC_MSG_RESULT(yes)
+    ], [
+      HAVE_FAAD="no"
+      AC_MSG_RESULT(no)
+    ])
+  fi
   AS_SCRUB_INCLUDE(FAAD_CFLAGS)
   AC_SUBST(FAAD_LIBS)
 ])
@@ -516,7 +537,10 @@ dnl *** libmms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
 GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
   dnl check with pkg-config first
-  PKG_CHECK_MODULES(LIBMMS, libmms >= 0.2, HAVE_LIBMMS="yes", HAVE_LIBMMS="no")
+  PKG_CHECK_MODULES(LIBMMS, libmms >= 0.2, HAVE_LIBMMS="yes", [
+    HAVE_LIBMMS="no"
+    AC_MSG_RESULT(no)
+  ])
 ])
 AC_SUBST(LIBMMS_LIBS)
 
@@ -535,7 +559,10 @@ GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
 dnl *** neon ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
 GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
-  PKG_CHECK_MODULES(NEON, neon >= 0.25.5, HAVE_NEON="yes", HAVE_NEON="no")
+  PKG_CHECK_MODULES(NEON, neon >= 0.25.5, HAVE_NEON="yes", [
+    HAVE_NEON="no"
+    AC_MSG_RESULT(no)
+  ])
   AC_SUBST(NEON_CFLAGS)
   AC_SUBST(NEON_LIBS)
 ])
@@ -549,7 +576,9 @@ GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink sdlaudiosink, [
 dnl *** soundtouch ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SOUNDTOUCH, true)
 GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
-  PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch, HAVE_SOUNDTOUCH=yes, HAVE_SOUNDTOUCH=no)
+  PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch, HAVE_SOUNDTOUCH=yes, [
+    HAVE_SOUNDTOUCH=no
+     AC_MSG_RESULT(no)])
   AC_SUBST(SOUNDTOUCH_CFLAGS)
   AC_SUBST(SOUNDTOUCH_LIBS)
   if test "x$HAVE_CXX" != "xyes"; then
@@ -561,7 +590,10 @@ GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
 dnl *** swfdec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
 GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
-  PKG_CHECK_MODULES(SWFDEC, swfdec-0.3 >= 0.3.6, HAVE_SWFDEC=yes, HAVE_SWFDEC=no)
+  PKG_CHECK_MODULES(SWFDEC, swfdec-0.3 >= 0.3.6, HAVE_SWFDEC=yes, [
+    HAVE_SWFDEC=no
+    AC_MSG_RESULT(no)
+  ])
   AC_SUBST(SWFDEC_CFLAGS)
   AC_SUBST(SWFDEC_LIBS)
 ])
@@ -570,7 +602,10 @@ GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
 dnl *** taglib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TAGLIB, true)
 GST_CHECK_FEATURE(TAGLIB, [taglib ID3v2 tag writer], taglib, [
-  PKG_CHECK_MODULES(TAGLIB, taglib >= 1.4, HAVE_TAGLIB="yes", HAVE_TAGLIB="no")
+  PKG_CHECK_MODULES(TAGLIB, taglib >= 1.4, HAVE_TAGLIB="yes", [
+    HAVE_TAGLIB="no"
+    AC_MSG_RESULT(no)
+  ])
   AC_SUBST(TAGLIB_CFLAGS)
   AC_SUBST(TAGLIB_LIBS)
   if test "x$HAVE_CXX" != "xyes"; then
@@ -582,7 +617,10 @@ GST_CHECK_FEATURE(TAGLIB, [taglib ID3v2 tag writer], taglib, [
 dnl *** theora ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_THEORADEC, true)
 GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoraexpdec, [
-  PKG_CHECK_MODULES(THEORADEC, theoradec, HAVE_THEORADEC="yes", HAVE_THEORADEC="no")
+  PKG_CHECK_MODULES(THEORADEC, theoradec, HAVE_THEORADEC="yes", [
+    HAVE_THEORADEC="no"
+    AC_MSG_RESULT(no)
+  ])
   AC_SUBST(THEORADEC_LIBS)
   AC_SUBST(THEORADEC_CFLAGS)
 ])
@@ -619,7 +657,10 @@ int main () { return 0; }
 dnl *** wavpack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_WAVPACK, true)
 GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
-  PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.2, HAVE_WAVPACK=yes, HAVE_WAVPACK=no)
+  PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.2, HAVE_WAVPACK=yes, [
+    HAVE_WAVPACK=no
+    AC_MSG_RESULT(no)
+  ])
   AC_SUBST(WAVPACK_CFLAGS)
   AC_SUBST(WAVPACK_LIBS)
 ])
