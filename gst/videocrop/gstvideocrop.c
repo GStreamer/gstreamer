@@ -59,8 +59,7 @@ struct _GstVideoCropClass
 };
 
 /* elementfactory information */
-static GstElementDetails gst_video_crop_details =
-GST_ELEMENT_DETAILS ("video crop filter",
+static GstElementDetails gst_video_crop_details = GST_ELEMENT_DETAILS ("Crop",
     "Filter/Effect/Video",
     "Crops video into a user defined region",
     "Wim Taymans <wim.taymans@chello.be>");

@@ -118,12 +118,11 @@ enum QtDemuxState
 static GNode *qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc);
 static GNode *qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc);
 
-static GstElementDetails gst_qtdemux_details = {
-  "QuickTime Demuxer",
-  "Codec/Demuxer",
-  "Demultiplex a QuickTime file into audio and video streams",
-  "David Schleef <ds@schleef.org>"
-};
+static GstElementDetails gst_qtdemux_details =
+GST_ELEMENT_DETAILS ("QuickTime demuxer",
+    "Codec/Demuxer",
+    "Demultiplex a QuickTime file into audio and video streams",
+    "David Schleef <ds@schleef.org>");
 
 static GstStaticPadTemplate gst_qtdemux_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
