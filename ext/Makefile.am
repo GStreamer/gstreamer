@@ -291,5 +291,6 @@ DIST_SUBDIRS= \
 	swfdec \
 	soundtouch \
 	taglib \
+	theora \
 	wavpack \
 	xvid
