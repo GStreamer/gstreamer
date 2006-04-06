@@ -1377,7 +1377,7 @@ gst_pad_set_fixatecaps_function (GstPad * pad,
  *
  * Sets the given setcaps function for the pad.  The setcaps function
  * will be called whenever a buffer with a new media type is pushed or
- * pulled from the pad. The pad/element needs to update it's internal
+ * pulled from the pad. The pad/element needs to update its internal
  * structures to process the new media type. If this new type is not
  * acceptable, the setcaps function should return FALSE.
  */
@@ -1897,7 +1897,7 @@ done:
  * @pad: a  #GstPad to get the capabilities of.
  *
  * Gets the capabilities this pad can produce or consume.
- * Note that this method doesn't necessarily returns the caps set by
+ * Note that this method doesn't necessarily return the caps set by
  * gst_pad_set_caps() - use #GST_PAD_CAPS for that instead.
  * gst_pad_get_caps returns all possible caps a pad can operate with, using
  * the pad's get_caps function;
