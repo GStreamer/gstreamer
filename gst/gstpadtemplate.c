@@ -119,7 +119,8 @@ static GstObject *parent_class = NULL;
 static guint gst_pad_template_signals[LAST_SIGNAL] = { 0 };
 
 static void gst_pad_template_class_init (GstPadTemplateClass * klass);
-static void gst_pad_template_init (GstPadTemplate * templ);
+static void gst_pad_template_init (GstPadTemplate * templ,
+    GstPadTemplateClass * klass);
 static void gst_pad_template_dispose (GObject * object);
 
 GType
@@ -172,8 +173,19 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
 }
 
 static void
-gst_pad_template_init (GstPadTemplate * templ)
+gst_pad_template_init (GstPadTemplate * templ, GstPadTemplateClass * klass)
 {
+  /* We ensure that the pad template we're creating has a sunken reference.
+   * Inconsistencies in pad templates being floating or sunken has caused
+   * problems in the past with leaks, etc.
+   *
+   * For consistency, then, we only produce them  with sunken references
+   * owned by the creator of the object
+   */
+  if (GST_OBJECT_IS_FLOATING (templ)) {
+    gst_object_ref (templ);
+    gst_object_sink (templ);
+  }
 }
 
 static void
@@ -346,10 +358,16 @@ gst_pad_template_get_caps (GstPadTemplate * templ)
   return GST_PAD_TEMPLATE_CAPS (templ);
 }
 
+/**
+ * gst_pad_template_pad_created:
+ * @templ: a #GstPadTemplate that has been created
+ * @pad:   the #GstPad that created it
+ *
+ * Emit the pad-created signal for this template when created by this pad.
+ */
 void
 gst_pad_template_pad_created (GstPadTemplate * templ, GstPad * pad)
 {
-  gst_object_sink (GST_OBJECT (templ));
   g_signal_emit (G_OBJECT (templ),
       gst_pad_template_signals[TEMPL_PAD_CREATED], 0, pad);
 }

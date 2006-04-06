@@ -1,3 +1,23 @@
+2006-04-06  Michael Smith  <msmith@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_set_property):
+	  Use g_value_get_object() instead of g_value_dup_gst_object(),
+	  to avoid double-reffing the pad template (which we then sink,
+	  so this worked previously if (and only if) the pad template
+	  was floating.
+
+	* gst/gstpadtemplate.c: (gst_pad_template_init),
+	(gst_pad_template_pad_created):
+	  Never return floating references to pad templates, create
+	  them as initially-sunken.
+
+	  Document an extra function (and make this stop sinking our
+	  pad template, since that is now guaranteed to do nothing,
+	  since we created it sunken).
+
+	* gst/gstghostpad.c:
+	  Fix docs typo.
+
 2006-04-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstinfo.c: (__gst_in_valgrind):

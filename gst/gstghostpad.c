@@ -36,7 +36,7 @@
  * If the target pad is known at creation time, gst_ghost_pad_new() is the
  * function to use to get a ghost-pad. Otherwise one can use gst_ghost_pad_new_no_target()
  * to create the ghost-pad and use gst_ghost_pad_set_target() to establish the
- * accociation later on.
+ * association later on.
  *
  * Last reviewed on 2005-11-18 (0.9.5)
  */
