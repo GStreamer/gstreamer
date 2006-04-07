@@ -100,7 +100,7 @@ class PipeTest(TestCase):
         self.sink.connect_handoff(self._sink_handoff_cb)
         self._handoffs = 0
 
-        self.pipeline.set_state(gst.STATE_PLAYING)
+        self.assertTrue(self.pipeline.set_state(gst.STATE_PLAYING) != gst.STATE_CHANGE_FAILURE)
         while True:
             (ret, cur, pen) = self.pipeline.get_state()
             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_PLAYING:
@@ -109,7 +109,7 @@ class PipeTest(TestCase):
         while self._handoffs < 10:
                 pass
 
-        self.pipeline.set_state(gst.STATE_NULL)
+        self.assertEquals(self.pipeline.set_state(gst.STATE_NULL), gst.STATE_CHANGE_SUCCESS)
         while True:
             (ret, cur, pen) = self.pipeline.get_state()
             if ret == gst.STATE_CHANGE_SUCCESS and cur == gst.STATE_NULL:

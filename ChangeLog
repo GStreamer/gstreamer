@@ -1,3 +1,8 @@
+2006-04-07  Edward Hervey  <edward@fluendo.com>
+
+	* testsuite/test_ghostpad.py:
+	more assertions to figure out an speed issue.
+
 2006-04-07  Andy Wingo  <wingo@pobox.com>
 
 	* gst/arg-types.py (GstCapsArg.beforenull): py_caps can be NULL if
