@@ -6167,7 +6167,7 @@
   (parameters
     '("GstURIType" "type")
     '("const-gchar*" "uri")
-    '("const-gchar*" "elementname")
+    '("const-gchar*" "elementname" (null-ok) (default "NULL"))
   )
 )
 
