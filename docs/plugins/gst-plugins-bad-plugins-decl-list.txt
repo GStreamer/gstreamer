@@ -6,6 +6,7 @@ GST_DFBSURFACE
 GstDfbSurface
 GstDfbVMode
 <TITLE>GstDfbVideoSink</TITLE>
+GstDfbVideoSink
 gst_dfbsurface_get_type
 <SUBSECTION Standard>
 GST_DFBVIDEOSINK
@@ -20,6 +21,7 @@ GST_IS_DFBVIDEOSINK_CLASS
 <FILE>gsttaglib</FILE>
 GstTagLibMuxPriv
 <TITLE>GstTagLibMux</TITLE>
+GstTagLibMux
 <SUBSECTION Standard>
 GST_TAGLIB_MUX
 GST_IS_TAGLIB_MUX

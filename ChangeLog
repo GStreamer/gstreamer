@@ -1,3 +1,9 @@
+2006-04-07  Julien MOUTTE  <julien@moutte.net>
+
+	* docs/plugins/gst-plugins-bad-plugins-decl-list.txt: Updates.
+	* examples/directfb/Makefile.am: Add example resource files to
+	dist.
+
 2006-04-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/amrwb/amrwb-code/Makefile.am:
