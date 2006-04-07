@@ -1,3 +1,13 @@
+2006-04-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/flac/gstflacdec.c: (gst_flac_calculate_crc8),
+	(gst_flac_dec_scan_got_frame), (gst_flac_dec_scan_for_last_block),
+	(gst_flac_dec_metadata_callback):
+	* ext/flac/gstflacdec.h:
+	  If the stream header doesn't contain the total number of samples,
+	  search for the last flac frame at the end of the file and calculate
+	  the total duration from that frame's offset (fixes #337609).
+
 2006-04-07  Edward Hervey  <edward@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream):

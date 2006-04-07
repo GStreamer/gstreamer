@@ -64,6 +64,10 @@ struct _GstFlacDec {
   gint           depth;
   gint           width;
   gint           sample_rate;
+
+  /* from the stream info, needed for scanning */
+  guint16        min_blocksize;
+  guint16        max_blocksize;
 };
 
 struct _GstFlacDecClass {
