@@ -34,7 +34,7 @@ uninstall-local:
 	@rm $(DESTDIR)/$(pyexecdir)/pygst.pth > /dev/null 2>&1 || true
 
 check-valgrind:
-	@true
+	cd testsuite/ && make check-valgrind
 
 check-torture:
 	@true

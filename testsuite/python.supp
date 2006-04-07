@@ -441,3 +441,47 @@
    fun:*
    fun:update_keyword_args
 }
+
+# memleaks/conds in import_submodule
+{
+   memleak in import_submodule
+   Memcheck:Cond
+   fun:strcpy
+   fun:find_module
+}
+
+{
+   wrong jump in  import_submodule
+   Memcheck:Cond
+   fun:find_module
+   fun:import_submodule
+}
+
+{
+   wrong jump in  import_submodule
+   Memcheck:Cond
+   fun:find_module
+   fun:load_package
+   fun:load_module
+   fun:import_submodule
+}
+
+{
+   Use of uninitialised value of size 4
+   Memcheck:Value4
+   fun:strcpy
+   fun:find_module
+}
+
+## KNOWN MEMORY LEAK in gst_element_state_get_name
+## See gstreamer/gst/gstutils.c
+{
+   Known leak in gst_element_state_get_name
+   Memcheck:Leak
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:g_strdup_printf
+   fun:gst_element_state_get_name
+}

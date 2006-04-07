@@ -1,3 +1,13 @@
+2006-04-07  Edward Hervey  <edward@fluendo.com>
+
+	* Makefile.am:
+	make check-valgrind calls make valgrind in the testsuite directory.
+	* testsuite/Makefile.am:
+	prepend $(top_srcdir) to PYTHONPATH for all tests so it uses the built
+	library and not the installed one.
+	* testsuite/python.supp:
+	Added suppressions discovered on x86/gentoo.
+
 2006-04-07  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstelement.override (_wrap_gst_element_link): Allow errors

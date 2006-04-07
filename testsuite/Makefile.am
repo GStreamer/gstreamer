@@ -53,6 +53,7 @@ endif
 GSTSUPP = $(top_srcdir)/common/gst.supp
 PYTHONSUPP = $(top_srcdir)/testsuite/python.supp
 GSTPYTHONSUPP = $(top_srcdir)/testsuite/gstpython.supp
+TESTS_ENVIRONMENT = PYTHONPATH=$(top_srcdir)/:$(PYTHONPATH)
 
 # gdb any given test_x.py by running make test_x.py.gdb
 %.gdb: %
