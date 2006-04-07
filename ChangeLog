@@ -1,3 +1,12 @@
+2006-04-07  Michael Smith  <msmith@fluendo.com>
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_set_header_on_caps),
+	(gst_vorbis_enc_chain):
+	  Remove leaks from vorbisenc.
+	  Mostly minor changes, the only significant one is that now the
+	  buffers we set as 'streamheader' on the caps are copies of the
+	  original buffers, to avoid circular refcounting problems.
+
 2006-04-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gstplaybasebin.c: (mute_stream), (setup_substreams):

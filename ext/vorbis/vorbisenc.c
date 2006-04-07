@@ -830,10 +830,15 @@ gst_vorbis_enc_push_packet (GstVorbisEnc * vorbisenc, ogg_packet * packet)
   return gst_vorbis_enc_push_buffer (vorbisenc, outbuf);
 }
 
+/* Set a copy of these buffers as 'streamheader' on the caps.
+ * We need a copy to avoid these buffers ending up with (indirect) refs on
+ * themselves
+ */
 static GstCaps *
 gst_vorbis_enc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
     GstBuffer * buf2, GstBuffer * buf3)
 {
+  GstBuffer *buf;
   GstStructure *structure;
   GValue array = { 0 };
   GValue value = { 0 };
@@ -849,15 +854,21 @@ gst_vorbis_enc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   /* put buffers in a fixed list */
   g_value_init (&array, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, buf1);
+  buf = gst_buffer_copy (buf1);
+  gst_value_set_buffer (&value, buf);
+  gst_buffer_unref (buf);
   gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, buf2);
+  buf = gst_buffer_copy (buf2);
+  gst_value_set_buffer (&value, buf);
+  gst_buffer_unref (buf);
   gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, buf3);
+  buf = gst_buffer_copy (buf3);
+  gst_value_set_buffer (&value, buf);
+  gst_buffer_unref (buf);
   gst_value_array_append_value (&array, &value);
   gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&value);
@@ -911,6 +922,7 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
   gulong size;
   gulong i, j;
   float **vorbis_buffer;
+  GstBuffer *buf1, *buf2, *buf3;
 
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
@@ -927,7 +939,6 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
     ogg_packet header;
     ogg_packet header_comm;
     ogg_packet header_code;
-    GstBuffer *buf1, *buf2, *buf3;
     GstCaps *caps;
 
     /* first, make sure header buffers get timestamp == 0 */
@@ -958,13 +969,18 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_set_caps (buf2, caps);
     gst_buffer_set_caps (buf3, caps);
 
+    gst_caps_unref (caps);
+
     /* push out buffers */
     if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf1)) != GST_FLOW_OK)
       goto failed_header_push;
+    buf1 = NULL;
     if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf2)) != GST_FLOW_OK)
       goto failed_header_push;
+    buf2 = NULL;
     if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf3)) != GST_FLOW_OK)
       goto failed_header_push;
+    buf3 = NULL;
 
 
     /* now adjust starting granulepos accordingly if the buffer's timestamp is
@@ -1014,6 +1030,13 @@ not_setup:
   }
 failed_header_push:
   {
+    GST_WARNING_OBJECT (vorbisenc, "Failed to push headers");
+    if (buf1)
+      gst_buffer_unref (buf1);
+    if (buf2)
+      gst_buffer_unref (buf2);
+    if (buf3)
+      gst_buffer_unref (buf3);
     gst_buffer_unref (buffer);
     return ret;
   }
