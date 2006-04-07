@@ -340,19 +340,13 @@ group_destroy (GstPlayBaseGroup * group)
 
     /* if the group is currently being played, we have to remove the element 
      * from the thread */
-    if (get_active_group (play_base_bin) == group) {
-      GST_LOG ("removing preroll element %s", GST_ELEMENT_NAME (element));
-      gst_element_set_state (element, GST_STATE_NULL);
-      gst_element_set_state (group->type[n].selector, GST_STATE_NULL);
-      gst_bin_remove (group->type[n].bin, element);
-      gst_bin_remove (group->type[n].bin, group->type[n].selector);
-    } else {
-      /* else we can just unref it */
-      gst_element_set_state (element, GST_STATE_NULL);
-      gst_element_set_state (group->type[n].selector, GST_STATE_NULL);
-      gst_object_unref (element);
-      gst_object_unref (group->type[n].selector);
-    }
+    gst_element_set_state (element, GST_STATE_NULL);
+    gst_element_set_state (group->type[n].selector, GST_STATE_NULL);
+
+    GST_LOG ("removing preroll element %s", GST_ELEMENT_NAME (element));
+
+    gst_bin_remove (group->type[n].bin, element);
+    gst_bin_remove (group->type[n].bin, group->type[n].selector);
 
     group->type[n].preroll = NULL;
     group->type[n].selector = NULL;

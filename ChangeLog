@@ -1,3 +1,9 @@
+2006-04-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gstplaybasebin.c: (group_destroy):
+	Clean up our group elements properly in the case where it never 
+	got committed - it still got added unconditionally to the bin.
+
 2006-04-07  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoradec.c: (theora_dec_sink_event),
