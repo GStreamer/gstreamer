@@ -1,3 +1,10 @@
+2006-04-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/ximagesrc/ximagesrc.c: (gst_ximagesrc_recalc),
+	(composite_pixel), (gst_ximagesrc_ximage_get),
+	(gst_ximagesrc_create), (gst_ximagesrc_set_property):
+	Fix typo, C++ style comments and other small cleanups
+	
 2006-04-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),
