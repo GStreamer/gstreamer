@@ -1,3 +1,11 @@
+2006-04-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Fabrizio Gennari  <fabrizio dot ge at tiscali dot it>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_sink_event),
+	(gst_asf_demux_push_buffer):
+	  Send newsegment event only once per pad, fixes #336550.
+
 2006-04-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:

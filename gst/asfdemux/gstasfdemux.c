@@ -135,6 +135,7 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
 
   demux = GST_ASF_DEMUX (gst_pad_get_parent (pad));
 
+  GST_LOG_OBJECT (demux, "handling %s event", GST_EVENT_TYPE_NAME (event));
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:{
       GstFormat newsegment_format;
@@ -1749,13 +1750,18 @@ gst_asf_demux_push_buffer (GstASFDemux * demux, asf_stream_context * stream,
 
   /* do we need to send a newsegment event? */
   if (stream->need_newsegment) {
-    GST_DEBUG ("sending new-segment event on pad %s",
-        GST_PAD_NAME (stream->pad));
+    GST_DEBUG ("sending new-segment event on pad %s: %" GST_TIME_FORMAT " - %"
+        GST_TIME_FORMAT, GST_PAD_NAME (stream->pad),
+        GST_TIME_ARGS (demux->segment.start),
+        GST_TIME_ARGS (demux->segment.stop));
 
     /* FIXME: if we need to send a newsegment event on this pad and
      * the buffer doesn't have a timestamp, should we just drop the buffer
      * and wait for one with a timestamp before sending it? */
-    gst_asf_demux_send_event_unlocked (demux, gst_event_new_new_segment (FALSE, demux->segment.rate, GST_FORMAT_TIME, demux->segment.start, demux->segment.stop, demux->segment.start));        /* last parameter isn't right */
+    /* FIXME: last parameter in newsegment isn't right, is it?! */
+    gst_pad_push_event (stream->pad,
+        gst_event_new_new_segment (FALSE, demux->segment.rate, GST_FORMAT_TIME,
+            demux->segment.start, demux->segment.stop, demux->segment.start));
 
     stream->need_newsegment = FALSE;
   }
