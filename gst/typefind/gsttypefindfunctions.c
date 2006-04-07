@@ -1073,6 +1073,90 @@ mpeg1_sys_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/** video/mpegts Transport Stream **/
+static GstStaticCaps mpegts_caps = GST_STATIC_CAPS ("video/mpegts, "
+    "systemstream = (boolean) true, packetsize = (int) [ 188, 208 ]");
+#define MPEGTS_CAPS gst_static_caps_get(&mpegts_caps)
+
+#define GST_MPEGTS_TYPEFIND_TRY_HEADERS 4
+#define GST_MPEGTS_MAX_PACKET_SIZE 204
+#define GST_MPEGTS_TYPEFIND_MAX_SYNC (10 * GST_MPEGTS_MAX_PACKET_SIZE)
+#define GST_MPEGTS_TYPEFIND_SYNC_SIZE \
+            (GST_MPEGTS_TYPEFIND_TRY_HEADERS * GST_MPEGTS_MAX_PACKET_SIZE)
+
+#define MPEGTS_HDR_SIZE 4
+#define IS_MPEGTS_HEADER(data) (((data)[0] == 0x47) && \
+                                (((data)[1] & 0x80) == 0x00) && \
+                                (((data)[3] & 0x10) == 0x10))
+
+/* Helper function to search ahead at intervals of packet_size for mpegts
+ * headers */
+gint
+mpeg_ts_probe_headers (GstTypeFind * tf, guint64 offset, gint packet_size)
+{
+  /* We always enter this function having found at least one header already */
+  gint found = 1;
+  guint8 *data = NULL;
+
+  while (found < GST_MPEGTS_TYPEFIND_TRY_HEADERS) {
+    offset += packet_size;
+
+    data = gst_type_find_peek (tf, offset, MPEGTS_HDR_SIZE);
+    if (data == NULL || !IS_MPEGTS_HEADER (data))
+      return found;
+
+    found++;
+  }
+
+  return found;
+}
+
+/* Try and detect at least 4 packets in at most 10 packets worth of
+ * data. Need to try several possible packet sizes */
+static void
+mpeg_ts_type_find (GstTypeFind * tf, gpointer unused)
+{
+  /* TS packet sizes to test: normal, DVHS packet size and 
+   * FEC with 16 or 20 byte codes packet size. */
+  const gint pack_sizes[] = { 188, 192, 204, 208 };
+  const gint n_pack_sizes = sizeof (pack_sizes) / sizeof (gint);
+
+  guint8 *data = NULL;
+  guint size = 0;
+  guint64 skipped = 0;
+
+  while (skipped < GST_MPEGTS_TYPEFIND_MAX_SYNC) {
+    if (size < MPEGTS_HDR_SIZE) {
+      data = gst_type_find_peek (tf, skipped, GST_MPEGTS_TYPEFIND_SYNC_SIZE);
+      if (!data)
+        break;
+      size = GST_MPEGTS_TYPEFIND_SYNC_SIZE;
+    }
+
+    /* Have at least MPEGTS_HDR_SIZE bytes at this point */
+    if (IS_MPEGTS_HEADER (data)) {
+      gint p;
+
+      for (p = 0; p < n_pack_sizes; p++) {
+        /* Probe ahead at size pack_sizes[p] */
+        if (mpeg_ts_probe_headers (tf, skipped, pack_sizes[p]) >=
+            GST_MPEGTS_TYPEFIND_TRY_HEADERS) {
+          GstCaps *caps = gst_caps_copy (MPEGTS_CAPS);
+
+          gst_structure_set (gst_caps_get_structure (caps, 0), "packetsize",
+              G_TYPE_INT, pack_sizes[p], NULL);
+          gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
+          gst_caps_unref (caps);
+          return;
+        }
+      }
+    }
+    data++;
+    skipped++;
+    size--;
+  }
+}
+
 /*** video/mpeg MPEG-4 elementary video stream ***/
 
 static GstStaticCaps mpeg4_video_caps = GST_STATIC_CAPS ("video/mpeg, "
@@ -2195,6 +2279,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *musepack_exts[] = { "mpc", NULL };
   static gchar *mpeg_sys_exts[] = { "mpe", "mpeg", "mpg", NULL };
   static gchar *mpeg_video_exts[] = { "mpv", "mpeg", "mpg", NULL };
+  static gchar *mpeg_ts_exts[] = { "ts", NULL };
   static gchar *ogg_exts[] = { "anx", "ogg", "ogm", NULL };
   static gchar *qt_exts[] = { "mov", NULL };
   static gchar *rm_exts[] = { "ra", "ram", "rm", "rmvb", NULL };
@@ -2290,6 +2375,8 @@ plugin_init (GstPlugin * plugin)
       mpeg1_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg2", GST_RANK_SECONDARY,
       mpeg2_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/mpegts", GST_RANK_PRIMARY,
+      mpeg_ts_type_find, mpeg_ts_exts, MPEGTS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/ogg", GST_RANK_PRIMARY,
       ogganx_type_find, ogg_exts, OGGANX_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg", GST_RANK_SECONDARY,

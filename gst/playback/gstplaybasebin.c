@@ -30,8 +30,13 @@
 GST_DEBUG_CATEGORY_STATIC (gst_play_base_bin_debug);
 #define GST_CAT_DEFAULT gst_play_base_bin_debug
 
+#if 0
+#define DEFAULT_QUEUE_THRESHOLD ((2 * GST_SECOND) / 3)
+#define DEFAULT_QUEUE_SIZE  (GST_SECOND / 2)
+#else
 #define DEFAULT_QUEUE_THRESHOLD (2 * GST_SECOND)
 #define DEFAULT_QUEUE_SIZE  (3 * GST_SECOND)
+#endif
 
 #define GROUP_LOCK(pbb) g_mutex_lock (pbb->group_lock)
 #define GROUP_UNLOCK(pbb) g_mutex_unlock (pbb->group_lock)
@@ -928,7 +933,8 @@ mute_stream (GstPad * pad, GstBuffer * buf, gpointer data)
   g_object_set (G_OBJECT (info), "mute", TRUE, NULL);
   id = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (info), "mute_probe"));
   g_object_set_data (G_OBJECT (info), "mute_probe", NULL);
-  gst_pad_remove_buffer_probe (GST_PAD_CAST (info->object), id);
+  if (id > 0)
+    gst_pad_remove_buffer_probe (GST_PAD_CAST (info->object), id);
 
   /* no data */
   return FALSE;
@@ -1137,9 +1143,12 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
     if (info->type == GST_STREAM_TYPE_UNKNOWN) {
       guint id;
 
-      id = gst_pad_add_buffer_probe (GST_PAD_CAST (info->object),
-          G_CALLBACK (mute_stream), info);
-      g_object_set_data (G_OBJECT (info), "mute_probe", GINT_TO_POINTER (id));
+      id = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (info), "mute_probe"));
+      if (id == 0) {
+        id = gst_pad_add_buffer_probe (GST_PAD_CAST (info->object),
+            G_CALLBACK (mute_stream), info);
+        g_object_set_data (G_OBJECT (info), "mute_probe", GINT_TO_POINTER (id));
+      }
     }
   }
 

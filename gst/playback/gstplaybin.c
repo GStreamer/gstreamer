@@ -1286,8 +1286,13 @@ gst_play_bin_send_event_to_sink (GstPlayBin * play_bin, GstEvent * event)
     GstElement *sink = GST_ELEMENT_CAST (sinks->data);
 
     gst_event_ref (event);
-    if ((res = gst_element_send_event (sink, event)))
+    if ((res = gst_element_send_event (sink, event))) {
+      GST_DEBUG_OBJECT (play_bin,
+          "Sent event succesfully to sink %" GST_PTR_FORMAT, sink);
       break;
+    }
+    GST_DEBUG_OBJECT (play_bin,
+        "Event failed when sent to sink %" GST_PTR_FORMAT, sink);
 
     sinks = g_list_next (sinks);
   }
@@ -1320,14 +1325,18 @@ do_playbin_seek (GstElement * element, GstEvent * event)
 
     if (was_playing) {
       gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_get_state (element, NULL, NULL, 50 * GST_MSECOND);
     }
   }
 
+  GST_DEBUG_OBJECT (element, "Sending seek event to a sink");
   res = gst_play_bin_send_event_to_sink (GST_PLAY_BIN (element), event);
 
-  if (flush && res) {
+  if (flush) {
     /* need to reset the stream time to 0 after a flushing seek */
-    gst_pipeline_set_new_stream_time (GST_PIPELINE (element), 0);
+    if (res)
+      gst_pipeline_set_new_stream_time (GST_PIPELINE (element), 0);
+
     if (was_playing)
       /* and continue playing */
       gst_element_set_state (element, GST_STATE_PLAYING);

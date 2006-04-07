@@ -1,3 +1,17 @@
+2006-04-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gstplaybasebin.c: (mute_stream), (setup_substreams):
+	  Don't remove our mute-probe if someone else already did so.
+	  Don't set a 2nd one if there is already one pending on the pad.
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_send_event_to_sink),
+	(do_playbin_seek):
+	  When a seek fails, ensure that playbin is still set back to playing.
+	  
+	* gst/typefind/gsttypefindfunctions.c: (mpeg_ts_probe_headers),
+	(mpeg_ts_type_find), (plugin_init):
+	  Add a typefind function for mpeg-ts streams.
+
 2006-04-06  Andy Wingo  <wingo@pobox.com>
 
 	* gst/videorate/gstvideorate.c (gst_video_rate_reset) 
