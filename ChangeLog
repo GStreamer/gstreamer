@@ -1,5 +1,8 @@
 2006-04-07  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstelement.override (_wrap_gst_element_link): Allow errors
+	parsing the optional filter caps to propagate up.
+
 	* gst/gst.defs (element_make_from_uri): Element name is optional
 	and can be None. It defaults to None.
 

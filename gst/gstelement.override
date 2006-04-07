@@ -179,8 +179,13 @@ _wrap_gst_element_link(PyGObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
     if (py_caps == NULL)
       caps = NULL;
-    else
+    else {
       caps = pygst_caps_from_pyobject (py_caps, &caps_is_copy);
+      if (caps == NULL)
+        /* an error happened, propagate up */
+        return NULL;
+    }
+
     ret = gst_element_link_filtered(GST_ELEMENT(self->obj), GST_ELEMENT(dest->obj), caps);
     if (caps && caps_is_copy)
         gst_caps_unref (caps);
