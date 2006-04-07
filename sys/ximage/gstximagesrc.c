@@ -25,7 +25,7 @@
  * This element captures your X Display and creates raw RGB video.  It uses
  * the XDamage extension if available to only capture areas of the screen that
  * have changed since the last frame.  It uses the XFixes extension if
- * available to also cpature your mouse pointer
+ * available to also capture your mouse pointer
  * </para>
  * <title>Example pipelines</title>
  * <para>
@@ -51,6 +51,9 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+
+#include <gst/gst.h>
+#include <gst/gst-i18n-plugin.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_ximagesrc);
 #define GST_CAT_DEFAULT gst_debug_ximagesrc
@@ -233,7 +236,7 @@ gst_ximagesrc_recalc (GstXImageSrc * src)
   if (!src->xcontext)
     return FALSE;
 
-  /* FIXME: Check the display hasn't changed size or something */
+  /* Mayble later we can check the display hasn't changed size */
   /* We could use XQueryPointer to get only the current window. */
   return TRUE;
 }
@@ -264,12 +267,13 @@ composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
       color = GUINT32_FROM_LE (*(guint32 *) (dest));
       break;
     default:
-      g_warning ("bpp %d not supported\n", xcontext->bpp);
-      color = 0;
+      /* Should not reach here */
+      g_assert_not_reached ();
   }
 
 
-  /* FIXME: move the code that finds shift and max in the _link function */
+  /* possible optimisation:
+   * move the code that finds shift and max in the _link function */
   for (r_shift = 0; !(xcontext->visual->red_mask & (1 << r_shift)); r_shift++);
   for (g_shift = 0; !(xcontext->visual->green_mask & (1 << g_shift));
       g_shift++);
@@ -478,7 +482,6 @@ gst_ximagesrc_ximage_get (GstXImageSrc * ximagesrc)
 
       cx = ximagesrc->cursor_image->x - ximagesrc->cursor_image->xhot;
       cy = ximagesrc->cursor_image->y - ximagesrc->cursor_image->yhot;
-      //count = image->width * image->height;
       count = ximagesrc->cursor_image->width * ximagesrc->cursor_image->height;
       for (i = 0; i < count; i++)
         ximagesrc->cursor_image->pixels[i] =
@@ -522,7 +525,9 @@ gst_ximagesrc_create (GstPushSrc * bs, GstBuffer ** buf)
   gint64 next_frame_no;
 
   if (!gst_ximagesrc_recalc (s)) {
-    /* FIXME: Post error on the bus */
+    GST_ELEMENT_ERROR (s, RESOURCE, FAILED,
+        (_("X11 Display changed resolution, we do not support this yet.")),
+        (NULL));
     return GST_FLOW_ERROR;
   }
 
@@ -610,11 +615,11 @@ gst_ximagesrc_set_property (GObject * object, guint prop_id,
       g_free (src->display_name);
       src->display_name = g_strdup (g_value_get_string (value));
 
-      // src->screen_num = MIN (src->screen_num, ScreenCount (src->display) - 1);
+      /* src->screen_num = MIN (src->screen_num, ScreenCount (src->display) - 1); */
       break;
     case PROP_SCREEN_NUM:
       src->screen_num = g_value_get_uint (value);
-      // src->screen_num = MIN (src->screen_num, ScreenCount (src->display) - 1);
+      /* src->screen_num = MIN (src->screen_num, ScreenCount (src->display) - 1); */
       break;
     case PROP_SHOW_POINTER:
       src->show_pointer = g_value_get_boolean (value);
