@@ -1,5 +1,10 @@
 2006-04-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* tests/icles/ximagesrc-test.c: (main):
+	Actually assert that pipeline goes to playing
+
+2006-04-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* sys/ximagesrc/ximagesrc.c: (gst_ximagesrc_recalc),
 	(composite_pixel), (gst_ximagesrc_ximage_get),
 	(gst_ximagesrc_create), (gst_ximagesrc_set_property):
