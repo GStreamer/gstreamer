@@ -25,7 +25,8 @@
  * This element captures your X Display and creates raw RGB video.  It uses
  * the XDamage extension if available to only capture areas of the screen that
  * have changed since the last frame.  It uses the XFixes extension if
- * available to also capture your mouse pointer
+ * available to also capture your mouse pointer.  By defaukt it will fixate to
+ * 25 frames per second..
  * </para>
  * <title>Example pipelines</title>
  * <para>
@@ -63,8 +64,8 @@ static GstElementDetails ximagesrc_details =
 GST_ELEMENT_DETAILS ("Ximage video source",
     "Source/Video",
     "Creates a screenshot video stream",
-    "Lutz Mueller <lutz@users.sourceforge.net>"
-    "Jan Schmidt <thaytan@mad.scientist.com>"
+    "Lutz Mueller <lutz@users.sourceforge.net>, "
+    "Jan Schmidt <thaytan@mad.scientist.com>, "
     "Zaheer Merali <zaheerabbas at merali dot org>");
 
 static GstStaticPadTemplate t =
@@ -236,7 +237,7 @@ gst_ximagesrc_recalc (GstXImageSrc * src)
   if (!src->xcontext)
     return FALSE;
 
-  /* Mayble later we can check the display hasn't changed size */
+  /* Maybe later we can check the display hasn't changed size */
   /* We could use XQueryPointer to get only the current window. */
   return TRUE;
 }
@@ -831,5 +832,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "ximagesrc",
-    "XFree86 video input plugin based on standard Xlib calls",
+    "X11 video input plugin based on standard Xlib calls",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

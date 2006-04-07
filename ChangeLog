@@ -1,5 +1,13 @@
 2006-04-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* ext/amrwb/amrwb-code/Makefile.am:
+	* sys/ximagesrc/ximagesrc.c: (gst_ximagesrc_recalc),
+	(gst_ximagesrc_create), (gst_ximagesrc_set_property):
+	Typo fix, s/XFree86/X11 and added doc blurb saying that it fixates to
+	25fps
+
+2006-04-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* tests/icles/ximagesrc-test.c: (main):
 	Actually assert that pipeline goes to playing
 
