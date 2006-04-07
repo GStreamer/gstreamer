@@ -6320,7 +6320,7 @@
   (return-type "GstPad*")
   (parameters
     '("GstPad*" "pad")
-    '("const-GstCaps*" "caps")
+    '("const-GstCaps*" "caps" (null-ok) (default "NULL"))
   )
 )
 

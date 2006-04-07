@@ -84,7 +84,7 @@ class GstCapsArg(ArgType):
     before = ('    %(name)s = pygst_caps_from_pyobject (py_%(name)s, %(namecopy)s);\n'
               '    if (PyErr_Occurred())\n'
               '      return NULL;\n')
-    beforenull = ('    if (py_%(name)s == Py_None)\n'
+    beforenull = ('    if (py_%(name)s == Py_None || py_%(name)s == NULL)\n'
                   '        %(name)s = NULL;\n'
                   '    else\n'
                   '  ' + before)

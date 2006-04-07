@@ -1,3 +1,12 @@
+2006-04-07  Andy Wingo  <wingo@pobox.com>
+
+	* gst/arg-types.py (GstCapsArg.beforenull): py_caps can be NULL if
+	it is an optional argument. Translate this python non-value to the
+	C NULL.
+
+	* gst/gst.defs (get_compatible_pad): Filter caps is optional and
+	can be None. It defaults to None.
+
 2006-04-07  Edward Hervey  <edward@fluendo.com>
 
 	* Makefile.am:
