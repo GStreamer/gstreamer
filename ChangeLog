@@ -1,3 +1,11 @@
+2006-04-07  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoradec.c: (theora_dec_sink_event),
+	(theora_handle_data_packet), (theora_dec_chain):
+	Unref unhandled events.
+	Protect against empty buffers.
+	Perform QoS on running time.
+
 2006-04-07  Michael Smith  <msmith@fluendo.com>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_set_header_on_caps),

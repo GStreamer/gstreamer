@@ -638,6 +638,7 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
+      /* FIXME, makes us waiting for keyframes */
       gst_theora_dec_reset (dec);
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
@@ -682,11 +683,13 @@ done:
 newseg_wrong_format:
   {
     GST_DEBUG_OBJECT (dec, "received non TIME newsegment");
+    gst_event_unref (event);
     goto done;
   }
 newseg_wrong_rate:
   {
     GST_DEBUG_OBJECT (dec, "negative rates not supported yet");
+    gst_event_unref (event);
     goto done;
   }
 }
@@ -916,13 +919,18 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
 
   if (outtime != -1) {
     gboolean need_skip;
+    GstClockTime qostime;
+
+    /* qos needs to be done on running time */
+    qostime = gst_segment_to_running_time (&dec->segment, GST_FORMAT_TIME,
+        outtime);
 
     GST_OBJECT_LOCK (dec);
     /* check for QoS, don't perform the last steps of getting and
      * pushing the buffers that are known to be late. */
     /* FIXME, we can also entirely skip decoding if the next valid buffer is 
      * known to be after a keyframe (using the granule_shift) */
-    need_skip = dec->earliest_time != -1 && outtime <= dec->earliest_time;
+    need_skip = dec->earliest_time != -1 && qostime <= dec->earliest_time;
     GST_OBJECT_UNLOCK (dec);
 
     if (need_skip)
@@ -1093,6 +1101,9 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
     dec->last_timestamp = -1;
   }
 
+  if (packet.bytes < 1)
+    goto wrong_size;
+
   GST_DEBUG_OBJECT (dec, "header=%d packetno=%lld, outtime=%" GST_TIME_FORMAT,
       packet.packet[0], packet.packetno, GST_TIME_ARGS (dec->last_timestamp));
 
@@ -1116,6 +1127,14 @@ done:
   gst_buffer_unref (buf);
 
   return result;
+
+  /* ERRORS */
+wrong_size:
+  {
+    GST_WARNING_OBJECT (dec, "received empty packet");
+    result = GST_FLOW_OK;
+    goto done;
+  }
 }
 
 static GstStateChangeReturn
