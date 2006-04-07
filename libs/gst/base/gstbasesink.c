@@ -859,7 +859,7 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   GstSegment *segment;
 
   /* start with nothing */
-  sstart = sstop = rstart = rstop = -1;
+  start = stop = sstart = sstop = rstart = rstop = -1;
 
   if (G_UNLIKELY (GST_IS_EVENT (obj))) {
     GstEvent *event = GST_EVENT_CAST (obj);
