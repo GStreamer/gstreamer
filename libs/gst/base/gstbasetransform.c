@@ -1176,7 +1176,7 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       trans->have_newsegment = TRUE;
 
       if (format == GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (trans, "received NEW_SEGMENT %" GST_TIME_FORMAT
+        GST_DEBUG_OBJECT (trans, "received TIME NEW_SEGMENT %" GST_TIME_FORMAT
             " -- %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT
             ", accum %" GST_TIME_FORMAT,
             GST_TIME_ARGS (trans->segment.start),
@@ -1254,7 +1254,7 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   GstFlowReturn ret = GST_FLOW_OK;
   guint out_size;
   gboolean want_in_place;
-  GstClockTime outtime;
+  GstClockTime qostime;
 
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
@@ -1273,7 +1273,14 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   if (!trans->negotiated && !trans->passthrough && (bclass->set_caps != NULL))
     goto not_negotiated;
 
-  if ((outtime = GST_BUFFER_TIMESTAMP (inbuf)) != -1) {
+  /* can only do QoS if the segment is in TIME */
+  if (trans->segment.format != GST_FORMAT_TIME)
+    goto no_qos;
+
+  qostime = gst_segment_to_running_time (&trans->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (inbuf));
+
+  if (qostime != -1) {
     gboolean need_skip;
     GstClockTime earliest_time;
 
@@ -1282,17 +1289,18 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
     /* check for QoS, don't perform conversion for buffers
      * that are known to be late. */
     need_skip = trans->priv->qos_enabled &&
-        earliest_time != -1 && outtime <= earliest_time;
+        earliest_time != -1 && qostime != -1 && qostime <= earliest_time;
     GST_OBJECT_UNLOCK (trans);
 
     if (need_skip) {
-      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, trans, "skipping transform: outtime %"
+      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, trans, "skipping transform: qostime %"
           GST_TIME_FORMAT " <= %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (outtime), GST_TIME_ARGS (earliest_time));
+          GST_TIME_ARGS (qostime), GST_TIME_ARGS (earliest_time));
       goto skip;
     }
   }
 
+no_qos:
   if (trans->passthrough) {
     /* In passthrough mode, give transform_ip a look at the
      * buffer, without making it writable, or just push the

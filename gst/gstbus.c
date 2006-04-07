@@ -688,6 +688,7 @@ gst_bus_create_watch (GstBus * bus)
  * @notify: the function to call when the source is removed.
  *
  * Adds a bus watch to the default main context with the given @priority.
+ * This function is used to receive asynchronous messages in the main loop.
  *
  * When @func is called, the message belongs to the caller; if you want to
  * keep a copy of it, call gst_message_ref() before leaving @func.
@@ -729,6 +730,7 @@ gst_bus_add_watch_full (GstBus * bus, gint priority,
  * @user_data: user data passed to @func.
  *
  * Adds a bus watch to the default main context with the default priority.
+ * This function is used to receive asynchronous messages in the main loop.
  *
  * The watch can be removed using g_source_remove() or by returning FALSE
  * from @func.
