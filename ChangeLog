@@ -1,3 +1,7 @@
+2006-04-07  Andy Wingo  <wingo@pobox.com>
+
+	* examples/remuxer.py: Code dump, work in progress...
+
 2006-04-07  Edward Hervey  <edward@fluendo.com>
 
 	* testsuite/test_ghostpad.py:

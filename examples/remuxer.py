@@ -51,6 +51,9 @@ class GstPlayer:
     def set_location(self, location):
         self.player.set_property('uri', location)
 
+    def get_location(self):
+        return self.player.get_property('uri')
+
     def query_position(self):
         "Returns a (position, duration) tuple"
         try:
@@ -253,24 +256,33 @@ class ProgressDialog(gtk.Dialog):
         progress.show()
         vbox.pack_start(progress, False)
 
-        self.progresstext = label = gtk.Label('<i>%s</i>' % task)
+        self.progresstext = label = gtk.Label('')
         label.set_use_markup(True)
         label.set_alignment(0.0, 0.0)
         label.show()
         vbox.pack_start(label)
+        self.set_task(task)
+
+    def set_task(self, task):
+        self.progresstext.set_markup('<i>%s</i>' % task)
+
+UNKNOWN = 0
+SUCCESS = 1
+FAILURE = 2
+CANCELLED = 3
 
 class RemuxProgressDialog(ProgressDialog):
     def __init__(self, parent, start, stop):
         ProgressDialog.__init__(self,
                                 "Writing to disk",
-                                ('Your ears need to be periodically cleaned to '
-                                 'maintain a decent level of hearing. The '
-                                 'process will be quick and painless.'),
-                                'Removing excess ear wax with a golf pencil',
+                                ('Writing the selected segment of your '
+                                 'media file to disk. This may take some '
+                                 'time depending on the file size.'),
+                                'Starting media pipeline',
                                 parent,
                                 gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                                (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                                 gtk.STOCK_CLOSE, gtk.RESPONSE_ACCEPT))
+                                (gtk.STOCK_CANCEL, CANCELLED,
+                                 gtk.STOCK_CLOSE, SUCCESS))
         self.start = start
         self.stop = stop
         self.update_position(start)
@@ -285,33 +297,150 @@ class RemuxProgressDialog(ProgressDialog):
         self.progress.set_fraction(1.0 - float(remaining) / (self.stop - self.start))
 
     def set_completed(self, completed):
-        self.set_response_sensitive(gtk.RESPONSE_ACCEPT, completed)
+        self.set_response_sensitive(CANCELLED, not completed)
+        self.set_response_sensitive(SUCCESS, completed)
 
 class Remuxer(gst.Pipeline):
+
+    __gsignals__ = {'done': (gobject.SIGNAL_RUN_LAST, None, (int,))}
+
     def __init__(self, fromuri, touri, start, stop):
-        gst.Pipeline.__init__(self)
+        self.__gobject_init__()
+
+        assert start >= 0
+        assert stop > start
+
         self.src = gst.element_make_from_uri(gst.URI_SRC, fromuri)
+        self.remuxbin = RemuxBin()
+        self.sink = gst.element_make_from_uri(gst.URI_SINK, touri)
+        self.resolution = UNKNOWN
+
+        self.add(self.src, self.remuxbin, self.sink)
+
+        self.src.link(self.remuxbin)
+        self.remuxbin.link(self.sink)
+
+        self.window = None
+        self.pdialog = None
+
+        self.start_time = start
+        self.stop_time = stop
+
+    def _start_queries(self):
+        pass
+
+    def _stop_queries(self):
+        pass
+
+    def _bus_watch(self, bus, message):
+        if message.type == gst.MESSAGE_ERROR:
+            print 'error', message
+            self._stop_queries()
+            m = gtk.MessageDialog(self.window,
+                                  gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
+                                  gtk.MESSAGE_ERROR,
+                                  gtk.BUTTONS_CLOSE,
+                                  "Error processing file")
+            txt = 'There was an error processing your file: %r' % message
+            m.format_secondary_text(txt)
+            m.run()
+            m.destroy()
+            self.response(FAILURE)
+        elif message.type == gst.MESSAGE_WARNING:
+            print 'warning', message
+        elif message.type == gst.MESSAGE_EOS:
+            print 'eos, woot'
+            self.pdialog.set_task('Finished')
+            self.pdialog.update_position(self.stop_time)
+            self._stop_queries()
+            self.pdialog.set_completed(True)
+        elif message.type == gst.MESSAGE_STATE_CHANGED:
+            if message.src == self:
+                print message
+                old, new, pending = message.parse_state_changed()
+                if ((old, new, pending) ==
+                    (gst.STATE_READY, gst.STATE_PAUSED,
+                     gst.STATE_VOID_PENDING)):
+                    self.pdialog.set_task('Processing file')
+                    self.pdialog.update_position(self.start_time)
+                    self._start_queries()
+                    self.set_state(gst.STATE_PLAYING)
+
+    def response(self, response):
+        assert self.resolution == UNKNOWN
+        self.resolution = response
+        self.set_state(gst.STATE_NULL)
+        self.pdialog.destroy()
+        self.pdialog = None
+        self.emit('done', response)
+
+    def start(self, main_window):
+        bus = self.get_bus()
+        bus.add_signal_watch()
+        bus.connect('message', self._bus_watch)
+        self.window = main_window
+        if self.window:
+            # can be None if we are debugging...
+            self.window.set_sensitive(False)
+        self.pdialog = RemuxProgressDialog(main_window, self.start_time,
+                                           self.stop_time)
+        self.pdialog.show()
+        self.pdialog.connect('response', lambda w, r: self.response(r))
+        self.set_state(gst.STATE_PAUSED)
+        
+    def run(self, main_window):
+        self.start(None)
+        loop = gobject.MainLoop()
+        self.connect('done', lambda *x: gobject.idle_add(loop.quit))
+        loop.run()
+        return self.resolution
+        
+class RemuxBin(gst.Bin):
+    def __init__(self):
+        self.__gobject_init__()
+
+        self.parsers = self._find_parsers()
+
         self.demux = gst.element_factory_make('oggdemux')
         self.mux = gst.element_factory_make('oggmux')
-        self.sink = gst.element_make_from_uri(gst.URI_SINK, touri)
 
-        self.add(self.src, self.demux, self.mux, self.sink)
+        self.add(self.demux, self.mux)
 
-        self.src.link(self.demux)
-        self.mux.link(self.sink)
+        self.add_pad(gst.GhostPad('sink', self.demux.get_pad('sink')))
+        self.add_pad(gst.GhostPad('src', self.mux.get_pad('src')))
 
         self.demux.connect('pad-added', self._new_demuxed_pad)
         self.demux.connect('no-more-pads', self._no_more_pads)
 
+    def _find_parsers(self):
+        registry = gst.registry_get_default()
+        ret = {}
+        for f in registry.get_feature_list(gst.ElementFactory):
+            if f.get_klass().find('Parser') >= 0:
+                for t in f.get_static_pad_templates():
+                    if t.direction == gst.PAD_SINK:
+                        for s in t.get_caps():
+                            ret[s.get_name()] = f.get_name()
+                        break
+        return ret
+
     def _new_demuxed_pad(self, element, pad):
-        pad.link(self.mux.get_pad('sink_%d'))
+        format = pad.get_caps()[0].get_name()
+
+        if format not in self.parsers:
+            self.async_error("Unsupported media type: %s", format)
+            return
+
+        parser = gst.element_factory_make(self.parsers[format])
+        self.add(parser)
+        parser.set_state(gst.STATE_PAUSED)
+        pad.link(parser.get_compatible_pad(pad))
+        parser.link(self.mux)
 
     def _no_more_pads(self, element):
+        # this is when we should commit to paused or something
         pass
 
-    def run(self):
-        self.set_state(gst.STATE_PLAYING)
-        
 
 class PlayerWindow(gtk.Window):
     UPDATE_INTERVAL = 500
@@ -406,7 +535,7 @@ class PlayerWindow(gtk.Window):
         buttonbox.show()
         table.attach(buttonbox, 2, 3, 1, 2, 0, 0)
 
-        button = gtk.Button("_Render to disk")
+        button = gtk.Button("_Write to disk")
         button.set_property('image',
                             gtk.image_new_from_stock(gtk.STOCK_SAVE_AS,
                                                      gtk.ICON_SIZE_BUTTON))
@@ -415,6 +544,14 @@ class PlayerWindow(gtk.Window):
 
         self.cutin.connect('notify::time', lambda *x: self.check_cutout())
         self.cutout.connect('notify::time', lambda *x: self.check_cutin())
+        button.connect('clicked', lambda *x: self.do_remux())
+
+    def do_remux(self):
+        in_uri = self.player.get_location()
+        out_uri = in_uri[:-4] + '-remuxed.ogg'
+        r = Remuxer(in_uri, out_uri,
+                    self.cutin.get_time(), self.cutout.get_time())
+        r.run(self)
 
     def check_cutout(self):
         if self.cutout.get_time() <= self.cutin.get_time():
