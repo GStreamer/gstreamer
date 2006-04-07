@@ -855,6 +855,8 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   gint64 cstart, cstop;         /* clipped raw timestamps */
   gint64 rstart, rstop;         /* clipped timestamps converted to running time */
   GstClockTime sstart, sstop;   /* clipped timestamps converted to stream time */
+  GstFormat format;
+  GstSegment *segment;
 
   /* start with nothing */
   sstart = sstop = rstart = rstop = -1;
@@ -879,10 +881,6 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     }
   }
 
-  /* no sync if we did not get a TIME segment format */
-  if (G_UNLIKELY (basesink->segment.format != GST_FORMAT_TIME))
-    goto done;
-
   /* else do buffer sync code */
   buffer = GST_BUFFER_CAST (obj);
 
@@ -902,8 +900,19 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
       ", stop: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
+  /* collect segment and format for code clarity */
+  segment = &basesink->segment;
+  format = segment->format;
+
+  /* no timestamp clipping if we did not * get a TIME segment format */
+  if (G_UNLIKELY (format != GST_FORMAT_TIME)) {
+    cstart = start;
+    cstop = stop;
+    goto do_times;
+  }
+
   /* clip */
-  if (G_UNLIKELY (!gst_segment_clip (&basesink->segment, GST_FORMAT_TIME,
+  if (G_UNLIKELY (!gst_segment_clip (segment, GST_FORMAT_TIME,
               (gint64) start, (gint64) stop, &cstart, &cstop)))
     goto out_of_segment;
 
@@ -913,14 +922,13 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
         GST_TIME_ARGS (cstop));
   }
 
-  sstart =
-      gst_segment_to_stream_time (&basesink->segment, GST_FORMAT_TIME, cstart);
-  sstop =
-      gst_segment_to_stream_time (&basesink->segment, GST_FORMAT_TIME, cstop);
-  rstart =
-      gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME, cstart);
-  rstop =
-      gst_segment_to_running_time (&basesink->segment, GST_FORMAT_TIME, cstop);
+do_times:
+  /* this can produce wrong values if we accumulated non-TIME segments. If this happens,
+   * upstream is behaving very badly */
+  sstart = gst_segment_to_stream_time (segment, format, cstart);
+  sstop = gst_segment_to_stream_time (segment, format, cstop);
+  rstart = gst_segment_to_running_time (segment, format, cstart);
+  rstop = gst_segment_to_running_time (segment, format, cstop);
 
 done:
   /* save times */
