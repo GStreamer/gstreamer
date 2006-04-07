@@ -1127,7 +1127,6 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
   if (stream->pad)
     gst_object_unref (stream->pad);
   pad = stream->pad = gst_pad_new_from_template (templ, padname);
-  gst_object_unref (templ);
   stream->last_flow = GST_FLOW_OK;
   stream->idx_duration = GST_CLOCK_TIME_NONE;
   g_free (padname);

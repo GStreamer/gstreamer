@@ -1,3 +1,9 @@
+2006-04-07  Edward Hervey  <edward@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream):
+	Don't unref the GstPadTemplate returned by
+	gst_element_class_get_pad_template().
+
 2006-04-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Brian Cameron  <brian dot cameron at sun dot com>
