@@ -170,9 +170,11 @@ void gst_ximageutil_ximage_destroy (GstXContext *xcontext,
 /* Call to manually release a buffer */
 void gst_ximage_buffer_free (GstXImageSrcBuffer *ximage);
 
-#define GST_TYPE_XIMAGESRC_BUFFER (gst_ximagesrc_buffer_get_type())
-#define GST_IS_XIMAGESRC_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XIMAGESRC_BUFFER))
-#define GST_XIMAGESRC_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_XIMAGESRC_BUFFER, GstXImageSrcBuffer))
+#define GST_TYPE_XIMAGESRC_BUFFER            (gst_ximagesrc_buffer_get_type())
+#define GST_IS_XIMAGESRC_BUFFER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XIMAGESRC_BUFFER))
+#define GST_IS_XIMAGESRC_BUFFER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_XIMAGESRC_BUFFER))
+#define GST_XIMAGESRC_BUFFER(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_XIMAGESRC_BUFFER, GstXImageSrcBuffer))
+#define GST_XIMAGESRC_BUFFER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_XIMAGESRC_BUFFER, GstXImageSrcBufferClass))
 #define GST_XIMAGESRC_BUFFER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_XIMAGESRC_BUFFER, GstXImageSrcBufferClass))
 
 G_END_DECLS 
