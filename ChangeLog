@@ -1,3 +1,12 @@
+2006-04-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/flac/gstflacdec.c: (gst_flac_dec_handle_seek_event):
+	  Don't try to seek beyond the end of the file (would
+	  occasionally display error dialogs in totem when seeking
+	  to the end) (#335869). Will still throw an error though
+	  if the file is truncated and the total_samples value in
+	  the stream header is wrong.
+
 2006-04-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/gstflacdec.c: (gst_flac_calculate_crc8),

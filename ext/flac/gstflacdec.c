@@ -1119,6 +1119,13 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
   /* operate on segment copy until we know the seek worked */
   segment = flacdec->segment;
 
+  if (segment.duration > 0) {
+    if (start != -1)
+      start = CLAMP (start, 0, segment.duration - 1);
+    if (stop != -1)
+      stop = CLAMP (stop, 0, segment.duration - 1);
+  }
+
   gst_segment_set_seek (&segment, rate, GST_FORMAT_DEFAULT,
       seek_flags, start_type, start, stop_type, stop, &only_update);
 
