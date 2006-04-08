@@ -1,19 +1,7 @@
 2006-04-08  Wim Taymans  <wim@fluendo.com>
 
-	reviewed by: <delete if not using a buddy>
-
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_avpicture_fill):
-	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init),
-	(gst_ffmpegdec_init), (gst_ffmpegdec_finalize),
-	(gst_ffmpegdec_query), (gst_ffmpegdec_update_qos),
-	(gst_ffmpegdec_reset_qos), (gst_ffmpegdec_read_qos),
-	(gst_ffmpegdec_src_event), (gst_ffmpegdec_open),
-	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_get_buffer),
-	(gst_ffmpegdec_release_buffer),
-	(gst_ffmpegdec_add_pixel_aspect_ratio), (gst_ffmpegdec_negotiate),
-	(gst_ffmpegdec_do_qos), (gst_ffmpegdec_frame),
-	(gst_ffmpegdec_flush_pcache), (gst_ffmpegdec_sink_event),
-	(gst_ffmpegdec_chain):
+	Some other formats, still commented out, though.
 
 2006-04-08  Wim Taymans  <wim@fluendo.com>
 
