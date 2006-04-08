@@ -1,3 +1,15 @@
+2006-04-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstpad.c: (gst_pad_link):
+	  Must set peer pads before calling the link function, otherwise
+	  a task started from a link function might get a flow-not-linked
+	  result when trying to push because the other thread where the
+	  linking happens hasn't had a chance to set the peers yet. This
+	  might happen for example when a queue gets linked to a downstream
+	  element, as queue starts a streaming task when its source pad
+	  gets linked. Happens in real life when playing back flac/musepack
+	  files in playbin (#332390).
+	  
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstindex.h:

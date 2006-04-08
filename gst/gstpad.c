@@ -1730,6 +1730,10 @@ gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
   if (result != GST_PAD_LINK_OK)
     goto prepare_failed;
 
+  /* must set peers before calling the link function */
+  GST_PAD_PEER (srcpad) = sinkpad;
+  GST_PAD_PEER (sinkpad) = srcpad;
+
   GST_OBJECT_UNLOCK (sinkpad);
   GST_OBJECT_UNLOCK (srcpad);
 
@@ -1750,9 +1754,6 @@ gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
   GST_OBJECT_LOCK (sinkpad);
 
   if (result == GST_PAD_LINK_OK) {
-    GST_PAD_PEER (srcpad) = sinkpad;
-    GST_PAD_PEER (sinkpad) = srcpad;
-
     GST_OBJECT_UNLOCK (sinkpad);
     GST_OBJECT_UNLOCK (srcpad);
 
@@ -1766,6 +1767,9 @@ gst_pad_link (GstPad * srcpad, GstPad * sinkpad)
   } else {
     GST_CAT_INFO (GST_CAT_PADS, "link between %s:%s and %s:%s failed",
         GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+
+    GST_PAD_PEER (srcpad) = NULL;
+    GST_PAD_PEER (sinkpad) = NULL;
 
     GST_OBJECT_UNLOCK (sinkpad);
     GST_OBJECT_UNLOCK (srcpad);
