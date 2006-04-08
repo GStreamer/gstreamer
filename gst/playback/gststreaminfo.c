@@ -120,7 +120,7 @@ gst_stream_info_class_init (GstStreamInfoClass * klass)
 
   gobject_klass = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (G_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_klass->set_property = gst_stream_info_set_property;
   gobject_klass->get_property = gst_stream_info_get_property;

@@ -71,7 +71,7 @@ gst_tuner_norm_class_init (GstTunerNormClass * klass)
 {
   GObjectClass *object_klass = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (G_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   object_klass->dispose = gst_tuner_norm_dispose;
 }

@@ -136,7 +136,7 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   gstelement_klass = (GstElementClass *) klass;
   gstbin_klass = (GstBinClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_PIPELINE);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_klass->set_property = gst_play_base_bin_set_property;
   gobject_klass->get_property = gst_play_base_bin_get_property;

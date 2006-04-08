@@ -94,7 +94,7 @@ gst_ring_buffer_class_init (GstRingBufferClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstobject_class = (GstObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ring_buffer_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_ring_buffer_finalize);

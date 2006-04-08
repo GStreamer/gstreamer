@@ -74,7 +74,7 @@ static void
 gst_v4l_color_balance_channel_class_init (GstV4lColorBalanceChannelClass *
     klass)
 {
-  parent_class = g_type_class_ref (GST_TYPE_COLOR_BALANCE_CHANNEL);
+  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void

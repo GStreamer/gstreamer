@@ -86,7 +86,7 @@ gst_mixer_track_class_init (GstMixerTrackClass * klass)
 {
   GObjectClass *object_klass = G_OBJECT_CLASS (klass);
 
-  parent_class = g_type_class_ref (G_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   object_klass->get_property = gst_mixer_track_get_property;
 

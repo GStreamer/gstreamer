@@ -72,7 +72,7 @@ gst_color_balance_channel_class_init (GstColorBalanceChannelClass * klass)
 {
   GObjectClass *object_klass = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (G_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   signals[SIGNAL_VALUE_CHANGED] =
       g_signal_new ("value-changed", G_TYPE_FROM_CLASS (klass),

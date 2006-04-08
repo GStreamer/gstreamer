@@ -58,8 +58,7 @@ gst_alsa_mixer_options_get_type (void)
 static void
 gst_alsa_mixer_options_class_init (gpointer g_class, gpointer class_data)
 {
-  if (parent_class == NULL)
-    parent_class = g_type_class_ref (GST_TYPE_MIXER_TRACK);
+  parent_class = g_type_class_peek_parent (g_class);
 }
 
 static void

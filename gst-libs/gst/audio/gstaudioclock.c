@@ -72,7 +72,7 @@ gst_audio_clock_class_init (GstAudioClockClass * klass)
   gstobject_class = (GstObjectClass *) klass;
   gstclock_class = (GstClockClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_SYSTEM_CLOCK);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstclock_class->get_internal_time = gst_audio_clock_get_internal_time;
 }

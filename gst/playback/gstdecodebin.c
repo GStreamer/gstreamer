@@ -187,7 +187,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gstelement_klass = (GstElementClass *) klass;
   gstbin_klass = (GstBinClass *) klass;
 
-  parent_class = g_type_class_ref (gst_bin_get_type ());
+  parent_class = g_type_class_peek_parent (klass);
 
   gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD] =
       g_signal_new ("new-decoded-pad", G_TYPE_FROM_CLASS (klass),

@@ -130,7 +130,7 @@ gst_tcp_client_sink_class_init (GstTCPClientSink * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_SINK);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_tcp_client_sink_set_property;
   gobject_class->get_property = gst_tcp_client_sink_get_property;

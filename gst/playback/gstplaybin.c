@@ -173,7 +173,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gstbin_klass = (GstBinClass *) klass;
   playbasebin_klass = (GstPlayBaseBinClass *) klass;
 
-  parent_class = g_type_class_ref (gst_play_base_bin_get_type ());
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_klass->set_property = gst_play_bin_set_property;
   gobject_klass->get_property = gst_play_bin_get_property;

@@ -265,7 +265,7 @@ gst_ogg_pad_class_init (GstOggPadClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  ogg_pad_parent_class = g_type_class_ref (GST_TYPE_PAD);
+  ogg_pad_parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_ogg_pad_dispose;
   gobject_class->finalize = gst_ogg_pad_finalize;

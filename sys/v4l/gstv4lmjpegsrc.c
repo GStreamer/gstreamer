@@ -160,7 +160,7 @@ gst_v4lmjpegsrc_class_init (GstV4lMjpegSrcClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_V4LELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
 #if 0
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_X_OFFSET,

@@ -1920,7 +1920,7 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_VIDEO_SINK);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_ximagesink_finalize;
   gobject_class->set_property = gst_ximagesink_set_property;

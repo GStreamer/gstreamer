@@ -58,7 +58,7 @@ gst_netbuffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mo_class = GST_MINI_OBJECT_CLASS (g_class);
 
-  parent_class = g_type_class_ref (GST_TYPE_BUFFER);
+  parent_class = g_type_class_peek_parent (g_class);
 
   mo_class->copy = (GstMiniObjectCopyFunction) gst_netbuffer_copy;
   mo_class->finalize = (GstMiniObjectFinalizeFunction) gst_netbuffer_finalize;

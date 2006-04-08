@@ -129,7 +129,7 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property =
       GST_DEBUG_FUNCPTR (gst_stream_selector_set_property);

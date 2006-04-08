@@ -91,7 +91,7 @@ gst_v4ljpegsrc_base_init (gpointer g_class)
 static void
 gst_v4ljpegsrc_class_init (GstV4lJpegSrcClass * klass)
 {
-  parent_class = g_type_class_ref (GST_TYPE_V4LSRC);
+  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void

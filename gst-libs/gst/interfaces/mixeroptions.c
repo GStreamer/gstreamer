@@ -71,7 +71,7 @@ gst_mixer_options_class_init (GstMixerOptionsClass * klass)
 {
   GObjectClass *object_klass = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_MIXER_TRACK);
+  parent_class = g_type_class_peek_parent (klass);
 
   signals[SIGNAL_OPTION_CHANGED] =
       g_signal_new ("option_changed", G_TYPE_FROM_CLASS (klass),

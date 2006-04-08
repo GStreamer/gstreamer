@@ -76,7 +76,7 @@ sinesrc_class_init (SineSrcClass * klass)
 
   element_class->change_state = sinesrc_change_state;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
