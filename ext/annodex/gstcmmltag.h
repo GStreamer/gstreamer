@@ -32,7 +32,8 @@
   (G_TYPE_CHECK_INSTANCE_CAST((obj), \
                               GST_TYPE_CMML_TAG_STREAM, GstCmmlTagStream))
 #define GST_CMML_TAG_STREAM_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_CMML_TAG_STREAM, GstCmmlTagStream))
+  (G_TYPE_CHECK_CLASS_CAST((klass), \
+                              GST_TYPE_CMML_TAG_STREAM, GstCmmlTagStreamClass))
 #define GST_CMML_TAG_STREAM_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS((obj), \
                              GST_TYPE_CMML_TAG_STREAM, GstCmmlTagStreamClass))
@@ -42,7 +43,7 @@
 #define GST_CMML_TAG_HEAD(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_CMML_TAG_HEAD, GstCmmlTagHead))
 #define GST_CMML_TAG_HEAD_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_CMML_TAG_HEAD, GstCmmlTagHead))
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_CMML_TAG_HEAD, GstCmmlTagHeadClass))
 #define GST_CMML_TAG_HEAD_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS((obj), \
                              GST_TYPE_CMML_TAG_HEAD, GstCmmlTagHeadClass))
@@ -51,10 +52,11 @@
 #define GST_TYPE_CMML_TAG_CLIP (gst_cmml_tag_clip_get_type ())
 #define GST_CMML_TAG_CLIP(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_CMML_TAG_CLIP, GstCmmlTagClip))
-#define GST_CMML_TAG_CLIP_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_CMML_TAG_CLIP, GstCmmlTagClip))
+#define GST_CMML_TAG_CLIP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_CMML_TAG_CLIP, GstCmmlTagClipClass))
 #define GST_CMML_TAG_CLIP_GET_CLASS(obj) \
-(G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_CMML_TAG_CLIP, GstCmmlTagClipClass))
+  (G_TYPE_INSTANCE_GET_CLASS((obj), \
+                             GST_TYPE_CMML_TAG_CLIP, GstCmmlTagClipClass))
 
 typedef struct _GstCmmlTagStream GstCmmlTagStream;
 typedef struct _GstCmmlTagStreamClass GstCmmlTagStreamClass;

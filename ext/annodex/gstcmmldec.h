@@ -35,10 +35,10 @@
 #define GST_CMML_DEC(obj) \
     (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_CMML_DEC, GstCmmlDec))
 #define GST_CMML_DEC_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_CMML_DEC, GstCmmlDec))
+    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_CMML_DEC, GstCmmlDecClass))
 #define GST_IS_CMML_DEC(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_CMML_DEC))
-#define GST_IS_CMML_DEC_CLASS(obj) \
+#define GST_IS_CMML_DEC_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_CMML_DEC))
 #define GST_CMML_DEC_GET_CLASS(obj) \
     (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_CMML_DEC, GstCmmlDecClass))

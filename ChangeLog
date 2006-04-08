@@ -1,3 +1,15 @@
+2006-04-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/annodex/gstcmmldec.h:
+	* ext/annodex/gstcmmlenc.h:
+	* ext/annodex/gstcmmltag.h:
+	* ext/cairo/gsttextoverlay.h:
+	* ext/ladspa/gstsignalprocessor.h:
+	* gst/matroska/ebml-read.h:
+	* gst/matroska/ebml-write.h:
+	* sys/osxaudio/gstosxaudioelement.h:
+	Fix broken GObject macros
+
 2006-04-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_handle_seek_event):
