@@ -485,8 +485,8 @@ set_hwparams (GstAlsaSink * alsa)
 
   snd_pcm_hw_params_alloca (&params);
 
-  GST_DEBUG_OBJECT (alsa, "Negotiating to %d channels @ %d Hz", alsa->channels,
-      alsa->rate);
+  GST_DEBUG_OBJECT (alsa, "Negotiating to %d channels @ %d Hz (format = %d)",
+      alsa->channels, alsa->rate, alsa->format);
 
   /* choose all parameters */
   CHECK (snd_pcm_hw_params_any (alsa->handle, params), no_config);
@@ -679,6 +679,10 @@ alsasink_parse_spec (GstAlsaSink * alsa, GstRingBufferSpec * spec)
 {
   switch (spec->type) {
     case GST_BUFTYPE_LINEAR:
+      GST_DEBUG_OBJECT (alsa,
+          "Linear format : depth=%d, width=%d, sign=%d, bigend=%d", spec->depth,
+          spec->width, spec->sign, spec->bigend);
+
       alsa->format = snd_pcm_build_linear_format (spec->depth, spec->width,
           spec->sign ? 0 : 1, spec->bigend ? 1 : 0);
       break;
