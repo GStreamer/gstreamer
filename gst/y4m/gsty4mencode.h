@@ -36,10 +36,12 @@ extern "C" {
 #define GST_Y4MENCODE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_Y4MENCODE,GstY4mEncode))
 #define GST_Y4MENCODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstY4mEncode))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_Y4MENCODE,GstY4mEncodeClass))
+#define GST_Y4MENCODE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_Y4MENCODE,GstY4mEncodeClass))
 #define GST_IS_Y4MENCODE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_Y4MENCODE))
-#define GST_IS_Y4MENCODE_CLASS(obj) \
+#define GST_IS_Y4MENCODE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_Y4MENCODE))
 
 typedef struct _GstY4mEncode GstY4mEncode;

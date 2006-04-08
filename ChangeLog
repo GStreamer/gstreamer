@@ -1,5 +1,13 @@
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/colorspace/gstcolorspace.h:
+	* gst/deinterlace/gstdeinterlace.h:
+	* gst/passthrough/gstpassthrough.h:
+	* gst/y4m/gsty4mencode.h:
+	Fix more broken GObject macros
+
+2006-04-08  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/xine/gstxine.h:
 	* gst-libs/gst/play/play.h:
 	* sys/v4l2/gstv4l2element.h:
