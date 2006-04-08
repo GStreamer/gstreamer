@@ -1,3 +1,12 @@
+2006-04-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_prepare_current_sample),
+	(gst_qtdemux_chain), (gst_qtdemux_add_stream), (qtdemux_dump_stsz),
+	(qtdemux_dump_stco), (qtdemux_parse_trak):
+	Don't make rounding errors in timestamp/duration calculations.
+	Fix timestamps for AMR and IMA4.  Fixes (#337436).
+	Create a dummy segment even when there is no edit list.
+
 2006-04-07  Julien MOUTTE  <julien@moutte.net>
 
 	* docs/plugins/gst-plugins-bad-plugins-decl-list.txt: Updates.
