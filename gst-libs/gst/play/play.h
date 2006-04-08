@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 #define GST_PLAY(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_PLAY, GstPlay))
 #define GST_PLAY_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PLAY, GstPlayClass))
 #define GST_IS_PLAY(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PLAY))
-#define GST_IS_PLAY_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PLAY))
+#define GST_IS_PLAY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PLAY))
 #define GST_PLAY_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GTK_TYPE_PLAY, GstPlayClass))
 
 typedef enum

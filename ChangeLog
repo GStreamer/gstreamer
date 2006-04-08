@@ -1,3 +1,11 @@
+2006-04-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/xine/gstxine.h:
+	* gst-libs/gst/play/play.h:
+	* sys/v4l2/gstv4l2element.h:
+	* sys/ximagesrc/ximageutil.h:
+	Fix broken GObject macros
+
 2006-04-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_prepare_current_sample),
