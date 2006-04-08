@@ -151,7 +151,7 @@ gst_lpwsinc_class_init (GstLPWSincClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREQUENCY,
       g_param_spec_double ("frequency", "Frequency",

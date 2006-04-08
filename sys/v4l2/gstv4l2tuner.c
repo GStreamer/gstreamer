@@ -85,7 +85,7 @@ gst_v4l2_tuner_channel_get_type (void)
 static void
 gst_v4l2_tuner_channel_class_init (GstV4l2TunerChannelClass * klass)
 {
-  channel_parent_class = g_type_class_ref (GST_TYPE_TUNER_CHANNEL);
+  channel_parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
@@ -126,7 +126,7 @@ gst_v4l2_tuner_norm_get_type (void)
 static void
 gst_v4l2_tuner_norm_class_init (GstV4l2TunerNormClass * klass)
 {
-  norm_parent_class = g_type_class_ref (GST_TYPE_TUNER_NORM);
+  norm_parent_class = g_type_class_peek_parent (klass);
 }
 
 static void

@@ -104,7 +104,7 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_WIDTH, g_param_spec_int ("width", "width", "width", G_MININT, G_MAXINT, 0, G_PARAM_WRITABLE));   /* CHECKME */
 
