@@ -1,5 +1,11 @@
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/mikmod/gstmikmod.h:
+	* gst/level/gstlevel.h:
+	Fix more broken GObject macros
+
+2006-04-08  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/annodex/gstcmmldec.h:
 	* ext/annodex/gstcmmlenc.h:
 	* ext/annodex/gstcmmltag.h:

@@ -36,10 +36,12 @@ G_BEGIN_DECLS
 #define GST_LEVEL(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_LEVEL,GstLevel))
 #define GST_LEVEL_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstLevel))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_LEVEL,GstLevelClass))
+#define GST_LEVEL_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_LEVEL,GstLevelClass))
 #define GST_IS_LEVEL(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_LEVEL))
-#define GST_IS_LEVEL_CLASS(obj) \
+#define GST_IS_LEVEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LEVEL))
 
 
