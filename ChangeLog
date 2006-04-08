@@ -1,5 +1,10 @@
 2006-04-08  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_do_qos):
+	Too bad we can't use gst_private.h..
+
+2006-04-08  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_avpicture_fill):
 	Some other formats, still commented out, though.
 

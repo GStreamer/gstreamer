@@ -31,7 +31,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/gst_private.h>
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
@@ -905,7 +904,7 @@ gst_ffmpegdec_do_qos (GstFFMpegDec *ffmpegdec, GstClockTime timestamp, gboolean 
    * values mean we are early, positive values mean we are too late. */
   diff = GST_CLOCK_DIFF (qostime, earliest_time);
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, ffmpegdec, "qostime %"GST_TIME_FORMAT
+  GST_DEBUG_OBJECT (ffmpegdec, "QOS: qostime %"GST_TIME_FORMAT
 			", earliest %"GST_TIME_FORMAT, GST_TIME_ARGS (qostime),
 			GST_TIME_ARGS (earliest_time));
 
@@ -945,7 +944,7 @@ normal_mode:
     if (ffmpegdec->context->hurry_up != 0) {
       ffmpegdec->context->hurry_up = 0;
       *mode_switch = TRUE;
-      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, ffmpegdec, "normal mode %g < 0.4", proportion);
+      GST_DEBUG_OBJECT (ffmpegdec, "QOS: normal mode %g < 0.4", proportion);
     }
     return TRUE;
   }
@@ -954,7 +953,7 @@ skip_to_keyframe:
     ffmpegdec->context->hurry_up = 1;
     ffmpegdec->waiting_for_key = TRUE;
     *mode_switch = TRUE;
-    GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, ffmpegdec, "keyframe, %"G_GINT64_FORMAT" > GST_SECOND/2", diff);
+    GST_DEBUG_OBJECT (ffmpegdec, "QOS: keyframe, %"G_GINT64_FORMAT" > GST_SECOND/2", diff);
     /* we can skip the current frame */
     return FALSE;
   }
@@ -963,7 +962,7 @@ hurry_up:
     if (ffmpegdec->context->hurry_up != 1) {
       ffmpegdec->context->hurry_up = 1;
       *mode_switch = TRUE;
-      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, ffmpegdec, "hurry up, diff %"G_GINT64_FORMAT" >= 0", diff);
+      GST_DEBUG_OBJECT (ffmpegdec, "QOS: hurry up, diff %"G_GINT64_FORMAT" >= 0", diff);
     }
     return TRUE;
   }
