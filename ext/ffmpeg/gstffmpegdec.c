@@ -31,6 +31,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/gst_private.h>
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
@@ -78,6 +79,13 @@ struct _GstFFMpegDec
   GValue *par;                  /* pixel aspect ratio of incoming data */
 
   gint hurry_up, lowres;
+
+  /* QoS stuff */ /* with LOCK */
+  gdouble proportion;
+  GstClockTime earliest_time;
+
+  /* clipping segment */
+  GstSegment segment;
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -122,10 +130,10 @@ static GHashTable *global_plugins;
 static void gst_ffmpegdec_base_init (GstFFMpegDecClass * klass);
 static void gst_ffmpegdec_class_init (GstFFMpegDecClass * klass);
 static void gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec);
-static void gst_ffmpegdec_dispose (GObject * object);
+static void gst_ffmpegdec_finalize (GObject * object);
 
 static gboolean gst_ffmpegdec_query (GstPad * pad, GstQuery * query);
-static gboolean gst_ffmpegdec_event (GstPad * pad, GstEvent * event);
+static gboolean gst_ffmpegdec_src_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event);
@@ -243,7 +251,8 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = gst_ffmpegdec_dispose;
+  gobject_class->finalize = gst_ffmpegdec_finalize;
+
   gobject_class->set_property = gst_ffmpegdec_set_property;
   gobject_class->get_property = gst_ffmpegdec_get_property;
   gstelement_class->change_state = gst_ffmpegdec_change_state;
@@ -261,8 +270,9 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
 static void
 gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
 {
-  GstFFMpegDecClass *oclass =
-      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  GstFFMpegDecClass *oclass;
+  
+  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   /* setup pads */
   ffmpegdec->sinkpad = gst_pad_new_from_template (oclass->sinktempl, "sink");
@@ -274,7 +284,7 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->srcpad = gst_pad_new_from_template (oclass->srctempl, "src");
   gst_pad_use_fixed_caps (ffmpegdec->srcpad);
   gst_pad_set_event_function (ffmpegdec->srcpad,
-      GST_DEBUG_FUNCPTR (gst_ffmpegdec_event));
+      GST_DEBUG_FUNCPTR (gst_ffmpegdec_src_event));
   gst_pad_set_query_function (ffmpegdec->srcpad,
       GST_DEBUG_FUNCPTR (gst_ffmpegdec_query));
   gst_element_add_pad (GST_ELEMENT (ffmpegdec), ffmpegdec->srcpad);
@@ -286,27 +296,28 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->pcache = NULL;
   ffmpegdec->par = NULL;
   ffmpegdec->opened = FALSE;
-  ffmpegdec->waiting_for_key = FALSE;
+  ffmpegdec->waiting_for_key = TRUE;
   ffmpegdec->hurry_up = ffmpegdec->lowres = 0;
 
   ffmpegdec->last_buffer = NULL;
 
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
+  gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
 }
 
 static void
-gst_ffmpegdec_dispose (GObject * object)
+gst_ffmpegdec_finalize (GObject * object)
 {
   GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) object;
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-  /* old session should have been closed in element_class->dispose */
   g_assert (!ffmpegdec->opened);
 
   /* clean up remaining allocated data */
   av_free (ffmpegdec->context);
   av_free (ffmpegdec->picture);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -314,60 +325,98 @@ gst_ffmpegdec_query (GstPad * pad, GstQuery * query)
 {
   GstFFMpegDec *ffmpegdec;
   GstPad *peer;
-  GstFormat bfmt;
+  gboolean res;
 
-  bfmt = GST_FORMAT_BYTES;
-  ffmpegdec = (GstFFMpegDec *) GST_PAD_PARENT (pad);
-  peer = GST_PAD_PEER (ffmpegdec->sinkpad);
+  ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
 
-  if (!peer)
-    goto no_peer;
+  res = FALSE;
 
-  /* just forward to peer */
-  if (gst_pad_query (peer, query))
-    return TRUE;
+  if ((peer = gst_pad_get_peer (ffmpegdec->sinkpad))) {
+    /* just forward to peer */
+    res = gst_pad_query (peer, query);
+    gst_object_unref (peer);
+  }
 
 #if 0
-  /* ok, do bitrate calc... */
-  if ((type != GST_QUERY_POSITION && type != GST_QUERY_TOTAL) ||
-      *fmt != GST_FORMAT_TIME || ffmpegdec->context->bit_rate == 0 ||
-      !gst_pad_query (peer, type, &bfmt, value))
-    return FALSE;
+  {
+    GstFormat bfmt;
+    bfmt = GST_FORMAT_BYTES;
 
-  if (ffmpegdec->pcache && type == GST_QUERY_POSITION)
-    *value -= GST_BUFFER_SIZE (ffmpegdec->pcache);
-  *value *= GST_SECOND / ffmpegdec->context->bit_rate;
+    /* ok, do bitrate calc... */
+    if ((type != GST_QUERY_POSITION && type != GST_QUERY_TOTAL) ||
+        *fmt != GST_FORMAT_TIME || ffmpegdec->context->bit_rate == 0 ||
+        !gst_pad_query (peer, type, &bfmt, value))
+      return FALSE;
+
+    if (ffmpegdec->pcache && type == GST_QUERY_POSITION)
+      *value -= GST_BUFFER_SIZE (ffmpegdec->pcache);
+    *value *= GST_SECOND / ffmpegdec->context->bit_rate;
+  }
 #endif
 
-  return FALSE;
+  gst_object_unref (ffmpegdec);
 
-no_peer:
-  {
-    return FALSE;
-  }
+  return res;
+}
+
+/* FIXME, make me ATOMIC */
+static void
+gst_ffmpegdec_update_qos (GstFFMpegDec *ffmpegdec, gdouble proportion, GstClockTime time)
+{
+  GST_OBJECT_LOCK (ffmpegdec);
+  ffmpegdec->proportion = proportion;
+  ffmpegdec->earliest_time = time;
+  GST_OBJECT_UNLOCK (ffmpegdec);
+}
+
+static void
+gst_ffmpegdec_reset_qos (GstFFMpegDec *ffmpegdec)
+{
+  gst_ffmpegdec_update_qos (ffmpegdec, 0.5, GST_CLOCK_TIME_NONE);
+}
+
+static void
+gst_ffmpegdec_read_qos (GstFFMpegDec *ffmpegdec, gdouble *proportion, GstClockTime *time)
+{
+  GST_OBJECT_LOCK (ffmpegdec);
+  *proportion = ffmpegdec->proportion;
+  *time = ffmpegdec->earliest_time;
+  GST_OBJECT_UNLOCK (ffmpegdec);
 }
 
 static gboolean
-gst_ffmpegdec_event (GstPad * pad, GstEvent * event)
+gst_ffmpegdec_src_event (GstPad * pad, GstEvent * event)
 {
   GstFFMpegDec *ffmpegdec;
-  GstPad *peer;
+  gboolean res;
 
-  ffmpegdec = (GstFFMpegDec *) GST_PAD_PARENT (pad);
-  peer = GST_PAD_PEER (ffmpegdec->sinkpad);
+  ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
 
-  if (!peer)
-    return FALSE;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:
+    {
+      gdouble proportion;
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
 
-  gst_event_ref (event);
-  if (gst_pad_send_event (peer, event)) {
-    gst_event_unref (event);
-    return TRUE;
+      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+
+      /* update our QoS values */
+      gst_ffmpegdec_update_qos (ffmpegdec, proportion, timestamp + diff);
+
+      /* forward upstream */
+      res = gst_pad_push_event (ffmpegdec->sinkpad, event);
+      break;
+    }
+    default:
+      /* forward upstream */
+      res = gst_pad_push_event (ffmpegdec->sinkpad, event);
+      break;
   }
 
-  gst_event_unref (event);
+  gst_object_unref (ffmpegdec);
 
-  return FALSE;                 /* .. */
+  return res;
 }
 
 /* with LOCK */
@@ -413,15 +462,16 @@ gst_ffmpegdec_close (GstFFMpegDec * ffmpegdec)
 static gboolean
 gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
 {
-  GstFFMpegDecClass *oclass =
-      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  GstFFMpegDecClass *oclass;
+  
+  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   if (gst_ffmpeg_avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0)
     goto could_not_open;
 
   ffmpegdec->opened = TRUE;
 
-  GST_LOG ("Opened ffmpeg codec %s", oclass->in_plugin->name);
+  GST_LOG_OBJECT (ffmpegdec, "Opened ffmpeg codec %s", oclass->in_plugin->name);
 
   /* open a parser if we can - exclude mpeg4, because it is already
    * framed (divx), mp3 because it doesn't work (?) and mjpeg because
@@ -449,6 +499,9 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
   ffmpegdec->next_ts = 0;
   ffmpegdec->synctime = GST_CLOCK_TIME_NONE;
   ffmpegdec->last_buffer = NULL;
+  /* FIXME, reset_qos holds the LOCK */
+  ffmpegdec->proportion = 0.0;
+  ffmpegdec->earliest_time = -1;
 
   return TRUE;
 
@@ -456,7 +509,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
 could_not_open:
   {
     gst_ffmpegdec_close (ffmpegdec);
-    GST_DEBUG ("ffdec_%s: Failed to open FFMPEG codec",
+    GST_DEBUG_OBJECT (ffmpegdec, "ffdec_%s: Failed to open FFMPEG codec",
         oclass->in_plugin->name);
     return FALSE;
   }
@@ -465,13 +518,15 @@ could_not_open:
 static GstPadLinkReturn
 gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (GST_OBJECT_PARENT (pad));
-  GstFFMpegDecClass *oclass =
-      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  GstFFMpegDec *ffmpegdec;
+  GstFFMpegDecClass *oclass;
   GstStructure *structure;
   const GValue *par;
   const GValue *fps;
   gboolean ret = TRUE;
+
+  ffmpegdec = (GstFFMpegDec *) (gst_pad_get_parent (pad));
+  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   GST_DEBUG_OBJECT (pad, "setcaps called");
 
@@ -492,7 +547,7 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
       oclass->in_plugin->type, caps, ffmpegdec->context);
 
   if (!ffmpegdec->context->time_base.den || !ffmpegdec->context->time_base.num) {
-    GST_DEBUG ("forcing 25/1 framerate");
+    GST_DEBUG_OBJECT (ffmpegdec, "forcing 25/1 framerate");
     ffmpegdec->context->time_base.num = 1;
     ffmpegdec->context->time_base.den = 25;
   }
@@ -504,6 +559,9 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (ffmpegdec, "sink caps have pixel-aspect-ratio of %d:%d",
         gst_value_get_fraction_numerator (par),
         gst_value_get_fraction_denominator (par));
+    /* should be NULL */
+    if (ffmpegdec->par)
+      g_free (ffmpegdec->par);
     ffmpegdec->par = g_new0 (GValue, 1);
     gst_value_init_and_copy (ffmpegdec->par, par);
   }
@@ -512,11 +570,11 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   if (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps)) {
     ffmpegdec->format.video.fps_n = gst_value_get_fraction_numerator (fps);
     ffmpegdec->format.video.fps_d = gst_value_get_fraction_denominator (fps);
-    GST_DEBUG_OBJECT (ffmpegdec, "Using framerate %d/%d from incoming caps\n",
+    GST_DEBUG_OBJECT (ffmpegdec, "Using framerate %d/%d from incoming caps",
         ffmpegdec->format.video.fps_n, ffmpegdec->format.video.fps_d);
   } else {
     ffmpegdec->format.video.fps_n = -1;
-    GST_DEBUG_OBJECT (ffmpegdec, "Using framerate from codec\n");
+    GST_DEBUG_OBJECT (ffmpegdec, "Using framerate from codec");
   }
 
   /* do *not* draw edges */
@@ -532,17 +590,27 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
    * during playback... */
-  if (!gst_ffmpegdec_open (ffmpegdec)) {
+  if (!gst_ffmpegdec_open (ffmpegdec)) 
+    goto open_failed;
+  
+done:
+  GST_OBJECT_UNLOCK (ffmpegdec);
+
+  gst_object_unref (ffmpegdec);
+
+  return ret;
+
+  /* ERRORS */
+open_failed:
+  {
+    GST_DEBUG_OBJECT (ffmpegdec, "Failed to open");
     if (ffmpegdec->par) {
       g_free (ffmpegdec->par);
       ffmpegdec->par = NULL;
     }
     ret = FALSE;
+    goto done;
   }
-
-  GST_OBJECT_UNLOCK (ffmpegdec);
-
-  return ret;
 }
 
 static int
@@ -550,13 +618,17 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 {
   GstBuffer *buf = NULL;
   gulong bufsize = 0;
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) context->opaque;
-  int width = context->width;
-  int height = context->height;
+  GstFFMpegDec *ffmpegdec;
+  int width;
+  int height;
+  
+  ffmpegdec = (GstFFMpegDec *) context->opaque;
+
+  width = context->width;
+  height = context->height;
 
   switch (context->codec_type) {
     case CODEC_TYPE_VIDEO:
-
       avcodec_align_dimensions (context, &width, &height);
 
       bufsize = avpicture_get_size (context->pix_fmt, width, height);
@@ -572,7 +644,6 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
         return avcodec_default_get_buffer (context, picture);
 #endif
-
       }
 
       if (!gst_ffmpegdec_negotiate (ffmpegdec)) {
@@ -590,10 +661,9 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
           GST_BUFFER_DATA (buf),
           context->pix_fmt, context->width, context->height);
       break;
-
     case CODEC_TYPE_AUDIO:
     default:
-      g_assert (0);
+      g_assert_not_reached ();
       break;
   }
 
@@ -605,8 +675,8 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
    * so that we don't need to copy data */
   picture->type = FF_BUFFER_TYPE_USER;
   picture->age = G_MAXINT;
-  picture->opaque = buf;
   gst_buffer_ref (buf);
+  picture->opaque = buf;
 
   GST_LOG_OBJECT (ffmpegdec, "END");
 
@@ -618,13 +688,14 @@ gst_ffmpegdec_release_buffer (AVCodecContext * context, AVFrame * picture)
 {
   gint i;
   GstBuffer *buf;
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) context->opaque;
-
+  GstFFMpegDec *ffmpegdec;
+  
   g_return_if_fail (picture->type == FF_BUFFER_TYPE_USER);
 
   buf = GST_BUFFER (picture->opaque);
-
   g_return_if_fail (buf != NULL);
+
+  ffmpegdec = (GstFFMpegDec *) context->opaque;
 
   if (buf == ffmpegdec->last_buffer)
     ffmpegdec->last_buffer = NULL;
@@ -654,7 +725,7 @@ gst_ffmpegdec_add_pixel_aspect_ratio (GstFFMpegDec * ffmpegdec,
     demuxer_num = gst_value_get_fraction_numerator (ffmpegdec->par);
     demuxer_denom = gst_value_get_fraction_denominator (ffmpegdec->par);
     demuxer_par_set = TRUE;
-    GST_DEBUG ("Demuxer PAR: %d:%d", demuxer_num, demuxer_denom);
+    GST_DEBUG_OBJECT (ffmpegdec, "Demuxer PAR: %d:%d", demuxer_num, demuxer_denom);
   }
 
   if (ffmpegdec->context->sample_aspect_ratio.num &&
@@ -662,16 +733,14 @@ gst_ffmpegdec_add_pixel_aspect_ratio (GstFFMpegDec * ffmpegdec,
     decoder_num = ffmpegdec->context->sample_aspect_ratio.num;
     decoder_denom = ffmpegdec->context->sample_aspect_ratio.den;
     decoder_par_set = TRUE;
-    GST_DEBUG ("Decoder PAR: %d:%d", decoder_num, decoder_denom);
+    GST_DEBUG_OBJECT (ffmpegdec, "Decoder PAR: %d:%d", decoder_num, decoder_denom);
   }
 
   GST_OBJECT_UNLOCK (ffmpegdec);
 
-  if (!demuxer_par_set && !decoder_par_set) {
-    GST_DEBUG ("Neither demuxer nor codec provide a pixel-aspect-ratio");
-    return;
-  }
-
+  if (!demuxer_par_set && !decoder_par_set)
+    goto no_par;
+  
   if (demuxer_par_set && !decoder_par_set)
     goto use_demuxer_par;
 
@@ -682,7 +751,6 @@ gst_ffmpegdec_add_pixel_aspect_ratio (GstFFMpegDec * ffmpegdec,
    * the two PARs is 1:1 and the other one is not, use the one
    * that is not 1:1. If both are non-1:1, use the pixel aspect
    * ratio provided by the codec */
-
   if (demuxer_num == demuxer_denom && decoder_num != decoder_denom)
     goto use_decoder_par;
 
@@ -690,10 +758,9 @@ gst_ffmpegdec_add_pixel_aspect_ratio (GstFFMpegDec * ffmpegdec,
     goto use_demuxer_par;
 
   /* fall through and use decoder pixel aspect ratio */
-
 use_decoder_par:
   {
-    GST_DEBUG ("Setting decoder provided pixel-aspect-ratio of %u:%u",
+    GST_DEBUG_OBJECT (ffmpegdec, "Setting decoder provided pixel-aspect-ratio of %u:%u",
         decoder_num, decoder_denom);
     gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         decoder_num, decoder_denom, NULL);
@@ -702,21 +769,26 @@ use_decoder_par:
 
 use_demuxer_par:
   {
-    GST_DEBUG ("Setting demuxer provided pixel-aspect-ratio of %u:%u",
+    GST_DEBUG_OBJECT (ffmpegdec, "Setting demuxer provided pixel-aspect-ratio of %u:%u",
         demuxer_num, demuxer_denom);
     gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         demuxer_num, demuxer_denom, NULL);
     return;
   }
-
+no_par:
+  {
+    GST_DEBUG_OBJECT (ffmpegdec, "Neither demuxer nor codec provide a pixel-aspect-ratio");
+    return;
+  }
 }
 
 static gboolean
 gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
 {
-  GstFFMpegDecClass *oclass =
-      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  GstFFMpegDecClass *oclass;
   GstCaps *caps;
+
+  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   switch (oclass->in_plugin->type) {
     case CODEC_TYPE_VIDEO:
@@ -743,7 +815,7 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
           ffmpegdec->context->sample_rate &&
           ffmpegdec->format.audio.channels == ffmpegdec->context->channels)
         return TRUE;
-      GST_DEBUG ("Renegotiating audio from %dHz@%dchannels to %dHz@%dchannels",
+      GST_DEBUG_OBJECT (ffmpegdec, "Renegotiating audio from %dHz@%dchannels to %dHz@%dchannels",
           ffmpegdec->format.audio.samplerate, ffmpegdec->format.audio.channels,
           ffmpegdec->context->sample_rate, ffmpegdec->context->channels);
       ffmpegdec->format.audio.samplerate = ffmpegdec->context->sample_rate;
@@ -756,32 +828,145 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
   caps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type,
       ffmpegdec->context);
 
-  if (caps) {
-    /* If a demuxer provided a framerate then use it (#313970) */
-    if (ffmpegdec->format.video.fps_n != -1) {
-      gst_structure_set (gst_caps_get_structure (caps, 0), "framerate",
-          GST_TYPE_FRACTION, ffmpegdec->format.video.fps_n,
-          ffmpegdec->format.video.fps_d, NULL);
-    }
-
-    gst_ffmpegdec_add_pixel_aspect_ratio (ffmpegdec,
-        gst_caps_get_structure (caps, 0));
+  if (caps == NULL)
+    goto no_caps;
+  
+  /* If a demuxer provided a framerate then use it (#313970) */
+  if (ffmpegdec->format.video.fps_n != -1) {
+    gst_structure_set (gst_caps_get_structure (caps, 0), "framerate",
+        GST_TYPE_FRACTION, ffmpegdec->format.video.fps_n,
+        ffmpegdec->format.video.fps_d, NULL);
   }
+  gst_ffmpegdec_add_pixel_aspect_ratio (ffmpegdec,
+      gst_caps_get_structure (caps, 0));
 
-  if (caps == NULL || !gst_pad_set_caps (ffmpegdec->srcpad, caps)) {
-    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
-        ("Failed to link ffmpeg decoder (%s) to next element",
-            oclass->in_plugin->name));
-
-    if (caps != NULL)
-      gst_caps_unref (caps);
-
-    return FALSE;
-  }
+  if (!gst_pad_set_caps (ffmpegdec->srcpad, caps))
+    goto caps_failed;
 
   gst_caps_unref (caps);
 
   return TRUE;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
+        ("could not find caps for codec (%s), unknown type",
+            oclass->in_plugin->name));
+    return FALSE;
+  }
+caps_failed:
+  {
+    GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
+        ("Could not set caps for ffmpeg decoder (%s), not fixed?",
+            oclass->in_plugin->name));
+    gst_caps_unref (caps);
+
+    return FALSE;
+  }
+}
+
+/* perform qos calculations before decoding the next frame.
+ *
+ * Sets the hurry_up flag and if things are really bad, skips to the next
+ * keyframe.
+ * 
+ * Returns TRUE if the frame should be decoded, FALSE if the frame can be dropped
+ * entirely.
+ */
+static gboolean
+gst_ffmpegdec_do_qos (GstFFMpegDec *ffmpegdec, GstClockTime timestamp, gboolean *mode_switch)
+{
+  GstClockTimeDiff diff;
+  gdouble proportion;
+  GstClockTime qostime, earliest_time;
+
+  *mode_switch = FALSE;
+
+  /* no timestamp, can't do QoS */
+  if (!GST_CLOCK_TIME_IS_VALID (timestamp))
+    goto no_qos;
+
+  /* get latest QoS observation values */
+  gst_ffmpegdec_read_qos (ffmpegdec, &proportion, &earliest_time);
+
+  /* skip qos if we have no observation (yet) */
+  if (!GST_CLOCK_TIME_IS_VALID (earliest_time)) {
+    /* no hurry_up initialy */
+    ffmpegdec->context->hurry_up = 0;
+    goto no_qos;
+  }
+
+  /* qos is done on running time */
+  qostime = gst_segment_to_running_time (&ffmpegdec->segment, GST_FORMAT_TIME,
+			timestamp);
+
+  /* see how our next timestamp relates to the latest qos timestamp. negative
+   * values mean we are early, positive values mean we are too late. */
+  diff = GST_CLOCK_DIFF (qostime, earliest_time);
+
+  GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, ffmpegdec, "qostime %"GST_TIME_FORMAT
+			", earliest %"GST_TIME_FORMAT, GST_TIME_ARGS (qostime),
+			GST_TIME_ARGS (earliest_time));
+
+  /* if we using less than 40% of the available time, we can try to
+   * speed up again when we were slow. */
+  if (proportion < 0.4 && diff < 0) {
+    goto normal_mode;
+  }
+  else {
+    /* if we're more than two seconds late, switch to the next keyframe */
+    /* FIXME, let the demuxer decide what's the best since we might be dropping
+     * a lot of frames when the keyframe is far away or we even might not get a new
+     * keyframe at all.. */
+    if (diff > ((GstClockTimeDiff) GST_SECOND * 2) && !ffmpegdec->waiting_for_key) {
+      goto skip_to_keyframe;
+    }
+    else if (diff >= 0) {
+      /* we're too slow, try to speed up */
+      if (ffmpegdec->waiting_for_key) {
+	/* we were waiting for a keyframe, that's ok */
+        goto skipping;
+      }
+      /* switch to hurry_up mode */
+      goto hurry_up;
+    }
+  }
+
+no_qos:
+  return TRUE;
+
+skipping:
+  {
+    return FALSE;
+  }
+normal_mode:
+  {
+    if (ffmpegdec->context->hurry_up != 0) {
+      ffmpegdec->context->hurry_up = 0;
+      *mode_switch = TRUE;
+      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, ffmpegdec, "normal mode %g < 0.4", proportion);
+    }
+    return TRUE;
+  }
+skip_to_keyframe:
+  {
+    ffmpegdec->context->hurry_up = 1;
+    ffmpegdec->waiting_for_key = TRUE;
+    *mode_switch = TRUE;
+    GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, ffmpegdec, "keyframe, %"G_GINT64_FORMAT" > GST_SECOND/2", diff);
+    /* we can skip the current frame */
+    return FALSE;
+  }
+hurry_up:
+  {
+    if (ffmpegdec->context->hurry_up != 1) {
+      ffmpegdec->context->hurry_up = 1;
+      *mode_switch = TRUE;
+      GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, ffmpegdec, "hurry up, diff %"G_GINT64_FORMAT" >= 0", diff);
+    }
+    return TRUE;
+  }
 }
 
 static gint
@@ -789,8 +974,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
     guint8 * data, guint size, gint * got_data, guint64 * in_ts,
     GstBuffer * inbuf, GstFlowReturn * ret)
 {
-  GstFFMpegDecClass *oclass =
-      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  GstFFMpegDecClass *oclass;
   GstBuffer *outbuf = NULL;
   gint have_data = 0, len = 0;
 
@@ -804,19 +988,35 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
   ffmpegdec->context->frame_number++;
 
+  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
   switch (oclass->in_plugin->type) {
-  case CODEC_TYPE_VIDEO:
+    case CODEC_TYPE_VIDEO:
     {
       gboolean	iskeyframe = FALSE;
       gboolean	is_itype = FALSE;
       gboolean	is_reference = FALSE;
+      gboolean  mode_switch = FALSE;
       
-      ffmpegdec->picture->pict_type = -1;       /* in case we skip frames */
-
       ffmpegdec->context->opaque = ffmpegdec;
+
+      /* run QoS code, returns FALSE if we can skip decoding this
+       * frame entirely. */
+      if (!gst_ffmpegdec_do_qos (ffmpegdec, *in_ts, &mode_switch)) {
+	have_data = 0;
+	break;
+      }
+
+      ffmpegdec->picture->pict_type = -1;       /* in case we skip frames */
 
       len = avcodec_decode_video (ffmpegdec->context,
           ffmpegdec->picture, &have_data, data, size);
+
+      /* when we are in hurry_up mode, don't complain when ffmpeg returned
+       * no data because we told it to skip stuff. */
+      if (len < 0 && (mode_switch || ffmpegdec->context->hurry_up))
+	len = 0;
+
       is_itype = (ffmpegdec->picture->pict_type == FF_I_TYPE);
       is_reference = (ffmpegdec->picture->reference == 1);
       iskeyframe = (is_itype || is_reference || ffmpegdec->picture->key_frame)
@@ -1062,13 +1262,32 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
   return len;
 }
 
+static void
+gst_ffmpegdec_flush_pcache (GstFFMpegDec *ffmpegdec)
+{
+  if (ffmpegdec->pcache) {
+    gst_buffer_unref (ffmpegdec->pcache);
+    ffmpegdec->pcache = NULL;
+  }
+  if (ffmpegdec->pctx) {
+    GstFFMpegDecClass *oclass;
+
+    oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
+    av_parser_close (ffmpegdec->pctx);
+    ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
+  }
+}
+
 static gboolean
 gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) GST_OBJECT_PARENT (pad);
-  GstFFMpegDecClass *oclass =
-      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
-  gboolean ret;
+  GstFFMpegDec *ffmpegdec;
+  GstFFMpegDecClass *oclass;
+  gboolean ret = FALSE;
+
+  ffmpegdec = (GstFFMpegDec *) gst_pad_get_parent (pad);
+  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   GST_DEBUG_OBJECT (ffmpegdec, "Handling %s event",
       GST_EVENT_TYPE_NAME (event));
@@ -1087,79 +1306,150 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
             break;
         } while (try++ < 10);
       }
+      ret = gst_pad_push_event (ffmpegdec->srcpad, event);
       break;
     }
     case GST_EVENT_FLUSH_STOP:{
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);
       }
+      gst_ffmpegdec_reset_qos (ffmpegdec);
+      gst_ffmpegdec_flush_pcache (ffmpegdec);
+      ffmpegdec->waiting_for_key = TRUE;
+      gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
+      ret = gst_pad_push_event (ffmpegdec->srcpad, event);
       break;
     }
     case GST_EVENT_NEWSEGMENT:{
-      gint64 base, start, end;
-      gdouble rate;
+      gboolean update;
       GstFormat fmt;
+      gint64 start, stop, time;
+      gdouble rate;
 
-      gst_event_parse_new_segment (event, NULL, &rate, &fmt, &start, &end,
-          &base);
-      if (fmt == GST_FORMAT_TIME) {
-        ffmpegdec->next_ts = start;
-        GST_DEBUG_OBJECT (ffmpegdec,
-            "Discont to time (next_ts) %" GST_TIME_FORMAT " -- %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (end));
-      } else if (ffmpegdec->context->bit_rate && fmt == GST_FORMAT_BYTES) {
-        ffmpegdec->next_ts = start * GST_SECOND / ffmpegdec->context->bit_rate;
-        GST_DEBUG_OBJECT (ffmpegdec,
-            "Newsegment in bytes from byte %" G_GINT64_FORMAT
-            " (time %" GST_TIME_FORMAT ") to byte % " G_GINT64_FORMAT
-            " (time %" GST_TIME_FORMAT ")",
-            start, GST_TIME_ARGS (ffmpegdec->next_ts),
-            end,
-            GST_TIME_ARGS (end * GST_SECOND / ffmpegdec->context->bit_rate));
-        gst_event_unref (event);
-        event = gst_event_new_new_segment (FALSE, rate, fmt,
-            start * GST_SECOND / ffmpegdec->context->bit_rate,
-            end == -1 ? -1 : end * GST_SECOND / ffmpegdec->context->bit_rate,
-            base * GST_SECOND / ffmpegdec->context->bit_rate);
-      } else {
-        GST_WARNING_OBJECT (ffmpegdec,
-            "Received discont with no useful value...");
+      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
+          &time);
+
+      if (rate <= 0.0)
+        goto newseg_wrong_rate;
+
+      switch (fmt) {
+	case GST_FORMAT_TIME:
+          /* fine, our native segment format */
+          break;
+	case GST_FORMAT_BYTES:
+	{
+          /* convert to time or fail */
+          if (!ffmpegdec->context->bit_rate)
+	    goto no_bitrate;
+
+	  /* convert values to TIME */
+	  if (start != -1)
+	    start = gst_util_uint64_scale_int (start, GST_SECOND,
+			  ffmpegdec->context->bit_rate);
+	  if (stop != -1)
+	    stop = gst_util_uint64_scale_int (stop, GST_SECOND,
+			  ffmpegdec->context->bit_rate);
+	  if (time != -1)
+	    time = gst_util_uint64_scale_int (time, GST_SECOND,
+			  ffmpegdec->context->bit_rate);
+
+	  /* unref old event */
+          gst_event_unref (event);
+
+	  /* create new converted time segment */
+          event = gst_event_new_new_segment (update, rate, fmt,
+			  start, stop, time);
+          break;
+	}
+	default:
+	  /* invalid format */
+	  goto invalid_format;
       }
+
+      GST_DEBUG_OBJECT (ffmpegdec,
+            "NEWSEGMENT in time (next_ts) %" GST_TIME_FORMAT " -- %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+
+      /* and store the values */
+      gst_segment_set_newsegment (&ffmpegdec->segment, update,
+               rate, fmt, start, stop, time);
+
+      /* FIXME, newsegment does not define the next timestamp */
+      ffmpegdec->next_ts = start;
+      ffmpegdec->synctime = start;
+
+      /* FIXME, newsegment does not mean a DISCONT */
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);
-
-        if (ffmpegdec->context->codec_id == CODEC_ID_MPEG2VIDEO ||
-            ffmpegdec->context->codec_id == CODEC_ID_MPEG4 ||
-            ffmpegdec->context->codec_id == CODEC_ID_H264) {
-          ffmpegdec->waiting_for_key = TRUE;
-        }
       }
       ffmpegdec->waiting_for_key = TRUE;
-      ffmpegdec->synctime = ffmpegdec->next_ts;
+
+      /* and push segment downstream */
+      ret = gst_pad_push_event (ffmpegdec->srcpad, event);
       break;
     }
     default:
+      ret = gst_pad_push_event (ffmpegdec->srcpad, event);
       break;
   }
 
-  ret = gst_pad_event_default (ffmpegdec->sinkpad, event);
+done:
+  gst_object_unref (ffmpegdec);
 
   return ret;
+
+  /* ERRORS */
+newseg_wrong_rate:
+  {
+    GST_WARNING_OBJECT (ffmpegdec, "negative rates not supported yet");
+    gst_event_unref (event);
+    goto done;
+  }
+no_bitrate:
+  {
+    GST_WARNING_OBJECT (ffmpegdec, "no bitrate to convert BYTES to TIME");
+    gst_event_unref (event);
+    goto done;
+  }
+invalid_format:
+  {
+    GST_WARNING_OBJECT (ffmpegdec, "unknown format received in NEWSEGMENT");
+    gst_event_unref (event);
+    goto done;
+  }
 }
 
 static GstFlowReturn
 gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 {
-  GstFFMpegDec *ffmpegdec = (GstFFMpegDec *) (GST_PAD_PARENT (pad));
-  GstFFMpegDecClass *oclass =
-      (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  GstFFMpegDec *ffmpegdec;
+  GstFFMpegDecClass *oclass;
   guint8 *bdata, *data;
   gint bsize, size, len, have_data;
-  guint64 in_ts = GST_BUFFER_TIMESTAMP (inbuf);
+  guint64 in_ts;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  if (!ffmpegdec->opened)
+  ffmpegdec = (GstFFMpegDec *) (GST_PAD_PARENT (pad));
+
+  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
+  if (G_UNLIKELY (!ffmpegdec->opened))
     goto not_negotiated;
+
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DISCONT))) {
+    GST_DEBUG_OBJECT (ffmpegdec, "received DISCONT");
+    gst_ffmpegdec_flush_pcache (ffmpegdec);
+    ffmpegdec->waiting_for_key = TRUE;
+  }
+
+  in_ts = GST_BUFFER_TIMESTAMP (inbuf);
+
+  if (G_UNLIKELY (ffmpegdec->waiting_for_key)) {
+    if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DELTA_UNIT))
+      goto skip_keyframe;
+
+    GST_DEBUG_OBJECT (ffmpegdec, "got keyframe %"GST_TIME_FORMAT, GST_TIME_ARGS (in_ts));
+  }
 
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %d, time %" GST_TIME_FORMAT " next_ts %"
@@ -1171,7 +1461,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   if (ffmpegdec->pcache) {
     GstClockTime timestamp = GST_CLOCK_TIME_NONE;
     GstClockTime duration = GST_CLOCK_TIME_NONE;
-
 
     /* decide on resulting timestamp/duration before we give away our ref */
     /* since the cache is all data that did not result in an outgoing frame,
@@ -1186,8 +1475,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
           GST_BUFFER_DURATION (inbuf);
 
     inbuf = gst_buffer_join (ffmpegdec->pcache, inbuf);
-/*     inbuf = gst_buffer_span (ffmpegdec->pcache, 0, inbuf, */
-/*         GST_BUFFER_SIZE (ffmpegdec->pcache) + GST_BUFFER_SIZE (inbuf)); */
 
     /* update time info as appropriate */
     GST_BUFFER_TIMESTAMP (inbuf) = timestamp;
@@ -1228,6 +1515,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 
       in_ts = gst_ffmpeg_time_ff_to_gst (ffmpegdec->pctx->pts,
           ffmpegdec->context->time_base);
+
       if (res == 0 || size == 0)
         break;
       else {
@@ -1274,7 +1562,14 @@ not_negotiated:
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
         ("ffdec_%s: input format was not set before data start",
             oclass->in_plugin->name));
+    gst_buffer_unref (inbuf);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+skip_keyframe:
+  {
+    GST_DEBUG_OBJECT (ffmpegdec, "skipping non keyframe");
+    gst_buffer_unref (inbuf);
+    return GST_FLOW_OK;
   }
 }
 

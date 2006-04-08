@@ -2694,6 +2694,8 @@ gst_ffmpeg_avpicture_fill (AVPicture * picture,
       picture->linesize[0] = stride;
       return size;
     /*case PIX_FMT_AYUV4444:
+    case PIX_FMT_BGR32:
+    case PIX_FMT_BGRA32:
     case PIX_FMT_RGB32:*/
     case PIX_FMT_RGBA32:
       stride = width * 4;
