@@ -155,7 +155,7 @@ gst_mem_index_class_init (GstMemIndexClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstindex_class = (GstIndexClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_INDEX);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_mem_index_dispose;
 

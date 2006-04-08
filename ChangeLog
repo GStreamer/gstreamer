@@ -1,3 +1,31 @@
+2006-04-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstbuffer.c: (gst_subbuffer_class_init):
+	* gst/gstclock.c: (gst_clock_class_init):
+	* gst/gstelement.c: (gst_element_class_init):
+	* gst/gstindex.c: (gst_index_class_init):
+	* gst/gstindexfactory.c: (gst_index_factory_class_init):
+	* gst/gstobject.c: (gst_object_class_init),
+	(gst_signal_object_class_init):
+	* gst/gstpad.c: (gst_pad_class_init):
+	* gst/gstpadtemplate.c: (gst_pad_template_class_init):
+	* gst/gstpluginfeature.c: (gst_plugin_feature_class_init):
+	* gst/gstregistry.c: (gst_registry_class_init):
+	* gst/gstsystemclock.c: (gst_system_clock_class_init):
+	* gst/gsttask.c: (gst_task_class_init):
+	* gst/gstxml.c: (gst_xml_class_init):
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init):
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_loop):
+	* libs/gst/controller/gstcontroller.c:
+	(_gst_controller_class_init):
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_class_init):
+	* plugins/indexers/gstfileindex.c: (gst_file_index_class_init):
+	* plugins/indexers/gstmemindex.c: (gst_mem_index_class_init):
+	* tests/old/examples/plugins/example.c: (gst_example_class_init):
+	* tests/old/testsuite/threads/signals.c: (gst_test_class_init):
+	Fix #337365 (g_type_class_ref <-> g_type_class_peek_parent)
+
 2006-04-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstpad.c: (gst_pad_link):

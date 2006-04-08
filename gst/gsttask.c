@@ -110,7 +110,7 @@ gst_task_class_init (GstTaskClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_task_finalize);
 

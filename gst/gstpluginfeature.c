@@ -51,7 +51,7 @@ static GstObjectClass *parent_class = NULL;
 static void
 gst_plugin_feature_class_init (GstPluginFeatureClass * klass)
 {
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   G_OBJECT_CLASS (klass)->finalize =
       GST_DEBUG_FUNCPTR (gst_plugin_feature_finalize);

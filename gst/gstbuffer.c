@@ -438,7 +438,7 @@ gst_subbuffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstBufferClass *buffer_class = GST_BUFFER_CLASS (g_class);
 
-  sub_parent_class = g_type_class_ref (GST_TYPE_BUFFER);
+  sub_parent_class = g_type_class_peek_parent (g_class);
 
   buffer_class->mini_object_class.finalize =
       (GstMiniObjectFinalizeFunction) gst_subbuffer_finalize;

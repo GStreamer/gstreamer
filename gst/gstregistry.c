@@ -138,7 +138,7 @@ gst_registry_class_init (GstRegistryClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gst_registry_signals[PLUGIN_ADDED] =
       g_signal_new ("plugin-added", G_TYPE_FROM_CLASS (klass),

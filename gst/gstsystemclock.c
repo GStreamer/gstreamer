@@ -104,7 +104,7 @@ gst_system_clock_class_init (GstSystemClockClass * klass)
   gstobject_class = (GstObjectClass *) klass;
   gstclock_class = (GstClockClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_CLOCK);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_system_clock_dispose;
 

@@ -300,7 +300,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstBaseSinkPrivate));
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_sink_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_base_sink_set_property);

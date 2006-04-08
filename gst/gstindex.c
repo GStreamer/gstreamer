@@ -157,7 +157,7 @@ gst_index_class_init (GstIndexClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   /**
    * GstIndex::entry-added

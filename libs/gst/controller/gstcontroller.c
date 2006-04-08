@@ -1101,7 +1101,7 @@ _gst_controller_class_init (GstControllerClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  parent_class = g_type_class_ref (G_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = _gst_controller_finalize;
 

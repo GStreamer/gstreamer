@@ -217,7 +217,7 @@ gst_object_class_init (GstObjectClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (G_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
 #ifndef GST_DISABLE_TRACE
   _gst_object_trace = gst_alloc_trace_register (g_type_name (GST_TYPE_OBJECT));
@@ -1202,6 +1202,7 @@ gst_object_get_path_string (GstObject * object)
   return path;
 }
 
+
 struct _GstSignalObject
 {
   GObject object;
@@ -1251,7 +1252,7 @@ gst_signal_object_class_init (GstSignalObjectClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (G_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
   gst_signal_object_signals[SO_OBJECT_LOADED] =

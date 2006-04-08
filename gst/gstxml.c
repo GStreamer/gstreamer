@@ -87,7 +87,7 @@ gst_xml_class_init (GstXMLClass * klass)
 
   gobject_class = (GObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   /* FIXME G_TYPE_POINTER should be GType of xmlNodePtr
    * (ensonic) can't be fixed, as libxml does not use GObject (unfortunately)

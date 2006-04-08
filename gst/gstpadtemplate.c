@@ -153,7 +153,7 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstobject_class = (GstObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   /**
    * GstPadTemplate::pad-created:

@@ -297,7 +297,7 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstBaseSrcPrivate));
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_src_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_base_src_set_property);
@@ -1383,8 +1383,11 @@ gst_base_src_loop (GstPad * pad)
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     if (ret == GST_FLOW_UNEXPECTED)
       goto eos;
-    else
+    else {
+      GST_INFO_OBJECT (src, "pausing after gst_base_src_get_range() =  %d",
+          ret);
       goto pause;
+    }
   }
   if (G_UNLIKELY (buf == NULL))
     goto error;
@@ -1434,8 +1437,10 @@ gst_base_src_loop (GstPad * pad)
   }
 
   ret = gst_pad_push (pad, buf);
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    GST_INFO_OBJECT (src, "pausing after gst_pad_push() =  %d", ret);
     goto pause;
+  }
 
   if (eos)
     goto eos;

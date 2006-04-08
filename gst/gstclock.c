@@ -563,7 +563,7 @@ gst_clock_class_init (GstClockClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstobject_class = (GstObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   if (!g_thread_supported ())
     g_thread_init (NULL);

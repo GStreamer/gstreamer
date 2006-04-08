@@ -81,7 +81,7 @@ gst_index_factory_class_init (GstIndexFactoryClass * klass)
   gstobject_class = (GstObjectClass *) klass;
   gstpluginfeature_class = (GstPluginFeatureClass *) klass;
 
-  factory_parent_class = g_type_class_ref (GST_TYPE_PLUGIN_FEATURE);
+  factory_parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_index_factory_finalize);
 }

@@ -179,7 +179,7 @@ gst_file_index_class_init (GstFileIndexClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstindex_class = (GstIndexClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_INDEX);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_file_index_dispose;
   gobject_class->set_property = gst_file_index_set_property;

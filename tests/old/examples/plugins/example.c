@@ -148,7 +148,7 @@ gst_example_class_init (GstExampleClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   /* The parent class is needed for class method overrides. */
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   /* Here we add an argument to the object.  This argument is an integer,
    * and can be both read and written.

@@ -243,7 +243,7 @@ gst_pad_class_init (GstPadClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstobject_class = (GstObjectClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OBJECT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pad_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_pad_finalize);
@@ -759,14 +759,14 @@ failure:
 /**
  * gst_pad_activate_push:
  * @pad: the #GstPad to activate or deactivate.
- * @active: whether or not the pad should be active.
+ * @active: whether the pad should be active or not.
  *
  * Activates or deactivates the given pad in push mode via dispatching to the
  * pad's activatepushfunc. For use from within pad activation functions only.
  *
  * If you don't know what this is, you probably don't want to call it.
  *
- * Returns: TRUE if the operation was successfull.
+ * Returns: %TRUE if the operation was successful.
  *
  * MT safe.
  */
