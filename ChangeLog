@@ -1,3 +1,10 @@
+2006-04-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_class_init):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_class_init):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_class_init):
+	Fix #337365 (g_type_class_ref <-> g_type_class_peek_parent)
+
 2006-04-08  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_do_qos):
