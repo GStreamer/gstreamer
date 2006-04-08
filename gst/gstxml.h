@@ -36,7 +36,6 @@ G_BEGIN_DECLS
 #define GST_IS_XML(obj) 	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XML))
 #define GST_XML_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_XML, GstXMLClass))
 #define GST_IS_XML_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_XML))
-
 #define GST_XML_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_XML, GstXMLClass))
 
 typedef struct _GstXML GstXML;

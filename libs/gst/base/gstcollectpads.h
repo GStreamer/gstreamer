@@ -26,12 +26,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_COLLECT_PADS  		(gst_collect_pads_get_type())
-#define GST_COLLECT_PADS(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_COLLECT_PADS,GstCollectPads))
-#define GST_COLLECT_PADS_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COLLECT_PADS,GstCollectPadsClass))
-#define GST_COLLECT_PADS_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_COLLECT_PADS,GstCollectPadsClass))
-#define GST_IS_COLLECT_PADS(obj)  	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COLLECT_PADS))
-#define GST_IS_COLLECT_PADS_CLASS(obj) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COLLECT_PADS))
+#define GST_TYPE_COLLECT_PADS  		 (gst_collect_pads_get_type())
+#define GST_COLLECT_PADS(obj)  		 (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_COLLECT_PADS,GstCollectPads))
+#define GST_COLLECT_PADS_CLASS(klass) 	 (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_COLLECT_PADS,GstCollectPadsClass))
+#define GST_COLLECT_PADS_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_COLLECT_PADS,GstCollectPadsClass))
+#define GST_IS_COLLECT_PADS(obj)  	 (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COLLECT_PADS))
+#define GST_IS_COLLECT_PADS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COLLECT_PADS))
 
 typedef struct _GstCollectData GstCollectData;
 typedef struct _GstCollectPads GstCollectPads;
@@ -93,7 +93,7 @@ struct _GstCollectPads {
   GstObject      object;
 
   /*< public >*/ /* with LOCK */
-  GSList	*data;
+  GSList	*data;                  /* list of CollectData items */
 
   /*< private >*/
   guint32	 cookie;

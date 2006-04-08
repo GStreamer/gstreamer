@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 #define GST_INDEX(obj)			(G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_INDEX, GstIndex))
 #define GST_IS_INDEX(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_INDEX))
 #define GST_INDEX_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_INDEX, GstIndexClass))
-#define GST_IS_INDEX_CLASS(klass)	(GST_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_INDEX))
+#define GST_IS_INDEX_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_INDEX))
 #define GST_INDEX_GET_CLASS(obj)	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_INDEX, GstIndexClass))
 
 #define GST_TYPE_INDEX_ENTRY            (gst_index_entry_get_type())
