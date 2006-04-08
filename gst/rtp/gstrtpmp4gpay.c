@@ -143,7 +143,7 @@ gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_rtp_mp4g_pay_set_property;
   gobject_class->get_property = gst_rtp_mp4g_pay_get_property;

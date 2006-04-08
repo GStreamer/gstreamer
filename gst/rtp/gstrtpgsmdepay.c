@@ -83,7 +83,7 @@ gst_rtp_gsm_depay_class_init (GstRTPGSMDepayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertp_depayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_DEPAYLOAD);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstbasertp_depayload_class->process = gst_rtp_gsm_depay_process;
   gstbasertp_depayload_class->set_caps = gst_rtp_gsm_depay_setcaps;

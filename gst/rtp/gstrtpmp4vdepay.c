@@ -106,7 +106,7 @@ gst_rtp_mp4v_depay_class_init (GstRtpMP4VDepayClass * klass)
 
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_DEPAYLOAD);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstbasertpdepayload_class->process = gst_rtp_mp4v_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_mp4v_depay_setcaps;

@@ -115,7 +115,7 @@ gst_pngdec_class_init (GstPngDecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstelement_class->change_state = gst_pngdec_change_state;
 

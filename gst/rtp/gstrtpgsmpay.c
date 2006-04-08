@@ -83,7 +83,7 @@ gst_rtp_gsm_pay_class_init (GstRTPGSMPayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstbasertppayload_class->set_caps = gst_rtp_gsm_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_gsm_pay_handle_buffer;

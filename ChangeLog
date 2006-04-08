@@ -1,5 +1,76 @@
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/aalib/gstaasink.c: (gst_aasink_class_init):
+	* ext/esd/esdsink.c: (gst_esdsink_class_init):
+	* ext/flac/gstflactag.c: (gst_flac_tag_class_init):
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_class_init):
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_class_init):
+	* ext/jpeg/gstsmokedec.c: (gst_smokedec_class_init):
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_class_init):
+	* ext/libcaca/gstcacasink.c: (gst_cacasink_class_init):
+	* ext/libmng/gstmngdec.c: (gst_mngdec_class_init):
+	* ext/libmng/gstmngenc.c: (gst_mngenc_class_init):
+	* ext/libpng/gstpngdec.c: (gst_pngdec_class_init):
+	* ext/libpng/gstpngenc.c: (gst_pngenc_class_init):
+	* ext/mikmod/gstmikmod.c: (gst_mikmod_class_init):
+	* ext/shout2/gstshout2.c: (gst_shout2send_class_init):
+	* ext/speex/gstspeexenc.c: (gst_speexenc_class_init):
+	* gst/alpha/gstalpha.c: (gst_alpha_class_init):
+	* gst/avi/gstavimux.c: (gst_avimux_class_init):
+	* gst/debug/efence.c: (gst_efence_class_init):
+	* gst/debug/negotiation.c: (gst_negotiation_class_init):
+	* gst/flx/gstflxdec.c: (gst_flxdec_class_init):
+	* gst/goom/gstgoom.c: (gst_goom_class_init):
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_class_init):
+	* gst/interleave/deinterleave.c: (deinterleave_class_init):
+	* gst/interleave/interleave.c: (interleave_class_init):
+	* gst/law/alaw-decode.c: (gst_alawdec_class_init):
+	* gst/law/alaw-encode.c: (gst_alawenc_class_init):
+	* gst/law/mulaw-encode.c: (gst_mulawenc_class_init):
+	* gst/median/gstmedian.c: (gst_median_class_init):
+	* gst/monoscope/gstmonoscope.c: (gst_monoscope_class_init):
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_class_init):
+	* gst/rtp/gstasteriskh263.c: (gst_asteriskh263_class_init):
+	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16depay_class_init):
+	* gst/rtp/gstrtpL16pay.c: (gst_rtpL16pay_class_init):
+	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_class_init):
+	* gst/rtp/gstrtpamrpay.c: (gst_rtp_amr_pay_class_init):
+	* gst/rtp/gstrtpdepay.c: (gst_rtp_depay_class_init):
+	* gst/rtp/gstrtpgsmdepay.c: (gst_rtp_gsm_depay_class_init):
+	* gst/rtp/gstrtpgsmpay.c: (gst_rtp_gsm_pay_class_init):
+	* gst/rtp/gstrtph263pay.c: (gst_rtp_h263_pay_class_init):
+	* gst/rtp/gstrtph263pdepay.c: (gst_rtp_h263p_depay_class_init):
+	* gst/rtp/gstrtph263ppay.c: (gst_rtp_h263p_pay_class_init):
+	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_class_init):
+	* gst/rtp/gstrtpmp4vdepay.c: (gst_rtp_mp4v_depay_class_init):
+	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_class_init):
+	* gst/rtp/gstrtpmpadepay.c: (gst_rtp_mpa_depay_class_init):
+	* gst/rtp/gstrtpmpapay.c: (gst_rtp_mpa_pay_class_init):
+	* gst/rtp/gstrtppcmadepay.c: (gst_rtp_pcma_depay_class_init):
+	* gst/rtp/gstrtppcmapay.c: (gst_rtp_pcma_pay_class_init):
+	* gst/rtp/gstrtppcmudepay.c: (gst_rtp_pcmu_depay_class_init):
+	* gst/rtp/gstrtppcmupay.c: (gst_rtp_pcmu_pay_class_init):
+	* gst/rtp/gstrtpspeexdepay.c: (gst_rtp_speex_depay_class_init):
+	* gst/rtp/gstrtpspeexpay.c: (gst_rtp_speex_pay_class_init):
+	* gst/rtsp/gstrtpdec.c: (gst_rtpdec_class_init):
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_class_init):
+	* gst/smpte/gstsmpte.c: (gst_smpte_class_init):
+	* gst/udp/gstdynudpsink.c: (gst_dynudpsink_class_init):
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init):
+	* gst/udp/gstudpsink.c: (gst_udpsink_class_init):
+	* gst/videomixer/videomixer.c: (gst_videomixer_class_init):
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_class_init):
+	* sys/oss/gstossdmabuffer.c: (gst_ossdmabuffer_class_init):
+	* sys/oss/gstosssink.c: (gst_oss_sink_class_init):
+	* sys/osxaudio/gstosxaudioelement.c:
+	(gst_osxaudioelement_class_init):
+	* sys/osxaudio/gstosxaudiosink.c: (gst_osxaudiosink_class_init):
+	* sys/osxaudio/gstosxaudiosrc.c: (gst_osxaudiosrc_class_init):
+	* sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_class_init):
+	Fix #337365 (g_type_class_ref <-> g_type_class_peek_parent)
+
+2006-04-08  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/mikmod/gstmikmod.h:
 	* gst/level/gstlevel.h:
 	Fix more broken GObject macros

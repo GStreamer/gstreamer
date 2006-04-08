@@ -229,7 +229,7 @@ gst_speexenc_class_init (GstSpeexEncClass * klass)
       g_param_spec_string ("last-message", "last-message",
           "The last status message", NULL, G_PARAM_READABLE));
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_speexenc_finalize);
 

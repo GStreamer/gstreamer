@@ -135,7 +135,7 @@ gst_esdsink_class_init (GstEsdSinkClass * klass)
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_AUDIO_SINK);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_esdsink_finalize;
 

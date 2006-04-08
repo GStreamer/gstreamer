@@ -241,7 +241,7 @@ gst_alawenc_base_init (GstALawEncClass * klass)
 static void
 gst_alawenc_class_init (GstALawEncClass * klass)
 {
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void

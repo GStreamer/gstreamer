@@ -120,7 +120,7 @@ gst_rtp_L16depay_class_init (GstRtpL16DepayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PAYLOAD_TYPE,
       g_param_spec_int ("payload_type", "payload_type", "payload type",

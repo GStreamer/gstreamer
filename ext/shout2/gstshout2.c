@@ -167,7 +167,7 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_SINK);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_shout2send_set_property;
   gobject_class->get_property = gst_shout2send_get_property;

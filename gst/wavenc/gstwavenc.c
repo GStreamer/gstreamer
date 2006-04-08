@@ -183,7 +183,7 @@ gst_wavenc_class_init (GstWavEncClass * klass)
 
   element_class->change_state = gst_wavenc_change_state;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   GST_DEBUG_CATEGORY_INIT (wavenc_debug, "wavenc", 0, "WAV encoder element");
 }

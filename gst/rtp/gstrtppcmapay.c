@@ -85,7 +85,7 @@ gst_rtp_pcma_pay_class_init (GstRtpPmcaPayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
+  parent_class = g_type_class_peek_parent (klass);
   gobject_class->finalize = gst_rtp_pcma_pay_finalize;
 
   gstbasertppayload_class->set_caps = gst_rtp_pcma_pay_setcaps;

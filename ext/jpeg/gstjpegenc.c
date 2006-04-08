@@ -151,7 +151,7 @@ gst_jpegenc_class_init (GstJpegEnc * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gst_jpegenc_signals[FRAME_ENCODED] =
       g_signal_new ("frame-encoded", G_TYPE_FROM_CLASS (klass),

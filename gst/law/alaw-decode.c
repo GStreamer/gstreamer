@@ -205,7 +205,7 @@ gst_alawdec_base_init (GstALawDecClass * klass)
 static void
 gst_alawdec_class_init (GstALawDecClass * klass)
 {
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void

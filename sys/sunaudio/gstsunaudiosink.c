@@ -151,7 +151,7 @@ gst_sunaudiosink_class_init (GstSunAudioSinkClass * klass)
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SINK);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_sunaudiosink_dispose;
   gobject_class->set_property =

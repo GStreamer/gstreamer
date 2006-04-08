@@ -223,7 +223,7 @@ gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_rtp_h263_pay_finalize;
 

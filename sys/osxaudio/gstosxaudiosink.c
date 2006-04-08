@@ -121,7 +121,7 @@ gst_osxaudiosink_class_init (GstOsxAudioSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_OSXAUDIOELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gst_osssink_signals[SIGNAL_HANDOFF] =
       g_signal_new ("handoff", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,

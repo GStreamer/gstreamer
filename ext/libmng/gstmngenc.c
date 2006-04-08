@@ -133,7 +133,7 @@ gst_mngenc_class_init (GstMngEncClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (gobject_class, ARG_SNAPSHOT,
       g_param_spec_boolean ("snapshot", "Snapshot",
