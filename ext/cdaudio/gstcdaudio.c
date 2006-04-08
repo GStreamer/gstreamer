@@ -155,7 +155,7 @@ gst_cdaudio_class_init (GstCDAudioClass * klass)
   gstelement_klass = (GstElementClass *) klass;
   gstbin_klass = (GstBinClass *) klass;
 
-  parent_class = g_type_class_ref (gst_bin_get_type ());
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_klass->set_property = gst_cdaudio_set_property;
   gobject_klass->get_property = gst_cdaudio_get_property;

@@ -274,9 +274,7 @@ gst_sf_class_init (GstSFClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  /* although this isn't really the parent class, that's ok; GstSF doesn't
-     override any methods */
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gst_element_class_install_std_props (gstelement_class, "location",
       ARG_LOCATION, G_PARAM_READWRITE, NULL);

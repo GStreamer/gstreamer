@@ -175,7 +175,7 @@ dxr3videosink_class_init (Dxr3VideoSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   dxr3videosink_signals[SIGNAL_FLUSHED] =
       g_signal_new ("flushed", G_TYPE_FROM_CLASS (klass),

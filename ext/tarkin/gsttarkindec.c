@@ -147,7 +147,7 @@ gst_tarkindec_class_init (TarkinDecClass * klass)
       g_param_spec_int ("bitrate", "bitrate", "bitrate",
           G_MININT, G_MAXINT, 3000, G_PARAM_READWRITE));
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_tarkindec_set_property;
   gobject_class->get_property = gst_tarkindec_get_property;

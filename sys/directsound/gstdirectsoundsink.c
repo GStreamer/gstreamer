@@ -121,7 +121,7 @@ gst_directsoundsink_class_init (GstDirectSoundSinkClass * klass)
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_AUDIO_SINK);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_directsoundsink_dispose);
   gobject_class->get_property =

@@ -1,5 +1,81 @@
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/amrwb/gstamrwbdec.c: (gst_amrwbdec_class_init):
+	* ext/amrwb/gstamrwbenc.c: (gst_amrwbenc_class_init):
+	* ext/amrwb/gstamrwbparse.c: (gst_amrwbparse_class_init):
+	* ext/arts/gst_arts.c: (gst_arts_class_init):
+	* ext/artsd/gstartsdsink.c: (gst_artsdsink_class_init):
+	* ext/audiofile/gstafsink.c: (gst_afsink_class_init):
+	* ext/audiofile/gstafsrc.c: (gst_afsrc_class_init):
+	* ext/audioresample/gstaudioresample.c:
+	* ext/cdaudio/gstcdaudio.c: (gst_cdaudio_class_init):
+	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_class_init):
+	* ext/divx/gstdivxdec.c: (gst_divxdec_class_init):
+	* ext/hermes/gsthermescolorspace.c:
+	(gst_hermes_colorspace_class_init):
+	* ext/ivorbis/vorbisfile.c: (gst_ivorbisfile_class_init):
+	* ext/jack/gstjack.c: (gst_jack_class_init):
+	* ext/jack/gstjackbin.c: (gst_jack_bin_class_init):
+	* ext/lcs/gstcolorspace.c: (gst_colorspace_class_init):
+	* ext/libfame/gstlibfame.c: (gst_fameenc_class_init):
+	* ext/musicbrainz/gsttrm.c: (gst_musicbrainz_class_init):
+	* ext/nas/nassink.c: (gst_nassink_class_init):
+	* ext/shout/gstshout.c: (gst_icecastsend_class_init):
+	* ext/snapshot/gstsnapshot.c: (gst_snapshot_class_init):
+	* ext/sndfile/gstsf.c: (gst_sf_class_init):
+	* ext/swfdec/gstswfdec.c: (gst_swfdecbuffer_class_init),
+	(gst_swfdec_class_init):
+	* ext/tarkin/gsttarkindec.c: (gst_tarkindec_class_init):
+	* ext/tarkin/gsttarkinenc.c: (gst_tarkinenc_class_init):
+	* gst/cdxaparse/gstcdxastrip.c: (gst_cdxastrip_class_init):
+	* gst/chart/gstchart.c: (gst_chart_class_init):
+	* gst/colorspace/gstcolorspace.c: (gst_colorspace_class_init):
+	* gst/deinterlace/gstdeinterlace.c: (gst_deinterlace_class_init):
+	* gst/festival/gstfestival.c: (gst_festival_class_init):
+	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init):
+	* gst/filter/gstiir.c: (gst_iir_class_init):
+	* gst/filter/gstlpwsinc.c: (gst_lpwsinc_class_init):
+	* gst/librfb/gstrfbsrc.c: (gst_rfbsrc_class_init):
+	* gst/mixmatrix/mixmatrix.c: (gst_mixmatrix_class_init):
+	* gst/mpeg1sys/gstmpeg1systemencode.c:
+	(gst_system_encode_class_init):
+	* gst/mpeg1videoparse/gstmp1videoparse.c:
+	(gst_mp1videoparse_class_init):
+	* gst/mpeg2sub/gstmpeg2subt.c: (gst_mpeg2subt_class_init):
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_class_init):
+	* gst/overlay/gstoverlay.c: (gst_overlay_class_init):
+	* gst/passthrough/gstpassthrough.c: (passthrough_class_init):
+	* gst/playondemand/gstplayondemand.c: (play_on_demand_class_init):
+	* gst/rtjpeg/gstrtjpegdec.c: (gst_rtjpegdec_class_init):
+	* gst/rtjpeg/gstrtjpegenc.c: (gst_rtjpegenc_class_init):
+	* gst/smooth/gstsmooth.c: (gst_smooth_class_init):
+	* gst/smoothwave/gstsmoothwave.c: (gst_smoothwave_class_init):
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init):
+	* gst/stereo/gststereo.c: (gst_stereo_class_init):
+	* gst/switch/gstswitch.c: (gst_switch_class_init):
+	* gst/tta/gstttadec.c: (gst_tta_dec_class_init):
+	* gst/tta/gstttaparse.c: (gst_tta_parse_class_init):
+	* gst/vbidec/gstvbidec.c: (gst_vbidec_class_init):
+	* gst/videocrop/gstvideocrop.c: (gst_video_crop_class_init):
+	* gst/virtualdub/gstxsharpen.c: (gst_xsharpen_class_init):
+	* gst/y4m/gsty4mencode.c: (gst_y4mencode_class_init):
+	* sys/cdrom/gstcdplayer.c: (cdplayer_class_init):
+	* sys/directsound/gstdirectsoundsink.c:
+	(gst_directsoundsink_class_init):
+	* sys/dxr3/dxr3audiosink.c: (dxr3audiosink_class_init):
+	* sys/dxr3/dxr3spusink.c: (dxr3spusink_class_init):
+	* sys/dxr3/dxr3videosink.c: (dxr3videosink_class_init):
+	* sys/qcam/gstqcamsrc.c: (gst_qcamsrc_class_init):
+	* sys/v4l2/gstv4l2colorbalance.c:
+	(gst_v4l2_color_balance_channel_class_init):
+	* sys/v4l2/gstv4l2tuner.c: (gst_v4l2_tuner_channel_class_init),
+	(gst_v4l2_tuner_norm_class_init):
+	* sys/ximagesrc/ximagesrc.c: (gst_ximagesrc_class_init):
+	Fix #337365 (g_type_class_ref <-> g_type_class_peek_parent)
+
+2006-04-08  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/colorspace/gstcolorspace.h:
 	* gst/deinterlace/gstdeinterlace.h:
 	* gst/passthrough/gstpassthrough.h:

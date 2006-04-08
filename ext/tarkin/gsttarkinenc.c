@@ -155,7 +155,7 @@ gst_tarkinenc_class_init (TarkinEncClass * klass)
           "Number of vanishing moments for the analysis filter",
           1, 4, 2, G_PARAM_READWRITE));
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_tarkinenc_set_property;
   gobject_class->get_property = gst_tarkinenc_get_property;

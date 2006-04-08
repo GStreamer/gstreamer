@@ -2274,7 +2274,7 @@ gst_dfbvideosink_class_init (GstDfbVideoSinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_VIDEO_SINK);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_dfbvideosink_finalize;
   gobject_class->set_property = gst_dfbvideosink_set_property;

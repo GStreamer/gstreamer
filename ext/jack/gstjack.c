@@ -202,7 +202,7 @@ gst_jack_class_init (GstJackClass * klass)
   element_class = (GstElementClass *) klass;
 
   if (parent_class == NULL)
-    parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+    parent_class = g_type_class_peek_parent (klass);
 
   object_class->get_property = gst_jack_get_property;
   object_class->set_property = gst_jack_set_property;

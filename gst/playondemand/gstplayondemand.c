@@ -193,7 +193,7 @@ play_on_demand_class_init (GstPlayOnDemandClass * klass)
   klass->clear = play_on_demand_clear_handler;
   klass->reset = play_on_demand_reset_handler;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = play_on_demand_set_property;
   gobject_class->get_property = play_on_demand_get_property;

@@ -125,7 +125,7 @@ gst_smooth_class_init (GstSmoothClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_boolean ("active", "active", "active", TRUE, G_PARAM_READWRITE));   /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOLERANCE, g_param_spec_int ("tolerance", "tolerance", "tolerance", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */

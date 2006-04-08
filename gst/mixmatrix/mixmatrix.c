@@ -170,7 +170,7 @@ gst_mixmatrix_class_init (GstMixMatrixClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gst_mixmatrix_signals[RESIZE_SIGNAL] =
       g_signal_new ("resize",

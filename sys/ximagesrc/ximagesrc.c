@@ -793,7 +793,7 @@ gst_ximagesrc_class_init (GstXImageSrcClass * klass)
           "Show mouse pointer if XFixes extension enabled", TRUE,
           G_PARAM_READWRITE));
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   push_class->create = gst_ximagesrc_create;
   bc->get_caps = gst_ximagesrc_get_caps;

@@ -181,7 +181,7 @@ passthrough_class_init (GstPassthroughClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SILENT, g_param_spec_boolean ("silent", "silent", "silent", TRUE, G_PARAM_READWRITE));   /* CHECKME */
 

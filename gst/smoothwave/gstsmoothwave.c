@@ -139,7 +139,8 @@ gst_smoothwave_class_init (GstSmoothWaveClass * klass)
   gobject_class = (GObjectClass *) klass;
   element_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
+
   gobject_class->dispose = gst_smoothwave_dispose;
   element_class->change_state = gst_sw_change_state;
 

@@ -109,7 +109,7 @@ cdplayer_class_init (CDPlayerClass * klass)
   gstelement_klass = (GstElementClass *) klass;
   gstbin_klass = (GstBinClass *) klass;
 
-  parent_class = g_type_class_ref (gst_bin_get_type ());
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (cdplayer_finalize);
 

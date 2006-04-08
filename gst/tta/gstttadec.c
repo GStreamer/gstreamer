@@ -206,7 +206,7 @@ gst_tta_dec_class_init (GstTtaDecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = gst_tta_dec_dispose;
 }

@@ -150,7 +150,7 @@ dxr3spusink_class_init (Dxr3SpuSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   dxr3spusink_signals[SET_CLUT_SIGNAL] =
       g_signal_new ("set-clut",

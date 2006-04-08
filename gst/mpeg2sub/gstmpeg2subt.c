@@ -194,7 +194,7 @@ gst_mpeg2subt_class_init (GstMpeg2SubtClass * klass)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP, g_param_spec_int ("skip", "skip", "skip", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_mpeg2subt_set_property;
   gobject_class->get_property = gst_mpeg2subt_get_property;

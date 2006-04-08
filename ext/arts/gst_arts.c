@@ -131,7 +131,7 @@ gst_arts_class_init (GstARTSClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;

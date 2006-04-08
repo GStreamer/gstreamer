@@ -145,7 +145,7 @@ static void gst_audioresample_class_init (AudioresampleClass * klass)
       g_param_spec_int ("filter_length", "filter_length", "filter_length",
           0, G_MAXINT, 16, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   GST_DEBUG_CATEGORY_INIT (audioresample_debug, "audioresample", 0,
       "audioresample element");

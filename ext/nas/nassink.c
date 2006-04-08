@@ -149,7 +149,7 @@ gst_nassink_class_init (GstNassinkClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   if (parent_class == NULL)
-    parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+    parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_nassink_set_property;
   gobject_class->get_property = gst_nassink_get_property;

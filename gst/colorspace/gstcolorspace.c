@@ -502,7 +502,7 @@ gst_colorspace_class_init (GstColorspaceClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_colorspace_set_property;
   gobject_class->get_property = gst_colorspace_get_property;

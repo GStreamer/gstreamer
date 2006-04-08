@@ -144,7 +144,7 @@ gst_deinterlace_class_init (GstDeInterlaceClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DI_ONLY, g_param_spec_boolean ("di_area_only", "di_area_only", "di_area_only", TRUE, G_PARAM_READWRITE));        /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLEND, g_param_spec_boolean ("blend", "blend", "blend", TRUE, G_PARAM_READWRITE));       /* CHECKME */

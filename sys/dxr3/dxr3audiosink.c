@@ -174,7 +174,7 @@ dxr3audiosink_class_init (Dxr3AudioSinkClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   dxr3audiosink_signals[SIGNAL_FLUSHED] =
       g_signal_new ("flushed", G_TYPE_FROM_CLASS (klass),

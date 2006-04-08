@@ -159,14 +159,14 @@ gst_swfdecbuffer_get_type (void)
 }
 
 static void
-gst_swfdecbuffer_class_init (gpointer g_class, gpointer class_data)
+gst_swfdecbuffer_class_init (gpointer klass)
 {
-  GstBufferClass *swfdecbuffer_class = GST_BUFFER_CLASS (g_class);
+  GstBufferClass *swfdecbuffer_class = GST_BUFFER_CLASS (klass);
 
   swfdecbuffer_class->mini_object_class.finalize =
       (GstMiniObjectFinalizeFunction) gst_swfdecbuffer_finalize;
 
-  buffer_parent_class = g_type_class_ref (GST_TYPE_BUFFER);
+  buffer_parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
@@ -234,7 +234,7 @@ gst_swfdec_class_init (GstSwfdecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_swfdec_set_property;
   gobject_class->get_property = gst_swfdec_get_property;
