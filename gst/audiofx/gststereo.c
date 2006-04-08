@@ -104,7 +104,7 @@ gst_stereo_class_init (GstStereoClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_int ("active", "active", "active", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STEREO, g_param_spec_float ("stereo", "stereo", "stereo", 0.0, 1.0, 0.0, G_PARAM_READWRITE));    /* CHECKME */
