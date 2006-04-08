@@ -1,5 +1,22 @@
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/pango/gsttextrender.h:
+	* gst-libs/gst/audio/gstaudiosink.h:
+	* gst-libs/gst/audio/gstaudiosrc.h:
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	* gst-libs/gst/audio/gstbaseaudiosrc.h:
+	* gst-libs/gst/audio/gstringbuffer.h:
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	* gst-libs/gst/rtp/gstbasertppayload.h:
+	* gst-libs/gst/video/gstvideofilter.h:
+	* gst-libs/gst/video/gstvideosink.h:
+	* gst/playback/gstplaybasebin.h:
+	* gst/tcp/gstmultifdsink.h:
+	* sys/v4l/gstv4lelement.h:
+	Fix broken GObject macros
+
+2006-04-08  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/alsa/gstalsasink.c: (set_hwparams), (alsasink_parse_spec):
 	More debug to trace why my USB headset is not working with gst
 

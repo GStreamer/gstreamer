@@ -53,10 +53,10 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_V4LELEMENT,GstV4lElementClass))
 #define GST_IS_V4LELEMENT(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4LELEMENT))
-#define GST_IS_V4LELEMENT_CLASS(obj) \
+#define GST_IS_V4LELEMENT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4LELEMENT))
-#define GST_V4LELEMENT_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_V4LELEMENT, GstV4lElementClass))
+#define GST_V4LELEMENT_GET_CLASS(klass) \
+  (G_TYPE_INSTANCE_GET_CLASS ((klass), GST_TYPE_V4LELEMENT, GstV4lElementClass))
 
 typedef struct _GstV4lElement GstV4lElement;
 typedef struct _GstV4lElementClass GstV4lElementClass;

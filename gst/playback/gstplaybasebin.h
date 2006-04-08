@@ -25,11 +25,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_PLAY_BASE_BIN          (gst_play_base_bin_get_type())
-#define GST_PLAY_BASE_BIN(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PLAY_BASE_BIN,GstPlayBaseBin))
-#define GST_PLAY_BASE_BIN_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PLAY_BASE_BIN,GstPlayBaseBinClass))
-#define GST_IS_PLAY_BASE_BIN(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PLAY_BASE_BIN))
-#define GST_IS_PLAY_BASE_BIN_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAY_BASE_BIN))
+#define GST_TYPE_PLAY_BASE_BIN            (gst_play_base_bin_get_type())
+#define GST_PLAY_BASE_BIN(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PLAY_BASE_BIN,GstPlayBaseBin))
+#define GST_PLAY_BASE_BIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PLAY_BASE_BIN,GstPlayBaseBinClass))
+#define GST_IS_PLAY_BASE_BIN(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PLAY_BASE_BIN))
+#define GST_IS_PLAY_BASE_BIN_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAY_BASE_BIN))
 #define GST_PLAY_BASE_BIN_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PLAY_BASE_BIN, \
                               GstPlayBaseBinClass))
