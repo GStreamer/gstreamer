@@ -213,7 +213,7 @@ gst_asfmux_class_init (GstAsfMuxClass * klass)
 
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstelement_class->request_new_pad = gst_asfmux_request_new_pad;
   gstelement_class->change_state = gst_asfmux_change_state;

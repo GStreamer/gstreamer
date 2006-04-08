@@ -1,3 +1,24 @@
+2006-04-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_class_init):
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_class_init):
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_class_init):
+	* ext/mad/gstmad.c: (gst_mad_class_init):
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_class_init):
+	* gst/ac3parse/gstac3parse.c: (gst_ac3parse_class_init):
+	* gst/asfdemux/gstasfmux.c: (gst_asfmux_class_init):
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_class_init):
+	* gst/iec958/ac3iec.c: (ac3iec_class_init):
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_class_init):
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_class_init):
+	* gst/mpegstream/gstmpegclock.c: (gst_mpeg_clock_class_init):
+	* gst/mpegstream/gstrfc2250enc.c: (gst_rfc2250_enc_class_init):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_class_init):
+	* gst/synaesthesia/gstsynaesthesia.c:
+	(gst_synaesthesia_class_init):
+	Fix #337365 (g_type_class_ref <-> g_type_class_peek_parent)
+
 2006-04-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Fabrizio Gennari  <fabrizio dot ge at tiscali dot it>

@@ -234,7 +234,7 @@ gst_dvd_demux_class_init (GstDVDDemuxClass * klass)
   GstMPEGParseClass *mpeg_parse_class;
   GstMPEGDemuxClass *mpeg_demux_class;
 
-  parent_class = g_type_class_ref (GST_TYPE_MPEG_DEMUX);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstelement_class = (GstElementClass *) klass;
   mpeg_parse_class = (GstMPEGParseClass *) klass;

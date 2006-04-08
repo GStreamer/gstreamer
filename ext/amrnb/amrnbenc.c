@@ -103,7 +103,7 @@ gst_amrnbenc_class_init (GstAmrnbEncClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   object_class->finalize = gst_amrnbenc_finalize;
 

@@ -251,7 +251,7 @@ gst_mpeg2dec_class_init (GstMpeg2decClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_mpeg2dec_set_property;
   gobject_class->get_property = gst_mpeg2dec_get_property;

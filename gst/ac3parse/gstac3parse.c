@@ -170,7 +170,7 @@ gst_ac3parse_class_init (gpointer g_class)
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP, g_param_spec_int ("skip", "skip", "skip", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = gst_ac3parse_set_property;
   gobject_class->get_property = gst_ac3parse_get_property;

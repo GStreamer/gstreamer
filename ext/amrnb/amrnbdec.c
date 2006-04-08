@@ -105,7 +105,7 @@ gst_amrnbdec_class_init (GstAmrnbDecClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   element_class->change_state = gst_amrnbdec_state_change;
 }
