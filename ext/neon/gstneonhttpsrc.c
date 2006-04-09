@@ -352,7 +352,7 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
   content_length = ne_get_response_header (src->request, "Content-Length");
 
   if (content_length) {
-    src->content_size = atoll (content_length);
+    src->content_size = g_ascii_strtoull (content_length, NULL, 10);
   } else {
     src->content_size = -1;
   }
@@ -710,7 +710,7 @@ size_header_handler (void *userdata, const char *value)
 {
   GstNeonhttpSrc *src = GST_NEONHTTP_SRC (userdata);
 
-  src->content_size = atoll (value);
+  src->content_size = g_ascii_strtoull (value, NULL, 10);
   GST_DEBUG ("content size = %lld bytes", src->content_size);
 
 }

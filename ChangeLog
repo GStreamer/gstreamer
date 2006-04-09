@@ -1,3 +1,13 @@
+2006-04-09  Sebastien Moutte  <sebastien@moutte.net>
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_start):
+	  remove atoll by using g_ascii_strtoull (atoll is not supported on WIN32)
+	* sys/directdraw/gstdirectdrawsink.c:
+	* sys/directsound/gstdirectsoundsink.c:
+	  done some cleans in sources
+	* win32/vs6:
+	  add project files for neon, qtdemux
+	  
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/amrwb/gstamrwbdec.c: (gst_amrwbdec_class_init):
