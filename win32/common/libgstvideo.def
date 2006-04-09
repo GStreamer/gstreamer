@@ -1,4 +1,5 @@
 EXPORTS
-	gst_video_sink_get_type
 	gst_video_frame_rate
+	gst_video_filter_get_type
 	gst_video_get_size
+	gst_video_sink_get_type

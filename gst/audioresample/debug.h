@@ -38,11 +38,11 @@ int resample_debug_get_level (void);
 GST_DEBUG_CATEGORY_EXTERN (audioresample_debug);
 #define GST_CAT_DEFAULT audioresample_debug
 
-#define RESAMPLE_ERROR(...) GST_ERROR(__VA_ARGS__)
-#define RESAMPLE_WARNING(...) GST_WARNING(__VA_ARGS__)
-#define RESAMPLE_INFO(...) GST_INFO(__VA_ARGS__)
-#define RESAMPLE_DEBUG(...) GST_DEBUG(__VA_ARGS__)
-#define RESAMPLE_LOG(...) GST_LOG(__VA_ARGS__)
+#define RESAMPLE_ERROR GST_ERROR
+#define RESAMPLE_WARNING GST_WARNING
+#define RESAMPLE_INFO GST_INFO
+#define RESAMPLE_DEBUG GST_DEBUG
+#define RESAMPLE_LOG GST_LOG
 
 #define resample_debug_set_level(x) do { } while (0)
 

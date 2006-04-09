@@ -1,3 +1,20 @@
+2006-04-09  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/audioresample/debug.h:
+	  replace debug macros with variable number of parameters
+	  by a simple alias to gstreamer standard debug macros 
+	 (#define RESAMPLE_ERROR GST_ERROR, __VA_ARGS__ is not
+	  supported by MSVC 6.0 and 7.1)
+	* gst/audioresample/resample.h:
+	  define M_PI and rint for WIN32
+	* win32/common/libgstaudio.def:
+	* win32/common/libgstriff.def:
+	* win32/common/libgsttag.def:
+	* win32/common/libgstvideo.def:
+	  add new exported functions
+	* win32/vs6:
+	  update project files
+
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/alsa/gstalsamixeroptions.c:

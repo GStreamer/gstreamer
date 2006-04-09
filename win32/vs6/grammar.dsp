@@ -75,8 +75,7 @@ BuildCmds= \
 	move gstplay-marshal.c.tmp ..\..\gst\playback\gstplay-marshal.c \
 	echo #include "gst/gstconfig.h" > gstplay-marshal.h.tmp \
 	glib-genmarshal --header --prefix=gst_play_marshal ..\..\gst\playback\gstplay-marshal.list >> gstplay-marshal.h.tmp \
-	move gstplay-marshal.h.tmp ..\..\gst\playback\gstplay-marshal.h \
-	
+	move gstplay-marshal.h.tmp ..\..\gst\playback\gstplay-marshal.h	
 
 "..\..\gst\playback\gstplay-marshal.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
@@ -97,8 +96,7 @@ BuildCmds= \
 	move gstplay-marshal.c.tmp ..\..\gst\playback\gstplay-marshal.c \
 	echo #include "gst/gstconfig.h" > gstplay-marshal.h.tmp \
 	glib-genmarshal --header --prefix=gst_play_marshal ..\..\gst\playback\gstplay-marshal.list >> gstplay-marshal.h.tmp \
-	move gstplay-marshal.h.tmp ..\..\gst\playback\gstplay-marshal.h \
-	
+	move gstplay-marshal.h.tmp ..\..\gst\playback\gstplay-marshal.h 
 
 "..\..\gst\playback\gstplay-marshal.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
@@ -112,15 +110,66 @@ BuildCmds= \
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\gst\tcp\gsttcp-marshal.list"
+!IF  "$(CFG)" == "grammar - Win32 Release"
+
+# Begin Custom Build
+InputPath="..\..\gst\tcp\gsttcp-marshal.list"
+
+BuildCmds= \
+	echo #include "glib-object.h" > gsttcp-marshal.c.tmp \
+	echo #include "gsttcp-marshal.h" >> gsttcp-marshal.c.tmp \
+	glib-genmarshal --body --prefix=gst_tcp_marshal ..\..\gst\tcp\gsttcp-marshal.list >> gsttcp-marshal.c.tmp \
+	move gsttcp-marshal.c.tmp ..\..\gst\tcp\gsttcp-marshal.c \
+	echo #include "gst/gstconfig.h" > gsttcp-marshal.h.tmp \
+	glib-genmarshal --header --prefix=gst_tcp_marshal ..\..\gst\tcp\gsttcp-marshal.list >> gsttcp-marshal.h.tmp \
+	move gsttcp-marshal.h.tmp ..\..\gst\tcp\gsttcp-marshal.h
+	
+
+"..\..\gst\tcp\gsttcp-marshal.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst\tcp\gsttcp-marshal.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
+
+# Begin Custom Build
+InputPath="..\..\gst\tcp\gsttcp-marshal.list"
+
+BuildCmds= \
+	echo #include "glib-object.h" > gsttcp-marshal.c.tmp \
+	echo #include "gsttcp-marshal.h" >> gsttcp-marshal.c.tmp \
+	glib-genmarshal --body --prefix=gst_tcp_marshal ..\..\gst\tcp\gsttcp-marshal.list >> gsttcp-marshal.c.tmp \
+	move gsttcp-marshal.c.tmp ..\..\gst\tcp\gsttcp-marshal.c \
+	echo #include "gst/gstconfig.h" > gsttcp-marshal.h.tmp \
+	glib-genmarshal --header --prefix=gst_tcp_marshal ..\..\gst\tcp\gsttcp-marshal.list >> gsttcp-marshal.h.tmp \
+	move gsttcp-marshal.h.tmp ..\..\gst\tcp\gsttcp-marshal.h
+	
+
+"..\..\gst\tcp\gsttcp-marshal.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst\tcp\gsttcp-marshal.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE="..\common\interfaces-enumtypes.c"
 
 !IF  "$(CFG)" == "grammar - Win32 Release"
+
 # Begin Custom Build
-InputPath=..\common\interfaces-enumtypes.c
+InputPath="..\common\interfaces-enumtypes.c"
 
 BuildCmds= \
 	copy ..\common\interfaces-enumtypes.h ..\..\gst-libs\gst\interfaces \
-	copy ..\common\interfaces-enumtypes.c ..\..\gst-libs\gst\interfaces \
+	copy ..\common\interfaces-enumtypes.c ..\..\gst-libs\gst\interfaces
 	
 
 "..\..\gst-libs\gst\interfaces\interfaces-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -129,14 +178,15 @@ BuildCmds= \
 "..\..\gst-libs\gst\interfaces\interfaces-enumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 # End Custom Build
+
 !ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
 
 # Begin Custom Build
-InputPath=..\common\interfaces-enumtypes.c
+InputPath="..\common\interfaces-enumtypes.c"
 
 BuildCmds= \
 	copy ..\common\interfaces-enumtypes.h ..\..\gst-libs\gst\interfaces \
-	copy ..\common\interfaces-enumtypes.c ..\..\gst-libs\gst\interfaces \
+	copy ..\common\interfaces-enumtypes.c ..\..\gst-libs\gst\interfaces
 	
 
 "..\..\gst-libs\gst\interfaces\interfaces-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -154,6 +204,7 @@ BuildCmds= \
 SOURCE="..\..\gst-libs\gst\interfaces\interfaces-marshal.list"
 
 !IF  "$(CFG)" == "grammar - Win32 Release"
+
 # Begin Custom Build
 InputPath="..\..\gst-libs\gst\interfaces\interfaces-marshal.list"
 
@@ -163,7 +214,7 @@ BuildCmds= \
 	move interfaces-marshal.c.tmp ..\..\gst-libs\gst\interfaces\interfaces-marshal.c \
 	echo #include "gst/gstconfig.h" > interfaces-marshal.h.tmp \
 	glib-genmarshal --header --prefix=gst_interfaces_marshal ..\..\gst-libs\gst\interfaces\interfaces-marshal.list >> interfaces-marshal.h.tmp \
-	move interfaces-marshal.h.tmp ..\..\gst-libs\gst\interfaces\interfaces-marshal.h \
+	move interfaces-marshal.h.tmp ..\..\gst-libs\gst\interfaces\interfaces-marshal.h
 	
 
 "..\..\gst-libs\gst\interfaces\interfaces-marshal.list.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -172,6 +223,7 @@ BuildCmds= \
 "..\..\gst-libs\gst\interfaces\interfaces-marshal.list.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 # End Custom Build
+
 !ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
 
 # Begin Custom Build
@@ -183,7 +235,7 @@ BuildCmds= \
 	move interfaces-marshal.c.tmp ..\..\gst-libs\gst\interfaces\interfaces-marshal.c \
 	echo #include "gst/gstconfig.h" > interfaces-marshal.h.tmp \
 	glib-genmarshal --header --prefix=gst_interfaces_marshal ..\..\gst-libs\gst\interfaces\interfaces-marshal.list >> interfaces-marshal.h.tmp \
-	move interfaces-marshal.h.tmp ..\..\gst-libs\gst\interfaces\interfaces-marshal.h \
+	move interfaces-marshal.h.tmp ..\..\gst-libs\gst\interfaces\interfaces-marshal.h
 	
 
 "..\..\gst-libs\gst\interfaces\interfaces-marshal.list.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -201,12 +253,13 @@ BuildCmds= \
 SOURCE="..\common\multichannel-enumtypes.c"
 
 !IF  "$(CFG)" == "grammar - Win32 Release"
+
 # Begin Custom Build
-InputPath=..\common\multichannel-enumtypes.c
+InputPath="..\common\multichannel-enumtypes.c"
 
 BuildCmds= \
 	copy ..\common\multichannel-enumtypes.h ..\..\gst-libs\gst\audio \
-	copy ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio \
+	copy ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio
 	
 
 "..\..\gst-libs\gst\audio\multichannel-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -215,14 +268,15 @@ BuildCmds= \
 "..\..\gst-libs\gst\audio\multichannel-enumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
    $(BuildCmds)
 # End Custom Build
+
 !ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
 
 # Begin Custom Build
-InputPath=..\common\multichannel-enumtypes.c
+InputPath="..\common\multichannel-enumtypes.c"
 
 BuildCmds= \
 	copy ..\common\multichannel-enumtypes.h ..\..\gst-libs\gst\audio \
-	copy ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio \
+	copy ..\common\multichannel-enumtypes.c ..\..\gst-libs\gst\audio
 	
 
 "..\..\gst-libs\gst\audio\multichannel-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
