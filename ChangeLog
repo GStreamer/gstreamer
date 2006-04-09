@@ -1,3 +1,13 @@
+2006-04-09  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/level/gstlevel.c: (gst_level_set_caps),(gst_level_transform_ip):
+	  use G_GINT64_CONSTANT for INT64 constants
+	* gst/videofilter/gstvideobalance.c:
+	  define rint for WIN32 #define rint(x) (floor((x)+0.5))
+	* win32/vs6/libgstavi.dsp:
+	 add missing libraries for the link and remove avimux.c from
+	 the project as it isn't ported to 0.10 yet
+	
 2006-04-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/ebml-read.c: (gst_ebml_read_sint):

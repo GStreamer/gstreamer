@@ -60,6 +60,10 @@
 #define M_PI  3.14159265358979323846
 #endif
 
+#ifdef WIN32
+#define rint(x) (floor((x)+0.5))
+#endif
+
 static GstElementDetails video_balance_details =
 GST_ELEMENT_DETAILS ("Video balance",
     "Filter/Effect/Video",
