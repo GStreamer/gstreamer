@@ -1,3 +1,11 @@
+2006-04-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_read_sint):
+	  Can't just replace 1LL with 1L here just because MSVC doesn't
+	  support it, as it might lead to incorrect results when doing the
+	  bitshifting here. Using GLib's G_GUINT64_CONSTANT() macro to
+	  force a 64-bit constant in a way that all compilers are happy with.
+
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/aalib/gstaasink.c: (gst_aasink_class_init):
