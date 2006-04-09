@@ -1,3 +1,9 @@
+2006-04-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_read_sint):
+	  Even better would be if we actually did the right thing
+	  here (also, G_GUINT64_CONSTANT only exists since GLib-2.10).
+
 2006-04-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/ebml-read.c: (gst_ebml_read_sint):
