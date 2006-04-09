@@ -24,6 +24,14 @@
 #include "functable.h"
 #include "buffer.h"
 
+#ifndef M_PI
+#define M_PI  3.14159265358979323846
+#endif
+
+#ifdef WIN32
+#define rint(x) (floor((x)+0.5))  
+#endif 
+
 typedef enum {
         RESAMPLE_FORMAT_S16 = 0,
         RESAMPLE_FORMAT_S32,
