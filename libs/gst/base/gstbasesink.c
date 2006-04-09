@@ -1249,7 +1249,9 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
     priv->avg_pt = UPDATE_RUNNING_AVG (priv->avg_pt, pt);
 
   if (priv->avg_duration != 0)
-    rate = ((gdouble) priv->avg_pt) / priv->avg_duration;
+    rate =
+        gst_guint64_to_gdouble (priv->avg_pt) /
+        gst_guint64_to_gdouble (priv->avg_duration);
   else
     rate = 1.0;
 

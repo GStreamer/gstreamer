@@ -48,7 +48,11 @@ gboolean __gst_in_valgrind (void);
 #ifndef WIN32
 #define IMPORT_SYMBOL
 #else
+#ifndef LIBGSTREAMER_EXPORTS
 #define IMPORT_SYMBOL __declspec(dllimport)
+#else
+#define IMPORT_SYMBOL 
+#endif
 #endif
 
 #include <gst/gstinfo.h>

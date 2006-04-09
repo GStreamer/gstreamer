@@ -1,3 +1,21 @@
+2006-04-09  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/gst_private.h:
+	  add a new #ifdef to use __declspec(dllimport) only for
+	  other modules and not for gstreamer core
+	* gst/gstbasesink.c: (gst_base_sink_perform_qos):
+	  use gst_guint64_to_gdouble for conversion
+	* win32/common/libgstreamer.def:
+	  add new exported functions
+	* win32/vs6/gst_inspect.dsp:
+	* win32/vs6/gst_launch.dsp:
+	* win32/vs6/libgstbase.dsp:
+	* win32/vs6/libgstcontroller.dsp:
+	* win32/vs6/libgstcoreelements.dsp:
+	* win32/vs6/libgstdataprotocol.dsp:
+	* win32/vs6/libgstnet.dsp:
+	  update project files
+
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstbuffer.c: (gst_subbuffer_class_init):
@@ -17,7 +35,7 @@
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init):
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
 	(gst_base_src_loop):
-	* libs/gst/controller/gstcontroller.c:
+	* libs/gst/controller/gstcontroller.c:/
 	(_gst_controller_class_init):
 	* plugins/elements/gstfdsrc.c: (gst_fd_src_class_init):
 	* plugins/indexers/gstfileindex.c: (gst_file_index_class_init):
