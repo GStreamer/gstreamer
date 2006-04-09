@@ -699,6 +699,7 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
+  GstIndexEntry *entry = NULL;
 
   /* since we know the exact byteoffset of the frame,
      make sure to try bytes first */
@@ -714,9 +715,8 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
 
-  GstIndexEntry *entry = gst_index_get_assoc_entry (mad->index, mad->index_id,
-      GST_INDEX_LOOKUP_BEFORE, 0,
-      format, cur);
+  entry = gst_index_get_assoc_entry (mad->index, mad->index_id,
+      GST_INDEX_LOOKUP_BEFORE, 0, format, cur);
 
   GST_DEBUG ("index seek");
 
@@ -1132,9 +1132,17 @@ is_xhead (unsigned char *buf)
 #undef LOG
 /*#define LOG*/
 #ifdef LOG
+#ifndef WIN32
 #define lprintf(x...) g_print(x)
 #else
+#define lprintf GST_DEBUG
+#endif
+#else
+#ifndef WIN32
 #define lprintf(x...)
+#else
+#define lprintf GST_DEBUG
+#endif
 #endif
 
 static int

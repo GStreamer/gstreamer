@@ -385,7 +385,8 @@ gst_dvd_sub_dec_parse_subpic (GstDvdSubDec * dec)
             dec->next_event_ts += event_time;
 
             GST_LOG_OBJECT (dec, "Exiting parse loop with time %g",
-                (gdouble) dec->next_event_ts / GST_SECOND);
+                gst_guint64_to_gdouble (dec->next_event_ts) /
+                gst_guint64_to_gdouble (GST_SECOND));
             return;
           }
         } else {

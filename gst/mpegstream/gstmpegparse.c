@@ -646,15 +646,15 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
     GST_LOG_OBJECT (mpeg_parse,
         "stream current is %1.3fMbs, calculated over %1.3fkB",
         (mpeg_parse->mux_rate * 8) / 1048576.0,
-        mpeg_parse->bytes_since_scr / 1024.0);
+        gst_guint64_to_gdouble (mpeg_parse->bytes_since_scr) / 1024.0);
   }
 
   if (mpeg_parse->avg_bitrate_bytes) {
     GST_LOG_OBJECT (mpeg_parse,
         "stream avg is %1.3fMbs, calculated over %1.3fkB",
-        (float) (mpeg_parse->avg_bitrate_bytes) * 8 * GST_SECOND
-        / mpeg_parse->avg_bitrate_time / 1048576.0,
-        mpeg_parse->avg_bitrate_bytes / 1024.0);
+        gst_guint64_to_gdouble (mpeg_parse->avg_bitrate_bytes) * 8 * GST_SECOND
+        / gst_guint64_to_gdouble (mpeg_parse->avg_bitrate_time) / 1048576.0,
+        gst_guint64_to_gdouble (mpeg_parse->avg_bitrate_bytes) / 1024.0);
   }
 
   /* Range-check the calculated average bitrate. */
@@ -890,7 +890,8 @@ gst_mpeg_parse_get_rate (GstMPEGParse * mpeg_parse, gint64 * rate)
      * check if we need to update scr_rate
      */
     if ((mpeg_parse->scr_rate == 0) ||
-        (((double) (ABS (mpeg_parse->scr_rate - *rate)) / mpeg_parse->scr_rate)
+        ((gst_guint64_to_gdouble (ABS (mpeg_parse->scr_rate -
+                        *rate)) / gst_guint64_to_gdouble (mpeg_parse->scr_rate))
             >= MP_SCR_RATE_HYST)) {
       mpeg_parse->scr_rate = *rate;
       return TRUE;

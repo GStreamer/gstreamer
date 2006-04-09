@@ -1,3 +1,25 @@
+2006-04-09  Sebastien Moutte  <sebastien@moutte.net>
+
+	* ext/mad/gstmad.c: (index_seek):
+	  move GstIndexEntry *entry variable declaration before 
+	  the first instruction
+	* ext/mad/gstmad.c: 
+	  remove debug macros with variable number of parameter by using 
+	  GST_DEBUG for WIN32
+	* gst/dvdsub/gstdvdsubdec.c: (gst_dvd_sub_dec_parse_subpic):
+	  use gst_guint64_to_gdouble for conversions
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_sync_stream_to_time):
+	  replace __FUNCTION__ which is not supported by MSVC by the current function name
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_reset):
+	  remove LL suffix by using G_GINT64_CONSTANT
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_parse_packhead),(gst_mpeg_parse_get_rate):
+	  use gst_guint64_to_gdouble for conversions
+	* gst/mpegstream/gstmpegparse.h:
+	  remove LL suffix by using G_GINT64_CONSTANT
+	* win32/vs6:
+	  add project files for tagac3parse, asfdemux, dvdlpcmdec, dvdsub, iec958, lame,
+	  mad, mpegaudioparse, mpegstream, realmedia, synaesthesia
+	
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_class_init):

@@ -1005,7 +1005,7 @@ gst_mpeg_demux_sync_stream_to_time (GstMPEGDemux * mpeg_demux,
   static gboolean beenhere;     /* FALSE */
 
   if (!beenhere) {
-    g_message ("FIXME: %s\n", __FUNCTION__);
+    g_message ("FIXME: gst_mpeg_demux_sync_stream_to_time\n");
     beenhere = TRUE;
   }
 #if 0
@@ -1214,7 +1214,7 @@ gst_mpeg_demux_reset (GstMPEGDemux * mpeg_demux)
   mpeg_demux->video_lock = FALSE;
 
   mpeg_demux->packet_rate_restriction = FALSE;
-  mpeg_demux->total_size_bound = 0LL;
+  mpeg_demux->total_size_bound = G_GINT64_CONSTANT (0);
 
   mpeg_demux->index = NULL;
   mpeg_demux->last_pts = -1;
