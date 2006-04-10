@@ -1,3 +1,12 @@
+2006-04-10  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Ryan Lortie (desrt) <desrt at destr dot ca>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_superindex),
+	(gst_avi_demux_parse_stream), (gst_avi_demux_parse_index),
+	(gst_avi_demux_stream_header):
+	Fix some crashers with empty chunks. (Fixes #337749)
+
 2006-04-09  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/level/gstlevel.c: (gst_level_set_caps),(gst_level_transform_ip):

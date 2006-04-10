@@ -724,7 +724,7 @@ static gboolean
 gst_avi_demux_parse_superindex (GstElement * element,
     GstBuffer * buf, guint64 ** _indexes)
 {
-  guint8 *data = GST_BUFFER_DATA (buf);
+  guint8 *data;
   gint bpe = 16, num, i;
   guint64 *indexes;
 
@@ -733,8 +733,10 @@ gst_avi_demux_parse_superindex (GstElement * element,
   if (buf == NULL)
     goto no_buffer;
 
-  if (!buf || GST_BUFFER_SIZE (buf) < 24)
+  if (GST_BUFFER_SIZE (buf) < 24)
     goto too_small;
+
+  data = GST_BUFFER_DATA (buf);
 
   /* check type of index. The opendml2 specs state that
    * there should be 4 dwords per array entry. Type can be
@@ -1031,6 +1033,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
 
   /* read strd/strn */
   while (gst_riff_parse_chunk (element, buf, &offset, &tag, &sub)) {
+    /* sub can be NULL if the chunk is empty */
     switch (tag) {
       case GST_RIFF_TAG_strd:
         if (stream->initdata)
@@ -1039,11 +1042,15 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
         break;
       case GST_RIFF_TAG_strn:
         g_free (stream->name);
-        stream->name = g_new (gchar, GST_BUFFER_SIZE (sub) + 1);
-        memcpy (stream->name, GST_BUFFER_DATA (sub), GST_BUFFER_SIZE (sub));
-        stream->name[GST_BUFFER_SIZE (sub)] = '\0';
-        gst_buffer_unref (sub);
-        sub = NULL;
+        if (sub != NULL) {
+          stream->name = g_new (gchar, GST_BUFFER_SIZE (sub) + 1);
+          memcpy (stream->name, GST_BUFFER_DATA (sub), GST_BUFFER_SIZE (sub));
+          stream->name[GST_BUFFER_SIZE (sub)] = '\0';
+          gst_buffer_unref (sub);
+          sub = NULL;
+        } else {
+          stream->name = g_strdup ("");
+        }
         break;
       default:
         if (tag == GST_MAKE_FOURCC ('i', 'n', 'd', 'x') ||
@@ -1058,8 +1065,10 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
             GST_FOURCC_ARGS (tag));
         /* fall-through */
       case GST_RIFF_TAG_JUNK:
-        gst_buffer_unref (sub);
-        sub = NULL;
+        if (sub != NULL) {
+          gst_buffer_unref (sub);
+          sub = NULL;
+        }
         break;
     }
   }
@@ -2075,13 +2084,15 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
 
   /* now, read the elements from the header until the end */
   while (gst_riff_parse_chunk (GST_ELEMENT (avi), buf, &offset, &tag, &sub)) {
+    /* sub can be NULL on empty tags */
+    if (!sub)
+      continue;
+
     switch (tag) {
       case GST_RIFF_TAG_LIST:
-        if (!sub || GST_BUFFER_SIZE (sub) < 4) {
-          if (sub) {
-            gst_buffer_unref (sub);
-            sub = NULL;
-          }
+        if (GST_BUFFER_SIZE (sub) < 4) {
+          gst_buffer_unref (sub);
+          sub = NULL;
           break;
         }
 
@@ -2100,10 +2111,8 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
                 GST_FOURCC_ARGS (GST_READ_UINT32_LE (GST_BUFFER_DATA (sub))));
             /* fall-through */
           case GST_RIFF_TAG_JUNK:
-            if (sub) {
-              gst_buffer_unref (sub);
-              sub = NULL;
-            }
+            gst_buffer_unref (sub);
+            sub = NULL;
             break;
         }
         break;
@@ -2113,10 +2122,8 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
             offset, GST_FOURCC_ARGS (tag));
         /* fall-through */
       case GST_RIFF_TAG_JUNK:
-        if (sub) {
-          gst_buffer_unref (sub);
-          sub = NULL;
-        }
+        gst_buffer_unref (sub);
+        sub = NULL;
         break;
     }
   }
