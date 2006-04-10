@@ -1448,6 +1448,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       goto skip_keyframe;
 
     GST_DEBUG_OBJECT (ffmpegdec, "got keyframe %"GST_TIME_FORMAT, GST_TIME_ARGS (in_ts));
+    ffmpegdec->waiting_for_key = FALSE;
   }
 
   GST_LOG_OBJECT (ffmpegdec,
