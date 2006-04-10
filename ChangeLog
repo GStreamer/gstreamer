@@ -1,3 +1,8 @@
+2006-04-10  Michael Smith  <msmith@fluendo.com>
+
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_chain):
+	  Plug big leak in AMR encoder.
+
 2006-04-09  Sebastien Moutte  <sebastien@moutte.net>
 
 	* ext/mad/gstmad.c: (index_seek):

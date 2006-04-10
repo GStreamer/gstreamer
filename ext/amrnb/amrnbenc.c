@@ -234,6 +234,8 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
     outsize = Encoder_Interface_Encode (amrnbenc->handle, MR122, (short *) data,
         (guint8 *) GST_BUFFER_DATA (out), 0);
 
+    g_free (data);
+
     GST_BUFFER_SIZE (out) = outsize;
 
     /* play */
