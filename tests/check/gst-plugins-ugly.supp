@@ -1,0 +1,72 @@
+### amrnb suppressions
+### these should/could be submitted to amrnb
+
+{
+   <amrnb>
+   Memcheck:Cond
+   fun:Encoder_Interface_Encode
+   fun:gst_amrnbenc_chain
+   fun:gst_pad_chain
+   fun:gst_pad_push
+}
+
+{
+   <amrnb>
+   Memcheck:Cond
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+   fun:gst_amrnbenc_chain
+   fun:gst_pad_chain
+   fun:gst_pad_push
+}
+
+{
+   <amrnb>
+   Memcheck:Cond
+   obj:/usr/lib/libamrnb.so*
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+   fun:gst_amrnbenc_chain
+   fun:gst_pad_chain
+   fun:gst_pad_push
+}
+
+{
+   <amrnb>
+   Memcheck:Cond
+   obj:/usr/lib/libamrnb.so*
+   obj:/usr/lib/libamrnb.so*
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+   fun:gst_amrnbenc_chain
+   fun:gst_pad_chain
+   fun:gst_pad_push
+}
+
+{
+   <amrnb>
+   Memcheck:Cond
+   obj:/usr/lib/libamrnb.so*
+   obj:/usr/lib/libamrnb.so*
+   obj:/usr/lib/libamrnb.so*
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+   fun:gst_amrnbenc_chain
+   fun:gst_pad_chain
+   fun:gst_pad_push
+}
+
+{
+   <amrnb acos>
+   Memcheck:Cond
+   fun:acos
+   obj:/usr/lib/libamrnb.so*
+   obj:/usr/lib/libamrnb.so*
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+   fun:gst_amrnbenc_chain
+   fun:gst_pad_chain
+   fun:gst_pad_push
+}
+
+

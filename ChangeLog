@@ -1,3 +1,23 @@
+2006-04-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/check.mak:
+	  allow for specifying more than one suppressions file in SUPPRESSIONS
+	* Makefile.am:
+	* tests/Makefile.am:
+	* tests/check/.cvsignore:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* configure.ac:
+	  add tests/check
+	* tests/check/gst-plugins-ugly.supp:
+	  add suppressions for libs used by -ugly
+	* tests/check/elements/amrnbenc.c: (buffer_new), (buffer_unref),
+	(setup_amrnbenc), (cleanup_amrnbenc), (push_data),
+	(GST_START_TEST), (amrnbenc_suite), (main):
+	  add a simple test for encoding amr
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_init):
+	  fix pad template leaks
+
 2006-04-10  Michael Smith  <msmith@fluendo.com>
 
 	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_chain):

@@ -1,7 +1,7 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 SUBDIRS = \
-	gst ext docs m4 common
+	gst ext docs m4 tests common
 
 EXTRA_DIST = \
 	gst-plugins-ugly.spec depcomp \
@@ -16,7 +16,12 @@ include $(top_srcdir)/common/release.mak
 include $(top_srcdir)/common/po.mak
 
 check-valgrind:
-	@true
+	cd tests/check && make check-valgrind
 
+if HAVE_CHECK
 check-torture:
-	@true
+	cd tests/check && make torture
+else
+check-torture:
+	true
+endif
