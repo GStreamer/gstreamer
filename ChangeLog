@@ -1,5 +1,11 @@
 2006-04-10  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gsttaglist.override: (tag_foreach_func_list): 
+	Return tag value if present more than once (instead of exactly once).
+	Fixes #337876
+
+2006-04-10  Edward Hervey  <edward@fluendo.com>
+
 	* codegen/argtypes.py:
 	Update from upstream codegen for UInt argtype.
 	* gst/gst-types.defs:

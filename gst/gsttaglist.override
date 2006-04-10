@@ -45,7 +45,7 @@ tag_foreach_func_list (const GstTagList *list,
 	count = gst_tag_list_get_tag_size(GST_TAG_LIST(list), tag);
 	if (count == 0)
 		PyErr_SetString(PyExc_KeyError, tag);
-	else if (count == 1)
+	else if (count > 0)
 		PyList_Append(py_list, PyString_FromString(tag));
 }
 
