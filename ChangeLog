@@ -1,3 +1,19 @@
+2006-04-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_base_init),
+	(gst_matroska_demux_handle_seek_event),
+	(gst_matroska_demux_video_caps), (gst_matroska_demux_audio_caps),
+	(gst_matroska_demux_subtitle_caps),
+	(gst_matroska_demux_plugin_init):
+	  Use static pad templates with ANY caps for audio and video
+	  source pads and get rid of a lot of unnecessary (and partially
+	  broken) code for the template caps. Clean up caps finding
+	  functions. Fixes playback of audio files/streams that do not
+	  contain the sample rate and/or number of channels in the audio
+	  context (happens a lot with vorbis/mp3 .mka files it seems).
+	  Fixes #337183.
+	  Also add myself to copyright holders.
+
 2006-04-10  Michael Smith  <msmith@fluendo.com>
 
 	* ext/annodex/gstcmmlutils.c: (gst_cmml_track_list_del_clip):
