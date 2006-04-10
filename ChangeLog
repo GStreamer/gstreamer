@@ -1,3 +1,12 @@
+2006-04-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_read_sint):
+	  Don't try to modify read-only data.
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock):
+	  Fix comment (won't crash any longer now).
+
 2006-04-10  Michael Smith  <msmith@fluendo.com>
 
 	* ext/annodex/gstcmmlenc.c: (gst_cmml_enc_set_header_on_caps):

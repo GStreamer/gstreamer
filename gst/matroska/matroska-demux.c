@@ -2274,7 +2274,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       }
 
       case GST_MATROSKA_ID_REFERENCEBLOCK:{
-        /* FIXME: this segfaults
+        /* FIXME: implement support for ReferenceBlock
            gint64 num;
            if (!gst_ebml_read_sint (ebml, &id, &num)) {
            res = FALSE;

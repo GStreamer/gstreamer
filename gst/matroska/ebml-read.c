@@ -487,7 +487,6 @@ gst_ebml_read_sint (GstEbmlRead * ebml, guint32 * id, gint64 * num)
   if (!gst_ebml_read_buffer (ebml, id, &buf))
     return FALSE;
 
-  data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
   if (size < 1 || size > 8) {
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
@@ -496,10 +495,16 @@ gst_ebml_read_sint (GstEbmlRead * ebml, guint32 * id, gint64 * num)
     gst_buffer_unref (buf);
     return FALSE;
   }
+
+  buf = gst_buffer_make_writable (buf);
+
+  data = GST_BUFFER_DATA (buf);
+
   if (data[0] & 0x80) {
     negative = 1;
     data[0] &= ~0x80;
   }
+
   *num = 0;
   while (n < size) {
     *num = (*num << 8) | data[n++];
