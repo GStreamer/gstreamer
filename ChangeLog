@@ -1,3 +1,9 @@
+2006-04-10  Michael Smith  <msmith@fluendo.com>
+
+	* ext/annodex/gstcmmlutils.c: (gst_cmml_track_list_del_clip):
+	  Use g_list_delete_link () instead of g_list_remove_link () so that
+	  we free the link as well as the contained data.
+
 2006-04-10  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Ryan Lortie (desrt) <desrt at destr dot ca>

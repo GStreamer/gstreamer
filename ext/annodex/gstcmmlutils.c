@@ -287,7 +287,7 @@ gst_cmml_track_list_del_clip (GHashTable * tracks, GstCmmlTagClip * clip)
     link = g_list_find (track->clips, clip);
     if (link) {
       g_object_unref (G_OBJECT (link->data));
-      track->clips = g_list_remove_link (track->clips, link);
+      track->clips = g_list_delete_link (track->clips, link);
       res = TRUE;
     }
   }
