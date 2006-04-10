@@ -1,5 +1,10 @@
 2006-04-10  Wim Taymans  <wim@fluendo.com>
 
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
+	Fix parsing of newer stsd chunks again.
+
+2006-04-10  Wim Taymans  <wim@fluendo.com>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream),
 	(qtdemux_parse_trak):
 	Fix framerate calculation.
