@@ -159,7 +159,7 @@ gst_swfdecbuffer_get_type (void)
 }
 
 static void
-gst_swfdecbuffer_class_init (gpointer klass)
+gst_swfdecbuffer_class_init (gpointer klass, gpointer class_data)
 {
   GstBufferClass *swfdecbuffer_class = GST_BUFFER_CLASS (klass);
 

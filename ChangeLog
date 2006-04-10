@@ -1,3 +1,8 @@
+2006-04-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/swfdec/gstswfdec.c: (gst_swfdecbuffer_class_init):
+	  Fix build (class_init declaration/definition mismatch).
+
 2006-04-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
