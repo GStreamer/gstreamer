@@ -412,14 +412,18 @@ gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
  * @position: the position in the segment
  *
  * Translate @position to stream time using the currently configured 
- * segment.
+ * segment. The @position value must be between @segment start and
+ * stop value. 
  *
  * This function is typically used by elements that need to operate on
  * the stream time of the buffers it receives, such as effect plugins.
+ * In those use cases, @position is typically the buffer timestamp that
+ * one wants to convert to the stream time.
  * The stream time is always between 0 and the total duration of the 
- * media stream.
+ * media stream. 
  *
- * Returns: the position in stream_time.
+ * Returns: the position in stream_time or -1 when an invalid position
+ * was given.
  */
 gint64
 gst_segment_to_stream_time (GstSegment * segment, GstFormat format,

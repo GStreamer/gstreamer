@@ -1215,10 +1215,14 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
 
   /* if we have the time when the last buffer left us, calculate
    * processing time */
-  if (priv->last_left != -1 && entered > priv->last_left) {
-    pt = entered - priv->last_left;
+  if (priv->last_left != -1) {
+    if (entered > priv->last_left) {
+      pt = entered - priv->last_left;
+    } else {
+      pt = 0;
+    }
   } else {
-    pt = 0;
+    pt = priv->avg_pt;
   }
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, sink, "start: %" GST_TIME_FORMAT
@@ -1232,9 +1236,6 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
       ", avg_pt: %" GST_TIME_FORMAT ", avg_rate: %g",
       GST_TIME_ARGS (priv->avg_duration), GST_TIME_ARGS (priv->avg_pt),
       priv->avg_rate);
-
-  /* record when this buffer will leave us */
-  priv->last_left = left;
 
   /* collect running averages. for first observations, we copy the
    * values */
@@ -1253,12 +1254,18 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
         gst_guint64_to_gdouble (priv->avg_pt) /
         gst_guint64_to_gdouble (priv->avg_duration);
   else
-    rate = 1.0;
+    rate = 0.0;
 
-  if (rate > 1.0)
-    priv->avg_rate = UPDATE_RUNNING_AVG_N (priv->avg_rate, rate);
-  else
-    priv->avg_rate = UPDATE_RUNNING_AVG_P (priv->avg_rate, rate);
+  if (priv->last_left != -1) {
+    if (dropped || priv->avg_rate < 0.0) {
+      priv->avg_rate = rate;
+    } else {
+      if (rate > 1.0)
+        priv->avg_rate = UPDATE_RUNNING_AVG_N (priv->avg_rate, rate);
+      else
+        priv->avg_rate = UPDATE_RUNNING_AVG_P (priv->avg_rate, rate);
+    }
+  }
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, sink,
       "updated: avg_duration: %" GST_TIME_FORMAT ", avg_pt: %" GST_TIME_FORMAT
@@ -1266,13 +1273,14 @@ gst_base_sink_perform_qos (GstBaseSink * sink, gboolean dropped)
       GST_TIME_ARGS (priv->avg_pt), priv->avg_rate);
 
 
-  if (dropped) {
-    priv->avg_rate = 2.0;
+  /* if we have a valid rate, start sending QoS messages */
+  if (priv->avg_rate >= 0.0) {
+    gst_base_sink_send_qos (sink, priv->avg_rate, priv->current_rstart,
+        priv->current_jitter);
   }
 
-  /* always send QoS events */
-  gst_base_sink_send_qos (sink, priv->avg_rate, priv->current_rstart,
-      priv->current_jitter);
+  /* record when this buffer will leave us */
+  priv->last_left = left;
 }
 
 /* reset all qos measuring */
@@ -1287,7 +1295,7 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
   priv->last_left = -1;
   priv->avg_duration = -1;
   priv->avg_pt = -1;
-  priv->avg_rate = 1.0;
+  priv->avg_rate = -1.0;
   priv->avg_render = -1;
   priv->rendered = 0;
   priv->dropped = 0;
