@@ -1488,6 +1488,8 @@ main (int argc, char **argv)
         pipeline);
     g_signal_connect (bus, "message::tag", (GCallback) message_received,
         pipeline);
+    g_signal_connect (bus, "message::element", (GCallback) message_received,
+        pipeline);
     g_signal_connect (bus, "message::segment-done",
         (GCallback) message_received, pipeline);
     g_signal_connect (bus, "message::segment-done", (GCallback) segment_done,

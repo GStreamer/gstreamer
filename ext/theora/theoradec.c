@@ -604,6 +604,9 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
       dec->earliest_time = timestamp + diff;
       GST_OBJECT_UNLOCK (dec);
 
+      GST_DEBUG_OBJECT (dec, "got QoS %" GST_TIME_FORMAT ", %" G_GINT64_FORMAT,
+          GST_TIME_ARGS (timestamp), diff);
+
       res = gst_pad_push_event (dec->sinkpad, event);
       break;
     }
