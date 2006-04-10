@@ -1,5 +1,17 @@
 2006-04-10  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_src_query),
+	(gst_ogg_demux_receive_event), (gst_ogg_pad_event),
+	(gst_ogg_demux_chain_peer), (gst_ogg_pad_submit_packet),
+	(gst_ogg_demux_submit_buffer), (gst_ogg_demux_get_data),
+	(gst_ogg_demux_deactivate_current_chain),
+	(gst_ogg_demux_activate_chain), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_bisect_forward_serialno),
+	(gst_ogg_demux_find_chains), (gst_ogg_demux_chain):
+	Add some more debugging.
+
+2006-04-10  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/theoradec.c: (theora_dec_src_event),
 	(theora_handle_data_packet):
 	Some more debug info.

@@ -402,7 +402,7 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
       gst_query_parse_duration (query, &format, NULL);
       /* can only get position in time */
       if (format != GST_FORMAT_TIME) {
-        GST_DEBUG ("only query duration on TIME is supported");
+        GST_DEBUG_OBJECT (ogg, "only query duration on TIME is supported");
         res = FALSE;
         goto done;
       }
@@ -433,7 +433,7 @@ gst_ogg_demux_receive_event (GstElement * element, GstEvent * event)
        * seek query upstream after converting it to bytes using
        * the average bitrate of the stream. */
       if (!ogg->seekable) {
-        GST_DEBUG ("seek on non seekable stream");
+        GST_DEBUG_OBJECT (ogg, "seek on non seekable stream");
         goto error;
       }
 
@@ -443,17 +443,20 @@ gst_ogg_demux_receive_event (GstElement * element, GstEvent * event)
 
     }
     default:
-      GST_DEBUG ("We only handle seek events here");
+      GST_DEBUG_OBJECT (ogg, "We only handle seek events here");
       goto error;
       break;
   }
 
   return res;
 
+  /* ERRORS */
 error:
-  GST_DEBUG ("error handling event");
-  gst_event_unref (event);
-  return FALSE;
+  {
+    GST_DEBUG_OBJECT (ogg, "error handling event");
+    gst_event_unref (event);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -473,7 +476,7 @@ gst_ogg_pad_event (GstPad * pad, GstEvent * event)
        * seek query upstream after converting it to bytes using
        * the average bitrate of the stream. */
       if (!ogg->seekable) {
-        GST_DEBUG ("seek on non seekable stream");
+        GST_DEBUG_OBJECT (ogg, "seek on non seekable stream");
         goto error;
       }
 
@@ -490,7 +493,7 @@ gst_ogg_pad_event (GstPad * pad, GstEvent * event)
   /* ERRORS */
 error:
   {
-    GST_DEBUG ("error handling event");
+    GST_DEBUG_OBJECT (ogg, "error handling event");
     gst_event_unref (event);
     return FALSE;
   }
@@ -949,7 +952,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
         } else {
           gst_segment_set_last_stop (&ogg->segment, GST_FORMAT_TIME,
               current_time);
-          GST_DEBUG ("ogg current time %" GST_TIME_FORMAT,
+          GST_DEBUG_OBJECT (ogg, "ogg current time %" GST_TIME_FORMAT,
               GST_TIME_ARGS (current_time));
         }
       }
@@ -1021,11 +1024,11 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
         GstEvent *event;
         GstClockTime segment_start, segment_stop;
 
-        GST_DEBUG ("chain->begin_time:    %" GST_TIME_FORMAT,
+        GST_DEBUG_OBJECT (ogg, "chain->begin_time:    %" GST_TIME_FORMAT,
             GST_TIME_ARGS (chain->begin_time));
-        GST_DEBUG ("chain->segment_start: %" GST_TIME_FORMAT,
+        GST_DEBUG_OBJECT (ogg, "chain->segment_start: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (chain->segment_start));
-        GST_DEBUG ("chain->segment_stop:  %" GST_TIME_FORMAT,
+        GST_DEBUG_OBJECT (ogg, "chain->segment_stop:  %" GST_TIME_FORMAT,
             GST_TIME_ARGS (chain->segment_stop));
 
         if (chain->begin_time != GST_CLOCK_TIME_NONE) {
@@ -1040,9 +1043,9 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
           segment_stop = chain->segment_stop;
         }
 
-        GST_DEBUG ("segment_start: %" GST_TIME_FORMAT,
+        GST_DEBUG_OBJECT (ogg, "segment_start: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (segment_start));
-        GST_DEBUG ("segment_stop:  %" GST_TIME_FORMAT,
+        GST_DEBUG_OBJECT (ogg, "segment_stop:  %" GST_TIME_FORMAT,
             GST_TIME_ARGS (segment_stop));
 
         /* create the newsegment event we are going to send out */
@@ -1363,7 +1366,7 @@ gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
 static gint
 gst_ogg_demux_submit_buffer (GstOggDemux * ogg, GstBuffer * buffer)
 {
-  guint size;
+  gint size;
   guint8 *data;
   gchar *oggbuffer;
 
@@ -1394,7 +1397,7 @@ gst_ogg_demux_seek (GstOggDemux * ogg, gint64 offset)
 /* read more data from the current offset and submit to
  * the ogg sync layer.
  *
- * Return number of bytes written.
+ * Return number of bytes written or 0 on EOS or -1 on error.
  */
 static gint
 gst_ogg_demux_get_data (GstOggDemux * ogg)
@@ -1405,15 +1408,28 @@ gst_ogg_demux_get_data (GstOggDemux * ogg)
 
   GST_LOG_OBJECT (ogg, "get data %lld %lld", ogg->offset, ogg->length);
   if (ogg->offset == ogg->length)
-    return 0;
+    goto eos;
 
   ret = gst_pad_pull_range (ogg->sinkpad, ogg->offset, CHUNKSIZE, &buffer);
   if (ret != GST_FLOW_OK)
-    return -1;
+    goto error;
 
   size = gst_ogg_demux_submit_buffer (ogg, buffer);
 
   return size;
+
+  /* ERROR */
+eos:
+  {
+    GST_LOG_OBJECT (ogg, "reached EOS");
+    return 0;
+  }
+error:
+  {
+    GST_WARNING_OBJECT (ogg, "got %d (%s) from pull range", ret,
+        gst_flow_get_name (ret));
+    return -1;
+  }
 }
 
 /* Read the next page from the current offset.
@@ -1525,7 +1541,7 @@ gst_ogg_demux_deactivate_current_chain (GstOggDemux * ogg)
   if (chain == NULL)
     return TRUE;
 
-  GST_DEBUG ("deactivating chain %p", chain);
+  GST_DEBUG_OBJECT (ogg, "deactivating chain %p", chain);
 
   /* send EOS on all the pads */
   for (i = 0; i < chain->streams->len; i++) {
@@ -1570,7 +1586,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     return TRUE;
   }
 
-  GST_DEBUG ("activating chain %p", chain);
+  GST_DEBUG_OBJECT (ogg, "activating chain %p", chain);
 
   /* first add the pads */
   for (i = 0; i < chain->streams->len; i++) {
@@ -1591,7 +1607,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
   if (event)
     gst_ogg_demux_send_event (ogg, event);
 
-  GST_DEBUG ("starting chain");
+  GST_DEBUG_OBJECT (ogg, "starting chain");
 
   /* then send out any queued buffers */
   for (i = 0; i < chain->streams->len; i++) {
@@ -1799,6 +1815,8 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
   gboolean update;
 
   if (event) {
+    GST_DEBUG_OBJECT (ogg, "seek with event");
+
     gst_event_parse_seek (event, &rate, &format, &flags,
         &cur_type, &cur, &stop_type, &stop);
 
@@ -1813,7 +1831,10 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
       goto error;
     }
   } else {
+    GST_DEBUG_OBJECT (ogg, "seek without event");
+
     flags = 0;
+    rate = 1.0;
   }
 
   GST_DEBUG_OBJECT (ogg, "seek, rate %g", rate);
@@ -1868,7 +1889,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
         cur_type, cur, stop_type, stop, &update);
   }
 
-  GST_DEBUG ("segment positions set to %" GST_TIME_FORMAT "-%"
+  GST_DEBUG_OBJECT (ogg, "segment positions set to %" GST_TIME_FORMAT "-%"
       GST_TIME_FORMAT, GST_TIME_ARGS (ogg->segment.start),
       GST_TIME_ARGS (ogg->segment.stop));
 
@@ -1978,7 +1999,7 @@ gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
     gst_ogg_demux_seek (ogg, bisect);
     ret = gst_ogg_demux_get_next_page (ogg, &og, -1);
     if (ret == OV_EREAD) {
-      GST_LOG_OBJECT (ogg, "OV_READ");
+      GST_LOG_OBJECT (ogg, "OV_EREAD");
       return OV_EREAD;
     }
 
@@ -2335,7 +2356,7 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
   if (!res || ogg->length <= 0)
     goto no_length;
 
-  GST_DEBUG ("file length %lld", ogg->length);
+  GST_DEBUG_OBJECT (ogg, "file length %lld", ogg->length);
 
   /* read chain from offset 0, this is the first chain of the
    * ogg file. */
@@ -2371,17 +2392,17 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
   /*** error cases ***/
 no_peer:
   {
-    GST_DEBUG ("we don't have a peer");
+    GST_DEBUG_OBJECT (ogg, "we don't have a peer");
     return FALSE;
   }
 no_length:
   {
-    GST_DEBUG ("can't get file length");
+    GST_DEBUG_OBJECT (ogg, "can't get file length");
     return FALSE;
   }
 no_first_chain:
   {
-    GST_DEBUG ("can't get first chain");
+    GST_DEBUG_OBJECT (ogg, "can't get first chain");
     return FALSE;
   }
 }
@@ -2399,7 +2420,7 @@ gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
 
   ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (pad));
 
-  GST_DEBUG ("chain");
+  GST_DEBUG_OBJECT (ogg, "chain");
   gst_ogg_demux_submit_buffer (ogg, buffer);
 
   while (ret != 0 && result == GST_FLOW_OK) {
@@ -2465,7 +2486,7 @@ gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
             newchain->offset = 0;
             /* set new chain begin time aligned with end time of old chain */
             newchain->begin_time = chain_time;
-            GST_DEBUG ("new chain, begin time %" GST_TIME_FORMAT,
+            GST_DEBUG_OBJECT (ogg, "new chain, begin time %" GST_TIME_FORMAT,
                 GST_TIME_ARGS (chain_time));
 
             /* and this is the one we are building now */
