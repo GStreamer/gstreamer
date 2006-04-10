@@ -3285,8 +3285,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   }
 
   /* promote to sampled format */
-  if (stream->fourcc == GST_MAKE_FOURCC ('s', 'a', 'm', 'r'))
+  if (stream->fourcc == GST_MAKE_FOURCC ('s', 'a', 'm', 'r')) {
+    /* force mono 8000 Hz for AMR */
     stream->sampled = TRUE;
+    stream->n_channels = 1;
+    stream->rate = 8000;
+  }
   if (stream->fourcc == GST_MAKE_FOURCC ('m', 'p', '4', 'a'))
     stream->sampled = TRUE;
 
