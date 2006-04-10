@@ -45,6 +45,7 @@
 #endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
 #include "gstosssrc.h"
+#include "common.h"
 
 GST_DEBUG_CATEGORY_EXTERN (oss_debug);
 #define GST_CAT_DEFAULT oss_debug
@@ -248,31 +249,6 @@ ilog2 (gint x)
   return (x & 0x0000003f) - 1;
 }
 
-#define SET_PARAM(_oss, _name, _val)            \
-G_STMT_START {                                  \
-  int _tmp = _val;                              \
-  if (ioctl(_oss->fd, _name, &_tmp) == -1) {    \
-    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ, \
-        ("Unable to set param "G_STRINGIFY (_name)": %s",        \
-                g_strerror (errno)),            \
-        (NULL));                                \
-    return FALSE;                               \
-  }                                             \
-  GST_DEBUG_OBJECT (_oss, G_STRINGIFY (_name)" %d", _tmp);      \
-} G_STMT_END
-
-#define GET_PARAM(_oss, _name, _val)    \
-G_STMT_START {                                  \
-  if (ioctl(oss->fd, _name, _val) == -1) {      \
-    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ, \
-        ("Unable to get param "G_STRINGIFY (_name)": %s",        \
-                g_strerror (errno)),            \
-        (NULL));                                \
-    return FALSE;                               \
-  }                                             \
-  GST_DEBUG_OBJECT (_oss, G_STRINGIFY (_name)" %d", _val);      \
-} G_STMT_END
-
 static gint
 gst_oss_src_get_format (GstBufferFormat fmt)
 {
@@ -388,20 +364,20 @@ gst_oss_src_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
 
   tmp = ilog2 (spec->segsize);
   tmp = ((spec->segtotal & 0x7fff) << 16) | tmp;
-  GST_DEBUG ("set segsize: %d, segtotal: %d, value: %08x", spec->segsize,
-      spec->segtotal, tmp);
+  GST_DEBUG_OBJECT (oss, "set segsize: %d, segtotal: %d, value: %08x",
+      spec->segsize, spec->segtotal, tmp);
 
-  SET_PARAM (oss, SNDCTL_DSP_SETFRAGMENT, tmp);
+  SET_PARAM (oss, SNDCTL_DSP_SETFRAGMENT, tmp, "SETFRAGMENT");
 
-  SET_PARAM (oss, SNDCTL_DSP_RESET, 0);
+  SET_PARAM (oss, SNDCTL_DSP_RESET, 0, "RESET");
 
-  SET_PARAM (oss, SNDCTL_DSP_SETFMT, fmt);
+  SET_PARAM (oss, SNDCTL_DSP_SETFMT, fmt, "SETFMT");
   if (spec->channels == 2)
-    SET_PARAM (oss, SNDCTL_DSP_STEREO, 1);
-  SET_PARAM (oss, SNDCTL_DSP_CHANNELS, spec->channels);
-  SET_PARAM (oss, SNDCTL_DSP_SPEED, spec->rate);
+    SET_PARAM (oss, SNDCTL_DSP_STEREO, 1, "STEREO");
+  SET_PARAM (oss, SNDCTL_DSP_CHANNELS, spec->channels, "CHANNELS");
+  SET_PARAM (oss, SNDCTL_DSP_SPEED, spec->rate, "SPEED");
 
-  GET_PARAM (oss, SNDCTL_DSP_GETISPACE, &info);
+  GET_PARAM (oss, SNDCTL_DSP_GETISPACE, &info, "GETISPACE");
 
   spec->segsize = info.fragsize;
   spec->segtotal = info.fragstotal;
@@ -413,8 +389,8 @@ gst_oss_src_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
   oss->bytes_per_sample = (spec->width / 8) * spec->channels;
   memset (spec->silence_sample, 0, spec->bytes_per_sample);
 
-  GST_DEBUG ("got segsize: %d, segtotal: %d, value: %08x", spec->segsize,
-      spec->segtotal, tmp);
+  GST_DEBUG_OBJECT (oss, "got segsize: %d, segtotal: %d, value: %08x",
+      spec->segsize, spec->segtotal, tmp);
 
   return TRUE;
 
@@ -454,12 +430,12 @@ gst_oss_src_unprepare (GstAudioSrc * asrc)
 
 couldnt_close:
   {
-    GST_DEBUG ("Could not close the audio device");
+    GST_DEBUG_OBJECT (asrc, "Could not close the audio device");
     return FALSE;
   }
 couldnt_reopen:
   {
-    GST_DEBUG ("Could not reopen the audio device");
+    GST_DEBUG_OBJECT (asrc, "Could not reopen the audio device");
     return FALSE;
   }
 }

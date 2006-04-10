@@ -1,3 +1,20 @@
+2006-04-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/oss/Makefile.am:
+	* sys/oss/common.h:
+	* sys/oss/gstosssink.c: (gst_oss_sink_init), (gst_oss_sink_open),
+	(gst_oss_sink_prepare), (gst_oss_sink_unprepare):
+	* sys/oss/gstosssrc.c: (gst_oss_src_prepare),
+	(gst_oss_src_unprepare):
+	  - the user-visible error strings were in the wrong category
+	  - and the messages were not marked for translation
+	  - which is actually a good thing, because they were exactly
+	    the kind of message you would never want anyone to see
+	  - the macros were using variables that didn't exist in the macro
+	    arguments
+	  - and they were obviously copied from each other and then modified
+	  - so a common header makes sense
+
 2006-04-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/ebml-read.c: (gst_ebml_read_sint):

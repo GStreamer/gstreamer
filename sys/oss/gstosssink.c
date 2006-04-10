@@ -43,6 +43,7 @@
 # endif /* HAVE_OSS_INCLUDE_IN_ROOT */
 #endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
+#include "common.h"
 #include "gstosssink.h"
 
 GST_DEBUG_CATEGORY_EXTERN (oss_debug);
@@ -203,7 +204,7 @@ gst_oss_sink_class_init (GstOssSinkClass * klass)
 static void
 gst_oss_sink_init (GstOssSink * osssink)
 {
-  GST_DEBUG ("initializing osssink");
+  GST_DEBUG_OBJECT (osssink, "initializing osssink");
 
   osssink->device = g_strdup (DEFAULT_DEVICE);
   osssink->fd = -1;
@@ -298,30 +299,6 @@ ilog2 (gint x)
   return (x & 0x0000003f) - 1;
 }
 
-#define SET_PARAM(_oss, _name, _val, _detail)   \
-G_STMT_START {                                  \
-  int _tmp = _val;                              \
-  if (ioctl(_oss->fd, _name, &_tmp) == -1) {    \
-    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE, \
-        ("Unable to set param " _detail ": %s",   \
-                   g_strerror (errno)),            \
-        (NULL));                                \
-    return FALSE;                               \
-  }                                             \
-  GST_DEBUG(_detail " %d", _tmp);       \
-} G_STMT_END
-
-#define GET_PARAM(_oss, _name, _val, _detail)   \
-G_STMT_START {                                  \
-  if (ioctl(oss->fd, _name, _val) == -1) {      \
-    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE, \
-        ("Unable to get param " _detail ": %s",    \
-                   g_strerror (errno)),            \
-        (NULL));                                \
-    return FALSE;                               \
-  }                                             \
-} G_STMT_END
-
 static gint
 gst_oss_sink_get_format (GstBufferFormat fmt)
 {
@@ -377,16 +354,26 @@ gst_oss_sink_open (GstAudioSink * asink)
   mode |= O_NONBLOCK;
 
   oss->fd = open (oss->device, mode, 0);
-  if (oss->fd == -1)
-    goto open_failed;
+  if (oss->fd == -1) {
+    switch (errno) {
+      case EBUSY:
+        goto busy;
+      default:
+        goto open_failed;
+    }
+  }
 
   return TRUE;
 
+busy:
+  {
+    GST_ELEMENT_ERROR (oss, RESOURCE, BUSY, (NULL), (NULL));
+    return FALSE;
+  }
+
 open_failed:
   {
-    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
-        ("Unable to open device %s for writing: %s",
-            oss->device, g_strerror (errno)), (NULL));
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE, (NULL), GST_ERROR_SYSTEM);
     return FALSE;
   }
 }
@@ -429,8 +416,8 @@ gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   tmp = ilog2 (spec->segsize);
   tmp = ((spec->segtotal & 0x7fff) << 16) | tmp;
-  GST_DEBUG ("set segsize: %d, segtotal: %d, value: %08x", spec->segsize,
-      spec->segtotal, tmp);
+  GST_DEBUG_OBJECT (oss, "set segsize: %d, segtotal: %d, value: %08x",
+      spec->segsize, spec->segtotal, tmp);
 
   SET_PARAM (oss, SNDCTL_DSP_SETFRAGMENT, tmp, "SETFRAGMENT");
   GET_PARAM (oss, SNDCTL_DSP_GETOSPACE, &info, "GETOSPACE");
@@ -442,28 +429,28 @@ gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   oss->bytes_per_sample = (spec->width / 8) * spec->channels;
   memset (spec->silence_sample, 0, spec->bytes_per_sample);
 
-  GST_DEBUG ("got segsize: %d, segtotal: %d, value: %08x", spec->segsize,
-      spec->segtotal, tmp);
+  GST_DEBUG_OBJECT (oss, "got segsize: %d, segtotal: %d, value: %08x",
+      spec->segsize, spec->segtotal, tmp);
 
   return TRUE;
 
 non_block:
   {
-    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
+    GST_ELEMENT_ERROR (oss, RESOURCE, SETTINGS, (NULL),
         ("Unable to set device %s in non blocking mode: %s",
-            oss->device, g_strerror (errno)), (NULL));
+            oss->device, g_strerror (errno)));
     return FALSE;
   }
 wrong_format:
   {
-    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
-        ("Unable to get format %d", spec->format), (NULL));
+    GST_ELEMENT_ERROR (oss, RESOURCE, SETTINGS, (NULL),
+        ("Unable to get format %d", spec->format));
     return FALSE;
   }
 dodgy_width:
   {
-    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
-        ("unexpected width %d", spec->width), (NULL));
+    GST_ELEMENT_ERROR (oss, RESOURCE, SETTINGS, (NULL),
+        ("unexpected width %d", spec->width));
     return FALSE;
   }
 }
@@ -483,12 +470,12 @@ gst_oss_sink_unprepare (GstAudioSink * asink)
 
 couldnt_close:
   {
-    GST_DEBUG ("Could not close the audio device");
+    GST_DEBUG_OBJECT (asink, "Could not close the audio device");
     return FALSE;
   }
 couldnt_reopen:
   {
-    GST_DEBUG ("Could not reopen the audio device");
+    GST_DEBUG_OBJECT (asink, "Could not reopen the audio device");
     return FALSE;
   }
 }
