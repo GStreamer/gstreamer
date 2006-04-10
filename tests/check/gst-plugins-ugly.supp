@@ -69,4 +69,114 @@
    fun:gst_pad_push
 }
 
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:Levinson
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
 
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:Az_lsp
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:acos
+   fun:Lsp_lsf
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:Lsf_wt
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:Vq_subvec
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:Lag_max
+   fun:Pitch_ol
+   fun:ol_ltp
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:Pitch_ol
+   fun:ol_ltp
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:cl_ltp
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:searchFrac
+   fun:cl_ltp
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:q_gain_pitch
+   fun:cl_ltp
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:set_sign12k2
+   fun:code_10i40_35bits
+   fun:cbsearch
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:code_10i40_35bits
+   fun:cbsearch
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+
+{
+   <AMR encoder>
+   Memcheck:Cond
+   fun:gainQuant
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
