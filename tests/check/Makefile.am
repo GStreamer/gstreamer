@@ -60,7 +60,7 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 # valgrind testing
 VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
 
-SUPPRESSIONS = $(top_srcdir)/common/gst.supp
+SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-base.supp
 
 libs_cddabasesrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
@@ -69,3 +69,5 @@ libs_cddabasesrc_LDADD = \
 libs_cddabasesrc_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	$(CFLAGS) $(AM_CFLAGS)
+
+EXTRA_DIST = gst-plugins-base.supp

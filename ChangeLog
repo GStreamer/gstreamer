@@ -1,3 +1,10 @@
+2006-04-10  Michael Smith  <msmith@fluendo.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst-plugins-base.supp:
+	  Suppress an old libtheora bug (fixed in more recent versions), so 
+	  that FC4 buildslaves can pass.
+
 2006-04-10  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_src_query),

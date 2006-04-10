@@ -1,0 +1,12 @@
+# A suppression for an old bug in libtheora (fixed in more recent versions,
+# but some of our buildslaves still have this)
+{
+   <Leaky libtheora>
+   Memcheck:Leak
+   fun:realloc
+   fun:oggpackB_write
+   fun:EncodeData
+   obj:/usr/lib/libtheora.so*
+   fun:theora_encode_YUVin
+}
+
