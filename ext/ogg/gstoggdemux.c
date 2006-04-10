@@ -167,6 +167,7 @@ struct _GstOggDemux
   GMutex *chain_lock;           /* we need the lock to protect the chains */
   GArray *chains;               /* list of chains we know */
   GstClockTime total_time;
+  GstFlowReturn chain_error;    /* error we received while finding chains */
 
   GstOggChain *current_chain;
   GstOggChain *building_chain;
@@ -391,7 +392,7 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
   GstOggDemux *ogg;
   GstOggPad *cur;
 
-  ogg = GST_OGG_DEMUX (GST_PAD_PARENT (pad));
+  ogg = GST_OGG_DEMUX (gst_pad_get_parent (pad));
   cur = GST_OGG_PAD (pad);
 
   switch (GST_QUERY_TYPE (query)) {
@@ -401,12 +402,11 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_duration (query, &format, NULL);
       /* can only get position in time */
-      if (format != GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (ogg, "only query duration on TIME is supported");
-        res = FALSE;
-        goto done;
-      }
+      if (format != GST_FORMAT_TIME)
+        goto wrong_format;
+
       /* can only return the total time position */
+      /* FIXME, return time for this specific stream */
       gst_query_set_duration (query, GST_FORMAT_TIME, ogg->total_time);
       break;
     }
@@ -415,7 +415,17 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 done:
+  gst_object_unref (ogg);
+
   return res;
+
+  /* ERRORS */
+wrong_format:
+  {
+    GST_DEBUG_OBJECT (ogg, "only query duration on TIME is supported");
+    res = FALSE;
+    goto done;
+  }
 }
 
 static gboolean
@@ -428,7 +438,6 @@ gst_ogg_demux_receive_event (GstElement * element, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-    {
       /* can't seek if we are not seekable, FIXME could pass the
        * seek query upstream after converting it to bytes using
        * the average bitrate of the stream. */
@@ -439,13 +448,11 @@ gst_ogg_demux_receive_event (GstElement * element, GstEvent * event)
 
       /* now do the seek */
       res = gst_ogg_demux_perform_seek (ogg, event);
+      gst_event_unref (event);
       break;
-
-    }
     default:
       GST_DEBUG_OBJECT (ogg, "We only handle seek events here");
       goto error;
-      break;
   }
 
   return res;
@@ -466,12 +473,11 @@ gst_ogg_pad_event (GstPad * pad, GstEvent * event)
   GstOggDemux *ogg;
   GstOggPad *cur;
 
-  ogg = GST_OGG_DEMUX (GST_PAD_PARENT (pad));
+  ogg = GST_OGG_DEMUX (gst_pad_get_parent (pad));
   cur = GST_OGG_PAD (pad);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-    {
       /* can't seek if we are not seekable, FIXME could pass the
        * seek query upstream after converting it to bytes using
        * the average bitrate of the stream. */
@@ -482,12 +488,15 @@ gst_ogg_pad_event (GstPad * pad, GstEvent * event)
 
       /* now do the seek */
       res = gst_ogg_demux_perform_seek (ogg, event);
+      gst_event_unref (event);
       break;
-    }
     default:
       res = gst_pad_event_default (pad, event);
       break;
   }
+done:
+  gst_object_unref (ogg);
+
   return res;
 
   /* ERRORS */
@@ -495,7 +504,8 @@ error:
   {
     GST_DEBUG_OBJECT (ogg, "error handling event");
     gst_event_unref (event);
-    return FALSE;
+    res = FALSE;
+    goto done;
   }
 }
 
@@ -1266,7 +1276,7 @@ static GstOggChain *gst_ogg_demux_read_chain (GstOggDemux * ogg);
 static gint gst_ogg_demux_read_end_chain (GstOggDemux * ogg,
     GstOggChain * chain);
 
-static gboolean gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event);
+static gboolean gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event);
 static void gst_ogg_demux_loop (GstOggPad * pad);
 static GstFlowReturn gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_ogg_demux_sink_activate (GstPad * sinkpad);
@@ -1314,7 +1324,7 @@ gst_ogg_demux_init (GstOggDemux * ogg, GstOggDemuxClass * g_class)
       gst_pad_new_from_static_template (&ogg_demux_sink_template_factory,
       "sink");
 
-  gst_pad_set_event_function (ogg->sinkpad, gst_ogg_demux_handle_event);
+  gst_pad_set_event_function (ogg->sinkpad, gst_ogg_demux_sink_event);
   gst_pad_set_chain_function (ogg->sinkpad, gst_ogg_demux_chain);
   gst_pad_set_activate_function (ogg->sinkpad, gst_ogg_demux_sink_activate);
   gst_pad_set_activatepull_function (ogg->sinkpad,
@@ -1338,25 +1348,33 @@ gst_ogg_demux_finalize (GObject * object)
   g_mutex_free (ogg->chain_lock);
   ogg_sync_clear (&ogg->sync);
 
-  if (G_OBJECT_CLASS (parent_class)->finalize)
-    G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
-gst_ogg_demux_handle_event (GstPad * pad, GstEvent * event)
+gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstOggDemux *ogg = GST_OGG_DEMUX (GST_PAD_PARENT (pad));
+  gboolean res;
+  GstOggDemux *ogg;
+
+  ogg = GST_OGG_DEMUX (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
+      /* FIXME */
       GST_DEBUG_OBJECT (ogg, "got a new segment event");
       ogg_sync_reset (&ogg->sync);
       gst_event_unref (event);
+      res = TRUE;
       break;
+    case GST_EVENT_EOS:
     default:
-      return gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, event);
+      break;
   }
-  return TRUE;
+  gst_object_unref (ogg);
+
+  return res;
 }
 
 /* submit the given buffer to the ogg sync.
@@ -1428,6 +1446,7 @@ error:
   {
     GST_WARNING_OBJECT (ogg, "got %d (%s) from pull range", ret,
         gst_flow_get_name (ret));
+    ogg->chain_error = ret;
     return -1;
   }
 }
@@ -1801,6 +1820,7 @@ seek_error:
   }
 }
 
+/* does not take ownership of the event */
 static gboolean
 gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
 {
@@ -2568,6 +2588,7 @@ gst_ogg_demux_loop (GstOggPad * pad)
 
     /* this is the only place where we write chains */
     GST_CHAIN_LOCK (ogg);
+    ogg->chain_error = GST_FLOW_OK;
     got_chains = gst_ogg_demux_find_chains (ogg);
     GST_CHAIN_UNLOCK (ogg);
     if (!got_chains)
@@ -2583,6 +2604,8 @@ gst_ogg_demux_loop (GstOggPad * pad)
 
     /* and seek to configured positions without FLUSH */
     gst_ogg_demux_perform_seek (ogg, event);
+    if (event)
+      gst_event_unref (event);
   }
 
   GST_LOG_OBJECT (ogg, "pull data %lld", ogg->offset);
@@ -2625,7 +2648,7 @@ gst_ogg_demux_loop (GstOggPad * pad)
 chain_read_failed:
   {
     GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL), ("could not read chains"));
-    ret = GST_FLOW_ERROR;
+    ret = ogg->chain_error;
     goto pause;
   }
 pause:

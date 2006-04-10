@@ -1,5 +1,16 @@
 2006-04-10  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_src_query),
+	(gst_ogg_demux_receive_event), (gst_ogg_pad_event),
+	(gst_ogg_demux_init), (gst_ogg_demux_finalize),
+	(gst_ogg_demux_sink_event), (gst_ogg_demux_get_data),
+	(gst_ogg_demux_loop):
+	Don't leak events.
+	Remember what error we got when finding chains, if we
+	were shutdown, that would not be an error.
+
+2006-04-10  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
 	(gst_base_audio_sink_event):
 	Starting the ringbuffer when we did not acquire it can cause
