@@ -86,7 +86,7 @@ _wrap_GstBaseSrc__proxy_do_create (GstBaseSrc * self,
       }
       
       if (py_flow == Py_None) {
-	  GST_ERROR ("WHAT THE HEL????");
+	  GST_ERROR ("None return flow is not valid");
 	  goto beach;
       }
 
@@ -257,6 +257,194 @@ _wrap_GstBaseSrc__do_get_size (PyObject *cls, PyObject *args, PyObject *kwargs)
     g_type_class_unref(klass);
     
     py_ret = PyLong_FromUnsignedLongLong(size);
+
+    return py_ret;
+}
+%%
+override GstBaseSrc__proxy_do_get_times
+static void
+_wrap_GstBaseSrc__proxy_do_get_times (GstBaseSrc * self,
+				      GstBuffer *buffer,
+				      GstClockTime * start,
+				      GstClockTime * end)
+{
+    PyGILState_STATE __py_state;
+    PyObject *py_args;
+    PyObject *py_self;
+    PyObject *py_method;
+    PyObject *py_ret;
+    
+    __py_state = pyg_gil_state_ensure();
+    
+    py_self = pygobject_new((GObject *) self);
+    if (!py_self) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+	return;
+    }
+
+    py_args = Py_BuildValue ("(N)",
+			     pygstminiobject_new((GstMiniObject *)buffer));
+    
+    py_method = PyObject_GetAttrString(py_self, "do_get_times");
+    
+    Py_DECREF(py_self);
+
+    if (!py_method) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+	goto beach;
+    }
+
+    py_ret = PyObject_CallObject(py_method, py_args);
+
+    Py_DECREF(py_method);
+
+    if (!py_ret) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+	goto beach;
+    }
+
+    /*
+      If the method returned a numeric, the return value will be TRUE.
+      For ANY other case, we don't set size and the return value is FALSE.
+    */
+
+    if ((PyTuple_Check(py_ret)) && (PyTuple_Size (py_ret) == 2))
+	PyArg_ParseTuple (py_ret, "KK", start, end);
+
+    Py_DECREF (py_ret);
+ beach:
+    Py_DECREF (py_args);
+    pyg_gil_state_release(__py_state);
+    return;
+}
+%%
+override GstBaseSrc__do_get_times kwargs
+static PyObject *
+_wrap_GstBaseSrc__do_get_times (PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    gpointer klass;
+    static char *kwlist[] = { "self", "buffer", NULL };
+    PyGObject *self;
+    PyGstMiniObject *py_buffer;
+    GstClockTime start = 0;
+    GstClockTime end = 0;
+    PyObject *py_ret;
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!:GstBaseSrc.get_times",
+				     kwlist, &PyGstBaseSrc_Type, &self,
+				     &PyGstBuffer_Type, &py_buffer))
+	return NULL;
+    klass = g_type_class_ref(pyg_type_from_object(cls));
+    if (GST_BASE_SRC_CLASS(klass)->get_times)
+	GST_BASE_SRC_CLASS(klass)->get_times(GST_BASE_SRC(self->obj),
+					     GST_BUFFER(py_buffer->obj),
+					     &start, &end);
+    else {
+      PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBaseSrc.get_times not implemented");
+      g_type_class_unref(klass);
+      return NULL;
+    }
+    g_type_class_unref(klass);
+    
+    py_ret = PyTuple_New(2);
+    PyTuple_SetItem(py_ret, 0, PyLong_FromUnsignedLongLong(start));
+    PyTuple_SetItem(py_ret, 1, PyLong_FromUnsignedLongLong(end));
+
+    return py_ret;
+}
+%%
+override GstPushSrc__proxy_do_create
+static GstFlowReturn
+_wrap_GstPushSrc__proxy_do_create (GstPushSrc * self,
+				   GstBuffer **buffer)
+{
+    PyGILState_STATE __py_state;
+    PyObject *py_self;
+    PyObject *py_method;
+    PyObject *py_ret;
+    PyGstMiniObject *py_buffer;
+    PyObject *py_flow;
+    GstFlowReturn ret = GST_FLOW_OK;
+    
+    __py_state = pyg_gil_state_ensure();
+    
+    py_self = pygobject_new((GObject *) self);
+    if (!py_self) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+	goto beach;
+    }
+
+    py_method = PyObject_GetAttrString(py_self, "do_create");
+    
+    Py_DECREF(py_self);
+
+    if (!py_method) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+	goto beach;
+    }
+
+    py_ret = PyObject_CallObject(py_method, NULL);
+
+    Py_DECREF(py_method);
+
+    if (!py_ret) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+	goto beach;
+    }
+
+    /*
+      If the method returned a numeric, the return value will be TRUE.
+      For ANY other case, we don't set size and the return value is FALSE.
+    */
+
+    if ((PyTuple_Check(py_ret)) && (PyTuple_Size (py_ret) == 2)) {
+	PyArg_ParseTuple (py_ret, "O!O!", &py_flow,
+			  &PyGstBuffer_Type, &py_buffer);
+	*buffer = GST_BUFFER (((PyGstMiniObject*) self)->obj);
+	gst_buffer_ref (*buffer);
+	pyg_enum_get_value(GST_TYPE_FLOW_RETURN, py_flow, (gint*)&ret);
+    }
+
+    Py_DECREF (py_ret);
+ beach:
+    pyg_gil_state_release(__py_state);
+    return ret;
+}
+%%
+override GstPushSrc__do_create kwargs
+static PyObject *
+_wrap_GstPushSrc__do_create (PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    gpointer klass;
+    static char *kwlist[] = { "self", NULL };
+    PyGObject *self;
+    GstBuffer *buffer;
+    GstFlowReturn flow;
+    PyObject *py_ret;
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!:GstPushSrc.create",
+				     kwlist, &PyGstPushSrc_Type, &self))
+	return NULL;
+    klass = g_type_class_ref(pyg_type_from_object(cls));
+    if (GST_PUSH_SRC_CLASS(klass)->create)
+	flow = GST_PUSH_SRC_CLASS(klass)->create(GST_PUSH_SRC(self->obj),
+						 (GstBuffer**) &buffer);
+    else {
+      PyErr_SetString(PyExc_NotImplementedError, "virtual method GstPushSrc.create not implemented");
+      g_type_class_unref(klass);
+      return NULL;
+    }
+    g_type_class_unref(klass);
+    
+    py_ret = PyTuple_New(2);
+    PyList_SetItem(py_ret, 0, pyg_enum_from_gtype(GST_TYPE_FLOW_RETURN, flow));
+    PyList_SetItem(py_ret, 1, pygstminiobject_new(GST_MINI_OBJECT(buffer)));
 
     return py_ret;
 }

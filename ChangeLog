@@ -1,3 +1,14 @@
+2006-04-10  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/argtypes.py:
+	Update from upstream codegen for UInt argtype.
+	* gst/gst-types.defs:
+	Added GstIndexEntry boxed type.
+	* gst/gstbase.override:
+	Wrapped gst.BaseSrc::get_times() and gst.PushSrc::create() virtual
+	methods.
+	gst.BaseSrc and gst.PushSrc virtual methods are now completely wrapped.
+
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* testsuite/test-object.h:

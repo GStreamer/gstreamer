@@ -175,16 +175,36 @@ class IntArg(ArgType):
         info.codeafter.append('    return PyInt_FromLong(ret);')
 
 class UIntArg(ArgType):
+    dflt = ('    if (py_%(name)s) {\n'
+            '        if (PyLong_Check(py_%(name)s))\n'
+            '            %(name)s = PyLong_AsUnsignedLong(py_%(name)s);\n'
+            '        else if (PyInt_Check(py_%(name)s))\n'
+            '            %(name)s = PyInt_AsLong(py_%(name)s);\n'
+            '        else\n'
+            '            PyErr_SetString(PyExc_TypeError, "Parameter \'%(name)s\' must be an int or a long");\n'
+            '        if (PyErr_Occurred())\n'
+            '            return NULL;\n'
+            '    }\n')
+    before = ('    if (PyLong_Check(py_%(name)s))\n'
+              '        %(name)s = PyLong_AsUnsignedLong(py_%(name)s);\n'
+              '    else if (PyInt_Check(py_%(name)s))\n'
+              '        %(name)s = PyInt_AsLong(py_%(name)s);\n'
+              '    else\n'
+              '        PyErr_SetString(PyExc_TypeError, "Parameter \'%(name)s\' must be an int or a long");\n'
+              '    if (PyErr_Occurred())\n'
+              '        return NULL;\n')
     def write_param(self, ptype, pname, pdflt, pnull, keeprefcount, info):
-	if pdflt:
-	    info.varlist.add(ptype, pname + ' = ' + pdflt)
-	else:
-	    info.varlist.add(ptype, pname)
-	info.arglist.append(pname)
-        info.add_parselist('I', ['&' + pname], [pname])
+        if not pdflt:
+            pdflt = '0';
+
+        info.varlist.add(ptype, pname + ' = ' + pdflt)
+        info.codebefore.append(self.dflt % {'name':pname})
+        info.varlist.add('PyObject', "*py_" + pname + ' = NULL')
+        info.arglist.append(pname)
+        info.add_parselist('O', ['&py_' + pname], [pname])
     def write_return(self, ptype, ownsreturn, info):
         info.varlist.add(ptype, 'ret')
-        info.codeafter.append('    return PyLong_FromUnsignedLong(ret);\n')
+        info.codeafter.append('    return PyLong_FromUnsignedLong(ret);')
 
 class SizeArg(ArgType):
 

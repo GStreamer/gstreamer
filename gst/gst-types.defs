@@ -277,6 +277,12 @@
   )
 )
 
+(define-boxed IndexEntry
+  (in-module "Gst")
+  (c-name "GstIndexEntry")
+  (gtype-id "GST_TYPE_INDEX_ENTRY")
+)
+
 (define-pointer StaticPadTemplate
   (in-module "Gst")
   (c-name "GstStaticPadTemplate")
