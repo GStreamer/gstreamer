@@ -220,15 +220,15 @@ check_headers ()
   fail_unless_equals_int (g_list_length (current_buf), 3);
 
   /* check the ident header */
-  check_output_buffer_is_equal ("cmml-ident-buffer", IDENT_HEADER, 2);
+  check_output_buffer_is_equal ("cmml-ident-buffer", IDENT_HEADER, 1);
 
   /* check the cmml processing instruction */
   current_buf = current_buf->next;
-  check_output_buffer_is_equal ("cmml-preamble-buffer", PREAMBLE_ENCODED, 2);
+  check_output_buffer_is_equal ("cmml-preamble-buffer", PREAMBLE_ENCODED, 1);
 
   /* check the encoded head tag */
   current_buf = current_buf->next;
-  check_output_buffer_is_equal ("head-tag-buffer", HEAD_TAG_ENCODED, 2);
+  check_output_buffer_is_equal ("head-tag-buffer", HEAD_TAG_ENCODED, 1);
 }
 
 static void

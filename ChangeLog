@@ -1,3 +1,15 @@
+2006-04-10  Michael Smith  <msmith@fluendo.com>
+
+	* ext/annodex/gstcmmlenc.c: (gst_cmml_enc_set_header_on_caps):
+	  Use copies of header buffers for caps to avoid circular refcounting
+	  problems (as in theoradec, vorbisdec).
+
+	* tests/check/elements/cmmldec.c: (GST_START_TEST):
+	  Fix a typo in test that meant it was testing the wrong thing.
+
+	* tests/check/elements/cmmlenc.c: (check_headers):
+	  Fix refcount checks now that we use buffer-copies for caps.
+
 2006-04-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_base_init),

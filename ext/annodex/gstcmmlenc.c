@@ -315,6 +315,7 @@ gst_cmml_enc_set_header_on_caps (GstCmmlEnc * enc, GstCaps * caps,
   GValue array = { 0 };
   GValue value = { 0 };
   GstStructure *structure;
+  GstBuffer *buffer;
 
   caps = gst_caps_make_writable (caps);
   structure = gst_caps_get_structure (caps, 0);
@@ -322,12 +323,21 @@ gst_cmml_enc_set_header_on_caps (GstCmmlEnc * enc, GstCaps * caps,
   g_value_init (&array, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
 
-  gst_value_set_buffer (&value, ident);
+  /* Make copies of header buffers to avoid circular references */
+  buffer = gst_buffer_copy (ident);
+  gst_value_set_buffer (&value, buffer);
   gst_value_array_append_value (&array, &value);
-  gst_value_set_buffer (&value, preamble);
+  gst_buffer_unref (buffer);
+
+  buffer = gst_buffer_copy (preamble);
+  gst_value_set_buffer (&value, buffer);
   gst_value_array_append_value (&array, &value);
-  gst_value_set_buffer (&value, head);
+  gst_buffer_unref (buffer);
+
+  buffer = gst_buffer_copy (head);
+  gst_value_set_buffer (&value, buffer);
   gst_value_array_append_value (&array, &value);
+  gst_buffer_unref (buffer);
 
   GST_BUFFER_FLAG_SET (ident, GST_BUFFER_FLAG_IN_CAPS);
   GST_BUFFER_FLAG_SET (preamble, GST_BUFFER_FLAG_IN_CAPS);

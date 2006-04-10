@@ -312,7 +312,7 @@ GST_START_TEST (test_tags)
   fail_unless (tag_val != NULL);
 
   tag = g_value_get_object (tag_val);
-  fail_unless (tags != NULL);
+  fail_unless (tag != NULL);
 
   g_object_get (tag, "title", &title, "base-uri", &base, "meta", &meta, NULL);
   fail_unless_equals_string ("The Research Hunter", title);
