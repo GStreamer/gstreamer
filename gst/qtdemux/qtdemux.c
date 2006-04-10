@@ -105,6 +105,8 @@ struct _QtDemuxStream
   guint32 n_samples;
   QtDemuxSample *samples;
   gboolean all_keyframe;        /* TRUE when all samples are keyframes (no stss) */
+  guint32 min_duration;         /* duration of dirst sample, used for figuring out
+                                   the framerate, in timescale units */
 
   /* if we use chunks or samples */
   gboolean sampled;
@@ -1757,16 +1759,17 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
         gst_pad_new_from_static_template (&gst_qtdemux_videosrc_template, name);
     g_free (name);
 
-    /* guess fps, FIXME */
-    if ((stream->n_samples == 1) && (stream->samples[0].duration == 0)) {
+    /* fps is calculated base on the duration of the first frames since
+     * qt does not have a fixed framerate. */
+    if ((stream->n_samples == 1) && (stream->min_duration == 0)) {
       stream->fps_n = 0;
       stream->fps_d = 1;
     } else {
       stream->fps_n = stream->timescale;
-      if (stream->samples[0].duration == 0)
+      if (stream->min_duration == 0)
         stream->fps_d = 1;
       else
-        stream->fps_d = stream->samples[0].duration;
+        stream->fps_d = stream->min_duration;
     }
 
     if (stream->caps) {
@@ -3368,6 +3371,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     n_sample_times = QTDEMUX_GUINT32_GET (stts->data + 12);
     timestamp = 0;
+    stream->min_duration = 0;
     time = 0;
     index = 0;
     for (i = 0; i < n_sample_times; i++) {
@@ -3381,6 +3385,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             index, GST_TIME_ARGS (timestamp));
 
         samples[index].timestamp = timestamp;
+        /* take first duration for fps */
+        if (stream->min_duration == 0)
+          stream->min_duration = duration;
         /* add non-scaled values to avoid rounding errors */
         time += duration;
         timestamp = gst_util_uint64_scale_int (time,
