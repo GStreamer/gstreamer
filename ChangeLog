@@ -1,5 +1,14 @@
 2006-04-10  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_event):
+	Starting the ringbuffer when we did not acquire it can cause
+	a deadlock, is pointless and causes nasty things for
+	subclasses. 
+	Fixes gst-launch audiotestsrc num-buffers=0 ! alsasink.
+
+2006-04-10  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_src_query),
 	(gst_ogg_demux_receive_event), (gst_ogg_pad_event),
 	(gst_ogg_demux_chain_peer), (gst_ogg_pad_submit_packet),

@@ -402,8 +402,10 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       break;
     case GST_EVENT_EOS:
-      /* need to start playback when we reach EOS */
-      gst_ring_buffer_start (sink->ringbuffer);
+      /* need to start playback when we reach EOS, but only when
+       * we have successfully negotiated a format. */
+      if (gst_ring_buffer_is_acquired (sink->ringbuffer))
+        gst_ring_buffer_start (sink->ringbuffer);
       /* now wait till we played everything */
       gst_base_audio_sink_drain (sink);
       break;
