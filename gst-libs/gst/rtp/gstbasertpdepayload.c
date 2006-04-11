@@ -164,6 +164,10 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter, gpointer g_class)
 static void
 gst_base_rtp_depayload_finalize (GObject * object)
 {
+  GstBuffer *buf;
+
+  while ((buf = g_queue_pop_head (GST_BASE_RTP_DEPAYLOAD (object)->queue)))
+    gst_buffer_unref (buf);
   g_queue_free (GST_BASE_RTP_DEPAYLOAD (object)->queue);
 
   if (G_OBJECT_CLASS (parent_class)->finalize)
@@ -321,12 +325,12 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * rtp_buf)
     bclass->set_gst_timestamp (filter, gst_rtp_buffer_get_timestamp (rtp_buf),
         out_buf);
     /* push it */
-    GST_DEBUG_OBJECT (filter, "Pushing buffer size %d, timestamp %u",
+    GST_LOG_OBJECT (filter, "Pushing buffer size %d, timestamp %u",
         GST_BUFFER_SIZE (out_buf), GST_BUFFER_TIMESTAMP (out_buf));
     gst_pad_push (filter->srcpad, GST_BUFFER (out_buf));
-    gst_buffer_unref (rtp_buf);
-    GST_DEBUG_OBJECT (filter, "Pushed buffer");
+    GST_LOG_OBJECT (filter, "Pushed buffer");
   }
+  gst_buffer_unref (rtp_buf);
 }
 
 static void

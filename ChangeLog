@@ -1,3 +1,14 @@
+2006-04-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Antoine Tremblay  <hexa00 at gmail dot com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_finalize), (gst_base_rtp_depayload_push):
+	  Fix some memory leaks: on finalize, free buffers left in the queue
+	  before destroying the queue; in _push(), unref rtp_buf even if
+	  the process vfunc returned a NULL buffer as output buffer (#337548);
+	  demote some recuring debug messages to LOG level.
+
 2006-04-11  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_src_query),
