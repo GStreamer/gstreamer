@@ -3,7 +3,7 @@
 
 Name: 		%{gstreamer}
 Version: 	@VERSION@
-Release: 	@GST_VERSION_RELEASE@
+Release: 	@PACKAGE_VERSION_RELEASE@
 Summary: 	GStreamer streaming media framework runtime
 
 Group: 		Applications/Multimedia
@@ -134,7 +134,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstcontroller-%{majorminor}.so.*
 %{_libdir}/libgstdataprotocol-%{majorminor}.so.*
 %{_libdir}/libgstnet-%{majorminor}.so.*
-# %{_libdir}/libgstcheck-%{majorminor}.so.*
+%{_libdir}/libgstcheck-0.10.so.*
 %dir %{_libdir}/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstcoreelements.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcoreindexers.so
@@ -142,14 +142,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-feedback-%{majorminor}
 %{_bindir}/gst-inspect-%{majorminor}
 %{_bindir}/gst-launch-%{majorminor}
-%{_bindir}/gst-md5sum-%{majorminor}
 %{_bindir}/gst-typefind-%{majorminor}
 %{_bindir}/gst-xmlinspect-%{majorminor}
 %{_bindir}/gst-xmllaunch-%{majorminor}
 %{_mandir}/man1/gst-feedback-%{majorminor}.*
 %{_mandir}/man1/gst-inspect-%{majorminor}.*
 %{_mandir}/man1/gst-launch-%{majorminor}.*
-%{_mandir}/man1/gst-md5sum-%{majorminor}.*
 %{_mandir}/man1/gst-typefind-%{majorminor}.*
 %{_mandir}/man1/gst-xmlinspect-%{majorminor}.*
 %{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
@@ -161,7 +159,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-feedback
 %{_bindir}/gst-inspect
 %{_bindir}/gst-launch
-%{_bindir}/gst-md5sum
 %{_bindir}/gst-typefind
 %{_bindir}/gst-xmlinspect
 %{_bindir}/gst-xmllaunch
@@ -179,13 +176,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/net/gstnettimeprovider.h
 %{_includedir}/gstreamer-%{majorminor}/gst/base
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
-# %{_includedir}/gstreamer-%{majorminor}/gst/check/gstcheck.h
+%{_includedir}/gstreamer-%{majorminor}/gst/check/gstcheck.h
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstdataprotocol-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
 %{_libdir}/libgstcontroller-%{majorminor}.so
 %{_libdir}/libgstnet-%{majorminor}.so
-# %{_libdir}/libgstcheck-%{majorminor}.so
+%{_libdir}/libgstcheck-%{majorminor}.so
 
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
@@ -193,7 +190,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/gstreamer-dataprotocol-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-controller-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-net-%{majorminor}.pc
-# %{_libdir}/pkgconfig/gstreamer-check-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-check-%{majorminor}.pc
 
 %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
 %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
