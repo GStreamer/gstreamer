@@ -1,5 +1,11 @@
 2006-04-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/rtp/gstrtpmp4vdepay.c: (gst_rtp_mp4v_depay_process):
+	  Don't leak memory allocated by gst_buffer_new_and_alloc() by
+	  overwriting GST_BUFFER_MALLOCDATA.
+
+2006-04-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/libpng/gstpngdec.c: (gst_pngdec_init),
 	(user_endrow_callback), (user_end_callback),
 	(gst_pngdec_caps_create_and_set), (gst_pngdec_chain),

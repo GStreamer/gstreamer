@@ -203,8 +203,8 @@ gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
       avail = gst_adapter_available (rtpmp4vdepay->adapter);
 
-      outbuf = gst_buffer_new_and_alloc (avail);
-
+      outbuf = gst_buffer_new ();
+      GST_BUFFER_SIZE (outbuf) = avail;
       GST_BUFFER_MALLOCDATA (outbuf) =
           gst_adapter_take (rtpmp4vdepay->adapter, avail);
       GST_BUFFER_DATA (outbuf) = GST_BUFFER_MALLOCDATA (outbuf);
