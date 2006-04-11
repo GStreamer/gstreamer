@@ -41,6 +41,8 @@ struct _GstPngDec
 
   GstPad *sinkpad, *srcpad;
 
+  gboolean need_newsegment;
+
   /* Progressive */
   GstBuffer *buffer_out;
   GstFlowReturn ret;
@@ -60,6 +62,11 @@ struct _GstPngDec
   gint color_type;
   gint fps_n;
   gint fps_d;
+
+  /* Chain */
+  gboolean framed;
+  GstClockTime in_timestamp;
+  GstClockTime in_duration;
 };
 
 struct _GstPngDecClass

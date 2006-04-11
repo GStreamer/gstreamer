@@ -53,6 +53,7 @@ static GstFlowReturn gst_pngdec_caps_create_and_set (GstPngDec * pngdec);
 static void gst_pngdec_task (GstPad * pad);
 static GstFlowReturn gst_pngdec_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_pngdec_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_pngdec_sink_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -122,7 +123,6 @@ gst_pngdec_class_init (GstPngDecClass * klass)
   GST_DEBUG_CATEGORY_INIT (pngdec_debug, "pngdec", 0, "PNG image decoder");
 }
 
-
 static void
 gst_pngdec_init (GstPngDec * pngdec)
 {
@@ -135,14 +135,13 @@ gst_pngdec_init (GstPngDec * pngdec)
       gst_pngdec_sink_activate_pull);
   gst_pad_set_chain_function (pngdec->sinkpad, gst_pngdec_chain);
   gst_pad_set_event_function (pngdec->sinkpad, gst_pngdec_sink_event);
+  gst_pad_set_setcaps_function (pngdec->sinkpad, gst_pngdec_sink_setcaps);
   gst_element_add_pad (GST_ELEMENT (pngdec), pngdec->sinkpad);
 
   pngdec->srcpad =
       gst_pad_new_from_static_template (&gst_pngdec_src_pad_template, "src");
   gst_pad_use_fixed_caps (pngdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (pngdec), pngdec->srcpad);
-
-  /* gst_pad_set_chain_function (pngdec->sinkpad, gst_pngdec_chain); */
 
   pngdec->buffer_out = NULL;
   pngdec->png = NULL;
@@ -156,6 +155,9 @@ gst_pngdec_init (GstPngDec * pngdec)
   pngdec->bpp = -1;
   pngdec->fps_n = 0;
   pngdec->fps_d = 1;
+
+  pngdec->in_timestamp = GST_CLOCK_TIME_NONE;
+  pngdec->in_duration = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -235,11 +237,31 @@ user_end_callback (png_structp png_ptr, png_infop info)
 
   pngdec = GST_PNGDEC (png_ptr->io_ptr);
 
-  GST_LOG ("and we are done reading this image, pushing it and setting eos");
+  GST_LOG_OBJECT (pngdec, "and we are done reading this image");
 
-  /* Push our buffer and then EOS */
+  if (GST_CLOCK_TIME_IS_VALID (pngdec->in_timestamp))
+    GST_BUFFER_TIMESTAMP (pngdec->buffer_out) = pngdec->in_timestamp;
+  if (GST_CLOCK_TIME_IS_VALID (pngdec->in_duration))
+    GST_BUFFER_DURATION (pngdec->buffer_out) = pngdec->in_duration;
+
+  /* Push our buffer and then EOS if needed */
+  GST_LOG_OBJECT (pngdec, "pushing buffer with ts=%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (pngdec->buffer_out)));
+
   pngdec->ret = gst_pad_push (pngdec->srcpad, pngdec->buffer_out);
-  pngdec->ret = gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
+  pngdec->buffer_out = NULL;
+
+  if (pngdec->framed) {
+    /* Reset ourselves for the next frame */
+    gst_pngdec_libpng_clear (pngdec);
+    gst_pngdec_libpng_init (pngdec);
+    GST_LOG_OBJECT (pngdec, "setting up callbacks for next frame");
+    png_set_progressive_read_fn (pngdec->png, pngdec,
+        user_info_callback, user_endrow_callback, user_end_callback);
+  } else {
+    GST_LOG_OBJECT (pngdec, "sending EOS");
+    pngdec->ret = gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
+  }
 }
 
 static void
@@ -282,7 +304,6 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps = NULL, *res = NULL;
   GstPadTemplate *templ = NULL;
-  GstEvent *new_seg = NULL;
   gint bpc = 0, color_type;
   png_uint_32 width, height;
 
@@ -374,9 +395,10 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   gst_caps_unref (res);
 
   /* Push a newsegment event */
-  new_seg = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
-  if (GST_IS_EVENT (new_seg)) {
-    gst_pad_push_event (pngdec->srcpad, new_seg);
+  if (pngdec->need_newsegment) {
+    gst_pad_push_event (pngdec->srcpad,
+        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
+    pngdec->need_newsegment = FALSE;
   }
 
 beach:
@@ -467,6 +489,8 @@ gst_pngdec_chain (GstPad * pad, GstBuffer * buffer)
 
   pngdec = GST_PNGDEC (GST_OBJECT_PARENT (pad));
 
+  GST_LOG_OBJECT (pngdec, "Got buffer, size=%u", GST_BUFFER_SIZE (buffer));
+
   if (!pngdec->setup) {
     GST_LOG ("we are not configured yet");
     ret = GST_FLOW_WRONG_STATE;
@@ -481,9 +505,13 @@ gst_pngdec_chain (GstPad * pad, GstBuffer * buffer)
 
   /* Let libpng come back here on error */
   if (setjmp (png_jmpbuf (pngdec->png))) {
+    GST_WARNING ("error during decoding");
     ret = GST_FLOW_ERROR;
     goto beach;
   }
+
+  pngdec->in_timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  pngdec->in_duration = GST_BUFFER_DURATION (buffer);
 
   /* Progressive loading of the PNG image */
   png_process_data (pngdec->png, pngdec->info, GST_BUFFER_DATA (buffer),
@@ -497,18 +525,65 @@ beach:
 }
 
 static gboolean
+gst_pngdec_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstStructure *s;
+  GstPngDec *pngdec;
+  gint num, denom;
+
+  pngdec = GST_PNGDEC (gst_pad_get_parent (pad));
+
+  s = gst_caps_get_structure (caps, 0);
+  if (gst_structure_get_fraction (s, "framerate", &num, &denom)) {
+    GST_DEBUG_OBJECT (pngdec, "framed input");
+    pngdec->framed = TRUE;
+    pngdec->fps_n = num;
+    pngdec->fps_d = denom;
+  } else {
+    pngdec->framed = FALSE;
+    pngdec->fps_n = 0;
+    pngdec->fps_d = 1;
+  }
+
+  gst_object_unref (pngdec);
+  return TRUE;
+}
+
+static gboolean
 gst_pngdec_sink_event (GstPad * pad, GstEvent * event)
 {
   GstPngDec *pngdec;
+  gboolean res;
 
-  pngdec = GST_PNGDEC (GST_OBJECT_PARENT (pad));
+  pngdec = GST_PNGDEC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:{
+      GstFormat fmt;
+
+      gst_event_parse_new_segment (event, NULL, NULL, &fmt, NULL, NULL, NULL);
+      GST_LOG_OBJECT (pngdec, "NEWSEGMENT (%s)", gst_format_get_name (fmt));
+      if (fmt == GST_FORMAT_TIME) {
+        pngdec->need_newsegment = FALSE;
+        res = gst_pad_event_default (pad, event);
+      } else {
+        gst_event_unref (event);
+        res = TRUE;
+      }
+      break;
+    }
     case GST_EVENT_EOS:
+      GST_LOG_OBJECT (pngdec, "EOS");
       gst_pngdec_libpng_clear (pngdec);
+      res = gst_pad_event_default (pad, event);
+      break;
     default:
-      return gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (pad, event);
+      break;
   }
+
+  gst_object_unref (pngdec);
+  return res;
 }
 
 
@@ -543,6 +618,9 @@ gst_pngdec_libpng_clear (GstPngDec * pngdec)
   pngdec->buffer_out = NULL;
 
   pngdec->setup = FALSE;
+
+  pngdec->in_timestamp = GST_CLOCK_TIME_NONE;
+  pngdec->in_duration = GST_CLOCK_TIME_NONE;
 
   return TRUE;
 }
@@ -599,6 +677,8 @@ gst_pngdec_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_pngdec_libpng_init (pngdec);
+      pngdec->need_newsegment = TRUE;
+      pngdec->framed = FALSE;
       break;
     default:
       break;

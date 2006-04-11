@@ -1,3 +1,14 @@
+2006-04-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/libpng/gstpngdec.c: (gst_pngdec_init),
+	(user_endrow_callback), (user_end_callback),
+	(gst_pngdec_caps_create_and_set), (gst_pngdec_chain),
+	(gst_pngdec_sink_setcaps), (gst_pngdec_sink_event),
+	(gst_pngdec_libpng_clear), (gst_pngdec_change_state):
+	* ext/libpng/gstpngdec.h:
+	  Handle more than one frame if the content is framed,
+	  like with png-in-quicktime (#331917).
+
 2006-04-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* sys/oss/Makefile.am:
