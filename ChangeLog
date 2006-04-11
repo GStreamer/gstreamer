@@ -1,3 +1,15 @@
+2006-04-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/controller/gstcontroller.c: (gst_controller_unset),
+	(gst_controller_unset_all):
+	* libs/gst/controller/gstcontroller.h:
+        Added new method _unset_all() and fixed _unset()
+	
+	* tests/check/libs/controller.c: (GST_START_TEST),
+	(gst_controller_suite):
+	Added two testcases for new and fixed method
+
 2006-04-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/net/gstnettimepacket.c: (gst_net_time_packet_send):

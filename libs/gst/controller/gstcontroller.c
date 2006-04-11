@@ -787,7 +787,44 @@ gst_controller_unset (GstController * self, gchar * property_name,
 
   g_mutex_lock (self->lock);
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    prop->values = g_list_remove (prop->values, prop);
+    GList *node;
+
+    /* check if a timed_value for the timestamp exists */
+    if ((node = g_list_find_custom (prop->values, &timestamp,
+                gst_timed_value_find))) {
+      prop->values = g_list_delete_link (prop->values, node);
+      res = TRUE;
+    }
+  }
+  g_mutex_unlock (self->lock);
+
+  return (res);
+}
+
+/**
+ * gst_controller_unset_all:
+ * @self: the controller object which handles the properties
+ * @property_name: the name of the property to unset
+ *
+ * Used to remove all time-stamped values of given controller-handled property
+ *
+ * Returns: %FALSE if the values couldn't be unset (ex : properties not handled
+ * by controller), %TRUE otherwise
+ * Since: 0.10.5
+ */
+gboolean
+gst_controller_unset_all (GstController * self, gchar * property_name)
+{
+  gboolean res = FALSE;
+  GstControlledProperty *prop;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
+  g_return_val_if_fail (property_name, FALSE);
+
+  g_mutex_lock (self->lock);
+  if ((prop = gst_controller_find_controlled_property (self, property_name))) {
+    g_list_free (prop->values);
+    prop->values = NULL;
     res = TRUE;
   }
   g_mutex_unlock (self->lock);

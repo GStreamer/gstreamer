@@ -566,6 +566,107 @@ GST_START_TEST (controller_interpolate_linear)
 
 GST_END_TEST;
 
+/* test _unset() */
+GST_START_TEST (controller_unset)
+{
+  GstController *ctrl;
+  GstElement *elem;
+  gboolean res;
+  GValue val_ulong = { 0, };
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* set interpolation mode */
+  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_NONE);
+
+  /* set control values */
+  g_value_init (&val_ulong, G_TYPE_ULONG);
+  g_value_set_ulong (&val_ulong, 0);
+  res = gst_controller_set (ctrl, "ulong", 0 * GST_SECOND, &val_ulong);
+  fail_unless (res, NULL);
+  g_value_set_ulong (&val_ulong, 100);
+  res = gst_controller_set (ctrl, "ulong", 1 * GST_SECOND, &val_ulong);
+  fail_unless (res, NULL);
+  g_value_set_ulong (&val_ulong, 50);
+  res = gst_controller_set (ctrl, "ulong", 2 * GST_SECOND, &val_ulong);
+  fail_unless (res, NULL);
+
+  /* verify values */
+  gst_controller_sync_values (ctrl, 0 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 2 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+
+  /* unset second */
+  res = gst_controller_unset (ctrl, "ulong", 1 * GST_SECOND);
+  fail_unless (res, NULL);
+
+  /* verify value again */
+  gst_controller_sync_values (ctrl, 1 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 2 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* test _unset_all() */
+GST_START_TEST (controller_unset_all)
+{
+  GstController *ctrl;
+  GstElement *elem;
+  gboolean res;
+  GValue val_ulong = { 0, };
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* set interpolation mode */
+  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_NONE);
+
+  /* set control values */
+  g_value_init (&val_ulong, G_TYPE_ULONG);
+  g_value_set_ulong (&val_ulong, 0);
+  res = gst_controller_set (ctrl, "ulong", 0 * GST_SECOND, &val_ulong);
+  fail_unless (res, NULL);
+  g_value_set_ulong (&val_ulong, 100);
+  res = gst_controller_set (ctrl, "ulong", 1 * GST_SECOND, &val_ulong);
+  fail_unless (res, NULL);
+
+  /* verify values */
+  gst_controller_sync_values (ctrl, 0 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+
+  /* unset second */
+  res = gst_controller_unset_all (ctrl, "ulong");
+  fail_unless (res, NULL);
+
+  /* verify value again */
+  gst_controller_sync_values (ctrl, 1 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 /* tests if we can run helper methods against any GObject */
 GST_START_TEST (controller_helper_any_gobject)
 {
@@ -605,6 +706,8 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_interpolate_none);
   tcase_add_test (tc, controller_interpolate_trigger);
   tcase_add_test (tc, controller_interpolate_linear);
+  tcase_add_test (tc, controller_unset);
+  tcase_add_test (tc, controller_unset_all);
   tcase_add_test (tc, controller_helper_any_gobject);
 
   return s;

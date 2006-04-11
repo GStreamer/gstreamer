@@ -159,7 +159,7 @@ gboolean gst_controller_set_from_list (GstController * self,
 
 gboolean gst_controller_unset (GstController * self, gchar * property_name,
     GstClockTime timestamp);
-
+gboolean gst_controller_unset_all (GstController * self, gchar * property_name);
 
 GValue *gst_controller_get (GstController * self, gchar * property_name,
     GstClockTime timestamp);
