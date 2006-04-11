@@ -4,6 +4,7 @@
 	Actually convert to time instead of pretending.. Also
 	the bitrate of the context is mostly wrong so don't
 	bother calculating a stop position.
+	Closing (#331323)
 
 2006-04-10  Wim Taymans  <wim@fluendo.com>
 
