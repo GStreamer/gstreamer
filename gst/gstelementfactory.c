@@ -248,7 +248,7 @@ gst_element_factory_cleanup (GstElementFactory * factory)
  * @type: GType of element to register
  *
  * Create a new elementfactory capable of instantiating objects of the
- * given type.
+ * @type and add the factory to @plugin.
  *
  * Returns: TRUE, if the registering succeeded, FALSE on error
  */
@@ -318,9 +318,13 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
 
   return TRUE;
 
+  /* ERRORS */
 error:
-  gst_element_factory_cleanup (factory);
-  return FALSE;
+  {
+    GST_WARNING_OBJECT (factory, "error with uri handler!");
+    gst_element_factory_cleanup (factory);
+    return FALSE;
+  }
 }
 
 /**
@@ -348,13 +352,11 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
   newfactory =
       GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
-  if (newfactory == NULL) {
-    GST_WARNING_OBJECT (factory, "loading plugin returned NULL!");
-    return NULL;
-  } else {
-    gst_object_unref (factory);
-    factory = newfactory;
-  }
+  if (newfactory == NULL)
+    goto load_failed;
+
+  gst_object_unref (factory);
+  factory = newfactory;
 
   if (name)
     GST_INFO ("creating element \"%s\" named \"%s\"",
@@ -362,27 +364,19 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
   else
     GST_INFO ("creating element \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
 
-#if 0
-  if (factory->type == 0) {
-    g_critical ("Plugin didn't set object type in feature.");
+  if (factory->type == 0)
+    goto no_type;
 
-    return NULL;
-  }
-#endif
+  /* create an instance of the element, cast so we don't assert on NULL */
+  element = GST_ELEMENT_CAST (g_object_new (factory->type, NULL));
+  if (element == NULL)
+    goto no_element;
 
-  /* FIXME: the object class gets a pointer to the factory that might
-   * be disposed at the end of this call if it was newly loaded;
-   * to fix that, we should ref and then unref in an object class finalize,
-   * which we don't have currently. */
-  oclass = GST_ELEMENT_CLASS (g_type_class_ref (factory->type));
+  /* fill in the pointer to the factory in the element class. The
+   * class will not be unreffed currently. */
+  oclass = GST_ELEMENT_GET_CLASS (element);
   if (oclass->elementfactory == NULL)
     oclass->elementfactory = factory;
-
-  /* create an instance of the element */
-  element = GST_ELEMENT (g_object_new (factory->type, NULL));
-  g_assert (element != NULL);
-
-  g_type_class_unref (oclass);
 
   if (name)
     gst_object_set_name (GST_OBJECT (element), name);
@@ -390,6 +384,23 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
   GST_DEBUG ("created element \"%s\"", GST_PLUGIN_FEATURE_NAME (factory));
 
   return element;
+
+  /* ERRORS */
+load_failed:
+  {
+    GST_WARNING_OBJECT (factory, "loading plugin returned NULL!");
+    return NULL;
+  }
+no_type:
+  {
+    GST_WARNING_OBJECT (factory, "factory has no type");
+    return NULL;
+  }
+no_element:
+  {
+    GST_WARNING_OBJECT (factory, "could not create element");
+    return NULL;
+  }
 }
 
 /**
@@ -415,21 +426,29 @@ gst_element_factory_make (const gchar * factoryname, const gchar * name)
   GST_LOG ("gstelementfactory: make \"%s\" \"%s\"",
       factoryname, GST_STR_NULL (name));
 
-  /* gst_plugin_load_element_factory (factoryname); */
   factory = gst_element_factory_find (factoryname);
-  if (factory == NULL) {
+  if (factory == NULL)
+    goto no_factory;
+
+  GST_LOG_OBJECT (factory, "found factory %p", factory);
+  element = gst_element_factory_create (factory, name);
+  gst_object_unref (factory);
+  if (element == NULL)
+    goto create_failed;
+
+  return element;
+
+  /* ERRORS */
+no_factory:
+  {
     GST_INFO ("no such element factory \"%s\"!", factoryname);
     return NULL;
   }
-  GST_LOG ("gstelementfactory: found factory %p", factory);
-  element = gst_element_factory_create (factory, name);
-  gst_object_unref (factory);
-  if (element == NULL) {
+create_failed:
+  {
     GST_INFO_OBJECT (factory, "couldn't create instance!");
     return NULL;
   }
-
-  return element;
 }
 
 void
@@ -448,9 +467,12 @@ __gst_element_factory_add_static_pad_template (GstElementFactory * factory,
  * gst_element_factory_get_element_type:
  * @factory: factory to get managed #GType from
  *
- * Get the #GType for elements managed by this factory
+ * Get the #GType for elements managed by this factory. The type can
+ * only be retrieved if the element factory is loaded, which can be
+ * assured with gst_plugin_feature_load().
  *
- * Returns: the #GType for elements managed by this factory
+ * Returns: the #GType for elements managed by this factory or 0 if
+ * the factory is not loaded.
  */
 GType
 gst_element_factory_get_element_type (GstElementFactory * factory)

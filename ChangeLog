@@ -1,3 +1,18 @@
+2006-04-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstelementfactory.c: (gst_element_register),
+	(gst_element_factory_create), (gst_element_factory_make):
+	Some cleanups.
+	Fixed a FIXME.
+	Updated docs (Fixes #131079)
+
+	* gst/gstpluginfeature.c: (gst_plugin_feature_load):
+	Small cleanups.
+
+	* tests/check/gst/gstelement.c: (GST_START_TEST),
+	(gst_element_suite):
+	Added testcase for elementfactory class field.
+
 2006-04-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstsegment.c:

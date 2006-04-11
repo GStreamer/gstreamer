@@ -111,28 +111,42 @@ gst_plugin_feature_load (GstPluginFeature * feature)
 
   GST_DEBUG ("loading plugin %s", feature->plugin_name);
   plugin = gst_plugin_load_by_name (feature->plugin_name);
-  if (!plugin) {
-    GST_WARNING ("Failed to load plugin containing feature '%s'.",
-        GST_PLUGIN_FEATURE_NAME (feature));
-    return NULL;
-  }
+  if (!plugin)
+    goto load_failed;
+
   GST_DEBUG ("loaded plugin %s", feature->plugin_name);
   gst_object_unref (plugin);
 
   real_feature =
       gst_registry_lookup_feature (gst_registry_get_default (), feature->name);
 
-  if (real_feature == NULL) {
+  if (real_feature == NULL)
+    goto disappeared;
+  else if (!real_feature->loaded)
+    goto not_found;
+
+  return real_feature;
+
+  /* ERRORS */
+load_failed:
+  {
+    GST_WARNING ("Failed to load plugin containing feature '%s'.",
+        GST_PLUGIN_FEATURE_NAME (feature));
+    return NULL;
+  }
+disappeared:
+  {
     GST_INFO
         ("Loaded plugin containing feature '%s', but feature disappeared.",
         feature->name);
-  } else if (!real_feature->loaded) {
+    return NULL;
+  }
+not_found:
+  {
     GST_INFO ("Tried to load plugin containing feature '%s', but feature was "
         "not found.", real_feature->name);
     return NULL;
   }
-
-  return real_feature;
 }
 
 /**
