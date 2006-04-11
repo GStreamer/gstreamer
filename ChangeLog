@@ -169,7 +169,7 @@
 	  
 	* gst/typefind/gsttypefindfunctions.c: (mpeg_ts_probe_headers),
 	(mpeg_ts_type_find), (plugin_init):
-	  Add a typefind function for mpeg-ts streams.
+	  Add a typefind function for mpeg-ts streams. (Closes: #336617)
 
 2006-04-06  Andy Wingo  <wingo@pobox.com>
 
