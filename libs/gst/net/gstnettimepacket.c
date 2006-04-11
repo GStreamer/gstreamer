@@ -32,6 +32,11 @@
 #include "config.h"
 #endif
 
+#ifdef __CYGWIN__
+# include <unistd.h>
+# include <fcntl.h>
+#endif
+
 #include "gstnettimepacket.h"
 
 
@@ -164,14 +169,29 @@ gint
 gst_net_time_packet_send (const GstNetTimePacket * packet, gint fd,
     struct sockaddr * addr, socklen_t len)
 {
+#ifdef __CYGWIN__
+  gint fdflags;
+#endif
   guint8 *buffer;
-  gint ret;
+  gint ret, send_flags;
 
   g_return_val_if_fail (packet != NULL, -EINVAL);
 
+#ifdef __CYGWIN__
+  send_flags = 0;
+  fdflags = fcntl (fd, F_GETFL);
+  fcntl (fd, F_SETFL, fdflags | O_NONBLOCK);
+#else
+  send_flags = MSG_DONTWAIT;
+#endif
+
   buffer = gst_net_time_packet_serialize (packet);
 
-  ret = sendto (fd, buffer, GST_NET_TIME_PACKET_SIZE, MSG_DONTWAIT, addr, len);
+  ret = sendto (fd, buffer, GST_NET_TIME_PACKET_SIZE, send_flags, addr, len);
+
+#ifdef __CYGWIN__
+  fcntl (fd, F_SETFL, fdflags);
+#endif
 
   g_free (buffer);
 

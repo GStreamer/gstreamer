@@ -1,3 +1,9 @@
+2006-04-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/net/gstnettimepacket.c: (gst_net_time_packet_send):
+	  MSG_DONTWAIT is not defined on Cygwin, so work
+	  around that (fixes #317048).
+	  
 2006-04-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstelementfactory.c: (gst_element_register),
