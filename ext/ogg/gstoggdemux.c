@@ -930,51 +930,77 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   GstBuffer *buf;
   GstFlowReturn ret;
   GstOggDemux *ogg = pad->ogg;
-
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (GST_PAD (pad), GST_BUFFER_OFFSET_NONE,
-      packet->bytes, GST_PAD_CAPS (pad), &buf);
+  GstFormat format;
+  gint64 current_time;
+  GstOggChain *chain;
 
   GST_DEBUG_OBJECT (ogg,
       "%p streaming to peer serial %08lx", pad, pad->serialno);
 
-  if (ret == GST_FLOW_OK) {
-    memcpy (buf->data, packet->packet, packet->bytes);
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (GST_PAD (pad), GST_BUFFER_OFFSET_NONE,
+      packet->bytes, GST_PAD_CAPS (pad), &buf);
+  if (ret != GST_FLOW_OK)
+    goto no_buffer;
 
-    GST_BUFFER_OFFSET (buf) = -1;
-    GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
+  /* copy packet in buffer */
+  memcpy (buf->data, packet->packet, packet->bytes);
 
-    ret = gst_pad_push (GST_PAD (pad), buf);
-    if (ret == GST_FLOW_NOT_LINKED)
-      ret = GST_FLOW_OK;
+  GST_BUFFER_OFFSET (buf) = -1;
+  GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
 
-    if (packet->granulepos >= 0) {
-      GstFormat format;
-      gint64 current_time;
+  ret = gst_pad_push (GST_PAD (pad), buf);
+  /* ignore not linked */
+  if (ret == GST_FLOW_NOT_LINKED)
+    ret = GST_FLOW_OK;
 
-      ogg->current_granule = packet->granulepos;
-      format = GST_FORMAT_TIME;
-      if (!pad->is_skeleton) {
-        if (!gst_ogg_pad_query_convert (pad,
-                GST_FORMAT_DEFAULT, packet->granulepos, &format,
-                (gint64 *) & current_time)) {
-          GST_WARNING_OBJECT (ogg, "could not convert granulepos to time");
-        } else {
-          gst_segment_set_last_stop (&ogg->segment, GST_FORMAT_TIME,
-              current_time);
-          GST_DEBUG_OBJECT (ogg, "ogg current time %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (current_time));
-        }
-      }
-    }
-  } else {
-    GST_DEBUG_OBJECT (ogg,
-        "%p could not get buffer from peer %08lx", pad, pad->serialno);
+  /* we're done with skeleton stuff */
+  if (pad->is_skeleton)
+    goto done;
 
-    if (ret == GST_FLOW_NOT_LINKED)
-      ret = GST_FLOW_OK;
-  }
+  /* check if valid granulepos, then we can calculate the current
+   * position */
+  if (packet->granulepos < 0)
+    goto done;
+
+  /* store current granule pos */
+  ogg->current_granule = packet->granulepos;
+
+  /* convert to time */
+  format = GST_FORMAT_TIME;
+  if (!gst_ogg_pad_query_convert (pad,
+          GST_FORMAT_DEFAULT, packet->granulepos, &format,
+          (gint64 *) & current_time))
+    goto convert_failed;
+
+  /* convert to stream time */
+  if ((chain = pad->chain))
+    current_time = current_time - chain->segment_start + chain->begin_time;
+
+  /* and store as the current position */
+  gst_segment_set_last_stop (&ogg->segment, GST_FORMAT_TIME, current_time);
+
+  GST_DEBUG_OBJECT (ogg, "ogg current time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (current_time));
+
+done:
   return ret;
+
+  /* special cases */
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (ogg,
+        "%p could not get buffer from peer %08lx, %d (%s)", pad,
+        pad->serialno, ret, gst_flow_get_name (ret));
+    if (ret == GST_FLOW_NOT_LINKED)
+      ret = GST_FLOW_OK;
+    return ret;
+  }
+convert_failed:
+  {
+    GST_WARNING_OBJECT (ogg, "could not convert granulepos to time");
+    return ret;
+  }
 }
 
 /* submit a packet to the oggpad, this function will run the
@@ -996,7 +1022,6 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
         !memcmp (packet->packet, "fishead\0", 8)) {
       gst_ogg_pad_parse_skeleton_fishead (pad, packet);
     }
-
     gst_ogg_pad_typefind (pad, packet);
     pad->have_type = TRUE;
   }
@@ -1172,7 +1197,7 @@ gst_ogg_chain_free (GstOggChain * chain)
     gst_object_unref (pad);
   }
   g_array_free (chain->streams, TRUE);
-  chain->streams = NULL;
+  g_free (chain);
 }
 
 static GstOggPad *
@@ -2609,24 +2634,8 @@ gst_ogg_demux_loop (GstOggPad * pad)
   }
 
   GST_LOG_OBJECT (ogg, "pull data %lld", ogg->offset);
-  if (ogg->offset == ogg->length) {
-    ret = GST_FLOW_OK;
-    /* segment playback just posts a segment end message instead of
-     * pushing out EOS. */
-    /* FIXME, need to be done somewhere else where we
-     * can check against segment_stop time. */
-    ogg->segment_running = FALSE;
-    if (ogg->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-      GST_LOG_OBJECT (ogg, "Sending segment done, at end of segment");
-      gst_element_post_message (GST_ELEMENT (ogg),
-          gst_message_new_segment_done (GST_OBJECT (ogg), GST_FORMAT_TIME,
-              ogg->total_time));
-    } else {
-      GST_LOG_OBJECT (ogg, "Sending EOS, at end of stream");
-      gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
-    }
-    goto pause;
-  }
+  if (ogg->offset == ogg->length)
+    goto eos;
 
   ret = gst_pad_pull_range (ogg->sinkpad, ogg->offset, CHUNKSIZE, &buffer);
   if (ret != GST_FLOW_OK) {
@@ -2642,6 +2651,11 @@ gst_ogg_demux_loop (GstOggPad * pad)
     goto pause;
   }
 
+  /* check for the end of the segment */
+  if (ogg->segment.stop != -1 && ogg->segment.last_stop != -1)
+    if (ogg->segment.last_stop > ogg->segment.stop)
+      goto eos;
+
   return;
 
   /* ERRORS */
@@ -2649,6 +2663,28 @@ chain_read_failed:
   {
     GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL), ("could not read chains"));
     ret = ogg->chain_error;
+    goto pause;
+  }
+eos:
+  {
+    ret = GST_FLOW_OK;
+    /* segment playback just posts a segment end message instead of
+     * pushing out EOS. */
+    ogg->segment_running = FALSE;
+    if (ogg->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+      gint64 stop;
+
+      if ((stop = ogg->segment.stop) == -1)
+        stop = ogg->segment.duration;
+
+      GST_LOG_OBJECT (ogg, "Sending segment done, at end of segment");
+      gst_element_post_message (GST_ELEMENT (ogg),
+          gst_message_new_segment_done (GST_OBJECT (ogg), GST_FORMAT_TIME,
+              stop));
+    } else {
+      GST_LOG_OBJECT (ogg, "Sending EOS, at end of stream");
+      gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
+    }
     goto pause;
   }
 pause:

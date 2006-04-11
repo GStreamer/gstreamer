@@ -1,3 +1,13 @@
+2006-04-11  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_src_query),
+	(gst_ogg_demux_chain_peer), (gst_ogg_pad_submit_packet),
+	(gst_ogg_chain_free), (gst_ogg_demux_sink_event),
+	(gst_ogg_demux_loop):
+	More cleanups.
+	Respect segment stop when emiting EOS or SEGMENT_DONE.
+	Fixes (#337945).
+
 2006-04-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gststreamselector.c:
