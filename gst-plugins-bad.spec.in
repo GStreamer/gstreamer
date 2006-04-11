@@ -5,7 +5,7 @@
 
 Name: 		%{gstreamer}-plugins-bad
 Version: 	@VERSION@
-Release: 	@GST_PLUGINS_BAD_VERSION_RELEASE@.gst
+Release: 	@PACKAGE_VERSION_RELEASE@.gst
 Summary: 	GStreamer plug-ins of bad quality
 
 %define 	majorminor	@GST_MAJORMINOR@
@@ -97,7 +97,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
 @USE_FAAC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
 @USE_OPENGL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstglimagesink.so
-# @USE_GSM_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 # @USE_HERMES_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthermescolorspace.so
 # @USE_LIBFAME_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstlibfame.so
 # @USE_MUSICBRAINZ_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttrm.so
@@ -117,6 +116,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-0.10/libgstvideo4linux2.so
 %{_libdir}/gstreamer-0.10/libgstximagesrc.so
 %{_libdir}/gstreamer-0.10/libgstxingheader.so
+%{_datadir}/locale
 
 %changelog
 * Sun Nov 27 2005 Thomas Vander Stichele <thomas at apestaart dot org>
