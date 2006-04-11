@@ -236,9 +236,10 @@ gst_stream_selector_get_property (GObject * object, guint prop_id,
     case PROP_ACTIVE_PAD:{
       GST_OBJECT_LOCK (object);
       if (sel->active_sinkpad != NULL) {
-        g_value_set_string (value, gst_pad_get_name (sel->active_sinkpad));
-      } else
+        g_value_take_string (value, gst_pad_get_name (sel->active_sinkpad));
+      } else {
         g_value_set_string (value, "");
+      }
       GST_OBJECT_UNLOCK (object);
       break;
     }
