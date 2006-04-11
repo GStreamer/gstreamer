@@ -1337,25 +1337,35 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
           break;
 	case GST_FORMAT_BYTES:
 	{
+          gint bit_rate;
+
+	  bit_rate = ffmpegdec->context->bit_rate;
+
           /* convert to time or fail */
-          if (!ffmpegdec->context->bit_rate)
+          if (!bit_rate)
 	    goto no_bitrate;
+
+	  GST_DEBUG_OBJECT (ffmpegdec, "bitrate: %d", bit_rate);
 
 	  /* convert values to TIME */
 	  if (start != -1)
 	    start = gst_util_uint64_scale_int (start, GST_SECOND,
-			  ffmpegdec->context->bit_rate);
+			  bit_rate);
 	  if (stop != -1)
 	    stop = gst_util_uint64_scale_int (stop, GST_SECOND,
-			  ffmpegdec->context->bit_rate);
+			  bit_rate);
 	  if (time != -1)
 	    time = gst_util_uint64_scale_int (time, GST_SECOND,
-			  ffmpegdec->context->bit_rate);
+			  bit_rate);
 
 	  /* unref old event */
           gst_event_unref (event);
 
 	  /* create new converted time segment */
+	  fmt = GST_FORMAT_TIME;
+	  /* FIXME, bitrate is not good enough too find a good stop, let's
+	   * hope start and time were 0... */
+	  stop = -1;
           event = gst_event_new_new_segment (update, rate, fmt,
 			  start, stop, time);
           break;
