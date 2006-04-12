@@ -792,6 +792,7 @@ gst_controller_unset (GstController * self, gchar * property_name,
     /* check if a timed_value for the timestamp exists */
     if ((node = g_list_find_custom (prop->values, &timestamp,
                 gst_timed_value_find))) {
+      g_free (node->data);      /* free GstTimedValue */
       prop->values = g_list_delete_link (prop->values, node);
       res = TRUE;
     }
@@ -823,6 +824,8 @@ gst_controller_unset_all (GstController * self, gchar * property_name)
 
   g_mutex_lock (self->lock);
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
+    /* free GstTimedValue structures */
+    g_list_foreach (prop->values, (GFunc) g_free, NULL);
     g_list_free (prop->values);
     prop->values = NULL;
     res = TRUE;
