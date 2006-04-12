@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-13 17:54+0100\n"
+"POT-Creation-Date: 2006-04-12 12:59+0200\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -16,124 +16,124 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/alsa/gstalsamixertrack.c:83
+#: ext/alsa/gstalsamixertrack.c:82
 msgid "Master"
 msgstr ""
 
-#: ext/alsa/gstalsamixertrack.c:84
+#: ext/alsa/gstalsamixertrack.c:83
 msgid "Bass"
 msgstr "Trầm"
 
-#: ext/alsa/gstalsamixertrack.c:85
+#: ext/alsa/gstalsamixertrack.c:84
 msgid "Treble"
 msgstr "Cao"
 
-#: ext/alsa/gstalsamixertrack.c:86
+#: ext/alsa/gstalsamixertrack.c:85
 msgid "PCM"
 msgstr "PCM"
 
-#: ext/alsa/gstalsamixertrack.c:87
+#: ext/alsa/gstalsamixertrack.c:86
 msgid "Synth"
 msgstr "Tổng hợp"
 
-#: ext/alsa/gstalsamixertrack.c:88
+#: ext/alsa/gstalsamixertrack.c:87
 msgid "Line-in"
 msgstr "Dây-vào"
 
-#: ext/alsa/gstalsamixertrack.c:89
+#: ext/alsa/gstalsamixertrack.c:88
 msgid "CD"
 msgstr "CD"
 
-#: ext/alsa/gstalsamixertrack.c:90
+#: ext/alsa/gstalsamixertrack.c:89
 msgid "Microphone"
 msgstr "Micrô"
 
-#: ext/alsa/gstalsamixertrack.c:91
+#: ext/alsa/gstalsamixertrack.c:90
 #, fuzzy
 msgid "PC Speaker"
 msgstr "Loa"
 
-#: ext/alsa/gstalsamixertrack.c:92
+#: ext/alsa/gstalsamixertrack.c:91
 msgid "Playback"
 msgstr ""
 
-#: ext/alsa/gstalsamixertrack.c:93
+#: ext/alsa/gstalsamixertrack.c:92
 msgid "Capture"
 msgstr ""
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:241 ext/cdparanoia/gstcdparanoiasrc.c:247
+#: ext/cdparanoia/gstcdparanoiasrc.c:240 ext/cdparanoia/gstcdparanoiasrc.c:246
 msgid "Could not open CD device for reading."
 msgstr "Đã không mở được thiết bị CD để đọc"
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:334
+#: ext/cdparanoia/gstcdparanoiasrc.c:333
 #, fuzzy
 msgid "Could not seek CD."
 msgstr "Đã không đóng được tập tin vfs \"%s\"."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:364
+#: ext/cdparanoia/gstcdparanoiasrc.c:363
 #, fuzzy
 msgid "Could not read CD."
 msgstr "Đã không ghi được vào thiết bị \"%s\"."
 
-#: ext/gnomevfs/gstgnomevfssink.c:382
+#: ext/gnomevfs/gstgnomevfssink.c:387
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
 msgstr "Đã không mở được tập tin vfs \"%s\" để ghi: %s."
 
-#: ext/gnomevfs/gstgnomevfssink.c:389
+#: ext/gnomevfs/gstgnomevfssink.c:394
 msgid "No filename given"
 msgstr "Chưa nhập tên tập tin "
 
-#: ext/gnomevfs/gstgnomevfssink.c:415
+#: ext/gnomevfs/gstgnomevfssink.c:420
 #, c-format
 msgid "Could not close vfs file \"%s\"."
 msgstr "Đã không đóng được tập tin vfs \"%s\"."
 
-#: ext/gnomevfs/gstgnomevfssink.c:566
+#: ext/gnomevfs/gstgnomevfssink.c:571
 #, fuzzy, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Lỗi khi đóng tập tin \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2610
+#: ext/ogg/gstoggdemux.c:2697
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1361
+#: gst/playback/gstplaybasebin.c:1364
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1367
+#: gst/playback/gstplaybasebin.c:1370
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1371
+#: gst/playback/gstplaybasebin.c:1374
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1378
+#: gst/playback/gstplaybasebin.c:1381
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1451
+#: gst/playback/gstplaybasebin.c:1454
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1456
+#: gst/playback/gstplaybasebin.c:1459
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1460
+#: gst/playback/gstplaybasebin.c:1463
 #, fuzzy
 msgid "This is not a media file"
 msgstr "Thiết bị \"%s\" không bắt gì được."
 
-#: gst/playback/gstplaybasebin.c:1465
+#: gst/playback/gstplaybasebin.c:1468
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 
@@ -141,7 +141,13 @@ msgstr ""
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:757
+#: gst/playback/gstplaybin.c:652 gst/playback/gstplaybin.c:661
+#: gst/playback/gstplaybin.c:820 gst/playback/gstplaybin.c:934
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+#: gst/playback/gstplaybin.c:786
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
