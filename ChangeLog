@@ -1,3 +1,16 @@
+2006-04-12  Wim Taymans  <wim@fluendo.com>
+
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_setcaps),
+	(gst_gdk_pixbuf_get_capslist), (gst_gdk_pixbuf_sink_getcaps),
+	(gst_gdk_pixbuf_class_init), (gst_gdk_pixbuf_init),
+	(gst_gdk_pixbuf_flush), (gst_gdk_pixbuf_sink_event),
+	(gst_gdk_pixbuf_chain):
+	Some cleanups.
+	Added RGBA as a possible output format.
+	Correctly free the supported mimetypes.
+	deprecate silent arg, it's not used.
+	Return result from _alloc_buffer to peer.
+
 2006-04-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/rtp/gstrtpmp4vdepay.c: (gst_rtp_mp4v_depay_process):

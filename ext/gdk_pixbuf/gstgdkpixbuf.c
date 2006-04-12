@@ -52,8 +52,6 @@ enum
   ARG_SILENT
 };
 
-
-
 static GstStaticPadTemplate gst_gdk_pixbuf_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -79,10 +77,10 @@ static GstStaticPadTemplate gst_gdk_pixbuf_sink_template =
     );
 
 static GstStaticPadTemplate gst_gdk_pixbuf_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; " GST_VIDEO_CAPS_RGBA)
     );
 
 gboolean pixbufscale_init (GstPlugin * plugin);
@@ -98,12 +96,11 @@ static void gst_gdk_pixbuf_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_gdk_pixbuf_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_gdk_pixbuf_event (GstPad * pad, GstEvent * event);
+static gboolean gst_gdk_pixbuf_sink_event (GstPad * pad, GstEvent * event);
 
 #ifdef enable_typefind
 static void gst_gdk_pixbuf_type_find (GstTypeFind * tf, gpointer ignore);
 #endif
-
 
 GST_BOILERPLATE (GstGdkPixbuf, gst_gdk_pixbuf, GstElement, GST_TYPE_ELEMENT)
 
@@ -126,6 +123,7 @@ GST_BOILERPLATE (GstGdkPixbuf, gst_gdk_pixbuf, GstElement, GST_TYPE_ELEMENT)
         filter->framerate_numerator, filter->framerate_denominator);
   }
   gst_object_unref (filter);
+
   return TRUE;
 }
 
@@ -148,9 +146,6 @@ gst_gdk_pixbuf_get_capslist (void)
 {
   GSList *slist;
   GSList *slist0;
-  GdkPixbufFormat *pixbuf_format;
-  char **mimetypes;
-  char **mimetype;
   GstCaps *capslist = NULL;
   GstCaps *return_caps = NULL;
 
@@ -158,12 +153,17 @@ gst_gdk_pixbuf_get_capslist (void)
   slist0 = gdk_pixbuf_get_formats ();
 
   for (slist = slist0; slist; slist = g_slist_next (slist)) {
+    GdkPixbufFormat *pixbuf_format;
+    char **mimetypes;
+    char **mimetype;
+
     pixbuf_format = slist->data;
     mimetypes = gdk_pixbuf_format_get_mime_types (pixbuf_format);
+
     for (mimetype = mimetypes; *mimetype; mimetype++) {
       gst_caps_append_structure (capslist, gst_structure_new (*mimetype, NULL));
     }
-    g_free (mimetypes);
+    g_strfreev (mimetypes);
   }
   g_slist_free (slist0);
 
@@ -178,13 +178,6 @@ gst_gdk_pixbuf_get_capslist (void)
 static GstCaps *
 gst_gdk_pixbuf_sink_getcaps (GstPad * pad)
 {
-  GstGdkPixbuf *filter;
-
-  filter = GST_GDK_PIXBUF (gst_pad_get_parent (pad));
-  g_return_val_if_fail (filter != NULL, NULL);
-  g_return_val_if_fail (GST_IS_GDK_PIXBUF (filter), NULL);
-  gst_object_unref (filter);
-
   return gst_gdk_pixbuf_get_capslist ();
 }
 
@@ -215,11 +208,9 @@ gst_gdk_pixbuf_class_init (GstGdkPixbufClass * klass)
   gobject_class->set_property = gst_gdk_pixbuf_set_property;
   gobject_class->get_property = gst_gdk_pixbuf_get_property;
 
-
   g_object_class_install_property (gobject_class, ARG_SILENT,
-      g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
-          FALSE, G_PARAM_READWRITE));
-
+      g_param_spec_boolean ("silent", "Silent",
+          "Produce verbose output ? (deprecated)", FALSE, G_PARAM_READWRITE));
 }
 
 static void
@@ -229,19 +220,12 @@ gst_gdk_pixbuf_init (GstGdkPixbuf * filter, GstGdkPixbufClass * klass)
       gst_pad_new_from_static_template (&gst_gdk_pixbuf_sink_template, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad, gst_gdk_pixbuf_sink_setcaps);
   gst_pad_set_getcaps_function (filter->sinkpad, gst_gdk_pixbuf_sink_getcaps);
-
-  gst_pad_set_chain_function (filter->sinkpad,
-      (GstPadChainFunction) gst_gdk_pixbuf_chain);
-
-  gst_pad_set_event_function (filter->sinkpad, gst_gdk_pixbuf_event);
-
-
+  gst_pad_set_chain_function (filter->sinkpad, gst_gdk_pixbuf_chain);
+  gst_pad_set_event_function (filter->sinkpad, gst_gdk_pixbuf_sink_event);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
-
 
   filter->srcpad =
       gst_pad_new_from_static_template (&gst_gdk_pixbuf_src_template, "src");
-
   gst_pad_use_fixed_caps (filter->srcpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
@@ -260,12 +244,11 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
   int in_rowstride;
   GstFlowReturn ret;
   GstCaps *caps = NULL;
+  gint n_channels;
 
   pixbuf = gdk_pixbuf_loader_get_pixbuf (filter->pixbuf_loader);
-  if (pixbuf == NULL) {
-    GST_DEBUG ("error geting pixbuf");
-    return GST_FLOW_ERROR;
-  }
+  if (pixbuf == NULL)
+    goto no_pixbuf;
 
   if (filter->image_size == 0) {
     filter->width = gdk_pixbuf_get_width (pixbuf);
@@ -273,15 +256,18 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
     filter->rowstride = gdk_pixbuf_get_rowstride (pixbuf);
     filter->image_size = filter->rowstride * filter->height;
 
-    if (gdk_pixbuf_get_rowstride (pixbuf) / filter->width == 4) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_RGBA);
-    } else if (gdk_pixbuf_get_rowstride (pixbuf) / filter->width == 3) {
-      caps = gst_caps_from_string (GST_VIDEO_CAPS_RGB);
-    } else {
-      GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION, (NULL),
-          ("Bpp %d not supported", gdk_pixbuf_get_bits_per_sample (pixbuf)));
-      return GST_FLOW_ERROR;
+    n_channels = gdk_pixbuf_get_n_channels (pixbuf);
+    switch (n_channels) {
+      case 3:
+        caps = gst_caps_from_string (GST_VIDEO_CAPS_RGB);
+        break;
+      case 4:
+        caps = gst_caps_from_string (GST_VIDEO_CAPS_RGBA);
+        break;
+      default:
+        goto channels_not_supported;
     }
+
     gst_caps_set_simple (caps,
         "width", G_TYPE_INT, filter->width,
         "height", G_TYPE_INT, filter->height,
@@ -297,14 +283,8 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
       GST_BUFFER_OFFSET_NONE,
       filter->image_size, GST_PAD_CAPS (filter->srcpad), &outbuf);
 
-  if (ret != GST_FLOW_OK) {
-    GST_DEBUG ("Failed to create outbuffer - %s", gst_flow_get_name (ret));
-    return GST_FLOW_ERROR;
-  }
-
-  caps = gst_pad_get_negotiated_caps (filter->srcpad);
-  GST_DEBUG ("Caps negotiated %s", gst_caps_to_string (caps));
-  gst_caps_unref (caps);
+  if (ret != GST_FLOW_OK)
+    goto no_buffer;
 
   GST_BUFFER_TIMESTAMP (outbuf) = filter->last_timestamp;
   GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
@@ -313,6 +293,7 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
   in_rowstride = gdk_pixbuf_get_rowstride (pixbuf);
   out_pix = GST_BUFFER_DATA (outbuf);
 
+  /* FIXME, last line might not have rowstride pixels */
   for (y = 0; y < filter->height; y++) {
     memcpy (out_pix, in_pix, filter->rowstride);
     in_pix += in_rowstride;
@@ -321,10 +302,28 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
 
   GST_DEBUG ("pushing... %d bytes", GST_BUFFER_SIZE (outbuf));
   return gst_pad_push (filter->srcpad, outbuf);
+
+  /* ERRORS */
+no_pixbuf:
+  {
+    GST_DEBUG ("error geting pixbuf");
+    return GST_FLOW_ERROR;
+  }
+channels_not_supported:
+  {
+    GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION, (NULL),
+        ("%d channels not supported", n_channels));
+    return GST_FLOW_ERROR;
+  }
+no_buffer:
+  {
+    GST_DEBUG ("Failed to create outbuffer - %s", gst_flow_get_name (ret));
+    return ret;
+  }
 }
 
 static gboolean
-gst_gdk_pixbuf_event (GstPad * pad, GstEvent * event)
+gst_gdk_pixbuf_sink_event (GstPad * pad, GstEvent * event)
 {
   GstFlowReturn res = GST_FLOW_OK;
   gboolean ret = TRUE;
@@ -334,10 +333,12 @@ gst_gdk_pixbuf_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      gdk_pixbuf_loader_close (pixbuf->pixbuf_loader, NULL);
-      res = gst_gdk_pixbuf_flush (pixbuf);
-      g_object_unref (G_OBJECT (pixbuf->pixbuf_loader));
-      pixbuf->pixbuf_loader = NULL;
+      if (pixbuf->pixbuf_loader != NULL) {
+        gdk_pixbuf_loader_close (pixbuf->pixbuf_loader, NULL);
+        res = gst_gdk_pixbuf_flush (pixbuf);
+        g_object_unref (G_OBJECT (pixbuf->pixbuf_loader));
+        pixbuf->pixbuf_loader = NULL;
+      }
       break;
     case GST_EVENT_NEWSEGMENT:
     case GST_EVENT_FLUSH_STOP:
@@ -369,31 +370,42 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GError *error = NULL;
   GstClockTime timestamp;
+  guint8 *data;
+  guint size;
 
-  GST_DEBUG ("gst_gdk_pixbuf_chain");
   filter = GST_GDK_PIXBUF (gst_pad_get_parent (pad));
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
     filter->last_timestamp = timestamp;
-  }
 
-  if (filter->pixbuf_loader == NULL) {
+  GST_DEBUG_OBJECT (filter, "buffer with ts: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (filter->pixbuf_loader == NULL)
     filter->pixbuf_loader = gdk_pixbuf_loader_new ();
-  }
 
-  GST_DEBUG ("Writing buffer size %d", GST_BUFFER_SIZE (buf));
-  if (gdk_pixbuf_loader_write (filter->pixbuf_loader, GST_BUFFER_DATA (buf),
-          GST_BUFFER_SIZE (buf), &error) == FALSE) {
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  GST_DEBUG ("Writing buffer size %d", size);
+  if (!gdk_pixbuf_loader_write (filter->pixbuf_loader, data, size, &error))
+    goto error;
+
+done:
+  gst_object_unref (filter);
+
+  return ret;
+
+  /* ERRORS */
+error:
+  {
     GST_DEBUG ("gst_gdk_pixbuf_chain ERROR: %s", error->message);
     ret = GST_FLOW_ERROR;
-    goto need_more_data;
+    g_error_free (error);
+    goto done;
   }
-
-need_more_data:
-  gst_object_unref (filter);
-  return ret;
 }
 
 static void
