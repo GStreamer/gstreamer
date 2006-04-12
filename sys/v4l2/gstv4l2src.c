@@ -739,7 +739,6 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
   do {
     *buf = gst_v4l2src_buffer_new (v4l2src, buffersize, NULL, NULL);
     GST_BUFFER_OFFSET (*buf) = GST_BUFFER_OFFSET_NONE;
-    gst_buffer_set_caps (*buf, GST_PAD_CAPS (v4l2src->srcpad));
 
     amount =
         read (GST_V4L2ELEMENT (v4l2src)->video_fd, GST_BUFFER_DATA (*buf),
