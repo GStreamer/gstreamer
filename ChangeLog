@@ -1,3 +1,8 @@
+2006-04-12  Wim Taymans  <wim@fluendo.com>
+
+	* tests/check/gst/gstelement.c: (GST_START_TEST):
+	Don't leak the factory.
+
 2006-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

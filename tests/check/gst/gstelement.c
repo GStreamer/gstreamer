@@ -163,7 +163,7 @@ GST_END_TEST;
 GST_START_TEST (test_class)
 {
   GstElementClass *klass;
-  GstElementFactory *factory;
+  GstElementFactory *factory, *tmp;
   GType type;
 
   GST_DEBUG ("finding factory for queue");
@@ -176,10 +176,13 @@ GST_START_TEST (test_class)
   fail_if (type != 0);
 
   GST_DEBUG ("now loading the plugin");
-  factory =
+  tmp =
       GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
-  fail_if (factory == NULL);
+  fail_if (tmp == NULL);
+
+  gst_object_unref (factory);
+  factory = tmp;
 
   /* feature is now loaded */
   type = gst_element_factory_get_element_type (factory);
@@ -192,6 +195,7 @@ GST_START_TEST (test_class)
   /* and elementfactory is filled in */
   fail_if (klass->elementfactory == NULL);
   fail_if (klass->elementfactory != factory);
+
 }
 
 GST_END_TEST;
