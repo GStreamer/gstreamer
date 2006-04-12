@@ -1,3 +1,9 @@
+2006-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  prerelease
+
 2006-04-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Antoine Tremblay  <hexa00 at gmail dot com>
