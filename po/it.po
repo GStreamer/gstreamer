@@ -1,7 +1,7 @@
 # Italian translation for gstreamer package of GStreamer project.
 # Copyright (C) 2004 GStreamer core team
 # This file is distributed under the same license as the gstreamer package.
-# Luca Ferretti <elle.uca@infinito.it>, 2004-2005.
+# Luca Ferretti <elle.uca@infinito.it>, 2004-2006.
 #
 #
 #
@@ -106,10 +106,10 @@
 # ----------------------------------------
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.9.7\n"
+"Project-Id-Version: gstreamer 0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2006-04-12 12:58+0200\n"
-"PO-Revision-Date: 2005-12-02 19:48+0100\n"
+"PO-Revision-Date: 2006-04-09 21:52+0000\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
@@ -332,7 +332,7 @@ msgstr "Impossibile impostare o ottenere le impostazioni dalla risorsa."
 
 #: gst/gsterror.c:205
 msgid "No space left on the resource."
-msgstr ""
+msgstr "Niente spazio sulla risorsa."
 
 #: gst/gsterror.c:219
 msgid "GStreamer encountered a general stream error."
@@ -746,7 +746,6 @@ msgid "Internal data flow problem."
 msgstr "Problema interno nel flusso di dati."
 
 #: libs/gst/base/gstbasesink.c:1980
-#, fuzzy
 msgid "Internal data stream error."
 msgstr "Errore interno nel flusso di dati."
 
@@ -924,39 +923,42 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERRORE: l'elemento «pipeline» non è stato trovato.\n"
 
 #: tools/gst-launch.c:632 tools/gst-launch.c:684
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "PAUSE sulla pipeline...\n"
+msgstr "Impostazione della pipeline a PAUSED ...\n"
 
 #: tools/gst-launch.c:637
-#, fuzzy, c-format
+#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ERRORE: la pipeline non vuole mettersi in pausa.\n"
 
+# Sinks are special elements in GStreamer. This is because sink elements have to take care of preroll, which is the process that takes care that elements going into the GST_STATE_PAUSED state will have buffers ready after the state change. The result of this is that such elements can start processing data immediately after going into the GST_STATE_PLAYING state, without requiring to take some time to initialize outputs or set up decoders; all that is done already before the state-change to GST_STATE_PAUSED  successfully completes.
+#
+# Preroll, however, is a complex process that would require the same code in many elements. Therefore, sink elements can derive from the GstBaseSink base-class, which does preroll and a few other utility functions automatically. The derived class only needs to implement a bunch of virtual functions and will work automatically.
 #: tools/gst-launch.c:642
-#, fuzzy, c-format
+#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "ERRORE: la pipeline non vuole riprodurre.\n"
+msgstr "La pipeline è viva e non necessita il PREROLL ...\n"
 
 #: tools/gst-launch.c:645
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
-msgstr ""
+msgstr "La pipeline è in PREROLLING ...\n"
 
 #: tools/gst-launch.c:648 tools/gst-launch.c:661
-#, fuzzy, c-format
+#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ERRORE: la pipeline non vuole fare il preroll.\n"
 
 #: tools/gst-launch.c:654
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
+msgstr "La pipeline è in PREROLLED ...\n"
 
 #: tools/gst-launch.c:666
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "Impostazione della pipeline a PLAYING ...\n"
 
 #: tools/gst-launch.c:669
 #, c-format
@@ -966,7 +968,6 @@ msgstr "ERRORE: la pipeline non vuole riprodurre.\n"
 # secondo me quel % è un errore... magari dovrebbe
 # essere %d o %s
 #: tools/gst-launch.c:680
-#, fuzzy
 msgid "Execution ended after %"
 msgstr "Esecuzione terminata dopo %"
 
@@ -975,42 +976,16 @@ msgid " ns.\n"
 msgstr " ns.\n"
 
 #: tools/gst-launch.c:687
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "PAUSE sulla pipeline...\n"
+msgstr "Impostazione della pipeline a READY ...\n"
 
 #: tools/gst-launch.c:692
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "PAUSE sulla pipeline...\n"
+msgstr "Impostazione della pipeline a NULL ...\n"
 
 #: tools/gst-launch.c:697
-#, fuzzy, c-format
+#, c-format
 msgid "FREEING pipeline ...\n"
-msgstr "SVUOTAMENTO della pipeline...\n"
-
-# < Sinks are special elements in GStreamer. This is because sink elements have to take care of preroll, which is the process that takes care that elements going into the GST_STATE_PAUSED state will have buffers ready after the state change. The result of this is that such elements can start processing data immediately after going into the GST_STATE_PLAYING state, without requiring to take some time to initialize outputs or set up decoders; all that is done already before the state-change to GST_STATE_PAUSED  successfully completes.
-#
-# Preroll, however, is a complex process that would require the same code in many elements. Therefore, sink elements can derive from the GstBaseSink base-class, which does preroll and a few other utility functions automatically. The derived class only needs to implement a bunch of virtual functions and will work automatically. 
-#, fuzzy
-#~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr "NO_PREROLL sulla pipeline...\n"
-
-#, fuzzy
-#~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "PREROLL sulla pipeline...\n"
-
-#, fuzzy
-#~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "PREROLL effettuato per la pipeline...\n"
-
-#~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "ESECUZIONE della pipeline...\n"
-
-#, fuzzy
-#~ msgid "READY pipeline ...\n"
-#~ msgstr "Pipeline PRONTA...\n"
-
-#, fuzzy
-#~ msgid "NULL pipeline ...\n"
-#~ msgstr "Pipeline NULLA...\n"
+msgstr "Esecuzione FREE su pipeline ...\n"

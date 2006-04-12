@@ -4,10 +4,10 @@
 # 
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.9.7\n"
+"Project-Id-Version: gstreamer-0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2006-04-12 12:58+0200\n"
-"PO-Revision-Date: 2005-12-05 21:38+1030\n"
+"PO-Revision-Date: 2006-04-07 18:23+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -136,7 +136,7 @@ msgstr "Lỗi nội bộ GStreamer: vấn đề đệm (pad)."
 
 #: gst/gsterror.c:141
 msgid "Internal GStreamer error: thread problem."
-msgstr "Lỗi nội bộ GStreamer: vấn đề mạch. "
+msgstr "Lỗi nội bộ GStreamer: vấn đề mạch."
 
 #: gst/gsterror.c:143
 msgid "Internal GStreamer error: negotiation problem."
@@ -228,7 +228,7 @@ msgstr "Không thể gọi/đặt tùy thích từ/vào tiềm năng."
 
 #: gst/gsterror.c:205
 msgid "No space left on the resource."
-msgstr ""
+msgstr "Không có sức chứa còn rảnh trên tài nguyên đó."
 
 #: gst/gsterror.c:219
 msgid "GStreamer encountered a general stream error."
@@ -647,7 +647,6 @@ msgid "Internal data flow problem."
 msgstr "Vấn đề luồng dữ liệu nội bộ."
 
 #: libs/gst/base/gstbasesink.c:1980
-#, fuzzy
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
@@ -835,9 +834,9 @@ msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "LỖI: đường ống không tạm dừng được.\n"
 
 #: tools/gst-launch.c:642
-#, fuzzy, c-format
+#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "Đường ống ĐÃ TIỀN CUỘN ...\n"
+msgstr "Đường ống là động, không cần TIỀN CUỘN ...\n"
 
 #: tools/gst-launch.c:645
 #, c-format

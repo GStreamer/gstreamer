@@ -869,9 +869,9 @@ msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ERREUR: le tube refuse de s'executer.\n"
 
 #: tools/gst-launch.c:642
-#, fuzzy, c-format
+#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "ERREUR: le tube refuse de s'executer.\n"
+msgstr ""
 
 #: tools/gst-launch.c:645
 #, c-format

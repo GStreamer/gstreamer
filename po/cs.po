@@ -655,9 +655,8 @@ msgid "Internal data flow problem."
 msgstr ""
 
 #: libs/gst/base/gstbasesink.c:1980
-#, fuzzy
 msgid "Internal data stream error."
-msgstr "Interní chyba GStreamer: problém při vyplňování. Ohlaste tuto chybu."
+msgstr ""
 
 #: plugins/elements/gstfilesink.c:230
 msgid "No file name specified for writing."
@@ -844,11 +843,10 @@ msgstr ""
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "CHYBA: roura nechce hrát.\n"
 
-# On strike?
 #: tools/gst-launch.c:642
-#, fuzzy, c-format
+#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "CHYBA: roura nechce hrát.\n"
+msgstr ""
 
 #: tools/gst-launch.c:645
 #, c-format

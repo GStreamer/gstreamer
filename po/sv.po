@@ -1,17 +1,17 @@
 # Swedish messages for gstreamer.
-# Copyright (C) 2004 Free Software Foundation, Inc.
-# Christian Rose <menthos@menthos.com>, 2004.
+# Copyright (C) 2004, 2005 Free Software Foundation, Inc.
+# Christian Rose <menthos@menthos.com>, 2004, 2005.
 #
 # $Id: sv.po,v 1.68 2004/02/29 23:00:29 menthos Exp $
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.8.7pre2\n"
+"Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2006-04-12 12:58+0200\n"
-"PO-Revision-Date: 2004-12-21 14:49+0100\n"
+"PO-Revision-Date: 2005-12-04 21:45+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
-"Language-Team: Swedish <sv@li.org>\n"
+"Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -66,7 +66,7 @@ msgstr "Aktivera utförlig diagnostik vid inläsning av insticksmoduler"
 
 #: gst/gst.c:295
 msgid "Colon-separated paths containing plugins"
-msgstr ""
+msgstr "Kolonseparerade sökvägar som innehåller insticksmoduler"
 
 #: gst/gst.c:295
 msgid "PATHS"
@@ -90,19 +90,16 @@ msgstr ""
 "Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
 
 #: gst/gst.c:307
-#, fuzzy
 msgid "GStreamer Options"
-msgstr "_GStreamer-rörledning:"
+msgstr "GStreamer-alternativ"
 
 #: gst/gst.c:308
-#, fuzzy
 msgid "Show GStreamer Options"
-msgstr "Visa mixerikoner"
+msgstr "Visa GStreamer-alternativ"
 
 #: gst/gst.c:807
-#, fuzzy
 msgid "Unknown option"
-msgstr "Okänd artist"
+msgstr "Okänt alternativ"
 
 #: gst/gstelement.c:279
 #, c-format
@@ -123,70 +120,58 @@ msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer stötte på ett allmänt fel i kärnbibliotek."
 
 #: gst/gsterror.c:133 gst/gsterror.c:170 gst/gsterror.c:190 gst/gsterror.c:221
-#, fuzzy
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
 "Utvecklarna av GStreamer var för lata för att tilldela detta fel ett "
-"felnummer. Skicka en felrapport."
+"felnummer."
 
 #: gst/gsterror.c:136
-#, fuzzy
 msgid "Internal GStreamer error: code not implemented."
-msgstr "Internt GStreamer-fel: koden inte implementerad. Skicka en felrapport."
+msgstr "Internt GStreamer-fel: koden inte implementerad."
 
 #: gst/gsterror.c:138
-#, fuzzy
 msgid "Internal GStreamer error: state change failed."
-msgstr ""
-"Internt GStreamer-fel: tillståndsändring misslyckades. Skicka en felrapport."
+msgstr "Internt GStreamer-fel: tillståndsändring misslyckades."
 
 # Richard Hult säger: "Pad" i gstreamer betyder ungefär "kontakt", man
 # kopplar ihop två element via deras "pads".
 #: gst/gsterror.c:139
-#, fuzzy
 msgid "Internal GStreamer error: pad problem."
-msgstr "Internt GStreamer-fel: kontaktproblem. Skicka en felrapport."
+msgstr "Internt GStreamer-fel: kontaktproblem."
 
 #: gst/gsterror.c:141
-#, fuzzy
 msgid "Internal GStreamer error: thread problem."
-msgstr "Internt GStreamer-fel: trådproblem. Skicka en felrapport."
+msgstr "Internt GStreamer-fel: trådproblem."
 
 #: gst/gsterror.c:143
-#, fuzzy
 msgid "Internal GStreamer error: negotiation problem."
-msgstr "Internt GStreamer-fel: förhandlingsproblem. Skicka en felrapport."
+msgstr "Internt GStreamer-fel: förhandlingsproblem."
 
 #: gst/gsterror.c:145
-#, fuzzy
 msgid "Internal GStreamer error: event problem."
-msgstr "Internt GStreamer-fel: händelseproblem. Skicka en felrapport."
+msgstr "Internt GStreamer-fel: händelseproblem."
 
 #: gst/gsterror.c:147
-#, fuzzy
 msgid "Internal GStreamer error: seek problem."
-msgstr "Internt GStreamer-fel: spolningsproblem. Skicka en felrapport."
+msgstr "Internt GStreamer-fel: spolningsproblem."
 
 # Osäker. Jag tror "caps" är kort för "capabilities".
 #: gst/gsterror.c:149
-#, fuzzy
 msgid "Internal GStreamer error: caps problem."
-msgstr "Internt GStreamer-fel: förmågeproblem. Skicka en felrapport."
+msgstr "Internt GStreamer-fel: förmågeproblem."
 
 #: gst/gsterror.c:150
-#, fuzzy
 msgid "Internal GStreamer error: tag problem."
-msgstr "Internt GStreamer-fel: taggproblem. Skicka en felrapport."
+msgstr "Internt GStreamer-fel: taggproblem."
 
 #: gst/gsterror.c:152
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr ""
+msgstr "Din GStreamer-installation saknar en insticksmodul."
 
 #: gst/gsterror.c:154
-#, fuzzy
 msgid "Internal GStreamer error: clock problem."
-msgstr "Internt GStreamer-fel: spolningsproblem. Skicka en felrapport."
+msgstr "Internt GStreamer-fel: klockproblem."
 
 #: gst/gsterror.c:168
 msgid "GStreamer encountered a general supporting library error."
@@ -201,9 +186,8 @@ msgid "Could not close supporting library."
 msgstr "Kunde inte stänga stödbibliotek."
 
 #: gst/gsterror.c:188
-#, fuzzy
 msgid "GStreamer encountered a general resource error."
-msgstr "GStreamer stötte på ett allmänt fel i kärnbibliotek."
+msgstr "GStreamer stötte på ett allmänt resursfel."
 
 #: gst/gsterror.c:192
 msgid "Resource not found."
@@ -254,9 +238,8 @@ msgid "No space left on the resource."
 msgstr ""
 
 #: gst/gsterror.c:219
-#, fuzzy
 msgid "GStreamer encountered a general stream error."
-msgstr "GStreamer stötte på ett allmänt fel i kärnbibliotek."
+msgstr "GStreamer stötte på ett allmänt flödesfel."
 
 #: gst/gsterror.c:224
 msgid "Element doesn't implement handling of this stream. Please file a bug."
@@ -329,9 +312,8 @@ msgid "date"
 msgstr "datum"
 
 #: gst/gsttaglist.c:103
-#, fuzzy
 msgid "date the data was created (as a GDate structure)"
-msgstr "datum då dessa data skapades (i dagar i den julianska kalendern)"
+msgstr "datum då dessa data skapades (som en GDate-struktur)"
 
 #: gst/gsttaglist.c:106
 msgid "genre"
@@ -575,11 +557,11 @@ msgstr "toppen för albumet"
 
 #: gst/gsttaglist.c:200
 msgid "language code"
-msgstr ""
+msgstr "språkkod"
 
 #: gst/gsttaglist.c:201
 msgid "language code for this stream, conforming to ISO-639-1"
-msgstr ""
+msgstr "språkkod för detta flöde, enligt ISO-639-1"
 
 #: gst/gsttaglist.c:240
 msgid ", "
@@ -658,18 +640,16 @@ msgstr "tom rörledning är inte tillåtet"
 #: libs/gst/base/gstbasesrc.c:1478 libs/gst/base/gstbasesrc.c:1488
 #: plugins/elements/gstqueue.c:781
 msgid "Internal data flow error."
-msgstr ""
+msgstr "Internt dataflödesfel."
 
 #: libs/gst/base/gstbasesink.c:1849
 msgid "Internal data flow problem."
-msgstr ""
+msgstr "Internt dataflödesproblem."
 
-# Richard Hult säger: "Pad" i gstreamer betyder ungefär "kontakt", man
-# kopplar ihop två element via deras "pads".
 #: libs/gst/base/gstbasesink.c:1980
 #, fuzzy
 msgid "Internal data stream error."
-msgstr "Internt GStreamer-fel: kontaktproblem. Skicka en felrapport."
+msgstr "Internt dataflödesfel."
 
 #: plugins/elements/gstfilesink.c:230
 msgid "No file name specified for writing."
@@ -695,14 +675,14 @@ msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
 #: plugins/elements/gstfilesrc.c:924
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open file \"%s\" for reading: %s."
-msgstr "Kunde inte öppna filen \"%s\" för läsning."
+msgstr "Kunde inte öppna filen \"%s\" för läsning: %s."
 
 #: plugins/elements/gstfilesrc.c:933
-#, fuzzy, c-format
+#, c-format
 msgid "could not get info on \"%s\"."
-msgstr "kunde inte länka %s till %s"
+msgstr "kunde inte få information om \"%s\"."
 
 #: plugins/elements/gstfilesrc.c:940
 #, c-format
@@ -769,14 +749,14 @@ msgid "WARNING: element named '%s' not found.\n"
 msgstr "VARNING: elementet med namnet \"%s\" hittades inte.\n"
 
 #: tools/gst-launch.c:380
-#, fuzzy, c-format
+#, c-format
 msgid "Got Message from element \"%s\" (%s): "
-msgstr "FEL: från element %s: %s\n"
+msgstr "Fick meddelande från element \"%s\" (%s): "
 
 #: tools/gst-launch.c:407
-#, fuzzy, c-format
+#, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "FEL: från element %s: %s\n"
+msgstr "Fick EOS från element \"%s\".\n"
 
 #: tools/gst-launch.c:417
 #, c-format
@@ -786,7 +766,7 @@ msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
 #: tools/gst-launch.c:469
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
-msgstr ""
+msgstr "Elementet \"%s\" har gått från PLAYING till PAUSED, avslutar.\n"
 
 #: tools/gst-launch.c:500
 msgid "Output tags (also known as metadata)"
@@ -797,9 +777,8 @@ msgid "Output status information and property notifications"
 msgstr "Skriv ut statusinformation och egenskapsnotifieringar"
 
 #: tools/gst-launch.c:504
-#, fuzzy
 msgid "Output messages"
-msgstr "Utförstärkning"
+msgstr "Utmatningsmeddelanden"
 
 #: tools/gst-launch.c:506
 msgid "Do not output status information of TYPE"
@@ -849,37 +828,37 @@ msgstr "FEL: \"pipeline\"-elementet hittades inte.\n"
 #: tools/gst-launch.c:632 tools/gst-launch.c:684
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "Ställer in rörledningen till PAUSED...\n"
 
 #: tools/gst-launch.c:637
-#, fuzzy, c-format
+#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "FEL: rörledningen vill inte spela.\n"
+msgstr "FEL: Rörledningen vill inte göra paus.\n"
 
 #: tools/gst-launch.c:642
 #, fuzzy, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "FEL: rörledningen vill inte spela.\n"
+msgstr "Rörledningen har utfört PREROLL...\n"
 
 #: tools/gst-launch.c:645
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
-msgstr ""
+msgstr "Rörledningen utför PREROLL...\n"
 
 #: tools/gst-launch.c:648 tools/gst-launch.c:661
-#, fuzzy, c-format
+#, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "FEL: rörledningen vill inte spela.\n"
+msgstr "FEL: rörledningen vill inte utföra preroll.\n"
 
 #: tools/gst-launch.c:654
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
+msgstr "Rörledningen har utfört PREROLL...\n"
 
 #: tools/gst-launch.c:666
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "Ställer in rörledningen till PLAYING...\n"
 
 #: tools/gst-launch.c:669
 #, c-format
@@ -893,24 +872,42 @@ msgstr "Körning avslutades efter %"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
 #: tools/gst-launch.c:680
-#, fuzzy
 msgid " ns.\n"
-msgstr " ns).\n"
+msgstr " ns.\n"
 
 #: tools/gst-launch.c:687
 #, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr ""
+msgstr "Ställer in rörledningen till READY...\n"
 
 #: tools/gst-launch.c:692
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr ""
+msgstr "Ställer in rörledningen till NULL...\n"
 
 #: tools/gst-launch.c:697
-#, fuzzy, c-format
+#, c-format
 msgid "FREEING pipeline ...\n"
-msgstr "KÖR rörledning...\n"
+msgstr "FRIGÖR rörledning...\n"
+
+# Osäker...
+#~ msgid "ERROR: Pipeline can't PREROLL ...\n"
+#~ msgstr "FEL: Rörledningen kan inte utföra PREROLL...\n"
+
+#~ msgid "Colon-separated path containing plugins"
+#~ msgstr "Kolonseparerad sökväg som innehåller insticksmoduler"
+
+#~ msgid "Your GStreamer installation is missing a plugin."
+#~ msgstr "Din GStreamer-installation saknar en insticksmodul."
+
+#~ msgid "Language code"
+#~ msgstr "Språkkod"
+
+#~ msgid "Language code for this stream, conforming to ISO-639-1"
+#~ msgstr "Språkkod för detta flöde, enligt ISO-639-1"
+
+#~ msgid " ns).\n"
+#~ msgstr " ns).\n"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Inaktivera accelererade processorinstruktioner"
@@ -2206,7 +2203,7 @@ msgstr "KÖR rörledning...\n"
 #~ msgstr "Te_sta"
 
 #~ msgid "Testing Pipeline"
-#~ msgstr "Testar pipeline"
+#~ msgstr "Testar rörledning"
 
 #~ msgid "Video"
 #~ msgstr "Video"
@@ -2218,7 +2215,7 @@ msgstr "KÖR rörledning...\n"
 #~ msgstr "_Utgång:"
 
 #~ msgid "_Pipeline:"
-#~ msgstr "_Pipeline:"
+#~ msgstr "_Rörledning:"
 
 #~ msgid "_Test"
 #~ msgstr "_Testa"
@@ -2227,7 +2224,7 @@ msgstr "KÖR rörledning...\n"
 #~ msgstr "Anpassad"
 
 #~ msgid "Failed to construct test pipeline for '%s'"
-#~ msgstr "Misslyckades med att konstruera testpipeline för \"%s\""
+#~ msgstr "Misslyckades med att konstruera teströrledning för \"%s\""
 
 #~ msgid "There was an error displaying help: %s"
 #~ msgstr "Det uppstod ett fel vid visning av hjälp: %s"
@@ -3056,7 +3053,7 @@ msgstr "KÖR rörledning...\n"
 #~ msgstr "Klicka på OK för att slutföra."
 
 #~ msgid "Pipeline:"
-#~ msgstr "Pipeline:"
+#~ msgstr "Rörledning:"
 
 #~ msgid "Te_st..."
 #~ msgstr "Te_sta..."

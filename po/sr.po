@@ -665,9 +665,8 @@ msgid "Internal data flow problem."
 msgstr ""
 
 #: libs/gst/base/gstbasesink.c:1980
-#, fuzzy
 msgid "Internal data stream error."
-msgstr "Унутрашња грешка у ГСтримеру: неприлика са попуном.  Пријавите грешку."
+msgstr ""
 
 #: plugins/elements/gstfilesink.c:230
 msgid "No file name specified for writing."
@@ -854,9 +853,9 @@ msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
 
 #: tools/gst-launch.c:642
-#, fuzzy, c-format
+#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "ГРЕШКА: цевовод не жели да пусти.\n"
+msgstr ""
 
 #: tools/gst-launch.c:645
 #, c-format

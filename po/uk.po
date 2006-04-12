@@ -1,14 +1,14 @@
 # Ukrainian translation to gstreamer.
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
-# Maxim V. Dziumanenko <mvd@mylinux.com.ua>, 2004-2005.
+# Maxim V. Dziumanenko <mvd@mylinux.com.ua>, 2004-2006.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.9.6\n"
+"Project-Id-Version: gstreamer 0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2006-04-12 12:58+0200\n"
-"PO-Revision-Date: 2005-11-26 15:16+0300\n"
+"PO-Revision-Date: 2006-04-07 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -229,7 +229,7 @@ msgstr "Не вдається отримати/встановити параме
 
 #: gst/gsterror.c:205
 msgid "No space left on the resource."
-msgstr ""
+msgstr "На ресурсі не залишилось місця."
 
 #: gst/gsterror.c:219
 msgid "GStreamer encountered a general stream error."
@@ -639,7 +639,6 @@ msgid "Internal data flow problem."
 msgstr "Помилка внутрішнього потоку даних."
 
 #: libs/gst/base/gstbasesink.c:1980
-#, fuzzy
 msgid "Internal data stream error."
 msgstr "Помилка внутрішнього потоку даних."
 
@@ -818,24 +817,24 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ПОМИЛКА: не знайдений елемент \"pipeline\".\n"
 
 #: tools/gst-launch.c:632 tools/gst-launch.c:684
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "ПРИЗУПИНЯЄТЬСЯ канал ...\n"
+msgstr "Канал переводиться у стан ПРИЗУПИНЕНО ...\n"
 
 #: tools/gst-launch.c:637
-#, fuzzy, c-format
+#, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ПОМИЛКА: канал не може призупинитись.\n"
 
 #: tools/gst-launch.c:642
-#, fuzzy, c-format
+#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "ПОМИЛКА: канал не може почати відтворення.\n"
+msgstr "Конвеєр активний та не потребує PREROLL ...\n"
 
 #: tools/gst-launch.c:645
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
-msgstr ""
+msgstr "Канал у стані PREROLLING ...\n"
 
 #: tools/gst-launch.c:648 tools/gst-launch.c:661
 #, c-format
@@ -845,12 +844,12 @@ msgstr "ПОМИЛКА: канал не може перейти у стан prer
 #: tools/gst-launch.c:654
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
-msgstr ""
+msgstr "Канал у стані PREROLLED ...\n"
 
 #: tools/gst-launch.c:666
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "Канал переводиться у стан ВІДТВОРЕННЯ ...\n"
 
 #: tools/gst-launch.c:669
 #, c-format
@@ -866,34 +865,19 @@ msgid " ns.\n"
 msgstr " нс.\n"
 
 #: tools/gst-launch.c:687
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to READY ...\n"
-msgstr "ПРИЗУПИНЯЄТЬСЯ канал ...\n"
+msgstr "Канал переводиться у стан ГОТОВИЙ ...\n"
 
 #: tools/gst-launch.c:692
-#, fuzzy, c-format
+#, c-format
 msgid "Setting pipeline to NULL ...\n"
-msgstr "ПРИЗУПИНЯЄТЬСЯ канал ...\n"
+msgstr "Канал переводиться у стан NULL ...\n"
 
 #: tools/gst-launch.c:697
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "канал ЗВІЛЬНЕННЯ...\n"
 
-#~ msgid "NO_PREROLL pipeline ...\n"
-#~ msgstr "канал у стані NO_PREROLL ...\n"
-
-#~ msgid "PREROLL pipeline ...\n"
-#~ msgstr "канал у стані PREROLL...\n"
-
-#~ msgid "PREROLLED pipeline ...\n"
-#~ msgstr "канал у стані PREROLLED ...\n"
-
-#~ msgid "RUNNING pipeline ...\n"
-#~ msgstr "ЗАПУСКАЄТЬСЯ канал ...\n"
-
-#~ msgid "READY pipeline ...\n"
-#~ msgstr "канал у стані ГОТОВИЙ...\n"
-
-#~ msgid "NULL pipeline ...\n"
-#~ msgstr "канал у стані NULL...\n"
+#~ msgid "ERROR: Pipeline can't PREROLL ...\n"
+#~ msgstr "ПОМИЛКА: канал не може перейти у стан PREROLL ...\n"

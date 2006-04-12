@@ -687,11 +687,8 @@ msgid "Internal data flow problem."
 msgstr ""
 
 #: libs/gst/base/gstbasesink.c:1980
-#, fuzzy
 msgid "Internal data stream error."
 msgstr ""
-"Interner GStreamer-Fehler: Paddingproblem. Bitte schicken Sie einen "
-"Fehlerbericht."
 
 #: plugins/elements/gstfilesink.c:230
 msgid "No file name specified for writing."
@@ -878,9 +875,9 @@ msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FEHLER: Leitung möchte nicht abgespielt werden.\n"
 
 #: tools/gst-launch.c:642
-#, fuzzy, c-format
+#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "FEHLER: Leitung möchte nicht abgespielt werden.\n"
+msgstr ""
 
 #: tools/gst-launch.c:645
 #, c-format

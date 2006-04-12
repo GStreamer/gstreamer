@@ -1,14 +1,14 @@
 # Bulgarian translation of gstreamer.
-# Copyright (C) 2005 THE gstreamer'S COPYRIGHT HOLDER
+# Copyright (C) 2005, 2006 THE gstreamer'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the gstreamer package.
-# Alexander Shopov <ash@contact.bg>, 2005.
+# Alexander Shopov <ash@contact.bg>, 2005, 2006.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.9.7\n"
+"Project-Id-Version: gstreamer 0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2006-04-12 12:58+0200\n"
-"PO-Revision-Date: 2005-12-03 16:02+0200\n"
+"PO-Revision-Date: 2006-04-07 18:54+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
 "MIME-Version: 1.0\n"
@@ -234,7 +234,7 @@ msgstr "Не може да се получи/зададе настройка о�
 
 #: gst/gsterror.c:205
 msgid "No space left on the resource."
-msgstr ""
+msgstr "Върху ресурса не е останало свободно място."
 
 #: gst/gsterror.c:219
 msgid "GStreamer encountered a general stream error."
@@ -642,7 +642,6 @@ msgid "Internal data flow problem."
 msgstr "Вътрешен проблем на потока от данни."
 
 #: libs/gst/base/gstbasesink.c:1980
-#, fuzzy
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка на потока от данни."
 
@@ -833,9 +832,9 @@ msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ГРЕШКА: конвейерът не изпълнява даването на пауза.\n"
 
 #: tools/gst-launch.c:642
-#, fuzzy, c-format
+#, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "Конвейерът е БУФЕРИРАН...\n"
+msgstr "Конвейерът работи и не се нуждае от БУФЕРИРАНЕ...\n"
 
 #: tools/gst-launch.c:645
 #, c-format
@@ -884,6 +883,3 @@ msgstr "Конвейерът се ЗАНУЛЯВА...\n"
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "ОСВОБОЖДАВАНЕ на конвейера...\n"
-
-#~ msgid "ERROR: Pipeline can't PREROLL ...\n"
-#~ msgstr "ГРЕШКА: конвейерът не може да се БУФЕРИРА...\n"

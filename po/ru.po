@@ -669,11 +669,8 @@ msgid "Internal data flow problem."
 msgstr ""
 
 #: libs/gst/base/gstbasesink.c:1980
-#, fuzzy
 msgid "Internal data stream error."
 msgstr ""
-"Внутренняя ошибка GStreamer: проблема с тэгами.  Отправьте сообщение об "
-"ошибке."
 
 #: plugins/elements/gstfilesink.c:230
 msgid "No file name specified for writing."
