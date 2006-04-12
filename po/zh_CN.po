@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-09 19:22+0100\n"
+"POT-Creation-Date: 2006-04-12 12:58+0200\n"
 "PO-Revision-Date: 2005-12-03 00:05+0800\n"
 "Last-Translator: Funda Wang <fundawang@linux.net.cn>\n"
 "Language-Team: Chinese (simplified) <i18n-translation@lists.linux.net.cn>\n"
@@ -105,165 +105,165 @@ msgstr ""
 "额外的调试信息：\n"
 "%s\n"
 
-#: gst/gsterror.c:132
+#: gst/gsterror.c:131
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer 遇到了常规核心库错误。"
 
-#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:222
+#: gst/gsterror.c:133 gst/gsterror.c:170 gst/gsterror.c:190 gst/gsterror.c:221
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
 msgstr "GStreamer 开发者未对此错误指派错误代码。"
 
-#: gst/gsterror.c:137
+#: gst/gsterror.c:136
 msgid "Internal GStreamer error: code not implemented."
 msgstr "GStreamer 内部错误：代码未实现。"
 
-#: gst/gsterror.c:139
+#: gst/gsterror.c:138
 msgid "Internal GStreamer error: state change failed."
 msgstr "GStreamer 内部错误：状态更改失败。"
 
-#: gst/gsterror.c:140
+#: gst/gsterror.c:139
 msgid "Internal GStreamer error: pad problem."
 msgstr ""
 
-#: gst/gsterror.c:142
+#: gst/gsterror.c:141
 msgid "Internal GStreamer error: thread problem."
 msgstr "GStreamer 内部错误：线程问题。"
 
-#: gst/gsterror.c:144
+#: gst/gsterror.c:143
 msgid "Internal GStreamer error: negotiation problem."
 msgstr ""
 
-#: gst/gsterror.c:146
+#: gst/gsterror.c:145
 msgid "Internal GStreamer error: event problem."
 msgstr "GStreamer 内部错误：事件问题。"
 
-#: gst/gsterror.c:148
+#: gst/gsterror.c:147
 msgid "Internal GStreamer error: seek problem."
 msgstr "GStreamer 内部错误：搜索问题。"
 
-#: gst/gsterror.c:150
+#: gst/gsterror.c:149
 msgid "Internal GStreamer error: caps problem."
 msgstr ""
 
-#: gst/gsterror.c:151
+#: gst/gsterror.c:150
 msgid "Internal GStreamer error: tag problem."
 msgstr "GStreamer 内部错误：标签问题。"
 
-#: gst/gsterror.c:153
+#: gst/gsterror.c:152
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "您的 GStreamer 安装缺少插件。"
 
-#: gst/gsterror.c:155
+#: gst/gsterror.c:154
 msgid "Internal GStreamer error: clock problem."
 msgstr "GStreamer 内部错误：始终错误。"
 
-#: gst/gsterror.c:169
+#: gst/gsterror.c:168
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer 遇到了常规支持库错误。"
 
-#: gst/gsterror.c:173
+#: gst/gsterror.c:172
 msgid "Could not initialize supporting library."
 msgstr "无法初始化支持库。"
 
-#: gst/gsterror.c:174 gst/gsterror.c:175
+#: gst/gsterror.c:173 gst/gsterror.c:174
 msgid "Could not close supporting library."
 msgstr "无法关闭支持库。"
 
-#: gst/gsterror.c:189
+#: gst/gsterror.c:188
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer 遇到了常规资源错误。"
 
-#: gst/gsterror.c:193
+#: gst/gsterror.c:192
 msgid "Resource not found."
 msgstr "资源未找到。"
 
-#: gst/gsterror.c:194
+#: gst/gsterror.c:193
 msgid "Resource busy or not available."
 msgstr "资源忙或不可用。"
 
-#: gst/gsterror.c:195
+#: gst/gsterror.c:194
 msgid "Could not open resource for reading."
 msgstr "无法打开资源读取。"
 
-#: gst/gsterror.c:196
+#: gst/gsterror.c:195
 msgid "Could not open resource for writing."
 msgstr "无法打开资源写入。"
 
-#: gst/gsterror.c:198
+#: gst/gsterror.c:197
 msgid "Could not open resource for reading and writing."
 msgstr "无法打开资源读取和写入。"
 
-#: gst/gsterror.c:199
+#: gst/gsterror.c:198
 msgid "Could not close resource."
 msgstr "无法关闭资源。"
 
-#: gst/gsterror.c:200
+#: gst/gsterror.c:199
 msgid "Could not read from resource."
 msgstr "无法从资源阅读。"
 
-#: gst/gsterror.c:201
+#: gst/gsterror.c:200
 msgid "Could not write to resource."
 msgstr "无法写入资源。"
 
-#: gst/gsterror.c:202
+#: gst/gsterror.c:201
 msgid "Could not perform seek on resource."
 msgstr "无法在资源上执行搜索。"
 
-#: gst/gsterror.c:203
+#: gst/gsterror.c:202
 msgid "Could not synchronize on resource."
 msgstr "无法在资源上同步。"
 
-#: gst/gsterror.c:205
+#: gst/gsterror.c:204
 msgid "Could not get/set settings from/on resource."
 msgstr "无法从资源获得设置或在资源上设定设置。"
 
-#: gst/gsterror.c:206
+#: gst/gsterror.c:205
 msgid "No space left on the resource."
 msgstr ""
 
-#: gst/gsterror.c:220
+#: gst/gsterror.c:219
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer 遇到了常规流错误。"
 
-#: gst/gsterror.c:225
+#: gst/gsterror.c:224
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr "元素未实现对此流的处理。请提交错误报告。"
 
-#: gst/gsterror.c:227
+#: gst/gsterror.c:226
 msgid "Could not determine type of stream."
 msgstr "无法确定流类型。"
 
-#: gst/gsterror.c:229
+#: gst/gsterror.c:228
 msgid "The stream is of a different type than handled by this element."
 msgstr "此流的类型与此元素可处理的类型不符。"
 
-#: gst/gsterror.c:231
+#: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
 msgstr "没有可处理此流类型的编解码器。"
 
-#: gst/gsterror.c:232
+#: gst/gsterror.c:231
 msgid "Could not decode stream."
 msgstr "无法解码流。"
 
-#: gst/gsterror.c:233
+#: gst/gsterror.c:232
 msgid "Could not encode stream."
 msgstr "无法编码流。"
 
-#: gst/gsterror.c:234
+#: gst/gsterror.c:233
 msgid "Could not demultiplex stream."
 msgstr ""
 
-#: gst/gsterror.c:235
+#: gst/gsterror.c:234
 msgid "Could not multiplex stream."
 msgstr ""
 
-#: gst/gsterror.c:286
+#: gst/gsterror.c:285
 #, c-format
 msgid "No error message for domain %s."
 msgstr ""
 
-#: gst/gsterror.c:294
+#: gst/gsterror.c:293
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr ""
@@ -616,16 +616,16 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr ""
 
-#: libs/gst/base/gstbasesrc.c:1415 libs/gst/base/gstbasesrc.c:1425
-#: plugins/elements/gstqueue.c:773
+#: libs/gst/base/gstbasesrc.c:1478 libs/gst/base/gstbasesrc.c:1488
+#: plugins/elements/gstqueue.c:781
 msgid "Internal data flow error."
 msgstr "内部数据流错误。"
 
-#: libs/gst/base/gstbasesink.c:1384
+#: libs/gst/base/gstbasesink.c:1849
 msgid "Internal data flow problem."
 msgstr "内部数据流问题。"
 
-#: libs/gst/base/gstbasesink.c:1514
+#: libs/gst/base/gstbasesink.c:1980
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "内部数据流错误。"
@@ -644,7 +644,7 @@ msgstr "无法打开文件“%s”写入。"
 msgid "Error closing file \"%s\"."
 msgstr "关闭文件“%s”出错。"
 
-#: plugins/elements/gstfilesink.c:361 plugins/elements/gstfilesink.c:425
+#: plugins/elements/gstfilesink.c:361 plugins/elements/gstfilesink.c:433
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "写入文件“%s”时出错。"
@@ -677,19 +677,19 @@ msgstr "文件“%s”是套接字。"
 msgid "Failed after iterations as requested."
 msgstr ""
 
-#: plugins/elements/gsttypefindelement.c:190
+#: plugins/elements/gsttypefindelement.c:192
 msgid "caps"
 msgstr ""
 
-#: plugins/elements/gsttypefindelement.c:191
+#: plugins/elements/gsttypefindelement.c:193
 msgid "detected capabilities in stream"
 msgstr ""
 
-#: plugins/elements/gsttypefindelement.c:194
+#: plugins/elements/gsttypefindelement.c:196
 msgid "minimum"
 msgstr "最小"
 
-#: plugins/elements/gsttypefindelement.c:198
+#: plugins/elements/gsttypefindelement.c:200
 msgid "maximum"
 msgstr "最大"
 

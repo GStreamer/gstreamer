@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-09 19:22+0100\n"
+"POT-Creation-Date: 2006-04-12 12:58+0200\n"
 "PO-Revision-Date: 2005-11-26 15:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -114,166 +114,166 @@ msgstr ""
 "Додаткова налагоджувальна інформація:\n"
 "%s\n"
 
-#: gst/gsterror.c:132
+#: gst/gsterror.c:131
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer перехопив загальну помилку основної бібліотеки."
 
-#: gst/gsterror.c:134 gst/gsterror.c:171 gst/gsterror.c:191 gst/gsterror.c:222
+#: gst/gsterror.c:133 gst/gsterror.c:170 gst/gsterror.c:190 gst/gsterror.c:221
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
 msgstr "Розробники GStreamer не призначили код для цієї помилки."
 
-#: gst/gsterror.c:137
+#: gst/gsterror.c:136
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Внутрішня помилка GStreamer: код не реалізований."
 
-#: gst/gsterror.c:139
+#: gst/gsterror.c:138
 msgid "Internal GStreamer error: state change failed."
 msgstr "Внутрішня помилка GStreamer: помилка зміни стану."
 
-#: gst/gsterror.c:140
+#: gst/gsterror.c:139
 msgid "Internal GStreamer error: pad problem."
 msgstr "Внутрішня помилка GStreamer: проблема наповнення."
 
-#: gst/gsterror.c:142
+#: gst/gsterror.c:141
 msgid "Internal GStreamer error: thread problem."
 msgstr "Внутрішня помилка GStreamer: помилка потоку виконання."
 
-#: gst/gsterror.c:144
+#: gst/gsterror.c:143
 msgid "Internal GStreamer error: negotiation problem."
 msgstr "Внутрішня помилка GStreamer: помилка встановлення зв'язку."
 
-#: gst/gsterror.c:146
+#: gst/gsterror.c:145
 msgid "Internal GStreamer error: event problem."
 msgstr "Внутрішня помилка GStreamer: помилка події."
 
-#: gst/gsterror.c:148
+#: gst/gsterror.c:147
 msgid "Internal GStreamer error: seek problem."
 msgstr "Внутрішня помилка GStreamer: помилка встановлення позиції."
 
-#: gst/gsterror.c:150
+#: gst/gsterror.c:149
 msgid "Internal GStreamer error: caps problem."
 msgstr "Внутрішня помилка GStreamer: проблема можливостей."
 
-#: gst/gsterror.c:151
+#: gst/gsterror.c:150
 msgid "Internal GStreamer error: tag problem."
 msgstr "Внутрішня помилка GStreamer: помилка тегу."
 
-#: gst/gsterror.c:153
+#: gst/gsterror.c:152
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "У вашій збірці GStreamer відсутній модуль."
 
-#: gst/gsterror.c:155
+#: gst/gsterror.c:154
 msgid "Internal GStreamer error: clock problem."
 msgstr "Внутрішня помилка GStreamer: помилка годинника."
 
-#: gst/gsterror.c:169
+#: gst/gsterror.c:168
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer перехопив загальну помилку основної бібліотеки підтримки."
 
-#: gst/gsterror.c:173
+#: gst/gsterror.c:172
 msgid "Could not initialize supporting library."
 msgstr "Не вдається ініціалізувати бібліотеку підтримки."
 
-#: gst/gsterror.c:174 gst/gsterror.c:175
+#: gst/gsterror.c:173 gst/gsterror.c:174
 msgid "Could not close supporting library."
 msgstr "Не вдається закрити бібліотеку підтримки."
 
-#: gst/gsterror.c:189
+#: gst/gsterror.c:188
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer перехопив загальну помилку ресурсу."
 
-#: gst/gsterror.c:193
+#: gst/gsterror.c:192
 msgid "Resource not found."
 msgstr "Ресурс не існує."
 
-#: gst/gsterror.c:194
+#: gst/gsterror.c:193
 msgid "Resource busy or not available."
 msgstr "Ресурс зайнятий або недоступний."
 
-#: gst/gsterror.c:195
+#: gst/gsterror.c:194
 msgid "Could not open resource for reading."
 msgstr "Не вдається відкрити ресурс для читання."
 
-#: gst/gsterror.c:196
+#: gst/gsterror.c:195
 msgid "Could not open resource for writing."
 msgstr "Не вдається відкрити ресурс для запису."
 
-#: gst/gsterror.c:198
+#: gst/gsterror.c:197
 msgid "Could not open resource for reading and writing."
 msgstr "Не вдається відкрити ресурс для читання чи запису."
 
-#: gst/gsterror.c:199
+#: gst/gsterror.c:198
 msgid "Could not close resource."
 msgstr "Не вдається закрити ресурс."
 
-#: gst/gsterror.c:200
+#: gst/gsterror.c:199
 msgid "Could not read from resource."
 msgstr "Не вдається прочитати з ресурсу."
 
-#: gst/gsterror.c:201
+#: gst/gsterror.c:200
 msgid "Could not write to resource."
 msgstr "Не вдається записати у ресурс."
 
-#: gst/gsterror.c:202
+#: gst/gsterror.c:201
 msgid "Could not perform seek on resource."
 msgstr "Не вдається виконати встановлення позиції у ресурсі."
 
-#: gst/gsterror.c:203
+#: gst/gsterror.c:202
 msgid "Could not synchronize on resource."
 msgstr "Не вдається синхронізуватись з ресурсом."
 
-#: gst/gsterror.c:205
+#: gst/gsterror.c:204
 msgid "Could not get/set settings from/on resource."
 msgstr "Не вдається отримати/встановити параметри з/у ресурсі."
 
-#: gst/gsterror.c:206
+#: gst/gsterror.c:205
 msgid "No space left on the resource."
 msgstr ""
 
-#: gst/gsterror.c:220
+#: gst/gsterror.c:219
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer перехопив загальну помилку потоку."
 
-#: gst/gsterror.c:225
+#: gst/gsterror.c:224
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
 "У елементі не реалізовано перехоплення цього потоку. Сповістіть про помилку."
 
-#: gst/gsterror.c:227
+#: gst/gsterror.c:226
 msgid "Could not determine type of stream."
 msgstr "Не вдається визначити тип потоку."
 
-#: gst/gsterror.c:229
+#: gst/gsterror.c:228
 msgid "The stream is of a different type than handled by this element."
 msgstr "Потік іншого типу ніж тип, який обробляє цей елемент."
 
-#: gst/gsterror.c:231
+#: gst/gsterror.c:230
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Відсутній кодек, який здатен обробляти цей тип потоку."
 
-#: gst/gsterror.c:232
+#: gst/gsterror.c:231
 msgid "Could not decode stream."
 msgstr "Не вдається розкодувати потік."
 
-#: gst/gsterror.c:233
+#: gst/gsterror.c:232
 msgid "Could not encode stream."
 msgstr "Не вдається закодувати потік."
 
-#: gst/gsterror.c:234
+#: gst/gsterror.c:233
 msgid "Could not demultiplex stream."
 msgstr "Не вдається демультиплексувати потік."
 
-#: gst/gsterror.c:235
+#: gst/gsterror.c:234
 msgid "Could not multiplex stream."
 msgstr "Не вдається мультиплексувати потік."
 
-#: gst/gsterror.c:286
+#: gst/gsterror.c:285
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Немає повідомлення про помилку для домену %s."
 
-#: gst/gsterror.c:294
+#: gst/gsterror.c:293
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Немає стандартного повідомлення про помилку для домену %s та коду %d."
@@ -629,16 +629,16 @@ msgstr "не вдається прив'язати елемент-спожива�
 msgid "empty pipeline not allowed"
 msgstr "порожній канал не допускається"
 
-#: libs/gst/base/gstbasesrc.c:1415 libs/gst/base/gstbasesrc.c:1425
-#: plugins/elements/gstqueue.c:773
+#: libs/gst/base/gstbasesrc.c:1478 libs/gst/base/gstbasesrc.c:1488
+#: plugins/elements/gstqueue.c:781
 msgid "Internal data flow error."
 msgstr "Помилка внутрішнього потоку даних."
 
-#: libs/gst/base/gstbasesink.c:1384
+#: libs/gst/base/gstbasesink.c:1849
 msgid "Internal data flow problem."
 msgstr "Помилка внутрішнього потоку даних."
 
-#: libs/gst/base/gstbasesink.c:1514
+#: libs/gst/base/gstbasesink.c:1980
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "Помилка внутрішнього потоку даних."
@@ -657,7 +657,7 @@ msgstr "Не вдається відкрити файл \"%s\" для запис
 msgid "Error closing file \"%s\"."
 msgstr "Помилка закривання файлу \"%s\"."
 
-#: plugins/elements/gstfilesink.c:361 plugins/elements/gstfilesink.c:425
+#: plugins/elements/gstfilesink.c:361 plugins/elements/gstfilesink.c:433
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Помилка при записуванні у файл \"%s\"."
@@ -690,19 +690,19 @@ msgstr "Файл \"%s\" є сокетом."
 msgid "Failed after iterations as requested."
 msgstr "Помилка після ітерацій у запитаному порядку."
 
-#: plugins/elements/gsttypefindelement.c:190
+#: plugins/elements/gsttypefindelement.c:192
 msgid "caps"
 msgstr "можливості"
 
-#: plugins/elements/gsttypefindelement.c:191
+#: plugins/elements/gsttypefindelement.c:193
 msgid "detected capabilities in stream"
 msgstr "у потоці знайдено можливості"
 
-#: plugins/elements/gsttypefindelement.c:194
+#: plugins/elements/gsttypefindelement.c:196
 msgid "minimum"
 msgstr "мінімум"
 
-#: plugins/elements/gsttypefindelement.c:198
+#: plugins/elements/gsttypefindelement.c:200
 msgid "maximum"
 msgstr "максимум"
 
