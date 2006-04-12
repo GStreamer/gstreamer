@@ -180,3 +180,12 @@
    fun:Speech_Encode_Frame
    fun:Encoder_Interface_Encode
 }
+
+{
+   <AMR encoder on FC4>
+   Memcheck:Value2
+   obj:/usr/lib/libamrnb.so.0.0.0
+   fun:Speech_Encode_Frame
+   fun:Encoder_Interface_Encode
+}
+
