@@ -103,17 +103,29 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
   g_return_val_if_fail (h->flags == URL_RDONLY, AVERROR_IO);
   info = (GstProtocolInfo *) h->priv_data;
 
+  GST_DEBUG ("Pulling %d bytes at position %lld", size, info->offset);
+
   ret = gst_pad_pull_range(info->pad, info->offset, (guint) size, &inbuf);
 
-  if ((ret == GST_FLOW_OK) || (ret == GST_FLOW_UNEXPECTED)) {
-    if (inbuf) {
+  switch (ret) {
+    case GST_FLOW_OK:
       total = (gint) GST_BUFFER_SIZE (inbuf);
       memcpy (buf, GST_BUFFER_DATA (inbuf), total);
       gst_buffer_unref (inbuf);
-    }
-  } else {
-    return -1;
+      break;
+    case GST_FLOW_UNEXPECTED:
+      total = 0;
+      break;
+    case GST_FLOW_WRONG_STATE:
+      total = -1;
+      break;
+    default:
+    case GST_FLOW_ERROR:
+      total = -2;
+      break;
   }
+
+  GST_DEBUG ("Got %d (%s) return result %d", ret, gst_flow_get_name (ret), total);
 
   return total;
 }
@@ -227,21 +239,25 @@ gst_ffmpegdata_close (URLContext * h)
   GstProtocolInfo *info;
 
   info = (GstProtocolInfo *) h->priv_data;
+  if (info == NULL)
+    return 0;
 
   GST_LOG ("Closing file");
 
   switch (h->flags) {
-  case URL_WRONLY:{
-    /* send EOS - that closes down the stream */
-    gst_pad_push_event (info->pad, gst_event_new_eos());
-  }
-    break;
-  default:
-    break;
+    case URL_WRONLY:
+    {
+      /* send EOS - that closes down the stream */
+      gst_pad_push_event (info->pad, gst_event_new_eos());
+      break;
+    }
+    default:
+      break;
   }
   
   /* clean up data */
   g_free (info);
+  h->priv_data = NULL;
 
   return 0;
 }

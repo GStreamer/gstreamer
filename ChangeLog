@@ -1,3 +1,24 @@
+2006-04-13  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_base_init),
+	(gst_ffmpegdemux_class_init), (gst_ffmpegdemux_init),
+	(gst_ffmpegdemux_close), (gst_ffmpegdemux_push_event),
+	(gst_ffmpegdemux_set_flags), (gst_ffmpegdemux_is_eos),
+	(gst_ffmpegdemux_do_seek), (gst_ffmpegdemux_perform_seek),
+	(gst_ffmpegdemux_src_event), (gst_ffmpegdemux_send_event),
+	(gst_ffmpegdemux_src_query), (gst_ffmpegdemux_src_convert),
+	(gst_ffmpegdemux_get_stream), (my_safe_copy),
+	(gst_ffmpegdemux_read_tags), (gst_ffmpegdemux_open),
+	(gst_ffmpegdemux_loop), (gst_ffmpegdemux_sink_activate),
+	(gst_ffmpegdemux_sink_activate_pull),
+	(gst_ffmpegdemux_change_state), (gst_ffmpegdemux_register):
+	Rework the demuxer, implement all seeking stuff including
+	seek in ready.
+
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_peek),
+	(gst_ffmpegdata_close):
+	Handle some more cases.
+
 2006-04-11  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_sink_event):
