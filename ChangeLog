@@ -1,5 +1,17 @@
 2006-04-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_alloc_sized_buf),
+	(gst_mpeg2dec_alloc_buffer):
+	  Can't use gst_pad_alloc_buffer*() when we are going to crop
+	  the image before sending it out. Downstream basetransform-based
+	  elements will complain about the wrong unit size otherwise
+	  (when not operating in passthrough-mode at least).
+	  Const-ify some static variables and do some minor clean-ups.
+	  Use I420 macros for size/offsets (not really necessary in this
+	  particular context, but this kind of code gets copy'n'pasted).
+
+2006-04-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/mpegstream/gstmpegpacketize.c: (gst_mpeg_packetize_put),
 	(read_cache):
 	* gst/mpegstream/gstmpegpacketize.h:

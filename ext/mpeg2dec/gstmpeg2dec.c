@@ -43,37 +43,23 @@ GST_DEBUG_CATEGORY_STATIC (mpeg2dec_debug);
 #define GST_CAT_DEFAULT (mpeg2dec_debug)
 
 /* table with framerates expressed as fractions */
-static gint fpss[][2] = { {24000, 1001},
+static const gint fpss[][2] = { {24000, 1001},
 {24, 1}, {25, 1}, {30000, 1001},
 {30, 1}, {50, 1}, {60000, 1001},
 {60, 1}, {0, 1}
 };
 
 /* frame periods */
-static guint frame_periods[] = {
+static const guint frame_periods[] = {
   1126125, 1125000, 1080000, 900900, 900000, 540000, 450450, 450000, 0
 };
 
 /* elementfactory information */
-static GstElementDetails gst_mpeg2dec_details = {
-  "mpeg1 and mpeg2 video decoder",
-  "Codec/Decoder/Video",
-  "Uses libmpeg2 to decode MPEG video streams",
-  "Wim Taymans <wim.taymans@chello.be>",
-};
-
-/* Mpeg2dec signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-      /* FILL ME */
-};
+static const GstElementDetails gst_mpeg2dec_details =
+GST_ELEMENT_DETAILS ("mpeg1 and mpeg2 video decoder",
+    "Codec/Decoder/Video",
+    "Uses libmpeg2 to decode MPEG video streams",
+    "Wim Taymans <wim.taymans@chello.be>");
 
 /* error out after receiving MAX_ERROR_COUNT STATE_INVALID return value
  * from mpeg2_parse. -1 means never error out
@@ -480,19 +466,40 @@ crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf)
 }
 
 static GstFlowReturn
+gst_mpeg2dec_alloc_sized_buf (GstMpeg2dec * mpeg2dec, guint size,
+    GstBuffer ** obuf)
+{
+  GstFlowReturn ret;
+
+  if (mpeg2dec->decoded_width == mpeg2dec->width &&
+      mpeg2dec->decoded_height == mpeg2dec->height) {
+    ret = gst_pad_alloc_buffer_and_set_caps (mpeg2dec->srcpad,
+        GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (mpeg2dec->srcpad), obuf);
+  } else {
+    /* can't use gst_pad_alloc_buffer() here because the output buffer will
+     * be cropped and basetransform-based elements will complain about
+     * the wrong unit size when not operating in passthrough mode */
+    *obuf = gst_buffer_new_and_alloc (size);
+    gst_buffer_set_caps (*obuf, GST_PAD_CAPS (mpeg2dec->srcpad));
+    ret = GST_FLOW_OK;
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
 gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset,
     GstBuffer ** obuf)
 {
   GstBuffer *outbuf = NULL;
-  gint size = mpeg2dec->decoded_width * mpeg2dec->decoded_height;
+  gint size;
   guint8 *buf[3], *out = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
 
   if (mpeg2dec->format == MPEG2DEC_FORMAT_I422) {
-    ret =
-        gst_pad_alloc_buffer_and_set_caps (mpeg2dec->srcpad,
-        GST_BUFFER_OFFSET_NONE, size * 2, GST_PAD_CAPS (mpeg2dec->srcpad),
-        &outbuf);
+    size = mpeg2dec->decoded_width * mpeg2dec->decoded_height;
+
+    ret = gst_mpeg2dec_alloc_sized_buf (mpeg2dec, size * 2, &outbuf);
     if (ret != GST_FLOW_OK)
       goto no_buffer;
 
@@ -503,24 +510,28 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset,
     buf[2] = buf[1] + size / 2;
 
   } else {
-    ret =
-        gst_pad_alloc_buffer_and_set_caps (mpeg2dec->srcpad,
-        GST_BUFFER_OFFSET_NONE, (size * 3) / 2, GST_PAD_CAPS (mpeg2dec->srcpad),
-        &outbuf);
+    size = I420_SIZE (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
+
+    ret = gst_mpeg2dec_alloc_sized_buf (mpeg2dec, size, &outbuf);
     if (ret != GST_FLOW_OK)
       goto no_buffer;
 
     out = GST_BUFFER_DATA (outbuf);
 
-    buf[0] = out;
     if (mpeg2dec->format == MPEG2DEC_FORMAT_I420) {
-      buf[0] = out;
-      buf[1] = buf[0] + size;
-      buf[2] = buf[1] + size / 4;
+      buf[0] = out +
+          I420_Y_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
+      buf[1] = out +
+          I420_U_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
+      buf[2] = out +
+          I420_V_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
     } else {
-      buf[0] = out;
-      buf[2] = buf[0] + size;
-      buf[1] = buf[2] + size / 4;
+      buf[0] = out +
+          I420_Y_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
+      buf[1] = out +
+          I420_V_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
+      buf[2] = out +
+          I420_U_OFFSET (mpeg2dec->decoded_width, mpeg2dec->decoded_height);
     }
   }
 
@@ -530,14 +541,7 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset,
    * because we need it for indexing */
   GST_BUFFER_OFFSET (outbuf) = offset;
 
-done:
-  if (ret != GST_FLOW_OK) {
-    outbuf = NULL;              /* just to asure NULL return, looking the path
-                                   above it happens only when gst_pad_alloc_buffer_and_set_caps
-                                   fails to alloc outbf */
-  }
   *obuf = outbuf;
-
   return ret;
 
   /* ERRORS */
@@ -548,7 +552,8 @@ no_buffer:
           ("Failed to allocate memory for buffer, reason %s",
               gst_flow_get_name (ret)));
     }
-    goto done;
+    *obuf = NULL;
+    return ret;
   }
 }
 
