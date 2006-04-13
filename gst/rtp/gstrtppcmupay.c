@@ -50,17 +50,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 static gboolean gst_rtp_pcmu_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
-static GstFlowReturn gst_rtp_pcmu_pay_handle_buffer (GstBaseRTPPayload *
-    payload, GstBuffer * buffer);
-static void gst_rtp_pcmu_pay_finalize (GObject * object);
 
-GST_BOILERPLATE (GstRtpPcmuPay, gst_rtp_pcmu_pay, GstBaseRTPPayload,
-    GST_TYPE_BASE_RTP_PAYLOAD);
-
-/* The lower limit for number of octet to put in one packet
- * (clock-rate=8000, octet-per-sample=1). The default 80 is equal
- * to to 10msec (see RFC3551) */
-#define GST_RTP_PCMU_MIN_PTIME_OCTETS   80
+GST_BOILERPLATE (GstRtpPcmuPay, gst_rtp_pcmu_pay, GstBaseRTPAudioPayload,
+    GST_TYPE_BASE_RTP_AUDIO_PAYLOAD);
 
 static void
 gst_rtp_pcmu_pay_base_init (gpointer klass)
@@ -86,30 +78,24 @@ gst_rtp_pcmu_pay_class_init (GstRtpPcmuPayClass * klass)
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
-  gobject_class->finalize = gst_rtp_pcmu_pay_finalize;
 
   gstbasertppayload_class->set_caps = gst_rtp_pcmu_pay_setcaps;
-  gstbasertppayload_class->handle_buffer = gst_rtp_pcmu_pay_handle_buffer;
 }
 
 static void
 gst_rtp_pcmu_pay_init (GstRtpPcmuPay * rtppcmupay, GstRtpPcmuPayClass * klass)
 {
-  rtppcmupay->adapter = gst_adapter_new ();
+  GstBaseRTPAudioPayload *basertpaudiopayload;
+
+  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (rtppcmupay);
+
   GST_BASE_RTP_PAYLOAD (rtppcmupay)->clock_rate = 8000;
-}
 
-static void
-gst_rtp_pcmu_pay_finalize (GObject * object)
-{
-  GstRtpPcmuPay *rtppcmupay;
+  /* tell basertpaudiopayload that this is a sample based codec */
+  gst_basertpaudiopayload_set_sample_based (basertpaudiopayload);
 
-  rtppcmupay = GST_RTP_PCMU_PAY (object);
-
-  g_object_unref (rtppcmupay->adapter);
-  rtppcmupay->adapter = NULL;
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  /* octet-per-sample is 1 for PCM */
+  gst_basertpaudiopayload_set_sample_options (basertpaudiopayload, 1);
 }
 
 static gboolean
@@ -121,104 +107,6 @@ gst_rtp_pcmu_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   gst_basertppayload_set_outcaps (payload, NULL);
 
   return TRUE;
-}
-
-static GstFlowReturn
-gst_rtp_pcmu_pay_flush (GstRtpPcmuPay * rtppcmupay)
-{
-  guint avail;
-  GstBuffer *outbuf;
-  GstFlowReturn ret;
-  guint maxptime_octets = G_MAXUINT;
-  guint minptime_octets = GST_RTP_PCMU_MIN_PTIME_OCTETS;
-
-  if (GST_BASE_RTP_PAYLOAD (rtppcmupay)->max_ptime > 0) {
-    /* calculate octet count with:
-       maxptime-nsec * samples-per-sec / nsecs-per-sec * octets-per-sample */
-    maxptime_octets =
-        GST_BASE_RTP_PAYLOAD (rtppcmupay)->max_ptime *
-        GST_BASE_RTP_PAYLOAD (rtppcmupay)->clock_rate / GST_SECOND;
-  }
-
-  /* the data available in the adapter is either smaller
-   * than the MTU or bigger. In the case it is smaller, the complete
-   * adapter contents can be put in one packet.  */
-  avail = gst_adapter_available (rtppcmupay->adapter);
-
-  ret = GST_FLOW_OK;
-
-  while (avail >= minptime_octets) {
-    guint8 *payload;
-    guint8 *data;
-    guint payload_len;
-    guint packet_len;
-
-    /* fill one MTU or all available bytes */
-    payload_len =
-        MIN (MIN (GST_BASE_RTP_PAYLOAD_MTU (rtppcmupay), maxptime_octets),
-        avail);
-
-    /* this will be the total lenght of the packet */
-    packet_len = gst_rtp_buffer_calc_packet_len (payload_len, 0, 0);
-
-    /* create buffer to hold the payload */
-    outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
-
-    /* copy payload */
-    gst_rtp_buffer_set_payload_type (outbuf,
-        GST_BASE_RTP_PAYLOAD_PT (rtppcmupay));
-    payload = gst_rtp_buffer_get_payload (outbuf);
-    data = (guint8 *) gst_adapter_peek (rtppcmupay->adapter, payload_len);
-    memcpy (payload, data, payload_len);
-    gst_adapter_flush (rtppcmupay->adapter, payload_len);
-
-    avail -= payload_len;
-
-    GST_BUFFER_TIMESTAMP (outbuf) = rtppcmupay->first_ts;
-    ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtppcmupay), outbuf);
-  }
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_rtp_pcmu_pay_handle_buffer (GstBaseRTPPayload * basepayload,
-    GstBuffer * buffer)
-{
-  GstRtpPcmuPay *rtppcmupay;
-  guint size, packet_len, avail;
-  GstFlowReturn ret;
-  GstClockTime duration;
-
-  rtppcmupay = GST_RTP_PCMU_PAY (basepayload);
-
-  size = GST_BUFFER_SIZE (buffer);
-  duration = GST_BUFFER_TIMESTAMP (buffer);
-
-  avail = gst_adapter_available (rtppcmupay->adapter);
-  if (avail == 0) {
-    rtppcmupay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtppcmupay->duration = 0;
-  }
-
-  /* get packet length of data and see if we exceeded MTU. */
-  packet_len = gst_rtp_buffer_calc_packet_len (avail + size, 0, 0);
-
-  /* if this buffer is going to overflow the packet, flush what we
-   * have. */
-  if (gst_basertppayload_is_filled (basepayload,
-          packet_len, rtppcmupay->duration + duration)) {
-    ret = gst_rtp_pcmu_pay_flush (rtppcmupay);
-    rtppcmupay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtppcmupay->duration = 0;
-  } else {
-    ret = GST_FLOW_OK;
-  }
-
-  gst_adapter_push (rtppcmupay->adapter, buffer);
-  rtppcmupay->duration += duration;
-
-  return ret;
 }
 
 gboolean

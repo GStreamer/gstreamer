@@ -1,3 +1,19 @@
+2006-04-12 Philippe Kalaf <philippe.kalaf@collabora.co.uk>
+
+	* gst/rtp/gstrtppcmapay.c:
+	* gst/rtp/gstrtppcmapay.h:
+	* gst/rtp/gstrtppcmupay.c:
+	* gst/rtp/gstrtppcmupay.h:
+	Ported mulaw and alaw payloaders to use new base class
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c:
+	* gst/rtp/gstrtpilbcpay.c:
+	* gst/rtp/gstrtpilbcpay.h:
+	* gst/rtp/gstrtpilbcdepay.c:
+	* gst/rtp/gstrtpilbcdepay.h:
+	Added new iLBC payloader/depayloader. Payloader uses new audio payload base
+	class.
+
 2006-04-12  Wim Taymans  <wim@fluendo.com>
 
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_setcaps),
