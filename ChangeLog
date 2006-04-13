@@ -1,11 +1,3 @@
-2006-04-12 Philippe Kalaf <philippe.kalaf@collabora.co.uk>
-
-	* gst-libs/gst/rtp/gstrtpbuffer.h:
-	Added GST_RTP_PAYLOAD_DYNAMIC_STRING for use by children
-	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
-	* gst-libs/gst/rtp/gstbasertpaudiopayload.h:
-	New RTP audio base payloader class. Supports frame or sample based codecs
-
 2006-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

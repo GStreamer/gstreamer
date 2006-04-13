@@ -71,8 +71,6 @@ typedef enum
 #define GST_RTP_PAYLOAD_MPV_STRING "32"
 #define GST_RTP_PAYLOAD_H263_STRING "34"
 
-#define GST_RTP_PAYLOAD_DYNAMIC_STRING "[96, 127]"
-
 /* creating buffers */
 GstBuffer*      gst_rtp_buffer_new              (void);
 void            gst_rtp_buffer_allocate_data    (GstBuffer *buffer, guint payload_len, 
