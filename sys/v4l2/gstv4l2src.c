@@ -102,6 +102,7 @@ static guint32 gst_v4l2_formats[] = {
 
 GST_BOILERPLATE (GstV4l2Src, gst_v4l2src, GstV4l2Element, GST_TYPE_V4L2ELEMENT);
 
+static void gst_v4l2src_dispose (GObject * object);
 
 /* basesrc methods */
 static gboolean gst_v4l2src_start (GstBaseSrc * src);
@@ -162,6 +163,9 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   basesrc_class->stop = gst_v4l2src_stop;
 
   pushsrc_class->create = gst_v4l2src_create;
+
+  gobject_class->dispose = gst_v4l2src_dispose;
+
 }
 
 static void
@@ -182,6 +186,21 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
 
   gst_base_src_set_live (GST_BASE_SRC (v4l2src), TRUE);
 }
+
+
+static void
+gst_v4l2src_dispose (GObject * object)
+{
+  GstV4l2Src *v4l2src = GST_V4L2SRC (object);
+
+  if (v4l2src->formats) {
+    gst_v4l2src_clear_format_list (v4l2src);
+  }
+
+  if (((GObjectClass *) parent_class)->dispose)
+    ((GObjectClass *) parent_class)->dispose (object);
+}
+
 
 static void
 gst_v4l2src_set_property (GObject * object,
