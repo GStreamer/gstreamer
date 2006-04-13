@@ -789,15 +789,15 @@ gst_v4l2src_buffer_new (GstV4l2Src * v4l2src, guint size, guint8 * data,
     fps_d = 1;
   }
 
-  buf = (GstBuffer *) gst_mini_object_new (GST_TYPE_V4L2SRC_BUFFER);
-
-  GST_V4L2SRC_BUFFER (buf)->buf = srcbuf;
-
   if (data == NULL) {
-    GST_BUFFER_DATA (buf) = g_malloc (size);
+    buf = gst_buffer_new_and_alloc (size);
   } else {
+    buf = (GstBuffer *) gst_mini_object_new (GST_TYPE_V4L2SRC_BUFFER);
     GST_BUFFER_DATA (buf) = data;
+    GST_V4L2SRC_BUFFER (buf)->buf = srcbuf;
   }
+
+
   GST_BUFFER_SIZE (buf) = size;
 
   GST_BUFFER_TIMESTAMP (buf) =
