@@ -23,7 +23,6 @@
 
 #include <string.h>
 
-/*#define GST_DEBUG_ENABLED */
 #include "gstmpegpacketize.h"
 
 GstMPEGPacketize *
@@ -69,7 +68,7 @@ gst_mpeg_packetize_tell (GstMPEGPacketize * packetize)
   return packetize->cache_byte_pos + packetize->cache_head;
 }
 
-gboolean
+void
 gst_mpeg_packetize_put (GstMPEGPacketize * packetize, GstBuffer * buf)
 {
   int cache_len = packetize->cache_tail - packetize->cache_head;
@@ -86,8 +85,6 @@ gst_mpeg_packetize_put (GstMPEGPacketize * packetize, GstBuffer * buf)
 
     /* allocate new cache - do not realloc to avoid copying data twice */
     new_cache = g_malloc (packetize->cache_size);
-    if (new_cache == NULL)
-      return FALSE;
 
     /* copy the data to the beginning of the new cache and update the cache info */
     memcpy (new_cache, packetize->cache + packetize->cache_head, cache_len);
@@ -114,7 +111,6 @@ gst_mpeg_packetize_put (GstMPEGPacketize * packetize, GstBuffer * buf)
   packetize->cache_tail += GST_BUFFER_SIZE (buf);
 
   gst_buffer_unref (buf);
-  return TRUE;
 }
 
 static guint
@@ -145,8 +141,6 @@ read_cache (GstMPEGPacketize * packetize, guint length, GstBuffer ** outbuf)
     return GST_FLOW_RESEND;
 
   *outbuf = gst_buffer_new_and_alloc (length);
-  if (*outbuf == NULL)
-    return GST_FLOW_ERROR;
 
   memcpy (GST_BUFFER_DATA (*outbuf), packetize->cache + packetize->cache_head,
       length);

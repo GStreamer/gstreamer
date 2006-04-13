@@ -321,6 +321,7 @@ gst_mpeg_parse_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
       GST_ELEMENT_ERROR (GST_ELEMENT (mpeg_parse),
           CORE, NEGOTIATION, (NULL), ("failed to set caps"));
       gst_caps_unref (caps);
+      gst_buffer_unref (buffer);
       return GST_FLOW_ERROR;
     }
     gst_caps_unref (caps);
@@ -689,12 +690,10 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
   GstClockTime time;
   guint64 size;
 
-  if (!gst_mpeg_packetize_put (mpeg_parse->packetize, buffer)) {
-    gst_buffer_unref (buffer);
-    goto done;
-  }
+  gst_mpeg_packetize_put (mpeg_parse->packetize, buffer);
+  buffer = NULL;
 
-  while (1) {
+  do {
     result = gst_mpeg_packetize_read (mpeg_parse->packetize, &buffer);
     if (result == GST_FLOW_RESEND) {
       /* there was not enough data in packetizer cache */
@@ -772,8 +771,13 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
         GST_FLOW_OK);
     time = CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
         MPEGTIME_TO_GSTTIME (mpeg_parse->current_scr));
+
     if (CLASS (mpeg_parse)->send_buffer)
       result = CLASS (mpeg_parse)->send_buffer (mpeg_parse, buffer, time);
+    else
+      gst_buffer_unref (buffer);
+
+    buffer = NULL;
 
     /* Calculate the expected next SCR. */
     if (mpeg_parse->current_scr != MP_INVALID_SCR) {
@@ -809,12 +813,7 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
           ", total since SCR: %" G_GINT64_FORMAT ", br: %" G_GINT64_FORMAT
           ", next SCR: %" G_GINT64_FORMAT, size, bss, br, mpeg_parse->next_scr);
     }
-
-    if (result != GST_FLOW_OK && result != GST_FLOW_NOT_LINKED) {
-      gst_buffer_unref (buffer);
-      goto done;
-    }
-  }
+  } while (!GST_FLOW_IS_FATAL (result));
 
 done:
   gst_object_unref (mpeg_parse);

@@ -1,3 +1,17 @@
+2006-04-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/mpegstream/gstmpegpacketize.c: (gst_mpeg_packetize_put),
+	(read_cache):
+	* gst/mpegstream/gstmpegpacketize.h:
+	  g_malloc() can't fail, we don't need to handle this. Same for
+	  gst_buffer_new_and_alloc().
+
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_chain):
+	  klass->send_buffer() should have the same semantics as
+	  gst_pad_push(), ie. ownership of the buffer is transfered,
+	  so we never have to unref the buffer no matter what the flow
+	  return value was.
+
 2006-04-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* common/check.mak:

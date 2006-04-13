@@ -71,7 +71,7 @@ GstMPEGPacketize* gst_mpeg_packetize_new     (GstPad *pad, GstMPEGPacketizeType 
 void              gst_mpeg_packetize_destroy (GstMPEGPacketize *packetize);
 
 guint64           gst_mpeg_packetize_tell    (GstMPEGPacketize *packetize);
-gboolean          gst_mpeg_packetize_put     (GstMPEGPacketize *packetize, GstBuffer * buf);
+void              gst_mpeg_packetize_put     (GstMPEGPacketize *packetize, GstBuffer * buf);
 GstFlowReturn     gst_mpeg_packetize_read    (GstMPEGPacketize *packetize, GstBuffer ** outbuf);
 
 G_END_DECLS
