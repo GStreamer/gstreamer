@@ -1,3 +1,31 @@
+2006-04-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/rtp/gstasteriskh263.h:
+	* gst/rtp/gstrtpL16depay.h:
+	* gst/rtp/gstrtpL16pay.h:
+	* gst/rtp/gstrtpamrdepay.h:
+	* gst/rtp/gstrtpamrpay.h:
+	* gst/rtp/gstrtpdepay.h:
+	* gst/rtp/gstrtpgsmdepay.h:
+	* gst/rtp/gstrtpgsmpay.h:
+	* gst/rtp/gstrtph263pay.h:
+	* gst/rtp/gstrtph263pdepay.h:
+	* gst/rtp/gstrtph263ppay.h:
+	* gst/rtp/gstrtpilbcdepay.h:
+	* gst/rtp/gstrtpilbcpay.h:
+	* gst/rtp/gstrtpmp4gpay.h:
+	* gst/rtp/gstrtpmp4vdepay.h:
+	* gst/rtp/gstrtpmp4vpay.h:
+	* gst/rtp/gstrtpmpadepay.h:
+	* gst/rtp/gstrtpmpapay.h:
+	* gst/rtp/gstrtppcmadepay.h:
+	* gst/rtp/gstrtppcmapay.h:
+	* gst/rtp/gstrtppcmudepay.h:
+	* gst/rtp/gstrtppcmupay.h:
+	* gst/rtp/gstrtpspeexdepay.h:
+	* gst/rtp/gstrtpspeexpay.h:
+	  Fix GObject macros.
+
 2006-04-12 Philippe Kalaf <philippe.kalaf@collabora.co.uk>
 
 	* gst/rtp/gstrtppcmapay.c:

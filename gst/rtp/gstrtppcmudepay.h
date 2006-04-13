@@ -28,10 +28,10 @@ typedef struct _GstRtpPcmuDepayClass GstRtpPcmuDepayClass;
 #define GST_RTP_PCMU_DEPAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_PCMU_DEPAY,GstRtpPcmuDepay))
 #define GST_RTP_PCMU_DEPAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_PCMU_DEPAY,GstRtpPcmuDepay))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_PCMU_DEPAY,GstRtpPcmuDepayClass))
 #define GST_IS_RTP_PCMU_DEPAY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_PCMU_DEPAY))
-#define GST_IS_RTP_PCMU_DEPAY_CLASS(obj) \
+#define GST_IS_RTP_PCMU_DEPAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_PCMU_DEPAY))
 
 struct _GstRtpPcmuDepay
