@@ -16,8 +16,6 @@ libgstrtp_la_SOURCES = \
 	gstrtph263pdepay.c \
 	gstrtph263ppay.c \
 	gstrtph263pay.c \
-	gstrtpilbcpay.c \
-	gstrtpilbcdepay.c \
 	gstasteriskh263.c \
 	gstrtpmp4vdepay.c \
 	gstrtpmp4vpay.c \
@@ -54,8 +52,6 @@ noinst_HEADERS =			\
 		 gstrtph263pdepay.h 	\
 		 gstrtph263ppay.h 	\
 		 gstrtph263pay.h 	\
-		 gstrtpilbcpay.h \
-		 gstrtpilbcdepay.h \
 		 gstrtpmp4vdepay.h	\
 		 gstrtpmp4vpay.h	\
 		 gstrtpmp4gpay.h	\

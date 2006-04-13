@@ -17,7 +17,8 @@
 #define __GST_RTP_PCMA_PAY_H__
 
 #include <gst/gst.h>
-#include <gst/rtp/gstbasertpaudiopayload.h>
+#include <gst/rtp/gstbasertppayload.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -29,20 +30,24 @@ typedef struct _GstRtpPmcaPayClass GstRtpPmcaPayClass;
 #define GST_RTP_PCMA_PAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_PCMA_PAY,GstRtpPmcaPay))
 #define GST_RTP_PCMA_PAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_PCMA_PAY,GstRtpPmcaPayClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_PCMA_PAY,GstRtpPmcaPay))
 #define GST_IS_RTP_PCMA_PAY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_PCMA_PAY))
-#define GST_IS_RTP_PCMA_PAY_CLASS(klass) \
+#define GST_IS_RTP_PCMA_PAY_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_PCMA_PAY))
 
 struct _GstRtpPmcaPay
 {
-  GstBaseRTPAudioPayload audiopayload;
+  GstBaseRTPPayload payload;
+  GstAdapter *adapter;
+  
+  GstClockTime first_ts;
+  GstClockTime duration;  
 };
 
 struct _GstRtpPmcaPayClass
 {
-  GstBaseRTPAudioPayloadClass parent_class;
+  GstBaseRTPPayloadClass parent_class;
 };
 
 gboolean gst_rtp_pcma_pay_plugin_init (GstPlugin * plugin);

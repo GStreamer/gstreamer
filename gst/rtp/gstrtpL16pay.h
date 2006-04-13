@@ -59,10 +59,10 @@ struct _GstRtpL16PayClass
 #define GST_RTP_L16_PAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_L16_PAY,GstRtpL16Pay))
 #define GST_RTP_L16_PAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_L16_PAY,GstRtpL16PayClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_L16_PAY,GstRtpL16Pay))
 #define GST_IS_RTP_L16_PAY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_L16_PAY))
-#define GST_IS_RTP_L16_PAY_CLASS(klass) \
+#define GST_IS_RTP_L16_PAY_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_L16_PAY))
 
 gboolean gst_rtpL16pay_plugin_init (GstPlugin * plugin);

@@ -24,7 +24,10 @@
 #include "rtp-packet.h"
 #include "gstrtp-common.h"
 
-G_BEGIN_DECLS
+#ifdef __cplusplus
+extern "C"
+{
+#endif                          /* __cplusplus */
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstRtpL16Depay GstRtpL16Depay;
@@ -54,14 +57,17 @@ struct _GstRtpL16DepayClass
 #define GST_RTP_L16_DEPAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_L16_DEPAY,GstRtpL16Depay))
 #define GST_RTP_L16_DEPAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_L16_DEPAY,GstRtpL16DepayClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_L16_DEPAY,GstRtpL16Depay))
 #define GST_IS_RTP_L16_DEPAY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_L16_DEPAY))
-#define GST_IS_RTP_L16_DEPAY_CLASS(klass) \
+#define GST_IS_RTP_L16_DEPAY_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_L16_DEPAY))
 
 gboolean gst_rtp_L16depay_plugin_init (GstPlugin * plugin);
 
-G_END_DECLS
+#ifdef __cplusplus
+}
+#endif                          /* __cplusplus */
+
 
 #endif                          /* __GST_RTP_L16_DEPAY_H__ */
