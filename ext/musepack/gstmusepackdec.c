@@ -109,21 +109,16 @@ gst_musepackdec_init (GstMusepackDec * musepackdec, GstMusepackDecClass * klass)
   musepackdec->d = g_new (mpc_decoder, 1);
 
   musepackdec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
+      gst_pad_new_from_static_template (&sink_template, "sink");
+  gst_pad_set_activate_function (musepackdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_musepackdec_sink_activate));
+  gst_pad_set_activatepull_function (musepackdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_musepackdec_sink_activate_pull));
   gst_element_add_pad (GST_ELEMENT (musepackdec), musepackdec->sinkpad);
 
-  gst_pad_set_activate_function (musepackdec->sinkpad,
-      gst_musepackdec_sink_activate);
-  gst_pad_set_activatepull_function (musepackdec->sinkpad,
-      gst_musepackdec_sink_activate_pull);
-
-  musepackdec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
+  musepackdec->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_event_function (musepackdec->srcpad,
       GST_DEBUG_FUNCPTR (gst_musepackdec_src_event));
-
   gst_pad_set_query_function (musepackdec->srcpad,
       GST_DEBUG_FUNCPTR (gst_musepackdec_src_query));
   gst_pad_set_query_type_function (musepackdec->srcpad,
@@ -416,18 +411,17 @@ gst_musepack_stream_init (GstMusepackDec * musepackdec)
         GST_TAG_BITRATE, (guint) i.average_bitrate, NULL);
   }
 
-  /* FIXME: are these values correct in the end? */
   if (i.gain_title != 0 || i.gain_album != 0) {
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_TRACK_GAIN, (gdouble) i.gain_title / 100.0,
         GST_TAG_ALBUM_GAIN, (gdouble) i.gain_album / 100.0, NULL);
   }
 
-  /* FIXME: are these values correct in the end? */
-  if (i.peak_title != 0 && i.peak_album != 0) {
+  if (i.peak_title != 0 && i.peak_title != 32767 &&
+      i.peak_album != 0 && i.peak_album != 32767) {
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
-        GST_TAG_TRACK_PEAK, (gdouble) i.peak_title,
-        GST_TAG_ALBUM_PEAK, (gdouble) i.peak_album, NULL);
+        GST_TAG_TRACK_PEAK, (gdouble) i.peak_title / 32767.0,
+        GST_TAG_ALBUM_PEAK, (gdouble) i.peak_album / 32767.0, NULL);
   }
 
   GST_LOG_OBJECT (musepackdec, "Posting tags: %" GST_PTR_FORMAT, tags);

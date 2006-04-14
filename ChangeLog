@@ -1,3 +1,10 @@
+2006-04-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/musepack/gstmusepackdec.c: (gst_musepackdec_init),
+	(gst_musepack_stream_init):
+	  Fix track/album peak tag values; use GST_DEBUG_FUNCPTR and
+	  gst_pad_new_from_static_template().
+
 2006-04-13  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2element_class_init),
