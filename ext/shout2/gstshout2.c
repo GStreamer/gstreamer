@@ -384,10 +384,16 @@ gst_shout2send_render (GstBaseSink * sink, GstBuffer * buf)
       shout2send->started = TRUE;
 
     } else {
-      GST_ERROR ("Couldn't connect to server: %s",
+      GST_ERROR_OBJECT (shout2send, "Couldn't connect to server: %s",
           shout_get_error (shout2send->conn));
-      shout2send->conn = FALSE;
-
+      GST_ELEMENT_ERROR (shout2send, RESOURCE, OPEN_WRITE,
+          (NULL), GST_ERROR_SYSTEM);
+      g_signal_emit (G_OBJECT (shout2send),
+          gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM], 0,
+          shout_get_errno (shout2send->conn));
+      shout_free (shout2send->conn);
+      shout2send->conn = NULL;
+      return GST_FLOW_ERROR;
     }
   }
 

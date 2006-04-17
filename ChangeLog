@@ -1,3 +1,12 @@
+2006-04-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/shout2/gstshout2.c: (gst_shout2send_render):
+	  Don't crash in case the connection to the server fails:
+	  don't set pointer to NULL by assigning FALSE; error out
+	  properly by using GST_ELEMENT_ERROR and returning
+	  GST_FLOW_ERROR (fixes #338636). Lastly, free connection
+	  before resetting the pointer.
+
 2006-04-17  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3tags.c:
