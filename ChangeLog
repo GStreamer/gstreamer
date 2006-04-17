@@ -1,3 +1,9 @@
+2006-04-17  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3tags.c:
+	Recognise TCO (Genre) tags in ID3v2.2. Patch by Alex Lancaster
+	(Fixes #338713)
+
 2006-04-12  Wim Taymans  <wim@fluendo.com>
 
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_setcaps),

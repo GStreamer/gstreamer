@@ -264,6 +264,7 @@ const struct ID3v2FrameIDConvert
   "TAL", "TALB"}, {
   "TBP", "TBPM"}, {
   "TCM", "TCOM"}, {
+  "TCO", "TCON"}, {
   "TCR", "TCOP"}, {
   "TDA", "TDRC"}, {
   "TDY", "TDLY"}, {
