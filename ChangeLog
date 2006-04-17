@@ -1,5 +1,16 @@
 2006-04-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Philippe Valembois
+
+	* ext/shout2/gstshout2.c: (gst_shout2send_init),
+	(gst_shout2send_set_metadata), (gst_shout2send_event),
+	(gst_shout2send_render), (gst_shout2send_change_state):
+	* ext/shout2/gstshout2.h:
+	  Handle tags being received before the connection to
+	  the server is established properly (see #338636).
+
+2006-04-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/shout2/gstshout2.c: (gst_shout2send_render):
 	  Don't crash in case the connection to the server fails:
 	  don't set pointer to NULL by assigning FALSE; error out

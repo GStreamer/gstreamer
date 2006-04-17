@@ -56,6 +56,7 @@ struct _GstShout2send {
   gchar *url;
   gboolean sync;
   gboolean started;
+  gchar *songmetadata;
 
   guint16 audio_format;
 

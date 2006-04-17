@@ -235,7 +235,7 @@ gst_shout2send_init (GstShout2send * shout2send)
   shout2send->audio_format = SHOUT_FORMAT_VORBIS;
   shout2send->sync = FALSE;
   shout2send->started = FALSE;
-
+  shout2send->songmetadata = NULL;
 }
 
 static void
@@ -281,10 +281,10 @@ set_shout_metadata (const GstTagList * list, const gchar * tag,
   GST_DEBUG ("shout metadata is now: %s", *shout_metadata);
 }
 
+#if 0
 static void
 gst_shout2send_set_metadata (GstShout2send * shout2send)
 {
-#if 0
   const GstTagList *user_tags;
   GstTagList *copy;
   char *tempmetadata;
@@ -311,16 +311,14 @@ gst_shout2send_set_metadata (GstShout2send * shout2send)
   }
 
   gst_tag_list_free (copy);
-#endif
 }
+#endif
 
 
 static gboolean
 gst_shout2send_event (GstBaseSink * sink, GstEvent * event)
 {
   GstShout2send *shout2send;
-  shout_metadata_t *pmetadata;
-  char *tempmetadata;
 
   shout2send = GST_SHOUT2SEND (sink);
 
@@ -337,13 +335,14 @@ gst_shout2send_event (GstBaseSink * sink, GstEvent * event)
             list,
             gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (shout2send)));
         /* lets get the artist and song tags */
-        tempmetadata = NULL;
         gst_tag_list_foreach ((GstTagList *) shout2send->tags,
-            set_shout_metadata, (gpointer) & tempmetadata);
-        if (tempmetadata) {
-          GST_DEBUG ("shout metadata now: %s", tempmetadata);
+            set_shout_metadata, &shout2send->songmetadata);
+        if (shout2send->songmetadata) {
+          shout_metadata_t *pmetadata;
+
+          GST_DEBUG ("shout metadata now: %s", shout2send->songmetadata);
           pmetadata = shout_metadata_new ();
-          shout_metadata_add (pmetadata, "song", tempmetadata);
+          shout_metadata_add (pmetadata, "song", shout2send->songmetadata);
           shout_set_metadata (shout2send->conn, pmetadata);
           shout_metadata_free (pmetadata);
         }
@@ -380,7 +379,16 @@ gst_shout2send_render (GstBaseSink * sink, GstBuffer * buf)
     if (shout_open (shout2send->conn) == SHOUTERR_SUCCESS) {
       g_print ("connected to server...\n");
       /* lets set metadata */
-      gst_shout2send_set_metadata (shout2send);
+      if (shout2send->songmetadata) {
+        shout_metadata_t *pmetadata;
+
+        GST_DEBUG ("shout metadata now: %s", shout2send->songmetadata);
+        pmetadata = shout_metadata_new ();
+        shout_metadata_add (pmetadata, "song", shout2send->songmetadata);
+        shout_set_metadata (shout2send->conn, pmetadata);
+        shout_metadata_free (pmetadata);
+      }
+
       shout2send->started = TRUE;
 
     } else {
@@ -687,6 +695,8 @@ gst_shout2send_change_state (GstElement * element, GstStateChange transition)
         shout_close (shout2send->conn);
         shout_free (shout2send->conn);
         shout2send->started = FALSE;
+        g_free (shout2send->songmetadata);
+        shout2send->songmetadata = NULL;
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
