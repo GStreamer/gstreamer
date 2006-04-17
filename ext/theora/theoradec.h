@@ -62,7 +62,7 @@ struct _GstTheoraExpDec
   th_dec_ctx *dec;
   th_setup_info *setup;
 
-  theora_info info;
+  th_info info;
   th_comment comment;
 
   gboolean have_header;
@@ -73,6 +73,7 @@ struct _GstTheoraExpDec
   gboolean need_keyframe;
   gint width, height;
   gint offset_x, offset_y;
+  gint output_bpp;
 
   int frame_nr;
 

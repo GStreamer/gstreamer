@@ -58,7 +58,7 @@ GST_ELEMENT_DETAILS ("Theora video decoder",
     "Benjamin Otte <in7y118@public.uni-hamburg.de>, "
     "Wim Taymans <wim@fluendo.com>, " "Michael Smith <msmith@fluendo,com>");
 
-/* TODO: Support for other pixel formats (4:4:4 and 4:2:2) as supported by the
+/* TODO: Support for other pixel formats (4:4:4) as supported by the
  * theoraexp codebase
  */
 static GstStaticPadTemplate theora_dec_src_factory =
@@ -66,7 +66,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) I420, "
+        "format = (fourcc) { I420, YUY2 }, "
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
@@ -218,8 +218,8 @@ theora_dec_src_convert (GstPad * pad,
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          *dest_value = gst_util_uint64_scale_int (src_value, 2,
-              dec->info.pic_height * dec->info.pic_width * 3);
+          *dest_value = gst_util_uint64_scale_int (src_value, 8,
+              dec->info.pic_height * dec->info.pic_width * dec->output_bpp);
           break;
         case GST_FORMAT_TIME:
           /* seems like a rather silly conversion, implement me if you like */
@@ -230,7 +230,8 @@ theora_dec_src_convert (GstPad * pad,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          scale = 3 * (dec->info.pic_width * dec->info.pic_height) / 2;
+          scale = dec->output_bpp *
+              (dec->info.pic_width * dec->info.pic_height) / 8;
         case GST_FORMAT_DEFAULT:
           if (dec->info.fps_numerator && dec->info.fps_denominator)
             *dest_value = scale * gst_util_uint64_scale (src_value,
@@ -255,7 +256,7 @@ theora_dec_src_convert (GstPad * pad,
           break;
         case GST_FORMAT_BYTES:
           *dest_value = gst_util_uint64_scale_int (src_value,
-              3 * dec->info.pic_width * dec->info.pic_height, 2);
+              dec->output_bpp * dec->info.pic_width * dec->info.pic_height, 8);
           break;
         default:
           res = FALSE;
@@ -662,6 +663,7 @@ theora_handle_type_packet (GstTheoraExpDec * dec, ogg_packet * packet)
 {
   GstCaps *caps;
   gint par_num, par_den;
+  guint32 fourcc;
 
   GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
       dec->info.fps_numerator, dec->info.fps_denominator,
@@ -697,13 +699,36 @@ theora_handle_type_packet (GstTheoraExpDec * dec, ogg_packet * packet)
   GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
       dec->width, dec->height, dec->offset_x, dec->offset_y);
 
+  if (dec->info.pixel_fmt == TH_PF_420) {
+    dec->output_bpp = 12;       /* Average bits per pixel. */
+
+    /* This is bad. I420 is very specific, and has implicit stride. This means
+     * we can't use the native output of the decoder, we have to memcpy it to
+     * an I420 buffer. For now, GStreamer gives us no better alternative.
+     */
+    fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
+  } else if (dec->info.pixel_fmt == TH_PF_422) {
+    dec->output_bpp = 16;
+    /* Unfortunately, we don't have a planar 'fourcc' value, which means we
+     * can't represent the output format of the decoder at all in gstreamer.
+     * So, we convert to a widely-supported packed format.
+     */
+    fourcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
+  } else {
+    /* TODO: Implement 4:4:4, check for reserved/invalid values,
+     * post appropriate error message, ensure callers handle errors here 
+     * properly.
+     */
+    return GST_FLOW_ERROR;
+  }
+
   dec->dec = th_decode_alloc (&dec->info, dec->setup);
 
   th_setup_free (dec->setup);
   dec->setup = NULL;
 
   caps = gst_caps_new_simple ("video/x-raw-yuv",
-      "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+      "format", GST_TYPE_FOURCC, fourcc,
       "framerate", GST_TYPE_FRACTION,
       dec->info.fps_numerator, dec->info.fps_denominator,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, par_num, par_den,
@@ -797,57 +822,117 @@ theora_dec_push (GstTheoraExpDec * dec, GstBuffer * buf)
   return result;
 }
 
+/* Create a packed 'YUY2' image, push it.
+ */
 static GstFlowReturn
-theora_handle_data_packet (GstTheoraExpDec * dec, ogg_packet * packet,
+theora_handle_422_image (GstTheoraExpDec * dec, th_ycbcr_buffer yuv,
     GstClockTime outtime)
 {
-  /* normal data packet */
-  th_ycbcr_buffer yuv;
+  int i, j;
+  gint width, height;
+  gint out_size;
+  gint stride;
   GstBuffer *out;
-  guint i;
+  GstFlowReturn result;
+
+  width = dec->width;
+  height = dec->height;
+
+  stride = ROUND_UP_2 (width) * 2;
+
+  out_size = stride * height;
+
+  /* now copy over the area contained in offset_x,offset_y,
+   * frame_width, frame_height */
+  result =
+      gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+      out_size, GST_PAD_CAPS (dec->srcpad), &out);
+  if (result != GST_FLOW_OK)
+    goto no_buffer;
+
+  /* The output pixels look like:
+   *   YUYVYUYV....
+   *
+   * Do the interleaving... Note that this is kinda messed up if our width is
+   * odd. In that case, we can't represent it properly in YUY2, so we just
+   * pad out to even in that case (this is why we have ROUND_UP_2() above).
+   */
+  {
+    guchar *src_y;
+    guchar *src_cb;
+    guchar *src_cr;
+    guchar *dest;
+    guchar *curdest;
+    guchar *src;
+
+    dest = GST_BUFFER_DATA (out);
+
+    src_y = yuv[0].data + dec->offset_x + dec->offset_y * yuv[0].ystride;
+    src_cb = yuv[1].data + dec->offset_x / 2 + dec->offset_y * yuv[1].ystride;
+    src_cr = yuv[2].data + dec->offset_x / 2 + dec->offset_y * yuv[2].ystride;
+
+    for (i = 0; i < height; i++) {
+      /* Y first */
+      curdest = dest;
+      src = src_y;
+      for (j = 0; j < width; j++) {
+        *curdest = *src++;
+        curdest += 2;
+      }
+      src_y += yuv[0].ystride;
+
+      curdest = dest + 1;
+      src = src_cb;
+      for (j = 0; j < width; j++) {
+        *curdest = *src++;
+        curdest += 4;
+      }
+      src_cb += yuv[1].ystride;
+
+      curdest = dest + 3;
+      src = src_cr;
+      for (j = 0; j < width; j++) {
+        *curdest = *src++;
+        curdest += 4;
+      }
+      src_cr += yuv[1].ystride;
+
+      dest += stride;
+    }
+  }
+
+  /* FIXME, frame_nr not correct */
+  GST_BUFFER_OFFSET (out) = dec->frame_nr;
+  dec->frame_nr++;
+  GST_BUFFER_OFFSET_END (out) = dec->frame_nr;
+  GST_BUFFER_DURATION (out) =
+      gst_util_uint64_scale_int (GST_SECOND, dec->info.fps_denominator,
+      dec->info.fps_numerator);
+  GST_BUFFER_TIMESTAMP (out) = outtime;
+
+  return theora_dec_push (dec, out);
+
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
+        gst_flow_get_name (result));
+    return result;
+  }
+}
+
+/* Create a (planar, but with special alignment and stride requirements) 'I420'
+ * buffer, populate, push.
+ */
+static GstFlowReturn
+theora_handle_420_image (GstTheoraExpDec * dec, th_ycbcr_buffer yuv,
+    GstClockTime outtime)
+{
+  int i;
+  gint width, height, cwidth, cheight;
   gint out_size;
   gint stride_y, stride_uv;
-  gint width, height;
-  gint cwidth, cheight;
+  GstBuffer *out;
   GstFlowReturn result;
-  ogg_int64_t gp;
-
-  if (!dec->have_header)
-    goto not_initialized;
-
-  if (th_packet_iskeyframe (packet)) {
-    dec->need_keyframe = FALSE;
-  } else if (dec->need_keyframe) {
-    goto dropping;
-  }
-
-  /* this does the decoding */
-  if (th_decode_packetin (dec->dec, packet, &gp))
-    goto decode_error;
-
-  if (outtime != -1) {
-    gboolean need_skip;
-
-    GST_OBJECT_LOCK (dec);
-    /* check for QoS, don't perform the last steps of getting and
-     * pushing the buffers that are known to be late. */
-    /* FIXME, we can also entirely skip decoding if the next valid buffer is 
-     * known to be after a keyframe (using the granule_shift) */
-    need_skip = dec->earliest_time != -1 && outtime <= dec->earliest_time;
-    GST_OBJECT_UNLOCK (dec);
-
-    if (need_skip)
-      goto dropping_qos;
-  }
-
-  /* this does postprocessing and set up the decoded frame
-   * pointers in our yuv variable */
-  if (th_decode_ycbcr_out (dec->dec, yuv) < 0)
-    goto no_yuv;
-
-  if ((yuv[0].width != dec->info.frame_width) ||
-      (yuv[0].height != dec->info.frame_height))
-    goto wrong_dimensions;
 
   width = dec->width;
   height = dec->height;
@@ -925,7 +1010,70 @@ theora_handle_data_packet (GstTheoraExpDec * dec, ogg_packet * packet,
       dec->info.fps_numerator);
   GST_BUFFER_TIMESTAMP (out) = outtime;
 
-  result = theora_dec_push (dec, out);
+  return theora_dec_push (dec, out);
+
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
+        gst_flow_get_name (result));
+    return result;
+  }
+}
+
+static GstFlowReturn
+theora_handle_data_packet (GstTheoraExpDec * dec, ogg_packet * packet,
+    GstClockTime outtime)
+{
+  /* normal data packet */
+  th_ycbcr_buffer yuv;
+  GstFlowReturn result;
+  ogg_int64_t gp;
+
+  if (!dec->have_header)
+    goto not_initialized;
+
+  if (th_packet_iskeyframe (packet)) {
+    dec->need_keyframe = FALSE;
+  } else if (dec->need_keyframe) {
+    goto dropping;
+  }
+
+  /* this does the decoding */
+  if (th_decode_packetin (dec->dec, packet, &gp))
+    goto decode_error;
+
+  if (outtime != -1) {
+    gboolean need_skip;
+
+    GST_OBJECT_LOCK (dec);
+    /* check for QoS, don't perform the last steps of getting and
+     * pushing the buffers that are known to be late. */
+    /* FIXME, we can also entirely skip decoding if the next valid buffer is 
+     * known to be after a keyframe (using the granule_shift) */
+    need_skip = dec->earliest_time != -1 && outtime <= dec->earliest_time;
+    GST_OBJECT_UNLOCK (dec);
+
+    if (need_skip)
+      goto dropping_qos;
+  }
+
+  /* this does postprocessing and set up the decoded frame
+   * pointers in our yuv variable */
+  if (th_decode_ycbcr_out (dec->dec, yuv) < 0)
+    goto no_yuv;
+
+  if ((yuv[0].width != dec->info.frame_width) ||
+      (yuv[0].height != dec->info.frame_height))
+    goto wrong_dimensions;
+
+  if (dec->info.pixel_fmt == TH_PF_420) {
+    result = theora_handle_420_image (dec, yuv, outtime);
+  } else if (dec->info.pixel_fmt == TH_PF_422) {
+    result = theora_handle_422_image (dec, yuv, outtime);
+  } else {
+    /* Should be unreachable */
+    result = GST_FLOW_ERROR;
+  }
 
   return result;
 
@@ -964,12 +1112,6 @@ wrong_dimensions:
     GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, FORMAT,
         (NULL), ("dimensions of image do not match header"));
     return GST_FLOW_ERROR;
-  }
-no_buffer:
-  {
-    GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
-        gst_flow_get_name (result));
-    return result;
   }
 }
 
