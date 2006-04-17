@@ -20,6 +20,27 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-v4l2srcsrc
+ *
+ * <refsect2>
+ * v4l2src can be used to capture video from v4l2 devices, like webcams and tv cards.
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch v4l2src ! xvimagesink
+ * </programlisting>
+ * This pipeline shows the video captured from /dev/video0 tv card.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch v4l2src use-fixed-fps=true ! xvimagesink
+ * </programlisting>
+ * This exemplo should be used to capture from web-cams
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
