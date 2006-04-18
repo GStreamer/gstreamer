@@ -1,6 +1,4 @@
-/*
- * gstgdkpixbuf.h
- * GStreamer
+/* GStreamer GdkPixbuf-based image decoder
  * Copyright (C) 1999-2001 Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) 2003 David A. Schleef <ds@schleef.org>
  *
@@ -33,10 +31,10 @@ G_BEGIN_DECLS
 #define GST_GDK_PIXBUF(obj)						\
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GDK_PIXBUF,GstGdkPixbuf))
 #define GST_GDK_PIXBUF_CLASS(klass)					\
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GDK_PIXBUF,GstGdkPixbuf))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GDK_PIXBUF,GstGdkPixbufClass))
 #define GST_IS_GDK_PIXBUF(obj)					\
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GDK_PIXBUF))
-#define GST_IS_GDK_PIXBUF_CLASS(obj)				\
+#define GST_IS_GDK_PIXBUF_CLASS(klass)				\
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GDK_PIXBUF))
 
 typedef struct _GstGdkPixbuf      GstGdkPixbuf;

@@ -1,6 +1,4 @@
-/*
- * gstgdkpixbuf.c
- * GStreamer
+/* GStreamer GdkPixbuf-based image decoder
  * Copyright (C) 1999-2001 Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) 2003 David A. Schleef <ds@schleef.org>
  *
@@ -33,7 +31,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_gdk_pixbuf_debug);
 #define GST_CAT_DEFAULT gst_gdk_pixbuf_debug
 
-static GstElementDetails plugin_details =
+static const GstElementDetails plugin_details =
 GST_ELEMENT_DETAILS ("GdkPixbuf image decoder",
     "Codec/Decoder/Image",
     "Decodes images in a video stream using GdkPixbuf",
@@ -95,9 +93,10 @@ static gboolean gst_gdk_pixbuf_sink_event (GstPad * pad, GstEvent * event);
 static void gst_gdk_pixbuf_type_find (GstTypeFind * tf, gpointer ignore);
 #endif
 
-GST_BOILERPLATE (GstGdkPixbuf, gst_gdk_pixbuf, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstGdkPixbuf, gst_gdk_pixbuf, GstElement, GST_TYPE_ELEMENT);
 
-     static gboolean gst_gdk_pixbuf_sink_setcaps (GstPad * pad, GstCaps * caps)
+static gboolean
+gst_gdk_pixbuf_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstGdkPixbuf *filter;
   const GValue *framerate;
@@ -181,8 +180,6 @@ gst_gdk_pixbuf_class_init (GstGdkPixbufClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->set_property = gst_gdk_pixbuf_set_property;
   gobject_class->get_property = gst_gdk_pixbuf_get_property;
 
@@ -196,10 +193,14 @@ gst_gdk_pixbuf_init (GstGdkPixbuf * filter, GstGdkPixbufClass * klass)
 {
   filter->sinkpad =
       gst_pad_new_from_static_template (&gst_gdk_pixbuf_sink_template, "sink");
-  gst_pad_set_setcaps_function (filter->sinkpad, gst_gdk_pixbuf_sink_setcaps);
-  gst_pad_set_getcaps_function (filter->sinkpad, gst_gdk_pixbuf_sink_getcaps);
-  gst_pad_set_chain_function (filter->sinkpad, gst_gdk_pixbuf_chain);
-  gst_pad_set_event_function (filter->sinkpad, gst_gdk_pixbuf_sink_event);
+  gst_pad_set_setcaps_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_sink_setcaps));
+  gst_pad_set_getcaps_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_sink_getcaps));
+  gst_pad_set_chain_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_chain));
+  gst_pad_set_event_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_sink_event));
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   filter->srcpad =
@@ -284,12 +285,12 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
   /* ERRORS */
 no_pixbuf:
   {
-    GST_DEBUG ("error geting pixbuf");
+    GST_ELEMENT_ERROR (filter, STREAM, DECODE, (NULL), ("error geting pixbuf"));
     return GST_FLOW_ERROR;
   }
 channels_not_supported:
   {
-    GST_ELEMENT_ERROR (filter, CORE, NEGOTIATION, (NULL),
+    GST_ELEMENT_ERROR (filter, STREAM, DECODE, (NULL),
         ("%d channels not supported", n_channels));
     return GST_FLOW_ERROR;
   }
@@ -358,7 +359,7 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstBuffer * buf)
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     filter->last_timestamp = timestamp;
 
-  GST_DEBUG_OBJECT (filter, "buffer with ts: %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (filter, "buffer with ts: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
 
   if (filter->pixbuf_loader == NULL)
@@ -367,11 +368,18 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstBuffer * buf)
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
-  GST_DEBUG ("Writing buffer size %d", size);
+  GST_LOG_OBJECT (filter, "Writing buffer size %d", size);
   if (!gdk_pixbuf_loader_write (filter->pixbuf_loader, data, size, &error))
     goto error;
 
-done:
+  /* packetised mode? */
+  if (filter->framerate_numerator != 0) {
+    gdk_pixbuf_loader_close (filter->pixbuf_loader, NULL);
+    ret = gst_gdk_pixbuf_flush (filter);
+    g_object_unref (filter->pixbuf_loader);
+    filter->pixbuf_loader = NULL;
+  }
+
   gst_object_unref (filter);
 
   return ret;
@@ -379,10 +387,11 @@ done:
   /* ERRORS */
 error:
   {
-    GST_DEBUG ("gst_gdk_pixbuf_chain ERROR: %s", error->message);
-    ret = GST_FLOW_ERROR;
+    GST_ELEMENT_ERROR (filter, STREAM, DECODE, (NULL),
+        ("gdk_pixbuf_loader_write error: %s", error->message));
     g_error_free (error);
-    goto done;
+    gst_object_unref (filter);
+    return GST_FLOW_ERROR;
   }
 }
 

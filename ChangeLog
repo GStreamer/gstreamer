@@ -1,5 +1,16 @@
 2006-04-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_setcaps),
+	(gst_gdk_pixbuf_class_init), (gst_gdk_pixbuf_init),
+	(gst_gdk_pixbuf_flush), (gst_gdk_pixbuf_chain):
+	* ext/gdk_pixbuf/gstgdkpixbuf.h:
+	  Make work with packetised/framed input (e.g. png-in-quicktime). Use
+	  GST_ELEMENT_ERROR when we return GST_FLOW_ERROR. Add some
+	  GST_DEBUG_FUNCPTR here and there. Use GST_LOG for recurring
+	  debug messages. Fix boilerplate macros.
+
+2006-04-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_get_capslist),
 	(gst_gdk_pixbuf_set_property), (gst_gdk_pixbuf_get_property):
 	  No need to special-case for Gdk-2.0 any longer, we require
