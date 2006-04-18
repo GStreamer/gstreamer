@@ -39,17 +39,10 @@ GST_ELEMENT_DETAILS ("GdkPixbuf image decoder",
     "Decodes images in a video stream using GdkPixbuf",
     "David A. Schleef <ds@schleef.org>, Renato Filho <renato.filho@indt.org.br>");
 
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
 enum
 {
   ARG_0,
-  ARG_SILENT
+  ARG_SILENT                    /* FIXME 0.11: remove */
 };
 
 static GstStaticPadTemplate gst_gdk_pixbuf_sink_template =
@@ -127,20 +120,6 @@ GST_BOILERPLATE (GstGdkPixbuf, gst_gdk_pixbuf, GstElement, GST_TYPE_ELEMENT)
   return TRUE;
 }
 
-
-#if GDK_PIXBUF_MAJOR == 2 && GDK_PIXBUF_MINOR < 2
-/* gdk-pixbuf prior to 2.2 didn't have gdk_pixbuf_get_formats().
- * These are just the formats that gdk-pixbuf is known to support.
- * But maybe not -- it may have been compiled without an external
- * library. */
-
-static GstCaps *
-gst_gdk_pixbuf_get_capslist (void)
-{
-  return gst_caps_copy (gst_static_caps_get (&gst_gdk_pixbuf_sink_template.
-          static_caps));
-}
-#else
 static GstCaps *
 gst_gdk_pixbuf_get_capslist (void)
 {
@@ -173,7 +152,6 @@ gst_gdk_pixbuf_get_capslist (void)
   gst_caps_unref (capslist);
   return return_caps;
 }
-#endif
 
 static GstCaps *
 gst_gdk_pixbuf_sink_getcaps (GstPad * pad)
@@ -414,7 +392,6 @@ gst_gdk_pixbuf_set_property (GObject * object, guint prop_id,
 {
   GstGdkPixbuf *filter;
 
-  g_return_if_fail (GST_IS_GDK_PIXBUF (object));
   filter = GST_GDK_PIXBUF (object);
 
   switch (prop_id) {
@@ -433,7 +410,6 @@ gst_gdk_pixbuf_get_property (GObject * object, guint prop_id,
 {
   GstGdkPixbuf *filter;
 
-  g_return_if_fail (GST_IS_GDK_PIXBUF (object));
   filter = GST_GDK_PIXBUF (object);
 
   switch (prop_id) {

@@ -1,5 +1,12 @@
 2006-04-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_get_capslist),
+	(gst_gdk_pixbuf_set_property), (gst_gdk_pixbuf_get_property):
+	  No need to special-case for Gdk-2.0 any longer, we require
+	  Gdk 2.2 or newer; minor clean-ups.
+
+2006-04-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/shout2/gstshout2.c: (gst_shout2send_base_init),
 	(gst_shout2send_class_init), (gst_shout2send_init),
 	(set_shout_metadata), (gst_shout2send_set_metadata),
