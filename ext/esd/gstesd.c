@@ -26,20 +26,14 @@
 #include "esdmon.h"
 #endif
 
+#include "gst/gst-i18n-plugin.h"
+
 GST_DEBUG_CATEGORY (esd_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret;
-
-#if 0
-  if (!gst_library_load ("gstaudio"))
-    return FALSE;
-#endif
-
-  ret = gst_esdsink_factory_init (plugin);
-  if (ret == FALSE)
+  if (!gst_esdsink_factory_init (plugin))
     return FALSE;
 
 #if 0
@@ -49,6 +43,12 @@ plugin_init (GstPlugin * plugin)
 #endif
 
   GST_DEBUG_CATEGORY_INIT (esd_debug, "esd", 0, "ESounD elements");
+
+#ifdef ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
+
   return TRUE;
 }
 

@@ -25,10 +25,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include "esdsink.h"
 #include <esd.h>
 #include <unistd.h>
 #include <errno.h>
+
+#include <gst/gst-i18n-plugin.h>
 
 GST_DEBUG_CATEGORY_EXTERN (esd_debug);
 #define GST_CAT_DEFAULT esd_debug
@@ -239,7 +242,8 @@ gst_esdsink_open (GstAudioSink * asink)
   /* ERRORS */
 couldnt_connect:
   {
-    GST_ELEMENT_ERROR (esdsink, RESOURCE, OPEN_WRITE, (NULL),
+    GST_ELEMENT_ERROR (esdsink, RESOURCE, OPEN_WRITE,
+        (_("Could not establish connection to sound server")),
         ("can't open connection to esound server"));
     return FALSE;
   }
@@ -336,7 +340,8 @@ unsupported_channels:
   }
 cannot_open:
   {
-    GST_ELEMENT_ERROR (esdsink, RESOURCE, OPEN_WRITE, (NULL),
+    GST_ELEMENT_ERROR (esdsink, RESOURCE, OPEN_WRITE,
+        (_("Could not establish connection to sound server")),
         ("can't open connection to esound server"));
     return FALSE;
   }

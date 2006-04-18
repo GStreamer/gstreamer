@@ -1,5 +1,15 @@
 2006-04-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/esd/esdsink.c: (gst_esdsink_open), (gst_esdsink_prepare):
+	* ext/esd/gstesd.c: (plugin_init):
+	* po/POTFILES.in:
+	  Add translatable error message for when we cannot
+	  connect to the sound server, as "Cannot open resource
+	  for writing" isn't really an acceptable message to show
+	  to the user in this case.
+
+2006-04-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* sys/oss/gst-i18n-plugin.h:
 	  Remove bogus file that doesn't belong here.
 
