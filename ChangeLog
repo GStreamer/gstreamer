@@ -1,5 +1,24 @@
 2006-04-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/shout2/gstshout2.c: (gst_shout2send_base_init),
+	(gst_shout2send_class_init), (gst_shout2send_init),
+	(set_shout_metadata), (gst_shout2send_set_metadata),
+	(gst_shout2send_event), (gst_shout2send_start),
+	(gst_shout2send_connect), (gst_shout2send_stop),
+	(gst_shout2send_render), (gst_shout2send_set_property),
+	(gst_shout2send_get_property), (gst_shout2send_setcaps),
+	(plugin_init):
+	* ext/shout2/gstshout2.h:
+	* po/POTFILES.in:
+	  Rewrite a bit: use GstBaseSink::start and stop instead of a state
+	  change function; use GST_ELEMENT_ERROR for error reporting, not
+	  g_error() or GST_ERROR(); don't unref caps in setcaps function,
+	  will cause crashes or assertion failures; remove (unused) "sync"
+	  property, basesink already has such a property; misc. other
+	  minor fixes and cleanups.
+
+2006-04-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/esd/esdsink.c: (gst_esdsink_open), (gst_esdsink_prepare):
 	* ext/esd/gstesd.c: (plugin_init):
 	* po/POTFILES.in:

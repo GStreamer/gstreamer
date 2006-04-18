@@ -25,9 +25,7 @@
 #include <gst/base/gstbasesink.h>
 #include <shout/shout.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
   /* Protocol type enum */
 typedef enum {
@@ -54,16 +52,12 @@ struct _GstShout2send {
   gchar *genre;
   gchar *mount;
   gchar *url;
-  gboolean sync;
-  gboolean started;
+  gboolean connected;
   gchar *songmetadata;
 
   guint16 audio_format;
 
   GstTagList* tags;
-
-  GstClock      *clock;
-
 };
 
 
@@ -83,19 +77,16 @@ struct _GstShout2sendClass {
 #define GST_SHOUT2SEND(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SHOUT2SEND,GstShout2send))
 #define GST_SHOUT2SEND_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SHOUT2SEND,GstShout2send))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SHOUT2SEND,GstShout2sendClass))
 #define GST_IS_SHOUT2SEND(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SHOUT2SEND))
-#define GST_IS_SHOUT2SEND_CLASS(obj) \
+#define GST_IS_SHOUT2SEND_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SHOUT2SEND))
 
 /* Standard function returning type information. */
 GType gst_shout2send_get_type(void);
 
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_SHOUT2SEND_H__ */

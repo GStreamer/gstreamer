@@ -1,5 +1,6 @@
 ext/libpng/gstpngdec.c
 ext/esd/esdsink.c
+ext/shout2/gstshout2.c
 gst/avi/gstavimux.c
 gst/wavparse/gstwavparse.c
 sys/oss/gstossmixer.c

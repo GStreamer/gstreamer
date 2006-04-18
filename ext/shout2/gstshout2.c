@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2006> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,15 +21,17 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include "gstshout2.h"
 #include <stdlib.h>
 #include <string.h>
 
-GST_DEBUG_CATEGORY (shout2_debug);
+#include "gst/gst-i18n-plugin.h"
+
+GST_DEBUG_CATEGORY_STATIC (shout2_debug);
 #define GST_CAT_DEFAULT shout2_debug
 
-/* elementfactory information */
-static GstElementDetails shout2send_details =
+static const GstElementDetails shout2send_details =
 GST_ELEMENT_DETAILS ("Icecast network sink",
     "Sink/Network",
     "Sends data to an icecast server",
@@ -37,11 +40,9 @@ GST_ELEMENT_DETAILS ("Icecast network sink",
     "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
 
-/* Shout2send signals and args */
 enum
 {
-  /* FILL ME */
-  SIGNAL_CONNECTION_PROBLEM,
+  SIGNAL_CONNECTION_PROBLEM,    /* 0.11 FIXME: remove this */
   LAST_SIGNAL
 };
 
@@ -59,9 +60,18 @@ enum
   ARG_PROTOCOL,                 /* Protocol to connect with */
 
   ARG_MOUNT,                    /* mountpoint of stream (icecast only) */
-  ARG_URL,                      /* Url of stream (I'm guessing) */
-  ARG_SYNC                      /* Sync with clock */
+  ARG_URL                       /* Url of stream (I'm guessing) */
 };
+
+#define DEFAULT_IP           "127.0.0.1"
+#define DEFAULT_PORT         8000
+#define DEFAULT_PASSWORD     "hackme"
+#define DEFAULT_STREAMNAME   ""
+#define DEFAULT_DESCRIPTION  ""
+#define DEFAULT_GENRE        ""
+#define DEFAULT_MOUNT        ""
+#define DEFAULT_URL          ""
+#define DEFAULT_PROTOCOL     SHOUT2SEND_PROTOCOL_HTTP
 
 static GstElementClass *parent_class = NULL;
 
@@ -78,14 +88,14 @@ static void gst_shout2send_init (GstShout2send * shout2send);
 static gboolean gst_shout2send_event (GstBaseSink * sink, GstEvent * event);
 static GstFlowReturn gst_shout2send_render (GstBaseSink * sink,
     GstBuffer * buffer);
+static gboolean gst_shout2send_start (GstBaseSink * basesink);
+static gboolean gst_shout2send_stop (GstBaseSink * basesink);
 
 static void gst_shout2send_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_shout2send_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstStateChangeReturn gst_shout2send_change_state (GstElement * element,
-    GstStateChange transition);
 static gboolean gst_shout2send_setcaps (GstPad * pad, GstCaps * caps);
 
 static guint gst_shout2send_signals[LAST_SIGNAL] = { 0 };
@@ -152,10 +162,11 @@ gst_shout2send_base_init (GstShout2sendClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  element_class->change_state = gst_shout2send_change_state;
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_set_details (element_class, &shout2send_details);
+
+  GST_DEBUG_CATEGORY_INIT (shout2_debug, "shout2", 0, "shout2send element");
 }
 
 static void
@@ -172,32 +183,41 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
   gobject_class->set_property = gst_shout2send_set_property;
   gobject_class->get_property = gst_shout2send_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_IP, g_param_spec_string ("ip", "ip", "ip", NULL, G_PARAM_READWRITE));    /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT, g_param_spec_int ("port", "port", "port", 1, G_MAXUSHORT, 8000, G_PARAM_READWRITE));       /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_IP,
+      g_param_spec_string ("ip", "ip", "ip", DEFAULT_IP, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
+      g_param_spec_int ("port", "port", "port", 1, G_MAXUSHORT, DEFAULT_PORT,
+          G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PASSWORD, g_param_spec_string ("password", "password", "password", NULL, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PASSWORD,
+      g_param_spec_string ("password", "password", "password", DEFAULT_PASSWORD,
+          G_PARAM_READWRITE));
 
   /* metadata */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STREAMNAME, g_param_spec_string ("streamname", "streamname", "name of the stream", NULL, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STREAMNAME,
+      g_param_spec_string ("streamname", "streamname", "name of the stream",
+          DEFAULT_STREAMNAME, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DESCRIPTION, g_param_spec_string ("description", "description", "description", NULL, G_PARAM_READWRITE));        /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DESCRIPTION,
+      g_param_spec_string ("description", "description", "description",
+          DEFAULT_DESCRIPTION, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GENRE, g_param_spec_string ("genre", "genre", "genre", NULL, G_PARAM_READWRITE));        /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GENRE,
+      g_param_spec_string ("genre", "genre", "genre", DEFAULT_GENRE,
+          G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROTOCOL,
       g_param_spec_enum ("protocol", "protocol", "Connection Protocol to use",
-          GST_TYPE_SHOUT_PROTOCOL, SHOUT2SEND_PROTOCOL_HTTP,
-          G_PARAM_READWRITE));
+          GST_TYPE_SHOUT_PROTOCOL, DEFAULT_PROTOCOL, G_PARAM_READWRITE));
 
 
   /* icecast only */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MOUNT, g_param_spec_string ("mount", "mount", "mount", NULL, G_PARAM_READWRITE));        /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MOUNT,
+      g_param_spec_string ("mount", "mount", "mount", DEFAULT_MOUNT,
+          G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_URL, g_param_spec_string ("url", "url", "url", NULL, G_PARAM_READWRITE));        /* CHECKME */
-
-  /* sync to clock */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SYNC,
-      g_param_spec_boolean ("sync", "Sync", "Sync on the clock", FALSE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_URL,
+      g_param_spec_string ("url", "url", "url", DEFAULT_URL,
           G_PARAM_READWRITE));
 
   /* signals */
@@ -207,34 +227,34 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
           connection_problem), NULL, NULL, g_cclosure_marshal_VOID__INT,
       G_TYPE_NONE, 1, G_TYPE_INT);
 
+  gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_shout2send_start);
+  gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_shout2send_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_shout2send_render);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_shout2send_event);
-  GST_DEBUG_CATEGORY_INIT (shout2_debug, "shout2", 0, "shout2send element");
 }
 
 static void
 gst_shout2send_init (GstShout2send * shout2send)
 {
-  GstPad *pad;
+  gst_base_sink_set_sync (GST_BASE_SINK (shout2send), FALSE);
 
-  pad = GST_BASE_SINK_PAD (shout2send);
+  gst_pad_set_setcaps_function (GST_BASE_SINK_PAD (shout2send),
+      GST_DEBUG_FUNCPTR (gst_shout2send_setcaps));
 
-  gst_pad_set_setcaps_function (pad, gst_shout2send_setcaps);
-  shout2send->clock = NULL;
-  shout2send->ip = g_strdup ("127.0.0.1");
-  shout2send->port = 8000;
-  shout2send->password = g_strdup ("hackme");
-  shout2send->streamname = g_strdup ("");
-  shout2send->description = g_strdup ("");
-  shout2send->genre = g_strdup ("");
-  shout2send->mount = g_strdup ("");
-  shout2send->url = g_strdup ("");
+  shout2send->ip = g_strdup (DEFAULT_IP);
+  shout2send->port = DEFAULT_PORT;
+  shout2send->password = g_strdup (DEFAULT_PASSWORD);
+  shout2send->streamname = g_strdup (DEFAULT_STREAMNAME);
+  shout2send->description = g_strdup (DEFAULT_DESCRIPTION);
+  shout2send->genre = g_strdup (DEFAULT_GENRE);
+  shout2send->mount = g_strdup (DEFAULT_MOUNT);
+  shout2send->url = g_strdup (DEFAULT_URL);
+  shout2send->protocol = DEFAULT_PROTOCOL;
+
   shout2send->tags = gst_tag_list_new ();
-  shout2send->protocol = SHOUT2SEND_PROTOCOL_HTTP;
   shout2send->conn = NULL;
   shout2send->audio_format = SHOUT_FORMAT_VORBIS;
-  shout2send->sync = FALSE;
-  shout2send->started = FALSE;
+  shout2send->connected = FALSE;
   shout2send->songmetadata = NULL;
 }
 
@@ -249,7 +269,7 @@ set_shout_metadata (const GstTagList * list, const gchar * tag,
   if (strcmp (tag, GST_TAG_ARTIST) == 0) {
     if (gst_tag_get_type (tag) == G_TYPE_STRING) {
       if (!gst_tag_list_get_string (list, tag, &value)) {
-        GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
+        GST_DEBUG ("Error reading \"%s\" tag value", tag);
         return;
       }
       /* shout_metadata should be NULL if title is after artist in  list */
@@ -265,7 +285,7 @@ set_shout_metadata (const GstTagList * list, const gchar * tag,
   } else if (strcmp (tag, GST_TAG_TITLE) == 0) {
     if (gst_tag_get_type (tag) == G_TYPE_STRING) {
       if (!gst_tag_list_get_string (list, tag, &value)) {
-        GST_DEBUG ("Error reading \"%s\" tag value\n", tag);
+        GST_DEBUG ("Error reading \"%s\" tag value", tag);
         return;
       }
       /* shout_metadata should be NULL if title is before artist in  list */
@@ -278,7 +298,7 @@ set_shout_metadata (const GstTagList * list, const gchar * tag,
       }
     }
   }
-  GST_DEBUG ("shout metadata is now: %s", *shout_metadata);
+  GST_LOG ("shout metadata is now: %s", *shout_metadata);
 }
 
 #if 0
@@ -292,13 +312,11 @@ gst_shout2send_set_metadata (GstShout2send * shout2send)
 
   g_return_if_fail (shout2send != NULL);
   user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (shout2send));
-
   if ((shout2send->tags == NULL) && (user_tags == NULL)) {
     return;
   }
   copy = gst_tag_list_merge (user_tags, shout2send->tags,
       gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (shout2send)));
-
   /* lets get the artist and song tags */
   tempmetadata = NULL;
   gst_tag_list_foreach ((GstTagList *) copy, set_shout_metadata,
@@ -319,28 +337,32 @@ static gboolean
 gst_shout2send_event (GstBaseSink * sink, GstEvent * event)
 {
   GstShout2send *shout2send;
+  gboolean ret = TRUE;
 
   shout2send = GST_SHOUT2SEND (sink);
 
+  GST_LOG_OBJECT (shout2send, "got %s event", GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:
-      GST_DEBUG ("tag event received");
+    case GST_EVENT_TAG:{
       /* vorbis audio doesnt need metadata setting on the icecast level, only mp3 */
       if (shout2send->tags && shout2send->audio_format == SHOUT_FORMAT_MP3) {
         GstTagList *list;
 
         gst_event_parse_tag (event, &list);
-
+        GST_DEBUG_OBJECT (shout2send, "tags=%" GST_PTR_FORMAT, list);
         gst_tag_list_insert (shout2send->tags,
             list,
             gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (shout2send)));
         /* lets get the artist and song tags */
         gst_tag_list_foreach ((GstTagList *) shout2send->tags,
             set_shout_metadata, &shout2send->songmetadata);
-        if (shout2send->songmetadata) {
+        if (shout2send->songmetadata && shout2send->connected) {
           shout_metadata_t *pmetadata;
 
-          GST_DEBUG ("shout metadata now: %s", shout2send->songmetadata);
+          GST_DEBUG_OBJECT (shout2send, "metadata now: %s",
+              shout2send->songmetadata);
+
           pmetadata = shout_metadata_new ();
           shout_metadata_add (pmetadata, "song", shout2send->songmetadata);
           shout_set_metadata (shout2send->conn, pmetadata);
@@ -348,81 +370,216 @@ gst_shout2send_event (GstBaseSink * sink, GstEvent * event)
         }
       }
       break;
-    default:
-      GST_DEBUG ("some other event received");
+    }
+    default:{
+      GST_LOG_OBJECT (shout2send, "let base class handle event");
+      if (GST_BASE_SINK_CLASS (parent_class)->event) {
+        event = gst_event_ref (event);
+        ret = GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
+      }
+      break;
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_shout2send_start (GstBaseSink * basesink)
+{
+  GstShout2send *sink = GST_SHOUT2SEND (basesink);
+  const gchar *cur_prop;
+  gshort proto = 3;
+  gchar *version_string;
+
+  GST_DEBUG_OBJECT (sink, "starting");
+
+  sink->conn = shout_new ();
+
+  switch (sink->protocol) {
+    case SHOUT2SEND_PROTOCOL_XAUDIOCAST:
+      proto = SHOUT_PROTOCOL_XAUDIOCAST;
+      break;
+    case SHOUT2SEND_PROTOCOL_ICY:
+      proto = SHOUT_PROTOCOL_ICY;
+      break;
+    case SHOUT2SEND_PROTOCOL_HTTP:
+      proto = SHOUT_PROTOCOL_HTTP;
       break;
   }
+
+  cur_prop = "protocol";
+  GST_DEBUG_OBJECT (sink, "setting protocol: %d", sink->protocol);
+  if (shout_set_protocol (sink->conn, proto) != SHOUTERR_SUCCESS)
+    goto set_failed;
+
+  /* --- FIXME: shout requires an ip, and fails if it is given a host. */
+  /* may want to put convert_to_ip(shout2send->ip) here */
+  cur_prop = "ip";
+  GST_DEBUG_OBJECT (sink, "setting ip: %s", sink->ip);
+  if (shout_set_host (sink->conn, sink->ip) != SHOUTERR_SUCCESS)
+    goto set_failed;
+
+  cur_prop = "port";
+  GST_DEBUG_OBJECT (sink, "setting port: %u", sink->port);
+  if (shout_set_port (sink->conn, sink->port) != SHOUTERR_SUCCESS)
+    goto set_failed;
+
+  cur_prop = "password";
+  GST_DEBUG_OBJECT (sink, "setting password: %s", sink->password);
+  if (shout_set_password (sink->conn, sink->password) != SHOUTERR_SUCCESS)
+    goto set_failed;
+
+  cur_prop = "streamname";
+  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, sink->streamname);
+  if (shout_set_name (sink->conn, sink->streamname) != SHOUTERR_SUCCESS)
+    goto set_failed;
+
+  cur_prop = "description";
+  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, sink->description);
+  if (shout_set_description (sink->conn, sink->description) != SHOUTERR_SUCCESS)
+    goto set_failed;
+
+  cur_prop = "genre";
+  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, sink->genre);
+  if (shout_set_genre (sink->conn, sink->genre) != SHOUTERR_SUCCESS)
+    goto set_failed;
+
+  cur_prop = "mount";
+  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, sink->mount);
+  if (shout_set_mount (sink->conn, sink->mount) != SHOUTERR_SUCCESS)
+    goto set_failed;
+
+  cur_prop = "user";
+  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, "source");
+  if (shout_set_user (sink->conn, "source") != SHOUTERR_SUCCESS)
+    goto set_failed;
+
+  version_string = gst_version_string ();
+  cur_prop = "agent";
+  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, version_string);
+  if (shout_set_agent (sink->conn, version_string) != SHOUTERR_SUCCESS) {
+    g_free (version_string);
+    goto set_failed;
+  }
+
+  g_free (version_string);
+  return TRUE;
+
+/* ERROR */
+set_failed:
+  {
+    GST_ELEMENT_ERROR (sink, LIBRARY, SETTINGS, (NULL),
+        ("Error setting %s: %s", cur_prop, shout_get_error (sink->conn)));
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_shout2send_connect (GstShout2send * sink)
+{
+  GST_DEBUG_OBJECT (sink, "Connection format is: %s",
+      (sink->audio_format == SHOUT_FORMAT_VORBIS) ? "vorbis" :
+      ((sink->audio_format == SHOUT_FORMAT_MP3) ? "mp3" : "unknown"));
+
+  if (shout_set_format (sink->conn, sink->audio_format) != SHOUTERR_SUCCESS)
+    goto could_not_set_format;
+
+  if (shout_open (sink->conn) != SHOUTERR_SUCCESS)
+    goto could_not_connect;
+
+  GST_DEBUG_OBJECT (sink, "connected to server");
+  sink->connected = TRUE;
+
+  /* let's set metadata */
+  if (sink->songmetadata) {
+    shout_metadata_t *pmetadata;
+
+    GST_DEBUG_OBJECT (sink, "shout metadata now: %s", sink->songmetadata);
+    pmetadata = shout_metadata_new ();
+    shout_metadata_add (pmetadata, "song", sink->songmetadata);
+    shout_set_metadata (sink->conn, pmetadata);
+    shout_metadata_free (pmetadata);
+  }
+
+  return TRUE;
+
+/* ERRORS */
+could_not_set_format:
+  {
+    GST_ELEMENT_ERROR (sink, LIBRARY, SETTINGS, (NULL),
+        ("Error setting connection format: %s", shout_get_error (sink->conn)));
+    return FALSE;
+  }
+
+could_not_connect:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
+        (_("Could not connect to server")),
+        ("shout_open() failed: err=%s", shout_get_error (sink->conn)));
+    g_signal_emit (sink, gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM], 0,
+        shout_get_errno (sink->conn));
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_shout2send_stop (GstBaseSink * basesink)
+{
+  GstShout2send *sink = GST_SHOUT2SEND (basesink);
+
+  if (sink->conn) {
+    if (sink->connected)
+      shout_close (sink->conn);
+    shout_free (sink->conn);
+    sink->conn = NULL;
+  }
+
+  if (sink->songmetadata) {
+    g_free (sink->songmetadata);
+    sink->songmetadata = NULL;
+  }
+
+  sink->connected = FALSE;
 
   return TRUE;
 }
 
 static GstFlowReturn
-gst_shout2send_render (GstBaseSink * sink, GstBuffer * buf)
+gst_shout2send_render (GstBaseSink * basesink, GstBuffer * buf)
 {
-  GstShout2send *shout2send;
+  GstShout2send *sink;
   glong ret;
 
+  sink = GST_SHOUT2SEND (basesink);
 
-  shout2send = GST_SHOUT2SEND (sink);
-
-  if (!shout2send->started) {
-/* connect */
-    GST_DEBUG ("Connection format is: %s",
-        shout2send->audio_format == SHOUT_FORMAT_VORBIS ? "vorbis" :
-        (shout2send->audio_format == SHOUT_FORMAT_MP3 ? "mp3" : "unknown"));
-    if (shout_set_format (shout2send->conn,
-            shout2send->audio_format) != SHOUTERR_SUCCESS) {
-      GST_ERROR ("Error setting connection format: %s\n",
-          shout_get_error (shout2send->conn));
-    }
-
-    if (shout_open (shout2send->conn) == SHOUTERR_SUCCESS) {
-      g_print ("connected to server...\n");
-      /* lets set metadata */
-      if (shout2send->songmetadata) {
-        shout_metadata_t *pmetadata;
-
-        GST_DEBUG ("shout metadata now: %s", shout2send->songmetadata);
-        pmetadata = shout_metadata_new ();
-        shout_metadata_add (pmetadata, "song", shout2send->songmetadata);
-        shout_set_metadata (shout2send->conn, pmetadata);
-        shout_metadata_free (pmetadata);
-      }
-
-      shout2send->started = TRUE;
-
-    } else {
-      GST_ERROR_OBJECT (shout2send, "Couldn't connect to server: %s",
-          shout_get_error (shout2send->conn));
-      GST_ELEMENT_ERROR (shout2send, RESOURCE, OPEN_WRITE,
-          (NULL), GST_ERROR_SYSTEM);
-      g_signal_emit (G_OBJECT (shout2send),
-          gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM], 0,
-          shout_get_errno (shout2send->conn));
-      shout_free (shout2send->conn);
-      shout2send->conn = NULL;
+  /* presumably we connect here because we need to know the format before
+   * we can set up the connection, which we don't know yet in _start() */
+  if (!sink->connected) {
+    if (!gst_shout2send_connect (sink))
       return GST_FLOW_ERROR;
-    }
   }
 
+  /* FIXME: do we want to do syncing here at all? (tpm) */
+  /* GST_LOG_OBJECT (sink, "using libshout to sync"); */
+  shout_sync (sink->conn);
 
-  if (shout2send->clock && shout2send->sync) {
-    //GST_DEBUG("using GStreamer clock to sync");
-    //gst_element_wait (GST_ELEMENT (shout2send), GST_BUFFER_TIMESTAMP (buf));
-  } else {
-    //GST_DEBUG("using libshout to sync");
-    shout_sync (shout2send->conn);
-  }
-  ret = shout_send (shout2send->conn, GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf));
-  if (ret != SHOUTERR_SUCCESS) {
-    GST_WARNING ("send error: %s...\n", shout_get_error (shout2send->conn));
-    g_signal_emit (G_OBJECT (shout2send),
-        gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM], 0,
-        shout_get_errno (shout2send->conn));
-  }
+  GST_LOG_OBJECT (sink, "sending %u bytes of data", GST_BUFFER_SIZE (buf));
+  ret = shout_send (sink->conn, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  if (ret != SHOUTERR_SUCCESS)
+    goto send_error;
 
   return GST_FLOW_OK;
+
+/* ERRORS */
+send_error:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
+        ("shout_send() failed: %s", shout_get_error (sink->conn)));
+    g_signal_emit (sink, gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM], 0,
+        shout_get_errno (sink->conn));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static void
@@ -431,9 +588,7 @@ gst_shout2send_set_property (GObject * object, guint prop_id,
 {
   GstShout2send *shout2send;
 
-  g_return_if_fail (GST_IS_SHOUT2SEND (object));
   shout2send = GST_SHOUT2SEND (object);
-
   switch (prop_id) {
 
     case ARG_IP:
@@ -441,67 +596,55 @@ gst_shout2send_set_property (GObject * object, guint prop_id,
         g_free (shout2send->ip);
       shout2send->ip = g_strdup (g_value_get_string (value));
       break;
-
     case ARG_PORT:
       shout2send->port = g_value_get_int (value);
       break;
-
     case ARG_PASSWORD:
       if (shout2send->password)
         g_free (shout2send->password);
       shout2send->password = g_strdup (g_value_get_string (value));
       break;
-
     case ARG_STREAMNAME:       /* Name of the stream */
       if (shout2send->streamname)
         g_free (shout2send->streamname);
       shout2send->streamname = g_strdup (g_value_get_string (value));
       break;
-
     case ARG_DESCRIPTION:      /* Description of the stream */
       if (shout2send->description)
         g_free (shout2send->description);
       shout2send->description = g_strdup (g_value_get_string (value));
       break;
-
     case ARG_GENRE:            /* Genre of the stream */
       if (shout2send->genre)
         g_free (shout2send->genre);
       shout2send->genre = g_strdup (g_value_get_string (value));
       break;
-
     case ARG_PROTOCOL:         /* protocol to connect with */
       shout2send->protocol = g_value_get_enum (value);
       break;
-
     case ARG_MOUNT:            /* mountpoint of stream (icecast only) */
       if (shout2send->mount)
         g_free (shout2send->mount);
       shout2send->mount = g_strdup (g_value_get_string (value));
       break;
-
     case ARG_URL:              /* Url of the stream (I'm guessing) */
       if (shout2send->url)
         g_free (shout2send->url);
       shout2send->url = g_strdup (g_value_get_string (value));
       break;
-    case ARG_SYNC:
-      shout2send->sync = g_value_get_boolean (value);
-      break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
 static void
-gst_shout2send_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
+gst_shout2send_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
   GstShout2send *shout2send;
 
-  g_return_if_fail (GST_IS_SHOUT2SEND (object));
   shout2send = GST_SHOUT2SEND (object);
-
   switch (prop_id) {
 
     case ARG_IP:
@@ -513,32 +656,23 @@ gst_shout2send_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_PASSWORD:
       g_value_set_string (value, shout2send->password);
       break;
-
     case ARG_STREAMNAME:       /* Name of the stream */
       g_value_set_string (value, shout2send->streamname);
       break;
-
     case ARG_DESCRIPTION:      /* Description of the stream */
       g_value_set_string (value, shout2send->description);
       break;
-
     case ARG_GENRE:            /* Genre of the stream */
       g_value_set_string (value, shout2send->genre);
       break;
-
     case ARG_PROTOCOL:         /* protocol to connect with */
       g_value_set_enum (value, shout2send->protocol);
       break;
-
     case ARG_MOUNT:            /* mountpoint of stream (icecast only) */
       g_value_set_string (value, shout2send->mount);
       break;
-
     case ARG_URL:              /* Url of stream (I'm guessing) */
       g_value_set_string (value, shout2send->url);
-      break;
-    case ARG_SYNC:             /* Sync to clock */
-      g_value_set_boolean (value, shout2send->sync);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -554,155 +688,17 @@ gst_shout2send_setcaps (GstPad * pad, GstCaps * caps)
   gboolean ret = TRUE;
 
   shout2send = GST_SHOUT2SEND (GST_OBJECT_PARENT (pad));
+
   mimetype = gst_structure_get_name (gst_caps_get_structure (caps, 0));
-  GST_DEBUG ("in setcaps function, mimetype of caps given is: %s", mimetype);
+
+  GST_DEBUG_OBJECT (shout2send, "mimetype of caps given is: %s", mimetype);
+
   if (!strcmp (mimetype, "audio/mpeg")) {
     shout2send->audio_format = SHOUT_FORMAT_MP3;
-  }
-
-  else if (!strcmp (mimetype, "application/ogg")) {
+  } else if (!strcmp (mimetype, "application/ogg")) {
     shout2send->audio_format = SHOUT_FORMAT_VORBIS;
   } else {
     ret = FALSE;
-  }
-  gst_caps_unref (caps);
-
-  return ret;
-
-}
-
-static GstStateChangeReturn
-gst_shout2send_change_state (GstElement * element, GstStateChange transition)
-{
-  GstShout2send *shout2send;
-  GstStateChangeReturn ret;
-
-  gshort proto = 3;
-
-  gchar *version_string;
-
-  g_return_val_if_fail (GST_IS_SHOUT2SEND (element), GST_STATE_CHANGE_FAILURE);
-
-  shout2send = GST_SHOUT2SEND (element);
-
-  GST_DEBUG ("state pending %d", GST_STATE_PENDING (element));
-
-  /* if going down into NULL state, close the file if it's open */
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      shout2send->conn = shout_new ();
-
-      switch (shout2send->protocol) {
-        case SHOUT2SEND_PROTOCOL_XAUDIOCAST:
-          proto = SHOUT_PROTOCOL_XAUDIOCAST;
-          break;
-        case SHOUT2SEND_PROTOCOL_ICY:
-          proto = SHOUT_PROTOCOL_ICY;
-          break;
-        case SHOUT2SEND_PROTOCOL_HTTP:
-          proto = SHOUT_PROTOCOL_HTTP;
-          break;
-      }
-
-      if (shout_set_protocol (shout2send->conn, proto) != SHOUTERR_SUCCESS) {
-        GST_DEBUG ("shout2send configured with protocol: %d",
-            shout2send->protocol);
-        g_error ("Error setting protocol: %s\n",
-            shout_get_error (shout2send->conn));
-      }
-
-      /* --- FIXME: shout requires an ip, and fails if it is given a host. */
-      /* may want to put convert_to_ip(shout2send->ip) here */
-
-
-      if (shout_set_host (shout2send->conn, shout2send->ip) != SHOUTERR_SUCCESS) {
-        g_error ("Error setting host: %s\n",
-            shout_get_error (shout2send->conn));
-      }
-      /* --- */
-
-      if (shout_set_port (shout2send->conn,
-              shout2send->port) != SHOUTERR_SUCCESS) {
-        g_error ("Error setting port: %s\n",
-            shout_get_error (shout2send->conn));
-      }
-
-      if (shout_set_password (shout2send->conn,
-              shout2send->password) != SHOUTERR_SUCCESS) {
-        g_error ("Error setting password: %s\n",
-            shout_get_error (shout2send->conn));
-      }
-
-      if (shout_set_name (shout2send->conn,
-              shout2send->streamname) != SHOUTERR_SUCCESS) {
-        g_error ("Error setting stream name: %s\n",
-            shout_get_error (shout2send->conn));
-      }
-
-      if (shout_set_description (shout2send->conn,
-              shout2send->description) != SHOUTERR_SUCCESS) {
-        g_error ("Error setting name: %s\n",
-            shout_get_error (shout2send->conn));
-      }
-
-      if (shout_set_genre (shout2send->conn,
-              shout2send->genre) != SHOUTERR_SUCCESS) {
-        g_error ("Error setting name: %s\n",
-            shout_get_error (shout2send->conn));
-      }
-
-      if (shout_set_mount (shout2send->conn,
-              shout2send->mount) != SHOUTERR_SUCCESS) {
-        g_error ("Error setting mount point: %s\n",
-            shout_get_error (shout2send->conn));
-      }
-
-      if (shout_set_user (shout2send->conn, "source") != SHOUTERR_SUCCESS) {
-        g_error ("Error setting user: %s\n",
-            shout_get_error (shout2send->conn));
-      }
-
-      version_string = gst_version_string ();
-
-      if (shout_set_agent (shout2send->conn,
-              version_string) != SHOUTERR_SUCCESS) {
-        g_error ("Error setting agent: %s\n",
-            shout_get_error (shout2send->conn));
-      }
-
-      g_free (version_string);
-
-
-
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-
-
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (shout2send->started) {
-        shout_close (shout2send->conn);
-        shout_free (shout2send->conn);
-        shout2send->started = FALSE;
-        g_free (shout2send->songmetadata);
-        shout2send->songmetadata = NULL;
-      }
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
   }
 
   return ret;
@@ -711,6 +707,11 @@ gst_shout2send_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#ifdef ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
+
   return gst_element_register (plugin, "shout2send", GST_RANK_NONE,
       GST_TYPE_SHOUT2SEND);
 }
