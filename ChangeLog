@@ -1,3 +1,10 @@
+2006-04-18  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_perform_seek),
+	(gst_ffmpegdemux_loop):
+	Don't try to convert -1 values when seeking.
+	Adjust timestamps with start_time of the stream.
+
 2006-04-13  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_base_init),

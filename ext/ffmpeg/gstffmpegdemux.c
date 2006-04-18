@@ -436,9 +436,9 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent *event)
       fmt = demux->segment.format;
       res = TRUE;
       /* FIXME, use source pad */
-      if (cur_type != GST_SEEK_TYPE_NONE)
+      if (cur_type != GST_SEEK_TYPE_NONE && cur != -1)
         res = gst_pad_query_convert (demux->sinkpad, format, cur, &fmt, &cur);
-      if (res && stop_type != GST_SEEK_TYPE_NONE)
+      if (res && stop_type != GST_SEEK_TYPE_NONE && stop != -1)
         res = gst_pad_query_convert (demux->sinkpad, format, stop, &fmt, &stop);
       if (!res)
         goto no_format;
@@ -1124,8 +1124,9 @@ gst_ffmpegdemux_loop (GstPad * pad)
   /* do timestamps, we do this first so that we can know when we
    * stepped over the segment stop position. */
   timestamp = gst_ffmpeg_time_ff_to_gst (pkt.pts, avstream->time_base);
-  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     stream->last_ts = timestamp;
+  }
   duration = gst_ffmpeg_time_ff_to_gst (pkt.duration, avstream->time_base);
 
   GST_DEBUG_OBJECT (demux,
@@ -1134,10 +1135,15 @@ gst_ffmpegdemux_loop (GstPad * pad)
       GST_TIME_ARGS (timestamp), pkt.size, pkt.stream_index, pkt.flags, 
       GST_TIME_ARGS (duration), pkt.pos);
 
+  /* check start_time */
+  if (demux->start_time != -1 && demux->start_time > timestamp)
+    goto drop;
+
+  timestamp -= demux->start_time;
+
   /* check if we ran outside of the segment */
   if (demux->segment.stop != -1 && timestamp > demux->segment.stop)
     goto drop;
-
 
   /* prepare to push packet to peer */
   srcpad = stream->pad;
