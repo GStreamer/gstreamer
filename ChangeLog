@@ -1,5 +1,14 @@
 2006-04-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/gdk_pixbuf/gstgdkpixbuf.c:
+	  Leave JPEG decoding to our jpegdec plugin. gdkpixbufdec cannot
+	  handle MJPEG streams and might be autoplugged for those if the
+	  user doesn't have jpegdec installed (resulting in a cryptic error
+	  message about huffman tables). Better to disable JPEG decoding here
+	  and let the user figure out that she needs to install jpegdec.
+
+2006-04-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_setcaps),
 	(gst_gdk_pixbuf_class_init), (gst_gdk_pixbuf_init),
 	(gst_gdk_pixbuf_flush), (gst_gdk_pixbuf_chain):
