@@ -1,3 +1,17 @@
+2006-04-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_base_init),
+	(gst_wavenc_class_init), (gst_wavenc_init),
+	(gst_wavenc_create_header_buf), (gst_wavenc_push_header),
+	(gst_wavenc_sink_setcaps), (get_id_from_name), (gst_wavenc_event),
+	(gst_wavenc_chain), (gst_wavenc_change_state):
+	* gst/wavenc/gstwavenc.h:
+	  Set caps on first outgoing buffer, so that it doesn't error out
+	  immediately with a non-negotiated error (#338716). Rewrite and
+	  clean up a bit; fix setcaps function to parse things properly;
+	  fix sink caps (8bit audio is unsigned and doesn't have depth);
+	  use boilerplate macros; remove unused properties stuff.
+
 2006-04-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/gdk_pixbuf/gstgdkpixbuf.c:
