@@ -75,7 +75,7 @@ class GstPlayer:
         """
         gst.debug("seeking to %r" % location)
         event = gst.event_new_seek(1.0, gst.FORMAT_TIME,
-            gst.SEEK_FLAG_FLUSH | gst.SEEK_FLAG_ACCURATE,
+            gst.SEEK_FLAG_FLUSH,
             gst.SEEK_TYPE_SET, location,
             gst.SEEK_TYPE_NONE, 0)
 

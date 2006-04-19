@@ -1,5 +1,10 @@
 2006-04-19  Andy Wingo  <wingo@pobox.com>
 
+	* examples/remuxer.py (GstPlayer.seek): Don't do accurate seeks,
+	because the output won't be readable without a keyframe anyway.
+
+2006-04-19  Andy Wingo  <wingo@pobox.com>
+
 	* examples/remuxer.py: Another code dump. I know it breaks the
 	freeze but it's just a wee example :)
 
