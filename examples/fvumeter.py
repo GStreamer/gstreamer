@@ -165,7 +165,6 @@ class FVUMeter(gtk.DrawingArea):
         self.style.set_background(self.window, gtk.STATE_NORMAL)
 
     def do_expose_event(self, event):
-        print 'foo'
         self.chain(event)
        
         x, y, w, h = self.allocation
@@ -236,6 +235,5 @@ class FVUMeter(gtk.DrawingArea):
             self.leftborder + vumeter_width + 5,
             self.topborder + int(vumeter_height / 2 - layout_height / 2),
             layout)
-        print 'bar'
 
 gobject.type_register(FVUMeter)
