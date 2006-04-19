@@ -1,3 +1,13 @@
+2006-04-19  J^ <j@bootlab.org>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_formatid_to_caps), (gst_ffmpeg_formatid_get_codecids),
+	(gst_ffmpeg_get_codecid_longname):
+	Added proper GstCaps <==> CodecId for Apple QDRaw.
+	Fixed up proper wrapping for GstCaps <==> FormatId.
+
 2006-04-18  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_perform_seek),
@@ -125,6 +135,25 @@
 	  as we'll artificially shorten the size of buffers in that
 	  case and GstBaseTransform will complain about unit size
 	  issues if we use _alloc_buffer() with the full size.
+
+2006-03-01  Michal Benes  <michal dot benes at xeris dot cz>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c: (plugin_init):
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps),
+	(gst_ffmpeg_formatid_get_codecids):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_base_init),
+	(gst_ffmpegmux_init), (gst_ffmpegmux_finalize),
+	(gst_ffmpegmux_request_new_pad), (gst_ffmpegmux_setcaps),
+	(gst_ffmpegmux_collected), (gst_ffmpegmux_change_state),
+	(gst_ffmpegmux_register):
+	Port of FFMpeg muxers to 0.10.
+	Still needs some loving in gstffmpegcodecmap to have them all supported
+	with correct input formats.
+	Closes #332339
+	
 
 2006-03-01  Michal Benes  <michal dot benes at xeris dot cz>
 

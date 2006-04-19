@@ -533,6 +533,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = GST_FF_VID_CAPS_NEW ("video/x-smc", NULL);
       break;
 
+    case CODEC_ID_QDRAW:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-qdrw", NULL);
+      break;
+
     case CODEC_ID_WS_VQA:
     case CODEC_ID_IDCIN:
     case CODEC_ID_8BPS:
@@ -542,7 +546,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_SONIC:
     case CODEC_ID_SONIC_LS:
     case CODEC_ID_SNOW:
-    case CODEC_ID_QDRAW:
     case CODEC_ID_VIXL:
     case CODEC_ID_QPEG:
     case CODEC_ID_XVID:
@@ -1510,6 +1513,12 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
   } else if (!strcmp (format_name, "mov_mp4_m4a_3gp_3g2")) {
     caps = gst_caps_from_string (
                "application/x-3gp; video/quicktime; audio/x-m4a");
+  } else if (!strcmp (format_name, "mov")) {
+    caps = gst_caps_new_simple ("video/quicktime", NULL);
+  } else if (!strcmp (format_name, "mp4")) {
+    caps = gst_caps_new_simple ("video/quicktime", NULL);
+  } else if ((!strcmp (format_name, "3gp")) || (!strcmp (format_name, "3gp2"))) {
+    caps = gst_caps_new_simple ("application/x-3gp", NULL);
   } else if (!strcmp (format_name, "aac")) {
     caps = gst_caps_new_simple ("audio/mpeg",
 				"mpegversion", G_TYPE_INT, 4,
@@ -1538,6 +1547,9 @@ gboolean
 gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
     enum CodecID ** video_codec_list, enum CodecID ** audio_codec_list)
 {
+
+  GST_LOG ("format_name : %s", format_name);
+
   if (!strcmp (format_name, "mp4")) {
     static enum CodecID mp4_video_list[] = { CODEC_ID_MPEG4, CODEC_ID_H264, CODEC_ID_NONE };
     static enum CodecID mp4_audio_list[] = { CODEC_ID_AAC, CODEC_ID_NONE };
@@ -1545,11 +1557,29 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
     *video_codec_list = mp4_video_list;
     *audio_codec_list = mp4_audio_list;
   } else if (!strcmp (format_name, "mpeg")) {
-    static enum CodecID mpeg_video_list[] = { CODEC_ID_MPEG1VIDEO, CODEC_ID_NONE };
-    static enum CodecID mpeg_audio_list[] = { CODEC_ID_MP2, CODEC_ID_NONE };
+    static enum CodecID mpeg_video_list[] = { CODEC_ID_MPEG1VIDEO, 
+        CODEC_ID_MPEG2VIDEO, 
+        CODEC_ID_H264, 
+        CODEC_ID_NONE };
+    static enum CodecID mpeg_audio_list[] = { CODEC_ID_MP2,
+        CODEC_ID_MP3, 
+        CODEC_ID_NONE };
 
     *video_codec_list = mpeg_video_list;
     *audio_codec_list = mpeg_audio_list;
+  } else if (!strcmp (format_name, "mpegts")) {
+    static enum CodecID mpegts_video_list[] = { CODEC_ID_MPEG1VIDEO, 
+        CODEC_ID_MPEG2VIDEO, 
+        CODEC_ID_H264, 
+        CODEC_ID_NONE };
+    static enum CodecID mpegts_audio_list[] = { CODEC_ID_MP2, 
+        CODEC_ID_MP3, 
+        CODEC_ID_AC3, 
+        CODEC_ID_AAC, 
+        CODEC_ID_NONE };
+
+    *video_codec_list = mpegts_video_list;
+    *audio_codec_list = mpegts_audio_list;
   } else if (!strcmp (format_name, "vob")) {
     static enum CodecID vob_video_list[] = { CODEC_ID_MPEG2VIDEO, CODEC_ID_NONE };
     static enum CodecID vob_audio_list[] = { CODEC_ID_MP2, CODEC_ID_AC3, CODEC_ID_NONE };
@@ -2278,7 +2308,7 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       name = "Ultimotion video";
       break;
     case CODEC_ID_QDRAW:
-      name = "Applet Quickdraw video";
+      name = "Apple Quickdraw video";
       break;
     case CODEC_ID_VIXL:
       name = "Miro VideoXL";
