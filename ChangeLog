@@ -1,3 +1,9 @@
+2006-04-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
+	For VBR audio, don't try to calculate the samples_per_frame.
+	Fixes #338935.
+
 2006-04-13  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2src.c:
