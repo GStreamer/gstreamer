@@ -1,5 +1,12 @@
 2006-04-19  Andy Wingo  <wingo@pobox.com>
 
+	* gst/arg-types.py (GstCapsArg.write_const_param) 
+	(GstCapsArg.write_param): If there is a default value, initialize
+	the py_caps variable to NULL. PyArgs_Parse* doesn't touch c
+	variables if the optional arg isn't there. Fixes #339010.
+
+2006-04-19  Andy Wingo  <wingo@pobox.com>
+
 	* examples/remuxer.py (GstPlayer.seek): Don't do accurate seeks,
 	because the output won't be readable without a keyframe anyway.
 

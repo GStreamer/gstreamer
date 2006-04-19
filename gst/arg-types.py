@@ -100,7 +100,11 @@ class GstCapsArg(ArgType):
             raise RuntimeError, "write_param not implemented for %s" % ptype
     
     def write_const_param(self, pname, pdflt, pnull, info):
-        info.varlist.add('PyObject', '*py_'+pname)
+        if pdflt:
+            assert pdflt == 'NULL'
+            info.varlist.add('PyObject', '*py_' + pname + ' = NULL')
+        else:
+            info.varlist.add('PyObject', '*py_' + pname)
         info.varlist.add('GstCaps', '*'+pname)
         info.varlist.add('gboolean', pname+'_is_copy')
 		info.add_parselist('O', ['&py_'+pname], [pname])
@@ -112,7 +116,11 @@ class GstCapsArg(ArgType):
         info.codeafter.append (self.after % { 'name' : pname, 'namecopy' : '&'+pname+'_is_copy' })
 	
     def write_normal_param(self, pname, pdflt, pnull, info):
-        info.varlist.add('PyObject', '*py_'+pname)
+        if pdflt:
+            assert pdflt == 'NULL'
+            info.varlist.add('PyObject', '*py_' + pname + ' = NULL')
+        else:
+            info.varlist.add('PyObject', '*py_' + pname)
         info.varlist.add('GstCaps', '*'+pname)
 		info.add_parselist('O', ['&py_'+pname], [pname])
         info.arglist.append(pname)
