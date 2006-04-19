@@ -3162,14 +3162,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       stream->bytes_per_packet = QTDEMUX_GUINT32_GET (stsd->data + offset + 4);
       stream->bytes_per_frame = QTDEMUX_GUINT32_GET (stsd->data + offset + 8);
       stream->bytes_per_sample = QTDEMUX_GUINT32_GET (stsd->data + offset + 12);
-      stream->samples_per_frame = (stream->bytes_per_frame /
-          stream->bytes_per_packet) * stream->samples_per_packet;
-
 
       GST_LOG ("samples/packet:   %d", stream->samples_per_packet);
       GST_LOG ("bytes/packet:     %d", stream->bytes_per_packet);
       GST_LOG ("bytes/frame:      %d", stream->bytes_per_frame);
       GST_LOG ("bytes/sample:     %d", stream->bytes_per_sample);
+
+      if (!stream->sampled) {
+        stream->samples_per_frame = (stream->bytes_per_frame /
+            stream->bytes_per_packet) * stream->samples_per_packet;
+        GST_LOG ("samples/frame:    %d", stream->samples_per_frame);
+      }
 
       offset = 68;
     } else if (version == 0x00000000) {
