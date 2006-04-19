@@ -1,3 +1,8 @@
+2006-04-19  Andy Wingo  <wingo@pobox.com>
+
+	* examples/remuxer.py: Another code dump. I know it breaks the
+	freeze but it's just a wee example :)
+
 2006-04-10  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gsttaglist.override: (tag_foreach_func_list): 

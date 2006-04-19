@@ -8,6 +8,7 @@ pygtk.require('2.0')
 import sys
 
 import gobject
+gobject.threads_init()
 
 import pygst
 pygst.require('0.10')
@@ -289,6 +290,7 @@ class RemuxProgressDialog(ProgressDialog):
         self.set_completed(False)
         
     def update_position(self, pos):
+        print pos
         pos = min(max(pos, self.start), self.stop)
         remaining = self.stop - pos
         minutes = remaining // (gst.SECOND * 60)
@@ -300,20 +302,55 @@ class RemuxProgressDialog(ProgressDialog):
         self.set_response_sensitive(CANCELLED, not completed)
         self.set_response_sensitive(SUCCESS, completed)
 
+def set_connection_blocked_async_marshalled(pads, proc, *args, **kwargs):
+    def clear_list(l):
+        while l:
+            l.pop()
+
+    to_block = list(pads)
+    to_relink = [(x, x.get_peer()) for x in pads]
+
+    def on_pad_blocked_sync(pad, is_blocked):
+        if pad not in to_block:
+            # can happen after the seek and before unblocking -- racy,
+            # but no prob, bob.
+            return
+        to_block.remove(pad)
+        if not to_block:
+            # marshal to main thread
+            gobject.idle_add(on_pads_blocked)
+
+    def on_pads_blocked():
+        for src, sink in to_relink:
+            src.link(sink)
+        proc(*args, **kwargs)
+        for src, sink in to_relink:
+            src.set_blocked_async(False, lambda *x: None)
+        clear_list(to_relink)
+
+    for src, sink in to_relink:
+        src.unlink(sink)
+        src.set_blocked_async(True, on_pad_blocked_sync)
+
 class Remuxer(gst.Pipeline):
 
     __gsignals__ = {'done': (gobject.SIGNAL_RUN_LAST, None, (int,))}
 
     def __init__(self, fromuri, touri, start, stop):
+        # HACK: should do Pipeline.__init__, but that doesn't do what we
+        # want; there's a bug open aboooot that
         self.__gobject_init__()
 
         assert start >= 0
         assert stop > start
 
         self.src = gst.element_make_from_uri(gst.URI_SRC, fromuri)
-        self.remuxbin = RemuxBin()
+        self.remuxbin = RemuxBin(start, stop)
         self.sink = gst.element_make_from_uri(gst.URI_SINK, touri)
         self.resolution = UNKNOWN
+
+        if gobject.signal_lookup('allow-overwrite', self.sink.__class__):
+            self.sink.connect('allow-overwrite', self._allow_overwrite)
 
         self.add(self.src, self.remuxbin, self.sink)
 
@@ -326,11 +363,56 @@ class Remuxer(gst.Pipeline):
         self.start_time = start
         self.stop_time = stop
 
+        self._query_id = -1
+
+    def _allow_overwrite(self, sink, uri):
+        name = self.sink.get_uri()
+        name = (gst.uri_has_protocol(name, 'file')
+                and gst.uri_get_location(name)
+                or name)
+        m = gtk.MessageDialog(self.window,
+                              gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
+                              gtk.MESSAGE_QUESTION,
+                              gtk.BUTTONS_NONE,
+                              ("The file %s already exists. Would you "
+                               "like to replace it?") % name)
+        b = gtk.Button(stock=gtk.STOCK_CANCEL)
+        b.show()
+        m.add_action_widget(b, CANCELLED)
+        b = gtk.Button('Replace')
+        b.show()
+        m.add_action_widget(b, SUCCESS)
+        txt = ('If you replace an existing file, its contents will be '
+               'overwritten.')
+        m.format_secondary_text(txt)
+        resp = m.run()
+        m.destroy()
+        return resp == SUCCESS
+
     def _start_queries(self):
-        pass
+        def do_query():
+            try:
+                # HACK: self.remuxbin.query() should do the same
+                # (requires implementing a vmethod, dunno how to do that
+                # although i think it's possible)
+                # HACK: why does self.query_position(..) not give useful
+                # answers? 
+                pad = self.remuxbin.get_pad('src')
+                pos, duration = pad.query_position(gst.FORMAT_TIME)
+                if pos != gst.CLOCK_TIME_NONE:
+                    self.pdialog.update_position(pos)
+            except gst.QueryError:
+                print 'query failed'
+                pass
+            return True
+        if self._query_id == -1:
+            self._query_id = gobject.timeout_add(100, # 10 Hz
+                                                 do_query)
 
     def _stop_queries(self):
-        pass
+        if self._query_id != -1:
+            gobject.source_remove(self._query_id)
+            self._query_id = -1
 
     def _bus_watch(self, bus, message):
         if message.type == gst.MESSAGE_ERROR:
@@ -341,15 +423,17 @@ class Remuxer(gst.Pipeline):
                                   gtk.MESSAGE_ERROR,
                                   gtk.BUTTONS_CLOSE,
                                   "Error processing file")
-            txt = 'There was an error processing your file: %r' % message
+            gerror, debug = message.parse_error()
+            txt = ('There was an error processing your file: %s\n\n'
+                   'Debug information:\n%s' % (gerror, debug))
             m.format_secondary_text(txt)
             m.run()
             m.destroy()
             self.response(FAILURE)
         elif message.type == gst.MESSAGE_WARNING:
             print 'warning', message
-        elif message.type == gst.MESSAGE_EOS:
-            print 'eos, woot'
+        elif message.type == gst.MESSAGE_SEGMENT_DONE:
+            print 'eos, woot', message.src
             self.pdialog.set_task('Finished')
             self.pdialog.update_position(self.stop_time)
             self._stop_queries()
@@ -372,6 +456,7 @@ class Remuxer(gst.Pipeline):
         self.set_state(gst.STATE_NULL)
         self.pdialog.destroy()
         self.pdialog = None
+        self.window.set_sensitive(True)
         self.emit('done', response)
 
     def start(self, main_window):
@@ -386,20 +471,22 @@ class Remuxer(gst.Pipeline):
                                            self.stop_time)
         self.pdialog.show()
         self.pdialog.connect('response', lambda w, r: self.response(r))
+
         self.set_state(gst.STATE_PAUSED)
         
     def run(self, main_window):
-        self.start(None)
+        self.start(main_window)
         loop = gobject.MainLoop()
         self.connect('done', lambda *x: gobject.idle_add(loop.quit))
         loop.run()
         return self.resolution
         
 class RemuxBin(gst.Bin):
-    def __init__(self):
+    def __init__(self, start_time, stop_time):
         self.__gobject_init__()
 
-        self.parsers = self._find_parsers()
+        self.parsefactories = self._find_parsers()
+        self.parsers = []
 
         self.demux = gst.element_factory_make('oggdemux')
         self.mux = gst.element_factory_make('oggmux')
@@ -411,6 +498,9 @@ class RemuxBin(gst.Bin):
 
         self.demux.connect('pad-added', self._new_demuxed_pad)
         self.demux.connect('no-more-pads', self._no_more_pads)
+
+        self.start_time = start_time
+        self.stop_time = stop_time
 
     def _find_parsers(self):
         registry = gst.registry_get_default()
@@ -427,19 +517,32 @@ class RemuxBin(gst.Bin):
     def _new_demuxed_pad(self, element, pad):
         format = pad.get_caps()[0].get_name()
 
-        if format not in self.parsers:
+        if format not in self.parsefactories:
             self.async_error("Unsupported media type: %s", format)
             return
 
-        parser = gst.element_factory_make(self.parsers[format])
+        queue = gst.element_factory_make('queue', 'queue_' + format)
+        parser = gst.element_factory_make(self.parsefactories[format])
+        self.add(queue)
         self.add(parser)
+        queue.set_state(gst.STATE_PAUSED)
         parser.set_state(gst.STATE_PAUSED)
-        pad.link(parser.get_compatible_pad(pad))
+        pad.link(queue.get_compatible_pad(pad))
+        queue.link(parser)
         parser.link(self.mux)
+        self.parsers.append(parser)
+
+    def _do_segment_seek(self):
+        flags = gst.SEEK_FLAG_SEGMENT | gst.SEEK_FLAG_FLUSH
+        # HACK: self.seek should work, should try that at some point
+        return self.demux.seek(1.0, gst.FORMAT_TIME, flags,
+                               gst.SEEK_TYPE_SET, self.start_time,
+                               gst.SEEK_TYPE_SET, self.stop_time)
 
     def _no_more_pads(self, element):
-        # this is when we should commit to paused or something
-        pass
+        pads = [x.get_pad('src') for x in self.parsers]
+        set_connection_blocked_async_marshalled(pads,
+                                                self._do_segment_seek)
 
 
 class PlayerWindow(gtk.Window):
@@ -547,6 +650,8 @@ class PlayerWindow(gtk.Window):
         button.connect('clicked', lambda *x: self.do_remux())
 
     def do_remux(self):
+        if self.player.is_playing():
+            self.play_toggled()
         in_uri = self.player.get_location()
         out_uri = in_uri[:-4] + '-remuxed.ogg'
         r = Remuxer(in_uri, out_uri,
