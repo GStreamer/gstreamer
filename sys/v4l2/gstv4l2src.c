@@ -102,7 +102,9 @@ static guint32 gst_v4l2_formats[] = {
   V4L2_PIX_FMT_HI240,
 
   /* see http://www.siliconimaging.com/RGB%20Bayer.htm */
+#ifdef V4L2_PIX_FMT_SBGGR8
   V4L2_PIX_FMT_SBGGR8,
+#endif
 
   /* compressed formats */
   V4L2_PIX_FMT_MJPEG,
@@ -111,10 +113,17 @@ static guint32 gst_v4l2_formats[] = {
   V4L2_PIX_FMT_MPEG,
 
   /*  Vendor-specific formats   */
-  V4L2_PIX_FMT_WNVA
-      /* V4L2_PIX_FMT_SN9C10X FIX */
-      /* V4L2_PIX_FMT_PWC1 FIX */
-      /* V4L2_PIX_FMT_PWC2 FIX */
+  V4L2_PIX_FMT_WNVA,
+
+#ifdef V4L2_PIX_FMT_SN9C10X
+  V4L2_PIX_FMT_SN9C10X,
+#endif
+#ifdef V4L2_PIX_FMT_PWC1
+  V4L2_PIX_FMT_PWC1,
+#endif
+#ifdef V4L2_PIX_FMT_PWC2
+  V4L2_PIX_FMT_PWC2,
+#endif
 };
 
 
