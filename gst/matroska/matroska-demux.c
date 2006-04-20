@@ -1181,6 +1181,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   demux->segment_start = segment_start;
   demux->segment_stop = segment_stop;
 
+  GST_OBJECT_UNLOCK (demux);
+
   /* notify start of new segment */
   if (demux->segment_play) {
     GstMessage *msg;
@@ -1191,10 +1193,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   }
 
   /* FIXME: should be demux->segment_start, not entry->time */
-  newsegment_event = gst_event_new_new_segment (FALSE, demux->segment_rate,
-      GST_FORMAT_TIME, entry->time, demux->segment_stop, entry->time);
-
-  GST_OBJECT_UNLOCK (demux);
+  newsegment_event = gst_event_new_new_segment (FALSE, rate,
+      GST_FORMAT_TIME, entry->time, segment_stop, entry->time);
 
   GST_DEBUG ("Stopping flush");
   if (flush) {
@@ -2827,7 +2827,7 @@ gst_matroska_demux_loop (GstPad * pad)
   /* first, if we're to start, let's actually get starting */
   if (demux->state == GST_MATROSKA_DEMUX_STATE_START) {
     if (!gst_matroska_demux_init_stream (demux)) {
-      GST_DEBUG_OBJECT (demux, "init stream failed!");
+      GST_WARNING_OBJECT (demux, "init stream failed!");
       goto eos_and_pause;
     }
     demux->state = GST_MATROSKA_DEMUX_STATE_HEADER;
@@ -2836,14 +2836,18 @@ gst_matroska_demux_loop (GstPad * pad)
   ret = gst_matroska_demux_loop_stream (demux);
 
   /* check if we're at the end of a configured segment */
-  if (demux->segment_play && GST_CLOCK_TIME_IS_VALID (demux->segment_stop)) {
+  if (GST_CLOCK_TIME_IS_VALID (demux->segment_stop)) {
     guint i;
 
     for (i = 0; i < demux->num_streams; i++) {
       if (demux->src[i]->pos >= demux->segment_stop) {
-        GST_LOG ("Reached end of segment (%" G_GUINT64_FORMAT "-%"
-            G_GUINT64_FORMAT ") on pad %s:%s", demux->segment_start,
+        GST_INFO_OBJECT (demux, "Reached end of segment (%" G_GUINT64_FORMAT
+            "-%" G_GUINT64_FORMAT ") on pad %s:%s", demux->segment_start,
             demux->segment_stop, GST_DEBUG_PAD_NAME (demux->src[i]->pad));
+
+        if (!demux->segment_play)
+          goto eos_and_pause;
+
         gst_element_post_message (GST_ELEMENT (demux),
             gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
                 demux->segment_stop));

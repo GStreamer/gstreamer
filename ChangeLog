@@ -1,5 +1,15 @@
 2006-04-20  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Mark Nauwelaerts  <manauw at skynet dot be>
+
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_handle_seek_event), (gst_matroska_demux_loop):
+	  Handle end of segment properly when set; don't dead-lock when
+	  posting start of segment message when doing a segment seek.
+	  Fixes #338810.
+
+2006-04-20  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_audio_caps),
 	(gst_matroska_demux_plugin_init):
 	  Make mpeg2 aac audio work: create artificial private codec data
