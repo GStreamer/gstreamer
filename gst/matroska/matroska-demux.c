@@ -315,6 +315,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   context->type = 0;            /* no type yet */
   context->default_duration = 0;
   context->pos = 0;
+  context->set_discont = TRUE;
   demux->num_streams++;
 
   /* start with the master */
@@ -908,9 +909,29 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
         GST_TAG_LANGUAGE_CODE, context->language, NULL);
   }
 
+  if (caps == NULL) {
+    GST_WARNING_OBJECT (demux, "could not determine caps for stream with "
+        "codec_id='%s'", context->codec_id);
+    switch (context->type) {
+      case GST_MATROSKA_TRACK_TYPE_VIDEO:
+        caps = gst_caps_new_simple ("video/x-unknown", NULL);
+        break;
+      case GST_MATROSKA_TRACK_TYPE_AUDIO:
+        caps = gst_caps_new_simple ("audio/x-unknown", NULL);
+        break;
+      case GST_MATROSKA_TRACK_TYPE_SUBTITLE:
+        caps = gst_caps_new_simple ("application/x-subtitle-unknown", NULL);
+        break;
+      case GST_MATROSKA_TRACK_TYPE_COMPLEX:
+      default:
+        caps = gst_caps_new_simple ("application/x-matroska-unknown", NULL);
+        break;
+    }
+  }
+
   /* the pad in here */
   context->pad = gst_pad_new_from_template (templ, padname);
-  context->caps = caps ? caps : gst_caps_new_empty ();
+  context->caps = caps;
 
   gst_pad_set_event_function (context->pad,
       GST_DEBUG_FUNCPTR (gst_matroska_demux_handle_src_event));
@@ -919,20 +940,13 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   gst_pad_set_query_function (context->pad,
       GST_DEBUG_FUNCPTR (gst_matroska_demux_handle_src_query));
 
-  if (caps) {
-    GST_LOG ("Adding pad '%s' with caps %" GST_PTR_FORMAT, padname, caps);
-    if (gst_caps_is_fixed (caps)) {
-      gst_pad_use_fixed_caps (context->pad);
-      gst_pad_set_caps (context->pad, context->caps);
-      gst_pad_set_active (context->pad, TRUE);
-      gst_element_add_pad (GST_ELEMENT (demux), context->pad);
-    } else {
-      g_warning ("FIXME: non-fixed caps: %s", gst_caps_to_string (caps));
-    }
-  } else {
-    /* FIXME: are we leaking the pad here? can this even happen? */
-    GST_LOG ("Not adding pad '%s' with empty caps", padname);
-  }
+  GST_INFO_OBJECT (demux, "Adding pad '%s' with caps %" GST_PTR_FORMAT,
+      padname, caps);
+
+  gst_pad_use_fixed_caps (context->pad);
+  gst_pad_set_caps (context->pad, context->caps);
+  gst_pad_set_active (context->pad, TRUE);
+  gst_element_add_pad (GST_ELEMENT (demux), context->pad);
 
   /* tags */
   if (list) {
@@ -1014,21 +1028,41 @@ gst_matroska_demux_handle_src_query (GstPad * pad, GstQuery * query)
 
 
 static GstMatroskaIndex *
-gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, guint64 seek_pos)
+gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, gint64 seek_pos,
+    gint64 segment_stop, gboolean keyunit)
 {
-  guint entry = demux->num_indexes - 1;
+  guint entry;
   guint n = 0;
 
   if (!demux->num_indexes)
     return NULL;
 
-  while (n < demux->num_indexes - 1) {
-    if ((demux->index[n].time <= seek_pos) &&
-        (demux->index[n + 1].time > seek_pos)) {
-      entry = n;
-      break;
+  if (keyunit) {
+    /* find index entry closest to the requested position */
+    entry = 0;
+    for (n = 0; n < demux->num_indexes; ++n) {
+      gdouble d_entry, d_this;
+
+      d_entry = fabs ((gdouble) demux->index[entry].time - (gdouble) seek_pos);
+      d_this = fabs ((gdouble) demux->index[n].time - (gdouble) seek_pos);
+
+      if (d_this < d_entry &&
+          (demux->index[n].time < segment_stop || segment_stop == -1)) {
+        entry = n;
+      }
     }
-    n++;
+  } else {
+    /* find index entry at or before the requested position */
+    entry = demux->num_indexes - 1;
+
+    while (n < demux->num_indexes - 1) {
+      if ((demux->index[n].time <= seek_pos) &&
+          (demux->index[n + 1].time > seek_pos)) {
+        entry = n;
+        break;
+      }
+      n++;
+    }
   }
 
   return &demux->index[entry];
@@ -1080,7 +1114,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GstSeekType cur_type, stop_type;
   GstFormat format;
   GstEvent *newsegment_event;
-  gboolean flush;
+  gboolean flush, keyunit;
   gdouble rate;
   gint64 cur, stop;
   gint64 segment_start, segment_stop;
@@ -1104,7 +1138,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   /* check sanity before we start flushing and all that */
   if (cur_type == GST_SEEK_TYPE_SET) {
     GST_OBJECT_LOCK (demux);
-    if (!gst_matroskademux_do_index_seek (demux, cur)) {
+    if (!gst_matroskademux_do_index_seek (demux, cur, -1, FALSE)) {
       GST_DEBUG ("No matching seek entry in index");
       GST_OBJECT_UNLOCK (demux);
       return FALSE;
@@ -1114,6 +1148,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   }
 
   flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     GST_DEBUG ("Starting flush");
@@ -1156,7 +1191,9 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GST_DEBUG ("New segment positions: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
       GST_TIME_ARGS (segment_start), GST_TIME_ARGS (segment_stop));
 
-  entry = gst_matroskademux_do_index_seek (demux, segment_start);
+  entry = gst_matroskademux_do_index_seek (demux, segment_start,
+      segment_stop, keyunit);
+
   if (!entry) {
     GST_DEBUG ("No matching seek entry in index");
     goto seek_error;
@@ -1172,6 +1209,12 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
   GST_DEBUG ("Seeked to offset %" G_GUINT64_FORMAT, entry->pos +
       demux->ebml_segment_start);
+
+  if (keyunit) {
+    GST_DEBUG ("seek to key unit, adjusting segment start to %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (entry->time));
+    segment_start = entry->time;
+  }
 
   GST_DEBUG ("Committing new seek segment");
 
@@ -1192,9 +1235,8 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     gst_element_post_message (GST_ELEMENT (demux), msg);
   }
 
-  /* FIXME: should be demux->segment_start, not entry->time */
   newsegment_event = gst_event_new_new_segment (FALSE, rate,
-      GST_FORMAT_TIME, entry->time, segment_stop, entry->time);
+      GST_FORMAT_TIME, segment_start, segment_stop, segment_start);
 
   GST_DEBUG ("Stopping flush");
   if (flush) {
@@ -1204,8 +1246,10 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
   /* send newsegment event to all source pads and update the time */
   gst_matroska_demux_send_event (demux, newsegment_event);
-  for (i = 0; i < demux->num_streams; i++)
+  for (i = 0; i < demux->num_streams; i++) {
     demux->src[i]->pos = entry->time;
+    demux->src[i]->set_discont = TRUE;
+  }
   demux->pos = entry->time;
 
   /* restart our task since it might have been stopped when we did the
@@ -2361,6 +2405,11 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           GST_BUFFER_FLAG_UNSET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
         else
           GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
+      }
+
+      if (stream->set_discont) {
+        GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DISCONT);
+        stream->set_discont = FALSE;
       }
 
       GST_DEBUG ("Pushing data of size %d for stream %d, time=%"

@@ -243,6 +243,8 @@ typedef struct _GstMatroskaTrackContext {
   GstMatroskaTrackFlags flags;
   guint64       default_duration;
   guint64       pos;
+
+  gboolean      set_discont; /* TRUE = set DISCONT flag on next buffer */
 } GstMatroskaTrackContext;
 
 typedef struct _GstMatroskaTrackVideoContext {
