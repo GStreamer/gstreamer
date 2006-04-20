@@ -1,5 +1,16 @@
 2006-04-20  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Fabrizio Gennari  <fabrizio dot ge at tiscali dot it>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_peek_tag),
+	(gst_avi_demux_next_data_buffer), (gst_avi_demux_stream_scan):
+	  Fix index creation when we have to scan the file to create
+	  an index. There may be other types of RIFF 'LIST' chunks than
+	  'movi' and we need to skip them properly as well or we'll end up
+	  reading garbage (#336889). Some other cosmetic changes.
+	  
+2006-04-20  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/flac/gstflacdec.c: (gst_flac_dec_loop),
 	(gst_flac_dec_handle_seek_event):
 	  Add support for segment seeks (fixes #338290). Also demote
