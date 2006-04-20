@@ -58,7 +58,7 @@ GST_DEBUG_CATEGORY_STATIC (flacdec_debug);
 
 static GstPadTemplate *src_template, *sink_template;
 
-static GstElementDetails flacdec_details =
+static const GstElementDetails flacdec_details =
 GST_ELEMENT_DETAILS ("FLAC audio decoder",
     "Codec/Decoder/Audio",
     "Decodes FLAC lossless audio streams",
@@ -755,7 +755,7 @@ gst_flac_dec_loop (GstPad * sinkpad)
 
   flacdec = GST_FLAC_DEC (GST_OBJECT_PARENT (sinkpad));
 
-  GST_DEBUG_OBJECT (flacdec, "entering loop");
+  GST_LOG_OBJECT (flacdec, "entering loop");
 
   if (flacdec->init) {
     GST_DEBUG_OBJECT (flacdec, "initializing decoder");
@@ -768,12 +768,12 @@ gst_flac_dec_loop (GstPad * sinkpad)
 
   flacdec->last_flow = GST_FLOW_OK;
 
-  GST_DEBUG_OBJECT (flacdec, "processing single");
+  GST_LOG_OBJECT (flacdec, "processing single");
   FLAC__seekable_stream_decoder_process_single (flacdec->decoder);
 
 analyze_state:
 
-  GST_DEBUG_OBJECT (flacdec, "done processing, checking encoder state");
+  GST_LOG_OBJECT (flacdec, "done processing, checking encoder state");
   s = FLAC__seekable_stream_decoder_get_state (flacdec->decoder);
   switch (s) {
     case FLAC__SEEKABLE_STREAM_DECODER_OK:
@@ -784,33 +784,32 @@ analyze_state:
           flacdec->last_flow != GST_FLOW_NOT_LINKED) {
         GST_DEBUG_OBJECT (flacdec, "last_flow return was %s, pausing",
             gst_flow_get_name (flacdec->last_flow));
-        gst_pad_pause_task (sinkpad);
+        goto pause;
       }
 
-/* FIXME: support segment seeks
-      if (((flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) != 0) &&
-          flacdec->segment.last_stop > 0 && flacdec->segment.stop != -1 &&
+      /* check if we're at the end of a configured segment */
+      if (flacdec->segment.stop != -1 &&
+          flacdec->segment.last_stop > 0 &&
           flacdec->segment.last_stop >= flacdec->segment.stop) {
-        GST_DEBUG_OBJECT (flacdec, "reached the end of the configured"
-            " segment, posting SEGMENT_DONE message and pausing");
-        gst_pad_pause_task (sinkpad);
+        GST_DEBUG_OBJECT (flacdec, "reached end of the configured segment");
+
+        if ((flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) == 0)
+          goto eos_and_pause;
+
+        GST_DEBUG_OBJECT (flacdec, "posting SEGMENT_DONE message");
         gst_element_post_message (GST_ELEMENT (flacdec),
             gst_message_new_segment_done (GST_OBJECT (flacdec),
                 GST_FORMAT_DEFAULT, flacdec->segment.stop));
+        goto pause;
       }
-*/
+
       return;
     }
 
     case FLAC__SEEKABLE_STREAM_DECODER_END_OF_STREAM:{
-      GST_DEBUG_OBJECT (flacdec, "EOS, pushing downstream");
+      GST_DEBUG_OBJECT (flacdec, "EOS");
       FLAC__seekable_stream_decoder_reset (flacdec->decoder);
-
-      gst_pad_push_event (flacdec->srcpad, gst_event_new_eos ());
-
-      GST_DEBUG_OBJECT (flacdec, "pausing");
-      gst_pad_pause_task (sinkpad);
-      return;
+      goto eos_and_pause;
     }
 
     case FLAC__SEEKABLE_STREAM_DECODER_MEMORY_ALLOCATION_ERROR:
@@ -825,13 +824,24 @@ analyze_state:
          specific error was already sent via the callback */
       GST_ELEMENT_ERROR (flacdec, STREAM, DECODE, (NULL),
           ("%s", FLAC__SeekableStreamDecoderStateString[s]));
-
-      gst_pad_push_event (flacdec->srcpad, gst_event_new_eos ());
-
-      GST_DEBUG_OBJECT (flacdec, "pausing");
-      gst_pad_pause_task (sinkpad);
-      return;
+      goto eos_and_pause;
     }
+  }
+
+  return;
+
+eos_and_pause:
+  {
+    GST_DEBUG_OBJECT (flacdec, "sending EOS event");
+    gst_pad_push_event (flacdec->srcpad, gst_event_new_eos ());
+    /* fall through to pause */
+  }
+
+pause:
+  {
+    GST_DEBUG_OBJECT (flacdec, "pausing");
+    gst_pad_pause_task (sinkpad);
+    return;
   }
 }
 
@@ -1156,6 +1166,19 @@ gst_flac_dec_handle_seek_event (GstFlacDec * flacdec, GstEvent * event)
     flacdec->segment.last_stop = segment.start;
 
     GST_DEBUG_OBJECT (flacdec, "seek successful");
+
+    /* notify start of new segment */
+    if ((flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) != 0) {
+      GstMessage *msg;
+      gint64 start_time = 0;
+
+      start_time = gst_util_uint64_scale_int (segment.start, GST_SECOND,
+          flacdec->sample_rate);
+
+      msg = gst_message_new_segment_start (GST_OBJECT (flacdec),
+          GST_FORMAT_TIME, start_time);
+      gst_element_post_message (GST_ELEMENT (flacdec), msg);
+    }
   } else {
     GST_WARNING_OBJECT (flacdec, "seek failed");
   }
