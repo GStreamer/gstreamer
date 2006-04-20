@@ -1,3 +1,9 @@
+2006-04-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/musepack/gstmusepackdec.c:
+	(gst_musepackdec_handle_seek_event), (gst_musepackdec_loop):
+	  Add support for segment seeks.
+
 2006-04-20  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2src.c:

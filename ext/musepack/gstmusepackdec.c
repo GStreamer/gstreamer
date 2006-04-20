@@ -224,7 +224,13 @@ gst_musepackdec_handle_seek_event (GstMusepackDec * dec, GstEvent * event)
   if (!mpc_decoder_seek_sample (dec->d, segment.start))
     goto failed;
 
-  /* FIXME: support segment seeks */
+  if ((flags & GST_SEEK_FLAG_SEGMENT) == GST_SEEK_FLAG_SEGMENT) {
+    GST_DEBUG_OBJECT (dec, "posting SEGMENT_START message");
+
+    gst_element_post_message (GST_ELEMENT (dec),
+        gst_message_new_segment_start (GST_OBJECT (dec), GST_FORMAT_TIME,
+            gst_util_uint64_scale_int (segment.start, GST_SECOND, dec->rate)));
+  }
 
   if (flush) {
     gst_pad_push_event (dec->srcpad, gst_event_new_flush_stop ());
@@ -493,9 +499,7 @@ gst_musepackdec_loop (GstPad * sinkpad)
     GST_ELEMENT_ERROR (musepackdec, STREAM, DECODE, (NULL), (NULL));
     goto pause_task;
   } else if (num_samples == 0) {
-    GST_DEBUG_OBJECT (musepackdec, "EOS");
-    gst_pad_push_event (musepackdec->srcpad, gst_event_new_eos ());
-    goto pause_task;
+    goto eos_and_pause;
   }
 
   GST_BUFFER_SIZE (out) = num_samples * bitspersample;
@@ -518,7 +522,36 @@ gst_musepackdec_loop (GstPad * sinkpad)
     goto pause_task;
   }
 
+  /* check if we're at the end of a configured segment */
+  if (musepackdec->segment.stop != -1 &&
+      musepackdec->segment.last_stop >= musepackdec->segment.stop) {
+    gint64 stop_time;
+
+    GST_DEBUG_OBJECT (musepackdec, "Reached end of configured segment");
+
+    if ((musepackdec->segment.flags & GST_SEEK_FLAG_SEGMENT) == 0)
+      goto eos_and_pause;
+
+    GST_DEBUG_OBJECT (musepackdec, "Posting SEGMENT_DONE message");
+
+    stop_time = gst_util_uint64_scale_int (musepackdec->segment.stop,
+        GST_SECOND, samplerate);
+
+    gst_element_post_message (GST_ELEMENT (musepackdec),
+        gst_message_new_segment_done (GST_OBJECT (musepackdec),
+            GST_FORMAT_TIME, stop_time));
+
+    goto pause_task;
+  }
+
   return;
+
+eos_and_pause:
+  {
+    GST_DEBUG_OBJECT (musepackdec, "sending EOS event");
+    gst_pad_push_event (musepackdec->srcpad, gst_event_new_eos ());
+    /* fall through to pause */
+  }
 
 pause_task:
   {
