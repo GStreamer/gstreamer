@@ -29,6 +29,7 @@
 
 /* For AVI compatibility mode... Who did that? */
 /* and for fourcc stuff */
+#include <gst/riff/riff-read.h>
 #include <gst/riff/riff-ids.h>
 #include <gst/riff/riff-media.h>
 
@@ -3252,27 +3253,27 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
           strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG2)) ||
       !strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG4,
           strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG4))) {
-    gint mpegversion = -1;
     GstBuffer *priv = NULL;
+    gint mpegversion = -1;
+    gint rate_idx, profile;
+    guint8 *data;
+
+    /* make up decoderspecificdata */
+    priv = gst_buffer_new_and_alloc (5);
+    data = GST_BUFFER_DATA (priv);
+    rate_idx = aac_rate_idx (audiocontext->samplerate);
+    profile = aac_profile_idx (codec_id);
+
+    data[0] = ((profile + 1) << 3) | ((rate_idx & 0xE) >> 1);
+    data[1] = ((rate_idx & 0x1) << 7) | (audiocontext->channels << 3);
+    GST_BUFFER_SIZE (priv) = 2;
 
     if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG2,
-            strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG2)))
+            strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG2))) {
       mpegversion = 2;
-    else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG4,
+    } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG4,
             strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG4))) {
-      gint rate_idx, profile;
-      guint8 *data;
-
       mpegversion = 4;
-
-      /* make up decoderspecificdata */
-      priv = gst_buffer_new_and_alloc (5);
-      data = GST_BUFFER_DATA (priv);
-      rate_idx = aac_rate_idx (audiocontext->samplerate);
-      profile = aac_profile_idx (codec_id);
-
-      data[0] = ((profile + 1) << 3) | ((rate_idx & 0xE) >> 1);
-      data[1] = ((rate_idx & 0x1) << 7) | (audiocontext->channels << 3);
 
       if (g_strrstr (codec_id, "SBR")) {
         /* HE-AAC (aka SBR AAC) */
@@ -3281,8 +3282,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
         data[2] = AAC_SYNC_EXTENSION_TYPE >> 3;
         data[3] = ((AAC_SYNC_EXTENSION_TYPE & 0x07) << 5) | 5;
         data[4] = (1 << 7) | (rate_idx << 3);
-      } else {
-        GST_BUFFER_SIZE (priv) = 2;
+        GST_BUFFER_SIZE (priv) = 5;
       }
     } else {
       g_assert_not_reached ();
@@ -3431,6 +3431,8 @@ gst_matroska_demux_change_state (GstElement * element,
 gboolean
 gst_matroska_demux_plugin_init (GstPlugin * plugin)
 {
+  gst_riff_init ();
+
   /* create an elementfactory for the matroska_demux element */
   if (!gst_element_register (plugin, "matroskademux",
           GST_RANK_PRIMARY, GST_TYPE_MATROSKA_DEMUX))
