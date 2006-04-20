@@ -1,3 +1,13 @@
+2006-04-20  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: j^ <j at bootlab dot org>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak),
+	(qtdemux_video_caps):
+	Never treat video streams as an audio stream.
+	Add qtdrw mime type.
+	Fixes #339041
+
 2006-04-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):

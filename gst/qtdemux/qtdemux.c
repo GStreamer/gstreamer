@@ -3013,10 +3013,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   GST_LOG ("track type: %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (hdlr->data + 12)));
-  GST_LOG ("track subtype: %" GST_FOURCC_FORMAT,
-      GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (hdlr->data + 16)));
 
   stream->subtype = QTDEMUX_FOURCC_GET (hdlr->data + 16);
+  GST_LOG ("track subtype: %" GST_FOURCC_FORMAT,
+      GST_FOURCC_ARGS (stream->subtype));
 
   minf = qtdemux_tree_get_child_by_type (mdia, FOURCC_minf);
   g_assert (minf);
@@ -3029,6 +3029,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   if (stream->subtype == FOURCC_vide) {
     guint32 fourcc;
+
+    stream->sampled = TRUE;
 
     offset = 16;
     GST_LOG ("st type:          %" GST_FOURCC_FORMAT,
@@ -3929,6 +3931,9 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     case GST_MAKE_FOURCC ('c', 'v', 'i', 'd'):
       _codec ("Cinepak");
       return gst_caps_from_string ("video/x-cinepak");
+    case GST_MAKE_FOURCC ('q', 'd', 'r', 'w'):
+      _codec ("Apple QuickDraw");
+      return gst_caps_from_string ("video/x-qdrw");
     case GST_MAKE_FOURCC ('r', 'p', 'z', 'a'):
       _codec ("Apple video");
       return gst_caps_from_string ("video/x-apple-video");
