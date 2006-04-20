@@ -1,5 +1,10 @@
 2006-04-20  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/flac/gstflacdec.c: (gst_flac_dec_loop):
+	  Post SEGMENT_DONE message in TIME format.
+
+2006-04-20  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Fabrizio Gennari  <fabrizio dot ge at tiscali dot it>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_peek_tag),

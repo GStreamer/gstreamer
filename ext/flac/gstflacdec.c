@@ -791,15 +791,21 @@ analyze_state:
       if (flacdec->segment.stop != -1 &&
           flacdec->segment.last_stop > 0 &&
           flacdec->segment.last_stop >= flacdec->segment.stop) {
+        gint64 stop_time;
+
         GST_DEBUG_OBJECT (flacdec, "reached end of the configured segment");
 
         if ((flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) == 0)
           goto eos_and_pause;
 
         GST_DEBUG_OBJECT (flacdec, "posting SEGMENT_DONE message");
+
+        stop_time = gst_util_uint64_scale_int (flacdec->segment.stop,
+            GST_SECOND, flacdec->sample_rate);
+
         gst_element_post_message (GST_ELEMENT (flacdec),
             gst_message_new_segment_done (GST_OBJECT (flacdec),
-                GST_FORMAT_DEFAULT, flacdec->segment.stop));
+                GST_FORMAT_TIME, stop_time));
         goto pause;
       }
 
