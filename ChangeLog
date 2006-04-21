@@ -1,3 +1,12 @@
+2006-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/debug/progressreport.c: (gst_progress_report_finalize),
+	(gst_progress_report_class_init), (gst_progress_report_init),
+	(gst_progress_report_do_query), (gst_progress_report_report),
+	(gst_progress_report_set_property),
+	(gst_progress_report_get_property):
+	  Add 'format' property to force querying to a particular format.
+
 2006-04-21  Andy Wingo  <wingo@pobox.com>
 
 	* ext/dv/gstdv.c (plugin_init): libdv is a marginal decoder, at
