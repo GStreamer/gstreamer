@@ -296,6 +296,7 @@ static GstStateChangeReturn
 gst_rfc2250_enc_change_state (GstElement * element, GstStateChange transition)
 {
   GstRFC2250Enc *rfc2250_enc = GST_RFC2250_ENC (element);
+  GstStateChangeReturn ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -305,6 +306,13 @@ gst_rfc2250_enc_change_state (GstElement * element, GstStateChange transition)
             GST_MPEG_PACKETIZE_VIDEO);
       }
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (rfc2250_enc->packetize) {
         gst_mpeg_packetize_destroy (rfc2250_enc->packetize);
@@ -314,10 +322,7 @@ gst_rfc2250_enc_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-
-  GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }
 
 static void

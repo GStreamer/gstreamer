@@ -1,3 +1,10 @@
+2006-04-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_change_state):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_change_state):
+	* gst/mpegstream/gstrfc2250enc.c: (gst_rfc2250_enc_change_state):
+	Do state changes correctly
+
 2006-04-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_alloc_sized_buf),

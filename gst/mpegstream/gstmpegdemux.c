@@ -1233,6 +1233,9 @@ static GstStateChangeReturn
 gst_mpeg_demux_change_state (GstElement * element, GstStateChange transition)
 {
   GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (element);
+  GstStateChangeReturn ret;
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -1241,8 +1244,7 @@ gst_mpeg_demux_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  return ret;
 }
 
 static void
