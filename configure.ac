@@ -85,6 +85,7 @@ GST_PLUGINS_ALL="\
 		debug \
 		effectv \
 		id3demux \
+                icydemux \
 		flx \
 		goom \
 		law \
@@ -646,6 +647,7 @@ gst/cutter/Makefile
 gst/debug/Makefile
 gst/effectv/Makefile
 gst/id3demux/Makefile
+gst/icydemux/Makefile
 gst/goom/Makefile
 gst/law/Makefile
 gst/level/Makefile

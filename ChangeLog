@@ -1,3 +1,25 @@
+2006-04-21  Michael Smith  <msmith@fluendo.com>
+
+	* configure.ac:
+	* gst/icydemux/Makefile.am:
+	* gst/icydemux/gsticydemux.c: (gst_icydemux_get_type),
+	(gst_icydemux_base_init), (gst_icydemux_class_init),
+	(gst_icydemux_reset), (gst_icydemux_init),
+	(gst_icydemux_sink_setcaps), (gst_icydemux_dispose),
+	(gst_icydemux_add_srcpad), (gst_icydemux_remove_srcpad),
+	(unicodify), (gst_icydemux_unicodify),
+	(gst_icydemux_parse_and_send_tags),
+	(gst_icydemux_typefind_or_forward), (gst_icydemux_add_meta),
+	(gst_icydemux_chain), (gst_icydemux_change_state),
+	(gst_icydemux_send_tag_event), (plugin_init):
+	* gst/icydemux/gsticydemux.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/icydemux.c: (typefind_succeed),
+	(plugin_init), (icydemux_found_pad), (create_icydemux),
+	(cleanup_icydemux), (push_data), (GST_START_TEST),
+	(icydemux_suite), (main):
+	  Add icydemux, and tests.
+
 2006-04-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_loop):
