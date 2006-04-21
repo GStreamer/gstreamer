@@ -1,5 +1,9 @@
 2006-04-21  Andy Wingo  <wingo@pobox.com>
 
+	* configure.ac (GST_MAJORMINOR): Drop the required gstreamer
+	version back down to the latest release, I don't think thomas'
+	commit on 1 april was meant to change it.
+
 	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_register): Up the rank
 	of the dv video decoder.
 
