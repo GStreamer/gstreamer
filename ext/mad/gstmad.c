@@ -437,6 +437,11 @@ gst_mad_convert_sink (GstPad * pad, GstFormat src_format, gint64 src_value,
   gboolean res = TRUE;
   GstMad *mad;
 
+  if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
   mad = GST_MAD (GST_PAD_PARENT (pad));
 
   if (mad->vbr_average == 0)
@@ -480,6 +485,11 @@ gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
   gint bytes_per_sample;
   GstMad *mad;
 
+  if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
   mad = GST_MAD (GST_PAD_PARENT (pad));
 
   bytes_per_sample = MAD_NCHANNELS (&mad->frame.header) * 4;
@@ -498,7 +508,8 @@ gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
 
           if (byterate == 0)
             return FALSE;
-          *dest_value = src_value * GST_SECOND / byterate;
+          *dest_value =
+              gst_util_uint64_scale_int (src_value, GST_SECOND, byterate);
           break;
         }
         default:
@@ -513,7 +524,8 @@ gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_TIME:
           if (mad->frame.header.samplerate == 0)
             return FALSE;
-          *dest_value = src_value * GST_SECOND / mad->frame.header.samplerate;
+          *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
+              mad->frame.header.samplerate);
           break;
         default:
           res = FALSE;
@@ -525,8 +537,8 @@ gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
           scale = bytes_per_sample;
           /* fallthrough */
         case GST_FORMAT_DEFAULT:
-          *dest_value =
-              src_value * scale * mad->frame.header.samplerate / GST_SECOND;
+          *dest_value = gst_util_uint64_scale_int (src_value,
+              scale * mad->frame.header.samplerate, GST_SECOND);
           break;
         default:
           res = FALSE;
@@ -600,6 +612,7 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_DURATION:
     {
       GstFormat bytes_format = GST_FORMAT_BYTES;
+      GstFormat time_format = GST_FORMAT_TIME;
       GstFormat req_format;
       gint64 total, total_bytes;
 
@@ -624,24 +637,19 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
         goto error;
       }
 
-      GST_LOG_OBJECT (mad, "peer pad returned total=%lld bytes", total_bytes);
+      GST_LOG_OBJECT (mad, "peer pad returned total=%" G_GINT64_FORMAT
+          " bytes", total_bytes);
 
-      if (req_format != GST_FORMAT_BYTES) {
-        if (!gst_mad_convert_sink (pad, GST_FORMAT_BYTES, total_bytes,
-                &req_format, &total)) {
-          goto error;
-        }
-      } else {
-        GstFormat tformat = GST_FORMAT_TIME;
-
-        /* bytes means different things on source and sink
-         * pad, so we need to do two conversions here */
-        if (!gst_mad_convert_sink (pad, GST_FORMAT_BYTES, total_bytes,
-                &tformat, &total) ||
-            !gst_mad_convert_src (pad, GST_FORMAT_TIME, total,
-                &req_format, &total)) {
-          goto error;
-        }
+      if (!gst_mad_convert_sink (pad, GST_FORMAT_BYTES, total_bytes,
+              &time_format, &total)) {
+        GST_DEBUG_OBJECT (mad, "conversion BYTE => TIME failed");
+        goto error;
+      }
+      if (!gst_mad_convert_src (pad, GST_FORMAT_TIME, total,
+              &req_format, &total)) {
+        GST_DEBUG_OBJECT (mad, "conversion TIME => %s failed",
+            gst_format_get_name (req_format));
+        goto error;
       }
 
       gst_query_set_duration (query, req_format, total);
@@ -1545,8 +1553,11 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           mad->total_samples = total;
           mad->last_ts = GST_CLOCK_TIME_NONE;
         }
-        time_offset = mad->total_samples * (GST_SECOND / mad->rate);
-        time_duration = (nsamples * (GST_SECOND / mad->rate));
+        time_offset =
+            gst_util_uint64_scale_int (mad->total_samples, GST_SECOND,
+            mad->rate);
+        time_duration =
+            gst_util_uint64_scale_int (nsamples, GST_SECOND, mad->rate);
       }
 
       if (mad->index) {

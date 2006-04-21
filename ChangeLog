@@ -1,5 +1,12 @@
 2006-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/mad/gstmad.c: (gst_mad_convert_sink), (gst_mad_convert_src),
+	(gst_mad_src_query), (gst_mad_chain):
+	  .. and DEFAULT queries should work too. Use magic gst util scale
+	  functions in some places.
+
+2006-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/mad/gstmad.c: (gst_mad_src_query):
 	  Fix duration query in BYTES format (#336824).
 
