@@ -28,7 +28,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GstRank dvdec_rank;
+  GstRank rank;
 
   if (!gst_element_register (plugin, "dvdemux", GST_RANK_PRIMARY,
           gst_dvdemux_get_type ()))
@@ -36,6 +36,7 @@ plugin_init (GstPlugin * plugin)
 
   /* libdv does not correctly play back videos on big-endian machines. also it's
      only optimized properly on x86-32 and x86-64. */
+
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   rank = GST_RANK_PRIMARY;
 #else
