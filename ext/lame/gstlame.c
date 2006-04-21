@@ -951,20 +951,24 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:{
-      GstBuffer *buf;
-      gint size;
-
       GST_DEBUG_OBJECT (lame, "handling EOS event");
-      buf = gst_buffer_new_and_alloc (7200);
-      size = lame_encode_flush (lame->lgf, GST_BUFFER_DATA (buf), 7200);
-      if (size > 0) {
-        GST_BUFFER_SIZE (buf) = size;
-        GST_DEBUG_OBJECT (lame, "pushing final packet of %u bytes", size);
-        gst_buffer_set_caps (buf, GST_PAD_CAPS (lame->srcpad));
-        gst_pad_push (lame->srcpad, buf);
-      } else {
-        GST_DEBUG_OBJECT (lame, "no final packet (size=%d)", size);
-        gst_buffer_unref (buf);
+
+      if (lame->lgf != NULL) {
+        GstBuffer *buf;
+        gint size;
+
+        buf = gst_buffer_new_and_alloc (7200);
+        size = lame_encode_flush (lame->lgf, GST_BUFFER_DATA (buf), 7200);
+
+        if (size > 0) {
+          GST_BUFFER_SIZE (buf) = size;
+          GST_DEBUG_OBJECT (lame, "pushing final packet of %u bytes", size);
+          gst_buffer_set_caps (buf, GST_PAD_CAPS (lame->srcpad));
+          gst_pad_push (lame->srcpad, buf);
+        } else {
+          GST_DEBUG_OBJECT (lame, "no final packet (size=%d)", size);
+          gst_buffer_unref (buf);
+        }
       }
 
       ret = gst_pad_event_default (pad, event);

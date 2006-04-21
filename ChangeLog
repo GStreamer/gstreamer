@@ -1,3 +1,11 @@
+2006-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Ed Catmur  <ed at catmur dot co dot uk>
+
+	* ext/lame/gstlame.c: (gst_lame_sink_event):
+	  Don't crash if we get an EOS event before the encoder
+	  has been set up (#339287).
+
 2006-04-21  Wim Taymans  <wim@fluendo.com>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_start),
