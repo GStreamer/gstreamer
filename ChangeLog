@@ -1,5 +1,13 @@
 2006-04-21  Wim Taymans  <wim@fluendo.com>
 
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_start),
+	(gst_dvd_read_src_goto_title), (gst_dvd_read_src_read),
+	(gst_dvd_read_src_create), (gst_dvd_read_src_goto_sector):
+	Move errors out of the normal code flow.
+	Don't send eos, basesrc will do that for us when needed.
+
+2006-04-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_change_state):
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_change_state):
 	* gst/mpegstream/gstrfc2250enc.c: (gst_rfc2250_enc_change_state):

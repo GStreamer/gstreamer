@@ -181,24 +181,14 @@ gst_dvd_read_src_start (GstBaseSrc * basesrc)
 
   GST_DEBUG_OBJECT (src, "Opening DVD '%s'", src->location);
 
-  src->dvd = DVDOpen (src->location);
-  if (src->dvd == NULL) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("Could not open DVD")),
-        ("DVDOpen(%s) failed: %s", src->location, g_strerror (errno)));
-    return FALSE;
-  }
+  if ((src->dvd = DVDOpen (src->location)) == NULL)
+    goto open_failed;
 
   /* Load the video manager to find out the information about the titles */
   GST_DEBUG_OBJECT (src, "Loading VMG info");
 
-  src->vmg_file = ifoOpen (src->dvd, 0);
-  if (!src->vmg_file) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("Could not open DVD")),
-        ("ifoOpen() failed: %s", g_strerror (errno)));
-    return FALSE;
-  }
+  if (!(src->vmg_file = ifoOpen (src->dvd, 0)))
+    goto ifo_open_failed;
 
   src->tt_srpt = src->vmg_file->tt_srpt;
 
@@ -206,21 +196,45 @@ gst_dvd_read_src_start (GstBaseSrc * basesrc)
   src->chapter = src->uri_chapter - 1;
   src->angle = src->uri_angle - 1;
 
-  if (!gst_dvd_read_src_goto_title (src, src->title, src->angle)) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("Could not open DVD title %d"), src->uri_title), (NULL));
-    return FALSE;
-  }
+  if (!gst_dvd_read_src_goto_title (src, src->title, src->angle))
+    goto title_open_failed;
 
-  if (!gst_dvd_read_src_goto_chapter (src, src->chapter)) {
-    GST_ERROR_OBJECT (src, "Failed to go to chapter %d of DVD title %d",
-        src->uri_chapter, src->uri_title);
-  }
+  if (!gst_dvd_read_src_goto_chapter (src, src->chapter))
+    goto chapter_open_failed;
 
   src->new_seek = FALSE;
   src->change_cell = TRUE;
 
   return TRUE;
+
+  /* ERRORS */
+open_failed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("Could not open DVD")),
+        ("DVDOpen(%s) failed: %s", src->location, g_strerror (errno)));
+    return FALSE;
+  }
+ifo_open_failed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("Could not open DVD")),
+        ("ifoOpen() failed: %s", g_strerror (errno)));
+    return FALSE;
+  }
+title_open_failed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("Could not open DVD title %d"), src->uri_title), (NULL));
+    return FALSE;
+  }
+chapter_open_failed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("Failed to go to chapter %d of DVD title %d"),
+            src->uri_chapter, src->uri_title), (NULL));
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -370,11 +384,8 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
   /* make sure our title number is valid */
   num_titles = src->tt_srpt->nr_of_srpts;
   GST_INFO_OBJECT (src, "There are %d titles on this DVD", num_titles);
-  if (title < 0 || title >= num_titles) {
-    GST_WARNING_OBJECT (src, "Invalid title %d (only %d available)",
-        title, num_titles);
-    return FALSE;
-  }
+  if (title < 0 || title >= num_titles)
+    goto invalid_title;
 
   src->num_chapters = src->tt_srpt->title[title].nr_of_ptts;
   GST_INFO_OBJECT (src, "Title %d has %d chapters", title, src->num_chapters);
@@ -391,24 +402,16 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
   /* load the VTS information for the title set our title is in */
   title_set_nr = src->tt_srpt->title[title].title_set_nr;
   src->vts_file = ifoOpen (src->dvd, title_set_nr);
-  if (src->vts_file == NULL) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("Could not open DVD title %d"), title_set_nr),
-        ("ifoOpen(%d) failed: %s", title_set_nr, g_strerror (errno)));
-    return FALSE;
-  }
+  if (src->vts_file == NULL)
+    goto ifo_open_failed;
 
   src->ttn = src->tt_srpt->title[title].vts_ttn;
   src->vts_ptt_srpt = src->vts_file->vts_ptt_srpt;
 
   /* we've got enough info, time to open the title set data */
   src->dvd_title = DVDOpenFile (src->dvd, title_set_nr, DVD_READ_TITLE_VOBS);
-  if (src->dvd_title == NULL) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("Could not open DVD title %d"), title_set_nr),
-        ("Can't open title VOBS (VTS_%02d_1.VOB)", title_set_nr));
-    return FALSE;
-  }
+  if (src->dvd_title == NULL)
+    goto title_open_failed;
 
   GST_INFO_OBJECT (src, "Opened title %d, angle %d", title, angle);
   src->title = title;
@@ -468,6 +471,28 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
       gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
 
   return TRUE;
+
+  /* ERRORS */
+invalid_title:
+  {
+    GST_WARNING_OBJECT (src, "Invalid title %d (only %d available)",
+        title, num_titles);
+    return FALSE;
+  }
+ifo_open_failed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("Could not open DVD title %d"), title_set_nr),
+        ("ifoOpen(%d) failed: %s", title_set_nr, g_strerror (errno)));
+    return FALSE;
+  }
+title_open_failed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("Could not open DVD title %d"), title_set_nr),
+        ("Can't open title VOBS (VTS_%02d_1.VOB)", title_set_nr));
+    return FALSE;
+  }
 }
 
 /* FIXME: double-check this function, compare against original */
@@ -519,10 +544,8 @@ again:
 
   if (src->cur_cell >= src->last_cell) {
     /* advance to next chapter */
-    if (src->chapter == (src->num_chapters - 1)) {
-      GST_INFO_OBJECT (src, "last chapter done - EOS");
-      return GST_DVD_READ_EOS;
-    }
+    if (src->chapter == (src->num_chapters - 1))
+      goto eos;
 
     GST_INFO_OBJECT (src, "end of chapter %d, switch to next", src->chapter);
 
@@ -564,10 +587,8 @@ again:
 nav_retry:
 
   len = DVDReadBlocks (src->dvd_title, src->cur_pack, 1, oneblock);
-  if (len == 0) {
-    GST_ERROR_OBJECT (src, "Read failed for block %d", src->cur_pack);
-    return GST_DVD_READ_ERROR;
-  }
+  if (len == 0)
+    goto read_error;
 
   if (!gst_dvd_read_src_is_nav_pack (oneblock)) {
     src->cur_pack++;
@@ -607,12 +628,8 @@ nav_retry:
   len = DVDReadBlocks (src->dvd_title, src->cur_pack, cur_output_size,
       GST_BUFFER_DATA (buf));
 
-  if (len != cur_output_size) {
-    GST_ERROR_OBJECT (src, "Read failed for %d blocks at %d",
-        cur_output_size, src->cur_pack);
-    gst_buffer_unref (buf);
-    return GST_DVD_READ_ERROR;
-  }
+  if (len != cur_output_size)
+    goto block_read_error;
 
   GST_BUFFER_SIZE (buf) = cur_output_size * DVD_VIDEO_LB_LEN;
   /* GST_BUFFER_OFFSET (buf) = priv->cur_pack * DVD_VIDEO_LB_LEN; */
@@ -624,7 +641,27 @@ nav_retry:
   src->cur_pack = next_vobu;
 
   GST_LOG_OBJECT (src, "Read %u sectors", cur_output_size);
+
   return GST_DVD_READ_OK;
+
+  /* ERRORS */
+eos:
+  {
+    GST_INFO_OBJECT (src, "last chapter done - EOS");
+    return GST_DVD_READ_EOS;
+  }
+read_error:
+  {
+    GST_ERROR_OBJECT (src, "Read failed for block %d", src->cur_pack);
+    return GST_DVD_READ_ERROR;
+  }
+block_read_error:
+  {
+    GST_ERROR_OBJECT (src, "Read failed for %d blocks at %d",
+        cur_output_size, src->cur_pack);
+    gst_buffer_unref (buf);
+    return GST_DVD_READ_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -698,7 +735,6 @@ gst_dvd_read_src_create (GstPushSrc * pushsrc, GstBuffer ** p_buf)
     }
     case GST_DVD_READ_EOS:{
       GST_INFO_OBJECT (src, "Reached EOS");
-      gst_pad_push_event (GST_BASE_SRC (src)->srcpad, gst_event_new_eos ());
       return GST_FLOW_UNEXPECTED;
     }
     case GST_DVD_READ_OK:{
@@ -1162,21 +1198,24 @@ gst_dvd_read_src_goto_sector (GstDvdReadSrc * src, int angle)
   }
 
   GST_DEBUG_OBJECT (src, "Seek to sector %u failed", seek_to);
+
   return FALSE;
 
 done:
-  /* so chapter $chapter and cell $cur contain our sector
-   * of interest. Let's go there! */
-  GST_INFO_OBJECT (src, "Seek succeeded, going to chapter %u, cell %u",
-      chapter, cur);
+  {
+    /* so chapter $chapter and cell $cur contain our sector
+     * of interest. Let's go there! */
+    GST_INFO_OBJECT (src, "Seek succeeded, going to chapter %u, cell %u",
+        chapter, cur);
 
-  gst_dvd_read_src_goto_chapter (src, chapter);
-  src->cur_cell = cur;
-  src->next_cell = next;
-  src->new_cell = FALSE;
-  src->cur_pack = seek_to;
+    gst_dvd_read_src_goto_chapter (src, chapter);
+    src->cur_cell = cur;
+    src->next_cell = next;
+    src->new_cell = FALSE;
+    src->cur_pack = seek_to;
 
-  return TRUE;
+    return TRUE;
+  }
 }
 
 
