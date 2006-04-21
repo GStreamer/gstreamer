@@ -803,7 +803,9 @@ gst_dv1394src_convert (GstPad * pad,
         case GST_FORMAT_BYTES:
           src_value *= src->frame_size;
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value * src->frame_rate / GST_SECOND;
+          *dest_value =
+              gst_util_uint64_scale_int (src_value, src->frame_rate,
+              GST_SECOND);
           break;
         default:
           goto not_supported;
@@ -818,7 +820,9 @@ gst_dv1394src_convert (GstPad * pad,
           break;
         case GST_FORMAT_TIME:
           if (src->frame_rate != 0)
-            *dest_value = src_value * GST_SECOND / src->frame_rate;
+            *dest_value =
+                gst_util_uint64_scale_int (src_value, GST_SECOND,
+                src->frame_rate);
           else
             goto not_supported;
           break;
@@ -835,6 +839,7 @@ gst_dv1394src_convert (GstPad * pad,
 
 not_supported:
   {
+    GST_DEBUG_OBJECT (src, "unsupported conversion");
     gst_object_unref (src);
     return FALSE;
   }
