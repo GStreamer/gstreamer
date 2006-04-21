@@ -1,3 +1,9 @@
+2006-04-21  Andy Wingo  <wingo@pobox.com>
+
+	* ext/dv/gstdv.c (plugin_init): libdv is a marginal decoder, at
+	best, on big endian systems. Drop its rank in that case. OTOH on
+	x86 it's quite fine. See changes from today in gst-ffmpeg as well.
+
 2006-04-21  Michael Smith  <msmith@fluendo.com>
 
 	* configure.ac:
