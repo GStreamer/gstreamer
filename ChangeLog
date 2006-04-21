@@ -1,5 +1,10 @@
 2006-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/mad/gstmad.c: (gst_mad_src_query):
+	  Fix duration query in BYTES format (#336824).
+
+2006-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Ed Catmur  <ed at catmur dot co dot uk>
 
 	* ext/lame/gstlame.c: (gst_lame_sink_event):

@@ -599,18 +599,18 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_DURATION:
     {
-      GstFormat format;
-      GstFormat rformat;
+      GstFormat bytes_format = GST_FORMAT_BYTES;
+      GstFormat req_format;
       gint64 total, total_bytes;
 
       /* save requested format */
-      gst_query_parse_duration (query, &format, NULL);
+      gst_query_parse_duration (query, &req_format, NULL);
 
       if (peer == NULL)
         goto error;
 
       /* try any demuxer before us first */
-      if (format == GST_FORMAT_TIME && gst_pad_query (peer, query)) {
+      if (req_format == GST_FORMAT_TIME && gst_pad_query (peer, query)) {
         gst_query_parse_duration (query, NULL, &total);
         GST_LOG_OBJECT (mad, "peer returned duration %" GST_TIME_FORMAT,
             GST_TIME_ARGS (total));
@@ -618,43 +618,40 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
       }
 
       /* query peer for total length in bytes */
-      gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
-
-      if (!gst_pad_query (peer, query)) {
-        GST_LOG_OBJECT (mad, "query on peer pad failed");
+      if (!gst_pad_query_peer_duration (mad->sinkpad, &bytes_format,
+              &total_bytes) || total_bytes <= 0) {
+        GST_LOG_OBJECT (mad, "duration query on peer pad failed");
         goto error;
       }
 
-      /* get the returned format */
-      gst_query_parse_duration (query, &rformat, &total_bytes);
-      if (rformat == GST_FORMAT_BYTES) {
-        GST_LOG_OBJECT (mad, "peer pad returned total=%lld bytes", total_bytes);
-      } else if (rformat == GST_FORMAT_TIME) {
-        GST_LOG_OBJECT (mad, "peer pad returned total time=%", GST_TIME_FORMAT,
-            GST_TIME_ARGS (total_bytes));
-      }
+      GST_LOG_OBJECT (mad, "peer pad returned total=%lld bytes", total_bytes);
 
-      /* Check if requested format is returned format */
-      if (format == rformat)
-        return TRUE;
-
-      if (total_bytes != -1) {
-        if (format != GST_FORMAT_BYTES) {
-          if (!gst_mad_convert_sink (pad, GST_FORMAT_BYTES, total_bytes,
-                  &format, &total))
-            goto error;
-        } else {
-          total = total_bytes;
+      if (req_format != GST_FORMAT_BYTES) {
+        if (!gst_mad_convert_sink (pad, GST_FORMAT_BYTES, total_bytes,
+                &req_format, &total)) {
+          goto error;
         }
       } else {
-        total = -1;
+        GstFormat tformat = GST_FORMAT_TIME;
+
+        /* bytes means different things on source and sink
+         * pad, so we need to do two conversions here */
+        if (!gst_mad_convert_sink (pad, GST_FORMAT_BYTES, total_bytes,
+                &tformat, &total) ||
+            !gst_mad_convert_src (pad, GST_FORMAT_TIME, total,
+                &req_format, &total)) {
+          goto error;
+        }
       }
 
-      gst_query_set_duration (query, format, total);
-      if (format == GST_FORMAT_TIME) {
-        GST_LOG ("duration=%" GST_TIME_FORMAT, GST_TIME_ARGS (total));
+      gst_query_set_duration (query, req_format, total);
+
+      if (req_format == GST_FORMAT_TIME) {
+        GST_LOG_OBJECT (mad, "duration=%" GST_TIME_FORMAT,
+            GST_TIME_ARGS (total));
       } else {
-        GST_LOG ("duration=%" G_GINT64_FORMAT ", format=%u", total, format);
+        GST_LOG_OBJECT (mad, "duration=%" G_GINT64_FORMAT " (%s)",
+            gst_format_get_name (req_format));
       }
       break;
     }
