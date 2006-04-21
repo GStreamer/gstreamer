@@ -1,3 +1,8 @@
+2006-04-21  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ffmpeg/gstffmpegdec.c (gst_ffmpegdec_register): Up the rank
+	of the dv video decoder.
+
 2006-04-19  J^ <j@bootlab.org>
 
 	reviewed by: Edward Hervey  <edward@fluendo.com>

@@ -1736,6 +1736,12 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_H264:
         rank = GST_RANK_PRIMARY;
         break;
+      case CODEC_ID_DVVIDEO:
+        /* we have a good dv decoder, fast on both ppc as well as x86. they say
+           libdv's quality is better though. leave as secondary.
+           note: if you change this, see the code in gstdv.c in good/ext/dv. */
+        rank = GST_RANK_SECONDARY;
+        break;
       default:
         rank = GST_RANK_MARGINAL;
         break;
