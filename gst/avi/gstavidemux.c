@@ -1914,10 +1914,17 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
        * the allocation of index entries could be improved. */
       stream = &avi->stream[entry->stream_nr];
       if (entry->dur > MAX_DURATION && stream->strh->type == GST_RIFF_FCC_auds) {
-        guint32 ideal_size = stream->strf.auds->av_bps / 10;
+        guint32 ideal_size;
         gst_avi_index_entry *entries;
         gint old_size, num_added;
         GList *one2;
+
+        /* cut in 1/10th of a second */
+        ideal_size = stream->strf.auds->av_bps / 10;
+
+        /* ensure chunk size is multiple of blockalign */
+        if (stream->strf.auds->blockalign > 1)
+          ideal_size -= ideal_size % stream->strf.auds->blockalign;
 
         /* copy index */
         old_size = entry->size;

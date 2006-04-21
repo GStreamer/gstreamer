@@ -1,5 +1,15 @@
 2006-04-21  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Fabrizio Gennari <fabrizio dot ge at tiscali dot it>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),
+	(gst_avi_demux_parse_index), (gst_avi_demux_massage_index):
+	When splitting audio chunks, the block alignment is not taken in
+	consideration, so the smaller chunks could be of size which is 
+	not a multiple of the block alignment. Fixes #336904
+
+2006-04-21  Wim Taymans  <wim@fluendo.com>
+
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_convert):
 	Use scale functions
 
