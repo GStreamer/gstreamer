@@ -217,6 +217,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Intel H.263");
       break;
 
+    case GST_MAKE_FOURCC ('H', '2', '6', '4'):
     case GST_MAKE_FOURCC ('h', '2', '6', '4'):
       caps = gst_caps_new_simple ("video/x-h264", NULL);
       if (codec_name)

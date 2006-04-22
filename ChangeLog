@@ -1,5 +1,12 @@
 2006-04-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	Patch by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	  add another H264 fourcc.  Fixes #339047.
+
+2006-04-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	Patch by: Jan Schmidt
 
 	* gst/playback/gststreamselector.c:
