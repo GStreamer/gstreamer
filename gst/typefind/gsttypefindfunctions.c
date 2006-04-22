@@ -1453,6 +1453,7 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
         STRNCMP (&data[4], "mdat", 4) == 0 ||
         STRNCMP (&data[4], "ftyp", 4) == 0 ||
         STRNCMP (&data[4], "free", 4) == 0 ||
+        STRNCMP (&data[4], "uuid", 4) == 0 ||
         STRNCMP (&data[4], "skip", 4) == 0) {
       if (tip == 0) {
         tip = GST_TYPE_FIND_LIKELY;

@@ -2,6 +2,13 @@
 
 	Patch by: Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/typefind/gsttypefindfunctions.c: (qt_type_find):
+	  fix typefinding on some ISO files.  Fixes #339212.
+
+2006-04-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Patch by: Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
 	  add another H264 fourcc.  Fixes #339047.
 
