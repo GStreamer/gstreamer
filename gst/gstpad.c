@@ -341,7 +341,9 @@ gst_pad_init (GstPad * pad)
   pad->querytypefunc = GST_DEBUG_FUNCPTR (gst_pad_get_query_types_default);
   pad->queryfunc = GST_DEBUG_FUNCPTR (gst_pad_query_default);
   pad->intlinkfunc = GST_DEBUG_FUNCPTR (gst_pad_get_internal_links_default);
+#if 0
   GST_PAD_ACCEPTCAPSFUNC (pad) = GST_DEBUG_FUNCPTR (gst_pad_acceptcaps_default);
+#endif
 
   pad->do_buffer_signals = 0;
   pad->do_event_signals = 0;
@@ -1335,7 +1337,9 @@ gst_pad_set_getcaps_function (GstPad * pad, GstPadGetCapsFunction getcaps)
  * @acceptcaps: the #GstPadAcceptCapsFunction to set.
  *
  * Sets the given acceptcaps function for the pad.  The acceptcaps function
- * will be called to check if the pad can accept the given caps. Setting the
+ * will be called to check if the pad can accept the given caps.
+ */
+/* Setting the
  * acceptcaps function to NULL restores the default behaviour of allowing 
  * any caps that matches the caps from gst_pad_get_caps.
  */
@@ -2262,15 +2266,17 @@ could_not_set:
 static gboolean
 gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
 {
+  GstPadAcceptCapsFunction acceptcaps;
   GstPadSetCapsFunction setcaps;
   gboolean res;
 
+  acceptcaps = GST_PAD_ACCEPTCAPSFUNC (pad);
   setcaps = GST_PAD_SETCAPSFUNC (pad);
 
   /* See if pad accepts the caps - only needed if 
    * no setcaps function */
-  if (setcaps == NULL)
-    if (!gst_pad_accept_caps (pad, caps))
+  if (setcaps == NULL && acceptcaps != NULL)
+    if (!acceptcaps (pad, caps))
       goto not_accepted;
 
   /* set caps on pad if call succeeds */
@@ -2291,15 +2297,17 @@ not_accepted:
 static gboolean
 gst_pad_configure_src (GstPad * pad, GstCaps * caps, gboolean dosetcaps)
 {
+  GstPadAcceptCapsFunction acceptcaps;
   GstPadSetCapsFunction setcaps;
   gboolean res;
 
+  acceptcaps = GST_PAD_ACCEPTCAPSFUNC (pad);
   setcaps = GST_PAD_SETCAPSFUNC (pad);
 
   /* See if pad accepts the caps - only needed if 
    * no setcaps function */
-  if (setcaps == NULL)
-    if (!gst_pad_accept_caps (pad, caps))
+  if (setcaps == NULL && acceptcaps != NULL)
+    if (!acceptcaps (pad, caps))
       goto not_accepted;
 
   if (dosetcaps)
@@ -3286,8 +3294,11 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 {
   GstPad *peer;
   GstFlowReturn ret;
+
+#if 0
   GstCaps *caps;
   gboolean caps_changed;
+#endif
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC, GST_FLOW_ERROR);
@@ -3320,19 +3331,25 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
     goto not_linked;
   gst_object_ref (peer);
 
+#if 0
+  /* FIXME, disabled for 0.10.5 release because it caused to much
+   * regressions */
   /* Before pushing the buffer to the peer pad, ensure that caps 
    * are set on this pad */
   caps = GST_BUFFER_CAPS (buffer);
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
+#endif
 
   GST_OBJECT_UNLOCK (pad);
 
+#if 0
   /* we got a new datatype from the pad, it had better handle it */
   if (G_UNLIKELY (caps_changed)) {
     GST_DEBUG_OBJECT (pad, "caps changed to %" GST_PTR_FORMAT, caps);
     if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, TRUE)))
       goto not_negotiated;
   }
+#endif
 
   ret = gst_pad_chain (peer, buffer);
 
@@ -3362,6 +3379,7 @@ not_linked:
     GST_OBJECT_UNLOCK (pad);
     return GST_FLOW_NOT_LINKED;
   }
+#if 0
 not_negotiated:
   {
     gst_buffer_unref (buffer);
@@ -3370,6 +3388,7 @@ not_negotiated:
         "element pushed buffer then refused to accept the caps");
     return GST_FLOW_NOT_NEGOTIATED;
   }
+#endif
 }
 
 /**

@@ -1,3 +1,12 @@
+2006-04-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Wim Taymans
+
+	* gst/gstpad.c: (gst_pad_init), (gst_pad_configure_sink),
+	(gst_pad_configure_src), (gst_pad_push):
+	* gst/gstpipeline.c: (gst_pipeline_init):
+	  Fix internal data flow errors.  Fixes #338711.
+
 2006-04-12  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/gst/gstelement.c: (GST_START_TEST):
