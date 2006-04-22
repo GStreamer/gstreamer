@@ -301,13 +301,14 @@ gst_stream_selector_bufferalloc (GstPad * pad, guint64 offset,
   active_sinkpad = sel->active_sinkpad;
   GST_OBJECT_UNLOCK (sel);
 
-  /* Ignore buffers from pads except the selected one */
+  /* Fallback allocation for buffers from pads except the selected one */
   if (pad != active_sinkpad) {
     GST_DEBUG_OBJECT (sel,
-        "Returning not-linked for buffer alloc from pad %s:%s",
+        "Pad %s:%s is not selected. Performing fallback allocation",
         GST_DEBUG_PAD_NAME (pad));
 
-    result = GST_FLOW_NOT_LINKED;
+    *buf = NULL;
+    result = GST_FLOW_OK;
   } else {
     result = gst_pad_alloc_buffer (sel->srcpad, offset, size, caps, buf);
 

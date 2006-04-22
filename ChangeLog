@@ -1,3 +1,12 @@
+2006-04-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Patch by: Jan Schmidt
+
+	* gst/playback/gststreamselector.c:
+	(gst_stream_selector_bufferalloc):
+	  Restore old StreamSelector behaviour.
+	  Fixes #338419.
+
 2006-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
