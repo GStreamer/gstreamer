@@ -135,6 +135,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libgsticydemux"=".\libgsticydemux.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "libgstid3demux"=".\libgstid3demux.dsp" - Package Owner=<4>
 
 Package=<5>

@@ -1,3 +1,11 @@
+2006-04-21  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/matroska/matroska-demux.c: (gst_matroskademux_do_index_seek):
+	Use gst_guint64_to_gdouble for conversions
+	* win32/vs6/gst_plugins_good.dsw:
+	* win32/vs6/libgsticydemux.dsp:
+	Add a project file for icydemux
+
 2006-04-21  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Fabrizio Gennari <fabrizio dot ge at tiscali dot it>

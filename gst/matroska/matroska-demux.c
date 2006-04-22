@@ -1043,8 +1043,9 @@ gst_matroskademux_do_index_seek (GstMatroskaDemux * demux, gint64 seek_pos,
     for (n = 0; n < demux->num_indexes; ++n) {
       gdouble d_entry, d_this;
 
-      d_entry = fabs ((gdouble) demux->index[entry].time - (gdouble) seek_pos);
-      d_this = fabs ((gdouble) demux->index[n].time - (gdouble) seek_pos);
+      d_entry =
+          fabs (gst_guint64_to_gdouble (demux->index[entry].time - seek_pos));
+      d_this = fabs (gst_guint64_to_gdouble (demux->index[n].time - seek_pos));
 
       if (d_this < d_entry &&
           (demux->index[n].time < segment_stop || segment_stop == -1)) {
