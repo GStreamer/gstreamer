@@ -1,3 +1,14 @@
+2006-04-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Alexander Lancaster  <alexl at users sourceforge net>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_get_caps), (gst_id3_tag_init),
+	(gst_id3_tag_sink_event), (gst_id3_tag_src_link),
+	(gst_id3_tag_chain):
+	  When acting as a muxer, set caps on outgoing buffers and set caps
+	  on source pad (fixes #323658). Remove unused application/x-gst-tags
+	  cruft from the 0.6 days.
+
 2006-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstmad.c: (gst_mad_convert_sink), (gst_mad_convert_src),

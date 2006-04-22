@@ -318,8 +318,7 @@ gst_id3_tag_get_caps (GstPad * pad)
     GstCaps *caps = gst_caps_copy (tag->found_caps);
 
     if (CAN_BE_MUXER (tag)) {
-      gst_caps_append (caps,
-          gst_caps_from_string ("application/x-gst-tags; application/x-id3"));
+      gst_caps_append (caps, gst_caps_from_string ("application/x-id3"));
     }
     return caps;
   } else {
@@ -366,6 +365,9 @@ gst_id3_tag_init (GTypeInstance * instance, gpointer g_class)
   if (GST_ID3_TAG_GET_CLASS (tag)->type == GST_ID3_TAG_PARSE_MUX) {
     /* only the muxer class here, all other use sometimes pads */
     gst_id3_tag_add_src_pad (tag);
+    gst_pad_use_fixed_caps (tag->srcpad);
+    gst_pad_set_caps (tag->srcpad,
+        gst_static_pad_template_get_caps (&id3_tag_src_id3_template_factory));
   }
   /* FIXME: for the alli^H^H^H^Hspider - gst_id3_tag_add_src_pad (tag); */
   tag->parse_mode = GST_ID3_TAG_PARSE_BASE;
@@ -1001,6 +1003,7 @@ gst_id3_tag_sink_event (GstPad * pad, GstEvent * event)
             tag_buffer = gst_buffer_new_and_alloc (128);
             if (128 != id3_tag_render (id3, tag_buffer->data))
               g_assert_not_reached ();
+            gst_buffer_set_caps (tag_buffer, GST_PAD_CAPS (tag->srcpad));
             gst_pad_push (tag->srcpad, tag_buffer);
             id3_tag_delete (id3);
           }
@@ -1139,9 +1142,6 @@ gst_id3_tag_src_link (GstPad * pad, GstPad * peer)
   if (strcmp (mimetype, "application/x-id3") == 0) {
     tag->parse_mode = GST_ID3_TAG_PARSE_MUX;
     GST_LOG_OBJECT (tag, "mux operation, using application/x-id3 output");
-  } else if (strcmp (mimetype, "application/x-gst-tags") == 0) {
-    tag->parse_mode = GST_ID3_TAG_PARSE_ANY;
-    GST_LOG_OBJECT (tag, "fast operation, just outputting tags");
   } else {
     tag->parse_mode = GST_ID3_TAG_PARSE_DEMUX;
     GST_LOG_OBJECT (tag, "demux operation, extracting tags");
@@ -1383,6 +1383,7 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
                 id3_tag_render (id3, GST_BUFFER_DATA (tag_buffer));
             g_assert (estimated >= tag->v2tag_size_new);
             GST_BUFFER_SIZE (tag_buffer) = tag->v2tag_size_new;
+            gst_buffer_set_caps (tag_buffer, GST_PAD_CAPS (tag->srcpad));
             gst_pad_push (tag->srcpad, tag_buffer);
             id3_tag_delete (id3);
           }
@@ -1434,6 +1435,7 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
           gst_buffer_unref (buffer);
           buffer = sub;
         }
+        gst_buffer_set_caps (buffer, GST_PAD_CAPS (tag->srcpad));
         gst_pad_push (tag->srcpad, buffer);
       }
       return GST_FLOW_OK;
