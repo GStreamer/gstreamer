@@ -1,3 +1,13 @@
+2006-04-23  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/matroska/matroska-demux.c: (gst_matroskademux_do_index_seek):
+	Fix a bad conversion using gst_guint64_to_gdouble.
+	fabs ((gdouble) demux->index[entry].time - (gdouble) seek_pos) can not be 
+	replaced by fabs (gst_guint64_to_gdouble (demux->index[entry].time - seek_pos)) as the
+	difference could be negative. fabs (gst_guint64_to_gdouble (demux->index[entry].time) - 
+    gst_guint64_to_gdouble (seek_pos)) is the good solution. Thanks to Tim who has seen my 
+	mistake.
+
 2006-04-21  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/matroska/matroska-demux.c: (gst_matroskademux_do_index_seek):
