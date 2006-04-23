@@ -1510,13 +1510,12 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "mad", GST_RANK_SECONDARY,
           gst_mad_get_type ())
-      || !gst_element_register (plugin, "id3mux", GST_RANK_NONE,        /* removed for spider */
+      || !gst_element_register (plugin, "id3mux", GST_RANK_NONE,
           gst_id3_tag_get_type (GST_ID3_TAG_PARSE_MUX))) {
     return FALSE;
   }
 
-  GST_DEBUG_CATEGORY_INIT (gst_id3_tag_debug, "id3tag", 0,
-      "id3 tag reader / setter");
+  GST_DEBUG_CATEGORY_INIT (gst_id3_tag_debug, "id3mux", 0, "id3 tag setter");
 
   return TRUE;
 }
