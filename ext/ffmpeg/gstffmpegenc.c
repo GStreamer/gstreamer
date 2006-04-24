@@ -506,8 +506,6 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_PAD_PARENT (pad));
   GstBuffer *outbuf;
-  GstFFMpegEncClass *oclass =
-      (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
   gint ret_size = 0, frame_size;
 
   GST_DEBUG_OBJECT (ffmpegenc,
@@ -530,8 +528,12 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
       GST_BUFFER_SIZE (outbuf), ffmpegenc->picture);
 
   if (ret_size < 0) {
+#ifndef GST_DISABLE_GST_DEBUG
+    GstFFMpegEncClass *oclass =
+      (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));	    
     GST_ERROR_OBJECT (ffmpegenc,
         "ffenc_%s: failed to encode buffer", oclass->in_plugin->name);
+#endif /* GST_DISABLE_GST_DEBUG */
     gst_buffer_unref (inbuf);
     gst_buffer_unref (outbuf);
     return GST_FLOW_OK;
