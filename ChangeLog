@@ -1,3 +1,8 @@
+2006-04-24  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/annodex/gstcmmlparser.c: (gst_cmml_parser_generic_error):
+	just make it compile with --disable-gst-debug.
+
 2006-04-23  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/matroska/matroska-demux.c: (gst_matroskademux_do_index_seek):

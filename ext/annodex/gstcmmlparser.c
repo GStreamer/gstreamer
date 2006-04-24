@@ -566,12 +566,14 @@ gst_cmml_parser_meta_to_string (GstCmmlParser * parser,
 static void
 gst_cmml_parser_generic_error (void *ctx, const char *msg, ...)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   va_list varargs;
 
   va_start (varargs, msg);
   gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_WARNING,
       "", "", 0, NULL, msg, varargs);
   va_end (varargs);
+#endif /* GST_DISABLE_GST_DEBUG */
 }
 
 /* sax handler called when an element start tag is found
