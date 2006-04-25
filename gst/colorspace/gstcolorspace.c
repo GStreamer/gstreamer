@@ -44,7 +44,7 @@ static GstColorspaceConverter gst_colorspace_converters[] = {
   {GST_COLORSPACE_YV12, GST_COLORSPACE_RGB16, gst_colorspace_YV12_to_rgb16},
 };
 
-static GstElementDetails colorspace_details =
+static const GstElementDetails colorspace_details =
 GST_ELEMENT_DETAILS ("Colorspace converter",
     "Filter/Converter/Video",
     "Converts video from YUV to RGB",
