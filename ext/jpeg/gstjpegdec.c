@@ -817,6 +817,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d",
         dec->cinfo.max_v_samp_factor);
 
+    gst_pad_use_fixed_caps (dec->srcpad);
     gst_pad_set_caps (dec->srcpad, caps);
     gst_caps_unref (caps);
 

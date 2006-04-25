@@ -1,5 +1,11 @@
 2006-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_chain):
+	  Source pad has fixed caps. If we don't set this, bad
+	  things happen when the window is resized.
+
+2006-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/matroska/Makefile.am:
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream),
 	(gst_matroska_demux_handle_src_event):
