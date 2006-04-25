@@ -60,7 +60,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_ximagesrc);
 #define GST_CAT_DEFAULT gst_debug_ximagesrc
 
 /* elementfactory information */
-static GstElementDetails ximagesrc_details =
+static const GstElementDetails ximagesrc_details =
 GST_ELEMENT_DETAILS ("Ximage video source",
     "Source/Video",
     "Creates a screenshot video stream",

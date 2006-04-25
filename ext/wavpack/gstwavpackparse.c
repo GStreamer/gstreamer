@@ -68,11 +68,12 @@ static GstBuffer *gst_wavpack_parse_pull_buffer (GstWavpackParse * wvparse,
     gint64 offset, guint size, GstFlowReturn * flow);
 
 GST_BOILERPLATE (GstWavpackParse, gst_wavpack_parse, GstElement,
-    GST_TYPE_ELEMENT)
+    GST_TYPE_ELEMENT);
 
-     static void gst_wavpack_parse_base_init (gpointer klass)
+static void
+gst_wavpack_parse_base_init (gpointer klass)
 {
-  static GstElementDetails plugin_details =
+  static const GstElementDetails plugin_details =
       GST_ELEMENT_DETAILS ("WavePack parser",
       "Codec/Demuxer/Audio",
       "Parses Wavpack files",

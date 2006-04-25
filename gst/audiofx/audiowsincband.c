@@ -39,7 +39,8 @@
 #include <string.h>             /* memmove */
 
 /* elementfactory information */
-static GstElementDetails gst_bpwsinc_details = GST_ELEMENT_DETAILS ("BPWSinc",
+static const GstElementDetails gst_bpwsinc_details =
+GST_ELEMENT_DETAILS ("BPWSinc",
     "Filter/Effect/Audio",
     "Band-Pass Windowed sinc filter",
     "Thomas <thomas@apestaart.org>, " "Steven W. Smith");

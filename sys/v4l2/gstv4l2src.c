@@ -52,7 +52,7 @@
 #include <unistd.h>
 
 
-static GstElementDetails gst_v4l2src_details =
+static const GstElementDetails gst_v4l2src_details =
 GST_ELEMENT_DETAILS ("Video (video4linux2/raw) Source",
     "Source/Video",
     "Reads raw frames from a video4linux2 (BT8x8) device",
