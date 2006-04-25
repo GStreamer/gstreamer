@@ -84,7 +84,7 @@ gst_xing_mux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  static GstElementDetails gst_xing_mux_details =
+  static const GstElementDetails gst_xing_mux_details =
       GST_ELEMENT_DETAILS ("MP3 Xing muxer",
       "Formatter/Metadata",
       "Adds a Xing header to the beginning of a VBR MP3 file",
