@@ -357,22 +357,22 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   GstRtpMP4GPay *rtpmp4gpay;
   GstStructure *structure;
-  const GValue *codec_info;
+  const GValue *codec_data;
   gboolean res = TRUE;
 
   rtpmp4gpay = GST_RTP_MP4G_PAY (payload);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  codec_info = gst_structure_get_value (structure, "codec_info");
-  if (codec_info) {
-    GST_LOG_OBJECT (rtpmp4gpay, "got codec_info");
-    if (G_VALUE_TYPE (codec_info) == GST_TYPE_BUFFER) {
+  codec_data = gst_structure_get_value (structure, "codec_data");
+  if (codec_data) {
+    GST_LOG_OBJECT (rtpmp4gpay, "got codec_data");
+    if (G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
       GstBuffer *buffer;
       const gchar *name;
 
-      buffer = gst_value_get_buffer (codec_info);
-      GST_LOG_OBJECT (rtpmp4gpay, "configuring codec_info");
+      buffer = gst_value_get_buffer (codec_data);
+      GST_LOG_OBJECT (rtpmp4gpay, "configuring codec_data");
 
       name = gst_structure_get_name (structure);
 

@@ -199,7 +199,7 @@ gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
   GstRtpMP4VPay *rtpmp4vpay;
   GstStructure *structure;
-  const GValue *codec_info;
+  const GValue *codec_data;
 
   rtpmp4vpay = GST_RTP_MP4V_PAY (payload);
 
@@ -207,15 +207,15 @@ gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
       rtpmp4vpay->rate);
 
   structure = gst_caps_get_structure (caps, 0);
-  codec_info = gst_structure_get_value (structure, "codec_info");
-  if (codec_info) {
-    GST_LOG_OBJECT (rtpmp4vpay, "got codec_info");
-    if (G_VALUE_TYPE (codec_info) == GST_TYPE_BUFFER) {
+  codec_data = gst_structure_get_value (structure, "codec_data");
+  if (codec_data) {
+    GST_LOG_OBJECT (rtpmp4vpay, "got codec_data");
+    if (G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
       GstBuffer *buffer;
       guint8 *data;
       guint size;
 
-      buffer = gst_value_get_buffer (codec_info);
+      buffer = gst_value_get_buffer (codec_data);
 
       data = GST_BUFFER_DATA (buffer);
       size = GST_BUFFER_SIZE (buffer);
@@ -224,7 +224,7 @@ gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
         goto done;
 
       rtpmp4vpay->profile = data[4];
-      GST_LOG_OBJECT (rtpmp4vpay, "configuring codec_info, profile %d",
+      GST_LOG_OBJECT (rtpmp4vpay, "configuring codec_data, profile %d",
           data[4]);
 
       if (rtpmp4vpay->config)

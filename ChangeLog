@@ -1,3 +1,9 @@
+2006-04-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_setcaps):
+	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_setcaps):
+	It's codec_data, not codec_info.
+
 2006-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Mark Nauwelaerts  <manauw at skynet dot be>
