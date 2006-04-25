@@ -1,3 +1,13 @@
+2006-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Josef Zlomek  <josef dot zlomek at itonis dot tv>
+
+	* gst/matroska/matroska-mux.c:
+	(gst_matroska_mux_create_buffer_header),
+	(gst_matroska_mux_write_data):
+	  Fix timestamping of B-frames, use signed integers, do
+	  some rounding (#339678).
+
 2006-04-24  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/annodex/gstcmmlparser.c: (gst_cmml_parser_generic_error):

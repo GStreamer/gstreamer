@@ -1298,7 +1298,7 @@ gst_matroska_mux_best_pad (GstMatroskaMux * mux, gboolean * popped)
  */
 GstBuffer *
 gst_matroska_mux_create_buffer_header (GstMatroskaTrackContext * track,
-    guint16 relative_timestamp, int flags)
+    gint16 relative_timestamp, int flags)
 {
   GstBuffer *hdr;
 
@@ -1330,7 +1330,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   GstBuffer *buf, *hdr;
   guint64 cluster, blockgroup;
   gboolean write_duration;
-  guint16 relative_timestamp;
+  gint16 relative_timestamp;
+  gint64 relative_timestamp64;
   guint64 block_duration;
 
   /* write data */
@@ -1430,8 +1431,15 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   /* write the block, for matroska v2 use SimpleBlock if possible
    * one slice (*breath*).
    * FIXME: lacing, etc. */
-  relative_timestamp =
-      (GST_BUFFER_TIMESTAMP (buf) - mux->cluster_time) / mux->time_scale;
+  relative_timestamp64 = GST_BUFFER_TIMESTAMP (buf) - mux->cluster_time;
+  if (relative_timestamp64 >= 0) {
+    /* round the timestamp */
+    relative_timestamp64 += mux->time_scale / 2;
+  } else {
+    /* round the timestamp */
+    relative_timestamp64 -= mux->time_scale / 2;
+  }
+  relative_timestamp = relative_timestamp64 / (gint64) mux->time_scale;
   if (mux->matroska_version > 1 && !write_duration) {
     int flags =
         GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) ? 0 : 0x80;
