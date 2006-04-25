@@ -1183,7 +1183,7 @@ gst_dvd_nav_src_push_titlelang_event (GstDvdNavSrc * src)
 
   /* build event */
 
-  s = gst_structure_new ("application/x-gst-event",
+  s = gst_structure_new ("application/x-gst-dvd",
       "event", G_TYPE_STRING, "dvd-lang-codes", NULL);
   e = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
 

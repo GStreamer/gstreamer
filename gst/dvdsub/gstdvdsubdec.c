@@ -27,32 +27,28 @@
 #include "gstdvdsubdec.h"
 #include <string.h>
 
-GST_BOILERPLATE (GstDvdSubDec, gst_dvd_sub_dec, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstDvdSubDec, gst_dvd_sub_dec, GstElement, GST_TYPE_ELEMENT);
 
-     static gboolean gst_dvd_sub_dec_src_event (GstPad * srcpad,
-    GstEvent * event);
-     static GstFlowReturn gst_dvd_sub_dec_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_dvd_sub_dec_src_event (GstPad * srcpad, GstEvent * event);
+static GstFlowReturn gst_dvd_sub_dec_chain (GstPad * pad, GstBuffer * buf);
 
-     static gboolean gst_dvd_sub_dec_handle_dvd_event (GstDvdSubDec * dec,
+static gboolean gst_dvd_sub_dec_handle_dvd_event (GstDvdSubDec * dec,
     GstEvent * event);
-     static void gst_dvd_sub_dec_finalize (GObject * gobject);
-     static void gst_setup_palette (GstDvdSubDec * dec);
-     static void gst_dvd_sub_dec_merge_title (GstDvdSubDec * dec,
-    GstBuffer * buf);
-     static GstClockTime gst_dvd_sub_dec_get_event_delay (GstDvdSubDec * dec);
-     static gboolean gst_dvd_sub_dec_sink_event (GstPad * pad,
-    GstEvent * event);
+static void gst_dvd_sub_dec_finalize (GObject * gobject);
+static void gst_setup_palette (GstDvdSubDec * dec);
+static void gst_dvd_sub_dec_merge_title (GstDvdSubDec * dec, GstBuffer * buf);
+static GstClockTime gst_dvd_sub_dec_get_event_delay (GstDvdSubDec * dec);
+static gboolean gst_dvd_sub_dec_sink_event (GstPad * pad, GstEvent * event);
 
-     static GstFlowReturn gst_send_subtitle_frame (GstDvdSubDec * dec,
+static GstFlowReturn gst_send_subtitle_frame (GstDvdSubDec * dec,
     GstClockTime end_ts);
 
-     static GstElementDetails gst_dvd_sub_dec_details = {
-       "DVD subtitle Decoder",
-       "Codec/Decoder/Video",
-       "Decodes DVD subtitles into AYUV video frames",
-       "Wim Taymans <wim.taymans@chello.be>, "
-           "Jan Schmidt <thaytan@mad.scientist.com>"
-     };
+static const GstElementDetails gst_dvd_sub_dec_details =
+GST_ELEMENT_DETAILS ("DVD subtitle Decoder",
+    "Codec/Decoder/Video",
+    "Decodes DVD subtitles into AYUV video frames",
+    "Wim Taymans <wim.taymans@chello.be>, "
+    "Jan Schmidt <thaytan@mad.scientist.com>");
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -742,7 +738,7 @@ gst_dvd_sub_dec_chain (GstPad * pad, GstBuffer * buf)
       GST_TIME_FORMAT ", dur %" G_GINT64_FORMAT, GST_BUFFER_SIZE (buf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_DURATION (buf));
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buf))) {
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     if (!GST_CLOCK_TIME_IS_VALID (dec->next_ts)) {
       dec->next_ts = GST_BUFFER_TIMESTAMP (buf);
     }
@@ -806,26 +802,27 @@ gst_dvd_sub_dec_sink_event (GstPad * pad, GstEvent * event)
   GstDvdSubDec *dec = GST_DVD_SUB_DEC (gst_pad_get_parent (pad));
   gboolean ret = FALSE;
 
-  GST_LOG_OBJECT (dec, "Handling %s event", GST_EVENT_TYPE_NAME (event));
+  GST_LOG_OBJECT (dec, "%s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_DOWNSTREAM:{
       GstClockTime ts = GST_EVENT_TIMESTAMP (event);
 
-      GST_LOG_OBJECT (dec, "DVD event on subtitle pad with timestamp %llu",
-          GST_EVENT_TIMESTAMP (event));
+      if (event->structure != NULL &&
+          gst_structure_has_name (event->structure, "application/x-gst-dvd")) {
 
-      if (GST_CLOCK_TIME_IS_VALID (ts))
-        gst_dvd_sub_dec_advance_time (dec, ts);
+        if (GST_CLOCK_TIME_IS_VALID (ts))
+          gst_dvd_sub_dec_advance_time (dec, ts);
 
-      if (!gst_dvd_sub_dec_handle_dvd_event (dec, event)) {
-        ret = gst_pad_event_default (pad, event);
-        break;
+        if (gst_dvd_sub_dec_handle_dvd_event (dec, event)) {
+          /* gst_dvd_sub_dec_advance_time (dec, dec->next_ts + GST_SECOND / 30.0); */
+          gst_event_unref (event);
+          ret = TRUE;
+          break;
+        }
       }
-      // gst_dvd_sub_dec_advance_time (dec, dec->next_ts + GST_SECOND / 30.0);
 
-      gst_event_unref (event);
-      ret = TRUE;
+      ret = gst_pad_event_default (pad, event);
       break;
     }
     case GST_EVENT_NEWSEGMENT:{
@@ -900,10 +897,22 @@ static gboolean
 gst_dvd_sub_dec_handle_dvd_event (GstDvdSubDec * dec, GstEvent * event)
 {
   GstStructure *structure;
+  const gchar *event_name;
 
   structure = (GstStructure *) gst_event_get_structure (event);
 
-  if (gst_structure_has_name (structure, "dvd-spu-highlight")) {
+  if (structure == NULL)
+    goto not_handled;
+
+  event_name = gst_structure_get_string (structure, "event");
+
+  GST_LOG_OBJECT (dec, "DVD event %s with timestamp %lld on sub pad",
+      GST_STR_NULL (event_name), GST_EVENT_TIMESTAMP (event));
+
+  if (event_name == NULL)
+    goto not_handled;
+
+  if (strcmp (event_name, "dvd-spu-highlight") == 0) {
     gint button;
     gint palette, sx, sy, ex, ey;
     gint i;
@@ -933,13 +942,13 @@ gst_dvd_sub_dec_handle_dvd_event (GstDvdSubDec * dec, GstEvent * event)
     gst_setup_palette (dec);
 
     dec->buf_dirty = TRUE;
-  } else if (gst_structure_has_name (structure, "dvd-spu-clut-change")) {
+  } else if (strcmp (event_name, "dvd-spu-clut-change") == 0) {
     /* Take a copy of the colour table */
     gchar name[16];
     int i;
     gint value;
 
-    GST_LOG_OBJECT (dec, "New colour table recieved");
+    GST_LOG_OBJECT (dec, "New colour table received");
     for (i = 0; i < 16; i++) {
       g_snprintf (name, sizeof (name), "clut%02d", i);
       if (!gst_structure_get_int (structure, name, &value)) {
@@ -953,23 +962,29 @@ gst_dvd_sub_dec_handle_dvd_event (GstDvdSubDec * dec, GstEvent * event)
     gst_setup_palette (dec);
 
     dec->buf_dirty = TRUE;
-  } else if (gst_structure_has_name (structure, "dvd-spu-stream-change")
-      || gst_structure_has_name (structure, "dvd-spu-reset-highlight")) {
+  } else if (strcmp (event_name, "dvd-spu-stream-change") == 0
+      || strcmp (event_name, "dvd-spu-reset-highlight") == 0) {
     /* Turn off forced highlight display */
     dec->current_button = 0;
 
     GST_LOG_OBJECT (dec, "Clearing button state");
     dec->buf_dirty = TRUE;
-  } else if (gst_structure_has_name (structure, "dvd-spu-still-frame")) {
+  } else if (strcmp (event_name, "dvd-spu-still-frame") == 0) {
     /* Handle a still frame */
     GST_LOG_OBJECT (dec, "Received still frame notification");
   } else {
+    goto not_handled;
+  }
+
+  return TRUE;
+
+not_handled:
+  {
     /* Ignore all other unknown events */
-    GST_LOG_OBJECT (dec, "Ignoring other custom event %s",
-        gst_structure_get_name (structure));
+    GST_LOG_OBJECT (dec, "Ignoring other custom event %" GST_PTR_FORMAT,
+        structure);
     return FALSE;
   }
-  return TRUE;
 }
 
 static gboolean

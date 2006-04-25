@@ -1,3 +1,14 @@
+2006-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dvdnav/dvdnavsrc.c: (gst_dvd_nav_src_push_titlelang_event):
+	  Fix name of custom event (use same as dvdreadsrc).
+
+	* gst/dvdsub/gstdvdsubdec.c: (gst_dvd_sub_dec_chain),
+	(gst_dvd_sub_dec_sink_event), (gst_dvd_sub_dec_handle_dvd_event):
+	  Fix event parsing (the event name is in the structure, not the
+	  name of the structure itself); also fix indentation after
+	  boilerplate macro.
+
 2006-04-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstid3tag.c: (plugin_init):
