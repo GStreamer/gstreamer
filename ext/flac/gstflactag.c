@@ -86,7 +86,7 @@ struct _GstFlacTagClass
 };
 
 /* elementfactory information */
-static GstElementDetails gst_flac_tag_details =
+static const GstElementDetails gst_flac_tag_details =
 GST_ELEMENT_DETAILS ("FLAC tagger",
     "Tag",
     "Rewrite tags in a FLAC file",

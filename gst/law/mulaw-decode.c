@@ -161,7 +161,7 @@ static void
 gst_mulawdec_base_init (GstMuLawDecClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails mulawdec_details =
+  const GstElementDetails mulawdec_details =
       GST_ELEMENT_DETAILS ("Mu Law audio decoder",
       "Codec/Decoder/Audio",
       "Convert 8bit mu law to 16bit PCM",

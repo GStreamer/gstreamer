@@ -25,7 +25,8 @@
 #include <stdlib.h>
 
 /* elementfactory information */
-GstElementDetails mikmod_details = GST_ELEMENT_DETAILS ("MikMod audio decoder",
+static const GstElementDetails mikmod_details =
+GST_ELEMENT_DETAILS ("MikMod audio decoder",
     "Codec/Decoder/Audio",
     "Module decoder based on libmikmod",
     "Jeremy SIMON <jsimon13@yahoo.fr>");

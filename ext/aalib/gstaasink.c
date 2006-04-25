@@ -28,7 +28,7 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-static GstElementDetails gst_aasink_details =
+static const GstElementDetails gst_aasink_details =
 GST_ELEMENT_DETAILS ("ASCII art video sink",
     "Sink/Video",
     "An ASCII art videosink",

@@ -56,7 +56,7 @@ static void
 gst_auto_audio_sink_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  GstElementDetails gst_auto_audio_sink_details =
+  const GstElementDetails gst_auto_audio_sink_details =
       GST_ELEMENT_DETAILS ("Auto audio sink",
       "Sink/Audio",
       "Wrapper audio sink for automatically detected audio sink",

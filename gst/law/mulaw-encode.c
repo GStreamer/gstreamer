@@ -161,7 +161,7 @@ static void
 gst_mulawenc_base_init (GstMuLawEncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails mulawenc_details =
+  const GstElementDetails mulawenc_details =
       GST_ELEMENT_DETAILS ("Mu Law audio encoder",
       "Codec/Encoder/Audio",
       "Convert 16bit PCM to 8bit mu law",

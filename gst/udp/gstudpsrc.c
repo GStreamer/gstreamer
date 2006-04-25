@@ -113,7 +113,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static GstElementDetails gst_udpsrc_details =
+static const GstElementDetails gst_udpsrc_details =
 GST_ELEMENT_DETAILS ("UDP packet receiver",
     "Source/Network",
     "Receive data over the network via UDP",

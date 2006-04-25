@@ -63,7 +63,7 @@ enum
 GST_DEBUG_CATEGORY (video_flip_debug);
 #define GST_CAT_DEFAULT video_flip_debug
 
-static GstElementDetails video_flip_details =
+static const GstElementDetails video_flip_details =
 GST_ELEMENT_DETAILS ("Video flipper",
     "Filter/Effect/Video",
     "Flips and rotates video",

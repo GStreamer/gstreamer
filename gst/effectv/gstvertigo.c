@@ -76,7 +76,7 @@ enum
   ARG_ZOOM_SPEED
 };
 
-static GstElementDetails vertigotv_details =
+static const GstElementDetails vertigotv_details =
 GST_ELEMENT_DETAILS ("VertigoTV effect",
     "Filter/Effect/Video",
     "A loopback alpha blending effector with rotating and scaling",

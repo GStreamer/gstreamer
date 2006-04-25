@@ -21,7 +21,7 @@
 #include "gstrtpspeexdepay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_speexdepay_details =
+static const GstElementDetails gst_rtp_speexdepay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
     "Codec/Depayr/Network",
     "Extracts Speex audio from RTP packets",

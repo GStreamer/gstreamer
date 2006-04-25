@@ -34,7 +34,8 @@ GST_DEBUG_CATEGORY (cutter_debug);
 #define CUTTER_DEFAULT_THRESHOLD_LENGTH  (500 * GST_MSECOND)
 #define CUTTER_DEFAULT_PRE_LENGTH        (200 * GST_MSECOND)
 
-static GstElementDetails cutter_details = GST_ELEMENT_DETAILS ("Audio cutter",
+static const GstElementDetails cutter_details =
+GST_ELEMENT_DETAILS ("Audio cutter",
     "Filter/Editor/Audio",
     "Audio Cutter to split audio into non-silent bits",
     "Thomas <thomas@apestaart.org>");

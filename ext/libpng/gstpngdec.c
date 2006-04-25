@@ -23,7 +23,7 @@
 #include <gst/video/video.h>
 #include <gst/gst-i18n-plugin.h>
 
-static GstElementDetails gst_pngdec_details =
+static const GstElementDetails gst_pngdec_details =
 GST_ELEMENT_DETAILS ("PNG image decoder",
     "Codec/Decoder/Image",
     "Decode a png video frame to a raw image",

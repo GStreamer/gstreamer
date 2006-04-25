@@ -50,7 +50,7 @@
 #include "gstid3demux.h"
 #include "id3tags.h"
 
-static GstElementDetails gst_id3demux_details =
+static const GstElementDetails gst_id3demux_details =
 GST_ELEMENT_DETAILS ("ID3 tag demuxer",
     "Codec/Demuxer/Metadata",
     "Read and output ID3v1 and ID3v2 tags while demuxing the contents",

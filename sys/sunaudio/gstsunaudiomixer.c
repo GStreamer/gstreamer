@@ -35,7 +35,7 @@
 
 #include "gstsunaudiomixer.h"
 
-static GstElementDetails gst_sunaudiomixer_details =
+static const GstElementDetails gst_sunaudiomixer_details =
 GST_ELEMENT_DETAILS ("Sun Audio Mixer",
     "Generic/Audio",
     "Control sound input and output levels with Sun Audio",

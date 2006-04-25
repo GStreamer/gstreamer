@@ -28,7 +28,7 @@
 #define MAX_HEIGHT              4096
 
 
-static GstElementDetails gst_pngenc_details =
+static const GstElementDetails gst_pngenc_details =
 GST_ELEMENT_DETAILS ("PNG image encoder",
     "Codec/Encoder/Image",
     "Encode a video frame to a .png image",

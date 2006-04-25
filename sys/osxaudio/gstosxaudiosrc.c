@@ -34,7 +34,7 @@
 #include <gstosxaudioelement.h>
 
 /* elementfactory information */
-static GstElementDetails gst_osxaudiosrc_details =
+static const GstElementDetails gst_osxaudiosrc_details =
 GST_ELEMENT_DETAILS ("Audio Source (Mac OS X)",
     "Source/Audio",
     "Read from the sound card",

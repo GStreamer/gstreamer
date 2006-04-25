@@ -70,7 +70,7 @@ GType gst_dicetv_get_type (void);
 
 static void gst_dicetv_create_map (GstDiceTV * filter);
 
-static GstElementDetails gst_dicetv_details =
+static const GstElementDetails gst_dicetv_details =
 GST_ELEMENT_DETAILS ("DiceTV effect",
     "Filter/Effect/Video",
     "'Dices' the screen up into many small squares",

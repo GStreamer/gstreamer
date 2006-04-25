@@ -25,7 +25,8 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-static GstElementDetails median_details = GST_ELEMENT_DETAILS ("Median effect",
+static const GstElementDetails median_details =
+GST_ELEMENT_DETAILS ("Median effect",
     "Filter/Effect/Video",
     "Apply a median filter to an image",
     "Wim Taymans <wim.taymans@chello.be>");

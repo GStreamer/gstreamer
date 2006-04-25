@@ -48,7 +48,8 @@
 #include "gstsunaudiosink.h"
 
 /* elementfactory information */
-static GstElementDetails plugin_details = GST_ELEMENT_DETAILS ("Sun Audio Sink",
+static const GstElementDetails plugin_details =
+GST_ELEMENT_DETAILS ("Sun Audio Sink",
     "Sink/Audio",
     "Audio sink for Sun Audio devices",
     "David A. Schleef <ds@schleef.org>, "

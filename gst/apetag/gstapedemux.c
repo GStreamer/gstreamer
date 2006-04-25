@@ -65,7 +65,7 @@
 GST_DEBUG_CATEGORY (apedemux_debug);
 #define GST_CAT_DEFAULT (apedemux_debug)
 
-static GstElementDetails gst_ape_demux_details =
+static const GstElementDetails gst_ape_demux_details =
 GST_ELEMENT_DETAILS ("APE tag demuxer",
     "Codec/Demuxer/Metadata",
     "Read and output APE tags while demuxing the contents",

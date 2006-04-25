@@ -83,7 +83,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static GstElementDetails progress_report_details =
+static const GstElementDetails progress_report_details =
 GST_ELEMENT_DETAILS ("Progress report",
     "Testing",
     "Periodically query and report on processing progress",

@@ -40,7 +40,7 @@ enum
 };
 
 /* elementfactory information */
-static GstElementDetails gst_osxaudioelement_details =
+static const GstElementDetails gst_osxaudioelement_details =
 GST_ELEMENT_DETAILS ("Audio Mixer (OSX)",
     "Generic/Audio",
     "Mac OS X audio mixer element",

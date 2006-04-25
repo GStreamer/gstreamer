@@ -31,7 +31,7 @@ GST_DEBUG_CATEGORY (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
 
 /* elementfactory information */
-static GstElementDetails gst_rtspsrc_details =
+static const GstElementDetails gst_rtspsrc_details =
 GST_ELEMENT_DETAILS ("RTSP packet receiver",
     "Source/Network",
     "Receive data over the network via RTSP (RFC 2326)",

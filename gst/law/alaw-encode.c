@@ -227,7 +227,7 @@ static void
 gst_alawenc_base_init (GstALawEncClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails alawenc_details =
+  const GstElementDetails alawenc_details =
       GST_ELEMENT_DETAILS ("A Law audio encoder",
       "Codec/Encoder/Audio",
       "Convert 16bit PCM to 8bit A law",

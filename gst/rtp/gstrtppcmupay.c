@@ -25,7 +25,7 @@
 #include "gstrtppcmupay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_pcmu_pay_details =
+static const GstElementDetails gst_rtp_pcmu_pay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
     "Codec/Payloader/Network",
     "Payload-encodes PCMU audio into a RTP packet",

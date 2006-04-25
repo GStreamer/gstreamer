@@ -191,7 +191,7 @@ static void
 gst_alawdec_base_init (GstALawDecClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails alawdec_details =
+  const GstElementDetails alawdec_details =
       GST_ELEMENT_DETAILS ("A Law audio decoder",
       "Codec/Decoder/Audio",
       "Convert 8bit A law to 16bit PCM",

@@ -23,7 +23,7 @@
 #include "gstrtpmpapay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_mpapay_details =
+static const GstElementDetails gst_rtp_mpapay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
     "Codec/Payloader/Network",
     "Payode MPEG audio as RTP packets (RFC 2038)",

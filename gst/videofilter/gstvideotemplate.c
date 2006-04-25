@@ -118,7 +118,7 @@ static GstVideofilterFormat gst_videotemplate_formats[] = {
 static void
 gst_videotemplate_base_init (gpointer g_class)
 {
-  static GstElementDetails videotemplate_details =
+  static const GstElementDetails videotemplate_details =
       GST_ELEMENT_DETAILS ("Video filter template",
       "Filter/Effect/Video",
       "Template for a video filter",

@@ -40,7 +40,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_statistics_debug);
 #define GST_CAT_DEFAULT gst_statistics_debug
 
-GstElementDetails gst_statistics_details = GST_ELEMENT_DETAILS ("Statistics",
+static const GstElementDetails gst_statistics_details =
+GST_ELEMENT_DETAILS ("Statistics",
     "Generic",
     "Statistics on buffers/bytes/events",
     "David I. Lehn <dlehn@users.sourceforge.net>");

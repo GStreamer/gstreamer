@@ -38,7 +38,8 @@ GST_DEBUG_CATEGORY (speexenc_debug);
 static GstPadTemplate *gst_speexenc_src_template, *gst_speexenc_sink_template;
 
 /* elementfactory information */
-GstElementDetails speexenc_details = GST_ELEMENT_DETAILS ("Speex audio encoder",
+static const GstElementDetails speexenc_details =
+GST_ELEMENT_DETAILS ("Speex audio encoder",
     "Codec/Encoder/Audio",
     "Encodes audio in Speex format",
     "Wim Taymans <wim@fluendo.com>");

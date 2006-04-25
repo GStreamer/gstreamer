@@ -42,7 +42,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_efence_debug);
 #define GST_CAT_DEFAULT  gst_efence_debug
 
-static GstElementDetails plugin_details = GST_ELEMENT_DETAILS ("Electric Fence",
+static const GstElementDetails plugin_details =
+GST_ELEMENT_DETAILS ("Electric Fence",
     "Testing",
     "This element converts a stream of normal GStreamer buffers into a "
     "stream of buffers that are allocated in such a way that out-of-bounds "

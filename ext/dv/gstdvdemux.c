@@ -110,7 +110,7 @@
 GST_DEBUG_CATEGORY (dvdemux_debug);
 #define GST_CAT_DEFAULT dvdemux_debug
 
-static GstElementDetails dvdemux_details =
+static const GstElementDetails dvdemux_details =
 GST_ELEMENT_DETAILS ("DV system stream demuxer",
     "Codec/Demuxer",
     "Uses libdv to separate DV audio from DV video (libdv.sourceforge.net)",

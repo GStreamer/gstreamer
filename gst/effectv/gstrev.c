@@ -93,7 +93,7 @@ enum
 
 GType gst_revtv_get_type (void);
 
-static GstElementDetails gst_revtv_details =
+static const GstElementDetails gst_revtv_details =
 GST_ELEMENT_DETAILS ("RevTV effect",
     "Filter/Effect/Video",
     "A video waveform monitor for each line of video processed",

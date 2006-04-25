@@ -27,7 +27,7 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-GstElementDetails gst_jpegenc_details =
+static const GstElementDetails gst_jpegenc_details =
 GST_ELEMENT_DETAILS ("JPEG image encoder",
     "Codec/Encoder/Image",
     "Encode images in JPEG format",

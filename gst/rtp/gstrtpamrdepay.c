@@ -29,7 +29,7 @@
  */
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_amrdepay_details =
+static const GstElementDetails gst_rtp_amrdepay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
     "Codec/Depayr/Network",
     "Extracts AMR audio from RTP packets (RFC 3267)",

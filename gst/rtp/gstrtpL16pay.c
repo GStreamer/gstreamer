@@ -25,7 +25,7 @@
 #include "gstrtpL16pay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtpL16pay_details =
+static const GstElementDetails gst_rtpL16pay_details =
 GST_ELEMENT_DETAILS ("RTP RAW audio payloader",
     "Codec/Payloader/Network",
     "Payload-encodes Raw Audio into a RTP packet",

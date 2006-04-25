@@ -34,7 +34,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_aggregator_debug);
 #define GST_CAT_DEFAULT gst_aggregator_debug
 
-GstElementDetails gst_aggregator_details =
+static const GstElementDetails gst_aggregator_details =
 GST_ELEMENT_DETAILS ("Aggregator pipe fitting",
     "Generic",
     "N-to-1 pipe fitting",

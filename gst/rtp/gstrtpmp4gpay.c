@@ -26,7 +26,7 @@ GST_DEBUG_CATEGORY (rtpmp4gpay_debug);
 #define GST_CAT_DEFAULT (rtpmp4gpay_debug)
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_mp4gpay_details =
+static const GstElementDetails gst_rtp_mp4gpay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
     "Codec/Payloader/Network",
     "Payload MPEG4 elementary streams as RTP packets (RFC 3640)",

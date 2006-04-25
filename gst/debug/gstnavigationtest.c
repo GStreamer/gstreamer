@@ -31,7 +31,7 @@
 GST_DEBUG_CATEGORY (navigationtest_debug);
 #define GST_CAT_DEFAULT navigationtest_debug
 
-static GstElementDetails navigationtest_details =
+static const GstElementDetails navigationtest_details =
 GST_ELEMENT_DETAILS ("Video navigation test",
     "Filter/Effect/Video",
     "Handle navigation events showing a black square following mouse pointer",

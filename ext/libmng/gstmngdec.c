@@ -21,7 +21,7 @@
 #include "gstmngdec.h"
 #include <gst/video/video.h>
 
-static GstElementDetails gst_mngdec_details =
+static const GstElementDetails gst_mngdec_details =
 GST_ELEMENT_DETAILS ("MNG video decoder",
     "Codec/Decoder/Video",
     "Decode a mng video to raw images",

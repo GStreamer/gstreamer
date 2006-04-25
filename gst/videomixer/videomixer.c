@@ -398,7 +398,7 @@ gst_videomixer_pad_init (GstVideoMixerPad * mixerpad)
 
 
 /* elementfactory information */
-static GstElementDetails gst_videomixer_details =
+static const GstElementDetails gst_videomixer_details =
 GST_ELEMENT_DETAILS ("Video mixer",
     "Filter/Editor/Video",
     "Mix multiple video streams",

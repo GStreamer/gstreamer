@@ -26,7 +26,7 @@
 #include "gstrtpilbcdepay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_ilbc_depay_details =
+static const GstElementDetails gst_rtp_ilbc_depay_details =
 GST_ELEMENT_DETAILS ("RTP iLBC packet depayloader",
     "Codec/Depayr/Network",
     "Extracts iLBC audio from RTP packets",

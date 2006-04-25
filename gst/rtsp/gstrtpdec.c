@@ -24,7 +24,8 @@ GST_DEBUG_CATEGORY (rtpdec_debug);
 #define GST_CAT_DEFAULT (rtpdec_debug)
 
 /* elementfactory information */
-static GstElementDetails rtpdec_details = GST_ELEMENT_DETAILS ("RTP Decoder",
+static const GstElementDetails rtpdec_details =
+GST_ELEMENT_DETAILS ("RTP Decoder",
     "Codec/Parser/Network",
     "Accepts raw RTP and RTCP packets and sends them forward",
     "Wim Taymans <wim@fluendo.com>");

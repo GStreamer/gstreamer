@@ -86,7 +86,7 @@
 GST_DEBUG_CATEGORY (level_debug);
 #define GST_CAT_DEFAULT level_debug
 
-static GstElementDetails level_details = GST_ELEMENT_DETAILS ("Level",
+static const GstElementDetails level_details = GST_ELEMENT_DETAILS ("Level",
     "Filter/Analyzer/Audio",
     "RMS/Peak/Decaying Peak Level messager for audio/raw",
     "Thomas Vander Stichele <thomas at apestaart dot org>");

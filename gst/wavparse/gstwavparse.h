@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2006> Nokia Corporation.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,6 +26,7 @@
 #include <gst/gst.h>
 #include "gst/riff/riff-ids.h"
 #include "gst/riff/riff-read.h"
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -92,6 +94,11 @@ struct _GstWavParse {
   
   /* pending seek */
   GstEvent *seek_event;
+
+  /* For streaming */
+  GstAdapter *adapter;
+  gboolean got_fmt;
+  gboolean streaming;
 
   /* configured segment, start/stop expressed in time */
   GstSegment segment;

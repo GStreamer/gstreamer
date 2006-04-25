@@ -26,7 +26,7 @@
 #define UDP_DEFAULT_PORT        4951
 
 /* elementfactory information */
-static GstElementDetails gst_udpsink_details =
+static const GstElementDetails gst_udpsink_details =
 GST_ELEMENT_DETAILS ("UDP packet sender",
     "Sink/Network",
     "Send data over the network via UDP",

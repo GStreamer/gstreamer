@@ -23,7 +23,7 @@
 #include "gstrtppcmudepay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_pcmudepay_details =
+static const GstElementDetails gst_rtp_pcmudepay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
     "Codec/Depayr/Network",
     "Extracts PCMU audio from RTP packets",

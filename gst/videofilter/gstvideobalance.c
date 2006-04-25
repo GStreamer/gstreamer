@@ -64,7 +64,7 @@
 #define rint(x) (floor((x)+0.5))
 #endif
 
-static GstElementDetails video_balance_details =
+static const GstElementDetails video_balance_details =
 GST_ELEMENT_DETAILS ("Video balance",
     "Filter/Effect/Video",
     "Adjusts brightness, contrast, hue, saturation on a video stream",

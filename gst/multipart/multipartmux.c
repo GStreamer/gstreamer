@@ -101,7 +101,7 @@ struct _GstMultipartMuxClass
 };
 
 /* elementfactory information */
-static GstElementDetails gst_multipart_mux_details =
+static const GstElementDetails gst_multipart_mux_details =
 GST_ELEMENT_DETAILS ("Multipart muxer",
     "Codec/Muxer",
     "mux multipart streams",

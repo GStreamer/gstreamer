@@ -33,7 +33,7 @@ enum
 };
 
 
-static GstElementDetails gst_oss_mixer_element_details =
+static const GstElementDetails gst_oss_mixer_element_details =
 GST_ELEMENT_DETAILS ("OSS Mixer",
     "Generic/Audio",
     "Control sound input and output levels with OSS",

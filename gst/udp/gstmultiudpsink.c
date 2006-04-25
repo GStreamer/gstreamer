@@ -45,7 +45,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS_ANY);
 
 /* elementfactory information */
-static GstElementDetails gst_multiudpsink_details =
+static const GstElementDetails gst_multiudpsink_details =
 GST_ELEMENT_DETAILS ("UDP packet sender",
     "Sink/Network",
     "Send data over the network via UDP",

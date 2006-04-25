@@ -29,7 +29,7 @@
 #include "gstrtpgsmpay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_gsm_pay_details =
+static const GstElementDetails gst_rtp_gsm_pay_details =
 GST_ELEMENT_DETAILS ("RTP GSM audio payloader",
     "Codec/Payloader/Network",
     "Payload-encodes GSM audio into a RTP packet",

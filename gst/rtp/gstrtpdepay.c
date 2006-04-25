@@ -24,7 +24,7 @@ GST_DEBUG_CATEGORY (rtpdepay_debug);
 #define GST_CAT_DEFAULT (rtpdepay_debug)
 
 /* elementfactory information */
-static GstElementDetails rtpdepay_details =
+static const GstElementDetails rtpdepay_details =
 GST_ELEMENT_DETAILS ("RTP payloader",
     "Codec/Depayr/Network",
     "Accepts raw RTP and RTCP packets and sends them forward",

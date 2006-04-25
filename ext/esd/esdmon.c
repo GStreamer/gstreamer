@@ -29,7 +29,7 @@
 
 
 /* elementfactory information */
-static GstElementDetails esdmon_details =
+static const GstElementDetails esdmon_details =
 GST_ELEMENT_DETAILS ("Esound audio monitor",
     "Source/Audio",
     "Monitors audio from an esound server",

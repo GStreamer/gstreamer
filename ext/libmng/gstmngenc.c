@@ -27,7 +27,8 @@
 #define MAX_HEIGHT              4096
 
 
-GstElementDetails gst_mngenc_details = GST_ELEMENT_DETAILS ("MNG video encoder",
+static const GstElementDetails gst_mngenc_details =
+GST_ELEMENT_DETAILS ("MNG video encoder",
     "Codec/Encoder/Video",
     "Encode a video frame to an .mng video",
     "Wim Taymans <wim@fluendo.com>");

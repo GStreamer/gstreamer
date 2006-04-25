@@ -51,7 +51,7 @@
 #include "gstdvdec.h"
 
 
-static GstElementDetails dvdec_details =
+static const GstElementDetails dvdec_details =
 GST_ELEMENT_DETAILS ("DV video decoder",
     "Codec/Decoder/Video",
     "Uses libdv to decode DV video (smpte314) (libdv.sourceforge.net)",

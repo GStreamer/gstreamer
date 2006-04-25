@@ -31,7 +31,7 @@
 #include "gstosxaudiosink.h"
 
 /* elementfactory information */
-static GstElementDetails gst_osxaudiosink_details =
+static const GstElementDetails gst_osxaudiosink_details =
 GST_ELEMENT_DETAILS ("Audio Sink (Mac OS X)",
     "Sink/Audio",
     "Output to a Mac OS X CoreAudio Sound Device",

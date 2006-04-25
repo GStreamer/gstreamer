@@ -99,7 +99,7 @@ gst_avi_demux_get_type (void)
 static void
 gst_avi_demux_base_init (GstAviDemuxClass * klass)
 {
-  static GstElementDetails gst_avi_demux_details =
+  static const GstElementDetails gst_avi_demux_details =
       GST_ELEMENT_DETAILS ("Avi demuxer",
       "Codec/Demuxer",
       "Demultiplex an avi file into audio and video",

@@ -26,7 +26,7 @@
 #include "paint.h"
 
 /* elementfactory information */
-static GstElementDetails smpte_details =
+static const GstElementDetails smpte_details =
 GST_ELEMENT_DETAILS ("SMPTE transitions",
     "Filter/Editor/Video",
     "Apply the standard SMPTE transitions on video images",

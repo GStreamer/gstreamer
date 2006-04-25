@@ -40,7 +40,7 @@ static void
 gst_gconf_audio_src_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  GstElementDetails gst_gconf_audio_src_details =
+  static const GstElementDetails gst_gconf_audio_src_details =
       GST_ELEMENT_DETAILS ("GConf audio source",
       "Source/Audio",
       "Audio source embedding the GConf-settings for audio input",

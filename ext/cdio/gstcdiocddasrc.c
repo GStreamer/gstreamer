@@ -91,7 +91,7 @@ enum
   PROP_READ_SPEED
 };
 
-static GstElementDetails gst_cdio_cdda_src_details =
+static const GstElementDetails gst_cdio_cdda_src_details =
 GST_ELEMENT_DETAILS ("CD audio source (CDDA)",
     "Source/File",
     "Read audio from CD using libcdio",

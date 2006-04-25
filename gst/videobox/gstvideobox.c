@@ -78,7 +78,7 @@ struct _GstVideoBoxClass
 };
 
 /* elementfactory information */
-static GstElementDetails gst_video_box_details =
+static const GstElementDetails gst_video_box_details =
 GST_ELEMENT_DETAILS ("Video box filter",
     "Filter/Effect/Video",
     "Resizes a video by adding borders or cropping",

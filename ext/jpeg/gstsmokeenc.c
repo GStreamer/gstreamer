@@ -27,7 +27,7 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-GstElementDetails gst_smokeenc_details =
+static const GstElementDetails gst_smokeenc_details =
 GST_ELEMENT_DETAILS ("Smoke video encoder",
     "Codec/Encoder/Video",
     "Encode images into the Smoke format",

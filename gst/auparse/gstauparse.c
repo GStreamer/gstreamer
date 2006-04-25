@@ -33,7 +33,7 @@
 #include <gst/audio/audio.h>
 
 /* elementfactory information */
-static GstElementDetails gst_au_parse_details =
+static const GstElementDetails gst_au_parse_details =
 GST_ELEMENT_DETAILS ("AU audio demuxer",
     "Codec/Demuxer/Audio",
     "Parse an .au file into raw audio",

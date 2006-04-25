@@ -47,7 +47,7 @@ GstStaticPadTemplate navseek_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-static GstElementDetails navseek_details =
+static const GstElementDetails navseek_details =
 GST_ELEMENT_DETAILS ("Seek based on left-right arrows",
     "Filter/Video",
     "Seek based on navigation keys left-right",

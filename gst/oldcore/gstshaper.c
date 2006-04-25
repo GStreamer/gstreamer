@@ -32,7 +32,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_shaper_debug);
 #define GST_CAT_DEFAULT gst_shaper_debug
 
-GstElementDetails gst_shaper_details = GST_ELEMENT_DETAILS ("Shaper",
+static const GstElementDetails gst_shaper_details =
+GST_ELEMENT_DETAILS ("Shaper",
     "Generic",
     "Synchronizes streams on different pads",
     "Wim Taymans <wim.taymans@chello.be>");

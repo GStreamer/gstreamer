@@ -31,7 +31,8 @@
 #include "flac_compat.h"
 
 
-GstElementDetails flacenc_details = GST_ELEMENT_DETAILS ("FLAC audio encoder",
+static const GstElementDetails flacenc_details =
+GST_ELEMENT_DETAILS ("FLAC audio encoder",
     "Codec/Encoder/Audio",
     "Encodes audio with the FLAC lossless audio encoder",
     "Wim Taymans <wim.taymans@chello.be>");

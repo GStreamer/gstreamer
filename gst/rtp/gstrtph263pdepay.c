@@ -22,7 +22,7 @@
 #include "gstrtph263pdepay.h"
 
 /* elementfactory information */
-static GstElementDetails gst_rtp_h263pdepay_details =
+static const GstElementDetails gst_rtp_h263pdepay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
     "Codec/Depayr/Network",
     "Extracts H263+ video from RTP packets (RFC 2429)",

@@ -60,7 +60,8 @@ struct _GstNegotiationClass
 GType gst_gst_negotiation_get_type (void);
 
 
-static GstElementDetails plugin_details = GST_ELEMENT_DETAILS ("Negotiation",
+static const GstElementDetails plugin_details =
+GST_ELEMENT_DETAILS ("Negotiation",
     "Testing",
     "This element acts like identity, except that one can control how "
     "negotiation works",

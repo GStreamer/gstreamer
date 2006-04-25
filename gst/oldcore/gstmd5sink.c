@@ -35,7 +35,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_md5sink_debug);
 #define GST_CAT_DEFAULT gst_md5sink_debug
 
-GstElementDetails gst_md5sink_details = GST_ELEMENT_DETAILS ("MD5 Sink",
+static const GstElementDetails gst_md5sink_details =
+GST_ELEMENT_DETAILS ("MD5 Sink",
     "Sink",
     "compute MD5 for incoming data",
     "Benjamin Otte <in7y118@public.uni-hamburg.de>");

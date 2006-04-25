@@ -47,7 +47,7 @@
 
 #include <string.h>
 
-static GstElementDetails gst_icydemux_details =
+static const GstElementDetails gst_icydemux_details =
 GST_ELEMENT_DETAILS ("ICY tag demuxer",
     "Codec/Demuxer/Metadata",
     "Read and output ICY tags while demuxing the contents",

@@ -197,7 +197,7 @@ static void
 gst_avimux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  static GstElementDetails gst_avimux_details =
+  static const GstElementDetails gst_avimux_details =
       GST_ELEMENT_DETAILS ("Avi muxer",
       "Codec/Muxer",
       "Muxes audio and video into an avi stream",

@@ -149,7 +149,7 @@ static void
 gst_matroska_demux_base_init (GstMatroskaDemuxClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  static GstElementDetails gst_matroska_demux_details =
+  static const GstElementDetails gst_matroska_demux_details =
       GST_ELEMENT_DETAILS ("Matroska demuxer",
       "Codec/Demuxer",
       "Demuxes a Matroska Stream into video/audio/subtitles",

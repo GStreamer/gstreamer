@@ -27,7 +27,7 @@
 #include "gstcacasink.h"
 
 /* elementfactory information */
-static GstElementDetails gst_cacasink_details =
+static const GstElementDetails gst_cacasink_details =
 GST_ELEMENT_DETAILS ("A colored ASCII art video sink",
     "Sink/Video",
     "A colored ASCII art videosink",

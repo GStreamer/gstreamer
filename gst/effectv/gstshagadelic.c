@@ -75,7 +75,7 @@ GType gst_shagadelictv_get_type (void);
 
 static void gst_shagadelic_initialize (GstShagadelicTV * filter);
 
-static GstElementDetails shagadelictv_details =
+static const GstElementDetails shagadelictv_details =
 GST_ELEMENT_DETAILS ("ShagadelicTV",
     "Filter/Effect/Video",
     "Oh behave, ShagedelicTV makes images shagadelic!",

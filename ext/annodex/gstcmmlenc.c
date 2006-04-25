@@ -65,7 +65,7 @@ enum
   LAST_SIGNAL
 };
 
-static GstElementDetails gst_cmml_enc_details =
+static const GstElementDetails gst_cmml_enc_details =
 GST_ELEMENT_DETAILS ("CMML streams encoder",
     "Codec/Encoder",
     "Encodes CMML streams",

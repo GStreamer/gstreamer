@@ -73,7 +73,7 @@ static void
 gst_hal_audio_sink_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  GstElementDetails gst_hal_audio_sink_details =
+  static const GstElementDetails gst_hal_audio_sink_details =
       GST_ELEMENT_DETAILS ("HAL audio sink",
       "Sink/Audio",
       "Audio sink for sound device access via HAL",

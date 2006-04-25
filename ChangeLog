@@ -1,3 +1,147 @@
+2006-04-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/aalib/gstaasink.c:
+	* ext/annodex/gstcmmldec.c:
+	* ext/annodex/gstcmmlenc.c:
+	* ext/cairo/gsttextoverlay.c:
+	* ext/cairo/gsttimeoverlay.c:
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/dv/gstdvdec.c:
+	* ext/dv/gstdvdemux.c:
+	* ext/esd/esdmon.c:
+	* ext/esd/esdsink.c:
+	* ext/flac/gstflacenc.c:
+	* ext/flac/gstflactag.c:
+	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_base_init):
+	* ext/gconf/gstgconfaudiosrc.c: (gst_gconf_audio_src_base_init):
+	* ext/gconf/gstgconfvideosink.c: (gst_gconf_video_sink_base_init):
+	* ext/gconf/gstgconfvideosrc.c: (gst_gconf_video_src_base_init):
+	* ext/gdk_pixbuf/pixbufscale.c:
+	* ext/hal/gsthalaudiosink.c: (gst_hal_audio_sink_base_init):
+	* ext/hal/gsthalaudiosrc.c: (gst_hal_audio_src_base_init):
+	* ext/jpeg/gstjpegdec.c:
+	* ext/jpeg/gstjpegenc.c:
+	* ext/jpeg/gstsmokedec.c:
+	* ext/jpeg/gstsmokeenc.c:
+	* ext/libcaca/gstcacasink.c:
+	* ext/libmng/gstmngdec.c:
+	* ext/libmng/gstmngenc.c:
+	* ext/libpng/gstpngdec.c:
+	* ext/libpng/gstpngenc.c:
+	* ext/mikmod/gstmikmod.c:
+	* ext/raw1394/gstdv1394src.c:
+	* ext/shout2/gstshout2.c: (gst_shout2send_init):
+	* ext/shout2/gstshout2.h:
+	* ext/speex/gstspeexdec.c:
+	* ext/speex/gstspeexenc.c:
+	* gst/alpha/gstalpha.c:
+	* gst/alpha/gstalphacolor.c:
+	* gst/apetag/gstapedemux.c:
+	* gst/auparse/gstauparse.c:
+	* gst/autodetect/gstautoaudiosink.c:
+	(gst_auto_audio_sink_base_init):
+	* gst/autodetect/gstautovideosink.c:
+	(gst_auto_video_sink_base_init):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_base_init):
+	* gst/avi/gstavimux.c: (gst_avimux_base_init):
+	* gst/cutter/gstcutter.c:
+	* gst/debug/breakmydata.c:
+	* gst/debug/efence.c:
+	* gst/debug/gstnavigationtest.c:
+	* gst/debug/gstnavseek.c:
+	* gst/debug/negotiation.c:
+	* gst/debug/progressreport.c:
+	* gst/debug/testplugin.c:
+	* gst/effectv/gstaging.c:
+	* gst/effectv/gstdice.c:
+	* gst/effectv/gstedge.c:
+	* gst/effectv/gstquark.c:
+	* gst/effectv/gstrev.c:
+	* gst/effectv/gstshagadelic.c:
+	* gst/effectv/gstvertigo.c:
+	* gst/effectv/gstwarp.c:
+	* gst/flx/gstflxdec.c:
+	* gst/goom/gstgoom.c:
+	* gst/icydemux/gsticydemux.c:
+	* gst/id3demux/gstid3demux.c:
+	* gst/interleave/deinterleave.c:
+	* gst/interleave/interleave.c:
+	* gst/law/alaw-decode.c: (gst_alawdec_base_init):
+	* gst/law/alaw-encode.c: (gst_alawenc_base_init):
+	* gst/law/mulaw-decode.c: (gst_mulawdec_base_init):
+	* gst/law/mulaw-encode.c: (gst_mulawenc_base_init):
+	* gst/level/gstlevel.c:
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_base_init):
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_base_init):
+	* gst/median/gstmedian.c:
+	* gst/monoscope/gstmonoscope.c:
+	* gst/multipart/multipartdemux.c:
+	* gst/multipart/multipartmux.c:
+	* gst/oldcore/gstaggregator.c:
+	* gst/oldcore/gstfdsink.c:
+	* gst/oldcore/gstmd5sink.c:
+	* gst/oldcore/gstmultifilesrc.c:
+	* gst/oldcore/gstpipefilter.c:
+	* gst/oldcore/gstshaper.c:
+	* gst/oldcore/gststatistics.c:
+	* gst/rtp/gstasteriskh263.c:
+	* gst/rtp/gstrtpL16depay.c:
+	* gst/rtp/gstrtpL16pay.c:
+	* gst/rtp/gstrtpamrdepay.c:
+	* gst/rtp/gstrtpamrpay.c:
+	* gst/rtp/gstrtpdepay.c:
+	* gst/rtp/gstrtpgsmpay.c:
+	* gst/rtp/gstrtph263pay.c:
+	* gst/rtp/gstrtph263pdepay.c:
+	* gst/rtp/gstrtph263ppay.c:
+	* gst/rtp/gstrtpilbcdepay.c:
+	* gst/rtp/gstrtpmp4gpay.c:
+	* gst/rtp/gstrtpmp4vdepay.c:
+	* gst/rtp/gstrtpmp4vpay.c:
+	* gst/rtp/gstrtpmpadepay.c:
+	* gst/rtp/gstrtpmpapay.c:
+	* gst/rtp/gstrtppcmadepay.c:
+	* gst/rtp/gstrtppcmapay.c:
+	* gst/rtp/gstrtppcmudepay.c:
+	* gst/rtp/gstrtppcmupay.c:
+	* gst/rtp/gstrtpspeexdepay.c:
+	* gst/rtp/gstrtpspeexpay.c:
+	* gst/rtsp/gstrtpdec.c:
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/smpte/gstsmpte.c:
+	* gst/udp/gstdynudpsink.c:
+	* gst/udp/gstmultiudpsink.c:
+	* gst/udp/gstudpsink.c:
+	* gst/udp/gstudpsrc.c:
+	* gst/videobox/gstvideobox.c:
+	* gst/videofilter/gstgamma.c: (gst_gamma_base_init):
+	* gst/videofilter/gstvideobalance.c:
+	* gst/videofilter/gstvideoflip.c:
+	* gst/videofilter/gstvideotemplate.c:
+	(gst_videotemplate_base_init):
+	* gst/videomixer/videomixer.c:
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_base_init),
+	(gst_wavparse_class_init), (gst_wavparse_dispose),
+	(gst_wavparse_reset), (gst_wavparse_init),
+	(gst_wavparse_perform_seek), (gst_wavparse_peek_chunk_info),
+	(gst_wavparse_peek_chunk), (gst_wavparse_stream_headers),
+	(gst_wavparse_parse_stream_init), (gst_wavparse_send_event),
+	(gst_wavparse_add_src_pad), (gst_wavparse_stream_data),
+	(gst_wavparse_chain), (gst_wavparse_srcpad_event),
+	(gst_wavparse_sink_activate), (gst_wavparse_sink_activate_pull),
+	(gst_wavparse_change_state):
+	* gst/wavparse/gstwavparse.h:
+	* sys/oss/gstossmixerelement.c:
+	* sys/oss/gstosssink.c:
+	* sys/oss/gstosssrc.c:
+	* sys/osxaudio/gstosxaudioelement.c:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosrc.c:
+	* sys/sunaudio/gstsunaudiomixer.c:
+	* sys/sunaudio/gstsunaudiosink.c:
+	  Define GstElementDetails as const and also static (when defined as
+	  global)
+
 2006-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_chain):
