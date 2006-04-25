@@ -22,6 +22,8 @@
 #ifndef __GST_MATROSKA_IDS_H__
 #define __GST_MATROSKA_IDS_H__
 
+#include <gst/gst.h>
+
 #include "ebml-ids.h"
 
 /*
@@ -298,5 +300,10 @@ typedef struct _Wavpack4Header {
   guint32 flags;         /* various flags for id and decoding              */
   guint32 crc;           /* crc for actual decoded data                    */
 } Wavpack4Header;
+
+gboolean gst_matroska_track_init_video_context    (GstMatroskaTrackContext ** p_context);
+gboolean gst_matroska_track_init_audio_context    (GstMatroskaTrackContext ** p_context);
+gboolean gst_matroska_track_init_subtitle_context (GstMatroskaTrackContext ** p_context);
+gboolean gst_matroska_track_init_complex_context  (GstMatroskaTrackContext ** p_context);
 
 #endif /* __GST_MATROSKA_IDS_H__ */

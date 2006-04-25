@@ -359,52 +359,37 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
 
         /* track type (video, audio, combined, subtitle, etc.) */
       case GST_MATROSKA_ID_TRACKTYPE:{
-        guint64 num;
+        guint64 track_type;
 
-        if (context->type != 0) {
+        if (!gst_ebml_read_uint (ebml, &id, &track_type)) {
+          res = FALSE;
+          break;
+        }
+
+        if (context->type != 0 && context->type != track_type) {
           GST_WARNING
               ("More than one tracktype defined in a trackentry - skipping");
           break;
         }
-        if (!gst_ebml_read_uint (ebml, &id, &num)) {
-          res = FALSE;
-          break;
-        }
-        context->type = num;
 
         /* ok, so we're actually going to reallocate this thing */
-        switch (context->type) {
+        switch (track_type) {
           case GST_MATROSKA_TRACK_TYPE_VIDEO:
-            context = (GstMatroskaTrackContext *)
-                g_renew (GstMatroskaTrackVideoContext, context, 1);
-            ((GstMatroskaTrackVideoContext *) context)->display_width = 0;
-            ((GstMatroskaTrackVideoContext *) context)->display_height = 0;
-            ((GstMatroskaTrackVideoContext *) context)->pixel_width = 0;
-            ((GstMatroskaTrackVideoContext *) context)->pixel_height = 0;
-            ((GstMatroskaTrackVideoContext *) context)->eye_mode = 0;
-            ((GstMatroskaTrackVideoContext *) context)->asr_mode = 0;
-            ((GstMatroskaTrackVideoContext *) context)->fourcc = 0;
+            gst_matroska_track_init_video_context (&context);
             break;
           case GST_MATROSKA_TRACK_TYPE_AUDIO:
-            context = (GstMatroskaTrackContext *)
-                g_renew (GstMatroskaTrackAudioContext, context, 1);
-            /* defaults */
-            ((GstMatroskaTrackAudioContext *) context)->channels = 1;
-            ((GstMatroskaTrackAudioContext *) context)->samplerate = 8000;
+            gst_matroska_track_init_audio_context (&context);
             break;
           case GST_MATROSKA_TRACK_TYPE_COMPLEX:
-            context = (GstMatroskaTrackContext *)
-                g_renew (GstMatroskaTrackComplexContext, context, 1);
+            gst_matroska_track_init_complex_context (&context);
             break;
           case GST_MATROSKA_TRACK_TYPE_SUBTITLE:
-            context = (GstMatroskaTrackContext *)
-                g_renew (GstMatroskaTrackSubtitleContext, context, 1);
+            gst_matroska_track_init_subtitle_context (&context);
             break;
           case GST_MATROSKA_TRACK_TYPE_LOGO:
           case GST_MATROSKA_TRACK_TYPE_CONTROL:
           default:
-            GST_WARNING ("Unknown or unsupported track type 0x%x",
-                context->type);
+            GST_WARNING ("Unknown or unsupported track type 0x%x", track_type);
             context->type = 0;
             break;
         }
@@ -416,7 +401,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TRACKVIDEO:{
         GstMatroskaTrackVideoContext *videocontext;
 
-        if (context->type != GST_MATROSKA_TRACK_TYPE_VIDEO) {
+        if (!gst_matroska_track_init_video_context (&context)) {
           GST_WARNING
               ("trackvideo EBML entry in non-video track - ignoring track");
           res = FALSE;
@@ -426,6 +411,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
           break;
         }
         videocontext = (GstMatroskaTrackVideoContext *) context;
+        demux->src[demux->num_streams - 1] = context;
 
         while (res) {
           if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
@@ -603,7 +589,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       case GST_MATROSKA_ID_TRACKAUDIO:{
         GstMatroskaTrackAudioContext *audiocontext;
 
-        if (context->type != GST_MATROSKA_TRACK_TYPE_AUDIO) {
+        if (!gst_matroska_track_init_audio_context (&context)) {
           GST_WARNING
               ("trackaudio EBML entry in non-audio track - ignoring track");
           res = FALSE;
@@ -613,6 +599,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
           break;
         }
         audiocontext = (GstMatroskaTrackAudioContext *) context;
+        demux->src[demux->num_streams - 1] = context;
 
         while (res) {
           if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
@@ -1288,10 +1275,12 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstEvent * event)
 
       /* events we don't need to handle */
     case GST_EVENT_NAVIGATION:
+    case GST_EVENT_QOS:
+      res = FALSE;
       break;
 
     default:
-      GST_WARNING ("Unhandled event of type %d", GST_EVENT_TYPE (event));
+      GST_WARNING ("Unhandled %s event, dropped", GST_EVENT_TYPE_NAME (event));
       res = FALSE;
       break;
   }

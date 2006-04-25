@@ -5,6 +5,7 @@ libgstmatroska_la_SOURCES = \
 	ebml-write.c \
 	matroska.c \
 	matroska-demux.c \
+	matroska-ids.c \
 	matroska-mux.c
 
 noinst_HEADERS = \

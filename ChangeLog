@@ -1,3 +1,18 @@
+2006-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/Makefile.am:
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream),
+	(gst_matroska_demux_handle_src_event):
+	* gst/matroska/matroska-ids.c:
+	(gst_matroska_track_init_video_context),
+	(gst_matroska_track_init_audio_context),
+	(gst_matroska_track_init_subtitle_context),
+	(gst_matroska_track_init_complex_context):
+	* gst/matroska/matroska-ids.h:
+	  Handle case where the TrackType ebml chunk does not come before the
+	  TrackInfoAudio or TrackInfoVideo ebml chunk (#339446). Ignore QoS
+	  events.
+
 2006-04-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_setcaps):
