@@ -115,7 +115,7 @@ gst_musicbrainz_get_type (void)
 static void
 gst_musicbrainz_base_init (GstMusicBrainzClass * klass)
 {
-  GstElementDetails gst_musicbrainz_details =
+  static const GstElementDetails gst_musicbrainz_details =
       GST_ELEMENT_DETAILS ("Musicbrainz TRM generator",
       "Filter/Analyzer/Audio",
       "Compute TRM Id from muscibrainz",

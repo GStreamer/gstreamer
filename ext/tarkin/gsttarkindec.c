@@ -29,7 +29,7 @@
 static GstPadTemplate *dec_src_template, *dec_sink_template;
 
 /* elementfactory information */
-GstElementDetails tarkindec_details =
+static const GstElementDetails tarkindec_details =
 GST_ELEMENT_DETAILS ("Tarkin video decoder",
     "Codec/Decoder/Video",
     "Decodes video in OGG Tarkin format",

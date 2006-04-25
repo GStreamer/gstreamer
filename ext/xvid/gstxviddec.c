@@ -28,7 +28,7 @@
 #include "gstxviddec.h"
 
 /* elementfactory information */
-GstElementDetails gst_xviddec_details =
+static const GstElementDetails gst_xviddec_details =
 GST_ELEMENT_DETAILS ("XviD video decoder",
     "Codec/Decoder/Video",
     "XviD decoder based on xvidcore",

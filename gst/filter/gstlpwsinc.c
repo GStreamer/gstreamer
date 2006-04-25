@@ -38,7 +38,7 @@
 #include <math.h>               /* M_PI */
 #include <string.h>             /* memmove */
 
-static GstElementDetails gst_lpwsinc_details =
+static const GstElementDetails gst_lpwsinc_details =
 GST_ELEMENT_DETAILS ("Low-pass Windowed sinc filter",
     "Filter/Effect/Audio",
     "Low-pass Windowed sinc filter",

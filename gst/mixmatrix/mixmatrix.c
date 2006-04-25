@@ -68,7 +68,7 @@ struct _GstMixMatrixClass
 };
 
 /* elementfactory information */
-static GstElementDetails mixmatrix_details =
+static const GstElementDetails mixmatrix_details =
 GST_ELEMENT_DETAILS ("Mixing Matrix",
     "Filter/Editor/Audio",
     "Mix N audio channels together into M channels",

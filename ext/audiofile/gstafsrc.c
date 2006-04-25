@@ -34,7 +34,7 @@
 #include "gstafsrc.h"
 
 /* elementfactory information */
-static GstElementDetails afsrc_details =
+static const GstElementDetails afsrc_details =
 GST_ELEMENT_DETAILS ("Audiofile source",
     "Source/Audio",
     "Read audio files from disk using libaudiofile",

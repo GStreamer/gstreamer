@@ -30,7 +30,7 @@
 #include "gstspeed.h"
 
 /* elementfactory information */
-static GstElementDetails speed_details = GST_ELEMENT_DETAILS ("Speed",
+static const GstElementDetails speed_details = GST_ELEMENT_DETAILS ("Speed",
     "Filter/Effect/Audio",
     "Set speed/pitch on audio/raw streams (resampler)",
     "Andy Wingo <apwingo@eos.ncsu.edu>, "

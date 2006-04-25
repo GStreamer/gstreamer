@@ -59,7 +59,7 @@ struct _GstColorspaceClass
 };
 
 /* elementfactory information */
-static GstElementDetails colorspace_details =
+static const GstElementDetails colorspace_details =
 GST_ELEMENT_DETAILS ("Colorspace converter",
     "Filter/Effect",
     "Converts video from one colorspace to another",

@@ -34,7 +34,7 @@
 #include "qcamip.h"
 
 /* elementfactory information */
-static GstElementDetails gst_qcamsrc_details =
+static const GstElementDetails gst_qcamsrc_details =
 GST_ELEMENT_DETAILS ("QCam Source",
     "Source/Video",
     "Read from a QuickCam device",

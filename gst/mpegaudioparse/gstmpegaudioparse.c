@@ -25,7 +25,7 @@
 
 
 /* elementfactory information */
-static GstElementDetails mp3parse_details =
+static const GstElementDetails mp3parse_details =
 GST_ELEMENT_DETAILS ("MPEG-1 audio parser",
     "Codec/Parser/Audio",
     "Parses and frames mpeg1 audio streams (levels 1-3), provides seek",

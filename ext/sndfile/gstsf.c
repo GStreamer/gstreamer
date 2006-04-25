@@ -31,12 +31,14 @@
 #include "gstsf.h"
 
 
-static GstElementDetails sfsrc_details = GST_ELEMENT_DETAILS ("Sndfile source",
+static const GstElementDetails sfsrc_details =
+GST_ELEMENT_DETAILS ("Sndfile source",
     "Source/Audio",
     "Read audio streams from disk using libsndfile",
     "Andy Wingo <wingo at pobox dot com>");
 
-static GstElementDetails sfsink_details = GST_ELEMENT_DETAILS ("Sndfile sink",
+static const GstElementDetails sfsink_details =
+GST_ELEMENT_DETAILS ("Sndfile sink",
     "Sink/Audio",
     "Write audio streams to disk using libsndfile",
     "Andy Wingo <wingo at pobox dot com>");

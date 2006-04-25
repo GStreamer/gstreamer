@@ -102,7 +102,7 @@ GST_DEBUG_CATEGORY (dfbvideosink_debug);
 #define GST_CAT_DEFAULT dfbvideosink_debug
 
 /* ElementFactory information */
-static GstElementDetails gst_dfbvideosink_details =
+static const GstElementDetails gst_dfbvideosink_details =
 GST_ELEMENT_DETAILS ("DirectFB video sink",
     "Sink/Video",
     "A DirectFB based videosink",

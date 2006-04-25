@@ -53,7 +53,7 @@ static void gst_setup_palette (GstMpeg2Subt * mpeg2subt, guchar * indexes,
 static void gst_update_still_frame (GstMpeg2Subt * mpeg2subt);
 
 /* elementfactory information */
-static GstElementDetails mpeg2subt_details =
+static const GstElementDetails mpeg2subt_details =
 GST_ELEMENT_DETAILS ("MPEG-2 subtitle decoder",
     "Codec/Decoder/Video",
     "Decodes and merges MPEG2 subtitles into a video frame",

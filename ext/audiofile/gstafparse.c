@@ -30,7 +30,7 @@
 #include "gstafparse.h"
 
 /* elementfactory information */
-static GstElementDetails afparse_details =
+static const GstElementDetails afparse_details =
 GST_ELEMENT_DETAILS ("Audiofile demuxer",
     "Codec/Demuxer/Audio",
     "Audiofile parser for audio/raw",

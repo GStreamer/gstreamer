@@ -34,7 +34,8 @@ enum
 GST_DEBUG_CATEGORY_STATIC (switch_debug);
 
 /* ElementFactory information */
-static GstElementDetails gst_switch_details = GST_ELEMENT_DETAILS ("Switch",
+static const GstElementDetails gst_switch_details =
+GST_ELEMENT_DETAILS ("Switch",
     "Generic",
     "N-to-1 input switching",
     "Julien Moutte <julien@moutte.net>");

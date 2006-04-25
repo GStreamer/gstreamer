@@ -30,7 +30,7 @@
 #define PASSTHRU_NUM_BUFS 4
 
 /* elementfactory information */
-static GstElementDetails passthrough_details =
+static const GstElementDetails passthrough_details =
 GST_ELEMENT_DETAILS ("Passthrough",
     "Filter/Effect/Audio",
     "Transparent filter for audio/raw (boilerplate for effects)",

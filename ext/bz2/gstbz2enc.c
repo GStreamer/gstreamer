@@ -27,7 +27,8 @@
 GST_DEBUG_CATEGORY_STATIC (bz2enc_debug);
 #define GST_CAT_DEFAULT bz2enc_debug
 
-static GstElementDetails bz2enc_details = GST_ELEMENT_DETAILS ("BZ2 encoder",
+static const GstElementDetails bz2enc_details =
+GST_ELEMENT_DETAILS ("BZ2 encoder",
     "Codec/Encoder", "Compresses streams",
     "Lutz Mueller <lutz@users.sourceforge.net>");
 

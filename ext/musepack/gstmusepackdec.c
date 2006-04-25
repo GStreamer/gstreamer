@@ -28,6 +28,12 @@
 GST_DEBUG_CATEGORY (musepackdec_debug);
 #define GST_CAT_DEFAULT musepackdec_debug
 
+static const GstElementDetails gst_musepackdec_details =
+GST_ELEMENT_DETAILS ("Musepack decoder",
+    "Codec/Decoder/Audio",
+    "Musepack decoder",
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -72,11 +78,6 @@ GST_BOILERPLATE (GstMusepackDec, gst_musepackdec, GstElement, GST_TYPE_ELEMENT);
 static void
 gst_musepackdec_base_init (gpointer klass)
 {
-  static GstElementDetails gst_musepackdec_details =
-      GST_ELEMENT_DETAILS ("Musepack decoder",
-      "Codec/Decoder/Audio",
-      "Musepack decoder",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,

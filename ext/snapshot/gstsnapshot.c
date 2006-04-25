@@ -29,7 +29,8 @@
 #define MAX_HEIGHT      2048
 
 /* elementfactory information */
-static GstElementDetails snapshot_details = GST_ELEMENT_DETAILS ("Snapshot",
+static const GstElementDetails snapshot_details =
+GST_ELEMENT_DETAILS ("Snapshot",
     "Filter/Editor/Video",
     "Dump a frame to a png file",
     "Jeremy SIMON <jsimon13@yahoo.fr>");

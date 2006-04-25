@@ -129,7 +129,7 @@ gst_iir_equalizer_get_type (void)
 static void
 gst_iir_equalizer_base_init (gpointer g_class)
 {
-  static GstElementDetails iir_equalizer_details =
+  static const GstElementDetails iir_equalizer_details =
       GST_ELEMENT_DETAILS ("Equalizer",
       "Filter/Effect/Audio",
       "Direct Form IIR equalizer",

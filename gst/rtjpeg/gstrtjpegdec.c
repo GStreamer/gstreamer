@@ -26,7 +26,7 @@
 
 
 /* elementfactory information */
-GstElementDetails gst_rtjpegdec_details =
+static const GstElementDetails gst_rtjpegdec_details =
 GST_ELEMENT_DETAILS ("RTjpeg video decoder",
     "Codec/Decoder/Video",
     "Decodes video in RTjpeg format",

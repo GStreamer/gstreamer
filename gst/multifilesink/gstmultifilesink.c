@@ -41,7 +41,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_multifilesink_debug);
 #define GST_CAT_DEFAULT gst_multifilesink_debug
 
-GstElementDetails gst_multifilesink_details =
+static const GstElementDetails gst_multifilesink_details =
 GST_ELEMENT_DETAILS ("Multiple file sink",
     "Sink/File",
     "Write stream to multiple files sequentially",

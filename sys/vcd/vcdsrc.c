@@ -126,7 +126,7 @@ static void
 gst_vcdsrc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  static GstElementDetails gst_vcdsrc_details =
+  static const GstElementDetails gst_vcdsrc_details =
       GST_ELEMENT_DETAILS ("VCD Source",
       "Source/File",
       "Asynchronous read from VCD disk",

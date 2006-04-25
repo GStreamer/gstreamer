@@ -34,7 +34,8 @@
 #include "gstafsink.h"
 
 /* elementfactory information */
-static GstElementDetails afsink_details = GST_ELEMENT_DETAILS ("Audiofile sink",
+static const GstElementDetails afsink_details =
+GST_ELEMENT_DETAILS ("Audiofile sink",
     "Sink/Audio",
     "Write audio streams to disk using libaudiofile",
     "Thomas Vander Stichele <thomas@apestaart.org>");

@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY_STATIC (audioresample_debug);
 #define GST_CAT_DEFAULT audioresample_debug
 
 /* elementfactory information */
-static GstElementDetails gst_audioresample_details =
+static const GstElementDetails gst_audioresample_details =
 GST_ELEMENT_DETAILS ("Audio scaler",
     "Filter/Converter/Audio",
     "Resample audio",

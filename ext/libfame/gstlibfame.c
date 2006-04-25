@@ -30,7 +30,7 @@
 #define FAMEENC_BUFFER_SIZE (300 * 1024)
 
 /* elementfactory information */
-static GstElementDetails gst_fameenc_details =
+static const GstElementDetails gst_fameenc_details =
 GST_ELEMENT_DETAILS ("MPEG-1 and MPEG-4 video encoder",
     "Codec/Encoder/Video",
     "Uses fameenc to encode MPEG video streams",

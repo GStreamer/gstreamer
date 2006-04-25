@@ -100,7 +100,7 @@ static GstHermesColorspaceFormat gst_hermes_colorspace_formats[] = {
   {GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_16)},
 };
 
-static GstElementDetails colorspace_details =
+static const GstElementDetails colorspace_details =
 GST_ELEMENT_DETAILS ("Colorspace converter",
     "Filter/Converter/Video",
     "Converts video from one colorspace to another using libhermes",

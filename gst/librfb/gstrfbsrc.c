@@ -70,63 +70,58 @@ struct _GstRfbsrcClass
   GstElementClass parent_class;
 };
 
-GType
-gst_rfbsrc_get_type (void)
-    G_GNUC_CONST;
+GType gst_rfbsrc_get_type (void);
 
 
-
-     static GstElementDetails rfbsrc_details =
-         GST_ELEMENT_DETAILS ("Video test source",
+static const GstElementDetails rfbsrc_details =
+GST_ELEMENT_DETAILS ("Video test source",
     "Source/Video",
     "Creates a test video stream",
     "David A. Schleef <ds@schleef.org>");
 
 /* GstRfbsrc signals and args */
-     enum
-     {
-       /* FILL ME */
-       LAST_SIGNAL
-     };
+enum
+{
+  /* FILL ME */
+  LAST_SIGNAL
+};
 
-     enum
-     {
-       ARG_0,
-       ARG_SERVER,
-       ARG_PORT,
-       /* FILL ME */
-     };
+enum
+{
+  ARG_0,
+  ARG_SERVER,
+  ARG_PORT,
+  /* FILL ME */
+};
 
-     static void gst_rfbsrc_base_init (gpointer g_class);
-     static void gst_rfbsrc_class_init (GstRfbsrcClass * klass);
-     static void gst_rfbsrc_init (GstRfbsrc * rfbsrc);
-     static GstStateChangeReturn gst_rfbsrc_change_state (GstElement * element);
+static void gst_rfbsrc_base_init (gpointer g_class);
+static void gst_rfbsrc_class_init (GstRfbsrcClass * klass);
+static void gst_rfbsrc_init (GstRfbsrc * rfbsrc);
+static GstStateChangeReturn gst_rfbsrc_change_state (GstElement * element);
 
-     static void gst_rfbsrc_set_property (GObject * object, guint prop_id,
+static void gst_rfbsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-     static void gst_rfbsrc_get_property (GObject * object, guint prop_id,
+static void gst_rfbsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-     static GstData *gst_rfbsrc_get (GstPad * pad);
+static GstData *gst_rfbsrc_get (GstPad * pad);
 
-     static const GstQueryType *gst_rfbsrc_get_query_types (GstPad * pad);
-     static gboolean gst_rfbsrc_src_query (GstPad * pad,
+static const GstQueryType *gst_rfbsrc_get_query_types (GstPad * pad);
+static gboolean gst_rfbsrc_src_query (GstPad * pad,
     GstQueryType type, GstFormat * format, gint64 * value);
-     static void gst_rfbsrc_paint_rect (RfbDecoder * decoder, int x, int y,
+static void gst_rfbsrc_paint_rect (RfbDecoder * decoder, int x, int y,
     int w, int h, guint8 * data);
-     static gboolean gst_rfbsrc_handle_src_event (GstPad * pad,
-    GstEvent * event);
+static gboolean gst_rfbsrc_handle_src_event (GstPad * pad, GstEvent * event);
 
-     static GstCaps *gst_rfbsrc_getcaps (GstPad * pad);
-     static GstPadLinkReturn gst_rfbsrc_link (GstPad * pad,
-    const GstCaps * caps);
-     static GstCaps *gst_rfbsrc_fixate (GstPad * pad, const GstCaps * caps);
+static GstCaps *gst_rfbsrc_getcaps (GstPad * pad);
+static GstPadLinkReturn gst_rfbsrc_link (GstPad * pad, const GstCaps * caps);
+static GstCaps *gst_rfbsrc_fixate (GstPad * pad, const GstCaps * caps);
 
-     static GstElementClass *parent_class = NULL;
+static GstElementClass *parent_class = NULL;
 
 
-     static GstStaticPadTemplate gst_rfbsrc_src_template =
-         GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate gst_rfbsrc_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "

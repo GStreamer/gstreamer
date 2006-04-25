@@ -24,7 +24,7 @@
 #include "gstrtjpegenc.h"
 
 /* elementfactory information */
-GstElementDetails gst_rtjpegenc_details =
+static const GstElementDetails gst_rtjpegenc_details =
 GST_ELEMENT_DETAILS ("RTjpeg video encoder",
     "Codec/Encoder/Video",
     "Encodes video in RTjpeg format",

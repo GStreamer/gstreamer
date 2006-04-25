@@ -29,7 +29,7 @@
 #include "gstxvidenc.h"
 
 /* elementfactory information */
-GstElementDetails gst_xvidenc_details =
+static const GstElementDetails gst_xvidenc_details =
 GST_ELEMENT_DETAILS ("XviD video encoder",
     "Codec/Encoder/Video",
     "XviD encoder based on xvidcore",

@@ -23,7 +23,7 @@
 
 #include "gstamrwbenc.h"
 
-static GstElementDetails gst_amrwbenc_details =
+static const GstElementDetails gst_amrwbenc_details =
 GST_ELEMENT_DETAILS ("AMR-WB audio encoder",
     "Codec/Encoder/Audio",
     "Adaptive Multi-Rate Wideband audio encoder",

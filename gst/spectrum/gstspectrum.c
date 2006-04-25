@@ -25,7 +25,7 @@
 #include "gstspectrum.h"
 
 /* elementfactory information */
-static GstElementDetails gst_spectrum_details =
+static const GstElementDetails gst_spectrum_details =
 GST_ELEMENT_DETAILS ("Spectrum analyzer",
     "Filter/Analyzer/Audio",
     "Run an FFT on the audio signal, output spectrum data",

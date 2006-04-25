@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY_STATIC (directsoundsink_debug);
 #define GST_CAT_DEFAULT directsoundsink_debug
 
 /* elementfactory information */
-static GstElementDetails gst_directsoundsink_details =
+static const GstElementDetails gst_directsoundsink_details =
 GST_ELEMENT_DETAILS ("Audio Sink (DIRECTSOUND)",
     "Sink/Audio",
     "Output to a sound card via DIRECTSOUND",

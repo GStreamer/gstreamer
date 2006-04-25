@@ -125,7 +125,7 @@ gst_nassink_get_type (void)
 static void
 gst_nassink_base_init (gpointer g_class)
 {
-  static GstElementDetails nassink_details =
+  static const GstElementDetails nassink_details =
       GST_ELEMENT_DETAILS ("NAS audio sink",
       "Sink/Audio",
       "Plays audio to a Network Audio Server",

@@ -58,7 +58,8 @@ static GstStateChangeReturn cdplayer_change_state (GstElement * element,
 static GstElementClass *parent_class;
 static guint cdplayer_signals[LAST_SIGNAL] = { 0 };
 
-static GstElementDetails cdplayer_details = GST_ELEMENT_DETAILS ("CD Player",
+static const GstElementDetails cdplayer_details =
+GST_ELEMENT_DETAILS ("CD Player",
     "Generic/Bin",
     "Play CD audio through the CD Drive",
     "Charles Schmidt <cbschmid@uiuc.edu>, "

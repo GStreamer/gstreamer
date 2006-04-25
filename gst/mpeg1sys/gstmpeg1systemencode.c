@@ -31,7 +31,7 @@
 /*#define GST_DEBUG (b...) g_print (##b) */
 
 /* elementfactory information */
-static GstElementDetails system_encode_details =
+static const GstElementDetails system_encode_details =
 GST_ELEMENT_DETAILS ("MPEG-1 muxer",
     "Codec/Muxer",
     "Multiplexes MPEG-1 Streams",

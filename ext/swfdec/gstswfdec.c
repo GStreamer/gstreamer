@@ -31,7 +31,7 @@ GST_DEBUG_CATEGORY_STATIC (swfdec_debug);
 #define GST_CAT_DEFAULT swfdec_debug
 
 /* elementfactory information */
-static GstElementDetails gst_swfdec_details =
+static const GstElementDetails gst_swfdec_details =
 GST_ELEMENT_DETAILS ("SWF video decoder",
     "Codec/Decoder/Video",
     "Uses libswfdec to decode Flash video streams",

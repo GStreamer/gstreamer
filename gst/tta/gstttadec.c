@@ -171,7 +171,7 @@ gst_tta_dec_get_type (void)
 static void
 gst_tta_dec_base_init (GstTtaDecClass * klass)
 {
-  static GstElementDetails plugin_details =
+  static const GstElementDetails plugin_details =
       GST_ELEMENT_DETAILS ("TTA audio decoder",
       "Codec/Decoder/Audio",
       "Decode TTA audio data",

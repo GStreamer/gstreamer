@@ -33,7 +33,8 @@ enum
 };
 
 
-static GstElementDetails freeze_details = GST_ELEMENT_DETAILS ("Stream freezer",
+static const GstElementDetails freeze_details =
+GST_ELEMENT_DETAILS ("Stream freezer",
     "Generic",
     "Makes a stream from buffers of data",
     "Gergely Nagy <gergely.nagy@neteyes.hu>,"

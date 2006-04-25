@@ -27,7 +27,7 @@
 #include <gst/audio/audio.h>
 
 /* elementfactory information */
-static GstElementDetails artsdsink_details =
+static const GstElementDetails artsdsink_details =
 GST_ELEMENT_DETAILS ("aRtsd audio sink",
     "Sink/Audio",
     "Plays audio to an aRts server",

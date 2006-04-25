@@ -43,7 +43,7 @@
 #define GST_VIDEO_I420_SIZE(w,h) (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
 
 /* elementfactory information */
-static GstElementDetails deinterlace_details =
+static const GstElementDetails deinterlace_details =
 GST_ELEMENT_DETAILS ("Deinterlace",
     "Filter/Effect/Video",
     "Deinterlace video",

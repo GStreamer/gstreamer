@@ -25,7 +25,8 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-static GstElementDetails overlay_details = GST_ELEMENT_DETAILS ("Video overlay",
+static const GstElementDetails overlay_details =
+GST_ELEMENT_DETAILS ("Video overlay",
     "Filter/Editor/Video",
     "Overlay multiple video streams",
     "David Schleef <ds@schleef.org>");

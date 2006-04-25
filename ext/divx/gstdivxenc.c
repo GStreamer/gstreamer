@@ -27,7 +27,7 @@
 #include <encore2.h>
 
 /* elementfactory information */
-GstElementDetails gst_divxenc_details =
+static const GstElementDetails gst_divxenc_details =
 GST_ELEMENT_DETAILS ("Divx4linux video encoder",
     "Codec/Encoder/Video",
     "Divx encoder based on divxencore",

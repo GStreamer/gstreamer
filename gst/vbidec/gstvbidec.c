@@ -64,7 +64,7 @@ struct _GstVBIDecClass
 GType gst_vbidec_get_type (void);
 
 /* elementfactory information */
-static GstElementDetails gst_vbidec_details =
+static const GstElementDetails gst_vbidec_details =
 GST_ELEMENT_DETAILS ("VBI decoder",
     "Codec/Decoder/Video",
     "Decodes closed captions and XDS data from VBI data",

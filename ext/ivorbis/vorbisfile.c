@@ -85,7 +85,7 @@ GType ivorbisfile_get_type (void);
 static GstPadTemplate *gst_vorbisdec_src_template, *gst_vorbisdec_sink_template;
 
 /* elementfactory information */
-GstElementDetails ivorbisfile_details =
+static const GstElementDetails ivorbisfile_details =
 GST_ELEMENT_DETAILS ("Ogg Vorbis audio decoder",
     "Codec/Decoder/Audio",
     "Decodes OGG Vorbis audio using the Tremor vorbisfile API",

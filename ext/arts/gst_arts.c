@@ -43,7 +43,8 @@
 #include "gst_artsio_impl.h"
 
 /* elementfactory information */
-static GstElementDetails gst_arts_details = GST_ELEMENT_DETAILS ("aRts plugin",
+static const GstElementDetails gst_arts_details =
+GST_ELEMENT_DETAILS ("aRts plugin",
     "Filter/Audio",
     "aRts wrapper filter",
     "Erik Walthinsen <omega@temple-baptist.com,\n"

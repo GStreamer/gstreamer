@@ -23,7 +23,7 @@
 #include "gstshout.h"
 
 /* elementfactory information */
-static GstElementDetails icecastsend_details =
+static const GstElementDetails icecastsend_details =
 GST_ELEMENT_DETAILS ("Icecast network sink",
     "Sink/Network",
     "Sends data to an icecast server using libshout",

@@ -53,7 +53,8 @@ struct _GstXsharpenClass
   GstElementClass parent_class;
 };
 
-GstElementDetails gst_xsharpen_details = GST_ELEMENT_DETAILS ("Sharpen",
+static const GstElementDetails gst_xsharpen_details =
+GST_ELEMENT_DETAILS ("Sharpen",
     "Filter/Video/Effect",
     "LGPL",
     "Apply a sharpen effect on video" VERSION,

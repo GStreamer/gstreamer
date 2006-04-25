@@ -90,7 +90,7 @@ static char *socket_receive_file_to_buff (int fd, int *size);
 static char *client_accept_s_expr (int fd);
 
 /* elementfactory information */
-static GstElementDetails gst_festival_details =
+static const GstElementDetails gst_festival_details =
 GST_ELEMENT_DETAILS ("Festival Text-to-Speech synthesizer",
     "Filter/Effect/Audio",
     "Synthesizes plain text into audio",

@@ -26,7 +26,7 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-GstElementDetails gst_divxdec_details =
+static const GstElementDetails gst_divxdec_details =
 GST_ELEMENT_DETAILS ("Divx4linux video decoder",
     "Codec/Decoder/Video",
     "Divx decoder based on divxdecore",

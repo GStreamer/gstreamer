@@ -25,7 +25,7 @@
 #include <gst/video/video.h>
 
 /* elementfactory information */
-static GstElementDetails videodrop_details =
+static const GstElementDetails videodrop_details =
 GST_ELEMENT_DETAILS ("Frame dropper",
     "Filter/Effect/Video",
     "Re-FPS'es video by dropping frames",

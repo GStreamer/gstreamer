@@ -106,7 +106,7 @@ static void gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink);
 static void gst_glimage_sink_push_image (GstGLImageSink * glimage_sink,
     GstBuffer * buf);
 
-static GstElementDetails gst_glimage_sink_details =
+static const GstElementDetails gst_glimage_sink_details =
 GST_ELEMENT_DETAILS ("OpenGL video sink",
     "Sink/Video",
     "A videosink based on OpenGL",

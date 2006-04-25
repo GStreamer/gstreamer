@@ -29,7 +29,7 @@
 
 #include "gstsmoothwave.h"
 
-static GstElementDetails gst_smoothwave_details =
+static const GstElementDetails gst_smoothwave_details =
 GST_ELEMENT_DETAILS ("Smooth waveform",
     "Visualization",
     "Fading grayscale waveform display",

@@ -27,7 +27,7 @@ GST_DEBUG_CATEGORY_EXTERN (sdl_debug);
 #define GST_CAT_DEFAULT sdl_debug
 
 /* elementfactory information */
-static GstElementDetails gst_sdlaudio_sink_details =
+static const GstElementDetails gst_sdlaudio_sink_details =
 GST_ELEMENT_DETAILS ("SDL audio sink",
     "Sink/Audio",
     "Output to a sound card via SDLAUDIO",

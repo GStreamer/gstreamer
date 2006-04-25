@@ -85,7 +85,7 @@ gst_tta_parse_get_type (void)
 static void
 gst_tta_parse_base_init (GstTtaParseClass * klass)
 {
-  static GstElementDetails plugin_details =
+  static const GstElementDetails plugin_details =
       GST_ELEMENT_DETAILS ("TTA file parser",
       "Codec/Demuxer/Audio",
       "Parses TTA files",

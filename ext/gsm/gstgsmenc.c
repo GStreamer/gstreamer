@@ -31,7 +31,8 @@ GST_DEBUG_CATEGORY (gsmenc_debug);
 #define GST_CAT_DEFAULT (gsmenc_debug)
 
 /* elementfactory information */
-GstElementDetails gst_gsmenc_details = GST_ELEMENT_DETAILS ("GSM audio encoder",
+static const GstElementDetails gst_gsmenc_details =
+GST_ELEMENT_DETAILS ("GSM audio encoder",
     "Codec/Encoder/Audio",
     "Encodes GSM audio",
     "Philippe Khalaf <burger@speedy.org>");
