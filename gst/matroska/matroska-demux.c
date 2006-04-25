@@ -2976,6 +2976,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     gst_riff_strf_vids *vids = NULL;
 
     if (data) {
+      GstBuffer *buf = NULL;
+
       vids = (gst_riff_strf_vids *) data;
 
       /* assure size is big enough */
@@ -3002,8 +3004,18 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       vids->num_colors = GUINT32_FROM_LE (vids->num_colors);
       vids->imp_colors = GUINT32_FROM_LE (vids->imp_colors);
 
+      if (size > sizeof (gst_riff_strf_vids)) { /* some extra_data */
+        buf = gst_buffer_new_and_alloc (size - sizeof (gst_riff_strf_vids));
+        memcpy (GST_BUFFER_DATA (buf),
+            (guint8 *) vids + sizeof (gst_riff_strf_vids),
+            GST_BUFFER_SIZE (buf));
+      }
+
       caps = gst_riff_create_video_caps (vids->compression, NULL, vids,
-          NULL, NULL, codec_name);
+          buf, NULL, codec_name);
+
+      if (buf)
+        gst_buffer_unref (buf);
     }
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_UNCOMPRESSED)) {
     guint32 fourcc = 0;

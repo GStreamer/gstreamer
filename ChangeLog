@@ -1,5 +1,17 @@
 2006-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Mark Nauwelaerts  <manauw at skynet dot be>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_video_caps):
+	  Handle codec_data for VfW compatibility codec IDs (#339451)
+
+	* gst/matroska/matroska-mux.c:
+	(gst_matroska_mux_video_pad_setcaps):
+	  Same here, handle codec_data and add additional caps we can handle
+	  now to the pad template (huffyuv, dv and h263 video) (#339451)
+
+2006-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Josef Zlomek  <josef dot zlomek at itonis dot tv>
 
 	* gst/matroska/matroska-mux.c:

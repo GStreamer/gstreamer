@@ -72,6 +72,12 @@ static GstStaticPadTemplate videosink_templ =
         COMMON_VIDEO_CAPS "; "
         "video/x-xvid, "
         COMMON_VIDEO_CAPS "; "
+        "video/x-huffyuv, "
+        COMMON_VIDEO_CAPS "; "
+        "video/x-dv, "
+        COMMON_VIDEO_CAPS "; "
+        "video/x-h263, "
+        COMMON_VIDEO_CAPS "; "
         "video/x-msmpeg, "
         COMMON_VIDEO_CAPS "; "
         "image/jpeg, "
@@ -484,12 +490,17 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_MJPEG);
 
     return TRUE;
-  } else if (!strcmp (mimetype, "video/x-divx")) {
-    gint divxversion;
+  } else if (!strcmp (mimetype, "video/x-xvid") /* MS/VfW compatibility cases */
+      ||!strcmp (mimetype, "video/x-huffyuv")
+      || !strcmp (mimetype, "video/x-divx")
+      || !strcmp (mimetype, "video/x-dv")
+      || !strcmp (mimetype, "video/x-h263")) {
     BITMAPINFOHEADER *bih;
+    const GValue *codec_data;
+    gint size = sizeof (BITMAPINFOHEADER);
 
-    bih = (BITMAPINFOHEADER *) g_malloc0 (sizeof (BITMAPINFOHEADER));
-    GST_WRITE_UINT32_LE (&bih->bi_size, sizeof (BITMAPINFOHEADER));
+    bih = g_new0 (BITMAPINFOHEADER, 1);
+    GST_WRITE_UINT32_LE (&bih->bi_size, size);
     GST_WRITE_UINT32_LE (&bih->bi_width, videocontext->pixel_width);
     GST_WRITE_UINT32_LE (&bih->bi_height, videocontext->pixel_height);
     GST_WRITE_UINT16_LE (&bih->bi_planes, (guint16) 1);
@@ -497,40 +508,47 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
     GST_WRITE_UINT32_LE (&bih->bi_size_image, videocontext->pixel_width *
         videocontext->pixel_height * 3);
 
-    gst_structure_get_int (structure, "divxversion", &divxversion);
-    switch (divxversion) {
-      case 3:
-        GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DIV3"));
-        break;
-      case 4:
-        GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DIVX"));
-        break;
-      case 5:
-        GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DX50"));
-        break;
+    if (!strcmp (mimetype, "video/x-xvid"))
+      GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("XVID"));
+    else if (!strcmp (mimetype, "video/x-huffyuv"))
+      GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("HFYU"));
+    else if (!strcmp (mimetype, "video/x-dv"))
+      GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DVSD"));
+    else if (!strcmp (mimetype, "video/x-h263"))
+      GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("H263"));
+    else if (!strcmp (mimetype, "video/x-divx")) {
+      gint divxversion;
+
+      gst_structure_get_int (structure, "divxversion", &divxversion);
+      switch (divxversion) {
+        case 3:
+          GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DIV3"));
+          break;
+        case 4:
+          GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DIVX"));
+          break;
+        case 5:
+          GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DX50"));
+          break;
+      }
+    }
+
+    /* process codec private/initialization data, if any */
+    codec_data = gst_structure_get_value (structure, "codec_data");
+    if (codec_data) {
+      GstBuffer *codec_data_buf;
+
+      codec_data_buf = g_value_peek_pointer (codec_data);
+      size += GST_BUFFER_SIZE (codec_data_buf);
+      bih = g_realloc (bih, size);
+      GST_WRITE_UINT32_LE (&bih->bi_size, size);
+      memcpy ((guint8 *) bih + sizeof (BITMAPINFOHEADER),
+          GST_BUFFER_DATA (codec_data_buf), GST_BUFFER_SIZE (codec_data_buf));
     }
 
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC);
     context->codec_priv = (gpointer) bih;
-    context->codec_priv_size = sizeof (BITMAPINFOHEADER);
-
-    return TRUE;
-  } else if (!strcmp (mimetype, "video/x-xvid")) {
-    BITMAPINFOHEADER *bih;
-
-    bih = (BITMAPINFOHEADER *) g_malloc0 (sizeof (BITMAPINFOHEADER));
-    GST_WRITE_UINT32_LE (&bih->bi_size, sizeof (BITMAPINFOHEADER));
-    GST_WRITE_UINT32_LE (&bih->bi_width, videocontext->pixel_width);
-    GST_WRITE_UINT32_LE (&bih->bi_height, videocontext->pixel_height);
-    GST_WRITE_UINT16_LE (&bih->bi_planes, (guint16) 1);
-    GST_WRITE_UINT16_LE (&bih->bi_bit_count, (guint16) 24);
-    GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("XVID"));
-    GST_WRITE_UINT32_LE (&bih->bi_size_image, videocontext->pixel_width *
-        videocontext->pixel_height * 3);
-
-    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC);
-    context->codec_priv = (gpointer) bih;
-    context->codec_priv_size = sizeof (BITMAPINFOHEADER);
+    context->codec_priv_size = size;
 
     return TRUE;
   } else if (!strcmp (mimetype, "video/x-h264")) {
