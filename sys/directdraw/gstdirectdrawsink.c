@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (directdrawsink_debug);
 #define GST_CAT_DEFAULT directdrawsink_debug
 
 /* elementfactory information */
-static GstElementDetails gst_directdrawsink_details =
+static const GstElementDetails gst_directdrawsink_details =
 GST_ELEMENT_DETAILS ("Video Sink (DIRECTDRAW)",
     "Sink/Video",
     "Output to a video card via DIRECTDRAW",
