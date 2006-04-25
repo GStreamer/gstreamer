@@ -31,7 +31,7 @@ GST_DEBUG_CATEGORY_STATIC (dvdlpcm_debug);
 #define GST_CAT_DEFAULT dvdlpcm_debug
 
 /* elementfactory information */
-static GstElementDetails gst_dvdlpcmdec_details =
+static const GstElementDetails gst_dvdlpcmdec_details =
 GST_ELEMENT_DETAILS ("DVD LPCM Audio decoder",
     "Codec/Demuxer/Audio",
     "Decode DVD LPCM frames into standard PCM audio",

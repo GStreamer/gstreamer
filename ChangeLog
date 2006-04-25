@@ -1,3 +1,13 @@
+2006-04-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/mad/gstid3tag.c:
+	* ext/mad/gstmad.c:
+	* gst/ac3parse/gstac3parse.c:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/synaesthesia/gstsynaesthesia.c:
+	  Define GstElementDetails as const and also static (when defined as
+	  global)
+
 2006-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdnav/dvdnavsrc.c: (gst_dvd_nav_src_push_titlelang_event):

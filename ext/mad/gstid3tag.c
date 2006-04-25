@@ -243,7 +243,7 @@ gst_id3_tag_get_type (guint type)
 }
 
 /* elementfactory information */
-GstElementDetails gst_id3_tag_details[3] = {
+static const GstElementDetails gst_id3_tag_details[3] = {
   GST_ELEMENT_DETAILS ("id3 tag extractor",
       "Codec/Demuxer/Audio",
       "Extract ID3 tagging information",

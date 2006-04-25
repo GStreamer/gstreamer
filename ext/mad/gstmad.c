@@ -95,7 +95,7 @@ struct _GstMadClass
 };
 
 /* elementfactory information */
-static GstElementDetails gst_mad_details =
+static const GstElementDetails gst_mad_details =
 GST_ELEMENT_DETAILS ("mad mp3 decoder",
     "Codec/Decoder/Audio",
     "Uses mad code to decode mp3 streams",
