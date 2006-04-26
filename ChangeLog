@@ -1,3 +1,18 @@
+2006-04-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_base_init),
+	(gst_wavparse_class_init), (gst_wavparse_reset),
+	(gst_wavparse_init), (gst_wavparse_create_sourcepad),
+	(gst_wavparse_parse_file_header), (gst_wavparse_stream_init),
+	(gst_wavparse_perform_seek), (gst_wavparse_stream_headers),
+	(gst_wavparse_send_event), (gst_wavparse_add_src_pad),
+	(gst_wavparse_stream_data), (gst_wavparse_loop),
+	(gst_wavparse_srcpad_event), (gst_wavparse_sink_activate),
+	(gst_wavparse_sink_activate_pull), (gst_wavparse_change_state),
+	(plugin_init):
+	* gst/wavparse/gstwavparse.h:
+	  reverted patch #337625 for the price of 1 hour sleep
+
 2006-04-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_base_init),
