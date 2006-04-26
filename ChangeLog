@@ -1,3 +1,21 @@
+2006-04-26  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/osxaudio/Makefile.am:
+	* sys/osxaudio/gstosxaudioelement.c:
+	(gst_osx_audio_element_get_type),
+	(gst_osx_audio_element_class_init):
+	* sys/osxaudio/gstosxaudioelement.h:
+	* sys/osxaudio/gstosxaudiosink.c:
+	(gst_osx_audio_sink_osxelement_do_init),
+	(gst_osx_audio_sink_base_init), (gst_osx_audio_sink_class_init),
+	(gst_osx_audio_sink_init), (gst_osx_audio_sink_set_property),
+	(gst_osx_audio_sink_get_property), (gst_osx_audio_sink_getcaps),
+	(gst_osx_audio_sink_create_ringbuffer),
+	(gst_osx_audio_sink_io_proc), (gst_osx_audio_sink_osxelement_init),
+	(plugin_init):
+	* sys/osxaudio/gstosxaudiosink.h:
+	Port of osxaudiosink to 0.10
+
 2006-04-26  Wim Taymans  <wim@fluendo.com>
 
 	* ext/esd/esdsink.c: (gst_esdsink_prepare), (gst_esdsink_delay):

@@ -1,8 +1,29 @@
-/* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+/*
+ * GStreamer
+ * Copyright 2005-2006 Zaheer Abbas Merali <zaheerabbas at merali dot org>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- * gstosxaudiosink.h: 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Alternatively, the contents of this file may be used under the
+ * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
+ * which case the following provisions apply instead of the ones
+ * mentioned above:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,62 +41,43 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_OSXAUDIOSINK_H__
 #define __GST_OSXAUDIOSINK_H__
 
-
 #include <gst/gst.h>
-
-#include "gstosxaudioelement.h"
-#include <CoreAudio/CoreAudio.h>
+#include <gst/audio/gstbaseaudiosink.h>
+#include "gstosxringbuffer.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_OSXAUDIOSINK \
-  (gst_osxaudiosink_get_type())
-#define GST_OSXAUDIOSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSXAUDIOSINK,GstOsxAudioSink))
-#define GST_OSXAUDIOSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSXAUDIOSINK,GstOsxAudioSinkClass))
-#define GST_IS_OSXAUDIOSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSXAUDIOSINK))
-#define GST_IS_OSXAUDIOSINK_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSXAUDIOSINK))
+/* #defines don't like whitespacey bits */
+#define GST_TYPE_OSX_AUDIO_SINK \
+  (gst_osx_audio_sink_get_type())
+#define GST_OSX_AUDIO_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSX_AUDIO_SINK,GstOsxAudioSink))
+#define GST_OSX_AUDIO_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSX_AUDIO_SINK,GstOsxAudioSinkClass))
+#define GST_IS_PLUGIN_TEMPLATE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSX_AUDIO_SINK))
+#define GST_IS_PLUGIN_TEMPLATE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSX_AUDIO_SINK))
 
-typedef enum {
-  GST_OSXAUDIOSINK_OPEN         = (GST_ELEMENT_FLAG_LAST << 0),
-
-  GST_OSXAUDIOSINK_FLAG_LAST    = (GST_ELEMENT_FLAG_LAST << 2)
-} GstOsxAudioSinkFlags;
-
-typedef struct _GstOsxAudioSink GstOsxAudioSink;
+typedef struct _GstOsxAudioSink      GstOsxAudioSink;
 typedef struct _GstOsxAudioSinkClass GstOsxAudioSinkClass;
 
-struct _GstOsxAudioSink {
-  GstOsxAudioElement     element;
+struct _GstOsxAudioSink
+{
+  GstBaseAudioSink sink;
 
-  GstPad        *sinkpad;
-
-/*  GstClock    *provided_clock;
-  GstClock      *clock;
-  gboolean       resync;
-  gboolean       sync;
-  guint64        handled;
-
-  gboolean       mute;
-  guint          bufsize;
-  guint          chunk_size;*/
+  GstOsxRingBuffer *ringbuffer;
 };
 
-struct _GstOsxAudioSinkClass {
-  GstOsxAudioElementClass parent_class;
-
-  /* signals */
-  void (*handoff) (GstElement *element,GstPad *pad);
+struct _GstOsxAudioSinkClass 
+{
+  GstBaseAudioSinkClass parent_class;
 };
 
-GType gst_osxaudiosink_get_type(void);
+GType gst_osx_audio_sink_get_type (void);
 
 G_END_DECLS
 

@@ -1,8 +1,29 @@
-/* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wim.taymans@chello.be>
+/*
+ * GStreamer
+ * Copyright 2006 Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- * gstosxaudioelement.h: 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Alternatively, the contents of this file may be used under the
+ * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
+ * which case the following provisions apply instead of the ones
+ * mentioned above:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,72 +41,27 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_OSXAUDIO_ELEMENT_H__
-#define __GST_OSXAUDIO_ELEMENT_H__
+#ifndef __GST_OSX_AUDIO_ELEMENT_H__
+#define __GST_OSX_AUDIO_ELEMENT_H__
 
 #include <gst/gst.h>
 #include <CoreAudio/CoreAudio.h>
-#include <pthread.h>
 
-/* debugging category */
-GST_DEBUG_CATEGORY_EXTERN (osxaudio_debug);
-#define GST_CAT_DEFAULT osxaudio_debug
+#define GST_OSX_AUDIO_ELEMENT_TYPE                       (gst_osx_audio_element_get_type())
+#define GST_OSX_AUDIO_ELEMENT(obj)                       (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_OSX_AUDIO_ELEMENT_TYPE, GstOsxAudioElementInterface))
+#define GST_IS_OSX_AUDIO_ELEMENT(obj)                    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_OSX_AUDIO_ELEMENT_TYPE))
+#define GST_OSX_AUDIO_ELEMENT_GET_INTERFACE(inst)        (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_OSX_AUDIO_ELEMENT_TYPE, GstOsxAudioElementInterface))
 
-G_BEGIN_DECLS
+typedef struct _GstOsxAudioElementInterface GstOsxAudioElementInterface;
 
-OSStatus outputAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStamp *inNow, const AudioBufferList *inInputData, const AudioTimeStamp *inInputTime, AudioBufferList *outOutputData, const AudioTimeStamp *inOutputTime, void *inClientData);
-
-OSStatus inputAudioDeviceIOProc(AudioDeviceID inDevice, const AudioTimeStamp *inNow, const AudioBufferList *inInputData, const AudioTimeStamp *inInputTime, AudioBufferList *outOutputData, const AudioTimeStamp *inOutputTime, void *inClientData);
-
-#define GST_TYPE_OSXAUDIOELEMENT \
-  (gst_osxaudioelement_get_type())
-#define GST_OSXAUDIOELEMENT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSXAUDIOELEMENT,GstOsxAudioElement))
-#define GST_OSXAUDIOELEMENT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSXAUDIOELEMENT,GstOsxAudioElementClass))
-#define GST_IS_OSXAUDIOELEMENT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSXAUDIOELEMENT))
-#define GST_IS_OSXAUDIOELEMENT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSXAUDIOELEMENT))
-#define GST_OSXAUDIOELEMENT_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_OSXAUDIOELEMENT, GstOsxAudioElementClass))
-
-typedef struct _GstOsxAudioElement GstOsxAudioElement;
-typedef struct _GstOsxAudioElementClass GstOsxAudioElementClass;
-
-/* This is large, but best (maybe it should be even larger).
- * CoreAudio supposedly has an internal latency in the order of 2ms */
-#define NUM_BUFS 128
-
-struct _GstOsxAudioElement
-{
-  /* yes, we're a gstelement too */
-  GstElement     parent;
-  
-  pthread_mutex_t buffer_mutex; /* mutex covering buffer variables */
-  AudioDeviceID  device_id;
-
-  unsigned char *buffer[NUM_BUFS];
-  unsigned int buffer_len;
-   
-  unsigned int buf_read;
-  unsigned int buf_write;
-  unsigned int buf_read_pos;
-  unsigned int buf_write_pos;
-  int full_buffers;
-  int buffered_bytes;
-
+struct _GstOsxAudioElementInterface {
+	GTypeInterface parent;
+	
+	OSStatus (*io_proc) (AudioDeviceID inDevice, const AudioTimeStamp *inNow, const AudioBufferList *inInputData, const AudioTimeStamp *inInputTime, AudioBufferList *outOutputData, const AudioTimeStamp *inOutputTime, void *inClientData);
+	
 };
 
-struct _GstOsxAudioElementClass {
-  GstElementClass klass;
+GType gst_osx_audio_element_get_type (void);
 
-  GList         *device_combinations;
-};
 
-GType           gst_osxaudioelement_get_type            (void);
-int read_buffer(GstOsxAudioElement* osxaudio, unsigned char* data);
-int write_buffer(GstOsxAudioElement* osxaudio, unsigned char* data, int len);
-G_END_DECLS
-
-#endif /* __GST_OSXAUDIO_ELEMENT_H__ */
+#endif
