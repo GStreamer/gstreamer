@@ -1,5 +1,11 @@
 2006-04-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* win32/common/config.h:
+	  new prerelease
+
+2006-04-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	patch by: Wim Taymans
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),

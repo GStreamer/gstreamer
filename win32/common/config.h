@@ -211,13 +211,13 @@
 #undef PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING "GStreamer Base Plug-ins 0.10.5.3"
+#undef PACKAGE_STRING "GStreamer Base Plug-ins 0.10.5.4"
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME "gst-plugins-base"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION "0.10.5.3"
+#undef PACKAGE_VERSION "0.10.5.4"
 
 /* directory where plugins are located */
 #undef PLUGINDIR
@@ -241,7 +241,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.5.3"
+#define VERSION "0.10.5.4"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
