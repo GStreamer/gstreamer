@@ -1,3 +1,9 @@
+2006-04-26  Wim Taymans  <wim@fluendo.com>
+
+	* ext/esd/esdsink.c:
+	Fix compile problem by defining ESD_MAX_WRITE_SIZE if
+	it is not in esd.h
+
 2006-04-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/auparse/gstauparse.c: (gst_au_parse_base_init),

@@ -33,6 +33,11 @@
 
 #include <gst/gst-i18n-plugin.h>
 
+/* wtay: from my esd.h (debian unstable libesd0-dev 0.2.36-3) */
+#ifndef ESD_MAX_WRITE_SIZE
+#define ESD_MAX_WRITE_SIZE (21 * 4096)
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (esd_debug);
 #define GST_CAT_DEFAULT esd_debug
 
