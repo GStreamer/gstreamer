@@ -1,3 +1,17 @@
+2006-04-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_base_init),
+	(gst_wavparse_class_init), (gst_wavparse_reset),
+	(gst_wavparse_init), (gst_wavparse_create_sourcepad),
+	(gst_wavparse_parse_adtl), (gst_wavparse_parse_cues),
+	(gst_wavparse_parse_file_header), (gst_wavparse_stream_init),
+	(gst_wavparse_perform_seek), (gst_wavparse_stream_headers),
+	(gst_wavparse_stream_data), (gst_wavparse_loop),
+	(gst_wavparse_chain), (plugin_init):
+	* gst/wavparse/gstwavparse.h:
+	  correct partial implementation of push mode
+	  (from my last commit)
+
 2006-04-26  Wim Taymans  <wim@fluendo.com>
 
 	* ext/esd/esdsink.c:
