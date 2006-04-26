@@ -38,6 +38,7 @@ check_PROGRAMS = $(check_vorbis) \
 	elements/audioconvert \
 	elements/audioresample \
 	elements/audiotestsrc \
+	elements/videorate \
 	elements/videotestsrc \
 	elements/volume \
 	generic/clock-selection \

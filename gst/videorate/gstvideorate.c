@@ -549,6 +549,20 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
 
     videorate->in++;
 
+    /* drop new buffer if it's before previous one */
+    if (intime < prevtime) {
+      GST_DEBUG_OBJECT (videorate,
+          "The new buffer (%" GST_TIME_FORMAT
+          ") is before the previous buffer (%"
+          GST_TIME_FORMAT "). Dropping new buffer.",
+          GST_TIME_ARGS (intime), GST_TIME_ARGS (prevtime));
+      videorate->drop++;
+      if (!videorate->silent)
+        g_object_notify (G_OBJECT (videorate), "drop");
+      gst_buffer_unref (buffer);
+      goto done;
+    }
+
     /* got 2 buffers, see which one is the best */
     do {
       diff1 = prevtime - videorate->next_ts;

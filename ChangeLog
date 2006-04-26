@@ -1,3 +1,15 @@
+2006-04-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Patch by: Edward Hervey  <edward@fluendo.com>
+
+	* gst/videorate/gstvideorate.c: (gst_video_rate_chain):
+	* tests/check/Makefile.am:
+	* tests/check/elements/videorate.c: (assert_videorate_stats),
+	(setup_videorate), (cleanup_videorate), (GST_START_TEST),
+	(videorate_suite), (main):
+	  Fix an infinite loop if frames are passed in with wrongly ordered
+	  timestamps.  Fixes #339013.
+
 2006-04-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	Patch by: Tim-Philipp Müller  <tim at centricular dot net>
