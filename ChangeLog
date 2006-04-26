@@ -1,5 +1,15 @@
 2006-04-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch by: Wim Taymans
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),
+	(gst_ogg_demux_perform_seek):
+	  make sure correct newsegments are sent, so that the decoder
+	  and the demuxer agree on timestamps.  Fixes playback of a lot
+	  of Ogg files that do not start from 0.  Fixes #339833.
+
+2006-04-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	Patch by: Edward Hervey  <edward@fluendo.com>
 
 	* gst/videorate/gstvideorate.c: (gst_video_rate_chain):
