@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2006> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,8 +19,8 @@
  */
 
 
-#ifndef __GST_AUPARSE_H__
-#define __GST_AUPARSE_H__
+#ifndef __GST_AU_PARSE_H__
+#define __GST_AU_PARSE_H__
 
 
 #include <gst/gst.h>
@@ -33,10 +34,10 @@ G_BEGIN_DECLS
 #define GST_AU_PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AU_PARSE,GstAuParse))
 #define GST_AU_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AU_PARSE,GstAuParse))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AU_PARSE,GstAuParseClass))
 #define GST_IS_AU_PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AU_PARSE))
-#define GST_IS_AU_PARSE_CLASS(obj) \
+#define GST_IS_AU_PARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AU_PARSE))
 
 typedef struct _GstAuParse GstAuParse;
@@ -45,19 +46,26 @@ typedef struct _GstAuParseClass GstAuParseClass;
 struct _GstAuParse {
   GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad     *sinkpad;
+  GstPad     *srcpad;
 
-  guchar le;
-  glong offset;
-  glong buffer_offset;
-  gint sample_size;
-  glong size;
-  glong encoding;
-  glong frequency;
-  glong channels;
+  GstCaps    *src_caps;
 
   GstAdapter *adapter;
 
+  /* GstSegment  segment; */
+
+  gint64      offset;        /* where sample data starts */
+  gint64      buffer_offset;
+  guint       sample_size;
+  guint       encoding;
+  guint       samplerate;
+  guint       endianness;
+  guint       channels;
+
+  /* audioconvert only handles float in native endianness,
+   * so we need to swap endianness here ourselves for now */
+  guint       float_swap; /* 0, 32 or 64 */
 };
 
 struct _GstAuParseClass {
@@ -68,4 +76,4 @@ GType gst_au_parse_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_AUPARSE_H__ */
+#endif /* __GST_AU_PARSE_H__ */

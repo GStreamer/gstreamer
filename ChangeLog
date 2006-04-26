@@ -1,3 +1,23 @@
+2006-04-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/auparse/gstauparse.c: (gst_au_parse_base_init),
+	(gst_au_parse_class_init), (gst_au_parse_init),
+	(gst_au_parse_reset), (gst_au_parse_add_srcpad),
+	(gst_au_parse_remove_srcpad), (gst_au_parse_parse_header),
+	(gst_au_parse_chain), (gst_au_parse_src_convert),
+	(gst_au_parse_src_query), (gst_au_parse_handle_seek),
+	(gst_au_parse_sink_event), (gst_au_parse_src_event),
+	(gst_au_parse_change_state):
+	* gst/auparse/gstauparse.h:
+	  Rewrite auparse to suck a little bit less: make source pad
+	  dynamic, so decodebin/playbin work with non-raw formats
+	  like alaw/mulaw; add query function for duration/position
+	  queries; check whether we have enough data before attempting
+	  to parse the header (instead of crashing when that is not the
+	  case); work around audioconvert sucking by swapping endianness
+	  to the native endianness ourselves for float formats; send
+	  initial newsegment event. Fixes #161712.
+
 2006-04-26  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/osxaudio/Makefile.am:
