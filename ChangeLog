@@ -1,3 +1,10 @@
+2006-04-26  Wim Taymans  <wim@fluendo.com>
+
+	* ext/esd/esdsink.c: (gst_esdsink_prepare), (gst_esdsink_delay):
+	Always write ESD_BUF_SIZE bytes and use ESD_MAX_WRITE_SIZE as
+	the size of the ringbuffer. This should fix hangs with older 
+	esd sound servers.
+
 2006-04-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/aalib/gstaasink.c:

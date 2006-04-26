@@ -270,7 +270,6 @@ gst_esdsink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   /* Name used by esound for this connection. */
   const char connname[] = "GStreamer";
-  guint latency;
 
   GST_DEBUG_OBJECT (esdsink, "prepare");
 
@@ -310,11 +309,8 @@ gst_esdsink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   esdsink->rate = spec->rate;
 
-  latency = esd_get_latency (esdsink->ctrl_fd);
-  latency = latency * 44100LL / esdsink->rate;
-
-  spec->segsize = 256 * spec->bytes_per_sample;
-  spec->segtotal = (latency / 256);
+  spec->segsize = ESD_BUF_SIZE;
+  spec->segtotal = (ESD_MAX_WRITE_SIZE / spec->segsize);
   spec->silence_sample[0] = 0;
   spec->silence_sample[1] = 0;
   spec->silence_sample[2] = 0;
@@ -402,7 +398,8 @@ gst_esdsink_delay (GstAudioSink * asink)
 
   latency = esd_get_latency (esdsink->ctrl_fd);
 
-  /* latency is measured in samples at a rate of 44100 */
+  /* latency is measured in samples at a rate of 44100, this 
+   * cannot overflow. */
   latency = latency * 44100LL / esdsink->rate;
 
   GST_DEBUG_OBJECT (asink, "got latency: %u", latency);
