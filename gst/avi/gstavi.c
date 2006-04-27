@@ -26,7 +26,7 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include "gstavidemux.h"
-/*#include "gstavimux.h"*/
+#include "gstavimux.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -38,9 +38,14 @@ plugin_init (GstPlugin * plugin)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 #endif /* ENABLE_NLS */
 
-  return (gst_element_register (plugin, "avidemux", GST_RANK_PRIMARY, GST_TYPE_AVI_DEMUX)       /*&&
-                                                                                                   gst_element_register (plugin, "avimux", GST_RANK_NONE, GST_TYPE_AVIMUX) */
-      );
+  if (!gst_element_register (plugin, "avidemux", GST_RANK_PRIMARY,
+          GST_TYPE_AVI_DEMUX) ||
+      !gst_element_register (plugin, "avimux", GST_RANK_NONE,
+          GST_TYPE_AVI_MUX)) {
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

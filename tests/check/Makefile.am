@@ -18,6 +18,7 @@ clean-local: clean-local-check
 TESTS = $(check_PROGRAMS)
 
 check_PROGRAMS = \
+	elements/avimux \
 	elements/level \
 	elements/matroskamux \
 	elements/cmmldec \

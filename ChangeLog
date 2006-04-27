@@ -1,3 +1,36 @@
+2006-04-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts  <manauw at skynet dot be>
+
+	* gst/avi/Makefile.am:
+	* gst/avi/gstavi.c: (plugin_init):
+	* gst/avi/gstavimux.c: (gst_avi_mux_get_type),
+	(gst_avi_mux_base_init), (gst_avi_mux_finalize),
+	(gst_avi_mux_class_init), (gst_avi_mux_init),
+	(gst_avi_mux_vidsink_set_caps), (gst_avi_mux_audsink_set_caps),
+	(gst_avi_mux_pad_link), (gst_avi_mux_pad_unlink),
+	(gst_avi_mux_request_new_pad), (gst_avi_mux_release_pad),
+	(gst_avi_mux_write_tag), (gst_avi_mux_riff_get_avi_header),
+	(gst_avi_mux_riff_get_avix_header),
+	(gst_avi_mux_riff_get_video_header),
+	(gst_avi_mux_riff_get_audio_header), (gst_avi_mux_add_index),
+	(gst_avi_mux_write_index), (gst_avi_mux_bigfile),
+	(gst_avi_mux_start_file), (gst_avi_mux_stop_file),
+	(gst_avi_mux_restart_file), (gst_avi_mux_handle_event),
+	(gst_avi_mux_fill_queue), (gst_avi_mux_send_pad_data),
+	(gst_avi_mux_strip_buffer), (gst_avi_mux_do_audio_buffer),
+	(gst_avi_mux_do_video_buffer), (gst_avi_mux_do_one_buffer),
+	(gst_avi_mux_loop), (gst_avi_mux_collect_pads),
+	(gst_avi_mux_get_property), (gst_avi_mux_set_property),
+	(gst_avi_mux_change_state):
+	* gst/avi/gstavimux.h:
+	  Port AVI muxer to GStreamer-0.10 (#332031).
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/avimux.c:
+	* tests/check/elements/.cvsignore:
+	  Add unit test for AVI muxer.
+
 2006-04-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_base_init),

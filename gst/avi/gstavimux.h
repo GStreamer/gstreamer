@@ -18,30 +18,27 @@
  */
 
 
-#ifndef __GST_AVIMUX_H__
-#define __GST_AVIMUX_H__
+#ifndef __GST_AVI_MUX_H__
+#define __GST_AVI_MUX_H__
 
 
 #include <gst/gst.h>
+#include <gst/base/gstcollectpads.h>
 #include <gst/riff/riff-ids.h>
 #include "avi-ids.h"
 
+G_BEGIN_DECLS
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-
-#define GST_TYPE_AVIMUX \
-  (gst_avimux_get_type())
-#define GST_AVIMUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AVIMUX,GstAviMux))
-#define GST_AVIMUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AVIMUX,GstAviMux))
-#define GST_IS_AVIMUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AVIMUX))
-#define GST_IS_AVIMUX_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVIMUX))
+#define GST_TYPE_AVI_MUX \
+  (gst_avi_mux_get_type())
+#define GST_AVI_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AVI_MUX,GstAviMux))
+#define GST_AVI_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AVI_MUX,GstAviMuxClass))
+#define GST_IS_AVI_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AVI_MUX))
+#define GST_IS_AVI_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVI_MUX))
 
 
 typedef struct _GstAviMux GstAviMux;
@@ -51,11 +48,13 @@ struct _GstAviMux {
   GstElement element;
 
   /* pads */
-  GstPad *srcpad;
-  GstPad *audiosinkpad;
-  gboolean audio_pad_connected, audio_pad_eos;
-  GstPad *videosinkpad;
-  gboolean video_pad_connected, video_pad_eos;
+  GstPad              *srcpad;
+  GstCollectData      *audiocollectdata;
+  gboolean             audio_pad_connected;
+  GstCollectData      *videocollectdata;
+  gboolean             video_pad_connected;
+  GstCollectPads      *collect;
+  GstPadEventFunction  collect_event;
 
   /* the AVI header */
   gst_riff_avih avi_hdr;
@@ -79,6 +78,8 @@ struct _GstAviMux {
 
   /* tags */
   GstTagList *tags;
+  GstTagList *tags_snap;
+  guint32 tag_size;
 
   /* information about the AVI index ('idx') */
   gst_riff_index_entry *idx;
@@ -91,21 +92,15 @@ struct _GstAviMux {
 
   /* whether to use "large AVI files" or just stick to small indexed files */
   gboolean enable_large_avi;
-
-  /* in order to be usable as a loopbased element, we need an internal
-   * 'buffered' buffer for each pad, so one for audio, one for video */
-  GstBuffer *audio_buffer_queue, *video_buffer_queue;
 };
 
 struct _GstAviMuxClass {
   GstElementClass parent_class;
 };
 
-GType gst_avimux_get_type(void);
+GType gst_avi_mux_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 
-#endif /* __GST_AVIMUX_H__ */
+#endif /* __GST_AVI_MUX_H__ */
