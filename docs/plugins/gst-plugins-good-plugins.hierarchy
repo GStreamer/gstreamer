@@ -106,6 +106,7 @@ GObject
       GstEFence
       GstCutter
       GstAviDemux
+      GstAviMux
       GstAuParse
       GstAlpha
       GstTagDemux

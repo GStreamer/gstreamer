@@ -18,5 +18,12 @@
     Wim Taymans &lt;wim.taymans@chello.be&gt;
     Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
     </element>
+    <element>
+      <name>avimux</name>
+      <longname>Avi muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>Muxes audio and video into an avi stream</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
   </elements>
 </plugin>

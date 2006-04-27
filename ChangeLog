@@ -1,5 +1,16 @@
 2006-04-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavimux.c:
+	  Add docs for both avidemux and avimux.
+
+2006-04-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Mark Nauwelaerts  <manauw at skynet dot be>
 
 	* gst/avi/Makefile.am:

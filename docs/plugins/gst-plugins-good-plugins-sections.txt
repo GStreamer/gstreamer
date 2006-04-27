@@ -23,6 +23,22 @@ GstAutoVideoSinkClass
 </SECTION>
 
 <SECTION>
+<FILE>element-avidemux</FILE>
+GstAviDemux
+<TITLE>avidemux</TITLE>
+<SUBSECTION Standard>
+GstAviDemuxClass
+</SECTION>
+
+<SECTION>
+<FILE>element-avimux</FILE>
+GstAviMux
+<TITLE>avimux</TITLE>
+<SUBSECTION Standard>
+GstAviMuxClass
+</SECTION>
+
+<SECTION>
 <FILE>element-cairotimeoverlay</FILE>
 GstCairoTimeOverlay
 <TITLE>cairotimeoverlay</TITLE>
