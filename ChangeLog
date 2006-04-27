@@ -1,3 +1,8 @@
+2006-04-26  David Schleef  <ds@schleef.org>
+
+	* gst/videoscale/gstvideoscale.c: Add call to oil_init().
+	  Fixes #338897.
+
 2006-04-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
