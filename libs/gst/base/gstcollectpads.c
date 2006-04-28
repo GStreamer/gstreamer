@@ -74,16 +74,16 @@
 GST_DEBUG_CATEGORY_STATIC (collect_pads_debug);
 #define GST_CAT_DEFAULT collect_pads_debug
 
-GST_BOILERPLATE (GstCollectPads, gst_collect_pads, GstObject, GST_TYPE_OBJECT)
+GST_BOILERPLATE (GstCollectPads, gst_collect_pads, GstObject, GST_TYPE_OBJECT);
 
-     static GstFlowReturn gst_collect_pads_chain (GstPad * pad,
-    GstBuffer * buffer);
-     static gboolean gst_collect_pads_event (GstPad * pad, GstEvent * event);
-     static void gst_collect_pads_finalize (GObject * object);
-     static void gst_collect_pads_init (GstCollectPads * pads,
+static GstFlowReturn gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_collect_pads_event (GstPad * pad, GstEvent * event);
+static void gst_collect_pads_finalize (GObject * object);
+static void gst_collect_pads_init (GstCollectPads * pads,
     GstCollectPadsClass * g_class);
 
-     static void gst_collect_pads_base_init (gpointer g_class)
+static void
+gst_collect_pads_base_init (gpointer g_class)
 {
   GST_DEBUG_CATEGORY_INIT (collect_pads_debug, "collectpads", 0,
       "GstCollectPads");
@@ -638,7 +638,9 @@ gst_collect_pads_is_collected (GstCollectPads * pads, GstFlowReturn * ret)
   /* We call the collected function as long as our condition matches.
      FIXME: should we error out if the collect function did not pop anything ?
      we can get a busy loop here if the element does not pop from the collect
-     function */
+     function
+     FIXME: Shouldn't we also check gst_pad_is_blocked () somewhere
+   */
   while (((pads->queuedpads + pads->eospads) >= pads->numpads) && pads->func) {
     GST_DEBUG ("All active pads (%d) have data, calling %s",
         pads->numpads, GST_DEBUG_FUNCPTR_NAME (pads->func));
@@ -652,7 +654,7 @@ gst_collect_pads_is_collected (GstCollectPads * pads, GstFlowReturn * ret)
 
 beach:
   if (!res) {
-    GST_DEBUG ("Not all active pads have data, continuing");
+    GST_DEBUG ("Not all active pads (%d) have data, continuing", pads->numpads);
   }
 
   if (ret) {
@@ -739,8 +741,8 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
 
       data->abidata.ABI.new_segment = TRUE;
 
-      /* We eat this event */
-      gst_event_unref (event);
+      /* forward to src-pad, sink-elements like to get the event */
+      gst_pad_event_default (pad, event);
       return TRUE;
     }
     default:

@@ -1707,7 +1707,8 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
 
   bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
-  GST_DEBUG_OBJECT (basesink, "event %p", event);
+  GST_DEBUG_OBJECT (basesink, "event %p (%s)", event,
+      GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
