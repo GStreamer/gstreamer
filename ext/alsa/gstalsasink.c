@@ -58,7 +58,7 @@
 #include <gst/audio/multichannel.h>
 
 /* elementfactory information */
-static GstElementDetails gst_alsasink_details =
+static const GstElementDetails gst_alsasink_details =
 GST_ELEMENT_DETAILS ("Audio sink (ALSA)",
     "Sink/Audio",
     "Output to a sound card via ALSA",
@@ -386,8 +386,20 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
   GstAlsaSink *sink = GST_ALSA_SINK (bsink);
   GstCaps *tmpl_caps;
   GstCaps *caps = NULL;
+  GstStructure *s;
   guint min, max;
-  gint i, err, min_channels, max_channels;
+  gint i, err, width;
+  gint min_channels, max_channels;
+  guint bits = 0;
+  static const int audio_fmts[] = {
+    SND_PCM_FORMAT_U8, SND_PCM_FORMAT_S8,
+    SND_PCM_FORMAT_S16, SND_PCM_FORMAT_U16,
+    /*SND_PCM_FORMAT_S24, SND_PCM_FORMAT_U24, */
+    SND_PCM_FORMAT_S32, SND_PCM_FORMAT_U32
+  };
+  static const guint audio_bits[] = {
+    8, 8, 16, 16, 32, 32
+  };
 
   if (sink->handle == NULL) {
     GST_DEBUG_OBJECT (sink, "device not open, using template caps");
@@ -435,6 +447,14 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
 
   snd_pcm_format_mask_alloca (&mask);
   snd_pcm_hw_params_get_format_mask (hw_params, mask);
+  for (i = 0; i < 6; i++) {
+    if (snd_pcm_format_mask_test (mask, audio_fmts[i])) {
+      bits |= audio_bits[i];
+    }
+  }
+  GST_LOG_OBJECT (sink, "Bits = 0x%08x", bits);
+
+  /* fill caps according to capabilities gathered above */
 
   element_class = GST_ELEMENT_GET_CLASS (sink);
   pad_template = gst_element_class_get_pad_template (element_class, "sink");
@@ -446,8 +466,14 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
   caps = gst_caps_new_empty ();
 
   for (i = 0; i < gst_caps_get_size (tmpl_caps); ++i) {
-    caps_add_channel_configuration (caps,
-        gst_caps_get_structure (tmpl_caps, i), min_channels, max_channels);
+    s = gst_caps_get_structure (tmpl_caps, i);
+    gst_structure_get_int (s, "width", &width);
+    /* TODO: filter signed/unsigned */
+    if (bits & width) {
+      caps_add_channel_configuration (caps, s, min_channels, max_channels);
+    } else {
+      GST_LOG_OBJECT (sink, "width = %d unsupported", width);
+    }
   }
 
   sink->cached_caps = gst_caps_ref (caps);

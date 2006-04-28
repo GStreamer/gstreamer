@@ -1,3 +1,9 @@
+2006-04-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_getcaps),
+	(alsasink_parse_spec):
+        query witdh capabilities from alsa, fixes #338919
+
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init),
