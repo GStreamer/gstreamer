@@ -1,5 +1,14 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Stefan Kost <ensonic at sonicpulse dot de>
+
+	* gst/gstbin.c: (gst_bin_handle_message_func):
+	Update docs.
+	Don't leak bin refcount when a state recalc is
+	in progress and we delay another one #339808.
+
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-TODO.txt:
 	Mention QoS as an ongoing work item.
 

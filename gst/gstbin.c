@@ -141,13 +141,13 @@
  * </variablelist>
  *
  * A #GstBin will by default forward any event sent to it to all sink elements.
- * If all the sinks return TRUE, the bin will also return TRUE. If no sinks are
- * in the bin, the event handler will return TRUE.
+ * If all the sinks return TRUE, the bin will also return TRUE, else FALSE is
+ * returned. If no sinks are in the bin, the event handler will return TRUE.
  *
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2006-03-12 (0.10.5)
+ * Last reviewed on 2006-04-28 (0.10.6)
  */
 
 #include "gst_private.h"
@@ -2065,9 +2065,9 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       gst_message_unref (message);
 
       klass = GST_BIN_GET_CLASS (bin);
-      gst_object_ref (bin);
       if (!bin->polling) {
         GST_DEBUG_OBJECT (bin, "pushing recalc on thread pool");
+        gst_object_ref (bin);
         g_thread_pool_push (klass->pool, bin, NULL);
       } else {
         GST_DEBUG_OBJECT (bin,
