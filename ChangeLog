@@ -1,5 +1,10 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_video_test_src_create):
+	Handle 0/1 framerate correctly Fixes #331901.
+
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* tests/check/elements/audioconvert.c: (get_float_caps),
 	(GST_START_TEST), (audioconvert_suite):
 	Added check for correct clipping when doing float samples

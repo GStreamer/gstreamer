@@ -504,6 +504,10 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   if (src->fourcc == NULL)
     goto not_negotiated;
 
+  /* 0 framerate and we are at the second frame, eos */
+  if (src->rate_numerator == 0 && src->n_frames == 1)
+    goto eos;
+
   newsize = gst_video_test_src_get_size (src, src->width, src->height);
 
   g_return_val_if_fail (newsize > 0, GST_FLOW_ERROR);
@@ -551,6 +555,11 @@ not_negotiated:
     GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before get function"));
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+eos:
+  {
+    GST_DEBUG_OBJECT (src, "eos: 0 framerate and frame %d", src->n_frames);
+    return GST_FLOW_UNEXPECTED;
   }
 no_buffer:
   {
