@@ -146,6 +146,114 @@ GST_START_TEST (test_one)
 
 GST_END_TEST;
 
+GST_START_TEST (test_more)
+{
+  GstElement *videorate;
+  GstBuffer *first, *second, *third, *outbuffer;
+  GList *l;
+  GstCaps *caps;
+
+  videorate = setup_videorate ();
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  assert_videorate_stats (videorate, "creation", 0, 0, 0, 0);
+
+  /* first buffer */
+  first = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (first) = 0;
+  memset (GST_BUFFER_DATA (first), 1, 4);
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_buffer_set_caps (first, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+  gst_buffer_ref (first);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, first) == GST_FLOW_OK);
+  /* ... and it is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (first, "first", 2);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+  assert_videorate_stats (videorate, "first buffer", 1, 0, 0, 0);
+
+  /* second buffer; inbetween second and third output frame's timestamp */
+  second = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (second) = GST_SECOND * 3 / 50;
+  memset (GST_BUFFER_DATA (second), 2, 4);
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_buffer_set_caps (second, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
+  gst_buffer_ref (second);
+
+  /* pushing gives away one of my references ... */
+  fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
+  /* ... and it is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (second, "second", 2);
+
+  /* ... and the first one is pushed out, with timestamp 0 */
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  assert_videorate_stats (videorate, "second buffer", 2, 1, 0, 0);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 2);
+
+  outbuffer = buffers->data;
+  fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (outbuffer), 0);
+
+  /* third buffer */
+  third = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (third) = GST_SECOND * 12 / 50;
+  memset (GST_BUFFER_DATA (third), 3, 4);
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_buffer_set_caps (third, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
+  gst_buffer_ref (third);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, third) == GST_FLOW_OK);
+  /* ... and it is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (third, "third", 2);
+
+  /* submitting the third buffer has triggered flushing of three more frames */
+  assert_videorate_stats (videorate, "third buffer", 3, 4, 0, 2);
+
+  /* check timestamp and source correctness */
+  l = buffers;
+  fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data), 0);
+  fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 1);
+  l = g_list_next (l);
+  fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data), GST_SECOND / 25);
+  fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 2);
+  l = g_list_next (l);
+  fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data),
+      GST_SECOND * 2 / 25);
+  fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 2);
+  l = g_list_next (l);
+  fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data),
+      GST_SECOND * 3 / 25);
+  fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 2);
+
+  fail_unless_equals_int (g_list_length (buffers), 4);
+  /* one held by us, three held by each output frame taken from the second */
+  ASSERT_BUFFER_REFCOUNT (second, "second", 4);
+
+  /* now send EOS */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* submitting eos should flush out two more frames for tick 8 and 10 */
+  /* FIXME: right now it only flushes out one, so out is 5 instead of 6 ! */
+  assert_videorate_stats (videorate, "eos", 3, 5, 0, 2);
+  fail_unless_equals_int (g_list_length (buffers), 5);
+
+  /* cleanup */
+  gst_buffer_unref (first);
+  gst_buffer_unref (second);
+  gst_buffer_unref (third);
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
 /* frames at 1, 0, 2 -> second one should be ignored */
 GST_START_TEST (test_wrong_order_from_zero)
 {
@@ -176,8 +284,7 @@ GST_START_TEST (test_wrong_order_from_zero)
   /* ... and it is now stuck inside videorate */
   ASSERT_BUFFER_REFCOUNT (first, "first", 2);
   fail_unless_equals_int (g_list_length (buffers), 0);
-  /* FIXME: in is not counted properly, should be 1 */
-  assert_videorate_stats (videorate, "first", 0, 0, 0, 0);
+  assert_videorate_stats (videorate, "first", 1, 0, 0, 0);
 
   /* second buffer */
   second = gst_buffer_new_and_alloc (4);
@@ -191,13 +298,12 @@ GST_START_TEST (test_wrong_order_from_zero)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
-  /* ... and it got dropped because it was before the first */
+  /* ... and it is now dropped because it is too old */
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   fail_unless_equals_int (g_list_length (buffers), 0);
 
-  /* ... and the first one is now dropped */
-  /* FIXME: still a bug with in, needs to be 2 */
-  assert_videorate_stats (videorate, "second", 1, 0, 1, 0);
+  /* ... and the first one is still there */
+  assert_videorate_stats (videorate, "second", 2, 0, 1, 0);
   ASSERT_BUFFER_REFCOUNT (first, "first", 2);
 
   /* third buffer */
@@ -221,8 +327,7 @@ GST_START_TEST (test_wrong_order_from_zero)
   ASSERT_BUFFER_REFCOUNT (first, "first", 39);
   ASSERT_BUFFER_REFCOUNT (second, "second", 1);
   ASSERT_BUFFER_REFCOUNT (third, "third", 2);
-  /* FIXME: you guessed it ... */
-  assert_videorate_stats (videorate, "third", 2, 38, 1, 37);
+  assert_videorate_stats (videorate, "third", 3, 38, 1, 37);
 
   /* verify last buffer */
   outbuffer = g_list_last (buffers)->data;
@@ -269,8 +374,7 @@ GST_START_TEST (test_wrong_order)
   /* ... and it is now stuck inside videorate */
   ASSERT_BUFFER_REFCOUNT (first, "first", 2);
   fail_unless_equals_int (g_list_length (buffers), 0);
-  /* FIXME: in is not counted properly, should be 1 */
-  assert_videorate_stats (videorate, "first", 0, 0, 0, 0);
+  assert_videorate_stats (videorate, "first", 1, 0, 0, 0);
 
   /* second buffer */
   second = gst_buffer_new_and_alloc (4);
@@ -288,8 +392,7 @@ GST_START_TEST (test_wrong_order)
   ASSERT_BUFFER_REFCOUNT (second, "second", 2);
   /* and it created 13 output buffers as copies of the first frame */
   fail_unless_equals_int (g_list_length (buffers), 13);
-  /* FIXME: guess */
-  assert_videorate_stats (videorate, "second", 1, 13, 0, 12);
+  assert_videorate_stats (videorate, "second", 2, 13, 0, 12);
   ASSERT_BUFFER_REFCOUNT (first, "first", 14);
 
   /* third buffer */
@@ -312,8 +415,7 @@ GST_START_TEST (test_wrong_order)
   ASSERT_BUFFER_REFCOUNT (first, "first", 14);
   ASSERT_BUFFER_REFCOUNT (second, "second", 26);
   /* three frames submitted; two of them output as is, and 36 duplicated */
-  /* FIXME: guess */
-  assert_videorate_stats (videorate, "third", 2, 38, 0, 36);
+  assert_videorate_stats (videorate, "third", 3, 38, 0, 36);
 
   /* fourth buffer */
   fourth = gst_buffer_new_and_alloc (4);
@@ -327,20 +429,20 @@ GST_START_TEST (test_wrong_order)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, fourth) == GST_FLOW_OK);
-  /* ... and it is dropped from videorate because 0 < 2 */
+  /* ... and it is dropped */
   ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
 
   fail_unless_equals_int (g_list_length (buffers), 38);
-  ASSERT_BUFFER_REFCOUNT (first, "first", 14);  /* 13 frames pushed out */
+  ASSERT_BUFFER_REFCOUNT (first, "first", 14);
   ASSERT_BUFFER_REFCOUNT (second, "second", 26);
-  /* FIXME: guess */
-  assert_videorate_stats (videorate, "fourth", 3, 38, 1, 36);
+  assert_videorate_stats (videorate, "fourth", 4, 38, 1, 36);
 
   /* verify last buffer */
   outbuffer = g_list_last (buffers)->data;
   fail_unless (GST_IS_BUFFER (outbuffer));
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (outbuffer),
       GST_SECOND * 37 / 25);
+
 
   /* cleanup */
   gst_buffer_unref (first);
@@ -352,6 +454,42 @@ GST_START_TEST (test_wrong_order)
 
 GST_END_TEST;
 
+
+/* if no framerate is negotiated, we should not be able to push a buffer */
+GST_START_TEST (test_no_framerate)
+{
+  GstElement *videorate;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+
+  videorate = setup_videorate ();
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  inbuffer = gst_buffer_new_and_alloc (4);
+  memset (GST_BUFFER_DATA (inbuffer), 0, 4);
+  caps = gst_caps_from_string (VIDEO_CAPS_NO_FRAMERATE_STRING);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* take a ref so we can later check refcount */
+  gst_buffer_ref (inbuffer);
+
+  /* no framerate is negotiated so pushing should fail */
+  fail_if (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  gst_buffer_unref (inbuffer);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* cleanup */
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
+
 Suite *
 videorate_suite (void)
 {
@@ -359,8 +497,11 @@ videorate_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_one);
+  tcase_add_test (tc_chain, test_more);
   tcase_add_test (tc_chain, test_wrong_order_from_zero);
   tcase_add_test (tc_chain, test_wrong_order);
+  tcase_add_test (tc_chain, test_no_framerate);
 
   return s;
 }

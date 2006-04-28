@@ -28,29 +28,35 @@
  * used to interpolate frames (yet).
  * </para>
  * <para>
- * By default the element will simply negotiate the same framerate on its source and
- * sink pad and will adjust timestamps/insert/drop frames in case the input stream
- * is not respecting that framerate.
+ * By default the element will simply negotiate the same framerate on its
+ * source and sink pad and will adjust timestamps/insert/drop frames in case
+ * the input stream is not respecting that framerate.
  * </para>
  * <para>
- * A conversion to another framerate can be forced by using filtered caps on the source
- * pad.
+ * A conversion to another framerate can be forced by using filtered caps on
+ * the source pad.
  * </para>
  * <para>
- * The properties "in", "out", "duplicate" and "drop" can be read to obtain 
- * information about respectively received frame, outputed frame, duplicated frames
- * and dropped frames.
- * When the "silent" property is set to FALSE, a GObject property notification will
- * be emited whenever one of the "duplicate" or "drop" values changed. This can 
- * potentially cause performance degradation. Also note that property notification 
- * will happen in the streaming thread so applications should be prepared for this.
+ * The properties "in", "out", "duplicate" and "drop" can be read to obtain
+ * information about number of input frames, output frames, dropped frames
+ * (i.e. the number of unused input frames) and duplicated frames (i.e. the
+ *  number of times an input frame was duplicated, beside being used normally).
+ *
+ * An input stream that needs no adjustments will thus never have dropped or
+ * duplicated frames.
+ *
+ * When the "silent" property is set to FALSE, a GObject property notification
+ * will be emitted whenever one of the "duplicate" or "drop" values changes.
+ * This can potentially cause performance degradation.
+ * Note that property notification will happen from the streaming thread, so
+ * applications should be prepared for this.
  * </para>
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
  * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videorate ! video/x-raw-yuv,framerate=15/1 ! xvimagesink
  * </programlisting>
- * Decode an Ogg/Theora and adjust the framerate to 15 fps. 
+ * Decode an Ogg/Theora file and adjust the framerate to 15 fps before playing.
  * To create the test Ogg/Theora file refer to the documentation of theoraenc.
  * </para>
  * </refsect2>
@@ -358,7 +364,7 @@ no_transform:
 static void
 gst_video_rate_reset (GstVideoRate * videorate)
 {
-  GST_DEBUG ("resetting data");
+  GST_DEBUG ("resetting internal variables");
 
   videorate->in = 0;
   videorate->out = 0;
@@ -450,6 +456,7 @@ static void
 gst_video_rate_swap_prev (GstVideoRate * videorate, GstBuffer * buffer,
     gint64 time)
 {
+  GST_LOG_OBJECT (videorate, "swap_prev: storing buffer %p in prev", buffer);
   if (videorate->prevbuf)
     gst_buffer_unref (videorate->prevbuf);
   videorate->prevbuf = buffer;
@@ -530,7 +537,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
 
   videorate = GST_VIDEO_RATE (gst_pad_get_parent (pad));
 
-  /* make sure the denominators have to be != 0 */
+  /* make sure the denominators are not 0 */
   if (videorate->from_rate_denominator == 0 ||
       videorate->to_rate_denominator == 0)
     goto not_negotiated;
@@ -543,9 +550,10 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
   intime = gst_segment_to_running_time (&videorate->segment,
       GST_FORMAT_TIME, in_ts);
 
-  /* pull in 2 buffers */
+  /* we need to have two buffers to compare */
   if (videorate->prevbuf == NULL) {
     gst_video_rate_swap_prev (videorate, buffer, intime);
+    videorate->in++;
     videorate->next_ts = 0;
   } else {
     GstClockTime prevtime;
@@ -639,6 +647,7 @@ done:
 not_negotiated:
   {
     GST_WARNING_OBJECT (videorate, "no framerate negotiated");
+    gst_buffer_unref (buffer);
     res = GST_FLOW_NOT_NEGOTIATED;
     goto done;
   }

@@ -1,3 +1,15 @@
+2006-04-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/videorate/gstvideorate.c: (gst_video_rate_reset),
+	(gst_video_rate_swap_prev), (gst_video_rate_chain):
+	  fix up docs
+	  fix a leak when no caps negotiated
+	  fix counting of input frames
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/videorate.c: (assert_videorate_stats),
+	(GST_START_TEST), (videorate_suite):
+	  add tests for these
+
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstringbuffer.c:

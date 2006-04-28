@@ -2,6 +2,7 @@
 audioconvert
 audioresample
 audiotestsrc
+videorate
 videotestsrc
 volume
 vorbisdec
