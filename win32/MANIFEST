@@ -7,6 +7,8 @@ win32/common/gtchar.h
 win32/common/libgstbase.def
 win32/common/libgstcontroller.def
 win32/common/libgstreamer.def
+win32/common/libgstnet.def
+win32/common/libgstdataprotocol.def
 win32/common/gstenumtypes.c
 win32/common/gstconfig.h
 win32/common/gstenumtypes.h
@@ -17,8 +19,11 @@ win32/vs6/gstreamer.dsw
 win32/vs6/gst_inspect.dsp
 win32/vs6/gst_launch.dsp
 win32/vs6/libgstbase.dsp
-win32/vs6/libgstcoreelements.dsp
+win32/vs6/libgstcontroller.dsp
 win32/vs6/libgstreamer.dsp
+win32/vs6/libgstnet.dsp
+win32/vs6/libgstdataprotocol.dsp
+win32/vs6/libgstcoreelements.dsp
 win32/vs7/grammar.vcproj
 win32/vs7/gst-inspect.vcproj
 win32/vs7/gst-launch.vcproj
