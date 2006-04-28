@@ -3,11 +3,13 @@ win32/common/libgstaudio.def
 win32/common/libgstriff.def
 win32/common/libgsttag.def
 win32/common/libgstvideo.def
+win32/common/libgstinterfaces.def
 win32/common/interfaces-enumtypes.c
 win32/common/interfaces-enumtypes.h
 win32/common/multichannel-enumtypes.c
 win32/common/multichannel-enumtypes.h
 win32/common/_stdint.h
+win32/vs6/grammar.dsp
 win32/vs6/gst_plugins_base.dsw
 win32/vs6/libgstadder.dsp
 win32/vs6/libgstaudio.dsp
@@ -21,6 +23,7 @@ win32/vs6/libgstffmpegcolorspace.dsp
 win32/vs6/libgstinterfaces.dsp
 win32/vs6/libgstnetbuffer.dsp
 win32/vs6/libgstogg.dsp
+win32/vs6/libgstplaybin.dsp
 win32/vs6/libgstriff.dsp
 win32/vs6/libgstrtp.dsp
 win32/vs6/libgstsinesrc.dsp
@@ -29,5 +32,9 @@ win32/vs6/libgsttag.dsp
 win32/vs6/libgsttheora.dsp
 win32/vs6/libgsttypefindfunctions.dsp
 win32/vs6/libgstvideo.dsp
+win32/vs6/libgstvideorate.dsp
+win32/vs6/libgstvideoscale.dsp
+win32/vs6/libgstvideotestsrc.dsp
+win32/vs6/libgstvolume.dsp
 win32/vs6/libgstvorbis.dsp
 win32/MANIFEST
