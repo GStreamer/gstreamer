@@ -1,5 +1,20 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ring_buffer_set_callback), (gst_ring_buffer_acquire),
+	(gst_ring_buffer_release), (gst_ring_buffer_is_acquired),
+	(gst_ring_buffer_set_flushing), (gst_ring_buffer_start),
+	(gst_ring_buffer_pause), (gst_ring_buffer_stop),
+	(gst_ring_buffer_delay), (gst_ring_buffer_samples_done),
+	(gst_ring_buffer_set_sample), (gst_ring_buffer_clear_all),
+	(gst_ring_buffer_commit), (gst_ring_buffer_read),
+	(gst_ring_buffer_prepare_read), (gst_ring_buffer_advance),
+	(gst_ring_buffer_clear), (gst_ring_buffer_may_start):
+	Check arguments passed to public functions instead of
+	crashing.
+
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/gstbaseaudiosrc.c: (gst_base_audio_src_init),
 	(gst_base_audio_src_get_time), (gst_base_audio_src_create):
 	GstBaseAudioSrc must be live or it does not work.

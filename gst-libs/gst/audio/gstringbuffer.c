@@ -374,7 +374,7 @@ void
 gst_ring_buffer_set_callback (GstRingBuffer * buf, GstRingBufferCallback cb,
     gpointer user_data)
 {
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (GST_IS_RING_BUFFER (buf));
 
   GST_OBJECT_LOCK (buf);
   buf->callback = cb;
@@ -557,7 +557,7 @@ gst_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   gint i, j;
   gint segsize, bps;
 
-  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
   GST_DEBUG_OBJECT (buf, "acquiring device");
 
@@ -644,7 +644,7 @@ gst_ring_buffer_release (GstRingBuffer * buf)
   gboolean res = FALSE;
   GstRingBufferClass *rclass;
 
-  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
   GST_DEBUG_OBJECT (buf, "releasing device");
 
@@ -709,7 +709,7 @@ gst_ring_buffer_is_acquired (GstRingBuffer * buf)
 {
   gboolean res;
 
-  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
   GST_OBJECT_LOCK (buf);
   res = buf->acquired;
@@ -729,6 +729,8 @@ gst_ring_buffer_is_acquired (GstRingBuffer * buf)
 void
 gst_ring_buffer_set_flushing (GstRingBuffer * buf, gboolean flushing)
 {
+  g_return_if_fail (GST_IS_RING_BUFFER (buf));
+
   GST_OBJECT_LOCK (buf);
   buf->abidata.ABI.flushing = flushing;
 
@@ -756,7 +758,7 @@ gst_ring_buffer_start (GstRingBuffer * buf)
   GstRingBufferClass *rclass;
   gboolean resume = FALSE;
 
-  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
   GST_DEBUG_OBJECT (buf, "starting ringbuffer");
 
@@ -865,7 +867,7 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
 {
   gboolean res = FALSE;
 
-  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
   GST_OBJECT_LOCK (buf);
   if (G_UNLIKELY (buf->abidata.ABI.flushing))
@@ -899,7 +901,7 @@ gst_ring_buffer_stop (GstRingBuffer * buf)
   gboolean res = FALSE;
   GstRingBufferClass *rclass;
 
-  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
   GST_DEBUG_OBJECT (buf, "stopping");
 
@@ -955,7 +957,7 @@ gst_ring_buffer_delay (GstRingBuffer * buf)
   GstRingBufferClass *rclass;
   guint res;
 
-  g_return_val_if_fail (buf != NULL, 0);
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), 0);
 
   res = 0;
 
@@ -989,7 +991,7 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
   guint64 raw, samples;
   guint delay;
 
-  g_return_val_if_fail (buf != NULL, 0);
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), 0);
 
   /* get the amount of segments we processed */
   segdone = g_atomic_int_get (&buf->segdone);
@@ -1025,7 +1027,7 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
 void
 gst_ring_buffer_set_sample (GstRingBuffer * buf, guint64 sample)
 {
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (GST_IS_RING_BUFFER (buf));
 
   if (sample == -1)
     sample = 0;
@@ -1057,7 +1059,7 @@ gst_ring_buffer_clear_all (GstRingBuffer * buf)
 {
   gint i;
 
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (GST_IS_RING_BUFFER (buf));
 
   /* not fatal, we just are not negotiated yet */
   if (G_UNLIKELY (buf->spec.segtotal <= 0))
@@ -1159,7 +1161,7 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
   guint8 *dest;
   guint to_write;
 
-  g_return_val_if_fail (buf != NULL, -1);
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), -1);
   g_return_val_if_fail (buf->data != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
 
@@ -1265,7 +1267,7 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
   gint segsize, segtotal, bps, sps;
   guint8 *dest;
 
-  g_return_val_if_fail (buf != NULL, -1);
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), -1);
   g_return_val_if_fail (buf->data != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
 
@@ -1370,7 +1372,7 @@ gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
   guint8 *data;
   gint segdone;
 
-  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_RING_BUFFER (buf), FALSE);
 
   /* buffer must be started */
   if (g_atomic_int_get (&buf->state) != GST_RING_BUFFER_STATE_STARTED)
@@ -1414,7 +1416,7 @@ gst_ring_buffer_prepare_read (GstRingBuffer * buf, gint * segment,
 void
 gst_ring_buffer_advance (GstRingBuffer * buf, guint advance)
 {
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (GST_IS_RING_BUFFER (buf));
 
   /* update counter */
   g_atomic_int_add (&buf->segdone, advance);
@@ -1445,7 +1447,7 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
 {
   guint8 *data;
 
-  g_return_if_fail (buf != NULL);
+  g_return_if_fail (GST_IS_RING_BUFFER (buf));
 
   /* no data means it's already cleared */
   if (G_UNLIKELY (buf->data == NULL))
@@ -1480,6 +1482,8 @@ gst_ring_buffer_clear (GstRingBuffer * buf, gint segment)
 void
 gst_ring_buffer_may_start (GstRingBuffer * buf, gboolean allowed)
 {
+  g_return_if_fail (GST_IS_RING_BUFFER (buf));
+
   GST_LOG_OBJECT (buf, "may start: %d", allowed);
   gst_atomic_int_set (&buf->abidata.ABI.may_start, allowed);
 }
