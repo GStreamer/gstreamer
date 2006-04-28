@@ -472,7 +472,7 @@ _wrap_GstBaseTransform__proxy_do_get_unit_size (GstBaseTransform * self,
     }
 
     if (caps)
-        py_caps = pyg_boxed_new(GST_TYPE_CAPS, caps, FALSE, TRUE); // should copyval be TRUE instead?
+        py_caps = pyg_boxed_new(GST_TYPE_CAPS, caps, FALSE, FALSE); // should copyval be TRUE instead?
     else {
         Py_INCREF (Py_None);
         py_caps = Py_None;

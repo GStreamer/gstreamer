@@ -1,3 +1,13 @@
+2006-04-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst/arg-types.py:
+	Caps used as arguments of virtual methods should keep their initial
+	refcount when calling the python methods.
+	This is similar to the patch done for GstMiniObjects.
+	* gst/gstbase.override:
+	Adjust the gst.BaseTransform.get_unit_size() virtual method for above
+	fix.
+
 2006-04-28  Артём Попов  <artfwo@gmail.com>
 
 	reviewed by: Edward Hervey  <edward@fluendo.com>
