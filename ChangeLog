@@ -1,5 +1,11 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstminiobject.c: (gst_value_take_mini_object):
+	Taking a NULL miniobject is valid, fix the case where
+	we try to unref the NULL miniobject.
+
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Stefan Kost <ensonic at sonicpulse dot de>
 
 	* gst/gstbin.c: (gst_bin_handle_message_func):

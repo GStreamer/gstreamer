@@ -425,8 +425,11 @@ gst_value_take_mini_object (GValue * value, GstMiniObject * mini_object)
   g_return_if_fail (mini_object == NULL || GST_IS_MINI_OBJECT (mini_object));
 
   pointer_p = &value->data[0].v_pointer;
+  /* takes additional refcount */
   gst_mini_object_replace ((GstMiniObject **) pointer_p, mini_object);
-  gst_mini_object_unref (mini_object);
+  /* remove additional refcount */
+  if (mini_object)
+    gst_mini_object_unref (mini_object);
 }
 
 /**
