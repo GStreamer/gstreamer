@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.43 2006/04/12 11:04:53 thomasvs Exp $
+# $Id: sv.po,v 1.44 2006/04/28 10:41:57 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-04-12 12:59+0200\n"
+"POT-Creation-Date: 2006-04-26 19:15+0200\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -96,7 +96,7 @@ msgstr "Kunde inte stänga vfs-filen \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2697
+#: ext/ogg/gstoggdemux.c:2710
 msgid "Internal data stream error."
 msgstr ""
 

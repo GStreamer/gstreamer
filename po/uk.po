@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-04-12 12:59+0200\n"
+"POT-Creation-Date: 2006-04-26 19:15+0200\n"
 "PO-Revision-Date: 2004-08-03 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -94,7 +94,7 @@ msgstr "Не вдається закрити файл віртуальної ф�
 msgid "Error while writing to file \"%s\"."
 msgstr "Помилка закривання файлу \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2697
+#: ext/ogg/gstoggdemux.c:2710
 msgid "Internal data stream error."
 msgstr ""
 

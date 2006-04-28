@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-04-12 12:59+0200\n"
+"POT-Creation-Date: 2006-04-26 19:15+0200\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -92,7 +92,7 @@ msgstr "Could not close vfs file \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Error closing file \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2697
+#: ext/ogg/gstoggdemux.c:2710
 msgid "Internal data stream error."
 msgstr ""
 
