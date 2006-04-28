@@ -1,5 +1,11 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videorate/gstvideorate.c: (gst_video_rate_event),
+	(gst_video_rate_chain):
+	Print more debugging info.
+
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/audioresample/gstaudioresample.c: (gst_audioresample_init),
 	(resample_set_state_from_caps):
 	Add support for other formats audioresample can handle such as

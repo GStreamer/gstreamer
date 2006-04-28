@@ -460,6 +460,7 @@ static GstFlowReturn
 gst_video_rate_event (GstPad * pad, GstEvent * event)
 {
   GstVideoRate *videorate;
+  gboolean ret;
 
   videorate = GST_VIDEO_RATE (gst_pad_get_parent (pad));
 
@@ -490,26 +491,32 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_EOS:
       /* flush last queued frame */
+      GST_DEBUG_OBJECT (videorate, "Got EOS");
       gst_video_rate_flush_prev (videorate);
       break;
     case GST_EVENT_FLUSH_STOP:
       /* also resets the segment */
+      GST_DEBUG_OBJECT (videorate, "Got FLUSH_STOP");
       gst_video_rate_reset (videorate);
       break;
     default:
       break;
   }
 
+  ret = gst_pad_push_event (videorate->srcpad, event);
+
 done:
   gst_object_unref (videorate);
 
-  return gst_pad_event_default (pad, event);
+  return ret;
 
   /* ERRORS */
 format_error:
   {
     GST_WARNING_OBJECT (videorate,
         "Got segment but doesn't have GST_FORMAT_TIME value");
+    gst_event_unref (event);
+    ret = FALSE;
     goto done;
   }
 }
@@ -519,7 +526,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstVideoRate *videorate;
   GstFlowReturn res = GST_FLOW_OK;
-  GstClockTime intime;
+  GstClockTime intime, in_ts;
 
   videorate = GST_VIDEO_RATE (gst_pad_get_parent (pad));
 
@@ -528,8 +535,13 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
       videorate->to_rate_denominator == 0)
     goto not_negotiated;
 
+  in_ts = GST_BUFFER_TIMESTAMP (buffer);
+
+  GST_DEBUG_OBJECT (videorate, "got buffer with timestamp %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (in_ts));
+
   intime = gst_segment_to_running_time (&videorate->segment,
-      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer));
+      GST_FORMAT_TIME, in_ts);
 
   /* pull in 2 buffers */
   if (videorate->prevbuf == NULL) {
