@@ -26,6 +26,12 @@
  * @see_also: #GstFdSrc
  *
  * Write data to a unix file descriptor.
+ *
+ * This element will sycnhronize on the clock before writing the data on the
+ * socket. For file descriptors where this does not make sense (files, ...) the
+ * ::sync property can be used to disable synchronisation.
+ *
+ * Last reviewed on 2006-04-28 (0.10.6)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -237,12 +243,20 @@ gst_fd_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   fd_set writefds;
   gint retval;
 #endif
+  guint8 *data;
+  guint size;
+  gint written;
 
   fdsink = GST_FD_SINK (sink);
 
   g_return_val_if_fail (fdsink->fd >= 0, GST_FLOW_ERROR);
 
+  data = GST_BUFFER_DATA (buffer);
+  size = GST_BUFFER_SIZE (buffer);
+
+again:
 #ifndef HAVE_WIN32
+
   FD_ZERO (&readfds);
   FD_SET (READ_SOCKET (fdsink), &readfds);
 
@@ -250,6 +264,8 @@ gst_fd_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   FD_SET (fdsink->fd, &writefds);
 
   do {
+    GST_DEBUG_OBJECT (fdsink, "going into select, have %d bytes to write",
+        size);
     retval = select (FD_SETSIZE, &readfds, &writefds, NULL, NULL);
   } while ((retval == -1 && errno == EINTR));
 
@@ -273,19 +289,31 @@ gst_fd_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   }
 #endif
 
-  if (GST_BUFFER_DATA (buffer)) {
-    guint bytes_written;
+  GST_DEBUG_OBJECT (fdsink, "writing %d bytes to file descriptor %d", size,
+      fdsink->fd);
 
-    GST_DEBUG ("writing %d bytes to file descriptor %d",
-        GST_BUFFER_SIZE (buffer), fdsink->fd);
-    /* FIXME: short writes are perfectly valid and may happen; also,
-     * we should probably handle EINTR and EAGAIN in a non-fatal way */
-    bytes_written =
-        write (fdsink->fd, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
-    fdsink->bytes_written += bytes_written;
-    if (bytes_written != GST_BUFFER_SIZE (buffer))
-      goto write_error;
+  written = write (fdsink->fd, data, size);
+
+  /* check for errors */
+  if (G_UNLIKELY (written < 0)) {
+    /* try to write again on non-fatal errors */
+    if (errno == EAGAIN || errno == EINTR)
+      goto again;
+
+    /* else go to our error handler */
+    goto write_error;
   }
+
+  /* all is fine when we get here */
+  size -= written;
+  data += written;
+  fdsink->bytes_written += written;
+
+  GST_DEBUG_OBJECT (fdsink, "wrote %d bytes, %d left", written, size);
+
+  /* short write, select and try to write the remainder */
+  if (G_UNLIKELY (size > 0))
+    goto again;
 
   return GST_FLOW_OK;
 
@@ -345,19 +373,22 @@ gst_fd_sink_check_fd (GstFdSink * fdsink, int fd)
         goto not_seekable;
     }
   } else
-    GST_DEBUG ("File descriptor \"%d\" is seekable", fd);
+    GST_DEBUG_OBJECT (fdsink, "File descriptor \"%d\" is seekable", fd);
 
   return TRUE;
 
 invalid:
-  GST_ELEMENT_ERROR (fdsink, RESOURCE, WRITE,
-      (_("File descriptor \"%d\" is not valid."), fd),
-      ("%s", g_strerror (errno)));
-  return FALSE;
-
+  {
+    GST_ELEMENT_ERROR (fdsink, RESOURCE, WRITE,
+        (_("File descriptor \"%d\" is not valid."), fd),
+        ("%s", g_strerror (errno)));
+    return FALSE;
+  }
 not_seekable:
-  GST_DEBUG ("File descriptor \"%d\" is a pipe", fd);
-  return TRUE;
+  {
+    GST_DEBUG_OBJECT (fdsink, "File descriptor \"%d\" is a pipe", fd);
+    return TRUE;
+  }
 }
 
 static gboolean
@@ -417,19 +448,22 @@ gst_fd_sink_update_fd (GstFdSink * fdsink, int new_fd)
   if (new_fd < 0)
     return FALSE;
 
+  if (!gst_fd_sink_check_fd (fdsink, new_fd))
+    goto invalid;
+
+  /* assign the fd */
   GST_OBJECT_LOCK (fdsink);
-
-  if (!gst_fd_sink_check_fd (fdsink, new_fd)) {
-    GST_OBJECT_UNLOCK (fdsink);
-    return FALSE;
-  }
-
   fdsink->fd = new_fd;
   g_free (fdsink->uri);
   fdsink->uri = g_strdup_printf ("fd://%d", fdsink->fd);
-
   GST_OBJECT_UNLOCK (fdsink);
+
   return TRUE;
+
+invalid:
+  {
+    return FALSE;
+  }
 }
 
 static void

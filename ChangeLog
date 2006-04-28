@@ -1,5 +1,14 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_render),
+	(gst_fd_sink_check_fd), (gst_fd_sink_update_fd):
+	handle EAGAIN, EINTR and short writes correctly. Also clean
+	up some error cases, avoid a deadlock on bad file descriptors and
+	use GST_DEBUG_OBJECT.
+	Fixes #339843
+
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstvalue.c: (gst_value_serialize_buffer),
 	(gst_value_deserialize_buffer):
 	Don't try to serialize a GValue with a NULL buffer. 
