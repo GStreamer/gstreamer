@@ -319,7 +319,7 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
   /* first construct payload, since we need the length */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_UNKNOWN:
-      g_warning ("Unknown event, ignoring");
+      GST_WARNING ("Unknown event, ignoring");
       *length = 0;
       g_free (h);
       return FALSE;
@@ -355,10 +355,12 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
     case GST_EVENT_QOS:
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_TAG:
-      g_warning ("Unhandled event type %d, ignoring", GST_EVENT_TYPE (event));
+      GST_WARNING ("Unhandled event type %d, ignoring", GST_EVENT_TYPE (event));
+      *length = 0;
+      g_free (h);
       return FALSE;
     default:
-      g_warning ("Unknown event type %d, ignoring", GST_EVENT_TYPE (event));
+      GST_WARNING ("Unknown event type %d, ignoring", GST_EVENT_TYPE (event));
       *length = 0;
       g_free (h);
       return FALSE;
@@ -486,7 +488,7 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
   type = GST_DP_HEADER_PAYLOAD_TYPE (header) - GST_DP_PAYLOAD_EVENT_NONE;
   switch (type) {
     case GST_EVENT_UNKNOWN:
-      g_warning ("Unknown event, ignoring");
+      GST_WARNING ("Unknown event, ignoring");
       return FALSE;
     case GST_EVENT_EOS:
     case GST_EVENT_FLUSH_START:
@@ -520,10 +522,10 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
     case GST_EVENT_QOS:
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_TAG:
-      g_warning ("Unhandled event type %d, ignoring", GST_EVENT_TYPE (event));
+      GST_WARNING ("Unhandled event type %d, ignoring", type);
       return FALSE;
     default:
-      g_warning ("Unknown event type %d, ignoring", GST_EVENT_TYPE (event));
+      GST_WARNING ("Unknown event type %d, ignoring", type);
       return FALSE;
   }
 
