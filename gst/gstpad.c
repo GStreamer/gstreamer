@@ -3282,8 +3282,9 @@ no_function:
  * @pad: a source #GstPad.
  * @buffer: the #GstBuffer to push.
  *
- * Pushes a buffer to the peer of @pad.
- * buffer probes will be triggered before the buffer gets pushed.
+ * Pushes a buffer to the peer of @pad.  This gives away your reference to
+ * the buffer.
+ * Buffer probes will be triggered before the buffer gets pushed.
  *
  * Returns: a #GstFlowReturn from the peer pad.
  *
