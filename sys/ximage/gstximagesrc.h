@@ -16,8 +16,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_XIMAGESRC_H__
-#define __GST_XIMAGESRC_H__
+#ifndef __GST_XIMAGE_SRC_H__
+#define __GST_XIMAGE_SRC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
@@ -32,16 +32,16 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_XIMAGESRC (gst_ximagesrc_get_type())
-#define GST_XIMAGESRC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_XIMAGESRC,GstXImageSrc))
-#define GST_XIMAGESRC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_XIMAGESRC,GstXImageSrc))
-#define GST_IS_XIMAGESRC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XIMAGESRC))
-#define GST_IS_XIMAGESRC_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XIMAGESRC))
+#define GST_TYPE_XIMAGE_SRC (gst_ximage_src_get_type())
+#define GST_XIMAGE_SRC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_XIMAGE_SRC,GstXImageSrc))
+#define GST_XIMAGE_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_XIMAGE_SRC,GstXImageSrc))
+#define GST_IS_XIMAGE_SRC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XIMAGE_SRC))
+#define GST_IS_XIMAGE_SRC_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XIMAGE_SRC))
 
 typedef struct _GstXImageSrc GstXImageSrc;
 typedef struct _GstXImageSrcClass GstXImageSrcClass;
 
-GType gst_ximagesrc_get_type (void) G_GNUC_CONST;
+GType gst_ximage_src_get_type (void) G_GNUC_CONST;
 
 struct _GstXImageSrc
 {
@@ -51,19 +51,19 @@ struct _GstXImageSrc
   GstXContext *xcontext;
   gint width;
   gint height;
-  
+
   Window xwindow;
   gchar *display_name;
   guint screen_num;
-  
+
   /* Desired output framerate */
   gint fps_n;
   gint fps_d;
-  
+
   /* for framerate sync */
-  GstClockID clock_id; 
+  GstClockID clock_id;
   gint64 last_frame_no;
-  
+
   /* Protect X Windows calls */
   GMutex *x_lock;
 
@@ -78,7 +78,6 @@ struct _GstXImageSrc
 #ifdef HAVE_XFIXES
   int fixes_event_base;
   XFixesCursorImage *cursor_image;
-
 #endif
 #ifdef HAVE_XDAMAGE
   Damage damage;
@@ -86,7 +85,6 @@ struct _GstXImageSrc
   XserverRegion damage_region;
   GC damage_copy_gc;
 #endif
-
 };
 
 struct _GstXImageSrcClass
@@ -96,4 +94,4 @@ struct _GstXImageSrcClass
 
 G_END_DECLS
 
-#endif /* __GST_XIMAGESRC_H__ */
+#endif /* __GST_XIMAGE_SRC_H__ */
