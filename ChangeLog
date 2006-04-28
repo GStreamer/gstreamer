@@ -1,5 +1,12 @@
 2006-04-28  Michael Smith  <msmith@fluendo.com>
 
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_handle_event):
+	  If we get EOS before any data is accumulated, don't use
+	  uninitialised local variables.
+
+2006-04-28  Michael Smith  <msmith@fluendo.com>
+
 	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packet_from_event),
 	(gst_dp_event_from_packet):
 	  Fixes in reading/writing events over GDP (not currently used?) - 
