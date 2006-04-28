@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Python bindings 0.10.3 "Maybe not today. Maybe not tomorrow, but soon..."
+Release notes for GStreamer Python bindings 0.10.4 "Alegre"
         
 
 
@@ -18,16 +18,21 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * Backwards compatibility with older GStreamer installations
-      * Wrapping of new API in GStreamer
-      * Bug-fixes and enhancements
+      * Conditional compile of core API additions
+      * wrapped gst.BaseSrc and gst.PushSrc
 
 Bugs fixed in this release
     
-      * 329110 : gst-python sets RTLD_GLOBAL when importing, but doesn't s...
-      * 332586 : pygst.require should raise an error based on StandardErro...
-      * 333055 : PYGIL_API_IS_BUGGY is already defined in pygobect.h
-      * 331616 : gst.version and gst.gst_version differ
+      * 339010 : segfault/undefined behavior with optional GstCaps args
+      * 337876 : TagList does not retreive tags by key if 2 or more tags w...
+
+API changed in this release
+     
+
+- API additions:
+    
+* gst.get_gst_version()
+* gst.get_pygst_version()
 
 Download
 
@@ -58,10 +63,8 @@ Applications
 Contributors to this release
     
       * Andy Wingo
+      * David I. Lehn
       * Edward Hervey
-      * Jan Schmidt
-      * Joe Wreschnig
-      * Michael Smith
+      * Stefan Kost
       * Thomas Vander Stichele
-      * Zaheer Abbas Merali
  

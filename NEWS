@@ -1,4 +1,20 @@
-This is GStreamer Python Bindings 0.10.3, "Maybe not today. Maybe not tomorrow, but soon..."
+This is GStreamer Python Bindings 0.10.4, "Alegre"
+
+Changes since 0.10.3:
+
+      * Conditional compile of core API additions
+      * wrapped gst.BaseSrc and gst.PushSrc
+
+Bugs fixed since 0.10.3:
+    
+      * 339010 : segfault/undefined behavior with optional GstCaps args
+      * 337876 : TagList does not retreive tags by key if 2 or more tags w...
+
+API added since 0.10.3:
+     
+      * gst.get_gst_version()
+      * gst.get_pygst_version()
+
 Changes since 0.10.2:
 
       * Backwards compatibility with older GStreamer installations
