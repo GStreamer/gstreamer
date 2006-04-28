@@ -1,3 +1,11 @@
+2006-04-28  Michael Smith  <msmith@fluendo.com>
+
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packet_from_event),
+	(gst_dp_event_from_packet):
+	  Fixes in reading/writing events over GDP (not currently used?) - 
+	  dereferencing NULL events for unknown/invalid event types, memory
+	  leak, and change g_warning to GST_WARNING.
+
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_is_too_late),
