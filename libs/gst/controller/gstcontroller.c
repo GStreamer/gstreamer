@@ -930,10 +930,10 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
         timestamp);
 
     live = FALSE;
-    if (G_IS_VALUE (&prop->live_value.value)) {
+    if (G_UNLIKELY (G_IS_VALUE (&prop->live_value.value))) {
       GList *lnode =
           gst_controlled_property_find_timed_value_node (prop, timestamp);
-      if (!lnode) {
+      if (G_UNLIKELY (!lnode)) {
         GST_DEBUG ("    no control changes in the queue");
         live = TRUE;
       } else {
@@ -947,7 +947,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
         }
       }
     }
-    if (!live) {
+    if (G_LIKELY (!live)) {
       /* get current value via interpolator */
       value = prop->get (prop, timestamp);
       prop->last_value.timestamp = timestamp;

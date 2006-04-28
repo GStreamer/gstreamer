@@ -1,3 +1,12 @@
+2006-04-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controller_sync_values):
+          some little tuning
+	* tests/check/libs/controller.c: (GST_START_TEST),
+	(gst_controller_suite):
+          a new test for live value handling
+
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Topi Paavola
