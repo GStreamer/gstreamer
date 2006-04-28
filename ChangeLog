@@ -29,7 +29,8 @@
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_event):
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_base_init),
 	(gst_collect_pads_is_collected), (gst_collect_pads_event):
-        more detailed debug and formatting cleanup
+        more detailed debug and formatting cleanup,
+        forward newsegments to src-pad (so that e.g. adder not eats them)
 
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 

@@ -736,7 +736,7 @@ gst_registry_lookup (GstRegistry * registry, const char *filename)
   return plugin;
 }
 
-static void
+static gboolean
 gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
     int level)
 {
@@ -745,10 +745,11 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
   gchar *filename;
   GstPlugin *plugin;
   GstPlugin *newplugin;
+  gboolean changed = FALSE;
 
   dir = g_dir_open (path, 0, NULL);
   if (!dir)
-    return;
+    return FALSE;
 
   while ((dirent = g_dir_read_name (dir))) {
     filename = g_strjoin ("/", path, dirent, NULL);
@@ -758,7 +759,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
     if (g_file_test (filename, G_FILE_TEST_IS_DIR)) {
       if (level > 0) {
         GST_LOG_OBJECT (registry, "found directory, recursing");
-        gst_registry_scan_path_level (registry, filename, level - 1);
+        changed |= gst_registry_scan_path_level (registry, filename, level - 1);
       } else {
         GST_LOG_OBJECT (registry,
             "found directory, but recursion level is too deep");
@@ -819,6 +820,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
           newplugin->registered = TRUE;
           gst_object_unref (newplugin);
         }
+        changed = TRUE;
       }
       gst_object_unref (plugin);
 
@@ -828,6 +830,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
       if (newplugin) {
         newplugin->registered = TRUE;
         gst_object_unref (newplugin);
+        changed = TRUE;
       }
     }
 
@@ -835,6 +838,10 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
   }
 
   g_dir_close (dir);
+
+  GST_DEBUG_OBJECT (registry, "registry changed? %d", changed);
+
+  return changed;
 }
 
 /**
@@ -845,15 +852,23 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
  * Add the given path to the registry. The syntax of the
  * path is specific to the registry. If the path has already been
  * added, do nothing.
+ *
+ * Returns: %TRUE if registry changed
  */
-void
+gboolean
 gst_registry_scan_path (GstRegistry * registry, const gchar * path)
 {
-  g_return_if_fail (GST_IS_REGISTRY (registry));
-  g_return_if_fail (path != NULL);
+  gboolean changed;
+
+  g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
+  g_return_val_if_fail (path != NULL, FALSE);
 
   GST_DEBUG_OBJECT (registry, "scanning path %s", path);
-  gst_registry_scan_path_level (registry, path, 10);
+  changed = gst_registry_scan_path_level (registry, path, 10);
+
+  GST_DEBUG_OBJECT (registry, "registry changed? %d", changed);
+
+  return changed;
 }
 
 void

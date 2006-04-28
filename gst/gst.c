@@ -602,6 +602,7 @@ init_post (void)
     char *registry_file;
     const char *plugin_path;
     GstRegistry *default_registry;
+    gboolean changed = FALSE;
 
     default_registry = gst_registry_get_default ();
     registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
@@ -622,7 +623,7 @@ init_post (void)
       GST_DEBUG ("GST_PLUGIN_PATH set to %s", plugin_path);
       list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
       for (i = 0; list[i]; i++) {
-        gst_registry_scan_path (default_registry, list[i]);
+        changed |= gst_registry_scan_path (default_registry, list[i]);
       }
       g_strfreev (list);
     } else {
@@ -642,11 +643,11 @@ init_post (void)
        * system-installed ones */
       home_plugins = g_build_filename (g_get_home_dir (),
           ".gstreamer-" GST_MAJORMINOR, "plugins", NULL);
-      gst_registry_scan_path (default_registry, home_plugins);
+      changed |= gst_registry_scan_path (default_registry, home_plugins);
       g_free (home_plugins);
 
       /* add the main (installed) library path */
-      gst_registry_scan_path (default_registry, PLUGINDIR);
+      changed |= gst_registry_scan_path (default_registry, PLUGINDIR);
     } else {
       char **list;
       int i;
@@ -654,12 +655,15 @@ init_post (void)
       GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH set to %s", plugin_path);
       list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
       for (i = 0; list[i]; i++) {
-        gst_registry_scan_path (default_registry, list[i]);
+        changed |= gst_registry_scan_path (default_registry, list[i]);
       }
       g_strfreev (list);
     }
 
-    gst_registry_xml_write_cache (default_registry, registry_file);
+    if (changed) {
+      GST_DEBUG ("writing registry cache");
+      gst_registry_xml_write_cache (default_registry, registry_file);
+    }
 
     _gst_registry_remove_cache_plugins (default_registry);
 
