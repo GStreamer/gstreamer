@@ -1,3 +1,10 @@
+2006-04-19  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.override (pad_block_callback_marshal) 
+	(_wrap_gst_pad_set_blocked_async): Fix refcounting problems and
+	indent.
+	Fixes #338982
+
 2006-04-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
