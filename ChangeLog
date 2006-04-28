@@ -1,3 +1,16 @@
+2006-04-28  Michael Smith  <msmith@fluendo.com>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_class_init),
+	(gst_gnome_vfs_src_init), (gst_gnome_vfs_src_finalize),
+	(gst_gnome_vfs_src_get_property),
+	(gst_gnome_vfs_src_send_additional_headers_callback),
+	(gst_gnome_vfs_src_received_headers_callback),
+	(gst_gnome_vfs_src_create), (gst_gnome_vfs_src_start),
+	(gst_gnome_vfs_src_stop):
+	* ext/gnomevfs/gstgnomevfssrc.h:
+	  Remove ICY handling (mostly) from gnomevfssrc, in favour of
+	  proper shared support within icydemux.
+
 2006-04-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/videorate/gstvideorate.c: (gst_video_rate_reset),

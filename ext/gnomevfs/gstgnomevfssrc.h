@@ -64,26 +64,17 @@ struct _GstGnomeVFSSrc
   GnomeVFSFileOffset curoffset; /* current offset in file */
   gboolean seekable;
 
-  /* icecast/audiocast metadata extraction handling */
+  /* shoutcast/icecast metadata extraction handling */
   gboolean iradio_mode;
   gboolean http_callbacks_pushed;
 
   gint icy_metaint;
-  GnomeVFSFileSize icy_count;
+  GstCaps *icy_caps;
 
   gchar *iradio_name;
   gchar *iradio_genre;
   gchar *iradio_url;
   gchar *iradio_title;
-
-  GThread *audiocast_thread;
-  GList *audiocast_notify_queue;
-  GMutex *audiocast_queue_mutex;
-  GMutex *audiocast_udpdata_mutex;
-  gint audiocast_thread_die_infd;
-  gint audiocast_thread_die_outfd;
-  gint audiocast_port;
-  gint audiocast_fd;
 };
 
 struct _GstGnomeVFSSrcClass
