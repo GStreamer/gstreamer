@@ -272,7 +272,7 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
   fakesrc = gst_element_factory_make ("fakesrc", "fakesrc");
   g_assert (fakesrc != NULL);
 
-  id3mux = gst_element_factory_make ("tagid3v2mux", "tagid3v2mux");
+  id3mux = gst_element_factory_make ("id3v2mux", "id3v2mux");
   g_assert (id3mux != NULL);
 
   id3demux = gst_element_factory_make ("id3demux", "id3demux");
