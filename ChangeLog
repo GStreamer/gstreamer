@@ -1,5 +1,13 @@
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gst.c:
+	* gst/gstregistry.c: (gst_registry_scan_path_level),
+	(gst_registry_scan_path):
+	* gst/gstregistry.h:
+        only write out registry if it has changed, fixes #338339
+
+2006-04-28  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstbin.c:
 	* gst/gstpipeline.c:
 	* plugins/elements/gstcapsfilter.c:
