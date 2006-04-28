@@ -1,3 +1,10 @@
+2006-04-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/id3v2frames.c: (has_utf16_bom),
+	(parse_split_strings):
+	  Recognise and skip any byte order marker (BOM) in
+	  UTF-16 strings.
+
 2006-04-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/Makefile.am:
