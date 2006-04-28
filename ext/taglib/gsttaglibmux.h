@@ -1,4 +1,4 @@
-/* GStreamer taglib-based ID3 muxer
+/* GStreamer taglib-based muxer
  * (c) 2006 Christophe Fergeau  <teuf@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -45,16 +45,16 @@ typedef struct _GstTagLibMuxClass {
 } GstTagLibMuxClass;
 
 /* Standard macros for defining types for this element.  */
-#define GST_TYPE_TAGLIB_MUX \
+#define GST_TYPE_TAG_LIB_MUX \
   (gst_tag_lib_mux_get_type())
-#define GST_TAGLIB_MUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TAGLIB_MUX,GstTagLibMux))
-#define GST_TAGLIB_MUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TAGLIB_MUX,GstTagLibMuxClass))
-#define GST_IS_TAGLIB_MUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TAGLIB_MUX))
-#define GST_IS_TAGLIB_MUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TAGLIB_MUX))
+#define GST_TAG_LIB_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TAG_LIB_MUX,GstTagLibMux))
+#define GST_TAG_LIB_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TAG_LIB_MUX,GstTagLibMuxClass))
+#define GST_IS_TAG_LIB_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TAG_LIB_MUX))
+#define GST_IS_TAG_LIB_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TAG_LIB_MUX))
 
 /* Standard function returning type information. */
 GType gst_tag_lib_mux_get_type (void);
