@@ -88,7 +88,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_fd_sink__debug);
 #define GST_CAT_DEFAULT gst_fd_sink__debug
 
-static GstElementDetails gst_fd_sink__details =
+static const GstElementDetails gst_fd_sink__details =
 GST_ELEMENT_DETAILS ("Filedescriptor Sink",
     "Sink/File",
     "Write data to a file descriptor",

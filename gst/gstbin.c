@@ -167,7 +167,8 @@
 GST_DEBUG_CATEGORY_STATIC (bin_debug);
 #define GST_CAT_DEFAULT bin_debug
 
-static GstElementDetails gst_bin_details = GST_ELEMENT_DETAILS ("Generic bin",
+static const GstElementDetails gst_bin_details =
+GST_ELEMENT_DETAILS ("Generic bin",
     "Generic/Bin",
     "Simple container object",
     "Erik Walthinsen <omega@cse.ogi.edu>," "Wim Taymans <wim@fluendo.com>");
@@ -1895,7 +1896,9 @@ done:
 
 /*
  * This function is a utility event handler for seek events.
- * It will send the event to all sinks.
+ * It will send the event to all sinks or sources depending on the
+ * event-direction.
+ *
  * Applications are free to override this behaviour and
  * implement their own seek handler, but this will work for
  * pretty much all cases in practice.

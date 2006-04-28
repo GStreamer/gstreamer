@@ -63,7 +63,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_type_find_element_debug);
 #define GST_CAT_DEFAULT gst_type_find_element_debug
 
-static GstElementDetails gst_type_find_element_details =
+static const GstElementDetails gst_type_find_element_details =
 GST_ELEMENT_DETAILS ("TypeFind",
     "Generic",
     "Finds the media type of a stream",
@@ -476,16 +476,17 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
           if (typefind->store) {
             caps = gst_type_find_helper_for_buffer (GST_OBJECT (typefind),
                 typefind->store, &prob);
+
+            if (caps && prob >= typefind->min_probability) {
+              g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
+                  0, prob, caps);
+            } else {
+              GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
+                  (NULL), (NULL));
+            }
+            gst_caps_replace (&caps, NULL);
           }
 
-          if (caps && prob >= typefind->min_probability) {
-            g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
-                0, prob, caps);
-          } else {
-            GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
-                (NULL), (NULL));
-          }
-          gst_caps_replace (&caps, NULL);
           stop_typefinding (typefind);
           res = gst_pad_event_default (pad, event);
           break;

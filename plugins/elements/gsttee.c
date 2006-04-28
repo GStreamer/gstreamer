@@ -45,7 +45,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_tee_debug);
 #define GST_CAT_DEFAULT gst_tee_debug
 
-static GstElementDetails gst_tee_details =
+static const GstElementDetails gst_tee_details =
 GST_ELEMENT_DETAILS ("Tee pipe fitting",
     "Generic",
     "1-to-N pipe fitting",

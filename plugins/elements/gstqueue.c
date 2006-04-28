@@ -76,7 +76,7 @@ GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
                       queue->max_size.time, \
                       queue->queue->length)
 
-static GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
+static const GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
     "Generic",
     "Simple data queue",
     "Erik Walthinsen <omega@cse.ogi.edu>");

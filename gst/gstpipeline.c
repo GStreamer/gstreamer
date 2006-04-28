@@ -90,7 +90,7 @@
 GST_DEBUG_CATEGORY_STATIC (pipeline_debug);
 #define GST_CAT_DEFAULT pipeline_debug
 
-static GstElementDetails gst_pipeline_details =
+static const GstElementDetails gst_pipeline_details =
 GST_ELEMENT_DETAILS ("Pipeline object",
     "Generic/Bin",
     "Complete pipeline object",

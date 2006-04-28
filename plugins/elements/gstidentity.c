@@ -45,7 +45,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_identity_debug);
 #define GST_CAT_DEFAULT gst_identity_debug
 
-static GstElementDetails gst_identity_details = GST_ELEMENT_DETAILS ("Identity",
+static const GstElementDetails gst_identity_details =
+GST_ELEMENT_DETAILS ("Identity",
     "Generic",
     "Pass data without modification",
     "Erik Walthinsen <omega@cse.ogi.edu>");

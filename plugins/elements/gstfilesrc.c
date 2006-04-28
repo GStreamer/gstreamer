@@ -116,7 +116,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_file_src_debug);
 #define GST_CAT_DEFAULT gst_file_src_debug
 
-static GstElementDetails gst_file_src_details =
+static const GstElementDetails gst_file_src_details =
 GST_ELEMENT_DETAILS ("File Source",
     "Source/File",
     "Read from arbitrary point in a file",

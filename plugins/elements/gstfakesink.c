@@ -42,7 +42,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_fake_sink_debug);
 #define GST_CAT_DEFAULT gst_fake_sink_debug
 
-static GstElementDetails gst_fake_sink_details =
+static const GstElementDetails gst_fake_sink_details =
 GST_ELEMENT_DETAILS ("Fake Sink",
     "Sink",
     "Black hole for data",

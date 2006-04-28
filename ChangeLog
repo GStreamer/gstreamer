@@ -1,5 +1,23 @@
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstbin.c:
+	* gst/gstpipeline.c:
+	* plugins/elements/gstcapsfilter.c:
+	* plugins/elements/gstfakesink.c:
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstfdsink.c:
+	* plugins/elements/gstfdsrc.c:
+	* plugins/elements/gstfilesink.c:
+	* plugins/elements/gstfilesrc.c:
+	* plugins/elements/gstidentity.c:
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gsttee.c:
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_handle_event):
+         make GstElementDetails const
+
+2006-04-28  Stefan Kost  <ensonic@users.sf.net>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_event):
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_base_init),
 	(gst_collect_pads_is_collected), (gst_collect_pads_event):
@@ -20,8 +38,6 @@
           a new test for live value handling
 
 2006-04-28  Wim Taymans  <wim@fluendo.com>
-
-	Patch by: Topi Paavola
 
 	* gst/gstutils.c: (push_and_ref):
 	Added some more docs.
