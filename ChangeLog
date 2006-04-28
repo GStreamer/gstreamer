@@ -1,5 +1,10 @@
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstutils.c: (gst_element_link_pads):
+        cleanup double code
+
+2006-04-28  Stefan Kost  <ensonic@users.sf.net>
+
 	* libs/gst/controller/gstcontroller.c:
 	(gst_controller_sync_values):
           some little tuning

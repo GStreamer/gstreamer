@@ -1439,17 +1439,13 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
   if (srcpadname) {
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s:%s to %s",
         GST_DEBUG_PAD_NAME (srcpad), GST_ELEMENT_NAME (dest));
-    if (srcpad)
-      gst_object_unref (srcpad);
-    srcpad = NULL;
     if (destpad)
       gst_object_unref (destpad);
     destpad = NULL;
-  } else {
-    if (srcpad)
-      gst_object_unref (srcpad);
-    srcpad = NULL;
   }
+  if (srcpad)
+    gst_object_unref (srcpad);
+  srcpad = NULL;
 
   if (destpad) {
     /* loop through the existing pads in the destination */
@@ -1465,8 +1461,6 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
               GST_DEBUG_PAD_NAME (temp), GST_DEBUG_PAD_NAME (destpad));
           gst_object_unref (temp);
           gst_object_unref (destpad);
-          if (srcpad)
-            gst_object_unref (srcpad);
           return TRUE;
         }
         if (temp) {
