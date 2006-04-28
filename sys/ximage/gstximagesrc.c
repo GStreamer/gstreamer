@@ -1,5 +1,7 @@
 /* GStreamer
  *
+ * Copyright (C) 2006 Zaheer Merali <zaheerabbas at merali dot org>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -25,8 +27,8 @@
  * This element captures your X Display and creates raw RGB video.  It uses
  * the XDamage extension if available to only capture areas of the screen that
  * have changed since the last frame.  It uses the XFixes extension if
- * available to also capture your mouse pointer.  By defaukt it will fixate to
- * 25 frames per second..
+ * available to also capture your mouse pointer.  By default it will fixate to
+ * 25 frames per second.
  * </para>
  * <title>Example pipelines</title>
  * <para>
@@ -242,7 +244,6 @@ gst_ximagesrc_recalc (GstXImageSrc * src)
   return TRUE;
 }
 
-/* ifdeff'ed to prevent warnings of not being used when xfixes not there */
 #ifdef HAVE_XFIXES
 static void
 composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
@@ -271,7 +272,6 @@ composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
       /* Should not reach here */
       g_assert_not_reached ();
   }
-
 
   /* possible optimisation:
    * move the code that finds shift and max in the _link function */
@@ -527,15 +527,14 @@ gst_ximagesrc_create (GstPushSrc * bs, GstBuffer ** buf)
 
   if (!gst_ximagesrc_recalc (s)) {
     GST_ELEMENT_ERROR (s, RESOURCE, FAILED,
-        (_("X11 Display changed resolution, we do not support this yet.")),
-        (NULL));
+        (_("Changing resolution at runtime is not yet supported.")), (NULL));
     return GST_FLOW_ERROR;
   }
 
   if (s->fps_n <= 0 || s->fps_d <= 0)
     return GST_FLOW_NOT_NEGOTIATED;     /* FPS must be > 0 */
 
-  /* Now, we might need to wait for the next multiple of the fps 
+  /* Now, we might need to wait for the next multiple of the fps
    * before capturing */
 
   GST_OBJECT_LOCK (s);
@@ -615,12 +614,9 @@ gst_ximagesrc_set_property (GObject * object, guint prop_id,
 
       g_free (src->display_name);
       src->display_name = g_strdup (g_value_get_string (value));
-
-      /* src->screen_num = MIN (src->screen_num, ScreenCount (src->display) - 1); */
       break;
     case PROP_SCREEN_NUM:
       src->screen_num = g_value_get_uint (value);
-      /* src->screen_num = MIN (src->screen_num, ScreenCount (src->display) - 1); */
       break;
     case PROP_SHOW_POINTER:
       src->show_pointer = g_value_get_boolean (value);
@@ -783,14 +779,14 @@ gst_ximagesrc_class_init (GstXImageSrcClass * klass)
   gc->finalize = gst_ximagesrc_finalize;
 
   g_object_class_install_property (gc, PROP_DISPLAY_NAME,
-      g_param_spec_string ("display_name", "Display", "X Display name", NULL,
+      g_param_spec_string ("display_name", "Display", "X Display Name", NULL,
           G_PARAM_READWRITE));
   g_object_class_install_property (gc, PROP_SCREEN_NUM,
-      g_param_spec_uint ("screen_num", "Screen number", "X Screen number",
+      g_param_spec_uint ("screen_num", "Screen number", "X Screen Number",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gc, PROP_SHOW_POINTER,
       g_param_spec_boolean ("show_pointer", "Show Mouse Pointer",
-          "Show mouse pointer if XFixes extension enabled", TRUE,
+          "Show mouse pointer (if XFixes extension enabled)", TRUE,
           G_PARAM_READWRITE));
 
   parent_class = g_type_class_peek_parent (klass);
@@ -832,5 +828,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "ximagesrc",
-    "X11 video input plugin based on standard Xlib calls",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+    "X11 video input plugin using standard Xlib calls",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
