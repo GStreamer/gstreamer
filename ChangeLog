@@ -1,3 +1,9 @@
+2006-04-26  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/osxaudio/gstosxringbuffer.c:
+	* sys/osxaudio/gstosxringbuffer.h:
+	  Forgot to commit earlier, part of the OSX audio plugin port
+
 2006-04-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/id3v2frames.c: (has_utf16_bom),
