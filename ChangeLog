@@ -1,3 +1,10 @@
+2006-04-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_handle_event):
+	reverted wrong change and reflowed code to avoid others falling into
+	this trap
+
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_event):
