@@ -664,7 +664,7 @@ gst_multi_fd_sink_get_stats (GstMultiFdSink * sink, int fd)
     GValue value = { 0 };
     guint64 interval;
 
-    result = g_value_array_new (4);
+    result = g_value_array_new (5);
 
     g_value_init (&value, G_TYPE_UINT64);
     g_value_set_uint64 (&value, client->bytes_sent);

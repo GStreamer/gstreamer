@@ -1,3 +1,9 @@
+2006-04-28  Michael Smith  <msmith@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_get_stats):
+	  When asking g_value_array_new to prealloc elements, we may as well
+	  ask for the right number of elements.
+
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
