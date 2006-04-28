@@ -1,6 +1,7 @@
 <SIGNAL>
 <NAME>GstBin::element-added</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
 GstBin *gstbin
 GstElement *arg1
 </SIGNAL>
@@ -8,6 +9,7 @@ GstElement *arg1
 <SIGNAL>
 <NAME>GstBin::element-removed</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
 GstBin *gstbin
 GstElement *arg1
 </SIGNAL>
@@ -15,47 +17,54 @@ GstElement *arg1
 <SIGNAL>
 <NAME>GstFakeSrc::handoff</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstFakeSrc *gstfakesrc
-GstBuffer  arg1
+GstBuffer *arg1
 GstPad *arg2
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstFakeSink::handoff</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstFakeSink *gstfakesink
-GstBuffer  arg1
+GstBuffer *arg1
 GstPad *arg2
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstIdentity::handoff</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstIdentity *gstidentity
-GstBuffer  arg1
+GstBuffer *arg1
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstQueue::overrun</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
 GstQueue *gstqueue
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstQueue::running</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
 GstQueue *gstqueue
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstQueue::underrun</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
 GstQueue *gstqueue
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstTypeFindElement::have-type</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
 GstTypeFindElement *gsttypefindelement
 guint  arg1
 GstCaps *arg2
