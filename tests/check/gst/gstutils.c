@@ -414,6 +414,40 @@ GST_START_TEST (test_parse_bin_from_description)
 GST_END_TEST;
 #endif
 
+GST_START_TEST (test_element_found_tags)
+{
+  GstElement *pipeline, *fakesrc, *fakesink;
+  GstTagList *list;
+  GstBus *bus;
+  GstMessage *message;
+
+  pipeline = gst_element_factory_make ("pipeline", NULL);
+  fakesrc = gst_element_factory_make ("fakesrc", NULL);
+  fakesink = gst_element_factory_make ("fakesink", NULL);
+  list = gst_tag_list_new ();
+
+  g_object_set (fakesrc, "num-buffers", (int) 10, NULL);
+
+  gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
+  gst_element_link (fakesrc, fakesink);
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  gst_element_found_tags (GST_ELEMENT (fakesrc), list);
+
+  bus = gst_element_get_bus (pipeline);
+  message = gst_bus_poll (bus, GST_MESSAGE_EOS, -1);
+  gst_message_unref (message);
+  gst_object_unref (bus);
+
+  /* FIXME: maybe also check if the fakesink receives the message */
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_utils_suite (void)
 {
@@ -431,6 +465,7 @@ gst_utils_suite (void)
 #ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_parse_bin_from_description);
 #endif
+  tcase_add_test (tc_chain, test_element_found_tags);
   return s;
 }
 

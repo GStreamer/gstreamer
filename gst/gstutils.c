@@ -482,6 +482,7 @@ overflow:
  * This function can potentially be very slow if denom > G_MAXUINT32.
  *
  * Returns: @val * @num / @denom, trying to avoid overflows.
+ * In the case of an overflow, this function returns G_MAXUINT64.
  */
 guint64
 gst_util_uint64_scale (guint64 val, guint64 num, guint64 denom)
@@ -528,7 +529,8 @@ do_int64:
  *
  * @num and @denom must be positive integers. @denom cannot be 0.
  *
- * Returns: @val * @num / @denom, avoiding overflow and loss of precision
+ * Returns: @val * @num / @denom, avoiding overflow and loss of precision.
+ * In the case of an overflow, this function returns G_MAXUINT64.
  */
 guint64
 gst_util_uint64_scale_int (guint64 val, gint num, gint denom)
@@ -3003,6 +3005,8 @@ static void
 push_and_ref (GstPad * pad, GstEvent * event)
 {
   gst_pad_push_event (pad, gst_event_ref (event));
+  /* iterator refs pad, we unref when we are done with it */
+  gst_object_unref (pad);
 }
 
 /**

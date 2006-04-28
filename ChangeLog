@@ -1,3 +1,13 @@
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstutils.c: (push_and_ref):
+	Added some more docs.
+	Fix refcount issue whith gst_element_found_tags() helper 
+	function. Fixes #338335
+
+	* tests/check/gst/gstutils.c: (GST_START_TEST), (gst_utils_suite):
+	Added testsuite for gst_element_found_tags().
+
 2006-04-28  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gstvalue.c: (gst_value_serialize_flags):
