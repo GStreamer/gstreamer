@@ -4,16 +4,8 @@ else
 SUBDIRS_CHECK =
 endif
 
-if USE_X
-SUBDIRS_ICLES = icles
-else
-SUBDIRS_ICLES =
-endif
+SUBDIRS = icles			\
+	$(SUBDIRS_CHECK)
 
-SUBDIRS = 			\
-	$(SUBDIRS_CHECK)	\
-	$(SUBDIRS_ICLES)
-
-DIST_SUBDIRS = 			\
-	check			\
-	icles
+DIST_SUBDIRS = icles		\
+	check

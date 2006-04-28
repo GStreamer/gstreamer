@@ -1,3 +1,22 @@
+2006-04-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins-decl-list.txt:
+	* docs/plugins/gst-plugins-bad-plugins-decl.txt:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-undocumented.txt:
+	* sys/Makefile.am:
+	* sys/ximagesrc/Makefile.am:
+	* sys/ximagesrc/ximagesrc.c:
+	* sys/ximagesrc/ximagesrc.h:
+	* sys/ximagesrc/ximageutil.c:
+	* sys/ximagesrc/ximageutil.h:
+	* tests/Makefile.am:
+	* tests/icles/.cvsignore:
+	* tests/icles/Makefile.am:
+	* tests/icles/ximagesrc-test.c:
+	  moved ximagesrc to good (See #336756)
+
 2006-04-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/faad/gstfaad.c: (gst_faad_init), (aac_rate_idx),

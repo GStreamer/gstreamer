@@ -133,6 +133,92 @@ void
 <RETURNS>GType </RETURNS>
 void
 </FUNCTION>
+<MACRO>
+<NAME>GST_TYPE_XIMAGESRC</NAME>
+#define GST_TYPE_XIMAGESRC (gst_ximagesrc_get_type())
+</MACRO>
+<MACRO>
+<NAME>GST_XIMAGESRC</NAME>
+#define GST_XIMAGESRC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_XIMAGESRC,GstXImageSrc))
+</MACRO>
+<MACRO>
+<NAME>GST_XIMAGESRC_CLASS</NAME>
+#define GST_XIMAGESRC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_XIMAGESRC,GstXImageSrc))
+</MACRO>
+<MACRO>
+<NAME>GST_IS_XIMAGESRC</NAME>
+#define GST_IS_XIMAGESRC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XIMAGESRC))
+</MACRO>
+<MACRO>
+<NAME>GST_IS_XIMAGESRC_CLASS</NAME>
+#define GST_IS_XIMAGESRC_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XIMAGESRC))
+</MACRO>
+<STRUCT>
+<NAME>GstXImageSrc</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstXImageSrcClass</NAME>
+</STRUCT>
+<FUNCTION>
+<NAME>gst_ximagesrc_get_type</NAME>
+<RETURNS>GType </RETURNS>
+void
+</FUNCTION>
+<STRUCT>
+<NAME>GstXImageSrc</NAME>
+struct _GstXImageSrc
+{
+  GstPushSrc parent;
+
+  /* Information on display */
+  GstXContext *xcontext;
+  gint width;
+  gint height;
+  
+  Window xwindow;
+  gchar *display_name;
+  guint screen_num;
+  
+  /* Desired output framerate */
+  gint fps_n;
+  gint fps_d;
+  
+  /* for framerate sync */
+  GstClockID clock_id; 
+  gint64 last_frame_no;
+  
+  /* Protect X Windows calls */
+  GMutex *x_lock;
+
+  /* Gathered pool of emitted buffers */
+  GMutex *pool_lock;
+  GSList *buffer_pool;
+
+  /* XFixes and XDamage support */
+  gboolean have_xfixes;
+  gboolean have_xdamage;
+  gboolean show_pointer;
+#ifdef HAVE_XFIXES
+  int fixes_event_base;
+  XFixesCursorImage *cursor_image;
+
+#endif
+#ifdef HAVE_XDAMAGE
+  Damage damage;
+  int damage_event_base;
+  XserverRegion damage_region;
+  GC damage_copy_gc;
+#endif
+
+};
+</STRUCT>
+<STRUCT>
+<NAME>GstXImageSrcClass</NAME>
+struct _GstXImageSrcClass
+{
+  GstPushSrcClass parent_class;
+};
+</STRUCT>
 <STRUCT>
 <NAME>GstTagLibMuxPriv</NAME>
 </STRUCT>
@@ -157,29 +243,29 @@ typedef struct _GstTagLibMuxClass {
 } GstTagLibMuxClass;
 </STRUCT>
 <MACRO>
-<NAME>GST_TYPE_TAGLIB_MUX</NAME>
-#define GST_TYPE_TAGLIB_MUX \
+<NAME>GST_TYPE_TAG_LIB_MUX</NAME>
+#define GST_TYPE_TAG_LIB_MUX \
   (gst_tag_lib_mux_get_type())
 </MACRO>
 <MACRO>
-<NAME>GST_TAGLIB_MUX</NAME>
-#define GST_TAGLIB_MUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TAGLIB_MUX,GstTagLibMux))
+<NAME>GST_TAG_LIB_MUX</NAME>
+#define GST_TAG_LIB_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TAG_LIB_MUX,GstTagLibMux))
 </MACRO>
 <MACRO>
-<NAME>GST_TAGLIB_MUX_CLASS</NAME>
-#define GST_TAGLIB_MUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TAGLIB_MUX,GstTagLibMuxClass))
+<NAME>GST_TAG_LIB_MUX_CLASS</NAME>
+#define GST_TAG_LIB_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TAG_LIB_MUX,GstTagLibMuxClass))
 </MACRO>
 <MACRO>
-<NAME>GST_IS_TAGLIB_MUX</NAME>
-#define GST_IS_TAGLIB_MUX(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TAGLIB_MUX))
+<NAME>GST_IS_TAG_LIB_MUX</NAME>
+#define GST_IS_TAG_LIB_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TAG_LIB_MUX))
 </MACRO>
 <MACRO>
-<NAME>GST_IS_TAGLIB_MUX_CLASS</NAME>
-#define GST_IS_TAGLIB_MUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TAGLIB_MUX))
+<NAME>GST_IS_TAG_LIB_MUX_CLASS</NAME>
+#define GST_IS_TAG_LIB_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TAG_LIB_MUX))
 </MACRO>
 <FUNCTION>
 <NAME>gst_tag_lib_mux_get_type</NAME>

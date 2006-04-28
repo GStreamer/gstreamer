@@ -1,9 +1,10 @@
-92% symbol docs coverage.
-11 symbols documented.
+83% symbol docs coverage.
+10 symbols documented.
 0 symbols incomplete.
-1 not documented.
+2 not documented.
 
 
 GstTagLibMux
 
 
+element-tagid3v2mux:Short_Description
