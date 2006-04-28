@@ -83,16 +83,26 @@ GST_STATIC_CAPS ( \
       "endianness = (int) BYTE_ORDER, " \
       "width = (int) 16, " \
       "depth = (int) 16, " \
-      "signed = (boolean) true " \
+      "signed = (boolean) true;" \
+    "audio/x-raw-int, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, MAX ], " \
+      "endianness = (int) BYTE_ORDER, " \
+      "width = (int) 32, " \
+      "depth = (int) 32, " \
+      "signed = (boolean) true;" \
+    "audio/x-raw-float, " \
+      "rate = (int) [ 1, MAX ], "	\
+      "channels = (int) [ 1, MAX ], " \
+      "endianness = (int) BYTE_ORDER, " \
+      "width = (int) 32; " \
+    "audio/x-raw-float, " \
+      "rate = (int) [ 1, MAX ], "	\
+      "channels = (int) [ 1, MAX ], " \
+      "endianness = (int) BYTE_ORDER, " \
+      "width = (int) 64" \
 )
 
-#if 0
-  /* disabled because it segfaults */
-"audio/x-raw-float, "
-    "rate = (int) [ 1, MAX ], "
-    "channels = (int) [ 1, MAX ], "
-    "endianness = (int) BYTE_ORDER, " "width = (int) 32"
-#endif
 static GstStaticPadTemplate gst_audioresample_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK, GST_PAD_ALWAYS, SUPPORTED_CAPS);
@@ -197,7 +207,6 @@ gst_audioresample_init (GstAudioresample * audioresample,
   audioresample->next_ts = -1;
 
   resample_set_filter_length (r, DEFAULT_FILTERLEN);
-  resample_set_format (r, RESAMPLE_FORMAT_S16);
 }
 
 static void
@@ -259,28 +268,49 @@ resample_set_state_from_caps (ResampleState * state, GstCaps * incaps,
   gboolean ret;
   gint myinrate, myoutrate;
   int mychannels;
+  gint width, depth;
+  ResampleFormat format;
 
   GST_DEBUG ("incaps %" GST_PTR_FORMAT ", outcaps %"
       GST_PTR_FORMAT, incaps, outcaps);
 
   structure = gst_caps_get_structure (incaps, 0);
 
-  /* FIXME: once it does float, set the correct format */
-#if 0
-  if (g_str_equal (gst_structure_get_name (structure), "audio/x-raw-float")) {
-    r->format = GST_RESAMPLE_FLOAT;
-  } else {
-    r->format = GST_RESAMPLE_S16;
-  }
-#endif
+  /* get width */
+  ret = gst_structure_get_int (structure, "width", &width);
+  if (!ret)
+    goto no_width;
 
+  /* figure out the format */
+  if (g_str_equal (gst_structure_get_name (structure), "audio/x-raw-float")) {
+    if (width == 32)
+      format = RESAMPLE_FORMAT_F32;
+    else if (width == 64)
+      format = RESAMPLE_FORMAT_F64;
+    else
+      goto wrong_depth;
+  } else {
+    /* for int, depth and width must be the same */
+    ret = gst_structure_get_int (structure, "depth", &depth);
+    if (!ret || width != depth)
+      goto not_equal;
+
+    if (width == 16)
+      format = RESAMPLE_FORMAT_S16;
+    else if (width == 32)
+      format = RESAMPLE_FORMAT_S32;
+    else
+      goto wrong_depth;
+  }
   ret = gst_structure_get_int (structure, "rate", &myinrate);
   ret &= gst_structure_get_int (structure, "channels", &mychannels);
-  g_return_val_if_fail (ret, FALSE);
+  if (!ret)
+    goto no_in_rate_channels;
 
   structure = gst_caps_get_structure (outcaps, 0);
   ret = gst_structure_get_int (structure, "rate", &myoutrate);
-  g_return_val_if_fail (ret, FALSE);
+  if (!ret)
+    goto no_out_rate;
 
   if (channels)
     *channels = mychannels;
@@ -289,11 +319,39 @@ resample_set_state_from_caps (ResampleState * state, GstCaps * incaps,
   if (outrate)
     *outrate = myoutrate;
 
+  resample_set_format (state, format);
   resample_set_n_channels (state, mychannels);
   resample_set_input_rate (state, myinrate);
   resample_set_output_rate (state, myoutrate);
 
   return TRUE;
+
+  /* ERRORS */
+no_width:
+  {
+    GST_DEBUG ("failed to get width from caps");
+    return FALSE;
+  }
+not_equal:
+  {
+    GST_DEBUG ("width %d and depth %d must be the same", width, depth);
+    return FALSE;
+  }
+wrong_depth:
+  {
+    GST_DEBUG ("unknown depth %d found", depth);
+    return FALSE;
+  }
+no_in_rate_channels:
+  {
+    GST_DEBUG ("could not get input rate and channels");
+    return FALSE;
+  }
+no_out_rate:
+  {
+    GST_DEBUG ("could not get output rate");
+    return FALSE;
+  }
 }
 
 gboolean
