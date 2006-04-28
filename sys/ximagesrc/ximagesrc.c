@@ -54,8 +54,8 @@
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_debug_ximagesrc);
-#define GST_CAT_DEFAULT gst_debug_ximagesrc
+GST_DEBUG_CATEGORY_STATIC (gst_debug_ximage_src);
+#define GST_CAT_DEFAULT gst_debug_ximage_src
 
 /* elementfactory information */
 static const GstElementDetails ximagesrc_details =
@@ -81,14 +81,15 @@ enum
   PROP_SHOW_POINTER
 };
 
-GST_BOILERPLATE (GstXImageSrc, gst_ximagesrc, GstPushSrc, GST_TYPE_PUSH_SRC);
+GST_BOILERPLATE (GstXImageSrc, gst_ximage_src, GstPushSrc, GST_TYPE_PUSH_SRC);
 
-static void gst_ximagesrc_fixate (GstPad * pad, GstCaps * caps);
-static void gst_ximagesrc_clear_bufpool (GstXImageSrc * ximagesrc);
+static void gst_ximage_src_fixate (GstPad * pad, GstCaps * caps);
+static void gst_ximage_src_clear_bufpool (GstXImageSrc * ximagesrc);
 
 /* Called when a buffer is returned from the pipeline */
 static void
-gst_ximagesrc_return_buf (GstXImageSrc * ximagesrc, GstXImageSrcBuffer * ximage)
+gst_ximage_src_return_buf (GstXImageSrc * ximagesrc,
+    GstXImageSrcBuffer * ximage)
 {
   /* If our geometry changed we can't reuse that image. */
   if ((ximage->width != ximagesrc->width) ||
@@ -112,9 +113,9 @@ gst_ximagesrc_return_buf (GstXImageSrc * ximagesrc, GstXImageSrcBuffer * ximage)
 }
 
 static gboolean
-gst_ximagesrc_open_display (GstXImageSrc * s, const gchar * name)
+gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
 {
-  g_return_val_if_fail (GST_IS_XIMAGESRC (s), FALSE);
+  g_return_val_if_fail (GST_IS_XIMAGE_SRC (s), FALSE);
 
   if (s->xcontext != NULL)
     return TRUE;
@@ -187,21 +188,21 @@ gst_ximagesrc_open_display (GstXImageSrc * s, const gchar * name)
 }
 
 static gboolean
-gst_ximagesrc_start (GstBaseSrc * basesrc)
+gst_ximage_src_start (GstBaseSrc * basesrc)
 {
-  GstXImageSrc *s = GST_XIMAGESRC (basesrc);
+  GstXImageSrc *s = GST_XIMAGE_SRC (basesrc);
 
   s->last_frame_no = -1;
 
-  return gst_ximagesrc_open_display (s, NULL);
+  return gst_ximage_src_open_display (s, NULL);
 }
 
 static gboolean
-gst_ximagesrc_stop (GstBaseSrc * basesrc)
+gst_ximage_src_stop (GstBaseSrc * basesrc)
 {
-  GstXImageSrc *src = GST_XIMAGESRC (basesrc);
+  GstXImageSrc *src = GST_XIMAGE_SRC (basesrc);
 
-  gst_ximagesrc_clear_bufpool (src);
+  gst_ximage_src_clear_bufpool (src);
 
   if (src->xcontext) {
     g_mutex_lock (src->x_lock);
@@ -214,9 +215,9 @@ gst_ximagesrc_stop (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_ximagesrc_unlock (GstBaseSrc * basesrc)
+gst_ximage_src_unlock (GstBaseSrc * basesrc)
 {
-  GstXImageSrc *src = GST_XIMAGESRC (basesrc);
+  GstXImageSrc *src = GST_XIMAGE_SRC (basesrc);
 
   /* Awaken the create() func if it's waiting on the clock */
   GST_OBJECT_LOCK (src);
@@ -230,7 +231,7 @@ gst_ximagesrc_unlock (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_ximagesrc_recalc (GstXImageSrc * src)
+gst_ximage_src_recalc (GstXImageSrc * src)
 {
   if (!src->xcontext)
     return FALSE;
@@ -323,7 +324,7 @@ composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
 /* Retrieve an XImageSrcBuffer, preferably from our
  * pool of existing images and populate it from the window */
 static GstXImageSrcBuffer *
-gst_ximagesrc_ximage_get (GstXImageSrc * ximagesrc)
+gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 {
   GstXImageSrcBuffer *ximage = NULL;
   GstCaps *caps = NULL;
@@ -351,7 +352,7 @@ gst_ximagesrc_ximage_get (GstXImageSrc * ximagesrc)
     g_mutex_lock (ximagesrc->x_lock);
     ximage = gst_ximageutil_ximage_new (ximagesrc->xcontext,
         GST_ELEMENT (ximagesrc), ximagesrc->width, ximagesrc->height,
-        (BufferReturnFunc) (gst_ximagesrc_return_buf));
+        (BufferReturnFunc) (gst_ximage_src_return_buf));
     if (ximage == NULL) {
       GST_ELEMENT_ERROR (ximagesrc, RESOURCE, WRITE, (NULL),
           ("could not create a %dx%d ximage", ximage->width, ximage->height));
@@ -379,7 +380,7 @@ gst_ximagesrc_ximage_get (GstXImageSrc * ximagesrc)
     g_mutex_unlock (ximagesrc->x_lock);
   }
 
-  g_return_val_if_fail (GST_IS_XIMAGESRC (ximagesrc), NULL);
+  g_return_val_if_fail (GST_IS_XIMAGE_SRC (ximagesrc), NULL);
 
 #ifdef HAVE_XDAMAGE
   if (ximagesrc->have_xdamage) {
@@ -512,16 +513,16 @@ gst_ximagesrc_ximage_get (GstXImageSrc * ximagesrc)
 }
 
 static GstFlowReturn
-gst_ximagesrc_create (GstPushSrc * bs, GstBuffer ** buf)
+gst_ximage_src_create (GstPushSrc * bs, GstBuffer ** buf)
 {
-  GstXImageSrc *s = GST_XIMAGESRC (bs);
+  GstXImageSrc *s = GST_XIMAGE_SRC (bs);
   GstXImageSrcBuffer *image;
   GstClockTime base_time;
   GstClockTime next_capture_ts;
   GstClockTime dur;
   gint64 next_frame_no;
 
-  if (!gst_ximagesrc_recalc (s)) {
+  if (!gst_ximage_src_recalc (s)) {
     GST_ELEMENT_ERROR (s, RESOURCE, FAILED,
         (_("Changing resolution at runtime is not yet supported.")), (NULL));
     return GST_FLOW_ERROR;
@@ -588,7 +589,7 @@ gst_ximagesrc_create (GstPushSrc * bs, GstBuffer ** buf)
   s->last_frame_no = next_frame_no;
   GST_OBJECT_UNLOCK (s);
 
-  image = gst_ximagesrc_ximage_get (s);
+  image = gst_ximage_src_ximage_get (s);
   if (!image)
     return GST_FLOW_ERROR;
 
@@ -600,10 +601,10 @@ gst_ximagesrc_create (GstPushSrc * bs, GstBuffer ** buf)
 }
 
 static void
-gst_ximagesrc_set_property (GObject * object, guint prop_id,
+gst_ximage_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstXImageSrc *src = GST_XIMAGESRC (object);
+  GstXImageSrc *src = GST_XIMAGE_SRC (object);
 
   switch (prop_id) {
     case PROP_DISPLAY_NAME:
@@ -623,10 +624,10 @@ gst_ximagesrc_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_ximagesrc_get_property (GObject * object, guint prop_id, GValue * value,
+gst_ximage_src_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstXImageSrc *src = GST_XIMAGESRC (object);
+  GstXImageSrc *src = GST_XIMAGE_SRC (object);
 
   switch (prop_id) {
     case PROP_DISPLAY_NAME:
@@ -649,7 +650,7 @@ gst_ximagesrc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_ximagesrc_clear_bufpool (GstXImageSrc * ximagesrc)
+gst_ximage_src_clear_bufpool (GstXImageSrc * ximagesrc)
 {
   g_mutex_lock (ximagesrc->pool_lock);
   while (ximagesrc->buffer_pool != NULL) {
@@ -664,7 +665,7 @@ gst_ximagesrc_clear_bufpool (GstXImageSrc * ximagesrc)
 }
 
 static void
-gst_ximagesrc_base_init (gpointer g_class)
+gst_ximage_src_base_init (gpointer g_class)
 {
   GstElementClass *ec = GST_ELEMENT_CLASS (g_class);
 
@@ -673,16 +674,16 @@ gst_ximagesrc_base_init (gpointer g_class)
 }
 
 static void
-gst_ximagesrc_dispose (GObject * object)
+gst_ximage_src_dispose (GObject * object)
 {
   /* Drop references in the buffer_pool */
-  gst_ximagesrc_clear_bufpool (GST_XIMAGESRC (object));
+  gst_ximage_src_clear_bufpool (GST_XIMAGE_SRC (object));
 }
 
 static void
-gst_ximagesrc_finalize (GObject * object)
+gst_ximage_src_finalize (GObject * object)
 {
-  GstXImageSrc *src = GST_XIMAGESRC (object);
+  GstXImageSrc *src = GST_XIMAGE_SRC (object);
 
   if (src->xcontext)
     ximageutil_xcontext_clear (src->xcontext);
@@ -694,16 +695,16 @@ gst_ximagesrc_finalize (GObject * object)
 }
 
 static GstCaps *
-gst_ximagesrc_get_caps (GstBaseSrc * bs)
+gst_ximage_src_get_caps (GstBaseSrc * bs)
 {
-  GstXImageSrc *s = GST_XIMAGESRC (bs);
+  GstXImageSrc *s = GST_XIMAGE_SRC (bs);
   GstXContext *xcontext;
 
-  if ((!s->xcontext) && (!gst_ximagesrc_open_display (s, NULL)))
+  if ((!s->xcontext) && (!gst_ximage_src_open_display (s, NULL)))
     return gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC (s)->
             srcpad));
 
-  if (!gst_ximagesrc_recalc (s))
+  if (!gst_ximage_src_recalc (s))
     return gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC (s)->
             srcpad));
 
@@ -724,9 +725,9 @@ gst_ximagesrc_get_caps (GstBaseSrc * bs)
 }
 
 static gboolean
-gst_ximagesrc_set_caps (GstBaseSrc * bs, GstCaps * caps)
+gst_ximage_src_set_caps (GstBaseSrc * bs, GstCaps * caps)
 {
-  GstXImageSrc *s = GST_XIMAGESRC (bs);
+  GstXImageSrc *s = GST_XIMAGE_SRC (bs);
   GstStructure *structure;
   const GValue *new_fps;
 
@@ -750,7 +751,7 @@ gst_ximagesrc_set_caps (GstBaseSrc * bs, GstCaps * caps)
 }
 
 static void
-gst_ximagesrc_fixate (GstPad * pad, GstCaps * caps)
+gst_ximage_src_fixate (GstPad * pad, GstCaps * caps)
 {
   gint i;
   GstStructure *structure;
@@ -763,16 +764,16 @@ gst_ximagesrc_fixate (GstPad * pad, GstCaps * caps)
 }
 
 static void
-gst_ximagesrc_class_init (GstXImageSrcClass * klass)
+gst_ximage_src_class_init (GstXImageSrcClass * klass)
 {
   GObjectClass *gc = G_OBJECT_CLASS (klass);
   GstBaseSrcClass *bc = GST_BASE_SRC_CLASS (klass);
   GstPushSrcClass *push_class = GST_PUSH_SRC_CLASS (klass);
 
-  gc->set_property = gst_ximagesrc_set_property;
-  gc->get_property = gst_ximagesrc_get_property;
-  gc->dispose = gst_ximagesrc_dispose;
-  gc->finalize = gst_ximagesrc_finalize;
+  gc->set_property = gst_ximage_src_set_property;
+  gc->get_property = gst_ximage_src_get_property;
+  gc->dispose = gst_ximage_src_dispose;
+  gc->finalize = gst_ximage_src_finalize;
 
   g_object_class_install_property (gc, PROP_DISPLAY_NAME,
       g_param_spec_string ("display_name", "Display", "X Display Name", NULL,
@@ -787,20 +788,20 @@ gst_ximagesrc_class_init (GstXImageSrcClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  push_class->create = gst_ximagesrc_create;
-  bc->get_caps = gst_ximagesrc_get_caps;
-  bc->set_caps = gst_ximagesrc_set_caps;
-  bc->start = gst_ximagesrc_start;
-  bc->stop = gst_ximagesrc_stop;
-  bc->unlock = gst_ximagesrc_unlock;
+  push_class->create = gst_ximage_src_create;
+  bc->get_caps = gst_ximage_src_get_caps;
+  bc->set_caps = gst_ximage_src_set_caps;
+  bc->start = gst_ximage_src_start;
+  bc->stop = gst_ximage_src_stop;
+  bc->unlock = gst_ximage_src_unlock;
 }
 
 static void
-gst_ximagesrc_init (GstXImageSrc * ximagesrc, GstXImageSrcClass * klass)
+gst_ximage_src_init (GstXImageSrc * ximagesrc, GstXImageSrcClass * klass)
 {
   gst_base_src_set_live (GST_BASE_SRC (ximagesrc), TRUE);
   gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (ximagesrc),
-      gst_ximagesrc_fixate);
+      gst_ximage_src_fixate);
 
   ximagesrc->pool_lock = g_mutex_new ();
   ximagesrc->x_lock = g_mutex_new ();
@@ -812,11 +813,11 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
 
-  GST_DEBUG_CATEGORY_INIT (gst_debug_ximagesrc, "ximagesrc", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_debug_ximage_src, "ximagesrc", 0,
       "ximagesrc element debug");
 
   ret = gst_element_register (plugin, "ximagesrc", GST_RANK_NONE,
-      GST_TYPE_XIMAGESRC);
+      GST_TYPE_XIMAGE_SRC);
 
   return ret;
 }
