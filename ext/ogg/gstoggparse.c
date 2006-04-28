@@ -36,7 +36,7 @@
 #include <ogg/ogg.h>
 #include <string.h>
 
-static GstElementDetails gst_ogg_parse_details =
+static const GstElementDetails gst_ogg_parse_details =
 GST_ELEMENT_DETAILS ("Ogg parser",
     "Codec/Parser",
     "parse ogg streams into pages (info about ogg: http://xiph.org)",

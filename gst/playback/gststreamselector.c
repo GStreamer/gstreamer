@@ -37,7 +37,7 @@
 GST_DEBUG_CATEGORY_STATIC (stream_selector_debug);
 #define GST_CAT_DEFAULT stream_selector_debug
 
-static GstElementDetails gst_stream_selector_details =
+static const GstElementDetails gst_stream_selector_details =
 GST_ELEMENT_DETAILS ("StreamSelector",
     "Generic",
     "N-to-1 input stream_selectoring",

@@ -67,7 +67,7 @@ static GstPadTemplate *gst_vorbis_enc_src_template,
     *gst_vorbis_enc_sink_template;
 
 /* elementfactory information */
-GstElementDetails vorbisenc_details =
+static const GstElementDetails vorbisenc_details =
 GST_ELEMENT_DETAILS ("Vorbis audio encoder",
     "Codec/Encoder/Audio",
     "Encodes audio in Vorbis format",

@@ -56,7 +56,7 @@ GST_DEBUG_CATEGORY (tcpclientsrc_debug);
 #define MAX_READ_SIZE                   4 * 1024
 
 
-static GstElementDetails gst_tcp_client_src_details =
+static const GstElementDetails gst_tcp_client_src_details =
 GST_ELEMENT_DETAILS ("TCP client source",
     "Source/Network",
     "Receive data as a client over the network via TCP",

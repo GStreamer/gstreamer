@@ -33,7 +33,7 @@
 GST_DEBUG_CATEGORY_STATIC (sub_parse_debug);
 #define GST_CAT_DEFAULT sub_parse_debug
 
-static GstElementDetails sub_parse_details =
+static const GstElementDetails sub_parse_details =
 GST_ELEMENT_DETAILS ("Subtitle parser",
     "Codec/Parser/Subtitle",
     "Parses subtitle (.sub) files into text streams",

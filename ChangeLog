@@ -1,5 +1,54 @@
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/alsa/gstalsamixerelement.c:
+	* ext/alsa/gstalsasrc.c:
+	* ext/cdparanoia/gstcdparanoiasrc.c:
+	* ext/gnomevfs/gstgnomevfssink.c:
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggmux.c:
+	* ext/ogg/gstoggparse.c:
+	* ext/ogg/gstogmparse.c:
+	* ext/pango/gstclockoverlay.c:
+	* ext/pango/gsttextoverlay.c:
+	* ext/pango/gsttextrender.c:
+	* ext/pango/gsttimeoverlay.c:
+	* ext/theora/theoradec.c:
+	* ext/theora/theoraenc.c:
+	* ext/vorbis/vorbisdec.c:
+	* ext/vorbis/vorbisenc.c:
+	* gst-libs/gst/audio/gstaudiofilter.c:
+	* gst-libs/gst/audio/gstaudiofiltertemplate.c:
+	* gst/audioconvert/gstaudioconvert.c:
+	* gst/audiorate/gstaudiorate.c:
+	* gst/audioresample/gstaudioresample.c:
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	* gst/playback/gstdecodebin.c:
+	* gst/playback/gstplaybin.c:
+	* gst/playback/gststreamselector.c:
+	* gst/subparse/gstsubparse.c:
+	* gst/tcp/gstmultifdsink.c:
+	* gst/tcp/gsttcpclientsink.c:
+	* gst/tcp/gsttcpclientsrc.c:
+	* gst/tcp/gsttcpserversink.c:
+	* gst/tcp/gsttcpserversrc.c:
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	* gst/videorate/gstvideorate.c:
+	* gst/videoscale/gstvideoscale.c:
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/volume/gstvolume.c:
+	* sys/v4l/gstv4ljpegsrc.c:
+	* sys/v4l/gstv4lmjpegsink.c:
+	* sys/v4l/gstv4lmjpegsrc.c:
+	* sys/v4l/gstv4lsrc.c:
+	* sys/ximage/ximagesink.c:
+	* sys/xvimage/xvimagesink.c:
+	* tests/check/libs/cddabasesrc.c:
+         make GstElementDetails const
+
+2006-04-28  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/adder/gstadder.c: (gst_adder_setcaps), (gst_adder_src_event),
 	(gst_adder_init):
         send events from src-pad to all sink-pads fixes #338657

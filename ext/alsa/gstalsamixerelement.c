@@ -36,7 +36,7 @@ enum
 };
 
 
-static GstElementDetails gst_alsa_mixer_element_details =
+static const GstElementDetails gst_alsa_mixer_element_details =
 GST_ELEMENT_DETAILS ("Alsa mixer",
     "Generic/Audio",
     "Control sound input and output levels with ALSA",

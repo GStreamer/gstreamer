@@ -184,7 +184,7 @@ static gboolean gst_cd_foo_src_open (GstCddaBaseSrc * src,
     const gchar * device);
 static void gst_cd_foo_src_close (GstCddaBaseSrc * src);
 
-static GstElementDetails cdfoo_details =
+static const GstElementDetails cdfoo_details =
 GST_ELEMENT_DETAILS ("CD Audio (cdda) Source, FooBar",
     "Source/File",
     "Read audio from CD",

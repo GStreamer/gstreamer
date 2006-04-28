@@ -57,7 +57,7 @@ GST_DEBUG_CATEGORY (tcpserversrc_debug);
 #define TCP_BACKLOG                     1       /* client connection queue */
 
 
-static GstElementDetails gst_tcp_server_src_details =
+static const GstElementDetails gst_tcp_server_src_details =
 GST_ELEMENT_DETAILS ("TCP server source",
     "Source/Network",
     "Receive data as a server over the network via TCP",

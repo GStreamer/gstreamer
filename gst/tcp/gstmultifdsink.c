@@ -127,7 +127,7 @@ G_STMT_START {                                  \
 } G_STMT_END
 
 /* elementfactory information */
-static GstElementDetails gst_multi_fd_sink_details =
+static const GstElementDetails gst_multi_fd_sink_details =
 GST_ELEMENT_DETAILS ("Multi filedescriptor sink",
     "Sink/Network",
     "Send data to multiple filedescriptors",

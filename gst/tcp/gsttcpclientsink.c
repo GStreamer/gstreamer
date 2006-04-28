@@ -28,7 +28,7 @@
 #include <string.h>             /* memset */
 
 /* elementfactory information */
-static GstElementDetails gst_tcp_client_sink_details =
+static const GstElementDetails gst_tcp_client_sink_details =
 GST_ELEMENT_DETAILS ("TCP client sink",
     "Sink/Network",
     "Send data as a client over the network via TCP",

@@ -157,7 +157,7 @@ static void gst_xvimagesink_expose (GstXOverlay * overlay);
 //static void gst_xvimagesink_send_pending_navigation (GstXvImageSink * xvimagesink);
 
 /* ElementFactory information */
-static GstElementDetails gst_xvimagesink_details =
+static const GstElementDetails gst_xvimagesink_details =
 GST_ELEMENT_DETAILS ("Video sink",
     "Sink/Video",
     "A Xv based videosink",

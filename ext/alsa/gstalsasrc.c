@@ -56,7 +56,7 @@
 #include <gst/gst-i18n-plugin.h>
 
 /* elementfactory information */
-static GstElementDetails gst_alsasrc_details =
+static const GstElementDetails gst_alsasrc_details =
 GST_ELEMENT_DETAILS ("Audio source (ALSA)",
     "Source/Audio",
     "Read from a sound card via ALSA",

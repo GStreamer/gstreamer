@@ -53,7 +53,7 @@ GST_DEBUG_CATEGORY (video_test_src_debug);
 #define GST_CAT_DEFAULT video_test_src_debug
 
 
-static GstElementDetails video_test_src_details =
+static const GstElementDetails video_test_src_details =
 GST_ELEMENT_DETAILS ("Video test source",
     "Source/Video",
     "Creates a test video stream",

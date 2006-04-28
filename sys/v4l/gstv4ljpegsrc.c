@@ -30,7 +30,7 @@
 #include "v4lsrc_calls.h"
 
 /* elementfactory information */
-static GstElementDetails gst_v4ljpegsrc_details =
+static const GstElementDetails gst_v4ljpegsrc_details =
 GST_ELEMENT_DETAILS ("Video (video4linux/raw) Jpeg Source",
     "Source/Video",
     "Reads jpeg frames from a video4linux (eg ov519) device",

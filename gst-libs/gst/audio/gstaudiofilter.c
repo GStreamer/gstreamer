@@ -27,7 +27,7 @@
 
 #include <string.h>
 
-static GstElementDetails audio_filter_details =
+static const GstElementDetails audio_filter_details =
 GST_ELEMENT_DETAILS ("Audio filter base class",
     "Filter/Effect/Audio",
     "Filters audio",

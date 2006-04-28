@@ -73,7 +73,7 @@
 #include <string.h>
 #include <errno.h>
 
-static GstElementDetails gst_gnome_vfs_sink_details =
+static const GstElementDetails gst_gnome_vfs_sink_details =
 GST_ELEMENT_DETAILS ("GnomeVFS Sink",
     "Sink/File",
     "Write a stream to a GnomeVFS URI",

@@ -96,7 +96,7 @@
 GST_DEBUG_CATEGORY_STATIC (gnomevfssrc_debug);
 #define GST_CAT_DEFAULT gnomevfssrc_debug
 
-static GstElementDetails gst_gnome_vfs_src_details =
+static const GstElementDetails gst_gnome_vfs_src_details =
 GST_ELEMENT_DETAILS ("GnomeVFS Source",
     "Source/File",
     "Read from any GnomeVFS-supported file",

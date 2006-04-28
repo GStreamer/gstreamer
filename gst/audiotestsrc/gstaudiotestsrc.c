@@ -64,7 +64,7 @@
 
 #define M_PI_M2 ( M_PI + M_PI )
 
-static GstElementDetails gst_audio_test_src_details =
+static const GstElementDetails gst_audio_test_src_details =
 GST_ELEMENT_DETAILS ("Audio test source",
     "Source/Audio",
     "Creates audio test signals of given frequency and volume",

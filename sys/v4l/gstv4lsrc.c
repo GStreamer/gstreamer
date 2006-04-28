@@ -30,7 +30,7 @@
 #include <sys/ioctl.h>
 
 
-static GstElementDetails gst_v4lsrc_details =
+static const GstElementDetails gst_v4lsrc_details =
 GST_ELEMENT_DETAILS ("Video (video4linux/raw) Source",
     "Source/Video",
     "Reads raw frames from a video4linux device",

@@ -34,7 +34,7 @@
 #include <gst/audio/gstaudiofilter.h>
 #include <string.h>
 
-static GstElementDetails audio_filter_template_details =
+static const GstElementDetails audio_filter_template_details =
 GST_ELEMENT_DETAILS ("Audio filter template",
     "Filter/Effect/Audio",
     "Filters audio",

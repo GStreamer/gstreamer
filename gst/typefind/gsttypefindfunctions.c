@@ -460,7 +460,7 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
  * of data (5762) to always detect any mp3.
  */
 
-static guint mp3types_bitrates[2][3][16] =
+static const guint mp3types_bitrates[2][3][16] =
     { {{0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448,},
     {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384,},
     {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320,}},
@@ -469,7 +469,7 @@ static guint mp3types_bitrates[2][3][16] =
     {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160,}},
 };
 
-static guint mp3types_freqs[3][3] = { {11025, 12000, 8000},
+static const guint mp3types_freqs[3][3] = { {11025, 12000, 8000},
 {22050, 24000, 16000},
 {44100, 48000, 32000}
 };
@@ -2255,6 +2255,10 @@ plugin_init (GstPlugin * plugin)
   /* can't initialize this via a struct as caps can't be statically initialized */
 
   /* note: asx/wax/wmx are XML files, asf doesn't handle them */
+  /* FIXME-0.11: these should be const,
+     this requires gstreamer/gst/gsttypefind::gst_type_find_register()
+     to have define the parameter as const
+   */
   static gchar *asf_exts[] = { "asf", "wm", "wma", "wmv", NULL };
   static gchar *au_exts[] = { "au", "snd", NULL };
   static gchar *avi_exts[] = { "avi", NULL };

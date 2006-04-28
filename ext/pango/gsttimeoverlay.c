@@ -57,7 +57,7 @@
 
 #include <gsttimeoverlay.h>
 
-static GstElementDetails time_overlay_details =
+static const GstElementDetails time_overlay_details =
 GST_ELEMENT_DETAILS ("Time overlay",
     "Filter/Editor/Video",
     "Overlays buffer time stamps on a video stream",

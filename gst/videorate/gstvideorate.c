@@ -74,7 +74,7 @@ GST_DEBUG_CATEGORY (video_rate_debug);
 #define GST_CAT_DEFAULT video_rate_debug
 
 /* elementfactory information */
-static GstElementDetails video_rate_details =
+static const GstElementDetails video_rate_details =
 GST_ELEMENT_DETAILS ("Video rate adjuster",
     "Filter/Effect/Video",
     "Drops/duplicates/adjusts timestamps on video frames to make a perfect stream",

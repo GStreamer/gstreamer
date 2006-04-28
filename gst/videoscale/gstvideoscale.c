@@ -72,7 +72,7 @@
 GST_DEBUG_CATEGORY (video_scale_debug);
 
 /* elementfactory information */
-static GstElementDetails video_scale_details =
+static const GstElementDetails video_scale_details =
 GST_ELEMENT_DETAILS ("Video scaler",
     "Filter/Effect/Video",
     "Resizes video",

@@ -64,7 +64,7 @@ struct _GstAudioRateClass
 };
 
 /* elementfactory information */
-static GstElementDetails audio_rate_details =
+static const GstElementDetails audio_rate_details =
 GST_ELEMENT_DETAILS ("Audio rate adjuster",
     "Filter/Effect/Audio",
     "Drops/duplicates/adjusts timestamps on audio samples to make a perfect stream",

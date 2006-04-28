@@ -128,7 +128,7 @@ static GstElementClass *parent_class;
 
 //static guint gst_play_bin_signals[LAST_SIGNAL] = { 0 };
 
-static GstElementDetails gst_play_bin_details =
+static const GstElementDetails gst_play_bin_details =
 GST_ELEMENT_DETAILS ("Player Bin",
     "Generic/Bin/Player",
     "Autoplug and play media from an uri",

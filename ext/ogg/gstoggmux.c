@@ -138,7 +138,8 @@ struct _GstOggMuxClass
 };
 
 /* elementfactory information */
-static GstElementDetails gst_ogg_mux_details = GST_ELEMENT_DETAILS ("Ogg muxer",
+static const GstElementDetails gst_ogg_mux_details =
+GST_ELEMENT_DETAILS ("Ogg muxer",
     "Codec/Muxer",
     "mux ogg streams (info about ogg: http://xiph.org)",
     "Wim Taymans <wim@fluendo.com>");

@@ -68,7 +68,7 @@ static gboolean gst_cd_paranoia_src_open (GstCddaBaseSrc * src,
     const gchar * device);
 static void gst_cd_paranoia_src_close (GstCddaBaseSrc * src);
 
-static GstElementDetails cdparanoia_details =
+static const GstElementDetails cdparanoia_details =
 GST_ELEMENT_DETAILS ("CD Audio (cdda) Source, Paranoia IV",
     "Source/File",
     "Read audio from CD in paranoid mode",

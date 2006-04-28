@@ -142,7 +142,7 @@ static void queue_filled_cb (GstElement * queue, GstDecodeBin * decode_bin);
 static GstElementClass *parent_class;
 static guint gst_decode_bin_signals[LAST_SIGNAL] = { 0 };
 
-static GstElementDetails gst_decode_bin_details =
+static const GstElementDetails gst_decode_bin_details =
 GST_ELEMENT_DETAILS ("Decoder Bin",
     "Generic/Bin/Decoder",
     "Autoplug and decode to raw media",

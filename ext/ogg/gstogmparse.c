@@ -55,19 +55,19 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogm_parse_debug);
 #define GST_OGM_PARSE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_OGM_PARSE, GstOgmParseClass))
 
-static GstElementDetails gst_ogm_audio_parse_details =
+static const GstElementDetails gst_ogm_audio_parse_details =
 GST_ELEMENT_DETAILS ("OGM audio stream parser",
     "Codec/Decoder/Audio",
     "parse an OGM audio header and stream",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
-static GstElementDetails gst_ogm_video_parse_details =
+static const GstElementDetails gst_ogm_video_parse_details =
 GST_ELEMENT_DETAILS ("OGM video stream parser",
     "Codec/Decoder/Video",
     "parse an OGM video header and stream",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
-static GstElementDetails gst_ogm_text_parse_details =
+static const GstElementDetails gst_ogm_text_parse_details =
 GST_ELEMENT_DETAILS ("OGM text stream parser",
     "Codec/Decoder/Subtitle",
     "parse an OGM text header and stream",

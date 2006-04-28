@@ -143,7 +143,7 @@ static void gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink,
 static void gst_ximagesink_expose (GstXOverlay * overlay);
 
 /* ElementFactory information */
-static GstElementDetails gst_ximagesink_details =
+static const GstElementDetails gst_ximagesink_details =
 GST_ELEMENT_DETAILS ("Video sink",
     "Sink/Video",
     "A standard X based videosink",

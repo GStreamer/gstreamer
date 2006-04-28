@@ -151,7 +151,7 @@ granulepos_to_timestamp (GstTheoraEnc * theoraenc, ogg_int64_t granulepos)
       theoraenc->info.fps_numerator);
 }
 
-static GstElementDetails theora_enc_details =
+static const GstElementDetails theora_enc_details =
 GST_ELEMENT_DETAILS ("Theora video encoder",
     "Codec/Encoder/Video",
     "encode raw YUV video to a theora stream",

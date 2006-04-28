@@ -43,7 +43,7 @@ GST_DEBUG_CATEGORY (ffmpegcolorspace_debug);
 #define GST_CAT_DEFAULT ffmpegcolorspace_debug
 
 /* elementfactory information */
-static GstElementDetails ffmpegcsp_details =
+static const GstElementDetails ffmpegcsp_details =
 GST_ELEMENT_DETAILS ("FFMPEG Colorspace converter",
     "Filter/Converter/Video",
     "Converts video from one colorspace to another",

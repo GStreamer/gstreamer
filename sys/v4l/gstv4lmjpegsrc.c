@@ -31,7 +31,7 @@ GST_DEBUG_CATEGORY (v4lmjpegsrc_debug);
 #define GST_CAT_DEFAULT v4lmjpegsrc_debug
 
 /* elementfactory information */
-static GstElementDetails gst_v4lmjpegsrc_details =
+static const GstElementDetails gst_v4lmjpegsrc_details =
 GST_ELEMENT_DETAILS ("Video (video4linux/MJPEG) Source",
     "Source/Video",
     "Reads MJPEG-encoded frames from a zoran MJPEG/video4linux device",

@@ -44,7 +44,7 @@
 #define TCP_BACKLOG             5
 
 /* elementfactory information */
-static GstElementDetails gst_tcp_server_sink_details =
+static const GstElementDetails gst_tcp_server_sink_details =
 GST_ELEMENT_DETAILS ("TCP server sink",
     "Sink/Network",
     "Send data as a server over the network via TCP",

@@ -57,7 +57,7 @@
 #include <gst/video/video.h>
 #include <time.h>
 
-static GstElementDetails clock_overlay_details =
+static const GstElementDetails clock_overlay_details =
 GST_ELEMENT_DETAILS ("Clock overlay",
     "Filter/Editor/Video",
     "Overlays the current clock time on a video stream",

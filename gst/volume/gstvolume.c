@@ -66,7 +66,7 @@
 /* number of steps we use for the mixer interface to go from 0.0 to 1.0 */
 # define VOLUME_STEPS           100
 
-static GstElementDetails volume_details = GST_ELEMENT_DETAILS ("Volume",
+static const GstElementDetails volume_details = GST_ELEMENT_DETAILS ("Volume",
     "Filter/Effect/Audio",
     "Set volume on audio/raw streams",
     "Andy Wingo <wingo@pobox.com>");
