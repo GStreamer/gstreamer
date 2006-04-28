@@ -3,7 +3,7 @@
   <description>ogg stream manipulation (info about ogg: http://xiph.org)</description>
   <filename>../../ext/ogg/.libs/libgstogg.so</filename>
   <basename>libgstogg.so</basename>
-  <version>0.10.5</version>
+  <version>0.10.6</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -11,21 +11,21 @@
   <elements>
     <element>
       <name>oggdemux</name>
-      <longname>ogg demuxer</longname>
+      <longname>Ogg demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>demux ogg streams (info about ogg: http://xiph.org)</description>
       <author>Wim Taymand &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>oggmux</name>
-      <longname>ogg muxer</longname>
+      <longname>Ogg muxer</longname>
       <class>Codec/Muxer</class>
       <description>mux ogg streams (info about ogg: http://xiph.org)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>oggparse</name>
-      <longname>ogg parser</longname>
+      <longname>Ogg parser</longname>
       <class>Codec/Parser</class>
       <description>parse ogg streams into pages (info about ogg: http://xiph.org)</description>
       <author>Michael Smith &lt;msmith@fluendo.com&gt;</author>

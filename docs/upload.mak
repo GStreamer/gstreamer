@@ -16,11 +16,9 @@
 DOC_SERVER=gstreamer.freedesktop.org
 DOC_BASE=/srv/gstreamer.freedesktop.org/www/data/doc
 DOC_URL=$(DOC_SERVER):$(DOC_BASE)
-GST_VERSION_NANO = $(GST_PLUGINS_BASE_VERSION_NANO)
-
 
 upload: $(FORMATS)
-	@if test "x$(GST_VERSION_NANO)" = x0; then \
+	@if test "x$(PACKAGE_VERSION_NANO)" = x0; then \
             export DOCVERSION=$(VERSION); \
         else export DOCVERSION=head; \
         fi; \

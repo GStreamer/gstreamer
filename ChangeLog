@@ -1,3 +1,10 @@
+=== release 0.10.6 ===
+
+2006-04-28  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.6, "Chao"
+
 2006-04-26  David Schleef  <ds@schleef.org>
 
 	* gst/videoscale/gstvideoscale.c: Add call to oil_init().
@@ -408,7 +415,7 @@
 
 	* tests/examples/seek/seek.c: (end_scrub), (seek_cb), (start_seek),
 	(stop_seek):
-	Don't let double and tripple clicks mess up our state.
+	Don't let double and triple clicks mess up our state.
 
 2006-03-28  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -525,8 +532,8 @@
 	* sys/v4l/gstv4lmjpegsrc.c:
 	* tests/check/libs/cddabasesrc.c:
 	* tests/old/examples/gob/gst-identity2.gob:
-        Add docs for adder, use GST_ELEMENT_DETAILS macro,
-        define GstElementDetails at the top
+	  Add docs for adder, use GST_ELEMENT_DETAILS macro,
+	  define GstElementDetails at the top
 
 2006-03-23  Sebastien Moutte  <sebastien@moutte.net>
 
@@ -25346,4 +25353,4 @@
 2003-12-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ChangeLog: moved to gstreamer/docs/random/old/ChangeLog.gst-plugins
-        * moved CVS to freedesktop.org
+	  * moved CVS to freedesktop.org

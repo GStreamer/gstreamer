@@ -1,4 +1,36 @@
-This is GStreamer Base Plug-ins 0.10.5, "Net"
+This is GStreamer Base Plug-ins 0.10.6, "Chao"
+
+Changes since 0.10.5:
+
+      * QoS in sinks and transform elements
+      * Needs GStreamer 0.10.5 for new GstBaseSink::async_playback() vmethod
+      * added theoraparse element
+
+Bugs fixed since 0.10.5:
+    
+      * 313136 : [playbin] hang while playing truncated ogg file
+      * 172848 : [subparse] subtitles with special chars are displayed as ...
+      * 305279 : [riff] uncompressed AVIs with 24bpp don't work
+      * 320765 : [ffmpegcolorspace] make win32+msvc compliant, don't use _...
+      * 323852 : Disable tests/icles on platforms that do not have X
+      * 325653 : build errors compiling audioresample on win32(vs7)
+      * 327357 : gst-plugins-base fails to compile with GCC 4.1
+      * 334620 : [gnomevfssrc] fails to connect to icecast streaming servers
+      * 334822 : [ffmpegcolorspace] YVU9 support
+      * 335028 : [typefinding] ID3 v1 tag is not recognized with mp3-in-wa...
+      * 335365 : inefficient use of GList in gst-plugins-base
+      * 336190 : [gnomevfssink] should accept non-URI filenames as " location " 
+      * 336194 : [gnomevfssrc] some minor memory leaks
+      * 336477 : plugins need better/univied descriptions
+      * 336617 : Unable to recognise MPEG TS stream
+      * 337548 : Memory leaks in basertpdepayload
+      * 337945 : [oggdemux] segment stop position ignored
+      * 338419 : Regression in the handling of files with multiple audio/s...
+      * 338897 : Videoscale crashes as part of DVD to Ogg transcoding
+      * 339013 : [videorate] Goes into an infinite loop
+      * 339047 : [riff] handle H264 fourcc in addition to h264
+      * 339212 : ISO file typefinding regression
+      * 330748 : deadlock in base audio sink on playing- > paused state change
 
 Bugs fixed since 0.10.4:
     

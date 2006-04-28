@@ -3,7 +3,7 @@
   <description>ALSA plugin library</description>
   <filename>../../ext/alsa/.libs/libgstalsa.so</filename>
   <basename>libgstalsa.so</basename>
-  <version>0.10.5</version>
+  <version>0.10.6</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -11,21 +11,21 @@
   <elements>
     <element>
       <name>alsamixer</name>
-      <longname>Alsa Mixer</longname>
+      <longname>Alsa mixer</longname>
       <class>Generic/Audio</class>
       <description>Control sound input and output levels with ALSA</description>
       <author>Leif Johnson &lt;leif@ambient.2y.net&gt;</author>
     </element>
     <element>
       <name>alsasink</name>
-      <longname>Audio Sink (ALSA)</longname>
+      <longname>Audio sink (ALSA)</longname>
       <class>Sink/Audio</class>
       <description>Output to a sound card via ALSA</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>alsasrc</name>
-      <longname>Audio Src (ALSA)</longname>
+      <longname>Audio source (ALSA)</longname>
       <class>Source/Audio</class>
       <description>Read from a sound card via ALSA</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>

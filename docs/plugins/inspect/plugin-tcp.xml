@@ -3,7 +3,7 @@
   <description>transfer data over the network via TCP</description>
   <filename>../../gst/tcp/.libs/libgsttcp.so</filename>
   <basename>libgsttcp.so</basename>
-  <version>0.10.5</version>
+  <version>0.10.6</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -11,35 +11,35 @@
   <elements>
     <element>
       <name>multifdsink</name>
-      <longname>MultiFd sink</longname>
+      <longname>Multi filedescriptor sink</longname>
       <class>Sink/Network</class>
       <description>Send data to multiple filedescriptors</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>tcpclientsink</name>
-      <longname>TCP Client sink</longname>
+      <longname>TCP client sink</longname>
       <class>Sink/Network</class>
       <description>Send data as a client over the network via TCP</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
     </element>
     <element>
       <name>tcpclientsrc</name>
-      <longname>TCP Client source</longname>
+      <longname>TCP client source</longname>
       <class>Source/Network</class>
       <description>Receive data as a client over the network via TCP</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
     </element>
     <element>
       <name>tcpserversink</name>
-      <longname>TCP Server sink</longname>
+      <longname>TCP server sink</longname>
       <class>Sink/Network</class>
       <description>Send data as a server over the network via TCP</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
     </element>
     <element>
       <name>tcpserversrc</name>
-      <longname>TCP Server source</longname>
+      <longname>TCP server source</longname>
       <class>Source/Network</class>
       <description>Receive data as a server over the network via TCP</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>

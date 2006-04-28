@@ -1,6 +1,7 @@
 <SIGNAL>
 <NAME>GstMultiFdSink::add</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
 </SIGNAL>
@@ -8,12 +9,14 @@ gint  arg1
 <SIGNAL>
 <NAME>GstMultiFdSink::clear</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiFdSink *gstmultifdsink
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstMultiFdSink::client-added</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
 </SIGNAL>
@@ -21,14 +24,16 @@ gint  arg1
 <SIGNAL>
 <NAME>GstMultiFdSink::client-removed</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
-GstClientStatus  arg2
+GstClientStatus *arg2
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstMultiFdSink::get-stats</NAME>
 <RETURNS>GValueArray*</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
 </SIGNAL>
@@ -36,6 +41,7 @@ gint  arg1
 <SIGNAL>
 <NAME>GstMultiFdSink::remove</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiFdSink *gstmultifdsink
 gint  arg1
 </SIGNAL>
@@ -43,6 +49,7 @@ gint  arg1
 <SIGNAL>
 <NAME>GstDecodeBin::new-decoded-pad</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstDecodeBin *gstdecodebin
 GstPad *arg1
 gboolean  arg2
@@ -51,6 +58,7 @@ gboolean  arg2
 <SIGNAL>
 <NAME>GstDecodeBin::removed-decoded-pad</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstDecodeBin *gstdecodebin
 GstPad *arg1
 </SIGNAL>
@@ -58,6 +66,7 @@ GstPad *arg1
 <SIGNAL>
 <NAME>GstDecodeBin::unknown-type</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstDecodeBin *gstdecodebin
 GstPad *arg1
 GstCaps *arg2
@@ -87,6 +96,7 @@ gint  arg1
 <SIGNAL>
 <NAME>GstGnomeVFSSink::allow-overwrite</NAME>
 <RETURNS>gboolean</RETURNS>
+<FLAGS>c</FLAGS>
 GstGnomeVFSSink *gstgnomevfssink
 GnomeVFSURI *arg1
 </SIGNAL>
@@ -94,6 +104,7 @@ GnomeVFSURI *arg1
 <SIGNAL>
 <NAME>GstCdParanoiaSrc::transport-error</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstCdParanoiaSrc *gstcdparanoiasrc
 gint  arg1
 </SIGNAL>
@@ -101,6 +112,7 @@ gint  arg1
 <SIGNAL>
 <NAME>GstCdParanoiaSrc::uncorrected-error</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstCdParanoiaSrc *gstcdparanoiasrc
 gint  arg1
 </SIGNAL>

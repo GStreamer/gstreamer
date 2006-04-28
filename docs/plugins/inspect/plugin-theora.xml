@@ -3,7 +3,7 @@
   <description>Theora plugin library</description>
   <filename>../../ext/theora/.libs/libgsttheora.so</filename>
   <basename>libgsttheora.so</basename>
-  <version>0.10.5</version>
+  <version>0.10.6</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -11,17 +11,24 @@
   <elements>
     <element>
       <name>theoradec</name>
-      <longname>TheoraDec</longname>
+      <longname>Theora video decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>decode raw theora streams to raw YUV video</description>
       <author>Benjamin Otte &lt;in7y118@public.uni-hamburg.de&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>theoraenc</name>
-      <longname>TheoraEnc</longname>
+      <longname>Theora video encoder</longname>
       <class>Codec/Encoder/Video</class>
       <description>encode raw YUV video to a theora stream</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>theoraparse</name>
+      <longname>TheoraParse</longname>
+      <class>Codec/Parser/Video</class>
+      <description>parse raw theora streams</description>
+      <author>Andy Wingo &lt;wingo@pobox.com&gt;</author>
     </element>
   </elements>
 </plugin>
