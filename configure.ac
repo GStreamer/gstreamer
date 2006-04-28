@@ -769,6 +769,7 @@ docs/plugins/Makefile
 docs/version.entities
 tests/Makefile
 tests/check/Makefile
+tests/icles/Makefile
 tests/examples/Makefile
 tests/examples/level/Makefile
 common/Makefile

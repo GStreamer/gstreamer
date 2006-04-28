@@ -1,6 +1,12 @@
 2006-04-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
+	* tests/Makefile.am:
+	  add ximagesrc icles test
+
+2006-04-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:

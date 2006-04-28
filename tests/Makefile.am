@@ -4,7 +4,13 @@ else
 SUBDIRS_CHECK =
 endif
 
-SUBDIRS = $(SUBDIRS_CHECK) examples
+if USE_X
+SUBDIRS_ICLES = icles
+else
+SUBDIRS_ICLES =
+endif
 
-DIST_SUBDIRS = check examples
+SUBDIRS = $(SUBDIRS_CHECK) $(SUBDIRS_ICLES) examples
+
+DIST_SUBDIRS = check icles examples
 
