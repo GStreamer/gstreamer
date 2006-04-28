@@ -139,6 +139,7 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
   gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (baseaudiosrc),
       gst_base_audio_src_fixate);
 
+  gst_base_src_set_live (GST_BASE_SRC (baseaudiosrc), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (baseaudiosrc), GST_FORMAT_TIME);
 }
 

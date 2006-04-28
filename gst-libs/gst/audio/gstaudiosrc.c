@@ -465,7 +465,6 @@ gst_audio_src_class_init (GstAudioSrcClass * klass)
 static void
 gst_audio_src_init (GstAudioSrc * audiosrc, GstAudioSrcClass * g_class)
 {
-  gst_base_src_set_live (GST_BASE_SRC (audiosrc), TRUE);
 }
 
 static GstRingBuffer *

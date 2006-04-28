@@ -1,5 +1,14 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosrc.c: (gst_base_audio_src_init),
+	(gst_base_audio_src_get_time), (gst_base_audio_src_create):
+	GstBaseAudioSrc must be live or it does not work.
+
+	* gst-libs/gst/audio/gstaudiosrc.c: (gst_audio_src_init):
+	Don't set live to TRUE as this is the default in the parentclass.
+
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videoscale/gstvideoscale.c: (gst_video_scale_transform_caps),
 	(gst_video_scale_fixate_caps), (gst_video_scale_src_event):
 	Videoscale doesn't pass on pixel-aspect ratio. Handle all
