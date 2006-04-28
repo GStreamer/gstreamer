@@ -34,10 +34,14 @@ enum
   LAST_SIGNAL
 };
 
-/* we tollerate a 10th of a second diff before we start resyncing. This
+/* we tollerate half a second diff before we start resyncing. This
  * should be enough to compensate for various rounding errors in the timestamp
- * and sample offset position. */
-#define DIFF_TOLERANCE  10
+ * and sample offset position. 
+ * This is an emergency resync fallback since buffers marked as DISCONT will
+ * always lock to the correct timestamp immediatly and buffers not marked as
+ * DISCONT are contiguous bu definition.
+ */
+#define DIFF_TOLERANCE  2
 
 #define DEFAULT_BUFFER_TIME     200 * GST_USECOND
 #define DEFAULT_LATENCY_TIME    10 * GST_USECOND
@@ -361,6 +365,12 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
   if (!sink->ringbuffer->spec.rate)
     return TRUE;
 
+  /* need to start playback before we can drain, but only when
+   * we have successfully negotiated a format and thus aqcuired the
+   * ringbuffer. */
+  if (gst_ring_buffer_is_acquired (sink->ringbuffer))
+    gst_ring_buffer_start (sink->ringbuffer);
+
   if (sink->next_sample != -1) {
     GstClockTime time;
     GstClock *clock;
@@ -394,18 +404,16 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      gst_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
+      if (sink->ringbuffer)
+        gst_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
       break;
     case GST_EVENT_FLUSH_STOP:
       /* always resync on sample after a flush */
       sink->next_sample = -1;
-      gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
+      if (sink->ringbuffer)
+        gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       break;
     case GST_EVENT_EOS:
-      /* need to start playback when we reach EOS, but only when
-       * we have successfully negotiated a format. */
-      if (gst_ring_buffer_is_acquired (sink->ringbuffer))
-        gst_ring_buffer_start (sink->ringbuffer);
       /* now wait till we played everything */
       gst_base_audio_sink_drain (sink);
       break;
@@ -583,9 +591,10 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if (G_LIKELY (sink->next_sample != -1)) {
     diff = ABS ((gint64) render_offset - (gint64) sink->next_sample);
 
-    /* we tollerate a 10th of a second diff before we start resyncing. This
+    /* we tollerate half a second diff before we start resyncing. This
      * should be enough to compensate for various rounding errors in the timestamp
-     * and sample offset position. We always resync if we got a discont anyway. */
+     * and sample offset position. We always resync if we got a discont anyway and
+     * non-discont should be aligned by definition. */
     if (diff < ringbuf->spec.rate / DIFF_TOLERANCE) {
       GST_DEBUG_OBJECT (sink,
           "align with prev sample, %" G_GINT64_FORMAT " < %lu", diff,
@@ -593,7 +602,9 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       /* just align with previous sample then */
       render_offset = sink->next_sample;
     } else {
-      GST_DEBUG_OBJECT (sink,
+      /* timestamps drifted apart from previous samples too much, we need to
+       * resync. */
+      GST_WARNING_OBJECT (sink,
           "resync after discont with previous sample of diff: %lu", diff);
     }
   } else {
@@ -787,6 +798,8 @@ gst_base_audio_sink_change_state (GstElement * element,
       GST_OBJECT_UNLOCK (sink);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* make sure we unblock before calling the parent state change
+       * so it can grab the STREAM_LOCK */
       gst_ring_buffer_set_flushing (sink->ringbuffer, TRUE);
       break;
     default:
@@ -813,8 +826,10 @@ gst_base_audio_sink_change_state (GstElement * element,
 
   return ret;
 
+  /* ERRORS */
 open_failed:
   {
+    /* subclass must post a meaningfull error message */
     GST_DEBUG_OBJECT (sink, "open failed");
     return GST_STATE_CHANGE_FAILURE;
   }
