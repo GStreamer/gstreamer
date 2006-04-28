@@ -77,6 +77,7 @@ static void gst_icydemux_init (GstICYDemux * icydemux);
 static void gst_icydemux_dispose (GObject * object);
 
 static GstFlowReturn gst_icydemux_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_icydemux_handle_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_icydemux_add_srcpad (GstICYDemux * icydemux,
     GstCaps * new_caps);
@@ -163,6 +164,13 @@ gst_icydemux_reset (GstICYDemux * icydemux)
     icydemux->cached_tags = NULL;
   }
 
+  if (icydemux->cached_events) {
+    g_list_foreach (icydemux->cached_events,
+        (GFunc) gst_mini_object_unref, NULL);
+    g_list_free (icydemux->cached_events);
+    icydemux->cached_events = NULL;
+  }
+
   if (icydemux->meta_adapter) {
     gst_adapter_clear (icydemux->meta_adapter);
     g_object_unref (icydemux->meta_adapter);
@@ -186,6 +194,8 @@ gst_icydemux_init (GstICYDemux * icydemux)
           "sink"), "sink");
   gst_pad_set_chain_function (icydemux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_icydemux_chain));
+  gst_pad_set_event_function (icydemux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_icydemux_handle_event));
   gst_pad_set_setcaps_function (icydemux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_icydemux_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (icydemux), icydemux->sinkpad);
@@ -375,6 +385,44 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
   }
 }
 
+static gboolean
+gst_icydemux_handle_event (GstPad * pad, GstEvent * event)
+{
+  GstICYDemux *icydemux = GST_ICYDEMUX (GST_PAD_PARENT (pad));
+
+  if (icydemux->typefinding) {
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_FLUSH_STOP:
+        g_list_foreach (icydemux->cached_events,
+            (GFunc) gst_mini_object_unref, NULL);
+        g_list_free (icydemux->cached_events);
+        icydemux->cached_events = NULL;
+
+        return gst_pad_event_default (pad, event);
+      default:
+        icydemux->cached_events = g_list_append (icydemux->cached_events,
+            event);
+        return TRUE;
+    }
+  } else {
+    return gst_pad_event_default (pad, event);
+  }
+}
+
+static void
+gst_icydemux_send_cached_events (GstICYDemux * icydemux)
+{
+  GList *l;
+
+  for (l = icydemux->cached_events; l != NULL; l = l->next) {
+    GstEvent *event = GST_EVENT (l->data);
+
+    gst_pad_push_event (icydemux->srcpad, event);
+  }
+  g_list_free (icydemux->cached_events);
+  icydemux->cached_events = NULL;
+}
+
 static GstFlowReturn
 gst_icydemux_typefind_or_forward (GstICYDemux * icydemux, GstBuffer * buf)
 {
@@ -425,6 +473,10 @@ gst_icydemux_typefind_or_forward (GstICYDemux * icydemux, GstBuffer * buf)
       return GST_FLOW_ERROR;
     }
     gst_caps_unref (caps);
+
+    if (icydemux->cached_events) {
+      gst_icydemux_send_cached_events (icydemux);
+    }
 
     if (icydemux->cached_tags) {
       gst_icydemux_send_tag_event (icydemux, icydemux->cached_tags);

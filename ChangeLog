@@ -1,3 +1,15 @@
+2006-04-28  Michael Smith  <msmith@fluendo.com>
+
+	* gst/icydemux/gsticydemux.c: (gst_icydemux_reset),
+	(gst_icydemux_init), (gst_icydemux_sink_setcaps),
+	(gst_icydemux_add_srcpad), (gst_icydemux_parse_and_send_tags),
+	(gst_icydemux_handle_event), (gst_icydemux_send_cached_events),
+	(gst_icydemux_typefind_or_forward), (gst_icydemux_add_meta),
+	(gst_icydemux_chain), (gst_icydemux_send_tag_event):
+	* gst/icydemux/gsticydemux.h:
+	  Fix event handling: cache events when typefinding and forward later.
+
+
 2006-04-28  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/osxaudio/gstosxaudiosink.c:

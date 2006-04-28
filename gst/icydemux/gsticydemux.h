@@ -65,6 +65,7 @@ struct _GstICYDemux
   gboolean typefinding;
 
   GstTagList *cached_tags;
+  GList *cached_events;
 
   GstAdapter *meta_adapter;
 
