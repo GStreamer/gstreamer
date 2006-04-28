@@ -87,9 +87,10 @@
  * value from the READY to PAUSED state will be GST_STATE_CHANGE_NO_PREROLL.
  * </para>
  * <para>
- * A typical live source will timestamp the buffers they create with the 
- * current stream time of the pipeline. This is one reason that they can only 
- * produce data in PLAYING, when the clock is actually distributed and running.
+ * A typical live source will timestamp the buffers it creates with the 
+ * current stream time of the pipeline. This is one reason why a live source
+ * can only produce data in the PLAYING state, when the clock is actually 
+ * distributed and running.
  * </para>
  * <para>
  * The #GstBaseSrc::get_times method can be used to implement pseudo-live 
@@ -154,7 +155,12 @@
  * </programlisting>
  * </para>
  * <para>
- * Last reviewed on 2006-03-31 (0.10.5)
+ * Note that setting the source element to NULL or READY when the 
+ * pipeline is in the PAUSED state may cause a deadlock since the streaming
+ * thread might be blocked in PREROLL.
+ * </para>
+ * <para>
+ * Last reviewed on 2006-04-14 (0.10.6)
  * </para>
  * </refsect2>
  */
@@ -405,8 +411,14 @@ gst_base_src_finalize (GObject * object)
  * @src: base source instance
  * @live: new live-mode
  *
- * If the element listens to a live source, the @livemode should
- * be set to %TRUE. This declares that this source can't seek.
+ * If the element listens to a live source, @live should
+ * be set to %TRUE. 
+ *
+ * A live source will not produce data in the PAUSED state and
+ * will therefore not be able to participate in the PREROLL phase
+ * of a pipeline. To signal this fact to the application and the 
+ * pipeline, the state change return value of the live source will
+ * be GST_STATE_CHANGE_NO_PREROLL.
  */
 void
 gst_base_src_set_live (GstBaseSrc * src, gboolean live)
@@ -797,12 +809,12 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     gst_base_src_unlock (src);
 
   /* grab streaming lock, this should eventually be possible, either
-   * because the task is paused or out streaming thread stopped 
+   * because the task is paused or our streaming thread stopped 
    * because our peer is flushing. */
   GST_PAD_STREAM_LOCK (src->srcpad);
 
   /* make copy into temp structure, we can only update the main one
-   * when the subclass actually could to the seek. */
+   * when the subclass actually could do the seek. */
   memcpy (&seeksegment, &src->segment, sizeof (GstSegment));
 
   /* now configure the seek segment */
@@ -892,9 +904,16 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:
+      /* sending random flushes downstream can break stuff,
+       * especially sync since all segment info will get flushed */
       break;
     case GST_EVENT_EOS:
+      /* FIXME, queue EOS and make sure the task or pull function 
+       * perform the EOS actions. */
+      break;
     case GST_EVENT_NEWSEGMENT:
+      /* sending random NEWSEGMENT downstream can break sync. */
+      break;
     case GST_EVENT_TAG:
     case GST_EVENT_BUFFERSIZE:
       break;
@@ -1894,6 +1913,9 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       if (!gst_base_src_stop (basesrc))
         goto error_stop;
 
+      /* FIXME, deprecate this behaviour, it is very dangerous.
+       * the prefered way of sending EOS downstream is by sending
+       * the EOS event to the element */
       if (!basesrc->priv->last_sent_eos) {
         GST_DEBUG_OBJECT (basesrc, "Sending EOS event");
         gst_pad_push_event (basesrc->srcpad, gst_event_new_eos ());

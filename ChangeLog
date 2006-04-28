@@ -1,5 +1,11 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek),
+	(gst_base_src_send_event), (gst_base_src_change_state):
+	Documentation updates.
+
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* plugins/elements/gstfdsink.c: (gst_fd_sink_render),
 	(gst_fd_sink_check_fd), (gst_fd_sink_update_fd):
 	handle EAGAIN, EINTR and short writes correctly. Also clean
