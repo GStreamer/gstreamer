@@ -1,6 +1,12 @@
+2006-04-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstmodule.c: (init_gst):
+	Wrap the gstreamer error domains quark.
+	Fixes #339040
+
 2006-04-19  Andy Wingo  <wingo@pobox.com>
 
-	* gst/gstpad.override (pad_block_callback_marshal) 
+	* gst/gstpad.override: (pad_block_callback_marshal) 
 	(_wrap_gst_pad_set_blocked_async): Fix refcounting problems and
 	indent.
 	Fixes #338982

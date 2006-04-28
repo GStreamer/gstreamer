@@ -236,6 +236,11 @@ init_gst (void)
      PyModule_AddStringConstant (m, "TAG_ALBUM_PEAK", GST_TAG_ALBUM_PEAK);
      PyModule_AddStringConstant (m, "TAG_LANGUAGE_CODE", GST_TAG_LANGUAGE_CODE);
 
+     PyModule_AddStringConstant (m, "LIBRARY_ERROR", (gchar *) g_quark_to_string(GST_LIBRARY_ERROR));
+     PyModule_AddStringConstant (m, "RESOURCE_ERROR",(gchar *)  g_quark_to_string(GST_RESOURCE_ERROR));
+     PyModule_AddStringConstant (m, "CORE_ERROR", (gchar *) g_quark_to_string(GST_CORE_ERROR));
+     PyModule_AddStringConstant (m, "STREAM_ERROR", (gchar *) g_quark_to_string(GST_STREAM_ERROR));
+
      g_timeout_add_full (0, 100, python_do_pending_calls, NULL, NULL);
 
      atexit(gst_deinit);
