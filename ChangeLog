@@ -1,5 +1,7 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Topi Paavola
+
 	* gst/gstutils.c: (push_and_ref):
 	Added some more docs.
 	Fix refcount issue whith gst_element_found_tags() helper 
