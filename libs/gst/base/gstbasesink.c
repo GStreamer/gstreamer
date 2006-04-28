@@ -187,8 +187,12 @@ struct _GstBaseSinkPrivate
 
 #define DO_RUNNING_AVG(avg,val,size) (((val) + ((size)-1) * (avg)) / (size))
 
+/* generic running average, this has a neutral window size */
 #define UPDATE_RUNNING_AVG(avg,val)   DO_RUNNING_AVG(avg,val,8)
 
+/* the windows for these running averages are experimentally obtained.
+ * possitive values get averaged more while negative values use a small
+ * window so we can react faster to badness. */
 #define UPDATE_RUNNING_AVG_P(avg,val) DO_RUNNING_AVG(avg,val,16)
 #define UPDATE_RUNNING_AVG_N(avg,val) DO_RUNNING_AVG(avg,val,4)
 
@@ -1341,12 +1345,24 @@ gst_base_sink_is_too_late (GstBaseSink * basesink, GstMiniObject * obj,
   if (G_UNLIKELY (start == -1))
     goto no_timestamp;
 
+  /* we can add a valid stop time */
+  if (stop != -1)
+    max_lateness += stop;
+  else
+    max_lateness += start;
+
   /* if the jitter bigger than duration and lateness we are too late */
-  if (G_LIKELY (stop != -1)) {
-    if ((late = start + jitter > stop + max_lateness)) {
-      if (priv->last_in_time && start - priv->last_in_time > GST_SECOND) {
-        late = FALSE;
-      }
+  if ((late = start + jitter > max_lateness)) {
+    GST_DEBUG_OBJECT (basesink, "buffer is too late %" GST_TIME_FORMAT
+        " > %" GST_TIME_FORMAT, GST_TIME_ARGS (start + jitter),
+        GST_TIME_ARGS (max_lateness));
+    /* !!emergency!!, if we did not receive anything valid for more than a 
+     * second, render it anyway so the user sees something */
+    if (priv->last_in_time && start - priv->last_in_time > GST_SECOND) {
+      late = FALSE;
+      GST_DEBUG_OBJECT (basesink,
+          "**emergency** last buffer at %" GST_TIME_FORMAT " > GST_SECOND",
+          GST_TIME_ARGS (priv->last_in_time));
     }
   }
 
@@ -1401,8 +1417,6 @@ gst_base_sink_do_render_stats (GstBaseSink * basesink, gboolean start)
     else
       priv->avg_render = UPDATE_RUNNING_AVG (priv->avg_render, elapsed);
 
-    priv->rendered++;
-
     GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, basesink,
         "avg_render: %" GST_TIME_FORMAT, GST_TIME_ARGS (priv->avg_render));
   }
@@ -1452,6 +1466,8 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
         gst_base_sink_do_render_stats (basesink, TRUE);
 
       ret = bclass->render (basesink, GST_BUFFER_CAST (obj));
+
+      priv->rendered++;
 
       if (do_qos)
         gst_base_sink_do_render_stats (basesink, FALSE);
@@ -2268,15 +2284,16 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
 
       gst_object_ref (clock);
       /* need to release the object lock before we can get the time, 
-       * a clock might take the LOCK of the provider. */
+       * a clock might take the LOCK of the provider, which could be
+       * a basesink subclass. */
       GST_OBJECT_UNLOCK (basesink);
 
       now = gst_clock_get_time (clock);
       base += accum;
       base = MIN (now, base);
-      /* never report more than last seen position */
       *cur = gst_guint64_to_gdouble (now - base) * abs_rate + time;
 
+      /* never report more than last seen position */
       if (last != -1)
         *cur = MIN (last, *cur);
 
@@ -2472,6 +2489,10 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         basesink->playing_async = TRUE;
         ret = GST_STATE_CHANGE_ASYNC;
       }
+      GST_DEBUG_OBJECT (basesink, "rendered: %" G_GUINT64_FORMAT
+          ", dropped: %" G_GUINT64_FORMAT, basesink->priv->rendered,
+          basesink->priv->dropped);
+
       gst_base_sink_reset_qos (basesink);
       GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
