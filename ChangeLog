@@ -1,5 +1,18 @@
 2006-04-28  Edward Hervey  <edward@fluendo.com>
 
+	* gst/arg-types.py:
+	GstMiniObject used as virtual methods parameters should be unreffed
+	before calling the method and the ref-ed.
+	Added Params and Returns for const-gchar*, GType and gulong so the
+	code generator can generate more virtual methods handlers/proxys.
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/interfaces.defs:
+	Added vtable and virtual method definition for interfaces so we can properly use virtual
+	methods from those interfaces in python.
+
+2006-04-28  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gstmodule.c: (init_gst):
 	Wrap the gstreamer error domains quark.
 	Fixes #339040

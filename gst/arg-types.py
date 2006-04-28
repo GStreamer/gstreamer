@@ -23,7 +23,7 @@
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
 
 from argtypes import UInt64Arg, Int64Arg, PointerArg, ArgMatcher, ArgType, matcher
-from reversewrapper import Parameter, ReturnType, GBoxedParam, GBoxedReturn
+from reversewrapper import Parameter, ReturnType, GBoxedParam, GBoxedReturn, IntParam, IntReturn
 
 class XmlNodeArg(ArgType):
 	"""libxml2 node generator"""
@@ -147,14 +147,15 @@ class GstMiniObjectParam(Parameter):
 
     def convert_c2py(self):
         self.wrapper.add_declaration("PyObject *py_%s = NULL;" % self.name)
-        self.wrapper.write_code(code=("if (%s)\n"
+        self.wrapper.write_code(code=("if (%s) {\n"
                                       "    py_%s = pygstminiobject_new((GstMiniObject *) %s);\n"
-                                      "else {\n"
+				      "    gst_mini_object_unref ((GstMiniObject *) %s);\n"
+                                      "} else {\n"
                                       "    Py_INCREF(Py_None);\n"
                                       "    py_%s = Py_None;\n"
                                       "}"
-                                      % (self.name, self.name, self.name, self.name)),
-                                cleanup=("Py_DECREF(py_%s);" % self.name))
+                                      % (self.name, self.name, self.name, self.name, self.name)),
+                                cleanup=("gst_mini_object_ref ((GstMiniObject *) %s);\nPy_DECREF(py_%s);" % (self.name, self.name)))
         self.wrapper.add_pyargv_item("py_%s" % self.name)
 
 matcher.register_reverse('GstMiniObject*', GstMiniObjectParam)
@@ -266,6 +267,50 @@ class UInt64Return(ReturnType):
             failure_expression="!PyLong_Check(py_retval)",
             failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be an long");')
         self.wrapper.write_code("retval = PyLong_AsUnsignedLongLongMask(py_retval);")
+
+class ULongParam(Parameter):
+
+    def get_c_type(self):
+        return self.props.get('c_type', 'gulong')
+
+    def convert_c2py(self):
+        self.wrapper.add_declaration("PyObject *py_%s;" % self.name)
+        self.wrapper.write_code(code=("py_%s = PyLong_FromUnsignedLong(%s);" %
+                                      (self.name, self.name)),
+                                cleanup=("Py_DECREF(py_%s);" % self.name))
+        self.wrapper.add_pyargv_item("py_%s" % self.name)
+
+class ULongReturn(ReturnType):
+    def get_c_type(self):
+        return self.props.get('c_type', 'gulong')
+    def write_decl(self):
+        self.wrapper.add_declaration("%s retval;" % self.get_c_type())
+    def write_error_return(self):
+        self.wrapper.write_code("return -G_MAXINT;")
+    def write_conversion(self):
+        self.wrapper.write_code(
+            code=None,
+            failure_expression="!PyLong_Check(py_retval)",
+            failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be an long");')
+        self.wrapper.write_code("retval = PyLong_AsUnsignedLongMask(py_retval);")
+
+class ConstStringReturn(ReturnType):
+
+    def get_c_type(self):
+        return "const gchar *"
+
+    def write_decl(self):
+        self.wrapper.add_declaration("const gchar *retval;")
+
+    def write_error_return(self):
+        self.wrapper.write_code("return NULL;")
+
+    def write_conversion(self):
+        self.wrapper.write_code(
+            code=None,
+            failure_expression="!PyString_Check(py_retval)",
+            failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be a string");')
+        self.wrapper.write_code("retval = g_strdup(PyString_AsString(py_retval));")
 			
 matcher.register('GstClockTime', UInt64Arg())
 matcher.register('GstClockTimeDiff', Int64Arg())
@@ -293,5 +338,13 @@ for typename in ["gint64", "GstClockTimeDiff"]:
 for typename in ["guint64", "GstClockTime"]:
 	matcher.register_reverse(typename, UInt64Param)
 	matcher.register_reverse_ret(typename, UInt64Return)
+
+matcher.register_reverse_ret("const-gchar*", ConstStringReturn)
+
+matcher.register_reverse("GType", IntParam)
+matcher.register_reverse_ret("GType", IntReturn)
+
+matcher.register_reverse("gulong", ULongParam)
+matcher.register_reverse_ret("gulong", ULongReturn)
 
 del arg

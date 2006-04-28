@@ -1028,6 +1028,7 @@
    (in-module "Gst")
    (c-name "GstURIHandler")
    (gtype-id "GST_TYPE_URI_HANDLER")
+   (vtable "GstURIHandlerInterface")
 )
 
 (define-interface TagSetter
@@ -1040,5 +1041,6 @@
    (in-module "Gst")
    (c-name "GstImplementsInterface")
    (gtype-id "GST_TYPE_IMPLEMENTS_INTERFACE")
+   (vtable "GstImplementsInterfaceClass")
 )
 

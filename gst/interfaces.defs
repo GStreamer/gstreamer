@@ -12,6 +12,7 @@
    (in-module "Gst")
    (c-name "GstColorBalance")
    (gtype-id "GST_TYPE_COLOR_BALANCE")
+   (vtable "GstColorBalanceClass")
 )
 
 (define-object ColorBalanceChannel
@@ -33,6 +34,7 @@
    (fields
      '("GstMixerType" "mixer_type")
     )
+   (vtable "GstMixerClass")
 )
 
 (define-object MixerTrack
@@ -60,18 +62,21 @@
    (in-module "Gst")
    (c-name "GstNavigation")
    (gtype-id "GST_TYPE_NAVIGATION")
+   (vtable "GstNavigationInterface")
 )
 
 (define-interface PropertyProbe
    (in-module "Gst")
    (c-name "GstPropertyProbe")
    (gtype-id "GST_TYPE_PROPERTY_PROBE")
+   (vtable "GstPropertyProbeInterface")
 )
 
 (define-interface Tuner
    (in-module "Gst")
    (c-name "GstTuner")
    (gtype-id "GST_TYPE_TUNER")
+   (vtable "GstTunerClass")
 )
 
 (define-object TunerChannel
@@ -189,6 +194,28 @@
   )
 )
 
+(define-virtual list_channels
+  (of-object "GstColorBalance")
+  (return-type "const-GList*")
+)
+
+(define-virtual set_value
+  (of-object "GstColorBalance")
+  (return-type "none")
+  (parameters
+    '("GstColorBalanceChannel*" "channel")
+    '("gint" "value")
+  )
+)
+
+(define-virtual get_value
+  (of-object "GstColorBalance")
+  (return-type "gint")
+  (parameters
+    '("GstColorBalanceChannel*" "channel")
+  )
+)
+
 
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/mixer/mixer.h
@@ -303,6 +330,48 @@
   )
 )
 
+(define-virtual list_tracks
+  (of-object "GstMixer")
+  (return-type "const-GList*")
+)
+
+(define-virtual set_volume
+  (of-object "GstMixer")
+  (return-type "none")
+  (parameters
+    '("GstMixerTrack*" "track")
+    '("gint*" "volumes")
+  )
+)
+
+(define-virtual get_volume
+  (of-object "GstMixer")
+  (return-type "none")
+  (parameters
+    '("GstMixerTrack*" "track")
+    '("gint*" "volumes")
+  )
+)
+
+(define-virtual set_mute
+  (of-object "GstMixer")
+  (return-type "none")
+  (parameters
+    '("GstMixerTrack*" "track")
+    '("gboolean" "mute")
+  )
+)
+
+(define-virtual set_record
+  (of-object "GstMixer")
+  (return-type "none")
+  (parameters
+    '("GstMixerTrack*" "track")
+    '("gboolean" "record")
+  )
+)
+
+
 ;; From ../gst-plugins-base/gst-libs/gst/interfaces/mixeroptions.h
 
 (define-function gst_mixer_options_get_type
@@ -355,7 +424,13 @@
   )
 )
 
-
+(define-virtual send_event
+  (of-object "GstNavigation")
+  (return-type "none")
+  (parameters
+    '("GstStructure*" "structure")
+  )
+)
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/propertyprobe/propertyprobe.h
 
@@ -451,6 +526,37 @@
   )
 )
 
+(define-virtual get_properties
+  (of-object "GstPropertyProbe")
+  (return-type "const-GList*")
+)
+
+(define-virtual needs_probe
+  (of-object "GstPropertyProbe")
+  (return-type "gboolean")
+  (parameters
+    '("guint" "prop_id")
+    '("const-GParamSpec*" "pspec")
+  )
+)
+
+(define-virtual probe_property
+  (of-object "GstPropertyProbe")
+  (return-type "none")
+  (parameters
+    '("guint" "prop_id")
+    '("const-GParamSpec*" "pspec")
+  )
+)
+
+(define-virtual get_values
+  (of-object "GstPropertyProbe")
+  (return-type "GValueArray*")
+  (parameters
+    '("guint" "prop_id")
+    '("const-GParamSpec*" "pspec")
+  )
+)
 
 
 ;; From /opt/gnome/include/gstreamer-0.7/gst/tuner/tuner.h
@@ -586,6 +692,66 @@
   )
 )
 
+(define-virtual list_channels
+  (of-object "GstTuner")
+  (return-type "const-GList*")
+)
+
+(define-virtual set_channel
+  (of-object "GstTuner")
+  (return-type "none")
+  (parameters
+    '("GstTunerChannel*" "channel")
+  )
+)
+
+(define-virtual get_channel
+  (of-object "GstTuner")
+  (return-type "GstTunerChannel*")
+)
+
+(define-virtual list_norms
+  (of-object "GstTuner")
+  (return-type "const-GList*")
+)
+
+(define-virtual set_norm
+  (of-object "GstTuner")
+  (return-type "none")
+  (parameters
+    '("GstTunerNorm*" "channel")
+  )
+)
+
+(define-virtual get_norm
+  (of-object "GstTuner")
+  (return-type "GstTunerNorm*")
+)
+
+(define-virtual set_frequency
+  (of-object "GstTuner")
+  (return-type "none")
+  (parameters
+    '("GstTunerChannel*" "channel")
+    '("gulong" "frequency")
+  )
+)
+
+(define-virtual get_frequency
+  (of-object "GstTuner")
+  (return-type "gulong")
+  (parameters
+    '("GstTunerChannel*" "channel")
+  )
+)
+
+(define-virtual signal_strength
+  (of-object "GstTuner")
+  (return-type "gint")
+  (parameters
+    '("GstTunerChannel*" "channel")
+  )
+)
 
 
 

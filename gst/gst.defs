@@ -2599,6 +2599,14 @@
   )
 )
 
+(define-virtual supported
+  (of-object "GstImplementsInterface")
+  (return-type "gboolean")
+  (parameters
+   '("GType" "iface_type")
+  )
+)
+
 ;; From ../gstreamer/gst/gstiterator.h
 
 (define-function iterator_new
@@ -6207,6 +6215,29 @@
   (of-object "GstURIHandler")
   (c-name "gst_uri_handler_new_uri")
   (return-type "none")
+  (parameters
+    '("const-gchar*" "uri")
+  )
+)
+
+(define-virtual get_type
+  (of-object "GstURIHandler")
+  (return-type "guint")
+)
+
+(define-virtual get_protocols
+  (of-object "GstURIHandler")
+  (return-type "gchar**")
+)
+
+(define-virtual get_uri
+  (of-object "GstURIHandler")
+  (return-type "const-gchar*")
+)
+
+(define-virtual set_uri
+  (of-object "GstURIHandler")
+  (return-type "gboolean")
   (parameters
     '("const-gchar*" "uri")
   )
