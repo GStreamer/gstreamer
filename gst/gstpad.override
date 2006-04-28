@@ -963,9 +963,7 @@ pad_block_callback_marshal(GstPad *pad, gboolean blocked, gpointer user_data)
     PyGILState_STATE state;
     PyObject *callback, *args;
     PyObject *ret;
-    PyObject *py_data;
     PyObject *py_user_data;
-    gint len, i;
 
     g_return_if_fail(user_data != NULL);
 
@@ -973,32 +971,26 @@ pad_block_callback_marshal(GstPad *pad, gboolean blocked, gpointer user_data)
 
     py_user_data = (PyObject *) user_data;
 
-    if (blocked)
-    py_data = Py_True;
-    else
-    py_data = Py_False;
-    Py_INCREF(py_data);
-
     callback = PyTuple_GetItem(py_user_data, 0);
-    args = Py_BuildValue("(NN)",
+    args = Py_BuildValue("(NO)",
              pygstobject_new(G_OBJECT(pad)),
-             py_data);
-
-    len = PyTuple_Size(py_user_data);
-    for (i = 1; i < len; ++i) {
-        PyObject *tuple = args;
-        args = PySequence_Concat(tuple, PyTuple_GetItem(py_user_data, i));
-        Py_DECREF(tuple);
+             blocked ? Py_True : Py_False);
+    
+    {
+        PyObject *tmp = args;
+        args = PySequence_Concat(tmp, PyTuple_GetItem(py_user_data, 1));
+        Py_DECREF (tmp);
     }
+
     ret = PyObject_CallObject(callback, args);
+    Py_DECREF(args);
 
     if (!ret)
         PyErr_Print();
+    else
+        Py_DECREF(ret);
     
-    Py_DECREF(py_data);
-    Py_DECREF(args);
     pyg_gil_state_release(state);
-
 }
 
 static PyObject *
@@ -1013,29 +1005,29 @@ _wrap_gst_pad_set_blocked_async (PyGObject *self, PyObject *args)
     len = PyTuple_Size(args);
 
     if (len < 2) {
-    PyErr_SetString(PyExc_TypeError, "Requires at least 2 arg");
-    return NULL;
+        PyErr_SetString(PyExc_TypeError, "Requires at least 2 arg");
+        return NULL;
     }
-    pblocked = PySequence_GetItem(args, 0);
+    pblocked = PyTuple_GetItem(args, 0);
     blocked = PyObject_IsTrue(pblocked);
 
-    callback = PySequence_GetItem(args, 1);
+    callback = PyTuple_GetItem(args, 1);
     if (!PyCallable_Check(callback)) {
-    PyErr_SetString(PyExc_TypeError, "callback is not callable");
-    return NULL;
+        PyErr_SetString(PyExc_TypeError, "callback is not callable");
+        return NULL;
     }
     cbargs = PySequence_GetSlice(args, 2, len);
     if (cbargs == NULL)
-    return NULL;
+        return NULL;
     data = Py_BuildValue("(ON)", callback, cbargs);
     if (data == NULL)
-    return NULL;
+        return NULL;
     ret = gst_pad_set_blocked_async (GST_PAD (self->obj), blocked,
-                     (GstPadBlockCallback) pad_block_callback_marshal, data);
+        (GstPadBlockCallback) pad_block_callback_marshal, data);
     if (ret)
-    pret = Py_True;
+        pret = Py_True;
     else
-    pret = Py_False;
+        pret = Py_False;
     Py_INCREF(pret);
 
     return pret;
