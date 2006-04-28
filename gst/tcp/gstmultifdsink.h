@@ -221,8 +221,9 @@ struct _GstMultiFdSinkClass {
   void (*removed) (GstMultiFdSink *sink, int fd);
 
   /* signals */
-  void (*client_added) (GstElement *element, gchar *host, gint fd);
-  void (*client_removed) (GstElement *element, gchar *host, gint fd);
+  void (*client_added) (GstElement *element, gint fd);
+  void (*client_removed) (GstElement *element, gint fd, GstClientStatus status);
+  void (*client_fd_removed) (GstElement *element, gint fd);
 };
 
 GType gst_multi_fd_sink_get_type (void);

@@ -34,8 +34,12 @@
  * descriptor removed the "client-removed" signal will be called. The "client-removed" 
  * signal can also be fired when multifdsink decides that a client is not active anymore
  * or, depending on the value of the "recover-policy" if the client is reading to slow.
- * In all cases, multifdsink will never close a filedescriptor itself, the application
- * has to do that itself, for example, in the "client-removed" signal callback.
+ * In all cases, multifdsink will never ever close a filedescriptor itself, the application
+ * has to do that itself in the "client-fd-removed" signal, for example. 
+ * Note that multifdsink still has a reference to the file descriptor when the 
+ * "client-removed" signal is emited so that "get-stats" can be performed on the 
+ * descriptor; It is therefore not allowed to close the file descriptor in the 
+ * "client-removed" signal, use the "client-fd-removed" signal to close the fd. 
  * </para>
  * <para>
  * Multifdsink internally keeps a queue of the incomming buffers and uses a separate
@@ -79,7 +83,7 @@
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2006-03-01 (0.10.4)
+ * Last reviewed on 2006-04-28 (0.10.7)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -150,6 +154,7 @@ enum
   /* signals */
   SIGNAL_CLIENT_ADDED,
   SIGNAL_CLIENT_REMOVED,
+  SIGNAL_CLIENT_FD_REMOVED,
 
   LAST_SIGNAL
 };
@@ -465,18 +470,42 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
   /**
    * GstMultiFdSink::client-removed:
    * @gstmultifdsink: the multifdsink element that emitted this signal
-   * @fd:             the file descriptor that was removed from multifdsink
+   * @fd:             the file descriptor that is to be removed from multifdsink
    * @status:         the reason why the client was removed
    *
-   * The given file descriptor was removed from multifdsink. This signal will
-   * be emited from the streaming thread so applications should be prepared
-   * for that.
+   * The given file descriptor is about to be removed from multifdsink. This 
+   * signal will be emited from the streaming thread so applications should
+   * be prepared for that. 
+   *
+   * @gstmultifdsink still holds a handle to @fd so it is possible to call
+   * the get-stats signal from this callback. For the same reason it is
+   * not safe to close() and reuse @fd in this callback.
    */
   gst_multi_fd_sink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiFdSinkClass,
           client_removed), NULL, NULL, gst_tcp_marshal_VOID__INT_BOXED,
       G_TYPE_NONE, 2, G_TYPE_INT, GST_TYPE_CLIENT_STATUS);
+  /**
+   * GstMultiFdSink::client-fd-removed:
+   * @gstmultifdsink: the multifdsink element that emitted this signal
+   * @fd:             the file descriptor that was removed from multifdsink
+   *
+   * The given file descriptor was removed from multifdsink. This signal will
+   * be emited from the streaming thread so applications should be prepared
+   * for that.
+   *
+   * In this callback, @gstmultifdsink has removed all the information 
+   * associated with @fd and it is therefore not possible to call get-stats
+   * with @fd. It is however safe to close() and reuse @fd in the callback.
+   *
+   * Since: 0.10.7
+   */
+  gst_multi_fd_sink_signals[SIGNAL_CLIENT_FD_REMOVED] =
+      g_signal_new ("client-fd-removed", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiFdSinkClass,
+          client_fd_removed), NULL, NULL, gst_tcp_marshal_VOID__INT,
+      G_TYPE_NONE, 1, G_TYPE_INT);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_multi_fd_sink_change_state);
@@ -771,6 +800,8 @@ gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink, GList * link)
   /* lock again before we remove the client completely */
   CLIENTS_LOCK (sink);
 
+  /* fd cannot be reused in the above signal callback so we can safely 
+   * remove it from the hashtable here */
   if (!g_hash_table_remove (sink->fd_hash, &client->fd.fd)) {
     GST_WARNING_OBJECT (sink,
         "[fd %5d] error removing client %p from hash", client->fd.fd, client);
@@ -786,6 +817,13 @@ gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink, GList * link)
     fclass->removed (sink, client->fd.fd);
 
   g_free (client);
+  CLIENTS_UNLOCK (sink);
+
+  /* and the fd is really gone now */
+  g_signal_emit (G_OBJECT (sink),
+      gst_multi_fd_sink_signals[SIGNAL_CLIENT_FD_REMOVED], 0, fd);
+
+  CLIENTS_LOCK (sink);
 }
 
 /* handle a read on a client fd,

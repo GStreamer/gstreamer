@@ -1,3 +1,15 @@
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init),
+	(gst_multi_fd_sink_remove_client_link):
+	* gst/tcp/gstmultifdsink.h:
+	Fix race condition in multifdsink that can lead to spurious 
+	duplicate clients. this patch adds a new signal that is fired when
+	multifdsink has removed all references to the fd.
+	Fixes #339574.
+	Updated documentation.
+	API: client-fd-removed signal added
+
 2006-04-28  Michael Smith  <msmith@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_get_stats):
