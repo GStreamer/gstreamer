@@ -668,6 +668,24 @@ parse_insert_string_field (const gchar * encoding, gchar * data, gint data_size,
     g_array_append_val (fields, field);
 }
 
+static gboolean
+has_utf16_bom (gchar * data, const gchar ** p_in_encoding)
+{
+  guint16 marker = (GST_READ_UINT8 (data) << 8) | GST_READ_UINT8 (data + 1);
+
+  switch (marker) {
+    case 0xFFFE:
+      *p_in_encoding = "UTF16LE";
+      return TRUE;
+    case 0xFEFF:
+      *p_in_encoding = "UTF16BE";
+      return TRUE;
+    default:
+      break;
+  }
+  return FALSE;
+}
+
 static void
 parse_split_strings (guint8 encoding, gchar * data, gint data_size,
     GArray ** out_fields)
@@ -719,6 +737,9 @@ parse_split_strings (guint8 encoding, gchar * data, gint data_size,
       /* Find '\0\0' terminator */
       for (text_pos = 0; text_pos < data_size - 1; text_pos += 2) {
         if (data[text_pos] == '\0' && data[text_pos + 1] == '\0') {
+          if (has_utf16_bom (data + prev, &in_encode)) {
+            prev += 2;          /* skip BOM */
+          }
           /* found a delimiter */
           parse_insert_string_field (in_encode, data + prev,
               text_pos - prev + 2, fields);
@@ -729,6 +750,9 @@ parse_split_strings (guint8 encoding, gchar * data, gint data_size,
       }
       if (data_size - prev > 1 &&
           (data[prev] != 0x00 || data[prev + 1] != 0x00)) {
+        if (has_utf16_bom (data + prev, &in_encode)) {
+          prev += 2;            /* skip BOM */
+        }
         /* There were 2 or more non-null chars left, convert those too */
         parse_insert_string_field (in_encode, data + prev,
             data_size - prev, fields);
