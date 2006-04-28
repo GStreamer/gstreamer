@@ -448,3 +448,105 @@ _wrap_GstPushSrc__do_create (PyObject *cls, PyObject *args, PyObject *kwargs)
 
     return py_ret;
 }
+%%
+override GstBaseTransform__proxy_do_get_unit_size
+static gboolean
+_wrap_GstBaseTransform__proxy_do_get_unit_size (GstBaseTransform * self,
+						GstCaps * caps,
+						guint * size)
+{
+  PyGILState_STATE __py_state;
+  PyObject *py_self;
+  PyObject *py_caps;
+  gboolean ret = FALSE;
+  PyObject *py_args;
+  PyObject *py_method;
+  PyObject *py_ret;
+
+    __py_state = pyg_gil_state_ensure();
+    py_self = pygobject_new((GObject *) self);
+    if (!py_self) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+	goto beach;
+    }
+
+    if (caps)
+        py_caps = pyg_boxed_new(GST_TYPE_CAPS, caps, FALSE, TRUE); // should copyval be TRUE instead?
+    else {
+        Py_INCREF (Py_None);
+        py_caps = Py_None;
+    }
+
+    py_args = PyTuple_New(1);
+    PyTuple_SET_ITEM(py_args, 0, py_caps);
+    
+    py_method = PyObject_GetAttrString(py_self, "do_get_unit_size");
+
+    if (!py_method) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        Py_DECREF(py_args);
+        Py_DECREF(py_self);
+	goto beach;
+    }
+    
+    py_ret = PyObject_CallObject(py_method, py_args);
+    if (!py_ret) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        Py_DECREF(py_method);
+        Py_DECREF(py_args);
+        Py_DECREF(py_self);
+	goto beach;
+    }
+
+    /*
+      If the method returned a numeric, the return value will be TRUE.
+      For ANY other case, we don't set size and the return value is FALSE.
+    */
+
+    if (PyInt_Check(py_ret)) {
+	*size = PyInt_AsLong(py_ret);
+	ret = TRUE;
+    }
+    
+    Py_DECREF(py_method);
+    Py_DECREF(py_args);
+    Py_DECREF(py_self);
+    Py_DECREF(py_ret);
+
+ beach:
+    pyg_gil_state_release(__py_state);
+    return ret;
+}
+%%
+override GstBaseTransform__do_get_unit_size kwargs
+static PyObject *
+_wrap_GstBaseTransform__do_get_unit_size (PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    gpointer klass;
+    static char *kwlist[] = { "self", "caps", NULL };
+    PyGObject *self;
+    PyGObject *caps;
+    gboolean ret;
+    guint size = 0;
+    PyObject *py_ret;
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O!:GstBaseTransform.get_unit_size",
+				     kwlist, &PyGstBaseTransform_Type, &self, &PyGstCaps_Type, &caps))
+	return NULL;
+    klass = g_type_class_ref(pyg_type_from_object(cls));
+    if (GST_BASE_TRANSFORM_CLASS(klass)->get_unit_size)
+      ret = GST_BASE_TRANSFORM_CLASS(klass)->get_unit_size(GST_BASE_TRANSFORM(self->obj), GST_CAPS(caps->obj), &size);
+    else {
+      PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBaseTransform.get_unit_size not implemented");
+      g_type_class_unref(klass);
+      return NULL;
+    }
+    g_type_class_unref(klass);
+    
+    py_ret = PyLong_FromUnsignedLongLong(size);
+
+    return py_ret;
+}

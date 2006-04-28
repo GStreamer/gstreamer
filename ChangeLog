@@ -1,3 +1,11 @@
+2006-04-28  Артём Попов  <artfwo@gmail.com>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstbase.override:
+	gst.BaseTransform.get_unit_size() virtual method override.
+	Closes #339248
+
 2006-04-28  Edward Hervey  <edward@fluendo.com>
 
 	* gst/arg-types.py:
