@@ -32,17 +32,13 @@
  * </para>
  * <title>Example pipelines</title>
  * <para>
- * Encode your X display to an Ogg theora video
- * </para>
  * <programlisting>
- * gst-launch -v ximagesrc ! ffmpegcolorspace ! theoraenc ! oggmux ! filesink location=desktop.ogg
+ * gst-launch -v ximagesrc ! video/x-raw-rgb,framerate=5/1 ! ffmpegcolorspace ! theoraenc ! oggmux ! filesink location=desktop.ogg
  * </programlisting>
- * <para>
+ * Encodes your X display to an Ogg theora video at 5 frames per second.
+ * </para>
  * </refsect2>
- *
  */
-
-
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
