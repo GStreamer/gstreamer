@@ -1928,9 +1928,10 @@ gst_value_serialize_flags (const GValue * value)
       g_free (result);
       result = tmp;
       first = FALSE;
+
+      /* clear flag */
+      flags &= ~fl->value;
     }
-    /* clear flag */
-    flags &= ~fl->value;
   }
   g_type_class_unref (klass);
 

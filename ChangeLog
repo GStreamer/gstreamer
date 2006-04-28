@@ -1,5 +1,11 @@
 2006-04-28  Michael Smith  <msmith@fluendo.com>
 
+	* gst/gstvalue.c: (gst_value_serialize_flags):
+	  Avoid NULL dereference when trying to serialize flags containing
+	  invalid values.
+
+2006-04-28  Michael Smith  <msmith@fluendo.com>
+
 	* plugins/elements/gsttypefindelement.c:
 	(gst_type_find_element_handle_event):
 	  If we get EOS before any data is accumulated, don't use
