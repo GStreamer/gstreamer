@@ -1260,7 +1260,11 @@ gst_value_serialize_buffer (const GValue * value)
   int i;
   int size;
   char *string;
-  GstBuffer *buffer = GST_BUFFER (gst_value_get_mini_object (value));
+  GstBuffer *buffer;
+
+  buffer = gst_value_get_buffer (value);
+  if (buffer == NULL)
+    return NULL;
 
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
@@ -1278,7 +1282,6 @@ static gboolean
 gst_value_deserialize_buffer (GValue * dest, const gchar * s)
 {
   GstBuffer *buffer;
-  gboolean ret = TRUE;
   int len;
   char ts[3];
   guint8 *data;
@@ -1286,14 +1289,14 @@ gst_value_deserialize_buffer (GValue * dest, const gchar * s)
 
   len = strlen (s);
   if (len & 1)
-    return FALSE;
+    goto wrong_length;
+
   buffer = gst_buffer_new_and_alloc (len / 2);
   data = GST_BUFFER_DATA (buffer);
   for (i = 0; i < len / 2; i++) {
-    if (!isxdigit ((int) s[i * 2]) || !isxdigit ((int) s[i * 2 + 1])) {
-      ret = FALSE;
-      break;
-    }
+    if (!isxdigit ((int) s[i * 2]) || !isxdigit ((int) s[i * 2 + 1]))
+      goto wrong_char;
+
     ts[0] = s[i * 2 + 0];
     ts[1] = s[i * 2 + 1];
     ts[2] = 0;
@@ -1301,10 +1304,17 @@ gst_value_deserialize_buffer (GValue * dest, const gchar * s)
     data[i] = (guint8) strtoul (ts, NULL, 16);
   }
 
-  if (ret) {
-    gst_value_take_mini_object (dest, GST_MINI_OBJECT (buffer));
-    return TRUE;
-  } else {
+  gst_value_take_buffer (dest, buffer);
+
+  return TRUE;
+
+  /* ERRORS */
+wrong_length:
+  {
+    return FALSE;
+  }
+wrong_char:
+  {
     gst_buffer_unref (buffer);
     return FALSE;
   }

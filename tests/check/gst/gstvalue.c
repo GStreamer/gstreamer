@@ -31,12 +31,64 @@ GST_START_TEST (test_deserialize_buffer)
 
   g_value_init (&value, GST_TYPE_BUFFER);
   fail_unless (gst_value_deserialize (&value, "1234567890abcdef"));
+  /* does not increase the refcount */
   buf = GST_BUFFER (gst_value_get_mini_object (&value));
+  ASSERT_MINI_OBJECT_REFCOUNT (buf, "buffer", 1);
 
+  /* does not increase the refcount */
+  buf = gst_value_get_buffer (&value);
   ASSERT_MINI_OBJECT_REFCOUNT (buf, "buffer", 1);
 
   /* cleanup */
-  gst_buffer_unref (buf);
+  g_value_unset (&value);
+}
+
+GST_END_TEST;
+
+/* create and serialize a buffer */
+GST_START_TEST (test_serialize_buffer)
+{
+  GValue value = { 0 };
+  GstBuffer *buf;
+  gchar *serialized;
+  static const char *buf_data = "1234567890abcdef";
+  gint len;
+
+  len = strlen (buf_data);
+  buf = gst_buffer_new_and_alloc (len);
+  memcpy (GST_BUFFER_DATA (buf), buf_data, len);
+  ASSERT_MINI_OBJECT_REFCOUNT (buf, "buffer", 1);
+
+  /* and assign buffer to mini object */
+  g_value_init (&value, GST_TYPE_BUFFER);
+  gst_value_take_buffer (&value, buf);
+  ASSERT_MINI_OBJECT_REFCOUNT (buf, "buffer", 1);
+
+  /* now serialize it */
+  serialized = gst_value_serialize (&value);
+  GST_DEBUG ("serialized buffer to %s", serialized);
+  fail_unless (serialized != NULL);
+
+  /* refcount should not change */
+  ASSERT_MINI_OBJECT_REFCOUNT (buf, "buffer", 1);
+
+  /* cleanup */
+  g_free (serialized);
+  g_value_unset (&value);
+
+  /* take NULL buffer */
+  g_value_init (&value, GST_TYPE_BUFFER);
+  GST_DEBUG ("setting NULL buffer");
+  gst_value_take_buffer (&value, NULL);
+
+  /* now serialize it */
+  GST_DEBUG ("serializing NULL buffer");
+  serialized = gst_value_serialize (&value);
+  /* should return NULL */
+  fail_unless (serialized == NULL);
+
+  g_free (serialized);
+  g_value_unset (&value);
 }
 
 GST_END_TEST;
@@ -1372,6 +1424,7 @@ gst_value_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_deserialize_buffer);
+  tcase_add_test (tc_chain, test_serialize_buffer);
   tcase_add_test (tc_chain, test_deserialize_gint);
   tcase_add_test (tc_chain, test_deserialize_gint_failures);
   tcase_add_test (tc_chain, test_deserialize_guint);

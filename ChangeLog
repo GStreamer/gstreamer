@@ -1,5 +1,15 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstvalue.c: (gst_value_serialize_buffer),
+	(gst_value_deserialize_buffer):
+	Don't try to serialize a GValue with a NULL buffer. 
+	Fixes #339821.
+
+	* tests/check/gst/gstvalue.c: (GST_START_TEST), (gst_value_suite):
+	Added check for serialisation of NULL buffers.
+
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstminiobject.c: (gst_value_take_mini_object):
 	Taking a NULL miniobject is valid, fix the case where
 	we try to unref the NULL miniobject.
