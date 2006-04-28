@@ -816,64 +816,58 @@ GST_STATIC_CAPS ("audio/x-wavpack-correction, framed = (boolean) false");
 static void
 wavpack_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data = gst_type_find_peek (tf, 0, 32);
+  guint64 offset;
+  guint32 blocksize;
+  guint8 *data;
 
+  data = gst_type_find_peek (tf, 0, 32);
   if (!data)
     return;
 
-  if (data[0] == 'w' && data[1] == 'v' && data[2] == 'p' && data[3] == 'k') {
-    guint32 blocksize, sublen;
-    gint32 left;
+  if (data[0] != 'w' || data[1] != 'v' || data[2] != 'p' || data[3] != 'k')
+    return;
 
-    GST_LOG ("got wavpack header");
+  /* Note: wavpack blocks can be fairly large (easily 60-110k), possibly
+   * larger than the max. limits imposed by certain typefinding elements
+   * like id3demux or apedemux, so typefinding is most likely only going to
+   * work in pull-mode */
+  blocksize = GST_READ_UINT32_LE (data + 4);
+  GST_LOG ("wavpack header, blocksize=0x%04x", blocksize);
+  offset = 32;
+  while (offset < 32 + blocksize) {
+    guint32 sublen;
 
-    /* wavpack blocks can be fairly large, possibly larger than the max.
-     * limits imposed by certain typefinding elements like id3demux or
-     * apedemux. So if the first wavpack block is larger than any particular
-     * limit, we try to get a smaller chunk and hope we get lucky parsing
-     * only bits of it (case at hand: first wavpack block: 42kB, with a
-     * max. limit imposed by apedemux/id3demux: 40kB) */
-    blocksize = GST_READ_UINT32_LE (data + 4);
-    do {
-      /* peek from offset 0, otherwise it won't work with apedemux */
-      data = gst_type_find_peek (tf, 0, 32 + blocksize);
-      if (data != NULL)
-        break;
-      if (32 + blocksize < 512) /* random threshold */
-        break;
-      blocksize = (blocksize * 3) / 4;
-    } while (data == NULL);
-    if (!data)
-      return;
-    data += 32;
-    left = (gint32) blocksize;
-    while (left > 2) {
-      sublen = ((guint32) data[1]) << 1;
-      if (data[0] & 0x80) {
-        sublen |= (((guint32) data[2]) << 9) | (((guint32) data[3]) << 17);
-        sublen += 1 + 3;        /* id + length */
-      } else {
-        sublen += 1 + 1;        /* id + length */
-      }
-      if (sublen > blocksize)
-        return;
-      if ((data[0] & 0x20) == 0) {
-        switch (data[0] & 0x0f) {
-          case 0xa:            /* ID_WV_BITSTREAM  */
-          case 0xc:            /* ID_WVX_BITSTREAM */
-            gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, WAVPACK_CAPS);
-            return;
-          case 0xb:            /* ID_WVC_BITSTREAM */
-            gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY,
-                WAVPACK_CORRECTION_CAPS);
-            return;
-          default:
-            break;
-        }
-      }
-      left -= sublen;
-      data += sublen;
+    /* get chunk header */
+    GST_LOG ("peeking at chunk at offset 0x%04x", (guint) offset);
+    data = gst_type_find_peek (tf, offset, 4);
+    if (data == NULL)
+      break;
+    sublen = ((guint32) data[1]) << 1;
+    if (data[0] & 0x80) {
+      sublen |= (((guint32) data[2]) << 9) | (((guint32) data[3]) << 17);
+      sublen += 1 + 3;          /* id + length */
+    } else {
+      sublen += 1 + 1;          /* id + length */
     }
+    if (sublen > blocksize - offset + 32) {
+      GST_LOG ("chunk length too big (%u > %u)", sublen, blocksize - offset);
+      break;
+    }
+    if ((data[0] & 0x20) == 0) {
+      switch (data[0] & 0x0f) {
+        case 0xa:              /* ID_WV_BITSTREAM  */
+        case 0xc:              /* ID_WVX_BITSTREAM */
+          gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, WAVPACK_CAPS);
+          return;
+        case 0xb:              /* ID_WVC_BITSTREAM */
+          gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY,
+              WAVPACK_CORRECTION_CAPS);
+          return;
+        default:
+          break;
+      }
+    }
+    offset += sublen;
   }
 }
 

@@ -1,3 +1,10 @@
+2006-04-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (wavpack_type_find):
+	  Fix wavpack typefinding to work in more cases (don't peek
+	  for chunks of multiple hundred kBs at once, but process
+	  things step-by-step in smaller units). Fixes #339786.
+
 2006-04-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
