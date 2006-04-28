@@ -743,6 +743,15 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
 
       /* forward to src-pad, sink-elements like to get the event */
       gst_pad_event_default (pad, event);
+      /* FIXME: collect-pads based elements need to create their own newsegment
+         event (and only one really)
+         (a) make the segment part of the GstCollectData structure of each pad,
+         so you can just check that once you have a buffer queued on that pad,
+         (b) you can override a pad's event function with your own,
+         catch the newsegment event and then pass it on to the original
+         gstcollectpads event function
+         (that's what avimux does for something IIRC)
+       */
       return TRUE;
     }
     default:
