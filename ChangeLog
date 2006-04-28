@@ -1,5 +1,12 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_transform_caps),
+	(gst_video_scale_fixate_caps), (gst_video_scale_src_event):
+	Videoscale doesn't pass on pixel-aspect ratio. Handle all
+	fixation cases better. Fixes #338991
+
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videotestsrc/gstvideotestsrc.c: (gst_video_test_src_create):
 	Handle 0/1 framerate correctly Fixes #331901.
 

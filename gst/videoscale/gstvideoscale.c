@@ -316,22 +316,42 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
 {
   GstVideoScale *videoscale;
   GstCaps *ret;
-  int i;
+  GstStructure *structure;
+  const GValue *par;
 
   videoscale = GST_VIDEO_SCALE (trans);
 
   ret = gst_caps_copy (caps);
 
-  for (i = 0; i < gst_caps_get_size (ret); i++) {
-    GstStructure *structure = gst_caps_get_structure (ret, i);
+  /* this function is always called with a simple caps */
+  g_return_val_if_fail (GST_CAPS_IS_SIMPLE (ret), NULL);
 
-    gst_structure_set (structure,
-        "width", GST_TYPE_INT_RANGE, 16, 4096,
-        "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
-    gst_structure_remove_field (structure, "pixel-aspect-ratio");
+  structure = gst_caps_get_structure (ret, 0);
+
+  gst_structure_set (structure,
+      "width", GST_TYPE_INT_RANGE, 16, 4096,
+      "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
+
+  /* if pixel aspect ratio, make a range of it */
+  if ((par = gst_structure_get_value (structure, "pixel-aspect-ratio"))) {
+    GstCaps *copy;
+    GstStructure *cstruct;
+
+    /* copy input PAR first, this is the prefered PAR */
+    gst_structure_set_value (structure, "pixel-aspect-ratio", par);
+
+    /* then make a copy with a fraction range as a second choice */
+    copy = gst_caps_copy (ret);
+    cstruct = gst_caps_get_structure (copy, 0);
+    gst_structure_set (cstruct,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+    /* and append */
+    gst_caps_append (ret, copy);
   }
 
   GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
+
   return ret;
 }
 
@@ -521,10 +541,28 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
   from_par = gst_structure_get_value (ins, "pixel-aspect-ratio");
   to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
 
+  /* we have both PAR but they might not be fixated */
   if (from_par && to_par) {
     GValue to_ratio = { 0, };   /* w/h of output video */
     gint from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
     gint count = 0, w = 0, h = 0, num, den;
+
+    /* from_par should be fixed */
+    g_return_if_fail (gst_value_is_fixed (from_par));
+
+    from_par_n = gst_value_get_fraction_numerator (from_par);
+    from_par_d = gst_value_get_fraction_denominator (from_par);
+
+    /* fixate the out PAR */
+    if (!gst_value_is_fixed (to_par)) {
+      GST_DEBUG_OBJECT (base, "fixating to_par to %dx%d", from_par_n,
+          from_par_d);
+      gst_structure_fixate_field_nearest_fraction (outs, "pixel-aspect-ratio",
+          from_par_n, from_par_d);
+    }
+
+    to_par_n = gst_value_get_fraction_numerator (to_par);
+    to_par_d = gst_value_get_fraction_denominator (to_par);
 
     /* if both width and height are already fixed, we can't do anything
      * about it anymore */
@@ -540,10 +578,6 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
     gst_structure_get_int (ins, "width", &from_w);
     gst_structure_get_int (ins, "height", &from_h);
-    from_par_n = gst_value_get_fraction_numerator (from_par);
-    from_par_d = gst_value_get_fraction_denominator (from_par);
-    to_par_n = gst_value_get_fraction_numerator (to_par);
-    to_par_d = gst_value_get_fraction_denominator (to_par);
 
     g_value_init (&to_ratio, GST_TYPE_FRACTION);
     gst_value_set_fraction (&to_ratio, from_w * from_par_n * to_par_d,
@@ -560,20 +594,30 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
      * prefer those that have one of w/h the same as the incoming video
      * using wd / hd = num / den */
 
-    /* start with same height, because of interlaced video */
-    /* check hd / den is an integer scale factor, and scale wd with the PAR */
-    if (from_h % den == 0) {
-      GST_DEBUG_OBJECT (base, "keeping video height");
-      h = from_h;
+    /* if one of the output width or height is fixed, we work from there */
+    if (h) {
+      GST_DEBUG_OBJECT (base, "height is fixed,scaling width");
       w = h * num / den;
-    } else if (from_w % num == 0) {
-      GST_DEBUG_OBJECT (base, "keeping video width");
-      w = from_w;
+    } else if (w) {
+      GST_DEBUG_OBJECT (base, "width is fixes, scaling height");
       h = w * den / num;
     } else {
-      GST_DEBUG_OBJECT (base, "approximating but keeping video height");
-      h = from_h;
-      w = h * num / den;
+      /* none of width or height is fixed, figure out both of them based only on
+       * the input width and height */
+      /* check hd / den is an integer scale factor, and scale wd with the PAR */
+      if (from_h % den == 0) {
+        GST_DEBUG_OBJECT (base, "keeping video height");
+        h = from_h;
+        w = h * num / den;
+      } else if (from_w % num == 0) {
+        GST_DEBUG_OBJECT (base, "keeping video width");
+        w = from_w;
+        h = w * den / num;
+      } else {
+        GST_DEBUG_OBJECT (base, "approximating but keeping video height");
+        h = from_h;
+        w = h * num / den;
+      }
     }
     GST_DEBUG_OBJECT (base, "scaling to %dx%d", w, h);
 
