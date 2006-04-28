@@ -1,3 +1,16 @@
+2006-04-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* ext/annodex/gstcmmlenc.c: (gst_cmml_enc_class_init),
+	(gst_cmml_enc_push_clip):
+	* sys/Makefile.am:
+	* sys/ximage/Makefile.am:
+	* sys/ximage/gstximagesrc.c:
+	  Move ximagesrc plug-in to good after review.  Fixes #336756.
+
 2006-04-28  Michael Smith  <msmith@fluendo.com>
 
 	* gst/icydemux/gsticydemux.c: (gst_icydemux_reset),
@@ -8,7 +21,6 @@
 	(gst_icydemux_chain), (gst_icydemux_send_tag_event):
 	* gst/icydemux/gsticydemux.h:
 	  Fix event handling: cache events when typefinding and forward later.
-
 
 2006-04-28  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 

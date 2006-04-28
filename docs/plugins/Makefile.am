@@ -100,7 +100,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \
 	$(top_srcdir)/gst/videofilter/gstvideoflip.h \
 	$(top_srcdir)/gst/videofilter/gstvideobalance.h \
-	$(top_srcdir)/gst/videomixer/videomixer.c
+	$(top_srcdir)/gst/videomixer/videomixer.c \
+	$(top_srcdir)/sys/ximage/gstximagesrc.h
 
 # example code that needs to be converted to xml and placed in xml/
 EXAMPLE_CFILES = \

@@ -146,7 +146,7 @@ gst_cmml_enc_class_init (GstCmmlEncClass * enc_class)
       g_param_spec_uchar ("granule-shift",
           "Granuleshift",
           "The number of lower bits to use for partitioning a granule position",
-          0, G_MAXUINT8, 32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, 64, 32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   GST_ELEMENT_CLASS (klass)->change_state = gst_cmml_enc_change_state;
 }
@@ -554,6 +554,7 @@ gst_cmml_enc_push_clip (GstCmmlEnc * enc, GstCmmlTagClip * clip,
     goto granule_overflow;
   }
 
+  GST_BUFFER_OFFSET (buffer) = clip->start_time;
   GST_BUFFER_OFFSET_END (buffer) = granulepos;
   GST_BUFFER_TIMESTAMP (buffer) = clip->start_time;
 

@@ -39,6 +39,7 @@
     <xi:include href="xml/element-videoflip.xml" />
     <xi:include href="xml/element-videomixer.xml" />
     <xi:include href="xml/element-wavparse.xml" />
+    <xi:include href="xml/element-ximagesrc.xml" />
   </chapter>
 
   <chapter>
@@ -88,5 +89,6 @@
     <xi:include href="xml/plugin-videomixer.xml" />
     <xi:include href="xml/plugin-wavenc.xml" />
     <xi:include href="xml/plugin-wavparse.xml" />
+    <xi:include href="xml/plugin-ximagesrc.xml" />
   </chapter>
 </book>

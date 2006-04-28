@@ -58,6 +58,12 @@ endif
 # GL_DIR=
 # endif
 
-SUBDIRS=$(OSS_DIR) $(SUNAUDIO_DIR)
+if USE_X
+XIMAGE_DIR=ximage
+else
+XIMAGE_DIR=
+endif
 
-DIST_SUBDIRS=oss sunaudio
+SUBDIRS=$(OSS_DIR) $(SUNAUDIO_DIR) $(XIMAGE_DIR)
+
+DIST_SUBDIRS=oss sunaudio ximage

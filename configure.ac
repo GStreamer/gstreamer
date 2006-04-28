@@ -339,6 +339,82 @@ GST_CHECK_FEATURE(SUNAUDIO, [Sun Audio], sunaudiosink, [
   AC_CHECK_HEADER(sys/audioio.h, HAVE_SUNAUDIO="yes", HAVE_SUNAUDIO="no")
 ])
 
+
+dnl Check for X11
+translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
+GST_CHECK_FEATURE(X, [X libraries and plugins],
+                  [ximagesrc], [
+  AC_PATH_XTRA
+
+  dnl now try to find the HEADER
+  ac_cflags_save="$CFLAGS"
+  ac_cppflags_save="$CPPFLAGS"
+  CFLAGS="$CFLAGS $X_CFLAGS"
+  CPPFLAGS="$CPPFLAGS $X_CFLAGS"
+  AC_CHECK_HEADER(X11/Xlib.h, HAVE_X="yes", HAVE_X="no")
+
+  if test "x$HAVE_X" = "xno"
+  then
+    AC_MSG_NOTICE([cannot find X11 development files])
+  else
+    dnl this is much more than we want
+    X_LIBS="$X_LIBS $X_PRE_LIBS $X_EXTRA_LIBS"
+    dnl AC_PATH_XTRA only defines the path needed to find the X libs,
+    dnl it does not add the libs; therefore we add them here
+    X_LIBS="$X_LIBS -lX11"
+    AC_SUBST(X_CFLAGS)
+    AC_SUBST(X_LIBS)
+
+    dnl check for Xfixes
+    PKG_CHECK_MODULES(XFIXES, xfixes, HAVE_XFIXES="yes", HAVE_XFIXES="no")
+    if test "x$HAVE_XFIXES" = "xyes"
+    then
+        XFIXES_CFLAGS="-DHAVE_XFIXES $XFIXES_CFLAGS"
+    fi
+    AC_SUBST(XFIXES_LIBS)
+    AC_SUBST(XFIXES_CFLAGS)
+
+    dnl check for Xdamage
+    PKG_CHECK_MODULES(XDAMAGE, xdamage, HAVE_XDAMAGE="yes", HAVE_XDAMAGE="no")
+    if test "x$HAVE_XDAMAGE" = "xyes"
+    then
+        XDAMAGE_CFLAGS="-DHAVE_XDAMAGE $XDAMAGE_CFLAGS"
+    fi
+    AC_SUBST(XDAMAGE_LIBS)
+    AC_SUBST(XDAMAGE_CFLAGS)
+  fi
+  AC_SUBST(HAVE_X)
+  CFLAGS="$ac_cflags_save"
+  CPPFLAGS="$ac_cppflags_save"
+])
+
+dnl FIXME: this should be rolled into the test above, it's just an additional
+dnl feature of the ximagesrc plug-in
+dnl This is the same as in gst-plugins-base
+dnl check for X Shm
+translit(dnm, m, l) AM_CONDITIONAL(USE_XSHM, true)
+GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], [], [
+  if test x$HAVE_X = xyes; then
+    AC_CHECK_LIB(Xext, XShmAttach,
+                 HAVE_XSHM="yes", HAVE_XSHM="no",
+                 $X_LIBS)
+    if test "x$HAVE_XSHM" = "xyes"; then
+      XSHM_LIBS="-lXext"
+    else
+      dnl On AIX, it is in XextSam instead, but we still need -lXext
+      AC_CHECK_LIB(XextSam, XShmAttach,
+                   HAVE_XSHM="yes", HAVE_XSHM="no",
+                   $X_LIBS)
+      if test "x$HAVE_XSHM" = "xyes"; then
+        XSHM_LIBS="-lXext -lXextSam"
+      fi
+    fi
+  fi
+], ,[
+  AC_SUBST(HAVE_XSHM)
+  AC_SUBST(XSHM_LIBS)
+])
+
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !
 
@@ -684,6 +760,7 @@ ext/speex/Makefile
 sys/Makefile
 sys/oss/Makefile
 sys/sunaudio/Makefile
+sys/ximage/Makefile
 po/Makefile.in
 gconf/Makefile
 gconf/gstreamer.schemas
