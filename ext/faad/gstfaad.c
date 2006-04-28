@@ -1,5 +1,6 @@
 /* GStreamer FAAD (Free AAC Decoder) plugin
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -121,6 +122,8 @@ static GstStateChangeReturn gst_faad_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_faad_src_convert (GstFaad * faad, GstFormat src_format,
     gint64 src_val, GstFormat dest_format, gint64 * dest_val);
+static gboolean gst_faad_open_decoder (GstFaad * faad);
+static void gst_faad_close_decoder (GstFaad * faad);
 
 static GstElementClass *parent_class;   /* NULL */
 
@@ -190,9 +193,7 @@ gst_faad_init (GstFaad * faad)
   faad->sum_dur_out = 0;
   faad->packetised = FALSE;
 
-  faad->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
+  faad->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (faad), faad->sinkpad);
   gst_pad_set_event_function (faad->sinkpad,
       GST_DEBUG_FUNCPTR (gst_faad_sink_event));
@@ -201,9 +202,7 @@ gst_faad_init (GstFaad * faad)
   gst_pad_set_chain_function (faad->sinkpad,
       GST_DEBUG_FUNCPTR (gst_faad_chain));
 
-  faad->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
+  faad->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_use_fixed_caps (faad->srcpad);
   gst_pad_set_getcaps_function (faad->srcpad,
       GST_DEBUG_FUNCPTR (gst_faad_srcgetcaps));
@@ -227,6 +226,35 @@ gst_faad_send_tags (GstFaad * faad)
   gst_element_found_tags (GST_ELEMENT (faad), tags);
 }
 
+static gint
+aac_rate_idx (gint rate)
+{
+  if (92017 <= rate)
+    return 0;
+  else if (75132 <= rate)
+    return 1;
+  else if (55426 <= rate)
+    return 2;
+  else if (46009 <= rate)
+    return 3;
+  else if (37566 <= rate)
+    return 4;
+  else if (27713 <= rate)
+    return 5;
+  else if (23004 <= rate)
+    return 6;
+  else if (18783 <= rate)
+    return 7;
+  else if (13856 <= rate)
+    return 8;
+  else if (11502 <= rate)
+    return 9;
+  else if (9391 <= rate)
+    return 10;
+  else
+    return 11;
+}
+
 static gboolean
 gst_faad_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -239,8 +267,8 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
   faad->packetised = FALSE;
 
   if ((value = gst_structure_get_value (str, "codec_data"))) {
-    guint samplerate;
-    guchar channels;
+    guint32 samplerate;
+    guint8 channels;
 
     /* We have codec data, means packetised stream */
     faad->packetised = TRUE;
@@ -253,10 +281,9 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
       GST_DEBUG ("faacDecInit2() failed");
       return FALSE;
     }
-#if 0
-    faad->samplerate = samplerate;
-    faad->channels = channels;
-#endif
+
+    GST_DEBUG_OBJECT (faad, "channels=%u, rate=%u", channels, samplerate);
+
     /* not updating these here, so they are updated in the
      * chain function, and new caps are created etc. */
     faad->samplerate = 0;
@@ -273,6 +300,25 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
     faad->packetised = TRUE;
   } else {
     faad->init = FALSE;
+  }
+
+  faad->fake_codec_data[0] = 0;
+  faad->fake_codec_data[1] = 0;
+
+  if (faad->packetised) {
+    gint rate, channels;
+
+    if (gst_structure_get_int (str, "rate", &rate) &&
+        gst_structure_get_int (str, "channels", &channels)) {
+      gint rate_idx, profile;
+
+      profile = 3;              /* 0=MAIN, 1=LC, 2=SSR, 3=? */
+      rate_idx = aac_rate_idx (rate);
+
+      faad->fake_codec_data[0] = ((profile + 1) << 3) | ((rate_idx & 0xE) >> 1);
+      faad->fake_codec_data[1] = ((rate_idx & 0x1) << 7) | (channels << 3);
+      GST_LOG_OBJECT (faad, "created fake codec data (%u,%u)", rate, channels);
+    }
   }
 
   faad->need_channel_setup = TRUE;
@@ -406,51 +452,6 @@ gst_faad_chanpos_to_gst (guchar * fpos, guint num)
 
   return pos;
 }
-
-/*
-static GstPadLinkReturn
-gst_faad_sinkconnect (GstPad * pad, const GstCaps * caps)
-{
-  GstFaad *faad = GST_FAAD (gst_pad_get_parent (pad));
-  GstStructure *str = gst_caps_get_structure (caps, 0);
-  const GValue *value;
-  GstBuffer *buf;
-
-  // Assume raw stream 
-  faad->packetised = FALSE;
-
-  if ((value = gst_structure_get_value (str, "codec_data"))) {
-    gulong samplerate;
-    guchar channels;
-
-    // We have codec data, means packetised stream 
-    faad->packetised = TRUE;
-    buf = g_value_get_boxed (value);
-
-    // someone forgot that char can be unsigned when writing the API 
-    if ((gint8) faacDecInit2 (faad->handle, GST_BUFFER_DATA (buf),
-            GST_BUFFER_SIZE (buf), &samplerate, &channels) < 0)
-      return GST_PAD_LINK_REFUSED;
-
-    //faad->samplerate = samplerate;
-    //faad->channels = channels;
-    faad->init = TRUE;
-
-    if (faad->tempbuf) {
-      gst_buffer_unref (faad->tempbuf);
-      faad->tempbuf = NULL;
-    }
-  } else {
-    faad->init = FALSE;
-  }
-
-  faad->need_channel_setup = TRUE;
-
-  // if there's no decoderspecificdata, it's all fine. We cannot know
-  // * much more at this point... 
-  return GST_PAD_LINK_OK;
-}
-*/
 
 static GstCaps *
 gst_faad_srcgetcaps (GstPad * pad)
@@ -1079,7 +1080,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
       faad->next_ts = GST_BUFFER_TIMESTAMP (buffer);
       faad->prev_ts = GST_BUFFER_TIMESTAMP (buffer);
     }
-    GST_DEBUG ("Timestamp on incoming buffer: %" GST_TIME_FORMAT
+    GST_LOG_OBJECT (faad, "Timestamp on incoming buffer: %" GST_TIME_FORMAT
         ", next_ts: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
         GST_TIME_ARGS (faad->next_ts));
@@ -1103,19 +1104,16 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 
   /* init if not already done during capsnego */
   if (!faad->init) {
-    guint32 samplerate;
-    guchar channels;
-    glong init_res;
+    guint32 rate;
+    guint8 ch;
 
-    init_res = faacDecInit (faad->handle, input_data, input_size,
-        &samplerate, &channels);
-    if (init_res < 0) {
-      GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
-          ("Failed to init decoder from stream"));
-      gst_object_unref (faad);
-      return GST_FLOW_UNEXPECTED;
-    }
-    skip_bytes = 0;             /* init_res; */
+    GST_DEBUG_OBJECT (faad, "initialising ...");
+    if (faacDecInit (faad->handle, input_data, input_size, &rate, &ch) < 0)
+      goto init_failed;
+
+    GST_DEBUG_OBJECT (faad, "faacDecInit() ok: rate=%u,channels=%u", rate, ch);
+
+    skip_bytes = 0;
     faad->init = TRUE;
 
     /* make sure we create new caps below */
@@ -1146,11 +1144,35 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 
     out = faacDecDecode (faad->handle, &info, input_data + skip_bytes,
         input_size - skip_bytes);
+
     if (info.error) {
-      GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
-          ("Failed to decode buffer: %s", faacDecGetErrorMessage (info.error)));
-      ret = GST_FLOW_ERROR;
-      goto out;
+      guint32 rate;
+      guint8 ch;
+
+      if (!faad->packetised)
+        goto decode_error;
+
+      /* decode error? try again using faacDecInit2 
+       * fabricated private codec data from sink caps */
+      gst_faad_close_decoder (faad);
+      if (!gst_faad_open_decoder (faad))
+        goto init2_failed;
+
+      GST_DEBUG_OBJECT (faad, "decoding error, reopening with faacDecInit2()");
+      if ((gint8) faacDecInit2 (faad->handle, faad->fake_codec_data, 2,
+              &rate, &ch) < 0) {
+        goto init2_failed;
+      }
+
+      GST_DEBUG_OBJECT (faad, "faacDecInit2(): rate=%d,channels=%d", rate, ch);
+
+      /* let's try again */
+      info.error = 0;
+      out = faacDecDecode (faad->handle, &info, input_data + skip_bytes,
+          input_size - skip_bytes);
+
+      if (info.error)
+        goto decode_error;
     }
 
     if (info.bytesconsumed > input_size)
@@ -1184,7 +1206,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
       }
 
       /* play decoded data */
-      if (info.samples > 0 && GST_PAD_PEER (faad->srcpad)) {
+      if (info.samples > 0) {
         guint bufsize = info.samples * faad->bps;
         guint num_samples = info.samples / faad->channels;
 
@@ -1207,7 +1229,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
         faad->sum_dur_out += GST_BUFFER_DURATION (outbuf);
         GST_OBJECT_UNLOCK (faad);
 
-        GST_DEBUG ("pushing buffer, off=%" G_GUINT64_FORMAT ", ts=%"
+        GST_LOG_OBJECT (faad, "pushing buffer, off=%" G_GUINT64_FORMAT ", ts=%"
             GST_TIME_FORMAT, GST_BUFFER_OFFSET (outbuf),
             GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
         if ((ret = gst_pad_push (faad->srcpad, outbuf)) != GST_FLOW_OK &&
@@ -1239,6 +1261,63 @@ out:
   gst_object_unref (faad);
 
   return ret;
+
+/* ERRORS */
+init_failed:
+  {
+    GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
+        ("Failed to init decoder from stream"));
+    ret = GST_FLOW_ERROR;
+    goto out;
+  }
+
+init2_failed:
+  {
+    GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
+        ("%s() failed", (faad->handle) ? "faacDecInit2" : "faacDecOpen"));
+    ret = GST_FLOW_ERROR;
+    goto out;
+  }
+
+decode_error:
+  {
+    GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
+        ("Failed to decode buffer: %s", faacDecGetErrorMessage (info.error)));
+    ret = GST_FLOW_ERROR;
+    goto out;
+  }
+}
+
+static gboolean
+gst_faad_open_decoder (GstFaad * faad)
+{
+  faacDecConfiguration *conf;
+
+  faad->handle = faacDecOpen ();
+
+  if (faad->handle == NULL) {
+    GST_WARNING_OBJECT (faad, "faacDecOpen() failed");
+    return FALSE;
+  }
+
+  conf = faacDecGetCurrentConfiguration (faad->handle);
+  conf->defObjectType = LC;
+  /* conf->dontUpSampleImplicitSBR = 1; */
+  conf->outputFormat = FAAD_FMT_16BIT;
+
+  if (faacDecSetConfiguration (faad->handle, conf) == 0) {
+    GST_WARNING_OBJECT (faad, "faacDecSetConfiguration() failed");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void
+gst_faad_close_decoder (GstFaad * faad)
+{
+  faacDecClose (faad->handle);
+  faad->handle = NULL;
 }
 
 static GstStateChangeReturn
@@ -1249,21 +1328,9 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-    {
-      if (!(faad->handle = faacDecOpen ()))
+      if (!gst_faad_open_decoder (faad))
         return GST_STATE_CHANGE_FAILURE;
-      else {
-        faacDecConfiguration *conf;
-
-        conf = faacDecGetCurrentConfiguration (faad->handle);
-        conf->defObjectType = LC;
-        /* conf->dontUpSampleImplicitSBR = 1; */
-        conf->outputFormat = FAAD_FMT_16BIT;
-        if (faacDecSetConfiguration (faad->handle, conf) == 0)
-          return GST_STATE_CHANGE_FAILURE;
-      }
       break;
-    }
     default:
       break;
   }
@@ -1285,8 +1352,7 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
       faad->sum_dur_out = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      faacDecClose (faad->handle);
-      faad->handle = NULL;
+      gst_faad_close_decoder (faad);
       if (faad->tempbuf) {
         gst_buffer_unref (faad->tempbuf);
         faad->tempbuf = NULL;

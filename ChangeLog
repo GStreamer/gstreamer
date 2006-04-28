@@ -1,3 +1,16 @@
+2006-04-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/faad/gstfaad.c: (gst_faad_init), (aac_rate_idx),
+	(gst_faad_setcaps), (gst_faad_chain), (gst_faad_open_decoder),
+	(gst_faad_close_decoder), (gst_faad_change_state):
+	* ext/faad/gstfaad.h:
+	  If we run into a decoding error, try re-opening the decoder
+	  with faacDecInit2() using fake codec data created from the
+	  data the demuxer gave us. Should fix a whole bunch of
+	  GStreamer-faad problems incl. 'channel coupling not
+	  implemented', 'maximum number of scalefactor bands exceeded'
+	  etc. (#173007, #332892).
+
 2006-04-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/amrwb/gstamrwbdec.c:

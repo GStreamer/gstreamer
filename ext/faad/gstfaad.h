@@ -33,7 +33,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_FAAD, GstFaadClass))
 #define GST_IS_FAAD(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_FAAD))
-#define GST_IS_FAAD_CLASS(obj) \
+#define GST_IS_FAAD_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_FAAD))
 
 typedef struct _GstFaad {
@@ -45,6 +45,8 @@ typedef struct _GstFaad {
   guint      samplerate; /* sample rate of the last MPEG frame    */
   guint      channels;   /* number of channels of the last frame  */
   guint      bps;        /* bytes per sample                      */
+
+  guint8     fake_codec_data[2];
 
   GstBuffer *tempbuf;    /* used to keep input leftovers          */
 
