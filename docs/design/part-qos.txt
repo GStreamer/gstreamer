@@ -21,7 +21,7 @@ Sources of quality problems
 ---------------------------
 
  - High CPU load
- - 
+ - Network problems
 
 
 QoS event
@@ -92,6 +92,18 @@ real-time. If DR1 is exactly 1.0, the element is running at a perfect speed.
 Values DR1 > 1.0 means that the upstream element cannot produce buffers of
 duration D1 in real-time. It is exactly DR1 that tells the amount of speedup
 we require from upstream to regain real-time performance.
+
+An element that is not receiving enough data is said to be starved.
+
+
+Element measurements
+--------------------
+
+In addition to the measurements of the datarate of the upstream element, a
+typical element must also measure its own performance. Global pipeline 
+performance problems can indeed also be caused by the element itself when it
+receives too much data it cannot process in time. The element is then said to
+be flooded.
 
 
 Short term correction
@@ -168,12 +180,111 @@ more dropped frames and a generally worse QoS.
 QoS strategies
 --------------
 
+Several strategies exist to reduce processing delay that might affect
+real time performance.
+
  - lowering quality
-   - dropping frames
-   - switch to a lower decoding/encoding quality
-   - switch to a lower quality source
+   - dropping frames (reduce CPU/bandwidth usage)
+   - switch to a lower decoding/encoding quality (reduce algorithmic
+     complexity)
+   - switch to a lower quality source (reduce network usage)
+ - increasing thread priorities
+   - switch to real-time scheduling
+   - assign more CPU cycles to critial pipeline parts
+   - assign more CPU(s) to critical pipeline parts
 
 
 QoS implementations
 -------------------
 
+Here follows a small overview of how QoS can be implemented in a range of
+different types of elements.
+
+
+GstBaseSink
+-----------
+
+The primary implementor of QoS is GstBaseSink. It will calculate the following
+values:
+
+ - upstream running average of processing time (5) in stream time.
+ - running average of buffer durations.
+ - upstream running average of processing time in system time.
+ - running average of render time (in system time)
+ - rendered/dropped buffers
+
+The processing time and the average buffer durations will be used to
+calculate a proportion.
+
+the processing time in system time is compared to render time to decide if
+the majority of the time is spend upstream or in the sink itself. This value
+is used to decide flood or starvation.
+
+the number of rendered and dropped buffers is used to query stats on the sink.
+
+A QoS message with the most current values is sent upstream for each buffer 
+that was received by the sink.
+
+Normally QoS is only enabled for video pipelines. The reason being that drops
+in audio is more disturbing than dropping frames. Also video requires in 
+general more processing than audio.
+
+Normally there is a threshold for when buffers get dropped in a video sink. Frames
+that arrive 20 milliseconds late are still rendered as it is not noticable for
+the human eye.
+
+
+GstBaseTransform
+----------------
+
+Transform elements can entirely skip the transform based on the timestamp and
+jitter values of recent QoS messages since these buffers will certainly arrive
+too late.
+
+With any intermediate element, the element should measure its performance to
+decide if it is responsible for the quality problems or any upstream/downstream
+element.
+
+some transforms can reduce the complexity of their algorithms. Depending on the
+algorith, the changes in quality may have disturbing visual or audible effect 
+that should be avoided.
+
+
+Video Decoders
+--------------
+
+A video decoder can, based on the codec in use, decide to not decode intermediate
+frames. A typical codec can for example skip the decoding of B-frames to reduce
+the CPU usage and framerate.
+
+If each frame is independantly decodable, any arbitrary frame can be skipped based
+on the timestamp and jitter values of the latest QoS message. In addition can the
+proportion member be used to skip frames.
+
+
+Demuxers
+--------
+
+Demuxer usually cannot do a lot regarding QoS except for skipping frames to the next
+keyframe when a lateness QoS message arrives on a source pad.
+
+A demuxer can however measure if the performance problems are upstream or downstream
+and forward an updated QoS message upstream.
+
+Most demuxers that have multiple output pads might need to combine the QoS messages on
+all the pads and derive an aggregated QoS message for the upstream element.
+
+
+Sources
+-------
+
+The QoS messages only apply to push based sources since pull based sources are entirely
+controlled by another downstream element.
+
+Sources can receive a flood or starvation message that can be used to switch to
+less demanding source material. In case of a network stream, a switch could be done
+to a lower or higher quality stream or additional enhancement layers could be used
+or ignored.
+
+Live sources will automatically drop data when it takes too long to prcess the data 
+that the element pushes out.

@@ -47,7 +47,7 @@ When performing a seek, the following steps have to be taken by the application:
     - a format to seek in, this can be time, bytes, units (frames, samples), ...
     - a playback rate, 1.0 is normal playback speed, positive values bigger than 1.0
       mean fast playback. negative values mean reverse playback. A playback speed of
-      0.0 is not allowed.
+      0.0 is not allowed (but is equivalent to PAUSING the pipeline).
     - a start position, this value has to be between 0 and the total duration of the 
       file. It can also be relative to the previously configured start value.
     - a stop position, this value has to be between 0 and the total duration. It can
@@ -124,7 +124,7 @@ client side forward trickmodes
 ------------------------------
 
 The seek happens as stated above. a NEW_SEGMENT event is sent downstream with a rate
-different from 1.0. Plugins receiving the NEW_SEGMENT can decide to perform the 
+bigger than 1.0. Plugins receiving the NEW_SEGMENT can decide to perform the 
 rate conversion of the media data (retimestamp video frames, resample audio, ...).
 A plugin can also decide to drop frames in the case of fast playback or use a more
 efficient decoding algorithm (skip B frames, ...). If a plugin decides to resample

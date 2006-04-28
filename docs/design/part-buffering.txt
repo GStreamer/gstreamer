@@ -1,0 +1,7 @@
+Buffering
+---------
+
+This document outlines the buffering policy used in the GStreamer
+core that can be used by plugins and applications.
+
+

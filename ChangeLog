@@ -1,3 +1,18 @@
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-TODO.txt:
+	Mention QoS as an ongoing work item.
+
+	* docs/design/part-buffering.txt:
+	New doc about buffering that needs to be fleshed out
+	at some point.
+
+	* docs/design/part-qos.txt:
+	More QoS policy for decoders/demuxers/transforms
+
+	* docs/design/part-trickmodes.txt:
+	Small update.
+
 2006-04-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

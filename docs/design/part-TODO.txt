@@ -24,7 +24,7 @@ IMPLEMENTATION
 
 - implement latency calculation for live sources.
 
-- implement QOS.
+- implement more QOS, see part-qos.txt.
 
 - implement BUFFERSIZE.
 
