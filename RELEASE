@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer 0.10.4 "Light"
+Release notes for GStreamer 0.10.5 "Fogo"
         
 
 
@@ -38,58 +38,53 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * 33% of library size removed by parse change
-      * (Experimental) QoS features (use max-lateness on BaseSink subclasses to enable)
+      * QoS in BaseTransform
+      * gcc 4.1 fixes
+      * BaseTransform reworked
+      * Bus reworked; signal API added
 
 Bugs fixed in this release
     
-      * 323542 : GStreamer 0.10 hangs at EOS for all songs
-      * 320340 : triggering a gst_task_join from the streaming task can de...
-      * 322628 : document thread-unsafety of gst_value_foo() + gst_value_r...
-      * 324186 : Smarter (deterministic!) typefind decisions
-      * 324398 : varargs/valist functions aren't bindable
-      * 328873 : only one gst_bin_recalc_state allowed at a time
-      * 330899 : CVS directory in make dist tarball
-      * 330906 : API: add GST_QUERY_TYPE_NAME and GST_MESSAGE_TYPE_NAME
-      * 330996 : basesrc emits EOS unconditionally when going to READY
-      * 331255 : Shrinking gst_parse_launch bloat
-      * 331898 : Basetranform is not reusable
-      * 332045 : API: GstPipeline needs API to disable  flushing of its bu...
-      * 332277 : [filesrc] seek does not correct read position in non-mmap...
-      * 332611 : [basesrc] needs way to prevent expensive start/stop in ch...
-      * 332723 : New API: gst_type_find_helper_for_buffer
-      * 333042 : New API: gst_type_find_helper_get_range
-      * 333266 : Registry file writing rewrite
-      * 333272 : tests should set G_SLICE=always-malloc now
-      * 333417 : GST_BOILERPLATE_WITH_INTERFACE can't be used in C++ code
-      * 333669 : Add pad accessor defines for GstBaseTransform
-      * 333779 : New API: add gst_uri_has_protocol
-      * 324818 : gst_registry_get_default doesn't sink newly created registry
-      * 330125 : _pad_send_event does not check flushing correctly
-      * 330684 : Add ability to emit sync-message without messing with the...
+      * 131079 : [PATCH] [api] loading a class leaves elementfactory blank
+      * 317048 : gstreamer Cygwin build fixes
+      * 325599 : Build fails with GCC 4.1
+      * 327315 : GStreamer CVS head files to build with GCC 4.1
+      * 331248 : [basesink] filesink spews warnings when used with flacenc
+      * 332151 : xml registry loader should use mmap() where possible
+      * 332390 : [GstQueue/GstPad] queue pauses immediately when linked, p...
+      * 332986 : Something wrong in caps checking...
+      * 334109 : pkg-config files must link with the same check library th...
+      * 334303 : Stale libgnomeui check in configure
+      * 334434 : Missing functions in def files for dlls
+      * 335195 : GST_BOILERPLATE_FULL etc isn' optimised
+      * 335480 : start with debugging disabled
+      * 335513 : totem goes (and stays) out of sync when running bittorrent
+      * 336336 : [queue] Queue might block in EOS
+      * 336945 : [filesink] throws error when writing 0 bytes
+      * 337103 : small cleanup in gstplugin.c
+      * 337386 : Pipeline bus is not initially flushing
+      * 338711 : Internal data flow error with latest updates for FC5 with...
+      * 326311 : basesink does not call the PAUSED- > PLAYING change_state f...
+      * 326998 : GstBaseSrc's send_event handler ignores seek requests aft...
 
 API changed in this release
      
 
 - API additions:
     
-* gst_pipeline_set_auto_flush_bus()
-* gst_pipeline_get_auto_flush_bus()
-* gst_uri_has_protocol()
-* gst_pipeline_set_max_lateness()
-* gst_pipeline_get_max_lateness()
-* gst_pipeline_get_sync()
-* gst_pipeline_do_sync()
-* GST_BASE_TRANSFORM_SRC_PAD()
-* GST_BASE_TRANSFORM_SINK_PAD()
-* GstBaseSrc::check_get_range()
-* GstBaseSink::max-lateness
-* gst_type_find_helper_get_range()
-* gst_type_find_helper_for_buffer()
-* GST_MESSAGE_TYPE_NAME()
-* GST_QUERY_TYPE_NAME()
-* gst_bus_enable_sync_message_emission()
-* gst_bus_disable_sync_message_emission()
+* gst_controller_unset_all()
+* gst_pad_query_peer_position()
+* gst_pad_query_peer_duration()
+* gst_pad_query_peer_convert()
+* GstBaseSink::async_play()
+* GstBaseSrc::qos
+* gst_base_sink_set_qos_enabled()
+* gst_base_sink_is_qos_enabled()
+* gst_base_transform_update_qos()
+* gst_base_transform_set_qos_enabled()
+* gst_base_transform_is_qos_enabled()
+* gst_pipeline_get_delay()
+* gst_pipeline_set_delay()
 
 Download
 
@@ -117,25 +112,28 @@ will create more lists as necessary.
         
 Applications
 
-Applications ported to GStreamer 0.10 include: totem, gnome-media, RhythmBox,
-Sound-juicer, Jamboree, Flumotion.
-
+Applications ported to GStreamer 0.10 include Totem, RhythmBox, Sound-Juicer,
+Gnome Media, Flumotion, Amarok, Jamboree, Pitivi, Istanbul, AnnoAmp, Elisa,
+and others.
+Let us know if you want to be added to this list.
 
   
 Contributors to this release
     
       * Andy Wingo
-      * Christophe Fergeau
+      * Edward Hervey
       * Jan Schmidt
       * Julien MOUTTE
+      * Julio M. Merino Vidal
       * Loïc Minier
+      * Mark Nauwelaerts
       * Michael Smith
-      * Renchi Raju
-      * Ross Burton
+      * Paolo Borelli
       * Sebastien Moutte
+      * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Torsten Schoenfeld
-      * Vincent Torri
+      * Tommi Myöhänen
       * Wim Taymans
+      * Zaheer Abbas Merali
  

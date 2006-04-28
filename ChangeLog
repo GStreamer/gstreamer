@@ -1,3 +1,10 @@
+=== release 0.10.5 ===
+
+2006-04-28  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.5, "Fogo"
+
 2006-04-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Wim Taymans
@@ -34,8 +41,8 @@
 	* libs/gst/controller/gstcontroller.c: (gst_controller_unset),
 	(gst_controller_unset_all):
 	* libs/gst/controller/gstcontroller.h:
-	API: Added new method _unset_all() and fixed _unset()
-	
+	API: Added new method gst_controller_unset_all()
+	fixed gst_controller_unset()
 	* tests/check/libs/controller.c: (GST_START_TEST),
 	(gst_controller_suite):
 	Added two testcases for new and fixed method
@@ -358,20 +365,19 @@
 
 2006-03-29  Wim Taymans  <wim@fluendo.com>
 
-	Patch by Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
+	Patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
 
 	* plugins/elements/gstqueue.c: (gst_queue_init),
 	(gst_queue_locked_flush), (gst_queue_handle_sink_event),
 	(gst_queue_set_property):
 	* plugins/elements/gstqueue.h:
 	In queue, when EOS is received, if minimum threshold > max_size -
-	current_level, there is chance that queue blocks forever in conditional item
-	del wait. This is because the queue is not emptied completely due to minimum
-	threshold.
-	Here is another approach. Instead of setting cur_levels to max in EOS, just
-	zero all minimum threshold levels. This should make sure that queue gives out
-	all data. When going to READY (stop) state, just reset the original minimum
-	threshold levels.
+	current_level, there is chance that queue blocks forever in conditional
+	item del wait. This is because the queue is not emptied completely due
+	to minimum threshold.  Here is another approach. Instead of setting
+	cur_levels to max in EOS, just zero all minimum threshold levels. This
+	should make sure that queue gives out all data. When going to READY
+	(stop) state, just reset the original minimum threshold levels.
 	Fixes #336336.
 
 2006-03-29  Tim-Philipp Müller  <tim at centricular dot net>
@@ -454,9 +460,9 @@
 	(gst_pad_query_peer_duration), (gst_pad_query_peer_convert):
 	* gst/gstutils.h:
 	  API: add some new utility functions:
-	   - gst_pad_query_peer_position
-	   - gst_pad_query_peer_duration
-	   - gst_pad_query_peer_convert
+	   - gst_pad_query_peer_position()
+	   - gst_pad_query_peer_duration()
+	   - gst_pad_query_peer_convert()
 	  
 2006-03-23  Wim Taymans  <wim@fluendo.com>
 
@@ -486,8 +492,8 @@
 
 	* libs/gst/base/gstbasesink.h:
 	Added Private struct.
-	API: gst_base_sink_set_qos_enabled
-	API: gst_base_sink_is_qos_enabled
+	API: gst_base_sink_set_qos_enabled()
+	API: gst_base_sink_is_qos_enabled()
 
 2006-03-23  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -785,9 +791,9 @@
 	* libs/gst/base/gstbasetransform.h:
 	Make basetransform virtual method for src events too.
 	Handle QOS in basetransform.
-	API: gst_base_transform_update_qos
-	API: gst_base_transform_set_qos_enabled
-	API: gst_base_transform_is_qos_enabled
+	API: gst_base_transform_update_qos()
+	API: gst_base_transform_set_qos_enabled()
+	API: gst_base_transform_is_qos_enabled()
 
 2006-03-13  Wim Taymans  <wim@fluendo.com>
 
@@ -828,8 +834,8 @@
 	(gst_pipeline_get_delay):
 	* gst/gstpipeline.h:
 	Added methods for setting the delay.
-	API: gst_pipeline_set_delay
-	API: gst_pipeline_get_delay
+	API: gst_pipeline_set_delay()
+	API: gst_pipeline_get_delay()
 	Add pipeline debug category
 	Various cleanups.
 	Updated docs.

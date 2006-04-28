@@ -1,5 +1,52 @@
-This is GStreamer 0.10.4, "Light"
-  
+This is GStreamer 0.10.5, "Fogo"
+
+Changes since 0.10.4:
+
+      * QoS in BaseTransform
+      * gcc 4.1 fixes
+      * BaseTransform reworked
+      * Bus reworked; signal API added
+
+Bugs fixed since 0.10.4:
+    
+      * 131079 : [PATCH] [api] loading a class leaves elementfactory blank
+      * 317048 : gstreamer Cygwin build fixes
+      * 325599 : Build fails with GCC 4.1
+      * 327315 : GStreamer CVS head files to build with GCC 4.1
+      * 331248 : [basesink] filesink spews warnings when used with flacenc
+      * 332151 : xml registry loader should use mmap() where possible
+      * 332390 : [GstQueue/GstPad] queue pauses immediately when linked, p...
+      * 332986 : Something wrong in caps checking...
+      * 334109 : pkg-config files must link with the same check library th...
+      * 334303 : Stale libgnomeui check in configure
+      * 334434 : Missing functions in def files for dlls
+      * 335195 : GST_BOILERPLATE_FULL etc isn' optimised
+      * 335480 : start with debugging disabled
+      * 335513 : totem goes (and stays) out of sync when running bittorrent
+      * 336336 : [queue] Queue might block in EOS
+      * 336945 : [filesink] throws error when writing 0 bytes
+      * 337103 : small cleanup in gstplugin.c
+      * 337386 : Pipeline bus is not initially flushing
+      * 338711 : Internal data flow error with latest updates for FC5 with...
+      * 326311 : basesink does not call the PAUSED- > PLAYING change_state f...
+      * 326998 : GstBaseSrc's send_event handler ignores seek requests aft...
+
+API added since 0.10.4:
+
+      * gst_controller_unset_all()
+      * gst_pad_query_peer_position()
+      * gst_pad_query_peer_duration()
+      * gst_pad_query_peer_convert()
+      * GstBaseSink::async_play()
+      * GstBaseSrc::qos
+      * gst_base_sink_set_qos_enabled()
+      * gst_base_sink_is_qos_enabled()
+      * gst_base_transform_update_qos()
+      * gst_base_transform_set_qos_enabled()
+      * gst_base_transform_is_qos_enabled()
+      * gst_pipeline_get_delay()
+      * gst_pipeline_set_delay()
+
 Changes since 0.10.3:
     
       * Parallel installability with 0.8.x series
