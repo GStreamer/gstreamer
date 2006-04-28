@@ -139,6 +139,26 @@ get_int_caps (guint channels, gchar * endianness, guint width,
   return caps;
 }
 
+/* returns a newly allocated caps */
+static GstCaps *
+get_float_caps (guint channels, gchar * endianness, guint width)
+{
+  GstCaps *caps;
+  gchar *string;
+
+  string = g_strdup_printf ("audio/x-raw-float, "
+      "rate = (int) 44100, "
+      "channels = (int) %d, "
+      "endianness = (int) %s, "
+      "width = (int) %d ", channels, endianness, width);
+  GST_DEBUG ("creating caps from %s", string);
+  caps = gst_caps_from_string (string);
+  g_free (string);
+  fail_unless (caps != NULL);
+  GST_DEBUG ("returning caps %p", caps);
+  return caps;
+}
+
 /* eats the refs to the caps */
 static void
 verify_convert (void *in, int inlength,
@@ -283,6 +303,25 @@ GST_START_TEST (test_int_conversion)
 
 GST_END_TEST;
 
+GST_START_TEST (test_float_conversion)
+{
+  /* float32 <-> 16 signed */
+  /* NOTE: if audioconvert was doing dithering we'd have a problem */
+  {
+    gfloat in[] = { 0.0, 1.0, -1.0, 0.5, -0.5, 1.1, -1.1 };
+    gint16 out[] = { 0, 32767, -32768, 16384, -16384, 32767, -32768 };
+
+    /* only one direction conversion, the other direction does
+     * not produce exactly the same as the input due to floating
+     * point rounding errors etc. */
+    RUN_CONVERSION (in, get_float_caps (1, "BYTE_ORDER", 32),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE)
+        );
+  }
+}
+
+GST_END_TEST;
+
 
 Suite *
 audioconvert_suite (void)
@@ -292,7 +331,8 @@ audioconvert_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_int16);
-  //tcase_add_test (tc_chain, test_int_conversion);
+  tcase_add_test (tc_chain, test_int_conversion);
+  tcase_add_test (tc_chain, test_float_conversion);
 
   return s;
 }

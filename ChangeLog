@@ -1,5 +1,12 @@
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
+	* tests/check/elements/audioconvert.c: (get_float_caps),
+	(GST_START_TEST), (audioconvert_suite):
+	Added check for correct clipping when doing float samples
+	in audioconvert.
+
+2006-04-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videorate/gstvideorate.c: (gst_video_rate_event),
 	(gst_video_rate_chain):
 	Print more debugging info.
