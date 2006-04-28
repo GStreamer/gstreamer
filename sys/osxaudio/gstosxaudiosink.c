@@ -61,6 +61,8 @@
 #include <gst/gst.h>
 #include <CoreAudio/CoreAudio.h>
 #include "gstosxaudiosink.h"
+#include "gstosxaudiosrc.h"
+
 #include "gstosxaudioelement.h"
 
 GST_DEBUG_CATEGORY_STATIC (osx_audiosink_debug);
@@ -91,7 +93,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-raw-float, "
         "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
         "signed = (boolean) { TRUE }, "
-        "width = (int) 32, " "rate = (int) 44100, " "channels = (int) 2")
+        "width = (int) 32, "
+        "depth = (int) 32, " "rate = (int) 44100, " "channels = (int) 2")
     );
 
 static void gst_osx_audio_sink_set_property (GObject * object, guint prop_id,
@@ -321,8 +324,12 @@ gst_osx_audio_sink_osxelement_init (gpointer g_iface, gpointer iface_data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "osxaudiosink",
+  gboolean ret;
+
+  ret = gst_element_register (plugin, "osxaudiosink",
       GST_RANK_NONE, GST_TYPE_OSX_AUDIO_SINK);
+  return ret && gst_element_register (plugin, "osxaudiosrc",
+      GST_RANK_NONE, GST_TYPE_OSX_AUDIO_SRC);
 }
 
 /* this is the structure that gstreamer looks for to register plugins

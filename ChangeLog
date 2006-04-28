@@ -1,3 +1,20 @@
+2006-04-28  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/osxaudio/gstosxaudiosink.c:
+	(plugin_init):
+	 Register osxaudiosrc to the plugin.
+	* sys/osxaudio/gstosxaudiosrc.c:
+	(gst_osx_audio_src_osxelement_do_init),
+	(gst_osx_audio_src_base_init), (gst_osx_audio_src_class_init),
+	(gst_osx_audio_src_init), (gst_osx_audio_src_set_property),
+	(gst_osx_audio_src_get_property),
+	(gst_osx_audio_src_create_ringbuffer), (gst_osx_audio_src_io_proc),
+	(gst_osx_audio_src_osxelement_init):
+	* sys/osxaudio/gstosxaudiosrc.h:
+	  Port of osxaudiosrc to 0.10.
+	* sys/osxaudio/Makefile.am:
+	  Add osxaudiosrc
+
 2006-04-26  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/osxaudio/gstosxringbuffer.c:

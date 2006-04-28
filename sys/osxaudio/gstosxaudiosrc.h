@@ -1,8 +1,29 @@
-/* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+/*
+ * GStreamer
+ * Copyright 2005-2006 Zaheer Abbas Merali <zaheerabbas at merali dot org>
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- * gstosxaudiosrc.h: 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Alternatively, the contents of this file may be used under the
+ * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
+ * which case the following provisions apply instead of the ones
+ * mentioned above:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,55 +41,39 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_OSXAUDIOSRC_H__
 #define __GST_OSXAUDIOSRC_H__
 
-
 #include <gst/gst.h>
-#include "gstosxaudioelement.h"
+#include <gst/audio/gstbaseaudiosrc.h>
+#include "gstosxringbuffer.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_OSXAUDIOSRC \
-  (gst_osxaudiosrc_get_type())
-#define GST_OSXAUDIOSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSXAUDIOSRC,GstOsxAudioSrc))
-#define GST_OSXAUDIOSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSXAUDIOSRC,GstOsxAudioSrcClass))
-#define GST_IS_OSXAUDIOSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSXAUDIOSRC))
-#define GST_IS_OSXAUDIOSRC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSXAUDIOSRC))
+/* #defines don't like whitespacey bits */
+#define GST_TYPE_OSX_AUDIO_SRC \
+  (gst_osx_audio_src_get_type())
+#define GST_OSX_AUDIO_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSX_AUDIO_SRC,GstOsxAudioSrc))
+#define GST_OSX_AUDIO_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSX_AUDIO_SRC,GstOsxAudioSrcClass))
 
-typedef enum {
-  GST_OSXAUDIOSRC_OPEN          = (GST_ELEMENT_FLAG_LAST << 0),
-
-  GST_OSXAUDIOSRC_FLAG_LAST     = (GST_ELEMENT_FLAG_LAST << 2)
-} GstOsxAudioSrcFlags;
-
-typedef struct _GstOsxAudioSrc GstOsxAudioSrc;
+typedef struct _GstOsxAudioSrc      GstOsxAudioSrc;
 typedef struct _GstOsxAudioSrcClass GstOsxAudioSrcClass;
 
-struct _GstOsxAudioSrc {
-  GstOsxAudioElement  element;
+struct _GstOsxAudioSrc
+{
+  GstBaseAudioSrc src;
 
-  /* pads */
-  GstPad        *srcpad;
-
-  gboolean       need_eos; /* Do we need to emit an EOS? */
-  
-  /* blocking */
-  gulong         curoffset;
-  gulong         buffersize;
-
+  GstOsxRingBuffer *ringbuffer;
 };
 
-struct _GstOsxAudioSrcClass {
-  GstOsxAudioElementClass parent_class;
+struct _GstOsxAudioSrcClass 
+{
+  GstBaseAudioSrcClass parent_class;
 };
 
-GType gst_osxaudiosrc_get_type(void);
+GType gst_osx_audio_src_get_type (void);
 
 G_END_DECLS
 
