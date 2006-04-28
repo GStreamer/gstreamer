@@ -1,5 +1,11 @@
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/adder/gstadder.c: (gst_adder_setcaps), (gst_adder_src_event),
+	(gst_adder_init):
+        send events from src-pad to all sink-pads fixes #338657
+
+2006-04-28  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/alsa/gstalsasink.c: (gst_alsasink_getcaps),
 	(alsasink_parse_spec):
         query witdh capabilities from alsa, fixes #338919

@@ -63,7 +63,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_adder_debug);
 #define GST_CAT_DEFAULT gst_adder_debug
 
 /* elementfactory information */
-static GstElementDetails adder_details = GST_ELEMENT_DETAILS ("Adder",
+static const GstElementDetails adder_details = GST_ELEMENT_DETAILS ("Adder",
     "Generic/Audio",
     "Add N audio channels together",
     "Thomas <thomas@apestaart.org>");
@@ -88,12 +88,14 @@ static void gst_adder_class_init (GstAdderClass * klass);
 static void gst_adder_init (GstAdder * adder);
 static void gst_adder_dispose (GObject * object);
 
+static gboolean gst_adder_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_adder_query (GstPad * pad, GstQuery * query);
+static gboolean gst_adder_src_event (GstPad * pad, GstEvent * event);
+
 static GstPad *gst_adder_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused);
 static GstStateChangeReturn gst_adder_change_state (GstElement * element,
     GstStateChange transition);
-
-static gboolean gst_adder_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstFlowReturn gst_adder_collected (GstCollectPads * pads,
     gpointer user_data);
@@ -128,16 +130,19 @@ static void name (type *out, type *in, gint bytes) {            \
     out[i] = CLAMP ((ttype)out[i] + (ttype)in[i], min, max);    \
 }
 
+/* *INDENT-OFF* */
 MAKE_FUNC (add_int32, gint32, gint64, MIN_INT_32, MAX_INT_32)
-    MAKE_FUNC (add_int16, gint16, gint32, MIN_INT_16, MAX_INT_16)
-    MAKE_FUNC (add_int8, gint8, gint16, MIN_INT_8, MAX_INT_8)
-    MAKE_FUNC (add_uint32, guint32, guint64, MIN_UINT_32, MAX_UINT_32)
-    MAKE_FUNC (add_uint16, guint16, guint32, MIN_UINT_16, MAX_UINT_16)
-    MAKE_FUNC (add_uint8, guint8, guint16, MIN_UINT_8, MAX_UINT_8)
-    MAKE_FUNC (add_float64, gdouble, gdouble, -1.0, 1.0)
-    MAKE_FUNC (add_float32, gfloat, gfloat, -1.0, 1.0)
+MAKE_FUNC (add_int16, gint16, gint32, MIN_INT_16, MAX_INT_16)
+MAKE_FUNC (add_int8, gint8, gint16, MIN_INT_8, MAX_INT_8)
+MAKE_FUNC (add_uint32, guint32, guint64, MIN_UINT_32, MAX_UINT_32)
+MAKE_FUNC (add_uint16, guint16, guint32, MIN_UINT_16, MAX_UINT_16)
+MAKE_FUNC (add_uint8, guint8, guint16, MIN_UINT_8, MAX_UINT_8)
+MAKE_FUNC (add_float64, gdouble, gdouble, -1.0, 1.0)
+MAKE_FUNC (add_float32, gfloat, gfloat, -1.0, 1.0)
+/* *INDENT-ON* */
 
-     static gboolean gst_adder_setcaps (GstPad * pad, GstCaps * caps)
+static gboolean
+gst_adder_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstAdder *adder;
   GList *pads;
@@ -260,6 +265,33 @@ gst_adder_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
+static gboolean
+gst_adder_src_event (GstPad * pad, GstEvent * event)
+{
+  GstAdder *adder = GST_ADDER (gst_pad_get_parent (pad));
+  GSList *node;
+  GstCollectData *data;
+  gboolean result = TRUE;
+
+  GST_LOG_OBJECT (pad, "Sending event %p (%s)", event,
+      GST_EVENT_TYPE_NAME (event));
+
+  for (node = adder->collect->data; (node && result);
+      node = g_slist_next (node)) {
+    data = (GstCollectData *) node->data;
+
+    GST_LOG_OBJECT (pad, "  to %s:%s", GST_DEBUG_PAD_NAME (data->pad));
+    gst_event_ref (event);
+    result &= gst_pad_push_event (data->pad, event);
+    if (!result) {
+      GST_WARNING ("Sending event  %p (%s) to %s:%s failed.",
+          event, GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (data->pad));
+    }
+  }
+  gst_object_unref (adder);
+  return result;
+}
+
 static void
 gst_adder_class_init (GstAdderClass * klass)
 {
@@ -298,6 +330,8 @@ gst_adder_init (GstAdder * adder)
       GST_DEBUG_FUNCPTR (gst_adder_setcaps));
   gst_pad_set_query_function (adder->srcpad,
       GST_DEBUG_FUNCPTR (gst_adder_query));
+  gst_pad_set_event_function (adder->srcpad,
+      GST_DEBUG_FUNCPTR (gst_adder_src_event));
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
 
   adder->format = GST_ADDER_FORMAT_UNSET;
