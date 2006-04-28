@@ -436,6 +436,7 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
 
   overlay->layout =
       pango_layout_new (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_context);
+  pango_layout_set_alignment (overlay->layout, PANGO_ALIGN_CENTER);
   memset (&overlay->bitmap, 0, sizeof (overlay->bitmap));
 
   overlay->halign = DEFAULT_PROP_HALIGNMENT;
@@ -950,7 +951,7 @@ gst_text_overlay_render_text (GstTextOverlay * overlay,
   } else {                      /* empty string */
     string = g_strdup (" ");
   }
-  g_strdelimit (string, "\n\r\t", ' ');
+  g_strdelimit (string, "\r\t", ' ');
   textlen = strlen (string);
 
   /* FIXME: should we check for UTF-8 here? */
