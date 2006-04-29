@@ -26,10 +26,11 @@
 #include <gst/base/gstcollectpads.h>
 
 #include <ogg/ogg.h>
-/* memcpy - if someone knows a way to get rid of it, please speak up 
+/* memcpy - if someone knows a way to get rid of it, please speak up
  * note: the ogg docs even say you need this... */
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>             /* rand, srand, atoi */
 
 GST_DEBUG_CATEGORY_STATIC (gst_ogg_mux_debug);
 #define GST_CAT_DEFAULT gst_ogg_mux_debug

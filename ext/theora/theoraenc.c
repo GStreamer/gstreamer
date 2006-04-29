@@ -60,7 +60,10 @@
 #endif
 
 #include "gsttheoraenc.h"
+
 #include <string.h>
+#include <stdlib.h>             /* free */
+
 #include <gst/tag/tag.h>
 
 GST_DEBUG_CATEGORY (theoraenc_debug);
