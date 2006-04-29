@@ -879,9 +879,9 @@ gst_riff_create_audio_caps (guint16 codec_id,
       guint32 subformat_guid[4];
       const guint8 *data;
 
-      if (GST_BUFFER_SIZE (strf_data) != 22) {
+      if (strf_data == NULL || GST_BUFFER_SIZE (strf_data) != 22) {
         GST_WARNING ("WAVE_FORMAT_EXTENSIBLE data size is %d (expected: 22)",
-            GST_BUFFER_SIZE (strf_data));
+            (strf_data) ? GST_BUFFER_SIZE (strf_data) : -1);
         return NULL;
       }
 
