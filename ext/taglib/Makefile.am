@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgsttaglib.la
 
-libgsttaglib_la_SOURCES = gsttaglib.cc
+libgsttaglib_la_SOURCES = gsttaglib.cc gstid3v2mux.cc
 libgsttaglib_la_CXXFLAGS = \
 	$(GST_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -11,6 +11,6 @@ libgsttaglib_la_LIBADD = \
 	$(TAGLIB_LIBS)
 libgsttaglib_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = gsttaglib.h 
+noinst_HEADERS = gsttaglib.h gstid3v2mux.h
 
 #EXTRA_DIST = README

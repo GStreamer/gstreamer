@@ -1,6 +1,7 @@
-/* GStreamer taglib-based ID3 muxer
- * (c) 2006 Christophe Fergeau  <teuf@gnome.org>
- *
+/* GStreamer taglib-based muxer base class
+ * Copyright (C) 2006 Christophe Fergeau  <teuf@gnome.org>
+ * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -17,73 +18,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/**
- * SECTION:element-tagid3v2mux
- * @see_also: #GstID3Demux, #GstTagSetter
- *
- * <refsect2>
- * <para>
- * This element adds ID3v2 tags to the beginning of a stream using the taglib
- * library. More precisely, the tags written are ID3 version 2.4.0 tags (which
- * means in practice that some hardware players or outdated programs might not
- * be able to read them properly).
- * </para>
- * <para>
- * Applications can set the tags to write using the #GstTagSetter interface.
- * Tags sent by upstream elements will be picked up automatically (and merged
- * according to the merge mode set via the tag setter interface).
- * </para>
- * <para>
- * Here is a simple pipeline that transcodes a file from Ogg/Vorbis to mp3
- * format with an ID3v2 that contains the same as the the Ogg/Vorbis file:
- * <programlisting>
- * gst-launch -v filesrc location=foo.ogg ! decodebin ! audioconvert ! lame ! id3v2mux ! filesink location=foo.mp3
- * </programlisting>
- * Make sure the Ogg/Vorbis file actually has comments to preserve.
- * You can verify the tags were written using:
- * <programlisting>
- * gst-launch -m filesrc location=foo.mp3 ! id3demux ! fakesink silent=TRUE 2&uml; /dev/null | grep taglist
- * </programlisting>
- * </para>
- * </refsect2>
- */
-
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <string.h>
-#include <textidentificationframe.h>
-#include <uniquefileidentifierframe.h>
-#include <id3v2tag.h>
 #include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
 #include "gsttaglib.h"
-
-using namespace TagLib;
+#include "gstid3v2mux.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_tag_lib_mux_debug);
 #define GST_CAT_DEFAULT gst_tag_lib_mux_debug
-
-static const GstElementDetails gst_tag_lib_mux_details =
-GST_ELEMENT_DETAILS ("TagLib ID3v2 Muxer",
-    "Formatter/Metadata",
-    "Adds an ID3v2 header to the beginning of MP3 files using taglib",
-    "Christophe Fergeau <teuf@gnome.org>");
 
 static GstStaticPadTemplate gst_tag_lib_mux_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg"));
-
-
-static GstStaticPadTemplate gst_tag_lib_mux_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-id3"));
+    GST_STATIC_CAPS ("ANY"));
 
 
 static void
@@ -132,10 +84,10 @@ gst_tag_lib_mux_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_tag_lib_mux_src_template));
-  gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_tag_lib_mux_sink_template));
-  gst_element_class_set_details (element_class, &gst_tag_lib_mux_details);
+
+  GST_DEBUG_CATEGORY_INIT (gst_tag_lib_mux_debug, "taglibmux", 0,
+      "taglib-based muxer");
 }
 
 static void
@@ -153,9 +105,10 @@ gst_tag_lib_mux_class_init (GstTagLibMuxClass * klass)
 }
 
 static void
-gst_tag_lib_mux_init (GstTagLibMux * mux, GstTagLibMuxClass * muxmux_class)
+gst_tag_lib_mux_init (GstTagLibMux * mux, GstTagLibMuxClass * mux_class)
 {
-  GstCaps *srccaps;
+  GstElementClass *element_klass = GST_ELEMENT_CLASS (mux_class);
+  GstPadTemplate *tmpl;
 
   /* pad through which data comes in to the element */
   mux->sinkpad =
@@ -167,230 +120,21 @@ gst_tag_lib_mux_init (GstTagLibMux * mux, GstTagLibMuxClass * muxmux_class)
   gst_element_add_pad (GST_ELEMENT (mux), mux->sinkpad);
 
   /* pad through which data goes out of the element */
-  mux->srcpad =
-      gst_pad_new_from_static_template (&gst_tag_lib_mux_src_template, "src");
-  srccaps = gst_static_pad_template_get_caps (&gst_tag_lib_mux_src_template);
-  gst_pad_use_fixed_caps (mux->srcpad);
-  gst_pad_set_caps (mux->srcpad, srccaps);
-  gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
+  tmpl = gst_element_class_get_pad_template (element_klass, "src");
+  if (tmpl) {
+    mux->srcpad = gst_pad_new_from_template (tmpl, "src");
+    gst_pad_use_fixed_caps (mux->srcpad);
+    gst_pad_set_caps (mux->srcpad, gst_pad_template_get_caps (tmpl));
+    gst_element_add_pad (GST_ELEMENT (mux), mux->srcpad);
+  }
 
   mux->render_tag = TRUE;
-}
-
-static void
-add_one_txxx_musicbrainz_tag (ID3v2::Tag * id3v2tag, const gchar * spec_id,
-    const gchar * realworld_id, const gchar * id_str)
-{
-  ID3v2::UserTextIdentificationFrame * frame;
-
-  if (id_str == NULL)
-    return;
-
-  GST_DEBUG ("Setting %s to %s", GST_STR_NULL (spec_id), id_str);
-
-  if (spec_id) {
-    frame = new ID3v2::UserTextIdentificationFrame (String::Latin1);
-    id3v2tag->addFrame (frame);
-    frame->setDescription (spec_id);
-    frame->setText (id_str);
-  }
-
-  if (realworld_id) {
-    frame = new ID3v2::UserTextIdentificationFrame (String::Latin1);
-    id3v2tag->addFrame (frame);
-    frame->setDescription (realworld_id);
-    frame->setText (id_str);
-  }
-}
-
-static void
-add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
-{
-  ID3v2::Tag * id3v2tag = (ID3v2::Tag *) user_data;
-  gboolean result;
-
-  /* FIXME: if there are several values set for the same tag, this won't
-   * work, only the first value will be taken into account
-   */
-  if (strcmp (tag, GST_TAG_TITLE) == 0) {
-    char *title;
-
-    result = gst_tag_list_get_string_index (list, tag, 0, &title);
-    if (result != FALSE) {
-      GST_DEBUG ("Setting title to %s", title);
-      id3v2tag->setTitle (String::String (title, String::UTF8));
-    }
-    g_free (title);
-  } else if (strcmp (tag, GST_TAG_ALBUM) == 0) {
-    char *album;
-
-    result = gst_tag_list_get_string_index (list, tag, 0, &album);
-    if (result != FALSE) {
-      GST_DEBUG ("Setting album to %s", album);
-      id3v2tag->setAlbum (String::String (album, String::UTF8));
-    }
-    g_free (album);
-  } else if (strcmp (tag, GST_TAG_ARTIST) == 0) {
-    char *artist;
-
-    result = gst_tag_list_get_string_index (list, tag, 0, &artist);
-    if (result != FALSE) {
-      GST_DEBUG ("Setting artist to %s", artist);
-      id3v2tag->setArtist (String::String (artist, String::UTF8));
-    }
-    g_free (artist);
-  } else if (strcmp (tag, GST_TAG_GENRE) == 0) {
-    char *genre;
-
-    result = gst_tag_list_get_string_index (list, tag, 0, &genre);
-    if (result != FALSE) {
-      GST_DEBUG ("Setting genre to %s", genre);
-      id3v2tag->setGenre (String::String (genre, String::UTF8));
-    }
-    g_free (genre);
-  } else if (strcmp (tag, GST_TAG_COMMENT) == 0) {
-    char *comment;
-
-    result = gst_tag_list_get_string_index (list, tag, 0, &comment);
-    if (result != FALSE) {
-      GST_DEBUG ("Setting comment to %s", comment);
-      id3v2tag->setComment (String::String (comment, String::UTF8));
-    }
-    g_free (comment);
-  } else if (strcmp (tag, GST_TAG_DATE) == 0) {
-    GDate *date;
-
-    result = gst_tag_list_get_date_index (list, tag, 0, &date);
-    if (result != FALSE) {
-      GDateYear year;
-
-      year = g_date_get_year (date);
-      GST_DEBUG ("Setting track year to %d", year);
-      id3v2tag->setYear (year);
-      g_date_free (date);
-    }
-  } else if (strcmp (tag, GST_TAG_TRACK_NUMBER) == 0) {
-    guint track_number;
-
-    result = gst_tag_list_get_uint_index (list, tag, 0, &track_number);
-    if (result != FALSE) {
-      guint total_tracks;
-
-      result = gst_tag_list_get_uint_index (list, GST_TAG_TRACK_COUNT,
-          0, &total_tracks);
-      if (result) {
-        gchar *tag_str;
-
-        ID3v2::TextIdentificationFrame * frame;
-
-        frame = new ID3v2::TextIdentificationFrame ("TRCK", String::UTF8);
-        tag_str = g_strdup_printf ("%d/%d", track_number, total_tracks);
-        GST_DEBUG ("Setting track number to %s", tag_str);
-        id3v2tag->addFrame (frame);
-        frame->setText (tag_str);
-        g_free (tag_str);
-      } else {
-        GST_DEBUG ("Setting track number to %d", track_number);
-        id3v2tag->setTrack (track_number);
-      }
-    }
-  } else if (strcmp (tag, GST_TAG_ALBUM_VOLUME_NUMBER) == 0) {
-    guint volume_number;
-
-    result = gst_tag_list_get_uint_index (list, tag, 0, &volume_number);
-
-    if (result != FALSE) {
-      guint volume_count;
-      gchar *tag_str;
-
-      ID3v2::TextIdentificationFrame * frame;
-
-      frame = new ID3v2::TextIdentificationFrame ("TPOS", String::UTF8);
-      result = gst_tag_list_get_uint_index (list, GST_TAG_ALBUM_VOLUME_COUNT,
-          0, &volume_count);
-      if (result) {
-        tag_str = g_strdup_printf ("%d/%d", volume_number, volume_count);
-      } else {
-        tag_str = g_strdup_printf ("%d", volume_number);
-      }
-
-      GST_DEBUG ("Setting album number to %s", tag_str);
-
-      id3v2tag->addFrame (frame);
-      frame->setText (tag_str);
-      g_free (tag_str);
-    }
-  } else if (strcmp (tag, GST_TAG_COPYRIGHT) == 0) {
-    gchar *copyright;
-
-    result = gst_tag_list_get_string_index (list, tag, 0, &copyright);
-
-    if (result != FALSE) {
-      ID3v2::TextIdentificationFrame * frame;
-
-      GST_DEBUG ("Setting copyright to %s", copyright);
-
-      frame = new ID3v2::TextIdentificationFrame ("TCOP", String::UTF8);
-
-      id3v2tag->addFrame (frame);
-      frame->setText (copyright);
-      g_free (copyright);
-    }
-  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_ARTISTID) == 0) {
-    gchar *id_str;
-
-    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
-      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz Artist Id",
-          "musicbrainz_artistid", id_str);
-      g_free (id_str);
-    }
-  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_ALBUMID) == 0) {
-    gchar *id_str;
-
-    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
-      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz Album Id",
-          "musicbrainz_albumid", id_str);
-      g_free (id_str);
-    }
-  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_ALBUMARTISTID) == 0) {
-    gchar *id_str;
-
-    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
-      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz Album Artist Id",
-          "musicbrainz_albumartistid", id_str);
-      g_free (id_str);
-    }
-  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_TRMID) == 0) {
-    gchar *id_str;
-
-    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
-      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz TRM Id",
-          "musicbrainz_trmid", id_str);
-      g_free (id_str);
-    }
-  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_TRACKID) == 0) {
-    gchar *id_str;
-
-    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
-      ID3v2::UniqueFileIdentifierFrame * frame;
-
-      GST_DEBUG ("Setting Musicbrainz Track Id to %s", id_str);
-
-      frame = new ID3v2::UniqueFileIdentifierFrame ("http://musicbrainz.org",
-          id_str);
-      id3v2tag->addFrame (frame);
-      g_free (id_str);
-    }
-  } else {
-    GST_WARNING ("Unsupported tag: %s", tag);
-  }
 }
 
 static GstBuffer *
 gst_tag_lib_mux_render_tag (GstTagLibMux * mux)
 {
-  ID3v2::Tag id3v2tag;
-  ByteVector rendered_tag;
+  GstTagLibMuxClass *klass;
   GstBuffer *buffer;
   GstTagSetter *tagsetter = GST_TAG_SETTER (mux);
   const GstTagList *tagsetter_tags;
@@ -416,18 +160,18 @@ gst_tag_lib_mux_render_tag (GstTagLibMux * mux)
 
   GST_LOG_OBJECT (mux, "final tags: %" GST_PTR_FORMAT, taglist);
 
-  /* Render the tag */
-  gst_tag_list_foreach (taglist, add_one_tag, &id3v2tag);
+  klass = GST_TAG_LIB_MUX_CLASS (G_OBJECT_GET_CLASS (mux));
 
-  rendered_tag = id3v2tag.render ();
-  mux->tag_size = rendered_tag.size ();
+  if (klass->render_tag == NULL)
+    goto no_vfunc;
 
+  buffer = klass->render_tag (mux, taglist);
+
+  if (buffer == NULL)
+    goto render_error;
+
+  mux->tag_size = GST_BUFFER_SIZE (buffer);
   GST_LOG_OBJECT (mux, "tag size = %d bytes", mux->tag_size);
-
-  /* Create buffer with tag */
-  buffer = gst_buffer_new_and_alloc (mux->tag_size);
-  memcpy (GST_BUFFER_DATA (buffer), rendered_tag.data (), mux->tag_size);
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (mux->srcpad));
 
   /* Send newsegment event from byte position 0, so the tag really gets
    * written to the start of the file, independent of the upstream segment */
@@ -442,6 +186,16 @@ gst_tag_lib_mux_render_tag (GstTagLibMux * mux)
   GST_BUFFER_OFFSET (buffer) = 0;
 
   return buffer;
+
+no_vfunc:
+  {
+    return NULL;                /* FIXME */
+  }
+
+render_error:
+  {
+    return NULL;                /* FIXME */
+  }
 }
 
 static GstEvent *
@@ -623,25 +377,3 @@ gst_tag_lib_mux_change_state (GstElement * element, GstStateChange transition)
 
   return result;
 }
-
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "id3v2mux", GST_RANK_NONE,
-          GST_TYPE_TAG_LIB_MUX))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (gst_tag_lib_mux_debug, "taglibmux", 0,
-      "taglib-based muxer");
-
-  gst_tag_register_musicbrainz_tags ();
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "taglib",
-    "Tag-writing plug-in based on taglib",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
