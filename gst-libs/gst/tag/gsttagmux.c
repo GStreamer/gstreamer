@@ -189,12 +189,14 @@ gst_tag_lib_mux_render_tag (GstTagLibMux * mux)
 
 no_vfunc:
   {
-    return NULL;                /* FIXME */
+    GST_ERROR_OBJECT (mux, "Subclass does not implement render_tag vfunc!");
+    return NULL;
   }
 
 render_error:
   {
-    return NULL;                /* FIXME */
+    GST_ERROR_OBJECT (mux, "Failed to render tag");
+    return NULL;
   }
 }
 
@@ -231,9 +233,13 @@ gst_tag_lib_mux_chain (GstPad * pad, GstBuffer * buffer)
 
   if (mux->render_tag) {
     GstFlowReturn ret;
+    GstBuffer *tag_buffer;
 
     GST_INFO_OBJECT (mux, "Adding tags to stream");
-    ret = gst_pad_push (mux->srcpad, gst_tag_lib_mux_render_tag (mux));
+    tag_buffer = gst_tag_lib_mux_render_tag (mux);
+    if (tag_buffer == NULL)
+      goto no_tag_buffer;
+    ret = gst_pad_push (mux->srcpad, tag_buffer);
     if (ret != GST_FLOW_OK) {
       GST_DEBUG_OBJECT (mux, "flow: %s", gst_flow_get_name (ret));
       gst_buffer_unref (buffer);
@@ -265,6 +271,13 @@ gst_tag_lib_mux_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (mux->srcpad));
   return gst_pad_push (mux->srcpad, buffer);
+
+/* ERRORS */
+no_tag_buffer:
+  {
+    GST_ELEMENT_ERROR (mux, LIBRARY, ENCODE, (NULL), (NULL));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static gboolean
