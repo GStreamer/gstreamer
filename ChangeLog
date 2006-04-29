@@ -1,3 +1,13 @@
+2006-04-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/taglib/Makefile.am:
+	* ext/taglib/gstid3v2mux.cc:
+	* ext/taglib/gstid3v2mux.h:
+	* ext/taglib/gsttaglib.cc:
+	* ext/taglib/gsttaglib.h:
+	  Split the actual ID3v2 tag rendering code into
+	  its own subclass.
+
 2006-04-29  Sebastien Moutte  <sebastien@moutte.net>
 
 	* ext/neon/gstneonhttpsrc.c:
