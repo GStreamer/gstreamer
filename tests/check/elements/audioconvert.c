@@ -196,6 +196,13 @@ verify_convert (const gchar * which, void *in, int inlength,
 
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), outlength);
+
+  if (memcmp (GST_BUFFER_DATA (outbuffer), out, outlength) != 0) {
+    g_print ("\nConverted data:\n");
+    gst_util_dump_mem (GST_BUFFER_DATA (outbuffer), outlength);
+    g_print ("\nExpected data:\n");
+    gst_util_dump_mem (out, outlength);
+  }
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, outlength) == 0,
       "failed converting %s", which);
   buffers = g_list_remove (buffers, outbuffer);
