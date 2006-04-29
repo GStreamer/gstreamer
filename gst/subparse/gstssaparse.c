@@ -24,6 +24,7 @@
 #include "config.h"
 #endif
 
+#include <stdlib.h>             /* atoi() */
 #include <string.h>
 
 #include "gstssaparse.h"
