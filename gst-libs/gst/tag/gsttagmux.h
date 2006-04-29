@@ -1,6 +1,7 @@
-/* GStreamer taglib-based muxer
- * (c) 2006 Christophe Fergeau  <teuf@gnome.org>
- *
+/* GStreamer taglib-based muxer base class
+ * Copyright (C) 2006 Christophe Fergeau  <teuf@gnome.org>
+ * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -24,7 +25,8 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstTagLibMuxPriv GstTagLibMuxPriv;
+typedef struct _GstTagLibMux GstTagLibMux;
+typedef struct _GstTagLibMuxClass GstTagLibMuxClass;
 
 /* Definition of structure storing data for this element. */
 typedef struct _GstTagLibMux {
@@ -37,12 +39,15 @@ typedef struct _GstTagLibMux {
   gboolean      render_tag;
 
   GstEvent     *newsegment_ev; /* cached newsegment event from upstream */
-} GstTagLibMux;
+};
 
 /* Standard definition defining a class for this element. */
 typedef struct _GstTagLibMuxClass {
   GstElementClass parent_class;
-} GstTagLibMuxClass;
+
+  /* vfuncs */
+  GstBuffer  * (*render_tag) (GstTagLibMux * mux, GstTagList * tag_list);
+};
 
 /* Standard macros for defining types for this element.  */
 #define GST_TYPE_TAG_LIB_MUX \
