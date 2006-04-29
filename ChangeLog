@@ -1,5 +1,11 @@
 2006-04-29  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/taglib/gsttaglib.cc:
+	  Post an error message on the bus in the (extremely unlikely)
+	  case of an error.
+
+2006-04-29  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/taglib/Makefile.am:
 	* ext/taglib/gstid3v2mux.cc:
 	* ext/taglib/gstid3v2mux.h:
