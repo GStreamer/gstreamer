@@ -308,11 +308,13 @@ GST_START_TEST (test_int_conversion)
   {
     gint8 in[] = { 0, 1, 127 };
     guint8 out[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x7f };
+    /* out has the bytes in little-endian, so that's how they should be
+     * interpreted during conversion */
 
     RUN_CONVERSION ("8 to 24 signed", in, get_int_caps (1, "BYTE_ORDER", 8, 8,
-            TRUE), out, get_int_caps (1, "BYTE_ORDER", 24, 24, TRUE)
+            TRUE), out, get_int_caps (1, "LITTLE_ENDIAN", 24, 24, TRUE)
         );
-    RUN_CONVERSION ("24 signed to 8", out, get_int_caps (1, "BYTE_ORDER", 24,
+    RUN_CONVERSION ("24 signed to 8", out, get_int_caps (1, "LITTLE_ENDIAN", 24,
             24, TRUE), in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE)
         );
   }

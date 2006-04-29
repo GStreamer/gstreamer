@@ -2,6 +2,15 @@
 
 	* tests/check/elements/audioconvert.c: (verify_convert),
 	(GST_START_TEST):
+	  interpret the out[] buffer in the order the bytes are actually
+	  put in, which is LITTLE_ENDIAN, not BYTE_ORDER.
+	  Other tests should use BYTE_ORDER since the array is filled in
+	  with actual values
+
+2006-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/check/elements/audioconvert.c: (verify_convert),
+	(GST_START_TEST):
 	  when a test fails, give an indication of which it is
 
 2006-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
