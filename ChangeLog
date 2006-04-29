@@ -1,3 +1,15 @@
+2006-04-29  Sebastien Moutte  <sebastien@moutte.net>
+
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/neon/gstneonhttpsrc.h:
+	  added iradio-mode support as in gnomevfssrc to enable 
+	  connections with icydemux that will send title tag messages on 
+	  shoutcast/icecast streams. I've also added iradio properties
+	  iradio-name, iradio-genre, iradio-url.
+	  added user-agent property because some shoutcast streams don't return 
+	  data if the GET requests don't have a User-Agent.
+	* win32/common/libgstneon.dsp:
+	  use debug version of libneon in debug mode
 2006-04-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

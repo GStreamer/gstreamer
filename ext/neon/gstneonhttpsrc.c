@@ -22,7 +22,7 @@
 
 #define HTTP_DEFAULT_HOST        "localhost"
 #define HTTP_DEFAULT_PORT        80
-#define HTTPS_DEFAULT_PORT        443
+#define HTTPS_DEFAULT_PORT       443
 
 GST_DEBUG_CATEGORY (neonhttpsrc_debug);
 #define GST_CAT_DEFAULT neonhttpsrc_debug
@@ -41,13 +41,17 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-
 enum
 {
   PROP_0,
   PROP_LOCATION,
   PROP_URI,
-  PROP_PROXY
+  PROP_PROXY,
+  PROP_USER_AGENT,
+  PROP_IRADIO_MODE,
+  PROP_IRADIO_NAME,
+  PROP_IRADIO_GENRE,
+  PROP_IRADIO_URL
 };
 
 static void oom_callback ();
@@ -119,7 +123,7 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
   gobject_class->finalize = gst_neonhttp_src_finalize;
 
   g_object_class_install_property
-      (G_OBJECT_CLASS (klass), PROP_LOCATION,
+      (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "Location",
           "The location. In the form:"
           "\n\t\t\thttp://a.com/file.txt - default port '80' "
@@ -130,18 +134,46 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
           "", G_PARAM_READWRITE));
 
   g_object_class_install_property
-      (G_OBJECT_CLASS (klass), PROP_URI,
+      (gobject_class, PROP_URI,
       g_param_spec_string ("uri", "Uri",
           "The location in form of a URI (deprecated; use location)",
           "", G_PARAM_READWRITE));
 
   g_object_class_install_property
-      (G_OBJECT_CLASS (klass), PROP_PROXY,
+      (gobject_class, PROP_PROXY,
       g_param_spec_string ("proxy", "Proxy",
           "The proxy. In the form myproxy.mycompany.com:8080. "
           "\n\t\t\tIf nothing is passed g_getenv(\"http_proxy\") will be used "
           "\n\t\t\tIf that http_proxy enviroment var isn't define no proxy is used",
           "", G_PARAM_READWRITE));
+
+  g_object_class_install_property
+      (gobject_class, PROP_USER_AGENT,
+      g_param_spec_string ("user-agent", "User-Agent",
+          "The User-Agent used for connection.",
+          "neonhttpsrc", G_PARAM_READWRITE));
+
+  g_object_class_install_property
+      (gobject_class, PROP_IRADIO_MODE,
+      g_param_spec_boolean ("iradio-mode", "iradio-mode",
+          "Enable internet radio mode (extraction of shoutcast/icecast metadata)",
+          FALSE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      PROP_IRADIO_NAME,
+      g_param_spec_string ("iradio-name",
+          "iradio-name", "Name of the stream", NULL, G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class,
+      PROP_IRADIO_GENRE,
+      g_param_spec_string ("iradio-genre",
+          "iradio-genre", "Genre of the stream", NULL, G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class,
+      PROP_IRADIO_URL,
+      g_param_spec_string ("iradio-url",
+          "iradio-url",
+          "Homepage URL for radio stream", NULL, G_PARAM_READABLE));
 
   gstbasesrc_class->start = gst_neonhttp_src_start;
   gstbasesrc_class->stop = gst_neonhttp_src_stop;
@@ -171,6 +203,15 @@ gst_neonhttp_src_init (GstNeonhttpSrc * this, GstNeonhttpSrcClass * g_class)
 
   this->adapter = gst_adapter_new ();
 
+  this->user_agent = g_strdup ("neonhttpsrc");
+
+  this->iradio_mode = FALSE;
+  this->iradio_name = NULL;
+  this->iradio_genre = NULL;
+  this->iradio_url = NULL;
+  this->icy_caps = NULL;
+  this->icy_metaint = 0;
+
   GST_OBJECT_FLAG_UNSET (this, GST_NEONHTTP_SRC_OPEN);
 }
 
@@ -182,6 +223,30 @@ gst_neonhttp_src_finalize (GObject * gobject)
   ne_uri_free (&this->uri);
   ne_uri_free (&this->proxy);
 
+  if (this->user_agent) {
+    g_free (this->user_agent);
+    this->user_agent = NULL;
+  }
+
+  if (this->iradio_name) {
+    g_free (this->iradio_name);
+    this->iradio_name = NULL;
+  }
+
+  if (this->iradio_genre) {
+    g_free (this->iradio_genre);
+    this->iradio_genre = NULL;
+  }
+
+  if (this->iradio_url) {
+    g_free (this->iradio_url);
+    this->iradio_url = NULL;
+  }
+
+  if (this->icy_caps) {
+    gst_caps_unref (this->icy_caps);
+    this->icy_caps = NULL;
+  }
 
   if (this->request) {
     ne_request_destroy (this->request);
@@ -288,7 +353,11 @@ gst_neonhttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   if (read > 0) {
 
     if (*outbuf) {
-      gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
+      if (src->icy_caps) {
+        gst_buffer_set_caps (*outbuf, src->icy_caps);
+      } else {
+        gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
+      }
     }
 
   } else if (read < 0) {
@@ -314,6 +383,42 @@ wrong_state:
     return GST_FLOW_WRONG_STATE;
   }
 
+}
+
+/* The following two charset mangling functions were copied from gnomevfssrc.
+ * Preserve them under the unverified assumption that they do something vaguely
+ * worthwhile.
+ */
+static char *
+unicodify (const char *str, int len, ...)
+{
+  char *ret = NULL, *cset;
+  va_list args;
+  gsize bytes_read, bytes_written;
+
+  if (g_utf8_validate (str, len, NULL))
+    return g_strndup (str, len >= 0 ? len : strlen (str));
+
+  va_start (args, len);
+  while ((cset = va_arg (args, char *)) != NULL)
+  {
+    if (!strcmp (cset, "locale"))
+      ret = g_locale_to_utf8 (str, len, &bytes_read, &bytes_written, NULL);
+    else
+      ret = g_convert (str, len, "UTF-8", cset,
+          &bytes_read, &bytes_written, NULL);
+    if (ret)
+      break;
+  }
+  va_end (args);
+
+  return ret;
+}
+
+static char *
+gst_neonhttp_src_unicodify (const char *str)
+{
+  return unicodify (str, -1, "locale", "ISO-8859-1", NULL);
 }
 
 /* create a socket for connecting to remote server */
@@ -344,6 +449,14 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
 
   src->request = ne_request_create (src->session, "GET", src->uri.path);
 
+  if (src->user_agent) {
+    ne_add_request_header (src->request, "User-Agent", src->user_agent);
+  }
+
+  if (src->iradio_mode) {
+    ne_add_request_header (src->request, "icy-metadata", "1");
+  }
+
   if (NE_OK != ne_begin_request (src->request)) {
     ret = FALSE;
     goto done;
@@ -355,6 +468,50 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
     src->content_size = g_ascii_strtoull (content_length, NULL, 10);
   } else {
     src->content_size = -1;
+  }
+
+  if (src->iradio_mode) {
+    /* Icecast stuff */
+    const char *str_value;
+    gint gint_value;
+
+    str_value = ne_get_response_header (src->request, "icy-metaint");
+    if (str_value) {
+      if (sscanf (str_value, "%d", &gint_value) == 1) {
+        if (src->icy_caps) {
+          gst_caps_unref (src->icy_caps);
+          src->icy_caps = NULL;
+        }
+        src->icy_metaint = gint_value;
+        src->icy_caps = gst_caps_new_simple ("application/x-icy",
+            "metadata-interval", G_TYPE_INT, src->icy_metaint, NULL);
+      }
+    }
+
+    str_value = ne_get_response_header (src->request, "icy-name");
+    if (str_value) {
+      if (src->iradio_name) {
+        g_free (src->iradio_name);
+        src->iradio_name = NULL;
+      }
+      src->iradio_name = gst_neonhttp_src_unicodify (str_value);
+    }
+    str_value = ne_get_response_header (src->request, "icy-genre");
+    if (str_value) {
+      if (src->iradio_genre) {
+        g_free (src->iradio_genre);
+        src->iradio_genre = NULL;
+      }
+      src->iradio_genre = gst_neonhttp_src_unicodify (str_value);
+    }
+    str_value = ne_get_response_header (src->request, "icy-url");
+    if (str_value) {
+      if (src->iradio_url) {
+        g_free (src->iradio_url);
+        src->iradio_url = NULL;
+      }
+      src->iradio_url = gst_neonhttp_src_unicodify (str_value);
+    }
   }
 
   GST_OBJECT_FLAG_SET (src, GST_NEONHTTP_SRC_OPEN);
@@ -404,6 +561,26 @@ gst_neonhttp_src_stop (GstBaseSrc * bsrc)
   GstNeonhttpSrc *src;
 
   src = GST_NEONHTTP_SRC (bsrc);
+
+  if (src->iradio_name) {
+    g_free (src->iradio_name);
+    src->iradio_name = NULL;
+  }
+
+  if (src->iradio_genre) {
+    g_free (src->iradio_genre);
+    src->iradio_genre = NULL;
+  }
+
+  if (src->iradio_url) {
+    g_free (src->iradio_url);
+    src->iradio_url = NULL;
+  }
+
+  if (src->icy_caps) {
+    gst_caps_unref (src->icy_caps);
+    src->icy_caps = NULL;
+  }
 
   if (src->request) {
     ne_request_destroy (src->request);
@@ -575,7 +752,24 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
       }
     }
       break;
+    case PROP_USER_AGENT:
+    {
+      if (this->user_agent) {
+        g_free (this->user_agent);
+        this->user_agent = NULL;
+      }
 
+      if (g_value_get_string (value)) {
+        this->user_agent = g_strdup (g_value_get_string (value));
+      }
+
+      break;
+    }
+    case PROP_IRADIO_MODE:
+    {
+      this->iradio_mode = g_value_get_boolean (value);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -626,7 +820,23 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
       }
     }
       break;
-
+    case PROP_USER_AGENT:
+    {
+      g_value_set_string (value, neonhttpsrc->user_agent);
+      break;
+    }
+    case PROP_IRADIO_MODE:
+      g_value_set_boolean (value, neonhttpsrc->iradio_mode);
+      break;
+    case PROP_IRADIO_NAME:
+      g_value_set_string (value, neonhttpsrc->iradio_name);
+      break;
+    case PROP_IRADIO_GENRE:
+      g_value_set_string (value, neonhttpsrc->iradio_genre);
+      break;
+    case PROP_IRADIO_URL:
+      g_value_set_string (value, neonhttpsrc->iradio_url);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

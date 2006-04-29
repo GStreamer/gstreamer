@@ -55,6 +55,7 @@ struct _GstNeonhttpSrc {
   ne_uri uri;
   gchar *uristr;
   ne_uri proxy;
+  gchar *user_agent;
 
   gboolean ishttps;
 
@@ -64,6 +65,13 @@ struct _GstNeonhttpSrc {
 
   gboolean eos;
 
+  /* icecast/audiocast metadata extraction handling */
+  gboolean iradio_mode;
+  gchar *iradio_name;
+  gchar *iradio_genre;
+  gchar *iradio_url;
+  GstCaps *icy_caps;
+  gint icy_metaint;
 };
 
 struct _GstNeonhttpSrcClass {
