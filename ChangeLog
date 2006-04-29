@@ -1,3 +1,11 @@
+2006-04-29  Edward Hervey  <edward@fluendo.com>
+
+	* examples/gstfile.py:
+	Threaded application, we NEED gobject.threads_init().
+	This should finally gets rid of the crashes when used on single files.
+	* gst/extend/discoverer.py:
+	Re-order the imports.
+
 2006-04-28  Edward Hervey  <edward@fluendo.com>
 
 	* gst/arg-types.py:

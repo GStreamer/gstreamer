@@ -24,9 +24,16 @@
 Class and functions for getting multimedia information about files
 """
 
-import gst
-import gobject
 import os.path
+
+import pygtk
+pygtk.require('2.0')
+import gobject
+
+import pygst
+pygst.require('0.10')
+import gst
+
 from gst.extend.pygobject import gsignal
 
 class Discoverer(gst.Pipeline):
