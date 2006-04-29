@@ -1022,9 +1022,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     if (!(gst_riff_parse_strf_auds (GST_ELEMENT (wav), buf, &header, &extra)))
       goto parse_header_error;
 
-    if (extra)
-      gst_buffer_unref (extra);
-
     if (wav->streaming) {
       gst_adapter_flush (wav->adapter, size);
       wav->offset += size;
@@ -1035,8 +1032,11 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     /* Note: gst_riff_create_audio_caps might nedd to fix values in
      * the header header depending on the format, so call it first */
     caps =
-        gst_riff_create_audio_caps (header->format, NULL, header, NULL,
+        gst_riff_create_audio_caps (header->format, NULL, header, extra,
         NULL, &codec_name);
+
+    if (extra)
+      gst_buffer_unref (extra);
 
     wav->format = header->format;
     wav->rate = header->rate;
