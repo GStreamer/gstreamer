@@ -1,3 +1,10 @@
+2006-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/check/gst/gstghostpad.c: (GST_START_TEST):
+	  add more asserts on refcounts
+	  do more cleanup at end of tests
+	  fix test leaks showing in FC5
+
 2006-04-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* plugins/elements/gsttypefindelement.c:
@@ -8,8 +15,8 @@
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_event):
-        fix changelog entry about last collectpads change,
-        add notes about proper fix
+	  fix changelog entry about last collectpads change,
+	  add notes about proper fix
 
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
@@ -17,7 +24,7 @@
 	* gst/gstregistry.c: (gst_registry_scan_path_level),
 	(gst_registry_scan_path):
 	* gst/gstregistry.h:
-        only write out registry if it has changed, fixes #338339
+	  only write out registry if it has changed, fixes #338339
 
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
@@ -35,29 +42,29 @@
 	* plugins/elements/gsttee.c:
 	* plugins/elements/gsttypefindelement.c:
 	(gst_type_find_element_handle_event):
-         make GstElementDetails const
+	  make GstElementDetails const
 
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_event):
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_base_init),
 	(gst_collect_pads_is_collected), (gst_collect_pads_event):
-        more detailed debug and formatting cleanup,
-        forward newsegments to src-pad (so that e.g. adder not eats them)
+	  more detailed debug and formatting cleanup,
+	  forward newsegments to src-pad (so that e.g. adder not eats them)
 
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstutils.c: (gst_element_link_pads):
-        cleanup double code
+	  cleanup double code
 
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/controller/gstcontroller.c:
 	(gst_controller_sync_values):
-          some little tuning
+	  some little tuning
 	* tests/check/libs/controller.c: (GST_START_TEST),
 	(gst_controller_suite):
-          a new test for live value handling
+	  a new test for live value handling
 
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 

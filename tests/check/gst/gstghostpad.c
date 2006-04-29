@@ -33,10 +33,17 @@ GST_START_TEST (test_remove1)
   b2 = gst_element_factory_make ("bin", NULL);
   src = gst_element_factory_make ("fakesrc", NULL);
   sink = gst_element_factory_make ("fakesink", NULL);
+  ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 1);
+  ASSERT_OBJECT_REFCOUNT (b2, "bin", 1);
 
   fail_unless (gst_bin_add (GST_BIN (b2), sink));
   fail_unless (gst_bin_add (GST_BIN (b1), src));
+  ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 1);
+  ASSERT_OBJECT_REFCOUNT (b2, "bin", 1);
   fail_unless (gst_bin_add (GST_BIN (b1), b2));
+  /* adding the bin creates a clock provide message with a ref to pipeline */
+  ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 2);
+  ASSERT_OBJECT_REFCOUNT (b2, "bin", 1);
 
   sinkpad = gst_element_get_pad (sink, "sink");
   gst_element_add_pad (b2, gst_ghost_pad_new ("sink", sinkpad));
@@ -51,8 +58,9 @@ GST_START_TEST (test_remove1)
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
 
-  /* now remove the bin with the ghostpad, b2 is disposed
-   * now. */
+  /* now remove the bin with the ghostpad, b2 is disposed now. */
+  ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 2);
+  ASSERT_OBJECT_REFCOUNT (b2, "bin", 1);
   gst_bin_remove (GST_BIN (b1), b2);
 
   srcpad = gst_element_get_pad (src, "src");
@@ -60,6 +68,10 @@ GST_START_TEST (test_remove1)
   fail_if (gst_pad_is_linked (srcpad));
   gst_object_unref (srcpad);
 
+  /* flush the message, dropping the b1 refcount to 1 */
+  gst_element_set_state (b1, GST_STATE_READY);
+  gst_element_set_state (b1, GST_STATE_NULL);
+  ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 1);
   gst_object_unref (b1);
 }
 
@@ -77,21 +89,31 @@ GST_START_TEST (test_remove2)
   b2 = gst_element_factory_make ("bin", NULL);
   src = gst_element_factory_make ("fakesrc", NULL);
   sink = gst_element_factory_make ("fakesink", NULL);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
 
   fail_unless (gst_bin_add (GST_BIN (b2), sink));
   fail_unless (gst_bin_add (GST_BIN (b1), src));
   fail_unless (gst_bin_add (GST_BIN (b1), b2));
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
 
   sinkpad = gst_element_get_pad (sink, "sink");
   gst_element_add_pad (b2, gst_ghost_pad_new ("sink", sinkpad));
   gst_object_unref (sinkpad);
 
   srcpad = gst_element_get_pad (src, "src");
+  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2); /* since we got one */
   /* get the ghostpad */
   sinkpad = gst_element_get_pad (b2, "sink");
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);       /* since we got one */
 
+  GST_DEBUG ("linking srcpad and sinkpad");
   ret = gst_pad_link (srcpad, sinkpad);
+  GST_DEBUG ("linked srcpad and sinkpad");
   fail_unless (ret == GST_PAD_LINK_OK);
+  /* the linking causes a proxypad to be created for srcpad,
+   * to which sinkpad gets linked.  This proxypad has a ref to srcpad */
+  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 3);
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
 
@@ -101,6 +123,27 @@ GST_START_TEST (test_remove2)
   srcpad = gst_element_get_pad (src, "src");
   /* pad is still linked to ghostpad */
   fail_if (!gst_pad_is_linked (srcpad));
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 3);
+  gst_object_unref (srcpad);
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 1);
+
+  /* cleanup */
+  /* now unlink the pads */
+  gst_pad_unlink (srcpad, sinkpad);
+  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1); /* proxy has dropped ref */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 1);
+
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (b2, "bin", 1);
+  /* remove b2 from b1 */
+  gst_bin_remove (GST_BIN (b1), b2);
+
+  /* flush the message, dropping the b1 refcount to 1 */
+  gst_element_set_state (b1, GST_STATE_READY);
+  gst_element_set_state (b1, GST_STATE_NULL);
+  ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 1);
+  gst_object_unref (b1);
 }
 
 GST_END_TEST;
@@ -177,6 +220,11 @@ GST_START_TEST (test_link)
   /* and linking should work now */
   ret = gst_pad_link (srcpad, sinkpad);
   fail_unless (ret == GST_PAD_LINK_OK);
+
+  /* flush the message, dropping the b1 refcount to 1 */
+  gst_element_set_state (b1, GST_STATE_READY);
+  gst_element_set_state (b1, GST_STATE_NULL);
+  ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 1);
 }
 
 GST_END_TEST;
@@ -301,12 +349,15 @@ GST_START_TEST (test_ghost_pads_bin)
   GstPad *sinkghost;
 
   pipeline = GST_BIN (gst_pipeline_new ("pipe"));
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   srcbin = GST_BIN (gst_bin_new ("srcbin"));
   gst_bin_add (pipeline, GST_ELEMENT (srcbin));
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);     /* provide-clock msg */
 
   sinkbin = GST_BIN (gst_bin_new ("sinkbin"));
   gst_bin_add (pipeline, GST_ELEMENT (sinkbin));
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 3);     /* provide-clock msg */
 
   src = gst_element_factory_make ("fakesrc", "src");
   gst_bin_add (srcbin, src);
@@ -326,6 +377,11 @@ GST_START_TEST (test_ghost_pads_bin)
               (srcghost))) != NULL);
   fail_unless (GST_PAD_PEER (gst_ghost_pad_get_target (GST_GHOST_PAD
               (sinkghost))) != NULL);
+
+  /* flush the message, dropping the b1 refcount to 1 */
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 }
 
 GST_END_TEST;
