@@ -57,7 +57,7 @@
 
 	* ext/alsa/gstalsasink.c: (gst_alsasink_getcaps),
 	(alsasink_parse_spec):
-        query witdh capabilities from alsa, fixes #338919
+	  query witdh capabilities from alsa, fixes #338919
 
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 

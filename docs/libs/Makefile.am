@@ -8,7 +8,7 @@ DOC_MODULE=gst-plugins-base-libs
 DOC=gst-plugins-base-libs
 FORMATS=html
 html: html-build.stamp
-include $(srcdir)/../upload.mak
+include $(top_srcdir)/common/upload.mak
 
 # generated basefiles
 #basefiles = \

@@ -8,7 +8,6 @@ SUBDIRS = $(GTK_DOC_DIRS)
 DIST_SUBDIRS = libs plugins
 
 EXTRA_DIST = \
-        upload.mak \
         version.entities.in
 
 upload:
