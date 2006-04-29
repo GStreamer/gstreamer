@@ -1,3 +1,8 @@
+2006-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	  compile fix; strtol() needs <stdlib.h>
+
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/alsa/gstalsamixerelement.c:

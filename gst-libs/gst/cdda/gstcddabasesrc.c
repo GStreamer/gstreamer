@@ -38,7 +38,7 @@
 /**
  * SECTION:gstcddabasesrc
  * @short_description: Base class for CD digital audio (CDDA) sources
- * 
+ *
  * <refsect2>
  * <para>
  * Provides a base class for CDDA sources, which handles things like seeking,
@@ -78,6 +78,7 @@
 #endif
 
 #include <string.h>
+#include <stdlib.h>             /* for strtol */
 
 #include "gstcddabasesrc.h"
 #include "gst/gst-i18n-plugin.h"
