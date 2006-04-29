@@ -232,8 +232,10 @@ get_candidates (const gchar * dir, const gchar * base)
 
   while (cur != &dirs[0]) {
     --cur;
-    if (!g_file_test (*cur, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR))
+    if (!g_file_test (*cur, G_FILE_TEST_EXISTS) ||
+        !g_file_test (*cur, G_FILE_TEST_IS_DIR)) {
       continue;
+    }
 
     gdir = g_dir_open (*cur, 0, &error);
     if (!gdir) {
@@ -326,9 +328,13 @@ main (int argc, char **argv)
     highest = NULL;
 
     /* otherwise, just look up the highest version */
-    g_hash_table_foreach (candidates, (GHFunc) find_highest_version, &highest);
+    if (candidates) {
+      g_hash_table_foreach (candidates, (GHFunc) find_highest_version,
+          &highest);
+    }
+
     if (highest == NULL) {
-      g_print ("ERROR: No version of tool %s not found.\n", base);
+      g_print ("ERROR: No version of tool %s found.\n", base);
       return 1;
     }
     dir = g_hash_table_lookup (candidates, highest);

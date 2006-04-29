@@ -1,3 +1,9 @@
+2006-04-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/gst-run.c: (get_candidates), (main):
+	  Fix wrong g_file_test() usage (see glib docs for why it doesn't
+	  work); fix typo in error message. Fixes #340079.
+
 2006-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* common/Makefile.am:
