@@ -161,12 +161,13 @@ get_float_caps (guint channels, gchar * endianness, guint width)
 
 /* eats the refs to the caps */
 static void
-verify_convert (void *in, int inlength,
+verify_convert (const gchar * which, void *in, int inlength,
     GstCaps * incaps, void *out, int outlength, GstCaps * outcaps)
 {
   GstBuffer *inbuffer, *outbuffer;
   GstElement *audioconvert;
 
+  GST_DEBUG ("verifying conversion %s", which);
   GST_DEBUG ("incaps: %" GST_PTR_FORMAT, incaps);
   GST_DEBUG ("outcaps: %" GST_PTR_FORMAT, outcaps);
   ASSERT_CAPS_REFCOUNT (incaps, "incaps", 1);
@@ -195,7 +196,8 @@ verify_convert (void *in, int inlength,
 
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
   fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), outlength);
-  fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, outlength) == 0);
+  fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, outlength) == 0,
+      "failed converting %s", which);
   buffers = g_list_remove (buffers, outbuffer);
   gst_buffer_unref (outbuffer);
   fail_unless (gst_element_set_state (audioconvert,
@@ -209,8 +211,8 @@ verify_convert (void *in, int inlength,
 }
 
 
-#define RUN_CONVERSION(inarray, in_get_caps, outarray, out_get_caps)    \
-  verify_convert (inarray, sizeof (inarray),                            \
+#define RUN_CONVERSION(which, inarray, in_get_caps, outarray, out_get_caps)    \
+  verify_convert (which, inarray, sizeof (inarray),                            \
         in_get_caps, outarray, sizeof (outarray), out_get_caps)
 
 GST_START_TEST (test_int16)
@@ -220,7 +222,8 @@ GST_START_TEST (test_int16)
     gint16 in[] = { 16384, -256, 1024, 1024 };
     gint16 out[] = { 8064, 1024 };
 
-    RUN_CONVERSION (in, get_int_caps (2, "BYTE_ORDER", 16, 16, TRUE),
+    RUN_CONVERSION ("int16 stereo to mono",
+        in, get_int_caps (2, "BYTE_ORDER", 16, 16, TRUE),
         out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE));
   }
   /* mono to stereo */
@@ -228,7 +231,8 @@ GST_START_TEST (test_int16)
     gint16 in[] = { 512, 1024 };
     gint16 out[] = { 512, 512, 1024, 1024 };
 
-    RUN_CONVERSION (in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+    RUN_CONVERSION ("int16 mono to stereo",
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
         out, get_int_caps (2, "BYTE_ORDER", 16, 16, TRUE));
   }
   /* signed -> unsigned */
@@ -236,9 +240,11 @@ GST_START_TEST (test_int16)
     gint16 in[] = { 0, -32767, 32767, -32768 };
     guint16 out[] = { 32768, 1, 65535, 0 };
 
-    RUN_CONVERSION (in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+    RUN_CONVERSION ("int16 signed to unsigned",
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
         out, get_int_caps (1, "BYTE_ORDER", 16, 16, FALSE));
-    RUN_CONVERSION (out, get_int_caps (1, "BYTE_ORDER", 16, 16, FALSE),
+    RUN_CONVERSION ("int16 unsigned to signed",
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, FALSE),
         in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE));
   }
 }
@@ -253,10 +259,12 @@ GST_START_TEST (test_int_conversion)
     gint8 in[] = { 0, 1, 2, 127, -127 };
     gint16 out[] = { 0, 256, 512, 32512, -32512 };
 
-    RUN_CONVERSION (in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE),
+    RUN_CONVERSION ("int 8bit to 16bit signed",
+        in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE),
         out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE)
         );
-    RUN_CONVERSION (out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+    RUN_CONVERSION ("int 16bit signed to 8bit",
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
         in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE)
         );
   }
@@ -265,7 +273,8 @@ GST_START_TEST (test_int_conversion)
     gint16 in[] = { 0, 255, 256, 257 };
     gint8 out[] = { 0, 0, 1, 1 };
 
-    RUN_CONVERSION (in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+    RUN_CONVERSION ("16 bit to 8 signed",
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
         out, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE)
         );
   }
@@ -281,9 +290,10 @@ GST_START_TEST (test_int_conversion)
     outcaps = get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE);
     GST_DEBUG ("incaps: %" GST_PTR_FORMAT, incaps);
     GST_DEBUG ("outcaps: %" GST_PTR_FORMAT, outcaps);
-    RUN_CONVERSION (in, incaps, out, outcaps);
-    RUN_CONVERSION (out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
-        in, get_int_caps (1, "BYTE_ORDER", 8, 8, FALSE)
+    RUN_CONVERSION ("8 unsigned to 16 signed", in, incaps, out, outcaps);
+    RUN_CONVERSION ("16 signed to 8 unsigned", out, get_int_caps (1,
+            "BYTE_ORDER", 16, 16, TRUE), in, get_int_caps (1, "BYTE_ORDER", 8,
+            8, FALSE)
         );
   }
   /* 8 <-> 24 signed */
@@ -292,11 +302,11 @@ GST_START_TEST (test_int_conversion)
     gint8 in[] = { 0, 1, 127 };
     guint8 out[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x7f };
 
-    RUN_CONVERSION (in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE),
-        out, get_int_caps (1, "BYTE_ORDER", 24, 24, TRUE)
+    RUN_CONVERSION ("8 to 24 signed", in, get_int_caps (1, "BYTE_ORDER", 8, 8,
+            TRUE), out, get_int_caps (1, "BYTE_ORDER", 24, 24, TRUE)
         );
-    RUN_CONVERSION (out, get_int_caps (1, "BYTE_ORDER", 24, 24, TRUE),
-        in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE)
+    RUN_CONVERSION ("24 signed to 8", out, get_int_caps (1, "BYTE_ORDER", 24,
+            24, TRUE), in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE)
         );
   }
 }
@@ -305,7 +315,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_float_conversion)
 {
-  /* float32 <-> 16 signed */
+  /* 32 float <-> 16 signed */
   /* NOTE: if audioconvert was doing dithering we'd have a problem */
   {
     gfloat in[] = { 0.0, 1.0, -1.0, 0.5, -0.5, 1.1, -1.1 };
@@ -314,8 +324,8 @@ GST_START_TEST (test_float_conversion)
     /* only one direction conversion, the other direction does
      * not produce exactly the same as the input due to floating
      * point rounding errors etc. */
-    RUN_CONVERSION (in, get_float_caps (1, "BYTE_ORDER", 32),
-        out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE)
+    RUN_CONVERSION ("32 float to 16 signed", in, get_float_caps (1,
+            "BYTE_ORDER", 32), out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE)
         );
   }
 }

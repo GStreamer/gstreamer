@@ -1,5 +1,11 @@
 2006-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tests/check/elements/audioconvert.c: (verify_convert),
+	(GST_START_TEST):
+	  when a test fails, give an indication of which it is
+
+2006-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst-libs/gst/cdda/gstcddabasesrc.c:
 	  compile fix; strtol() needs <stdlib.h>
 
@@ -50,19 +56,19 @@
 	* sys/ximage/ximagesink.c:
 	* sys/xvimage/xvimagesink.c:
 	* tests/check/libs/cddabasesrc.c:
-         make GstElementDetails const
+	  make GstElementDetails const
 
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/adder/gstadder.c: (gst_adder_setcaps), (gst_adder_src_event),
 	(gst_adder_init):
-        send events from src-pad to all sink-pads fixes #338657
+	  send events from src-pad to all sink-pads fixes #338657
 
 2006-04-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/alsa/gstalsasink.c: (gst_alsasink_getcaps),
 	(alsasink_parse_spec):
-	  query witdh capabilities from alsa, fixes #338919
+	  query width capabilities from alsa, fixes #338919
 
 2006-04-28  Wim Taymans  <wim@fluendo.com>
 
