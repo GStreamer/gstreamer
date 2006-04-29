@@ -28,6 +28,19 @@ to -good or -ugly if a number of conditions are met:
   - use GST_(DEBUG/*)_OBJECT
   - use dashes in object property names to separate words
   - use correct value, name, nick for enums
+  - use underscores in macros/function names/structs
+    e.g.: GST_BASE_SINK, GstBaseSink, gst_base_sink_
+
+- The plug-in's build:
+  - should be correctly integrated with configure.ac
+  - files implementing elements should be named according to their class name,
+    e.g GstBaseSink -> gstbasesink.c
+  - should list libs and cflags in stack order, with lowest in the stack first
+    (so one can link against highest in the stack somewhere else without
+     picking up everything from the somewhere else)
+    e.g. $(GST_PLUGINS_BASE_CFLAGS) \
+         $(GST_BASE_CFLAGS) \
+         $(GST_CFLAGS) $(CAIRO_CFLAGS)
 
 - The compiled plug-in:
   - should show up correct in gst-inspect output; no warnings, no unknown
@@ -36,6 +49,7 @@ to -good or -ugly if a number of conditions are met:
 - The plug-in should be put in the correct location inside the module:
   sys/: plug-ins that include system headers/link to system libraries;
     usually platform-dependent as well
+    name after whatever system "thing" they use (oss, v4l, ...)
   gst/: plug-ins with no external dependencies, only GLib/GStreamer/liboil
   ext/: plug-ins with external dependencies
 
@@ -88,5 +102,6 @@ to -good or -ugly if a number of conditions are met:
   LGPL dependencies, no patent issues) or ugly
 
 - plugin documentation needs to be added:
+  - see gstreamer/docs/README; section on adding plugins and elements
   - "make update" in docs/plugins and commit the new file
   - edit -docs.sgml and add an include for the file
