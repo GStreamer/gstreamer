@@ -16,7 +16,7 @@ SUBDIRS = design $(SUBDIRS_DOCBOOK) $(SUBDIRS_GTK_DOC)
 DIST_SUBDIRS = design gst libs plugins faq manual pwg slides xsl
 
 EXTRA_DIST = \
-	manuals.mak htmlinstall.mak upload.mak \
+	manuals.mak htmlinstall.mak \
 	image-png image-pdf image-eps url.entities version.entities.in
 
 upload:

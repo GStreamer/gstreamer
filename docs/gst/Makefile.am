@@ -10,7 +10,7 @@ BUILT_SOURCES=gstreamer.types
 DOC=gstreamer
 FORMATS=html
 html: html-build.stamp
-include $(srcdir)/../upload.mak
+include $(top_srcdir)/common/upload.mak
 
 # generated basefiles
 #basefiles = \

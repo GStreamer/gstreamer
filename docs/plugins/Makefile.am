@@ -11,7 +11,7 @@ DOC_MODULE=$(MODULE)-plugins
 DOC=$(MODULE)-plugins
 FORMATS=html
 html: html-build.stamp
-include $(srcdir)/../upload.mak
+include $(top_srcdir)/common/upload.mak
 
 # generated basefiles
 #basefiles = \

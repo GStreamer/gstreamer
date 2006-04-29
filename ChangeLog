@@ -1,5 +1,20 @@
 2006-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* common/Makefile.am:
+	* docs/Makefile.am:
+	* docs/faq/Makefile.am:
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	* docs/manual/Makefile.am:
+	* docs/plugins/Makefile.am:
+	* docs/pwg/Makefile.am:
+	* docs/slides/Makefile.am:
+	* docs/upload.mak:
+	* common/upload.mak:
+	  move upload.mak to common
+
+2006-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* tests/check/gst/gstghostpad.c: (GST_START_TEST):
 	  add more asserts on refcounts
 	  do more cleanup at end of tests

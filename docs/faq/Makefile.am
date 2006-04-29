@@ -24,7 +24,7 @@ EXTRA_SRC = gst-uninstalled
 # get the generic docbuilding Makefile stuff
 include $(srcdir)/../manuals.mak
 # get the generic upload target
-include $(srcdir)/../upload.mak
+include $(top_srcdir)/common/upload.mak
 
 ### this is standard automake stuff
 
