@@ -3,15 +3,15 @@
   <description>Add a xing header to mp3 encoded data</description>
   <filename>../../gst/xingheader/.libs/libgstxingheader.so</filename>
   <basename>libgstxingheader.so</basename>
-  <version>0.10.1.1</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org/</origin>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>xingmux</name>
-      <longname>MP3 Xing Muxer</longname>
+      <longname>MP3 Xing muxer</longname>
       <class>Formatter/Metadata</class>
       <description>Adds a Xing header to the beginning of a VBR MP3 file</description>
       <author>Christophe Fergeau &lt;teuf@gnome.org&gt;</author>

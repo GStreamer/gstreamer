@@ -11,14 +11,14 @@
   <elements>
     <element>
       <name>sdlaudiosink</name>
-      <longname>Audio Sink (SDLAUDIO)</longname>
+      <longname>SDL audio sink</longname>
       <class>Sink/Audio</class>
       <description>Output to a sound card via SDLAUDIO</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
     </element>
     <element>
       <name>sdlvideosink</name>
-      <longname>Video sink</longname>
+      <longname>SDL video sink</longname>
       <class>Sink/Video</class>
       <description>An SDL-based videosink</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;Edgard Lima &lt;edgard.lima@indt.org.br&gt;Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>

@@ -3,15 +3,15 @@
   <description>DirectFB video output plugin</description>
   <filename>../../ext/directfb/.libs/libgstdfbvideosink.so</filename>
   <basename>libgstdfbvideosink.so</basename>
-  <version>0.10.0.1</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org/</origin>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>dfbvideosink</name>
-      <longname>Video sink</longname>
+      <longname>DirectFB video sink</longname>
       <class>Sink/Video</class>
       <description>A DirectFB based videosink</description>
       <author>Julien Moutte &lt;julien@moutte.net&gt;</author>

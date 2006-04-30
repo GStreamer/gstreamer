@@ -3,17 +3,17 @@
   <description>Parse a .dat file (VCD) into raw mpeg1</description>
   <filename>../../gst/cdxaparse/.libs/libgstcdxaparse.so</filename>
   <basename>libgstcdxaparse.so</basename>
-  <version>0.10.1.1</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org/</origin>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>cdxaparse</name>
-      <longname>.dat parser</longname>
+      <longname>(S)VCD parser</longname>
       <class>Codec/Parser</class>
-      <description>Parse a .dat file (VCD) into raw mpeg1</description>
+      <description>Parse a .dat file from (S)VCD into raw MPEG-1</description>
       <author>Wim Taymans &lt;wim.taymans@tvd.be&gt;</author>
     </element>
   </elements>
