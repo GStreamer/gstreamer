@@ -6,14 +6,18 @@ Makefile.in
 *-undocumented.txt
 *-unused.txt
 
-*.args
-*.hierarchy
-*.interfaces
-*.prerequisites
-*.signals
-
-html
-sgml
 tmpl
 xml
-*.stamp
+html
+
+gst-plugins-bad-plugins-scan
+gst-plugins-bad-plugins-scan.c
+inspect-registry.xml
+
+html-build.stamp
+html.stamp
+scan-build.stamp
+sgml-build.stamp
+sgml.stamp
+tmpl-build.stamp
+tmpl.stamp

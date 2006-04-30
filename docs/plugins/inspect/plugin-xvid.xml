@@ -1,0 +1,27 @@
+<plugin>
+  <name>xvid</name>
+  <description>XviD plugin library</description>
+  <filename>../../ext/xvid/.libs/libgstxvid.so</filename>
+  <basename>libgstxvid.so</basename>
+  <version>0.10.2.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>xviddec</name>
+      <longname>XviD video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>XviD decoder based on xvidcore</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>xvidenc</name>
+      <longname>XviD video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>XviD encoder based on xvidcore</description>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+  </elements>
+</plugin>
