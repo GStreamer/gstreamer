@@ -3,15 +3,15 @@
   <description>Quicktime stream demuxer</description>
   <filename>../../gst/qtdemux/.libs/libgstqtdemux.so</filename>
   <basename>libgstqtdemux.so</basename>
-  <version>0.10.1.1</version>
+  <version>0.10.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer CVS/prerelease</package>
-  <origin>http://gstreamer.freedesktop.org/</origin>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>qtdemux</name>
-      <longname>QuickTime Demuxer</longname>
+      <longname>QuickTime demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>Demultiplex a QuickTime file into audio and video streams</description>
       <author>David Schleef &lt;ds@schleef.org&gt;</author>

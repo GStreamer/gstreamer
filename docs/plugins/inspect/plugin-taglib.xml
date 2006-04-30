@@ -10,10 +10,10 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>tagid3v2mux</name>
+      <name>id3v2mux</name>
       <longname>TagLib ID3v2 Muxer</longname>
       <class>Formatter/Metadata</class>
-      <description>Adds an ID3v2 header to the beginning of MP3 files</description>
+      <description>Adds an ID3v2 header to the beginning of MP3 files using taglib</description>
       <author>Christophe Fergeau &lt;teuf@gnome.org&gt;</author>
     </element>
   </elements>
