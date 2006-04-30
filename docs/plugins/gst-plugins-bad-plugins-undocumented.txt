@@ -1,9 +1,0 @@
-92% symbol docs coverage.
-11 symbols documented.
-0 symbols incomplete.
-1 not documented.
-
-
-GstId3v2Mux
-
-
