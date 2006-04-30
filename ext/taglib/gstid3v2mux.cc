@@ -43,7 +43,7 @@
  * Make sure the Ogg/Vorbis file actually has comments to preserve.
  * You can verify the tags were written using:
  * <programlisting>
- * gst-launch -m filesrc location=foo.mp3 ! id3demux ! fakesink silent=TRUE 2&uml; /dev/null | grep taglist
+ * gst-launch -m filesrc location=foo.mp3 ! id3demux ! fakesink silent=TRUE 2&gt; /dev/null | grep taglist
  * </programlisting>
  * </para>
  * </refsect2>
