@@ -59,6 +59,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstDfbVideoSink::pixel-aspect-ratio</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>The pixel aspect ratio of the device.</BLURB>
+<DEFAULT>"1/1"</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSDLVideoSink::fullscreen</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -266,5 +276,222 @@
 <NICK>max-buffers</NICK>
 <BLURB>Maximum number of buffers.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::iradio-genre</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-genre</NICK>
+<BLURB>Genre of the stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::iradio-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>iradio-mode</NICK>
+<BLURB>Enable internet radio mode (extraction of shoutcast/icecast metadata).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::iradio-name</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-name</NICK>
+<BLURB>Name of the stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::iradio-url</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>iradio-url</NICK>
+<BLURB>Homepage URL for radio stream.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>The location. In the form:
+			http://a.com/file.txt - default port '80' 
+			http://a.com:80/file.txt 
+			a.com/file.txt - defualt scheme 'HTTP' 
+			https://a.com/file.txt - default port '443' 
+			http:///file.txt - default host 'localhost'.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::proxy</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Proxy</NICK>
+<BLURB>The proxy. In the form myproxy.mycompany.com:8080. 
+			If nothing is passed g_getenv("http_proxy") will be used 
+			If that http_proxy enviroment var isn't define no proxy is used.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::uri</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Uri</NICK>
+<BLURB>The location in form of a URI (deprecated; use location).</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::user-agent</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>User-Agent</NICK>
+<BLURB>The User-Agent used for connection.</BLURB>
+<DEFAULT>"neonhttpsrc"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstV4l2Src::use-fixed-fps</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use Fixed FPS</NICK>
+<BLURB>Drop/Insert frames to reach a certain FPS (TRUE) or adapt FPS to suit the number of frabbed frames.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::megabass</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>megabass</NICK>
+<BLURB>Megabass.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::megabass-amount</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>megabass amount</NICK>
+<BLURB>Megabass amount.</BLURB>
+<DEFAULT>40</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::megabass-range</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>megabass range</NICK>
+<BLURB>Megabass range.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::noise-reduction</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>noise reduction</NICK>
+<BLURB>noise reduction.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::oversamp</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>oversamp</NICK>
+<BLURB>oversamp.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::reverb</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>reverb</NICK>
+<BLURB>Reverb.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::reverb-delay</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,200]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>reverb delay</NICK>
+<BLURB>Reverb delay.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::reverb-depth</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>reverb depth</NICK>
+<BLURB>Reverb depth.</BLURB>
+<DEFAULT>30</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::songname</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Songname</NICK>
+<BLURB>The song name.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::surround</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>surround</NICK>
+<BLURB>Surround.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::surround-delay</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,40]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>surround delay</NICK>
+<BLURB>Surround delay.</BLURB>
+<DEFAULT>20</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstModPlug::surround-depth</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>surround depth</NICK>
+<BLURB>Surround depth.</BLURB>
+<DEFAULT>20</DEFAULT>
 </ARG>
 
