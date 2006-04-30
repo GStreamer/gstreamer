@@ -1,3 +1,14 @@
+2006-04-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-decl-list.txt:
+	* docs/plugins/gst-plugins-bad-plugins-decl.txt:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins-undocumented.txt:
+	  Fix up docs for taglib plugin
+	  Also scan .cc files
+
 2006-04-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/taglib/gsttaglib.cc:

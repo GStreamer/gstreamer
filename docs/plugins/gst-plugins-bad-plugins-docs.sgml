@@ -14,7 +14,7 @@
     <title>gst-plugins-bad Elements</title>
 
     <xi:include href="xml/element-dfbvideosink.xml" />
-    <xi:include href="xml/element-tagid3v2mux.xml" />
+    <xi:include href="xml/element-id3v2mux.xml" />
   </chapter>
 
   <chapter>

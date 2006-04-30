@@ -133,97 +133,62 @@ void
 <RETURNS>GType </RETURNS>
 void
 </FUNCTION>
-<MACRO>
-<NAME>GST_TYPE_XIMAGESRC</NAME>
-#define GST_TYPE_XIMAGESRC (gst_ximagesrc_get_type())
-</MACRO>
-<MACRO>
-<NAME>GST_XIMAGESRC</NAME>
-#define GST_XIMAGESRC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_XIMAGESRC,GstXImageSrc))
-</MACRO>
-<MACRO>
-<NAME>GST_XIMAGESRC_CLASS</NAME>
-#define GST_XIMAGESRC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_XIMAGESRC,GstXImageSrc))
-</MACRO>
-<MACRO>
-<NAME>GST_IS_XIMAGESRC</NAME>
-#define GST_IS_XIMAGESRC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XIMAGESRC))
-</MACRO>
-<MACRO>
-<NAME>GST_IS_XIMAGESRC_CLASS</NAME>
-#define GST_IS_XIMAGESRC_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XIMAGESRC))
-</MACRO>
 <STRUCT>
-<NAME>GstXImageSrc</NAME>
+<NAME>GstId3v2Mux</NAME>
 </STRUCT>
 <STRUCT>
-<NAME>GstXImageSrcClass</NAME>
+<NAME>GstId3v2MuxClass</NAME>
 </STRUCT>
+<STRUCT>
+<NAME></NAME>
+typedef struct _GstId3v2Mux {
+  GstTagLibMux  taglibmux;
+};
+</STRUCT>
+<STRUCT>
+<NAME></NAME>
+typedef struct _GstId3v2MuxClass {
+  GstTagLibMuxClass  taglibmux_class;
+};
+</STRUCT>
+<MACRO>
+<NAME>GST_TYPE_ID3V2_MUX</NAME>
+#define GST_TYPE_ID3V2_MUX \
+  (gst_id3v2_mux_get_type())
+</MACRO>
+<MACRO>
+<NAME>GST_ID3V2_MUX</NAME>
+#define GST_ID3V2_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ID3V2_MUX,GstId3v2Mux))
+</MACRO>
+<MACRO>
+<NAME>GST_ID3V2_MUX_CLASS</NAME>
+#define GST_ID3V2_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ID3V2_MUX,GstId3v2MuxClass))
+</MACRO>
+<MACRO>
+<NAME>GST_IS_ID3V2_MUX</NAME>
+#define GST_IS_ID3V2_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ID3V2_MUX))
+</MACRO>
+<MACRO>
+<NAME>GST_IS_ID3V2_MUX_CLASS</NAME>
+#define GST_IS_ID3V2_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ID3V2_MUX))
+</MACRO>
 <FUNCTION>
-<NAME>gst_ximagesrc_get_type</NAME>
+<NAME>gst_id3v2_mux_get_type</NAME>
 <RETURNS>GType </RETURNS>
 void
 </FUNCTION>
 <STRUCT>
-<NAME>GstXImageSrc</NAME>
-struct _GstXImageSrc
-{
-  GstPushSrc parent;
-
-  /* Information on display */
-  GstXContext *xcontext;
-  gint width;
-  gint height;
-  
-  Window xwindow;
-  gchar *display_name;
-  guint screen_num;
-  
-  /* Desired output framerate */
-  gint fps_n;
-  gint fps_d;
-  
-  /* for framerate sync */
-  GstClockID clock_id; 
-  gint64 last_frame_no;
-  
-  /* Protect X Windows calls */
-  GMutex *x_lock;
-
-  /* Gathered pool of emitted buffers */
-  GMutex *pool_lock;
-  GSList *buffer_pool;
-
-  /* XFixes and XDamage support */
-  gboolean have_xfixes;
-  gboolean have_xdamage;
-  gboolean show_pointer;
-#ifdef HAVE_XFIXES
-  int fixes_event_base;
-  XFixesCursorImage *cursor_image;
-
-#endif
-#ifdef HAVE_XDAMAGE
-  Damage damage;
-  int damage_event_base;
-  XserverRegion damage_region;
-  GC damage_copy_gc;
-#endif
-
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstXImageSrcClass</NAME>
-struct _GstXImageSrcClass
-{
-  GstPushSrcClass parent_class;
-};
-</STRUCT>
-<STRUCT>
-<NAME>GstTagLibMuxPriv</NAME>
-</STRUCT>
-<STRUCT>
 <NAME>GstTagLibMux</NAME>
+</STRUCT>
+<STRUCT>
+<NAME>GstTagLibMuxClass</NAME>
+</STRUCT>
+<STRUCT>
+<NAME></NAME>
 typedef struct _GstTagLibMux {
   GstElement    element;
 
@@ -234,13 +199,16 @@ typedef struct _GstTagLibMux {
   gboolean      render_tag;
 
   GstEvent     *newsegment_ev; /* cached newsegment event from upstream */
-} GstTagLibMux;
+};
 </STRUCT>
 <STRUCT>
-<NAME>GstTagLibMuxClass</NAME>
+<NAME></NAME>
 typedef struct _GstTagLibMuxClass {
   GstElementClass parent_class;
-} GstTagLibMuxClass;
+
+  /* vfuncs */
+  GstBuffer  * (*render_tag) (GstTagLibMux * mux, GstTagList * tag_list);
+};
 </STRUCT>
 <MACRO>
 <NAME>GST_TYPE_TAG_LIB_MUX</NAME>

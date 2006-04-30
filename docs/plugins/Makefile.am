@@ -50,7 +50,7 @@ SCAN_OPTIONS=
 #EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode
+MKDB_OPTIONS=--sgml-mode --source-suffixes=c,h,cc
 
 # Extra options to supply to gtkdoc-fixref.
 # FIXME get the location of the installed gstreamer docs
