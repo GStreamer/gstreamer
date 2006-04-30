@@ -56,6 +56,7 @@
 #include "gstid3v2mux.h"
 
 #include <string.h>
+
 #include <textidentificationframe.h>
 #include <uniquefileidentifierframe.h>
 #include <id3v2tag.h>
@@ -67,7 +68,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_id3v2_mux_debug);
 #define GST_CAT_DEFAULT gst_id3v2_mux_debug
 
 static const GstElementDetails gst_id3v2_mux_details =
-GST_ELEMENT_DETAILS ("TagLib ID3v2 Muxer",
+GST_ELEMENT_DETAILS ("TagLib-based ID3v2 Muxer",
     "Formatter/Metadata",
     "Adds an ID3v2 header to the beginning of MP3 files using taglib",
     "Christophe Fergeau <teuf@gnome.org>");
@@ -359,5 +360,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "taglib",
-    "Tag-writing plug-in based on taglib",
+    "Tag writing plug-in based on taglib",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
