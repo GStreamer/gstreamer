@@ -26,7 +26,6 @@
 #include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
 #include "gsttaglib.h"
-#include "gstid3v2mux.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_tag_lib_mux_debug);
 #define GST_CAT_DEFAULT gst_tag_lib_mux_debug
@@ -36,7 +35,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("ANY"));
-
 
 static void
 gst_tag_lib_mux_iface_init (GType taglib_type)
