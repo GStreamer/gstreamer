@@ -523,22 +523,6 @@ GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
   AC_SUBST(SWFDEC_LIBS)
 ])
 
-
-dnl *** taglib ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_TAGLIB, true)
-GST_CHECK_FEATURE(TAGLIB, [taglib ID3v2 tag writer], taglib, [
-  PKG_CHECK_MODULES(TAGLIB, taglib >= 1.4, HAVE_TAGLIB="yes", [
-    HAVE_TAGLIB="no"
-    AC_MSG_RESULT(no)
-  ])
-  AC_SUBST(TAGLIB_CFLAGS)
-  AC_SUBST(TAGLIB_LIBS)
-  if test "x$HAVE_CXX" != "xyes"; then
-    USE_TAGLIB=false
-    AC_MSG_NOTICE([Not building taglib plugin: no C++ compiler found])
-  fi
-])
-
 dnl *** theora ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_THEORADEC, true)
 GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoraexpdec, [
@@ -668,7 +652,6 @@ ext/neon/Makefile
 ext/sdl/Makefile
 ext/soundtouch/Makefile
 ext/swfdec/Makefile
-ext/taglib/Makefile
 ext/theora/Makefile
 ext/wavpack/Makefile
 ext/xvid/Makefile

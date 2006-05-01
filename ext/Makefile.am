@@ -202,12 +202,6 @@ else
 SWFDEC_DIR=
 endif
 
-if USE_TAGLIB
-TAGLIB_DIR = taglib
-else
-TAGLIB_DIR =
-endif
-
 if USE_THEORADEC
 THEORA_DIR = theora
 else
@@ -267,7 +261,6 @@ SUBDIRS=\
 	$(SNDFILE_DIR) \
 	$(SOUNDTOUCH_DIR) \
 	$(SWFDEC_DIR) \
-	$(TAGLIB_DIR) \
 	$(TARKIN_DIR) \
 	$(THEORA_DIR) \
 	$(WAVPACK_DIR) \
@@ -290,7 +283,6 @@ DIST_SUBDIRS= \
 	sdl \
 	swfdec \
 	soundtouch \
-	taglib \
 	theora \
 	wavpack \
 	xvid
