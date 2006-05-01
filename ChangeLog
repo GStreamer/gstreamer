@@ -1,3 +1,11 @@
+2006-05-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (musepack_type_find),
+	(plugin_init):
+	  Refine musepack typefinding a bit. Return MAXIMUM
+	  probability when we detect stream version 7 to make
+	  sure the mpeg audio typefinder doesn't trump us.
+
 2006-04-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):

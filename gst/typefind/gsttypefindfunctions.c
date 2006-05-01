@@ -782,6 +782,25 @@ suggest:
   }
 }
 
+/*** audio/x-musepack ***/
+
+static GstStaticCaps musepack_caps = GST_STATIC_CAPS ("audio/x-musepack");
+
+#define MUSEPACK_CAPS (gst_static_caps_get(&musepack_caps))
+static void
+musepack_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 4);
+
+  if (data && memcmp (data, "MP+", 3) == 0) {
+    if ((data[3] & 0x7f) == 7) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MUSEPACK_CAPS);
+    } else {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY + 10, MUSEPACK_CAPS);
+    }
+  }
+}
+
 /*** audio/x-ac3 ***/
 static GstStaticCaps ac3_caps = GST_STATIC_CAPS ("audio/x-ac3");
 
@@ -2340,9 +2359,8 @@ plugin_init (GstPlugin * plugin)
       asf_exts,
       "\060\046\262\165\216\146\317\021\246\331\000\252\000\142\316\154", 16,
       GST_TYPE_FIND_MAXIMUM);
-  /* -1 so id3v1 or apev1/2 are detected with higher preference */
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-musepack", GST_RANK_PRIMARY,
-      musepack_exts, "MP+", 3, GST_TYPE_FIND_LIKELY + 10);
+  TYPE_FIND_REGISTER (plugin, "audio/x-musepack", GST_RANK_PRIMARY,
+      musepack_type_find, musepack_exts, MUSEPACK_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-au", GST_RANK_MARGINAL,
       au_type_find, au_exts, AU_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_RIFF (plugin, "video/x-msvideo", GST_RANK_PRIMARY,
