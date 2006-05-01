@@ -651,6 +651,21 @@ GST_CHECK_FEATURE(SPEEX, [speex plug-in], speex, [
   ])
 ])
 
+dnl *** taglib ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_TAGLIB, true)
+GST_CHECK_FEATURE(TAGLIB, [taglib ID3v2 tag writer], taglib, [
+  PKG_CHECK_MODULES(TAGLIB, taglib >= 1.4, HAVE_TAGLIB="yes", [
+    HAVE_TAGLIB="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(TAGLIB_CFLAGS)
+  AC_SUBST(TAGLIB_LIBS)
+  if test "x$HAVE_CXX" != "xyes"; then
+    USE_TAGLIB=false
+    AC_MSG_NOTICE([Not building taglib plugin: no C++ compiler found])
+  fi
+])
+
 dnl *** id3demux prefers to have zlib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ZLIB, true)
 GST_CHECK_FEATURE(ZLIB, [zlib support for id3demux],, [
@@ -757,6 +772,7 @@ ext/libpng/Makefile
 ext/raw1394/Makefile
 ext/shout2/Makefile
 ext/speex/Makefile
+ext/taglib/Makefile
 sys/Makefile
 sys/oss/Makefile
 sys/sunaudio/Makefile

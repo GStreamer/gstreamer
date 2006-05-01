@@ -111,6 +111,14 @@ GstHalAudioSrcClass
 </SECTION>
 
 <SECTION>
+<FILE>element-id3v2mux</FILE>
+GstId3v2Mux
+<TITLE>id3v2mux</TITLE>
+<SUBSECTION Standard>
+GstId3v2MuxClass
+</SECTION>
+
+<SECTION>
 <FILE>element-jpegdec</FILE>
 GstJpegDec
 GstJpegDecErrorMgr

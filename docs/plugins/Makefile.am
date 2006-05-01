@@ -45,7 +45,7 @@ DOC_SOURCE_DIR = $(top_srcdir)
 SCAN_OPTIONS=
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode
+MKDB_OPTIONS=--sgml-mode --source-suffixes=c,h,cc
 
 # Extra options to supply to gtkdoc-fixref.
 # FIXME get the location of the installed gstreamer docs
@@ -53,7 +53,7 @@ MKDB_OPTIONS=--sgml-mode
 
 # Used for dependencies.
 HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.h
-CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c
+CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c $(DOC_SOURCE_DIR)/*/*/*.cc
 
 # this is a wingo addition
 # thomasvs: another nice wingo addition would be an explanation on why
@@ -94,6 +94,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/jpeg/gstjpegenc.h \
 	$(top_srcdir)/ext/jpeg/gstsmokedec.h \
 	$(top_srcdir)/ext/jpeg/gstsmokeenc.h \
+	$(top_srcdir)/ext/taglib/gsttaglibmux.h \
+	$(top_srcdir)/ext/taglib/gstid3v2mux.h \
 	$(top_srcdir)/gst/multipart/multipartmux.c \
 	$(top_srcdir)/gst/multipart/multipartdemux.c \
 	$(top_srcdir)/gst/udp/gstudpsrc.h \

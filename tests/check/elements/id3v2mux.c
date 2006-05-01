@@ -397,9 +397,9 @@ GST_START_TEST (test_id3v2mux)
 GST_END_TEST;
 
 static Suite *
-tagid3v2mux_suite (void)
+id3v2mux_suite (void)
 {
-  Suite *s = suite_create ("tagid3v2mux");
+  Suite *s = suite_create ("id3v2mux");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
@@ -413,7 +413,7 @@ main (int argc, char **argv)
 {
   int nf;
 
-  Suite *s = tagid3v2mux_suite ();
+  Suite *s = id3v2mux_suite ();
   SRunner *sr = srunner_create (s);
 
   gst_check_init (&argc, &argv);

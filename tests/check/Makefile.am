@@ -15,7 +15,11 @@ CLEANFILES = core.* test-registry.xml
 
 clean-local: clean-local-check
 
-TESTS = $(check_PROGRAMS)
+if USE_TAGLIB
+check_taglib = elements/id3v2mux
+else
+check_taglib =
+endif
 
 check_PROGRAMS = \
 	elements/avimux \
@@ -25,9 +29,10 @@ check_PROGRAMS = \
 	elements/cmmlenc \
 	elements/icydemux
     
+TESTS = $(check_PROGRAMS)
 
 # these tests don't even pass
-noinst_PROGRAMS =
+noinst_PROGRAMS = $(check_taglib)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)

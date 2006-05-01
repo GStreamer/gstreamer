@@ -1,3 +1,19 @@
+2006-05-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/Makefile.am:
+	  also check .cc files for gtk-doc markup
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* tests/check/Makefile.am:
+	* tests/check/elements/id3v2mux.c: (id3v2mux_suite), (main):
+	* ext/Makefile.am:
+	* ext/taglib/Makefile.am:
+	* ext/taglib/gstid3v2mux.h:
+	* ext/taglib/gsttaglibmux.c:
+	* ext/taglib/gsttaglibmux.h:
+	  move taglib-based id3v2muxer to -good.  Fixes #336110.
+
 2006-04-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):

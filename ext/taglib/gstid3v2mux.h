@@ -21,7 +21,7 @@
 #ifndef GST_ID3V2_MUX_H
 #define GST_ID3V2_MUX_H
 
-#include "gsttaglib.h"
+#include "gsttaglibmux.h"
 
 G_BEGIN_DECLS
 

@@ -112,6 +112,12 @@ else
 SPEEX_DIR =
 endif
 
+if USE_TAGLIB
+TAGLIB_DIR = taglib
+else
+TAGLIB_DIR =
+endif
+
 SUBDIRS = \
 	$(AALIB_DIR) \
 	$(ANNODEX_DIR) \
@@ -131,7 +137,8 @@ SUBDIRS = \
 	$(LIBPNG_DIR) \
 	$(MIKMOD_DIR) \
 	$(SHOUT2_DIR) \
-	$(SPEEX_DIR)
+	$(SPEEX_DIR) \
+	$(TAGLIB_DIR)
 
 DIST_SUBDIRS = \
 	aalib \
@@ -150,4 +157,5 @@ DIST_SUBDIRS = \
 	libpng \
 	raw1394 \
 	shout2 \
-	speex
+	speex \
+	taglib
