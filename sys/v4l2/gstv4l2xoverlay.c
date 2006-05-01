@@ -71,30 +71,33 @@ gst_v4l2_xoverlay_open (GstV4l2Element * v4l2element)
 
   /* we need a display, obviously */
   if (!name || !(dpy = XOpenDisplay (name))) {
-    GST_WARNING ("No $DISPLAY set or failed to open - no overlay");
+    GST_WARNING_OBJECT (v4l2element,
+        "No $DISPLAY set or failed to open - no overlay");
     return;
   }
 
   /* First let's check that XVideo extension is available */
   if (!XQueryExtension (dpy, "XVideo", &i, &i, &i)) {
-    GST_WARNING ("Xv extension not available - no overlay");
+    GST_WARNING_OBJECT (v4l2element, "Xv extension not available - no overlay");
     XCloseDisplay (dpy);
     return;
   }
 
   /* find port that belongs to this device */
   if (XvQueryExtension (dpy, &ver, &rel, &req, &ev, &err) != Success) {
-    GST_WARNING ("Xv extension not supported - no overlay");
+    GST_WARNING_OBJECT (v4l2element, "Xv extension not supported - no overlay");
     XCloseDisplay (dpy);
     return;
   }
   if (XvQueryAdaptors (dpy, DefaultRootWindow (dpy), &anum, &ai) != Success) {
-    GST_WARNING ("Failed to query Xv adaptors");
+    GST_WARNING_OBJECT (v4l2element, "Failed to query Xv adaptors");
     XCloseDisplay (dpy);
     return;
   }
   if (fstat (v4l2element->video_fd, &s) < 0) {
-    GST_ERROR ("Failed to stat() file descriptor: %s", g_strerror (errno));
+    GST_ELEMENT_ERROR (v4l2element, RESOURCE, GST_RESOURCE_ERROR_NOT_FOUND,
+        (_("Cannot identify '%s': %d, %s\n"),
+            v4l2element->videodev, errno, strerror (errno)), GST_ERROR_SYSTEM);
     XCloseDisplay (dpy);
     return;
   }
@@ -112,7 +115,7 @@ gst_v4l2_xoverlay_open (GstV4l2Element * v4l2element)
   XvFreeAdaptorInfo (ai);
 
   if (id == 0) {
-    GST_WARNING ("Did not find XvPortID for device - no overlay");
+    GST_WARNING (v4l2element, "Did not find XvPortID for device - no overlay");
     XCloseDisplay (dpy);
     return;
   }
