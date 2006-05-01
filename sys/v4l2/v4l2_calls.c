@@ -48,13 +48,14 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 gboolean
 gst_v4l2_get_capabilities (GstV4l2Element * v4l2element)
 {
-  GST_DEBUG ("getting capabilities");
+  GST_DEBUG_OBJECT (v4l2element, "getting capabilities");
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
 
   if (ioctl (v4l2element->video_fd, VIDIOC_QUERYCAP, &(v4l2element->vcap)) < 0) {
-    GST_ERROR_OBJECT (v4l2element, "Error getting %s capabilities: %s",
-        v4l2element->videodev, g_strerror (errno));
+    GST_ELEMENT_ERROR (v4l2element, RESOURCE, SETTINGS,
+        (_("Error getting capabilities '%s': %d, %s\n"),
+            v4l2element->videodev, errno, strerror (errno)), GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -74,7 +75,7 @@ gst_v4l2_fill_lists (GstV4l2Element * v4l2element)
   gint n;
   GstPadDirection dir = GST_PAD_UNKNOWN;
 
-  GST_DEBUG ("getting enumerations");
+  GST_DEBUG_OBJECT (v4l2element, "getting enumerations");
   GST_V4L2_CHECK_OPEN (v4l2element);
 
   if (dir != GST_PAD_SINK) {
@@ -242,7 +243,8 @@ gst_v4l2_fill_lists (GstV4l2Element * v4l2element)
         /* we only handle these for now */
         break;
       default:
-        GST_DEBUG ("ControlID %s (%d) unhandled, FIXME", control.name, n);
+        GST_DEBUG_OBJECT (v4l2element, "ControlID %s (%d) unhandled, FIXME",
+            control.name, n);
         control.id++;
         break;
     }
@@ -305,7 +307,7 @@ gst_v4l2_fill_lists (GstV4l2Element * v4l2element)
 static void
 gst_v4l2_empty_lists (GstV4l2Element * v4l2element)
 {
-  GST_DEBUG ("deleting enumerations");
+  GST_DEBUG_OBJECT (v4l2element, "deleting enumerations");
 
   g_list_foreach (v4l2element->inputs, (GFunc) g_object_unref, NULL);
   g_list_free (v4l2element->inputs);
@@ -381,7 +383,8 @@ gst_v4l2_open (GstV4l2Element * v4l2element)
 {
   struct stat st;
 
-  GST_DEBUG ("Trying to open device %s", v4l2element->videodev);
+  GST_DEBUG_OBJECT (v4l2element, "Trying to open device %s",
+      v4l2element->videodev);
   GST_V4L2_CHECK_NOT_OPEN (v4l2element);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2element);
 
@@ -391,12 +394,15 @@ gst_v4l2_open (GstV4l2Element * v4l2element)
 
   /* check if it is a device */
   if (-1 == stat (v4l2element->videodev, &st)) {
-    GST_ERROR ("Cannot identify '%s': %d, %s\n",
-        v4l2element->videodev, errno, strerror (errno));
+    GST_ELEMENT_ERROR (v4l2element, RESOURCE, NOT_FOUND,
+        (_("Cannot identify '%s': %d, %s\n"),
+            v4l2element->videodev, errno, strerror (errno)), GST_ERROR_SYSTEM);
     goto error;
   }
   if (!S_ISCHR (st.st_mode)) {
-    GST_ERROR ("%s is no device\n", v4l2element->videodev);
+    GST_ELEMENT_ERROR (v4l2element, RESOURCE, NOT_FOUND,
+        (_("It isn't a device '%s': %d, %s\n"),
+            v4l2element->videodev, errno, strerror (errno)), GST_ERROR_SYSTEM);
     goto error;
   }
 
@@ -460,7 +466,7 @@ error:
 gboolean
 gst_v4l2_close (GstV4l2Element * v4l2element)
 {
-  GST_DEBUG ("Trying to close %s", v4l2element->videodev);
+  GST_DEBUG_OBJECT (v4l2element, "Trying to close %s", v4l2element->videodev);
   GST_V4L2_CHECK_OPEN (v4l2element);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2element);
 
@@ -484,7 +490,7 @@ gst_v4l2_close (GstV4l2Element * v4l2element)
 gboolean
 gst_v4l2_get_norm (GstV4l2Element * v4l2element, v4l2_std_id * norm)
 {
-  GST_DEBUG ("getting norm");
+  GST_DEBUG_OBJECT (v4l2element, "getting norm");
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
 
@@ -508,7 +514,7 @@ gst_v4l2_get_norm (GstV4l2Element * v4l2element, v4l2_std_id * norm)
 gboolean
 gst_v4l2_set_norm (GstV4l2Element * v4l2element, v4l2_std_id norm)
 {
-  GST_DEBUG ("trying to set norm to %llx", norm);
+  GST_DEBUG_OBJECT (v4l2element, "trying to set norm to %llx", norm);
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
   if (!GST_V4L2_IS_ACTIVE (v4l2element))
@@ -536,7 +542,7 @@ gst_v4l2_get_input (GstV4l2Element * v4l2element, gint * input)
 {
   gint n;
 
-  GST_DEBUG ("trying to get input");
+  GST_DEBUG_OBJECT (v4l2element, "trying to get input");
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
 
@@ -562,7 +568,7 @@ gst_v4l2_get_input (GstV4l2Element * v4l2element, gint * input)
 gboolean
 gst_v4l2_set_input (GstV4l2Element * v4l2element, gint input)
 {
-  GST_DEBUG ("trying to set input to %d", input);
+  GST_DEBUG_OBJECT (v4l2element, "trying to set input to %d", input);
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
   if (!GST_V4L2_IS_ACTIVE (v4l2element))
@@ -589,7 +595,7 @@ gst_v4l2_get_output (GstV4l2Element * v4l2element, gint * output)
 {
   gint n;
 
-  GST_DEBUG ("trying to get output");
+  GST_DEBUG_OBJECT (v4l2element, "trying to get output");
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
 
@@ -615,7 +621,7 @@ gst_v4l2_get_output (GstV4l2Element * v4l2element, gint * output)
 gboolean
 gst_v4l2_set_output (GstV4l2Element * v4l2element, gint output)
 {
-  GST_DEBUG ("trying to set output to %d", output);
+  GST_DEBUG_OBJECT (v4l2element, "trying to set output to %d", output);
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
   if (!GST_V4L2_IS_ACTIVE (v4l2element))
@@ -645,7 +651,7 @@ gst_v4l2_get_frequency (GstV4l2Element * v4l2element,
   struct v4l2_frequency freq;
   GstTunerChannel *channel;
 
-  GST_DEBUG ("getting current tuner frequency");
+  GST_DEBUG_OBJECT (v4l2element, "getting current tuner frequency");
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
 
@@ -678,7 +684,8 @@ gst_v4l2_set_frequency (GstV4l2Element * v4l2element,
   struct v4l2_frequency freq;
   GstTunerChannel *channel;
 
-  GST_DEBUG ("setting current tuner frequency to %lu", frequency);
+  GST_DEBUG_OBJECT (v4l2element, "setting current tuner frequency to %lu",
+      frequency);
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
   if (!GST_V4L2_IS_ACTIVE (v4l2element))
@@ -714,7 +721,7 @@ gst_v4l2_signal_strength (GstV4l2Element * v4l2element,
 {
   struct v4l2_tuner tuner;
 
-  GST_DEBUG ("trying to get signal strength");
+  GST_DEBUG_OBJECT (v4l2element, "trying to get signal strength");
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
 
@@ -747,7 +754,8 @@ gst_v4l2_get_attribute (GstV4l2Element * v4l2element,
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
 
-  GST_DEBUG ("getting value of attribute %d", attribute_num);
+  GST_DEBUG_OBJECT (v4l2element, "getting value of attribute %d",
+      attribute_num);
 
   control.id = attribute_num;
 
@@ -779,7 +787,8 @@ gst_v4l2_set_attribute (GstV4l2Element * v4l2element,
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
 
-  GST_DEBUG ("setting value of attribute %d to %d", attribute_num, value);
+  GST_DEBUG_OBJECT (v4l2element, "setting value of attribute %d to %d",
+      attribute_num, value);
 
   control.id = attribute_num;
   control.value = value;

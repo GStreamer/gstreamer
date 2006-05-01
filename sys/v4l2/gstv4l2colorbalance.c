@@ -27,12 +27,6 @@
 #include "gstv4l2colorbalance.h"
 #include "gstv4l2element.h"
 
-static void
-gst_v4l2_color_balance_channel_class_init (GstV4l2ColorBalanceChannelClass *
-    klass);
-static void gst_v4l2_color_balance_channel_init (GstV4l2ColorBalanceChannel *
-    channel);
-
 static const GList *gst_v4l2_color_balance_list_channels (GstColorBalance *
     balance);
 static void gst_v4l2_color_balance_set_value (GstColorBalance * balance,
@@ -40,44 +34,27 @@ static void gst_v4l2_color_balance_set_value (GstColorBalance * balance,
 static gint gst_v4l2_color_balance_get_value (GstColorBalance * balance,
     GstColorBalanceChannel * channel);
 
-static GstColorBalanceChannelClass *parent_class = NULL;
 
-GType
-gst_v4l2_color_balance_channel_get_type (void)
+GST_BOILERPLATE (GstV4l2ColorBalanceChannel,
+    gst_v4l2_color_balance_channel,
+    GstColorBalanceChannel, GST_TYPE_COLOR_BALANCE_CHANNEL);
+
+
+static void
+gst_v4l2_color_balance_channel_base_init (gpointer g_class)
 {
-  static GType gst_v4l2_color_balance_channel_type = 0;
-
-  if (!gst_v4l2_color_balance_channel_type) {
-    static const GTypeInfo v4l2_tuner_channel_info = {
-      sizeof (GstV4l2ColorBalanceChannelClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_v4l2_color_balance_channel_class_init,
-      NULL,
-      NULL,
-      sizeof (GstV4l2ColorBalanceChannel),
-      0,
-      (GInstanceInitFunc) gst_v4l2_color_balance_channel_init,
-      NULL
-    };
-
-    gst_v4l2_color_balance_channel_type =
-        g_type_register_static (GST_TYPE_COLOR_BALANCE_CHANNEL,
-        "GstV4l2ColorBalanceChannel", &v4l2_tuner_channel_info, 0);
-  }
-
-  return gst_v4l2_color_balance_channel_type;
 }
+
 
 static void
 gst_v4l2_color_balance_channel_class_init (GstV4l2ColorBalanceChannelClass *
     klass)
 {
-  parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
-gst_v4l2_color_balance_channel_init (GstV4l2ColorBalanceChannel * channel)
+gst_v4l2_color_balance_channel_init (GstV4l2ColorBalanceChannel * channel,
+    GstV4l2ColorBalanceChannelClass * klass)
 {
   channel->id = (guint32) - 1;
 }

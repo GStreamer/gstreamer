@@ -1,3 +1,13 @@
+2006-05-01  Edgard Lima <edgard.lima@indt.org.br>
+
+	* sys/v4l2/Makefile.am:
+	* sys/v4l2/gstv4l2colorbalance.c:
+	* sys/v4l2/gstv4l2xoverlay.c:
+	* sys/v4l2/v4l2_calls.c:
+	* tests/icles/Makefile.am:
+	* tests/icles/v4l2src-test.c:
+	Few improvements to move to good.
+
 2006-05-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
