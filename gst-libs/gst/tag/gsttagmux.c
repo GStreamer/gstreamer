@@ -25,7 +25,8 @@
 #include <string.h>
 #include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
-#include "gsttaglib.h"
+
+#include "gsttaglibmux.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_tag_lib_mux_debug);
 #define GST_CAT_DEFAULT gst_tag_lib_mux_debug

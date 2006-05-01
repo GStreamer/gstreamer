@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef GST_TAG_LIB_H
-#define GST_TAG_LIB_H
+#ifndef GST_TAG_LIB_MUX_H
+#define GST_TAG_LIB_MUX_H
 
 #include <gst/gst.h>
 
@@ -29,7 +29,7 @@ typedef struct _GstTagLibMux GstTagLibMux;
 typedef struct _GstTagLibMuxClass GstTagLibMuxClass;
 
 /* Definition of structure storing data for this element. */
-typedef struct _GstTagLibMux {
+struct _GstTagLibMux {
   GstElement    element;
 
   GstPad       *srcpad;
@@ -42,7 +42,7 @@ typedef struct _GstTagLibMux {
 };
 
 /* Standard definition defining a class for this element. */
-typedef struct _GstTagLibMuxClass {
+struct _GstTagLibMuxClass {
   GstElementClass parent_class;
 
   /* vfuncs */
