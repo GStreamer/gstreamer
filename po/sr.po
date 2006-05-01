@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-17 16:42+0100\n"
+"POT-Creation-Date: 2006-04-28 23:55+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,14 +16,27 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/libpng/gstpngdec.c:275 ext/libpng/gstpngdec.c:458
-#: gst/wavparse/gstwavparse.c:1231
+#: ext/libpng/gstpngdec.c:296 ext/libpng/gstpngdec.c:479
+#: gst/wavparse/gstwavparse.c:1311
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/avi/gstavimux.c:1019
+#: ext/esd/esdsink.c:251 ext/esd/esdsink.c:345
+msgid "Could not establish connection to sound server"
+msgstr ""
+
+#: ext/shout2/gstshout2.c:518
+#, fuzzy
+msgid "Could not connect to server"
+msgstr "Не могу да затворим управљачки уређај „%s“."
+
+#: gst/avi/gstavimux.c:1141
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."
+
+#: sys/ximage/gstximagesrc.c:527
+msgid "Changing resolution at runtime is not yet supported."
+msgstr ""
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Не могу да отворим датотеку „%s“ ради уписа."
@@ -54,9 +67,6 @@ msgstr "Улазног звука нема или је неисправан, А�
 
 #~ msgid "Could not close audio device \"%s\"."
 #~ msgstr "Не могу да отворим радио уређај '%s'"
-
-#~ msgid "Could not close control device \"%s\"."
-#~ msgstr "Не могу да затворим управљачки уређај „%s“."
 
 #~ msgid "Could not open video device \"%s\" for writing."
 #~ msgstr "Не могу да отворим видео уређај „%s“ ради уписа."

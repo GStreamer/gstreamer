@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-17 16:42+0100\n"
+"POT-Creation-Date: 2006-04-28 23:55+0200\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -15,14 +15,27 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/libpng/gstpngdec.c:275 ext/libpng/gstpngdec.c:458
-#: gst/wavparse/gstwavparse.c:1231
+#: ext/libpng/gstpngdec.c:296 ext/libpng/gstpngdec.c:479
+#: gst/wavparse/gstwavparse.c:1311
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/avi/gstavimux.c:1019
+#: ext/esd/esdsink.c:251 ext/esd/esdsink.c:345
+msgid "Could not establish connection to sound server"
+msgstr ""
+
+#: ext/shout2/gstshout2.c:518
+#, fuzzy
+msgid "Could not connect to server"
+msgstr "Kon instelapparaat \"%s\" niet sluiten."
+
+#: gst/avi/gstavimux.c:1141
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
+
+#: sys/ximage/gstximagesrc.c:527
+msgid "Changing resolution at runtime is not yet supported."
+msgstr ""
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Kon \"%s\" niet openen om te schrijven."
@@ -53,9 +66,6 @@ msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
 
 #~ msgid "Could not close audio device \"%s\"."
 #~ msgstr "Kon geluidsapparaat \"%s\" niet sluiten."
-
-#~ msgid "Could not close control device \"%s\"."
-#~ msgstr "Kon instelapparaat \"%s\" niet sluiten."
 
 #~ msgid "Could not open video device \"%s\" for writing."
 #~ msgstr "Kon videoapparaat \"%s\" niet openen om te schrijven."

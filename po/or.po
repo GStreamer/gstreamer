@@ -2,13 +2,13 @@
 # Copyright (C) 2004, Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-0.8.3 package.
 # Gora Mohanty <gora_mohanty@yahoo.co.in>, 2004.
-# $Id: or.po,v 1.21 2006/02/25 19:07:41 dolphy Exp $
+# $Id: or.po,v 1.22 2006/04/01 09:56:45 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-17 16:42+0100\n"
+"POT-Creation-Date: 2006-04-28 23:55+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -16,14 +16,27 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/libpng/gstpngdec.c:275 ext/libpng/gstpngdec.c:458
-#: gst/wavparse/gstwavparse.c:1231
+#: ext/libpng/gstpngdec.c:296 ext/libpng/gstpngdec.c:479
+#: gst/wavparse/gstwavparse.c:1311
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/avi/gstavimux.c:1019
+#: ext/esd/esdsink.c:251 ext/esd/esdsink.c:345
+msgid "Could not establish connection to sound server"
+msgstr ""
+
+#: ext/shout2/gstshout2.c:518
+#, fuzzy
+msgid "Could not connect to server"
+msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
+
+#: gst/avi/gstavimux.c:1141
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "ନିବେଶ ଧ୍ବନି ନାହିଁ ବା ଅବୈଧ ଅଛି. ଏ.ଭି.ଆଇ. ଧାରା ଭ୍ରଷ୍ଟ ହୋଇଯିବ."
+
+#: sys/ximage/gstximagesrc.c:527
+msgid "Changing resolution at runtime is not yet supported."
+msgstr ""
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "\"%s\" ଫାଇଲ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
@@ -54,9 +67,6 @@ msgstr "ନିବେଶ ଧ୍ବନି ନାହିଁ ବା ଅବୈଧ ଅ�
 
 #~ msgid "Could not close audio device \"%s\"."
 #~ msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
-
-#~ msgid "Could not close control device \"%s\"."
-#~ msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
 #~ msgid "Could not open video device \"%s\" for writing."
 #~ msgstr "\"%s\" ଭିଡିଓ ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
