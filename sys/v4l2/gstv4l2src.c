@@ -675,14 +675,12 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
       if (fps_n > 0) {
         gst_structure_set (structure, "framerate", GST_TYPE_FRACTION,
             fps_n, fps_d, NULL);
+      } else {
+        gst_structure_set (structure, "framerate", GST_TYPE_FRACTION_RANGE,
+            1, 1, 100, 1, NULL);
       }
 
       gst_caps_append_structure (caps, structure);
-
-      if (fps_n <= 0) {
-        gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION_RANGE,
-            1, 1, 100, 1, NULL);
-      }
 
     }
   }
