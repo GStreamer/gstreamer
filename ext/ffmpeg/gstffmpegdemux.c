@@ -1365,7 +1365,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     gchar *type_name, *typefind_name;
     gchar *p, *name = NULL;
     GstCaps *sinkcaps, *audiosrccaps, *videosrccaps;
-    gint rank = GST_RANK_MARGINAL;
+    gint rank = GST_RANK_NONE; /* don't autoplug unless more stable */
     gboolean register_typefind_func = TRUE;
 
     /* no emulators */
@@ -1375,6 +1375,11 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strncmp (in_plugin->name, "image", 5) ||
         !strcmp (in_plugin->name, "mpegvideo") ||
         !strcmp (in_plugin->name, "mjpeg"))
+      goto next;
+
+    /* these don't do what one would expect or
+     * are only partially functional/useful */
+    if (!strcmp (in_plugin->name, "aac"))
       goto next;
 
     /* these are known to be buggy or broken or not
