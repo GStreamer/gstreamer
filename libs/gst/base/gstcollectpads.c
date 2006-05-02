@@ -741,8 +741,8 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
 
       data->abidata.ABI.new_segment = TRUE;
 
-      /* forward to src-pad, sink-elements like to get the event */
-      gst_pad_event_default (pad, event);
+      /* For now we eat this event */
+      gst_event_unref (event);
       /* FIXME: collect-pads based elements need to create their own newsegment
          event (and only one really)
          (a) make the segment part of the GstCollectData structure of each pad,
@@ -751,6 +751,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
          catch the newsegment event and then pass it on to the original
          gstcollectpads event function
          (that's what avimux does for something IIRC)
+         see #340060
        */
       return TRUE;
     }

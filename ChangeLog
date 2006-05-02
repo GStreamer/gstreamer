@@ -1,3 +1,9 @@
+2006-05-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_event):
+	  back out the newsegment handling change, see #340060 for ongoing
+	  discussion
+
 2006-04-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-run.c: (get_candidates), (main):
