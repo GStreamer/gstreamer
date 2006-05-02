@@ -24,10 +24,10 @@
  *
  * <refsect2>
  * <para>
- * Parse a .wav file into raw or compressed audio. 
+ * Parse a .wav file into raw or compressed audio.
  * </para>
  * <para>
- * This element currently only supports pull based scheduling. 
+ * This element currently only supports pull based scheduling.
  * </para>
  * <title>Example launch line</title>
  * <para>
@@ -43,7 +43,6 @@
  * </programlisting>
  * Stream data from
  * </para>
- *
  * </refsect2>
  *
  * Last reviewed on 2006-03-03 (0.10.3)
