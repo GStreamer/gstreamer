@@ -381,6 +381,7 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
   /* update first, so that the property is set to the last
    * seqnum pushed */
   payload->seqnum++;
+  GST_LOG_OBJECT (payload, "setting RTP seqnum %d", payload->seqnum);
   gst_rtp_buffer_set_seq (buffer, payload->seqnum);
 
   /* add our random offset to the timestamp */
@@ -397,6 +398,7 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
 
     ts += rtime;
   }
+  GST_LOG_OBJECT (payload, "setting RTP timestamp %d", ts);
   gst_rtp_buffer_set_timestamp (buffer, ts);
 
   payload->timestamp = ts;
