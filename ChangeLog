@@ -1,3 +1,12 @@
+2006-05-02  Edward Hervey  <edward@fluendo.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_sink_convert),
+	(gst_mpeg2dec_src_query):
+	Remember the query duration format before passing it upstream since it
+	could have been modified.
+	Add GST_WARNING_OBJECT in sink convert function to detail why the
+	conversion didn't work.
+
 2006-04-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/mad/gstid3tag.c:

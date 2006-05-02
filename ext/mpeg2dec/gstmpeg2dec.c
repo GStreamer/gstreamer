@@ -1060,8 +1060,12 @@ gst_mpeg2dec_sink_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
         case GST_FORMAT_TIME:
           if (info->sequence && info->sequence->byte_rate) {
             *dest_value = GST_SECOND * src_value / info->sequence->byte_rate;
+            GST_WARNING_OBJECT (mpeg2dec, "dest_value:%" GST_TIME_FORMAT,
+                GST_TIME_ARGS (*dest_value));
             break;
-          }
+          } else if (info->sequence)
+            GST_WARNING_OBJECT (mpeg2dec,
+                "Cannot convert from BYTES to TIME since we don't know the bitrate at this point.");
         default:
           res = FALSE;
       }
@@ -1072,7 +1076,9 @@ gst_mpeg2dec_sink_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
           if (info->sequence && info->sequence->byte_rate) {
             *dest_value = src_value * info->sequence->byte_rate / GST_SECOND;
             break;
-          }
+          } else if (info->sequence)
+            GST_WARNING_OBJECT (mpeg2dec,
+                "Cannot convert from TIME to BYTES since we don't know the bitrate at this point.");
         default:
           res = FALSE;
       }
@@ -1195,6 +1201,9 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query)
       if ((peer = gst_pad_get_peer (mpeg2dec->sinkpad)) == NULL)
         goto error;
 
+      /* save requested format */
+      gst_query_parse_duration (query, &format, NULL);
+
       /* send to peer */
       if ((res = gst_pad_query (peer, query))) {
         gst_object_unref (peer);
@@ -1202,9 +1211,6 @@ gst_mpeg2dec_src_query (GstPad * pad, GstQuery * query)
       } else {
         GST_LOG_OBJECT (mpeg2dec, "query on peer pad failed, trying bytes");
       }
-
-      /* save requested format */
-      gst_query_parse_duration (query, &format, NULL);
 
       /* query peer for total length in bytes */
       gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
