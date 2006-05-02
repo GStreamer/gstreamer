@@ -1,3 +1,11 @@
+2006-05-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/playback/gstplaybin.c: (add_sink):
+	* gst/playback/test.c: (main):
+	* gst/playback/test5.c: (dump_element_stats):
+	* gst/playback/test6.c: (main):
+	  free cpas using gst_caps_unref, don't leak caps-strings
+
 2006-05-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/typefind/gsttypefindfunctions.c: (musepack_type_find),

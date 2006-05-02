@@ -115,11 +115,14 @@ main (gint argc, gchar * argv[])
     sinkpad = gst_element_get_pad (sink, "sink");
     res = gst_pad_link (srcpad, sinkpad);
     if (!res) {
+      GstCaps *caps;
       gchar *capsstr;
 
-      capsstr = gst_caps_to_string (gst_pad_get_caps (srcpad));
+      caps = gst_pad_get_caps (srcpad);
+      capsstr = gst_caps_to_string (caps);
       g_warning ("could not link %s", capsstr);
       g_free (capsstr);
+      gst_caps_unref (caps);
     }
     //g_signal_emit_by_name (G_OBJECT (player), "link_stream", obj, sinkpad);
   }

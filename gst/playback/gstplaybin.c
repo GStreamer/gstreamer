@@ -1109,7 +1109,7 @@ link_failed:
     GST_DEBUG_OBJECT (play_bin,
         "link failed when adding sink, caps %s, reason %d", capsstr, linkres);
     g_free (capsstr);
-    g_free (caps);
+    gst_caps_unref (caps);
 
     gst_element_set_state (sink, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (play_bin), sink);
@@ -1127,7 +1127,7 @@ subtitle_failed:
         "subtitle link failed when adding sink, caps %s, reason %d", capsstr,
         linkres);
     g_free (capsstr);
-    g_free (caps);
+    gst_caps_unref (caps);
 
     return TRUE;
   }

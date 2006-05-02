@@ -68,6 +68,7 @@ dump_element_stats (GstElement * element)
     str = gst_caps_to_string (caps);
     g_print (" caps: %s\n", str);
     g_free (str);
+    gst_caps_unref (caps);
 
     query = gst_query_new_duration (GST_FORMAT_TIME);
     if (gst_pad_query (pad, query)) {
