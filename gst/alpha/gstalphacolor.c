@@ -180,8 +180,15 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
   gst_caps_unref (local_caps);
   gst_caps_do_simplify (result);
 
-  GST_LOG ("transformed %s to %s", gst_caps_to_string (caps),
-      gst_caps_to_string (result));
+  {
+    gchar *caps_str, *result_str;
+
+    caps_str = gst_caps_to_string (caps);
+    result_str = gst_caps_to_string (result);
+    GST_LOG ("transformed %s to %s", caps_str, result_str);
+    g_free (caps_str);
+    g_free (result_str);
+  }
 
   return result;
 }

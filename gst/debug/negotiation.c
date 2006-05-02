@@ -237,6 +237,7 @@ gst_negotiation_update_caps (GstNegotiation * negotiation)
   GstCaps *srccaps;
   GstCaps *sinkcaps;
   GstCaps *icaps;
+  gchar *icapsstr;
 
   srccaps = gst_pad_get_allowed_caps (negotiation->srcpad);
   sinkcaps = gst_pad_get_allowed_caps (negotiation->sinkpad);
@@ -247,7 +248,9 @@ gst_negotiation_update_caps (GstNegotiation * negotiation)
 
   gst_caps_replace (&negotiation->caps, icaps);
   g_object_notify (G_OBJECT (negotiation), "allowed-caps");
-  g_print ("notify %s", gst_caps_to_string (icaps));
+  icapsstr = gst_caps_to_string (icaps);
+  GST_DEBUG ("notify %s", icapsstr);
+  g_free (icapsstr);
 }
 
 static void
