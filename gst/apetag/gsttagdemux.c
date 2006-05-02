@@ -129,6 +129,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static void gst_tag_demux_dispose (GObject * object);
 
 static GstFlowReturn gst_tag_demux_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_tag_demux_sink_event (GstPad * pad, GstEvent * event);
 
 static gboolean gst_tag_demux_src_activate_pull (GstPad * pad, gboolean active);
 static GstFlowReturn gst_tag_demux_read_range (GstTagDemux * tagdemux,
@@ -260,6 +261,8 @@ gst_tag_demux_init (GstTagDemux * demux, GstTagDemuxClass * gclass)
 
     gst_pad_set_activate_function (demux->priv->sinkpad,
         GST_DEBUG_FUNCPTR (gst_tag_demux_sink_activate));
+    gst_pad_set_event_function (demux->priv->sinkpad,
+        GST_DEBUG_FUNCPTR (gst_tag_demux_sink_event));
     gst_pad_set_chain_function (demux->priv->sinkpad,
         GST_DEBUG_FUNCPTR (gst_tag_demux_chain));
     gst_element_add_pad (GST_ELEMENT (demux), demux->priv->sinkpad);
@@ -632,6 +635,31 @@ error:
   GST_DEBUG_OBJECT (demux, "error in chain function");
 
   return GST_FLOW_ERROR;
+}
+
+static gboolean
+gst_tag_demux_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstTagDemux *demux;
+  gboolean ret;
+
+  demux = GST_TAG_DEMUX (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      if (demux->priv->srcpad == NULL) {
+        GST_WARNING_OBJECT (demux, "EOS before we found a type");
+        GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+      }
+      ret = gst_pad_event_default (pad, event);
+      break;
+    default:
+      ret = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  gst_object_unref (demux);
+  return ret;
 }
 
 static gboolean

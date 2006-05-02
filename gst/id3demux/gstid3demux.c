@@ -95,7 +95,7 @@ static void gst_id3demux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_id3demux_chain (GstPad * pad, GstBuffer * buf);
-
+static gboolean gst_id3demux_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_id3demux_src_activate_pull (GstPad * pad, gboolean active);
 static GstFlowReturn gst_id3demux_read_range (GstID3Demux * id3demux,
     guint64 offset, guint length, GstBuffer ** buffer);
@@ -217,6 +217,8 @@ gst_id3demux_init (GstID3Demux * id3demux)
           "sink"), "sink");
   gst_pad_set_activate_function (id3demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_id3demux_sink_activate));
+  gst_pad_set_event_function (id3demux->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_id3demux_sink_event));
   gst_pad_set_chain_function (id3demux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_id3demux_chain));
   gst_element_add_pad (GST_ELEMENT (id3demux), id3demux->sinkpad);
@@ -531,6 +533,32 @@ error:
 
   return GST_FLOW_ERROR;
 }
+
+static gboolean
+gst_id3demux_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstID3Demux *demux;
+  gboolean ret;
+
+  demux = GST_ID3DEMUX (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      if (demux->srcpad == NULL) {
+        GST_WARNING_OBJECT (demux, "EOS before we found a type");
+        GST_ELEMENT_ERROR (demux, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
+      }
+      ret = gst_pad_event_default (pad, event);
+      break;
+    default:
+      ret = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  gst_object_unref (demux);
+  return ret;
+}
+
 
 static void
 gst_id3demux_set_property (GObject * object, guint prop_id,
