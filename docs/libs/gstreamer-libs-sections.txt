@@ -159,12 +159,14 @@ gst_base_src_get_type
 GstBaseSink
 GstBaseSinkClass
 
-GST_BASE_SINK_PAD
-
 gst_base_sink_set_sync
 gst_base_sink_get_sync
 gst_base_sink_set_max_lateness
 gst_base_sink_get_max_lateness
+gst_base_sink_is_qos_enabled
+gst_base_sink_set_qos_enabled
+
+GST_BASE_SINK_PAD
 
 <SUBSECTION Standard>
 GST_BASE_SINK
@@ -175,6 +177,7 @@ GST_BASE_SINK_CLASS
 GST_IS_BASE_SINK_CLASS
 GST_BASE_SINK_GET_CLASS
 <SUBSECTION Private>
+GstBaseSinkPrivate
 gst_base_sink_get_type
 </SECTION>
 
@@ -189,6 +192,9 @@ gst_base_transform_is_passthrough
 gst_base_transform_set_passthrough
 gst_base_transform_is_in_place
 gst_base_transform_set_in_place
+gst_base_transform_is_qos_enabled
+gst_base_transform_set_qos_enabled
+gst_base_transform_update_qos
 
 GST_BASE_TRANSFORM_SINK_NAME
 GST_BASE_TRANSFORM_SRC_NAME
@@ -205,6 +211,7 @@ GST_IS_BASE_TRANSFORM_CLASS
 GST_BASE_TRANSFORM_GET_CLASS
 GST_BASE_TRANSFORM_CAST
 <SUBSECTION Private>
+GstBaseTransformPrivate
 gst_base_transform_get_type
 </SECTION>
 
