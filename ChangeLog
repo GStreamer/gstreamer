@@ -1,3 +1,9 @@
+2006-05-03  Michael Smith  <msmith@fluendo.com>
+
+	* ext/cairo/gsttimeoverlay.c: (gst_cairo_time_overlay_transform):
+	  Fix timeoverlay for non-multiple-of-4 widths. This fourcc crap
+	  SUCKS.
+
 2006-05-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/alpha/gstalphacolor.c: (gst_alpha_color_transform_caps):

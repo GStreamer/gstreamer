@@ -181,6 +181,7 @@ gst_cairo_time_overlay_transform (GstBaseTransform * trans, GstBuffer * in,
   int width;
   int height;
   int b_width;
+  int stride_y, stride_u, stride_v;
   char *string;
   int i, j;
   unsigned char *image;
@@ -238,16 +239,22 @@ gst_cairo_time_overlay_transform (GstBaseTransform * trans, GstBuffer * in,
   if (b_width > width)
     b_width = width;
 
+  stride_y = GST_VIDEO_I420_Y_ROWSTRIDE (width);
+  stride_u = GST_VIDEO_I420_U_ROWSTRIDE (width);
+  stride_v = GST_VIDEO_I420_V_ROWSTRIDE (width);
+
   memcpy (dest, src, GST_BUFFER_SIZE (in));
   for (i = 0; i < timeoverlay->text_height; i++) {
     for (j = 0; j < b_width; j++) {
-      ((unsigned char *) dest)[i * width + j] = image[(i * width + j) * 4 + 0];
+      ((unsigned char *) dest)[i * stride_y + j] =
+          image[(i * width + j) * 4 + 0];
     }
   }
   for (i = 0; i < timeoverlay->text_height / 2; i++) {
-    memset (dest + width * height + i * (width / 2), 128, b_width / 2);
-    memset (dest + width * height + (width / 2) * (height / 2) +
-        i * (width / 2), 128, b_width / 2);
+    memset (dest + GST_VIDEO_I420_U_OFFSET (width, height) + i * stride_u, 128,
+        b_width / 2);
+    memset (dest + GST_VIDEO_I420_V_OFFSET (width, height) + i * stride_v, 128,
+        b_width / 2);
   }
 
   cairo_destroy (text_cairo);
