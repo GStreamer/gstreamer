@@ -8,7 +8,7 @@ REGISTRY_ENVIRONMENT = \
 TESTS_ENVIRONMENT = \
 	$(REGISTRY_ENVIRONMENT)					\
 	GST_PLUGIN_SYSTEM_PATH=					\
-	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(GST_PLUGINS_DIR)
+	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)
 
 # ths core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.xml
@@ -27,12 +27,13 @@ check_PROGRAMS = \
 	elements/matroskamux \
 	elements/cmmldec \
 	elements/cmmlenc \
-	elements/icydemux
+	elements/icydemux \
+	$(check_taglib)
     
 TESTS = $(check_PROGRAMS)
 
 # these tests don't even pass
-noinst_PROGRAMS = $(check_taglib)
+noinst_PROGRAMS =
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)

@@ -1,3 +1,13 @@
+2006-05-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  figure out where plugins-base plugins are
+	* tests/check/Makefile.am:
+	  use plugins-base plugins, so we have typefind functions
+	* tests/check/elements/id3v2mux.c: (test_taglib_id3mux_with_tags):
+	  increase num-buffers, this makes sure the test errors out instead
+	  of timing out when no typefind functions are present
+
 2006-05-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/Makefile.am:

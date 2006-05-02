@@ -294,7 +294,7 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
   /* set up source */
   g_object_set (fakesrc, "signal-handoffs", TRUE, "can-activate-pull", FALSE,
       "filltype", 2, "sizetype", 2, "sizemax", MP3_FRAME_SIZE,
-      "num-buffers", 16, NULL);
+      "num-buffers", 256, NULL);
 
   offset = 0;
   g_signal_connect (fakesrc, "handoff", G_CALLBACK (fill_mp3_buffer), &offset);
