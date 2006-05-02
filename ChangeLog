@@ -1,5 +1,13 @@
 2006-05-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain),
+	(gst_id3demux_sink_activate):
+	  Let core insert default error message for TYPE_NOT_FOUND
+	  errors, it's just as good as our own and has the added
+	  bonus of being translated.
+
+2006-05-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_init),
 	(gst_tag_demux_sink_event):
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_init),
