@@ -1,3 +1,15 @@
+2006-05-03  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset),
+	(mpeg_ts_probe_headers), (mpeg_ts_type_find):
+
+	When typefinding an MP3 in push-based mode, don't penalise the
+	probability down to 74% when we found 5 valid frames just because we
+	can't peek the end of the file.
+
+	Make the probability for detecting MPEG Transport Streams based on the
+	number of sequential headers we successfully detected.
+
 2006-05-03  Wim Taymans  <wim@fluendo.com>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_sink_event),

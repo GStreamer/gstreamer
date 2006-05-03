@@ -692,9 +692,7 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
             GST_MP3_TYPEFIND_TRY_SYNC);
         /* make sure we're not id3 tagged */
         head_data = gst_type_find_peek (tf, -128, 3);
-        if (!head_data) {
-          probability = probability * 4 / 5;
-        } else if (memcmp (head_data, "TAG", 3) == 0) {
+        if (head_data && (memcmp (head_data, "TAG", 3) == 0)) {
           probability = 0;
         }
         g_assert (probability <= GST_TYPE_FIND_MAXIMUM);
@@ -1091,11 +1089,13 @@ static GstStaticCaps mpegts_caps = GST_STATIC_CAPS ("video/mpegts, "
     "systemstream = (boolean) true, packetsize = (int) [ 188, 208 ]");
 #define MPEGTS_CAPS gst_static_caps_get(&mpegts_caps)
 
-#define GST_MPEGTS_TYPEFIND_TRY_HEADERS 4
+#define GST_MPEGTS_TYPEFIND_MIN_HEADERS 4
+#define GST_MPEGTS_TYPEFIND_MAX_HEADERS 10
 #define GST_MPEGTS_MAX_PACKET_SIZE 204
-#define GST_MPEGTS_TYPEFIND_MAX_SYNC (10 * GST_MPEGTS_MAX_PACKET_SIZE)
 #define GST_MPEGTS_TYPEFIND_SYNC_SIZE \
-            (GST_MPEGTS_TYPEFIND_TRY_HEADERS * GST_MPEGTS_MAX_PACKET_SIZE)
+            (GST_MPEGTS_TYPEFIND_MIN_HEADERS * GST_MPEGTS_MAX_PACKET_SIZE)
+#define GST_MPEGTS_TYPEFIND_MAX_SYNC \
+            (GST_MPEGTS_TYPEFIND_MAX_HEADERS * GST_MPEGTS_MAX_PACKET_SIZE)
 
 #define MPEGTS_HDR_SIZE 4
 #define IS_MPEGTS_HEADER(data) (((data)[0] == 0x47) && \
@@ -1111,7 +1111,7 @@ mpeg_ts_probe_headers (GstTypeFind * tf, guint64 offset, gint packet_size)
   gint found = 1;
   guint8 *data = NULL;
 
-  while (found < GST_MPEGTS_TYPEFIND_TRY_HEADERS) {
+  while (found < GST_MPEGTS_TYPEFIND_MAX_HEADERS) {
     offset += packet_size;
 
     data = gst_type_find_peek (tf, offset, MPEGTS_HDR_SIZE);
@@ -1151,14 +1151,24 @@ mpeg_ts_type_find (GstTypeFind * tf, gpointer unused)
       gint p;
 
       for (p = 0; p < n_pack_sizes; p++) {
+        gint found;
+
         /* Probe ahead at size pack_sizes[p] */
-        if (mpeg_ts_probe_headers (tf, skipped, pack_sizes[p]) >=
-            GST_MPEGTS_TYPEFIND_TRY_HEADERS) {
+        found = mpeg_ts_probe_headers (tf, skipped, pack_sizes[p]);
+        if (found >= GST_MPEGTS_TYPEFIND_MIN_HEADERS) {
+          gint probability;
           GstCaps *caps = gst_caps_copy (MPEGTS_CAPS);
 
           gst_structure_set (gst_caps_get_structure (caps, 0), "packetsize",
               G_TYPE_INT, pack_sizes[p], NULL);
-          gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
+
+          /* found at least 4 headers. 10 headers = MAXIMUM probability. 
+           * Arbitrarily, I assigned 10% probability for each header we
+           * found, 40% -> 100% */
+
+          probability = 10 * MIN (found, 10);
+
+          gst_type_find_suggest (tf, probability, caps);
           gst_caps_unref (caps);
           return;
         }
