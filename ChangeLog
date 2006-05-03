@@ -1,3 +1,10 @@
+2006-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* configure.ac:
+	* win32/common/config.h.in:
+	  add win32 stuff
+
 2006-05-03  Michael Smith  <msmith@fluendo.com>
 
 	* ext/cairo/gsttimeoverlay.c: (gst_cairo_time_overlay_transform):
