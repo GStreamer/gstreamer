@@ -26,16 +26,16 @@
  *
  * #GstBaseSink is the base class for sink elements in GStreamer, such as
  * xvimagesink or filesink. It is a layer on top of #GstElement that provides a
- * simplified interface to plugin writers. #GstBaseSink handles many details 
- * for you, for example: preroll, clock synchronization, state changes, 
- * activation in push or pull mode, and queries. 
- * 
- * In most cases, when writing sink elements, there is no need to implement 
- * class methods from #GstElement or to set functions on pads, because the 
+ * simplified interface to plugin writers. #GstBaseSink handles many details
+ * for you, for example: preroll, clock synchronization, state changes,
+ * activation in push or pull mode, and queries.
+ *
+ * In most cases, when writing sink elements, there is no need to implement
+ * class methods from #GstElement or to set functions on pads, because the
  * #GstBaseSink infrastructure should be sufficient.
  *
- * #GstBaseSink provides support for exactly one sink pad, which should be 
- * named "sink". A sink implementation (subclass of GstBaseSink) should 
+ * #GstBaseSink provides support for exactly one sink pad, which should be
+ * named "sink". A sink implementation (subclass of GstBaseSink) should
  * install a pad template in its base_init function, like so:
  * <programlisting>
  * static void
@@ -53,15 +53,15 @@
  * </programlisting>
  *
  * #GstBaseSink will handle the prerolling correctly. This means that it will
- * return GST_STATE_CHANGE_ASYNC from a state change to PAUSED until the first 
- * buffer arrives in this element. The base class will call the 
- * GstBaseSink::preroll vmethod with this preroll buffer and will then commit 
+ * return GST_STATE_CHANGE_ASYNC from a state change to PAUSED until the first
+ * buffer arrives in this element. The base class will call the
+ * GstBaseSink::preroll vmethod with this preroll buffer and will then commit
  * the state change to the next asynchronously pending state.
  *
- * When the element is set to PLAYING, #GstBaseSink will synchronise on the 
+ * When the element is set to PLAYING, #GstBaseSink will synchronise on the
  * clock using the times returned from ::get_times. If this function returns
  * #GST_CLOCK_TIME_NONE for the start time, no synchronisation will be done.
- * Synchronisation can be disabled entirely by setting the object "sync" 
+ * Synchronisation can be disabled entirely by setting the object "sync"
  * property to FALSE.
  *
  * After synchronisation the virtual method #GstBaseSink::render will be called.
@@ -70,61 +70,61 @@
  * Since 0.10.3 subclasses that synchronise on the clock in the ::render method
  * are supported as well. These classes typically receive a buffer in the render
  * method and can then potentially block on the clock while rendering. A typical
- * example is an audiosink. 
+ * example is an audiosink.
  *
- * Upon receiving the EOS event in the PLAYING state, #GstBaseSink will wait 
- * for the clock to reach the time indicated by the stop time of the last 
- * ::get_times call before posting an EOS message. When the element receives 
- * EOS in PAUSED, preroll completes, the event is queued and an EOS message is 
+ * Upon receiving the EOS event in the PLAYING state, #GstBaseSink will wait
+ * for the clock to reach the time indicated by the stop time of the last
+ * ::get_times call before posting an EOS message. When the element receives
+ * EOS in PAUSED, preroll completes, the event is queued and an EOS message is
  * posted when going to PLAYING.
- * 
+ *
  * #GstBaseSink will internally use the GST_EVENT_NEW_SEGMENT events to schedule
  * synchronisation and clipping of buffers. Buffers that fall completely outside
- * of the current segment are dropped. Buffers that fall partially in the 
- * segment are rendered (and prerolled). Subclasses should do any subbuffer 
+ * of the current segment are dropped. Buffers that fall partially in the
+ * segment are rendered (and prerolled). Subclasses should do any subbuffer
  * clipping themselves when needed.
- * 
- * #GstBaseSink will by default report the current playback position in 
- * GST_FORMAT_TIME based on the current clock time and segment information. 
- * If no clock has been set on the element, the query will be forwarded 
+ *
+ * #GstBaseSink will by default report the current playback position in
+ * GST_FORMAT_TIME based on the current clock time and segment information.
+ * If no clock has been set on the element, the query will be forwarded
  * upstream.
  *
- * The ::set_caps function will be called when the subclass should configure 
+ * The ::set_caps function will be called when the subclass should configure
  * itself to process a specific media type.
- * 
- * The ::start and ::stop virtual methods will be called when resources should 
- * be allocated. Any ::preroll, ::render  and ::set_caps function will be 
- * called between the ::start and ::stop calls. 
  *
- * The ::event virtual method will be called when an event is received by 
+ * The ::start and ::stop virtual methods will be called when resources should
+ * be allocated. Any ::preroll, ::render  and ::set_caps function will be
+ * called between the ::start and ::stop calls.
+ *
+ * The ::event virtual method will be called when an event is received by
  * #GstBaseSink. Normally this method should only be overriden by very specific
- * elements (such as file sinks) which need to handle the newsegment event 
+ * elements (such as file sinks) which need to handle the newsegment event
  * specially.
- * 
- * #GstBaseSink provides an overridable ::buffer_alloc function that can be 
+ *
+ * #GstBaseSink provides an overridable ::buffer_alloc function that can be
  * used by sinks that want to do reverse negotiation or to provide
  * custom buffers (hardware buffers for example) to upstream elements.
  *
  * The ::unlock method is called when the elements should unblock any blocking
  * operations they perform in the ::render method. This is mostly useful when
- * the ::render method performs a blocking write on a file descriptor, for 
+ * the ::render method performs a blocking write on a file descriptor, for
  * example.
  *
- * The max-lateness property affects how the sink deals with buffers that 
- * arrive too late in the sink. A buffer arrives too late in the sink when 
- * the presentation time (as a combination of the last segment, buffer 
- * timestamp and element base_time) plus the duration is before the current 
- * time of the clock. 
+ * The max-lateness property affects how the sink deals with buffers that
+ * arrive too late in the sink. A buffer arrives too late in the sink when
+ * the presentation time (as a combination of the last segment, buffer
+ * timestamp and element base_time) plus the duration is before the current
+ * time of the clock.
  * If the frame is later than max-lateness, the sink will drop the buffer
- * without calling the render method. 
- * This feature is disabled if sync is disabled, the ::get-times method does 
- * not return a valid start time or max-lateness is set to -1 (the default). 
- * Subclasses can use gst_base_sink_set_max_lateness() to configure the 
+ * without calling the render method.
+ * This feature is disabled if sync is disabled, the ::get-times method does
+ * not return a valid start time or max-lateness is set to -1 (the default).
+ * Subclasses can use gst_base_sink_set_max_lateness() to configure the
  * max-lateness value.
  *
- * The qos property will enable the quality-of-service features of the basesink 
- * which gather statistics about the real-time performance of the clock 
- * synchronisation. For each dropped buffer it will also send a QoS message 
+ * The qos property will enable the quality-of-service features of the basesink
+ * which gather statistics about the real-time performance of the clock
+ * synchronisation. For each dropped buffer it will also send a QoS message
  * upstream.
  *
  * Last reviewed on 2006-03-31 (0.10.5)
@@ -145,7 +145,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_base_sink_debug);
 #define GST_BASE_SINK_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BASE_SINK, GstBaseSinkPrivate))
 
-/* FIXME, some stuff in ABI.data and other in Private... 
+/* FIXME, some stuff in ABI.data and other in Private...
  * Make up your mind please.
  */
 struct _GstBaseSinkPrivate
@@ -171,9 +171,9 @@ struct _GstBaseSinkPrivate
   GstClockTime avg_duration;
   gdouble avg_rate;
 
-  /* these are done on system time. avg_jitter and avg_render are 
+  /* these are done on system time. avg_jitter and avg_render are
    * compared to eachother to see if the rendering time takes a
-   * huge amount of the processing, If so we are flooded with 
+   * huge amount of the processing, If so we are flooded with
    * buffers. */
   GstClockTime last_left_systime;
   GstClockTime avg_jitter;
@@ -208,8 +208,8 @@ enum
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE /* fixme: enable me */
 #define DEFAULT_CAN_ACTIVATE_PUSH TRUE
 
-#define DEFAULT_PREROLL_QUEUE_LEN 	0
-#define DEFAULT_SYNC 			TRUE
+#define DEFAULT_PREROLL_QUEUE_LEN	0
+#define DEFAULT_SYNC			TRUE
 #define DEFAULT_MAX_LATENESS		-1
 #define DEFAULT_QOS			FALSE
 
