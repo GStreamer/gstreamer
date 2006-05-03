@@ -1,5 +1,6 @@
 /* GStreamer trm plugin
  * Copyright (C) 2004 Jeremy Simon <jsimon13@yahoo.fr>
+ * Copyright (C) 2006 James Livingston <doclivingston gmail com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,23 +27,21 @@
 
 #include "gsttrm.h"
 
-/* musicbrainz signals and args */
-enum
-{
-  SIGNAL_SIGNATURE_AVAILABLE,
-  LAST_SIGNAL
-};
-
-
 enum
 {
   ARG_0,
-  ARG_SIGNATURE,
-  ARG_ASCII_SIGNATURE,
   ARG_PROXY_ADDRESS,
   ARG_PROXY_PORT
 };
 
+GST_DEBUG_CATEGORY_STATIC (trm_debug);
+#define GST_CAT_DEFAULT trm_debug
+
+static const GstElementDetails gst_trm_details =
+GST_ELEMENT_DETAILS ("MusicBrainz TRM generator",
+    "Filter/Analyzer/Audio",
+    "Compute MusicBrainz TRM Id using libmusicbrainz",
+    "Jeremy Simon <jsimon13@yahoo.fr>");
 
 GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -67,59 +66,28 @@ GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 2 ]")
     );
 
+#define DEFAULT_PROXY_ADDRESS  NULL
+#define DEFAULT_PROXY_PORT     8080
 
-static void gst_musicbrainz_class_init (GstMusicBrainzClass * klass);
-static void gst_musicbrainz_base_init (GstMusicBrainzClass * klass);
-static void gst_musicbrainz_init (GstMusicBrainz * musicbrainz);
+static GstFlowReturn gst_trm_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_trm_setcaps (GstPad * pad, GstCaps * caps);
 
-static void gst_musicbrainz_chain (GstPad * pad, GstData * data);
-
-static void gst_musicbrainz_set_property (GObject * object, guint prop_id,
+static void gst_trm_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_musicbrainz_get_property (GObject * object, guint prop_id,
+static void gst_trm_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn
-gst_musicbrainz_change_state (GstElement * element, GstStateChange transition);
+gst_trm_change_state (GstElement * element, GstStateChange transition);
+
+static void gst_trm_emit_signature (GstTRM * trm);
 
 
-static GstElementClass *parent_class = NULL;
-static guint gst_musicbrainz_signals[LAST_SIGNAL] = { 0 };
-
-
-GType
-gst_musicbrainz_get_type (void)
-{
-  static GType musicbrainz_type = 0;
-
-  if (!musicbrainz_type) {
-    static const GTypeInfo musicbrainz_info = {
-      sizeof (GstMusicBrainzClass),
-      (GBaseInitFunc) gst_musicbrainz_base_init,
-      NULL,
-      (GClassInitFunc) gst_musicbrainz_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMusicBrainz),
-      0,
-      (GInstanceInitFunc) gst_musicbrainz_init,
-    };
-
-    musicbrainz_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstMusicBrainz", &musicbrainz_info, 0);
-  }
-  return musicbrainz_type;
-}
-
+GST_BOILERPLATE (GstTRM, gst_trm, GstElement, GST_TYPE_ELEMENT);
 
 static void
-gst_musicbrainz_base_init (GstMusicBrainzClass * klass)
+gst_trm_base_init (gpointer klass)
 {
-  static const GstElementDetails gst_musicbrainz_details =
-      GST_ELEMENT_DETAILS ("Musicbrainz TRM generator",
-      "Filter/Analyzer/Audio",
-      "Compute TRM Id from muscibrainz",
-      "Jeremy Simon <jsimon13@yahoo.fr>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
@@ -127,13 +95,11 @@ gst_musicbrainz_base_init (GstMusicBrainzClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details (element_class, &gst_musicbrainz_details);
+  gst_element_class_set_details (element_class, &gst_trm_details);
 }
 
-
-
 static void
-gst_musicbrainz_class_init (GstMusicBrainzClass * klass)
+gst_trm_class_init (GstTRMClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -141,183 +107,175 @@ gst_musicbrainz_class_init (GstMusicBrainzClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
+  gobject_class->set_property = gst_trm_set_property;
+  gobject_class->get_property = gst_trm_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SIGNATURE,
-      g_param_spec_string ("signature", "signature", "signature",
-          NULL, G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ASCII_SIGNATURE,
-      g_param_spec_string ("ascii_signature", "ascii_signature",
-          "ascii_signature", NULL, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_PROXY_ADDRESS,
+      g_param_spec_string ("proxy-address", "proxy address", "proxy address",
+          DEFAULT_PROXY_ADDRESS, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_PROXY_PORT,
+      g_param_spec_uint ("proxy-port", "proxy port", "proxy port",
+          1, 65535, DEFAULT_PROXY_PORT, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROXY_ADDRESS,
-      g_param_spec_string ("proxy_address", "proxy address", "proxy address",
-          NULL, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PROXY_PORT,
-      g_param_spec_uint ("proxy_port", "proxy port", "proxy port",
-          1, 65535, 8080, G_PARAM_READWRITE));
-
-  gobject_class->set_property = gst_musicbrainz_set_property;
-  gobject_class->get_property = gst_musicbrainz_get_property;
-
-  gst_musicbrainz_signals[SIGNAL_SIGNATURE_AVAILABLE] =
-      g_signal_new ("signature-available", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMusicBrainzClass,
-          signature_available), NULL, NULL, g_cclosure_marshal_VOID__VOID,
-      G_TYPE_NONE, 0);
-
-  gstelement_class->change_state = gst_musicbrainz_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_trm_change_state);
 }
 
-static GstPadLinkReturn
-gst_musicbrainz_sinkconnect (GstPad * pad, const GstCaps * caps)
+static void
+gst_trm_init (GstTRM * trm, GstTRMClass * klass)
 {
-  GstMusicBrainz *musicbrainz;
+  trm->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
+  gst_pad_set_chain_function (trm->sinkpad, GST_DEBUG_FUNCPTR (gst_trm_chain));
+  gst_pad_set_setcaps_function (trm->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_trm_setcaps));
+  gst_element_add_pad (GST_ELEMENT (trm), trm->sinkpad);
+
+  trm->srcpad = gst_pad_new_from_static_template (&src_template, "src");
+  gst_element_add_pad (GST_ELEMENT (trm), trm->srcpad);
+
+  trm->proxy_address = g_strdup (DEFAULT_PROXY_ADDRESS);
+  trm->proxy_port = DEFAULT_PROXY_PORT;
+
+  trm->trm = NULL;
+  trm->data_available = FALSE;
+  trm->signature_available = FALSE;
+}
+
+static gboolean
+gst_trm_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstTRM *trm;
   GstStructure *structure;
   const gchar *mimetype;
   gint width;
 
-  musicbrainz = GST_MUSICBRAINZ (gst_pad_get_parent (pad));
+  trm = GST_TRM (gst_pad_get_parent (pad));
 
-  musicbrainz->caps = caps;
+  if (!gst_pad_set_caps (trm->srcpad, caps))
+    return FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
   mimetype = gst_structure_get_name (structure);
 
-  if (!gst_structure_get_int (structure, "depth", &musicbrainz->depth) ||
-      !gst_structure_get_int (structure, "width", &width))
-    return GST_PAD_LINK_REFUSED;
-
-  if (musicbrainz->depth != width)
-    return GST_PAD_LINK_REFUSED;
-
-  if (!gst_structure_get_int (structure, "channels", &musicbrainz->channels))
-    return GST_PAD_LINK_REFUSED;
-
-  if (!gst_structure_get_int (structure, "rate", &musicbrainz->rate))
-    return GST_PAD_LINK_REFUSED;
-
-  trm_SetPCMDataInfo (musicbrainz->trm, musicbrainz->rate,
-      musicbrainz->channels, musicbrainz->depth);
-  musicbrainz->linked = TRUE;
-
-  return GST_PAD_LINK_OK;
-}
-
-
-static void
-gst_musicbrainz_init (GstMusicBrainz * musicbrainz)
-{
-  musicbrainz->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
-  gst_element_add_pad (GST_ELEMENT (musicbrainz), musicbrainz->sinkpad);
-  gst_pad_set_chain_function (musicbrainz->sinkpad, gst_musicbrainz_chain);
-  gst_pad_set_link_function (musicbrainz->sinkpad, gst_musicbrainz_sinkconnect);
-
-  musicbrainz->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
-  gst_element_add_pad (GST_ELEMENT (musicbrainz), musicbrainz->srcpad);
-
-  musicbrainz->proxy_port = 8080;
-
-  musicbrainz->trm = NULL;
-  musicbrainz->linked = FALSE;
-  musicbrainz->data_available = FALSE;
-  musicbrainz->total_time = 0;
-  musicbrainz->signature_available = FALSE;
-
-  GST_OBJECT_FLAG_SET (musicbrainz, GST_ELEMENT_EVENT_AWARE);
-  /*GST_OBJECT_FLAG_SET(musicbrainz, GST_ELEMENT_THREAD_SUGGESTED); */
-}
-
-static void
-gst_trm_handle_event (GstPad * pad, GstData * data)
-{
-  GstEvent *event = GST_EVENT (data);
-
-  gst_pad_event_default (pad, event);
-}
-
-static void
-gst_musicbrainz_chain (GstPad * pad, GstData * data)
-{
-  GstMusicBrainz *musicbrainz;
-  GstBuffer *buf;
-  static GstFormat format = GST_FORMAT_TIME;
-  gint64 nanos;
-
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-
-  musicbrainz = GST_MUSICBRAINZ (gst_pad_get_parent (pad));
-
-  if (GST_IS_EVENT (data)) {
-    gst_trm_handle_event (pad, data);
-    return;
+  if (!gst_structure_get_int (structure, "depth", &trm->depth) ||
+      !gst_structure_get_int (structure, "width", &width) ||
+      !gst_structure_get_int (structure, "channels", &trm->channels) ||
+      !gst_structure_get_int (structure, "rate", &trm->rate)) {
+    GST_DEBUG_OBJECT (trm, "failed to extract depth, width, channels or rate");
+    goto failure;
   }
 
-  buf = GST_BUFFER (data);
+  if (trm->depth != width) {
+    GST_DEBUG_OBJECT (trm, "depth != width (%d != %d)", trm->depth != width);
+    goto failure;
+  }
 
-  if (musicbrainz->linked && !musicbrainz->data_available)
-    if (gst_pad_query (gst_pad_get_peer (pad), GST_QUERY_TOTAL, &format,
-            &nanos)) {
-      musicbrainz->total_time = nanos / GST_SECOND;
-      trm_SetSongLength (musicbrainz->trm, musicbrainz->total_time);
-      musicbrainz->data_available = TRUE;
+  trm_SetPCMDataInfo (trm->trm, trm->rate, trm->channels, trm->depth);
 
-      gst_pad_try_set_caps (musicbrainz->srcpad, musicbrainz->caps);
+  gst_object_unref (trm);
+  return TRUE;
+
+/* ERRORS */
+failure:
+  {
+    GST_WARNING_OBJECT (trm, "FAILED with caps %" GST_PTR_FORMAT, caps);
+    gst_object_unref (trm);
+    return FALSE;
+  }
+}
+
+static GstFlowReturn
+gst_trm_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstTRM *trm = GST_TRM (GST_PAD_PARENT (pad));
+
+  if (!trm->data_available) {
+    GstFormat tformat = GST_FORMAT_TIME;
+    gint64 total_duration;
+
+    /* FIXME: maybe we should only query this once we have as much data as
+     * we need (30secs or so), to get a better estimation of the length in
+     * the case of VBR files? */
+    if (gst_pad_query_peer_duration (pad, &tformat, &total_duration)) {
+      total_duration /= GST_SECOND;
+      trm_SetSongLength (trm->trm, total_duration);
+      trm->data_available = TRUE;
     }
+  }
 
-  if (!musicbrainz->signature_available
-      && trm_GenerateSignature (musicbrainz->trm, GST_BUFFER_DATA (buf),
+  if (!trm->signature_available
+      && trm_GenerateSignature (trm->trm, (char *) GST_BUFFER_DATA (buf),
           GST_BUFFER_SIZE (buf))) {
     GST_DEBUG ("Signature");
 
-    if (musicbrainz->proxy_address != NULL) {
-      if (!trm_SetProxy (musicbrainz->trm, musicbrainz->proxy_address,
-              musicbrainz->proxy_port))
-        GST_ELEMENT_ERROR (musicbrainz, RESOURCE, SETTINGS, (NULL),
-            ("Unable to set proxy server for trm lookup"));
+    GST_OBJECT_LOCK (trm);
+    if (trm->proxy_address != NULL) {
+      if (!trm_SetProxy (trm->trm, trm->proxy_address, trm->proxy_port)) {
+        GST_OBJECT_UNLOCK (trm);
+        goto proxy_setup_error;
+      }
     }
+    GST_OBJECT_UNLOCK (trm);
 
-    trm_FinalizeSignature (musicbrainz->trm, musicbrainz->signature, NULL);
-    trm_ConvertSigToASCII (musicbrainz->trm, musicbrainz->signature,
-        musicbrainz->ascii_signature);
-    musicbrainz->signature_available = TRUE;
-    g_signal_emit (G_OBJECT (musicbrainz),
-        gst_musicbrainz_signals[SIGNAL_SIGNATURE_AVAILABLE], 0);
-
-    GST_DEBUG ("Signature : %s", musicbrainz->ascii_signature);
-
-    musicbrainz->signature_available = TRUE;
+    gst_trm_emit_signature (trm);
   }
 
-  gst_pad_push (musicbrainz->srcpad, data);
+  return gst_pad_push (trm->srcpad, buf);
+
+/* ERRORS */
+proxy_setup_error:
+  {
+    GST_ELEMENT_ERROR (trm, RESOURCE, SETTINGS, (NULL),
+        ("Unable to set proxy server for trm lookup"));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static void
+gst_trm_emit_signature (GstTRM * trm)
+{
+  char signature[17];
+  char ascii_sig[37];
+
+  if (trm->signature_available)
+    return;
+
+  if (trm_FinalizeSignature (trm->trm, signature, NULL) == 0) {
+    GstTagList *tags;
+
+    trm_ConvertSigToASCII (trm->trm, signature, ascii_sig);
+    ascii_sig[36] = '\0';
+    GST_DEBUG_OBJECT (trm, "Signature : %s", ascii_sig);
+
+    tags = gst_tag_list_new ();
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE,
+        GST_TAG_MUSICBRAINZ_TRMID, ascii_sig, NULL);
+    gst_element_found_tags_for_pad (GST_ELEMENT (trm), trm->srcpad, tags);
+
+    trm->signature_available = TRUE;
+  } else {
+    /* FIXME: should we be throwing an error here? */
+  }
 }
 
 
 static void
-gst_musicbrainz_set_property (GObject * object, guint prop_id,
+gst_trm_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstMusicBrainz *musicbrainz;
+  GstTRM *trm;
 
-  g_return_if_fail (GST_IS_MUSICBRAINZ (object));
+  trm = GST_TRM (object);
 
-  musicbrainz = GST_MUSICBRAINZ (object);
+  GST_OBJECT_LOCK (trm);
 
   switch (prop_id) {
-    case ARG_SIGNATURE:
-    case ARG_ASCII_SIGNATURE:
-      break;
     case ARG_PROXY_ADDRESS:{
-      musicbrainz->proxy_address = g_value_dup_string (value);
+      g_free (trm->proxy_address);
+      trm->proxy_address = g_value_dup_string (value);
       break;
     }
     case ARG_PROXY_PORT:{
-      musicbrainz->proxy_port = g_value_get_uint (value);
+      trm->proxy_port = g_value_get_uint (value);
       break;
     }
     default:
@@ -325,31 +283,26 @@ gst_musicbrainz_set_property (GObject * object, guint prop_id,
       break;
   }
 
+  GST_OBJECT_UNLOCK (trm);
 }
 
 static void
-gst_musicbrainz_get_property (GObject * object, guint prop_id, GValue * value,
+gst_trm_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstMusicBrainz *musicbrainz;
+  GstTRM *trm;
 
-  musicbrainz = GST_MUSICBRAINZ (object);
+  trm = GST_TRM (object);
+
+  GST_OBJECT_LOCK (trm);
 
   switch (prop_id) {
-    case ARG_SIGNATURE:{
-      g_value_set_string (value, musicbrainz->signature);
-      break;
-    }
-    case ARG_ASCII_SIGNATURE:{
-      g_value_set_string (value, musicbrainz->ascii_signature);
-      break;
-    }
     case ARG_PROXY_ADDRESS:{
-      g_value_set_string (value, musicbrainz->proxy_address);
+      g_value_set_string (value, trm->proxy_address);
       break;
     }
     case ARG_PROXY_PORT:{
-      g_value_set_uint (value, musicbrainz->proxy_port);
+      g_value_set_uint (value, trm->proxy_port);
       break;
     }
     default:{
@@ -357,50 +310,61 @@ gst_musicbrainz_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     }
   }
+
+  GST_OBJECT_UNLOCK (trm);
 }
 
-
 static GstStateChangeReturn
-gst_musicbrainz_change_state (GstElement * element, GstStateChange transition)
+gst_trm_change_state (GstElement * element, GstStateChange transition)
 {
-  GstMusicBrainz *musicbrainz;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstTRM *trm;
 
-  g_return_val_if_fail (GST_IS_MUSICBRAINZ (element), GST_STATE_CHANGE_FAILURE);
-
-  musicbrainz = GST_MUSICBRAINZ (element);
+  trm = GST_TRM (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      musicbrainz->trm = trm_New ();
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      trm_Delete (musicbrainz->trm);
-      musicbrainz->trm = NULL;
-      musicbrainz->linked = FALSE;
-      musicbrainz->data_available = FALSE;
-      musicbrainz->total_time = 0;
-      musicbrainz->signature_available = FALSE;
+      trm->trm = trm_New ();
       break;
     default:
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret != GST_STATE_CHANGE_SUCCESS)
+    return ret;
 
-  return GST_STATE_CHANGE_SUCCESS;
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_trm_emit_signature (trm);
+      trm_Delete (trm->trm);
+      trm->trm = NULL;
+      trm->data_available = FALSE;
+      trm->signature_available = FALSE;
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "trm",
-      GST_RANK_NONE, GST_TYPE_MUSICBRAINZ);
+  gst_tag_register_musicbrainz_tags ();
+
+  if (!gst_element_register (plugin, "trm", GST_RANK_NONE, GST_TYPE_TRM))
+    return FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (trm_debug, "trm", 0, "TRM calculation element");
+
+  return TRUE;
 }
 
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "trm",
-    "A trm signature producer",
+    "musicbrainz",
+    "A TRM signature producer based on libmusicbrainz",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

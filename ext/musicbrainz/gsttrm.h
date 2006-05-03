@@ -18,68 +18,51 @@
  */
 
 
-#ifndef __GST_MUSICBRAINZ_H__
-#define __GST_MUSICBRAINZ_H__
+#ifndef __GST_TRM_H__
+#define __GST_TRM_H__
 
 #include <gst/gst.h>
+#include <gst/gsttaglist.h>
+#include <gst/tag/tag.h>
 
 #include <musicbrainz/mb_c.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
+#define GST_TYPE_TRM            (gst_trm_get_type())
+#define GST_TRM(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TRM,GstTRM))
+#define GST_TRM_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TRM,GstTRMClass))
+#define GST_IS_TRM(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TRM))
+#define GST_IS_TRM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TRM))
 
-#define GST_TYPE_MUSICBRAINZ \
-  (gst_musicbrainz_get_type())
-#define GST_MUSICBRAINZ(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MUSICBRAINZ,GstMusicBrainz))
-#define GST_MUSICBRAINZ_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MUSICBRAINZ,GstMusicBrainz))
-#define GST_IS_MUSICBRAINZ(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MUSICBRAINZ))
-#define GST_IS_MUSICBRAINZ_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MUSICBRAINZ))
+typedef struct _GstTRM GstTRM;
+typedef struct _GstTRMClass GstTRMClass;
 
-
-typedef struct _GstMusicBrainz GstMusicBrainz;
-typedef struct _GstMusicBrainzClass GstMusicBrainzClass;
-
-struct _GstMusicBrainz {
+struct _GstTRM {
   GstElement element;
 
-  GstPad *sinkpad;
-  GstPad *srcpad;
-  const GstCaps *caps;
+  GstPad   *sinkpad;
+  GstPad   *srcpad;
 
-  trm_t trm;
-  gchar signature[17];
-  gchar ascii_signature[37];
+  trm_t     trm;
 
-  gchar *proxy_address;
-  guint  proxy_port;
+  gchar    *proxy_address;
+  guint     proxy_port;
 
-  guint depth;  
-  guint rate;
-  guint channels;
-  gboolean linked;
-  gboolean data_available;
-  gboolean signature_available;
-  guint64 total_time;
+  gint      depth;  
+  gint      rate;
+  gint      channels;
+
+  gboolean  data_available;
+  gboolean  signature_available;
 };
 
-struct _GstMusicBrainzClass {
+struct _GstTRMClass {
   GstElementClass parent_class;
-
-  /* signals */
-  void (*signature_available) (GstElement *element);
 };
 
 GType gst_musicbrainz_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
-
-#endif /* __GST_MUSICBRAINZE_H__ */
+#endif /* __GST_TRM_H__ */

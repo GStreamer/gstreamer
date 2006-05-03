@@ -481,6 +481,14 @@ GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
   AC_LANG_C
 ])
 
+dnl *** musicbrainz ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MUSICBRAINZ, true)
+GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz tag generation], musicbrainz, [
+  PKG_CHECK_MODULES(MUSICBRAINZ, libmusicbrainz >= 2.1.0, HAVE_MUSICBRAINZ="yes", HAVE_MUSICBRAINZ="no")
+  AC_SUBST(MUSICBRAINZ_CFLAGS)
+  AC_SUBST(MUSICBRAINZ_LIBS)
+])
+
 dnl *** neon ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
 GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
@@ -648,6 +656,7 @@ ext/ivorbis/Makefile
 ext/libmms/Makefile
 ext/Makefile
 ext/musepack/Makefile
+ext/musicbrainz/Makefile
 ext/neon/Makefile
 ext/sdl/Makefile
 ext/soundtouch/Makefile

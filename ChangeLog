@@ -1,3 +1,16 @@
+2006-05-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: James "Doc" Livingston  <doclivingston gmail com>
+
+	* configure.ac:
+	* ext/musicbrainz/Makefile.am:
+	* ext/musicbrainz/gsttrm.c: (gst_trm_base_init),
+	(gst_trm_class_init), (gst_trm_init), (gst_trm_setcaps),
+	(gst_trm_chain), (gst_trm_emit_signature), (gst_trm_set_property),
+	(gst_trm_get_property), (gst_trm_change_state), (plugin_init):
+	* ext/musicbrainz/gsttrm.h:
+	  Port MusicBrainz TRM plugin (#336898).
+
 2006-05-03  Michael Smith  <msmith@fluendo.com>
 
 	* ext/faad/gstfaad.c: (gst_faad_setcaps),
