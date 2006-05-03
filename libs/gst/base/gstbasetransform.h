@@ -50,7 +50,7 @@ G_BEGIN_DECLS
 /**
  * GST_BASE_TRANSFORM_SRC_PAD:
  * @obj: base transform instance
- * 
+ *
  * Gives the pointer to the source #GstPad object of the element.
  *
  * Since: 0.10.4
@@ -60,7 +60,7 @@ G_BEGIN_DECLS
 /**
  * GST_BASE_TRANSFORM_SINK_PAD:
  * @obj: base transform instance
- * 
+ *
  * Gives the pointer to the sink #GstPad object of the element.
  *
  * Since: 0.10.4
@@ -114,12 +114,44 @@ struct _GstBaseTransform {
 };
 
 /**
- * GstBaseTransformClass::transform_caps:
- * @direction: the pad direction
- * @caps: the caps
- *
- * This method should answer the question "given this pad, and given these
- * caps, what caps would you allow on the other pad inside your element ?"
+ * GstBaseTransformClass:
+ * @transform_caps: Optional.  given the pad in this direction and the given
+ *                  caps, what caps are allowed on the other pad in this
+ *                  element ?
+ * @fixate_caps:    Optional. Given the pad in this direction and the given
+ *                  caps, fixate the caps on the other pad.
+ * @transform_size: Optional. given the size of a buffer in the given direction
+ *                  with the given caps, calculate the size in bytes of a buffer
+ *                  on the other pad with the given other caps.
+ *                  The default implementation uses get_unit_size and keeps
+ *                  the number of units the same.
+ * @get_unit_size:  Required if the transform is not in-place.
+ *                  get the size in bytes of one unit for the given caps.
+ * @set_caps:       allows the subclass to be notified of the actual caps set.
+ * @start:          Optional.
+ *                  Called when the element starts processing.
+ *                  Allows opening external resources.
+ * @stop:           Optional.
+ *                  Called when the element stops processing.
+ *                  Allows closing external resources.
+ * @transform:      Required if the element does not operate in-place.
+ *                  Transforms one incoming buffer to one outgoing buffer.
+ *                  The function is allowed to change size/timestamp/duration
+ *                  of the outgoing buffer.
+ * @transform_ip:   Required if the element operates in-place.
+ *                  Transform the incoming buffer in-place.
+ * @event:          Optional.
+ *                  Event handler on the sink pad.
+ * @src_event:      Optional.
+ *                  Event handler on the source pad.
+ * @passthrough_on_same_caps: If set to TRUE, passthrough mode will be
+ *                            automatically enabled if the caps are the same.
+ * @prepare_output_buffer: Optional.
+ *                         Subclasses can override this to do their own
+ *                         allocation of output buffers.  Elements that only do
+ *                         analysis can return a subbuffer or even just
+ *                         increment the reference to the input buffer (if in
+ *                         passthrough mode)
  */
 struct _GstBaseTransformClass {
   GstElementClass parent_class;
@@ -127,60 +159,37 @@ struct _GstBaseTransformClass {
   /*< public >*/
   /* virtual methods for subclasses */
 
-  /* given the (non-)fixed simple caps on the pad in the given direction,
-   * what can I do on the other pad ? */
   GstCaps*	(*transform_caps) (GstBaseTransform *trans,
                                    GstPadDirection direction,
                                    GstCaps *caps);
 
-  /* given caps on one pad, how would you fixate caps on the other pad ? */
   void		(*fixate_caps)	  (GstBaseTransform *trans,
                                    GstPadDirection direction, GstCaps *caps,
                                    GstCaps *othercaps);
 
-  /* given the size of a buffer in the given direction with the given caps,
-   * calculate the byte size of an buffer on the other side with the given
-   * other caps; the default
-   * implementation uses get_size and keeps the number of units the same */
   gboolean      (*transform_size) (GstBaseTransform *trans,
                                    GstPadDirection direction,
                                    GstCaps *caps, guint size,
                                    GstCaps *othercaps, guint *othersize);
 
-  /* get the byte size of one unit for a given caps.
-   * Always needs to be implemented if the transform is not in-place. */
   gboolean      (*get_unit_size)  (GstBaseTransform *trans, GstCaps *caps,
                                    guint *size);
 
-  /* notify the subclass of new caps */
   gboolean      (*set_caps)     (GstBaseTransform *trans, GstCaps *incaps,
                                  GstCaps *outcaps);
 
-  /* start and stop processing, ideal for opening/closing the resource */
   gboolean      (*start)        (GstBaseTransform *trans);
   gboolean      (*stop)         (GstBaseTransform *trans);
 
-  /* sink event */
   gboolean      (*event)        (GstBaseTransform *trans, GstEvent *event);
 
-  /* transform one incoming buffer to one outgoing buffer.
-   * Always needs to be implemented unless always operating in-place.
-   * transform function is allowed to change size/timestamp/duration of
-   * the outgoing buffer. */
   GstFlowReturn (*transform)    (GstBaseTransform *trans, GstBuffer *inbuf,
                                  GstBuffer *outbuf);
-
-  /* transform a buffer inplace */
   GstFlowReturn (*transform_ip) (GstBaseTransform *trans, GstBuffer *buf);
 
   /* FIXME: When adjusting the padding, move these to nicer places in the class */
-  /* Set by child classes to automatically do passthrough mode */
   gboolean       passthrough_on_same_caps;
 
-  /* Subclasses can override this to do their own allocation of output buffers.
-   * Elements that only do analysis can return a subbuffer or even just
-   * increment the reference to the input buffer (if in passthrough mode)
-   */
   GstFlowReturn (*prepare_output_buffer) (GstBaseTransform * trans,
      GstBuffer *input, gint size, GstCaps *caps, GstBuffer **buf);
 
@@ -201,11 +210,11 @@ void		gst_base_transform_set_in_place     (GstBaseTransform *trans,
 	                                             gboolean in_place);
 gboolean	gst_base_transform_is_in_place      (GstBaseTransform *trans);
 
-void		gst_base_transform_update_qos       (GstBaseTransform *trans, 
-						     gdouble proportion, 
-						     GstClockTimeDiff diff, 
+void		gst_base_transform_update_qos       (GstBaseTransform *trans,
+						     gdouble proportion,
+						     GstClockTimeDiff diff,
 						     GstClockTime timestamp);
-void		gst_base_transform_set_qos_enabled  (GstBaseTransform *trans, 
+void		gst_base_transform_set_qos_enabled  (GstBaseTransform *trans,
 		                                     gboolean enabled);
 gboolean	gst_base_transform_is_qos_enabled   (GstBaseTransform *trans);
 

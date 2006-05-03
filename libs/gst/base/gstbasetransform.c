@@ -60,18 +60,22 @@
  *     element negotiates the same caps on both pads.
  *   </para></listitem>
  *   <listitem><para>
- *     passthrough_on_same_caps on an element that doesn't implement a transform_caps
- *     function is useful for elements that only inspect data (such as level)
+ *     passthrough_on_same_caps on an element that doesn't implement a
+ *     transform_caps function is useful for elements that only inspect data
+ *     (such as level)
  *   </para></listitem>
  *   </itemizedlist>
  *   <itemizedlist>
  *   <title>Example elements</title>
  *     <listitem>Level</listitem>
- *     <listitem>Videoscale, audioconvert, ffmpegcolorspace, audioresample in certain modes.</listitem>
+ *     <listitem>Videoscale, audioconvert, ffmpegcolorspace, audioresample in
+ *     certain modes.</listitem>
  *   </itemizedlist>
  * </listitem>
  * <listitem>
- *   <itemizedlist><title>Modifications in-place - input buffer and output buffer are the same thing.</title>
+ *   <itemizedlist>
+ *     <title>Modifications in-place - input buffer and output buffer are the
+ *     same thing.</title>
  *   <listitem><para>
  *     The element must implement a transform_ip function.
  *   </para></listitem>
@@ -79,41 +83,46 @@
  *     Output buffer size must <= input buffer size
  *   </para></listitem>
  *   <listitem><para>
- *     If the always_in_place flag is set, non-writable buffers will be copied and
- *     passed to the transform_ip function, otherwise a new buffer will be created
- *     and the transform function called.
+ *     If the always_in_place flag is set, non-writable buffers will be copied
+ *     and passed to the transform_ip function, otherwise a new buffer will be
+ *     created and the transform function called.
  *   </para></listitem>
  *   <listitem><para>
- *     Incoming writable buffers will be passed to the transform_ip function immediately.
- *   </para></listitem>
+ *     Incoming writable buffers will be passed to the transform_ip function
+ *     immediately.  </para></listitem>
  *   <listitem><para>
- *     only implementing transform_ip and not transform implies always_in_place =
- *     TRUE
+ *     only implementing transform_ip and not transform implies always_in_place
+ *     = TRUE
  *   </para></listitem>
  *   </itemizedlist>
  *   <itemizedlist>
  *   <title>Example elements</title>
  *     <listitem>Volume</listitem>
- *     <listitem>Audioconvert in certain modes (signed/unsigned conversion)</listitem>
- *     <listitem>ffmpegcolorspace in certain modes (endianness swapping)</listitem>
+ *     <listitem>Audioconvert in certain modes (signed/unsigned
+ *     conversion)</listitem>
+ *     <listitem>ffmpegcolorspace in certain modes (endianness
+ *     swapping)</listitem>
  *   </itemizedlist>
  *  </listitem>
  * <listitem>
- *   <itemizedlist><title>Modifications only to the caps/metadata of a buffer</title>
+ *   <itemizedlist>
+ *   <title>Modifications only to the caps/metadata of a buffer</title>
  *   <listitem><para>
- *     The element does not require writable data, but non-writable buffers should
- *     be subbuffered so that the meta-information can be replaced.
+ *     The element does not require writable data, but non-writable buffers
+ *     should be subbuffered so that the meta-information can be replaced.
  *   </para></listitem>
  *   <listitem><para>
  *     Elements wishing to operate in this mode should replace the
- *     prepare_output_buffer method to create subbuffers of the input buffer and
- *     set always_in_place to TRUE
+ *     prepare_output_buffer method to create subbuffers of the input buffer
+ *     and set always_in_place to TRUE
  *   </para></listitem>
  *   </itemizedlist>
  *   <itemizedlist>
  *   <title>Example elements</title>
- *     <listitem>Capsfilter when setting caps on outgoing buffers that have none.</listitem>
- *     <listitem>identity when it is going to re-timestamp buffers by datarate.</listitem>
+ *     <listitem>Capsfilter when setting caps on outgoing buffers that have
+ *     none.</listitem>
+ *     <listitem>identity when it is going to re-timestamp buffers by
+ *     datarate.</listitem>
  *   </itemizedlist>
  * </listitem>
  * <listitem>
@@ -130,14 +139,15 @@
  *   </itemizedlist>
  *   <itemizedlist>
  *   <title>Example elements</title>
- *     <listitem>Videoscale, ffmpegcolorspace, audioconvert when doing scaling/conversions</listitem>
+ *     <listitem>Videoscale, ffmpegcolorspace, audioconvert when doing
+ *     scaling/conversions</listitem>
  *   </itemizedlist>
  * </listitem>
  * <listitem>
  *   <itemizedlist><title>Special output buffer allocations</title>
  *   <listitem><para>
- *     Elements which need to do special allocation of their output buffers other
- *     than what gst_buffer_pad_alloc allows should implement a
+ *     Elements which need to do special allocation of their output buffers
+ *     other than what gst_buffer_pad_alloc allows should implement a
  *     prepare_output_buffer method, which calls the parent implementation and
  *     passes the newly allocated buffer.
  *   </para></listitem>
@@ -157,8 +167,8 @@
  *       interested in modifying the buffers.
  *     </para></listitem>
  *     <listitem><para>
- *       Elements which are always in passthrough mode whenever the same caps has
- *       been negotiated on both pads can set the class variable
+ *       Elements which are always in passthrough mode whenever the same caps
+ *       has been negotiated on both pads can set the class variable
  *       passthrough_on_same_caps to have this behaviour automatically.
  *     </para></listitem>
  *   </itemizedlist>
