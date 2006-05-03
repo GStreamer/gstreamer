@@ -279,6 +279,7 @@ DIST_SUBDIRS= \
 	dts \
 	divx \
 	musepack \
+	musicbrainz \
 	neon \
 	sdl \
 	swfdec \

@@ -1,6 +1,11 @@
 2006-05-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/Makefile.am:
+	  Add musicbrainz dir to DIST_SUBDIRS as well (fixes distcheck).
+	  
+2006-05-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/Makefile.am:
 	  Forgot to commit this one.
 
 2006-05-03  Tim-Philipp Müller  <tim at centricular dot net>
