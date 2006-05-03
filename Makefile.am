@@ -27,6 +27,7 @@ win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
 
 debug:
 	echo $(win32)
+
 EXTRA_DIST = \
 	gstreamer.spec gstreamer.spec.in gst-element-check.m4 \
 	configure.ac autogen.sh depcomp \
@@ -37,7 +38,6 @@ CLEANFILES = gst-element-check-@GST_MAJORMINOR@.m4
 
 include $(top_srcdir)/common/release.mak
 include $(top_srcdir)/common/po.mak
-
 
 if GST_GCOV_ENABLED
 clean-gcov:
