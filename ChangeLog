@@ -1,5 +1,15 @@
 2006-05-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/matroska/matroska-mux.c:
+	(gst_matroska_mux_stream_is_vorbis_header),
+	(gst_matroska_mux_write_data):
+	  Don't strcmp() NULL strings.
+	  Only start new clusters on video keyframes, not on any
+	  random audio buffer that doesn't have the DELTA_UNIT
+	  flag set (fixes 'make check' again).
+
+2006-05-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Mark Nauwelaerts  <manauw at skynet be>
 
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_best_pad),

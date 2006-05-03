@@ -1318,7 +1318,8 @@ gst_matroska_mux_stream_is_vorbis_header (GstMatroskaMux * mux,
   if (audio_ctx->first_frame != FALSE)
     return FALSE;
 
-  if (strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_AUDIO_VORBIS))
+  if (collect_pad->track->codec_id == NULL ||
+      strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_AUDIO_VORBIS))
     return FALSE;
 
   /* HACK: three frame headers are counted using pos */
@@ -1379,6 +1380,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   gint16 relative_timestamp;
   gint64 relative_timestamp64;
   guint64 block_duration;
+  gboolean is_video_keyframe = FALSE;
 
   /* write data */
   buf = collect_pad->buffer;
@@ -1386,6 +1388,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
 
   /* vorbis header are retrieved from caps and placed in CodecPrivate */
   if (gst_matroska_mux_stream_is_vorbis_header (mux, collect_pad)) {
+    GST_LOG_OBJECT (collect_pad->collect.pad, "dropping vorbis header buffer");
     gst_buffer_unref (buf);
     return GST_FLOW_OK;
   }
@@ -1402,10 +1405,17 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   /* set the timestamp for outgoing buffers */
   ebml->timestamp = GST_BUFFER_TIMESTAMP (buf);
 
+  if (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_VIDEO &&
+      !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
+    GST_LOG_OBJECT (mux, "have video keyframe, ts=%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+    is_video_keyframe = TRUE;
+  }
+
   if (mux->cluster) {
     /* start a new cluster every two seconds or at keyframe */
     if (mux->cluster_time + GST_SECOND * 2 < GST_BUFFER_TIMESTAMP (buf)
-        || !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
+        || is_video_keyframe) {
       GstMatroskaMetaSeekIndex *idx;
 
       gst_ebml_write_master_finish (ebml, mux->cluster);
@@ -1453,8 +1463,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
    * for audio only files. This can be largely improved, such as doing
    * one for each keyframe or each second (for all-keyframe
    * streams), only the *first* video track. But that'll come later... */
-  if (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_VIDEO &&
-      !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
+  if (is_video_keyframe) {
     GstMatroskaIndex *idx;
 
     if (mux->num_indexes % 32 == 0) {
