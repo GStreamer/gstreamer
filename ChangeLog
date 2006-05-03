@@ -1,5 +1,11 @@
 2006-05-03  Wim Taymans  <wim@fluendo.com>
 
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_sink_event),
+	(vorbis_dec_push), (vorbis_dec_chain):
+	Still produce an error when we receive an empty packet.
+
+2006-05-03  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_peer),
 	(gst_ogg_chain_mark_discont), (gst_ogg_chain_new_stream),
 	(gst_ogg_demux_activate_chain), (gst_ogg_demux_perform_seek):

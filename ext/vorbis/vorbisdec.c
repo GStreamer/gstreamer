@@ -914,8 +914,8 @@ done:
   /* ERRORS */
 wrong_size:
   {
-    GST_WARNING_OBJECT (vd, "received empty packet");
-    result = GST_FLOW_OK;
+    GST_ELEMENT_ERROR (vd, STREAM, DECODE, (NULL), ("empty buffer received"));
+    result = GST_FLOW_ERROR;
     vd->discont = TRUE;
     goto done;
   }
