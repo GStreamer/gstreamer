@@ -142,11 +142,11 @@ else
 MUSEPACK_DIR=
 endif
 
-# if USE_MUSICBRAINZ
-# MUSICBRAINZ_DIR=musicbrainz
-# else
+if USE_MUSICBRAINZ
+MUSICBRAINZ_DIR=musicbrainz
+else
 MUSICBRAINZ_DIR=
-# endif
+endif
 
 # if USE_NAS
 # NAS_DIR=nas
