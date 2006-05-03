@@ -14,6 +14,7 @@
     <title>gst-plugins-bad Elements</title>
 
     <xi:include href="xml/element-dfbvideosink.xml" />
+    <xi:include href="xml/element-trm.xml" />
   </chapter>
 
   <chapter>
@@ -27,6 +28,7 @@
     <xi:include href="xml/plugin-glimagesink.xml" />
     <xi:include href="xml/plugin-gsm.xml" />
     <xi:include href="xml/plugin-modplug.xml" />
+    <xi:include href="xml/plugin-musicbrainz.xml" />
     <xi:include href="xml/plugin-neon.xml" />
     <xi:include href="xml/plugin-qtdemux.xml" />
     <xi:include href="xml/plugin-sdlvideosink.xml" />

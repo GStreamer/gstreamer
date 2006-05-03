@@ -1,5 +1,16 @@
 2006-05-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-musicbrainz.xml:
+	* ext/musicbrainz/gsttrm.c:
+	* ext/musicbrainz/gsttrm.h:
+	  Everybody loves docs - add docs for musicbrainz plugin.
+
+2006-05-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/Makefile.am:
 	  Add musicbrainz dir to DIST_SUBDIRS as well (fixes distcheck).
 	  

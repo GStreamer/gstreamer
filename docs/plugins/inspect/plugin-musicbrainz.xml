@@ -1,0 +1,20 @@
+<plugin>
+  <name>musicbrainz</name>
+  <description>A TRM signature producer based on libmusicbrainz</description>
+  <filename>../../ext/musicbrainz/.libs/libgsttrm.so</filename>
+  <basename>libgsttrm.so</basename>
+  <version>0.10.2.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>trm</name>
+      <longname>MusicBrainz TRM generator</longname>
+      <class>Filter/Analyzer/Audio</class>
+      <description>Compute MusicBrainz TRM Id using libmusicbrainz</description>
+      <author>Jeremy Simon &lt;jsimon13@yahoo.fr&gt;</author>
+    </element>
+  </elements>
+</plugin>

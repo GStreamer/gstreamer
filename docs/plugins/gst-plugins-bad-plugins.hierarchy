@@ -12,6 +12,7 @@ GObject
       GstBaseSink
         GstVideoSink
           GstDfbVideoSink
+      GstTRM
     GstPlugin
     GstRegistry
     GstPadTemplate

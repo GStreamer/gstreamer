@@ -86,7 +86,8 @@ EXAMPLE_CFILES = \
         $(top_srcdir)/ext/directfb/dfb-example.c
 
 EXTRA_HFILES = \
-	$(top_srcdir)/ext/directfb/dfbvideosink.h
+	$(top_srcdir)/ext/directfb/dfbvideosink.h \
+	$(top_srcdir)/ext/musicbrainz/gsttrm.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

@@ -38,9 +38,17 @@ G_BEGIN_DECLS
 typedef struct _GstTRM GstTRM;
 typedef struct _GstTRMClass GstTRMClass;
 
+/**
+ *  GstTRM
+ *
+ *  GStreamer TRM element. This structure is opaque (private).
+ *
+ **/
+
 struct _GstTRM {
   GstElement element;
 
+  /*< private >*/
   GstPad   *sinkpad;
   GstPad   *srcpad;
 

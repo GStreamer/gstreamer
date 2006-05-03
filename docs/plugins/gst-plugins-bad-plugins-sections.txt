@@ -5,3 +5,11 @@ GstDfbVideoSink
 <SUBSECTION Standard>
 GstDfbVideoSinkClass
 </SECTION>
+
+<SECTION>
+<FILE>element-trm</FILE>
+GstTRM
+<TITLE>trm</TITLE>
+<SUBSECTION Standard>
+GstTRMClass
+</SECTION>
