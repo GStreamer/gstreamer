@@ -59,7 +59,7 @@
  */
 #define VOLUME_UNITY_INT        8192    /* internal int for unity */
 #define VOLUME_UNITY_BIT_SHIFT  13      /* number of bits to shift for unity */
-#define VOLUME_MAX_DOUBLE       4.0
+#define VOLUME_MAX_DOUBLE       10.0
 #define VOLUME_MAX_INT16        32767
 #define VOLUME_MIN_INT16        -32768
 
@@ -334,6 +334,8 @@ volume_funcfind (GstVolume * this, const GstStructure * structure)
     this->process = volume_process_int16;
   else if (strcmp (mimetype, "audio/x-raw-float") == 0)
     this->process = volume_process_float;
+  else
+    this->process = NULL;
 }
 
 static void
@@ -391,14 +393,21 @@ volume_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
 
   GST_DEBUG_OBJECT (this,
       "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
+
   volume_funcfind (this, gst_caps_get_structure (incaps, 0));
 
-  if (!this->process) {
+  if (!this->process)
+    goto invalid_format;
+
+  return TRUE;
+
+  /* ERRORS */
+invalid_format:
+  {
     GST_ELEMENT_ERROR (this, CORE, NEGOTIATION,
         ("Invalid incoming caps: %" GST_PTR_FORMAT, incaps), (NULL));
     return FALSE;
   }
-  return TRUE;
 }
 
 /* call the plugged-in process function for this instance
@@ -409,11 +418,14 @@ static GstFlowReturn
 volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstVolume *this = GST_VOLUME (base);
+  GstClockTime timestamp;
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (outbuf)))
-    gst_object_sync_values (G_OBJECT (this), GST_BUFFER_TIMESTAMP (outbuf));
+  timestamp = GST_BUFFER_TIMESTAMP (outbuf);
 
-  this->process (this, GST_BUFFER_TIMESTAMP (outbuf),
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+    gst_object_sync_values (G_OBJECT (this), timestamp);
+
+  this->process (this, timestamp,
       GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 
   return GST_FLOW_OK;
