@@ -3229,27 +3229,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     mp4a = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4a);
     wave = NULL;
-    if (mp4a)
-      wave = qtdemux_tree_get_child_by_type (mp4a, FOURCC_wave);
-
     esds = NULL;
-    if (wave)
-      esds = qtdemux_tree_get_child_by_type (wave, FOURCC_esds);
-    else if (mp4a)
-      esds = qtdemux_tree_get_child_by_type (mp4a, FOURCC_esds);
+    if (mp4a) {
+      wave = qtdemux_tree_get_child_by_type (mp4a, FOURCC_wave);
+      if (wave)
+        esds = qtdemux_tree_get_child_by_type (wave, FOURCC_esds);
+      if (!esds)
+        esds = qtdemux_tree_get_child_by_type (mp4a, FOURCC_esds);
+    }
 
     if (esds) {
       gst_qtdemux_handle_esds (qtdemux, stream, esds);
-#if 0
-      GstBuffer *buffer;
-      int len = QTDEMUX_GUINT32_GET (esds->data);
-
-      buffer = gst_buffer_new_and_alloc (len - 8);
-      memcpy (GST_BUFFER_DATA (buffer), esds->data + 8, len - 8);
-
-      gst_caps_set_simple (stream->caps, "codec_data",
-          GST_TYPE_BUFFER, buffer, NULL);
-#endif
     } else {
       if (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4) ==
           GST_MAKE_FOURCC ('Q', 'D', 'M', '2')) {
