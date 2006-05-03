@@ -275,7 +275,7 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
                   &value)))
         goto error;
 
-      value = (value - dec->segment_start) + dec->segment_time;
+      value = (value - dec->segment.start) + dec->segment.time;
 
       gst_query_set_position (query, format, value);
 
@@ -426,25 +426,18 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment (event, &update, &rate, &format, &start,
           &stop, &time);
 
+      /* we need time and a positive rate for now */
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
       if (rate <= 0.0)
         goto newseg_wrong_rate;
 
-      /* now copy over the values */
-      dec->segment_rate = rate;
-      dec->segment_start = start;
-      dec->segment_stop = stop;
-      dec->segment_time = time;
+      /* now configure the values */
+      gst_segment_set_newsegment (&dec->segment, update,
+          rate, format, start, stop, time);
 
-      dec->granulepos = -1;
-      dec->cur_timestamp = GST_CLOCK_TIME_NONE;
-      dec->prev_timestamp = GST_CLOCK_TIME_NONE;
-
-#ifdef HAVE_VORBIS_SYNTHESIS_RESTART
-      vorbis_synthesis_restart (&dec->vd);
-#endif
+      /* and forward */
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
     }
@@ -659,6 +652,8 @@ header_read_error:
   }
 }
 
+/* These samples can be outside of the float -1.0 -- 1.0 range, this
+ * is allowed, downstream elements are supposed to clip */
 static void
 copy_samples (float *out, float **in, guint samples, gint channels)
 {
@@ -714,10 +709,18 @@ vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
         GstBuffer *buffer = GST_BUFFER (walk->data);
 
         /* ignore the result */
+        if (dec->discont) {
+          GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+          dec->discont = FALSE;
+        }
         gst_pad_push (dec->srcpad, buffer);
       }
       g_list_free (dec->queued);
       dec->queued = NULL;
+    }
+    if (dec->discont) {
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      dec->discont = FALSE;
     }
     result = gst_pad_push (dec->srcpad, buf);
   }
@@ -841,12 +844,18 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
 
-  vd = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
+  vd = GST_VORBIS_DEC (gst_pad_get_parent (pad));
 
-  if (GST_BUFFER_SIZE (buffer) == 0) {
-    gst_buffer_unref (buffer);
-    GST_ELEMENT_ERROR (vd, STREAM, DECODE, (NULL), ("empty buffer received"));
-    return GST_FLOW_ERROR;
+  /* resync on DISCONT */
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
+    GST_DEBUG_OBJECT (vd, "received DISCONT buffer");
+    vd->granulepos = -1;
+    vd->cur_timestamp = GST_CLOCK_TIME_NONE;
+    vd->prev_timestamp = GST_CLOCK_TIME_NONE;
+#ifdef HAVE_VORBIS_SYNTHESIS_RESTART
+    vorbis_synthesis_restart (&vd->vd);
+#endif
+    vd->discont = TRUE;
   }
 
   /* only ogg has granulepos, demuxers of other container formats 
@@ -876,6 +885,9 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
    */
   packet.e_o_s = 0;
 
+  if (packet.bytes < 1)
+    goto wrong_size;
+
   GST_DEBUG_OBJECT (vd, "vorbis granule: %" G_GINT64_FORMAT,
       (gint64) packet.granulepos);
 
@@ -895,8 +907,18 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
 
 done:
   gst_buffer_unref (buffer);
+  gst_object_unref (vd);
 
   return result;
+
+  /* ERRORS */
+wrong_size:
+  {
+    GST_WARNING_OBJECT (vd, "received empty packet");
+    result = GST_FLOW_OK;
+    vd->discont = TRUE;
+    goto done;
+  }
 }
 
 static GstStateChangeReturn
@@ -917,6 +939,7 @@ vorbis_dec_change_state (GstElement * element, GstStateChange transition)
       vd->prev_timestamp = GST_CLOCK_TIME_NONE;
       vd->granulepos = -1;
       vd->packetno = 0;
+      vd->discont = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;

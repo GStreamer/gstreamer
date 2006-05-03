@@ -78,6 +78,7 @@ struct _GstTheoraDec
 
   /* segment info */ /* with STREAM_LOCK */
   GstSegment segment;
+  gboolean discont;
 
   /* QoS stuff */ /* with LOCK*/
   gdouble proportion;

@@ -172,6 +172,8 @@ gst_theora_dec_reset (GstTheoraDec * dec)
   dec->need_keyframe = TRUE;
   dec->last_timestamp = -1;
   dec->granulepos = -1;
+  dec->discont = TRUE;
+  dec->frame_nr = -1;
   gst_segment_init (&dec->segment, GST_FORMAT_TIME);
 
   GST_OBJECT_LOCK (dec);
@@ -180,7 +182,6 @@ gst_theora_dec_reset (GstTheoraDec * dec)
   GST_OBJECT_UNLOCK (dec);
 }
 
-/* FIXME: copy from libtheora, theora should somehow make this available for seeking */
 static int
 _theora_ilog (unsigned int v)
 {
@@ -281,6 +282,8 @@ theora_get_query_types (GstPad * pad)
 {
   static const GstQueryType theora_src_query_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    GST_QUERY_CONVERT,
     0
   };
 
@@ -641,7 +644,6 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
-      /* FIXME, makes us waiting for keyframes */
       gst_theora_dec_reset (dec);
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
@@ -876,12 +878,21 @@ theora_dec_push (GstTheoraDec * dec, GstBuffer * buf)
 
         GST_DEBUG_OBJECT (dec, "patch buffer %lld %lld", size, time);
         GST_BUFFER_TIMESTAMP (buffer) = time;
+
+        if (dec->discont) {
+          GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+          dec->discont = FALSE;
+        }
         /* ignore the result.. */
         gst_pad_push (dec->srcpad, buffer);
         size--;
       }
       g_list_free (dec->queued);
       dec->queued = NULL;
+    }
+    if (dec->discont) {
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      dec->discont = FALSE;
     }
     result = gst_pad_push (dec->srcpad, buf);
   }
@@ -904,20 +915,23 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   gint cwidth, cheight;
   GstFlowReturn result;
 
-  if (!dec->have_header)
+  if (G_UNLIKELY (!dec->have_header))
     goto not_initialized;
 
   /* the second most significant bit of the first data byte is cleared 
    * for keyframes */
   keyframe = (packet->packet[0] & 0x40) == 0;
   if (keyframe) {
+    GST_DEBUG_OBJECT (dec, "we have a keyframe");
     dec->need_keyframe = FALSE;
   } else if (dec->need_keyframe) {
     goto dropping;
   }
 
+  GST_DEBUG_OBJECT (dec, "parsing data packet");
+
   /* this does the decoding */
-  if (theora_decode_packetin (&dec->state, packet))
+  if (G_UNLIKELY (theora_decode_packetin (&dec->state, packet)))
     goto decode_error;
 
   if (outtime != -1) {
@@ -942,10 +956,11 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
 
   /* this does postprocessing and set up the decoded frame
    * pointers in our yuv variable */
-  if (theora_decode_YUVout (&dec->state, &yuv) < 0)
+  if (G_UNLIKELY (theora_decode_YUVout (&dec->state, &yuv) < 0))
     goto no_yuv;
 
-  if ((yuv.y_width != dec->info.width) || (yuv.y_height != dec->info.height))
+  if (G_UNLIKELY ((yuv.y_width != dec->info.width)
+          || (yuv.y_height != dec->info.height)))
     goto wrong_dimensions;
 
   width = dec->width;
@@ -966,7 +981,7 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   result =
       gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
       out_size, GST_PAD_CAPS (dec->srcpad), &out);
-  if (result != GST_FLOW_OK)
+  if (G_UNLIKELY (result != GST_FLOW_OK))
     goto no_buffer;
 
   /* copy the visible region to the destination. This is actually pretty
@@ -1011,9 +1026,9 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
     }
   }
 
-  /* FIXME, frame_nr not correct */
   GST_BUFFER_OFFSET (out) = dec->frame_nr;
-  dec->frame_nr++;
+  if (dec->frame_nr != -1)
+    dec->frame_nr++;
   GST_BUFFER_OFFSET_END (out) = dec->frame_nr;
   GST_BUFFER_DURATION (out) =
       gst_util_uint64_scale_int (GST_SECOND, dec->info.fps_denominator,
@@ -1034,11 +1049,14 @@ not_initialized:
 dropping:
   {
     GST_WARNING_OBJECT (dec, "dropping frame because we need a keyframe");
+    dec->discont = TRUE;
     return GST_FLOW_OK;
   }
 dropping_qos:
   {
-    dec->frame_nr++;
+    if (dec->frame_nr != -1)
+      dec->frame_nr++;
+    dec->discont = TRUE;
     GST_WARNING_OBJECT (dec, "dropping frame because of QoS");
     return GST_FLOW_OK;
   }
@@ -1079,9 +1097,11 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
 
   /* resync on DISCONT */
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
+    GST_DEBUG_OBJECT (dec, "received DISCONT buffer");
     dec->need_keyframe = TRUE;
     dec->last_timestamp = -1;
     dec->granulepos = -1;
+    dec->discont = TRUE;
   }
 
   /* make ogg_packet out of the buffer */
@@ -1107,7 +1127,7 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
   if (packet.bytes < 1)
     goto wrong_size;
 
-  GST_DEBUG_OBJECT (dec, "header=%d packetno=%lld, outtime=%" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (dec, "header=%02x packetno=%lld, outtime=%" GST_TIME_FORMAT,
       packet.packet[0], packet.packetno, GST_TIME_ARGS (dec->last_timestamp));
 
   /* switch depending on packet type */
@@ -1122,7 +1142,7 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
   }
 
 done:
-  /* interpollate granule pos */
+  /* interpolate granule pos */
   dec->granulepos = _inc_granulepos (dec, dec->granulepos);
 
   gst_object_unref (dec);
@@ -1135,6 +1155,7 @@ done:
 wrong_size:
   {
     GST_WARNING_OBJECT (dec, "received empty packet");
+    dec->discont = TRUE;
     result = GST_FLOW_OK;
     goto done;
   }
@@ -1171,6 +1192,7 @@ theora_dec_change_state (GstElement * element, GstStateChange transition)
       theora_clear (&dec->state);
       theora_comment_clear (&dec->comment);
       theora_info_clear (&dec->info);
+      gst_theora_dec_reset (dec);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

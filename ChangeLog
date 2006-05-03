@@ -1,5 +1,29 @@
 2006-05-03  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_peer),
+	(gst_ogg_chain_mark_discont), (gst_ogg_chain_new_stream),
+	(gst_ogg_demux_activate_chain), (gst_ogg_demux_perform_seek):
+	Mark buffers with DISCONT after seek and after activating new
+	chains.
+
+	* ext/theora/gsttheoradec.h:
+	* ext/theora/theoradec.c: (gst_theora_dec_reset),
+	(theora_get_query_types), (theora_dec_sink_event),
+	(theora_dec_push), (theora_handle_data_packet), (theora_dec_chain),
+	(theora_dec_change_state):
+	Fix frame counter.
+	Detect and mark DISCONT buffers.
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query),
+	(vorbis_dec_sink_event), (vorbis_dec_push), (vorbis_dec_chain),
+	(vorbis_dec_change_state):
+	* ext/vorbis/vorbisdec.h:
+	Use GstSegment.
+	Detect and mark DISCONT buffers.
+	Don't crash on 0 sized buffers.
+
+2006-05-03  Wim Taymans  <wim@fluendo.com>
+
 	* gst/volume/gstvolume.c: (volume_funcfind), (volume_set_caps),
 	(volume_transform_ip):
 	Increase "volume" property to 10.0. Fixes #340369.

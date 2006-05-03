@@ -137,6 +137,8 @@ struct _GstOggPad
 
   ogg_stream_state stream;
 
+  gboolean discont;
+
   gboolean dynamic;             /* True if the internal element had dynamic pads */
   guint padaddedid;             /* The signal id for element::pad-added */
 };
@@ -949,6 +951,12 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   GST_BUFFER_OFFSET (buf) = -1;
   GST_BUFFER_OFFSET_END (buf) = packet->granulepos;
 
+  /* Mark discont on the buffer */
+  if (pad->discont) {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    pad->discont = FALSE;
+  }
+
   ret = gst_pad_push (GST_PAD (pad), buf);
   /* ignore not linked */
   if (ret == GST_FLOW_NOT_LINKED)
@@ -1204,6 +1212,18 @@ gst_ogg_chain_free (GstOggChain * chain)
   g_free (chain);
 }
 
+static void
+gst_ogg_chain_mark_discont (GstOggChain * chain)
+{
+  gint i;
+
+  for (i = 0; i < chain->streams->len; i++) {
+    GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
+
+    pad->discont = TRUE;
+  }
+}
+
 static GstOggPad *
 gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
 {
@@ -1225,6 +1245,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   GST_PAD_DIRECTION (ret) = GST_PAD_SRC;
   ret->chain = chain;
   ret->ogg = chain->ogg;
+  ret->discont = TRUE;
   gst_object_set_name (GST_OBJECT (ret), name);
   g_free (name);
 
@@ -1643,6 +1664,9 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     pad = g_array_index (chain->streams, GstOggPad *, i);
     GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
 
+    /* mark discont */
+    pad->discont = TRUE;
+
     /* activate first */
     gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
 
@@ -1666,6 +1690,11 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
     for (headers = pad->headers; headers; headers = g_list_next (headers)) {
       GstBuffer *buffer = GST_BUFFER (headers->data);
+
+      if (pad->discont) {
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+        pad->discont = FALSE;
+      }
 
       /* we don't care about the return value here */
       gst_pad_push (GST_PAD_CAST (pad), buffer);
@@ -1991,7 +2020,8 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
       /* switch to different chain, send segment on new chain */
       gst_ogg_demux_activate_chain (ogg, chain, event);
     } else {
-      /* send segment on current chain */
+      /* mark discont and send segment on current chain */
+      gst_ogg_chain_mark_discont (chain);
       gst_ogg_demux_send_event (ogg, event);
     }
 
