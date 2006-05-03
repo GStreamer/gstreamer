@@ -1,5 +1,11 @@
 2006-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* win32/common/config.h:
+	* win32/MANIFEST
+	  add the generated file as well
+
+2006-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* Makefile.am:
 	* configure.ac:
 	* win32/common/config.h.in:

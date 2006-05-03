@@ -23,10 +23,17 @@ DIST_SUBDIRS = 			\
 	$(ALWAYS_SUBDIRS)	\
 	gconf
 
+
+win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
+
+debug:
+	echo $(win32)
+
 EXTRA_DIST = \
 	gst-plugins-good.spec depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
-	ChangeLog autogen.sh
+	ChangeLog autogen.sh \
+	$(win32)
 
 DISTCLEANFILES = _stdint.h
 
