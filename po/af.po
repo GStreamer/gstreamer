@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-31 23:33+0200\n"
+"POT-Creation-Date: 2006-05-03 23:45+0200\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -15,12 +15,27 @@ msgstr ""
 "Content-Type: text/plain; charset=iso-8859-1\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: sys/v4l2/v4l2_calls.c:409
+#: sys/v4l2/v4l2_calls.c:57
+#, c-format
+msgid "Error getting capabilities '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:398
+#, c-format
+msgid "Cannot identify '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:404
+#, c-format
+msgid "It isn't a device '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:415
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kon nie toestel \"%s\" oopmaak vir lees en skryf nie."
 
-#: sys/v4l2/v4l2_calls.c:423
+#: sys/v4l2/v4l2_calls.c:429
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "Toestel \"%s\" is nie 'n vasleggingtoestel nie."

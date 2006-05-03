@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-31 23:33+0200\n"
+"POT-Creation-Date: 2006-05-03 23:45+0200\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,12 +16,27 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: sys/v4l2/v4l2_calls.c:409
+#: sys/v4l2/v4l2_calls.c:57
+#, c-format
+msgid "Error getting capabilities '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:398
+#, c-format
+msgid "Cannot identify '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:404
+#, c-format
+msgid "It isn't a device '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:415
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
 
-#: sys/v4l2/v4l2_calls.c:423
+#: sys/v4l2/v4l2_calls.c:429
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "Уређај „%s“ не представља уређај за снимање."

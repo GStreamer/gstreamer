@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-31 23:33+0200\n"
+"POT-Creation-Date: 2006-05-03 23:45+0200\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -15,12 +15,27 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: sys/v4l2/v4l2_calls.c:409
+#: sys/v4l2/v4l2_calls.c:57
+#, c-format
+msgid "Error getting capabilities '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:398
+#, c-format
+msgid "Cannot identify '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:404
+#, c-format
+msgid "It isn't a device '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:415
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Kon apparaat \"%s\" niet openen voor lezen en schrijven."
 
-#: sys/v4l2/v4l2_calls.c:423
+#: sys/v4l2/v4l2_calls.c:429
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "Apparaat \"%s\" is niet een opvangapparaat."

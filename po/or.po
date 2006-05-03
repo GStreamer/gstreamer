@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-03-31 23:33+0200\n"
+"POT-Creation-Date: 2006-05-03 23:45+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -16,12 +16,27 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: sys/v4l2/v4l2_calls.c:409
+#: sys/v4l2/v4l2_calls.c:57
+#, c-format
+msgid "Error getting capabilities '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:398
+#, c-format
+msgid "Cannot identify '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:404
+#, c-format
+msgid "It isn't a device '%s': %d, %s\n"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:415
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "\"%s\" ଯନ୍ତ୍ର ପଢ଼ିବା ଓ ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#: sys/v4l2/v4l2_calls.c:423
+#: sys/v4l2/v4l2_calls.c:429
 #, c-format
 msgid "Device \"%s\" is not a capture device."
 msgstr "\"%s\" ଯନ୍ତ୍ର ଗୋଟିଏ ଅନୁଲିପିକାର ନୁହେଁ."
