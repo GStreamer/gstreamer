@@ -312,12 +312,14 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
         gst_structure_get_int (str, "channels", &channels)) {
       gint rate_idx, profile;
 
-      profile = 3;              /* 0=MAIN, 1=LC, 2=SSR, 3=? */
+      profile = 3;              /* 0=MAIN, 1=LC, 2=SSR, 3=LTP */
       rate_idx = aac_rate_idx (rate);
 
       faad->fake_codec_data[0] = ((profile + 1) << 3) | ((rate_idx & 0xE) >> 1);
       faad->fake_codec_data[1] = ((rate_idx & 0x1) << 7) | (channels << 3);
-      GST_LOG_OBJECT (faad, "created fake codec data (%u,%u)", rate, channels);
+      GST_LOG_OBJECT (faad, "created fake codec data (%u,%u): 0x%x 0x%x", rate,
+          channels, (int) faad->fake_codec_data[0],
+          (int) faad->fake_codec_data[1]);
     }
   }
 
@@ -1052,6 +1054,28 @@ gst_faad_sync (GstBuffer * buf, guint * off)
   return FALSE;
 }
 
+static gboolean
+looks_like_valid_header (guint8 * input_data, guint input_size)
+{
+  guint32 rate;
+  guint32 channels;
+
+  if (input_size < 2)
+    return FALSE;
+
+  rate = ((input_data[0] & 0x7) << 1) | ((input_data[1] & 0x80) >> 7);
+  channels = (input_data[1] & 0x78) >> 3;
+
+  if (rate == 0xd || rate == 0xe)       /* Reserved values */
+    return FALSE;
+
+  if (channels == 0)            /* Extended specifier: never seen one of these */
+    return FALSE;
+
+  return TRUE;
+}
+
+
 static GstFlowReturn
 gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -1108,10 +1132,23 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     guint8 ch;
 
     GST_DEBUG_OBJECT (faad, "initialising ...");
-    if (faacDecInit (faad->handle, input_data, input_size, &rate, &ch) < 0)
-      goto init_failed;
+    /* We check if the first data looks like it might plausibly contain
+     * appropriate initialisation info... if not, we use our fake_codec_data
+     */
+    if (looks_like_valid_header (input_data, input_size) || !faad->packetised) {
+      if (faacDecInit (faad->handle, input_data, input_size, &rate, &ch) < 0)
+        goto init_failed;
 
-    GST_DEBUG_OBJECT (faad, "faacDecInit() ok: rate=%u,channels=%u", rate, ch);
+      GST_DEBUG_OBJECT (faad, "faacDecInit() ok: rate=%u,channels=%u", rate,
+          ch);
+    } else {
+      if ((gint8) faacDecInit2 (faad->handle, faad->fake_codec_data, 2,
+              &rate, &ch) < 0) {
+        goto init2_failed;
+      }
+      GST_DEBUG_OBJECT (faad, "faacDecInit2() ok: rate=%u,channels=%u", rate,
+          ch);
+    }
 
     skip_bytes = 0;
     faad->init = TRUE;

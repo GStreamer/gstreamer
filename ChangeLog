@@ -1,3 +1,12 @@
+2006-05-03  Michael Smith  <msmith@fluendo.com>
+
+	* ext/faad/gstfaad.c: (gst_faad_setcaps),
+	(looks_like_valid_header), (gst_faad_chain):
+	  Fix #334748: use fake_codec_data if the first bytes of the first
+	  buffer we process doesn't look like plausible AAC data (e.g.
+	  reserved values for rate, or channels). Fixes playback of Apple's
+	  movie trailers.
+
 2006-05-02  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_get_caps):
