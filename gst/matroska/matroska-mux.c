@@ -1292,15 +1292,43 @@ gst_matroska_mux_best_pad (GstMatroskaMux * mux, gboolean * popped)
 
     /* if we have a buffer check if it is better then the current best one */
     if (collect_pad->buffer != NULL) {
-      if (best == NULL
-          || GST_BUFFER_TIMESTAMP (collect_pad->buffer) <
-          GST_BUFFER_TIMESTAMP (best->buffer)) {
+      if (best == NULL || !GST_BUFFER_TIMESTAMP_IS_VALID (collect_pad->buffer)
+          || (GST_BUFFER_TIMESTAMP_IS_VALID (best->buffer)
+              && GST_BUFFER_TIMESTAMP (collect_pad->buffer) <
+              GST_BUFFER_TIMESTAMP (best->buffer))) {
         best = collect_pad;
       }
     }
   }
 
   return best;
+}
+
+static gboolean
+gst_matroska_mux_stream_is_vorbis_header (GstMatroskaMux * mux,
+    GstMatroskaPad * collect_pad)
+{
+  GstMatroskaTrackAudioContext *audio_ctx;
+
+  audio_ctx = (GstMatroskaTrackAudioContext *) collect_pad->track;
+
+  if (collect_pad->track->type != GST_MATROSKA_TRACK_TYPE_AUDIO)
+    return FALSE;
+
+  if (audio_ctx->first_frame != FALSE)
+    return FALSE;
+
+  if (strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_AUDIO_VORBIS))
+    return FALSE;
+
+  /* HACK: three frame headers are counted using pos */
+  if (++collect_pad->track->pos <= 3)
+    return TRUE;
+
+  /* 4th vorbis packet => skipped all headers */
+  collect_pad->track->pos = 0;
+  audio_ctx->first_frame = TRUE;
+  return FALSE;
 }
 
 
@@ -1356,12 +1384,28 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   buf = collect_pad->buffer;
   collect_pad->buffer = NULL;
 
+  /* vorbis header are retrieved from caps and placed in CodecPrivate */
+  if (gst_matroska_mux_stream_is_vorbis_header (mux, collect_pad)) {
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
+  }
+
+  /* hm, invalid timestamp (due to --to be fixed--- element upstream);
+   * this would wreak havoc with time stored in matroska file */
+  if (!GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    GST_WARNING_OBJECT (collect_pad->collect.pad,
+        "Invalid buffer timestamp; dropping buffer");
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
+  }
+
   /* set the timestamp for outgoing buffers */
   ebml->timestamp = GST_BUFFER_TIMESTAMP (buf);
 
   if (mux->cluster) {
-    /* start a new cluster every two seconds */
-    if (mux->cluster_time + GST_SECOND * 2 < GST_BUFFER_TIMESTAMP (buf)) {
+    /* start a new cluster every two seconds or at keyframe */
+    if (mux->cluster_time + GST_SECOND * 2 < GST_BUFFER_TIMESTAMP (buf)
+        || !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
       GstMatroskaMetaSeekIndex *idx;
 
       gst_ebml_write_master_finish (ebml, mux->cluster);

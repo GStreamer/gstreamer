@@ -1,3 +1,18 @@
+2006-05-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts  <manauw at skynet be>
+
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_best_pad),
+	(gst_matroska_mux_stream_is_vorbis_header),
+	(gst_matroska_mux_write_data):
+	  Don't misinterpret GST_CLOCK_TIME_NONE as very high timestamp
+	  value and then dead-lock when muxing vorbis audio streams
+	  (the three vorbis header buffers carry no timestamp, and it
+	  would try to mux these after all video buffers). Fixes #340346.
+
+	  Improve clustering: start a new cluster also whenever we get
+	  a keyframe.	  
+
 2006-05-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* win32/common/config.h:
