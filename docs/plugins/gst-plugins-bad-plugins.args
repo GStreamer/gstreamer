@@ -495,3 +495,23 @@
 <DEFAULT>20</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstTRM::proxy-address</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>proxy address</NICK>
+<BLURB>proxy address.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTRM::proxy-port</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>proxy port</NICK>
+<BLURB>proxy port.</BLURB>
+<DEFAULT>8080</DEFAULT>
+</ARG>
+

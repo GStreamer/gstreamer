@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer Bad Plug-ins 0.10.1 "Slimy - yet satisfying"
+GStreamer: Release notes for GStreamer Bad Plug-ins 0.10.3 "Petition to request permission"
         
 
 
@@ -59,29 +59,49 @@ contains a set of well-supported plug-ins, but might pose problems for
   
 Features of this release
     
-      * Parallel installability with 0.8.x series
-      * Threadsafe design and API
-      * Lots of fixes for the QT/MOV demuxer, including 
-        restoring the ability to play web streams, and more 
-        codecs supported
-      * AAC decoder fixes
-      * MMS source fixes
-      * DirectFB plugin updated
-      * New plugins ported to 0.10: swfdec, XVid, dtsdec, glimagesink
-      * New libneon based http source filter
-      * APE tag reader moved to gst-plugins-good module
+      * FAAD/AAC decoder improvements
+      * Better QuickTime support
+      * Plugins ported from 0.8: modplug, v4l2src, Musicbrainz TRM
+      * New plugins: Xing muxer, libsoundtouch, AMR-WB, theora-exp
+      * Musepack decoder improved
+      * libneon based http input now supports iradio mode
+      * More uniform plugin descriptions
+      * Many bug fixes
 
 Bugs fixed in this release
     
-      * 303167 : Add bzip2 support
-      * 322973 : [wavpack] erroneous sampling rates range
-      * 326524 : Support for Indeo 3-encoded QuickTime files
-      * 327133 : [qtdemux] QuickTime with 8-bit audio
-      * 328854 : AAC+ stream not working with FAAD plugin
-      * 330089 : [bz2] Wrong mimetype and no typefinding
-      * 331302 : bz2 plugin source files lack copyright notices
-      * 331543 : crash on iTunes MPEG v4 AAC-LC files
-      * 331582 : [qtdemux] protect log statement against invalid memory ac...
+      * 333307 : AmrWB Plugin
+      * 330317 : New xingmux element  for writing Xing headers
+      * 304795 : [ximagesrc] port to 0.9 [PATCH]
+      * 154906 : [qtdemux] A/V Synch problem + crackling sound
+      * 167129 : [qtdemux] eats last chunk
+      * 173007 : [faad] Failed to decode buffer: Channel coupling not yet ...
+      * 302606 : [qtdemux] Movie playback too fast (quicktime mov, H.263 c...
+      * 321351 : extracted AAC output is played too slow
+      * 324082 : [qtdemux] [faad] playback issues with quicktime videos
+      * 327075 : [qtdemux] add support for palettized SMC videos
+      * 327355 : gst-plugins-bad CVS compilation breaks on gcc 4.1
+      * 331335 : New Element: libsoundtouch based pitch shifter
+      * 331909 : support for more fourccs in qtdemux
+      * 332066 : [qtdemux] doesn't extract Disc Number field from some files
+      * 332155 : Seeking problems in .mov files
+      * 332402 : quicktime file will not play
+      * 332598 : port modplug to 0.10
+      * 332892 : [faad] 'Negative scalefactor found' and 'Maximum number o...
+      * 333283 : [xviddec] Fix build with gcc 2.95
+      * 333501 : [patch] taglib element
+      * 334123 : [taglibmux] fixes for TPOS and TCOP
+      * 334417 : autogen.sh bit rot
+      * 334700 : [qtdemux] Memory leaks
+      * 334748 : [faad] doesn't take sampling rate from demuxer
+      * 335585 : xvidenc does not mark key-frame/delta-units
+      * 336898 : Port musicbrainz/trm plugin to 0.10
+      * 337263 : plugins need better/unified descriptions
+      * 338233 : theora-exp api out of sync
+      * 339041 : qtdemux : Floating point exception
+      * 339074 : Thumbnail generation fails on the following file
+      * 337436 : Sound is very jerky on this .mov file
+      * 338935 : [qtdemux] floating point exception parsing trac header
 
 Download
 
@@ -111,18 +131,26 @@ Applications
   
 Contributors to this release
     
-      * Andy Wingo
-      * Christian Schaller
-      * David Schleef
+      * Alex Lancaster
+      * Christophe Fergeau
       * Edgard Lima
       * Edward Hervey
       * Fabrizio Gennari
+      * James "Doc" Livingston
+      * Jan Gerber
       * Jan Schmidt
+      * Jens Granseuer).
       * Julien MOUTTE
-      * Lutz Mueller
+      * Mark Nauwelaerts
+      * Michael Smith
+      * Mikhail Zabaluev
+      * Renato Araujo Oliveira Filho
       * Sebastien Moutte
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans
+      * Wouter Paeson
+      * Zaheer Abbas Merali
+      * j^
  

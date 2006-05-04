@@ -1,3 +1,10 @@
+=== release 0.10.3 ===
+
+2006-05-04  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.3, "Petition to request permission"
+
 2006-05-04  Julien MOUTTE  <julien@moutte.net>
 
 	* tests/icles/Makefile.am: Fix build.
