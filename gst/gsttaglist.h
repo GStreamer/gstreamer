@@ -277,23 +277,23 @@ gboolean        gst_tag_list_get_date_index     (const GstTagList     * list,
                                                  guint                  index,
                                                  GDate               ** value);
 
-/* GStreamer core tags (need to be discussed) */
+/* GStreamer core tags */
 /**
  * GST_TAG_TITLE:
  *
- * commonly used title
+ * commonly used title (string)
  */
 #define GST_TAG_TITLE			"title"
 /**
  * GST_TAG_ARTIST:
  *
- * person(s) responsible for the recording
+ * person(s) responsible for the recording (string)
  */
 #define GST_TAG_ARTIST			"artist"
 /**
  * GST_TAG_ALBUM:
  *
- * album containing this data
+ * album containing this data (string)
  */
 #define GST_TAG_ALBUM			"album"
 /**
@@ -305,187 +305,187 @@ gboolean        gst_tag_list_get_date_index     (const GstTagList     * list,
 /**
  * GST_TAG_GENRE:
  *
- * genre this data belongs to
+ * genre this data belongs to (string)
  */
 #define GST_TAG_GENRE			"genre"
 /**
  * GST_TAG_COMMENT:
  *
- * free text commenting the data
+ * free text commenting the data (string)
  */
 #define GST_TAG_COMMENT			"comment"
 /**
  * GST_TAG_TRACK_NUMBER:
  *
- * track number inside a collection
+ * track number inside a collection (unsigned integer)
  */
 #define GST_TAG_TRACK_NUMBER		"track-number"
 /**
  * GST_TAG_TRACK_COUNT:
  *
- * count of tracks inside collection this track belongs to
+ * count of tracks inside collection this track belongs to (unsigned integer)
  */
 #define GST_TAG_TRACK_COUNT		"track-count"
 /**
  * GST_TAG_ALBUM_VOLUME_NUMBER:
  *
- * disc number inside a collection
+ * disc number inside a collection (unsigned integer)
  */
 #define GST_TAG_ALBUM_VOLUME_NUMBER	"album-disc-number"
 /**
  * GST_TAG_ALBUM_VOLUME_COUNT:
  *
- * count of discs inside collection this disc belongs to
+ * count of discs inside collection this disc belongs to (unsigned integer)
  */
 #define GST_TAG_ALBUM_VOLUME_COUNT	"album-disc-count"
 /**
  * GST_TAG_LOCATION:
  *
- * original location of file as a URI
+ * original location of file as a URI (string)
  */
 #define GST_TAG_LOCATION		"location"
 /**
  * GST_TAG_DESCRIPTION:
  *
- * short text describing the content of the data
+ * short text describing the content of the data (string)
  */
 #define GST_TAG_DESCRIPTION		"description"
 /**
  * GST_TAG_VERSION:
  *
- * version of this data
+ * version of this data (string)
  */
 #define GST_TAG_VERSION			"version"
 /**
  * GST_TAG_ISRC:
  *
- * International Standard Recording Code - see http://www.ifpi.org/isrc/
+ * International Standard Recording Code - see http://www.ifpi.org/isrc/ (string)
  */
 #define GST_TAG_ISRC			"isrc"
 /**
  * GST_TAG_ORGANIZATION:
  *
- * organization
+ * organization (string)
  */
 #define GST_TAG_ORGANIZATION		"organization"
 /**
  * GST_TAG_COPYRIGHT:
  *
- * copyright notice of the data
+ * copyright notice of the data (string)
  */
 #define GST_TAG_COPYRIGHT		"copyright"
 /**
  * GST_TAG_CONTACT:
  *
- * contact information
+ * contact information (string)
  */
 #define GST_TAG_CONTACT			"contact"
 /**
  * GST_TAG_LICENSE:
  *
- * license of data
+ * license of data (string)
  */
 #define GST_TAG_LICENSE			"license"
 /**
  * GST_TAG_PERFORMER:
  *
- * person(s) performing
+ * person(s) performing (string)
  */
 #define GST_TAG_PERFORMER		"performer"
 /**
  * GST_TAG_DURATION:
  *
- * length in GStreamer time units (nanoseconds)
+ * length in GStreamer time units (nanoseconds) (unsigned 64-bit integer)
  */
 #define GST_TAG_DURATION		"duration"
 /**
  * GST_TAG_CODEC:
  *
- * codec the data is stored in
+ * codec the data is stored in (string)
  */
 #define GST_TAG_CODEC			"codec"
 /**
  * GST_TAG_VIDEO_CODEC:
  *
- * codec the video data is stored in
+ * codec the video data is stored in (string)
  */
 #define GST_TAG_VIDEO_CODEC		"video-codec"
 /**
  * GST_TAG_AUDIO_CODEC:
  *
- * codec the audio data is stored in
+ * codec the audio data is stored in (string)
  */
 #define GST_TAG_AUDIO_CODEC		"audio-codec"
 /**
  * GST_TAG_BITRATE:
  *
- * exact or average bitrate in bits/s
+ * exact or average bitrate in bits/s (unsigned integer)
  */
 #define GST_TAG_BITRATE			"bitrate"
 /**
  * GST_TAG_NOMINAL_BITRATE:
  *
- * nominal bitrate in bits/s
+ * nominal bitrate in bits/s (unsigned integer)
  */
 #define GST_TAG_NOMINAL_BITRATE		"nominal-bitrate"
 /**
  * GST_TAG_MINIMUM_BITRATE:
  *
- * minimum bitrate in bits/s
+ * minimum bitrate in bits/s (unsigned integer)
  */
 #define GST_TAG_MINIMUM_BITRATE		"minimum-bitrate"
 /**
  * GST_TAG_MAXIMUM_BITRATE:
  *
- * maximum bitrate in bits/s
+ * maximum bitrate in bits/s (unsigned integer)
  */
 #define GST_TAG_MAXIMUM_BITRATE		"maximum-bitrate"
 /**
  * GST_TAG_SERIAL:
  *
- * serial number of track
+ * serial number of track (unsigned integer)
  */
 #define GST_TAG_SERIAL			"serial"
 /**
  * GST_TAG_ENCODER:
  *
- * encoder used to encode this stream
+ * encoder used to encode this stream (string)
  */
 #define GST_TAG_ENCODER			"encoder"
 /**
  * GST_TAG_ENCODER_VERSION:
  *
- * version of the encoder used to encode this stream
+ * version of the encoder used to encode this stream (unsigned integer)
  */
 #define GST_TAG_ENCODER_VERSION		"encoder-version"
 /**
  * GST_TAG_TRACK_GAIN:
  *
- * track gain in db
+ * track gain in db (double)
  */
 #define GST_TAG_TRACK_GAIN		"replaygain-track-gain"
 /**
  * GST_TAG_TRACK_PEAK:
  *
- * peak of the track
+ * peak of the track (double)
  */
 #define GST_TAG_TRACK_PEAK		"replaygain-track-peak"
 /**
  * GST_TAG_ALBUM_GAIN:
  *
- * album gain in db
+ * album gain in db (double)
  */
 #define GST_TAG_ALBUM_GAIN  		"replaygain-album-gain"
 /**
  * GST_TAG_ALBUM_PEAK:
  *
- * peak of the album
+ * peak of the album (double)
  */
 #define GST_TAG_ALBUM_PEAK		"replaygain-album-peak"
 /**
  * GST_TAG_LANGUAGE_CODE:
  *
- * Language code (ISO-639-1)
+ * Language code (ISO-639-1) (string)
  */
 #define GST_TAG_LANGUAGE_CODE		"language-code"
 

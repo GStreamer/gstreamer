@@ -1,3 +1,8 @@
+2006-05-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsttaglist.h:
+	  Mention type of tags in doc blurbs.
+
 2006-05-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstpad.c: (gst_pad_init), (gst_pad_configure_sink),
