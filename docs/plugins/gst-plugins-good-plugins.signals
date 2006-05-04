@@ -14,6 +14,7 @@ GstGSMEnc *gstgsmenc
 <SIGNAL>
 <NAME>GstMultiUDPSink::add</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiUDPSink *gstmultiudpsink
 gchar *arg1
 gint  arg2
@@ -22,12 +23,14 @@ gint  arg2
 <SIGNAL>
 <NAME>GstMultiUDPSink::clear</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiUDPSink *gstmultiudpsink
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstMultiUDPSink::client-added</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiUDPSink *gstmultiudpsink
 gchar *arg1
 gint  arg2
@@ -36,6 +39,7 @@ gint  arg2
 <SIGNAL>
 <NAME>GstMultiUDPSink::client-removed</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiUDPSink *gstmultiudpsink
 gchar *arg1
 gint  arg2
@@ -44,6 +48,7 @@ gint  arg2
 <SIGNAL>
 <NAME>GstMultiUDPSink::get-stats</NAME>
 <RETURNS>GValueArray*</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiUDPSink *gstmultiudpsink
 gchar *arg1
 gint  arg2
@@ -52,6 +57,7 @@ gint  arg2
 <SIGNAL>
 <NAME>GstMultiUDPSink::remove</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstMultiUDPSink *gstmultiudpsink
 gchar *arg1
 gint  arg2
@@ -60,6 +66,7 @@ gint  arg2
 <SIGNAL>
 <NAME>GstDynUDPSink::get-stats</NAME>
 <RETURNS>GValueArray*</RETURNS>
+<FLAGS>l</FLAGS>
 GstDynUDPSink *gstdynudpsink
 gchar *arg1
 gint  arg2
@@ -86,6 +93,7 @@ GstVertigoTV *gstvertigotv
 <SIGNAL>
 <NAME>GstShout2send::connection-problem</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>c</FLAGS>
 GstShout2send *gstshout2send
 gint  arg1
 </SIGNAL>
@@ -99,18 +107,21 @@ DV1394Src *dv1394src
 <SIGNAL>
 <NAME>GstJpegEnc::frame-encoded</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstJpegEnc *gstjpegenc
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstAASink::frame-displayed</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstAASink *gstaasink
 </SIGNAL>
 
 <SIGNAL>
 <NAME>GstAASink::have-size</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstAASink *gstaasink
 guint  arg1
 guint  arg2
@@ -247,6 +258,7 @@ GstElement *arg1
 <SIGNAL>
 <NAME>GstDV1394Src::frame-dropped</NAME>
 <RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
 GstDV1394Src *gstdv1394src
 </SIGNAL>
 

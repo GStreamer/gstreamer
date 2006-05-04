@@ -1,3 +1,10 @@
+=== release 0.10.3 ===
+
+2006-05-04  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.3, "Desplazado"
+
 2006-05-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/matroska-mux.c:

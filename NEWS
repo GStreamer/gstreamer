@@ -1,4 +1,86 @@
-This is GStreamer Good Plug-ins 0.10.2, "Papa was a rolling stone".
+This is GStreamer Good Plug-ins 0.10.3, "Desplazado"
+
+Changes since 0.10.2:
+
+      * Annodex/CMML support
+      * RTSP and RTP enhancements
+      * HAL configured audio device support
+      * FLAC, Matroska, AVI, WAV, ID3, APE, DV and JPEG plugin improvements
+      * Recognise SSA/ASS and USF subtitles in Matroska files
+      * Fixes for ESD and SunAudio output plugins
+      * More uniform plugin descriptions
+      * IceCast metadata reading plugin added
+      * New plugins ported from 0.8: OSX audio, AVI muxer, X-Windows input, 
+         WAV encoder, Gdk-Pixbuf image decoder, Smoke decoder, 
+         Video colour balance
+      * Lots of bug fixes
+
+Bugs fixed since 0.10.2:
+
+      * 335067 : RTSP src not working with WMServer servers
+      * 333657 : Replacing icy demuxing in gnomevfssrc
+      * 329106 : HAL sound device wrapper plugins
+      * 337749 : totem (gstreamer) crashes when playing an avi file
+      * 330885 : avidemux does not handle eos at end of seek-region
+      * 337364 : faulty GObject macros
+      * 337625 : [patch] Streaming support for wavparse
+      * 150363 : [pngdec] doesn't handle grayscale or paletted
+      * 154744 : Time slider does not work with avi videos from Cannon SD100
+      * 161712 : [auparse] .au files don't play in playbin
+      * 313266 : [wavparse] will not play DTS stream in malformed WAV
+      * 319183 : rtspsrc filter sometimes uses an odd port for rtp
+      * 319986 : annodex decoding and encoding support
+      * 323721 : [id3demux] read in replaygain information from RVA2 frame...
+      * 323880 :  " Seek in ready " for dvdemux
+      * 325191 : problem with auparse or mulawdec, choppy esd playback
+      * 326160 : videobalance not ported to new GstVideoFilter
+      * 327658 :  " Seek in ready " support for wavparse plugin
+      * 328327 : gst-plugins-good fail to compile with gcc 4.1
+      * 329107 : Profile support for gconfaudiosink
+      * 330239 : Crash playing any song from a particular album over rhyth...
+      * 330678 : Unable to play .fli files
+      * 331253 : Critical warnings when using cddacdiosrc
+      * 331368 : Gstreamer doesn't recognise tags
+      * 331385 : [alpha] state change function returns a constant
+      * 331672 : Another file that gstreamer can't read the tags on
+      * 331905 : [jpeg] smokedec not ported
+      * 331917 : [pngdec] does not support files with png streams
+      * 332031 : [PATCH] avimux ported to 0.10
+      * 332547 : [wavparse] does not support multichannel wavs
+      * 333070 : [id3demux] reads unicode tags incorrectly where .8 did it...
+      * 333302 : [apedemux] some WavPack files with APE tags fail to play ...
+      * 333392 : [sunaudio] unused variables break CVS build with -Werror
+      * 333512 : [PATCH] Fix gst_pad_new_from_template (gst_static_pad_tem...
+      * 333624 : invalid get_times implementation in gstdynudpsink
+      * 333784 : [patch] unref the result of gst_pad_get_parent
+      * 334083 : [jpegdec] wrong durations set on buffers after seeking in...
+      * 334522 : avi of mpeg4 video and adpcm audio from digital camera re...
+      * 334732 : [id3demux] mp3 fails to play because typefinding thinks i...
+      * 334995 : [goom] zoom filter leaked
+      * 335231 : [wavparse] incorrect way to calculate seek position with ...
+      * 335755 : rhythmbox import crasher - png?
+      * 335858 : Video playback out of sync
+      * 335958 : [speexenc] doesn't work
+      * 336110 : move taglib-based ID3 muxer to -good
+      * 336602 : plugins need better/univied descriptions
+      * 336756 : move ximagesrc to gst-plugins-good
+      * 336889 : [avidemux] index creation might fail with some non-indexe...
+      * 336904 : Problem playing some AVI file when splitting large chunks...
+      * 337033 : [speex] can't seek in speex-encoded audio
+      * 337183 : [matroska] " caps not real subset " when playing audio files
+      * 337294 : AVI files downloaded from vidoe.google.com won't play
+      * 337421 : [sunaudiosink] some fixes
+      * 337609 : [flacdec] can't play .flac files where header says total_...
+      * 338290 : [flacdec] segment seek not supported
+      * 338713 : [id3demux] TCO genre tags (id3v2.2) don't get read by gst...
+      * 338715 : [shout2send] fix crash on error and tags received before ...
+      * 338716 : [wavenc] " not negotiated " error with CVS core
+      * 338810 : [matroskademux] blocks on segmenting seek (and other seek...
+      * 339446 : [matroska] can't play file if details come before type in...
+      * 339451 : [matroska] enhancement for VfW compatibility cases
+      * 339678 : [matroskamux] wrong timestamps of B-frames
+      * 340346 : [matroskamux] blocks upon muxing video and vorbis-audio
+      * 319884 : rtpamrdec discards non-transmitted frames
 
 Changes since 0.10.1:
       * New libcdio based CDDA reading element

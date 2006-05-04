@@ -1,17 +1,17 @@
 <plugin>
   <name>taglib</name>
-  <description>Tag-writing plug-in based on taglib</description>
+  <description>Tag writing plug-in based on taglib</description>
   <filename>../../ext/taglib/.libs/libgsttaglib.so</filename>
   <basename>libgsttaglib.so</basename>
-  <version>0.10.2.1</version>
+  <version>0.10.3.0</version>
   <license>LGPL</license>
-  <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>id3v2mux</name>
-      <longname>TagLib ID3v2 Muxer</longname>
+      <longname>TagLib-based ID3v2 Muxer</longname>
       <class>Formatter/Metadata</class>
       <description>Adds an ID3v2 header to the beginning of MP3 files using taglib</description>
       <author>Christophe Fergeau &lt;teuf@gnome.org&gt;</author>
