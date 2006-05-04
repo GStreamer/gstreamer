@@ -22,11 +22,11 @@
  */
 
 
-#include <stdlib.h>
-
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
+
+#include <stdlib.h>
 
 #include "../../gst/gst-i18n-lib.h"
 #include "gstidentity.h"

@@ -29,9 +29,9 @@
  * gst-launch utillity.
  */
 
-#include <string.h>
 
 #include "gst_private.h"
+#include <string.h>
 
 #include "gstparse.h"
 #include "gstinfo.h"

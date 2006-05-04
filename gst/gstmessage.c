@@ -48,9 +48,9 @@
  * Last reviewed on 2005-11-09 (0.9.4)
  */
 
-#include <string.h>             /* memcpy */
 
 #include "gst_private.h"
+#include <string.h>             /* memcpy */
 #include "gsterror.h"
 #include "gstenumtypes.h"
 #include "gstinfo.h"

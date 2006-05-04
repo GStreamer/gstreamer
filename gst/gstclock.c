@@ -102,9 +102,9 @@
  * Last reviewed on 2006-03-09 (0.10.4)
  */
 
-#include <time.h>
 
 #include "gst_private.h"
+#include <time.h>
 
 #include "gstclock.h"
 #include "gstinfo.h"

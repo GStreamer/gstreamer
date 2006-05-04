@@ -1,3 +1,29 @@
+2006-05-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: James Andrewartha <trs80 at tartarus uwa edu au>
+
+	* gst/gst.c:
+	* gst/gstbus.c:
+	* gst/gstclock.c:
+	* gst/gstevent.c:
+	* gst/gstformat.c:
+	* gst/gstmessage.c:
+	* gst/gstparse.c:
+	* gst/gstquery.c:
+	* gst/gstutils.c:
+	* gst/parse/Makefile.am:
+	* libs/gst/base/gstadapter.c:
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstpushsrc.c:
+	* libs/gst/base/gsttypefindhelper.c:
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstidentity.c:
+	  Make sure gstprivate.h and/or config.h are
+	  always included first, otherwise some of our
+	  defines (like _FILE_OFFSET_BITS) might be
+	  redefined in the system headers. Fixes build
+	  on opensolaris (#340016).
+
 2006-05-04  Wim Taymans  <wim@fluendo.com>
 
 	* docs/libs/gstreamer-libs-sections.txt:

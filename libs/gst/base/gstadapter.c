@@ -92,9 +92,9 @@
  * Last reviewed on 2006-03-07 (0.10.4).
  */
 
-#include <string.h>
 
 #include "gstadapter.h"
+#include <string.h>
 
 /* default size for the assembled data buffer */
 #define DEFAULT_SIZE 16

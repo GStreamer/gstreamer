@@ -66,13 +66,13 @@
  * Last reviewed on 2006-03-12 (0.10.5)
  */
 
+#include "gst_private.h"
 #include <errno.h>
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
 #include <sys/types.h>
 
-#include "gst_private.h"
 #include "gstinfo.h"
 
 #include "gstbus.h"

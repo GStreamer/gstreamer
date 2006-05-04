@@ -101,10 +101,10 @@
  * Last reviewed on 2005-11-23 (0.9.5)
  */
 
+#include "gst_private.h"
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "gst_private.h"
 #include "gst-i18n-lib.h"
 #include <locale.h>             /* for LC_ALL */
 

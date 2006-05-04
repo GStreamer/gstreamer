@@ -31,12 +31,12 @@
  * typefinding in push mode from a chain function.
  */
 
-#include <stdlib.h>
-#include <string.h>
-
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
+
+#include <stdlib.h>
+#include <string.h>
 
 #include "gsttypefindhelper.h"
 

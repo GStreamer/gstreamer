@@ -28,10 +28,10 @@
  * When defining own plugins, use the GST_BOILERPLATE ease gobject creation.
  */
 
+#include "gst_private.h"
 #include <stdio.h>
 #include <string.h>
 
-#include "gst_private.h"
 #include "gstghostpad.h"
 #include "gstutils.h"
 #include "gstinfo.h"

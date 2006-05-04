@@ -75,9 +75,9 @@
  * Last reviewed on 2006-01-24 (0.10.2)
  */
 
-#include <string.h>             /* memcpy */
 
 #include "gst_private.h"
+#include <string.h>             /* memcpy */
 
 #include "gstinfo.h"
 #include "gstevent.h"

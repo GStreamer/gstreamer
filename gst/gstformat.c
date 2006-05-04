@@ -31,9 +31,9 @@
  * operations.
  */
 
-#include <string.h>
 
 #include "gst_private.h"
+#include <string.h>
 #include "gstformat.h"
 
 static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
