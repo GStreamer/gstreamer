@@ -1,3 +1,7 @@
+2006-05-04  David Schleef  <ds@schleef.org>
+
+	* gst/typefind/gsttypefindfunctions.c:
+
 2006-05-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset),

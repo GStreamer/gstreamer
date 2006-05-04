@@ -2534,8 +2534,12 @@ plugin_init (GstPlugin * plugin)
       ar_type_find, ar_exts, AR_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-ms-dos-executable",
       GST_RANK_SECONDARY, msdos_type_find, msdos_exts, MSDOS_CAPS, NULL, NULL);
+#if 0
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-dirac",
-      GST_RANK_PRIMARY, NULL, "BBCD", 4, GST_TYPE_FIND_LIKELY);
+      GST_RANK_PRIMARY, NULL, "BBCD", 4, GST_TYPE_FIND_MAXIMUM);
+#endif
+  TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-dirac",
+      GST_RANK_PRIMARY, NULL, "KW-DIRAC", 8, GST_TYPE_FIND_MAXIMUM);
 
   return TRUE;
 }
