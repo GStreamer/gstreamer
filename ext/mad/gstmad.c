@@ -159,10 +159,6 @@ static void gst_mad_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_mad_src_event (GstPad * pad, GstEvent * event);
 
-#if 0
-static const GstFormat *gst_mad_get_formats (GstPad * pad);
-#endif
-
 static const GstQueryType *gst_mad_get_query_types (GstPad * pad);
 
 static gboolean gst_mad_src_query (GstPad * pad, GstQuery * query);
@@ -334,12 +330,6 @@ gst_mad_init (GstMad * mad)
   gst_pad_set_chain_function (mad->sinkpad, GST_DEBUG_FUNCPTR (gst_mad_chain));
   gst_pad_set_event_function (mad->sinkpad,
       GST_DEBUG_FUNCPTR (gst_mad_sink_event));
-#if 0
-  gst_pad_set_convert_function (mad->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_mad_convert_sink));
-  gst_pad_set_formats_function (mad->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_mad_get_formats));
-#endif
   template = gst_static_pad_template_get (&mad_src_template_factory);
   mad->srcpad = gst_pad_new_from_template (template, "src");
   gst_object_unref (template);
@@ -351,12 +341,6 @@ gst_mad_init (GstMad * mad)
   gst_pad_set_query_type_function (mad->srcpad,
       GST_DEBUG_FUNCPTR (gst_mad_get_query_types));
   gst_pad_use_fixed_caps (mad->srcpad);
-#if 0
-  gst_pad_set_convert_function (mad->srcpad,
-      GST_DEBUG_FUNCPTR (gst_mad_convert_src));
-  gst_pad_set_formats_function (mad->srcpad,
-      GST_DEBUG_FUNCPTR (gst_mad_get_formats));
-#endif
   mad->tempbuffer = g_malloc (MAD_BUFFER_MDLEN * 3);
   mad->tempsize = 0;
   mad->base_byte_offset = 0;
@@ -409,26 +393,6 @@ gst_mad_get_index (GstElement * element)
 
   return mad->index;
 }
-
-#if 0
-static const GstFormat *
-gst_mad_get_formats (GstPad * pad)
-{
-  static const GstFormat src_formats[] = {
-    GST_FORMAT_BYTES,
-    GST_FORMAT_DEFAULT,
-    GST_FORMAT_TIME,
-    0
-  };
-  static const GstFormat sink_formats[] = {
-    GST_FORMAT_BYTES,
-    GST_FORMAT_TIME,
-    0
-  };
-
-  return (GST_PAD_IS_SRC (pad) ? src_formats : sink_formats);
-}
-#endif
 
 static gboolean
 gst_mad_convert_sink (GstPad * pad, GstFormat src_format, gint64 src_value,
@@ -575,6 +539,10 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
   peer = gst_pad_get_peer (mad->sinkpad);
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_FORMATS:
+      gst_query_set_formats (query, 3, GST_FORMAT_DEFAULT, GST_FORMAT_TIME,
+          GST_FORMAT_BYTES);
+      break;
     case GST_QUERY_POSITION:
     {
       GstFormat format;

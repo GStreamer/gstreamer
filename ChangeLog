@@ -1,3 +1,11 @@
+2006-05-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Lutz Müller <lutz at topfrose de>
+
+	* ext/mad/gstmad.c: (gst_mad_init), (gst_mad_src_query):
+	  Make mad the second element to support the highly useful
+	  FORMATS query (#340594)
+
 2006-05-02  Edward Hervey  <edward@fluendo.com>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_sink_convert),
