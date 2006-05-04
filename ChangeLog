@@ -1,3 +1,10 @@
+2006-05-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Michal Benes  <michal dot benes at xeris dot cz>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_reset):
+	  Don't leak caps when freeing the stream context (#340623).
+
 2006-05-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

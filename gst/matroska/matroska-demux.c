@@ -227,6 +227,7 @@ gst_matroska_demux_reset (GstElement * element)
       if (demux->src[i]->pad != NULL) {
         gst_element_remove_pad (GST_ELEMENT (demux), demux->src[i]->pad);
       }
+      gst_caps_replace (&demux->src[i]->caps, NULL);
       g_free (demux->src[i]->codec_id);
       g_free (demux->src[i]->codec_name);
       g_free (demux->src[i]->name);
