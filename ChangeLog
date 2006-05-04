@@ -1,3 +1,10 @@
+2006-05-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstpad.c: (gst_pad_init), (gst_pad_configure_sink),
+	(gst_pad_configure_src), (gst_pad_push):
+	Restore acceptcaps checking behaviour now that good plugins have
+	been released.
+
 2006-05-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: James Andrewartha <trs80 at tartarus uwa edu au>
