@@ -112,6 +112,7 @@ gst_adapter_flush
 gst_adapter_available
 gst_adapter_available_fast
 gst_adapter_take
+gst_adapter_take_buffer
 <SUBSECTION Standard>
 GstAdapterClass
 GST_ADAPTER

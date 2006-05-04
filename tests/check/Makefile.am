@@ -78,6 +78,7 @@ check_PROGRAMS =				\
 	$(REGISTRY_CHECKS)			\
 	libs/libsabi				\
 	libs/gdp				\
+	libs/adapter				\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider
 
@@ -102,6 +103,9 @@ libs_gdp_CFLAGS = $(AM_CFLAGS)
 elements_fdsrc_CFLAGS=$(GST_OBJ_CFLAGS) $(CHECK_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
 
 libs_basesrc_LDADD = \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(LDADD)
+libs_adapter_LDADD = \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(LDADD)
 libs_controller_LDADD = \

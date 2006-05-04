@@ -1,5 +1,25 @@
 2006-05-04  Wim Taymans  <wim@fluendo.com>
 
+	* docs/libs/gstreamer-libs-sections.txt:
+	API: addition: gst_adapter_take_buffer()
+	
+	* libs/gst/base/gstadapter.c: (gst_adapter_push),
+	(gst_adapter_peek), (gst_adapter_take), (gst_adapter_take_buffer),
+	(gst_adapter_available_fast):
+	* libs/gst/base/gstadapter.h:
+	Prepare for optimizing the hell out of this hugely inefficient
+	piece of code. 
+	Added gst_adapter_take_buffer() so we can at least start thinking
+	about subbuffering and merging.
+	Added some comments.
+
+	* tests/check/Makefile.am:
+	* tests/check/libs/adapter.c: (GST_START_TEST),
+	(gst_adapter_suite), (main):
+	Added GstAdapter check.
+
+2006-05-04  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-overview.txt:
 	Fix some typos, add blurb about buffer flags.
 
