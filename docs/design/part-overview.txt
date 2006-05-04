@@ -190,6 +190,8 @@ Dataflow and buffers
     - the duration of the data in time.
     - the media type of the data described with caps, these are key/value pairs that
         describe the media type in a unique way.
+    - additional flags describing special properties of the data such as 
+      discontinuities or delta units.
 
  When an element whishes to send a buffer to another element is does this using one
  of the pads that is linked to a pad of the other element. In the push model, a 
@@ -219,7 +221,6 @@ Dataflow and buffers
 
  The process of selecting a media type and attaching it to the buffers is called
  caps negotiation.
-
 
 Caps
 ----
@@ -284,7 +285,7 @@ Pipeline clock
 
  The purpose of the clock is to provide a stricly increasing value at the rate
  of one GST_SECOND per second. Clock values are expressed in nanoseconds.
- Elements use the clock time to synchronized the playback of data.
+ Elements use the clock time to synchronize the playback of data.
 
  Before the pipeline is set to PLAYING, the pipeline asks each element if they can
  provide a clock. The clock is selected in the following order:
@@ -295,11 +296,11 @@ Pipeline clock
     sinks.
   - If no element provides a clock a default system clock is used for the pipeline.
 
- In a typical playback pipeline this will select the clock provided by a sink element
- such as an audio sink.
+ In a typical playback pipeline this algorithm will select the clock provided by 
+ a sink element such as an audio sink.
 
  In capture pipelines, this will typically select the clock of the data producer, which
- can in most cases not control the rate at which it delivers data.
+ can in most cases not control the rate at which it produces data.
 
 
 Pipeline states
