@@ -43,6 +43,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %makeinstall
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{gst_majorminor}/*.la
+rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{gst_majorminor}/*.a
 
 %clean
 rm -rf $RPM_BUILD_ROOT
