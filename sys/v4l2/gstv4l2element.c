@@ -1,10 +1,11 @@
 /*
- * GStreamer gstv4l2element.c: base class for V4L2 elements Copyright
- * (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net> This library 
- * is free software; you can redistribute it and/or modify it under the
- * terms of the GNU Library General Public License as published by the
- * Free Software Foundation; either version 2 of the License, or (at your
- * option) any later version. This library is distributed in the hope
+ * GStreamer gstv4l2element.c: base class for V4L2 elements
+ * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ * This library is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Library General Public License as published
+ * by the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version. This library is distributed in the hope
  * that it will be useful, but WITHOUT ANY WARRANTY; without even the
  * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
  * PURPOSE.  See the GNU Library General Public License for more details.
@@ -49,19 +50,19 @@ enum
 static void gst_v4l2element_init_interfaces (GType type);
 
 GST_BOILERPLATE_FULL (GstV4l2Element, gst_v4l2element, GstPushSrc,
-    GST_TYPE_PUSH_SRC, gst_v4l2element_init_interfaces)
-     static void gst_v4l2element_dispose (GObject * object);
-     static void gst_v4l2element_set_property (GObject * object,
+    GST_TYPE_PUSH_SRC, gst_v4l2element_init_interfaces);
+
+static void gst_v4l2element_dispose (GObject * object);
+static void gst_v4l2element_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-     static void gst_v4l2element_get_property (GObject * object,
+static void gst_v4l2element_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-     static gboolean gst_v4l2element_start (GstBaseSrc * src);
-     static gboolean gst_v4l2element_stop (GstBaseSrc * src);
+static gboolean gst_v4l2element_start (GstBaseSrc * src);
+static gboolean gst_v4l2element_stop (GstBaseSrc * src);
 
 
-     static gboolean
-         gst_v4l2_iface_supported (GstImplementsInterface * iface,
-    GType iface_type)
+static gboolean
+gst_v4l2_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (iface);
 
@@ -99,9 +100,15 @@ gst_v4l2_probe_get_properties (GstPropertyProbe * probe)
   GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
   static GList *list = NULL;
 
+  /* well, not perfect, but better than no locking at all.
+   * In the worst case we leak a list node, so who cares? */
+  GST_CLASS_LOCK (GST_OBJECT_CLASS (klass));
+
   if (!list) {
     list = g_list_append (NULL, g_object_class_find_property (klass, "device"));
   }
+
+  GST_CLASS_UNLOCK (GST_OBJECT_CLASS (klass));
 
   return list;
 }
@@ -435,12 +442,13 @@ gst_v4l2element_set_property (GObject * object,
             g_value_get_string (value));
 
         if (norm) {
-          gst_tuner_set_norm (tuner, norm);
+          /* more generic would be gst_tuner_set_norm (tuner, norm)
+             without g_object_notify */
+          gst_v4l2_tuner_set_norm (tuner, norm);
         }
       } else {
         g_free (v4l2element->std);
         v4l2element->std = g_value_dup_string (value);
-        g_object_notify (object, "std");
       }
       break;
     case PROP_INPUT:
@@ -451,12 +459,13 @@ gst_v4l2element_set_property (GObject * object,
             g_value_get_string (value));
 
         if (channel) {
-          gst_tuner_set_channel (tuner, channel);
+          /* more generic would be gst_tuner_set_channel (tuner, channel)
+             without g_object_notify */
+          gst_v4l2_tuner_set_channel (tuner, channel);
         }
       } else {
         g_free (v4l2element->input);
         v4l2element->input = g_value_dup_string (value);
-        g_object_notify (object, "input");
       }
       break;
     case PROP_FREQUENCY:
@@ -466,11 +475,14 @@ gst_v4l2element_set_property (GObject * object,
 
         if (channel &&
             GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
-          gst_tuner_set_frequency (tuner, channel, g_value_get_ulong (value));
+          /* more generic would be
+             gst_tuner_set_frequency (tuner, channel, g_value_get_ulong (value))
+             without g_object_notify */
+          gst_v4l2_tuner_set_frequency (tuner, channel,
+              g_value_get_ulong (value));
         }
       } else {
         v4l2element->frequency = g_value_get_ulong (value);
-        g_object_notify (object, "frequency");
       }
       break;
     default:

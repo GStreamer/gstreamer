@@ -1,5 +1,6 @@
 /* G-Streamer Video4linux2 video-capture plugin - system calls
  * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -48,7 +49,7 @@ gboolean gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
 void gst_v4l2src_free_buffer (GstBuffer * buffer);
 
 
-gboolean gst_v4l2src_get_fps (GstV4l2Src * v4l2src, gint * fps_n, gint * fps_d);
+gboolean gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d);
 
 GValue *gst_v4l2src_get_fps_list (GstV4l2Src * v4l2src);
 

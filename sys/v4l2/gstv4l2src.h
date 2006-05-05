@@ -3,6 +3,7 @@
  * gstv4l2src.h: BT8x8/V4L2 video source element
  *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -97,6 +98,7 @@ struct _GstV4l2Src
   gint offset;
 
   /* how are we going to push buffers? */
+  guint fps_n, fps_d;
   gboolean use_fixed_fps;
 };
 
