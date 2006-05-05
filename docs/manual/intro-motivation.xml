@@ -105,9 +105,11 @@
         same encoder algorithms found in a non-distributed encoder.
       </para> 
       <para> 
-        No provisions have been made for technologies such as
-        the <ulink url="http://developer.gnome.org/arch/component/bonobo.html"
-        type="http">GNOME object embedding using Bonobo</ulink>.
+        No provisions have been made for use by and use of technologies such 
+	as the <ulink url="http://gnome.org/" type="http">GNOME</ulink>
+	desktop platform. Because the wheel is re-invented all the time,
+	it's hard to properly integrate multimedia into the bigger whole of
+	user's environment.
       </para> 
       <para> 
         The &GStreamer; core does not use network transparent technologies
