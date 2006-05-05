@@ -360,17 +360,10 @@ dnl *** checks for dependancy libraries ***
 
 dnl GLib
 
-GST_GLIB_CHECK([2.6])
+GST_GLIB_CHECK([2.8])
 
-dnl GLib 2.8 has some bug fixes that we like, so make sure our code knows
-AC_MSG_CHECKING([glib version >= 2.8])
-if pkg-config --atleast-version=2.8 glib-2.0; then
-  AC_MSG_RESULT(yes)
-  GST_HAVE_GLIB_2_8_DEFINE="#define GST_HAVE_GLIB_2_8 1"
-else
-  AC_MSG_RESULT(no)
-  GST_HAVE_GLIB_2_8_DEFINE="/* #undef GST_HAVE_GLIB_2_8 */"
-fi
+dnl Guess we need to keep this around until 0.11
+GST_HAVE_GLIB_2_8_DEFINE="#define GST_HAVE_GLIB_2_8 1"
 AC_SUBST(GST_HAVE_GLIB_2_8_DEFINE)
 
 dnl Check for glib2 without extra fat, useful for the unversioned tool frontends
