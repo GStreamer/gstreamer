@@ -291,12 +291,19 @@ main (int argc, char **argv)
   gchar *highest = NULL;
   gchar *binary;                /* actual binary we're going to run */
   gchar *path = NULL;           /* and its path */
+  gchar *desc;
   GOptionContext *ctx;
   GError *err = NULL;
   int nextopt;
 
+  /* detect stuff */
+  dir = get_dir_of_binary (argv[0]);
+  base = g_path_get_basename (argv[0]);
+
   /* parse command line options */
-  ctx = g_option_context_new ("gst-run");
+  desc = g_strdup_printf ("wrapper to call versioned %s", base);
+  ctx = g_option_context_new (desc);
+  g_free (desc);
   g_option_context_set_ignore_unknown_options (ctx, TRUE);
   g_option_context_add_main_entries (ctx, wrapper_options, GETTEXT_PACKAGE);
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
@@ -304,10 +311,6 @@ main (int argc, char **argv)
     exit (1);
   }
   g_option_context_free (ctx);
-
-  /* detect stuff */
-  dir = get_dir_of_binary (argv[0]);
-  base = g_path_get_basename (argv[0]);
 
   /* unmangle libtool if necessary */
   unmangle_libtool (&dir, &base);

@@ -1,5 +1,16 @@
 2006-05-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tools/gst-inspect.c: (main):
+	* tools/gst-launch.c: (main):
+	* tools/gst-run.c: (main):
+	* tools/gst-typefind.c: (main):
+	* tools/gst-xmlinspect.c: (main):
+	  Use the string passed to g_option_context_new() for
+	  what it's intended for - the program name is already
+	  printed elsewhere.
+
+2006-05-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tools/Makefile.am:
 	* tools/gst-inspect.c: (main):
 	* tools/gst-launch.c: (main):

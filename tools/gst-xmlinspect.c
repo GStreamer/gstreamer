@@ -777,7 +777,7 @@ main (int argc, char *argv[])
 
   setlocale (LC_ALL, "");
 
-  ctx = g_option_context_new ("gst-xmlinspect");
+  ctx = g_option_context_new ("[ELEMENT-NAME | PLUGIN-NAME]");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
