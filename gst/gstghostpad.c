@@ -31,7 +31,7 @@
  * contains a sub-graph. Now one would like to treat the bin-element like other
  * #GstElements. This is where GhostPads come into play. A GhostPad acts as a
  * proxy for another pad. Thus the bin can have sink and source ghost-pads that
- * are accociated with sink and source pads of the child elements.
+ * are associated with sink and source pads of the child elements.
  *
  * If the target pad is known at creation time, gst_ghost_pad_new() is the
  * function to use to get a ghost-pad. Otherwise one can use gst_ghost_pad_new_no_target()
