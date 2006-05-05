@@ -594,7 +594,7 @@ class PlayerWindow(gtk.Window):
 
     def load_file(self, location):
         filename = location.split('/')[-1]
-        self.set_title('Cutting %s with blunt instruments' % filename)
+        self.set_title('%s munger' % filename)
         self.player.set_location(location)
         if self.videowidget.flags() & gtk.REALIZED:
             self.play_toggled()
