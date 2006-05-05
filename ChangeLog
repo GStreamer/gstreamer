@@ -1,8 +1,12 @@
 2006-05-05  Andy Wingo  <wingo@pobox.com>
 
+	* examples/remuxer.py (PlayerWindow.update_scale_cb): Fix a race
+	condition getting the initial cutin time via inserting whitespace.
+	(all over): UI fixes to make Mike happy.
+	
 	* examples/remuxer.py: Updates! Nothing gstreamery, it's all ui,
 	so I won't bother you with the details.
-
+	
 2006-04-29  Edward Hervey  <edward@fluendo.com>
 
 	* examples/gstfile.py:

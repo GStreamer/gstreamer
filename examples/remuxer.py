@@ -263,9 +263,9 @@ class ProgressDialog(gtk.Dialog):
         vbox.pack_start(progress, False)
 
         self.progresstext = label = gtk.Label('')
+        label.set_line_wrap(True)
         label.set_use_markup(True)
         label.set_alignment(0.0, 0.0)
-        label.set_selectable(True)
         label.show()
         vbox.pack_start(label)
         self.set_task(task)
@@ -350,52 +350,53 @@ class Remuxer(gst.Pipeline):
         assert stop > start
 
         self.fromuri = fromuri
-        self.touri = touri
+        self.touri = None
+        self.start_time = start
+        self.stop_time = stop
 
-        self.src = gst.element_make_from_uri(gst.URI_SRC, fromuri)
-        self.remuxbin = RemuxBin(start, stop)
-        self.sink = gst.element_make_from_uri(gst.URI_SINK, touri)
+        self.src = self.remuxbin = self.sink = None
+        self.resolution = UNKNOWN
+
+        self.window = None
+        self.pdialog = None
+
+        self._query_id = -1
+
+    def do_setup_pipeline(self):
+        self.src = gst.element_make_from_uri(gst.URI_SRC, self.fromuri)
+        self.remuxbin = RemuxBin(self.start_time, self.stop_time)
+        self.sink = gst.element_make_from_uri(gst.URI_SINK, self.touri)
         self.resolution = UNKNOWN
 
         if gobject.signal_lookup('allow-overwrite', self.sink.__class__):
-            self.sink.connect('allow-overwrite', self._allow_overwrite)
+            self.sink.connect('allow-overwrite', lambda *x: True)
 
         self.add(self.src, self.remuxbin, self.sink)
 
         self.src.link(self.remuxbin)
         self.remuxbin.link(self.sink)
 
-        self.window = None
-        self.pdialog = None
+    def do_get_touri(self):
+        chooser = gtk.FileChooserDialog('Save as...',
+                                        self.window,
+                                        action=gtk.FILE_CHOOSER_ACTION_SAVE,
+                                        buttons=(gtk.STOCK_CANCEL,
+                                                 CANCELLED,
+                                                 gtk.STOCK_SAVE,
+                                                 SUCCESS))
+        chooser.set_uri(self.fromuri) # to select the folder
+        chooser.unselect_all()
+        chooser.set_do_overwrite_confirmation(True)
+        name = self.fromuri.split('/')[-1][:-4] + '-remuxed.ogg'
+        chooser.set_current_name(name)
+        resp = chooser.run()
+        uri = chooser.get_uri()
+        chooser.destroy()
 
-        self.start_time = start
-        self.stop_time = stop
-
-        self._query_id = -1
-
-    def _allow_overwrite(self, sink, uri):
-        name = self.sink.get_uri()
-        name = (gst.uri_has_protocol(name, 'file')
-                and gst.uri_get_location(name)
-                or name)
-        m = gtk.MessageDialog(self.window,
-                              gtk.DIALOG_MODAL|gtk.DIALOG_DESTROY_WITH_PARENT,
-                              gtk.MESSAGE_QUESTION,
-                              gtk.BUTTONS_NONE,
-                              ("The file %s already exists. Would you "
-                               "like to replace it?") % name)
-        b = gtk.Button(stock=gtk.STOCK_CANCEL)
-        b.show()
-        m.add_action_widget(b, CANCELLED)
-        b = gtk.Button('Replace')
-        b.show()
-        m.add_action_widget(b, SUCCESS)
-        txt = ('If you replace an existing file, its contents will be '
-               'overwritten.')
-        m.format_secondary_text(txt)
-        resp = m.run()
-        m.destroy()
-        return resp == SUCCESS
+        if resp == SUCCESS:
+            return uri
+        else:
+            return None
 
     def _start_queries(self):
         def do_query():
@@ -470,10 +471,14 @@ class Remuxer(gst.Pipeline):
         self.emit('done', response)
 
     def start(self, main_window):
+        self.window = main_window
+        self.touri = self.do_get_touri()
+        if not self.touri:
+            return False
+        self.do_setup_pipeline()
         bus = self.get_bus()
         bus.add_signal_watch()
         bus.connect('message', self._bus_watch)
-        self.window = main_window
         if self.window:
             # can be None if we are debugging...
             self.window.set_sensitive(False)
@@ -485,12 +490,15 @@ class Remuxer(gst.Pipeline):
         self.pdialog.connect('response', lambda w, r: self.response(r))
 
         self.set_state(gst.STATE_PAUSED)
+        return True
         
     def run(self, main_window):
-        self.start(main_window)
-        loop = gobject.MainLoop()
-        self.connect('done', lambda *x: gobject.idle_add(loop.quit))
-        loop.run()
+        if self.start(main_window):
+            loop = gobject.MainLoop()
+            self.connect('done', lambda *x: gobject.idle_add(loop.quit))
+            loop.run()
+        else:
+            self.resolution = CANCELLED
         return self.resolution
         
 class RemuxBin(gst.Bin):
@@ -797,8 +805,8 @@ class PlayerWindow(gtk.Window):
         if self.p_position != gst.CLOCK_TIME_NONE:
             value = self.p_position * 100.0 / self.p_duration
             self.adjustment.set_value(value)
-        if not had_duration:
-            self.cutin.set_time(0)
+            if not had_duration:
+                self.cutin.set_time(0)
         return True
 
 def main(args):
