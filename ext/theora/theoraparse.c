@@ -249,8 +249,13 @@ static void
 parse_granulepos (gint64 granulepos, gint shift, gint64 * keyframe,
     gint64 * frame)
 {
-  *keyframe = granulepos >> shift;
-  *frame = *keyframe + (granulepos & ((1 << shift) - 1));
+  gint64 kf;
+
+  kf = granulepos >> shift;
+  if (keyframe)
+    *keyframe = kf;
+  if (frame)
+    *frame = kf + (granulepos & ((1 << shift) - 1));
 }
 
 static gboolean
@@ -307,6 +312,20 @@ theora_parse_drain_queue_prematurely (GstTheoraParse * parse)
       /* we have a keyframe */
       parse->prev_keyframe = parse->prev_frame;
 
+    if (parse->prev_keyframe < 0) {
+      if (GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
+        parse_granulepos (GST_BUFFER_OFFSET_END (buf), parse->shift,
+            &parse->prev_keyframe, NULL);
+      } else {
+        /* No previous keyframe known; can't extract one from this frame. That
+         * means we can't do any valid output for this frame, just continue to
+         * the next frame.
+         */
+        gst_buffer_unref (buf);
+        continue;
+      }
+    }
+
     ret = theora_parse_push_buffer (parse, buf, parse->prev_keyframe,
         parse->prev_frame);
 
@@ -361,8 +380,13 @@ theora_parse_queue_buffer (GstTheoraParse * parse, GstBuffer * buf)
 
   g_queue_push_tail (parse->buffer_queue, buf);
 
-  if (GST_BUFFER_OFFSET_END_IS_VALID (buf))
+  if (GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
+    if (parse->prev_keyframe < 0) {
+      parse_granulepos (GST_BUFFER_OFFSET_END (buf), parse->shift,
+          &parse->prev_keyframe, NULL);
+    }
     ret = theora_parse_drain_queue (parse, GST_BUFFER_OFFSET_END (buf));
+  }
 
   return ret;
 }
@@ -405,7 +429,7 @@ theora_parse_sink_event (GstPad * pad, GstEvent * event)
   parse = GST_THEORA_PARSE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
       theora_parse_clear_queue (parse);
       parse->prev_keyframe = -1;
       parse->prev_frame = -1;

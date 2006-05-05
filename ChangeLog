@@ -1,3 +1,11 @@
+2006-05-05  Michael Smith  <msmith@fluendo.com>
+
+	* ext/theora/theoraparse.c: (parse_granulepos),
+	(theora_parse_drain_queue_prematurely),
+	(theora_parse_queue_buffer), (theora_parse_sink_event):
+	  Fix flushing.
+	  Fix invalid granulepos outputs when starting with a non-keyframe.
+
 2006-05-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (mpeg2_sys_type_find),
