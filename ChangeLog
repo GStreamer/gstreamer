@@ -1,3 +1,17 @@
+2006-05-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/Makefile.am:
+	* tools/gst-inspect.c: (main):
+	* tools/gst-launch.c: (main):
+	* tools/gst-xmlinspect.c: (main):
+	* tools/tools.h:
+	  Add back --version command line option (#340460).
+
+	* tools/gst-typefind.c: (have_type_handler), (typefind_file), (main):
+	  Add --version option and use GOption for argument parsing; refactor a
+	  bit; accept directories as arguments and recurse into them; lastly,
+	  print a decent error message when things go wrong.
+
 2006-05-05  Maciej Katafiasz  <mathrick@freedesktop.org>
 
 	* docs/manual/basics-bins.xml:

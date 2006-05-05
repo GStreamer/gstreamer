@@ -37,24 +37,24 @@ bin_SCRIPTS = gst-feedback-@GST_MAJORMINOR@
 
 # make sure each versioned tool has the right source file and flags
 if !GST_DISABLE_LOADSAVE
-gst_xmllaunch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
+gst_xmllaunch_@GST_MAJORMINOR@_SOURCES = gst-launch.c tools.h
 gst_xmllaunch_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_xmllaunch_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 endif
 
 if !GST_DISABLE_PARSE
-gst_launch_@GST_MAJORMINOR@_SOURCES = gst-launch.c
+gst_launch_@GST_MAJORMINOR@_SOURCES = gst-launch.c tools.h
 gst_launch_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_launch_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 endif
 
-gst_inspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c
+gst_inspect_@GST_MAJORMINOR@_SOURCES = gst-inspect.c tools.h
 gst_inspect_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_inspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
-gst_typefind_@GST_MAJORMINOR@_SOURCES = gst-typefind.c
+gst_typefind_@GST_MAJORMINOR@_SOURCES = gst-typefind.c tools.h
 gst_typefind_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_typefind_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
-gst_xmlinspect_@GST_MAJORMINOR@_SOURCES = gst-xmlinspect.c
+gst_xmlinspect_@GST_MAJORMINOR@_SOURCES = gst-xmlinspect.c tools.h
 gst_xmlinspect_@GST_MAJORMINOR@_CFLAGS = $(GST_OBJ_CFLAGS)
 gst_xmlinspect_@GST_MAJORMINOR@_LDFLAGS = $(GST_OBJ_LIBS)
 
@@ -111,6 +111,8 @@ man_MANS = $(manpages)
 
 # developer helper tools, not meant for installation
 noinst_SCRIPTS = gst-indent
+
+noinst_HEADERS = tools.h
 
 EXTRA_DIST = \
 	$(noinst_SCRIPTS) \

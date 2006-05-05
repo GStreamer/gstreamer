@@ -43,6 +43,7 @@
 #include "gst/gst-i18n-app.h"
 
 #include <gst/gst.h>
+#include "tools.h"
 
 /* FIXME: This is just a temporary hack.  We should have a better
  * check for siginfo handling. */
@@ -512,6 +513,7 @@ main (int argc, char *argv[])
         N_("Do not install a fault handler"), NULL},
     {"trace", 'T', 0, G_OPTION_ARG_NONE, &trace,
         N_("Print alloc trace (if enabled at compile time)"), NULL},
+    GST_TOOLS_GOPTION_VERSION,
     {NULL}
   };
   GOptionContext *ctx;
@@ -538,6 +540,8 @@ main (int argc, char *argv[])
     exit (1);
   }
   g_option_context_free (ctx);
+
+  gst_tools_print_version ("gst-launch");
 
   /* FIXpopt: strip short args, too. We do it ourselves for now */
   j = 1;

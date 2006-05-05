@@ -29,6 +29,7 @@
 #include <gst/controller/gstcontroller.h>
 
 #include "gst/gst-i18n-app.h"
+#include "tools.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -1098,6 +1099,7 @@ main (int argc, char *argv[])
   GOptionEntry options[] = {
     {"print-all", 'a', 0, G_OPTION_ARG_NONE, &print_all,
         N_("Print all elements"), NULL},
+    GST_TOOLS_GOPTION_VERSION,
     {NULL}
   };
   GOptionContext *ctx;
@@ -1117,6 +1119,8 @@ main (int argc, char *argv[])
     exit (1);
   }
   g_option_context_free (ctx);
+
+  gst_tools_print_version ("gst-inspect");
 
   if (print_all && argc > 2) {
     g_print ("-a requires no extra arguments\n");

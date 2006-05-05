@@ -31,38 +31,45 @@
 #include <locale.h>
 #include <gst/gst.h>
 
+#include "tools.h"
 
-char *filename = NULL;
-
-
-void
+static void
 have_type_handler (GstElement * typefind, guint probability,
-    const GstCaps * caps, gpointer unused)
+    const GstCaps * caps, GstCaps ** p_caps)
 {
-  gchar *caps_str;
-
-  caps_str = gst_caps_to_string (caps);
-  g_print ("%s - %s\n", filename, caps_str);
-  g_free (caps_str);
+  if (p_caps) {
+    *p_caps = gst_caps_copy (caps);
+  }
 }
 
-int
-main (int argc, char *argv[])
+static void
+typefind_file (const gchar * filename)
 {
-  guint i = 1;
+  GstStateChangeReturn sret;
   GstElement *pipeline;
-  GstElement *source, *typefind, *fakesink;
+  GstElement *source;
+  GstElement *typefind;
+  GstElement *fakesink;
+  GstState state;
+  GstCaps *caps = NULL;
+  GDir *dir;
 
-  setlocale (LC_ALL, "");
+  if ((dir = g_dir_open (filename, 0, NULL))) {
+    const gchar *entry;
 
-  gst_init (&argc, &argv);
+    while ((entry = g_dir_read_name (dir))) {
+      gchar *path;
 
-  if (argc < 2) {
-    g_print ("Please give a filename to typefind\n\n");
-    return 1;
+      path = g_strconcat (filename, G_DIR_SEPARATOR_S, entry, NULL);
+      typefind_file (path);
+      g_free (path);
+    }
+
+    g_dir_close (dir);
+    return;
   }
 
-  pipeline = gst_pipeline_new (NULL);
+  pipeline = gst_pipeline_new ("pipeline");
 
   source = gst_element_factory_make ("filesrc", "source");
   g_assert (GST_IS_ELEMENT (source));
@@ -75,40 +82,102 @@ main (int argc, char *argv[])
   gst_element_link_many (source, typefind, fakesink, NULL);
 
   g_signal_connect (G_OBJECT (typefind), "have-type",
-      G_CALLBACK (have_type_handler), NULL);
+      G_CALLBACK (have_type_handler), &caps);
 
-  while (i < argc) {
-    GstStateChangeReturn sret;
-    GstState state;
+  g_object_set (source, "location", filename, NULL);
 
-    filename = argv[i];
-    g_object_set (source, "location", filename, NULL);
+  GST_DEBUG ("Starting typefinding for %s", filename);
 
-    GST_DEBUG ("Starting typefinding for %s", filename);
+  /* typefind will only commit to PAUSED if it actually finds a type;
+   * otherwise the state change fails */
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
 
-    /* typefind will only commit to PAUSED if it actually finds a type;
-     * otherwise the state change fails */
-    sret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
+  /* wait until state change either completes or fails */
+  sret = gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, -1);
 
-    if (GST_STATE_CHANGE_ASYNC == sret) {
-      if (GST_STATE_CHANGE_FAILURE ==
-          gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
-              GST_CLOCK_TIME_NONE))
-        break;
-    } else if (sret != GST_STATE_CHANGE_SUCCESS)
-      g_print ("%s - No type found\n", argv[i]);
+  switch (sret) {
+    case GST_STATE_CHANGE_FAILURE:{
+      GstMessage *msg;
+      GstBus *bus;
+      GError *err = NULL;
 
-    if (GST_STATE_CHANGE_ASYNC ==
-        gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL)) {
-      if (GST_STATE_CHANGE_FAILURE ==
-          gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
-              GST_CLOCK_TIME_NONE))
-        break;
+      bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+      msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, 0);
+      gst_object_unref (bus);
+
+      if (msg) {
+        gst_message_parse_error (msg, &err, NULL);
+        g_printerr ("%s - FAILED: %s\n", filename, err->message);
+        g_error_free (err);
+        gst_message_unref (msg);
+      } else {
+        g_printerr ("%s - FAILED: unknown error\n", filename);
+      }
+      break;
     }
+    case GST_STATE_CHANGE_SUCCESS:{
+      if (caps) {
+        gchar *caps_str;
 
-    i++;
+        caps_str = gst_caps_to_string (caps);
+        g_print ("%s - %s\n", filename, caps_str);
+        g_free (caps_str);
+        gst_caps_unref (caps);
+      } else {
+        g_print ("%s - %s\n", filename, "No type found");
+      }
+      break;
+    }
+    default:
+      g_assert_not_reached ();
   }
 
+  gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
+}
+
+int
+main (int argc, char *argv[])
+{
+  gchar **filenames = NULL;
+  guint num, i;
+  GError *err = NULL;
+  GOptionContext *ctx;
+  GOptionEntry options[] = {
+    GST_TOOLS_GOPTION_VERSION,
+    {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
+    {NULL}
+  };
+
+#ifdef ENABLE_NLS
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+  textdomain (GETTEXT_PACKAGE);
+#endif
+
+  ctx = g_option_context_new ("gst-typefind");
+  g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
+  g_option_context_add_group (ctx, gst_init_get_option_group ());
+  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+    g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
+    exit (1);
+  }
+  g_option_context_free (ctx);
+
+  gst_tools_print_version ("gst-typefind");
+
+  if (filenames == NULL || *filenames == NULL) {
+    g_print ("Please give a filename to typefind\n\n");
+    return 1;
+  }
+
+  num = g_strv_length (filenames);
+
+  for (i = 0; i < num; ++i) {
+    typefind_file (filenames[i]);
+  }
+
+  g_strfreev (filenames);
+
   return 0;
 }

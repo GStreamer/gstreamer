@@ -8,6 +8,8 @@
 #include <locale.h>
 #include <glib/gprintf.h>
 
+#include "tools.h"
+
 #define PUT_START_TAG(pfx,tag)                                  \
 G_STMT_START{                                                   \
   g_print ("%*.*s<%s>\n", pfx, pfx, "", tag);                   \
@@ -767,6 +769,7 @@ main (int argc, char *argv[])
         "Show plugin details", NULL},
     {"gst-inspect-scheduler", 's', 0, G_OPTION_ARG_STRING,
         "Show scheduler details", NULL},
+    GST_TOOLS_GOPTION_VERSION,
     {NULL}
   };
   GOptionContext *ctx;
@@ -782,6 +785,8 @@ main (int argc, char *argv[])
     exit (1);
   }
   g_option_context_free (ctx);
+
+  gst_tools_print_version ("gst-xmlinspect");
 
   PUT_STRING (0, "<?xml version=\"1.0\"?>");
 
