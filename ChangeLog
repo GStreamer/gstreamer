@@ -1,3 +1,8 @@
+2006-05-05  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (cleanup_decodebin):
+	Properly remove ghostpads. Fixes #340392
+
 2006-05-04  David Schleef  <ds@schleef.org>
 
 	* gst/typefind/gsttypefindfunctions.c:

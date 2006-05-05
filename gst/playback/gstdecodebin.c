@@ -1353,6 +1353,7 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
   }
   gst_iterator_free (elem_it);
 
+  done = FALSE;
   gpad_it = gst_element_iterate_pads (GST_ELEMENT (decode_bin));
   while (!done) {
     GstPad *pad = NULL;
