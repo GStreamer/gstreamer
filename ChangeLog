@@ -1,3 +1,12 @@
+2006-05-05  Andy Wingo  <wingo@pobox.com>
+
+	* ext/theora/theoraparse.c (gst_theora_parse_init)
+	(theora_parse_src_convert, theora_parse_src_query):
+	* ext/vorbis/vorbisparse.c (gst_vorbis_parse_init)
+	(vorbis_parse_convert, vorbis_parse_src_query): Add convert and
+	query functions on the source pads of the theora and vorbis parse
+	elements. Fixes position querying when doing a remux.
+
 2006-05-05  Michael Smith  <msmith@fluendo.com>
 
 	* ext/theora/theoraparse.c: (parse_granulepos),

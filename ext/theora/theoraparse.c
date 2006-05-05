@@ -92,6 +92,7 @@ static GstFlowReturn theora_parse_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_parse_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean theora_parse_sink_event (GstPad * pad, GstEvent * event);
+static gboolean theora_parse_src_query (GstPad * pad, GstQuery * query);
 
 static void
 gst_theora_parse_base_init (gpointer g_class)
@@ -124,6 +125,7 @@ gst_theora_parse_init (GstTheoraParse * parse, GstTheoraParseClass * g_class)
 
   parse->srcpad =
       gst_pad_new_from_static_template (&theora_parse_src_factory, "src");
+  gst_pad_set_query_function (parse->srcpad, theora_parse_src_query);
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 }
 
@@ -447,6 +449,172 @@ theora_parse_sink_event (GstPad * pad, GstEvent * event)
   gst_object_unref (parse);
 
   return ret;
+}
+
+static gboolean
+theora_parse_src_convert (GstPad * pad,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value)
+{
+  gboolean res = TRUE;
+  GstTheoraParse *parse;
+  guint64 scale = 1;
+
+  if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
+  parse = GST_THEORA_PARSE (gst_pad_get_parent (pad));
+
+  /* we need the info part before we can done something */
+  if (!parse->streamheader_received)
+    goto no_header;
+
+  switch (src_format) {
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_value = gst_util_uint64_scale_int (src_value, 2,
+              parse->info.height * parse->info.width * 3);
+          break;
+        case GST_FORMAT_TIME:
+          /* seems like a rather silly conversion, implement me if you like */
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          scale = 3 * (parse->info.width * parse->info.height) / 2;
+        case GST_FORMAT_DEFAULT:
+          *dest_value = scale * gst_util_uint64_scale (src_value,
+              parse->info.fps_numerator,
+              parse->info.fps_denominator * GST_SECOND);
+          break;
+        default:
+          GST_DEBUG_OBJECT (parse, "cannot convert to format %s",
+              gst_format_get_name (*dest_format));
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_DEFAULT:
+      switch (*dest_format) {
+        case GST_FORMAT_TIME:
+          *dest_value = gst_util_uint64_scale (src_value,
+              GST_SECOND * parse->info.fps_denominator,
+              parse->info.fps_numerator);
+          break;
+        case GST_FORMAT_BYTES:
+          *dest_value = gst_util_uint64_scale_int (src_value,
+              3 * parse->info.width * parse->info.height, 2);
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+  }
+done:
+  gst_object_unref (parse);
+  return res;
+
+  /* ERRORS */
+no_header:
+  {
+    GST_DEBUG_OBJECT (parse, "no header yet, cannot convert");
+    res = FALSE;
+    goto done;
+  }
+}
+
+static gboolean
+theora_parse_src_query (GstPad * pad, GstQuery * query)
+{
+  GstTheoraParse *parse;
+
+  gboolean res = FALSE;
+
+  parse = GST_THEORA_PARSE (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      gint64 frame, value;
+      GstFormat my_format, format;
+      gint64 time;
+
+      frame = parse->prev_frame;
+
+      GST_LOG_OBJECT (parse,
+          "query %p: we have current frame: %lld", query, frame);
+
+      /* parse format */
+      gst_query_parse_position (query, &format, NULL);
+
+      /* and convert to the final format in two steps with time as the 
+       * intermediate step */
+      my_format = GST_FORMAT_TIME;
+      if (!(res =
+              theora_parse_src_convert (parse->sinkpad, GST_FORMAT_DEFAULT,
+                  frame, &my_format, &time)))
+        goto error;
+
+      /* fixme: handle segments
+         time = (time - parse->segment.start) + parse->segment.time;
+       */
+
+      GST_LOG_OBJECT (parse,
+          "query %p: our time: %" GST_TIME_FORMAT " (conv to %s)",
+          query, GST_TIME_ARGS (time), gst_format_get_name (format));
+
+      if (!(res =
+              theora_parse_src_convert (pad, my_format, time, &format, &value)))
+        goto error;
+
+      gst_query_set_position (query, format, value);
+
+      GST_LOG_OBJECT (parse,
+          "query %p: we return %lld (format %u)", query, value, format);
+
+      break;
+    }
+    case GST_QUERY_DURATION:
+      /* forward to peer for total */
+      if (!(res = gst_pad_query (GST_PAD_PEER (parse->sinkpad), query)))
+        goto error;
+      break;
+    case GST_QUERY_CONVERT:
+    {
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if (!(res =
+              theora_parse_src_convert (pad, src_fmt, src_val, &dest_fmt,
+                  &dest_val)))
+        goto error;
+
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+done:
+  gst_object_unref (parse);
+
+  return res;
+
+  /* ERRORS */
+error:
+  {
+    GST_DEBUG_OBJECT (parse, "query failed");
+    goto done;
+  }
 }
 
 static GstStateChangeReturn

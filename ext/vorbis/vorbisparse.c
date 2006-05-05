@@ -107,6 +107,10 @@ static GstFlowReturn vorbis_parse_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn vorbis_parse_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean vorbis_parse_sink_event (GstPad * pad, GstEvent * event);
+static gboolean vorbis_parse_src_query (GstPad * pad, GstQuery * query);
+static gboolean vorbis_parse_convert (GstPad * pad,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value);
 
 static void
 gst_vorbis_parse_base_init (gpointer g_class)
@@ -139,6 +143,7 @@ gst_vorbis_parse_init (GstVorbisParse * parse, GstVorbisParseClass * g_class)
 
   parse->srcpad =
       gst_pad_new_from_static_template (&vorbis_parse_src_factory, "src");
+  gst_pad_set_query_function (parse->srcpad, vorbis_parse_src_query);
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 }
 
@@ -426,6 +431,155 @@ vorbis_parse_sink_event (GstPad * pad, GstEvent * event)
   gst_object_unref (parse);
 
   return ret;
+}
+
+static gboolean
+vorbis_parse_convert (GstPad * pad,
+    GstFormat src_format, gint64 src_value,
+    GstFormat * dest_format, gint64 * dest_value)
+{
+  gboolean res = TRUE;
+  GstVorbisParse *parse;
+  guint64 scale = 1;
+
+  parse = GST_VORBIS_PARSE (GST_PAD_PARENT (pad));
+
+  /* fixme: assumes atomic access to lots of instance variables modified from
+   * the streaming thread, including 64-bit variables */
+
+  if (parse->packetno < 4)
+    return FALSE;
+
+  if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
+  if (parse->sinkpad == pad &&
+      (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
+    return FALSE;
+
+  switch (src_format) {
+    case GST_FORMAT_TIME:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          scale = sizeof (float) * parse->vi.channels;
+        case GST_FORMAT_DEFAULT:
+          *dest_value =
+              scale * gst_util_uint64_scale_int (src_value, parse->vi.rate,
+              GST_SECOND);
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_DEFAULT:
+      switch (*dest_format) {
+        case GST_FORMAT_BYTES:
+          *dest_value = src_value * sizeof (float) * parse->vi.channels;
+          break;
+        case GST_FORMAT_TIME:
+          *dest_value =
+              gst_util_uint64_scale_int (src_value, GST_SECOND, parse->vi.rate);
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    case GST_FORMAT_BYTES:
+      switch (*dest_format) {
+        case GST_FORMAT_DEFAULT:
+          *dest_value = src_value / (sizeof (float) * parse->vi.channels);
+          break;
+        case GST_FORMAT_TIME:
+          *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
+              parse->vi.rate * sizeof (float) * parse->vi.channels);
+          break;
+        default:
+          res = FALSE;
+      }
+      break;
+    default:
+      res = FALSE;
+  }
+
+  return res;
+}
+
+static gboolean
+vorbis_parse_src_query (GstPad * pad, GstQuery * query)
+{
+  gint64 granulepos;
+  GstVorbisParse *parse;
+  gboolean res = FALSE;
+
+  parse = GST_VORBIS_PARSE (GST_PAD_PARENT (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      GstFormat format;
+      gint64 value;
+
+      granulepos = parse->prev_granulepos;
+
+      gst_query_parse_position (query, &format, NULL);
+
+      /* and convert to the final format */
+      if (!(res =
+              vorbis_parse_convert (pad, GST_FORMAT_DEFAULT, granulepos,
+                  &format, &value)))
+        goto error;
+
+      /* fixme: support segments
+         value = (value - parse->segment_start) + parse->segment_time;
+       */
+
+      gst_query_set_position (query, format, value);
+
+      GST_LOG_OBJECT (parse,
+          "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
+          query, granulepos, value, format);
+
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      /* fixme: not threadsafe */
+      /* query peer for total length */
+      if (!gst_pad_is_linked (parse->sinkpad)) {
+        GST_WARNING_OBJECT (parse, "sink pad %" GST_PTR_FORMAT " is not linked",
+            parse->sinkpad);
+        goto error;
+      }
+      if (!(res = gst_pad_query (GST_PAD_PEER (parse->sinkpad), query)))
+        goto error;
+      break;
+    }
+    case GST_QUERY_CONVERT:
+    {
+      GstFormat src_fmt, dest_fmt;
+      gint64 src_val, dest_val;
+
+      gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
+      if (!(res =
+              vorbis_parse_convert (pad, src_fmt, src_val, &dest_fmt,
+                  &dest_val)))
+        goto error;
+      gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  return res;
+
+error:
+  {
+    GST_WARNING_OBJECT (parse, "error handling query");
+    return res;
+  }
 }
 
 static GstStateChangeReturn
