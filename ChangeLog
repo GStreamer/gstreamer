@@ -1,5 +1,10 @@
 2006-05-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/parse/Makefile.am:
+	  Make 'make -j' proof (see #340698).
+
+2006-05-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Require GLib-2.8 here as well.
 
