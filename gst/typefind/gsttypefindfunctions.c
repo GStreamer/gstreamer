@@ -893,56 +893,56 @@ wavpack_type_find (GstTypeFind * tf, gpointer unused)
 
 static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
     "systemstream = (boolean) true, mpegversion = (int) [ 1, 2 ]");
+
 #define MPEG_SYS_CAPS gst_static_caps_get(&mpeg_sys_caps)
-#define IS_MPEG_HEADER(data)            ((((guint8 *)data)[0] == 0x00) &&       \
-                                         (((guint8 *)data)[1] == 0x00) &&       \
-                                         (((guint8 *)data)[2] == 0x01) &&       \
-                                         (((guint8 *)data)[3] == 0xBA))
-#define IS_MPEG_SYSTEM_HEADER(data)     ((((guint8 *)data)[0] == 0x00) &&       \
-                                         (((guint8 *)data)[1] == 0x00) &&       \
-                                         (((guint8 *)data)[2] == 0x01) &&       \
-                                         (((guint8 *)data)[3] == 0xBB))
-#define IS_MPEG_PACKET_HEADER(data)     ((((guint8 *)data)[0] == 0x00) &&       \
-                                         (((guint8 *)data)[1] == 0x00) &&       \
-                                         (((guint8 *)data)[2] == 0x01) &&       \
-                                         ((((guint8 *)data)[3] & 0x80) == 0x80))
-#define IS_MPEG_PES_HEADER(data)        ((((guint8 *)data)[0] == 0x00) &&       \
-                                         (((guint8 *)data)[1] == 0x00) &&       \
-                                         (((guint8 *)data)[2] == 0x01) && \
-                                         ((((guint8 *)data)[3] == 0xE0) || \
-                                          (((guint8 *)data)[3] == 0xC0) || \
-                                          (((guint8 *)data)[3] == 0xBD)))
+#define IS_MPEG_HEADER(data)            ((((guint8 *)(data))[0] == 0x00) &&  \
+                                         (((guint8 *)(data))[1] == 0x00) &&  \
+                                         (((guint8 *)(data))[2] == 0x01))
+
+#define IS_MPEG_PACK_HEADER(data)       (IS_MPEG_HEADER (data) &&            \
+                                         (((guint8 *)(data))[3] == 0xBA))
+
+#define IS_MPEG_SYSTEM_HEADER(data)     (IS_MPEG_HEADER (data) &&            \
+                                         (((guint8 *)(data))[3] == 0xBB))
+#define IS_MPEG_PACKET_HEADER(data)     (IS_MPEG_HEADER (data) &&            \
+                                         ((((guint8 *)(data))[3] & 0x80) == 0x80))
+
+#define IS_MPEG_PES_HEADER(data)        (IS_MPEG_HEADER (data) &&            \
+                                         ((((guint8 *)(data))[3] == 0xE0) || \
+                                          (((guint8 *)(data))[3] == 0xC0) || \
+                                          (((guint8 *)(data))[3] == 0xBD)))
 
 static void
 mpeg2_sys_type_find (GstTypeFind * tf, gpointer unused)
 {
   guint8 *data = gst_type_find_peek (tf, 0, 5);
+  gint mpegversion;
 
-  if (data && IS_MPEG_HEADER (data)) {
+  if (data && IS_MPEG_PACK_HEADER (data)) {
     if ((data[4] & 0xC0) == 0x40) {
       /* type 2 */
-      GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
-
-      gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-          G_TYPE_INT, 2, NULL);
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
+      mpegversion = 2;
+      goto suggest;
     } else if ((data[4] & 0xF0) == 0x20) {
-      GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
-
-      gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-          G_TYPE_INT, 1, NULL);
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
-      gst_caps_unref (caps);
+      mpegversion = 1;
+      goto suggest;
     }
   } else if (data && IS_MPEG_PES_HEADER (data)) {
     /* PES stream */
+    mpegversion = 2;
+    goto suggest;
+  }
+
+  return;
+suggest:
+  {
     GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
 
     gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-        G_TYPE_INT, 2, NULL);
+        G_TYPE_INT, mpegversion, NULL);
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
+    gst_caps_unref (caps);
   }
-
 };
 
 /* ATTENTION: ugly return value:
@@ -1055,7 +1055,7 @@ mpeg1_sys_type_find (GstTypeFind * tf, gpointer unused)
         break;
       size = GST_MPEG_TYPEFIND_SYNC_SIZE;
     }
-    if (IS_MPEG_HEADER (data)) {
+    if (IS_MPEG_PACK_HEADER (data)) {
       /* found packet start code */
       guint found = 0;
       guint packet_size = 0;
@@ -1856,26 +1856,21 @@ dv_type_find (GstTypeFind * tf, gpointer private)
 /*** application/ogg and application/x-annodex ***/
 static GstStaticCaps ogg_caps = GST_STATIC_CAPS ("application/ogg");
 static GstStaticCaps annodex_caps = GST_STATIC_CAPS ("application/x-annodex");
-static GstStaticCaps ogganx_caps =
-    GST_STATIC_CAPS ("application/ogg; application/x-annodex");
-#define OGGANX_CAPS (gst_static_caps_get(&ogganx_caps))
+
+#define OGGANX_CAPS (gst_static_caps_get(&annodex_caps))
 
 static void
 ogganx_type_find (GstTypeFind * tf, gpointer private)
 {
-  guint8 *data = gst_type_find_peek (tf, 28, 8);
-  gboolean is_annodex = FALSE;
+  guint8 *data = gst_type_find_peek (tf, 0, 4);
 
-  if ((data != NULL) && (memcmp (data, "fishead\0", 8) == 0)) {
-    is_annodex = TRUE;
-  }
-
-  data = gst_type_find_peek (tf, 0, 4);
   if ((data != NULL) && (memcmp (data, "OggS", 4) == 0)) {
-    if (is_annodex == TRUE) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
-          gst_static_caps_get (&annodex_caps));
-    }
+
+    /* Check for an annodex fishbone header */
+    data = gst_type_find_peek (tf, 28, 8);
+    if (memcmp (data, "fishead\0", 8) == 0)
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, OGGANX_CAPS);
+
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
         gst_static_caps_get (&ogg_caps));
   }
@@ -2206,7 +2201,7 @@ msdos_type_find (GstTypeFind * tf, gpointer unused)
 /*** generic typefind for streams that have some data at a specific position***/
 typedef struct
 {
-  guint8 *data;
+  const guint8 *data;
   guint size;
   guint probability;
   GstCaps *caps;
@@ -2228,15 +2223,24 @@ start_with_type_find (GstTypeFind * tf, gpointer private)
   }
 }
 
+static void
+sw_data_destroy (GstTypeFindData * sw_data)
+{
+  if (G_LIKELY (sw_data->caps != NULL))
+    gst_caps_unref (sw_data->caps);
+  g_free (sw_data);
+}
+
 #define TYPE_FIND_REGISTER_START_WITH(plugin,name,rank,ext,_data,_size,_probability)\
 G_BEGIN_DECLS{                                                          \
   GstTypeFindData *sw_data = g_new (GstTypeFindData, 1);                \
-  sw_data->data = (gpointer)_data;                                      \
+  sw_data->data = (const guint8 *)_data;                                \
   sw_data->size = _size;                                                \
   sw_data->probability = _probability;                                  \
   sw_data->caps = gst_caps_new_simple (name, NULL);                     \
   if (!gst_type_find_register (plugin, name, rank, start_with_type_find,\
-                      ext, sw_data->caps, sw_data, (GDestroyNotify) (g_free))) {        \
+                      ext, sw_data->caps, sw_data,                      \
+                     (GDestroyNotify) (sw_data_destroy))) {             \
     gst_caps_unref (sw_data->caps);                                     \
     g_free (sw_data);                                                   \
   }                                                                     \
@@ -2265,7 +2269,8 @@ G_BEGIN_DECLS{                                                          \
   sw_data->probability = GST_TYPE_FIND_MAXIMUM;                         \
   sw_data->caps = gst_caps_new_simple (name, NULL);                     \
   if (!gst_type_find_register (plugin, name, rank, riff_type_find,      \
-                      ext, sw_data->caps, sw_data, (GDestroyNotify) (g_free))) {                        \
+                      ext, sw_data->caps, sw_data,                      \
+                      (GDestroyNotify) (sw_data_destroy))) {            \
     gst_caps_unref (sw_data->caps);                                     \
     g_free (sw_data);                                                   \
   }                                                                     \

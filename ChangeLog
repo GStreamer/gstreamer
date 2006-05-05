@@ -1,3 +1,14 @@
+2006-05-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (mpeg2_sys_type_find),
+	(mpeg1_sys_type_find), (ogganx_type_find), (sw_data_destroy):
+	Rearrange MPEG system stream detection, fixing some memleaks in the
+	process.
+	Constify the data for STARTS_WITH and RIFF helper handlers. Make sure
+	they clean up their data correctly.
+	Remove unused ogganx caps and move the 'is_annodex' check to inside
+	the 'is_ogg' if statement.
+
 2006-05-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (cleanup_decodebin):
