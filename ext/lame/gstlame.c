@@ -999,8 +999,8 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
       if (lame->tags) {
         GstTagList *taglist;
 
-        gst_event_parse_tag (event, &taglist),
-            gst_tag_list_insert (lame->tags, taglist,
+        gst_event_parse_tag (event, &taglist);
+        gst_tag_list_insert (lame->tags, taglist,
             gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (lame)));
       } else {
         g_assert_not_reached ();

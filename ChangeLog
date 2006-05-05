@@ -1,3 +1,10 @@
+2006-05-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Andres Salomon  <dilinger at debian org>
+
+	* ext/lame/gstlame.c: (gst_lame_sink_event):
+	  Fix typo (comma vs. semicolon) (#340710).
+
 2006-05-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Lutz Müller <lutz at topfrose de>
