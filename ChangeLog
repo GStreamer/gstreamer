@@ -1,5 +1,12 @@
 2006-05-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/manual/basics-bins.xml:
+	* docs/manual/basics-bus.xml:
+	* docs/manual/basics-pads.xml:
+	  Some typo fixes, some additions, some clarifications. 
+
+2006-05-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tools/gst-inspect.c: (main):
 	* tools/gst-launch.c: (main):
 	* tools/gst-run.c: (main):

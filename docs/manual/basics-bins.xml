@@ -36,17 +36,16 @@
     </figure>
 
     <para> 
-      There is one specialized types of bins available to the
+      There is one specialized type of bin available to the
       &GStreamer; programmer:
     </para>
     <itemizedlist>
       <listitem>
         <para>
           A pipeline: a generic container that allows scheduling of the
-          containing elements.  The toplevel bin has to be a pipeline.
-          Every application thus needs at least one of these. Applications
-          can iterate pipelines using <function>gst_bin_iterate
-          ()</function> to make it process data while in the playing state.
+          containing elements.  The toplevel bin has to be a pipeline,
+          every application thus needs at least one of these. Pipelines will
+          automatically run themselves in a background thread when started.
         </para>
       </listitem>
     </itemizedlist>

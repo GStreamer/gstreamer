@@ -19,12 +19,36 @@
   <sect1 id="section-bus-howto">
     <title>How to use a bus</title>
     <para>
-      To use a bus, attach a message handler to the default bus of a pipeline
-      using <function>gst_bus_add_watch ()</function>. This handler will be
-      called whenever the pipeline emits a message to the bus. In this
-      handler, check the signal type (see next section) and do something
-      accordingly. The return value of the handler should be TRUE to remove
-      the message from the bus.
+      There are two different ways to use a bus:
+      <itemizedlist>
+        <listitem>
+          <para>
+            Run a GLib/Gtk+ main loop (or iterate the defauly GLib main
+            context yourself regularly) and attach some kind of watch to the
+            bus. This way the GLib main loop will check the bus for new
+            messages and notify you whenever there are messages.
+          </para>
+          <para>
+            Typically you would use <function>gst_bus_add_watch ()</function>
+            or <function>gst_bus_add_signal_watch ()</function> in this case.
+          </para>
+          <para>
+            To use a bus, attach a message handler to the bus of a pipeline
+            using <function>gst_bus_add_watch ()</function>. This handler will
+            be called whenever the pipeline emits a message to the bus. In this
+            handler, check the signal type (see next section) and do something
+            accordingly. The return value of the handler should be TRUE to
+            remove the message from the bus.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Check for messages on the bus yourself. This can be done using
+            <function>gst_bus_peek ()</function> and/or
+            <function>gst_bus_poll ()</function>.
+          </para>
+        </listitem>
+      </itemizedlist>
     </para>
     <programlisting><!-- example-begin bus.c a -->
 #include &lt;gst/gst.h&gt;
@@ -68,14 +92,16 @@ main (gint   argc,
 {
   GMainLoop *loop;
   GstElement *pipeline;
+  GstBus *bus;
 
   /* init */
   gst_init (&amp;argc, &amp;argv);
 
   /* create pipeline, add handler */
   pipeline = gst_pipeline_new ("my_pipeline");
-  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
-		     my_bus_callback, NULL);
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_watch (bus, my_bus_callback, NULL);
+  gst_object_unref (bus);
 <!-- example-end bus.c a -->
 [..]<!-- example-begin bus.c b -->
 <!-- example-begin bus.c c -->
@@ -98,18 +124,23 @@ main (gint   argc,
       should be done in the pipeline context, which is easiest by writing
       a &GStreamer; plug-in. It is very useful for its primary purpose,
       though: passing messages from pipeline to application.
+      The advantage of this approach is that all the threading that
+      &GStreamer; does internally is hidden from the application and the
+      application developer does not have to worry about thread issues at
+      all.
     </para>
     <para>
-      Note that if you're using the default GLib mainloop integration,
-      you can, instead of attaching a watch, connect to <quote>message</quote> 
-      signal on the bus. This way you don't have to <function>switch()</function> 
-      on all possible message types; just connect to the interesting 
-      ones in form <quote>message::&lt;type&gt;</quote>, where &lt;type&gt; 
-      is a specific message type (see the next section for explanation of 
+      Note that if you're using the default GLib mainloop integration, you
+      can, instead of attaching a watch, connect to the <quote>message</quote> 
+      signal on the bus. This way you don't have to
+      <function>switch()</function> 
+      on all possible message types; just connect to the interesting signals
+      in form of <quote>message::&lt;type&gt;</quote>, where &lt;type&gt; 
+      is a specific message type (see the next section for an explanation of 
       message types).
     </para>
     <para>
-      The above snippet would be thus written as:
+      The above snippet could then also be written as:
     </para>
     <programlisting>
 GstBus *bus;
@@ -117,8 +148,9 @@ GstBus *bus;
 [..]
 
 bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline);
-g_signal_connect(G_OBJECT(bus), "message::error", G_CALLBACK(cb_message_error));
-g_signal_connect(G_OBJECT(bus), "message::eos", G_CALLBACK(cb_message_eos));
+gst_bus_add_signal_watch (bus);
+g_signal_connect (bus, "message::error", G_CALLBACK (cb_message_error), NULL);
+g_signal_connect (bus, "message::eos", G_CALLBACK (cb_message_eos), NULL);
 
 [..]
     </programlisting>
@@ -135,7 +167,7 @@ g_signal_connect(G_OBJECT(bus), "message::eos", G_CALLBACK(cb_message_eos));
     <title>Message types</title>
     <para>
       &GStreamer; has a few pre-defined message types that can be passed
-      over the bus. The messages are extendible, however. Plug-ins can
+      over the bus. The messages are extensible, however. Plug-ins can
       define additional messages, and applications can decide to either
       have specific code for those or ignore them. All applications are
       strongly recommended to at least handle error messages by providing
@@ -156,7 +188,7 @@ g_signal_connect(G_OBJECT(bus), "message::eos", G_CALLBACK(cb_message_eos));
           by elements if a message should be shown to the user about the
           state of the pipeline. Error messages are fatal and terminate
           the data-passing. The error should be repaired to resume pipeline
-          acvitity. Warnings are not fatal, but imply a problem nevertheless.
+          activity. Warnings are not fatal, but imply a problem nevertheless.
           Information messages are for non-problem notifications. All those
           messages contain a <classname>GError</classname> with the main
           error type and message, and optionally a debug string. Both
@@ -184,7 +216,8 @@ g_signal_connect(G_OBJECT(bus), "message::eos", G_CALLBACK(cb_message_eos));
           stream-information, such as samplerate and bitrate). Applications
           should cache metadata internally. <function>gst_message_parse_tag
           ()</function> should be used to parse the taglist, which should
-          be dereferenced after use.
+          be <function>gst_tag_list_free ()</function>'ed when no longer
+          needed.
         </para>
       </listitem>
       <listitem>
@@ -199,16 +232,34 @@ g_signal_connect(G_OBJECT(bus), "message::eos", G_CALLBACK(cb_message_eos));
           Buffering: emitted during caching of network-streams. One can
           manually extract the progress (in percent) from the message by
           extracting the <quote>buffer-percent</quote> property from the
-          structure returned by <function>gst_message_parse_structure
+          structure returned by <function>gst_message_get_structure
           ()</function>.
         </para>
       </listitem>
       <listitem>
         <para>
-          Other application-specific messages: any information on those can
-          be extracted by getting a structure (see above) and reading
-          properties. In most cases, such messages can conveniently be
-          ignored.
+          Element messages: these are special messages that are unique to
+          certain elements and usually represent additional features. The
+          element's documentation should mention in detail which
+          element messages a particular element may send. As an example,
+          the 'qtdemux' QuickTime demuxer element may send a 'redirect'
+          element message on certain occasions if the stream contains a
+          redirect instruction.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Application-specific messages: any information on those can
+          be extracted by getting the message structure (see above) and
+          reading its fields. Usually these messages can safely be ignored.
+        </para>
+        <para>
+          Application messages are primarily meant for internal
+          use in applications in case the application needs to marshal
+          information from some thread into the main thread. This is
+          particularly useful when the application is making use of element
+          signals (as those signals will be emitted in the context of the
+          streaming thread).
         </para>
       </listitem>
     </itemizedlist>
