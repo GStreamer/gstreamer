@@ -286,6 +286,14 @@ G_STMT_START {						\
  * @buf: a #GstBuffer.
  *
  * Increases the refcount of the given buffer by one.
+ *
+ * Note that the refcount affects the writeability
+ * of @buf, see gst_buffer_is_writable(). It is
+ * important to note that keeping additional references to
+ * GstBuffer instances can potentially increase the number
+ * of memcpy operations in a pipeline.
+ *
+ * Returns: @buf
  */
 static inline GstBuffer *
 gst_buffer_ref (GstBuffer * buf)

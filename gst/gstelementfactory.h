@@ -41,12 +41,15 @@ typedef struct _GstElementDetails GstElementDetails;
 /**
  * GstElementDetails:
  * @longname: long, english name
- * @klass: type of element, as hierarchy
+ * @klass: type of element, as an unordered list separated with slashes ('/')
  * @description: what the element is about
  * @author: who wrote this thing?
  *
  * This struct defines the public information about a #GstElement. It contains
  * meta-data about the element that is mostly for the benefit of editors.
+ *
+ * The @klass member can be used by applications to filter elements based 
+ * on functionality.
  */
 /* FIXME: need translatable stuff in here (how handle in registry)? */
 struct _GstElementDetails

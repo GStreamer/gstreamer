@@ -232,6 +232,13 @@ gst_mini_object_make_writable (GstMiniObject * mini_object)
  *
  * Increase the reference count of the mini-object.
  *
+ * Note that the refcount affects the writeability
+ * of @mini-object, see gst_mini_object_is_writable(). It is 
+ * important to note that keeping additional references to
+ * GstMiniObject instances can potentially increase the number
+ * of memcpy operations in a pipeline, especially if the minibject
+ * is a #GstBuffer.
+ *
  * Returns: the mini-object.
  */
 GstMiniObject *

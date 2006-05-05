@@ -1,3 +1,13 @@
+2006-05-05  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbuffer.h:
+	* gst/gstminiobject.c:
+	Add note about refcounting and miniobject/buffer writeability
+	to docs. Fixes #340604
+
+	* gst/gstelementfactory.h:
+	Added some explanation about @klass.
+
 2006-05-05  Maciej Katafiasz  <mathrick@freedesktop.org>
 
 	* docs/manual/intro-motivation.xml:
