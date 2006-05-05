@@ -235,8 +235,8 @@ link_to_multiplexer (GstPad     *tolink_pad,
         accept vorbis-encoded audio data, with the mime-type
         <quote>audio/x-vorbis</quote>. The source pad will be used
         to send raw (decoded) audio samples to the next element, with
-        a raw audio mime-type (either <quote>audio/x-raw-int</quote> or
-        <quote>audio/x-raw-float</quote>). The source pad will also
+        a raw audio mime-type (in this case, 
+	<quote>audio/x-raw-int</quote>) The source pad will also
         contain properties for the audio samplerate and the amount of
         channels, plus some more that you don't need to worry about
         for now.
@@ -532,8 +532,9 @@ link_pads_with_filter (GstPad *one,
     <para>
       <xref linkend="section-bin-ghost-img"/> is a representation of a
       ghost pad. The sink pad of element one is now also a pad of the bin.
-      Obviously, ghost pads can be added to any type of elements, not just
-      to a <classname>GstBin</classname>.
+      Because ghost pads look and work like any other pads, they can be added 
+      to any type of elements, not just to a <classname>GstBin</classname>,
+      just like ordinary pads.
     </para>
     <para>
       A ghostpad is created using the function

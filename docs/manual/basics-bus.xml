@@ -99,6 +99,36 @@ main (gint   argc,
       a &GStreamer; plug-in. It is very useful for its primary purpose,
       though: passing messages from pipeline to application.
     </para>
+    <para>
+      Note that if you're using the default GLib mainloop integration,
+      you can, instead of attaching a watch, connect to <quote>message</quote> 
+      signal on the bus. This way you don't have to <function>switch()</function> 
+      on all possible message types; just connect to the interesting 
+      ones in form <quote>message::&lt;type&gt;</quote>, where &lt;type&gt; 
+      is a specific message type (see the next section for explanation of 
+      message types).
+    </para>
+    <para>
+      The above snippet would be thus written as:
+    </para>
+    <programlisting>
+GstBus *bus;
+
+[..]
+
+bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline);
+g_signal_connect(G_OBJECT(bus), "message::error", G_CALLBACK(cb_message_error));
+g_signal_connect(G_OBJECT(bus), "message::eos", G_CALLBACK(cb_message_eos));
+
+[..]
+    </programlisting>
+    <para>
+      If you aren't using GLib mainloop, the message signals won't be available 
+      by default. You can however use a small helper exported by to provide
+      integration with the mainloop you're using, and enable generation of bus
+      signals (see <ulink type="http"
+      url="&URLAPI;GstBus.html">documentation</ulink> for details)
+    </para>
   </sect1>
 
   <sect1 id="section-bus-message-types">
