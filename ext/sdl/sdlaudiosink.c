@@ -389,19 +389,19 @@ gst_sdlaudio_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 unable_open:
   {
     GST_ELEMENT_ERROR (sdlaudio, RESOURCE, OPEN_READ,
-        ("Unable to open audio: %s", SDL_GetError ()), NULL);
+        ("Unable to open audio: %s", SDL_GetError ()), (NULL));
     return FALSE;
   }
 wrong_format:
   {
     GST_ELEMENT_ERROR (sdlaudio, RESOURCE, OPEN_READ,
-        ("Unable to get format %d", spec->format), NULL);
+        ("Unable to get format %d", spec->format), (NULL));
     return FALSE;
   }
 dodgy_width:
   {
     GST_ELEMENT_ERROR (sdlaudio, RESOURCE, OPEN_READ,
-        ("unexpected width %d", spec->width), NULL);
+        ("unexpected width %d", spec->width), (NULL));
     return FALSE;
   }
 }
