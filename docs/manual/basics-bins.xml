@@ -36,7 +36,7 @@
     </figure>
 
     <para> 
-      There are two specialized types of bins available to the
+      There is one specialized types of bins available to the
       &GStreamer; programmer:
     </para>
     <itemizedlist>
@@ -49,14 +49,6 @@
           ()</function> to make it process data while in the playing state.
         </para>
       </listitem>
-      <listitem>
-        <para>
-          A thread: a bin that will be run in a separate execution thread.
-	  You will have to use this bin if you have to carefully
-          synchronize audio and video, or for buffering. You will learn
-	  more about threads in <xref linkend="chapter-threads"/>.
-        </para>
-      </listitem>
     </itemizedlist>
   </sect1>
 
@@ -65,9 +57,9 @@
     <para>
       Bins are created in the same way that other elements are created,
       i.e. using an element factory. There are also convenience functions
-      available (<function>gst_bin_new ()</function>,
-      <function>gst_thread_new ()</function> and <function>gst_pipeline_new
-      ()</function>). To add elements to a bin or remove elements from a
+      available (<function>gst_bin_new ()</function> and 
+      <function>gst_pipeline_new ()</function>).
+      To add elements to a bin or remove elements from a
       bin, you can use <function>gst_bin_add ()</function> and
       <function>gst_bin_remove ()</function>. Note that the bin that you
       add an element to will take ownership of that element. If you

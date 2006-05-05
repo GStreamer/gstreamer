@@ -1,3 +1,10 @@
+2006-05-05  Maciej Katafiasz  <mathrick@freedesktop.org>
+
+	* docs/manual/basics-bins.xml:
+	Don't mention GstThread (#340611)
+	* docs/manual/basics-elements.xml:
+	Update link to GObject tutorial (#340607)
+	
 2006-05-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbuffer.h:
@@ -19,6 +26,7 @@
 	* docs/manual/basics-bus.xml:
 	* docs/manual/basics-pads.xml:
 	Fix up some inaccuracies and omissions (#340609)
+	
 2006-05-05  Maciej Katafiasz  <mathrick@freedesktop.org>
 
 	* gst/gstghostpad.c:

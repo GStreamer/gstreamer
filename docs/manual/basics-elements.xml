@@ -284,8 +284,8 @@ main (int   argc,
       properties we recommend you read the <ulink
       url="http://developer.gnome.org/doc/API/2.0/gobject/index.html"
       type="http">GObject manual</ulink> and an introduction to <ulink
-      url="http://le-hacker.org/papers/gobject/index.html" type="http">The
-      Glib Object system</ulink>.
+      url="http://developer.gnome.org/doc/API/2.0/gobject/pr01.html" type="http">
+	The Glib Object system</ulink>.
     </para>
     <para>
       A <ulink type="http" url="&URLAPI;gstreamer/html/GstElementFactory.html">
