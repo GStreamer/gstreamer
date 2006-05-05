@@ -199,7 +199,7 @@ main (int argc, char *argv[])
     return -1;
   }
 
-  if (argv < 2) {
+  if (argc < 2) {
     g_object_set (source, "device", "/dev/video0", NULL);
   } else {
     g_object_set (source, "device", argv[1], NULL);
@@ -222,7 +222,7 @@ main (int argc, char *argv[])
     return -1;
   }
 
-  if (argv < 2)
+  if (argc < 2)
     printf
         ("\nOpening /dev/video0. Launch ./v4l2src-test.c devname to try another one\n");
 

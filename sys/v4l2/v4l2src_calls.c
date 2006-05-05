@@ -1,5 +1,6 @@
 /* G-Streamer Video4linux2 video-capture plugin - system calls
  * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -319,6 +320,13 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
     return FALSE;
   }
 
+  /* Determine the device's framerate */
+  if (!gst_v4l2src_get_fps (v4l2src, &v4l2src->fps_n, &v4l2src->fps_d)) {
+    GST_DEBUG_OBJECT (v4l2src, "frame rate is unknown.");
+    v4l2src->fps_d = 1;
+    v4l2src->fps_n = 0;
+  }
+
   if (v4l2src->breq.memory > 0) {
     if (v4l2src->breq.count < GST_V4L2_MIN_BUFFERS) {
       GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
@@ -588,7 +596,7 @@ gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
       fmt.fmt.pix.height);
 
   fmt.fmt.pix.width = G_MAXINT;
-  fmt.fmt.pix.height = 576;
+  fmt.fmt.pix.height = G_MAXINT;
   if (ioctl (GST_V4L2ELEMENT (v4l2src)->video_fd, VIDIOC_TRY_FMT, &fmt) < 0) {
     return FALSE;
   }
@@ -604,14 +612,28 @@ gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
 }
 
 gboolean
-gst_v4l2src_get_fps (GstV4l2Src * v4l2src, gint * fps_n, gint * fps_d)
+gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
 {
   v4l2_std_id std;
+  struct v4l2_streamparm stream;
   const GList *item;
 
   if (!GST_V4L2_IS_OPEN (GST_V4L2ELEMENT (v4l2src)))
     return FALSE;
 
+  /* Try to get the frame rate directly from the device using VIDIOC_G_PARM */
+  stream.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  if (ioctl (GST_V4L2ELEMENT (v4l2src)->video_fd, VIDIOC_G_PARM, &stream) == 0
+      && stream.parm.capture.capability & V4L2_CAP_TIMEPERFRAME) {
+    /* Note: V4L2 gives us the frame interval, we need the frame rate */
+    *fps_n = stream.parm.capture.timeperframe.denominator;
+    *fps_d = stream.parm.capture.timeperframe.numerator;
+    GST_DEBUG_OBJECT (v4l2src, "frame rate returned by G_PARM: %d/%d fps",
+        *fps_n, *fps_d);
+    return TRUE;
+  }
+
+  /* If G_PARM failed, try to get the same information from the video standard */
   if (!gst_v4l2_get_norm (GST_V4L2ELEMENT (v4l2src), &std))
     return FALSE;
   for (item = GST_V4L2ELEMENT (v4l2src)->stds; item != NULL; item = item->next) {
@@ -624,6 +646,8 @@ gst_v4l2src_get_fps (GstV4l2Src * v4l2src, gint * fps_n, gint * fps_d)
       *fps_d =
           gst_value_get_fraction_denominator (&GST_TUNER_NORM (v4l2norm)->
           framerate);
+      GST_DEBUG_OBJECT (v4l2src, "frame rate returned by get_norm: %d/%d fps",
+          *fps_n, *fps_d);
       return TRUE;
     }
   }
@@ -780,14 +804,8 @@ gst_v4l2src_buffer_new (GstV4l2Src * v4l2src, guint size, guint8 * data,
     GstV4l2Buffer * srcbuf)
 {
   GstBuffer *buf;
-  gint fps_n, fps_d;
 
-  GST_DEBUG_OBJECT (v4l2src, "creating buffer %d");
-
-  if (!gst_v4l2src_get_fps (v4l2src, &fps_n, &fps_d)) {
-    fps_n = 0;
-    fps_d = 1;
-  }
+  GST_LOG_OBJECT (v4l2src, "creating buffer %d");
 
   if (data == NULL) {
     buf = gst_buffer_new_and_alloc (size);
@@ -805,9 +823,9 @@ gst_v4l2src_buffer_new (GstV4l2Src * v4l2src, guint size, guint8 * data,
   GST_BUFFER_TIMESTAMP (buf) -= GST_ELEMENT (v4l2src)->base_time;
 
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
-  if (fps_n > 0) {
-    GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (GST_SECOND,
-        fps_n, fps_d);
+  if (v4l2src->fps_n > 0) {
+    GST_BUFFER_DURATION (buf) =
+        gst_util_uint64_scale_int (GST_SECOND, v4l2src->fps_n, v4l2src->fps_d);
   } else {
     GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
   }

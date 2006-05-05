@@ -1,5 +1,6 @@
 /* G-Streamer generic V4L2 element - generic V4L2 calls handling
  * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -73,12 +74,18 @@ static gboolean
 gst_v4l2_fill_lists (GstV4l2Element * v4l2element)
 {
   gint n;
+
+#if 0                           /* output not handled by now */
   GstPadDirection dir = GST_PAD_UNKNOWN;
+#endif /* #if 0 - output not handled by now */
 
   GST_DEBUG_OBJECT (v4l2element, "getting enumerations");
   GST_V4L2_CHECK_OPEN (v4l2element);
 
+#if 0                           /* output not handled by now */
   if (dir != GST_PAD_SINK) {
+#endif /* #if 0 - output not handled by now */
+
     /* and now, the inputs */
     for (n = 0;; n++) {
       struct v4l2_input input;
@@ -134,6 +141,8 @@ gst_v4l2_fill_lists (GstV4l2Element * v4l2element)
       v4l2element->inputs =
           g_list_append (v4l2element->inputs, (gpointer) channel);
     }
+
+#if 0                           /* output not handled by now */
   } else {
     /* outputs */
     for (n = 0;; n++) {
@@ -170,6 +179,7 @@ gst_v4l2_fill_lists (GstV4l2Element * v4l2element)
           g_list_append (v4l2element->inputs, (gpointer) channel);
     }
   }
+#endif /* #if 0 - output not handled by now */
 
   /* norms... */
   for (n = 0;; n++) {
@@ -501,6 +511,8 @@ gst_v4l2_get_norm (GstV4l2Element * v4l2element, v4l2_std_id * norm)
     return FALSE;
   }
 
+
+
   return TRUE;
 }
 
@@ -517,8 +529,6 @@ gst_v4l2_set_norm (GstV4l2Element * v4l2element, v4l2_std_id norm)
   GST_DEBUG_OBJECT (v4l2element, "trying to set norm to %llx", norm);
   if (!GST_V4L2_IS_OPEN (v4l2element))
     return FALSE;
-  if (!GST_V4L2_IS_ACTIVE (v4l2element))
-    return FALSE;
 
   if (ioctl (v4l2element->video_fd, VIDIOC_S_STD, &norm) < 0) {
     GST_WARNING_OBJECT (v4l2element,
@@ -529,114 +539,6 @@ gst_v4l2_set_norm (GstV4l2Element * v4l2element, v4l2_std_id norm)
 
   return TRUE;
 }
-
-
-/******************************************************
- * gst_v4l2_get_input()
- *   Get the input of the current device
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-
-gboolean
-gst_v4l2_get_input (GstV4l2Element * v4l2element, gint * input)
-{
-  gint n;
-
-  GST_DEBUG_OBJECT (v4l2element, "trying to get input");
-  if (!GST_V4L2_IS_OPEN (v4l2element))
-    return FALSE;
-
-  if (ioctl (v4l2element->video_fd, VIDIOC_G_INPUT, &n) < 0) {
-    GST_WARNING_OBJECT (v4l2element,
-        "Failed to get current input on device %s: %s",
-        v4l2element->videodev, g_strerror (errno));
-    return FALSE;
-  }
-
-  *input = n;
-
-  return TRUE;
-}
-
-
-/******************************************************
- * gst_v4l2_set_input()
- *   Set the input of the current device
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-
-gboolean
-gst_v4l2_set_input (GstV4l2Element * v4l2element, gint input)
-{
-  GST_DEBUG_OBJECT (v4l2element, "trying to set input to %d", input);
-  if (!GST_V4L2_IS_OPEN (v4l2element))
-    return FALSE;
-  if (!GST_V4L2_IS_ACTIVE (v4l2element))
-    return FALSE;
-
-  if (ioctl (v4l2element->video_fd, VIDIOC_S_INPUT, &input) < 0) {
-    GST_WARNING_OBJECT (v4l2element, "Failed to set input %d on device %s: %s",
-        input, v4l2element->videodev, g_strerror (errno));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-
-/******************************************************
- * gst_v4l2_get_output()
- *   Get the output of the current device
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-
-gboolean
-gst_v4l2_get_output (GstV4l2Element * v4l2element, gint * output)
-{
-  gint n;
-
-  GST_DEBUG_OBJECT (v4l2element, "trying to get output");
-  if (!GST_V4L2_IS_OPEN (v4l2element))
-    return FALSE;
-
-  if (ioctl (v4l2element->video_fd, VIDIOC_G_OUTPUT, &n) < 0) {
-    GST_WARNING_OBJECT (v4l2element,
-        "Failed to get current output on device %s: %s",
-        v4l2element->videodev, g_strerror (errno));
-    return FALSE;
-  }
-
-  *output = n;
-
-  return TRUE;
-}
-
-
-/******************************************************
- * gst_v4l2_set_output()
- *   Set the output of the current device
- * return value: TRUE on success, FALSE on error
- ******************************************************/
-
-gboolean
-gst_v4l2_set_output (GstV4l2Element * v4l2element, gint output)
-{
-  GST_DEBUG_OBJECT (v4l2element, "trying to set output to %d", output);
-  if (!GST_V4L2_IS_OPEN (v4l2element))
-    return FALSE;
-  if (!GST_V4L2_IS_ACTIVE (v4l2element))
-    return FALSE;
-
-  if (ioctl (v4l2element->video_fd, VIDIOC_S_OUTPUT, &output) < 0) {
-    GST_WARNING_OBJECT (v4l2element,
-        "Failed to set current output on device %s to %d: %s",
-        v4l2element->videodev, output, g_strerror (errno));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
 
 /******************************************************
  * gst_v4l2_get_frequency():
@@ -687,8 +589,6 @@ gst_v4l2_set_frequency (GstV4l2Element * v4l2element,
   GST_DEBUG_OBJECT (v4l2element, "setting current tuner frequency to %lu",
       frequency);
   if (!GST_V4L2_IS_OPEN (v4l2element))
-    return FALSE;
-  if (!GST_V4L2_IS_ACTIVE (v4l2element))
     return FALSE;
 
   channel = gst_tuner_get_channel (GST_TUNER (v4l2element));

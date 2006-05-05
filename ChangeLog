@@ -1,3 +1,19 @@
+2006-05-05  Edgard Lima <edgard.lima@indt.org.br>
+
+	* sys/v4l2/gstv4l2element.c:
+	* sys/v4l2/gstv4l2element.h:
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2src.h:
+	* sys/v4l2/gstv4l2tuner.c:
+	* sys/v4l2/gstv4l2tuner.h:
+	* sys/v4l2/v4l2_calls.c:
+	* sys/v4l2/v4l2_calls.h:
+	* sys/v4l2/v4l2src_calls.c:
+	* sys/v4l2/v4l2src_calls.h:
+	* tests/icles/v4l2src-test.c:
+	Some changes proposed by wingo in bug #338818 (but not everything
+	yet). Patch from Martin Rubli to fix framerate detection.
+
 2006-05-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/sdl/sdlaudiosink.c: (gst_sdlaudio_sink_prepare):

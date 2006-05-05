@@ -1,5 +1,6 @@
 /* G-Streamer generic V4L2 element - Tuner interface implementation
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * gstv4l2tuner.h: tuner interface implementation for V4L2
  *
@@ -81,5 +82,15 @@ GType	gst_v4l2_tuner_channel_get_type	(void);
 GType	gst_v4l2_tuner_norm_get_type	(void);
 
 void	gst_v4l2_tuner_interface_init	(GstTunerClass *klass);
+
+extern gboolean
+gst_v4l2_tuner_set_channel (GstTuner * mixer, GstTunerChannel * channel);
+
+gboolean
+gst_v4l2_tuner_set_norm (GstTuner * mixer, GstTunerNorm * norm);
+
+extern gboolean
+gst_v4l2_tuner_set_frequency (GstTuner * mixer,
+			      GstTunerChannel * channel, gulong frequency);
 
 #endif /* __GST_V4L2_TUNER_H__ */

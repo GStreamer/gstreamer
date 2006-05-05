@@ -1,5 +1,6 @@
 /* GStreamer Tuner interface implementation
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * gstv4l2tuner.c: tuner interface implementation for V4L2
  *
@@ -28,6 +29,9 @@
 #include "gstv4l2tuner.h"
 #include "gstv4l2element.h"
 #include "v4l2_calls.h"
+#include "v4l2src_calls.h"
+
+#include <sys/ioctl.h>
 
 static void gst_v4l2_tuner_channel_class_init (GstV4l2TunerChannelClass *
     klass);
@@ -37,20 +41,34 @@ static void gst_v4l2_tuner_norm_class_init (GstV4l2TunerNormClass * klass);
 static void gst_v4l2_tuner_norm_init (GstV4l2TunerNorm * norm);
 
 static const GList *gst_v4l2_tuner_list_channels (GstTuner * mixer);
-static void gst_v4l2_tuner_set_channel (GstTuner * mixer,
+
+static void
+gst_v4l2_tuner_set_channel_and_notify (GstTuner * mixer,
     GstTunerChannel * channel);
 static GstTunerChannel *gst_v4l2_tuner_get_channel (GstTuner * mixer);
 
 static const GList *gst_v4l2_tuner_list_norms (GstTuner * mixer);
-static void gst_v4l2_tuner_set_norm (GstTuner * mixer, GstTunerNorm * norm);
+
+static void
+gst_v4l2_tuner_set_norm_and_notify (GstTuner * mixer, GstTunerNorm * norm);
 static GstTunerNorm *gst_v4l2_tuner_get_norm (GstTuner * mixer);
 
-static void gst_v4l2_tuner_set_frequency (GstTuner * mixer,
+static void
+gst_v4l2_tuner_set_frequency_and_notify (GstTuner * mixer,
     GstTunerChannel * channel, gulong frequency);
 static gulong gst_v4l2_tuner_get_frequency (GstTuner * mixer,
     GstTunerChannel * channel);
 static gint gst_v4l2_tuner_signal_strength (GstTuner * mixer,
     GstTunerChannel * channel);
+
+static gboolean gst_v4l2_get_input (GstV4l2Element * v4l2element, gint * input);
+static gboolean gst_v4l2_set_input (GstV4l2Element * v4l2element, gint input);
+
+#if 0                           /* output not handled by now */
+static gboolean
+gst_v4l2_get_output (GstV4l2Element * v4l2element, gint * output);
+static gboolean gst_v4l2_set_output (GstV4l2Element * v4l2element, gint output);
+#endif /* #if 0 - output not handled by now */
 
 static GstTunerNormClass *norm_parent_class = NULL;
 static GstTunerChannelClass *channel_parent_class = NULL;
@@ -140,18 +158,19 @@ gst_v4l2_tuner_interface_init (GstTunerClass * klass)
 {
   /* default virtual functions */
   klass->list_channels = gst_v4l2_tuner_list_channels;
-  klass->set_channel = gst_v4l2_tuner_set_channel;
+  klass->set_channel = gst_v4l2_tuner_set_channel_and_notify;
   klass->get_channel = gst_v4l2_tuner_get_channel;
 
   klass->list_norms = gst_v4l2_tuner_list_norms;
-  klass->set_norm = gst_v4l2_tuner_set_norm;
+  klass->set_norm = gst_v4l2_tuner_set_norm_and_notify;
   klass->get_norm = gst_v4l2_tuner_get_norm;
 
-  klass->set_frequency = gst_v4l2_tuner_set_frequency;
+  klass->set_frequency = gst_v4l2_tuner_set_frequency_and_notify;
   klass->get_frequency = gst_v4l2_tuner_get_frequency;
   klass->signal_strength = gst_v4l2_tuner_signal_strength;
 }
 
+#if 0                           /* output not handled by now */
 static gboolean
 gst_v4l2_tuner_is_sink (GstV4l2Element * v4l2element)
 {
@@ -159,6 +178,7 @@ gst_v4l2_tuner_is_sink (GstV4l2Element * v4l2element)
 
   return (dir == GST_PAD_SINK);
 }
+#endif /* #if 0 - output not handled by now */
 
 static G_GNUC_UNUSED gboolean
 gst_v4l2_tuner_contains_channel (GstV4l2Element * v4l2element,
@@ -176,28 +196,85 @@ gst_v4l2_tuner_contains_channel (GstV4l2Element * v4l2element,
 static const GList *
 gst_v4l2_tuner_list_channels (GstTuner * mixer)
 {
-  /* ... or output, if we're a sink... */
   return GST_V4L2ELEMENT (mixer)->inputs;
 }
 
 static void
-gst_v4l2_tuner_set_channel (GstTuner * mixer, GstTunerChannel * channel)
+gst_v4l2_tuner_set_channel_and_notify (GstTuner * mixer,
+    GstTunerChannel * channel)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
-  GstV4l2TunerChannel *v4l2channel = GST_V4L2_TUNER_CHANNEL (channel);
 
-  /* assert that we're opened and that we're using a known item */
-  g_return_if_fail (GST_V4L2_IS_OPEN (v4l2element));
-  g_return_if_fail (gst_v4l2_tuner_contains_channel (v4l2element, v4l2channel));
-
-  /* ... or output, if we're a sink... */
-  if (gst_v4l2_tuner_is_sink (v4l2element) ?
-      gst_v4l2_set_output (v4l2element, v4l2channel->index) :
-      gst_v4l2_set_input (v4l2element, v4l2channel->index)) {
-    gst_tuner_channel_changed (mixer, channel);
+  if (gst_v4l2_tuner_set_channel (mixer, channel)) {
     g_object_notify (G_OBJECT (v4l2element), "input");
   }
 }
+
+gboolean
+gst_v4l2_tuner_set_channel (GstTuner * mixer, GstTunerChannel * channel)
+{
+  GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
+  GstV4l2Src *v4l2src = GST_V4L2SRC (v4l2element);
+  GstV4l2TunerChannel *v4l2channel = GST_V4L2_TUNER_CHANNEL (channel);
+
+  /* assert that we're opened and that we're using a known item */
+  g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2element), FALSE);
+  g_return_val_if_fail (gst_v4l2_tuner_contains_channel (v4l2element,
+          v4l2channel), FALSE);
+
+  if (
+#if 0                           /* output not handled by now */
+      gst_v4l2_tuner_is_sink (v4l2element) ?
+      gst_v4l2_set_output (v4l2element, v4l2channel->index) :
+#endif /* #if 0 - output not handled by now */
+      gst_v4l2_set_input (v4l2element, v4l2channel->index)
+      ) {
+    gst_tuner_channel_changed (mixer, channel);
+    gst_v4l2src_get_fps (v4l2src, &v4l2src->fps_n, &v4l2src->fps_d);
+    return TRUE;
+  }
+
+  return FALSE;
+
+}
+
+static gboolean
+gst_v4l2_get_input (GstV4l2Element * v4l2element, gint * input)
+{
+  gint n;
+
+  GST_DEBUG_OBJECT (v4l2element, "trying to get input");
+  if (!GST_V4L2_IS_OPEN (v4l2element))
+    return FALSE;
+
+  if (ioctl (v4l2element->video_fd, VIDIOC_G_INPUT, &n) < 0) {
+    GST_WARNING_OBJECT (v4l2element,
+        "Failed to get current input on device %s: %s",
+        v4l2element->videodev, g_strerror (errno));
+    return FALSE;
+  }
+
+  *input = n;
+
+  return TRUE;
+}
+
+static gboolean
+gst_v4l2_set_input (GstV4l2Element * v4l2element, gint input)
+{
+  GST_DEBUG_OBJECT (v4l2element, "trying to set input to %d", input);
+  if (!GST_V4L2_IS_OPEN (v4l2element))
+    return FALSE;
+
+  if (ioctl (v4l2element->video_fd, VIDIOC_S_INPUT, &input) < 0) {
+    GST_WARNING_OBJECT (v4l2element, "Failed to set input %d on device %s: %s",
+        input, v4l2element->videodev, g_strerror (errno));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 
 static GstTunerChannel *
 gst_v4l2_tuner_get_channel (GstTuner * mixer)
@@ -209,10 +286,11 @@ gst_v4l2_tuner_get_channel (GstTuner * mixer)
   /* assert that we're opened and that we're using a known item */
   g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2element), NULL);
 
-  /* ... or output, if we're a sink... */
+#if 0                           /* output not handled by now */
   if (gst_v4l2_tuner_is_sink (v4l2element))
     gst_v4l2_get_output (v4l2element, &channel);
   else
+#endif /* #if 0 - output not handled by now */
     gst_v4l2_get_input (v4l2element, &channel);
 
   for (item = v4l2element->inputs; item != NULL; item = item->next) {
@@ -243,19 +321,35 @@ gst_v4l2_tuner_list_norms (GstTuner * mixer)
 }
 
 static void
+gst_v4l2_tuner_set_norm_and_notify (GstTuner * mixer, GstTunerNorm * norm)
+{
+  GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
+
+  if (gst_v4l2_tuner_set_norm (mixer, norm)) {
+    g_object_notify (G_OBJECT (v4l2element), "std");
+  }
+}
+
+gboolean
 gst_v4l2_tuner_set_norm (GstTuner * mixer, GstTunerNorm * norm)
 {
   GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
+  GstV4l2Src *v4l2src = GST_V4L2SRC (v4l2element);
   GstV4l2TunerNorm *v4l2norm = GST_V4L2_TUNER_NORM (norm);
 
   /* assert that we're opened and that we're using a known item */
-  g_return_if_fail (GST_V4L2_IS_OPEN (v4l2element));
-  g_return_if_fail (gst_v4l2_tuner_contains_norm (v4l2element, v4l2norm));
+  g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2element), FALSE);
+  g_return_val_if_fail (gst_v4l2_tuner_contains_norm (v4l2element, v4l2norm),
+      FALSE);
 
   if (gst_v4l2_set_norm (v4l2element, v4l2norm->index)) {
     gst_tuner_norm_changed (mixer, norm);
-    g_object_notify (G_OBJECT (v4l2element), "std");
+    gst_v4l2src_get_fps (v4l2src, &v4l2src->fps_n, &v4l2src->fps_d);
+    return TRUE;
   }
+
+  return FALSE;
+
 }
 
 static GstTunerNorm *
@@ -279,6 +373,17 @@ gst_v4l2_tuner_get_norm (GstTuner * mixer)
 }
 
 static void
+gst_v4l2_tuner_set_frequency_and_notify (GstTuner * mixer,
+    GstTunerChannel * channel, gulong frequency)
+{
+  GstV4l2Element *v4l2element = GST_V4L2ELEMENT (mixer);
+
+  if (gst_v4l2_tuner_set_frequency (mixer, channel, frequency)) {
+    g_object_notify (G_OBJECT (v4l2element), "frequency");
+  }
+}
+
+gboolean
 gst_v4l2_tuner_set_frequency (GstTuner * mixer,
     GstTunerChannel * channel, gulong frequency)
 {
@@ -287,19 +392,21 @@ gst_v4l2_tuner_set_frequency (GstTuner * mixer,
   gint chan;
 
   /* assert that we're opened and that we're using a known item */
-  g_return_if_fail (GST_V4L2_IS_OPEN (v4l2element));
-  g_return_if_fail (GST_TUNER_CHANNEL_HAS_FLAG (channel,
-          GST_TUNER_CHANNEL_FREQUENCY));
-  g_return_if_fail (gst_v4l2_tuner_contains_channel (v4l2element, v4l2channel));
+  g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2element), FALSE);
+  g_return_val_if_fail (GST_TUNER_CHANNEL_HAS_FLAG (channel,
+          GST_TUNER_CHANNEL_FREQUENCY), FALSE);
+  g_return_val_if_fail (gst_v4l2_tuner_contains_channel (v4l2element,
+          v4l2channel), FALSE);
 
   gst_v4l2_get_input (v4l2element, &chan);
   if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&
       GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
     if (gst_v4l2_set_frequency (v4l2element, v4l2channel->tuner, frequency)) {
       gst_tuner_frequency_changed (mixer, channel, frequency);
-      g_object_notify (G_OBJECT (v4l2element), "frequency");
+      return TRUE;
     }
   }
+  return FALSE;
 }
 
 static gulong
@@ -349,3 +456,47 @@ gst_v4l2_tuner_signal_strength (GstTuner * mixer, GstTunerChannel * channel)
 
   return signal;
 }
+
+#if 0                           /* output not handled by now */
+
+static gboolean
+gst_v4l2_get_output (GstV4l2Element * v4l2element, gint * output)
+{
+  gint n;
+
+  GST_DEBUG_OBJECT (v4l2element, "trying to get output");
+  if (!GST_V4L2_IS_OPEN (v4l2element))
+    return FALSE;
+
+  if (ioctl (v4l2element->video_fd, VIDIOC_G_OUTPUT, &n) < 0) {
+    GST_WARNING_OBJECT (v4l2element,
+        "Failed to get current output on device %s: %s",
+        v4l2element->videodev, g_strerror (errno));
+    return FALSE;
+  }
+
+  *output = n;
+
+  return TRUE;
+}
+
+static gboolean
+gst_v4l2_set_output (GstV4l2Element * v4l2element, gint output)
+{
+  GST_DEBUG_OBJECT (v4l2element, "trying to set output to %d", output);
+  if (!GST_V4L2_IS_OPEN (v4l2element))
+    return FALSE;
+  if (!GST_V4L2_IS_ACTIVE (v4l2element))
+    return FALSE;
+
+  if (ioctl (v4l2element->video_fd, VIDIOC_S_OUTPUT, &output) < 0) {
+    GST_WARNING_OBJECT (v4l2element,
+        "Failed to set current output on device %s to %d: %s",
+        v4l2element->videodev, output, g_strerror (errno));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+#endif /* #if 0 - output not handled by now */

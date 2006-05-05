@@ -3,6 +3,7 @@
  * gstv4l2src.c: BT8x8/V4L2 source element
  *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -207,6 +208,8 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
   v4l2src->formats = NULL;
 
   /* fps */
+  v4l2src->fps_n = 0;
+  v4l2src->fps_d = 1;
   v4l2src->use_fixed_fps = TRUE;
 
   v4l2src->is_capturing = FALSE;
@@ -631,8 +634,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
   int min_w, max_w, min_h, max_h;
   GSList *walk;
   GstStructure *structure;
-  gint fps_n, fps_d;
-
+  guint fps_n, fps_d;
 
   if (!GST_V4L2_IS_OPEN (GST_V4L2ELEMENT (v4l2src))) {
     return
@@ -647,6 +649,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
   caps = gst_caps_new_empty ();
   walk = v4l2src->formats;
   if (!gst_v4l2src_get_fps (v4l2src, &fps_n, &fps_d)) {
+    GST_DEBUG_OBJECT (v4l2src, "frame rate is unknown.");
     fps_n = 0;
     fps_d = 1;
   }
@@ -857,10 +860,8 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
   GstFlowReturn ret;
-  gint fps_n, fps_d;
 
-  if (v4l2src->use_fixed_fps
-      && gst_v4l2src_get_fps (v4l2src, &fps_n, &fps_d) == 0) {
+  if (v4l2src->use_fixed_fps && v4l2src->fps_n == 0) {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS, (NULL),
         ("could not get frame rate for element"));
     return GST_FLOW_ERROR;

@@ -1,5 +1,6 @@
 /* G-Streamer generic V4L2 element - generic V4L2 calls handling
  * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -90,10 +91,6 @@ gboolean	gst_v4l2_get_norm		(GstV4l2Element *v4l2element,
 						 v4l2_std_id    *norm);
 gboolean	gst_v4l2_set_norm		(GstV4l2Element *v4l2element,
 						 v4l2_std_id     norm);
-gboolean	gst_v4l2_get_input		(GstV4l2Element *v4l2element,
-						 gint           *input);
-gboolean	gst_v4l2_set_input		(GstV4l2Element *v4l2element,
-						 gint            input);
 gboolean	gst_v4l2_get_output		(GstV4l2Element *v4l2element,
 						 gint           *output);
 gboolean	gst_v4l2_set_output		(GstV4l2Element *v4l2element,
