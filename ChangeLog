@@ -1,3 +1,16 @@
+2006-05-05  Wim Taymans  <wim@fluendo.com>
+
+	* gst/glib-compat.c:
+	* gst/gst.c: (init_pre):
+	* gst/gstobject.c: (gst_object_init), (gst_object_ref),
+	(gst_object_unref), (gst_object_replace), (gst_object_dispose),
+	(gst_object_dispatch_properties_changed):
+	* gst/gstobject.h:
+	* gst/gstregistryxml.c: (gst_registry_xml_read_cache):
+	* gst/gststructure.c: (gst_structure_set_valist):
+	* gst/gstvalue.c: (gst_date_get_type), (_gst_value_initialize):
+	Remove pre glib2.8 compatibility, fixes #340508
+
 2006-05-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsttaglist.h:

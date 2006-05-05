@@ -3792,7 +3792,7 @@ gst_date_get_type (void)
     /* Not using G_TYPE_DATE here on purpose, even if we could
      * if GLIB_CHECK_VERSION(2,8,0) was true: we don't want the
      * serialised strings to have different type strings depending
-     * on what version is used, so FIXME in 0.11 when we
+     * on what version is used, so FIXME when we
      * require GLib-2.8 */
     gst_date_type = g_boxed_type_register_static ("GstDate",
         (GBoxedCopyFunc) gst_date_copy, (GBoxedFreeFunc) g_date_free);
@@ -4023,14 +4023,12 @@ _gst_value_initialize (void)
       GST_TYPE_FRACTION_RANGE,
       gst_value_subtract_fraction_range_fraction_range);
 
-#if GLIB_CHECK_VERSION(2,8,0)
   /* see bug #317246, #64994, #65041 */
   {
     volatile GType date_type = G_TYPE_DATE;
 
     g_type_name (date_type);
   }
-#endif
 
   gst_value_register_union_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_union_int_int_range);

@@ -62,7 +62,6 @@ typedef enum
   GST_OBJECT_FLAG_LAST = (1<<4)
 } GstObjectFlags;
 
-#ifdef GST_HAVE_GLIB_2_8
 /**
  * GST_OBJECT_REFCOUNT:
  * @obj: a #GstObject
@@ -76,11 +75,7 @@ typedef enum
  *
  * Get the reference count value of the object.
  */
-#define GST_OBJECT_REFCOUNT_VALUE(obj)          GST_OBJECT_REFCOUNT(obj)
-#else
-#define GST_OBJECT_REFCOUNT(obj)                ((GST_OBJECT_CAST(obj))->refcount)
-#define GST_OBJECT_REFCOUNT_VALUE(obj)          (g_atomic_int_get (&(GST_OBJECT_CAST(obj))->refcount))
-#endif /* GST_HAVE_GLIB_2_8 */
+#define GST_OBJECT_REFCOUNT_VALUE(obj)          g_atomic_int_get (&GST_OBJECT_REFCOUNT(obj))
 
 /* we do a GST_OBJECT_CAST to avoid type checking, better call these
  * function with a valid object! */
@@ -186,7 +181,7 @@ typedef struct _GstObjectClass GstObjectClass;
 
 /**
  * GstObject:
- * @refcount: only used ifndef GST_HAVE_GLIB_2_8
+ * @refcount: unused
  * @lock: object LOCK
  * @name: The name of the object
  * @name_prefix: used for debugging

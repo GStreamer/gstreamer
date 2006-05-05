@@ -480,12 +480,10 @@ gst_structure_set_valist (GstStructure * structure,
 
     type = va_arg (varargs, GType);
 
-#if GLIB_CHECK_VERSION(2,8,0)
     if (type == G_TYPE_DATE) {
       g_warning ("Don't use G_TYPE_DATE, use GST_TYPE_DATE instead\n");
       type = GST_TYPE_DATE;
     }
-#endif
 
     g_value_init (&field.value, type);
     G_VALUE_COLLECT (&field.value, varargs, 0, &err);

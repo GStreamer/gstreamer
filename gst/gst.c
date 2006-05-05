@@ -242,10 +242,6 @@ parse_debug_list (const gchar * list)
 }
 #endif
 
-#ifndef GST_HAVE_GLIB_2_8
-#define G_OPTION_FLAG_NO_ARG 0
-#endif
-
 /**
  * gst_init_get_option_group:
  *
@@ -463,17 +459,10 @@ split_and_iterate (const gchar * stringlist, gchar * separator, GFunc iterator,
 static gboolean
 init_pre (void)
 {
-#ifdef GST_HAVE_GLIB_2_8
   /* GStreamer was built against a GLib >= 2.8 and is therefore not doing
    * the refcount hack. Check that it isn't being run against an older GLib */
   if (glib_major_version < 2 ||
       (glib_major_version == 2 && glib_minor_version < 8)) {
-#else
-  /* GStreamer was built against a GLib < 2.8 and is therefore doing
-   * the refcount hack. Check that it isn't being run against a newer GLib */
-  if (glib_major_version > 2 ||
-      (glib_major_version == 2 && glib_minor_version >= 8)) {
-#endif
     g_warning ("GStreamer was compiled against GLib %d.%d.%d but is running"
         " against %d.%d.%d. This will cause reference counting issues",
         GLIB_MAJOR_VERSION, GLIB_MINOR_VERSION, GLIB_MICRO_VERSION,

@@ -466,9 +466,7 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
 gboolean
 gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
 {
-#if GLIB_CHECK_VERSION(2,8,0)
   GMappedFile *mapped = NULL;
-#endif
   GTimer *timer;
   gdouble seconds;
   xmlTextReaderPtr reader = NULL;
@@ -483,7 +481,6 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
 
   timer = g_timer_new ();
 
-#if GLIB_CHECK_VERSION(2,8,0)
   mapped = g_mapped_file_new (location, FALSE, NULL);
   if (mapped) {
     reader = xmlReaderForMemory (g_mapped_file_get_contents (mapped),
@@ -493,7 +490,6 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
       mapped = NULL;
     }
   }
-#endif
 
   if (reader == NULL) {
     file = fopen (location, "r");
@@ -540,10 +536,8 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
   xmlFreeTextReader (reader);
   if (ret != 0) {
     GST_ERROR ("parsing registry cache: %s", location);
-#if GLIB_CHECK_VERSION(2,8,0)
     if (mapped)
       g_mapped_file_free (mapped);
-#endif
     if (file)
       fclose (file);
     g_timer_destroy (timer);
@@ -556,10 +550,8 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
 
   GST_INFO ("loaded %s in %f seconds", location, seconds);
 
-#if GLIB_CHECK_VERSION(2,8,0)
   if (mapped)
     g_mapped_file_free (mapped);
-#endif
 
   if (file)
     fclose (file);

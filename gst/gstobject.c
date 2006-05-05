@@ -96,29 +96,6 @@ static GstAllocTrace *_gst_object_trace;
 #endif
 
 #define DEBUG_REFCOUNT
-#ifndef GST_HAVE_GLIB_2_8
-#define REFCOUNT_HACK
-#endif
-
-/* Refcount hack: since glib < 2.8 is not threadsafe, the glib refcounter can be
- * screwed up and the object can be freed unexpectedly. We use an evil hack
- * to work around this problem. We set the glib refcount to a high value so
- * that glib will never unref the object under realistic circumstances. Then
- * we use our own atomic refcounting to do proper MT safe refcounting.
- *
- * The hack has several side-effect. At first you should use
- * gst_object_ref/unref() whenever you can. Next when using
- * g_value_set/get_object(); you need to manually fix the refcount.
- *
- * A proper fix is of course to upgrade to glib 2.8
- */
-#ifdef REFCOUNT_HACK
-#define PATCH_REFCOUNT(obj)    ((GObject*)(obj))->ref_count = 100000;
-#define PATCH_REFCOUNT1(obj)    ((GObject*)(obj))->ref_count = 1;
-#else
-#define PATCH_REFCOUNT(obj)
-#define PATCH_REFCOUNT1(obj)
-#endif
 
 /* Object signals and args */
 enum
@@ -314,10 +291,6 @@ gst_object_init (GTypeInstance * instance, gpointer g_class)
   object->parent = NULL;
   object->name = NULL;
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p new", object);
-#ifdef REFCOUNT_HACK
-  gst_atomic_int_set (&object->refcount, 1);
-#endif
-  PATCH_REFCOUNT (object);
 
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_object_trace, object);
@@ -344,27 +317,14 @@ gst_object_init (GTypeInstance * instance, gpointer g_class)
 gpointer
 gst_object_ref (gpointer object)
 {
-#ifdef REFCOUNT_HACK
-  gint old;
-#endif
-
   g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
 
-#ifdef REFCOUNT_HACK
-  old = g_atomic_int_exchange_and_add (&((GstObject *) object)->refcount, 1);
-#  ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref %d->%d",
-      object, old, old + 1);
-#  endif
-  PATCH_REFCOUNT (object);
-#else
-#  ifdef DEBUG_REFCOUNT
+#ifdef DEBUG_REFCOUNT
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref %d->%d",
       object,
       ((GObject *) object)->ref_count, ((GObject *) object)->ref_count + 1);
-#  endif
-  g_object_ref (object);
 #endif
+  g_object_ref (object);
 
   return object;
 }
@@ -383,27 +343,7 @@ gst_object_ref (gpointer object)
 void
 gst_object_unref (gpointer object)
 {
-#ifdef REFCOUNT_HACK
-  gint old;
-#endif
   g_return_if_fail (GST_IS_OBJECT (object));
-
-#ifdef REFCOUNT_HACK
-  g_return_if_fail (GST_OBJECT_REFCOUNT_VALUE (object) > 0);
-
-  old = g_atomic_int_exchange_and_add (&((GstObject *) object)->refcount, -1);
-
-#  ifdef DEBUG_REFCOUNT
-  GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p unref %d->%d",
-      object, old, old - 1);
-#endif
-  if (G_UNLIKELY (old == 1)) {
-    PATCH_REFCOUNT1 (object);
-    g_object_unref (object);
-  } else {
-    PATCH_REFCOUNT (object);
-  }
-#else
   g_return_if_fail (((GObject *) object)->ref_count > 0);
 
 #ifdef DEBUG_REFCOUNT
@@ -412,7 +352,6 @@ gst_object_unref (gpointer object)
       ((GObject *) object)->ref_count, ((GObject *) object)->ref_count - 1);
 #endif
   g_object_unref (object);
-#endif
 }
 
 /**
@@ -471,19 +410,11 @@ gst_object_replace (GstObject ** oldobj, GstObject * newobj)
   g_return_if_fail (newobj == NULL || GST_IS_OBJECT (newobj));
 
 #ifdef DEBUG_REFCOUNT
-#ifdef REFCOUNT_HACK
-  GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %s (%d) with %s (%d)",
-      *oldobj ? GST_STR_NULL (GST_OBJECT_NAME (*oldobj)) : "(NONE)",
-      *oldobj ? GST_OBJECT_REFCOUNT_VALUE (*oldobj) : 0,
-      newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)",
-      newobj ? GST_OBJECT_REFCOUNT_VALUE (newobj) : 0);
-#else
   GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %s (%d) with %s (%d)",
       *oldobj ? GST_STR_NULL (GST_OBJECT_NAME (*oldobj)) : "(NONE)",
       *oldobj ? G_OBJECT (*oldobj)->ref_count : 0,
       newobj ? GST_STR_NULL (GST_OBJECT_NAME (newobj)) : "(NONE)",
       newobj ? G_OBJECT (newobj)->ref_count : 0);
-#endif
 #endif
 
   if (G_LIKELY (*oldobj != newobj)) {
@@ -511,9 +442,6 @@ gst_object_dispose (GObject * object)
   GST_OBJECT_PARENT (object) = NULL;
   GST_OBJECT_UNLOCK (object);
 
-  /* need to patch refcount so it is finalized */
-  PATCH_REFCOUNT1 (object);
-
   parent_class->dispose (object);
 
   return;
@@ -526,6 +454,7 @@ have_parent:
         "object instead of unreffing the object directly.\n",
         GST_OBJECT_NAME (object), GST_OBJECT_NAME (parent));
     GST_OBJECT_UNLOCK (object);
+    /* ref the object again to revive it in this error case */
     object = gst_object_ref (object);
     return;
   }
@@ -576,15 +505,9 @@ gst_object_dispatch_properties_changed (GObject * object,
 
   klass = GST_OBJECT_GET_CLASS (object);
 
-#ifndef GST_HAVE_GLIB_2_8
-  GST_CLASS_LOCK (klass);
-#endif
-
   /* do the standard dispatching */
-  PATCH_REFCOUNT (object);
   G_OBJECT_CLASS (parent_class)->dispatch_properties_changed (object, n_pspecs,
       pspecs);
-  PATCH_REFCOUNT (object);
 
   gst_object = GST_OBJECT_CAST (object);
   name = gst_object_get_name (gst_object);
@@ -605,14 +528,9 @@ gst_object_dispatch_properties_changed (GObject * object,
       GST_CAT_LOG (GST_CAT_EVENT, "deep notification from %s to %s (%s)",
           debug_name, debug_parent_name, pspecs[i]->name);
 
-      /* not MT safe because of glib, fixed by taking class lock higher up */
-      PATCH_REFCOUNT (parent);
-      PATCH_REFCOUNT (object);
       g_signal_emit (parent, gst_object_signals[DEEP_NOTIFY],
           g_quark_from_string (pspecs[i]->name), GST_OBJECT_CAST (object),
           pspecs[i]);
-      PATCH_REFCOUNT (parent);
-      PATCH_REFCOUNT (object);
     }
     g_free (parent_name);
 
@@ -621,10 +539,6 @@ gst_object_dispatch_properties_changed (GObject * object,
     gst_object_unref (old_parent);
   }
   g_free (name);
-
-#ifndef GST_HAVE_GLIB_2_8
-  GST_CLASS_UNLOCK (klass);
-#endif
 }
 
 /**
