@@ -792,22 +792,15 @@ analyze_state:
       if (flacdec->segment.stop != -1 &&
           flacdec->segment.last_stop > 0 &&
           flacdec->segment.last_stop >= flacdec->segment.stop) {
-        gint64 stop_time;
-
         GST_DEBUG_OBJECT (flacdec, "reached end of the configured segment");
 
-        if ((flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) == 0)
+        if ((flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) == 0) {
           goto eos_and_pause;
+        } else {
+          goto segment_done_and_pause;
+        }
 
-        GST_DEBUG_OBJECT (flacdec, "posting SEGMENT_DONE message");
-
-        stop_time = gst_util_uint64_scale_int (flacdec->segment.stop,
-            GST_SECOND, flacdec->sample_rate);
-
-        gst_element_post_message (GST_ELEMENT (flacdec),
-            gst_message_new_segment_done (GST_OBJECT (flacdec),
-                GST_FORMAT_TIME, stop_time));
-        goto pause;
+        g_assert_not_reached ();
       }
 
       return;
@@ -816,6 +809,16 @@ analyze_state:
     case FLAC__SEEKABLE_STREAM_DECODER_END_OF_STREAM:{
       GST_DEBUG_OBJECT (flacdec, "EOS");
       FLAC__seekable_stream_decoder_reset (flacdec->decoder);
+
+      if ((flacdec->segment.flags & GST_SEEK_FLAG_SEGMENT) != 0) {
+        if (flacdec->segment.duration > 0) {
+          flacdec->segment.stop = flacdec->segment.duration;
+        } else {
+          flacdec->segment.stop = flacdec->segment.last_stop;
+        }
+        goto segment_done_and_pause;
+      }
+
       goto eos_and_pause;
     }
 
@@ -836,6 +839,23 @@ analyze_state:
   }
 
   return;
+
+segment_done_and_pause:
+  {
+    gint64 stop_time;
+
+    stop_time = gst_util_uint64_scale_int (flacdec->segment.stop,
+        GST_SECOND, flacdec->sample_rate);
+
+    GST_DEBUG_OBJECT (flacdec, "posting SEGMENT_DONE message, stop time %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (stop_time));
+
+    gst_element_post_message (GST_ELEMENT (flacdec),
+        gst_message_new_segment_done (GST_OBJECT (flacdec),
+            GST_FORMAT_TIME, stop_time));
+
+    goto pause;
+  }
 
 eos_and_pause:
   {

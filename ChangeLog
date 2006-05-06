@@ -1,3 +1,12 @@
+2006-05-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/flac/gstflacdec.c: (gst_flac_dec_loop):
+	* ext/flac/gstflacdec.h:
+	  Handle segment seeks that include the end of the file as stop point
+	  properly: when the decoder hits EOS we want to send a SEGMENT_DONE
+	  message instead of an EOS event in case we're in segment seek
+	  mode (fixes #340699).
+	  
 2006-05-05  Maciej Katafiasz  <mathrick@freedesktop.org>
 
 	* ext/cairo/gsttextoverlay.c:
