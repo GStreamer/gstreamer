@@ -39,12 +39,6 @@ G_BEGIN_DECLS
 #define GST_IS_LAME_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LAME))
 
-typedef enum {
-  GST_LAME_OPEN         = (GST_ELEMENT_FLAG_LAST << 0),
-
-  GST_LAME_FLAG_LAST    = (GST_ELEMENT_FLAG_LAST << 2)
-} GstLameFlags;
-
 typedef struct _GstLame GstLame;
 typedef struct _GstLameClass GstLameClass;
 
@@ -92,10 +86,6 @@ struct _GstLame {
   gint preset;
 
   lame_global_flags *lgf;
-
-  GstTagList *tags;
-
-  GSList *tag_strings;
 
   /* time tracker */
   guint64 last_ts, last_offs, last_duration;

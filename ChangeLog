@@ -1,3 +1,15 @@
+2006-05-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/lame/gstlame.c: (gst_lame_get_type),
+	(gst_lame_release_memory), (gst_lame_init), (gst_lame_sink_event),
+	(gst_lame_setup), (gst_lame_change_state):
+	* ext/lame/gstlame.h:
+	  Remove tag writing from lame (which was completely broken
+	  anyway, #329184). Leaving GstTagSetter interface around for
+	  now, albeit non-functional. Should be removed completely
+	  in 0.11. Use the 'id3v2mux' plugin from -good for writing
+	  tags.
+
 2006-05-05  Maciej Katafiasz  <mathrick@freedesktop.org>
 
 	* ext/dvdread/dvdreadsrc.c:
