@@ -175,12 +175,6 @@ gst_lame_preset_get_type (void)
 #endif
 
 /********** Standard stuff for signals and arguments **********/
-/* GstLame signals and args */
-enum
-{
-  /* FILL_ME */
-  LAST_SIGNAL
-};
 
 enum
 {
@@ -240,8 +234,6 @@ static GstStateChangeReturn gst_lame_change_state (GstElement * element,
 
 static GstElementClass *parent_class = NULL;
 
-/* static guint gst_lame_signals[LAST_SIGNAL] = { 0 }; */
-
 GType
 gst_lame_get_type (void)
 {
@@ -260,6 +252,7 @@ gst_lame_get_type (void)
       (GInstanceInitFunc) gst_lame_init,
     };
 
+    /* FIXME: remove support for the GstTagSetter interface in 0.11 */
     static const GInterfaceInfo tag_setter_info = {
       NULL,
       NULL,
@@ -278,15 +271,6 @@ gst_lame_get_type (void)
 static void
 gst_lame_release_memory (GstLame * lame)
 {
-  g_slist_foreach (lame->tag_strings, (GFunc) g_free, NULL);
-  g_slist_free (lame->tag_strings);
-  lame->tag_strings = NULL;
-
-  if (lame->tags) {
-    gst_tag_list_free (lame->tags);
-    lame->tags = NULL;
-  }
-
   if (lame->lgf) {
     lame_close (lame->lgf);
     lame->lgf = NULL;
@@ -585,127 +569,9 @@ gst_lame_init (GstLame * lame)
   lame->preset = 0;
   lame_close (lame->lgf);
   lame->lgf = NULL;
-  lame->tag_strings = NULL;
 
   GST_DEBUG_OBJECT (lame, "done initializing");
 }
-
-typedef struct _GstLameTagMatch GstLameTagMatch;
-typedef void (*GstLameTagFunc) (lame_global_flags * gfp, const char *value);
-
-struct _GstLameTagMatch
-{
-  gchar *gstreamer_tag;
-  GstLameTagFunc tag_func;
-};
-
-static GstLameTagMatch tag_matches[] = {
-  {GST_TAG_TITLE, id3tag_set_title},
-  {GST_TAG_DATE, id3tag_set_year},
-  {GST_TAG_TRACK_NUMBER, id3tag_set_track},
-  {GST_TAG_COMMENT, id3tag_set_comment},
-  {GST_TAG_ARTIST, id3tag_set_artist},
-  {GST_TAG_ALBUM, id3tag_set_album},
-  {GST_TAG_GENRE, (GstLameTagFunc) id3tag_set_genre},
-  {NULL, NULL}
-};
-
-static void
-add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
-{
-  GstLame *lame;
-  gchar *value = NULL;
-  int i = 0;
-
-  lame = GST_LAME (user_data);
-  g_return_if_fail (lame != NULL);
-
-  while (tag_matches[i].gstreamer_tag != NULL) {
-    if (strcmp (tag, tag_matches[i].gstreamer_tag) == 0) {
-      break;
-    }
-    i++;
-  }
-
-  if (tag_matches[i].tag_func == NULL) {
-    GST_WARNING_OBJECT (lame,
-        "Couldn't find matching gstreamer tag for \"%s\"", tag);
-    return;
-  }
-
-  switch (gst_tag_get_type (tag)) {
-    case G_TYPE_UINT:{
-      guint ivalue;
-
-      if (!gst_tag_list_get_uint (list, tag, &ivalue)) {
-        GST_WARNING_OBJECT (lame, "Error reading \"%s\" tag value", tag);
-        return;
-      }
-      value = g_strdup_printf ("%u", ivalue);
-      break;
-    }
-    case G_TYPE_STRING:
-      if (!gst_tag_list_get_string (list, tag, &value)) {
-        GST_WARNING_OBJECT (lame, "Error reading \"%s\" tag value", tag);
-        return;
-      };
-      break;
-    default:{
-      if (strcmp (tag, GST_TAG_DATE) == 0) {
-        GDate *date = NULL;
-
-        if (!gst_tag_list_get_date (list, tag, &date) || date == NULL) {
-          GST_WARNING_OBJECT (lame, "Error reading \"%s\" tag value", tag);
-        } else {
-          value = g_strdup_printf ("%u", g_date_get_year (date));
-          g_date_free (date);
-        }
-      } else {
-        GST_WARNING_OBJECT (lame, "Couldn't write tag %s", tag);
-      }
-      break;
-    }
-  }
-
-  if (value != NULL && *value != '\0') {
-    GST_LOG_OBJECT (lame, "Adding tag %s:%s", tag, value);
-    tag_matches[i].tag_func (lame->lgf, value);
-  }
-
-  /* lame does not copy strings passed to it and expects them
-   * to be around later, but it does not free them for us either,
-   * so we just add them to a list and free it later when it's safe */
-  lame->tag_strings = g_slist_prepend (lame->tag_strings, value);
-}
-
-static void
-gst_lame_set_metadata (GstLame * lame)
-{
-  const GstTagList *user_tags;
-  GstTagList *copy;
-
-  g_return_if_fail (lame != NULL);
-
-  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (lame));
-
-  GST_DEBUG_OBJECT (lame, "lame->tags  = %" GST_PTR_FORMAT, lame->tags);
-  GST_DEBUG_OBJECT (lame, "user tags   = %" GST_PTR_FORMAT, user_tags);
-
-  if ((lame->tags == NULL) && (user_tags == NULL)) {
-    return;
-  }
-
-  copy = gst_tag_list_merge (user_tags, lame->tags,
-      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (lame)));
-
-  GST_DEBUG_OBJECT (lame, "merged tags = %" GST_PTR_FORMAT, copy);
-
-  gst_tag_list_foreach ((GstTagList *) copy, add_one_tag, lame);
-
-  gst_tag_list_free (copy);
-}
-
-
 
 static void
 gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -995,16 +861,7 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     case GST_EVENT_TAG:
-      GST_DEBUG_OBJECT (lame, "handling TAG event");
-      if (lame->tags) {
-        GstTagList *taglist;
-
-        gst_event_parse_tag (event, &taglist);
-        gst_tag_list_insert (lame->tags, taglist,
-            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (lame)));
-      } else {
-        g_assert_not_reached ();
-      }
+      GST_DEBUG_OBJECT (lame, "ignoring TAG event, passing it on");
       ret = gst_pad_push_event (lame->srcpad, event);
       break;
     default:
@@ -1138,7 +995,6 @@ gst_lame_setup (GstLame * lame)
   }
 
   lame->lgf = lame_init ();
-  id3tag_init (lame->lgf);
 
   /* let lame choose a default samplerate */
   lame_set_out_samplerate (lame->lgf, 0);
@@ -1190,7 +1046,6 @@ gst_lame_setup (GstLame * lame)
     CHECK_ERROR (lame_set_preset (lame->lgf, lame->preset));
   }
 #endif
-  gst_lame_set_metadata (lame);
 
   /* initialize the lame encoder */
   if ((retval = lame_init_params (lame->lgf)) >= 0) {
@@ -1217,8 +1072,6 @@ gst_lame_change_state (GstElement * element, GstStateChange transition)
   lame = GST_LAME (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      lame->tags = gst_tag_list_new ();
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       lame->last_ts = GST_CLOCK_TIME_NONE;
       break;
