@@ -1745,7 +1745,7 @@ interrupted:
 /**
  * gst_element_get_state:
  * @element: a #GstElement to get the state of.
- * @state: a pointer to #GstState to hold the state. Can be NULL.
+ * @state: a pointer to #GstState to hold the state. Can be %NULL.
  * @pending: a pointer to #GstState to hold the pending state.
  *           Can be %NULL.
  * @timeout: a #GstClockTime to specify the timeout for an async
@@ -1859,9 +1859,9 @@ nothing_aborted:
  * pending state if any. This function is used   
  * by elements that do asynchronous state changes.       
  * The core will normally call this method automatically when an         
- * element returned SUCCESS from the state change function.      
- * Elements that return ASYNC from the change_state function should      
- * eventually call this method from the streaming thread to signal       
+ * element returned %GST_STATE_CHANGE_SUCCESS from the state change function.      
+ * Elements that return %GST_STATE_CHANGE_ASYNC from the change_state function
+ * should eventually call this method from the streaming thread to signal       
  * successfull state change completion.          
  *       
  * If after calling this method the element still has not reached        
@@ -1964,11 +1964,11 @@ complete:
  *
  * Brings the element to the lost state. The current state of the
  * element is copied to the pending state so that any call to
- * gst_element_get_state() will return ASYNC.
+ * gst_element_get_state() will return %GST_STATE_CHANGE_ASYNC.
  *
  * This is mostly used for elements that lost their preroll buffer
- * in the PAUSED state after a flush, they become PAUSED again
- * if a new preroll buffer is queued.
+ * in the %GST_STATE_PAUSED state after a flush, they become %GST_STATE_PAUSED
+ * again if a new preroll buffer is queued.
  * This function can only be called when the element is currently
  * not in error or an async state change.
  *
