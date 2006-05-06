@@ -1,3 +1,10 @@
+2006-05-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst-libs/ext/ffmpeg/patches/autotools.patch:
+	* gst-libs/ext/ffmpeg/patches/noinst.patch:
+	Refresh patches to incorporate MikeS' automake 1.9 changes from a
+	while back.
+
 2006-05-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
