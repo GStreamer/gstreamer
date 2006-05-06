@@ -23,16 +23,17 @@
 
 #include "gstxine.h"
 
-GST_BOILERPLATE (GstXine, gst_xine, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstXine, gst_xine, GstElement, GST_TYPE_ELEMENT);
 
-     static GstStateChangeReturn gst_xine_change_state (GstElement * element,
+static GstStateChangeReturn gst_xine_change_state (GstElement * element,
     GstStateChange transition);
 
-     static xine_ao_driver_t *_xine_create_audio_driver (GstXine * xine);
-     static xine_vo_driver_t *_xine_create_video_driver (GstXine * xine);
+static xine_ao_driver_t *_xine_create_audio_driver (GstXine * xine);
+static xine_vo_driver_t *_xine_create_video_driver (GstXine * xine);
 
 
-     static void gst_xine_base_init (gpointer klass)
+static void
+gst_xine_base_init (gpointer klass)
 {
 }
 

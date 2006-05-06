@@ -67,18 +67,18 @@ enum
   ARG_LOCATION
 };
 
-GST_BOILERPLATE (GstXineInput, gst_xine_input, GstXine, GST_TYPE_XINE)
+GST_BOILERPLATE (GstXineInput, gst_xine_input, GstXine, GST_TYPE_XINE);
 
-     static void gst_xine_input_dispose (GObject * object);
-     static void gst_xine_input_set_property (GObject * object, guint prop_id,
+static void gst_xine_input_dispose (GObject * object);
+static void gst_xine_input_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-     static void gst_xine_input_get_property (GObject * object, guint prop_id,
+static void gst_xine_input_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-     static GstStateChangeReturn
-         gst_xine_input_change_state (GstElement * element,
-    GstStateChange transition);
+static GstStateChangeReturn
+gst_xine_input_change_state (GstElement * element, GstStateChange transition);
 
-     static void gst_xine_input_base_init (gpointer g_class)
+static void
+gst_xine_input_base_init (gpointer g_class)
 {
 }
 

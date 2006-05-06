@@ -1,3 +1,20 @@
+2006-05-05  Maciej Katafiasz  <mathrick@freedesktop.org>
+
+	* ext/amrwb/gstamrwbdec.c:
+	* ext/amrwb/gstamrwbenc.c:
+	* ext/sdl/sdlaudiosink.c:
+	* ext/sdl/sdlvideosink.c:
+	* ext/wavpack/gstwavpackdec.c:
+	* ext/xine/xine.c:
+	* ext/xine/xineaudiodec.c:
+	* ext/xine/xineaudiosink.c:
+	* ext/xine/xineinput.c:
+	* gst/cdxaparse/gstcdxaparse.c:
+	* gst/freeze/gstfreeze.c:
+	* sys/v4l2/gstv4l2element.c:
+	Add semicolons after GST_BOILERPLATE[_FULL] so that
+	indent doesn't mess up following lines.
+
 2006-05-05  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2element.c:

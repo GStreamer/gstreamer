@@ -127,9 +127,10 @@ _do_init (GType type)
 }
 
 GST_BOILERPLATE_FULL (GstSDLVideoSink, gst_sdlvideosink, GstVideoSink,
-    GST_TYPE_VIDEO_SINK, _do_init)
+    GST_TYPE_VIDEO_SINK, _do_init);
 
-     static void gst_sdlvideosink_base_init (gpointer g_class)
+static void
+gst_sdlvideosink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstCaps *capslist;

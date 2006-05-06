@@ -71,9 +71,10 @@ static void gst_freeze_clear_buffer (GstFreeze * freeze);
 static void gst_freeze_buffer_free (gpointer data, gpointer user_data);
 
 
-GST_BOILERPLATE (GstFreeze, gst_freeze, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstFreeze, gst_freeze, GstElement, GST_TYPE_ELEMENT);
 
-     static void gst_freeze_base_init (gpointer klass)
+static void
+gst_freeze_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 

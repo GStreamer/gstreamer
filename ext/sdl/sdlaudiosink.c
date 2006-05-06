@@ -132,9 +132,10 @@ static GstStaticPadTemplate sdlaudiosink_sink_factory =
     );
 
 GST_BOILERPLATE (GstSDLAudioSink, gst_sdlaudio_sink, GstAudioSink,
-    GST_TYPE_AUDIO_SINK)
+    GST_TYPE_AUDIO_SINK);
 
-     static void gst_sdlaudio_sink_dispose (GObject * object)
+static void
+gst_sdlaudio_sink_dispose (GObject * object)
 {
   GstSDLAudioSink *sdlaudiosink = GST_SDLAUDIOSINK (object);
 

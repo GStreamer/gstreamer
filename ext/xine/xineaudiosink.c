@@ -60,13 +60,14 @@ struct _GstXineAudioSinkClass
 
 /** GstXineAudioSink ***********************************************************/
 
-GST_BOILERPLATE (GstXineAudioSink, gst_xine_audio_sink, GstXine, GST_TYPE_XINE)
+GST_BOILERPLATE (GstXineAudioSink, gst_xine_audio_sink, GstXine, GST_TYPE_XINE);
 
-     static GstStateChangeReturn
-         gst_xine_audio_sink_change_state (GstElement * element,
+static GstStateChangeReturn
+gst_xine_audio_sink_change_state (GstElement * element,
     GstStateChange transition);
 
-     static void gst_xine_audio_sink_base_init (gpointer g_class)
+static void
+gst_xine_audio_sink_base_init (gpointer g_class)
 {
 }
 

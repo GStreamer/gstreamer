@@ -60,9 +60,10 @@ static GstStateChangeReturn gst_amrwbenc_state_change (GstElement * element,
     GstStateChange transition);
 
 
-GST_BOILERPLATE (GstAmrwbEnc, gst_amrwbenc, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstAmrwbEnc, gst_amrwbenc, GstElement, GST_TYPE_ELEMENT);
 
-     static void gst_amrwbenc_base_init (gpointer klass)
+static void
+gst_amrwbenc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 

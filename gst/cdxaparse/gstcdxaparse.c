@@ -56,9 +56,10 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/mpeg, " "systemstream = (boolean) TRUE")
     );
 
-GST_BOILERPLATE (GstCDXAParse, gst_cdxa_parse, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstCDXAParse, gst_cdxa_parse, GstElement, GST_TYPE_ELEMENT);
 
-     static void gst_cdxa_parse_base_init (gpointer g_class)
+static void
+gst_cdxa_parse_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   static const GstElementDetails gst_cdxa_parse_details =

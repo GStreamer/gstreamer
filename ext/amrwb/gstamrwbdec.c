@@ -61,9 +61,10 @@ static gboolean gst_amrwbdec_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_amrwbdec_state_change (GstElement * element,
     GstStateChange transition);
 
-GST_BOILERPLATE (GstAmrwbDec, gst_amrwbdec, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstAmrwbDec, gst_amrwbdec, GstElement, GST_TYPE_ELEMENT);
 
-     static void gst_amrwbdec_base_init (gpointer klass)
+static void
+gst_amrwbdec_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 

@@ -230,16 +230,16 @@ _gst_xine_audio_dec_create_audio_driver (GstXine * xine)
 
 /** GstXineAudioDec ***********************************************************/
 
-GST_BOILERPLATE (GstXineAudioDec, gst_xine_audio_dec, GstXine, GST_TYPE_XINE)
+GST_BOILERPLATE (GstXineAudioDec, gst_xine_audio_dec, GstXine, GST_TYPE_XINE);
 
-     static void gst_xine_audio_dec_chain (GstPad * pad, GstData * in);
-     static GstStateChangeReturn
-         gst_xine_audio_dec_change_state (GstElement * element,
+static void gst_xine_audio_dec_chain (GstPad * pad, GstData * in);
+static GstStateChangeReturn
+gst_xine_audio_dec_change_state (GstElement * element,
     GstStateChange transition);
 
 /* this function handles the link with other plug-ins */
-     static GstPadLinkReturn
-         gst_xine_audio_dec_sink_link (GstPad * pad, const GstCaps * caps)
+static GstPadLinkReturn
+gst_xine_audio_dec_sink_link (GstPad * pad, const GstCaps * caps)
 {
   guint temp;
   GstStructure *structure;
