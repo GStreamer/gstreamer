@@ -84,9 +84,10 @@ static GstTagDemuxResult gst_ape_demux_parse_tag (GstTagDemux * demux,
     GstBuffer * buffer, gboolean start_tag, guint * tag_size,
     GstTagList ** tags);
 
-GST_BOILERPLATE (GstApeDemux, gst_ape_demux, GstTagDemux, GST_TYPE_TAG_DEMUX)
+GST_BOILERPLATE (GstApeDemux, gst_ape_demux, GstTagDemux, GST_TYPE_TAG_DEMUX);
 
-     static void gst_ape_demux_base_init (gpointer klass)
+static void
+gst_ape_demux_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 

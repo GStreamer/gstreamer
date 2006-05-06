@@ -122,9 +122,10 @@ static gboolean gst_pixbufscale_handle_src_event (GstPad * pad,
 static gboolean parse_caps (GstCaps * caps, gint * width, gint * height);
 
 GST_BOILERPLATE (GstPixbufScale, gst_pixbufscale, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM)
+    GST_TYPE_BASE_TRANSFORM);
 
-     static void gst_pixbufscale_base_init (gpointer g_class)
+static void
+gst_pixbufscale_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 

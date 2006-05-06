@@ -174,9 +174,10 @@ static void gst_multipart_demux_finalize (GObject * object);
 
 
 GST_BOILERPLATE (GstMultipartDemux, gst_multipart_demux, GstElement,
-    GST_TYPE_ELEMENT)
+    GST_TYPE_ELEMENT);
 
-     static void gst_multipart_demux_base_init (gpointer g_class)
+static void
+gst_multipart_demux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);

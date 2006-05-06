@@ -104,7 +104,7 @@ static void gst_flac_dec_metadata_callback (const FLAC__SeekableStreamDecoder *
 static void gst_flac_dec_error_callback (const FLAC__SeekableStreamDecoder *
     decoder, FLAC__StreamDecoderErrorStatus status, void *client_data);
 
-GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT);
 #define GST_FLAC_DEC_SRC_CAPS                             \
     "audio/x-raw-int, "                                   \
     "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", " \
@@ -113,7 +113,8 @@ GST_BOILERPLATE (GstFlacDec, gst_flac_dec, GstElement, GST_TYPE_ELEMENT)
     "depth = (int) { 8, 12, 16, 20, 24, 32 }, "           \
     "rate = (int) [ 8000, 96000 ], "                      \
     "channels = (int) [ 1, 8 ]"
-     static void gst_flac_dec_base_init (gpointer g_class)
+static void
+gst_flac_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstCaps *raw_caps, *flac_caps;

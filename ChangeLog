@@ -1,3 +1,18 @@
+2006-05-05  Maciej Katafiasz  <mathrick@freedesktop.org>
+
+	* ext/cairo/gsttextoverlay.c:
+	* ext/flac/gstflacdec.c:
+	* ext/gdk_pixbuf/pixbufscale.c:
+	* gst/apetag/gstapedemux.c:
+	* gst/debug/breakmydata.c:
+	* gst/debug/testplugin.c:
+	* gst/matroska/ebml-write.c:
+	* gst/multipart/multipartdemux.c:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosrc.c:
+	Add semicolons after GST_BOILERPLATE[_FULL] so that
+	indent doesn't mess up following lines.
+
 2006-05-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Michal Benes  <michal dot benes at xeris dot cz>

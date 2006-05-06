@@ -84,9 +84,10 @@ static const GstElementDetails details = GST_ELEMENT_DETAILS ("Test plugin",
     "perform a number of tests",
     "Benjamin Otte <otte@gnome>");
 
-GST_BOILERPLATE (GstTest, gst_test, GstBaseSink, GST_TYPE_BASE_SINK)
+GST_BOILERPLATE (GstTest, gst_test, GstBaseSink, GST_TYPE_BASE_SINK);
 
-     static void gst_test_base_init (gpointer g_class)
+static void
+gst_test_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 

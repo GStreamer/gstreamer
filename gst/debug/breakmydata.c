@@ -99,9 +99,10 @@ GstStaticPadTemplate bmd_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS_ANY);
 
 GST_BOILERPLATE (GstBreakMyData, gst_break_my_data, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM)
+    GST_TYPE_BASE_TRANSFORM);
 
-     static void gst_break_my_data_base_init (gpointer g_class)
+static void
+gst_break_my_data_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 

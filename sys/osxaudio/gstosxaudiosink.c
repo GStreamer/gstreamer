@@ -130,10 +130,11 @@ gst_osx_audio_sink_osxelement_do_init (GType type)
 }
 
 GST_BOILERPLATE_FULL (GstOsxAudioSink, gst_osx_audio_sink, GstBaseAudioSink,
-    GST_TYPE_BASE_AUDIO_SINK, gst_osx_audio_sink_osxelement_do_init)
+    GST_TYPE_BASE_AUDIO_SINK, gst_osx_audio_sink_osxelement_do_init);
 
 
-     static void gst_osx_audio_sink_base_init (gpointer g_class)
+static void
+gst_osx_audio_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 

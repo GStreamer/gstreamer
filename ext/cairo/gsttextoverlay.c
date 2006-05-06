@@ -114,9 +114,10 @@ static void gst_text_overlay_font_init (GstCairoTextOverlay * overlay);
 #define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
 GST_BOILERPLATE (GstCairoTextOverlay, gst_text_overlay, GstElement,
-    GST_TYPE_ELEMENT)
+    GST_TYPE_ELEMENT);
 
-     static void gst_text_overlay_base_init (gpointer g_class)
+static void
+gst_text_overlay_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 

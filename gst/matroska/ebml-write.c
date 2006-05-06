@@ -36,12 +36,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_ebml_write_debug);
 #define _do_init(thing) \
       GST_DEBUG_CATEGORY_INIT (gst_ebml_write_debug, "GstEbmlWrite", 0, "Write EBML structured data")
 GST_BOILERPLATE_FULL (GstEbmlWrite, gst_ebml_write, GstObject, GST_TYPE_OBJECT,
-    _do_init)
+    _do_init);
 
-     static void gst_ebml_write_finalize (GObject * object);
+static void gst_ebml_write_finalize (GObject * object);
 
 
-     static void gst_ebml_write_base_init (gpointer g_class)
+static void
+gst_ebml_write_base_init (gpointer g_class)
 {
 }
 

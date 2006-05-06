@@ -67,9 +67,10 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static GstFlowReturn gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_wavpack_dec_sink_event (GstPad * pad, GstEvent * event);
 
-GST_BOILERPLATE (GstWavpackDec, gst_wavpack_dec, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstWavpackDec, gst_wavpack_dec, GstElement, GST_TYPE_ELEMENT);
 
-     static gboolean gst_wavpack_dec_setcaps (GstPad * pad, GstCaps * caps)
+static gboolean
+gst_wavpack_dec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstWavpackDec *wavpackdec = GST_WAVPACK_DEC (gst_pad_get_parent (pad));
   GstStructure *structure;
