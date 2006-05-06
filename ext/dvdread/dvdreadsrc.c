@@ -89,9 +89,10 @@ static GstEvent *gst_dvd_read_src_make_clut_change_event (GstDvdReadSrc * src,
 static gboolean gst_dvd_read_src_get_size (GstDvdReadSrc * src, gint64 * size);
 
 GST_BOILERPLATE_FULL (GstDvdReadSrc, gst_dvd_read_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, gst_dvd_read_src_do_init)
+    GST_TYPE_PUSH_SRC, gst_dvd_read_src_do_init);
 
-     static void gst_dvd_read_src_base_init (gpointer g_class)
+static void
+gst_dvd_read_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 

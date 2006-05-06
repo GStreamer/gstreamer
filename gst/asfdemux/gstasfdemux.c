@@ -61,12 +61,13 @@ static gboolean gst_asf_demux_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_asf_demux_process_object (GstASFDemux * demux,
     guint8 ** p_data, guint64 * p_size);
 
-GST_BOILERPLATE (GstASFDemux, gst_asf_demux, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstASFDemux, gst_asf_demux, GstElement, GST_TYPE_ELEMENT);
 
-     static GstPadTemplate *videosrctempl;
-     static GstPadTemplate *audiosrctempl;
+static GstPadTemplate *videosrctempl;
+static GstPadTemplate *audiosrctempl;
 
-     static void gst_asf_demux_base_init (gpointer g_class)
+static void
+gst_asf_demux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   static GstElementDetails gst_asf_demux_details = {

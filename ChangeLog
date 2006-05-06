@@ -1,3 +1,10 @@
+2006-05-05  Maciej Katafiasz  <mathrick@freedesktop.org>
+
+	* ext/dvdread/dvdreadsrc.c:
+	* gst/asfdemux/gstasfdemux.c:
+	Add semicolons after GST_BOILERPLATE[_FULL] so that
+	indent doesn't mess up following lines.
+	
 2006-05-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Andres Salomon  <dilinger at debian org>
