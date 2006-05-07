@@ -1,5 +1,15 @@
 2006-05-07  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/typefind/gsttypefindfunctions.c: (mp4_find_box),
+	(mp4_type_find), (plugin_init):
+          Add typefind to distinguish between "audio/x-m4a" and new type
+          "video/mp4". Fixes #340375
+
+        * tests/check/elements/adder.c: (adder_suite):
+          Raise timeout to make buildbot happy
+
+2006-05-07  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/adder/gstadder.c: (gst_adder_sink_event),
 	(gst_adder_request_new_pad), (gst_adder_change_state):
 	* gst/adder/gstadder.h:
@@ -8,7 +18,7 @@
 	(adder_suite), (main):
           Add sink-event handling to adder. It tries to merge incomming
           newsegment-events. Added test to check if segment_done is comming
-          through.
+          through. Fixes #340060
 
 2006-05-05  Andy Wingo  <wingo@pobox.com>
 

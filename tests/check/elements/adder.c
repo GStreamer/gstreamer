@@ -135,6 +135,10 @@ adder_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_event);
 
+  /* Use a long timeout, as we test all elements and take
+   * at least 0.2 seconds each */
+  tcase_set_timeout (tc_chain, 5);
+
   return s;
 }
 
