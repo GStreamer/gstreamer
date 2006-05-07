@@ -1,5 +1,11 @@
 2006-05-07  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/elements/adder.c: (event_loop), (GST_START_TEST),
+	(adder_suite):
+          Shuffle NULL state change around and raise timeout more
+
+2006-05-07  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/typefind/gsttypefindfunctions.c: (mp4_find_box),
 	(mp4_type_find), (plugin_init):
           Add typefind to distinguish between "audio/x-m4a" and new type

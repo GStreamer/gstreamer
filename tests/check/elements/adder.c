@@ -55,7 +55,6 @@ event_loop (GstElement * bin)
       case GST_MESSAGE_SEGMENT_DONE:
         gst_message_parse_segment_done (message, &format, &position);
         GST_INFO ("received segment_done : %" G_GINT64_FORMAT, position);
-        gst_element_set_state (bin, GST_STATE_NULL);
         loop = FALSE;
         break;
       case GST_MESSAGE_WARNING:
@@ -118,6 +117,9 @@ GST_START_TEST (test_event)
 
   event_loop (bin);
 
+  res = gst_element_set_state (bin, GST_STATE_NULL);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
   fail_unless (position == GST_SECOND, NULL);
 
   /* cleanup */
@@ -135,9 +137,8 @@ adder_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_event);
 
-  /* Use a long timeout, as we test all elements and take
-   * at least 0.2 seconds each */
-  tcase_set_timeout (tc_chain, 5);
+  /* Use a longer timeout */
+  tcase_set_timeout (tc_chain, 10);
 
   return s;
 }
