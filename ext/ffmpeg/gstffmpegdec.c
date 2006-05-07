@@ -256,14 +256,16 @@ gst_ffmpegdec_class_init (GstFFMpegDecClass * klass)
   gobject_class->get_property = gst_ffmpegdec_get_property;
   gstelement_class->change_state = gst_ffmpegdec_change_state;
 
-  g_object_class_install_property (gobject_class, ARG_SKIPFRAME,
-      g_param_spec_enum ("skip-frame", "Skip frames",
-          "Which types of frames to skip during decoding",
-          GST_FFMPEGDEC_TYPE_SKIPFRAME, 0, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_LOWRES,
-      g_param_spec_enum ("lowres", "Low resolution",
-          "At which resolution to decode images",
-          GST_FFMPEGDEC_TYPE_LOWRES, 0, G_PARAM_READWRITE));
+  if (klass->in_plugin->type == CODEC_TYPE_VIDEO) {
+    g_object_class_install_property (gobject_class, ARG_SKIPFRAME,
+        g_param_spec_enum ("skip-frame", "Skip frames",
+            "Which types of frames to skip during decoding",
+            GST_FFMPEGDEC_TYPE_SKIPFRAME, 0, G_PARAM_READWRITE));
+    g_object_class_install_property (gobject_class, ARG_LOWRES,
+        g_param_spec_enum ("lowres", "Low resolution",
+            "At which resolution to decode images",
+            GST_FFMPEGDEC_TYPE_LOWRES, 0, G_PARAM_READWRITE));
+  }
 }
 
 static void

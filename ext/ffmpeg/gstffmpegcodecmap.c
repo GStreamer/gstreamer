@@ -179,8 +179,21 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_RV10:
     case CODEC_ID_RV20:
+    case CODEC_ID_RV40:
       {
-        gint version = (codec_id == CODEC_ID_RV10) ? 1 : 2;
+        gint version;
+
+        switch (codec_id) {
+          case CODEC_ID_RV40:
+            version = 4;
+            break;
+          case CODEC_ID_RV20:
+            version = 2;
+            break;
+          default:
+            version = 1;
+            break;
+        }
 
         /* FIXME: context->sub_id must be filled in during decoding */
         caps = GST_FF_VID_CAPS_NEW ("video/x-pn-realvideo",
@@ -235,6 +248,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         /* FIXME: bitrate */
         caps = GST_FF_AUD_CAPS_NEW ("audio/x-ac3", NULL);
       }
+      break;
+    case CODEC_ID_DTS:
+      caps = GST_FF_AUD_CAPS_NEW ("audio/x-dts", NULL);
       break;
 
       /* MJPEG is normal JPEG, Motion-JPEG and Quicktime MJPEG-A. MJPEGB
@@ -1416,6 +1432,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
     case CODEC_ID_RV10:
     case CODEC_ID_RV20:
+    case CODEC_ID_RV40:
       {
         guint32 fourcc;
 
@@ -1575,6 +1592,7 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
     static enum CodecID mpegts_audio_list[] = { CODEC_ID_MP2, 
         CODEC_ID_MP3, 
         CODEC_ID_AC3, 
+        CODEC_ID_DTS, 
         CODEC_ID_AAC, 
         CODEC_ID_NONE };
 
@@ -1582,7 +1600,8 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
     *audio_codec_list = mpegts_audio_list;
   } else if (!strcmp (format_name, "vob")) {
     static enum CodecID vob_video_list[] = { CODEC_ID_MPEG2VIDEO, CODEC_ID_NONE };
-    static enum CodecID vob_audio_list[] = { CODEC_ID_MP2, CODEC_ID_AC3, CODEC_ID_NONE };
+    static enum CodecID vob_audio_list[] = { CODEC_ID_MP2, CODEC_ID_AC3, 
+                            CODEC_ID_DTS, CODEC_ID_NONE };
 
     *video_codec_list = vob_video_list;
     *audio_codec_list = vob_audio_list;
@@ -1785,6 +1804,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "audio/x-ac3")) {
     id = CODEC_ID_AC3;
     audio = TRUE;
+  } else if (!strcmp (mimetype, "audio/x-dts")) {
+    id = CODEC_ID_DTS;
+    audio = TRUE;
   } else if (!strcmp (mimetype, "video/x-msmpeg")) {
     gint msmpegversion = 0;
 
@@ -1975,6 +1997,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
         case 2:
           id = CODEC_ID_RV20;
           break;
+        case 4:
+          id = CODEC_ID_RV40;
+          break;
       }
     }
     if (id != CODEC_ID_NONE)
@@ -2102,6 +2127,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_RV20:
       name = "Realvideo 2.0";
       break;
+    case CODEC_ID_RV40:
+      name = "Realvideo 4.0";
+      break;
     case CODEC_ID_MP2:
       name = "MPEG-1 layer 2 audio";
       break;
@@ -2116,6 +2144,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_AC3:
       name = "AC-3 audio";
+      break;
+    case CODEC_ID_DTS:
+      name = "DTS Audio";
       break;
     case CODEC_ID_MJPEG:
       name = "Motion-JPEG";
@@ -2477,6 +2508,12 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_TRUESPEECH:
       name = "DSP Group TrueSpeech Audio";
+      break;
+    case CODEC_ID_AMR_NB:
+      name = "3GPP AMR NarrowBand speech audio codec";
+      break;
+    case CODEC_ID_AMR_WB:
+      name = "3GPP AMR WideBand speech audio codec";
       break;
     default:
       GST_WARNING ("Unknown codecID 0x%x", codec_id);

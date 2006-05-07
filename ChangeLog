@@ -1,5 +1,22 @@
 2006-05-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_formatid_get_codecids),
+	(gst_ffmpeg_caps_to_codecid), (gst_ffmpeg_get_codecid_longname):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_class_init):
+	Add mappings for RealVideo 4.0, AMR-WB, AMR-NB and DTS to silence
+	warnings when registering.
+	Only register the 1/2,1/4 size decode and frame-skipping properties
+	on video decoders.
+
+	* gst-libs/ext/ffmpeg/configure.ac:
+	* gst-libs/ext/ffmpeg/libavformat/Makefile.am:
+	* gst-libs/ext/ffmpeg/patches/autotools.patch:
+	Merge patch by Sam Morris to allow disabling of decoders. 
+	Fixes #324366
+
+2006-05-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst-libs/ext/ffmpeg/patches/autotools.patch:
 	* gst-libs/ext/ffmpeg/patches/noinst.patch:
 	Refresh patches to incorporate MikeS' automake 1.9 changes from a
