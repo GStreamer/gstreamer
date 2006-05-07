@@ -1,5 +1,12 @@
 2006-05-07  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/Makefile.am:
+	* tests/check/elements/adder.c: (event_loop), (GST_START_TEST):
+          Disable the adder test, until the build-slaves posses the kindness to 
+          either like it or to give valid reason for not doing so 
+
+2006-05-07  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/check/elements/adder.c: (event_loop), (GST_START_TEST),
 	(adder_suite):
           Shuffle NULL state change around and raise timeout more

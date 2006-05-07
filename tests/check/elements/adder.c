@@ -66,7 +66,7 @@ event_loop (GstElement * bin)
         gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
         g_error_free (gerror);
         g_free (debug);
-        return;
+        loop = FALSE;
       }
       default:
         break;
@@ -103,6 +103,9 @@ GST_START_TEST (test_event)
       GST_SEEK_FLAG_SEGMENT,
       GST_SEEK_TYPE_SET, (GstClockTime) 0,
       GST_SEEK_TYPE_SET, (GstClockTime) GST_SECOND);
+
+  format = GST_FORMAT_UNDEFINED;
+  position = -1;
 
   /* prepare playing */
   res = gst_element_set_state (bin, GST_STATE_PAUSED);

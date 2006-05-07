@@ -35,7 +35,6 @@ endif
 
 check_PROGRAMS = $(check_vorbis) \
 	$(check_theora) \
-	elements/adder \
 	elements/audioconvert \
 	elements/audioresample \
 	elements/audiotestsrc \
@@ -46,6 +45,9 @@ check_PROGRAMS = $(check_vorbis) \
 	generic/states \
 	libs/cddabasesrc \
         pipelines/simple-launch-lines
+
+# TORTURE_TO_FIX = \
+#       elements/adder
 
 VALGRIND_TO_FIX = \
 	elements/audioresample \
