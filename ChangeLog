@@ -1,3 +1,15 @@
+2006-05-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/adder/gstadder.c: (gst_adder_sink_event),
+	(gst_adder_request_new_pad), (gst_adder_change_state):
+	* gst/adder/gstadder.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/adder.c: (event_loop), (GST_START_TEST),
+	(adder_suite), (main):
+          Add sink-event handling to adder. It tries to merge incomming
+          newsegment-events. Added test to check if segment_done is comming
+          through.
+
 2006-05-05  Andy Wingo  <wingo@pobox.com>
 
 	* ext/theora/theoraparse.c (gst_theora_parse_init)

@@ -35,6 +35,7 @@ endif
 
 check_PROGRAMS = $(check_vorbis) \
 	$(check_theora) \
+	elements/adder \
 	elements/audioconvert \
 	elements/audioresample \
 	elements/audiotestsrc \

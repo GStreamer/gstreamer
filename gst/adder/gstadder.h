@@ -28,16 +28,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ADDER \
-  (gst_adder_get_type())
-#define GST_ADDER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ADDER,GstAdder))
-#define GST_ADDER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ADDER,GstAdderClass))
-#define GST_IS_ADDER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ADDER))
-#define GST_IS_ADDER_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ADDER))
+#define GST_TYPE_ADDER            (gst_adder_get_type())
+#define GST_ADDER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ADDER,GstAdder))
+#define GST_IS_ADDER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ADDER))
+#define GST_ADDER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_ADDER,GstAdderClass))
+#define GST_IS_ADDER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_ADDER))
+#define GST_ADDER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_ADDER,GstAdderClass))
 
 typedef struct _GstAdder             GstAdder;
 typedef struct _GstAdderClass        GstAdderClass;
@@ -75,6 +71,10 @@ struct _GstAdder {
   /* counters to keep track of timestamps */
   gint64          timestamp;
   gint64          offset;
+  
+  /* sink event handling */
+  GstPadEventFunction  collect_event;
+  GstSegment      segment;
 };
 
 struct _GstAdderClass {
