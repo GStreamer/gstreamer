@@ -1,5 +1,13 @@
 2006-05-07  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstcaps.c:
+          Docs about how to print caps for debug purposes.
+        
+	* gst/gstpadtemplate.c: (gst_static_pad_template_get):
+          use gst_caps_make_writable instead of gst_caps_copy, Fixes #340608
+
+2006-05-07  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstelement.c:
 	  use full enum names and preprend a '%' in docs strings to make recent 
 	  gtk-doc turn that into a link

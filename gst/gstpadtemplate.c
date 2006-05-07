@@ -277,7 +277,7 @@ gst_static_pad_template_get (GstStaticPadTemplate * pad_template)
   GST_PAD_TEMPLATE_PRESENCE (new) = pad_template->presence;
 
   GST_PAD_TEMPLATE_CAPS (new) =
-      gst_caps_copy (gst_static_caps_get (&pad_template->static_caps));
+      gst_caps_make_writable (gst_static_caps_get (&pad_template->static_caps));
 
   return new;
 }
