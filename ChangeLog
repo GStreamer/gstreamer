@@ -1,10 +1,24 @@
+2006-05-08  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times),
+	(gst_base_sink_do_sync), (gst_base_sink_chain_unlocked),
+	(gst_base_sink_get_position), (gst_base_sink_change_state):
+	Store the sync time of the buffer end position separatly in a
+	new variable eos_rtime so we can properly sync the EOS event.
+	Fixes #340697.
+	Fix the docs for gst_base_sink_set_qos_enabled().
+	Don't set segment start to invalid value when we receive a 
+	non TIME newsegment.
+	get closer to handling position reporting for negative rates 
+	correctly.
+
 2006-05-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstcaps.c:
-          Docs about how to print caps for debug purposes.
-        
+	Docs about how to print caps for debug purposes.
+
 	* gst/gstpadtemplate.c: (gst_static_pad_template_get):
-          use gst_caps_make_writable instead of gst_caps_copy, Fixes #340608
+	use gst_caps_make_writable instead of gst_caps_copy, Fixes #340608
 
 2006-05-07  Stefan Kost  <ensonic@users.sf.net>
 

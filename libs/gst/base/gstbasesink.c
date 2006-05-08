@@ -161,6 +161,9 @@ struct _GstBaseSinkPrivate
   GstClockTime current_rstop;
   GstClockTimeDiff current_jitter;
 
+  /* EOS sync time in running time */
+  GstClockTime eos_rtime;
+
   /* last buffer that arrived in time, running time */
   GstClockTime last_in_time;
   /* when the last buffer left the sink, running time */
@@ -560,7 +563,7 @@ gst_base_sink_get_max_lateness (GstBaseSink * sink)
 /**
  * gst_base_sink_set_qos_enabled:
  * @sink: the sink
- * @qos: the new qos value.
+ * @enabled: the new qos value.
  *
  * Configures @sink to send QoS events upstream.
  *
@@ -872,7 +875,10 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
         /* EOS event needs syncing */
       case GST_EVENT_EOS:
         sstart = sstop = basesink->priv->current_sstop;
-        rstart = rstop = basesink->priv->current_rstop;
+        rstart = rstop = basesink->priv->eos_rtime;
+        *do_sync = rstart != -1;
+        GST_DEBUG_OBJECT (basesink, "sync times for EOS %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (rstart));
         goto done;
         /* other events do not need syncing */
         /* FIXME, maybe NEWSEGMENT might need synchronisation
@@ -902,7 +908,8 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   }
 
   GST_DEBUG_OBJECT (basesink, "got times start: %" GST_TIME_FORMAT
-      ", stop: %" GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+      ", stop: %" GST_TIME_FORMAT ", do_sync %d", GST_TIME_ARGS (start),
+      GST_TIME_ARGS (stop), *do_sync);
 
   /* collect segment and format for code clarity */
   segment = &basesink->segment;
@@ -1073,6 +1080,9 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
   /* store timing info for current object */
   basesink->priv->current_rstart = rstart;
   basesink->priv->current_rstop = (rstop != -1 ? rstop : rstart);
+  /* save sync time for eos when the previous object needed sync */
+  basesink->priv->eos_rtime = (do_sync ? basesink->priv->current_rstop : -1);
+
   /* lock because we read this when answering the POSITION 
    * query. */
   GST_OBJECT_LOCK (basesink);
@@ -1868,11 +1878,10 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     }
 
     basesink->have_newsegment = TRUE;
-    /* this means this sink will not use segment info for sync */
-    clip_segment->start = -1;
+    /* this means this sink will assume timestamps start from 0 */
+    clip_segment->start = 0;
     clip_segment->stop = -1;
-    /* and we set the rendering segment to invalid as well */
-    basesink->segment.start = -1;
+    basesink->segment.start = 0;
     basesink->segment.stop = -1;
   }
 
@@ -2251,7 +2260,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
     {
       GstClockTime now, base;
       gint64 time, accum;
-      gdouble abs_rate;
+      gdouble rate;
       gint64 last;
 
       /* we can answer time format */
@@ -2280,7 +2289,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
 
       base = GST_ELEMENT_CAST (basesink)->base_time;
       accum = basesink->segment.accum;
-      abs_rate = basesink->segment.abs_rate;
+      rate = basesink->segment.rate;
       gst_base_sink_get_position_last (basesink, &last);
 
       gst_object_ref (clock);
@@ -2290,9 +2299,13 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       GST_OBJECT_UNLOCK (basesink);
 
       now = gst_clock_get_time (clock);
+      /* subtract base time and accumulated time from the clock time. 
+       * Make sure we don't go negative. This is the current time in
+       * the segment which we need to scale with the rate */
       base += accum;
       base = MIN (now, base);
-      *cur = gst_guint64_to_gdouble (now - base) * abs_rate + time;
+      /* for negative rate this will count back from the segment time */
+      *cur = time + gst_guint64_to_gdouble (now - base) * rate;
 
       /* never report more than last seen position */
       if (last != -1)
@@ -2429,6 +2442,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       basesink->playing_async = TRUE;
       basesink->priv->current_sstart = 0;
       basesink->priv->current_sstop = 0;
+      basesink->priv->eos_rtime = -1;
       basesink->eos = FALSE;
       gst_base_sink_reset_qos (basesink);
       ret = GST_STATE_CHANGE_ASYNC;
