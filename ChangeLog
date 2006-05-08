@@ -1,3 +1,8 @@
+2006-05-08  Edward Hervey  <edward@fluendo.com>
+
+	* autogen.sh: (CONFIGURE_DEF_OPT): 
+	libtoolize on Darwin/MacOSX is called glibtoolize.
+
 2006-05-08  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Jens Granseuer <jensgr at gmx dot net>
