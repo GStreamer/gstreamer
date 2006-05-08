@@ -549,7 +549,7 @@ gst_dp_validate_header (guint header_length, const guint8 * header)
   if (!(GST_DP_HEADER_FLAGS (header) & GST_DP_HEADER_FLAG_CRC_HEADER))
     return TRUE;
   crc_read = GST_DP_HEADER_CRC_HEADER (header);
-  /* don't included the last two crc fields for the crc check */
+  /* don't include the last two crc fields for the crc check */
   crc_calculated = gst_dp_crc (header, header_length - 4);
   if (crc_read != crc_calculated) {
     GST_WARNING ("header crc mismatch: read %02x, calculated %02x", crc_read,
