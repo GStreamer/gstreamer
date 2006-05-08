@@ -1,5 +1,12 @@
 2006-05-08  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_loop):
+	Unify error handling, don't post an error message
+	when a push() returns EOS but perform our normal EOS
+	handling code. Fixes #340772.
+
+2006-05-08  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-overview.txt:
 	Make upsteam/downstream concepts more clear.
 	Give an example of serialized/non-serialized events.

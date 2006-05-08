@@ -1400,16 +1400,11 @@ gst_base_src_loop (GstPad * pad)
 
   ret = gst_base_src_get_range (src, position, src->blocksize, &buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    if (ret == GST_FLOW_UNEXPECTED)
-      goto eos;
-    else {
-      GST_INFO_OBJECT (src, "pausing after gst_base_src_get_range() =  %d",
-          ret);
-      goto pause;
-    }
+    GST_INFO_OBJECT (src, "pausing after gst_base_src_get_range() =  %d", ret);
+    goto pause;
   }
   if (G_UNLIKELY (buf == NULL))
-    goto error;
+    goto null_buffer;
 
   /* figure out the new position */
   switch (src->segment.format) {
@@ -1461,47 +1456,47 @@ gst_base_src_loop (GstPad * pad)
     goto pause;
   }
 
-  if (eos)
-    goto eos;
+  if (eos) {
+    GST_INFO_OBJECT (src, "pausing after EOS");
+    ret = GST_FLOW_UNEXPECTED;
+    goto pause;
+  }
 
 done:
   gst_object_unref (src);
   return;
 
   /* special cases */
-eos:
-  {
-    GST_DEBUG_OBJECT (src, "going to EOS, getrange returned UNEXPECTED");
-    /* we finished the segment */
-    src->data.ABI.running = FALSE;
-    gst_pad_pause_task (pad);
-    if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-      gst_element_post_message (GST_ELEMENT (src),
-          gst_message_new_segment_done (GST_OBJECT (src),
-              src->segment.format, src->segment.last_stop));
-    } else {
-      gst_pad_push_event (pad, gst_event_new_eos ());
-      src->priv->last_sent_eos = TRUE;
-    }
-    goto done;
-  }
 pause:
   {
     const gchar *reason = gst_flow_get_name (ret);
 
     GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
+    src->data.ABI.running = FALSE;
     gst_pad_pause_task (pad);
     if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      /* for fatal errors we post an error message */
-      GST_ELEMENT_ERROR (src, STREAM, FAILED,
-          (_("Internal data flow error.")),
-          ("streaming task paused, reason %s", reason));
-      gst_pad_push_event (pad, gst_event_new_eos ());
-      src->priv->last_sent_eos = TRUE;
+      if (ret == GST_FLOW_UNEXPECTED) {
+        /* perform EOS logic */
+        if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+          gst_element_post_message (GST_ELEMENT (src),
+              gst_message_new_segment_done (GST_OBJECT (src),
+                  src->segment.format, src->segment.last_stop));
+        } else {
+          gst_pad_push_event (pad, gst_event_new_eos ());
+          src->priv->last_sent_eos = TRUE;
+        }
+      } else {
+        /* for fatal errors we post an error message */
+        GST_ELEMENT_ERROR (src, STREAM, FAILED,
+            (_("Internal data flow error.")),
+            ("streaming task paused, reason %s", reason));
+        gst_pad_push_event (pad, gst_event_new_eos ());
+        src->priv->last_sent_eos = TRUE;
+      }
     }
     goto done;
   }
-error:
+null_buffer:
   {
     GST_ELEMENT_ERROR (src, STREAM, FAILED,
         (_("Internal data flow error.")), ("element returned NULL buffer"));
