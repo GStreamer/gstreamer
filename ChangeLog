@@ -1,3 +1,9 @@
+2006-05-08  Edward Hervey  <edward@fluendo.com>
+
+	* autogen.sh: (CONFIGURE_DEF_OPT): 
+	Darwin's libtoolize is in fact called glibtoolize.
+	Adding glibtoolize to the list of accepted names for libtoolize.
+
 2006-05-08  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_loop):
