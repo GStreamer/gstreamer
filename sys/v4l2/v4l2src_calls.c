@@ -85,7 +85,7 @@ gst_v4l2src_fill_format_list (GstV4l2Src * v4l2src)
         return FALSE;
       }
     }
-    GST_LOG_OBJECT (v4l2src, "got format" GST_FOURCC_FORMAT,
+    GST_LOG_OBJECT (v4l2src, "got format %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (format->pixelformat));
     v4l2src->formats = g_slist_prepend (v4l2src->formats, format);
   }
@@ -341,7 +341,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
       g_object_notify (G_OBJECT (v4l2src), "num_buffers");
 
     GST_INFO_OBJECT (v4l2src,
-        "Got %d buffers (" GST_FOURCC_FORMAT ") of size %d KB\n",
+        "Got %d buffers (%" GST_FOURCC_FORMAT ") of size %d KB\n",
         v4l2src->breq.count,
         GST_FOURCC_ARGS (v4l2src->format.fmt.pix.pixelformat),
         v4l2src->format.fmt.pix.sizeimage / 1024);
@@ -574,7 +574,8 @@ gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
 {
   struct v4l2_format fmt;
 
-  GST_LOG_OBJECT (v4l2src, "getting size limits with format " GST_FOURCC_FORMAT,
+  GST_LOG_OBJECT (v4l2src,
+      "getting size limits with format %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (format->pixelformat));
 
   /* get size delimiters */
@@ -805,15 +806,16 @@ gst_v4l2src_buffer_new (GstV4l2Src * v4l2src, guint size, guint8 * data,
 {
   GstBuffer *buf;
 
-  GST_LOG_OBJECT (v4l2src, "creating buffer %d");
-
   if (data == NULL) {
     buf = gst_buffer_new_and_alloc (size);
   } else {
     buf = (GstBuffer *) gst_mini_object_new (GST_TYPE_V4L2SRC_BUFFER);
     GST_BUFFER_DATA (buf) = data;
     GST_V4L2SRC_BUFFER (buf)->buf = srcbuf;
+    GST_LOG_OBJECT (v4l2src, "creating buffer  %p (nr. %d)",
+        srcbuf, srcbuf->buffer.index);
   }
+
 
 
   GST_BUFFER_SIZE (buf) = size;
