@@ -232,6 +232,7 @@ _gst_stream_errors_init (void)
   TABLE (t, STREAM, ENCODE, N_("Could not encode stream."));
   TABLE (t, STREAM, DEMUX, N_("Could not demultiplex stream."));
   TABLE (t, STREAM, MUX, N_("Could not multiplex stream."));
+  TABLE (t, STREAM, FORMAT, N_("The stream is in the wrong format."));
 
   return t;
 }
