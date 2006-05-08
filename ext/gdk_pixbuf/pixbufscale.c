@@ -170,8 +170,10 @@ static void
 gst_pixbufscale_init (GstPixbufScale * pixbufscale,
     GstPixbufScaleClass * kclass)
 {
+  GstBaseTransform *trans;
+
   GST_DEBUG_OBJECT (pixbufscale, "_init");
-  GstBaseTransform *trans = GST_BASE_TRANSFORM (pixbufscale);
+  trans = GST_BASE_TRANSFORM (pixbufscale);
 
   gst_pad_set_event_function (trans->srcpad, gst_pixbufscale_handle_src_event);
 

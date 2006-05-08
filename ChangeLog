@@ -1,3 +1,11 @@
+2006-05-08  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Jens Granseuer <jensgr at gmx dot net>
+
+	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_init):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_dispose):
+	C89 compliance fixes. Fixes #340980
+
 2006-05-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_loop):

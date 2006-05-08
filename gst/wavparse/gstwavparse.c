@@ -205,8 +205,10 @@ gst_wavparse_class_init (GstWavParseClass * klass)
 static void
 gst_wavparse_dispose (GObject * object)
 {
+  GstWavParse *wav;
+
   GST_DEBUG ("WAV: Dispose\n");
-  GstWavParse *wav = GST_WAVPARSE (object);
+  wav = GST_WAVPARSE (object);
 
   if (wav->adapter) {
     g_object_unref (wav->adapter);
