@@ -721,17 +721,19 @@ gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
 
   if (format == GST_FORMAT_TIME) {
     GST_DEBUG_OBJECT (basesink,
-        "configured NEWSEGMENT update %d, rate %lf, format GST_FORMAT_TIME, "
+        "configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+        "format GST_FORMAT_TIME, "
         "%" GST_TIME_FORMAT " -- %" GST_TIME_FORMAT
         ", time %" GST_TIME_FORMAT ", accum %" GST_TIME_FORMAT,
-        update, rate, GST_TIME_ARGS (segment->start),
+        update, rate, arate, GST_TIME_ARGS (segment->start),
         GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time),
         GST_TIME_ARGS (segment->accum));
   } else {
     GST_DEBUG_OBJECT (basesink,
-        "configured NEWSEGMENT update %d, rate %lf, format %d, "
+        "configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+        "format %d, "
         "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
-        G_GINT64_FORMAT ", accum %" G_GINT64_FORMAT, update, rate,
+        G_GINT64_FORMAT ", accum %" G_GINT64_FORMAT, update, rate, arate,
         segment->format, segment->start, segment->stop, segment->time,
         segment->accum);
   }

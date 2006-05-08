@@ -1,3 +1,11 @@
+2006-05-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_configure_segment):
+	Add applied_rate to the debug
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek):
+	Copy applied_rate into the outgoing NEWSEGMENT event
+
 2006-05-08  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Philippe Rouquier <philippero at libertysurf dot fr>

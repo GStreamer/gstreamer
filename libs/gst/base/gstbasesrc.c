@@ -842,8 +842,8 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
         " to %" G_GINT64_FORMAT, src->segment.start, src->segment.last_stop);
 
     gst_pad_push_event (src->srcpad,
-        gst_event_new_new_segment (TRUE,
-            src->segment.rate, src->segment.format,
+        gst_event_new_new_segment_full (TRUE,
+            src->segment.rate, src->segment.applied_rate, src->segment.format,
             src->segment.start, src->segment.last_stop, src->segment.time));
   }
 
@@ -866,8 +866,8 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
         " to %" G_GINT64_FORMAT, src->segment.start, stop);
 
     gst_pad_push_event (src->srcpad,
-        gst_event_new_new_segment (FALSE,
-            src->segment.rate, src->segment.format,
+        gst_event_new_new_segment_full (FALSE,
+            src->segment.rate, src->segment.applied_rate, src->segment.format,
             src->segment.last_stop, stop, src->segment.time));
   }
 
