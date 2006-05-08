@@ -1,3 +1,13 @@
+2006-05-08  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Philippe Rouquier <philippero at libertysurf dot fr>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_set_flushing),
+	(gst_base_sink_change_state):
+	call ::unlock before taking the PREROLL_LOCK so we can safely
+	handle elements that lock in ::render.
+	Fixes #340174.
+
 2006-05-08  Edward Hervey  <edward@fluendo.com>
 
 	* autogen.sh: (CONFIGURE_DEF_OPT): 

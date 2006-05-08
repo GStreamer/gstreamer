@@ -2023,22 +2023,26 @@ static gboolean
 gst_base_sink_set_flushing (GstBaseSink * basesink, GstPad * pad,
     gboolean flushing)
 {
-  GST_PAD_PREROLL_LOCK (pad);
-  basesink->flushing = flushing;
+
   if (flushing) {
     GstBaseSinkClass *bclass;
 
     bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
+    /* unlock any subclasses, we need to do this before grabbing the
+     * PREROLL_LOCK since we hold this lock before going into ::render. */
+    if (bclass->unlock)
+      bclass->unlock (basesink);
+  }
+
+  GST_PAD_PREROLL_LOCK (pad);
+  basesink->flushing = flushing;
+  if (flushing) {
     /* step 1, unblock clock sync (if any) or any other blocking thing */
     basesink->need_preroll = TRUE;
     if (basesink->clock_id) {
       gst_clock_id_unschedule (basesink->clock_id);
     }
-
-    /* unlock any subclasses */
-    if (bclass->unlock)
-      bclass->unlock (basesink);
 
     /* flush out the data thread if it's locked in finish_preroll */
     GST_DEBUG_OBJECT (basesink,
@@ -2488,14 +2492,17 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED");
+
+      /* we need to call ::unlock before locking PREROLL_LOCK
+       * since we lock it before going into ::render */
+      if (bclass->unlock)
+        bclass->unlock (basesink);
+
       GST_PAD_PREROLL_LOCK (basesink->sinkpad);
       basesink->need_preroll = TRUE;
       if (basesink->clock_id) {
         gst_clock_id_unschedule (basesink->clock_id);
       }
-
-      if (bclass->unlock)
-        bclass->unlock (basesink);
 
       /* if we don't have a preroll buffer we need to wait for a preroll and
        * return ASYNC. */
