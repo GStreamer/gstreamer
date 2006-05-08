@@ -1170,18 +1170,18 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
     {
       GstFormat format;
-      gdouble rate;
+      gdouble rate, arate;
       gint64 start, stop, time;
       gboolean update;
 
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
 
       if (trans->segment.format != format)
         gst_segment_init (&trans->segment, format);
 
-      gst_segment_set_newsegment (&trans->segment, update, rate, format, start,
-          stop, time);
+      gst_segment_set_newsegment_full (&trans->segment, update, rate, arate,
+          format, start, stop, time);
 
       trans->have_newsegment = TRUE;
 

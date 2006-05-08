@@ -1,5 +1,55 @@
 2006-05-08  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-overview.txt:
+	Make upsteam/downstream concepts more clear.
+	Give an example of serialized/non-serialized events.
+
+	* docs/design/part-events.txt:
+	* docs/design/part-streams.txt:
+	Mention applied_rate.
+
+	* docs/design/part-trickmodes.txt:
+	Mention applied rate, flesh out some more use cases.
+
+	* gst/gstevent.c: (gst_event_new_new_segment),
+	(gst_event_parse_new_segment), (gst_event_new_new_segment_full),
+	(gst_event_parse_new_segment_full), (gst_event_new_tag),
+	(gst_event_parse_tag), (gst_event_new_buffer_size),
+	(gst_event_parse_buffer_size), (gst_event_new_qos),
+	(gst_event_parse_qos), (gst_event_parse_seek),
+	(gst_event_new_navigation):
+	* gst/gstevent.h:
+	Add applied_rate field to NEWSEGMENT event.
+	API: gst_event_new_new_segment_full()
+	API: gst_event_parse_new_segment_full()
+
+	* gst/gstsegment.c: (gst_segment_init), (gst_segment_set_seek),
+	(gst_segment_set_newsegment), (gst_segment_set_newsegment_full),
+	(gst_segment_to_stream_time), (gst_segment_to_running_time):
+	* gst/gstsegment.h:
+	Add applied_rate to GstSegment structure.
+	Make calculation of stream_time and running_time more correct
+	wrt rate/applied_rate.
+	Add some more docs.
+	API: GstSegment::applied_rate field
+	API: gst_segment_set_newsegment_full();
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_configure_segment),
+	(gst_base_sink_get_sync_times), (gst_base_sink_get_position):
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_sink_eventfunc),
+	(gst_base_transform_handle_buffer):
+	Parse and use applied_rate in the GstSegment field.
+
+	* tests/check/gst/gstevent.c: (GST_START_TEST):
+	Add check for applied_rate field.
+
+	* tests/check/gst/gstsegment.c: (GST_START_TEST),
+	(gstsegments_suite):
+	Add more checks for various GstSegment operations.
+
+2006-05-08  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times),
 	(gst_base_sink_do_sync), (gst_base_sink_chain_unlocked),
 	(gst_base_sink_get_position), (gst_base_sink_change_state):

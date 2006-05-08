@@ -700,7 +700,7 @@ gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
     GstEvent * event, GstSegment * segment)
 {
   gboolean update;
-  gdouble rate;
+  gdouble rate, arate;
   GstFormat format;
   gint64 start;
   gint64 stop;
@@ -708,7 +708,7 @@ gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
 
   /* the newsegment event is needed to bring the buffer timestamps to the
    * stream time and to drop samples outside of the playback segment. */
-  gst_event_parse_new_segment (event, &update, &rate, &format,
+  gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
       &start, &stop, &time);
 
   GST_OBJECT_LOCK (basesink);
@@ -716,7 +716,8 @@ gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
   if (segment->format != format)
     gst_segment_init (segment, format);
 
-  gst_segment_set_newsegment (segment, update, rate, format, start, stop, time);
+  gst_segment_set_newsegment_full (segment, update, rate, arate, format, start,
+      stop, time);
 
   if (format == GST_FORMAT_TIME) {
     GST_DEBUG_OBJECT (basesink,
@@ -2289,7 +2290,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
 
       base = GST_ELEMENT_CAST (basesink)->base_time;
       accum = basesink->segment.accum;
-      rate = basesink->segment.rate;
+      rate = basesink->segment.rate * basesink->segment.applied_rate;
       gst_base_sink_get_position_last (basesink, &last);
 
       gst_object_ref (clock);
@@ -2301,7 +2302,8 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       now = gst_clock_get_time (clock);
       /* subtract base time and accumulated time from the clock time. 
        * Make sure we don't go negative. This is the current time in
-       * the segment which we need to scale with the rate */
+       * the segment which we need to scale with the combined 
+       * rate and applied rate. */
       base += accum;
       base = MIN (now, base);
       /* for negative rate this will count back from the segment time */

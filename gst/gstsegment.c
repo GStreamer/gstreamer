@@ -49,11 +49,13 @@
  * A segment structure is initialized with gst_segment_init(), which takes a #GstFormat
  * that will be used as the format of the segment values. The segment will be configured
  * with a start value of 0 and a stop/duration of -1, which is undefined. The default
- * rate is 1.0.
+ * rate and applied_rate is 1.0.
  *
  * If the segment is used for managing seeks, the segment duration should be set with
  * gst_segment_set_duration(). The public duration field contains the duration of the
- * segment.
+ * segment. When using the segment for seeking, the start and time members should 
+ * normally be left to their default 0 value. The stop position is left to -1 unless
+ * explicitly configured to a different value after a seek event.
  *
  * The current position in the segment should be set with the gst_segment_set_last_stop().
  * The public last_stop field contains the last set stop position in the segment.
@@ -71,13 +73,14 @@
  *
  * For elements that want to synchronize to the pipeline clock, gst_segment_to_running_time()
  * can be used to convert a timestamp to a value that can be used to synchronize
- * to the clock. This function takes into account all accumulated segments.
+ * to the clock. This function takes into account all accumulated segments as well as
+ * any rate or applied_rate conversions.
  *
  * For elements that need to perform operations on media data in stream_time, 
  * gst_segment_to_stream_time() can be used to convert a timestamp and the segment
  * info to stream time (which is always between 0 and the duration of the stream).
  *
- * Last reviewed on 2006-03-12 (0.10.5)
+ * Last reviewed on 2006-05-03 (0.10.6)
  */
 
 static GstSegment *
@@ -154,6 +157,7 @@ gst_segment_init (GstSegment * segment, GstFormat format)
 
   segment->rate = 1.0;
   segment->abs_rate = 1.0;
+  segment->applied_rate = 1.0;
   segment->format = format;
   segment->flags = 0;
   segment->start = 0;
@@ -235,6 +239,10 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
  * from GST_SEEK_TYPE_NONE, the current position is not updated and 
  * streaming should continue from the last position, possibly with
  * updated rate, flags or stop position.
+ *
+ * The applied rate of the segment will be set to 1.0 by default.
+ * If the caller can apply a rate change, it should update @segment
+ * rate and applied_rate after calling this function.
  */
 void
 gst_segment_set_seek (GstSegment * segment, gdouble rate,
@@ -324,6 +332,7 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
 
   segment->rate = rate;
   segment->abs_rate = ABS (rate);
+  segment->applied_rate = 1.0;
   segment->flags = flags;
   segment->start = cur;
   if (update_start) {
@@ -346,15 +355,41 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
  * @stop: the new stop value
  * @time: the new stream time
  *
- * Update the segment structure with the field values of a new segment event.
+ * Update the segment structure with the field values of a new segment event and
+ * with a default applied_rate of 1.0.
+ *
+ * Since: 0.10.6
  */
 void
 gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
     GstFormat format, gint64 start, gint64 stop, gint64 time)
 {
+  gst_segment_set_newsegment_full (segment, update, rate, 1.0, format, start,
+      stop, time);
+}
+
+/**
+ * gst_segment_set_newsegment_full:
+ * @segment: a #GstSegment structure.
+ * @update: flag indicating a new segment is started or updated
+ * @rate: the rate of the segment.
+ * @applied_rate: the applied rate of the segment.
+ * @format: the format of the segment.
+ * @start: the new start value
+ * @stop: the new stop value
+ * @time: the new stream time
+ *
+ * Update the segment structure with the field values of a new segment event.
+ */
+void
+gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
+    gdouble rate, gdouble applied_rate, GstFormat format, gint64 start,
+    gint64 stop, gint64 time)
+{
   gint64 duration;
 
   g_return_if_fail (rate != 0.0);
+  g_return_if_fail (applied_rate != 0.0);
   g_return_if_fail (segment != NULL);
 
   if (segment->format == GST_FORMAT_UNDEFINED)
@@ -382,23 +417,29 @@ gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
      * segment. the accumulated time is used when syncing to the
      * clock. 
      */
-    if (GST_CLOCK_TIME_IS_VALID (segment->stop)) {
+    if (segment->stop != -1) {
       duration = segment->stop - segment->start;
-    } else if (GST_CLOCK_TIME_IS_VALID (segment->last_stop)) {
+    } else if (segment->last_stop != -1) {
       /* else use last seen timestamp as segment stop */
       duration = segment->last_stop - segment->start;
     } else {
-      /* else we don't know */
+      /* else we don't know and throw a warning.. really, this should
+       * be fixed in the element. */
+      g_warning ("closing segment of unknown duration, assuming duration of 0");
       duration = 0;
     }
   }
   /* use previous rate to calculate duration */
-  segment->accum += gst_gdouble_to_guint64 (
-      (gst_guint64_to_gdouble (duration) / segment->abs_rate));
+  if (segment->abs_rate != 1.0)
+    duration /= segment->abs_rate;
+
+  /* accumulate duration */
+  segment->accum += duration;
 
   /* then update the current segment */
   segment->rate = rate;
   segment->abs_rate = ABS (rate);
+  segment->applied_rate = applied_rate;
   segment->start = start;
   segment->last_stop = start;
   segment->stop = stop;
@@ -417,8 +458,8 @@ gst_segment_set_newsegment (GstSegment * segment, gboolean update, gdouble rate,
  *
  * This function is typically used by elements that need to operate on
  * the stream time of the buffers it receives, such as effect plugins.
- * In those use cases, @position is typically the buffer timestamp that
- * one wants to convert to the stream time.
+ * In those use cases, @position is typically the buffer timestamp or 
+ * clock time that one wants to convert to the stream time.
  * The stream time is always between 0 and the total duration of the 
  * media stream. 
  *
@@ -429,22 +470,52 @@ gint64
 gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
     gint64 position)
 {
-  gint64 result, time;
+  gint64 result;
+  gdouble abs_applied_rate;
 
   g_return_val_if_fail (segment != NULL, -1);
+
+  /* format does not matter for -1 */
+  if (position == -1)
+    return -1;
 
   if (segment->format == GST_FORMAT_UNDEFINED)
     segment->format = format;
   else
     g_return_val_if_fail (segment->format == format, -1);
 
-  if ((time = segment->time) == -1)
-    time = 0;
+  /* outside of the segment boundary stop */
+  if (segment->stop != -1 && position >= segment->stop)
+    return -1;
 
-  if (position != -1 && position >= segment->start)
-    result = ((position - segment->start) / segment->abs_rate) + time;
-  else
-    result = -1;
+  /* before the segment boundary */
+  if (position < segment->start)
+    return -1;
+
+  /* time must be known */
+  if (segment->time == -1)
+    return -1;
+
+  /* bring to uncorrected position in segment */
+  result = position - segment->start;
+
+  abs_applied_rate = ABS (segment->applied_rate);
+
+  /* correct for applied rate if needed */
+  if (abs_applied_rate != 1.0)
+    result *= abs_applied_rate;
+
+  /* add or subtract from segment time based on applied rate */
+  if (segment->applied_rate > 0.0) {
+    /* correct for segment time */
+    result += segment->time;
+  } else {
+    /* correct for segment time, clamp at 0 */
+    if (segment->time > result)
+      result = segment->time - result;
+    else
+      result = 0;
+  }
 
   return result;
 }
@@ -456,14 +527,18 @@ gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
  * @position: the position in the segment
  *
  * Translate @position to the total running time using the currently configured 
- * and previously accumulated segments.
+ * and previously accumulated segments. Position is a value between @segment
+ * start and stop time.
  *
  * This function is typically used by elements that need to synchronize to the
  * global clock in a pipeline. The runnning time is a constantly increasing value
  * starting from 0. When gst_segment_init() is called, this value will reset to
  * 0.
  *
- * Returns: the position as the total running time.
+ * This function returns -1 if the position is outside of @segment start and stop.
+ *
+ * Returns: the position as the total running time or -1 when an invalid position
+ * was given.
  */
 gint64
 gst_segment_to_running_time (GstSegment * segment, GstFormat format,
@@ -473,15 +548,42 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
 
   g_return_val_if_fail (segment != NULL, -1);
 
+  if (position == -1)
+    return -1;
+
   if (segment->format == GST_FORMAT_UNDEFINED)
     segment->format = format;
   else if (segment->accum)
     g_return_val_if_fail (segment->format == format, -1);
 
-  if (position != -1 && position >= segment->start)
-    result = ((position - segment->start) / segment->abs_rate) + segment->accum;
-  else
-    result = -1;
+  /* before the segment boundary */
+  if (position < segment->start)
+    return -1;
+
+  if (segment->rate > 0.0) {
+    /* outside of the segment boundary stop */
+    if (segment->stop != -1 && position >= segment->stop)
+      return -1;
+
+    /* bring to uncorrected position in segment */
+    result = position - segment->start;
+  } else {
+    /* cannot continue if no stop position set or outside of
+     * the segment. */
+    if (segment->stop == -1 || position >= segment->stop)
+      return -1;
+
+    /* bring to uncorrected position in segment */
+    result = segment->stop - position;
+  }
+
+  /* scale based on the rate, avoid division by and conversion to 
+   * float when not needed */
+  if (segment->abs_rate != 1.0)
+    result /= segment->abs_rate;
+
+  /* correct for accumulated segments */
+  result += segment->accum;
 
   return result;
 }
@@ -496,7 +598,8 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
  * @clip_stop: the clipped stop position in the segment
  *
  * Clip the given @start and @stop values to the segment boundaries given
- * in @segment.
+ * in @segment. @start and @stop are compared and clipped to @segment 
+ * start and stop values.
  *
  * If the function returns FALSE, @start and @stop are known to fall
  * outside of @segment and @clip_start and @clip_stop are not updated.

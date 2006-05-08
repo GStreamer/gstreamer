@@ -53,7 +53,7 @@ GST_START_TEST (segment_seek_nosize)
   res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 0, 50, &cstart, &cstop);
   fail_unless (res == FALSE);
 
-  /* touching lower bound */
+  /* touching lower bound, still outside of the segment */
   res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 50, 100, &cstart, &cstop);
   fail_unless (res == FALSE);
 
@@ -81,7 +81,7 @@ GST_START_TEST (segment_seek_nosize)
   res = gst_segment_clip (&segment, GST_FORMAT_BYTES, -1, 100, &cstart, &cstop);
   fail_unless (res == FALSE);
 
-  /* start outside */
+  /* start outside, we don't know the stop */
   res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 50, -1, &cstart, &cstop);
   fail_unless (res == TRUE);
   fail_unless (cstart == 100);
@@ -108,7 +108,8 @@ GST_START_TEST (segment_seek_nosize)
   fail_unless (segment.stop == 300);
 
   /* add 100 to start (to 300), set stop to 200, this is not allowed. 
-   * nothing should be updated in the segment. */
+   * nothing should be updated in the segment. A g_warning is
+   * emited. */
   ASSERT_CRITICAL (gst_segment_set_seek (&segment, 1.0,
           GST_FORMAT_BYTES,
           GST_SEEK_FLAG_NONE,
@@ -417,7 +418,7 @@ GST_START_TEST (segment_newsegment_open)
   fail_unless (segment.time == 100);
   fail_unless (segment.accum == 100);
 
-  /* last_stop unknown, accum does not change */
+  /* last_stop 0, accum does not change */
   gst_segment_set_newsegment (&segment, FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
 
   fail_unless (segment.start == 0);
@@ -498,6 +499,778 @@ GST_START_TEST (segment_newsegment_closed)
 
 GST_END_TEST;
 
+/* mess with the segment structure in the time format */
+GST_START_TEST (segment_newsegment_streamtime)
+{
+  GstSegment segment;
+  gint64 result;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  /***************************
+   * Normal segment
+   ***************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 1.0, 1.0,
+      GST_FORMAT_TIME, 0, 200, 0);
+
+  fail_unless (segment.rate == 1.0);
+  fail_unless (segment.applied_rate == 1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.accum == 0);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 0);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 100);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  /*********************
+   * time shifted by 500
+   *********************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 1.0, 1.0,
+      GST_FORMAT_TIME, 0, 200, 500);
+
+  fail_unless (segment.accum == 200);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 500);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 600);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 500);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  /*********************
+   * time offset by 500
+   *********************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 1.0, 1.0,
+      GST_FORMAT_TIME, 500, 700, 0);
+
+  fail_unless (segment.accum == 400);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* before segment is invalid */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 400);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 500);
+  fail_unless (result == 0);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 600);
+  fail_unless (result == 100);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 700);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 800);
+  fail_unless (result == -1);
+
+  /*************************************
+   * time offset by 500, shifted by 200
+   *************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 1.0, 1.0,
+      GST_FORMAT_TIME, 500, 700, 200);
+
+  fail_unless (segment.accum == 600);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* before segment is invalid */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 400);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 500);
+  fail_unless (result == 200);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 600);
+  fail_unless (result == 300);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 700);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 800);
+  fail_unless (result == -1);
+}
+
+GST_END_TEST;
+
+/* mess with the segment structure in the time format */
+GST_START_TEST (segment_newsegment_streamtime_rate)
+{
+  GstSegment segment;
+  gint64 result;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  /***************************
+   * Normal segment rate 2.0
+   ***************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 2.0, 1.0,
+      GST_FORMAT_TIME, 0, 200, 0);
+
+  fail_unless (segment.rate == 2.0);
+  fail_unless (segment.applied_rate == 1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.accum == 0);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 0);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 100);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 150);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  /***************************************
+   * Normal segment rate 2.0, offset
+   ***************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 2.0, 1.0,
+      GST_FORMAT_TIME, 100, 300, 0);
+
+  fail_unless (segment.accum == 100);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 0);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == 100);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 250);
+  fail_unless (result == 150);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 400);
+  fail_unless (result == -1);
+
+  /***************************************
+   * Normal segment rate -1.0, offset
+   ***************************************/
+
+  /* buffers will arrive from 300 to 100 in a sink, stream time
+   * calculation is unaffected by the rate */
+  gst_segment_set_newsegment_full (&segment, FALSE, -1.0, 1.0,
+      GST_FORMAT_TIME, 100, 300, 0);
+
+  fail_unless (segment.accum == 200);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 0);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == 100);
+
+  /***********************************************
+   * Normal segment rate -1.0, offset, time = 200
+   ***********************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, -1.0, 1.0,
+      GST_FORMAT_TIME, 100, 300, 200);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 200);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == 300);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 400);
+  fail_unless (result == -1);
+}
+
+GST_END_TEST;
+
+/* mess with the segment structure in the time format */
+GST_START_TEST (segment_newsegment_streamtime_applied_rate)
+{
+  GstSegment segment;
+  gint64 result;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  /***********************************************************
+   * Normal segment rate 1.0, applied rate -1.0
+   * This means the timestamps represents a stream going backwards
+   * starting from @time to 0.
+   ************************************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 1.0, -1.0,
+      GST_FORMAT_TIME, 0, 200, 200);
+
+  fail_unless (segment.rate == 1.0);
+  fail_unless (segment.applied_rate == -1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 200);
+  fail_unless (segment.accum == 0);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* we count backwards from 200 */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 200);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 100);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 50);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  /***********************************************************
+   * Normal segment rate 1.0, applied rate 2.0
+   * This means the timestamps represents a stream at twice the
+   * normal rate
+   ************************************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 1.0, 2.0,
+      GST_FORMAT_TIME, 0, 200, 0);
+
+  fail_unless (segment.rate == 1.0);
+  fail_unless (segment.applied_rate == 2.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.accum == 200);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 0);
+
+  /* the stream prepresents a stream going twice as fast, the position 
+   * in the segment is therefore scaled by the applied rate */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 200);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 300);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  /***********************************************************
+   * Normal segment rate 1.0, applied rate -2.0
+   * This means the timestamps represents a stream at twice the
+   * reverse rate
+   ************************************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 1.0, -2.0,
+      GST_FORMAT_TIME, 0, 200, 400);
+
+  fail_unless (segment.rate == 1.0);
+  fail_unless (segment.applied_rate == -2.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 400);
+  /* previous segment lasted 200, rate of 2.0 was already applied */
+  fail_unless (segment.accum == 400);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* we count backwards from 400 */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 400);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 200);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 100);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  /***********************************************************
+   * Normal segment rate 1.0, applied rate -2.0
+   * This means the timestamps represents a stream at twice the
+   * reverse rate, start time cannot compensate the complete
+   * duration of the segment so we stop at 0
+   ************************************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 1.0, -2.0,
+      GST_FORMAT_TIME, 0, 200, 200);
+
+  fail_unless (segment.rate == 1.0);
+  fail_unless (segment.applied_rate == -2.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 200);
+  fail_unless (segment.accum == 600);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* we count backwards from 200 */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 200);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 0);
+
+  /* clamp at 0 */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 0);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+}
+
+GST_END_TEST;
+
+/* mess with the segment structure in the time format */
+GST_START_TEST (segment_newsegment_streamtime_applied_rate_rate)
+{
+  GstSegment segment;
+  gint64 result;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  /***********************************************************
+   * Segment rate 2.0, applied rate 2.0
+   * this means we have a double speed stream that we should
+   * speed up by a factor of 2.0 some more. the resulting
+   * stream will be played at four times the speed. 
+   ************************************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 2.0, 2.0,
+      GST_FORMAT_TIME, 0, 200, 0);
+
+  fail_unless (segment.rate == 2.0);
+  fail_unless (segment.applied_rate == 2.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.accum == 0);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* only applied rate affects our calculation of the stream time */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 0);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 200);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 300);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  /***********************************************************
+   * Segment rate 2.0, applied rate -1.0
+   * this means we have a reverse stream that we should
+   * speed up by a factor of 2.0
+   ************************************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 2.0, -1.0,
+      GST_FORMAT_TIME, 0, 200, 200);
+
+  fail_unless (segment.rate == 2.0);
+  fail_unless (segment.applied_rate == -1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 200);
+  /* previous segment lasted 100 */
+  fail_unless (segment.accum == 100);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* only applied rate affects our calculation of the stream time */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 200);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 100);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 50);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  /***********************************************************
+   * Segment rate -1.0, applied rate -1.0
+   * this means we have a reverse stream that we should
+   * reverse to get the normal stream again.
+   ************************************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, -1.0, -1.0,
+      GST_FORMAT_TIME, 0, 200, 200);
+
+  fail_unless (segment.rate == -1.0);
+  fail_unless (segment.applied_rate == -1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 200);
+  /* accumulated 100 of previous segment to make 200 */
+  fail_unless (segment.accum == 200);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* only applied rate affects our calculation of the stream time */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 200);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 100);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 50);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  /***********************************************************
+   * Segment rate -1.0, applied rate -1.0
+   * this means we have a reverse stream that we should
+   * reverse to get the normal stream again.
+   ************************************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, -1.0, 2.0,
+      GST_FORMAT_TIME, 0, 200, 0);
+
+  fail_unless (segment.rate == -1.0);
+  fail_unless (segment.applied_rate == 2.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.accum == 400);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* only applied rate affects our calculation of the stream time */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 0);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 200);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 300);
+
+  /* outside of the segment */
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+}
+
+GST_END_TEST;
+
+/* mess with the segment structure in the time format */
+GST_START_TEST (segment_newsegment_runningtime)
+{
+  GstSegment segment;
+  gint64 result;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  /***************************
+   * Normal segment
+   ***************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 1.0, 1.0,
+      GST_FORMAT_TIME, 0, 200, 0);
+
+  fail_unless (segment.rate == 1.0);
+  fail_unless (segment.applied_rate == 1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.accum == 0);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 0);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 100);
+
+  /* outside of the segment */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 300);
+  fail_unless (result == -1);
+
+  /***********************************************************
+   * time shifted by 500, check if accumulation worked.
+   * Rate convert to twice the speed which means scaling down
+   * all positions by 2.0 in this segment.
+   * Then time argument is not used at all here.
+   ***********************************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 2.0, 1.0,
+      GST_FORMAT_TIME, 0, 200, 500);
+
+  /* normal speed gives elapsed of 200 */
+  fail_unless (segment.accum == 200);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 0);
+  fail_unless (result == 200);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 250);
+
+  /* outside of the segment */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 500);
+  fail_unless (result == -1);
+
+  /********************************************
+   * time offset by 500
+   * applied rate is not used for running time
+   ********************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, 1.0, 2.0,
+      GST_FORMAT_TIME, 500, 700, 0);
+
+  /* previous segment played at double speed gives elapsed time of
+   * 100 added to previous accum of 200 gives 300. */
+  fail_unless (segment.accum == 300);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* before segment is invalid */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 400);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 500);
+  fail_unless (result == 300);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 600);
+  fail_unless (result == 400);
+
+  /* outside of the segment */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 700);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 800);
+  fail_unless (result == -1);
+
+  /**********************************************************
+   * time offset by 500, shifted by 200
+   * Negative rate makes the running time go backwards 
+   * relative to the segment stop position. again time
+   * is ignored.
+   **********************************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, -1.0, 1.0,
+      GST_FORMAT_TIME, 500, 700, 200);
+
+  fail_unless (segment.accum == 500);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* before segment is invalid */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 400);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 500);
+  fail_unless (result == 700);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 600);
+  fail_unless (result == 600);
+
+  /* outside of the segment */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 700);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 800);
+  fail_unless (result == -1);
+
+  /**********************************************************
+   * time offset by 500, shifted by 200
+   * Negative rate makes the running time go backwards at
+   * twice speed relative to the segment stop position. again 
+   * time is ignored.
+   **********************************************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, -2.0, -2.0,
+      GST_FORMAT_TIME, 500, 700, 200);
+
+  fail_unless (segment.accum == 700);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  /* before segment is invalid */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 400);
+  fail_unless (result == -1);
+
+  /* total scaled segment time is 100, accum is 700, so we get 800 */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 500);
+  fail_unless (result == 800);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 600);
+  fail_unless (result == 750);
+
+  /* outside of the segment */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 700);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 800);
+  fail_unless (result == -1);
+
+  /* see if negative rate closed segment correctly */
+  gst_segment_set_newsegment_full (&segment, FALSE, -2.0, -1.0,
+      GST_FORMAT_TIME, 500, 700, 200);
+
+  /* previous segment lasted 100, and was at 700 so we should get 800 */
+  fail_unless (segment.accum == 800);
+}
+
+GST_END_TEST;
+
 Suite *
 gstsegments_suite (void)
 {
@@ -511,6 +1284,12 @@ gstsegments_suite (void)
   tcase_add_test (tc_chain, segment_seek_size);
   tcase_add_test (tc_chain, segment_newsegment_open);
   tcase_add_test (tc_chain, segment_newsegment_closed);
+  tcase_add_test (tc_chain, segment_newsegment_streamtime);
+  tcase_add_test (tc_chain, segment_newsegment_streamtime_rate);
+  tcase_add_test (tc_chain, segment_newsegment_streamtime_applied_rate);
+  tcase_add_test (tc_chain, segment_newsegment_streamtime_applied_rate_rate);
+  tcase_add_test (tc_chain, segment_newsegment_runningtime);
+
   return s;
 }
 

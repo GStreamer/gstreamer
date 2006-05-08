@@ -101,7 +101,7 @@ NEWSEGMENT
 
 A newsegment event is sent downstream by an element to indicate that the following
 group of buffers start and end at the specified positions. The newsegment event
-also contains the playback speed of the stream.
+also contains the playback speed and the applied rate of the stream.
 
 Since the stream time is always set to 0 at start and after a seek, a 0
 point for all next buffer's timestamps has to be propagated through the
@@ -133,6 +133,7 @@ If a newsegment arrives at an element not preceeded by a flush event, the
 streamtime of the pipeline will not be reset to 0 so any element that syncs
 to the clock must use the stop times of the previous newsegment events to
 make the buffer timestamps increasing (part-segments.txt).
+
 
 TAG
 ---    

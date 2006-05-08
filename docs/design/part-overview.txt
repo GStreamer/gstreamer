@@ -29,11 +29,15 @@ Introduction
  an example of an ogg/vorbis playback pipeline.
 
    +-----------------------------------------------------------+
+   |    ----------> downstream ------------------->            |
+   |                                                           |
    | pipeline                                                  |
    | +---------+   +----------+   +-----------+   +----------+ |
    | | filesrc |   | oggdemux |   | vorbisdec |   | alsasink | |
    | |        src-sink       src-sink        src-sink        | |
    | +---------+   +----------+   +-----------+   +----------+ |
+   |                                                           |
+   |    <---------< upstream <-------------------<             |
    +-----------------------------------------------------------+
 
  The filesrc element reads data from a file on disk. The oggdemux element parses
@@ -244,7 +248,14 @@ Dataflow and events
  the events are used to denote special conditions in the dataflow such as EOS or 
  to inform plugins of special events such as flushing or seeking.
 
- Some events must be serialized with the buffer flow, others don't.
+ Some events must be serialized with the buffer flow, others don't. Serialized 
+ events are inserted between the buffers. Non serialized events jump in front
+ of any buffers current being processed.
+
+ An example of a serialized event is a TAG event that is inserted between buffers
+ to mark metadata for those buffers.
+
+ An example of a non serialized event is the FLUSH event.
 
 
 Pipeline construction

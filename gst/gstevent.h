@@ -368,12 +368,25 @@ GstEvent*	gst_event_new_new_segment	(gboolean update, gdouble rate,
                                                  GstFormat format,
                                                  gint64 start, gint64 stop,
 						 gint64 position);
+GstEvent*	gst_event_new_new_segment_full	(gboolean update, gdouble rate,
+						 gdouble applied_rate,
+                                                 GstFormat format,
+                                                 gint64 start, gint64 stop,
+						 gint64 position);
 void		gst_event_parse_new_segment	(GstEvent *event,
                                                  gboolean *update,
                                                  gdouble *rate,
 						 GstFormat *format,
                                                  gint64 *start, gint64 *stop,
 						 gint64 *position);
+void		gst_event_parse_new_segment_full (GstEvent *event,
+                                                 gboolean *update,
+                                                 gdouble *rate,
+                                                 gdouble *applied_rate,
+						 GstFormat *format,
+                                                 gint64 *start, gint64 *stop,
+						 gint64 *position);
+
 /* tag event */
 GstEvent*	gst_event_new_tag		(GstTagList *taglist);
 void		gst_event_parse_tag		(GstEvent *event, GstTagList **taglist);

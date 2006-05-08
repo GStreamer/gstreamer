@@ -35,7 +35,7 @@ typedef struct _GstSegment GstSegment;
 /**
  * GstSegment:
  * @rate: the rate of the segment
- * @abs_rate: absolute value of the rate
+ * @abs_rate: absolute value of @rate
  * @format: the format of the segment values
  * @flags: flags for this segment
  * @start: the start of the segment
@@ -44,6 +44,7 @@ typedef struct _GstSegment GstSegment;
  * @accum: accumulated segment
  * @last_stop: last known stop time
  * @duration: total duration of segment
+ * @applied_rate: the already applied rate to the segment
  *
  * A helper structure that holds the configured region of
  * interest in a media file.
@@ -62,8 +63,12 @@ struct _GstSegment {
   gint64         last_stop;
   gint64         duration;
 
+  /* API added 0.10.6 */
+  gdouble        applied_rate;
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  //gpointer _gst_reserved[GST_PADDING-2];
+  guint8 _gst_reserved[(sizeof (gpointer) * GST_PADDING) - sizeof (gdouble)];
 };
 
 GType           gst_segment_get_type 		(void);
@@ -84,6 +89,9 @@ void		gst_segment_set_seek		(GstSegment *segment, gdouble rate,
 
 void		gst_segment_set_newsegment	(GstSegment *segment, gboolean update, gdouble rate,
 						 GstFormat format, gint64 start, gint64 stop, gint64 time);
+void		gst_segment_set_newsegment_full	(GstSegment *segment, gboolean update, gdouble rate,
+						 gdouble applied_rate, GstFormat format, gint64 start, 
+						 gint64 stop, gint64 time);
 
 gint64		gst_segment_to_stream_time	(GstSegment *segment, GstFormat format, gint64 position);
 gint64		gst_segment_to_running_time	(GstSegment *segment, GstFormat format, gint64 position);
