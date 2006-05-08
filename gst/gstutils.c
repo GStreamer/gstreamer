@@ -2321,7 +2321,7 @@ gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
  * @dest: buffer to stamp
  * @src: buffer to stamp from
  *
- * Copies additional information (the timestamp, duration, and offset start 
+ * Copies additional information (the timestamp, duration, and offset start
  * and end) from one buffer to the other.
  *
  * This function does not copy any buffer flags or caps.

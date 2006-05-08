@@ -31,23 +31,23 @@ G_BEGIN_DECLS
 
 /**
  * GST_DP_VERSION_MAJOR:
- * 
+ *
  * The major version number of the GStreamer Data Protocol.
  */
 #define GST_DP_VERSION_MAJOR 0
 /**
  * GST_DP_VERSION_MINOR:
- * 
+ *
  * The minor version number of the GStreamer Data Protocol.
  */
 #define GST_DP_VERSION_MINOR 2
 
 /**
  * GST_DP_HEADER_LENGTH:
- * 
+ *
  * The header size in bytes.
  */
-#define GST_DP_HEADER_LENGTH 62 
+#define GST_DP_HEADER_LENGTH 62
 
 /**
  * GstDPHeaderFlag:
