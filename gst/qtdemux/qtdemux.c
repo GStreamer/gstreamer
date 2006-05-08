@@ -478,8 +478,7 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     case GST_QUERY_DURATION:
-      if (qtdemux->pullbased && qtdemux->duration != 0
-          && qtdemux->timescale != 0) {
+      if (qtdemux->duration != 0 && qtdemux->timescale != 0) {
         gint64 duration;
 
         duration = gst_util_uint64_scale_int (qtdemux->duration,
@@ -2444,10 +2443,10 @@ qtdemux_dump_mvhd (GstQTDemux * qtdemux, void *buffer, int depth)
       QTDEMUX_GUINT32_GET (buffer + 12));
   GST_LOG ("%*s  modify time:   %u", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 16));
-  qtdemux->duration = QTDEMUX_GUINT32_GET (buffer + 24);
-  qtdemux->timescale = QTDEMUX_GUINT32_GET (buffer + 20);
-  GST_LOG ("%*s  time scale:    1/%u sec", depth, "", qtdemux->timescale);
-  GST_LOG ("%*s  duration:      %u", depth, "", qtdemux->duration);
+  GST_LOG ("%*s  time scale:    1/%u sec", depth, "",
+      QTDEMUX_GUINT32_GET (buffer + 20));
+  GST_LOG ("%*s  duration:      %u", depth, "",
+      QTDEMUX_GUINT32_GET (buffer + 24));
   GST_LOG ("%*s  pref. rate:    %g", depth, "", QTDEMUX_FP32_GET (buffer + 28));
   GST_LOG ("%*s  pref. volume:  %g", depth, "", QTDEMUX_FP16_GET (buffer + 32));
   GST_LOG ("%*s  preview time:  %u", depth, "",
