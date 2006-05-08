@@ -1,5 +1,10 @@
 2006-05-08  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstquery.c:
+	Added some docs for the segment query.
+
+2006-05-08  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek),
 	(gst_base_src_loop), (gst_base_src_change_state):
 	Always push non-flushing serialized events in the streaming 

@@ -650,7 +650,17 @@ gst_query_new_segment (GstFormat format)
  * @start_value: the start value
  * @stop_value: the stop value
  *
- * Answer a segment query by setting the requested values.
+ * Answer a segment query by setting the requested values. The normal
+ * playback segment of a pipeline is 0 to duration at the default rate of
+ * 1.0. If a seek was performed on the pipeline to play a different
+ * segment, this query will return the range specified in the last seek.
+ *
+ * @start_value and @stop_value will respectively contain the configured 
+ * playback range start and stop values expressed in @format. 
+ * The values are always between 0 and the duration of the media and 
+ * @start_value <= @stop_value. @rate will contain the playback rate. For
+ * negative rates, playback will actually happen from @stop_value to
+ * @start_value.
  */
 void
 gst_query_set_segment (GstQuery * query, gdouble rate, GstFormat format,
@@ -678,6 +688,8 @@ gst_query_set_segment (GstQuery * query, gdouble rate, GstFormat format,
  *
  * Parse a segment query answer. Any of @rate, @format, @start_value, and 
  * @stop_value may be NULL, which will cause this value to be omitted.
+ *
+ * See gst_query_set_segment() for an explanation of the function arguments.
  */
 void
 gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
