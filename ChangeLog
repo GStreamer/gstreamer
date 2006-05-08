@@ -1,3 +1,10 @@
+2006-05-08  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek),
+	(gst_base_src_loop), (gst_base_src_change_state):
+	Always push non-flushing serialized events in the streaming 
+	thread.
+
 2006-05-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gsterror.c: (_gst_stream_errors_init):

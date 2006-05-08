@@ -218,6 +218,10 @@ struct _GstBaseSrcPrivate
   gboolean last_sent_eos;       /* last thing we did was send an EOS (we set this
                                  * to avoid the sending of two EOS in some cases) */
   gboolean discont;
+
+  /* two segments to be sent in the streaming thread with STREAM_LOCK */
+  GstEvent *close_segment;
+  GstEvent *start_segment;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -841,10 +845,12 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     GST_DEBUG_OBJECT (src, "closing running segment %" G_GINT64_FORMAT
         " to %" G_GINT64_FORMAT, src->segment.start, src->segment.last_stop);
 
-    gst_pad_push_event (src->srcpad,
+    if (src->priv->close_segment)
+      gst_event_unref (src->priv->close_segment);
+    src->priv->close_segment =
         gst_event_new_new_segment_full (TRUE,
-            src->segment.rate, src->segment.applied_rate, src->segment.format,
-            src->segment.start, src->segment.last_stop, src->segment.time));
+        src->segment.rate, src->segment.applied_rate, src->segment.format,
+        src->segment.start, src->segment.last_stop, src->segment.time);
   }
 
   /* if successfull seek, we update our real segment and push
@@ -865,10 +871,12 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     GST_DEBUG_OBJECT (src, "Sending newsegment from %" G_GINT64_FORMAT
         " to %" G_GINT64_FORMAT, src->segment.start, stop);
 
-    gst_pad_push_event (src->srcpad,
+    if (src->priv->start_segment)
+      gst_event_unref (src->priv->start_segment);
+    src->priv->start_segment =
         gst_event_new_new_segment_full (FALSE,
-            src->segment.rate, src->segment.applied_rate, src->segment.format,
-            src->segment.last_stop, stop, src->segment.time));
+        src->segment.rate, src->segment.applied_rate, src->segment.format,
+        src->segment.last_stop, stop, src->segment.time);
   }
 
   src->priv->discont = TRUE;
@@ -1391,6 +1399,16 @@ gst_base_src_loop (GstPad * pad)
   src = GST_BASE_SRC (gst_pad_get_parent (pad));
 
   src->priv->last_sent_eos = FALSE;
+
+  /* push events to close/start our segment before we do the real work. */
+  if (src->priv->close_segment) {
+    gst_pad_push_event (pad, src->priv->close_segment);
+    src->priv->close_segment = NULL;
+  }
+  if (src->priv->start_segment) {
+    gst_pad_push_event (pad, src->priv->start_segment);
+    src->priv->start_segment = NULL;
+  }
 
   /* if we operate in bytes, we can calculate an offset */
   if (src->segment.format == GST_FORMAT_BYTES)
@@ -1917,6 +1935,10 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
         basesrc->priv->last_sent_eos = TRUE;
       }
       event_p = &basesrc->data.ABI.pending_seek;
+      gst_event_replace (event_p, NULL);
+      event_p = &basesrc->priv->close_segment;
+      gst_event_replace (event_p, NULL);
+      event_p = &basesrc->priv->start_segment;
       gst_event_replace (event_p, NULL);
       break;
     }
