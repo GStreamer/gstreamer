@@ -37,7 +37,7 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
   res = g_new0 (RTSPUrl, 1);
 
   if (urlstr == NULL)
-    return RTSP_EINVAL;
+    goto invalid;
 
   p = (gchar *) urlstr;
   if (g_str_has_prefix (p, RTSP_PROTO)) {
@@ -46,30 +46,31 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
   } else if (g_str_has_prefix (p, RTSPU_PROTO)) {
     res->protocol = RTSP_PROTO_UDP;
     p += RTSPU_PROTO_LEN;
-  } else {
-    return RTSP_EINVAL;
-  }
+  } else
+    goto invalid;
 
   slash = strstr (p, "/");
-  at = g_strrstr (p, "@");
+  at = strstr (p, "@");
 
   if (at && slash && at > slash)
     at = NULL;
 
   if (at) {
-    col = g_strrstr (p, ":");
+    col = strstr (p, ":");
 
-    if (col == NULL)
-      return RTSP_EINVAL;
+    /* must have a ':' and it must be before the '@' */
+    if (col == NULL || col > at)
+      goto invalid;
 
     res->user = g_strndup (p, col - p);
     col++;
     res->passwd = g_strndup (col, col - at);
 
+    /* move to host */
     p = at + 1;
   }
 
-  col = g_strrstr (p, ":");
+  col = strstr (p, ":");
   if (col) {
     res->host = g_strndup (p, col - p);
     p = col + 1;
@@ -92,6 +93,12 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
   *url = res;
 
   return RTSP_OK;
+
+invalid:
+  {
+    rtsp_url_free (res);
+    return RTSP_EINVAL;
+  }
 }
 
 void
