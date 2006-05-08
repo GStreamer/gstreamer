@@ -1,3 +1,8 @@
+2006-05-08  Edward Hervey  <edward@fluendo.com>
+
+	* autogen.sh: (CONFIGURE_DEF_OPT): 
+	libtoolize on Darwin/MacOSX is called glibtoolize
+
 2006-05-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/lame/gstlame.c: (gst_lame_get_type),
