@@ -25,61 +25,69 @@
  *
  * <refsect2>
  * <para>
- * This plugin writes incoming data to a set of filedescriptors. The filedescriptors
- * can be added to multifdsink by emiting the "add" signal. For each descriptor added
+ * This plugin writes incoming data to a set of filedescriptors. The
+ * filedescriptors can be added to multifdsink by emiting the "add" signal. For
+ * each descriptor added
  * the "client-added" signal will be called.
  * </para>
  * <para>
- * Clients can be removed from multifdsink by emiting the "remove" signal. For each 
- * descriptor removed the "client-removed" signal will be called. The "client-removed" 
- * signal can also be fired when multifdsink decides that a client is not active anymore
- * or, depending on the value of the "recover-policy" if the client is reading to slow.
- * In all cases, multifdsink will never ever close a filedescriptor itself, the application
- * has to do that itself in the "client-fd-removed" signal, for example. 
- * Note that multifdsink still has a reference to the file descriptor when the 
- * "client-removed" signal is emited so that "get-stats" can be performed on the 
- * descriptor; It is therefore not allowed to close the file descriptor in the 
- * "client-removed" signal, use the "client-fd-removed" signal to close the fd. 
+ * Clients can be removed from multifdsink by emiting the "remove" signal. For
+ * each descriptor removed the "client-removed" signal will be called. The
+ * "client-removed" signal can also be fired when multifdsink decides that a
+ * client is not active anymore or, depending on the value of the
+ * "recover-policy" if the client is reading to slow.
+ * In all cases, multifdsink will never ever close a filedescriptor itself, the
+ * application has to do that itself in the "client-fd-removed" signal, for
+ * example.
+ * Note that multifdsink still has a reference to the file descriptor when the
+ * "client-removed" signal is emited so that "get-stats" can be performed on
+ * the descriptor; It is therefore not allowed to close the file descriptor in
+ * the "client-removed" signal, use the "client-fd-removed" signal to close the
+ * fd.
  * </para>
  * <para>
- * Multifdsink internally keeps a queue of the incomming buffers and uses a separate
- * thread to send the buffers to the clients. This ensures that no client write can
- * block the pipeline and that clients can read with different speeds. 
+ * Multifdsink internally keeps a queue of the incomming buffers and uses a
+ * separate thread to send the buffers to the clients. This ensures that no
+ * client write can block the pipeline and that clients can read with different
+ * speeds.
  * </para>
  * <para>
- * When adding a client to multifdsink, the "sync-method" property will define which
- * buffer will be sent first to the client. Clients can be sent respectively the most
- * recent buffer (which might not be decodable by the client when it is not a keyframe),
- * the next keyframe received in multifdsink (which can take some time depending on the 
- * keyframe rate, or the last received keyframe (which will cause a burst-on-connect).
+ * When adding a client to multifdsink, the "sync-method" property will define
+ * which buffer will be sent first to the client. Clients can be sent
+ * respectively the most recent buffer (which might not be decodable by the
+ * client when it is not a keyframe), the next keyframe received in multifdsink
+ * (which can take some time depending on the keyframe rate, or the last
+ * received keyframe (which will cause a burst-on-connect).
  * </para>
  * <para>
- * When streaming data, clients are allowed to read at a different rate than the rate 
- * at which multifdsink receives data. If the client is reading too fast, no data will
- * be send to the client until multifdsink receives more data. If the client however
- * reads too slow, data for that client will bunch up in multifdsink. Two properties
- * control the amount of data (buffers) that is queued in multifdsink: "buffers-max"
- * and "buffers-soft-max". A client with a lag of "buffers-max" is removed from
- * multifdsink forcibly.
+ * When streaming data, clients are allowed to read at a different rate than
+ * the rate at which multifdsink receives data. If the client is reading too
+ * fast, no data will be send to the client until multifdsink receives more
+ * data. If the client however reads too slow, data for that client will bunch
+ * up in multifdsink. Two properties control the amount of data (buffers) that
+ * is queued in multifdsink: "buffers-max" and "buffers-soft-max". A client
+ * with a lag of "buffers-max" is removed from multifdsink forcibly.
  * </para>
  * <para>
- * A client with a lag of at least "buffers-soft-max" enters the recovery procedure 
- * which is controled with the "recover-policy" property. A recover policy of NONE will
- * do nothing, RESYNC_LATEST will send the most recently received buffer as the next
- * buffer for the client, RESYNC_SOFT_LIMIT positions the client to the soft limit
- * in the buffer queue and RESYNC_KEYFRAME positions the client to the most recent 
- * keyframe in the buffer queue.
+ * A client with a lag of at least "buffers-soft-max" enters the recovery
+ * procedure which is controled with the "recover-policy" property. A recover
+ * policy of NONE will do nothing, RESYNC_LATEST will send the most recently
+ * received buffer as the next buffer for the client, RESYNC_SOFT_LIMIT
+ * positions the client to the soft limit in the buffer queue and
+ * RESYNC_KEYFRAME positions the client to the most recent keyframe in the
+ * buffer queue.
  * </para>
  * <para>
- * multifdsink will synchronize on the clock before serving the buffers to the clients.
+ * multifdsink will synchronize on the clock before serving the buffers to the
+ * clients.
  * </para>
  * <para>
  * Example pipeline:
  * <programlisting>
  * gst-launch -v videotestsrc ! multifdsink
  * </programlisting>
- * This pipeline will not do a lot since it is not possible from a gst-launch line
- * to add filedescriptors to multifdsink.
+ * This pipeline will not do a lot since it is not possible from a gst-launch
+ * line to add filedescriptors to multifdsink.
  * </para>
  * </refsect2>
  *

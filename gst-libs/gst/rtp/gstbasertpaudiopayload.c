@@ -69,12 +69,13 @@ gst_basertpaudiopayload_class_init (GstBaseRTPAudioPayloadClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
-  gobject_class->finalize = gst_basertpaudiopayload_finalize;
+  gobject_class->finalize =
+      GST_DEBUG_FUNCPTR (gst_basertpaudiopayload_finalize);
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
 
   gstbasertppayload_class->handle_buffer =
-      gst_basertpaudiopayload_handle_buffer;
+      GST_DEBUG_FUNCPTR (gst_basertpaudiopayload_handle_buffer);
 
   GST_DEBUG_CATEGORY_INIT (basertpaudiopayload_debug, "basertpaudiopayload", 0,
       "base audio RTP payloader");

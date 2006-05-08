@@ -20,7 +20,6 @@
 
 /**
  * SECTION:element-videoscale
- * @short_description: rescale video
  * @see_also: videorate, ffmpegcolorspace
  *
  * <refsect2>
@@ -31,24 +30,26 @@
  * get more robust behaviour without any cost if no scaling is needed.
  * </para>
  * <para>
- * This element supports a wide range of color spaces including various YUV and 
- * RGB formats and is therefore generally able to operate anywhere in a pipeline.
+ * This element supports a wide range of color spaces including various YUV and
+ * RGB formats and is therefore generally able to operate anywhere in a
+ * pipeline.
  * </para>
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
  * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! ffmpegcolorspace ! videoscale ! ximagesink
  * </programlisting>
- * Decode an Ogg/Theora and display the video using ximagesink. Since ximagesink cannot
- * perform scaling, the video scaling will be performed by videoscale when you resize the
- * video window.
+ * Decode an Ogg/Theora and display the video using ximagesink. Since
+ * ximagesink cannot perform scaling, the video scaling will be performed by
+ * videoscale when you resize the video window.
  * To create the test Ogg/Theora file refer to the documentation of theoraenc.
  * </para>
  * <para>
  * <programlisting>
  * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoscale ! video/x-raw-yuv, width=50 ! xvimagesink
  * </programlisting>
- * Decode an Ogg/Theora and display the video using xvimagesink with a width of 50.
+ * Decode an Ogg/Theora and display the video using xvimagesink with a width of
+ * 50.
  * </para>
  * </refsect2>
  *
