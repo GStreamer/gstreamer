@@ -1,3 +1,8 @@
+2006-05-08  Edward Hervey  <edward@fluendo.com>
+
+	* autogen.sh: (CONFIGURE_DEF_OPT): 
+	libtoolize on Darwin/MacOSX is called glibtoolize
+
 2006-05-05  Andy Wingo  <wingo@pobox.com>
 
 	* examples/remuxer.py (PlayerWindow.update_scale_cb): Fix a race
