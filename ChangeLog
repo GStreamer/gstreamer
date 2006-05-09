@@ -1,5 +1,15 @@
 2006-05-09  Edward Hervey  <edward@fluendo.com>
 
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-0.10.6.ignore:
+	* gst/gst.defs:
+	* gst/gstversion.override.in:
+	Update for API changes.
+	Added ignore files for core 0.10.6 API additions.
+
+2006-05-09  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst.override:
 	Reverting previous patches for conditional ignore.
 	It can't be done from within override files.
