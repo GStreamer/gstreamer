@@ -1,5 +1,15 @@
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstindex.c: (gst_index_resolver_get_type):
+	* plugins/elements/gstfakesink.c:
+	(gst_fake_sink_state_error_get_type):
+	* plugins/elements/gstfakesrc.c: (gst_fake_src_data_get_type),
+	(gst_fake_src_sizetype_get_type), (gst_fake_src_filltype_get_type):
+	* plugins/elements/gstqueue.c: (queue_leaky_get_type):
+	  Const-ify GEnumValue arrays.
+
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/gst/gstbuffer.c: (GST_START_TEST):
 	  Add test case for flags + gst_buffer_make_metadata_writable().
 

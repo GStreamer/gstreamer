@@ -127,7 +127,7 @@ static GType
 gst_fake_src_output_get_type (void)
 {
   static GType fakesrc_output_type = 0;
-  static GEnumValue fakesrc_output[] = {
+  static const GEnumValue fakesrc_output[] = {
     {FAKE_SRC_FIRST_LAST_LOOP, "1", "First-Last loop"},
     {FAKE_SRC_LAST_FIRST_LOOP, "2", "Last-First loop"},
     {FAKE_SRC_PING_PONG, "3", "Ping-Pong"},
@@ -152,7 +152,7 @@ static GType
 gst_fake_src_data_get_type (void)
 {
   static GType fakesrc_data_type = 0;
-  static GEnumValue fakesrc_data[] = {
+  static const GEnumValue fakesrc_data[] = {
     {FAKE_SRC_DATA_ALLOCATE, "Allocate data", "allocate"},
     {FAKE_SRC_DATA_SUBBUFFER, "Subbuffer data", "subbuffer"},
     {0, NULL, NULL},
@@ -170,7 +170,7 @@ static GType
 gst_fake_src_sizetype_get_type (void)
 {
   static GType fakesrc_sizetype_type = 0;
-  static GEnumValue fakesrc_sizetype[] = {
+  static const GEnumValue fakesrc_sizetype[] = {
     {FAKE_SRC_SIZETYPE_EMPTY, "Send empty buffers", "empty"},
     {FAKE_SRC_SIZETYPE_FIXED, "Fixed size buffers (sizemax sized)", "fixed"},
     {FAKE_SRC_SIZETYPE_RANDOM,
@@ -190,7 +190,7 @@ static GType
 gst_fake_src_filltype_get_type (void)
 {
   static GType fakesrc_filltype_type = 0;
-  static GEnumValue fakesrc_filltype[] = {
+  static const GEnumValue fakesrc_filltype[] = {
     {FAKE_SRC_FILLTYPE_NOTHING, "Leave data as malloced", "nothing"},
     {FAKE_SRC_FILLTYPE_ZERO, "Fill buffers with zeros", "zero"},
     {FAKE_SRC_FILLTYPE_RANDOM, "Fill buffers with random crap", "random"},

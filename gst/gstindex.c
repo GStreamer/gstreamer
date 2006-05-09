@@ -92,7 +92,7 @@ static GType
 gst_index_resolver_get_type (void)
 {
   static GType index_resolver_type = 0;
-  static GEnumValue index_resolver[] = {
+  static const GEnumValue index_resolver[] = {
     {GST_INDEX_RESOLVER_CUSTOM, "GST_INDEX_RESOLVER_CUSTOM",
         "Use a custom resolver"},
     {GST_INDEX_RESOLVER_GTYPE, "GST_INDEX_RESOLVER_GTYPE",

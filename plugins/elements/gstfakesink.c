@@ -86,7 +86,7 @@ static GType
 gst_fake_sink_state_error_get_type (void)
 {
   static GType fakesink_state_error_type = 0;
-  static GEnumValue fakesink_state_error[] = {
+  static const GEnumValue fakesink_state_error[] = {
     {FAKE_SINK_STATE_ERROR_NONE, "No state change errors", "none"},
     {FAKE_SINK_STATE_ERROR_NULL_READY,
         "Fail state change from NULL to READY", "null-to-ready"},
