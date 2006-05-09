@@ -2,8 +2,6 @@
 #  include "config.h"
 #endif
 
-#include <gst/gst.h>
-#include <stdlib.h>
 #include <string.h>
 #include <locale.h>
 #include <glib/gprintf.h>

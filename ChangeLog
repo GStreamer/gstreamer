@@ -1,5 +1,14 @@
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tools/gst-inspect.c:
+	* tools/gst-launch.c:
+	* tools/gst-typefind.c:
+	* tools/gst-xmlinspect.c:
+	* tools/tools.h:
+	  Fix up includes: need to include stdlib.h in tools.h for exit().
+
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gsttaglist.c: (_gst_tag_initialize):
 	* gst/gsttaglist.h:
 	  API: add GST_TAG_IMAGE tag (#340721).

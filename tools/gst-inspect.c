@@ -25,13 +25,10 @@
 #  include "config.h"
 #endif
 
-#include <gst/gst.h>
 #include <gst/controller/gstcontroller.h>
 
-#include "gst/gst-i18n-app.h"
 #include "tools.h"
 
-#include <stdlib.h>
 #include <string.h>
 #include <locale.h>
 #include <glib/gprintf.h>

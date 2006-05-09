@@ -27,9 +27,7 @@
 #endif
 
 #include <string.h>
-#include <stdlib.h>
 #include <locale.h>
-#include <gst/gst.h>
 
 #include "tools.h"
 

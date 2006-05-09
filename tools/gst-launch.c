@@ -31,7 +31,6 @@
 #endif
 
 #include <string.h>
-#include <stdlib.h>
 #include <signal.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -40,9 +39,6 @@
 #include <sys/wait.h>
 #endif
 #include <locale.h>             /* for LC_ALL */
-#include "gst/gst-i18n-app.h"
-
-#include <gst/gst.h>
 #include "tools.h"
 
 /* FIXME: This is just a temporary hack.  We should have a better

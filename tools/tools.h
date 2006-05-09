@@ -23,6 +23,9 @@
 #ifndef __GST_TOOLS_H__
 #define __GST_TOOLS_H__
 
+#include <stdlib.h>
+
+#include <gst/gst.h>
 #include "gst/gst-i18n-app.h"
 
 /*
