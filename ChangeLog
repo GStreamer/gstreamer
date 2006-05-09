@@ -1,5 +1,10 @@
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/gst/gstbuffer.c: (GST_START_TEST):
+	  Add test case for flags + gst_buffer_make_metadata_writable().
+
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstbuffer.c: (gst_buffer_make_metadata_writable):
 	  gst_buffer_make_metadata_writable() should maintain the
 	  buffer flags (those that make sense at least) (see #340859).

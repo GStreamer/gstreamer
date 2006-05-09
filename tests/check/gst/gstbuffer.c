@@ -273,6 +273,9 @@ GST_START_TEST (test_metadata_writable)
   GstBuffer *buffer, *sub1;
 
   buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
   /* Buffer with refcount 1 should have writable metadata */
   fail_unless (gst_buffer_is_metadata_writable (buffer) == TRUE);
 
@@ -291,6 +294,17 @@ GST_START_TEST (test_metadata_writable)
    * (subbuffer should be holding a reference, and so should we) */
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 2);
   fail_unless (gst_buffer_is_metadata_writable (buffer) == FALSE);
+
+  /* Check that make_metadata_writable() maintains the buffer flags */
+  fail_unless (GST_BUFFER_FLAG_IS_SET (sub1, GST_BUFFER_FLAG_DISCONT));
+  fail_unless (GST_BUFFER_FLAG_IS_SET (sub1, GST_BUFFER_FLAG_DELTA_UNIT));
+
+  /* Unset flags on writable buffer, then make sure they're still
+   * set on the original buffer */
+  GST_BUFFER_FLAG_UNSET (sub1, GST_BUFFER_FLAG_DISCONT);
+  GST_BUFFER_FLAG_UNSET (sub1, GST_BUFFER_FLAG_DELTA_UNIT);
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT));
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
 
   /* Drop the subbuffer and check that the metadata is now writable again */
   ASSERT_BUFFER_REFCOUNT (sub1, "sub1", 1);
