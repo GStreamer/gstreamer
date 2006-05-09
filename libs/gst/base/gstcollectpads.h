@@ -49,6 +49,7 @@ typedef struct _GstCollectPadsClass GstCollectPadsClass;
  */
 struct _GstCollectData
 {
+  /* with LOCK of @collect */
   GstCollectPads 	*collect;
   GstPad		*pad;
   GstBuffer		*buffer;
@@ -60,6 +61,7 @@ struct _GstCollectData
     struct {
       gboolean           flushing;
       gboolean           new_segment;
+      gboolean           eos;
     } ABI;
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING + 0];
@@ -76,6 +78,10 @@ struct _GstCollectData
  * Returns: GST_FLOW_OK for success
  */
 typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer user_data);
+
+#define GST_COLLECT_PADS_GET_PAD_LOCK(pads) (((GstCollectPads *)pads)->abidata.ABI.pad_lock)
+#define GST_COLLECT_PADS_PAD_LOCK(pads)     (g_mutex_lock(GST_COLLECT_PADS_GET_PAD_LOCK (pads)))
+#define GST_COLLECT_PADS_PAD_UNLOCK(pads)   (g_mutex_unlock(GST_COLLECT_PADS_GET_PAD_LOCK (pads)))
 
 #define GST_COLLECT_PADS_GET_COND(pads) (((GstCollectPads *)pads)->cond)
 #define GST_COLLECT_PADS_WAIT(pads)     (g_cond_wait (GST_COLLECT_PADS_GET_COND (pads), GST_OBJECT_GET_LOCK (pads)))
@@ -96,21 +102,31 @@ struct _GstCollectPads {
   GSList	*data;                  /* list of CollectData items */
 
   /*< private >*/
-  guint32	 cookie;
+  guint32	 cookie;		/* @data list cookie */
 
+  /* with LOCK */
   GCond		*cond;			/* to signal removal of data */
 
   GstCollectPadsFunction func;		/* function and user_data for callback */
   gpointer	 user_data;
 
-  guint		 numpads;		/* number of pads */
+  guint		 numpads;		/* number of pads in @data */
   guint		 queuedpads;		/* number of pads with a buffer */
   guint		 eospads;		/* number of pads that are EOS */
 
   gboolean	 started;
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  union {
+    struct {
+      /* since 0.10.6 */ /* with PAD_LOCK */
+      GMutex    *pad_lock;		/* used to serialize add/remove */
+      GSList    *pad_list;              /* updated pad list */
+      guint32	 pad_cookie;            /* updated cookie */
+    } ABI;
+    /* adding + 0 to mark ABI change to be undone later */
+    gpointer _gst_reserved[GST_PADDING + 0];
+  } abidata;
 };
 
 struct _GstCollectPadsClass {

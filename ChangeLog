@@ -1,3 +1,28 @@
+2006-05-09  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_init),
+	(gst_collect_pads_finalize), (gst_collect_pads_add_pad),
+	(gst_collect_pads_remove_pad), (gst_collect_pads_set_flushing),
+	(gst_collect_pads_start), (gst_collect_pads_stop),
+	(gst_collect_pads_peek), (gst_collect_pads_pop),
+	(gst_collect_pads_available), (gst_collect_pads_read),
+	(gst_collect_pads_flush), (gst_collect_pads_check_pads),
+	(gst_collect_pads_is_collected), (gst_collect_pads_event),
+	(gst_collect_pads_chain):
+	* libs/gst/base/gstcollectpads.h:
+	Clean up the mess that is collectpads, add comments and
+	FIXMEs where needed.
+	Maintain a separate pad list so we can add pads while
+	collecting the other ones. For this we need a new separate 
+	lock (see comics).
+	Fix memory leak in finalize.
+	Refactor some weird code to set/unset pad flushing flags, mark
+	with comments.
+	Don't crash in _available, _read, _flush when we're EOS.
+
+	* tests/check/libs/.cvsignore:
+	Ignore adapter check binary.
+
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstindex.c: (gst_index_resolver_get_type):
