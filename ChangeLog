@@ -1,3 +1,14 @@
+2006-05-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/adder/gstadder.c: (gst_adder_request_new_pad),
+	(gst_adder_collected):
+	* gst/adder/gstadder.h:
+	Remove bogus segment merging and forwarding, we don't
+	care about timestamps anyway and we just produce a
+	continuous stream. 
+	Also create a nice NEWSEGMENT event when we start.
+	Use _scale_int some more.
+
 2006-05-09  Edward Hervey  <edward@fluendo.com>
 
 	* tests/icles/stress-xoverlay.c:

@@ -91,7 +91,6 @@ static void gst_adder_dispose (GObject * object);
 static gboolean gst_adder_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_adder_query (GstPad * pad, GstQuery * query);
 static gboolean gst_adder_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_adder_sink_event (GstPad * pad, GstEvent * event);
 
 static GstPad *gst_adder_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused);
@@ -293,67 +292,6 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
   return result;
 }
 
-static gboolean
-gst_adder_sink_event (GstPad * pad, GstEvent * event)
-{
-  GstAdder *adder;
-  gboolean ret;
-
-  adder = GST_ADDER (gst_pad_get_parent (pad));
-
-  GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
-      GST_DEBUG_PAD_NAME (pad));
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-    {
-      gint64 start, stop, time;
-      gdouble rate;
-      GstFormat format;
-      gboolean update;
-      gboolean change = FALSE;
-
-      gst_event_parse_new_segment (event, &update, &rate, &format,
-          &start, &stop, &time);
-
-      GST_DEBUG_OBJECT (pad, "got newsegment, start %" GST_TIME_FORMAT
-          ", stop %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
-          GST_TIME_ARGS (stop));
-
-      if (adder->segment.format != format) {
-        gst_segment_init (&adder->segment, format);
-        change = TRUE;
-      } else if ((adder->segment.rate != rate)
-          || (adder->segment.format != format)
-          || (adder->segment.start != start)
-          || (adder->segment.stop != stop)
-          || (adder->segment.time != time)) {
-        change = TRUE;
-      }
-      if (change) {
-        GST_DEBUG ("Send new newsegment");
-        gst_segment_set_newsegment (&adder->segment, update, rate, format,
-            start, stop, time);
-
-        /* send new newsegment event */
-        gst_pad_push_event (adder->srcpad,
-            gst_event_new_new_segment (update, rate, format, start, stop,
-                time));
-        /* gst_event_unref (event); */
-      }
-      break;
-    }
-    default:
-      break;
-  }
-
-  /* now GstCollectPads can take care of the rest, e.g. EOS */
-  ret = adder->collect_event (pad, event);
-
-  gst_object_unref (adder);
-  return ret;
-}
-
 static void
 gst_adder_class_init (GstAdderClass * klass)
 {
@@ -437,12 +375,6 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_setcaps_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_setcaps));
   gst_collect_pads_add_pad (adder->collect, newpad, sizeof (GstCollectData));
-
-  /* FIXME: hacked way to override/extend the event function of
-   * GstCollectPads; because it sets its own event function giving the
-   * element no access to events */
-  adder->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
-  gst_pad_set_event_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_sink_event));
 
   if (!gst_element_add_pad (GST_ELEMENT (adder), newpad))
     goto could_not_add;
@@ -536,21 +468,33 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     gst_collect_pads_flush (pads, data, len);
   }
 
+  /* we always timestamp in stream time */
+  if (adder->segment_pending) {
+    GstEvent *event;
+
+    event = gst_event_new_new_segment_full (FALSE, 1.0,
+        1.0, GST_FORMAT_TIME, adder->timestamp, -1, adder->timestamp);
+
+    gst_pad_push_event (adder->srcpad, event);
+    adder->segment_pending = FALSE;
+  }
+
   /* set timestamps on the output buffer */
   {
     guint64 samples;
-    guint64 duration;
-
-    /* width is in bits and we need bytes */
-    samples = size / ((adder->width / 8) * adder->channels);
-    duration = samples * GST_SECOND / adder->rate;
 
     GST_BUFFER_TIMESTAMP (outbuf) = adder->timestamp;
     GST_BUFFER_OFFSET (outbuf) = adder->offset;
 
-    adder->offset += samples;
-    adder->timestamp = adder->offset * GST_SECOND / adder->rate;
+    /* get next timestamp */
+    /* width is in bits and we need bytes */
+    samples = size / ((adder->width / 8) * adder->channels);
 
+    adder->offset += samples;
+    adder->timestamp = gst_util_uint64_scale_int (adder->offset,
+        GST_SECOND, adder->rate);
+
+    /* now we can set the duration */
     GST_BUFFER_DURATION (outbuf) = adder->timestamp -
         GST_BUFFER_TIMESTAMP (outbuf);
   }
@@ -558,6 +502,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   /* send it out */
   GST_LOG_OBJECT (adder, "pushing outbuf");
   ret = gst_pad_push (adder->srcpad, outbuf);
+  GST_LOG_OBJECT (adder, "pushed outbuf");
 
   return ret;
 
@@ -582,6 +527,7 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       adder->timestamp = 0;
       adder->offset = 0;
+      adder->segment_pending = TRUE;
       gst_segment_init (&adder->segment, GST_FORMAT_UNDEFINED);
       gst_collect_pads_start (adder->collect);
       break;

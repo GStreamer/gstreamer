@@ -73,8 +73,8 @@ struct _GstAdder {
   gint64          offset;
   
   /* sink event handling */
-  GstPadEventFunction  collect_event;
   GstSegment      segment;
+  gboolean        segment_pending;
 };
 
 struct _GstAdderClass {
