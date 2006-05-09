@@ -208,12 +208,12 @@ typedef struct _GstEventClass GstEventClass;
 /**
  * gst_event_replace:
  * @old_event: pointer to a pointer to a #GstEvent to be replaced.
- * @new_event: pointer to a #GstEvent that will replace the event pointed to 
+ * @new_event: pointer to a #GstEvent that will replace the event pointed to
  *        by @old_event.
  *
  * Modifies a pointer to a #GstEvent to point to a different #GstEvent. The
  * modification is done atomically (so this is useful for ensuring thread safety
- * in some cases), and the reference counts are updated appropriately (the old 
+ * in some cases), and the reference counts are updated appropriately (the old
  * event is unreffed, the new one is reffed).
  *
  * Either @new_event or the #GstEvent pointed to by @old_event may be NULL.
@@ -251,7 +251,7 @@ typedef enum {
  *                     be considerably slower for some formats.
  * @GST_SEEK_FLAG_KEY_UNIT: seek to the nearest keyframe. This might be
  *		       faster but less accurate.
- * @GST_SEEK_FLAG_SEGMENT: perform a segment seek. 
+ * @GST_SEEK_FLAG_SEGMENT: perform a segment seek.
  *
  * Flags to be used with gst_element_seek() or gst_event_new_seek()
  *
@@ -262,11 +262,12 @@ typedef enum {
  * or timestamp markers in the stream. Specifying this flag might require a
  * complete scan of the file in those cases.
  *
- * When perfoming a segment seek: after the playback of the segment completes, 
- * no EOS will be emmited by the element that performed the seek, but a SEGMENT_DONE 
- * message will be posted on the bus by the element. When this message is posted, it is
- * possible to send a new seek event to continue playback. With this seek method it
- * is possible to perform seemless looping or simple linear editing.
+ * When performing a segment seek: after the playback of the segment completes,
+ * no EOS will be emmited by the element that performed the seek, but a
+ * SEGMENT_DONE message will be posted on the bus by the element. When this
+ * message is posted, it is possible to send a new seek event to continue
+ * playback. With this seek method it is possible to perform seemless looping
+ * or simple linear editing.
  */
 typedef enum {
   GST_SEEK_FLAG_NONE		= 0,
