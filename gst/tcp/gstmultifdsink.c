@@ -274,7 +274,7 @@ gst_client_status_get_type (void)
 {
   static GType client_status_type = 0;
   static GEnumValue client_status[] = {
-    {GST_CLIENT_STATUS_OK, "ok"},
+    {GST_CLIENT_STATUS_OK, "ok", "ok"},
     {GST_CLIENT_STATUS_CLOSED, "Closed", "closed"},
     {GST_CLIENT_STATUS_REMOVED, "Removed", "removed"},
     {GST_CLIENT_STATUS_SLOW, "Too slow", "slow"},
