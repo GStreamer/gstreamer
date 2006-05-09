@@ -1,5 +1,11 @@
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/gst-ffmpeg.supp:
+	  Add missing file (which prepare-ChangeLog didn't pick up
+	  because it's empty).
+
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/generic/libavcodec-locking.c: (GST_START_TEST),
 	(simple_launch_lines_suite), (main):
 	  Only run test when encoder element is available (we might
