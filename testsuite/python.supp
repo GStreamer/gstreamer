@@ -485,3 +485,36 @@
    fun:g_strdup_printf
    fun:gst_element_state_get_name
 }
+
+## Suppressions for FC5 64bit
+
+{
+   Wrong jump in PyImport_ImportModuleEx
+   Memcheck:Cond
+   fun:__strcpy_chk
+   obj:/usr/lib64/libpython2.4.so.1.0
+   obj:/usr/lib64/libpython2.4.so.1.0
+   obj:/usr/lib64/libpython2.4.so.1.0
+   fun:PyImport_ImportModuleEx
+}
+
+{
+   Wrong jump in PyImport_ImportModuleEx
+   Memcheck:Cond
+   fun:__strcpy_chk
+   fun:PyImport_ImportModuleEx
+}
+
+{
+   Wrong jump in PyImport_ImportModuleEx
+   Memcheck:Cond
+   fun:__strcpy_chk
+   obj:/usr/lib64/libpython2.4.so.1.0
+   obj:/usr/lib64/libpython2.4.so.1.0
+   fun:PyObject_Call
+   fun:PyObject_CallFunction
+   obj:/usr/lib64/libpython2.4.so.1.0
+   obj:/usr/lib64/libpython2.4.so.1.0
+   obj:/usr/lib64/libpython2.4.so.1.0
+   fun:PyImport_ImportModuleEx
+}
