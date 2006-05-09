@@ -1,5 +1,15 @@
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Luca Ognibene  <luogni at tin dot it>
+
+	* tests/check/Makefile.am:
+	* tests/check/generic/libavcodec-locking.c: (setup_pipeline),
+	(run_pipeline), (GST_START_TEST), (simple_launch_lines_suite),
+	(main):
+	  Add test case for libavcodec locking
+
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* Makefile.am:
 	* configure.ac:
 	* tests/Makefile.am:
