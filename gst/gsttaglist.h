@@ -488,6 +488,14 @@ gboolean        gst_tag_list_get_date_index     (const GstTagList     * list,
  * Language code (ISO-639-1) (string)
  */
 #define GST_TAG_LANGUAGE_CODE		"language-code"
+/**
+ * GST_TAG_IMAGE:
+ *
+ * image (buffer) (buffer caps should specify the content type)
+ *
+ * Since: 0.10.6
+ */
+#define GST_TAG_IMAGE                "image"
 
 G_END_DECLS
 

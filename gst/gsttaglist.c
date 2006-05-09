@@ -37,6 +37,7 @@
 #include "gsttaglist.h"
 #include "gstinfo.h"
 #include "gstvalue.h"
+#include "gstbuffer.h"
 
 #include <gobject/gvaluecollector.h>
 #include <string.h>
@@ -199,6 +200,8 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_LANGUAGE_CODE, GST_TAG_FLAG_META, G_TYPE_STRING,
       _("language code"),
       _("language code for this stream, conforming to ISO-639-1"), NULL);
+  gst_tag_register (GST_TAG_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
+      _("image"), _("image related to this stream"), NULL);
 }
 
 /**
