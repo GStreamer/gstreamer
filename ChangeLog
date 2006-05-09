@@ -1,5 +1,10 @@
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	  Require core CVS for the new newsegment stuff.
+
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Sjoerd Simons  <sjoerd at luon net>
 
 	* gst/tcp/gstmultifdsink.c: (gst_client_status_get_type):
