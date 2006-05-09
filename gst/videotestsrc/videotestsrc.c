@@ -681,20 +681,16 @@ gst_video_test_src_black (GstVideoTestSrc * v, unsigned char *dest, int w,
   }
 }
 
-#define ROUND_UP_2(x)  (((x)+1)&~1)
-#define ROUND_UP_4(x)  (((x)+3)&~3)
-#define ROUND_UP_8(x)  (((x)+7)&~7)
-
 static void
 paint_setup_I420 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
-  p->ystride = ROUND_UP_4 (p->width);
-  p->up = p->yp + p->ystride * ROUND_UP_2 (p->height);
-  p->ustride = ROUND_UP_8 (p->width) / 2;
-  p->vp = p->up + p->ustride * ROUND_UP_2 (p->height) / 2;
-  p->vstride = ROUND_UP_8 (p->ystride) / 2;
-  p->endptr = p->vp + p->vstride * ROUND_UP_2 (p->height) / 2;
+  p->ystride = GST_ROUND_UP_4 (p->width);
+  p->up = p->yp + p->ystride * GST_ROUND_UP_2 (p->height);
+  p->ustride = GST_ROUND_UP_8 (p->width) / 2;
+  p->vp = p->up + p->ustride * GST_ROUND_UP_2 (p->height) / 2;
+  p->vstride = GST_ROUND_UP_8 (p->ystride) / 2;
+  p->endptr = p->vp + p->vstride * GST_ROUND_UP_2 (p->height) / 2;
 }
 
 static void
@@ -716,12 +712,12 @@ static void
 paint_setup_YV12 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
-  p->ystride = ROUND_UP_4 (p->width);
-  p->vp = p->yp + p->ystride * ROUND_UP_2 (p->height);
-  p->vstride = ROUND_UP_8 (p->ystride) / 2;
-  p->up = p->vp + p->vstride * ROUND_UP_2 (p->height) / 2;
-  p->ustride = ROUND_UP_8 (p->ystride) / 2;
-  p->endptr = p->up + p->ustride * ROUND_UP_2 (p->height) / 2;
+  p->ystride = GST_ROUND_UP_4 (p->width);
+  p->vp = p->yp + p->ystride * GST_ROUND_UP_2 (p->height);
+  p->vstride = GST_ROUND_UP_8 (p->ystride) / 2;
+  p->up = p->vp + p->vstride * GST_ROUND_UP_2 (p->height) / 2;
+  p->ustride = GST_ROUND_UP_8 (p->ystride) / 2;
+  p->endptr = p->up + p->ustride * GST_ROUND_UP_2 (p->height) / 2;
 }
 
 static void
@@ -730,7 +726,7 @@ paint_setup_YUY2 (paintinfo * p, unsigned char *dest)
   p->yp = dest;
   p->up = dest + 1;
   p->vp = dest + 3;
-  p->ystride = ROUND_UP_2 (p->width) * 2;
+  p->ystride = GST_ROUND_UP_2 (p->width) * 2;
   p->endptr = dest + p->ystride * p->height;
 }
 
@@ -740,7 +736,7 @@ paint_setup_UYVY (paintinfo * p, unsigned char *dest)
   p->yp = dest + 1;
   p->up = dest;
   p->vp = dest + 2;
-  p->ystride = ROUND_UP_2 (p->width) * 2;
+  p->ystride = GST_ROUND_UP_2 (p->width) * 2;
   p->endptr = dest + p->ystride * p->height;
 }
 
@@ -750,7 +746,7 @@ paint_setup_YVYU (paintinfo * p, unsigned char *dest)
   p->yp = dest;
   p->up = dest + 3;
   p->vp = dest + 1;
-  p->ystride = ROUND_UP_2 (p->width * 2);
+  p->ystride = GST_ROUND_UP_2 (p->width * 2);
   p->endptr = dest + p->ystride * p->height;
 }
 
@@ -774,7 +770,7 @@ paint_setup_IYU2 (paintinfo * p, unsigned char *dest)
   p->yp = dest + 1;
   p->up = dest + 0;
   p->vp = dest + 2;
-  p->ystride = ROUND_UP_4 (p->width * 3);
+  p->ystride = GST_ROUND_UP_4 (p->width * 3);
   p->endptr = dest + p->ystride * p->height;
 }
 
@@ -793,11 +789,11 @@ static void
 paint_setup_Y41B (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
-  p->ystride = ROUND_UP_4 (p->width);
+  p->ystride = GST_ROUND_UP_4 (p->width);
   p->up = p->yp + p->ystride * p->height;
-  p->ustride = ROUND_UP_8 (p->width) / 4;
+  p->ustride = GST_ROUND_UP_8 (p->width) / 4;
   p->vp = p->up + p->ustride * p->height;
-  p->vstride = ROUND_UP_8 (p->width) / 4;
+  p->vstride = GST_ROUND_UP_8 (p->width) / 4;
   p->endptr = p->vp + p->vstride * p->height;
 }
 
@@ -820,11 +816,11 @@ static void
 paint_setup_Y42B (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
-  p->ystride = ROUND_UP_4 (p->width);
+  p->ystride = GST_ROUND_UP_4 (p->width);
   p->up = p->yp + p->ystride * p->height;
-  p->ustride = ROUND_UP_8 (p->width) / 2;
+  p->ustride = GST_ROUND_UP_8 (p->width) / 2;
   p->vp = p->up + p->ustride * p->height;
-  p->vstride = ROUND_UP_8 (p->width) / 2;
+  p->vstride = GST_ROUND_UP_8 (p->width) / 2;
   p->endptr = p->vp + p->vstride * p->height;
 }
 
@@ -848,7 +844,7 @@ paint_setup_Y800 (paintinfo * p, unsigned char *dest)
 {
   /* untested */
   p->yp = dest;
-  p->ystride = ROUND_UP_4 (p->width);
+  p->ystride = GST_ROUND_UP_4 (p->width);
   p->endptr = dest + p->ystride * p->height;
 }
 
@@ -912,30 +908,30 @@ paint_hline_IMC1 (paintinfo * p, int x, int y, int w)
 static void
 paint_setup_YVU9 (paintinfo * p, unsigned char *dest)
 {
-  int h = ROUND_UP_4 (p->height);
+  int h = GST_ROUND_UP_4 (p->height);
 
   p->yp = dest;
-  p->ystride = ROUND_UP_4 (p->width);
-  p->vp = p->yp + p->ystride * ROUND_UP_4 (p->height);
-  p->vstride = ROUND_UP_4 (p->ystride / 4);
-  p->up = p->vp + p->vstride * ROUND_UP_4 (h / 4);
-  p->ustride = ROUND_UP_4 (p->ystride / 4);
-  p->endptr = p->up + p->ustride * ROUND_UP_4 (h / 4);
+  p->ystride = GST_ROUND_UP_4 (p->width);
+  p->vp = p->yp + p->ystride * GST_ROUND_UP_4 (p->height);
+  p->vstride = GST_ROUND_UP_4 (p->ystride / 4);
+  p->up = p->vp + p->vstride * GST_ROUND_UP_4 (h / 4);
+  p->ustride = GST_ROUND_UP_4 (p->ystride / 4);
+  p->endptr = p->up + p->ustride * GST_ROUND_UP_4 (h / 4);
 }
 
 static void
 paint_setup_YUV9 (paintinfo * p, unsigned char *dest)
 {
   /* untested */
-  int h = ROUND_UP_4 (p->height);
+  int h = GST_ROUND_UP_4 (p->height);
 
   p->yp = dest;
-  p->ystride = ROUND_UP_4 (p->width);
+  p->ystride = GST_ROUND_UP_4 (p->width);
   p->up = p->yp + p->ystride * h;
-  p->ustride = ROUND_UP_4 (p->ystride / 4);
-  p->vp = p->up + p->ustride * ROUND_UP_4 (h / 4);
-  p->vstride = ROUND_UP_4 (p->ystride / 4);
-  p->endptr = p->vp + p->vstride * ROUND_UP_4 (h / 4);
+  p->ustride = GST_ROUND_UP_4 (p->ystride / 4);
+  p->vp = p->up + p->ustride * GST_ROUND_UP_4 (h / 4);
+  p->vstride = GST_ROUND_UP_4 (p->ystride / 4);
+  p->endptr = p->vp + p->vstride * GST_ROUND_UP_4 (h / 4);
 }
 
 static void
@@ -999,7 +995,7 @@ paint_setup_RGB888 (paintinfo * p, unsigned char *dest)
   p->yp = dest + 0;
   p->up = dest + 1;
   p->vp = dest + 2;
-  p->ystride = ROUND_UP_4 (p->width * 3);
+  p->ystride = GST_ROUND_UP_4 (p->width * 3);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -1009,7 +1005,7 @@ paint_setup_BGR888 (paintinfo * p, unsigned char *dest)
   p->yp = dest + 2;
   p->up = dest + 1;
   p->vp = dest + 0;
-  p->ystride = ROUND_UP_4 (p->width * 3);
+  p->ystride = GST_ROUND_UP_4 (p->width * 3);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -1037,7 +1033,7 @@ static void
 paint_setup_RGB565 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
-  p->ystride = ROUND_UP_4 (p->width * 2);
+  p->ystride = GST_ROUND_UP_4 (p->width * 2);
   p->endptr = p->dest + p->ystride * p->height;
 }
 
@@ -1063,7 +1059,7 @@ static void
 paint_setup_xRGB1555 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
-  p->ystride = ROUND_UP_4 (p->width * 2);
+  p->ystride = GST_ROUND_UP_4 (p->width * 2);
   p->endptr = p->dest + p->ystride * p->height;
 }
 

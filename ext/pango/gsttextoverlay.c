@@ -161,7 +161,7 @@ static GType
 gst_text_overlay_valign_get_type (void)
 {
   static GType text_overlay_valign_type = 0;
-  static GEnumValue text_overlay_valign[] = {
+  static const GEnumValue text_overlay_valign[] = {
     {GST_TEXT_OVERLAY_VALIGN_BASELINE, "baseline", "baseline"},
     {GST_TEXT_OVERLAY_VALIGN_BOTTOM, "bottom", "bottom"},
     {GST_TEXT_OVERLAY_VALIGN_TOP, "top", "top"},
@@ -180,7 +180,7 @@ static GType
 gst_text_overlay_halign_get_type (void)
 {
   static GType text_overlay_halign_type = 0;
-  static GEnumValue text_overlay_halign[] = {
+  static const GEnumValue text_overlay_halign[] = {
     {GST_TEXT_OVERLAY_HALIGN_LEFT, "left", "left"},
     {GST_TEXT_OVERLAY_HALIGN_CENTER, "center", "center"},
     {GST_TEXT_OVERLAY_HALIGN_RIGHT, "right", "right"},
@@ -200,7 +200,7 @@ static GType
 gst_text_overlay_wrap_mode_get_type (void)
 {
   static GType text_overlay_wrap_mode_type = 0;
-  static GEnumValue text_overlay_wrap_mode[] = {
+  static const GEnumValue text_overlay_wrap_mode[] = {
     {GST_TEXT_OVERLAY_WRAP_MODE_NONE, "none", "none"},
     {GST_TEXT_OVERLAY_WRAP_MODE_WORD, "word", "word"},
     {GST_TEXT_OVERLAY_WRAP_MODE_CHAR, "char", "char"},

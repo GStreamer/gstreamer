@@ -207,7 +207,7 @@ static GType
 gst_recover_policy_get_type (void)
 {
   static GType recover_policy_type = 0;
-  static GEnumValue recover_policy[] = {
+  static const GEnumValue recover_policy[] = {
     {GST_RECOVER_POLICY_NONE,
         "Do not try to recover", "none"},
     {GST_RECOVER_POLICY_RESYNC_LATEST,
@@ -231,7 +231,7 @@ static GType
 gst_sync_method_get_type (void)
 {
   static GType sync_method_type = 0;
-  static GEnumValue sync_method[] = {
+  static const GEnumValue sync_method[] = {
     {GST_SYNC_METHOD_LATEST,
         "Serve starting from the latest buffer", "latest"},
     {GST_SYNC_METHOD_NEXT_KEYFRAME,
@@ -254,7 +254,7 @@ static GType
 gst_unit_type_get_type (void)
 {
   static GType unit_type_type = 0;
-  static GEnumValue unit_type[] = {
+  static const GEnumValue unit_type[] = {
     {GST_UNIT_TYPE_BUFFERS, "Buffers", "buffers"},
     {GST_UNIT_TYPE_BYTES, "Bytes", "bytes"},
     {GST_UNIT_TYPE_TIME, "Time", "time"},
@@ -273,7 +273,7 @@ static GType
 gst_client_status_get_type (void)
 {
   static GType client_status_type = 0;
-  static GEnumValue client_status[] = {
+  static const GEnumValue client_status[] = {
     {GST_CLIENT_STATUS_OK, "ok", "ok"},
     {GST_CLIENT_STATUS_CLOSED, "Closed", "closed"},
     {GST_CLIENT_STATUS_REMOVED, "Removed", "removed"},

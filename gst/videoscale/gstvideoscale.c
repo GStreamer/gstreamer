@@ -130,7 +130,7 @@ static GType
 gst_video_scale_method_get_type (void)
 {
   static GType video_scale_method_type = 0;
-  static GEnumValue video_scale_methods[] = {
+  static const GEnumValue video_scale_methods[] = {
     {GST_VIDEO_SCALE_NEAREST, "Nearest Neighbour", "nearest-neighbour"},
     {GST_VIDEO_SCALE_BILINEAR, "Bilinear", "bilinear"},
     {0, NULL, NULL},

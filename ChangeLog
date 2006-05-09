@@ -1,5 +1,36 @@
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_valign_get_type),
+	(gst_text_overlay_halign_get_type),
+	(gst_text_overlay_wrap_mode_get_type):
+	* ext/theora/theoradec.c: (theora_handle_type_packet),
+	(theora_handle_data_packet):
+	* ext/theora/theoraenc.c: (gst_border_mode_get_type),
+	(theora_enc_sink_setcaps), (theora_enc_chain):
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	(gst_cdda_base_src_mode_get_type):
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	(gst_audiostestsrc_wave_get_type):
+	* gst/playback/gststreaminfo.c: (gst_stream_type_get_type):
+	* gst/tcp/gstfdset.c: (gst_fdset_mode_get_type):
+	* gst/tcp/gstmultifdsink.c: (gst_recover_policy_get_type),
+	(gst_sync_method_get_type), (gst_unit_type_get_type),
+	(gst_client_status_get_type):
+	* gst/videoscale/gstvideoscale.c:
+	(gst_video_scale_method_get_type):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_video_test_src_pattern_get_type):
+	* gst/videotestsrc/videotestsrc.c: (paint_setup_I420),
+	(paint_setup_YV12), (paint_setup_YUY2), (paint_setup_UYVY),
+	(paint_setup_YVYU), (paint_setup_IYU2), (paint_setup_Y41B),
+	(paint_setup_Y42B), (paint_setup_Y800), (paint_setup_YVU9),
+	(paint_setup_YUV9), (paint_setup_RGB888), (paint_setup_BGR888),
+	(paint_setup_RGB565), (paint_setup_xRGB1555):
+	  Const-ify GEnumValue and GFlagsValue arrays. Use
+	  GST_ROUND_UP_* macros instead of home-made ones.
+
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Require core CVS for the new newsegment stuff.
 

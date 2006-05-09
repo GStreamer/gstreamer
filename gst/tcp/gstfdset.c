@@ -36,7 +36,7 @@ GType
 gst_fdset_mode_get_type (void)
 {
   static GType fdset_mode_type = 0;
-  static GEnumValue fdset_mode[] = {
+  static const GEnumValue fdset_mode[] = {
     {GST_FDSET_MODE_SELECT, "Select", "select"},
     {GST_FDSET_MODE_POLL, "Poll", "poll"},
     {GST_FDSET_MODE_EPOLL, "EPoll", "epoll"},

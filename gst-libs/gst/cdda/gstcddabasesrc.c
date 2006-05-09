@@ -156,7 +156,7 @@ static GType
 gst_cdda_base_src_mode_get_type (void)
 {
   static GType mode_type;       /* 0 */
-  static GEnumValue modes[] = {
+  static const GEnumValue modes[] = {
     {GST_CDDA_BASE_SRC_MODE_NORMAL, "Stream consists of a single track",
         "normal"},
     {GST_CDDA_BASE_SRC_MODE_CONTINUOUS, "Stream consists of the whole disc",

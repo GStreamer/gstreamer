@@ -699,10 +699,6 @@ newseg_wrong_rate:
   }
 }
 
-#define ROUND_UP_2(x) (((x) + 1) & ~1)
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
-#define ROUND_UP_8(x) (((x) + 7) & ~7)
-
 static GstFlowReturn
 theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
 {
@@ -778,9 +774,10 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   if (dec->crop) {
     /* add black borders to make width/height/offsets even. we need this because
      * we cannot express an offset to the peer plugin. */
-    dec->width = ROUND_UP_2 (dec->info.frame_width + (dec->info.offset_x & 1));
+    dec->width =
+        GST_ROUND_UP_2 (dec->info.frame_width + (dec->info.offset_x & 1));
     dec->height =
-        ROUND_UP_2 (dec->info.frame_height + (dec->info.offset_y & 1));
+        GST_ROUND_UP_2 (dec->info.frame_height + (dec->info.offset_y & 1));
     dec->offset_x = dec->info.offset_x & ~1;
     dec->offset_y = dec->info.offset_y & ~1;
   } else {
@@ -971,8 +968,8 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   /* should get the stride from the caps, for now we round up to the nearest
    * multiple of 4 because some element needs it. chroma needs special 
    * treatment, see videotestsrc. */
-  stride_y = ROUND_UP_4 (width);
-  stride_uv = ROUND_UP_8 (width) / 2;
+  stride_y = GST_ROUND_UP_4 (width);
+  stride_uv = GST_ROUND_UP_8 (width) / 2;
 
   out_size = stride_y * height + stride_uv * cheight * 2;
 

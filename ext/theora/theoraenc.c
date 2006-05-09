@@ -74,7 +74,7 @@ static GType
 gst_border_mode_get_type (void)
 {
   static GType border_mode_type = 0;
-  static GEnumValue border_mode[] = {
+  static const GEnumValue border_mode[] = {
     {BORDER_NONE, "No Border", "none"},
     {BORDER_BLACK, "Black Border", "black"},
     {BORDER_MIRROR, "Mirror image in borders", "mirror"},
@@ -87,10 +87,6 @@ gst_border_mode_get_type (void)
   }
   return border_mode_type;
 }
-
-#define ROUND_UP_2(x) (((x) + 1) & ~1)
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
-#define ROUND_UP_8(x) (((x) + 7) & ~7)
 
 /* taken from theora/lib/toplevel.c */
 static int
@@ -336,8 +332,8 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   /* center image if needed */
   if (enc->center) {
     /* make sure offset is even, for easier decoding */
-    enc->offset_x = ROUND_UP_2 ((enc->info_width - enc->width) / 2);
-    enc->offset_y = ROUND_UP_2 ((enc->info_height - enc->height) / 2);
+    enc->offset_x = GST_ROUND_UP_2 ((enc->info_width - enc->width) / 2);
+    enc->offset_y = GST_ROUND_UP_2 ((enc->info_height - enc->height) / 2);
   } else {
     enc->offset_x = 0;
     enc->offset_y = 0;
@@ -686,8 +682,8 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       cheight = height / 2;
 
       /* source strides as defined in videotestsrc */
-      src_y_stride = ROUND_UP_4 (width);
-      src_uv_stride = ROUND_UP_8 (width) / 2;
+      src_y_stride = GST_ROUND_UP_4 (width);
+      src_uv_stride = GST_ROUND_UP_8 (width) / 2;
 
       /* destination strides from the real picture width */
       dst_y_stride = enc->info_width;
@@ -704,8 +700,8 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       dest_v = yuv.v = yuv.u + y_size / 4;
 
       src_y = GST_BUFFER_DATA (buffer);
-      src_u = src_y + src_y_stride * ROUND_UP_2 (height);
-      src_v = src_u + src_uv_stride * ROUND_UP_2 (height) / 2;
+      src_u = src_y + src_y_stride * GST_ROUND_UP_2 (height);
+      src_v = src_u + src_uv_stride * GST_ROUND_UP_2 (height) / 2;
 
       if (enc->border != BORDER_NONE) {
         /* fill top border */

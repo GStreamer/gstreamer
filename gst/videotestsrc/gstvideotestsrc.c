@@ -101,7 +101,7 @@ static GType
 gst_video_test_src_pattern_get_type (void)
 {
   static GType video_test_src_pattern_type = 0;
-  static GEnumValue pattern_types[] = {
+  static const GEnumValue pattern_types[] = {
     {GST_VIDEO_TEST_SRC_SMPTE, "SMPTE 100% color bars", "smpte"},
     {GST_VIDEO_TEST_SRC_SNOW, "Random (television snow)", "snow"},
     {GST_VIDEO_TEST_SRC_BLACK, "100% Black", "black"},

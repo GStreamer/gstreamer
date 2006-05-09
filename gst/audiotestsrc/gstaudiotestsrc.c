@@ -103,7 +103,7 @@ static GType
 gst_audiostestsrc_wave_get_type (void)
 {
   static GType audiostestsrc_wave_type = 0;
-  static GEnumValue audiostestsrc_waves[] = {
+  static const GEnumValue audiostestsrc_waves[] = {
     {GST_AUDIO_TEST_SRC_WAVE_SINE, "Sine", "sine"},
     {GST_AUDIO_TEST_SRC_WAVE_SQUARE, "Square", "square"},
     {GST_AUDIO_TEST_SRC_WAVE_SAW, "Saw", "saw"},
