@@ -1,6 +1,7 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-SUBDIRS = gst-libs ext docs common
+SUBDIRS = gst-libs ext docs common tests
+
 EXTRA_DIST = \
 	gst-ffmpeg.spec depcomp \
 	AUTHORS COPYING NEWS README ChangeLog

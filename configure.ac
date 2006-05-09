@@ -51,6 +51,7 @@ dnl *** check for arguments to configure ***
 
 GST_ARG_WITH_PACKAGE_NAME
 GST_ARG_WITH_PACKAGE_ORIGIN
+GST_ARG_VALGRIND
 
 dnl *** checks for platform ***
 
@@ -68,6 +69,9 @@ AC_PROG_CC
 # FIXME: are these two lines needed ?
 AM_PROG_CC_STDC
 AS="${CC}"
+
+AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
+AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
 dnl check for documentation tools
 GTK_DOC_CHECK([1.3])
@@ -95,6 +99,7 @@ dnl uninstalled is selected preferentially -- see pkg-config(1)
 GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
 GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
 GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
 
 dnl *** set variables based on configure arguments ***
 
@@ -144,6 +149,11 @@ dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
+dnl FIXME: get rid of this by making sure gstreamer-check brings it in
+dnl check for "check", unit testing library/header
+AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
+AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+
 dnl *** configure external libs ***
 
 AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1,
@@ -164,5 +174,7 @@ docs/version.entities
 docs/plugins/Makefile
 common/Makefile
 common/m4/Makefile
+tests/Makefile
+tests/check/Makefile
 )
 AC_OUTPUT

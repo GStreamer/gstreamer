@@ -1,3 +1,13 @@
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* Makefile.am:
+	* configure.ac:
+	* tests/Makefile.am:
+	* tests/check/.cvsignore:
+	* tests/check/Makefile.am:
+	* tests/check/generic/.cvsignore:
+	  Add test infrastructure to gst-ffmpeg (#324279).
+
 2006-05-08  Edward Hervey  <edward@fluendo.com>
 
 	* autogen.sh: (CONFIGURE_DEF_OPT): 
