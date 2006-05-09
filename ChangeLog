@@ -1,5 +1,10 @@
 2006-05-09  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.override:
+	Better conditional ignore for types and methods.
+
+2006-05-09  Edward Hervey  <edward@fluendo.com>
+
 	* codegen/codegen.py:
 	* codegen/override.py:
 	Added code to ignore type and the function/methods/classes that use

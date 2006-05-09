@@ -310,20 +310,20 @@ ignore
   gst_plugin_get_module
   gst_object_sink
   gst_version
-#ifdef GST_DISABLE_LOADSAVE
 %%
 ignore-glob
+#ifdef GST_DISABLE_LOADSAVE
   gst_xml_*
+#endif
+#ifdef GST_DISABLE_PARSE
+  gst_parse_*
+#endif
 %%
 ignore-type
+#ifdef GST_DISABLE_LOADSAVE
   GstXML
 #endif
 #ifdef GST_DISABLE_PARSE
-%%
-ignore-glob
-  gst_parse_*
-%%
-ignore-type
   GstParseError
 #endif
 %%
