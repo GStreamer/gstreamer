@@ -1,5 +1,11 @@
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstbuffer.c: (gst_buffer_make_metadata_writable):
+	  gst_buffer_make_metadata_writable() should maintain the
+	  buffer flags (those that make sense at least) (see #340859).
+
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tools/gst-inspect.c:
 	* tools/gst-launch.c:
 	* tools/gst-typefind.c:

@@ -376,6 +376,8 @@ gst_buffer_make_metadata_writable (GstBuffer * buf)
     ret = buf;
   } else {
     ret = gst_buffer_create_sub (buf, 0, GST_BUFFER_SIZE (buf));
+    GST_BUFFER_FLAGS (ret) = GST_BUFFER_FLAGS (buf);
+    GST_BUFFER_FLAG_UNSET (ret, GST_BUFFER_FLAG_IN_CAPS);
     gst_buffer_unref (buf);
   }
 
