@@ -98,7 +98,7 @@ GST_START_TEST (test_libavcodec_locks)
 {
   gchar *sink[NUM_SINKS+1], *s, *sinks;
   gint i;
-    
+
   for (i=0; i<NUM_SINKS; i++)
     sink[i] = g_strdup_printf (" t.src%d ! queue ! ffenc_mpeg4 ! ffdec_mpeg4 ! fakesink", i);
   
@@ -137,7 +137,14 @@ simple_launch_lines_suite (void)
   tcase_set_timeout (tc_chain, timeout * 12);
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_libavcodec_locks);
+
+  /* only run this if we haven't been configured with --disable-encoders */
+  if (gst_default_registry_check_feature_version ("ffenc_mpeg4",
+      GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)) {
+    tcase_add_test (tc_chain, test_libavcodec_locks);
+  } else {
+    g_print ("******* Skipping libavcodec_locks test, no encoder available\n");
+  }
   
   return s;
 }
@@ -145,12 +152,14 @@ simple_launch_lines_suite (void)
 int
 main (int argc, char **argv)
 {
+  SRunner *sr;
+  Suite *s;
   int nf;
 
-  Suite *s = simple_launch_lines_suite ();
-  SRunner *sr = srunner_create (s);
-
   gst_check_init (&argc, &argv);
+
+  s = simple_launch_lines_suite ();
+  sr = srunner_create (s);
 
   srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);

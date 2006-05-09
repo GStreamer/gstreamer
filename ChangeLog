@@ -1,5 +1,12 @@
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/generic/libavcodec-locking.c: (GST_START_TEST),
+	(simple_launch_lines_suite), (main):
+	  Only run test when encoder element is available (we might
+	  have been configured with --disable-encoders).
+
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Luca Ognibene  <luogni at tin dot it>
 
 	* tests/check/Makefile.am:
