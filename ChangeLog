@@ -1,5 +1,17 @@
 2006-05-09  Edward Hervey  <edward@fluendo.com>
 
+	* codegen/codegen.py:
+	* codegen/override.py:
+	Added code to ignore type and the function/methods/classes that use
+	them.
+	* gst/gst.override:
+	ignore methods/classes/types depending on how GStreamer core was built:
+	_ GST_DISABLE_GST_DEBUG
+	_ GST_DISABLE_LOADSAVE
+	_ GST_DISABLE_PARSE
+
+2006-05-09  Edward Hervey  <edward@fluendo.com>
+
 	* testsuite/python.supp: 
 	Added suppressions for FC5 64 bit
 

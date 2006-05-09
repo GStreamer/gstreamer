@@ -204,6 +204,7 @@ static PyObject *
 pygst_debug_log (PyObject *pyobject, PyObject *string, GstDebugLevel level,
     gboolean isgstobject)
 {
+#ifndef GST_DISABLE_GST_DEBUG
     gchar	*str;
     gchar	*function;
     gchar	*filename;
@@ -227,6 +228,7 @@ pygst_debug_log (PyObject *pyobject, PyObject *string, GstDebugLevel level,
     if (filename)
 	g_free(filename);
     Py_INCREF (Py_None);
+#endif
     return Py_None;    
 }
 
@@ -308,12 +310,27 @@ ignore
   gst_plugin_get_module
   gst_object_sink
   gst_version
+#ifdef GST_DISABLE_LOADSAVE
+%%
+ignore-glob
+  gst_xml_*
+%%
+ignore-type
+  GstXML
+#endif
+#ifdef GST_DISABLE_PARSE
+%%
+ignore-glob
+  gst_parse_*
+%%
+ignore-type
+  GstParseError
+#endif
 %%
 /*
   Magic to be able to use bugfixes of new releases without having to use
   newer core/base
 */
-#warn your mom !
 ignore
 #if (GST_VERSION_MICRO < 5)
 # if (GST_VERSION_MICRO < 4)
