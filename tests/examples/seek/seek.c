@@ -813,6 +813,7 @@ make_playerbin_pipeline (const gchar * location)
   return player;
 }
 
+#ifndef GST_DISABLE_PARSE
 static GstElement *
 make_parselaunch_pipeline (const gchar * description)
 {
@@ -827,6 +828,7 @@ make_parselaunch_pipeline (const gchar * description)
 
   return pipeline;
 }
+#endif
 
 static gchar *
 format_value (GtkScale * scale, gdouble value)
@@ -1335,7 +1337,9 @@ static Pipeline pipelines[] = {
   {"dv", make_dv_pipeline},
   {"mpeg1nothreads", make_mpegnt_pipeline},
   {"playerbin", make_playerbin_pipeline},
+#ifndef GST_DISABLE_PARSE
   {"parse-launch", make_parselaunch_pipeline},
+#endif
   {NULL, NULL},
 };
 
