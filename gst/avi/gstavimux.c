@@ -1317,7 +1317,6 @@ gst_avi_mux_do_audio_buffer (GstAviMux * avimux)
   gulong total_size, pad_bytes = 0;
 
   data = gst_collect_pads_pop (avimux->collect, avimux->audiocollectdata);
-  data = gst_avi_mux_strip_buffer (avimux, data);
 
   /* write a audio header + index entry */
   if (GST_BUFFER_SIZE (data) & 1) {
@@ -1336,7 +1335,10 @@ gst_avi_mux_do_audio_buffer (GstAviMux * avimux)
         GST_BUFFER_SIZE (data));
   }
 
+  /* prepare buffers for sending */
   gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));
+  data = gst_avi_mux_strip_buffer (avimux, data);
+
   if ((res = gst_pad_push (avimux->srcpad, header)) != GST_FLOW_OK)
     return res;
   if ((res = gst_pad_push (avimux->srcpad, data)) != GST_FLOW_OK)
@@ -1364,7 +1366,6 @@ gst_avi_mux_do_video_buffer (GstAviMux * avimux)
   gulong total_size, pad_bytes = 0;
 
   data = gst_collect_pads_pop (avimux->collect, avimux->videocollectdata);
-  data = gst_avi_mux_strip_buffer (avimux, data);
 
   if (avimux->restart) {
     if ((res = gst_avi_mux_restart_file (avimux)) != GST_FLOW_OK)
@@ -1404,7 +1405,10 @@ gst_avi_mux_do_video_buffer (GstAviMux * avimux)
         GST_BUFFER_SIZE (data));
   }
 
+  /* prepare buffers for sending */
   gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));
+  data = gst_avi_mux_strip_buffer (avimux, data);
+
   if ((res = gst_pad_push (avimux->srcpad, header)) != GST_FLOW_OK)
     return res;
   if ((res = gst_pad_push (avimux->srcpad, data)) != GST_FLOW_OK)

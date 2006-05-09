@@ -1,3 +1,13 @@
+2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts  <manauw at skynet bet>
+
+	* gst/avi/gstavimux.c: (gst_avi_mux_do_audio_buffer),
+	(gst_avi_mux_do_video_buffer):
+	  Work around gst_buffer_make_metadata_writable() bug that
+	  results in avimux marking all frames in the index as
+	  keyframes (#340859).
+	  
 2006-05-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/rtspurl.c: (rtsp_url_parse):
