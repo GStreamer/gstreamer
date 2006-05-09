@@ -1,3 +1,13 @@
+2006-05-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/typefind/gsttypefindfunctions.c: (m4a_type_find),
+	(plugin_init):
+	 backout typefind patch #340375
+	 
+	* tests/check/elements/adder.c: (message_received),
+	(GST_START_TEST), (adder_suite):
+	  redo, signal-handling of test
+
 2006-05-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/adder/gstadder.c: (gst_adder_request_new_pad),

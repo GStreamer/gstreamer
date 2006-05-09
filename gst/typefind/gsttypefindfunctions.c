@@ -1385,103 +1385,20 @@ ape_type_find (GstTypeFind * tf, gpointer unused)
 /*** ISO FORMATS ***/
 
 /*** audio/x-m4a ***/
-/*** video/mp4 ***/
 
 static GstStaticCaps m4a_caps = GST_STATIC_CAPS ("audio/x-m4a");
-static GstStaticCaps m4v_caps = GST_STATIC_CAPS ("video/mp4");
-static GstStaticCaps mp4_caps = GST_STATIC_CAPS ("video/mp4;audio/x-m4a");
 
 #define M4A_CAPS (gst_static_caps_get(&m4a_caps))
-#define M4V_CAPS (gst_static_caps_get(&m4v_caps))
-#define MP4_CAPS (gst_static_caps_get(&mp4_caps))
-
-static gboolean
-mp4_find_box (GstTypeFind * tf,
-    guint32 pos,
-    guint32 * found_offset, guint32 * found_size, const gchar * box_type)
-{
-  gboolean found = FALSE;
-  guint8 *data = NULL;
-
-  while (!found) {
-
-    if ((data = gst_type_find_peek (tf, pos + 4, 4)) != NULL) {
-      if (memcmp (data, box_type, 4) == 0) {
-        *found_offset = pos;
-        found = TRUE;
-      }
-    } else {
-      break;
-    }
-
-    if ((data = gst_type_find_peek (tf, pos, 4)) != NULL) {
-      *found_size = GST_READ_UINT32_BE (data);
-      if (*found_size == 0 || *found_size == 1) {
-        /* largesize boxes or boxes that extend to eof not handled */
-        break;
-      }
-      pos += *found_size;
-    } else {
-      break;
-    }
-
-  }
-  return found;
-
-}
-
 static void
-mp4_type_find (GstTypeFind * tf, gpointer unused)
+m4a_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint32 box_size = 0;
-  guint32 pos = 0;
-  guint32 offset = 0;
-  guint32 next_trak_offset = 0;
-  gboolean found_hdlr = TRUE;
-  gboolean found_video = FALSE;
+  guint8 *data = gst_type_find_peek (tf, 4, 8);
 
-  guint8 *data = NULL;
-
-  if ((data = gst_type_find_peek (tf, pos, 12)) != NULL) {
-    data += 4;
-    if (memcmp (data, "ftypM4A ", 8) == 0) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, M4A_CAPS);
-    } else if (memcmp (data, "ftypmp42", 8) == 0) {
-      /* parsing based on ISO 14496-12:ISO base media file format, 1st edition */
-      if (mp4_find_box (tf, pos, &offset, &box_size, "moov")) {
-        pos = offset + 8;
-
-        /*loop all trak boxes to see if they contain video */
-        while (found_hdlr) {
-          found_hdlr = FALSE;
-          if (mp4_find_box (tf, pos, &offset, &box_size, "trak")) {
-            next_trak_offset = offset + box_size;
-            pos = offset + 8;
-            if (mp4_find_box (tf, pos, &offset, &box_size, "mdia")) {
-              pos = offset + 8;
-              if (mp4_find_box (tf, pos, &offset, &box_size, "hdlr")) {
-                found_hdlr = TRUE;
-                pos = offset + 12;      // hdlr is FullBox
-                data = gst_type_find_peek (tf, pos + 4, 4);
-                if (data && (memcmp (data, "vide", 4) == 0)) {
-                  found_video = TRUE;
-                  gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, M4V_CAPS);
-                  break;
-                }
-              }
-            }
-          }
-          pos = next_trak_offset;
-        }
-
-      }
-      if (!found_video) {
-        /* if video wasn't found, let's interpret this as audio */
-        gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, M4A_CAPS);
-      }
-    }
+  if (data &&
+      (memcmp (data, "ftypM4A ", 8) == 0 ||
+          memcmp (data, "ftypmp42", 8) == 0)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, M4A_CAPS);
   }
-
 }
 
 /*** application/x-3gp ***/
@@ -2434,7 +2351,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *gz_exts[] = { "gz", NULL };
   static gchar *zip_exts[] = { "zip", NULL };
   static gchar *compress_exts[] = { "Z", NULL };
-  static gchar *mp4_exts[] = { "m4a", "mp4", NULL };
+  static gchar *m4a_exts[] = { "m4a", NULL };
   static gchar *q3gp_exts[] = { "3gp", NULL };
   static gchar *aac_exts[] = { "aac", NULL };
   static gchar *spc_exts[] = { "spc", NULL };
@@ -2503,8 +2420,8 @@ plugin_init (GstPlugin * plugin)
       mpeg4_video_type_find, m4v_exts, MPEG_VIDEO_CAPS, NULL, NULL);
 
   /* ISO formats */
-  TYPE_FIND_REGISTER (plugin, "application/x-mp4", GST_RANK_PRIMARY,
-      mp4_type_find, mp4_exts, MP4_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY, m4a_type_find,
+      m4a_exts, M4A_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-3gp", GST_RANK_PRIMARY,
       q3gp_type_find, q3gp_exts, Q3GP_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/quicktime", GST_RANK_SECONDARY,
