@@ -1,5 +1,8 @@
 2006-05-09  Edward Hervey  <edward@fluendo.com>
 
+	* tests/examples/volume/volume.c:
+	Fox if core was built without parsing support.
+
 	* tests/examples/seek/seek.c:
 	Disable the parse_launch example if core was built without parsing
 	support.

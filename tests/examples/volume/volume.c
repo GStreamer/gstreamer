@@ -118,10 +118,19 @@ main (int argc, char *argv[])
 {
 
   GstElement *pipeline = NULL;
+
+#ifndef GST_DISABLE_PARSE
   GError *error = NULL;
+#endif
   GstElement *volume;
   GstBus *bus;
 
+#ifdef GST_DISABLE_PARSE
+  g_print ("GStreamer was built without pipeline parsing capabilities.\n");
+  g_print
+      ("Please rebuild GStreamer with pipeline parsing capabilities activated to use this example.\n");
+  return 1;
+#else
   gst_init (&argc, &argv);
   gtk_init (&argc, &argv);
 
@@ -133,7 +142,7 @@ main (int argc, char *argv[])
     g_error_free (error);
     return 1;
   }
-
+#endif
   volume = gst_bin_get_by_name (GST_BIN (pipeline), "volume0");
   if (volume == NULL) {
     g_print ("Please give a pipeline with a 'volume' element in it\n");
