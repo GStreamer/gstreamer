@@ -155,7 +155,10 @@ main (int argc, char **argv)
 {
   GstElement *pipeline;
   GstBus *bus;
+
+#ifndef GST_DISABLE_PARSE
   GError *error = NULL;
+#endif
 
   gst_init (&argc, &argv);
 
@@ -166,12 +169,18 @@ main (int argc, char **argv)
     g_print ("Example: %s \"videotestsrc ! ximagesink\"\n", argv[0]);
     return -1;
   }
-
+#ifdef GST_DISABLE_PARSE
+  g_print ("GStreamer was built without pipeline parsing capabilities.\n");
+  g_print
+      ("Please rebuild GStreamer with pipeline parsing capabilities activated to use this example.\n");
+  return 1;
+#else
   pipeline = gst_parse_launch (argv[1], &error);
   if (error) {
     g_print ("Error while parsing pipeline description: %s\n", error->message);
     return -1;
   }
+#endif
 
   loop = g_main_loop_new (NULL, FALSE);
 

@@ -1,3 +1,8 @@
+2006-05-09  Edward Hervey  <edward@fluendo.com>
+
+	* tests/icles/stress-xoverlay.c:
+	Fix if core was built without parsing support.
+
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
@@ -5,8 +10,9 @@
 
 2006-05-09  Edward Hervey  <edward@fluendo.com>
 
+	* tests/icles/stress-xoverlay.c:
 	* tests/examples/volume/volume.c:
-	Fox if core was built without parsing support.
+	Fix if core was built without parsing support.
 
 	* tests/examples/seek/seek.c:
 	Disable the parse_launch example if core was built without parsing
