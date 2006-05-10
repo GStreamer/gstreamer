@@ -1,3 +1,13 @@
+2006-05-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_stop):
+	  clean up the bufqueue when shutting down
+	* tests/check/Makefile.am:
+	* tests/check/elements/multifdsink.c: (setup_multifdsink),
+	(cleanup_multifdsink), (GST_START_TEST), (multifdsink_suite),
+	(main):
+	  add a test for the leak that was just fixed
+
 2006-05-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/adder/gstadder.c: (gst_adder_setcaps),

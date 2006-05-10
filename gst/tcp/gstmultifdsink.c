@@ -655,6 +655,8 @@ gst_multi_fd_sink_remove (GstMultiFdSink * sink, int fd)
   CLIENTS_UNLOCK (sink);
 }
 
+/* can be called both through the signal (ie from any thread) or when stopping,
+ * after the writing thread has shut down */
 void
 gst_multi_fd_sink_clear (GstMultiFdSink * sink)
 {
@@ -1859,6 +1861,8 @@ gst_multi_fd_sink_stop (GstBaseSink * bsink)
 {
   GstMultiFdSinkClass *fclass;
   GstMultiFdSink *this;
+  GstBuffer *buf;
+  int i;
 
   this = GST_MULTI_FD_SINK (bsink);
   fclass = GST_MULTI_FD_SINK_GET_CLASS (this);
@@ -1870,7 +1874,9 @@ gst_multi_fd_sink_stop (GstBaseSink * bsink)
 
   SEND_COMMAND (this, CONTROL_STOP);
   if (this->thread) {
+    GST_DEBUG_OBJECT (this, "joining thread");
     g_thread_join (this->thread);
+    GST_DEBUG_OBJECT (this, "joined thread");
     this->thread = NULL;
   }
 
@@ -1895,6 +1901,20 @@ gst_multi_fd_sink_stop (GstBaseSink * bsink)
     this->fdset = NULL;
   }
   g_hash_table_foreach_remove (this->fd_hash, multifdsink_hash_remove, this);
+
+  /* remove all queued buffers */
+  if (this->bufqueue) {
+    GST_DEBUG_OBJECT (this, "Emptying bufqueue with %d buffers",
+        this->bufqueue->len);
+    for (i = this->bufqueue->len - 1; i >= 0; --i) {
+      buf = g_array_index (this->bufqueue, GstBuffer *, i);
+      GST_LOG_OBJECT (this, "Removing buffer %p (%d) with refcount %d", buf, i,
+          GST_MINI_OBJECT_REFCOUNT (buf));
+      gst_buffer_unref (buf);
+      this->bufqueue = g_array_remove_index (this->bufqueue, i);
+    }
+    /* freeing the array is done in _finalize */
+  }
   GST_OBJECT_FLAG_UNSET (this, GST_MULTI_FD_SINK_OPEN);
 
   return TRUE;
