@@ -1,3 +1,10 @@
+2006-05-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/basics-pads.xml:
+	  Expand a bit on caps and filtered links and update
+	  examples that were still using the no longer existing
+	  gst_pad_link_filtered() (#338206).
+
 2006-05-10  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_finalize),

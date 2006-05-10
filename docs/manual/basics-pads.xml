@@ -301,6 +301,13 @@ Pad Templates:
                 the property contains a UTF-8 string.
               </para>
             </listitem>
+            <listitem>
+              <para>
+                A fraction value (<classname>GST_TYPE_FRACTION</classname>):
+                contains a fraction expressed by an integer numerator and
+                denominator.
+              </para>
+            </listitem>
           </itemizedlist>
         </listitem>
         <listitem>
@@ -330,6 +337,14 @@ Pad Templates:
                 lower and an upper boundary.
               </para>
             </listitem>
+            <listitem>
+              <para>
+    	        A fraction range value
+                (<classname>GST_TYPE_FRACTION_RANGE</classname>): the property
+                denotes a range of possible fraction values, with a
+                lower and an upper boundary.
+              </para>
+            </listitem>
           </itemizedlist>
         </listitem>
         <listitem>
@@ -338,16 +353,31 @@ Pad Templates:
             property can take any value from a list of basic values
             given in this list.
           </para>
+          <para>
+            Example: caps that express that either
+            a sample rate of 44100 Hz and a sample rate of 48000 Hz
+            is supported would use a list of integer values, with
+            one value being 44100 and one value being 48000.
+          </para>
         </listitem>
         <listitem>
           <para>
-            An array value (<classname>GST_TYPE_FIXED_LIST</classname>): the
+            An array value (<classname>GST_TYPE_ARRAY</classname>): the
             property is an array of values. Each value in the array is a
             full value on its own, too. All values in the array should be
             of the same elementary type. This means that an array can
             contain any combination of integers, lists of integers, integer
             ranges together, and the same for floats or strings, but it can
             not contain both floats and ints at the same time.
+          </para>
+          <para>
+            Example: for audio where there are more than two channels involved
+            the channel layout needs to be specified (for one and two channel
+            audio the channel layout is implicit unless stated otherwise in the
+            caps). So the channel layout would be an array of integer enum
+            values where each enum value represents a loudspeaker position.
+            Unlike a <classname>GST_TYPE_LIST</classname>, the values in an
+            array will be interpreted as a whole.
           </para>
         </listitem>
       </itemizedlist>
@@ -357,8 +387,8 @@ Pad Templates:
   <sect1 id="section-caps-api">
     <title>What capabilities are used for</title>
     <para> 
-      Capabilities describe the type of data that is streamed between
-      two pads, or that one pad (template) supports. This makes them
+      Capabilities (short: caps) describe the type of data that is streamed
+      between two pads, or that one pad (template) supports. This makes them
       very useful for various purposes:
     </para> 
     <itemizedlist>
@@ -391,9 +421,15 @@ Pad Templates:
           possible media types that can stream between two pads to a
           specific subset of their supported stream types. An application
           can, for example, use <quote>filtered caps</quote> to set a
-          specific (non-fixed) video size that will stream between two
-          pads. You will see an example of filtered caps further on in
-          this manual, in <xref linkend="section-data-spoof"/>.
+          specific (fixed or non-fixed) video size that should stream
+          between two pads. You will see an example of filtered caps
+          later in this manual, in <xref linkend="section-data-spoof"/>.
+          You can do caps filtering by inserting a capsfilter element into
+          your pipeline and setting its <quote>caps</quote> property. Caps
+          filters are often placed after converter elements like audioconvert,
+          audioresample, ffmpegcolorspace or videoscale to force those
+          converters to convert data to a specific output format at a
+          certain point in a stream.
         </para>
       </listitem>
     </itemizedlist>
@@ -402,11 +438,42 @@ Pad Templates:
       <title>Using capabilities for metadata</title>
       <para> 
         A pad can have a set (i.e. one or more) of capabilities attached
-        to it. You can get values of properties in a set of capabilities
+        to it. Capabilities (<classname>GstCaps</classname>) are represented
+        as an array of one or more <classname>GstStructure</classname>s, and
+        each <classname>GstStructure</classname> is an array of fields where
+        each field consists of a field name string (e.g. "width") and a
+        typed value (e.g. <classname>G_TYPE_INT</classname> or
+        <classname>GST_TYPE_INT_RANGE</classname>).
+      </para>
+      <para>
+        Note that there is a distinct difference between the
+        <emphasis>possible</emphasis> capabilities of a pad (ie. usually what
+        you find as caps of pad templates as they are shown in gst-inspect),
+        the <emphasis>allowed</emphasis> caps of a pad (can be the same as
+        the pad's template caps or a subset of them, depending on the possible
+        caps of the peer pad) and lastly <emphasis>negotiated</emphasis> caps
+        (these describe the exact format of a stream or buffer and contain
+        exactly one structure and have no variable bits like ranges or lists,
+        ie. they are fixed caps).
+      </para>
+      <para>
+        You can get values of properties in a set of capabilities
         by querying individual properties of one structure. You can get
         a structure from a caps using
-        <function>gst_caps_get_structure ()</function>:
+        <function>gst_caps_get_structure ()</function> and the number of
+        structures in a <classname>GstCaps</classname> using
+        <function>gst_caps_get_size ()</function>.
       </para>
+      <para>
+        Caps are called <emphasis>simple caps</emphasis> when they contain
+        only one structure, and <emphasis>fixed caps</emphasis> when they
+        contain only one structure and have no variable field types (like
+        ranges or lists of possible values). Two other special types of caps
+        are <emphasis>ANY caps</emphasis> and <emphasis>empty caps</emphasis>.
+      </para>
+      <para>
+        Here is an example of how to extract the width and height from
+        a set of fixed video caps:
       <programlisting>
 static void
 read_video_props (GstCaps *caps)
@@ -414,7 +481,9 @@ read_video_props (GstCaps *caps)
   gint width, height;
   const GstStructure *str;
 
-  str = gst_caps_get_structure (caps);
+  g_return_if_fail (gst_caps_is_fixed (caps));
+
+  str = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_int (str, "width", &amp;width) ||
       !gst_structure_get_int (str, "height", &amp;height)) {
     g_print ("No width/height available\n");
@@ -425,38 +494,58 @@ read_video_props (GstCaps *caps)
 	   width, height);
 }
       </programlisting>
+      </para>
     </sect2>
 
     <sect2 id="section-caps-filter">
       <title>Creating capabilities for filtering</title>
       <para> 
         While capabilities are mainly used inside a plugin to describe the
-        media type of the pads, the application programmer also has to have
-        basic understanding of capabilities in order to interface with the
-        plugins, especially when using filtered caps. When you're using
-        filtered caps or fixation, you're limiting the allowed types of
+        media type of the pads, the application programmer often also has
+        to have basic understanding of capabilities in order to interface
+        with the plugins, especially when using filtered caps. When you're
+        using filtered caps or fixation, you're limiting the allowed types of
         media that can stream between two pads to a subset of their supported
-        media types. You do this by filtering using your own set of
-        capabilities. In order to do this, you need to create your own
-        <classname>GstCaps</classname>. The simplest way to do this is by
-        using the convenience function <function>gst_caps_new_simple
-        ()</function>:
+        media types. You do this using a <classname>capsfilter</classname>
+        element in your pipeline. In order to do this, you also need to
+        create your own <classname>GstCaps</classname>. The easiest way to
+        do this is by using the convenience function
+        <function>gst_caps_new_simple ()</function>:
       </para>
+      <para>
       <programlisting>
-static void
-link_pads_with_filter (GstPad *one,
-		       GstPad *other)
+static gboolean
+link_elements_with_filter (GstElement *element1, GstElement *element2)
 {
+  gboolean link_ok;
   GstCaps *caps;
 
   caps = gst_caps_new_simple ("video/x-raw-yuv",
-			      "width", G_TYPE_INT, 384,
-			      "height", G_TYPE_INT, 288,
-			      "framerate", GST_TYPE_FRACTION, 25, 1,
-			      NULL);
-  gst_pad_link_filtered (one, other, caps);
+  	      "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+	      "width", G_TYPE_INT, 384,
+	      "height", G_TYPE_INT, 288,
+	      "framerate", GST_TYPE_FRACTION, 25, 1,
+	      NULL);
+
+  link_ok = gst_element_link_filtered (element1, element2, caps);
+  gst_caps_unref (caps);
+
+  if (!link_ok) {
+    g_warning ("Failed to link element1 and element2!");
+  }
+
+  return link_ok;
 }
       </programlisting>
+      This will force the data flow between those two elements to a
+      a certain video format, width, height and framerate (or the linking
+      will fail if that cannot be achieved in the context of the elments
+      involved). Keep in mind that when you use <function>
+      gst_element_link_filtered ()</function> it will automatically create
+      a <classname>capsfilter</classname> element for you and insert it into
+      your bin or pipeline between the two elements you want to connect (this
+      is important if you ever want to disconnect those elements).
+      </para>
       <para>
         In some cases, you will want to create a more elaborate set of
         capabilities to filter a link between two pads. Then, this function
@@ -464,10 +553,10 @@ link_pads_with_filter (GstPad *one,
         <function>gst_caps_new_full ()</function>:
       </para>
       <programlisting>
-static void
-link_pads_with_filter (GstPad *one,
-                       GstPad *other)
+static gboolean
+link_elements_with_filter (GstElement *element1, GstElement *element2)
 {
+  gboolean link_ok;
   GstCaps *caps;
                                                                                 
   caps = gst_caps_new_full (
@@ -483,7 +572,14 @@ link_pads_with_filter (GstPad *one,
 			 NULL),
       NULL);
 
-  gst_pad_link_filtered (one, other, caps);
+  link_ok = gst_element_link_filtered (element1, element2, caps);
+  gst_caps_unref (caps);
+
+  if (!link_ok) {
+    g_warning ("Failed to link element1 and element2!");
+  }
+
+  return link_ok;
 }
       </programlisting>
       <para>
