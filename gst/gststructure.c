@@ -1227,6 +1227,8 @@ typedef struct _GstStructureAbbreviation
 }
 GstStructureAbbreviation;
 
+/* return a copy of an array of GstStructureAbbreviation containing all the
+ * known type_string, GType maps, including abbreviations for common types */
 static GstStructureAbbreviation *
 gst_structure_get_abbrs (gint * n_abbrs)
 {
@@ -1278,8 +1280,10 @@ gst_structure_get_abbrs (gint * n_abbrs)
   return abbrs;
 }
 
+/* given a type_name that could be a type abbreviation or a registered GType,
+ * return a matching GType */
 static GType
-gst_structure_from_abbr (const char *type_name)
+gst_structure_gtype_from_abbr (const char *type_name)
 {
   int i;
   GstStructureAbbreviation *abbrs;
@@ -1640,6 +1644,7 @@ gst_structure_parse_value (gchar * str,
   while (g_ascii_isspace (*s))
     s++;
 
+  /* check if there's a (type_name) 'cast' */
   type_name = NULL;
   if (*s == '(') {
     type = G_TYPE_INVALID;
@@ -1661,7 +1666,7 @@ gst_structure_parse_value (gchar * str,
 
     c = *type_end;
     *type_end = 0;
-    type = gst_structure_from_abbr (type_name);
+    type = gst_structure_gtype_from_abbr (type_name);
     *type_end = c;
 
     if (type == G_TYPE_INVALID)

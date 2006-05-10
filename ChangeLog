@@ -1,5 +1,12 @@
 2006-05-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gststructure.c: (gst_structure_gtype_from_abbr),
+	(gst_structure_parse_value):
+	  add some comments
+	  rename a method so that it actually says what it does better
+
+2006-05-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstevent.c: (_gst_event_initialize):
 	* gst/gstformat.c: (_gst_format_initialize):
 	  make sure some essential types used by events are registered
