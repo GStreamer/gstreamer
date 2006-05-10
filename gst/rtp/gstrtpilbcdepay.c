@@ -80,7 +80,7 @@ static GType
 gst_ilbc_mode_get_type (void)
 {
   static GType ilbc_mode_type = 0;
-  static GEnumValue ilbc_modes[] = {
+  static const GEnumValue ilbc_modes[] = {
     {GST_ILBC_MODE_20, "20ms frames", "20ms"},
     {GST_ILBC_MODE_30, "30ms frames", "30ms"},
     {0, NULL, NULL},

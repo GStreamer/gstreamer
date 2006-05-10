@@ -81,7 +81,7 @@ static GType
 gst_pixbufscale_method_get_type (void)
 {
   static GType pixbufscale_method_type = 0;
-  static GEnumValue pixbufscale_methods[] = {
+  static const GEnumValue pixbufscale_methods[] = {
     {GST_PIXBUFSCALE_NEAREST, "0", "Nearest Neighbour"},
     {GST_PIXBUFSCALE_TILES, "1", "Tiles"},
     {GST_PIXBUFSCALE_BILINEAR, "2", "Bilinear"},

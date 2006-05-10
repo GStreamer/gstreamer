@@ -144,7 +144,7 @@ static GType
 gst_video_box_fill_get_type (void)
 {
   static GType video_box_fill_type = 0;
-  static GEnumValue video_box_fill[] = {
+  static const GEnumValue video_box_fill[] = {
     {VIDEO_BOX_FILL_BLACK, "Black", "black"},
     {VIDEO_BOX_FILL_GREEN, "Colorkey green", "green"},
     {VIDEO_BOX_FILL_BLUE, "Colorkey blue", "blue"},

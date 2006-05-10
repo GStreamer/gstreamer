@@ -107,7 +107,7 @@ gst_cacasink_dither_get_type (void)
 {
   static GType dither_type = 0;
 
-  static GEnumValue dither_types[] = {
+  static const GEnumValue dither_types[] = {
     {CACA_DITHERING_NONE, "No dithering", "none"},
     {CACA_DITHERING_ORDERED2, "Ordered 2x2 Bayer dithering", "2x2"},
     {CACA_DITHERING_ORDERED4, "Ordered 4x4 Bayer dithering", "4x4"},

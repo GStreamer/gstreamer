@@ -91,7 +91,7 @@ static GType
 gst_esdmon_depths_get_type (void)
 {
   static GType esdmon_depths_type = 0;
-  static GEnumValue esdmon_depths[] = {
+  static const GEnumValue esdmon_depths[] = {
     {8, "8 Bits", "8"},
     {16, "16 Bits", "16"},
     {0, NULL, NULL},
@@ -109,7 +109,7 @@ static GType
 gst_esdmon_channels_get_type (void)
 {
   static GType esdmon_channels_type = 0;
-  static GEnumValue esdmon_channels[] = {
+  static const GEnumValue esdmon_channels[] = {
     {1, "Mono", "mono"},
     {2, "Stereo", "stereo"},
     {0, NULL, NULL},

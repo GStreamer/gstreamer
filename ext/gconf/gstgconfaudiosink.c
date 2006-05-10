@@ -71,7 +71,7 @@ static GType
 gst_gconf_profile_get_type (void)
 {
   static GType gconf_profile_type = 0;
-  static GEnumValue gconf_profiles[] = {
+  static const GEnumValue gconf_profiles[] = {
     {GCONF_PROFILE_SOUNDS, "Sound Events", "sounds"},
     {GCONF_PROFILE_MUSIC, "Music and Movies", "music"},
     {GCONF_PROFILE_CHAT, "Audio/Video Conferencing", "chat"},

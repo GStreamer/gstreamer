@@ -174,7 +174,7 @@ static GType
 gst_alpha_method_get_type (void)
 {
   static GType alpha_method_type = 0;
-  static GEnumValue alpha_method[] = {
+  static const GEnumValue alpha_method[] = {
     {ALPHA_METHOD_SET, "Set/adjust alpha channel", "set"},
     {ALPHA_METHOD_GREEN, "Chroma Key green", "green"},
     {ALPHA_METHOD_BLUE, "Chroma Key blue", "blue"},

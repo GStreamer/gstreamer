@@ -105,7 +105,7 @@ static GType
 gst_shout2send_protocol_get_type (void)
 {
   static GType shout2send_protocol_type = 0;
-  static GEnumValue shout2send_protocol[] = {
+  static const GEnumValue shout2send_protocol[] = {
     {SHOUT2SEND_PROTOCOL_XAUDIOCAST,
         "Xaudiocast Protocol (icecast 1.3.x)", "xaudiocast"},
     {SHOUT2SEND_PROTOCOL_ICY, "Icy Protocol (ShoutCast)", "icy"},

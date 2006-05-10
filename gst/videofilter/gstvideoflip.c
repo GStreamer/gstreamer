@@ -91,7 +91,7 @@ static GType
 gst_video_flip_method_get_type (void)
 {
   static GType video_flip_method_type = 0;
-  static GEnumValue video_flip_methods[] = {
+  static const GEnumValue video_flip_methods[] = {
     {GST_VIDEO_FLIP_METHOD_IDENTITY, "Identity (no rotation)", "none"},
     {GST_VIDEO_FLIP_METHOD_90R, "Rotate clockwise 90 degrees", "clockwise"},
     {GST_VIDEO_FLIP_METHOD_180, "Rotate 180 degrees", "rotate-180"},
