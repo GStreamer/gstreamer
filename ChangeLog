@@ -1,5 +1,11 @@
 2006-05-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* libs/gst/check/gstcheck.h:
+	  add an assert for setting state to avoid lots of repetitive code
+	  in the future
+
+2006-05-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstvalue.c: (gst_value_serialize_flags):
 	  fix a leak if no flags are set
 	* tests/check/gst/gstvalue.c: (GST_START_TEST):

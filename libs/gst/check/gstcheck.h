@@ -257,6 +257,10 @@ G_STMT_START {							\
                name " refcount is %d instead of %d", rc, value);\
 } G_STMT_END
 
+#define ASSERT_SET_STATE(element, state, ret)			\
+fail_unless (gst_element_set_state (element,			\
+  state) == ret,						\
+  "could not change state to " #state);
 
 #endif /* __GST_CHECK_H__ */
 
