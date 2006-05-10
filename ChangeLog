@@ -1,5 +1,11 @@
 2006-05-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tests/check/elements/multifdsink.c: (wait_bytes_served),
+	(GST_START_TEST), (fail_unless_read), (multifdsink_suite):
+	  add two more tests, one doing streamheader
+
+2006-05-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_stop):
 	  clean up the bufqueue when shutting down
 	* tests/check/Makefile.am:
