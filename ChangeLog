@@ -1,3 +1,11 @@
+2006-05-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse), (qtdemux_dump_unknown),
+	(qtdemux_parse_trak), (gst_qtdemux_handle_esds):
+	Parse version 2 sample descriptions.
+	Don't #define gst_util_dump_mem(), use something more
+	specific instead to avoid confusion.
+
 2006-05-08  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2src.c:

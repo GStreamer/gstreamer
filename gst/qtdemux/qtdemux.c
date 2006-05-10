@@ -31,8 +31,12 @@
 GST_DEBUG_CATEGORY_EXTERN (qtdemux_debug);
 #define GST_CAT_DEFAULT qtdemux_debug
 
-/* temporary hack */
-#define gst_util_dump_mem(a,b)  /* */
+
+#if 0
+#define qtdemux_dump_mem(a,b)  gst_util_dump_mem(a,b)
+#else
+#define qtdemux_dump_mem(a,b)   /* */
+#endif
 
 #define QTDEMUX_GUINT32_GET(a)  (GST_READ_UINT32_BE(a))
 #define QTDEMUX_GUINT24_GET(a)  (GST_READ_UINT32_BE(a) >> 8)
@@ -2248,7 +2252,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         buf += 31;
         buf += 4;               /* and 4 bytes reserved */
 
-        gst_util_dump_mem (buf, end - buf);
+        qtdemux_dump_mem (buf, end - buf);
         while (buf < end) {
           GNode *child;
 
@@ -2327,7 +2331,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         buf += tlen;
         buf += 23;
 
-        gst_util_dump_mem (buf, end - buf);
+        qtdemux_dump_mem (buf, end - buf);
         while (buf < end) {
           GNode *child;
 
@@ -2796,7 +2800,7 @@ qtdemux_dump_unknown (GstQTDemux * qtdemux, void *buffer, int depth)
   GST_LOG ("%*s  length: %d", depth, "", QTDEMUX_GUINT32_GET (buffer + 0));
 
   len = QTDEMUX_GUINT32_GET (buffer + 0);
-  gst_util_dump_mem (buffer, len);
+  qtdemux_dump_mem (buffer, len);
 
 }
 
@@ -3158,25 +3162,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       stream->sampled = TRUE;
 
     offset = 52;
-    if (version == 0x00010000) {
-      stream->samples_per_packet = QTDEMUX_GUINT32_GET (stsd->data + offset);
-      stream->bytes_per_packet = QTDEMUX_GUINT32_GET (stsd->data + offset + 4);
-      stream->bytes_per_frame = QTDEMUX_GUINT32_GET (stsd->data + offset + 8);
-      stream->bytes_per_sample = QTDEMUX_GUINT32_GET (stsd->data + offset + 12);
-
-      GST_LOG ("samples/packet:   %d", stream->samples_per_packet);
-      GST_LOG ("bytes/packet:     %d", stream->bytes_per_packet);
-      GST_LOG ("bytes/frame:      %d", stream->bytes_per_frame);
-      GST_LOG ("bytes/sample:     %d", stream->bytes_per_sample);
-
-      if (!stream->sampled) {
-        stream->samples_per_frame = (stream->bytes_per_frame /
-            stream->bytes_per_packet) * stream->samples_per_packet;
-        GST_LOG ("samples/frame:    %d", stream->samples_per_frame);
-      }
-
-      offset = 68;
-    } else if (version == 0x00000000) {
+    if (version == 0x00000000) {
       stream->bytes_per_sample = samplesize / 8;
       stream->samples_per_frame = stream->n_channels;
       stream->bytes_per_frame = stream->n_channels * stream->bytes_per_sample;
@@ -3213,6 +3199,40 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         stream->bytes_per_sample = 2;
         stream->samples_per_frame = 6 * stream->n_channels;
       }
+    } else if (version == 0x00010000) {
+      stream->samples_per_packet = QTDEMUX_GUINT32_GET (stsd->data + offset);
+      stream->bytes_per_packet = QTDEMUX_GUINT32_GET (stsd->data + offset + 4);
+      stream->bytes_per_frame = QTDEMUX_GUINT32_GET (stsd->data + offset + 8);
+      stream->bytes_per_sample = QTDEMUX_GUINT32_GET (stsd->data + offset + 12);
+
+      GST_LOG ("samples/packet:   %d", stream->samples_per_packet);
+      GST_LOG ("bytes/packet:     %d", stream->bytes_per_packet);
+      GST_LOG ("bytes/frame:      %d", stream->bytes_per_frame);
+      GST_LOG ("bytes/sample:     %d", stream->bytes_per_sample);
+
+      if (!stream->sampled) {
+        stream->samples_per_frame = (stream->bytes_per_frame /
+            stream->bytes_per_packet) * stream->samples_per_packet;
+        GST_LOG ("samples/frame:    %d", stream->samples_per_frame);
+      }
+      offset = 68;
+    } else if (version == 0x00020000) {
+      union
+      {
+        gdouble fp;
+        guint64 val;
+      } qtfp;
+
+      stream->samples_per_packet = QTDEMUX_GUINT32_GET (stsd->data + offset);
+      qtfp.val = QTDEMUX_GUINT64_GET (stsd->data + offset + 4);
+      stream->rate = qtfp.fp;
+      stream->n_channels = QTDEMUX_GUINT32_GET (stsd->data + offset + 12);
+
+      GST_LOG ("samples/packet:   %d", stream->samples_per_packet);
+      GST_LOG ("sample rate:      %g", stream->rate);
+      GST_LOG ("n_channels:       %d", stream->n_channels);
+
+      offset = 68;
     } else {
       GST_WARNING ("unknown version %08x", version);
     }
@@ -3778,7 +3798,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
   guint8 *data_ptr = NULL;
   int data_len = 0;
 
-  gst_util_dump_mem (ptr, len);
+  qtdemux_dump_mem (ptr, len);
   ptr += 8;
   GST_DEBUG_OBJECT (qtdemux, "version/flags = %08x", QTDEMUX_GUINT32_GET (ptr));
   ptr += 4;
@@ -3811,7 +3831,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         break;
       case 0x05:
         GST_DEBUG_OBJECT (qtdemux, "data:");
-        gst_util_dump_mem (ptr, len);
+        qtdemux_dump_mem (ptr, len);
         data_ptr = ptr;
         data_len = len;
         ptr += len;
@@ -3830,7 +3850,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     buffer = gst_buffer_new_and_alloc (data_len);
     memcpy (GST_BUFFER_DATA (buffer), data_ptr, data_len);
-    gst_util_dump_mem (GST_BUFFER_DATA (buffer), data_len);
+    qtdemux_dump_mem (GST_BUFFER_DATA (buffer), data_len);
 
     gst_caps_set_simple (stream->caps, "codec_data", GST_TYPE_BUFFER,
         buffer, NULL);
