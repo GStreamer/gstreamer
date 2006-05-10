@@ -1,3 +1,12 @@
+2006-05-10  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3v2frames.c: (id3v2_genre_fields_to_taglist):
+	  Fix parsing of numeric genre strings some more, by ensuring that
+	  we only try and parse strings that a) Start with '(' and b) Consist
+	  only of digits.
+	  Also, when finding an escaping '((' sequence, bust it back to '(' by
+	  swallowing the first parenthesis
+
 2006-05-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/esd/esdsink.c: (gst_esdsink_finalize), (gst_esdsink_getcaps),

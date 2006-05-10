@@ -622,8 +622,17 @@ id3v2_genre_fields_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
         gint pos;
         gboolean found = FALSE;
 
-        /* Double parenthesis ends the numeric genres */
-        if (tag_str[0] == '(' && tag_str[1] == '(')
+        /* Double parenthesis ends the numeric genres, but we need
+         * to swallow the first one so we actually output '(' */
+        if (tag_str[0] == '(' && tag_str[1] == '(') {
+          tag_str++;
+          len--;
+          break;
+        }
+
+        /* If the first char is not a parenthesis, then stop
+         * looking for parenthesised genre strings */
+        if (tag_str[0] != '(')
           break;
 
         for (pos = 1; pos < len; pos++) {
@@ -640,6 +649,12 @@ id3v2_genre_fields_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
             found = TRUE;
             break;
           }
+
+          /* If we encounter a non-digit while searching for a closing 
+           * parenthesis, we should not try and interpret this as a 
+           * numeric genre string */
+          if (!g_ascii_isdigit (tag_str[pos]))
+            break;
         }
         if (!found)
           break;                /* There was no closing parenthesis */
