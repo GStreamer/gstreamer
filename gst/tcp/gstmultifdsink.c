@@ -481,9 +481,9 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * @fd:             the file descriptor that is to be removed from multifdsink
    * @status:         the reason why the client was removed
    *
-   * The given file descriptor is about to be removed from multifdsink. This 
+   * The given file descriptor is about to be removed from multifdsink. This
    * signal will be emited from the streaming thread so applications should
-   * be prepared for that. 
+   * be prepared for that.
    *
    * @gstmultifdsink still holds a handle to @fd so it is possible to call
    * the get-stats signal from this callback. For the same reason it is
@@ -503,7 +503,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * be emited from the streaming thread so applications should be prepared
    * for that.
    *
-   * In this callback, @gstmultifdsink has removed all the information 
+   * In this callback, @gstmultifdsink has removed all the information
    * associated with @fd and it is therefore not possible to call get-stats
    * with @fd. It is however safe to close() and reuse @fd in the callback.
    *
@@ -1071,13 +1071,13 @@ done:
   return result;
 }
 
-/* handle a write on a client,
+/* Handle a write on a client,
  * which indicates a read request from a client.
  *
- * The strategy is as follows, for each client we maintain a queue of GstBuffers
- * that contain the raw bytes we need to send to the client. In the case of the
- * GDP protocol, we create buffers out of the header bytes so that we can only
- * focus on sending buffers.
+ * For each client we maintain a queue of GstBuffers that contain the raw bytes
+ * we need to send to the client. In the case of the GDP protocol, we create
+ * buffers out of the header bytes so that we can focus only on sending
+ * buffers.
  *
  * We first check to see if we need to send caps (in GDP) and streamheaders.
  * If so, we queue them.
@@ -1086,7 +1086,7 @@ done:
  * possible. It will first exhaust the client->sending queue and if the queue
  * is empty, it will pick a buffer from the global queue.
  *
- * Sending the Buffers from the client->sending queue is basically writing
+ * Sending the buffers from the client->sending queue is basically writing
  * the bytes to the socket and maintaining a count of the bytes that were
  * sent. When the buffer is completely sent, it is removed from the
  * client->sending queue and we try to pick a new buffer for sending.
@@ -1301,7 +1301,7 @@ gst_multi_fd_sink_recover_client (GstMultiFdSink * sink, GstTCPClient * client)
       newbufpos = sink->units_soft_max;
       break;
     case GST_RECOVER_POLICY_RESYNC_KEYFRAME:
-      /* find keyframe in buffers, we search backwards to find the 
+      /* find keyframe in buffers, we search backwards to find the
        * closest keyframe relative to what this client already received. */
       newbufpos = MIN (sink->bufqueue->len - 1, sink->units_soft_max - 1);
 
@@ -1324,11 +1324,11 @@ gst_multi_fd_sink_recover_client (GstMultiFdSink * sink, GstTCPClient * client)
   return newbufpos;
 }
 
-/* Queue a buffer on the global queue. 
+/* Queue a buffer on the global queue.
  *
- * This functions adds the buffer to the front of a GArray. It removes the
- * tail buffer if the max queue size is exceeded. Unreffing the buffer that
- * is queued. Note that unreffing the buffer is not a problem as clients who
+ * This function adds the buffer to the front of a GArray. It removes the
+ * tail buffer if the max queue size is exceeded, unreffing the queued buffer.
+ * Note that unreffing the buffer is not a problem as clients who
  * started writing out this buffer will still have a reference to it in the
  * client->sending queue.
  *

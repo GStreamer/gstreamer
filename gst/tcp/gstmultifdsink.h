@@ -42,7 +42,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTI_FD_SINK))
 #define GST_MULTI_FD_SINK_GET_CLASS(klass) \
   (G_TYPE_INSTANCE_GET_CLASS ((klass), GST_TYPE_MULTI_FD_SINK, GstMultiFdSinkClass))
-        
+
 
 typedef struct _GstMultiFdSink GstMultiFdSink;
 typedef struct _GstMultiFdSinkClass GstMultiFdSinkClass;
@@ -78,7 +78,7 @@ typedef enum
  * @GST_SYNC_METHOD_LATEST_KEYFRAME: client receives latest keyframe (burst)
  *
  * This enum defines the selection of the first buffer that is sent
- * to a new client. 
+ * to a new client.
  */
 typedef enum
 {
@@ -111,7 +111,7 @@ typedef enum
  * @GST_CLIENT_STATUS_ERROR    : client is in error
  * @GST_CLIENT_STATUS_DUPLICATE: same client added twice
  *
- * This specifies the reason why a client was removed from 
+ * This specifies the reason why a client was removed from
  * multifdsink and is received in the "client-removed" signal.
  */
 typedef enum
