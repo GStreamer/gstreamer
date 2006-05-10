@@ -326,6 +326,10 @@ GType		gst_event_get_type		(void);
  *
  * Increase the refcount of this event.
  */
+#ifdef _FOOL_GTK_DOC_
+G_INLINE_FUNC GstEvent * gst_event_ref (GstEvent * ev);
+#endif
+
 static inline GstEvent *
 gst_event_ref (GstEvent * ev)
 {

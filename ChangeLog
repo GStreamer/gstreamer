@@ -1,3 +1,13 @@
+2006-05-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstbuffer.h:
+	* gst/gstevent.h:
+	* gst/gstmessage.h:
+	  Make gtk-doc generate docs for our inlined gst_buffer_ref(),
+	  gst_event_ref() and gst_message_ref() functions again
+	  (ugly hack, please do fix if there's a better way besides
+	  overrides.txt, which doesn't seem to work).
+
 2006-05-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* libs/gst/check/gstcheck.h:
