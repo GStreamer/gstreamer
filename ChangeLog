@@ -1,3 +1,18 @@
+2006-05-10  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_finalize),
+	(gst_collect_pads_add_pad), (gst_collect_pads_remove_pad),
+	(gst_collect_pads_set_flushing), (gst_collect_pads_start),
+	(gst_collect_pads_stop):
+	* libs/gst/base/gstcollectpads.h:
+	No need to call _stop in _finalize.
+	Iterate the main pad list in _finalize.
+	Added some more debug.
+	Free lists and data in the right order.
+	Also free data whem doing _remove_pad when stopped for
+	backward compatibility protect ::started with PAD_LOCK as
+	well.
+
 2006-05-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gststructure.c: (gst_structure_gtype_from_abbr),

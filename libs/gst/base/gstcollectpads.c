@@ -123,17 +123,21 @@ gst_collect_pads_finalize (GObject * object)
   GSList *collected;
   GstCollectPads *pads = GST_COLLECT_PADS (object);
 
-  gst_collect_pads_stop (pads);
+  GST_DEBUG ("finalize");
+
   g_cond_free (pads->cond);
   g_mutex_free (pads->abidata.ABI.pad_lock);
 
   /* Remove pads */
-  for (collected = pads->data; collected; collected = g_slist_next (collected)) {
+  collected = pads->abidata.ABI.pad_list;
+  for (; collected; collected = g_slist_next (collected)) {
     GstCollectData *pdata = (GstCollectData *) collected->data;
 
-    if (pdata->pad)
+    if (pdata->pad) {
+      GST_DEBUG ("finalize pad %s:%s", GST_DEBUG_PAD_NAME (pdata->pad));
       gst_object_unref (pdata->pad);
-
+      pdata->pad = NULL;
+    }
     g_free (pdata);
   }
   /* Free pads list */
@@ -213,6 +217,8 @@ gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
   g_return_val_if_fail (GST_PAD_IS_SINK (pad), NULL);
   g_return_val_if_fail (size >= sizeof (GstCollectData), NULL);
 
+  GST_DEBUG ("adding pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
   data = g_malloc0 (size);
   data->collect = pads;
   data->pad = gst_object_ref (pad);
@@ -264,26 +270,46 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
   g_return_val_if_fail (pad != NULL, FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
+  GST_DEBUG ("removing pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
   GST_COLLECT_PADS_PAD_LOCK (pads);
   list =
       g_slist_find_custom (pads->abidata.ABI.pad_list, pad,
       (GCompareFunc) find_pad);
-  if (list) {
-    pads->abidata.ABI.pad_list =
-        g_slist_delete_link (pads->abidata.ABI.pad_list, list);
-    /* clear the stuff we configured */
-    gst_pad_set_chain_function (pad, NULL);
-    gst_pad_set_event_function (pad, NULL);
-    /* FIXME, check that freeing the private data does not causes
-     * crashes in the streaming thread */
-    gst_pad_set_element_private (pad, NULL);
-    g_free (list->data);
-    gst_object_unref (pad);
-    pads->abidata.ABI.pad_cookie++;
+  if (!list)
+    goto unknown_pad;
+
+  GST_DEBUG ("found pad %s:%s at %p", GST_DEBUG_PAD_NAME (pad), list->data);
+  /* clear the stuff we configured */
+  gst_pad_set_chain_function (pad, NULL);
+  gst_pad_set_event_function (pad, NULL);
+  /* FIXME, check that freeing the private data does not causes
+   * crashes in the streaming thread */
+  gst_pad_set_element_private (pad, NULL);
+
+  /* backward compat, also remove from data if stopped */
+  if (!pads->started) {
+    GSList *dlist;
+
+    dlist = g_slist_find_custom (pads->data, pad, (GCompareFunc) find_pad);
+    if (dlist) {
+      pads->data = g_slist_delete_link (pads->data, dlist);
+    }
   }
+  gst_object_unref (pad);
+  g_free (list->data);
+  pads->abidata.ABI.pad_list =
+      g_slist_delete_link (pads->abidata.ABI.pad_list, list);
+  pads->abidata.ABI.pad_cookie++;
   GST_COLLECT_PADS_PAD_UNLOCK (pads);
 
-  return (list != NULL);
+  return TRUE;
+
+unknown_pad:
+  {
+    GST_WARNING ("cannot remove unknown pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+    return FALSE;
+  }
 }
 
 /**
@@ -365,13 +391,14 @@ gst_collect_pads_collect_range (GstCollectPads * pads, guint64 offset,
 
 /* FIXME, I think this function is used to work around bad behaviour
  * of elements that add pads to themselves without activating them.
+ *
+ * Must be called with PAD_LOCK.
  */
 static void
 gst_collect_pads_set_flushing (GstCollectPads * pads, gboolean flushing)
 {
   GSList *walk = NULL;
 
-  GST_COLLECT_PADS_PAD_LOCK (pads);
   /* Update the pads flushing flag */
   for (walk = pads->data; walk; walk = g_slist_next (walk)) {
     GstCollectData *cdata = walk->data;
@@ -385,7 +412,6 @@ gst_collect_pads_set_flushing (GstCollectPads * pads, gboolean flushing)
       GST_OBJECT_UNLOCK (cdata->pad);
     }
   }
-  GST_COLLECT_PADS_PAD_UNLOCK (pads);
 }
 
 /**
@@ -408,10 +434,12 @@ gst_collect_pads_start (GstCollectPads * pads)
   GST_OBJECT_LOCK (pads);
 
   /* make pads streamable */
+  GST_COLLECT_PADS_PAD_LOCK (pads);
   gst_collect_pads_set_flushing (pads, FALSE);
 
   /* Start collect pads */
   pads->started = TRUE;
+  GST_COLLECT_PADS_PAD_UNLOCK (pads);
   GST_OBJECT_UNLOCK (pads);
 }
 
@@ -436,10 +464,12 @@ gst_collect_pads_stop (GstCollectPads * pads)
   GST_OBJECT_LOCK (pads);
 
   /* make pads not accept data anymore */
+  GST_COLLECT_PADS_PAD_LOCK (pads);
   gst_collect_pads_set_flushing (pads, TRUE);
 
   /* Stop collect pads */
   pads->started = FALSE;
+  GST_COLLECT_PADS_PAD_UNLOCK (pads);
   /* Wake them up so then can end the chain functions. */
   GST_COLLECT_PADS_BROADCAST (pads);
 

@@ -114,6 +114,7 @@ struct _GstCollectPads {
   guint		 queuedpads;		/* number of pads with a buffer */
   guint		 eospads;		/* number of pads that are EOS */
 
+  /* with LOCK and PAD_LOCK*/
   gboolean	 started;
 
   /*< private >*/
