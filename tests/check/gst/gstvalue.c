@@ -345,6 +345,7 @@ GST_START_TEST (test_serialize_flags)
     fail_if (string == NULL, "could not serialize flags %d", i);
     fail_unless (strcmp (string, results[i]) == 0,
         "resulting value is %s, not %s, for flags #%d", string, results[i], i);
+    g_free (string);
   }
 }
 

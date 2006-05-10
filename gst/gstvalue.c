@@ -1919,7 +1919,6 @@ gst_value_serialize_flags (const GValue * value)
 
   g_return_val_if_fail (klass, NULL);
 
-  result = g_strdup ("");
   flags = g_value_get_flags (value);
 
   /* if no flags are set, try to serialize to the _NONE string */
@@ -1929,6 +1928,7 @@ gst_value_serialize_flags (const GValue * value)
   }
 
   /* some flags are set, so serialize one by one */
+  result = g_strdup ("");
   while (flags) {
     fl = gst_flags_get_first_value (klass, flags);
     if (fl != NULL) {
