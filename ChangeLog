@@ -1,3 +1,14 @@
+2006-05-10  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_collect),
+	(gst_collect_pads_collect_range), (gst_collect_pads_available),
+	(gst_collect_pads_check_pads), (gst_collect_pads_check_collected),
+	(gst_collect_pads_event), (gst_collect_pads_chain):
+	Update docs.
+	Better debug info.
+	Catch and return errors from the collect function
+	Refuse data on eos pads.
+
 2006-05-10  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstinterface.h:

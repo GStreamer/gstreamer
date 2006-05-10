@@ -33,12 +33,12 @@
  *   <listitem><para>
  *     Pads are added to the collection with gst_collect_pads_add_pad()/
  *     gst_collect_pads_remove_pad(). The pad
- *     has to be a sinkpad. The chain function of the pad is
+ *     has to be a sinkpad. The chain and event functions of the pad are
  *     overridden. The element_private of the pad is used to store
- *     private information.
+ *     private information for the collectpads.
  *   </para></listitem>
  *   <listitem><para>
- *     For each pad, data is queued in the chain function or by
+ *     For each pad, data is queued in the _chain function or by
  *     performing a pull_range.
  *   </para></listitem>
  *   <listitem><para>
@@ -64,9 +64,12 @@
  *   </para></listitem>
  *   <listitem><para>
  *     gst_collect_pads_collect() and gst_collect_pads_collect_range() can be used by
- *     elements that start a #GstTask to drive the collect_pads.
+ *     elements that start a #GstTask to drive the collect_pads. This feature is however
+ *     not yet implemented.
  *   </para></listitem>
  * </itemizedlist>
+ *
+ * Last reviewed on 2006-05-10 (0.10.6)
  */
 
 #include "gstcollectpads.h"
@@ -330,7 +333,7 @@ gst_collect_pads_collect (GstCollectPads * pads)
 
   g_warning ("gst_collect_pads_collect() is not implemented");
 
-  return GST_FLOW_ERROR;
+  return GST_FLOW_NOT_SUPPORTED;
 }
 
 /**
@@ -357,7 +360,7 @@ gst_collect_pads_collect_range (GstCollectPads * pads, guint64 offset,
 
   g_warning ("gst_collect_pads_collect_range() is not implemented");
 
-  return GST_FLOW_ERROR;
+  return GST_FLOW_NOT_SUPPORTED;
 }
 
 /* FIXME, I think this function is used to work around bad behaviour
@@ -531,6 +534,7 @@ gst_collect_pads_pop (GstCollectPads * pads, GstCollectData * data)
  *
  * MT safe.
  */
+/* FIXME, we can do this in the _chain functions */
 guint
 gst_collect_pads_available (GstCollectPads * pads)
 {
@@ -548,22 +552,27 @@ gst_collect_pads_available (GstCollectPads * pads)
     pdata = (GstCollectData *) collected->data;
 
     /* ignore pad with EOS */
-    if (pdata->abidata.ABI.eos)
+    if (G_UNLIKELY (pdata->abidata.ABI.eos)) {
+      GST_DEBUG ("pad %p is EOS", pdata);
       continue;
+    }
 
-    /* an empty buffer not EOS is weird */
-    if ((buffer = pdata->buffer) == NULL)
+    /* an empty buffer without EOS is weird when we get here.. */
+    if (G_UNLIKELY ((buffer = pdata->buffer) == NULL)) {
+      GST_WARNING ("pad %p has no buffer", pdata);
       goto not_filled;
+    }
 
     /* this is the size left of the buffer */
     size = GST_BUFFER_SIZE (buffer) - pdata->pos;
+    GST_DEBUG ("pad %p has %d bytes left", pdata, size);
 
     /* need to return the min of all available data */
     if (size < result)
       result = size;
   }
   /* nothing changed, all must be EOS then, return 0 */
-  if (result == G_MAXUINT)
+  if (G_UNLIKELY (result == G_MAXUINT))
     result = 0;
 
   return result;
@@ -677,7 +686,7 @@ gst_collect_pads_check_pads (GstCollectPads * pads)
 {
   /* the master list and cookie are protected with the PAD_LOCK */
   GST_COLLECT_PADS_PAD_LOCK (pads);
-  if (pads->abidata.ABI.pad_cookie != pads->cookie) {
+  if (G_UNLIKELY (pads->abidata.ABI.pad_cookie != pads->cookie)) {
     GSList *collected;
 
     /* clear list and stats */
@@ -712,56 +721,51 @@ gst_collect_pads_check_pads (GstCollectPads * pads)
  *
  * Should be called with LOCK.
  *
- * Returns: TRUE if the collectfunction was called, FALSE otherwise.
+ * Returns: The GstFlowReturn of collection.
  */
-static gboolean
-gst_collect_pads_is_collected (GstCollectPads * pads, GstFlowReturn * ret)
+static GstFlowReturn
+gst_collect_pads_check_collected (GstCollectPads * pads)
 {
   GstFlowReturn flow_ret = GST_FLOW_OK;
-  gboolean res = FALSE;
 
-  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), FALSE);
-  g_return_val_if_fail (pads->func != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), GST_FLOW_ERROR);
+  g_return_val_if_fail (pads->func != NULL, GST_FLOW_NOT_SUPPORTED);
 
   /* check for new pads, update stats etc.. */
   gst_collect_pads_check_pads (pads);
 
-  /* If all our pads are EOS just collect once to let the element
-   * do its final EOS handling. */
-  if (pads->eospads == pads->numpads) {
+  if (G_UNLIKELY (pads->eospads == pads->numpads)) {
+    /* If all our pads are EOS just collect once to let the element
+     * do its final EOS handling. */
     GST_DEBUG ("All active pads (%d) are EOS, calling %s",
         pads->numpads, GST_DEBUG_FUNCPTR_NAME (pads->func));
     flow_ret = pads->func (pads, pads->user_data);
-    res = TRUE;
-    goto beach;
+  } else {
+    gboolean collected = FALSE;
+
+    /* We call the collected function as long as our condition matches.
+     * FIXME: should we error out if the collect function did not pop anything ?
+     * we can get a busy loop here if the element does not pop from the collect
+     * function
+     */
+    while (((pads->queuedpads + pads->eospads) >= pads->numpads)) {
+      GST_DEBUG ("All active pads (%d) have data, calling %s",
+          pads->numpads, GST_DEBUG_FUNCPTR_NAME (pads->func));
+      flow_ret = pads->func (pads, pads->user_data);
+      collected = TRUE;
+
+      /* break on error */
+      if (flow_ret != GST_FLOW_OK)
+        break;
+      /* Don't keep looping after telling the element EOS or flushing */
+      if (pads->queuedpads == 0)
+        break;
+    }
+    if (!collected)
+      GST_DEBUG ("Not all active pads (%d) have data, continuing",
+          pads->numpads);
   }
-
-  /* We call the collected function as long as our condition matches.
-     FIXME: should we error out if the collect function did not pop anything ?
-     we can get a busy loop here if the element does not pop from the collect
-     function
-     FIXME: Shouldn't we also check gst_pad_is_blocked () somewhere
-   */
-  while (((pads->queuedpads + pads->eospads) >= pads->numpads)) {
-    GST_DEBUG ("All active pads (%d) have data, calling %s",
-        pads->numpads, GST_DEBUG_FUNCPTR_NAME (pads->func));
-    flow_ret = pads->func (pads, pads->user_data);
-    res = TRUE;
-
-    /* Don't keep looping after telling the element EOS or flushing */
-    if (pads->queuedpads == 0)
-      break;
-  }
-
-beach:
-  if (!res) {
-    GST_DEBUG ("Not all active pads (%d) have data, continuing", pads->numpads);
-  }
-
-  if (ret)
-    *ret = flow_ret;
-
-  return res;
+  return flow_ret;
 }
 
 static gboolean
@@ -773,7 +777,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
 
   /* some magic to get the managing collect_pads */
   data = (GstCollectData *) gst_pad_get_element_private (pad);
-  if (data == NULL)
+  if (G_UNLIKELY (data == NULL))
     goto not_ours;
 
   res = TRUE;
@@ -786,7 +790,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
     {
-      /* forward event to unblock is_collected */
+      /* forward event to unblock check_collected */
       gst_pad_event_default (pad, event);
 
       /* now unblock the chain function.
@@ -808,7 +812,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
       gst_collect_pads_pop (pads, data);
       /* if the pad was EOS, remove the EOS flag and
        * decrement the number of eospads */
-      if (data->abidata.ABI.eos == TRUE) {
+      if (G_UNLIKELY (data->abidata.ABI.eos == TRUE)) {
         pads->eospads--;
         data->abidata.ABI.eos = FALSE;
       }
@@ -822,12 +826,13 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_LOCK (pads);
       /* if the pad was not EOS, make it EOS and so we
        * have one more eospad */
-      if (data->abidata.ABI.eos == FALSE) {
+      if (G_LIKELY (data->abidata.ABI.eos == FALSE)) {
         data->abidata.ABI.eos = TRUE;
         pads->eospads++;
       }
-      /* check if we need collecting anything */
-      gst_collect_pads_is_collected (pads, NULL);
+      /* check if we need collecting anything, we ignore the
+       * result. */
+      gst_collect_pads_check_collected (pads);
       GST_OBJECT_UNLOCK (pads);
 
       /* We eat this event, element should do something
@@ -886,7 +891,7 @@ done:
   /* ERRORS */
 not_ours:
   {
-    GST_DEBUG ("collect_pads not ours");
+    GST_WARNING ("not our pad");
     return FALSE;
   }
 }
@@ -910,7 +915,7 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
 
   /* some magic to get the managing collect_pads */
   data = (GstCollectData *) gst_pad_get_element_private (pad);
-  if (data == NULL)
+  if (G_UNLIKELY (data == NULL))
     goto not_ours;
 
   pads = data->collect;
@@ -919,11 +924,14 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
   GST_OBJECT_LOCK (pads);
 
   /* if not started, bail out */
-  if (!pads->started)
+  if (G_UNLIKELY (!pads->started))
     goto not_started;
   /* check if this pad is flushing */
-  if (data->abidata.ABI.flushing)
+  if (G_UNLIKELY (data->abidata.ABI.flushing))
     goto flushing;
+  /* pad was EOS, we can refuse this data */
+  if (G_UNLIKELY (data->abidata.ABI.eos))
+    goto unexpected;
 
   GST_DEBUG ("Queuing buffer %p for pad %s:%s", buffer,
       GST_DEBUG_PAD_NAME (pad));
@@ -934,7 +942,7 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
   gst_buffer_replace (buffer_p, buffer);
 
   /* update segment last position if in TIME */
-  if (data->segment.format == GST_FORMAT_TIME) {
+  if (G_LIKELY (data->segment.format == GST_FORMAT_TIME)) {
     GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
     if (GST_CLOCK_TIME_IS_VALID (timestamp))
@@ -943,18 +951,30 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
 
   /* Check if our collected condition is matched and call the collected function
    * if it is */
-  gst_collect_pads_is_collected (pads, &ret);
+  ret = gst_collect_pads_check_collected (pads);
+  /* when an error occurs, we want to report this back to the caller ASAP
+   * without having to block if the buffer was not popped */
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto error;
 
   /* We still have data queued on this pad, wait for something to happen */
   while (data->buffer != NULL) {
     GST_DEBUG ("Pad %s:%s has a buffer queued, waiting",
         GST_DEBUG_PAD_NAME (pad));
+
+    /* wait to be collected, this must happen from another thread triggered
+     * by the _chain function of another pad. We release the lock so we
+     * can get stopped or flushed as well. We can however not get EOS
+     * because we still hold the STREAM_LOCK. */
     GST_COLLECT_PADS_WAIT (pads);
+
     GST_DEBUG ("Pad %s:%s resuming", GST_DEBUG_PAD_NAME (pad));
-    /* after a signal,  we could be stopped */
-    if (!pads->started)
+
+    /* after a signal, we could be stopped */
+    if (G_UNLIKELY (!pads->started))
       goto not_started;
-    if (data->abidata.ABI.flushing)
+    /* check if this pad is flushing */
+    if (G_UNLIKELY (data->abidata.ABI.flushing))
       goto flushing;
   }
   GST_OBJECT_UNLOCK (pads);
@@ -964,19 +984,36 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
   /* ERRORS */
 not_ours:
   {
-    GST_DEBUG ("collect_pads not ours");
+    /* pretty fatal this one, can't post an error though... */
+    GST_WARNING ("not our pad");
     return GST_FLOW_ERROR;
   }
 not_started:
   {
     GST_OBJECT_UNLOCK (pads);
-    GST_DEBUG ("collect_pads not started");
+    GST_DEBUG ("not started");
     return GST_FLOW_WRONG_STATE;
   }
 flushing:
   {
     GST_OBJECT_UNLOCK (pads);
-    GST_DEBUG ("collect_pads %s:%s is flushing", GST_DEBUG_PAD_NAME (pad));
+    GST_DEBUG ("pad %s:%s is flushing", GST_DEBUG_PAD_NAME (pad));
     return GST_FLOW_WRONG_STATE;
+  }
+unexpected:
+  {
+    GST_OBJECT_UNLOCK (pads);
+    /* we should not post an error for this, just inform upstream that
+     * we don't expect anything anymore */
+    GST_DEBUG ("pad %s:%s is eos", GST_DEBUG_PAD_NAME (pad));
+    return GST_FLOW_UNEXPECTED;
+  }
+error:
+  {
+    GST_OBJECT_UNLOCK (pads);
+    /* we print the error, the element should post a reasonable error
+     * message for fatal errors */
+    GST_DEBUG ("collect failed, reason %d (%s)", ret, gst_flow_get_name (ret));
+    return ret;
   }
 }
