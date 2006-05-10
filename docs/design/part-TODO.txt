@@ -1,23 +1,26 @@
 API/ABI
 -------
 
-- implement return values from events in addition to the gboolean. This should be
-  done by making the event contain a GstStructure with input/output values, similar
-  to GstQuery. A typical use case is performing a non-accurate seek to a keyframe,
-  after the seek you want to get the new stream time that will actually be used to
-  update the slider bar.
+- implement return values from events in addition to the gboolean. This should
+  be done by making the event contain a GstStructure with input/output values,
+  similar to GstQuery. A typical use case is performing a non-accurate seek to a
+  keyframe, after the seek you want to get the new stream time that will
+  actually be used to update the slider bar.
 
 - GstEvent, GstMessage register like GstFormat or GstQuery.
 
 - query POSITION/DURATION return accuracy. Just a flag or accuracy percentage.
 
-- add some sort of time/frame stepping functionality, either with a flag on the seek
-  event or some new seek event type. The idea would be to operate on the current
-  playback position instead of the current configured segment when doing the seek.
-  Idea is that frame stepping forwards can be done in the sinks, ie, just dropping
-  N frames/time, sending more complicated queries upstream which can ideally handle
-  those cases more efficiently too.
+- add some sort of time/frame stepping functionality, either with a flag on
+  the seek event or some new seek event type. The idea would be to operate on
+  the current playback position instead of the current configured segment when
+  doing the seek.
+  Idea is that frame stepping forwards can be done in the sinks, ie, just
+  dropping N frames/time, sending more complicated queries upstream which can
+  ideally handle those cases more efficiently too.
 
+- use | instead of + as divider in serialization of Flags
+  (gstvalue/gststructure)
 
 IMPLEMENTATION
 --------------
