@@ -191,6 +191,8 @@ GST_START_TEST (test_streamheader)
 
   gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&array);
+  fail_unless (gst_pad_set_caps (mysrcpad, caps));
+  gst_caps_unref (caps);
 
   fail_unless (gst_pad_push (mysrcpad, hbuf1) == GST_FLOW_OK);
   fail_unless (gst_pad_push (mysrcpad, hbuf2) == GST_FLOW_OK);
@@ -231,6 +233,8 @@ GST_START_TEST (test_streamheader)
   fail_unless_read ("second client", pfd2[0], 4, "deaf");
   wait_bytes_served (sink, 36);
 
+  gst_buffer_unref (hbuf1);
+  gst_buffer_unref (hbuf2);
   GST_DEBUG ("cleaning up multifdsink");
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_multifdsink (sink);
