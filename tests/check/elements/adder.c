@@ -127,6 +127,9 @@ GST_START_TEST (test_event)
   bus = gst_element_get_bus (bin);
   gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
+  /* FIXME, fakesrc with default setting will produce 0 sized
+   * buffers and incompatible caps for adder that will make
+   * adder EOS and error out */
   src1 = gst_element_factory_make ("fakesrc", "src1");
   //g_object_set (src1, "wave", 4, NULL); /* silence */
   src2 = gst_element_factory_make ("fakesrc", "src2");
@@ -161,6 +164,7 @@ GST_START_TEST (test_event)
   res = gst_element_set_state (bin, GST_STATE_PAUSED);
   fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
 
+  /* FIXME, PAUSED is async and seek might not work before being prerolled. */
   res = gst_element_send_event (bin, seek_event);
   fail_unless (res == TRUE, NULL);
 

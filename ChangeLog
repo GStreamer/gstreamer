@@ -1,3 +1,23 @@
+2006-05-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/adder/gstadder.c: (gst_adder_setcaps),
+	(gst_adder_query_duration), (gst_adder_query), (forward_event),
+	(gst_adder_src_event), (gst_adder_sink_event),
+	(gst_adder_class_init), (gst_adder_finalize),
+	(gst_adder_request_new_pad), (gst_adder_collected):
+	* gst/adder/gstadder.h:
+	Updated some docs. Added comments and FIXMEs all over the place.
+	Improve debugging info.
+	Fix leak on finalize by not calling the parent.
+	Implement duration query.
+	Make event forwarding threadsafe.
+	Correctly send NEWSEGMENT at start and after flush.
+	Handle EOS correctly.
+	Post error when not negotiated.
+
+	* tests/check/elements/adder.c: (GST_START_TEST):
+	Added FIXME in the test.
+
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_valign_get_type),
