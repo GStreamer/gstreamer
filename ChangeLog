@@ -1,3 +1,15 @@
+2006-05-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstevent.c: (_gst_event_initialize):
+	* gst/gstformat.c: (_gst_format_initialize):
+	  make sure some essential types used by events are registered
+	  as part of gst_init()
+	* gst/gstvalue.c: (gst_value_serialize_flags):
+	  if no flags are set, serialize them to a value that represents NONE
+	  so that deserializing them works
+	* tests/check/gst/gstvalue.c: (GST_START_TEST), (gst_value_suite):
+	  add tests for serialization and deserialization of flags
+
 2006-05-10  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_collect),

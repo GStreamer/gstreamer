@@ -319,6 +319,69 @@ GST_START_TEST (test_deserialize_guint_failures)
 
 GST_END_TEST;
 
+GST_START_TEST (test_serialize_flags)
+{
+  GValue value = { 0 };
+  gchar *string;
+  GstSeekFlags flags[] = {
+    0,
+    GST_SEEK_FLAG_NONE,
+    GST_SEEK_FLAG_FLUSH,
+    GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
+  };
+  const char *results[] = {
+    "GST_SEEK_FLAG_NONE",
+    "GST_SEEK_FLAG_NONE",
+    "GST_SEEK_FLAG_FLUSH",
+    "GST_SEEK_FLAG_FLUSH+GST_SEEK_FLAG_ACCURATE",
+  };
+  int i;
+
+  g_value_init (&value, GST_TYPE_SEEK_FLAGS);
+
+  for (i = 0; i < G_N_ELEMENTS (flags); ++i) {
+    g_value_set_flags (&value, flags[i]);
+    string = gst_value_serialize (&value);
+    fail_if (string == NULL, "could not serialize flags %d", i);
+    fail_unless (strcmp (string, results[i]) == 0,
+        "resulting value is %s, not %s, for flags #%d", string, results[i], i);
+  }
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_deserialize_flags)
+{
+  GValue value = { 0 };
+  const char *strings[] = {
+    "",
+    "0",
+    "GST_SEEK_FLAG_NONE",
+    "GST_SEEK_FLAG_FLUSH",
+    "GST_SEEK_FLAG_FLUSH+GST_SEEK_FLAG_ACCURATE",
+  };
+  GstSeekFlags results[] = {
+    GST_SEEK_FLAG_NONE,
+    GST_SEEK_FLAG_NONE,
+    GST_SEEK_FLAG_NONE,
+    GST_SEEK_FLAG_FLUSH,
+    GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
+  };
+  int i;
+
+  g_value_init (&value, GST_TYPE_SEEK_FLAGS);
+
+  for (i = 0; i < G_N_ELEMENTS (strings); ++i) {
+    fail_unless (gst_value_deserialize (&value, strings[i]),
+        "could not deserialize %s (%d)", strings[i], i);
+    fail_unless (g_value_get_flags (&value) == results[i],
+        "resulting value is %d, not %d, for string %s (%d)",
+        g_value_get_flags (&value), results[i], strings[i], i);
+  }
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_string)
 {
@@ -1431,6 +1494,8 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_guint_failures);
   tcase_add_test (tc_chain, test_deserialize_gint64);
   tcase_add_test (tc_chain, test_deserialize_gstfraction);
+  tcase_add_test (tc_chain, test_serialize_flags);
+  tcase_add_test (tc_chain, test_deserialize_flags);
   tcase_add_test (tc_chain, test_string);
   tcase_add_test (tc_chain, test_deserialize_string);
   tcase_add_test (tc_chain, test_value_compare);

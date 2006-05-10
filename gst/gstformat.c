@@ -35,6 +35,7 @@
 #include "gst_private.h"
 #include <string.h>
 #include "gstformat.h"
+#include "gstenumtypes.h"
 
 static GStaticMutex mutex = G_STATIC_MUTEX_INIT;
 static GList *_gst_formats = NULL;
@@ -72,6 +73,8 @@ _gst_format_initialize (void)
     standards++;
     _n_values++;
   }
+  /* getting the type registers the enum */
+  gst_format_get_type ();
   g_static_mutex_unlock (&mutex);
 }
 
