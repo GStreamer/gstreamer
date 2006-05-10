@@ -1,3 +1,10 @@
+2006-05-10  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstinterface.h:
+	GST_IMPLEMENTS_INTERFACE and GST_IS_IMPLEMENTS_INTERFACE use the normal
+	GInterface type checking.
+	They were previously using non-defined macros.
+
 2006-05-09  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_init),
