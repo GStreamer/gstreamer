@@ -305,13 +305,10 @@ static void gst_multi_fd_sink_set_property (GObject * object, guint prop_id,
 static void gst_multi_fd_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-
 GST_BOILERPLATE (GstMultiFdSink, gst_multi_fd_sink, GstBaseSink,
     GST_TYPE_BASE_SINK);
 
-
 static guint gst_multi_fd_sink_signals[LAST_SIGNAL] = { 0 };
-
 
 static void
 gst_multi_fd_sink_base_init (gpointer g_class)
@@ -518,12 +515,12 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_multi_fd_sink_change_state);
 
-  gstbasesink_class->render = gst_multi_fd_sink_render;
+  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_fd_sink_render);
 
-  klass->add = gst_multi_fd_sink_add;
-  klass->remove = gst_multi_fd_sink_remove;
-  klass->clear = gst_multi_fd_sink_clear;
-  klass->get_stats = gst_multi_fd_sink_get_stats;
+  klass->add = GST_DEBUG_FUNCPTR (gst_multi_fd_sink_add);
+  klass->remove = GST_DEBUG_FUNCPTR (gst_multi_fd_sink_remove);
+  klass->clear = GST_DEBUG_FUNCPTR (gst_multi_fd_sink_clear);
+  klass->get_stats = GST_DEBUG_FUNCPTR (gst_multi_fd_sink_get_stats);
 
   GST_DEBUG_CATEGORY_INIT (multifdsink_debug, "multifdsink", 0, "FD sink");
 }
