@@ -179,6 +179,7 @@ gst_esdsink_finalize (GObject * object)
 {
   GstEsdSink *esdsink = GST_ESDSINK (object);
 
+  gst_caps_replace (&esdsink->cur_caps, NULL);
   g_free (esdsink->host);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -188,59 +189,56 @@ static GstCaps *
 gst_esdsink_getcaps (GstBaseSink * bsink)
 {
   GstEsdSink *esdsink;
-  GstPadTemplate *pad_template;
-  GstCaps *caps = NULL;
-  gint i;
-  esd_server_info_t *server_info;
 
   esdsink = GST_ESDSINK (bsink);
 
-  GST_DEBUG_OBJECT (esdsink, "getcaps called");
-
-  pad_template = gst_static_pad_template_get (&sink_factory);
-  caps = gst_caps_copy (gst_pad_template_get_caps (pad_template));
-
   /* no fd, we're done with the template caps */
-  if (esdsink->ctrl_fd < 0)
-    goto done;
-
-  /* get server info */
-  server_info = esd_get_server_info (esdsink->ctrl_fd);
-  if (!server_info)
-    goto no_info;
-
-  GST_DEBUG_OBJECT (esdsink, "got server info rate: %i", server_info->rate);
-
-  for (i = 0; i < caps->structs->len; i++) {
-    GstStructure *s;
-
-    s = gst_caps_get_structure (caps, i);
-    gst_structure_set (s, "rate", G_TYPE_INT, server_info->rate, NULL);
-  }
-  esd_free_server_info (server_info);
-
-done:
-  return caps;
-
-  /* ERRORS */
-no_info:
-  {
-    GST_WARNING_OBJECT (esdsink, "couldn't get server info!");
-    gst_caps_unref (caps);
+  if (esdsink->ctrl_fd < 0 || esdsink->cur_caps == NULL) {
+    GST_LOG_OBJECT (esdsink, "getcaps called, returning template caps");
     return NULL;
   }
+
+  GST_LOG_OBJECT (esdsink, "returning %" GST_PTR_FORMAT, esdsink->cur_caps);
+
+  return gst_caps_ref (esdsink->cur_caps);
 }
 
 static gboolean
 gst_esdsink_open (GstAudioSink * asink)
 {
-  GstEsdSink *esdsink = GST_ESDSINK (asink);
+  esd_server_info_t *server_info;
+  GstPadTemplate *pad_template;
+  GstEsdSink *esdsink;
+  gint i;
+
+  esdsink = GST_ESDSINK (asink);
 
   GST_DEBUG_OBJECT (esdsink, "open");
 
   esdsink->ctrl_fd = esd_open_sound (esdsink->host);
   if (esdsink->ctrl_fd < 0)
     goto couldnt_connect;
+
+  /* get server info */
+  server_info = esd_get_server_info (esdsink->ctrl_fd);
+  if (!server_info)
+    goto no_server_info;
+
+  GST_INFO_OBJECT (esdsink, "got server info rate: %i", server_info->rate);
+
+  pad_template = gst_static_pad_template_get (&sink_factory);
+  esdsink->cur_caps = gst_caps_copy (gst_pad_template_get_caps (pad_template));
+
+  for (i = 0; i < esdsink->cur_caps->structs->len; i++) {
+    GstStructure *s;
+
+    s = gst_caps_get_structure (esdsink->cur_caps, i);
+    gst_structure_set (s, "rate", G_TYPE_INT, server_info->rate, NULL);
+  }
+
+  esd_free_server_info (server_info);
+
+  GST_INFO_OBJECT (esdsink, "server caps: %" GST_PTR_FORMAT, esdsink->cur_caps);
 
   return TRUE;
 
@@ -252,6 +250,13 @@ couldnt_connect:
         ("can't open connection to esound server"));
     return FALSE;
   }
+no_server_info:
+  {
+    GST_ELEMENT_ERROR (esdsink, RESOURCE, OPEN_WRITE,
+        (_("Failed to query sound server capabilities")),
+        ("couldn't get server info!"));
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -261,6 +266,7 @@ gst_esdsink_close (GstAudioSink * asink)
 
   GST_DEBUG_OBJECT (esdsink, "close");
 
+  gst_caps_replace (&esdsink->cur_caps, NULL);
   esd_close (esdsink->ctrl_fd);
   esdsink->ctrl_fd = -1;
 

@@ -50,6 +50,7 @@ struct _GstEsdSink {
   gchar    *host;
 
   guint     rate;
+  GstCaps  *cur_caps;
 };
 
 struct _GstEsdSinkClass {

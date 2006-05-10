@@ -1,3 +1,11 @@
+2006-05-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/esd/esdsink.c: (gst_esdsink_finalize), (gst_esdsink_getcaps),
+	(gst_esdsink_open), (gst_esdsink_close):
+	* ext/esd/esdsink.h:
+	  Move the esd_get_server_info() into gst_esdsink_open() and fail
+	  with a decent error message on errors.
+
 2006-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/esd/esdmon.c: (gst_esdmon_depths_get_type),
