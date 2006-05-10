@@ -1,3 +1,8 @@
+2006-05-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_get_string):
+	  Fix silly bug when reading metadata (#341254).
+
 2006-05-08  Edward Hervey  <edward@fluendo.com>
 
 	* autogen.sh: (CONFIGURE_DEF_OPT): 

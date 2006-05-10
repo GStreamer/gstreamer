@@ -548,7 +548,7 @@ gst_asf_demux_get_string (gchar ** p_str, guint16 * p_strlen,
 
   s_length = gst_asf_demux_get_uint16 (p_data, p_size);
 
-  if (*p_strlen)
+  if (p_strlen)
     *p_strlen = s_length;
 
   if (s_length == 0) {
