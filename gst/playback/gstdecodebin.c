@@ -138,6 +138,7 @@ static void new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic);
 static void no_more_pads (GstElement * element, GstDynamic * dynamic);
 
 static void queue_filled_cb (GstElement * queue, GstDecodeBin * decode_bin);
+static void queue_underrun_cb (GstElement * queue, GstDecodeBin * decode_bin);
 
 static GstElementClass *parent_class;
 static guint gst_decode_bin_signals[LAST_SIGNAL] = { 0 };
@@ -805,6 +806,8 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
         decode_bin->queues = g_list_append (decode_bin->queues, queue);
         g_signal_connect (G_OBJECT (queue),
             "overrun", G_CALLBACK (queue_filled_cb), decode_bin);
+        g_signal_connect (G_OBJECT (queue),
+            "underrun", G_CALLBACK (queue_underrun_cb), decode_bin);
       }
 
       /* The link worked, now figure out what it was that we connected */
@@ -990,6 +993,48 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
   gst_bin_remove (GST_BIN (decode_bin), elem);
 }
 
+/* there are @bytes bytes in @queue, enlarge it 
+ *
+ * Returns: new max number of bytes in @queue
+ */
+static guint
+queue_enlarge (GstElement * queue, guint bytes, GstDecodeBin * decode_bin)
+{
+  /* Increase the queue size by 1Mbyte if it is over 1Mb, else double its current limit
+   */
+  if (bytes > 1024 * 1024)
+    bytes += 1024 * 1024;
+  else
+    bytes *= 2;
+
+  GST_DEBUG_OBJECT (decode_bin,
+      "increasing queue %s max-size-bytes to %d", GST_ELEMENT_NAME (queue),
+      bytes);
+  g_object_set (G_OBJECT (queue), "max-size-bytes", bytes, NULL);
+
+  return bytes;
+}
+
+/* this callback is called when our queues fills up or are empty
+ * We then check the status of all other queues to make sure we
+ * never have an empty and full queue at the same time since that
+ * would block dataflow. In the case of a filled queue, we make
+ * it larger.
+ */
+static void
+queue_underrun_cb (GstElement * queue, GstDecodeBin * decode_bin)
+{
+  /* FIXME: we don't really do anything here for now. Ideally we should
+   * see if some of the queues are filled and increase their values
+   * in that case. 
+   * Note: be very carefull with thread safety here as this underrun
+   * signal is done from the streaming thread of queue srcpad which
+   * is different from the pad_added (where we add the queue to the
+   * list) and the overrun signals that are signalled from the
+   * demuxer thread.
+   */
+}
+
 /* Make sure we don't have a full queue and empty queue situation */
 static void
 queue_filled_cb (GstElement * queue, GstDecodeBin * decode_bin)
@@ -998,43 +1043,48 @@ queue_filled_cb (GstElement * queue, GstDecodeBin * decode_bin)
   gboolean increase = FALSE;
   guint bytes;
 
+  /* get current byte level from the queue that is filled */
   g_object_get (G_OBJECT (queue), "current-level-bytes", &bytes, NULL);
   GST_DEBUG_OBJECT (decode_bin, "One of the queues is full at %d bytes", bytes);
 
-  if (bytes > (20 * 1024 * 1024)) {
-    GST_WARNING_OBJECT (decode_bin,
-        "Queue is bigger than 20Mbytes, something else is going wrong");
-    return;
-  }
+  /* we do not buffer more than 20Mb */
+  if (bytes > (20 * 1024 * 1024))
+    goto too_large;
 
+  /* check all other queue to see if one is empty, in that case
+   * we need to enlarge @queue */
   for (tmp = decode_bin->queues; tmp; tmp = g_list_next (tmp)) {
     GstElement *aqueue = GST_ELEMENT (tmp->data);
     guint levelbytes = -1;
 
     if (aqueue != queue) {
-      g_object_get (G_OBJECT (aqueue),
-          "current-level-bytes", &levelbytes, NULL);
+      g_object_get (G_OBJECT (aqueue), "current-level-bytes", &levelbytes,
+          NULL);
       if (levelbytes == 0) {
+        /* yup, found an empty queue, we can stop the search and
+         * need to enlarge the queue */
         increase = TRUE;
+        break;
       }
     }
   }
 
   if (increase) {
-    /* 
-     * Increase the queue size by 1Mbyte if it is over 1Mb, else double its current limit
-     */
-    if (bytes > 1024 * 1024)
-      bytes += 1024 * 1024;
-    else
-      bytes *= 2;
-    GST_DEBUG_OBJECT (decode_bin,
-        "One of the other queues is empty, increasing queue byte limit to %d",
-        bytes);
-    g_object_set (G_OBJECT (queue), "max-size-bytes", bytes, NULL);
-  } else
+    /* enlarge @queue */
+    queue_enlarge (queue, bytes, decode_bin);
+  } else {
     GST_DEBUG_OBJECT (decode_bin,
         "Queue is full but other queues are not empty, not doing anything");
+  }
+  return;
+
+  /* errors */
+too_large:
+  {
+    GST_WARNING_OBJECT (decode_bin,
+        "Queue is bigger than 20Mbytes, something else is going wrong");
+    return;
+  }
 }
 
 /* This function will be called when a dynamic pad is created on an element.

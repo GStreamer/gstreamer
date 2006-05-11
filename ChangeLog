@@ -1,3 +1,19 @@
+2006-05-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (try_to_link_1), (queue_enlarge),
+	(queue_underrun_cb), (queue_filled_cb):
+	Also catch queue underruns but don't do anything yet.
+	Refactor and comment queue enlarging code a bit.
+
+	* gst/playback/gstplaybasebin.c: (queue_overrun),
+	(queue_threshold_reached), (queue_out_of_data),
+	(gen_preroll_element):
+	If a queue over/underruns check that we don't create nasty
+	deadlocks when the min-threshold is not reached but the
+	max-bytes is. In those cases disable max-bytes when we
+	know that the queue is fed timed data.
+	Add more comments.
+
 2006-05-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybin.c: (gen_audio_element):
