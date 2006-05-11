@@ -1,3 +1,28 @@
+2006-05-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_chain):
+	  Add more debug
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcm_reset),
+	(gst_dvdlpcmdec_init), (update_timestamps),
+	(gst_dvdlpcmdec_chain_dvd), (gst_dvdlpcmdec_chain_raw),
+	(dvdlpcmdec_sink_event):
+	* gst/dvdlpcmdec/gstdvdlpcmdec.h:
+	  If we have a first_access offset but no current timestamp (might
+	  happen after a seek), then calculate a start time for the first
+	  portion so that it will align with the timestamp given for the
+	  first_access portion.
+
+	  If a new-segment arrives with format time, store the start
+	  time as a failsafe timestamp in case we never get any further
+	  timestamp info (unlikely)
+	
+	  Mask out the 'frame number' section of the incoming header so
+	  that we don't consider it to be changing on every buffer and
+	  reset the caps constantly.
+
+	  Use gst_util_uint64_scale for duration calculation
+
 2006-05-11  Michael Smith  <msmith@fluendo.com>
 
 	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_chain_dvd):

@@ -55,6 +55,7 @@ struct _GstDvdLpcmDec {
   gint mute;
   
   GstClockTime timestamp;
+  GstClockTime segment_start;
 };
 
 struct _GstDvdLpcmDecClass {

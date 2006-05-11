@@ -535,7 +535,8 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
       len = first_access - 1;
 
       if (len <= 0 || offset + len > size) {
-        GST_ERROR_OBJECT (pad, "Bad first_access parameter in buffer");
+        GST_ERROR_OBJECT (pad, "Bad first_access parameter (%d) in buffer",
+            first_access);
         ret = GST_FLOW_ERROR;
         goto done;
       }

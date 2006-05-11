@@ -85,6 +85,7 @@ static GstFlowReturn gst_dvdlpcmdec_chain_raw (GstPad * pad,
 static GstFlowReturn gst_dvdlpcmdec_chain_dvd (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_dvdlpcmdec_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean dvdlpcmdec_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_dvdlpcmdec_change_state (GstElement * element,
     GstStateChange transition);
@@ -150,7 +151,7 @@ gst_dvdlpcm_reset (GstDvdLpcmDec * dvdlpcmdec)
   dvdlpcmdec->dynamic_range = 0;
   dvdlpcmdec->emphasis = FALSE;
   dvdlpcmdec->mute = FALSE;
-  dvdlpcmdec->timestamp = 0;
+  dvdlpcmdec->timestamp = GST_CLOCK_TIME_NONE;
 
   dvdlpcmdec->header = 0;
 
@@ -165,6 +166,7 @@ gst_dvdlpcmdec_init (GstDvdLpcmDec * dvdlpcmdec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gst_dvdlpcmdec_sink_template), "sink");
   gst_pad_set_setcaps_function (dvdlpcmdec->sinkpad, gst_dvdlpcmdec_setcaps);
+  gst_pad_set_event_function (dvdlpcmdec->sinkpad, dvdlpcmdec_sink_event);
   gst_element_add_pad (GST_ELEMENT (dvdlpcmdec), dvdlpcmdec->sinkpad);
 
   dvdlpcmdec->srcpad =
@@ -257,14 +259,20 @@ caps_parse_error:
 static void
 update_timestamps (GstDvdLpcmDec * dvdlpcmdec, GstBuffer * buf, int samples)
 {
-  GST_BUFFER_DURATION (buf) = samples * GST_SECOND / dvdlpcmdec->rate;
+  GST_BUFFER_DURATION (buf) =
+      gst_util_uint64_scale (samples, GST_SECOND, dvdlpcmdec->rate);
+
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
     /* Then leave it as-is, and save this timestamp */
     dvdlpcmdec->timestamp = GST_BUFFER_TIMESTAMP (buf);
   } else {
-    dvdlpcmdec->timestamp += GST_BUFFER_DURATION (buf);
+    if (!GST_CLOCK_TIME_IS_VALID (dvdlpcmdec->timestamp))
+      dvdlpcmdec->timestamp = dvdlpcmdec->segment_start;
+
     GST_BUFFER_TIMESTAMP (buf) = dvdlpcmdec->timestamp;
   }
+
+  dvdlpcmdec->timestamp += GST_BUFFER_DURATION (buf);
 
   GST_LOG_OBJECT (dvdlpcmdec, "Updated timestamp to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
@@ -315,7 +323,7 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
   guint first_access;
   guint32 header;
   GstBuffer *subbuf;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   gint off, len;
 
   dvdlpcmdec = GST_DVDLPCMDEC (gst_pad_get_parent (pad));
@@ -348,7 +356,8 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
     goto done;
   }
 
-  header = (data[2] << 16) | (data[3] << 8) | data[4];
+  /* Don't keep the 'frame number' low 5 bits of the first byte */
+  header = ((data[2] & 0xC0) << 16) | (data[3] << 8) | data[4];
 
   /* see if we have a new header */
   if (header != dvdlpcmdec->header) {
@@ -389,11 +398,14 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
   off = 5;
 
   if (first_access > 4) {
+    guint samples = 0;
+    GstClockTime ts;
+
     /* length of first buffer */
     len = first_access - 4;
 
-    GST_LOG_OBJECT (dvdlpcmdec, "Creating first sub-buffer off %d, len %d", off,
-        len);
+    GST_LOG_OBJECT (dvdlpcmdec, "Creating first sub-buffer off %d, len %d",
+        off, len);
 
     /* see if we need a subbuffer without timestamp */
     if (off + len > size) {
@@ -406,7 +418,35 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
     }
 
     subbuf = gst_buffer_create_sub (buf, off, len);
-    GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+
+    /* If we don't have a stored timestamp from the last packet, 
+     * (it's straight after a new-segment, but we have one on the
+     * first access buffer, then calculate the timestamp to align
+     * this buffer to just before the first_access buffer */
+    if (!GST_CLOCK_TIME_IS_VALID (dvdlpcmdec->timestamp) &&
+        GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+      switch (dvdlpcmdec->width) {
+        case 16:
+          samples = len / dvdlpcmdec->channels / 2;
+          break;
+        case 20:
+          samples = (len / dvdlpcmdec->channels) * 2 / 5;
+          break;
+        case 24:
+          samples = len / dvdlpcmdec->channels / 3;
+          break;
+      }
+    }
+    if (samples != 0) {
+      ts = gst_util_uint64_scale (samples, GST_SECOND, dvdlpcmdec->rate);
+      if (ts < GST_BUFFER_TIMESTAMP (buf))
+        GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf) - ts;
+      else
+        GST_BUFFER_TIMESTAMP (subbuf) = 0;
+    } else {
+      GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+    }
+
     ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
     if (ret != GST_FLOW_OK)
       goto done;
@@ -462,7 +502,9 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
   size = GST_BUFFER_SIZE (buf);
   data = GST_BUFFER_DATA (buf);
 
-  GST_LOG_OBJECT (dvdlpcmdec, "got buffer %p of size %d", buf, size);
+  GST_LOG_OBJECT (dvdlpcmdec,
+      "got buffer %p of size %d with ts %" GST_TIME_FORMAT,
+      buf, size, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   if (dvdlpcmdec->rate == 0)
     goto not_negotiated;
@@ -475,7 +517,7 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
       /* We can just pass 16-bits straight through intact, once we set 
        * appropriate things on the buffer */
       samples = size / dvdlpcmdec->channels / 2;
-      buf = gst_buffer_make_writable (buf);
+      buf = gst_buffer_make_metadata_writable (buf);
       break;
     }
     case 20:
@@ -598,6 +640,45 @@ invalid_width:
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
   }
+}
+
+static gboolean
+dvdlpcmdec_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstDvdLpcmDec *dvdlpcmdec = GST_DVDLPCMDEC (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gdouble rate, arate;
+      GstFormat format;
+      gboolean update;
+      gint64 start, end, base;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate,
+          &format, &start, &end, &base);
+
+      GST_DEBUG_OBJECT (dvdlpcmdec,
+          "new segment, format=%d, start = %" G_GINT64_FORMAT
+          ", end = %" G_GINT64_FORMAT ", position %" G_GINT64_FORMAT,
+          format, start, end, base);
+
+      dvdlpcmdec->timestamp = GST_CLOCK_TIME_NONE;
+      if (format == GST_FORMAT_TIME)
+        dvdlpcmdec->segment_start = start;
+      else
+        dvdlpcmdec->segment_start = 0;
+
+      GST_DEBUG_OBJECT (dvdlpcmdec,
+          "Have new segment. Resetting timestamp. segment_start = % "
+          G_GINT64_FORMAT, dvdlpcmdec->segment_start);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_event_default (pad, event);
 }
 
 static GstStateChangeReturn
