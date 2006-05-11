@@ -121,7 +121,7 @@ static void gst_buffer_init (GTypeInstance * instance, gpointer g_class);
 static void gst_buffer_class_init (gpointer g_class, gpointer class_data);
 static void gst_buffer_finalize (GstBuffer * buffer);
 static GstBuffer *_gst_buffer_copy (GstBuffer * buffer);
-
+static GType gst_subbuffer_get_type (void);
 
 void
 _gst_buffer_initialize (void)
@@ -129,6 +129,7 @@ _gst_buffer_initialize (void)
   gpointer ptr;
 
   gst_buffer_get_type ();
+  gst_subbuffer_get_type ();
 
   /* the GstMiniObject types need to be class_ref'd once before it can be
    * done from multiple threads;

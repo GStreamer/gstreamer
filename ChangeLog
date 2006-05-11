@@ -1,3 +1,10 @@
+2006-05-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbuffer.c: (_gst_buffer_initialize):
+	Register subbufer along with the buffer type so that
+	it does not accidentally gets registered from N
+	different streaming threads in a non threadsafe way.
+
 2006-05-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbuffer.h:
