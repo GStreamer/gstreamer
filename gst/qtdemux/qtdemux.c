@@ -302,7 +302,7 @@ static void qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag,
     GNode * node);
 
 static void gst_qtdemux_handle_esds (GstQTDemux * qtdemux,
-    QtDemuxStream * stream, GNode * esds);
+    QtDemuxStream * stream, GNode * esds, GstTagList * list);
 static GstCaps *qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     const guint8 * stsd_data, const gchar ** codec_name);
 static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux,
@@ -2225,6 +2225,8 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
 
           buf += len;
         }
+      } else {
+        GST_WARNING ("unhandled mp4a version 0x%08x", version);
       }
     } else if (fourcc == FOURCC_mp4v) {
       void *buf;
@@ -3063,7 +3065,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       esds = qtdemux_tree_get_child_by_type (mp4v, FOURCC_esds);
 
     if (esds) {
-      gst_qtdemux_handle_esds (qtdemux, stream, esds);
+      gst_qtdemux_handle_esds (qtdemux, stream, esds, list);
     } else {
       if (QTDEMUX_FOURCC_GET ((char *) stsd->data + 16 + 4) ==
           GST_MAKE_FOURCC ('a', 'v', 'c', '1')) {
@@ -3258,7 +3260,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     }
 
     if (esds) {
-      gst_qtdemux_handle_esds (qtdemux, stream, esds);
+      gst_qtdemux_handle_esds (qtdemux, stream, esds, list);
     } else {
       if (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4) ==
           GST_MAKE_FOURCC ('Q', 'D', 'M', '2')) {
@@ -3787,9 +3789,10 @@ get_size (guint8 * ptr, guint8 ** end)
   return len;
 }
 
+/* this can change the codec originally present in @list */
 static void
 gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
-    GNode * esds)
+    GNode * esds, GstTagList * list)
 {
   int len = QTDEMUX_GUINT32_GET (esds->data);
   guint8 *ptr = esds->data;
@@ -3797,6 +3800,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
   int tag;
   guint8 *data_ptr = NULL;
   int data_len = 0;
+  guint8 object_type_id = 0;
 
   qtdemux_dump_mem (ptr, len);
   ptr += 8;
@@ -3817,8 +3821,8 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         ptr += 3;
         break;
       case 0x04:
-        GST_DEBUG_OBJECT (qtdemux, "object_type_id %02x",
-            QTDEMUX_GUINT8_GET (ptr));
+        object_type_id = QTDEMUX_GUINT8_GET (ptr);
+        GST_DEBUG_OBJECT (qtdemux, "object_type_id %02x", object_type_id);
         GST_DEBUG_OBJECT (qtdemux, "stream_type %02x",
             QTDEMUX_GUINT8_GET (ptr + 1));
         GST_DEBUG_OBJECT (qtdemux, "buffer_size_db %02x",
@@ -3855,6 +3859,20 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
     gst_caps_set_simple (stream->caps, "codec_data", GST_TYPE_BUFFER,
         buffer, NULL);
     gst_buffer_unref (buffer);
+  }
+  /* object_type_id in the stsd atom in mp4a tells us about AAC or plain
+   * MPEG audio */
+  switch (object_type_id) {
+    case 107:
+      /* change to mpeg1 layer 3 audio */
+      gst_caps_set_simple (stream->caps, "layer", G_TYPE_INT, 3,
+          "mpegversion", G_TYPE_INT, 1, NULL);
+      if (list)
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            GST_TAG_AUDIO_CODEC, "MPEG-1 layer 3", NULL);
+      break;
+    default:
+      break;
   }
 }
 
