@@ -147,8 +147,9 @@ G_STMT_START { \
  * some caps that match it, and store them in the given pointers
  * returns buffers and caps with a refcount of 1 */
 static void
-gst_multifdsink_create_streamheader (guint8 * data1,
-    guint8 * data2, GstBuffer ** hbuf1, GstBuffer ** hbuf2, GstCaps ** caps)
+gst_multifdsink_create_streamheader (const gchar * data1,
+    const gchar * data2, GstBuffer ** hbuf1, GstBuffer ** hbuf2,
+    GstCaps ** caps)
 {
   GValue array = { 0 };
   GValue value = { 0 };
