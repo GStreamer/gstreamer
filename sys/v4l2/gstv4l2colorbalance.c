@@ -1,5 +1,6 @@
 /* GStreamer Color Balance interface implementation
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * gstv4l2colorbalance.c: color balance interface implementation for V4L2
  *
@@ -25,15 +26,7 @@
 
 #include <gst/gst.h>
 #include "gstv4l2colorbalance.h"
-#include "gstv4l2element.h"
-
-static const GList *gst_v4l2_color_balance_list_channels (GstColorBalance *
-    balance);
-static void gst_v4l2_color_balance_set_value (GstColorBalance * balance,
-    GstColorBalanceChannel * channel, gint value);
-static gint gst_v4l2_color_balance_get_value (GstColorBalance * balance,
-    GstColorBalanceChannel * channel);
-
+#include "gstv4l2object.h"
 
 GST_BOILERPLATE (GstV4l2ColorBalanceChannel,
     gst_v4l2_color_balance_channel,
@@ -59,67 +52,55 @@ gst_v4l2_color_balance_channel_init (GstV4l2ColorBalanceChannel * channel,
   channel->id = (guint32) - 1;
 }
 
-void
-gst_v4l2_color_balance_interface_init (GstColorBalanceClass * klass)
-{
-  GST_COLOR_BALANCE_TYPE (klass) = GST_COLOR_BALANCE_HARDWARE;
-
-  /* default virtual functions */
-  klass->list_channels = gst_v4l2_color_balance_list_channels;
-  klass->set_value = gst_v4l2_color_balance_set_value;
-  klass->get_value = gst_v4l2_color_balance_get_value;
-}
-
 static G_GNUC_UNUSED gboolean
-gst_v4l2_color_balance_contains_channel (GstV4l2Element * v4l2element,
+gst_v4l2_color_balance_contains_channel (GstV4l2Object * v4l2object,
     GstV4l2ColorBalanceChannel * v4l2channel)
 {
   const GList *item;
 
-  for (item = v4l2element->colors; item != NULL; item = item->next)
+  for (item = v4l2object->colors; item != NULL; item = item->next)
     if (item->data == v4l2channel)
       return TRUE;
 
   return FALSE;
 }
 
-static const GList *
-gst_v4l2_color_balance_list_channels (GstColorBalance * balance)
+const GList *
+gst_v4l2_color_balance_list_channels (GstV4l2Object * v4l2object)
 {
-  return GST_V4L2ELEMENT (balance)->colors;
+  return v4l2object->colors;
 }
 
-static void
-gst_v4l2_color_balance_set_value (GstColorBalance * balance,
+void
+gst_v4l2_color_balance_set_value (GstV4l2Object * v4l2object,
     GstColorBalanceChannel * channel, gint value)
 {
-  GstV4l2Element *v4l2element = GST_V4L2ELEMENT (balance);
+
   GstV4l2ColorBalanceChannel *v4l2channel =
       GST_V4L2_COLOR_BALANCE_CHANNEL (channel);
 
   /* assert that we're opened and that we're using a known item */
-  g_return_if_fail (GST_V4L2_IS_OPEN (v4l2element));
-  g_return_if_fail (gst_v4l2_color_balance_contains_channel (v4l2element,
+  g_return_if_fail (GST_V4L2_IS_OPEN (v4l2object));
+  g_return_if_fail (gst_v4l2_color_balance_contains_channel (v4l2object,
           v4l2channel));
 
-  gst_v4l2_set_attribute (v4l2element, v4l2channel->id, value);
+  gst_v4l2_set_attribute (v4l2object, v4l2channel->id, value);
 }
 
-static gint
-gst_v4l2_color_balance_get_value (GstColorBalance * balance,
+gint
+gst_v4l2_color_balance_get_value (GstV4l2Object * v4l2object,
     GstColorBalanceChannel * channel)
 {
-  GstV4l2Element *v4l2element = GST_V4L2ELEMENT (balance);
   GstV4l2ColorBalanceChannel *v4l2channel =
       GST_V4L2_COLOR_BALANCE_CHANNEL (channel);
   gint value;
 
   /* assert that we're opened and that we're using a known item */
-  g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2element), 0);
-  g_return_val_if_fail (gst_v4l2_color_balance_contains_channel (v4l2element,
+  g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2object), 0);
+  g_return_val_if_fail (gst_v4l2_color_balance_contains_channel (v4l2object,
           v4l2channel), 0);
 
-  if (!gst_v4l2_get_attribute (v4l2element, v4l2channel->id, &value))
+  if (!gst_v4l2_get_attribute (v4l2object, v4l2channel->id, &value))
     return 0;
 
   return value;

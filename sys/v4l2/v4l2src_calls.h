@@ -48,8 +48,11 @@ gboolean gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
 
 void gst_v4l2src_free_buffer (GstBuffer * buffer);
 
+extern gboolean
+gst_v4l2src_update_fps (GstV4l2Object * v4l2object);
 
-gboolean gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d);
+extern gboolean
+gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d);
 
 GValue *gst_v4l2src_get_fps_list (GstV4l2Src * v4l2src);
 

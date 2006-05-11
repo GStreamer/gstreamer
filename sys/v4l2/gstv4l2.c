@@ -3,6 +3,7 @@
  * gstv4l2.c: plugin for v4l2 elements
  *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2001-2002 Edgard Lima <edgard.lima@indt.org.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -28,7 +29,7 @@
 
 #include <gst/gst.h>
 
-#include "gstv4l2element.h"
+#include "gstv4l2object.h"
 #include "gstv4l2src.h"
 /* #include "gstv4l2jpegsrc.h" */
 /* #include "gstv4l2mjpegsrc.h" */

@@ -1,5 +1,6 @@
 /* GStreamer X-based overlay interface implementation
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * gstv4l2xoverlay.c: X-based overlay interface implementation for V4L2
  *
@@ -32,11 +33,8 @@
 #include <sys/stat.h>
 
 #include "gstv4l2xoverlay.h"
-#include "gstv4l2element.h"
+#include "gstv4l2object.h"
 #include "v4l2_calls.h"
-
-GST_DEBUG_CATEGORY_STATIC (v4l2xv_debug);
-#define GST_CAT_DEFAULT v4l2xv_debug
 
 struct _GstV4l2Xv
 {
@@ -45,21 +43,18 @@ struct _GstV4l2Xv
   GMutex *mutex;
 };
 
-static void gst_v4l2_xoverlay_set_xwindow_id (GstXOverlay * overlay,
-    XID xwindow_id);
+GST_DEBUG_CATEGORY_STATIC (v4l2xv_debug);
+#define GST_CAT_DEFAULT v4l2xv_debug
 
 void
 gst_v4l2_xoverlay_interface_init (GstXOverlayClass * klass)
 {
-  /* default virtual functions */
-  klass->set_xwindow_id = gst_v4l2_xoverlay_set_xwindow_id;
-
   GST_DEBUG_CATEGORY_INIT (v4l2xv_debug, "v4l2xv", 0,
       "V4L2 XOverlay interface debugging");
 }
 
 static void
-gst_v4l2_xoverlay_open (GstV4l2Element * v4l2element)
+gst_v4l2_xoverlay_open (GstV4l2Object * v4l2object)
 {
   struct stat s;
   GstV4l2Xv *v4l2xv;
@@ -71,33 +66,35 @@ gst_v4l2_xoverlay_open (GstV4l2Element * v4l2element)
 
   /* we need a display, obviously */
   if (!name || !(dpy = XOpenDisplay (name))) {
-    GST_WARNING_OBJECT (v4l2element,
+    GST_WARNING_OBJECT (v4l2object->element,
         "No $DISPLAY set or failed to open - no overlay");
     return;
   }
 
   /* First let's check that XVideo extension is available */
   if (!XQueryExtension (dpy, "XVideo", &i, &i, &i)) {
-    GST_WARNING_OBJECT (v4l2element, "Xv extension not available - no overlay");
+    GST_WARNING_OBJECT (v4l2object->element,
+        "Xv extension not available - no overlay");
     XCloseDisplay (dpy);
     return;
   }
 
   /* find port that belongs to this device */
   if (XvQueryExtension (dpy, &ver, &rel, &req, &ev, &err) != Success) {
-    GST_WARNING_OBJECT (v4l2element, "Xv extension not supported - no overlay");
+    GST_WARNING_OBJECT (v4l2object->element,
+        "Xv extension not supported - no overlay");
     XCloseDisplay (dpy);
     return;
   }
   if (XvQueryAdaptors (dpy, DefaultRootWindow (dpy), &anum, &ai) != Success) {
-    GST_WARNING_OBJECT (v4l2element, "Failed to query Xv adaptors");
+    GST_WARNING_OBJECT (v4l2object->element, "Failed to query Xv adaptors");
     XCloseDisplay (dpy);
     return;
   }
-  if (fstat (v4l2element->video_fd, &s) < 0) {
-    GST_ELEMENT_ERROR (v4l2element, RESOURCE, GST_RESOURCE_ERROR_NOT_FOUND,
+  if (fstat (v4l2object->video_fd, &s) < 0) {
+    GST_ELEMENT_ERROR (v4l2object, RESOURCE, GST_RESOURCE_ERROR_NOT_FOUND,
         (_("Cannot identify '%s': %d, %s\n"),
-            v4l2element->videodev, errno, strerror (errno)), GST_ERROR_SYSTEM);
+            v4l2object->videodev, errno, strerror (errno)), GST_ERROR_SYSTEM);
     XCloseDisplay (dpy);
     return;
   }
@@ -115,7 +112,7 @@ gst_v4l2_xoverlay_open (GstV4l2Element * v4l2element)
   XvFreeAdaptorInfo (ai);
 
   if (id == 0) {
-    GST_WARNING (v4l2element, "Did not find XvPortID for device - no overlay");
+    GST_WARNING (v4l2object, "Did not find XvPortID for device - no overlay");
     XCloseDisplay (dpy);
     return;
   }
@@ -125,24 +122,23 @@ gst_v4l2_xoverlay_open (GstV4l2Element * v4l2element)
   v4l2xv->port = id;
   v4l2xv->mutex = g_mutex_new ();
   v4l2xv->idle_id = 0;
-  v4l2element->xv = v4l2xv;
+  v4l2object->xv = v4l2xv;
 
-  if (v4l2element->xwindow_id) {
-    gst_v4l2_xoverlay_set_xwindow_id (GST_X_OVERLAY (v4l2element),
-        v4l2element->xwindow_id);
+  if (v4l2object->xwindow_id) {
+    gst_v4l2_xoverlay_set_xwindow_id (v4l2object, v4l2object->xwindow_id);
   }
 }
 
 static void
-gst_v4l2_xoverlay_close (GstV4l2Element * v4l2element)
+gst_v4l2_xoverlay_close (GstV4l2Object * v4l2object)
 {
-  GstV4l2Xv *v4l2xv = v4l2element->xv;
+  GstV4l2Xv *v4l2xv = v4l2object->xv;
 
-  if (!v4l2element->xv)
+  if (!v4l2object->xv)
     return;
 
-  if (v4l2element->xwindow_id) {
-    gst_v4l2_xoverlay_set_xwindow_id (GST_X_OVERLAY (v4l2element), 0);
+  if (v4l2object->xwindow_id) {
+    gst_v4l2_xoverlay_set_xwindow_id (v4l2object, 0);
   }
 
   XCloseDisplay (v4l2xv->dpy);
@@ -150,35 +146,35 @@ gst_v4l2_xoverlay_close (GstV4l2Element * v4l2element)
   if (v4l2xv->idle_id)
     g_source_remove (v4l2xv->idle_id);
   g_free (v4l2xv);
-  v4l2element->xv = NULL;
+  v4l2object->xv = NULL;
 }
 
 void
-gst_v4l2_xoverlay_start (GstV4l2Element * v4l2element)
+gst_v4l2_xoverlay_start (GstV4l2Object * v4l2object)
 {
-  if (v4l2element->xwindow_id) {
-    gst_v4l2_xoverlay_open (v4l2element);
+  if (v4l2object->xwindow_id) {
+    gst_v4l2_xoverlay_open (v4l2object);
   }
 }
 
 void
-gst_v4l2_xoverlay_stop (GstV4l2Element * v4l2element)
+gst_v4l2_xoverlay_stop (GstV4l2Object * v4l2object)
 {
-  gst_v4l2_xoverlay_close (v4l2element);
+  gst_v4l2_xoverlay_close (v4l2object);
 }
 
 static gboolean
 idle_refresh (gpointer data)
 {
-  GstV4l2Element *v4l2element = GST_V4L2ELEMENT (data);
-  GstV4l2Xv *v4l2xv = v4l2element->xv;
+  GstV4l2Object *v4l2object = GST_V4L2OBJECT (data);
+  GstV4l2Xv *v4l2xv = v4l2object->xv;
   XWindowAttributes attr;
 
   if (v4l2xv) {
     g_mutex_lock (v4l2xv->mutex);
 
-    XGetWindowAttributes (v4l2xv->dpy, v4l2element->xwindow_id, &attr);
-    XvPutVideo (v4l2xv->dpy, v4l2xv->port, v4l2element->xwindow_id,
+    XGetWindowAttributes (v4l2xv->dpy, v4l2object->xwindow_id, &attr);
+    XvPutVideo (v4l2xv->dpy, v4l2xv->port, v4l2object->xwindow_id,
         DefaultGC (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy)),
         0, 0, attr.width, attr.height, 0, 0, attr.width, attr.height);
 
@@ -191,34 +187,34 @@ idle_refresh (gpointer data)
 }
 
 static void
-gst_v4l2_xoverlay_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
+gst_v4l2_xoverlay_set_xwindow_id (GstV4l2Object * v4l2object, XID xwindow_id)
 {
-  GstV4l2Element *v4l2element = GST_V4L2ELEMENT (overlay);
   GstV4l2Xv *v4l2xv;
   XWindowAttributes attr;
-  gboolean change = (v4l2element->xwindow_id != xwindow_id);
+  gboolean change = (v4l2object->xwindow_id != xwindow_id);
 
-  GST_LOG_OBJECT (v4l2element, "Setting XID to %lx", (gulong) xwindow_id);
+  GST_LOG_OBJECT (v4l2object->element, "Setting XID to %lx",
+      (gulong) xwindow_id);
 
-  if (!v4l2element->xv && GST_V4L2_IS_OPEN (v4l2element))
-    gst_v4l2_xoverlay_open (v4l2element);
+  if (!v4l2object->xv && GST_V4L2_IS_OPEN (v4l2object))
+    gst_v4l2_xoverlay_open (v4l2object);
 
-  v4l2xv = v4l2element->xv;
+  v4l2xv = v4l2object->xv;
 
   if (v4l2xv)
     g_mutex_lock (v4l2xv->mutex);
 
   if (change) {
-    if (v4l2element->xwindow_id && v4l2xv) {
-      GST_DEBUG_OBJECT (v4l2element,
-          "Deactivating old port %lx", v4l2element->xwindow_id);
+    if (v4l2object->xwindow_id && v4l2xv) {
+      GST_DEBUG_OBJECT (v4l2object->element,
+          "Deactivating old port %lx", v4l2object->xwindow_id);
 
       XvSelectPortNotify (v4l2xv->dpy, v4l2xv->port, 0);
-      XvSelectVideoNotify (v4l2xv->dpy, v4l2element->xwindow_id, 0);
-      XvStopVideo (v4l2xv->dpy, v4l2xv->port, v4l2element->xwindow_id);
+      XvSelectVideoNotify (v4l2xv->dpy, v4l2object->xwindow_id, 0);
+      XvStopVideo (v4l2xv->dpy, v4l2xv->port, v4l2object->xwindow_id);
     }
 
-    v4l2element->xwindow_id = xwindow_id;
+    v4l2object->xwindow_id = xwindow_id;
   }
 
   if (!v4l2xv || xwindow_id == 0) {
@@ -228,20 +224,21 @@ gst_v4l2_xoverlay_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
   }
 
   if (change) {
-    GST_DEBUG_OBJECT (v4l2element, "Activating new port %lx", xwindow_id);
+    GST_DEBUG_OBJECT (v4l2object->element, "Activating new port %lx",
+        xwindow_id);
 
     /* draw */
     XvSelectPortNotify (v4l2xv->dpy, v4l2xv->port, 1);
-    XvSelectVideoNotify (v4l2xv->dpy, v4l2element->xwindow_id, 1);
+    XvSelectVideoNotify (v4l2xv->dpy, v4l2object->xwindow_id, 1);
   }
 
-  XGetWindowAttributes (v4l2xv->dpy, v4l2element->xwindow_id, &attr);
-  XvPutVideo (v4l2xv->dpy, v4l2xv->port, v4l2element->xwindow_id,
+  XGetWindowAttributes (v4l2xv->dpy, v4l2object->xwindow_id, &attr);
+  XvPutVideo (v4l2xv->dpy, v4l2xv->port, v4l2object->xwindow_id,
       DefaultGC (v4l2xv->dpy, DefaultScreen (v4l2xv->dpy)),
       0, 0, attr.width, attr.height, 0, 0, attr.width, attr.height);
 
   if (v4l2xv->idle_id)
     g_source_remove (v4l2xv->idle_id);
-  v4l2xv->idle_id = g_idle_add (idle_refresh, v4l2element);
+  v4l2xv->idle_id = g_idle_add (idle_refresh, v4l2object);
   g_mutex_unlock (v4l2xv->mutex);
 }

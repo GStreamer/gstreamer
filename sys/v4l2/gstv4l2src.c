@@ -49,9 +49,11 @@
 #include <string.h>
 #include <sys/time.h>
 #include "v4l2src_calls.h"
-#include <sys/ioctl.h>
 #include <unistd.h>
 
+#include "gstv4l2colorbalance.h"
+#include "gstv4l2tuner.h"
+#include "gstv4l2xoverlay.h"
 
 static const GstElementDetails gst_v4l2src_details =
 GST_ELEMENT_DETAILS ("Video (video4linux2/raw) Source",
@@ -65,14 +67,8 @@ GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
 
-enum
-{
-  PROP_0,
-  PROP_USE_FIXED_FPS
-};
-
-
-static guint32 gst_v4l2_formats[] = {
+OPEN_V4L2OBJECT_PROPS, PROP_USE_FIXED_FPS
+    CLOSE_V4L2OBJECT_PROPS static guint32 gst_v4l2_formats[] = {
   /* from Linux 2.6.15 videodev2.h */
   V4L2_PIX_FMT_RGB332,
   V4L2_PIX_FMT_RGB555,
@@ -130,8 +126,93 @@ static guint32 gst_v4l2_formats[] = {
 
 #define GST_V4L2_FORMAT_COUNT (G_N_ELEMENTS (gst_v4l2_formats))
 
+GST_IMPLEMENT_V4L2_PROBE_METHODS (GstV4l2SrcClass, gst_v4l2src)
 
-GST_BOILERPLATE (GstV4l2Src, gst_v4l2src, GstV4l2Element, GST_TYPE_V4L2ELEMENT);
+    GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS (GstV4l2Src, gst_v4l2src)
+
+    GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Src, gst_v4l2src)
+#ifdef HAVE_XVIDEO
+    GST_IMPLEMENT_V4L2_XOVERLAY_METHODS (GstV4l2Src, gst_v4l2src)
+#endif
+     static gboolean
+         gst_v4l2src_iface_supported (GstImplementsInterface * iface,
+    GType iface_type)
+{
+  GstV4l2Object *v4l2object = GST_V4L2SRC (iface)->v4l2object;
+
+#ifdef HAVE_XVIDEO
+  g_assert (iface_type == GST_TYPE_TUNER ||
+      iface_type == GST_TYPE_X_OVERLAY || iface_type == GST_TYPE_COLOR_BALANCE);
+#else
+  g_assert (iface_type == GST_TYPE_TUNER ||
+      iface_type == GST_TYPE_COLOR_BALANCE);
+#endif
+
+  if (v4l2object->video_fd == -1)
+    return FALSE;
+
+#ifdef HAVE_XVIDEO
+  if (iface_type == GST_TYPE_X_OVERLAY && !GST_V4L2_IS_OVERLAY (v4l2object))
+    return FALSE;
+#endif
+
+  return TRUE;
+}
+
+static void
+gst_v4l2src_interface_init (GstImplementsInterfaceClass * klass)
+{
+  /*
+   * default virtual functions 
+   */
+  klass->supported = gst_v4l2src_iface_supported;
+}
+
+void
+gst_v4l2src_init_interfaces (GType type)
+{
+  static const GInterfaceInfo v4l2iface_info = {
+    (GInterfaceInitFunc) gst_v4l2src_interface_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo v4l2_tuner_info = {
+    (GInterfaceInitFunc) gst_v4l2src_tuner_interface_init,
+    NULL,
+    NULL,
+  };
+#ifdef HAVE_XVIDEO
+  static const GInterfaceInfo v4l2_xoverlay_info = {
+    (GInterfaceInitFunc) gst_v4l2src_xoverlay_interface_init,
+    NULL,
+    NULL,
+  };
+#endif
+  static const GInterfaceInfo v4l2_colorbalance_info = {
+    (GInterfaceInitFunc) gst_v4l2src_color_balance_interface_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo v4l2_propertyprobe_info = {
+    (GInterfaceInitFunc) gst_v4l2src_property_probe_interface_init,
+    NULL,
+    NULL,
+  };
+
+  g_type_add_interface_static (type,
+      GST_TYPE_IMPLEMENTS_INTERFACE, &v4l2iface_info);
+  g_type_add_interface_static (type, GST_TYPE_TUNER, &v4l2_tuner_info);
+#ifdef HAVE_XVIDEO
+  g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &v4l2_xoverlay_info);
+#endif
+  g_type_add_interface_static (type,
+      GST_TYPE_COLOR_BALANCE, &v4l2_colorbalance_info);
+  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
+      &v4l2_propertyprobe_info);
+}
+
+GST_BOILERPLATE_FULL (GstV4l2Src, gst_v4l2src, GstPushSrc, GST_TYPE_PUSH_SRC,
+    gst_v4l2src_init_interfaces);
 
 static void gst_v4l2src_dispose (GObject * object);
 
@@ -156,6 +237,9 @@ static void
 gst_v4l2src_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GstV4l2SrcClass *gstv4l2src_class = GST_V4L2SRC_CLASS (g_class);
+
+  gstv4l2src_class->v4l2_class_devices = NULL;
 
   GST_DEBUG_CATEGORY_INIT (v4l2src_debug, "v4l2src", 0, "V4L2 source element");
 
@@ -181,6 +265,8 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   gobject_class->set_property = gst_v4l2src_set_property;
   gobject_class->get_property = gst_v4l2src_get_property;
 
+  gst_v4l2object_install_properties_helper (gobject_class);
+
   g_object_class_install_property
       (gobject_class, PROP_USE_FIXED_FPS,
       g_param_spec_boolean ("use_fixed_fps", "Use Fixed FPS",
@@ -202,6 +288,9 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
 static void
 gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
 {
+
+  v4l2src->v4l2object = gst_v4l2object_new (GST_ELEMENT (v4l2src),
+      gst_v4l2_get_input, gst_v4l2_set_input, gst_v4l2src_update_fps);
 
   v4l2src->breq.count = 0;
 
@@ -244,17 +333,24 @@ gst_v4l2src_set_property (GObject * object,
   g_return_if_fail (GST_IS_V4L2SRC (object));
   v4l2src = GST_V4L2SRC (object);
 
-  switch (prop_id) {
-    case PROP_USE_FIXED_FPS:
-      if (!GST_V4L2_IS_ACTIVE (GST_V4L2ELEMENT (v4l2src))) {
-        v4l2src->use_fixed_fps = g_value_get_boolean (value);
-      }
-      break;
 
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+  if (!gst_v4l2object_set_property_helper (v4l2src->v4l2object,
+          prop_id, value, pspec)) {
+
+    switch (prop_id) {
+      case PROP_USE_FIXED_FPS:
+        if (!GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
+          v4l2src->use_fixed_fps = g_value_get_boolean (value);
+        }
+        break;
+
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
+
   }
+
 }
 
 
@@ -267,41 +363,22 @@ gst_v4l2src_get_property (GObject * object,
   g_return_if_fail (GST_IS_V4L2SRC (object));
   v4l2src = GST_V4L2SRC (object);
 
-  switch (prop_id) {
-    case PROP_USE_FIXED_FPS:
-      g_value_set_boolean (value, v4l2src->use_fixed_fps);
-      break;
+  if (!gst_v4l2object_get_property_helper (v4l2src->v4l2object,
+          prop_id, value, pspec)) {
 
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
+    switch (prop_id) {
+      case PROP_USE_FIXED_FPS:
+        g_value_set_boolean (value, v4l2src->use_fixed_fps);
+        break;
 
-
-gboolean
-get_fmt_width_height (GstV4l2Src * v4l2src, int *width, int *height)
-{
-  int ret;
-
-  struct v4l2_format format;
-
-  memset (&format, 0x00, sizeof (format));
-
-  format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-
-  ret = ioctl (GST_V4L2ELEMENT (v4l2src)->video_fd, VIDIOC_G_FMT, &format);
-
-  if (ret == 0) {
-
-    *width = format.fmt.pix.width;
-    *height = format.fmt.pix.height;
-
+      default:
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+        break;
+    }
   }
 
-  return (ret == 0);
-
 }
+
 
 /* this function is a bit of a last resort */
 static void
@@ -636,7 +713,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
   GstStructure *structure;
   guint fps_n, fps_d;
 
-  if (!GST_V4L2_IS_OPEN (GST_V4L2ELEMENT (v4l2src))) {
+  if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object)) {
     return
         gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD
             (v4l2src)));
@@ -702,11 +779,11 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
   v4l2src = GST_V4L2SRC (src);
 
   /* if we're not open, punt -- we'll get setcaps'd later via negotiate */
-  if (!GST_V4L2_IS_OPEN (v4l2src))
+  if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object))
     return FALSE;
 
   /* make sure we stop capturing and dealloc buffers */
-  if (GST_V4L2_IS_ACTIVE (v4l2src)) {
+  if (GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
     if (!gst_v4l2src_capture_stop (v4l2src))
       return FALSE;
     if (!gst_v4l2src_capture_deinit (v4l2src))
@@ -751,7 +828,7 @@ gst_v4l2src_start (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
 
-  if (!GST_BASE_SRC_CLASS (parent_class)->start (src))
+  if (!gst_v4l2object_start (v4l2src->v4l2object))
     return FALSE;
 
   v4l2src->offset = 0;
@@ -764,15 +841,16 @@ gst_v4l2src_stop (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
 
-  if (GST_V4L2_IS_ACTIVE (v4l2src) && !gst_v4l2src_capture_stop (v4l2src))
+  if (GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)
+      && !gst_v4l2src_capture_stop (v4l2src))
     return FALSE;
 
-  if (GST_V4L2ELEMENT (v4l2src)->buffer != NULL) {
+  if (v4l2src->v4l2object->buffer != NULL) {
     if (!gst_v4l2src_capture_deinit (v4l2src))
       return FALSE;
   }
 
-  if (!GST_BASE_SRC_CLASS (parent_class)->stop (src))
+  if (!gst_v4l2object_stop (v4l2src->v4l2object))
     return FALSE;
 
   return TRUE;
@@ -791,7 +869,7 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
     GST_BUFFER_OFFSET (*buf) = GST_BUFFER_OFFSET_NONE;
 
     amount =
-        read (GST_V4L2ELEMENT (v4l2src)->video_fd, GST_BUFFER_DATA (*buf),
+        read (v4l2src->v4l2object->video_fd, GST_BUFFER_DATA (*buf),
         buffersize);
     if (amount == buffersize) {
       break;
@@ -801,14 +879,14 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
       } else {
         GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC, (NULL),
             ("error read()ing a buffer on device %s: %s",
-                GST_V4L2ELEMENT (v4l2src)->videodev, g_strerror (errno)));
+                v4l2src->v4l2object->videodev, g_strerror (errno)));
         gst_buffer_unref (*buf);
         return GST_FLOW_ERROR;
       }
     } else {
       GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC, (NULL),
           ("error read()ing a buffer on device %s: got only %d bytes instead of expected %d",
-              GST_V4L2ELEMENT (v4l2src)->videodev, amount, buffersize));
+              v4l2src->v4l2object->videodev, amount, buffersize));
       gst_buffer_unref (*buf);
       return GST_FLOW_ERROR;
     }
