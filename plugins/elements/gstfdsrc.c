@@ -144,8 +144,8 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
 
   gobject_class = G_OBJECT_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
-  gstbasesrc_class = (GstBaseSrcClass *) klass;
-  gstpush_src_class = (GstPushSrcClass *) klass;
+  gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
+  gstpush_src_class = GST_PUSH_SRC_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -153,7 +153,7 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
   gobject_class->get_property = gst_fd_src_get_property;
   gobject_class->dispose = gst_fd_src_dispose;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FD,
+  g_object_class_install_property (gobject_class, PROP_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to read from",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
 

@@ -192,7 +192,7 @@ gst_object_class_init (GstObjectClass * klass)
 {
   GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -203,7 +203,7 @@ gst_object_class_init (GstObjectClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_object_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_object_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NAME,
+  g_object_class_install_property (gobject_class, ARG_NAME,
       g_param_spec_string ("name", "Name", "The name of the object",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 

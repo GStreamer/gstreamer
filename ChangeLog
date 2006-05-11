@@ -1,3 +1,31 @@
+2006-05-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstclock.c: (gst_clock_class_init):
+	* gst/gstindex.c: (gst_index_class_init):
+	* gst/gstobject.c: (gst_object_class_init):
+	* gst/gstpad.c: (gst_pad_class_init):
+	* gst/gstpipeline.c: (gst_pipeline_class_init):
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init):
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init):
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_class_init):
+	* libs/gst/net/gstnetclientclock.c:
+	(gst_net_client_clock_class_init):
+	* libs/gst/net/gstnettimeprovider.c:
+	(gst_net_time_provider_class_init):
+	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_class_init):
+	* plugins/elements/gstfakesink.c: (gst_fake_sink_class_init):
+	* plugins/elements/gstfakesrc.c: (gst_fake_src_class_init):
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_class_init):
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_class_init):
+	* plugins/elements/gstfilesink.c: (gst_file_sink_class_init):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_class_init):
+	* plugins/elements/gstidentity.c: (gst_identity_class_init):
+	* plugins/elements/gsttee.c: (gst_tee_class_init):
+	* tests/old/examples/plugins/example.c: (gst_example_class_init):
+	* tests/old/testsuite/threads/signals.c: (gst_test_class_init):
+          G_OBJECT_CLASS macro usage batch cleanup, fixes #337747 for core
+
 2006-05-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbuffer.c: (_gst_buffer_initialize):

@@ -152,10 +152,8 @@ static void
 gst_index_class_init (GstIndexClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -174,7 +172,7 @@ gst_index_class_init (GstIndexClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_index_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_index_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RESOLVER,
+  g_object_class_install_property (gobject_class, ARG_RESOLVER,
       g_param_spec_enum ("resolver", "Resolver",
           "Select a predefined object to string mapper",
           GST_TYPE_INDEX_RESOLVER, GST_INDEX_RESOLVER_PATH, G_PARAM_READWRITE));

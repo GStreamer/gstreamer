@@ -121,7 +121,7 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
 {
   GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_net_client_clock_finalize;
   gobject_class->get_property = gst_net_client_clock_get_property;
@@ -131,7 +131,7 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
       g_param_spec_string ("address", "address",
           "The address of the machine providing a time server, "
           "as a dotted quad (x.x.x.x)", DEFAULT_ADDRESS, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
+  g_object_class_install_property (gobject_class, PROP_PORT,
       g_param_spec_int ("port", "port",
           "The port on which the remote server is listening", 0, G_MAXUINT16,
           DEFAULT_PORT, G_PARAM_READWRITE));

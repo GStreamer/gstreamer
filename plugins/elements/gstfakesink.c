@@ -149,38 +149,38 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbase_sink_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbase_sink_class = (GstBaseSinkClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
+  gstbase_sink_class = GST_BASE_SINK_CLASS (klass);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_fake_sink_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_fake_sink_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_STATE_ERROR,
+  g_object_class_install_property (gobject_class, PROP_STATE_ERROR,
       g_param_spec_enum ("state_error", "State Error",
           "Generate a state change error", GST_TYPE_FAKE_SINK_STATE_ERROR,
           DEFAULT_STATE_ERROR, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LAST_MESSAGE,
+  g_object_class_install_property (gobject_class, PROP_LAST_MESSAGE,
       g_param_spec_string ("last_message", "Last Message",
           "The message describing current status", DEFAULT_LAST_MESSAGE,
           G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIGNAL_HANDOFFS,
+  g_object_class_install_property (gobject_class, PROP_SIGNAL_HANDOFFS,
       g_param_spec_boolean ("signal-handoffs", "Signal handoffs",
           "Send a signal before unreffing the buffer", DEFAULT_SIGNAL_HANDOFFS,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
+  g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent",
           "Don't produce last_message events", DEFAULT_SILENT,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DUMP,
+  g_object_class_install_property (gobject_class, PROP_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump received bytes to stdout",
           DEFAULT_DUMP, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
+  g_object_class_install_property (gobject_class,
       PROP_CAN_ACTIVATE_PUSH,
       g_param_spec_boolean ("can-activate-push", "Can activate push",
           "Can activate in push mode", DEFAULT_CAN_ACTIVATE_PUSH,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
+  g_object_class_install_property (gobject_class,
       PROP_CAN_ACTIVATE_PULL,
       g_param_spec_boolean ("can-activate-pull", "Can activate pull",
           "Can activate in pull mode", DEFAULT_CAN_ACTIVATE_PULL,

@@ -195,29 +195,29 @@ gst_file_src_class_init (GstFileSrcClass * klass)
   GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesrc_class = (GstBaseSrcClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
+  gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
 
   gobject_class->set_property = gst_file_src_set_property;
   gobject_class->get_property = gst_file_src_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
+  g_object_class_install_property (gobject_class, ARG_FD,
       g_param_spec_int ("fd", "File-descriptor",
           "File-descriptor for the file being mmap()d", 0, G_MAXINT, 0,
           G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
+  g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "File Location",
           "Location of the file to read", NULL, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MMAPSIZE,
+  g_object_class_install_property (gobject_class, ARG_MMAPSIZE,
       g_param_spec_ulong ("mmapsize", "mmap() Block Size",
           "Size in bytes of mmap()d regions", 0, G_MAXULONG, DEFAULT_MMAPSIZE,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TOUCH,
+  g_object_class_install_property (gobject_class, ARG_TOUCH,
       g_param_spec_boolean ("touch", "Touch read data",
           "Touch data to force disk read", DEFAULT_TOUCH, G_PARAM_READWRITE));
 
-  gobject_class->finalize = gst_file_src_finalize;
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_file_src_finalize);
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_file_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_file_src_stop);

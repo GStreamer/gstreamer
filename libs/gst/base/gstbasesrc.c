@@ -302,8 +302,8 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GstBaseSrcPrivate));
 
@@ -313,15 +313,15 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_base_src_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_base_src_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BLOCKSIZE,
+  g_object_class_install_property (gobject_class, PROP_BLOCKSIZE,
       g_param_spec_ulong ("blocksize", "Block size",
           "Size in bytes to read per buffer", 1, G_MAXULONG, DEFAULT_BLOCKSIZE,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_NUM_BUFFERS,
+  g_object_class_install_property (gobject_class, PROP_NUM_BUFFERS,
       g_param_spec_int ("num-buffers", "num-buffers",
           "Number of buffers to output before sending EOS", -1, G_MAXINT,
           DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TYPEFIND,
+  g_object_class_install_property (gobject_class, PROP_TYPEFIND,
       g_param_spec_boolean ("typefind", "Typefind",
           "Run typefind before negotiating", DEFAULT_TYPEFIND,
           G_PARAM_READWRITE));

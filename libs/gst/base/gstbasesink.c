@@ -302,8 +302,8 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GstBaseSinkPrivate));
 
@@ -315,24 +315,22 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
 
   /* FIXME, this next value should be configured using an event from the
    * upstream element, ie, the BUFFER_SIZE event. */
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_PREROLL_QUEUE_LEN,
+  g_object_class_install_property (gobject_class, PROP_PREROLL_QUEUE_LEN,
       g_param_spec_uint ("preroll-queue-len", "Preroll queue length",
           "Number of buffers to queue during preroll", 0, G_MAXUINT,
           DEFAULT_PREROLL_QUEUE_LEN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SYNC,
+  g_object_class_install_property (gobject_class, PROP_SYNC,
       g_param_spec_boolean ("sync", "Sync", "Sync on the clock", DEFAULT_SYNC,
           G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_MAX_LATENESS,
+  g_object_class_install_property (gobject_class, PROP_MAX_LATENESS,
       g_param_spec_int64 ("max-lateness", "Max Lateness",
           "Maximum number of nanoseconds that a buffer can be late before it "
           "is dropped (-1 unlimited)", -1, G_MAXINT64, DEFAULT_MAX_LATENESS,
           G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QOS,
+  g_object_class_install_property (gobject_class, PROP_QOS,
       g_param_spec_boolean ("qos", "Qos", "Generate QoS events upstream",
           DEFAULT_QOS, G_PARAM_READWRITE));
 

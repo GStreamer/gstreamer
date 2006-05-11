@@ -173,38 +173,38 @@ gst_identity_class_init (GstIdentityClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_identity_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_identity_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SLEEP_TIME,
+  g_object_class_install_property (gobject_class, PROP_SLEEP_TIME,
       g_param_spec_uint ("sleep-time", "Sleep time",
           "Microseconds to sleep between processing", 0, G_MAXUINT,
           DEFAULT_SLEEP_TIME, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ERROR_AFTER,
+  g_object_class_install_property (gobject_class, PROP_ERROR_AFTER,
       g_param_spec_int ("error_after", "Error After", "Error after N buffers",
           G_MININT, G_MAXINT, DEFAULT_ERROR_AFTER, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
+  g_object_class_install_property (gobject_class,
       PROP_DROP_PROBABILITY, g_param_spec_float ("drop_probability",
           "Drop Probability", "The Probability a buffer is dropped", 0.0, 1.0,
           DEFAULT_DROP_PROBABILITY, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DATARATE,
+  g_object_class_install_property (gobject_class, PROP_DATARATE,
       g_param_spec_int ("datarate", "Datarate",
           "(Re)timestamps buffers with number of bytes per second (0 = inactive)",
           0, G_MAXINT, DEFAULT_DATARATE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
+  g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "silent", "silent", DEFAULT_SILENT,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SINGLE_SEGMENT,
+  g_object_class_install_property (gobject_class, PROP_SINGLE_SEGMENT,
       g_param_spec_boolean ("single-segment", "Single Segment",
           "Timestamp buffers and eat newsegments so as to appear as one segment",
           DEFAULT_SINGLE_SEGMENT, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LAST_MESSAGE,
+  g_object_class_install_property (gobject_class, PROP_LAST_MESSAGE,
       g_param_spec_string ("last-message", "last-message", "last-message", NULL,
           G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DUMP,
+  g_object_class_install_property (gobject_class, PROP_DUMP,
       g_param_spec_boolean ("dump", "Dump", "Dump buffer contents",
           DEFAULT_DUMP, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SYNC,
+  g_object_class_install_property (gobject_class, PROP_SYNC,
       g_param_spec_boolean ("sync", "Synchronize",
           "Synchronize to pipeline clock", DEFAULT_SYNC, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CHECK_PERFECT,
+  g_object_class_install_property (gobject_class, PROP_CHECK_PERFECT,
       g_param_spec_boolean ("check-perfect", "Check For Perfect Stream",
           "Verify that the stream is time- and data-contiguous",
           DEFAULT_CHECK_PERFECT, G_PARAM_READWRITE));

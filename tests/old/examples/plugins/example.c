@@ -144,8 +144,8 @@ gst_example_class_init (GstExampleClass * klass)
   /* Since the example class contains the parent classes, you can simply
    * cast the pointer to get access to the parent classes.
    */
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
 
   /* The parent class is needed for class method overrides. */
   parent_class = g_type_class_peek_parent (klass);
@@ -153,7 +153,7 @@ gst_example_class_init (GstExampleClass * klass)
   /* Here we add an argument to the object.  This argument is an integer,
    * and can be both read and written.
    */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_int ("active", "active", "active", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_ACTIVE, g_param_spec_int ("active", "active", "active", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));       /* CHECKME */
 
   /* Here we add a signal to the object. This is a very useless signal
    * called asdf. The signal will also pass a pointer to the listeners

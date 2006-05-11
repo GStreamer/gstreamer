@@ -87,8 +87,8 @@ gst_test_class_init (GstTestClass * klass)
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstobject_class = GST_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -108,7 +108,7 @@ gst_test_class_init (GstTestClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstTestClass, test_signal2), NULL,
       NULL, gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TEST_PROP,
+  g_object_class_install_property (gobject_class, ARG_TEST_PROP,
       g_param_spec_int ("test-prop", "Test Prop", "Test property",
           0, 1, 0, G_PARAM_READWRITE));
 

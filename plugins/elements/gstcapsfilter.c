@@ -124,17 +124,17 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
 
-  gobject_class = (GObjectClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->set_property = gst_capsfilter_set_property;
   gobject_class->get_property = gst_capsfilter_get_property;
   gobject_class->dispose = gst_capsfilter_dispose;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILTER_CAPS,
+  g_object_class_install_property (gobject_class, PROP_FILTER_CAPS,
       g_param_spec_boxed ("caps", _("Filter caps"),
           _("Restrict the possible allowed capabilities (NULL means ANY)"),
           GST_TYPE_CAPS, G_PARAM_READWRITE));
 
-  trans_class = (GstBaseTransformClass *) klass;
+  trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   trans_class->transform_caps = gst_capsfilter_transform_caps;
   trans_class->transform_ip = gst_capsfilter_transform_ip;
   trans_class->prepare_output_buffer = gst_capsfilter_prepare_buf;

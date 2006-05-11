@@ -118,26 +118,26 @@ gst_tee_class_init (GstTeeClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_tee_finalize);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_tee_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_tee_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_NUM_SRC_PADS,
+  g_object_class_install_property (gobject_class, PROP_NUM_SRC_PADS,
       g_param_spec_int ("num-src-pads", "num-src-pads", "num-src-pads",
           0, G_MAXINT, 0, G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_SINK_LOOP,
+  g_object_class_install_property (gobject_class, PROP_HAS_SINK_LOOP,
       g_param_spec_boolean ("has-sink-loop", "has-sink-loop", "has-sink-loop",
           FALSE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HAS_CHAIN,
+  g_object_class_install_property (gobject_class, PROP_HAS_CHAIN,
       g_param_spec_boolean ("has-chain", "has-chain", "has-chain",
           TRUE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
+  g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "silent", "silent",
           TRUE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LAST_MESSAGE,
+  g_object_class_install_property (gobject_class, PROP_LAST_MESSAGE,
       g_param_spec_string ("last_message", "last_message", "last_message",
           NULL, G_PARAM_READABLE));
 

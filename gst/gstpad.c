@@ -236,12 +236,10 @@ static void
 gst_pad_class_init (GstPadClass * klass)
 {
   GObjectClass *gobject_class;
-
-
   GstObjectClass *gstobject_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstobject_class = GST_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -303,14 +301,14 @@ gst_pad_class_init (GstPadClass * klass)
       NULL, gst_marshal_BOOLEAN__POINTER, G_TYPE_BOOLEAN, 1,
       GST_TYPE_MINI_OBJECT);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PAD_PROP_CAPS,
+  g_object_class_install_property (gobject_class, PAD_PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps", "The capabilities of the pad",
           GST_TYPE_CAPS, G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PAD_PROP_DIRECTION,
+  g_object_class_install_property (gobject_class, PAD_PROP_DIRECTION,
       g_param_spec_enum ("direction", "Direction", "The direction of the pad",
           GST_TYPE_PAD_DIRECTION, GST_PAD_UNKNOWN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PAD_PROP_TEMPLATE,
+  g_object_class_install_property (gobject_class, PAD_PROP_TEMPLATE,
       g_param_spec_object ("template", "Template",
           "The GstPadTemplate of this pad", GST_TYPE_PAD_TEMPLATE,
           G_PARAM_READWRITE));

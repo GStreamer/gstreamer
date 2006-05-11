@@ -114,13 +114,13 @@ gst_net_time_provider_class_init (GstNetTimeProviderClass * klass)
 {
   GObjectClass *gobject_class;
 
-  gobject_class = (GObjectClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_net_time_provider_finalize;
   gobject_class->set_property = gst_net_time_provider_set_property;
   gobject_class->get_property = gst_net_time_provider_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
+  g_object_class_install_property (gobject_class, PROP_PORT,
       g_param_spec_int ("port", "port",
           "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
           DEFAULT_PORT, G_PARAM_READWRITE));

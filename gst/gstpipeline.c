@@ -204,7 +204,7 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
    *
    * Since: 0.10.5
    **/
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DELAY,
+  g_object_class_install_property (gobject_class, PROP_DELAY,
       g_param_spec_uint64 ("delay", "Delay",
           "Expected delay needed for elements "
           "to spin up to PLAYING in nanoseconds", 0, G_MAXUINT64, DEFAULT_DELAY,
@@ -219,7 +219,7 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
    *
    * Since: 0.10.4
    **/
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_AUTO_FLUSH_BUS,
+  g_object_class_install_property (gobject_class, PROP_AUTO_FLUSH_BUS,
       g_param_spec_boolean ("auto-flush-bus", "Auto Flush Bus",
           "Whether to automatically flush the pipeline's bus when going "
           "from READY into NULL state", DEFAULT_AUTO_FLUSH_BUS,

@@ -123,7 +123,7 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
   gobject_class->set_property = gst_file_sink_set_property;
   gobject_class->get_property = gst_file_sink_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOCATION,
+  g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "File Location",
           "Location of the file to write", NULL, G_PARAM_READWRITE));
 

@@ -334,7 +334,7 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_base_transform_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QOS,
+  g_object_class_install_property (gobject_class, PROP_QOS,
       g_param_spec_boolean ("qos", "QoS", "handle QoS messages",
           DEFAULT_PROP_QOS, G_PARAM_READWRITE));
 

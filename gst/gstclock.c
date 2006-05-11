@@ -560,8 +560,8 @@ gst_clock_class_init (GstClockClass * klass)
   GObjectClass *gobject_class;
   GstObjectClass *gstobject_class;
 
-  gobject_class = (GObjectClass *) klass;
-  gstobject_class = (GstObjectClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstobject_class = GST_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -578,20 +578,19 @@ gst_clock_class_init (GstClockClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_clock_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_clock_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_STATS,
+  g_object_class_install_property (gobject_class, PROP_STATS,
       g_param_spec_boolean ("stats", "Stats",
           "Enable clock stats (unimplemented)", DEFAULT_STATS,
           G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WINDOW_SIZE,
+  g_object_class_install_property (gobject_class, PROP_WINDOW_SIZE,
       g_param_spec_int ("window-size", "Window size",
           "The size of the window used to calculate rate and offset", 2, 1024,
           DEFAULT_WINDOW_SIZE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_WINDOW_THRESHOLD, g_param_spec_int ("window-threshold",
-          "Window threshold",
+  g_object_class_install_property (gobject_class, PROP_WINDOW_THRESHOLD,
+      g_param_spec_int ("window-threshold", "Window threshold",
           "The threshold to start calculating rate and offset", 2, 1024,
           DEFAULT_WINDOW_THRESHOLD, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMEOUT,
+  g_object_class_install_property (gobject_class, PROP_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
           "The amount of time, in nanoseconds, to sample master and slave clocks",
           0, G_MAXUINT64, DEFAULT_TIMEOUT, G_PARAM_READWRITE));

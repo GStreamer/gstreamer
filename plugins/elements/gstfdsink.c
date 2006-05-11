@@ -172,7 +172,7 @@ gst_fd_sink_class_init (GstFdSinkClass * klass)
   gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_fd_sink_unlock);
   gstbasesink_class->event = NULL;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FD,
+  g_object_class_install_property (gobject_class, ARG_FD,
       g_param_spec_int ("fd", "fd", "An open file descriptor to write to",
           0, G_MAXINT, 1, G_PARAM_READWRITE));
 }
