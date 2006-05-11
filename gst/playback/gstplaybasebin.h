@@ -53,6 +53,7 @@ typedef struct
 
   gint           nstreams;
   GList         *streaminfo;
+  GValueArray   *streaminfo_value_array;
 
   /* contained decoded elementary streams */
   struct {

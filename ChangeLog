@@ -1,3 +1,17 @@
+2006-05-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	patch by: Sjoerd Simons (sjoerd@luon.net)
+
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
+	(group_create), (group_destroy), (add_stream),
+	(gst_play_base_bin_get_property),
+	(gst_play_base_bin_get_streaminfo_value_array):
+	* gst/playback/gstplaybasebin.h:
+	  API: GstPlayBaseBin::stream-info-value-array property
+	  use a more bindings-friendly way of exposing streaminfo
+	  using a GValueArray.  Tested in ipython.
+	  Closes #341114
+
 2006-05-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (try_to_link_1), (queue_enlarge),

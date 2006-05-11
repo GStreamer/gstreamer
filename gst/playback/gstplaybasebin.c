@@ -67,6 +67,7 @@ enum
   ARG_QUEUE_THRESHOLD,
   ARG_NSTREAMS,
   ARG_STREAMINFO,
+  ARG_STREAMINFO_VALUES,
   ARG_SOURCE,
   ARG_VIDEO,
   ARG_AUDIO,
@@ -85,6 +86,8 @@ static void gst_play_base_bin_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_play_base_bin_change_state (GstElement *
     element, GstStateChange transition);
 const GList *gst_play_base_bin_get_streaminfo (GstPlayBaseBin * play_base_bin);
+const GValueArray *gst_play_base_bin_get_streaminfo_value_array (GstPlayBaseBin
+    * play_base_bin);
 
 static gboolean prepare_output (GstPlayBaseBin * play_base_bin);
 static void set_active_source (GstPlayBaseBin * play_base_bin,
@@ -163,6 +166,11 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
   g_object_class_install_property (gobject_klass, ARG_STREAMINFO,
       g_param_spec_pointer ("stream-info", "Stream info", "List of streaminfo",
           G_PARAM_READABLE));
+  g_object_class_install_property (gobject_klass, ARG_STREAMINFO_VALUES,
+      g_param_spec_value_array ("stream-info-value-array",
+          "StreamInfo GValueArray", "value array of streaminfo",
+          g_param_spec_object ("streaminfo", "StreamInfo", "Streaminfo object",
+              GST_TYPE_STREAM_INFO, G_PARAM_READABLE), G_PARAM_READABLE));
   g_object_class_install_property (gobject_klass, ARG_SOURCE,
       g_param_spec_object ("source", "Source", "Source element",
           GST_TYPE_ELEMENT, G_PARAM_READABLE));
@@ -247,6 +255,7 @@ group_create (GstPlayBaseBin * play_base_bin)
 
   group = g_new0 (GstPlayBaseGroup, 1);
   group->bin = play_base_bin;
+  group->streaminfo_value_array = g_value_array_new (0);
 
   return group;
 }
@@ -338,7 +347,7 @@ group_destroy (GstPlayBaseGroup * group)
       }
     }
 
-    /* if the group is currently being played, we have to remove the element 
+    /* if the group is currently being played, we have to remove the element
      * from the thread */
     gst_element_set_state (element, GST_STATE_NULL);
     gst_element_set_state (group->type[n].selector, GST_STATE_NULL);
@@ -356,11 +365,12 @@ group_destroy (GstPlayBaseGroup * group)
   /* free the streaminfo too */
   g_list_foreach (group->streaminfo, (GFunc) g_object_unref, NULL);
   g_list_free (group->streaminfo);
+  g_value_array_free (group->streaminfo_value_array);
   g_free (group);
 }
 
 /*
- * is called when the current building group is completely finished 
+ * is called when the current building group is completely finished
  * and ready for playback
  *
  * This function grabs lock, so take care when calling.
@@ -792,19 +802,23 @@ remove_groups (GstPlayBaseBin * play_base_bin)
   GROUP_UNLOCK (play_base_bin);
 }
 
-/* 
- * Add/remove a single stream to current  building group.
+/*
+ * Add/remove a single stream to current building group.
  *
  * Must be called with group-lock held.
  */
 static void
 add_stream (GstPlayBaseGroup * group, GstStreamInfo * info)
 {
+  GValue v = { 0, };
   GST_DEBUG ("add stream to group %p", group);
 
   /* keep ref to the group */
   g_object_set_data (G_OBJECT (info), "group", group);
 
+  g_value_init (&v, G_TYPE_OBJECT);
+  g_value_set_object (&v, info);
+  g_value_array_append (group->streaminfo_value_array, &v);
   group->streaminfo = g_list_append (group->streaminfo, info);
   if (info->type > 0 && info->type <= NUM_TYPES) {
     group->type[info->type - 1].npads++;
@@ -1836,6 +1850,11 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_pointer (value,
           (gpointer) gst_play_base_bin_get_streaminfo (play_base_bin));
       break;
+    case ARG_STREAMINFO_VALUES:{
+      g_value_set_boxed (value,
+          gst_play_base_bin_get_streaminfo_value_array (play_base_bin));
+      break;
+    }
     case ARG_SOURCE:
       _gst_gvalue_set_gstobject (value, play_base_bin->source);
       break;
@@ -1921,4 +1940,17 @@ gst_play_base_bin_get_streaminfo (GstPlayBaseBin * play_base_bin)
     info = group->streaminfo;
   }
   return info;
+}
+
+const GValueArray *
+gst_play_base_bin_get_streaminfo_value_array (GstPlayBaseBin * play_base_bin)
+{
+  GstPlayBaseGroup *group = get_active_group (play_base_bin);
+  GValueArray *array = NULL;
+
+  if (group) {
+    array = group->streaminfo_value_array;
+  }
+
+  return array;
 }
