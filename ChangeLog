@@ -1,3 +1,16 @@
+2006-05-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_remove_client_link),
+	(gst_multi_fd_sink_new_client), (gst_multi_fd_sink_stop):
+	  remove stupid example from docs - it should come with a simple
+	  C program instead.
+	  Clean up/fix docs
+	* tests/check/elements/multifdsink.c: (wait_bytes_served),
+	(fail_if_can_read), (GST_START_TEST),
+	(gst_multifdsink_create_streamheader), (multifdsink_suite):
+	  add a test for changing streamheader which exposes a bug in
+	  multifdsink
+
 2006-05-11  Michael Smith  <msmith@fluendo.com>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_init),

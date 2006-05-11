@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
+ * Copyright (C) 2006 Wim Taymans <wim at fluendo dot com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,20 +26,19 @@
  *
  * <refsect2>
  * <para>
- * This plugin writes incoming data to a set of filedescriptors. The
- * filedescriptors can be added to multifdsink by emiting the "add" signal. For
- * each descriptor added
- * the "client-added" signal will be called.
+ * This plugin writes incoming data to a set of file descriptors. The
+ * file descriptors can be added to multifdsink by emiting the "add" signal. For
+ * each descriptor added, the "client-added" signal will be called.
  * </para>
  * <para>
  * Clients can be removed from multifdsink by emiting the "remove" signal. For
- * each descriptor removed the "client-removed" signal will be called. The
+ * each descriptor removed, the "client-removed" signal will be called. The
  * "client-removed" signal can also be fired when multifdsink decides that a
  * client is not active anymore or, depending on the value of the
- * "recover-policy" if the client is reading to slow.
- * In all cases, multifdsink will never ever close a filedescriptor itself, the
- * application has to do that itself in the "client-fd-removed" signal, for
- * example.
+ * "recover-policy," if the client is reading to slow.
+ * In all cases, multifdsink will never ever close a file descriptor itself.
+ * The user of multifdsink is responsible for closing the file descriptor.
+ * This can for example be done in response to the "client-fd-removed" signal.
  * Note that multifdsink still has a reference to the file descriptor when the
  * "client-removed" signal is emited so that "get-stats" can be performed on
  * the descriptor; It is therefore not allowed to close the file descriptor in
@@ -70,7 +70,7 @@
  * </para>
  * <para>
  * A client with a lag of at least "buffers-soft-max" enters the recovery
- * procedure which is controled with the "recover-policy" property. A recover
+ * procedure which is controlled with the "recover-policy" property. A recover
  * policy of NONE will do nothing, RESYNC_LATEST will send the most recently
  * received buffer as the next buffer for the client, RESYNC_SOFT_LIMIT
  * positions the client to the soft limit in the buffer queue and
@@ -80,14 +80,6 @@
  * <para>
  * multifdsink will synchronize on the clock before serving the buffers to the
  * clients.
- * </para>
- * <para>
- * Example pipeline:
- * <programlisting>
- * gst-launch -v videotestsrc ! multifdsink
- * </programlisting>
- * This pipeline will not do a lot since it is not possible from a gst-launch
- * line to add filedescriptors to multifdsink.
  * </para>
  * </refsect2>
  *
@@ -807,7 +799,7 @@ gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink, GList * link)
   /* lock again before we remove the client completely */
   CLIENTS_LOCK (sink);
 
-  /* fd cannot be reused in the above signal callback so we can safely 
+  /* fd cannot be reused in the above signal callback so we can safely
    * remove it from the hashtable here */
   if (!g_hash_table_remove (sink->fd_hash, &client->fd.fd)) {
     GST_WARNING_OBJECT (sink,
@@ -987,6 +979,11 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
   return TRUE;
 }
 
+/* decide where in the current buffer queue this new client should start
+ * receiving buffers from
+ * If this returns -1, it means that we haven't found a good point to
+ * start streaming from yet, and this function should be called again later
+ * when more buffers have arrived */
 static gint
 gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
 {
@@ -1001,7 +998,7 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
           "[fd %5d] new client, bufpos %d, waiting for keyframe", client->fd.fd,
           client->bufpos);
 
-      /* the client is not yet alligned to a buffer */
+      /* the client is not yet aligned to a buffer */
       if (client->bufpos < 0) {
         result = -1;
       } else {
