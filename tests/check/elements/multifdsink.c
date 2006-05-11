@@ -67,7 +67,7 @@ wait_bytes_served (GstElement * sink, guint64 bytes)
 
 /* FIXME: possibly racy, since if it would write, we may not get it
  * immediately ? */
-#define fail_unless_read(msg,fd) \
+#define fail_if_can_read(msg,fd) \
 G_STMT_START { \
   long avail; \
 \
