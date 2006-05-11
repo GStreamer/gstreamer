@@ -1,3 +1,11 @@
+2006-05-11  Michael Smith  <msmith@fluendo.com>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_init),
+	(gst_gnome_vfs_src_received_headers_callback):
+	* ext/gnomevfs/gstgnomevfssrc.h:
+	  Don't set icy-caps unless we have a sane interval value. Move
+	  interval to a local variable; we never use it outside this function.
+
 2006-05-11  Wim Taymans  <wim@fluendo.com>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_get_type):

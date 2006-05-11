@@ -263,7 +263,6 @@ gst_gnome_vfs_src_init (GstGnomeVFSSrc * gnomevfssrc)
   gnomevfssrc->curoffset = 0;
   gnomevfssrc->seekable = FALSE;
 
-  gnomevfssrc->icy_metaint = 0;
   gnomevfssrc->icy_caps = NULL;
   gnomevfssrc->iradio_mode = FALSE;
   gnomevfssrc->http_callbacks_pushed = FALSE;
@@ -550,11 +549,11 @@ gst_gnome_vfs_src_received_headers_callback (gconstpointer in,
     /* Icecast stuff */
     if (strncmp (data, "icy-metaint:", 12) == 0) {      /* ugh */
       if (sscanf (data + 12, "%d", &icy_metaint) == 1) {
-        src->icy_metaint = icy_metaint;
-        src->icy_caps = gst_caps_new_simple ("application/x-icy",
-            "metadata-interval", G_TYPE_INT, src->icy_metaint, NULL);
-        continue;
+        if (icy_metaint > 0)
+          src->icy_caps = gst_caps_new_simple ("application/x-icy",
+              "metadata-interval", G_TYPE_INT, icy_metaint, NULL);
       }
+      continue;
     }
 
     if (!strncmp (data, "icy-", 4))
