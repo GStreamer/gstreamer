@@ -1,3 +1,13 @@
+2006-05-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybasebin.c: (gen_source_element):
+	  Make http sources send special headers so that we receive
+	  icecast metadata if the http stream is an icecast stream
+	  (otherwise the server will just ignore them). This also
+	  means that from now on users will need the 'icydemux'
+	  element from gst-plugins-good installed if they want to
+	  listen to icecast radio streams. (#341432, #333657).
+
 2006-05-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_remove_client_link),
