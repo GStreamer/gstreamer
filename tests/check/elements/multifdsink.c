@@ -65,17 +65,15 @@ wait_bytes_served (GstElement * sink, guint64 bytes)
   }
 }
 
-static void
-fail_if_can_read (char *msg, int fd)
-{
-  long avail;
-
-  /* verify this hasn't triggered a write yet */
-  /* FIXME: possibly racy, since if it would write, we may not get it
-   * immediately ? */
-  fail_if (ioctl (fd, FIONREAD, &avail) < 0, "%s: could not ioctl", msg);
-  fail_if (avail > 0, "%s: has bytes available to read");
-}
+/* FIXME: possibly racy, since if it would write, we may not get it
+ * immediately ? */
+#define fail_unless_read(msg,fd) \
+G_STMT_START { \
+  long avail; \
+\
+  fail_if (ioctl (fd, FIONREAD, &avail) < 0, "%s: could not ioctl", msg); \
+  fail_if (avail > 0, "%s: has bytes available to read"); \
+} G_STMT_END;
 
 
 GST_START_TEST (test_no_clients)
