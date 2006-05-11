@@ -1,3 +1,11 @@
+2006-05-11  Wim Taymans  <wim@fluendo.com>
+
+	* plugins/elements/gstqueue.c: (gst_queue_chain), (gst_queue_loop),
+	(gst_queue_set_property):
+	Don't forget to signal the _chain or _loop function 
+	when the queue size or thresholds change since that might
+	cause them to make progres again.
+
 2006-05-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstclock.c: (gst_clock_class_init):

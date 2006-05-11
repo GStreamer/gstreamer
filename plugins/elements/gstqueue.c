@@ -682,6 +682,7 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
       case GST_QUEUE_NO_LEAK:
         STATUS (queue, pad, "pre-full wait");
 
+        /* we recheck, the signal could have changed the thresholds */
         while (gst_queue_is_filled (queue)) {
           STATUS (queue, pad,
               "waiting for item_del signal from thread using qlock");
@@ -840,6 +841,7 @@ restart:
     GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
 
     STATUS (queue, pad, "pre-empty wait");
+    /* we recheck, the signal could have changed the thresholds */
     while (gst_queue_is_empty (queue)) {
       STATUS (queue, pad, "waiting for item_add");
 
@@ -1045,6 +1047,19 @@ gst_queue_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
+/* changing the capacity of the queue must wake up
+ * the _chain function, it might have more room now
+ * to store the buffer/event in the queue */
+#define QUEUE_CAPACITY_CHANGE(q)\
+  g_cond_signal (queue->item_del);
+
+/* Changing the minimum required fill level must
+ * wake up the _loop function as it might now
+ * be able to preceed.
+ */
+#define QUEUE_THRESHOLD_CHANGE(q)\
+  g_cond_signal (queue->item_add);
+
 static void
 gst_queue_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
@@ -1058,24 +1073,30 @@ gst_queue_set_property (GObject * object,
   switch (prop_id) {
     case ARG_MAX_SIZE_BYTES:
       queue->max_size.bytes = g_value_get_uint (value);
+      QUEUE_CAPACITY_CHANGE (queue);
       break;
     case ARG_MAX_SIZE_BUFFERS:
       queue->max_size.buffers = g_value_get_uint (value);
+      QUEUE_CAPACITY_CHANGE (queue);
       break;
     case ARG_MAX_SIZE_TIME:
       queue->max_size.time = g_value_get_uint64 (value);
+      QUEUE_CAPACITY_CHANGE (queue);
       break;
     case ARG_MIN_THRESHOLD_BYTES:
       queue->min_threshold.bytes = g_value_get_uint (value);
       queue->orig_min_threshold.bytes = queue->min_threshold.bytes;
+      QUEUE_THRESHOLD_CHANGE (queue);
       break;
     case ARG_MIN_THRESHOLD_BUFFERS:
       queue->min_threshold.buffers = g_value_get_uint (value);
       queue->orig_min_threshold.buffers = queue->min_threshold.buffers;
+      QUEUE_THRESHOLD_CHANGE (queue);
       break;
     case ARG_MIN_THRESHOLD_TIME:
       queue->min_threshold.time = g_value_get_uint64 (value);
       queue->orig_min_threshold.time = queue->min_threshold.time;
+      QUEUE_THRESHOLD_CHANGE (queue);
       break;
     case ARG_LEAKY:
       queue->leaky = g_value_get_enum (value);
