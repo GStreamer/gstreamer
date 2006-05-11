@@ -1,5 +1,6 @@
 /* G-Streamer generic V4L2 element - Color Balance interface implementation
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * gstv4l2colorbalance.h: color balance interface implementation for V4L2
  *
@@ -53,6 +54,52 @@ typedef struct _GstV4l2ColorBalanceChannelClass {
 
 GType	gst_v4l2_color_balance_channel_get_type	(void);
 
-void	gst_v4l2_color_balance_interface_init	(GstColorBalanceClass *klass);
+extern const GList *
+gst_v4l2_color_balance_list_channels (GstV4l2Object * v4l2object);
+
+extern void
+gst_v4l2_color_balance_set_value (GstV4l2Object * v4l2object,
+      GstColorBalanceChannel * channel, gint value);
+
+extern gint
+gst_v4l2_color_balance_get_value (GstV4l2Object * v4l2object,
+                                  GstColorBalanceChannel * channel);
+
+#define GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS(Type, interface_as_function)         \
+                                                                                      \
+static const GList *                                                                  \
+interface_as_function ## _color_balance_list_channels (GstColorBalance * balance)     \
+{                                                                                     \
+  Type *this = (Type*) balance;                                                       \
+  return gst_v4l2_color_balance_list_channels(this->v4l2object);                      \
+}                                                                                     \
+                                                                                      \
+static void                                                                           \
+interface_as_function ## _color_balance_set_value (GstColorBalance * balance,         \
+                                                   GstColorBalanceChannel * channel,  \
+                                                   gint value)                        \
+{                                                                                     \
+  Type *this = (Type*) balance;                                                       \
+  return gst_v4l2_color_balance_set_value(this->v4l2object, channel, value);          \
+}                                                                                     \
+                                                                                      \
+static gint                                                                           \
+interface_as_function ## _color_balance_get_value (GstColorBalance * balance,         \
+                                                   GstColorBalanceChannel * channel)  \
+{                                                                                     \
+  Type *this = (Type*) balance;                                                       \
+  return gst_v4l2_color_balance_get_value(this->v4l2object, channel);                 \
+}                                                                                     \
+                                                                                      \
+void                                                                                  \
+interface_as_function ## _color_balance_interface_init (GstColorBalanceClass * klass) \
+{                                                                                     \
+  GST_COLOR_BALANCE_TYPE (klass) = GST_COLOR_BALANCE_HARDWARE;                        \
+                                                                                      \
+  /* default virtual functions */                                                     \
+  klass->list_channels = interface_as_function ## _color_balance_list_channels;       \
+  klass->set_value = interface_as_function ## _color_balance_set_value;               \
+  klass->get_value = interface_as_function ## _color_balance_get_value;               \
+}                                                                                     \
 
 #endif /* __GST_V4L2_COLOR_BALANCE_H__ */

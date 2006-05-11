@@ -25,7 +25,7 @@
 #define __GST_V4L2SRC_H__
 
 
-#include <gstv4l2element.h>
+#include <gstv4l2object.h>
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 
@@ -78,7 +78,9 @@ enum
 
 struct _GstV4l2Src
 {
-  GstV4l2Element v4l2element;
+  GstPushSrc pushsrc;
+
+  GstV4l2Object * v4l2object;
 
   /* pads */
   GstPad *srcpad;
@@ -104,12 +106,14 @@ struct _GstV4l2Src
 
 struct _GstV4l2SrcClass
 {
-  GstV4l2ElementClass parent_class;
+  GstPushSrcClass parent_class;
+  
+  GList *v4l2_class_devices;
+
 };
 
 
 GType gst_v4l2src_get_type (void);
-
 
 G_END_DECLS
 #endif /* __GST_V4L2SRC_H__ */

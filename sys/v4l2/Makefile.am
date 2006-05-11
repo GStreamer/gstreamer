@@ -10,7 +10,7 @@ endif
 
 libgstvideo4linux2_la_SOURCES = gstv4l2.c \
 				gstv4l2colorbalance.c \
-				gstv4l2element.c \
+				gstv4l2object.c \
 				gstv4l2src.c \
 				gstv4l2tuner.c \
 				v4l2_calls.c \
@@ -30,7 +30,7 @@ libgstvideo4linux2_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 				 $(xv_libs) \
 				 -lgstinterfaces-$(GST_MAJORMINOR) 
 
-noinst_HEADERS = gstv4l2element.h v4l2_calls.h \
+noinst_HEADERS = gstv4l2object.h v4l2_calls.h \
 		 gstv4l2src.h v4l2src_calls.h \
 		 gstv4l2tuner.h gstv4l2xoverlay.h \
 		 gstv4l2colorbalance.h

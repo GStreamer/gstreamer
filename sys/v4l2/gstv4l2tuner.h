@@ -26,7 +26,7 @@
 #include <gst/gst.h>
 #include <gst/interfaces/tuner.h>
 
-#include "gstv4l2element.h"
+#include "gstv4l2object.h"
 
 G_BEGIN_DECLS
 
@@ -34,10 +34,10 @@ G_BEGIN_DECLS
   (gst_v4l2_tuner_channel_get_type ())
 #define GST_V4L2_TUNER_CHANNEL(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_TUNER_CHANNEL, \
-			       GstV4l2TunerChannel))
+          GstV4l2TunerChannel))
 #define GST_V4L2_TUNER_CHANNEL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_V4L2_TUNER_CHANNEL, \
-			    GstV4l2TunerChannelClass))
+       GstV4l2TunerChannelClass))
 #define GST_IS_V4L2_TUNER_CHANNEL(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_TUNER_CHANNEL))
 #define GST_IS_V4L2_TUNER_CHANNEL_CLASS(klass) \
@@ -59,10 +59,10 @@ typedef struct _GstV4l2TunerChannelClass {
   (gst_v4l2_tuner_norm_get_type ())
 #define GST_V4L2_TUNER_NORM(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_V4L2_TUNER_NORM, \
-			       GstV4l2TunerNorm))
+          GstV4l2TunerNorm))
 #define GST_V4L2_TUNER_NORM_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_V4L2_TUNER_NORM, \
-			    GstV4l2TunerNormClass))
+       GstV4l2TunerNormClass))
 #define GST_IS_V4L2_TUNER_NORM(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_V4L2_TUNER_NORM))
 #define GST_IS_V4L2_TUNER_NORM_CLASS(klass) \
@@ -78,19 +78,121 @@ typedef struct _GstV4l2TunerNormClass {
   GstTunerNormClass parent;
 } GstV4l2TunerNormClass;
 
-GType	gst_v4l2_tuner_channel_get_type	(void);
-GType	gst_v4l2_tuner_norm_get_type	(void);
-
-void	gst_v4l2_tuner_interface_init	(GstTunerClass *klass);
-
 extern gboolean
-gst_v4l2_tuner_set_channel (GstTuner * mixer, GstTunerChannel * channel);
-
-gboolean
-gst_v4l2_tuner_set_norm (GstTuner * mixer, GstTunerNorm * norm);
-
+gst_v4l2_tuner_set_channel (GstV4l2Object * v4l2object, GstTunerChannel * channel);
 extern gboolean
-gst_v4l2_tuner_set_frequency (GstTuner * mixer,
-			      GstTunerChannel * channel, gulong frequency);
+gst_v4l2_tuner_set_norm (GstV4l2Object * v4l2object, GstTunerNorm * norm);
+extern gboolean
+gst_v4l2_tuner_set_frequency (GstV4l2Object * v4l2object,
+                              GstTunerChannel * channel, gulong frequency);
+
+GType gst_v4l2_tuner_channel_get_type (void);
+GType gst_v4l2_tuner_norm_get_type (void);
+
+extern const GList *
+gst_v4l2_tuner_list_channels (GstV4l2Object * v4l2object);
+extern void
+gst_v4l2_tuner_set_channel_and_notify (GstV4l2Object * v4l2object, GstTunerChannel * channel);
+extern GstTunerChannel *
+gst_v4l2_tuner_get_channel (GstV4l2Object * v4l2object);
+
+extern const GList *
+gst_v4l2_tuner_list_norms (GstV4l2Object * v4l2object);
+extern void
+gst_v4l2_tuner_set_norm_and_notify (GstV4l2Object * v4l2object, GstTunerNorm * norm);
+extern GstTunerNorm *
+gst_v4l2_tuner_get_norm (GstV4l2Object * v4l2object);
+
+extern void
+gst_v4l2_tuner_set_frequency_and_notify (GstV4l2Object * v4l2object,
+                                         GstTunerChannel * channel, gulong frequency);
+extern gulong
+gst_v4l2_tuner_get_frequency (GstV4l2Object * v4l2object, GstTunerChannel * channel);
+extern gint
+gst_v4l2_tuner_signal_strength (GstV4l2Object * v4l2object, GstTunerChannel * channel);
+
+#define GST_IMPLEMENT_V4L2_TUNER_METHODS(Type, interface_as_function)                 \
+                                                                                      \
+static const GList *                                                                  \
+interface_as_function ## _tuner_list_channels (GstTuner * mixer)                      \
+{                                                                                     \
+  Type *this = (Type*) mixer;                                                         \
+  return gst_v4l2_tuner_list_channels (this->v4l2object);                             \
+}                                                                                     \
+                                                                                      \
+static void                                                                           \
+interface_as_function ## _tuner_set_channel_and_notify (GstTuner * mixer,             \
+                                                        GstTunerChannel * channel)    \
+{                                                                                     \
+  Type *this = (Type*) mixer;                                                         \
+  gst_v4l2_tuner_set_channel_and_notify (this->v4l2object, channel);                  \
+}                                                                                     \
+static GstTunerChannel *                                                              \
+interface_as_function ## _tuner_get_channel (GstTuner * mixer)                        \
+{                                                                                     \
+  Type *this = (Type*) mixer;                                                         \
+  return gst_v4l2_tuner_get_channel (this->v4l2object);                               \
+}                                                                                     \
+static const GList *                                                                  \
+interface_as_function ## _tuner_list_norms (GstTuner * mixer)                         \
+{                                                                                     \
+  Type *this = (Type*) mixer;                                                         \
+  return gst_v4l2_tuner_list_norms (this->v4l2object);                                \
+}                                                                                     \
+static void                                                                           \
+interface_as_function ## _tuner_set_norm_and_notify (GstTuner * mixer,                \
+                                                     GstTunerNorm * norm)             \
+{                                                                                     \
+  Type *this = (Type*) mixer;                                                         \
+  gst_v4l2_tuner_set_norm_and_notify (this->v4l2object, norm);                        \
+}                                                                                     \
+static GstTunerNorm *                                                                 \
+interface_as_function ## _tuner_get_norm (GstTuner * mixer)                           \
+{                                                                                     \
+  Type *this = (Type*) mixer;                                                         \
+  return gst_v4l2_tuner_get_norm (this->v4l2object);                                  \
+}                                                                                     \
+                                                                                      \
+static void                                                                           \
+interface_as_function ## _tuner_set_frequency_and_notify (GstTuner * mixer,           \
+                                                          GstTunerChannel * channel,  \
+                                                          gulong frequency)           \
+{                                                                                     \
+  Type *this = (Type*) mixer;                                                         \
+  gst_v4l2_tuner_set_frequency_and_notify (this->v4l2object, channel, frequency);     \
+}                                                                                     \
+                                                                                      \
+static gulong                                                                         \
+interface_as_function ## _tuner_get_frequency (GstTuner * mixer,                      \
+                                               GstTunerChannel * channel)             \
+{                                                                                     \
+  Type *this = (Type*) mixer;                                                         \
+  return gst_v4l2_tuner_get_frequency (this->v4l2object, channel);                    \
+}                                                                                     \
+                                                                                      \
+static gint                                                                           \
+interface_as_function ## _tuner_signal_strength (GstTuner * mixer,                    \
+                                                 GstTunerChannel * channel)           \
+{                                                                                     \
+  Type *this = (Type*) mixer;                                                         \
+  return gst_v4l2_tuner_signal_strength (this->v4l2object, channel);                  \
+}                                                                                     \
+                                                                                      \
+void                                                                                  \
+interface_as_function ## _tuner_interface_init (GstTunerClass * klass)                \
+{                                                                                     \
+  /* default virtual functions */                                                     \
+  klass->list_channels = interface_as_function ## _tuner_list_channels;               \
+  klass->set_channel = interface_as_function ## _tuner_set_channel_and_notify;        \
+  klass->get_channel = interface_as_function ## _tuner_get_channel;                   \
+                                                                                      \
+  klass->list_norms = interface_as_function ## _tuner_list_norms;                     \
+  klass->set_norm = interface_as_function ## _tuner_set_norm_and_notify;              \
+  klass->get_norm = interface_as_function ## _tuner_get_norm;                         \
+                                                                                      \
+  klass->set_frequency = interface_as_function ## _tuner_set_frequency_and_notify;    \
+  klass->get_frequency = interface_as_function ## _tuner_get_frequency;               \
+  klass->signal_strength = interface_as_function ## _tuner_signal_strength;           \
+}                                                                                     \
 
 #endif /* __GST_V4L2_TUNER_H__ */
