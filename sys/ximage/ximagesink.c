@@ -2006,6 +2006,10 @@ gst_ximagesink_get_type (void)
         &navigation_info);
     g_type_add_interface_static (ximagesink_type, GST_TYPE_X_OVERLAY,
         &overlay_info);
+
+    /* register type in a more safe place instead of at runtime since the
+     * type registration is not threadsafe. */
+    gst_ximage_buffer_get_type ();
   }
 
   return ximagesink_type;

@@ -1,3 +1,11 @@
+2006-05-11  Wim Taymans  <wim@fluendo.com>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_get_type):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_type):
+	Register special buffer types along with the objects so
+	that they are not registered at runtime from N different
+	streaming threads since they are not threadsafe.
+
 2006-05-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tests/check/elements/multifdsink.c: (wait_bytes_served),

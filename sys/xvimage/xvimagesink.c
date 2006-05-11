@@ -2566,6 +2566,10 @@ gst_xvimagesink_get_type (void)
         &overlay_info);
     g_type_add_interface_static (xvimagesink_type, GST_TYPE_COLOR_BALANCE,
         &colorbalance_info);
+
+    /* make sure type is registered and not at runtime as this is not
+     * threadsafe */
+    gst_xvimage_buffer_get_type ();
   }
 
   return xvimagesink_type;
