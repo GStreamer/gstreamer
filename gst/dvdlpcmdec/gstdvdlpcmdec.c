@@ -389,20 +389,27 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
   off = 5;
 
   if (first_access > 4) {
-    /* length of first blength before access unit */
+    /* length of first buffer */
     len = first_access - 4;
 
     GST_LOG_OBJECT (dvdlpcmdec, "Creating first sub-buffer off %d, len %d", off,
         len);
 
     /* see if we need a subbuffer without timestamp */
-    if (len > 0) {
-      subbuf = gst_buffer_create_sub (buf, off, len);
-      GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
-      ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
-      if (ret != GST_FLOW_OK)
-        goto done;
+    if (off + len > size) {
+      GST_WARNING_OBJECT (pad, "Bad first_access parameter in buffer");
+      GST_ELEMENT_ERROR (dvdlpcmdec, STREAM, DECODE,
+          (NULL),
+          ("first_access parameter out of range: bad buffer from " "demuxer"));
+      ret = GST_FLOW_ERROR;
+      goto done;
     }
+
+    subbuf = gst_buffer_create_sub (buf, off, len);
+    GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+    ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
+    if (ret != GST_FLOW_OK)
+      goto done;
 
     /* then the buffer with new timestamp */
     off += len;
@@ -411,16 +418,17 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
     GST_LOG_OBJECT (dvdlpcmdec, "Creating next sub-buffer off %d, len %d", off,
         len);
 
-    subbuf = gst_buffer_create_sub (buf, off, len);
-    GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
+    if (len > 0) {
+      subbuf = gst_buffer_create_sub (buf, off, len);
+      GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
 
-    ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
+      ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
+    }
   } else {
     GST_LOG_OBJECT (dvdlpcmdec, "Creating single sub-buffer off %d, len %d",
         off, size - off);
-    /* We don't have a valid timestamp at all */
     subbuf = gst_buffer_create_sub (buf, off, size - off);
-    GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
     ret = gst_dvdlpcmdec_chain_raw (pad, subbuf);
   }
 

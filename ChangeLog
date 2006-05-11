@@ -1,3 +1,9 @@
+2006-05-11  Michael Smith  <msmith@fluendo.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_chain_dvd):
+	  Fix timestamping for cases where the first_access parameter is 4.
+	  Ensure we don't overrun buffers in other cases.
+
 2006-05-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_get_string):
