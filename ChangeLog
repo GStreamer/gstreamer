@@ -1,8 +1,16 @@
+2006-05-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse), (qtdemux_parse_trak),
+	(gst_qtdemux_handle_esds):
+	Figure out the real audio type in mp4a boxes by parsing the
+	optional descriptors in the optional esds box. Promote the
+	default AAC to mp3 when indicated. Fixes #330632.
+
 2006-05-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse), (qtdemux_dump_unknown),
 	(qtdemux_parse_trak), (gst_qtdemux_handle_esds):
-	Parse version 2 sample descriptions.
+	Parse version 2 sample descriptions. Fixes #341231
 	Don't #define gst_util_dump_mem(), use something more
 	specific instead to avoid confusion.
 
