@@ -751,10 +751,9 @@ gen_audio_element (GstPlayBin * play_bin)
 {
   GstElement *element;
   GstElement *conv;
+  GstElement *scale;
   GstElement *sink;
   GstElement *volume;
-
-  /* GstElement *scale; */
   GstPad *pad;
 
   element = g_hash_table_lookup (play_bin->cache, "abin");
@@ -765,11 +764,11 @@ gen_audio_element (GstPlayBin * play_bin)
   conv = gst_element_factory_make ("audioconvert", "aconv");
   if (conv == NULL)
     goto no_audioconvert;
-/*
+
   scale = gst_element_factory_make ("audioresample", "aresample");
   if (scale == NULL)
     goto no_audioresample;
-*/
+
   volume = gst_element_factory_make ("volume", "volume");
   g_object_set (G_OBJECT (volume), "volume", play_bin->volume, NULL);
   play_bin->volume_element = volume;
@@ -793,12 +792,12 @@ gen_audio_element (GstPlayBin * play_bin)
   g_hash_table_insert (play_bin->cache, "audio_sink", sink);
 
   gst_bin_add (GST_BIN (element), conv);
-  /* gst_bin_add (GST_BIN (element), scale); */
+  gst_bin_add (GST_BIN (element), scale);
   gst_bin_add (GST_BIN (element), volume);
   gst_bin_add (GST_BIN (element), sink);
 
-  gst_element_link_pads (conv, "src",   /*scale, "sink");
-                                           gst_element_link_pads (scale, "src", */ volume, "sink");
+  gst_element_link_pads (conv, "src", scale, "sink");
+  gst_element_link_pads (scale, "src", volume, "sink");
   gst_element_link_pads (volume, "src", sink, "sink");
 
   pad = gst_element_get_pad (conv, "sink");
@@ -822,17 +821,15 @@ no_audioconvert:
     gst_object_unref (element);
     return NULL;
   }
-/*
+
 no_audioresample:
   {
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
-         "audioresample"),
-        ("possibly a liboil version mismatch?"));
+            "audioresample"), ("possibly a liboil version mismatch?"));
     gst_object_unref (element);
     return NULL;
   }
-*/
 }
 
 /* make the element (bin) that contains the elements needed to perform

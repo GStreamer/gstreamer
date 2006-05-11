@@ -1,5 +1,13 @@
 2006-05-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybin.c: (gen_audio_element):
+	  Make playbin automatically plug an 'audioresample'
+	  element before the audio sink as well. This solves
+	  problems with sinks that only accept a very specific
+	  sample rate, like esdsink (e.g. #340379).
+
+2006-05-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstplaybasebin.c: (gen_source_element):
 	  Make http sources send special headers so that we receive
 	  icecast metadata if the http stream is an icecast stream
