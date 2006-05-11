@@ -123,7 +123,7 @@ G_STMT_START {                                  \
 
 #define READ_COMMAND(sink, command, res)        \
 G_STMT_START {                                  \
-  res = read(READ_SOCKET(sink).fd, &command, 1);        \
+  res = read(READ_SOCKET(sink).fd, &command, 1);\
 } G_STMT_END
 
 /* elementfactory information */
@@ -553,6 +553,7 @@ gst_multi_fd_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/* "add" signal implemntation */
 void
 gst_multi_fd_sink_add (GstMultiFdSink * sink, int fd)
 {
@@ -626,6 +627,7 @@ gst_multi_fd_sink_add (GstMultiFdSink * sink, int fd)
       gst_multi_fd_sink_signals[SIGNAL_CLIENT_ADDED], 0, fd);
 }
 
+/* "remove" signal implemntation */
 void
 gst_multi_fd_sink_remove (GstMultiFdSink * sink, int fd)
 {
@@ -670,7 +672,8 @@ gst_multi_fd_sink_clear (GstMultiFdSink * sink)
   CLIENTS_UNLOCK (sink);
 }
 
-/* the array returned contains:
+/* "get-stats" signal implemntation
+ * the array returned contains:
  *
  * guint64 : bytes_sent
  * guint64 : connect time (in nanoseconds)
@@ -893,7 +896,8 @@ gst_multi_fd_sink_handle_client_read (GstMultiFdSink * sink,
   return ret;
 }
 
-/* Queue raw data, creating a new buffer. This takes ownership of the data by
+/* Queue raw data for this client, creating a new buffer.
+ * This takes ownership of the data by
  * setting it as GST_BUFFER_MALLOCDATA() on the created buffer
  */
 static gboolean
@@ -915,6 +919,7 @@ gst_multi_fd_sink_client_queue_data (GstMultiFdSink * sink,
   return TRUE;
 }
 
+/* GDP-encode given caps and queue them for sending */
 static gboolean
 gst_multi_fd_sink_client_queue_caps (GstMultiFdSink * sink,
     GstTCPClient * client, const GstCaps * caps)
@@ -954,6 +959,8 @@ is_sync_frame (GstMultiFdSink * sink, GstBuffer * buffer)
   return FALSE;
 }
 
+/* queue the given buffer for the given client, possibly adding the GDP
+ * header if GDP is being used */
 static gboolean
 gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
     GstTCPClient * client, GstBuffer * buffer)
@@ -1391,8 +1398,8 @@ gst_multi_fd_sink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
       /* remove client */
       GST_WARNING_OBJECT (sink, "[fd %5d] client %p is too slow, removing",
           client->fd.fd, client);
-      /* remove the client, the fd set will be cleared and the select thread will
-       * be signaled */
+      /* remove the client, the fd set will be cleared and the select thread
+       * will be signaled */
       client->status = GST_CLIENT_STATUS_SLOW;
       gst_multi_fd_sink_remove_client_link (sink, clients);
       /* set client to invalid position while being removed */
@@ -1553,7 +1560,8 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
               GST_LOG_OBJECT (sink, "restart");
               /* need to restart the select call as the fd_set changed */
               /* if other file descriptors than the READ_SOCKET had activity,
-               * we don't restart just yet, but handle the other clients first */
+               * we don't restart just yet, but handle the other clients first
+               */
               if (result == 1)
                 try_again = TRUE;
               break;
