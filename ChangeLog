@@ -1,3 +1,8 @@
+2006-05-12  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/MANIFEST:
+	  update win32 files listing
+
 2006-05-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	patch by: Sjoerd Simons (sjoerd@luon.net)
