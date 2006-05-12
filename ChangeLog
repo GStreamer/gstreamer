@@ -1,3 +1,8 @@
+2006-05-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/gstid3tag.c:
+	  Map GST_IMAGE_TAG to and from ID2v2 APIC frames (#341557).
+
 2006-05-12  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/MANIFEST:

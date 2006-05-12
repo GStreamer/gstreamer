@@ -204,6 +204,7 @@ static GstTagEntryMatch tag_matches[] = {
   {GST_TAG_ALBUM_VOLUME_NUMBER, "TPOS"},
   {GST_TAG_DURATION, "TLEN"},
   {GST_TAG_ISRC, "TSRC"},
+  {GST_TAG_IMAGE, "APIC"},
   {NULL, NULL}
 };
 
