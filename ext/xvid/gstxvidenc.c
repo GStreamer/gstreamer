@@ -472,7 +472,7 @@ static void
 gst_xvidenc_init (GstXvidEnc * xvidenc)
 {
   GParamSpec **pspecs;
-  gint i, num_props;
+  guint i, num_props;
 
   /* create the sink pad */
   xvidenc->sinkpad =

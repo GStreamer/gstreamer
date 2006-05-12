@@ -1,5 +1,15 @@
 2006-05-12  Wim Taymans  <wim@fluendo.com>
 
+	* ext/xvid/gstxvidenc.c: (gst_xvidenc_class_init),
+	(gst_xvidenc_init), (gst_xvidenc_finalize),
+	(gst_xvidenc_handle_sink_event), (gst_xvidenc_setup),
+	(gst_xvidenc_setcaps), (gst_xvidenc_encode), (gst_xvidenc_chain),
+	(gst_xvidenc_flush_buffers), (gst_xvidenc_set_property),
+	(gst_xvidenc_get_property):
+	Compile fixes.
+
+2006-05-12  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
 
 	* ext/xvid/gstxvid.c: (gst_xvid_init), (gst_xvid_structure_to_csp),
