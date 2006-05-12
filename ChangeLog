@@ -1,3 +1,9 @@
+2006-05-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/gst-launch.c: (print_tag):
+	  Print something more intelligible for image tags when
+	  using the -t switch (#341556).
+
 2006-05-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

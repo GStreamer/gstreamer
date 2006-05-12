@@ -245,6 +245,19 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
     if (gst_tag_get_type (tag) == G_TYPE_STRING) {
       if (!gst_tag_list_get_string_index (list, tag, i, &str))
         g_assert_not_reached ();
+    } else if (gst_tag_get_type (tag) == GST_TYPE_BUFFER) {
+      GstBuffer *img;
+
+      img = gst_value_get_buffer (gst_tag_list_get_value_index (list, tag, i));
+      if (img) {
+        gchar *caps_str;
+
+        caps_str = GST_BUFFER_CAPS (img) ?
+            gst_caps_to_string (GST_BUFFER_CAPS (img)) : g_strdup ("unknown");
+        str = g_strdup_printf ("buffer of %u bytes, type: %s",
+            GST_BUFFER_SIZE (img), caps_str);
+        g_free (caps_str);
+      }
     } else {
       str =
           g_strdup_value_contents (gst_tag_list_get_value_index (list, tag, i));
