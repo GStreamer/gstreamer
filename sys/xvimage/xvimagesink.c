@@ -125,6 +125,8 @@
 #include <gst/interfaces/navigation.h>
 #include <gst/interfaces/xoverlay.h>
 #include <gst/interfaces/colorbalance.h>
+/* Helper functions */
+#include <gst/video/video.h>
 
 /* Object header */
 #include "xvimagesink.h"
@@ -1585,7 +1587,6 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   gint video_width, video_height;
   gint video_par_n, video_par_d;        /* video's PAR */
   gint display_par_n, display_par_d;    /* display's PAR */
-  GValue display_ratio = { 0, };        /* display w/h ratio */
   const GValue *caps_par;
   const GValue *fps;
   gint num, den;
@@ -1626,9 +1627,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   /* get aspect ratio from caps if it's present, and
    * convert video width and height to a display width and height
-   * using wd / hd = wv / hv * PARv / PARd
-   * the ratio wd / hd will be stored in display_ratio */
-  g_value_init (&display_ratio, GST_TYPE_FRACTION);
+   * using wd / hd = wv / hv * PARv / PARd */
 
   /* get video's PAR */
   caps_par = gst_structure_get_value (structure, "pixel-aspect-ratio");
@@ -1648,12 +1647,14 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     display_par_d = 1;
   }
 
-  gst_value_set_fraction (&display_ratio,
-      video_width * video_par_n * display_par_d,
-      video_height * video_par_d * display_par_n);
+  if (!gst_video_calculate_display_ratio (&num, &den, video_width,
+          video_height, video_par_n, video_par_d, display_par_n,
+          display_par_d)) {
+    GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
+        ("Error calculating the output display ratio of the video."));
+    return FALSE;
+  }
 
-  num = gst_value_get_fraction_numerator (&display_ratio);
-  den = gst_value_get_fraction_denominator (&display_ratio);
   GST_DEBUG_OBJECT (xvimagesink,
       "video width/height: %dx%d, calculated display ratio: %d/%d",
       video_width, video_height, num, den);
@@ -1686,8 +1687,13 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   }
 
   /* Creating our window and our image with the display size in pixels */
-  g_assert (GST_VIDEO_SINK_WIDTH (xvimagesink) > 0);
-  g_assert (GST_VIDEO_SINK_HEIGHT (xvimagesink) > 0);
+  if (GST_VIDEO_SINK_WIDTH (xvimagesink) <= 0 ||
+      GST_VIDEO_SINK_HEIGHT (xvimagesink) <= 0) {
+    GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
+        ("Error calculating the output display ratio of the video."));
+    return FALSE;
+  }
+
   if (!xvimagesink->xwindow)
     xvimagesink->xwindow = gst_xvimagesink_xwindow_new (xvimagesink,
         GST_VIDEO_SINK_WIDTH (xvimagesink),

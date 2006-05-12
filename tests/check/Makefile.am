@@ -45,6 +45,7 @@ check_PROGRAMS = $(check_vorbis) \
 	generic/clock-selection \
 	generic/states \
 	libs/cddabasesrc \
+	libs/video \
         pipelines/simple-launch-lines
 
 # TORTURE_TO_FIX = \
@@ -54,6 +55,7 @@ VALGRIND_TO_FIX = \
 	elements/audioresample \
 	generic/states \
 	libs/cddabasesrc \
+	libs/video \
         pipelines/simple-launch-lines
 
 # these tests don't even pass
@@ -74,5 +76,10 @@ libs_cddabasesrc_LDADD = \
 libs_cddabasesrc_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	$(CFLAGS) $(AM_CFLAGS)
+
+libs_video_LDADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
+	$(LDADD)
+libs_video_CFLAGS = -I$(top_srcdir)/gst-libs $(CFLAGS) $(AM_CFLAGS)
 
 EXTRA_DIST = gst-plugins-base.supp

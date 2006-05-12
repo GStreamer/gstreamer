@@ -7,7 +7,9 @@ libgstvideoscale_la_SOURCES = \
 
 libgstvideoscale_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(LIBOIL_CFLAGS)
 libgstvideoscale_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstvideoscale_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LIBOIL_LIBS)
+libgstvideoscale_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_MAJORMINOR).la \
+	$(GST_BASE_LIBS) $(GST_LIBS) $(LIBOIL_LIBS)
 
 noinst_HEADERS = \
 	gstvideoscale.h \

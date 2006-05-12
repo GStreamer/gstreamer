@@ -24,6 +24,18 @@
 
 #include "video.h"
 
+/**
+ * SECTION:gstvideo
+ * @short_description: Support library for video operations
+ *
+ * <refsect2>
+ * <para>
+ * This library contains some helper functions and includes the 
+ * videosink and videofilter base classes.
+ * </para>
+ * </refsect2>
+ */
+
 /* This is simply a convenience function, nothing more or less */
 const GValue *
 gst_video_frame_rate (GstPad * pad)
@@ -96,4 +108,78 @@ gst_video_get_size (GstPad * pad, gint * width, gint * height)
       GST_DEBUG_PAD_NAME (pad), width ? *width : -1, height ? *height : -1);
 
   return TRUE;
+}
+
+/**
+ * gst_video_calculate_display_ratio:
+ * @dar_n: Numerator of the calculated display_ratio
+ * @dar_d: Denominator of the calculated display_ratio
+ * @video_width: Width of the video frame in pixels
+ * @video_height: Height of the video frame in pixels
+ * @video_par_n: Numerator of the pixel aspect ratio of the input video.
+ * @video_par_d: Denominator of the pixel aspect ratio of the input video.
+ * @display_par_n: Numerator of the pixel aspect ratio of the display device
+ * @display_par_d: Denominator of the pixel aspect ratio of the display device
+ *
+ * Given the Pixel Aspect Ratio and size of an input video frame, and the 
+ * pixel aspect ratio of the intended display device, calculates the actual 
+ * display ratio the video will be rendered with.
+ *
+ * Returns: A boolean indicating success and a calculated Display Ratio in the 
+ * dar_n and dar_d parameters. 
+ * The return value is FALSE in the case of integer overflow or other error. 
+ *
+ * Since: 0.10.7
+ */
+gboolean
+gst_video_calculate_display_ratio (guint * dar_n, guint * dar_d,
+    guint video_width, guint video_height,
+    guint video_par_n, guint video_par_d,
+    guint display_par_n, guint display_par_d)
+{
+  gint num, den;
+
+  GValue display_ratio = { 0, };
+  GValue tmp = { 0, };
+  GValue tmp2 = { 0, };
+
+  g_return_val_if_fail (dar_n != NULL, FALSE);
+  g_return_val_if_fail (dar_d != NULL, FALSE);
+
+  g_value_init (&display_ratio, GST_TYPE_FRACTION);
+  g_value_init (&tmp, GST_TYPE_FRACTION);
+  g_value_init (&tmp2, GST_TYPE_FRACTION);
+
+  /* Calculate (video_width * video_par_n * display_par_d) /
+   * (video_height * video_par_d * display_par_n) */
+  gst_value_set_fraction (&display_ratio, video_width, video_height);
+  gst_value_set_fraction (&tmp, video_par_n, video_par_d);
+
+  if (!gst_value_fraction_multiply (&tmp2, &display_ratio, &tmp))
+    goto error_overflow;
+
+  gst_value_set_fraction (&tmp, display_par_d, display_par_n);
+
+  if (!gst_value_fraction_multiply (&display_ratio, &tmp2, &tmp))
+    goto error_overflow;
+
+  num = gst_value_get_fraction_numerator (&display_ratio);
+  den = gst_value_get_fraction_denominator (&display_ratio);
+
+  g_value_unset (&display_ratio);
+  g_value_unset (&tmp);
+  g_value_unset (&tmp2);
+
+  g_return_val_if_fail (num > 0, FALSE);
+  g_return_val_if_fail (den > 0, FALSE);
+
+  *dar_n = num;
+  *dar_d = den;
+
+  return TRUE;
+error_overflow:
+  g_value_unset (&display_ratio);
+  g_value_unset (&tmp);
+  g_value_unset (&tmp2);
+  return FALSE;
 }

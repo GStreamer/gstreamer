@@ -544,7 +544,6 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
   /* we have both PAR but they might not be fixated */
   if (from_par && to_par) {
-    GValue to_ratio = { 0, };   /* w/h of output video */
     gint from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
     gint count = 0, w = 0, h = 0, num, den;
 
@@ -580,11 +579,13 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
     gst_structure_get_int (ins, "width", &from_w);
     gst_structure_get_int (ins, "height", &from_h);
 
-    g_value_init (&to_ratio, GST_TYPE_FRACTION);
-    gst_value_set_fraction (&to_ratio, from_w * from_par_n * to_par_d,
-        from_h * from_par_d * to_par_n);
-    num = gst_value_get_fraction_numerator (&to_ratio);
-    den = gst_value_get_fraction_denominator (&to_ratio);
+    if (!gst_video_calculate_display_ratio (&num, &den, from_w, from_h,
+            from_par_n, from_par_d, to_par_n, to_par_d)) {
+      GST_ELEMENT_ERROR (base, CORE, NEGOTIATION, (NULL),
+          ("Error calculating the output scaled size - integer overflow"));
+      return;
+    }
+
     GST_DEBUG_OBJECT (base,
         "scaling input with %dx%d and PAR %d/%d to output PAR %d/%d",
         from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d);

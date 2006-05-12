@@ -1,3 +1,18 @@
+2006-05-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/video/video.c: (gst_video_calculate_display_ratio):
+	* gst-libs/gst/video/video.h:
+	* gst/videoscale/Makefile.am:
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_fixate_caps):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_setcaps):
+	* tests/check/Makefile.am:
+	* tests/check/libs/video.c: (GST_START_TEST), (video_suite),
+	(main):
+	  Fix integer overflow problem with pixel-aspect-ratio calculations
+	  in videoscale and xvimagesink (#341542)
+
 2006-05-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gstid3tag.c:

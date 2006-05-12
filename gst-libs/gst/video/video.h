@@ -189,6 +189,11 @@ gboolean gst_video_get_size   (GstPad *pad,
                                gint   *width,
                                gint   *height);
 
+gboolean gst_video_calculate_display_ratio (guint *dar_n, guint *dar_d,
+            guint video_width, guint video_height, 
+            guint video_par_n, guint video_par_d, 
+            guint display_par_n, guint display_par_d);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_H__ */

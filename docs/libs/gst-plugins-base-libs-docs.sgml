@@ -10,6 +10,7 @@
 <!ENTITY GstAudioSink SYSTEM "xml/gstaudiosink.xml">
 <!ENTITY GstBaseAudioSink SYSTEM "xml/gstbaseaudiosink.xml">
 <!ENTITY GstCddaBaseSrc SYSTEM "xml/gstcddabasesrc.xml">
+<!ENTITY GstVideo SYSTEM "xml/gstvideo.xml">
 <!ENTITY GstVideoSink SYSTEM "xml/gstvideosink.xml">
 <!ENTITY GstVideoFilter SYSTEM "xml/gstvideofilter.xml">
 <!ENTITY GstColorBalance SYSTEM "xml/gstcolorbalance.xml">
@@ -57,6 +58,7 @@ This library should be linked to by getting cflags and libs from
 <filename>gstreamer-plugins-base.pc</filename> and adding
 <filename>-lgstvideo-&GST_MAJORMINOR;</filename> to the library flags.
     </para>
+    &GstVideo;
     &GstVideoSink;
     &GstVideoFilter;
   </chapter>

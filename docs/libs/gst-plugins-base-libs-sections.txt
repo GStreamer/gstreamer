@@ -207,6 +207,11 @@ GstVideoFilter
 GstVideoFilterClass
 </SECTION>
 
+<SECTION>
+<FILE>gstvideo</FILE>
+<INCLUDE>gst/video/video.h</INCLUDE>
+gst_video_calculate_display_ratio
+</SECTION>
 
 <SECTION>
 <FILE>private</FILE>
