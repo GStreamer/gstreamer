@@ -1,3 +1,12 @@
+2006-05-12  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/MANIFEST:
+	  Update win32 files listing.
+	* win32/common/gstversion.h:
+	  Add GST_MAJORMINOR definition.
+	* win32/common/libgstreamer.def:
+	  Add new exported functions.
+	  
 2006-05-12  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gstplugin.c: (gst_plugin_load_file):
