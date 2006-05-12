@@ -34,7 +34,7 @@ G_BEGIN_DECLS
   "video/x-raw-rgb, " \
   "width = (int) [ 0, MAX ], " \
   "height = (int) [ 0, MAX], " \
-  "framerate = (double) [ 0.0, MAX], " \
+  "framerate = (fraction) [ 0, MAX], " \
   "depth = (int) 24, " \
   "bpp = (int) " G_STRINGIFY (bpp) ", " \
   "endianness = (int) BIG_ENDIAN, " \
@@ -45,10 +45,12 @@ G_BEGIN_DECLS
 extern gchar *	gst_xvid_error (int errorcode);
 extern gboolean	gst_xvid_init  (void);
 
-extern gint     gst_xvid_structure_to_csp (GstStructure *structure,
-					   gint w, gint *stride, gint *bpp);
-extern GstCaps *gst_xvid_csp_to_caps (gint csp, gint w, gint h,
-                       gint fps_n, gint fps_d);
+extern gint     gst_xvid_structure_to_csp (GstStructure *structure);
+extern GstCaps *gst_xvid_csp_to_caps      (gint csp, gint w, gint h);
+extern gint     gst_xvid_image_get_size (gint csp,
+                                         gint width, gint height);
+extern gint     gst_xvid_image_fill (xvid_image_t * im, void * ptr, gint csp,
+                                     gint width, gint height);
 
 G_END_DECLS
 

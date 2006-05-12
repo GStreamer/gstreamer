@@ -1,3 +1,34 @@
+2006-05-12  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
+
+	* ext/xvid/gstxvid.c: (gst_xvid_init), (gst_xvid_structure_to_csp),
+	(gst_xvid_csp_to_caps), (gst_xvid_image_get_size),
+	(gst_xvid_image_fill):
+	* ext/xvid/gstxvid.h:
+	* ext/xvid/gstxviddec.c: (gst_xviddec_class_init),
+	(gst_xviddec_init), (gst_xviddec_reset), (gst_xviddec_unset),
+	(gst_xviddec_handle_sink_event), (gst_xviddec_setup),
+	(gst_xviddec_add_par), (gst_xviddec_negotiate),
+	(gst_xviddec_decode), (gst_xviddec_chain),
+	(gst_xviddec_flush_buffers), (gst_xviddec_src_getcaps),
+	(gst_xviddec_src_link), (gst_xviddec_setcaps),
+	(gst_xviddec_change_state):
+	* ext/xvid/gstxviddec.h:
+	* ext/xvid/gstxvidenc.c: (gst_xvidenc_profile_get_type),
+	(gst_xvidenc_quant_type_get_type), (gst_xvidenc_pass_get_type),
+	(gst_xvidenc_get_type), (gst_xvidenc_base_init),
+	(gst_xvidenc_class_init), (gst_xvidenc_init),
+	(gst_xvidenc_finalize), (gst_xvidenc_handle_sink_event),
+	(gst_xvidenc_setup), (gst_xvidenc_setcaps), (gst_xvidenc_encode),
+	(gst_xvidenc_chain), (gst_xvidenc_flush_buffers),
+	(gst_xvidenc_set_property), (gst_xvidenc_get_property),
+	(gst_xvidenc_change_state):
+	* ext/xvid/gstxvidenc.h:
+	xvid plugin to support more capabilities of XviD codec.
+	Fixes #339462.
+	Some more cleanups here and there.
+
 2006-05-11  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/Makefile.am:

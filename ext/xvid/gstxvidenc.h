@@ -23,10 +23,7 @@
 #include <gst/gst.h>
 #include "gstxvid.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_XVIDENC \
   (gst_xvidenc_get_type())
@@ -48,24 +45,84 @@ struct _GstXvidEnc {
   /* pads */
   GstPad *sinkpad, *srcpad;
 
+  /* xvid handle */
+  void *handle;
+
+  /* cache in place */
+  xvid_enc_frame_t *xframe_cache;
+
+  /* caps information */
+  gint csp;
+  gint width, height;
+  gint fbase;
+  gint fincr;
+  gint par_width;
+  gint par_height;
+
+  /* delayed buffers if bframe usage */
+  GQueue *delay;
+
   /* encoding profile */
   gint profile;
 
+  /* quantizer type; h263, MPEG */
+  gint quant_type;
+
+  /* encoding type; cbr, vbr, quant */
+  gint pass;
+
   /* quality of encoded image */
   gint bitrate;
-  gint buffer_size;
+  gint quant;
 
-  /* max number of B frames between I/P */
-  gint max_b_frames;
-
-  /* max key interval */
+  /* gop */
   gint max_key_interval;
+  gboolean closed_gop;
 
-  /* xvid handle */
-  void *handle;
-  gint csp;
-  gint width, height, stride;
-  gint fps_n, fps_d;
+  /* motion estimation */
+  gint motion;
+  gboolean me_chroma;
+  gint me_vhq;
+  gboolean me_quarterpel;
+
+  /* lumimasking */
+  gboolean lumimasking;
+
+  /* b-frames */
+  gint max_bframes;
+  gint bquant_ratio;
+  gint bquant_offset;
+  gint bframe_threshold;
+
+  /* misc */
+  gboolean gmc;
+  gboolean trellis;
+  gboolean interlaced;
+  gboolean cartoon;
+  gboolean greyscale;
+  gboolean hqacpred;
+
+  /* quantizer ranges */
+  gint max_iquant, min_iquant;
+  gint max_pquant, min_pquant;
+  gint max_bquant, min_bquant;
+
+  /* cbr (single pass) encoding */
+  gint reaction_delay_factor;
+  gint averaging_period;
+  gint buffer;
+
+  /* vbr (2pass) encoding */
+  gchar *filename;
+  gint keyframe_boost;
+  gint curve_compression_high;
+  gint curve_compression_low;
+  gint overflow_control_strength;
+  gint max_overflow_improvement;
+  gint max_overflow_degradation;
+  gint kfreduction;
+  gint kfthreshold;
+  gint container_frame_overhead;
 };
 
 struct _GstXvidEncClass {
@@ -77,8 +134,6 @@ struct _GstXvidEncClass {
 
 GType gst_xvidenc_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_XVIDENC_H__ */

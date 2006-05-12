@@ -42,6 +42,7 @@ gst_xvid_init (void)
 
   /* set up xvid initially (function pointers, CPU flags) */
   gst_xvid_init_struct (xinit);
+
   if ((ret = xvid_global (NULL, XVID_GBL_INIT, &xinit, NULL)) < 0) {
     g_warning ("Failed to initialize XviD: %s (%d)", gst_xvid_error (ret), ret);
     return FALSE;
@@ -87,11 +88,10 @@ gst_xvid_error (int errorcode)
 }
 
 gint
-gst_xvid_structure_to_csp (GstStructure * structure,
-    gint w, gint * _stride, gint * _bpp)
+gst_xvid_structure_to_csp (GstStructure * structure)
 {
   const gchar *mime = gst_structure_get_name (structure);
-  gint xvid_cs = -1, stride = -1, bpp = -1;
+  gint xvid_cs = -1;
 
   if (!strcmp (mime, "video/x-raw-yuv")) {
     guint32 fourcc;
@@ -100,32 +100,22 @@ gst_xvid_structure_to_csp (GstStructure * structure,
     switch (fourcc) {
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
         xvid_cs = XVID_CSP_I420;
-        stride = w;
-        bpp = 12;
         break;
       case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
         xvid_cs = XVID_CSP_YUY2;
-        stride = w * 2;
-        bpp = 16;
         break;
       case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
         xvid_cs = XVID_CSP_YV12;
-        stride = w;
-        bpp = 12;
         break;
       case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
         xvid_cs = XVID_CSP_UYVY;
-        stride = w * 2;
-        bpp = 16;
         break;
       case GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'):
         xvid_cs = XVID_CSP_YVYU;
-        stride = w * 2;
-        bpp = 16;
         break;
     }
   } else {
-    gint depth, r_mask;
+    gint depth, bpp, r_mask;
 
     gst_structure_get_int (structure, "depth", &depth);
     gst_structure_get_int (structure, "bpp", &bpp);
@@ -164,20 +154,15 @@ gst_xvid_structure_to_csp (GstStructure * structure,
         break;
     }
 
-    stride = w * bpp / 8;
   }
-  if (_stride)
-    *_stride = stride;
-  if (_bpp)
-    *_bpp = bpp;
 
   return xvid_cs;
 }
 
 GstCaps *
-gst_xvid_csp_to_caps (gint csp, gint w, gint h, gint fps_n, gint fps_d)
+gst_xvid_csp_to_caps (gint csp, gint w, gint h)
 {
-  GstCaps *caps = NULL;
+  GstStructure *structure = NULL;
 
   switch (csp) {
     case XVID_CSP_RGB555:
@@ -253,7 +238,7 @@ gst_xvid_csp_to_caps (gint csp, gint w, gint h, gint fps_n, gint fps_d)
           break;
       }
 
-      caps = gst_caps_new_simple ("video/x-raw-rgb",
+      structure = gst_structure_new ("video/x-raw-rgb",
           "width", G_TYPE_INT, w,
           "height", G_TYPE_INT, h,
           "depth", G_TYPE_INT, depth,
@@ -261,8 +246,7 @@ gst_xvid_csp_to_caps (gint csp, gint w, gint h, gint fps_n, gint fps_d)
           "endianness", G_TYPE_INT, endianness,
           "red_mask", G_TYPE_INT, r_mask,
           "green_mask", G_TYPE_INT, g_mask,
-          "blue_mask", G_TYPE_INT, b_mask,
-          "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+          "blue_mask", G_TYPE_INT, b_mask, NULL);
       break;
     }
 
@@ -290,18 +274,86 @@ gst_xvid_csp_to_caps (gint csp, gint w, gint h, gint fps_n, gint fps_d)
           fourcc = GST_MAKE_FOURCC ('Y', 'V', '1', '2');
           break;
       }
-      caps = gst_caps_new_simple ("video/x-raw-yuv",
+
+      structure = gst_structure_new ("video/x-raw-yuv",
           "width", G_TYPE_INT, w,
-          "height", G_TYPE_INT, h,
-          "format", GST_TYPE_FOURCC, fourcc,
-          "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
+          "height", G_TYPE_INT, h, "format", GST_TYPE_FOURCC, fourcc, NULL);
       break;
     }
   }
 
-  return caps;
+  return gst_caps_new_full (structure, NULL);
 }
 
+
+gint
+gst_xvid_image_get_size (gint csp, gint width, gint height)
+{
+  xvid_image_t dummy_im;
+
+  return gst_xvid_image_fill (&dummy_im, NULL, csp, width, height);
+}
+
+gint
+gst_xvid_image_fill (xvid_image_t * im, void *ptr, gint csp,
+    gint width, gint height)
+{
+  gint stride, h2, size = 0;
+
+  im->csp = csp;
+
+  switch (csp) {
+    case XVID_CSP_I420:
+    case XVID_CSP_YV12:
+      /* planar */
+      /* luma */
+      stride = GST_ROUND_UP_4 (width);
+      h2 = GST_ROUND_UP_2 (height);
+      im->stride[0] = stride;
+      im->plane[0] = ptr;
+      /* chroma */
+      im->plane[1] = im->plane[0] + (stride * h2);
+      size += stride * height;
+      stride = GST_ROUND_UP_8 (width) / 2;
+      h2 = GST_ROUND_UP_2 (height) / 2;
+      im->stride[1] = stride;
+
+      im->plane[2] = im->plane[1] + (stride * h2);
+      im->stride[2] = stride;
+      size += 2 * (stride * height);
+      break;
+    case XVID_CSP_RGB555:
+    case XVID_CSP_RGB565:
+    case XVID_CSP_YUY2:
+    case XVID_CSP_UYVY:
+    case XVID_CSP_YVYU:
+      /* packed */
+      stride = GST_ROUND_UP_4 (width * 2);
+      im->plane[0] = ptr;
+      im->stride[0] = stride;
+      size = stride * height;
+      break;
+    case XVID_CSP_BGR:
+      stride = GST_ROUND_UP_4 (width * 3);
+      im->plane[0] = ptr;
+      im->stride[0] = stride;
+      size = stride * height * 2;
+      break;
+    case XVID_CSP_ABGR:
+    case XVID_CSP_BGRA:
+    case XVID_CSP_RGBA:
+#ifdef XVID_CSP_ARGB
+    case XVID_CSP_ARGB:
+#endif
+      stride = width * 4;
+      im->plane[0] = ptr;
+      im->stride[0] = stride;
+      size = stride * height;
+      break;
+  }
+
+  return size;
+}
 
 static gboolean
 plugin_init (GstPlugin * plugin)

@@ -23,10 +23,7 @@
 #include <gst/gst.h>
 #include "gstxvid.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_XVIDDEC \
   (gst_xviddec_get_type())
@@ -52,9 +49,16 @@ struct _GstXvidDec {
   void *handle;
 
   /* video (output) settings */
-  gint csp, bpp, stride;
+  gint csp;
   gint width, height;
-  gint fps_n, fps_d;
+  gint fps_n, fps_d, par_n, par_d;
+
+  /* whether in need for keyframe */
+  gboolean waiting_for_key;
+
+  /* retain some info on delayed frame */
+  gboolean have_ts;
+  GstClockTime next_ts, next_dur;
 };
 
 struct _GstXvidDecClass {
@@ -63,8 +67,6 @@ struct _GstXvidDecClass {
 
 GType gst_xviddec_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __GST_XVIDDEC_H__ */
