@@ -29,6 +29,9 @@
 /* GStreamer license */
 #define GST_LICENSE "@GST_LICENSE@"
 
+/* library major.minor version */
+#define GST_MAJORMINOR "@GST_MAJORMINOR@"
+
 /* package name in plugins */
 #define GST_PACKAGE_NAME "@GST_PACKAGE_NAME@"
 

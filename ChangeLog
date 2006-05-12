@@ -1,3 +1,17 @@
+2006-05-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	  updates for win32
+	* configure.ac:
+	  define GST_MAJORMINOR so we have it available in win32/common/config.h
+	  Possibly remove it from our Makefile.am files later
+	* win32/common/config.h:
+	* win32/common/config.h.in:
+	  added GST_MAJORMINOR
+	* win32/common/gstenumtypes.c: (register_gst_resource_error):
+	* win32/common/gstversion.h:
+	  updated
+
 2006-05-12  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/MANIFEST:

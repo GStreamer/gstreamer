@@ -33,6 +33,8 @@ GST_MAJORMINOR=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
 dnl we override it here for release candidates for a new series
 GST_MAJORMINOR=0.10
 AC_SUBST(GST_MAJORMINOR)
+AC_DEFINE_UNQUOTED(GST_MAJORMINOR, "$GST_MAJORMINOR",
+  [library major.minor version])
 
 dnl CURRENT, REVISION, AGE
 dnl - library source changed -> increment REVISION

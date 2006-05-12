@@ -29,6 +29,9 @@
 /* GStreamer license */
 #define GST_LICENSE "LGPL"
 
+/* library major.minor version */
+#define GST_MAJORMINOR "0.10"
+
 /* package name in plugins */
 #define GST_PACKAGE_NAME "GStreamer CVS/prerelease"
 

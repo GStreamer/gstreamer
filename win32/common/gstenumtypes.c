@@ -190,17 +190,17 @@ register_gst_clock_flags (GType * id)
 {
   static const GFlagsValue values[] = {
     {GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC, "GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC",
-          "can-do-single-sync"},
+        "can-do-single-sync"},
     {GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC, "GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC",
-          "can-do-single-async"},
+        "can-do-single-async"},
     {GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC, "GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC",
-          "can-do-periodic-sync"},
+        "can-do-periodic-sync"},
     {GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC,
-          "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC", "can-do-periodic-async"},
+        "GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC", "can-do-periodic-async"},
     {GST_CLOCK_FLAG_CAN_SET_RESOLUTION, "GST_CLOCK_FLAG_CAN_SET_RESOLUTION",
-          "can-set-resolution"},
+        "can-set-resolution"},
     {GST_CLOCK_FLAG_CAN_SET_MASTER, "GST_CLOCK_FLAG_CAN_SET_MASTER",
-          "can-set-master"},
+        "can-set-master"},
     {GST_CLOCK_FLAG_LAST, "GST_CLOCK_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -268,17 +268,17 @@ register_gst_state_change (GType * id)
 {
   static const GEnumValue values[] = {
     {GST_STATE_CHANGE_NULL_TO_READY, "GST_STATE_CHANGE_NULL_TO_READY",
-          "null-to-ready"},
+        "null-to-ready"},
     {GST_STATE_CHANGE_READY_TO_PAUSED, "GST_STATE_CHANGE_READY_TO_PAUSED",
-          "ready-to-paused"},
+        "ready-to-paused"},
     {GST_STATE_CHANGE_PAUSED_TO_PLAYING, "GST_STATE_CHANGE_PAUSED_TO_PLAYING",
-          "paused-to-playing"},
+        "paused-to-playing"},
     {GST_STATE_CHANGE_PLAYING_TO_PAUSED, "GST_STATE_CHANGE_PLAYING_TO_PAUSED",
-          "playing-to-paused"},
+        "playing-to-paused"},
     {GST_STATE_CHANGE_PAUSED_TO_READY, "GST_STATE_CHANGE_PAUSED_TO_READY",
-          "paused-to-ready"},
+        "paused-to-ready"},
     {GST_STATE_CHANGE_READY_TO_NULL, "GST_STATE_CHANGE_READY_TO_NULL",
-          "ready-to-null"},
+        "ready-to-null"},
     {0, NULL, NULL}
   };
   *id = g_enum_register_static ("GstStateChange", values);
@@ -324,9 +324,9 @@ register_gst_core_error (GType * id)
     {GST_CORE_ERROR_FAILED, "GST_CORE_ERROR_FAILED", "failed"},
     {GST_CORE_ERROR_TOO_LAZY, "GST_CORE_ERROR_TOO_LAZY", "too-lazy"},
     {GST_CORE_ERROR_NOT_IMPLEMENTED, "GST_CORE_ERROR_NOT_IMPLEMENTED",
-          "not-implemented"},
+        "not-implemented"},
     {GST_CORE_ERROR_STATE_CHANGE, "GST_CORE_ERROR_STATE_CHANGE",
-          "state-change"},
+        "state-change"},
     {GST_CORE_ERROR_PAD, "GST_CORE_ERROR_PAD", "pad"},
     {GST_CORE_ERROR_THREAD, "GST_CORE_ERROR_THREAD", "thread"},
     {GST_CORE_ERROR_NEGOTIATION, "GST_CORE_ERROR_NEGOTIATION", "negotiation"},
@@ -335,7 +335,7 @@ register_gst_core_error (GType * id)
     {GST_CORE_ERROR_CAPS, "GST_CORE_ERROR_CAPS", "caps"},
     {GST_CORE_ERROR_TAG, "GST_CORE_ERROR_TAG", "tag"},
     {GST_CORE_ERROR_MISSING_PLUGIN, "GST_CORE_ERROR_MISSING_PLUGIN",
-          "missing-plugin"},
+        "missing-plugin"},
     {GST_CORE_ERROR_CLOCK, "GST_CORE_ERROR_CLOCK", "clock"},
     {GST_CORE_ERROR_NUM_ERRORS, "GST_CORE_ERROR_NUM_ERRORS", "num-errors"},
     {0, NULL, NULL}
@@ -363,7 +363,7 @@ register_gst_library_error (GType * id)
     {GST_LIBRARY_ERROR_SETTINGS, "GST_LIBRARY_ERROR_SETTINGS", "settings"},
     {GST_LIBRARY_ERROR_ENCODE, "GST_LIBRARY_ERROR_ENCODE", "encode"},
     {GST_LIBRARY_ERROR_NUM_ERRORS, "GST_LIBRARY_ERROR_NUM_ERRORS",
-          "num-errors"},
+        "num-errors"},
     {0, NULL, NULL}
   };
   *id = g_enum_register_static ("GstLibraryError", values);
@@ -388,17 +388,19 @@ register_gst_resource_error (GType * id)
     {GST_RESOURCE_ERROR_BUSY, "GST_RESOURCE_ERROR_BUSY", "busy"},
     {GST_RESOURCE_ERROR_OPEN_READ, "GST_RESOURCE_ERROR_OPEN_READ", "open-read"},
     {GST_RESOURCE_ERROR_OPEN_WRITE, "GST_RESOURCE_ERROR_OPEN_WRITE",
-          "open-write"},
+        "open-write"},
     {GST_RESOURCE_ERROR_OPEN_READ_WRITE, "GST_RESOURCE_ERROR_OPEN_READ_WRITE",
-          "open-read-write"},
+        "open-read-write"},
     {GST_RESOURCE_ERROR_CLOSE, "GST_RESOURCE_ERROR_CLOSE", "close"},
     {GST_RESOURCE_ERROR_READ, "GST_RESOURCE_ERROR_READ", "read"},
     {GST_RESOURCE_ERROR_WRITE, "GST_RESOURCE_ERROR_WRITE", "write"},
     {GST_RESOURCE_ERROR_SEEK, "GST_RESOURCE_ERROR_SEEK", "seek"},
     {GST_RESOURCE_ERROR_SYNC, "GST_RESOURCE_ERROR_SYNC", "sync"},
     {GST_RESOURCE_ERROR_SETTINGS, "GST_RESOURCE_ERROR_SETTINGS", "settings"},
+    {GST_RESOURCE_ERROR_NO_SPACE_LEFT, "GST_RESOURCE_ERROR_NO_SPACE_LEFT",
+        "no-space-left"},
     {GST_RESOURCE_ERROR_NUM_ERRORS, "GST_RESOURCE_ERROR_NUM_ERRORS",
-          "num-errors"},
+        "num-errors"},
     {0, NULL, NULL}
   };
   *id = g_enum_register_static ("GstResourceError", values);
@@ -420,12 +422,12 @@ register_gst_stream_error (GType * id)
     {GST_STREAM_ERROR_FAILED, "GST_STREAM_ERROR_FAILED", "failed"},
     {GST_STREAM_ERROR_TOO_LAZY, "GST_STREAM_ERROR_TOO_LAZY", "too-lazy"},
     {GST_STREAM_ERROR_NOT_IMPLEMENTED, "GST_STREAM_ERROR_NOT_IMPLEMENTED",
-          "not-implemented"},
+        "not-implemented"},
     {GST_STREAM_ERROR_TYPE_NOT_FOUND, "GST_STREAM_ERROR_TYPE_NOT_FOUND",
-          "type-not-found"},
+        "type-not-found"},
     {GST_STREAM_ERROR_WRONG_TYPE, "GST_STREAM_ERROR_WRONG_TYPE", "wrong-type"},
     {GST_STREAM_ERROR_CODEC_NOT_FOUND, "GST_STREAM_ERROR_CODEC_NOT_FOUND",
-          "codec-not-found"},
+        "codec-not-found"},
     {GST_STREAM_ERROR_DECODE, "GST_STREAM_ERROR_DECODE", "decode"},
     {GST_STREAM_ERROR_ENCODE, "GST_STREAM_ERROR_ENCODE", "encode"},
     {GST_STREAM_ERROR_DEMUX, "GST_STREAM_ERROR_DEMUX", "demux"},
@@ -485,9 +487,9 @@ register_gst_event_type (GType * id)
     {GST_EVENT_NAVIGATION, "GST_EVENT_NAVIGATION", "navigation"},
     {GST_EVENT_CUSTOM_UPSTREAM, "GST_EVENT_CUSTOM_UPSTREAM", "custom-upstream"},
     {GST_EVENT_CUSTOM_DOWNSTREAM, "GST_EVENT_CUSTOM_DOWNSTREAM",
-          "custom-downstream"},
+        "custom-downstream"},
     {GST_EVENT_CUSTOM_DOWNSTREAM_OOB, "GST_EVENT_CUSTOM_DOWNSTREAM_OOB",
-          "custom-downstream-oob"},
+        "custom-downstream-oob"},
     {GST_EVENT_CUSTOM_BOTH, "GST_EVENT_CUSTOM_BOTH", "custom-both"},
     {GST_EVENT_CUSTOM_BOTH_OOB, "GST_EVENT_CUSTOM_BOTH_OOB", "custom-both-oob"},
     {0, NULL, NULL}
@@ -647,9 +649,9 @@ register_gst_assoc_flags (GType * id)
   static const GFlagsValue values[] = {
     {GST_ASSOCIATION_FLAG_NONE, "GST_ASSOCIATION_FLAG_NONE", "none"},
     {GST_ASSOCIATION_FLAG_KEY_UNIT, "GST_ASSOCIATION_FLAG_KEY_UNIT",
-          "key-unit"},
+        "key-unit"},
     {GST_ASSOCIATION_FLAG_DELTA_UNIT, "GST_ASSOCIATION_FLAG_DELTA_UNIT",
-          "delta-unit"},
+        "delta-unit"},
     {GST_ASSOCIATION_FLAG_LAST, "GST_ASSOCIATION_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -835,7 +837,7 @@ register_gst_message_type (GType * id)
     {GST_MESSAGE_CLOCK_LOST, "GST_MESSAGE_CLOCK_LOST", "clock-lost"},
     {GST_MESSAGE_NEW_CLOCK, "GST_MESSAGE_NEW_CLOCK", "new-clock"},
     {GST_MESSAGE_STRUCTURE_CHANGE, "GST_MESSAGE_STRUCTURE_CHANGE",
-          "structure-change"},
+        "structure-change"},
     {GST_MESSAGE_STREAM_STATUS, "GST_MESSAGE_STREAM_STATUS", "stream-status"},
     {GST_MESSAGE_APPLICATION, "GST_MESSAGE_APPLICATION", "application"},
     {GST_MESSAGE_ELEMENT, "GST_MESSAGE_ELEMENT", "element"},
@@ -864,7 +866,7 @@ register_gst_mini_object_flags (GType * id)
 {
   static const GFlagsValue values[] = {
     {GST_MINI_OBJECT_FLAG_READONLY, "GST_MINI_OBJECT_FLAG_READONLY",
-          "readonly"},
+        "readonly"},
     {GST_MINI_OBJECT_FLAG_LAST, "GST_MINI_OBJECT_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -888,10 +890,10 @@ register_gst_pad_link_return (GType * id)
   static const GEnumValue values[] = {
     {GST_PAD_LINK_OK, "GST_PAD_LINK_OK", "ok"},
     {GST_PAD_LINK_WRONG_HIERARCHY, "GST_PAD_LINK_WRONG_HIERARCHY",
-          "wrong-hierarchy"},
+        "wrong-hierarchy"},
     {GST_PAD_LINK_WAS_LINKED, "GST_PAD_LINK_WAS_LINKED", "was-linked"},
     {GST_PAD_LINK_WRONG_DIRECTION, "GST_PAD_LINK_WRONG_DIRECTION",
-          "wrong-direction"},
+        "wrong-direction"},
     {GST_PAD_LINK_NOFORMAT, "GST_PAD_LINK_NOFORMAT", "noformat"},
     {GST_PAD_LINK_NOSCHED, "GST_PAD_LINK_NOSCHED", "nosched"},
     {GST_PAD_LINK_REFUSED, "GST_PAD_LINK_REFUSED", "refused"},
@@ -1050,7 +1052,7 @@ register_gst_pipeline_flags (GType * id)
 {
   static const GFlagsValue values[] = {
     {GST_PIPELINE_FLAG_FIXED_CLOCK, "GST_PIPELINE_FLAG_FIXED_CLOCK",
-          "fixed-clock"},
+        "fixed-clock"},
     {GST_PIPELINE_FLAG_LAST, "GST_PIPELINE_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -1074,9 +1076,9 @@ register_gst_plugin_error (GType * id)
   static const GEnumValue values[] = {
     {GST_PLUGIN_ERROR_MODULE, "GST_PLUGIN_ERROR_MODULE", "module"},
     {GST_PLUGIN_ERROR_DEPENDENCIES, "GST_PLUGIN_ERROR_DEPENDENCIES",
-          "dependencies"},
+        "dependencies"},
     {GST_PLUGIN_ERROR_NAME_MISMATCH, "GST_PLUGIN_ERROR_NAME_MISMATCH",
-          "name-mismatch"},
+        "name-mismatch"},
     {0, NULL, NULL}
   };
   *id = g_enum_register_static ("GstPluginError", values);
@@ -1270,7 +1272,7 @@ register_gst_type_find_probability (GType * id)
     {GST_TYPE_FIND_POSSIBLE, "GST_TYPE_FIND_POSSIBLE", "possible"},
     {GST_TYPE_FIND_LIKELY, "GST_TYPE_FIND_LIKELY", "likely"},
     {GST_TYPE_FIND_NEARLY_CERTAIN, "GST_TYPE_FIND_NEARLY_CERTAIN",
-          "nearly-certain"},
+        "nearly-certain"},
     {GST_TYPE_FIND_MAXIMUM, "GST_TYPE_FIND_MAXIMUM", "maximum"},
     {0, NULL, NULL}
   };
@@ -1317,12 +1319,12 @@ register_gst_parse_error (GType * id)
   static const GEnumValue values[] = {
     {GST_PARSE_ERROR_SYNTAX, "GST_PARSE_ERROR_SYNTAX", "syntax"},
     {GST_PARSE_ERROR_NO_SUCH_ELEMENT, "GST_PARSE_ERROR_NO_SUCH_ELEMENT",
-          "no-such-element"},
+        "no-such-element"},
     {GST_PARSE_ERROR_NO_SUCH_PROPERTY, "GST_PARSE_ERROR_NO_SUCH_PROPERTY",
-          "no-such-property"},
+        "no-such-property"},
     {GST_PARSE_ERROR_LINK, "GST_PARSE_ERROR_LINK", "link"},
     {GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY,
-          "GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY", "could-not-set-property"},
+        "GST_PARSE_ERROR_COULD_NOT_SET_PROPERTY", "could-not-set-property"},
     {GST_PARSE_ERROR_EMPTY_BIN, "GST_PARSE_ERROR_EMPTY_BIN", "empty-bin"},
     {GST_PARSE_ERROR_EMPTY, "GST_PARSE_ERROR_EMPTY", "empty"},
     {0, NULL, NULL}
