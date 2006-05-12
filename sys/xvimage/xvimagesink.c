@@ -1589,7 +1589,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   gint display_par_n, display_par_d;    /* display's PAR */
   const GValue *caps_par;
   const GValue *fps;
-  gint num, den;
+  guint num, den;
 
   xvimagesink = GST_XVIMAGESINK (bsink);
 

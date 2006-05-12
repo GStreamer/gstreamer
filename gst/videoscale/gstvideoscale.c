@@ -545,7 +545,8 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
   /* we have both PAR but they might not be fixated */
   if (from_par && to_par) {
     gint from_w, from_h, from_par_n, from_par_d, to_par_n, to_par_d;
-    gint count = 0, w = 0, h = 0, num, den;
+    gint count = 0, w = 0, h = 0;
+    guint num, den;
 
     /* from_par should be fixed */
     g_return_if_fail (gst_value_is_fixed (from_par));
