@@ -81,6 +81,10 @@ typedef struct {
   /* stream length */
   guint64        total_bytes;
   guint32        total_frames;
+  guint64        total_time;
+
+  /* VBR indicator */
+  gboolean       is_vbr;
 
   /* stream length according to index */
   GstClockTime   idx_duration;
@@ -119,13 +123,10 @@ typedef struct _GstAviDemux {
   /* some stream info for length */
   gst_riff_avih *avih;
 
-  /* seeking */
-  gdouble       segment_rate;
-  GstSeekFlags  segment_flags;
-  /* in GST_FORMAT_TIME */
-  gint64        segment_start;
-  gint64        segment_stop;
+  /* seeking in TIME */
+  GstSegment    segment;
   GstEvent      *seek_event;
+
 } GstAviDemux;
 
 typedef struct _GstAviDemuxClass {

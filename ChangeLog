@@ -1,3 +1,22 @@
+2006-05-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
+	(gst_avi_demux_index_next), (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_handle_src_event), (gst_avi_demux_parse_subindex),
+	(gst_avi_demux_parse_stream), (gst_avi_demux_parse_index),
+	(gst_avi_demux_stream_index), (gst_avi_demux_stream_scan),
+	(gst_avi_demux_massage_index),
+	(gst_avi_demux_calculate_durations_from_index),
+	(gst_avi_demux_push_event), (gst_avi_demux_stream_header),
+	(gst_avi_demux_handle_seek), (gst_avi_demux_process_next_entry),
+	(gst_avi_demux_loop):
+	* gst/avi/gstavidemux.h:
+	Some cleanups, prepare to use GstSegment.
+	Fix error in entry walking code.
+	Fix VBR detection.
+	Smarter timestamp calculation code.
+	Uniform error/eos handling.
+
 2006-05-12  Michael Smith  <msmith@fluendo.com>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_fmt),
