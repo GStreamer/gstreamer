@@ -1,3 +1,10 @@
+2006-05-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/id3v2frames.c: (parse_insert_string_field):
+	  Some more debug info. No need to check whether the string
+	  returned by g_convert() is really UTF-8 - either it is or
+	  we get NULL returned.
+
 2006-05-10  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3v2frames.c: (id3v2_genre_fields_to_taglist):

@@ -671,14 +671,20 @@ static void
 parse_insert_string_field (const gchar * encoding, gchar * data, gint data_size,
     GArray * fields)
 {
-  gchar *field;
+  gchar *field = NULL;
 
-  field = g_convert (data, data_size, "UTF-8", encoding, NULL, NULL, NULL);
-  if (field && !g_utf8_validate (field, -1, NULL)) {
-    GST_DEBUG ("%s was bad UTF-8. Ignoring", field);
-    g_free (field);
-    field = NULL;
+  if (strcmp (encoding, "UTF-8") != 0) {
+    field = g_convert (data, data_size, "UTF-8", encoding, NULL, NULL, NULL);
+    if (field == NULL) {
+      GST_WARNING ("could not convert string from %s to UTF-8. Ignoring",
+          encoding);
+    }
+  } else if (g_utf8_validate (data, data_size, NULL)) {
+    field = g_strndup (data, data_size);
+  } else {
+    GST_WARNING ("alleged UTF-8 string is not valid UTF-8. Ignoring");
   }
+
   if (field)
     g_array_append_val (fields, field);
 }
