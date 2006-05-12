@@ -1,3 +1,9 @@
+2006-05-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/wavparse/Makefile.am:
+	  Add CFLAGS and LIBS for libgstbase, fixes build on
+	  Cygwin (#341489).
+
 2006-05-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/id3v2frames.c: (parse_insert_string_field):
