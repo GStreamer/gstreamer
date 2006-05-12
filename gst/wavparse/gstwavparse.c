@@ -591,7 +591,7 @@ gst_wavparse_fmt (GstWavParse * wav)
     return FALSE;
   }
 
-  /* Note: gst_riff_create_audio_caps might nedd to fix values in
+  /* Note: gst_riff_create_audio_caps might need to fix values in
    * the header header depending on the format, so call it first */
   caps = gst_riff_create_audio_caps (header->format, NULL, header, NULL);
 
@@ -774,7 +774,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   GstEvent *newsegment;
   GstFormat format;
   GstSeekFlags flags;
-  GstSeekType cur_type, stop_type;
+  GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type;
   gint64 cur, stop;
   gboolean flush;
   gboolean update;
@@ -1030,7 +1030,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
       gst_buffer_unref (buf);
     }
 
-    /* Note: gst_riff_create_audio_caps might nedd to fix values in
+    /* Note: gst_riff_create_audio_caps might need to fix values in
      * the header header depending on the format, so call it first */
     caps =
         gst_riff_create_audio_caps (header->format, NULL, header, extra,
