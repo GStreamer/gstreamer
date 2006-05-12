@@ -2379,7 +2379,7 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, gboolean update)
       start_time, avi->segment.stop, start_time);
 
   if (flush) {
-    gst_avi_demux_push_event (avi, gst_event_new_flush_start ());
+    gst_avi_demux_push_event (avi, gst_event_new_flush_stop ());
     gst_pad_push_event (avi->sinkpad, gst_event_new_flush_stop ());
   }
 

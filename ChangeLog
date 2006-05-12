@@ -1,5 +1,13 @@
 2006-05-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_index_next),
+	(gst_avi_demux_parse_index), (gst_avi_demux_massage_index),
+	(gst_avi_demux_handle_seek), (gst_avi_demux_loop):
+	Ooops, bitten by the copy-and-paste design paradigm, fixes
+	seek again.
+
+2006-05-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
 	(gst_avi_demux_index_next), (gst_avi_demux_handle_src_query),
 	(gst_avi_demux_handle_src_event), (gst_avi_demux_parse_subindex),
