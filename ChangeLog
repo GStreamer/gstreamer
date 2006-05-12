@@ -1,3 +1,8 @@
+2006-05-12  Michael Smith  <msmith@fluendo.com>
+
+	* gst/gstplugin.c: (gst_plugin_load_file):
+	  If an so file has no plugin entry point, unload the module.
+
 2006-05-11  Wim Taymans  <wim@fluendo.com>
 
 	* plugins/elements/gstqueue.c: (gst_queue_chain), (gst_queue_loop),

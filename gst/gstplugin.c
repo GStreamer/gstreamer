@@ -428,6 +428,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
         GST_PLUGIN_ERROR,
         GST_PLUGIN_ERROR_MODULE,
         "File \"%s\" is not a GStreamer plugin", filename);
+    g_module_close (module);
     goto return_error;
   }
   plugin->orig_desc = (GstPluginDesc *) ptr;
