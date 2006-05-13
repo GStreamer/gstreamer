@@ -1,3 +1,15 @@
+2006-05-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Young-Ho Cha  <ganadist chollian net>
+
+	* ext/faad/gstfaad.c: (gst_faad_init), (gst_faad_chain),
+	(gst_faad_change_state):
+	* ext/faad/gstfaad.h:
+	  If we encounter a decoding error, don't error out immediately,
+	  but try to resync (or see if we have better luck with the next
+	  buffer in case of framed input). Only error out after five
+	  consecutive errors. Fixes #341563.
+
 2006-05-12  Wim Taymans  <wim@fluendo.com>
 
 	* ext/xvid/gstxvidenc.c: (gst_xvidenc_class_init),

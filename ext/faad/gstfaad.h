@@ -63,6 +63,7 @@ typedef struct _GstFaad {
   gint64  next_ts;     /* timestamp of next buffer                        */
   guint64 bytes_in;    /* bytes received                                  */
   guint64 sum_dur_out; /* sum of durations of decoded buffers we sent out */
+  gint    error_count;
 } GstFaad;
 
 typedef struct _GstFaadClass {

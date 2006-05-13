@@ -51,6 +51,8 @@ extern int8_t faacDecInit2 (faacDecHandle, guint8 *, guint32,
 GST_DEBUG_CATEGORY_STATIC (faad_debug);
 #define GST_CAT_DEFAULT faad_debug
 
+#define MAX_DECODE_ERRORS 5
+
 static const GstElementDetails faad_details =
 GST_ELEMENT_DETAILS ("AAC audio decoder",
     "Codec/Decoder/Audio",
@@ -192,6 +194,7 @@ gst_faad_init (GstFaad * faad)
   faad->bytes_in = 0;
   faad->sum_dur_out = 0;
   faad->packetised = FALSE;
+  faad->error_count = 0;
 
   faad->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (faad), faad->sinkpad);
@@ -1208,8 +1211,17 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
       out = faacDecDecode (faad->handle, &info, input_data + skip_bytes,
           input_size - skip_bytes);
 
-      if (info.error)
-        goto decode_error;
+      if (info.error) {
+        faad->error_count++;
+        if (faad->error_count >= MAX_DECODE_ERRORS)
+          goto decode_error;
+        GST_DEBUG_OBJECT (faad,
+            "Failed to decode buffer: %s, count = %d, trying to resync",
+            faacDecGetErrorMessage (info.error), faad->error_count);
+        continue;
+      }
+
+      faad->error_count = 0;    /* all fine, reset error counter */
     }
 
     if (info.bytesconsumed > input_size)
@@ -1387,6 +1399,7 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
       faad->prev_ts = GST_CLOCK_TIME_NONE;
       faad->bytes_in = 0;
       faad->sum_dur_out = 0;
+      faad->error_count = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_faad_close_decoder (faad);
