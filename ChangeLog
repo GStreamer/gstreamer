@@ -1,3 +1,10 @@
+2006-05-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/gst-launch.c: (print_tag):
+	  Fix use of uninitialized variable in the hypothetical
+	  case that some broken plugin creates a GST_TAG_IMAGE
+	  tag containing a NULL buffer (#341667).
+
 2006-05-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-launch.c: (print_tag):

@@ -257,6 +257,8 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
         str = g_strdup_printf ("buffer of %u bytes, type: %s",
             GST_BUFFER_SIZE (img), caps_str);
         g_free (caps_str);
+      } else {
+        str = g_strdup ("NULL buffer");
       }
     } else {
       str =
