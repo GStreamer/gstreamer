@@ -350,7 +350,7 @@ gst_channel_mix_fill_others (AudioConvertCtx * this)
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_CENTER, RATIO_FRONT_REAR);
-  } else if (in_has_center && !out_has_center && out_has_front) {
+  } else if (in_has_rear && !out_has_rear && out_has_front) {
     gst_channel_mix_fill_one_other (this->matrix,
         &this->in, in_r,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,

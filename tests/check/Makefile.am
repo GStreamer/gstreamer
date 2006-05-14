@@ -77,6 +77,14 @@ libs_cddabasesrc_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	$(CFLAGS) $(AM_CFLAGS)
 
+elements_audioconvert_LDADD = \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(LDADD)
+
+elements_audioconvert_CFLAGS = \
+	-I$(top_srcdir)/gst-libs \
+	$(CFLAGS) $(AM_CFLAGS)
+
 libs_video_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
 	$(LDADD)

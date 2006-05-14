@@ -1,3 +1,14 @@
+2006-05-14  Michael Smith  <msmith@fluendo.com>
+
+	* gst/audioconvert/gstchannelmix.c: (gst_channel_mix_fill_others):
+	  Fix #341696: crash when mixing L+R+C to mono or stereo.
+	* tests/check/Makefile.am:
+	* tests/check/elements/audioconvert.c: (set_channel_positions),
+	(get_float_mc_caps), (get_int_mc_caps), (GST_START_TEST),
+	(audioconvert_suite):
+	  Add test for the above, including some generic framework bits for
+	  testing multichannel things.
+
 === release 0.10.7 ===
 
 2006-05-14  Jan Schmidt <thaytan@mad.scientist.com>

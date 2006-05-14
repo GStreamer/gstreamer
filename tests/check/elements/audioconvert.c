@@ -23,6 +23,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/multichannel.h>
 
 GList *buffers = NULL;
 gboolean have_eos = FALSE;
@@ -156,6 +157,88 @@ get_float_caps (guint channels, gchar * endianness, guint width)
   g_free (string);
   fail_unless (caps != NULL);
   GST_DEBUG ("returning caps %p", caps);
+  return caps;
+}
+
+/* Copied from vorbis; the particular values used don't matter */
+static GstAudioChannelPosition channelpositions[][6] = {
+  {                             /* Mono */
+      GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+  {                             /* Stereo */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {                             /* Stereo + Centre */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {                             /* Quadraphonic */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      },
+  {                             /* Stereo + Centre + rear stereo */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      },
+  {                             /* Full 5.1 Surround */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+      },
+};
+
+static void
+set_channel_positions (GstCaps * caps, int channels,
+    GstAudioChannelPosition * channelpositions)
+{
+  GValue chanpos = { 0 };
+  GValue pos = { 0 };
+  GstStructure *structure = gst_caps_get_structure (caps, 0);
+  int c;
+
+  g_value_init (&chanpos, GST_TYPE_ARRAY);
+  g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
+
+  for (c = 0; c < channels; c++) {
+    g_value_set_enum (&pos, channelpositions[c]);
+    gst_value_array_append_value (&chanpos, &pos);
+  }
+  g_value_unset (&pos);
+
+  gst_structure_set_value (structure, "channel-positions", &chanpos);
+  g_value_unset (&chanpos);
+}
+
+/* For channels > 2, caps have to have channel positions. This adds some simple
+ * ones. Only implemented for channels between 1 and 6.
+ */
+static GstCaps *
+get_float_mc_caps (guint channels, gchar * endianness, guint width)
+{
+  GstCaps *caps = get_float_caps (channels, endianness, width);
+
+  if (channels <= 6)
+    set_channel_positions (caps, channels, channelpositions[channels - 1]);
+
+  return caps;
+}
+
+static GstCaps *
+get_int_mc_caps (guint channels, gchar * endianness, guint width,
+    guint depth, gboolean signedness)
+{
+  GstCaps *caps = get_int_caps (channels, endianness, width, depth, signedness);
+
+  if (channels <= 6)
+    set_channel_positions (caps, channels, channelpositions[channels - 1]);
+
   return caps;
 }
 
@@ -341,6 +424,24 @@ GST_START_TEST (test_float_conversion)
 
 GST_END_TEST;
 
+GST_START_TEST (test_multichannel_conversion)
+{
+  {
+    /* Ensure that audioconvert prefers to convert to integer, rather than mix
+     * to mono
+     */
+    gfloat in[] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+    gfloat out[] = { 0.0, 0.0 };
+
+    /* only one direction conversion, the other direction does
+     * not produce exactly the same as the input due to floating
+     * point rounding errors etc. */
+    RUN_CONVERSION ("3 channels to 1", in, get_float_mc_caps (3,
+            "BYTE_ORDER", 32), out, get_float_caps (1, "BYTE_ORDER", 32));
+  }
+}
+
+GST_END_TEST;
 
 Suite *
 audioconvert_suite (void)
@@ -352,6 +453,7 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_int16);
   tcase_add_test (tc_chain, test_int_conversion);
   tcase_add_test (tc_chain, test_float_conversion);
+  tcase_add_test (tc_chain, test_multichannel_conversion);
 
   return s;
 }
