@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-04-26 19:15+0200\n"
+"POT-Creation-Date: 2006-05-12 23:54+0200\n"
 "PO-Revision-Date: 2004-11-07 19:11+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -93,46 +93,46 @@ msgstr "Impossibile chiudere il file vfs «%s»."
 msgid "Error while writing to file \"%s\"."
 msgstr "Errore nel chiudere il file «%s»."
 
-#: ext/ogg/gstoggdemux.c:2710
+#: ext/ogg/gstoggdemux.c:2737
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1364
+#: gst/playback/gstplaybasebin.c:1470
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1370
+#: gst/playback/gstplaybasebin.c:1476
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1374
+#: gst/playback/gstplaybasebin.c:1480
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1381
+#: gst/playback/gstplaybasebin.c:1487
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1454
+#: gst/playback/gstplaybasebin.c:1560
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1459
+#: gst/playback/gstplaybasebin.c:1565
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1463
+#: gst/playback/gstplaybasebin.c:1569
 #, fuzzy
 msgid "This is not a media file"
 msgstr "Il device «%s» non è un device di cattura."
 
-#: gst/playback/gstplaybasebin.c:1468
+#: gst/playback/gstplaybasebin.c:1574
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 
@@ -141,12 +141,13 @@ msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
 #: gst/playback/gstplaybin.c:652 gst/playback/gstplaybin.c:661
-#: gst/playback/gstplaybin.c:820 gst/playback/gstplaybin.c:934
+#: gst/playback/gstplaybin.c:819 gst/playback/gstplaybin.c:828
+#: gst/playback/gstplaybin.c:931
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:786
+#: gst/playback/gstplaybin.c:785
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
@@ -198,8 +199,8 @@ msgstr ""
 msgid "MusicBrainz artist sortname"
 msgstr ""
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1388
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1421
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1389
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1422
 msgid "This CD has no audio tracks"
 msgstr ""
 
