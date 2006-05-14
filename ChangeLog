@@ -1,3 +1,8 @@
+2006-05-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/parse/Makefile.am:
+	  chain commands using &&, which also makes parallel make work
+
 2006-05-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
