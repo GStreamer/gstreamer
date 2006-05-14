@@ -196,8 +196,9 @@ GQuark		gst_message_type_to_quark	(GstMessageType type);
  * gst_message_ref:
  * @msg: the message to ref
  *
- * Convenience macro to increase the reference count of the message. Returns the
- * reffed message.
+ * Convenience macro to increase the reference count of the message.
+ *
+ * Returns: @msg (for convenience when doing assignments)
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstMessage * gst_message_ref (GstMessage * msg);

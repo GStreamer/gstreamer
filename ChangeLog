@@ -1,3 +1,11 @@
+2006-05-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* gst/gstmessage.h:
+	  Minor docs fixes.
+
 === release 0.10.6 ===
 
 2006-05-14  Jan Schmidt <thaytan@mad.scientist.com>

@@ -422,6 +422,8 @@ gst_event_new_eos (void)
  *
  * This method calls gst_event_new_new_segment_full() passing a default
  * value of 1.0 for applied_rate
+ *
+ * Returns: A new newsegment event.
  */
 GstEvent *
 gst_event_new_new_segment (gboolean update, gdouble rate, GstFormat format,

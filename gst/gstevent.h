@@ -322,12 +322,14 @@ GType		gst_event_get_type		(void);
 /* refcounting */
 /**
  * gst_event_ref:
- * @ev: The event to refcount
+ * @event: The event to refcount
  *
  * Increase the refcount of this event.
+ *
+ * Returns: @event (for convenience when doing assignments)
  */
 #ifdef _FOOL_GTK_DOC_
-G_INLINE_FUNC GstEvent * gst_event_ref (GstEvent * ev);
+G_INLINE_FUNC GstEvent * gst_event_ref (GstEvent * event);
 #endif
 
 static inline GstEvent *
