@@ -91,14 +91,14 @@ typedef enum {
 
 /**
  * GstFlowReturn:
- * @GST_FLOW_RESEND:	  	 Resend buffer, possibly with new caps.
+ * @GST_FLOW_RESEND:		 Resend buffer, possibly with new caps.
  * @GST_FLOW_OK:		 Data passing was ok.
- * @GST_FLOW_NOT_LINKED:     	 Pad is not linked.
- * @GST_FLOW_WRONG_STATE:    	 Pad is in wrong state.
- * @GST_FLOW_UNEXPECTED:     	 Did not expect anything, like after EOS.
- * @GST_FLOW_NOT_NEGOTIATED: 	 Pad is not negotiated.
- * @GST_FLOW_ERROR:	  	 Some (fatal) error occured.
- * @GST_FLOW_NOT_SUPPORTED:  	 This operation is not supported.
+ * @GST_FLOW_NOT_LINKED:	 Pad is not linked.
+ * @GST_FLOW_WRONG_STATE:	 Pad is in wrong state.
+ * @GST_FLOW_UNEXPECTED:	 Did not expect anything, like after EOS.
+ * @GST_FLOW_NOT_NEGOTIATED:	 Pad is not negotiated.
+ * @GST_FLOW_ERROR:		 Some (fatal) error occured.
+ * @GST_FLOW_NOT_SUPPORTED:	 This operation is not supported.
  *
  * The result of passing data to a linked pad.
  */
