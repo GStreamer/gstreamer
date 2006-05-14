@@ -26,9 +26,6 @@
  * <para>
  * Parse a .wav file into raw or compressed audio.
  * </para>
- * <para>
- * This element currently only supports pull based scheduling.
- * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
