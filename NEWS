@@ -1,4 +1,45 @@
-This is GStreamer Base Plug-ins 0.10.6, "Chao"
+This is GStreamer Base Plug-ins 0.10.7, "Leave the gun"
+
+Changes since 0.10.6:
+      * typefind improvements
+      * bug-fixes in textoverlay, audioconvert, videotestsrc, 
+        multifdsink and audio source/sink base classes
+      * Ice-cast metadata support has moved from gnomevfssrc to the 
+        icydemux element in gst-plugins-good
+      * audioresample now supports floating point samples
+      * Adder element fixes.
+      * Fixes for network playback and audio resampling in playbin
+
+Bugs fixed since 0.10.6:
+    
+      * 340060 : [adder] handle newsegment events properly
+      * 340375 : [API 0.11] [patch] typefind to differentiate between mp4 ...
+      * 339405 : [textoverlay] can't display '\n' character
+      * 338657 : [patch] adder should send events from src-pad to all sink...
+      * 338919 : [patch] alsasink should also query witdh capabilities fro...
+      * 301759 : [audioresample] float audio support (for OSX audio sinks)
+      * 331901 : [videotestsrc] framerate=0/1 gives assertion error
+      * 333657 : Replacing icy demuxing in gnomevfssrc
+      * 336339 : [audioresample] should support width != 16
+      * 338718 : [patch] [audioconvert] correctly clip float samples > 1.0
+      * 338778 : [patch] Bad audio with ASX files
+      * 338991 : [patch] Videoscale doesn't pass on pixel-aspect ratio
+      * 339574 : [patch] Race condition in multifdsink can lead to spuriou...
+      * 339786 : [typefinding] wavpack typefinding doesn't always work
+      * 340369 : [volume element] " volume " property range insufficient
+      * 340379 : [playbin] doesn't insert audioresample, causes problems w...
+      * 340392 : Problem with internal-decodebin
+      * 341160 : [multifdsink] client_status enum has an uninitialized nick
+      * 341182 : Accessing playbin's streaminfo property from high languag...
+      * 341432 : [playbin] automatically get icecast metadata requiring ic...
+      * 341542 : some users have an assertion failed: (GST_VIDEO_SINK_WIDT...
+      * 341557 : Map GST_TAG_IMAGE < = > ID3v2 APIC tag
+
+API added since 0.10.6:
+    
+      * client-fd-removed signal added to multifdsink
+      * stream-info-value-array property added to playbin
+      * gst_video_calculate_display_ratio() in libgstvideo
 
 Changes since 0.10.5:
 

@@ -1,3 +1,10 @@
+=== release 0.10.7 ===
+
+2006-05-14  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.7, "Leave the gun"
+
 2006-05-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/videoscale/gstvideoscale.c: (gst_video_scale_fixate_caps):

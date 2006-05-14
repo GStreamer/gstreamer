@@ -181,7 +181,7 @@
 <ARG>
 <NAME>GstVolume::volume</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,4]</RANGE>
+<RANGE>[0,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>volume</NICK>
 <BLURB>volume.</BLURB>
@@ -844,7 +844,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>iradio-mode</NICK>
-<BLURB>Enable internet radio mode (extraction of icecast/audiocast metadata).</BLURB>
+<BLURB>Enable internet radio mode (extraction of shoutcast/icecast metadata).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 

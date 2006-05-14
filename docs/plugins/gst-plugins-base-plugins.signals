@@ -47,6 +47,14 @@ gint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstMultiFdSink::client-fd-removed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstMultiFdSink *gstmultifdsink
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstDecodeBin::new-decoded-pad</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
