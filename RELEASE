@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.5 "Fogo"
+Release notes for GStreamer 0.10.6 "Take the cannoli"
         
 
 
@@ -36,55 +36,40 @@ contains a set of less supported plug-ins that haven't passed the
   
 Features of this release
     
-      * Parallel installability with 0.8.x series
-      * Threadsafe design and API
-      * QoS in BaseTransform
-      * gcc 4.1 fixes
-      * BaseTransform reworked
-      * Bus reworked; signal API added
+      * Fixes for the collectpads helper
+      * Support for proper time recording on server-trickmode streams
+    via the applied_rate parameter of the NewSegment event
+      * Many bug fixes
 
 Bugs fixed in this release
     
-      * 131079 : [PATCH] [api] loading a class leaves elementfactory blank
-      * 317048 : gstreamer Cygwin build fixes
-      * 325599 : Build fails with GCC 4.1
-      * 327315 : GStreamer CVS head files to build with GCC 4.1
-      * 331248 : [basesink] filesink spews warnings when used with flacenc
-      * 332151 : xml registry loader should use mmap() where possible
-      * 332390 : [GstQueue/GstPad] queue pauses immediately when linked, p...
-      * 332986 : Something wrong in caps checking...
-      * 334109 : pkg-config files must link with the same check library th...
-      * 334303 : Stale libgnomeui check in configure
-      * 334434 : Missing functions in def files for dlls
-      * 335195 : GST_BOILERPLATE_FULL etc isn' optimised
-      * 335480 : start with debugging disabled
-      * 335513 : totem goes (and stays) out of sync when running bittorrent
-      * 336336 : [queue] Queue might block in EOS
-      * 336945 : [filesink] throws error when writing 0 bytes
-      * 337103 : small cleanup in gstplugin.c
-      * 337386 : Pipeline bus is not initially flushing
-      * 338711 : Internal data flow error with latest updates for FC5 with...
-      * 326311 : basesink does not call the PAUSED- > PLAYING change_state f...
-      * 326998 : GstBaseSrc's send_event handler ignores seek requests aft...
+      * 339808 : [patch] mem-leak of bin in gstbin.c
+      * 338339 : [patch] registry cache is always written
+      * 339843 : [patch] fdsink should not handle short writes and non fat...
+      * 340016 : does not build on opensolaris, must always include config...
+      * 340079 : gst-launch wrapper fails with 'No version of tool gst-lau...
+      * 340174 : locking problem in gstbasesink
+      * 340460 : gst-launch no longer supports --version
+      * 340508 : remove glib pre 2.8 hacks and compat stuff
+      * 340604 : gst_mini_object_ref () docs make no mention of writeability
+      * 340608 : leaking caps in padtemplate
+      * 340697 : gstsystemclock hangs when outputting to stdout via fdsink
+      * 340721 : API: add GST_TAG_IMAGE
+      * 340772 : [qtdemux] bails out on Meet The Robinsons trailer
+      * 341556 : gst-launch: print image tags in a human readable form
+      * 339821 : [patch] serializing a GValue with a NULL buffer crashes
 
 API changed in this release
      
 
 - API additions:
     
-* gst_controller_unset_all()
-* gst_pad_query_peer_position()
-* gst_pad_query_peer_duration()
-* gst_pad_query_peer_convert()
-* GstBaseSink::async_play()
-* GstBaseSrc::qos
-* gst_base_sink_set_qos_enabled()
-* gst_base_sink_is_qos_enabled()
-* gst_base_transform_update_qos()
-* gst_base_transform_set_qos_enabled()
-* gst_base_transform_is_qos_enabled()
-* gst_pipeline_get_delay()
-* gst_pipeline_set_delay()
+* gst_adapter_take_buffer()
+* GST_TAG_IMAGE tag added.
+* gst_event_new_new_segment_full()
+* gst_event_parse_new_segment_full()
+* GstSegment::applied_rate field
+* gst_segment_set_newsegment_full()
 
 Download
 
@@ -113,27 +98,21 @@ will create more lists as necessary.
 Applications
 
 Applications ported to GStreamer 0.10 include Totem, RhythmBox, Sound-Juicer,
-Gnome Media, Flumotion, Amarok, Jamboree, Pitivi, Istanbul, AnnoAmp, Elisa,
-and others.
+Gnome Media, Flumotion, Amarok, Jamboree, Pitivi, Istanbul, AnnoAmp, Elisa, and others.
 Let us know if you want to be added to this list.
 
   
 Contributors to this release
     
-      * Andy Wingo
       * Edward Hervey
+      * James Andrewartha
       * Jan Schmidt
-      * Julien MOUTTE
-      * Julio M. Merino Vidal
-      * Loïc Minier
-      * Mark Nauwelaerts
+      * Maciej Katafiasz
       * Michael Smith
-      * Paolo Borelli
+      * Philippe Rouquier
       * Sebastien Moutte
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Tommi Myöhänen
       * Wim Taymans
-      * Zaheer Abbas Merali
  

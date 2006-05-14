@@ -1,3 +1,10 @@
+=== release 0.10.6 ===
+
+2006-05-14  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.6, "Take the cannoli"
+
 2006-05-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-launch.c: (print_tag):

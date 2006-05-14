@@ -1,4 +1,38 @@
-This is GStreamer 0.10.5, "Fogo"
+This is GStreamer 0.10.6, "Take the cannoli"
+
+Changes since 0.10.5:
+
+      * Fixes for the collectpads helper
+      * Support for proper time recording on server-trickmode streams
+        via the applied_rate parameter of the NewSegment event
+      * Many bug fixes
+
+Bugs fixed since 0.10.5:
+
+      * 339808 : [patch] mem-leak of bin in gstbin.c
+      * 338339 : [patch] registry cache is always written
+      * 339843 : [patch] fdsink should not handle short writes and non fat...
+      * 340016 : does not build on opensolaris, must always include config...
+      * 340079 : gst-launch wrapper fails with 'No version of tool gst-lau...
+      * 340174 : locking problem in gstbasesink
+      * 340460 : gst-launch no longer supports --version
+      * 340508 : remove glib pre 2.8 hacks and compat stuff
+      * 340604 : gst_mini_object_ref () docs make no mention of writeability
+      * 340608 : leaking caps in padtemplate
+      * 340697 : gstsystemclock hangs when outputting to stdout via fdsink 
+      * 340721 : API: add GST_TAG_IMAGE
+      * 340772 : [qtdemux] bails out on Meet The Robinsons trailer
+      * 341556 : gst-launch: print image tags in a human readable form
+      * 339821 : [patch] serializing a GValue with a NULL buffer crashes
+
+API added since 0.10.5:
+
+      * gst_adapter_take_buffer()
+      * GST_TAG_IMAGE tag added.
+      * gst_event_new_new_segment_full()
+      * gst_event_parse_new_segment_full()
+      * GstSegment::applied_rate field
+      * gst_segment_set_newsegment_full()
 
 Changes since 0.10.4:
 
