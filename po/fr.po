@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-04-12 12:58+0200\n"
+"POT-Creation-Date: 2006-05-14 17:08+0200\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:270
+#: gst/gst.c:266
 msgid "Print the GStreamer version"
 msgstr "Afficher la version de GStreamer"
 
-#: gst/gst.c:272
+#: gst/gst.c:268
 msgid "Make all warnings fatal"
 msgstr "Rendre tout les avertissements bloquants"
 
-#: gst/gst.c:275
+#: gst/gst.c:271
 msgid "Print available debug categories and exit"
 msgstr "Afficher les catégories de deboguage disponibles et quitter"
 
-#: gst/gst.c:278
+#: gst/gst.c:274
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Niveau de deboguage par defaut de 1 (que les erreurs) a 5 (tout) ou 0 pour "
 "n'avoir aucun affichage"
 
-#: gst/gst.c:280
+#: gst/gst.c:276
 msgid "LEVEL"
 msgstr "NIVEAU"
 
-#: gst/gst.c:282
+#: gst/gst.c:278
 #, fuzzy
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
@@ -48,32 +48,32 @@ msgstr ""
 "des niveaux spécifiques pour chaque catégorie.\n"
 "Exemple: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:285
+#: gst/gst.c:281
 msgid "LIST"
 msgstr ""
 
-#: gst/gst.c:287
+#: gst/gst.c:283
 #, fuzzy
 msgid "Disable colored debugging output"
 msgstr "Désactiver la couleur dans la sortie de deboguage"
 
-#: gst/gst.c:289
+#: gst/gst.c:285
 msgid "Disable debugging"
 msgstr "Désactiver la sortie de deboguage"
 
-#: gst/gst.c:292
+#: gst/gst.c:288
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Activer un diagnostique détaillé du chargement des plugins"
 
-#: gst/gst.c:295
+#: gst/gst.c:291
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:295
+#: gst/gst.c:291
 msgid "PATHS"
 msgstr "CHEMINS"
 
-#: gst/gst.c:297
+#: gst/gst.c:293
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -82,26 +82,26 @@ msgstr ""
 "Liste séparée par des virgules de plugins a precharger en plus de la liste "
 "contenue dans la variable d'environnement GST_PLUGIN_PATH"
 
-#: gst/gst.c:299
+#: gst/gst.c:295
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:302
+#: gst/gst.c:298
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Désactiver la detection des erreurs de segmentation pendant le chargement "
 "des plugins"
 
-#: gst/gst.c:307
+#: gst/gst.c:303
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:308
+#: gst/gst.c:304
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "Afficher la version de GStreamer"
 
-#: gst/gst.c:807
+#: gst/gst.c:800
 msgid "Unknown option"
 msgstr ""
 
@@ -286,308 +286,321 @@ msgstr "Echoué a déterminer le type du flux"
 msgid "Could not multiplex stream."
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsterror.c:285
+#: gst/gsterror.c:235
+msgid "The stream is in the wrong format."
+msgstr ""
+
+#: gst/gsterror.c:286
 #, c-format
 msgid "No error message for domain %s."
 msgstr ""
 
-#: gst/gsterror.c:293
+#: gst/gsterror.c:294
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr ""
 
-#: gst/gsttaglist.c:92
+#: gst/gsttaglist.c:93
 msgid "title"
 msgstr "titre"
 
-#: gst/gsttaglist.c:92
+#: gst/gsttaglist.c:93
 msgid "commonly used title"
 msgstr "titre utilisé habituellement"
 
-#: gst/gsttaglist.c:95
+#: gst/gsttaglist.c:96
 msgid "artist"
 msgstr "artiste"
 
-#: gst/gsttaglist.c:96
+#: gst/gsttaglist.c:97
 msgid "person(s) responsible for the recording"
 msgstr "personne(s) responsable(s) de l'enregistrement"
 
-#: gst/gsttaglist.c:100
+#: gst/gsttaglist.c:101
 msgid "album"
 msgstr "album"
 
-#: gst/gsttaglist.c:101
+#: gst/gsttaglist.c:102
 msgid "album containing this data"
 msgstr "album contenant cette donnée"
 
-#: gst/gsttaglist.c:103
+#: gst/gsttaglist.c:104
 msgid "date"
 msgstr "date"
 
-#: gst/gsttaglist.c:103
+#: gst/gsttaglist.c:104
 #, fuzzy
 msgid "date the data was created (as a GDate structure)"
 msgstr "date a laquelle la donnée fut créée (selon le calendrier Julienne)"
 
-#: gst/gsttaglist.c:106
+#: gst/gsttaglist.c:107
 msgid "genre"
 msgstr "genre"
 
-#: gst/gsttaglist.c:107
+#: gst/gsttaglist.c:108
 msgid "genre this data belongs to"
 msgstr "genre auquel cette donnée appartient"
 
-#: gst/gsttaglist.c:110
+#: gst/gsttaglist.c:111
 msgid "comment"
 msgstr "commentaire"
 
-#: gst/gsttaglist.c:111
+#: gst/gsttaglist.c:112
 msgid "free text commenting the data"
 msgstr "texte libre décrivant la donnée"
 
-#: gst/gsttaglist.c:114
+#: gst/gsttaglist.c:115
 msgid "track number"
 msgstr "numéro de piste"
 
-#: gst/gsttaglist.c:115
+#: gst/gsttaglist.c:116
 msgid "track number inside a collection"
 msgstr "numéro de piste au sein d'une collection"
 
-#: gst/gsttaglist.c:118
+#: gst/gsttaglist.c:119
 msgid "track count"
 msgstr "nombre de pistes"
 
-#: gst/gsttaglist.c:119
+#: gst/gsttaglist.c:120
 msgid "count of tracks inside collection this track belongs to"
 msgstr "nombre de pistes dans la collection dont cette donnée fait partie"
 
-#: gst/gsttaglist.c:123
+#: gst/gsttaglist.c:124
 #, fuzzy
 msgid "disc number"
 msgstr "numéro de piste"
 
-#: gst/gsttaglist.c:124
+#: gst/gsttaglist.c:125
 #, fuzzy
 msgid "disc number inside a collection"
 msgstr "numéro de piste au sein d'une collection"
 
-#: gst/gsttaglist.c:127
+#: gst/gsttaglist.c:128
 #, fuzzy
 msgid "disc count"
 msgstr "nombre de pistes"
 
-#: gst/gsttaglist.c:128
+#: gst/gsttaglist.c:129
 #, fuzzy
 msgid "count of discs inside collection this disc belongs to"
 msgstr "nombre de pistes dans la collection dont cette donnée fait partie"
 
-#: gst/gsttaglist.c:132
+#: gst/gsttaglist.c:133
 msgid "location"
 msgstr "emplacement"
 
-#: gst/gsttaglist.c:133
+#: gst/gsttaglist.c:134
 msgid "original location of file as a URI"
 msgstr "emplacement original du fichier en tant qu'un URI"
 
-#: gst/gsttaglist.c:137
+#: gst/gsttaglist.c:138
 msgid "description"
 msgstr "description"
 
-#: gst/gsttaglist.c:138
+#: gst/gsttaglist.c:139
 msgid "short text describing the content of the data"
 msgstr "texte court décrivant le contenu de la donnée"
 
-#: gst/gsttaglist.c:141
+#: gst/gsttaglist.c:142
 msgid "version"
 msgstr "version"
 
-#: gst/gsttaglist.c:141
+#: gst/gsttaglist.c:142
 msgid "version of this data"
 msgstr "version de cette donnée"
 
-#: gst/gsttaglist.c:144
+#: gst/gsttaglist.c:145
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttaglist.c:146
+#: gst/gsttaglist.c:147
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr "International Standard Recording Code - voir http://www.ifpi.org/isrc/"
 
-#: gst/gsttaglist.c:148
+#: gst/gsttaglist.c:149
 msgid "organization"
 msgstr "organisation"
 
-#: gst/gsttaglist.c:151
+#: gst/gsttaglist.c:152
 msgid "copyright"
 msgstr "droit de copie"
 
-#: gst/gsttaglist.c:151
+#: gst/gsttaglist.c:152
 msgid "copyright notice of the data"
 msgstr "information sur le droit de copie de la donnée"
 
-#: gst/gsttaglist.c:154
+#: gst/gsttaglist.c:155
 msgid "contact"
 msgstr "contact"
 
-#: gst/gsttaglist.c:154
+#: gst/gsttaglist.c:155
 msgid "contact information"
 msgstr "information sur le contact"
 
-#: gst/gsttaglist.c:156
+#: gst/gsttaglist.c:157
 msgid "license"
 msgstr "license"
 
-#: gst/gsttaglist.c:156
+#: gst/gsttaglist.c:157
 msgid "license of data"
 msgstr "license de la donnée"
 
-#: gst/gsttaglist.c:159
+#: gst/gsttaglist.c:160
 msgid "performer"
 msgstr "interprète"
 
-#: gst/gsttaglist.c:160
+#: gst/gsttaglist.c:161
 msgid "person(s) performing"
 msgstr "personne(s) qui interprète(nt)"
 
-#: gst/gsttaglist.c:163
+#: gst/gsttaglist.c:164
 msgid "duration"
 msgstr "durée"
 
-#: gst/gsttaglist.c:163
+#: gst/gsttaglist.c:164
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "longueur en unité de temps GStreamer (nanosecondes)"
 
-#: gst/gsttaglist.c:166
+#: gst/gsttaglist.c:167
 msgid "codec"
 msgstr "codec"
 
-#: gst/gsttaglist.c:167
+#: gst/gsttaglist.c:168
 msgid "codec the data is stored in"
 msgstr "codec avec lequel la donnée fut enregistrée"
 
-#: gst/gsttaglist.c:170
+#: gst/gsttaglist.c:171
 #, fuzzy
 msgid "video codec"
 msgstr "codec"
 
-#: gst/gsttaglist.c:170
+#: gst/gsttaglist.c:171
 #, fuzzy
 msgid "codec the video data is stored in"
 msgstr "codec avec lequel la donnée fut enregistrée"
 
-#: gst/gsttaglist.c:173
+#: gst/gsttaglist.c:174
 #, fuzzy
 msgid "audio codec"
 msgstr "codec"
 
-#: gst/gsttaglist.c:173
+#: gst/gsttaglist.c:174
 #, fuzzy
 msgid "codec the audio data is stored in"
 msgstr "codec avec lequel la donnée fut enregistrée"
 
-#: gst/gsttaglist.c:175
+#: gst/gsttaglist.c:176
 msgid "bitrate"
 msgstr "bitrate"
 
-#: gst/gsttaglist.c:175
+#: gst/gsttaglist.c:176
 msgid "exact or average bitrate in bits/s"
 msgstr "bitrate exact ou moyen en bits par seconde"
 
-#: gst/gsttaglist.c:177
+#: gst/gsttaglist.c:178
 #, fuzzy
 msgid "nominal bitrate"
 msgstr "bitrate minimum"
 
-#: gst/gsttaglist.c:177
+#: gst/gsttaglist.c:178
 #, fuzzy
 msgid "nominal bitrate in bits/s"
 msgstr "bitrate minimum en bits par seconde"
 
-#: gst/gsttaglist.c:179
+#: gst/gsttaglist.c:180
 msgid "minimum bitrate"
 msgstr "bitrate minimum"
 
-#: gst/gsttaglist.c:179
+#: gst/gsttaglist.c:180
 msgid "minimum bitrate in bits/s"
 msgstr "bitrate minimum en bits par seconde"
 
-#: gst/gsttaglist.c:181
+#: gst/gsttaglist.c:182
 msgid "maximum bitrate"
 msgstr "bitrate maximum"
 
-#: gst/gsttaglist.c:181
+#: gst/gsttaglist.c:182
 msgid "maximum bitrate in bits/s"
 msgstr "bitrate maximum en bits par seconde"
 
-#: gst/gsttaglist.c:184
+#: gst/gsttaglist.c:185
 #, fuzzy
 msgid "encoder"
 msgstr "codec"
 
-#: gst/gsttaglist.c:184
+#: gst/gsttaglist.c:185
 #, fuzzy
 msgid "encoder used to encode this stream"
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsttaglist.c:187
+#: gst/gsttaglist.c:188
 #, fuzzy
 msgid "encoder version"
 msgstr "version"
 
-#: gst/gsttaglist.c:188
+#: gst/gsttaglist.c:189
 msgid "version of the encoder used to encode this stream"
 msgstr ""
 
-#: gst/gsttaglist.c:190
+#: gst/gsttaglist.c:191
 msgid "serial"
 msgstr ""
 
-#: gst/gsttaglist.c:190
+#: gst/gsttaglist.c:191
 msgid "serial number of track"
 msgstr ""
 
-#: gst/gsttaglist.c:192
+#: gst/gsttaglist.c:193
 msgid "replaygain track gain"
 msgstr ""
 
-#: gst/gsttaglist.c:192
+#: gst/gsttaglist.c:193
 msgid "track gain in db"
 msgstr ""
 
-#: gst/gsttaglist.c:194
+#: gst/gsttaglist.c:195
 msgid "replaygain track peak"
 msgstr ""
 
-#: gst/gsttaglist.c:194
+#: gst/gsttaglist.c:195
 msgid "peak of the track"
 msgstr ""
 
-#: gst/gsttaglist.c:196
+#: gst/gsttaglist.c:197
 msgid "replaygain album gain"
 msgstr ""
 
-#: gst/gsttaglist.c:196
+#: gst/gsttaglist.c:197
 #, fuzzy
 msgid "album gain in db"
 msgstr "album contenant cette donnée"
 
-#: gst/gsttaglist.c:198
+#: gst/gsttaglist.c:199
 msgid "replaygain album peak"
 msgstr ""
 
-#: gst/gsttaglist.c:198
+#: gst/gsttaglist.c:199
 msgid "peak of the album"
 msgstr ""
 
-#: gst/gsttaglist.c:200
+#: gst/gsttaglist.c:201
 msgid "language code"
 msgstr ""
 
-#: gst/gsttaglist.c:201
+#: gst/gsttaglist.c:202
 msgid "language code for this stream, conforming to ISO-639-1"
 msgstr ""
 
-#: gst/gsttaglist.c:240
+#: gst/gsttaglist.c:204
+msgid "image"
+msgstr ""
+
+#: gst/gsttaglist.c:204
+#, fuzzy
+msgid "image related to this stream"
+msgstr "Echoué a déterminer le type du flux"
+
+#: gst/gsttaglist.c:243
 msgid ", "
 msgstr ", "
 
@@ -660,16 +673,16 @@ msgstr "impossible de lier un element destination pour l'URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tube vide non autorisé"
 
-#: libs/gst/base/gstbasesrc.c:1478 libs/gst/base/gstbasesrc.c:1488
-#: plugins/elements/gstqueue.c:781
+#: libs/gst/base/gstbasesrc.c:1509 libs/gst/base/gstbasesrc.c:1520
+#: plugins/elements/gstqueue.c:782
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1849
+#: libs/gst/base/gstbasesink.c:1877
 msgid "Internal data flow problem."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1980
+#: libs/gst/base/gstbasesink.c:2007
 msgid "Internal data stream error."
 msgstr ""
 
@@ -718,7 +731,7 @@ msgstr ""
 msgid "File \"%s\" is a socket."
 msgstr ""
 
-#: plugins/elements/gstidentity.c:359
+#: plugins/elements/gstidentity.c:360
 msgid "Failed after iterations as requested."
 msgstr ""
 
@@ -738,186 +751,186 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maximum"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1098
 #, fuzzy
 msgid "Print all elements"
 msgstr "pas d'element \"%s\""
 
-#: tools/gst-launch.c:82
+#: tools/gst-launch.c:79
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr ""
 "Utilisation: gst-xmllaunch <fichier.xml> [ element.property=valeur ... ]\n"
 
-#: tools/gst-launch.c:91
+#: tools/gst-launch.c:88
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "ERREUR: l'interpretation du fichier xml '%s' a echoué.\n"
 
-#: tools/gst-launch.c:97
+#: tools/gst-launch.c:94
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ERREUR: pas d'element tube de plus haut niveau dans le fichier '%s'.\n"
 
-#: tools/gst-launch.c:104
+#: tools/gst-launch.c:101
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr ""
 "AVERTISSEMENT: actuellement seul un element tube de plus haut niveau est "
 "supporté."
 
-#: tools/gst-launch.c:115
+#: tools/gst-launch.c:112
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr ""
 "ERREUR: impossible d'interpreter l'argument de la ligne de commande numero %"
 "d: %s.\n"
 
-#: tools/gst-launch.c:126
+#: tools/gst-launch.c:123
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "AVERTISSEMENT: l'element nommé '%s' est introuvable.\n"
 
-#: tools/gst-launch.c:380
+#: tools/gst-launch.c:392
 #, fuzzy, c-format
 msgid "Got Message from element \"%s\" (%s): "
 msgstr ""
 "ERREUR: impossible d'interpreter l'argument de la ligne de commande numero %"
 "d: %s.\n"
 
-#: tools/gst-launch.c:407
+#: tools/gst-launch.c:419
 #, fuzzy, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr ""
 "ERREUR: impossible d'interpreter l'argument de la ligne de commande numero %"
 "d: %s.\n"
 
-#: tools/gst-launch.c:417
+#: tools/gst-launch.c:429
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "TAG DECOUVERT   : decouvert par l'element \"%s\".\n"
 
-#: tools/gst-launch.c:469
+#: tools/gst-launch.c:481
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 msgstr ""
 
-#: tools/gst-launch.c:500
+#: tools/gst-launch.c:512
 msgid "Output tags (also known as metadata)"
 msgstr "tags de sortie (aussi connus sous le nom de metadata)"
 
-#: tools/gst-launch.c:502
+#: tools/gst-launch.c:514
 msgid "Output status information and property notifications"
 msgstr ""
 "Afficher des informations sur le status et les notifications de proprietés"
 
-#: tools/gst-launch.c:504
+#: tools/gst-launch.c:516
 msgid "Output messages"
 msgstr ""
 
-#: tools/gst-launch.c:506
+#: tools/gst-launch.c:518
 msgid "Do not output status information of TYPE"
 msgstr "Ne pas afficher d'informations sur les status de TYPE"
 
-#: tools/gst-launch.c:506
+#: tools/gst-launch.c:518
 msgid "TYPE1,TYPE2,..."
 msgstr "TYPE1,TYPE2,..."
 
-#: tools/gst-launch.c:509
+#: tools/gst-launch.c:521
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Sauvegarder la representation xml du tube dans FICHIER et quitter"
 
-#: tools/gst-launch.c:509
+#: tools/gst-launch.c:521
 msgid "FILE"
 msgstr "FICHIER"
 
-#: tools/gst-launch.c:512
+#: tools/gst-launch.c:524
 msgid "Do not install a fault handler"
 msgstr "Ne pas installer un gestionaire de dysfonctionement"
 
-#: tools/gst-launch.c:514
+#: tools/gst-launch.c:526
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Imprimer les traces d'allocations (si activées lors de la compilation)"
 
-#: tools/gst-launch.c:592
+#: tools/gst-launch.c:607
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ERREUR: le tube n'a pas pu etre construit: %s.\n"
 
-#: tools/gst-launch.c:596
+#: tools/gst-launch.c:611
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ERREUR: le tube n'a pas pu etre construit.\n"
 
-#: tools/gst-launch.c:600
+#: tools/gst-launch.c:615
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "AVERTISSEMENT: tube erroné: %s\n"
 
-#: tools/gst-launch.c:626
+#: tools/gst-launch.c:641
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ERREUR: l'element 'tube' est introuvable.\n"
 
-#: tools/gst-launch.c:632 tools/gst-launch.c:684
+#: tools/gst-launch.c:647 tools/gst-launch.c:699
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:637
+#: tools/gst-launch.c:652
 #, fuzzy, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ERREUR: le tube refuse de s'executer.\n"
 
-#: tools/gst-launch.c:642
+#: tools/gst-launch.c:657
 #, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:645
+#: tools/gst-launch.c:660
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:648 tools/gst-launch.c:661
+#: tools/gst-launch.c:663 tools/gst-launch.c:676
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ERREUR: le tube refuse de s'executer.\n"
 
-#: tools/gst-launch.c:654
+#: tools/gst-launch.c:669
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:666
+#: tools/gst-launch.c:681
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:669
+#: tools/gst-launch.c:684
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ERREUR: le tube refuse de s'executer.\n"
 
-#: tools/gst-launch.c:680
+#: tools/gst-launch.c:695
 msgid "Execution ended after %"
 msgstr "L'execution s'est terminé après %"
 
-#: tools/gst-launch.c:680
+#: tools/gst-launch.c:695
 #, fuzzy
 msgid " ns.\n"
 msgstr "ns).\n"
 
-#: tools/gst-launch.c:687
+#: tools/gst-launch.c:702
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:692
+#: tools/gst-launch.c:707
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:697
+#: tools/gst-launch.c:712
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "EXECUTION du tube en cours ...\n"

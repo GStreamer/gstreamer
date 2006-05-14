@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-04-12 12:58+0200\n"
+"POT-Creation-Date: 2006-05-14 17:08+0200\n"
 "PO-Revision-Date: 2005-12-04 21:45+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -17,30 +17,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:270
+#: gst/gst.c:266
 msgid "Print the GStreamer version"
 msgstr "Skriv ut Gstreamer-versionen"
 
-#: gst/gst.c:272
+#: gst/gst.c:268
 msgid "Make all warnings fatal"
 msgstr "Gör alla varningar ödesdigra"
 
-#: gst/gst.c:275
+#: gst/gst.c:271
 msgid "Print available debug categories and exit"
 msgstr "Skriv ut tillgängliga felsökningskategorier och avsluta"
 
-#: gst/gst.c:278
+#: gst/gst.c:274
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för "
 "ingen utmatning"
 
-#: gst/gst.c:280
+#: gst/gst.c:276
 msgid "LEVEL"
 msgstr "NIVÅ"
 
-#: gst/gst.c:282
+#: gst/gst.c:278
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "Kommaseparerad lista med kategorinamn:nivå-par för att ställa in specifika "
 "nivåer för de enskilda kategorierna. Exempel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:285
+#: gst/gst.c:281
 msgid "LIST"
 msgstr "LISTA"
 
-#: gst/gst.c:287
+#: gst/gst.c:283
 msgid "Disable colored debugging output"
 msgstr "Inaktivera färglagd felsökningsutmatning"
 
-#: gst/gst.c:289
+#: gst/gst.c:285
 msgid "Disable debugging"
 msgstr "Inaktivera felsökning"
 
-#: gst/gst.c:292
+#: gst/gst.c:288
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktivera utförlig diagnostik vid inläsning av insticksmoduler"
 
-#: gst/gst.c:295
+#: gst/gst.c:291
 msgid "Colon-separated paths containing plugins"
 msgstr "Kolonseparerade sökvägar som innehåller insticksmoduler"
 
-#: gst/gst.c:295
+#: gst/gst.c:291
 msgid "PATHS"
 msgstr "SÖKVÄGAR"
 
-#: gst/gst.c:297
+#: gst/gst.c:293
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -80,24 +80,24 @@ msgstr ""
 "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
 "som lagras i miljövariabeln GST_PLUGIN_PATH"
 
-#: gst/gst.c:299
+#: gst/gst.c:295
 msgid "PLUGINS"
 msgstr "INSTICKSMODULER"
 
-#: gst/gst.c:302
+#: gst/gst.c:298
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
 
-#: gst/gst.c:307
+#: gst/gst.c:303
 msgid "GStreamer Options"
 msgstr "GStreamer-alternativ"
 
-#: gst/gst.c:308
+#: gst/gst.c:304
 msgid "Show GStreamer Options"
 msgstr "Visa GStreamer-alternativ"
 
-#: gst/gst.c:807
+#: gst/gst.c:800
 msgid "Unknown option"
 msgstr "Okänt alternativ"
 
@@ -273,297 +273,312 @@ msgstr "Kunde inte avmultiplexera flöde."
 msgid "Could not multiplex stream."
 msgstr "Kunde inte multiplexera flöde."
 
-#: gst/gsterror.c:285
+#: gst/gsterror.c:235
+#, fuzzy
+msgid "The stream is in the wrong format."
+msgstr "Flödet är av fel format."
+
+#: gst/gsterror.c:286
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Inget felmeddelande för domänen %s."
 
-#: gst/gsterror.c:293
+#: gst/gsterror.c:294
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Inget standardfelmeddelande för domänen %s och koden %d."
 
-#: gst/gsttaglist.c:92
+#: gst/gsttaglist.c:93
 msgid "title"
 msgstr "titel"
 
-#: gst/gsttaglist.c:92
+#: gst/gsttaglist.c:93
 msgid "commonly used title"
 msgstr "vanligtvis använd titel"
 
-#: gst/gsttaglist.c:95
+#: gst/gsttaglist.c:96
 msgid "artist"
 msgstr "artist"
 
-#: gst/gsttaglist.c:96
+#: gst/gsttaglist.c:97
 msgid "person(s) responsible for the recording"
 msgstr "person(er) som ansvarar för inspelningen"
 
-#: gst/gsttaglist.c:100
+#: gst/gsttaglist.c:101
 msgid "album"
 msgstr "album"
 
-#: gst/gsttaglist.c:101
+#: gst/gsttaglist.c:102
 msgid "album containing this data"
 msgstr "album som innehåller dessa data"
 
-#: gst/gsttaglist.c:103
+#: gst/gsttaglist.c:104
 msgid "date"
 msgstr "datum"
 
-#: gst/gsttaglist.c:103
+#: gst/gsttaglist.c:104
 msgid "date the data was created (as a GDate structure)"
 msgstr "datum då dessa data skapades (som en GDate-struktur)"
 
-#: gst/gsttaglist.c:106
+#: gst/gsttaglist.c:107
 msgid "genre"
 msgstr "genre"
 
-#: gst/gsttaglist.c:107
+#: gst/gsttaglist.c:108
 msgid "genre this data belongs to"
 msgstr "genre som dessa data tillhör"
 
-#: gst/gsttaglist.c:110
+#: gst/gsttaglist.c:111
 msgid "comment"
 msgstr "kommentar"
 
-#: gst/gsttaglist.c:111
+#: gst/gsttaglist.c:112
 msgid "free text commenting the data"
 msgstr "fri text som kommenterar dessa data"
 
-#: gst/gsttaglist.c:114
+#: gst/gsttaglist.c:115
 msgid "track number"
 msgstr "spårnummer"
 
-#: gst/gsttaglist.c:115
+#: gst/gsttaglist.c:116
 msgid "track number inside a collection"
 msgstr "spårnummer inuti en samling"
 
-#: gst/gsttaglist.c:118
+#: gst/gsttaglist.c:119
 msgid "track count"
 msgstr "spårantal"
 
-#: gst/gsttaglist.c:119
+#: gst/gsttaglist.c:120
 msgid "count of tracks inside collection this track belongs to"
 msgstr "antal spår inuti den samling som detta spår tillhör"
 
-#: gst/gsttaglist.c:123
+#: gst/gsttaglist.c:124
 msgid "disc number"
 msgstr "skivnummer"
 
-#: gst/gsttaglist.c:124
+#: gst/gsttaglist.c:125
 msgid "disc number inside a collection"
 msgstr "skivnummer inuti en samling"
 
-#: gst/gsttaglist.c:127
+#: gst/gsttaglist.c:128
 msgid "disc count"
 msgstr "skivantal"
 
-#: gst/gsttaglist.c:128
+#: gst/gsttaglist.c:129
 msgid "count of discs inside collection this disc belongs to"
 msgstr "antal skivor inuti den samling som denna skiva tillhör"
 
-#: gst/gsttaglist.c:132
+#: gst/gsttaglist.c:133
 msgid "location"
 msgstr "plats"
 
-#: gst/gsttaglist.c:133
+#: gst/gsttaglist.c:134
 msgid "original location of file as a URI"
 msgstr "ursprunglig plats för filen som en URI"
 
-#: gst/gsttaglist.c:137
+#: gst/gsttaglist.c:138
 msgid "description"
 msgstr "beskrivning"
 
-#: gst/gsttaglist.c:138
+#: gst/gsttaglist.c:139
 msgid "short text describing the content of the data"
 msgstr "kort text som beskriver innehållet av dessa data"
 
-#: gst/gsttaglist.c:141
+#: gst/gsttaglist.c:142
 msgid "version"
 msgstr "version"
 
-#: gst/gsttaglist.c:141
+#: gst/gsttaglist.c:142
 msgid "version of this data"
 msgstr "version av dessa data"
 
-#: gst/gsttaglist.c:144
+#: gst/gsttaglist.c:145
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttaglist.c:146
+#: gst/gsttaglist.c:147
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr "International Standard Recording Code - se http://www.ifpi.org/isrc/"
 
-#: gst/gsttaglist.c:148
+#: gst/gsttaglist.c:149
 msgid "organization"
 msgstr "organisation"
 
-#: gst/gsttaglist.c:151
+#: gst/gsttaglist.c:152
 msgid "copyright"
 msgstr "copyright"
 
-#: gst/gsttaglist.c:151
+#: gst/gsttaglist.c:152
 msgid "copyright notice of the data"
 msgstr "copyrightnotis för dessa data"
 
-#: gst/gsttaglist.c:154
+#: gst/gsttaglist.c:155
 msgid "contact"
 msgstr "kontakt"
 
-#: gst/gsttaglist.c:154
+#: gst/gsttaglist.c:155
 msgid "contact information"
 msgstr "kontaktinformation"
 
-#: gst/gsttaglist.c:156
+#: gst/gsttaglist.c:157
 msgid "license"
 msgstr "licens"
 
-#: gst/gsttaglist.c:156
+#: gst/gsttaglist.c:157
 msgid "license of data"
 msgstr "licens för data"
 
-#: gst/gsttaglist.c:159
+#: gst/gsttaglist.c:160
 msgid "performer"
 msgstr "aktör"
 
-#: gst/gsttaglist.c:160
+#: gst/gsttaglist.c:161
 msgid "person(s) performing"
 msgstr "person(er) som agerar"
 
-#: gst/gsttaglist.c:163
+#: gst/gsttaglist.c:164
 msgid "duration"
 msgstr "varaktighet"
 
-#: gst/gsttaglist.c:163
+#: gst/gsttaglist.c:164
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "längd i GStreamer-tidsenheter (nanosekunder)"
 
-#: gst/gsttaglist.c:166
+#: gst/gsttaglist.c:167
 msgid "codec"
 msgstr "komprimeringsmetod"
 
-#: gst/gsttaglist.c:167
+#: gst/gsttaglist.c:168
 msgid "codec the data is stored in"
 msgstr "komprimeringsmetod som dessa data lagras med"
 
-#: gst/gsttaglist.c:170
+#: gst/gsttaglist.c:171
 msgid "video codec"
 msgstr "videokomprimeringsmetod"
 
-#: gst/gsttaglist.c:170
+#: gst/gsttaglist.c:171
 msgid "codec the video data is stored in"
 msgstr "komprimeringsmetod som dessa videodata lagras med"
 
-#: gst/gsttaglist.c:173
+#: gst/gsttaglist.c:174
 msgid "audio codec"
 msgstr "ljudkomprimeringsmetod"
 
-#: gst/gsttaglist.c:173
+#: gst/gsttaglist.c:174
 msgid "codec the audio data is stored in"
 msgstr "komprimeringsmetod som dessa ljuddata lagras med"
 
-#: gst/gsttaglist.c:175
+#: gst/gsttaglist.c:176
 msgid "bitrate"
 msgstr "bithastighet"
 
-#: gst/gsttaglist.c:175
+#: gst/gsttaglist.c:176
 msgid "exact or average bitrate in bits/s"
 msgstr "exakt bithastighet eller medelbithastighet i bitar/s"
 
-#: gst/gsttaglist.c:177
+#: gst/gsttaglist.c:178
 msgid "nominal bitrate"
 msgstr "nominell bithastighet"
 
-#: gst/gsttaglist.c:177
+#: gst/gsttaglist.c:178
 msgid "nominal bitrate in bits/s"
 msgstr "nominell bithastighet i bitar/s"
 
-#: gst/gsttaglist.c:179
+#: gst/gsttaglist.c:180
 msgid "minimum bitrate"
 msgstr "minsta bithastighet"
 
-#: gst/gsttaglist.c:179
+#: gst/gsttaglist.c:180
 msgid "minimum bitrate in bits/s"
 msgstr "minsta bithastighet i bitar/s"
 
-#: gst/gsttaglist.c:181
+#: gst/gsttaglist.c:182
 msgid "maximum bitrate"
 msgstr "högsta bithastighet"
 
-#: gst/gsttaglist.c:181
+#: gst/gsttaglist.c:182
 msgid "maximum bitrate in bits/s"
 msgstr "högsta bithastighet i bitar/s"
 
-#: gst/gsttaglist.c:184
+#: gst/gsttaglist.c:185
 msgid "encoder"
 msgstr "kodare"
 
-#: gst/gsttaglist.c:184
+#: gst/gsttaglist.c:185
 msgid "encoder used to encode this stream"
 msgstr "kodare som använts för att koda detta flöde"
 
-#: gst/gsttaglist.c:187
+#: gst/gsttaglist.c:188
 msgid "encoder version"
 msgstr "kodarversion"
 
-#: gst/gsttaglist.c:188
+#: gst/gsttaglist.c:189
 msgid "version of the encoder used to encode this stream"
 msgstr "version av kodaren som använts för att koda detta flöde"
 
-#: gst/gsttaglist.c:190
+#: gst/gsttaglist.c:191
 msgid "serial"
 msgstr "serienummer"
 
-#: gst/gsttaglist.c:190
+#: gst/gsttaglist.c:191
 msgid "serial number of track"
 msgstr "serienummer för spår"
 
 # Osäker.
-#: gst/gsttaglist.c:192
+#: gst/gsttaglist.c:193
 msgid "replaygain track gain"
 msgstr "uppspelningsförstärkning spårförstärkning"
 
-#: gst/gsttaglist.c:192
+#: gst/gsttaglist.c:193
 msgid "track gain in db"
 msgstr "spårförstärkning i db"
 
 # Osäker.
-#: gst/gsttaglist.c:194
+#: gst/gsttaglist.c:195
 msgid "replaygain track peak"
 msgstr "uppspelningsförstärkning spårtopp"
 
-#: gst/gsttaglist.c:194
+#: gst/gsttaglist.c:195
 msgid "peak of the track"
 msgstr "toppen för spåret"
 
 # Osäker.
-#: gst/gsttaglist.c:196
+#: gst/gsttaglist.c:197
 msgid "replaygain album gain"
 msgstr "uppspelningsförstärkning albumförstärkning"
 
-#: gst/gsttaglist.c:196
+#: gst/gsttaglist.c:197
 msgid "album gain in db"
 msgstr "albumförstärkning i db"
 
 # Osäker.
-#: gst/gsttaglist.c:198
+#: gst/gsttaglist.c:199
 msgid "replaygain album peak"
 msgstr "uppspelningsförstärkning albumtopp"
 
-#: gst/gsttaglist.c:198
+#: gst/gsttaglist.c:199
 msgid "peak of the album"
 msgstr "toppen för albumet"
 
-#: gst/gsttaglist.c:200
+#: gst/gsttaglist.c:201
 msgid "language code"
 msgstr "språkkod"
 
-#: gst/gsttaglist.c:201
+#: gst/gsttaglist.c:202
 msgid "language code for this stream, conforming to ISO-639-1"
 msgstr "språkkod för detta flöde, enligt ISO-639-1"
 
-#: gst/gsttaglist.c:240
+#: gst/gsttaglist.c:204
+#, fuzzy
+msgid "image"
+msgstr "Tid"
+
+#: gst/gsttaglist.c:204
+#, fuzzy
+msgid "image related to this stream"
+msgstr "kodare som använts för att koda detta flöde"
+
+#: gst/gsttaglist.c:243
 msgid ", "
 msgstr ", "
 
@@ -637,16 +652,16 @@ msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
-#: libs/gst/base/gstbasesrc.c:1478 libs/gst/base/gstbasesrc.c:1488
-#: plugins/elements/gstqueue.c:781
+#: libs/gst/base/gstbasesrc.c:1509 libs/gst/base/gstbasesrc.c:1520
+#: plugins/elements/gstqueue.c:782
 msgid "Internal data flow error."
 msgstr "Internt dataflödesfel."
 
-#: libs/gst/base/gstbasesink.c:1849
+#: libs/gst/base/gstbasesink.c:1877
 msgid "Internal data flow problem."
 msgstr "Internt dataflödesproblem."
 
-#: libs/gst/base/gstbasesink.c:1980
+#: libs/gst/base/gstbasesink.c:2007
 #, fuzzy
 msgid "Internal data stream error."
 msgstr "Internt dataflödesfel."
@@ -694,7 +709,7 @@ msgstr "\"%s\" är en katalog."
 msgid "File \"%s\" is a socket."
 msgstr "Filen \"%s\" är ett uttag."
 
-#: plugins/elements/gstidentity.c:359
+#: plugins/elements/gstidentity.c:360
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
@@ -715,177 +730,177 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maximum"
 
-#: tools/gst-inspect.c:1100
+#: tools/gst-inspect.c:1098
 msgid "Print all elements"
 msgstr "Skriv ut alla element"
 
-#: tools/gst-launch.c:82
+#: tools/gst-launch.c:79
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "Användning: gst-xmllaunch <fil.xml> [ element.egenskap=värde ... ]\n"
 
-#: tools/gst-launch.c:91
+#: tools/gst-launch.c:88
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "FEL: tolkning av xml-filen \"%s\" misslyckades.\n"
 
-#: tools/gst-launch.c:97
+#: tools/gst-launch.c:94
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "FEL: inget rörledningselement på översta nivån i filen \"%s\".\n"
 
-#: tools/gst-launch.c:104
+#: tools/gst-launch.c:101
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "VARNING: endast ett element på översta nivån stöds just nu."
 
-#: tools/gst-launch.c:115
+#: tools/gst-launch.c:112
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr "FEL: kunde inte tolka kommandoradsargumentet %d: %s.\n"
 
-#: tools/gst-launch.c:126
+#: tools/gst-launch.c:123
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VARNING: elementet med namnet \"%s\" hittades inte.\n"
 
-#: tools/gst-launch.c:380
+#: tools/gst-launch.c:392
 #, c-format
 msgid "Got Message from element \"%s\" (%s): "
 msgstr "Fick meddelande från element \"%s\" (%s): "
 
-#: tools/gst-launch.c:407
+#: tools/gst-launch.c:419
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Fick EOS från element \"%s\".\n"
 
-#: tools/gst-launch.c:417
+#: tools/gst-launch.c:429
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
 
-#: tools/gst-launch.c:469
+#: tools/gst-launch.c:481
 #, c-format
 msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 msgstr "Elementet \"%s\" har gått från PLAYING till PAUSED, avslutar.\n"
 
-#: tools/gst-launch.c:500
+#: tools/gst-launch.c:512
 msgid "Output tags (also known as metadata)"
 msgstr "Utmatningstaggar (även känt som metadata)"
 
-#: tools/gst-launch.c:502
+#: tools/gst-launch.c:514
 msgid "Output status information and property notifications"
 msgstr "Skriv ut statusinformation och egenskapsnotifieringar"
 
-#: tools/gst-launch.c:504
+#: tools/gst-launch.c:516
 msgid "Output messages"
 msgstr "Utmatningsmeddelanden"
 
-#: tools/gst-launch.c:506
+#: tools/gst-launch.c:518
 msgid "Do not output status information of TYPE"
 msgstr "Skriv inte ut statusinformation av TYP"
 
-#: tools/gst-launch.c:506
+#: tools/gst-launch.c:518
 msgid "TYPE1,TYPE2,..."
 msgstr "TYP1,TYP2,..."
 
-#: tools/gst-launch.c:509
+#: tools/gst-launch.c:521
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Spara xml-representation av rörledningen i FIL och avsluta"
 
-#: tools/gst-launch.c:509
+#: tools/gst-launch.c:521
 msgid "FILE"
 msgstr "FIL"
 
-#: tools/gst-launch.c:512
+#: tools/gst-launch.c:524
 msgid "Do not install a fault handler"
 msgstr "Installera inte en felhanterare"
 
-#: tools/gst-launch.c:514
+#: tools/gst-launch.c:526
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Skriv ut alloc-spår (om aktiverat vid kompileringen)"
 
-#: tools/gst-launch.c:592
+#: tools/gst-launch.c:607
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras: %s.\n"
 
-#: tools/gst-launch.c:596
+#: tools/gst-launch.c:611
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "FEL: rörledningen kunde inte konstrueras.\n"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:600
+#: tools/gst-launch.c:615
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VARNING: felaktig rörledning: %s\n"
 
-#: tools/gst-launch.c:626
+#: tools/gst-launch.c:641
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "FEL: \"pipeline\"-elementet hittades inte.\n"
 
-#: tools/gst-launch.c:632 tools/gst-launch.c:684
+#: tools/gst-launch.c:647 tools/gst-launch.c:699
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Ställer in rörledningen till PAUSED...\n"
 
-#: tools/gst-launch.c:637
+#: tools/gst-launch.c:652
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "FEL: Rörledningen vill inte göra paus.\n"
 
-#: tools/gst-launch.c:642
+#: tools/gst-launch.c:657
 #, fuzzy, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Rörledningen har utfört PREROLL...\n"
 
-#: tools/gst-launch.c:645
+#: tools/gst-launch.c:660
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Rörledningen utför PREROLL...\n"
 
-#: tools/gst-launch.c:648 tools/gst-launch.c:661
+#: tools/gst-launch.c:663 tools/gst-launch.c:676
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "FEL: rörledningen vill inte utföra preroll.\n"
 
-#: tools/gst-launch.c:654
+#: tools/gst-launch.c:669
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Rörledningen har utfört PREROLL...\n"
 
-#: tools/gst-launch.c:666
+#: tools/gst-launch.c:681
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Ställer in rörledningen till PLAYING...\n"
 
-#: tools/gst-launch.c:669
+#: tools/gst-launch.c:684
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "FEL: rörledningen vill inte spela.\n"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:680
+#: tools/gst-launch.c:695
 msgid "Execution ended after %"
 msgstr "Körning avslutades efter %"
 
 # Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:680
+#: tools/gst-launch.c:695
 msgid " ns.\n"
 msgstr " ns.\n"
 
-#: tools/gst-launch.c:687
+#: tools/gst-launch.c:702
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Ställer in rörledningen till READY...\n"
 
-#: tools/gst-launch.c:692
+#: tools/gst-launch.c:707
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Ställer in rörledningen till NULL...\n"
 
-#: tools/gst-launch.c:697
+#: tools/gst-launch.c:712
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "FRIGÖR rörledning...\n"
@@ -936,9 +951,6 @@ msgstr "FRIGÖR rörledning...\n"
 
 #~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
 #~ msgstr "Internt GStreamer-fel: schedulerarproblem. Skicka en felrapport."
-
-#~ msgid "Stream is of the wrong format."
-#~ msgstr "Flödet är av fel format."
 
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr ""
@@ -2882,9 +2894,6 @@ msgstr "FRIGÖR rörledning...\n"
 
 #~ msgid "Recording"
 #~ msgstr "Inspelning"
-
-#~ msgid "Time"
-#~ msgstr "Tid"
 
 #~ msgid "_Recording timeout: "
 #~ msgstr "_Inspelningstimeout: "
