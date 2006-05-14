@@ -52,12 +52,11 @@ In Vorbis, the granulepos represents the number of samples that can be
 decoded from all packets up to that point.
 
 In GStreamer, the vorbisenc elements produces a stream where:
-- OFFSET is the byte offset this buffer is at; ie a running count of the
+- OFFSET is the time corresponding to the granulepos
   number of bytes produced before
 - OFFSET_END is the granulepos of the produced vorbis buffer
 - TIMESTAMP is the timestamp matching the begin of the buffer
-- DURATION is set such that TIMESTAMP + DURATION is the correct 
-in a raw vorbis stream we use the granulepos as the offset field.
+- DURATION is set to the length in time of the buffer
 
 Ogg media mapping
 -----------------
@@ -323,9 +322,9 @@ Possible ways:
 In practice
 -----------
 - all encoders of formats that can be muxed into Ogg produce a stream where:
-  - OFFSET is abused to be the granulepos of the encoded theora buffer
-  - OFFSET_END is abused to be the timestamp corresponding exactly to the
+  - OFFSET is abused to be the timestamp corresponding exactly to the
     granulepos
+  - OFFSET_END is abused to be the granulepos of the encoded theora buffer
   - TIMESTAMP is the timestamp matching the begin of the buffer
   - DURATION is the length in time of the buffer
 
