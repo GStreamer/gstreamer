@@ -39,11 +39,18 @@ Rules for sending streamheaders:
 - when all streamheader buffers are collected in the element, pad caps should
   be set, including this streamheader
 - streamheader buffers should be sent consecutively, and before any of the
-  data (non-IN_CAPS) buffers they apply to.
+  data (non-IN_CAPS) buffers they apply to.  If necessary, the element
+  should internally queue non-IN_CAPS buffers until the streamheaders
+  are completely assembled.
 - when new streamheader buffers need to be pushed out, this process is
   repeated.  Receiving a new IN_CAPS buffer after a non-IN_CAPS buffer
   signifies resetting streamheader, as does the new set_caps with different
-  streamheader right before.
+  streamheader right before. (FIXME: it's probably better to explicitly
+  have an event/buffer that clears streamheaders; consider the case of
+  an element like GDP that has created streamheader from the first newsegment
+  and the first caps, and then receives a new tag event that it also wants
+  to put on the streamheader - it should be able to invalidate the previous
+  ones)
 
 Elements that can send streamheader caps:
 - vorbisenc
