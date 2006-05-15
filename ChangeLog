@@ -1,5 +1,13 @@
 2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/subparse/gstsubparse.c:
+	(gst_sub_parse_data_format_autodetect):
+	  Improve SAMI typefinding: handle case where there are
+	  whitespaces or newlines in front of the first <SAMI>
+	  tag (#169936).
+
+2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Build video4linux plugin even if there's no XVIDEO, just
 	  without implementing the GstXOverlay interface (#334002).
