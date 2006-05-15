@@ -1,3 +1,9 @@
+2006-05-15  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_position):
+	Don't report POSITION based on clock time if sync is
+	disabled in a sink.
+
 2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstobject.h:

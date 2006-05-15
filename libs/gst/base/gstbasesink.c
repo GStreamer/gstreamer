@@ -2227,7 +2227,9 @@ gst_base_sink_peer_query (GstBaseSink * sink, GstQuery * query)
   return res;
 }
 
-/* get the position of the last seen object */
+/* get the end position of the last seen object, this is used
+ * for EOS and for making sure that we don't report a position we
+ * have not reached yet. */
 static gboolean
 gst_base_sink_get_position_last (GstBaseSink * basesink, gint64 * cur)
 {
@@ -2261,6 +2263,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
   gboolean res = FALSE;
 
   switch (format) {
+      /* we can answer time format */
     case GST_FORMAT_TIME:
     {
       GstClockTime now, base;
@@ -2268,23 +2271,30 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       gdouble rate;
       gint64 last;
 
-      /* we can answer time format */
       GST_OBJECT_LOCK (basesink);
 
-      /* can only give answer if not EOS */
+      /* can only give answer based on the clock if not EOS */
       if (G_UNLIKELY (basesink->eos))
         goto in_eos;
 
+      /* in PAUSE we cannot read from the clock so we
+       * report time based on the last seen timestamp. */
       if (GST_STATE (basesink) == GST_STATE_PAUSED)
         goto in_pause;
 
-      /* We get position from clock only in PLAYING */
+      /* We get position from clock only in PLAYING, we checked
+       * the PAUSED case above, so this is check is to test 
+       * READY and NULL, where the position is always 0 */
       if (GST_STATE (basesink) != GST_STATE_PLAYING)
         goto wrong_state;
 
+      /* we need to sync on the clock. */
+      if (basesink->sync == FALSE)
+        goto no_sync;
+
       /* and we need a clock */
       if (G_UNLIKELY ((clock = GST_ELEMENT_CLOCK (basesink)) == NULL))
-        goto no_clock;
+        goto no_sync;
 
       /* collect all data we need holding the lock */
       if (GST_CLOCK_TIME_IS_VALID (basesink->segment.time))
@@ -2328,7 +2338,8 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
           GST_TIME_ARGS (accum), GST_TIME_ARGS (time));
     }
     default:
-      /* cannot answer other than TIME */
+      /* cannot answer other than TIME, we return FALSE, which will
+       * send the query upstream. */
       break;
   }
 
@@ -2352,15 +2363,20 @@ in_pause:
   }
 wrong_state:
   {
+    /* in NULL or READY we always return 0 */
     res = TRUE;
     *cur = 0;
     GST_OBJECT_UNLOCK (basesink);
     goto done;
   }
-no_clock:
+no_sync:
   {
+    /* report last seen timestamp if any, else return FALSE so
+     * that upstream can answer */
+    if ((*cur = basesink->priv->current_sstart) != -1)
+      res = TRUE;
     GST_OBJECT_UNLOCK (basesink);
-    return FALSE;
+    return res;
   }
 }
 
