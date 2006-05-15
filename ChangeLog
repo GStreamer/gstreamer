@@ -1,3 +1,9 @@
+2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/taglib/gstid3v2mux.cc:
+	  Add support for writing images (APIC frames) into ID3v2
+	  tags (picture type always set to 'other' for now though).
+
 2006-05-14  Michael Smith  <msmith@fluendo.com>
 
 	* gst/wavparse/gstwavparse.c:

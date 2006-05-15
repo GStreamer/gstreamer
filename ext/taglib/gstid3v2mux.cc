@@ -59,6 +59,7 @@
 
 #include <textidentificationframe.h>
 #include <uniquefileidentifierframe.h>
+#include <attachedpictureframe.h>
 #include <id3v2tag.h>
 #include <gst/tag/tag.h>
 
@@ -315,6 +316,49 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
           id_str);
       id3v2tag->addFrame (frame);
       g_free (id_str);
+    }
+  } else if (strcmp (tag, GST_TAG_IMAGE) == 0) {
+    const GValue *val;
+    GstBuffer *image;
+
+    GST_LOG ("image tag");
+    val = gst_tag_list_get_value_index (list, tag, 0);
+    image = (GstBuffer *) gst_value_get_mini_object (val);
+    if (GST_IS_BUFFER (image) && GST_BUFFER_SIZE (image) > 0 &&
+        GST_BUFFER_CAPS (image) != NULL &&
+        !gst_caps_is_empty (GST_BUFFER_CAPS (image))) {
+      const gchar *mime_type;
+      GstStructure *s;
+
+      s = gst_caps_get_structure (GST_BUFFER_CAPS (image), 0);
+      mime_type = gst_structure_get_name (s);
+      if (mime_type != NULL) {
+        ID3v2::AttachedPictureFrame * frame;
+        const gchar *desc;
+
+        if (strcmp (mime_type, "text/uri-list") == 0)
+          mime_type = "-->";
+
+        frame = new ID3v2::AttachedPictureFrame ();
+
+        GST_DEBUG ("Attaching picture of %u bytes and mime type %s",
+            GST_BUFFER_SIZE (image), mime_type);
+
+        id3v2tag->addFrame (frame);
+        frame->setPicture (ByteVector ((const char *) GST_BUFFER_DATA (image),
+                GST_BUFFER_SIZE (image)));
+        frame->setTextEncoding (String::UTF8);
+        frame->setMimeType (mime_type);
+
+        desc = gst_structure_get_string (s, "image-description");
+        frame->setDescription ((desc) ? desc : "");
+
+        /* FIXME */
+        frame->setType (ID3v2::AttachedPictureFrame::Other);
+      }
+    } else {
+      GST_WARNING ("NULL image or no caps on image buffer (%p, caps=%"
+          GST_PTR_FORMAT ")", image, (image) ? GST_BUFFER_CAPS (image) : NULL);
     }
   } else {
     GST_WARNING ("Unsupported tag: %s", tag);
