@@ -1,3 +1,26 @@
+2006-05-15  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoradec.c: (gst_theora_dec_reset),
+	(theora_dec_src_query), (theora_dec_src_event),
+	(theora_dec_sink_event), (theora_handle_comment_packet),
+	(theora_handle_data_packet), (theora_dec_change_state):
+	Cleanups, add some G_LIKELY.
+	Use segment helpers instead of our own wrong code.
+	Clear queued buffers on seek and READY.
+
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_reset),
+	(vorbis_dec_convert), (vorbis_dec_src_query),
+	(vorbis_dec_src_event), (vorbis_dec_sink_event),
+	(vorbis_handle_comment_packet), (vorbis_dec_push),
+	(vorbis_handle_data_packet), (vorbis_dec_chain),
+	(vorbis_dec_change_state):
+	* ext/vorbis/vorbisdec.h:
+	Remove old useless packetno variable.
+	Do position query properly.
+	Add some G_LIKELY.
+	Do cleanup of queued buffers in new helper function
+	and use it.
+
 2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/alsa/gstalsasink.c: (gst_alsasink_getcaps):

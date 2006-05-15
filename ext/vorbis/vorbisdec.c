@@ -182,6 +182,25 @@ vorbis_dec_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_vorbis_dec_reset (GstVorbisDec * dec)
+{
+  GList *walk;
+
+  dec->cur_timestamp = GST_CLOCK_TIME_NONE;
+  dec->prev_timestamp = GST_CLOCK_TIME_NONE;
+  dec->granulepos = -1;
+  dec->discont = TRUE;
+  gst_segment_init (&dec->segment, GST_FORMAT_TIME);
+
+  for (walk = dec->queued; walk; walk = g_list_next (walk)) {
+    gst_buffer_unref (GST_BUFFER_CAST (walk->data));
+  }
+  g_list_free (dec->queued);
+  dec->queued = NULL;
+}
+
+
 static gboolean
 vorbis_dec_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
@@ -198,7 +217,7 @@ vorbis_dec_convert (GstPad * pad,
 
   dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
 
-  if (dec->packetno < 1)
+  if (!dec->initialized)
     goto no_header;
 
   if (dec->sinkpad == pad &&
@@ -271,7 +290,6 @@ no_format:
 static gboolean
 vorbis_dec_src_query (GstPad * pad, GstQuery * query)
 {
-  gint64 granulepos;
   GstVorbisDec *dec;
   gboolean res = FALSE;
 
@@ -280,29 +298,37 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
-      GstFormat format;
-      gint64 value;
+      gint64 granulepos, value;
+      GstFormat my_format, format;
+      gint64 time;
 
       /* we start from the last seen granulepos */
       granulepos = dec->granulepos;
 
       gst_query_parse_position (query, &format, NULL);
 
-      /* and convert to the final format */
+      /* and convert to the final format in two steps with time as the
+       * intermediate step */
+      my_format = GST_FORMAT_TIME;
       if (!(res =
-              vorbis_dec_convert (pad, GST_FORMAT_DEFAULT, granulepos, &format,
-                  &value)))
+              vorbis_dec_convert (pad, GST_FORMAT_DEFAULT, granulepos,
+                  &my_format, &time)))
         goto error;
 
       /* correct for the segment values */
-      value =
-          gst_segment_to_stream_time (&dec->segment, GST_FORMAT_TIME, value);
+      time = gst_segment_to_stream_time (&dec->segment, GST_FORMAT_TIME, time);
+
+      GST_LOG_OBJECT (dec,
+          "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));
+
+      /* and convert to the final format */
+      if (!(res = vorbis_dec_convert (pad, my_format, time, &format, &value)))
+        goto error;
 
       gst_query_set_position (query, format, value);
 
       GST_LOG_OBJECT (dec,
-          "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
-          query, granulepos, value, format);
+          "query %p: we return %lld (format %u)", query, value, format);
 
       break;
     }
@@ -406,6 +432,7 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
           &stop_type, &stop);
+      gst_event_unref (event);
 
       /* we have to ask our peer to seek to time here as we know
        * nothing about how to generate a granulepos from the src
@@ -415,9 +442,9 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
        */
       tformat = GST_FORMAT_TIME;
       if (!(res = vorbis_dec_convert (pad, format, cur, &tformat, &tcur)))
-        goto error;
+        goto convert_error;
       if (!(res = vorbis_dec_convert (pad, format, stop, &tformat, &tstop)))
-        goto error;
+        goto convert_error;
 
       /* then seek with time on the peer */
       real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
@@ -425,11 +452,10 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
 
       res = gst_pad_push_event (dec->sinkpad, real_seek);
 
-      gst_event_unref (event);
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (dec->sinkpad, event);
       break;
   }
 done:
@@ -438,10 +464,9 @@ done:
   return res;
 
   /* ERRORS */
-error:
+convert_error:
   {
     GST_DEBUG_OBJECT (dec, "cannot convert start/stop for seek");
-    gst_event_unref (event);
     goto done;
   }
 }
@@ -463,9 +488,11 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
-      /* here we are supposed to clean any state in the
-       * decoder */
-      gst_segment_init (&dec->segment, GST_FORMAT_TIME);
+      /* here we must clean any state in the decoder */
+#ifdef HAVE_VORBIS_SYNTHESIS_RESTART
+      vorbis_synthesis_restart (&dec->vd);
+#endif
+      gst_vorbis_dec_reset (dec);
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
     case GST_EVENT_NEWSEGMENT:
@@ -647,7 +674,7 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
         GST_TAG_BITRATE, (guint) bitrate, NULL);
   }
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (vd), vd->srcpad, list);
+  gst_element_found_tags_for_pad (GST_ELEMENT_CAST (vd), vd->srcpad, list);
 
   return GST_FLOW_OK;
 }
@@ -725,18 +752,6 @@ copy_samples (float *out, float **in, guint samples, gint channels)
 #endif
 }
 
-static void
-vorbis_dec_clean_queued (GstVorbisDec * dec)
-{
-  GList *walk;
-
-  for (walk = dec->queued; walk; walk = g_list_next (walk)) {
-    gst_buffer_unref (GST_BUFFER_CAST (walk->data));
-  }
-  g_list_free (dec->queued);
-  dec->queued = NULL;
-}
-
 static GstFlowReturn
 vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
 {
@@ -805,10 +820,10 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
     goto not_initialized;
 
   /* normal data packet */
-  if (vorbis_synthesis (&vd->vb, packet))
+  if (G_UNLIKELY (vorbis_synthesis (&vd->vb, packet)))
     goto could_not_read;
 
-  if (vorbis_synthesis_blockin (&vd->vd, &vd->vb) < 0)
+  if (G_UNLIKELY (vorbis_synthesis_blockin (&vd->vd, &vd->vb) < 0))
     goto not_accepted;
 
   /* assume all goes well here */
@@ -824,11 +839,11 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   result =
       gst_pad_alloc_buffer_and_set_caps (vd->srcpad, GST_BUFFER_OFFSET_NONE,
       size, GST_PAD_CAPS (vd->srcpad), &out);
-  if (result != GST_FLOW_OK)
+  if (G_UNLIKELY (result != GST_FLOW_OK))
     goto done;
 
   /* get samples ready for reading now, should be sample_count */
-  if ((vorbis_synthesis_pcmout (&vd->vd, &pcm)) != sample_count)
+  if (G_UNLIKELY ((vorbis_synthesis_pcmout (&vd->vd, &pcm)) != sample_count))
     goto wrong_samples;
 
   /* copy samples in buffer */
@@ -878,7 +893,7 @@ done:
 not_initialized:
   {
     GST_ELEMENT_ERROR (GST_ELEMENT (vd), STREAM, DECODE,
-        (NULL), ("no header sent yet (packet no is %d)", packet->packetno));
+        (NULL), ("no header sent yet"));
     return GST_FLOW_ERROR;
   }
 could_not_read:
@@ -941,7 +956,7 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
   packet.packet = GST_BUFFER_DATA (buffer);
   packet.bytes = GST_BUFFER_SIZE (buffer);
   packet.granulepos = GST_BUFFER_OFFSET_END (buffer);
-  packet.packetno = vd->packetno++;
+  packet.packetno = 0;          /* we don't care */
   /*
    * FIXME. Is there anyway to know that this is the last packet and
    * set e_o_s??
@@ -950,7 +965,7 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
    */
   packet.e_o_s = 0;
 
-  if (packet.bytes < 1)
+  if (G_UNLIKELY (packet.bytes < 1))
     goto wrong_size;
 
   GST_DEBUG_OBJECT (vd, "vorbis granule: %" G_GINT64_FORMAT,
@@ -1000,12 +1015,7 @@ vorbis_dec_change_state (GstElement * element, GstStateChange transition)
       vorbis_info_init (&vd->vi);
       vorbis_comment_init (&vd->vc);
       vd->initialized = FALSE;
-      vd->cur_timestamp = GST_CLOCK_TIME_NONE;
-      vd->prev_timestamp = GST_CLOCK_TIME_NONE;
-      vd->granulepos = -1;
-      vd->packetno = 0;
-      vd->discont = TRUE;
-      gst_segment_init (&vd->segment, GST_FORMAT_TIME);
+      gst_vorbis_dec_reset (vd);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -1024,7 +1034,7 @@ vorbis_dec_change_state (GstElement * element, GstStateChange transition)
       vorbis_dsp_clear (&vd->vd);
       vorbis_comment_clear (&vd->vc);
       vorbis_info_clear (&vd->vi);
-      vorbis_dec_clean_queued (vd);
+      gst_vorbis_dec_reset (vd);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

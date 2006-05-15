@@ -169,6 +169,8 @@ gst_theora_dec_init (GstTheoraDec * dec, GstTheoraDecClass * g_class)
 static void
 gst_theora_dec_reset (GstTheoraDec * dec)
 {
+  GList *walk;
+
   dec->need_keyframe = TRUE;
   dec->last_timestamp = -1;
   dec->granulepos = -1;
@@ -180,6 +182,12 @@ gst_theora_dec_reset (GstTheoraDec * dec)
   dec->proportion = 1.0;
   dec->earliest_time = -1;
   GST_OBJECT_UNLOCK (dec);
+
+  for (walk = dec->queued; walk; walk = g_list_next (walk)) {
+    gst_buffer_unref (GST_BUFFER_CAST (walk->data));
+  }
+  g_list_free (dec->queued);
+  dec->queued = NULL;
 }
 
 static int
@@ -466,7 +474,7 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
                   granulepos, &my_format, &time)))
         goto error;
 
-      time = (time - dec->segment.start) + dec->segment.time;
+      time = gst_segment_to_stream_time (&dec->segment, GST_FORMAT_TIME, time);
 
       GST_LOG_OBJECT (dec,
           "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));
@@ -483,10 +491,20 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     case GST_QUERY_DURATION:
-      /* forward to peer for total */
-      if (!(res = gst_pad_query (GST_PAD_PEER (dec->sinkpad), query)))
+    {
+      GstPad *peer;
+
+      if (!(peer = gst_pad_get_peer (dec->sinkpad)))
         goto error;
+
+      /* forward to peer for total */
+      res = gst_pad_query (peer, query);
+      gst_object_unref (peer);
+      if (!res)
+        goto error;
+
       break;
+    }
     case GST_QUERY_CONVERT:
     {
       GstFormat src_fmt, dest_fmt;
@@ -587,7 +605,6 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
           flags, cur_type, tcur, stop_type, tstop);
 
       res = gst_pad_push_event (dec->sinkpad, real_seek);
-
       break;
     }
     case GST_EVENT_QOS:
@@ -654,11 +671,11 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
     {
       gboolean update;
       GstFormat format;
-      gdouble rate;
+      gdouble rate, arate;
       gint64 start, stop, time;
 
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
 
       /* we need TIME and a positive rate */
       if (format != GST_FORMAT_TIME)
@@ -668,8 +685,8 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
         goto newseg_wrong_rate;
 
       /* now configure the values */
-      gst_segment_set_newsegment (&dec->segment, update,
-          rate, format, start, stop, time);
+      gst_segment_set_newsegment_full (&dec->segment, update,
+          rate, arate, format, start, stop, time);
 
       /* and forward */
       ret = gst_pad_push_event (dec->srcpad, event);
@@ -736,7 +753,7 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
         GST_TAG_NOMINAL_BITRATE, dec->info.target_bitrate, NULL);
   }
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, list);
+  gst_element_found_tags_for_pad (GST_ELEMENT_CAST (dec), dec->srcpad, list);
 
   return GST_FLOW_OK;
 }
@@ -918,10 +935,10 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   /* the second most significant bit of the first data byte is cleared 
    * for keyframes */
   keyframe = (packet->packet[0] & 0x40) == 0;
-  if (keyframe) {
+  if (G_UNLIKELY (keyframe)) {
     GST_DEBUG_OBJECT (dec, "we have a keyframe");
     dec->need_keyframe = FALSE;
-  } else if (dec->need_keyframe) {
+  } else if (G_UNLIKELY (dec->need_keyframe)) {
     goto dropping;
   }
 
@@ -1163,7 +1180,6 @@ theora_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstTheoraDec *dec = GST_THEORA_DEC (element);
   GstStateChangeReturn ret;
-
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:

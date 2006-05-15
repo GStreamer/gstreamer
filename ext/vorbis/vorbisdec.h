@@ -57,7 +57,6 @@ struct _GstVorbisDec {
   vorbis_info           vi;
   vorbis_comment        vc;
   vorbis_block          vb;
-  guint                 packetno;
   guint64               granulepos;
 
   gboolean              initialized;
