@@ -1,3 +1,16 @@
+2006-05-15  Wim Taymans  <wim@fluendo.com>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_get_query_types),
+	(vorbis_dec_convert), (vorbis_dec_src_query),
+	(vorbis_dec_sink_query), (vorbis_dec_src_event),
+	(vorbis_dec_sink_event), (vorbis_handle_identification_packet),
+	(vorbis_dec_clean_queued), (vorbis_dec_push),
+	(vorbis_handle_data_packet), (vorbis_dec_change_state):
+	Cleanups. Use refcounting and DEBUG_OBJECT.
+	Reset segment on flush, use code methods instead of our
+	own wrong version.
+	Fix potential memleak.
+
 2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/alsa/gstalsasink.c: (gst_alsasink_finalise),

@@ -129,6 +129,8 @@ vorbis_get_query_types (GstPad * pad)
 {
   static const GstQueryType vorbis_dec_src_query_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    GST_QUERY_CONVERT,
     0
   };
 
@@ -189,19 +191,19 @@ vorbis_dec_convert (GstPad * pad,
   GstVorbisDec *dec;
   guint64 scale = 1;
 
-  dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
-
-  if (dec->packetno < 1)
-    return FALSE;
-
   if (src_format == *dest_format) {
     *dest_value = src_value;
     return TRUE;
   }
 
+  dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
+
+  if (dec->packetno < 1)
+    goto no_header;
+
   if (dec->sinkpad == pad &&
       (src_format == GST_FORMAT_BYTES || *dest_format == GST_FORMAT_BYTES))
-    return FALSE;
+    goto no_format;
 
   switch (src_format) {
     case GST_FORMAT_TIME:
@@ -246,8 +248,24 @@ vorbis_dec_convert (GstPad * pad,
     default:
       res = FALSE;
   }
+done:
+  gst_object_unref (dec);
 
   return res;
+
+  /* ERRORS */
+no_header:
+  {
+    GST_DEBUG_OBJECT (dec, "no header packets received");
+    res = FALSE;
+    goto done;
+  }
+no_format:
+  {
+    GST_DEBUG_OBJECT (dec, "formats unsupported");
+    res = FALSE;
+    goto done;
+  }
 }
 
 static gboolean
@@ -257,7 +275,7 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
   GstVorbisDec *dec;
   gboolean res = FALSE;
 
-  dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
+  dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -265,6 +283,7 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
       gint64 value;
 
+      /* we start from the last seen granulepos */
       granulepos = dec->granulepos;
 
       gst_query_parse_position (query, &format, NULL);
@@ -275,7 +294,9 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
                   &value)))
         goto error;
 
-      value = (value - dec->segment.start) + dec->segment.time;
+      /* correct for the segment values */
+      value =
+          gst_segment_to_stream_time (&dec->segment, GST_FORMAT_TIME, value);
 
       gst_query_set_position (query, format, value);
 
@@ -313,12 +334,16 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
       res = gst_pad_query_default (pad, query);
       break;
   }
+done:
+  gst_object_unref (dec);
+
   return res;
 
+  /* ERRORS */
 error:
   {
     GST_WARNING_OBJECT (dec, "error handling query");
-    return res;
+    goto done;
   }
 }
 
@@ -328,7 +353,7 @@ vorbis_dec_sink_query (GstPad * pad, GstQuery * query)
   GstVorbisDec *dec;
   gboolean res;
 
-  dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
+  dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONVERT:
@@ -347,15 +372,27 @@ vorbis_dec_sink_query (GstPad * pad, GstQuery * query)
       res = gst_pad_query_default (pad, query);
       break;
   }
-error:
+
+done:
+  gst_object_unref (dec);
+
   return res;
+
+  /* ERRORS */
+error:
+  {
+    GST_DEBUG_OBJECT (dec, "error converting value");
+    goto done;
+  }
 }
 
 static gboolean
 vorbis_dec_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstVorbisDec *dec = GST_VORBIS_DEC (GST_PAD_PARENT (pad));
+  GstVorbisDec *dec;
+
+  dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
@@ -395,12 +432,18 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
       res = gst_pad_event_default (pad, event);
       break;
   }
+done:
+  gst_object_unref (dec);
 
   return res;
 
+  /* ERRORS */
 error:
-  gst_event_unref (event);
-  return res;
+  {
+    GST_DEBUG_OBJECT (dec, "cannot convert start/stop for seek");
+    gst_event_unref (event);
+    goto done;
+  }
 }
 
 static gboolean
@@ -416,15 +459,24 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       ret = gst_pad_push_event (dec->srcpad, event);
       break;
+    case GST_EVENT_FLUSH_START:
+      ret = gst_pad_push_event (dec->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      /* here we are supposed to clean any state in the
+       * decoder */
+      gst_segment_init (&dec->segment, GST_FORMAT_TIME);
+      ret = gst_pad_push_event (dec->srcpad, event);
+      break;
     case GST_EVENT_NEWSEGMENT:
     {
       GstFormat format;
-      gdouble rate;
+      gdouble rate, arate;
       gint64 start, stop, time;
       gboolean update;
 
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
 
       /* we need time and a positive rate for now */
       if (format != GST_FORMAT_TIME)
@@ -434,8 +486,8 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
         goto newseg_wrong_rate;
 
       /* now configure the values */
-      gst_segment_set_newsegment (&dec->segment, update,
-          rate, format, start, stop, time);
+      gst_segment_set_newsegment_full (&dec->segment, update,
+          rate, arate, format, start, stop, time);
 
       /* and forward */
       ret = gst_pad_push_event (dec->srcpad, event);
@@ -449,18 +501,18 @@ done:
   gst_object_unref (dec);
 
   return ret;
+
   /* ERRORS */
 newseg_wrong_format:
   {
-    GST_DEBUG ("received non TIME newsegment");
+    GST_DEBUG_OBJECT (dec, "received non TIME newsegment");
     goto done;
   }
 newseg_wrong_rate:
   {
-    GST_DEBUG ("negative rates not supported yet");
+    GST_DEBUG_OBJECT (dec, "negative rates not supported yet");
     goto done;
   }
-
 }
 
 static GstFlowReturn
@@ -469,18 +521,13 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
   GstCaps *caps;
   const GstAudioChannelPosition *pos = NULL;
 
-  caps = gst_caps_new_simple ("audio/x-raw-float",
-      "rate", G_TYPE_INT, vd->vi.rate,
-      "channels", G_TYPE_INT, vd->vi.channels,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
-
   switch (vd->vi.channels) {
     case 1:
     case 2:
       /* nothing */
       break;
     case 3:{
-      static GstAudioChannelPosition pos3[] = {
+      static const GstAudioChannelPosition pos3[] = {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
@@ -489,7 +536,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
       break;
     }
     case 4:{
-      static GstAudioChannelPosition pos4[] = {
+      static const GstAudioChannelPosition pos4[] = {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
@@ -499,7 +546,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
       break;
     }
     case 5:{
-      static GstAudioChannelPosition pos5[] = {
+      static const GstAudioChannelPosition pos5[] = {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
@@ -510,7 +557,7 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
       break;
     }
     case 6:{
-      static GstAudioChannelPosition pos6[] = {
+      static const GstAudioChannelPosition pos6[] = {
         GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
         GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
         GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
@@ -524,6 +571,12 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
     default:
       goto channel_count_error;
   }
+
+  caps = gst_caps_new_simple ("audio/x-raw-float",
+      "rate", G_TYPE_INT, vd->vi.rate,
+      "channels", G_TYPE_INT, vd->vi.channels,
+      "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
+
   if (pos) {
     gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0), pos);
   }
@@ -535,7 +588,6 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
   /* ERROR */
 channel_count_error:
   {
-    gst_caps_unref (caps);
     GST_ELEMENT_ERROR (vd, STREAM, NOT_IMPLEMENTED, (NULL),
         ("Unsupported channel count %d", vd->vi.channels));
     return GST_FLOW_ERROR;
@@ -673,6 +725,18 @@ copy_samples (float *out, float **in, guint samples, gint channels)
 #endif
 }
 
+static void
+vorbis_dec_clean_queued (GstVorbisDec * dec)
+{
+  GList *walk;
+
+  for (walk = dec->queued; walk; walk = g_list_next (walk)) {
+    gst_buffer_unref (GST_BUFFER_CAST (walk->data));
+  }
+  g_list_free (dec->queued);
+  dec->queued = NULL;
+}
+
 static GstFlowReturn
 vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
 {
@@ -684,7 +748,7 @@ vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
     GST_DEBUG_OBJECT (dec, "queued buffer");
     result = GST_FLOW_OK;
   } else {
-    if (dec->queued) {
+    if (G_UNLIKELY (dec->queued)) {
       gint64 size;
       GList *walk;
 
@@ -708,11 +772,11 @@ vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
       for (walk = dec->queued; walk; walk = g_list_next (walk)) {
         GstBuffer *buffer = GST_BUFFER (walk->data);
 
-        /* ignore the result */
         if (dec->discont) {
           GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
           dec->discont = FALSE;
         }
+        /* ignore the result */
         gst_pad_push (dec->srcpad, buffer);
       }
       g_list_free (dec->queued);
@@ -785,7 +849,8 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
 
   if (vd->cur_timestamp != GST_CLOCK_TIME_NONE) {
     GST_BUFFER_TIMESTAMP (out) = vd->cur_timestamp;
-    GST_DEBUG ("cur_timestamp: %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT " = % "
+    GST_DEBUG_OBJECT (vd,
+        "cur_timestamp: %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT " = % "
         GST_TIME_FORMAT, GST_TIME_ARGS (vd->cur_timestamp),
         GST_TIME_ARGS (GST_BUFFER_DURATION (out)),
         GST_TIME_ARGS (vd->cur_timestamp + GST_BUFFER_DURATION (out)));
@@ -940,6 +1005,7 @@ vorbis_dec_change_state (GstElement * element, GstStateChange transition)
       vd->granulepos = -1;
       vd->packetno = 0;
       vd->discont = TRUE;
+      gst_segment_init (&vd->segment, GST_FORMAT_TIME);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -958,6 +1024,7 @@ vorbis_dec_change_state (GstElement * element, GstStateChange transition)
       vorbis_dsp_clear (&vd->vd);
       vorbis_comment_clear (&vd->vc);
       vorbis_info_clear (&vd->vi);
+      vorbis_dec_clean_queued (vd);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
