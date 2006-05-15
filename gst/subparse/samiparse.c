@@ -173,6 +173,11 @@ handle_start_font (GstSamiContext * sctx, const xmlChar ** atts)
             sharp = "#";
           }
         }
+        /* silver colour can be found in many sami files, but X RGB database
+         * doesn't contain a colour by this name, so map explicitly */
+        if (!xmlStrncmp ((const xmlChar *) "silver", value, 6)) {
+          value = (const xmlChar *) "#c0c0c0";
+        }
         g_string_append_printf (sctx->buf, "<span foreground=\"%s%s\">", sharp,
             value);
         sami_context_push_state (sctx, COLOR_TAG);

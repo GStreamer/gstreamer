@@ -1,5 +1,12 @@
 2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Young-Ho Cha <ganadist at chollian net>
+
+	* gst/subparse/samiparse.c: (handle_start_font):
+	  Need to map "silver" colour explicitly (#169936).
+
+2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Young-Ho Cha  <ganadist at chollian net>
 
 	* gst/subparse/Makefile.am:
