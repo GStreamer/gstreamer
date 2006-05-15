@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
+ * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  *
  * gstalsasink.c:
  *
@@ -33,7 +34,7 @@
  * Play an Ogg/Vorbis file.
  * </para>
  * <programlisting>
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! alsasink
+ * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! alsasink
  * </programlisting>
  * </refsect2>
  *
@@ -100,11 +101,6 @@ static gint output_ref;         /* 0    */
 static snd_output_t *output;    /* NULL */
 static GStaticMutex output_mutex = G_STATIC_MUTEX_INIT;
 
-/* AlsaSink signals and args */
-enum
-{
-  LAST_SIGNAL
-};
 
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
 # define ALSA_SINK_FACTORY_ENDIANNESS	"LITTLE_ENDIAN, BIG_ENDIAN"
@@ -403,8 +399,9 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
   GstCaps *caps = NULL;
   GstStructure *s;
   guint min, max;
-  gint i, err, width;
+  gint i, err, width, dir;
   gint min_channels, max_channels;
+  gint min_rate, max_rate;
   guint bits = 0;
   static const int audio_fmts[] = {
     SND_PCM_FORMAT_U8, SND_PCM_FORMAT_S8,
@@ -430,6 +427,7 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
   snd_pcm_hw_params_alloca (&hw_params);
   CHECK (snd_pcm_hw_params_any (sink->handle, hw_params), error);
 
+  /* === probe supported channels === */
   GST_LOG_OBJECT (sink, "probing channels ...");
   CHECK (snd_pcm_hw_params_get_channels_min (hw_params, &min), min_chan_error);
   CHECK (snd_pcm_hw_params_get_channels_max (hw_params, &max), max_chan_error);
@@ -460,9 +458,30 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
   GST_LOG_OBJECT (sink, "Min. channels = %d (%d)", min_channels, min);
   GST_LOG_OBJECT (sink, "Max. channels = %d (%d)", max_channels, max);
 
+  /* === probe supported sample rates === */
+  GST_LOG_OBJECT (sink, "probing sample rates ...");
+  CHECK (snd_pcm_hw_params_get_rate_min (hw_params, &min, &dir), min_rate_err);
+  CHECK (snd_pcm_hw_params_get_rate_max (hw_params, &max, &dir), max_rate_err);
+
+  min_rate = min;
+  max_rate = max;
+
+  if (min_rate < 4000)
+    min_rate = 4000;            /* random 'sensible minimum' */
+
+  if (max_rate <= 0)
+    max_rate = G_MAXINT;        /* or maybe just use 192400 or so? */
+  else if (max_rate > 0 && max_rate < 4000)
+    max_rate = MAX (4000, min_rate);
+
+  GST_LOG_OBJECT (sink, "Min. rate = %d (%d)", min_rate, min);
+  GST_LOG_OBJECT (sink, "Max. rate = %d (%d)", max_rate, max);
+
+  /* === probe supported sample widths === */
   snd_pcm_format_mask_alloca (&mask);
   snd_pcm_hw_params_get_format_mask (hw_params, mask);
-  for (i = 0; i < 6; i++) {
+  g_assert (G_N_ELEMENTS (audio_fmts) == G_N_ELEMENTS (audio_bits));
+  for (i = 0; i < G_N_ELEMENTS (audio_fmts); i++) {
     if (snd_pcm_format_mask_test (mask, audio_fmts[i])) {
       bits |= audio_bits[i];
     }
@@ -470,7 +489,6 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
   GST_LOG_OBJECT (sink, "Bits = 0x%08x", bits);
 
   /* fill caps according to capabilities gathered above */
-
   element_class = GST_ELEMENT_GET_CLASS (sink);
   pad_template = gst_element_class_get_pad_template (element_class, "sink");
 
@@ -488,6 +506,16 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
       caps_add_channel_configuration (caps, s, min_channels, max_channels);
     } else {
       GST_LOG_OBJECT (sink, "width = %d unsupported", width);
+    }
+  }
+
+  for (i = 0; i < gst_caps_get_size (caps); ++i) {
+    s = gst_caps_get_structure (caps, i);
+    if (min_rate == max_rate) {
+      gst_structure_set (s, "rate", G_TYPE_INT, min_rate, NULL);
+    } else {
+      gst_structure_set (s, "rate", GST_TYPE_INT_RANGE,
+          min_rate, max_rate, NULL);
     }
   }
 
@@ -512,6 +540,18 @@ min_chan_error:
 max_chan_error:
   {
     GST_ERROR_OBJECT (sink, "failed to query maximum channel count: %s",
+        snd_strerror (err));
+    return NULL;
+  }
+min_rate_err:
+  {
+    GST_ERROR_OBJECT (sink, "failed to query minimum sample rate: %s",
+        snd_strerror (err));
+    return NULL;
+  }
+max_rate_err:
+  {
+    GST_ERROR_OBJECT (sink, "failed to query maximum sample rate: %s",
         snd_strerror (err));
     return NULL;
   }

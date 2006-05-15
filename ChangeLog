@@ -1,3 +1,8 @@
+2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_getcaps):
+	  Query supported sample rates. Fixes #341732.
+
 2006-05-15  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/playback/gstdecodebin.c: (cleanup_decodebin),
