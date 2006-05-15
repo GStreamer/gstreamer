@@ -346,16 +346,22 @@ dnl for information about the header/define, see sys/v4l/gstv4lelement.h
 dnl renamed to GST_V4L in accordance with V4L2 below
 translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L, true)
 GST_CHECK_FEATURE(GST_V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
-  # first check X
   HAVE_GST_V4L="no"
-  if test "$HAVE_X" = "yes"
-  then
-    AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_GST_V4L="yes", HAVE_GST_V4L="no", [
+  AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_GST_V4L="yes", HAVE_GST_V4L="no", [
 #include <sys/types.h>
 #define _LINUX_TIME_H
 #define __user
 #include <linux/videodev.h>
+  ])
+
+  dnl we can build v4l without Xv, but then we won't have XOverlay support
+  if test "x$HAVE_GST_V4L" = "xyes" -a "x$HAVE_XVIDEO" != "xyes"
+  then
+    AC_MSG_NOTICE([
+        *****  NO XVIDEO FOUND, VIDEO4LINUX WILL BE  *****
+        *****     BUILT WITHOUT XOVERLAY SUPPORT     *****
     ])
+    sleep 3
   fi
 ])
 
