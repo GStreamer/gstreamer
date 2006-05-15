@@ -1,5 +1,12 @@
 2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	* ext/libvisual/visual.c: (gst_visual_actor_plugin_is_gl),
+	(plugin_init):
+	  Add tentative support for libvisual-0.4 (#336881).
+
+2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Young-Ho Cha <ganadist at chollian net>
 
 	* gst/subparse/samiparse.c: (handle_start_font):

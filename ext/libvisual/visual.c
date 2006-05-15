@@ -675,9 +675,39 @@ make_valid_name (char *name)
 }
 
 static gboolean
+gst_visual_actor_plugin_is_gl (VisObject * plugin, const gchar * name)
+{
+  gboolean is_gl;
+  gint depth;
+
+#if !defined(VISUAL_API_VERSION)
+
+  depth = VISUAL_PLUGIN_ACTOR (plugin)->depth;
+  is_gl = (depth == VISUAL_VIDEO_DEPTH_GL);
+
+#elif VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
+
+  depth = VISUAL_ACTOR_PLUGIN (plugin)->vidoptions.depth;
+  /* FIXME: how to figure this out correctly in 0.4? */
+  is_gl = (depth & VISUAL_VIDEO_DEPTH_GL) == VISUAL_VIDEO_DEPTH_GL;
+
+#else
+# error what libvisual version is this?
+#endif
+
+  if (!is_gl) {
+    GST_DEBUG ("plugin %s is not a GL plugin (%d), registering", name, depth);
+  } else {
+    GST_DEBUG ("plugin %s is a GL plugin (%d), ignoring", name, depth);
+  }
+
+  return is_gl;
+}
+
+static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  guint i;
+  guint i, count;
   VisList *list;
 
   GST_DEBUG_CATEGORY_INIT (libvisual_debug, "libvisual", 0,
@@ -697,11 +727,17 @@ plugin_init (GstPlugin * plugin)
       return FALSE;
 
   list = visual_actor_get_list ();
-  for (i = 0; i < visual_list_count (list); i++) {
+
+#if !defined(VISUAL_API_VERSION)
+  count = visual_list_count (list);
+#elif VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
+  count = visual_collection_size (VISUAL_COLLECTION (list));
+#endif
+
+  for (i = 0; i < count; i++) {
     VisPluginRef *ref = visual_list_get (list, i);
-    VisActorPlugin *actplugin = NULL;
     VisPluginData *visplugin = NULL;
-    gboolean is_gl = FALSE;
+    gboolean skip = FALSE;
     GType type;
     gchar *name;
     GTypeInfo info = {
@@ -721,21 +757,19 @@ plugin_init (GstPlugin * plugin)
     if (ref->info->plugname == NULL)
       continue;
 
-    actplugin = VISUAL_PLUGIN_ACTOR (visplugin->info->plugin);
-
-    /* Ignore plugins that only support GL output for now */
-    if (actplugin->depth == VISUAL_VIDEO_DEPTH_GL) {
-      GST_DEBUG ("plugin %s is a GL plugin (%d), ignoring",
-          ref->info->plugname, actplugin->depth);
-      is_gl = TRUE;
+    /* Blacklist some plugins */
+    if (strcmp (ref->info->plugname, "gstreamer") == 0 ||
+        strcmp (ref->info->plugname, "gdkpixbuf") == 0) {
+      skip = TRUE;
     } else {
-      GST_DEBUG ("plugin %s is not a GL plugin (%d), registering",
-          ref->info->plugname, actplugin->depth);
+      /* Ignore plugins that only support GL output for now */
+      skip = gst_visual_actor_plugin_is_gl (visplugin->info->plugin,
+          visplugin->info->plugname);
     }
 
     visual_plugin_unload (visplugin);
 
-    if (!is_gl) {
+    if (!skip) {
       name = g_strdup_printf ("GstVisual%s", ref->info->plugname);
       make_valid_name (name);
       type = g_type_register_static (GST_TYPE_VISUAL, name, &info, 0);
