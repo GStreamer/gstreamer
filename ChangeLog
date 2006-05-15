@@ -1,3 +1,10 @@
+2006-05-15  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/playback/gstdecodebin.c: (cleanup_decodebin),
+	(gst_decode_bin_change_state): Make decodebin reusable
+	when going from PAUSE_TO_READY and then back to PAUSED.
+	Fixes #331678.
+
 2006-05-15  Wim Taymans  <wim@fluendo.com>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_get_query_types),

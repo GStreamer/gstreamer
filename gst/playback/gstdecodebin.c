@@ -1386,6 +1386,7 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
         if (element != decode_bin->typefind && element != decode_bin->fakesink) {
           GST_DEBUG_OBJECT (element, "removing autoplugged element");
           g_signal_handlers_disconnect_by_func (element, unlinked, decode_bin);
+          gst_element_set_state (element, GST_STATE_NULL);
           gst_bin_remove (GST_BIN (decode_bin), element);
         }
         gst_object_unref (element);
@@ -1472,8 +1473,8 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
     case GST_STATE_CHANGE_READY_TO_NULL:
       free_dynamics (decode_bin);
       free_pad_probes (decode_bin);
