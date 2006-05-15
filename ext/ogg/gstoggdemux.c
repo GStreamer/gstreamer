@@ -1041,9 +1041,16 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
   granule = packet->granulepos;
   if (granule != -1) {
+    GST_DEBUG_OBJECT (ogg, "%p has granulepos %lld", pad, granule);
     ogg->current_granule = granule;
     pad->current_granule = granule;
+    /* granulepos 0 and -1 are considered header packets.
+     * Note that since theora is busted, it can create non-header
+     * packets with 0 granulepos. We will correct for this when our
+     * internal decoder produced a frame and we don't have a
+     * granulepos because in that case the granulpos must have been 0 */
     if (pad->first_granule == -1 && granule != 0) {
+      GST_DEBUG_OBJECT (ogg, "%p found first granulepos %lld", pad, granule);
       pad->first_granule = granule;
     }
   }
@@ -1058,6 +1065,15 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
    * chain. */
   if (pad->start_time != GST_CLOCK_TIME_NONE) {
     GstOggChain *chain = pad->chain;
+
+    /* correction for busted ogg, if the internal decoder outputed
+     * a timestamp but we did not get a granulepos, it must have
+     * been 0 and the time is therefore also 0 */
+    if (pad->first_time == -1) {
+      GST_DEBUG_OBJECT (ogg, "%p found start time without granulepos", pad);
+      pad->first_granule = 0;
+      pad->first_time = 0;
+    }
 
     /* check if complete chain has start time */
     if (chain == ogg->building_chain) {

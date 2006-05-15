@@ -1,3 +1,10 @@
+2006-05-15  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet):
+	Fix seeking performance in the case where a non-header 
+	packet has a 0 granulepos (busted theora case). 
+	Fixes #341719
+
 2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/subparse/gstsubparse.c:
