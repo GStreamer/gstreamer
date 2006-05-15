@@ -1,5 +1,14 @@
 2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/alsa/gstalsasink.c: (gst_alsasink_finalise),
+	(gst_alsasink_init):
+	* ext/alsa/gstalsasink.h:
+	  Don't leak allocated snd_output_t structure if there's
+	  more than one alsasink instance at a time (#341873).
+	  Also fix GObject macros in header file.
+	  
+2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/subparse/gstsubparse.c:
 	(gst_sub_parse_data_format_autodetect):
 	  Don't use libxml functions in the typefinding code.

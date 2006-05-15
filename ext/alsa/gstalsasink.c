@@ -96,6 +96,10 @@ static guint gst_alsasink_write (GstAudioSink * asink, gpointer data,
 static guint gst_alsasink_delay (GstAudioSink * asink);
 static void gst_alsasink_reset (GstAudioSink * asink);
 
+static gint output_ref;         /* 0    */
+static snd_output_t *output;    /* NULL */
+static GStaticMutex output_mutex = G_STATIC_MUTEX_INIT;
+
 /* AlsaSink signals and args */
 enum
 {
@@ -172,6 +176,14 @@ gst_alsasink_finalise (GObject * object)
 
   g_free (sink->device);
   g_mutex_free (sink->alsa_lock);
+
+  g_static_mutex_lock (&output_mutex);
+  --output_ref;
+  if (output_ref == 0) {
+    snd_output_close (output);
+    output = NULL;
+  }
+  g_static_mutex_unlock (&output_mutex);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -279,8 +291,6 @@ gst_alsasink_get_property (GObject * object, guint prop_id,
   }
 }
 
-static snd_output_t *output = NULL;
-
 static void
 gst_alsasink_init (GstAlsaSink * alsasink)
 {
@@ -291,7 +301,12 @@ gst_alsasink_init (GstAlsaSink * alsasink)
   alsasink->cached_caps = NULL;
   alsasink->alsa_lock = g_mutex_new ();
 
-  snd_output_stdio_attach (&output, stdout, 0);
+  g_static_mutex_lock (&output_mutex);
+  if (output_ref == 0) {
+    snd_output_stdio_attach (&output, stdout, 0);
+    ++output_ref;
+  }
+  g_static_mutex_unlock (&output_mutex);
 }
 
 #define CHECK(call, error) \

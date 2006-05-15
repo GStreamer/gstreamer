@@ -29,12 +29,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ALSA_SINK          (gst_alsasink_get_type())
-#define GST_ALSA_SINK(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_SINK,GstAlsaSink))
-#define GST_ALSA_SINK_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_SINK,GstAlsaSinkClass))
-#define GST_IS_ALSA_SINK(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_SINK))
-#define GST_IS_ALSA_SINK_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_SINK))
-#define GST_ALSA_SINK_CAST(obj)     ((GstAlsaSink *) (obj))
+#define GST_TYPE_ALSA_SINK            (gst_alsasink_get_type())
+#define GST_ALSA_SINK(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_SINK,GstAlsaSink))
+#define GST_ALSA_SINK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_SINK,GstAlsaSinkClass))
+#define GST_IS_ALSA_SINK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_SINK))
+#define GST_IS_ALSA_SINK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_SINK))
+#define GST_ALSA_SINK_CAST(obj)       ((GstAlsaSink *) (obj))
 
 typedef struct _GstAlsaSink GstAlsaSink;
 typedef struct _GstAlsaSinkClass GstAlsaSinkClass;
