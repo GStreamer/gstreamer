@@ -2,7 +2,11 @@ plugin_LTLIBRARIES = libgstsubparse.la
 
 libgstsubparse_la_SOURCES = \
 	gstssaparse.c \
-	gstsubparse.c
+	gstssaparse.h \
+	gstsubparse.c \
+	gstsubparse.h \
+	samiparse.c \
+	samiparse.h
 
 libgstsubparse_la_CFLAGS = $(GST_CFLAGS)
 libgstsubparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
@@ -10,4 +14,5 @@ libgstsubparse_la_LIBADD = $(GST_LIBS)
 
 noinst_HEADERS = \
 	gstssaparse.h \
-	gstsubparse.h
+	gstsubparse.h \
+	samiparse.h

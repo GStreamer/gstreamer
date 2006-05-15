@@ -29,6 +29,7 @@
 
 #include "gstsubparse.h"
 #include "gstssaparse.h"
+#include "samiparse.h"
 
 GST_DEBUG_CATEGORY_STATIC (sub_parse_debug);
 #define GST_CAT_DEFAULT sub_parse_debug
@@ -40,11 +41,19 @@ GST_ELEMENT_DETAILS ("Subtitle parser",
     "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>\n"
     "Ronald S. Bultje <rbultje@ronald.bitfreak.net>");
 
+#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-sami")
+    );
+#else
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-subtitle")
     );
+#endif
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -114,6 +123,7 @@ gst_sub_parse_dispose (GObject * object)
     gst_segment_free (subparse->segment);
     subparse->segment = NULL;
   }
+  sami_context_deinit (&subparse->state);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
@@ -569,6 +579,9 @@ parser_state_dispose (ParserState * state)
     g_string_free (state->buf, TRUE);
     state->buf = NULL;
   }
+  if (state->user_data) {
+    sami_context_reset (state);
+  }
 }
 
 /*
@@ -602,19 +615,23 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
   }
 
   if (regexec (&mdvd_rx, match_str, 0, NULL, 0) == 0) {
-    GST_LOG ("subparse: MicroDVD (frame based) format detected");
+    GST_LOG ("MicroDVD (frame based) format detected");
     return GST_SUB_PARSE_FORMAT_MDVDSUB;
   }
   if (regexec (&subrip_rx, match_str, 0, NULL, 0) == 0) {
-    GST_LOG ("subparse: SubRip (time based) format detected");
+    GST_LOG ("SubRip (time based) format detected");
     return GST_SUB_PARSE_FORMAT_SUBRIP;
   }
   if (!strncmp (match_str, "FORMAT=TIME", 11)) {
-    GST_LOG ("subparse: MPSub (time based) format detected");
+    GST_LOG ("MPSub (time based) format detected");
     return GST_SUB_PARSE_FORMAT_MPSUB;
   }
+  if (!g_ascii_strncasecmp (match_str, "<SAMI>", 6)) {
+    GST_LOG ("SAMI (time based) format detected");
+    return GST_SUB_PARSE_FORMAT_SAMI;
+  }
 
-  GST_WARNING ("subparse: subtitle format autodetection failed!");
+  GST_DEBUG ("no subtitle format detected");
   return GST_SUB_PARSE_FORMAT_UNKNOWN;
 }
 
@@ -646,6 +663,10 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
     case GST_SUB_PARSE_FORMAT_MPSUB:
       self->parse_line = parse_mpsub;
       return gst_caps_new_simple ("text/plain", NULL);
+    case GST_SUB_PARSE_FORMAT_SAMI:
+      self->parse_line = parse_sami;
+      sami_context_init (&self->state);
+      return gst_caps_new_simple ("text/x-pango-markup", NULL);
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
     default:
       GST_DEBUG ("no subtitle format detected");
@@ -662,6 +683,7 @@ feed_textbuf (GstSubParse * self, GstBuffer * buf)
     /* flush the parser state */
     parser_state_init (&self->state);
     g_string_truncate (self->textbuf, 0);
+    sami_context_reset (&self->state);
   }
 
   self->textbuf = g_string_append_len (self->textbuf,
@@ -866,15 +888,18 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
  * Typefind support.
  */
 
+static GstStaticCaps smi_caps = GST_STATIC_CAPS ("application/x-subtitle-sami");
 static GstStaticCaps sub_caps = GST_STATIC_CAPS ("application/x-subtitle");
 
 #define SUB_CAPS (gst_static_caps_get (&sub_caps))
+#define SAMI_CAPS (gst_static_caps_get (&smi_caps))
 
 static void
 gst_subparse_type_find (GstTypeFind * tf, gpointer private)
 {
-  const guint8 *data;
   GstSubParseFormat format;
+  const guint8 *data;
+  GstCaps *caps;
   gchar *str;
 
   if (!(data = gst_type_find_peek (tf, 0, 36)))
@@ -888,26 +913,34 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
   switch (format) {
     case GST_SUB_PARSE_FORMAT_MDVDSUB:
       GST_DEBUG ("MicroDVD format detected");
+      caps = SUB_CAPS;
       break;
     case GST_SUB_PARSE_FORMAT_SUBRIP:
       GST_DEBUG ("SubRip format detected");
+      caps = SUB_CAPS;
       break;
     case GST_SUB_PARSE_FORMAT_MPSUB:
       GST_DEBUG ("MPSub format detected");
+      caps = SUB_CAPS;
       break;
+    case GST_SUB_PARSE_FORMAT_SAMI:
+      GST_DEBUG ("SAMI (time-based) format detected");
+      caps = SAMI_CAPS;
+      break;
+    default:
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
       GST_DEBUG ("no subtitle format detected");
       return;
   }
 
   /* if we're here, it's ok */
-  gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SUB_CAPS);
+  gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
 }
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  static gchar *sub_exts[] = { "srt", "sub", "mpsub", "mdvd", NULL };
+  static gchar *sub_exts[] = { "srt", "sub", "mpsub", "mdvd", "smi", NULL };
 
   GST_DEBUG_CATEGORY_INIT (sub_parse_debug, "subparse", 0, ".sub parser");
 

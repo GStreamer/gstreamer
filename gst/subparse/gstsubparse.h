@@ -30,10 +30,10 @@ G_BEGIN_DECLS
 #define GST_SUBPARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SUBPARSE, GstSubParse))
 #define GST_SUBPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SUBPARSE, GstSubParse))
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_SUBPARSE, GstSubParseClass))
 #define GST_IS_SUBPARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SUBPARSE))
-#define GST_IS_SUBPARSE_CLASS(obj) \
+#define GST_IS_SUBPARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_SUBPARSE))
 
 typedef struct _GstSubParse GstSubParse;
@@ -45,7 +45,8 @@ typedef enum
   GST_SUB_PARSE_FORMAT_UNKNOWN = 0,
   GST_SUB_PARSE_FORMAT_MDVDSUB = 1,
   GST_SUB_PARSE_FORMAT_SUBRIP = 2,
-  GST_SUB_PARSE_FORMAT_MPSUB = 3
+  GST_SUB_PARSE_FORMAT_MPSUB = 3,
+  GST_SUB_PARSE_FORMAT_SAMI = 4
 } GstSubParseFormat;
 
 typedef struct {
@@ -54,6 +55,7 @@ typedef struct {
   guint64  start_time;
   guint64  duration;
   GstSegment *segment;
+  gpointer user_data;
 } ParserState;
 
 typedef gchar* (*Parser) (ParserState *state, const gchar *line);
