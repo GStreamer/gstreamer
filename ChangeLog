@@ -1,3 +1,10 @@
+2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstobject.h:
+	  Add cast to make compiler happy - refcount variable was a gint
+	  in GstObject but is a guint in GObject and g_atomic_int_get()
+	  wants a gint *.
+
 2006-05-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/parse/Makefile.am:

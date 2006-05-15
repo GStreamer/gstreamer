@@ -75,7 +75,7 @@ typedef enum
  *
  * Get the reference count value of the object.
  */
-#define GST_OBJECT_REFCOUNT_VALUE(obj)          g_atomic_int_get (&GST_OBJECT_REFCOUNT(obj))
+#define GST_OBJECT_REFCOUNT_VALUE(obj)          g_atomic_int_get ((gint *) &GST_OBJECT_REFCOUNT(obj))
 
 /* we do a GST_OBJECT_CAST to avoid type checking, better call these
  * function with a valid object! */
