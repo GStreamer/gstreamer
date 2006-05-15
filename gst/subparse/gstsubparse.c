@@ -626,7 +626,8 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
     GST_LOG ("MPSub (time based) format detected");
     return GST_SUB_PARSE_FORMAT_MPSUB;
   }
-  if (xmlStrcasestr ((const xmlChar *) match_str, (xmlChar *) "<SAMI>")) {
+  if (strstr (match_str, "<SAMI>") != NULL ||
+      strstr (match_str, "<sami>") != NULL) {
     GST_LOG ("SAMI (time based) format detected");
     return GST_SUB_PARSE_FORMAT_SAMI;
   }
