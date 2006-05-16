@@ -1,3 +1,9 @@
+2006-05-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/tcp/gsttcp.c: (gst_tcp_socket_read):
+	Return GST_FLOW_UNEXPECTED when we have an eos on the socket so
+	basesrc can do its job correctly.
+
 2006-05-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/alsa/Makefile.am:
