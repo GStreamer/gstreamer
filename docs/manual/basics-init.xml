@@ -30,13 +30,22 @@ int
 main (int   argc,
       char *argv[])
 {
-  guint major, minor, micro;
+  const gchar *nano_str;
+  guint major, minor, micro, nano;
 
   gst_init (&amp;argc, &amp;argv);
 
-  gst_version (&amp;major, &amp;minor, &amp;micro);
-  printf ("This program is linked against GStreamer %d.%d.%d\n",
-          major, minor, micro);
+  gst_version (&amp;major, &amp;minor, &amp;micro, &amp;nano);
+
+  if (nano == 1)
+    nano_str = "(CVS)";
+  else if (nano == 2)
+    nano_str = "(Prerelease)";
+  else
+    nano_str = "";
+
+  printf ("This program is linked against GStreamer %d.%d.%d %s\n",
+          major, minor, micro, nano_str);
 
   return 0;
 }
@@ -80,15 +89,15 @@ main (int   argc,
   GOptionContext *ctx;
   GError *err = NULL;
   GOptionEntry entries[] = {
-    { "silent", 's', 0, G_OPTION_ARG_NONE, &amp;silent, 0,
+    { "silent", 's', 0, G_OPTION_ARG_NONE, &amp;silent,
       "do not output status information", NULL },
-    { "output", 'o', 0, G_OPTION_ARG_STRING, &amp;savefile, 0,
+    { "output", 'o', 0, G_OPTION_ARG_STRING, &amp;savefile,
       "save xml representation of pipeline to FILE and exit", "FILE" },
     { NULL }
   };
 
   ctx = g_option_context_new ("- Your application");
-  g_option_context_add_main_entries (ctx, entries, GETTEXT_PACKAGE);
+  g_option_context_add_main_entries (ctx, entries, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &amp;argc, &amp;argv, &amp;err)) {
     g_print ("Failed to initialize: %s\n", err->message);

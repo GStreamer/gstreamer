@@ -113,7 +113,7 @@ main (int   argc,
     </para>
     <programlisting>
 int
-main (int   argc
+main (int   argc,
       char *argv[])
 {
   GstElement *player;

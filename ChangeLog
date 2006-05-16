@@ -1,3 +1,9 @@
+2006-05-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/basics-bins.xml:
+	* docs/manual/basics-init.xml:
+	  Fix typos and minor errors in sample code (#341856).
+
 2006-05-16  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-qos.txt:
