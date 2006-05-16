@@ -163,10 +163,13 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       /* this is a special ID - don't need it in GStreamer, I think */
       break;
 
-      /* I don't know the exact differences between those... Anyone? */
     case CODEC_ID_H263:
-    case CODEC_ID_H263P:
       caps = GST_FF_VID_CAPS_NEW ("video/x-h263", NULL);
+      break;
+
+    case CODEC_ID_H263P:
+      caps = GST_FF_VID_CAPS_NEW ("video/x-h263", 
+          "variant", G_TYPE_STRING, "h263p", NULL);
       break;
 
     case CODEC_ID_H263I:
