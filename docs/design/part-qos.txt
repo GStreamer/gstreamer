@@ -89,7 +89,7 @@ the upstream element is given as:
 For values 0.0 < DR1 <= 1.0 the upstream element is producing faster than
 real-time. If DR1 is exactly 1.0, the element is running at a perfect speed.
 
-Values DR1 > 1.0 means that the upstream element cannot produce buffers of
+Values DR1 > 1.0 mean that the upstream element cannot produce buffers of
 duration D1 in real-time. It is exactly DR1 that tells the amount of speedup
 we require from upstream to regain real-time performance.
 
@@ -125,38 +125,38 @@ This will effectively result in frame drops.
 The element can even do a better estimation of the next valid timestamp it
 should output.
 
-Indeed, given the element generate a buffer with timestamp B1 that arrived
-in time in the sink but then received a QoS message stating B2 arrived J2
-too late. This means generating B2 took (B2 - J2) - B1 = T1 - T0 = PT1, as 
-given in (3). Given the buffer B2 had a duration D2 and assuming that
-generating a new buffer B3 will take the same amount of processing time,
-a better estimation for B3 would then be:
+Indeed, given the element generated a buffer with timestamp B0 that arrived
+in time in the sink but then received a QoS message stating B1 arrived J1
+too late. This means generating B1 took (B1 - J1) - B0 = T1 - T0 = PT1, as 
+given in (3). Given the buffer B1 had a duration D1 and assuming that
+generating a new buffer B2 will take the same amount of processing time,
+a better estimation for B2 would then be:
 
-  B3 = T1 + D3 * DR2
+  B2 = T1 + D2 * DR1
 
  expanding gives:
 
-  B3 = (B2 - J2) + D3 * (B2 - J2 - B1)
+  B2 = (B1 - J1) + D2 * (B1 - J1 - B0)
                         --------------  
-		             D2
+		             D1
 
- assuming the durations of the frames are equal and thus D2 = D3:
+ assuming the durations of the frames are equal and thus D1 = D2:
 
-  B3 = (B2 - J2) + (B2 - J2 - B1)
+  B2 = (B1 - J1) + (B1 - J1 - B0)
 
-  B3 =  2 * (B2 - J2) - B1
+  B2 =  2 * (B1 - J1) - B0
 
  also:
 
-  B1 = B2 - D2
+  B0 = B1 - D1
 
  so:
 
-  B3 =  2 * (B2 - J2) - (B2 - D2)
+  B2 =  2 * (B1 - J1) - (B1 - D1)
 
 Which yields a more accurate prediction for the next buffer given as:
 
-  B3 =  B2 - 2 * J2 + D2                          (5)
+  B2 =  B1 - 2 * J1 + D1                          (5)
 
 
 Long term correction

@@ -1,3 +1,8 @@
+2006-05-16  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-qos.txt:
+	Fix indexes in formulas to make more sense.
+
 2006-05-15  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_position):
