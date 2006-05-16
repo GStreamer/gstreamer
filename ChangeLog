@@ -1,3 +1,13 @@
+2006-05-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/multichannel.c:
+	(gst_audio_check_channel_positions):
+	  It's okay to have caps with channels=1 and a channel position
+	  different from GST_AUDIO_CHANNEL_POSITION_FRONT_MONO
+	  (deinterleavers might want to keep the position in the caps,
+	  so that they can be re-interleaved again properly later).
+	  Leave check for unexpected 2-channel layouts intact for now.
+
 2006-05-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/tcp/gsttcp.c: (gst_tcp_socket_read):
