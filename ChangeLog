@@ -1,3 +1,10 @@
+2006-05-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	Patch from: Matthieu <matthieu at fluendo dot com>
+
+	* ext/libpng/Makefile.am:
+	Add LIBPNG_CFLAGS.
+
 2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/taglib/gstid3v2mux.cc:
