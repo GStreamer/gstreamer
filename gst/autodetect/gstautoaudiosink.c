@@ -159,6 +159,8 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
   GstMessage *message = NULL;
   GSList *errors = NULL;
   GstBus *bus = gst_bus_new ();
+  gchar *child_name = g_strdup_printf ("%s-actual-sink",
+      GST_OBJECT_NAME (sink));
 
   list = gst_registry_feature_filter (gst_registry_get_default (),
       (GstPluginFeatureFilter) gst_auto_audio_sink_factory_filter, FALSE, sink);
@@ -178,7 +180,7 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
       GstElementFactory *f = GST_ELEMENT_FACTORY (item->data);
       GstElement *el;
 
-      if ((el = gst_element_factory_create (f, "actual-sink"))) {
+      if ((el = gst_element_factory_create (f, child_name))) {
         /* FIXME: no element actually has this property as far as I can tell.
          * also, this is a nasty uncheckable way of supporting something that
          * amounts to being an interface. */
@@ -247,6 +249,7 @@ done:
           ("Failed to find a supported audio sink"));
     }
   }
+  g_free (child_name);
   gst_object_unref (bus);
   gst_plugin_feature_list_free (list);
   g_slist_foreach (errors, (GFunc) gst_mini_object_unref, NULL);

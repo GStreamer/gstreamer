@@ -1,3 +1,19 @@
+2006-05-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/autodetect/gstautoaudiosink.c:
+	(gst_auto_audio_sink_find_best):
+	* gst/autodetect/gstautovideosink.c:
+	(gst_auto_video_sink_find_best):
+	Make the name of the child element be based on the name of the
+	parent, so that debug output is more useful.
+	
+	* gst/id3demux/id3v2frames.c: (find_utf16_bom),
+	(parse_insert_string_field), (parse_split_strings):
+	Rework string parsing to always walk over BOM markers in UTF16
+	strings, using the endianness indicated by the innermost one,
+	then trying the opposite endianness if that fails to convert
+	to valid UTF-8. Fixes #341774
+
 2006-05-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	Patch from: Matthieu <matthieu at fluendo dot com>

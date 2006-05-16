@@ -155,6 +155,8 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
 {
   GstElement *choice = NULL;
   GList *list, *walk;
+  gchar *child_name = g_strdup_printf ("%s-actual-sink",
+      GST_OBJECT_NAME (sink));
 
   list = gst_registry_feature_filter (gst_registry_get_default (),
       (GstPluginFeatureFilter) gst_auto_video_sink_factory_filter, FALSE, sink);
@@ -165,7 +167,7 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
     GstElement *el;
 
     GST_DEBUG_OBJECT (sink, "Trying %s", GST_PLUGIN_FEATURE (f)->name);
-    if ((el = gst_element_factory_create (f, "actual-sink"))) {
+    if ((el = gst_element_factory_create (f, child_name))) {
       GstStateChangeReturn ret;
 
       GST_DEBUG_OBJECT (sink, "Changing state to READY");
@@ -188,6 +190,7 @@ gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
   }
 
 done:
+  g_free (child_name);
   gst_plugin_feature_list_free (list);
 
   return choice;
