@@ -1,3 +1,12 @@
+2006-05-16  Edward Hervey  <edward@fluendo.com>
+
+	* plugins/elements/gstqueue.c: (gst_queue_push_one):
+	The queue was posting a non-needed GST_MESSAGE_ERROR when pushing a
+	buffer returned a fatal error. It should just send an EOS and stop
+	it's task.
+	Upstream elements will then properly receive the GST_FLOW_UNEXPECTED
+	when pushing buffers on the queue and will be able to handle the event.
+
 2006-05-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/basics-bins.xml:
