@@ -1,3 +1,9 @@
+2006-05-16  Edward Hervey  <edward@fluendo.com>
+
+	* ext/libpng/gstpngenc.c: (gst_pngenc_chain): 
+	In snapshot mode, we always return GST_FLOW_UNEXPECTED whatever the
+	return value of gst_pad_push_event().
+
 2006-05-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/autodetect/gstautoaudiosink.c:

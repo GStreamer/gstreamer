@@ -331,10 +331,8 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
     /* send EOS event, since a frame has been pushed out */
     event = gst_event_new_eos ();
 
-    ret = gst_pad_push_event (pngenc->srcpad, event);
-
-    if (!(GST_FLOW_IS_FATAL (ret)))
-      ret = GST_FLOW_UNEXPECTED;
+    gst_pad_push_event (pngenc->srcpad, event);
+    ret = GST_FLOW_UNEXPECTED;
   }
 /*  else if (pngenc->newmedia) { */
 /*     /\* send new media discont *\/ */
