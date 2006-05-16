@@ -56,7 +56,6 @@
 #include "gstalsasink.h"
 
 #include <gst/gst-i18n-plugin.h>
-#include <gst/audio/multichannel.h>
 
 /* elementfactory information */
 static const GstElementDetails gst_alsasink_details =
@@ -311,107 +310,13 @@ if ((err = call) < 0)           \
   goto error;                   \
 } G_STMT_END;
 
-/* we don't have channel mappings for more than this many channels */
-#define GST_ALSA_MAX_CHANNELS 8
-
-static GstStructure *
-get_channel_free_structure (const GstStructure * in_structure)
-{
-  GstStructure *s = gst_structure_copy (in_structure);
-
-  gst_structure_remove_field (s, "channels");
-  return s;
-}
-
-static void
-caps_add_channel_configuration (GstCaps * caps,
-    const GstStructure * in_structure, gint min_channels, gint max_channels)
-{
-  GstAudioChannelPosition pos[8] = {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-    GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-    GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-    GST_AUDIO_CHANNEL_POSITION_LFE,
-    GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
-    GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT
-  };
-  GstStructure *s = NULL;
-  gint c;
-
-  if (min_channels == max_channels) {
-    s = get_channel_free_structure (in_structure);
-    gst_structure_set (s, "channels", G_TYPE_INT, max_channels, NULL);
-    gst_caps_append_structure (caps, s);
-    return;
-  }
-
-  g_assert (min_channels >= 1);
-
-  /* mono and stereo don't need channel configurations */
-  if (min_channels == 2) {
-    s = get_channel_free_structure (in_structure);
-    gst_structure_set (s, "channels", G_TYPE_INT, 2, NULL);
-    gst_caps_append_structure (caps, s);
-  } else if (min_channels == 1 && max_channels >= 2) {
-    s = get_channel_free_structure (in_structure);
-    gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 2, NULL);
-    gst_caps_append_structure (caps, s);
-  }
-
-  /* don't know whether to use 2.1 or 3.0 here - but I suspect
-   * alsa might work around that/fix it somehow. Can we tell alsa
-   * what our channel layout is like? */
-  if (max_channels >= 3) {
-    GstAudioChannelPosition pos_21[3] = {
-      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-      GST_AUDIO_CHANNEL_POSITION_LFE
-    };
-
-    s = get_channel_free_structure (in_structure);
-    gst_structure_set (s, "channels", G_TYPE_INT, 3, NULL);
-    gst_audio_set_channel_positions (s, pos_21);
-    gst_caps_append_structure (caps, s);
-  }
-
-  /* everything else (4, 6, 8 channels) needs a channel layout */
-  for (c = 4; c < 8; c += 2) {
-    if (max_channels >= c) {
-      s = get_channel_free_structure (in_structure);
-      gst_structure_set (s, "channels", G_TYPE_INT, c, NULL);
-      gst_audio_set_channel_positions (s, pos);
-      gst_caps_append_structure (caps, s);
-    }
-  }
-}
-
 static GstCaps *
 gst_alsasink_getcaps (GstBaseSink * bsink)
 {
-  snd_pcm_format_mask_t *mask;
-  snd_pcm_hw_params_t *hw_params;
   GstElementClass *element_class;
   GstPadTemplate *pad_template;
   GstAlsaSink *sink = GST_ALSA_SINK (bsink);
-  GstCaps *tmpl_caps;
-  GstCaps *caps = NULL;
-  GstStructure *s;
-  guint min, max;
-  gint i, err, width, dir;
-  gint min_channels, max_channels;
-  gint min_rate, max_rate;
-  guint bits = 0;
-  static const int audio_fmts[] = {
-    SND_PCM_FORMAT_U8, SND_PCM_FORMAT_S8,
-    SND_PCM_FORMAT_S16, SND_PCM_FORMAT_U16,
-    /*SND_PCM_FORMAT_S24, SND_PCM_FORMAT_U24, */
-    SND_PCM_FORMAT_S32, SND_PCM_FORMAT_U32
-  };
-  static const guint audio_bits[] = {
-    8, 8, 16, 16, 32, 32
-  };
+  GstCaps *caps;
 
   if (sink->handle == NULL) {
     GST_DEBUG_OBJECT (sink, "device not open, using template caps");
@@ -419,142 +324,24 @@ gst_alsasink_getcaps (GstBaseSink * bsink)
   }
 
   if (sink->cached_caps) {
-    GST_DEBUG_OBJECT (sink, "Returning cached caps %" GST_PTR_FORMAT,
-        sink->cached_caps);
+    GST_LOG_OBJECT (sink, "Returning cached caps");
     return gst_caps_ref (sink->cached_caps);
   }
 
-  snd_pcm_hw_params_alloca (&hw_params);
-  CHECK (snd_pcm_hw_params_any (sink->handle, hw_params), error);
-
-  /* === probe supported channels === */
-  GST_LOG_OBJECT (sink, "probing channels ...");
-  CHECK (snd_pcm_hw_params_get_channels_min (hw_params, &min), min_chan_error);
-  CHECK (snd_pcm_hw_params_get_channels_max (hw_params, &max), max_chan_error);
-
-  min_channels = min;
-  max_channels = max;
-
-  if (min_channels < 0) {       /* hmm? min and max are unsigned */
-    min_channels = 1;
-    max_channels = GST_ALSA_MAX_CHANNELS;
-  } else if (max_channels < 0) {        /* hmm? min and max are unsigned */
-    max_channels = GST_ALSA_MAX_CHANNELS;
-  }
-
-  if (min_channels > max_channels) {
-    gint temp;
-
-    GST_WARNING_OBJECT (sink, "minimum channels > maximum channels (%d > %d), "
-        "please fix your soundcard drivers", min, max);
-    temp = min_channels;
-    min_channels = max_channels;
-    max_channels = temp;
-  }
-
-  min_channels = MAX (min_channels, 1);
-  max_channels = MIN (GST_ALSA_MAX_CHANNELS, max_channels);
-
-  GST_LOG_OBJECT (sink, "Min. channels = %d (%d)", min_channels, min);
-  GST_LOG_OBJECT (sink, "Max. channels = %d (%d)", max_channels, max);
-
-  /* === probe supported sample rates === */
-  GST_LOG_OBJECT (sink, "probing sample rates ...");
-  CHECK (snd_pcm_hw_params_get_rate_min (hw_params, &min, &dir), min_rate_err);
-  CHECK (snd_pcm_hw_params_get_rate_max (hw_params, &max, &dir), max_rate_err);
-
-  min_rate = min;
-  max_rate = max;
-
-  if (min_rate < 4000)
-    min_rate = 4000;            /* random 'sensible minimum' */
-
-  if (max_rate <= 0)
-    max_rate = G_MAXINT;        /* or maybe just use 192400 or so? */
-  else if (max_rate > 0 && max_rate < 4000)
-    max_rate = MAX (4000, min_rate);
-
-  GST_LOG_OBJECT (sink, "Min. rate = %d (%d)", min_rate, min);
-  GST_LOG_OBJECT (sink, "Max. rate = %d (%d)", max_rate, max);
-
-  /* === probe supported sample widths === */
-  snd_pcm_format_mask_alloca (&mask);
-  snd_pcm_hw_params_get_format_mask (hw_params, mask);
-  g_assert (G_N_ELEMENTS (audio_fmts) == G_N_ELEMENTS (audio_bits));
-  for (i = 0; i < G_N_ELEMENTS (audio_fmts); i++) {
-    if (snd_pcm_format_mask_test (mask, audio_fmts[i])) {
-      bits |= audio_bits[i];
-    }
-  }
-  GST_LOG_OBJECT (sink, "Bits = 0x%08x", bits);
-
-  /* fill caps according to capabilities gathered above */
   element_class = GST_ELEMENT_GET_CLASS (sink);
   pad_template = gst_element_class_get_pad_template (element_class, "sink");
-
   g_return_val_if_fail (pad_template != NULL, NULL);
 
-  tmpl_caps = gst_pad_template_get_caps (pad_template);
+  caps = gst_alsa_probe_supported_formats (GST_OBJECT (sink), sink->handle,
+      gst_pad_template_get_caps (pad_template));
 
-  caps = gst_caps_new_empty ();
-
-  for (i = 0; i < gst_caps_get_size (tmpl_caps); ++i) {
-    s = gst_caps_get_structure (tmpl_caps, i);
-    gst_structure_get_int (s, "width", &width);
-    /* TODO: filter signed/unsigned */
-    if (bits & width) {
-      caps_add_channel_configuration (caps, s, min_channels, max_channels);
-    } else {
-      GST_LOG_OBJECT (sink, "width = %d unsupported", width);
-    }
+  if (caps) {
+    sink->cached_caps = gst_caps_ref (caps);
   }
 
-  for (i = 0; i < gst_caps_get_size (caps); ++i) {
-    s = gst_caps_get_structure (caps, i);
-    if (min_rate == max_rate) {
-      gst_structure_set (s, "rate", G_TYPE_INT, min_rate, NULL);
-    } else {
-      gst_structure_set (s, "rate", GST_TYPE_INT_RANGE,
-          min_rate, max_rate, NULL);
-    }
-  }
-
-  sink->cached_caps = gst_caps_ref (caps);
-
-  GST_DEBUG_OBJECT (sink, "returning caps %" GST_PTR_FORMAT, caps);
+  GST_INFO_OBJECT (sink, "returning caps %" GST_PTR_FORMAT, caps);
 
   return caps;
-
-error:
-  {
-    GST_ERROR_OBJECT (sink, "failed to query alsasink formats: %s",
-        snd_strerror (err));
-    return NULL;
-  }
-min_chan_error:
-  {
-    GST_ERROR_OBJECT (sink, "failed to query minimum channel count: %s",
-        snd_strerror (err));
-    return NULL;
-  }
-max_chan_error:
-  {
-    GST_ERROR_OBJECT (sink, "failed to query maximum channel count: %s",
-        snd_strerror (err));
-    return NULL;
-  }
-min_rate_err:
-  {
-    GST_ERROR_OBJECT (sink, "failed to query minimum sample rate: %s",
-        snd_strerror (err));
-    return NULL;
-  }
-max_rate_err:
-  {
-    GST_ERROR_OBJECT (sink, "failed to query maximum sample rate: %s",
-        snd_strerror (err));
-    return NULL;
-  }
 }
 
 static int
@@ -566,8 +353,8 @@ set_hwparams (GstAlsaSink * alsa)
 
   snd_pcm_hw_params_alloca (&params);
 
-  GST_DEBUG_OBJECT (alsa, "Negotiating to %d channels @ %d Hz (format = %d)",
-      alsa->channels, alsa->rate, alsa->format);
+  GST_DEBUG_OBJECT (alsa, "Negotiating to %d channels @ %d Hz (format = %s)",
+      alsa->channels, alsa->rate, snd_pcm_format_name (alsa->format));
 
   /* choose all parameters */
   CHECK (snd_pcm_hw_params_any (alsa->handle, params), no_config);

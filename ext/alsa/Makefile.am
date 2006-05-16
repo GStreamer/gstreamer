@@ -8,7 +8,8 @@ libgstalsa_la_SOURCES = \
 	gstalsamixeroptions.c \
 	gstalsaplugin.c \
 	gstalsasink.c 	\
-	gstalsasrc.c
+	gstalsasrc.c \
+	gstalsa.c
 
 libgstalsa_la_CFLAGS = $(GST_CFLAGS) $(ALSA_CFLAGS)
 libgstalsa_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

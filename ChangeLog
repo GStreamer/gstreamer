@@ -1,3 +1,21 @@
+2006-05-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/alsa/Makefile.am:
+	* ext/alsa/gstalsa.c: (gst_alsa_detect_rates),
+	(gst_alsa_detect_formats), (get_channel_free_structure),
+	(caps_add_channel_configuration), (gst_alsa_detect_channels),
+	(gst_alsa_probe_supported_formats):
+	* ext/alsa/gstalsa.h:
+	* ext/alsa/gstalsasink.c: (gst_alsasink_getcaps):
+	  Refactor and improve caps probing code: probe signedness
+	  when we probe the supported formats/widths; set endianness
+	  to the one we actually probed for (ie. cpu endianness).
+	  
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_init), (gst_alsasrc_getcaps),
+	(gst_alsasrc_close):
+	* ext/alsa/gstalsasrc.h:
+	  Implement caps probing for alsasrc.
+
 2006-05-15  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoradec.c: (gst_theora_dec_reset),

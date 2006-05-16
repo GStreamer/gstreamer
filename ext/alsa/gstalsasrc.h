@@ -29,11 +29,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ALSA_SRC          (gst_alsasrc_get_type())
-#define GST_ALSA_SRC(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_SRC,GstAlsaSrc))
-#define GST_ALSA_SRC_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_SRC,GstAlsaSrcClass))
-#define GST_IS_ALSA_SRC(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_SRC))
-#define GST_IS_ALSA_SRC_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_SRC))
+#define GST_TYPE_ALSA_SRC            (gst_alsasrc_get_type())
+#define GST_ALSA_SRC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_SRC,GstAlsaSrc))
+#define GST_ALSA_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_SRC,GstAlsaSrcClass))
+#define GST_IS_ALSA_SRC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_SRC))
+#define GST_IS_ALSA_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_SRC))
 
 typedef struct _GstAlsaSrc GstAlsaSrc;
 typedef struct _GstAlsaSrcClass GstAlsaSrcClass;
@@ -51,6 +51,8 @@ struct _GstAlsaSrc {
   snd_pcm_t             *handle;
   snd_pcm_hw_params_t   *hwparams;
   snd_pcm_sw_params_t   *swparams;
+
+  GstCaps               *cached_caps;
 
   snd_pcm_access_t      access;
   snd_pcm_format_t      format;

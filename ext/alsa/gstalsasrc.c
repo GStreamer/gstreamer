@@ -236,12 +236,7 @@ gst_alsasrc_init (GstAlsaSrc * alsasrc, GstAlsaSrcClass * g_class)
   GST_DEBUG_OBJECT (alsasrc, "initializing");
 
   alsasrc->device = g_strdup (DEFAULT_PROP_DEVICE);
-}
-
-static GstCaps *
-gst_alsasrc_getcaps (GstBaseSrc * bsrc)
-{
-  return NULL;
+  alsasrc->cached_caps = NULL;
 }
 
 #define CHECK(call, error) \
@@ -249,6 +244,43 @@ G_STMT_START {                  \
 if ((err = call) < 0)           \
   goto error;                   \
 } G_STMT_END;
+
+
+static GstCaps *
+gst_alsasrc_getcaps (GstBaseSrc * bsrc)
+{
+  GstElementClass *element_class;
+  GstPadTemplate *pad_template;
+  GstAlsaSrc *src;
+  GstCaps *caps;
+
+  src = GST_ALSA_SRC (bsrc);
+
+  if (src->handle == NULL) {
+    GST_DEBUG_OBJECT (src, "device not open, using template caps");
+    return NULL;                /* base class will get template caps for us */
+  }
+
+  if (src->cached_caps) {
+    GST_LOG_OBJECT (src, "Returning cached caps");
+    return gst_caps_ref (src->cached_caps);
+  }
+
+  element_class = GST_ELEMENT_GET_CLASS (src);
+  pad_template = gst_element_class_get_pad_template (element_class, "src");
+  g_return_val_if_fail (pad_template != NULL, NULL);
+
+  caps = gst_alsa_probe_supported_formats (GST_OBJECT (src), src->handle,
+      gst_pad_template_get_caps (pad_template));
+
+  if (caps) {
+    src->cached_caps = gst_caps_ref (caps);
+  }
+
+  GST_INFO_OBJECT (src, "returning caps %" GST_PTR_FORMAT, caps);
+
+  return caps;
+}
 
 static int
 set_hwparams (GstAlsaSrc * alsa)
@@ -637,6 +669,8 @@ gst_alsasrc_close (GstAudioSrc * asrc)
     gst_alsa_mixer_free (alsa->mixer);
     alsa->mixer = NULL;
   }
+
+  gst_caps_replace (&alsa->cached_caps, NULL);
 
   return TRUE;
 }
