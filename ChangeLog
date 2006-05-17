@@ -1,3 +1,10 @@
+2006-05-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_chain):
+	  Fix crash when outputting debugging information for certain
+	  pictures (always good to use the right struct member for
+	  the number of records in an array).
+
 2006-05-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Jindrich Makovicka  <jindrich.makivicka at itonis tv>
