@@ -3,7 +3,8 @@
 	* gst/gstregistryxml.c: (read_string), (load_pad_template),
 	(load_feature), (load_plugin):
 	Allow empty strings for some of the plugin fields so we don't 
-	drop valid plugin entries that were written out correctly.
+	drop valid plugin entries that were written out correctly
+	(Fixes #341479)
 
 2006-05-17  Sebastien Moutte  <sebastien@moutte.net>
 	
