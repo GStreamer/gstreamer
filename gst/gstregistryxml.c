@@ -107,14 +107,21 @@ add_to_char_array (gchar *** array, gchar * value)
 
 /* read a string and copy it into the given location */
 static gboolean
-read_string (xmlTextReaderPtr reader, gchar ** write_to)
+read_string (xmlTextReaderPtr reader, gchar ** write_to, gboolean allow_blank)
 {
   int depth = xmlTextReaderDepth (reader);
   gboolean found = FALSE;
 
   while (xmlTextReaderRead (reader) == 1) {
-    if (xmlTextReaderDepth (reader) == depth)
+    if (xmlTextReaderDepth (reader) == depth) {
+      if (allow_blank && !found &&
+          xmlTextReaderNodeType (reader) == XML_READER_TYPE_END_ELEMENT) {
+        /* Allow blank strings */
+        *write_to = g_strdup ("");
+        found = TRUE;
+      }
       return found;
+    }
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_TEXT) {
       if (found)
         return FALSE;
@@ -213,13 +220,13 @@ load_pad_template (xmlTextReaderPtr reader)
       const gchar *tag = (gchar *) xmlTextReaderConstName (reader);
 
       if (g_str_equal (tag, "nametemplate")) {
-        read_string (reader, &name);
+        read_string (reader, &name, FALSE);
       } else if (g_str_equal (tag, "direction")) {
         read_enum (reader, GST_TYPE_PAD_DIRECTION, &direction);
       } else if (g_str_equal (tag, "presence")) {
         read_enum (reader, GST_TYPE_PAD_PRESENCE, &presence);
       } else if (!strncmp (tag, "caps", 4)) {
-        read_string (reader, &caps_str);
+        read_string (reader, &caps_str, FALSE);
       }
     }
   }
@@ -276,7 +283,7 @@ load_feature (xmlTextReaderPtr reader)
       const gchar *tag = (gchar *) xmlTextReaderConstName (reader);
 
       if (g_str_equal (tag, "name"))
-        read_string (reader, &feature->name);
+        read_string (reader, &feature->name, FALSE);
       if (g_str_equal (tag, "rank"))
         read_uint (reader, &feature->rank);
       if (GST_IS_ELEMENT_FACTORY (feature)) {
@@ -285,19 +292,19 @@ load_feature (xmlTextReaderPtr reader)
         if (g_str_equal (tag, "longname")) {
           int ret;
 
-          ret = read_string (reader, &factory->details.longname);
+          ret = read_string (reader, &factory->details.longname, TRUE);
           GST_DEBUG ("longname ret=%d, name=%s",
               ret, factory->details.longname);
         } else if (g_str_equal (tag, "class")) {
-          read_string (reader, &factory->details.klass);
+          read_string (reader, &factory->details.klass, TRUE);
         } else if (g_str_equal (tag, "description")) {
-          read_string (reader, &factory->details.description);
+          read_string (reader, &factory->details.description, TRUE);
         } else if (g_str_equal (tag, "author")) {
-          read_string (reader, &factory->details.author);
+          read_string (reader, &factory->details.author, TRUE);
         } else if (g_str_equal (tag, "uri_type")) {
           gchar *s = NULL;
 
-          if (read_string (reader, &s)) {
+          if (read_string (reader, &s, FALSE)) {
             if (g_ascii_strncasecmp (s, "sink", 4) == 0) {
               factory->uri_type = GST_URI_SINK;
             } else if (g_ascii_strncasecmp (s, "source", 5) == 0) {
@@ -308,12 +315,12 @@ load_feature (xmlTextReaderPtr reader)
         } else if (g_str_equal (tag, "uri_protocol")) {
           gchar *s = NULL;
 
-          if (read_string (reader, &s))
+          if (read_string (reader, &s, FALSE))
             add_to_char_array (&factory->uri_protocols, s);
         } else if (g_str_equal (tag, "interface")) {
           gchar *s = NULL;
 
-          if (read_string (reader, &s)) {
+          if (read_string (reader, &s, FALSE)) {
             __gst_element_factory_add_interface (factory, s);
             /* add_interface strdup's s */
             g_free (s);
@@ -334,12 +341,12 @@ load_feature (xmlTextReaderPtr reader)
         if (g_str_equal (tag, "extension")) {
           gchar *s = NULL;
 
-          if (read_string (reader, &s))
+          if (read_string (reader, &s, TRUE))
             add_to_char_array (&factory->extensions, s);
         } else if (g_str_equal (tag, "caps")) {
           gchar *s = NULL;
 
-          if (read_string (reader, &s)) {
+          if (read_string (reader, &s, FALSE)) {
             factory->caps = gst_caps_from_string (s);
             g_free (s);
           }
@@ -348,7 +355,7 @@ load_feature (xmlTextReaderPtr reader)
         GstIndexFactory *factory = GST_INDEX_FACTORY (feature);
 
         if (g_str_equal (tag, "longdesc"))
-          read_string (reader, &factory->longdesc);
+          read_string (reader, &factory->longdesc, TRUE);
       }
     }
   }
@@ -381,44 +388,56 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
       if (g_str_equal (tag, "name")) {
         int ret;
 
-        ret = read_string (reader, &plugin->desc.name);
+        ret = read_string (reader, &plugin->desc.name, FALSE);
         GST_DEBUG ("name ret=%d, name=%s", ret, plugin->desc.name);
         if (!ret)
           break;
       } else if (g_str_equal (tag, "description")) {
-        if (!read_string (reader, &plugin->desc.description))
+        if (!read_string (reader, &plugin->desc.description, TRUE)) {
+          GST_DEBUG ("description field was invalid in registry");
           break;
+        }
         GST_DEBUG ("description %s", plugin->desc.description);
       } else if (g_str_equal (tag, "filename")) {
-        if (!read_string (reader, &plugin->filename))
+        if (!read_string (reader, &plugin->filename, FALSE)) {
+          GST_DEBUG ("filename field was invalid in registry");
           break;
+        }
         GST_DEBUG ("filename %s", plugin->filename);
         plugin->basename = g_path_get_basename (plugin->filename);
       } else if (g_str_equal (tag, "version")) {
-        if (!read_string (reader, &plugin->desc.version))
+        if (!read_string (reader, &plugin->desc.version, TRUE)) {
+          GST_DEBUG ("version field was invalid in registry");
           break;
+        }
         GST_DEBUG ("version %s", plugin->desc.version);
       } else if (g_str_equal (tag, "license")) {
-        if (!read_string (reader, &plugin->desc.license))
+        if (!read_string (reader, &plugin->desc.license, TRUE)) {
+          GST_DEBUG ("license field was invalid in registry");
           break;
+        }
         GST_DEBUG ("license %s", plugin->desc.license);
       } else if (g_str_equal (tag, "source")) {
-        if (!read_string (reader, &plugin->desc.source))
+        if (!read_string (reader, &plugin->desc.source, TRUE)) {
+          GST_DEBUG ("source field was invalid in registry");
           break;
+        }
         GST_DEBUG ("source %s", plugin->desc.source);
       } else if (g_str_equal (tag, "package")) {
-        if (!read_string (reader, &plugin->desc.package))
+        if (!read_string (reader, &plugin->desc.package, TRUE)) {
+          GST_DEBUG ("package field was invalid in registry");
           break;
+        }
         GST_DEBUG ("package %s", plugin->desc.package);
       } else if (g_str_equal (tag, "origin")) {
-        if (!read_string (reader, &plugin->desc.origin)) {
+        if (!read_string (reader, &plugin->desc.origin, TRUE)) {
           GST_DEBUG ("failed to read origin");
           break;
         }
       } else if (g_str_equal (tag, "m32p")) {
         char *s;
 
-        if (!read_string (reader, &s)) {
+        if (!read_string (reader, &s, FALSE)) {
           GST_DEBUG ("failed to read mtime");
           break;
         }
