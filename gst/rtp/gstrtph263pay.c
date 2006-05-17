@@ -158,8 +158,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "payload = (int) [ 96, 127 ], "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"")
+        "payload = (int) 34, "
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263\"")
     );
 
 static void gst_rtp_h263_pay_class_init (GstRtpH263PayClass * klass);
