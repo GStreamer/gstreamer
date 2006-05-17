@@ -1,3 +1,9 @@
+2006-05-17  Edward Hervey  <edward@fluendo.com>
+
+	* plugins/elements/gstqueue.c: (gst_queue_push_one):
+	The queue is not responsible for pushing an EOS when receiving a fatal
+	flow error. It's up to the real element driving the pipeline to do that.
+
 2006-05-16  Edward Hervey  <edward@fluendo.com>
 
 	* plugins/elements/gstqueue.c: (gst_queue_push_one):

@@ -777,8 +777,6 @@ gst_queue_push_one (GstQueue * queue)
       flowname = gst_flow_get_name (result);
 
       queue->srcresult = result;
-      if (GST_FLOW_IS_FATAL (result))
-        gst_pad_push_event (queue->srcpad, gst_event_new_eos ());
 
       GST_DEBUG_OBJECT (queue, "pausing queue, reason %s", flowname);
       gst_pad_pause_task (queue->srcpad);
