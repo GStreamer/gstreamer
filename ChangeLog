@@ -1,3 +1,11 @@
+2006-05-17  Edward Hervey  <edward@fluendo.com>
+
+	* ext/faad/gstfaad.c: (gst_faad_chain): 
+	There's no guarantee that caps was set to something, and if it did, the
+	function called to fill that variable actually sets the caps on the
+	sourcpad, so we call gst_pad_alloc_buffer_and_set_caps() using
+	GST_PAD_CAPS(faad->srcpad).
+
 2006-05-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Young-Ho Cha  <ganadist chollian net>

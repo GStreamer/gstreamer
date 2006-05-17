@@ -1261,8 +1261,8 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 
         /* note: info.samples is total samples, not per channel */
         ret =
-            gst_pad_alloc_buffer_and_set_caps (faad->srcpad, 0, bufsize, caps,
-            &outbuf);
+            gst_pad_alloc_buffer_and_set_caps (faad->srcpad, 0, bufsize,
+            GST_PAD_CAPS (faad->srcpad), &outbuf);
         if (ret != GST_FLOW_OK)
           goto out;
 
