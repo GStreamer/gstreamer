@@ -38,9 +38,9 @@ static GstStateChangeReturn gst_ebml_read_change_state (GstElement * element,
 
 /* convenience functions */
 static gboolean gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size,
-    GstBuffer ** p_buf);
+    GstBuffer ** p_buf, guint8 ** bytes);
 static gboolean gst_ebml_read_pull_bytes (GstEbmlRead * ebml, guint size,
-    GstBuffer ** p_buf);
+    GstBuffer ** p_buf, guint8 ** bytes);
 
 
 static GstElementClass *parent_class;   /* NULL */
@@ -163,7 +163,8 @@ gst_ebml_read_element_level_up (GstEbmlRead * ebml)
  * Calls pull_range for (offset,size) without advancing our offset
  */
 static gboolean
-gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf)
+gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf,
+    guint8 ** bytes)
 {
   GstFlowReturn ret;
 
@@ -175,8 +176,12 @@ gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf)
 
     if (cache_offset <= ebml->offset &&
         (ebml->offset + size) < (cache_offset + cache_size)) {
-      *p_buf = gst_buffer_create_sub (ebml->cached_buffer,
-          ebml->offset - cache_offset, size);
+      if (p_buf)
+        *p_buf = gst_buffer_create_sub (ebml->cached_buffer,
+            ebml->offset - cache_offset, size);
+      if (bytes)
+        *bytes =
+            GST_BUFFER_DATA (ebml->cached_buffer) + ebml->offset - cache_offset;
       return TRUE;
     }
     gst_buffer_unref (ebml->cached_buffer);
@@ -186,9 +191,15 @@ gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf)
   if (gst_pad_pull_range (ebml->sinkpad, ebml->offset, MAX (size, 64 * 1024),
           &ebml->cached_buffer) == GST_FLOW_OK &&
       GST_BUFFER_SIZE (ebml->cached_buffer) >= size) {
-    *p_buf = gst_buffer_create_sub (ebml->cached_buffer, 0, size);
+    if (p_buf)
+      *p_buf = gst_buffer_create_sub (ebml->cached_buffer, 0, size);
+    if (bytes)
+      *bytes = GST_BUFFER_DATA (ebml->cached_buffer);
     return TRUE;
   }
+
+  if (!p_buf)
+    return FALSE;
 
   ret = gst_pad_pull_range (ebml->sinkpad, ebml->offset, size, p_buf);
   if (ret != GST_FLOW_OK) {
@@ -202,8 +213,13 @@ gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf)
         size, GST_BUFFER_SIZE (*p_buf));
     gst_buffer_unref (*p_buf);
     *p_buf = NULL;
+    if (bytes)
+      *bytes = NULL;
     return FALSE;
   }
+
+  if (bytes)
+    *bytes = GST_BUFFER_DATA (*p_buf);
 
   return TRUE;
 }
@@ -212,9 +228,10 @@ gst_ebml_read_peek_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf)
  * Calls pull_range for (offset,size) and advances our offset by size
  */
 static gboolean
-gst_ebml_read_pull_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf)
+gst_ebml_read_pull_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf,
+    guint8 ** bytes)
 {
-  if (!gst_ebml_read_peek_bytes (ebml, size, p_buf))
+  if (!gst_ebml_read_peek_bytes (ebml, size, p_buf, bytes))
     return FALSE;
 
   ebml->offset += size;
@@ -229,16 +246,15 @@ gst_ebml_read_pull_bytes (GstEbmlRead * ebml, guint size, GstBuffer ** p_buf)
 static gboolean
 gst_ebml_read_element_id (GstEbmlRead * ebml, guint32 * id, guint * level_up)
 {
-  GstBuffer *buf;
+  guint8 *buf;
   gint len_mask = 0x80, read = 1, n = 1;
   guint32 total;
   guint8 b;
 
-  if (!gst_ebml_read_peek_bytes (ebml, 1, &buf))
+  if (!gst_ebml_read_peek_bytes (ebml, 1, NULL, &buf))
     return FALSE;
 
-  b = GST_READ_UINT8 (GST_BUFFER_DATA (buf));
-  gst_buffer_unref (buf);
+  b = GST_READ_UINT8 (buf);
 
   total = (guint32) b;
 
@@ -255,11 +271,11 @@ gst_ebml_read_element_id (GstEbmlRead * ebml, guint32 * id, guint * level_up)
     return FALSE;
   }
 
-  if (!gst_ebml_read_peek_bytes (ebml, read, &buf))
+  if (!gst_ebml_read_peek_bytes (ebml, read, NULL, &buf))
     return FALSE;
 
   while (n < read) {
-    b = GST_READ_UINT8 (GST_BUFFER_DATA (buf) + n);
+    b = GST_READ_UINT8 (buf + n);
     total = (total << 8) | b;
     ++n;
   }
@@ -269,8 +285,6 @@ gst_ebml_read_element_id (GstEbmlRead * ebml, guint32 * id, guint * level_up)
   /* level */
   if (level_up)
     *level_up = gst_ebml_read_element_level_up (ebml);
-
-  gst_buffer_unref (buf);
 
   ebml->offset += read;
   return TRUE;
@@ -284,16 +298,15 @@ gst_ebml_read_element_id (GstEbmlRead * ebml, guint32 * id, guint * level_up)
 static gint
 gst_ebml_read_element_length (GstEbmlRead * ebml, guint64 * length)
 {
-  GstBuffer *buf;
+  guint8 *buf;
   gint len_mask = 0x80, read = 1, n = 1, num_ffs = 0;
   guint64 total;
   guint8 b;
 
-  if (!gst_ebml_read_peek_bytes (ebml, 1, &buf))
+  if (!gst_ebml_read_peek_bytes (ebml, 1, NULL, &buf))
     return -1;
 
-  b = GST_READ_UINT8 (GST_BUFFER_DATA (buf));
-  gst_buffer_unref (buf);
+  b = GST_READ_UINT8 (buf);
 
   total = (guint64) b;
 
@@ -313,18 +326,17 @@ gst_ebml_read_element_length (GstEbmlRead * ebml, guint64 * length)
   if ((total &= (len_mask - 1)) == len_mask - 1)
     num_ffs++;
 
-  if (!gst_ebml_read_peek_bytes (ebml, read, &buf))
+  if (!gst_ebml_read_peek_bytes (ebml, read, NULL, &buf))
     return -1;
 
   while (n < read) {
-    guint8 b = GST_READ_UINT8 (GST_BUFFER_DATA (buf) + n);
+    guint8 b = GST_READ_UINT8 (buf + n);
 
     if (b == 0xff)
       num_ffs++;
     total = (total << 8) | b;
     ++n;
   }
-  gst_buffer_unref (buf);
 
   if (read == num_ffs)
     *length = G_MAXUINT64;
@@ -433,8 +445,40 @@ gst_ebml_read_buffer (GstEbmlRead * ebml, guint32 * id, GstBuffer ** buf)
   }
 
   *buf = NULL;
-  if (!gst_ebml_read_pull_bytes (ebml, (guint) length, buf))
+  if (!gst_ebml_read_pull_bytes (ebml, (guint) length, buf, NULL))
     return FALSE;
+
+  return TRUE;
+}
+
+/*
+ * Read the next element, return a pointer to it and its size.
+ */
+
+static gboolean
+gst_ebml_read_bytes (GstEbmlRead * ebml, guint32 * id, guint8 ** data,
+    guint * size)
+{
+  guint64 length;
+
+  *size = 0;
+
+  if (!gst_ebml_read_element_id (ebml, id, NULL))
+    return FALSE;
+
+  if (gst_ebml_read_element_length (ebml, &length) < 0)
+    return FALSE;
+
+  if (length == 0) {
+    *data = NULL;
+    return TRUE;
+  }
+
+  *data = NULL;
+  if (!gst_ebml_read_pull_bytes (ebml, (guint) length, NULL, data))
+    return FALSE;
+
+  *size = (guint) length;
 
   return TRUE;
 }
@@ -446,29 +490,24 @@ gst_ebml_read_buffer (GstEbmlRead * ebml, guint32 * id, GstBuffer ** buf)
 gboolean
 gst_ebml_read_uint (GstEbmlRead * ebml, guint32 * id, guint64 * num)
 {
-  GstBuffer *buf;
   guint8 *data;
   guint size;
 
-  if (!gst_ebml_read_buffer (ebml, id, &buf))
+  if (!gst_ebml_read_bytes (ebml, id, &data, &size))
     return FALSE;
 
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
   if (size < 1 || size > 8) {
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
         ("Invalid integer element size %d at position %llu (0x%llu)",
-            size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
-    gst_buffer_unref (buf);
+            size, ebml->offset - size, ebml->offset - size));
     return FALSE;
   }
   *num = 0;
   while (size > 0) {
-    *num = (*num << 8) | data[GST_BUFFER_SIZE (buf) - size];
+    *num = (*num << 8) | *data;
     size--;
+    data++;
   }
-
-  gst_buffer_unref (buf);
 
   return TRUE;
 }
@@ -480,42 +519,38 @@ gst_ebml_read_uint (GstEbmlRead * ebml, guint32 * id, guint64 * num)
 gboolean
 gst_ebml_read_sint (GstEbmlRead * ebml, guint32 * id, gint64 * num)
 {
-  GstBuffer *buf;
   guint8 *data;
-  guint size, negative = 0, n = 0;
+  guint size;
+  gboolean negative = 0;
 
-  if (!gst_ebml_read_buffer (ebml, id, &buf))
+  if (!gst_ebml_read_bytes (ebml, id, &data, &size))
     return FALSE;
 
-  size = GST_BUFFER_SIZE (buf);
   if (size < 1 || size > 8) {
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
         ("Invalid integer element size %d at position %llu (0x%llx)",
-            size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
-    gst_buffer_unref (buf);
+            size, ebml->offset - size, ebml->offset - size));
     return FALSE;
   }
 
-  buf = gst_buffer_make_writable (buf);
-
-  data = GST_BUFFER_DATA (buf);
-
-  if (data[0] & 0x80) {
+  *num = 0;
+  if (*data & 0x80) {
     negative = 1;
-    data[0] &= ~0x80;
+    *num = *data & ~0x80;
+    size--;
+    data++;
   }
 
-  *num = 0;
-  while (n < size) {
-    *num = (*num << 8) | data[n++];
+  while (size > 0) {
+    *num = (*num << 8) | *data;
+    size--;
+    data++;
   }
 
   /* make signed */
   if (negative) {
     *num = 0 - *num;
   }
-
-  gst_buffer_unref (buf);
 
   return TRUE;
 }
@@ -527,28 +562,22 @@ gst_ebml_read_sint (GstEbmlRead * ebml, guint32 * id, gint64 * num)
 gboolean
 gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
 {
-  GstBuffer *buf;
   guint8 *data;
   guint size;
 
-  if (!gst_ebml_read_buffer (ebml, id, &buf))
+  if (!gst_ebml_read_bytes (ebml, id, &data, &size))
     return FALSE;
-
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
 
   if (size != 4 && size != 8 && size != 10) {
     GST_ELEMENT_ERROR (ebml, STREAM, DEMUX, (NULL),
         ("Invalid float element size %d at position %llu (0x%llx)",
-            size, GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET (buf)));
-    gst_buffer_unref (buf);
+            size, ebml->offset - size, ebml->offset - size));
     return FALSE;
   }
 
   if (size == 10) {
     GST_ELEMENT_ERROR (ebml, CORE, NOT_IMPLEMENTED, (NULL),
         ("FIXME! 10-byte floats unimplemented"));
-    gst_buffer_unref (buf);
     return FALSE;
   }
 
@@ -580,8 +609,6 @@ gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
     *num = d;
   }
 
-  gst_buffer_unref (buf);
-
   return TRUE;
 }
 
@@ -592,16 +619,15 @@ gst_ebml_read_float (GstEbmlRead * ebml, guint32 * id, gdouble * num)
 gboolean
 gst_ebml_read_ascii (GstEbmlRead * ebml, guint32 * id, gchar ** str)
 {
-  GstBuffer *buf;
+  guint8 *data;
+  guint size;
 
-  if (!gst_ebml_read_buffer (ebml, id, &buf))
+  if (!gst_ebml_read_bytes (ebml, id, &data, &size))
     return FALSE;
 
-  *str = g_malloc (GST_BUFFER_SIZE (buf) + 1);
-  memcpy (*str, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-  (*str)[GST_BUFFER_SIZE (buf)] = '\0';
-
-  gst_buffer_unref (buf);
+  *str = g_malloc (size + 1);
+  memcpy (*str, data, size);
+  (*str)[size] = '\0';
 
   return TRUE;
 }
@@ -678,15 +704,14 @@ gboolean
 gst_ebml_read_binary (GstEbmlRead * ebml,
     guint32 * id, guint8 ** binary, guint64 * length)
 {
-  GstBuffer *buf;
+  guint8 *data;
+  guint size;
 
-  if (!gst_ebml_read_buffer (ebml, id, &buf))
+  if (!gst_ebml_read_bytes (ebml, id, &data, &size))
     return FALSE;
 
-  *length = GST_BUFFER_SIZE (buf);
-  *binary = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-
-  gst_buffer_unref (buf);
+  *length = size;
+  *binary = g_memdup (data, size);
 
   return TRUE;
 }

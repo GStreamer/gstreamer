@@ -1,3 +1,18 @@
+2006-05-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Jindrich Makovicka  <jindrich.makivicka at itonis tv>
+
+	* gst/matroska/ebml-read.c: (gst_ebml_read_peek_bytes),
+	(gst_ebml_read_pull_bytes), (gst_ebml_read_element_id),
+	(gst_ebml_read_element_length), (gst_ebml_read_buffer),
+	(gst_ebml_read_bytes), (gst_ebml_read_uint), (gst_ebml_read_sint),
+	(gst_ebml_read_float), (gst_ebml_read_ascii),
+	(gst_ebml_read_binary):
+	  Don't create unnecessary sub-buffers all the time. Dramatically
+	  improves performance with multiple concurrently running
+	  matroskademux instances (#341818) (and avoids doing
+	  unnecessarily inefficient things in the general case).
+
 2006-05-16  Edward Hervey  <edward@fluendo.com>
 
 	* ext/libpng/gstpngenc.c: (gst_pngenc_chain): 
