@@ -235,18 +235,21 @@ static void
 characters_sami (void *ctx, const xmlChar * ch, int len)
 {
   GstSamiContext *sctx = (GstSamiContext *) ctx;
+  gchar *escaped;
 
   /* skip title */
   if (sctx->in_title)
     return;
 
+  escaped = g_markup_escape_text ((const gchar *) ch, len);
   if (has_tag (sctx->state, RT_TAG)) {
     g_string_append_c (sctx->rubybuf, ' ');
-    g_string_append_len (sctx->rubybuf, (const gchar *) ch, len);
+    g_string_append (sctx->rubybuf, escaped);
     g_string_append_c (sctx->rubybuf, ' ');
   } else {
-    g_string_append_len (sctx->buf, (const gchar *) ch, len);
+    g_string_append (sctx->buf, escaped);
   }
+  g_free (escaped);
 }
 
 static xmlSAXHandler samiSAXHandlerStruct = {

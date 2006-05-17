@@ -1,3 +1,18 @@
+2006-05-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Young-Ho Cha  <ganadist chollian net>
+
+	* gst/subparse/gstsubparse.c: (gst_sub_parse_dispose),
+	(gst_sub_parse_class_init), (gst_sub_parse_init),
+	(gst_sub_parse_set_property), (gst_sub_parse_get_property),
+	(convert_encoding):
+	* gst/subparse/gstsubparse.h:
+	  Add 'encoding' property (#341681).
+
+	* gst/subparse/samiparse.c: (characters_sami):
+	  Output is pango markup, so we need to escape text
+	  between tags (#342143).
+
 2006-05-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/multichannel.c:

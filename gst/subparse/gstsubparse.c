@@ -34,6 +34,22 @@
 GST_DEBUG_CATEGORY_STATIC (sub_parse_debug);
 #define GST_CAT_DEFAULT sub_parse_debug
 
+#define DEFAULT_ENCODING   NULL
+
+enum
+{
+  PROP_0,
+  PROP_ENCODING
+};
+
+static void
+gst_sub_parse_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void
+gst_sub_parse_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
+
 static const GstElementDetails sub_parse_details =
 GST_ELEMENT_DETAILS ("Subtitle parser",
     "Codec/Parser/Subtitle",
@@ -123,6 +139,10 @@ gst_sub_parse_dispose (GObject * object)
     gst_segment_free (subparse->segment);
     subparse->segment = NULL;
   }
+  if (subparse->encoding) {
+    g_free (subparse->encoding);
+    subparse->encoding = NULL;
+  }
   sami_context_deinit (&subparse->state);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
@@ -137,8 +157,17 @@ gst_sub_parse_class_init (GstSubParseClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   object_class->dispose = gst_sub_parse_dispose;
+  object_class->set_property = gst_sub_parse_set_property;
+  object_class->get_property = gst_sub_parse_get_property;
 
   element_class->change_state = gst_sub_parse_change_state;
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ENCODING,
+      g_param_spec_string ("encoding", "subtitle charset encoding",
+          "Encoding to assume if input subtitles are not in UTF-8 encoding. "
+          "If not set, the GST_SUBTITLE_ENCODING environment variable will "
+          "be checked for an encoding to use. If that is not set either, "
+          "ISO-8859-15 will be assumed.", DEFAULT_ENCODING, G_PARAM_READWRITE));
 }
 
 static void
@@ -167,6 +196,7 @@ gst_sub_parse_init (GstSubParse * subparse)
     GST_WARNING_OBJECT (subparse, "segment creation failed");
     g_assert_not_reached ();
   }
+  subparse->encoding = g_strdup (DEFAULT_ENCODING);
 }
 
 /*
@@ -237,6 +267,43 @@ beach:
   return ret;
 }
 
+static void
+gst_sub_parse_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstSubParse *subparse = GST_SUBPARSE (object);
+
+  GST_OBJECT_LOCK (subparse);
+  switch (prop_id) {
+    case PROP_ENCODING:
+      g_free (subparse->encoding);
+      subparse->encoding = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (subparse);
+}
+
+static void
+gst_sub_parse_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstSubParse *subparse = GST_SUBPARSE (object);
+
+  GST_OBJECT_LOCK (subparse);
+  switch (prop_id) {
+    case PROP_ENCODING:
+      g_value_set_string (value, subparse->encoding);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (subparse);
+}
+
 static gchar *
 convert_encoding (GstSubParse * self, const gchar * str, gsize len)
 {
@@ -253,7 +320,10 @@ convert_encoding (GstSubParse * self, const gchar * str, gsize len)
     self->valid_utf8 = FALSE;
   }
 
-  encoding = g_getenv ("GST_SUBTITLE_ENCODING");
+  encoding = self->encoding;
+  if (encoding == NULL || *encoding == '\0') {
+    encoding = g_getenv ("GST_SUBTITLE_ENCODING");
+  }
   if (encoding == NULL || *encoding == '\0') {
     /* if local encoding is UTF-8 and no encoding specified
      * via the environment variable, assume ISO-8859-15 */
