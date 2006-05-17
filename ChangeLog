@@ -1,3 +1,17 @@
+2006-05-17  Sebastien Moutte  <sebastien@moutte.net>
+	
+	* gst/gstregistryxml.c: (gst_registry_xml_write_cache):
+	  Use g_remove and g_rename instead of remove and rename that don't 
+	  handle utf8 characters. rename was failing for users who had specific
+	  characters in their name then the registry was built at each gstreamer init.
+	* win32/vs6/gst_inspect.dsp:
+	* win32/vs6/gst_launch.dsp:
+	* win32/vs6/libgstbase.dsp:
+	* win32/vs6/libgstcoreelements.dsp:
+	* win32/vs6/libgstreamer.dsp:
+	  Use a debug version of libxml2 (libxml2D.lib,libxml2D.dll) for DEBUG build
+	  of libgstreamer and clean unused libraries in projects link settings.
+
 2006-05-17  Edward Hervey  <edward@fluendo.com>
 
 	* plugins/elements/gstqueue.c: (gst_queue_push_one):

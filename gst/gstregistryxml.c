@@ -866,9 +866,9 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
 
   if (g_file_test (tmp_location, G_FILE_TEST_EXISTS)) {
 #ifdef WIN32
-    remove (location);
+    g_remove (location);
 #endif
-    rename (tmp_location, location);
+    g_rename (tmp_location, location);
   }
 
   g_free (tmp_location);
