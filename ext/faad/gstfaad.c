@@ -952,10 +952,10 @@ gst_faad_src_query (GstPad * pad, GstQuery * query)
 
 
 static gboolean
-gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info,
-    GstCaps ** p_caps)
+gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
 {
   GstAudioChannelPosition *pos;
+  gboolean ret;
   GstCaps *caps;
 
   /* store new negotiation information */
@@ -985,14 +985,10 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info,
 
   GST_DEBUG ("New output caps: %" GST_PTR_FORMAT, caps);
 
-  if (!gst_pad_set_caps (faad->srcpad, caps)) {
-    gst_caps_unref (caps);
-    return FALSE;
-  }
+  ret = gst_pad_set_caps (faad->srcpad, caps);
+  gst_caps_unref (caps);
 
-  *p_caps = caps;
-
-  return TRUE;
+  return ret;
 }
 
 /*
@@ -1088,7 +1084,6 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
   guchar *input_data;
   GstFaad *faad;
   GstBuffer *outbuf;
-  GstCaps *caps = NULL;
   faacDecFrameInfo info;
   void *out;
   gboolean run_loop = TRUE;
@@ -1246,7 +1241,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
       }
 
       if (fmt_change) {
-        if (!gst_faad_update_caps (faad, &info, &caps)) {
+        if (!gst_faad_update_caps (faad, &info)) {
           GST_ELEMENT_ERROR (faad, CORE, NEGOTIATION, (NULL),
               ("Setting caps on source pad failed"));
           ret = GST_FLOW_ERROR;
@@ -1302,9 +1297,6 @@ next:
   }
 
 out:
-
-  if (caps)
-    gst_caps_unref (caps);
 
   gst_buffer_unref (buffer);
   gst_object_unref (faad);

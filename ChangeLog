@@ -1,3 +1,8 @@
+2006-05-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/faad/gstfaad.c: (gst_faad_update_caps), (gst_faad_chain):
+	  Remove unused caps cruft from chain function altogether.
+
 2006-05-17  Edward Hervey  <edward@fluendo.com>
 
 	* ext/faad/gstfaad.c: (gst_faad_chain): 
