@@ -72,6 +72,11 @@ mulawdec_getcaps (GstPad * pad)
     GValue irate = { 0 }, ichans = {
     0};
 
+    if (gst_caps_is_empty (othercaps) || gst_caps_is_any (othercaps)) {
+      gst_caps_unref (othercaps);
+      goto done;
+    }
+
     structure = gst_caps_get_structure (othercaps, 0);
     orate = gst_structure_get_value (structure, "rate");
     ochans = gst_structure_get_value (structure, "channels");
