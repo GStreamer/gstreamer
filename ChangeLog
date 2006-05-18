@@ -1,3 +1,8 @@
+2006-05-19  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  update for new GSTPB_PLUGINS_DIR
+
 2006-05-18  Philippe Kalaf  <philippe.kalaf at collabora.co.uk>
 
 	* rtp/gst/gstrtph263pay.c:

@@ -242,8 +242,7 @@ if test -z $GST_TOOLS_DIR; then
 fi
 AC_SUBST(GST_TOOLS_DIR)
 
-GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_MAJORMINOR --variable pluginsdir`
-AC_SUBST(GSTPB_PLUGINS_DIR)
+AC_MSG_NOTICE(Using GStreamer Core Plugins in $GST_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
 dnl FIXME: get rid of this by making sure gstreamer-check brings it in
