@@ -146,6 +146,7 @@ static void gst_queue_get_property (GObject * object,
 static GstFlowReturn gst_queue_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_queue_bufferalloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
+static gboolean gst_queue_acceptcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_queue_push_one (GstQueue * queue);
 static void gst_queue_loop (GstPad * pad);
 
@@ -357,6 +358,8 @@ gst_queue_init (GstQueue * queue)
       GST_DEBUG_FUNCPTR (gst_queue_src_activate_push));
   gst_pad_set_link_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_link_src));
+  gst_pad_set_acceptcaps_function (queue->srcpad,
+      GST_DEBUG_FUNCPTR (gst_queue_acceptcaps));
   gst_pad_set_getcaps_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_getcaps));
   gst_pad_set_event_function (queue->srcpad,
@@ -476,13 +479,19 @@ gst_queue_bufferalloc (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
 
   queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
-  result =
-      gst_pad_alloc_buffer_and_set_caps (queue->srcpad, offset, size, caps,
-      buf);
+  /* Forward to src pad, without setting caps on the src pad */
+  result = gst_pad_alloc_buffer (queue->srcpad, offset, size, caps, buf);
 
   return result;
 }
 
+static gboolean
+gst_queue_acceptcaps (GstPad * pad, GstCaps * caps)
+{
+  /* The only time our acceptcaps method should be called is on the srcpad
+   * when we push a buffer, in which case we always accept those caps */
+  return TRUE;
+}
 
 static void
 gst_queue_locked_flush (GstQueue * queue)
@@ -767,6 +776,11 @@ gst_queue_push_one (GstQueue * queue)
       queue->cur_level.time -= GST_BUFFER_DURATION (data);
 
     GST_QUEUE_MUTEX_UNLOCK (queue);
+    /* Set caps on the src pad first, because otherwise when we push it will
+     * check that we accept the caps which checks upstream, whereas 
+     * explicitly setting the caps doesn't */
+    gst_pad_set_caps (queue->srcpad, GST_BUFFER_CAPS (data));
+
     result = gst_pad_push (queue->srcpad, GST_BUFFER (data));
     /* need to check for srcresult here as well */
     GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);

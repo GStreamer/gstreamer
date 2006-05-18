@@ -1,3 +1,19 @@
+2006-05-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_prepare_buf):
+	The caps intersection algorithm can produce multiple copies of the
+	caps. Until that is fixed, we need to simplify the result to be
+	sure whether the allowed caps are fixed or not.
+
+	* plugins/elements/gstqueue.c: (gst_queue_init),
+	(gst_queue_bufferalloc), (gst_queue_acceptcaps),
+	(gst_queue_push_one):
+	Proxied buffer alloc should not set the caps on the source pad.
+	When pushing buffers, we always accept the caps change that triggers.
+	This prevents negotiation errors caused by caps changing mid-stream 
+	and then being refused on our source pad (because upstream is now
+	refusing those caps).
+
 2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/examples/helloworld/helloworld.c: (main):
