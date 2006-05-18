@@ -134,28 +134,23 @@ static GstBuffer *
 gst_tag_lib_mux_render_tag (GstTagLibMux * mux)
 {
   GstTagLibMuxClass *klass;
+  GstTagMergeMode merge_mode;
+  GstTagSetter *tagsetter;
   GstBuffer *buffer;
-  GstTagSetter *tagsetter = GST_TAG_SETTER (mux);
   const GstTagList *tagsetter_tags;
   GstTagList *taglist;
   GstEvent *event;
 
-  if (mux->event_tags != NULL) {
-    taglist = gst_tag_list_copy (mux->event_tags);
-  } else {
-    taglist = gst_tag_list_new ();
-  }
+  tagsetter = GST_TAG_SETTER (mux);
 
   tagsetter_tags = gst_tag_setter_get_tag_list (tagsetter);
-  if (tagsetter_tags) {
-    GstTagMergeMode merge_mode;
+  merge_mode = gst_tag_setter_get_tag_merge_mode (tagsetter);
 
-    merge_mode = gst_tag_setter_get_tag_merge_mode (tagsetter);
-    GST_LOG_OBJECT (mux, "merging tags, merge mode = %d", merge_mode);
-    GST_LOG_OBJECT (mux, "event tags: %" GST_PTR_FORMAT, taglist);
-    GST_LOG_OBJECT (mux, "set   tags: %" GST_PTR_FORMAT, tagsetter_tags);
-    gst_tag_list_insert (taglist, tagsetter_tags, merge_mode);
-  }
+  GST_LOG_OBJECT (mux, "merging tags, merge mode = %d", merge_mode);
+  GST_LOG_OBJECT (mux, "event tags: %" GST_PTR_FORMAT, mux->event_tags);
+  GST_LOG_OBJECT (mux, "set   tags: %" GST_PTR_FORMAT, tagsetter_tags);
+
+  taglist = gst_tag_list_merge (tagsetter_tags, mux->event_tags, merge_mode);
 
   GST_LOG_OBJECT (mux, "final tags: %" GST_PTR_FORMAT, taglist);
 
@@ -189,12 +184,14 @@ gst_tag_lib_mux_render_tag (GstTagLibMux * mux)
 no_vfunc:
   {
     GST_ERROR_OBJECT (mux, "Subclass does not implement render_tag vfunc!");
+    gst_tag_list_free (taglist);
     return NULL;
   }
 
 render_error:
   {
     GST_ERROR_OBJECT (mux, "Failed to render tag");
+    gst_tag_list_free (taglist);
     return NULL;
   }
 }
