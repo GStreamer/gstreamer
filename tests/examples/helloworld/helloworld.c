@@ -41,6 +41,7 @@ int
 main (int argc, char *argv[])
 {
   GstElement *bin, *filesrc, *decoder, *audiosink;
+  GstElement *conv, *resample;
 
   gst_init (&argc, &argv);
 
@@ -64,15 +65,31 @@ main (int argc, char *argv[])
     g_print ("could not find plugin \"mad\"");
     return -1;
   }
+
+  /* also, we need to add some converters to make sure the audio stream
+   * from the decoder is converted into a format the audio sink can
+   * understand (if necessary) */
+  conv = gst_element_factory_make ("audioconvert", "audioconvert");
+  if (!conv) {
+    g_print ("could not create \"audioconvert\" element!");
+    return -1;
+  }
+  resample = gst_element_factory_make ("audioresample", "audioresample");
+  if (!conv) {
+    g_print ("could not create \"audioresample\" element!");
+    return -1;
+  }
+
   /* and an audio sink */
   audiosink = gst_element_factory_make ("alsasink", "play_audio");
   g_assert (audiosink);
 
   /* add objects to the main pipeline */
-  gst_bin_add_many (GST_BIN (bin), filesrc, decoder, audiosink, NULL);
+  gst_bin_add_many (GST_BIN (bin), filesrc, decoder, conv,
+      resample, audiosink, NULL);
 
   /* link the elements */
-  gst_element_link_many (filesrc, decoder, audiosink, NULL);
+  gst_element_link_many (filesrc, decoder, conv, resample, audiosink, NULL);
 
   /* start playing */
   gst_element_set_state (bin, GST_STATE_PLAYING);
