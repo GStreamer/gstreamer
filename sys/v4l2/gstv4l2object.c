@@ -33,7 +33,13 @@
 #endif
 #include "gstv4l2colorbalance.h"
 
-OPEN_V4L2OBJECT_PROPS CLOSE_V4L2OBJECT_PROPS const GList *
+enum
+{
+  PROP_0,
+  V4L2_STD_OBJECT_PROPS,
+};
+
+const GList *
 gst_v4l2_probe_get_properties (GstPropertyProbe * probe)
 {
   GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
@@ -60,7 +66,7 @@ gst_v4l2_class_probe_devices (GstElementClass * klass, gboolean check,
   static GList *devices = NULL;
 
   if (!init && !check) {
-    gchar *dev_base[] = { "/dev/video", "/dev/v4l2/video", NULL };
+    const gchar *dev_base[] = { "/dev/video", "/dev/v4l2/video", NULL };
     gint base, n, fd;
 
     while (devices) {

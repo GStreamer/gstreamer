@@ -49,6 +49,8 @@
 
 G_BEGIN_DECLS
 
+#define GST_V4L2OBJECT(obj) (GstV4l2Object *)(obj)
+
 typedef struct _GstV4l2Object GstV4l2Object;
 typedef struct _GstV4l2ObjectClassHelper GstV4l2ObjectClassHelper;
 typedef struct _GstV4l2Xv GstV4l2Xv;
@@ -110,17 +112,14 @@ struct _GstV4l2ObjectClassHelper {
 GType gst_v4l2object_get_type(void);
 
 
-#define OPEN_V4L2OBJECT_PROPS			\
-  enum {					\
-    PROP_0,					\
-    PROP_DEVICE,				\
+#define V4L2_STD_OBJECT_PROPS			\
+    PROP_DEVICE,					\
     PROP_DEVICE_NAME,				\
     PROP_FLAGS,					\
     PROP_STD,					\
     PROP_INPUT,					\
     PROP_FREQUENCY
 
-#define CLOSE_V4L2OBJECT_PROPS   };
 
 extern GstV4l2Object *
 gst_v4l2object_new (GstElement * element,

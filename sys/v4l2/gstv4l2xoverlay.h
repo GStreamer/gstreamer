@@ -35,9 +35,6 @@ G_BEGIN_DECLS
 void gst_v4l2_xoverlay_start (GstV4l2Object  *v4l2object);
 void gst_v4l2_xoverlay_stop  (GstV4l2Object  *v4l2object);
 
-extern void gst_v4l2_xoverlay_set_xwindow_id (GstV4l2Object  *v4l2object,
-                                              XID xwindow_id);
-
 extern void
 gst_v4l2_xoverlay_interface_init (GstXOverlayClass * klass);
 

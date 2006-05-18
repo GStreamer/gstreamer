@@ -46,6 +46,11 @@ struct _GstV4l2Xv
 GST_DEBUG_CATEGORY_STATIC (v4l2xv_debug);
 #define GST_CAT_DEFAULT v4l2xv_debug
 
+static void gst_v4l2_xoverlay_set_xwindow_id (GstV4l2Object * v4l2object,
+    XID xwindow_id);
+
+
+
 void
 gst_v4l2_xoverlay_interface_init (GstXOverlayClass * klass)
 {
@@ -92,9 +97,9 @@ gst_v4l2_xoverlay_open (GstV4l2Object * v4l2object)
     return;
   }
   if (fstat (v4l2object->video_fd, &s) < 0) {
-    GST_ELEMENT_ERROR (v4l2object, RESOURCE, GST_RESOURCE_ERROR_NOT_FOUND,
-        (_("Cannot identify '%s': %d, %s\n"),
-            v4l2object->videodev, errno, strerror (errno)), GST_ERROR_SYSTEM);
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
+        (_("Cannot identify '%s': %d, %s\n"), v4l2object->videodev, errno,
+            strerror (errno)), (NULL));
     XCloseDisplay (dpy);
     return;
   }
@@ -112,7 +117,8 @@ gst_v4l2_xoverlay_open (GstV4l2Object * v4l2object)
   XvFreeAdaptorInfo (ai);
 
   if (id == 0) {
-    GST_WARNING (v4l2object, "Did not find XvPortID for device - no overlay");
+    GST_WARNING_OBJECT (v4l2object->element,
+        "Did not find XvPortID for device - no overlay");
     XCloseDisplay (dpy);
     return;
   }
