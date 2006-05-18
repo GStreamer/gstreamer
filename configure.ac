@@ -101,6 +101,9 @@ GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
 GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GST_REQ])
 GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
 
+AC_MSG_NOTICE(Using GStreamer Core Plugins in $GST_PLUGINS_DIR)
+AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
+
 dnl *** set variables based on configure arguments ***
 
 dnl set location of plugin directory
