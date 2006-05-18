@@ -46,17 +46,21 @@ GST_START_TEST (test_device_property_probe)
     fail_unless (probe != NULL);
 
     arr = gst_property_probe_probe_and_get_values_name (probe, "device");
+    if (arr) {
+      for (i = 0; i < arr->n_values; ++i) {
+        GValue *val;
 
-    for (i = 0; arr != NULL && i < arr->n_values; ++i) {
-      GValue *val;
+        val = g_value_array_get_nth (arr, i);
+        fail_unless (val != NULL);
+        fail_unless (G_VALUE_HOLDS_STRING (val));
 
-      val = g_value_array_get_nth (arr, i);
-      fail_unless (val != NULL);
-      fail_unless (G_VALUE_HOLDS_STRING (val));
-
-      GST_LOG_OBJECT (element, "device[%d] = %s", i, g_value_get_string (val));
+        GST_LOG_OBJECT (element, "device[%d] = %s", i,
+            g_value_get_string (val));
+      }
+      g_value_array_free (arr);
+    } else {
+      GST_LOG_OBJECT (element, "no devices found");
     }
-    g_value_array_free (arr);
 
     gst_object_unref (element);
   }

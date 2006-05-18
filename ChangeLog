@@ -1,5 +1,11 @@
 2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/elements/alsa.c: (test_device_property_probe):
+	  Fix test case: don't try to free NULL GValueArray when there
+	  are no devices.
+
+2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/Makefile.am:
 	* tests/check/elements/alsa.c: (test_device_property_probe),
 	(alsa_suite), (main):
