@@ -21,6 +21,12 @@ $(CHECK_REGISTRY):
 
 TESTS = $(check_PROGRAMS)
 
+if USE_ALSA
+check_alsa = elements/alsa
+else
+check_alsa =
+endif
+
 if USE_VORBIS
 check_vorbis = elements/vorbisdec pipelines/vorbisenc
 else
@@ -33,7 +39,9 @@ else
 check_theora =
 endif
 
-check_PROGRAMS = $(check_vorbis) \
+check_PROGRAMS = \
+	$(check_alsa) \
+	$(check_vorbis) \
 	$(check_theora) \
 	elements/audioconvert \
 	elements/audioresample \
@@ -52,6 +60,7 @@ check_PROGRAMS = $(check_vorbis) \
 #       elements/adder
 
 VALGRIND_TO_FIX = \
+	elements/alsa \
 	elements/audioresample \
 	generic/states \
 	libs/cddabasesrc \
@@ -74,6 +83,14 @@ libs_cddabasesrc_LDADD = \
 	$(LDADD)
 
 libs_cddabasesrc_CFLAGS = \
+	-I$(top_srcdir)/gst-libs \
+	$(CFLAGS) $(AM_CFLAGS)
+
+elements_alsa_LDADD = \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(LDADD)
+
+elements_alsa_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	$(CFLAGS) $(AM_CFLAGS)
 

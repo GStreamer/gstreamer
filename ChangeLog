@@ -1,5 +1,15 @@
 2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	* tests/check/elements/alsa.c: (test_device_property_probe),
+	(alsa_suite), (main):
+	  Add simple test that runs a device property probe on alsasrc,
+	  alsasink and alsamixer. Disable valgrind check for now (too
+	  many leaks in libasound, and valgrind ignored my suppressions
+	  additions).
+
+2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/alsa/gstalsadeviceprobe.c: (gst_alsa_get_device_list),
 	(gst_alsa_device_property_probe_probe_property),
 	(gst_alsa_device_property_probe_needs_probe),
