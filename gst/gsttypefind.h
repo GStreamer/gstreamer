@@ -29,6 +29,8 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_TYPE_FIND	(gst_type_find_get_type())
+
 typedef struct _GstTypeFind GstTypeFind;
 
 /**
@@ -85,6 +87,8 @@ struct _GstTypeFind {
   /* <private> */
   gpointer _gst_reserved[GST_PADDING];
 };
+
+GType		gst_type_find_get_type			(void);
 
 /* typefind function interface */
 guint8 *	gst_type_find_peek			(GstTypeFind *		find,

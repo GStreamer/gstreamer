@@ -1,3 +1,11 @@
+2006-05-18  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gsttypefind.c: (gst_type_find_get_type):
+	* gst/gsttypefind.h:
+	Added GST_TYPE_TYPE_FIND and gst_type_find_get_type() so a GType gets
+	registered for GstTypeFind pointers. This allows wrapping the structure
+	in bindings (i.e. gst-python).
+
 2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsttagsetter.c:
