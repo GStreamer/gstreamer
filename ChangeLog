@@ -1,3 +1,11 @@
+2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: James "Doc" Livingston  <doclivingston gmail com>
+
+	* ext/taglib/gsttaglibmux.c: (gst_tag_lib_mux_render_tag):
+	  Merge event tags and tag setter tags correctly (#339918). Also,
+	  don't leak taglist in case of an error.
+	  
 2006-05-17  Edward Hervey  <edward@fluendo.com>
 
 	* gst/law/mulaw-decode.c: (mulawdec_getcaps): 
