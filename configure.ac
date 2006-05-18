@@ -266,6 +266,18 @@ dnl keep this list sorted alphabetically !
 
 if test "x$BUILD_EXTERNAL" = "xyes"; then
 
+dnl *** alsa ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
+GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
+  PKG_CHECK_MODULES(ALSA, alsa >= 0.9.1, [
+    HAVE_ALSA="yes"
+    AC_SUBST(ALSA_CFLAGS)
+    AC_SUBST(ALSA_LIBS)
+  ], [
+    AM_PATH_ALSA(0.9.1, HAVE_ALSA="yes", HAVE_ALSA="no")
+  ])
+])
+
 dnl *** amrwb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
 GST_CHECK_FEATURE(AMRWB, [amrwb code], amrwb, [
@@ -650,6 +662,7 @@ examples/Makefile
 examples/directfb/Makefile
 ext/amrwb/amrwb-code/Makefile
 ext/amrwb/Makefile
+ext/alsaspdif/Makefile
 ext/bz2/Makefile
 ext/directfb/Makefile
 ext/divx/Makefile

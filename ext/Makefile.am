@@ -1,3 +1,9 @@
+if USE_ALSA
+ALSASPDIF_DIR = alsaspdif
+else
+ALSASPDIF_DIR =
+endif
+
 if USE_AMRWB
 AMRWB_DIR = amrwb
 else
@@ -228,6 +234,7 @@ XVID_DIR=
 endif
 
 SUBDIRS=\
+	$(ALSASPDIF_DIR) \
 	$(AMRWB_DIR) \
 	$(ARTS_DIR) \
 	$(ARTSC_DIR) \
