@@ -861,9 +861,10 @@ gst_id3_tag_get_tag_to_render (GstID3Tag * tag)
   const GstTagList *taglist =
       gst_tag_setter_get_tag_list (GST_TAG_SETTER (tag));
 
-  GST_DEBUG
-      ("preparing taglist to render: event_tags=%p, parsed_tags=%p, taglist=%p",
-      tag->event_tags, tag->parsed_tags, taglist);
+  GST_DEBUG ("preparing taglist to render:");
+  GST_DEBUG (" event_tags  = %" GST_PTR_FORMAT, tag->event_tags);
+  GST_DEBUG (" parsed_tags = %" GST_PTR_FORMAT, tag->parsed_tags);
+  GST_DEBUG (" taglist     = %" GST_PTR_FORMAT, taglist);
 
   if (tag->event_tags)
     ret = gst_tag_list_copy (tag->event_tags);
@@ -875,8 +876,12 @@ gst_id3_tag_get_tag_to_render (GstID3Tag * tag)
   }
   if (taglist) {
     if (ret) {
-      gst_tag_list_insert (ret, taglist,
+      GstTagList *tmp;
+
+      tmp = gst_tag_list_merge (taglist, ret,
           gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (tag)));
+      gst_tag_list_free (ret);
+      ret = tmp;
     } else {
       ret = gst_tag_list_copy (taglist);
     }

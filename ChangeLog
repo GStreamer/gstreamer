@@ -1,3 +1,11 @@
+2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: James "Doc" Livingston  <doclivingston gmail com>
+
+	* ext/mad/gstid3tag.c: (gst_id3_tag_get_tag_to_render):
+	  Do tag merging correctly (#339918). Output taglists
+	  properly in debug statements too while we're at it.
+
 2006-05-11  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_chain):
