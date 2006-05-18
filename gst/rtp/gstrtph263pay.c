@@ -158,7 +158,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "payload = (int) 34, "
+        "payload = (int) " GST_RTP_PAYLOAD_H263_STRING ", "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"H263\"")
     );
 
@@ -253,7 +253,8 @@ gst_rtp_h263_pay_finalize (GObject * object)
 static gboolean
 gst_rtp_h263_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 {
-  gst_basertppayload_set_options (payload, "video", TRUE, "H263-1998", 90000);
+  payload->pt = GST_RTP_PAYLOAD_H263;
+  gst_basertppayload_set_options (payload, "video", TRUE, "H263", 90000);
   gst_basertppayload_set_outcaps (payload, NULL);
 
   return TRUE;

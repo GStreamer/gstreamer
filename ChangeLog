@@ -1,3 +1,8 @@
+2006-05-18  Philippe Kalaf  <philippe.kalaf at collabora.co.uk>
+
+	* rtp/gst/gstrtph263pay.c:
+	Properly set static caps for H263 at 34.
+
 2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: James "Doc" Livingston  <doclivingston gmail com>
