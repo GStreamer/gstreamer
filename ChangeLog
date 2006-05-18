@@ -1,3 +1,26 @@
+2006-05-18  Michael Smith  <msmith@fluendo.com>
+
+	* ext/Makefile.am:
+	  Fix distcheck?
+
+2006-05-18  Michael Smith  <msmith@fluendo.com>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/alsaspdif/Makefile.am:
+	* ext/alsaspdif/alsaspdifsink.c: (alsaspdifsink_base_init),
+	(alsaspdifsink_class_init), (alsaspdifsink_init),
+	(alsaspdifsink_dispose), (alsaspdifsink_set_property),
+	(alsaspdifsink_get_property), (alsaspdifsink_provide_clock),
+	(alsaspdifsink_get_time), (alsaspdifsink_open),
+	(alsaspdifsink_close), (alsaspdifsink_find_pcm_device),
+	(alsaspdifsink_write_frame), (alsaspdifsink_event),
+	(alsaspdifsink_get_times), (alsaspdifsink_current_delay),
+	(generate_iec958_zero_frame), (alsaspdifsink_render),
+	(ignore_alsa_err), (alsaspdifsink_change_state), (plugin_init):
+	* ext/alsaspdif/alsaspdifsink.h:
+	  Add an alsa plugin to output IEC958 frames over S/PDIF
+
 2006-05-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/faad/gstfaad.c: (gst_faad_update_caps), (gst_faad_chain):

@@ -275,6 +275,7 @@ SUBDIRS=\
 	$(XVID_DIR)
 
 DIST_SUBDIRS= \
+	alsaspdif \
 	amrwb \
 	bz2 \
 	directfb \
