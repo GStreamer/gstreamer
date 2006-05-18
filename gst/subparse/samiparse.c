@@ -168,8 +168,9 @@ handle_start_font (GstSamiContext * sctx, const xmlChar ** atts)
         if (!(*value == '#' && len == 7)) {
           gchar *r;
 
-          strtol ((const char *) value, &r, 16);        /* trying onvert hex */
-          if (((xmlChar *) r == (value + 6) && len == 6)) {
+          /* check if it looks like hex */
+          if (strtol ((const char *) value, &r, 16) >= 0 &&
+              ((xmlChar *) r == (value + 6) && len == 6)) {
             sharp = "#";
           }
         }
