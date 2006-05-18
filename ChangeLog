@@ -1,3 +1,8 @@
+2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsttagsetter.c:
+	  Docs additions and fixes (see #339918).
+
 2006-05-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_prepare_buf):
