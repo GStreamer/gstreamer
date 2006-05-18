@@ -33,6 +33,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 #define GST_V4L2_MIN_BUFFERS 2
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_V4L2SRC			\
   (gst_v4l2src_get_type())
 #define GST_V4L2SRC(obj)						\
@@ -41,8 +42,9 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_V4L2SRC,GstV4l2SrcClass))
 #define GST_IS_V4L2SRC(obj)				\
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4L2SRC))
-#define GST_IS_V4L2SRC_CLASS(obj)			\
+#define GST_IS_V4L2SRC_CLASS(klass)			\
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4L2SRC))
+
 typedef struct _GstV4l2BufferPool GstV4l2BufferPool;
 typedef struct _GstV4l2Buffer GstV4l2Buffer;
 typedef struct _GstV4l2Src GstV4l2Src;

@@ -1,3 +1,15 @@
+2006-05-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Check for X11
+	* sys/v4l2/gstv4l2object.c: (gst_v4l2_class_probe_devices):
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_iface_supported):
+	* sys/v4l2/gstv4l2src.h:
+	* sys/v4l2/gstv4l2xoverlay.c: (gst_v4l2_xoverlay_open):
+	* sys/v4l2/gstv4l2xoverlay.h:
+	  Code cleanups, fix debug macros
+
 2006-05-18  Michael Smith  <msmith@fluendo.com>
 
 	* ext/Makefile.am:

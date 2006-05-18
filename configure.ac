@@ -204,6 +204,36 @@ GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
 CPPFLAGS="$save_CPPFLAGS"
 LIBS="$save_LIBS"
 
+dnl Check for X11
+translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
+GST_CHECK_FEATURE(X, [X libraries and plugins],
+                  [ximagesrc], [
+  AC_PATH_XTRA
+
+  dnl now try to find the HEADER
+  ac_cflags_save="$CFLAGS"
+  ac_cppflags_save="$CPPFLAGS"
+  CFLAGS="$CFLAGS $X_CFLAGS"
+  CPPFLAGS="$CPPFLAGS $X_CFLAGS"
+  AC_CHECK_HEADER(X11/X.h, HAVE_X="yes", HAVE_X="no")
+
+  if test "x$HAVE_X" = "xno"
+  then
+    AC_MSG_NOTICE([cannot find X11 development files])
+  else
+    dnl this is much more than we want
+    X_LIBS="$X_LIBS $X_PRE_LIBS $X_EXTRA_LIBS"
+    dnl AC_PATH_XTRA only defines the path needed to find the X libs,
+    dnl it does not add the libs; therefore we add them here
+    X_LIBS="$X_LIBS -lX11"
+    AC_SUBST(X_CFLAGS)
+    AC_SUBST(X_LIBS)
+  fi
+  AC_SUBST(HAVE_X)
+  CFLAGS="$ac_cflags_save"
+  CPPFLAGS="$ac_cppflags_save"
+])
+
 dnl *** Video 4 Linux 2 ***
 dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
 dnl renamed to GST_V4L2 because of some conflict with kernel headers

@@ -67,8 +67,14 @@ GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
 
-OPEN_V4L2OBJECT_PROPS, PROP_USE_FIXED_FPS
-    CLOSE_V4L2OBJECT_PROPS static guint32 gst_v4l2_formats[] = {
+enum
+{
+  PROP_0,
+  V4L2_STD_OBJECT_PROPS,
+  PROP_USE_FIXED_FPS
+};
+
+static const guint32 gst_v4l2_formats[] = {
   /* from Linux 2.6.15 videodev2.h */
   V4L2_PIX_FMT_RGB332,
   V4L2_PIX_FMT_RGB555,
@@ -126,17 +132,15 @@ OPEN_V4L2OBJECT_PROPS, PROP_USE_FIXED_FPS
 
 #define GST_V4L2_FORMAT_COUNT (G_N_ELEMENTS (gst_v4l2_formats))
 
-GST_IMPLEMENT_V4L2_PROBE_METHODS (GstV4l2SrcClass, gst_v4l2src)
-
-    GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS (GstV4l2Src, gst_v4l2src)
-
-    GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Src, gst_v4l2src)
+GST_IMPLEMENT_V4L2_PROBE_METHODS (GstV4l2SrcClass, gst_v4l2src);
+GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS (GstV4l2Src, gst_v4l2src);
+GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Src, gst_v4l2src);
 #ifdef HAVE_XVIDEO
-    GST_IMPLEMENT_V4L2_XOVERLAY_METHODS (GstV4l2Src, gst_v4l2src)
+GST_IMPLEMENT_V4L2_XOVERLAY_METHODS (GstV4l2Src, gst_v4l2src);
 #endif
-     static gboolean
-         gst_v4l2src_iface_supported (GstImplementsInterface * iface,
-    GType iface_type)
+
+static gboolean
+gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
   GstV4l2Object *v4l2object = GST_V4L2SRC (iface)->v4l2object;
 
@@ -225,9 +229,8 @@ static GstFlowReturn gst_v4l2src_create (GstPushSrc * src, GstBuffer ** out);
 
 static void gst_v4l2src_fixate (GstPad * pad, GstCaps * caps);
 
-static void
-gst_v4l2src_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_v4l2src_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 static void gst_v4l2src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
