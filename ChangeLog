@@ -1,3 +1,14 @@
+2006-05-18 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
+  	 
+	* gst-libs/gst/rtp/README:
+	  Some new documentation
+	* gst-libs/gst/rtp/gstrtpbuffer.h: 	 
+		Added GST_RTP_PAYLOAD_DYNAMIC_STRING for use by children 	 
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c: 	 
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.h: 	 
+		New RTP audio base payloader class. Supports frame or sample based codecs.
+		Not enabled in Makefile.am until approved.
+
 2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/elements/alsa.c: (test_device_property_probe):

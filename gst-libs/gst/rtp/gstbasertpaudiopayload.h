@@ -22,7 +22,6 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
-#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -32,9 +31,11 @@ typedef struct _GstBaseRTPAudioPayloadClass GstBaseRTPAudioPayloadClass;
 #define GST_TYPE_BASE_RTP_AUDIO_PAYLOAD \
   (gst_basertpaudiopayload_get_type())
 #define GST_BASE_RTP_AUDIO_PAYLOAD(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_RTP_AUDIO_PAYLOAD,GstBaseRTPAudioPayload))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), \
+  GST_TYPE_BASE_RTP_AUDIO_PAYLOAD,GstBaseRTPAudioPayload))
 #define GST_BASE_RTP_AUDIO_PAYLOAD_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_RTP_AUDIO_PAYLOAD,GstBaseRTPAudioPayload))
+  (G_TYPE_CHECK_CLASS_CAST((klass), \
+  GST_TYPE_BASE_RTP_AUDIO_PAYLOAD,GstBaseRTPAudioPayload))
 #define GST_IS_BASE_RTP_AUDIO_PAYLOAD(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_RTP_AUDIO_PAYLOAD))
 #define GST_IS_BASE_RTP_AUDIO_PAYLOAD_CLASS(obj) \
@@ -50,19 +51,22 @@ struct _GstBaseRTPAudioPayload
 {
   GstBaseRTPPayload payload;
 
-  GstClockTime adapter_base_ts;
-  GstAdapter *adapter;
+  GstClockTime base_ts;
   gint frame_size;
   gint frame_duration;
 
   gint sample_size;
 
   AudioCodecType type;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstBaseRTPAudioPayloadClass
 {
   GstBaseRTPPayloadClass parent_class;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 gboolean gst_basertpaudiopayload_plugin_init (GstPlugin * plugin);
@@ -70,10 +74,12 @@ gboolean gst_basertpaudiopayload_plugin_init (GstPlugin * plugin);
 GType gst_basertpaudiopayload_get_type (void);
 
 void
-gst_basertpaudiopayload_set_frame_based (GstBaseRTPAudioPayload *basertpaudiopayload);
+gst_basertpaudiopayload_set_frame_based (GstBaseRTPAudioPayload
+    *basertpaudiopayload);
 
 void
-gst_basertpaudiopayload_set_sample_based (GstBaseRTPAudioPayload *basertpaudiopayload);
+gst_basertpaudiopayload_set_sample_based (GstBaseRTPAudioPayload
+    *basertpaudiopayload);
 
 void
 gst_basertpaudiopayload_set_frame_options (GstBaseRTPAudioPayload
