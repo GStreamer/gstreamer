@@ -52,6 +52,7 @@
 #include <alsa/asoundlib.h>
 
 #include "gstalsasrc.h"
+#include "gstalsadeviceprobe.h"
 
 #include <gst/gst-i18n-plugin.h>
 
@@ -72,8 +73,10 @@ enum
   PROP_DEVICE_NAME,
 };
 
-GST_BOILERPLATE_WITH_INTERFACE (GstAlsaSrc, gst_alsasrc, GstAudioSrc,
-    GST_TYPE_AUDIO_SRC, GstMixer, GST_TYPE_MIXER, gst_alsasrc_mixer);
+static void gst_alsasrc_init_interfaces (GType type);
+
+GST_BOILERPLATE_FULL (GstAlsaSrc, gst_alsasrc, GstAudioSrc,
+    GST_TYPE_AUDIO_SRC, gst_alsasrc_init_interfaces);
 
 GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaSrc, gst_alsasrc_mixer);
 
@@ -126,7 +129,48 @@ static GstStaticPadTemplate alsasrc_src_factory =
 static void
 gst_alsasrc_dispose (GObject * object)
 {
+  GstAlsaSrc *src = GST_ALSA_SRC (object);
+
+  g_free (src->device);
+  src->device = NULL;
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static gboolean
+gst_alsasrc_interface_supported (GstAlsaSrc * this, GType interface_type)
+{
+  /* only support this one interface (wrapped by GstImplementsInterface) */
+  g_assert (interface_type == GST_TYPE_MIXER);
+
+  return gst_alsasrc_mixer_supported (this, interface_type);
+}
+
+static void
+gst_implements_interface_init (GstImplementsInterfaceClass * klass)
+{
+  klass->supported = (gpointer) gst_alsasrc_interface_supported;
+}
+
+static void
+gst_alsasrc_init_interfaces (GType type)
+{
+  static const GInterfaceInfo implements_iface_info = {
+    (GInterfaceInitFunc) gst_implements_interface_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo mixer_iface_info = {
+    (GInterfaceInitFunc) gst_alsasrc_mixer_interface_init,
+    NULL,
+    NULL,
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
+      &implements_iface_info);
+  g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
+
+  gst_alsa_type_add_device_property_probe_interface (type);
 }
 
 static void
@@ -190,9 +234,8 @@ gst_alsasrc_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE:
-      if (src->device)
-        g_free (src->device);
-      src->device = g_strdup (g_value_get_string (value));
+      g_free (src->device);
+      src->device = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

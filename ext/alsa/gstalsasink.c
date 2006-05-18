@@ -54,6 +54,7 @@
 
 #include "gstalsa.h"
 #include "gstalsasink.h"
+#include "gstalsadeviceprobe.h"
 
 #include <gst/gst-i18n-plugin.h>
 
@@ -74,9 +75,11 @@ enum
   PROP_DEVICE_NAME
 };
 
-static void gst_alsasink_base_init (gpointer g_class);
-static void gst_alsasink_class_init (GstAlsaSinkClass * klass);
-static void gst_alsasink_init (GstAlsaSink * alsasink);
+static void gst_alsasink_init_interfaces (GType type);
+
+GST_BOILERPLATE_FULL (GstAlsaSink, gst_alsasink, GstAudioSink,
+    GST_TYPE_AUDIO_SINK, gst_alsasink_init_interfaces);
+
 static void gst_alsasink_dispose (GObject * object);
 static void gst_alsasink_finalise (GObject * object);
 static void gst_alsasink_set_property (GObject * object,
@@ -130,34 +133,6 @@ static GstStaticPadTemplate alsasink_sink_factory =
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 8 ]")
     );
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_alsasink_get_type (void)
-{
-  static GType alsasink_type = 0;
-
-  if (!alsasink_type) {
-    static const GTypeInfo alsasink_info = {
-      sizeof (GstAlsaSinkClass),
-      gst_alsasink_base_init,
-      NULL,
-      (GClassInitFunc) gst_alsasink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAlsaSink),
-      0,
-      (GInstanceInitFunc) gst_alsasink_init,
-    };
-
-    alsasink_type =
-        g_type_register_static (GST_TYPE_AUDIO_SINK, "GstAlsaSink",
-        &alsasink_info, 0);
-  }
-
-  return alsasink_type;
-}
-
 static void
 gst_alsasink_dispose (GObject * object)
 {
@@ -181,6 +156,12 @@ gst_alsasink_finalise (GObject * object)
   g_static_mutex_unlock (&output_mutex);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_alsasink_init_interfaces (GType type)
+{
+  gst_alsa_type_add_device_property_probe_interface (type);
 }
 
 static void
@@ -287,7 +268,7 @@ gst_alsasink_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_alsasink_init (GstAlsaSink * alsasink)
+gst_alsasink_init (GstAlsaSink * alsasink, GstAlsaSinkClass * g_class)
 {
   GST_DEBUG_OBJECT (alsasink, "initializing alsasink");
 

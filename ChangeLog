@@ -1,5 +1,28 @@
 2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/alsa/gstalsadeviceprobe.c: (gst_alsa_get_device_list),
+	(gst_alsa_device_property_probe_probe_property),
+	(gst_alsa_device_property_probe_needs_probe),
+	(gst_alsa_device_property_probe_get_values),
+	(gst_alsa_type_add_device_property_probe_interface):
+	* ext/alsa/gstalsadeviceprobe.h:
+	* ext/alsa/gstalsamixerelement.c:
+	(gst_alsa_mixer_element_init_interfaces):
+	* ext/alsa/gstalsamixerelement.h:
+	  Clean up and simplify alsa device probing. Make it actually work
+	  for multiple classes. Don't cache results any longer.
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_init_interfaces),
+	(gst_alsasink_init):
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_dispose),
+	(gst_alsasrc_interface_supported), (gst_implements_interface_init),
+	(gst_alsasrc_init_interfaces), (gst_alsasrc_set_property):
+	  Make alsasink and alsasrc implement the GstPropertyProbe interface
+	  for device probing (#342181).
+      Patch by: Martin Szulecki  <gnomebugzilla at sukimashita com>
+
+2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/subparse/samiparse.c: (handle_start_font):
 	  Don't ignore return value of strtol (++compiler_happiness).
 

@@ -94,9 +94,7 @@ gst_alsa_mixer_element_init_interfaces (GType type)
       &implements_iface_info);
   g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_iface_info);
 
-  gst_alsa_type_add_device_property_probe_interface (type,
-      G_STRUCT_OFFSET (GstAlsaMixerElementClass, device_probe_data),
-      PROP_DEVICE);
+  gst_alsa_type_add_device_property_probe_interface (type);
 }
 
 static void

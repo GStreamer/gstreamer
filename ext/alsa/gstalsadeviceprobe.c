@@ -26,12 +26,6 @@
 #include "gstalsadeviceprobe.h"
 #include "gst/interfaces/propertyprobe.h"
 
-#define DATA_OFFSET_QUARK \
-    g_quark_from_static_string ("alsa-device-probe-data-offset-quark")
-
-#define DEVICE_PROPID_QUARK \
-    g_quark_from_static_string ("alsa-device-probe-device-propid-quark")
-
 static const GList *
 gst_alsa_device_property_probe_get_properties (GstPropertyProbe * probe)
 {
@@ -54,48 +48,15 @@ gst_alsa_device_property_probe_get_properties (GstPropertyProbe * probe)
   return list;
 }
 
-/* yes, this is evil, but hey, it works */
-
-static gboolean
-gst_alsa_device_probe_get_data (GObject * obj, GstAlsaDeviceProbeData ** p_data,
-    guint * p_device_propid)
-{
-  gpointer klass;
-  guint devpropid;
-  guint offset;
-  GType type;
-
-  type = G_TYPE_FROM_INSTANCE (obj);
-
-  /* in case this is a derived class ... */
-  while (g_type_get_qdata (type, DATA_OFFSET_QUARK) == NULL) {
-    type = g_type_parent (type);
-    g_return_val_if_fail (G_TYPE_IS_FUNDAMENTAL (type) == FALSE, FALSE);
-  }
-
-  offset = GPOINTER_TO_UINT (g_type_get_qdata (type, DATA_OFFSET_QUARK));
-  devpropid = GPOINTER_TO_UINT (g_type_get_qdata (type, DEVICE_PROPID_QUARK));
-
-  g_return_val_if_fail (offset != 0, FALSE);
-  g_return_val_if_fail (devpropid != 0, FALSE);
-
-  klass = G_OBJECT_GET_CLASS (obj);
-
-  *p_data = (GstAlsaDeviceProbeData *) G_STRUCT_MEMBER_P (klass, offset);
-  *p_device_propid = devpropid;
-
-  return TRUE;
-}
-
-static void
-gst_alsa_add_device_list (GstAlsaDeviceProbeData * probe_data,
-    snd_pcm_stream_t stream)
+static GList *
+gst_alsa_get_device_list (snd_pcm_stream_t stream)
 {
   snd_ctl_t *handle;
   int card, err, dev;
   snd_ctl_card_info_t *info;
   snd_pcm_info_t *pcminfo;
   gboolean mixer = (stream == -1);
+  GList *list = NULL;
 
   if (stream == -1)
     stream = 0;
@@ -106,8 +67,9 @@ gst_alsa_add_device_list (GstAlsaDeviceProbeData * probe_data,
 
   if (snd_card_next (&card) < 0 || card < 0) {
     /* no soundcard found */
-    return;
+    return NULL;
   }
+
   while (card >= 0) {
     gchar name[32];
 
@@ -121,8 +83,7 @@ gst_alsa_add_device_list (GstAlsaDeviceProbeData * probe_data,
     }
 
     if (mixer) {
-      probe_data->devices = g_list_append (probe_data->devices,
-          g_strdup (name));
+      list = g_list_append (list, g_strdup (name));
     } else {
       dev = -1;
       while (1) {
@@ -140,7 +101,7 @@ gst_alsa_add_device_list (GstAlsaDeviceProbeData * probe_data,
         }
 
         gst_device = g_strdup_printf ("hw:%d,%d", card, dev);
-        probe_data->devices = g_list_append (probe_data->devices, gst_device);
+        list = g_list_append (list, gst_device);
       }
     }
     snd_ctl_close (handle);
@@ -149,52 +110,15 @@ gst_alsa_add_device_list (GstAlsaDeviceProbeData * probe_data,
       break;
     }
   }
-}
 
-static gboolean
-gst_alsa_probe_devices (GstElementClass * klass,
-    GstAlsaDeviceProbeData * probe_data, gboolean check)
-{
-  static gboolean init = FALSE;
-
-  /* I'm pretty sure ALSA has a good way to do this. However, their cool
-   * auto-generated documentation is pretty much useless if you try to
-   * do function-wise look-ups. */
-
-  if (!init && !check) {
-    snd_pcm_stream_t mode = -1;
-    const GList *templates;
-
-    /* we assume one pad template at max [zero=mixer] */
-    templates = gst_element_class_get_pad_template_list (klass);
-    if (templates) {
-      if (GST_PAD_TEMPLATE_DIRECTION (templates->data) == GST_PAD_SRC)
-        mode = SND_PCM_STREAM_CAPTURE;
-      else
-        mode = SND_PCM_STREAM_PLAYBACK;
-    }
-
-    gst_alsa_add_device_list (probe_data, mode);
-
-    init = TRUE;
-  }
-
-  return init;
+  return list;
 }
 
 static void
 gst_alsa_device_property_probe_probe_property (GstPropertyProbe * probe,
     guint prop_id, const GParamSpec * pspec)
 {
-  GstAlsaDeviceProbeData *probe_data;
-  guint devid;
-
-  if (!gst_alsa_device_probe_get_data (G_OBJECT (probe), &probe_data, &devid))
-    g_return_if_reached ();
-
-  if (prop_id == devid) {
-    gst_alsa_probe_devices (GST_ELEMENT_GET_CLASS (probe), probe_data, FALSE);
-  } else {
+  if (!g_str_equal (pspec->name, "device")) {
     G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
   }
 }
@@ -203,59 +127,59 @@ static gboolean
 gst_alsa_device_property_probe_needs_probe (GstPropertyProbe * probe,
     guint prop_id, const GParamSpec * pspec)
 {
-  GstAlsaDeviceProbeData *probe_data;
-  GstElementClass *klass;
-  guint devid;
-
-  if (!gst_alsa_device_probe_get_data (G_OBJECT (probe), &probe_data, &devid))
-    g_return_val_if_reached (FALSE);
-
-  if (prop_id != devid) {
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
-    return FALSE;
-  }
-
-  klass = GST_ELEMENT_GET_CLASS (probe);
-  return !gst_alsa_probe_devices (klass, probe_data, TRUE);
-}
-
-static GValueArray *
-gst_alsa_device_probe_list_devices (GstAlsaDeviceProbeData * probe_data)
-{
-  GValueArray *array;
-  GValue value = { 0 };
-  GList *item;
-
-  if (!probe_data->devices)
-    return NULL;
-
-  array = g_value_array_new (g_list_length (probe_data->devices));
-  g_value_init (&value, G_TYPE_STRING);
-  for (item = probe_data->devices; item != NULL; item = item->next) {
-    g_value_set_string (&value, (const gchar *) item->data);
-    g_value_array_append (array, &value);
-  }
-  g_value_unset (&value);
-
-  return array;
+  /* don't cache probed data */
+  return TRUE;
 }
 
 static GValueArray *
 gst_alsa_device_property_probe_get_values (GstPropertyProbe * probe,
     guint prop_id, const GParamSpec * pspec)
 {
-  GstAlsaDeviceProbeData *probe_data;
-  guint devid;
+  GstElementClass *klass;
+  const GList *templates;
+  snd_pcm_stream_t mode = -1;
+  GValueArray *array;
+  GValue value = { 0, };
+  GList *l, *list;
 
-  if (!gst_alsa_device_probe_get_data (G_OBJECT (probe), &probe_data, &devid))
-    g_return_val_if_reached (NULL);
-
-  if (prop_id != devid) {
+  if (!g_str_equal (pspec->name, "device")) {
     G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
     return NULL;
   }
 
-  return gst_alsa_device_probe_list_devices (probe_data);
+  klass = GST_ELEMENT_GET_CLASS (GST_ELEMENT (probe));
+
+  /* I'm pretty sure ALSA has a good way to do this. However, their cool
+   * auto-generated documentation is pretty much useless if you try to
+   * do function-wise look-ups. */
+  /* we assume one pad template at max [zero=mixer] */
+  templates = gst_element_class_get_pad_template_list (klass);
+  if (templates) {
+    if (GST_PAD_TEMPLATE_DIRECTION (templates->data) == GST_PAD_SRC)
+      mode = SND_PCM_STREAM_CAPTURE;
+    else
+      mode = SND_PCM_STREAM_PLAYBACK;
+  }
+
+  list = gst_alsa_get_device_list (mode);
+
+  if (list == NULL) {
+    GST_LOG_OBJECT (probe, "No devices found");
+    return NULL;
+  }
+
+  array = g_value_array_new (g_list_length (list));
+  g_value_init (&value, G_TYPE_STRING);
+  for (l = list; l != NULL; l = l->next) {
+    GST_LOG_OBJECT (probe, "Found device: %s", l->data);
+    g_value_take_string (&value, (gchar *) l->data);
+    l->data = NULL;
+    g_value_array_append (array, &value);
+  }
+  g_value_unset (&value);
+  g_list_free (list);
+
+  return array;
 }
 
 static void
@@ -268,23 +192,13 @@ gst_alsa_property_probe_interface_init (GstPropertyProbeInterface * iface)
 }
 
 void
-gst_alsa_type_add_device_property_probe_interface (GType type,
-    guint probe_data_klass_offset, guint device_prop_id)
+gst_alsa_type_add_device_property_probe_interface (GType type)
 {
   static const GInterfaceInfo probe_iface_info = {
     (GInterfaceInitFunc) gst_alsa_property_probe_interface_init,
     NULL,
     NULL,
   };
-
-  g_assert (probe_data_klass_offset != 0);
-  g_assert (device_prop_id != 0);
-
-  g_type_set_qdata (type, DATA_OFFSET_QUARK,
-      GUINT_TO_POINTER (probe_data_klass_offset));
-
-  g_type_set_qdata (type, DEVICE_PROPID_QUARK,
-      GUINT_TO_POINTER (device_prop_id));
 
   g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
       &probe_iface_info);

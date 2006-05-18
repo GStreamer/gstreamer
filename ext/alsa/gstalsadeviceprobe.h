@@ -25,17 +25,7 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstAlsaDeviceProbeData GstAlsaDeviceProbeData;
-
-struct _GstAlsaDeviceProbeData {
-  /* autodetected devices available */
-  GList *devices;
-};
-
-/* offset is the offset of the device probe data struct in the klass struct */
-void      gst_alsa_type_add_device_property_probe_interface (GType  type,
-                                                             guint  probe_data_offset,
-                                                             guint  device_prop_id);
+void      gst_alsa_type_add_device_property_probe_interface (GType type);
 
 G_END_DECLS
 
