@@ -450,41 +450,34 @@ id3v2_tag_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
   switch (tag_type) {
     case G_TYPE_UINT:
     {
-      guint tmp;
-      gchar *check;
+      gint current, total;
 
-      tmp = strtoul ((char *) tag_str, &check, 10);
-
-      if (strcmp (tag_name, GST_TAG_TRACK_NUMBER) == 0) {
-        if (*check == '/') {
-          guint total;
-
-          check++;
-          total = strtoul (check, &check, 10);
-          if (*check != '\0')
-            break;
-
-          gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
-              GST_TAG_TRACK_COUNT, total, NULL);
+      if (sscanf (tag_str, "%d/%d", &current, &total) == 2) {
+        if (total < 0) {
+          GST_WARNING ("Ignoring negative value for total %d in tag %s",
+              total, tag_name);
+        } else {
+          if (strcmp (tag_name, GST_TAG_TRACK_NUMBER) == 0) {
+            gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
+                GST_TAG_TRACK_COUNT, total, NULL);
+          } else if (strcmp (tag_name, GST_TAG_ALBUM_VOLUME_NUMBER) == 0) {
+            gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
+                GST_TAG_ALBUM_VOLUME_COUNT, total, NULL);
+          }
         }
-      } else if (strcmp (tag_name, GST_TAG_ALBUM_VOLUME_NUMBER) == 0) {
-        if (*check == '/') {
-          guint total;
-
-          check++;
-          total = strtoul (check, &check, 10);
-          if (*check != '\0')
-            break;
-
-          gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
-              GST_TAG_ALBUM_VOLUME_COUNT, total, NULL);
-        }
+      } else if (sscanf (tag_str, "%d", &current) != 1) {
+        /* Not an integer in the string */
+        GST_WARNING ("Tag string for tag %s does not contain an integer - "
+            "ignoring", tag_name);
+        break;
       }
 
-      if (*check != '\0')
-        break;
-
-      gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, tmp, NULL);
+      if (current < 0)
+        GST_WARNING ("Ignoring negative value %d in tag %s", current, tag_name);
+      else {
+        gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, current,
+            NULL);
+      }
       break;
     }
     case G_TYPE_UINT64:
