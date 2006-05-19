@@ -1,6 +1,14 @@
 2006-05-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_chunk):
+	  On second thought, just skip JUNK chunks automatically, so
+	  the caller doesn't have to handle this. Fixes #342345.
+	  Also, return GST_FLOW_UNEXPECTED if we get a short read,
+	  not GST_FLOW_ERROR.
+
+2006-05-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_chunk):
 	  Don't bail out on JUNK chunks with a size of 0 (would try to
 	  pull_range 0 bytes before, which sources don't like too much).
 	  See #342345.

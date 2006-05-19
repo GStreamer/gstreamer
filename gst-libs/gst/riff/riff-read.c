@@ -39,7 +39,8 @@ GST_DEBUG_CATEGORY_EXTERN (riff_debug);
  * @tag: fourcc of the chunk (returned by this function).
  * @chunk_data: buffer (returned by this function).
  *
- * Reads a single chunk of data.
+ * Reads a single chunk of data. Since 0.10.8 'JUNK' chunks
+ * are skipped automatically.
  *
  * Returns: flow status.
  */
@@ -53,6 +54,8 @@ gst_riff_read_chunk (GstElement * element,
   guint size;
   guint64 offset = *_offset;
   gchar dbg[5] = { 0, };
+
+skip_junk:
 
   if ((res = gst_pad_pull_range (pad, offset, 8, &buf)) != GST_FLOW_OK)
     return res;
@@ -69,18 +72,22 @@ gst_riff_read_chunk (GstElement * element,
   memcpy (dbg, tag, 4);
   GST_DEBUG_OBJECT (element, "tag=%s, size=%u", dbg, size);
 
-  if (*tag == GST_RIFF_TAG_JUNK && size == 0) {
-    buf = gst_buffer_new ();
-  } else {
-    if ((res = gst_pad_pull_range (pad, offset + 8, size, &buf)) != GST_FLOW_OK)
-      return res;
-    if (!buf || GST_BUFFER_SIZE (buf) < size) {
-      GST_DEBUG_OBJECT (element, "not enough data (available=%u, needed=%u)",
-          (buf) ? GST_BUFFER_SIZE (buf) : 0, size);
-      if (buf)
-        gst_buffer_unref (buf);
-      return GST_FLOW_ERROR;
-    }
+  /* skip 'JUNK' chunks */
+  if (*tag == GST_RIFF_TAG_JUNK) {
+    *_offset += 8 + GST_ROUND_UP_2 (size);
+    offset += 8 + GST_ROUND_UP_2 (size);
+    GST_DEBUG_OBJECT (element, "skipping JUNK chunk");
+    goto skip_junk;
+  }
+
+  if ((res = gst_pad_pull_range (pad, offset + 8, size, &buf)) != GST_FLOW_OK)
+    return res;
+  else if (!buf || GST_BUFFER_SIZE (buf) < size) {
+    GST_DEBUG_OBJECT (element, "not enough data (available=%u, needed=%u)",
+        (buf) ? GST_BUFFER_SIZE (buf) : 0, size);
+    if (buf)
+      gst_buffer_unref (buf);
+    return GST_FLOW_UNEXPECTED;
   }
 
   *_chunk_data = buf;
@@ -101,7 +108,7 @@ gst_riff_read_chunk (GstElement * element,
  *
  * Reads a single chunk.
  *
- * Returns: the fourcc tag of this chunk, or 0 on error.
+ * Returns: the fourcc tag of this chunk, or FALSE on error
  */
 
 gboolean
