@@ -33,8 +33,14 @@
         deep-down-and-dirty compilation issues.
       </para>
     </abstract>
-    
+
     <revhistory>
+      <revision>
+        <revnumber>0.2.1</revnumber>
+        <date>2006-05-19</date>
+        <revremark>Some updates for GStreamer-0.10</revremark>
+      </revision>
+
       <revision>
         <revnumber>0.2.0</revnumber>
         <date>2006-03-16</date>
@@ -53,7 +59,6 @@
         <revremark>Initial conversion from FAQ database.</revremark>
       </revision>
     </revhistory>
-
   </articleinfo>
 
   &START;

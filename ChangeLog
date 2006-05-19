@@ -1,3 +1,14 @@
+2006-05-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/faq/developing.xml:
+	* docs/faq/faq.xml:
+	* docs/faq/troubleshooting.xml:
+	* docs/faq/using.xml:
+	  Some minor FAQ updates that won't change the fact that
+	  our FAQ is badly structured, full of information hardly
+	  anyone new to GStreamer needs to know and lacking lots
+	  of information people constantly ask for.
+	  
 2006-05-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstpad.c: (gst_pad_set_caps):

@@ -58,9 +58,10 @@ A (non-complete) list of output plug-ins for audio is
 <itemizedlist>
 <listitem><para>osssink for OSS output</para></listitem>
 <listitem><para>esdsink for ESound output</para></listitem>
-<listitem><para>artsdsink for aRTs output</para></listitem>
+<listitem><para>artsdsink for aRTs output (not ported to 0.10 yet)</para></listitem>
 <listitem><para>alsasink for ALSA output</para></listitem>
-<listitem><para>jacksink for JACK output</para></listitem>
+<listitem><para>alsaspdifsink for ALSA S/PDIF output</para></listitem>
+<listitem><para>jacksink for JACK output (not available yet)</para></listitem>
 </itemizedlist>
 First of all, run gst-inspect on the output plug-in you want to use to
 make sure you have it installed.  For example, if you use OSS, run
@@ -72,7 +73,7 @@ and see if that prints out a bunch of properties for the plug-in.
         <para>
 Then try to play the sine tone by running
 <programlisting>
-$ gst-launch audiotestsrc ! osssink
+$ gst-launch audiotestsrc ! audioconvert ! audioresample ! osssink
 </programlisting>
 and see if you hear something.  Make sure your volume is turned up,
 but also make sure it is not too loud and you are not wearing your headphones.

@@ -3,33 +3,6 @@
   <qandaset defaultlabel="qanda">
 
     <qandaentry>
-      <question id="troubleshooting-undefined-behaviour">
-        <label>
-My GStreamer-based application crashes on startup with errors about unfound
-schedulers on the command-line.
-        </label>
-        <para>
-I get undefined behaviour as soon as anyGStreamer element is being initialized.
-        </para>
-      </question>
-
-      <answer>
-        <para>
-If the application is using GStreamer-0.8 it might be that your registry is missing, or is outdated (i.e. not updated after
-a recent upgrade). Fix this by running gst-register yourself:
-          <programlisting>
-gst-register
-          </programlisting>
-In the worst case, you might have to run it both as user and as root.
-        </para>
-        <para>
-Note that package managers are suggested to run this automatically during the
-post-installation. Our RPMs and Debian packages do just that.
-        </para>
-      </answer>
-    </qandaentry>
-
-    <qandaentry>
       <question id="troubleshooting-missing-plug-in">
         <para>
 Some application is telling me that I am missing a plug-in.  What do I do ?
@@ -183,14 +156,14 @@ On my system there is no gst-register command.
 
       <answer>
         <para>
-GStreamer version 0.9 and higher does not need this anymore. The registry will
-be rebuild automatically. If you suspect the registry is broken, just delete the
+GStreamer version 0.10 does not need this anymore. The registry will
+be rebuilt automatically. If you suspect the registry is broken, just delete the
 <filename>registry.*.xml</filename> files under <filename>$HOME/.gstreamer-0.X/</filename>
 and run
 <programlisting>
   gst-inspect
 </programlisting>
-to rebuild the registry. You might need to do this as root again for the system-wide registry.
+to rebuild the registry.
         </para>
       </answer>
     </qandaentry>
