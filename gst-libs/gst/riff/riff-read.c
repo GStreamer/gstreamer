@@ -69,14 +69,18 @@ gst_riff_read_chunk (GstElement * element,
   memcpy (dbg, tag, 4);
   GST_DEBUG_OBJECT (element, "tag=%s, size=%u", dbg, size);
 
-  if ((res = gst_pad_pull_range (pad, offset + 8, size, &buf)) != GST_FLOW_OK)
-    return res;
-  else if (!buf || GST_BUFFER_SIZE (buf) < size) {
-    GST_DEBUG_OBJECT (element, "not enough data (available=%u, needed=%u)",
-        (buf) ? GST_BUFFER_SIZE (buf) : 0, size);
-    if (buf)
-      gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
+  if (*tag == GST_RIFF_TAG_JUNK && size == 0) {
+    buf = gst_buffer_new ();
+  } else {
+    if ((res = gst_pad_pull_range (pad, offset + 8, size, &buf)) != GST_FLOW_OK)
+      return res;
+    if (!buf || GST_BUFFER_SIZE (buf) < size) {
+      GST_DEBUG_OBJECT (element, "not enough data (available=%u, needed=%u)",
+          (buf) ? GST_BUFFER_SIZE (buf) : 0, size);
+      if (buf)
+        gst_buffer_unref (buf);
+      return GST_FLOW_ERROR;
+    }
   }
 
   *_chunk_data = buf;
