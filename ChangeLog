@@ -1,3 +1,14 @@
+2006-05-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstpad.c: (gst_pad_set_caps):
+	  Short-circuit gst_pad_set_caps if setting the existing
+	  caps pointer again, and avoid printing debug and 
+	  reffing/unreffing the caps.
+
+	* plugins/elements/gstqueue.c: (gst_queue_push_one):
+	  There's actually no need to set the caps before pushing -
+	  the acceptcaps method will handle it anyway.
+
 2006-05-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:

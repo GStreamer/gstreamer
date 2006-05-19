@@ -776,11 +776,6 @@ gst_queue_push_one (GstQueue * queue)
       queue->cur_level.time -= GST_BUFFER_DURATION (data);
 
     GST_QUEUE_MUTEX_UNLOCK (queue);
-    /* Set caps on the src pad first, because otherwise when we push it will
-     * check that we accept the caps which checks upstream, whereas 
-     * explicitly setting the caps doesn't */
-    gst_pad_set_caps (queue->srcpad, GST_BUFFER_CAPS (data));
-
     result = gst_pad_push (queue->srcpad, GST_BUFFER (data));
     /* need to check for srcresult here as well */
     GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);

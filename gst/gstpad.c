@@ -2206,6 +2206,11 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
   setcaps = GST_PAD_SETCAPSFUNC (pad);
 
   existing = GST_PAD_CAPS (pad);
+  if (existing == caps) {
+    GST_OBJECT_UNLOCK (pad);
+    return TRUE;
+  }
+
   if (gst_caps_is_equal (caps, existing))
     goto setting_same_caps;
 
