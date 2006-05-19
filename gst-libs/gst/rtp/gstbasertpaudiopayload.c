@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
-#include <math.h>
 
 #include "gstbasertpaudiopayload.h"
 
@@ -118,10 +117,8 @@ gst_basertpaudiopayload_set_frame_based (GstBaseRTPAudioPayload *
 {
   g_return_if_fail (basertpaudiopayload != NULL);
 
-  if (basertpaudiopayload->type != AUDIO_CODEC_TYPE_NONE) {
-    GST_ERROR_OBJECT (basertpaudiopayload,
-        "Codec type already set! You should only set this once!");
-  }
+  g_return_if_fail (basertpaudiopayload->type == AUDIO_CODEC_TYPE_NONE);
+
   basertpaudiopayload->type = AUDIO_CODEC_TYPE_FRAME_BASED;
 }
 
@@ -139,10 +136,8 @@ gst_basertpaudiopayload_set_sample_based (GstBaseRTPAudioPayload *
 {
   g_return_if_fail (basertpaudiopayload != NULL);
 
-  if (basertpaudiopayload->type != AUDIO_CODEC_TYPE_NONE) {
-    GST_ERROR_OBJECT (basertpaudiopayload,
-        "Codec type already set! You should only set this once!");
-  }
+  g_return_if_fail (basertpaudiopayload->type == AUDIO_CODEC_TYPE_NONE);
+
   basertpaudiopayload->type = AUDIO_CODEC_TYPE_SAMPLE_BASED;
 }
 
@@ -252,9 +247,8 @@ gst_basertpaudiopayload_handle_frame_based_buffer (GstBaseRTPPayload *
 
     maxptime_octets = frame_size * (int) (ptime_ms / frame_duration);
     if (maxptime_octets == 0) {
-      GST_WARNING_OBJECT (basertpaudiopayload,
-          "Given ptime %d is smaller than minimum %d ms, overwriting to minimum",
-          ptime_ms, frame_duration);
+      GST_WARNING_OBJECT (basertpaudiopayload, "Given ptime %d is smaller than"
+          " minimum %d ms, overwriting to minimum", ptime_ms, frame_duration);
       maxptime_octets = frame_size;
     }
   }
@@ -277,7 +271,7 @@ gst_basertpaudiopayload_handle_frame_based_buffer (GstBaseRTPPayload *
             /* ptime max */
             maxptime_octets),
         /* currently available */
-        floor (available / frame_size) * frame_size);
+        (available / frame_size) * frame_size);
 
     ret = gst_basertpaudiopayload_push (basepayload, data, payload_len,
         basertpaudiopayload->base_ts);
@@ -293,8 +287,8 @@ gst_basertpaudiopayload_handle_frame_based_buffer (GstBaseRTPPayload *
 
   /* none should be available by now */
   if (available != 0) {
-    GST_ERROR_OBJECT (basertpaudiopayload,
-        "The buffer size is not a multiple of the frame_size");
+    GST_ERROR_OBJECT (basertpaudiopayload, "The buffer size is not a multiple"
+        " of the frame_size");
     return GST_FLOW_ERROR;
   }
 
