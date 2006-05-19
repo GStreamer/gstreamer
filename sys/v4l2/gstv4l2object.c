@@ -234,7 +234,7 @@ gst_v4l2_device_get_type (void)
 }
 
 void
-gst_v4l2object_install_properties_helper (GObjectClass * gobject_class)
+gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class)
 {
 
   g_object_class_install_property
@@ -269,7 +269,7 @@ gst_v4l2object_install_properties_helper (GObjectClass * gobject_class)
 }
 
 GstV4l2Object *
-gst_v4l2object_new (GstElement * element,
+gst_v4l2_object_new (GstElement * element,
     GstV4l2GetInOutFunction get_in_out_func,
     GstV4l2SetInOutFunction set_in_out_func,
     GstV4l2UpdateFpsFunction update_fps_func)
@@ -304,7 +304,7 @@ gst_v4l2object_new (GstElement * element,
 
 
 void
-gst_v4l2object_destroy (GstV4l2Object ** v4l2object)
+gst_v4l2_object_destroy (GstV4l2Object ** v4l2object)
 {
 
   if (*v4l2object) {
@@ -323,7 +323,7 @@ gst_v4l2object_destroy (GstV4l2Object ** v4l2object)
 
 
 gboolean
-gst_v4l2object_set_property_helper (GstV4l2Object * v4l2object,
+gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
 
@@ -395,7 +395,7 @@ gst_v4l2object_set_property_helper (GstV4l2Object * v4l2object,
 
 
 gboolean
-gst_v4l2object_get_property_helper (GstV4l2Object * v4l2object,
+gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
   switch (prop_id) {
@@ -495,7 +495,7 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
 
 
 gboolean
-gst_v4l2object_start (GstV4l2Object * v4l2object)
+gst_v4l2_object_start (GstV4l2Object * v4l2object)
 {
   if (gst_v4l2_open (v4l2object))
     gst_v4l2_set_defaults (v4l2object);
@@ -511,7 +511,7 @@ gst_v4l2object_start (GstV4l2Object * v4l2object)
 }
 
 gboolean
-gst_v4l2object_stop (GstV4l2Object * v4l2object)
+gst_v4l2_object_stop (GstV4l2Object * v4l2object)
 {
 
 #ifdef HAVE_XVIDEO

@@ -21,8 +21,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_V4L2OBJECT_H__
-#define __GST_V4L2OBJECT_H__
+#ifndef __GST_V4L2_OBJECT_H__
+#define __GST_V4L2_OBJECT_H__
 
 /* Because of some really cool feature in video4linux1, also known as
  * 'not including sys/types.h and sys/time.h', we had to include it
@@ -49,7 +49,7 @@
 
 G_BEGIN_DECLS
 
-#define GST_V4L2OBJECT(obj) (GstV4l2Object *)(obj)
+#define GST_V4L2_OBJECT(obj) (GstV4l2Object *)(obj)
 
 typedef struct _GstV4l2Object GstV4l2Object;
 typedef struct _GstV4l2ObjectClassHelper GstV4l2ObjectClassHelper;
@@ -109,7 +109,7 @@ struct _GstV4l2ObjectClassHelper {
 };
 
 
-GType gst_v4l2object_get_type(void);
+GType gst_v4l2_object_get_type(void);
 
 
 #define V4L2_STD_OBJECT_PROPS			\
@@ -122,26 +122,26 @@ GType gst_v4l2object_get_type(void);
 
 
 extern GstV4l2Object *
-gst_v4l2object_new (GstElement * element,
+gst_v4l2_object_new (GstElement * element,
                     GstV4l2GetInOutFunction get_in_out_func,
                     GstV4l2SetInOutFunction set_in_out_func,
 		    GstV4l2UpdateFpsFunction   update_fps_func);
 
 extern void
-gst_v4l2object_destroy (GstV4l2Object ** v4l2object);
+gst_v4l2_object_destroy (GstV4l2Object ** v4l2object);
 
 extern void
-gst_v4l2object_install_properties_helper (GObjectClass *gobject_class);
+gst_v4l2_object_install_properties_helper (GObjectClass *gobject_class);
 
 extern gboolean
-gst_v4l2object_set_property_helper (GstV4l2Object *v4l2object,
+gst_v4l2_object_set_property_helper (GstV4l2Object *v4l2object,
 				    guint prop_id, const GValue * value, GParamSpec * pspec);
 extern gboolean
-gst_v4l2object_get_property_helper (GstV4l2Object *v4l2object,
+gst_v4l2_object_get_property_helper (GstV4l2Object *v4l2object,
 				    guint prop_id, GValue * value, GParamSpec * pspec);
 
-extern gboolean gst_v4l2object_start (GstV4l2Object *v4l2object);
-extern gboolean gst_v4l2object_stop (GstV4l2Object *v4l2object);
+extern gboolean gst_v4l2_object_start (GstV4l2Object *v4l2object);
+extern gboolean gst_v4l2_object_stop (GstV4l2Object *v4l2object);
 
 extern const GList *
 gst_v4l2_probe_get_properties (GstPropertyProbe * probe);
@@ -207,4 +207,4 @@ interface_as_function ## _property_probe_interface_init (GstPropertyProbeInterfa
 
 G_END_DECLS
 
-#endif /* __GST_V4L2OBJECT_H__ */
+#endif /* __GST_V4L2_OBJECT_H__ */

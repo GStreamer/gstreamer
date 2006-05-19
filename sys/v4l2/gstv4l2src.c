@@ -268,7 +268,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   gobject_class->set_property = gst_v4l2src_set_property;
   gobject_class->get_property = gst_v4l2src_get_property;
 
-  gst_v4l2object_install_properties_helper (gobject_class);
+  gst_v4l2_object_install_properties_helper (gobject_class);
 
   g_object_class_install_property
       (gobject_class, PROP_USE_FIXED_FPS,
@@ -292,7 +292,7 @@ static void
 gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
 {
 
-  v4l2src->v4l2object = gst_v4l2object_new (GST_ELEMENT (v4l2src),
+  v4l2src->v4l2object = gst_v4l2_object_new (GST_ELEMENT (v4l2src),
       gst_v4l2_get_input, gst_v4l2_set_input, gst_v4l2src_update_fps);
 
   v4l2src->breq.count = 0;
@@ -337,7 +337,7 @@ gst_v4l2src_set_property (GObject * object,
   v4l2src = GST_V4L2SRC (object);
 
 
-  if (!gst_v4l2object_set_property_helper (v4l2src->v4l2object,
+  if (!gst_v4l2_object_set_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
 
     switch (prop_id) {
@@ -366,7 +366,7 @@ gst_v4l2src_get_property (GObject * object,
   g_return_if_fail (GST_IS_V4L2SRC (object));
   v4l2src = GST_V4L2SRC (object);
 
-  if (!gst_v4l2object_get_property_helper (v4l2src->v4l2object,
+  if (!gst_v4l2_object_get_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
 
     switch (prop_id) {
@@ -831,7 +831,7 @@ gst_v4l2src_start (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
 
-  if (!gst_v4l2object_start (v4l2src->v4l2object))
+  if (!gst_v4l2_object_start (v4l2src->v4l2object))
     return FALSE;
 
   v4l2src->offset = 0;
@@ -853,7 +853,7 @@ gst_v4l2src_stop (GstBaseSrc * src)
       return FALSE;
   }
 
-  if (!gst_v4l2object_stop (v4l2src->v4l2object))
+  if (!gst_v4l2_object_stop (v4l2src->v4l2object))
     return FALSE;
 
   return TRUE;
