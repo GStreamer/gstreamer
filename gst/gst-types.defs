@@ -305,6 +305,14 @@
   )
 )
 
+(define-pointer TypeFind
+  (in-module "Gst")
+  (c-name "GstTypeFind")
+  (gtype-id "GST_TYPE_TYPE_FIND")
+  (fields
+  )
+)
+
 ;; Enumerations and flags ...
 
 (define-flags BinFlags

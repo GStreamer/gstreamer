@@ -1,0 +1,7 @@
+%%
+ignore
+   gst_type_find_new
+%%
+ignore-type
+   GstTypeFind
+%%

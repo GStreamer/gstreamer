@@ -1,3 +1,23 @@
+2006-05-19  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-0.10.7.ignore:
+	* gst/gstversion.override.in:
+	Added ignore file for core 0.10.7
+	* gst/base.defs:
+	Added gst_adapter_take_buffer
+	* gst/gst-0.10.6.ignore:
+	Filed API addition for 0.10.6
+	* gst/gst-types.defs:
+	Added GstTypeFind pointer definition
+	* gst/gst.defs:
+	* gst/gst.override:
+	Added fake function gst_type_find_new() to create a GstTypeFind that can
+	be used in all typefinding function.
+	GstTypeFind * 
+	gst_type_find_new(data, peekfunction, suggestfunction [, getlenghtfunction])
+
 2006-05-09  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

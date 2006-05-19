@@ -967,3 +967,168 @@ _wrap_gst_type_find_helper_for_buffer (PyObject *self, PyObject *args, PyObject 
     
     return py_ret;
 }
+%%
+override gst_type_find_new kwargs
+
+static guint8 *
+gst_type_find_peek_handler (gpointer data, gint64 offset, guint size)
+{
+    PyGILState_STATE state;
+    guint8 * ret = NULL;
+    PyObject *py_data;
+    PyObject *callback, *args;
+    PyObject *py_ret;
+
+    GST_DEBUG ("mkay");
+
+    g_return_val_if_fail (data != NULL, NULL);
+    py_data = (PyObject *) data;
+    g_assert (PyTuple_Check (py_data));
+
+    state = pyg_gil_state_ensure ();
+
+    /* Figure out the callback and create the arguments */
+    if (!(callback = PyTuple_GetItem(py_data, 1)))
+	goto beach;
+
+    args = Py_BuildValue ("(OLI)", 
+			  PyTuple_GetItem(py_data, 0),
+			  offset, size);
+    if (!args)
+	goto beach;
+
+    /* Call python method */
+    py_ret = PyObject_CallObject (callback, args);
+    
+    /* transform return value (a string) */
+    if (!py_ret) {
+	Py_DECREF (args);
+	goto beach;
+    }
+    if (!PyString_Check(py_ret)) {
+	Py_DECREF (py_ret);
+	Py_DECREF (args);
+	goto beach;
+    } else {
+	gchar *str;
+	int len;
+
+	if ((PyString_AsStringAndSize(py_ret, &str, &len)) == -1) {
+	    Py_DECREF (py_ret);
+	    Py_DECREF (args);
+	    goto beach;
+	}
+	GST_DEBUG ("got string of len %d", len);
+	if (len)
+	    ret = g_memdup((gconstpointer) str, (guint) len);
+    }
+    Py_DECREF (py_ret);
+    Py_DECREF (args);
+
+ beach:
+    pyg_gil_state_release (state);
+    return ret;
+}
+
+static void
+gst_type_find_suggest_handler (gpointer data, guint probability, const GstCaps * caps)
+{
+    PyGILState_STATE state;
+    PyObject *py_data;
+    PyObject *callback, *args;
+
+    GST_DEBUG ("mkay");
+
+    if (!data)
+	return;
+    py_data = (PyObject *) data;
+    g_assert (PyTuple_Check (py_data));
+
+    state = pyg_gil_state_ensure ();
+
+    /* Figure out the callback and create the arguments */
+    if (!(callback = PyTuple_GetItem(py_data, 2)))
+	goto beach;
+
+    args = Py_BuildValue ("(OIN)", 
+			  PyTuple_GetItem(py_data, 0),
+			  probability, pyg_boxed_new (GST_TYPE_CAPS, (GstCaps*) caps, FALSE, TRUE));
+    if (!args)
+	goto beach;
+
+    /* Call python method */
+    PyObject_CallObject (callback, args);
+    
+    Py_DECREF (args);
+
+ beach:
+    pyg_gil_state_release (state);
+    return;
+}
+
+static guint64
+gst_type_find_get_length_handler (gpointer data)
+{
+    guint64 ret = 0;
+
+    /* Call python method */
+    return ret;
+}
+
+static PyObject *
+_wrap_gst_type_find_new (PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "data", "peekfunction", "suggestfunction", "getlengthfunction", NULL };
+    PyObject *py_data;
+    gpointer data;
+    PyObject *peekfunction;
+    PyObject *suggestfunction;
+    PyObject *getlengthfunction = NULL;
+    PyObject *pytypefind = NULL;
+    GstTypeFind *typefind = NULL;
+
+    GST_DEBUG ("poeut");
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OOO|O:type_find_new",
+				     kwlist, &py_data, &peekfunction,
+				     &suggestfunction, &getlengthfunction)) {
+	PyErr_SetString (PyExc_TypeError, "Error parsing values ...");
+	return NULL;
+    }
+
+    if (!PyCallable_Check(peekfunction)) {
+	PyErr_SetString (PyExc_TypeError, "peekfunction is not callable");
+	return NULL;
+    }
+    if (!PyCallable_Check(suggestfunction)) {
+	PyErr_SetString (PyExc_TypeError, "suggestfunction is not callable");
+	return NULL;
+    }
+    if (getlengthfunction && (!PyCallable_Check(suggestfunction))) {
+	PyErr_SetString (PyExc_TypeError, "getlengthfunction is not callable");
+	return NULL;
+    }
+
+    /* Create a python list to put in typefind->data */
+    if (getlengthfunction)
+	data = Py_BuildValue("(OOOO)", py_data, peekfunction, suggestfunction, getlengthfunction);
+    else
+	data = Py_BuildValue("(OOO)", py_data, peekfunction, suggestfunction);
+    
+    typefind = g_new0(GstTypeFind, 1);
+    typefind->peek = gst_type_find_peek_handler;
+    typefind->suggest = gst_type_find_suggest_handler;
+    typefind->data = data;
+    if (getlengthfunction)
+	typefind->get_length = gst_type_find_get_length_handler;
+
+    pytypefind = pyg_pointer_new (GST_TYPE_TYPE_FIND, typefind);
+
+    if (!pytypefind) {
+	PyErr_SetString (PyExc_TypeError, "pyg_pointer_new failed");
+    }
+
+    GST_DEBUG ("poeut : %p", pytypefind);
+
+    return pytypefind;
+}

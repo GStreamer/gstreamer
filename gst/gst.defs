@@ -6089,6 +6089,11 @@
 
 ;; From ../gstreamer/gst/gsttypefind.h
 
+(define-function type_find_new
+  (c-name "gst_type_find_new")
+  (return-type "GstTypeFind*")
+)
+
 (define-method peek
   (of-object "GstTypeFind")
   (c-name "gst_type_find_peek")

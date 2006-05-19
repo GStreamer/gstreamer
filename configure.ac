@@ -113,16 +113,25 @@ then
   else
     IGNORE_GST_0_10_6=""
   fi
+
+  if test $GST_MINOR_VERSION -lt "7"
+  then
+    IGNORE_GST_0_10_7="gst-0.10.7.ignore"
+  else
+    IGNORE_GST_0_10_7=""
+  fi
 else
   IGNORE_GST_0_10_3=""
   IGNORE_GST_0_10_4=""
   IGNORE_GST_0_10_5=""
   IGNORE_GST_0_10_6=""
+  IGNORE_GST_0_10_7=""
 fi
 AC_SUBST(IGNORE_GST_0_10_3)
 AC_SUBST(IGNORE_GST_0_10_4)
 AC_SUBST(IGNORE_GST_0_10_5)
 AC_SUBST(IGNORE_GST_0_10_6)
+AC_SUBST(IGNORE_GST_0_10_7)
 
 dnl check for gstreamer-base; uninstalled is selected preferentially
 PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,

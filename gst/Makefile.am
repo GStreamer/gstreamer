@@ -26,7 +26,8 @@ versioned_overrides = \
 	gst-0.10.3.ignore	\
 	gst-0.10.4.ignore	\
 	gst-0.10.5.ignore	\
-	gst-0.10.6.ignore
+	gst-0.10.6.ignore	\
+	gst-0.10.7.ignore
 
 INCLUDES = $(PYTHON_INCLUDES)
 EXTRA_DIST = $(defs_DATA) $(versioned_overrides) common.h arg-types.py

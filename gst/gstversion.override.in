@@ -4,4 +4,5 @@ include
 @IGNORE_GST_0_10_4@
 @IGNORE_GST_0_10_5@
 @IGNORE_GST_0_10_6@
+@IGNORE_GST_0_10_7@
 %%
