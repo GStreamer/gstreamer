@@ -172,7 +172,7 @@ gst_v4l2_xoverlay_stop (GstV4l2Object * v4l2object)
 static gboolean
 idle_refresh (gpointer data)
 {
-  GstV4l2Object *v4l2object = GST_V4L2OBJECT (data);
+  GstV4l2Object *v4l2object = GST_V4L2_OBJECT (data);
   GstV4l2Xv *v4l2xv = v4l2object->xv;
   XWindowAttributes attr;
 
