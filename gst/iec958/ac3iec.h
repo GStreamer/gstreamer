@@ -57,6 +57,8 @@ struct _AC3IEC {
   GstPad *sink;
   GstPad *src;
 
+  GstCaps *caps;                /* source pad caps, once known */
+
   GstClockTime cur_ts;          /* Time stamp for the current
                                    frame. */
   GstClockTime next_ts;         /* Time stamp for the next frame. */

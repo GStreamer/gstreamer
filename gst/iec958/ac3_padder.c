@@ -107,6 +107,8 @@ static const guint16 ac3_crc_lut[256] = {
   0x8213, 0x0216, 0x021c, 0x8219, 0x0208, 0x820d, 0x8207, 0x0202
 };
 
+static gint ac3_sample_rates[] = { 48000, 44100, 32000, -1 };
+
 typedef guint16 ac3_crc_state;
 
 static void
@@ -277,6 +279,8 @@ ac3p_parse (ac3_padder * padder)
             resync (padder, AC3P_AC3_HEADER_SIZE - 2, 2);
             continue;
           }
+
+          padder->rate = ac3_sample_rates[fscod];
 
           /* Calculate the frame size (in 16 bit units). */
           padder->ac3_frame_size =

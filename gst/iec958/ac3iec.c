@@ -69,13 +69,13 @@ static GstStaticPadTemplate ac3iec_sink_template =
     );
 
 /* Two different output caps are possible. */
-#define NORMAL_CAPS_DEF "audio/x-iec958"
+#define NORMAL_CAPS_DEF "audio/x-iec958, rate = (int){32000, 44100, 48000}"
 #define RAW_AUDIO_CAPS_DEF "audio/x-raw-int, " \
     "endianness = (int) " G_STRINGIFY (G_BIG_ENDIAN) ", " \
     "signed = (boolean) true, " \
     "width = (int) 16, " \
     "depth = (int) 16, " \
-    "rate = (int) 48000, " \
+    "rate = (int){32000, 44100, 48000}, " \
     "channels = (int) 2"
 
 static GstStaticCaps normal_caps = GST_STATIC_CAPS (NORMAL_CAPS_DEF);
@@ -176,8 +176,6 @@ ac3iec_class_init (AC3IECClass * klass)
 static void
 ac3iec_init (AC3IEC * ac3iec)
 {
-  GstCaps *src_caps;
-
   ac3iec->sink =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ac3iec_sink_template), "sink");
@@ -189,9 +187,6 @@ ac3iec_init (AC3IEC * ac3iec)
       gst_pad_new_from_template (gst_static_pad_template_get
       (&ac3iec_src_template), "src");
   gst_pad_use_fixed_caps (ac3iec->src);
-  src_caps = gst_static_caps_get (&normal_caps);
-  gst_pad_set_caps (ac3iec->src, src_caps);
-  gst_caps_unref (src_caps);
   gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->src);
 
   ac3iec->cur_ts = GST_CLOCK_TIME_NONE;
@@ -217,16 +212,7 @@ ac3iec_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_RAW_AUDIO:
     {
-      GstCaps *src_caps;
-
       ac3iec->raw_audio = g_value_get_boolean (value);
-      if (ac3iec->raw_audio) {
-        src_caps = gst_static_caps_get (&raw_audio_caps);
-      } else {
-        src_caps = gst_static_caps_get (&normal_caps);
-      }
-      gst_pad_set_caps (ac3iec->src, src_caps);
-      gst_caps_unref (src_caps);
       break;
     }
     default:
@@ -364,6 +350,21 @@ ac3iec_chain_raw (GstPad * pad, GstBuffer * buf)
   event = ac3p_parse (ac3iec->padder);
   while (event != AC3P_EVENT_PUSH) {
     if (event == AC3P_EVENT_FRAME) {
+      if (ac3iec->caps == NULL) {
+        gint rate = ac3iec->padder->rate;
+
+        if (ac3iec->raw_audio) {
+          ac3iec->caps =
+              gst_caps_make_writable (gst_static_caps_get (&raw_audio_caps));
+        } else {
+          ac3iec->caps =
+              gst_caps_make_writable (gst_static_caps_get (&normal_caps));
+        }
+        gst_structure_set (gst_caps_get_structure (ac3iec->caps, 0), "rate",
+            G_TYPE_INT, rate, NULL);
+        gst_pad_set_caps (ac3iec->src, ac3iec->caps);
+      }
+
       /* We have a new frame: */
       GstCaps *bufcaps = GST_PAD_CAPS (ac3iec->src);
 
@@ -409,6 +410,7 @@ static GstStateChangeReturn
 ac3iec_change_state (GstElement * element, GstStateChange transition)
 {
   AC3IEC *ac3iec;
+  GstStateChangeReturn ret;
 
   g_return_val_if_fail (GST_IS_AC3IEC (element), GST_STATE_CHANGE_FAILURE);
 
@@ -422,20 +424,27 @@ ac3iec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       ac3p_clear (ac3iec->padder);
+      gst_caps_unref (ac3iec->caps);
+      ac3iec->caps = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
+    default:
+      break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  }
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }
 
 

@@ -99,6 +99,8 @@ typedef struct {
 
   gint skipped;      /* Number of bytes skipped while trying to find sync */
 
+  gint rate;         /* Sample rate of ac3 data */
+
   ac3p_iec958_burst_frame frame;
                      /* The current output frame. */
 } ac3_padder;
