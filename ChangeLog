@@ -4,6 +4,7 @@
 	* sys/v4l2/gstv4l2object.c:
 	* sys/v4l2/gstv4l2object.h:
 	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2xoverlay.c:
 	Some clean-ups requested by wingo in bug #338818.	
 
 2006-05-19  Michael Smith  <msmith@fluendo.com>
