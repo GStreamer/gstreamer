@@ -1,0 +1,30 @@
+<Type Name="PadBufferAllocFunction" FullName="Gst.PadBufferAllocFunction">
+  <TypeSignature Language="C#" Value="public delegate Gst.FlowReturn PadBufferAllocFunction(Gst.Pad pad, ulong offset, uint size, Gst.Caps caps, Gst.Buffer buf);" />
+  <AssemblyInfo>
+    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="pad" Type="Gst.Pad" />
+    <Parameter Name="offset" Type="System.UInt64" />
+    <Parameter Name="size" Type="System.UInt32" />
+    <Parameter Name="caps" Type="Gst.Caps" />
+    <Parameter Name="buf" Type="Gst.Buffer" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>Gst.FlowReturn</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="pad">To be added.</param>
+    <param name="offset">To be added.</param>
+    <param name="size">To be added.</param>
+    <param name="caps">To be added.</param>
+    <param name="buf">To be added.</param>
+    <summary>To be added.</summary>
+    <returns>To be added.</returns>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>

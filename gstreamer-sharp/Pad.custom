@@ -1,0 +1,13 @@
+		[DllImport("gstreamer-0.10.dll")]
+		static extern bool gst_pad_query_position(IntPtr raw, ref Format format, out long cur);
+
+		public bool QueryPosition(Gst.Format format, out long cur) {
+			return gst_pad_query_position(Handle, ref format, out cur);
+		}
+
+		[DllImport("gstreamer-0.10.dll")]
+		static extern bool gst_pad_query_duration(IntPtr raw, ref Format format, out long duration);
+
+		public bool QueryDuration(Gst.Format format, out long duration) {
+			return gst_pad_query_duration(Handle, ref format, out duration);
+		}

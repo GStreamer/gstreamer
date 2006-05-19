@@ -1,0 +1,7 @@
+<configuration>
+  <dllmap dll="libglib-2.0-0.dll" target="libglib-2.0@LIB_PREFIX@.0@LIB_SUFFIX@"/>
+  <dllmap dll="libgobject-2.0-0.dll" target="libgobject-2.0@LIB_PREFIX@.0@LIB_SUFFIX@"/>
+  <dllmap dll="gstreamer-0.8" target="libgstreamer-0.8@LIB_PREFIX@.1@LIB_SUFFIX@"/>
+  <dllmap dll="gstplay-0.8" target="libgstplay-0.8@LIB_PREFIX@.0@LIB_SUFFIX@"/>
+  <dllmap dll="gstgconf-0.8" target="libgstgconf-0.8@LIB_PREFIX@.0@LIB_SUFFIX@"/>
+</configuration>

@@ -1,0 +1,24 @@
+<Type Name="StructureForeachFunc" FullName="Gst.StructureForeachFunc">
+  <TypeSignature Language="C#" Value="public delegate bool StructureForeachFunc(int field_id, GLib.Value value);" />
+  <AssemblyInfo>
+    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="field_id" Type="System.Int32" />
+    <Parameter Name="value" Type="GLib.Value" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>System.Boolean</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="field_id">To be added.</param>
+    <param name="value">To be added.</param>
+    <summary>To be added.</summary>
+    <returns>To be added.</returns>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>

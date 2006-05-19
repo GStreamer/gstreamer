@@ -1,0 +1,25 @@
+//
+// Clock.custom
+//
+//
+//
+
+		[DllImport ("gstsharpglue-0.10")]
+		extern static long gstsharp_gst_clock_get_gst_second ();
+
+		public static readonly long GstSecond = gstsharp_gst_clock_get_gst_second ();
+
+		[DllImport ("gstsharpglue-0.10")]
+		extern static long gstsharp_gst_clock_get_gst_msecond ();
+
+		public static readonly long GstMSecond = gstsharp_gst_clock_get_gst_second ();
+
+		[DllImport ("gstsharpglue-0.10")]
+		extern static long gstsharp_gst_clock_get_gst_usecond ();
+
+		public static readonly long GstUSecond = gstsharp_gst_clock_get_gst_second ();
+
+		[DllImport ("gstsharpglue-0.10")]
+		extern static long gstsharp_gst_clock_get_gst_nsecond ();
+
+		public static readonly long GstNSecond = gstsharp_gst_clock_get_gst_second ();

@@ -1,0 +1,24 @@
+<Type Name="IteratorItemFunction" FullName="Gst.IteratorItemFunction">
+  <TypeSignature Language="C#" Value="public delegate Gst.IteratorItem IteratorItemFunction(Gst.Iterator it, IntPtr item);" />
+  <AssemblyInfo>
+    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="it" Type="Gst.Iterator" />
+    <Parameter Name="item" Type="System.IntPtr" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>Gst.IteratorItem</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="it">To be added.</param>
+    <param name="item">To be added.</param>
+    <summary>To be added.</summary>
+    <returns>To be added.</returns>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>

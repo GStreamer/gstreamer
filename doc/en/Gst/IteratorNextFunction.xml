@@ -1,0 +1,24 @@
+<Type Name="IteratorNextFunction" FullName="Gst.IteratorNextFunction">
+  <TypeSignature Language="C#" Value="public delegate Gst.IteratorResult IteratorNextFunction(Gst.Iterator it, IntPtr result);" />
+  <AssemblyInfo>
+    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="it" Type="Gst.Iterator" />
+    <Parameter Name="result" Type="System.IntPtr" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>Gst.IteratorResult</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="it">To be added.</param>
+    <param name="result">To be added.</param>
+    <summary>To be added.</summary>
+    <returns>To be added.</returns>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>

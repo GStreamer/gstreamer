@@ -1,0 +1,24 @@
+<Type Name="PadLinkFunction" FullName="Gst.PadLinkFunction">
+  <TypeSignature Language="C#" Value="public delegate Gst.PadLinkReturn PadLinkFunction(Gst.Pad pad, Gst.Pad peer);" />
+  <AssemblyInfo>
+    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="pad" Type="Gst.Pad" />
+    <Parameter Name="peer" Type="Gst.Pad" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>Gst.PadLinkReturn</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="pad">To be added.</param>
+    <param name="peer">To be added.</param>
+    <summary>To be added.</summary>
+    <returns>To be added.</returns>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>

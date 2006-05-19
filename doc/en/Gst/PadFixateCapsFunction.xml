@@ -1,0 +1,23 @@
+<Type Name="PadFixateCapsFunction" FullName="Gst.PadFixateCapsFunction">
+  <TypeSignature Language="C#" Value="public delegate void PadFixateCapsFunction(Gst.Pad pad, Gst.Caps caps);" />
+  <AssemblyInfo>
+    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="pad" Type="Gst.Pad" />
+    <Parameter Name="caps" Type="Gst.Caps" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>System.Void</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="pad">To be added.</param>
+    <param name="caps">To be added.</param>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>

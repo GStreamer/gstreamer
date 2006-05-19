@@ -1,0 +1,38 @@
+//
+// Bin.custom
+//
+// This code is inserted after the automatically generated code.
+//
+                [DllImport("gstreamer-0.10")]
+                static extern IntPtr gst_bin_get_list(IntPtr raw);
+
+                public Element[] List {
+			get {
+		                IntPtr list_ptr = gst_bin_get_list (Handle);
+		                if (list_ptr == IntPtr.Zero)
+                	        return new Element [0];
+ 
+		                GLib.List list = new GLib.List (list_ptr);
+		                Element[] result = new Element [list.Count];
+		                for (int i = 0; i < list.Count; i++)
+		                        result [i] = list [i] as Element;
+		                return result;
+			}
+                }
+
+		public bool AddMany (params Element[] elements)
+		{
+			if (elements == null)
+				return false;
+
+			bool ret = true;
+			foreach (Element element in elements)
+			{
+				if (element == null || !Add (element)) {
+					ret = false;
+					continue;
+				}
+			}
+
+			return ret;
+		}

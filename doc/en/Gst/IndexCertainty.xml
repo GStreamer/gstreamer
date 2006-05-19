@@ -1,0 +1,46 @@
+<Type Name="IndexCertainty" FullName="Gst.IndexCertainty">
+  <TypeSignature Language="C#" Value="public enum IndexCertainty" />
+  <AssemblyInfo>
+    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Enum</BaseTypeName>
+  </Base>
+  <Members>
+    <Member MemberName="Certain">
+      <MemberSignature Language="C#" Value="Certain" />
+      <MemberType>Field</MemberType>
+      <ReturnValue>
+        <ReturnType>Gst.IndexCertainty</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Unknown">
+      <MemberSignature Language="C#" Value="Unknown" />
+      <MemberType>Field</MemberType>
+      <ReturnValue>
+        <ReturnType>Gst.IndexCertainty</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="Fuzzy">
+      <MemberSignature Language="C#" Value="Fuzzy" />
+      <MemberType>Field</MemberType>
+      <ReturnValue>
+        <ReturnType>Gst.IndexCertainty</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+      </Docs>
+    </Member>
+  </Members>
+  <Docs>
+    <summary>To be added.</summary>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>

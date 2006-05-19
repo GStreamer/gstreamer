@@ -1,0 +1,59 @@
+Index: parser/gapi-fixup.cs
+===================================================================
+--- parser/gapi-fixup.cs	(revision 60863)
++++ parser/gapi-fixup.cs	(working copy)
+@@ -136,6 +136,21 @@
+ 					Console.WriteLine ("Warning: <attr path=\"{0}\"/> matched no nodes", path);
+ 			}
+ 
++			XPathNodeIterator remove_attr_iter = meta_nav.Select ("/metadata/remove-attr");
++			while (remove_attr_iter.MoveNext ()) {
++				string path = remove_attr_iter.Current.GetAttribute ("path", "");
++				string attr_name = remove_attr_iter.Current.GetAttribute ("name", "");
++				XPathNodeIterator api_iter = api_nav.Select (path);
++				bool matched = false;
++				while (api_iter.MoveNext ()) {
++					XmlElement node = ((IHasXmlNode)api_iter.Current).GetNode () as XmlElement;
++					node.RemoveAttribute (attr_name);
++					matched = true;
++				}
++				if (!matched)
++					Console.WriteLine ("Warning: <attr path=\"{0}\"/> matched no nodes", path);
++			}
++
+ 			XPathNodeIterator move_iter = meta_nav.Select ("/metadata/move-node");
+ 			while (move_iter.MoveNext ()) {
+ 				string path = move_iter.Current.GetAttribute ("path", "");
+@@ -157,6 +172,32 @@
+ 					Console.WriteLine ("Warning: <move-node path=\"{0}\"/> matched no nodes", path);
+ 			}
+ 
++			XPathNodeIterator change_iter = meta_nav.Select ("/metadata/change-node-type");
++			while (change_iter.MoveNext ()) {
++				string path = change_iter.Current.GetAttribute ("path", "");
++				XPathNodeIterator api_iter = api_nav.Select (path);
++				bool matched = false;
++				while (api_iter.MoveNext ()) {
++					XmlElement node = ((IHasXmlNode)api_iter.Current).GetNode () as XmlElement;
++					XmlElement new_node = api_doc.CreateElement (change_iter.Current.Value);
++					foreach (XmlNode child in node.ChildNodes)
++					{
++						XmlNode new_child = child.CloneNode (true);
++						new_node.AppendChild (new_child);
++					}
++			
++					foreach (XmlAttribute attr in node.Attributes)
++					{
++						new_node.SetAttribute (attr.Name, attr.Value);
++					}
++			
++					node.ParentNode.ReplaceChild (new_node, node);
++					matched = true;
++				}
++				if (!matched)
++					Console.WriteLine ("Warning: <change-node-type path=\"{0}\"/> matched no nodes", path);
++			}
++
+ 			if (symbol_doc != null) {
+ 				XPathNavigator symbol_nav = symbol_doc.CreateNavigator ();
+ 				XPathNodeIterator iter = symbol_nav.Select ("/api/*");

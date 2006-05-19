@@ -1,0 +1,26 @@
+<Type Name="IndexResolver" FullName="Gst.IndexResolver">
+  <TypeSignature Language="C#" Value="public delegate bool IndexResolver(Gst.Index index, Gst.Object writer, string writer_string);" />
+  <AssemblyInfo>
+    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="index" Type="Gst.Index" />
+    <Parameter Name="writer" Type="Gst.Object" />
+    <Parameter Name="writer_string" Type="System.String" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>System.Boolean</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="index">To be added.</param>
+    <param name="writer">To be added.</param>
+    <param name="writer_string">To be added.</param>
+    <summary>To be added.</summary>
+    <returns>To be added.</returns>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>

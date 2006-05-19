@@ -1,0 +1,158 @@
+AC_INIT(README)
+AC_CANONICAL_SYSTEM
+AM_CONFIG_HEADER(config.h)
+AM_INIT_AUTOMAKE(gstreamer-sharp, 0.9.5.99)
+AM_MAINTAINER_MODE
+
+AC_ARG_WITH(readme, AC_HELP_STRING([--with-readme], [This must be passed to configure indicating you have fully read and understand README]), readme_understanding="yes", readme_understanding="no")
+
+if test ! "x$readme_understanding" = "xyes"; then
+	AC_MSG_ERROR([You must pass --with-readme to indicate you have read and fully understand the implications in the README file])
+fi
+
+AC_PROG_INSTALL
+
+PACKAGE_VERSION=gstreamer-sharp-0.10
+AC_SUBST(PACKAGE_VERSION)
+
+MONO_REQUIRED_VERSION=1.1
+AC_SUBST(MONO_REQUIRED_VERSION)
+PKG_CHECK_MODULES(MONO_DEPENDENCY, mono >= $MONO_REQUIRED_VERSION, has_mono=true, has_mono=false)
+
+AM_PROG_LIBTOOL
+
+if test "x$has_mono" = "xtrue"; then
+GACUTIL_FLAGS='/package $(PACKAGE_VERSION) /gacdir $(libdir) /root $(DESTDIR)/$(libdir)'
+GENERATED_SOURCES=generated/*.cs
+AC_PATH_PROG(RUNTIME, mono, no)
+AC_PATH_PROG(CSC, mcs, no)
+if test `uname -s` = "Darwin"; then
+        LIB_PREFIX=
+        LIB_SUFFIX=.dylib
+else
+        LIB_PREFIX=.so
+        LIB_SUFFIX=
+fi
+else
+AC_PATH_PROG(CSC, csc.exe, no)
+GACUTIL_FLAGS=
+GENERATED_SOURCES=generated\\\\*.cs
+
+if test x$CSC = "xno"; then
+        AC_MSG_ERROR([You need to install either mono or .Net])
+else
+RUNTIME=
+LIB_PREFIX=
+LIB_SUFFIX=.dylib
+fi
+fi
+                                                                                
+CS="C#"
+if test "x$CSC" = "xno" ; then
+        AC_MSG_ERROR([No $CS compiler found])
+fi
+                                                                                
+AC_PATH_PROG(GACUTIL, gacutil, no)
+if test "x$GACUTIL" = "xno" ; then
+        AC_MSG_ERROR([No gacutil tool found])
+fi
+
+AC_SUBST(RUNTIME)
+AC_SUBST(CSC)
+AC_SUBST(GACUTIL)
+AC_SUBST(GACUTIL_FLAGS)
+AC_SUBST(LIB_PREFIX)
+AC_SUBST(LIB_SUFFIX)
+AC_SUBST(GENERATED_SOURCES)
+
+MONODOC_REQUIRED_VERSION=1.1
+AC_SUBST(MONODOC_REQUIRED_VERSION)
+PKG_CHECK_MODULES(MONODOC_DEPENDENCY, monodoc >= $MONODOC_REQUIRED_VERSION, enable_monodoc=yes, enable_monodoc=no)
+
+if test "x$enable_monodoc" = "xyes"; then
+	AC_PATH_PROG(MONODOCER, monodocer, no)
+	AC_PATH_PROG(MDASSEMBLER, mdassembler, no)
+	if test x$MONODOCER = xno -o x$MDASSEMBLER = xno; then
+	   enable_monodoc=no
+	fi
+else
+	MONODOCER=
+	MDASSEMBLER=
+fi
+
+AC_SUBST(MONODOCER)
+AC_SUBST(MDASSEMBLER)
+
+MONODOC_SOURCESDIR=`pkg-config --variable=sourcesdir monodoc`
+AC_SUBST(MONODOC_SOURCESDIR)
+
+## Versions of dependencies
+GTKSHARP_REQUIRED_VERSION=2.4.0
+AC_SUBST(GTKSHARP_REQUIRED_VERSION)
+PKG_CHECK_MODULES(BASE_DEPENDENCIES, gtk-sharp-2.0 >= $GTKSHARP_REQUIRED_VERSION)
+
+## glib-sharp dependancy
+GLIBSHARP_REQUIRED_VERSION=2.4.0
+PKG_CHECK_MODULES(GLIBSHARP, glib-sharp-2.0 >= $GLIBSHARP_REQUIRED_VERSION)
+AC_SUBST(GLIBSHARP_LIBS)
+
+## probably should make gstreamer-plugins optional
+## but generating conditionally the source is not really possible
+GSTREAMER_REQUIRED_VERSION=0.10.3
+GSTREAMER_PLUGINS_REQUIRED_VERSION=0.10.3
+AC_SUBST(GSTREAMER_REQUIRED_VERSION)
+AC_SUBST(GSTREAMER_PLUGINS_REQUIRED_VERSION)
+PKG_CHECK_MODULES(GST,
+gstreamer-base-0.10 >= $GSTREAMER_REQUIRED_VERSION
+gstreamer-plugins-base-0.10 >= $GSTREAMER_PLUGINS_REQUIRED_VERSION,
+enable_gst=yes, enable_gst=no 
+)
+
+AC_SUBST(GST_LIBS)
+AC_SUBST(GST_CFLAGS)
+
+if test "x$enable_gst" = "xno" ; then
+      AC_MSG_ERROR([Install gstreamer and gstreamer-plugins])
+fi
+
+AM_CONDITIONAL(ENABLE_MONODOC, test "x$enable_monodoc" = "xyes")
+
+## Check for the gapi programs
+PKG_CHECK_MODULES(GAPI, gapi-2.0 >= $GTKSHARP_REQUIRED_VERSION)
+
+AC_PATH_PROG(GAPI_CODEGEN, gapi2-codegen, no)
+if test "x$GAPI_CODEGEN" = "xno"; then
+        AC_MSG_ERROR([You need to install gtk-sharp-gapi])
+fi
+ 
+AC_PATH_PROG(GAPI_FIXUP, gapi2-fixup, no)
+if test "x$GAPI_FIXUP" = "xno"; then
+        AC_MSG_ERROR([You need to install gtk-sharp-gapi])
+fi
+
+AC_PATH_PROG(GAPI_PARSER, gapi2-parser, no)
+if test "x$GAPI_PARSER" = "xno"; then
+        AC_MSG_ERROR([You need to install gtk-sharp-gapi])
+fi
+
+AC_OUTPUT([
+source/Makefile
+gstreamer-sharp/Makefile
+gstreamer-sharp/AssemblyInfo.cs
+gstreamer-sharp/gstreamer-sharp.dll.config
+gstreamer-sharp/glue/Makefile
+doc/Makefile
+sample/Makefile
+gstreamer-sharp-0.10.pc
+Makefile
+])
+
+echo "---"
+echo "Configuration summary"
+echo ""
+echo "   * Installation prefix = $prefix"
+echo "   * $CS compiler: $CSC"
+echo "   * Documentation: $enable_monodoc ($MONODOC)"
+echo ""
+echo "---"
+

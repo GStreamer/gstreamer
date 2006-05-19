@@ -1,0 +1,26 @@
+<Type Name="ClockCallback" FullName="Gst.ClockCallback">
+  <TypeSignature Language="C#" Value="public delegate bool ClockCallback(Gst.Clock clock, ulong time, IntPtr id);" />
+  <AssemblyInfo>
+    <AssemblyName>gst-sharp</AssemblyName>
+    <AssemblyVersion>0.9.5.99</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Delegate</BaseTypeName>
+  </Base>
+  <Parameters>
+    <Parameter Name="clock" Type="Gst.Clock" />
+    <Parameter Name="time" Type="System.UInt64" />
+    <Parameter Name="id" Type="System.IntPtr" />
+  </Parameters>
+  <ReturnValue>
+    <ReturnType>System.Boolean</ReturnType>
+  </ReturnValue>
+  <Docs>
+    <param name="clock">To be added.</param>
+    <param name="time">To be added.</param>
+    <param name="id">To be added.</param>
+    <summary>To be added.</summary>
+    <returns>To be added.</returns>
+    <remarks>To be added.</remarks>
+  </Docs>
+</Type>
