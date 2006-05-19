@@ -1,5 +1,13 @@
 2006-05-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_fixate_caps):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_setcaps):
+	Use the gstutil scaling function to preserve 64 bits while calculating
+	output width and height from the display-aspect-ratio. (A continuation
+	of #341542)
+
+2006-05-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_clear),
 	(gst_xvimagesink_buffer_alloc):
 	* sys/xvimage/xvimagesink.h:

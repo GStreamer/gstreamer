@@ -1670,15 +1670,18 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   /* check hd / den is an integer scale factor, and scale wd with the PAR */
   if (video_height % den == 0) {
     GST_DEBUG_OBJECT (xvimagesink, "keeping video height");
-    GST_VIDEO_SINK_WIDTH (xvimagesink) = video_height * num / den;
+    GST_VIDEO_SINK_WIDTH (xvimagesink) = (guint)
+        gst_util_uint64_scale_int (video_height, num, den);
     GST_VIDEO_SINK_HEIGHT (xvimagesink) = video_height;
   } else if (video_width % num == 0) {
     GST_DEBUG_OBJECT (xvimagesink, "keeping video width");
     GST_VIDEO_SINK_WIDTH (xvimagesink) = video_width;
-    GST_VIDEO_SINK_HEIGHT (xvimagesink) = video_width * den / num;
+    GST_VIDEO_SINK_HEIGHT (xvimagesink) = (guint)
+        gst_util_uint64_scale_int (video_width, den, num);
   } else {
     GST_DEBUG_OBJECT (xvimagesink, "approximating while keeping video height");
-    GST_VIDEO_SINK_WIDTH (xvimagesink) = video_height * num / den;
+    GST_VIDEO_SINK_WIDTH (xvimagesink) = (guint)
+        gst_util_uint64_scale_int (video_height, num, den);
     GST_VIDEO_SINK_HEIGHT (xvimagesink) = video_height;
   }
   GST_DEBUG_OBJECT (xvimagesink, "scaling to %dx%d",

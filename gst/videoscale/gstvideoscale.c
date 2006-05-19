@@ -600,10 +600,10 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
     /* if one of the output width or height is fixed, we work from there */
     if (h) {
       GST_DEBUG_OBJECT (base, "height is fixed,scaling width");
-      w = h * num / den;
+      w = (guint) gst_util_uint64_scale_int (h, num, den);
     } else if (w) {
-      GST_DEBUG_OBJECT (base, "width is fixes, scaling height");
-      h = w * den / num;
+      GST_DEBUG_OBJECT (base, "width is fixed, scaling height");
+      h = (guint) gst_util_uint64_scale_int (w, den, num);
     } else {
       /* none of width or height is fixed, figure out both of them based only on
        * the input width and height */
@@ -611,15 +611,15 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
       if (from_h % den == 0) {
         GST_DEBUG_OBJECT (base, "keeping video height");
         h = from_h;
-        w = h * num / den;
+        w = (guint) gst_util_uint64_scale_int (h, num, den);
       } else if (from_w % num == 0) {
         GST_DEBUG_OBJECT (base, "keeping video width");
         w = from_w;
-        h = w * den / num;
+        h = (guint) gst_util_uint64_scale_int (w, den, num);
       } else {
         GST_DEBUG_OBJECT (base, "approximating but keeping video height");
         h = from_h;
-        w = h * num / den;
+        w = (guint) gst_util_uint64_scale_int (h, num, den);
       }
     }
     GST_DEBUG_OBJECT (base, "scaling to %dx%d", w, h);
