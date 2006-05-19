@@ -1,7 +1,0 @@
-backup ^Makefile$
-backup ^Makefile\.in$
-backup \.lo$
-backup \.la$
-backup generated\.c
-backup ^\.deps$
-backup ^\.libs$
