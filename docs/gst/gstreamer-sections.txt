@@ -501,6 +501,7 @@ gst_element_query_duration
 
 <SUBSECTION element-event>
 gst_element_send_event
+gst_element_seek_simple
 gst_element_seek
 
 <SUBSECTION Standard>

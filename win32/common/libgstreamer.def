@@ -222,6 +222,7 @@ EXPORTS
 	gst_element_remove_pad
 	gst_element_requires_clock
 	gst_element_seek
+	gst_element_seek_simple
 	gst_element_send_event
 	gst_element_set_base_time
 	gst_element_set_bus

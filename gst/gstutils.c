@@ -1917,6 +1917,40 @@ gst_element_query_convert (GstElement * element, GstFormat src_format,
 }
 
 /**
+ * gst_element_seek_simple
+ * @element: a #GstElement to seek on
+ * @format: a #GstFormat to execute the seek in, such as #GST_FORMAT_TIME
+ * @seek_flags: seek options
+ * @seek_pos: position to seek to (relative to the start); if you are doing
+ *            a seek in #GST_FORMAT_TIME this value is in nanoseconds -
+ *            multiply with #GST_SECOND to convert seconds to nanoseconds or
+ *            with #GST_MSECOND to convert milliseconds to nanoseconds.
+ *
+ * Simple API to perform a seek on the given element, meaning it just seeks
+ * to the given position relative to the start of the stream. For more complex
+ * operations like segment seeks (e.g. for looping) or changing the playback
+ * rate or seeking relative to the current position or seeking relative to
+ * the end of the stream you should use gst_element_seek ().
+ *
+ * Note that seeking is usually only possible in PAUSED or PLAYING state.
+ *
+ * Returns: TRUE if the seek operation succeeded (the seek
+ *          might not always be executed instantly though)
+ *
+ * Since: 0.10.7
+ */
+gboolean
+gst_element_seek_simple (GstElement * element, GstFormat format,
+    GstSeekFlags seek_flags, gint64 seek_pos)
+{
+  g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
+  g_return_val_if_fail (seek_pos >= 0, FALSE);
+
+  return gst_element_seek (element, 1.0, format, seek_flags,
+      GST_SEEK_TYPE_SET, seek_pos, GST_SEEK_TYPE_NONE, 0);
+}
+
+/**
  * gst_pad_can_link:
  * @srcpad: the source #GstPad to link.
  * @sinkpad: the sink #GstPad to link.

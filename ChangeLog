@@ -1,3 +1,11 @@
+2006-05-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* win32/common/libgstreamer.def:
+	* gst/gstutils.c: (gst_element_seek_simple):
+	* gst/gstutils.h:
+	  API: add gst_element_seek_simple() (#342238).
+
 2006-05-18  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gsttypefind.c: (gst_type_find_get_type):
