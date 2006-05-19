@@ -1497,6 +1497,9 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
     g_list_free (xvimagesink->xcontext->channels_list);
 
   gst_caps_unref (xvimagesink->xcontext->caps);
+  if (xvimagesink->xcontext->last_caps)
+    gst_caps_replace (&xvimagesink->xcontext->last_caps, NULL);
+
   g_free (xvimagesink->xcontext->par);
 
   g_mutex_lock (xvimagesink->x_lock);
@@ -1881,6 +1884,16 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   xvimagesink = GST_XVIMAGESINK (bsink);
 
+  if (G_LIKELY (xvimagesink->xcontext->last_caps &&
+          gst_caps_is_equal (caps, xvimagesink->xcontext->last_caps))) {
+    GST_DEBUG_OBJECT (xvimagesink,
+        "buffer alloc for same last_caps, reusing caps");
+    intersection = gst_caps_ref (caps);
+    image_format = xvimagesink->xcontext->last_format;
+
+    goto reuse_last_caps;
+  }
+
   GST_DEBUG_OBJECT (xvimagesink, "buffer alloc requested with caps %"
       GST_PTR_FORMAT "intersecting with our caps %" GST_PTR_FORMAT, caps,
       xvimagesink->xcontext->caps);
@@ -1936,11 +1949,22 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
     GST_DEBUG_OBJECT (xvimagesink, "allocating a buffer with caps %"
         GST_PTR_FORMAT, intersection);
+  } else if (gst_caps_is_equal (intersection, caps)) {
+    /* Things work better if we return a buffer with the same caps ptr
+     * as was asked for when we can */
+    gst_caps_replace (&intersection, caps);
   }
 
   /* Get image format from caps */
   image_format = gst_xvimagesink_get_format_from_caps (xvimagesink,
       intersection);
+
+  /* Store our caps and format as the last_caps to avoid expensive 
+   * caps intersection next time */
+  gst_caps_replace (&xvimagesink->xcontext->last_caps, intersection);
+  xvimagesink->xcontext->last_format = image_format;
+
+reuse_last_caps:
 
   /* Get geometry from caps */
   structure = gst_caps_get_structure (intersection, 0);
@@ -1984,7 +2008,7 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     /* We found no suitable image in the pool. Creating... */
     GST_DEBUG_OBJECT (xvimagesink, "no usable image in pool, creating xvimage");
     xvimage = gst_xvimagesink_xvimage_new (xvimagesink, intersection);
-    if (xvimage->size < size) {
+    if (xvimage && xvimage->size < size) {
       /* This image is unusable. Destroying... */
       gst_xvimage_buffer_free (xvimage);
       xvimage = NULL;

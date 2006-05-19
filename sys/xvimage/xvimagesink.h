@@ -121,6 +121,10 @@ struct _GstXContext {
   GList *channels_list;
 
   GstCaps *caps;
+
+  /* Optimisation storage for buffer_alloc return */
+  GstCaps *last_caps;
+  gint last_format;
 };
 
 /**

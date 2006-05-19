@@ -1,3 +1,12 @@
+2006-05-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_clear),
+	(gst_xvimagesink_buffer_alloc):
+	* sys/xvimage/xvimagesink.h:
+	When performing buffer allocations, remember the caps and image format
+	we return so that if the same caps are asked for next time we can
+	return them immediately without doing any caps intersections.
+
 2006-05-18 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
   	 
 	* gst-libs/gst/rtp/README:
