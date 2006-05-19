@@ -71,6 +71,8 @@ struct _AlsaSPDIFSink {
 
   guint64 frames;               /* Number of complete frames written */
   gboolean need_swap;           /* Whether to byte swap outgoing data */
+
+  gint rate;                    /* Sampling rate of data */
 };
 
 struct _AlsaSPDIFSinkClass {

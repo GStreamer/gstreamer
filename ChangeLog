@@ -1,3 +1,18 @@
+2006-05-19  Michael Smith  <msmith@fluendo.com>
+
+	* ext/alsaspdif/alsaspdifsink.c: (alsaspdifsink_base_init),
+	(alsaspdifsink_class_init), (alsaspdifsink_init),
+	(alsaspdifsink_dispose), (alsaspdifsink_set_property),
+	(alsaspdifsink_get_property), (alsaspdifsink_set_caps),
+	(alsaspdifsink_get_time), (alsaspdifsink_open),
+	(alsaspdifsink_close), (alsaspdifsink_find_pcm_device),
+	(alsaspdifsink_write_frame), (alsaspdifsink_event),
+	(alsaspdifsink_get_times), (alsaspdifsink_current_delay),
+	(generate_iec958_zero_frame), (alsaspdifsink_render),
+	(ignore_alsa_err), (alsaspdifsink_change_state), (plugin_init):
+	* ext/alsaspdif/alsaspdifsink.h:
+	  Use sampling rate from set_caps. Comment out some more unused code.
+
 2006-05-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

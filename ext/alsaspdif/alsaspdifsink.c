@@ -37,7 +37,6 @@ GST_DEBUG_CATEGORY_STATIC (alsaspdifsink_debug);
 
 /* The magic audio-type we pretend to be for AC3 output */
 #define AC3_CHANNELS 2
-#define AC3_RATE     48000
 #define AC3_BITS     16
 
 /* Define AC3 FORMAT as big endian. Fall back to swapping
@@ -48,6 +47,10 @@ GST_DEBUG_CATEGORY_STATIC (alsaspdifsink_debug);
 /* The size in bytes of an IEC958 frame. */
 #define IEC958_FRAME_SIZE 6144
 
+/* Size in bytes of an ALSA PCM frame (4, for this case). */
+#define ALSASPDIFSINK_BYTES_PER_FRAME ((AC3_BITS / 8) * AC3_CHANNELS)
+
+#if 0
 /* The duration of a single IEC958 frame. */
 #define IEC958_FRAME_DURATION (32 * GST_MSECOND)
 
@@ -56,9 +59,6 @@ GST_DEBUG_CATEGORY_STATIC (alsaspdifsink_debug);
    value. */
 #define MAX_SYNC_DIFF (IEC958_FRAME_DURATION * 0.8)
 
-/* Size in bytes of an ALSA PCM frame (4, for this case). */
-#define ALSASPDIFSINK_BYTES_PER_FRAME ((AC3_BITS / 8) * AC3_CHANNELS)
-
 /* Playing time for the given number of ALSA PCM frames. */
 #define ALSASPDIFSINK_TIME_PER_FRAMES(sink, frames) \
   (((GstClockTime) (frames) * GST_SECOND) / AC3_RATE)
@@ -66,6 +66,7 @@ GST_DEBUG_CATEGORY_STATIC (alsaspdifsink_debug);
 /* Number of ALSA PCM frames for the given playing time. */
 #define ALSASPDIFSINK_FRAMES_PER_TIME(sink, time) \
   (((GstClockTime) AC3_RATE * (time)) / GST_SECOND)
+#endif
 
 /* ElementFactory information. */
 static GstElementDetails alsaspdifsink_details = {
@@ -112,6 +113,7 @@ static GstFlowReturn alsaspdifsink_render (GstBaseSink * bsink,
     GstBuffer * buf);
 static void alsaspdifsink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
+static gboolean alsaspdifsink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 
 static gboolean alsaspdifsink_open (AlsaSPDIFSink * sink);
 static void alsaspdifsink_close (AlsaSPDIFSink * sink);
@@ -160,6 +162,7 @@ alsaspdifsink_class_init (AlsaSPDIFSinkClass * klass)
   gstbasesink_class->event = alsaspdifsink_event;
   gstbasesink_class->render = alsaspdifsink_render;
   gstbasesink_class->get_times = alsaspdifsink_get_times;
+  gstbasesink_class->set_caps = alsaspdifsink_set_caps;
 
 #if 0
   /* We ignore the device property anyway, so don't install it
@@ -250,6 +253,18 @@ alsaspdifsink_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+alsaspdifsink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+{
+  AlsaSPDIFSink *sink = ALSASPDIFSINK (bsink);
+
+  if (!gst_structure_get_int (gst_caps_get_structure (caps, 0), "rate",
+          &sink->rate))
+    sink->rate = 48000;
+
+  return TRUE;
+}
+
 static GstClock *
 alsaspdifsink_provide_clock (GstElement * elem)
 {
@@ -263,7 +278,7 @@ alsaspdifsink_get_time (GstClock * clock, gpointer user_data)
 {
   AlsaSPDIFSink *sink = ALSASPDIFSINK (user_data);
 
-  return sink->frames * IEC958_FRAME_DURATION;
+  return sink->frames * sink->rate / 1536;
 }
 
 static gboolean
@@ -359,7 +374,7 @@ alsaspdifsink_open (AlsaSPDIFSink * sink)
     goto __close;
   }
 
-  rate = AC3_RATE;
+  rate = sink->rate;
   err = snd_pcm_hw_params_set_rate_near (sink->pcm, params, &rate, 0);
   if (err < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
