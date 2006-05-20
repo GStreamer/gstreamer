@@ -5,8 +5,8 @@ noinst_DATA = $(TARGET)
 APIS = $(API)
 API = gstreamer-api.xml
 RAW_API = gstreamer-api.raw
-SYMBOLS = gstreamer-symbols.xml
 METADATA = Gstreamer.metadata
+SYMBOLS=gstreamer-symbols.xml
 ASSEMBLY_NAME = gstreamer-sharp
 references = $(GLIBSHARP_LIBS)
 KEYFILE = gstreamer-sharp.snk
@@ -38,6 +38,7 @@ clean-local:
 
 sources =				\
 	Application.cs			\
+	Version.cs \
 	AssemblyInfo.cs			\
 	CommonTags.cs			\
 	plugins-base/PlayBin.cs

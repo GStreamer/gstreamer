@@ -1,0 +1,16 @@
+<Combine name="gstreamer-sharp" fileversion="2.0">
+  <Configurations active="Debug">
+    <Configuration name="Debug" ctype="CombineConfiguration">
+      <Entry configuration="Debug" build="True" name="gstreamer-sharp" />
+    </Configuration>
+    <Configuration name="Release" ctype="CombineConfiguration">
+      <Entry configuration="Debug" build="True" name="gstreamer-sharp" />
+    </Configuration>
+  </Configurations>
+  <StartMode startupentry="gstreamer-sharp" single="True">
+    <Execute type="None" entry="gstreamer-sharp" />
+  </StartMode>
+  <Entries>
+    <Entry filename="./gstreamer-sharp.mdp" />
+  </Entries>
+</Combine>

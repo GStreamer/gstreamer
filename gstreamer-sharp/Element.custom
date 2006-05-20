@@ -1,42 +1,44 @@
-//
-// Element.custom
-//
-// This code is inserted after the automatically generated code.
-//
 
-                public new GLib.Value GetProperty (string property_name) {
-                        return base.GetProperty (property_name);
-                }
+    public new GLib.Value GetProperty(string propertyName) 
+    {
+        return base.GetProperty(propertyName);
+    }
 
-		public new void SetProperty (string property_name, GLib.Value value) {
-			base.SetProperty (property_name, value);
-		}
+    public new void SetProperty(string propertyName, GLib.Value value) 
+    {
+        base.SetProperty(propertyName, value);
+    }
 
-		public void SetProperty (string property_name, string value) {
-			GLib.Value val = new GLib.Value (value);
-			base.SetProperty (property_name, val);
-		}
+    public void SetProperty(string propertyName, string value) 
+    {
+        GLib.Value val = new GLib.Value(value);
+        base.SetProperty(propertyName, val);
+    }
 
-		public void SetProperty (string property_name, double value) {
-			GLib.Value val = new GLib.Value (value);
-			base.SetProperty (property_name, val);
-		}
+    public void SetProperty(string propertyName, double value) 
+    {
+        GLib.Value val = new GLib.Value(value);
+        base.SetProperty(propertyName, val);
+    }
 
-		public void SetProperty (string property_name, bool value) {
-			GLib.Value val = new GLib.Value (value);
-			base.SetProperty (property_name, val);
-		}
+    public void SetProperty(string propertyName, bool value) 
+    {
+        GLib.Value val = new GLib.Value(value);
+        base.SetProperty(propertyName, val);
+    }
 
-		[DllImport("gstreamer-0.10.dll")]
-		static extern bool gst_element_query_position(IntPtr raw, ref Format format, out long cur);
+    [DllImport("gstreamer-0.10.dll")]
+    private static extern bool gst_element_query_position(IntPtr raw, ref Format format, out long cur);
 
-		public bool QueryPosition(Gst.Format format, out long cur) {
-			return gst_element_query_position(Handle, ref format, out cur);
-		}
+    public bool QueryPosition(Gst.Format format, out long current) 
+    {
+        return gst_element_query_position(Handle, ref format, out current);
+    }
 
-		[DllImport("gstreamer-0.10.dll")]
-		static extern bool gst_element_query_duration(IntPtr raw, ref Format format, out long duration);
+    [DllImport("gstreamer-0.10.dll")]
+    private static extern bool gst_element_query_duration(IntPtr raw, ref Format format, out long duration);
 
-		public bool QueryDuration(Gst.Format format, out long duration) {
-			return gst_element_query_duration(Handle, ref format, out duration);
-		}
+    public bool QueryDuration(Gst.Format format, out long duration) 
+    {
+        return gst_element_query_duration(Handle, ref format, out duration);
+    }

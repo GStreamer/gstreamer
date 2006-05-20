@@ -135,6 +135,13 @@ if test "x$GAPI_PARSER" = "xno"; then
         AC_MSG_ERROR([You need to install gtk-sharp-gapi])
 fi
 
+PKG_CHECK_MODULES(MONO_NUNIT, mono-nunit >= 1.0, do_tests="yes", do_tests="no")
+AC_SUBST(MONO_NUNIT_LIBS)
+AM_CONDITIONAL(ENABLE_TESTS, test "x$do_tests" = "xyes")
+if test "x$do_tests" = "xno"; then
+	AC_MSG_WARN([Could not find mono-nunit: tests will not be available])
+fi
+
 AC_OUTPUT([
 source/Makefile
 gstreamer-sharp/Makefile
@@ -142,6 +149,7 @@ gstreamer-sharp/AssemblyInfo.cs
 gstreamer-sharp/gstreamer-sharp.dll.config
 gstreamer-sharp/glue/Makefile
 doc/Makefile
+tests/Makefile
 sample/Makefile
 gstreamer-sharp-0.10.pc
 Makefile

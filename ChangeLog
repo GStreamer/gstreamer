@@ -1,3 +1,36 @@
+2006-05-20  Aaron Bockover  <aaron@abock.org>
+
+	* autogen.sh: Fixed a left over configure.in to configure.ac
+
+	* confiugre.ac: Added check foo for NUnit
+
+	* gstreamer-sharp.mdp:
+	* gstreamer-sharp.mds: Added MonoDevelop solution
+
+	* source/Makefile.am: Cleaned and fixed
+
+	* tests/ConsoleUi.cs: 
+	* tests/ApplicationTest.cs:
+	* tests/BinTest.cs:
+	* tests/Makefile.am: Added NUnit test framework and a few tests for
+	Gst.Application and Gst.Bin
+	
+	* gstreamer-sharp/CommonTags.cs:
+	* gstreamer-sharp/*.custom:
+	* gstreamer-sharp/glue/*.c: Cleaned up
+	
+	* gstreamer-sharp/Application.cs: New application bindings; fixed
+	to work properly with GStreamer 0.10
+
+	* gstreamer-sharp/Version.cs: New Gst.Version class 
+
+	* gstreamer-sharp/Makefile.am: Added Version.cs
+
+	* gstreamer-sharp/plugins-base/PlayBin.cs: Fixed and extended PlayBin
+	element binding with new (but not all) properties
+
+	* Makefile.am: Added tests
+
 2006-05-19  Aaron Bockover  <aaron@abock.org>
 
 	* gstreamer-sharp: Initial import to Mono Subversion; all prior work

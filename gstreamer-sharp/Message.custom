@@ -1,10 +1,10 @@
-	
-		[DllImport("gstsharpglue-0.10")]
-		extern static IntPtr gstsharp_message_parse_error (IntPtr raw);
-	
-		public void ParseError (out string error)
-		{
-			IntPtr err = gstsharp_message_parse_error (Handle);
-			error = GLib.Marshaller.PtrToStringGFree (err);
-		}
+
+    [DllImport("gstsharpglue-0.10")]
+    private extern static IntPtr gstsharp_message_parse_error(IntPtr raw);
+
+    public void ParseError(out string error)
+    {
+        IntPtr err = gstsharp_message_parse_error(Handle);
+        error = GLib.Marshaller.PtrToStringGFree(err);
+    }
 

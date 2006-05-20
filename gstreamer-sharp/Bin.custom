@@ -1,38 +1,42 @@
-//
-// Bin.custom
-//
-// This code is inserted after the automatically generated code.
-//
-                [DllImport("gstreamer-0.10")]
-                static extern IntPtr gst_bin_get_list(IntPtr raw);
 
-                public Element[] List {
-			get {
-		                IntPtr list_ptr = gst_bin_get_list (Handle);
-		                if (list_ptr == IntPtr.Zero)
-                	        return new Element [0];
- 
-		                GLib.List list = new GLib.List (list_ptr);
-		                Element[] result = new Element [list.Count];
-		                for (int i = 0; i < list.Count; i++)
-		                        result [i] = list [i] as Element;
-		                return result;
-			}
-                }
+    /*[DllImport ("gstreamersharpglue-0.10")]
+    private extern static uint gstsharp_gst_bin_get_children_offset();
 
-		public bool AddMany (params Element[] elements)
-		{
-			if (elements == null)
-				return false;
+    static uint children_offset = gstsharp_gst_bin_get_children_offset();*/
 
-			bool ret = true;
-			foreach (Element element in elements)
-			{
-				if (element == null || !Add (element)) {
-					ret = false;
-					continue;
-				}
-			}
+    /* TODO: This needs to be called 'Children' and the default version
+       needs to be hidden (see Gstreamer.metadata) */
 
-			return ret;
-		}
+    public Element [] List {
+        get {
+            GLib.List list;
+            
+            unsafe {
+                IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + children_offset);
+                list = new GLib.List((*raw_ptr));
+            }
+            
+            Element [] result = new Element[list.Count];
+            
+            for(int i = 0; i < list.Count; i++) {
+                result[i] = list[i] as Element;
+            }
+            
+            return result;
+        }
+    }
+
+    public bool AddMany(params Element[] elements)
+    {
+        if(elements == null) {
+            return false;
+        }
+        
+        foreach(Element element in elements) {
+            if(element == null || !Add(element)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
