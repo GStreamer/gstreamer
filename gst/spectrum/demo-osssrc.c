@@ -4,26 +4,26 @@
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 
-extern gboolean _gst_plugin_spew;
-
-gboolean idle_func (gpointer data);
+#define DEFAULT_AUDIOSRC "alsasrc"
+#define SPECT_BANDS 256
 
 GtkWidget *drawingarea;
 
-void
+static void
 spectrum_chain (GstElement * sink, GstBuffer * buf, GstPad * pad,
     gpointer unused)
 {
   gint i;
   guchar *data = buf->data;
-  GdkRectangle rect = { 0, 0, GST_BUFFER_SIZE (buf), 25 };
+  gint width = GST_BUFFER_SIZE (buf);
+  GdkRectangle rect = { 0, 0, width, 50 };
 
   gdk_window_begin_paint_rect (drawingarea->window, &rect);
   gdk_draw_rectangle (drawingarea->window, drawingarea->style->black_gc,
-      TRUE, 0, 0, GST_BUFFER_SIZE (buf), 25);
-  for (i = 0; i < GST_BUFFER_SIZE (buf); i++) {
+      TRUE, 0, 0, width, 50);
+  for (i = 0; i < width; i++) {
     gdk_draw_rectangle (drawingarea->window, drawingarea->style->white_gc,
-        TRUE, i, 32 - data[i], 1, data[i]);
+        TRUE, i, 64 - data[i], 1, data[i]);
   }
   gdk_window_end_paint (drawingarea->window);
 }
@@ -32,7 +32,7 @@ int
 main (int argc, char *argv[])
 {
   GstElement *bin;
-  GstElement *src, *spectrum, *sink;
+  GstElement *src, *conv, *spectrum, *sink;
 
   GtkWidget *appwindow;
 
@@ -42,34 +42,35 @@ main (int argc, char *argv[])
   bin = gst_pipeline_new ("bin");
 
   src = gst_element_factory_make (DEFAULT_AUDIOSRC, "src");
-  g_object_set (G_OBJECT (src), "buffersize", (gulong) 1024, NULL);
+  g_object_set (G_OBJECT (src), "blocksize", (gulong) 1024 * 2, NULL);
+
+  conv = gst_element_factory_make ("audioconvert", "conv");
+
   spectrum = gst_element_factory_make ("spectrum", "spectrum");
-  g_object_set (G_OBJECT (spectrum), "width", 256, NULL);
+  g_object_set (G_OBJECT (spectrum), "width", SPECT_BANDS, NULL);
+
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (G_OBJECT (sink), "signal-handoffs", TRUE, NULL);
+
   g_signal_connect (sink, "handoff", G_CALLBACK (spectrum_chain), NULL);
 
-  gst_bin_add_many (GST_BIN (bin), src, spectrum, sink, NULL);
-  gst_element_link_many (src, spectrum, sink, NULL);
+  gst_bin_add_many (GST_BIN (bin), src, conv, spectrum, sink, NULL);
+  if (!gst_element_link_many (src, conv, spectrum, sink, NULL)) {
+    fprintf (stderr, "cant link elements\n");
+    exit (1);
+  }
 
   appwindow = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   drawingarea = gtk_drawing_area_new ();
-  gtk_drawing_area_size (GTK_DRAWING_AREA (drawingarea), 256, 32);
+  gtk_drawing_area_size (GTK_DRAWING_AREA (drawingarea), SPECT_BANDS, 64);
   gtk_container_add (GTK_CONTAINER (appwindow), drawingarea);
   gtk_widget_show_all (appwindow);
 
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
-
-  g_idle_add (idle_func, bin);
-
+  gst_element_set_state (bin, GST_STATE_PLAYING);
   gtk_main ();
+  gst_element_set_state (bin, GST_STATE_NULL);
+
+  gst_object_unref (bin);
 
   return 0;
-}
-
-
-gboolean
-idle_func (gpointer data)
-{
-  return gst_bin_iterate (data);
 }

@@ -1,3 +1,15 @@
+2006-05-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst/spectrum/demo-osssrc.c: (spectrum_chain), (main):
+	* gst/spectrum/fix_fft.c: (gst_spectrum_fix_dot):
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_get_type),
+	(gst_spectrum_base_init), (gst_spectrum_class_init),
+	(gst_spectrum_init), (gst_spectrum_dispose),
+	(gst_spectrum_set_property), (gst_spectrum_chain):
+	* gst/spectrum/gstspectrum.h:
+        Initial port of the spectrum element
+
 2006-05-19  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2.c:
