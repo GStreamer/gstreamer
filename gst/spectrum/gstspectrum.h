@@ -39,7 +39,7 @@ extern "C" {
 #define GST_IS_SPECTRUM(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SPECTRUM))
 #define GST_IS_SPECTRUM_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SPECTRUM))
+  (G_TYPE_CHECK_CLASS_TYPE((obj),GST_TYPE_SPECTRUM))
 
 typedef struct _GstSpectrum GstSpectrum;
 typedef struct _GstSpectrumClass GstSpectrumClass;
@@ -50,6 +50,8 @@ struct _GstSpectrum {
   GstPad *sinkpad,*srcpad;
 
   gint width;
+  gint base, len;
+  gint16 *re, *im, *loud;
 };
 
 struct _GstSpectrumClass {
