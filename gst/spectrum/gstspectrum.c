@@ -47,7 +47,7 @@ static const GstElementDetails gst_spectrum_details =
 GST_ELEMENT_DETAILS ("Spectrum analyzer",
     "Filter/Analyzer/Audio",
     "Run an FFT on the audio signal, output spectrum data",
-    "Erik Walthinsen <omega@cse.ogi.edu>,"
+    "Erik Walthinsen <omega@cse.ogi.edu>, "
     "Stefan Kost <ensonic@users.sf.net>");
 
 static GstStaticPadTemplate sink_template_factory =
@@ -81,10 +81,8 @@ enum
   ARG_THRESHOLD
 };
 
+GST_BOILERPLATE (GstSpectrum, gst_spectrum, GstElement, GST_TYPE_ELEMENT);
 
-static void gst_spectrum_base_init (gpointer g_class);
-static void gst_spectrum_class_init (GstSpectrumClass * klass);
-static void gst_spectrum_init (GstSpectrum * spectrum);
 static void gst_spectrum_dispose (GObject * object);
 static void gst_spectrum_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -101,35 +99,7 @@ extern void gst_spectrum_fix_loud (fixed loud[], fixed fr[], fixed fi[], int n,
     int scale_shift);
 extern void gst_spectrum_window (fixed fr[], int n);
 
-static GstElementClass *parent_class = NULL;
-
 /*static guint gst_spectrum_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_spectrum_get_type (void)
-{
-  static GType spectrum_type = 0;
-
-  if (!spectrum_type) {
-    static const GTypeInfo spectrum_info = {
-      sizeof (GstSpectrumClass),
-      gst_spectrum_base_init,
-      NULL,
-      (GClassInitFunc) gst_spectrum_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSpectrum),
-      0,
-      (GInstanceInitFunc) gst_spectrum_init,
-    };
-
-    spectrum_type = g_type_register_static (GST_TYPE_ELEMENT, "GstSpectrum",
-        &spectrum_info, 0);
-    GST_DEBUG_CATEGORY_INIT (gst_spectrum_debug, "spectrum", 0,
-        "audio spectrum analyser element");
-  }
-  return spectrum_type;
-}
 
 static void
 gst_spectrum_base_init (gpointer g_class)
@@ -149,26 +119,26 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->set_property = gst_spectrum_set_property;
   gobject_class->dispose = gst_spectrum_dispose;
 
   element->change_state = gst_spectrum_change_state;
 
   g_object_class_install_property (gobject_class, ARG_WIDTH,
-      g_param_spec_uint ("width", "width", "number of frequency bands",
+      g_param_spec_uint ("width", "Width", "number of frequency bands",
           0, G_MAXUINT, 0, G_PARAM_WRITABLE));
 
   g_object_class_install_property (gobject_class, ARG_THRESHOLD,
-      g_param_spec_int ("threshold", "threshold",
+      g_param_spec_int ("threshold", "Threshold",
           "db threshold for result, maps to 0", G_MININT, 0, -60,
           G_PARAM_WRITABLE));
 
+  GST_DEBUG_CATEGORY_INIT (gst_spectrum_debug, "spectrum", 0,
+      "audio spectrum analyser element");
 }
 
 static void
-gst_spectrum_init (GstSpectrum * spectrum)
+gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
 {
   spectrum->sinkpad =
       gst_pad_new_from_static_template (&sink_template_factory, "sink");

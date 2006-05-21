@@ -1,5 +1,12 @@
 2006-05-21  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init),
+	(gst_spectrum_init), (gst_spectrum_set_sink_caps),
+	(gst_spectrum_get_sink_caps), (gst_spectrum_chain):
+        Use boilerplate macro, fix strings to match plugin-moval-requirements
+
+2006-05-21  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/spectrum/Makefile.am:
         Link to base libraries
         
