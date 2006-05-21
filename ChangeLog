@@ -1,3 +1,16 @@
+2006-05-21  Aaron Bockover  <aaron@abock.org>
+
+	* gstreamer-sharp/plugins-base/DecodeBin.cs: Added a quick binding for
+	decodebin to test new-decoded-pad; probably is only a temporary solution
+
+	* sample/DecodeBinTranscoder.cs: Added a small decodebin sample
+	
+	* sample/Makefile.am: Added build rules for decodebin sample
+
+	* gstreamer-sharp.mdp: Updated MonoDevelop project
+
+	* gstreamer-sharp/Makefile.am: Added plugins-base/DecodeBin.cs
+
 2006-05-20  Aaron Bockover  <aaron@abock.org>
 
 	* autogen.sh: Fixed a left over configure.in to configure.ac

@@ -36,12 +36,13 @@ uninstall-local:
 clean-local:
 	rm -rf generated
 
-sources =				\
-	Application.cs			\
+sources = \
+	Application.cs \
 	Version.cs \
-	AssemblyInfo.cs			\
-	CommonTags.cs			\
-	plugins-base/PlayBin.cs
+	AssemblyInfo.cs \
+	CommonTags.cs \
+	plugins-base/PlayBin.cs \
+	plugins-base/DecodeBin.cs
 
 build_sources = $(addprefix $(srcdir)/, $(sources))
 
