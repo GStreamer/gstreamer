@@ -1,5 +1,23 @@
 2006-05-21  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/spectrum/Makefile.am:
+        Link to base libraries
+        
+	* gst/spectrum/demo-osssrc.c: (main):
+        use new threshhold property
+        
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init),
+	(gst_spectrum_init), (gst_spectrum_dispose),
+	(gst_spectrum_set_property), (gst_spectrum_set_sink_caps),
+	(gst_spectrum_get_sink_caps), (gst_spectrum_chain),
+	(gst_spectrum_change_state):
+	* gst/spectrum/gstspectrum.h:
+        Use gst_adapter, support multiple-channels, add threshold property for
+        result, add docs, fix resulting spectrum range (was including mirrored
+        results)
+
+2006-05-21  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* gst/spectrum/demo-osssrc.c: (spectrum_chain), (main):
 	* gst/spectrum/fix_fft.c: (gst_spectrum_fix_dot):
