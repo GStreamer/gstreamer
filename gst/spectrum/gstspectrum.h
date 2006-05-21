@@ -23,23 +23,18 @@
 
 
 #include <gst/gst.h>
-
+#include <gst/base/gstadapter.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
 
-#define GST_TYPE_SPECTRUM \
-  (gst_spectrum_get_type())
-#define GST_SPECTRUM(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SPECTRUM,GstSpectrum))
-#define GST_SPECTRUM_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SPECTRUM,GstSpectrum))
-#define GST_IS_SPECTRUM(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SPECTRUM))
-#define GST_IS_SPECTRUM_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((obj),GST_TYPE_SPECTRUM))
+#define GST_TYPE_SPECTRUM            (gst_spectrum_get_type())
+#define GST_SPECTRUM(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SPECTRUM,GstSpectrum))
+#define GST_IS_SPECTRUM(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SPECTRUM))
+#define GST_SPECTRUM_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_SPECTRUM,GstSpectrum))
+#define GST_IS_SPECTRUM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_SPECTRUM))
 
 typedef struct _GstSpectrum GstSpectrum;
 typedef struct _GstSpectrumClass GstSpectrumClass;
@@ -48,8 +43,13 @@ struct _GstSpectrum {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
+  GstAdapter *adapter;
 
-  gint width;
+  /* properties */
+  guint width;
+  gint threshold;
+
+  gint channels;
   gint base, len;
   gint16 *re, *im, *loud;
 };

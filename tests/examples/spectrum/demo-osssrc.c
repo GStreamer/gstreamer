@@ -32,7 +32,7 @@ int
 main (int argc, char *argv[])
 {
   GstElement *bin;
-  GstElement *src, *conv, *spectrum, *sink;
+  GstElement *src, *spectrum, *sink;
 
   GtkWidget *appwindow;
 
@@ -44,18 +44,17 @@ main (int argc, char *argv[])
   src = gst_element_factory_make (DEFAULT_AUDIOSRC, "src");
   g_object_set (G_OBJECT (src), "blocksize", (gulong) 1024 * 2, NULL);
 
-  conv = gst_element_factory_make ("audioconvert", "conv");
-
   spectrum = gst_element_factory_make ("spectrum", "spectrum");
-  g_object_set (G_OBJECT (spectrum), "width", SPECT_BANDS, NULL);
+  g_object_set (G_OBJECT (spectrum), "width", SPECT_BANDS, "threshold", -80,
+      NULL);
 
   sink = gst_element_factory_make ("fakesink", "sink");
   g_object_set (G_OBJECT (sink), "signal-handoffs", TRUE, NULL);
 
   g_signal_connect (sink, "handoff", G_CALLBACK (spectrum_chain), NULL);
 
-  gst_bin_add_many (GST_BIN (bin), src, conv, spectrum, sink, NULL);
-  if (!gst_element_link_many (src, conv, spectrum, sink, NULL)) {
+  gst_bin_add_many (GST_BIN (bin), src, spectrum, sink, NULL);
+  if (!gst_element_link_many (src, spectrum, sink, NULL)) {
     fprintf (stderr, "cant link elements\n");
     exit (1);
   }
