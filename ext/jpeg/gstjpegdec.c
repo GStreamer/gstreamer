@@ -610,9 +610,24 @@ gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps)
   return TRUE;
 }
 
+/* yuk */
+static void
+hresamplecpy1 (guint8 * dest, const guint8 * src, guint len)
+{
+  gint i;
+
+  for (i = 0; i < len; ++i) {
+    /* equivalent to: dest[i] = src[i << 1] */
+    *dest = *src;
+    ++dest;
+    ++src;
+    ++src;
+  }
+}
+
 static void
 gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
-    guchar * last[3], guint width, guint height, gint r_v)
+    guchar * last[3], guint width, guint height, gint r_v, gint r_h)
 {
   guchar y[16][MAX_WIDTH];
   guchar u[8][MAX_WIDTH / 2];
@@ -626,7 +641,7 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
   gint i, j, k;
 
   GST_DEBUG_OBJECT (dec,
-      "unadvantageous width, taking slow route involving memcpy");
+      "unadvantageous width or r_h, taking slow route involving memcpy");
 
   for (i = 0; i < height; i += r_v * DCTSIZE) {
     jpeg_read_raw_data (&dec->cinfo, scanarray, r_v * DCTSIZE);
@@ -639,8 +654,16 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
         if (base[0] < last[0])
           base[0] += I420_Y_ROWSTRIDE (width);
       }
-      memcpy (base[1], u_rows[k], I420_U_ROWSTRIDE (width));
-      memcpy (base[2], v_rows[k], I420_V_ROWSTRIDE (width));
+      if (G_LIKELY (r_h == 2)) {
+        memcpy (base[1], u_rows[k], I420_U_ROWSTRIDE (width));
+        memcpy (base[2], v_rows[k], I420_V_ROWSTRIDE (width));
+      } else if (G_UNLIKELY (r_h == 1)) {
+        hresamplecpy1 (base[1], u_rows[k], I420_U_ROWSTRIDE (width));
+        hresamplecpy1 (base[2], v_rows[k], I420_V_ROWSTRIDE (width));
+      } else {
+        /* FIXME: implement (at least we avoid crashing by doing nothing) */
+      }
+
       if (r_v == 2 || (k & 1) != 0) {
         if (base[1] < last[1] && base[2] < last[2]) {
           base[1] += I420_U_ROWSTRIDE (width);
@@ -772,6 +795,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   r_h = dec->cinfo.cur_comp_info[0]->h_samp_factor;
   r_v = dec->cinfo.cur_comp_info[0]->v_samp_factor;
 
+  GST_DEBUG ("r_h = %d, r_v = %d", r_h, r_v);
   GST_DEBUG ("num_components=%d, comps_in_scan=%d\n",
       dec->cinfo.num_components, dec->cinfo.comps_in_scan);
   for (i = 0; i < dec->cinfo.comps_in_scan; ++i) {
@@ -879,8 +903,8 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
    * copy over the data into our final picture buffer, otherwise jpeglib might
    * write over the end of a line into the beginning of the next line,
    * resulting in blocky artifacts on the left side of the picture. */
-  if (width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0) {
-    gst_jpeg_dec_decode_indirect (dec, base, last, width, height, r_v);
+  if (r_h != 2 || width % (dec->cinfo.max_h_samp_factor * DCTSIZE) != 0) {
+    gst_jpeg_dec_decode_indirect (dec, base, last, width, height, r_v, r_h);
   } else {
     gst_jpeg_dec_decode_direct (dec, base, last, width, height, r_v);
   }

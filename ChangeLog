@@ -1,5 +1,12 @@
 2006-05-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/jpeg/gstjpegdec.c: (hresamplecpy1),
+	(gst_jpeg_dec_decode_indirect), (gst_jpeg_dec_chain):
+	  Fix crashes when the horizontal subsampling is 1.
+	  Fixes #342097.
+
+2006-05-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Mark Nauwelaerts  <manauw at skynet be>
 
 	* gst/avi/gstavimux.c: (gst_avi_mux_finalize), (gst_avi_mux_init),
