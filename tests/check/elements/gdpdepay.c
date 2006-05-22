@@ -163,6 +163,9 @@ GST_START_TEST (test_audio_per_byte)
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
 
   ASSERT_OBJECT_REFCOUNT (gdpdepay, "gdpdepay", 1);
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
   gst_object_unref (srcpad);
   cleanup_gdpdepay (gdpdepay);
 }
@@ -232,6 +235,9 @@ GST_START_TEST (test_audio_in_one_buffer)
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
 
   gst_object_unref (srcpad);
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdpdepay, "gdpdepay", 1);
   cleanup_gdpdepay (gdpdepay);
 }
@@ -361,6 +367,9 @@ GST_START_TEST (test_streamheader)
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
 
   gst_object_unref (srcpad);
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdpdepay, "gdpdepay", 1);
   cleanup_gdpdepay (gdpdepay);
 }

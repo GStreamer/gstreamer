@@ -193,6 +193,9 @@ GST_START_TEST (test_audio)
 
   gst_caps_unref (caps);
   g_free (caps_string);
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdppay, "gdppay", 1);
   gst_object_unref (gdppay);
 }
@@ -362,6 +365,9 @@ GST_START_TEST (test_streamheader)
 
   gst_caps_unref (caps);
   g_free (caps_string);
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdppay, "gdppay", 1);
   gst_object_unref (gdppay);
 }
@@ -392,6 +398,9 @@ GST_START_TEST (test_first_no_caps)
   fail_unless (gst_element_set_state (gdppay,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
 
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdppay, "gdppay", 1);
   gst_object_unref (gdppay);
 }
@@ -430,6 +439,9 @@ GST_START_TEST (test_first_no_new_segment)
   fail_unless (gst_element_set_state (gdppay,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
 
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdppay, "gdppay", 1);
   gst_object_unref (gdppay);
 }

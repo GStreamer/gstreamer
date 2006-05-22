@@ -1,5 +1,5 @@
-/* Gnome-Streamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+/* GStreamer
+ * Copyright (C) 2006 Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

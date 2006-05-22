@@ -42,7 +42,7 @@
 /* elementfactory information */
 static const GstElementDetails gdp_depay_details =
 GST_ELEMENT_DETAILS ("GDP Depayloader",
-    "Filter/Effect/Video",
+    "GDP/Depayloader",
     "Depayloads GStreamer Data Protocol buffers",
     "Thomas Vander Stichele <thomas at apestaart dot org>");
 
@@ -221,6 +221,13 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
 
         GST_LOG_OBJECT (this, "reading GDP buffer from adapter");
         buf = gst_dp_buffer_from_header (GST_DP_HEADER_LENGTH, this->header);
+        if (!buf) {
+          GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
+              ("could not create buffer from GDP packet"));
+          ret = GST_FLOW_ERROR;
+          goto done;
+        }
+
         payload = gst_adapter_take (this->adapter, this->payload_length);
         memcpy (GST_BUFFER_DATA (buf), payload, this->payload_length);
         g_free (payload);
@@ -243,6 +250,12 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
         caps = gst_dp_caps_from_packet (GST_DP_HEADER_LENGTH, this->header,
             payload);
         g_free (payload);
+        if (!caps) {
+          GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
+              ("could not create caps from GDP packet"));
+          ret = GST_FLOW_ERROR;
+          goto done;
+        }
         GST_DEBUG_OBJECT (this, "read caps %" GST_PTR_FORMAT, caps);
         gst_caps_replace (&(this->caps), caps);
         gst_pad_set_caps (this->srcpad, caps);
@@ -260,6 +273,14 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
           payload = gst_adapter_take (this->adapter, this->payload_length);
         event = gst_dp_event_from_packet (GST_DP_HEADER_LENGTH, this->header,
             payload);
+        if (payload)
+          g_free (payload);
+        if (!event) {
+          GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
+              ("could not create event from GDP packet"));
+          ret = GST_FLOW_ERROR;
+          goto done;
+        }
         /* FIXME: set me as source ? */
         gst_pad_push_event (this->srcpad, event);
 
@@ -295,6 +316,8 @@ gst_gdp_depay_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
   GstGDPDepay *this = GST_GDP_DEPAY (element);
 
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (this->caps) {
@@ -305,8 +328,6 @@ gst_gdp_depay_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
 }

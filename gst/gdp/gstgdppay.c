@@ -39,7 +39,7 @@
 /* elementfactory information */
 static const GstElementDetails gdp_pay_details =
 GST_ELEMENT_DETAILS ("GDP Payloader",
-    "Filter/Effect/Video",
+    "GDP/Payloader",
     "Payloads GStreamer Data Protocol buffers",
     "Thomas Vander Stichele <thomas at apestaart dot org>");
 
@@ -260,8 +260,6 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
 
   /* we also need to add GDP serializations of the streamheaders of the
    * incoming caps */
-  /* FIXME: HEREIAM */
-
   structure = gst_caps_get_structure (this->caps, 0);
   if (gst_structure_has_field (structure, "streamheader")) {
     const GValue *sh;
@@ -281,10 +279,14 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
       bufval = &g_array_index (buffers, GValue, i);
       buffer = g_value_peek_pointer (bufval);
       outbuffer = gst_gdp_pay_buffer_from_buffer (this, buffer);
-      g_value_init (&value, GST_TYPE_BUFFER);
-      gst_value_set_buffer (&value, outbuffer);
-      gst_value_array_append_value (&array, &value);
-      g_value_unset (&value);
+      if (outbuffer) {
+        g_value_init (&value, GST_TYPE_BUFFER);
+        gst_value_set_buffer (&value, outbuffer);
+        gst_value_array_append_value (&array, &value);
+        g_value_unset (&value);
+      }
+      /* FIXME: if one or more in this loop fail to produce and outbuffer,
+       * should we error out ? Once ? Every time ? */
     }
   }
 
@@ -373,10 +375,9 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
   GstGDPPay *this;
   GstCaps *caps;
   GstBuffer *outbuffer;
+  GstFlowReturn ret;
 
   this = GST_GDP_PAY (gst_pad_get_parent (pad));
-
-  caps = gst_buffer_get_caps (buffer);
 
   /* we should have received a new_segment before, otherwise it's a bug.
    * fake one in that case */
@@ -387,25 +388,44 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
         "did not receive new-segment before first buffer");
     event = gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_BYTES, 0, -1, 0);
     outbuffer = gst_gdp_buffer_from_event (this, event);
+    gst_event_unref (event);
+
+    if (!outbuffer) {
+      GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
+          ("Could not create GDP buffer from new segment event"));
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+
     gst_gdp_stamp_buffer (this, outbuffer);
     GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_DURATION (outbuffer) = 0;
     this->new_segment_buf = outbuffer;
-    gst_event_unref (event);
   }
 
   /* make sure we've received caps before */
+  caps = gst_buffer_get_caps (buffer);
   if (!this->caps && !caps) {
     GST_WARNING_OBJECT (this, "first received buffer does not have caps set");
-    gst_buffer_unref (buffer);
-    gst_object_unref (this);
-    return GST_FLOW_NOT_NEGOTIATED;
+    if (caps)
+      gst_caps_unref (caps);
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
   }
+
   /* if the caps have changed, process caps first */
   if (caps && !gst_caps_is_equal (this->caps, caps)) {
     GST_LOG_OBJECT (this, "caps changed to %p, %" GST_PTR_FORMAT, caps, caps);
     gst_caps_replace (&(this->caps), caps);
     outbuffer = gst_gdp_buffer_from_caps (this, caps);
+    if (!outbuffer) {
+      GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
+          ("Could not create GDP buffer from caps %" GST_PTR_FORMAT, caps));
+      gst_caps_unref (caps);
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+
     gst_gdp_stamp_buffer (this, outbuffer);
     GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_DURATION (outbuffer) = 0;
@@ -417,13 +437,23 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
   /* create a GDP header packet,
    * then create a GST buffer of the header packet and the buffer contents */
   outbuffer = gst_gdp_pay_buffer_from_buffer (this, buffer);
+  if (!outbuffer) {
+    GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
+        ("Could not create GDP buffer from buffer"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
   gst_gdp_stamp_buffer (this, outbuffer);
   GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (outbuffer) = GST_BUFFER_DURATION (buffer);
-  gst_buffer_unref (buffer);
 
+  ret = gst_gdp_queue_buffer (this, outbuffer);
+
+done:
+  gst_buffer_unref (buffer);
   gst_object_unref (this);
-  return gst_gdp_queue_buffer (this, outbuffer);
+  return ret;
 }
 
 static gboolean
@@ -436,6 +466,12 @@ gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event)
 
   /* now turn the event into a buffer */
   outbuffer = gst_gdp_buffer_from_event (this, event);
+  if (!outbuffer) {
+    GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
+        ("Could not create GDP buffer from event"));
+    ret = FALSE;
+    goto done;
+  }
   gst_gdp_stamp_buffer (this, outbuffer);
   GST_BUFFER_TIMESTAMP (outbuffer) = GST_EVENT_TIMESTAMP (event);
   GST_BUFFER_DURATION (outbuffer) = 0;
@@ -476,6 +512,8 @@ gst_gdp_pay_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
   GstGDPPay *this = GST_GDP_PAY (element);
 
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (this->caps) {
@@ -486,8 +524,6 @@ gst_gdp_pay_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return ret;
 }
