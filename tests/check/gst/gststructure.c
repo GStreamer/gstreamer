@@ -110,16 +110,19 @@ GST_START_TEST (test_from_string)
 
 GST_END_TEST;
 
-Suite *
-gst_value_suite (void)
+GST_START_TEST (test_complete_structure)
 {
-  Suite *s = suite_create ("GstStructure");
-  TCase *tc_chain = tcase_create ("general");
+  GstStructure *structure;
+  const gchar *s;
 
-  suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_from_string_int);
-  return s;
+  s = "GstEventSeek, rate=(double)1, format=(GstFormat)GST_FORMAT_TIME, flags=(GstSeekFlags)GST_SEEK_FLAGS_NONE, cur_type=(GstSeekType)GST_SEEK_TYPE_SET, cur=(gint64)1000000000, stop_type=(GstSeekType)GST_SEEK_TYPE_NONE, stop=(gint64)0";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  /* FIXME: TODO: add checks for correct serialization of members ? */
+  gst_structure_free (structure);
 }
+
+GST_END_TEST;
 
 GST_START_TEST (test_structure_new)
 {
@@ -149,6 +152,7 @@ gst_structure_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_from_string_int);
   tcase_add_test (tc_chain, test_from_string);
+  tcase_add_test (tc_chain, test_complete_structure);
   tcase_add_test (tc_chain, test_structure_new);
   return s;
 }

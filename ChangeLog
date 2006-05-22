@@ -1,3 +1,9 @@
+2006-05-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/check/gst/gststructure.c: (GST_START_TEST),
+	(gst_structure_suite):
+	  add a test for a complete structure
+
 2006-05-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/faq/developing.xml:
