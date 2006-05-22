@@ -28,9 +28,8 @@ clean-local: clean-local-check
 
 check_PROGRAMS =
 
-nocheck_PROGRAMS =
-	elements/gdppay \
-	elements/gdpdepay
+#	elements/gdppay \
+#	elements/gdpdepay
 
 TESTS = $(check_PROGRAMS)
 
