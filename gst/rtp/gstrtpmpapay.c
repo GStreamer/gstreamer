@@ -9,7 +9,12 @@
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more 
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -26,7 +31,7 @@
 static const GstElementDetails gst_rtp_mpapay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
     "Codec/Payloader/Network",
-    "Payode MPEG audio as RTP packets (RFC 2038)",
+    "Payload MPEG audio as RTP packets (RFC 2038)",
     "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate gst_rtp_mpa_pay_sink_template =

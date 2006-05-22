@@ -9,7 +9,12 @@
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more 
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -23,9 +28,9 @@
 
 /* references:
  *
- * RFC 3267 - Real-Time Transport Protocol (RTP) Payload Format and File Storage Format 
- *   for the Adaptive Multi-Rate (AMR) and Adaptive Multi-Rate Wideband (AMR-WB) Audio 
- *   Codecs.
+ * RFC 3267 - Real-Time Transport Protocol (RTP) Payload Format and File
+ * Storage Format for the Adaptive Multi-Rate (AMR) and Adaptive Multi-Rate
+ * Wideband (AMR-WB) Audio Codecs.
  */
 
 /* elementfactory information */
@@ -48,7 +53,7 @@ enum
   ARG_FREQUENCY
 };
 
-/* input is an RTP packet 
+/* input is an RTP packet
  *
  * params see RFC 3267, section 8.1
  */
@@ -64,7 +69,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "octet-align = (string) \"1\", "
         "crc = (string) { \"0\", \"1\" }, "
         "robust-sorting = (string) \"0\", " "interleaving = (string) \"0\""
-        /* following options are not needed for a decoder 
+        /* following options are not needed for a decoder
          *
          "mode-set = (int) [ 0, 7 ], "
          "mode-change-period = (int) [ 1, MAX ], "

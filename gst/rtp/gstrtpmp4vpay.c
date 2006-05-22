@@ -9,7 +9,12 @@
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more 
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -29,7 +34,7 @@ GST_DEBUG_CATEGORY (rtpmp4vpay_debug);
 static const GstElementDetails gst_rtp_mp4vpay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
     "Codec/Payloader/Network",
-    "Payode MPEG4 video as RTP packets (RFC 3016)",
+    "Paload MPEG4 video as RTP packets (RFC 3016)",
     "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate gst_rtp_mp4v_pay_sink_template =
