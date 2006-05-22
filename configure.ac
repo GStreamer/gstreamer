@@ -78,6 +78,7 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
   cdxaparse \
   freeze \
+  h264parse \
   modplug \
   spectrum \
   speed \
@@ -703,6 +704,7 @@ gst-plugins-bad.spec
 gst/Makefile
 gst/cdxaparse/Makefile
 gst/freeze/Makefile
+gst/h264parse/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
 gst/spectrum/Makefile
