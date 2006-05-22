@@ -1,4 +1,4 @@
-/* Gnome-Streamer
+/* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
