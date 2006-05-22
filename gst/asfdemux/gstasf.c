@@ -22,6 +22,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/riff/riff-media.h>
 
 #include "gstasfdemux.h"
 /* #include "gstasfmux.h" */
@@ -29,11 +30,16 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "asfdemux", GST_RANK_SECONDARY, GST_TYPE_ASF_DEMUX))       /*
-                                                                                                   || !gst_element_register (plugin, "asfmux", GST_RANK_NONE,
-                                                                                                   GST_TYPE_ASFMUX))
-                                                                                                 */
+  gst_riff_init ();
+
+  if (!gst_element_register (plugin, "asfdemux", GST_RANK_SECONDARY,
+          GST_TYPE_ASF_DEMUX)) {
     return FALSE;
+  }
+/*
+  if (!gst_element_register (plugin, "asfmux", GST_RANK_NONE, GST_TYPE_ASFMUX))
+    return FALSE;
+*/
 
   return TRUE;
 }

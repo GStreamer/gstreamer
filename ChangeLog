@@ -1,3 +1,9 @@
+2006-05-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasf.c: (plugin_init):
+	  Call gst_riff_init() so the riff debug category gets set up
+	  before it is being used.
+
 2006-05-19  Michael Smith  <msmith@fluendo.com>
 
 	* gst/iec958/ac3_padder.c: (ac3p_parse):
