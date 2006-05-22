@@ -12,7 +12,7 @@ REGISTRY_ENVIRONMENT = \
 TESTS_ENVIRONMENT = \
         $(REGISTRY_ENVIRONMENT)                                 \
         GST_PLUGIN_SYSTEM_PATH=					\
-        GST_PLUGIN_PATH=$(top_builddir)/ext:$(GSTPB_PLUGINS_DIR)/../gst-plugins-good:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)
+        GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
@@ -26,9 +26,13 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
 clean-local: clean-local-check
 
-check_PROGRAMS =
+check_PROGRAMS = \
+	elements/gdppay \
+	elements/gdpdepay
 
 TESTS = $(check_PROGRAMS)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
+
+elements_gdpdepay_LDFLAGS = $(LDADD) $(GST_GDP_LIBS)
