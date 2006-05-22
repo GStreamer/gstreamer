@@ -1,3 +1,22 @@
+2006-05-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts  <manauw at skynet be>
+
+	* gst/avi/gstavimux.c: (gst_avi_mux_finalize), (gst_avi_mux_init),
+	(gst_avi_mux_vidsink_set_caps), (gst_avi_mux_audsink_set_caps),
+	(gst_avi_mux_write_tag), (gst_avi_mux_riff_get_avi_header),
+	(gst_avi_mux_riff_get_avix_header), (gst_avi_mux_write_avix_index),
+	(gst_avi_mux_add_index), (gst_avi_mux_bigfile),
+	(gst_avi_mux_start_file), (gst_avi_mux_stop_file),
+	(gst_avi_mux_handle_event), (gst_avi_mux_do_audio_buffer),
+	(gst_avi_mux_do_video_buffer), (gst_avi_mux_do_one_buffer),
+	(gst_avi_mux_change_state):
+	* gst/avi/gstavimux.h:
+	  Some enhancements for avimux (#342526):
+	   - add odml (large file) index support
+	   - store codec init data (e.g. huffyuv)
+	   - miscellaneous other fixes/cleanups
+
 2006-05-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3v2frames.c: (id3v2_tag_to_taglist):

@@ -255,6 +255,11 @@ gst_avi_mux_finalize (GObject * object)
   g_free (mux->idx);
   mux->idx = NULL;
 
+  g_free (mux->vids_idx);
+  mux->vids_idx = NULL;
+  g_free (mux->auds_idx);
+  mux->auds_idx = NULL;
+
   gst_object_unref (mux->collect);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -312,10 +317,13 @@ gst_avi_mux_init (GstAviMux * avimux)
   avimux->auds_hdr.type = GST_MAKE_FOURCC ('a', 'u', 'd', 's');
   avimux->vids_hdr.quality = 0xFFFFFFFF;
   avimux->auds_hdr.quality = 0xFFFFFFFF;
+  avimux->vids_codec_data = NULL;
   avimux->tags = NULL;
   avimux->tags_snap = NULL;
 
   avimux->idx = NULL;
+  avimux->vids_idx = g_new (gst_avi_superindex_entry, GST_AVI_SUPERINDEX_COUNT);
+  avimux->auds_idx = g_new (gst_avi_superindex_entry, GST_AVI_SUPERINDEX_COUNT);
 
   avimux->write_header = TRUE;
 
@@ -335,6 +343,7 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
   GstStructure *structure;
   const gchar *mimetype;
   const GValue *fps;
+  const GValue *codec_data;
   gint width, height;
 
   avimux = GST_AVI_MUX (gst_pad_get_parent (pad));
@@ -362,6 +371,13 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
 
   avimux->vids_hdr.rate = gst_value_get_fraction_numerator (fps);
   avimux->vids_hdr.scale = gst_value_get_fraction_denominator (fps);
+
+  /* codec initialization data, if any */
+  codec_data = gst_structure_get_value (structure, "codec_data");
+  if (codec_data) {
+    avimux->vids_codec_data = gst_value_get_buffer (codec_data);
+    gst_buffer_ref (avimux->vids_codec_data);
+  }
 
   if (!strcmp (mimetype, "video/x-raw-yuv")) {
     guint32 format;
@@ -435,7 +451,8 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
   avimux->vids.image_size = avimux->vids.height * avimux->vids.width;
   avimux->avi_hdr.width = avimux->vids.width;
   avimux->avi_hdr.height = avimux->vids.height;
-  avimux->avi_hdr.us_frame = avimux->vids_hdr.scale;
+  avimux->avi_hdr.us_frame = 1000000. * avimux->vids_hdr.scale /
+      avimux->vids_hdr.rate;
 
   gst_object_unref (avimux);
   return TRUE;
@@ -456,7 +473,7 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
   const gchar *mimetype;
   gint channels, rate;
 
-  avimux = GST_AVI_MUX (GST_PAD_PARENT (pad));
+  avimux = GST_AVI_MUX (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (avimux, "%s:%s, caps=%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), vscaps);
@@ -525,8 +542,9 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
   avimux->auds_hdr.rate = avimux->auds.blockalign * avimux->auds.rate;
   avimux->auds_hdr.samplesize = avimux->auds.blockalign;
   avimux->auds_hdr.scale = 1;
-  return TRUE;
 
+  gst_object_unref (avimux);
+  return TRUE;
 
 refuse_caps:
   {
@@ -702,11 +720,14 @@ gst_avi_mux_write_tag (const GstTagList * list, const gchar * tag,
         *highmark += 8 + plen;
         GST_DEBUG ("writing tag in buffer %p, highmark at %d", buf, *highmark);
       }
+      g_free (str);
       break;
     }
   }
 }
 
+#define ODML_SUPERINDEX_SIZE    \
+    (32 + GST_AVI_SUPERINDEX_COUNT * sizeof (gst_avi_superindex_entry))
 
 static GstBuffer *
 gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
@@ -716,16 +737,24 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
   GstBuffer *buffer;
   guint8 *buffdata;
   guint size = 0;
+  guint codec_size = 0;
   guint highmark = 0;
+
+  /* do we have some extra data for the codec */
+  if (avimux->vids_codec_data)
+    codec_size = GST_BUFFER_SIZE (avimux->vids_codec_data);
 
   /* first, let's see what actually needs to be in the buffer */
   size += 32 + sizeof (gst_riff_avih);  /* avi header */
   if (avimux->video_pad_connected) {    /* we have video */
     size += 28 + sizeof (gst_riff_strh) + sizeof (gst_riff_strf_vids);  /* vid hdr */
+    size += codec_size;         /* codec data */
     size += 24;                 /* odml header */
+    size += ODML_SUPERINDEX_SIZE;       /* vids superindex */
   }
   if (avimux->audio_pad_connected) {    /* we have audio */
     size += 28 + sizeof (gst_riff_strh) + sizeof (gst_riff_strf_auds);  /* aud hdr */
+    size += ODML_SUPERINDEX_SIZE;       /* auds superindex */
   }
   /* this is the "riff size" */
   avimux->header_size = size;
@@ -745,6 +774,8 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     } else {
       tags = gst_tag_list_copy (avimux->tags);
     }
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
+        PACKAGE_STRING " AVI muxer", NULL);
   } else {
     tags = avimux->tags_snap;
   }
@@ -795,7 +826,8 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     /* video header metadata */
     memcpy (buffdata + 0, "LIST", 4);
     GST_WRITE_UINT32_LE (buffdata + 4,
-        sizeof (gst_riff_strh) + sizeof (gst_riff_strf_vids) + 4 * 5);
+        sizeof (gst_riff_strh) + sizeof (gst_riff_strf_vids)
+        + codec_size + 4 * 5 + ODML_SUPERINDEX_SIZE);
     memcpy (buffdata + 8, "strl", 4);
     /* generic header */
     memcpy (buffdata + 12, "strh", 4);
@@ -815,9 +847,10 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     GST_WRITE_UINT32_LE (buffdata + 64, avimux->vids_hdr.samplesize);
     /* the video header */
     memcpy (buffdata + 68, "strf", 4);
-    GST_WRITE_UINT32_LE (buffdata + 72, sizeof (gst_riff_strf_vids));
+    GST_WRITE_UINT32_LE (buffdata + 72,
+        sizeof (gst_riff_strf_vids) + codec_size);
     /* the actual header */
-    GST_WRITE_UINT32_LE (buffdata + 76, avimux->vids.size);
+    GST_WRITE_UINT32_LE (buffdata + 76, avimux->vids.size + codec_size);
     GST_WRITE_UINT32_LE (buffdata + 80, avimux->vids.width);
     GST_WRITE_UINT32_LE (buffdata + 84, avimux->vids.height);
     GST_WRITE_UINT16_LE (buffdata + 88, avimux->vids.planes);
@@ -830,13 +863,41 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     GST_WRITE_UINT32_LE (buffdata + 112, avimux->vids.imp_colors);
     buffdata += 116;
     highmark += 116;
+
+    /* include codec data, if any */
+    if (codec_size) {
+      memcpy (buffdata, GST_BUFFER_DATA (avimux->vids_codec_data), codec_size);
+
+      buffdata += codec_size;
+      highmark += codec_size;
+    }
+
+    /* odml superindex chunk */
+    if (avimux->vids_idx_index > 0)
+      memcpy (buffdata, "indx", 4);
+    else
+      memcpy (buffdata, "JUNK", 4);
+    GST_WRITE_UINT32_LE (buffdata + 4, ODML_SUPERINDEX_SIZE - 8);       /* chunk size */
+    GST_WRITE_UINT16_LE (buffdata + 8, 4);      /* bytes per entry */
+    buffdata[10] = 0;           /* index subtype */
+    buffdata[11] = GST_AVI_INDEX_OF_INDEXES;    /* index type */
+    GST_WRITE_UINT32_LE (buffdata + 12, avimux->vids_idx_index);        /* entries in use */
+    memcpy (buffdata + 16, "00db", 4);  /* stream id */
+    GST_WRITE_UINT32_LE (buffdata + 20, 0);     /* reserved */
+    GST_WRITE_UINT32_LE (buffdata + 24, 0);     /* reserved */
+    GST_WRITE_UINT32_LE (buffdata + 28, 0);     /* reserved */
+    memcpy (buffdata + 32, avimux->vids_idx,
+        GST_AVI_SUPERINDEX_COUNT * sizeof (gst_avi_superindex_entry));
+    buffdata += ODML_SUPERINDEX_SIZE;
+    highmark += ODML_SUPERINDEX_SIZE;
   }
 
   if (avimux->audio_pad_connected) {
     /* audio header */
     memcpy (buffdata + 0, "LIST", 4);
     GST_WRITE_UINT32_LE (buffdata + 4,
-        sizeof (gst_riff_strh) + sizeof (gst_riff_strf_auds) + 4 * 5);
+        sizeof (gst_riff_strh) + sizeof (gst_riff_strf_auds) + 4 * 5
+        + ODML_SUPERINDEX_SIZE);
     memcpy (buffdata + 8, "strl", 4);
     /* generic header */
     memcpy (buffdata + 12, "strh", 4);
@@ -866,6 +927,25 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     GST_WRITE_UINT16_LE (buffdata + 90, avimux->auds.size);
     buffdata += 92;
     highmark += 92;
+
+    /* odml superindex chunk */
+    if (avimux->auds_idx_index > 0)
+      memcpy (buffdata, "indx", 4);
+    else
+      memcpy (buffdata, "JUNK", 4);
+    GST_WRITE_UINT32_LE (buffdata + 4, ODML_SUPERINDEX_SIZE - 8);       /* chunk size */
+    GST_WRITE_UINT16_LE (buffdata + 8, 4);      /* bytes per entry */
+    buffdata[10] = 0;           /* index subtype */
+    buffdata[11] = GST_AVI_INDEX_OF_INDEXES;    /* index type */
+    GST_WRITE_UINT32_LE (buffdata + 12, avimux->auds_idx_index);        /* entries in use */
+    memcpy (buffdata + 16, "01wb", 4);  /* stream id */
+    GST_WRITE_UINT32_LE (buffdata + 20, 0);     /* reserved */
+    GST_WRITE_UINT32_LE (buffdata + 24, 0);     /* reserved */
+    GST_WRITE_UINT32_LE (buffdata + 28, 0);     /* reserved */
+    memcpy (buffdata + 32, avimux->auds_idx,
+        GST_AVI_SUPERINDEX_COUNT * sizeof (gst_avi_superindex_entry));
+    buffdata += ODML_SUPERINDEX_SIZE;
+    highmark += ODML_SUPERINDEX_SIZE;
   }
 
   if (avimux->video_pad_connected) {
@@ -930,7 +1010,7 @@ gst_avi_mux_riff_get_avix_header (guint32 datax_size)
   buffer = gst_buffer_new_and_alloc (24);
   buffdata = GST_BUFFER_DATA (buffer);
 
-  memcpy (buffdata + 0, "LIST", 4);
+  memcpy (buffdata + 0, "RIFF", 4);
   GST_WRITE_UINT32_LE (buffdata + 4, datax_size + 4 * 4);
   memcpy (buffdata + 8, "AVIX", 4);
   memcpy (buffdata + 12, "LIST", 4);
@@ -968,6 +1048,85 @@ gst_avi_mux_riff_get_audio_header (guint32 audio_sample_size)
   return buffer;
 }
 
+/* write an odml index chunk in the movi list */
+static GstFlowReturn
+gst_avi_mux_write_avix_index (GstAviMux * avimux, guchar * code,
+    guchar * chunk, gst_avi_superindex_entry * super_index,
+    gint * super_index_count)
+{
+  GstFlowReturn res;
+  GstBuffer *buffer;
+  guint8 *buffdata, *data;
+  gst_riff_index_entry *entry;
+  gint i;
+  guint32 size, entry_count;
+
+  /* allocate the maximum possible */
+  buffer = gst_buffer_new_and_alloc (32 + 8 * avimux->idx_index);
+  buffdata = GST_BUFFER_DATA (buffer);
+
+  /* general index chunk info */
+  memcpy (buffdata + 0, chunk, 4);      /* chunk id */
+  GST_WRITE_UINT32_LE (buffdata + 4, 0);        /* chunk size; fill later */
+  GST_WRITE_UINT16_LE (buffdata + 8, 2);        /* index entry is 2 words */
+  buffdata[10] = 0;             /* index subtype */
+  buffdata[11] = GST_AVI_INDEX_OF_CHUNKS;       /* index type: AVI_INDEX_OF_CHUNKS */
+  GST_WRITE_UINT32_LE (buffdata + 12, 0);       /* entries in use; fill later */
+  memcpy (buffdata + 16, code, 4);      /* stream to which index refers */
+  GST_WRITE_UINT64_LE (buffdata + 20, avimux->avix_start);      /* base offset */
+  GST_WRITE_UINT32_LE (buffdata + 28, 0);       /* reserved */
+  buffdata += 32;
+
+  /* now the actual index entries */
+  i = avimux->idx_index;
+  entry = avimux->idx;
+  while (i > 0) {
+    if (memcmp ((guchar *) & entry->id, code, 4) == 0) {
+      /* enter relative offset to the data (!) */
+      GST_WRITE_UINT32_LE (buffdata, GUINT32_FROM_LE (entry->offset) + 8);
+      /* msb is set if not (!) keyframe */
+      GST_WRITE_UINT32_LE (buffdata + 4, GUINT32_FROM_LE (entry->size)
+          | (GUINT32_FROM_LE (entry->flags)
+              & GST_RIFF_IF_KEYFRAME ? 0 : 1 << 31));
+      buffdata += 8;
+    }
+    i--;
+    entry++;
+  }
+
+  /* ok, now we know the size and no of entries, fill in where needed */
+  data = GST_BUFFER_DATA (buffer);
+  GST_BUFFER_SIZE (buffer) = size = buffdata - data;
+  GST_WRITE_UINT32_LE (data + 4, size - 8);
+  entry_count = (size - 32) / 8;
+  GST_WRITE_UINT32_LE (data + 12, entry_count);
+
+  /* decorate and send */
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (avimux->srcpad));
+  if ((res = gst_pad_push (avimux->srcpad, buffer)) != GST_FLOW_OK)
+    return res;
+
+  /* keep track of this in superindex (if room) ... */
+  if (*super_index_count < GST_AVI_SUPERINDEX_COUNT) {
+    i = *super_index_count;
+    super_index[i].offset = GUINT64_TO_LE (avimux->total_data);
+    super_index[i].size = GUINT32_TO_LE (size);
+    super_index[i].duration = GUINT32_TO_LE (entry_count);
+    (*super_index_count)++;
+  } else
+    GST_WARNING_OBJECT (avimux, "No more room in superindex of stream %s",
+        code);
+
+  /* ... and in size */
+  avimux->total_data += size;
+  if (avimux->is_bigfile)
+    avimux->datax_size += size;
+  else
+    avimux->data_size += size;
+
+  return GST_FLOW_OK;
+}
+
 /* some other usable functions (thankyou xawtv ;-) ) */
 
 static void
@@ -981,9 +1140,9 @@ gst_avi_mux_add_index (GstAviMux * avimux, guchar * code, guint32 flags,
         avimux->idx_count * sizeof (gst_riff_index_entry));
   }
   memcpy (&(avimux->idx[avimux->idx_index].id), code, 4);
-  avimux->idx[avimux->idx_index].flags = GUINT32_FROM_LE (flags);
-  avimux->idx[avimux->idx_index].offset = GUINT32_FROM_LE (avimux->idx_offset);
-  avimux->idx[avimux->idx_index].size = GUINT32_FROM_LE (size);
+  avimux->idx[avimux->idx_index].flags = GUINT32_TO_LE (flags);
+  avimux->idx[avimux->idx_index].offset = GUINT32_TO_LE (avimux->idx_offset);
+  avimux->idx[avimux->idx_index].size = GUINT32_TO_LE (size);
   avimux->idx_index++;
 }
 
@@ -1031,6 +1190,20 @@ gst_avi_mux_bigfile (GstAviMux * avimux, gboolean last)
   GstBuffer *header;
   GstEvent *event;
 
+  /* first some odml standard index chunk in the movi list */
+  if (avimux->video_pad_connected) {
+    res = gst_avi_mux_write_avix_index (avimux, (guchar *) "00db",
+        (guchar *) "ix00", avimux->vids_idx, &avimux->vids_idx_index);
+    if (res != GST_FLOW_OK)
+      return res;
+  }
+  if (avimux->audio_pad_connected) {
+    res = gst_avi_mux_write_avix_index (avimux, (guchar *) "01wb",
+        (guchar *) "ix01", avimux->auds_idx, &avimux->auds_idx_index);
+    if (res != GST_FLOW_OK)
+      return res;
+  }
+
   if (avimux->is_bigfile) {
     /* search back */
     event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
@@ -1041,14 +1214,23 @@ gst_avi_mux_bigfile (GstAviMux * avimux, gboolean last)
     /* rewrite AVIX header */
     header = gst_avi_mux_riff_get_avix_header (avimux->datax_size);
     gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));
-    if ((res = gst_pad_push (avimux->srcpad, header)) != GST_FLOW_OK)
-      return res;
+    res = gst_pad_push (avimux->srcpad, header);
 
-    /* go back to current location */
+    /* go back to current location, at least try */
     event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
         avimux->total_data, GST_CLOCK_TIME_NONE, avimux->total_data);
     gst_pad_push_event (avimux->srcpad, event);
+
+    if (res != GST_FLOW_OK)
+      return res;
+  } else {                      /* write a standard index in the first riff chunk */
+    res = gst_avi_mux_write_index (avimux);
+    /* the index data/buffer is freed by pushing it */
+    avimux->idx_count = 0;
+    if (res != GST_FLOW_OK)
+      return res;
   }
+
   avimux->avix_start = avimux->total_data;
 
   if (last)
@@ -1056,10 +1238,13 @@ gst_avi_mux_bigfile (GstAviMux * avimux, gboolean last)
 
   avimux->is_bigfile = TRUE;
   avimux->numx_frames = 0;
-  avimux->datax_size = 0;
+  avimux->datax_size = 4;       /* movi tag */
+  avimux->idx_index = 0;
 
   header = gst_avi_mux_riff_get_avix_header (0);
   avimux->total_data += GST_BUFFER_SIZE (header);
+  /* avix_start is used as base offset for the odml index chunk */
+  avimux->idx_offset = avimux->total_data - avimux->avix_start;
   gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));
   return gst_pad_push (avimux->srcpad, header);
 }
@@ -1074,7 +1259,7 @@ gst_avi_mux_start_file (GstAviMux * avimux)
 
   avimux->total_data = 0;
   avimux->total_frames = 0;
-  avimux->data_size = 4;        /* ? */
+  avimux->data_size = 4;        /* movi tag */
   avimux->datax_size = 0;
   avimux->num_frames = 0;
   avimux->numx_frames = 0;
@@ -1087,6 +1272,8 @@ gst_avi_mux_start_file (GstAviMux * avimux)
   avimux->idx_size = 0;
   avimux->idx_count = 0;
   avimux->idx = NULL;
+  avimux->vids_idx_index = 0;
+  avimux->auds_idx_index = 0;
 
   avimux->tag_size = 0;
 
@@ -1122,11 +1309,14 @@ gst_avi_mux_stop_file (GstAviMux * avimux)
   if (avimux->video_pad_connected) {
     if (avimux->is_bigfile) {
       res = gst_avi_mux_bigfile (avimux, TRUE);
-      avimux->idx_size = 0;
     } else {
       res = gst_avi_mux_write_index (avimux);
     }
   }
+
+  /* we do our best to make it interleaved at least ... */
+  if (avimux->audio_pad_connected && avimux->video_pad_connected)
+    avimux->avi_hdr.flags |= GST_RIFF_AVIH_ISINTERLEAVED;
 
   /* set rate and everything having to do with that */
   avimux->avi_hdr.max_bps = 0;
@@ -1136,6 +1326,10 @@ gst_avi_mux_stop_file (GstAviMux * avimux)
       if (avimux->audio_time) {
         avimux->auds.av_bps =
             (GST_SECOND * avimux->audio_size) / avimux->audio_time;
+        /* round bps to nearest multiple of 8;
+         * which is much more likely to be the (cbr) bitrate in use;
+         * which in turn results in better timestamp calculation on playback */
+        avimux->auds.av_bps = GST_ROUND_UP_8 (avimux->auds.av_bps - 4);
       } else {
         GST_ELEMENT_WARNING (avimux, STREAM, MUX,
             (_("No or invalid input audio, AVI stream will be corrupt.")),
@@ -1207,18 +1401,6 @@ gst_avi_mux_handle_event (GstPad * pad, GstEvent * event)
   avimux = GST_AVI_MUX (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-#if 0
-    case GST_EVENT_EOS:
-      /* is this allright? */
-      if (pad == avimux->videosinkpad) {
-        avimux->video_pad_eos = TRUE;
-      } else if (pad == avimux->audiosinkpad) {
-        avimux->audio_pad_eos = TRUE;
-      } else {
-        g_warning ("Unknown pad for EOS!");
-      }
-      break;
-#endif
     case GST_EVENT_TAG:
       gst_event_parse_tag (event, &list);
       if (avimux->tags) {
@@ -1239,42 +1421,6 @@ gst_avi_mux_handle_event (GstPad * pad, GstEvent * event)
 
   return ret;
 }
-
-
-#if 0
-/* fill the internal queue for each available pad */
-static void
-gst_avi_mux_fill_queue (GstAviMux * avimux)
-{
-  GstBuffer *buffer;
-
-  while (!avimux->audio_buffer_queue &&
-      avimux->audiosinkpad &&
-      avimux->audio_pad_connected &&
-      GST_PAD_IS_USABLE (avimux->audiosinkpad) && !avimux->audio_pad_eos) {
-    buffer = GST_BUFFER (gst_pad_pull (avimux->audiosinkpad));
-    if (GST_IS_EVENT (buffer)) {
-      gst_avi_mux_handle_event (avimux->audiosinkpad, GST_EVENT (buffer));
-    } else {
-      avimux->audio_buffer_queue = buffer;
-      break;
-    }
-  }
-
-  while (!avimux->video_buffer_queue &&
-      avimux->videosinkpad &&
-      avimux->video_pad_connected &&
-      GST_PAD_IS_USABLE (avimux->videosinkpad) && !avimux->video_pad_eos) {
-    buffer = GST_BUFFER (gst_pad_pull (avimux->videosinkpad));
-    if (GST_IS_EVENT (buffer)) {
-      gst_avi_mux_handle_event (avimux->videosinkpad, GST_EVENT (buffer));
-    } else {
-      avimux->video_buffer_queue = buffer;
-      break;
-    }
-  }
-}
-#endif
 
 /* send extra 'padding' data */
 static GstFlowReturn
@@ -1331,9 +1477,9 @@ gst_avi_mux_do_audio_buffer (GstAviMux * avimux)
     avimux->data_size += total_size;
     avimux->audio_size += GST_BUFFER_SIZE (data);
     avimux->audio_time += GST_BUFFER_DURATION (data);
-    gst_avi_mux_add_index (avimux, (guchar *) "01wb", 0x0,
-        GST_BUFFER_SIZE (data));
   }
+  gst_avi_mux_add_index (avimux, (guchar *) "01wb", 0x0,
+      GST_BUFFER_SIZE (data));
 
   /* prepare buffers for sending */
   gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));
@@ -1364,6 +1510,7 @@ gst_avi_mux_do_video_buffer (GstAviMux * avimux)
   GstFlowReturn res;
   GstBuffer *data, *header;
   gulong total_size, pad_bytes = 0;
+  guint flags;
 
   data = gst_collect_pads_pop (avimux->collect, avimux->videocollectdata);
 
@@ -1395,15 +1542,15 @@ gst_avi_mux_do_video_buffer (GstAviMux * avimux)
     avimux->datax_size += total_size;
     avimux->numx_frames++;
   } else {
-    guint flags = 0x2;
-
-    if (!GST_BUFFER_FLAG_IS_SET (data, GST_BUFFER_FLAG_DELTA_UNIT))
-      flags |= 0x10;
     avimux->data_size += total_size;
     avimux->num_frames++;
-    gst_avi_mux_add_index (avimux, (guchar *) "00db", flags,
-        GST_BUFFER_SIZE (data));
   }
+
+  flags = 0x02;
+  if (!GST_BUFFER_FLAG_IS_SET (data, GST_BUFFER_FLAG_DELTA_UNIT))
+    flags |= 0x10;
+  gst_avi_mux_add_index (avimux, (guchar *) "00db", flags,
+      GST_BUFFER_SIZE (data));
 
   /* prepare buffers for sending */
   gst_buffer_set_caps (header, GST_PAD_CAPS (avimux->srcpad));
@@ -1425,53 +1572,6 @@ gst_avi_mux_do_video_buffer (GstAviMux * avimux)
 
   return res;
 }
-
-
-#if 0
-/* take the oldest buffer in our internal queue and push-it */
-static gboolean
-gst_avi_mux_do_one_buffer (GstAviMux * avimux)
-{
-  if (avimux->video_buffer_queue && avimux->audio_buffer_queue) {
-    if (GST_BUFFER_TIMESTAMP (avimux->video_buffer_queue) <=
-        GST_BUFFER_TIMESTAMP (avimux->audio_buffer_queue))
-      gst_avi_mux_do_video_buffer (avimux);
-    else
-      gst_avi_mux_do_audio_buffer (avimux);
-  } else if (avimux->video_buffer_queue || avimux->audio_buffer_queue) {
-    if (avimux->video_buffer_queue)
-      gst_avi_mux_do_video_buffer (avimux);
-    else
-      gst_avi_mux_do_audio_buffer (avimux);
-  } else {
-    /* simply finish off the file and send EOS */
-    gst_avi_mux_stop_file (avimux);
-    gst_pad_push (avimux->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
-    gst_element_set_eos (GST_ELEMENT (avimux));
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-
-static void
-gst_avi_mux_loop (GstElement * element)
-{
-  GstAviMux *avimux;
-
-  avimux = GST_AVI_MUX (element);
-
-  /* first fill queue (some elements only set caps when
-   * flowing data), then write header */
-  gst_avi_mux_fill_queue (avimux);
-
-  if (avimux->write_header)
-    gst_avi_mux_start_file (avimux);
-
-  gst_avi_mux_do_one_buffer (avimux);
-}
-#endif
 
 /* pick the oldest buffer from the pads and push it */
 static GstFlowReturn
@@ -1512,7 +1612,6 @@ gst_avi_mux_do_one_buffer (GstAviMux * avimux)
         ", running %" GST_TIME_FORMAT, audio_buf,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (audio_buf)),
         GST_TIME_ARGS (audio_time));
-
   }
 
   /* now use re-calculated time to choose */
@@ -1523,7 +1622,10 @@ gst_avi_mux_do_one_buffer (GstAviMux * avimux)
       video_time = GST_BUFFER_TIMESTAMP (video_buf);
       audio_time = GST_BUFFER_TIMESTAMP (audio_buf);
     }
-    if (video_time <= audio_time)
+    /* invalid time buffers should be rare, pass these first;
+     * typically contain init data */
+    if ((video_time <= audio_time && GST_CLOCK_TIME_IS_VALID (audio_time))
+        || !GST_CLOCK_TIME_IS_VALID (video_time))
       res = gst_avi_mux_do_video_buffer (avimux);
     else
       res = gst_avi_mux_do_audio_buffer (avimux);
@@ -1601,6 +1703,7 @@ static GstStateChangeReturn
 gst_avi_mux_change_state (GstElement * element, GstStateChange transition)
 {
   GstAviMux *avimux;
+  GstStateChangeReturn ret;
 
   avimux = GST_AVI_MUX (element);
 
@@ -1619,13 +1722,9 @@ gst_avi_mux_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    GstStateChangeReturn ret;
-
-    ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-    if (ret != GST_STATE_CHANGE_SUCCESS)
-      return ret;
-  }
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto done;
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
@@ -1639,6 +1738,11 @@ gst_avi_mux_change_state (GstElement * element, GstStateChange transition)
         gst_tag_list_free (avimux->tags_snap);
         avimux->tags_snap = NULL;
       }
+      g_free (avimux->idx);
+      avimux->idx = NULL;
+      if (avimux->vids_codec_data)
+        gst_buffer_unref (avimux->vids_codec_data);
+      avimux->vids_codec_data = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -1646,5 +1750,6 @@ gst_avi_mux_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  return GST_STATE_CHANGE_SUCCESS;
+done:
+  return ret;
 }

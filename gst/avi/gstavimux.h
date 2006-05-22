@@ -40,6 +40,18 @@ G_BEGIN_DECLS
 #define GST_IS_AVI_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AVI_MUX))
 
+#define GST_AVI_INDEX_OF_INDEXES     0
+#define GST_AVI_INDEX_OF_CHUNKS      1
+
+/* this allows indexing up to 64GB avi file */
+#define GST_AVI_SUPERINDEX_COUNT    32
+
+typedef struct _gst_avi_superindex_entry {
+  guint64 offset;
+  guint32 size;
+  guint32 duration;
+} gst_avi_superindex_entry;
+
 
 typedef struct _GstAviMux GstAviMux;
 typedef struct _GstAviMuxClass GstAviMuxClass;
@@ -58,10 +70,16 @@ struct _GstAviMux {
 
   /* the AVI header */
   gst_riff_avih avi_hdr;
-  guint32 total_frames; /* total number of frames */
-  guint64 total_data; /* amount of total data */
-  guint32 data_size, datax_size; /* amount of data (bytes) in the AVI/AVIX block */
-  guint32 num_frames, numx_frames; /* num frames in the AVI/AVIX block */
+  /* total number of (video) frames */
+  guint32 total_frames;
+  /* amount of total data (bytes) */
+  guint64 total_data;
+  /* amount of data (bytes) in the AVI/AVIX block;
+   * actually the movi list, so counted from and including the movi tag */
+  guint32 data_size, datax_size;
+  /* num (video) frames in the AVI/AVIX block */
+  guint32 num_frames, numx_frames;
+  /* size of hdrl list, including tag as usual */
   guint32 header_size;
   gboolean write_header;
   gboolean restart;
@@ -71,6 +89,7 @@ struct _GstAviMux {
   /* video header */
   gst_riff_strh vids_hdr;
   gst_riff_strf_vids vids;
+  GstBuffer *vids_codec_data;
 
   /* audio header */
   gst_riff_strh auds_hdr;
@@ -84,7 +103,15 @@ struct _GstAviMux {
   /* information about the AVI index ('idx') */
   gst_riff_index_entry *idx;
   gint idx_index, idx_count;
-  guint32 idx_offset, idx_size;
+  /* offset of *chunk* (relative to a base offset); entered in the index */
+  guint32 idx_offset;
+  /* size of idx1 chunk (including! chunk header and size bytes) */
+  guint32 idx_size;
+
+  /* odml super indexes */
+  gst_avi_superindex_entry *vids_idx;
+  gst_avi_superindex_entry *auds_idx;
+  gint vids_idx_index, auds_idx_index;
 
   /* are we a big file already? */
   gboolean is_bigfile;
