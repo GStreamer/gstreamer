@@ -26,7 +26,9 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
 clean-local: clean-local-check
 
-check_PROGRAMS = \
+check_PROGRAMS =
+
+nocheck_PROGRAMS =
 	elements/gdppay \
 	elements/gdpdepay
 
