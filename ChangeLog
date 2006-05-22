@@ -1,3 +1,9 @@
+2006-05-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_stop),
+	(gst_collect_pads_check_collected):
+	Flush queued buffer on _stop(), fixes playing again (#342454)
+
 2006-05-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tests/check/gst/gststructure.c: (GST_START_TEST),

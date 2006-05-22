@@ -455,6 +455,8 @@ gst_collect_pads_start (GstCollectPads * pads)
 void
 gst_collect_pads_stop (GstCollectPads * pads)
 {
+  GSList *collected;
+
   g_return_if_fail (pads != NULL);
   g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
@@ -469,6 +471,23 @@ gst_collect_pads_stop (GstCollectPads * pads)
 
   /* Stop collect pads */
   pads->started = FALSE;
+
+  /* loop over the master pad list and flush buffers */
+  collected = pads->abidata.ABI.pad_list;
+  for (; collected; collected = g_slist_next (collected)) {
+    GstCollectData *data;
+    GstBuffer **buffer_p;
+
+    data = collected->data;
+    if (data->buffer) {
+      buffer_p = &data->buffer;
+      gst_buffer_replace (buffer_p, NULL);
+      data->pos = 0;
+      /* one less pad with queued data now */
+      pads->queuedpads--;
+    }
+  }
+
   GST_COLLECT_PADS_PAD_UNLOCK (pads);
   /* Wake them up so then can end the chain functions. */
   GST_COLLECT_PADS_BROADCAST (pads);
@@ -779,8 +798,9 @@ gst_collect_pads_check_collected (GstCollectPads * pads)
      * function
      */
     while (((pads->queuedpads + pads->eospads) >= pads->numpads)) {
-      GST_DEBUG ("All active pads (%d) have data, calling %s",
-          pads->numpads, GST_DEBUG_FUNCPTR_NAME (pads->func));
+      GST_DEBUG ("All active pads (%d + %d >= %d) have data, calling %s",
+          pads->queuedpads, pads->eospads, pads->numpads,
+          GST_DEBUG_FUNCPTR_NAME (pads->func));
       flow_ret = pads->func (pads, pads->user_data);
       collected = TRUE;
 
