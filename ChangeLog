@@ -1,5 +1,20 @@
 2006-05-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_chain),
+	(gst_gdp_depay_change_state):
+	* gst/gdp/gstgdpdepay.h:
+	* gst/gdp/gstgdppay.c: (gst_gdp_pay_reset_streamheader),
+	(gst_gdp_pay_chain), (gst_gdp_pay_sink_event),
+	(gst_gdp_pay_change_state):
+	* gst/gdp/gstgdppay.h:
+	  Handle error cases when calling functions
+	  do downwards state change after parent's change_state
+	* tests/check/elements/gdpdepay.c: (GST_START_TEST):
+	* tests/check/elements/gdppay.c: (GST_START_TEST):
+	  clean up more
+
+2006-05-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gdp/Makefile.am:
 	* gst/gdp/gstgdp.c: (plugin_init):
 	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_base_init),
