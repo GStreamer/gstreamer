@@ -22,13 +22,16 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include "gst/gst-i18n-plugin.h"
+
 #include "qtdemux.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <zlib.h>
 
-GST_DEBUG_CATEGORY_EXTERN (qtdemux_debug);
+GST_DEBUG_CATEGORY_STATIC (qtdemux_debug);
 #define GST_CAT_DEFAULT qtdemux_debug
 
 
@@ -41,7 +44,7 @@ GST_DEBUG_CATEGORY_EXTERN (qtdemux_debug);
 #define QTDEMUX_GUINT32_GET(a)  (GST_READ_UINT32_BE(a))
 #define QTDEMUX_GUINT24_GET(a)  (GST_READ_UINT32_BE(a) >> 8)
 #define QTDEMUX_GUINT16_GET(a)  (GST_READ_UINT16_BE(a))
-#define QTDEMUX_GUINT8_GET(a) (*(guint8 *)(a))
+#define QTDEMUX_GUINT8_GET(a)   (GST_READ_UINT8(a))
 #define QTDEMUX_FP32_GET(a)     ((GST_READ_UINT32_BE(a))/65536.0)
 #define QTDEMUX_FP16_GET(a)     ((GST_READ_UINT16_BE(a))/256.0)
 #define QTDEMUX_FOURCC_GET(a)   (GST_READ_UINT32_LE(a))
@@ -861,23 +864,6 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
 
   return res;
 }
-
-GST_DEBUG_CATEGORY (qtdemux_debug);
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (qtdemux_debug, "qtdemux", 0, "qtdemux plugin");
-
-  return gst_element_register (plugin, "qtdemux",
-      GST_RANK_PRIMARY, GST_TYPE_QTDEMUX);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "qtdemux",
-    "Quicktime stream demuxer",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
 static gboolean
 gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstEvent * event)
@@ -3052,6 +3038,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         QTDEMUX_GUINT16_GET (stsd->data + offset + 48));
 
     stream->fourcc = fourcc = QTDEMUX_FOURCC_GET (stsd->data + offset + 4);
+    if (fourcc == GST_MAKE_FOURCC ('d', 'r', 'm', 's'))
+      goto error_encrypted;
+
     stream->caps = qtdemux_video_caps (qtdemux, fourcc, stsd->data, &codec);
     if (codec) {
       list = gst_tag_list_new ();
@@ -3238,6 +3227,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     } else {
       GST_WARNING ("unknown version %08x", version);
     }
+
+    if (fourcc == GST_MAKE_FOURCC ('d', 'r', 'm', 's'))
+      goto error_encrypted;
 
     stream->caps = qtdemux_audio_caps (qtdemux, stream, fourcc, NULL, 0,
         &codec);
@@ -3593,6 +3585,15 @@ done3:
   GST_DEBUG_OBJECT (qtdemux, "using %d segments", stream->n_segments);
 
   gst_qtdemux_add_stream (qtdemux, stream, list);
+  return;
+
+/* ERRORS */
+error_encrypted:
+  {
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        (_("This file is encrypted and cannot be played.")), (NULL));
+    return;
+  }
 }
 
 static void
@@ -4152,3 +4153,23 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       }
   }
 }
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+#ifdef ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
+
+  GST_DEBUG_CATEGORY_INIT (qtdemux_debug, "qtdemux", 0, "qtdemux plugin");
+
+  return gst_element_register (plugin, "qtdemux",
+      GST_RANK_PRIMARY, GST_TYPE_QTDEMUX);
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "qtdemux",
+    "Quicktime stream demuxer",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

@@ -1,5 +1,13 @@
 2006-05-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak), (plugin_init):
+	  po/POTFILES.in:
+	  Throw an error when the file is encrypted. Move plugin_init stuff
+	  to the end of the file, add stuff for i18n, make debug category
+	  static.
+
+2006-05-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Michal Benes  <michal dot benes at xeris dot cz>
 
 	* configure.ac:
