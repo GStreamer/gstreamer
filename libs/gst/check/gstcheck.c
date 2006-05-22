@@ -156,9 +156,9 @@ gst_check_setup_src_pad (GstElement * element,
 {
   GstPad *srcpad, *sinkpad;
 
-  GST_DEBUG_OBJECT (element, "setting up sending pad");
   /* sending pad */
   srcpad = gst_pad_new_from_static_template (template, "src");
+  GST_DEBUG_OBJECT (element, "setting up sending pad %p", srcpad);
   fail_if (srcpad == NULL, "Could not create a srcpad");
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
 
@@ -189,12 +189,12 @@ gst_check_teardown_src_pad (GstElement * element)
   gst_pad_unlink (srcpad, sinkpad);
 
   /* pad refs held by both creator and this function (through _get) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "element sinkpad", 2);
   gst_object_unref (sinkpad);
   /* one more ref is held by element itself */
 
   /* pad refs held by both creator and this function (through _get_peer) */
-  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2);
+  ASSERT_OBJECT_REFCOUNT (srcpad, "check srcpad", 2);
   gst_object_unref (srcpad);
   gst_object_unref (srcpad);
 }
@@ -207,9 +207,9 @@ gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
 {
   GstPad *srcpad, *sinkpad;
 
-  GST_DEBUG_OBJECT (element, "setting up receiving pad");
   /* receiving pad */
   sinkpad = gst_pad_new_from_static_template (template, "sink");
+  GST_DEBUG_OBJECT (element, "setting up receiving pad %p", sinkpad);
   fail_if (sinkpad == NULL, "Could not create a sinkpad");
 
   srcpad = gst_element_get_pad (element, "src");
@@ -219,11 +219,13 @@ gst_check_setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
     fail_unless (gst_pad_set_caps (sinkpad, caps));
   gst_pad_set_chain_function (sinkpad, gst_check_chain_func);
 
+  GST_DEBUG_OBJECT (element, "Linking element src pad and receiving sink pad");
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link %s source and sink pads", GST_ELEMENT_NAME (element));
   gst_object_unref (srcpad);    /* because we got it higher up */
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
 
+  GST_DEBUG_OBJECT (element, "set up srcpad, refcount is 1");
   return sinkpad;
 }
 
@@ -238,12 +240,12 @@ gst_check_teardown_sink_pad (GstElement * element)
   gst_pad_unlink (srcpad, sinkpad);
 
   /* pad refs held by both creator and this function (through _get_pad) */
-  ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2);
+  ASSERT_OBJECT_REFCOUNT (srcpad, "element srcpad", 2);
   gst_object_unref (srcpad);
   /* one more ref is held by element itself */
 
   /* pad refs held by both creator and this function (through _get_peer) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "check sinkpad", 2);
   gst_object_unref (sinkpad);
   gst_object_unref (sinkpad);
 }
