@@ -64,6 +64,9 @@
 
 #include "gsttheoraparse.h"
 
+#define GST_CAT_DEFAULT theoraparse_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
 static GstElementDetails theora_parse_details = {
   "TheoraParse",
   "Codec/Parser/Video",
@@ -112,6 +115,9 @@ gst_theora_parse_class_init (GstTheoraParseClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gstelement_class->change_state = theora_parse_change_state;
+
+  GST_DEBUG_CATEGORY_INIT (theoraparse_debug, "theoraparse", 0,
+      "Theora parser");
 }
 
 static void

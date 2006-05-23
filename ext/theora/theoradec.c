@@ -48,8 +48,8 @@
 #include "gsttheoradec.h"
 #include <gst/tag/tag.h>
 
-GST_DEBUG_CATEGORY (theoradec_debug);
 #define GST_CAT_DEFAULT theoradec_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #define THEORA_DEF_CROP         TRUE
 enum

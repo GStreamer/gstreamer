@@ -25,8 +25,8 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 
-GST_DEBUG_CATEGORY (audio_rate_debug);
 #define GST_CAT_DEFAULT audio_rate_debug
+GST_DEBUG_CATEGORY_STATIC (audio_rate_debug);
 
 #define GST_TYPE_AUDIO_RATE \
   (gst_audio_rate_get_type())

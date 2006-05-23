@@ -66,8 +66,8 @@
 
 #include <gst/tag/tag.h>
 
-GST_DEBUG_CATEGORY (theoraenc_debug);
 #define GST_CAT_DEFAULT theoraenc_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #define GST_TYPE_BORDER_MODE (gst_border_mode_get_type())
 static GType

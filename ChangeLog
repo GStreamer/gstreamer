@@ -1,3 +1,18 @@
+2006-05-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/theora/theoradec.c:
+	* ext/theora/theoraenc.c:
+	* ext/theora/theoraparse.c: (gst_theora_parse_class_init):
+	* gst/audiorate/gstaudiorate.c:
+	  make more debug catagories static
+	
+	* tests/check/Makefile.am:
+	* tests/check/elements/adder.c: (message_received),
+	(test_event_message_received), (GST_START_TEST),
+	(test_play_twice_message_received), (adder_suite):
+	  added test case for using element twice, extra bonus points for anyone
+	  who can make these test run reliably
+
 2006-05-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/theora/theoradec.c: (theora_dec_chain):
