@@ -130,6 +130,7 @@ typedef struct
 } GstFlowQuarks;
 
 static GstFlowQuarks flow_quarks[] = {
+  {GST_FLOW_CUSTOM_SUCCESS, "custom-success", 0},
   {GST_FLOW_RESEND, "resend", 0},
   {GST_FLOW_OK, "ok", 0},
   {GST_FLOW_NOT_LINKED, "not-linked", 0},
@@ -138,6 +139,7 @@ static GstFlowQuarks flow_quarks[] = {
   {GST_FLOW_NOT_NEGOTIATED, "not-negotiated", 0},
   {GST_FLOW_ERROR, "error", 0},
   {GST_FLOW_NOT_SUPPORTED, "not-supported", 0},
+  {GST_FLOW_CUSTOM_ERROR, "custom-error", 0},
 
   {0, NULL, 0}
 };
@@ -148,12 +150,14 @@ static GstFlowQuarks flow_quarks[] = {
  *
  * Gets a string representing the given flow return.
  *
- * Returns: a string with the name of the flow return.
+ * Returns: a static string with the name of the flow return.
  */
 G_CONST_RETURN gchar *
 gst_flow_get_name (GstFlowReturn ret)
 {
   gint i;
+
+  ret = CLAMP (ret, GST_FLOW_CUSTOM_ERROR, GST_FLOW_CUSTOM_SUCCESS);
 
   for (i = 0; flow_quarks[i].name; i++) {
     if (ret == flow_quarks[i].ret)
@@ -175,6 +179,8 @@ GQuark
 gst_flow_to_quark (GstFlowReturn ret)
 {
   gint i;
+
+  ret = CLAMP (ret, GST_FLOW_CUSTOM_ERROR, GST_FLOW_CUSTOM_SUCCESS);
 
   for (i = 0; flow_quarks[i].name; i++) {
     if (ret == flow_quarks[i].ret)

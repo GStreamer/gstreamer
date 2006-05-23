@@ -380,6 +380,67 @@ GST_START_TEST (test_push_linked)
 
 GST_END_TEST;
 
+GST_START_TEST (test_flowreturn)
+{
+  GstFlowReturn ret;
+  GQuark quark;
+
+  /* test some of the macros */
+  ret = GST_FLOW_UNEXPECTED;
+  fail_unless (GST_FLOW_IS_FATAL (ret));
+  fail_if (GST_FLOW_IS_SUCCESS (ret));
+  fail_if (strcmp (gst_flow_get_name (ret), "unexpected"));
+  quark = gst_flow_to_quark (ret);
+  fail_if (strcmp (g_quark_to_string (quark), "unexpected"));
+
+  ret = GST_FLOW_RESEND;
+  fail_if (GST_FLOW_IS_FATAL (ret));
+  fail_unless (GST_FLOW_IS_SUCCESS (ret));
+  fail_if (strcmp (gst_flow_get_name (ret), "resend"));
+  quark = gst_flow_to_quark (ret);
+  fail_if (strcmp (g_quark_to_string (quark), "resend"));
+
+  /* custom returns */
+  ret = GST_FLOW_CUSTOM_SUCCESS;
+  fail_if (GST_FLOW_IS_FATAL (ret));
+  fail_unless (GST_FLOW_IS_SUCCESS (ret));
+  fail_if (strcmp (gst_flow_get_name (ret), "custom-success"));
+  quark = gst_flow_to_quark (ret);
+  fail_if (strcmp (g_quark_to_string (quark), "custom-success"));
+
+  ret = GST_FLOW_CUSTOM_ERROR;
+  fail_unless (GST_FLOW_IS_FATAL (ret));
+  fail_if (GST_FLOW_IS_SUCCESS (ret));
+  fail_if (strcmp (gst_flow_get_name (ret), "custom-error"));
+  quark = gst_flow_to_quark (ret);
+  fail_if (strcmp (g_quark_to_string (quark), "custom-error"));
+
+  /* custom returns clamping */
+  ret = GST_FLOW_CUSTOM_SUCCESS + 2;
+  fail_if (GST_FLOW_IS_FATAL (ret));
+  fail_unless (GST_FLOW_IS_SUCCESS (ret));
+  fail_if (strcmp (gst_flow_get_name (ret), "custom-success"));
+  quark = gst_flow_to_quark (ret);
+  fail_if (strcmp (g_quark_to_string (quark), "custom-success"));
+
+  ret = GST_FLOW_CUSTOM_ERROR - 2;
+  fail_unless (GST_FLOW_IS_FATAL (ret));
+  fail_if (GST_FLOW_IS_SUCCESS (ret));
+  fail_if (strcmp (gst_flow_get_name (ret), "custom-error"));
+  quark = gst_flow_to_quark (ret);
+  fail_if (strcmp (g_quark_to_string (quark), "custom-error"));
+
+  /* unknown values */
+  ret = GST_FLOW_CUSTOM_ERROR + 2;
+  fail_unless (GST_FLOW_IS_FATAL (ret));
+  fail_if (GST_FLOW_IS_SUCCESS (ret));
+  fail_if (strcmp (gst_flow_get_name (ret), "unknown"));
+  quark = gst_flow_to_quark (ret);
+  fail_unless (quark == 0);
+
+}
+
+GST_END_TEST;
 
 Suite *
 gst_pad_suite (void)
@@ -398,6 +459,8 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_name_is_valid);
   tcase_add_test (tc_chain, test_push_unlinked);
   tcase_add_test (tc_chain, test_push_linked);
+  tcase_add_test (tc_chain, test_flowreturn);
+
   return s;
 }
 

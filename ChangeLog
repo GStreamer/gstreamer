@@ -1,5 +1,19 @@
 2006-05-23  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_flow_get_name), (gst_flow_to_quark):
+	* gst/gstpad.h:
+	Added _CUSTOM error and success GstFlowReturn that can be
+	used be elements internally. 
+	Added macro to check for SUCCESS flowreturns.
+	API: GST_FLOW_CUSTOM_SUCCESS
+	API: GST_FLOW_CUSTOM_ERROR
+	API: GST_FLOW_IS_SUCCESS
+
+	* tests/check/gst/gstpad.c: (GST_START_TEST), (gst_pad_suite):
+	Added check for GstFlowReturn sanity.
+
+2006-05-23  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_remove_pad),

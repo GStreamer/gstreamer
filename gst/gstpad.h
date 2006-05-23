@@ -91,18 +91,32 @@ typedef enum {
 
 /**
  * GstFlowReturn:
+ * @GST_FLOW_CUSTOM_SUCCESS:	 Elements can use values starting from
+ *                               this to define custom success codes. 
+ *                               Since 0.10.7.
  * @GST_FLOW_RESEND:		 Resend buffer, possibly with new caps.
  * @GST_FLOW_OK:		 Data passing was ok.
  * @GST_FLOW_NOT_LINKED:	 Pad is not linked.
  * @GST_FLOW_WRONG_STATE:	 Pad is in wrong state.
  * @GST_FLOW_UNEXPECTED:	 Did not expect anything, like after EOS.
  * @GST_FLOW_NOT_NEGOTIATED:	 Pad is not negotiated.
- * @GST_FLOW_ERROR:		 Some (fatal) error occured.
+ * @GST_FLOW_ERROR:		 Some (fatal) error occured. Element generating
+ *                               this error should post an error message with more
+ *                               details.
  * @GST_FLOW_NOT_SUPPORTED:	 This operation is not supported.
+ * @GST_FLOW_CUSTOM_ERROR:	 Elements can use values starting from
+ *                               this to define custom error codes. Since 0.10.7.
  *
- * The result of passing data to a linked pad.
+ * The result of passing data to a pad. 
+ *
+ * Note that the custom return values should not be exposed outside of the 
+ * element scope and are available since 0.10.7.
  */
 typedef enum {
+  /* custom success starts here */ 
+  GST_FLOW_CUSTOM_SUCCESS = 100,
+
+  /* core predefined */ 
   GST_FLOW_RESEND	  =  1,
   GST_FLOW_OK		  =  0,
   /* expected failures */
@@ -112,7 +126,10 @@ typedef enum {
   GST_FLOW_UNEXPECTED     = -3,
   GST_FLOW_NOT_NEGOTIATED = -4,
   GST_FLOW_ERROR	  = -5,
-  GST_FLOW_NOT_SUPPORTED  = -6
+  GST_FLOW_NOT_SUPPORTED  = -6,
+
+  /* custom error starts here */ 
+  GST_FLOW_CUSTOM_ERROR   = -100
 } GstFlowReturn;
 
 /**
@@ -124,6 +141,19 @@ typedef enum {
  * message should be posted on the bus.
  */
 #define GST_FLOW_IS_FATAL(ret) ((ret) <= GST_FLOW_UNEXPECTED)
+
+/**
+ * GST_FLOW_IS_SUCCESS:
+ * @ret: a #GstFlowReturn value
+ *
+ * Macro to test if the given #GstFlowReturn value indicates a 
+ * successfull result
+ * This macro is mainly used in elements to decide if the processing
+ * of a buffer was successfull.
+ *
+ * Since: 0.10.7
+ */
+#define GST_FLOW_IS_SUCCESS(ret) ((ret) >= GST_FLOW_OK)
 
 G_CONST_RETURN gchar*	gst_flow_get_name	(GstFlowReturn ret);
 GQuark			gst_flow_to_quark	(GstFlowReturn ret);
