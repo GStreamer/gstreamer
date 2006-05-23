@@ -853,7 +853,6 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
       caps = gst_matroska_demux_audio_caps (audiocontext,
           context->codec_id,
           context->codec_priv, context->codec_priv_size, &codec);
-      audiocontext->first_frame = TRUE;
       if (codec) {
         list = gst_tag_list_new ();
         gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
@@ -2024,18 +2023,7 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
 }
 
 static gboolean
-gst_matroska_demux_stream_is_first_vorbis_frame (GstMatroskaDemux * demux,
-    GstMatroskaTrackContext * stream)
-{
-  if (stream->type == GST_MATROSKA_TRACK_TYPE_AUDIO
-      && ((GstMatroskaTrackAudioContext *) stream)->first_frame == TRUE) {
-    return (strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_AUDIO_VORBIS) == 0);
-  }
-  return FALSE;
-}
-
-static gboolean
-gst_matroska_demux_push_vorbis_codec_priv_data (GstMatroskaDemux * demux,
+gst_matroska_demux_push_xiph_codec_priv_data (GstMatroskaDemux * demux,
     GstMatroskaTrackContext * stream)
 {
   GstFlowReturn ret;
@@ -2044,9 +2032,8 @@ gst_matroska_demux_push_vorbis_codec_priv_data (GstMatroskaDemux * demux,
   guchar *p;
   gint i;
 
-  /* start of the stream and vorbis audio, need to send the codec_priv
-   * data as first three packets */
-  ((GstMatroskaTrackAudioContext *) stream)->first_frame = FALSE;
+  /* start of the stream and vorbis audio or theora video, need to
+   * send the codec_priv data as first three packets */
   p = (guchar *) stream->codec_priv;
   offset = 3;
 
@@ -2292,9 +2279,11 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             break;
         }
 
-        if (gst_matroska_demux_stream_is_first_vorbis_frame (demux, stream)) {
-          if (!gst_matroska_demux_push_vorbis_codec_priv_data (demux, stream))
+        if (stream->send_xiph_headers) {
+          if (!gst_matroska_demux_push_xiph_codec_priv_data (demux, stream)) {
             got_error = TRUE;
+          }
+          stream->send_xiph_headers = FALSE;
         }
 
         if (got_error)
@@ -2962,6 +2951,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
   g_assert (videocontext != NULL);
   g_assert (codec_name != NULL);
 
+  context->send_xiph_headers = FALSE;
+
   if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VFW_FOURCC)) {
     gst_riff_strf_vids *vids = NULL;
 
@@ -3107,6 +3098,9 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     caps = gst_caps_new_simple ("video/x-pn-realvideo",
         "rmversion", G_TYPE_INT, rmversion, NULL);
     *codec_name = g_strdup_printf ("RealVideo %d.0", rmversion);
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_THEORA)) {
+    caps = gst_caps_new_simple ("video/x-theora", NULL);
+    context->send_xiph_headers = TRUE;
   } else {
     GST_WARNING ("Unknown codec '%s', cannot build Caps", codec_id);
     return NULL;
@@ -3232,10 +3226,13 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     audiocontext, const gchar * codec_id, gpointer data, guint size,
     gchar ** codec_name)
 {
+  GstMatroskaTrackContext *context = (GstMatroskaTrackContext *) audiocontext;
   GstCaps *caps = NULL;
 
   g_assert (audiocontext != NULL);
   g_assert (codec_name != NULL);
+
+  context->send_xiph_headers = FALSE;
 
   if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1) ||
       !strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L2) ||
@@ -3288,6 +3285,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     *codec_name = g_strdup ("DTS audio");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_VORBIS)) {
     caps = gst_caps_new_simple ("audio/x-vorbis", NULL);
+    context->send_xiph_headers = TRUE;
     /* vorbis decoder does tags */
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_ACM)) {
     gst_riff_strf_auds *auds = NULL;

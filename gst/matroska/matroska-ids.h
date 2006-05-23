@@ -144,6 +144,7 @@
 #define GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO2   "V_REAL/RV20"
 #define GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO3   "V_REAL/RV30"
 #define GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO4   "V_REAL/RV40"
+#define GST_MATROSKA_CODEC_ID_VIDEO_THEORA       "V_THEORA"
 /* TODO: Quicktime */
 
 #define GST_MATROSKA_CODEC_ID_AUDIO_MPEG1_L1     "A_MPEG/L1"
@@ -247,6 +248,15 @@ typedef struct _GstMatroskaTrackContext {
   guint64       pos;
 
   gboolean      set_discont; /* TRUE = set DISCONT flag on next buffer */
+
+  /* Special flag for Vorbis and Theora, for which we need to send
+   * codec_priv first before sending any data, and just testing
+   * for time == 0 is not enough to detect that. Used by demuxer */
+  gboolean      send_xiph_headers;
+
+  /* Special counter for muxer to skip the first N vorbis/theora headers -
+   * they are put into codec private data, not muxed into the stream */
+  guint         xiph_headers_to_skip;
 } GstMatroskaTrackContext;
 
 typedef struct _GstMatroskaTrackVideoContext {
@@ -263,11 +273,6 @@ typedef struct _GstMatroskaTrackAudioContext {
   GstMatroskaTrackContext parent;
 
   guint         samplerate, channels, bitdepth;
-  
-  /* Special flag for Vorbis, we need to send codec_priv first before
-   * sending any data, and just testing for time == 0 is not enough
-   * to detect that */
-  gboolean      first_frame;
 } GstMatroskaTrackAudioContext;
 
 typedef struct _GstMatroskaTrackComplexContext {

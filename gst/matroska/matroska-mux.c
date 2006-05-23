@@ -35,16 +35,9 @@ GST_DEBUG_CATEGORY_STATIC (matroskamux_debug);
 
 enum
 {
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
   ARG_0,
   ARG_WRITING_APP,
   ARG_MATROSKA_VERSION
-      /* FILL ME */
 };
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
@@ -82,6 +75,7 @@ static GstStaticPadTemplate videosink_templ =
         COMMON_VIDEO_CAPS "; "
         "image/jpeg, "
         COMMON_VIDEO_CAPS "; "
+        "video/x-theora; "
         "video/x-raw-yuv, "
         "format = (fourcc) { YUY2, I420 }, " COMMON_VIDEO_CAPS)
     );
@@ -127,15 +121,8 @@ GST_STATIC_PAD_TEMPLATE ("subtitle_%d",
 
 static GArray *used_uids;
 
-static void
-_do_init (GType matroskamux_type)
-{
-  GST_DEBUG_CATEGORY_INIT (matroskamux_debug, "matroskamux", 0,
-      "Matroska muxer");
-}
-
-GST_BOILERPLATE_FULL (GstMatroskaMux, gst_matroska_mux, GstElement,
-    GST_TYPE_ELEMENT, _do_init);
+GST_BOILERPLATE (GstMatroskaMux, gst_matroska_mux, GstElement,
+    GST_TYPE_ELEMENT);
 
 /* Matroska muxer destructor */
 static void gst_matroska_mux_finalize (GObject * object);
@@ -166,7 +153,10 @@ static void gst_matroska_mux_reset (GstElement * element);
 /* uid generation */
 static guint32 gst_matroska_mux_create_uid ();
 
-/*static guint gst_matroska_mux_signals[LAST_SIGNAL] = { 0 };*/
+static gboolean theora_streamheader_to_codecdata (const GValue * streamheader,
+    GstMatroskaTrackContext * context);
+static gboolean vorbis_streamheader_to_codecdata (const GValue * streamheader,
+    GstMatroskaTrackContext * context);
 
 static void
 gst_matroska_mux_base_init (gpointer g_class)
@@ -187,6 +177,9 @@ gst_matroska_mux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
   gst_element_class_set_details (element_class, &gst_matroska_mux_details);
+
+  GST_DEBUG_CATEGORY_INIT (matroskamux_debug, "matroskamux", 0,
+      "Matroska muxer");
 }
 
 static void
@@ -427,11 +420,14 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstMatroskaTrackContext *context = NULL;
   GstMatroskaTrackVideoContext *videocontext;
+  GstMatroskaMux *mux;
   GstMatroskaPad *collect_pad;
   const gchar *mimetype;
   gint width, height, pixel_width, pixel_height;
   const GValue *framerate;
   GstStructure *structure;
+
+  mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
 
   /* find context */
   collect_pad = (GstMatroskaPad *) gst_pad_get_element_private (pad);
@@ -445,6 +441,11 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   mimetype = gst_structure_get_name (structure);
+
+  if (!strcmp (mimetype, "video/x-theora")) {
+    /* we'll extract the details later from the theora identification header */
+    goto skip_details;
+  }
 
   /* get general properties */
   gst_structure_get_int (structure, "width", &width);
@@ -475,6 +476,8 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
     videocontext->display_width = 0;
     videocontext->display_height = 0;
   }
+
+skip_details:
 
   videocontext->asr_mode = GST_MATROSKA_ASPECT_RATIO_MODE_FREE;
   videocontext->eye_mode = GST_MATROSKA_EYE_MODE_MONO;
@@ -582,6 +585,24 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
     }
 
     return TRUE;
+  } else if (!strcmp (mimetype, "video/x-theora")) {
+    const GValue *streamheader;
+
+    context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_VIDEO_THEORA);
+
+    if (context->codec_priv != NULL) {
+      g_free (context->codec_priv);
+      context->codec_priv = NULL;
+      context->codec_priv_size = 0;
+    }
+
+    streamheader = gst_structure_get_value (structure, "streamheader");
+    if (!theora_streamheader_to_codecdata (streamheader, context)) {
+      GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+          ("theora stream headers missing or malformed"));
+      return FALSE;
+    }
+    return TRUE;
   } else if (!strcmp (mimetype, "video/mpeg")) {
     gint mpegversion;
 
@@ -610,6 +631,182 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   return FALSE;
 }
 
+static gboolean
+xiph3_streamheader_to_codecdata (const GValue * streamheader,
+    GstMatroskaTrackContext * context, GstBuffer ** p_buf0)
+{
+  GstBuffer *buf[3];
+  GArray *bufarr;
+  guint8 *priv_data;
+  guint i, offset, priv_data_size;
+
+  if (streamheader == NULL)
+    goto no_stream_headers;
+
+  if (G_VALUE_TYPE (streamheader) != GST_TYPE_ARRAY)
+    goto wrong_type;
+
+  bufarr = g_value_peek_pointer (streamheader);
+  if (bufarr->len != 3)
+    goto wrong_count;
+
+  context->xiph_headers_to_skip = bufarr->len;
+
+  for (i = 0; i < 3; i++) {
+    GValue *bufval = &g_array_index (bufarr, GValue, i);
+
+    if (G_VALUE_TYPE (bufval) != GST_TYPE_BUFFER)
+      goto wrong_content_type;
+
+    buf[i] = g_value_peek_pointer (bufval);
+  }
+
+  priv_data_size = 1;
+  priv_data_size += GST_BUFFER_SIZE (buf[0]) / 0xff + 1;
+  priv_data_size += GST_BUFFER_SIZE (buf[1]) / 0xff + 1;
+
+  for (i = 0; i < 3; ++i) {
+    priv_data_size += GST_BUFFER_SIZE (buf[i]);
+  }
+
+  priv_data = g_malloc0 (priv_data_size);
+
+  priv_data[0] = 2;
+  offset = 1;
+
+  for (i = 0; i < GST_BUFFER_SIZE (buf[0]) / 0xff; ++i) {
+    priv_data[offset++] = 0xff;
+  }
+  priv_data[offset++] = GST_BUFFER_SIZE (buf[0]) % 0xff;
+
+  for (i = 0; i < GST_BUFFER_SIZE (buf[1]) / 0xff; ++i) {
+    priv_data[offset++] = 0xff;
+  }
+  priv_data[offset++] = GST_BUFFER_SIZE (buf[1]) % 0xff;
+
+  for (i = 0; i < 3; ++i) {
+    memcpy (priv_data + offset, GST_BUFFER_DATA (buf[i]),
+        GST_BUFFER_SIZE (buf[i]));
+    offset += GST_BUFFER_SIZE (buf[i]);
+  }
+
+  context->codec_priv = priv_data;
+  context->codec_priv_size = priv_data_size;
+
+  if (p_buf0)
+    *p_buf0 = gst_buffer_ref (buf[0]);
+
+  return TRUE;
+
+/* ERRORS */
+no_stream_headers:
+  {
+    GST_WARNING ("required streamheaders missing in sink caps!");
+    return FALSE;
+  }
+wrong_type:
+  {
+    GST_WARNING ("streamheaders are not a GST_TYPE_ARRAY, but a %s",
+        G_VALUE_TYPE_NAME (streamheader));
+    return FALSE;
+  }
+wrong_count:
+  {
+    GST_WARNING ("got %u streamheaders, not 3 as expected", bufarr->len);
+    return FALSE;
+  }
+wrong_content_type:
+  {
+    GST_WARNING ("streamheaders array does not contain GstBuffers");
+    return FALSE;
+  }
+}
+
+static gboolean
+vorbis_streamheader_to_codecdata (const GValue * streamheader,
+    GstMatroskaTrackContext * context)
+{
+  GstBuffer *buf0 = NULL;
+
+  if (!xiph3_streamheader_to_codecdata (streamheader, context, &buf0))
+    return FALSE;
+
+  if (buf0 == NULL || GST_BUFFER_SIZE (buf0) < 1 + 6 + 4) {
+    GST_WARNING ("First vorbis header too small, ignoring");
+  } else {
+    if (memcmp (GST_BUFFER_DATA (buf0) + 1, "vorbis", 6) == 0) {
+      GstMatroskaTrackAudioContext *audiocontext;
+      guint8 *hdr;
+
+      hdr = GST_BUFFER_DATA (buf0) + 1 + 6 + 4;
+      audiocontext = (GstMatroskaTrackAudioContext *) context;
+      audiocontext->channels = GST_READ_UINT8 (hdr);
+      audiocontext->samplerate = GST_READ_UINT32_LE (hdr + 1);
+    }
+  }
+
+  if (buf0)
+    gst_buffer_unref (buf0);
+
+  return TRUE;
+}
+
+static gboolean
+theora_streamheader_to_codecdata (const GValue * streamheader,
+    GstMatroskaTrackContext * context)
+{
+  GstBuffer *buf0 = NULL;
+
+  if (!xiph3_streamheader_to_codecdata (streamheader, context, &buf0))
+    return FALSE;
+
+  if (buf0 == NULL || GST_BUFFER_SIZE (buf0) < 1 + 6 + 26) {
+    GST_WARNING ("First theora header too small, ignoring");
+  } else if (memcmp (GST_BUFFER_DATA (buf0), "\200theora\003\002", 9) != 0) {
+    GST_WARNING ("First header not a theora identification header, ignoring");
+  } else {
+    GstMatroskaTrackVideoContext *videocontext;
+    guint fps_num, fps_denom, par_num, par_denom;
+    guint8 *hdr;
+
+    hdr = GST_BUFFER_DATA (buf0) + 1 + 6 + 3 + 2 + 2;
+
+    videocontext = (GstMatroskaTrackVideoContext *) context;
+    videocontext->pixel_width = GST_READ_UINT32_BE (hdr) >> 8;
+    videocontext->pixel_height = GST_READ_UINT32_BE (hdr + 3) >> 8;
+    hdr += 3 + 3 + 1 + 1;
+    fps_num = GST_READ_UINT32_BE (hdr);
+    fps_denom = GST_READ_UINT32_BE (hdr + 4);
+    context->default_duration = gst_util_uint64_scale_int (GST_SECOND,
+        fps_denom, fps_num);
+    hdr += 4 + 4;
+    par_num = GST_READ_UINT32_BE (hdr) >> 8;
+    par_denom = GST_READ_UINT32_BE (hdr + 3) >> 8;
+    if (par_num > 0 && par_num > 0) {
+      if (par_num > par_denom) {
+        videocontext->display_width =
+            videocontext->pixel_width * par_num / par_denom;
+        videocontext->display_height = videocontext->pixel_height;
+      } else if (par_num < par_denom) {
+        videocontext->display_width = videocontext->pixel_width;
+        videocontext->display_height =
+            videocontext->pixel_height * par_denom / par_num;
+      } else {
+        videocontext->display_width = 0;
+        videocontext->display_height = 0;
+      }
+    } else {
+      videocontext->display_width = 0;
+      videocontext->display_height = 0;
+    }
+    hdr += 3 + 3;
+  }
+
+  if (buf0)
+    gst_buffer_unref (buf0);
+
+  return TRUE;
+}
 
 /**
  * gst_matroska_mux_audio_pad_setcaps:
@@ -625,10 +822,13 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstMatroskaTrackContext *context = NULL;
   GstMatroskaTrackAudioContext *audiocontext;
+  GstMatroskaMux *mux;
   GstMatroskaPad *collect_pad;
   const gchar *mimetype;
   gint samplerate = 0, channels = 0;
   GstStructure *structure;
+
+  mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
 
   /* find context */
   collect_pad = (GstMatroskaPad *) gst_pad_get_element_private (pad);
@@ -716,8 +916,6 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     /* FIXME: endianness is undefined */
   } else if (!strcmp (mimetype, "audio/x-vorbis")) {
     const GValue *streamheader;
-    guint8 *priv_data = NULL;
-    guint priv_data_size = 0;
 
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_VORBIS);
 
@@ -726,81 +924,14 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       context->codec_priv = NULL;
       context->codec_priv_size = 0;
     }
+
     streamheader = gst_structure_get_value (structure, "streamheader");
-
-    if (streamheader != NULL) {
-      if (G_VALUE_TYPE (streamheader) == GST_TYPE_ARRAY) {
-        GArray *bufarr = g_value_peek_pointer (streamheader);
-        gint i;
-        gint offset;
-
-        if (bufarr->len == 3) {
-          GstBuffer *buf[3];
-
-          for (i = 0; i < bufarr->len; i++) {
-            GValue *bufval = &g_array_index (bufarr, GValue, i);
-
-            if (G_VALUE_TYPE (bufval) == GST_TYPE_BUFFER) {
-              buf[i] = g_value_peek_pointer (bufval);
-            }
-          }
-
-          priv_data_size = 1;
-          priv_data_size += GST_BUFFER_SIZE (buf[0]) / 0xff + 1;
-          priv_data_size += GST_BUFFER_SIZE (buf[1]) / 0xff + 1;
-
-          for (i = 0; i < 3; ++i) {
-            priv_data_size += GST_BUFFER_SIZE (buf[i]);
-          }
-
-          priv_data = g_malloc0 (priv_data_size);
-
-          priv_data[0] = 2;
-          offset = 1;
-
-          for (i = 0; i < GST_BUFFER_SIZE (buf[0]) / 0xff; ++i) {
-            priv_data[offset++] = 0xff;
-          }
-          priv_data[offset++] = GST_BUFFER_SIZE (buf[0]) % 0xff;
-
-          for (i = 0; i < GST_BUFFER_SIZE (buf[1]) / 0xff; ++i) {
-            priv_data[offset++] = 0xff;
-          }
-          priv_data[offset++] = GST_BUFFER_SIZE (buf[1]) % 0xff;
-
-          for (i = 0; i < 3; ++i) {
-            memcpy (priv_data + offset, GST_BUFFER_DATA (buf[i]),
-                GST_BUFFER_SIZE (buf[i]));
-            offset += GST_BUFFER_SIZE (buf[i]);
-          }
-
-          if (GST_BUFFER_SIZE (buf[0]) < 1 + 6 + 4) {
-            GST_WARNING ("First vorbis header too small, ignoring");
-          } else {
-            if (memcmp (GST_BUFFER_DATA (buf[0]) + 1, "vorbis", 6) == 0) {
-              guint8 *hdr = GST_BUFFER_DATA (buf[0]) + 1 + 6 + 4;
-
-              audiocontext->channels = GST_READ_UINT8 (hdr);
-              audiocontext->samplerate = GST_READ_UINT32_LE (hdr + 1);
-            }
-          }
-        } else {
-          GST_WARNING ("Vorbis header does not contain "
-              "three buffers (found %d buffers), Ignoring.", bufarr->len);
-        }
-      }
+    if (!vorbis_streamheader_to_codecdata (streamheader, context)) {
+      GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
+          ("vorbis stream headers missing or malformed"));
+      return FALSE;
     }
-
-    if (priv_data == NULL) {
-      GST_WARNING ("Could not write Vorbis header into codec private data. "
-          "You will probably not be able to play the stream.");
-    }
-
-    context->codec_priv_size = priv_data_size;
-    context->codec_priv = (gpointer) priv_data;
-
     return TRUE;
-
   } else if (!strcmp (mimetype, "audio/x-ac3")) {
     context->codec_id = g_strdup (GST_MATROSKA_CODEC_ID_AUDIO_AC3);
 
@@ -1304,35 +1435,6 @@ gst_matroska_mux_best_pad (GstMatroskaMux * mux, gboolean * popped)
   return best;
 }
 
-static gboolean
-gst_matroska_mux_stream_is_vorbis_header (GstMatroskaMux * mux,
-    GstMatroskaPad * collect_pad)
-{
-  GstMatroskaTrackAudioContext *audio_ctx;
-
-  audio_ctx = (GstMatroskaTrackAudioContext *) collect_pad->track;
-
-  if (collect_pad->track->type != GST_MATROSKA_TRACK_TYPE_AUDIO)
-    return FALSE;
-
-  if (audio_ctx->first_frame != FALSE)
-    return FALSE;
-
-  if (collect_pad->track->codec_id == NULL ||
-      strcmp (collect_pad->track->codec_id, GST_MATROSKA_CODEC_ID_AUDIO_VORBIS))
-    return FALSE;
-
-  /* HACK: three frame headers are counted using pos */
-  if (++collect_pad->track->pos <= 3)
-    return TRUE;
-
-  /* 4th vorbis packet => skipped all headers */
-  collect_pad->track->pos = 0;
-  audio_ctx->first_frame = TRUE;
-  return FALSE;
-}
-
-
 /**
  * gst_matroska_mux_buffer_header:
  * @track: Track context.
@@ -1386,10 +1488,11 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad)
   buf = collect_pad->buffer;
   collect_pad->buffer = NULL;
 
-  /* vorbis header are retrieved from caps and placed in CodecPrivate */
-  if (gst_matroska_mux_stream_is_vorbis_header (mux, collect_pad)) {
-    GST_LOG_OBJECT (collect_pad->collect.pad, "dropping vorbis header buffer");
+  /* vorbis/theora headers are retrieved from caps and put in CodecPrivate */
+  if (collect_pad->track->xiph_headers_to_skip > 0) {
+    GST_LOG_OBJECT (collect_pad->collect.pad, "dropping streamheader buffer");
     gst_buffer_unref (buf);
+    --collect_pad->track->xiph_headers_to_skip;
     return GST_FLOW_OK;
   }
 
