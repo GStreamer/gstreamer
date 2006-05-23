@@ -860,6 +860,9 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_LOCK (pads);
       data->abidata.ABI.flushing = FALSE;
       gst_collect_pads_pop (pads, data);
+      /* we need new segment info after the flush */
+      gst_segment_init (&data->segment, GST_FORMAT_UNDEFINED);
+      data->abidata.ABI.new_segment = FALSE;
       /* if the pad was EOS, remove the EOS flag and
        * decrement the number of eospads */
       if (G_UNLIKELY (data->abidata.ABI.eos == TRUE)) {

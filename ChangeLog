@@ -1,3 +1,12 @@
+2006-05-23  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_remove_pad),
+	(gst_collect_pads_event):
+	clear/reset segment info in FLUSH_STOP.
+	Fixes #336929.
+
 2006-05-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_stop),
