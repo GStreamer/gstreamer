@@ -1134,6 +1134,8 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
     } else if (dec->last_timestamp != -1) {
       dec->last_timestamp = _theora_granule_time (dec, dec->granulepos);
     }
+    if (dec->last_timestamp == -1 && GST_BUFFER_TIMESTAMP_IS_VALID (buf))
+      dec->last_timestamp = GST_BUFFER_TIMESTAMP (buf);
   } else {
     dec->last_timestamp = -1;
   }

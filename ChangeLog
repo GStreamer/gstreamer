@@ -1,3 +1,10 @@
+2006-05-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/theora/theoradec.c: (theora_dec_chain):
+	  Make work with time-stamped input buffers that do not
+	  have a granulepos in BUFFER_OFFSET_END (like theora
+	  buffers coming from matroskademux). Fixes #342448.
+
 2006-05-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Peter Kjellerstedt  <pkj at axis com>
