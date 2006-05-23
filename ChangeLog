@@ -1,5 +1,13 @@
 2006-05-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Mark Nauwelaerts  <manauw at skynet be>
+
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_change_state):
+	  gst_collect_pads_stop() needs to be called before chaining up
+	  to the parent class (#342734).
+
+2006-05-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/flac/Makefile.am:
 	* ext/flac/flac_compat.h:
 	* ext/flac/gstflac.c:

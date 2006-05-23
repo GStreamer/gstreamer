@@ -1722,6 +1722,9 @@ gst_matroska_mux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_collect_pads_stop (mux->collect);
+      break;
     default:
       break;
   }
@@ -1732,7 +1735,6 @@ gst_matroska_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (mux->collect);
       gst_matroska_mux_reset (GST_ELEMENT (mux));
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
