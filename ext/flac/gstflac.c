@@ -25,8 +25,6 @@
 #include "gstflacdec.h"
 #include "gstflactag.h"
 
-#include "flac_compat.h"
-
 #include <gst/tag/tag.h>
 
 static gboolean

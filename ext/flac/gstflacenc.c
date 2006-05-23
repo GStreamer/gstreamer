@@ -28,7 +28,6 @@
 #include <gst/audio/audio.h>
 #include <gst/tag/tag.h>
 #include <gst/gsttagsetter.h>
-#include "flac_compat.h"
 
 
 static const GstElementDetails flacenc_details =

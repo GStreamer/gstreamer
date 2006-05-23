@@ -51,8 +51,6 @@
 
 #include <gst/tag/tag.h>
 
-#include "flac_compat.h"
-
 GST_DEBUG_CATEGORY_STATIC (flacdec_debug);
 #define GST_CAT_DEFAULT flacdec_debug
 
@@ -182,17 +180,8 @@ gst_flac_dec_init (GstFlacDec * flacdec, GstFlacDecClass * klass)
       gst_flac_dec_length);
   FLAC__seekable_stream_decoder_set_eof_callback (flacdec->decoder,
       gst_flac_dec_eof);
-#if FLAC_VERSION >= 0x010003
   FLAC__seekable_stream_decoder_set_write_callback (flacdec->decoder,
       gst_flac_dec_write);
-#else
-  FLAC__seekable_stream_decoder_set_write_callback (flacdec->decoder,
-      (FLAC__StreamDecoderWriteStatus (*)
-          (const FLAC__SeekableStreamDecoder * decoder,
-              const FLAC__Frame * frame,
-              const FLAC__int32 * buffer[], void *client_data))
-      (gst_flac_dec_write));
-#endif
   FLAC__seekable_stream_decoder_set_metadata_respond (flacdec->decoder,
       FLAC__METADATA_TYPE_VORBIS_COMMENT);
   FLAC__seekable_stream_decoder_set_metadata_callback (flacdec->decoder,
