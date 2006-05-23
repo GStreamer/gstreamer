@@ -1,3 +1,15 @@
+2006-05-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Julien Moutte  <julien at moutte net>
+
+	* docs/gst/gstreamer-sections.txt:
+	  Make new GST_FLOW_IS_SUCCESS macro visible in docs.
+	  
+	* plugins/elements/gstfakesink.c: (gst_fake_sink_class_init),
+	(gst_fake_sink_preroll):
+	* plugins/elements/gstfakesink.h:
+	  Add new ::preroll-handoff signal (#337100).
+
 2006-05-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c: (gst_flow_get_name), (gst_flow_to_quark):

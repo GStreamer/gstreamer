@@ -56,6 +56,7 @@ enum
 {
   /* FILL ME */
   SIGNAL_HANDOFF,
+  SIGNAL_PREROLL_HANDOFF,
   LAST_SIGNAL
 };
 
@@ -200,6 +201,22 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
       gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2,
       GST_TYPE_BUFFER, GST_TYPE_PAD);
 
+  /**
+   * GstFakeSink::preroll-handoff:
+   * @fakesink: the fakesink instance
+   * @buffer: the buffer that just has been received
+   * @pad: the pad that received it
+   *
+   * This signal gets emitted before unreffing the buffer.
+   *
+   * Since: 0.10.7
+   */
+  gst_fake_sink_signals[SIGNAL_PREROLL_HANDOFF] =
+      g_signal_new ("preroll-handoff", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstFakeSinkClass, preroll_handoff),
+      NULL, NULL, gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2,
+      GST_TYPE_BUFFER, GST_TYPE_PAD);
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_fake_sink_change_state);
 
@@ -332,6 +349,11 @@ gst_fake_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
     GST_OBJECT_UNLOCK (sink);
 
     g_object_notify (G_OBJECT (sink), "last_message");
+  }
+  if (sink->signal_handoffs) {
+    g_signal_emit (sink,
+        gst_fake_sink_signals[SIGNAL_PREROLL_HANDOFF], 0, buffer,
+        bsink->sinkpad);
   }
   return GST_FLOW_OK;
 }
