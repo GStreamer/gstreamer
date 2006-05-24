@@ -6,3 +6,4 @@ gstnetclientclock
 gstnettimeprovider
 libsabi
 basesrc
+typefindhelper

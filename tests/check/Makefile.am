@@ -54,6 +54,7 @@ REGISTRY_CHECKS =				\
 	elements/identity			\
 	libs/basesrc				\
 	libs/controller				\
+	libs/typefindhelper			\
 	pipelines/stress
 endif
 
@@ -116,6 +117,9 @@ libs_gstnetclientclock_LDADD = \
 	$(LDADD)
 libs_gstnettimeprovider_LDADD = \
 	$(top_builddir)/libs/gst/net/libgstnet-@GST_MAJORMINOR@.la \
+	$(LDADD)
+libs_typefindhelper_LDADD = \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
 # valgrind testing

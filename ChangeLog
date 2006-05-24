@@ -1,3 +1,19 @@
+2006-05-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/base/gsttypefindhelper.c: (buf_helper_find_peek):
+	  Fix off-by-one bug that would only allow peeks of N-1 bytes
+	  from the start even if the buffer to typefind on contains
+	  in fact N bytes of data (makes vorbis typefinding from a
+	  vorbis identification header buffer work).
+
+	* tests/check/Makefile.am:
+	* tests/check/libs/.cvsignore:
+	* tests/check/libs/typefindhelper.c: (GST_START_TEST),
+	(gst_typefindhelper_suite), (main), (foobar_typefind),
+	(plugin_init):
+	  Add very basic unit test for gst_type_find_helper_for_buffer()
+	  that checks for the problem fixed above.
+
 2006-05-24  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tools/gst-inspect.c: (print_interfaces),
