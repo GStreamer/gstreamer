@@ -56,7 +56,8 @@ gst_type_find_get_type (void)
  * @rank: The rank (or importance) of this typefind function
  * @func: The #GstTypeFindFunction to use
  * @extensions: Optional extensions that could belong to this type
- * @possible_caps: Optionally the caps that could be returned when typefinding succeeds
+ * @possible_caps: Optionally the caps that could be returned when typefinding
+ *                 succeeds
  * @data: Optional user data. This user data must be available until the plugin
  *        is unloaded.
  * @data_notify: a #GDestroyNotify that will be called on @data when the plugin
