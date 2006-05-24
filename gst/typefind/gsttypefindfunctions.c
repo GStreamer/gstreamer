@@ -1487,7 +1487,8 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
     /* other box/atom types, apparently quicktime specific */
     else if (STRNCMP (&data[4], "pnot", 4) == 0 ||
         STRNCMP (&data[4], "PICT", 4) == 0 ||
-        STRNCMP (&data[4], "wide", 4) == 0) {
+        STRNCMP (&data[4], "wide", 4) == 0 ||
+        STRNCMP (&data[4], "prfl", 4) == 0) {
       tip = GST_TYPE_FIND_MAXIMUM;
       break;
     } else {

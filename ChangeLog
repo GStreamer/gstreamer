@@ -1,3 +1,9 @@
+2006-05-24  Edward Hervey  <edward@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (qt_type_find): 
+	Added the 'prfl' atom type which MQV (no, it's not a typo) files contain.
+	Else they play perfectly fine with qtdemux.
+
 2006-05-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/theora/theoradec.c:
