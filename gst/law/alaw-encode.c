@@ -269,40 +269,50 @@ gst_alawenc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstALawEnc *alawenc;
   gint16 *linear_data;
+  guint linear_size;
   guint8 *alaw_data;
+  guint alaw_size;
   GstBuffer *outbuf;
-  gint bufsize;
   gint i;
+  GstFlowReturn ret;
 
-  alawenc = GST_ALAWENC (GST_OBJECT_PARENT (pad));
+  alawenc = GST_ALAWENC (gst_pad_get_parent (pad));
 
   if (!alawenc->rate || !alawenc->channels)
     goto not_negotiated;
 
   linear_data = (gint16 *) GST_BUFFER_DATA (buffer);
-  bufsize = GST_BUFFER_SIZE (buffer) / 2;
-  outbuf = gst_buffer_new_and_alloc (bufsize);
+  linear_size = GST_BUFFER_SIZE (buffer);
 
-  GST_BUFFER_DURATION (outbuf) = GST_SECOND * (bufsize) /
-      (alawenc->rate * alawenc->channels);
+  alaw_size = linear_size / 2;
+
+  outbuf = gst_buffer_new_and_alloc (alaw_size);
+  alaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
+
+  /* FIXME, just copy (and interpolate) timestamp */
+  GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (alaw_size,
+      GST_SECOND, alawenc->rate * alawenc->channels);
   GST_BUFFER_TIMESTAMP (outbuf) = alawenc->ts;
   alawenc->ts += GST_BUFFER_DURATION (outbuf);
 
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (alawenc->srcpad));
-  alaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
 
-  for (i = 0; i < GST_BUFFER_SIZE (outbuf); i++) {
-    *alaw_data = s16_to_alaw (*linear_data);
-    alaw_data++;
-    linear_data++;
+  for (i = 0; i < alaw_size; i++) {
+    alaw_data[i] = s16_to_alaw (linear_data[i]);
   }
 
   gst_buffer_unref (buffer);
 
-  return gst_pad_push (alawenc->srcpad, outbuf);
+  ret = gst_pad_push (alawenc->srcpad, outbuf);
+
+done:
+  gst_object_unref (alawenc);
+
+  return ret;
 
 not_negotiated:
   {
-    return GST_FLOW_NOT_NEGOTIATED;
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
   }
 }

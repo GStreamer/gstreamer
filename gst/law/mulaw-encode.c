@@ -205,34 +205,43 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
   GstMuLawEnc *mulawenc;
   gint16 *linear_data;
   guint8 *mulaw_data;
+  guint mulaw_size;
   GstBuffer *outbuf;
-  gint bufsize;
+  GstFlowReturn ret;
 
-  mulawenc = GST_MULAWENC (GST_OBJECT_PARENT (pad));
+  mulawenc = GST_MULAWENC (gst_pad_get_parent (pad));
 
   if (!mulawenc->rate || !mulawenc->channels)
     goto not_negotiated;
 
   linear_data = (gint16 *) GST_BUFFER_DATA (buffer);
-  bufsize = GST_BUFFER_SIZE (buffer) / 2;
-  outbuf = gst_buffer_new_and_alloc (bufsize);
+  mulaw_size = GST_BUFFER_SIZE (buffer) / 2;
 
-  GST_BUFFER_DURATION (outbuf) = GST_SECOND * (bufsize) /
-      (mulawenc->rate * mulawenc->channels);
-  GST_BUFFER_TIMESTAMP (outbuf) = mulawenc->ts;
-  mulawenc->ts += GST_BUFFER_DURATION (outbuf);
-
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mulawenc->srcpad));
+  outbuf = gst_buffer_new_and_alloc (mulaw_size);
   mulaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
 
-  mulaw_encode (linear_data, mulaw_data, GST_BUFFER_SIZE (outbuf));
+  /* copy discont flag */
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+
+  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
+  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mulawenc->srcpad));
+
+  mulaw_encode (linear_data, mulaw_data, mulaw_size);
 
   gst_buffer_unref (buffer);
 
-  return gst_pad_push (mulawenc->srcpad, outbuf);
+  ret = gst_pad_push (mulawenc->srcpad, outbuf);
+
+done:
+  gst_object_unref (mulawenc);
+
+  return ret;
 
 not_negotiated:
   {
-    return GST_FLOW_NOT_NEGOTIATED;
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
   }
 }

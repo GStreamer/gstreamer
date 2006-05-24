@@ -205,20 +205,33 @@ gst_mulawdec_chain (GstPad * pad, GstBuffer * buffer)
   GstMuLawDec *mulawdec;
   gint16 *linear_data;
   guint8 *mulaw_data;
+  guint mulaw_size;
   GstBuffer *outbuf;
+  GstFlowReturn ret;
 
-  mulawdec = GST_MULAWDEC (GST_OBJECT_PARENT (pad));
+  mulawdec = GST_MULAWDEC (gst_pad_get_parent (pad));
 
   mulaw_data = (guint8 *) GST_BUFFER_DATA (buffer);
-  outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer) * 2);
+  mulaw_size = GST_BUFFER_SIZE (buffer);
+
+  outbuf = gst_buffer_new_and_alloc (mulaw_size * 2);
+  linear_data = (gint16 *) GST_BUFFER_DATA (outbuf);
+
+  /* copy discont flag */
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mulawdec->srcpad));
-  linear_data = (gint16 *) GST_BUFFER_DATA (outbuf);
 
-  mulaw_decode (mulaw_data, linear_data, GST_BUFFER_SIZE (buffer));
+  mulaw_decode (mulaw_data, linear_data, mulaw_size);
 
   gst_buffer_unref (buffer);
 
-  return gst_pad_push (mulawdec->srcpad, outbuf);
+  ret = gst_pad_push (mulawdec->srcpad, outbuf);
+
+  gst_object_unref (mulawdec);
+
+  return ret;
 }

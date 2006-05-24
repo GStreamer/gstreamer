@@ -229,24 +229,35 @@ gst_alawdec_chain (GstPad * pad, GstBuffer * buffer)
   GstALawDec *alawdec;
   gint16 *linear_data;
   guint8 *alaw_data;
+  guint alaw_size;
   GstBuffer *outbuf;
   gint i;
+  GstFlowReturn ret;
 
-  alawdec = GST_ALAWDEC (GST_OBJECT_PARENT (pad));
+  alawdec = GST_ALAWDEC (gst_pad_get_parent (pad));
 
-  alaw_data = (guint8 *) GST_BUFFER_DATA (buffer);
-  outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer) * 2);
+  alaw_data = GST_BUFFER_DATA (buffer);
+  alaw_size = GST_BUFFER_SIZE (buffer);
+
+  outbuf = gst_buffer_new_and_alloc (alaw_size * 2);
+  linear_data = (gint16 *) GST_BUFFER_DATA (outbuf);
+
+  /* copy discont flag */
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (alawdec->srcpad));
-  linear_data = (gint16 *) GST_BUFFER_DATA (outbuf);
 
-  for (i = 0; i < GST_BUFFER_SIZE (buffer); i++) {
-    *linear_data = alaw_to_s16 (*alaw_data);
-    linear_data++;
-    alaw_data++;
+  for (i = 0; i < alaw_size; i++) {
+    linear_data[i] = alaw_to_s16 (alaw_data[i]);
   }
-
   gst_buffer_unref (buffer);
-  return gst_pad_push (alawdec->srcpad, outbuf);
+
+  ret = gst_pad_push (alawdec->srcpad, outbuf);
+
+  gst_object_unref (alawdec);
+
+  return ret;
 }

@@ -1,3 +1,16 @@
+2006-05-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/law/alaw-decode.c: (gst_alawdec_chain):
+	* gst/law/alaw-decode.h:
+	* gst/law/alaw-encode.c: (gst_alawenc_chain):
+	* gst/law/alaw-encode.h:
+	* gst/law/mulaw-decode.c: (gst_mulawdec_chain):
+	* gst/law/mulaw-decode.h:
+	* gst/law/mulaw-encode.c: (gst_mulawenc_chain):
+	* gst/law/mulaw-encode.h:
+	Some cleanups in the chain functions.
+	Remove some GStreamer 0.0.2 bits.
+
 2006-05-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Mark Nauwelaerts  <manauw at skynet be>

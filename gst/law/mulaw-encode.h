@@ -21,15 +21,9 @@
 #ifndef __GST_MULAWENCODE_H__
 #define __GST_MULAWENCODE_H__
 
-
 #include <gst/gst.h>
-/* #include <gst/meta/audioraw.h> */
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_MULAWENC \
   (gst_mulawenc_get_type())
@@ -54,8 +48,6 @@ struct _GstMuLawEnc {
 
   gint channels;
   gint rate;
-  /*MetaAudioRaw meta; */
-
 };
 
 struct _GstMuLawEncClass {
@@ -64,9 +56,6 @@ struct _GstMuLawEncClass {
 
 GType gst_mulawenc_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_STEREO_H__ */

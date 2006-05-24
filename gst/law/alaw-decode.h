@@ -21,15 +21,9 @@
 #ifndef __GST_ALAWDECODE_H__
 #define __GST_ALAWDECODE_H__
 
-
 #include <gst/gst.h>
-/* #include <gst/meta/audioraw.h> */
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_ALAWDEC \
   (gst_alawdec_get_type())
@@ -49,9 +43,6 @@ struct _GstALawDec {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
-
-  /*MetaAudioRaw meta; */
-
 };
 
 struct _GstALawDecClass {
@@ -60,9 +51,6 @@ struct _GstALawDecClass {
 
 GType gst_alawdec_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_STEREO_H__ */
