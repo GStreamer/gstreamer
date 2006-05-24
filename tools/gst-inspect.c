@@ -246,7 +246,8 @@ print_interfaces (GType type)
 
   if (ifaces) {
     if (n_ifaces) {
-      g_print ("%sImplemented Interfaces:\n", _name);
+      g_print ("%s", _name);
+      g_print (_("Implemented Interfaces:\n"));
       iface = ifaces;
       while (*iface) {
         g_print ("%s  %s\n", _name, g_type_name (*iface));
@@ -287,15 +288,18 @@ print_element_properties_info (GstElement * element)
     if (param->flags & G_PARAM_READABLE) {
       g_object_get_property (G_OBJECT (element), param->name, &value);
       readable = TRUE;
-      g_print ((first_flag ? "readable" : ", readable"));
+      g_print ((first_flag ? "" : ", "));
+      g_print (_("readable"));
       first_flag = FALSE;
     }
     if (param->flags & G_PARAM_WRITABLE) {
-      g_print ((first_flag ? "writable" : ", writable"));
+      g_print ((first_flag ? "" : ", "));
+      g_print (_("writable"));
       first_flag = FALSE;
     }
     if (param->flags & GST_PARAM_CONTROLLABLE) {
-      g_print ((first_flag ? "controllable" : ", controllable"));
+      g_print ((first_flag ? "" : ", "));
+      g_print (_("controllable"));
       first_flag = FALSE;
     }
     n_print ("\n");
@@ -914,8 +918,12 @@ print_element_list (gboolean print_all)
 
   gst_plugin_list_free (orig_plugins);
 
-  g_print ("\nTotal plugins: %d\nTotal features: %d\n",
-      plugincount, featurecount);
+  g_print ("\n");
+  g_print (_("Total count: "));
+  g_print (ngettext ("%d plugin", "%d plugins", plugincount), plugincount);
+  g_print (", ");
+  g_print (ngettext ("%d feature", "%d features", featurecount), featurecount);
+  g_print ("\n");
 }
 
 static void
@@ -1161,12 +1169,12 @@ main (int argc, char *argv[])
             print_plugin_info (plugin);
             print_plugin_features (plugin);
           } else {
-            g_print ("Error loading plugin file: %s\n", error->message);
+            g_print (_("Could not load plugin file: %s\n"), error->message);
             g_error_free (error);
             return -1;
           }
         } else {
-          g_print ("No such element or plugin '%s'\n", arg);
+          g_print (_("No such element or plugin '%s'\n"), arg);
           return -1;
         }
       }
