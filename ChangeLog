@@ -1,5 +1,12 @@
 2006-05-24  Wim Taymans  <wim@fluendo.com>
 
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_loop):
+	Implement EOS correctly by either posting
+	SEGMENT_DONE or pushing an EOS message depending
+	on the seek type. Fixes #342592
+
+2006-05-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/law/alaw-decode.c: (gst_alawdec_chain):
 	* gst/law/alaw-decode.h:
 	* gst/law/alaw-encode.c: (gst_alawenc_chain):

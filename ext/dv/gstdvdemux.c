@@ -1547,7 +1547,7 @@ gst_dvdemux_loop (GstPad * pad)
 
     /* check buffer size, don't want to read small buffers */
     if (G_UNLIKELY (GST_BUFFER_SIZE (buffer) < NTSC_BUFFER))
-      goto pause;
+      goto small_buffer;
 
     data = GST_BUFFER_DATA (buffer);
 
@@ -1609,15 +1609,12 @@ gst_dvdemux_loop (GstPad * pad)
 
     ret = gst_pad_pull_range (dvdemux->sinkpad,
         dvdemux->byte_segment.last_stop, dvdemux->frame_len, &buffer);
-    if (ret == GST_FLOW_UNEXPECTED)
-      goto eos;
-
     if (ret != GST_FLOW_OK)
       goto pause;
 
     /* check buffer size, don't want to read small buffers */
     if (GST_BUFFER_SIZE (buffer) < dvdemux->frame_len)
-      goto pause;
+      goto small_buffer;
   }
   /* and decode the buffer */
   ret = gst_dvdemux_demux_frame (dvdemux, buffer);
@@ -1627,6 +1624,7 @@ gst_dvdemux_loop (GstPad * pad)
   /* and position ourselves for the next buffer */
   dvdemux->byte_segment.last_stop += dvdemux->frame_len;
 
+done:
   gst_object_unref (dvdemux);
 
   return;
@@ -1637,17 +1635,20 @@ parse_header_error:
     GST_ELEMENT_ERROR (dvdemux, STREAM, DECODE,
         (NULL), ("Error parsing DV header"));
     gst_buffer_unref (buffer);
-    ret = GST_FLOW_ERROR;
-    /* will stop the task */
-    goto pause;
-  }
-eos:
-  {
-    GST_LOG_OBJECT (dvdemux, "got eos");
+    dvdemux->running = FALSE;
+    gst_pad_pause_task (dvdemux->sinkpad);
     gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
-    /* pause with non-fatal error */
-    ret = GST_FLOW_WRONG_STATE;
-    goto pause;
+    goto done;
+  }
+small_buffer:
+  {
+    GST_ELEMENT_ERROR (dvdemux, STREAM, DECODE,
+        (NULL), ("Error reading buffer"));
+    gst_buffer_unref (buffer);
+    dvdemux->running = FALSE;
+    gst_pad_pause_task (dvdemux->sinkpad);
+    gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
+    goto done;
   }
 pause:
   {
@@ -1655,12 +1656,25 @@ pause:
     dvdemux->running = FALSE;
     gst_pad_pause_task (dvdemux->sinkpad);
     if (GST_FLOW_IS_FATAL (ret)) {
-      /* for fatal errors we post an error message */
-      GST_ELEMENT_ERROR (dvdemux, STREAM, FAILED,
-          (NULL), ("streaming stopped, reason %s", gst_flow_get_name (ret)));
-      gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
+      if (ret == GST_FLOW_UNEXPECTED) {
+        GST_LOG_OBJECT (dvdemux, "got eos");
+        /* perform EOS logic */
+        if (dvdemux->time_segment.flags & GST_SEEK_FLAG_SEGMENT) {
+          gst_element_post_message (GST_ELEMENT (dvdemux),
+              gst_message_new_segment_done (GST_OBJECT_CAST (dvdemux),
+                  dvdemux->time_segment.format,
+                  dvdemux->time_segment.last_stop));
+        } else {
+          gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
+        }
+      } else {
+        /* for fatal errors we post an error message */
+        GST_ELEMENT_ERROR (dvdemux, STREAM, FAILED,
+            (NULL), ("streaming stopped, reason %s", gst_flow_get_name (ret)));
+        gst_dvdemux_push_event (dvdemux, gst_event_new_eos ());
+      }
     }
-    gst_object_unref (dvdemux);
+    goto done;
   }
 }
 
