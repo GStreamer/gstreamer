@@ -3862,7 +3862,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
     gst_buffer_unref (buffer);
   }
   /* object_type_id in the stsd atom in mp4a tells us about AAC or plain
-   * MPEG audio */
+   * MPEG audio and other formats */
   switch (object_type_id) {
     case 107:
       /* change to mpeg1 layer 3 audio */
@@ -3872,6 +3872,21 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
             GST_TAG_AUDIO_CODEC, "MPEG-1 layer 3", NULL);
       break;
+    case 0xE1:
+    {
+      GstStructure *structure;
+
+      /* QCELP, the codec_data is a riff tag (little endian) with
+       * more info (http://ftp.3gpp2.org/TSGC/Working/2003/2003-05-SanDiego/TSG-C-2003-05-San%20Diego/WG1/SWG12/C12-20030512-006%20=%20C12-20030217-015_Draft_Baseline%20Text%20of%20FFMS_R2.doc). */
+      structure = gst_caps_get_structure (stream->caps, 0);
+      gst_structure_set_name (structure, "audio/qcelp");
+      gst_structure_remove_fields (structure, "mpegversion", "framed", NULL);
+
+      if (list)
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            GST_TAG_AUDIO_CODEC, "QCELP", NULL);
+      break;
+    }
     default:
       break;
   }
