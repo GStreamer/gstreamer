@@ -52,7 +52,7 @@ static void gst_amrnbparse_init (GstAmrnbParse * amrnbparse);
 static const GstQueryType *gst_amrnbparse_querytypes (GstPad * pad);
 static gboolean gst_amrnbparse_query (GstPad * pad, GstQuery * query);
 
-static gboolean gst_amrnbparse_event (GstPad * pad, GstEvent * event);
+static gboolean gst_amrnbparse_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_amrnbparse_loop (GstPad * pad);
 static gboolean gst_amrnbparse_sink_activate (GstPad * sinkpad);
@@ -128,7 +128,7 @@ gst_amrnbparse_init (GstAmrnbParse * amrnbparse)
   gst_pad_set_chain_function (amrnbparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_amrnbparse_chain));
   gst_pad_set_event_function (amrnbparse->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_amrnbparse_event));
+      GST_DEBUG_FUNCPTR (gst_amrnbparse_sink_event));
   gst_pad_set_activate_function (amrnbparse->sinkpad,
       gst_amrnbparse_sink_activate);
   gst_element_add_pad (GST_ELEMENT (amrnbparse), amrnbparse->sinkpad);
@@ -244,22 +244,40 @@ gst_amrnbparse_query (GstPad * pad, GstQuery * query)
  * Data reading.
  */
 static gboolean
-gst_amrnbparse_event (GstPad * pad, GstEvent * event)
+gst_amrnbparse_sink_event (GstPad * pad, GstEvent * event)
 {
   GstAmrnbParse *amrnbparse;
   gboolean res;
 
-  amrnbparse = GST_AMRNBPARSE (GST_PAD_PARENT (pad));
+  amrnbparse = GST_AMRNBPARSE (gst_pad_get_parent (pad));
 
   GST_LOG ("handling event %d", GST_EVENT_TYPE (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      res = gst_pad_push_event (amrnbparse->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_adapter_clear (amrnbparse->adapter);
+      gst_segment_init (&amrnbparse->segment, GST_FORMAT_TIME);
+      res = gst_pad_push_event (amrnbparse->srcpad, event);
+      break;
     case GST_EVENT_EOS:
+      res = gst_pad_push_event (amrnbparse->srcpad, event);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      /* eat for now, we send a newsegment at start with infinite
+       * duration. */
+      gst_event_unref (event);
+      res = TRUE;
+      break;
+    }
     default:
+      res = gst_pad_push_event (amrnbparse->srcpad, event);
       break;
   }
-
-  res = gst_pad_event_default (amrnbparse->sinkpad, event);
+  gst_object_unref (amrnbparse);
 
   return res;
 }
@@ -273,8 +291,16 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
   gint block, mode;
   const guint8 *data;
   GstBuffer *out;
+  GstClockTime timestamp;
 
   amrnbparse = GST_AMRNBPARSE (GST_PAD_PARENT (pad));
+
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    GST_DEBUG_OBJECT (amrnbparse, "Lock on timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+    amrnbparse->ts = timestamp;
+  }
 
   gst_adapter_push (amrnbparse->adapter, buffer);
 
@@ -282,6 +308,7 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
 
   /* init */
   if (amrnbparse->need_header) {
+    GstEvent *segev;
 
     if (gst_adapter_available (amrnbparse->adapter) < 6)
       goto done;
@@ -293,6 +320,12 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
     gst_adapter_flush (amrnbparse->adapter, 6);
 
     amrnbparse->need_header = FALSE;
+
+    GST_DEBUG_OBJECT (amrnbparse, "Sending first segment");
+    segev = gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
+        GST_FORMAT_TIME, 0, -1, 0);
+
+    gst_pad_push_event (amrnbparse->srcpad, segev);
   }
 
   while (TRUE) {
@@ -312,14 +345,16 @@ gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer)
     data = gst_adapter_peek (amrnbparse->adapter, block);
     memcpy (GST_BUFFER_DATA (out), data, block);
 
-    /* output */
+    /* timestamp, all constants that won't overflow */
     GST_BUFFER_DURATION (out) = GST_SECOND * 160 / 8000;
     GST_BUFFER_TIMESTAMP (out) = amrnbparse->ts;
-    amrnbparse->ts += GST_BUFFER_DURATION (out);
+    if (GST_CLOCK_TIME_IS_VALID (amrnbparse->ts))
+      amrnbparse->ts += GST_BUFFER_DURATION (out);
+
     gst_buffer_set_caps (out,
         (GstCaps *) gst_pad_get_pad_template_caps (amrnbparse->srcpad));
 
-    GST_DEBUG ("Pushing %d bytes of data", block);
+    GST_DEBUG_OBJECT (amrnbparse, "Pushing %d bytes of data", block);
     res = gst_pad_push (amrnbparse->srcpad, out);
 
     gst_adapter_flush (amrnbparse->adapter, block);
@@ -456,6 +491,8 @@ gst_amrnbparse_sink_activate (GstPad * sinkpad)
 
   amrnbparse = GST_AMRNBPARSE (GST_OBJECT_PARENT (sinkpad));
 
+  /* FIXME, this will never activate the element in pull mode.
+   * see -base/ext/ogg/gstoggdemux.c for an example. */
   GST_OBJECT_LOCK (sinkpad);
   mode = GST_PAD_ACTIVATE_MODE (sinkpad);
   GST_OBJECT_UNLOCK (sinkpad);
@@ -467,8 +504,6 @@ gst_amrnbparse_sink_activate (GstPad * sinkpad)
       break;
     case GST_ACTIVATE_PULL:
       /*gst_pad_peer_set_active (sinkpad, mode); */
-
-      amrnbparse->need_header = TRUE;
       amrnbparse->seekable = TRUE;
       amrnbparse->ts = 0;
 
@@ -497,6 +532,9 @@ gst_amrnbparse_state_change (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      amrnbparse->need_header = TRUE;
+      amrnbparse->ts = -1;
+      gst_segment_init (&amrnbparse->segment, GST_FORMAT_TIME);
       break;
     default:
       break;

@@ -52,6 +52,9 @@ struct _GstAmrnbParse {
   gint64 offset;
 
   guint64 ts;
+
+  /* for seeking etc */
+  GstSegment segment;
 };
 
 struct _GstAmrnbParseClass {

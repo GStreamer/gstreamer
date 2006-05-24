@@ -41,7 +41,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static const gint block_size[16] = { 12, 13, 15, 17, 19, 20, 26, 31, 5,
-  -1, -1, -1, -1, -1, -1, 0
+  0, 0, 0, 0, 0, 0, 0
 };
 
 static void gst_amrnbdec_base_init (GstAmrnbDecClass * klass);
@@ -190,6 +190,10 @@ gst_amrnbdec_event (GstPad * pad, GstEvent * event)
       gst_adapter_clear (amrnbdec->adapter);
       ret = gst_pad_push_event (amrnbdec->srcpad, event);
       break;
+    case GST_EVENT_NEWSEGMENT:
+      /* FIXME, store, forward and use for clipping */
+      ret = gst_pad_push_event (amrnbdec->srcpad, event);
+      break;
     default:
       ret = gst_pad_push_event (amrnbdec->srcpad, event);
       break;
@@ -238,6 +242,8 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
     /* get size */
     mode = (data[0] >> 3) & 0x0F;
     block = block_size[mode] + 1;
+
+    GST_DEBUG_OBJECT (amrnbdec, "mode %d, block %d", mode, block);
 
     if (gst_adapter_available (amrnbdec->adapter) < block)
       break;

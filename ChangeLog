@@ -1,3 +1,15 @@
+2006-05-24  Wim Taymans  <wim@fluendo.com>
+
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_event), (gst_amrnbdec_chain):
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_init),
+	(gst_amrnbparse_sink_event), (gst_amrnbparse_chain),
+	(gst_amrnbparse_sink_activate), (gst_amrnbparse_state_change):
+	* ext/amrnb/amrnbparse.h:
+	Sortof first quick cleanup of all this mess... 
+	Don't crap out on empty and invalid FTs but treat them as
+	empty packets, the decoder handles them fine.
+	Fixes #342222.
+
 2006-05-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/gstasf.c: (plugin_init):
