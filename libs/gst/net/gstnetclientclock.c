@@ -450,12 +450,13 @@ gst_net_client_clock_start (GstNetClientClock * self)
   if (ret < 0)
     goto getsockname_error;
 
-  GST_DEBUG_OBJECT (self, "socket opened on UDP port %hd",
-      ntohs (servaddr.sin_port));
-
   memset (&servaddr, 0, sizeof (servaddr));
   servaddr.sin_family = AF_INET;        /* host byte order */
   servaddr.sin_port = htons (self->port);       /* short, network byte order */
+
+  GST_DEBUG_OBJECT (self, "socket opened on UDP port %hd",
+      ntohs (servaddr.sin_port));
+
   if (!inet_aton (self->address, &servaddr.sin_addr))
     goto bad_address;
 

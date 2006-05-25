@@ -1,3 +1,8 @@
+2006-05-25  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/net/gstnetclientclock.c: (gst_net_client_clock_start):
+	Initialize variable before using. Fixes #342820.
+
 2006-05-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gsttypefindhelper.c: (buf_helper_find_peek):
