@@ -495,6 +495,7 @@ static void
 remove_fakesink (GstDecodeBin * decode_bin)
 {
   if (decode_bin->fakesink) {
+    GST_DEBUG_OBJECT (decode_bin, "Removing fakesink and marking state dirty");
     gst_object_ref (decode_bin->fakesink);
     gst_bin_remove (GST_BIN (decode_bin), decode_bin->fakesink);
 
@@ -534,8 +535,13 @@ pad_probe (GstPad * pad, GstMiniObject * data, GstDecodeBin * decode_bin)
           decode_bin->numwaiting--;
         pdata->done = TRUE;
       }
-    } else if (!(pdata->done))
+    }
+
+    if (!(pdata->done)) {
+      GST_LOG_OBJECT (decode_bin, "Pad probe on pad %" GST_PTR_FORMAT
+          " but pad %" GST_PTR_FORMAT " still needs data.", pad, pdata->pad);
       alldone = FALSE;
+    }
   }
   if (alldone)
     remove_fakesink (decode_bin);
