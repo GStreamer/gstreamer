@@ -6,4 +6,4 @@ libdir=${exec_prefix}/lib
 Name: Gst#
 Description: Gst# - GStreamer .NET Binding
 Version: @VERSION@
-Libs: -r:${libdir}/mono/@PACKAGE_VERSION@/gst-sharp.dll
+Libs: -r:${libdir}/mono/@PACKAGE_VERSION@/gstreamer-sharp.dll

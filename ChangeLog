@@ -1,3 +1,7 @@
+2006-05-25  Aaron Bockover  <aaron@abock.org>
+
+	* gstreamer-sharp-0.10.pc.in: link against proper assembly
+
 2006-05-21  Aaron Bockover  <aaron@abock.org>
 
 	* gstreamer-sharp/plugins-base/DecodeBin.cs: Added a quick binding for
