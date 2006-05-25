@@ -1,5 +1,15 @@
 2006-05-25  Aaron Bockover  <aaron@abock.org>
 
+	* gstreamer-sharp/Gstreamer.metadata: Hide the Children property and
+	implement own version in Bin.custom to return an Element [] instead of
+	a GLib.List
+
+	* gstreamer-sharp/Bin.custom: Implement Bin.Children
+
+	* tests/BinTest.cs: wrote a test for Bin.Children
+
+2006-05-25  Aaron Bockover  <aaron@abock.org>
+
 	* gstreamer-sharp-0.10.pc.in: link against proper assembly
 
 2006-05-21  Aaron Bockover  <aaron@abock.org>

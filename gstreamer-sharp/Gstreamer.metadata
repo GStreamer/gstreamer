@@ -3,10 +3,10 @@
   <attr path="/api/namespace/object[@name='Bin']" name="disable_gtype_ctor">1</attr>
   <attr path="/api/namespace/object[@name='Pipeline']" name="disable_gtype_ctor">1</attr>
 
-  <!-- TODO: Why doesn't this work? -->
-  <attr path="/api/namespace/class[@name='Bin']/property[@name='Children']" name="hidden">1</attr>
-  <attr path="/api/namespace/object[@name='Bin']/property[@name='ChildrenCount']" name="name">ChildCount</attr> 
-  
+
+  <attr path="/api/namespace/object[@name='Bin']/field[@name='Children']" name="hidden">1</attr>
+ 
+
   <attr path="/api/namespace/object[@name='Element']/signal[@name='NoMorePads']" name="name">HasNoMorePads</attr>
   <!-- Hidden as the parameter name conflicts with generated code -->
   <attr path="/api/namespace/object[@name='Element']/method[@name='ContinueState']/parameters/*[@name='ret']" name="name">state_change_ret</attr>

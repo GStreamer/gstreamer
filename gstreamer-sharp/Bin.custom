@@ -1,13 +1,10 @@
 
-    /*[DllImport ("gstreamersharpglue-0.10")]
+    [DllImport ("gstreamersharpglue-0.10")]
     private extern static uint gstsharp_gst_bin_get_children_offset();
 
-    static uint children_offset = gstsharp_gst_bin_get_children_offset();*/
+    static uint children_offset = gstsharp_gst_bin_get_children_offset();
 
-    /* TODO: This needs to be called 'Children' and the default version
-       needs to be hidden (see Gstreamer.metadata) */
-
-    public Element [] List {
+    public Element [] Children {
         get {
             GLib.List list;
             
