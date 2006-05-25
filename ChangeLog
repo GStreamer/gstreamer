@@ -1,3 +1,13 @@
+2006-05-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind):
+	  Use gst_type_find_helper_for_buffer() to find the type
+	  of stream from the first packet.
+
+	* configure.ac:
+	  Bump requirements to core CVS (needed for vorbis
+	  typefinding to work).
+
 2006-05-24  Edward Hervey  <edward@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (qt_type_find): 

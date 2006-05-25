@@ -27,6 +27,9 @@
 #include <string.h>
 #include <gst/gst-i18n-plugin.h>
 
+#include <gst/base/gsttypefindhelper.h>
+
+
 static const GstElementDetails gst_ogg_demux_details =
 GST_ELEMENT_DETAILS ("Ogg demuxer",
     "Codec/Demuxer",
@@ -224,7 +227,6 @@ static const GstQueryType *gst_ogg_pad_query_types (GstPad * pad);
 static gboolean gst_ogg_pad_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_ogg_pad_event (GstPad * pad, GstEvent * event);
 static GstCaps *gst_ogg_pad_getcaps (GstPad * pad);
-static GstCaps *gst_ogg_type_find (ogg_packet * packet);
 static GstOggPad *gst_ogg_chain_get_stream (GstOggChain * chain,
     glong serialno);
 
@@ -783,6 +785,7 @@ internal_element_pad_added_cb (GstElement * element, GstPad * pad,
 static gboolean
 gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
 {
+  GstBuffer *buf;
   GstCaps *caps;
   GstElement *element = NULL;
 
@@ -793,7 +796,16 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
   if (GST_PAD_CAPS (pad) != NULL)
     return TRUE;
 
-  caps = gst_ogg_type_find (packet);
+  /* The ogg spec defines that the first packet of an ogg stream must identify
+   * the stream. Therefore ogg can use a simplified approach to typefinding
+   * and only needs to check the first packet */
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = packet->packet;
+  GST_BUFFER_SIZE (buf) = packet->bytes;
+  GST_BUFFER_OFFSET (buf) = 0;
+
+  caps = gst_type_find_helper_for_buffer (GST_OBJECT (pad), buf, NULL);
+  gst_buffer_unref (buf);
 
   if (caps == NULL) {
     GST_WARNING_OBJECT (ogg,
@@ -804,6 +816,8 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
      * meaning of granulepos etc so we make one. We also do this if
      * we are in the streaming mode to calculate the first timestamp. */
     GList *factories;
+
+    GST_LOG_OBJECT (ogg, "found caps: %" GST_PTR_FORMAT, caps);
 
     /* first filter out the interesting element factories */
     factories = gst_default_registry_feature_filter (
@@ -2896,80 +2910,6 @@ gst_annodex_granule_to_time (gint64 granulepos, gint64 granulerate_n,
       granulerate_d, granulerate_n);
   res = gst_util_uint64_scale (granulepos, granulerate, 1);
   return res;
-}
-
-/*** typefinding **************************************************************/
-/* ogg supports its own typefinding because the ogg spec defines that the first
- * packet of an ogg stream must identify the stream. Therefore ogg can use a
- * simplified approach at typefinding.
- */
-typedef struct
-{
-  ogg_packet *packet;
-  guint best_probability;
-  GstCaps *caps;
-}
-OggTypeFind;
-
-static guint8 *
-ogg_find_peek (gpointer data, gint64 offset, guint size)
-{
-  OggTypeFind *find = (OggTypeFind *) data;
-
-  /* We don't support negative offset (from stream end); nothing embedded in ogg
-   * ever needs them */
-  if (offset >= 0 && offset + size <= find->packet->bytes) {
-    return ((guint8 *) find->packet->packet) + offset;
-  } else {
-    return NULL;
-  }
-}
-static void
-ogg_find_suggest (gpointer data, guint probability, const GstCaps * caps)
-{
-  OggTypeFind *find = (OggTypeFind *) data;
-
-  if (probability > find->best_probability) {
-    GstCaps *copy = gst_caps_copy (caps);
-
-    gst_caps_replace (&find->caps, copy);
-    gst_caps_unref (copy);
-
-    find->best_probability = probability;
-  }
-}
-static GstCaps *
-gst_ogg_type_find (ogg_packet * packet)
-{
-  GstTypeFind gst_find;
-  OggTypeFind find;
-  GList *walk, *type_list = NULL;
-
-  walk = type_list = gst_type_find_factory_get_list ();
-
-  find.packet = packet;
-  find.best_probability = 0;
-  find.caps = NULL;
-  gst_find.data = &find;
-  gst_find.peek = ogg_find_peek;
-  gst_find.suggest = ogg_find_suggest;
-  gst_find.get_length = NULL;
-
-  while (walk) {
-    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
-
-    gst_type_find_factory_call_function (factory, &gst_find);
-    if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
-      break;
-    walk = g_list_next (walk);
-  }
-
-  gst_plugin_feature_list_free (type_list);
-
-  if (find.best_probability > 0)
-    return find.caps;
-
-  return NULL;
 }
 
 gboolean
