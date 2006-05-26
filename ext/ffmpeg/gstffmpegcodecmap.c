@@ -869,8 +869,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         (codec = avcodec_find_encoder (codec_id))) {
       gchar *mime = NULL;
 
-      GST_WARNING ("Could not create stream format caps for %s",
-		   codec->name);
+      GST_LOG ("Could not create stream format caps for %s",
+	       codec->name);
       
       switch (codec->type) {
         case CODEC_TYPE_VIDEO:
@@ -914,7 +914,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     GST_LOG ("caps for codec_id=%d: %" GST_PTR_FORMAT, codec_id, caps);
 
   } else {
-    GST_WARNING ("No caps found for codec_id=%d", codec_id);
+    GST_LOG ("No caps found for codec_id=%d", codec_id);
   }
 
   return caps;
@@ -1052,7 +1052,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
     GST_DEBUG ("caps for pix_fmt=%d: %s", pix_fmt, str);
     g_free (str);
   } else {
-    GST_WARNING ("No caps found for pix_fmt=%d", pix_fmt);
+    GST_LOG ("No caps found for pix_fmt=%d", pix_fmt);
   }
 
   return caps;
@@ -1098,7 +1098,7 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
     GST_LOG ("caps for sample_fmt=%d: %s", sample_fmt, str);
     g_free (str);
   } else {
-    GST_WARNING ("No caps found for sample_fmt=%d", sample_fmt);
+    GST_LOG ("No caps found for sample_fmt=%d", sample_fmt);
   }
 
   return caps;
@@ -1554,7 +1554,7 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
   } else {
     gchar *name;
 
-    GST_WARNING ("Could not create stream format caps for %s", format_name);
+    GST_LOG ("Could not create stream format caps for %s", format_name);
     name = g_strdup_printf ("application/x-gst_ff-%s", format_name);
     caps = gst_caps_new_simple (name, NULL);
     g_free (name);
@@ -1615,7 +1615,7 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
     *video_codec_list = flv_video_list;
     *audio_codec_list = flv_audio_list;
   } else {
-    GST_WARNING ("Format %s not found", format_name);
+    GST_LOG ("Format %s not found", format_name);
     return FALSE;
   }
 
@@ -2519,7 +2519,7 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       name = "3GPP AMR WideBand speech audio codec";
       break;
     default:
-      GST_WARNING ("Unknown codecID 0x%x", codec_id);
+      GST_LOG ("Unknown codecID 0x%x", codec_id);
       break;
   }
 

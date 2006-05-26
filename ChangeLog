@@ -1,3 +1,12 @@
+2006-05-26  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_smpfmt_to_caps),
+	(gst_ffmpeg_formatid_to_caps), (gst_ffmpeg_formatid_get_codecids),
+	(gst_ffmpeg_get_codecid_longname):
+	Change all GST_WARNING to GST_LOG. None of these warning are
+	really critical issues anyway.
+	
 2006-05-19  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
