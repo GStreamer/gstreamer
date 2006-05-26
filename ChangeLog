@@ -1,3 +1,13 @@
+2006-05-26  Wim Taymans  <wim@fluendo.com>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query),
+	(vorbis_dec_src_event), (vorbis_dec_sink_event), (vorbis_do_clip),
+	(vorbis_dec_push), (vorbis_handle_data_packet), (vorbis_dec_chain),
+	(vorbis_dec_change_state):
+	Small cleanups.
+	Add some FIXMEs
+	Clip output samples to segment boundaries.
+
 2006-05-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new),

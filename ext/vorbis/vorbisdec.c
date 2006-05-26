@@ -334,14 +334,19 @@ vorbis_dec_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_DURATION:
     {
-      /* query peer for total length */
-      if (!gst_pad_is_linked (dec->sinkpad)) {
+      GstPad *peer;
+
+      if (!(peer = gst_pad_get_peer (dec->sinkpad))) {
         GST_WARNING_OBJECT (dec, "sink pad %" GST_PTR_FORMAT " is not linked",
             dec->sinkpad);
         goto error;
       }
-      if (!(res = gst_pad_query (GST_PAD_PEER (dec->sinkpad), query)))
+
+      res = gst_pad_query (peer, query);
+      gst_object_unref (peer);
+      if (!res)
         goto error;
+
       break;
     }
     case GST_QUERY_CONVERT:
@@ -421,7 +426,8 @@ vorbis_dec_src_event (GstPad * pad, GstEvent * event)
   dec = GST_VORBIS_DEC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:{
+    case GST_EVENT_SEEK:
+    {
       GstFormat format, tformat;
       gdouble rate;
       GstEvent *real_seek;
@@ -511,6 +517,12 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
 
       if (rate <= 0.0)
         goto newseg_wrong_rate;
+
+      GST_DEBUG_OBJECT (dec,
+          "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
+          ", stop %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
+          update, rate, arate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
+          GST_TIME_ARGS (time));
 
       /* now configure the values */
       gst_segment_set_newsegment_full (&dec->segment, update,
@@ -752,6 +764,61 @@ copy_samples (float *out, float **in, guint samples, gint channels)
 #endif
 }
 
+/* clip output samples to the segment boundaries
+ */
+static gboolean
+vorbis_do_clip (GstVorbisDec * dec, GstBuffer * buf)
+{
+  gint64 start, stop, cstart, cstop, diff;
+  guint size;
+
+  start = GST_BUFFER_TIMESTAMP (buf);
+  stop = start + GST_BUFFER_DURATION (buf);
+
+  size = GST_BUFFER_SIZE (buf);
+
+  if (!gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
+          start, stop, &cstart, &cstop))
+    goto clipped;
+
+  /* see if some clipping happened */
+  diff = cstart - start;
+  if (diff > 0) {
+    GST_BUFFER_TIMESTAMP (buf) = cstart;
+    GST_BUFFER_DURATION (buf) -= diff;
+
+    /* bring clipped time to samples */
+    diff = gst_util_uint64_scale_int (diff, dec->vi.rate, GST_SECOND);
+    /* samples to bytes */
+    diff *= (sizeof (float) * dec->vi.channels);
+    GST_DEBUG_OBJECT (dec, "clipping start to %" GST_TIME_FORMAT " %"
+        G_GUINT64_FORMAT " bytes", GST_TIME_ARGS (cstart), diff);
+    GST_BUFFER_DATA (buf) += diff;
+    GST_BUFFER_SIZE (buf) -= diff;
+  }
+  diff = stop - cstop;
+  if (diff > 0) {
+    GST_BUFFER_DURATION (buf) -= diff;
+
+    /* bring clipped time to samples and then to bytes */
+    diff = gst_util_uint64_scale_int (diff, dec->vi.rate, GST_SECOND);
+    diff *= (sizeof (float) * dec->vi.channels);
+    GST_DEBUG_OBJECT (dec, "clipping stop to %" GST_TIME_FORMAT " %"
+        G_GUINT64_FORMAT " bytes", GST_TIME_ARGS (cstop), diff);
+    GST_BUFFER_SIZE (buf) -= diff;
+  }
+
+  return FALSE;
+
+  /* dropped buffer */
+clipped:
+  {
+    GST_DEBUG_OBJECT (dec, "clipped buffer");
+    gst_buffer_unref (buf);
+    return TRUE;
+  }
+}
+
 static GstFlowReturn
 vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
 {
@@ -787,6 +854,11 @@ vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
       for (walk = dec->queued; walk; walk = g_list_next (walk)) {
         GstBuffer *buffer = GST_BUFFER (walk->data);
 
+        /* clips or returns FALSE with buffer unreffed when completely
+         * clipped */
+        if (vorbis_do_clip (dec, buffer))
+          continue;
+
         if (dec->discont) {
           GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
           dec->discont = FALSE;
@@ -797,6 +869,11 @@ vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
       g_list_free (dec->queued);
       dec->queued = NULL;
     }
+
+    /* clip */
+    if (vorbis_do_clip (dec, buf))
+      return GST_FLOW_OK;
+
     if (dec->discont) {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       dec->discont = FALSE;
@@ -819,7 +896,20 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   if (!vd->initialized)
     goto not_initialized;
 
+  /* FIXME, we should queue undecoded packets here until we get
+   * a timestamp, then we reverse timestamp the queued packets and
+   * clip them, then we decode only the ones we want and don't
+   * keep decoded data in memory.
+   * Ideally, of course, the demuxer gives us a valid timestamp on
+   * the first packet.
+   */
+
   /* normal data packet */
+  /* FIXME, we can skip decoding if the packet is outside of the
+   * segment, this is however not very trivial as we need a previous
+   * packet to decode the current one so we must be carefull not to
+   * throw away too much. For now we decode everything and clip right
+   * before pushing data. */
   if (G_UNLIKELY (vorbis_synthesis (&vd->vb, packet)))
     goto could_not_read;
 
@@ -923,6 +1013,8 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
   GstVorbisDec *vd;
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
+  GstClockTime timestamp;
+  guint64 offset_end;
 
   vd = GST_VORBIS_DEC (gst_pad_get_parent (pad));
 
@@ -938,14 +1030,16 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
     vd->discont = TRUE;
   }
 
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  offset_end = GST_BUFFER_OFFSET_END (buffer);
+
   /* only ogg has granulepos, demuxers of other container formats 
    * might provide us with timestamps instead (e.g. matroskademux) */
-  if (GST_BUFFER_OFFSET_END (buffer) == GST_BUFFER_OFFSET_NONE &&
-      GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE) {
+  if (offset_end == GST_BUFFER_OFFSET_NONE && timestamp != GST_CLOCK_TIME_NONE) {
     /* we might get multiple consecutive buffers with the same timestamp */
-    if (GST_BUFFER_TIMESTAMP (buffer) != vd->prev_timestamp) {
-      vd->cur_timestamp = GST_BUFFER_TIMESTAMP (buffer);
-      vd->prev_timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    if (timestamp != vd->prev_timestamp) {
+      vd->cur_timestamp = timestamp;
+      vd->prev_timestamp = timestamp;
     }
   } else {
     vd->cur_timestamp = GST_CLOCK_TIME_NONE;
@@ -955,7 +1049,7 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
   /* make ogg_packet out of the buffer */
   packet.packet = GST_BUFFER_DATA (buffer);
   packet.bytes = GST_BUFFER_SIZE (buffer);
-  packet.granulepos = GST_BUFFER_OFFSET_END (buffer);
+  packet.granulepos = offset_end;
   packet.packetno = 0;          /* we don't care */
   /*
    * FIXME. Is there anyway to know that this is the last packet and
@@ -982,8 +1076,7 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
     result = vorbis_handle_data_packet (vd, &packet);
   }
 
-  GST_DEBUG_OBJECT (vd, "offset end: %" G_GINT64_FORMAT,
-      (gint64) GST_BUFFER_OFFSET_END (buffer));
+  GST_DEBUG_OBJECT (vd, "offset end: %" G_GUINT64_FORMAT, offset_end);
 
 done:
   gst_buffer_unref (buffer);
@@ -1006,7 +1099,6 @@ vorbis_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstVorbisDec *vd = GST_VORBIS_DEC (element);
   GstStateChangeReturn res;
-
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
