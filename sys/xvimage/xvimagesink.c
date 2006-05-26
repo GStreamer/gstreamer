@@ -488,9 +488,12 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
       xvimage->height);
 
   xvimage->im_format = gst_xvimagesink_get_format_from_caps (xvimagesink, caps);
-  if (!xvimage->im_format) {
+  if (xvimage->im_format == -1) {
     GST_WARNING_OBJECT (xvimagesink, "failed to get format from caps %"
         GST_PTR_FORMAT, caps);
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
+        ("Failed to create output image buffer of %dx%d pixels",
+            xvimage->width, xvimage->height), ("Invalid input caps"));
     goto beach_unlocked;
   }
   xvimage->xvimagesink = gst_object_ref (xvimagesink);
@@ -504,8 +507,11 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
         xvimage->im_format, NULL,
         xvimage->width, xvimage->height, &xvimage->SHMInfo);
     if (!xvimage->xvimage) {
-      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
-          ("could not XvShmCreateImage a %dx%d image"));
+      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
+          ("Failed to create output image buffer of %dx%d pixels",
+              xvimage->width, xvimage->height),
+          ("could not XvShmCreateImage a %dx%d image",
+              xvimage->width, xvimage->height));
       goto beach;
     }
 
@@ -516,14 +522,18 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
         IPC_CREAT | 0777);
     if (xvimage->SHMInfo.shmid == -1) {
-      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
+      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
+          ("Failed to create output image buffer of %dx%d pixels",
+              xvimage->width, xvimage->height),
           ("could not get shared memory of %d bytes", xvimage->size));
       goto beach;
     }
 
     xvimage->SHMInfo.shmaddr = shmat (xvimage->SHMInfo.shmid, 0, 0);
     if (xvimage->SHMInfo.shmaddr == ((void *) -1)) {
-      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
+      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
+          ("Failed to create output image buffer of %dx%d pixels",
+              xvimage->width, xvimage->height),
           ("Failed to shmat: %s", g_strerror (errno)));
       /* Clean up the shared memory segment */
       shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
@@ -539,8 +549,9 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     xvimage->SHMInfo.readOnly = FALSE;
 
     if (XShmAttach (xvimagesink->xcontext->disp, &xvimage->SHMInfo) == 0) {
-      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
-          ("Failed to XShmAttach"));
+      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
+          ("Failed to create output image buffer of %dx%d pixels",
+              xvimage->width, xvimage->height), ("Failed to XShmAttach"));
       goto beach;
     }
 
@@ -552,8 +563,11 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
         xvimagesink->xcontext->xv_port_id,
         xvimage->im_format, NULL, xvimage->width, xvimage->height);
     if (!xvimage->xvimage) {
-      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
-          ("could not XvCreateImage a %dx%d image"));
+      GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
+          ("Failed to create outputimage buffer of %dx%d pixels",
+              xvimage->width, xvimage->height),
+          ("could not XvCreateImage a %dx%d image",
+              xvimage->width, xvimage->height));
       goto beach;
     }
 
@@ -1055,13 +1069,18 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
   XvAdaptorInfo *adaptors;
   gint nb_formats;
   XvImageFormatValues *formats = NULL;
+  guint nb_encodings;
+  XvEncodingInfo *encodings = NULL;
+  gulong max_w = G_MAXINT, max_h = G_MAXINT;
   GstCaps *caps = NULL;
+  GstCaps *rgb_caps = NULL;
 
   g_return_val_if_fail (xcontext != NULL, NULL);
 
   /* First let's check that XVideo extension is available */
   if (!XQueryExtension (xcontext->disp, "XVideo", &i, &i, &i)) {
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS, (NULL),
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
+        ("Could not initialise Xv output"),
         ("XVideo extension is not available"));
     return NULL;
   }
@@ -1069,7 +1088,8 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
   /* Then we get adaptors list */
   if (Success != XvQueryAdaptors (xcontext->disp, xcontext->root,
           &nb_adaptors, &adaptors)) {
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS, (NULL),
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
+        ("Could not initialise Xv output"),
         ("Failed getting XV adaptors list"));
     return NULL;
   }
@@ -1099,8 +1119,8 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
   XvFreeAdaptorInfo (adaptors);
 
   if (!xcontext->xv_port_id) {
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, BUSY, (NULL),
-        ("No port available"));
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, BUSY,
+        ("Could not initialise Xv output"), ("No port available"));
     return NULL;
   }
 
@@ -1143,12 +1163,32 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
     XFree (attr);
   }
 
+  /* Get the list of encodings supported by the adapter and look for the
+   * XV_IMAGE encoding so we can determine the maximum width and height
+   * supported */
+  XvQueryEncodings (xcontext->disp, xcontext->xv_port_id, &nb_encodings,
+      &encodings);
+
+  for (i = 0; i < nb_encodings; i++) {
+    GST_LOG_OBJECT (xvimagesink,
+        "Encoding %d, name %s, max wxh %lux%lu rate %d/%d",
+        i, encodings[i].name, encodings[i].width, encodings[i].height,
+        encodings[i].rate.numerator, encodings[i].rate.denominator);
+    if (strcmp (encodings[i].name, "XV_IMAGE") == 0) {
+      max_w = encodings[i].width;
+      max_h = encodings[i].height;
+    }
+  }
+
+  XvFreeEncodingInfo (encodings);
+
   /* We get all image formats supported by our port */
   formats = XvListImageFormats (xcontext->disp,
       xcontext->xv_port_id, &nb_formats);
   caps = gst_caps_new_empty ();
   for (i = 0; i < nb_formats; i++) {
     GstCaps *format_caps = NULL;
+    gboolean is_rgb_format = FALSE;
 
     /* We set the image format of the xcontext to an existing one. Sink
        connect method will override that but we need to have at least a
@@ -1159,23 +1199,44 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
     switch (formats[i].type) {
       case XvRGB:
       {
+        XvImageFormatValues *fmt = &(formats[i]);
+        gint endianness = G_BIG_ENDIAN;
+
+        if (fmt->byte_order == LSBFirst) {
+          /* our caps system handles 24/32bpp RGB as big-endian. */
+          if (fmt->bits_per_pixel == 24 || fmt->bits_per_pixel == 32) {
+            fmt->red_mask = GUINT32_TO_BE (fmt->red_mask);
+            fmt->green_mask = GUINT32_TO_BE (fmt->green_mask);
+            fmt->blue_mask = GUINT32_TO_BE (fmt->blue_mask);
+
+            if (fmt->bits_per_pixel == 24) {
+              fmt->red_mask >>= 8;
+              fmt->green_mask >>= 8;
+              fmt->blue_mask >>= 8;
+            }
+          } else
+            endianness = G_LITTLE_ENDIAN;
+        }
+
         format_caps = gst_caps_new_simple ("video/x-raw-rgb",
-            "endianness", G_TYPE_INT, xcontext->endianness,
-            "depth", G_TYPE_INT, xcontext->depth,
-            "bpp", G_TYPE_INT, xcontext->bpp,
-            "blue_mask", G_TYPE_INT, formats[i].red_mask,
-            "green_mask", G_TYPE_INT, formats[i].green_mask,
-            "red_mask", G_TYPE_INT, formats[i].blue_mask,
-            "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "endianness", G_TYPE_INT, endianness,
+            "depth", G_TYPE_INT, fmt->depth,
+            "bpp", G_TYPE_INT, fmt->bits_per_pixel,
+            "blue_mask", G_TYPE_INT, fmt->red_mask,
+            "green_mask", G_TYPE_INT, fmt->green_mask,
+            "red_mask", G_TYPE_INT, fmt->blue_mask,
+            "width", GST_TYPE_INT_RANGE, 1, max_w,
+            "height", GST_TYPE_INT_RANGE, 1, max_h,
             "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+        is_rgb_format = TRUE;
         break;
       }
       case XvYUV:
         format_caps = gst_caps_new_simple ("video/x-raw-yuv",
             "format", GST_TYPE_FOURCC, formats[i].id,
-            "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "width", GST_TYPE_INT_RANGE, 1, max_w,
+            "height", GST_TYPE_INT_RANGE, 1, max_h,
             "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
         break;
       default:
@@ -1192,10 +1253,21 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
         format->caps = gst_caps_copy (format_caps);
         xcontext->formats_list = g_list_append (xcontext->formats_list, format);
       }
-    }
 
-    gst_caps_append (caps, format_caps);
+      if (is_rgb_format) {
+        if (rgb_caps == NULL)
+          rgb_caps = format_caps;
+        else
+          gst_caps_append (rgb_caps, format_caps);
+      } else
+        gst_caps_append (caps, format_caps);
+    }
   }
+
+  /* Collected all caps into either the caps or rgb_caps structures.
+   * Append rgb_caps on the end of YUV, so that YUV is always preferred */
+  if (rgb_caps)
+    gst_caps_append (caps, rgb_caps);
 
   if (formats)
     XFree (formats);
@@ -1312,8 +1384,8 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   if (!xcontext->disp) {
     g_mutex_unlock (xvimagesink->x_lock);
     g_free (xcontext);
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE, (NULL),
-        ("Could not open display"));
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
+        ("Could not initialise Xv output"), ("Could not open display"));
     return NULL;
   }
 
@@ -1342,8 +1414,8 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
     XCloseDisplay (xcontext->disp);
     g_mutex_unlock (xvimagesink->x_lock);
     g_free (xcontext);
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS, (NULL),
-        ("Could not get pixel formats"));
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
+        ("Could not initialise Xv output"), ("Could not get pixel formats"));
     return NULL;
   }
 
@@ -1561,7 +1633,7 @@ gst_xvimagesink_get_format_from_caps (GstXvImageSink * xvimagesink,
     list = g_list_next (list);
   }
 
-  return 0;
+  return -1;
 }
 
 static GstCaps *
@@ -1615,8 +1687,11 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   fps = gst_structure_get_value (structure, "framerate");
   ret &= (fps != NULL);
 
-  if (!ret)
+  if (!ret) {
+    GST_DEBUG_OBJECT (xvimagesink, "Failed to retrieve either width, "
+        "height or framerate from intersected caps");
     return FALSE;
+  }
 
   xvimagesink->fps_n = gst_value_get_fraction_numerator (fps);
   xvimagesink->fps_d = gst_value_get_fraction_denominator (fps);
@@ -1624,7 +1699,9 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   xvimagesink->video_width = video_width;
   xvimagesink->video_height = video_height;
   im_format = gst_xvimagesink_get_format_from_caps (xvimagesink, caps);
-  if (im_format == 0) {
+  if (im_format == -1) {
+    GST_DEBUG_OBJECT (xvimagesink,
+        "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 
@@ -1847,9 +1924,20 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
       xvimagesink->xvimage = gst_xvimagesink_xvimage_new (xvimagesink,
           GST_BUFFER_CAPS (buf));
 
-      if ((!xvimagesink->xvimage) ||
-          (xvimagesink->xvimage->size < GST_BUFFER_SIZE (buf)))
+      if (!xvimagesink->xvimage)
+        /* The create method should have posted an informative error */
         goto no_image;
+
+      if (xvimagesink->xvimage->size < GST_BUFFER_SIZE (buf)) {
+        GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
+            ("Failed to create output image buffer of %dx%d pixels",
+                xvimagesink->xvimage->width, xvimagesink->xvimage->height),
+            ("XServer allocated buffer size did not match input buffer"));
+
+        gst_xvimage_buffer_destroy (xvimagesink->xvimage);
+        xvimagesink->xvimage = NULL;
+        goto no_image;
+      }
     }
 
     memcpy (xvimagesink->xvimage->xvimage->data,
@@ -1866,8 +1954,6 @@ no_image:
   {
     /* No image available. That's very bad ! */
     GST_WARNING_OBJECT (xvimagesink, "could not create image");
-    GST_ELEMENT_ERROR (xvimagesink, CORE, NEGOTIATION, (NULL),
-        ("Failed creating an XvImage in xvimagesink chain function."));
     return GST_FLOW_ERROR;
   }
 }
@@ -1903,6 +1989,10 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   /* Check the caps against our xcontext */
   intersection = gst_caps_intersect (xvimagesink->xcontext->caps, caps);
+
+  /* Ensure the returned caps are fixed */
+  gst_caps_truncate (intersection);
+
   GST_DEBUG_OBJECT (xvimagesink, "intersection in buffer alloc returned %"
       GST_PTR_FORMAT, intersection);
 
@@ -1972,7 +2062,8 @@ reuse_last_caps:
   /* Get geometry from caps */
   structure = gst_caps_get_structure (intersection, 0);
   if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height) || !image_format) {
+      !gst_structure_get_int (structure, "height", &height) ||
+      image_format == -1) {
     GST_WARNING_OBJECT (xvimagesink, "invalid caps for buffer allocation %"
         GST_PTR_FORMAT, intersection);
     ret = GST_FLOW_UNEXPECTED;

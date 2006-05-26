@@ -1,3 +1,25 @@
+2006-05-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_get_xv_support), (gst_xvimagesink_xcontext_get),
+	(gst_xvimagesink_get_format_from_caps), (gst_xvimagesink_setcaps),
+	(gst_xvimagesink_show_frame), (gst_xvimagesink_buffer_alloc):
+	Improve the errors produced on bad output, including some human 
+	readable description strings.
+	Handle RGB Xv formats properly by transforming them into our 
+	big-endian caps description.
+	Use gst_caps_truncate to ensure that we never try and choose a
+	non-fixed caps in buffer_alloc.
+	Handle the case where the XServer has a different idea about the size
+	required for a particular frame and gives us too small a memory
+	allocation.
+	Use -1 to indicate 'no image format', because 0 is a valid XServer
+	image format number.
+	Put RGB Xv formats at the end of the caps, so that we always prefer
+	YUV format frames.
+	Iterate the available Xv Encodings to determine the maximum width and
+	height, and then return that in our caps.
+
 2006-05-25  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gstdecodebin.c: (remove_fakesink), (pad_probe):
