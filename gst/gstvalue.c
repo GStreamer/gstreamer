@@ -3389,11 +3389,17 @@ gst_value_deserialize_fraction (GValue * dest, const gchar * s)
 {
   gint num, den;
 
-  if (s && sscanf (s, "%d/%d", &num, &den) == 2) {
+  if (G_UNLIKELY (s == NULL))
+    return FALSE;
+
+  if (G_UNLIKELY (dest == NULL || !GST_VALUE_HOLDS_FRACTION (dest)))
+    return FALSE;
+
+  if (sscanf (s, "%d/%d", &num, &den) == 2) {
     gst_value_set_fraction (dest, num, den);
     return TRUE;
   }
-  if (s && sscanf (s, "%d", &num) == 1) {
+  if (sscanf (s, "%d", &num) == 1) {
     gst_value_set_fraction (dest, num, 1);
     return TRUE;
   }

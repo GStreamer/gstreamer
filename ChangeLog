@@ -1,3 +1,9 @@
+2006-05-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstvalue.c: (gst_value_deserialize_fraction):
+	Handle NULL input and output pointers silently as a failed conversion,
+	rather than g_warnings.
+
 2006-05-25  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/net/gstnetclientclock.c: (gst_net_client_clock_start):
