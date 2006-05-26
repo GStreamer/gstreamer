@@ -1,3 +1,9 @@
+2006-05-26  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment): 
+	Clip the outputed NEWSEGMENT stop time to the configured segment stop
+	time.
+
 2006-05-26  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_do_seek):
