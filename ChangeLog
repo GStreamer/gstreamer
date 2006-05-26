@@ -1,3 +1,8 @@
+2006-05-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_do_seek):
+	Don't clear the running variable in the seek code.
+
 2006-05-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_esds):

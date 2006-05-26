@@ -777,7 +777,6 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
     gst_qtdemux_push_event (qtdemux, gst_event_new_flush_start ());
   } else {
     /* non flushing seek, pause the task */
-    qtdemux->segment_running = FALSE;
     gst_pad_pause_task (qtdemux->sinkpad);
   }
 
