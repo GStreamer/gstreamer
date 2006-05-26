@@ -418,8 +418,11 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
         ximagesink->xcontext->depth,
         ZPixmap, NULL, &ximage->SHMInfo, ximage->width, ximage->height);
     if (!ximage->ximage) {
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE, (NULL),
-          ("could not XShmCreateImage a %dx%d image"));
+      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
+          ("Failed to create output image buffer of %dx%d pixels",
+              ximage->width, ximage->height),
+          ("could not XShmCreateImage a %dx%d image",
+              ximage->width, ximage->height));
       goto beach;
     }
 
@@ -431,14 +434,18 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
     ximage->SHMInfo.shmid = shmget (IPC_PRIVATE, ximage->size,
         IPC_CREAT | 0777);
     if (ximage->SHMInfo.shmid == -1) {
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE, (NULL),
+      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
+          ("Failed to create output image buffer of %dx%d pixels",
+              ximage->width, ximage->height),
           ("could not get shared memory of %d bytes", ximage->size));
       goto beach;
     }
 
     ximage->SHMInfo.shmaddr = shmat (ximage->SHMInfo.shmid, 0, 0);
     if (ximage->SHMInfo.shmaddr == ((void *) -1)) {
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE, (NULL),
+      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
+          ("Failed to create output image buffer of %dx%d pixels",
+              ximage->width, ximage->height),
           ("Failed to shmat: %s", g_strerror (errno)));
       /* Clean up the shared memory segment */
       shmctl (ximage->SHMInfo.shmid, IPC_RMID, 0);
@@ -454,8 +461,9 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
     ximage->SHMInfo.readOnly = FALSE;
 
     if (XShmAttach (ximagesink->xcontext->disp, &ximage->SHMInfo) == 0) {
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE, (NULL),
-          ("Failed to XShmAttach"));
+      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
+          ("Failed to create output image buffer of %dx%d pixels",
+              ximage->width, ximage->height), ("Failed to XShmAttach"));
       goto beach;
     }
 
@@ -469,8 +477,11 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
         ZPixmap, 0, NULL,
         ximage->width, ximage->height, ximagesink->xcontext->bpp, 0);
     if (!ximage->ximage) {
-      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE, (NULL),
-          ("could not XCreateImage a %dx%d image"));
+      GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
+          ("Failed to create output image buffer of %dx%d pixels",
+              ximage->width, ximage->height),
+          ("could not XCreateImage a %dx%d image",
+              ximage->width, ximage->height));
       goto beach;
     }
 
@@ -1022,8 +1033,8 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
   if (!xcontext->disp) {
     g_mutex_unlock (ximagesink->x_lock);
     g_free (xcontext);
-    GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE, (NULL),
-        ("Could not open display"));
+    GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
+        ("Could not initialise X output"), ("Could not open display"));
     return NULL;
   }
 
@@ -1423,7 +1434,19 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
       ximagesink->ximage = gst_ximagesink_ximage_new (ximagesink,
           GST_BUFFER_CAPS (buf));
       if (!ximagesink->ximage)
+        /* The create method should have posted an informative error */
         goto no_ximage;
+
+      if (ximagesink->ximage->size < GST_BUFFER_SIZE (buf)) {
+        GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
+            ("Failed to create output image buffer of %dx%d pixels",
+                ximagesink->ximage->width, ximagesink->ximage->height),
+            ("XServer allocated buffer size did not match input buffer"));
+
+        gst_ximagesink_ximage_destroy (ximagesink, ximagesink->ximage);
+        ximagesink->ximage = NULL;
+        goto no_ximage;
+      }
     }
     memcpy (GST_BUFFER_DATA (ximagesink->ximage), GST_BUFFER_DATA (buf),
         MIN (GST_BUFFER_SIZE (buf), ximagesink->ximage->size));
@@ -1437,8 +1460,6 @@ no_ximage:
   {
     /* No image available. That's very bad ! */
     GST_DEBUG ("could not create image");
-    GST_ELEMENT_ERROR (ximagesink, CORE, NEGOTIATION, (NULL),
-        ("Failed creating an XImage in ximagesink chain function."));
     return GST_FLOW_ERROR;
   }
 }
