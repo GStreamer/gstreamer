@@ -1,3 +1,9 @@
+2006-05-26  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* tools/gst-inspect.c:
+	Add missing include, removes warning of ngettext not being defined on
+	some arches.
+
 2006-05-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstvalue.c: (gst_value_deserialize_fraction):
