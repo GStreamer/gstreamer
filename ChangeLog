@@ -1,3 +1,14 @@
+2006-05-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/spectrum/Makefile.am:
+	* gst/spectrum/demo-audiotest.c: (on_frequency_changed),
+	(spectrum_chain), (main):
+	* gst/spectrum/demo-osssrc.c:
+	added another example
+	
+	* sys/v4l2/gstv4l2src.c:
+	fix typo
+
 2006-05-26  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment): 

@@ -7,7 +7,7 @@
 #define DEFAULT_AUDIOSRC "alsasrc"
 #define SPECT_BANDS 256
 
-GtkWidget *drawingarea;
+static GtkWidget *drawingarea = NULL;
 
 static void
 spectrum_chain (GstElement * sink, GstBuffer * buf, GstPad * pad,

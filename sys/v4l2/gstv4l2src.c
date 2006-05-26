@@ -37,7 +37,7 @@
  * <programlisting>
  * gst-launch v4l2src use-fixed-fps=true ! xvimagesink
  * </programlisting>
- * This exemplo should be used to capture from web-cams
+ * This exemple should be used to capture from web-cams
  * </para>
  * </refsect2>
  */
