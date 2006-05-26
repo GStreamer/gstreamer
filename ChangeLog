@@ -1,3 +1,15 @@
+2006-05-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* plugins/elements/gstelements.c:
+	* plugins/elements/gstfilesrc.c: (gst_file_src_class_init),
+	(gst_file_src_init), (gst_file_src_set_property),
+	(gst_file_src_get_property), (gst_file_src_start):
+	* plugins/elements/gstfilesrc.h:
+
+	Add a use-mmap property to enable easier testing of all code paths.
+	Bump rank to PRIMARY, so filesrc is the preferred file reader and used
+	in the absence of gnomevfssrc. (Closes #340501)
+
 2006-05-26  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* tools/gst-inspect.c:

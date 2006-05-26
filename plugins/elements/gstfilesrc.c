@@ -132,6 +132,7 @@ enum
 #define DEFAULT_BLOCKSIZE       4*1024
 #define DEFAULT_MMAPSIZE        4*1024*1024
 #define DEFAULT_TOUCH           FALSE
+#define DEFAULT_USEMMAP         TRUE
 
 enum
 {
@@ -139,7 +140,8 @@ enum
   ARG_LOCATION,
   ARG_FD,
   ARG_MMAPSIZE,
-  ARG_TOUCH
+  ARG_TOUCH,
+  ARG_USEMMAP
 };
 
 static void gst_file_src_finalize (GObject * object);
@@ -214,8 +216,13 @@ gst_file_src_class_init (GstFileSrcClass * klass)
           "Size in bytes of mmap()d regions", 0, G_MAXULONG, DEFAULT_MMAPSIZE,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_TOUCH,
-      g_param_spec_boolean ("touch", "Touch read data",
-          "Touch data to force disk read", DEFAULT_TOUCH, G_PARAM_READWRITE));
+      g_param_spec_boolean ("touch", "Touch mapped region read data",
+          "Touch mmapped data regions to force them to be read from disk",
+          DEFAULT_TOUCH, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_USEMMAP,
+      g_param_spec_boolean ("use-mmap", "Use mmap to read data",
+          "Whether to use mmap. FALSE to force normal read() calls",
+          DEFAULT_USEMMAP, G_PARAM_READWRITE));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_file_src_finalize);
 
@@ -245,6 +252,7 @@ gst_file_src_init (GstFileSrc * src, GstFileSrcClass * g_class)
 
   src->mapbuf = NULL;
   src->mapsize = DEFAULT_MMAPSIZE;      /* default is 4MB */
+  src->use_mmap = DEFAULT_USEMMAP;
 
   src->is_regular = FALSE;
 }
@@ -329,6 +337,10 @@ gst_file_src_set_property (GObject * object, guint prop_id,
       src->touch = g_value_get_boolean (value);
       g_object_notify (G_OBJECT (src), "touch");
       break;
+    case ARG_USEMMAP:
+      src->use_mmap = g_value_get_boolean (value);
+      g_object_notify (G_OBJECT (src), "use-mmap");
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -357,6 +369,9 @@ gst_file_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_TOUCH:
       g_value_set_boolean (value, src->touch);
+      break;
+    case ARG_USEMMAP:
+      g_value_set_boolean (value, src->use_mmap);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -876,14 +891,17 @@ gst_file_src_start (GstBaseSrc * basesrc)
     src->is_regular = TRUE;
 
 #ifdef HAVE_MMAP
-  /* FIXME: maybe we should only try to mmap if it's a regular file */
-  /* allocate the first mmap'd region if it's a regular file ? */
-  src->mapbuf = gst_file_src_map_region (src, 0, src->mapsize, TRUE);
-  if (src->mapbuf != NULL) {
-    GST_DEBUG_OBJECT (src, "using mmap for file");
-    src->using_mmap = TRUE;
-    src->seekable = TRUE;
-  } else
+  if (src->use_mmap) {
+    /* FIXME: maybe we should only try to mmap if it's a regular file */
+    /* allocate the first mmap'd region if it's a regular file ? */
+    src->mapbuf = gst_file_src_map_region (src, 0, src->mapsize, TRUE);
+    if (src->mapbuf != NULL) {
+      GST_DEBUG_OBJECT (src, "using mmap for file");
+      src->using_mmap = TRUE;
+      src->seekable = TRUE;
+    }
+  }
+  if (src->mapbuf == NULL)
 #endif
   {
     /* If not in mmap mode, we need to check if the underlying file is

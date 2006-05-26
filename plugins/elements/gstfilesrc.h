@@ -68,6 +68,7 @@ struct _GstFileSrc {
                                            regular file */
   GstBuffer *mapbuf;
   size_t mapsize;
+  gboolean use_mmap;
 };
 
 struct _GstFileSrcClass {
