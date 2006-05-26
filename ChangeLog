@@ -19,6 +19,7 @@
 	YUV format frames.
 	Iterate the available Xv Encodings to determine the maximum width and
 	height, and then return that in our caps.
+	(Closes #315312, #337544)
 
 2006-05-25  Jan Schmidt  <thaytan@mad.scientist.com>
 
