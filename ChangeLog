@@ -1,5 +1,10 @@
 2006-05-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/flac/gstflac.c:
+	  Don't #include file we don't dist any longer.
+
+2006-05-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* README:
 	  Replace current README (containing the release notes from
 	  some 0.9.x version) with a proper README taken from the core.

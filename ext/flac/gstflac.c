@@ -23,7 +23,7 @@
 
 #include "gstflacenc.h"
 #include "gstflacdec.h"
-#include "gstflactag.h"
+/* #include "gstflactag.h" */
 
 #include <gst/tag/tag.h>
 
