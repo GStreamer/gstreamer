@@ -1,3 +1,9 @@
+2006-05-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* README:
+	  Replace current README (containing the release notes from
+	  some 0.9.x version) with a proper README taken from the core.
+
 2006-05-24  Wim Taymans  <wim@fluendo.com>
 
 	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_event), (gst_amrnbdec_chain):
