@@ -1,3 +1,9 @@
+2006-05-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* README:
+	  Replace current README (containing the release notes from
+	  some 0.9.x version) with a proper README taken from the core.
+
 2006-05-26  Wim Taymans  <wim@fluendo.com>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query),
