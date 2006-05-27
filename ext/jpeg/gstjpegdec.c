@@ -79,6 +79,7 @@ static void gst_jpeg_dec_init (GstJpegDec * jpegdec);
 
 static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_jpeg_dec_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -238,6 +239,8 @@ gst_jpeg_dec_init (GstJpegDec * dec)
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_setcaps));
   gst_pad_set_chain_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_chain));
+  gst_pad_set_event_function (dec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_jpeg_dec_sink_event));
 
   dec->srcpad =
       gst_pad_new_from_static_template (&gst_jpeg_dec_src_pad_template, "src");
@@ -968,6 +971,28 @@ alloc_failed:
     }
     return ret;
   }
+}
+
+static gboolean
+gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
+{
+  gboolean ret = TRUE;
+  GstJpegDec *dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
+
+  GST_DEBUG_OBJECT (dec, "event : %s", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      GST_DEBUG_OBJECT (dec, "Aborting decompress");
+      jpeg_abort_decompress (&dec->cinfo);
+      break;
+    default:
+      break;
+  }
+
+  ret = gst_pad_push_event (dec->srcpad, event);
+
+  return ret;
 }
 
 static GstStateChangeReturn

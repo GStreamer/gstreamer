@@ -1,3 +1,10 @@
+2006-05-27  Edward Hervey  <edward@fluendo.com>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_init),
+	(gst_jpeg_dec_sink_event):
+	Abort decompression when receiving FLUSH_STOP. This should avoid
+	issues when interrupting decoding with flushes.
+
 2006-05-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/gstflac.c:
