@@ -1,5 +1,13 @@
 2006-05-27  Edward Hervey  <edward@fluendo.com>
 
+	* tests/check/Makefile.am:
+	Extra bonus points for whoever explains to ensonic that you are meant
+	to test unit tests thoroughly before commiting them, especially if
+	you know it's going to break.
+	De-activated element/adder tests.
+
+2006-05-27  Edward Hervey  <edward@fluendo.com>
+
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
 	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_smpfmt_to_caps):
 	Marking caps conversion issues as GST_WARNING is way too verbose,

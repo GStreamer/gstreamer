@@ -43,7 +43,6 @@ check_PROGRAMS = \
 	$(check_alsa) \
 	$(check_vorbis) \
 	$(check_theora) \
-	elements/adder \
 	elements/audioconvert \
 	elements/audioresample \
 	elements/audiotestsrc \
