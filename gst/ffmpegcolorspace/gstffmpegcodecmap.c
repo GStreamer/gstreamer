@@ -338,7 +338,7 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
     GST_DEBUG ("caps for pix_fmt=%d: %s", pix_fmt, str);
     g_free (str);
   } else {
-    GST_WARNING ("No caps found for pix_fmt=%d", pix_fmt);
+    GST_LOG ("No caps found for pix_fmt=%d", pix_fmt);
   }
 
   return caps;
@@ -384,7 +384,7 @@ gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
     GST_DEBUG ("caps for sample_fmt=%d: %s", sample_fmt, str);
     g_free (str);
   } else {
-    GST_WARNING ("No caps found for sample_fmt=%d", sample_fmt);
+    GST_LOG ("No caps found for sample_fmt=%d", sample_fmt);
   }
 
   return caps;
