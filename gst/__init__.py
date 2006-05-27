@@ -83,17 +83,35 @@ class Fraction(Value):
    def __repr__(self):
       return '<gst.Fraction %d/%d>' % (self.num, self.denom)
 
-import DLFCN, sys
+import sys
 dlsave = sys.getdlopenflags()
-sys.setdlopenflags(DLFCN.RTLD_LAZY | DLFCN.RTLD_GLOBAL)
+try:
+    from DLFCN import RTLD_GLOBAL, RTLD_LAZY
+except ImportError:
+    RTLD_GLOBAL = -1
+    RTLD_LAZY = -1
+    import os
+    osname = os.uname()[0]
+    if osname == 'Linux' or osname == 'SunOS' or osname == 'FreeBSD':
+        RTLD_GLOBAL = 0x100
+        RTLD_LAZY = 0x1
+    elif osname == 'Darwin':
+        RTLD_GLOBAL = 0x8
+        RTLD_LAZY = 0x1
+    del os
+except:
+    RTLD_GLOBAL = -1
+    RTLD_LAZY = -1
 
-from _gst import *
-import interfaces
+if RTLD_GLOBAL != -1 and RTLD_LAZY != -1:
+    sys.setdlopenflags(RTLD_LAZY | RTLD_GLOBAL)
+    from _gst import *
+    import interfaces
 
 version = get_gst_version
 
 sys.setdlopenflags(dlsave)
-del DLFCN, sys
+del sys
 
 # this restores previously installed importhooks, so we don't interfere
 # with other people's module importers
