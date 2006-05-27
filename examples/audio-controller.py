@@ -7,14 +7,16 @@
 # Test case for the GstController on sinesrc -> alsasink
 # Inspired from ensonic's examples/controller/audio-controller.c
 
+import pygst
+pygst.require('0.10')
 import gst
 import time
 
 def main():
     pipeline = gst.Pipeline("audiocontroller")
-    src = gst.element_factory_make("sinesrc", "src")
+    src = gst.element_factory_make("audiotestsrc", "src")
     sink = gst.element_factory_make("alsasink", "sink")
-    pipeline.add_many(src, sink)
+    pipeline.add(src, sink)
     src.link(sink)
 
     control = gst.Controller(src, "freq", "volume")
