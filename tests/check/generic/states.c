@@ -62,6 +62,11 @@ GST_START_TEST (test_state_changes)
 
       GST_DEBUG ("testing element %s", name);
       element = gst_element_factory_make (name, name);
+      if (!element) {
+        GST_WARNING ("failed to create element %s", name);
+        continue;
+      }
+
       if (GST_IS_PIPELINE (element)) {
         GST_DEBUG ("element %s is a pipeline", name);
       }

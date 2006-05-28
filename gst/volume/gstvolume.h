@@ -36,16 +36,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VOLUME,GstVolume))
 #define GST_IS_VOLUME(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VOLUME))
-#define GST_IS_VOLUME_CLASS(obj) \
+#define GST_IS_VOLUME_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VOLUME))
 
 typedef struct _GstVolume GstVolume;
 typedef struct _GstVolumeClass GstVolumeClass;
-
-typedef enum {
-  GST_VOLUME_FORMAT_INT=1,
-  GST_VOLUME_FORMAT_FLOAT
-} GstVolumeFormat;
 
 /**
  * GstVolume:
@@ -60,7 +55,7 @@ struct _GstVolume {
   gboolean mute;
   gint   volume_i, real_vol_i; /* the _i(nt) values get synchronized with the */
   gfloat volume_f, real_vol_f; /* _f(loat) values on each update */
-
+  
   GList *tracklist;
 };
 

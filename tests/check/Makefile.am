@@ -102,6 +102,14 @@ elements_audioconvert_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	$(CFLAGS) $(AM_CFLAGS)
 
+elements_volume_LDADD = \
+	$(GST_BASE_LIBS) \
+	$(LDADD)
+
+elements_volume_CFLAGS = \
+	$(GST_BASE_CFLAGS) \
+	$(CFLAGS) $(AM_CFLAGS)
+
 libs_video_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
 	$(LDADD)

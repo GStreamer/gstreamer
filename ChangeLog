@@ -1,3 +1,26 @@
+2006-05-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/adder/gstadder.c: (gst_adder_get_type):
+	Make it easier to copy&paste
+	
+	* gst/volume/Makefile.am:
+	* gst/volume/gstvolume.c: (volume_update_real_volume),
+	(gst_volume_set_volume), (gst_volume_set_mute),
+	(gst_volume_class_init), (volume_process_int16), (volume_set_caps),
+	(volume_transform_ip), (volume_update_mute),
+	(volume_update_volume):
+	* gst/volume/gstvolume.h:
+	Add own debug category, move duplicate code to helper function, fix
+	property texts, add more comments and prepare ffor liboil-goodness
+	
+	* tests/check/Makefile.am:
+	* tests/check/elements/volume.c: (GST_START_TEST), (volume_suite):
+	add test for mute and passtrough case, be a bit more verbose to track
+	failure
+	
+	* tests/check/generic/states.c: (GST_START_TEST):
+	catch elements that fail to instantiate
+
 2006-05-28  Edward Hervey  <edward@fluendo.com>
 
 	* tests/check/pipelines/simple-launch-lines.c:

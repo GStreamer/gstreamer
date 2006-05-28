@@ -66,6 +66,9 @@
 /* number of steps we use for the mixer interface to go from 0.0 to 1.0 */
 # define VOLUME_STEPS           100
 
+#define GST_CAT_DEFAULT gst_volume_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
 static const GstElementDetails volume_details = GST_ELEMENT_DETAILS ("Volume",
     "Filter/Effect/Audio",
     "Set volume on audio/raw streams",
@@ -159,6 +162,22 @@ static void volume_process_float (GstVolume * this, GstClockTime tstamp,
 static void volume_process_int16 (GstVolume * this, GstClockTime tstamp,
     gpointer bytes, gint n_bytes);
 
+/* helper functions */
+
+static void
+volume_update_real_volume (GstVolume * this)
+{
+  if (this->mute) {
+    this->real_vol_f = 0.0;
+    this->real_vol_i = 0;
+  } else {
+    this->real_vol_f = this->volume_f;
+    this->real_vol_i = this->volume_i;
+  }
+}
+
+/* Mixer interface */
+
 static gboolean
 gst_volume_interface_supported (GstImplementsInterface * iface, GType type)
 {
@@ -194,13 +213,7 @@ gst_volume_set_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
   this->volume_f = (gfloat) volumes[0] / VOLUME_STEPS;
   this->volume_i = this->volume_f * VOLUME_UNITY_INT;
 
-  if (this->mute) {
-    this->real_vol_f = 0.0;
-    this->real_vol_i = 0;
-  } else {
-    this->real_vol_f = this->volume_f;
-    this->real_vol_i = this->volume_i;
-  }
+  volume_update_real_volume (this);
 }
 
 static void
@@ -224,13 +237,7 @@ gst_volume_set_mute (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
 
   this->mute = mute;
 
-  if (this->mute) {
-    this->real_vol_f = 0.0;
-    this->real_vol_i = 0;
-  } else {
-    this->real_vol_f = this->volume_f;
-    this->real_vol_i = this->volume_i;
-  }
+  volume_update_real_volume (this);
 }
 
 static void
@@ -244,6 +251,8 @@ gst_volume_mixer_init (GstMixerClass * klass)
   klass->get_volume = gst_volume_get_volume;
   klass->set_mute = gst_volume_set_mute;
 }
+
+/* Element class */
 
 static void
 gst_volume_dispose (GObject * object)
@@ -290,9 +299,11 @@ gst_volume_class_init (GstVolumeClass * klass)
           FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VOLUME,
-      g_param_spec_double ("volume", "volume", "volume",
+      g_param_spec_double ("volume", "Volume", "volume factor",
           0.0, VOLUME_MAX_DOUBLE, 1.0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "volume", 0, "Volume gain");
 
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (volume_transform_ip);
   trans_class->set_caps = GST_DEBUG_FUNCPTR (volume_set_caps);
@@ -322,21 +333,10 @@ gst_volume_init (GstVolume * this, GstVolumeClass * g_class)
   }
 }
 
-/* based on the caps' structure, install the correct volume_process method */
-static void
-volume_funcfind (GstVolume * this, const GstStructure * structure)
-{
-  const gchar *mimetype;
-
-  mimetype = gst_structure_get_name (structure);
-
-  if (strcmp (mimetype, "audio/x-raw-int") == 0)
-    this->process = volume_process_int16;
-  else if (strcmp (mimetype, "audio/x-raw-float") == 0)
-    this->process = volume_process_float;
-  else
-    this->process = NULL;
-}
+/* NOTE: although it might be tempting to have volume_process_mute() which uses
+ *       memset(bytes, 0, nbytes) for the vol=0 case, this has the downside that
+ *       unmuting would unly take place after processing a buffer.
+ */
 
 static void
 volume_process_float (GstVolume * this, GstClockTime tstamp,
@@ -351,6 +351,9 @@ volume_process_float (GstVolume * this, GstClockTime tstamp,
   for (i = 0; i < num_samples; i++) {
     *data++ *= this->real_vol_f;
   }
+  /* FIXME: need... liboil...
+     oil_scalarmultiply_f32_ns (data, data, &this->real_vol_f, num_samples);
+   */
 }
 
 static void
@@ -363,16 +366,20 @@ volume_process_int16 (GstVolume * this, GstClockTime tstamp,
   data = (gint16 *) bytes;
   num_samples = n_bytes / sizeof (gint16);
 
-  /* FIXME: need... liboil... */
-  /* only clamp if the gain is greater than 1.0 */
+  /* FIXME: need... liboil... 
+   * oil_scalarmultiply_s16_ns ?
+   */
+
+  /* only clamp if the gain is greater than 1.0
+   * FIXME: real_vol_i can change while processing the buffer!
+   */
   if (this->real_vol_i > VOLUME_UNITY_INT) {
     for (i = 0; i < num_samples; i++) {
       /* we use bitshifting instead of dividing by UNITY_INT for speed */
       val = (gint) * data;
       *data++ =
-          (gint16) CLAMP ((this->real_vol_i *
-              val) >> VOLUME_UNITY_BIT_SHIFT, VOLUME_MIN_INT16,
-          VOLUME_MAX_INT16);
+          (gint16) CLAMP ((this->real_vol_i * val) >> VOLUME_UNITY_BIT_SHIFT,
+          VOLUME_MIN_INT16, VOLUME_MAX_INT16);
     }
   } else {
     for (i = 0; i < num_samples; i++) {
@@ -390,14 +397,22 @@ static gboolean
 volume_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
 {
   GstVolume *this = GST_VOLUME (base);
+  const gchar *mimetype;
 
   GST_DEBUG_OBJECT (this,
       "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
 
-  volume_funcfind (this, gst_caps_get_structure (incaps, 0));
+  mimetype = gst_structure_get_name (gst_caps_get_structure (incaps, 0));
 
-  if (!this->process)
+  /* based on mimetype, install the correct volume_process method */
+  if (strcmp (mimetype, "audio/x-raw-int") == 0)
+    this->process = volume_process_int16;
+  else if (strcmp (mimetype, "audio/x-raw-float") == 0)
+    this->process = volume_process_float;
+  else {
+    this->process = NULL;
     goto invalid_format;
+  }
 
   return TRUE;
 
@@ -419,6 +434,10 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstVolume *this = GST_VOLUME (base);
   GstClockTime timestamp;
+
+  /* don't process data in passthrough-mode (requires #343196)
+     if (!gst_buffer_is_writable (outbuf)) return GST_FLOW_OK;
+   */
 
   timestamp = GST_BUFFER_TIMESTAMP (outbuf);
 
@@ -444,13 +463,7 @@ volume_update_mute (const GValue * value, gpointer data)
     this->mute = (g_value_get_int (value) == 1);
   }
 
-  if (this->mute) {
-    this->real_vol_f = 0.0;
-    this->real_vol_i = 0;
-  } else {
-    this->real_vol_f = this->volume_f;
-    this->real_vol_i = this->volume_i;
-  }
+  volume_update_real_volume (this);
 }
 
 static void
@@ -462,13 +475,8 @@ volume_update_volume (const GValue * value, gpointer data)
 
   this->volume_f = g_value_get_double (value);
   this->volume_i = this->volume_f * VOLUME_UNITY_INT;
-  if (this->mute) {
-    this->real_vol_f = 0.0;
-    this->real_vol_i = 0;
-  } else {
-    this->real_vol_f = this->volume_f;
-    this->real_vol_i = this->volume_i;
-  }
+
+  volume_update_real_volume (this);
 }
 
 static void

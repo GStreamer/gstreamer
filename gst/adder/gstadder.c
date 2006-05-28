@@ -65,8 +65,8 @@
 #define MIN_UINT_16 ((guint16)(0x0000))
 #define MIN_UINT_8  ((guint8) (0x00))
 
-GST_DEBUG_CATEGORY_STATIC (gst_adder_debug);
 #define GST_CAT_DEFAULT gst_adder_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 /* elementfactory information */
 static const GstElementDetails adder_details = GST_ELEMENT_DETAILS ("Adder",
@@ -124,7 +124,7 @@ gst_adder_get_type (void)
 
     adder_type = g_type_register_static (GST_TYPE_ELEMENT, "GstAdder",
         &adder_info, 0);
-    GST_DEBUG_CATEGORY_INIT (gst_adder_debug, "adder", 0,
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "adder", 0,
         "audio channel mixing element");
   }
   return adder_type;
