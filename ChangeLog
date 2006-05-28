@@ -1,3 +1,10 @@
+2006-05-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/id3v2frames.c: (id3v2_tag_to_taglist):
+	  A track/volume number or count of 0 does not make sense,
+	  just ignore it along with negative numbers (a tag might
+	  only contain a track count without a track number).
+
 2006-05-27  Edward Hervey  <edward@fluendo.com>
 
 	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_init),
