@@ -1,3 +1,14 @@
+2006-05-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.c: (init_post):
+	  if we have fork, fork while reading/rebuilding the registry
+	  so the parent doesn't take the hit of having all plugins loaded
+	  in memory.  Fixes #342777.
+	* configure.ac:
+	  Check if we have fork()
+	* win32/common/config.h.in:
+	  no fork() on win32
+
 2006-05-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* plugins/elements/gstelements.c:

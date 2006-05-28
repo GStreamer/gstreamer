@@ -324,6 +324,9 @@ dnl *** checks for library functions ***
 
 AC_CHECK_FUNCS([sigaction])
 
+dnl we use fork in the registry code
+AC_CHECK_FUNCS([fork])
+
 dnl check for fseeko()
 AC_FUNC_FSEEKO
 dnl check for ftello()
