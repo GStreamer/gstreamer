@@ -1,5 +1,10 @@
 2006-05-28  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/elements/volume.c:
+	make it compile again
+
+2006-05-28  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/check/elements/volume.c: (volume_suite):
 	disable test until #343196 gets resolved
 

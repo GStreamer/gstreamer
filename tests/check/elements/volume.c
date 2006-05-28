@@ -371,7 +371,7 @@ GST_START_TEST (test_passthrough)
 }
 
 GST_END_TEST;
-#endiif
+#endif
 
 Suite *
 volume_suite (void)
