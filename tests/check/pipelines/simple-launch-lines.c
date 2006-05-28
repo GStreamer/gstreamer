@@ -22,6 +22,7 @@
 
 #include <gst/check/gstcheck.h>
 
+#ifndef GST_DISABLE_PARSE
 
 static GstElement *
 setup_pipeline (const gchar * pipe_descr)
@@ -148,8 +149,10 @@ GST_START_TEST (test_basetransform_based)
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
 }
-GST_END_TEST Suite *
-simple_launch_lines_suite (void)
+
+GST_END_TEST
+#endif /* #ifndef GST_DISABLE_PARSE */
+    Suite * simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
   TCase *tc_chain = tcase_create ("linear");
@@ -158,8 +161,10 @@ simple_launch_lines_suite (void)
   tcase_set_timeout (tc_chain, 20);
 
   suite_add_tcase (s, tc_chain);
+#ifndef GST_DISABLE_PARSE
 //  tcase_add_test (tc_chain, test_element_negotiation);
   tcase_add_test (tc_chain, test_basetransform_based);
+#endif
   return s;
 }
 

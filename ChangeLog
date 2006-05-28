@@ -1,3 +1,11 @@
+2006-05-28  Edward Hervey  <edward@fluendo.com>
+
+	* tests/check/pipelines/simple-launch-lines.c:
+	* tests/check/pipelines/theoraenc.c:
+	* tests/check/pipelines/vorbisenc.c:
+	Comment out tests using parse_launch() if core was built without
+	parsing capabilities.
+
 2006-05-27  Edward Hervey  <edward@fluendo.com>
 
 	* tests/check/Makefile.am:

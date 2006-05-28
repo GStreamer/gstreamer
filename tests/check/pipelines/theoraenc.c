@@ -22,6 +22,8 @@
 
 #include <gst/check/gstcheck.h>
 
+#ifndef GST_DISABLE_PARSE
+
 #define TIMESTAMP_OFFSET G_GINT64_CONSTANT(3249870963)
 #define FRAMERATE 10
 
@@ -384,6 +386,8 @@ GST_START_TEST (test_continuity)
 
 GST_END_TEST;
 
+#endif /* #ifndef GST_DISABLE_PARSE */
+
 Suite *
 theoraenc_suite (void)
 {
@@ -391,8 +395,11 @@ theoraenc_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+
+#ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_granulepos_offset);
   tcase_add_test (tc_chain, test_continuity);
+#endif
 
   return s;
 }
