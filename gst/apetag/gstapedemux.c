@@ -62,7 +62,7 @@
 
 #define APE_VERSION_MAJOR(ver)  ((ver)/1000)
 
-GST_DEBUG_CATEGORY (apedemux_debug);
+GST_DEBUG_CATEGORY_STATIC (apedemux_debug);
 #define GST_CAT_DEFAULT (apedemux_debug)
 
 static const GstElementDetails gst_ape_demux_details =
@@ -141,7 +141,8 @@ static const struct _GstApeDemuxTagTableEntry
   "genre", GST_TAG_GENRE}, {
   "isrc", GST_TAG_ISRC}, {
   "track", GST_TAG_TRACK_NUMBER}, {
-  "year", GST_TAG_DATE}
+  "year", GST_TAG_DATE}, {
+  "file", GST_TAG_LOCATION}
 };
 
 static gboolean
@@ -154,6 +155,7 @@ ape_demux_get_gst_tag_from_tag (const gchar * ape_tag,
     if (g_ascii_strcasecmp (tag_table[i].ape_tag, ape_tag) == 0) {
       *gst_tag = tag_table[i].gst_tag;
       *gst_tag_type = gst_tag_get_type (tag_table[i].gst_tag);
+      GST_LOG ("Mapped APE tag '%s' to GStreamer tag '%s'", ape_tag, *gst_tag);
       return TRUE;
     }
   }
@@ -205,29 +207,62 @@ ape_demux_parse_tags (const guint8 * data, gint size)
       GValue v = { 0, };
 
       switch (gst_tag_type) {
-        case G_TYPE_INT:
-          g_value_init (&v, G_TYPE_INT);
-          g_value_set_int (&v, atoi (val));
+        case G_TYPE_INT:{
+          gint v_int;
+
+          if (sscanf (val, "%d", &v_int) == 1) {
+            g_value_init (&v, G_TYPE_INT);
+            g_value_set_int (&v, v_int);
+          }
           break;
-        case G_TYPE_UINT:
-          g_value_init (&v, G_TYPE_UINT);
-          g_value_set_uint (&v, (guint) atof (val));    /* hmmm */
+        }
+        case G_TYPE_UINT:{
+          guint v_uint, count;
+
+          if (strcmp (gst_tag, GST_TAG_TRACK_NUMBER) == 0) {
+            gint dummy;
+
+            if (sscanf (val, "%u", &v_uint) == 1 && v_uint > 0) {
+              g_value_init (&v, G_TYPE_UINT);
+              g_value_set_uint (&v, v_uint);
+            }
+            GST_LOG ("checking for count: %s", val);
+            /* might be 0/N or -1/N to specify that there is only a count */
+            if (sscanf (val, "%d/%u", &dummy, &count) == 2 && count > 0) {
+              gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
+                  GST_TAG_TRACK_COUNT, count, NULL);
+            }
+          } else if (sscanf (val, "%u", &v_uint) == 1) {
+            g_value_init (&v, G_TYPE_UINT);
+            g_value_set_uint (&v, v_uint);
+          }
           break;
-        case G_TYPE_STRING:
+        }
+        case G_TYPE_STRING:{
           g_value_init (&v, G_TYPE_STRING);
           g_value_set_string (&v, val);
           break;
-        case G_TYPE_DOUBLE:
-          g_value_init (&v, G_TYPE_DOUBLE);
-          g_value_set_double (&v, atof (val));
+        }
+        case G_TYPE_DOUBLE:{
+          gdouble v_double;
+
+          if (sscanf (val, "%lf", &v_double) == 1) {
+            g_value_init (&v, G_TYPE_DOUBLE);
+            g_value_set_double (&v, v_double);
+          }
           break;
+        }
         default:{
           if (gst_tag_type == GST_TYPE_DATE) {
-            GDate *date = g_date_new_dmy (1, 1, atoi (val));
+            gint v_int;
 
-            g_value_init (&v, GST_TYPE_DATE);
-            gst_value_set_date (&v, date);
-            g_date_free (date);
+            if (sscanf (val, "%d", &v_int) == 1) {
+              GDate *date = g_date_new_dmy (1, 1, v_int);
+
+              g_value_init (&v, GST_TYPE_DATE);
+              gst_value_set_date (&v, date);
+              g_date_free (date);
+            }
           } else {
             GST_WARNING ("Unhandled tag type '%s' for tag '%s'",
                 g_type_name (gst_tag_type), gst_tag);

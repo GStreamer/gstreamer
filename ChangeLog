@@ -1,3 +1,13 @@
+2006-05-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge  <slomo at ubuntu dot com>
+
+	* gst/apetag/gstapedemux.c: (ape_demux_get_gst_tag_from_tag),
+	(ape_demux_parse_tags):
+	  Some clean-ups and additions: map APE 'file' tag to
+	  GST_TAG_LOCATION (#343123); add support for extracting
+	  the track count and clean up parsing a bit (#343127).
+
 2006-05-28  Edward Hervey  <edward@fluendo.com>
 
 	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_change_state):
