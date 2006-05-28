@@ -1062,7 +1062,7 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
       dec->caps_height = -1;
       dec->packetized = FALSE;
       dec->next_ts = 0;
-      gst_segment_init (dec->segment, GST_FORMAT_TIME);
+      gst_segment_init (dec->segment, GST_FORMAT_UNDEFINED);
     default:
       break;
   }

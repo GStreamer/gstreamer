@@ -1,5 +1,10 @@
 2006-05-28  Edward Hervey  <edward@fluendo.com>
 
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_change_state):
+	Initialize segment to GST_FORMAT_UNDEFINED in READY->PAUSED.
+
+2006-05-28  Edward Hervey  <edward@fluendo.com>
+
 	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_finalize),
 	(gst_jpeg_dec_init), (gst_jpeg_dec_chain),
 	(gst_jpeg_dec_sink_event), (gst_jpeg_dec_change_state):
