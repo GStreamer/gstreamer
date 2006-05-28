@@ -453,8 +453,8 @@ id3v2_tag_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
       gint current, total;
 
       if (sscanf (tag_str, "%d/%d", &current, &total) == 2) {
-        if (total < 0) {
-          GST_WARNING ("Ignoring negative value for total %d in tag %s",
+        if (total <= 0) {
+          GST_WARNING ("Ignoring invalid value for total %d in tag %s",
               total, tag_name);
         } else {
           if (strcmp (tag_name, GST_TAG_TRACK_NUMBER) == 0) {
@@ -472,9 +472,9 @@ id3v2_tag_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
         break;
       }
 
-      if (current < 0)
-        GST_WARNING ("Ignoring negative value %d in tag %s", current, tag_name);
-      else {
+      if (current <= 0) {
+        GST_WARNING ("Ignoring invalid value %d in tag %s", current, tag_name);
+      } else {
         gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, current,
             NULL);
       }
