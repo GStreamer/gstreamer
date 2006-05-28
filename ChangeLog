@@ -1,5 +1,12 @@
 2006-05-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/alpha/gstalphacolor.c: (gst_alpha_color_transform_caps):
+	* gst/debug/negotiation.c: (gst_negotiation_update_caps):
+	* gst/rtp/gstrtpilbcdepay.c: (gst_rtp_ilbc_depay_setcaps):
+	  GST_PTR_FORMAT should be used to print caps in debug statements.
+
+2006-05-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Sebastian Dröge  <slomo at ubuntu dot com>
 
 	* gst/apetag/gstapedemux.c: (ape_demux_get_gst_tag_from_tag),

@@ -148,7 +148,6 @@ gst_rtp_ilbc_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstRTPiLBCDepay *rtpilbcdepay = GST_RTP_ILBC_DEPAY (depayload);
   GstCaps *srccaps;
   GstStructure *structure;
-  gchar *str;
   gboolean ret;
 
   srccaps = gst_caps_copy (gst_static_pad_template_get_caps
@@ -156,11 +155,10 @@ gst_rtp_ilbc_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   structure = gst_caps_get_structure (srccaps, 0);
   gst_structure_set (structure, "mode", G_TYPE_INT,
       rtpilbcdepay->mode == GST_ILBC_MODE_30 ? 30 : 20, NULL);
+
   ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
 
-  str = gst_caps_to_string (srccaps)
-      GST_DEBUG ("caps set on source are %s", str);
-  g_free (str);
+  GST_DEBUG ("set caps on source: %" GST_PTR_FORMAT " (ret=%d)", srccaps, ret);
 
   gst_caps_unref (srccaps);
   return ret;
