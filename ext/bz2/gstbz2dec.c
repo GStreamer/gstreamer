@@ -21,6 +21,8 @@
 #endif
 #include "gstbz2dec.h"
 
+#include <gst/base/gsttypefindhelper.h>
+
 #include <bzlib.h>
 #include <string.h>
 
@@ -37,7 +39,7 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-bzip"));
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("ANY"));
+    GST_STATIC_CAPS_ANY);
 
 struct _GstBz2dec
 {
@@ -100,75 +102,6 @@ gst_bz2dec_decompress_init (GstBz2dec * b)
   }
 }
 
-typedef struct
-{
-  guint best_probability;
-  GstCaps *caps;
-  GstBuffer *buffer;
-} SimpleTypeFind;
-
-guint8 *
-simple_find_peek (gpointer data, gint64 offset, guint size)
-{
-  SimpleTypeFind *find = (SimpleTypeFind *) data;
-
-  if (offset < 0)
-    return NULL;
-
-  if (GST_BUFFER_SIZE (find->buffer) >= offset + size) {
-    return GST_BUFFER_DATA (find->buffer) + offset;
-  }
-  return NULL;
-}
-
-static void
-simple_find_suggest (gpointer data, guint probability, const GstCaps * caps)
-{
-  SimpleTypeFind *find = (SimpleTypeFind *) data;
-
-  if (probability > find->best_probability) {
-    GstCaps *copy = gst_caps_copy (caps);
-
-    gst_caps_replace (&find->caps, copy);
-    gst_caps_unref (copy);
-    find->best_probability = probability;
-  }
-}
-
-static GstCaps *
-gst_bz2dec_do_typefind (GstBz2dec * b, GstBuffer * buffer)
-{
-  GList *walk, *type_list;
-  SimpleTypeFind find;
-  GstTypeFind gst_find;
-
-  walk = type_list = gst_type_find_factory_get_list ();
-
-  find.buffer = buffer;
-  find.best_probability = 0;
-  find.caps = NULL;
-  gst_find.data = &find;
-  gst_find.peek = simple_find_peek;
-  gst_find.get_length = NULL;
-  gst_find.suggest = simple_find_suggest;
-  while (walk) {
-    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
-
-    gst_type_find_factory_call_function (factory, &gst_find);
-    if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
-      break;
-    walk = g_list_next (walk);
-  }
-  gst_plugin_feature_list_free (type_list);
-  if (find.best_probability > 0) {
-    GST_DEBUG ("Found caps %s" GST_PTR_FORMAT " with buf size %u", find.caps,
-        GST_BUFFER_SIZE (buffer));
-    return find.caps;
-  }
-
-  return NULL;
-}
-
 static GstFlowReturn
 gst_bz2dec_chain (GstPad * pad, GstBuffer * in)
 {
@@ -188,14 +121,13 @@ gst_bz2dec_chain (GstPad * pad, GstBuffer * in)
 
   while (r != BZ_STREAM_END) {
     GstBuffer *out;
-    GstCaps *caps;
     guint n;
     GstFlowReturn fr;
 
     /* Create the output buffer */
     if ((fr = gst_pad_alloc_buffer (src, b->offset,
                 b->offset ? b->buffer_size : b->first_buffer_size,
-                GST_PAD_CAPS (pad), &out)) != GST_FLOW_OK) {
+                GST_PAD_CAPS (src), &out)) != GST_FLOW_OK) {
       gst_bz2dec_decompress_init (b);
       return fr;
     }
@@ -219,18 +151,21 @@ gst_bz2dec_chain (GstPad * pad, GstBuffer * in)
     GST_BUFFER_OFFSET (out) = b->stream.total_out_lo32 - GST_BUFFER_SIZE (out);
 
     /* Configure source pad (if necessary) */
-    if (!b->offset && (caps = gst_bz2dec_do_typefind (b, out))) {
-      gst_buffer_set_caps (out, caps);
-      gst_pad_set_caps (src, caps);
-      gst_caps_unref (caps);
+    if (!b->offset) {
+      GstCaps *caps = NULL;
+
+      caps = gst_type_find_helper_for_buffer (GST_OBJECT (b), out, NULL);
+      if (caps) {
+        gst_buffer_set_caps (out, caps);
+        gst_pad_set_caps (src, caps);
+        gst_caps_unref (caps);
+      }
     }
 
     /* Push data */
     n = GST_BUFFER_SIZE (out);
-    if ((fr = gst_pad_push (src, out)) != GST_FLOW_OK) {
-      gst_buffer_unref (out);
+    if ((fr = gst_pad_push (src, out)) != GST_FLOW_OK)
       return fr;
-    }
     b->offset += n;
   }
   gst_buffer_unref (in);
@@ -253,6 +188,7 @@ gst_bz2dec_init (GstBz2dec * b, GstBz2decClass * klass)
       gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
       "src");
   gst_element_add_pad (GST_ELEMENT (b), pad);
+  gst_pad_use_fixed_caps (pad);
 
   gst_bz2dec_decompress_init (b);
 }
@@ -315,10 +251,33 @@ gst_bz2dec_set_property (GObject * object, guint prop_id,
   }
 }
 
+static GstStateChangeReturn
+gst_bz2dec_change_state (GstElement * element, GstStateChange transition)
+{
+  GstBz2dec *b = GST_BZ2DEC (element);
+  GstStateChangeReturn ret;
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret != GST_STATE_CHANGE_SUCCESS)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_bz2dec_decompress_init (b);
+      break;
+    default:
+      break;
+  }
+  return ret;
+}
+
 static void
 gst_bz2dec_class_init (GstBz2decClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_bz2dec_change_state);
 
   gobject_class->finalize = gst_bz2dec_finalize;
   gobject_class->get_property = gst_bz2dec_get_property;

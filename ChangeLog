@@ -1,3 +1,15 @@
+2006-05-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Lutz Müller  <lutz at topfrose de>
+
+	* ext/bz2/Makefile.am:
+	* ext/bz2/gstbz2dec.c: (gst_bz2dec_chain), (gst_bz2dec_init),
+	(gst_bz2dec_change_state), (gst_bz2dec_class_init):
+	  Use gst_type_find_helper_* functions for typefinding; use
+	  correct caps with gst_pad_alloc_buffer(); add state change
+	  function and reset decoder in it; don't unref buffer if
+	  pad_push fails; use fixed caps on source pad. (#341524).
+
 2006-05-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/spectrum/Makefile.am:
