@@ -136,25 +136,45 @@ test_taglib_id3mux_check_tags (GstTagList * tags, guint32 mask)
     g_date_free (date);
   }
   if (mask & (1 << 4)) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
-        GST_TAG_TRACK_NUMBER, TEST_TRACK_NUMBER, NULL);
+    guint num;
+
+    fail_unless (gst_tag_list_get_uint (tags, GST_TAG_TRACK_NUMBER, &num));
+    fail_unless (num == TEST_TRACK_NUMBER);
   }
   if (mask & (1 << 5)) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
-        GST_TAG_TRACK_COUNT, TEST_TRACK_COUNT, NULL);
+    guint count;
+
+    fail_unless (gst_tag_list_get_uint (tags, GST_TAG_TRACK_COUNT, &count));
+    fail_unless (count == TEST_TRACK_COUNT);
   }
   if (mask & (1 << 6)) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
-        GST_TAG_ALBUM_VOLUME_NUMBER, TEST_VOLUME_NUMBER, NULL);
+    guint num;
+
+    fail_unless (gst_tag_list_get_uint (tags, GST_TAG_ALBUM_VOLUME_NUMBER,
+            &num));
+    fail_unless (num == TEST_VOLUME_NUMBER);
   }
   if (mask & (1 << 7)) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_KEEP,
-        GST_TAG_ALBUM_VOLUME_COUNT, TEST_VOLUME_COUNT, NULL);
+    guint count;
+
+    fail_unless (gst_tag_list_get_uint (tags, GST_TAG_ALBUM_VOLUME_COUNT,
+            &count));
+    fail_unless (count == TEST_VOLUME_COUNT);
   }
+#if 0
   if (mask & (1 << 8)) {
+    gdouble gain;
+
+    fail_unless (gst_tag_list_get_double (tags, GST_TAG_TRACK_GAIN, &gain));
+    fail_unless (gain == TEST_TRACK_GAIN);
   }
   if (mask & (1 << 9)) {
+    gdouble gain;
+
+    fail_unless (gst_tag_list_get_double (tags, GST_TAG_ALBUM_GAIN, &gain));
+    fail_unless (gain == TEST_ALBUM_GAIN);
   }
+#endif
   if (mask & (1 << 10)) {
   }
   if (mask & (1 << 11)) {

@@ -1,5 +1,17 @@
 2006-05-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/taglib/gstid3v2mux.cc:
+	  Handle  writing of track-count or album-volume-count without
+	  track-number or albume-volume-number (in this case the number
+	  will just be set to 0).
+
+	* tests/check/elements/id3v2mux.c: (test_taglib_id3mux_check_tags):
+	  It would be nice if we actually checked the values received for
+	  track/album-volume number/count in  _check_tags(), rather than
+	  setting them again ...
+
+2006-05-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/id3demux/id3v2frames.c: (id3v2_tag_to_taglist):
 	  A track/volume number or count of 0 does not make sense,
 	  just ignore it along with negative numbers (a tag might

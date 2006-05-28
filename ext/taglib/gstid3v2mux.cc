@@ -230,6 +230,23 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
         id3v2tag->setTrack (track_number);
       }
     }
+  } else if (strcmp (tag, GST_TAG_TRACK_COUNT) == 0) {
+    guint n;
+
+    if (gst_tag_list_get_uint_index (list, GST_TAG_TRACK_NUMBER, 0, &n)) {
+      GST_DEBUG ("track-count handled with track-number, skipping");
+    } else if (gst_tag_list_get_uint_index (list, GST_TAG_TRACK_COUNT, 0, &n)) {
+      ID3v2::TextIdentificationFrame * frame;
+      gchar *tag_str;
+
+      frame = new ID3v2::TextIdentificationFrame ("TRCK", String::UTF8);
+      tag_str = g_strdup_printf ("0/%u", n);
+      GST_DEBUG ("Setting track number/count to %s", tag_str);
+
+      id3v2tag->addFrame (frame);
+      frame->setText (tag_str);
+      g_free (tag_str);
+    }
   } else if (strcmp (tag, GST_TAG_ALBUM_VOLUME_NUMBER) == 0) {
     guint volume_number;
 
@@ -251,6 +268,24 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
       }
 
       GST_DEBUG ("Setting album number to %s", tag_str);
+
+      id3v2tag->addFrame (frame);
+      frame->setText (tag_str);
+      g_free (tag_str);
+    }
+  } else if (strcmp (tag, GST_TAG_ALBUM_VOLUME_COUNT) == 0) {
+    guint n;
+
+    if (gst_tag_list_get_uint_index (list, GST_TAG_ALBUM_VOLUME_NUMBER, 0, &n)) {
+      GST_DEBUG ("volume-count handled with volume-number, skipping");
+    } else if (gst_tag_list_get_uint_index (list, GST_TAG_ALBUM_VOLUME_COUNT,
+            0, &n)) {
+      ID3v2::TextIdentificationFrame * frame;
+      gchar *tag_str;
+
+      frame = new ID3v2::TextIdentificationFrame ("TPOS", String::UTF8);
+      tag_str = g_strdup_printf ("0/%u", n);
+      GST_DEBUG ("Setting album volume number/count to %s", tag_str);
 
       id3v2tag->addFrame (frame);
       frame->setText (tag_str);
