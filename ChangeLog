@@ -1,5 +1,10 @@
 2006-05-28  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/elements/volume.c: (volume_suite):
+	disable test until #343196 gets resolved
+
+2006-05-28  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/adder/gstadder.c: (gst_adder_get_type):
 	Make it easier to copy&paste
 	
