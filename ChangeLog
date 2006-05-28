@@ -1,3 +1,11 @@
+2006-05-28  Edward Hervey  <edward@fluendo.com>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_finalize),
+	(gst_jpeg_dec_init), (gst_jpeg_dec_chain),
+	(gst_jpeg_dec_sink_event), (gst_jpeg_dec_change_state):
+	* ext/jpeg/gstjpegdec.h:
+	Clip outgoing buffers according to currently configured segment.
+
 2006-05-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/taglib/gstid3v2mux.cc:

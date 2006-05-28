@@ -117,6 +117,9 @@ gst_jpeg_dec_finalize (GObject * object)
   if (dec->tempbuf)
     gst_buffer_unref (dec->tempbuf);
 
+  if (dec->segment)
+    gst_segment_free (dec->segment);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -245,6 +248,8 @@ gst_jpeg_dec_init (GstJpegDec * dec)
   dec->srcpad =
       gst_pad_new_from_static_template (&gst_jpeg_dec_src_pad_template, "src");
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
+
+  dec->segment = gst_segment_new ();
 
   /* setup jpeglib */
   memset (&dec->cinfo, 0, sizeof (dec->cinfo));
@@ -915,6 +920,34 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (dec, "decompressing finished");
   jpeg_finish_decompress (&dec->cinfo);
 
+  /* Clipping */
+  if (dec->segment->format == GST_FORMAT_TIME) {
+    gint64 start, stop, clip_start, clip_stop;
+
+    GST_LOG_OBJECT (dec, "Attempting clipping");
+
+    start = GST_BUFFER_TIMESTAMP (outbuf);
+    if (GST_BUFFER_DURATION (outbuf) == GST_CLOCK_TIME_NONE)
+      stop = start;
+    else
+      stop = start + GST_BUFFER_DURATION (outbuf);
+
+    if (gst_segment_clip (dec->segment, GST_FORMAT_TIME,
+            start, stop, &clip_start, &clip_stop)) {
+      GST_LOG_OBJECT (dec, "Clipping start to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (clip_start));
+      GST_BUFFER_TIMESTAMP (outbuf) = clip_start;
+      if (GST_BUFFER_DURATION (outbuf) != GST_CLOCK_TIME_NONE) {
+        GST_LOG_OBJECT (dec, "Clipping duration to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (clip_stop - clip_start));
+        GST_BUFFER_DURATION (outbuf) = clip_stop - clip_start;
+      }
+    } else {
+      GST_WARNING_OBJECT (dec,
+          "Outgoing buffer is outsided configured segment");
+    }
+  }
+
   GST_LOG_OBJECT (dec, "pushing buffer (ts=%" GST_TIME_FORMAT ", dur=%"
       GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
@@ -986,6 +1019,23 @@ gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (dec, "Aborting decompress");
       jpeg_abort_decompress (&dec->cinfo);
       break;
+    case GST_EVENT_NEWSEGMENT:{
+      gboolean update;
+      gdouble rate;
+      GstFormat format;
+      gint64 start, stop, position;
+
+      /* Once -good depends on core >= 0.10.6, use newsegment_full */
+      gst_event_parse_new_segment (event, &update, &rate, &format,
+          &start, &stop, &position);
+      GST_DEBUG_OBJECT (dec, "Got NEWSEGMENT [%" GST_TIME_FORMAT
+          " - %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "]",
+          GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
+          GST_TIME_ARGS (position));
+      gst_segment_set_newsegment (dec->segment, update, rate, format,
+          start, stop, position);
+    }
+      break;
     default:
       break;
   }
@@ -1012,6 +1062,7 @@ gst_jpeg_dec_change_state (GstElement * element, GstStateChange transition)
       dec->caps_height = -1;
       dec->packetized = FALSE;
       dec->next_ts = 0;
+      gst_segment_init (dec->segment, GST_FORMAT_TIME);
     default:
       break;
   }

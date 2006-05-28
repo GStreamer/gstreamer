@@ -23,7 +23,7 @@
 
 
 #include <setjmp.h>
-#include <gst/gstelement.h>
+#include <gst/gst.h>
 
 /* this is a hack hack hack to get around jpeglib header bugs... */
 #ifdef HAVE_STDLIB_H
@@ -74,6 +74,8 @@ struct _GstJpegDec {
 
   /* the (expected) timestamp of the next frame */
   guint64  next_ts;
+
+  GstSegment *segment;
 
   /* video state */
   gint framerate_numerator;
