@@ -395,7 +395,8 @@ gst_collect_pads_collect_range (GstCollectPads * pads, guint64 offset,
  * Must be called with PAD_LOCK.
  */
 static void
-gst_collect_pads_set_flushing (GstCollectPads * pads, gboolean flushing)
+gst_collect_pads_set_flushing_unlocked (GstCollectPads * pads,
+    gboolean flushing)
 {
   GSList *walk = NULL;
 
@@ -409,9 +410,34 @@ gst_collect_pads_set_flushing (GstCollectPads * pads, gboolean flushing)
         GST_PAD_SET_FLUSHING (cdata->pad);
       else
         GST_PAD_UNSET_FLUSHING (cdata->pad);
+      cdata->abidata.ABI.flushing = flushing;
       GST_OBJECT_UNLOCK (cdata->pad);
     }
   }
+}
+
+/**
+ * gst_collect_pads_set_flushing:
+ * @pads: the collectspads to use
+ * @flushing: desired state of the pads
+ *
+ * Change the flushing state of all the pads in the collection. No pad
+ * is able to accept anymore data when @flushing is %TRUE. Calling this
+ * function with @flushing %TRUE makes @pads accept data again.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.7.
+ */
+void
+gst_collect_pads_set_flushing (GstCollectPads * pads, gboolean flushing)
+{
+  g_return_if_fail (pads != NULL);
+  g_return_if_fail (GST_IS_COLLECT_PADS (pads));
+
+  GST_COLLECT_PADS_PAD_LOCK (pads);
+  gst_collect_pads_set_flushing_unlocked (pads, flushing);
+  GST_COLLECT_PADS_PAD_UNLOCK (pads);
 }
 
 /**
@@ -425,6 +451,8 @@ gst_collect_pads_set_flushing (GstCollectPads * pads, gboolean flushing)
 void
 gst_collect_pads_start (GstCollectPads * pads)
 {
+  GSList *collected;
+
   g_return_if_fail (pads != NULL);
   g_return_if_fail (GST_IS_COLLECT_PADS (pads));
 
@@ -435,7 +463,17 @@ gst_collect_pads_start (GstCollectPads * pads)
 
   /* make pads streamable */
   GST_COLLECT_PADS_PAD_LOCK (pads);
-  gst_collect_pads_set_flushing (pads, FALSE);
+
+  /* loop over the master pad list and reset the segment */
+  collected = pads->abidata.ABI.pad_list;
+  for (; collected; collected = g_slist_next (collected)) {
+    GstCollectData *data;
+
+    data = collected->data;
+    gst_segment_init (&data->segment, GST_FORMAT_UNDEFINED);
+  }
+
+  gst_collect_pads_set_flushing_unlocked (pads, FALSE);
 
   /* Start collect pads */
   pads->started = TRUE;
@@ -467,7 +505,7 @@ gst_collect_pads_stop (GstCollectPads * pads)
 
   /* make pads not accept data anymore */
   GST_COLLECT_PADS_PAD_LOCK (pads);
-  gst_collect_pads_set_flushing (pads, TRUE);
+  gst_collect_pads_set_flushing_unlocked (pads, TRUE);
 
   /* Stop collect pads */
   pads->started = FALSE;

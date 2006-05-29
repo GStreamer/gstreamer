@@ -1,3 +1,16 @@
+2006-05-29  Wim Taymans  <wim@fluendo.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstcollectpads.c:
+	(gst_collect_pads_set_flushing_unlocked),
+	(gst_collect_pads_set_flushing), (gst_collect_pads_start),
+	(gst_collect_pads_stop):
+	* libs/gst/base/gstcollectpads.h:
+	API: gst_collect_pads_set_flushing
+	Added api to set the pads to flushing, usefull for seeking
+	code in elements using collectpads.
+	Clear segment when receiving a flush.
+
 2006-05-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (add_path_func), (init_post):

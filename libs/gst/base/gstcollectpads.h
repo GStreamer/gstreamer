@@ -157,6 +157,7 @@ GstFlowReturn	gst_collect_pads_collect_range 	(GstCollectPads *pads, guint64 off
 
 void		gst_collect_pads_start 		(GstCollectPads *pads);
 void		gst_collect_pads_stop 		(GstCollectPads *pads);
+void		gst_collect_pads_set_flushing	(GstCollectPads *pads, gboolean flushing);
 
 /* get collected buffers */
 GstBuffer*	gst_collect_pads_peek 		(GstCollectPads *pads, GstCollectData *data);

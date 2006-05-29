@@ -233,6 +233,7 @@ gst_collect_pads_collect
 gst_collect_pads_collect_range
 gst_collect_pads_start
 gst_collect_pads_stop
+gst_collect_pads_set_flushing
 gst_collect_pads_peek
 gst_collect_pads_pop
 gst_collect_pads_available
