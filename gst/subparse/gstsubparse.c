@@ -163,7 +163,7 @@ gst_sub_parse_class_init (GstSubParseClass * klass)
   element_class->change_state = gst_sub_parse_change_state;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ENCODING,
-      g_param_spec_string ("encoding", "subtitle charset encoding",
+      g_param_spec_string ("subtitle-encoding", "subtitle charset encoding",
           "Encoding to assume if input subtitles are not in UTF-8 encoding. "
           "If not set, the GST_SUBTITLE_ENCODING environment variable will "
           "be checked for an encoding to use. If that is not set either, "
@@ -278,6 +278,8 @@ gst_sub_parse_set_property (GObject * object, guint prop_id,
     case PROP_ENCODING:
       g_free (subparse->encoding);
       subparse->encoding = g_value_dup_string (value);
+      GST_LOG_OBJECT (object, "subtitle encoding set to %s",
+          GST_STR_NULL (subparse->encoding));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

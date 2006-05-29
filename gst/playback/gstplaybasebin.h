@@ -79,7 +79,9 @@ struct _GstPlayBaseBin {
   gboolean       is_stream;
   GstElement    *source;
   GstElement    *decoder;
-  GstElement    *subtitle; /* additional filesrc ! subparse bin */
+  GstElement    *subtitle;              /* additional filesrc ! subparse bin */
+  GSList        *subtitle_elements;     /* subtitle elements that have 'subtitle-encoding' property */
+  gchar         *subencoding;           /* encoding to propagate to the above subtitle elements     */
   gboolean       need_rebuild;
 
   /* group management - using own lock */

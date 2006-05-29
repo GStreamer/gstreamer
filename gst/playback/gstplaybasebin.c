@@ -71,7 +71,8 @@ enum
   ARG_SOURCE,
   ARG_VIDEO,
   ARG_AUDIO,
-  ARG_TEXT
+  ARG_TEXT,
+  ARG_SUBTITLE_ENCODING
 };
 
 static void gst_play_base_bin_class_init (GstPlayBaseBinClass * klass);
@@ -187,6 +188,12 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
       g_param_spec_int ("current-text", "Current text",
           "Currently playing text stream (-1 = none)",
           -1, G_MAXINT, -1, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_SUBTITLE_ENCODING,
+      g_param_spec_string ("subtitle-encoding", "subtitle encoding",
+          "Encoding to assume if input subtitles are not in UTF-8 encoding. "
+          "If not set, the GST_SUBTITLE_ENCODING environment variable will "
+          "be checked for an encoding to use. If that is not set either, "
+          "ISO-8859-15 will be assumed.", NULL, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (gst_play_base_bin_debug, "playbasebin", 0,
       "playbasebin");
@@ -208,6 +215,8 @@ gst_play_base_bin_init (GstPlayBaseBin * play_base_bin)
   play_base_bin->source = NULL;
   play_base_bin->decoder = NULL;
   play_base_bin->subtitle = NULL;
+  play_base_bin->subencoding = NULL;
+  play_base_bin->subtitle_elements = NULL;
 
   play_base_bin->group_lock = g_mutex_new ();
   play_base_bin->group_cond = g_cond_new ();
@@ -229,7 +238,12 @@ gst_play_base_bin_dispose (GObject * object)
   play_base_bin->uri = NULL;
   g_free (play_base_bin->suburi);
   play_base_bin->suburi = NULL;
-
+  g_free (play_base_bin->subencoding);
+  play_base_bin->subencoding = NULL;
+  if (play_base_bin->subtitle_elements) {
+    g_slist_free (play_base_bin->subtitle_elements);
+    play_base_bin->subtitle_elements = NULL;
+  }
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -1147,6 +1161,48 @@ no_type:
   }
 }
 
+static void
+set_encoding_element (GstElement * element, gchar * encoding)
+{
+  GST_DEBUG_OBJECT (element, "setting encoding to %s", GST_STR_NULL (encoding));
+  g_object_set (G_OBJECT (element), "subtitle-encoding", encoding, NULL);
+}
+
+
+static void
+decodebin_element_added_cb (GstBin * decodebin, GstElement * element,
+    gpointer data)
+{
+  GstPlayBaseBin *play_base_bin = GST_PLAY_BASE_BIN (data);
+  gchar *encoding;
+
+  if (!g_object_class_find_property (G_OBJECT_GET_CLASS (element),
+          "subtitle-encoding")) {
+    return;
+  }
+
+  GST_OBJECT_LOCK (play_base_bin);
+  play_base_bin->subtitle_elements =
+      g_slist_append (play_base_bin->subtitle_elements, element);
+  encoding = g_strdup (play_base_bin->subencoding);
+  GST_OBJECT_UNLOCK (play_base_bin);
+
+  set_encoding_element (element, encoding);
+  g_free (encoding);
+}
+
+static void
+decodebin_element_removed_cb (GstBin * decodebin, GstElement * element,
+    gpointer data)
+{
+  GstPlayBaseBin *play_base_bin = GST_PLAY_BASE_BIN (data);
+
+  GST_OBJECT_LOCK (play_base_bin);
+  play_base_bin->subtitle_elements =
+      g_slist_remove (play_base_bin->subtitle_elements, element);
+  GST_OBJECT_UNLOCK (play_base_bin);
+}
+
 
 /*
  * Generate source ! subparse bins.
@@ -1155,16 +1211,20 @@ no_type:
 static GstElement *
 setup_subtitle (GstPlayBaseBin * play_base_bin, gchar * sub_uri)
 {
-  GstElement *source, *subparse, *subbin;
+  GstElement *source, *subdecodebin, *subbin;
 
   source = gst_element_make_from_uri (GST_URI_SRC, sub_uri, NULL);
   if (!source)
     return NULL;
-  subparse = gst_element_factory_make ("decodebin", "subtitle-decoder");
-
+  subdecodebin = gst_element_factory_make ("decodebin", "subtitle-decoder");
+  g_signal_connect (subdecodebin, "element-added",
+      G_CALLBACK (decodebin_element_added_cb), play_base_bin);
+  g_signal_connect (subdecodebin, "element-removed",
+      G_CALLBACK (decodebin_element_removed_cb), play_base_bin);
   subbin = gst_bin_new ("subtitle-bin");
-  gst_bin_add_many (GST_BIN (subbin), source, subparse, NULL);
-  gst_element_link (source, subparse);
+  gst_bin_add_many (GST_BIN (subbin), source, subdecodebin, NULL);
+
+  gst_element_link (source, subdecodebin);
 
   /* return the subtitle GstElement object */
   return subbin;
@@ -1436,6 +1496,11 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
   if (!(play_base_bin->decoder =
           gst_element_factory_make ("decodebin", "decoder")))
     goto no_decodebin;
+
+  g_signal_connect (play_base_bin->decoder, "element-added",
+      G_CALLBACK (decodebin_element_added_cb), play_base_bin);
+  g_signal_connect (play_base_bin->decoder, "element-removed",
+      G_CALLBACK (decodebin_element_removed_cb), play_base_bin);
 
   gst_bin_add (GST_BIN (play_base_bin), play_base_bin->decoder);
 
@@ -1802,6 +1867,34 @@ gst_play_base_bin_set_property (GObject * object, guint prop_id,
           GST_STREAM_TYPE_TEXT, g_value_get_int (value));
       GROUP_UNLOCK (play_base_bin);
       break;
+    case ARG_SUBTITLE_ENCODING:
+    {
+      const gchar *encoding;
+      GSList *list;
+
+      encoding = g_value_get_string (value);
+      if (encoding && play_base_bin->subencoding &&
+          !strcmp (play_base_bin->subencoding, encoding)) {
+        return;
+      }
+      if (encoding == NULL && play_base_bin->subencoding == NULL)
+        return;
+
+      GST_OBJECT_LOCK (play_base_bin);
+      g_free (play_base_bin->subencoding);
+      play_base_bin->subencoding = g_strdup (encoding);
+      list = g_slist_copy (play_base_bin->subtitle_elements);
+      g_slist_foreach (list, (GFunc) gst_object_ref, NULL);
+      GST_OBJECT_UNLOCK (play_base_bin);
+
+      /* we can't hold a lock when calling g_object_set() on a child, since
+       * the notify event will trigger GstObject to send a deep-notify event
+       * which will try to take the lock ... */
+      g_slist_foreach (list, (GFunc) set_encoding_element, (gpointer) encoding);
+      g_slist_foreach (list, (GFunc) gst_object_unref, NULL);
+      g_slist_free (list);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1875,6 +1968,11 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, get_active_source (play_base_bin,
               GST_STREAM_TYPE_TEXT));
       GROUP_UNLOCK (play_base_bin);
+      break;
+    case ARG_SUBTITLE_ENCODING:
+      GST_OBJECT_LOCK (play_base_bin);
+      g_value_set_string (value, play_base_bin->subencoding);
+      GST_OBJECT_UNLOCK (play_base_bin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
