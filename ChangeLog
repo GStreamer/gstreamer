@@ -1,3 +1,12 @@
+2006-05-29  Michael Smith  <msmith@fluendo.com>
+
+	* gst/audioconvert/gstaudioconvert.c: (make_lossless_changes),
+	(append_with_other_format), (set_structure_widths),
+	(gst_audio_convert_transform_caps):
+	  Patch from #341562: give more specific audio caps in get_caps, so
+	  that basetransform  can make better decisions on what caps to
+	  negotiate.
+
 2006-05-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/elements/volume.c:

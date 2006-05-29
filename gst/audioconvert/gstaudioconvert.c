@@ -156,8 +156,6 @@ GST_STATIC_CAPS ( \
 
 static GstAudioChannelPosition *supported_positions;
 
-static GstStaticCaps gst_audio_convert_static_caps = STATIC_CAPS;
-
 static GstStaticPadTemplate gst_audio_convert_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -318,37 +316,224 @@ parse_error:
   }
 }
 
-/* audioconvert can convert anything except sample rate; so return template
- * caps with rate fixed */
-/* FIXME:
- * it would be smart here to return the caps with the same width as the first
+/* Modify the structure so that things that must always have a single
+ * value (for float), or can always be losslessly converted (for int), have
+ * appropriate values.
+ */
+static GstStructure *
+make_lossless_changes (GstStructure * s, gboolean isfloat)
+{
+  if (isfloat) {
+    /* float doesn't have depth, and only supports width 32, and native-endian
+     */
+    gst_structure_remove_field (s, "depth");
+    gst_structure_set (s, "width", G_TYPE_INT, 32, NULL);
+    gst_structure_set (s, "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
+  } else {
+    /* int supports either endian, and signed or unsigned. GValues are a pain */
+    GValue list = { 0 };
+    GValue val = { 0 };
+    int i;
+    gint endian[] = { G_LITTLE_ENDIAN, G_BIG_ENDIAN };
+    gboolean booleans[] = { TRUE, FALSE };
+
+    g_value_init (&list, GST_TYPE_LIST);
+    g_value_init (&val, G_TYPE_INT);
+    for (i = 0; i < 2; i++) {
+      g_value_set_int (&val, endian[i]);
+      gst_value_list_append_value (&list, &val);
+    }
+    gst_structure_set_value (s, "endianness", &list);
+    g_value_unset (&val);
+    g_value_unset (&list);
+
+    g_value_init (&list, GST_TYPE_LIST);
+    g_value_init (&val, G_TYPE_BOOLEAN);
+    for (i = 0; i < 2; i++) {
+      g_value_set_boolean (&val, booleans[i]);
+      gst_value_list_append_value (&list, &val);
+    }
+    gst_structure_set_value (s, "signed", &list);
+    g_value_unset (&val);
+    g_value_unset (&list);
+  }
+
+  return s;
+}
+
+/* Little utility function to create a related structure for float/int */
+static void
+append_with_other_format (GstCaps * caps, GstStructure * s, gboolean isfloat)
+{
+  GstStructure *s2;
+
+  if (isfloat) {
+    s2 = gst_structure_copy (s);
+    gst_structure_set_name (s2, "audio/x-raw-int");
+    s = make_lossless_changes (s2, FALSE);
+    gst_caps_append_structure (caps, s2);
+  } else {
+    s2 = gst_structure_copy (s);
+    gst_structure_set_name (s2, "audio/x-raw-float");
+    s = make_lossless_changes (s2, TRUE);
+    gst_caps_append_structure (caps, s2);
+  }
+}
+
+/* Set widths (a list); multiples of 8 between min and max */
+static void
+set_structure_widths (GstStructure * s, int min, int max)
+{
+  GValue list = { 0 };
+  GValue val = { 0 };
+  int width;
+
+  if (min == max) {
+    gst_structure_set (s, "width", G_TYPE_INT, min, NULL);
+    return;
+  }
+
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&val, G_TYPE_INT);
+  for (width = min; width <= max; width += 8) {
+    g_value_set_int (&val, width);
+    gst_value_list_append_value (&list, &val);
+    GST_DEBUG ("Appended width %d to widths available", width);
+  }
+  gst_structure_set_value (s, "width", &list);
+  g_value_unset (&val);
+  g_value_unset (&list);
+}
+
+/* Audioconvert can perform all conversions on audio except for resampling. 
+ * However, there are some conversions we _prefer_ not to do. For example, it's
+ * better to convert format (float<->int, endianness, etc) than the number of
+ * channels, as the latter conversion is not lossless.
+ *
+ * So, we return, in order (assuming input caps have only one structure; 
+ * is this right?):
+*  - input caps with a different format (lossless conversions).
+ *  - input caps with a different format (slightly lossy conversions).
+ *  - input caps with a different number of channels (very lossy!)
  */
 static GstCaps *
 gst_audio_convert_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps)
 {
-  int i;
-  const GValue *rate;
   GstCaps *ret;
-  GstStructure *structure;
+  GstStructure *s, *structure;
+  gboolean isfloat;
+  gint width, depth, channels;
+  gchar *fields_used[] = { "width", "depth", "rate", "channels", "endianness",
+    "signed"
+  };
+  int i;
 
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
 
   structure = gst_caps_get_structure (caps, 0);
 
-  ret = gst_static_caps_get (&gst_audio_convert_static_caps);
+  isfloat = strcmp (gst_structure_get_name (structure),
+      "audio/x-raw-float") == 0;
 
-  /* if rate not set, we return the template */
-  if (!(rate = gst_structure_get_value (structure, "rate")))
-    return ret;
-
-  /* else, write rate in the template caps */
-  ret = gst_caps_make_writable (ret);
-
-  for (i = 0; i < gst_caps_get_size (ret); ++i) {
-    structure = gst_caps_get_structure (ret, i);
-    gst_structure_set_value (structure, "rate", rate);
+  /* We operate on a version of the original structure with any additional
+   * fields absent */
+  s = gst_structure_empty_new (gst_structure_get_name (structure));
+  for (i = 0; i < sizeof (fields_used) / sizeof (*fields_used); i++) {
+    if (gst_structure_has_field (structure, fields_used[i]))
+      gst_structure_set_value (s, fields_used[i],
+          gst_structure_get_value (structure, fields_used[i]));
   }
+
+  if (!isfloat) {
+    /* Commonly, depth is left out: set it equal to width if we have a fixed
+     * width, if so */
+    if (!gst_structure_has_field (s, "depth") &&
+        gst_structure_get_int (s, "width", &width))
+      gst_structure_set (s, "depth", G_TYPE_INT, width, NULL);
+  }
+
+  ret = gst_caps_new_empty ();
+
+  /* All lossless conversions */
+  s = make_lossless_changes (s, isfloat);
+  gst_caps_append_structure (ret, s);
+
+  /* Same, plus a float<->int conversion */
+  append_with_other_format (ret, s, isfloat);
+
+  /* We don't mind increasing width/depth/channels, but reducing them is 
+   * Very Bad. Only available if width, depth, channels are already fixed. */
+  s = gst_structure_copy (s);
+  if (!isfloat) {
+    if (gst_structure_get_int (structure, "width", &width))
+      set_structure_widths (s, width, 32);
+    if (gst_structure_get_int (structure, "depth", &depth)) {
+      if (depth == 32)
+        gst_structure_set (s, "depth", G_TYPE_INT, 32, NULL);
+      else
+        gst_structure_set (s, "depth", GST_TYPE_INT_RANGE, depth, 32, NULL);
+    }
+  }
+
+  if (gst_structure_get_int (structure, "channels", &channels)) {
+    if (channels == 8)
+      gst_structure_set (s, "channels", G_TYPE_INT, 8, NULL);
+    else
+      gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, channels, 8, NULL);
+  }
+  gst_caps_append_structure (ret, s);
+
+  /* Same, plus a float<->int conversion */
+  append_with_other_format (ret, s, isfloat);
+
+  /* We'll reduce depth if we must... only for integer, since we can't do this
+   * for float. We reduce as low as 16 bits; reducing to less than this is
+   * even worse than dropping channels. We only do this if we haven't already
+   * done the equivalent above. */
+  if (!gst_structure_get_int (structure, "width", &width) || width > 16) {
+    if (isfloat) {
+      /* These are invalid widths/depths for float, but we don't actually use
+       * them - we just pass it to append_with_other_format, which makes them
+       * valid
+       */
+      GstStructure *s2 = gst_structure_copy (s);
+
+      set_structure_widths (s2, 16, 32);
+      gst_structure_set (s2, "depth", GST_TYPE_INT_RANGE, 16, 32, NULL);
+      append_with_other_format (ret, s2, TRUE);
+      gst_structure_free (s2);
+    } else {
+      s = gst_structure_copy (s);
+      set_structure_widths (s, 16, 32);
+      gst_structure_set (s, "depth", GST_TYPE_INT_RANGE, 16, 32, NULL);
+      gst_caps_append_structure (ret, s);
+    }
+  }
+
+  /* Channel conversions to fewer channels is only done if needed - generally
+   * it's very bad to drop channels entirely.
+   */
+  s = gst_structure_copy (s);
+  gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 8, NULL);
+  gst_caps_append_structure (ret, s);
+
+  /* Same, plus a float<->int conversion */
+  append_with_other_format (ret, s, isfloat);
+
+  /* And, finally, for integer only, we allow conversion to any width/depth we
+   * support: this should be equivalent to our (non-float) template caps. (the
+   * floating point case should be being handled just above) */
+  s = gst_structure_copy (s);
+  set_structure_widths (s, 8, 32);
+  gst_structure_set (s, "depth", GST_TYPE_INT_RANGE, 1, 32, NULL);
+
+  if (isfloat) {
+    append_with_other_format (ret, s, TRUE);
+    gst_structure_free (s);
+  } else
+    gst_caps_append_structure (ret, s);
+
   return ret;
 }
 
