@@ -245,47 +245,70 @@ not_supported:
  * eachother which we can get from the first timestamps we see.
  * When we add a new stream (or remove a stream) the duration might
  * also become invalid again and we need to post a new DURATION
- * message to ntify this fact to the parent.
+ * message to notify this fact to the parent.
  * For now we take the max of all the upstream elements so the simple
  * cases work at least somewhat. */
 static gboolean
 gst_adder_query_duration (GstAdder * adder, GstQuery * query)
 {
-  GList *pads;
   gint64 max;
   gboolean res;
   GstFormat format;
-
-  max = -1;
-  res = TRUE;
+  GstIterator *it;
+  gboolean done;
 
   /* parse format */
   gst_query_parse_duration (query, &format, NULL);
 
-  GST_OBJECT_LOCK (adder);
-  pads = GST_ELEMENT_CAST (adder)->sinkpads;
-  for (; pads; pads = g_list_next (pads)) {
-    GstPad *pad = GST_PAD_CAST (pads->data);
-    gint64 duration;
+  max = -1;
+  res = TRUE;
+  done = FALSE;
 
-    /* ask sink peer for duration */
-    res &= gst_pad_query_peer_duration (pad, &format, &duration);
-    /* take max from all valid return values */
-    if (res) {
-      /* valid unknown length, stop searching */
-      if (duration == -1) {
-        max = duration;
+  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (adder));
+  while (!done) {
+    GstIteratorResult ires;
+    gpointer item;
+
+    ires = gst_iterator_next (it, &item);
+    switch (ires) {
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_OK:
+      {
+        GstPad *pad = GST_PAD_CAST (item);
+        gint64 duration;
+
+        /* ask sink peer for duration */
+        res &= gst_pad_query_peer_duration (pad, &format, &duration);
+        /* take max from all valid return values */
+        if (res) {
+          /* valid unknown length, stop searching */
+          if (duration == -1) {
+            max = duration;
+            done = TRUE;
+          }
+          /* else see if bigger than current max */
+          else if (duration > max)
+            max = duration;
+        }
         break;
       }
-      /* else see if bigger than current max */
-      else if (duration > max)
-        max = duration;
+      case GST_ITERATOR_RESYNC:
+        max = -1;
+        res = TRUE;
+        break;
+      default:
+        res = FALSE;
+        done = TRUE;
+        break;
     }
   }
-  GST_OBJECT_UNLOCK (adder);
 
-  /* and store the max */
-  gst_query_set_duration (query, format, max);
+  if (res) {
+    /* and store the max */
+    gst_query_set_duration (query, format, max);
+  }
 
   return res;
 }
@@ -332,6 +355,22 @@ gst_adder_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
+static gboolean
+forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
+{
+  gst_event_ref (event);
+  if (!gst_pad_push_event (pad, event)) {
+    g_value_set_boolean (ret, FALSE);
+    GST_WARNING_OBJECT (pad, "Sending event  %p (%s) failed.",
+        event, GST_EVENT_TYPE_NAME (event));
+  } else {
+    GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
+        event, GST_EVENT_TYPE_NAME (event));
+  }
+  gst_object_unref (pad);
+  return TRUE;
+}
+
 /* forwards the event to all sinkpads, takes ownership of the 
  * event
  *
@@ -342,33 +381,23 @@ static gboolean
 forward_event (GstAdder * adder, GstEvent * event)
 {
   gboolean ret;
-  GList *pads;
+  GstIterator *it;
+  GValue vret = { 0 };
 
   GST_LOG_OBJECT (adder, "Forwarding event %p (%s)", event,
       GST_EVENT_TYPE_NAME (event));
 
   ret = TRUE;
 
-  GST_OBJECT_LOCK (adder);
-  pads = GST_ELEMENT_CAST (adder)->sinkpads;
-  for (; pads; pads = g_list_next (pads)) {
-    GstPad *pad = GST_PAD_CAST (pads->data);
-
-    gst_event_ref (event);
-    ret &= gst_pad_push_event (pad, event);
-
-    if (!ret) {
-      GST_WARNING_OBJECT (pad, "Sending event  %p (%s) failed.",
-          event, GST_EVENT_TYPE_NAME (event));
-      break;
-    } else {
-      GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
-          event, GST_EVENT_TYPE_NAME (event));
-    }
-  }
-  GST_OBJECT_UNLOCK (adder);
-
+  g_value_init (&vret, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&vret, TRUE);
+  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (adder));
+  gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func, &vret,
+      event);
+  gst_iterator_free (it);
   gst_event_unref (event);
+
+  ret = g_value_get_boolean (&vret);
 
   return ret;
 }
@@ -387,9 +416,33 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       result = FALSE;
       break;
     case GST_EVENT_SEEK:
-      /* FIXME seek needs something smarter. */
+    {
+      GstSeekFlags flags;
+
+      /* parse the flushing flag */
+      gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
+
+      /* if we are not flushing, just forward */
+      if (!flags & GST_SEEK_FLAG_FLUSH)
+        goto done;
+
+      /* make sure we accept nothing anymore and return WRONG_STATE */
+      gst_collect_pads_set_flushing (adder->collect, TRUE);
+
+      /* flushing seek, start flush downstream, the flush will be done
+       * when all pads received a FLUSH_STOP. */
+      gst_pad_push_event (adder->srcpad, gst_event_new_flush_start ());
+
+      /* now wait for the collected to be finished and mark a new 
+       * segment */
+      GST_OBJECT_LOCK (adder->collect);
+      adder->segment_pending = TRUE;
+      GST_OBJECT_UNLOCK (adder->collect);
+
+    done:
       result = forward_event (adder, event);
       break;
+    }
     case GST_EVENT_NAVIGATION:
       /* navigation is rather pointless. */
       result = FALSE;

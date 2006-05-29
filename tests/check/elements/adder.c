@@ -76,6 +76,7 @@ test_event_message_received (GstBus * bus, GstMessage * message,
       g_main_loop_quit (main_loop);
       break;
     default:
+      g_assert_not_reached ();
       break;
   }
 }
@@ -114,7 +115,7 @@ GST_START_TEST (test_event)
   fail_unless (res == TRUE, NULL);
 
   seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
-      GST_SEEK_FLAG_SEGMENT,
+      GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_FLUSH,
       GST_SEEK_TYPE_SET, (GstClockTime) 0,
       GST_SEEK_TYPE_SET, (GstClockTime) 2 * GST_SECOND);
 
@@ -134,9 +135,10 @@ GST_START_TEST (test_event)
   res = gst_element_set_state (bin, GST_STATE_PAUSED);
   fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
 
-  /* FIXME, PAUSED is async and seek might not work before being prerolled.
-   * though it should work in this case, as audiotestsrc is a live source
-   */
+  /* wait for completion */
+  res = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
   res = gst_element_send_event (bin, seek_event);
   fail_unless (res == TRUE, NULL);
 
@@ -184,8 +186,17 @@ test_play_twice_message_received (GstBus * bus, GstMessage * message,
         res = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
         fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
 
+        /* wait for completion */
+        res =
+            gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+            GST_CLOCK_TIME_NONE);
+        fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
         res = gst_element_send_event (GST_ELEMENT (bin), play_seek_event);
         fail_unless (res == TRUE, NULL);
+
+        /* event is now gone */
+        play_seek_event = NULL;
 
         res = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PLAYING);
         fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
@@ -194,6 +205,7 @@ test_play_twice_message_received (GstBus * bus, GstMessage * message,
       }
       break;
     default:
+      g_assert_not_reached ();
       break;
   }
 }
@@ -228,7 +240,7 @@ GST_START_TEST (test_play_twice)
   fail_unless (res == TRUE, NULL);
 
   play_seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
-      GST_SEEK_FLAG_SEGMENT,
+      GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_FLUSH,
       GST_SEEK_TYPE_SET, (GstClockTime) 0,
       GST_SEEK_TYPE_SET, (GstClockTime) 2 * GST_SECOND);
 
@@ -245,6 +257,12 @@ GST_START_TEST (test_play_twice)
 
   /* prepare playing */
   res = gst_element_set_state (bin, GST_STATE_PAUSED);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* wait for completion */
+  res =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
   fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
 
   res = gst_element_send_event (bin, gst_event_ref (play_seek_event));

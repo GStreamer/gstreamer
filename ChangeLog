@@ -1,3 +1,15 @@
+2006-05-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/adder/gstadder.c: (gst_adder_query_duration),
+	(forward_event_func), (forward_event), (gst_adder_src_event):
+	Fix adder seeking.
+	Make query/seeking code threadsafe.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/adder.c: (test_event_message_received),
+	(GST_START_TEST), (test_play_twice_message_received):
+	Fix adder test case.
+
 2006-05-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Young-Ho Cha  <ganadist at chollian net>
