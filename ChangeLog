@@ -1,5 +1,10 @@
 2006-05-29  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_finalize):
+	Don't leak pads lists.
+
+2006-05-29  Wim Taymans  <wim@fluendo.com>
+
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/gstcollectpads.c:
 	(gst_collect_pads_set_flushing_unlocked),

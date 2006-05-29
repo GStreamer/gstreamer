@@ -142,6 +142,7 @@ gst_collect_pads_finalize (GObject * object)
   }
   /* Free pads list */
   g_slist_free (pads->data);
+  g_slist_free (pads->abidata.ABI.pad_list);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
