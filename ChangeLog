@@ -1,5 +1,10 @@
 2006-05-29  Wim Taymans  <wim@fluendo.com>
 
+	* gst/adder/gstadder.c: (gst_adder_request_new_pad):
+	Don't leak pad name.
+
+2006-05-29  Wim Taymans  <wim@fluendo.com>
+
 	* gst/adder/gstadder.c: (gst_adder_query_duration),
 	(forward_event_func), (forward_event), (gst_adder_src_event):
 	Fix adder seeking.

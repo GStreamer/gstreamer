@@ -569,6 +569,7 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   name = g_strdup_printf ("sink%d", adder->numpads);
   newpad = gst_pad_new_from_template (templ, name);
+  g_free (name);
 
   gst_pad_set_getcaps_function (newpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
