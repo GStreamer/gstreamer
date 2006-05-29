@@ -120,6 +120,8 @@
 
 static gboolean gst_initialized = FALSE;
 
+static GList *plugin_paths = NULL;      /* for delayed processing in post_init */
+
 extern gint _gst_trace_on;
 
 /* set to TRUE when segfaults need to be left as is */
@@ -393,8 +395,8 @@ gst_init (int *argc, char **argv[])
 static void
 add_path_func (gpointer data, gpointer user_data)
 {
-  GST_INFO ("Adding plugin path: \"%s\"", (gchar *) data);
-  gst_registry_scan_path (gst_registry_get_default (), (gchar *) data);
+  GST_INFO ("Adding plugin path: \"%s\", will scan later", (gchar *) data);
+  plugin_paths = g_list_append (plugin_paths, g_strdup (data));
 }
 #endif
 
@@ -595,6 +597,16 @@ init_post (void)
     const char *plugin_path;
     GstRegistry *default_registry;
     gboolean changed = FALSE;
+    GList *l;
+
+    for (l = plugin_paths; l != NULL; l = l->next) {
+      GST_INFO ("Scanning plugin path: \"%s\"", (gchar *) l->data);
+      /* CHECKME: add changed |= here as well? */
+      gst_registry_scan_path (gst_registry_get_default (), (gchar *) l->data);
+      g_free (l->data);
+    }
+    g_list_free (plugin_paths);
+    plugin_paths = NULL;
 
 #ifdef HAVE_FORK
     pid_t pid;

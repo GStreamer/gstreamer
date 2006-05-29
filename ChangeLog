@@ -1,3 +1,10 @@
+2006-05-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c: (add_path_func), (init_post):
+	  Don't scan registry paths passed via --gst-plugin--path immediately
+	  (will crash, because absolutely nothing is set up and no types are
+	  registered etc.); do this later in init_post(). Fixes #343057.
+
 2006-05-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gst.c: (init_post):
