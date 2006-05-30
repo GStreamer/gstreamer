@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-14 17:08+0200\n"
+"POT-Creation-Date: 2006-05-30 16:22+0200\n"
 "PO-Revision-Date: 2005-12-02 17:43+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n!=1;\n"
 
-#: gst/gst.c:266
+#: gst/gst.c:271
 msgid "Print the GStreamer version"
 msgstr "Imprimeix la versió de GStreamer"
 
-#: gst/gst.c:268
+#: gst/gst.c:273
 msgid "Make all warnings fatal"
 msgstr "Fes fatals tots els avisos"
 
-#: gst/gst.c:271
+#: gst/gst.c:276
 msgid "Print available debug categories and exit"
 msgstr "Imprimeix les categories de depuració disponibles i surt"
 
-#: gst/gst.c:274
+#: gst/gst.c:279
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Nivell de depuració per defecte des de 1 (només errors) a 5 (tot) o 0 per a "
 "cap sortida"
 
-#: gst/gst.c:276
+#: gst/gst.c:281
 msgid "LEVEL"
 msgstr "NIVELL"
 
-#: gst/gst.c:278
+#: gst/gst.c:283
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "nivells específics per a les categories individuals. Per exemple: "
 "GST_AUTOPLUG:5, GST_ELEMENT_*:3"
 
-#: gst/gst.c:281
+#: gst/gst.c:286
 msgid "LIST"
 msgstr "LLISTA"
 
-#: gst/gst.c:283
+#: gst/gst.c:288
 msgid "Disable colored debugging output"
 msgstr "Inhabilita la sortida de depuració colorejada"
 
-#: gst/gst.c:285
+#: gst/gst.c:290
 msgid "Disable debugging"
 msgstr "Inhabilita la depuració"
 
-#: gst/gst.c:288
+#: gst/gst.c:293
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Habilita els diagnòstics detallats de càrrega de connectors"
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "Colon-separated paths containing plugins"
 msgstr "Camins separats per dos punts que contenen connectors"
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "PATHS"
 msgstr "CAMINS"
 
-#: gst/gst.c:293
+#: gst/gst.c:298
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -80,25 +80,25 @@ msgstr ""
 "Llista separada per comes de connectors a precarregar a més de la llista "
 "emmagatzemada en la variable d'entorn GST_PLUGIN_PATH"
 
-#: gst/gst.c:295
+#: gst/gst.c:300
 msgid "PLUGINS"
 msgstr "CONNECTORS"
 
-#: gst/gst.c:298
+#: gst/gst.c:303
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Inhabilita la captura de violacions de segment durant la càrrega de "
 "connectors"
 
-#: gst/gst.c:303
+#: gst/gst.c:308
 msgid "GStreamer Options"
 msgstr "Opcions del GStreamer"
 
-#: gst/gst.c:304
+#: gst/gst.c:309
 msgid "Show GStreamer Options"
 msgstr "Mostra les opcions del GStreamer"
 
-#: gst/gst.c:800
+#: gst/gst.c:861
 msgid "Unknown option"
 msgstr "Opció desconeguda"
 
@@ -576,7 +576,16 @@ msgstr ""
 msgid "image related to this stream"
 msgstr "codificador utilitzat per a codificar aquest flux"
 
-#: gst/gsttaglist.c:243
+#: gst/gsttaglist.c:206
+msgid "preview image"
+msgstr ""
+
+#: gst/gsttaglist.c:206
+#, fuzzy
+msgid "preview image related to this stream"
+msgstr "codificador utilitzat per a codificar aquest flux"
+
+#: gst/gsttaglist.c:245
 msgid ", "
 msgstr ", "
 
@@ -648,8 +657,7 @@ msgstr "No s'ha pogut enllaçar l'element de sortida per a l'URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "no es permet un conducte buit"
 
-#: libs/gst/base/gstbasesrc.c:1509 libs/gst/base/gstbasesrc.c:1520
-#: plugins/elements/gstqueue.c:782
+#: libs/gst/base/gstbasesrc.c:1535 libs/gst/base/gstbasesrc.c:1546
 msgid "Internal data flow error."
 msgstr "S'ha produït un error intern de flux de dades."
 
@@ -681,26 +689,26 @@ msgstr "S'ha produït un error en tancar el fitxer «%s»."
 msgid "Error while writing to file \"%s\"."
 msgstr "S'ha produït un error en escriure al fitxer «%s»."
 
-#: plugins/elements/gstfilesrc.c:912
+#: plugins/elements/gstfilesrc.c:930
 msgid "No file name specified for reading."
 msgstr "No s'ha especificat cap fitxer per a llegir."
 
-#: plugins/elements/gstfilesrc.c:924
+#: plugins/elements/gstfilesrc.c:942
 #, c-format
 msgid "Could not open file \"%s\" for reading: %s."
 msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura: %s."
 
-#: plugins/elements/gstfilesrc.c:933
+#: plugins/elements/gstfilesrc.c:951
 #, c-format
 msgid "could not get info on \"%s\"."
 msgstr "no s'ha pogut obtenir informació sobre «%s»."
 
-#: plugins/elements/gstfilesrc.c:940
+#: plugins/elements/gstfilesrc.c:958
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "«%s» és un directori."
 
-#: plugins/elements/gstfilesrc.c:947
+#: plugins/elements/gstfilesrc.c:965
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "El fitxer «%s» és un sòcol."
@@ -725,9 +733,55 @@ msgstr "mínim"
 msgid "maximum"
 msgstr "màxim"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:251
+msgid "Implemented Interfaces:\n"
+msgstr ""
+
+#: tools/gst-inspect.c:293
+msgid "readable"
+msgstr ""
+
+#: tools/gst-inspect.c:298
+#, fuzzy
+msgid "writable"
+msgstr "títol"
+
+#: tools/gst-inspect.c:303
+msgid "controllable"
+msgstr ""
+
+#: tools/gst-inspect.c:923
+#, fuzzy
+msgid "Total count: "
+msgstr "compte de pistes"
+
+#: tools/gst-inspect.c:924
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] ""
+msgstr[1] ""
+
+#: tools/gst-inspect.c:926
+#, fuzzy, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "funcionalitat"
+msgstr[1] "funcionalitats"
+
+#: tools/gst-inspect.c:1107
 msgid "Print all elements"
 msgstr "Imprimeix tots els elements"
+
+#: tools/gst-inspect.c:1173
+#, fuzzy, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "No s'ha pogut obrir «%s» per a l'escriptura."
+
+#: tools/gst-inspect.c:1178
+#, fuzzy, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "no hi ha cap element font per a l'URI «%s»"
 
 #: tools/gst-launch.c:79
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
@@ -1051,11 +1105,6 @@ msgstr "S'ESTÀ ALLIBERANT el conducte ...\n"
 
 #~ msgid "Added plugin %s with %d %s.\n"
 #~ msgstr "S'ha afegit el connector %s amb %d %s.\n"
-
-#~ msgid "feature"
-#~ msgid_plural "features"
-#~ msgstr[0] "funcionalitat"
-#~ msgstr[1] "funcionalitats"
 
 #~ msgid "Added path   %s to %s \n"
 #~ msgstr "S'ha afegit el camí %s a %s\n"

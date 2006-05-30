@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-14 17:08+0200\n"
+"POT-Creation-Date: 2006-05-30 16:22+0200\n"
 "PO-Revision-Date: 2005-01-27 16:58+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :    n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 
-#: gst/gst.c:266
+#: gst/gst.c:271
 msgid "Print the GStreamer version"
 msgstr "Испиши издање Гстримера"
 
-#: gst/gst.c:268
+#: gst/gst.c:273
 msgid "Make all warnings fatal"
 msgstr "Учини сва упозорења кобним"
 
-#: gst/gst.c:271
+#: gst/gst.c:276
 msgid "Print available debug categories and exit"
 msgstr "Испиши доступне категорије за налажење грешака и заврши"
 
-#: gst/gst.c:274
+#: gst/gst.c:279
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Подразумевани ниво опширности од 1 (само грешке) до 5 (све) или 0 (без "
 "излаза)"
 
-#: gst/gst.c:276
+#: gst/gst.c:281
 msgid "LEVEL"
 msgstr "НИВО"
 
-#: gst/gst.c:278
+#: gst/gst.c:283
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -47,31 +47,31 @@ msgstr ""
 "Запетом раздвојени списак парова име_категорије:ниво за постављање нарочитих "
 "нивоа за појединачне категорије. Пример: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:281
+#: gst/gst.c:286
 msgid "LIST"
 msgstr "СПИСАК"
 
-#: gst/gst.c:283
+#: gst/gst.c:288
 msgid "Disable colored debugging output"
 msgstr "Искључи обојени излаз за исправљање грешака"
 
-#: gst/gst.c:285
+#: gst/gst.c:290
 msgid "Disable debugging"
 msgstr "Искључи исправљање грешака"
 
-#: gst/gst.c:288
+#: gst/gst.c:293
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Укључи опширну дијагностику при учитавању додатка"
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "PATHS"
 msgstr "ПУТАЊЕ"
 
-#: gst/gst.c:293
+#: gst/gst.c:298
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -80,24 +80,24 @@ msgstr ""
 "Запетом раздвојен списак додатака који се предучитавају поред списка из "
 "променљиве окружења GST_PLUGIN_PATH"
 
-#: gst/gst.c:295
+#: gst/gst.c:300
 msgid "PLUGINS"
 msgstr "ДОДАЦИ"
 
-#: gst/gst.c:298
+#: gst/gst.c:303
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Искључи пресретање погрешних приступа меморији при учитавању додатака"
 
-#: gst/gst.c:303
+#: gst/gst.c:308
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:304
+#: gst/gst.c:309
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "Испиши издање Гстримера"
 
-#: gst/gst.c:800
+#: gst/gst.c:861
 msgid "Unknown option"
 msgstr ""
 
@@ -597,7 +597,16 @@ msgstr ""
 msgid "image related to this stream"
 msgstr "како кодирати овај ток"
 
-#: gst/gsttaglist.c:243
+#: gst/gsttaglist.c:206
+msgid "preview image"
+msgstr ""
+
+#: gst/gsttaglist.c:206
+#, fuzzy
+msgid "preview image related to this stream"
+msgstr "како кодирати овај ток"
+
+#: gst/gsttaglist.c:245
 msgid ", "
 msgstr ", "
 
@@ -669,8 +678,7 @@ msgstr "не могу да вежем завршни елемент за адр�
 msgid "empty pipeline not allowed"
 msgstr "није допуштен празан цевовод"
 
-#: libs/gst/base/gstbasesrc.c:1509 libs/gst/base/gstbasesrc.c:1520
-#: plugins/elements/gstqueue.c:782
+#: libs/gst/base/gstbasesrc.c:1535 libs/gst/base/gstbasesrc.c:1546
 msgid "Internal data flow error."
 msgstr ""
 
@@ -701,26 +709,26 @@ msgstr "Грешка при затварању датотеке „%s“."
 msgid "Error while writing to file \"%s\"."
 msgstr "Грешка при упису у датотеку „%s“."
 
-#: plugins/elements/gstfilesrc.c:912
+#: plugins/elements/gstfilesrc.c:930
 msgid "No file name specified for reading."
 msgstr "Није наведено име датотеке за читање."
 
-#: plugins/elements/gstfilesrc.c:924
+#: plugins/elements/gstfilesrc.c:942
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading: %s."
 msgstr "Не могу да отворим датотеку „%s“ ради читања."
 
-#: plugins/elements/gstfilesrc.c:933
+#: plugins/elements/gstfilesrc.c:951
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "не могу да вежем %s са %s"
 
-#: plugins/elements/gstfilesrc.c:940
+#: plugins/elements/gstfilesrc.c:958
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" је директоријум."
 
-#: plugins/elements/gstfilesrc.c:947
+#: plugins/elements/gstfilesrc.c:965
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Датотека „%s“ је сокет."
@@ -746,9 +754,57 @@ msgstr "најмање"
 msgid "maximum"
 msgstr "највише"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:251
+msgid "Implemented Interfaces:\n"
+msgstr ""
+
+#: tools/gst-inspect.c:293
+msgid "readable"
+msgstr ""
+
+#: tools/gst-inspect.c:298
+#, fuzzy
+msgid "writable"
+msgstr "наслов"
+
+#: tools/gst-inspect.c:303
+msgid "controllable"
+msgstr ""
+
+#: tools/gst-inspect.c:923
+#, fuzzy
+msgid "Total count: "
+msgstr "укупно песама"
+
+#: tools/gst-inspect.c:924
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: tools/gst-inspect.c:926
+#, fuzzy, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "одлика"
+msgstr[1] "одлике"
+msgstr[2] "одлика"
+
+#: tools/gst-inspect.c:1107
 msgid "Print all elements"
 msgstr "Испиши све елементе"
+
+#: tools/gst-inspect.c:1173
+#, fuzzy, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "Не могу да отворим датотеку „%s“ ради уписа."
+
+#: tools/gst-inspect.c:1178
+#, fuzzy, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "нема изворног елемента за адресу „%s“"
 
 #: tools/gst-launch.c:79
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
@@ -960,12 +1016,6 @@ msgstr "Покрећем цевовод...\n"
 
 #~ msgid "Added plugin %s with %d %s.\n"
 #~ msgstr "Придодат додатак %s са %d %s.\n"
-
-#~ msgid "feature"
-#~ msgid_plural "features"
-#~ msgstr[0] "одлика"
-#~ msgstr[1] "одлике"
-#~ msgstr[2] "одлика"
 
 #~ msgid "Added path   %s to %s \n"
 #~ msgstr "Додао путању %s ка %s \n"

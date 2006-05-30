@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-14 17:08+0200\n"
+"POT-Creation-Date: 2006-05-30 16:22+0200\n"
 "PO-Revision-Date: 2006-04-07 18:23+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0\n"
 "X-Generator: BBEdit 8.2.3\n"
 
-#: gst/gst.c:266
+#: gst/gst.c:271
 msgid "Print the GStreamer version"
 msgstr "Hiển thị phiên bản GStreamer"
 
-#: gst/gst.c:268
+#: gst/gst.c:273
 msgid "Make all warnings fatal"
 msgstr "Đặt mọi cảnh báo là nghiêm trọng"
 
-#: gst/gst.c:271
+#: gst/gst.c:276
 msgid "Print available debug categories and exit"
 msgstr "Hiển thị tất cả các loại gỡ lỗi sẵn sàng rồi thoát"
 
-#: gst/gst.c:274
+#: gst/gst.c:279
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Mức gỡ lỗi mặc định từ 1 (chỉ lỗi) đến 5 (bất cứ điều nào) hay 0 (không xuất "
 "gì)"
 
-#: gst/gst.c:276
+#: gst/gst.c:281
 msgid "LEVEL"
 msgstr "MỨC"
 
-#: gst/gst.c:278
+#: gst/gst.c:283
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -47,31 +47,31 @@ msgstr ""
 "Danh sách định giới bằng dấu phẩy của đôi « tên_loại:mức » để đặt mức dứt "
 "khoát cho mỗi loại. Thí dụ: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:281
+#: gst/gst.c:286
 msgid "LIST"
 msgstr "DANH SÁCH"
 
-#: gst/gst.c:283
+#: gst/gst.c:288
 msgid "Disable colored debugging output"
 msgstr "Tắt xuất dữ liệu gỡ lỗi với màu"
 
-#: gst/gst.c:285
+#: gst/gst.c:290
 msgid "Disable debugging"
 msgstr "Tắt gỡ lỗi"
 
-#: gst/gst.c:288
+#: gst/gst.c:293
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Bật chẩn đoán chi tiết việc tải trình cầm phít"
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "Colon-separated paths containing plugins"
 msgstr "Các đường dẫn chứa bộ cầm phít, phân cách nhau bởi dấu phẩy."
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "PATHS"
 msgstr "ĐƯỜNG DẪN"
 
-#: gst/gst.c:293
+#: gst/gst.c:298
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -79,23 +79,23 @@ msgstr ""
 "Danh sách định giới bằng dấu phẩy của các bộ cầm phít cần tải trước, thêm "
 "vào danh sách được cất giữ trong biến môi trường <GST_PLUGIN_PATH>."
 
-#: gst/gst.c:295
+#: gst/gst.c:300
 msgid "PLUGINS"
 msgstr "CẦM PHÍT"
 
-#: gst/gst.c:298
+#: gst/gst.c:303
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Tắt khả năng bắt lỗi phân đoạn trong khi tải bộ cầm phít"
 
-#: gst/gst.c:303
+#: gst/gst.c:308
 msgid "GStreamer Options"
 msgstr "Tùy chọn GStreamer"
 
-#: gst/gst.c:304
+#: gst/gst.c:309
 msgid "Show GStreamer Options"
 msgstr "Hiển thị Tùy chọnStreamer"
 
-#: gst/gst.c:800
+#: gst/gst.c:861
 msgid "Unknown option"
 msgstr "Tùy chọn lạ"
 
@@ -573,7 +573,16 @@ msgstr ""
 msgid "image related to this stream"
 msgstr "bộ mã hóa được sử dụng để mã hóa luồng này"
 
-#: gst/gsttaglist.c:243
+#: gst/gsttaglist.c:206
+msgid "preview image"
+msgstr ""
+
+#: gst/gsttaglist.c:206
+#, fuzzy
+msgid "preview image related to this stream"
+msgstr "bộ mã hóa được sử dụng để mã hóa luồng này"
+
+#: gst/gsttaglist.c:245
 msgid ", "
 msgstr ", "
 
@@ -650,8 +659,7 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr "không cho phép đường ống trống"
 
-#: libs/gst/base/gstbasesrc.c:1509 libs/gst/base/gstbasesrc.c:1520
-#: plugins/elements/gstqueue.c:782
+#: libs/gst/base/gstbasesrc.c:1535 libs/gst/base/gstbasesrc.c:1546
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
@@ -682,26 +690,26 @@ msgstr "Gặp lỗi khi đóng tập tin « %s »."
 msgid "Error while writing to file \"%s\"."
 msgstr "Gặp lỗi khi ghi vào tập tin « %s »."
 
-#: plugins/elements/gstfilesrc.c:912
+#: plugins/elements/gstfilesrc.c:930
 msgid "No file name specified for reading."
 msgstr "Chưa ghi rõ tên tập tin để đọc."
 
-#: plugins/elements/gstfilesrc.c:924
+#: plugins/elements/gstfilesrc.c:942
 #, c-format
 msgid "Could not open file \"%s\" for reading: %s."
 msgstr "Không mở được tập tin « %s » để đọc: %s."
 
-#: plugins/elements/gstfilesrc.c:933
+#: plugins/elements/gstfilesrc.c:951
 #, c-format
 msgid "could not get info on \"%s\"."
 msgstr "không thể lấy thông tin về « %s »."
 
-#: plugins/elements/gstfilesrc.c:940
+#: plugins/elements/gstfilesrc.c:958
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "« %s » là thư mục."
 
-#: plugins/elements/gstfilesrc.c:947
+#: plugins/elements/gstfilesrc.c:965
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Tập tin « %s » là ổ cắm."
@@ -726,9 +734,53 @@ msgstr "tối thiểu"
 msgid "maximum"
 msgstr "tối đa"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:251
+msgid "Implemented Interfaces:\n"
+msgstr ""
+
+#: tools/gst-inspect.c:293
+msgid "readable"
+msgstr ""
+
+#: tools/gst-inspect.c:298
+#, fuzzy
+msgid "writable"
+msgstr "tựa đề"
+
+#: tools/gst-inspect.c:303
+msgid "controllable"
+msgstr ""
+
+#: tools/gst-inspect.c:923
+#, fuzzy
+msgid "Total count: "
+msgstr "số đếm rãnh"
+
+#: tools/gst-inspect.c:924
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] ""
+
+#: tools/gst-inspect.c:926
+#, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] ""
+
+#: tools/gst-inspect.c:1107
 msgid "Print all elements"
 msgstr "Hiển thị mọi yếu tố"
+
+#: tools/gst-inspect.c:1173
+#, fuzzy, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "Không mở được tập tin « %s » để ghi."
+
+#: tools/gst-inspect.c:1178
+#, fuzzy, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "không có yếu tố nguồn cho địa điểm « %s »"
 
 #: tools/gst-launch.c:79
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"

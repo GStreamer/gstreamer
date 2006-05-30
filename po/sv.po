@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-14 17:08+0200\n"
+"POT-Creation-Date: 2006-05-30 16:22+0200\n"
 "PO-Revision-Date: 2005-12-04 21:45+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -17,30 +17,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:266
+#: gst/gst.c:271
 msgid "Print the GStreamer version"
 msgstr "Skriv ut Gstreamer-versionen"
 
-#: gst/gst.c:268
+#: gst/gst.c:273
 msgid "Make all warnings fatal"
 msgstr "Gör alla varningar ödesdigra"
 
-#: gst/gst.c:271
+#: gst/gst.c:276
 msgid "Print available debug categories and exit"
 msgstr "Skriv ut tillgängliga felsökningskategorier och avsluta"
 
-#: gst/gst.c:274
+#: gst/gst.c:279
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för "
 "ingen utmatning"
 
-#: gst/gst.c:276
+#: gst/gst.c:281
 msgid "LEVEL"
 msgstr "NIVÅ"
 
-#: gst/gst.c:278
+#: gst/gst.c:283
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "Kommaseparerad lista med kategorinamn:nivå-par för att ställa in specifika "
 "nivåer för de enskilda kategorierna. Exempel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:281
+#: gst/gst.c:286
 msgid "LIST"
 msgstr "LISTA"
 
-#: gst/gst.c:283
+#: gst/gst.c:288
 msgid "Disable colored debugging output"
 msgstr "Inaktivera färglagd felsökningsutmatning"
 
-#: gst/gst.c:285
+#: gst/gst.c:290
 msgid "Disable debugging"
 msgstr "Inaktivera felsökning"
 
-#: gst/gst.c:288
+#: gst/gst.c:293
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktivera utförlig diagnostik vid inläsning av insticksmoduler"
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "Colon-separated paths containing plugins"
 msgstr "Kolonseparerade sökvägar som innehåller insticksmoduler"
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "PATHS"
 msgstr "SÖKVÄGAR"
 
-#: gst/gst.c:293
+#: gst/gst.c:298
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -80,24 +80,24 @@ msgstr ""
 "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
 "som lagras i miljövariabeln GST_PLUGIN_PATH"
 
-#: gst/gst.c:295
+#: gst/gst.c:300
 msgid "PLUGINS"
 msgstr "INSTICKSMODULER"
 
-#: gst/gst.c:298
+#: gst/gst.c:303
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
 
-#: gst/gst.c:303
+#: gst/gst.c:308
 msgid "GStreamer Options"
 msgstr "GStreamer-alternativ"
 
-#: gst/gst.c:304
+#: gst/gst.c:309
 msgid "Show GStreamer Options"
 msgstr "Visa GStreamer-alternativ"
 
-#: gst/gst.c:800
+#: gst/gst.c:861
 msgid "Unknown option"
 msgstr "Okänt alternativ"
 
@@ -578,7 +578,16 @@ msgstr "Tid"
 msgid "image related to this stream"
 msgstr "kodare som använts för att koda detta flöde"
 
-#: gst/gsttaglist.c:243
+#: gst/gsttaglist.c:206
+msgid "preview image"
+msgstr ""
+
+#: gst/gsttaglist.c:206
+#, fuzzy
+msgid "preview image related to this stream"
+msgstr "kodare som använts för att koda detta flöde"
+
+#: gst/gsttaglist.c:245
 msgid ", "
 msgstr ", "
 
@@ -652,8 +661,7 @@ msgstr "kunde inte länka utgångselementet för URI:n \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
-#: libs/gst/base/gstbasesrc.c:1509 libs/gst/base/gstbasesrc.c:1520
-#: plugins/elements/gstqueue.c:782
+#: libs/gst/base/gstbasesrc.c:1535 libs/gst/base/gstbasesrc.c:1546
 msgid "Internal data flow error."
 msgstr "Internt dataflödesfel."
 
@@ -685,26 +693,26 @@ msgstr "Fel vid stängning av filen \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid skrivning till filen \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:912
+#: plugins/elements/gstfilesrc.c:930
 msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
-#: plugins/elements/gstfilesrc.c:924
+#: plugins/elements/gstfilesrc.c:942
 #, c-format
 msgid "Could not open file \"%s\" for reading: %s."
 msgstr "Kunde inte öppna filen \"%s\" för läsning: %s."
 
-#: plugins/elements/gstfilesrc.c:933
+#: plugins/elements/gstfilesrc.c:951
 #, c-format
 msgid "could not get info on \"%s\"."
 msgstr "kunde inte få information om \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:940
+#: plugins/elements/gstfilesrc.c:958
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" är en katalog."
 
-#: plugins/elements/gstfilesrc.c:947
+#: plugins/elements/gstfilesrc.c:965
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Filen \"%s\" är ett uttag."
@@ -730,9 +738,57 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maximum"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:251
+msgid "Implemented Interfaces:\n"
+msgstr ""
+
+#: tools/gst-inspect.c:293
+#, fuzzy
+msgid "readable"
+msgstr "Diskant"
+
+#: tools/gst-inspect.c:298
+#, fuzzy
+msgid "writable"
+msgstr "titel"
+
+#: tools/gst-inspect.c:303
+#, fuzzy
+msgid "controllable"
+msgstr "_Kontroll"
+
+#: tools/gst-inspect.c:923
+#, fuzzy
+msgid "Total count: "
+msgstr "spårantal"
+
+#: tools/gst-inspect.c:924
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] ""
+msgstr[1] ""
+
+#: tools/gst-inspect.c:926
+#, fuzzy, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "funktion"
+msgstr[1] "funktioner"
+
+#: tools/gst-inspect.c:1107
 msgid "Print all elements"
 msgstr "Skriv ut alla element"
+
+#: tools/gst-inspect.c:1173
+#, fuzzy, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "Kunde inte ta bort filen: %s\n"
+
+#: tools/gst-inspect.c:1178
+#, fuzzy, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "inget källelement för URI:n \"%s\""
 
 #: tools/gst-launch.c:79
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
@@ -972,11 +1028,6 @@ msgstr "FRIGÖR rörledning...\n"
 
 #~ msgid "Added plugin %s with %d %s.\n"
 #~ msgstr "Lade till insticksmodul %s med %d %s.\n"
-
-#~ msgid "feature"
-#~ msgid_plural "features"
-#~ msgstr[0] "funktion"
-#~ msgstr[1] "funktioner"
 
 #~ msgid "Added path   %s to %s \n"
 #~ msgstr "Lade till sökväg   %s till %s \n"
@@ -2018,9 +2069,6 @@ msgstr "FRIGÖR rörledning...\n"
 #~ msgid "_Contents"
 #~ msgstr "_Innehåll"
 
-#~ msgid "_Control"
-#~ msgstr "_Kontroll"
-
 #~ msgid "_File"
 #~ msgstr "_Fil"
 
@@ -2562,9 +2610,6 @@ msgstr "FRIGÖR rörledning...\n"
 
 #~ msgid "DSP Output"
 #~ msgstr "DSP-utgång"
-
-#~ msgid "Treble"
-#~ msgstr "Diskant"
 
 #~ msgid "Equalizer"
 #~ msgstr "Equalizer"
@@ -3429,9 +3474,6 @@ msgstr "FRIGÖR rörledning...\n"
 
 #~ msgid "Error reading $HOME/.cddbslave."
 #~ msgstr "Fel vid läsning av $HOME/.cddbslave."
-
-#~ msgid "Couldn't remove file: %s\n"
-#~ msgstr "Kunde inte ta bort filen: %s\n"
 
 #~ msgid "Delete CDDB Entry?"
 #~ msgstr "Ta bort CDDB-post?"

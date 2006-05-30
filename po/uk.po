@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-14 17:08+0200\n"
+"POT-Creation-Date: 2006-05-30 16:22+0200\n"
 "PO-Revision-Date: 2006-04-07 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -17,30 +17,30 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
 "10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: gst/gst.c:266
+#: gst/gst.c:271
 msgid "Print the GStreamer version"
 msgstr "Вивести версію GStreamer"
 
-#: gst/gst.c:268
+#: gst/gst.c:273
 msgid "Make all warnings fatal"
 msgstr "Вважати всі попередження помилками"
 
-#: gst/gst.c:271
+#: gst/gst.c:276
 msgid "Print available debug categories and exit"
 msgstr "Вивести наявні категорії налагодження та вийти"
 
-#: gst/gst.c:274
+#: gst/gst.c:279
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Типовий рівень налагодження від 1 (лише помилки) до 5 (усе), або 0 - без "
 "налагодження"
 
-#: gst/gst.c:276
+#: gst/gst.c:281
 msgid "LEVEL"
 msgstr "РІВЕНЬ"
 
-#: gst/gst.c:278
+#: gst/gst.c:283
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "Перелік розділених комою пар \"назва_категорії:рівень\" для встановлення "
 "певних рівнів окремим категоріям. Наприклад: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:281
+#: gst/gst.c:286
 msgid "LIST"
 msgstr "ПЕРЕЛІК"
 
-#: gst/gst.c:283
+#: gst/gst.c:288
 msgid "Disable colored debugging output"
 msgstr "Вимкнути оформлення кольором налагоджувальних повідомлень"
 
-#: gst/gst.c:285
+#: gst/gst.c:290
 msgid "Disable debugging"
 msgstr "Вимкнути налагодження"
 
-#: gst/gst.c:288
+#: gst/gst.c:293
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Вимкнути докладну діагностику завантаження модулів"
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "Colon-separated paths containing plugins"
 msgstr "Список розділених крапкою з комою шляхів, які містять модулі"
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "PATHS"
 msgstr "ШЛЯХИ"
 
-#: gst/gst.c:293
+#: gst/gst.c:298
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -80,23 +80,23 @@ msgstr ""
 "Перелік розділених комою назв модулів, що попередньо завантажуються, які є "
 "додатковими до переліку, що зберігається у змінній оточення GST_PLUGIN_PATH"
 
-#: gst/gst.c:295
+#: gst/gst.c:300
 msgid "PLUGINS"
 msgstr "МОДУЛІ"
 
-#: gst/gst.c:298
+#: gst/gst.c:303
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Вимкнути перехоплення помилок сегментації при завантаженні модулів"
 
-#: gst/gst.c:303
+#: gst/gst.c:308
 msgid "GStreamer Options"
 msgstr "Параметри GStreamer"
 
-#: gst/gst.c:304
+#: gst/gst.c:309
 msgid "Show GStreamer Options"
 msgstr "Показати параметри GStreamer"
 
-#: gst/gst.c:800
+#: gst/gst.c:861
 msgid "Unknown option"
 msgstr "Невідомий параметр"
 
@@ -569,7 +569,16 @@ msgstr ""
 msgid "image related to this stream"
 msgstr "кодер, що використовувався для кодування цих даних"
 
-#: gst/gsttaglist.c:243
+#: gst/gsttaglist.c:206
+msgid "preview image"
+msgstr ""
+
+#: gst/gsttaglist.c:206
+#, fuzzy
+msgid "preview image related to this stream"
+msgstr "кодер, що використовувався для кодування цих даних"
+
+#: gst/gsttaglist.c:245
 msgid ", "
 msgstr ", "
 
@@ -642,8 +651,7 @@ msgstr "не вдається прив'язати елемент-спожива�
 msgid "empty pipeline not allowed"
 msgstr "порожній канал не допускається"
 
-#: libs/gst/base/gstbasesrc.c:1509 libs/gst/base/gstbasesrc.c:1520
-#: plugins/elements/gstqueue.c:782
+#: libs/gst/base/gstbasesrc.c:1535 libs/gst/base/gstbasesrc.c:1546
 msgid "Internal data flow error."
 msgstr "Помилка внутрішнього потоку даних."
 
@@ -674,26 +682,26 @@ msgstr "Помилка закривання файлу \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Помилка при записуванні у файл \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:912
+#: plugins/elements/gstfilesrc.c:930
 msgid "No file name specified for reading."
 msgstr "Не вказана назва файлу для читання."
 
-#: plugins/elements/gstfilesrc.c:924
+#: plugins/elements/gstfilesrc.c:942
 #, c-format
 msgid "Could not open file \"%s\" for reading: %s."
 msgstr "Не вдається відкрити файл \"%s\" для читання: %s."
 
-#: plugins/elements/gstfilesrc.c:933
+#: plugins/elements/gstfilesrc.c:951
 #, c-format
 msgid "could not get info on \"%s\"."
 msgstr "не вдається отримати інформацію про \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:940
+#: plugins/elements/gstfilesrc.c:958
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" є каталогом."
 
-#: plugins/elements/gstfilesrc.c:947
+#: plugins/elements/gstfilesrc.c:965
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Файл \"%s\" є сокетом."
@@ -718,9 +726,57 @@ msgstr "мінімум"
 msgid "maximum"
 msgstr "максимум"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:251
+msgid "Implemented Interfaces:\n"
+msgstr ""
+
+#: tools/gst-inspect.c:293
+msgid "readable"
+msgstr ""
+
+#: tools/gst-inspect.c:298
+#, fuzzy
+msgid "writable"
+msgstr "заголовок"
+
+#: tools/gst-inspect.c:303
+msgid "controllable"
+msgstr ""
+
+#: tools/gst-inspect.c:923
+#, fuzzy
+msgid "Total count: "
+msgstr "кількість доріжок"
+
+#: tools/gst-inspect.c:924
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: tools/gst-inspect.c:926
+#, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#: tools/gst-inspect.c:1107
 msgid "Print all elements"
 msgstr "Вивести усі елементи"
+
+#: tools/gst-inspect.c:1173
+#, fuzzy, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "Не вдається відкрити файл \"%s\" для запису."
+
+#: tools/gst-inspect.c:1178
+#, fuzzy, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "відсутній елемент-джерело для URI \"%s\""
 
 #: tools/gst-launch.c:79
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"

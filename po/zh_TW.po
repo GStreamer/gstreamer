@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-14 17:08+0200\n"
+"POT-Creation-Date: 2006-05-30 16:22+0200\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -15,29 +15,29 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: gst/gst.c:266
+#: gst/gst.c:271
 msgid "Print the GStreamer version"
 msgstr "顯示 GStreamer 版本"
 
-#: gst/gst.c:268
+#: gst/gst.c:273
 msgid "Make all warnings fatal"
 msgstr "令任何警告都造成程式終止"
 
-#: gst/gst.c:271
+#: gst/gst.c:276
 msgid "Print available debug categories and exit"
 msgstr "顯示可以偵錯的類別，然後結束"
 
-#: gst/gst.c:274
+#: gst/gst.c:279
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "將預設偵錯級別設定為 1 (只顯示錯誤) 至 5 (任何訊息)，或者用 0 表示不顯示訊息"
 
-#: gst/gst.c:276
+#: gst/gst.c:281
 msgid "LEVEL"
 msgstr "LEVEL"
 
-#: gst/gst.c:278
+#: gst/gst.c:283
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -45,31 +45,31 @@ msgstr ""
 "各種類別和它們的詳細程度，格式是「分類:等級」，每個都以逗號隔開。例如："
 "GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:281
+#: gst/gst.c:286
 msgid "LIST"
 msgstr "LIST"
 
-#: gst/gst.c:283
+#: gst/gst.c:288
 msgid "Disable colored debugging output"
 msgstr "偵錯結果不加上色彩"
 
-#: gst/gst.c:285
+#: gst/gst.c:290
 msgid "Disable debugging"
 msgstr "關閉偵錯功能"
 
-#: gst/gst.c:288
+#: gst/gst.c:293
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "載入增效模組時顯示詳細訊息"
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "PATHS"
 msgstr "PATHS"
 
-#: gst/gst.c:293
+#: gst/gst.c:298
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -78,24 +78,24 @@ msgstr ""
 "除了環境變數 GST_PLUGIN_PATH 中的增效模組之外，另外再指定載入的增效模組 (以逗"
 "號分隔)"
 
-#: gst/gst.c:295
+#: gst/gst.c:300
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:298
+#: gst/gst.c:303
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "載入增效模組時不攔截程式區段碼錯誤"
 
-#: gst/gst.c:303
+#: gst/gst.c:308
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:304
+#: gst/gst.c:309
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "顯示 GStreamer 版本"
 
-#: gst/gst.c:800
+#: gst/gst.c:861
 msgid "Unknown option"
 msgstr ""
 
@@ -580,7 +580,15 @@ msgstr ""
 msgid "image related to this stream"
 msgstr ""
 
-#: gst/gsttaglist.c:243
+#: gst/gsttaglist.c:206
+msgid "preview image"
+msgstr ""
+
+#: gst/gsttaglist.c:206
+msgid "preview image related to this stream"
+msgstr ""
+
+#: gst/gsttaglist.c:245
 msgid ", "
 msgstr ""
 
@@ -652,8 +660,7 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr "不允許使用沒有內容的管線"
 
-#: libs/gst/base/gstbasesrc.c:1509 libs/gst/base/gstbasesrc.c:1520
-#: plugins/elements/gstqueue.c:782
+#: libs/gst/base/gstbasesrc.c:1535 libs/gst/base/gstbasesrc.c:1546
 msgid "Internal data flow error."
 msgstr ""
 
@@ -684,26 +691,26 @@ msgstr "關閉檔案 “%s” 時發生錯誤。"
 msgid "Error while writing to file \"%s\"."
 msgstr "當寫入內容至檔案 “%s” 時發生錯誤。"
 
-#: plugins/elements/gstfilesrc.c:912
+#: plugins/elements/gstfilesrc.c:930
 msgid "No file name specified for reading."
 msgstr "未指定要讀取的檔案名稱。"
 
-#: plugins/elements/gstfilesrc.c:924
+#: plugins/elements/gstfilesrc.c:942
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading: %s."
 msgstr "無法開啟檔案 “%s” 來讀取內容。"
 
-#: plugins/elements/gstfilesrc.c:933
+#: plugins/elements/gstfilesrc.c:951
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "無法連接 %s 和 %s"
 
-#: plugins/elements/gstfilesrc.c:940
+#: plugins/elements/gstfilesrc.c:958
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "“%s” 是一個目錄。"
 
-#: plugins/elements/gstfilesrc.c:947
+#: plugins/elements/gstfilesrc.c:965
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "“%s” 是一個 socket。"
@@ -728,9 +735,53 @@ msgstr "最低"
 msgid "maximum"
 msgstr "最高"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:251
+msgid "Implemented Interfaces:\n"
+msgstr ""
+
+#: tools/gst-inspect.c:293
+msgid "readable"
+msgstr ""
+
+#: tools/gst-inspect.c:298
+#, fuzzy
+msgid "writable"
+msgstr "標題"
+
+#: tools/gst-inspect.c:303
+msgid "controllable"
+msgstr ""
+
+#: tools/gst-inspect.c:923
+#, fuzzy
+msgid "Total count: "
+msgstr "音軌總數"
+
+#: tools/gst-inspect.c:924
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] ""
+
+#: tools/gst-inspect.c:926
+#, fuzzy, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "功能"
+
+#: tools/gst-inspect.c:1107
 msgid "Print all elements"
 msgstr "顯示所有元件"
+
+#: tools/gst-inspect.c:1173
+#, fuzzy, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "無法開啟 “%s” 檔案來寫入內容。"
+
+#: tools/gst-inspect.c:1178
+#, fuzzy, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "URI “%s” 沒有來源元件"
 
 #: tools/gst-launch.c:79
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
@@ -933,10 +984,6 @@ msgstr "執行管線 ...\n"
 # (abel) e.g. "Added plugin alaw with 2 features."
 #~ msgid "Added plugin %s with %d %s.\n"
 #~ msgstr "加入增效模組 %s，當中有 %d 項%s。\n"
-
-#~ msgid "feature"
-#~ msgid_plural "features"
-#~ msgstr[0] "功能"
 
 #~ msgid "Rebuilding %s (%s) ...\n"
 #~ msgstr "正在重新整理 %s (%s) ...\n"

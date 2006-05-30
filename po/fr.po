@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-14 17:08+0200\n"
+"POT-Creation-Date: 2006-05-30 16:22+0200\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -15,30 +15,30 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/gst.c:266
+#: gst/gst.c:271
 msgid "Print the GStreamer version"
 msgstr "Afficher la version de GStreamer"
 
-#: gst/gst.c:268
+#: gst/gst.c:273
 msgid "Make all warnings fatal"
 msgstr "Rendre tout les avertissements bloquants"
 
-#: gst/gst.c:271
+#: gst/gst.c:276
 msgid "Print available debug categories and exit"
 msgstr "Afficher les catégories de deboguage disponibles et quitter"
 
-#: gst/gst.c:274
+#: gst/gst.c:279
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Niveau de deboguage par defaut de 1 (que les erreurs) a 5 (tout) ou 0 pour "
 "n'avoir aucun affichage"
 
-#: gst/gst.c:276
+#: gst/gst.c:281
 msgid "LEVEL"
 msgstr "NIVEAU"
 
-#: gst/gst.c:278
+#: gst/gst.c:283
 #, fuzzy
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
@@ -48,32 +48,32 @@ msgstr ""
 "des niveaux spécifiques pour chaque catégorie.\n"
 "Exemple: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:281
+#: gst/gst.c:286
 msgid "LIST"
 msgstr ""
 
-#: gst/gst.c:283
+#: gst/gst.c:288
 #, fuzzy
 msgid "Disable colored debugging output"
 msgstr "Désactiver la couleur dans la sortie de deboguage"
 
-#: gst/gst.c:285
+#: gst/gst.c:290
 msgid "Disable debugging"
 msgstr "Désactiver la sortie de deboguage"
 
-#: gst/gst.c:288
+#: gst/gst.c:293
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Activer un diagnostique détaillé du chargement des plugins"
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:291
+#: gst/gst.c:296
 msgid "PATHS"
 msgstr "CHEMINS"
 
-#: gst/gst.c:293
+#: gst/gst.c:298
 #, fuzzy
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -82,26 +82,26 @@ msgstr ""
 "Liste séparée par des virgules de plugins a precharger en plus de la liste "
 "contenue dans la variable d'environnement GST_PLUGIN_PATH"
 
-#: gst/gst.c:295
+#: gst/gst.c:300
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:298
+#: gst/gst.c:303
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Désactiver la detection des erreurs de segmentation pendant le chargement "
 "des plugins"
 
-#: gst/gst.c:303
+#: gst/gst.c:308
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:304
+#: gst/gst.c:309
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "Afficher la version de GStreamer"
 
-#: gst/gst.c:800
+#: gst/gst.c:861
 msgid "Unknown option"
 msgstr ""
 
@@ -600,7 +600,16 @@ msgstr ""
 msgid "image related to this stream"
 msgstr "Echoué a déterminer le type du flux"
 
-#: gst/gsttaglist.c:243
+#: gst/gsttaglist.c:206
+msgid "preview image"
+msgstr ""
+
+#: gst/gsttaglist.c:206
+#, fuzzy
+msgid "preview image related to this stream"
+msgstr "Echoué a déterminer le type du flux"
+
+#: gst/gsttaglist.c:245
 msgid ", "
 msgstr ", "
 
@@ -673,8 +682,7 @@ msgstr "impossible de lier un element destination pour l'URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tube vide non autorisé"
 
-#: libs/gst/base/gstbasesrc.c:1509 libs/gst/base/gstbasesrc.c:1520
-#: plugins/elements/gstqueue.c:782
+#: libs/gst/base/gstbasesrc.c:1535 libs/gst/base/gstbasesrc.c:1546
 msgid "Internal data flow error."
 msgstr ""
 
@@ -706,27 +714,27 @@ msgstr ""
 msgid "Error while writing to file \"%s\"."
 msgstr ""
 
-#: plugins/elements/gstfilesrc.c:912
+#: plugins/elements/gstfilesrc.c:930
 #, fuzzy
 msgid "No file name specified for reading."
 msgstr "Echoué a déterminer le type du flux"
 
-#: plugins/elements/gstfilesrc.c:924
+#: plugins/elements/gstfilesrc.c:942
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading: %s."
 msgstr "Echoué a déterminer le type du flux"
 
-#: plugins/elements/gstfilesrc.c:933
+#: plugins/elements/gstfilesrc.c:951
 #, fuzzy, c-format
 msgid "could not get info on \"%s\"."
 msgstr "impossible de connecter %s a %s"
 
-#: plugins/elements/gstfilesrc.c:940
+#: plugins/elements/gstfilesrc.c:958
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr ""
 
-#: plugins/elements/gstfilesrc.c:947
+#: plugins/elements/gstfilesrc.c:965
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr ""
@@ -751,10 +759,56 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maximum"
 
-#: tools/gst-inspect.c:1098
+#: tools/gst-inspect.c:251
+msgid "Implemented Interfaces:\n"
+msgstr ""
+
+#: tools/gst-inspect.c:293
+msgid "readable"
+msgstr ""
+
+#: tools/gst-inspect.c:298
+#, fuzzy
+msgid "writable"
+msgstr "titre"
+
+#: tools/gst-inspect.c:303
+msgid "controllable"
+msgstr ""
+
+#: tools/gst-inspect.c:923
+#, fuzzy
+msgid "Total count: "
+msgstr "nombre de pistes"
+
+#: tools/gst-inspect.c:924
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] ""
+msgstr[1] ""
+
+#: tools/gst-inspect.c:926
+#, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] ""
+msgstr[1] ""
+
+#: tools/gst-inspect.c:1107
 #, fuzzy
 msgid "Print all elements"
 msgstr "pas d'element \"%s\""
+
+#: tools/gst-inspect.c:1173
+#, fuzzy, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "Echoué a déterminer le type du flux"
+
+#: tools/gst-inspect.c:1178
+#, fuzzy, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "pas d'element source pour l'URI \"%s\""
 
 #: tools/gst-launch.c:79
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
