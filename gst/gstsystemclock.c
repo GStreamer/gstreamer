@@ -43,6 +43,9 @@
 
 #include "gstsystemclock.h"
 
+/* Define this to get some extra debug about jitter from each clock_wait */
+#undef WAIT_DEBUGGING
+
 /* the one instance of the systemclock */
 static GstClock *_the_system_clock = NULL;
 
@@ -385,6 +388,10 @@ gst_system_clock_id_wait_unlocked (GstClock * clock, GstClockEntry * entry)
   if (diff > 0) {
     GTimeVal tv;
 
+#ifdef WAIT_DEBUGGING
+    GstClockTime result, final;
+#endif
+
     GST_TIME_TO_TIMEVAL (target, tv);
 
     while (TRUE) {
@@ -393,6 +400,20 @@ gst_system_clock_id_wait_unlocked (GstClock * clock, GstClockEntry * entry)
         /* timeout, this is fine, we can report success now */
         GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p unlocked after timeout", entry);
         entry->status = GST_CLOCK_OK;
+
+#ifdef WAIT_DEBUGGING
+        real = GST_CLOCK_GET_CLASS (clock)->get_internal_time (clock);
+        result = gst_clock_adjust_unlocked (clock, real);
+        final = gst_system_clock_get_internal_time (clock);
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "Waited for %" G_GINT64_FORMAT
+            " got %" G_GINT64_FORMAT " diff %" G_GINT64_FORMAT
+            " %g target-offset %" G_GINT64_FORMAT " %g", entryt, result,
+            result - entryt,
+            (double) (GstClockTimeDiff) (result - entryt) / GST_SECOND,
+            (final - target),
+            ((double) (GstClockTimeDiff) (final - target)) / GST_SECOND);
+#endif
+
         break;
       } else {
         /* the waiting is interrupted because the GCond was signaled. This can

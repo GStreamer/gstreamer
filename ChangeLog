@@ -1,3 +1,10 @@
+2006-05-30  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstsystemclock.c: (gst_system_clock_id_wait_unlocked):
+	Add debug that can be enabled using a #define at the top of the file,
+	for dumping stats about how late/early we were when waking up from
+	waiting on the clock.
+
 2006-05-30  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_check_pads):
