@@ -424,8 +424,8 @@ gst_id3v2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
   return buf;
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+gboolean
+gst_id3v2_mux_plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "id3v2mux", GST_RANK_NONE,
           GST_TYPE_ID3V2_MUX))
@@ -435,9 +435,3 @@ plugin_init (GstPlugin * plugin)
 
   return TRUE;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "taglib",
-    "Tag writing plug-in based on taglib",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

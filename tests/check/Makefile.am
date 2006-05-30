@@ -16,7 +16,9 @@ CLEANFILES = core.* test-registry.xml
 clean-local: clean-local-check
 
 if USE_TAGLIB
-check_taglib = elements/id3v2mux
+check_taglib = \
+	elements/id3v2mux \
+	elements/apev2mux
 else
 check_taglib =
 endif

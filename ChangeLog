@@ -1,3 +1,26 @@
+2006-05-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge  <mail at slomosnail de >
+
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* ext/taglib/Makefile.am:
+	* ext/taglib/gstapev2mux.cc:
+	* ext/taglib/gstapev2mux.h:
+	* ext/taglib/gstid3v2mux.cc:
+	* ext/taglib/gsttaglibmux.c: (plugin_init):
+	* ext/taglib/gsttaglibmux.h:
+	  Add apev2mux element (#343122).
+	
+	* tests/check/Makefile.am:
+	* tests/check/elements/apev2mux.c:
+	(test_taglib_apev2mux_create_tags),
+	(test_taglib_apev2mux_check_tags), (fill_mp3_buffer), (got_buffer),
+	(demux_pad_added), (test_taglib_apev2mux_check_output_buffer),
+	(test_taglib_apev2mux_with_tags), (GST_START_TEST),
+	(apev2mux_suite), (main):
+	  Add unit test for apev2mux element.
+
 2006-05-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/alpha/gstalphacolor.c: (gst_alpha_color_transform_caps):

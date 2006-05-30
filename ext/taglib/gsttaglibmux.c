@@ -1,6 +1,7 @@
 /* GStreamer taglib-based muxer base class
  * Copyright (C) 2006 Christophe Fergeau  <teuf@gnome.org>
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2006 Sebastian Dröge <mail@slomosnail.de>
 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -386,3 +387,16 @@ gst_tag_lib_mux_change_state (GstElement * element, GstStateChange transition)
 
   return result;
 }
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  return (gst_id3v2_mux_plugin_init (plugin)
+      && gst_apev2_mux_plugin_init (plugin));
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "taglib",
+    "Tag writing plug-in based on taglib",
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

@@ -119,6 +119,14 @@ GstId3v2MuxClass
 </SECTION>
 
 <SECTION>
+<FILE>element-apev2mux</FILE>
+GstApev2Mux
+<TITLE>apev2mux</TITLE>
+<SUBSECTION Standard>
+GstApev2MuxClass
+</SECTION>
+
+<SECTION>
 <FILE>element-jpegdec</FILE>
 GstJpegDec
 GstJpegDecErrorMgr

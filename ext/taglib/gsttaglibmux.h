@@ -63,6 +63,8 @@ struct _GstTagLibMuxClass {
 
 /* Standard function returning type information. */
 GType gst_tag_lib_mux_get_type (void);
+gboolean gst_apev2_mux_plugin_init (GstPlugin * plugin);
+gboolean gst_id3v2_mux_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 

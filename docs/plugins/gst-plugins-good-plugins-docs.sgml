@@ -13,6 +13,7 @@
   <chapter>
     <title>gst-plugins-good Elements</title>
     <xi:include href="xml/element-apedemux.xml" />
+    <xi:include href="xml/element-apev2mux.xml" />
     <xi:include href="xml/element-autoaudiosink.xml" />
     <xi:include href="xml/element-autovideosink.xml" />
     <xi:include href="xml/element-avidemux.xml" />
