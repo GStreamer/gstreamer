@@ -1980,6 +1980,8 @@ gst_type_find_register
 GST_TYPE_TYPE_FIND_PROBABILITY
 <SUBSECTION Private>
 gst_type_find_probability_get_type
+gst_type_find_get_type
+GST_TYPE_TYPE_FIND
 </SECTION>
 
 
