@@ -1,3 +1,10 @@
+2006-05-30  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/common/libgstvideo.def:
+	  export gst_video_calculate_display_ratio
+	* win32/vs6/libgstvideoscale.dsp:
+	  add link to libgstvideo-0.10.lib
+
 2006-05-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (gen_source_element):
