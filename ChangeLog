@@ -1,3 +1,10 @@
+2006-05-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybasebin.c: (gen_source_element):
+	  Throw a more comprehensible error for rtsp:// URIs (rather
+	  than erroring out with a negotiation error later on) until
+	  we fix playbin to handle rtspsrc etc.
+
 2006-05-30  Wim Taymans  <wim@fluendo.com>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_src_event),

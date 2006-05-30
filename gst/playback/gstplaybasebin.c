@@ -1242,6 +1242,13 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
   /* stip subtitle from uri */
   if (!play_base_bin->uri)
     return NULL;
+
+  if (g_str_has_prefix (play_base_bin->uri, "rtsp://")) {
+    GST_ELEMENT_ERROR (play_base_bin, RESOURCE, FAILED,
+        (_("RTSP streams cannot be played yet.")), (NULL));
+    return NULL;
+  }
+
   if (play_base_bin->suburi) {
     /* subtitle specified */
     *subbin = setup_subtitle (play_base_bin, play_base_bin->suburi);
