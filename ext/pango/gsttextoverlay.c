@@ -698,7 +698,7 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
 
       GST_DEBUG_OBJECT (overlay, "seek received, driving from here");
 
-      /* Flush downstream */
+      /* Flush downstream, FIXME, only for flushing seek */
       gst_pad_push_event (overlay->srcpad, gst_event_new_flush_start ());
 
       /* Mark ourself as flushing, unblock chains */
@@ -1090,6 +1090,7 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       GST_OBJECT_LOCK (overlay);
       /* We use flushing to make sure we return WRONG_STATE */
+      /* FIXME, after EOS a _pad_push() returns _UNEXPECTED */
       overlay->text_flushing = TRUE;
       /* We don't signal anything here because we want to keep the last queued
          buffer until video pad receives EOS or discard the buffer */
