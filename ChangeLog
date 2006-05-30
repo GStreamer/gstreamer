@@ -1,3 +1,17 @@
+2006-05-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_typefind),
+	(gst_ogg_demux_chain_elem_pad), (gst_ogg_demux_queue_data),
+	(gst_ogg_demux_chain_peer), (gst_ogg_pad_submit_packet),
+	(gst_ogg_pad_submit_page), (gst_ogg_chain_new_stream),
+	(gst_ogg_demux_seek), (gst_ogg_demux_get_data),
+	(gst_ogg_demux_get_next_page), (gst_ogg_demux_do_seek),
+	(gst_ogg_demux_bisect_forward_serialno),
+	(gst_ogg_demux_read_chain), (gst_ogg_demux_find_chains),
+	(gst_ogg_demux_chain), (gst_ogg_demux_loop), (gst_ogg_print):
+	  add more debugging
+	  clean up printf formats for granulepos and serialno
+
 2006-05-30  Michael Smith  <msmith@fluendo.com>
 
 	* ext/vorbis/vorbisenc.c: (raw_caps_factory),

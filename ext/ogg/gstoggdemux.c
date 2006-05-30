@@ -29,7 +29,6 @@
 
 #include <gst/base/gsttypefindhelper.h>
 
-
 static const GstElementDetails gst_ogg_demux_details =
 GST_ELEMENT_DETAILS ("Ogg demuxer",
     "Codec/Demuxer",
@@ -809,7 +808,7 @@ gst_ogg_pad_typefind (GstOggPad * pad, ogg_packet * packet)
 
   if (caps == NULL) {
     GST_WARNING_OBJECT (ogg,
-        "couldn't find caps for stream with serial %08lx", pad->serialno);
+        "couldn't find caps for stream with serial %08x", pad->serialno);
     caps = gst_caps_new_simple ("application/octet-stream", NULL);
   } else {
     /* ogg requires you to use a decoder element to define the
@@ -890,7 +889,7 @@ gst_ogg_demux_chain_elem_pad (GstOggPad * pad, ogg_packet * packet)
   if (!pad->elem_pad)
     goto no_decoder;
 
-  GST_DEBUG_OBJECT (ogg, "%p init decoder serial %08lx", pad, pad->serialno);
+  GST_DEBUG_OBJECT (ogg, "%p init decoder serial %08x", pad, pad->serialno);
 
   buf = gst_buffer_new_and_alloc (packet->bytes);
   memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
@@ -907,7 +906,7 @@ gst_ogg_demux_chain_elem_pad (GstOggPad * pad, ogg_packet * packet)
 no_decoder:
   {
     GST_WARNING_OBJECT (ogg,
-        "pad %08lx does not have elem_pad, no decoder ?", pad);
+        "pad %08x does not have elem_pad, no decoder ?", pad);
     return GST_FLOW_ERROR;
   }
 decoder_error:
@@ -927,7 +926,7 @@ gst_ogg_demux_queue_data (GstOggPad * pad, ogg_packet * packet)
   GstOggDemux *ogg = pad->ogg;
 #endif
 
-  GST_DEBUG_OBJECT (ogg, "%p queueing data serial %08lx", pad, pad->serialno);
+  GST_DEBUG_OBJECT (ogg, "%p queueing data serial %08x", pad, pad->serialno);
 
   buf = gst_buffer_new_and_alloc (packet->bytes);
   memcpy (buf->data, packet->packet, packet->bytes);
@@ -951,7 +950,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
   GstOggChain *chain;
 
   GST_DEBUG_OBJECT (ogg,
-      "%p streaming to peer serial %08lx", pad, pad->serialno);
+      "%p streaming to peer serial %08x", pad, pad->serialno);
 
   ret =
       gst_pad_alloc_buffer_and_set_caps (GST_PAD (pad), GST_BUFFER_OFFSET_NONE,
@@ -1012,7 +1011,7 @@ done:
 no_buffer:
   {
     GST_DEBUG_OBJECT (ogg,
-        "%p could not get buffer from peer %08lx, %d (%s)", pad,
+        "%p could not get buffer from peer %08x, %d (%s)", pad,
         pad->serialno, ret, gst_flow_get_name (ret));
     if (ret == GST_FLOW_NOT_LINKED)
       ret = GST_FLOW_OK;
@@ -1037,7 +1036,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
   GstOggDemux *ogg = pad->ogg;
 
-  GST_DEBUG_OBJECT (ogg, "%p submit packet serial %08lx", pad, pad->serialno);
+  GST_DEBUG_OBJECT (ogg, "%p submit packet serial %08x", pad, pad->serialno);
 
   if (!pad->have_type) {
     if (!ogg->have_fishead && packet->bytes == SKELETON_FISHEAD_SIZE &&
@@ -1055,7 +1054,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
 
   granule = packet->granulepos;
   if (granule != -1) {
-    GST_DEBUG_OBJECT (ogg, "%p has granulepos %lld", pad, granule);
+    GST_DEBUG_OBJECT (ogg, "%p has granulepos %" G_GINT64_FORMAT, pad, granule);
     ogg->current_granule = granule;
     pad->current_granule = granule;
     /* granulepos 0 and -1 are considered header packets.
@@ -1064,7 +1063,8 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
      * internal decoder produced a frame and we don't have a
      * granulepos because in that case the granulpos must have been 0 */
     if (pad->first_granule == -1 && granule != 0) {
-      GST_DEBUG_OBJECT (ogg, "%p found first granulepos %lld", pad, granule);
+      GST_DEBUG_OBJECT (ogg, "%p found first granulepos %" G_GINT64_FORMAT, pad,
+          granule);
       pad->first_granule = granule;
     }
   }
@@ -1136,7 +1136,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     }
   }
 
-  /* if we are building a chain, store buffer for when we activate 
+  /* if we are building a chain, store buffer for when we activate
    * it. This path is taken if we operate in streaming mode. */
   if (ogg->building_chain) {
     ret = gst_ogg_demux_queue_data (pad, packet);
@@ -1194,7 +1194,7 @@ gst_ogg_pad_submit_page (GstOggPad * pad, ogg_page * page)
 choked:
   {
     GST_WARNING_OBJECT (ogg,
-        "ogg stream choked on page (serial %08lx), resetting stream",
+        "ogg stream choked on page (serial %08x), resetting stream",
         pad->serialno);
     gst_ogg_pad_reset (pad);
     /* we continue to recover */
@@ -1261,7 +1261,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   GstTagList *list;
   gchar *name;
 
-  GST_DEBUG_OBJECT (chain->ogg, "creating new stream %08lx in chain %p",
+  GST_DEBUG_OBJECT (chain->ogg, "creating new stream %08x in chain %p",
       serialno, chain);
 
   ret = g_object_new (GST_TYPE_OGG_PAD, NULL);
@@ -1270,7 +1270,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   gst_object_sink (GST_OBJECT (ret));
 
   list = gst_tag_list_new ();
-  name = g_strdup_printf ("serial_%08lx", serialno);
+  name = g_strdup_printf ("serial_%08x", serialno);
 
   GST_PAD_DIRECTION (ret) = GST_PAD_SRC;
   ret->chain = chain;
@@ -1281,7 +1281,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
 
   ret->serialno = serialno;
   if (ogg_stream_init (&ret->stream, serialno) != 0) {
-    GST_ERROR ("Could not initialize ogg_stream struct for serial %08lx.",
+    GST_ERROR ("Could not initialize ogg_stream struct for serial %08x.",
         serialno);
     gst_object_unref (ret);
     return NULL;
@@ -1293,7 +1293,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   gst_tag_list_free (list);
 
   GST_DEBUG_OBJECT (chain->ogg,
-      "created new ogg src %p for stream with serial %08lx", ret, serialno);
+      "created new ogg src %p for stream with serial %08x", ret, serialno);
 
   g_array_append_val (chain->streams, ret);
 
@@ -1486,7 +1486,7 @@ gst_ogg_demux_submit_buffer (GstOggDemux * ogg, GstBuffer * buffer)
 static void
 gst_ogg_demux_seek (GstOggDemux * ogg, gint64 offset)
 {
-  GST_LOG_OBJECT (ogg, "seeking to %lld", offset);
+  GST_LOG_OBJECT (ogg, "seeking to %" G_GINT64_FORMAT, offset);
 
   ogg->offset = offset;
   ogg_sync_reset (&ogg->sync);
@@ -1504,7 +1504,8 @@ gst_ogg_demux_get_data (GstOggDemux * ogg)
   GstBuffer *buffer;
   gint size;
 
-  GST_LOG_OBJECT (ogg, "get data %lld %lld", ogg->offset, ogg->length);
+  GST_LOG_OBJECT (ogg, "get data %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
+      ogg->offset, ogg->length);
   if (ogg->offset == ogg->length)
     goto eos;
 
@@ -1532,13 +1533,19 @@ error:
 }
 
 /* Read the next page from the current offset.
+ * boundary: number of bytes ahead we allow looking for;
+ * -1 if no boundary
+ * returns the offset the next page starts at, or OV_FALSE if we couldn't
+ * find a new page within the boundary
  */
 static gint64
 gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary)
 {
   gint64 end_offset = 0;
 
-  GST_LOG_OBJECT (ogg, "get next page %lld", boundary);
+  GST_LOG_OBJECT (ogg,
+      "get next page, current offset %" G_GINT64_FORMAT ", bytes boundary %"
+      G_GINT64_FORMAT, ogg->offset, boundary);
 
   if (boundary > 0)
     end_offset = ogg->offset + boundary;
@@ -1547,8 +1554,9 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary)
     glong more;
 
     if (boundary > 0 && ogg->offset >= end_offset) {
-      GST_LOG_OBJECT (ogg, "offset %lld >= end_offset %lld", ogg->offset,
-          end_offset);
+      GST_LOG_OBJECT (ogg,
+          "offset %" G_GINT64_FORMAT " >= end_offset %" G_GINT64_FORMAT,
+          ogg->offset, end_offset);
       return OV_FALSE;
     }
 
@@ -1581,7 +1589,8 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary)
       ogg_sync_reset (&ogg->sync);
 
       GST_LOG_OBJECT (ogg,
-          "got page at %lld, serial %08lx, end at %lld, granule %lld", ret,
+          "got page at %" G_GINT64_FORMAT ", serial %08x, end at %"
+          G_GINT64_FORMAT ", granule %" G_GINT64_FORMAT, ret,
           ogg_page_serialno (og), ogg->offset, ogg_page_granulepos (og));
 
       return ret;
@@ -1802,6 +1811,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
 
       if (bisect <= begin)
         bisect = begin;
+      GST_DEBUG_OBJECT (ogg, "Initial guess: %" G_GINT64_FORMAT, bisect);
     }
     gst_ogg_demux_seek (ogg, bisect);
 
@@ -1813,6 +1823,8 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
           ", end %" G_GINT64_FORMAT, bisect, begin, end);
 
       result = gst_ogg_demux_get_next_page (ogg, &og, end - ogg->offset);
+      GST_LOG_OBJECT (ogg, "looking for next page returned %" G_GINT64_FORMAT,
+          result);
       if (result == OV_EREAD) {
         goto seek_error;
       }
@@ -1831,14 +1843,19 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
           gst_ogg_demux_seek (ogg, bisect);
         }
       } else {
+        /* found offset of next ogg page */
         gint64 granulepos;
         GstClockTime granuletime;
         GstFormat format;
         GstOggPad *pad;
 
+        GST_LOG_OBJECT (ogg, "found next ogg page at %" G_GINT64_FORMAT,
+            result);
         granulepos = ogg_page_granulepos (&og);
-        if (granulepos == -1)
+        if (granulepos == -1) {
+          GST_LOG_OBJECT (ogg, "granulepos of next page is -1");
           continue;
+        }
 
         pad = gst_ogg_chain_get_stream (chain, ogg_page_serialno (&og));
         if (pad == NULL || pad->is_skeleton)
@@ -1853,6 +1870,8 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
         } else {
           if (granuletime < pad->first_time)
             continue;
+          GST_LOG_OBJECT (ogg, "granulepos %" G_GINT64_FORMAT "maps to time %"
+              GST_TIME_FORMAT, granulepos, GST_TIME_ARGS (granuletime));
 
           granuletime -= pad->first_time;
         }
@@ -2097,8 +2116,8 @@ gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
   GstOggChain *nextchain;
 
   GST_LOG_OBJECT (ogg,
-      "bisect begin: %lld, searched: %lld, end %lld, chain: %p", begin,
-      searched, end, chain);
+      "bisect begin: %" G_GINT64_FORMAT ", searched: %" G_GINT64_FORMAT
+      ", end %" G_GINT64_FORMAT ", chain: %p", begin, searched, end, chain);
 
   /* the below guards against garbage seperating the last and
    * first pages of two links. */
@@ -2132,12 +2151,12 @@ gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
     }
   }
 
-  GST_LOG_OBJECT (ogg, "current chain ends at %lld", searched);
+  GST_LOG_OBJECT (ogg, "current chain ends at %" G_GINT64_FORMAT, searched);
 
   chain->end_offset = searched;
   gst_ogg_demux_read_end_chain (ogg, chain);
 
-  GST_LOG_OBJECT (ogg, "found begin at %lld", next);
+  GST_LOG_OBJECT (ogg, "found begin at %" G_GINT64_FORMAT, next);
 
   gst_ogg_demux_seek (ogg, next);
   nextchain = gst_ogg_demux_read_chain (ogg);
@@ -2174,7 +2193,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
   gboolean done;
   gint i;
 
-  GST_LOG_OBJECT (ogg, "reading chain at %lld", offset);
+  GST_LOG_OBJECT (ogg, "reading chain at %" G_GINT64_FORMAT, offset);
 
   /* first read the BOS pages, do typefind on them, create
    * the decoders, send data to the decoders. */
@@ -2239,7 +2258,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
       }
       /* the timestamp will be filled in when we submit the pages */
       done &= (pad->start_time != GST_CLOCK_TIME_NONE);
-      GST_LOG_OBJECT (ogg, "done %08lx now %d", serial, done);
+      GST_LOG_OBJECT (ogg, "done %08x now %d", serial, done);
     }
 
     /* we read a page not belonging to the current chain: seek back to the
@@ -2277,7 +2296,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
   return chain;
 }
 
-/* read the last pages from the ogg stream to get the final 
+/* read the last pages from the ogg stream to get the final
  * page end_offsets.
  */
 static gint
@@ -2471,7 +2490,7 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
   if (!res || ogg->length <= 0)
     goto no_length;
 
-  GST_DEBUG_OBJECT (ogg, "file length %lld", ogg->length);
+  GST_DEBUG_OBJECT (ogg, "file length %" G_GINT64_FORMAT, ogg->length);
 
   /* read chain from offset 0, this is the first chain of the
    * ogg file. */
@@ -2555,7 +2574,8 @@ gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
       granule = ogg_page_granulepos (&page);
 
       GST_LOG_OBJECT (ogg,
-          "processing ogg page (serial %08lx, pageno %ld, granule pos %llu, bos %d)",
+          "processing ogg page (serial %08x, pageno %ld, granulepos %"
+          G_GINT64_FORMAT ", bos %d)",
           serialno, ogg_page_pageno (&page), granule, ogg_page_bos (&page));
 
       if (ogg_page_bos (&page)) {
@@ -2634,7 +2654,7 @@ unknown_chain:
 unknown_pad:
   {
     GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
-        (NULL), ("unknown ogg pad for serial %08d detected", serialno));
+        (NULL), ("unknown ogg pad for serial %08x detected", serialno));
     gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
     return GST_FLOW_ERROR;
   }
@@ -2659,14 +2679,11 @@ gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
   gst_event_unref (event);
 }
 
-/* random access code 
+/* random access code
  *
- * - first find all the chains and streams by scanning the 
- *   file.
- * - then get and chain buffers, just like the streaming
- *   case.
- * - when seeking, we can use the chain info to perform the
- *   seek.
+ * - first find all the chains and streams by scanning the file.
+ * - then get and chain buffers, just like the streaming case.
+ * - when seeking, we can use the chain info to perform the seek.
  */
 static void
 gst_ogg_demux_loop (GstOggPad * pad)
@@ -2703,7 +2720,7 @@ gst_ogg_demux_loop (GstOggPad * pad)
       gst_event_unref (event);
   }
 
-  GST_LOG_OBJECT (ogg, "pull data %lld", ogg->offset);
+  GST_LOG_OBJECT (ogg, "pull data %" G_GINT64_FORMAT, ogg->offset);
   if (ogg->offset == ogg->length)
     goto eos;
 
@@ -2970,7 +2987,7 @@ gst_ogg_print (GstOggDemux * ogg)
     for (j = 0; j < chain->streams->len; j++) {
       GstOggPad *stream = g_array_index (chain->streams, GstOggPad *, j);
 
-      GST_INFO_OBJECT (ogg, "  stream %08lx:", stream->serialno);
+      GST_INFO_OBJECT (ogg, "  stream %08x:", stream->serialno);
       GST_INFO_OBJECT (ogg, "   start time:       %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->start_time));
       GST_INFO_OBJECT (ogg, "   first granulepos: %" G_GINT64_FORMAT,
