@@ -105,7 +105,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#ifdef HAVE_FORK
 #include <sys/wait.h>
+#endif //HAVE_FORK
 #include <unistd.h>
 
 #include "gst-i18n-lib.h"

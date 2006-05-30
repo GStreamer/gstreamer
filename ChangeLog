@@ -1,3 +1,15 @@
+2006-05-30  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/gst.c:
+	 set #include <sys/wait.h> in a #ifdef #ifdef HAVE_FORK
+	* win32/common/libgstbase.def:
+	 export gst_collect_pads_set_flushing
+	* win32/common/libgstreamer.def:
+	 export gst_pad_set_acceptcaps_function, gst_structure_empty_new,
+	 gst_value_fraction_multiply
+	* win32/vs6/gst_inspect.dsp:
+	 add a link to intl.lib
+
 2006-05-30  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_remove_pad),

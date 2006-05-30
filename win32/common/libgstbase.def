@@ -39,6 +39,7 @@ EXPORTS
 	gst_collect_pads_pop
 	gst_collect_pads_read
 	gst_collect_pads_remove_pad
+	gst_collect_pads_set_flushing
 	gst_collect_pads_set_function
 	gst_collect_pads_start
 	gst_collect_pads_stop
