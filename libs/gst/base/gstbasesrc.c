@@ -267,6 +267,7 @@ static void gst_base_src_get_property (GObject * object, guint prop_id,
 static gboolean gst_base_src_event_handler (GstPad * pad, GstEvent * event);
 static gboolean gst_base_src_send_event (GstElement * elem, GstEvent * event);
 static gboolean gst_base_src_default_event (GstBaseSrc * src, GstEvent * event);
+static const GstQueryType *gst_base_src_get_query_types (GstElement * element);
 
 static gboolean gst_base_src_query (GstPad * pad, GstQuery * query);
 
@@ -329,6 +330,8 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_src_change_state);
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_src_send_event);
+  gstelement_class->get_query_types =
+      GST_DEBUG_FUNCPTR (gst_base_src_get_query_types);
 
   klass->negotiate = GST_DEBUG_FUNCPTR (gst_base_src_default_negotiate);
   klass->event = GST_DEBUG_FUNCPTR (gst_base_src_default_event);
@@ -899,6 +902,25 @@ no_format:
   }
 }
 
+static const GstQueryType *
+gst_base_src_get_query_types (GstElement * element)
+{
+  static const GstQueryType query_types[] = {
+    GST_QUERY_DURATION,
+    GST_QUERY_POSITION,
+    GST_QUERY_SEEKING,
+    GST_QUERY_SEGMENT,
+    GST_QUERY_FORMATS,
+    GST_QUERY_LATENCY,
+    GST_QUERY_JITTER,
+    GST_QUERY_RATE,
+    GST_QUERY_CONVERT,
+    0
+  };
+
+  return query_types;
+}
+
 /* all events send to this element directly
  */
 static gboolean
@@ -1209,6 +1231,10 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
   }
   if (*length == 0)
     goto unexpected_length;
+
+  /* keep track f current position. segment is in bytes, we checked 
+   * that above. */
+  gst_segment_set_last_stop (&src->segment, GST_FORMAT_BYTES, offset);
 
   return TRUE;
 

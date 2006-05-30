@@ -1,3 +1,13 @@
+2006-05-30  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Lutz Mueller <lutz at topfrose dot de>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_get_query_types), (gst_base_src_update_length):
+	Publish supported query types.
+	Update last_stop field in get_range mode so the position
+	query works. Fixes #342321.
+
 2006-05-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
