@@ -1,0 +1,88 @@
+//
+// CapsTest.cs: NUnit Test Suite for gstreamer-sharp
+//
+// Authors:
+//   Michael Dominic K. (michaldominik@gmail.com)
+//   
+// (C) 2006 Novell, Inc.
+//
+
+using System;
+using NUnit.Framework;
+
+using Gst;
+
+[TestFixture]
+public class CapsTest
+{
+    [TestFixtureSetUp]
+    public void Init()
+    {
+        Application.Init();
+    }
+
+    [TestFixtureTearDown]
+    public void Deinit()
+    {
+        Application.Deinit();
+    }
+
+    [Test]
+    public void TestPlainCreation()
+    {
+        Caps caps = new Caps();
+        Assert.IsNotNull(caps);
+        Assert.IsFalse(caps.Handle == IntPtr.Zero, "Ooops, null handle");
+
+        caps.Dispose();
+    }
+
+    [Test]
+    public void TestFromString()
+    {
+        Caps caps = Caps.FromString("video/x-raw-yuv, " + 
+                                    "format=(fourcc)I420, " +
+                                    "width=(int)384, " + 
+                                    "height=(int)288, " + 
+                                    "framerate=(fraction)25/1");
+        Assert.IsNotNull(caps);
+
+        Assert.IsFalse(caps.Handle == IntPtr.Zero, "Ooops, null handle");
+        Assert.IsTrue(caps.IsFixed, "Caps should be FIXED!");
+        Assert.IsFalse(caps.IsEmpty, "Caps shouldn't be EMPTY!");
+        Assert.IsFalse(caps.IsAny, "Caps shouldn't be ANY!");
+
+        caps.Dispose();
+    }
+
+    [Test]
+    public void TestIntersecting()
+    {
+        Caps caps1 = Caps.FromString("video/x-raw-yuv, " + 
+                                     "format=(fourcc)I420, " + 
+                                     "width=(int)[ 1,1000 ], " + 
+                                     "height=(int)[ 1, 1000 ], " + 
+                                     "framerate=(fraction)[ 0/1, 100/1 ]");
+        Caps caps2 = Caps.FromString("video/x-raw-yuv, " + 
+                                     "format=(fourcc)I420, " + 
+                                     "width=(int)640, " + 
+                                     "height=(int)480");
+        Assert.IsNotNull(caps1);
+        Assert.IsNotNull(caps2);
+
+        Assert.IsFalse(caps1.Handle == IntPtr.Zero, "Ooops, null handle in caps1");
+        Assert.IsFalse(caps1.Handle == IntPtr.Zero, "Ooops, null handle in caps2");
+
+        Caps caps3 = caps1.Intersect(caps2);
+
+        Assert.IsFalse(caps3.IsFixed, "How come caps are FIXED?!");
+        Assert.IsFalse(caps3.IsEmpty, "How come caps are EMPTY?!");
+
+        Assert.AreEqual(caps2.ToString () + ", framerate=(fraction)[ 0/1, 100/1 ]", caps3.ToString ());
+
+        caps1.Dispose();
+        caps2.Dispose();
+        caps3.Dispose();
+    }
+
+}

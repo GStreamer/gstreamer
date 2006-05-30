@@ -17,7 +17,7 @@ To build gstreamer-sharp, you must have a subversion checkout of
 gtk-sharp-2.0 and apply the gapi-fixup patch and install gapi-fixup:
 
   $ cd ~/cvs/mono
-  $ svn co svn://svn.myrealbox.com/trunk/gtk-sharp
+  $ svn co svn://svn.myrealbox.com/source/trunk/gtk-sharp
   $ cd gtk-sharp
   $ patch -p0 < ~/cvs/mono/gstreamer-sharp/gtk-sharp-gapi-fixup.diff
   $ ./bootstrap-2.8 --prefix=/usr

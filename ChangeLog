@@ -1,3 +1,12 @@
+2006-05-30  Michael Dominic K.  <michaldominik@gmail.com>
+
+	* README:
+	Fixing a broken svn link to gtk-sharp sources.
+
+	* tests/CapsTest.cs:
+	* tests/Makefile.am:
+	Introducing a new test for Gst.Caps. All fixtures pass.
+
 2006-05-25  Aaron Bockover  <aaron@abock.org>
 
 	* gstreamer-sharp/Gstreamer.metadata: Hide the Children property and
