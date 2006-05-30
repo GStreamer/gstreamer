@@ -1,5 +1,12 @@
 2006-05-30  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_remove_pad),
+	(gst_collect_pads_chain):
+	Handle the case where a pad is removed from the collection
+	that could cause the other pads to become collectable.
+
+2006-05-30  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstelement.c:
 	Clarify the use of _release_request_pad() and
 	_get_request_pad() a bit better.

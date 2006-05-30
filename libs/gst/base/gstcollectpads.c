@@ -197,7 +197,9 @@ gst_collect_pads_set_function (GstCollectPads * pads,
  * @size: the size of the returned GstCollectData structure
  *
  * Add a pad to the collection of collect pads. The pad has to be
- * a sinkpad.
+ * a sinkpad. The refcount of the pad is incremented. Use
+ * gst_collect_pads_remove_pad() to remove the pad from the collection
+ * again.
  *
  * You specify a size for the returned #GstCollectData structure
  * so that you can use it to store additional information.
@@ -302,6 +304,8 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
   pads->abidata.ABI.pad_list =
       g_slist_delete_link (pads->abidata.ABI.pad_list, list);
   pads->abidata.ABI.pad_cookie++;
+  /* signal waiters because something changed */
+  GST_COLLECT_PADS_BROADCAST (pads);
   GST_COLLECT_PADS_PAD_UNLOCK (pads);
 
   return TRUE;
@@ -1043,16 +1047,20 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
       gst_segment_set_last_stop (&data->segment, GST_FORMAT_TIME, timestamp);
   }
 
-  /* Check if our collected condition is matched and call the collected function
-   * if it is */
-  ret = gst_collect_pads_check_collected (pads);
-  /* when an error occurs, we want to report this back to the caller ASAP
-   * without having to block if the buffer was not popped */
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
-    goto error;
+  /* While we have data queued on this pad try to collect stuff */
+  do {
+    /* Check if our collected condition is matched and call the collected function
+     * if it is */
+    ret = gst_collect_pads_check_collected (pads);
+    /* when an error occurs, we want to report this back to the caller ASAP
+     * without having to block if the buffer was not popped */
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      goto error;
 
-  /* We still have data queued on this pad, wait for something to happen */
-  while (data->buffer != NULL) {
+    /* data was consumed, we can exit and accept new data */
+    if (data->buffer == NULL)
+      break;
+
     GST_DEBUG ("Pad %s:%s has a buffer queued, waiting",
         GST_DEBUG_PAD_NAME (pad));
 
@@ -1071,6 +1079,8 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
     if (G_UNLIKELY (data->abidata.ABI.flushing))
       goto flushing;
   }
+  while (data->buffer != NULL);
+
   GST_OBJECT_UNLOCK (pads);
 
   return ret;
