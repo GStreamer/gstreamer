@@ -779,6 +779,7 @@ gst_collect_pads_check_pads (GstCollectPads * pads)
     GSList *collected;
 
     /* clear list and stats */
+    g_slist_free (pads->data);
     pads->data = NULL;
     pads->numpads = 0;
     pads->queuedpads = 0;

@@ -1,5 +1,10 @@
 2006-05-30  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_check_pads):
+	When rebuilding the pad list, don't leak the previous list.
+
+2006-05-30  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Lutz Mueller <lutz at topfrose dot de>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
