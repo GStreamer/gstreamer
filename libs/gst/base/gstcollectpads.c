@@ -309,6 +309,7 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
 unknown_pad:
   {
     GST_WARNING ("cannot remove unknown pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+    GST_COLLECT_PADS_PAD_UNLOCK (pads);
     return FALSE;
   }
 }

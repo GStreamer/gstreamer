@@ -109,6 +109,9 @@ libs_basesrc_LDADD = \
 libs_adapter_LDADD = \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
 	$(LDADD)
+libs_collectpads_LDADD = \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
+	$(LDADD)
 libs_controller_LDADD = \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_MAJORMINOR@.la \
 	$(LDADD)
@@ -124,7 +127,8 @@ libs_typefindhelper_LDADD = \
 
 # valgrind testing
 # these just need valgrind fixing, period
-VALGRIND_TO_FIX =
+VALGRIND_TO_FIX =		\
+	libs/collectpads
 
 VALGRIND_IGNORE = \
 	pipelines/stress

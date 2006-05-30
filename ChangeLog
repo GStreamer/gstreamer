@@ -1,3 +1,18 @@
+2006-05-30  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Alessandro Decina <alessandro at nnva dot org>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_remove_pad):
+	Unlock mutex when removing an unknown pad.
+	Fixes #343334.
+
+	* tests/check/Makefile.am:
+	* tests/check/libs/collectpads.c: (collected_cb), (push_buffer),
+	(push_event), (setup), (teardown), (GST_START_TEST),
+	(gst_collect_pads_suite), (main):
+	Added collecpads check, disabled for now as check crashes for
+	some reason.
+
 2006-05-29  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_finalize):
