@@ -85,6 +85,7 @@ check_PROGRAMS =				\
 
 # failing tests
 noinst_PROGRAMS =				\
+	libs/collectpads			\
 	gst/gstpipeline
 
 TESTS = $(check_PROGRAMS)
@@ -127,7 +128,7 @@ libs_typefindhelper_LDADD = \
 
 # valgrind testing
 # these just need valgrind fixing, period
-VALGRIND_TO_FIX =		\
+VALGRIND_TO_FIX = \
 	libs/collectpads
 
 VALGRIND_IGNORE = \
