@@ -287,6 +287,81 @@ GST_START_TEST (test_play_twice)
 
 GST_END_TEST;
 
+/* check if adding and removing pads work as expected */
+GST_START_TEST (test_add_pad)
+{
+  GstElement *bin, *src1, *src2, *adder, *sink;
+  GstBus *bus;
+  gboolean res;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  src1 = gst_element_factory_make ("audiotestsrc", "src1");
+  g_object_set (src1, "num-buffers", 4, NULL);
+  g_object_set (src1, "wave", 4, NULL); /* silence */
+  src2 = gst_element_factory_make ("audiotestsrc", "src2");
+  /* one buffer less, we connect with 1 buffer of delay */
+  g_object_set (src2, "num-buffers", 3, NULL);
+  g_object_set (src2, "wave", 4, NULL); /* silence */
+  adder = gst_element_factory_make ("adder", "adder");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (bin), src1, adder, sink, NULL);
+
+  res = gst_element_link (src1, adder);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (adder, sink);
+  fail_unless (res == TRUE, NULL);
+
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (bus, "message::segment-done", (GCallback) message_received,
+      bin);
+  g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::warning", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::eos", (GCallback) message_received, bin);
+
+  GST_INFO ("starting test");
+
+  /* prepare playing */
+  res = gst_element_set_state (bin, GST_STATE_PAUSED);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* wait for completion */
+  res =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* add other element */
+  gst_bin_add_many (GST_BIN (bin), src2, NULL);
+
+  /* now link the second element */
+  res = gst_element_link (src2, adder);
+  fail_unless (res == TRUE, NULL);
+
+  /* set to PAUSED as well */
+  res = gst_element_set_state (src2, GST_STATE_PAUSED);
+
+  /* now play all */
+  res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  g_main_loop_run (main_loop);
+
+  res = gst_element_set_state (bin, GST_STATE_NULL);
+  fail_unless (res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* cleanup */
+  g_main_loop_unref (main_loop);
+  gst_object_unref (G_OBJECT (bus));
+  gst_object_unref (G_OBJECT (bin));
+}
+
+GST_END_TEST;
 
 Suite *
 adder_suite (void)
@@ -297,6 +372,7 @@ adder_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_event);
   tcase_add_test (tc_chain, test_play_twice);
+  tcase_add_test (tc_chain, test_add_pad);
 
   /* Use a longer timeout */
   tcase_set_timeout (tc_chain, 6);

@@ -1,3 +1,11 @@
+2006-05-30  Wim Taymans  <wim@fluendo.com>
+
+	* tests/check/elements/adder.c: (test_event_message_received),
+	(test_play_twice_message_received), (GST_START_TEST),
+	(adder_suite):
+	Added check to show that #339935 is fixed with ongoing
+	adder and collectpads fixes.
+
 2006-05-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/adder/gstadder.c: (gst_adder_request_new_pad):
