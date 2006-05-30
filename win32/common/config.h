@@ -84,6 +84,9 @@
 /* Define to 1 if you have the `fgetpos' function. */
 #define HAVE_FGETPOS 1
 
+/* Define to 1 if you have the `fork' function. */
+#undef HAVE_FORK
+
 /* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
 #undef HAVE_FSEEKO
 
