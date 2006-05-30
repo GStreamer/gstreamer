@@ -1270,7 +1270,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   gst_object_sink (GST_OBJECT (ret));
 
   list = gst_tag_list_new ();
-  name = g_strdup_printf ("serial_%08x", serialno);
+  name = g_strdup_printf ("serial_%08lx", serialno);
 
   GST_PAD_DIRECTION (ret) = GST_PAD_SRC;
   ret->chain = chain;
