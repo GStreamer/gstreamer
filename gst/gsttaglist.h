@@ -496,6 +496,15 @@ gboolean        gst_tag_list_get_date_index     (const GstTagList     * list,
  * Since: 0.10.6
  */
 #define GST_TAG_IMAGE                "image"
+/**
+ * GST_TAG_PREVIEW_IMAGE:
+ *
+ * image that is meant for preview purposes (buffer)
+ * (buffer caps should specify the content type)
+ *
+ * Since: 0.10.7
+ */
+#define GST_TAG_PREVIEW_IMAGE        "preview-image"
 
 G_END_DECLS
 
