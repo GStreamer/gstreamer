@@ -675,6 +675,11 @@ no_direction:
  * Removes @pad from @element. @pad will be destroyed if it has not been
  * referenced elsewhere.
  *
+ * This function is used by plugin developers and should not be used
+ * by applications. Pads that were dynamically requested from elements
+ * with gst_element_get_request_pad() should be released with the
+ * gst_element_release_request_pad() function instead.
+ *
  * Returns: TRUE if the pad could be removed. Can return FALSE if the
  * pad is not belonging to the provided element.
  *
@@ -847,7 +852,8 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * @name: the name of the request #GstPad to retrieve.
  *
  * Retrieves a pad from the element by name. This version only retrieves
- * request pads.
+ * request pads. The pad should be released with 
+ * gst_element_release_request_pad().
  *
  * Returns: requested #GstPad if found, otherwise NULL. Unref after usage.
  */

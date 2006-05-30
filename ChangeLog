@@ -1,3 +1,13 @@
+2006-05-30  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstelement.c:
+	Clarify the use of _release_request_pad() and
+	_get_request_pad() a bit better.
+
+	* libs/gst/base/gstadapter.c: (gst_adapter_peek),
+	(gst_adapter_take_buffer):
+	Fix some doc and comment typos.
+
 2006-05-30  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* docs/gst/gstreamer-sections.txt:

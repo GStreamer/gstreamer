@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2004 Benjamin Otte <otte@gnome.org>
+ *               2005 Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -89,7 +90,7 @@
  * access the buffer later. The adapter will never modify the data in the
  * buffer pushed in it.
  *
- * Last reviewed on 2006-03-07 (0.10.4).
+ * Last reviewed on 2006-04-04 (0.10.6).
  */
 
 
@@ -236,7 +237,7 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
   g_return_val_if_fail (size > 0, NULL);
 
   /* we don't have enough data, return NULL. This is unlikely
-   * as one usually does a _available() first instead of peeking a
+   * as one usually does an _available() first instead of peeking a
    * random size. */
   if (G_UNLIKELY (size > adapter->size))
     return NULL;
