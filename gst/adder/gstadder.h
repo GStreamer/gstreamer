@@ -52,7 +52,8 @@ struct _GstAdder {
 
   GstPad         *srcpad;
   GstCollectPads *collect;
-  gint            numpads;
+  /* pad counter, used for creating unique request pads */
+  gint            padcount;
 
   /* the next are valid for both int and float */
   GstAdderFormat  format;

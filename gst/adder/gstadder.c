@@ -101,6 +101,8 @@ static gboolean gst_adder_sink_event (GstPad * pad, GstEvent * event);
 
 static GstPad *gst_adder_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused);
+static void gst_adder_release_pad (GstElement * element, GstPad * pad);
+
 static GstStateChangeReturn gst_adder_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -510,6 +512,7 @@ gst_adder_class_init (GstAdderClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gstelement_class->request_new_pad = gst_adder_request_new_pad;
+  gstelement_class->release_pad = gst_adder_release_pad;
   gstelement_class->change_state = gst_adder_change_state;
 }
 
@@ -532,7 +535,7 @@ gst_adder_init (GstAdder * adder)
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
 
   adder->format = GST_ADDER_FORMAT_UNSET;
-  adder->numpads = 0;
+  adder->padcount = 0;
   adder->func = NULL;
 
   /* keep track of the sinkpads requested */
@@ -559,16 +562,19 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   gchar *name;
   GstAdder *adder;
   GstPad *newpad;
-
-  g_return_val_if_fail (GST_IS_ADDER (element), NULL);
+  gint padcount;
 
   if (templ->direction != GST_PAD_SINK)
     goto not_sink;
 
   adder = GST_ADDER (element);
 
-  name = g_strdup_printf ("sink%d", adder->numpads);
+  /* increment pad counter */
+  padcount = g_atomic_int_exchange_and_add (&adder->padcount, 1);
+
+  name = g_strdup_printf ("sink%d", padcount);
   newpad = gst_pad_new_from_template (templ, name);
+  GST_DEBUG_OBJECT (adder, "request new pad %s", name);
   g_free (name);
 
   gst_pad_set_getcaps_function (newpad,
@@ -582,10 +588,9 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   adder->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
   gst_pad_set_event_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_sink_event));
 
+  /* takes ownership of the pad */
   if (!gst_element_add_pad (GST_ELEMENT (adder), newpad))
     goto could_not_add;
-
-  adder->numpads++;
 
   return newpad;
 
@@ -597,10 +602,24 @@ not_sink:
   }
 could_not_add:
   {
+    GST_DEBUG_OBJECT (adder, "could not add pad");
     gst_collect_pads_remove_pad (adder->collect, newpad);
     gst_object_unref (newpad);
     return NULL;
   }
+}
+
+static void
+gst_adder_release_pad (GstElement * element, GstPad * pad)
+{
+  GstAdder *adder;
+
+  adder = GST_ADDER (element);
+
+  GST_DEBUG_OBJECT (adder, "release pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  gst_collect_pads_remove_pad (adder->collect, pad);
+  gst_element_remove_pad (element, pad);
 }
 
 static GstFlowReturn

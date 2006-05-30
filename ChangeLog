@@ -1,5 +1,16 @@
 2006-05-30  Wim Taymans  <wim@fluendo.com>
 
+	* gst/adder/gstadder.c: (gst_adder_class_init), (gst_adder_init),
+	(gst_adder_request_new_pad), (gst_adder_release_pad):
+	* gst/adder/gstadder.h:
+	Implement release_request_pad.
+	Make padcounter atomic.
+
+	* tests/check/elements/adder.c: (GST_START_TEST), (adder_suite):
+	Added check for release_pad in adder.
+
+2006-05-30  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_chain_new_stream):
 	Fix build again.
 
