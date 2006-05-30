@@ -58,6 +58,7 @@
 
 #include <gst/gsttagsetter.h>
 #include <gst/tag/tag.h>
+#include <gst/audio/multichannel.h>
 #include "vorbisenc.h"
 
 GST_DEBUG_CATEGORY_EXTERN (vorbisenc_debug);
@@ -120,6 +121,7 @@ static gboolean gst_vorbis_enc_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_vorbis_enc_setup (GstVorbisEnc * vorbisenc);
 
+static void gst_vorbis_enc_dispose (GObject * object);
 static void gst_vorbis_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_vorbis_enc_set_property (GObject * object, guint prop_id,
@@ -149,12 +151,12 @@ vorbis_caps_factory (void)
 static GstCaps *
 raw_caps_factory (void)
 {
-  /* lowest sample rate is in vorbis/lib/modes/setup_8.h, 8000 Hz
-   * highest sample rate is in vorbis/lib/modes/setup_44.h, 50000 Hz */
+  /* lowest, highest sample rates come from vorbis/lib/modes/setup_X.h: 
+   * 1-200000 Hz */
   return
       gst_caps_new_simple ("audio/x-raw-float",
-      "rate", GST_TYPE_INT_RANGE, 8000, 50000,
-      "channels", GST_TYPE_INT_RANGE, 1, 2,
+      "rate", GST_TYPE_INT_RANGE, 1, 200000,
+      "channels", GST_TYPE_INT_RANGE, 1, 256,
       "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
 }
 
@@ -189,6 +191,7 @@ gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
 
   gobject_class->set_property = gst_vorbis_enc_set_property;
   gobject_class->get_property = gst_vorbis_enc_get_property;
+  gobject_class->dispose = gst_vorbis_enc_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MAX_BITRATE,
       g_param_spec_int ("max-bitrate", "Maximum Bitrate",
@@ -219,6 +222,113 @@ gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_vorbis_enc_change_state);
+}
+
+static void
+gst_vorbis_enc_dispose (GObject * object)
+{
+  GstVorbisEnc *vorbisenc = GST_VORBISENC (object);
+
+  if (vorbisenc->sinkcaps) {
+    gst_caps_unref (vorbisenc->sinkcaps);
+    vorbisenc->sinkcaps = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static GstAudioChannelPosition vorbischannelpositions[][6] = {
+  {                             /* Mono */
+      GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+  {                             /* Stereo */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {                             /* Stereo + Centre */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+  {                             /* Quadraphonic */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      },
+  {                             /* Stereo + Centre + rear stereo */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      },
+  {                             /* Full 5.1 Surround */
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+      },
+};
+static GstCaps *
+gst_vorbis_enc_generate_sink_caps (void)
+{
+  GstCaps *caps = gst_caps_new_empty ();
+  int i, c;
+
+  gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw-float",
+          "rate", GST_TYPE_INT_RANGE, 1, 200000,
+          "channels", G_TYPE_INT, 1,
+          "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32,
+          NULL));
+
+  gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw-float",
+          "rate", GST_TYPE_INT_RANGE, 1, 200000,
+          "channels", G_TYPE_INT, 2,
+          "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32,
+          NULL));
+
+  for (i = 3; i <= 6; i++) {
+    GValue chanpos = { 0 };
+    GValue pos = { 0 };
+    GstStructure *structure;
+
+    g_value_init (&chanpos, GST_TYPE_ARRAY);
+    g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
+
+    for (c = 0; c < i; c++) {
+      g_value_set_enum (&pos, vorbischannelpositions[i - 1][c]);
+      gst_value_array_append_value (&chanpos, &pos);
+    }
+    g_value_unset (&pos);
+
+    structure = gst_structure_new ("audio/x-raw-float",
+        "rate", GST_TYPE_INT_RANGE, 1, 200000,
+        "channels", G_TYPE_INT, i,
+        "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32, NULL);
+    gst_structure_set_value (structure, "channel-positions", &chanpos);
+    g_value_unset (&chanpos);
+
+    gst_caps_append_structure (caps, structure);
+  }
+
+  gst_caps_append_structure (caps, gst_structure_new ("audio/x-raw-float",
+          "rate", GST_TYPE_INT_RANGE, 1, 200000,
+          "channels", GST_TYPE_INT_RANGE, 7, 256,
+          "endianness", G_TYPE_INT, G_BYTE_ORDER, "width", G_TYPE_INT, 32,
+          NULL));
+
+  return caps;
+}
+
+static GstCaps *
+gst_vorbis_enc_sink_getcaps (GstPad * pad)
+{
+  GstVorbisEnc *vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
+
+  if (vorbisenc->sinkcaps == NULL)
+    vorbisenc->sinkcaps = gst_vorbis_enc_generate_sink_caps ();
+
+  return gst_caps_ref (vorbisenc->sinkcaps);
 }
 
 static gboolean
@@ -488,6 +598,8 @@ gst_vorbis_enc_init (GstVorbisEnc * vorbisenc, GstVorbisEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_vorbis_enc_chain));
   gst_pad_set_setcaps_function (vorbisenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_setcaps));
+  gst_pad_set_getcaps_function (vorbisenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_getcaps));
   gst_pad_set_query_function (vorbisenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_query));
   gst_element_add_pad (GST_ELEMENT (vorbisenc), vorbisenc->sinkpad);
@@ -807,6 +919,8 @@ gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
   GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
 
+  gst_buffer_set_caps (outbuf, vorbisenc->srccaps);
+
   GST_DEBUG ("created header packet buffer, %d bytes",
       GST_BUFFER_SIZE (outbuf));
   return outbuf;
@@ -958,7 +1072,8 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
     buf3 = gst_vorbis_enc_buffer_from_header_packet (vorbisenc, &header_code);
 
     /* mark and put on caps */
-    caps = gst_pad_get_caps (vorbisenc->srcpad);
+    vorbisenc->srccaps = gst_caps_new_simple ("audio/x-vorbis", NULL);
+    caps = vorbisenc->srccaps;
     caps = gst_vorbis_enc_set_header_on_caps (caps, buf1, buf2, buf3);
 
     /* negotiate with these caps */
@@ -968,8 +1083,6 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_set_caps (buf1, caps);
     gst_buffer_set_caps (buf2, caps);
     gst_buffer_set_caps (buf3, caps);
-
-    gst_caps_unref (caps);
 
     /* push out buffers */
     if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf1)) != GST_FLOW_OK)
@@ -1210,6 +1323,10 @@ gst_vorbis_enc_change_state (GstElement * element, GstStateChange transition)
       vorbis_info_clear (&vorbisenc->vi);
       g_free (vorbisenc->last_message);
       vorbisenc->last_message = NULL;
+      if (vorbisenc->srccaps) {
+        gst_caps_unref (vorbisenc->srccaps);
+        vorbisenc->srccaps = NULL;
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_tag_list_free (vorbisenc->tags);

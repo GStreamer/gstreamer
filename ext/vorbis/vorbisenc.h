@@ -53,6 +53,9 @@ struct _GstVorbisEnc {
   GstPad          *sinkpad;
   GstPad          *srcpad;
 
+  GstCaps         *srccaps;
+  GstCaps         *sinkcaps;
+
   vorbis_info      vi; /* struct that stores all the static vorbis bitstream
                                                             settings */
   vorbis_comment   vc; /* struct that stores all the user comments */

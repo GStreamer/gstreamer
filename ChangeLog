@@ -1,3 +1,14 @@
+2006-05-30  Michael Smith  <msmith@fluendo.com>
+
+	* ext/vorbis/vorbisenc.c: (raw_caps_factory),
+	(gst_vorbis_enc_class_init), (gst_vorbis_enc_dispose),
+	(gst_vorbis_enc_generate_sink_caps), (gst_vorbis_enc_sink_getcaps),
+	(gst_vorbis_enc_init), (gst_vorbis_enc_buffer_from_header_packet),
+	(gst_vorbis_enc_chain), (gst_vorbis_enc_change_state):
+	* ext/vorbis/vorbisenc.h:
+	  Multi-channel caps negotiation, so we can do proper multichannel
+	  vorbis encoding, negotiated through audioconvert.
+
 2006-05-30  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/elements/adder.c: (test_event_message_received),
