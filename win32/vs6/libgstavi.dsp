@@ -111,6 +111,10 @@ SOURCE=..\..\gst\avi\gstavi.c
 
 SOURCE=..\..\gst\avi\gstavidemux.c
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\avi\gstavimux.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

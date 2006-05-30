@@ -1,3 +1,16 @@
+2006-05-30  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/avi/gstavidemux.c:
+	  add an explicit dll imported declaration for GST_CAT_EVENT+WIN32
+	* win32/MANIFEST:
+	  sort file listing
+	* win32/vs6/libgstavi.dsp:
+	  add gstavimux.c to the project
+	* win32/vs6/libgstid3demux.dsp:
+	  add link to zlib library
+	* win32/vs6/libgstmatroska.dsp:
+	  add matroska-ids.c to the project
+
 2006-05-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sebastian Dröge  <mail at slomosnail de >

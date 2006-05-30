@@ -56,43 +56,53 @@
 GST_DEBUG_CATEGORY_STATIC (avidemux_debug);
 #define GST_CAT_DEFAULT avidemux_debug
 
+#ifndef WIN32
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_EVENT);
+#else
+extern
+_declspec (dllimport)
+     GstDebugCategory *GST_CAT_EVENT;
+#endif
 
-static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
+     static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-msvideo")
     );
 
-static void gst_avi_demux_base_init (GstAviDemuxClass * klass);
-static void gst_avi_demux_class_init (GstAviDemuxClass * klass);
-static void gst_avi_demux_init (GstAviDemux * avi);
+     static void gst_avi_demux_base_init (GstAviDemuxClass * klass);
+     static void gst_avi_demux_class_init (GstAviDemuxClass * klass);
+     static void gst_avi_demux_init (GstAviDemux * avi);
 
-static void gst_avi_demux_reset (GstAviDemux * avi);
-
-#if 0
-static const GstEventMask *gst_avi_demux_get_event_mask (GstPad * pad);
-#endif
-static gboolean gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event);
+     static void gst_avi_demux_reset (GstAviDemux * avi);
 
 #if 0
-static const GstFormat *gst_avi_demux_get_src_formats (GstPad * pad);
+     static const GstEventMask *gst_avi_demux_get_event_mask (GstPad * pad);
 #endif
-static const GstQueryType *gst_avi_demux_get_src_query_types (GstPad * pad);
-static gboolean gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query);
-static gboolean gst_avi_demux_src_convert (GstPad * pad,
-    GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
+     static gboolean gst_avi_demux_handle_src_event (GstPad * pad,
+    GstEvent * event);
 
-static gboolean gst_avi_demux_handle_seek (GstAviDemux * avi, gboolean update);
-static void gst_avi_demux_loop (GstPad * pad);
-static gboolean gst_avi_demux_sink_activate (GstPad * sinkpad);
-static gboolean gst_avi_demux_sink_activate_pull (GstPad * sinkpad,
+#if 0
+     static const GstFormat *gst_avi_demux_get_src_formats (GstPad * pad);
+#endif
+     static const GstQueryType *gst_avi_demux_get_src_query_types (GstPad *
+    pad);
+     static gboolean gst_avi_demux_handle_src_query (GstPad * pad,
+    GstQuery * query);
+     static gboolean gst_avi_demux_src_convert (GstPad * pad,
+    GstFormat src_format, gint64 src_value, GstFormat * dest_format,
+    gint64 * dest_value);
+
+     static gboolean gst_avi_demux_handle_seek (GstAviDemux * avi,
+    gboolean update);
+     static void gst_avi_demux_loop (GstPad * pad);
+     static gboolean gst_avi_demux_sink_activate (GstPad * sinkpad);
+     static gboolean gst_avi_demux_sink_activate_pull (GstPad * sinkpad,
     gboolean active);
-static GstStateChangeReturn gst_avi_demux_change_state (GstElement * element,
-    GstStateChange transition);
+     static GstStateChangeReturn gst_avi_demux_change_state (GstElement *
+    element, GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
+     static GstElementClass *parent_class = NULL;
 
 GType
 gst_avi_demux_get_type (void)

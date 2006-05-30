@@ -116,6 +116,10 @@ SOURCE="..\..\gst\matroska\matroska-demux.c"
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\gst\matroska\matroska-ids.c"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\gst\matroska\matroska-mux.c"
 # End Source File
 # Begin Source File
