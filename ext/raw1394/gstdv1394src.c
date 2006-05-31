@@ -3,6 +3,7 @@
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *               <2000> Daniel Fischer <dan@f3c.com>
  *               <2004> Wim Taymans <wim@fluendo.com>
+ *               <2006> Zaheer Abbas Merali <zaheerabbas at merali dot org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -34,6 +35,9 @@
 #include <libavc1394/avc1394_vcr.h>
 #include <libavc1394/rom1394.h>
 #include <libraw1394/raw1394.h>
+#ifdef HAVE_LIBIEC61883
+#include <libiec61883/iec61883.h>
+#endif
 
 #include <gst/gst.h>
 
@@ -98,7 +102,8 @@ GST_ELEMENT_DETAILS ("Firewire (1394) DV video source",
     "Source/Video",
     "Source for DV video data from firewire port",
     "Erik Walthinsen <omega@temple-baptist.com>\n"
-    "Daniel Fischer <dan@f3c.com>\n" "Wim Taymans <wim@fluendo.com>");
+    "Daniel Fischer <dan@f3c.com>\n" "Wim Taymans <wim@fluendo.com>\n"
+    "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -327,6 +332,70 @@ gst_dv1394src_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+
+#ifdef HAVE_LIBIEC61883
+static int
+gst_dv1394src_iec61883_receive (unsigned char *data, int len,
+    int complete, void *cbdata)
+{
+  GstDV1394Src *dv1394src = GST_DV1394SRC (cbdata);
+
+  if (!GST_PAD_CAPS (GST_BASE_SRC_PAD (dv1394src))) {
+    GstCaps *caps;
+    unsigned char *p = data;
+
+    // figure format (NTSC/PAL)
+    if (p[3] & 0x80) {
+      // PAL
+      dv1394src->frame_size = PAL_FRAMESIZE;
+      dv1394src->frame_rate = PAL_FRAMERATE;
+      GST_DEBUG ("PAL data");
+      caps = gst_caps_new_simple ("video/x-dv",
+          "format", G_TYPE_STRING, "PAL",
+          "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
+    } else {
+      // NTSC (untested)
+      dv1394src->frame_size = NTSC_FRAMESIZE;
+      dv1394src->frame_rate = NTSC_FRAMERATE;
+      GST_DEBUG
+          ("NTSC data [untested] - please report success/failure to <dan@f3c.com>");
+      caps = gst_caps_new_simple ("video/x-dv",
+          "format", G_TYPE_STRING, "NTSC",
+          "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
+    }
+    gst_pad_set_caps (GST_BASE_SRC_PAD (dv1394src), caps);
+    gst_caps_unref (caps);
+  }
+  dv1394src->frame = NULL;
+  if ((dv1394src->frame_sequence + 1) % (dv1394src->skip +
+          dv1394src->consecutive) < dv1394src->consecutive) {
+    if (complete && len == dv1394src->frame_size) {
+      gint64 i64;
+      guint8 *bufdata;
+      GstBuffer *buf;
+      GstFormat format;
+
+      buf = gst_buffer_new_and_alloc (dv1394src->frame_size);
+
+      /* fill in offset, duration, timestamp */
+      GST_BUFFER_OFFSET (buf) = dv1394src->frame_sequence;
+      format = GST_FORMAT_TIME;
+      gst_dv1394src_convert (GST_BASE_SRC_PAD (dv1394src), GST_FORMAT_DEFAULT,
+          GST_BUFFER_OFFSET (buf), &format, &i64);
+      GST_BUFFER_TIMESTAMP (buf) = i64;
+      gst_dv1394src_convert (GST_BASE_SRC_PAD (dv1394src), GST_FORMAT_DEFAULT,
+          1, &format, &i64);
+      GST_BUFFER_DURATION (buf) = i64;
+      bufdata = GST_BUFFER_DATA (buf);
+      memcpy (bufdata, data, len);
+      dv1394src->buf = buf;
+    }
+  }
+  dv1394src->frame_sequence++;
+  return 0;
+}
+
+#else
 static int
 gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
     quadlet_t * data)
@@ -340,6 +409,7 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
        this file in CVS.
      */
     unsigned char *p = (unsigned char *) &data[3];
+
     int section_type = p[0] >> 5;       /* section type is in bits 5 - 7 */
     int dif_sequence = p[1] >> 4;       /* dif sequence number is in bits 4 - 7 */
     int dif_block = p[2];
@@ -347,7 +417,6 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
     /* if we are at the beginning of a frame, 
        we set buf=frame, and alloc a new buffer for frame
      */
-
     if (section_type == 0 && dif_sequence == 0) {       // dif header
       if (!GST_PAD_CAPS (GST_BASE_SRC_PAD (dv1394src))) {
         GstCaps *caps;
@@ -386,7 +455,6 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
           gst_buffer_unref (dv1394src->frame);
         }
       }
-      dv1394src->frame = NULL;
       if ((dv1394src->frame_sequence + 1) % (dv1394src->skip +
               dv1394src->consecutive) < dv1394src->consecutive) {
         GstFormat format;
@@ -449,7 +517,7 @@ gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
 
   return 0;
 }
-
+#endif
 /*
  * When an ieee1394 bus reset happens, usually a device has been removed
  * or added.  We send a message on the message bus with the node count 
@@ -470,7 +538,13 @@ gst_dv1394src_bus_reset (raw1394handle_t handle, unsigned int generation)
   gint current_device_change;
   gint i;
 
+#ifdef HAVE_LIBIEC61883
+  iec61883_dv_t dv = (iec61883_dv_t) raw1394_get_userdata (handle);
+
+  src = GST_DV1394SRC (iec61883_dv_get_callback_data (dv));
+#else
   src = GST_DV1394SRC (raw1394_get_userdata (handle));
+#endif
 
   GST_INFO_OBJECT (src, "have bus reset");
 
@@ -515,13 +589,20 @@ gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstDV1394Src *dv1394src = GST_DV1394SRC (psrc);
   GstCaps *caps;
+  int numfds;
+
+  GST_DEBUG ("_create");
   struct pollfd pollfds[2];
 
   pollfds[0].fd = raw1394_get_fd (dv1394src->handle);
   pollfds[0].events = POLLIN | POLLERR | POLLHUP | POLLPRI;
   pollfds[1].fd = READ_SOCKET (dv1394src);
   pollfds[1].events = POLLIN | POLLERR | POLLHUP | POLLPRI;
-
+#ifdef HAVE_LIBIEC61883
+  numfds = 1;
+#else
+  numfds = 2;
+#endif
   if (dv1394src->buf) {
     /* maybe we had an error before, and there's a stale buffer? */
     gst_buffer_unref (dv1394src->buf);
@@ -529,7 +610,7 @@ gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
   }
 
   while (TRUE) {
-    int res = poll (pollfds, 2, -1);
+    int res = poll (pollfds, numfds, -1);
 
     if (res < 0) {
       if (errno == EAGAIN || errno == EINTR)
@@ -537,7 +618,13 @@ gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
       else
         goto error_while_polling;
     }
-
+#ifdef HAVE_LIBIEC61883
+    if ((pollfds[0].revents & POLLIN) | (pollfds[0].revents & POLLPRI)) {
+      res = raw1394_loop_iterate (dv1394src->handle);
+      if (dv1394src->buf)
+        break;
+    }
+#else
     if (pollfds[1].revents) {
       char command;
 
@@ -548,9 +635,11 @@ gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
     } else if (pollfds[0].revents & POLLIN) {
       /* shouldn't block in theory */
       raw1394_loop_iterate (dv1394src->handle);
+
       if (dv1394src->buf)
         break;
     }
+#endif
   }
 
   g_assert (dv1394src->buf);
@@ -561,7 +650,6 @@ gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   *buf = dv1394src->buf;
   dv1394src->buf = NULL;
-
   return GST_FLOW_OK;
 
 error_while_polling:
@@ -569,11 +657,13 @@ error_while_polling:
     GST_ELEMENT_ERROR (dv1394src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     return GST_FLOW_UNEXPECTED;
   }
+#ifndef HAVE_LIBIEC61883
 told_to_stop:
   {
     GST_DEBUG_OBJECT (dv1394src, "told to stop, shutting down");
     return GST_FLOW_WRONG_STATE;
   }
+#endif
 }
 
 static int
@@ -598,17 +688,18 @@ gst_dv1394src_discover_avc_node (GstDV1394Src * src)
     /* open the port */
     handle = raw1394_new_handle ();
     if (!handle) {
-      g_warning ("raw1394 - failed to get handle: %s.\n", strerror (errno));
+      GST_WARNING ("raw1394 - failed to get handle: %s.\n", strerror (errno));
       continue;
     }
     if ((n_ports = raw1394_get_port_info (handle, pinf, 16)) < 0) {
-      g_warning ("raw1394 - failed to get port info: %s.\n", strerror (errno));
+      GST_WARNING ("raw1394 - failed to get port info: %s.\n",
+          strerror (errno));
       goto next;
     }
 
     /* tell raw1394 which host adapter to use */
     if (raw1394_set_port (handle, j) < 0) {
-      g_warning ("raw1394 - failed to set set port: %s.\n", strerror (errno));
+      GST_WARNING ("raw1394 - failed to set set port: %s.\n", strerror (errno));
       goto next;
     }
 
@@ -628,7 +719,7 @@ gst_dv1394src_discover_avc_node (GstDV1394Src * src)
 
         /* select first AV/C Tape Reccorder Player node */
         if (rom1394_get_directory (handle, i, &rom_dir) < 0) {
-          g_warning ("error reading config rom directory for node %d\n", i);
+          GST_WARNING ("error reading config rom directory for node %d\n", i);
           continue;
         }
         if ((rom1394_get_node_type (&rom_dir) == ROM1394_NODE_TYPE_AVC) &&
@@ -676,8 +767,6 @@ gst_dv1394src_start (GstBaseSrc * bsrc)
       goto no_handle;
   }
 
-  raw1394_set_userdata (src->handle, src);
-
   src->num_ports = raw1394_get_port_info (src->handle, src->pinfo, 16);
 
   if (src->num_ports == 0)
@@ -686,17 +775,38 @@ gst_dv1394src_start (GstBaseSrc * bsrc)
   if (src->use_avc || src->port == -1)
     src->avc_node = gst_dv1394src_discover_avc_node (src);
 
-  if (raw1394_set_port (src->handle, src->port) < 0)
+  /* lets destroy handle and create one on port
+     this is more reliable than setting port on
+     the existing handle */
+  raw1394_destroy_handle (src->handle);
+  src->handle = raw1394_new_handle_on_port (src->port);
+  if (!src->handle)
     goto cannot_set_port;
 
+
+#ifdef HAVE_LIBIEC61883
+  if ((src->iec61883dv =
+          iec61883_dv_fb_init (src->handle,
+              gst_dv1394src_iec61883_receive, src)) == NULL)
+    goto cannot_initialise_dv;
+
+#else
+  raw1394_set_userdata (src->handle, src);
   raw1394_set_iso_handler (src->handle, src->channel,
       gst_dv1394src_iso_receive);
+#endif
   raw1394_set_bus_reset_handler (src->handle, gst_dv1394src_bus_reset);
 
   GST_DEBUG_OBJECT (src, "successfully opened up 1394 connection");
   src->connected = TRUE;
+
+#ifdef HAVE_LIBIEC61883
+  if (iec61883_dv_fb_start (src->iec61883dv, src->channel) != 0)
+    goto cannot_start;
+#else
   if (raw1394_start_iso_rcv (src->handle, src->channel) < 0)
     goto cannot_start;
+#endif
 
   if (src->use_avc) {
     /* start the VCR */
@@ -748,6 +858,14 @@ cannot_start:
         ("can't start 1394 iso receive"));
     return FALSE;
   }
+#ifdef HAVE_LIBIEC61883
+cannot_initialise_dv:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("can't initialise iec61883 dv"));
+    return FALSE;
+  }
+#endif
 }
 
 static gboolean
@@ -759,8 +877,11 @@ gst_dv1394src_stop (GstBaseSrc * bsrc)
   close (WRITE_SOCKET (src));
   READ_SOCKET (src) = -1;
   WRITE_SOCKET (src) = -1;
-
+#ifdef HAVE_LIBIEC61883
+  iec61883_dv_fb_close (src->iec61883dv);
+#else
   raw1394_stop_iso_rcv (src->handle, src->channel);
+#endif
   if (src->use_avc) {
     /* pause the VCR */
     if (!avc1394_vcr_is_recording (src->handle, src->avc_node)

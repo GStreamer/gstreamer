@@ -26,6 +26,9 @@
 #include <gst/base/gstpushsrc.h>
 
 #include <libraw1394/raw1394.h>
+#ifdef HAVE_LIBIEC61883
+#include <libiec61883/iec61883.h>
+#endif
 
 G_BEGIN_DECLS
 
@@ -74,6 +77,9 @@ struct _GstDV1394Src {
   gchar *uri;
 
   gboolean connected;
+  #ifdef HAVE_LIBIEC61883
+  iec61883_dv_fb_t iec61883dv;
+  #endif
 };
 
 struct _GstDV1394SrcClass {

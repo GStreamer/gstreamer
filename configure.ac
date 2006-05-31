@@ -582,17 +582,25 @@ GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], dv1394src, [
   GST_CHECK_LIBHEADER(ROM1394,
     rom1394, rom1394_free_directory, $RAW1394_LIBS,
     libavc1394/rom1394.h, ROM1394_LIBS="-lrom1394")
-
+  PKG_CHECK_MODULES(LIBIEC61883, libiec61883 >= 1.0.0, HAVE_LIBIEC61883="yes",
+  	HAVE_LIBIEC61883="no")
   dnl now see how far we got
   if test x$HAVE_RAW1394 = xyes && \
      test x$HAVE_AVC1394 = xyes && \
      test x$HAVE_ROM1394 = xyes; then
        HAVE_DV1394=yes
        DV1394_LIBS="$RAW1394_LIBS $AVC1394_LIBS $ROM1394_LIBS"
+       DV1394_CFLAGS=""
+       if test x$HAVE_LIBIEC61883 = xyes; then
+         DV1394_CFLAGS="$LIBIEC61883_CFLAGS -DHAVE_LIBIEC61883"
+	 DV1394_LIBS="$DV1394_LIBS $LIBIEC61883_LIBS"
+       fi
+       AC_SUBST(DV1394_CFLAGS)
        AC_SUBST(DV1394_LIBS)
   else
        HAVE_DV1394=no
   fi
+
 ])
 
 dnl *** shout2 ***
