@@ -1,3 +1,32 @@
+2006-05-31  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_bus_reset):
+	Fix bus reset when using libiec61883
+
+2006-05-31  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* configure.ac:
+	Detect libiec61883 and set necessary CFLAGS and LIBS for dv1394.
+	* ext/raw1394/Makefile.am:
+	Add CFLAGS.
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_iec61883_receive),
+	New method, to receive using libiec61883.
+	(gst_dv1394src_iso_receive),
+	#ifdef'd out if libiec61883 is present.
+	(gst_dv1394src_bus_reset),
+	Get userdata correctly if using libiec61883. 
+	(gst_dv1394src_create),
+	When using libiec61883, only poll one fd and no need to read.
+	(gst_dv1394src_discover_avc_node),
+	Replace g_warnings.
+	(gst_dv1394src_start),
+	Create new handle when we know which dv port.  More reliable
+	than setting port on an existing handle.  Initialise libiec61883.
+	(gst_dv1394src_stop):
+	If using libiec61883, then cleanup its handle properly.
+	* ext/raw1394/gstdv1394src.h:
+	Add libiec61883 handle.
+
 2006-05-30  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/avi/gstavidemux.c:

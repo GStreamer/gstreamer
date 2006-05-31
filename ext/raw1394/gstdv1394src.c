@@ -540,8 +540,9 @@ gst_dv1394src_bus_reset (raw1394handle_t handle, unsigned int generation)
 
 #ifdef HAVE_LIBIEC61883
   iec61883_dv_t dv = (iec61883_dv_t) raw1394_get_userdata (handle);
-
-  src = GST_DV1394SRC (iec61883_dv_get_callback_data (dv));
+  iec61883_dv_fb_t dv_fb =
+      (iec61883_dv_fb_t) iec61883_dv_get_callback_data (dv);
+  src = GST_DV1394SRC (iec61883_dv_fb_get_callback_data (dv_fb));
 #else
   src = GST_DV1394SRC (raw1394_get_userdata (handle));
 #endif
