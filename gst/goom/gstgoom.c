@@ -1,5 +1,6 @@
 /* gstgoom.c: implementation of goom drawing element
  * Copyright (C) <2001> Richard Boulton <richard@tartarus.org>
+ *           (C) <2006> Wim Taymans <wim at fluendo dot com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -49,7 +50,7 @@ static const GstElementDetails gst_goom_details =
 GST_ELEMENT_DETAILS ("GOOM: what a GOOM!",
     "Visualization",
     "Takes frames of data and outputs video frames using the GOOM filter",
-    "Wim Taymans <wim.taymans@chello.be>");
+    "Wim Taymans <wim@fluendo.com>");
 
 /* signals and args */
 enum
@@ -78,20 +79,21 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",    
         "signed = (boolean) TRUE, "
         "width = (int) 16, "
         "depth = (int) 16, "
-        "rate = (int) [ 8000, 96000 ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) [ 8000, 96000 ], " "channels = (int) { 1, 2 }")
     );
 
 
 static void gst_goom_class_init (GstGoomClass * klass);
 static void gst_goom_base_init (GstGoomClass * klass);
 static void gst_goom_init (GstGoom * goom);
-static void gst_goom_dispose (GObject * object);
+static void gst_goom_finalize (GObject * object);
 
 static GstStateChangeReturn gst_goom_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstFlowReturn gst_goom_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_goom_event (GstPad * pad, GstEvent * event);
+static gboolean gst_goom_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_goom_sink_event (GstPad * pad, GstEvent * event);
 
 static GstPadLinkReturn gst_goom_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstPadLinkReturn gst_goom_src_setcaps (GstPad * pad, GstCaps * caps);
@@ -144,7 +146,7 @@ gst_goom_class_init (GstGoomClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = gst_goom_dispose;
+  gobject_class->finalize = gst_goom_finalize;
 
   gstelement_class->change_state = gst_goom_change_state;
 
@@ -156,14 +158,15 @@ gst_goom_init (GstGoom * goom)
 {
   /* create the sink and src pads */
   goom->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  goom->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_element_add_pad (GST_ELEMENT (goom), goom->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
-
   gst_pad_set_chain_function (goom->sinkpad, gst_goom_chain);
-  gst_pad_set_event_function (goom->sinkpad, gst_goom_event);
+  gst_pad_set_event_function (goom->sinkpad, gst_goom_sink_event);
   gst_pad_set_setcaps_function (goom->sinkpad, gst_goom_sink_setcaps);
+  gst_element_add_pad (GST_ELEMENT (goom), goom->sinkpad);
+
+  goom->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_setcaps_function (goom->srcpad, gst_goom_src_setcaps);
+  gst_pad_set_event_function (goom->srcpad, gst_goom_src_event);
+  gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
 
   goom->adapter = gst_adapter_new ();
 
@@ -172,28 +175,35 @@ gst_goom_init (GstGoom * goom)
   goom->fps_n = 25;             /* desired frame rate */
   goom->fps_d = 1;              /* desired frame rate */
   goom->channels = 0;
-  goom->sample_rate = 0;
-  goom->audio_basetime = GST_CLOCK_TIME_NONE;
-  goom->samples_consumed = 0;
-  goom->disposed = FALSE;
+  goom->rate = 0;
+  goom->duration = 0;
 
   goom_init (&(goom->goomdata), goom->width, goom->height);
 }
 
 static void
-gst_goom_dispose (GObject * object)
+gst_goom_finalize (GObject * object)
 {
   GstGoom *goom = GST_GOOM (object);
 
-  if (!goom->disposed) {
-    goom_close (&(goom->goomdata));
-    goom->disposed = TRUE;
+  goom_close (&(goom->goomdata));
 
-    g_object_unref (goom->adapter);
-    goom->adapter = NULL;
-  }
+  g_object_unref (goom->adapter);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_goom_reset (GstGoom * goom)
+{
+  goom->next_ts = -1;
+  gst_adapter_clear (goom->adapter);
+  gst_segment_init (&goom->segment, GST_FORMAT_UNDEFINED);
+
+  GST_OBJECT_LOCK (goom);
+  goom->proportion = 1.0;
+  goom->earliest_time = -1;
+  GST_OBJECT_UNLOCK (goom);
 }
 
 static gboolean
@@ -201,15 +211,18 @@ gst_goom_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstGoom *goom;
   GstStructure *structure;
+  gboolean res;
 
   goom = GST_GOOM (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "channels", &goom->channels);
-  gst_structure_get_int (structure, "rate", &goom->sample_rate);
+  res = gst_structure_get_int (structure, "channels", &goom->channels);
+  res &= gst_structure_get_int (structure, "rate", &goom->rate);
 
-  return TRUE;
+  goom->bps = goom->channels * sizeof (gint16);
+
+  return res;
 }
 
 static gboolean
@@ -229,6 +242,15 @@ gst_goom_src_setcaps (GstPad * pad, GstCaps * caps)
     return FALSE;
 
   goom_set_resolution (&(goom->goomdata), goom->width, goom->height);
+
+  /* size of the output buffer in bytes, depth is always 4 bytes */
+  goom->outsize = goom->width * goom->height * 4;
+  goom->duration =
+      gst_util_uint64_scale_int (GST_SECOND, goom->fps_d, goom->fps_n);
+  goom->spf = gst_util_uint64_scale_int (goom->rate, goom->fps_d, goom->fps_n);
+
+  GST_DEBUG_OBJECT (goom, "dimension %dx%d, framerate %d/%d, spf %d",
+      goom->width, goom->height, goom->fps_n, goom->fps_d, goom->spf);
 
   return TRUE;
 }
@@ -276,82 +298,188 @@ no_format:
 }
 
 static gboolean
-gst_goom_event (GstPad * pad, GstEvent * event)
+gst_goom_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res;
   GstGoom *goom;
 
-  goom = GST_GOOM (GST_PAD_PARENT (pad));
+  goom = GST_GOOM (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_QOS:
     {
-      gint64 start = 0, stop = 0;
-      GstFormat format;
+      gdouble proportion;
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
 
-      gst_event_parse_new_segment (event, NULL, NULL, &format, &start, &stop,
-          NULL);
-      gst_adapter_clear (goom->adapter);
-      goom->audio_basetime = start;
-      goom->samples_consumed = 0;
-      GST_DEBUG ("Got discont. Adjusting time to=%" G_GUINT64_FORMAT, start);
+      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+
+      /* save stuff for the _chain() function */
+      GST_OBJECT_LOCK (goom);
+      goom->proportion = proportion;
+      if (diff >= 0)
+        /* we're late, this is a good estimate for next displayable
+         * frame (see part-qos.txt) */
+        goom->earliest_time = timestamp + 2 * diff + goom->duration;
+      else
+        goom->earliest_time = timestamp + diff;
+      GST_OBJECT_UNLOCK (goom);
+
+      res = gst_pad_push_event (goom->sinkpad, event);
+      break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (goom->sinkpad, event);
       break;
   }
+  gst_object_unref (goom);
+
+  return res;
+}
+
+static gboolean
+gst_goom_sink_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res;
+  GstGoom *goom;
+
+  goom = GST_GOOM (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      res = gst_pad_push_event (goom->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_goom_reset (goom);
+      res = gst_pad_push_event (goom->srcpad, event);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat format;
+      gdouble rate, arate;
+      gint64 start, stop, time;
+      gboolean update;
+
+      /* the newsegment values are used to clip the input samples
+       * and to convert the incomming timestamps to running time so
+       * we can do QoS */
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
+
+      /* now configure the values */
+      gst_segment_set_newsegment_full (&goom->segment, update,
+          rate, arate, format, start, stop, time);
+
+      res = gst_pad_push_event (goom->srcpad, event);
+      break;
+    }
+    default:
+      res = gst_pad_push_event (goom->srcpad, event);
+      break;
+  }
+  gst_object_unref (goom);
+
   return res;
 }
 
 static GstFlowReturn
-gst_goom_chain (GstPad * pad, GstBuffer * bufin)
+get_buffer (GstGoom * goom, GstBuffer ** outbuf)
 {
-  GstGoom *goom;
-  guint32 bytesperread;
-  gint16 *data;
-  gint samples_per_frame;
   GstFlowReturn ret;
-
-  goom = GST_GOOM (GST_PAD_PARENT (pad));
-
-  if (goom->channels == 0)
-    goto not_negotiated;
-
-  if (goom->audio_basetime == GST_CLOCK_TIME_NONE)
-    goom->audio_basetime = GST_BUFFER_TIMESTAMP (bufin);
-
-  if (goom->audio_basetime == GST_CLOCK_TIME_NONE)
-    goom->audio_basetime = 0;
-
-  bytesperread = GOOM_SAMPLES * goom->channels * sizeof (gint16);
-  samples_per_frame = goom->sample_rate * goom->fps_d / goom->fps_n;
-  data = (gint16 *) GST_BUFFER_DATA (bufin);
-
-  gst_adapter_push (goom->adapter, bufin);
-
-  GST_DEBUG ("Input buffer has %d samples, time=%" G_GUINT64_FORMAT,
-      GST_BUFFER_SIZE (bufin) * sizeof (gint16) * goom->channels,
-      GST_BUFFER_TIMESTAMP (bufin));
-
-  ret = GST_FLOW_OK;
 
   if (GST_PAD_CAPS (goom->srcpad) == NULL) {
     if (!gst_goom_src_negotiate (goom))
-      goto no_format;
+      return GST_FLOW_NOT_NEGOTIATED;
   }
 
+  GST_DEBUG_OBJECT (goom, "allocating output buffer with caps %"
+      GST_PTR_FORMAT, GST_PAD_CAPS (goom->srcpad));
+
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (goom->srcpad,
+      GST_BUFFER_OFFSET_NONE, goom->outsize,
+      GST_PAD_CAPS (goom->srcpad), outbuf);
+
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  if (*outbuf == NULL)
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_goom_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstGoom *goom;
+  GstFlowReturn ret;
+  GstBuffer *outbuf = NULL;
+  guint avail;
+
+  goom = GST_GOOM (gst_pad_get_parent (pad));
+
+  /* If we don't have an output format yet, preallocate a buffer to try and
+   * set one */
+  if (GST_PAD_CAPS (goom->srcpad) == NULL) {
+    ret = get_buffer (goom, &outbuf);
+    if (ret != GST_FLOW_OK) {
+      gst_buffer_unref (buffer);
+      goto beach;
+    }
+  }
+
+  /* don't try to combine samples from discont buffer */
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+    gst_adapter_clear (goom->adapter);
+    goom->next_ts = -1;
+  }
+
+  /* Match timestamps from the incoming audio */
+  if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE)
+    goom->next_ts = GST_BUFFER_TIMESTAMP (buffer);
+
+  GST_DEBUG_OBJECT (goom,
+      "Input buffer has %d samples, time=%" G_GUINT64_FORMAT,
+      GST_BUFFER_SIZE (buffer) / goom->bps, GST_BUFFER_TIMESTAMP (buffer));
+
+  gst_adapter_push (goom->adapter, buffer);
+
+  ret = GST_FLOW_OK;
+
   /* Collect samples until we have enough for an output frame */
-  while (gst_adapter_available (goom->adapter) > MAX (bytesperread,
-          samples_per_frame * goom->channels * sizeof (gint16))) {
+  avail = gst_adapter_available (goom->adapter);
+  GST_DEBUG_OBJECT (goom, "avail now %u", avail);
+  while (avail > MAX (GOOM_SAMPLES, goom->spf) * goom->bps) {
     const guint16 *data;
-    GstBuffer *bufout;
+    gboolean need_skip;
     guchar *out_frame;
-    GstClockTimeDiff frame_duration;
     gint i;
 
-    frame_duration = gst_util_uint64_scale_int (GST_SECOND, goom->fps_d,
-        goom->fps_n);
-    data = (const guint16 *) gst_adapter_peek (goom->adapter, bytesperread);
+    GST_DEBUG_OBJECT (goom, "processing buffer");
+
+    if (goom->next_ts != -1) {
+      gint64 qostime;
+
+      qostime = gst_segment_to_running_time (&goom->segment, GST_FORMAT_TIME,
+          goom->next_ts);
+
+      GST_OBJECT_LOCK (goom);
+      /* check for QoS, don't compute buffers that are known to be late */
+      need_skip = goom->earliest_time != -1 && qostime <= goom->earliest_time;
+      GST_OBJECT_UNLOCK (goom);
+
+      if (need_skip) {
+        GST_WARNING_OBJECT (goom,
+            "QoS: skip ts: %" GST_TIME_FORMAT ", earliest: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (qostime), GST_TIME_ARGS (goom->earliest_time));
+        goto skip;
+      }
+    }
+
+    data =
+        (const guint16 *) gst_adapter_peek (goom->adapter,
+        GOOM_SAMPLES * goom->bps);
 
     if (goom->channels == 2) {
       for (i = 0; i < GOOM_SAMPLES; i++) {
@@ -365,50 +493,52 @@ gst_goom_chain (GstPad * pad, GstBuffer * bufin)
       }
     }
 
-    ret =
-        gst_pad_alloc_buffer_and_set_caps (goom->srcpad, GST_BUFFER_OFFSET_NONE,
-        goom->width * goom->height * 4, GST_PAD_CAPS (goom->srcpad), &bufout);
-    if (ret != GST_FLOW_OK)
-      break;
+    /* alloc a buffer if we don't have one yet, this happens
+     * when we pushed a buffer in this while loop before */
+    if (outbuf == NULL) {
+      ret = get_buffer (goom, &outbuf);
+      if (ret != GST_FLOW_OK) {
+        goto beach;
+      }
+    }
 
-    GST_BUFFER_TIMESTAMP (bufout) =
-        goom->audio_basetime +
-        (GST_SECOND * goom->samples_consumed / goom->sample_rate);
-    GST_BUFFER_DURATION (bufout) = frame_duration;
-    GST_BUFFER_SIZE (bufout) = goom->width * goom->height * 4;
+    GST_BUFFER_TIMESTAMP (outbuf) = goom->next_ts;
+    GST_BUFFER_DURATION (outbuf) = goom->duration;
+    GST_BUFFER_SIZE (outbuf) = goom->outsize;
 
     out_frame = (guchar *) goom_update (&(goom->goomdata), goom->datain);
-    memcpy (GST_BUFFER_DATA (bufout), out_frame, GST_BUFFER_SIZE (bufout));
+    memcpy (GST_BUFFER_DATA (outbuf), out_frame, goom->outsize);
 
-    GST_DEBUG ("Pushing frame with time=%" G_GUINT64_FORMAT ", duration=%"
-        G_GUINT64_FORMAT, GST_BUFFER_TIMESTAMP (bufout),
-        GST_BUFFER_DURATION (bufout));
-    ret = gst_pad_push (goom->srcpad, bufout);
+    GST_DEBUG ("Pushing frame with time=%" GST_TIME_FORMAT ", duration=%"
+        GST_TIME_FORMAT, GST_TIME_ARGS (goom->next_ts),
+        GST_TIME_ARGS (goom->duration));
 
-    goom->samples_consumed += samples_per_frame;
-    gst_adapter_flush (goom->adapter,
-        samples_per_frame * goom->channels * sizeof (gint16));
+    ret = gst_pad_push (goom->srcpad, outbuf);
+    outbuf = NULL;
+
+  skip:
+    /* interpollate next timestamp */
+    if (goom->next_ts != -1)
+      goom->next_ts += goom->duration;
+
+    GST_DEBUG_OBJECT (goom, "finished frame, flushing %u samples from input",
+        goom->spf);
+    gst_adapter_flush (goom->adapter, MIN (avail, goom->spf * goom->bps));
 
     if (ret != GST_FLOW_OK)
       break;
-  }
-  return ret;
 
-  /* ERRORS */
-not_negotiated:
-  {
-    GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
-        ("Format wasn't negotiated before chain function."));
-    gst_buffer_unref (bufin);
-    return GST_FLOW_NOT_NEGOTIATED;
+    avail = gst_adapter_available (goom->adapter);
+    GST_DEBUG_OBJECT (goom, "avail now %u", avail);
   }
-no_format:
-  {
-    GST_ELEMENT_ERROR (goom, CORE, NEGOTIATION, (NULL),
-        ("Could not negotiate format on source pad."));
-    gst_buffer_unref (bufin);
-    return GST_FLOW_ERROR;
-  }
+
+  if (outbuf != NULL)
+    gst_buffer_unref (outbuf);
+
+beach:
+  gst_object_unref (goom);
+
+  return ret;
 }
 
 static GstStateChangeReturn
@@ -422,9 +552,7 @@ gst_goom_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      goom->audio_basetime = GST_CLOCK_TIME_NONE;
-      gst_adapter_clear (goom->adapter);
-      goom->channels = 0;
+      gst_goom_reset (goom);
       break;
     default:
       break;

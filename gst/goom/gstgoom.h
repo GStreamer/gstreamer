@@ -46,23 +46,34 @@ struct _GstGoom
   GstAdapter *adapter;
 
   /* input tracking */
-  gint sample_rate;
-
-  gint16 datain[2][GOOM_SAMPLES];
-  /* the timestamp of the next frame */
-  GstClockTime audio_basetime;
-  guint64 samples_consumed;
+  gint rate;
+  gint channels;
+  guint bps;
 
   /* video state */
   gint fps_n;
   gint fps_d;
   gint width;
   gint height;
-  gint channels;
+  GstClockTime duration;
+  guint outsize;
 
-  gboolean disposed;
+  /* samples per frame */
+  guint spf;
 
+  /* goom stuff */
+  gint16 datain[2][GOOM_SAMPLES];
   GoomData goomdata;
+
+  /* segment state */
+  GstSegment segment;
+
+  /* the timestamp of the next frame */
+  GstClockTime next_ts;
+
+  /* QoS stuff *//* with LOCK */
+  gdouble proportion;
+  GstClockTime earliest_time;
 };
 
 struct _GstGoomClass

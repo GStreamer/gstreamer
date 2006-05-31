@@ -1,3 +1,15 @@
+2006-05-31  Wim Taymans  <wim@fluendo.com>
+
+	* gst/goom/gstgoom.c: (gst_goom_class_init), (gst_goom_init),
+	(gst_goom_finalize), (gst_goom_reset), (gst_goom_sink_setcaps),
+	(gst_goom_src_setcaps), (gst_goom_src_event),
+	(gst_goom_sink_event), (get_buffer), (gst_goom_chain),
+	(gst_goom_change_state):
+	* gst/goom/gstgoom.h:
+	Handle QoS.
+	Handle flushing, discont and events.
+	Fix timestamps and various other cleanups.
+
 2006-05-31  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_bus_reset):
