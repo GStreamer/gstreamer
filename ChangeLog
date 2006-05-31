@@ -1,3 +1,13 @@
+2006-05-31  Michael Dominic K.  <michaldominik@gmail.com>
+
+	* tests/PadTest.cs:
+	* tests/Makefile.am:
+	Introducing a new test for Gst.Pad. All fixtures pass.
+
+	* tests/CapsTest.cs:
+	Adding a new fixture for caps union testing (passes).
+	Fixing some code-style errors.
+
 2006-05-30  Michael Dominic K.  <michaldominik@gmail.com>
 
 	* README:

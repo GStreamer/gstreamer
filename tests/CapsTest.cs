@@ -78,7 +78,39 @@ public class CapsTest
         Assert.IsFalse(caps3.IsFixed, "How come caps are FIXED?!");
         Assert.IsFalse(caps3.IsEmpty, "How come caps are EMPTY?!");
 
-        Assert.AreEqual(caps2.ToString () + ", framerate=(fraction)[ 0/1, 100/1 ]", caps3.ToString ());
+        Assert.AreEqual(caps2.ToString() + ", framerate=(fraction)[ 0/1, 100/1 ]", caps3.ToString());
+
+        caps1.Dispose();
+        caps2.Dispose();
+        caps3.Dispose();
+    }
+
+    [Test]
+    public void TestUnion()
+    {
+        Caps caps1 = Caps.FromString("video/x-raw-yuv, " + 
+                                     "format=(fourcc)I420, " + 
+                                     "width=(int)640"); 
+        Caps caps2 = Caps.FromString("video/x-raw-yuv, " + 
+                                     "format=(fourcc)I420, " + 
+                                     "height=(int)480");
+        Assert.IsNotNull(caps1);
+        Assert.IsNotNull(caps2);
+
+        Assert.IsFalse(caps1.Handle == IntPtr.Zero, "Ooops, null handle in caps1");
+        Assert.IsFalse(caps1.Handle == IntPtr.Zero, "Ooops, null handle in caps2");
+
+        Caps caps3 = caps1.Union(caps2);
+
+        Assert.IsFalse(caps3.IsEmpty, "How come caps are EMPTY?!");
+
+        Assert.AreEqual("video/x-raw-yuv, " + 
+                        "format=(fourcc)I420, " + 
+                        "width=(int)640; " + 
+                        "video/x-raw-yuv, " + 
+                        "format=(fourcc)I420, " + 
+                        "height=(int)480", 
+                        caps3.ToString());
 
         caps1.Dispose();
         caps2.Dispose();
