@@ -1,5 +1,10 @@
 2006-05-31  Edward Hervey  <edward@fluendo.com>
 
+	* ext/faad/gstfaad.h:
+	Forgot to commit the header file too.
+
+2006-05-31  Edward Hervey  <edward@fluendo.com>
+
 	* ext/faad/gstfaad.c: (gst_faad_class_init), (gst_faad_init),
 	(gst_faad_dispose), (gst_faad_sink_event), (clip_outgoing_buffer),
 	(gst_faad_chain), (gst_faad_change_state):
