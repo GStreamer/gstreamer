@@ -48,6 +48,7 @@ struct _GstVisual
   GstPad *sinkpad;
   GstPad *srcpad;
   GstClockTime next_ts;
+  GstSegment segment;
 
   /* libvisual stuff */
   VisAudio audio;
@@ -55,7 +56,9 @@ struct _GstVisual
   VisActor *actor;
 
   /* audio/video state */
+  gint channels;
   gint rate;                    /* Input samplerate */
+  gint bps;
 
   /* framerate numerator & denominator */
   gint fps_n;
@@ -107,7 +110,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "depth = (int) 16, "
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) TRUE, "
-        "channels = (int) 2, " "rate = (int) [ 1000, MAX ]")
+        "channels = (int) { 1, 2 }, " "rate = (int) [ 1000, MAX ]")
     );
 
 
@@ -246,6 +249,7 @@ gst_visual_reset (GstVisual * visual)
 {
   visual->next_ts = -1;
   gst_adapter_clear (visual->adapter);
+  gst_segment_init (&visual->segment, GST_FORMAT_UNDEFINED);
 
   GST_OBJECT_LOCK (visual);
   visual->proportion = 1.0;
@@ -354,12 +358,14 @@ gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
+  gst_structure_get_int (structure, "channels", &visual->channels);
   gst_structure_get_int (structure, "rate", &visual->rate);
 
   if (visual->fps_n != 0) {
     visual->spf =
         gst_util_uint64_scale_int (visual->rate, visual->fps_d, visual->fps_n);
   }
+  visual->bps = visual->channels * sizeof (gint16);
 
   gst_object_unref (visual);
   return TRUE;
@@ -427,6 +433,27 @@ gst_visual_sink_event (GstPad * pad, GstEvent * event)
       gst_visual_reset (visual);
       res = gst_pad_push_event (visual->srcpad, event);
       break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat format;
+      gdouble rate, arate;
+      gint64 start, stop, time;
+      gboolean update;
+
+      /* the newsegment values are used to clip the input samples
+       * and to convert the incomming timestamps to running time so
+       * we can do QoS */
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
+
+      /* now configure the values */
+      gst_segment_set_newsegment_full (&visual->segment, update,
+          rate, arate, format, start, stop, time);
+
+      /* and forward */
+      res = gst_pad_push_event (visual->srcpad, event);
+      break;
+    }
     default:
       res = gst_pad_push_event (visual->srcpad, event);
       break;
@@ -453,9 +480,16 @@ gst_visual_src_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_qos (event, &proportion, &diff, &timestamp);
 
+      /* save stuff for the _chain function */
       GST_OBJECT_LOCK (visual);
       visual->proportion = proportion;
-      visual->earliest_time = timestamp + diff;
+      if (diff >= 0)
+        /* we're late, this is a good estimate for next displayable
+         * frame (see part-qos.txt) */
+        visual->earliest_time = timestamp + 2 * diff + visual->duration;
+      else
+        visual->earliest_time = timestamp + diff;
+
       GST_OBJECT_UNLOCK (visual);
 
       res = gst_pad_push_event (visual->sinkpad, event);
@@ -470,11 +504,15 @@ gst_visual_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+/* allocate and output buffer, if no format was negotiated, this
+ * function will negotiate one. After calling this function, a
+ * reverse negotiation could have happened. */
 static GstFlowReturn
 get_buffer (GstVisual * visual, GstBuffer ** outbuf)
 {
   GstFlowReturn ret;
 
+  /* we don't know an output format yet, pick one */
   if (GST_PAD_CAPS (visual->srcpad) == NULL) {
     if (!gst_vis_src_negotiate (visual))
       return GST_FLOW_NOT_NEGOTIATED;
@@ -483,14 +521,20 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
   GST_DEBUG_OBJECT (visual, "allocating output buffer with caps %"
       GST_PTR_FORMAT, GST_PAD_CAPS (visual->srcpad));
 
+  /* now allocate a buffer with the last negotiated format. 
+   * Downstream could renegotiate a new format, which will trigger
+   * our setcaps function on the source pad. */
   ret =
       gst_pad_alloc_buffer_and_set_caps (visual->srcpad,
       GST_BUFFER_OFFSET_NONE, visual->outsize,
       GST_PAD_CAPS (visual->srcpad), outbuf);
 
+  /* no buffer allocated, we don't care why. */
   if (ret != GST_FLOW_OK)
     return ret;
 
+  /* this is bad and should not happen. When the alloc function
+   * returns _OK, core ensures we have a valid buffer. */
   if (*outbuf == NULL)
     return GST_FLOW_ERROR;
 
@@ -504,6 +548,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
   guint i;
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
   GstFlowReturn ret = GST_FLOW_OK;
+  guint avail;
 
   GST_DEBUG_OBJECT (visual, "chain function called");
 
@@ -517,43 +562,70 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     }
   }
 
+  /* resync on DISCONT */
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+    gst_adapter_clear (visual->adapter);
+    visual->next_ts = -1;
+  }
+
   /* Match timestamps from the incoming audio */
   if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE)
     visual->next_ts = GST_BUFFER_TIMESTAMP (buffer);
 
+  GST_DEBUG_OBJECT (visual,
+      "Input buffer has %d samples, time=%" G_GUINT64_FORMAT,
+      GST_BUFFER_SIZE (buffer) / visual->bps, GST_BUFFER_TIMESTAMP (buffer));
+
   gst_adapter_push (visual->adapter, buffer);
 
-  while (gst_adapter_available (visual->adapter) > MAX (512, visual->spf) * 4 &&
-      (ret == GST_FLOW_OK)) {
-    gboolean need_skip;
+  avail = gst_adapter_available (visual->adapter);
+  GST_DEBUG_OBJECT (visual, "avail now %u", avail);
 
-    /* Read 512 samples per channel */
+  while (avail > MAX (512, visual->spf) * visual->bps) {
+    gboolean need_skip;
     const guint16 *data;
 
-    data = (const guint16 *) gst_adapter_peek (visual->adapter, 512 * 4);
-
-    GST_DEBUG_OBJECT (visual, "QoS: in: %" G_GUINT64_FORMAT
-        ", earliest: %" G_GUINT64_FORMAT, visual->next_ts,
-        visual->earliest_time);
+    GST_DEBUG_OBJECT (visual, "processing buffer");
 
     if (visual->next_ts != -1) {
+      gint64 qostime;
+
+      /* QoS is done on running time */
+      qostime = gst_segment_to_running_time (&visual->segment, GST_FORMAT_TIME,
+          visual->next_ts);
+
       GST_OBJECT_LOCK (visual);
       /* check for QoS, don't compute buffers that are known to be late */
       need_skip = visual->earliest_time != -1 &&
-          visual->next_ts <= visual->earliest_time;
+          qostime <= visual->earliest_time;
       GST_OBJECT_UNLOCK (visual);
 
       if (need_skip) {
-        GST_WARNING_OBJECT (visual, "skipping frame because of QoS");
+        GST_WARNING_OBJECT (visual,
+            "QoS: skip ts: %" GST_TIME_FORMAT ", earliest: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (qostime), GST_TIME_ARGS (visual->earliest_time));
         goto skip;
       }
     }
 
-    for (i = 0; i < 512; i++) {
-      visual->audio.plugpcm[0][i] = *data++;
-      visual->audio.plugpcm[1][i] = *data++;
+    /* Read 512 samples per channel */
+    data =
+        (const guint16 *) gst_adapter_peek (visual->adapter, 512 * visual->bps);
+
+    if (visual->channels == 2) {
+      for (i = 0; i < 512; i++) {
+        visual->audio.plugpcm[0][i] = *data++;
+        visual->audio.plugpcm[1][i] = *data++;
+      }
+    } else {
+      for (i = 0; i < 512; i++) {
+        visual->audio.plugpcm[0][i] = *data;
+        visual->audio.plugpcm[1][i] = *data++;
+      }
     }
 
+    /* alloc a buffer if we don't have one yet, this happens
+     * when we pushed a buffer in this while loop before */
     if (outbuf == NULL) {
       ret = get_buffer (visual, &outbuf);
       if (ret != GST_FLOW_OK) {
@@ -579,8 +651,14 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
       visual->next_ts += visual->duration;
 
     /* Flush out the number of samples per frame * channels * sizeof (gint16) */
-    gst_adapter_flush (visual->adapter,
-        MIN (gst_adapter_available (visual->adapter), visual->spf * 4));
+    gst_adapter_flush (visual->adapter, MIN (avail, visual->spf * visual->bps));
+
+    /* quit the loop if something was wrong */
+    if (ret != GST_FLOW_OK)
+      break;
+
+    /* see what we have left for next iteration */
+    avail = gst_adapter_available (visual->adapter);
   }
 
   if (outbuf != NULL)
