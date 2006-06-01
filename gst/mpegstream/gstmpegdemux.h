@@ -35,7 +35,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MPEG_DEMUX,GstMPEGDemuxClass))
 #define GST_IS_MPEG_DEMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MPEG_DEMUX))
-#define GST_IS_MPEG_DEMUX_CLASS(obj) \
+#define GST_IS_MPEG_DEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MPEG_DEMUX))
 
 /* Supported kinds of streams. */

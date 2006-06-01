@@ -33,10 +33,10 @@ extern "C" {
 #define GST_ASFMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ASFMUX,GstAsfMux))
 #define GST_ASFMUX_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ASFMUX,GstAsfMux))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ASFMUX,GstAsfMuxClass))
 #define GST_IS_ASFMUX(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ASFMUX))
-#define GST_IS_ASFMUX_CLASS(obj) \
+#define GST_IS_ASFMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ASFMUX))
 
 #define MAX_ASF_OUTPUTS 16

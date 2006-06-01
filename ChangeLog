@@ -1,3 +1,23 @@
+2006-06-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/a52dec/gsta52dec.h:
+	* ext/amrnb/amrnbdec.h:
+	* ext/amrnb/amrnbenc.h:
+	* ext/amrnb/amrnbparse.h:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	* ext/sidplay/gstsiddec.h:
+	* gst/ac3parse/gstac3parse.h:
+	* gst/asfdemux/gstasfdemux.h:
+	* gst/asfdemux/gstasfmux.h:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.h:
+	* gst/iec958/ac3iec.h:
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	* gst/mpegstream/gstdvddemux.h:
+	* gst/mpegstream/gstmpegclock.h:
+	* gst/mpegstream/gstmpegdemux.h:
+	* gst/mpegstream/gstmpegparse.h:
+	Fix more gobject macros: obj<->klass, GstXXX<->GstXXXClass
+
 2006-05-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* README:

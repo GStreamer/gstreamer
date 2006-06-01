@@ -33,7 +33,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_A52DEC,GstA52DecClass))
 #define GST_IS_A52DEC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_A52DEC))
-#define GST_IS_A52DEC_CLASS(obj) \
+#define GST_IS_A52DEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_A52DEC))
 
 typedef struct _GstA52Dec GstA52Dec;

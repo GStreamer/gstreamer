@@ -34,10 +34,10 @@ G_BEGIN_DECLS
 #define GST_SIDDEC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SIDDEC,GstSidDec))
 #define GST_SIDDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SIDDEC,GstSidDec))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SIDDEC,GstSidDecClass))
 #define GST_IS_SIDDEC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SIDDEC))
-#define GST_IS_SIDDEC_CLASS(obj) \
+#define GST_IS_SIDDEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SIDDEC))
 
 typedef struct _GstSidDec GstSidDec;

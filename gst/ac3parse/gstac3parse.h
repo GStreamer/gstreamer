@@ -35,10 +35,10 @@ extern "C" {
 #define GST_AC3PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AC3PARSE,GstAc3Parse))
 #define GST_AC3PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AC3PARSE,GstAc3Parse))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AC3PARSE,GstAc3ParseClass))
 #define GST_IS_AC3PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AC3PARSE))
-#define GST_IS_AC3PARSE_CLASS(obj) \
+#define GST_IS_AC3PARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AC3PARSE)))
 
 typedef struct _GstAc3Parse GstAc3Parse;

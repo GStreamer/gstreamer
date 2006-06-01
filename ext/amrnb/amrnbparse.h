@@ -30,10 +30,10 @@ G_BEGIN_DECLS
 #define GST_AMRNBPARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AMRNBPARSE, GstAmrnbParse))
 #define GST_AMRNBPARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AMRNBPARSE, GstAmrnbParse))
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AMRNBPARSE, GstAmrnbParseClass))
 #define GST_IS_AMRNBPARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AMRNBPARSE))
-#define GST_IS_AMRNBPARSE_CLASS(obj) \
+#define GST_IS_AMRNBPARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AMRNBPARSE))
 
 typedef struct _GstAmrnbParse GstAmrnbParse;
