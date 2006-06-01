@@ -330,8 +330,6 @@ GST_START_TEST (test_wrong_caps)
 
 GST_END_TEST;
 
-/* requires #343196 */
-#if 0
 GST_START_TEST (test_passthrough)
 {
   GstElement *volume;
@@ -371,7 +369,6 @@ GST_START_TEST (test_passthrough)
 }
 
 GST_END_TEST;
-#endif
 
 Suite *
 volume_suite (void)
@@ -385,9 +382,7 @@ volume_suite (void)
   tcase_add_test (tc_chain, test_double);
   tcase_add_test (tc_chain, test_mute);
   tcase_add_test (tc_chain, test_wrong_caps);
-  /* requires #343196
-     tcase_add_test (tc_chain, test_passthrough);
-   */
+  tcase_add_test (tc_chain, test_passthrough);
 
   return s;
 }

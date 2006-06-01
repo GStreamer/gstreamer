@@ -42,6 +42,12 @@ G_BEGIN_DECLS
 typedef struct _GstVolume GstVolume;
 typedef struct _GstVolumeClass GstVolumeClass;
 
+typedef enum {
+  GST_VOLUME_FORMAT_NONE,
+  GST_VOLUME_FORMAT_INT, 	 
+  GST_VOLUME_FORMAT_FLOAT 	 
+} GstVolumeFormat;
+
 /**
  * GstVolume:
  *
@@ -50,13 +56,14 @@ typedef struct _GstVolumeClass GstVolumeClass;
 struct _GstVolume {
   GstBaseTransform element;
 
-  void (*process)(GstVolume*, GstClockTime, gpointer, gint);
+  void (*process)(GstVolume*, gpointer, gint);
 
   gboolean mute;
   gint   volume_i, real_vol_i; /* the _i(nt) values get synchronized with the */
   gfloat volume_f, real_vol_f; /* _f(loat) values on each update */
   
   GList *tracklist;
+  GstVolumeFormat format;
 };
 
 struct _GstVolumeClass {

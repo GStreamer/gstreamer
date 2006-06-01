@@ -1,5 +1,19 @@
 2006-06-01  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/volume/gstvolume.c: (volume_choose_func),
+	(volume_update_real_volume), (gst_volume_class_init),
+	(gst_volume_init), (volume_process_float), (volume_process_int16),
+	(volume_process_int16_clamp), (volume_set_caps),
+	(volume_transform_ip), (plugin_init):
+	* gst/volume/gstvolume.h:
+	rewrite the passthrough check, split _int16 and _int16_clamp, fix
+	another property desc., remove unused param from process function
+	
+	* tests/check/elements/volume.c: (volume_suite):
+	reactivate the passthrough test
+
+2006-06-01  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/alsa/gstalsamixerelement.h:
 	* ext/alsa/gstalsamixeroptions.h:
 	* ext/alsa/gstalsamixertrack.h:
