@@ -22,7 +22,10 @@
 #include <gst/gstplugin.h>
 
 extern gboolean gst_mem_index_plugin_init (GstPlugin * plugin);
+
+#ifndef GST_DISABLE_LOADSAVE
 extern gboolean gst_file_index_plugin_init (GstPlugin * plugin);
+#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -30,7 +33,7 @@ plugin_init (GstPlugin * plugin)
   gboolean res = TRUE;
 
   res &= gst_mem_index_plugin_init (plugin);
-#ifdef HAVE_MMAP
+#if HAVE_MMAP && !GST_DISABLE_LOADSAVE
   res &= gst_file_index_plugin_init (plugin);
 #endif
 

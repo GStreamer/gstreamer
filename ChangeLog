@@ -1,5 +1,10 @@
 2006-06-01  Stefan Kost  <ensonic@users.sf.net>
 
+	* plugins/indexers/gstindexers.c: (plugin_init):
+	conditionally register fileindexer (fixes #343598)
+
+2006-06-01  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gsttagsetter.h:
 	Can't cast ifaces to a class
 
