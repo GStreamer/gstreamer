@@ -37,7 +37,7 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_CAST((klass),TYPE_SINESRC,SineSrcClass))
 #define IS_SINESRC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),TYPE_SINESRC))
-#define IS_SINESRC_CLASS(obj) \
+#define IS_SINESRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),TYPE_SINESRC))
 
 typedef struct _SineSrc SineSrc;

@@ -29,10 +29,10 @@ G_BEGIN_DECLS
 #define GST_VIDEO_RATE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_RATE,GstVideoRate))
 #define GST_VIDEO_RATE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_RATE,GstVideoRate))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_RATE,GstVideoRateClass))
 #define GST_IS_VIDEO_RATE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_RATE))
-#define GST_IS_VIDEO_RATE_CLASS(obj) \
+#define GST_IS_VIDEO_RATE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_RATE))
 
 typedef struct _GstVideoRate GstVideoRate;

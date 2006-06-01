@@ -32,7 +32,7 @@ G_BEGIN_DECLS
 #define GST_ALSA_MIXER_TRACK(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALSA_MIXER_TRACK,GstAlsaMixerTrack))
 #define GST_ALSA_MIXER_TRACK_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_MIXER_TRACK,GstAlsaMixerTrackClass))
 #define GST_IS_ALSA_MIXER_TRACK(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_MIXER_TRACK))
-#define GST_IS_ALSA_MIXER_TRACK_CLASS(obj)      (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_MIXER_TRACK))
+#define GST_IS_ALSA_MIXER_TRACK_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_MIXER_TRACK))
 #define GST_TYPE_ALSA_MIXER_TRACK               (gst_alsa_mixer_track_get_type())
 
 typedef struct _GstAlsaMixerTrack GstAlsaMixerTrack;

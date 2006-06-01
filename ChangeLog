@@ -1,3 +1,40 @@
+2006-06-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/alsa/gstalsamixerelement.h:
+	* ext/alsa/gstalsamixeroptions.h:
+	* ext/alsa/gstalsamixertrack.h:
+	* ext/gnomevfs/gstgnomevfssink.h:
+	* ext/gnomevfs/gstgnomevfssrc.h:
+	* ext/theora/gsttheoradec.h:
+	* ext/theora/gsttheoraenc.h:
+	* ext/theora/gsttheoraparse.h:
+	* ext/vorbis/vorbisparse.h:
+	* gst-libs/gst/audio/gstaudioclock.h:
+	* gst-libs/gst/audio/gstaudiofilter.h:
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.h:
+	* gst/audioconvert/gstaudioconvert.h:
+	* gst/audioresample/gstaudioresample.h:
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.h:
+	* gst/playback/gststreamselector.h:
+	* gst/tcp/gstmultifdsink.h:
+	* gst/tcp/gsttcpclientsink.h:
+	* gst/tcp/gsttcpclientsrc.h:
+	* gst/tcp/gsttcpserversink.h:
+	* gst/tcp/gsttcpserversrc.h:
+	* gst/videorate/gstvideorate.h:
+	* gst/videoscale/gstvideoscale.h:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/volume/gstvolume.h:
+	* sys/v4l/gstv4ljpegsrc.h:
+	* sys/v4l/gstv4lmjpegsink.h:
+	* sys/v4l/gstv4lmjpegsrc.h:
+	* sys/v4l/gstv4lsrc.h:
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.h:
+	* tests/old/testsuite/alsa/sinesrc.h:
+	Fix more gobject macros: obj<->klass, GstXXX<->GstXXXClass
+
 2006-05-31  Wim Taymans  <wim@fluendo.com>
 
 	* ext/libvisual/visual.c: (gst_visual_reset),

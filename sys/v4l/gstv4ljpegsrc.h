@@ -34,7 +34,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_V4LJPEGSRC,GstV4lJpegSrcClass))
 #define GST_IS_V4LJPEGSRC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4LJPEGSRC))
-#define GST_IS_V4LJPEGSRC_CLASS(obj) \
+#define GST_IS_V4LJPEGSRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4LJPEGSRC))
 typedef struct _GstV4lJpegSrc GstV4lJpegSrc;
 typedef struct _GstV4lJpegSrcClass GstV4lJpegSrcClass;

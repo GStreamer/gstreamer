@@ -30,10 +30,10 @@ G_BEGIN_DECLS
 #define GST_THEORA_ENC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_THEORA_ENC,GstTheoraEnc))
 #define GST_THEORA_ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_THEORA_ENC,GstTheoraEnc))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_THEORA_ENC,GstTheoraEncClass))
 #define GST_IS_THEORA_ENC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_THEORA_ENC))
-#define GST_IS_THEORA_ENC_CLASS(obj) \
+#define GST_IS_THEORA_ENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_THEORA_ENC))
 
 typedef struct _GstTheoraEnc GstTheoraEnc;
