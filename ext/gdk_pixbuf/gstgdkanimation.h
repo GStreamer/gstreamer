@@ -36,9 +36,9 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_GDK_ANIMATION                  (gst_gdk_animation_get_type())
 #define GST_GDK_ANIMATION(obj)                  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GDK_ANIMATION,GstGdkAnimation))
-#define GST_GDK_ANIMATION_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GDK_ANIMATION,GstGdkAnimation))
+#define GST_GDK_ANIMATION_CLASS(klass)          (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GDK_ANIMATION,GstGdkAnimationClass))
 #define GST_IS_GDK_ANIMATION(obj)               (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GDK_ANIMATION))
-#define GST_IS_GDK_ANIMATION_CLASS(obj)         (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GDK_ANIMATION))
+#define GST_IS_GDK_ANIMATION_CLASS(klass)       (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GDK_ANIMATION))
 
 typedef struct _GstGdkAnimation      GstGdkAnimation;
 typedef struct _GstGdkAnimationClass GstGdkAnimationClass;

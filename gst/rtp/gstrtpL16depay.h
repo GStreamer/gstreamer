@@ -57,10 +57,10 @@ struct _GstRtpL16DepayClass
 #define GST_RTP_L16_DEPAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_L16_DEPAY,GstRtpL16Depay))
 #define GST_RTP_L16_DEPAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_L16_DEPAY,GstRtpL16Depay))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_L16_DEPAY,GstRtpL16DepayClass))
 #define GST_IS_RTP_L16_DEPAY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_L16_DEPAY))
-#define GST_IS_RTP_L16_DEPAY_CLASS(obj) \
+#define GST_IS_RTP_L16_DEPAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_L16_DEPAY))
 
 gboolean gst_rtp_L16depay_plugin_init (GstPlugin * plugin);

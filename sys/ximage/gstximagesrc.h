@@ -36,7 +36,7 @@ G_BEGIN_DECLS
 #define GST_XIMAGE_SRC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_XIMAGE_SRC,GstXImageSrc))
 #define GST_XIMAGE_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_XIMAGE_SRC,GstXImageSrc))
 #define GST_IS_XIMAGE_SRC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XIMAGE_SRC))
-#define GST_IS_XIMAGE_SRC_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XIMAGE_SRC))
+#define GST_IS_XIMAGE_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XIMAGE_SRC))
 
 typedef struct _GstXImageSrc GstXImageSrc;
 typedef struct _GstXImageSrcClass GstXImageSrcClass;

@@ -43,9 +43,9 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_UDPSINK                (gst_udpsink_get_type())
 #define GST_UDPSINK(obj)                (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_UDPSINK,GstUDPSink))
-#define GST_UDPSINK_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_UDPSINK,GstUDPSink))
+#define GST_UDPSINK_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_UDPSINK,GstUDPSinkClass))
 #define GST_IS_UDPSINK(obj)             (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_UDPSINK))
-#define GST_IS_UDPSINK_CLASS(obj)       (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_UDPSINK))
+#define GST_IS_UDPSINK_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_UDPSINK))
 
 typedef struct _GstUDPSink GstUDPSink;
 typedef struct _GstUDPSinkClass GstUDPSinkClass;

@@ -31,10 +31,10 @@ G_BEGIN_DECLS
                                GstAutoAudioSink))
 #define GST_AUTO_AUDIO_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_AUTO_AUDIO_SINK, \
-                            GstAutoAudioSink))
+                            GstAutoAudioSinkClass))
 #define GST_IS_AUTO_AUDIO_SINK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_AUTO_AUDIO_SINK))
-#define GST_IS_AUTO_AUDIO_SINK_CLASS(obj) \
+#define GST_IS_AUTO_AUDIO_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_AUTO_AUDIO_SINK))
 
 typedef struct _GstAutoAudioSink {

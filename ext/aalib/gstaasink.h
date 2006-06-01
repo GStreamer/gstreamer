@@ -36,10 +36,10 @@ extern "C" {
 #define GST_AASINK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_AASINK,GstAASink))
 #define GST_AASINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AASINK,GstAASink))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AASINK,GstAASinkClass))
 #define GST_IS_AASINK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AASINK))
-#define GST_IS_AASINK_CLASS(obj) \
+#define GST_IS_AASINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AASINK))
 
 typedef struct _GstAASink GstAASink;

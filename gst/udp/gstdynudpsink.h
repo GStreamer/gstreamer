@@ -42,9 +42,9 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_DYNUDPSINK             (gst_dynudpsink_get_type())
 #define GST_DYNUDPSINK(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DYNUDPSINK,GstDynUDPSink))
-#define GST_DYNUDPSINK_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DYNUDPSINK,GstDynUDPSink))
-#define GST_IS_DYNUDPSINK(obj)  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DYNUDPSINK))
-#define GST_IS_DYNUDPSINK_CLASS(obj)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DYNUDPSINK))
+#define GST_DYNUDPSINK_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DYNUDPSINK,GstDynUDPSinkClass))
+#define GST_IS_DYNUDPSINK(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DYNUDPSINK))
+#define GST_IS_DYNUDPSINK_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DYNUDPSINK))
 
 typedef struct _GstDynUDPSink GstDynUDPSink;
 typedef struct _GstDynUDPSinkClass GstDynUDPSinkClass;

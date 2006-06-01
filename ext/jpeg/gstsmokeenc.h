@@ -32,10 +32,10 @@ G_BEGIN_DECLS
 #define GST_SMOKEENC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SMOKEENC,GstSmokeEnc))
 #define GST_SMOKEENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SMOKEENC,GstSmokeEnc))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SMOKEENC,GstSmokeEncClass))
 #define GST_IS_SMOKEENC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SMOKEENC))
-#define GST_IS_SMOKEENC_CLASS(obj) \
+#define GST_IS_SMOKEENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SMOKEENC))
 
 typedef struct _GstSmokeEnc GstSmokeEnc;

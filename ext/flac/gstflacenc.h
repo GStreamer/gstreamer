@@ -29,9 +29,9 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_FLAC_ENC (gst_flac_enc_get_type())
 #define GST_FLAC_ENC(obj) G_TYPE_CHECK_INSTANCE_CAST(obj, GST_TYPE_FLAC_ENC, GstFlacEnc)
-#define GST_FLAC_ENC_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_FLAC_ENC, GstFlacEnc)
+#define GST_FLAC_ENC_CLASS(klass) G_TYPE_CHECK_CLASS_CAST(klass, GST_TYPE_FLAC_ENC, GstFlacEncClass)
 #define GST_IS_FLAC_ENC(obj) G_TYPE_CHECK_INSTANCE_TYPE(obj, GST_TYPE_FLAC_ENC)
-#define GST_IS_FLAC_ENC_CLASS(obj) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_FLAC_ENC)
+#define GST_IS_FLAC_ENC_CLASS(klass) G_TYPE_CHECK_CLASS_TYPE(klass, GST_TYPE_FLAC_ENC)
 
 typedef struct _GstFlacEnc GstFlacEnc;
 typedef struct _GstFlacEncClass GstFlacEncClass;

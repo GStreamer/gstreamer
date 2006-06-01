@@ -36,10 +36,10 @@ G_BEGIN_DECLS
 #define GST_JPEGENC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_JPEGENC,GstJpegEnc))
 #define GST_JPEGENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_JPEGENC,GstJpegEnc))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_JPEGENC,GstJpegEncClass))
 #define GST_IS_JPEGENC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_JPEGENC))
-#define GST_IS_JPEGENC_CLASS(obj) \
+#define GST_IS_JPEGENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_JPEGENC))
 
 typedef struct _GstJpegEnc GstJpegEnc;

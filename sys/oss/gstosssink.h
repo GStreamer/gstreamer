@@ -32,11 +32,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_OSSSINK          (gst_oss_sink_get_type())
-#define GST_OSSSINK(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSSSINK,GstOssSink))
-#define GST_OSSSINK_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSSSINK,GstOssSinkClass))
-#define GST_IS_OSSSINK(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSSSINK))
-#define GST_IS_OSSSINK_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSSSINK))
+#define GST_TYPE_OSSSINK            (gst_oss_sink_get_type())
+#define GST_OSSSINK(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OSSSINK,GstOssSink))
+#define GST_OSSSINK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OSSSINK,GstOssSinkClass))
+#define GST_IS_OSSSINK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OSSSINK))
+#define GST_IS_OSSSINK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OSSSINK))
 
 typedef struct _GstOssSink GstOssSink;
 typedef struct _GstOssSinkClass GstOssSinkClass;
