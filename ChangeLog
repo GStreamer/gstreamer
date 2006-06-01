@@ -1,3 +1,9 @@
+2006-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/volume/Makefile.am:
+	  Seriously, it's not *that* hard to get compilation right.  Even
+	  a drunk can do it ! Add LIBOIL CFLAGS and LIBS
+
 2006-06-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/volume/gstvolume.c: (volume_choose_func),
