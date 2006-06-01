@@ -74,7 +74,7 @@ struct _GstExampleClass {
  * class of the correct type. */
 #define GST_IS_EXAMPLE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EXAMPLE))
-#define GST_IS_EXAMPLE_CLASS(obj) \
+#define GST_IS_EXAMPLE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EXAMPLE))
 
 /* This is the only prototype needed, because it is used in the above

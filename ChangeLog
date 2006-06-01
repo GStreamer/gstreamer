@@ -1,3 +1,24 @@
+2006-06-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gsttagsetter.h:
+	Can't cast ifaces to a class
+
+	* libs/gst/net/gstnetclientclock.h:
+	* libs/gst/net/gstnettimeprovider.h:
+	* plugins/elements/gstfakesink.h:
+	* plugins/elements/gstfakesrc.h:
+	* plugins/elements/gstfdsink.h:
+	* plugins/elements/gstfdsrc.h:
+	* plugins/elements/gstfilesink.h:
+	* plugins/elements/gstfilesrc.h:
+	* plugins/elements/gstidentity.h:
+	* plugins/elements/gstqueue.h:
+	* plugins/elements/gsttee.h:
+	* plugins/indexers/gstfileindex.c:
+	* plugins/indexers/gstmemindex.c:
+	* tests/old/examples/plugins/example.h:
+	Fix more gobject macros: obj<->klass, GstXXX<->GstXXXClass
+
 2006-06-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* libs/gst/dataprotocol/dataprotocol.c:

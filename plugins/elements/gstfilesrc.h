@@ -39,7 +39,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FILE_SRC,GstFileSrcClass))
 #define GST_IS_FILE_SRC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FILE_SRC))
-#define GST_IS_FILE_SRC_CLASS(obj) \
+#define GST_IS_FILE_SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FILE_SRC))
 
 typedef struct _GstFileSrc GstFileSrc;
