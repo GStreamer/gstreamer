@@ -196,8 +196,9 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
   GST_WRITE_UINT16_BE (h + 42, GST_BUFFER_FLAGS (buffer) & flags_mask);
 
   /* ABI padding */
-  GST_WRITE_UINT32_BE (h + 44, (guint64) 0);
-  GST_WRITE_UINT64_BE (h + 48, (guint64) 0);
+  GST_WRITE_UINT64_BE (h + 44, (guint64) 0);
+  GST_WRITE_UINT32_BE (h + 52, (guint32) 0);
+  GST_WRITE_UINT16_BE (h + 56, (guint16) 0);
 
   /* CRC */
   crc = 0;
