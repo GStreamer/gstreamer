@@ -1,3 +1,9 @@
+2006-06-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_header_from_buffer):
+	  make sure we zero the whole ABI-compatible area
+
 2006-06-01  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Alessandro Decina <alessandro at nnva dot org>
