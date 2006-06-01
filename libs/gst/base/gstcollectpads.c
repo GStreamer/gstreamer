@@ -515,6 +515,8 @@ gst_collect_pads_stop (GstCollectPads * pads)
 
   /* Stop collect pads */
   pads->started = FALSE;
+  pads->eospads = 0;
+  pads->queuedpads = 0;
 
   /* loop over the master pad list and flush buffers */
   collected = pads->abidata.ABI.pad_list;
@@ -527,9 +529,8 @@ gst_collect_pads_stop (GstCollectPads * pads)
       buffer_p = &data->buffer;
       gst_buffer_replace (buffer_p, NULL);
       data->pos = 0;
-      /* one less pad with queued data now */
-      pads->queuedpads--;
     }
+    data->abidata.ABI.eos = FALSE;
   }
 
   GST_COLLECT_PADS_PAD_UNLOCK (pads);

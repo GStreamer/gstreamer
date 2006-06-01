@@ -1,3 +1,15 @@
+2006-06-01  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Alessandro Decina <alessandro at nnva dot org>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_stop):
+	Make sure the EOS flag is cleared from pads after a flush
+	or stop. Fixes #343538.
+
+	* tests/check/libs/collectpads.c: (GST_START_TEST),
+	(gst_collect_pads_suite):
+	Added test for collectpads reusage after EOS.
+
 2006-05-30  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/gst.c:
