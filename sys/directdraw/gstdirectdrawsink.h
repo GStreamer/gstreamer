@@ -32,11 +32,11 @@
 #include <ddraw.h>
 
 G_BEGIN_DECLS
-#define GST_TYPE_DIRECTDRAW_SINK          (gst_directdrawsink_get_type())
-#define GST_DIRECTDRAW_SINK(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DIRECTDRAW_SINK,GstDirectDrawSink))
-#define GST_DIRECTDRAW_SINK_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DIRECTDRAW_SINK,GstDirectDrawSinkClass))
-#define GST_IS_DIRECTDRAW_SINK(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DIRECTDRAW_SINK))
-#define GST_IS_DIRECTDRAW_SINK_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DIRECTDRAW_SINK))
+#define GST_TYPE_DIRECTDRAW_SINK            (gst_directdrawsink_get_type())
+#define GST_DIRECTDRAW_SINK(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DIRECTDRAW_SINK,GstDirectDrawSink))
+#define GST_DIRECTDRAW_SINK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DIRECTDRAW_SINK,GstDirectDrawSinkClass))
+#define GST_IS_DIRECTDRAW_SINK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DIRECTDRAW_SINK))
+#define GST_IS_DIRECTDRAW_SINK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DIRECTDRAW_SINK))
 typedef struct _GstDirectDrawSink GstDirectDrawSink;
 typedef struct _GstDirectDrawSinkClass GstDirectDrawSinkClass;
 
