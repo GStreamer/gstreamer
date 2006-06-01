@@ -87,10 +87,10 @@ typedef struct FT_Info
 #define GST_FESTIVAL(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FESTIVAL,GstFestival))
 #define GST_FESTIVAL_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FESTIVAL,GstFestival))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FESTIVAL,GstFestivalClass))
 #define GST_IS_FESTIVAL(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FESTIVAL))
-#define GST_IS_FESTIVAL_CLASS(obj) \
+#define GST_IS_FESTIVAL_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FESTIVAL))
 
 typedef enum {

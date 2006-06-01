@@ -45,7 +45,7 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AFSINK,GstAFSinkClass))
 #define GST_IS_AFSINK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AFSINK))
-#define GST_IS_AFSINK_CLASS(obj) \
+#define GST_IS_AFSINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AFSINK))
 
 typedef struct _GstAFSink GstAFSink;

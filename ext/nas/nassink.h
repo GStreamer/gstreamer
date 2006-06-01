@@ -33,10 +33,10 @@ extern "C" {
 #define GST_NASSINK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_NASSINK,GstNassink))
 #define GST_NASSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_NASSINK,GstNassink))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_NASSINK,GstNassinkClass))
 #define GST_IS_NASSINK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_NASSINK))
-#define GST_IS_NASSINK_CLASS(obj) \
+#define GST_IS_NASSINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_NASSINK))
 
 typedef enum {

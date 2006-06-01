@@ -1,3 +1,81 @@
+2006-06-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/alsaspdif/alsaspdifsink.h:
+	* ext/amrwb/gstamrwbdec.h:
+	* ext/amrwb/gstamrwbenc.h:
+	* ext/amrwb/gstamrwbparse.h:
+	* ext/arts/gst_arts.h:
+	* ext/artsd/gstartsdsink.h:
+	* ext/audiofile/gstafparse.h:
+	* ext/audiofile/gstafsink.h:
+	* ext/audiofile/gstafsrc.h:
+	* ext/audioresample/gstaudioresample.h:
+	* ext/bz2/gstbz2dec.h:
+	* ext/bz2/gstbz2enc.h:
+	* ext/dirac/gstdiracdec.h:
+	* ext/directfb/dfbvideosink.h:
+	* ext/divx/gstdivxdec.h:
+	* ext/divx/gstdivxenc.h:
+	* ext/dts/gstdtsdec.h:
+	* ext/faac/gstfaac.h:
+	* ext/gsm/gstgsmdec.h:
+	* ext/gsm/gstgsmenc.h:
+	* ext/ivorbis/vorbisenc.h:
+	* ext/libfame/gstlibfame.h:
+	* ext/nas/nassink.h:
+	* ext/neon/gstneonhttpsrc.h:
+	* ext/polyp/polypsink.h:
+	* ext/sdl/sdlaudiosink.h:
+	* ext/sdl/sdlvideosink.h:
+	* ext/shout/gstshout.h:
+	* ext/snapshot/gstsnapshot.h:
+	* ext/sndfile/gstsf.h:
+	* ext/swfdec/gstswfdec.h:
+	* ext/tarkin/gsttarkindec.h:
+	* ext/tarkin/gsttarkinenc.h:
+	* ext/theora/theoradec.h:
+	* ext/wavpack/gstwavpackdec.h:
+	* ext/wavpack/gstwavpackparse.h:
+	* ext/xine/gstxine.h:
+	* ext/xvid/gstxviddec.h:
+	* ext/xvid/gstxvidenc.h:
+	* gst/cdxaparse/gstcdxaparse.h:
+	* gst/cdxaparse/gstcdxastrip.h:
+	* gst/colorspace/gstcolorspace.h:
+	* gst/festival/gstfestival.h:
+	* gst/freeze/gstfreeze.h:
+	* gst/gdp/gstgdpdepay.h:
+	* gst/gdp/gstgdppay.h:
+	* gst/modplug/gstmodplug.h:
+	* gst/mpeg1sys/gstmpeg1systemencode.h:
+	* gst/mpeg1videoparse/gstmp1videoparse.h:
+	* gst/mpeg2sub/gstmpeg2subt.h:
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	* gst/multifilesink/gstmultifilesink.h:
+	* gst/overlay/gstoverlay.h:
+	* gst/playondemand/gstplayondemand.h:
+	* gst/qtdemux/qtdemux.h:
+	* gst/rtjpeg/gstrtjpegdec.h:
+	* gst/rtjpeg/gstrtjpegenc.h:
+	* gst/smooth/gstsmooth.h:
+	* gst/smoothwave/gstsmoothwave.h:
+	* gst/spectrum/gstspectrum.h:
+	* gst/speed/gstspeed.h:
+	* gst/stereo/gststereo.h:
+	* gst/switch/gstswitch.h:
+	* gst/tta/gstttadec.h:
+	* gst/tta/gstttaparse.h:
+	* gst/videodrop/gstvideodrop.h:
+	* gst/xingheader/gstxingmux.h:
+	* sys/directdraw/gstdirectdrawsink.h:
+	* sys/directsound/gstdirectsoundsink.h:
+	* sys/dxr3/dxr3audiosink.h:
+	* sys/dxr3/dxr3spusink.h:
+	* sys/dxr3/dxr3videosink.h:
+	* sys/qcam/gstqcamsrc.h:
+	* sys/vcd/vcdsrc.h:
+	Fix more gobject macros: obj<->klass, GstXXX<->GstXXXClass
+
 2006-05-31  Edward Hervey  <edward@fluendo.com>
 
 	* ext/faad/gstfaad.h:

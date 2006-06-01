@@ -66,10 +66,10 @@ struct _GstIcecastSendClass {
 #define GST_ICECASTSEND(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ICECASTSEND,GstIcecastSend))
 #define GST_ICECASTSEND_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ICECASTSEND,GstIcecastSend))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ICECASTSEND,GstIcecastSendClass))
 #define GST_IS_ICECASTSEND(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ICECASTSEND))
-#define GST_IS_ICECASTSEND_CLASS(obj) \
+#define GST_IS_ICECASTSEND_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ICECASTSEND))
 
 /* Standard function returning type information. */

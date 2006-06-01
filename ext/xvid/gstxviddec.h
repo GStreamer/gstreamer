@@ -30,10 +30,10 @@ G_BEGIN_DECLS
 #define GST_XVIDDEC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_XVIDDEC, GstXvidDec))
 #define GST_XVIDDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_XVIDDEC, GstXvidDec))
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_XVIDDEC, GstXvidDecClass))
 #define GST_IS_XVIDDEC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_XVIDDEC))
-#define GST_IS_XVIDDEC_CLASS(obj) \
+#define GST_IS_XVIDDEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_XVIDDEC))
 
 typedef struct _GstXvidDec GstXvidDec;

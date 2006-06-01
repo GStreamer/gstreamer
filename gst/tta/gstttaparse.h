@@ -32,10 +32,10 @@ G_BEGIN_DECLS
 #define GST_TTA_PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TTA_PARSE,GstTtaParse))
 #define GST_TTA_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TTA_PARSE,GstTtaParse))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TTA_PARSE,GstTtaParseClass))
 #define GST_IS_TTA_PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TTA_PARSE))
-#define GST_IS_TTA_PARSE_CLASS(obj) \
+#define GST_IS_TTA_PARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TTA_PARSE))
 
 typedef struct _GstTtaParse      GstTtaParse;

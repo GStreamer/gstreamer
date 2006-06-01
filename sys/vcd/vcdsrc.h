@@ -36,7 +36,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VCDSRC,GstVCDSrcClass))
 #define GST_IS_VCDSRC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VCDSRC))
-#define GST_IS_VCDSRC_CLASS(obj) \
+#define GST_IS_VCDSRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VCDSRC))
 
 /* NOTE: per-element flags start with 16 for now */

@@ -28,10 +28,10 @@
 #define GST_OVERLAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OVERLAY,GstOverlay))
 #define GST_OVERLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OVERLAY,GstOverlay))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OVERLAY,GstOverlayClass))
 #define GST_IS_OVERLAY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_OVERLAY))
-#define GST_IS_OVERLAY_CLASS(obj) \
+#define GST_IS_OVERLAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_OVERLAY))
 
 typedef struct _GstOverlay GstOverlay;

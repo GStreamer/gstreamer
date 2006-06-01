@@ -25,7 +25,7 @@
 G_BEGIN_DECLS
 #define GST_TYPE_BZ2ENC            (gst_bz2enc_get_type())
 #define GST_BZ2ENC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BZ2ENC,GstBz2enc))
-#define GST_BZ2ENC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BZ2ENC,GstBz2enc))
+#define GST_BZ2ENC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BZ2ENC,GstBz2encClass))
 #define GST_IS_BZ2ENC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BZ2ENC))
 #define GST_IS_BZ2ENC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BZ2ENC))
 typedef struct _GstBz2enc GstBz2enc;

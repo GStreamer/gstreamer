@@ -34,10 +34,10 @@ G_BEGIN_DECLS
 #define GST_SWFDEC(obj)						\
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SWFDEC,GstSwfdec))
 #define GST_SWFDEC_CLASS(klass)					\
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SWFDEC,GstSwfdec))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SWFDEC,GstSwfdecClass))
 #define GST_IS_SWFDEC(obj)				\
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SWFDEC))
-#define GST_IS_SWFDEC_CLASS(obj)			\
+#define GST_IS_SWFDEC_CLASS(klass)			\
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SWFDEC))
 
 typedef struct _GstSwfdec GstSwfdec;

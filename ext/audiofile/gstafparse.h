@@ -47,7 +47,7 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AFPARSE,GstAFParseClass))
 #define GST_IS_AFPARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AFPARSE))
-#define GST_IS_AFPARSE_CLASS(obj) \
+#define GST_IS_AFPARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AFPARSE))
 
 typedef struct _GstAFParse GstAFParse;

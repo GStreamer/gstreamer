@@ -34,10 +34,10 @@ extern "C" {
 #define GST_SMOOTH(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SMOOTH,GstSmooth))
 #define GST_SMOOTH_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SMOOTH,GstSmooth))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SMOOTH,GstSmoothClass))
 #define GST_IS_SMOOTH(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SMOOTH))
-#define GST_IS_SMOOTH_CLASS(obj) \
+#define GST_IS_SMOOTH_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SMOOTH))
 
 typedef struct _GstSmooth GstSmooth;

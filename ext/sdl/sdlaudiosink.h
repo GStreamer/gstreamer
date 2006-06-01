@@ -24,11 +24,11 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SDLAUDIOSINK          (gst_sdlaudio_sink_get_type())
-#define GST_SDLAUDIOSINK(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SDLAUDIOSINK,GstSDLAudioSink))
-#define GST_SDLAUDIOSINK_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SDLAUDIOSINK,GstSDLAudioSinkClass))
-#define GST_IS_SDLAUDIOSINK(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SDLAUDIOSINK))
-#define GST_IS_SDLAUDIOSINK_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SDLAUDIOSINK))
+#define GST_TYPE_SDLAUDIOSINK            (gst_sdlaudio_sink_get_type())
+#define GST_SDLAUDIOSINK(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SDLAUDIOSINK,GstSDLAudioSink))
+#define GST_SDLAUDIOSINK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SDLAUDIOSINK,GstSDLAudioSinkClass))
+#define GST_IS_SDLAUDIOSINK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SDLAUDIOSINK))
+#define GST_IS_SDLAUDIOSINK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SDLAUDIOSINK))
 
 typedef struct _GstSDLAudioSink GstSDLAudioSink;
 typedef struct _GstSDLAudioSinkClass GstSDLAudioSinkClass;

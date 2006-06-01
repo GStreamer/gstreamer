@@ -45,7 +45,7 @@ typedef struct _GstXingMuxClass {
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_XING_MUX,GstXingMuxClass))
 #define GST_IS_XING_MUX(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XING_MUX))
-#define GST_IS_XING_MUX_CLASS(obj) \
+#define GST_IS_XING_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XING_MUX))
 
 /* Standard function returning type information. */

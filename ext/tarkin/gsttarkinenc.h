@@ -38,7 +38,7 @@ extern "C" {
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_TARKINENC,TarkinEncClass))
 #define GST_IS_TARKINENC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TARKINENC))
-#define GST_IS_TARKINENC_CLASS(obj) \
+#define GST_IS_TARKINENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TARKINENC))
 
 typedef struct _TarkinEnc TarkinEnc;

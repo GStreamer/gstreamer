@@ -33,10 +33,10 @@ extern "C" {
 #define GST_DIVXDEC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_DIVXDEC, GstDivxDec))
 #define GST_DIVXDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_DIVXDEC, GstDivxDec))
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_DIVXDEC, GstDivxDecClass))
 #define GST_IS_DIVXDEC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_DIVXDEC))
-#define GST_IS_DIVXDEC_CLASS(obj) \
+#define GST_IS_DIVXDEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_DIVXDEC))
 
 typedef struct _GstDivxDec GstDivxDec;

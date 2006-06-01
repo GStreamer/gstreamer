@@ -33,10 +33,10 @@ G_BEGIN_DECLS
 #define GST_AMRWBENC(obj)						\
   (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AMRWBENC, GstAmrwbEnc))
 #define GST_AMRWBENC_CLASS(klass)					\
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AMRWBENC, GstAmrwbEnc))
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AMRWBENC, GstAmrwbEncClass))
 #define GST_IS_AMRWBENC(obj)					\
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AMRWBENC))
-#define GST_IS_AMRWBENC_CLASS(obj)			\
+#define GST_IS_AMRWBENC_CLASS(klass)			\
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AMRWBENC))
 
 typedef struct _GstAmrwbEnc GstAmrwbEnc;

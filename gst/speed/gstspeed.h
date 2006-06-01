@@ -31,10 +31,10 @@ G_BEGIN_DECLS
 #define GST_SPEED(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SPEED,GstSpeed))
 #define GST_SPEED_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SPEED,GstSpeed))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SPEED,GstSpeedClass))
 #define GST_IS_SPEED(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SPEED))
-#define GST_IS_SPEED_CLASS(obj) \
+#define GST_IS_SPEED_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SPEED))
 
 typedef struct _GstSpeed GstSpeed;

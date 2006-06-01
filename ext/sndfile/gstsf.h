@@ -37,7 +37,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SF,GstSFClass))
 #define GST_IS_SF(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SF))
-#define GST_IS_SF_CLASS(obj) \
+#define GST_IS_SF_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SF))
 
 #define GST_TYPE_SFSRC \
@@ -48,7 +48,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SFSRC,GstSFClass))
 #define GST_IS_SFSRC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SFSRC))
-#define GST_IS_SFSRC_CLASS(obj) \
+#define GST_IS_SFSRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SFSRC))
 
 #define GST_TYPE_SFSINK \
@@ -59,7 +59,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SFSINK,GstSFClass))
 #define GST_IS_SFSINK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SFSINK))
-#define GST_IS_SFSINK_CLASS(obj) \
+#define GST_IS_SFSINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SFSINK))
 
 typedef struct _GstSF GstSF;

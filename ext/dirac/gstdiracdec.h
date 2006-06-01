@@ -33,10 +33,10 @@ G_BEGIN_DECLS
 #define GST_DIRACDEC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DIRACDEC,GstDiracDec))
 #define GST_DIRACDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DIRACDEC,GstDiracDec))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DIRACDEC,GstDiracDecClass))
 #define GST_IS_DIRACDEC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DIRACDEC))
-#define GST_IS_DIRACDEC_CLASS(obj) \
+#define GST_IS_DIRACDEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DIRACDEC))
 
 typedef struct _GstDiracDec GstDiracDec;

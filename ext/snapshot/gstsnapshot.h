@@ -35,10 +35,10 @@ extern "C" {
 #define GST_SNAPSHOT(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SNAPSHOT,GstSnapshot))
 #define GST_SNAPSHOT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SNAPSHOT,GstSnapshot))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SNAPSHOT,GstSnapshotClass))
 #define GST_IS_SNAPSHOT(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SNAPSHOT))
-#define GST_IS_SNAPSHOT_CLASS(obj) \
+#define GST_IS_SNAPSHOT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SNAPSHOT))
 
 typedef struct _GstSnapshot GstSnapshot;

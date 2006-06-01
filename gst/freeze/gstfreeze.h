@@ -25,7 +25,7 @@ G_BEGIN_DECLS
 #define GST_FREEZE(obj)							\
   (G_TYPE_CHECK_INSTANCE_CAST (obj, GST_TYPE_FREEZE, GstFreeze))
 #define GST_FREEZE_CLASS(klass)					\
-  (G_TYPE_CHECK_CLASS_CAST (klass, GST_TYPE_FREEZE, GstFreeze))
+  (G_TYPE_CHECK_CLASS_CAST (klass, GST_TYPE_FREEZE, GstFreezeClass))
 #define GST_IS_FREEZE(obj)				\
   (G_TYPE_CHECK_INSTANCE_TYPE (obj, GST_TYPE_FREEZE))
 #define GST_IS_FREEZE_CLASS(klass)			\

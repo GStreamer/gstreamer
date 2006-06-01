@@ -36,10 +36,10 @@ extern "C" {
 #define GST_ARTS(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ARTS,GstARTS))
 #define GST_ARTS_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ARTS,GstARTS))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ARTS,GstARTSClass))
 #define GST_IS_ARTS(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ARTS))
-#define GST_IS_ARTS_CLASS(obj) \
+#define GST_IS_ARTS_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ARTS))
 
 typedef struct _GstARTS GstARTS;

@@ -35,10 +35,10 @@ extern "C" {
 #define GST_MPEG2SUBT(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MPEG2SUBT,GstMpeg2Subt))
 #define GST_MPEG2SUBT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MPEG2SUBT,GstMpeg2Subt))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MPEG2SUBT,GstMpeg2SubtClass))
 #define GST_IS_MPEG2SUBT(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MPEG2SUBT))
-#define GST_IS_MPEG2SUBT_CLASS(obj) \
+#define GST_IS_MPEG2SUBT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MPEG2SUBT))
 
 typedef struct _GstMpeg2Subt GstMpeg2Subt;

@@ -30,7 +30,7 @@ G_BEGIN_DECLS
   (gst_xine_get_type())
 #define GST_XINE(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_XINE,GstXine))
-#define GST_XINE_GET_CLASS(obj) \
+#define GST_XINE_GET_CLASS(klass) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_XINE, GstXineClass))
 #define GST_XINE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_XINE,GstXineClass))
