@@ -90,7 +90,8 @@ alawdec_getcaps (GstPad * pad)
   }
   /* now intersect rate and channels from peer caps */
   othercaps = gst_pad_peer_get_caps (otherpad);
-  if (othercaps) {
+  if (othercaps && (!gst_caps_is_empty (othercaps))
+      && (!gst_caps_is_any (othercaps))) {
     GstStructure *structure;
     const GValue *orate, *ochans;
     const GValue *rate, *chans;

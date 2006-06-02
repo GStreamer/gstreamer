@@ -1,5 +1,10 @@
 2006-06-02  Edward Hervey  <edward@fluendo.com>
 
+	* gst/law/alaw-decode.c: (alawdec_getcaps): 
+	Trying to get items from an ANY or EMPTY caps is ... stupid.
+
+2006-06-02  Edward Hervey  <edward@fluendo.com>
+
 	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_sink_event),
 	(gst_dvdec_chain), (gst_dvdec_change_state):
 	* ext/dv/gstdvdec.h:
