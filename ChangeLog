@@ -1,3 +1,16 @@
+2006-06-02  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	  One of the ffmpeg 'plugins' changed its name with the latest update
+	  of the snapshot. Change the blacklisted typefind list to match.
+
+2006-06-02  Michael Smith  <msmith@fluendo.com>
+
+	reviewed by: <delete if not using a buddy>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_chain_video):
+
 2006-05-26  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
