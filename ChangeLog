@@ -1,3 +1,20 @@
+2006-06-02  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
+	(gst_ffmpegdec_query), (gst_ffmpegdec_update_qos),
+	(gst_ffmpegdec_reset_qos), (gst_ffmpegdec_read_qos),
+	(gst_ffmpegdec_open), (gst_ffmpegdec_setcaps),
+	(gst_ffmpegdec_get_buffer), (gst_ffmpegdec_release_buffer),
+	(gst_ffmpegdec_add_pixel_aspect_ratio), (gst_ffmpegdec_negotiate),
+	(gst_ffmpegdec_do_qos), (gst_ffmpegdec_video_frame),
+	(gst_ffmpegdec_audio_frame), (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_flush_pcache), (gst_ffmpegdec_sink_event),
+	(gst_ffmpegdec_chain):
+	Split out audio and video frame decoding.
+	Added dropping/clipping of decoded buffers.
+	Ran gst-indent on code.
+	Small non-invasive code cleanups.
+
 2006-06-02  Michael Smith  <msmith@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
