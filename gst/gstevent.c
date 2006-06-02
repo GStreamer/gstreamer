@@ -281,8 +281,8 @@ gst_event_new (GstEventType type)
 
   event = (GstEvent *) gst_mini_object_new (GST_TYPE_EVENT);
 
-  GST_CAT_DEBUG (GST_CAT_EVENT, "creating new event %p %s", event,
-      gst_event_type_get_name (type));
+  GST_CAT_DEBUG (GST_CAT_EVENT, "creating new event %p %s %d", event,
+      gst_event_type_get_name (type), type);
 
   event->type = type;
   event->src = NULL;
