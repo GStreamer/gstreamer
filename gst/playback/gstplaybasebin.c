@@ -271,6 +271,8 @@ group_create (GstPlayBaseBin * play_base_bin)
   group->bin = play_base_bin;
   group->streaminfo_value_array = g_value_array_new (0);
 
+  GST_DEBUG_OBJECT (play_base_bin, "created new group %p", group);
+
   return group;
 }
 
@@ -400,6 +402,9 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
   group = play_base_bin->building_group;
   had_active_group = (get_active_group (play_base_bin) != NULL);
 
+  GST_DEBUG_OBJECT (play_base_bin, "commit group %p, had active %d",
+      group, had_active_group);
+
   /* if an element signalled a no-more-pads after we stopped due
    * to preroll, the group is NULL. This is not an error */
   if (group == NULL) {
@@ -407,40 +412,49 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
       GROUP_UNLOCK (play_base_bin);
       return;
     } else {
-      GST_DEBUG ("Group loading failed, bailing out");
+      GST_DEBUG_OBJECT (play_base_bin, "Group loading failed, bailing out");
     }
-  } else if (!subtitle) {
-    gint n;
+  } else {
+    if (!subtitle) {
+      gint n;
 
-    GST_DEBUG ("group %p done", group);
+      GST_DEBUG_OBJECT (play_base_bin, "group %p done", group);
 
-    play_base_bin->queued_groups = g_list_append (play_base_bin->queued_groups,
-        group);
+      play_base_bin->queued_groups =
+          g_list_append (play_base_bin->queued_groups, group);
 
-    play_base_bin->building_group = NULL;
+      play_base_bin->building_group = NULL;
 
-    /* remove signals. We don't want anymore signals from the preroll
-     * elements at this stage. */
-    for (n = 0; n < NUM_TYPES; n++) {
-      GstElement *element = group->type[n].preroll;
-      guint sig_id;
+      /* remove signals. We don't want anymore signals from the preroll
+       * elements at this stage. */
+      for (n = 0; n < NUM_TYPES; n++) {
+        GstElement *element = group->type[n].preroll;
+        guint sig_id;
 
-      if (!element)
-        continue;
+        if (!element)
+          continue;
 
-      sig_id =
-          GPOINTER_TO_INT (g_object_get_data (G_OBJECT (element), "signal_id"));
+        sig_id =
+            GPOINTER_TO_INT (g_object_get_data (G_OBJECT (element),
+                "signal_id"));
 
-      if (sig_id) {
-        GST_LOG ("removing preroll signal %s", GST_ELEMENT_NAME (element));
-        g_signal_handler_disconnect (G_OBJECT (element), sig_id);
+        if (sig_id) {
+          GST_LOG_OBJECT (play_base_bin, "removing preroll signal %s",
+              GST_ELEMENT_NAME (element));
+          g_signal_handler_disconnect (G_OBJECT (element), sig_id);
+        }
       }
+    } else {
+      /* this is a special subtitle bin, we don't commit the group but
+       * mark the subtitles as detected before se signal. */
+      GST_DEBUG_OBJECT (play_base_bin, "marking subtitle bin as complete");
+      play_base_bin->subtitle_done = TRUE;
     }
   }
 
-  GST_DEBUG ("signal group done");
+  GST_DEBUG_OBJECT (play_base_bin, "signal group done");
   GROUP_SIGNAL (play_base_bin);
-  GST_DEBUG ("signaled group done");
+  GST_DEBUG_OBJECT (play_base_bin, "signaled group done");
 
   if (!subtitle && !had_active_group) {
     if (!prepare_output (play_base_bin)) {
@@ -449,10 +463,10 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
     }
 
     setup_substreams (play_base_bin);
-    GST_DEBUG ("Emitting signal");
+    GST_DEBUG_OBJECT (play_base_bin, "Emitting signal");
     res = GST_PLAY_BASE_BIN_GET_CLASS (play_base_bin)->
         setup_output_pads (play_base_bin, group);
-    GST_DEBUG ("done");
+    GST_DEBUG_OBJECT (play_base_bin, "done");
 
     GROUP_UNLOCK (play_base_bin);
 
@@ -1346,6 +1360,8 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
   if (!play_base_bin->need_rebuild)
     return TRUE;
 
+  GST_DEBUG_OBJECT (play_base_bin, "setup source");
+
   /* delete old src */
   if (play_base_bin->source) {
     GST_DEBUG_OBJECT (play_base_bin, "removing old src element");
@@ -1394,12 +1410,20 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
        * has no more dynamic streams, the cond is unlocked. We can remove
        * the signal handlers then
        */
+      GST_DEBUG_OBJECT (play_base_bin, "starting subtitle bin");
+
+      /* for subtitles in a separate bin we will not commit the
+       * current building group since we need to add the other
+       * audio/video streams to the group. We check if we managed
+       * to commit the subtitle group using an extra flag. */
+      play_base_bin->subtitle_done = FALSE;
 
       gst_element_set_state (subbin, GST_STATE_PAUSED);
 
       GROUP_LOCK (play_base_bin);
-      GST_DEBUG ("waiting for first group...");
-      GROUP_WAIT (play_base_bin);
+      GST_DEBUG ("waiting for subtitle to complete...");
+      while (!play_base_bin->subtitle_done)
+        GROUP_WAIT (play_base_bin);
       GST_DEBUG ("group done !");
       GROUP_UNLOCK (play_base_bin);
 

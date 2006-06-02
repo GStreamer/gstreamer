@@ -1,3 +1,11 @@
+2006-06-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c: (group_create), (group_commit),
+	(setup_source):
+	* gst/playback/gstplaybasebin.h:
+	Make the subtitle detection work from any thread so we don't
+	deadlock. Fixes #343397.
+
 2006-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/volume/Makefile.am:
