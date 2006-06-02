@@ -1,3 +1,16 @@
+2006-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gdp/gstgdppay.c: (gst_gdp_pay_class_init),
+	(gst_gdp_pay_init), (gst_gdp_buffer_from_caps),
+	(gst_gdp_pay_buffer_from_buffer), (gst_gdp_buffer_from_event),
+	(gst_gdp_pay_reset_streamheader), (gst_gdp_pay_chain),
+	(gst_gdp_pay_sink_event), (gst_gdp_pay_set_property),
+	(gst_gdp_pay_get_property):
+	  add crc-header and crc-payload properties
+	  don't error out on some things that are recoverable
+	* tests/check/elements/gdppay.c: (GST_START_TEST), (gdppay_suite):
+	  add test for crc
+
 2006-06-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/alsaspdif/alsaspdifsink.h:
