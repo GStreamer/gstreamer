@@ -1,5 +1,12 @@
 2006-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_header_from_buffer), (gst_dp_packet_from_caps),
+	(gst_dp_packet_from_event):
+	  factor out some common header init code
+
+2006-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/libs/gstreamer-libs-sections.txt:
 	* docs/libs/tmpl/gstdataprotocol.sgml:
 	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_crc):
