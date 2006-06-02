@@ -1679,7 +1679,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       gint res;
       gint64 ffpts;
 
-      dump_parser_context (ffmpegdec->pctx, ffmpegdec->context);
       GST_LOG_OBJECT (ffmpegdec,
           "Calling av_parser_parse with ts:%" GST_TIME_FORMAT,
           GST_TIME_ARGS (in_ts));
@@ -1693,8 +1692,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       GST_LOG_OBJECT (ffmpegdec,
           "Parsed video frame, res=%d, size=%d, data=%p, in_ts:%"
           GST_TIME_FORMAT, res, size, data, GST_TIME_ARGS (in_ts));
-
-      dump_parser_context (ffmpegdec->pctx, ffmpegdec->context);
 
       if (res == 0 || size == 0) {
         GST_LOG_OBJECT (ffmpegdec,

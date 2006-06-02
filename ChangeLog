@@ -1,5 +1,10 @@
 2006-06-02  Edward Hervey  <edward@fluendo.com>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	Nothing to see, pass your way, I didn't screwup the previous commit.
+
+2006-06-02  Edward Hervey  <edward@fluendo.com>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
 	(gst_ffmpegdec_query), (gst_ffmpegdec_update_qos),
 	(gst_ffmpegdec_reset_qos), (gst_ffmpegdec_read_qos),
