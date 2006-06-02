@@ -1,6 +1,13 @@
 2006-06-02  Michael Smith  <msmith@fluendo.com>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_handle_identification_packet):
+	  Reinstate limit on channel count. Vorbis does not define the meaning
+	  of > 6 channels, so they're just independent channels. Gstreamer
+	  currently has no mechanism to represent N independent channels.
+
+2006-06-02  Michael Smith  <msmith@fluendo.com>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_identification_packet):
 	  Don't arbitrarily restrict channel counts and rate in vorbis.
 	  In terms of effects likely on real-world files, this fixes 96kHz
 	  playback of vorbis.

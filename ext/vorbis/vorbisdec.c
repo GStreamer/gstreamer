@@ -607,6 +607,8 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
       pos = pos6;
       break;
     }
+    default:
+      goto channel_count_error;
   }
 
   caps = gst_caps_new_simple ("audio/x-raw-float",
@@ -621,6 +623,14 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
   gst_caps_unref (caps);
 
   return GST_FLOW_OK;
+
+  /* ERROR */
+channel_count_error:
+  {
+    GST_ELEMENT_ERROR (vd, STREAM, NOT_IMPLEMENTED, (NULL),
+        ("Unsupported channel count %d", vd->vi.channels));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
