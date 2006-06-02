@@ -39,7 +39,6 @@ GST_DEBUG_CATEGORY (data_protocol_debug);
 /* write first 6 bytes of header, as well as ABI padding */
 #define GST_DP_INIT_HEADER(h, maj, min, flags, type)		\
 G_STMT_START {							\
-								\
   h[0] = (guint8) maj;						\
   h[1] = (guint8) min;						\
   h[2] = (guint8) flags;					\
@@ -50,6 +49,19 @@ G_STMT_START {							\
   GST_WRITE_UINT64_BE (h + 50, (guint64) 0); /* ABI padding */	\
 } G_STMT_END
 
+#define GST_DP_SET_CRC(h, flags, payload, length);		\
+G_STMT_START {							\
+  guint16 crc = 0;						\
+  if (flags & GST_DP_HEADER_FLAG_CRC_HEADER)			\
+    /* we don't crc the last four bytes since they are crc's */ \
+    crc = gst_dp_crc (h, 58);					\
+  GST_WRITE_UINT16_BE (h + 58, crc);				\
+								\
+  crc = 0;							\
+  if (length && (flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD))	\
+    crc = gst_dp_crc (payload, length);				\
+  GST_WRITE_UINT16_BE (h + 60, crc);				\
+} G_STMT_END
 
 /* calculate a CCITT 16 bit CRC check value for a given byte array */
 /*
@@ -191,7 +203,6 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
     guint * length, guint8 ** header)
 {
   guint8 *h;
-  guint16 crc;
   guint16 flags_mask;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
@@ -218,19 +229,7 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
 
   GST_WRITE_UINT16_BE (h + 42, GST_BUFFER_FLAGS (buffer) & flags_mask);
 
-  /* CRC */
-  crc = 0;
-  if (flags & GST_DP_HEADER_FLAG_CRC_HEADER) {
-    /* we don't crc the last four bytes of the header since they are crc's */
-    crc = gst_dp_crc (h, 58);
-  }
-  GST_WRITE_UINT16_BE (h + 58, crc);
-
-  crc = 0;
-  if (flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
-    crc = gst_dp_crc (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
-  }
-  GST_WRITE_UINT16_BE (h + 60, crc);
+  GST_DP_SET_CRC (h, flags, GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
 
   GST_LOG ("created header from buffer:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
@@ -255,7 +254,6 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
     guint * length, guint8 ** header, guint8 ** payload)
 {
   guint8 *h;
-  guint16 crc;
   guchar *string;
 
   /* FIXME: GST_IS_CAPS doesn't work
@@ -280,18 +278,7 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
   GST_WRITE_UINT64_BE (h + 26, (guint64) 0);
   GST_WRITE_UINT64_BE (h + 34, (guint64) 0);
 
-  /* CRC */
-  crc = 0;
-  if (flags & GST_DP_HEADER_FLAG_CRC_HEADER) {
-    crc = gst_dp_crc (h, 58);
-  }
-  GST_WRITE_UINT16_BE (h + 58, crc);
-
-  crc = 0;
-  if (flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
-    crc = gst_dp_crc (string, strlen ((gchar *) string) + 1);
-  }
-  GST_WRITE_UINT16_BE (h + 60, crc);
+  GST_DP_SET_CRC (h, flags, string, strlen ((gchar *) string) + 1);
 
   GST_LOG ("created header from caps:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
@@ -317,7 +304,6 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
     guint * length, guint8 ** header, guint8 ** payload)
 {
   guint8 *h;
-  guint16 crc;
   guint pl_length;              /* length of payload */
 
   g_return_val_if_fail (event, FALSE);
@@ -387,19 +373,7 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
   /* timestamp */
   GST_WRITE_UINT64_BE (h + 10, GST_EVENT_TIMESTAMP (event));
 
-  /* CRC */
-  crc = 0;
-  if (flags & GST_DP_HEADER_FLAG_CRC_HEADER) {
-    crc = gst_dp_crc (h, 58);
-  }
-  GST_WRITE_UINT16_BE (h + 58, crc);
-
-  crc = 0;
-  /* events can have a NULL payload */
-  if (*payload && flags & GST_DP_HEADER_FLAG_CRC_PAYLOAD) {
-    crc = gst_dp_crc (*payload, strlen ((gchar *) * payload) + 1);
-  }
-  GST_WRITE_UINT16_BE (h + 60, crc);
+  GST_DP_SET_CRC (h, flags, *payload, pl_length);
 
   GST_LOG ("created header from event:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
