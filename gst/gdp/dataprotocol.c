@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
+ * Copyright (C) 2004,2006 Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * dataprotocol.c: Functions implementing the GStreamer Data Protocol
  *
@@ -33,6 +33,23 @@
 /* debug category */
 GST_DEBUG_CATEGORY (data_protocol_debug);
 #define GST_CAT_DEFAULT data_protocol_debug
+
+/* helper macros */
+
+/* write first 6 bytes of header, as well as ABI padding */
+#define GST_DP_INIT_HEADER(h, maj, min, flags, type)		\
+G_STMT_START {							\
+								\
+  h[0] = (guint8) maj;						\
+  h[1] = (guint8) min;						\
+  h[2] = (guint8) flags;					\
+  h[3] = 0; /* padding byte */					\
+  GST_WRITE_UINT16_BE (h + 4, type);				\
+								\
+  GST_WRITE_UINT64_BE (h + 42, (guint64) 0); /* ABI padding */	\
+  GST_WRITE_UINT64_BE (h + 50, (guint64) 0); /* ABI padding */	\
+} G_STMT_END
+
 
 /* calculate a CCITT 16 bit CRC check value for a given byte array */
 /*
@@ -184,11 +201,8 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
   h = g_malloc0 (GST_DP_HEADER_LENGTH);
 
   /* version, flags, type */
-  h[0] = (guint8) GST_DP_VERSION_MAJOR;
-  h[1] = (guint8) GST_DP_VERSION_MINOR;
-  h[2] = (guint8) flags;
-  h[3] = 0;                     /* padding byte */
-  GST_WRITE_UINT16_BE (h + 4, GST_DP_PAYLOAD_BUFFER);
+  GST_DP_INIT_HEADER (h, GST_DP_VERSION_MAJOR, GST_DP_VERSION_MINOR, flags,
+      GST_DP_PAYLOAD_BUFFER);
 
   /* buffer properties */
   GST_WRITE_UINT32_BE (h + 6, GST_BUFFER_SIZE (buffer));
@@ -197,17 +211,12 @@ gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
   GST_WRITE_UINT64_BE (h + 26, GST_BUFFER_OFFSET (buffer));
   GST_WRITE_UINT64_BE (h + 34, GST_BUFFER_OFFSET_END (buffer));
 
-  /* data flags */
+  /* data flags; eats two bytes from the ABI area */
   /* we only copy KEY_UNIT,DELTA_UNIT and IN_CAPS flags */
   flags_mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
       GST_BUFFER_FLAG_DELTA_UNIT;
 
   GST_WRITE_UINT16_BE (h + 42, GST_BUFFER_FLAGS (buffer) & flags_mask);
-
-  /* ABI padding */
-  GST_WRITE_UINT64_BE (h + 44, (guint64) 0);
-  GST_WRITE_UINT32_BE (h + 52, (guint32) 0);
-  GST_WRITE_UINT16_BE (h + 56, (guint16) 0);
 
   /* CRC */
   crc = 0;
@@ -261,11 +270,8 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
   string = (guchar *) gst_caps_to_string (caps);
 
   /* version, flags, type */
-  h[0] = (guint8) GST_DP_VERSION_MAJOR;
-  h[1] = (guint8) GST_DP_VERSION_MINOR;
-  h[2] = (guint8) flags;
-  h[3] = 0;                     /* padding bytes */
-  GST_WRITE_UINT16_BE (h + 4, GST_DP_PAYLOAD_CAPS);
+  GST_DP_INIT_HEADER (h, GST_DP_VERSION_MAJOR, GST_DP_VERSION_MINOR, flags,
+      GST_DP_PAYLOAD_CAPS);
 
   /* buffer properties */
   GST_WRITE_UINT32_BE (h + 6, strlen ((gchar *) string) + 1);   /* include trailing 0 */
@@ -273,10 +279,6 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
   GST_WRITE_UINT64_BE (h + 18, (guint64) 0);
   GST_WRITE_UINT64_BE (h + 26, (guint64) 0);
   GST_WRITE_UINT64_BE (h + 34, (guint64) 0);
-
-  /* ABI padding */
-  GST_WRITE_UINT64_BE (h + 42, (guint64) 0);
-  GST_WRITE_UINT64_BE (h + 50, (guint64) 0);
 
   /* CRC */
   crc = 0;
@@ -377,21 +379,13 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
   }
 
   /* version, flags, type */
-  h[0] = (guint8) GST_DP_VERSION_MAJOR;
-  h[1] = (guint8) GST_DP_VERSION_MINOR;
-  h[2] = (guint8) flags;
-  h[3] = 0;                     /* padding byte */
-  GST_WRITE_UINT16_BE (h + 4,
+  GST_DP_INIT_HEADER (h, GST_DP_VERSION_MAJOR, GST_DP_VERSION_MINOR, flags,
       GST_DP_PAYLOAD_EVENT_NONE + GST_EVENT_TYPE (event));
 
   /* length */
   GST_WRITE_UINT32_BE (h + 6, (guint32) pl_length);
   /* timestamp */
   GST_WRITE_UINT64_BE (h + 10, GST_EVENT_TIMESTAMP (event));
-
-  /* ABI padding */
-  GST_WRITE_UINT64_BE (h + 42, (guint64) 0);
-  GST_WRITE_UINT64_BE (h + 50, (guint64) 0);
 
   /* CRC */
   crc = 0;
@@ -412,7 +406,6 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
   *header = h;
   return TRUE;
 }
-
 
 /**
  * gst_dp_buffer_from_header:
