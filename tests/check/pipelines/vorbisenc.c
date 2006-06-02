@@ -198,10 +198,12 @@ GST_START_TEST (test_granulepos_offset)
 
   /* header packets should have timestamp == NONE, granulepos 0 */
   buffer = get_buffer (bin, pad);
+  GST_DEBUG ("Got buffer in test");
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
   gst_buffer_unref (buffer);
+  GST_DEBUG ("Unreffed buffer in test");
 
   buffer = get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);

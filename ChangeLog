@@ -1,3 +1,17 @@
+2006-06-02  Michael Smith  <msmith@fluendo.com>
+
+	* tests/check/elements/audioconvert.c: (set_channel_positions),
+	(get_float_mc_caps), (get_int_mc_caps):
+	* tests/check/elements/audioresample.c:
+	* tests/check/elements/audiotestsrc.c: (GST_START_TEST):
+	* tests/check/elements/videorate.c:
+	* tests/check/elements/videotestsrc.c: (GST_START_TEST):
+	* tests/check/elements/volume.c:
+	* tests/check/elements/vorbisdec.c:
+	* tests/check/pipelines/vorbisenc.c: (GST_START_TEST):
+	  Don't busy-wait in tests; this was causing test timeouts very
+	  frequently when running under valgrind.
+
 2006-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/README:
