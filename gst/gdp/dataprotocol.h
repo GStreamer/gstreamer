@@ -84,6 +84,10 @@ typedef enum {
 
 void		gst_dp_init			(void);
 
+/* crc checksum */
+guint16         gst_dp_crc                      (const guint8 * buffer,
+                                                 guint length);
+
 /* payload information from header */
 guint32		gst_dp_header_payload_length	(const guint8 * header);
 GstDPPayloadType
