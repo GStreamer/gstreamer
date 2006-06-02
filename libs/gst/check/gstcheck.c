@@ -95,6 +95,9 @@ gst_check_init (int *argc, char **argv[])
       gst_check_log_critical_func, NULL);
   g_log_set_handler ("GLib-GObject", G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING,
       gst_check_log_critical_func, NULL);
+
+  check_cond = g_cond_new ();
+  check_mutex = g_mutex_new ();
 }
 
 /* message checking */
@@ -119,6 +122,10 @@ gst_check_chain_func (GstPad * pad, GstBuffer * buffer)
 {
   GST_DEBUG ("chain_func: received buffer %p", buffer);
   buffers = g_list_append (buffers, buffer);
+
+  g_mutex_lock (check_mutex);
+  g_cond_signal (check_cond);
+  g_mutex_unlock (check_mutex);
 
   return GST_FLOW_OK;
 }

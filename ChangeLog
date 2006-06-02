@@ -1,3 +1,12 @@
+2006-06-02  Michael Smith  <msmith@fluendo.com>
+
+	* libs/gst/check/gstcheck.c: (gst_check_init),
+	(gst_check_chain_func):
+	* libs/gst/check/gstcheck.h:
+	  Add a cond/mutex to the check support lib, signal this whenever we
+	  add to the buffers list. This will allow tests to not busy-wait on
+	  the buffer-list.
+
 2006-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* libs/gst/dataprotocol/dataprotocol.c:

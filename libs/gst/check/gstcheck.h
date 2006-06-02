@@ -47,6 +47,9 @@ extern gboolean _gst_check_expecting_log;
 /* global variables used in test methods */
 GList * buffers;
 
+GMutex *check_mutex;
+GCond *check_cond;
+
 void gst_check_init (int *argc, char **argv[]);
 
 GstFlowReturn gst_check_chain_func (GstPad *pad, GstBuffer *buffer);
