@@ -52,6 +52,10 @@ struct _GstGDPPay
   gboolean sent_streamheader; /* TRUE after the first streamheaders are sent */
   GList *queue; /* list of queued buffers before streamheaders are sent */
   guint64 offset;
+
+  gboolean crc_header;
+  gboolean crc_payload;
+  GstDPHeaderFlag header_flag;
 };
 
 struct _GstGDPPayClass

@@ -19,7 +19,7 @@
 
 /**
  * SECTION:element-gdpdepay
- * @see_also: videorate, ffmpegcolorspace
+ * @see_also: gdppay
  *
  * <refsect2>
  * <para>
