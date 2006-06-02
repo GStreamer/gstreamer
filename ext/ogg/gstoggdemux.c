@@ -2049,6 +2049,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
   {
     GstEvent *event;
     gint64 stop;
+    gint64 start;
 
     /* we have to send the flush to the old chain, not the new one */
     if (flush)
@@ -2060,10 +2061,13 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
     if (stop != -1)
       stop += chain->segment_start;
 
+    start = ogg->segment.last_stop;
+    if (chain->segment_start != GST_CLOCK_TIME_NONE)
+      start += chain->segment_start;
+
     /* create the segment event we are going to send out */
     event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
-        ogg->segment.format,
-        ogg->segment.last_stop + chain->segment_start, stop, ogg->segment.time);
+        ogg->segment.format, start, stop, ogg->segment.time);
 
     if (chain != ogg->current_chain) {
       /* switch to different chain, send segment on new chain */

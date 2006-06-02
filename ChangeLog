@@ -1,3 +1,10 @@
+2006-06-02  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_perform_seek):
+	  Don't accidently send GST_CLOCK_TIME_NONE as a new segment start
+	  value. Fixes g-critical on trying to play back ogg containing
+	  unknown codec.
+
 2006-06-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (group_create), (group_commit),
