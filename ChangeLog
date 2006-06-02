@@ -1,3 +1,8 @@
+2006-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* libs/gst/check/gstcheck.c: (gst_check_teardown_src_pad):
+	  make sure we unset caps
+
 2006-06-02  Michael Smith  <msmith@fluendo.com>
 
 	* libs/gst/check/gstcheck.c: (gst_check_init),

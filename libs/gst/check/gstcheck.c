@@ -195,6 +195,9 @@ gst_check_teardown_src_pad (GstElement * element)
 
   gst_pad_unlink (srcpad, sinkpad);
 
+  /* caps could have been set, make sure they get unset */
+  gst_pad_set_caps (srcpad, NULL);
+
   /* pad refs held by both creator and this function (through _get) */
   ASSERT_OBJECT_REFCOUNT (sinkpad, "element sinkpad", 2);
   gst_object_unref (sinkpad);
