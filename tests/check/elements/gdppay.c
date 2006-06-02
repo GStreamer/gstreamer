@@ -86,7 +86,6 @@ cleanup_gdppay (GstElement * gdppay)
   gst_check_teardown_element (gdppay);
 }
 
-
 GST_START_TEST (test_audio)
 {
   GstCaps *caps;
@@ -448,6 +447,96 @@ GST_START_TEST (test_first_no_new_segment)
 
 GST_END_TEST;
 
+GST_START_TEST (test_crc)
+{
+  GstCaps *caps;
+  GstElement *gdppay;
+  GstBuffer *inbuffer, *outbuffer;
+  GstEvent *event;
+  gchar *caps_string;
+  gint length;
+  guint16 crc_calculated, crc_read;
+
+  gdppay = setup_gdppay ();
+  g_object_set (gdppay, "crc-header", TRUE, NULL);
+
+  fail_unless (gst_element_set_state (gdppay,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  GST_DEBUG ("new segment");
+  event =
+      gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, GST_SECOND, 0);
+  fail_unless (gst_pad_push_event (mysrcpad, event));
+
+  /* no buffer should be pushed yet, waiting for caps */
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  GST_DEBUG ("first buffer");
+  inbuffer = gst_buffer_new_and_alloc (4);
+  caps = gst_caps_from_string (AUDIO_CAPS_STRING);
+  gst_buffer_set_caps (inbuffer, caps);
+  caps_string = gst_caps_to_string (caps);
+
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+
+  /* we should have three buffers now */
+  fail_unless_equals_int (g_list_length (buffers), 3);
+
+  /* first buffer is the serialized new_segment event;
+   * the element also holds a ref to it */
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  buffers = g_list_remove (buffers, outbuffer);
+  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 2);
+
+  /* verify the header checksum */
+  /* CRC's start at 58 in the header */
+  crc_calculated = gst_dp_crc (GST_BUFFER_DATA (outbuffer), 58);
+  crc_read = GST_READ_UINT16_BE (GST_BUFFER_DATA (outbuffer) + 58);
+  fail_unless_equals_int (crc_calculated, crc_read);
+
+  /* change a byte in the header and verify that the checksum now fails */
+  GST_BUFFER_DATA (outbuffer)[0] = 0xff;
+  crc_calculated = gst_dp_crc (GST_BUFFER_DATA (outbuffer), 58);
+  fail_if (crc_calculated == crc_read,
+      "Introducing a byte error in the header should make the checksum fail");
+
+  gst_buffer_unref (outbuffer);
+
+  /* second buffer is the serialized caps;
+   * the element also holds a ref to it */
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  buffers = g_list_remove (buffers, outbuffer);
+  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 2);
+  length = GST_DP_HEADER_LENGTH + (strlen (caps_string) + 1);
+  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  gst_buffer_unref (outbuffer);
+
+  /* the third buffer is the GDP buffer for our pushed buffer */
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  buffers = g_list_remove (buffers, outbuffer);
+  ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
+  length = GST_DP_HEADER_LENGTH + 4;
+  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), length);
+  gst_buffer_unref (outbuffer);
+
+  fail_unless (gst_element_set_state (gdppay,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
+  gst_caps_unref (caps);
+  g_free (caps_string);
+  g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (buffers);
+  buffers = NULL;
+  ASSERT_OBJECT_REFCOUNT (gdppay, "gdppay", 1);
+  gst_object_unref (gdppay);
+}
+
+GST_END_TEST;
+
 
 Suite *
 gdppay_suite (void)
@@ -460,6 +549,7 @@ gdppay_suite (void)
   tcase_add_test (tc_chain, test_first_no_caps);
   tcase_add_test (tc_chain, test_first_no_new_segment);
   tcase_add_test (tc_chain, test_streamheader);
+  tcase_add_test (tc_chain, test_crc);
 
   return s;
 }

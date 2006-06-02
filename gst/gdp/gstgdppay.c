@@ -19,6 +19,7 @@
 
 /**
  * SECTION:element-gdppay
+ * @see_also: gdpdepay
  *
  * <refsect2>
  * <para>
@@ -43,12 +44,6 @@ GST_ELEMENT_DETAILS ("GDP Payloader",
     "Payloads GStreamer Data Protocol buffers",
     "Thomas Vander Stichele <thomas at apestaart dot org>");
 
-enum
-{
-  PROP_0,
-  /* FILL ME */
-};
-
 static GstStaticPadTemplate gdp_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -64,6 +59,16 @@ GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY (gst_gdp_pay_debug);
 #define GST_CAT_DEFAULT gst_gdp_pay_debug
 
+#define DEFAULT_CRC_HEADER TRUE
+#define DEFAULT_CRC_PAYLOAD FALSE
+
+enum
+{
+  PROP_0,
+  PROP_CRC_HEADER,
+  PROP_CRC_PAYLOAD,
+};
+
 #define _do_init(x) \
     GST_DEBUG_CATEGORY_INIT (gst_gdp_pay_debug, "gdppay", 0, \
     "GDP payloader");
@@ -75,6 +80,11 @@ static GstFlowReturn gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_gdp_pay_change_state (GstElement *
     element, GstStateChange transition);
+
+static void gst_gdp_pay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_gdp_pay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static void gst_gdp_pay_dispose (GObject * gobject);
 
@@ -102,8 +112,19 @@ gst_gdp_pay_class_init (GstGDPPayClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_gdp_pay_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_gdp_pay_get_property);
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_gdp_pay_dispose);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_gdp_pay_change_state);
+
+  g_object_class_install_property (gobject_class, PROP_CRC_HEADER,
+      g_param_spec_boolean ("crc-header", "CRC Header",
+          "Calculate and store a CRC checksum on the header",
+          DEFAULT_CRC_HEADER, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_CRC_PAYLOAD,
+      g_param_spec_boolean ("crc-payload", "CRC Payload",
+          "Calculate and store a CRC checksum on the payload",
+          DEFAULT_CRC_PAYLOAD, G_PARAM_READWRITE));
 }
 
 static void
@@ -122,6 +143,10 @@ gst_gdp_pay_init (GstGDPPay * gdppay, GstGDPPayClass * g_class)
   gst_element_add_pad (GST_ELEMENT (gdppay), gdppay->srcpad);
 
   gdppay->offset = 0;
+
+  gdppay->crc_header = DEFAULT_CRC_HEADER;
+  gdppay->crc_payload = DEFAULT_CRC_PAYLOAD;
+  gdppay->header_flag = gdppay->crc_header | gdppay->crc_payload;
 }
 
 static void
@@ -157,7 +182,8 @@ gst_gdp_buffer_from_caps (GstGDPPay * this, GstCaps * caps)
   guint8 *header, *payload;
   guint len;
 
-  if (!gst_dp_packet_from_caps (caps, 0, &len, &header, &payload)) {
+  if (!gst_dp_packet_from_caps (caps, this->header_flag, &len, &header,
+          &payload)) {
     GST_WARNING_OBJECT (this, "could not create GDP header from caps");
     return NULL;
   }
@@ -182,7 +208,7 @@ gst_gdp_pay_buffer_from_buffer (GstGDPPay * this, GstBuffer * buffer)
   guint8 *header;
   guint len;
 
-  if (!gst_dp_header_from_buffer (buffer, 0, &len, &header)) {
+  if (!gst_dp_header_from_buffer (buffer, this->header_flag, &len, &header)) {
     GST_WARNING_OBJECT (this, "could not create GDP header from buffer");
     return NULL;
   }
@@ -205,8 +231,10 @@ gst_gdp_buffer_from_event (GstGDPPay * this, GstEvent * event)
   guint8 *header, *payload;
   guint len;
 
-  if (!gst_dp_packet_from_event (event, 0, &len, &header, &payload)) {
-    GST_WARNING_OBJECT (this, "could not create GDP header from event");
+  if (!gst_dp_packet_from_event (event, this->header_flag, &len, &header,
+          &payload)) {
+    GST_WARNING_OBJECT (this, "could not create GDP header from event %s (%d)",
+        gst_event_type_get_name (event->type), event->type);
     return NULL;
   }
 
@@ -270,7 +298,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     sh = gst_structure_get_value (structure, "streamheader");
     buffers = g_value_peek_pointer (sh);
     GST_DEBUG_OBJECT (this,
-        "Need to serialize %d incoming streamheader buffers on our streamheader",
+        "Need to serialize %d incoming streamheader buffers on ours",
         buffers->len);
     for (i = 0; i < buffers->len; ++i) {
       GValue *bufval;
@@ -390,17 +418,23 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
     outbuffer = gst_gdp_buffer_from_event (this, event);
     gst_event_unref (event);
 
+    /* GDP 0.2 doesn't know about new-segment, so this is not fatal */
     if (!outbuffer) {
-      GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
+      GST_ELEMENT_WARNING (this, STREAM, ENCODE, (NULL),
           ("Could not create GDP buffer from new segment event"));
+/*
       ret = GST_FLOW_ERROR;
       goto done;
-    }
+*/
+    } else {
 
-    gst_gdp_stamp_buffer (this, outbuffer);
-    GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
-    GST_BUFFER_DURATION (outbuffer) = 0;
-    this->new_segment_buf = outbuffer;
+      gst_gdp_stamp_buffer (this, outbuffer);
+      GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
+      GST_BUFFER_DURATION (outbuffer) = 0;
+      GST_DEBUG_OBJECT (this, "Storing buffer %p as new_segment_buf",
+          outbuffer);
+      this->new_segment_buf = outbuffer;
+    }
   }
 
   /* make sure we've received caps before */
@@ -464,11 +498,14 @@ gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event)
   GstFlowReturn flowret;
   gboolean ret = TRUE;
 
+  GST_DEBUG_OBJECT (this, "received event %s (%d)",
+      gst_event_type_get_name (event->type), event->type);
+
   /* now turn the event into a buffer */
   outbuffer = gst_gdp_buffer_from_event (this, event);
   if (!outbuffer) {
-    GST_ELEMENT_ERROR (this, STREAM, ENCODE, (NULL),
-        ("Could not create GDP buffer from event"));
+    GST_ELEMENT_WARNING (this, STREAM, ENCODE, (NULL),
+        ("Could not create GDP buffer from received event"));
     ret = FALSE;
     goto done;
   }
@@ -479,9 +516,11 @@ gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event)
   /* if we got a new segment, we should put it on our streamheader,
    * and not send it on */
   if (GST_EVENT_TYPE (event) == GST_EVENT_NEWSEGMENT) {
+    GST_DEBUG_OBJECT (this, "received new_segment event");
     if (this->new_segment_buf) {
       gst_buffer_unref (this->new_segment_buf);
     }
+    GST_DEBUG_OBJECT (this, "Storing buffer %p as new_segment_buf", outbuffer);
     this->new_segment_buf = outbuffer;
     gst_gdp_pay_reset_streamheader (this);
   } else {
@@ -504,6 +543,52 @@ done:
   gst_object_unref (this);
   gst_event_unref (event);
   return ret;
+}
+
+static void
+gst_gdp_pay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstGDPPay *this;
+
+  g_return_if_fail (GST_IS_GDP_PAY (object));
+  this = GST_GDP_PAY (object);
+
+  switch (prop_id) {
+    case PROP_CRC_HEADER:
+      this->crc_header = g_value_get_boolean (value);
+      this->header_flag = this->crc_header | this->crc_payload;
+      break;
+    case PROP_CRC_PAYLOAD:
+      this->crc_payload = g_value_get_boolean (value);
+      this->header_flag = this->crc_header | this->crc_payload;
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_gdp_pay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstGDPPay *this;
+
+  g_return_if_fail (GST_IS_GDP_PAY (object));
+  this = GST_GDP_PAY (object);
+
+  switch (prop_id) {
+    case PROP_CRC_HEADER:
+      g_value_set_boolean (value, this->crc_header);
+      break;
+    case PROP_CRC_PAYLOAD:
+      g_value_set_boolean (value, this->crc_payload);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstStateChangeReturn
