@@ -58,15 +58,12 @@ GST_ELEMENT_DETAILS ("Theora video decoder",
     "Benjamin Otte <in7y118@public.uni-hamburg.de>, "
     "Wim Taymans <wim@fluendo.com>, " "Michael Smith <msmith@fluendo,com>");
 
-/* TODO: Support for other pixel formats (4:4:4) as supported by the
- * theoraexp codebase
- */
 static GstStaticPadTemplate theora_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-yuv, "
-        "format = (fourcc) { I420, YUY2 }, "
+        "format = (fourcc) { I420, YUY2, Y444 }, "
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
@@ -714,11 +711,14 @@ theora_handle_type_packet (GstTheoraExpDec * dec, ogg_packet * packet)
      * So, we convert to a widely-supported packed format.
      */
     fourcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
-  } else {
-    /* TODO: Implement 4:4:4, check for reserved/invalid values,
-     * post appropriate error message, ensure callers handle errors here 
-     * properly.
+  } else if (dec->info.pixel_fmt == TH_PF_444) {
+    dec->output_bpp = 24;
+    /* As for I420, we can't define the stride for this, so we need to memcpy,
+     * though at least this is a planar format...
      */
+    fourcc = GST_MAKE_FOURCC ('Y', '4', '4', '4');
+  } else {
+    GST_ERROR_OBJECT (dec, "Invalid pixel format %d", dec->info.pixel_fmt);
     return GST_FLOW_ERROR;
   }
 
@@ -895,9 +895,78 @@ theora_handle_422_image (GstTheoraExpDec * dec, th_ycbcr_buffer yuv,
         *curdest = *src++;
         curdest += 4;
       }
-      src_cr += yuv[1].ystride;
+      src_cr += yuv[2].ystride;
 
       dest += stride;
+    }
+  }
+
+  /* FIXME, frame_nr not correct */
+  GST_BUFFER_OFFSET (out) = dec->frame_nr;
+  dec->frame_nr++;
+  GST_BUFFER_OFFSET_END (out) = dec->frame_nr;
+  GST_BUFFER_DURATION (out) =
+      gst_util_uint64_scale_int (GST_SECOND, dec->info.fps_denominator,
+      dec->info.fps_numerator);
+  GST_BUFFER_TIMESTAMP (out) = outtime;
+
+  return theora_dec_push (dec, out);
+
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
+        gst_flow_get_name (result));
+    return result;
+  }
+}
+
+/* Get buffer, populate with original data (we must memcpy to get things to
+ * have the expected strides, etc...), and push.
+ */
+static GstFlowReturn
+theora_handle_444_image (GstTheoraExpDec * dec, th_ycbcr_buffer yuv,
+    GstClockTime outtime)
+{
+  int i, plane;
+  gint width, height;
+  gint out_size;
+  gint stride;
+  GstBuffer *out;
+  GstFlowReturn result;
+
+  width = dec->width;
+  height = dec->height;
+
+  /* TODO: Check if we have any special alignment requirements for the planes,
+   * or for each line within a plane. */
+  stride = width;
+  out_size = stride * height * 3;
+
+  /* now copy over the area contained in offset_x,offset_y,
+   * frame_width, frame_height */
+  result =
+      gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+      out_size, GST_PAD_CAPS (dec->srcpad), &out);
+  if (result != GST_FLOW_OK)
+    goto no_buffer;
+
+  {
+    guchar *dest, *src;
+
+    for (plane = 0; plane < 3; plane++) {
+      /* TODO: do we have to use something different here? */
+      dest = GST_BUFFER_DATA (out) + plane * stride * height;
+
+      src = yuv[plane].data + dec->offset_x +
+          dec->offset_y * yuv[plane].ystride;
+
+      for (i = 0; i < height; i++) {
+        memcpy (dest, src, width);
+
+        dest += stride;
+        src += yuv[plane].ystride;
+      }
+
     }
   }
 
@@ -988,9 +1057,6 @@ theora_handle_420_image (GstTheoraExpDec * dec, th_ycbcr_buffer yuv,
     src_v = yuv[2].data + offset_v;
 
     for (i = 0; i < cheight; i++) {
-      /* TODO: This, like many other things, is broken for pixel formats other
-       * than OC_PF_420
-       */
       memcpy (dest_u, src_u, cwidth);
       memcpy (dest_v, src_v, cwidth);
 
@@ -1070,9 +1136,10 @@ theora_handle_data_packet (GstTheoraExpDec * dec, ogg_packet * packet,
     result = theora_handle_420_image (dec, yuv, outtime);
   } else if (dec->info.pixel_fmt == TH_PF_422) {
     result = theora_handle_422_image (dec, yuv, outtime);
+  } else if (dec->info.pixel_fmt == TH_PF_444) {
+    result = theora_handle_444_image (dec, yuv, outtime);
   } else {
-    /* Should be unreachable */
-    result = GST_FLOW_ERROR;
+    g_assert_not_reached ();
   }
 
   return result;

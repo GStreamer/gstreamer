@@ -1,3 +1,11 @@
+2006-06-02  Michael Smith  <msmith@fluendo.com>
+
+	* ext/theora/theoradec.c: (theora_dec_src_convert),
+	(theora_handle_type_packet), (theora_handle_422_image),
+	(theora_handle_444_image), (theora_handle_420_image),
+	(theora_handle_data_packet):
+	  Theora 4:4:4 pixel format support.
+
 2006-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gdp/gstgdppay.c: (gst_gdp_pay_class_init),
