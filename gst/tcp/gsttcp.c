@@ -381,7 +381,8 @@ validate_error:
 is_not_buffer:
   {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
-        ("GDP packet contains something that is not a buffer"));
+        ("GDP packet contains something that is not a buffer (type %d)",
+            gst_dp_header_payload_type (header)));
     g_free (header);
     return GST_FLOW_ERROR;
   }
@@ -461,7 +462,8 @@ header_validate_error:
 is_not_caps:
   {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
-        ("GDP packet contains something that is not a caps"));
+        ("GDP packet contains something that is not a caps (type %d)",
+            gst_dp_header_payload_type (header)));
     g_free (header);
     return GST_FLOW_ERROR;
   }
