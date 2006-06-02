@@ -69,6 +69,8 @@ struct _GstDVDec {
   
   gint           video_offset;
   gint           drop_factor;
+
+  GstSegment	*segment;
 };
 
 struct _GstDVDecClass {

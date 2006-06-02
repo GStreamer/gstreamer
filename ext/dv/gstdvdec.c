@@ -143,6 +143,7 @@ GST_BOILERPLATE (GstDVDec, gst_dvdec, GstElement, GST_TYPE_ELEMENT);
 
 static gboolean gst_dvdec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_dvdec_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_dvdec_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_dvdec_change_state (GstElement * element,
     GstStateChange transition);
@@ -207,6 +208,7 @@ gst_dvdec_init (GstDVDec * dvdec, GstDVDecClass * g_class)
   gst_pad_set_setcaps_function (dvdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_dvdec_sink_setcaps));
   gst_pad_set_chain_function (dvdec->sinkpad, gst_dvdec_chain);
+  gst_pad_set_event_function (dvdec->sinkpad, gst_dvdec_sink_event);
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->sinkpad);
 
   dvdec->srcpad =
@@ -282,6 +284,41 @@ error:
   }
 }
 
+static gboolean
+gst_dvdec_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstDVDec *dvdec;
+  gboolean res = TRUE;
+
+  dvdec = GST_DVDEC (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:{
+      gboolean update;
+      gdouble rate;
+      GstFormat format;
+      gint64 start, stop, position;
+
+      /* Once -good depends on core >= 0.10.6, use newsegment_full */
+      gst_event_parse_new_segment (event, &update, &rate, &format,
+          &start, &stop, &position);
+      GST_DEBUG_OBJECT (dvdec, "Got NEWSEGMENT [%" GST_TIME_FORMAT
+          " - %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "]",
+          GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
+          GST_TIME_ARGS (position));
+      gst_segment_set_newsegment (dvdec->segment, update, rate, format,
+          start, stop, position);
+    }
+      break;
+    default:
+      break;
+  }
+
+  res = gst_pad_push_event (dvdec->srcpad, event);
+
+  return res;
+}
+
 static GstFlowReturn
 gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -293,6 +330,7 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
   GstBuffer *outbuf;
   GstFlowReturn ret = GST_FLOW_OK;
   guint length;
+  gint64 cstart, cstop;
 
   dvdec = GST_DVDEC (gst_pad_get_parent (pad));
   inframe = GST_BUFFER_DATA (buf);
@@ -301,6 +339,14 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
    * be enough to decode the header. */
   if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < NTSC_BUFFER))
     goto wrong_size;
+
+  /* preliminary dropping. unref and return if outside of configured segment */
+  if ((dvdec->segment->format == GST_FORMAT_TIME) &&
+      (!(gst_segment_clip (dvdec->segment, GST_FORMAT_TIME,
+                  GST_BUFFER_TIMESTAMP (buf),
+                  GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf),
+                  &cstart, &cstop))))
+    goto dropping;
 
   if (G_UNLIKELY (dv_parse_header (dvdec->decoder, inframe) < 0))
     goto parse_header_error;
@@ -341,7 +387,10 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
   dv_decode_full_frame (dvdec->decoder, inframe,
       e_dv_color_yuv, outframe_ptrs, outframe_pitches);
 
-  gst_buffer_stamp (outbuf, buf);
+  GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buf);
+  GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_END (buf);
+  GST_BUFFER_TIMESTAMP (outbuf) = cstart;
+  GST_BUFFER_DURATION (outbuf) = cstop - cstart;
 
   ret = gst_pad_push (dvdec->srcpad, outbuf);
 
@@ -374,6 +423,13 @@ no_buffer:
     GST_DEBUG_OBJECT (dvdec, "could not allocate buffer");
     goto done;
   }
+
+dropping:
+  {
+    GST_DEBUG_OBJECT (dvdec,
+        "dropping buffer since it's out of the configured segment");
+    goto done;
+  }
 }
 
 static GstStateChangeReturn
@@ -391,6 +447,8 @@ gst_dvdec_change_state (GstElement * element, GstStateChange transition)
           dv_decoder_new (0, dvdec->clamp_luma, dvdec->clamp_chroma);
       dvdec->decoder->quality = qualities[dvdec->quality];
       dv_set_error_log (dvdec->decoder, NULL);
+      dvdec->segment = gst_segment_new ();
+      gst_segment_init (dvdec->segment, GST_FORMAT_UNDEFINED);
       /* 
        * Enable this function call when libdv2 0.100 or higher is more
        * common
@@ -411,6 +469,8 @@ gst_dvdec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       dv_decoder_free (dvdec->decoder);
       dvdec->decoder = NULL;
+      gst_segment_free (dvdec->segment);
+      dvdec->segment = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
