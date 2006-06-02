@@ -537,6 +537,8 @@ gst_multi_fd_sink_init (GstMultiFdSink * this, GstMultiFdSinkClass * klass)
 
   this->timeout = DEFAULT_TIMEOUT;
   this->sync_method = DEFAULT_SYNC_METHOD;
+
+  this->header_flags = 0;
 }
 
 static void
@@ -792,6 +794,10 @@ gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink, GList * link)
   g_slist_free (client->sending);
   client->sending = NULL;
 
+  if (client->caps)
+    gst_caps_unref (client->caps);
+  client->caps = NULL;
+
   /* unlock the mutex before signaling because the signal handler
    * might query some properties */
   CLIENTS_UNLOCK (sink);
@@ -936,7 +942,8 @@ gst_multi_fd_sink_client_queue_caps (GstMultiFdSink * sink,
       client->fd.fd, string);
   g_free (string);
 
-  if (!gst_dp_packet_from_caps (caps, 0, &length, &header, &payload)) {
+  if (!gst_dp_packet_from_caps (caps, sink->header_flags, &length, &header,
+          &payload)) {
     GST_DEBUG_OBJECT (sink, "Could not create GDP packet from caps");
     return FALSE;
   }
@@ -965,11 +972,118 @@ static gboolean
 gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
     GstTCPClient * client, GstBuffer * buffer)
 {
+  GstCaps *caps;
+
+  /* TRUE: send them if the new caps have them */
+  gboolean send_streamheader = FALSE;
+  GstStructure *s;
+
+
+  /* before we queue the buffer, we check if we need to queue streamheader
+   * buffers (because it's a new client, or because they changed) */
+  caps = gst_buffer_get_caps (buffer);  /* cleaned up after streamheader */
+  if (!client->caps) {
+    GST_LOG_OBJECT (sink,
+        "[fd %5d] no previous caps for this client, send streamheader",
+        client->fd.fd);
+    send_streamheader = TRUE;
+    client->caps = gst_caps_ref (caps);
+  } else {
+    /* there were previous caps recorded, so compare */
+    if (!gst_caps_is_equal (caps, client->caps)) {
+      const GValue *sh1, *sh2;
+
+      /* caps are not equal, but could still have the same streamheader */
+      s = gst_caps_get_structure (caps, 0);
+      if (!gst_structure_has_field (s, "streamheader")) {
+        /* no new streamheader, so nothing new to send */
+        GST_LOG_OBJECT (sink,
+            "[fd %5d] new caps do not have streamheader, not sending",
+            client->fd.fd);
+      } else {
+        /* there is a new streamheader */
+        s = gst_caps_get_structure (client->caps, 0);
+        if (!gst_structure_has_field (s, "streamheader")) {
+          /* no previous streamheader, so send the new one */
+          GST_LOG_OBJECT (sink,
+              "[fd %5d] previous caps did not have streamheader, sending",
+              client->fd.fd);
+          send_streamheader = TRUE;
+        } else {
+          /* both old and new caps have streamheader set */
+          sh1 = gst_structure_get_value (s, "streamheader");
+          s = gst_caps_get_structure (caps, 0);
+          sh2 = gst_structure_get_value (s, "streamheader");
+          if (gst_value_compare (sh1, sh2) != GST_VALUE_EQUAL) {
+            GST_LOG_OBJECT (sink,
+                "[fd %5d] new streamheader different from old, sending",
+                client->fd.fd);
+            send_streamheader = TRUE;
+          }
+        }
+      }
+    }
+  }
+
+  if (G_UNLIKELY (send_streamheader)) {
+    const GValue *sh;
+    GArray *buffers;
+    int i;
+
+    GST_LOG_OBJECT (sink,
+        "[fd %5d] sending streamheader from caps %" GST_PTR_FORMAT,
+        client->fd.fd, caps);
+    s = gst_caps_get_structure (caps, 0);
+    if (!gst_structure_has_field (s, "streamheader")) {
+      GST_LOG_OBJECT (sink,
+          "[fd %5d] no new streamheader, so nothing to send", client->fd.fd);
+    } else {
+      GST_LOG_OBJECT (sink,
+          "[fd %5d] sending streamheader from caps %" GST_PTR_FORMAT,
+          client->fd.fd, caps);
+      sh = gst_structure_get_value (s, "streamheader");
+      g_assert (G_VALUE_TYPE (sh) == GST_TYPE_ARRAY);
+      buffers = g_value_peek_pointer (sh);
+      for (i = 0; i < buffers->len; ++i) {
+        GValue *bufval;
+        GstBuffer *buffer;
+
+        bufval = &g_array_index (buffers, GValue, i);
+        g_assert (G_VALUE_TYPE (bufval) == GST_TYPE_BUFFER);
+        buffer = g_value_peek_pointer (bufval);
+        GST_LOG_OBJECT (sink,
+            "[fd %5d] queueing streamheader buffer of length %d",
+            client->fd.fd, GST_BUFFER_SIZE (buffer));
+        gst_buffer_ref (buffer);
+
+        if (sink->protocol == GST_TCP_PROTOCOL_GDP) {
+          guint8 *header;
+          guint len;
+
+          if (!gst_dp_header_from_buffer (buffer, sink->header_flags, &len,
+                  &header)) {
+            GST_DEBUG_OBJECT (sink,
+                "[fd %5d] could not create header, removing client",
+                client->fd.fd);
+            return FALSE;
+          }
+          gst_multi_fd_sink_client_queue_data (sink, client, (gchar *) header,
+              len);
+        }
+
+        client->sending = g_slist_append (client->sending, buffer);
+      }
+    }
+  }
+
+  gst_caps_unref (caps);
+  caps = NULL;
+  /* now we can send the buffer, possibly sending a GDP header first */
   if (sink->protocol == GST_TCP_PROTOCOL_GDP) {
     guint8 *header;
     guint len;
 
-    if (!gst_dp_header_from_buffer (buffer, 0, &len, &header)) {
+    if (!gst_dp_header_from_buffer (buffer, sink->header_flags, &len, &header)) {
       GST_DEBUG_OBJECT (sink,
           "[fd %5d] could not create header, removing client", client->fd.fd);
       return FALSE;
@@ -1142,28 +1256,6 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
       }
       client->caps_sent = TRUE;
     }
-  }
-  /* if we have streamheader buffers, and haven't sent them to this client
-   * yet, send them out one by one */
-  if (!client->streamheader_sent) {
-    GST_DEBUG_OBJECT (sink, "[fd %5d] Sending streamheader, %d buffers", fd,
-        g_slist_length (sink->streamheader));
-    if (sink->streamheader) {
-      GSList *l;
-
-      for (l = sink->streamheader; l; l = l->next) {
-        /* queue stream headers for sending */
-        res =
-            gst_multi_fd_sink_client_queue_buffer (sink, client,
-            GST_BUFFER (l->data));
-        if (!res) {
-          GST_DEBUG_OBJECT (sink,
-              "Failed queueing streamheader, removing client");
-          return FALSE;
-        }
-      }
-    }
-    client->streamheader_sent = TRUE;
   }
 
   more = TRUE;
@@ -1645,8 +1737,31 @@ static GstFlowReturn
 gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstMultiFdSink *sink;
+  GstCaps *bufcaps, *padcaps;
 
   sink = GST_MULTI_FD_SINK (bsink);
+
+  /* since we check every buffer for streamheader caps, we need to make
+   * sure every buffer has caps set */
+  bufcaps = gst_buffer_get_caps (buf);
+  padcaps = GST_PAD_CAPS (GST_BASE_SINK_PAD (bsink));
+
+  /* make sure we have caps on the pad */
+  if (!padcaps) {
+    if (!bufcaps) {
+      GST_ELEMENT_ERROR (sink, CORE, NEGOTIATION, (NULL),
+          ("Received first buffer without caps set"));
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
+
+  /* stamp the buffer with previous caps if no caps set */
+  if (!bufcaps) {
+    buf = gst_buffer_make_writable (buf);
+    gst_buffer_set_caps (buf, padcaps);
+  } else {
+    gst_caps_unref (bufcaps);
+  }
 
   /* since we keep this buffer out of the scope of this method */
   gst_buffer_ref (buf);
@@ -1670,9 +1785,11 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   /* if the incoming buffer is marked as IN CAPS, then we assume for now
    * it's a streamheader that needs to be sent to each new client, so we
    * put it on our internal list of streamheader buffers.
-   * After that we return, since we only send these out when we get
-   * non IN_CAPS buffers so we properly keep track of clients that got
-   * streamheaders. */
+   * FIXME: we could check if the buffer's contents are in fact part of the
+   * current streamheader.
+   *
+   * We don't send the buffer to the client, since streamheaders are sent
+   * separately when necessary. */
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS)) {
     sink->previous_buffer_in_caps = TRUE;
     GST_DEBUG_OBJECT (sink,

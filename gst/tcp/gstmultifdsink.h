@@ -142,8 +142,9 @@ typedef struct {
   GstTCPProtocol protocol;
 
   gboolean caps_sent;
-  gboolean streamheader_sent;
   gboolean new_connection;
+
+  GstCaps *caps;                /* caps of last queued buffer */
 
   /* stats */
   guint64 bytes_sent;
@@ -152,7 +153,6 @@ typedef struct {
   guint64 last_activity_time;
   guint64 dropped_buffers;
   guint64 avg_queue_size;
-
 } GstTCPClient;
 
 #define CLIENTS_LOCK_INIT(fdsink)       (g_static_rec_mutex_init(&fdsink->clientslock))
@@ -203,6 +203,8 @@ struct _GstMultiFdSink {
   gint buffers_queued;  /* number of queued buffers */
   gint bytes_queued;    /* number of queued bytes */
   gint time_queued;     /* number of queued time */
+
+  guint8 header_flags;
 };
 
 struct _GstMultiFdSinkClass {

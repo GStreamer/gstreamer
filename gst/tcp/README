@@ -29,3 +29,22 @@ TODO
 ----
 - implement DNS resolution
 
+multifdsink
+-----------
+- operation:
+  - client fd gets added when "add" signal gets emitted on multifdsink
+  - signal handler creates a GstTCPClient structure, adds it to ->clients,
+    and adds the fd to ->fd_hash, then emits client-added
+  - client 
+
+  - when a buffer comes in:
+    - the _render vmethod puts the buffer on the global queue
+    - and increases bytes_to_serve
+    - (currently it sets streamheaders, but since this is treated globally
+       this is wrong - clients can be at different positions in the stream)
+
+  - when a client issues a write (ie requests data):
+    - when using GDP, if no caps sent yet, send caps first, then set caps_sent
+    - if streamheader buffers, and we haven't sent yet to this client,
+      send current streamheader buffers, then set streamheader_sent
+    - send out buffers

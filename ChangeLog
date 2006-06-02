@@ -1,3 +1,24 @@
+2006-06-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/README:
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_init),
+	(gst_multi_fd_sink_remove_client_link),
+	(gst_multi_fd_sink_client_queue_caps),
+	(gst_multi_fd_sink_client_queue_buffer),
+	(gst_multi_fd_sink_handle_client_write),
+	(gst_multi_fd_sink_render):
+	* gst/tcp/gstmultifdsink.h:
+	  make multifdsink properly deal with streamheader:
+	  - streamheader is taken from caps
+	  - buffers marked with IN_CAPS are not sent
+	  - streamheaders are sent, on connection, from the caps of the
+	    buffer where the client gets positioned to
+	  - further streamheader changes are done every time the client
+	    will receive a buffer with different caps
+	* tests/check/elements/multifdsink.c: (GST_START_TEST),
+	(gst_multifdsink_create_streamheader):
+	  add tests for this
+
 2006-06-02  Michael Smith  <msmith@fluendo.com>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_handle_identification_packet):

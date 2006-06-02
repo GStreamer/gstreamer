@@ -31,7 +31,7 @@ GstPad *mysrcpad;
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-gdp")
+    GST_STATIC_CAPS ("application/x-gst-check")
     );
 
 GstElement *
@@ -80,12 +80,16 @@ GST_START_TEST (test_no_clients)
 {
   GstElement *sink;
   GstBuffer *buffer;
+  GstCaps *caps;
 
   sink = setup_multifdsink ();
 
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
 
+  caps = gst_caps_from_string ("application/x-gst-check");
   buffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_set_caps (buffer, caps);
+  gst_caps_unref (caps);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
   GST_DEBUG ("cleaning up multifdsink");
@@ -99,6 +103,7 @@ GST_START_TEST (test_add_client)
 {
   GstElement *sink;
   GstBuffer *buffer;
+  GstCaps *caps;
   int pfd[2];
   gchar data[4];
   guint64 bytes_served;
@@ -112,7 +117,11 @@ GST_START_TEST (test_add_client)
   /* add the client */
   g_signal_emit_by_name (sink, "add", pfd[1]);
 
+  caps = gst_caps_from_string ("application/x-gst-check");
+  GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
   buffer = gst_buffer_new_and_alloc (4);
+  gst_buffer_set_caps (buffer, caps);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
   memcpy (GST_BUFFER_DATA (buffer), "dead", 4);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
@@ -123,6 +132,9 @@ GST_START_TEST (test_add_client)
   GST_DEBUG ("cleaning up multifdsink");
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_multifdsink (sink);
+
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  gst_caps_unref (caps);
 }
 
 GST_END_TEST;
@@ -143,12 +155,13 @@ G_STMT_START { \
 
 /* from the given two data buffers, create two streamheader buffers and
  * some caps that match it, and store them in the given pointers
- * returns buffers and caps with a refcount of 1 */
+ * returns  one ref to each of the buffers and the caps */
 static void
 gst_multifdsink_create_streamheader (const gchar * data1,
     const gchar * data2, GstBuffer ** hbuf1, GstBuffer ** hbuf2,
     GstCaps ** caps)
 {
+  GstBuffer *buf;
   GValue array = { 0 };
   GValue value = { 0 };
   GstStructure *structure;
@@ -174,12 +187,19 @@ gst_multifdsink_create_streamheader (const gchar * data1,
   g_value_init (&array, GST_TYPE_ARRAY);
 
   g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, *hbuf1);
+  /* we take a copy, set it on the array (which refs it), then unref our copy */
+  buf = gst_buffer_copy (*hbuf1);
+  gst_value_set_buffer (&value, buf);
+  ASSERT_BUFFER_REFCOUNT (buf, "copied buffer", 2);
+  gst_buffer_unref (buf);
   gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
 
   g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, *hbuf2);
+  buf = gst_buffer_copy (*hbuf2);
+  gst_value_set_buffer (&value, buf);
+  ASSERT_BUFFER_REFCOUNT (buf, "copied buffer", 2);
+  gst_buffer_unref (buf);
   gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
 
@@ -188,6 +208,14 @@ gst_multifdsink_create_streamheader (const gchar * data1,
 
   gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&array);
+  ASSERT_CAPS_REFCOUNT (*caps, "streamheader caps", 1);
+
+  /* set our streamheadery caps on the buffers */
+  gst_buffer_set_caps (*hbuf1, *caps);
+  gst_buffer_set_caps (*hbuf2, *caps);
+  ASSERT_CAPS_REFCOUNT (*caps, "streamheader caps", 3);
+
+  GST_DEBUG ("created streamheader caps %p %" GST_PTR_FORMAT, *caps, *caps);
 }
 
 
@@ -196,7 +224,8 @@ gst_multifdsink_create_streamheader (const gchar * data1,
  * - sets streamheader caps on the pad
  * - pushes the IN_CAPS buffers
  * - pushes a buffer
- * - verifies that the client received all the data correctly
+ * - verifies that the client received all the data correctly, and did not
+ *   get multiple copies of the streamheader
  * - adds a second client
  * - verifies that this second client receives the streamheader caps too, plus
  * - the new buffer
@@ -227,7 +256,8 @@ GST_START_TEST (test_streamheader)
   gst_multifdsink_create_streamheader ("babe", "deadbeef", &hbuf1, &hbuf2,
       &caps);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
-  gst_caps_unref (caps);
+  /* one is ours, two on the buffers, and one now on the pad */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 4);
 
   fail_unless (gst_pad_push (mysrcpad, hbuf1) == GST_FLOW_OK);
   fail_unless (gst_pad_push (mysrcpad, hbuf2) == GST_FLOW_OK);
@@ -265,11 +295,21 @@ GST_START_TEST (test_streamheader)
   fail_unless_read ("second client", pfd2[0], 4, "deaf");
   wait_bytes_served (sink, 36);
 
-  gst_buffer_unref (hbuf1);
-  gst_buffer_unref (hbuf2);
   GST_DEBUG ("cleaning up multifdsink");
+
+  g_signal_emit_by_name (sink, "remove", pfd1[1]);
+  g_signal_emit_by_name (sink, "remove", pfd2[1]);
+
   ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_multifdsink (sink);
+
+  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 1);
+  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 1);
+  gst_buffer_unref (hbuf1);
+  gst_buffer_unref (hbuf2);
+
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  gst_caps_unref (caps);
 }
 
 GST_END_TEST;
@@ -306,10 +346,15 @@ GST_START_TEST (test_change_streamheader)
 
   /* create caps with streamheader, set the caps, and push the IN_CAPS
    * buffers */
-  gst_multifdsink_create_streamheader ("babe", "deadbeef", &hbuf1, &hbuf2,
+  gst_multifdsink_create_streamheader ("first", "header", &hbuf1, &hbuf2,
       &caps);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
-  gst_caps_unref (caps);
+  /* one is ours, two on the buffers, and one now on the pad */
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 4);
+
+  /* one to hold for the test and one to give away */
+  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 2);
+  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 2);
 
   fail_unless (gst_pad_push (mysrcpad, hbuf1) == GST_FLOW_OK);
   fail_unless (gst_pad_push (mysrcpad, hbuf2) == GST_FLOW_OK);
@@ -327,22 +372,32 @@ GST_START_TEST (test_change_streamheader)
   memcpy (GST_BUFFER_DATA (buf), "f00d", 4);
   gst_pad_push (mysrcpad, buf);
 
-  fail_unless_read ("change: first client", pfd1[0], 4, "babe");
-  fail_unless_read ("change: first client", pfd1[0], 8, "deadbeef");
+  fail_unless_read ("change: first client", pfd1[0], 5, "first");
+  fail_unless_read ("change: first client", pfd1[0], 6, "header");
   fail_unless_read ("change: first client", pfd1[0], 4, "f00d");
-  wait_bytes_served (sink, 16);
+  //wait_bytes_served (sink, 16);
 
   /* now add the second client */
   g_signal_emit_by_name (sink, "add", pfd2[1]);
   fail_if_can_read ("second client, no buffer", pfd2[0]);
 
   /* change the streamheader */
+
+  /* before we change, multifdsink still has a list of the old streamheaders */
+  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 2);
+  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 2);
   gst_buffer_unref (hbuf1);
   gst_buffer_unref (hbuf2);
-  gst_multifdsink_create_streamheader ("beef", "deadbabe", &hbuf1, &hbuf2,
+
+  /* drop our ref to the previous caps */
+  gst_caps_unref (caps);
+
+  gst_multifdsink_create_streamheader ("second", "header", &hbuf1, &hbuf2,
       &caps);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
-  gst_caps_unref (caps);
+  /* one to hold for the test and one to give away */
+  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 2);
+  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 2);
 
   fail_unless (gst_pad_push (mysrcpad, hbuf1) == GST_FLOW_OK);
   fail_unless (gst_pad_push (mysrcpad, hbuf2) == GST_FLOW_OK);
@@ -353,25 +408,35 @@ GST_START_TEST (test_change_streamheader)
 
   /* now push another buffer, which will trigger streamheader for second
    * client, but should also send new streamheaders to first client */
-  buf = gst_buffer_new_and_alloc (4);
-  memcpy (GST_BUFFER_DATA (buf), "deaf", 4);
+  buf = gst_buffer_new_and_alloc (8);
+  memcpy (GST_BUFFER_DATA (buf), "deadbabe", 8);
   gst_pad_push (mysrcpad, buf);
 
-  /* FIXME: here's a bug - the first client does not get new streamheaders */
-  fail_unless_read ("first client", pfd1[0], 4, "deaf");
+  fail_unless_read ("first client", pfd1[0], 6, "second");
+  fail_unless_read ("first client", pfd1[0], 6, "header");
+  fail_unless_read ("first client", pfd1[0], 8, "deadbabe");
 
   /* new streamheader data */
-  fail_unless_read ("second client", pfd2[0], 4, "beef");
-  fail_unless_read ("second client", pfd2[0], 8, "deadbabe");
+  fail_unless_read ("second client", pfd2[0], 6, "second");
+  fail_unless_read ("second client", pfd2[0], 6, "header");
   /* we missed the f00d buffer */
-  fail_unless_read ("second client", pfd2[0], 4, "deaf");
-  wait_bytes_served (sink, 36);
+  fail_unless_read ("second client", pfd2[0], 8, "deadbabe");
+  //wait_bytes_served (sink, 36);
 
+  GST_DEBUG ("cleaning up multifdsink");
+  g_signal_emit_by_name (sink, "remove", pfd1[1]);
+  g_signal_emit_by_name (sink, "remove", pfd2[1]);
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+
+  /* setting to NULL should have cleared the streamheader */
+  ASSERT_BUFFER_REFCOUNT (hbuf1, "hbuf1", 1);
+  ASSERT_BUFFER_REFCOUNT (hbuf2, "hbuf2", 1);
   gst_buffer_unref (hbuf1);
   gst_buffer_unref (hbuf2);
-  GST_DEBUG ("cleaning up multifdsink");
-  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_multifdsink (sink);
+
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  gst_caps_unref (caps);
 }
 
 GST_END_TEST;
