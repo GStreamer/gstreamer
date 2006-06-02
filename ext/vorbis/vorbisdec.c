@@ -65,8 +65,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 8000, 50000 ], "
-        "channels = (int) [ 1, 6 ], " "endianness = (int) BYTE_ORDER, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, 256 ], " "endianness = (int) BYTE_ORDER, "
 /* no ifdef in macros, please
 #ifdef GST_VORBIS_DEC_SEQUENTIAL
       "layout = \"sequential\", "
@@ -607,8 +607,6 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
       pos = pos6;
       break;
     }
-    default:
-      goto channel_count_error;
   }
 
   caps = gst_caps_new_simple ("audio/x-raw-float",
@@ -623,14 +621,6 @@ vorbis_handle_identification_packet (GstVorbisDec * vd)
   gst_caps_unref (caps);
 
   return GST_FLOW_OK;
-
-  /* ERROR */
-channel_count_error:
-  {
-    GST_ELEMENT_ERROR (vd, STREAM, NOT_IMPLEMENTED, (NULL),
-        ("Unsupported channel count %d", vd->vi.channels));
-    return GST_FLOW_ERROR;
-  }
 }
 
 static GstFlowReturn
