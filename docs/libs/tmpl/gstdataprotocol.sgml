@@ -78,6 +78,16 @@ network connections also need a protocol to do this.
 
 
 
+<!-- ##### FUNCTION gst_dp_crc ##### -->
+<para>
+
+</para>
+
+@buffer: 
+@length: 
+@Returns: 
+
+
 <!-- ##### FUNCTION gst_dp_header_payload_length ##### -->
 <para>
 

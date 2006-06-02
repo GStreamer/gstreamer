@@ -46,8 +46,17 @@ GST_DEBUG_CATEGORY (data_protocol_debug);
 #define POLY       0x1021
 #define CRC_INIT   0xFFFF
 
-static guint16
-gst_dp_crc (const guint8 * buffer, register guint length)
+/**
+ * gst_dp_crc:
+ *
+ * Calculate a CRC for the given buffer over the given number of bytes.
+ * This is only provided for verification purposes; typical GDP users
+ * will not need this function.
+ *
+ * Returns: a two-byte CRC checksum.
+ */
+guint16
+gst_dp_crc (const guint8 * buffer, guint length)
 {
   static gboolean initialized = FALSE;
   static guint16 crc_table[256];

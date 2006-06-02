@@ -25,6 +25,8 @@ GST_DP_VERSION_MINOR
 
 gst_dp_init
 
+gst_dp_crc
+
 gst_dp_header_payload_length
 gst_dp_header_payload_type
 
