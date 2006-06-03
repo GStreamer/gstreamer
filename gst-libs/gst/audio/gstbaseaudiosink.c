@@ -39,12 +39,13 @@ enum
  * and sample offset position. 
  * This is an emergency resync fallback since buffers marked as DISCONT will
  * always lock to the correct timestamp immediatly and buffers not marked as
- * DISCONT are contiguous bu definition.
+ * DISCONT are contiguous by definition.
  */
 #define DIFF_TOLERANCE  2
 
-#define DEFAULT_BUFFER_TIME     200 * GST_USECOND
-#define DEFAULT_LATENCY_TIME    10 * GST_USECOND
+/* FIXME: 0.11, store the buffer_time and latency_time in nanoseconds */
+#define DEFAULT_BUFFER_TIME     ((200 * GST_MSECOND) / GST_USECOND)
+#define DEFAULT_LATENCY_TIME    ((10 * GST_MSECOND) / GST_USECOND)
 #define DEFAULT_PROVIDE_CLOCK   TRUE
 
 enum
@@ -100,8 +101,6 @@ gst_base_audio_sink_base_init (gpointer g_class)
 static void
 gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
 {
-  gchar *longdesc;
-
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
@@ -116,21 +115,16 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_property);
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_base_audio_sink_dispose);
 
-  longdesc =
-      g_strdup_printf
-      ("Size of audio buffer in microseconds (use -1 for default of %"
-      G_GUINT64_FORMAT " us)", DEFAULT_BUFFER_TIME / GST_USECOND);
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_TIME,
-      g_param_spec_int64 ("buffer-time", "Buffer Time", longdesc, -1,
+      g_param_spec_int64 ("buffer-time", "Buffer Time",
+          "Size of audio buffer in microseconds", 1,
           G_MAXINT64, DEFAULT_BUFFER_TIME, G_PARAM_READWRITE));
-  g_free (longdesc);
-  longdesc =
-      g_strdup_printf ("Audio latency in microseconds (use -1 for default of %"
-      G_GUINT64_FORMAT " us)", DEFAULT_LATENCY_TIME / GST_USECOND);
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LATENCY_TIME,
-      g_param_spec_int64 ("latency-time", "Latency Time", longdesc, -1,
+      g_param_spec_int64 ("latency-time", "Latency Time",
+          "Audio latency in microseconds", 1,
           G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
-  g_free (longdesc);
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PROVIDE_CLOCK,
       g_param_spec_boolean ("provide-clock", "Provide Clock",
           "Provide a clock to be used as the global pipeline clock",
@@ -318,12 +312,12 @@ gst_base_audio_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_ring_buffer_acquire (sink->ringbuffer, spec))
     goto acquire_error;
 
-  /* calculate actual latency and buffer times */
-  spec->latency_time =
-      spec->segsize * GST_MSECOND / (spec->rate * spec->bytes_per_sample);
-  spec->buffer_time =
-      spec->segtotal * spec->segsize * GST_MSECOND / (spec->rate *
-      spec->bytes_per_sample);
+  /* calculate actual latency and buffer times. 
+   * FIXME: In 0.11, store the latency_time internally in ns */
+  spec->latency_time = gst_util_uint64_scale (spec->segsize,
+      (GST_SECOND / GST_USECOND), spec->rate * spec->bytes_per_sample);
+
+  spec->buffer_time = spec->segtotal * spec->latency_time;
 
   gst_ring_buffer_debug_spec_buff (spec);
 

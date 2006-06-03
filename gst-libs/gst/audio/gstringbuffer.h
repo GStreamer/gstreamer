@@ -156,8 +156,8 @@ typedef enum
  * @depth: th depth of the samples
  * @rate: the samplerate
  * @channels: the number of channels
- * @latency_time: the latency in time units
- * @buffer_time: the total buffer size in time units
+ * @latency_time: the latency in microseconds
+ * @buffer_time: the total buffer size in microseconds
  * @segsize: the size of one segment in bytes
  * @segtotal: the total number of segments
  * @bytes_per_sample: number of bytes in one sample
@@ -181,8 +181,8 @@ struct _GstRingBufferSpec
   gint      rate;
   gint      channels;
   
-  GstClockTime latency_time;    /* the required/actual latency time */
-  GstClockTime buffer_time;     /* the required/actual time of the buffer */
+  guint64  latency_time;        /* the required/actual latency time */
+  guint64  buffer_time;         /* the required/actual time of the buffer */
   gint     segsize;             /* size of one buffer segement */
   gint     segtotal;            /* total number of segments */
 

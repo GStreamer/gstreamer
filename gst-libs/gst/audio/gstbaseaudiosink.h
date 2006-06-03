@@ -76,9 +76,9 @@ struct _GstBaseAudioSink {
   /* our ringbuffer */
   GstRingBuffer *ringbuffer;
 
-  /* required buffer and latency */
-  GstClockTime   buffer_time;
-  GstClockTime   latency_time;
+  /* required buffer and latency in microseconds */
+  guint64 buffer_time;
+  guint64 latency_time;
 
   /* the next sample to write */
   guint64        next_sample;

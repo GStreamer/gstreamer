@@ -1,3 +1,24 @@
+2006-06-03  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_class_init), (gst_base_audio_sink_setcaps):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_parse_caps),
+	(gst_ring_buffer_samples_done):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Document better the fact that latency_time and buffer_time are values
+	stored in microseconds, and not the usual GStreamer nanoseconds.
+	Change the variables (compatibly) that store them from GstClockTime 
+	to guint64 to make it more clear that they're not storing clock times.
+	Also, remove the bogus property description that says the user can
+	specify -1 to get the default value, since that's never been the case.
+
+	When computing the default segment size for the ring buffer, make it
+	an integer number of samples.
+
+	When the sub-class indicates a delay greater than the number of
+	samples we've written return 0 from the audio sink get_time method.
+
 2006-06-02  Michael Smith  <msmith@fluendo.com>
 
 	* tests/check/elements/audioconvert.c: (set_channel_positions),

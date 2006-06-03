@@ -341,9 +341,14 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
 
   g_return_val_if_fail (spec->latency_time != 0, FALSE);
 
-  /* calculate suggested segsize and segtotal */
-  spec->segsize =
-      spec->rate * spec->bytes_per_sample * spec->latency_time / GST_MSECOND;
+  /* calculate suggested segsize and segtotal. segsize should be one unit
+   * of 'latency_time' samples, scaling for the fact that latency_time is
+   * currently stored in microseconds (FIXME: in 0.11) */
+  spec->segsize = gst_util_uint64_scale (spec->rate * spec->bytes_per_sample,
+      spec->latency_time, GST_SECOND / GST_USECOND);
+  /* Round to an integer number of samples */
+  spec->segsize -= spec->segsize % spec->bytes_per_sample;
+
   spec->segtotal = spec->buffer_time / spec->latency_time;
 
   gst_ring_buffer_debug_spec_caps (spec);
@@ -1003,6 +1008,8 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
 
   if (G_LIKELY (samples >= delay))
     samples -= delay;
+  else
+    samples = 0;
 
   GST_DEBUG_OBJECT (buf, "processed samples: raw %llu, delay %u, real %llu",
       raw, delay, samples);
