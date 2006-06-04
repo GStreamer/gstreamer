@@ -423,10 +423,10 @@
       </Docs>
     </Member>
     <Member MemberName="GstSecond">
-      <MemberSignature Language="C#" Value="public static readonly long GstSecond = 1000000000;" />
+      <MemberSignature Language="C#" Value="public static readonly ulong GstSecond = 1000000000;" />
       <MemberType>Field</MemberType>
       <ReturnValue>
-        <ReturnType>System.Int64</ReturnType>
+        <ReturnType>System.UInt64</ReturnType>
       </ReturnValue>
       <MemberValue>1000000000</MemberValue>
       <Docs>
@@ -435,10 +435,10 @@
       </Docs>
     </Member>
     <Member MemberName="GstMSecond">
-      <MemberSignature Language="C#" Value="public static readonly long GstMSecond = 1000000000;" />
+      <MemberSignature Language="C#" Value="public static readonly ulong GstMSecond = 1000000000;" />
       <MemberType>Field</MemberType>
       <ReturnValue>
-        <ReturnType>System.Int64</ReturnType>
+        <ReturnType>System.UInt64</ReturnType>
       </ReturnValue>
       <MemberValue>1000000000</MemberValue>
       <Docs>
@@ -447,10 +447,10 @@
       </Docs>
     </Member>
     <Member MemberName="GstUSecond">
-      <MemberSignature Language="C#" Value="public static readonly long GstUSecond = 1000000000;" />
+      <MemberSignature Language="C#" Value="public static readonly ulong GstUSecond = 1000000000;" />
       <MemberType>Field</MemberType>
       <ReturnValue>
-        <ReturnType>System.Int64</ReturnType>
+        <ReturnType>System.UInt64</ReturnType>
       </ReturnValue>
       <MemberValue>1000000000</MemberValue>
       <Docs>
@@ -459,10 +459,10 @@
       </Docs>
     </Member>
     <Member MemberName="GstNSecond">
-      <MemberSignature Language="C#" Value="public static readonly long GstNSecond = 1000000000;" />
+      <MemberSignature Language="C#" Value="public static readonly ulong GstNSecond = 1000000000;" />
       <MemberType>Field</MemberType>
       <ReturnValue>
-        <ReturnType>System.Int64</ReturnType>
+        <ReturnType>System.UInt64</ReturnType>
       </ReturnValue>
       <MemberValue>1000000000</MemberValue>
       <Docs>

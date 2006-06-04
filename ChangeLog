@@ -1,5 +1,14 @@
 2006-06-04  Michael Dominic K.  <michaldominik@gmail.com>
 
+	* doc/gst-sharp-docs.zip:
+	* doc/gst-sharp-docs.tree: Removing, this is a left over from
+	something old (new prefix seems to be: gstreamer-sharp-). 
+
+	* doc/en/Gst/Clock.xml: Fixing the docs to represent the change
+	introduced in the last commit.  
+
+2006-06-04  Michael Dominic K.  <michaldominik@gmail.com>
+
 	* sample/DecodeBinTranscoder.cs: Fixing ambigious cast.
 
 	* gstreamer-sharp/glue/clock.c:
