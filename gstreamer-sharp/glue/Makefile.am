@@ -3,9 +3,10 @@ lib_LTLIBRARIES = libgstreamersharpglue-0.10.la
 libgstreamersharpglue_0_10_la_SOURCES =	\
 	clock.c \
 	message.c \
-	miniobject.c
+	miniobject.c \
+	bin.c
 
-nodist_libgstreamersharpglue_0_10_la_SOURCES = generated.c
+nodist_libgstreamersharpglue_0_10_la_SOURCES = generated.c 
 
 libgstreamersharpglue_0_10_la_LIBADD = $(GST_LIBS)
 

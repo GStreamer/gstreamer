@@ -78,7 +78,7 @@ public class BinTest
          Element [] children = bin.Children;
      
          for(int i = 0; i < elements.Length; i++) {
-            Assert.AreEqual(elements[i], children[i]);
+            Assert.AreEqual(elements[elements.Length - i - 1], children[i]);
         }
 
         bin.Dispose();

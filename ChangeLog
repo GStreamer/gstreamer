@@ -1,3 +1,17 @@
+2006-06-04  Khaled Mohammed <khaled.mohammed@gmail.com>
+
+	* gstreamer/glue/Bin.c: added this file to the source. It has only one 
+	function which gives offset of *children in the C struct.
+
+	* gstreamer/glue/Makefile.am: added Bin.c to the list of C source that
+	must be compiled.
+
+	* tests/ElementTest.cs: added NUnit tests for Element class.
+
+	* tests/Makefile.am: added ElementTest.cs to the list of TestSuite
+
+	* tests/BinTest.cs: fixed the test for Bin.Children
+
 2006-06-04  Michael Dominic K.  <michaldominik@gmail.com>
 
 	* doc/gst-sharp-docs.zip:
