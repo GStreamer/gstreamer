@@ -1,21 +1,32 @@
+2006-06-04  Michael Dominic K.  <michaldominik@gmail.com>
+
+	* sample/DecodeBinTranscoder.cs: Fixing ambigious cast.
+
+	* gstreamer-sharp/glue/clock.c:
+	* gstreamer-sharp/Clock.custom: Changing the gint64 to guint64 and
+	long to ulong respectively. The clocktime (GstClockTime) is measured
+	in nanoseconds as unsigned long inside GStreamer. 
+	This is introducing a small schizophrenia since some functions (such
+	as queries, seeks) take signed long (-1 to mark infinity or error).
+	This is the expected Gst behaviour.
+	Just sticking silently to long (instead of ulong) will bork us 	sooner
+	or later, especially for custom-build low level routines/elements.
+	Comments welcome. 
+
 2006-05-31  Michael Dominic K.  <michaldominik@gmail.com>
 
 	* tests/PadTest.cs:
-	* tests/Makefile.am:
-	Introducing a new test for Gst.Pad. All fixtures pass.
+	* tests/Makefile.am: Introducing a new test for Gst.Pad. All fixtures pass.
 
-	* tests/CapsTest.cs:
-	Adding a new fixture for caps union testing (passes).
+	* tests/CapsTest.cs: Adding a new fixture for caps union testing (passes).
 	Fixing some code-style errors.
 
 2006-05-30  Michael Dominic K.  <michaldominik@gmail.com>
 
-	* README:
-	Fixing a broken svn link to gtk-sharp sources.
+	* README: Fixing a broken svn link to gtk-sharp sources.
 
 	* tests/CapsTest.cs:
-	* tests/Makefile.am:
-	Introducing a new test for Gst.Caps. All fixtures pass.
+	* tests/Makefile.am: Introducing a new test for Gst.Caps. All fixtures pass.
 
 2006-05-25  Aaron Bockover  <aaron@abock.org>
 

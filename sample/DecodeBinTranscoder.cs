@@ -184,8 +184,8 @@ public class DecodeBinTranscoder : IDisposable
         
         transcoder.Progress += delegate(object o, ProgressArgs args) {
             Console.Write("\rEncoding: {0} / {1} ({2:00.00}%) ", 
-                new TimeSpan((args.Position / Clock.GstSecond) * TimeSpan.TicksPerSecond), 
-                new TimeSpan((args.Duration / Clock.GstSecond) * TimeSpan.TicksPerSecond),
+                new TimeSpan((args.Position / (long) Clock.GstSecond) * TimeSpan.TicksPerSecond), 
+                new TimeSpan((args.Duration / (long) Clock.GstSecond) * TimeSpan.TicksPerSecond),
                 ((double)args.Position / (double)args.Duration) * 100.0);
         };
         
