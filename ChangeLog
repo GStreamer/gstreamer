@@ -1,5 +1,8 @@
 2006-06-05  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.c:
+	plugin_paths is not used if we build without registry support.
+
 	* gst/gstsegment.c: (gst_segment_copy): 
 	_copy() was always returning NULL...
 

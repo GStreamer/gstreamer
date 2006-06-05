@@ -122,7 +122,9 @@
 
 static gboolean gst_initialized = FALSE;
 
+#ifndef GST_DISABLE_REGISTRY
 static GList *plugin_paths = NULL;      /* for delayed processing in post_init */
+#endif
 
 extern gint _gst_trace_on;
 
