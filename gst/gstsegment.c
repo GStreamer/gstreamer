@@ -92,7 +92,7 @@ gst_segment_copy (GstSegment * segment)
     result = gst_segment_new ();
     memcpy (result, segment, sizeof (GstSegment));
   }
-  return NULL;
+  return result;
 }
 
 GType
