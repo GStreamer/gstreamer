@@ -350,6 +350,8 @@ ac3iec_chain_raw (GstPad * pad, GstBuffer * buf)
   event = ac3p_parse (ac3iec->padder);
   while (event != AC3P_EVENT_PUSH) {
     if (event == AC3P_EVENT_FRAME) {
+      GstCaps *bufcaps = NULL;
+
       if (ac3iec->caps == NULL) {
         gint rate = ac3iec->padder->rate;
 
@@ -366,7 +368,7 @@ ac3iec_chain_raw (GstPad * pad, GstBuffer * buf)
       }
 
       /* We have a new frame: */
-      GstCaps *bufcaps = GST_PAD_CAPS (ac3iec->src);
+      bufcaps = GST_PAD_CAPS (ac3iec->src);
 
       /* Create a new buffer, and copy the frame data into it. */
       ret =

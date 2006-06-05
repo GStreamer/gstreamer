@@ -1,3 +1,11 @@
+2006-06-05  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/MANIFEST:
+	Add a manifest for futures ugly win32 releases.
+	* gst/iec958/ac3iec.c: (ac3iec_chain_raw):
+	Move bufcaps declaration at the begining of the instructions 
+	block.
+	
 2006-06-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/a52dec/gsta52dec.h:
