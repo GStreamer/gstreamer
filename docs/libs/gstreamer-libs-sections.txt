@@ -20,10 +20,18 @@ GstDPHeaderFlag
 GstDPPayloadType
 
 GST_DP_HEADER_LENGTH
+GstDPVersion
 GST_DP_VERSION_MAJOR
 GST_DP_VERSION_MINOR
 
 gst_dp_init
+
+GstDPHeaderFromBufferFunction
+GstDPPacketFromCapsFunction
+GstDPPacketFromEventFunction
+GstDPPacketizer
+gst_dp_packetizer_new
+gst_dp_packetizer_free
 
 gst_dp_crc
 
@@ -42,6 +50,8 @@ gst_dp_validate_header
 gst_dp_validate_payload
 gst_dp_validate_packet
 <SUBSECTION Standard>
+GST_TYPE_DP_VERSION
+gst_dp_version_get_type
 </SECTION>
 
 <SECTION>
@@ -386,4 +396,5 @@ gst_check_setup_src_pad
 gst_check_teardown_element
 gst_check_teardown_sink_pad
 gst_check_teardown_src_pad
+gst_check_abi_list
 </SECTION>
