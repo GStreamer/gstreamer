@@ -37,7 +37,7 @@ typedef struct _GstElementClass GstElementClass;
  * @GST_STATE_PAUSED           : the element is PAUSED
  * @GST_STATE_PLAYING          : the element is PLAYING
  *
- * The posible states an element can be in. 
+ * The posible states an element can be in.
  */
 typedef enum {
   GST_STATE_VOID_PENDING        = 0,
@@ -104,7 +104,7 @@ typedef enum {
  * GST_STATE_NEXT:
  * @elem: a #GstElement to return the next state for.
  *
- * This macro returns the next #GstState of the element. 
+ * This macro returns the next #GstState of the element.
  */
 #define GST_STATE_NEXT(elem)		(GST_ELEMENT_CAST(elem)->next_state)
 
@@ -124,7 +124,7 @@ typedef enum {
  */
 #define GST_STATE_RETURN(elem)		(GST_ELEMENT_CAST(elem)->last_return)
 
-#define __GST_SIGN(val)				((val) < 0 ? -1 : ((val) > 0 ? 1 : 0))
+#define __GST_SIGN(val)			((val) < 0 ? -1 : ((val) > 0 ? 1 : 0))
 /**
  * GST_STATE_GET_NEXT:
  * @cur: A starting #GstState
@@ -133,30 +133,30 @@ typedef enum {
  * Given a current state @cur and a target state @pending, calculate the next (intermediate)
  * #GstState.
  */
-#define GST_STATE_GET_NEXT(cur,pending) 	((cur) + __GST_SIGN ((gint)(pending) - (gint)(cur)))
+#define GST_STATE_GET_NEXT(cur,pending)		((cur) + __GST_SIGN ((gint)(pending) - (gint)(cur)))
 /**
  * GST_STATE_TRANSITION:
  * @cur: A current state
  * @next: A next state
  *
- * Given a current state @cur and a next state @next, calculate the associated 
+ * Given a current state @cur and a next state @next, calculate the associated
  * #GstStateChange transition.
  */
-#define GST_STATE_TRANSITION(cur,next)  	(((cur)<<3)|(next))
+#define GST_STATE_TRANSITION(cur,next)		(((cur)<<3)|(next))
 /**
  * GST_STATE_TRANSITION_CURRENT:
- * @trans: A #GstStateChange 
+ * @trans: A #GstStateChange
  *
  * Given a state transition @trans, extract the current #GstState.
  */
-#define GST_STATE_TRANSITION_CURRENT(trans)  	((trans)>>3)
+#define GST_STATE_TRANSITION_CURRENT(trans)	((trans)>>3)
 /**
  * GST_STATE_TRANSITION_NEXT:
  * @trans: A #GstStateChange
  *
  * Given a state transition @trans, extract the next #GstState.
  */
-#define GST_STATE_TRANSITION_NEXT(trans)  	((trans)&0x7)
+#define GST_STATE_TRANSITION_NEXT(trans)	((trans)&0x7)
 
 /**
  * GstStateChange:
@@ -315,7 +315,7 @@ G_STMT_START {								\
 #define GST_STATE_GET_LOCK(elem)               (GST_ELEMENT_CAST(elem)->state_lock)
 /**
  * GST_STATE_GET_COND:
- * @elem: a #GstElement 
+ * @elem: a #GstElement
  *
  * Get the conditional used to signal the completion of a state change.
  */
@@ -337,20 +337,21 @@ G_STMT_START {								\
  * GstElement:
  * @state_lock: Used to serialize execution of gst_element_set_state()
  * @state_cond: Used to signal completion of a state change
- * @state_cookie: Used to detect concurrent execution of gst_element_set_state() and
- *     gst_element_get_state()
+ * @state_cookie: Used to detect concurrent execution of
+ * gst_element_set_state() and gst_element_get_state()
  * @current_state: the current state of an element
- * @next_state: the next state of an element, can be #GST_STATE_VOID_PENDING if the 
- *     element is in the correct state.
- * @pending_state: the final state the element should go to, can be #GST_STATE_VOID_PENDING
- *     if the element is in the correct state
+ * @next_state: the next state of an element, can be #GST_STATE_VOID_PENDING if
+ * the element is in the correct state.
+ * @pending_state: the final state the element should go to, can be
+ * #GST_STATE_VOID_PENDING if the element is in the correct state
  * @last_return: the last return value of an element state change
- * @bus: the bus of the element. This bus is provided to the element by the parent element
- *     or the application. A #GstPipeline has a bus of its own.
- * @clock: the clock of the element. This clock is usually provided by to the element by
- *     the toplevel #GstPipeline.
- * @base_time: the time of the clock right before the element is set to PLAYING. Subtracting
- *     @base_time from the current clock time in the PLAYING state will yield the stream time.
+ * @bus: the bus of the element. This bus is provided to the element by the
+ * parent element or the application. A #GstPipeline has a bus of its own.
+ * @clock: the clock of the element. This clock is usually provided by to the
+ * element by the toplevel #GstPipeline.
+ * @base_time: the time of the clock right before the element is set to
+ * PLAYING. Subtracting @base_time from the current clock time in the PLAYING
+ * state will yield the stream time.
  * @numpads: number of pads of the element, includes both source and sink pads.
  * @pads: list of pads
  * @numsrcpads: number of source pads of the element.
@@ -402,7 +403,7 @@ struct _GstElement
  * @details: #GstElementDetails for elements of this class
  * @elementfactory: the #GstElementFactory that creates these elements
  * @padtemplates: a #GList of #GstPadTemplate
- * @numpadtemplates: the number of padtemplates 
+ * @numpadtemplates: the number of padtemplates
  * @pad_templ_cookie: changed whenever the padtemplates change
  * @request_new_pad: called when a new pad is requested
  * @release_pad: called when a request pad is to be released
@@ -551,9 +552,9 @@ GstPad*			gst_element_get_static_pad	(GstElement *element, const gchar *name);
 GstPad*			gst_element_get_request_pad	(GstElement *element, const gchar *name);
 void			gst_element_release_request_pad	(GstElement *element, GstPad *pad);
 
-GstIterator *		gst_element_iterate_pads 	(GstElement * element);
-GstIterator *		gst_element_iterate_src_pads 	(GstElement * element);
-GstIterator *		gst_element_iterate_sink_pads 	(GstElement * element);
+GstIterator *		gst_element_iterate_pads	(GstElement * element);
+GstIterator *		gst_element_iterate_src_pads	(GstElement * element);
+GstIterator *		gst_element_iterate_sink_pads	(GstElement * element);
 
 /* event/query/format stuff */
 gboolean		gst_element_send_event		(GstElement *element, GstEvent *event);
