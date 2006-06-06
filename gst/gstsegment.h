@@ -67,7 +67,7 @@ struct _GstSegment {
   gdouble        applied_rate;
 
   /*< private >*/
-  //gpointer _gst_reserved[GST_PADDING-2];
+  /*gpointer _gst_reserved[GST_PADDING-2];*/
   guint8 _gst_reserved[(sizeof (gpointer) * GST_PADDING) - sizeof (gdouble)];
 };
 
