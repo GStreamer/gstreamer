@@ -78,6 +78,7 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
   cdxaparse \
   freeze \
+  gdp \
   h264parse \
   modplug \
   spectrum \
