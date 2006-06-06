@@ -1,5 +1,23 @@
 2006-06-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_header_from_buffer_any), (gst_dp_packet_from_caps_any),
+	(gst_dp_version_get_type), (gst_dp_init),
+	(gst_dp_header_from_buffer), (gst_dp_header_from_buffer_1_0),
+	(gst_dp_packet_from_caps), (gst_dp_packet_from_caps_1_0),
+	(gst_dp_packet_from_event), (gst_dp_packet_from_event_1_0),
+	(gst_dp_event_from_packet_0_2), (gst_dp_event_from_packet_1_0),
+	(gst_dp_event_from_packet), (gst_dp_packetizer_new),
+	(gst_dp_packetizer_free):
+	* libs/gst/dataprotocol/dataprotocol.h:
+	  API: add a GstDPPacketizer object, and create/free functions
+	  API: add GstDPVersion enum
+	  Add 1.0 event function that uses the string serialization
+	  Serialize more useful buffer flags
+	  Fixes #343988
+
+2006-06-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* tests/check/Makefile.am:
 	* tests/check/gst/gstabi.c:
 	* tests/check/gst/struct_ppc64.h:
