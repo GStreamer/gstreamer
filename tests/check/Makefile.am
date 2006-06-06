@@ -26,13 +26,14 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
 clean-local: clean-local-check
 
-check_PROGRAMS =
-#	elements/gdppay \
-#	elements/gdpdepay
+check_PROGRAMS = \
+	elements/gdppay \
+	elements/gdpdepay
 
 TESTS = $(check_PROGRAMS)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 
-# elements_gdpdepay_LDFLAGS = $(LDADD) $(GST_GDP_LIBS)
+elements_gdpdepay_LDFLAGS = $(LDADD) $(GST_GDP_LIBS)
+elements_gdppay_LDFLAGS = $(LDADD) $(GST_GDP_LIBS)

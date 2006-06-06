@@ -42,7 +42,7 @@ dnl AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.3
+GST_REQ=0.10.6.1
 GSTPB_REQ=0.10.3
 
 dnl *** autotools stuff ****
@@ -155,6 +155,7 @@ dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
 GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
 GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
+GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])
 GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
 GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ], no)
 
@@ -704,6 +705,7 @@ gst-plugins-bad.spec
 gst/Makefile
 gst/cdxaparse/Makefile
 gst/freeze/Makefile
+gst/gdp/Makefile
 gst/h264parse/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile

@@ -282,6 +282,8 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
           goto done;
         }
         /* FIXME: set me as source ? */
+        GST_DEBUG_OBJECT (this, "sending deserialized event %p of type %s",
+            event, gst_event_type_get_name (event->type));
         gst_pad_push_event (this->srcpad, event);
 
         GST_LOG_OBJECT (this, "switching to state HEADER");
