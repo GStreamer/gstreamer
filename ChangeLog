@@ -2,6 +2,15 @@
 
 	* tests/check/Makefile.am:
 	* tests/check/gst/gstabi.c:
+	* tests/check/gst/struct_ppc64.h:
+	* tests/check/libs/libsabi.c:
+	* tests/check/libs/struct_ppc64.h:
+	  add ppc64 structure sizes
+
+2006-06-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/gstabi.c:
 	* tests/check/gst/struct_x86_64.h:
 	* tests/check/libs/libsabi.c:
 	* tests/check/libs/struct_x86_64.h:

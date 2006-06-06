@@ -39,6 +39,10 @@
 #include "struct_i386.h"
 #define HAVE_ABI_SIZES TRUE
 #else
+#ifdef HAVE_CPU_PPC64
+#include "struct_ppc64.h"
+#define HAVE_ABI_SIZES TRUE
+#else
 #ifdef HAVE_CPU_X86_64
 #include "struct_x86_64.h"
 #define HAVE_ABI_SIZES TRUE
