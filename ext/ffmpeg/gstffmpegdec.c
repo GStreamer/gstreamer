@@ -478,7 +478,8 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
 
   /* open a parser if we can - exclude mp3 because it doesn't work (?),
    * and mjpeg because ... */
-  if (oclass->in_plugin->id != CODEC_ID_MJPEG &&
+  if (oclass->in_plugin->id != CODEC_ID_MPEG4 &&
+      oclass->in_plugin->id != CODEC_ID_MJPEG &&
       oclass->in_plugin->id != CODEC_ID_MP3 &&
       oclass->in_plugin->id != CODEC_ID_H264) {
     ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
