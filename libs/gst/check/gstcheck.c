@@ -279,13 +279,13 @@ gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes)
     if (g_getenv ("GST_ABI")) {
       gint i;
 
-      g_print ("GstCheckABIStruct list[] = {\n");
+      g_print ("\nGstCheckABIStruct list[] = {\n");
       for (i = 0; list[i].name; i++) {
         g_print ("  {\"%s\", sizeof (%s), %d},\n", list[i].name, list[i].name,
             list[i].size);
       }
       g_print ("  {NULL, 0, 0}\n");
-      g_print ("}\n");
+      g_print ("};\n");
     } else {
       g_print ("No structure size list was generated for this architecture.\n");
       g_print ("Run with GST_ABI environment variable set to output header.\n");
