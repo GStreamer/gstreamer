@@ -259,3 +259,36 @@ gst_check_teardown_sink_pad (GstElement * element)
   gst_object_unref (sinkpad);
   gst_object_unref (sinkpad);
 }
+
+void
+gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes)
+{
+  if (have_abi_sizes) {
+    gboolean ok = TRUE;
+    gint i;
+
+    for (i = 0; list[i].name; i++) {
+      if (list[i].size != list[i].abi_size) {
+        ok = FALSE;
+        g_print ("sizeof(%s) is %d, expected %d\n",
+            list[i].name, list[i].size, list[i].abi_size);
+      }
+    }
+    fail_unless (ok, "failed ABI check");
+  } else {
+    if (g_getenv ("GST_ABI")) {
+      gint i;
+
+      g_print ("GstCheckABIStruct list[] = {\n");
+      for (i = 0; list[i].name; i++) {
+        g_print ("  {\"%s\", sizeof (%s), %d},\n", list[i].name, list[i].name,
+            list[i].size);
+      }
+      g_print ("  {NULL, 0, 0}\n");
+      g_print ("}\n");
+    } else {
+      g_print ("No structure size list was generated for this architecture.\n");
+      g_print ("Run with GST_ABI environment variable set to output header.\n");
+    }
+  }
+}

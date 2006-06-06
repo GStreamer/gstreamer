@@ -50,6 +50,14 @@ GList * buffers;
 GMutex *check_mutex;
 GCond *check_cond;
 
+typedef struct
+{
+  char *name;
+  int size;
+  int abi_size;
+}
+GstCheckABIStruct;
+
 void gst_check_init (int *argc, char **argv[]);
 
 GstFlowReturn gst_check_chain_func (GstPad *pad, GstBuffer *buffer);
@@ -64,6 +72,8 @@ void gst_check_teardown_src_pad (GstElement *element);
 GstPad * gst_check_setup_sink_pad (GstElement *element,
     GstStaticPadTemplate *template, GstCaps *caps);
 void gst_check_teardown_sink_pad (GstElement *element);
+void gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes);
+
 
 
 #define fail_unless_message_error(msg, domain, code)		\

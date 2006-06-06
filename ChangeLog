@@ -1,3 +1,15 @@
+2006-06-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* libs/gst/check/gstcheck.c: (gst_check_abi_list):
+	* libs/gst/check/gstcheck.h:
+	  factor out the method from tests that checks size of structures,
+	  and add code to generate the header containing these sizes
+	* tests/check/gst/gstabi.c: (GST_START_TEST):
+	* tests/check/gst/struct_i386.h:
+	* tests/check/libs/libsabi.c: (GST_START_TEST):
+	* tests/check/libs/struct_i386.h:
+	  use it
+
 2006-06-06  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gstsegment.h:

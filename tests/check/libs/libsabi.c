@@ -35,42 +35,19 @@
 #include <gst/net/gstnettimepacket.h>
 #include <gst/net/gstnettimeprovider.h>
 
-
-typedef struct
-{
-  char *name;
-  int size;
-  int abi_size;
-}
-Struct;
-
 #ifdef HAVE_CPU_I386
 #include "struct_i386.h"
-#define HAVE_ABI_SIZES
+#define HAVE_ABI_SIZES TRUE
 #else
 /* in case someone wants to generate a new arch */
 #include "struct_i386.h"
+#define HAVE_ABI_SIZES FALSE
 #endif
 
 
 GST_START_TEST (test_ABI)
 {
-#ifdef HAVE_ABI_SIZES
-  gboolean ok = TRUE;
-  gint i;
-
-  for (i = 0; list[i].name; i++) {
-    if (list[i].size != list[i].abi_size) {
-      ok = FALSE;
-      g_print ("sizeof(%s) is %d, expected %d\n",
-          list[i].name, list[i].size, list[i].abi_size);
-    }
-  }
-  fail_unless (ok, "failed ABI check");
-#else
-  g_print ("No structure size list was generated for this architecture\n");
-  g_print ("ignoring\n");
-#endif
+  gst_check_abi_list (list, HAVE_ABI_SIZES);
 }
 
 GST_END_TEST;
