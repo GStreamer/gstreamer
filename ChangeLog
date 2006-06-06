@@ -1,5 +1,14 @@
 2006-06-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tests/check/Makefile.am:
+	* tests/check/gst/gstabi.c:
+	* tests/check/gst/struct_x86_64.h:
+	* tests/check/libs/libsabi.c:
+	* tests/check/libs/struct_x86_64.h:
+	  generate and add structure size lists for x86_64
+
+2006-06-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* libs/gst/check/gstcheck.c: (gst_check_abi_list):
 	* libs/gst/check/gstcheck.h:
 	  factor out the method from tests that checks size of structures,

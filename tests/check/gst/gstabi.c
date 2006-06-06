@@ -28,6 +28,7 @@
 #else
 #ifdef HAVE_CPU_X86_64
 #include "struct_x86_64.h"
+#define HAVE_ABI_SIZES TRUE
 #else
 /* in case someone wants to generate a new arch */
 #include "struct_i386.h"
