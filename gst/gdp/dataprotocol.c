@@ -42,6 +42,12 @@
  * stream.  This implies that there will always be a caps packet before any
  * buffer packets.
  *
+ * The versioning of the protocol is independent of GStreamer's version.
+ * The major number gets incremented, and the minor reset, for incompatible
+ * changes.  The minor number gets incremented for compatible changes that
+ * allow clients who do not completely understand the newer protocol version
+ * to still decode what they do understand.
+ *
  * Version 0.2 serializes only a small subset of all events, with a custom
  * payload for each type.  Also, all GDP streams start with the initial caps
  * packet.
