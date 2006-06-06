@@ -1,6 +1,6 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2004,2006 Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * dataprotocol.h: Functions implementing the GStreamer Data Protocol
  *
@@ -28,6 +28,21 @@
 #include <gst/gstcaps.h>
 
 G_BEGIN_DECLS
+
+/**
+ * GstDPVersion:
+ * @GST_DP_VERSION_0_2: protocol version 0.2
+ * @GST_DP_VERSION_1_0: protocol version 1.0
+ *
+ * The version of the GDP protocol being used.
+ */
+typedef enum {
+  GST_DP_VERSION_0_2 = 1,
+  GST_DP_VERSION_1_0,
+} GstDPVersion;
+
+GType gst_dp_version_get_type ();
+#define GST_TYPE_DP_VERSION (gst_dp_version_get_type ())
 
 /**
  * GST_DP_VERSION_MAJOR:
@@ -62,7 +77,7 @@ typedef enum {
   GST_DP_HEADER_FLAG_NONE        = 0,
   GST_DP_HEADER_FLAG_CRC_HEADER  = (1 << 0),
   GST_DP_HEADER_FLAG_CRC_PAYLOAD = (1 << 1),
-  GST_DP_HEADER_FLAG_CRC         = (1 << 1) | (1 <<0),
+  GST_DP_HEADER_FLAG_CRC         = (1 << 1) | (1 << 0),
 } GstDPHeaderFlag;
 
 /**
@@ -82,7 +97,38 @@ typedef enum {
   GST_DP_PAYLOAD_EVENT_NONE      = 64,
 } GstDPPayloadType;
 
+typedef gboolean (*GstDPHeaderFromBufferFunction) (const GstBuffer * buffer,
+						GstDPHeaderFlag flags,
+						guint * length,
+						guint8 ** header);
+typedef gboolean (*GstDPPacketFromCapsFunction) (const GstCaps * caps,
+						GstDPHeaderFlag flags,
+						guint * length,
+						guint8 ** header,
+						guint8 ** payload);
+typedef gboolean (*GstDPPacketFromEventFunction) (const GstEvent * event,
+						GstDPHeaderFlag flags,
+						guint * length,
+						guint8 ** header,
+						guint8 ** payload);
+typedef struct {
+  GstDPVersion version;
+
+  GstDPHeaderFromBufferFunction header_from_buffer;
+  GstDPPacketFromCapsFunction packet_from_caps;
+  GstDPPacketFromEventFunction packet_from_event;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+} GstDPPacketizer;
+
+
 void		gst_dp_init			(void);
+
+/* packetizer */
+GstDPPacketizer *
+                gst_dp_packetizer_new           (GstDPVersion version);
+void            gst_dp_packetizer_free          (GstDPPacketizer *packetizer);
 
 /* crc checksum */
 guint16         gst_dp_crc                      (const guint8 * buffer,
@@ -108,7 +154,6 @@ gboolean	gst_dp_packet_from_event	(const GstEvent * event,
 						guint * length,
 						guint8 ** header,
 						guint8 ** payload);
-
 
 /* converting to GstBuffer/GstEvent/GstCaps */
 GstBuffer *	gst_dp_buffer_from_header	(guint header_length,
