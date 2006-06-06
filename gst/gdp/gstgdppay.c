@@ -662,7 +662,7 @@ gst_gdp_pay_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      this->packetizer = gst_dp_get_packetizer (this->version);
+      this->packetizer = gst_dp_packetizer_new (this->version);
       break;
     default:
       break;
@@ -673,7 +673,7 @@ gst_gdp_pay_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (this->packetizer) {
-        g_free (this->packetizer);
+        gst_dp_packetizer_free (this->packetizer);
         this->packetizer = NULL;
       }
       break;
