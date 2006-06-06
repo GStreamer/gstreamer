@@ -25,9 +25,9 @@
  * @short_description: Data-passing buffer type, supporting sub-buffers.
  * @see_also: #GstPad, #GstMiniObject
  *
- * Buffers are the basic unit of data transfer in GStreamer.  The #GstBuffer type
- * provides all the state necessary to define a region of memory as part of a
- * stream.  Sub-buffers are also supported, allowing a smaller region of a
+ * Buffers are the basic unit of data transfer in GStreamer.  The #GstBuffer
+ * type provides all the state necessary to define a region of memory as part
+ * of a stream.  Sub-buffers are also supported, allowing a smaller region of a
  * buffer to become its own buffer, with mechanisms in place to ensure that
  * neither memory space goes away prematurely.
  *
@@ -61,16 +61,16 @@
  * in the buffer. Attach caps to the buffer with gst_buffer_set_caps(); this
  * is typically done before pushing out a buffer using gst_pad_push() so that
  * the downstream element knows the type of the buffer.
- * 
+ *
  * A buffer will usually have a timestamp, and a duration, but neither of these
- * are guaranteed (they may be set to #GST_CLOCK_TIME_NONE). Whenever a 
- * meaningful value can be given for these, they should be set. The timestamp 
- * and duration are measured in nanoseconds (they are #GstClockTime values). 
- * 
+ * are guaranteed (they may be set to #GST_CLOCK_TIME_NONE). Whenever a
+ * meaningful value can be given for these, they should be set. The timestamp
+ * and duration are measured in nanoseconds (they are #GstClockTime values).
+ *
  * A buffer can also have one or both of a start and an end offset. These are
  * media-type specific. For video buffers, the start offset will generally be
- * the frame number. For audio buffers, it will be the number of samples 
- * produced so far. For compressed data, it could be the byte offset in a 
+ * the frame number. For audio buffers, it will be the number of samples
+ * produced so far. For compressed data, it could be the byte offset in a
  * source or destination file. Likewise, the end offset will be the offset of
  * the end of the buffer. These can only be meaningfully interpreted if you
  * know the media type of the buffer (the #GstCaps set on it). Either or both
@@ -87,10 +87,10 @@
  * a buffer that is safe to modify by using gst_buffer_make_writable().  This
  * function is optimized so that a copy will only be made when it is necessary.
  *
- * A plugin that only wishes to modify the metadata of a buffer, such as the offset,
- * timestamp or caps, should use gst_buffer_make_metadata_writable(), which will
- * create a subbuffer of the original buffer to ensure the caller has sole ownership,
- * and not copy the buffer data.
+ * A plugin that only wishes to modify the metadata of a buffer, such as the
+ * offset, timestamp or caps, should use gst_buffer_make_metadata_writable(),
+ * which will create a subbuffer of the original buffer to ensure the caller
+ * has sole ownership, and not copy the buffer data.
  *
  * Several flags of the buffer can be set and unset with the
  * GST_BUFFER_FLAG_SET() and GST_BUFFER_FLAG_UNSET() macros. Use
