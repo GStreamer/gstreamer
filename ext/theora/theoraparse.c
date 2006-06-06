@@ -319,6 +319,8 @@ theora_parse_drain_queue_prematurely (GstTheoraParse * parse)
     if (is_keyframe (buf))
       /* we have a keyframe */
       parse->prev_keyframe = parse->prev_frame;
+    else
+      GST_BUFFER_FLAGS (buf) |= GST_BUFFER_FLAG_DELTA_UNIT;
 
     if (parse->prev_keyframe < 0) {
       if (GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
@@ -367,6 +369,8 @@ theora_parse_drain_queue (GstTheoraParse * parse, gint64 granulepos)
     if (is_keyframe (buf))
       /* we have a keyframe */
       parse->prev_keyframe = parse->prev_frame;
+    else
+      GST_BUFFER_FLAGS (buf) |= GST_BUFFER_FLAG_DELTA_UNIT;
 
     ret = theora_parse_push_buffer (parse, buf, parse->prev_keyframe,
         parse->prev_frame);

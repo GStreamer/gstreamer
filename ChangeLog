@@ -1,3 +1,9 @@
+2006-06-06  Michael Smith  <msmith@fluendo.com>
+
+	* ext/theora/theoraparse.c: (theora_parse_drain_queue_prematurely),
+	(theora_parse_drain_queue):
+	  Mark DELTA_UNIT on non-keyframes.
+
 2006-06-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
