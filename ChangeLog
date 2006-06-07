@@ -1,3 +1,24 @@
+2006-06-07  Wim Taymans  <wim@fluendo.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_base_init),
+	(gst_mpeg2dec_class_init), (gst_mpeg2dec_init),
+	(gst_mpeg2dec_finalize), (gst_mpeg2dec_reset),
+	(gst_mpeg2dec_qos_reset), (gst_mpeg2dec_alloc_buffer),
+	(gst_mpeg2dec_negotiate_format), (init_dummybuf),
+	(handle_sequence), (handle_picture), (handle_slice),
+	(gst_mpeg2dec_chain), (gst_mpeg2dec_sink_event),
+	(gst_mpeg2dec_src_event), (gst_mpeg2dec_change_state):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	Fix padtemplate as we can now do fractional framerates.
+	Small cleanups.
+	Use GstSegment.
+	Add simple frame dropping QoS.
+	Precalc buffer output sizes and UV offsets.
+	Always give libmpeg2 a valid fbuf when it wants one.
+	don't trust libmpeg to discard our buffers but manage it
+	ourselves.
+	Fixes #343627, #327350, #335288
+
 2006-06-05  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/MANIFEST:

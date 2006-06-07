@@ -41,8 +41,6 @@ G_BEGIN_DECLS
 #define MPEG_TIME_TO_GST_TIME(time) (((time) * (GST_MSECOND/10)) / 9LL)
 #define GST_TIME_TO_MPEG_TIME(time) (((time) * 9LL) / (GST_MSECOND/10))
 
-#define GST_MPEG2DEC_NUM_BUFS 6
-
 typedef struct _GstMpeg2dec GstMpeg2dec;
 typedef struct _GstMpeg2decClass GstMpeg2decClass;
 
@@ -61,6 +59,11 @@ typedef enum
   MPEG2DEC_DISC_NEW_KEYFRAME
 } DiscontState;
 
+typedef struct {
+  gint type;
+  GstBuffer *buffer;
+} GstMpeg2Buf;
+
 struct _GstMpeg2dec {
   GstElement     element;
 
@@ -75,14 +78,16 @@ struct _GstMpeg2dec {
   gboolean       closed;
   gboolean       have_fbuf;
 
-  GstBuffer     *buffers[GST_MPEG2DEC_NUM_BUFS];
+  /* buffer management */
+  guint          ip_bufpos;
+  GstMpeg2Buf    ip_buffers[4];
+  GstMpeg2Buf    b_buffer;
 
   DiscontState   discont_state;
 
   /* the timestamp of the next frame */
   GstClockTime   next_time;
-  gint64         segment_start;
-  gint64         segment_end;
+  GstSegment     segment;
 
   /* video state */
   Mpeg2decFormat format;
@@ -95,18 +100,26 @@ struct _GstMpeg2dec {
   gint           frame_rate_code;
   gint64         total_frames;
   gint64         frame_period;
+
+  gint           size;
+  gint           u_offs;
+  gint           v_offs;
+  guint8        *dummybuf[3];
+
   
   guint64        offset;
   gint           fps_n;
   gint           fps_d;
   gboolean       need_sequence;
 
-  GstEvent      *pending_event;
-
   GstIndex      *index;
   gint           index_id;
   
   gint           error_count;
+
+  /* QoS stuff */ /* with LOCK*/
+  gdouble        proportion;
+  GstClockTime   earliest_time;
 };
 
 struct _GstMpeg2decClass {
