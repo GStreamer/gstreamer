@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-30 16:22+0200\n"
+"POT-Creation-Date: 2006-06-07 11:46+0200\n"
 "PO-Revision-Date: 2006-04-07 18:23+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0\n"
 "X-Generator: BBEdit 8.2.3\n"
 
-#: gst/gst.c:271
+#: gst/gst.c:275
 msgid "Print the GStreamer version"
 msgstr "Hiển thị phiên bản GStreamer"
 
-#: gst/gst.c:273
+#: gst/gst.c:277
 msgid "Make all warnings fatal"
 msgstr "Đặt mọi cảnh báo là nghiêm trọng"
 
-#: gst/gst.c:276
+#: gst/gst.c:280
 msgid "Print available debug categories and exit"
 msgstr "Hiển thị tất cả các loại gỡ lỗi sẵn sàng rồi thoát"
 
-#: gst/gst.c:279
+#: gst/gst.c:283
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Mức gỡ lỗi mặc định từ 1 (chỉ lỗi) đến 5 (bất cứ điều nào) hay 0 (không xuất "
 "gì)"
 
-#: gst/gst.c:281
+#: gst/gst.c:285
 msgid "LEVEL"
 msgstr "MỨC"
 
-#: gst/gst.c:283
+#: gst/gst.c:287
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -47,31 +47,31 @@ msgstr ""
 "Danh sách định giới bằng dấu phẩy của đôi « tên_loại:mức » để đặt mức dứt "
 "khoát cho mỗi loại. Thí dụ: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:286
+#: gst/gst.c:290
 msgid "LIST"
 msgstr "DANH SÁCH"
 
-#: gst/gst.c:288
+#: gst/gst.c:292
 msgid "Disable colored debugging output"
 msgstr "Tắt xuất dữ liệu gỡ lỗi với màu"
 
-#: gst/gst.c:290
+#: gst/gst.c:294
 msgid "Disable debugging"
 msgstr "Tắt gỡ lỗi"
 
-#: gst/gst.c:293
+#: gst/gst.c:297
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Bật chẩn đoán chi tiết việc tải trình cầm phít"
 
-#: gst/gst.c:296
+#: gst/gst.c:300
 msgid "Colon-separated paths containing plugins"
 msgstr "Các đường dẫn chứa bộ cầm phít, phân cách nhau bởi dấu phẩy."
 
-#: gst/gst.c:296
+#: gst/gst.c:300
 msgid "PATHS"
 msgstr "ĐƯỜNG DẪN"
 
-#: gst/gst.c:298
+#: gst/gst.c:302
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -79,23 +79,23 @@ msgstr ""
 "Danh sách định giới bằng dấu phẩy của các bộ cầm phít cần tải trước, thêm "
 "vào danh sách được cất giữ trong biến môi trường <GST_PLUGIN_PATH>."
 
-#: gst/gst.c:300
+#: gst/gst.c:304
 msgid "PLUGINS"
 msgstr "CẦM PHÍT"
 
-#: gst/gst.c:303
+#: gst/gst.c:307
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Tắt khả năng bắt lỗi phân đoạn trong khi tải bộ cầm phít"
 
-#: gst/gst.c:308
+#: gst/gst.c:312
 msgid "GStreamer Options"
 msgstr "Tùy chọn GStreamer"
 
-#: gst/gst.c:309
+#: gst/gst.c:313
 msgid "Show GStreamer Options"
 msgstr "Hiển thị Tùy chọnStreamer"
 
-#: gst/gst.c:861
+#: gst/gst.c:865
 msgid "Unknown option"
 msgstr "Tùy chọn lạ"
 

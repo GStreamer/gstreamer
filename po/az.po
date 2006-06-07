@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-30 16:22+0200\n"
+"POT-Creation-Date: 2006-06-07 11:46+0200\n"
 "PO-Revision-Date: 2004-03-19 18:40+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -16,81 +16,81 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.0.2\n"
 
-#: gst/gst.c:271
+#: gst/gst.c:275
 msgid "Print the GStreamer version"
 msgstr "GStreamer buraxılışını göstər"
 
-#: gst/gst.c:273
+#: gst/gst.c:277
 msgid "Make all warnings fatal"
 msgstr "Bütün xətaları ölümcül et"
 
-#: gst/gst.c:276
+#: gst/gst.c:280
 msgid "Print available debug categories and exit"
 msgstr ""
 
-#: gst/gst.c:279
+#: gst/gst.c:283
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 
-#: gst/gst.c:281
+#: gst/gst.c:285
 msgid "LEVEL"
 msgstr "SƏVİYYƏ"
 
-#: gst/gst.c:283
+#: gst/gst.c:287
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
 
-#: gst/gst.c:286
+#: gst/gst.c:290
 msgid "LIST"
 msgstr "SİYAHI"
 
-#: gst/gst.c:288
+#: gst/gst.c:292
 msgid "Disable colored debugging output"
 msgstr ""
 
-#: gst/gst.c:290
+#: gst/gst.c:294
 msgid "Disable debugging"
 msgstr "Xəta ayırmasını bağla"
 
-#: gst/gst.c:293
+#: gst/gst.c:297
 msgid "Enable verbose plugin loading diagnostics"
 msgstr ""
 
-#: gst/gst.c:296
+#: gst/gst.c:300
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
-#: gst/gst.c:296
+#: gst/gst.c:300
 msgid "PATHS"
 msgstr "CIĞIRLAR"
 
-#: gst/gst.c:298
+#: gst/gst.c:302
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
 
-#: gst/gst.c:300
+#: gst/gst.c:304
 msgid "PLUGINS"
 msgstr "ƏLAVƏLƏR"
 
-#: gst/gst.c:303
+#: gst/gst.c:307
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 
-#: gst/gst.c:308
+#: gst/gst.c:312
 msgid "GStreamer Options"
 msgstr ""
 
-#: gst/gst.c:309
+#: gst/gst.c:313
 #, fuzzy
 msgid "Show GStreamer Options"
 msgstr "GStreamer buraxılışını göstər"
 
-#: gst/gst.c:861
+#: gst/gst.c:865
 msgid "Unknown option"
 msgstr ""
 

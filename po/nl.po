@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-30 16:22+0200\n"
+"POT-Creation-Date: 2006-06-07 11:46+0200\n"
 "PO-Revision-Date: 2006-01-20 16:15+0200\n"
 "Last-Translator: Taco Witte <tcwitte@cs.uu.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -17,30 +17,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:271
+#: gst/gst.c:275
 msgid "Print the GStreamer version"
 msgstr "Geeft de GStreamer versie weer"
 
-#: gst/gst.c:273
+#: gst/gst.c:277
 msgid "Make all warnings fatal"
 msgstr "Alle waarschuwingen fataal maken"
 
-#: gst/gst.c:276
+#: gst/gst.c:280
 msgid "Print available debug categories and exit"
 msgstr "Beschikbare debug-categorieën weergeven en afsluiten"
 
-#: gst/gst.c:279
+#: gst/gst.c:283
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Standaard debug-niveau van 1 (enkel fouten) tot 5 (alles) of 0 voor geen "
 "uitvoer"
 
-#: gst/gst.c:281
+#: gst/gst.c:285
 msgid "LEVEL"
 msgstr "NIVEAU"
 
-#: gst/gst.c:283
+#: gst/gst.c:287
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -49,31 +49,31 @@ msgstr ""
 "niveau's in te stellen voor de individuele categorieën. Voorbeeld: "
 "GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:286
+#: gst/gst.c:290
 msgid "LIST"
 msgstr "LIJST"
 
-#: gst/gst.c:288
+#: gst/gst.c:292
 msgid "Disable colored debugging output"
 msgstr "Kleuren uit zetten in debug-uitvoer"
 
-#: gst/gst.c:290
+#: gst/gst.c:294
 msgid "Disable debugging"
 msgstr "Debugging uit zetten"
 
-#: gst/gst.c:293
+#: gst/gst.c:297
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Uitgebreide diagnostiek voor het laden van plugins aan zetten"
 
-#: gst/gst.c:296
+#: gst/gst.c:300
 msgid "Colon-separated paths containing plugins"
 msgstr "Dubbele punt-gescheiden lijst met paden met plugins"
 
-#: gst/gst.c:296
+#: gst/gst.c:300
 msgid "PATHS"
 msgstr "PADEN"
 
-#: gst/gst.c:298
+#: gst/gst.c:302
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -81,24 +81,24 @@ msgstr ""
 "Komma-gescheiden lijst van plugins om voor te laden naast de lijst "
 "opgeslagen in omgevingsvariable GST_PLUGIN_PATH"
 
-#: gst/gst.c:300
+#: gst/gst.c:304
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:303
+#: gst/gst.c:307
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Het opvangen van segmentatiefouten uit zetten tijdens laden van plugins"
 
-#: gst/gst.c:308
+#: gst/gst.c:312
 msgid "GStreamer Options"
 msgstr "GStreamer opties"
 
-#: gst/gst.c:309
+#: gst/gst.c:313
 msgid "Show GStreamer Options"
 msgstr "Geeft GStreamer opties weer"
 
-#: gst/gst.c:861
+#: gst/gst.c:865
 msgid "Unknown option"
 msgstr "Onbekende optie"
 

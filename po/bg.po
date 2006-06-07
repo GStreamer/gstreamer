@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-30 16:22+0200\n"
+"POT-Creation-Date: 2006-06-07 11:46+0200\n"
 "PO-Revision-Date: 2006-04-07 18:54+0300\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: gst/gst.c:271
+#: gst/gst.c:275
 msgid "Print the GStreamer version"
 msgstr "Отпечатване на версията на GStreamer"
 
-#: gst/gst.c:273
+#: gst/gst.c:277
 msgid "Make all warnings fatal"
 msgstr "Всички предупреждения да са фатални"
 
-#: gst/gst.c:276
+#: gst/gst.c:280
 msgid "Print available debug categories and exit"
 msgstr "Отпечатване на наличните категории за изчистване на грешки и изход"
 
-#: gst/gst.c:279
+#: gst/gst.c:283
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Стандартното ниво за изчистване на грешки - от 1 (само грешки) до 5 (всичко) "
 "или 0 - без никакви съобщения за изчистване на грешки"
 
-#: gst/gst.c:281
+#: gst/gst.c:285
 msgid "LEVEL"
 msgstr "НИВО"
 
-#: gst/gst.c:283
+#: gst/gst.c:287
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "конкретните нива за съобщения за изчистване на грешки на отделните "
 "категории. Например: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:286
+#: gst/gst.c:290
 msgid "LIST"
 msgstr "СПИСЪК"
 
-#: gst/gst.c:288
+#: gst/gst.c:292
 msgid "Disable colored debugging output"
 msgstr "Спиране на оцветените съобщения за изчистване на грешки"
 
-#: gst/gst.c:290
+#: gst/gst.c:294
 msgid "Disable debugging"
 msgstr "Спиране на съобщенията за изчистване на грешки"
 
-#: gst/gst.c:293
+#: gst/gst.c:297
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Включване на подробни съобщения при зареждане на приставка"
 
-#: gst/gst.c:296
+#: gst/gst.c:300
 msgid "Colon-separated paths containing plugins"
 msgstr "Пътища с приставки, разделени с двоеточие"
 
-#: gst/gst.c:296
+#: gst/gst.c:300
 msgid "PATHS"
 msgstr "ПЪТИЩА"
 
-#: gst/gst.c:298
+#: gst/gst.c:302
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -81,25 +81,25 @@ msgstr ""
 "заредени в допълнение към тези от списъка в променливата на средата "
 "GST_PPLUGIN_PATH"
 
-#: gst/gst.c:300
+#: gst/gst.c:304
 msgid "PLUGINS"
 msgstr "ПРИСТАВКИ"
 
-#: gst/gst.c:303
+#: gst/gst.c:307
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Спиране не прехващането на сегментационни грешки по времето на зареждане на "
 "приставка"
 
-#: gst/gst.c:308
+#: gst/gst.c:312
 msgid "GStreamer Options"
 msgstr "Настройки на GStreamer"
 
-#: gst/gst.c:309
+#: gst/gst.c:313
 msgid "Show GStreamer Options"
 msgstr "Показване на опциите на GStreamer"
 
-#: gst/gst.c:861
+#: gst/gst.c:865
 msgid "Unknown option"
 msgstr "Непозната опция"
 
