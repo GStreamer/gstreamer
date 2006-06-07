@@ -59,11 +59,6 @@ typedef enum
   MPEG2DEC_DISC_NEW_KEYFRAME
 } DiscontState;
 
-typedef struct {
-  gint type;
-  GstBuffer *buffer;
-} GstMpeg2Buf;
-
 struct _GstMpeg2dec {
   GstElement     element;
 
@@ -80,8 +75,8 @@ struct _GstMpeg2dec {
 
   /* buffer management */
   guint          ip_bufpos;
-  GstMpeg2Buf    ip_buffers[4];
-  GstMpeg2Buf    b_buffer;
+  GstBuffer     *ip_buffers[4];
+  GstBuffer     *b_buffer;
 
   DiscontState   discont_state;
 

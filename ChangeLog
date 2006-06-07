@@ -1,5 +1,16 @@
 2006-06-07  Wim Taymans  <wim@fluendo.com>
 
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_finalize),
+	(gst_mpeg2dec_reset), (clear_buffers), (handle_picture),
+	(gst_mpeg2dec_sink_convert), (gst_mpeg2dec_src_convert),
+	(gst_mpeg2dec_change_state):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	Simplify and don't leak our buffer pool.
+	Use _scale_int.
+	Remove unfixed bug number from previous ChangeLog entry.
+
+2006-06-07  Wim Taymans  <wim@fluendo.com>
+
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_base_init),
 	(gst_mpeg2dec_class_init), (gst_mpeg2dec_init),
 	(gst_mpeg2dec_finalize), (gst_mpeg2dec_reset),
@@ -17,7 +28,7 @@
 	Always give libmpeg2 a valid fbuf when it wants one.
 	don't trust libmpeg to discard our buffers but manage it
 	ourselves.
-	Fixes #343627, #327350, #335288
+	Fixes #343627, #335288
 
 2006-06-05  Sebastien Moutte  <sebastien@moutte.net>
 
