@@ -1,5 +1,25 @@
 2006-06-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* win32/common/config.h:
+	  0.10.7.2 prerelease
+
+2006-06-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/libs/tmpl/gstaudio.sgml:
 	* docs/libs/tmpl/gstcolorbalance.sgml:
 	* docs/libs/tmpl/gstmixer.sgml:

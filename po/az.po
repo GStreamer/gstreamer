@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-12 23:54+0200\n"
+"POT-Creation-Date: 2006-06-07 12:55+0200\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -95,46 +95,50 @@ msgstr "\"%s\" vfs faylı bağlana bilmədi."
 msgid "Error while writing to file \"%s\"."
 msgstr "\"%s\" faylı bağlana bilmədi."
 
-#: ext/ogg/gstoggdemux.c:2737
+#: ext/ogg/gstoggdemux.c:2788
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1470
+#: gst/playback/gstplaybasebin.c:1262
+msgid "RTSP streams cannot be played yet."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1566
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1476
+#: gst/playback/gstplaybasebin.c:1572
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1480
+#: gst/playback/gstplaybasebin.c:1576
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1487
+#: gst/playback/gstplaybasebin.c:1583
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1560
+#: gst/playback/gstplaybasebin.c:1656
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1565
+#: gst/playback/gstplaybasebin.c:1661
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1569
+#: gst/playback/gstplaybasebin.c:1665
 #, fuzzy
 msgid "This is not a media file"
 msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
 
-#: gst/playback/gstplaybasebin.c:1574
+#: gst/playback/gstplaybasebin.c:1670
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 
