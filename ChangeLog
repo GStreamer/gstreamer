@@ -1,3 +1,9 @@
+2006-06-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* configure.ac:
+	We now require libraw1394 >= 1.1.0 and that version onwards all
+	have .pc files.
+
 2006-06-02  Edward Hervey  <edward@fluendo.com>
 
 	* gst/law/alaw-decode.c: (alawdec_getcaps): 

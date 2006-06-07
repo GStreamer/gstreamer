@@ -573,9 +573,8 @@ dnl *** dv1394 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DV1394, true)
 GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], dv1394src, [
   dnl we need to test three headers and three libs
-  GST_CHECK_LIBHEADER(RAW1394,
-    raw1394, raw1394_new_handle,,
-    libraw1394/raw1394.h, RAW1394_LIBS="-lraw1394")
+  PKG_CHECK_MODULES(RAW1394,
+    libraw1394 >= 1.1.0, HAVE_RAW1394="yes", HAVE_RAW1394="no")
   GST_CHECK_LIBHEADER(AVC1394,
     avc1394, avc1394_send_command, $RAW1394_LIBS,
     libavc1394/avc1394.h, AVC1394_LIBS="-lavc1394")
@@ -590,9 +589,9 @@ GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], dv1394src, [
      test x$HAVE_ROM1394 = xyes; then
        HAVE_DV1394=yes
        DV1394_LIBS="$RAW1394_LIBS $AVC1394_LIBS $ROM1394_LIBS"
-       DV1394_CFLAGS=""
+       DV1394_CFLAGS="$RAW1394_CFLAGS"
        if test x$HAVE_LIBIEC61883 = xyes; then
-         DV1394_CFLAGS="$LIBIEC61883_CFLAGS -DHAVE_LIBIEC61883"
+         DV1394_CFLAGS="$RAW1394_CFLAGS $LIBIEC61883_CFLAGS -DHAVE_LIBIEC61883"
 	 DV1394_LIBS="$DV1394_LIBS $LIBIEC61883_LIBS"
        fi
        AC_SUBST(DV1394_CFLAGS)
