@@ -1,3 +1,10 @@
+2006-06-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstindex.c: (gst_index_gtype_resolver):
+	* tools/gst-xmlinspect.c: (print_plugin_info):
+	Fix leak spotted by coverity checker. Fixes #343827
+	Fix another other leak found by paolo borelli.
+
 2006-06-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* libs/gst/dataprotocol/dataprotocol.c:

@@ -557,9 +557,15 @@ gst_index_gtype_resolver (GstIndex * index, GstObject * writer,
   if (GST_IS_PAD (writer)) {
     GstElement *element =
         (GstElement *) gst_object_get_parent (GST_OBJECT (writer));
+    gchar *name;
 
+    name = gst_object_get_name (writer);
     *writer_string = g_strdup_printf ("%s.%s",
-        g_type_name (G_OBJECT_TYPE (element)), gst_object_get_name (writer));
+        g_type_name (G_OBJECT_TYPE (element)), name);
+
+    gst_object_unref (element);
+    g_free (name);
+
   } else {
     *writer_string =
         g_strdup_printf ("%s", g_type_name (G_OBJECT_TYPE (writer)));

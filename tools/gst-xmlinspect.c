@@ -733,7 +733,7 @@ print_plugin_info (GstPlugin * plugin)
         g_print ("%s type: N/A\n", plugin->desc.name);
       num_types++;
     } else {
-      g_print ("  %s (%s)\n", gst_object_get_name (GST_OBJECT (feature)),
+      g_print ("  %s (%s)\n", GST_OBJECT_NAME (feature),
           g_type_name (G_OBJECT_TYPE (feature)));
       num_other++;
     }
