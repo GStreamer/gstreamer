@@ -38,10 +38,10 @@
  * </listitem>
  * <listitem>
  * <para>
- * To force a redrawing of the latest video frame the video sink element 
+ * To force a redrawing of the latest video frame the video sink element
  * displayed on the Window. Indeed if the #GstPipeline is in #GST_STATE_PAUSED
  * state, moving the Window around will damage its content. Application
- * developers will want to handle the Expose events themselves and force the 
+ * developers will want to handle the Expose events themselves and force the
  * video sink element to refresh the Window's content.
  * </para>
  * </listitem>
@@ -49,7 +49,7 @@
  * </para>
  * <para>
  * Using the Window created by the video sink is probably the simplest scenario,
- * in some cases, though, it might not be flexible enough for application 
+ * in some cases, though, it might not be flexible enough for application
  * developers if they need to catch events such as mouse moves and button
  * clicks.
  * </para>
@@ -58,7 +58,7 @@
  * flexible solution but it has some issues. Indeed the application needs to set
  * its Window identifier at the right time to avoid internal Window creation
  * from the video sink element. To solve this issue a #GstMessage is posted on
- * the bus to inform the application that it should set the Window identifier 
+ * the bus to inform the application that it should set the Window identifier
  * immediately. Here is an example on how to do that correctly:
  * <programlisting>
  * static GstBusSyncReply

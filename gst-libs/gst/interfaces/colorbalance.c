@@ -27,6 +27,11 @@
 #include "colorbalance.h"
 #include "interfaces-marshal.h"
 
+/**
+ * SECTION:gstcolorbalance
+ * @short_description: Interface for adjusting color balance settings
+ */
+
 enum
 {
   VALUE_CHANGED,

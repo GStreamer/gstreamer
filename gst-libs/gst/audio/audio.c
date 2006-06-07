@@ -26,6 +26,11 @@
 
 #include <gst/gststructure.h>
 
+/**
+ * SECTION:gstaudio
+ * @short_description: Support library for audio elements
+ */
+
 int
 gst_audio_frame_byte_size (GstPad * pad)
 {

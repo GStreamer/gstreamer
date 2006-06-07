@@ -1,3 +1,19 @@
+2006-06-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/libs/tmpl/gstaudio.sgml:
+	* docs/libs/tmpl/gstcolorbalance.sgml:
+	* docs/libs/tmpl/gstmixer.sgml:
+	* docs/libs/tmpl/gstringbuffer.sgml:
+	* docs/libs/tmpl/gsttuner.sgml:
+	* docs/libs/tmpl/gstxoverlay.sgml:
+	* gst-libs/gst/audio/audio.c:
+	* gst-libs/gst/audio/gstringbuffer.c:
+	* gst-libs/gst/interfaces/colorbalance.c:
+	* gst-libs/gst/interfaces/mixer.c:
+	* gst-libs/gst/interfaces/tuner.c:
+	* gst-libs/gst/interfaces/xoverlay.c:
+	  move last template doc snippets to source code and delete them
+
 2006-06-06  Michael Smith  <msmith@fluendo.com>
 
 	* ext/theora/theoraparse.c: (theora_parse_drain_queue_prematurely),

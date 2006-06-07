@@ -26,6 +26,11 @@
 #include "mixer.h"
 #include "interfaces-marshal.h"
 
+/**
+ * SECTION:gstmixer
+ * @short_description: Interface for elements that provide mixer operations
+ */
+
 enum
 {
   SIGNAL_MUTE_TOGGLED,

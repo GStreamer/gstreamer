@@ -28,6 +28,11 @@
 
 #include <string.h>
 
+/**
+ * SECTION:gsttuner
+ * @short_description: Interface for elements providing tuner operations
+ */
+
 enum
 {
   NORM_CHANGED,

@@ -1,8 +1,6 @@
 /* GStreamer
  * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
  *
- * gstringbuffer.c: 
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -18,6 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 /**
  * SECTION:gstringbuffer
  * @short_description: Base class for audio ringbuffer implementations
@@ -30,9 +29,9 @@
  * </para>
  * <para>
  * The ringbuffer abstracts a circular buffer of data. One reader and
- * one writer can operate on the data from different threads in a lockfree 
+ * one writer can operate on the data from different threads in a lockfree
  * manner. The base class is sufficiently flexible to be used as an
- * abstraction for DMA based ringbuffers as well as a pure software 
+ * abstraction for DMA based ringbuffers as well as a pure software
  * implementations.
  * </para>
  * </refsect2>
