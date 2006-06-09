@@ -1,6 +1,14 @@
 2006-06-09  Edward Hervey  <edward@fluendo.com>
 
 	* pygst.py.in:
+	Raise RequiredVersionError(ValueError, AssertionError) wherever
+	applicable. This makes the new system (raising an error) compatible
+	with the old system (assertions).
+	Fixes #341114
+
+2006-06-09  Edward Hervey  <edward@fluendo.com>
+
+	* pygst.py.in:
 	Don't import non-used modules
 	* testsuite/Makefile.am:
 	Heavy valgrinding por favor !
