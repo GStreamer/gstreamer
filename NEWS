@@ -1,4 +1,48 @@
-This is GStreamer 0.10.6, "Take the cannoli"
+This is GStreamer 0.10.7, "Soepeke, ik zie ou"
+
+Changes since 0.10.6:
+    
+      * Registry cache updating is now done in a fork, so no plugins are left
+        opened
+      * New version of data protocol now serializes events
+      * queue fixes
+      * win32 fixes
+
+Bugs fixed since 0.10.6:
+    
+      * 338335 : [patch] memleak in gst-utils.c (leak pads from iterator)
+      * 343598 : undefined symbol in coreindexers when using --disable-loa...
+      * 336929 : GstCollectPads does not clear/reset segment info after fl...
+      * 337100 : [fakesink] add " preroll-handoff " signal
+      * 339918 : GstTagSetter merge-mode description unclear, and implemen...
+      * 340501 : [filesrc] give primary rank
+      * 341662 : gst-launch print_tags() fix
+      * 342238 : API: gst_element_seek_simple
+      * 342321 : GST_QUERY_POSITION fails if GstBaseSrc in get_range mode
+      * 342777 : rebuilding the registry leaves all plugins in memory
+      * 342820 : gstnetclientclock.c(453): servaddr used before set
+      * 343057 : gst-launch-0.10 segfaults when passed gst-plugin-path and...
+      * 343341 : [API] add GST_TAG_PREVIEW_IMAGE
+      * 343827 : leak in gst_index_gtype_resolver
+      * 343929 : Use of // in public header
+      * 343988 : data protocol needs extending to handle events better
+      * 341479 : Too many plugins loaded even for up-to-date registry
+      * 343334 : GstCollectPads testsuite and fixes
+      * 343538 : GstCollectPads doesn't reset EOS fields when stopped
+
+API added since 0.10.6:
+
+      * gst_element_seek_simple()
+      * GST_FLOW_CUSTOM_SUCCESS
+      * GST_FLOW_CUSTOM_ERROR
+      * GST_FLOW_IS_SUCCESS
+      * gst_collect_pads_set_flushing()
+      * GST_TAG_PREVIEW_IMAGE
+      * gst_dp_crc()
+      * GstDPPacketizer
+      * GstDPVersion
+      * GstFakeSink::preroll-handoff
+      * GstFakeSink::use-mmap
 
 Changes since 0.10.5:
 

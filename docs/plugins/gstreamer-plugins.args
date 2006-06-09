@@ -303,9 +303,19 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Touch read data</NICK>
-<BLURB>Touch data to force disk read.</BLURB>
+<NICK>Touch mapped region read data</NICK>
+<BLURB>Touch mmapped data regions to force them to be read from disk.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFileSrc::use-mmap</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use mmap to read data</NICK>
+<BLURB>Whether to use mmap. FALSE to force normal read() calls.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>

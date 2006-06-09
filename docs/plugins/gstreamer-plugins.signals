@@ -33,6 +33,15 @@ GstPad *arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstFakeSink::preroll-handoff</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstFakeSink *gstfakesink
+GstBuffer *arg1
+GstPad *arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstIdentity::handoff</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>

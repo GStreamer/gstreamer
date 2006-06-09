@@ -1,3 +1,10 @@
+=== release 0.10.7 ===
+
+2006-06-09  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.7, "Soepeke, ik zie ou"
+
 2006-06-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
@@ -264,15 +271,15 @@
 	(gst_collect_pads_set_flushing), (gst_collect_pads_start),
 	(gst_collect_pads_stop):
 	* libs/gst/base/gstcollectpads.h:
-	API: gst_collect_pads_set_flushing
-	Added api to set the pads to flushing, usefull for seeking
+	API: gst_collect_pads_set_flushing()
+	Added api to set the pads to flushing, useful for seeking
 	code in elements using collectpads.
 	Clear segment when receiving a flush.
 
 2006-05-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (add_path_func), (init_post):
-	  Don't scan registry paths passed via --gst-plugin--path immediately
+	  Don't scan registry paths passed via --gst-plugin-path immediately
 	  (will crash, because absolutely nothing is set up and no types are
 	  registered etc.); do this later in init_post(). Fixes #343057.
 
@@ -294,6 +301,7 @@
 	(gst_file_src_init), (gst_file_src_set_property),
 	(gst_file_src_get_property), (gst_file_src_start):
 	* plugins/elements/gstfilesrc.h:
+	  API: GstFileSrc::use-mmap
 
 	Add a use-mmap property to enable easier testing of all code paths.
 	Bump rank to PRIMARY, so filesrc is the preferred file reader and used
@@ -348,7 +356,7 @@
 	* plugins/elements/gstfakesink.c: (gst_fake_sink_class_init),
 	(gst_fake_sink_preroll):
 	* plugins/elements/gstfakesink.h:
-	  Add new ::preroll-handoff signal (#337100).
+	  API: Add new GstFakeSink::preroll-handoff signal (#337100).
 
 2006-05-23  Wim Taymans  <wim@fluendo.com>
 
@@ -485,7 +493,7 @@
 	* plugins/elements/gstqueue.c: (gst_queue_push_one):
 	The queue was posting a non-needed GST_MESSAGE_ERROR when pushing a
 	buffer returned a fatal error. It should just send an EOS and stop
-	it's task.
+	its task.
 	Upstream elements will then properly receive the GST_FLOW_UNEXPECTED
 	when pushing buffers on the queue and will be able to handle the event.
 
