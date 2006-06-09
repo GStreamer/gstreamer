@@ -1,3 +1,10 @@
+2006-06-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Peter Kjellerstedt  <pkj at axis dot com>
+
+	* configure.ac:
+	  We should use $SED and not $(SED) in configure.ac (#343678).
+
 2006-06-09  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Brian Cameron <brian dot cameron at sun dot com>
