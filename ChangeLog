@@ -1,5 +1,29 @@
 2006-06-09  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Brian Cameron <brian dot cameron at sun dot com>
+
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	(gst_sunaudiomixer_ctrl_open), (gst_sunaudiomixer_ctrl_build_list),
+	(gst_sunaudiomixer_ctrl_new), (gst_sunaudiomixer_ctrl_set_volume),
+	(gst_sunaudiomixer_ctrl_set_mute):
+	* sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_class_init),
+	(gst_sunaudiosink_init), (gst_sunaudiosink_prepare),
+	(gst_sunaudiosink_write):
+	Attached find a patch that fixes a number of bugs with the SunAudio mixer
+	plugin and fixes #344101:
+	1. The gst_sunaudiomixer_ctrl_build_list kept appending the same 3 tracks onto 
+	   the tracklist causing gnome-volume-control's preferences dialog to be messed
+	   up and would core dump if you checked/unchecked any item.
+	2. We weren't previously setting the MUTE flag properly.  Fixing this makes 
+	   gnome-volume-control work better.
+	3. Now we properly define the input track to be GST_MIXER_TRACK_INPUT and
+	   the monitor to be GST_MIXER_TRACK_OUTPUT, so that makes gnome-volume-control
+	   look better.
+	Also some minor cleanup in gstsunaudiosink.c.
+
+
+2006-06-09  Wim Taymans  <wim@fluendo.com>
+
 	* ext/jpeg/gstjpegdec.c: (gst_idct_method_get_type),
 	(gst_jpeg_dec_class_init), (gst_jpeg_dec_init),
 	(gst_jpeg_dec_decode_indirect), (gst_jpeg_dec_decode_direct),

@@ -160,10 +160,6 @@ gst_sunaudiosink_class_init (GstSunAudioSinkClass * klass)
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_sunaudiosink_get_property);
 
-  g_object_class_install_property (gobject_class, PROP_DEVICE,
-      g_param_spec_string ("device", "Device", "Audio Device (/dev/audio)",
-          DEFAULT_DEVICE, G_PARAM_READWRITE));
-
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_sunaudiosink_getcaps);
 
   gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_sunaudiosink_open);
@@ -174,16 +170,21 @@ gst_sunaudiosink_class_init (GstSunAudioSinkClass * klass)
   gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_sunaudiosink_write);
   gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_sunaudiosink_delay);
   gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_sunaudiosink_reset);
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_string ("device", "Device", "Audio Device (/dev/audio)",
+          DEFAULT_DEVICE, G_PARAM_READWRITE));
+
 }
 
 static void
 gst_sunaudiosink_init (GstSunAudioSink * sunaudiosink)
 {
   const char *audiodev;
-  GstClockTime buffer_time;
-  GValue gvalue = { 0, };
 
   GST_DEBUG_OBJECT (sunaudiosink, "initializing sunaudiosink");
+
+  sunaudiosink->fd = -1;
 
   audiodev = g_getenv ("AUDIODEV");
   if (audiodev == NULL)
@@ -340,7 +341,6 @@ gst_sunaudiosink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   ainfo.play.precision = spec->width;
   ainfo.play.encoding = AUDIO_ENCODING_LINEAR;
   ainfo.play.port = ports;
-  ainfo.output_muted = 0;
 
   /*
    * SunAudio doesn't really give access to buffer size, these values work.  Setting
@@ -376,9 +376,7 @@ gst_sunaudiosink_unprepare (GstAudioSink * asink)
 static guint
 gst_sunaudiosink_write (GstAudioSink * asink, gpointer data, guint length)
 {
-  GstSunAudioSink *sunaudiosink = GST_SUNAUDIO_SINK (asink);
-
-  return write (sunaudiosink->fd, data, length);
+  return write (GST_SUNAUDIO_SINK (asink)->fd, data, length);
 }
 
 /*

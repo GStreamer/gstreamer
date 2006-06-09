@@ -38,43 +38,48 @@
 #define SCALE_FACTOR 2.55       /* 255/100 */
 
 static gboolean
-gst_sunaudiomixer_ctrl_open (GstSunAudioMixerCtrl * sunaudio)
+gst_sunaudiomixer_ctrl_open (GstSunAudioMixerCtrl * mixer)
 {
   int fd;
 
   /* First try to open non-blocking */
-  fd = open (sunaudio->device, O_RDWR | O_NONBLOCK);
+  fd = open (mixer->device, O_RDWR | O_NONBLOCK);
 
   if (fd >= 0) {
     close (fd);
-    fd = open (sunaudio->device, O_WRONLY);
+    fd = open (mixer->device, O_WRONLY);
   }
 
   if (fd == -1) {
-    GST_DEBUG_OBJECT (sunaudio,
-        "Failed to open mixer device %s, mixing disabled: %s", sunaudio->device,
+    GST_DEBUG_OBJECT (mixer,
+        "Failed to open mixer device %s, mixing disabled: %s", mixer->device,
         strerror (errno));
 
     return FALSE;
   }
 
-  sunaudio->mixer_fd = fd;
+  mixer->mixer_fd = fd;
   return TRUE;
 }
 
 void
-gst_sunaudiomixer_ctrl_build_list (GstSunAudioMixerCtrl * sunaudio)
+gst_sunaudiomixer_ctrl_build_list (GstSunAudioMixerCtrl * mixer)
 {
   GstMixerTrack *track;
 
-  g_return_if_fail (sunaudio->mixer_fd != -1);
+  g_return_if_fail (mixer->mixer_fd != -1);
 
-  track = gst_sunaudiomixer_track_new (0, 1, GST_MIXER_TRACK_OUTPUT);
-  sunaudio->tracklist = g_list_append (sunaudio->tracklist, track);
-  track = gst_sunaudiomixer_track_new (1, 1, 0);
-  sunaudio->tracklist = g_list_append (sunaudio->tracklist, track);
-  track = gst_sunaudiomixer_track_new (2, 1, 0);
-  sunaudio->tracklist = g_list_append (sunaudio->tracklist, track);
+  /*
+   * Do not continue appending the same 3 static tracks onto the list
+   */
+  if (mixer->tracklist == NULL) {
+    track = gst_sunaudiomixer_track_new (0, 1, GST_MIXER_TRACK_OUTPUT);
+    mixer->tracklist = g_list_append (mixer->tracklist, track);
+    track = gst_sunaudiomixer_track_new (1, 1, GST_MIXER_TRACK_INPUT);
+    mixer->tracklist = g_list_append (mixer->tracklist, track);
+    track = gst_sunaudiomixer_track_new (2, 1, GST_MIXER_TRACK_OUTPUT);
+    mixer->tracklist = g_list_append (mixer->tracklist, track);
+  }
 }
 
 GstSunAudioMixerCtrl *
@@ -88,6 +93,7 @@ gst_sunaudiomixer_ctrl_new (const char *device)
 
   ret->device = g_strdup (device);
   ret->mixer_fd = -1;
+  ret->tracklist = NULL;
 
   if (!gst_sunaudiomixer_ctrl_open (ret))
     goto error;
@@ -172,7 +178,10 @@ gst_sunaudiomixer_ctrl_set_volume (GstSunAudioMixerCtrl * mixer,
 
   g_return_if_fail (mixer->mixer_fd != -1);
 
-  volume = volumes[0] * SCALE_FACTOR + 0.5;
+  if (volume < 0)
+    volume = 0;
+
+  volume = volumes[0] * SCALE_FACTOR;
 
   /* Set the volume */
   AUDIO_INITINFO (&audioinfo);
@@ -198,29 +207,33 @@ gst_sunaudiomixer_ctrl_set_volume (GstSunAudioMixerCtrl * mixer,
 }
 
 void
-gst_sunaudiomixer_ctrl_set_mute (GstSunAudioMixerCtrl * sunaudio,
+gst_sunaudiomixer_ctrl_set_mute (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gboolean mute)
 {
   struct audio_info audioinfo;
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
   gint volume;
 
-  g_return_if_fail (sunaudio->mixer_fd != -1);
-  if (sunaudiotrack->track_num != 0)
-    return;
+  g_return_if_fail (mixer->mixer_fd != -1);
 
   AUDIO_INITINFO (&audioinfo);
 
   if (mute) {
-    audioinfo.output_muted = 1;
     volume = 0;
+    track->flags |= GST_MIXER_TRACK_MUTE;
   } else {
-    audioinfo.output_muted = 0;
     volume = sunaudiotrack->vol;
+    track->flags &= ~GST_MIXER_TRACK_MUTE;
   }
 
   switch (sunaudiotrack->track_num) {
     case 0:
+
+      if (mute)
+        audioinfo.output_muted = 1;
+      else
+        audioinfo.output_muted = 0;
+
       audioinfo.play.gain = volume;
       break;
     case 1:
@@ -231,7 +244,7 @@ gst_sunaudiomixer_ctrl_set_mute (GstSunAudioMixerCtrl * sunaudio,
       break;
   }
 
-  if (ioctl (sunaudio->mixer_fd, AUDIO_SETINFO, &audioinfo) < 0) {
+  if (ioctl (mixer->mixer_fd, AUDIO_SETINFO, &audioinfo) < 0) {
     g_warning ("Error setting audio device volume");
     return;
   }
