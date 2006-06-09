@@ -3,7 +3,7 @@
   <description>libvisual visualization plugins</description>
   <filename>../../ext/libvisual/.libs/libgstlibvisual.so</filename>
   <basename>libgstlibvisual.so</basename>
-  <version>0.10.7</version>
+  <version>0.10.8</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -28,27 +28,6 @@
       <longname>libvisual libvisual corona plugin plugin v.0.1</longname>
       <class>Visualization</class>
       <description>The Libvisual corona plugin</description>
-      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
-    </element>
-    <element>
-      <name>libvisual_gdkpixbuf</name>
-      <longname>libvisual GdkPixbuf image loader plugin v.0.0.1</longname>
-      <class>Visualization</class>
-      <description>The GdkPixbuf image loader for libvisual</description>
-      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
-    </element>
-    <element>
-      <name>libvisual_goom</name>
-      <longname>libvisual libvisual goom2 plugin plugin v.0.1</longname>
-      <class>Visualization</class>
-      <description>The Libvisual goom2 plugin</description>
-      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
-    </element>
-    <element>
-      <name>libvisual_infinite</name>
-      <longname>libvisual infinite plugin plugin v.0.1</longname>
-      <class>Visualization</class>
-      <description>The infinite visual plugin</description>
       <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
     </element>
     <element>

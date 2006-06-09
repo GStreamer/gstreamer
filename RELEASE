@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.7 "Leave the gun"
+Release notes for GStreamer Base Plug-ins 0.10.8 "Moar gij ziet mij nie"
         
 
 
@@ -53,46 +53,37 @@ contains a set of less supported plug-ins that haven't passed the
   
 Features of this release
     
-      * typefind improvements
-      * bug-fixes in textoverlay, audioconvert, videotestsrc, multifdsink and audio source/sink base classes
-      * Ice-cast metadata support has moved from gnomevfssrc to the icydemux element in gst-plugins-good
-      * audioresample now supports floating point samples
-      * Adder element fixes.
-      * Fixes for network playback and audio resampling in playbin
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+      * alsasink probing fixes
+      * xvimagesink error reporting fixes
+      * subtitle fixes
+      * adder fixes
+      * vorbis multichannel fixes
+      * multifdsink streamheader fixes
 
 Bugs fixed in this release
     
-      * 340060 : [adder] handle newsegment events properly
-      * 340375 : [API 0.11] [patch] typefind to differentiate between mp4 ...
-      * 339405 : [textoverlay] can't display '\n' character
-      * 338657 : [patch] adder should send events from src-pad to all sink...
-      * 338919 : [patch] alsasink should also query witdh capabilities fro...
-      * 301759 : [audioresample] float audio support (for OSX audio sinks)
-      * 331901 : [videotestsrc] framerate=0/1 gives assertion error
-      * 333657 : Replacing icy demuxing in gnomevfssrc
-      * 336339 : [audioresample] should support width != 16
-      * 338718 : [patch] [audioconvert] correctly clip float samples > 1.0
-      * 338778 : [patch] Bad audio with ASX files
-      * 338991 : [patch] Videoscale doesn't pass on pixel-aspect ratio
-      * 339574 : [patch] Race condition in multifdsink can lead to spuriou...
-      * 339786 : [typefinding] wavpack typefinding doesn't always work
-      * 340369 : [volume element] " volume " property range insufficient
-      * 340379 : [playbin] doesn't insert audioresample, causes problems w...
-      * 340392 : Problem with internal-decodebin
-      * 341160 : [multifdsink] client_status enum has an uninitialized nick
-      * 341182 : Accessing playbin's streaminfo property from high languag...
-      * 341432 : [playbin] automatically get icecast metadata requiring ic...
+      * 169936 : [subparse] support for SAMI subtitles
+      * 315312 : Gstreamer Xv uses RGB instead of YUV.
+      * 334002 : video4linux shouldn't depend on X in configure script
+      * 336881 : [libvisual] additional support for libvisual-0.4
+      * 337544 : [xvimagesink] Internal Error when image is too large
+      * 339520 : [subparse] add " encoding " property
+      * 340909 : [alsasink] can't enable spdif output
       * 341542 : some users have an assertion failed: (GST_VIDEO_SINK_WIDT...
-      * 341557 : Map GST_TAG_IMAGE < = > ID3v2 APIC tag
-
-API changed in this release
-     
-
-- API additions:
-    
-* client-fd-removed signal added to multifdsink
-* stream-info-value-array property added to playbin
-* gst_video_calculate_display_ratio() in libgstvideo
+      * 341562 : audioconvert doesn't list formats in order of preference
+      * 341696 : audioconvert crashes if converting from a format with no ...
+      * 341719 : bisection algorithm in ogg doesn't bisect in some cases
+      * 341732 : [alsasink] doesn't query supported sample rates
+      * 341873 : [alsasink] minor memory leak, uses unprotected static var...
+      * 342143 : [subparse] sami parser needs to escape characters
+      * 342181 : [alsa] add property probe interface to alsasink and alsasrc
+      * 342268 : [playbin] add 'subtitle-encoding' property
+      * 342345 : [riff] Elephant's Dream AVI does not play, JUNK chunk bef...
+      * 342566 : Building without GTK+ fails
+      * 343397 : H.264/AAC movie deadlocks with totem in gstreamer code, p...
+      * 339935 : [adder] dead-locks when adding sink pads in PAUSED state
 
 Download
 
@@ -122,16 +113,17 @@ Applications
   
 Contributors to this release
     
-      * Andy Wingo
-      * David Schleef
       * Edward Hervey
       * Jan Schmidt
+      * Julien Moutte
+      * Martin Szulecki
       * Michael Smith
+      * Peter Kjellerstedt
       * Sebastien Moutte
-      * Sjoerd Simons
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans
       * Young-Ho Cha
+      * Zaheer Abbas Merali
  

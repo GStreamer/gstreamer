@@ -173,8 +173,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>mute</NICK>
-<BLURB>mute.</BLURB>
+<NICK>Mute</NICK>
+<BLURB>mute channel.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -183,8 +183,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[0,10]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>volume</NICK>
-<BLURB>volume.</BLURB>
+<NICK>Volume</NICK>
+<BLURB>volume factor.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -1466,5 +1466,15 @@
 <NICK>Search overlap</NICK>
 <BLURB>Force minimum overlap search during verification to n sectors.</BLURB>
 <DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSubParse::subtitle-encoding</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>subtitle charset encoding</NICK>
+<BLURB>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 

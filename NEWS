@@ -1,6 +1,39 @@
-This is GStreamer Base Plug-ins 0.10.7, "Leave the gun"
+This is GStreamer Base Plug-ins 0.10.8, "Moar gij ziet mij nie"
+  
+Changes since 0.10.7:
+    
+      * alsasink probing fixes
+      * xvimagesink error reporting fixes
+      * subtitle fixes
+      * adder fixes
+      * vorbis multichannel fixes
+      * multifdsink streamheader fixes
+
+Bugs fixed since 0.10.7:
+    
+      * 169936 : [subparse] support for SAMI subtitles
+      * 315312 : Gstreamer Xv uses RGB instead of YUV.
+      * 334002 : video4linux shouldn't depend on X in configure script
+      * 336881 : [libvisual] additional support for libvisual-0.4
+      * 337544 : [xvimagesink] Internal Error when image is too large
+      * 339520 : [subparse] add " encoding " property
+      * 340909 : [alsasink] can't enable spdif output
+      * 341542 : some users have an assertion failed: (GST_VIDEO_SINK_WIDT...
+      * 341562 : audioconvert doesn't list formats in order of preference
+      * 341696 : audioconvert crashes if converting from a format with no ...
+      * 341719 : bisection algorithm in ogg doesn't bisect in some cases
+      * 341732 : [alsasink] doesn't query supported sample rates
+      * 341873 : [alsasink] minor memory leak, uses unprotected static var...
+      * 342143 : [subparse] sami parser needs to escape characters
+      * 342181 : [alsa] add property probe interface to alsasink and alsasrc
+      * 342268 : [playbin] add 'subtitle-encoding' property
+      * 342345 : [riff] Elephant's Dream AVI does not play, JUNK chunk bef...
+      * 342566 : Building without GTK+ fails
+      * 343397 : H.264/AAC movie deadlocks with totem in gstreamer code, p...
+      * 339935 : [adder] dead-locks when adding sink pads in PAUSED state
 
 Changes since 0.10.6:
+
       * typefind improvements
       * bug-fixes in textoverlay, audioconvert, videotestsrc, 
         multifdsink and audio source/sink base classes

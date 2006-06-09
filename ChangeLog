@@ -1,3 +1,10 @@
+=== release 0.10.8 ===
+
+2006-06-09  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.8, "Moar gij ziet mij nie"
+
 2006-06-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
@@ -440,8 +447,8 @@
 2006-05-24  Edward Hervey  <edward@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (qt_type_find): 
-	Added the 'prfl' atom type which MQV (no, it's not a typo) files contain.
-	Else they play perfectly fine with qtdemux.
+	Added the 'prfl' atom type which MQV (no, it's not a typo) files
+	contain.  Else they play perfectly fine with qtdemux.
 
 2006-05-23  Stefan Kost  <ensonic@users.sf.net>
 
@@ -474,10 +481,10 @@
 	  gtk is not available (#342566).
 
 2006-05-19 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
-  	 
+	 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c: 	 
-		80 line columns
-		Removed redundant floor()
+	  80 line columns
+	  Removed redundant floor()
 
 2006-05-19  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -512,15 +519,15 @@
 	return them immediately without doing any caps intersections.
 
 2006-05-18 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
-  	 
+	 
 	* gst-libs/gst/rtp/README:
 	  Some new documentation
 	* gst-libs/gst/rtp/gstrtpbuffer.h: 	 
-		Added GST_RTP_PAYLOAD_DYNAMIC_STRING for use by children 	 
+	  Added GST_RTP_PAYLOAD_DYNAMIC_STRING for use by children 	 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c: 	 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.h: 	 
-		New RTP audio base payloader class. Supports frame or sample based codecs.
-		Not enabled in Makefile.am until approved.
+	  New RTP audio base payloader class. Supports frame or sample based
+	  codecs.  Not enabled in Makefile.am until approved.
 
 2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -559,7 +566,7 @@
 	(gst_alsasrc_init_interfaces), (gst_alsasrc_set_property):
 	  Make alsasink and alsasrc implement the GstPropertyProbe interface
 	  for device probing (#342181).
-      Patch by: Martin Szulecki  <gnomebugzilla at sukimashita com>
+	  Patch by: Martin Szulecki  <gnomebugzilla at sukimashita com>
 
 2006-05-18  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -684,6 +691,8 @@
 	Fix seeking performance in the case where a non-header 
 	packet has a 0 granulepos (busted theora case). 
 	Fixes #341719
+	(nvdr: thanks Wim for not mentioning who spotted and fixed it in
+	 the first place, you limelight stealer you)
 
 2006-05-15  Tim-Philipp Müller  <tim at centricular dot net>
 
