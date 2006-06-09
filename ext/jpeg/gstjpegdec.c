@@ -32,12 +32,38 @@ static const GstElementDetails gst_jpeg_dec_details =
 GST_ELEMENT_DETAILS ("JPEG image decoder",
     "Codec/Decoder/Image",
     "Decode images from JPEG format",
-    "Wim Taymans <wim.taymans@tvd.be>");
+    "Wim Taymans <wim@fluendo.com>");
 
 #define MIN_WIDTH  16
 #define MAX_WIDTH  4096
 #define MIN_HEIGHT 16
 #define MAX_HEIGHT 4096
+
+#define DEFAULT_IDCT_METHOD	JDCT_FASTEST
+
+enum
+{
+  PROP_0,
+  PROP_IDCT_METHOD
+};
+
+#define GST_TYPE_IDCT_METHOD (gst_idct_method_get_type())
+static GType
+gst_idct_method_get_type (void)
+{
+  static GType idct_method_type = 0;
+  static const GEnumValue idct_method[] = {
+    {JDCT_ISLOW, "Slow but accurate integer algorithm", "islow"},
+    {JDCT_IFAST, "Faster, less accurate integer method", "ifast"},
+    {JDCT_FLOAT, "Floating-point: accurate, fast on fast HW", "float"},
+    {0, NULL, NULL},
+  };
+
+  if (!idct_method_type) {
+    idct_method_type = g_enum_register_static ("GstIDCTMethod", idct_method);
+  }
+  return idct_method_type;
+}
 
 static GstStaticPadTemplate gst_jpeg_dec_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -76,6 +102,11 @@ static GstElementClass *parent_class;   /* NULL */
 static void gst_jpeg_dec_base_init (gpointer g_class);
 static void gst_jpeg_dec_class_init (GstJpegDecClass * klass);
 static void gst_jpeg_dec_init (GstJpegDec * jpegdec);
+
+static void gst_jpeg_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_jpeg_dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_jpeg_dec_setcaps (GstPad * pad, GstCaps * caps);
@@ -147,6 +178,13 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_jpeg_dec_finalize;
+  gobject_class->set_property = gst_jpeg_dec_set_property;
+  gobject_class->get_property = gst_jpeg_dec_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_IDCT_METHOD,
+      g_param_spec_enum ("idct-method", "IDCT Method",
+          "The IDCT algorithm to use", GST_TYPE_IDCT_METHOD,
+          DEFAULT_IDCT_METHOD, G_PARAM_READWRITE));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_jpeg_dec_change_state);
@@ -247,6 +285,7 @@ gst_jpeg_dec_init (GstJpegDec * dec)
 
   dec->srcpad =
       gst_pad_new_from_static_template (&gst_jpeg_dec_src_pad_template, "src");
+  gst_pad_use_fixed_caps (dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   dec->segment = gst_segment_new ();
@@ -268,6 +307,9 @@ gst_jpeg_dec_init (GstJpegDec * dec)
   dec->cinfo.src->resync_to_restart = gst_jpeg_dec_resync_to_restart;
   dec->cinfo.src->term_source = gst_jpeg_dec_term_source;
   dec->jsrc.dec = dec;
+
+  /* init properties */
+  dec->idct_method = DEFAULT_IDCT_METHOD;
 }
 
 static inline gboolean
@@ -638,13 +680,17 @@ gst_jpeg_dec_decode_indirect (GstJpegDec * dec, guchar * base[3],
     guchar * last[3], guint width, guint height, gint r_v, gint r_h)
 {
   guchar y[16][MAX_WIDTH];
-  guchar u[8][MAX_WIDTH / 2];
-  guchar v[8][MAX_WIDTH / 2];
+  guchar u[16][MAX_WIDTH];
+  guchar v[16][MAX_WIDTH];
   guchar *y_rows[16] = { y[0], y[1], y[2], y[3], y[4], y[5], y[6], y[7],
     y[8], y[9], y[10], y[11], y[12], y[13], y[14], y[15]
   };
-  guchar *u_rows[8] = { u[0], u[1], u[2], u[3], u[4], u[5], u[6], u[7] };
-  guchar *v_rows[8] = { v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7] };
+  guchar *u_rows[16] = { u[0], u[1], u[2], u[3], u[4], u[5], u[6], u[7],
+    u[8], u[9], u[10], u[11], u[12], u[13], u[14], u[15]
+  };
+  guchar *v_rows[16] = { v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7],
+    v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]
+  };
   guchar **scanarray[3] = { y_rows, u_rows, v_rows };
   gint i, j, k;
 
@@ -687,11 +733,14 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
     guchar * last[3], guint width, guint height, gint r_v)
 {
   guchar **line[3];             /* the jpeg line buffer */
+  guchar *y[4 * DCTSIZE];       /* alloc enough for the lines */
+  guchar *u[4 * DCTSIZE];
+  guchar *v[4 * DCTSIZE];
   gint i, j, k;
 
-  line[0] = g_new0 (guchar *, (r_v * DCTSIZE));
-  line[1] = g_new0 (guchar *, (r_v * DCTSIZE));
-  line[2] = g_new0 (guchar *, (r_v * DCTSIZE));
+  line[0] = y;
+  line[1] = u;
+  line[2] = v;
 
   /* let jpeglib decode directly into our final buffer */
   GST_DEBUG_OBJECT (dec, "decoding directly into output buffer");
@@ -716,12 +765,7 @@ gst_jpeg_dec_decode_direct (GstJpegDec * dec, guchar * base[3],
     }
     jpeg_read_raw_data (&dec->cinfo, line, r_v * DCTSIZE);
   }
-
-  g_free (line[0]);
-  g_free (line[1]);
-  g_free (line[2]);
 }
-
 
 static GstFlowReturn
 gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
@@ -732,27 +776,20 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
   gulong size;
   guchar *data, *outdata;
   guchar *base[3], *last[3];
-  guint img_len;
+  guint img_len, outsize;
   gint width, height;
   gint r_h, r_v;
   gint i;
   guint code;
   GstClockTime timestamp, duration;
 
-  dec = GST_JPEG_DEC (GST_OBJECT_PARENT (pad));
+  dec = GST_JPEG_DEC (gst_pad_get_parent (pad));
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
   duration = GST_BUFFER_DURATION (buf);
 
-/*
-  GST_LOG_OBJECT (dec, "Received buffer: %d bytes, ts=%" GST_TIME_FORMAT
-      ", dur=%" GST_TIME_FORMAT, GST_BUFFER_SIZE (buf),
-      GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
-*/
-
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
     dec->next_ts = timestamp;
-  }
 
   if (dec->tempbuf) {
     dec->tempbuf = gst_buffer_join (dec->tempbuf, buf);
@@ -798,28 +835,34 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
 
   GST_LOG_OBJECT (dec, "reading header %02x %02x %02x %02x", data[0], data[1],
       data[2], data[3]);
+
+  /* read header */
   jpeg_read_header (&dec->cinfo, TRUE);
 
   r_h = dec->cinfo.cur_comp_info[0]->h_samp_factor;
   r_v = dec->cinfo.cur_comp_info[0]->v_samp_factor;
 
   GST_DEBUG ("r_h = %d, r_v = %d", r_h, r_v);
-  GST_DEBUG ("num_components=%d, comps_in_scan=%d\n",
+  GST_DEBUG ("num_components=%d, comps_in_scan=%d",
       dec->cinfo.num_components, dec->cinfo.comps_in_scan);
+
   for (i = 0; i < dec->cinfo.comps_in_scan; ++i) {
-    GST_DEBUG ("[%d] h_samp_factor=%d, v_samp_factor=%d\n", i,
+    GST_DEBUG ("[%d] h_samp_factor=%d, v_samp_factor=%d", i,
         dec->cinfo.cur_comp_info[i]->h_samp_factor,
         dec->cinfo.cur_comp_info[i]->v_samp_factor);
   }
 
+  /* prepare for raw output */
   dec->cinfo.do_fancy_upsampling = FALSE;
   dec->cinfo.do_block_smoothing = FALSE;
   dec->cinfo.out_color_space = JCS_YCbCr;
-  dec->cinfo.dct_method = JDCT_IFAST;
+  dec->cinfo.dct_method = dec->idct_method;
   dec->cinfo.raw_data_out = TRUE;
+
   GST_LOG_OBJECT (dec, "starting decompress");
   guarantee_huff_tables (&dec->cinfo);
   jpeg_start_decompress (&dec->cinfo);
+
   width = dec->cinfo.output_width;
   height = dec->cinfo.output_height;
 
@@ -849,7 +892,6 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d",
         dec->cinfo.max_v_samp_factor);
 
-    gst_pad_use_fixed_caps (dec->srcpad);
     gst_pad_set_caps (dec->srcpad, caps);
     gst_caps_unref (caps);
 
@@ -857,14 +899,20 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     dec->caps_height = height;
     dec->caps_framerate_numerator = dec->framerate_numerator;
     dec->caps_framerate_denominator = dec->framerate_denominator;
+    dec->outsize = I420_SIZE (width, height);
   }
 
   ret = gst_pad_alloc_buffer_and_set_caps (dec->srcpad, GST_BUFFER_OFFSET_NONE,
-      I420_SIZE (width, height), GST_PAD_CAPS (dec->srcpad), &outbuf);
+      dec->outsize, GST_PAD_CAPS (dec->srcpad), &outbuf);
   if (ret != GST_FLOW_OK)
     goto alloc_failed;
 
   outdata = GST_BUFFER_DATA (outbuf);
+  outsize = GST_BUFFER_SIZE (outbuf);
+
+  GST_LOG_OBJECT (dec, "width %d, height %d, buffer size %d, required size %d",
+      width, height, outsize, dec->outsize);
+
   GST_BUFFER_TIMESTAMP (outbuf) = dec->next_ts;
 
   if (dec->packetized && GST_CLOCK_TIME_IS_VALID (dec->next_ts)) {
@@ -884,9 +932,6 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
     dec->next_ts = GST_CLOCK_TIME_NONE;
   }
   GST_BUFFER_DURATION (outbuf) = duration;
-
-  GST_LOG_OBJECT (dec, "width %d, height %d, buffer size %d, required size %d",
-      width, height, GST_BUFFER_SIZE (outbuf), I420_SIZE (width, height));
 
   /* mind the swap, jpeglib outputs blue chroma first */
   base[0] = outdata + I420_Y_OFFSET (width, height);
@@ -943,8 +988,7 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
         GST_BUFFER_DURATION (outbuf) = clip_stop - clip_start;
       }
     } else {
-      GST_WARNING_OBJECT (dec,
-          "Outgoing buffer is outsided configured segment");
+      GST_WARNING_OBJECT (dec, "Outgoing buffer is outside configured segment");
     }
   }
 
@@ -965,13 +1009,18 @@ done:
     gst_buffer_unref (dec->tempbuf);
     dec->tempbuf = buf;
   }
+
+exit:
+  gst_object_unref (dec);
+
   return ret;
 
   /* special cases */
 need_more_data:
   {
     GST_LOG_OBJECT (dec, "we need more data");
-    return GST_FLOW_OK;
+    ret = GST_FLOW_OK;
+    goto exit;
   }
   /* ERRORS */
 wrong_size:
@@ -1002,7 +1051,7 @@ alloc_failed:
           ("Buffer allocation failed, reason: %s", reason),
           ("Buffer allocation failed, reason: %s", reason));
     }
-    return ret;
+    goto exit;
   }
 }
 
@@ -1028,14 +1077,17 @@ gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
       /* Once -good depends on core >= 0.10.6, use newsegment_full */
       gst_event_parse_new_segment (event, &update, &rate, &format,
           &start, &stop, &position);
+
       GST_DEBUG_OBJECT (dec, "Got NEWSEGMENT [%" GST_TIME_FORMAT
           " - %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "]",
           GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
           GST_TIME_ARGS (position));
+
       gst_segment_set_newsegment (dec->segment, update, rate, format,
           start, stop, position);
-    }
+
       break;
+    }
     default:
       break;
   }
@@ -1043,6 +1095,44 @@ gst_jpeg_dec_sink_event (GstPad * pad, GstEvent * event)
   ret = gst_pad_push_event (dec->srcpad, event);
 
   return ret;
+}
+
+static void
+gst_jpeg_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstJpegDec *dec;
+
+  dec = GST_JPEG_DEC (object);
+
+  switch (prop_id) {
+    case PROP_IDCT_METHOD:
+      dec->idct_method = g_value_get_enum (value);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_jpeg_dec_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstJpegDec *dec;
+
+  dec = GST_JPEG_DEC (object);
+
+  switch (prop_id) {
+    case PROP_IDCT_METHOD:
+      g_value_set_enum (value, dec->idct_method);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstStateChangeReturn

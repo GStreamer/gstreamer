@@ -1,3 +1,16 @@
+2006-06-09  Wim Taymans  <wim@fluendo.com>
+
+	* ext/jpeg/gstjpegdec.c: (gst_idct_method_get_type),
+	(gst_jpeg_dec_class_init), (gst_jpeg_dec_init),
+	(gst_jpeg_dec_decode_indirect), (gst_jpeg_dec_decode_direct),
+	(gst_jpeg_dec_chain), (gst_jpeg_dec_sink_event),
+	(gst_jpeg_dec_set_property), (gst_jpeg_dec_get_property):
+	* ext/jpeg/gstjpegdec.h:
+	API: Added IDCT method property
+	Small cleanups.
+	Avoid dynamic allocation of trivial fixed structure.
+	Allocate enough space for temp 4:4:4 YUV buffers. Fixes #343661.
+
 2006-06-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:
