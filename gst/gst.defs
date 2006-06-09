@@ -74,8 +74,8 @@
   (c-name "gst_bin_new")
   (is-constructor-of "GstBin")
   (return-type "GstElement*")
-  (parameters
-    '("const-gchar*" "name" (null-ok) (default "NULL"))
+  (properties
+    '("name" (argname "name") (optional))
   )
 )
 
@@ -2342,10 +2342,10 @@
   (c-name "gst_index_factory_new")
   (is-constructor-of "GstIndexFactory")
   (return-type "GstIndexFactory*")
-  (parameters
-    '("const-gchar*" "name")
-    '("const-gchar*" "longdesc")
-    '("GType" "type")
+  (properties
+    '("name" (argname "name"))
+    '("longdesc" (argname "longdesc"))
+    '("type" (argname "type"))
   )
 )
 
@@ -3324,9 +3324,9 @@
   (c-name "gst_pad_new")
   (is-constructor-of "GstPad")
   (return-type "GstPad*")
-  (parameters
-    '("const-gchar*" "name")
-    '("GstPadDirection" "direction")
+  (properties
+    '("name" (argname "name"))
+    '("direction" (argname "direction"))
   )
 )
 
@@ -4043,8 +4043,8 @@
   (c-name "gst_pipeline_new")
   (is-constructor-of "GstPipeline")
   (return-type "GstElement*")
-  (parameters
-    '("const-gchar*" "name" (null-ok) (default "NULL"))
+  (properties
+    '("name" (argname "name") (optional))
   )
 )
 

@@ -1,5 +1,31 @@
 2006-06-09  Edward Hervey  <edward@fluendo.com>
 
+	* codegen/Makefile.am:
+	* codegen/argtypes.py:
+	* codegen/codegen.py:
+	* codegen/definitions.py:
+	* codegen/defsconvert.py:
+	* codegen/defsparser.py:
+	* codegen/docextract.py:
+	* codegen/docextract_to_xml.py:
+	* codegen/docgen.py:
+	* codegen/h2def.py:
+	* codegen/mergedefs.py:
+	* codegen/missingdefs.py:
+	* codegen/mkskel.py:
+	* codegen/override.py:
+	* codegen/reversewrapper.py:
+	Updated codegenerator to current pygtk one.
+	* gst/gst.defs:
+	* gst/gst.override:
+	* gst/gstpad.override:
+	Update defs for new constructor definition.
+	* testsuite/test_bin.py:
+	With new constructors, pygobject will try to convert the argument to the
+	proper GType (here a string).
+
+2006-06-09  Edward Hervey  <edward@fluendo.com>
+
 	* gst/base.defs:
 	* gst/gst-0.10.7.ignore:
 	* gst/gst-types.defs:

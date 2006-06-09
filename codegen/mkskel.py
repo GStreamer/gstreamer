@@ -52,11 +52,11 @@ override_template = \
 
 def open_with_backup(file):
     if os.path.exists(file):
-	try:
-	    os.rename(file, file+'~')
-	except OSError:
-	    # fail silently if we can't make a backup
-	    pass
+        try:
+            os.rename(file, file+'~')
+        except OSError:
+            # fail silently if we can't make a backup
+            pass
     return open(file, 'w')
 
 def write_skels(fileprefix, prefix, module):
@@ -69,21 +69,21 @@ def write_skels(fileprefix, prefix, module):
 
 if __name__ == '__main__':
     opts, args = getopt.getopt(sys.argv[1:], 'f:p:m:h',
-			       ['file-prefix=', 'prefix=', 'module=', 'help'])
+                               ['file-prefix=', 'prefix=', 'module=', 'help'])
     fileprefix = None
     prefix = None
     module = None
     for opt, arg in opts:
-	if opt in ('-f', '--file-prefix'):
-	    fileprefix = arg
-	elif opt in ('-p', '--prefix'):
-	    prefix = arg
-	elif opt in ('-m', '--module'):
-	    module = arg
-	elif opt in ('-h', '--help'):
-	    print 'usage: mkskel.py -f fileprefix -p prefix -m module'
-	    sys.exit(0)
+        if opt in ('-f', '--file-prefix'):
+            fileprefix = arg
+        elif opt in ('-p', '--prefix'):
+            prefix = arg
+        elif opt in ('-m', '--module'):
+            module = arg
+        elif opt in ('-h', '--help'):
+            print 'usage: mkskel.py -f fileprefix -p prefix -m module'
+            sys.exit(0)
     if not fileprefix or not prefix or not module:
-	print 'usage: mkskel.py -f fileprefix -p prefix -m module'
-	sys.exit(1)
+        print 'usage: mkskel.py -f fileprefix -p prefix -m module'
+        sys.exit(1)
     write_skels(fileprefix, prefix, module)

@@ -553,6 +553,8 @@ _wrap_gst_registry_get_feature_list_by_plugin (PyGObject *self, PyObject *args, 
 }
 
 %%
+new-constructor GST_TYPE_XML
+%%
 override gst_xml_new noargs
 
 extern PyObject * libxml_xmlDocPtrWrap(xmlDocPtr doc);

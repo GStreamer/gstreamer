@@ -186,8 +186,11 @@ class ConstructorTest(TestCase):
         bin = gst.Bin('myname')
         
     def testBad(self):
-        self.assertRaises(TypeError, gst.Bin, 0)
-        self.assertRaises(TypeError, gst.Bin, gst.Bin())
-
+        # these are now valid. pygobject will take care of converting
+        # the arguments to a string.
+        #self.assertRaises(TypeError, gst.Bin, 0)
+        #self.assertRaises(TypeError, gst.Bin, gst.Bin())
+        pass
+        
 if __name__ == "__main__":
     unittest.main()

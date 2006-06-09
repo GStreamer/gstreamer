@@ -506,6 +506,8 @@ _wrap_gst_pad_template_get_caps_by_name(PyGObject *self, PyObject *args, PyObjec
     return pyg_boxed_new(GST_TYPE_CAPS, ret, TRUE, TRUE);
 }
 %%
+new-constructor GST_TYPE_PAD
+%%
 override gst_pad_new kwargs
 static int
 _wrap_gst_pad_new(PyGObject *self, PyObject *args, PyObject *kwargs)
@@ -658,7 +660,7 @@ _wrap_gst_pad_template_tp_getattr(PyObject *self, char *attr)
   } else if (IS_ATTR ("caps")) {
     return pyg_boxed_new (GST_TYPE_CAPS, GST_PAD_TEMPLATE_CAPS(templ), TRUE, TRUE);
   }
-  return Py_FindMethod(_PyGstPadTemplate_methods, self, attr);
+  return Py_FindMethod((PyMethodDef*) _PyGstPadTemplate_methods, self, attr);
 }
 %%
 override gst_pad_query_position args

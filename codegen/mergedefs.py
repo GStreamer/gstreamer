@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- Mode: Python; py-indent-offset: 4 -*-
 
-import sys
-import defsparser
-from optparse import OptionParser
+import optparse
 
-parser = OptionParser(usage="usage: %prog [options] generated-defs old-defs")
+import defsparser
+
+parser = optparse.OptionParser(
+    usage="usage: %prog [options] generated-defs old-defs")
 parser.add_option("-p", "--merge-parameters",
                   help="Merge changes in function/methods parameter lists",
                   action="store_true", dest="parmerge", default=False)

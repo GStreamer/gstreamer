@@ -32,12 +32,11 @@ def build_object_tree(parser):
     root = Node(None)
     nodes = { None: root }
     for obj_def in objects:
+        print obj_def.name
         parent_node = nodes[obj_def.parent]
         node = Node(obj_def.c_name, obj_def.implements)
         parent_node.add_child(node)
         nodes[node.name] = node
-
-    # TODO: Add mini-object
 
     if parser.interfaces:
         interfaces = Node('gobject.GInterface')
@@ -70,7 +69,7 @@ def build_object_tree(parser):
 
 class DocWriter:
     def __init__(self):
-	# parse the defs file
+        # parse the defs file
         self.parser = defsparser.DefsParser(())
         self.overrides = override.Overrides()
         self.classmap = {}
@@ -116,12 +115,12 @@ class DocWriter:
         self.write_full_hierarchy(hierarchy, fp)
         fp.close()
 
-	obj_defs = self.parser.objects + self.parser.interfaces + \
+        obj_defs = self.parser.objects + self.parser.interfaces + \
                    self.parser.boxes + self.parser.pointers
-	obj_defs.sort(self.__compare)
-	for obj_def in obj_defs:
+        obj_defs.sort(self.__compare)
+        for obj_def in obj_defs:
             filename = self.create_filename(obj_def.c_name, output_prefix)
-	    fp = open(filename, 'w')
+            fp = open(filename, 'w')
             if isinstance(obj_def, definitions.ObjectDef):
                 self.output_object_docs(obj_def, fp)
             elif isinstance(obj_def, definitions.InterfaceDef):
@@ -130,24 +129,24 @@ class DocWriter:
                 self.output_boxed_docs(obj_def, fp)
             elif isinstance(obj_def, definitions.PointerDef):
                 self.output_boxed_docs(obj_def, fp)
-	    fp.close()
+            fp.close()
             files.append((os.path.basename(filename), obj_def))
 
         if files:
             filename = self.create_toc_filename(output_prefix)
-	    fp = open(filename, 'w')
+            fp = open(filename, 'w')
             self.output_toc(files, fp)
             fp.close()
-            
+
     def output_object_docs(self, obj_def, fp=sys.stdout):
-	self.write_class_header(obj_def.c_name, fp)
+        self.write_class_header(obj_def.c_name, fp)
 
         self.write_heading('Synopsis', fp)
         self.write_synopsis(obj_def, fp)
         self.close_section(fp)
 
-	# construct the inheritence hierarchy ...
-	ancestry = [ (obj_def.c_name, obj_def.implements) ]
+        # construct the inheritence hierarchy ...
+        ancestry = [ (obj_def.c_name, obj_def.implements) ]
         try:
             parent = obj_def.parent
             while parent != None:
@@ -185,7 +184,7 @@ class DocWriter:
         self.write_class_footer(obj_def.c_name, fp)
 
     def output_interface_docs(self, int_def, fp=sys.stdout):
-	self.write_class_header(int_def.c_name, fp)
+        self.write_class_header(int_def.c_name, fp)
 
         self.write_heading('Synopsis', fp)
         self.write_synopsis(int_def, fp)
@@ -203,7 +202,7 @@ class DocWriter:
         self.write_class_footer(int_def.c_name, fp)
 
     def output_boxed_docs(self, box_def, fp=sys.stdout):
-	self.write_class_header(box_def.c_name, fp)
+        self.write_class_header(box_def.c_name, fp)
 
         self.write_heading('Synopsis', fp)
         self.write_synopsis(box_def, fp)
@@ -235,8 +234,8 @@ class DocWriter:
 
     # override the following to create a more complex output format
     def create_filename(self, obj_name, output_prefix):
-	'''Create output filename for this particular object'''
-	return output_prefix + '-' + string.lower(obj_name) + '.txt'
+        '''Create output filename for this particular object'''
+        return output_prefix + '-' + string.lower(obj_name) + '.txt'
     def create_toc_filename(self, output_prefix):
         return self.create_filename(self, 'docs', output_prefix)
 
@@ -269,8 +268,8 @@ class DocWriter:
                ')'
 
     def write_class_header(self, obj_name, fp):
-	fp.write('Class %s\n' % obj_name)
-	fp.write('======%s\n\n' % ('=' * len(obj_name)))
+        fp.write('Class %s\n' % obj_name)
+        fp.write('======%s\n\n' % ('=' * len(obj_name)))
     def write_class_footer(self, obj_name, fp):
         pass
     def write_heading(self, text, fp):
@@ -352,9 +351,9 @@ class DocbookDocWriter(DocWriter):
     def __init__(self, use_xml=0):
         DocWriter.__init__(self)
         self.use_xml = use_xml
-    
+
     def create_filename(self, obj_name, output_prefix):
-	'''Create output filename for this particular object'''
+        '''Create output filename for this particular object'''
         stem = output_prefix + '-' + string.lower(obj_name)
         if self.use_xml:
             return stem + '.xml'
@@ -429,7 +428,7 @@ class DocbookDocWriter(DocWriter):
                        '</classname></link>'
         # fall through through
         return '<literal>' + match.group(1) + '</literal>'
-    
+
     def reformat_text(self, text, singleline=0):
         # replace special strings ...
         text = self.__function_pat.sub(self.__format_function, text)
@@ -439,7 +438,7 @@ class DocbookDocWriter(DocWriter):
 
         # don't bother with <para> expansion for single line text.
         if singleline: return text
-        
+
         lines = string.split(string.strip(text), '\n')
         for index in range(len(lines)):
             if string.strip(lines[index]) == '':
@@ -538,7 +537,7 @@ class DocbookDocWriter(DocWriter):
             sgml.append('    <methodparam></methodparam>')
         sgml.append('  </methodsynopsis>')
         return string.join(sgml, '')
-    
+
     def write_class_header(self, obj_name, fp):
         if self.use_xml:
             fp.write('<?xml version="1.0" standalone="no"?>\n')
@@ -680,7 +679,7 @@ class DocbookDocWriter(DocWriter):
             #    fp.write('&' + string.translate(obj_def.c_name,
             #                                    self.__transtable) + ';\n')
             #fp.write('</reference>\n')
-            
+
             fp.write('<reference id="class-reference" xmlns:xi="http://www.w3.org/2001/XInclude">\n')
             fp.write('  <title>Class Reference</title>\n')
             for filename, obj_def in files:
@@ -726,25 +725,25 @@ if __name__ == '__main__':
                                     "output-prefix="])
     except getopt.error, e:
         sys.stderr.write('docgen.py: %s\n' % e)
-	sys.stderr.write(
-	    'usage: docgen.py -d file.defs [-s /src/dir] [-o output-prefix]\n')
+        sys.stderr.write(
+            'usage: docgen.py -d file.defs [-s /src/dir] [-o output-prefix]\n')
         sys.exit(1)
     defs_file = None
     overrides_file = None
     source_dirs = []
     output_prefix = 'docs'
     for opt, arg in opts:
-	if opt in ('-d', '--defs-file'):
-	    defs_file = arg
+        if opt in ('-d', '--defs-file'):
+            defs_file = arg
         if opt in ('--override',):
             overrides_file = arg
-	elif opt in ('-s', '--source-dir'):
-	    source_dirs.append(arg)
-	elif opt in ('-o', '--output-prefix'):
-	    output_prefix = arg
+        elif opt in ('-s', '--source-dir'):
+            source_dirs.append(arg)
+        elif opt in ('-o', '--output-prefix'):
+            output_prefix = arg
     if len(args) != 0 or not defs_file:
-	sys.stderr.write(
-	    'usage: docgen.py -d file.defs [-s /src/dir] [-o output-prefix]\n')
+        sys.stderr.write(
+            'usage: docgen.py -d file.defs [-s /src/dir] [-o output-prefix]\n')
         sys.exit(1)
 
     d = DocbookDocWriter()
