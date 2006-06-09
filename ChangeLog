@@ -4,6 +4,7 @@
 	Don't import non-used modules
 	* testsuite/Makefile.am:
 	Heavy valgrinding por favor !
+	(%.valgrind): with always-malloc for GSlice
 
 2006-06-09  Edward Hervey  <edward@fluendo.com>
 

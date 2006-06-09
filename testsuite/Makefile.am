@@ -65,6 +65,7 @@ TESTS_ENVIRONMENT = PYTHONPATH=$(top_srcdir)/:$(PYTHONPATH)
 # valgrind any given test_x.py by running make test_x.py.valgrind
 %.valgrind: %
 	$(TESTS_ENVIRONMENT)                                    \
+	G_SLICE=always-malloc					\
 	$(VALGRIND_PATH) -q					\
 	--suppressions=$(GSTSUPP)				\
 	--suppressions=$(PYTHONSUPP)				\
