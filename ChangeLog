@@ -1,3 +1,13 @@
+2006-06-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Check for X before using X_CFLAGS in the check for opengl (#343866).
+	  
+	* ext/musepack/Makefile.am:
+	* ext/wavpack/Makefile.am:
+	* gst/speed/Makefile.am:
+	  Add missing GST_LIBS, fixes build on cygwin (#343866).
+
 2006-06-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

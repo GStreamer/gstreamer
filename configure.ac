@@ -222,6 +222,7 @@ dnl *** sys plug-ins ***
 
 dnl OpenGL
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENGL, true)
+GST_CHECK_X
 save_CPPFLAGS="$CPPFLAGS"
 save_LIBS="$LIBS"
 CPPFLAGS="$CPPFLAGS $X_CFLAGS"
