@@ -1,5 +1,12 @@
 2006-06-09  Edward Hervey  <edward@fluendo.com>
 
+	* pygst.py.in:
+	Don't import non-used modules
+	* testsuite/Makefile.am:
+	Heavy valgrinding por favor !
+
+2006-06-09  Edward Hervey  <edward@fluendo.com>
+
 	* codegen/Makefile.am:
 	* codegen/argtypes.py:
 	* codegen/codegen.py:

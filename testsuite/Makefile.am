@@ -69,8 +69,8 @@ TESTS_ENVIRONMENT = PYTHONPATH=$(top_srcdir)/:$(PYTHONPATH)
 	--suppressions=$(GSTSUPP)				\
 	--suppressions=$(PYTHONSUPP)				\
 	--suppressions=$(GSTPYTHONSUPP)				\
-	--tool=memcheck --leak-check=yes --trace-children=yes  \
-	--leak-resolution=med --num-callers=50		\
+	--tool=memcheck --leak-check=full --trace-children=yes  \
+	--leak-resolution=high --num-callers=50		\
 	$(PYTHON)						\
 	$* 2>&1 | tee valgrind.log
 	@if grep "tely lost" valgrind.log; then                 \

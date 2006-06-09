@@ -24,9 +24,6 @@
 #
 # In order to have backward compatibility
 
-import fnmatch
-import glob
-import os
 import sys
 
 __all__ = ['require']
