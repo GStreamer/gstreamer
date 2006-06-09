@@ -1,3 +1,15 @@
+2006-06-09  Edward Hervey  <edward@fluendo.com>
+
+	* gst/base.defs:
+	* gst/gst-0.10.7.ignore:
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/gstbase.override:
+	* gst/libs.defs:
+	Update for API additions.
+	* gst/gstmodule.c: (init_gst):
+	Added new GST_TAG_IMAGE and GST_TAG_PREVIEW_IMAGE
+
 2006-05-27  Yuri Pankov <yuri.pankov@gmail.com>
 
 	reviewed by: Edward Hervey <edward@fluendo.com>

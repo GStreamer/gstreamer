@@ -628,6 +628,15 @@
   (return-type "none")
 )
 
+(define-method set_flushing
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_set_flushing")
+  (return-type "none")
+  (parameters
+    '("gboolean" "flushing")
+  )
+)
+
 (define-method peek
   (of-object "GstCollectPads")
   (c-name "gst_collect_pads_peek")

@@ -235,6 +235,13 @@ init_gst (void)
      PyModule_AddStringConstant (m, "TAG_ALBUM_GAIN", GST_TAG_ALBUM_GAIN);
      PyModule_AddStringConstant (m, "TAG_ALBUM_PEAK", GST_TAG_ALBUM_PEAK);
      PyModule_AddStringConstant (m, "TAG_LANGUAGE_CODE", GST_TAG_LANGUAGE_CODE);
+#if (GST_VERSION_MAJOR == 0 && GST_VERSION_MINOR == 10 && \
+     ((GST_VERSION_MICRO >= 6) || (GST_VERSION_MICRO == 5 && GST_VERSION_NANO > 0)))
+     PyModule_AddStringConstant (m, "TAG_IMAGE", GST_TAG_IMAGE);
+#if ((GST_VERSION_MICRO >= 7) || (GST_VERSION_MICRO == 6 && GST_VERSION_NANO > 0 ))
+     PyModule_AddStringConstant (m, "TAG_PREVIEW_IMAGE", GST_TAG_PREVIEW_IMAGE);
+#endif
+#endif
 
      PyModule_AddStringConstant (m, "LIBRARY_ERROR", (gchar *) g_quark_to_string(GST_LIBRARY_ERROR));
      PyModule_AddStringConstant (m, "RESOURCE_ERROR",(gchar *)  g_quark_to_string(GST_RESOURCE_ERROR));

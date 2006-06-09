@@ -6510,6 +6510,17 @@
   )
 )
 
+(define-method seek_simple
+  (of-object "GstElement")
+  (c-name "gst_element_seek_simple")
+  (return-type "gboolean")
+  (parameters
+    '("GstFormat" "format")
+    '("GstSeekFlags" "seek_flags")
+    '("gint64" "seek_pos")
+  )
+)
+
 (define-method can_src_caps
   (of-object "GstElementFactory")
   (c-name "gst_element_factory_can_src_caps")

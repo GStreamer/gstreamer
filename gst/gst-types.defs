@@ -777,6 +777,7 @@
   (c-name "GstFlowReturn")
   (gtype-id "GST_TYPE_FLOW_RETURN")
   (values
+    '("custom-success" "GST_FLOW_CUSTOM_SUCCESS")
     '("resend" "GST_FLOW_RESEND")
     '("ok" "GST_FLOW_OK")
     '("not-linked" "GST_FLOW_NOT_LINKED")
@@ -785,6 +786,7 @@
     '("not-negotiated" "GST_FLOW_NOT_NEGOTIATED")
     '("error" "GST_FLOW_ERROR")
     '("not-supported" "GST_FLOW_NOT_SUPPORTED")
+    '("custom-error" "GST_FLOW_CUSTOM_ERROR")
   )
 )
 

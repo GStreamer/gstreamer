@@ -23,6 +23,16 @@
   )
 )
 
+(define-enum DPVersion
+  (in-module "Gst")
+  (c-name "GstDPVersion")
+  (gtype-id "GST_TYPE_DP_VERSION")
+  (values
+    '("0-2" "GST_DP_VERSION_0_2")
+    '("1-0" "GST_DP_VERSION_1_0")
+  )
+)
+
 (define-flags DPHeaderFlag
   (in-module "Gst")
   (c-name "GstDPHeaderFlag")
@@ -135,6 +145,15 @@
   (parameters
     '("gchar*" "property_name")
     '("GstClockTime" "timestamp")
+  )
+)
+
+(define-method unset_all
+  (of-object "GstController")
+  (c-name "gst_controller_unset_all")
+  (return-type "gboolean")
+  (parameters
+    '("gchar*" "property_name")
   )
 )
 
@@ -271,6 +290,20 @@
 
 
 ;; From ../gstreamer/libs/gst/dataprotocol/dataprotocol.h
+
+(define-function dp_init
+  (c-name "gst_dp_init")
+  (return-type "none")
+)
+
+(define-function dp_crc
+  (c-name "gst_dp_crc")
+  (return-type "guint16")
+  (parameters
+    '("const-guint8*" "buffer")
+    '("guint" "length")
+  )
+)
 
 (define-function dp_header_payload_length
   (c-name "gst_dp_header_payload_length")

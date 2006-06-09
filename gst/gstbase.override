@@ -404,7 +404,7 @@ _wrap_GstPushSrc__proxy_do_create (GstPushSrc * self,
     */
 
     if ((PyTuple_Check(py_ret)) && (PyTuple_Size (py_ret) == 2)) {
-	PyArg_ParseTuple (py_ret, "O!O!", &py_flow,
+	PyArg_ParseTuple (py_ret, "O!O!", &PyGEnum_Type, &py_flow,
 			  &PyGstBuffer_Type, &py_buffer);
 	*buffer = GST_BUFFER (((PyGstMiniObject*) self)->obj);
 	gst_buffer_ref (*buffer);
