@@ -1,5 +1,12 @@
 2006-06-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/examples/level/Makefile.am:
+	  Add -lm to LIBS for pow() function, don't assume one of our
+	  dependencies (such as libxml-2.0) drags it in automatically
+	  (#343603).
+
+2006-06-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Peter Kjellerstedt  <pkj at axis dot com>
 
 	* configure.ac:
