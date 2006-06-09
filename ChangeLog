@@ -1,5 +1,10 @@
 2006-06-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gconf/Makefile.am:
+	  Honour --disable-schemas-install configure option. Fixes #344100.
+
+2006-06-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/examples/level/Makefile.am:
 	  Add -lm to LIBS for pow() function, don't assume one of our
 	  dependencies (such as libxml-2.0) drags it in automatically
