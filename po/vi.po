@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-06-07 11:46+0200\n"
+"POT-Creation-Date: 2006-06-10 13:03+0200\n"
 "PO-Revision-Date: 2006-04-07 18:23+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
@@ -95,7 +95,7 @@ msgstr "Tùy chọn GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Hiển thị Tùy chọnStreamer"
 
-#: gst/gst.c:865
+#: gst/gst.c:867
 msgid "Unknown option"
 msgstr "Tùy chọn lạ"
 

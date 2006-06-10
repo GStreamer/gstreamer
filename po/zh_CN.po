@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-06-07 11:46+0200\n"
+"POT-Creation-Date: 2006-06-10 13:03+0200\n"
 "PO-Revision-Date: 2005-12-03 00:05+0800\n"
 "Last-Translator: Funda Wang <fundawang@linux.net.cn>\n"
 "Language-Team: Chinese (simplified) <i18n-translation@lists.linux.net.cn>\n"
@@ -87,7 +87,7 @@ msgstr "GStreamer 选项"
 msgid "Show GStreamer Options"
 msgstr "显示 GStreamer 选项"
 
-#: gst/gst.c:865
+#: gst/gst.c:867
 msgid "Unknown option"
 msgstr "未知选项"
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-06-07 11:46+0200\n"
+"POT-Creation-Date: 2006-06-10 13:03+0200\n"
 "PO-Revision-Date: 2005-12-04 21:45+0100\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -97,7 +97,7 @@ msgstr "GStreamer-alternativ"
 msgid "Show GStreamer Options"
 msgstr "Visa GStreamer-alternativ"
 
-#: gst/gst.c:865
+#: gst/gst.c:867
 msgid "Unknown option"
 msgstr "Okänt alternativ"
 

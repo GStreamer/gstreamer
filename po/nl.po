@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-06-07 11:46+0200\n"
+"POT-Creation-Date: 2006-06-10 13:03+0200\n"
 "PO-Revision-Date: 2006-01-20 16:15+0200\n"
 "Last-Translator: Taco Witte <tcwitte@cs.uu.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -98,7 +98,7 @@ msgstr "GStreamer opties"
 msgid "Show GStreamer Options"
 msgstr "Geeft GStreamer opties weer"
 
-#: gst/gst.c:865
+#: gst/gst.c:867
 msgid "Unknown option"
 msgstr "Onbekende optie"
 

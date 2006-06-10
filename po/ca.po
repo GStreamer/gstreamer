@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-06-07 11:46+0200\n"
+"POT-Creation-Date: 2006-06-10 13:03+0200\n"
 "PO-Revision-Date: 2005-12-02 17:43+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -98,7 +98,7 @@ msgstr "Opcions del GStreamer"
 msgid "Show GStreamer Options"
 msgstr "Mostra les opcions del GStreamer"
 
-#: gst/gst.c:865
+#: gst/gst.c:867
 msgid "Unknown option"
 msgstr "Opció desconeguda"
 

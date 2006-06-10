@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.7 "Soepeke, ik zie ou"
+Release notes for GStreamer 0.10.8 "Soepeke, ik zie ou nog altijd nie"
         
 
 
@@ -38,49 +38,11 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * Registry cache updating is now done in a fork, so no plugins are left opened
-      * New version of data protocol now serializes events
-      * queue fixes
-      * win32 fixes
+      * Important fix for registry update causing applets not to load
 
 Bugs fixed in this release
     
-      * 338335 : [patch] memleak in gst-utils.c (leak pads from iterator)
-      * 343598 : undefined symbol in coreindexers when using --disable-loa...
-      * 336929 : GstCollectPads does not clear/reset segment info after fl...
-      * 337100 : [fakesink] add " preroll-handoff " signal
-      * 339918 : GstTagSetter merge-mode description unclear, and implemen...
-      * 340501 : [filesrc] give primary rank
-      * 341662 : gst-launch print_tags() fix
-      * 342238 : API: gst_element_seek_simple
-      * 342321 : GST_QUERY_POSITION fails if GstBaseSrc in get_range mode
-      * 342777 : rebuilding the registry leaves all plugins in memory
-      * 342820 : gstnetclientclock.c(453): servaddr used before set
-      * 343057 : gst-launch-0.10 segfaults when passed gst-plugin-path and...
-      * 343341 : [API] add GST_TAG_PREVIEW_IMAGE
-      * 343827 : leak in gst_index_gtype_resolver
-      * 343929 : Use of // in public header
-      * 343988 : data protocol needs extending to handle events better
-      * 341479 : Too many plugins loaded even for up-to-date registry
-      * 343334 : GstCollectPads testsuite and fixes
-      * 343538 : GstCollectPads doesn't reset EOS fields when stopped
-
-API changed in this release
-     
-
-- API additions:
-    
-* gst_element_seek_simple()
-* GST_FLOW_CUSTOM_SUCCESS
-* GST_FLOW_CUSTOM_ERROR
-* GST_FLOW_IS_SUCCESS
-* gst_collect_pads_set_flushing()
-* GST_TAG_PREVIEW_IMAGE
-* gst_dp_crc()
-* GstDPPacketizer
-* GstDPVersion
-* GstFakeSink::preroll-handoff
-* GstFakeSink::use-mmap
+      * 344474 : Gnome Mixer Applet doesn't want to load
 
 Download
 
@@ -115,17 +77,7 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * Alessandro Decina
       * Edward Hervey
-      * Jan Schmidt
-      * Julien Moutte
-      * Lutz Mueller
-      * Mark Nauwelaerts
-      * Michael Smith
-      * Sebastien Moutte
-      * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Wim Taymans
-      * Zaheer Abbas Merali
  

@@ -1,4 +1,12 @@
-This is GStreamer 0.10.7, "Soepeke, ik zie ou"
+This is GStreamer 0.10.8, "Soepeke, ik zie ou nog altijd nie"
+
+Changes since 0.10.7:
+    
+      * Important fix for registry update causing applets not to load
+
+Bugs fixed since 0.10.7:
+    
+      * 344474 : Gnome Mixer Applet doesn't want to load
 
 Changes since 0.10.6:
     
