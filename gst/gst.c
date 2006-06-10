@@ -603,6 +603,10 @@ init_post (void)
     gboolean changed = FALSE;
     GList *l;
 
+#ifdef HAVE_FORK
+    pid_t pid;
+#endif
+
     for (l = plugin_paths; l != NULL; l = l->next) {
       GST_INFO ("Scanning plugin path: \"%s\"", (gchar *) l->data);
       /* CHECKME: add changed |= here as well? */
@@ -611,10 +615,6 @@ init_post (void)
     }
     g_list_free (plugin_paths);
     plugin_paths = NULL;
-
-#ifdef HAVE_FORK
-    pid_t pid;
-#endif
 
     default_registry = gst_registry_get_default ();
     registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
