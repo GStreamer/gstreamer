@@ -695,7 +695,9 @@ init_post (void)
       _gst_registry_remove_cache_plugins (default_registry);
 
 #ifdef HAVE_FORK
-      exit (0);
+      /* need to use _exit, so that any exit handlers registered don't
+       * bring down the main program */
+      _exit (0);
     } else {
       /* parent */
       int status;

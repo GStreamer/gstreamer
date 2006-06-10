@@ -1,3 +1,14 @@
+2006-06-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gst.c: (init_post):
+	  use _exit() instead of exit() in our forked child; this ensures
+	  that none of the registered exit handlers from whatever is using
+	  GStreamer get executed.  This fixes gnome-mixer-applet failing
+	  to load, because ORBit would shut down.
+	  Spotted by: Edward Hervey  <edward@fluendo.com>
+	  Fix suggested by: Tim-Philipp Müller  <tim at centricular dot net>
+	  Fixes #344474
+
 2006-06-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
