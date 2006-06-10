@@ -1,5 +1,11 @@
 2006-06-10  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/gnomevfs/gstgnomevfsuri.c: (gst_gnomevfs_get_supported_uris):
+	  Add support for burn:// URIs (#343385); const-ify things a bit,
+	  use G_N_ELEMENTS instead of hard-coded array size.
+
+2006-06-10  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Young-Ho Cha  <ganadist at chollian net>
 
 	* gst/subparse/samiparse.c: (fix_invalid_entities), (parse_sami):

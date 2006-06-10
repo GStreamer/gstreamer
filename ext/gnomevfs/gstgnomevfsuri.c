@@ -30,11 +30,13 @@
 #include <libgnomevfs/gnome-vfs.h>
 #include "gstgnomevfsuri.h"
 
+#include <gst/gst.h>
+
 gchar **
 gst_gnomevfs_get_supported_uris (void)
 {
   GnomeVFSURI *uri;
-  gchar *uris[] = {
+  const gchar *uris[] = {
     "http://localhost/bla",
     "file:///bla",
     "smb://localhost/bla",
@@ -42,13 +44,13 @@ gst_gnomevfs_get_supported_uris (void)
     "sftp://localhost/bla",
     "nfs://localhost/bla",
     "ssh://localhost/bla",
-    NULL
-  }
-  , **result;
+    "burn://"
+  };
+  gchar **result;
   gint n, r = 0;
 
-  result = g_new (gchar *, 9);
-  for (n = 0; uris[n] != NULL; n++) {
+  result = g_new0 (gchar *, G_N_ELEMENTS (uris) + 1);
+  for (n = 0; n < G_N_ELEMENTS (uris); n++) {
     uri = gnome_vfs_uri_new (uris[n]);
     if (uri != NULL) {
       gchar *protocol = g_strdup (uris[n]);
@@ -62,7 +64,10 @@ gst_gnomevfs_get_supported_uris (void)
         }
       }
 
+      GST_DEBUG ("adding protocol '%s'", protocol);
       result[r++] = protocol;
+    } else {
+      GST_DEBUG ("could not create GnomeVfsUri from '%s'", uris[n]);
     }
   }
   result[r] = NULL;
