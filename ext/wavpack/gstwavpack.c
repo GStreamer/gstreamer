@@ -25,16 +25,18 @@
 
 #include "gstwavpackparse.h"
 #include "gstwavpackdec.h"
+#include "gstwavpackenc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   return (gst_wavpack_parse_plugin_init (plugin)
-      && gst_wavpack_dec_plugin_init (plugin));
+      && gst_wavpack_dec_plugin_init (plugin)
+      && gst_wavpack_enc_plugin_init (plugin));
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "wavpack",
     "Wavpack lossless/lossy audio format handling",
-    plugin_init, VERSION, "LGPL", "gst-wavpack", "http://www.wavpack.com")
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

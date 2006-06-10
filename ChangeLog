@@ -1,3 +1,26 @@
+2006-06-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge  <mail at slomosnail de>
+
+	* ext/wavpack/Makefile.am:
+	* ext/wavpack/gstwavpack.c: (plugin_init):
+	* ext/wavpack/gstwavpackcommon.h:
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_mode_get_type),
+	(gst_wavpack_enc_correction_mode_get_type),
+	(gst_wavpack_enc_joint_stereo_mode_get_type),
+	(gst_wavpack_enc_base_init), (gst_wavpack_enc_class_init),
+	(gst_wavpack_enc_init), (gst_wavpack_enc_dispose),
+	(gst_wavpack_enc_sink_set_caps), (gst_wavpack_enc_set_wp_config),
+	(gst_wavpack_enc_format_samples), (gst_wavpack_enc_push_block),
+	(gst_wavpack_enc_chain), (gst_wavpack_enc_rewrite_first_block),
+	(gst_wavpack_enc_sink_event), (gst_wavpack_enc_change_state),
+	(gst_wavpack_enc_set_property), (gst_wavpack_enc_get_property),
+	(gst_wavpack_enc_plugin_init):
+	* ext/wavpack/gstwavpackenc.h:
+	* ext/wavpack/md5.c:
+	* ext/wavpack/md5.h:
+	  Add wavpack encoder element (#343131).
+
 2006-06-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
