@@ -349,13 +349,54 @@ sami_context_reset (ParserState * state)
   }
 }
 
+static gchar *
+fix_invalid_entities (const gchar * line)
+{
+  const gchar *cp, *pp;         /* current pointer, previous pointer */
+  gssize size;
+  GString *ret = g_string_new (NULL);
+
+  pp = line;
+  cp = strchr (line, '&');
+  while (cp) {
+    size = cp - pp;
+    ret = g_string_append_len (ret, pp, size);
+    cp++;
+    if (g_ascii_strncasecmp (cp, "nbsp;", 5)
+        && (!g_ascii_strncasecmp (cp, "nbsp", 4))) {
+      /* translate "&nbsp" to "&nbsp;" */
+      ret = g_string_append_len (ret, "&nbsp;", 6);
+      cp += 4;
+    } else if (g_ascii_strncasecmp (cp, "quot;", 5)
+        && g_ascii_strncasecmp (cp, "amp;", 4)
+        && g_ascii_strncasecmp (cp, "apos;", 5)
+        && g_ascii_strncasecmp (cp, "lt;", 3)
+        && g_ascii_strncasecmp (cp, "gt;", 3)
+        && g_ascii_strncasecmp (cp, "nbsp;", 5)) {
+      /* translate "&" to "&amp;" */
+      ret = g_string_append_len (ret, "&amp;", 5);
+    } else {
+      /* do not translate */
+      ret = g_string_append_c (ret, '&');
+    }
+
+    pp = cp;
+    cp = strchr (pp, '&');
+  }
+  ret = g_string_append (ret, pp);
+  return g_string_free (ret, FALSE);
+}
 
 gchar *
 parse_sami (ParserState * state, const gchar * line)
 {
+  gchar *fixed_line;
   GstSamiContext *context = (GstSamiContext *) state->user_data;
 
-  htmlParseChunk (context->htmlctxt, line, strlen (line), 0);
+  fixed_line = fix_invalid_entities (line);
+  htmlParseChunk (context->htmlctxt, fixed_line, strlen (fixed_line), 0);
+  g_free (fixed_line);
+
   if (context->has_result) {
     gchar *r;
 

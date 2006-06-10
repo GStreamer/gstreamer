@@ -1,3 +1,11 @@
+2006-06-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Young-Ho Cha  <ganadist at chollian net>
+
+	* gst/subparse/samiparse.c: (fix_invalid_entities), (parse_sami):
+	  Fix up broken entities before passing them to libxml *sigh*.
+	  (#343303).
+	  
 2006-06-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
