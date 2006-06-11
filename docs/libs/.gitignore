@@ -1,5 +1,6 @@
 *.stamp
 html
+tmpl
 xml
 Makefile
 Makefile.in

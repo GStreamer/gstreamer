@@ -1,5 +1,12 @@
 2006-06-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/libs/.cvsignore:
+	* tests/check/elements/.cvsignore:
+	* tests/check/libs/.cvsignore:
+	  ignore more
+
+2006-06-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/libs/Makefile.am:
 	  also commiting the changed Makefile.am (added more libs to the
 	  doc-build)

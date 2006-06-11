@@ -1,7 +1,10 @@
 .dirstamp
+adder
+alsa
 audioconvert
 audioresample
 audiotestsrc
+multifdsink
 videorate
 videotestsrc
 volume
