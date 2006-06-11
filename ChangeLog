@@ -1,3 +1,8 @@
+2006-06-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	reorder (put dp into a chapter) and indent
+
 2006-06-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
