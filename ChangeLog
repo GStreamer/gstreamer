@@ -1,3 +1,23 @@
+2006-06-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* autogen.sh:
+	  require am17
+	* configure.ac:
+	* ext/annodex/Makefile.am:
+	* ext/cdio/Makefile.am:
+	* ext/dv/Makefile.am:
+	* ext/esd/Makefile.am:
+	* ext/flac/Makefile.am:
+	* ext/gdk_pixbuf/Makefile.am:
+	* ext/ladspa/Makefile.am:
+	* ext/libcaca/Makefile.am:
+	* ext/speex/Makefile.am:
+	* ext/taglib/Makefile.am:
+	* sys/oss/Makefile.am:
+	* sys/sunaudio/Makefile.am:
+	* sys/ximage/Makefile.am:
+	  clean up build further
+
 2006-06-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gconf/Makefile.am:

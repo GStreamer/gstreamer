@@ -3,7 +3,8 @@ plugin_LTLIBRARIES = libgstximagesrc.la
 libgstximagesrc_la_SOURCES = gstximagesrc.c ximageutil.c
 libgstximagesrc_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_CFLAGS) $(GST_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(GST_CFLAGS) \
 	$(X_CFLAGS) $(XFIXES_CFLAGS) $(XDAMAGE_CFLAGS)
 libgstximagesrc_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
