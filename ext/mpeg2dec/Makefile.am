@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstmpeg2dec.la
 
 libgstmpeg2dec_la_SOURCES = gstmpeg2dec.c

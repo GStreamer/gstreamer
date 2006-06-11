@@ -1,8 +1,10 @@
 AC_PREREQ(2.52)
 
+dnl please read gstreamer/docs/random/autotools before changing this file
+
 dnl initialize autoconf
-dnl when going to/from release please set the nano (fourth number) right !
-dnl releases only do Wall, cvs and prerelease does Werror too
+dnl releases only do -Wall, cvs and prerelease does -Werror too
+dnl use a three digit version number for releases, and four for cvs/prerelease
 AC_INIT(GStreamer Ugly Plug-ins, 0.10.3.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-ugly)
@@ -219,7 +221,7 @@ GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
 
 dnl *** AMR-NB ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
-GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnbdec amrnbenc, [
+GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnb, [
   GST_CHECK_LIBHEADER(AMRNB, amrnb,
 		      Decoder_Interface_init, -lm,
 		      amrnb/interf_dec.h,
@@ -236,7 +238,7 @@ GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
 
 dnl *** dvdnav ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDNAV, true)
-GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnavsrc, [
+GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnav, [
   translit(dnm, m, l) AC_SUBST(DVDNAV_LIBS)
   translit(dnm, m, l) AC_SUBST(DVDNAV_CFLAGS)
   GST_CHECK_CONFIGPROG(DVDNAV, dvdnav-config)
@@ -300,7 +302,7 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_ID3TAG, true)
 GST_CHECK_FEATURE(ID3TAG, [id3tag reading and writing from the MAD project],
   id3tag, [
   dnl check with pkg-config first
-  PKG_CHECK_MODULES(ID3TAG, id3tag >= 0.15, HAVE_ID3TAG="yes", HAVE_ID3TAG="no")
+  GST_PKG_CHECK_MODULES(ID3TAG, id3tag >= 0.15)
   if test "x$HAVE_ID3TAG" = "xno"; then
     dnl fall back to oldskool detection
     AC_CHECK_HEADER(id3tag.h, [
@@ -309,18 +311,17 @@ GST_CHECK_FEATURE(ID3TAG, [id3tag reading and writing from the MAD project],
       AC_CHECK_LIB(id3tag, id3_tag_options,
         HAVE_ID3TAG="yes" ID3TAG_LIBS="-lid3tag -lz")
       LIBS=$save_LIBS
+      AC_SUBST(ID3TAG_LIBS)
     ])
   fi
 ])
-AC_SUBST(ID3TAG_LIBS)
 
 dnl *** mad ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
 GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
   if test "x$HAVE_ID3TAG" = "xyes"; then
     dnl check with pkg-config first
-    PKG_CHECK_MODULES(MAD, mad >= 0.15 id3tag >= 0.15,
-      HAVE_MAD="yes", HAVE_MAD="no")
+    GST_PKG_CHECK_MODULES(MAD, mad >= 0.15 id3tag >= 0.15)
     if test "x$HAVE_MAD" = "xno"; then
       dnl fall back to oldskool detection
       AC_CHECK_HEADER(mad.h, [
@@ -338,15 +339,12 @@ AC_SUBST(MAD_LIBS)
 dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
 GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
-  PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.4.0,
-      HAVE_MPEG2DEC="yes", HAVE_MPEG2DEC="no")
-  AC_SUBST(MPEG2DEC_CFLAGS)
-  AC_SUBST(MPEG2DEC_LIBS)
+  GST_PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.4.0)
 ])
 
 dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
-GST_CHECK_FEATURE(SIDPLAY, [sidplay plug-in], sidplay, [
+GST_CHECK_FEATURE(SIDPLAY, [libsidplay], sid, [
   GST_PATH_SIDPLAY()
 ])
 
