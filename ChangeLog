@@ -1,5 +1,12 @@
 2006-06-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* po/POTFILES.in:
+	* po/POTFILES.skip:
+	  add missing files containing translatable strings, tell intltool about
+	  one exception
+
+2006-06-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/check/libs/.cvsignore:
 	add test-binary to ignore list
 
