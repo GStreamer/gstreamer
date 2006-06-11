@@ -119,7 +119,9 @@ GST_START_TEST (test_int16)
 
   /* create a bus to get the level message on */
   bus = gst_bus_new ();
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
   gst_element_set_bus (level, bus);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
@@ -130,6 +132,7 @@ GST_START_TEST (test_int16)
   fail_unless (inbuffer == outbuffer);
 
   message = gst_bus_poll (bus, GST_MESSAGE_ELEMENT, -1);
+  ASSERT_OBJECT_REFCOUNT (message, "message", 1);
 
   fail_unless (message != NULL);
   fail_unless (GST_MESSAGE_SRC (message) == GST_OBJECT (level));
@@ -151,10 +154,28 @@ GST_START_TEST (test_int16)
       fail_if (dB > -5.9);
     }
   }
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (inbuffer == outbuffer);
 
+
+  /* clean up */
+  /* flush current messages,and future state change messages */
+  gst_bus_set_flushing (bus, TRUE);
+
+  /* message has a ref to the element */
+  ASSERT_OBJECT_REFCOUNT (level, "level", 2);
   gst_message_unref (message);
-  // FIXME: need to fix leaks in level object first
-  //gst_object_unref (level);
+  ASSERT_OBJECT_REFCOUNT (level, "level", 1);
+
+  gst_element_set_bus (level, NULL);
+  ASSERT_OBJECT_REFCOUNT (bus, "bus", 1);
+  gst_object_unref (bus);
+  gst_buffer_unref (outbuffer);
+  fail_unless (gst_element_set_state (level,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+  ASSERT_OBJECT_REFCOUNT (level, "level", 1);
+  gst_object_unref (level);
 }
 
 GST_END_TEST;

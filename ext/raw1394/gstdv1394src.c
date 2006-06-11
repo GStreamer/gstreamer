@@ -706,7 +706,7 @@ gst_dv1394src_discover_avc_node (GstDV1394Src * src)
 
     /* now loop over all the nodes */
     for (i = 0; i < raw1394_get_nodecount (handle); i++) {
-      /* are we looking for an explicit GUID */
+      /* are we looking for an explicit GUID ? */
       if (src->guid != 0) {
         if (src->guid == rom1394_get_guid (handle, i)) {
           node = i;
@@ -718,7 +718,7 @@ gst_dv1394src_discover_avc_node (GstDV1394Src * src)
       } else {
         rom1394_directory rom_dir;
 
-        /* select first AV/C Tape Reccorder Player node */
+        /* select first AV/C Tape Recorder Player node */
         if (rom1394_get_directory (handle, i, &rom_dir) < 0) {
           GST_WARNING ("error reading config rom directory for node %d\n", i);
           continue;

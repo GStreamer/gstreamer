@@ -1,3 +1,10 @@
+2006-06-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_discover_avc_node):
+	  gratuitous comment changes
+	* tests/check/elements/level.c: (GST_START_TEST):
+	  fix level test leaks
+
 2006-06-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_get_upstream_size):
