@@ -665,27 +665,21 @@ gst_tag_demux_sink_event (GstPad * pad, GstEvent * event)
 static gboolean
 gst_tag_demux_get_upstream_size (GstTagDemux * tagdemux)
 {
-  GstPad *peer = NULL;
   GstFormat format;
-  gint64 result;
-  gboolean res = FALSE;
+  gint64 len;
 
   /* Short-cut if we already queried upstream */
   if (tagdemux->priv->upstream_size > 0)
     return TRUE;
 
-  if ((peer = gst_pad_get_peer (tagdemux->priv->sinkpad)) == NULL)
-    return FALSE;
-
   format = GST_FORMAT_BYTES;
-  if (gst_pad_query_duration (peer, &format, &result) &&
-      format == GST_FORMAT_BYTES && result > 0) {
-    tagdemux->priv->upstream_size = result;
-    res = TRUE;
+  if (!gst_pad_query_peer_duration (tagdemux->priv->sinkpad, &format, &len) ||
+      len <= 0) {
+    return FALSE;
   }
 
-  gst_object_unref (peer);
-  return res;
+  tagdemux->priv->upstream_size = len;
+  return TRUE;
 }
 
 static gboolean

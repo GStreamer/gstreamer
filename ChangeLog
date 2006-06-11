@@ -1,3 +1,9 @@
+2006-06-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_get_upstream_size):
+	* gst/id3demux/gstid3demux.c: (id3demux_get_upstream_size):
+	  Use gst_pad_query_peer_duration() utility function here.
+
 2006-06-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* autogen.sh:

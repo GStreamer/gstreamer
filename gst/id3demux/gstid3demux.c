@@ -600,37 +600,21 @@ gst_id3demux_get_property (GObject * object, guint prop_id,
 static gboolean
 id3demux_get_upstream_size (GstID3Demux * id3demux)
 {
-  GstQuery *query;
-  GstPad *peer = NULL;
   GstFormat format;
   gint64 result;
-  gboolean res = FALSE;
 
   /* Short-cut if we already queried upstream */
   if (id3demux->upstream_size > 0)
     return TRUE;
 
-  if ((peer = gst_pad_get_peer (id3demux->sinkpad)) == NULL)
+  format = GST_FORMAT_BYTES;
+  if (!gst_pad_query_peer_duration (id3demux->sinkpad, &format, &result) ||
+      result < 0) {
     return FALSE;
-
-  query = gst_query_new_duration (GST_FORMAT_BYTES);
-  gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
-
-  if (!gst_pad_query (peer, query))
-    goto out;
-
-  gst_query_parse_duration (query, &format, &result);
-  gst_query_unref (query);
-
-  if (format != GST_FORMAT_BYTES || result == -1)
-    goto out;
+  }
 
   id3demux->upstream_size = result;
-  res = TRUE;
-
-out:
-  gst_object_unref (peer);
-  return res;
+  return TRUE;
 }
 
 static gboolean
