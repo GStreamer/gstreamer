@@ -1,5 +1,6 @@
 /* -*- Mode: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2 -*- */
-/* Copyright 2005 Jan Schmidt <thaytan@mad.scientist.com>
+/* Copyright 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright 2005 Jan Schmidt <thaytan@mad.scientist.com>
  * Copyright 2002,2003 Scott Wheeler <wheeler@kde.org> (portions from taglib)
  *
  * This library is free software; you can redistribute it and/or
@@ -25,6 +26,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <gst/tag/tag.h>
+#include <gst/base/gsttypefindhelper.h>
 
 #ifdef HAVE_ZLIB
 #include <zlib.h>
@@ -51,6 +53,7 @@ static void free_tag_strings (GArray * fields);
 static gboolean
 id3v2_genre_fields_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
     GArray * tag_fields);
+static gboolean parse_picture_frame (ID3TagsWorking * work);
 
 #define ID3V2_ENCODING_ISO8859 0x00
 #define ID3V2_ENCODING_UTF16   0x01
@@ -156,6 +159,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     tag_str = parse_comment_frame (work);
   } else if (!strcmp (work->frame_id, "APIC")) {
     /* Attached picture */
+    result = parse_picture_frame (work);
   } else if (!strcmp (work->frame_id, "RVA2")) {
     /* Relative volume */
     result = parse_relative_volume_adjustment_two (work);
@@ -357,6 +361,170 @@ parse_unique_file_identifier (ID3TagsWorking * work, const gchar ** tag_name)
   g_free (owner_id);
 
   return ret;
+}
+
+/* parse data and return length of the next string in the given encoding,
+ * including the NUL terminator */
+static gint
+scan_encoded_string (guint8 encoding, gchar * data, gint data_size)
+{
+  gint i;
+
+  switch (encoding) {
+    case ID3V2_ENCODING_ISO8859:
+    case ID3V2_ENCODING_UTF8:
+      for (i = 0; i < data_size; ++i) {
+        if (data[i] == '\0')
+          return i + 1;
+      }
+      break;
+    case ID3V2_ENCODING_UTF16:
+    case ID3V2_ENCODING_UTF16BE:
+      /* we don't care about BOMs here and treat them as part of the string */
+      /* Find '\0\0' terminator */
+      for (i = 0; i < data_size - 1; i += 2) {
+        if (data[i] == '\0' && data[i + 1] == '\0')
+          return i + 2;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return 0;
+}
+
+static gboolean
+parse_picture_frame (ID3TagsWorking * work)
+{
+  GstBuffer *image = NULL;
+  GstCaps *image_caps = NULL;
+  gboolean is_pic_uri = FALSE;
+  guint8 txt_encoding, pic_type;
+  gchar *mime_str = NULL;
+  gint len, datalen;
+
+  GST_LOG ("APIC frame");
+
+  if (work->parse_size < 1 + 1 + 1 + 1 + 1)
+    goto not_enough_data;
+
+  txt_encoding = work->parse_data[0];
+  ++work->parse_data;
+  --work->parse_size;
+
+  if (!parse_id_string (work, &mime_str, &len, &datalen)) {
+    return FALSE;
+  }
+
+  is_pic_uri = (mime_str != NULL && strcmp (mime_str, "-->") == 0);
+
+  if (mime_str && *mime_str && strchr (mime_str, '/') == NULL && !is_pic_uri) {
+    gchar *tmp;
+
+    tmp = g_strdup_printf ("image/%s", mime_str);
+    g_free (mime_str);
+    mime_str = tmp;
+  }
+
+  if (work->parse_size < (len + 1) + 1 + 1 + 1)
+    goto not_enough_data;
+
+  work->parse_data += (len + 1);
+  work->parse_size -= (len + 1);
+
+  pic_type = work->parse_data[0];
+  ++work->parse_data;
+  --work->parse_size;
+
+  GST_LOG ("APIC frame mime type    : %s", GST_STR_NULL (mime_str));
+  GST_LOG ("APIC frame picture type : 0x%02x", (guint) pic_type);
+
+  if (work->parse_size < 1 + 1)
+    goto not_enough_data;
+
+  len = scan_encoded_string (txt_encoding, (gchar *) work->parse_data,
+      work->parse_size);
+
+  if (len < 1)
+    goto error;
+
+  /* just skip the description string ... */
+  GST_LOG ("Skipping description string (%d bytes in original coding)", len);
+
+  if (work->parse_size < len + 1)
+    goto not_enough_data;
+
+  work->parse_data += len;
+  work->parse_size -= len;
+
+  GST_DEBUG ("image data is %u bytes", work->parse_size);
+
+  if (work->parse_size <= 0)
+    goto not_enough_data;
+
+  if (is_pic_uri) {
+    gchar *uri;
+
+    uri = g_strndup ((gchar *) work->parse_data, work->parse_size);
+    GST_DEBUG ("image URI: %s", uri);
+
+    image = gst_buffer_new ();
+    GST_BUFFER_MALLOCDATA (image) = (guint8 *) uri;     /* take ownership */
+    GST_BUFFER_DATA (image) = (guint8 *) uri;
+    GST_BUFFER_SIZE (image) = work->parse_size;
+
+    image_caps = gst_caps_new_simple ("text/uri-list", NULL);
+  } else {
+    image = gst_buffer_new_and_alloc (work->parse_size);
+    memcpy (GST_BUFFER_DATA (image), work->parse_data, work->parse_size);
+
+    /* if possible use GStreamer media type rather than declared type */
+    image_caps = gst_type_find_helper_for_buffer (NULL, image, NULL);
+    if (image_caps) {
+      GST_DEBUG ("Found GStreamer media type: %" GST_PTR_FORMAT, image_caps);
+    } else if (mime_str && *mime_str) {
+      GST_DEBUG ("No GStreamer media type found, using declared type");
+      image_caps = gst_caps_new_simple (mime_str, NULL);
+    } else {
+      GST_DEBUG ("Empty declared mime type, ignoring image frame");
+      image = NULL;
+      image_caps = NULL;
+      goto error;
+    }
+  }
+
+  if (image && image_caps) {
+    /* FIXME: use an enum here, declare in -base/gst-libs/gst/tag/? */
+    /* gst_structure_set (gst_caps_get_structure (image_caps, 0),
+       "id3-picture-type", G_TYPE_INT, (gint) pic_type, NULL); */
+    gst_buffer_set_caps (image, image_caps);
+    gst_caps_unref (image_caps);
+    if (pic_type == 0x01 || pic_type == 0x02) {
+      /* file icon of some sort */
+      gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
+          GST_TAG_PREVIEW_IMAGE, image, NULL);
+    } else {
+      gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
+          GST_TAG_IMAGE, image, NULL);
+    }
+    gst_buffer_unref (image);
+  }
+
+  g_free (mime_str);
+  return TRUE;
+
+not_enough_data:
+  {
+    GST_DEBUG ("not enough data, skipping APIC frame");
+    /* fall through to error */
+  }
+error:
+  {
+    GST_DEBUG ("problem parsing APIC frame, skipping");
+    g_free (mime_str);
+    return FALSE;
+  }
 }
 
 #define ID3V2_RVA2_CHANNEL_MASTER  1

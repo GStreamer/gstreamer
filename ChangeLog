@@ -1,3 +1,13 @@
+2006-06-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame),
+	(scan_encoded_string), (parse_picture_frame):
+	  Extract images from ID3v2 tags (APIC frames). Fixes #339704.
+
+	* configure.ac:
+	  Require core >= 0.10.8 (for GST_TAG_IMAGE and
+	  GST_TAG_PPEVIEW_IMAGE used in the patch above).
+
 2006-06-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_discover_avc_node):
