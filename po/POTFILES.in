@@ -1,9 +1,15 @@
 ext/alsa/gstalsamixertrack.c
+ext/alsa/gstalsasink.c
+ext/alsa/gstalsasrc.c
 ext/cdparanoia/gstcdparanoiasrc.c
 ext/gnomevfs/gstgnomevfssrc.c
 ext/gnomevfs/gstgnomevfssink.c
 ext/ogg/gstoggdemux.c
 gst/playback/gstplaybasebin.c
 gst/playback/gstplaybin.c
+gst/tcp/gsttcp.c
+gst/tcp/gsttcpclientsink.c
+gst/tcp/gsttcpclientsrc.c
 gst-libs/gst/tag/tags.c
 gst-libs/gst/cdda/gstcddabasesrc.c
+sys/v4l/v4l_calls.c
