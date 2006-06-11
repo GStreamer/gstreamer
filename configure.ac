@@ -1,8 +1,10 @@
 AC_PREREQ(2.52)
 
+dnl please read gstreamer/docs/random/autotools before changing this file
+
 dnl initialize autoconf
-dnl when going to/from release please set the nano (fourth number) right !
-dnl releases only do Wall, cvs and prerelease does Werror too
+dnl releases only do -Wall, cvs and prerelease does -Werror too
+dnl use a three digit version number for releases, and four for cvs/prerelease
 AC_INIT(GStreamer Base Plug-ins, 0.10.8.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-base)
@@ -307,7 +309,6 @@ GST_CHECK_FEATURE(X, [X libraries and plugins],
   CPPFLAGS="$ac_cppflags_save"
 ])
   
-  
 dnl Check for Xv extension
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
@@ -317,7 +318,7 @@ GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
 
 dnl check for X Shm
 translit(dnm, m, l) AM_CONDITIONAL(USE_XSHM, true)
-GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], xshm, [
+GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
   if test x$HAVE_X = xyes; then
     AC_CHECK_LIB(Xext, XShmAttach, 
 		 HAVE_XSHM="yes", HAVE_XSHM="no",
@@ -337,7 +338,7 @@ GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], xshm, [
 ], , [ 
   AC_SUBST(HAVE_XSHM) 
   AC_SUBST(XSHM_LIBS) 
-] )
+])
 
 dnl v4l/v4l2 checks have been moved down because they require X
 
@@ -345,8 +346,7 @@ dnl *** Video 4 Linux ***
 dnl for information about the header/define, see sys/v4l/gstv4lelement.h
 dnl renamed to GST_V4L in accordance with V4L2 below
 translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L, true)
-GST_CHECK_FEATURE(GST_V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
-  HAVE_GST_V4L="no"
+GST_CHECK_FEATURE(GST_V4L, [Video 4 Linux], video4linux, [
   AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_GST_V4L="yes", HAVE_GST_V4L="no", [
 #include <sys/types.h>
 #define _LINUX_TIME_H
@@ -357,11 +357,8 @@ GST_CHECK_FEATURE(GST_V4L, [Video 4 Linux], v4lsrc v4lmjpegsrc v4lmjpegsink, [
   dnl we can build v4l without Xv, but then we won't have XOverlay support
   if test "x$HAVE_GST_V4L" = "xyes" -a "x$HAVE_XVIDEO" != "xyes"
   then
-    AC_MSG_NOTICE([
-        *****  NO XVIDEO FOUND, VIDEO4LINUX WILL BE  *****
-        *****     BUILT WITHOUT XOVERLAY SUPPORT     *****
-    ])
-    sleep 3
+    AC_MSG_NOTICE([NO XVIDEO FOUND, VIDEO4LINUX WILL BE BUILT])
+    AC_MSG_NOTICE([WITHOUT XOVERLAY SUPPORT])
   fi
 ])
 
@@ -376,7 +373,7 @@ echo
 
 dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
-GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
+GST_CHECK_FEATURE(ALSA, [ALSA], alsa, [
   PKG_CHECK_MODULES(ALSA, alsa >= 0.9.1, [
     HAVE_ALSA="yes"
     AC_SUBST(ALSA_CFLAGS)
@@ -415,79 +412,62 @@ dnl FIXME : add second check somehow if that is necessary
 dnl AC_CHECK_LIB(cdda_paranoia, paranoia_init, : , HAVE_CDPARANOIA=no, -lcdda_interface )
 dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
-dnl *** Gnome VFS ***
+dnl *** GNOME VFS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
-GST_CHECK_FEATURE(GNOME_VFS, [Gnome VFS], gnomevfssrc, [
-  PKG_CHECK_MODULES(GNOME_VFS, gnome-vfs-2.0, HAVE_GNOME_VFS="yes", HAVE_GNOME_VFS="no")
-  AC_SUBST(GNOME_VFS_CFLAGS)
-  AC_SUBST(GNOME_VFS_LIBS)
+GST_CHECK_FEATURE(GNOME_VFS, [GNOME VFS], gnomevfs, [
+  GST_PKG_CHECK_MODULES(GNOME_VFS, gnome-vfs-2.0)
 ])
 
 dnl *** libvisual ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
-GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization plugins], libvisual, [
-  PKG_CHECK_MODULES(LIBVISUAL, libvisual = 0.2.0,
-    [
-      HAVE_LIBVISUAL="yes",
-    ], [
-      PKG_CHECK_MODULES(LIBVISUAL, libvisual-0.4 >= 0.4.0,
-        [
-          HAVE_LIBVISUAL="yes"
-        ], [
-          HAVE_LIBVISUAL="no"
-        ])
-    ]
-  )
-  AC_SUBST(LIBVISUAL_CFLAGS)
-  AC_SUBST(LIBVISUAL_LIBS)
+GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization library], libvisual, [
+  GST_PKG_CHECK_MODULES(LIBVISUAL, libvisual-0.4 >= 0.4.0)
+  if test $HAVE_LIBVISUAL = no
+  then
+    GST_PKG_CHECK_MODULES(LIBVISUAL, libvisual = 0.2.0)
+  fi
 ])
 
 dnl *** ogg ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OGG, true)
-GST_CHECK_FEATURE(OGG, [ogg de/encoder], oggdemux oggmux, [
-  PKG_CHECK_MODULES(OGG, ogg >= 1.0, [
-    HAVE_OGG="yes"
-    AC_SUBST(OGG_CFLAGS)
-    AC_SUBST(OGG_LIBS)
-  ], [
+GST_CHECK_FEATURE(OGG, [Xiph Ogg library], ogg, [
+  GST_PKG_CHECK_MODULES(OGG, ogg >= 1.0)
+  if test $HAVE_OGG = no
+  then
     XIPH_PATH_OGG(HAVE_OGG="yes", HAVE_OGG="no")
     AS_SCRUB_INCLUDE(OGG_CFLAGS)
-  ])
+  fi
 ])
 
 dnl *** pango ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
-GST_CHECK_FEATURE(PANGO, [pango], pango, [
-  PKG_CHECK_MODULES(PANGO, pango pangoft2,
-      HAVE_PANGO="yes", HAVE_PANGO="no")
-  AC_SUBST(PANGO_CFLAGS)
-  AC_SUBST(PANGO_LIBS)
+GST_CHECK_FEATURE(PANGO, [Pango font rendering], pango, [
+  GST_PKG_CHECK_MODULES(PANGO, pango pangoft2)
 ])
 
 dnl *** theora ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_THEORA, true)
-GST_CHECK_FEATURE(THEORA, [ogg theora codec], theoradec theoraenc, [
-  PKG_CHECK_MODULES(THEORA, theora, [
-    HAVE_THEORA="yes"
-    AC_SUBST(THEORA_LIBS)
-    AC_SUBST(THEORA_CFLAGS)
-  ], [
+GST_CHECK_FEATURE(THEORA, [Xiph Theora video codec], theora, [
+  GST_PKG_CHECK_MODULES(THEORA, theora)
+  if test $HAVE_THEORA = no
+  then
     GST_CHECK_LIBHEADER(THEORA, theora, theora_version_string, "-logg", theora/theora.h, THEORA_LIBS="-ltheora -logg")
     AC_SUBST(THEORA_LIBS)
-  ])
+  fi
 ])
 
 dnl *** vorbis ***
 dnl AM_PATH_VORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
-GST_CHECK_FEATURE(VORBIS, [vorbis plug-in], vorbisenc vorbisdec, [
-  PKG_CHECK_MODULES(VORBIS, vorbis >= 1.0 vorbisenc >= 1.0, [
-    HAVE_VORBIS="yes"
-  ], [
+GST_CHECK_FEATURE(VORBIS, [Xiph Vorbis audio codec], vorbis, [
+  GST_PKG_CHECK_MODULES(VORBIS, vorbis >= 1.0 vorbisenc >= 1.0)
+  if test $HAVE_VORBIS = no
+  then
     XIPH_PATH_VORBIS(HAVE_VORBIS="yes", HAVE_VORBIS="no")
     AS_SCRUB_INCLUDE(VORBIS_CFLAGS)
-  ])
+  fi
 ])
+
 if test "x$HAVE_VORBIS" = "xyes"; then
   ac_cflags_save="$CFLAGS"
   dnl FIXME: does this work on non-gcc? -- Company

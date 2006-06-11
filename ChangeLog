@@ -1,3 +1,8 @@
+2006-06-11  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  use GST_PKG_CHECK_MODULES, cleans up output
+
 2006-06-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/gnomevfs/gstgnomevfsuri.c: (gst_gnomevfs_get_supported_uris):
