@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstpango.la
 
 noinst_HEADERS = \
@@ -18,11 +17,8 @@ libgstpango_la_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
 	$(PANGO_CFLAGS)
-
 libgstpango_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(PANGO_LIBS)
-
-libgstpango_la_LDFLAGS = \
-	$(GST_PLUGIN_LDFLAGS)
+libgstpango_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
