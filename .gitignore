@@ -27,3 +27,4 @@ depcomp
 autoregen.sh
 ABOUT-NLS
 _stdint.h
+gst-plugins-bad-*.tar.*
