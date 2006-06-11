@@ -1,0 +1,61 @@
+These are some notes on our autotools setup, and some things to remember.
+
+plugin Makefile.am:
+- plugindir gets defined for you, don't set it in Makefile.am 
+- plugin_LTLIBRARIES should contain the name of every plugin,
+  starting with libgst and ending in .la
+
+- put compile/link variables in the following order: CFLAGS, LIBADD, LDFLAGS
+- order _CFLAGS and _LIBADD with the highest in the stack first;
+  e.g. $(GST_PLUGINS_BASE_LIBS) $(GST_LIBS) $(MUSICBRAINZ_LIBS)
+  this makes sure that the one you're most likely to be hacking on
+  (GStreamer) has its -L flags pointing to your hacking directory,
+  and comes first on the link line.  If it were to come later and you
+  had the library installed in the same place as the dependency, it
+  would take that version instead
+- DO NOT put any libraries in _LDFLAGS.  Typically, _LDFLAGS should only
+  have $(GST_PLUGIN_LDFLAGS)
+- when using gst-plugins-base libraries, use $(GST_PLUGINS_BASE_LIBS) then
+  add -lgst(library)-$(GST_MAJORMINOR).  Example:
+
+libgstsdlvideosink_la_LIBADD =  $(GST_PLUGINS_BASE_LIBS) \
+                                -lgstvideo-$(GST_MAJORMINOR) \
+                                -lgstaudio-$(GST_MAJORMINOR) \
+                                -lgstinterfaces-$(GST_MAJORMINOR) \
+                                $(SDL_LIBS)
+
+
+- don't forget to use noinst_HEADERS if you have private headers
+
+plugin configure.ac snippet:
+  - ORDER THEM ALPHABETICALLY PLEASE
+  - wrap your check in a block like this:
+
+translit(dnm, m, l) AM_CONDITIONAL(USE_DEP, true)
+  GST_CHECK_FEATURE(DEP, [(dependency description)], (plug-in-name), [
+    (here go the checks)
+])
+  - plug-in name is the name of the *plug-in*, not the element; ie, the
+    first column when running gst-inspect
+
+  - For the checks, in the simplest case, use something like:
+    GST_PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.2)
+    This will:
+    - do the check
+    - show a decent message if it can't find it, without failing
+    - set HAVE_LIBOIL to yes or no
+    - set LIBOIL_CFLAGS and LBOIL_LIBS
+  - if you want to make sure configure fails when this dependency is missing,
+    use:
+    GST_PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.2, yes)
+
+  - if your library does not come with a .pc file, you have to roll your own
+    check
+
+pkg.m4: (last checked: version 0.20)
+  - was changed at some point to hide the error message from you, and error
+    out by default if no ACTION-IF-NOT-FOUND is given.
+  - caller is responsible for doing AC_MSG_RESULT if ACTION-IF-NOT-FOUND
+    is given
+  - for automake-1.6, AC_SUBST((PKG)_CFLAGS) and AC_SUBST((PKG)_LIBS) is not
+    done automatically.  Starting from 1.7, it is.  We require 1.7 now.
