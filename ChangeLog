@@ -1,3 +1,10 @@
+2006-06-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* docs/libs/gst-plugins-base-libs.types:
+	  first batch of reordering things, add index & hierarchy
+
 2006-06-11  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
