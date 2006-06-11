@@ -1,5 +1,11 @@
 2006-06-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/libs/Makefile.am:
+	  also commiting the changed Makefile.am (added more libs to the
+	  doc-build)
+
+2006-06-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/libs/gst-plugins-base-libs-docs.sgml:
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* docs/libs/gst-plugins-base-libs.types:
