@@ -1,5 +1,10 @@
 2006-06-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/libs/tmpl/.cvsignore:
+	  we don't want those *.sgml files in CVS either
+
+2006-06-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/libs/.cvsignore:
 	* tests/check/elements/.cvsignore:
 	* tests/check/libs/.cvsignore:
