@@ -166,7 +166,7 @@ gst_object_get_type (void)
 {
   static GType gst_object_type = 0;
 
-  if (!gst_object_type) {
+  if (G_UNLIKELY (gst_object_type == 0)) {
     static const GTypeInfo object_info = {
       sizeof (GstObjectClass),
       NULL,
@@ -317,7 +317,7 @@ gst_object_init (GTypeInstance * instance, gpointer g_class)
 gpointer
 gst_object_ref (gpointer object)
 {
-  g_return_val_if_fail (GST_IS_OBJECT (object), NULL);
+  g_return_val_if_fail (object != NULL, NULL);
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "%p ref %d->%d",
@@ -343,7 +343,7 @@ gst_object_ref (gpointer object)
 void
 gst_object_unref (gpointer object)
 {
-  g_return_if_fail (GST_IS_OBJECT (object));
+  g_return_if_fail (object != NULL);
   g_return_if_fail (((GObject *) object)->ref_count > 0);
 
 #ifdef DEBUG_REFCOUNT

@@ -1,5 +1,13 @@
 2006-06-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstobject.c: (gst_object_get_type), (gst_object_ref),
+	(gst_object_unref):
+	Add G_UNLIKELY in type registration.
+	Avoid type check in _ref/_unref since that is also
+	done in glib.
+
+2006-06-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gsterror.c: (gst_g_error_get_type):
 	* gst/gstpadtemplate.c: (gst_pad_template_get_type),
 	(gst_static_pad_template_get_type):
