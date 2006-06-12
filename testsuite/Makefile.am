@@ -33,17 +33,20 @@ tests =  \
 	test_xml.py
 
 check-local: testhelper.la
+	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/cleanup.py
 	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py
 	@rm -fr *.pyc
 
 check-verbose: testhelper.la
+	@VERBOSE=yes PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/cleanup.py
 	@VERBOSE=yes PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py
 	@rm -fr *.pyc
 
-EXTRA_DIST = $(tests) common.py runtests.py test-object.h python.supp gstpython.supp
+EXTRA_DIST = $(tests) common.py cleanup.py runtests.py test-object.h python.supp gstpython.supp
 
 if HAVE_VALGRIND
 check-valgrind:
+	$(PYTHON) cleanup.py
 	make valgrind
 else
 check-valgrind:
@@ -65,7 +68,7 @@ TESTS_ENVIRONMENT = PYTHONPATH=$(top_srcdir)/:$(PYTHONPATH)
 # valgrind any given test_x.py by running make test_x.py.valgrind
 %.valgrind: %
 	$(TESTS_ENVIRONMENT)                                    \
-	G_SLICE=always-malloc					\
+	G_DEBUG=gc-friendly G_SLICE=always-malloc					\
 	$(VALGRIND_PATH) -q					\
 	--suppressions=$(GSTSUPP)				\
 	--suppressions=$(PYTHONSUPP)				\

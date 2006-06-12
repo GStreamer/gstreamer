@@ -31,7 +31,7 @@ SKIP_FILES = ['common', 'runtests']
 def gettestnames(which):
     if not which:
         dir = os.path.split(os.path.abspath(__file__))[0]
-        which = [os.path.basename(p) for p in glob.glob('%s/*.py' % dir)]
+        which = [os.path.basename(p) for p in glob.glob('%s/test_*.py' % dir)]
     
     names = map(lambda x: x[:-3], which)
     for f in SKIP_FILES:
