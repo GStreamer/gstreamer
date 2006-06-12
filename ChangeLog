@@ -1,5 +1,10 @@
 2006-06-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/spectrum/.cvsignore:
+	  Ignore more.
+
+2006-06-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/libmms/gstmms.c: (gst_mms_create):
 	  Set caps on outgoing buffers.
 
