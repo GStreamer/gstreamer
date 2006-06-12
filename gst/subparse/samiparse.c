@@ -25,7 +25,7 @@
 #include <string.h>
 
 #define ITALIC_TAG 'i'
-#define COLOR_TAG  'c'
+#define SPAN_TAG   's'
 #define RUBY_TAG   'r'
 #define RT_TAG     't'
 #define CLEAR_TAG  '0'
@@ -79,7 +79,7 @@ sami_context_pop_state (GstSamiContext * sctx, char state)
         g_string_append (str, "</i>");
         break;
       }
-      case COLOR_TAG:          /* <span foreground= > */
+      case SPAN_TAG:           /* <span foreground= > */
       {
         g_string_append (str, "</span>");
         break;
@@ -146,8 +146,9 @@ handle_start_font (GstSamiContext * sctx, const xmlChar ** atts)
 {
   int i;
 
-  sami_context_pop_state (sctx, COLOR_TAG);
+  sami_context_pop_state (sctx, SPAN_TAG);
   if (atts != NULL) {
+    g_string_append (sctx->buf, "<span");
     for (i = 0; (atts[i] != NULL); i += 2) {
       const xmlChar *key, *value;
 
@@ -179,11 +180,14 @@ handle_start_font (GstSamiContext * sctx, const xmlChar ** atts)
         if (!xmlStrncmp ((const xmlChar *) "silver", value, 6)) {
           value = (const xmlChar *) "#c0c0c0";
         }
-        g_string_append_printf (sctx->buf, "<span foreground=\"%s%s\">", sharp,
+        g_string_append_printf (sctx->buf, " foreground=\"%s%s\"", sharp,
             value);
-        sami_context_push_state (sctx, COLOR_TAG);
+      } else if (!xmlStrncmp ((const xmlChar *) "face", key, 4)) {
+        g_string_append_printf (sctx->buf, " font_family=\"%s\"", value);
       }
     }
+    g_string_append_c (sctx->buf, '>');
+    sami_context_push_state (sctx, SPAN_TAG);
   }
 }
 
@@ -224,7 +228,7 @@ end_sami_element (void *ctx, const xmlChar * name)
   if (!xmlStrncmp ((const xmlChar *) "title", name, 5)) {
     sctx->in_title = FALSE;
   } else if (!xmlStrncmp ((const xmlChar *) "font", name, 4)) {
-    sami_context_pop_state (sctx, COLOR_TAG);
+    sami_context_pop_state (sctx, SPAN_TAG);
   } else if (!xmlStrncmp ((const xmlChar *) "ruby", name, 4)) {
     sami_context_pop_state (sctx, RUBY_TAG);
   } else if (!xmlStrncmp ((const xmlChar *) "i", name, 1)) {

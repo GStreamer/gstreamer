@@ -1,3 +1,11 @@
+2006-06-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Young-Ho Cha  <ganadist at chollian net>
+
+	* gst/subparse/samiparse.c: (sami_context_pop_state),
+	(handle_start_font), (end_sami_element):
+	  Honour font face tags in SAMI subtitles (#344503).
+
 2006-06-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* po/POTFILES.in:
