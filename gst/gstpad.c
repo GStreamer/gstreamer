@@ -124,8 +124,8 @@ static GQuark event_quark;
 
 typedef struct
 {
-  gint ret;
-  gchar *name;
+  const gint ret;
+  const gchar *name;
   GQuark quark;
 } GstFlowQuarks;
 
@@ -3165,31 +3165,14 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
   return res;
 }
 
-/**
- * gst_pad_chain:
- * @pad: a sink #GstPad.
- * @buffer: the #GstBuffer to send.
- *
- * Chain a buffer to @pad.
- *
- * Returns: a #GstFlowReturn from the pad.
- *
- * MT safe.
- */
-GstFlowReturn
-gst_pad_chain (GstPad * pad, GstBuffer * buffer)
+static inline GstFlowReturn
+gst_pad_chain_unchecked (GstPad * pad, GstBuffer * buffer)
 {
   GstCaps *caps;
   gboolean caps_changed;
   GstPadChainFunction chainfunc;
   GstFlowReturn ret;
   gboolean emit_signal;
-
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
-      GST_FLOW_ERROR);
-  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   GST_PAD_STREAM_LOCK (pad);
 
@@ -3279,6 +3262,29 @@ no_function:
 }
 
 /**
+ * gst_pad_chain:
+ * @pad: a sink #GstPad.
+ * @buffer: the #GstBuffer to send.
+ *
+ * Chain a buffer to @pad.
+ *
+ * Returns: a #GstFlowReturn from the pad.
+ *
+ * MT safe.
+ */
+GstFlowReturn
+gst_pad_chain (GstPad * pad, GstBuffer * buffer)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
+      GST_FLOW_ERROR);
+  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
+
+  return gst_pad_chain_unchecked (pad, buffer);
+}
+
+/**
  * gst_pad_push:
  * @pad: a source #GstPad.
  * @buffer: the #GstBuffer to push.
@@ -3345,7 +3351,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
       goto not_negotiated;
   }
 
-  ret = gst_pad_chain (peer, buffer);
+  ret = gst_pad_chain_unchecked (peer, buffer);
 
   gst_object_unref (peer);
 

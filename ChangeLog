@@ -1,5 +1,17 @@
 2006-06-12  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Stefan Kost <ensonic at sonicpulse dot de>
+
+	* gst/gstevent.c: (gst_event_get_type):
+	* gst/gstmessage.c:
+	* gst/gstpad.c: (gst_pad_chain_unchecked), (gst_pad_chain),
+	(gst_pad_push):
+	constify quark registration strings. Fixes #344115
+	Avoid unneeded type checking is _pad_push() by internally
+	calling gst_pad_chain_unchecked().
+
+2006-06-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbuffer.c: (gst_buffer_get_type), (gst_buffer_finalize),
 	(_gst_buffer_copy), (gst_buffer_is_metadata_writable),
 	(gst_subbuffer_finalize), (gst_buffer_create_sub),

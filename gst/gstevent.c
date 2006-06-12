@@ -99,8 +99,8 @@ _gst_event_initialize (void)
 
 typedef struct
 {
-  gint type;
-  gchar *name;
+  const gint type;
+  const gchar *name;
   GQuark quark;
 } GstEventQuarks;
 
@@ -185,7 +185,7 @@ gst_event_type_get_flags (GstEventType type)
 GType
 gst_event_get_type (void)
 {
-  static GType _gst_event_type;
+  static GType _gst_event_type = 0;
   int i;
 
   if (G_UNLIKELY (_gst_event_type == 0)) {

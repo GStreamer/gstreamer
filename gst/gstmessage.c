@@ -82,8 +82,8 @@ _gst_message_initialize (void)
 
 typedef struct
 {
-  gint type;
-  gchar *name;
+  const gint type;
+  const gchar *name;
   GQuark quark;
 } GstMessageQuarks;
 
