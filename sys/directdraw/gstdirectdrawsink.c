@@ -334,7 +334,9 @@ gst_ddrawsurface_get_type (void)
   return _gst_ddrawsurface_type;
 }
 
-static GstDirectDrawSink *global_ddrawsink = NULL;
+/* FIXME: this is problematic if there is more than one sink instance at the
+ * same time, surely there exists a better solution than this? */
+/* static GstDirectDrawSink *global_ddrawsink = NULL; */
 
 /*GType
 gst_directdrawsink_get_type (void)
@@ -513,7 +515,7 @@ gst_directdrawsink_init (GstDirectDrawSink * ddrawsink,
   ddrawsink->buffer_pool = NULL;
 
   ddrawsink->resize_window = TRUE;      /*resize only our internal window to the video size */
-  global_ddrawsink = ddrawsink;
+  /* global_ddrawsink = ddrawsink; */
 
   ddrawsink->pool_lock = g_mutex_new ();
 }
