@@ -1,5 +1,11 @@
 2006-06-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* examples/directfb/.cvsignore:
+	* ext/directfb/.cvsignore:
+	  #define red green
+
+2006-06-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/spectrum/.cvsignore:
 	  Ignore more.
 
