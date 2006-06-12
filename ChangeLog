@@ -1,3 +1,8 @@
+2006-06-12  Edward Hervey  <edward@fluendo.com>
+
+	* gst/asfdemux/.cvsignore:
+	More ignore
+
 2006-06-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* .cvsignore:
