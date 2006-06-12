@@ -262,6 +262,8 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   GST_DEBUG ("Returning buffer with offset %" G_GINT64_FORMAT " and size %u",
       GST_BUFFER_OFFSET (*buf), GST_BUFFER_SIZE (*buf));
 
+  gst_buffer_set_caps (*buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (mmssrc)));
+
   return GST_FLOW_OK;
 
 eos:

@@ -1,3 +1,11 @@
+2006-06-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/libmms/gstmms.c: (gst_mms_create):
+	  Set caps on outgoing buffers.
+
+	* sys/directdraw/gstdirectdrawsink.c: (gst_directdrawsink_init):
+	  Comment out unused global instance variable.
+
 2006-06-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sebastian Dröge  <mail at slomosnail de>
