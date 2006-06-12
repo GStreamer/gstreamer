@@ -58,7 +58,7 @@ gst_uri_handler_get_type (void)
 {
   static GType urihandler_type = 0;
 
-  if (!urihandler_type) {
+  if (G_UNLIKELY (urihandler_type == 0)) {
     static const GTypeInfo urihandler_info = {
       sizeof (GstURIHandlerInterface),
       gst_uri_handler_base_init,

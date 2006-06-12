@@ -61,7 +61,7 @@ gst_xml_get_type (void)
 {
   static GType xml_type = 0;
 
-  if (!xml_type) {
+  if (G_UNLIKELY (xml_type == 0)) {
     static const GTypeInfo xml_info = {
       sizeof (GstXMLClass),
       NULL,

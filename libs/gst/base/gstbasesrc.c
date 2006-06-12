@@ -237,7 +237,7 @@ gst_base_src_get_type (void)
 {
   static GType base_src_type = 0;
 
-  if (!base_src_type) {
+  if (G_UNLIKELY (base_src_type == 0)) {
     static const GTypeInfo base_src_info = {
       sizeof (GstBaseSrcClass),
       (GBaseInitFunc) gst_base_src_base_init,

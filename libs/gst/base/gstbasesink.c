@@ -237,7 +237,7 @@ gst_base_sink_get_type (void)
 {
   static GType base_sink_type = 0;
 
-  if (!base_sink_type) {
+  if (G_UNLIKELY (base_sink_type == 0)) {
     static const GTypeInfo base_sink_info = {
       sizeof (GstBaseSinkClass),
       (GBaseInitFunc) gst_base_sink_base_init,
@@ -1573,7 +1573,6 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, GstPad * pad,
     if (bclass->preroll)
       if ((ret = bclass->preroll (basesink, buf)) != GST_FLOW_OK)
         goto preroll_failed;
-  } else {
   }
 
   /* commit state */

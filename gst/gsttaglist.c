@@ -67,9 +67,9 @@ static GHashTable *__tags;
 GType
 gst_tag_list_get_type (void)
 {
-  static GType _gst_tag_list_type;
+  static GType _gst_tag_list_type = 0;
 
-  if (_gst_tag_list_type == 0) {
+  if (G_UNLIKELY (_gst_tag_list_type == 0)) {
     _gst_tag_list_type = g_boxed_type_register_static ("GstTagList",
         (GBoxedCopyFunc) gst_tag_list_copy, (GBoxedFreeFunc) gst_tag_list_free);
 

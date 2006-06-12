@@ -1,5 +1,21 @@
 2006-06-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gsterror.c: (gst_g_error_get_type):
+	* gst/gstpadtemplate.c: (gst_pad_template_get_type),
+	(gst_static_pad_template_get_type):
+	* gst/gsttaglist.c: (gst_tag_list_get_type):
+	* gst/gsttagsetter.c: (gst_tag_setter_get_type):
+	* gst/gsttypefindfactory.c: (gst_type_find_factory_get_type):
+	* gst/gsturi.c: (gst_uri_handler_get_type):
+	* gst/gstvalue.c: (gst_date_get_type):
+	* gst/gstxml.c: (gst_xml_get_type):
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_type),
+	(gst_base_sink_preroll_object), (gst_base_sink_get_position):
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_get_type):
+	Add G_UNLIKELY in type registration.
+
+2006-06-12  Wim Taymans  <wim@fluendo.com>
+
 	* tools/gst-inspect.c: (print_signal_info):
 	Properly print enum values.
 

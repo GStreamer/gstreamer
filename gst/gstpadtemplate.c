@@ -128,7 +128,7 @@ gst_pad_template_get_type (void)
 {
   static GType padtemplate_type = 0;
 
-  if (!padtemplate_type) {
+  if (G_UNLIKELY (padtemplate_type == 0)) {
     static const GTypeInfo padtemplate_info = {
       sizeof (GstPadTemplateClass), NULL, NULL,
       (GClassInitFunc) gst_pad_template_class_init, NULL, NULL,
@@ -246,7 +246,7 @@ gst_static_pad_template_get_type (void)
 {
   static GType staticpadtemplate_type = 0;
 
-  if (!staticpadtemplate_type) {
+  if (G_UNLIKELY (staticpadtemplate_type == 0)) {
     staticpadtemplate_type =
         g_pointer_type_register_static ("GstStaticPadTemplate");
   }

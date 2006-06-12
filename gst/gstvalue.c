@@ -3802,7 +3802,7 @@ gst_date_get_type (void)
 {
   static GType gst_date_type = 0;
 
-  if (!gst_date_type) {
+  if (G_UNLIKELY (gst_date_type == 0)) {
     /* Not using G_TYPE_DATE here on purpose, even if we could
      * if GLIB_CHECK_VERSION(2,8,0) was true: we don't want the
      * serialised strings to have different type strings depending

@@ -102,7 +102,7 @@ gst_type_find_factory_get_type (void)
 {
   static GType typefind_type = 0;
 
-  if (!typefind_type) {
+  if (G_UNLIKELY (typefind_type == 0)) {
     static const GTypeInfo typefind_info = {
       sizeof (GstTypeFindFactoryClass),
       NULL,
