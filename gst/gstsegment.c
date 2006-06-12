@@ -187,7 +187,7 @@ gst_segment_set_duration (GstSegment * segment, GstFormat format,
 {
   g_return_if_fail (segment != NULL);
 
-  if (segment->format == GST_FORMAT_UNDEFINED)
+  if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
   else
     g_return_if_fail (segment->format == format);
@@ -212,7 +212,7 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
 {
   g_return_if_fail (segment != NULL);
 
-  if (segment->format == GST_FORMAT_UNDEFINED)
+  if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
   else
     g_return_if_fail (segment->format == format);
@@ -255,7 +255,7 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
   g_return_if_fail (rate != 0.0);
   g_return_if_fail (segment != NULL);
 
-  if (segment->format == GST_FORMAT_UNDEFINED)
+  if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
   else
     g_return_if_fail (segment->format == format);
@@ -392,7 +392,7 @@ gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
   g_return_if_fail (applied_rate != 0.0);
   g_return_if_fail (segment != NULL);
 
-  if (segment->format == GST_FORMAT_UNDEFINED)
+  if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
 
   /* any other format with 0 also gives time 0, the other values are
@@ -476,24 +476,24 @@ gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
   g_return_val_if_fail (segment != NULL, -1);
 
   /* format does not matter for -1 */
-  if (position == -1)
+  if (G_UNLIKELY (position == -1))
     return -1;
 
-  if (segment->format == GST_FORMAT_UNDEFINED)
+  if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
   else
     g_return_val_if_fail (segment->format == format, -1);
 
   /* outside of the segment boundary stop */
-  if (segment->stop != -1 && position >= segment->stop)
+  if (G_UNLIKELY (segment->stop != -1 && position >= segment->stop))
     return -1;
 
   /* before the segment boundary */
-  if (position < segment->start)
+  if (G_UNLIKELY (position < segment->start))
     return -1;
 
   /* time must be known */
-  if (segment->time == -1)
+  if (G_UNLIKELY (segment->time == -1))
     return -1;
 
   /* bring to uncorrected position in segment */
@@ -548,21 +548,21 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
 
   g_return_val_if_fail (segment != NULL, -1);
 
-  if (position == -1)
+  if (G_UNLIKELY (position == -1))
     return -1;
 
-  if (segment->format == GST_FORMAT_UNDEFINED)
+  if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
   else if (segment->accum)
     g_return_val_if_fail (segment->format == format, -1);
 
   /* before the segment boundary */
-  if (position < segment->start)
+  if (G_UNLIKELY (position < segment->start))
     return -1;
 
   if (segment->rate > 0.0) {
     /* outside of the segment boundary stop */
-    if (segment->stop != -1 && position >= segment->stop)
+    if (G_UNLIKELY (segment->stop != -1 && position >= segment->stop))
       return -1;
 
     /* bring to uncorrected position in segment */
@@ -570,7 +570,7 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
   } else {
     /* cannot continue if no stop position set or outside of
      * the segment. */
-    if (segment->stop == -1 || position >= segment->stop)
+    if (G_UNLIKELY (segment->stop == -1 || position >= segment->stop))
       return -1;
 
     /* bring to uncorrected position in segment */
@@ -618,19 +618,19 @@ gst_segment_clip (GstSegment * segment, GstFormat format, gint64 start,
 {
   g_return_val_if_fail (segment != NULL, FALSE);
 
-  if (segment->format == GST_FORMAT_UNDEFINED)
+  if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
   else
     g_return_val_if_fail (segment->format == format, FALSE);
 
   /* if we have a stop position and a valid start and start is bigger, 
    * we're outside of the segment */
-  if (segment->stop != -1 && start != -1 && start >= segment->stop)
+  if (G_UNLIKELY (segment->stop != -1 && start != -1 && start >= segment->stop))
     return FALSE;
 
   /* if a stop position is given and is before the segment start,
    * we're outside of the segment */
-  if (stop != -1 && stop <= segment->start)
+  if (G_UNLIKELY (stop != -1 && stop <= segment->start))
     return FALSE;
 
   if (clip_start) {
