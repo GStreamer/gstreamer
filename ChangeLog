@@ -1,5 +1,10 @@
 2006-06-12  Wim Taymans  <wim@fluendo.com>
 
+	* tools/gst-inspect.c: (print_signal_info):
+	Properly print enum values.
+
+2006-06-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstinfo.c: (gst_debug_set_active),
 	(gst_debug_category_set_threshold), (_gst_debug_nameof_funcptr):
 	* gst/gstinfo.h:

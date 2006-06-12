@@ -798,6 +798,9 @@ print_signal_info (GstElement * element)
         if (G_TYPE_IS_FUNDAMENTAL (query->param_types[j])) {
           g_print (",\n%s%s%s arg%d", _name, indent,
               g_type_name (query->param_types[j]), j);
+        } else if (G_TYPE_IS_ENUM (query->param_types[j])) {
+          g_print (",\n%s%s%s arg%d", _name, indent,
+              g_type_name (query->param_types[j]), j);
         } else {
           g_print (",\n%s%s%s* arg%d", _name, indent,
               g_type_name (query->param_types[j]), j);
