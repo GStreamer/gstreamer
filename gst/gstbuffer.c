@@ -141,7 +141,7 @@ _gst_buffer_initialize (void)
 GType
 gst_buffer_get_type (void)
 {
-  static GType _gst_buffer_type;
+  static GType _gst_buffer_type = 0;
 
   if (G_UNLIKELY (_gst_buffer_type == 0)) {
     static const GTypeInfo buffer_info = {
@@ -183,9 +183,7 @@ gst_buffer_finalize (GstBuffer * buffer)
   GST_CAT_LOG (GST_CAT_BUFFER, "finalize %p", buffer);
 
   /* free our data */
-  if (buffer->malloc_data) {
-    g_free (buffer->malloc_data);
-  }
+  g_free (buffer->malloc_data);
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
 }
@@ -207,7 +205,7 @@ _gst_buffer_copy (GstBuffer * buffer)
   mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
       GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
       GST_BUFFER_FLAG_GAP;
-  GST_MINI_OBJECT (copy)->flags |= GST_MINI_OBJECT (buffer)->flags & mask;
+  GST_MINI_OBJECT_FLAGS (copy) |= GST_MINI_OBJECT_FLAGS (buffer) & mask;
 
   /* we simply copy everything from our parent */
   copy->data = g_memdup (buffer->data, buffer->size);
@@ -352,7 +350,7 @@ gst_buffer_set_caps (GstBuffer * buffer, GstCaps * caps)
 gboolean
 gst_buffer_is_metadata_writable (GstBuffer * buf)
 {
-  return (GST_MINI_OBJECT_REFCOUNT_VALUE (GST_MINI_OBJECT (buf)) == 1);
+  return (GST_MINI_OBJECT_REFCOUNT_VALUE (GST_MINI_OBJECT_CAST (buf)) == 1);
 }
 
 /**
@@ -390,8 +388,9 @@ typedef struct _GstSubBufferClass GstSubBufferClass;
 
 #define GST_TYPE_SUBBUFFER                         (gst_subbuffer_get_type())
 
-#define GST_IS_SUBBUFFER(obj)  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SUBBUFFER))
-#define GST_SUBBUFFER(obj)     (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SUBBUFFER, GstSubBuffer))
+#define GST_IS_SUBBUFFER(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SUBBUFFER))
+#define GST_SUBBUFFER(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SUBBUFFER, GstSubBuffer))
+#define GST_SUBBUFFER_CAST(obj) ((GstSubBuffer *)(obj))
 
 struct _GstSubBuffer
 {
@@ -452,7 +451,8 @@ gst_subbuffer_finalize (GstSubBuffer * buffer)
 {
   gst_buffer_unref (buffer->parent);
 
-  GST_MINI_OBJECT_CLASS (sub_parent_class)->finalize (GST_MINI_OBJECT (buffer));
+  GST_MINI_OBJECT_CLASS (sub_parent_class)->
+      finalize (GST_MINI_OBJECT_CAST (buffer));
 }
 
 static void
@@ -491,7 +491,7 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
 
   /* find real parent */
   if (GST_IS_SUBBUFFER (buffer)) {
-    parent = GST_SUBBUFFER (buffer)->parent;
+    parent = GST_SUBBUFFER_CAST (buffer)->parent;
   } else {
     parent = buffer;
   }
@@ -549,8 +549,8 @@ gst_buffer_is_span_fast (GstBuffer * buf1, GstBuffer * buf2)
   /* it's only fast if we have subbuffers of the same parent */
   return (GST_IS_SUBBUFFER (buf1) &&
       GST_IS_SUBBUFFER (buf2) &&
-      (GST_SUBBUFFER (buf1)->parent == GST_SUBBUFFER (buf2)->parent) &&
-      ((buf1->data + buf1->size) == buf2->data));
+      (GST_SUBBUFFER_CAST (buf1)->parent == GST_SUBBUFFER_CAST (buf2)->parent)
+      && ((buf1->data + buf1->size) == buf2->data));
 }
 
 /**
@@ -589,7 +589,7 @@ gst_buffer_span (GstBuffer * buf1, guint32 offset, GstBuffer * buf2,
 
   /* if the two buffers have the same parent and are adjacent */
   if (gst_buffer_is_span_fast (buf1, buf2)) {
-    GstBuffer *parent = GST_SUBBUFFER (buf1)->parent;
+    GstBuffer *parent = GST_SUBBUFFER_CAST (buf1)->parent;
 
     /* we simply create a subbuffer of the common parent */
     newbuf = gst_buffer_create_sub (parent,

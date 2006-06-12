@@ -1,5 +1,15 @@
 2006-06-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbuffer.c: (gst_buffer_get_type), (gst_buffer_finalize),
+	(_gst_buffer_copy), (gst_buffer_is_metadata_writable),
+	(gst_subbuffer_finalize), (gst_buffer_create_sub),
+	(gst_buffer_is_span_fast), (gst_buffer_span):
+	Init _type for consistency.
+	Use _FLAGS macro to avoid type check.
+	Avoid unneeded type checks in subbufer code.
+
+2006-06-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gst.c: (gst_debug_help):
 	* gst/gstplugin.c: (gst_plugin_finalize), (gst_plugin_list_free):
 	* gst/gstpluginfeature.c: (gst_plugin_feature_finalize),
