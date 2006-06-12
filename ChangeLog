@@ -1,3 +1,8 @@
+2006-06-12  Edward Hervey  <edward@fluendo.com>
+
+	* .cvsignore:
+	ignore more files
+
 2006-06-06  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open): 
