@@ -1,3 +1,13 @@
+2006-06-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstinfo.c: (gst_debug_set_active),
+	(gst_debug_category_set_threshold), (_gst_debug_nameof_funcptr):
+	* gst/gstinfo.h:
+	Add some G_[UN]LIKELY.
+	Maintain __gst_debug_min to avoid formatting the arguments of
+	debug messages that will be dropped anyway to avoid a lot of 
+	overhead from the debugging system.
+
 2006-06-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* po/POTFILES.in:

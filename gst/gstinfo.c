@@ -192,8 +192,7 @@ static gint __use_color;
 /* disabled by default, as soon as some threshold is set > NONE,
  * it becomes enabled. */
 gboolean __gst_debug_enabled = FALSE;
-static gboolean __gst_debug_min = GST_LEVEL_NONE;
-
+GstDebugLevel __gst_debug_min = GST_LEVEL_NONE;
 
 GstDebugCategory *GST_CAT_DEFAULT = NULL;
 
@@ -794,9 +793,9 @@ gst_debug_set_active (gboolean active)
 {
   __gst_debug_enabled = active;
   if (active)
-    __gst_debug_min = GST_LEVEL_NONE;
-  else
     __gst_debug_min = GST_LEVEL_COUNT;
+  else
+    __gst_debug_min = GST_LEVEL_NONE;
 }
 
 /**
@@ -1012,8 +1011,10 @@ gst_debug_category_set_threshold (GstDebugCategory * category,
 {
   g_return_if_fail (category != NULL);
 
-  if (level > __gst_debug_min)
+  if (level > __gst_debug_min) {
     __gst_debug_enabled = TRUE;
+    __gst_debug_min = level;
+  }
 
   gst_atomic_int_set (&category->threshold, level);
 }
@@ -1131,11 +1132,11 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr ptr)
   Dl_info dlinfo;
 #endif
 
-  if (__gst_function_pointers) {
+  if (G_LIKELY (__gst_function_pointers)) {
     g_static_mutex_lock (&__dbg_functions_mutex);
     ptrname = g_hash_table_lookup (__gst_function_pointers, ptr);
     g_static_mutex_unlock (&__dbg_functions_mutex);
-    if (ptrname)
+    if (G_LIKELY (ptrname))
       return ptrname;
   }
   /* we need to create an entry in the hash table for this one so we don't leak
