@@ -1,5 +1,10 @@
 2006-06-12  Wim Taymans  <wim@fluendo.com>
 
+	* ext/dvdnav/.cvsignore:
+	More ignore
+
+2006-06-12  Wim Taymans  <wim@fluendo.com>
+
 	* tests/check/elements/amrnbenc.c: (push_data):
 	Init memory before feeding it to the encoder to make
 	the valgrind test succeed.
