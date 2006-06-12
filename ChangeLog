@@ -1,5 +1,10 @@
 2006-06-12  Wim Taymans  <wim@fluendo.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	Fix docs.
+
+2006-06-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstsegment.c: (gst_segment_set_duration),
 	(gst_segment_set_last_stop), (gst_segment_set_seek),
 	(gst_segment_set_newsegment_full), (gst_segment_to_stream_time),
