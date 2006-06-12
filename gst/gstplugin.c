@@ -124,7 +124,7 @@ gst_plugin_init (GstPlugin * plugin)
 static void
 gst_plugin_finalize (GObject * object)
 {
-  GstPlugin *plugin = GST_PLUGIN (object);
+  GstPlugin *plugin = GST_PLUGIN_CAST (object);
   GstRegistry *registry = gst_registry_get_default ();
   GList *g;
 
@@ -935,7 +935,7 @@ gst_plugin_list_free (GList * list)
   GList *g;
 
   for (g = list; g; g = g->next) {
-    gst_object_unref (GST_PLUGIN (g->data));
+    gst_object_unref (GST_PLUGIN_CAST (g->data));
   }
   g_list_free (list);
 }

@@ -314,7 +314,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
 
   GST_OBJECT_LOCK (registry);
   existing_plugin = gst_registry_lookup_locked (registry, plugin->filename);
-  if (existing_plugin) {
+  if (G_UNLIKELY (existing_plugin)) {
     GST_DEBUG_OBJECT (registry,
         "Replacing existing plugin %p with new plugin %p for filename \"%s\"",
         existing_plugin, plugin, GST_STR_NULL (plugin->filename));
@@ -385,7 +385,7 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
   GST_OBJECT_LOCK (registry);
   existing_feature = gst_registry_lookup_feature_locked (registry,
       feature->name);
-  if (existing_feature) {
+  if (G_UNLIKELY (existing_feature)) {
     GST_DEBUG_OBJECT (registry, "Replacing existing feature %p (%s)",
         existing_feature, feature->name);
     registry->features = g_list_remove (registry->features, existing_feature);
@@ -461,7 +461,7 @@ gst_registry_plugin_filter (GstRegistry * registry,
   list = gst_filter_run (registry->plugins, (GstFilterFunc) filter, first,
       user_data);
   for (g = list; g; g = g->next) {
-    gst_object_ref (GST_PLUGIN (g->data));
+    gst_object_ref (GST_PLUGIN_CAST (g->data));
   }
   GST_OBJECT_UNLOCK (registry);
 
@@ -497,7 +497,7 @@ gst_registry_feature_filter (GstRegistry * registry,
   list = gst_filter_run (registry->features, (GstFilterFunc) filter, first,
       user_data);
   for (g = list; g; g = g->next) {
-    gst_object_ref (GST_PLUGIN_FEATURE (g->data));
+    gst_object_ref (GST_PLUGIN_FEATURE_CAST (g->data));
   }
   GST_OBJECT_UNLOCK (registry);
 
@@ -529,7 +529,7 @@ gst_registry_find_plugin (GstRegistry * registry, const gchar * name)
   walk = gst_registry_plugin_filter (registry,
       (GstPluginFilter) gst_plugin_name_filter, TRUE, (gpointer) name);
   if (walk) {
-    result = GST_PLUGIN (walk->data);
+    result = GST_PLUGIN_CAST (walk->data);
 
     gst_object_ref (result);
     gst_plugin_list_free (walk);
@@ -571,7 +571,7 @@ gst_registry_find_feature (GstRegistry * registry, const gchar * name,
       TRUE, &data);
 
   if (walk) {
-    feature = GST_PLUGIN_FEATURE (walk->data);
+    feature = GST_PLUGIN_FEATURE_CAST (walk->data);
 
     gst_object_ref (feature);
     gst_plugin_feature_list_free (walk);
@@ -630,7 +630,7 @@ gst_registry_get_plugin_list (GstRegistry * registry)
   GST_OBJECT_LOCK (registry);
   list = g_list_copy (registry->plugins);
   for (g = list; g; g = g->next) {
-    gst_object_ref (GST_PLUGIN (g->data));
+    gst_object_ref (GST_PLUGIN_CAST (g->data));
   }
   GST_OBJECT_UNLOCK (registry);
 
@@ -643,11 +643,11 @@ gst_registry_lookup_feature_locked (GstRegistry * registry, const char *name)
   GList *g;
   GstPluginFeature *feature;
 
-  if (name == NULL)
+  if (G_UNLIKELY (name == NULL))
     return NULL;
 
   for (g = registry->features; g; g = g_list_next (g)) {
-    feature = GST_PLUGIN_FEATURE (g->data);
+    feature = GST_PLUGIN_FEATURE_CAST (g->data);
     if (feature->name && strcmp (name, feature->name) == 0) {
       return feature;
     }
@@ -692,12 +692,12 @@ gst_registry_lookup_locked (GstRegistry * registry, const char *filename)
   GstPlugin *plugin;
   gchar *basename;
 
-  if (filename == NULL)
+  if (G_UNLIKELY (filename == NULL))
     return NULL;
 
   basename = g_path_get_basename (filename);
   for (g = registry->plugins; g; g = g_list_next (g)) {
-    plugin = GST_PLUGIN (g->data);
+    plugin = GST_PLUGIN_CAST (g->data);
     if (plugin->basename && strcmp (basename, plugin->basename) == 0) {
       g_free (basename);
       return plugin;

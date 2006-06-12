@@ -284,10 +284,11 @@ load_feature (xmlTextReaderPtr reader)
 
       if (g_str_equal (tag, "name"))
         read_string (reader, &feature->name, FALSE);
-      if (g_str_equal (tag, "rank"))
+      else if (g_str_equal (tag, "rank"))
         read_uint (reader, &feature->rank);
+
       if (GST_IS_ELEMENT_FACTORY (feature)) {
-        GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
+        GstElementFactory *factory = GST_ELEMENT_FACTORY_CAST (feature);
 
         if (g_str_equal (tag, "longname")) {
           int ret;
@@ -544,7 +545,8 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
             GST_DEBUG ("adding plugin %s", plugin->desc.name);
             gst_registry_add_plugin (registry, plugin);
             for (g = feature_list; g; g = g_list_next (g)) {
-              gst_registry_add_feature (registry, GST_PLUGIN_FEATURE (g->data));
+              gst_registry_add_feature (registry,
+                  GST_PLUGIN_FEATURE_CAST (g->data));
             }
             g_list_free (feature_list);
           }
@@ -853,7 +855,7 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
 
   for (walk = g_list_last (registry->plugins); walk;
       walk = g_list_previous (walk)) {
-    GstPlugin *plugin = GST_PLUGIN (walk->data);
+    GstPlugin *plugin = GST_PLUGIN_CAST (walk->data);
 
     if (!plugin->filename)
       continue;

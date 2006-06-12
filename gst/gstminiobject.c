@@ -300,7 +300,7 @@ gst_mini_object_unref (GstMiniObject * mini_object)
       GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) - 1);
 #endif
 
-  if (g_atomic_int_dec_and_test (&mini_object->refcount)) {
+  if (G_UNLIKELY (g_atomic_int_dec_and_test (&mini_object->refcount))) {
     gst_mini_object_free (mini_object);
   }
 }
@@ -318,6 +318,12 @@ void
 gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
 {
   GstMiniObject *olddata_val;
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %p (%d) with %p (%d)",
+      *olddata, *olddata ? (*olddata)->refcount : 0,
+      newdata, newdata ? newdata->refcount : 0);
+#endif
 
   if (newdata)
     gst_mini_object_ref (newdata);
@@ -341,7 +347,7 @@ static void
 gst_value_mini_object_free (GValue * value)
 {
   if (value->data[0].v_pointer) {
-    gst_mini_object_unref (GST_MINI_OBJECT (value->data[0].v_pointer));
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (value->data[0].v_pointer));
   }
 }
 
@@ -350,7 +356,8 @@ gst_value_mini_object_copy (const GValue * src_value, GValue * dest_value)
 {
   if (src_value->data[0].v_pointer) {
     dest_value->data[0].v_pointer =
-        gst_mini_object_ref (GST_MINI_OBJECT (src_value->data[0].v_pointer));
+        gst_mini_object_ref (GST_MINI_OBJECT_CAST (src_value->data[0].
+            v_pointer));
   } else {
     dest_value->data[0].v_pointer = NULL;
   }

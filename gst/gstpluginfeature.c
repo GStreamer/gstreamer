@@ -66,7 +66,7 @@ gst_plugin_feature_init (GstPluginFeature * feature)
 static void
 gst_plugin_feature_finalize (GObject * object)
 {
-  GstPluginFeature *feature = GST_PLUGIN_FEATURE (object);
+  GstPluginFeature *feature = GST_PLUGIN_FEATURE_CAST (object);
 
   GST_DEBUG ("finalizing feature %p: '%s'", feature,
       GST_PLUGIN_FEATURE_NAME (feature));
@@ -252,7 +252,7 @@ gst_plugin_feature_list_free (GList * list)
   GList *g;
 
   for (g = list; g; g = g->next) {
-    GstPluginFeature *feature = GST_PLUGIN_FEATURE (g->data);
+    GstPluginFeature *feature = GST_PLUGIN_FEATURE_CAST (g->data);
 
     gst_object_unref (feature);
   }

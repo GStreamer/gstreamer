@@ -772,7 +772,7 @@ gst_debug_help (void)
 
   /* FIXME this is gross.  why don't debug have categories PluginFeatures? */
   for (g = list2; g; g = g_list_next (g)) {
-    GstPlugin *plugin = GST_PLUGIN (g->data);
+    GstPlugin *plugin = GST_PLUGIN_CAST (g->data);
 
     gst_plugin_load (plugin);
   }
