@@ -115,7 +115,7 @@ push_data (gint size, GstFlowReturn expected_return)
 {
   GstBuffer *buffer;
   GstFlowReturn res;
-  gchar *data = g_malloc (size);
+  gchar *data = g_malloc0 (size);
 
   buffer = buffer_new (data, size);
   g_free (data);
