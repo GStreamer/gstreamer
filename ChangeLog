@@ -1,5 +1,22 @@
 2006-06-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbuffer.h:
+	Avoid unneeded type checking.
+	API: GST_BUFFER_IS_DISCONT
+
+	* gst/gstminiobject.h:
+	Avoid type check in flag accessor.
+
+	* gst/gstelementfactory.h:
+	* gst/gstplugin.h:
+	* gst/gstpluginfeature.h:
+	Add _CAST macros.
+	API: GST_ELEMENT_FACTORY_CAST
+	API: GST_PLUGIN_CAST
+	API: GST_PLUGIN_FEATURE_CAST
+
+2006-06-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstobject.c: (gst_object_get_type), (gst_object_ref),
 	(gst_object_unref):
 	Add G_UNLIKELY in type registration.

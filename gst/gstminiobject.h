@@ -67,7 +67,7 @@ typedef void (*GstMiniObjectFinalizeFunction) (GstMiniObject *obj);
  *
  * This macro returns the entire set of flags for the mini-object.
  */
-#define GST_MINI_OBJECT_FLAGS(obj)  (GST_MINI_OBJECT(obj)->flags)
+#define GST_MINI_OBJECT_FLAGS(obj)  (GST_MINI_OBJECT_CAST(obj)->flags)
 /**
  * GST_MINI_OBJECT_FLAG_IS_SET:
  * @obj: MiniObject to check for flags.

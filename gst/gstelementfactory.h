@@ -94,6 +94,7 @@ struct _GstElementDetails
 						 GstElementFactoryClass))
 #define GST_IS_ELEMENT_FACTORY(obj) 		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ELEMENT_FACTORY))
 #define GST_IS_ELEMENT_FACTORY_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ELEMENT_FACTORY))
+#define GST_ELEMENT_FACTORY_CAST(obj)           ((GstElementFactory *)(obj))
 
 /**
  * GstElementFactory:

@@ -177,6 +177,15 @@ typedef struct _GstBufferClass GstBufferClass;
  * Tests if the end offset is known.
  */
 #define GST_BUFFER_OFFSET_END_IS_VALID(buffer)	(GST_BUFFER_OFFSET_END (buffer) != GST_BUFFER_OFFSET_NONE)
+/**
+ * GST_BUFFER_IS_DISCONT:
+ * @buffer: a #GstBuffer
+ *
+ * Tests if the buffer marks a discontinuity in the stream.
+ *
+ * Since: 0.10.9
+ */
+#define GST_BUFFER_IS_DISCONT(buffer)	(GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
 
 /**
  * GstBufferFlag:
@@ -307,7 +316,7 @@ gst_buffer_ref (GstBuffer * buf)
 {
   /* not using a macro here because gcc-4.1 will complain
    * if the return value isn't used (because of the cast) */
-  return (GstBuffer *) gst_mini_object_ref (GST_MINI_OBJECT (buf));
+  return (GstBuffer *) gst_mini_object_ref (GST_MINI_OBJECT_CAST (buf));
 }
 
 /**
@@ -318,7 +327,7 @@ gst_buffer_ref (GstBuffer * buf)
  * will be freed. If GST_BUFFER_MALLOCDATA() is non-NULL, this pointer will
  * also be freed at this time.
  */
-#define		gst_buffer_unref(buf)		gst_mini_object_unref (GST_MINI_OBJECT (buf))
+#define		gst_buffer_unref(buf)		gst_mini_object_unref (GST_MINI_OBJECT_CAST (buf))
 
 /* copy buffer */
 /**
@@ -328,7 +337,7 @@ gst_buffer_ref (GstBuffer * buf)
  * Create a copy of the given buffer. This will also make a newly allocated
  * copy of the data the source buffer contains.
  */
-#define		gst_buffer_copy(buf)		GST_BUFFER_CAST (gst_mini_object_copy (GST_MINI_OBJECT (buf)))
+#define		gst_buffer_copy(buf)		GST_BUFFER_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (buf)))
 /**
  * gst_buffer_is_writable:
  * @buf: a #GstBuffer
@@ -338,7 +347,7 @@ gst_buffer_ref (GstBuffer * buf)
  * writable, but it is only safe to change it when there is only one owner
  * of the buffer - ie, the refcount is 1. 
  */
-#define		gst_buffer_is_writable(buf)	gst_mini_object_is_writable (GST_MINI_OBJECT (buf))
+#define		gst_buffer_is_writable(buf)	gst_mini_object_is_writable (GST_MINI_OBJECT_CAST (buf))
 /**
  * gst_buffer_make_writable:
  * @buf: a #GstBuffer
@@ -347,7 +356,7 @@ gst_buffer_ref (GstBuffer * buf)
  * already writable, this will simply return the same buffer. A copy will 
  * otherwise be made using gst_buffer_copy().
  */
-#define		gst_buffer_make_writable(buf)   GST_BUFFER_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT (buf)))
+#define		gst_buffer_make_writable(buf)   GST_BUFFER_CAST (gst_mini_object_make_writable (GST_MINI_OBJECT_CAST (buf)))
 
 /* Ensure that the metadata of the buffer is writable, even if the buffer data
  * isn't */
@@ -367,7 +376,7 @@ GstBuffer*      gst_buffer_make_metadata_writable (GstBuffer *buf);
  *
  * Either @nbuf or the #GstBuffer pointed to by @obuf may be NULL.
  */
-#define		gst_buffer_replace(obuf,nbuf)	gst_mini_object_replace ((GstMiniObject **)(obuf), GST_MINI_OBJECT (nbuf))
+#define		gst_buffer_replace(obuf,nbuf)	gst_mini_object_replace ((GstMiniObject **)(obuf), GST_MINI_OBJECT_CAST (nbuf))
 
 GstCaps*	gst_buffer_get_caps		(GstBuffer *buffer);
 void		gst_buffer_set_caps		(GstBuffer *buffer, GstCaps *caps);
@@ -387,7 +396,7 @@ GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, 
  * Sets @b as the value of @v, correclty incrementing the refcount of
  * the buffer.
  */
-#define		gst_value_set_buffer(v,b)	gst_value_set_mini_object(v, GST_MINI_OBJECT(b))
+#define		gst_value_set_buffer(v,b)	gst_value_set_mini_object(v, GST_MINI_OBJECT_CAST(b))
 /**
  * gst_value_take_buffer:
  * @v: a #GstValue to receive the data
@@ -396,7 +405,7 @@ GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, 
  * Sets @b as the value of @v, this function lets the GstValue
  * take ownership of the buffer.
  */
-#define		gst_value_take_buffer(v,b)	gst_value_take_mini_object(v, GST_MINI_OBJECT(b))
+#define		gst_value_take_buffer(v,b)	gst_value_take_mini_object(v, GST_MINI_OBJECT_CAST(b))
 /**
  * gst_value_get_buffer:
  * @v: a #GstValue to qeury
@@ -405,7 +414,7 @@ GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, 
  * increase the refcount of the returned buffer so the buffer remains
  * valid as long as you own a refcount to the GstValue.
  */
-#define		gst_value_get_buffer(v)		GST_BUFFER (gst_value_get_mini_object(v))
+#define		gst_value_get_buffer(v)		GST_BUFFER_CAST (gst_value_get_mini_object(v))
 
 /* --- protected --- */
 void		_gst_buffer_initialize		(void);
