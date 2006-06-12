@@ -37,3 +37,6 @@ lex._gst_parse_yy.c: parse.l grammar.tab.h
 	rm lex._gst_parse_yy_tmp.c && \
 	mv lex._gst_parse_yy_tmp2.c lex._gst_parse_yy.c
 
+
+.NOTPARALLEL:
+
