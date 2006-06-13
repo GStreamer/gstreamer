@@ -1450,6 +1450,10 @@ found_eos:
   }
 pull_error:
   {
+    /* check if we got EOS */
+    if (res == GST_FLOW_UNEXPECTED)
+      goto found_eos;
+
     GST_DEBUG_OBJECT (wav, "Error getting %" G_GINT64_FORMAT " bytes from the "
         "sinkpad (dataleft = %" G_GINT64_FORMAT ")", desired, wav->dataleft);
     return res;
