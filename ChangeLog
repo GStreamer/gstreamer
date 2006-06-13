@@ -1,5 +1,10 @@
 2006-06-13  Edward Hervey  <edward@fluendo.com>
 
+	* Makefile.am: (CLEANFILES): 
+	Cleanup pygst.pyc file.
+
+2006-06-13  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst.defs:
 	Add 'unblock-threads #t' for critical functions/methods.
 
