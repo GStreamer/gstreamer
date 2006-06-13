@@ -1,6 +1,11 @@
 2006-06-13  Edward Hervey  <edward@fluendo.com>
 
 	* testsuite/gstpython.supp: 
+	Keeping suppresions
+
+2006-06-13  Edward Hervey  <edward@fluendo.com>
+
+	* testsuite/gstpython.supp: 
 	Tim might have fixed this suppression. Commenting it.
 
 2006-06-13  Edward Hervey  <edward@fluendo.com>
