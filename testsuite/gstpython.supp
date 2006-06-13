@@ -206,3 +206,22 @@
    fun:symtable_*
    fun:jcompile
 }
+
+#FIXME : This leak is is core. See bug #344761
+{
+   leak in init_gst, when creating the argv to give to gst_init_check()
+   Memcheck:Leak
+   fun:*
+   fun:g_malloc
+   fun:init_gst
+}
+
+{
+   The GOption context is leaking in gst_init_check
+   Memcheck:Leak
+   fun:*
+   fun:g_malloc0
+   fun:g_option_context_new
+   fun:gst_init_check
+   fun:init_gst
+}

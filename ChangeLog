@@ -1,5 +1,10 @@
 2006-06-13  Edward Hervey  <edward@fluendo.com>
 
+	* testsuite/gstpython.supp: 
+	Added suppresion for leaks of bug #344761.
+
+2006-06-13  Edward Hervey  <edward@fluendo.com>
+
 	* .cvsignore:
 	* testsuite/.cvsignore:
 	Ignore log files.
