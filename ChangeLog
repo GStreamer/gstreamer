@@ -1,5 +1,11 @@
 2006-06-13  Edward Hervey  <edward@fluendo.com>
 
+	* .cvsignore:
+	* testsuite/.cvsignore:
+	Ignore log files.
+
+2006-06-13  Edward Hervey  <edward@fluendo.com>
+
 	* Makefile.am: (CLEANFILES): 
 	Cleanup pygst.pyc file.
 

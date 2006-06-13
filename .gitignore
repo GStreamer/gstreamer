@@ -43,3 +43,4 @@ gst-python*.tar.*
 pygst.py
 gst-libs
 gst-python-0.9.3.1
+log
