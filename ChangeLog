@@ -1,5 +1,10 @@
 2006-06-13  Edward Hervey  <edward@fluendo.com>
 
+	* testsuite/gstpython.supp: 
+	One more suppression added to bug #344761
+
+2006-06-13  Edward Hervey  <edward@fluendo.com>
+
 	* .cvsignore:
 	Ignore more files
 
