@@ -1,3 +1,8 @@
+2006-06-13  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.c: (init_post):
+	Free string.
+
 2006-06-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/glib-compat-private.h:
