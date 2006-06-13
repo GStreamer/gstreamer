@@ -1,3 +1,15 @@
+2006-06-13  Wim Taymans  <wim@fluendo.com>
+
+	* ext/sidplay/gstsiddec.cc:
+	Fix copyright, email addresses and descriptions.
+	Use saner defaults for arguments. Fixes #344667.
+	constify some stuff.
+	Fix memleaks.
+	Add tags.
+	Fix negotiation to do mono/44100 by default.
+	Post error messages.
+	Use _scale_int where possible.
+
 2006-06-12  Wim Taymans  <wim@fluendo.com>
 
 	* ext/dvdnav/.cvsignore:
