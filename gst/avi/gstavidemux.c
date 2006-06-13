@@ -2372,6 +2372,8 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, gboolean update)
       GST_WARNING_OBJECT (avi,
           "Couldn't find AviIndexEntry for time:%" GST_TIME_FORMAT,
           GST_TIME_ARGS (avi->segment.start));
+      if (avi->current_entry >= avi->index_size && avi->index_size > 0)
+        avi->current_entry = avi->index_size - 1;
     }
   }
 
