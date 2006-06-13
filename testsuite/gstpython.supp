@@ -226,16 +226,16 @@
    fun:init_gst
 }
 
-{
-   The GDir is leaked.
-   Memcheck:Leak
-   fun:*
-   fun:g_malloc
-   fun:g_dir_open
-   fun:gst_registry_scan_path_level
-   fun:gst_registry_scan_path
-   fun:init_post
-   fun:g_option_context_parse
-   fun:gst_init_check
-   fun:init_gst
-}
+# {
+#    The GDir is leaked.
+#    Memcheck:Leak
+#    fun:*
+#    fun:g_malloc
+#    fun:g_dir_open
+#    fun:gst_registry_scan_path_level
+#    fun:gst_registry_scan_path
+#    fun:init_post
+#    fun:g_option_context_parse
+#    fun:gst_init_check
+#    fun:init_gst
+# }
