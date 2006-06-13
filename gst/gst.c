@@ -543,6 +543,100 @@ static GstPluginDesc plugin_desc = {
   GST_PADDING_INIT
 };
 
+#ifndef GST_DISABLE_REGISTRY
+
+static gboolean
+scan_and_update_registry (GstRegistry * default_registry,
+    const gchar * registry_file, gboolean write_changes)
+{
+  const gchar *plugin_path;
+  gboolean changed = FALSE;
+  GList *l;
+
+  GST_DEBUG ("reading registry cache: %s", registry_file);
+  gst_registry_xml_read_cache (default_registry, registry_file);
+
+  /* scan paths specified via --gst-plugin-path */
+  GST_DEBUG ("scanning paths added via --gst-plugin-path");
+  for (l = plugin_paths; l != NULL; l = l->next) {
+    GST_INFO ("Scanning plugin path: \"%s\"", (gchar *) l->data);
+    /* CHECKME: add changed |= here as well? */
+    gst_registry_scan_path (default_registry, (gchar *) l->data);
+    g_free (l->data);
+  }
+  g_list_free (plugin_paths);
+  plugin_paths = NULL;
+
+  /* GST_PLUGIN_PATH specifies a list of directories to scan for
+   * additional plugins.  These take precedence over the system plugins */
+  plugin_path = g_getenv ("GST_PLUGIN_PATH");
+  if (plugin_path) {
+    char **list;
+    int i;
+
+    GST_DEBUG ("GST_PLUGIN_PATH set to %s", plugin_path);
+    list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
+    for (i = 0; list[i]; i++) {
+      changed |= gst_registry_scan_path (default_registry, list[i]);
+    }
+    g_strfreev (list);
+  } else {
+    GST_DEBUG ("GST_PLUGIN_PATH not set");
+  }
+
+  /* GST_PLUGIN_SYSTEM_PATH specifies a list of plugins that are always
+   * loaded by default.  If not set, this defaults to the system-installed
+   * path, and the plugins installed in the user's home directory */
+  plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH");
+  if (plugin_path == NULL) {
+    char *home_plugins;
+
+    GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH not set");
+
+    /* plugins in the user's home directory take precedence over
+     * system-installed ones */
+    home_plugins = g_build_filename (g_get_home_dir (),
+        ".gstreamer-" GST_MAJORMINOR, "plugins", NULL);
+    changed |= gst_registry_scan_path (default_registry, home_plugins);
+    g_free (home_plugins);
+
+    /* add the main (installed) library path */
+    changed |= gst_registry_scan_path (default_registry, PLUGINDIR);
+  } else {
+    gchar **list;
+    gint i;
+
+    GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH set to %s", plugin_path);
+    list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
+    for (i = 0; list[i]; i++) {
+      changed |= gst_registry_scan_path (default_registry, list[i]);
+    }
+    g_strfreev (list);
+  }
+
+  if (!changed) {
+    GST_DEBUG ("registry cache has not changed");
+    return TRUE;
+  }
+
+  if (!write_changes) {
+    GST_DEBUG ("not trying to write registry cache changes to file");
+    return TRUE;
+  }
+
+  GST_DEBUG ("writing registry cache");
+  if (!gst_registry_xml_write_cache (default_registry, registry_file)) {
+    g_warning ("Problem writing registry cache to %s: %s", registry_file,
+        g_strerror (errno));
+    return FALSE;
+  }
+
+  GST_DEBUG ("registry cache written successfully");
+  return TRUE;
+}
+
+#endif /* GST_DISABLE_REGISTRY */
+
 /*
  * this bit handles:
  * - initalization of threads if we use them
@@ -598,23 +692,11 @@ init_post (void)
 #ifndef GST_DISABLE_REGISTRY
   {
     char *registry_file;
-    const char *plugin_path;
     GstRegistry *default_registry;
-    gboolean changed = FALSE;
-    GList *l;
 
 #ifdef HAVE_FORK
     pid_t pid;
 #endif
-
-    for (l = plugin_paths; l != NULL; l = l->next) {
-      GST_INFO ("Scanning plugin path: \"%s\"", (gchar *) l->data);
-      /* CHECKME: add changed |= here as well? */
-      gst_registry_scan_path (gst_registry_get_default (), (gchar *) l->data);
-      g_free (l->data);
-    }
-    g_list_free (plugin_paths);
-    plugin_paths = NULL;
 
     default_registry = gst_registry_get_default ();
     registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
@@ -635,71 +717,18 @@ init_post (void)
     }
 
     if (pid == 0) {
+      gboolean res;
+
       /* this is the child */
-#endif /* HAVE_FORK */
-
       GST_DEBUG ("child reading registry cache");
-      gst_registry_xml_read_cache (default_registry, registry_file);
-
-      /* GST_PLUGIN_PATH specifies a list of directories to scan for
-       * additional plugins.  These take precedence over the system plugins */
-      plugin_path = g_getenv ("GST_PLUGIN_PATH");
-      if (plugin_path) {
-        char **list;
-        int i;
-
-        GST_DEBUG ("GST_PLUGIN_PATH set to %s", plugin_path);
-        list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
-        for (i = 0; list[i]; i++) {
-          changed |= gst_registry_scan_path (default_registry, list[i]);
-        }
-        g_strfreev (list);
-      } else {
-        GST_DEBUG ("GST_PLUGIN_PATH not set");
-      }
-
-      /* GST_PLUGIN_SYSTEM_PATH specifies a list of plugins that are always
-       * loaded by default.  If not set, this defaults to the system-installed
-       * path, and the plugins installed in the user's home directory */
-      plugin_path = g_getenv ("GST_PLUGIN_SYSTEM_PATH");
-      if (plugin_path == NULL) {
-        char *home_plugins;
-
-        GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH not set");
-
-        /* plugins in the user's home directory take precedence over
-         * system-installed ones */
-        home_plugins = g_build_filename (g_get_home_dir (),
-            ".gstreamer-" GST_MAJORMINOR, "plugins", NULL);
-        changed |= gst_registry_scan_path (default_registry, home_plugins);
-        g_free (home_plugins);
-
-        /* add the main (installed) library path */
-        changed |= gst_registry_scan_path (default_registry, PLUGINDIR);
-      } else {
-        char **list;
-        int i;
-
-        GST_DEBUG ("GST_PLUGIN_SYSTEM_PATH set to %s", plugin_path);
-        list = g_strsplit (plugin_path, G_SEARCHPATH_SEPARATOR_S, 0);
-        for (i = 0; list[i]; i++) {
-          changed |= gst_registry_scan_path (default_registry, list[i]);
-        }
-        g_strfreev (list);
-      }
-
-      if (changed) {
-        GST_DEBUG ("writing registry cache");
-        gst_registry_xml_write_cache (default_registry, registry_file);
-      }
-
+      res = scan_and_update_registry (default_registry, registry_file, TRUE);
       _gst_registry_remove_cache_plugins (default_registry);
-
-#ifdef HAVE_FORK
       g_free (registry_file);
+
       /* need to use _exit, so that any exit handlers registered don't
        * bring down the main program */
-      _exit (0);
+      GST_DEBUG ("child exiting: %s", (res) ? "SUCCESS" : "FAILURE");
+      _exit ((res) ? EXIT_SUCCESS : EXIT_FAILURE);
     } else {
       /* parent */
       int status;
@@ -720,9 +749,22 @@ init_post (void)
 
       GST_DEBUG ("child exited normally with return value %d",
           WEXITSTATUS (status));
-      GST_DEBUG ("parent reading registry cache");
-      gst_registry_xml_read_cache (default_registry, registry_file);
+
+      if (WEXITSTATUS (status) == EXIT_SUCCESS) {
+        GST_DEBUG ("parent reading registry cache");
+        gst_registry_xml_read_cache (default_registry, registry_file);
+      } else {
+        GST_DEBUG ("parent re-scanning registry");
+        scan_and_update_registry (default_registry, registry_file, FALSE);
+      }
     }
+
+#else /* HAVE_FORK */
+
+    /* fork() not available */
+    GST_DEBUG ("updating registry cache");
+    scan_and_update_registry (default_registry, registry_file, TRUE);
+
 #endif /* HAVE_FORK */
 
     g_free (registry_file);

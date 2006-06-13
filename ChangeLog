@@ -1,3 +1,14 @@
+2006-06-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c: (scan_and_update_registry), (init_post):
+	  If the fork()'ed child process can't write the updated registry cache
+	  file to disk for some reason, make it exit with a failure exit code,
+	  so that the parent can then re-scan the plugins itself and update the
+	  registry structures in memory and work with that (rather than failing
+	  when creating elements because seemingly no plugins are available).
+	  Refactor registry scanning code into separate function for this and
+	  also separate fork() and non-fork() code paths. Fixes #344748.
+
 2006-06-13  Wim Taymans  <wim@fluendo.com>
 
 	* docs/manual/advanced-dataaccess.xml:
