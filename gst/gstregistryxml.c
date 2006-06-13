@@ -840,11 +840,16 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
     g_mkdir_with_parents (dir, 0777);
     g_free (dir);
 
-    registry->cache_file = g_mkstemp (tmp_location);
-  }
-  if (registry->cache_file == -1) {
+    /* the previous g_mkstemp call overwrote the XXXXXX placeholder ... */
     g_free (tmp_location);
-    return FALSE;
+    tmp_location = g_strconcat (location, ".tmpXXXXXX", NULL);
+    registry->cache_file = g_mkstemp (tmp_location);
+
+    if (registry->cache_file == -1) {
+      GST_DEBUG ("g_mkstemp() failed: %s", g_strerror (errno));
+      g_free (tmp_location);
+      return FALSE;
+    }
   }
 
   if (!gst_registry_save (registry, "<?xml version=\"1.0\"?>\n"))
