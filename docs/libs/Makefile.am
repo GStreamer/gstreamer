@@ -72,7 +72,7 @@ IGNORE_HFILES = \
 	dp-private.h
 
 # Images to copy into HTML directory.
-HTML_IMAGES =
+HTML_IMAGES = gdp-header.png
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE).
 content_files =

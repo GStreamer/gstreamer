@@ -116,7 +116,7 @@
         at the lowest level as it only adds overhead for the local case. 
 	That said, it shouldn't be hard to create a wrapper around the
 	core components. There are tcp plugins now that implement a
-        &GStreamer; Data Protocol that allows pipelines to be slit over
+        &GStreamer; Data Protocol that allows pipelines to be split over
         TCP. These are located in the gst-plugins module directory gst/tcp.
       </para> 
     </sect2>

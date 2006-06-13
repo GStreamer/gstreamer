@@ -1,3 +1,15 @@
+2006-06-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/README:
+	* docs/images/gdp-header.svg:
+	  add a gdp image
+	* docs/libs/Makefile.am:
+	* docs/libs/gdp-header.png:
+	* libs/gst/dataprotocol/dataprotocol.c:
+	  add it to the API docs
+	* docs/manual/intro-motivation.xml:
+	  fix typo
+
 2006-06-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (scan_and_update_registry), (init_post):

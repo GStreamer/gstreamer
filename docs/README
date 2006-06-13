@@ -341,3 +341,9 @@ It's a really nice development app allowing you to look up API stuff
 from various gtk-doc'd libraries.  GStreamer is one of these ;)
 
 gtk-doc generates both html API docs and the matching .devhelp files
+
+IMAGES
+------
+It's important to keep the original source format for images, to be able
+to change and regenerate later on.  Original files go in
+docs/images

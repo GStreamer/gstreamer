@@ -60,6 +60,10 @@
  * #GstDPPacketizer object and invoking its packetizer functions.
  * For backwards-compatibility reasons, the old 0.2 methods are still
  * available but deprecated.
+ *
+ * For reference, this image shows the byte layout of the GDP header:
+ *
+ * <inlinegraphic format="PNG" fileref="gdp-header.png"></inlinegraphic>
  */
 
 #ifdef HAVE_CONFIG_H
