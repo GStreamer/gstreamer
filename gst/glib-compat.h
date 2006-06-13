@@ -32,15 +32,6 @@
 
 G_BEGIN_DECLS
 
-/* added in GLib 2.8 */
-#if !GLIB_CHECK_VERSION (2, 8, 0)
-#if     __GNUC__ >= 4
-#define G_GNUC_NULL_TERMINATED __attribute__((__sentinel__))
-#else
-#define G_GNUC_NULL_TERMINATED
-#endif
-#endif
-
 G_END_DECLS
 
 #endif /* __GST_GLIB_COMPAT_H__ */

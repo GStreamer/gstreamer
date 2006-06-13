@@ -1,3 +1,11 @@
+2006-06-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/glib-compat-private.h:
+	* gst/glib-compat.c:
+	* gst/glib-compat.h:
+	* gst/gstvalue.c: (gst_value_serialize_flags):
+	  remove GLib 2.6 compatibility code
+
 2006-06-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/parse/Makefile.am:
