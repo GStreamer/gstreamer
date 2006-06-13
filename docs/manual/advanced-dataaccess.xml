@@ -340,7 +340,6 @@ static GstPluginDesc plugin_desc = {
   "my-private-plugins",
   "Private elements of my application",
   register_elements,
-  NULL,
   "0.0.1",
   "LGPL",
   "my-application",
