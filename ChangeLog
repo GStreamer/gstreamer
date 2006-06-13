@@ -1,3 +1,8 @@
+2006-06-13  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	Add 'unblock-threads #t' for critical functions/methods.
+
 2006-06-12  Edward Hervey  <edward@fluendo.com>
 
 	* testsuite/Makefile.am:
