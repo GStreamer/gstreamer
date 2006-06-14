@@ -1,5 +1,5 @@
 /* GStreamer Wavpack encoder plugin
- * Copyrigh (c) 2006 Sebastian Dröge <mail@slomosnail.de>
+ * Copyright (c) 2006 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * gstwavpackenc.h: Wavpack audio encoder
  *
