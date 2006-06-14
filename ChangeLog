@@ -1,3 +1,15 @@
+2006-06-14  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst-types.defs:
+	Added fields for GstPadTemplate.
+	* gst/gst.defs:
+	Made gst_element_class_get_template_list a GstElement method.
+	* gst/gstelement.override:
+	Override for gst.Element.get_template_list()
+	* gst/gstpad.override:
+	Override getter for GstStaticPadTemplate.static_caps so that it uses
+	the correct pointer.
+
 2006-06-13  Edward Hervey  <edward@fluendo.com>
 
 	* testsuite/gstpython.supp: 

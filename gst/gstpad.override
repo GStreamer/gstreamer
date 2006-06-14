@@ -143,6 +143,7 @@ probe_handler_marshal(GstPad *pad, GstMiniObject *data, gpointer user_data)
     repr = PyObject_Repr (callback);
     GST_LOG_OBJECT (pad, "calling callback %s", PyString_AsString (repr));
     Py_DECREF (repr);
+
     ret = PyObject_CallObject(callback, args);
 
     if (!ret) {
@@ -1151,3 +1152,15 @@ _wrap_gst_pad_query_peer_convert (PyGObject *self, PyObject *args, PyObject *kwa
 
     return ret;
 }
+%%
+override-attr GstStaticPadTemplate.static_caps
+static PyObject *
+_wrap_gst_static_pad_template__get_static_caps(PyObject *self, void *closure)
+{
+    GstStaticPadTemplate *templ;
+
+
+    templ = pyg_pointer_get(self, GstStaticPadTemplate);
+    return pyg_pointer_new(GST_TYPE_STATIC_CAPS, &(templ->static_caps));
+}
+

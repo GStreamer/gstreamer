@@ -66,6 +66,12 @@
   (parent "GstObject")
   (c-name "GstPadTemplate")
   (gtype-id "GST_TYPE_PAD_TEMPLATE")
+  (fields
+   '("const-gchar*" "name_template")
+   '("GstPadDirection" "direction")
+   '("GstPadPresence" "presence")
+   '("GstCaps*" "caps")
+   )
 )
 
 (define-object Pipeline
