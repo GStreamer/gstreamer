@@ -1080,6 +1080,8 @@ gst_dvdemux_handle_pull_seek (GstDVDemux * demux, GstPad * pad,
         gst_event_new_new_segment (FALSE,
             demux->time_segment.rate, demux->time_segment.format,
             demux->time_segment.last_stop, stop, demux->time_segment.time));
+
+    demux->need_segment = FALSE;
   }
 
   demux->running = TRUE;

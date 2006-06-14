@@ -1,5 +1,16 @@
 2006-06-14  Wim Taymans  <wim@fluendo.com>
 
+	* ext/dv/gstdvdec.c: (gst_dvdec_class_init), (gst_dvdec_init),
+	(gst_dvdec_finalize), (gst_dvdec_sink_event),
+	(gst_dvdec_change_state):
+	Reset segment info on flush.
+	Alloc segment in _init, free in _finalize.
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_handle_pull_seek):
+	Don't send segments twice.
+
+2006-06-14  Wim Taymans  <wim@fluendo.com>
+
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_demux_frame):
 	Respect segment.stop. Fixes #342592.
 

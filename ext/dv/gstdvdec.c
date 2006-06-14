@@ -141,6 +141,7 @@ gst_dvdec_quality_get_type (void)
 
 GST_BOILERPLATE (GstDVDec, gst_dvdec, GstElement, GST_TYPE_ELEMENT);
 
+static void gst_dvdec_finalize (GObject * object);
 static gboolean gst_dvdec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_dvdec_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_dvdec_sink_event (GstPad * pad, GstEvent * event);
@@ -177,6 +178,7 @@ gst_dvdec_class_init (GstDVDecClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->finalize = gst_dvdec_finalize;
   gobject_class->set_property = gst_dvdec_set_property;
   gobject_class->get_property = gst_dvdec_get_property;
 
@@ -228,6 +230,17 @@ gst_dvdec_init (GstDVDec * dvdec, GstDVDecClass * g_class)
   dvdec->clamp_luma = FALSE;
   dvdec->clamp_chroma = FALSE;
   dvdec->quality = DV_DEFAULT_QUALITY;
+  dvdec->segment = gst_segment_new ();
+}
+
+static void
+gst_dvdec_finalize (GObject * object)
+{
+  GstDVDec *dvdec = GST_DVDEC (object);
+
+  gst_segment_free (dvdec->segment);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -293,6 +306,9 @@ gst_dvdec_sink_event (GstPad * pad, GstEvent * event)
   dvdec = GST_DVDEC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (dvdec->segment, GST_FORMAT_UNDEFINED);
+      break;
     case GST_EVENT_NEWSEGMENT:{
       gboolean update;
       gdouble rate;
@@ -302,14 +318,16 @@ gst_dvdec_sink_event (GstPad * pad, GstEvent * event)
       /* Once -good depends on core >= 0.10.6, use newsegment_full */
       gst_event_parse_new_segment (event, &update, &rate, &format,
           &start, &stop, &position);
+
       GST_DEBUG_OBJECT (dvdec, "Got NEWSEGMENT [%" GST_TIME_FORMAT
           " - %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "]",
           GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
           GST_TIME_ARGS (position));
+
       gst_segment_set_newsegment (dvdec->segment, update, rate, format,
           start, stop, position);
-    }
       break;
+    }
     default:
       break;
   }
@@ -447,7 +465,6 @@ gst_dvdec_change_state (GstElement * element, GstStateChange transition)
           dv_decoder_new (0, dvdec->clamp_luma, dvdec->clamp_chroma);
       dvdec->decoder->quality = qualities[dvdec->quality];
       dv_set_error_log (dvdec->decoder, NULL);
-      dvdec->segment = gst_segment_new ();
       gst_segment_init (dvdec->segment, GST_FORMAT_UNDEFINED);
       /* 
        * Enable this function call when libdv2 0.100 or higher is more
@@ -469,8 +486,6 @@ gst_dvdec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       dv_decoder_free (dvdec->decoder);
       dvdec->decoder = NULL;
-      gst_segment_free (dvdec->segment);
-      dvdec->segment = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
