@@ -953,9 +953,6 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
           ", stop %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
 
-      if (data->segment.format != format)
-        gst_segment_init (&data->segment, format);
-
       gst_segment_set_newsegment_full (&data->segment, update, rate, arate,
           format, start, stop, time);
 

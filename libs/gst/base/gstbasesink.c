@@ -709,11 +709,10 @@ gst_base_sink_configure_segment (GstBaseSink * basesink, GstPad * pad,
   gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
       &start, &stop, &time);
 
+  /* The segment is protected with both the STREAM_LOCK and the OBJECT_LOCK.
+   * We protect with the OBJECT_LOCK so that we can use the values to
+   * safely answer a POSITION query. */
   GST_OBJECT_LOCK (basesink);
-
-  if (segment->format != format)
-    gst_segment_init (segment, format);
-
   gst_segment_set_newsegment_full (segment, update, rate, arate, format, start,
       stop, time);
 

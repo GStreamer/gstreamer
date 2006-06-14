@@ -1,3 +1,13 @@
+2006-06-14  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_configure_segment),
+	(gst_base_sink_preroll_object), (gst_base_sink_get_position):
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_sink_eventfunc):
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_event):
+	Don't randomly and silently reset a segment when the format 
+	changes as this is a bug somewhere upstream. Fixes #330379.
+
 2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Wouter Paesen  <wouter at kangaroot net>
