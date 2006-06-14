@@ -690,6 +690,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
         }
         context->codec_priv = data;
         context->codec_priv_size = size;
+        GST_LOG_OBJECT (demux, "%u bytes of codec private data", size);
         break;
       }
 
@@ -714,6 +715,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
           break;
         }
         context->name = text;
+        GST_LOG ("stream %d: trackname=%s", context->index, text);
         break;
       }
 
@@ -725,7 +727,13 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
           res = FALSE;
           break;
         }
+
         context->language = text;
+        GST_LOG ("stream %d: language=%s", context->index, text);
+
+        /* fre-ca => fre */
+        if (strlen (context->language) >= 4 && context->language[3] == '-')
+          context->language[3] = '\0';
         break;
       }
 
@@ -887,6 +895,13 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
     default:
       /* we should already have quit by now */
       g_assert_not_reached ();
+  }
+
+  if ((context->language == NULL || *context->language == '\0') &&
+      (context->type == GST_MATROSKA_TRACK_TYPE_AUDIO ||
+          context->type == GST_MATROSKA_TRACK_TYPE_SUBTITLE)) {
+    GST_LOG ("stream %d: language=eng (assuming default)", context->index);
+    context->language = g_strdup ("eng");
   }
 
   if (context->language) {

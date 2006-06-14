@@ -1,5 +1,12 @@
 2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream):
+	  No language specified means the implied language is English
+	  according to the matroska spec (partially fixes #344708);
+	  add some more debug output.
+
+2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_peek_chunk_info),
 	(gst_wavparse_peek_chunk), (gst_wavparse_stream_headers),
 	(gst_wavparse_chain):
