@@ -1,3 +1,8 @@
+2006-06-14  Wim Taymans  <wim@fluendo.com>
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_demux_frame):
+	Respect segment.stop. Fixes #342592.
+
 2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream):

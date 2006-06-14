@@ -1397,9 +1397,14 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
     goto done;
   }
 
-  ret = GST_FLOW_OK;
   gst_segment_set_last_stop (&dvdemux->time_segment, GST_FORMAT_TIME, next_ts);
   dvdemux->frame_offset++;
+
+  /* check for the end of the segment */
+  if (dvdemux->time_segment.stop != -1 && next_ts > dvdemux->time_segment.stop)
+    ret = GST_FLOW_UNEXPECTED;
+  else
+    ret = GST_FLOW_OK;
 
 done:
   return ret;
