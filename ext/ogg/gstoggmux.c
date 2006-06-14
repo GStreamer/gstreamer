@@ -173,7 +173,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-theora; "
         "audio/x-vorbis; audio/x-flac; audio/x-speex; "
-        "application/x-ogm-video; application/x-ogm-audio; video/x-dirac")
+        "application/x-ogm-video; application/x-ogm-audio; video/x-dirac; "
+        "video/x-smoke")
     );
 
 static void gst_ogg_mux_base_init (gpointer g_class);
@@ -204,7 +205,7 @@ gst_ogg_mux_get_type (void)
 {
   static GType ogg_mux_type = 0;
 
-  if (!ogg_mux_type) {
+  if (G_UNLIKELY (ogg_mux_type == 0)) {
     static const GTypeInfo ogg_mux_info = {
       sizeof (GstOggMuxClass),
       gst_ogg_mux_base_init,
@@ -290,6 +291,8 @@ gst_ogg_mux_clear (GstOggMux * ogg_mux)
   ogg_mux->max_delay = DEFAULT_MAX_DELAY;
   ogg_mux->max_page_delay = DEFAULT_MAX_PAGE_DELAY;
   ogg_mux->delta_pad = NULL;
+  ogg_mux->offset = 0;
+  ogg_mux->next_ts = 0;
 }
 
 static void
@@ -440,23 +443,21 @@ gst_ogg_mux_release_pad (GstElement * element, GstPad * pad)
   /* Find out GstOggPad in the collect pads info and clean it up */
 
   GST_OBJECT_LOCK (ogg_mux->collect);
-  walk = ogg_mux->collect->data;
-  while (walk) {
+  for (walk = ogg_mux->collect->data; walk; walk = g_slist_next (walk)) {
     GstOggPad *oggpad = (GstOggPad *) walk->data;
     GstCollectData *cdata = (GstCollectData *) walk->data;
     GstBuffer *buf;
 
     if (cdata->pad == pad) {
-      /* FIXME: clear the ogg stream stuff? - 
-       *    ogg_stream_clear (&oggpad->stream); */
+      ogg_stream_clear (&oggpad->stream);
 
       while ((buf = g_queue_pop_head (oggpad->pagebuffers)) != NULL) {
         gst_buffer_unref (buf);
       }
 
       g_queue_free (oggpad->pagebuffers);
+      oggpad->pagebuffers = NULL;
     }
-    walk = g_slist_next (walk);
   }
   GST_OBJECT_UNLOCK (ogg_mux->collect);
 
@@ -825,7 +826,7 @@ gst_ogg_mux_get_headers (GstOggPad * pad)
   GList *res = NULL;
   GstOggMux *ogg_mux;
   GstStructure *structure;
-  const GstCaps *caps;
+  GstCaps *caps;
   GstPad *thepad;
 
   thepad = pad->collect.pad;
@@ -867,6 +868,7 @@ gst_ogg_mux_get_headers (GstOggPad * pad)
     } else {
       GST_LOG_OBJECT (thepad, "caps done have streamheader");
     }
+    gst_caps_unref (caps);
   } else {
     GST_LOG_OBJECT (thepad, "got empty caps as negotiated format");
   }
@@ -889,6 +891,7 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
 
   while (walk) {
     GstBuffer *buf = GST_BUFFER (walk->data);
+    GstBuffer *copy;
     GValue value = { 0 };
 
     walk = walk->next;
@@ -898,7 +901,9 @@ gst_ogg_mux_set_header_on_caps (GstCaps * caps, GList * buffers)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 
     g_value_init (&value, GST_TYPE_BUFFER);
-    gst_value_set_buffer (&value, buf);
+    copy = gst_buffer_copy (buf);
+    gst_value_set_buffer (&value, copy);
+    gst_buffer_unref (copy);
     gst_value_array_append_value (&array, &value);
     g_value_unset (&value);
   }
@@ -1471,22 +1476,15 @@ gst_ogg_mux_set_property (GObject * object,
   }
 }
 
-/* Clear all buffers from the collectpads object */
+/* reset all variables in the ogg pads. */
 static void
-gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
+gst_ogg_mux_init_collectpads (GstCollectPads * collect)
 {
   GSList *walk;
 
   walk = collect->data;
   while (walk) {
     GstOggPad *oggpad = (GstOggPad *) walk->data;
-    GstBuffer *buf;
-
-    ogg_stream_clear (&oggpad->stream);
-
-    while ((buf = g_queue_pop_head (oggpad->pagebuffers)) != NULL) {
-      gst_buffer_unref (buf);
-    }
 
     ogg_stream_init (&oggpad->stream, oggpad->serial);
     oggpad->packetno = 0;
@@ -1503,6 +1501,26 @@ gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
   }
 }
 
+/* Clear all buffers from the collectpads object */
+static void
+gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
+{
+  GSList *walk;
+
+  for (walk = collect->data; walk; walk = g_slist_next (walk)) {
+    GstOggPad *oggpad = (GstOggPad *) walk->data;
+    GstBuffer *buf;
+
+    ogg_stream_clear (&oggpad->stream);
+
+    while ((buf = g_queue_pop_head (oggpad->pagebuffers)) != NULL) {
+      gst_buffer_unref (buf);
+    }
+    g_queue_free (oggpad->pagebuffers);
+    oggpad->pagebuffers = NULL;
+  }
+}
+
 static GstStateChangeReturn
 gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1515,11 +1533,9 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      ogg_mux->next_ts = 0;
-      ogg_mux->offset = 0;
-      ogg_mux->pulling = NULL;
-      gst_collect_pads_start (ogg_mux->collect);
       gst_ogg_mux_clear (ogg_mux);
+      gst_ogg_mux_init_collectpads (ogg_mux->collect);
+      gst_collect_pads_start (ogg_mux->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -1535,8 +1551,10 @@ gst_ogg_mux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ogg_mux_clear_collectpads (ogg_mux->collect);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;

@@ -1,3 +1,14 @@
+2006-06-14  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Alessandro Decina <alessandro at nnva dot org>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_get_type), (gst_ogg_mux_clear),
+	(gst_ogg_mux_release_pad), (gst_ogg_mux_get_headers),
+	(gst_ogg_mux_set_header_on_caps), (gst_ogg_mux_init_collectpads),
+	(gst_ogg_mux_clear_collectpads), (gst_ogg_mux_change_state):
+	Fix various leaks. Fixes #343699.
+	Add x-smoke mime type.
+
 2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-ids.h:
