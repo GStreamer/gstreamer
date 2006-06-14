@@ -1,3 +1,17 @@
+2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge  <slomo at circular-chaos org>
+
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_base_init),
+	(gst_wavpack_enc_class_init), (gst_wavpack_enc_set_wp_config),
+	(gst_wavpack_enc_chain), (gst_wavpack_enc_sink_event),
+	(gst_wavpack_enc_set_property), (gst_wavpack_enc_get_property):
+	* ext/wavpack/gstwavpackenc.h:
+	  Use bitrate property solely for bitrates and add new
+	  bits-per-sample property for the other stuff. Set duration
+	  to 'unknown' in initial header and resend header with proper
+	  duration on EOS; update Sebastian's e-mail address.
+
 2006-06-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* examples/directfb/.cvsignore:

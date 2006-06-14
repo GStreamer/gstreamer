@@ -1,5 +1,5 @@
 /* GStreamer Wavpack encoder plugin
- * Copyright (c) 2006 Sebastian Dröge <mail@slomosnail.de>
+ * Copyright (c) 2006 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * gstwavpackdec.c: Wavpack audio encoder
  *
@@ -63,6 +63,7 @@ enum
   ARG_0,
   ARG_MODE,
   ARG_BITRATE,
+  ARG_BITSPERSAMPLE,
   ARG_CORRECTION_MODE,
   ARG_MD5,
   ARG_EXTRA_PROCESSING,
@@ -185,7 +186,7 @@ gst_wavpack_enc_base_init (gpointer klass)
     "Wavpack audio encoder",
     "Codec/Encoder/Audio",
     "Encodes audio with the Wavpack lossless/lossy audio codec",
-    "Sebastian Dröge <mail@slomosnail.de>"
+    "Sebastian Dröge <slomo@circular-chaos.org>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -228,9 +229,14 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
           GST_TYPE_WAVPACK_ENC_MODE, DEFAULT_MODE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_double ("bitrate", "Bitrate",
-          "Try to encode with this average bitrate. "
-          "This enables lossy encoding! (0 .. 2.0 == disabled, 2.0 .. 23.9 == bits/sample, 24.0 .. 9600 == kbit/second)",
-          0.0, 9600.0, 0.0, G_PARAM_READWRITE));
+          "Try to encode with this average bitrate (bits/sec). "
+          "This enables lossy encoding! A value smaller than 24000.0 disables this.",
+          0.0, 9600000.0, 0.0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_BITSPERSAMPLE,
+      g_param_spec_double ("bits-per-sample", "Bits per sample",
+          "Try to encode with this amount of bits per sample. "
+          "This enables lossy encoding! A value smaller than 2.0 disables this.",
+          0.0, 24.0, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_CORRECTION_MODE,
       g_param_spec_enum ("correction_mode", "Correction file mode",
           "Use this mode for correction file creation. Only works in lossy mode!",
@@ -386,11 +392,14 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * wavpack_enc)
   }
 
   /* Bitrate, enables lossy mode */
-  if (wavpack_enc->bitrate > 2.0) {
+  if (wavpack_enc->bitrate >= 2.0) {
     wavpack_enc->wp_config->flags |= CONFIG_HYBRID_FLAG;
-    wavpack_enc->wp_config->bitrate = wavpack_enc->bitrate;
-    if (wavpack_enc->bitrate >= 24.0)
+    if (wavpack_enc->bitrate >= 24000.0) {
+      wavpack_enc->wp_config->bitrate = wavpack_enc->bitrate / 1000.0;
       wavpack_enc->wp_config->flags |= CONFIG_BITRATE_KBPS;
+    } else {
+      wavpack_enc->wp_config->bitrate = wavpack_enc->bitrate;
+    }
   }
 
   /* Correction Mode, only in lossy mode */
@@ -674,9 +683,6 @@ gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buf)
 
   /* check if we already have a valid WavpackContext, otherwise make one */
   if (!wavpack_enc->wp_context) {
-    gint64 duration;
-    GstFormat fmt = GST_FORMAT_DEFAULT;
-
     /* create raw context */
     wavpack_enc->wp_context =
         WavpackOpenFileOutput (gst_wavpack_enc_push_block, wavpack_enc->wv_id,
@@ -692,38 +698,10 @@ gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buf)
     /* set the WavpackConfig according to our parameters */
     gst_wavpack_enc_set_wp_config (wavpack_enc);
 
-    /* try to get the duration (or an estimate) in samples from upstream */
-    if (gst_pad_query_peer_duration (pad, &fmt, &duration)) {
-      switch (fmt) {
-        case GST_FORMAT_DEFAULT:
-          break;
-        case GST_FORMAT_TIME:
-          duration =
-              gst_util_uint64_scale (wavpack_enc->samplerate,
-              duration, GST_SECOND);
-          break;
-        default:
-          duration = 0;
-          break;
-      }
-    } else {
-      duration = 0;
-    }
-
-    /* Wavpack doesn't support more than 2^32 samples unfortunately */
-    if (duration > G_GINT64_CONSTANT (1) << 32) {
-      GST_ELEMENT_ERROR (wavpack_enc, LIBRARY, SETTINGS, (NULL),
-          ("more than 2^32 samples are not supported"));
-      WavpackCloseFile (wavpack_enc->wp_context);
-      gst_object_unref (wavpack_enc);
-      gst_buffer_unref (buf);
-      return GST_FLOW_ERROR;
-    }
-
     /* set the configuration to the context now that we know everything
      * and initialize the encoder */
     if (!WavpackSetConfiguration (wavpack_enc->wp_context,
-            wavpack_enc->wp_config, (uint32_t) duration)
+            wavpack_enc->wp_config, (uint32_t) (-1))
         || !WavpackPackInit (wavpack_enc->wp_context)) {
       GST_ELEMENT_ERROR (wavpack_enc, LIBRARY, SETTINGS, (NULL),
           ("error setting up wavpack encoding context"));
@@ -833,11 +811,8 @@ gst_wavpack_enc_sink_event (GstPad * pad, GstEvent * event)
         WavpackStoreMD5Sum (wavpack_enc->wp_context, md5_digest);
       }
 
-      /* Try to rewrite the first frame with the correct sample number if we
-       * had a wrong one at the start of encoding */
-      if ((wavpack_enc->first_block)
-          && (WavpackGetNumSamples (wavpack_enc->wp_context) !=
-              WavpackGetSampleIndex (wavpack_enc->wp_context)))
+      /* Try to rewrite the first frame with the correct sample number */
+      if (wavpack_enc->first_block)
         gst_wavpack_enc_rewrite_first_block (wavpack_enc);
 
       /* close the context if not already happened */
@@ -936,9 +911,26 @@ gst_wavpack_enc_set_property (GObject * object, guint prop_id,
     case ARG_MODE:
       wavpack_enc->mode = g_value_get_enum (value);
       break;
-    case ARG_BITRATE:
-      wavpack_enc->bitrate = g_value_get_double (value);
+    case ARG_BITRATE:{
+      gdouble val = g_value_get_double (value);
+
+      if ((val >= 24000.0) && (val <= 9600000.0)) {
+        wavpack_enc->bitrate = val;
+      } else {
+        wavpack_enc->bitrate = 0.0;
+      }
       break;
+    }
+    case ARG_BITSPERSAMPLE:{
+      gdouble val = g_value_get_double (value);
+
+      if ((val >= 2.0) && (val <= 24.0)) {
+        wavpack_enc->bitrate = val;
+      } else {
+        wavpack_enc->bitrate = 0.0;
+      }
+      break;
+    }
     case ARG_CORRECTION_MODE:
       wavpack_enc->correction_mode = g_value_get_enum (value);
       break;
@@ -968,7 +960,18 @@ gst_wavpack_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_enum (value, wavpack_enc->mode);
       break;
     case ARG_BITRATE:
-      g_value_set_double (value, wavpack_enc->bitrate);
+      if (wavpack_enc->bitrate >= 24000.0) {
+        g_value_set_double (value, wavpack_enc->bitrate);
+      } else {
+        g_value_set_double (value, 0.0);
+      }
+      break;
+    case ARG_BITSPERSAMPLE:
+      if (wavpack_enc->bitrate <= 24.0) {
+        g_value_set_double (value, wavpack_enc->bitrate);
+      } else {
+        g_value_set_double (value, 0.0);
+      }
       break;
     case ARG_CORRECTION_MODE:
       g_value_set_enum (value, wavpack_enc->correction_mode);
