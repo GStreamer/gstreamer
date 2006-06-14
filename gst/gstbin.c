@@ -164,6 +164,11 @@
 #include "gstutils.h"
 #include "gstchildproxy.h"
 
+/* enable for DURATION caching. 
+ * FIXME currently too many elements don't update
+ * their duration when it changes so we return inaccurate values.
+ * #define DURATION_CACHING */
+
 GST_DEBUG_CATEGORY_STATIC (bin_debug);
 #define GST_CAT_DEFAULT bin_debug
 
@@ -2254,7 +2259,7 @@ bin_query_duration_done (GstBin * bin, QueryFold * fold)
 
   GST_DEBUG_OBJECT (bin, "max duration %" G_GINT64_FORMAT, fold->max);
 
-#if 0
+#ifdef DURATION_CACHING
   /* and cache now */
   GST_OBJECT_LOCK (bin);
   bin->messages = g_list_prepend (bin->messages,
@@ -2326,7 +2331,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
     {
-#if 0
+#ifdef DURATION_CACHING
       GList *cached;
       GstFormat qformat;
 
@@ -2358,6 +2363,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
       }
       GST_OBJECT_UNLOCK (bin);
 #endif
+      /* no cached value found, iterate and collect durations */
       fold_func = (GstIteratorFoldFunction) bin_query_duration_fold;
       fold_init = bin_query_max_init;
       fold_done = bin_query_duration_done;

@@ -1,5 +1,11 @@
 2006-06-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (bin_query_duration_done), (gst_bin_query):
+	Make it clear with a FIXME and a real define what the #if 0
+	previously disabled.
+
+2006-06-14  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_configure_segment),
 	(gst_base_sink_preroll_object), (gst_base_sink_get_position):
 	* libs/gst/base/gstbasetransform.c:
