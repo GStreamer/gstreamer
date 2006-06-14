@@ -32,6 +32,7 @@
 enum
 {
   ARG_ULONG = 1,
+  ARG_FLOAT,
   ARG_DOUBLE,
   ARG_BOOLEAN,
   ARG_READONLY,
@@ -54,6 +55,7 @@ struct _GstTestMonoSource
 {
   GstElement parent;
   gulong val_ulong;
+  gfloat val_float;
   gdouble val_double;
   gboolean val_boolean;
 };
@@ -73,6 +75,9 @@ gst_test_mono_source_get_property (GObject * object,
   switch (property_id) {
     case ARG_ULONG:
       g_value_set_ulong (value, self->val_ulong);
+      break;
+    case ARG_FLOAT:
+      g_value_set_float (value, self->val_float);
       break;
     case ARG_DOUBLE:
       g_value_set_double (value, self->val_double);
@@ -95,6 +100,9 @@ gst_test_mono_source_set_property (GObject * object,
   switch (property_id) {
     case ARG_ULONG:
       self->val_ulong = g_value_get_ulong (value);
+      break;
+    case ARG_FLOAT:
+      self->val_float = g_value_get_float (value);
       break;
     case ARG_DOUBLE:
       self->val_double = g_value_get_double (value);
@@ -123,6 +131,12 @@ gst_test_mono_source_class_init (GstTestMonoSourceClass * klass)
           "ulong prop",
           "ulong number parameter for the test_mono_source",
           0, G_MAXULONG, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, ARG_FLOAT,
+      g_param_spec_float ("float",
+          "float prop",
+          "float number parameter for the test_mono_source",
+          0.0, 100.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, ARG_DOUBLE,
       g_param_spec_double ("double",
@@ -355,7 +369,7 @@ GST_START_TEST (controller_new_okay2)
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
   /* that property should exist and should be controllable */
-  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", "double", NULL);
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", "double", "float", NULL);
   fail_unless (ctrl != NULL, NULL);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
@@ -368,7 +382,7 @@ GST_END_TEST;
 /* controlling several params should return the same controller */
 GST_START_TEST (controller_new_okay3)
 {
-  GstController *ctrl1, *ctrl2;
+  GstController *ctrl1, *ctrl2, *ctrl3;
   GstElement *elem;
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
@@ -381,6 +395,11 @@ GST_START_TEST (controller_new_okay3)
   ctrl2 = gst_controller_new (G_OBJECT (elem), "double", NULL);
   fail_unless (ctrl2 != NULL, NULL);
   fail_unless (ctrl1 == ctrl2, NULL);
+
+  /* that property should exist and should be controllable */
+  ctrl3 = gst_controller_new (G_OBJECT (elem), "float", NULL);
+  fail_unless (ctrl3 != NULL, NULL);
+  fail_unless (ctrl1 == ctrl3, NULL);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl1)->ref_count);
   g_object_unref (ctrl1);

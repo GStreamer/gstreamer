@@ -1,3 +1,17 @@
+2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Wouter Paesen  <wouter at kangaroot net>
+
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_new):
+	  Fix controlling of float properties (#344849).
+
+	* tests/check/libs/controller.c:
+	(gst_test_mono_source_get_property),
+	(gst_test_mono_source_set_property),
+	(gst_test_mono_source_class_init), (GST_START_TEST):
+	  While we're at it, add some float stuff to unit test.
+
 2006-06-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/README:

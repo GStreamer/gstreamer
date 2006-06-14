@@ -328,6 +328,7 @@ gst_controlled_property_new (GObject * object, const gchar * name)
 
           g_value_set_float (&prop->default_value, tpspec->default_value);
         }
+          break;
         case G_TYPE_DOUBLE:{
           GParamSpecDouble *tpspec = G_PARAM_SPEC_DOUBLE (pspec);
 
