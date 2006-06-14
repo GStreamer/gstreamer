@@ -49,6 +49,8 @@ G_BEGIN_DECLS
 #define GST_RIFF_TAG_data GST_MAKE_FOURCC ('d','a','t','a')
 #define GST_RIFF_TAG_plst GST_MAKE_FOURCC ('p','l','s','t')
 #define GST_RIFF_TAG_cue  GST_MAKE_FOURCC ('c','u','e',' ')
+#define GST_RIFF_TAG_bext GST_MAKE_FOURCC ('b','e','x','t')
+#define GST_RIFF_TAG_BEXT GST_MAKE_FOURCC ('B','E','X','T')
 /* LIST types */
 #define GST_RIFF_LIST_movi GST_MAKE_FOURCC ('m','o','v','i')
 #define GST_RIFF_LIST_hdrl GST_MAKE_FOURCC ('h','d','r','l')
