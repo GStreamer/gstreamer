@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#include <gst/tag/tag.h>
 #include <gst/riff/riff-media.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_ogm_parse_debug);
@@ -633,9 +634,25 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
       }
       break;
     }
-    case 0x03:
-      /* comment - unused */
+    case 0x03:{
+      /* vorbis comment - need to extract the tags ourself for subtitle
+       * streams since we want to know the language and there won't be a
+       * decoder to do this for us like with vorbis */
+      if (ogm->hdr.streamtype[0] == 't') {
+        GstTagList *tags;
+
+        tags = gst_tag_list_from_vorbiscomment_buffer (buffer,
+            (guint8 *) "\003vorbis", 7, NULL);
+
+        if (tags) {
+          GST_DEBUG_OBJECT (ogm, "tags = %" GST_PTR_FORMAT, tags);
+          gst_element_found_tags_for_pad (GST_ELEMENT (ogm), ogm->srcpad, tags);
+        } else {
+          GST_DEBUG_OBJECT (ogm, "failed to extract tags from vorbis comment");
+        }
+      }
       break;
+    }
     default:
       if ((data[0] & 0x01) == 0) {
         /* data - push on */
@@ -653,9 +670,10 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
           xsize = (xsize << 8) | data[n];
         }
 
-        GST_DEBUG_OBJECT (ogm,
+        GST_LOG_OBJECT (ogm,
             "[0x%02x] samples: %d, hdrbytes: %d, datasize: %d",
             data[0], xsize, len, size - len - 1);
+
         sbuf = gst_buffer_create_sub (buf, len + 1, size - len - 1);
         if (GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
           ogm->next_granulepos = GST_BUFFER_OFFSET_END (buf);

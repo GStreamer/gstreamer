@@ -1,3 +1,11 @@
+2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ogg/Makefile.am:
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_chain):
+	  Extract language tags from ogm subtitle streams, so that
+	  the subtitle menu choices are labelled correctly in
+	  Totem (fixes #344708).
+
 2006-06-14  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Alessandro Decina <alessandro at nnva dot org>
