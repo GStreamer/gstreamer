@@ -187,15 +187,23 @@ cb_probe (GstPad * pad, GstEvent * e, gpointer user_data)
     if (gst_tag_list_get_string (list, GST_TAG_VIDEO_CODEC, &codec)) {
       g_free (info->codec);
       info->codec = codec;
+      GST_LOG_OBJECT (pad, "codec = %s (video)", codec);
       g_object_notify (G_OBJECT (info), "codec");
     } else if (gst_tag_list_get_string (list, GST_TAG_AUDIO_CODEC, &codec)) {
       g_free (info->codec);
       info->codec = codec;
+      GST_LOG_OBJECT (pad, "codec = %s (audio)", codec);
+      g_object_notify (G_OBJECT (info), "codec");
+    } else if (gst_tag_list_get_string (list, GST_TAG_CODEC, &codec)) {
+      g_free (info->codec);
+      info->codec = codec;
+      GST_LOG_OBJECT (pad, "codec = %s (generic)", codec);
       g_object_notify (G_OBJECT (info), "codec");
     }
     if (gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &lang)) {
       g_free (info->langcode);
       info->langcode = lang;
+      GST_LOG_OBJECT (pad, "language-code = %s", lang);
       g_object_notify (G_OBJECT (info), "language-code");
     }
   }

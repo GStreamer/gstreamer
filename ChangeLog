@@ -1,5 +1,11 @@
 2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gststreaminfo.c: (cb_probe):
+	  Try GST_TAG_CODEC as fallback when extracting the
+	  codec name; more debug info.
+
+2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/ogg/Makefile.am:
 	* ext/ogg/gstogmparse.c: (gst_ogm_parse_chain):
 	  Extract language tags from ogm subtitle streams, so that
