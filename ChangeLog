@@ -1,3 +1,19 @@
+2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_peek_chunk_info),
+	(gst_wavparse_peek_chunk), (gst_wavparse_stream_headers),
+	(gst_wavparse_chain):
+	  When operating chain-based, don't make any assumptions about the
+	  chunking of the incoming data and make streaming work on days other
+	  than the second Thursday after a full moon. Also fix up debug
+	  messages here and there and make use of the most excellent new
+	  gst_pad_query_peer_duration() utility function.
+	  Skip any 'bext' chunks in front of the 'fmt ' chunk. Fixes #343837.
+
+	* gst/wavparse/gstwavparse.h:
+	  Remove trailing comma after last enum value, some compilers don't
+	  like that.
+
 2006-06-13  Wim Taymans  <wim@fluendo.com>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_data):

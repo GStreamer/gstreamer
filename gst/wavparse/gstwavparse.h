@@ -44,7 +44,7 @@ G_BEGIN_DECLS
 typedef enum {
   GST_WAVPARSE_START,
   GST_WAVPARSE_HEADER,
-  GST_WAVPARSE_DATA,
+  GST_WAVPARSE_DATA
 } GstWavParseState;
 
 typedef struct _GstWavParse GstWavParse;
