@@ -12,5 +12,18 @@ else
 GST_V4L2_TESTS =
 endif
 
-noinst_PROGRAMS = $(GST_V4L2_TESTS)
 
+if USE_SOUNDTOUCH
+
+GST_SOUNDTOUCH_TESTS = pitch-test
+
+pitch_test_SOURCES = pitch-test.c
+pitch_test_CFLAGS  = $(GST_CONTROLLER_CFLAGS)
+pitch_test_LDADD   = $(GST_CONTROLLER_LIBS)
+pitch_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+else
+GST_SOUNDTOUCH_TESTS = 
+endif
+
+noinst_PROGRAMS = $(GST_V4L2_TESTS) $(GST_SOUNDTOUCH_TESTS)

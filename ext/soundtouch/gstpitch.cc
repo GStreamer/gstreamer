@@ -22,6 +22,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/controller/gstcontroller.h>
 #include "gstpitch.hh"
 #include <math.h>
 
@@ -136,17 +137,17 @@ gst_pitch_class_init (GstPitchClass * klass)
   g_object_class_install_property (gobject_class, ARG_PITCH,
       g_param_spec_float ("pitch", "Pitch",
           "Audio stream pitch", 0.1, 10.0, 1.0,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE)));
 
   g_object_class_install_property (gobject_class, ARG_TEMPO,
       g_param_spec_float ("tempo", "Tempo",
           "Audio stream tempo", 0.1, 10.0, 1.0,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE)));
 
   g_object_class_install_property (gobject_class, ARG_RATE,
       g_param_spec_float ("rate", "Rate",
           "Audio stream rate", 0.1, 10.0, 1.0,
-          (GParamFlags) G_PARAM_READWRITE));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE)));
 
   g_type_class_add_private (gobject_class, sizeof (GstPitchPrivate));
 }
@@ -640,6 +641,8 @@ gst_pitch_chain (GstPad * pad, GstBuffer * buffer)
   pitch = GST_PITCH (GST_PAD_PARENT (pad));
   priv = GST_PITCH_GET_PRIVATE (pitch);
 
+  gst_object_sync_values (G_OBJECT (pitch), pitch->next_buffer_time);
+
   /* push the received samples on the soundtouch buffer */
   GST_LOG_OBJECT (pitch, "incoming buffer (%d samples)",
       (gint) (GST_BUFFER_SIZE (buffer) / pitch->sample_size));
@@ -696,6 +699,8 @@ gst_pitch_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  gst_controller_init (NULL, NULL);
+
   GST_DEBUG_CATEGORY_INIT (pitch_debug, "pitch", 0,
       "audio pitch control element");
 

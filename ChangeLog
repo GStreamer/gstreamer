@@ -1,5 +1,23 @@
 2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Wouter Paesen  <wouter at kangaroot net>
+
+	* ext/soundtouch/Makefile.am:
+	* ext/soundtouch/gstpitch.cc:
+	  Make pitch element controllable via GstController interface
+	  (#344821).
+	  
+	* configure.ac:
+	  Up core requirements to 0.10.8.1/CVS because earlier
+	  GstControllers can't handle float properties correctly.
+	  Check for GstController CFLAGS and LIBS.
+
+	* tests/icles/Makefile.am:
+	* tests/icles/pitch-test.c: (main):
+	  Add small test program for the above (welcome to the 80s!).
+
+2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Sebastian Dröge  <slomo at circular-chaos org>
 
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_base_init),
