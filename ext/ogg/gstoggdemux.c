@@ -140,6 +140,7 @@ struct _GstOggPad
   ogg_stream_state stream;
 
   gboolean discont;
+  GstFlowReturn last_ret;       /* last return of _pad_push() */
 
   gboolean dynamic;             /* True if the internal element had dynamic pads */
   guint padaddedid;             /* The signal id for element::pad-added */
@@ -235,6 +236,8 @@ static gboolean gst_ogg_pad_query_convert (GstOggPad * pad,
 static GstClockTime gst_annodex_granule_to_time (gint64 granulepos,
     gint64 granulerate_n, gint64 granulerate_d, guint8 granuleshift);
 
+static GstFlowReturn gst_ogg_demux_combine_flows (GstOggDemux * ogg,
+    GstOggPad * pad, GstFlowReturn ret);
 
 static GstPadClass *ogg_pad_parent_class = NULL;
 
@@ -943,7 +946,7 @@ static GstFlowReturn
 gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
 {
   GstBuffer *buf;
-  GstFlowReturn ret;
+  GstFlowReturn ret, cret;
   GstOggDemux *ogg = pad->ogg;
   GstFormat format;
   gint64 current_time;
@@ -953,8 +956,11 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
       "%p streaming to peer serial %08x", pad, pad->serialno);
 
   ret =
-      gst_pad_alloc_buffer_and_set_caps (GST_PAD (pad), GST_BUFFER_OFFSET_NONE,
-      packet->bytes, GST_PAD_CAPS (pad), &buf);
+      gst_pad_alloc_buffer_and_set_caps (GST_PAD_CAST (pad),
+      GST_BUFFER_OFFSET_NONE, packet->bytes, GST_PAD_CAPS (pad), &buf);
+
+  /* combine flows */
+  cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
   if (ret != GST_FLOW_OK)
     goto no_buffer;
 
@@ -970,10 +976,10 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
     pad->discont = FALSE;
   }
 
-  ret = gst_pad_push (GST_PAD (pad), buf);
-  /* ignore not linked */
-  if (ret == GST_FLOW_NOT_LINKED)
-    ret = GST_FLOW_OK;
+  ret = gst_pad_push (GST_PAD_CAST (pad), buf);
+
+  /* combine flows */
+  cret = gst_ogg_demux_combine_flows (ogg, pad, ret);
 
   /* we're done with skeleton stuff */
   if (pad->is_skeleton)
@@ -1005,22 +1011,22 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet)
       GST_TIME_ARGS (current_time));
 
 done:
-  return ret;
+  /* return combined flow result */
+  return cret;
 
   /* special cases */
 no_buffer:
   {
     GST_DEBUG_OBJECT (ogg,
-        "%p could not get buffer from peer %08x, %d (%s)", pad,
-        pad->serialno, ret, gst_flow_get_name (ret));
-    if (ret == GST_FLOW_NOT_LINKED)
-      ret = GST_FLOW_OK;
-    return ret;
+        "%p could not get buffer from peer %08x, %d (%s), combined %d (%s)",
+        pad, pad->serialno, ret, gst_flow_get_name (ret),
+        cret, gst_flow_get_name (cret));
+    goto done;
   }
 convert_failed:
   {
     GST_WARNING_OBJECT (ogg, "could not convert granulepos to time");
-    return ret;
+    goto done;
   }
 }
 
@@ -1705,6 +1711,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 
     /* mark discont */
     pad->discont = TRUE;
+    pad->last_ret = GST_FLOW_OK;
 
     /* activate first */
     gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
@@ -2683,6 +2690,44 @@ gst_ogg_demux_send_event (GstOggDemux * ogg, GstEvent * event)
   gst_event_unref (event);
 }
 
+static GstFlowReturn
+gst_ogg_demux_combine_flows (GstOggDemux * ogg, GstOggPad * pad,
+    GstFlowReturn ret)
+{
+  GstOggChain *chain;
+
+  /* store the value */
+  pad->last_ret = ret;
+  /* if it's success we can return the value right away */
+  if (GST_FLOW_IS_SUCCESS (ret))
+    goto done;
+
+  /* any other error that is not-linked can be returned right
+   * away */
+  if (ret != GST_FLOW_NOT_LINKED)
+    goto done;
+
+  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
+  chain = ogg->current_chain;
+  if (chain) {
+    gint i;
+
+    for (i = 0; i < chain->streams->len; i++) {
+      GstOggPad *opad = g_array_index (chain->streams, GstOggPad *, i);
+
+      ret = opad->last_ret;
+      /* some other return value (must be SUCCESS but we can return
+       * other values as well) */
+      if (ret != GST_FLOW_NOT_LINKED)
+        goto done;
+    }
+    /* if we get here, all other pads were unlinked and we return
+     * NOT_LINKED then */
+  }
+done:
+  return ret;
+}
+
 /* random access code
  *
  * - first find all the chains and streams by scanning the file.
@@ -2724,10 +2769,13 @@ gst_ogg_demux_loop (GstOggPad * pad)
       gst_event_unref (event);
   }
 
-  GST_LOG_OBJECT (ogg, "pull data %" G_GINT64_FORMAT, ogg->offset);
-  if (ogg->offset == ogg->length)
+  if (ogg->offset == ogg->length) {
+    GST_LOG_OBJECT (ogg, "no more data to pull %" G_GINT64_FORMAT
+        " == %" G_GINT64_FORMAT, ogg->offset, ogg->length);
     goto eos;
+  }
 
+  GST_LOG_OBJECT (ogg, "pull data %" G_GINT64_FORMAT, ogg->offset);
   ret = gst_pad_pull_range (ogg->sinkpad, ogg->offset, CHUNKSIZE, &buffer);
   if (ret != GST_FLOW_OK) {
     GST_LOG_OBJECT (ogg, "Failed pull_range");
@@ -2758,35 +2806,43 @@ chain_read_failed:
   }
 eos:
   {
-    ret = GST_FLOW_OK;
-    /* segment playback just posts a segment end message instead of
-     * pushing out EOS. */
-    ogg->segment_running = FALSE;
-    if (ogg->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-      gint64 stop;
-
-      if ((stop = ogg->segment.stop) == -1)
-        stop = ogg->segment.duration;
-
-      GST_LOG_OBJECT (ogg, "Sending segment done, at end of segment");
-      gst_element_post_message (GST_ELEMENT (ogg),
-          gst_message_new_segment_done (GST_OBJECT (ogg), GST_FORMAT_TIME,
-              stop));
-    } else {
-      GST_LOG_OBJECT (ogg, "Sending EOS, at end of stream");
-      gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
-    }
+    ret = GST_FLOW_UNEXPECTED;
     goto pause;
   }
 pause:
   {
-    GST_LOG_OBJECT (ogg, "pausing task, reason %s", gst_flow_get_name (ret));
+    const gchar *reason = gst_flow_get_name (ret);
+
+    GST_LOG_OBJECT (ogg, "pausing task, reason %s", reason);
+    ogg->segment_running = FALSE;
     gst_pad_pause_task (ogg->sinkpad);
-    if (GST_FLOW_IS_FATAL (ret)) {
-      gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
-      GST_ELEMENT_ERROR (ogg, STREAM, FAILED,
-          (_("Internal data stream error.")),
-          ("stream stopped, reason %s", gst_flow_get_name (ret)));
+
+    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+      if (ret == GST_FLOW_UNEXPECTED) {
+        /* perform EOS logic */
+        if (ogg->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+          gint64 stop;
+
+          /* for segment playback we need to post when (in stream time)
+           * we stopped, this is either stop (when set) or the duration. */
+          if ((stop = ogg->segment.stop) == -1)
+            stop = ogg->segment.duration;
+
+          GST_LOG_OBJECT (ogg, "Sending segment done, at end of segment");
+          gst_element_post_message (GST_ELEMENT (ogg),
+              gst_message_new_segment_done (GST_OBJECT (ogg), GST_FORMAT_TIME,
+                  stop));
+        } else {
+          /* normal playback, send EOS to all linked pads */
+          GST_LOG_OBJECT (ogg, "Sending EOS, at end of stream");
+          gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
+        }
+      } else {
+        GST_ELEMENT_ERROR (ogg, STREAM, FAILED,
+            (_("Internal data stream error.")),
+            ("stream stopped, reason %s", reason));
+        gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
+      }
     }
     return;
   }

@@ -1,3 +1,12 @@
+2006-06-15  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_peer),
+	(gst_ogg_demux_activate_chain), (gst_ogg_demux_combine_flows),
+	(gst_ogg_demux_loop):
+	Combine GstFlowReturn from the source pads to give a
+	meaningfull result to the upstream peer or to stop the
+	processing task in case of errors.
+
 2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gststreaminfo.c: (cb_probe):
