@@ -8,7 +8,7 @@ libgsta52dec_la_CFLAGS = \
 	$(A52DEC_CFLAGS)
 libgsta52dec_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstaudio-$(GST_MAJORMINOR)
+	-lgstaudio-$(GST_MAJORMINOR) \
 	$(LIBOIL_LIBS) \
 	$(A52DEC_LIBS)
 libgsta52dec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

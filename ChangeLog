@@ -1,3 +1,10 @@
+2006-06-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/a52dec/Makefile.am:
+	  ... and then he said "When you go and fix the build you
+	  better make sure you have some spare backslashes in your
+	  pocket".
+
 2006-06-13  Wim Taymans  <wim@fluendo.com>
 
 	* ext/sidplay/gstsiddec.cc:
