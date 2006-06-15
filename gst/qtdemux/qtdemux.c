@@ -145,6 +145,9 @@ struct _QtDemuxStream
   guint32 sample_index;
   guint64 time_position;        /* in gst time */
 
+  /* last GstFlowReturn */
+  GstFlowReturn last_ret;
+
   /* quicktime segments */
   guint32 n_segments;
   QtDemuxSegment *segments;
@@ -631,6 +634,8 @@ gst_qtdemux_move_stream (GstQTDemux * qtdemux, QtDemuxStream * str,
  * fact, none of the segments could contain a keyframe. We take a
  * practical approach: seek to the previous keyframe in the segment,
  * if there is none, seek to the beginning of the segment.
+ *
+ * Called with STREAM_LOCK
  */
 static gboolean
 gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
@@ -713,6 +718,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
     stream->time_position = desired_offset;
     stream->sample_index = 0;
     stream->segment_index = -1;
+    stream->last_ret = GST_FLOW_OK;
   }
   segment->last_stop = desired_offset;
   segment->time = desired_offset;
@@ -1230,6 +1236,40 @@ next_segment:
 }
 
 static GstFlowReturn
+gst_qtdemux_combine_flows (GstQTDemux * demux, QtDemuxStream * stream,
+    GstFlowReturn ret)
+{
+  gint i;
+
+  /* store the value */
+  stream->last_ret = ret;
+
+  /* if it's success we can return the value right away */
+  if (GST_FLOW_IS_SUCCESS (ret))
+    goto done;
+
+  /* any other error that is not-linked can be returned right
+   * away */
+  if (ret != GST_FLOW_NOT_LINKED)
+    goto done;
+
+  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
+  for (i = 0; i < demux->n_streams; i++) {
+    QtDemuxStream *ostream = demux->streams[i];
+
+    ret = ostream->last_ret;
+    /* some other return value (must be SUCCESS but we can return
+     * other values as well) */
+    if (ret != GST_FLOW_NOT_LINKED)
+      goto done;
+  }
+  /* if we get here, all other pads were unlinked and we return
+   * NOT_LINKED then */
+done:
+  return ret;
+}
+
+static GstFlowReturn
 gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 {
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1315,6 +1355,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   gst_buffer_set_caps (buf, stream->caps);
 
   ret = gst_pad_push (stream->pad, buf);
+  /* combine flows */
+  ret = gst_qtdemux_combine_flows (qtdemux, stream, ret);
 
 next:
   gst_qtdemux_advance_sample (qtdemux, stream);
@@ -1357,44 +1399,9 @@ gst_qtdemux_loop (GstPad * pad)
       goto invalid_state;
   }
 
-  /* if all is fine, continue */
-  if (G_LIKELY (ret == GST_FLOW_OK))
-    goto done;
-
-  /* we don't care about unlinked pads */
-  if (ret == GST_FLOW_NOT_LINKED)
-    goto done;
-
-  /* other errors make us stop */
-  GST_LOG_OBJECT (qtdemux, "pausing task, reason %s", gst_flow_get_name (ret));
-
-  qtdemux->segment_running = FALSE;
-  gst_pad_pause_task (pad);
-
-  /* fatal errors need special actions */
-  if (GST_FLOW_IS_FATAL (ret)) {
-    /* check EOS */
-    if (ret == GST_FLOW_UNEXPECTED) {
-      if (qtdemux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-        gint64 stop;
-
-        if ((stop = qtdemux->segment.stop) == -1)
-          stop = qtdemux->segment.duration;
-
-        GST_LOG_OBJECT (qtdemux, "Sending segment done, at end of segment");
-        gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
-            gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
-                GST_FORMAT_TIME, stop));
-      } else {
-        GST_LOG_OBJECT (qtdemux, "Sending EOS at end of segment");
-        gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
-      }
-    } else {
-      gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
-      GST_ELEMENT_ERROR (qtdemux, STREAM, FAILED,
-          (NULL), ("streaming stopped, reason %s", gst_flow_get_name (ret)));
-    }
-  }
+  /* if something went wrong, pause */
+  if (ret != GST_FLOW_OK)
+    goto pause;
 
 done:
   gst_object_unref (qtdemux);
@@ -1408,6 +1415,41 @@ invalid_state:
     qtdemux->segment_running = FALSE;
     gst_pad_pause_task (pad);
     gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
+    goto done;
+  }
+pause:
+  {
+    const gchar *reason = gst_flow_get_name (ret);
+
+    GST_LOG_OBJECT (qtdemux, "pausing task, reason %s", reason);
+
+    qtdemux->segment_running = FALSE;
+    gst_pad_pause_task (pad);
+
+    /* fatal errors need special actions */
+    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+      /* check EOS */
+      if (ret == GST_FLOW_UNEXPECTED) {
+        if (qtdemux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+          gint64 stop;
+
+          if ((stop = qtdemux->segment.stop) == -1)
+            stop = qtdemux->segment.duration;
+
+          GST_LOG_OBJECT (qtdemux, "Sending segment done, at end of segment");
+          gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
+              gst_message_new_segment_done (GST_OBJECT_CAST (qtdemux),
+                  GST_FORMAT_TIME, stop));
+        } else {
+          GST_LOG_OBJECT (qtdemux, "Sending EOS at end of segment");
+          gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
+        }
+      } else {
+        gst_qtdemux_push_event (qtdemux, gst_event_new_eos ());
+        GST_ELEMENT_ERROR (qtdemux, STREAM, FAILED,
+            (NULL), ("streaming stopped, reason %s", reason));
+      }
+    }
     goto done;
   }
 }
@@ -1652,6 +1694,9 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)), stream->pad);
         gst_buffer_set_caps (outbuf, stream->caps);
         ret = gst_pad_push (stream->pad, outbuf);
+
+        /* combine flows */
+        ret = gst_qtdemux_combine_flows (demux, stream, ret);
 
         stream->sample_index++;
 
@@ -2977,6 +3022,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   stream->segment_index = -1;
   stream->time_position = 0;
   stream->sample_index = 0;
+  stream->last_ret = GST_FLOW_OK;
 
   stream->timescale = QTDEMUX_GUINT32_GET (mdhd->data + 20);
   stream->duration = QTDEMUX_GUINT32_GET (mdhd->data + 24);
