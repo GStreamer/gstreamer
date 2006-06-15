@@ -1016,8 +1016,8 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       qtdemux->state = QTDEMUX_STATE_MOVIE;
       GST_DEBUG_OBJECT (qtdemux, "switching state to STATE_MOVIE (%d)",
           qtdemux->state);
-    }
       break;
+    }
     ed_edd_and_eddy:
     default:{
       GST_LOG ("unknown %08x '%" GST_FOURCC_FORMAT "' at %d",
@@ -1150,6 +1150,9 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   if (stream->segment_index != seg_idx)
     gst_qtdemux_activate_segment (qtdemux, stream, seg_idx, time_position);
 
+  if (stream->sample_index >= stream->n_samples)
+    goto eos;
+
   /* now get the info for the sample we're at */
   sample = &stream->samples[stream->sample_index];
 
@@ -1186,7 +1189,7 @@ gst_qtdemux_advance_sample (GstQTDemux * qtdemux, QtDemuxStream * stream)
   segment = &stream->segments[stream->segment_index];
 
   /* reached the last sample, we need the next segment */
-  if (stream->sample_index == stream->n_samples)
+  if (stream->sample_index >= stream->n_samples)
     goto next_segment;
 
   /* get next sample */
@@ -1410,12 +1413,11 @@ invalid_state:
 }
 
 /*
-  next_entry_size
-  
-  Returns the size of the first entry at the current offset.
-  If -1, there are none (which means EOS or empty file).
-*/
-
+ * next_entry_size
+ * 
+ * Returns the size of the first entry at the current offset.
+ * If -1, there are none (which means EOS or empty file).
+ */
 static guint64
 next_entry_size (GstQTDemux * demux)
 {
@@ -1753,6 +1755,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     /* fps is calculated base on the duration of the first frames since
      * qt does not have a fixed framerate. */
     if ((stream->n_samples == 1) && (stream->min_duration == 0)) {
+      /* still frame */
       stream->fps_n = 0;
       stream->fps_d = 1;
     } else {
@@ -1768,6 +1771,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
           "width", G_TYPE_INT, stream->width,
           "height", G_TYPE_INT, stream->height,
           "framerate", GST_TYPE_FRACTION, stream->fps_n, stream->fps_d, NULL);
+
       if ((stream->bits_per_sample & 0x1F) == 8) {
         const guint32 *palette_data = NULL;
 
