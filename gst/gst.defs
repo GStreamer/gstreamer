@@ -87,7 +87,6 @@
     '("GstElement*" "element_1")
   )
   (varargs #t)
-  (unblock-threads #t)
 )
 
 (define-method add_many
@@ -98,7 +97,6 @@
     '("GstElement*" "element_1")
   )
   (varargs #t)
-  (unblock-threads #t)
 )
 
 (define-method remove
@@ -109,7 +107,6 @@
     '("GstElement*" "element_1")
   )
   (varargs #t)
-  (unblock-threads #t)
 )
 
 (define-method remove_many
@@ -120,7 +117,6 @@
     '("GstElement*" "element_1")
   )
   (varargs #t)
-  (unblock-threads #t)
 )
 
 (define-method get_by_name
@@ -320,7 +316,6 @@
   (parameters
     '("GstMessage*" "message" (keep-refcount))
   )
-  (unblock-threads #t)
 )
 
 (define-method have_pending
@@ -399,7 +394,6 @@
     '("GstMessageType" "events")
     '("GstClockTimeDiff" "timeout")
   )
-  (unblock-threads #t)
 )
 
 (define-method async_signal_func
@@ -1006,7 +1000,6 @@
   (c-name "gst_element_provide_clock")
   (return-type "GstClock*")
   (caller-owns-return #t)
-  (unblock-threads #t)
 )
 
 (define-method set_clock
@@ -1016,7 +1009,6 @@
   (parameters
     '("GstClock*" "clock")
   )
-  (unblock-threads #t)
 )
 
 (define-method set_base_time
@@ -1026,7 +1018,6 @@
   (parameters
     '("GstClockTime" "time")
   )
-  (unblock-threads #t)
 )
 
 (define-method get_base_time
@@ -1048,7 +1039,6 @@
   (parameters
     '("GstIndex*" "index")
   )
-  (unblock-threads #t)
 )
 
 (define-method get_index
@@ -1065,7 +1055,6 @@
   (parameters
     '("GstBus*" "bus")
   )
-  (unblock-threads #t)
 )
 
 (define-method get_bus
@@ -1073,7 +1062,6 @@
   (c-name "gst_element_get_bus")
   (return-type "GstBus*")
   (caller-owns-return #t)
-  (unblock-threads #t)
 )
 
 (define-method get_clock
@@ -1081,7 +1069,6 @@
   (c-name "gst_element_get_clock")
   (return-type "GstClock*")
   (caller-owns-return #t)
-  (unblock-threads #t)
 )
 
 (define-method add_pad
@@ -1091,7 +1078,6 @@
   (parameters
     '("GstPad*" "pad")
   )
-  (unblock-threads #t)
 )
 
 (define-method remove_pad
@@ -1101,14 +1087,12 @@
   (parameters
     '("GstPad*" "pad")
   )
-  (unblock-threads #t)
 )
 
 (define-method no_more_pads
   (of-object "GstElement")
   (c-name "gst_element_no_more_pads")
   (return-type "none")
-  (unblock-threads #t)
 )
 
 (define-method get_pad
@@ -1119,7 +1103,6 @@
   (parameters
     '("const-gchar*" "name")
   )
-  (unblock-threads #t)
 )
 
 (define-method get_static_pad
@@ -1130,7 +1113,6 @@
   (parameters
     '("const-gchar*" "name")
   )
-  (unblock-threads #t)
 )
 
 (define-method get_request_pad
@@ -1141,7 +1123,6 @@
   (parameters
     '("const-gchar*" "name")
   )
-  (unblock-threads #t)
 )
 
 (define-method release_request_pad
@@ -1151,7 +1132,6 @@
   (parameters
     '("GstPad*" "pad")
   )
-  (unblock-threads #t)
 )
 
 (define-method pads
@@ -1179,7 +1159,6 @@
   (parameters
     '("GstEvent*" "event" (keep-refcount))
   )
-  (unblock-threads #t)
 )
 
 (define-method seek
@@ -1195,7 +1174,6 @@
     '("GstSeekType" "stop_type")
     '("gint64" "stop")
   )
-  (unblock-threads #t)
 )
 
 (define-method get_query_types
@@ -1211,7 +1189,6 @@
   (parameters
     '("GstQuery*" "query")
   )
-  (unblock-threads #t)
 )
 
 (define-method post_message
@@ -1221,7 +1198,6 @@
   (parameters
     '("GstMessage*" "message" (keep-refcount))
   )
-  (unblock-threads #t)
 )
 
 (define-method message_full
@@ -1238,14 +1214,12 @@
     '("const-gchar*" "function")
     '("gint" "line")
   )
-  (unblock-threads #t)
 )
 
 (define-method is_locked_state
   (of-object "GstElement")
   (c-name "gst_element_is_locked_state")
   (return-type "gboolean")
-  (unblock-threads #t)
 )
 
 (define-method set_locked_state
@@ -1255,14 +1229,12 @@
   (parameters
     '("gboolean" "locked_state")
   )
-  (unblock-threads #t)
 )
 
 (define-method sync_state_with_parent
   (of-object "GstElement")
   (c-name "gst_element_sync_state_with_parent")
   (return-type "gboolean")
-  (unblock-threads #t)
 )
 
 (define-method get_state
@@ -1274,7 +1246,6 @@
     '("GstState*" "pending")
     '("GstClockTime" "timeout")
   )
-  (unblock-threads #t)
 )
 
 (define-method set_state
@@ -1284,14 +1255,12 @@
   (parameters
     '("GstState" "state")
   )
-  (unblock-threads #t)
 )
 
 (define-method abort_state
   (of-object "GstElement")
   (c-name "gst_element_abort_state")
   (return-type "none")
-  (unblock-threads #t)
 )
 
 (define-method continue_state
@@ -1301,14 +1270,12 @@
   (parameters
     '("GstStateChangeReturn" "retstate")
   )
-  (unblock-threads #t)
 )
 
 (define-method lost_state
   (of-object "GstElement")
   (c-name "gst_element_lost_state")
   (return-type "none")
-  (unblock-threads #t)
 )
 
 (define-method get_factory
@@ -2153,7 +2120,6 @@
   (parameters
     '("gint" "id")
   )
-  (unblock-threads #t)
 )
 
 (define-method get_group
@@ -2175,7 +2141,6 @@
   (parameters
     '("gint" "groupnum")
   )
-  (unblock-threads #t)
 )
 
 (define-method set_certainty
@@ -3198,7 +3163,6 @@
   (parameters
     '("GstObject*" "parent")
   )
-  (unblock-threads #t)
 )
 
 (define-method get_parent
@@ -3212,7 +3176,6 @@
   (of-object "GstObject")
   (c-name "gst_object_unparent")
   (return-type "none")
-  (unblock-threads #t)
 )
 
 (define-method has_ancestor
@@ -3964,7 +3927,6 @@
     '("GstPad*" "pad")
     '("GstTagList*" "list")
   )
-  (unblock-threads #t)
 )
 
 (define-method found_tags
@@ -3974,7 +3936,6 @@
   (parameters
     '("GstTagList*" "list")
   )
-  (unblock-threads #t)
 )
 
 (define-function gst_parse_bin_from_description
@@ -6428,14 +6389,12 @@
     '("GError*" "error")
     '("gchar*" "debug")
   )
-  (unblock-threads #t)
 )
 
 (define-method create_all_pads
   (of-object "GstElement")
   (c-name "gst_element_create_all_pads")
   (return-type "none")
-  (unblock-threads #t)
 )
 
 (define-method get_compatible_pad
@@ -6446,7 +6405,6 @@
     '("GstPad*" "pad")
     '("const-GstCaps*" "caps" (null-ok) (default "NULL"))
   )
-  (unblock-threads #t)
 )
 
 (define-method get_compatible_pad_template
@@ -6456,7 +6414,6 @@
   (parameters
     '("GstPadTemplate*" "compattempl")
   )
-  (unblock-threads #t)
 )
 
 (define-method get_name
@@ -6499,7 +6456,6 @@
   (parameters
     '("GstElement*" "dest")
   )
-  (unblock-threads #t)
 )
 
 (define-method link_filtered
@@ -6510,7 +6466,6 @@
     '("GstElement*" "dest")
     '("GstCaps*" "filter")
   )
-  (unblock-threads #t)
 )
 
 (define-function element_unlink_many
@@ -6521,7 +6476,6 @@
     '("GstElement*" "element_2")
   )
   (varargs #t)
-  (unblock-threads #t)
 )
 
 (define-method link_pads
@@ -6533,7 +6487,6 @@
     '("GstElement*" "dest")
     '("const-gchar*" "destpadname")
   )
-  (unblock-threads #t)
 )
 
 (define-method unlink_pads
@@ -6545,7 +6498,6 @@
     '("GstElement*" "dest")
     '("const-gchar*" "destpadname")
   )
-  (unblock-threads #t)
 )
 
 (define-method link_pads_filtered
@@ -6558,7 +6510,6 @@
     '("const-gchar*" "destpadname")
     '("GstCaps*" "filter")
   )
-  (unblock-threads #t)
 )
 
 (define-method seek_simple
@@ -6570,7 +6521,6 @@
     '("GstSeekFlags" "seek_flags")
     '("gint64" "seek_pos")
   )
-  (unblock-threads #t)
 )
 
 (define-method can_src_caps
@@ -6600,7 +6550,6 @@
     '("GstFormat*" "format")
     '("gint64*" "cur")
   )
-  (unblock-threads #t)
 )
 
 (define-method query_duration
@@ -6611,7 +6560,6 @@
     '("GstFormat*" "format")
     '("gint64*" "duration")
   )
-  (unblock-threads #t)
 )
 
 (define-method query_convert
@@ -6624,7 +6572,6 @@
     '("GstFormat*" "dest_fmt")
     '("gint64*" "dest_val")
   )
-  (unblock-threads #t)
 )
 
 (define-method install_std_props

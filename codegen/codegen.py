@@ -249,12 +249,8 @@ class Wrapper:
                  'errorreturn': '-1' }
     def get_initial_method_substdict(self, method):
         substdict = { 'name': '%s.%s' % (self.objinfo.c_name, method.name) }
-        if method.unblock_threads:
-            substdict['begin_allow_threads'] = 'pyg_begin_allow_threads;'
-            substdict['end_allow_threads'] = 'pyg_end_allow_threads;'
-        else:
-            substdict['begin_allow_threads'] = ''
-            substdict['end_allow_threads'] = ''
+        substdict['begin_allow_threads'] = 'pyg_begin_allow_threads;'
+        substdict['end_allow_threads'] = 'pyg_end_allow_threads;'
         return substdict
 
     def write_class(self):
@@ -343,12 +339,8 @@ class Wrapper:
         # if name isn't set, set it to function_obj.name
         substdict.setdefault('name', function_obj.name)
 
-        if function_obj.unblock_threads:
-            substdict['begin_allow_threads'] = 'pyg_begin_allow_threads;'
-            substdict['end_allow_threads'] = 'pyg_end_allow_threads;'
-        else:
-            substdict['begin_allow_threads'] = ''
-            substdict['end_allow_threads'] = ''
+        substdict['begin_allow_threads'] = 'pyg_begin_allow_threads;'
+        substdict['end_allow_threads'] = 'pyg_end_allow_threads;'
 
         if self.objinfo:
             substdict['typename'] = self.objinfo.c_name
