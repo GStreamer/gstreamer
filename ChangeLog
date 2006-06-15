@@ -1,3 +1,11 @@
+2006-06-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_state_header),
+	(gst_qtdemux_prepare_current_sample), (gst_qtdemux_advance_sample),
+	(gst_qtdemux_add_stream):
+	Don't crash on files with 0 samples, EOS immediatly instead.
+	Fixes #344944.
+
 2006-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Wouter Paesen  <wouter at kangaroot net>
