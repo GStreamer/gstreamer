@@ -1,3 +1,8 @@
+2006-06-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/spectrum/Makefile.am:
+	Fix build.
+
 2006-06-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/spectrum/demo-audiotest.c: (on_window_destroy),
