@@ -185,6 +185,7 @@ main (gint   argc,
 {
   GMainLoop *loop;
   GstElement *pipeline, *filesrc, *typefind;
+  GstBus *bus;
 
   /* init GStreamer */
   gst_init (&amp;argc, &amp;argv);
@@ -198,8 +199,10 @@ main (gint   argc,
 
   /* create a new pipeline to hold the elements */
   pipeline = gst_pipeline_new ("pipe");
-  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
-		     my_bus_callback, NULL);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_watch (bus, my_bus_callback, NULL);
+  gst_object_unref (bus);
 
   /* create file source and typefind element */
   filesrc = gst_element_factory_make ("filesrc", "source");
@@ -544,6 +547,7 @@ main (gint   argc,
 {
   GMainLoop *loop;
   GstElement *typefind, *realsink;
+  GError *err = NULL;
   gchar *p;
 
   /* init GStreamer and ourselves */
@@ -559,10 +563,19 @@ main (gint   argc,
 
   /* pipeline */
   p = g_strdup_printf ("filesrc location=\"%s\" ! typefind name=tf", argv[1]);
-  pipeline = gst_parse_launch (p, NULL);
-  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
-		     my_bus_callback, NULL);
+  pipeline = gst_parse_launch (p, &amp;err);
   g_free (p);
+
+  if (err) {
+    g_error ("Could not construct pipeline: %s", err-&gt;message);
+    g_error_free (err);
+    return -1;
+  }
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_watch (bus, my_bus_callback, NULL);
+  gst_object_unref (bus);
+
   typefind = gst_bin_get_by_name (GST_BIN (pipeline), "tf");
   g_signal_connect (typefind, "have-type", G_CALLBACK (cb_typefound), NULL);
   gst_object_unref (GST_OBJECT (typefind));

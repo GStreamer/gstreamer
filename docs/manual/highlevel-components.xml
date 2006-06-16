@@ -89,6 +89,7 @@ main (gint   argc,
 {
   GMainLoop *loop;
   GstElement *play;
+  GstBus *bus;
 
   /* init GStreamer */
   gst_init (&amp;argc, &amp;argv);
@@ -103,8 +104,11 @@ main (gint   argc,
   /* set up */
   play = gst_element_factory_make ("playbin", "play");
   g_object_set (G_OBJECT (play), "uri", argv[1], NULL);
-  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (play)),
-		     my_bus_callback, loop);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (play));
+  gst_bus_add_watch (bus, my_bus_callback, loop);
+  gst_object_unref (bus);
+
   gst_element_set_state (play, GST_STATE_PLAYING);
 
   /* now run */
@@ -266,6 +270,7 @@ main (gint   argc,
   GMainLoop *loop;
   GstElement *src, *dec, *conv, *sink;
   GstPad *audiopad;
+  GstBus *bus;
 
   /* init GStreamer */
   gst_init (&amp;argc, &amp;argv);
@@ -279,8 +284,11 @@ main (gint   argc,
 
   /* setup */
   pipeline = gst_pipeline_new ("pipeline");
-  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
-		     my_bus_callback, loop);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_watch (bus, my_bus_callback, loop);
+  gst_object_unref (bus);
+
   src = gst_element_factory_make ("filesrc", "source");
   g_object_set (G_OBJECT (src), "location", argv[1], NULL);
   dec = gst_element_factory_make ("decodebin", "decoder");

@@ -119,6 +119,7 @@ main (int   argc,
       char *argv[])
 {
   GMainLoop *loop;
+  GstBus *bus;
 
   /* initialize GStreamer */
   gst_init (&amp;argc, &amp;argv);
@@ -145,8 +146,10 @@ main (int   argc,
   /* set filename property on the file source. Also add a message
    * handler. */
   g_object_set (G_OBJECT (source), "location", argv[1], NULL);
-  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
-		     bus_call, loop);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_watch (bus, bus_call, loop);
+  gst_object_unref (bus);
 
   /* put all elements in a bin */
   gst_bin_add_many (GST_BIN (pipeline),
