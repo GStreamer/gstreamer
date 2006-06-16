@@ -1,3 +1,19 @@
+2006-06-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/audioresample/gstaudioresample.c:
+	(gst_audioresample_class_init), (gst_audioresample_init),
+	(audioresample_start), (audioresample_stop),
+	(gst_audioresample_set_property), (gst_audioresample_get_property):
+	  Implement GstBaseTransform::start and ::stop so that audioresample
+	  can clear its internal state properly and be reused insted of
+	  causing non-negotiated errors with playbin under some circumstances
+	  (#342789).
+
+	* tests/check/elements/audioresample.c: (setup_audioresample),
+	(cleanup_audioresample):
+	  Need to set element state here so that ::start and ::stop are
+	  called.
+
 2006-06-16  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Young-Ho Cha <ganadist at chollian dot net>

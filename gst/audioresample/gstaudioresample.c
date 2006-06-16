@@ -60,13 +60,6 @@ GST_ELEMENT_DETAILS ("Audio scaler",
     "Resample audio",
     "David Schleef <ds@schleef.org>");
 
-/* GstAudioresample signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
 #define DEFAULT_FILTERLEN       16
 
 enum
@@ -111,8 +104,6 @@ static GstStaticPadTemplate gst_audioresample_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC, GST_PAD_ALWAYS, SUPPORTED_CAPS);
 
-static void gst_audioresample_dispose (GObject * object);
-
 static void gst_audioresample_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_audioresample_get_property (GObject * object,
@@ -133,8 +124,8 @@ static GstFlowReturn audioresample_pushthrough (GstAudioresample *
 static GstFlowReturn audioresample_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean audioresample_event (GstBaseTransform * base, GstEvent * event);
-
-/*static guint gst_audioresample_signals[LAST_SIGNAL] = { 0 }; */
+static gboolean audioresample_start (GstBaseTransform * base);
+static gboolean audioresample_stop (GstBaseTransform * base);
 
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (audioresample_debug, "audioresample", 0, "audio resampling element");
@@ -164,13 +155,16 @@ gst_audioresample_class_init (GstAudioresampleClass * klass)
 
   gobject_class->set_property = gst_audioresample_set_property;
   gobject_class->get_property = gst_audioresample_get_property;
-  gobject_class->dispose = gst_audioresample_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILTERLEN,
       g_param_spec_int ("filter_length", "filter_length", "filter_length",
           0, G_MAXINT, DEFAULT_FILTERLEN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  GST_BASE_TRANSFORM_CLASS (klass)->start =
+      GST_DEBUG_FUNCPTR (audioresample_start);
+  GST_BASE_TRANSFORM_CLASS (klass)->stop =
+      GST_DEBUG_FUNCPTR (audioresample_stop);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_size =
       GST_DEBUG_FUNCPTR (audioresample_transform_size);
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
@@ -191,7 +185,6 @@ static void
 gst_audioresample_init (GstAudioresample * audioresample,
     GstAudioresampleClass * klass)
 {
-  ResampleState *r;
   GstBaseTransform *trans;
 
   trans = GST_BASE_TRANSFORM (audioresample);
@@ -200,29 +193,39 @@ gst_audioresample_init (GstAudioresample * audioresample,
    * is trivial in the passtrough case. */
   gst_pad_set_bufferalloc_function (trans->sinkpad, NULL);
 
-  r = resample_new ();
-  audioresample->resample = r;
+  audioresample->filter_length = DEFAULT_FILTERLEN;
+}
+
+/* vmethods */
+static gboolean
+audioresample_start (GstBaseTransform * base)
+{
+  GstAudioresample *audioresample = GST_AUDIORESAMPLE (base);
+
+  audioresample->resample = resample_new ();
   audioresample->ts_offset = -1;
   audioresample->offset = -1;
   audioresample->next_ts = -1;
 
-  resample_set_filter_length (r, DEFAULT_FILTERLEN);
+  resample_set_filter_length (audioresample->resample,
+      audioresample->filter_length);
+
+  return TRUE;
 }
 
-static void
-gst_audioresample_dispose (GObject * object)
+static gboolean
+audioresample_stop (GstBaseTransform * base)
 {
-  GstAudioresample *audioresample = GST_AUDIORESAMPLE (object);
+  GstAudioresample *audioresample = GST_AUDIORESAMPLE (base);
 
   if (audioresample->resample) {
     resample_free (audioresample->resample);
     audioresample->resample = NULL;
   }
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  return TRUE;
 }
 
-/* vmethods */
 gboolean
 audioresample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
     guint * size)
@@ -639,7 +642,6 @@ gst_audioresample_set_property (GObject * object, guint prop_id,
 {
   GstAudioresample *audioresample;
 
-  g_return_if_fail (GST_IS_AUDIORESAMPLE (object));
   audioresample = GST_AUDIORESAMPLE (object);
 
   switch (prop_id) {
@@ -647,8 +649,10 @@ gst_audioresample_set_property (GObject * object, guint prop_id,
       audioresample->filter_length = g_value_get_int (value);
       GST_DEBUG_OBJECT (GST_ELEMENT (audioresample), "new filter length %d",
           audioresample->filter_length);
-      resample_set_filter_length (audioresample->resample,
-          audioresample->filter_length);
+      if (audioresample->resample) {
+        resample_set_filter_length (audioresample->resample,
+            audioresample->filter_length);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -662,7 +666,6 @@ gst_audioresample_get_property (GObject * object, guint prop_id,
 {
   GstAudioresample *audioresample;
 
-  g_return_if_fail (GST_IS_AUDIORESAMPLE (object));
   audioresample = GST_AUDIORESAMPLE (object);
 
   switch (prop_id) {
