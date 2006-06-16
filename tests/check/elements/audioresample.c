@@ -69,6 +69,10 @@ setup_audioresample (int channels, int inrate, int outrate)
       "rate", G_TYPE_INT, inrate, NULL);
   fail_unless (gst_caps_is_fixed (caps));
 
+  fail_unless (gst_element_set_state (audioresample,
+          GST_STATE_PAUSED) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to paused");
+
   mysrcpad = gst_check_setup_src_pad (audioresample, &srctemplate, caps);
   pad = gst_pad_get_peer (mysrcpad);
   gst_pad_set_caps (pad, caps);
@@ -99,6 +103,9 @@ void
 cleanup_audioresample (GstElement * audioresample)
 {
   GST_DEBUG ("cleanup_audioresample");
+
+  fail_unless (gst_element_set_state (audioresample,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to NULL");
 
   gst_check_teardown_src_pad (audioresample);
   gst_check_teardown_sink_pad (audioresample);
