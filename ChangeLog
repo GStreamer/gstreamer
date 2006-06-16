@@ -1,5 +1,11 @@
 2006-06-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/elements/audioresample.c: (test_reuse),
+	(audioresample_suite):
+	  Add test case for bug #342789 fixed below.
+
+2006-06-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/audioresample/gstaudioresample.c:
 	(gst_audioresample_class_init), (gst_audioresample_init),
 	(audioresample_start), (audioresample_stop),
