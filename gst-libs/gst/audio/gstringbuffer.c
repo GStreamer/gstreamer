@@ -725,6 +725,7 @@ gst_ring_buffer_is_acquired (GstRingBuffer * buf)
 /**
  * gst_ring_buffer_set_flushing:
  * @buf: the #GstRingBuffer to flush
+ * @flushing: the new mode
  *
  * Set the ringbuffer to flushing mode or normal mode.
  *

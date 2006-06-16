@@ -53,7 +53,6 @@ gst_riff_read_chunk (GstElement * element,
   GstFlowReturn res;
   guint size;
   guint64 offset = *_offset;
-  gchar dbg[5] = { 0, };
 
 skip_junk:
 
@@ -69,8 +68,8 @@ skip_junk:
   size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
   gst_buffer_unref (buf);
 
-  memcpy (dbg, tag, 4);
-  GST_DEBUG_OBJECT (element, "tag=%s, size=%u", dbg, size);
+  GST_DEBUG_OBJECT (element, "fourcc=%" GST_FOURCC_FORMAT ", size=%u",
+      GST_FOURCC_ARGS (tag), size);
 
   /* skip 'JUNK' chunks */
   if (*tag == GST_RIFF_TAG_JUNK) {

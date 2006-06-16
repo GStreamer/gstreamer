@@ -332,7 +332,9 @@ guint           gst_ring_buffer_read            (GstRingBuffer *buf, guint64 sam
                                                  guchar *data, guint len);
 
 /* mostly protected */
+/* not yet implemented
 gboolean        gst_ring_buffer_prepare_write   (GstRingBuffer *buf, gint *segment, guint8 **writeptr, gint *len);
+*/
 gboolean        gst_ring_buffer_prepare_read    (GstRingBuffer *buf, gint *segment, guint8 **readptr, gint *len);
 void            gst_ring_buffer_clear           (GstRingBuffer *buf, gint segment);
 void            gst_ring_buffer_advance         (GstRingBuffer *buf, guint advance);

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN" 
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
                "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
 <!ENTITY % version-entities SYSTEM "version.entities">
 %version-entities;
@@ -13,6 +13,7 @@
 <!ENTITY GstAudioSrc SYSTEM "xml/gstaudiosrc.xml">
 <!ENTITY GstBaseAudioSink SYSTEM "xml/gstbaseaudiosink.xml">
 <!ENTITY GstBaseAudioSrc SYSTEM "xml/gstbaseaudiosrc.xml">
+<!ENTITY GstMultiChannel SYSTEM "xml/gstmultichannel.xml">
 <!ENTITY GstRingBuffer SYSTEM "xml/gstringbuffer.xml">
 <!-- cdda -->
 <!ENTITY GstCddaBaseSrc SYSTEM "xml/gstcddabasesrc.xml">
@@ -31,8 +32,14 @@
 <!ENTITY GstTunerNorm SYSTEM "xml/gsttunernorm.xml">
 <!ENTITY GstXOverlay SYSTEM "xml/gstxoverlay.xml">
 <!-- netbuffer -->
+<!ENTITY GstNetBuffer SYSTEM "xml/gstnetbuffer.xml">
 <!-- riff -->
+<!ENTITY GstRiff SYSTEM "xml/gstriff.xml">
 <!-- rtp -->
+<!ENTITY GstBaseRtpAudioPayload SYSTEM "xml/gstbasertpaudiopayload.xml">
+<!ENTITY GstBaseRtpDepayload SYSTEM "xml/gstbasertpdepayload.xml">
+<!ENTITY GstBaseRtpPayload SYSTEM "xml/gstbasertppayload.xml">
+<!ENTITY GstRtpBuffer SYSTEM "xml/gstrtpbuffer.xml">
 <!-- tag -->
 <!ENTITY GstTag SYSTEM "xml/gsttag.xml">
 <!ENTITY GstTagVorbis SYSTEM "xml/gsttagvorbis.xml">
@@ -75,9 +82,10 @@
       &GstBaseAudioSrc;
       &GstAudioSink;
       &GstAudioSrc;
+      &GstMultiChannel;
       &GstRingBuffer;
     </chapter>
-  
+
     <chapter id="gstreamer-cdda">
       <title>CDDA Library</title>
       <para>
@@ -87,7 +95,7 @@
       </para>
       &GstCddaBaseSrc;
     </chapter>
-  
+
     <chapter id="gstreamer-floatcast">
       <title>FloatCast Library</title>
       <para>
@@ -97,7 +105,7 @@
       </para>
       &GstFloatCast;
     </chapter>
-  
+
     <chapter id="gstreamer-interfaces">
       <title>Interfaces Library</title>
       <para>
@@ -117,7 +125,40 @@
       &GstTunerNorm;
       &GstXOverlay;
     </chapter>
-  
+
+    <chapter id="gstreamer-netbuffer">
+      <title>Network Buffer Library</title>
+      <para>
+        This library should be linked to by getting cflags and libs from
+        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>-lgstnetbuffer-&GST_MAJORMINOR;</filename> to the library flags.
+      </para>
+      &GstNetBuffer;
+    </chapter>
+
+    <chapter id="gstreamer-riff">
+      <title>Riff Media Library</title>
+      <para>
+        This library should be linked to by getting cflags and libs from
+        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>-lgstriff-&GST_MAJORMINOR;</filename> to the library flags.
+      </para>
+      &GstRiff;
+    </chapter>
+
+    <chapter id="gstreamer-rtp">
+      <title>Rtp Library</title>
+      <para>
+        This library should be linked to by getting cflags and libs from
+        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>-lgstrtp-&GST_MAJORMINOR;</filename> to the library flags.
+      </para>
+      &GstBaseRtpAudioPayload;
+      &GstBaseRtpDepayload;
+      &GstBaseRtpPayload;
+      &GstRtpBuffer;
+    </chapter>
+
     <chapter id="gstreamer-tag">
       <title>Tag Support Library</title>
       <para>
@@ -129,7 +170,7 @@
       &GstTagVorbis;
       &GstTagID3;
     </chapter>
-  
+
     <chapter id="gstreamer-video">
       <title>Video Library</title>
       <para>

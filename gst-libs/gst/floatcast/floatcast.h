@@ -18,6 +18,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstfloatcast
+ * @short_description: Floating point platform independence macros
+ */
+
 #ifndef __FLOATCAST_H__
 #define __FLOATCAST_H__
 

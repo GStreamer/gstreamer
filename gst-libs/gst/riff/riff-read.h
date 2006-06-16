@@ -36,7 +36,7 @@ G_BEGIN_DECLS
 GstFlowReturn gst_riff_read_chunk   (GstElement * element,
                                      GstPad     * pad,
                                      guint64    * offset,
-                                     guint32    * fourcc,
+                                     guint32    * tag,
                                      GstBuffer ** chunk_data);
 
 /*

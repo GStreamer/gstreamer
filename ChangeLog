@@ -1,3 +1,35 @@
+2006-06-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* docs/libs/gst-plugins-base-libs.types:
+	add remaining symbols into correct setions
+	
+	* gst-libs/gst/audio/gstringbuffer.c:
+	fix incomplete docs
+	
+	* gst-libs/gst/audio/gstringbuffer.h:
+	comment out not yet implemented function
+	
+	
+	* gst-libs/gst/floatcast/floatcast.h:
+	* gst-libs/gst/netbuffer/gstnetbuffer.c:
+	add short descriptions
+	
+	
+	* gst-libs/gst/interfaces/propertyprobe.c:
+	fix return value docs	
+	
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_chunk):
+	simplify debug logging
+	
+	* gst-libs/gst/riff/riff-read.h:
+	sync function prototype and docs
+	
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.h:
+	remove left over symbol
+
 2006-06-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* autogen.sh:

@@ -40,6 +40,16 @@ gst_tuner_norm_get_type
 gst_x_overlay_get_type
 
 
+#include <gst/netbuffer/gstnetbuffer.h>
+gst_netbuffer_get_type
+
+
+#include <gst/rtp/gstbasertpdepayload.h>
+gst_base_rtp_depayload_get_type
+#include <gst/rtp/gstbasertppayload.h>
+gst_basertppayload_get_type
+
+
 #include <gst/video/gstvideofilter.h>
 gst_video_filter_get_type
 #include <gst/video/gstvideosink.h>

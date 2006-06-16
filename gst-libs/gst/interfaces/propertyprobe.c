@@ -296,7 +296,7 @@ gst_property_probe_get_values_name (GstPropertyProbe * probe,
  * fo the probe. After that, retrieve a value list. Meant as a
  * utility function that wraps the above functions.
  *
- * Return: the list of valid values for this property.
+ * Returns: the list of valid values for this property.
  */
 
 GValueArray *
@@ -323,7 +323,7 @@ gst_property_probe_probe_and_get_values (GstPropertyProbe * probe,
  *
  * Same as gst_property_probe_probe_and_get_values ().
  *
- * Return: the list of valid values for this property.
+ * Returns: the list of valid values for this property.
  */
 
 GValueArray *

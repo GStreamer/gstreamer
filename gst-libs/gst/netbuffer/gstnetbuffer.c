@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstnetbuffer
+ * @short_description: Buffer for use in network sources and sinks
+ */
+
 #include <string.h>
 
 #include "gstnetbuffer.h"

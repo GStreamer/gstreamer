@@ -69,8 +69,6 @@ struct _GstBaseRTPAudioPayloadClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-gboolean gst_basertpaudiopayload_plugin_init (GstPlugin * plugin);
-
 GType gst_basertpaudiopayload_get_type (void);
 
 void
