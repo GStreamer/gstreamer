@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstbasetransform.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,25 +41,35 @@ typedef struct _GstSpectrum GstSpectrum;
 typedef struct _GstSpectrumClass GstSpectrumClass;
 
 struct _GstSpectrum {
-  GstElement element;
+  GstBaseTransform element;
 
   GstPad *sinkpad,*srcpad;
   GstAdapter *adapter;
 
   /* properties */
-  guint width;
-  gint threshold;
+  gboolean message;             /* whether or not to post messages */
+  gdouble interval;             /* how many seconds between emits */
+  guint bands;                  /* number of spectrum bands */
+  gint threshold;               /* energy level treshold */
 
+  gint num_frames;              /* frame count (1 sample per channel)
+                                 * since last emit */
+                                 
+  gint rate;                    /* caps variables */
+  gint width;
   gint channels;
+
+  /* <private> */
   gint base, len;
   gint16 *re, *im, *loud;
+  guchar *spect;
 };
 
 struct _GstSpectrumClass {
-  GstElementClass parent_class;
+  GstBaseTransformClass parent_class;
 };
 
-GType gst_spectrum_get_type(void);
+GType gst_spectrum_get_type (void);
 
 
 #ifdef __cplusplus
