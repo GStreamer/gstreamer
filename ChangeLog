@@ -6,7 +6,7 @@
 	  out in the header file and shouldn't be listed in the docs.
 
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_chunk):
-	  Fix it so that it doesn't crash in the debug statement.
+	  Must dereference pointer to fourcc in the debug statement.
 
 2006-06-16  Stefan Kost  <ensonic@users.sf.net>
 
