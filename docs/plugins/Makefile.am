@@ -96,6 +96,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/jpeg/gstsmokeenc.h \
 	$(top_srcdir)/ext/taglib/gsttaglibmux.h \
 	$(top_srcdir)/ext/taglib/gstid3v2mux.h \
+	$(top_srcdir)/ext/taglib/gstapev2mux.h \
 	$(top_srcdir)/gst/multipart/multipartmux.c \
 	$(top_srcdir)/gst/multipart/multipartdemux.c \
 	$(top_srcdir)/gst/udp/gstudpsrc.h \

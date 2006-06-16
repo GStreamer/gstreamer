@@ -3,12 +3,19 @@
   <description>Tag writing plug-in based on taglib</description>
   <filename>../../ext/taglib/.libs/libgsttaglib.so</filename>
   <basename>libgsttaglib.so</basename>
-  <version>0.10.3</version>
+  <version>0.10.3.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
+    <element>
+      <name>apev2mux</name>
+      <longname>TagLib-based APEv2 Muxer</longname>
+      <class>Formatter/Metadata</class>
+      <description>Adds an APEv2 header to the beginning of files using taglib</description>
+      <author>Sebastian Dröge &lt;mail@slomosnail.de&gt;</author>
+    </element>
     <element>
       <name>id3v2mux</name>
       <longname>TagLib-based ID3v2 Muxer</longname>
