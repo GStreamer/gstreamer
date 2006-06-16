@@ -69,7 +69,7 @@ skip_junk:
   gst_buffer_unref (buf);
 
   GST_DEBUG_OBJECT (element, "fourcc=%" GST_FOURCC_FORMAT ", size=%u",
-      GST_FOURCC_ARGS (tag), size);
+      GST_FOURCC_ARGS (*tag), size);
 
   /* skip 'JUNK' chunks */
   if (*tag == GST_RIFF_TAG_JUNK) {

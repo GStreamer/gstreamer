@@ -166,7 +166,7 @@ gboolean gst_cdda_base_src_add_track (GstCddaBaseSrc      * src,
 #define GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL  "musicbrainz-discid-full"
 
 #if 0
-/**
+/*
  * GST_TAG_CDDA_TRACK_TAGS:
  *
  * Tag details for all available tracks
