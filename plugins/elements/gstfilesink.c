@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2006 Wim Taymans <wim@fluendo.com>
  *
  * gstfilesink.c:
  *
@@ -79,6 +80,9 @@ static gboolean gst_file_sink_stop (GstBaseSink * sink);
 static gboolean gst_file_sink_event (GstBaseSink * sink, GstEvent * event);
 static GstFlowReturn gst_file_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
+
+static gboolean gst_file_sink_do_seek (GstFileSink * filesink,
+    guint64 new_offset);
 
 static gboolean gst_file_sink_query (GstPad * pad, GstQuery * query);
 
@@ -225,33 +229,55 @@ static gboolean
 gst_file_sink_open_file (GstFileSink * sink)
 {
   /* open the file */
-  if (sink->filename == NULL || sink->filename[0] == '\0') {
+  if (sink->filename == NULL || sink->filename[0] == '\0')
+    goto no_filename;
+
+  sink->file = fopen (sink->filename, "wb");
+  if (sink->file == NULL)
+    goto open_failed;
+
+  sink->data_written = 0;
+  /* try to seek in the file to figure out if it is seekable */
+  sink->seekable = gst_file_sink_do_seek (sink, 0);
+
+  GST_DEBUG_OBJECT (sink, "opened file %s, seekable %d",
+      sink->filename, sink->seekable);
+
+  return TRUE;
+
+  /* ERRORS */
+no_filename:
+  {
     GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
         (_("No file name specified for writing.")), (NULL));
     return FALSE;
   }
-
-  sink->file = fopen (sink->filename, "wb");
-  if (sink->file == NULL) {
+open_failed:
+  {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         (_("Could not open file \"%s\" for writing."), sink->filename),
         GST_ERROR_SYSTEM);
     return FALSE;
   }
-
-  sink->data_written = 0;
-
-  return TRUE;
 }
 
 static void
 gst_file_sink_close_file (GstFileSink * sink)
 {
   if (sink->file) {
-    if (fclose (sink->file) != 0) {
-      GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
-          (_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
-    }
+    if (fclose (sink->file) != 0)
+      goto close_failed;
+
+    GST_DEBUG_OBJECT (sink, "closed file");
+  }
+  return;
+
+  /* ERRORS */
+close_failed:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE,
+        (_("Error closing file \"%s\"."), sink->filename), GST_ERROR_SYSTEM);
+    return;
   }
 }
 
@@ -292,7 +318,7 @@ gst_file_sink_query (GstPad * pad, GstQuery * query)
 # define __GST_STDIO_SEEK_FUNCTION "fseek"
 #endif
 
-static void
+static gboolean
 gst_file_sink_do_seek (GstFileSink * filesink, guint64 new_offset)
 {
   GST_DEBUG_OBJECT (filesink, "Seeking to offset %" G_GUINT64_FORMAT
@@ -313,18 +339,18 @@ gst_file_sink_do_seek (GstFileSink * filesink, guint64 new_offset)
     goto seek_failed;
 #endif
 
-  return;
+  return TRUE;
 
   /* ERRORS */
 flush_failed:
   {
     GST_DEBUG_OBJECT (filesink, "Flush failed: %s", g_strerror (errno));
-    return;
+    return FALSE;
   }
 seek_failed:
   {
     GST_DEBUG_OBJECT (filesink, "Seeking failed: %s", g_strerror (errno));
-    return;
+    return FALSE;
   }
 }
 
@@ -349,24 +375,39 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
           &eoffset, NULL);
 
       if (format == GST_FORMAT_BYTES) {
-        gst_file_sink_do_seek (filesink, (guint64) soffset);
+        if (!gst_file_sink_do_seek (filesink, (guint64) soffset))
+          goto seek_failed;
       } else {
-        GST_DEBUG ("Ignored NEWSEGMENT event of format %u", (guint) format);
+        GST_DEBUG ("Ignored NEWSEGMENT event of format %u (%s)",
+            (guint) format, gst_format_get_name (format));
       }
       break;
     }
     case GST_EVENT_EOS:
-      if (fflush (filesink->file)) {
-        GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
-            (_("Error while writing to file \"%s\"."), filesink->filename),
-            GST_ERROR_SYSTEM);
-      }
+      if (fflush (filesink->file))
+        goto flush_failed;
       break;
     default:
       break;
   }
 
   return TRUE;
+
+  /* ERRORS */
+seek_failed:
+  {
+    GST_ELEMENT_ERROR (filesink, RESOURCE, SEEK,
+        (_("Error while seeking in file \"%s\"."), filesink->filename),
+        GST_ERROR_SYSTEM);
+    return FALSE;
+  }
+flush_failed:
+  {
+    GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
+        (_("Error while writing to file \"%s\"."), filesink->filename),
+        GST_ERROR_SYSTEM);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -403,8 +444,12 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   filesink = GST_FILE_SINK (sink);
 
-  if (!gst_file_sink_get_current_offset (filesink, &cur_pos))
-    goto handle_error;
+  if (filesink->seekable) {
+    if (!gst_file_sink_get_current_offset (filesink, &cur_pos))
+      goto handle_error;
+  } else {
+    cur_pos = filesink->data_written;
+  }
 
   if (cur_pos < filesink->data_written)
     back_pending = filesink->data_written - cur_pos;

@@ -56,6 +56,7 @@ struct _GstFileSink {
   gchar *uri;
   FILE *file;
 
+  gboolean seekable;
   guint64 data_written;
 };
 
