@@ -1,3 +1,12 @@
+2006-06-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* autogen.sh:
+	* configure.ac:
+	* docs/Makefile.am:
+	  Use GST_PLUGIN_DOCS macro in configure.ac, add
+	  --enable-plugin-docs default to autogen.sh and use
+	  ENABLE_PLUGIN_DOCS conditional in Makefile.am (#344039).
+
 2006-06-15  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_peer),
