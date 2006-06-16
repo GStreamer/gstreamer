@@ -278,6 +278,7 @@ dnl check for documentation tools
 GST_DOCBOOK_CHECK
 GTK_DOC_CHECK([1.3])
 AS_PATH_PYTHON([2.1])
+GST_PLUGIN_DOCS([1.3],[2.1])
 
 dnl *** checks for libraries ***
 

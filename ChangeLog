@@ -1,3 +1,15 @@
+2006-06-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* autogen.sh:
+	  Add default for new --enable-plugin-docs switch.
+
+	* configure.ac:
+	  Use new GST_PLUGIN_DOCS macro to check for pyxml etc.
+	  Fixes #344039.
+
+	* docs/Makefile.am:
+	  Use new ENABLE_PLUGIN_DOCS conditional.
+
 2006-06-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (bin_query_duration_done), (gst_bin_query):
