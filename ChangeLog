@@ -1,5 +1,10 @@
 2006-06-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tools/gst-launch.1.in:
+	  Un-garble (fourcc) bit in filtered caps section.
+
+2006-06-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/manual/advanced-autoplugging.xml:
 	* docs/manual/basics-helloworld.xml:
 	* docs/manual/highlevel-components.xml:

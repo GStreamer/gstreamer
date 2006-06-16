@@ -369,7 +369,7 @@ automatically. To make this even easier, you can use the playbin element:
 These examples show you how to use filtered caps.
 
 .B
-        gst\-launch videotestsrc ! video/x-raw-yuv,format=\(fourcc\)YUY2;video/x-raw-yuv,format=\(fourcc\)YV12 ! xvimagesink
+        gst\-launch videotestsrc ! 'video/x-raw-yuv,format=(fourcc)YUY2;video/x-raw-yuv,format=(fourcc)YV12' ! xvimagesink
 .br
 Show a test image and use the YUY2 or YV12 video format for this.
 
