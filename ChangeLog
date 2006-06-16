@@ -1,3 +1,20 @@
+2006-06-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/spectrum/demo-audiotest.c: (on_window_destroy),
+	(draw_spectrum), (message_handler), (main):
+	* gst/spectrum/demo-osssrc.c: (on_window_destroy), (draw_spectrum),
+	(message_handler), (main):
+	port to use message to get results, cleanly exit when closing the window
+	
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init),
+	(gst_spectrum_init), (gst_spectrum_dispose),
+	(gst_spectrum_set_property), (gst_spectrum_get_property),
+	(gst_spectrum_set_caps), (gst_spectrum_start),
+	(gst_spectrum_message_new), (gst_spectrum_transform_ip):
+	* gst/spectrum/gstspectrum.h:
+	port to derive from basetransform and send results via messages
+	(like level element)
+
 2006-06-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_perform_seek),
