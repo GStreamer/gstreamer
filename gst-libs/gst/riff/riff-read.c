@@ -340,9 +340,10 @@ gst_riff_parse_strf_vids (GstElement * element,
         "strf_vids header gave %d bytes data, only %d available",
         strf->size, GST_BUFFER_SIZE (buf));
     strf->size = GST_BUFFER_SIZE (buf);
-  } else if (strf->size < GST_BUFFER_SIZE (buf)) {
-    *data = gst_buffer_create_sub (buf, strf->size,
-        GST_BUFFER_SIZE (buf) - strf->size);
+  }
+  if (sizeof (gst_riff_strf_vids) < GST_BUFFER_SIZE (buf)) {
+    *data = gst_buffer_create_sub (buf, sizeof (gst_riff_strf_vids),
+        GST_BUFFER_SIZE (buf) - sizeof (gst_riff_strf_vids));
   }
 
   /* debug */
