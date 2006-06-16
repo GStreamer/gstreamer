@@ -331,12 +331,19 @@ set_hwparams (GstAlsaSink * alsa)
   guint rrate;
   gint err, dir;
   snd_pcm_hw_params_t *params;
+  guint period_time, buffer_time;
 
   snd_pcm_hw_params_alloca (&params);
 
   GST_DEBUG_OBJECT (alsa, "Negotiating to %d channels @ %d Hz (format = %s)",
       alsa->channels, alsa->rate, snd_pcm_format_name (alsa->format));
 
+  /* start with requested values, if we cannot configure alsa for those values,
+   * we set these values to -1, which will leave the default alsa values */
+  buffer_time = alsa->buffer_time;
+  period_time = alsa->period_time;
+
+retry:
   /* choose all parameters */
   CHECK (snd_pcm_hw_params_any (alsa->handle, params), no_config);
   /* set the interleaved read/write format */
@@ -355,25 +362,66 @@ set_hwparams (GstAlsaSink * alsa)
   if (rrate != alsa->rate)
     goto rate_match;
 
-  if (alsa->buffer_time != -1) {
-    /* set the buffer time */
-    CHECK (snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
-            &alsa->buffer_time, &dir), buffer_time);
+  /* get and dump some limits */
+  {
+    guint min, max;
+
+    snd_pcm_hw_params_get_buffer_time_min (params, &min, &dir);
+    snd_pcm_hw_params_get_buffer_time_max (params, &max, &dir);
+
+    GST_DEBUG_OBJECT (alsa, "buffer time %u, min %u, max %u",
+        alsa->buffer_time, min, max);
+
+    snd_pcm_hw_params_get_period_time_min (params, &min, &dir);
+    snd_pcm_hw_params_get_period_time_max (params, &max, &dir);
+
+    GST_DEBUG_OBJECT (alsa, "period time %u, min %u, max %u",
+        alsa->period_time, min, max);
+
+    snd_pcm_hw_params_get_periods_min (params, &min, &dir);
+    snd_pcm_hw_params_get_periods_max (params, &max, &dir);
+
+    GST_DEBUG_OBJECT (alsa, "periods min %u, max %u", min, max);
   }
-  if (alsa->period_time != -1) {
+
+  /* now try to configure the buffer time and period time, if one
+   * of those fail, we fall back to the defaults and emit a warning. */
+  if (buffer_time != -1) {
+    /* set the buffer time */
+    if ((err = snd_pcm_hw_params_set_buffer_time_near (alsa->handle, params,
+                &buffer_time, &dir)) < 0) {
+      GST_ELEMENT_WARNING (alsa, RESOURCE, SETTINGS, (NULL),
+          ("Unable to set buffer time %i for playback: %s",
+              buffer_time, snd_strerror (err)));
+      /* disable buffer_time the next round */
+      buffer_time = -1;
+      goto retry;
+    }
+  }
+  if (period_time != -1) {
     /* set the period time */
-    CHECK (snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
-            &alsa->period_time, &dir), period_time);
+    if ((err = snd_pcm_hw_params_set_period_time_near (alsa->handle, params,
+                &period_time, &dir)) < 0) {
+      GST_ELEMENT_WARNING (alsa, RESOURCE, SETTINGS, (NULL),
+          ("Unable to set period time %i for playback: %s",
+              period_time, snd_strerror (err)));
+      /* disable period_time the next round */
+      period_time = -1;
+      goto retry;
+    }
   }
 
   /* write the parameters to device */
   CHECK (snd_pcm_hw_params (alsa->handle, params), set_hw_params);
 
+  /* now get the configured values */
   CHECK (snd_pcm_hw_params_get_buffer_size (params, &alsa->buffer_size),
       buffer_size);
-
   CHECK (snd_pcm_hw_params_get_period_size (params, &alsa->period_size, &dir),
       period_size);
+
+  GST_DEBUG_OBJECT (alsa, "buffer size %u, period size %u", alsa->buffer_size,
+      alsa->period_size);
 
   return 0;
 
@@ -427,24 +475,10 @@ rate_match:
         ("Rate doesn't match (requested %iHz, get %iHz)", alsa->rate, err));
     return -EINVAL;
   }
-buffer_time:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Unable to set buffer time %i for playback: %s",
-            alsa->buffer_time, snd_strerror (err)));
-    return err;
-  }
 buffer_size:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to get buffer size for playback: %s", snd_strerror (err)));
-    return err;
-  }
-period_time:
-  {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
-        ("Unable to set period time %i for playback: %s", alsa->period_time,
-            snd_strerror (err)));
     return err;
   }
 period_size:
