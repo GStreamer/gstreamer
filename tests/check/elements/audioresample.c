@@ -3,6 +3,7 @@
  * unit test for audioresample
  *
  * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
+ * Copyright (C) <2006> Tim-Philipp Müller <tim at centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -223,6 +224,69 @@ GST_START_TEST (test_perfect_stream)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reuse)
+{
+  GstElement *audioresample;
+  GstEvent *newseg;
+  GstBuffer *inbuffer;
+  GstCaps *caps;
+
+  audioresample = setup_audioresample (1, 9343, 48000);
+  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  fail_unless (gst_caps_is_fixed (caps));
+
+  fail_unless (gst_element_set_state (audioresample,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  newseg = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
+
+  inbuffer = gst_buffer_new_and_alloc (9343 * 4);
+  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  GST_BUFFER_OFFSET (inbuffer) = 0;
+  gst_buffer_set_caps (inbuffer, caps);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+
+  /* ... but it ends up being collected on the global buffer list */
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  /* now reset and try again ... */
+  fail_unless (gst_element_set_state (audioresample,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to NULL");
+
+  fail_unless (gst_element_set_state (audioresample,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  newseg = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+  fail_unless (gst_pad_push_event (mysrcpad, newseg) != FALSE);
+
+  inbuffer = gst_buffer_new_and_alloc (9343 * 4);
+  memset (GST_BUFFER_DATA (inbuffer), 0, GST_BUFFER_SIZE (inbuffer));
+  GST_BUFFER_DURATION (inbuffer) = GST_SECOND;
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
+  GST_BUFFER_OFFSET (inbuffer) = 0;
+  gst_buffer_set_caps (inbuffer, caps);
+
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+
+  /* ... it also ends up being collected on the global buffer list. If we
+   * now have more than 2 buffers, then audioresample probably didn't clean
+   * up its internal buffer properly and tried to push the remaining samples
+   * when it got the second NEWSEGMENT event */
+  fail_unless_equals_int (g_list_length (buffers), 2);
+
+  cleanup_audioresample (audioresample);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 Suite *
 audioresample_suite (void)
 {
@@ -231,6 +295,7 @@ audioresample_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_perfect_stream);
+  tcase_add_test (tc_chain, test_reuse);
 
   return s;
 }
