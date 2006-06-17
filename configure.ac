@@ -348,6 +348,21 @@ GST_CHECK_FEATURE(SIDPLAY, [libsidplay], sid, [
   GST_PATH_SIDPLAY()
 ])
 
+else
+
+dnl not building plugins with external dependencies,
+dnl but we still need to set the conditionals
+
+AM_CONDITIONAL(USE_A52DEC, false)
+AM_CONDITIONAL(USE_AMRNB, false)
+AM_CONDITIONAL(USE_DVDREAD, false)
+AM_CONDITIONAL(USE_DVDNAV, false)
+AM_CONDITIONAL(USE_LAME, false)
+AM_CONDITIONAL(USE_ID3TAG, false)
+AM_CONDITIONAL(USE_MAD, false)
+AM_CONDITIONAL(USE_MPEG2DEC, false)
+AM_CONDITIONAL(USE_SIDPLAY, false)
+
 fi dnl of EXT plugins
 
 dnl *** finalize CFLAGS, LDFLAGS, LIBS
