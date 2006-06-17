@@ -1,7 +1,7 @@
 2006-06-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
-	  Fix --disable-extern (can't set conditionals conditionally,
+	  Fix --disable-external (can't set conditionals conditionally,
 	  #343602).
 
 2006-06-16  Tim-Philipp Müller  <tim at centricular dot net>
@@ -17,7 +17,7 @@
 	(audioresample_start), (audioresample_stop),
 	(gst_audioresample_set_property), (gst_audioresample_get_property):
 	  Implement GstBaseTransform::start and ::stop so that audioresample
-	  can clear its internal state properly and be reused insted of
+	  can clear its internal state properly and be reused instead of
 	  causing non-negotiated errors with playbin under some circumstances
 	  (#342789).
 
