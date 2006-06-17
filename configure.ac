@@ -489,6 +489,19 @@ vorbis_synthesis_restart (v);
   CFLAGS="$ac_cflags_save"
 fi
 
+else
+
+dnl not building plugins with external dependencies,
+dnl but we still need to set the conditionals
+AM_CONDITIONAL(USE_ALSA, false)
+AM_CONDITIONAL(USE_CDPARANOIA, false)
+AM_CONDITIONAL(USE_GNOME_VFS, false)
+AM_CONDITIONAL(USE_LIBVISUAL, false)
+AM_CONDITIONAL(USE_OGG, false)
+AM_CONDITIONAL(USE_PANGO, false)
+AM_CONDITIONAL(USE_THEORA, false)
+AM_CONDITIONAL(USE_VORBIS, false)
+
 fi dnl of EXT plugins
 
 dnl seeking needs freetype, so check for it here
