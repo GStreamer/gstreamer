@@ -1,5 +1,15 @@
 2006-06-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Michael Dominic K.  < mdk at mdk org pl>
+
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	  Send newsegment event before calling
+	  gst_pad_alloc_buffer_and_set_caps(), makes mad behave better
+	  in connection with pad blocking (#342594). While we're at it,
+	  do some minor clean-ups.
+
+2006-06-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Fix --disable-external (can't set conditionals conditionally,
 	  #343602).

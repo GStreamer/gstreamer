@@ -29,10 +29,10 @@
 #define GST_MAD(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MAD,GstMad))
 #define GST_MAD_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MAD,GstMad))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MAD,GstMadClass))
 #define GST_IS_MAD(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MAD))
-#define GST_IS_MAD_CLASS(obj) \
+#define GST_IS_MAD_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MAD))
 
 
@@ -99,24 +99,14 @@ static const GstElementDetails gst_mad_details =
 GST_ELEMENT_DETAILS ("mad mp3 decoder",
     "Codec/Decoder/Audio",
     "Uses mad code to decode mp3 streams",
-    "Wim Taymans <wim.taymans@chello.be>");
+    "Wim Taymans <wim@fluendo.com>");
 
-
-/* Mad signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
 
 enum
 {
   ARG_0,
   ARG_HALF,
-  ARG_IGNORE_CRC,
-  ARG_METADATA,
-  ARG_STREAMINFO
-      /* FILL ME */
+  ARG_IGNORE_CRC
 };
 
 GST_DEBUG_CATEGORY_STATIC (mad_debug);
@@ -898,8 +888,6 @@ gst_mad_set_property (GObject * object, guint prop_id,
 {
   GstMad *mad;
 
-  g_return_if_fail (GST_IS_MAD (object));
-
   mad = GST_MAD (object);
 
   switch (prop_id) {
@@ -919,8 +907,6 @@ gst_mad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstMad *mad;
-
-  g_return_if_fail (GST_IS_MAD (object));
 
   mad = GST_MAD (object);
 
@@ -1545,6 +1531,18 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         gint32 *outdata;
         mad_fixed_t const *left_ch, *right_ch;
 
+        if (mad->need_newsegment) {
+          gint64 start = time_offset;
+
+          GST_DEBUG ("Sending NEWSEGMENT event, start=%" GST_TIME_FORMAT,
+              GST_TIME_ARGS (start));
+
+          gst_pad_push_event (mad->srcpad,
+              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+                  start, GST_CLOCK_TIME_NONE, start));
+          mad->need_newsegment = FALSE;
+        }
+
         /* will attach the caps to the buffer */
         result =
             gst_pad_alloc_buffer_and_set_caps (mad->srcpad, 0,
@@ -1584,18 +1582,6 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
             *outdata++ = scale (*left_ch++) & 0xffffffff;
             *outdata++ = scale (*right_ch++) & 0xffffffff;
           }
-        }
-
-        if (mad->need_newsegment) {
-          gint64 start = GST_BUFFER_TIMESTAMP (outbuffer);
-
-          GST_DEBUG ("Sending NEWSEGMENT event, start=%" GST_TIME_FORMAT,
-              GST_TIME_ARGS (start));
-
-          gst_pad_push_event (mad->srcpad,
-              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-                  start, GST_CLOCK_TIME_NONE, start));
-          mad->need_newsegment = FALSE;
         }
 
         result = gst_pad_push (mad->srcpad, outbuffer);
