@@ -1,3 +1,10 @@
+2006-06-18  Edward Hervey  <edward@fluendo.com>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_chain): 
+	After a failed buffer alloc, we need to abort the jpeg decoding (it
+	started when parsing headers to figure out how many bytes we need
+	to request downstream).
+
 2006-06-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Mark Nauwelaerts  <manauw at skynet be>
