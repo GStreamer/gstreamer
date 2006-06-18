@@ -769,10 +769,10 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   gboolean res;
   gdouble rate;
   GstEvent *newsegment;
-  GstFormat format;
+  GstFormat format, bformat;
   GstSeekFlags flags;
   GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type;
-  gint64 cur, stop;
+  gint64 cur, stop, upstream_size;
   gboolean flush;
   gboolean update;
   GstSegment seeksegment;
@@ -843,6 +843,14 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   } else {
     wav->end_offset = wav->datasize + wav->datastart;
   }
+
+  /* make sure filesize is not exceeded due to rounding errors or so,
+   * same precaution as in _stream_headers */
+  bformat = GST_FORMAT_BYTES;
+  if (gst_pad_query_peer_duration (wav->sinkpad, &bformat, &upstream_size)) {
+    wav->end_offset = MIN (wav->end_offset, upstream_size);
+  }
+
   wav->offset = MIN (wav->offset, wav->end_offset);
   wav->dataleft = wav->end_offset - wav->offset;
 
