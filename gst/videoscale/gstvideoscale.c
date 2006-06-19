@@ -93,6 +93,10 @@ static GstStaticCaps gst_video_scale_format_caps[] = {
   GST_STATIC_CAPS (GST_VIDEO_CAPS_xRGB),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRx),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_xBGR),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_ARGB),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRA),
+  GST_STATIC_CAPS (GST_VIDEO_CAPS_ABGR),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_BGR),
   GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV")),
@@ -112,6 +116,10 @@ enum
   GST_VIDEO_SCALE_xRGB,
   GST_VIDEO_SCALE_BGRx,
   GST_VIDEO_SCALE_xBGR,
+  GST_VIDEO_SCALE_RGBA,
+  GST_VIDEO_SCALE_ARGB,
+  GST_VIDEO_SCALE_BGRA,
+  GST_VIDEO_SCALE_ABGR,
   GST_VIDEO_SCALE_RGB,
   GST_VIDEO_SCALE_BGR,
   GST_VIDEO_SCALE_AYUV,
@@ -390,6 +398,10 @@ gst_video_scale_prepare_size (GstVideoScale * videoscale, gint format,
     case GST_VIDEO_SCALE_xRGB:
     case GST_VIDEO_SCALE_BGRx:
     case GST_VIDEO_SCALE_xBGR:
+    case GST_VIDEO_SCALE_RGBA:
+    case GST_VIDEO_SCALE_ARGB:
+    case GST_VIDEO_SCALE_BGRA:
+    case GST_VIDEO_SCALE_ABGR:
     case GST_VIDEO_SCALE_AYUV:
       img->stride = img->width * 4;
       *size = img->stride * img->height;
@@ -700,6 +712,10 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
         case GST_VIDEO_SCALE_xRGB:
         case GST_VIDEO_SCALE_BGRx:
         case GST_VIDEO_SCALE_xBGR:
+        case GST_VIDEO_SCALE_RGBA:
+        case GST_VIDEO_SCALE_ARGB:
+        case GST_VIDEO_SCALE_BGRA:
+        case GST_VIDEO_SCALE_ABGR:
         case GST_VIDEO_SCALE_AYUV:
           vs_image_scale_nearest_RGBA (dest, src, videoscale->tmp_buf);
           break;
@@ -739,6 +755,10 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
         case GST_VIDEO_SCALE_xRGB:
         case GST_VIDEO_SCALE_BGRx:
         case GST_VIDEO_SCALE_xBGR:
+        case GST_VIDEO_SCALE_RGBA:
+        case GST_VIDEO_SCALE_ARGB:
+        case GST_VIDEO_SCALE_BGRA:
+        case GST_VIDEO_SCALE_ABGR:
         case GST_VIDEO_SCALE_AYUV:
           vs_image_scale_linear_RGBA (dest, src, videoscale->tmp_buf);
           break;

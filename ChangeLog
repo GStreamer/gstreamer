@@ -1,3 +1,11 @@
+2006-06-19  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Philip Jaegenstedt <philip at lysator dot liu dot se>
+
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_prepare_size),
+	(gst_video_scale_transform):
+	Make videoscale support RGBA, ARGB, BGRA and ABGR. Fixes #345131
+
 2006-06-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
