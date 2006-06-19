@@ -543,9 +543,32 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
   }
 
   if (mpeg2dec->pixel_width == 0 || mpeg2dec->pixel_height == 0) {
-    GST_WARNING_OBJECT (mpeg2dec, "Unknown pixel-aspect-ratio - assuming 4:3");
-    mpeg2dec->pixel_width = 4;
-    mpeg2dec->pixel_height = 3;
+    GValue par = { 0, }
+    , dar = {
+    0,}
+    , dimensions = {
+    0,};
+
+    /* assume display aspect ratio (DAR) of 4:3 */
+    g_value_init (&dar, GST_TYPE_FRACTION);
+    gst_value_set_fraction (&dar, 4, 3);
+    g_value_init (&dimensions, GST_TYPE_FRACTION);
+    gst_value_set_fraction (&dimensions, mpeg2dec->height, mpeg2dec->width);
+
+    g_value_init (&par, GST_TYPE_FRACTION);
+    if (!gst_value_fraction_multiply (&par, &dar, &dimensions)) {
+      gst_value_set_fraction (&dimensions, 1, 1);
+    }
+
+    mpeg2dec->pixel_width = gst_value_get_fraction_numerator (&par);
+    mpeg2dec->pixel_height = gst_value_get_fraction_denominator (&par);
+
+    GST_WARNING_OBJECT (mpeg2dec, "Unknown pixel-aspect-ratio, assuming %d:%d",
+        mpeg2dec->pixel_width, mpeg2dec->pixel_height);
+
+    g_value_unset (&par);
+    g_value_unset (&dar);
+    g_value_unset (&dimensions);
   }
 
   caps = gst_caps_new_simple ("video/x-raw-yuv",

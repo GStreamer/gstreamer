@@ -1,6 +1,11 @@
 2006-06-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_negotiate_format):
+	  Assume 4:3 DAR rather than 4:3 PAR (#345184).
+
+2006-06-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_negotiate_format):
 	  Assume pixel-aspect-ratio of 4:3 if libmpeg2dec doesn't give us
 	  any PAR whatsoever (rather than using 0/0, which will lead to
 	  an abort later on). Fixes #345184.
