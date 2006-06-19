@@ -542,6 +542,12 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
     return (FALSE);
   }
 
+  if (mpeg2dec->pixel_width == 0 || mpeg2dec->pixel_height == 0) {
+    GST_WARNING_OBJECT (mpeg2dec, "Unknown pixel-aspect-ratio - assuming 4:3");
+    mpeg2dec->pixel_width = 4;
+    mpeg2dec->pixel_height = 3;
+  }
+
   caps = gst_caps_new_simple ("video/x-raw-yuv",
       "format", GST_TYPE_FOURCC, fourcc,
       "width", G_TYPE_INT, mpeg2dec->width,
