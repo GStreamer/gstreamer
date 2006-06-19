@@ -863,17 +863,50 @@ header_read_error:
   }
 }
 
+/* returns TRUE if buffer is within segment, else FALSE.
+ * if Buffer is on segment border, it's timestamp and duration will be clipped */
+
+static gboolean
+clip_buffer (GstTheoraDec * dec, GstBuffer * buf)
+{
+  gboolean res = FALSE;
+  gint64 cstart, cstop;
+
+  GST_LOG_OBJECT (dec,
+      "timestamp:%" GST_TIME_FORMAT " , duration:%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+  if (dec->segment.format != GST_FORMAT_TIME) {
+    res = TRUE;
+    goto beach;
+  }
+
+  if (!(gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
+              GST_BUFFER_TIMESTAMP (buf),
+              GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf),
+              &cstart, &cstop)))
+    goto beach;
+
+  GST_BUFFER_TIMESTAMP (buf) = cstart;
+  GST_BUFFER_DURATION (buf) = cstop - cstart;
+  res = TRUE;
+
+beach:
+  GST_LOG_OBJECT (dec, "dropping : %d", res);
+  return res;
+}
+
 /* FIXME, this needs to be moved to the demuxer */
 static GstFlowReturn
 theora_dec_push (GstTheoraDec * dec, GstBuffer * buf)
 {
-  GstFlowReturn result;
+  GstFlowReturn result = GST_FLOW_OK;
   GstClockTime outtime = GST_BUFFER_TIMESTAMP (buf);
 
   if (outtime == GST_CLOCK_TIME_NONE) {
     dec->queued = g_list_append (dec->queued, buf);
     GST_DEBUG_OBJECT (dec, "queued buffer");
-    result = GST_FLOW_OK;
   } else {
     if (dec->queued) {
       gint64 size;
@@ -898,7 +931,10 @@ theora_dec_push (GstTheoraDec * dec, GstBuffer * buf)
           dec->discont = FALSE;
         }
         /* ignore the result.. */
-        gst_pad_push (dec->srcpad, buffer);
+        if (clip_buffer (dec, buffer))
+          gst_pad_push (dec->srcpad, buffer);
+        else
+          gst_buffer_unref (buffer);
         size--;
       }
       g_list_free (dec->queued);
@@ -908,7 +944,10 @@ theora_dec_push (GstTheoraDec * dec, GstBuffer * buf)
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       dec->discont = FALSE;
     }
-    result = gst_pad_push (dec->srcpad, buf);
+    if (clip_buffer (dec, buf))
+      result = gst_pad_push (dec->srcpad, buf);
+    else
+      gst_buffer_unref (buf);
   }
 
   return result;

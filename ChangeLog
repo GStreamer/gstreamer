@@ -1,3 +1,9 @@
+2006-06-19  Edward Hervey  <edward@fluendo.com>
+
+	* ext/theora/theoradec.c: (clip_buffer), (theora_dec_push):
+	Implement clipping for accurate seeking.
+	Closes #345225
+
 2006-06-19  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Philip Jaegenstedt <philip at lysator dot liu dot se>
