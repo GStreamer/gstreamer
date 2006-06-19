@@ -125,6 +125,7 @@ GST_START_TEST (test_add_client)
   memcpy (GST_BUFFER_DATA (buffer), "dead", 4);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
+  GST_DEBUG ("reading");
   fail_if (read (pfd[0], data, 4) < 4);
   fail_unless (strncmp (data, "dead", 4) == 0);
   wait_bytes_served (sink, 4);
@@ -441,6 +442,358 @@ GST_START_TEST (test_change_streamheader)
 
 GST_END_TEST;
 
+/* keep 100 bytes and burst 80 bytes to clients */
+GST_START_TEST (test_burst_client_bytes)
+{
+  GstElement *sink;
+  GstBuffer *buffer;
+  GstCaps *caps;
+  int pfd1[2];
+  int pfd2[2];
+  int pfd3[2];
+  gchar data[16];
+  guint64 bytes_served;
+  gint i;
+  guint buffers_queued;
+
+  sink = setup_multifdsink ();
+  /* make sure we keep at least 100 bytes at all times */
+  g_object_set (sink, "bytes-min", 100, NULL);
+  g_object_set (sink, "sync-method", 3, NULL);  /* 3 = burst */
+  g_object_set (sink, "burst-unit", 3, NULL);   /* 3 = bytes */
+  g_object_set (sink, "burst-value", (guint64) 80, NULL);
+
+  fail_if (pipe (pfd1) == -1);
+  fail_if (pipe (pfd2) == -1);
+  fail_if (pipe (pfd3) == -1);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  caps = gst_caps_from_string ("application/x-gst-check");
+  GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
+
+  /* push buffers in, 9 * 16 bytes = 144 bytes */
+  for (i = 0; i < 9; i++) {
+    gchar *data;
+
+    buffer = gst_buffer_new_and_alloc (16);
+    gst_buffer_set_caps (buffer, caps);
+
+    /* copy some id */
+    data = (gchar *) GST_BUFFER_DATA (buffer);
+    g_snprintf (data, 16, "deadbee%08x", i);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  /* check that at least 7 buffers (112 bytes) are in the queue */
+  g_object_get (sink, "buffers-queued", &buffers_queued, NULL);
+  fail_if (buffers_queued != 7);
+
+  /* now add the clients */
+  g_signal_emit_by_name (sink, "add", pfd1[1]);
+  g_signal_emit_by_name (sink, "add_full", pfd2[1], 3,
+      3, (guint64) 50, 3, (guint64) 200);
+  g_signal_emit_by_name (sink, "add_full", pfd3[1], 3,
+      3, (guint64) 50, 3, (guint64) 50);
+
+  /* push last buffer to make client fds ready for reading */
+  for (i = 9; i < 10; i++) {
+    gchar *data;
+
+    buffer = gst_buffer_new_and_alloc (16);
+    gst_buffer_set_caps (buffer, caps);
+
+    /* copy some id */
+    data = (gchar *) GST_BUFFER_DATA (buffer);
+    g_snprintf (data, 16, "deadbee%08x", i);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  /* now we should only read the last 5 buffers (5 * 16 = 80 bytes) */
+  GST_DEBUG ("Reading from client 1");
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000005", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000006", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000007", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000008", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000009", 16) == 0);
+
+  /* second client only bursts 50 bytes = 4 buffers (we get 4 buffers since
+   * the max alows it) */
+  GST_DEBUG ("Reading from client 2");
+  fail_if (read (pfd2[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000006", 16) == 0);
+  fail_if (read (pfd2[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000007", 16) == 0);
+  fail_if (read (pfd2[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000008", 16) == 0);
+  fail_if (read (pfd2[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000009", 16) == 0);
+
+  /* third client only bursts 50 bytes = 4 buffers, we can't send
+   * more than 50 bytes so we only get 3 buffers (48 bytes). */
+  GST_DEBUG ("Reading from client 3");
+  fail_if (read (pfd3[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000007", 16) == 0);
+  fail_if (read (pfd3[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000008", 16) == 0);
+  fail_if (read (pfd3[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000009", 16) == 0);
+
+  GST_DEBUG ("cleaning up multifdsink");
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_multifdsink (sink);
+
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+/* keep 100 bytes and burst 80 bytes to clients */
+GST_START_TEST (test_burst_client_bytes_keyframe)
+{
+  GstElement *sink;
+  GstBuffer *buffer;
+  GstCaps *caps;
+  int pfd1[2];
+  int pfd2[2];
+  int pfd3[2];
+  gchar data[16];
+  guint64 bytes_served;
+  gint i;
+  guint buffers_queued;
+
+  sink = setup_multifdsink ();
+  /* make sure we keep at least 100 bytes at all times */
+  g_object_set (sink, "bytes-min", 100, NULL);
+  g_object_set (sink, "sync-method", 4, NULL);  /* 3 = burst_keyframe */
+  g_object_set (sink, "burst-unit", 3, NULL);   /* 3 = bytes */
+  g_object_set (sink, "burst-value", (guint64) 80, NULL);
+
+  fail_if (pipe (pfd1) == -1);
+  fail_if (pipe (pfd2) == -1);
+  fail_if (pipe (pfd3) == -1);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  caps = gst_caps_from_string ("application/x-gst-check");
+  GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
+
+  /* push buffers in, 9 * 16 bytes = 144 bytes */
+  for (i = 0; i < 9; i++) {
+    gchar *data;
+
+    buffer = gst_buffer_new_and_alloc (16);
+    gst_buffer_set_caps (buffer, caps);
+
+    /* mark most buffers as delta */
+    if (i != 0 && i != 4 && i != 8)
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+    /* copy some id */
+    data = (gchar *) GST_BUFFER_DATA (buffer);
+    g_snprintf (data, 16, "deadbee%08x", i);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  /* check that at least 7 buffers (112 bytes) are in the queue */
+  g_object_get (sink, "buffers-queued", &buffers_queued, NULL);
+  fail_if (buffers_queued != 7);
+
+  /* now add the clients */
+  g_signal_emit_by_name (sink, "add", pfd1[1]);
+  g_signal_emit_by_name (sink, "add_full", pfd2[1], 4,
+      3, (guint64) 50, 3, (guint64) 90);
+  g_signal_emit_by_name (sink, "add_full", pfd3[1], 4,
+      3, (guint64) 50, 3, (guint64) 50);
+
+  /* push last buffer to make client fds ready for reading */
+  for (i = 9; i < 10; i++) {
+    gchar *data;
+
+    buffer = gst_buffer_new_and_alloc (16);
+    gst_buffer_set_caps (buffer, caps);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+    /* copy some id */
+    data = (gchar *) GST_BUFFER_DATA (buffer);
+    g_snprintf (data, 16, "deadbee%08x", i);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  /* now we should only read the last 6 buffers (min 5 * 16 = 80 bytes),
+   * keyframe at buffer 4 */
+  GST_DEBUG ("Reading from client 1");
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000004", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000005", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000006", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000007", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000008", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000009", 16) == 0);
+
+  /* second client only bursts 50 bytes = 4 buffers, there is
+   * no keyframe above min and below max, so get one below min */
+  GST_DEBUG ("Reading from client 2");
+  fail_if (read (pfd2[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000008", 16) == 0);
+  fail_if (read (pfd2[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000009", 16) == 0);
+
+  /* third client only bursts 50 bytes = 4 buffers, we can't send
+   * more than 50 bytes so we only get 2 buffers (32 bytes). */
+  GST_DEBUG ("Reading from client 3");
+  fail_if (read (pfd3[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000008", 16) == 0);
+  fail_if (read (pfd3[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000009", 16) == 0);
+
+  GST_DEBUG ("cleaning up multifdsink");
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_multifdsink (sink);
+
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+/* keep 100 bytes and burst 80 bytes to clients */
+GST_START_TEST (test_burst_client_bytes_with_keyframe)
+{
+  GstElement *sink;
+  GstBuffer *buffer;
+  GstCaps *caps;
+  int pfd1[2];
+  int pfd2[2];
+  int pfd3[2];
+  gchar data[16];
+  guint64 bytes_served;
+  gint i;
+  guint buffers_queued;
+
+  sink = setup_multifdsink ();
+  /* make sure we keep at least 100 bytes at all times */
+  g_object_set (sink, "bytes-min", 100, NULL);
+  g_object_set (sink, "sync-method", 5, NULL);  /* 3 = burst_with_keyframe */
+  g_object_set (sink, "burst-unit", 3, NULL);   /* 3 = bytes */
+  g_object_set (sink, "burst-value", (guint64) 80, NULL);
+
+  fail_if (pipe (pfd1) == -1);
+  fail_if (pipe (pfd2) == -1);
+  fail_if (pipe (pfd3) == -1);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  caps = gst_caps_from_string ("application/x-gst-check");
+  GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
+
+  /* push buffers in, 9 * 16 bytes = 144 bytes */
+  for (i = 0; i < 9; i++) {
+    gchar *data;
+
+    buffer = gst_buffer_new_and_alloc (16);
+    gst_buffer_set_caps (buffer, caps);
+
+    /* mark most buffers as delta */
+    if (i != 0 && i != 4 && i != 8)
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+    /* copy some id */
+    data = (gchar *) GST_BUFFER_DATA (buffer);
+    g_snprintf (data, 16, "deadbee%08x", i);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  /* check that at least 7 buffers (112 bytes) are in the queue */
+  g_object_get (sink, "buffers-queued", &buffers_queued, NULL);
+  fail_if (buffers_queued != 7);
+
+  /* now add the clients */
+  g_signal_emit_by_name (sink, "add", pfd1[1]);
+  g_signal_emit_by_name (sink, "add_full", pfd2[1], 5,
+      3, (guint64) 50, 3, (guint64) 90);
+  g_signal_emit_by_name (sink, "add_full", pfd3[1], 5,
+      3, (guint64) 50, 3, (guint64) 50);
+
+  /* push last buffer to make client fds ready for reading */
+  for (i = 9; i < 10; i++) {
+    gchar *data;
+
+    buffer = gst_buffer_new_and_alloc (16);
+    gst_buffer_set_caps (buffer, caps);
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+    /* copy some id */
+    data = (gchar *) GST_BUFFER_DATA (buffer);
+    g_snprintf (data, 16, "deadbee%08x", i);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  /* now we should only read the last 6 buffers (min 5 * 16 = 80 bytes),
+   * keyframe at buffer 4 */
+  GST_DEBUG ("Reading from client 1");
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000004", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000005", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000006", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000007", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000008", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000009", 16) == 0);
+
+  /* second client only bursts 50 bytes = 4 buffers, there is
+   * no keyframe above min and below max, so send min */
+  GST_DEBUG ("Reading from client 2");
+  fail_if (read (pfd2[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000006", 16) == 0);
+  fail_if (read (pfd2[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000007", 16) == 0);
+  fail_if (read (pfd2[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000008", 16) == 0);
+  fail_if (read (pfd2[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000009", 16) == 0);
+
+  /* third client only bursts 50 bytes = 4 buffers, we can't send
+   * more than 50 bytes so we only get 3 buffers (48 bytes). */
+  GST_DEBUG ("Reading from client 3");
+  fail_if (read (pfd3[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000007", 16) == 0);
+  fail_if (read (pfd3[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000008", 16) == 0);
+  fail_if (read (pfd3[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000009", 16) == 0);
+
+  GST_DEBUG ("cleaning up multifdsink");
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_multifdsink (sink);
+
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 /* FIXME: add test simulating chained oggs where:
  * sync-method is burst-on-connect
  * (when multifdsink actually does burst-on-connect based on byte size, not
@@ -448,7 +801,6 @@ GST_END_TEST;
  * an old client still needs to read from before the new streamheaders
  * a new client gets the new streamheaders
  */
-
 Suite *
 multifdsink_suite (void)
 {
@@ -460,6 +812,9 @@ multifdsink_suite (void)
   tcase_add_test (tc_chain, test_add_client);
   tcase_add_test (tc_chain, test_streamheader);
   tcase_add_test (tc_chain, test_change_streamheader);
+  tcase_add_test (tc_chain, test_burst_client_bytes);
+  tcase_add_test (tc_chain, test_burst_client_bytes_keyframe);
+  tcase_add_test (tc_chain, test_burst_client_bytes_with_keyframe);
 
   return s;
 }

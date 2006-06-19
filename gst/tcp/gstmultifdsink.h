@@ -73,9 +73,15 @@ typedef enum
 
 /**
  * GstSyncMethod:
- * @GST_SYNC_METHOD_LATEST         : client receives most recent buffer
- * @GST_SYNC_METHOD_NEXT_KEYFRAME  : client receives next keyframe
- * @GST_SYNC_METHOD_LATEST_KEYFRAME: client receives latest keyframe (burst)
+ * @GST_SYNC_METHOD_LATEST              : client receives most recent buffer
+ * @GST_SYNC_METHOD_NEXT_KEYFRAME       : client receives next keyframe
+ * @GST_SYNC_METHOD_LATEST_KEYFRAME     : client receives latest keyframe (burst)
+ * @GST_SYNC_METHOD_BURST               : client receives specific amount of data
+ * @GST_SYNC_METHOD_BURST_KEYFRAME      : client receives specific amount of data 
+ *                                        starting from latest keyframe
+ * @GST_SYNC_METHOD_BURST_WITH_KEYFRAME : client receives specific amount of data from
+ *                                        a keyframe, or if there is not enough data after
+ *                                        the keyframe, starting before the keyframe
  *
  * This enum defines the selection of the first buffer that is sent
  * to a new client.
@@ -85,18 +91,23 @@ typedef enum
   GST_SYNC_METHOD_LATEST,
   GST_SYNC_METHOD_NEXT_KEYFRAME,
   GST_SYNC_METHOD_LATEST_KEYFRAME,
+  GST_SYNC_METHOD_BURST,
+  GST_SYNC_METHOD_BURST_KEYFRAME,
+  GST_SYNC_METHOD_BURST_WITH_KEYFRAME,
 } GstSyncMethod;
 
 /**
  * GstUnitType:
- * @GST_UNIT_TYPE_BUFFERS: a buffer
- * @GST_UNIT_TYPE_TIME   : timeunits (in nanoseconds)
- * @GST_UNIT_TYPE_BYTES  : bytes
+ * @GST_UNIT_TYPE_UNDEFINED: undefined
+ * @GST_UNIT_TYPE_BUFFERS  : buffers
+ * @GST_UNIT_TYPE_TIME     : timeunits (in nanoseconds)
+ * @GST_UNIT_TYPE_BYTES    : bytes
  *
  * The units used to specify limits.
  */
 typedef enum
 {
+  GST_UNIT_TYPE_UNDEFINED,
   GST_UNIT_TYPE_BUFFERS,
   GST_UNIT_TYPE_TIME,
   GST_UNIT_TYPE_BYTES,
@@ -143,6 +154,13 @@ typedef struct {
 
   gboolean caps_sent;
   gboolean new_connection;
+
+  /* method to sync client when connecting */
+  GstSyncMethod sync_method;
+  GstUnitType   burst_min_unit;
+  guint64       burst_min_value;
+  GstUnitType   burst_max_unit;
+  guint64       burst_max_value;
 
   GstCaps *caps;                /* caps of last queued buffer */
 
@@ -192,12 +210,24 @@ struct _GstMultiFdSink {
   gboolean running;     /* the thread state */
   GThread *thread;      /* the sender thread */
 
+  /* these values are used to check if a client is reading fast
+   * enough and to control receovery */
   GstUnitType unit_type;/* the type of the units */
-  gint units_max;       /* max units to queue */
+  gint units_max;       /* max units to queue for a client */
   gint units_soft_max;  /* max units a client can lag before recovery starts */
   GstRecoverPolicy recover_policy;
   GstClockTime timeout; /* max amount of nanoseconds to remain idle */
-  GstSyncMethod sync_method;    /* what method to use for connecting clients */
+
+  GstSyncMethod def_sync_method;    /* what method to use for connecting clients */
+  GstUnitType   def_burst_unit;
+  guint64       def_burst_value;
+
+  /* these values are used to control the amount of data
+   * kept in the queues. It allows clients to perform a burst
+   * on connect. */
+  gint   bytes_min;	/* min number of bytes to queue */
+  gint64 time_min;	/* min time to queue */
+  gint   buffers_min;   /* min number of buffers to queue */
 
   /* stats */
   gint buffers_queued;  /* number of queued buffers */
@@ -212,6 +242,9 @@ struct _GstMultiFdSinkClass {
 
   /* element methods */
   void          (*add)          (GstMultiFdSink *sink, int fd);
+  void          (*add_full)     (GstMultiFdSink *sink, int fd, GstSyncMethod sync,
+		                 GstUnitType format, guint64 value, 
+				 GstUnitType max_unit, guint64 max_value);
   void          (*remove)       (GstMultiFdSink *sink, int fd);
   void          (*clear)        (GstMultiFdSink *sink);
   GValueArray*  (*get_stats)    (GstMultiFdSink *sink, int fd);
@@ -231,9 +264,13 @@ struct _GstMultiFdSinkClass {
 GType gst_multi_fd_sink_get_type (void);
 
 void gst_multi_fd_sink_add (GstMultiFdSink *sink, int fd);
+void gst_multi_fd_sink_add_full (GstMultiFdSink *sink, int fd, GstSyncMethod sync, 
+		GstUnitType min_unit, guint64 min_value,
+		GstUnitType max_unit, guint64 max_value);
 void gst_multi_fd_sink_remove (GstMultiFdSink *sink, int fd);
 void gst_multi_fd_sink_clear (GstMultiFdSink *sink);
 GValueArray* gst_multi_fd_sink_get_stats (GstMultiFdSink *sink, int fd);
+
 
 G_END_DECLS
 
