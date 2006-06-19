@@ -20,6 +20,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#ifndef NE_FREE
+#define NEON_026_OR_LATER  1
+#endif
+
 #define HTTP_DEFAULT_HOST        "localhost"
 #define HTTP_DEFAULT_PORT        80
 #define HTTPS_DEFAULT_PORT       443
@@ -626,10 +630,13 @@ set_proxy (const char *uri, ne_uri * parsed, gboolean set_default)
   if (parsed->host && !parsed->port) {
     goto clear;
   }
-
-  if (!parsed->path || parsed->authinfo) {
+#ifdef NEON_026_OR_LATER
+  if (!parsed->path || parsed->userinfo)
     goto clear;
-  }
+#else
+  if (!parsed->path || parsed->authinfo)
+    goto clear;
+#endif
 
   return TRUE;
 

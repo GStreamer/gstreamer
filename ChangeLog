@@ -1,3 +1,11 @@
+2006-06-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Fix check so that future libneon API changes won't break the build.
+
+	* ext/neon/gstneonhttpsrc.c:
+	  Fix build with libneon-0.26.x (#345182).
+
 2006-06-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

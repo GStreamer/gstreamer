@@ -564,7 +564,7 @@ GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz tag generation], musicbrainz, [
 dnl *** neon ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
 GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
-  PKG_CHECK_MODULES(NEON, neon >= 0.25.5, HAVE_NEON="yes", [
+  PKG_CHECK_MODULES(NEON, neon >= 0.25.5  neon <= 0.26.99, HAVE_NEON="yes", [
     HAVE_NEON="no"
     AC_MSG_RESULT(no)
   ])
