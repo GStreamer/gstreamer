@@ -1,3 +1,8 @@
+2006-06-19  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* configure.ac:
+	If we have libraw1394 >= 1.2.1, then we need libiec61883.
+
 2006-06-18  Edward Hervey  <edward@fluendo.com>
 
 	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_chain): 
