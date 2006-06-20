@@ -18,6 +18,19 @@
  */
 /* Element-Checklist-Version: 5 */
 
+/**
+ * SECTION:element-rtpdec
+ *
+ * <refsect2>
+ * <para>
+ * A simple RTP session manager used internally by rtspsrc.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-06-20 (0.10.4)
+ */
+
+
 #include "gstrtpdec.h"
 
 GST_DEBUG_CATEGORY (rtpdec_debug);
@@ -138,7 +151,10 @@ gst_rtpdec_class_init (gpointer g_class)
   gobject_class->set_property = gst_rtpdec_set_property;
   gobject_class->get_property = gst_rtpdec_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP, g_param_spec_int ("skip", "skip", "skip", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
+  /* FIXME, this is unused and probably copied from somewhere */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP,
+      g_param_spec_int ("skip", "Skip", "skip (unused)", G_MININT, G_MAXINT, 0,
+          G_PARAM_READWRITE));
 
   parent_class = g_type_class_peek_parent (klass);
 

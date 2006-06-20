@@ -16,6 +16,49 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-rtspsrc
+ *
+ * <refsect2>
+ * <para>
+ * Makes a connection to an RTSP server and read the data.
+ * rtspsrc strictly follows RFC 2326 and therefore does not (yet) support
+ * RealMedia/Quicktime/Microsoft extensions.
+ * </para>
+ * <para>
+ * RTSP supports transport over TCP or UDP in unicast or multicast mode. By
+ * default rtspsrc will negotiate a connection in the following order:
+ * UDP unicast/UDP multicast/TCP. The order cannot be changed but the allowed
+ * protocols can be controlled with the "protocols" property.
+ * </para>
+ * <para>
+ * rtspsrc currently understands SDP as the format of the session description.
+ * For each stream listed in the SDP a new rtp_stream%d pad will be created
+ * with caps derived from the SDP media description. This is a caps of mime type
+ * "application/x-rtp" that can be connected to any available rtp depayloader
+ * element. 
+ * </para>
+ * <para>
+ * rtspsrc will internally instantiate an RTP session manager element
+ * that will handle the RTCP messages to and from the server, jitter removal,
+ * packet reordering along with providing a clock for the pipeline. 
+ * This feature is however currently not yet implemented.
+ * </para>
+ * <para>
+ * rtspsrc acts like a live source and will therefore only generate data in the 
+ * PLAYING state.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch rtspsrc location=rtsp://some.server/url ! fakesink
+ * </programlisting>
+ * Establish a connection to an RTSP server and send the stream to a fakesink.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-06-20 (0.10.4)
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

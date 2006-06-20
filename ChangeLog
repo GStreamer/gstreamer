@@ -1,5 +1,15 @@
 2006-06-20  Wim Taymans  <wim@fluendo.com>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* gst/rtsp/gstrtpdec.c: (gst_rtpdec_class_init):
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/rtsp/gstrtspsrc.h:
+	Added documentation for the rtsp plugin. Fixes #345393.
+
+2006-06-20  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/rtspconnection.c: (inet_aton), (rtsp_connection_send),
 	(rtsp_connection_close), (rtsp_connection_free):
 	Use better G_OS_* macros. Fixes #345301 some more.

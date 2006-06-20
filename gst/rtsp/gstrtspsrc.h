@@ -23,9 +23,7 @@
 
 #include <gst/gst.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
 #include "gstrtsp.h"
 #include "rtsp.h"
@@ -103,10 +101,6 @@ struct _GstRTSPSrcClass {
 
 GType gst_rtspsrc_get_type(void);
 
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_RTSPSRC_H__ */
