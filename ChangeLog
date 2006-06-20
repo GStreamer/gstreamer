@@ -1,3 +1,10 @@
+2006-06-20  Wim Taymans  <wim@fluendo.com>
+
+	* tests/check/gst/gstghostpad.c: (block_callback),
+	(GST_START_TEST), (gst_ghost_pad_suite):
+	Added some more ghostpad tests, mainly blocking
+	and probes.
+
 2006-06-16  Wim Taymans  <wim@fluendo.com>
 
 	* plugins/elements/gstfilesink.c: (gst_file_sink_open_file),

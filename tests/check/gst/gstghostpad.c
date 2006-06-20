@@ -386,6 +386,99 @@ GST_START_TEST (test_ghost_pads_bin)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GMutex *mutex;
+  GCond *cond;
+} BlockData;
+
+static void
+block_callback (GstPad * pad, gboolean blocked, gpointer user_data)
+{
+  BlockData *block_data = (BlockData *) user_data;
+
+  g_mutex_lock (block_data->mutex);
+  GST_DEBUG ("blocked\n");
+  g_cond_signal (block_data->cond);
+  g_mutex_unlock (block_data->mutex);
+}
+
+GST_START_TEST (test_ghost_pads_block)
+{
+  GstBin *pipeline;
+  GstBin *srcbin;
+  GstElement *src;
+  GstPad *srcpad;
+  GstPad *srcghost;
+  BlockData block_data;
+
+  pipeline = GST_BIN (gst_pipeline_new ("pipeline"));
+
+  srcbin = GST_BIN (gst_bin_new ("srcbin"));
+  gst_bin_add (pipeline, GST_ELEMENT (srcbin));
+
+  src = gst_element_factory_make ("fakesrc", "src");
+  gst_bin_add (srcbin, src);
+  srcpad = gst_element_get_pad (src, "src");
+  srcghost = gst_ghost_pad_new ("src", srcpad);
+  gst_element_add_pad (GST_ELEMENT (srcbin), srcghost);
+  gst_object_unref (srcpad);
+
+  block_data.mutex = g_mutex_new ();
+  block_data.cond = g_cond_new ();
+
+  g_mutex_lock (block_data.mutex);
+  gst_pad_set_blocked_async (srcghost, TRUE, block_callback, &block_data);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  /* and wait now */
+  g_cond_wait (block_data.cond, block_data.mutex);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+  g_mutex_unlock (block_data.mutex);
+
+  g_mutex_free (block_data.mutex);
+  g_cond_free (block_data.cond);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_ghost_pads_probes)
+{
+  GstBin *pipeline;
+  GstBin *srcbin;
+  GstElement *src;
+  GstPad *srcpad;
+  GstPad *srcghost;
+  BlockData block_data;
+
+  pipeline = GST_BIN (gst_pipeline_new ("pipeline"));
+
+  srcbin = GST_BIN (gst_bin_new ("srcbin"));
+  gst_bin_add (pipeline, GST_ELEMENT (srcbin));
+
+  src = gst_element_factory_make ("fakesrc", "src");
+  gst_bin_add (srcbin, src);
+  srcpad = gst_element_get_pad (src, "src");
+  srcghost = gst_ghost_pad_new ("src", srcpad);
+  gst_element_add_pad (GST_ELEMENT (srcbin), srcghost);
+  gst_object_unref (srcpad);
+
+  block_data.mutex = g_mutex_new ();
+  block_data.cond = g_cond_new ();
+
+  g_mutex_lock (block_data.mutex);
+  gst_pad_set_blocked_async (srcghost, TRUE, block_callback, &block_data);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  /* and wait now */
+  g_cond_wait (block_data.cond, block_data.mutex);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+  g_mutex_unlock (block_data.mutex);
+
+  g_mutex_free (block_data.mutex);
+  g_cond_free (block_data.cond);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_ghost_pad_suite (void)
 {
@@ -399,6 +492,8 @@ gst_ghost_pad_suite (void)
   tcase_add_test (tc_chain, test_ghost_pads);
   tcase_add_test (tc_chain, test_ghost_pads_bin);
 /*  tcase_add_test (tc_chain, test_ghost_pad_notarget); */
+  tcase_add_test (tc_chain, test_ghost_pads_block);
+  tcase_add_test (tc_chain, test_ghost_pads_probes);
 
   return s;
 }
