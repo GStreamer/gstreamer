@@ -1,3 +1,13 @@
+2006-06-20  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Joni Valtanen <joni dot valtanen at movial dot fi>
+
+	* gst/rtsp/rtspconnection.c: (inet_aton), (rtsp_connection_send),
+	(rtsp_connection_close):
+	Make RTSP plugin compile on windows. Fixes #345301.
+	Some changes to original patch to catch errors better.
+	use ifdef WIN32 instead of ifndef.
+
 2006-06-19  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:
