@@ -1,5 +1,38 @@
 2006-06-20  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Brian Cameron <brian dot cameron at sun dot com>
+
+	* sys/sunaudio/Makefile.am:
+	* sys/sunaudio/gstsunaudio.c: (plugin_init):
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	(gst_sunaudiomixer_ctrl_build_list), (gst_sunaudiomixer_ctrl_new),
+	(gst_sunaudiomixer_ctrl_list_tracks),
+	(gst_sunaudiomixer_ctrl_get_volume),
+	(gst_sunaudiomixer_ctrl_set_volume),
+	(gst_sunaudiomixer_ctrl_set_mute),
+	(gst_sunaudiomixer_ctrl_set_record):
+	* sys/sunaudio/gstsunaudiomixerctrl.h:
+	* sys/sunaudio/gstsunaudiomixertrack.c:
+	(gst_sunaudiomixer_track_init), (gst_sunaudiomixer_track_new):
+	* sys/sunaudio/gstsunaudiomixertrack.h:
+	* sys/sunaudio/gstsunaudiosrc.c: (gst_sunaudiosrc_dispose),
+	(gst_sunaudiosrc_base_init), (gst_sunaudiosrc_class_init),
+	(gst_sunaudiosrc_init), (gst_sunaudiosrc_set_property),
+	(gst_sunaudiosrc_get_property), (gst_sunaudiosrc_getcaps),
+	(gst_sunaudiosrc_open), (gst_sunaudiosrc_close),
+	(gst_sunaudiosrc_prepare), (gst_sunaudiosrc_unprepare),
+	(gst_sunaudiosrc_read), (gst_sunaudiosrc_delay),
+	(gst_sunaudiosrc_reset):
+	* sys/sunaudio/gstsunaudiosrc.h:
+	Add a SunAudio source plugin.
+	Support stereo and right/left channel gain in the mixer plugin.
+	Support the RECORD flag so that you can switch between line-input and
+	microphone in gnome-volume-control.
+	Code cleanups like using an enumerator for track number instead of an 
+	integer. Fixes #344923.
+
+2006-06-20  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Joni Valtanen <joni dot valtanen at movial dot fi>
 
 	* gst/rtsp/rtspconnection.c: (inet_aton), (rtsp_connection_send),

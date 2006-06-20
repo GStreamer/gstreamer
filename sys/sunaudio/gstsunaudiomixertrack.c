@@ -31,20 +31,20 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/ioctl.h>
+#include <sys/audioio.h>
 
 #include <gst/gst-i18n-plugin.h>
 
 #include "gstsunaudiomixertrack.h"
 
-#define MIXER_DEVICES 3
 #define MASK_BIT_IS_SET(mask, bit) \
   (mask & (1 << bit))
 
 G_DEFINE_TYPE (GstSunAudioMixerTrack, gst_sunaudiomixer_track,
-    GST_TYPE_MIXER_TRACK);
+    GST_TYPE_MIXER_TRACK)
 
-static void
-gst_sunaudiomixer_track_class_init (GstSunAudioMixerTrackClass * klass)
+     static void
+         gst_sunaudiomixer_track_class_init (GstSunAudioMixerTrackClass * klass)
 {
   /* nop */
 }
@@ -52,7 +52,8 @@ gst_sunaudiomixer_track_class_init (GstSunAudioMixerTrackClass * klass)
 static void
 gst_sunaudiomixer_track_init (GstSunAudioMixerTrack * track)
 {
-  track->vol = 0;
+  track->gain = 0;
+  track->balance = AUDIO_MID_BALANCE;
   track->track_num = 0;
 }
 
@@ -85,10 +86,12 @@ fill_labels (void)
 }
 
 GstMixerTrack *
-gst_sunaudiomixer_track_new (gint track_num, gint max_chans, gint flags)
+gst_sunaudiomixer_track_new (GstSunAudioTrackType track_num,
+    gint max_chans, gint flags)
 {
   GstSunAudioMixerTrack *sunaudiotrack;
   GstMixerTrack *track;
+  gint volume;
 
   if (!labels)
     fill_labels ();
@@ -101,8 +104,8 @@ gst_sunaudiomixer_track_new (gint track_num, gint max_chans, gint flags)
   track->min_volume = 0;
   track->max_volume = 100;
   sunaudiotrack->track_num = track_num;
-
-  sunaudiotrack->vol = (0 & 0xff);
+  sunaudiotrack->gain = (0 & 0xff);
+  sunaudiotrack->balance = AUDIO_MID_BALANCE;
 
   return track;
 }

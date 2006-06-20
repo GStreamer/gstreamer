@@ -66,18 +66,42 @@ void
 gst_sunaudiomixer_ctrl_build_list (GstSunAudioMixerCtrl * mixer)
 {
   GstMixerTrack *track;
-
-  g_return_if_fail (mixer->mixer_fd != -1);
+  struct audio_info audioinfo;
 
   /*
    * Do not continue appending the same 3 static tracks onto the list
    */
   if (mixer->tracklist == NULL) {
-    track = gst_sunaudiomixer_track_new (0, 1, GST_MIXER_TRACK_OUTPUT);
+    g_return_if_fail (mixer->mixer_fd != -1);
+
+    /* Output */
+    track = gst_sunaudiomixer_track_new (GST_SUNAUDIO_TRACK_OUTPUT,
+        2, GST_MIXER_TRACK_OUTPUT);
     mixer->tracklist = g_list_append (mixer->tracklist, track);
-    track = gst_sunaudiomixer_track_new (1, 1, GST_MIXER_TRACK_INPUT);
+
+    /* Input */
+    track = gst_sunaudiomixer_track_new (GST_SUNAUDIO_TRACK_LINE_IN,
+        2, GST_MIXER_TRACK_INPUT);
+
+    /* Set whether we are recording from microphone or from line-in */
+    if (ioctl (mixer->mixer_fd, AUDIO_GETINFO, &audioinfo) < 0) {
+      g_warning ("Error getting audio device volume");
+      return;
+    }
+
+    /* Set initial RECORD status */
+    if (audioinfo.record.port == AUDIO_MICROPHONE) {
+      mixer->recdevs |= (1 << GST_SUNAUDIO_TRACK_LINE_IN);
+      track->flags |= GST_MIXER_TRACK_RECORD;
+    } else {
+      mixer->recdevs &= ~(1 << GST_SUNAUDIO_TRACK_LINE_IN);
+      track->flags &= ~GST_MIXER_TRACK_RECORD;
+    }
+
+    /* Monitor */
     mixer->tracklist = g_list_append (mixer->tracklist, track);
-    track = gst_sunaudiomixer_track_new (2, 1, GST_MIXER_TRACK_OUTPUT);
+    track = gst_sunaudiomixer_track_new (GST_SUNAUDIO_TRACK_MONITOR,
+        2, GST_MIXER_TRACK_OUTPUT);
     mixer->tracklist = g_list_append (mixer->tracklist, track);
   }
 }
@@ -135,6 +159,7 @@ const GList *
 gst_sunaudiomixer_ctrl_list_tracks (GstSunAudioMixerCtrl * mixer)
 {
   gst_sunaudiomixer_ctrl_build_list (mixer);
+
   return (const GList *) mixer->tracklist;
 }
 
@@ -142,6 +167,8 @@ void
 gst_sunaudiomixer_ctrl_get_volume (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gint * volumes)
 {
+  gint gain, balance;
+  float ratio;
   struct audio_info audioinfo;
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
 
@@ -153,18 +180,71 @@ gst_sunaudiomixer_ctrl_get_volume (GstSunAudioMixerCtrl * mixer,
   }
 
   switch (sunaudiotrack->track_num) {
-    case 0:
-      sunaudiotrack->vol = volumes[0] =
-          (audioinfo.play.gain / SCALE_FACTOR) + 0.5;
+    case GST_SUNAUDIO_TRACK_OUTPUT:
+      gain = (int) ((float) audioinfo.play.gain / (float) SCALE_FACTOR + 0.5);
+      balance = audioinfo.play.balance;
       break;
-    case 1:
-      sunaudiotrack->vol = volumes[0] =
-          (audioinfo.record.gain / SCALE_FACTOR) + 0.5;
+    case GST_SUNAUDIO_TRACK_LINE_IN:
+      gain = (int) ((float) audioinfo.record.gain / (float) SCALE_FACTOR + 0.5);
+      balance = audioinfo.record.balance;
       break;
-    case 2:
-      sunaudiotrack->vol = volumes[0] =
-          (audioinfo.monitor_gain / SCALE_FACTOR) + 0.5;
+    case GST_SUNAUDIO_TRACK_MONITOR:
+      gain =
+          (int) ((float) audioinfo.monitor_gain / (float) SCALE_FACTOR + 0.5);
+      balance = audioinfo.record.balance;
       break;
+  }
+
+  if (balance == AUDIO_MID_BALANCE) {
+    volumes[0] = gain;
+    volumes[1] = gain;
+  } else if (balance < AUDIO_MID_BALANCE) {
+    volumes[0] = gain;
+    ratio = 1 - (float) (AUDIO_MID_BALANCE - balance) /
+        (float) AUDIO_MID_BALANCE;
+    volumes[1] = (int) ((float) gain * ratio + 0.5);
+  } else {
+    volumes[1] = gain;
+    ratio = 1 - (float) (balance - AUDIO_MID_BALANCE) /
+        (float) AUDIO_MID_BALANCE;
+    volumes[0] = (int) ((float) gain * ratio + 0.5);
+  }
+
+  /*
+   * Reset whether we are recording from microphone or from line-in.
+   * This can change if another program resets the value (such as
+   * sdtaudiocontrol), so it is good to update the flag when we
+   * get the volume.  The gnome-volume-control program calls this
+   * function in a loop so the value will update properly when
+   * changed.
+   */
+  if ((audioinfo.record.port == AUDIO_MICROPHONE &&
+          !GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD)) ||
+      (audioinfo.record.port == AUDIO_LINE_IN &&
+          GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD))) {
+
+    if (audioinfo.record.port == AUDIO_MICROPHONE) {
+      mixer->recdevs |= (1 << GST_SUNAUDIO_TRACK_LINE_IN);
+      track->flags |= GST_MIXER_TRACK_RECORD;
+    } else {
+      mixer->recdevs &= ~(1 << GST_SUNAUDIO_TRACK_LINE_IN);
+      track->flags &= ~GST_MIXER_TRACK_RECORD;
+    }
+  }
+
+  /* Likewise reset MUTE */
+  if ((sunaudiotrack->track_num == GST_SUNAUDIO_TRACK_OUTPUT &&
+          audioinfo.output_muted == 1) ||
+      (sunaudiotrack->track_num != GST_SUNAUDIO_TRACK_OUTPUT && gain == 0)) {
+    track->flags |= GST_MIXER_TRACK_MUTE;
+  } else {
+    /*
+     * If MUTE is set, then gain is always 0, so don't bother
+     * resetting our internal value.
+     */
+    sunaudiotrack->gain = gain;
+    sunaudiotrack->balance = balance;
+    track->flags &= ~GST_MIXER_TRACK_MUTE;
   }
 }
 
@@ -172,38 +252,64 @@ void
 gst_sunaudiomixer_ctrl_set_volume (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gint * volumes)
 {
-  gint volume;
+  gint gain;
+  gint balance;
+  gint l_real_gain;
+  gint r_real_gain;
+  float ratio;
+  gchar buf[100];
   struct audio_info audioinfo;
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
+  gint temp[2];
 
-  g_return_if_fail (mixer->mixer_fd != -1);
+  l_real_gain = volumes[0];
+  r_real_gain = volumes[1];
 
-  if (volume < 0)
-    volume = 0;
+  if (l_real_gain == r_real_gain) {
+    gain = (int) ((float) l_real_gain * (float) SCALE_FACTOR + 0.5);
+    balance = AUDIO_MID_BALANCE;
+  } else if (l_real_gain < r_real_gain) {
+    gain = (int) ((float) r_real_gain * (float) SCALE_FACTOR + 0.5);
+    ratio = (float) l_real_gain / (float) r_real_gain;
+    balance =
+        AUDIO_RIGHT_BALANCE - (int) (ratio * (float) AUDIO_MID_BALANCE + 0.5);
+  } else {
+    gain = (int) ((float) l_real_gain * (float) SCALE_FACTOR + 0.5);
+    ratio = (float) r_real_gain / (float) l_real_gain;
+    balance =
+        AUDIO_LEFT_BALANCE + (int) (ratio * (float) AUDIO_MID_BALANCE + 0.5);
+  }
 
-  volume = volumes[0] * SCALE_FACTOR;
+  sunaudiotrack->gain = gain;
+  sunaudiotrack->balance = balance;
+
+  if (GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_MUTE))
+    return;
 
   /* Set the volume */
   AUDIO_INITINFO (&audioinfo);
 
   switch (sunaudiotrack->track_num) {
-    case 0:
-      audioinfo.play.gain = volume;
+    case GST_SUNAUDIO_TRACK_OUTPUT:
+      audioinfo.play.gain = gain;
+      audioinfo.play.balance = balance;
       break;
-    case 1:
-      audioinfo.record.gain = volume;
+    case GST_SUNAUDIO_TRACK_LINE_IN:
+      audioinfo.record.gain = gain;
+      audioinfo.record.balance = balance;
       break;
-    case 2:
-      audioinfo.monitor_gain = volume;
+    case GST_SUNAUDIO_TRACK_MONITOR:
+      audioinfo.monitor_gain = gain;
+      audioinfo.record.balance = balance;
       break;
   }
+
+  g_return_if_fail (mixer->mixer_fd != -1);
 
   if (ioctl (mixer->mixer_fd, AUDIO_SETINFO, &audioinfo) < 0) {
     g_warning ("Error setting audio device volume");
     return;
   }
-
-  sunaudiotrack->vol = volume;
 }
 
 void
@@ -212,9 +318,7 @@ gst_sunaudiomixer_ctrl_set_mute (GstSunAudioMixerCtrl * mixer,
 {
   struct audio_info audioinfo;
   GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
-  gint volume;
-
-  g_return_if_fail (mixer->mixer_fd != -1);
+  gint volume, balance;
 
   AUDIO_INITINFO (&audioinfo);
 
@@ -222,12 +326,14 @@ gst_sunaudiomixer_ctrl_set_mute (GstSunAudioMixerCtrl * mixer,
     volume = 0;
     track->flags |= GST_MIXER_TRACK_MUTE;
   } else {
-    volume = sunaudiotrack->vol;
+    volume = sunaudiotrack->gain;
     track->flags &= ~GST_MIXER_TRACK_MUTE;
   }
 
+  balance = sunaudiotrack->balance;
+
   switch (sunaudiotrack->track_num) {
-    case 0:
+    case GST_SUNAUDIO_TRACK_OUTPUT:
 
       if (mute)
         audioinfo.output_muted = 1;
@@ -235,14 +341,19 @@ gst_sunaudiomixer_ctrl_set_mute (GstSunAudioMixerCtrl * mixer,
         audioinfo.output_muted = 0;
 
       audioinfo.play.gain = volume;
+      audioinfo.play.balance = balance;
       break;
-    case 1:
+    case GST_SUNAUDIO_TRACK_LINE_IN:
       audioinfo.record.gain = volume;
+      audioinfo.record.balance = balance;
       break;
-    case 2:
+    case GST_SUNAUDIO_TRACK_MONITOR:
       audioinfo.monitor_gain = volume;
+      audioinfo.record.balance = balance;
       break;
   }
+
+  g_return_if_fail (mixer->mixer_fd != -1);
 
   if (ioctl (mixer->mixer_fd, AUDIO_SETINFO, &audioinfo) < 0) {
     g_warning ("Error setting audio device volume");
@@ -254,5 +365,43 @@ void
 gst_sunaudiomixer_ctrl_set_record (GstSunAudioMixerCtrl * mixer,
     GstMixerTrack * track, gboolean record)
 {
-  /* Implementation Pending */
+  GstSunAudioMixerTrack *sunaudiotrack = GST_SUNAUDIO_MIXER_TRACK (track);
+  struct audio_info audioinfo;
+  GList *trk;
+
+  /* Don't change the setting */
+  if ((record && GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD)) ||
+      (!record && !GST_MIXER_TRACK_HAS_FLAG (track, GST_MIXER_TRACK_RECORD)))
+    return;
+
+  /*
+   * So there is probably no need to look for others, but reset them all
+   * to being off.
+   */
+  for (trk = mixer->tracklist; trk != NULL; trk = trk->next) {
+    GstMixerTrack *turn = (GstMixerTrack *) trk->data;
+
+    turn->flags &= ~GST_MIXER_TRACK_RECORD;
+  }
+  mixer->recdevs = 0;
+
+  /* Set the port */
+  AUDIO_INITINFO (&audioinfo);
+
+  if (record) {
+    audioinfo.record.port = AUDIO_MICROPHONE;
+    mixer->recdevs |= (1 << sunaudiotrack->track_num);
+    track->flags |= GST_MIXER_TRACK_RECORD;
+  } else {
+    audioinfo.record.port = AUDIO_LINE_IN;
+    mixer->recdevs &= ~(1 << sunaudiotrack->track_num);
+    track->flags &= ~GST_MIXER_TRACK_RECORD;
+  }
+
+  g_return_if_fail (mixer->mixer_fd != -1);
+
+  if (ioctl (mixer->mixer_fd, AUDIO_SETINFO, &audioinfo) < 0) {
+    g_warning ("Error setting audio device volume");
+    return;
+  }
 }

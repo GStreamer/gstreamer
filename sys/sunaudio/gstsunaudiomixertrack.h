@@ -27,6 +27,15 @@
 
 G_BEGIN_DECLS
 
+typedef enum
+{
+   GST_SUNAUDIO_TRACK_OUTPUT   = 0,
+   GST_SUNAUDIO_TRACK_LINE_IN  = 1,
+   GST_SUNAUDIO_TRACK_MONITOR  = 2,
+} GstSunAudioTrackType;
+
+#define MIXER_DEVICES 3
+
 #define GST_TYPE_SUNAUDIO_MIXER_TRACK \
   (gst_sunaudiomixer_track_get_type ())
 #define GST_SUNAUDIO_MIXER_TRACK(obj) \
@@ -43,8 +52,9 @@ G_BEGIN_DECLS
 typedef struct _GstSunAudioMixerTrack {
   GstMixerTrack parent;
 
-  gint          vol;
-  gint          track_num;
+  gint                  gain;
+  gint                  balance;
+  GstSunAudioTrackType track_num;
 } GstSunAudioMixerTrack;
 
 typedef struct _GstSunAudioMixerTrackClass {

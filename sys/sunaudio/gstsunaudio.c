@@ -26,6 +26,7 @@
 
 #include "gstsunaudiomixer.h"
 #include "gstsunaudiosink.h"
+#include "gstsunaudiosrc.h"
 
 extern gchar *__gst_oss_plugin_dir;
 
@@ -37,7 +38,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "sunaudiomixer", GST_RANK_NONE,
           GST_TYPE_SUNAUDIO_MIXER) ||
       !gst_element_register (plugin, "sunaudiosink", GST_RANK_SECONDARY,
-          GST_TYPE_SUNAUDIO_SINK)) {
+          GST_TYPE_SUNAUDIO_SINK) ||
+      !gst_element_register (plugin, "sunaudiosrc", GST_RANK_SECONDARY,
+          GST_TYPE_SUNAUDIO_SRC)) {
     return FALSE;
   }
 

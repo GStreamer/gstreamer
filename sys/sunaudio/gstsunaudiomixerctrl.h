@@ -37,6 +37,7 @@ struct _GstSunAudioMixerCtrl {
   gint                  mixer_fd;
 
   gchar *               device;
+  gint                  recdevs;
 };
 
 GstSunAudioMixerCtrl* gst_sunaudiomixer_ctrl_new          (const gchar *device);
