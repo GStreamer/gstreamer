@@ -1,5 +1,10 @@
 2006-06-20  Wim Taymans  <wim@fluendo.com>
 
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	Doc updates, merge some unused symbols.
+
+2006-06-20  Wim Taymans  <wim@fluendo.com>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
