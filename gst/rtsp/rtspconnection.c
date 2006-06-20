@@ -23,18 +23,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef WIN32
-#include <winsock2.h>
-#else
+/* we include this here to get the G_OS_* defines */
+#include <glib.h>
+
+#ifdef G_OS_UNIX
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #endif
 
+#ifdef G_OS_WIN32
+#include <winsock2.h>
+#endif
+
 #include "rtspconnection.h"
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 /* note that inet_aton is deprecated on unix because
  * inet_addr returns -1 (INADDR_NONE) for the valid 255.255.255.255
  * address. */
@@ -150,7 +155,7 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
   if (conn == NULL || message == NULL)
     return RTSP_EINVAL;
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
   WSADATA w;
   int error = WSAStartup (0x0202, &w);
 
@@ -215,7 +220,7 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
 
   return RTSP_OK;
 
-#ifdef WIN32
+#ifdef G_OS_WIN32
 startup_error:
   {
     GST_DEBUG_OBJECT (self, "Error %d on WSAStartup", error);
@@ -580,12 +585,14 @@ rtsp_connection_close (RTSPConnection * conn)
 
   if (conn == NULL)
     return RTSP_EINVAL;
-#ifdef WIN32
+
+#ifdef G_OS_WIN32
   res = socketclose (conn->fd);
   WSACleanup ();
 #else
   res = close (conn->fd);
 #endif
+
   conn->fd = -1;
   if (res != 0)
     goto sys_error;
@@ -603,6 +610,10 @@ rtsp_connection_free (RTSPConnection * conn)
 {
   if (conn == NULL)
     return RTSP_EINVAL;
+
+#ifdef G_OS_WIN32
+  WSACleanup ();
+#endif
 
   g_free (conn);
 

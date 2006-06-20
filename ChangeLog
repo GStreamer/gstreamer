@@ -1,5 +1,11 @@
 2006-06-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/rtspconnection.c: (inet_aton), (rtsp_connection_send),
+	(rtsp_connection_close), (rtsp_connection_free):
+	Use better G_OS_* macros. Fixes #345301 some more.
+
+2006-06-20  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Brian Cameron <brian dot cameron at sun dot com>
 
 	* sys/sunaudio/Makefile.am:
