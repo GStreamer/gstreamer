@@ -1,3 +1,8 @@
+2006-06-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/modplug/libmodplug/stdafx.h:
+	Fix modplug on AMD64. Fixes #345336.
+
 2006-06-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

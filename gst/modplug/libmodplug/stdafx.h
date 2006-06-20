@@ -31,24 +31,33 @@ typedef signed char CHAR;
 typedef unsigned char UCHAR;
 typedef unsigned char* PUCHAR;
 typedef unsigned short USHORT;
+#if defined(__x86_64__)
+typedef unsigned int ULONG;
+typedef unsigned int UINT;
+typedef unsigned int DWORD;
+typedef int LONG;
+typedef long LONGLONG;
+typedef int * LPLONG;
+typedef unsigned int * LPDWORD;
+#else
 typedef unsigned long ULONG;
 typedef unsigned long UINT;
 typedef unsigned long DWORD;
 typedef long LONG;
+typedef long long LONGLONG;
+typedef long * LPLONG;
+typedef unsigned long * LPDWORD;
+#endif
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
 typedef unsigned char * LPBYTE;
 typedef bool BOOL;
 typedef char * LPSTR;
 typedef void *  LPVOID;
-typedef long * LPLONG;
-typedef unsigned long * LPDWORD;
 typedef unsigned short * LPWORD;
 typedef const char * LPCSTR;
-typedef long long LONGLONG;
 typedef void * PVOID;
 typedef void VOID;
-
 
 inline LONG MulDiv (long a, long b, long c)
 {
