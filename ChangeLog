@@ -1,3 +1,29 @@
+2006-06-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/flac/Makefile.am:
+	* ext/flac/gstflacdec.c: (gst_flac_dec_init),
+	(gst_flac_dec_reset_decoders),
+	(gst_flac_dec_setup_seekable_decoder),
+	(gst_flac_dec_setup_stream_decoder), (gst_flac_dec_finalize),
+	(gst_flac_dec_metadata_callback),
+	(gst_flac_dec_metadata_callback_seekable),
+	(gst_flac_dec_metadata_callback_stream),
+	(gst_flac_dec_error_callback),
+	(gst_flac_dec_error_callback_seekable),
+	(gst_flac_dec_error_callback_stream), (gst_flac_dec_read_seekable),
+	(gst_flac_dec_read_stream), (gst_flac_dec_write),
+	(gst_flac_dec_write_seekable), (gst_flac_dec_write_stream),
+	(gst_flac_dec_loop), (gst_flac_dec_sink_event),
+	(gst_flac_dec_chain), (gst_flac_dec_convert_sink),
+	(gst_flac_dec_get_sink_query_types), (gst_flac_dec_sink_query),
+	(gst_flac_dec_get_src_query_types), (gst_flac_dec_src_query),
+	(gst_flac_dec_handle_seek_event), (gst_flac_dec_sink_activate),
+	(gst_flac_dec_sink_activate_push),
+	(gst_flac_dec_sink_activate_pull), (gst_flac_dec_change_state):
+	* ext/flac/gstflacdec.h:
+	  Support chain-based operation, should make flac-over-DAAP
+	  work (#340492).
+
 2006-06-20  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:

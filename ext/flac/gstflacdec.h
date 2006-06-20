@@ -23,6 +23,7 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 #include <FLAC/all.h>
 
@@ -40,7 +41,11 @@ typedef struct _GstFlacDecClass GstFlacDecClass;
 struct _GstFlacDec {
   GstElement     element;
 
-  FLAC__SeekableStreamDecoder *decoder;
+  FLAC__SeekableStreamDecoder *seekable_decoder; /* for pull-based operation  */
+
+  FLAC__StreamDecoder         *stream_decoder;   /* for chain-based operation */
+  GstAdapter                  *adapter;
+  gboolean                     framed;
 
   GstPad        *sinkpad;
   GstPad        *srcpad;
