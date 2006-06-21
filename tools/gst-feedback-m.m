@@ -63,12 +63,21 @@ do
   done
 done
 
-echo "+   GSTREAMER INFORMATION"
+echo "+   GSTREAMER INFORMATION (unversioned)"
 command_output "which gst-inspect"
 command_output "gst-inspect"
 command_output "gst-inspect fakesrc"
 command_output "gst-inspect fakesink"
-command_output "gst-launch fakesrc num_buffers=5 ! fakesink"
+command_output "gst-launch fakesrc num-buffers=5 ! fakesink"
+for mm in 0.6 0.7 0.8 0.9 0.10
+do
+  echo "+   GSTREAMER INFORMATION ($mm)"
+  command_output "which gst-inspect-$mm"
+  command_output "gst-inspect-$mm"
+  command_output "gst-inspect-$mm fakesrc"
+  command_output "gst-inspect-$mm fakesink"
+  command_output "gst-launch-$mm fakesrc num-buffers=5 ! fakesink"
+done
 
 echo "++  looking for gstreamer libraries in common locations"
 for dirs in /usr/lib /usr/local/lib; do
@@ -85,6 +94,10 @@ done
 
 echo "+   GSTREAMER PLUG-INS INFORMATION"
 command_output "gst-inspect volume"
+for mm in 0.6 0.7 0.8 0.9 0.10
+do
+  command_output "gst-inspect-$mm volume"
+done
 
 echo "++  looking for gstreamer volume plugin in common locations"
 for dirs in /usr/lib /usr/local/lib; do

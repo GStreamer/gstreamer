@@ -1,5 +1,11 @@
 2006-06-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tools/gst-feedback-m.m:
+	  Don't only use unversioned tools, try versioned tools as well
+	  (#345086).
+
+2006-06-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstbus.c: (gst_bus_class_init):
 	  Fix some typos, make docs more explicit.
 
