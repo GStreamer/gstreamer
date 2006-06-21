@@ -41,6 +41,8 @@ sources = \
 	Version.cs \
 	AssemblyInfo.cs \
 	CommonTags.cs \
+	DynamicSignalMarshalHandler.cs \
+	DynamicSignalHandlerGenerator.cs \
 	plugins-base/PlayBin.cs \
 	plugins-base/DecodeBin.cs
 

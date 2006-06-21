@@ -23,6 +23,17 @@
         }
     }
 
+    [DllImport("gstreamer-0.10.dll")]
+    static extern bool gst_bin_add(IntPtr raw, IntPtr element);
+
+    public bool Add(Gst.Element element) {
+//	if(element !=null)
+//		element.Refcount++;
+	bool raw_ret = gst_bin_add(Handle, element == null ? IntPtr.Zero : element.Handle);
+	bool ret = raw_ret;
+	return ret;
+    }
+
     public bool AddMany(params Element[] elements)
     {
         if(elements == null) {
@@ -37,3 +48,6 @@
         
         return true;
     }
+
+
+   

@@ -1,4 +1,4 @@
-TARGETS = playbin-player.exe decodebin-transcoder.exe
+TARGETS = playbin-player.exe decodebin-transcoder.exe helloworld.exe
 DEBUGS = $(addsuffix .mdb, $(TARGETS))
 
 assemblies=$(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll
@@ -11,6 +11,9 @@ playbin-player.exe: $(srcdir)/PlayBinPlayer.cs $(assemblies)
 decodebin-transcoder.exe: $(srcdir)/DecodeBinTranscoder.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/DecodeBinTranscoder.cs 
 
+helloworld.exe: $(srcdir)/HelloWorld.cs $(assemblies)
+	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/HelloWorld.cs
+
 noinst_SCRIPTS = $(TARGETS)
 
 CLEANFILES = $(TARGETS) $(DEBUGS)
@@ -18,4 +21,5 @@ MAINTAINERCLEANFILES = Makefile.in
 
 EXTRA_DIST = \
 	PlayBinPlayer.cs \
-	DecodeBinTranscoder.cs
+	DecodeBinTranscoder.cs \
+	HelloWorld.cs
