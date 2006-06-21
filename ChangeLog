@@ -1,5 +1,15 @@
 2006-06-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/pipelines/simple-launch-lines.c: (test_stop_from_app):
+	  Attempt to 'fix' spuriously failing test case: it seems like the
+	  timeout of half a second is simply too small when the system is under
+	  load otherwise, and the timeout doesn't really seem to serve any
+	  particular purpose here. Give the pipeline a few seconds to preroll
+	  first, and then give it another half a second to go from PAUSED to
+	  PLAYING and marshal the message into the main thread.
+
+2006-06-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tools/gst-feedback-m.m:
 	  Don't only use unversioned tools, try versioned tools as well
 	  (#345086).

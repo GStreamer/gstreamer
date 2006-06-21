@@ -149,6 +149,7 @@ GST_START_TEST (test_stop_from_app)
 {
   GstElement *fakesrc, *fakesink, *pipeline;
   GstBus *bus;
+  GstStateChangeReturn ret;
   GstMessageType rmessage;
   GstMessage *message;
 
@@ -161,10 +162,23 @@ GST_START_TEST (test_stop_from_app)
   fail_unless (fakesrc && fakesink && pipeline);
 
   gst_bin_add_many (GST_BIN (pipeline), fakesrc, fakesink, NULL);
-  gst_element_link (fakesrc, fakesink);
+  fail_unless (gst_element_link (fakesrc, fakesink) != FALSE);
 
   g_object_set (fakesink, "signal-handoffs", (gboolean) TRUE, NULL);
   g_signal_connect (fakesink, "handoff", G_CALLBACK (got_handoff), NULL);
+
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  ret = gst_element_get_state (pipeline, NULL, NULL, 5 * GST_SECOND);
+  switch (ret) {
+    case GST_STATE_CHANGE_FAILURE:
+      g_error ("Failed to change state to PAUSED");
+      break;
+    case GST_STATE_CHANGE_ASYNC:
+      g_error ("Failed to change state to PAUSED within 5 seconds");
+      break;
+    default:
+      break;
+  }
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
