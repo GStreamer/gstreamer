@@ -1324,11 +1324,23 @@ gst_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
           /* Push the video frame */
           ret = gst_pad_push (overlay->srcpad, buffer);
         } else {
-          const gchar *in_text;
+          gchar *in_text;
           gsize in_size;
 
-          in_text = (const gchar *) GST_BUFFER_DATA (overlay->text_buffer);
+          in_text = (gchar *) GST_BUFFER_DATA (overlay->text_buffer);
           in_size = GST_BUFFER_SIZE (overlay->text_buffer);
+
+          /* g_markup_escape_text() absolutely requires valid UTF8 input, it
+           * might crash otherwise. We don't fall back on GST_SUBTITLE_ENCODING
+           * here on purpose, this is something that needs fixing upstream */
+          if (!g_utf8_validate (in_text, in_size, NULL)) {
+            const gchar *end = NULL;
+
+            GST_WARNING_OBJECT (overlay, "received invalid UTF-8");
+            in_text = g_strndup (in_text, in_size);
+            while (!g_utf8_validate (in_text, in_size, &end) && end)
+              *((gchar *) end) = '*';
+          }
 
           /* Get the string */
           if (overlay->have_pango_markup) {
@@ -1350,6 +1362,9 @@ gst_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
             GST_DEBUG_OBJECT (overlay, "No text to render (empty buffer)");
             gst_text_overlay_render_text (overlay, " ", 1);
           }
+
+          if (in_text != (gchar *) GST_BUFFER_DATA (overlay->text_buffer))
+            g_free (in_text);
 
           GST_OBJECT_UNLOCK (overlay);
           ret = gst_text_overlay_push_frame (overlay, buffer);

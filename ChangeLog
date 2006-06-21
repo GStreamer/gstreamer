@@ -1,3 +1,11 @@
+2006-06-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_make_utf8),
+	(gst_text_overlay_video_chain):
+	  g_markup_escape_text() REALLY doesn't like non-UTF8 input
+	  and doesn't validate its input either (and neither did
+	  textoverlay it seems). Let's do that then and fix #345206.
+
 2006-06-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_sync_method_get_type),
