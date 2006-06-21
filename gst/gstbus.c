@@ -183,7 +183,7 @@ gst_bus_class_init (GstBusClass * klass)
    * @message: the message that has been posted synchronously
    *
    * A message has been posted on the bus. This signal is emitted from the
-   * thread that posted the message so one has to be carefull with locking.
+   * thread that posted the message so one has to be careful with locking.
    */
   gst_bus_signals[SYNC_MESSAGE] =
       g_signal_new ("sync-message", G_TYPE_FROM_CLASS (klass),
@@ -197,7 +197,7 @@ gst_bus_class_init (GstBusClass * klass)
    * @message: the message that has been posted asynchronously
    *
    * A message has been posted on the bus. This signal is emitted from a
-   * GSource added to the mainloop. this signal will only be emited when
+   * GSource added to the mainloop. this signal will only be emitted when
    * there is a mainloop running.
    */
   gst_bus_signals[ASYNC_MESSAGE] =
@@ -478,6 +478,8 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
  * Get a message from the bus.
  *
  * Returns: The #GstMessage that is on the bus, or NULL if the bus is empty.
+ * The message is taken from the bus and needs to be unreffed with
+ * gst_message_unref() after usage.
  *
  * MT safe.
  */
@@ -826,7 +828,8 @@ poll_destroy_timeout (GstBusPollData * poll_data)
  * polling.
  *
  * Returns: The message that was received, or NULL if the poll timed out.
- * The message is taken from the bus and needs to be unreffed after usage.
+ * The message is taken from the bus and needs to be unreffed with
+ * gst_message_unref() after usage.
  */
 GstMessage *
 gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTimeDiff timeout)
