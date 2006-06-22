@@ -323,11 +323,11 @@ gst_volume_class_init (GstVolumeClass * klass)
   gobject_class->get_property = volume_get_property;
   gobject_class->dispose = gst_volume_dispose;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MUTE,
+  g_object_class_install_property (gobject_class, PROP_MUTE,
       g_param_spec_boolean ("mute", "Mute", "mute channel",
           FALSE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_VOLUME,
+  g_object_class_install_property (gobject_class, PROP_VOLUME,
       g_param_spec_double ("volume", "Volume", "volume factor",
           0.0, VOLUME_MAX_DOUBLE, 1.0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));

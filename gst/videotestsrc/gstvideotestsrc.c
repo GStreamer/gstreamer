@@ -141,11 +141,11 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   gobject_class->set_property = gst_video_test_src_set_property;
   gobject_class->get_property = gst_video_test_src_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PATTERN,
+  g_object_class_install_property (gobject_class, PROP_PATTERN,
       g_param_spec_enum ("pattern", "Pattern",
           "Type of test pattern to generate", GST_TYPE_VIDEO_TEST_SRC_PATTERN,
           1, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
+  g_object_class_install_property (gobject_class,
       PROP_TIMESTAMP_OFFSET, g_param_spec_int64 ("timestamp-offset",
           "Timestamp offset",
           "An offset added to timestamps set on buffers (in ns)", G_MININT64,

@@ -260,7 +260,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
   gobject_class->set_property = gst_video_scale_set_property;
   gobject_class->get_property = gst_video_scale_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_METHOD,
+  g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method", "method", "method",
           GST_TYPE_VIDEO_SCALE_METHOD, DEFAULT_PROP_METHOD, G_PARAM_READWRITE));
 

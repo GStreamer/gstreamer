@@ -136,7 +136,7 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_stream_selector_get_property);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ACTIVE_PAD,
+  g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
       g_param_spec_string ("active-pad", "Active pad", "Name of the currently"
           " active sink pad", NULL, G_PARAM_READWRITE));
 

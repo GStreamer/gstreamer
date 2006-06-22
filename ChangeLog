@@ -1,3 +1,24 @@
+2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Cody Russell <bratsche at gnome org>
+
+	* gst/audioresample/gstaudioresample.c:
+	(gst_audioresample_class_init):
+	* gst/playback/gststreamselector.c:
+	(gst_stream_selector_class_init):
+	* gst/subparse/gstsubparse.c: (gst_sub_parse_class_init):
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init):
+	* gst/tcp/gsttcpclientsink.c: (gst_tcp_client_sink_class_init):
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcp_client_src_class_init):
+	* gst/tcp/gsttcpserversink.c: (gst_tcp_server_sink_class_init):
+	* gst/tcp/gsttcpserversrc.c: (gst_tcp_server_src_class_init):
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_class_init):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_video_test_src_class_init):
+	* gst/volume/gstvolume.c: (gst_volume_class_init):
+	  Avoid unnecessary class cast check in class_init
+	  functions (#337747).
+
 2006-06-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_make_utf8),

@@ -122,10 +122,10 @@ gst_tcp_server_src_class_init (GstTCPServerSrcClass * klass)
   gobject_class->get_property = gst_tcp_server_src_get_property;
   gobject_class->finalize = gst_tcp_server_src_finalize;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HOST,
+  g_object_class_install_property (gobject_class, PROP_HOST,
       g_param_spec_string ("host", "Host", "The hostname to listen as",
           TCP_DEFAULT_LISTEN_HOST, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
+  g_object_class_install_property (gobject_class, PROP_PORT,
       g_param_spec_int ("port", "Port", "The port to listen to",
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_PROTOCOL,

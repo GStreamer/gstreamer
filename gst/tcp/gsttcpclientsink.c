@@ -136,10 +136,10 @@ gst_tcp_client_sink_class_init (GstTCPClientSink * klass)
   gobject_class->get_property = gst_tcp_client_sink_get_property;
   gobject_class->finalize = gst_tcp_client_sink_finalize;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST,
+  g_object_class_install_property (gobject_class, ARG_HOST,
       g_param_spec_string ("host", "Host", "The host/IP to send the packets to",
           TCP_DEFAULT_HOST, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
+  g_object_class_install_property (gobject_class, ARG_PORT,
       g_param_spec_int ("port", "Port", "The port to send the packets to",
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_PROTOCOL,

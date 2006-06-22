@@ -372,54 +372,54 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
           "The mode for selecting activity on the fds", GST_TYPE_FDSET_MODE,
           DEFAULT_MODE, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFERS_MAX,
+  g_object_class_install_property (gobject_class, PROP_BUFFERS_MAX,
       g_param_spec_int ("buffers-max", "Buffers max",
           "max number of buffers to queue for a client (-1 = no limit)", -1,
           G_MAXINT, DEFAULT_BUFFERS_MAX, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
+  g_object_class_install_property (gobject_class,
       PROP_BUFFERS_SOFT_MAX, g_param_spec_int ("buffers-soft-max",
           "Buffers soft max",
           "Recover client when going over this limit (-1 = no limit)", -1,
           G_MAXINT, DEFAULT_BUFFERS_SOFT_MAX, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTES_MIN,
+  g_object_class_install_property (gobject_class, PROP_BYTES_MIN,
       g_param_spec_int ("bytes-min", "Bytes min",
           "min number of bytes to queue (-1 = as little as possible)", -1,
           G_MAXINT, DEFAULT_BYTES_MIN, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIME_MIN,
+  g_object_class_install_property (gobject_class, PROP_TIME_MIN,
       g_param_spec_int64 ("time-min", "Time min",
           "min number of time to queue (-1 = as litte as possible)", -1,
           G_MAXINT64, DEFAULT_TIME_MIN, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFERS_MIN,
+  g_object_class_install_property (gobject_class, PROP_BUFFERS_MIN,
       g_param_spec_int64 ("buffers-min", "Buffers min",
           "min number of buffers to queue (-1 = as litte as possible)", -1,
           G_MAXINT, DEFAULT_BUFFERS_MIN, G_PARAM_READWRITE));
 
 #if NOT_IMPLEMENTED
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_UNIT_TYPE,
+  g_object_class_install_property (gobject_class, PROP_UNIT_TYPE,
       g_param_spec_enum ("unit-type", "Units type",
           "The unit to measure the max/soft-max/queued properties",
           GST_TYPE_UNIT_TYPE, DEFAULT_UNIT_TYPE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_UNITS_MAX,
+  g_object_class_install_property (gobject_class, PROP_UNITS_MAX,
       g_param_spec_int ("units-max", "Units max",
           "max number of units to queue (-1 = no limit)", -1, G_MAXINT,
           DEFAULT_UNITS_MAX, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_UNITS_SOFT_MAX,
+  g_object_class_install_property (gobject_class, PROP_UNITS_SOFT_MAX,
       g_param_spec_int ("units-soft-max", "Units soft max",
           "Recover client when going over this limit (-1 = no limit)", -1,
           G_MAXINT, DEFAULT_UNITS_SOFT_MAX, G_PARAM_READWRITE));
 #endif
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFERS_QUEUED,
+  g_object_class_install_property (gobject_class, PROP_BUFFERS_QUEUED,
       g_param_spec_uint ("buffers-queued", "Buffers queued",
           "Number of buffers currently queued", 0, G_MAXUINT, 0,
           G_PARAM_READABLE));
 #if NOT_IMPLEMENTED
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTES_QUEUED,
+  g_object_class_install_property (gobject_class, PROP_BYTES_QUEUED,
       g_param_spec_uint ("bytes-queued", "Bytes queued",
           "Number of bytes currently queued", 0, G_MAXUINT, 0,
           G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIME_QUEUED,
+  g_object_class_install_property (gobject_class, PROP_TIME_QUEUED,
       g_param_spec_uint64 ("time-queued", "Time queued",
           "Number of time currently queued", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE));
@@ -429,28 +429,28 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
       g_param_spec_enum ("recover-policy", "Recover Policy",
           "How to recover when client reaches the soft max",
           GST_TYPE_RECOVER_POLICY, DEFAULT_RECOVER_POLICY, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMEOUT,
+  g_object_class_install_property (gobject_class, PROP_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
           "Maximum inactivity timeout in nanoseconds for a client (0 = no limit)",
           0, G_MAXUINT64, DEFAULT_TIMEOUT, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SYNC_METHOD,
+  g_object_class_install_property (gobject_class, PROP_SYNC_METHOD,
       g_param_spec_enum ("sync-method", "Sync Method",
           "How to sync new clients to the stream",
           GST_TYPE_SYNC_METHOD, DEFAULT_SYNC_METHOD, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTES_TO_SERVE,
+  g_object_class_install_property (gobject_class, PROP_BYTES_TO_SERVE,
       g_param_spec_uint64 ("bytes-to-serve", "Bytes to serve",
           "Number of bytes received to serve to clients", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BYTES_SERVED,
+  g_object_class_install_property (gobject_class, PROP_BYTES_SERVED,
       g_param_spec_uint64 ("bytes-served", "Bytes served",
           "Total number of bytes send to all clients", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BURST_UNIT,
+  g_object_class_install_property (gobject_class, PROP_BURST_UNIT,
       g_param_spec_enum ("burst-unit", "Burst unit",
           "The format of the burst units (when sync-method is burst[[-with]-keyframe])",
           GST_TYPE_UNIT_TYPE, DEFAULT_BURST_UNIT, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BURST_VALUE,
+  g_object_class_install_property (gobject_class, PROP_BURST_VALUE,
       g_param_spec_uint64 ("burst-value", "Burst value",
           "The amount of burst expressed in burst-unit",
           0, G_MAXUINT64, DEFAULT_BURST_VALUE, G_PARAM_READWRITE));
