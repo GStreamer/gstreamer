@@ -84,6 +84,61 @@ G_BEGIN_DECLS
 #define GST_TAG_CMML_CLIP "cmml-clip"
 
 
+/* additional information for image tags */
+
+/**
+ * GstTagImageType:
+ * @GST_TAG_IMAGE_TYPE_UNDEFINED             : Undefined/other image type
+ * @GST_TAG_IMAGE_TYPE_FRONT_COVER           : Cover (front)
+ * @GST_TAG_IMAGE_TYPE_BACK_COVER            : Cover (back)
+ * @GST_TAG_IMAGE_TYPE_LEAFLET_PAGE          : Leaflet page
+ * @GST_TAG_IMAGE_TYPE_MEDIUM                : Medium (e.g. label side of CD)
+ * @GST_TAG_IMAGE_TYPE_LEAD_ARTIST           : Lead artist/lead performer/soloist
+ * @GST_TAG_IMAGE_TYPE_ARTIST                : Artist/performer
+ * @GST_TAG_IMAGE_TYPE_CONDUCTOR             : Conductor
+ * @GST_TAG_IMAGE_TYPE_BAND_ORCHESTRA        : Band/orchestra
+ * @GST_TAG_IMAGE_TYPE_COMPOSER              : Composer
+ * @GST_TAG_IMAGE_TYPE_LYRICIST              : Lyricist/text writer
+ * @GST_TAG_IMAGE_TYPE_RECORDING_LOCATION    : Recording location
+ * @GST_TAG_IMAGE_TYPE_DURING_RECORDING      : During recording
+ * @GST_TAG_IMAGE_TYPE_DURING_PERFORMANCE    : During performance
+ * @GST_TAG_IMAGE_TYPE_VIDEO_CAPTURE         : Movie/video screen capture
+ * @GST_TAG_IMAGE_TYPE_FISH                  : A fish as funny as the ID3v2 spec
+ * @GST_TAG_IMAGE_TYPE_ILLUSTRATION          : Illustration
+ * @GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO      : Band/artist logotype
+ * @GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO : Publisher/studio logotype
+ *
+ * Type of image contained in an image tag (specified as field in
+ * the image buffer's caps structure)
+ *
+ * Since: 0.10.10
+ */
+typedef enum {
+  GST_TAG_IMAGE_TYPE_UNDEFINED,
+  GST_TAG_IMAGE_TYPE_FRONT_COVER,
+  GST_TAG_IMAGE_TYPE_BACK_COVER,
+  GST_TAG_IMAGE_TYPE_LEAFLET_PAGE,
+  GST_TAG_IMAGE_TYPE_MEDIUM,
+  GST_TAG_IMAGE_TYPE_LEAD_ARTIST,
+  GST_TAG_IMAGE_TYPE_ARTIST,
+  GST_TAG_IMAGE_TYPE_CONDUCTOR,
+  GST_TAG_IMAGE_TYPE_BAND_ORCHESTRA,
+  GST_TAG_IMAGE_TYPE_COMPOSER,
+  GST_TAG_IMAGE_TYPE_LYRICIST,
+  GST_TAG_IMAGE_TYPE_RECORDING_LOCATION,
+  GST_TAG_IMAGE_TYPE_DURING_RECORDING,
+  GST_TAG_IMAGE_TYPE_DURING_PERFORMANCE,
+  GST_TAG_IMAGE_TYPE_VIDEO_CAPTURE,
+  GST_TAG_IMAGE_TYPE_FISH,
+  GST_TAG_IMAGE_TYPE_ILLUSTRATION,
+  GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO,
+  GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO
+} GstTagImageType;
+
+#define GST_TYPE_TAG_IMAGE_TYPE  (gst_tag_image_type_get_type ())
+GType   gst_tag_image_type_get_type (void);
+
+
 /* functions for vorbis comment manipulation */
 
 G_CONST_RETURN gchar *  gst_tag_from_vorbis_tag                 (const gchar *          vorbis_tag);

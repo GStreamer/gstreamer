@@ -1,5 +1,14 @@
 2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/tag/tag.h:
+	* gst-libs/gst/tag/tags.c: (register_tag_image_type_enum),
+	(gst_tag_image_type_get_type):
+	  API: add GstTagImageType enum to describe images contained
+	  in image tags (#345641).
+
+2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init):
 	  Fix warnings with gst-inspect: "buffers-min" property
 	  should be of G_TYPE_INT and not G_TYPE_INT64. Also fix

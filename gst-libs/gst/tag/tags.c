@@ -83,3 +83,49 @@ gst_tag_register_musicbrainz_tags (void)
 
   g_once (&mb_once, gst_tag_register_musicbrainz_tags_internal, NULL);
 }
+
+static void
+register_tag_image_type_enum (GType * id)
+{
+  static const GEnumValue image_types[] = {
+    {GST_TAG_IMAGE_TYPE_UNDEFINED, "Undefined/other image type", "undefined"},
+    {GST_TAG_IMAGE_TYPE_FRONT_COVER, "Cover (front)", "front-cover"},
+    {GST_TAG_IMAGE_TYPE_BACK_COVER, "Cover (back)", "back-cover"},
+    {GST_TAG_IMAGE_TYPE_LEAFLET_PAGE, "Leaflet page", "leaflet-page"},
+    {GST_TAG_IMAGE_TYPE_MEDIUM, "Medium (e.g. label side of CD)", "medium"},
+    {GST_TAG_IMAGE_TYPE_LEAD_ARTIST, "Lead artist/lead performer/soloist",
+        "lead-artist"},
+    {GST_TAG_IMAGE_TYPE_ARTIST, "Artist/performer", "artist"},
+    {GST_TAG_IMAGE_TYPE_CONDUCTOR, "Conductor", "conductor"},
+    {GST_TAG_IMAGE_TYPE_BAND_ORCHESTRA, "Band/orchestra", "band-orchestra"},
+    {GST_TAG_IMAGE_TYPE_COMPOSER, "Composer", "composer"},
+    {GST_TAG_IMAGE_TYPE_LYRICIST, "Lyricist/text writer", "lyricist"},
+    {GST_TAG_IMAGE_TYPE_RECORDING_LOCATION, "Recording location",
+        "recording-location"},
+    {GST_TAG_IMAGE_TYPE_DURING_RECORDING, "During recording",
+        "during-recording"},
+    {GST_TAG_IMAGE_TYPE_DURING_PERFORMANCE, "During performance",
+        "during-performance"},
+    {GST_TAG_IMAGE_TYPE_VIDEO_CAPTURE, "Movie/video screen capture",
+        "video-capture"},
+    {GST_TAG_IMAGE_TYPE_FISH, "A fish as funny as the ID3v2 spec", "fish"},
+    {GST_TAG_IMAGE_TYPE_ILLUSTRATION, "Illustration", "illustration"},
+    {GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO, "Band/artist logotype",
+        "artist-logo"},
+    {GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO, "Publisher/studio logotype",
+        "publisher-studio-logo"},
+    {0, NULL, NULL}
+  };
+
+  *id = g_enum_register_static ("GstTagImageType", image_types);
+}
+
+GType
+gst_tag_image_type_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_tag_image_type_enum, &id);
+  return id;
+}
