@@ -388,11 +388,11 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
           G_MAXINT, DEFAULT_BYTES_MIN, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_TIME_MIN,
       g_param_spec_int64 ("time-min", "Time min",
-          "min number of time to queue (-1 = as litte as possible)", -1,
+          "min number of time to queue (-1 = as little as possible)", -1,
           G_MAXINT64, DEFAULT_TIME_MIN, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_BUFFERS_MIN,
-      g_param_spec_int64 ("buffers-min", "Buffers min",
-          "min number of buffers to queue (-1 = as litte as possible)", -1,
+      g_param_spec_int ("buffers-min", "Buffers min",
+          "min number of buffers to queue (-1 = as few as possible)", -1,
           G_MAXINT, DEFAULT_BUFFERS_MIN, G_PARAM_READWRITE));
 
 #if NOT_IMPLEMENTED

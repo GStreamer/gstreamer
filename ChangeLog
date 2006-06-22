@@ -1,5 +1,12 @@
 2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init):
+	  Fix warnings with gst-inspect: "buffers-min" property
+	  should be of G_TYPE_INT and not G_TYPE_INT64. Also fix
+	  typo in property description.
+
+2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Cody Russell <bratsche at gnome org>
 
 	* gst/audioresample/gstaudioresample.c:
