@@ -105,6 +105,7 @@ gst_matroska_track_init_subtitle_context (GstMatroskaTrackContext ** p_context)
   *p_context = (GstMatroskaTrackContext *) subtitle_context;
 
   (*p_context)->type = GST_MATROSKA_TRACK_TYPE_SUBTITLE;
+  subtitle_context->invalid_utf8 = FALSE;
   return TRUE;
 }
 

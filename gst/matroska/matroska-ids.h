@@ -284,7 +284,8 @@ typedef struct _GstMatroskaTrackComplexContext {
 typedef struct _GstMatroskaTrackSubtitleContext {
   GstMatroskaTrackContext parent;
 
-  /* or here... */
+  gboolean    check_utf8;     /* buffers should be valid UTF-8 */
+  gboolean    invalid_utf8;   /* work around broken files      */
 } GstMatroskaTrackSubtitleContext;
 
 typedef struct _GstMatroskaIndex {

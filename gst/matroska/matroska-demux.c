@@ -36,7 +36,7 @@
 #include "matroska-demux.h"
 #include "matroska-ids.h"
 
-GST_DEBUG_CATEGORY (matroskademux_debug);
+GST_DEBUG_CATEGORY_STATIC (matroskademux_debug);
 #define GST_CAT_DEFAULT matroskademux_debug
 
 enum
@@ -2135,6 +2135,75 @@ gst_matroska_demux_add_wvpk_header (GstMatroskaTrackContext * stream,
   return TRUE;
 }
 
+static GstBuffer *
+gst_matroska_demux_check_subtitle_buffer (GstMatroskaDemux * demux,
+    GstMatroskaTrackContext * stream, GstBuffer * buf)
+{
+  GstMatroskaTrackSubtitleContext *sub_stream;
+  const gchar *encoding, *data;
+  GError *err = NULL;
+  GstBuffer *newbuf;
+  gchar *utf8;
+  guint size;
+
+  sub_stream = (GstMatroskaTrackSubtitleContext *) stream;
+
+  if (!sub_stream->check_utf8)
+    return buf;
+
+  data = (const gchar *) GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  if (!sub_stream->invalid_utf8) {
+    if (g_utf8_validate (data, size, NULL)) {
+      return buf;
+    }
+    GST_WARNING_OBJECT (demux, "subtitle stream %d is not valid UTF-8, this "
+        "is broken according to the matroska specification", stream->num);
+    sub_stream->invalid_utf8 = TRUE;
+  }
+
+  /* file with broken non-UTF8 subtitle, do the best we can do to fix it */
+  encoding = g_getenv ("GST_SUBTITLE_ENCODING");
+  if (encoding == NULL || *encoding == '\0') {
+    /* if local encoding is UTF-8 and no encoding specified
+     * via the environment variable, assume ISO-8859-15 */
+    if (g_get_charset (&encoding)) {
+      encoding = "ISO-8859-15";
+    }
+  }
+
+  utf8 = g_convert_with_fallback (data, size, "UTF-8", encoding, "*",
+      NULL, NULL, &err);
+
+  if (err) {
+    GST_LOG_OBJECT (demux, "could not convert string from '%s' to UTF-8: %s",
+        encoding, err->message);
+    g_error_free (err);
+    g_free (utf8);
+
+    /* invalid input encoding, fall back to ISO-8859-15 (always succeeds) */
+    encoding = "ISO-8859-15";
+    utf8 = g_convert_with_fallback (data, size, "UTF-8", encoding, "*",
+        NULL, NULL, NULL);
+  }
+
+  GST_LOG_OBJECT (demux, "converted subtitle text from %s to UTF-8 %s",
+      encoding, (err) ? "(using ISO-8859-15 as fallback)" : "");
+
+  if (utf8 == NULL)
+    utf8 = g_strdup ("invalid subtitle");
+
+  newbuf = gst_buffer_new ();
+  GST_BUFFER_MALLOCDATA (newbuf) = (guint8 *) utf8;
+  GST_BUFFER_DATA (newbuf) = (guint8 *) utf8;
+  GST_BUFFER_SIZE (newbuf) = strlen (utf8);
+  gst_buffer_stamp (newbuf, buf);
+
+  gst_buffer_unref (buf);
+  return newbuf;
+}
+
 static gboolean
 gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     guint64 cluster_time, gboolean is_simpleblock)
@@ -2415,6 +2484,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           GST_TIME_ARGS (GST_BUFFER_DURATION (sub)));
 
       gst_buffer_set_caps (sub, GST_PAD_CAPS (stream->pad));
+
+      /* Fix up broken files with subtitles that are not UTF8 */
+      if (stream->type == GST_MATROSKA_TRACK_TYPE_SUBTITLE) {
+        sub = gst_matroska_demux_check_subtitle_buffer (demux, stream, sub);
+      }
+
       ret = gst_pad_push (stream->pad, sub);
       if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
         got_error = TRUE;
@@ -3448,15 +3523,20 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
 
   if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8)) {
     caps = gst_caps_new_simple ("text/plain", NULL);
+    subtitlecontext->check_utf8 = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_SSA)) {
     caps = gst_caps_new_simple ("application/x-ssa", NULL);
+    subtitlecontext->check_utf8 = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_ASS)) {
     caps = gst_caps_new_simple ("application/x-ass", NULL);
+    subtitlecontext->check_utf8 = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_USF)) {
     caps = gst_caps_new_simple ("application/x-usf", NULL);
+    subtitlecontext->check_utf8 = TRUE;
   } else {
     GST_DEBUG ("Unknown subtitle stream: codec_id='%s'", codec_id);
     caps = gst_caps_new_simple ("application/x-subtitle-unknown", NULL);
+    subtitlecontext->check_utf8 = FALSE;
   }
 
   if (data != NULL && size > 0) {
