@@ -1,3 +1,11 @@
+2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Philip Jägenstedt  <philip at lysator liu se>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  Fix 'Embedding static elements' section to use
+	  GST_PLUGIN_DEFINE_STATIC (#345607).
+
 2006-06-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/pipelines/simple-launch-lines.c: (test_stop_from_app):

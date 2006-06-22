@@ -311,15 +311,17 @@ main (gint   argc,
       <function>plugin_init</function>) that will be called right after that.
       It's purpose is to register the elements provided by the plugin with
       the &GStreamer; framework. If you want to embed elements directly in
-      your application, the only thing you need to do is to manually run
-      this structure using <function>_gst_plugin_register_static
-      ()</function>. The initialization will then be called, and the elements
-      will from then on be available like any other element, without
-      them having to be dynamically loadable libraries. In the example below,
-      you would be able to call <function>gst_element_factory_make
-      ("my-element-name", "some-name")</function> to create an instance
-      of the element.
+      your application, the only thing you need to do is to replace
+	  <function>GST_PLUGIN_DEFINE ()</function> with
+	  <function>GST_PLUGIN_DEFINE_STATIC ()</function>. This will cause the
+      elements to be registered when your application loads, and the elements
+      will from then on be available like any other element, without them
+      having to be dynamically loadable libraries. In the example below, you
+      would be able to call <function>gst_element_factory_make
+      ("my-element-name", "some-name")</function> to create an instance of the
+      element.
     </para>
+
     <programlisting>
 /*
  * Here, you would write the actual plugin code.
@@ -334,28 +336,17 @@ register_elements (GstPlugin *plugin)
 			       GST_RANK_NONE, MY_PLUGIN_TYPE);
 }
 
-static GstPluginDesc plugin_desc = {
+GST_PLUGIN_DEFINE_STATIC (
   GST_VERSION_MAJOR,
   GST_VERSION_MINOR,
   "my-private-plugins",
   "Private elements of my application",
   register_elements,
-  "0.0.1",
+  VERSION,
   "LGPL",
   "my-application",
-  "http://www.my-application.net/",
-  GST_PADDING_INIT
-};
-
-/*
- * Call this function right after calling gst_init ().
- */
-
-void
-my_elements_init (void)
-{
-  _gst_plugin_register_static (&amp;plugin_desc);
-}
+  "http://www.my-application.net/"
+)
     </programlisting>
   </sect1>
 </chapter>
