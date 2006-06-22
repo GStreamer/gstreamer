@@ -1,3 +1,9 @@
+2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/tags.c: (register_tag_image_type_enum):
+	  Second field in GEnumValue shouldn't be a description,
+	  but a stringified version of the enum value.
+
 2006-06-22  Wim Taymans  <wim@fluendo.com>
 
 	* sys/ximage/ximagesink.c: (gst_ximage_buffer_finalize),
