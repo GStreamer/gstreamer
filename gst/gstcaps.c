@@ -1560,26 +1560,28 @@ gst_caps_load_thyself (xmlNodePtr parent)
  * Replaces *caps with @newcaps.  Unrefs the #GstCaps in the location
  * pointed to by @caps, if applicable, then modifies @caps to point to
  * @newcaps. An additional ref on @newcaps is taken.
+ *
+ * This function does not take any locks so you might want to lock
+ * the object owning @caps pointer.
  */
 void
 gst_caps_replace (GstCaps ** caps, GstCaps * newcaps)
 {
   GstCaps *oldcaps;
 
-#if 0                           /* disable this, since too many plugins rely on undefined behavior */
-#ifdef USE_POISONING
-  //if (newcaps) CAPS_POISON (newcaps);
-#endif
-#endif
+  g_return_if_fail (caps != NULL);
+
   oldcaps = *caps;
 
-  if (newcaps)
-    gst_caps_ref (newcaps);
+  if (newcaps != oldcaps) {
+    if (newcaps)
+      gst_caps_ref (newcaps);
 
-  *caps = newcaps;
+    *caps = newcaps;
 
-  if (oldcaps)
-    gst_caps_unref (oldcaps);
+    if (oldcaps)
+      gst_caps_unref (oldcaps);
+  }
 }
 
 /**

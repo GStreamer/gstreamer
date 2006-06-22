@@ -1,3 +1,21 @@
+2006-06-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstcaps.c: (gst_caps_replace):
+	Fix crasher when passed NULL. Doc clarification.
+	Optimize for the trivial case.
+
+	* gst/gstpipeline.c: (gst_pipeline_change_state):
+	Small cleanups.
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_loop):
+	Small documentation cleanup.
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_buffer_alloc):
+	Don't use silly gst_pad_get_negotiated_caps, GST_PAD_CAPS
+	is what we need and it avoids a whole lot of redundant 
+	refcount operations.
+
 2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Philip Jägenstedt  <philip at lysator liu se>

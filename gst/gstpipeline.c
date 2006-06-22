@@ -111,7 +111,6 @@ enum
   PROP_0,
   PROP_DELAY,
   PROP_AUTO_FLUSH_BUS
-      /* FILL ME */
 };
 
 #define GST_PIPELINE_GET_PRIVATE(obj)  \
@@ -320,7 +319,6 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
  * A flushing seek also resets the stream time to 0 so that when
  * we go back to PLAYING after the seek, the base_time is recalculated
  * and redistributed to the elements.
- *
  */
 static gboolean
 do_pipeline_seek (GstElement * element, GstEvent * event)
@@ -506,8 +504,9 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 
       if (need_reset)
         gst_pipeline_set_new_stream_time (pipeline, 0);
-    }
+
       break;
+    }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
@@ -734,7 +733,7 @@ gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
  * @clock: the clock to set
  *
  * Set the clock for @pipeline. The clock will be distributed
- * to all the elements managed by the pipeline.
+ * to all the elements managed by the pipeline. 
  *
  * Returns: TRUE if the clock could be set on the pipeline. FALSE if
  *   some element did not accept the clock.

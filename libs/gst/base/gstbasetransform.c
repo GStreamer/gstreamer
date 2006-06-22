@@ -1041,32 +1041,31 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
         buf);
   } else {
     /* if we are configured, request a buffer with the src caps */
-    GstCaps *srccaps = gst_pad_get_negotiated_caps (trans->srcpad);
-    GstCaps *sinkcaps = gst_pad_get_negotiated_caps (trans->sinkpad);
+    GstCaps *srccaps;
+    GstCaps *sinkcaps;
 
+    srccaps = GST_PAD_CAPS (trans->srcpad);
     if (!srccaps)
       goto not_configured;
 
+    sinkcaps = GST_PAD_CAPS (trans->sinkpad);
     if (sinkcaps != NULL) {
       if (sinkcaps != caps || !gst_caps_is_equal (sinkcaps, caps)) {
         gst_caps_unref (sinkcaps);
         gst_caps_unref (srccaps);
         goto not_configured;
       }
-      gst_caps_unref (sinkcaps);
     }
 
     GST_DEBUG_OBJECT (trans, "calling transform_size");
     if (!gst_base_transform_transform_size (trans,
             GST_PAD_DIRECTION (pad), caps, size, srccaps, &new_size)) {
-      gst_caps_unref (srccaps);
       goto unknown_size;
     }
 
     res =
         gst_pad_alloc_buffer_and_set_caps (trans->srcpad, offset, new_size,
         srccaps, buf);
-    gst_caps_unref (srccaps);
   }
 
   if (res == GST_FLOW_OK && !trans->have_same_caps) {
@@ -1075,19 +1074,19 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
        the alloc_buffer served to transmit caps information but we can't use the
        buffer. fall through and allocate a buffer corresponding to our sink
        caps, if any */
-    GstCaps *sinkcaps = gst_pad_get_negotiated_caps (trans->sinkpad);
-    GstCaps *srccaps = gst_pad_get_negotiated_caps (trans->srcpad);
+    GstCaps *sinkcaps;
+    GstCaps *srccaps;
 
+    sinkcaps = GST_PAD_CAPS (trans->sinkpad);
     if (!sinkcaps)
       goto not_configured;
 
+    srccaps = GST_PAD_CAPS (trans->srcpad);
+
     if (!gst_base_transform_transform_size (trans,
             GST_PAD_DIRECTION (trans->srcpad), srccaps, GST_BUFFER_SIZE (*buf),
-            sinkcaps, &new_size)) {
-      gst_caps_unref (srccaps);
-      gst_caps_unref (sinkcaps);
+            sinkcaps, &new_size))
       goto unknown_size;
-    }
 
     gst_buffer_unref (*buf);
 
@@ -1095,9 +1094,6 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     gst_buffer_set_caps (*buf, sinkcaps);
     GST_BUFFER_OFFSET (*buf) = offset;
     res = GST_FLOW_OK;
-
-    gst_caps_unref (srccaps);
-    gst_caps_unref (sinkcaps);
   }
 
 done:

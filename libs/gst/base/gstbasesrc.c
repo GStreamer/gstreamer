@@ -1530,7 +1530,8 @@ pause:
           src->priv->last_sent_eos = TRUE;
         }
       } else {
-        /* for fatal errors we post an error message */
+        /* for fatal errors we post an error message, post the error
+         * first so the app knows about the error first. */
         GST_ELEMENT_ERROR (src, STREAM, FAILED,
             (_("Internal data flow error.")),
             ("streaming task paused, reason %s", reason));
