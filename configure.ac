@@ -114,7 +114,7 @@ then
     IGNORE_GST_0_10_6=""
   fi
 
-  if test $GST_MINOR_VERSION -lt "7"
+  if test $GST_MINOR_VERSION -lt "8"
   then
     IGNORE_GST_0_10_7="gst-0.10.7.ignore"
   else

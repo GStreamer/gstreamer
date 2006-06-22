@@ -1,3 +1,9 @@
+2006-06-22  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac: (GST_LIBS): 
+	0.10.7 ignore file is for 0.10.7 AND 0.10.8 (due to brown paperbag
+	release).
+
 2006-06-15  Edward Hervey  <edward@fluendo.com>
 
 	* codegen/codegen.py:
