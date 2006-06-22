@@ -27,7 +27,7 @@
 
 #include "gstrtpamrpay.h"
 
-GST_DEBUG_CATEGORY (rtpamrpay_debug);
+GST_DEBUG_CATEGORY_STATIC (rtpamrpay_debug);
 #define GST_CAT_DEFAULT (rtpamrpay_debug)
 
 /* references:

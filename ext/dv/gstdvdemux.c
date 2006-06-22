@@ -107,7 +107,7 @@
 #define NTSC_WIDE_PAR_X         40
 #define NTSC_WIDE_PAR_Y         33
 
-GST_DEBUG_CATEGORY (dvdemux_debug);
+GST_DEBUG_CATEGORY_STATIC (dvdemux_debug);
 #define GST_CAT_DEFAULT dvdemux_debug
 
 static const GstElementDetails dvdemux_details =

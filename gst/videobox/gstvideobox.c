@@ -27,7 +27,7 @@
 #include <liboil/liboil.h>
 #include <string.h>
 
-GST_DEBUG_CATEGORY (videobox_debug);
+GST_DEBUG_CATEGORY_STATIC (videobox_debug);
 #define GST_CAT_DEFAULT videobox_debug
 
 #define GST_TYPE_VIDEO_BOX \

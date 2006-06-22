@@ -25,7 +25,7 @@
 #include "gstdynudpsink.h"
 #include <gst/netbuffer/gstnetbuffer.h>
 
-GST_DEBUG_CATEGORY (dynudpsink_debug);
+GST_DEBUG_CATEGORY_STATIC (dynudpsink_debug);
 #define GST_CAT_DEFAULT (dynudpsink_debug)
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",

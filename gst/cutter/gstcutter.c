@@ -27,7 +27,7 @@
 #include "gstcutter.h"
 #include "math.h"
 
-GST_DEBUG_CATEGORY (cutter_debug);
+GST_DEBUG_CATEGORY_STATIC (cutter_debug);
 #define GST_CAT_DEFAULT cutter_debug
 
 #define CUTTER_DEFAULT_THRESHOLD_LEVEL    0.1

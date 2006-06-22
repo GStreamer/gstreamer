@@ -33,7 +33,7 @@ GST_ELEMENT_DETAILS ("JPEG image encoder",
     "Encode images in JPEG format",
     "Wim Taymans <wim.taymans@tvd.be>");
 
-GST_DEBUG_CATEGORY (jpegenc_debug);
+GST_DEBUG_CATEGORY_STATIC (jpegenc_debug);
 #define GST_CAT_DEFAULT jpegenc_debug
 
 #define JPEG_DEFAULT_QUALITY 85

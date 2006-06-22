@@ -36,7 +36,7 @@
 #define GST_RGB24_SIZE(width,height)  ((height)*GST_RGB24_ROWSTRIDE(width))
 
 
-GST_DEBUG_CATEGORY (pixbufscale_debug);
+GST_DEBUG_CATEGORY_STATIC (pixbufscale_debug);
 #define GST_CAT_DEFAULT pixbufscale_debug
 
 /* elementfactory information */

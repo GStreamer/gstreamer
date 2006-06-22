@@ -32,7 +32,7 @@ static GstElementDetails gst_rtpilbcpay_details = {
   "Philippe Kalaf <philippe.kalaf@collabora.co.uk>"
 };
 
-GST_DEBUG_CATEGORY (rtpilbcpay_debug);
+GST_DEBUG_CATEGORY_STATIC (rtpilbcpay_debug);
 #define GST_CAT_DEFAULT (rtpilbcpay_debug)
 
 static GstStaticPadTemplate gst_rtpilbcpay_sink_template =
@@ -144,8 +144,8 @@ gst_rtpilbcpay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
       gst_basertppayload_set_outcaps (basertppayload, "mode", G_TYPE_INT, mode,
       NULL);
   if (mode != rtpilbcpay->mode && rtpilbcpay->mode != -1) {
-    GST_ERROR_OBJECT (rtpilbcpay, "Mode has changed from %d to %d! \
-          Mode cannot change while streaming", rtpilbcpay->mode, mode);
+    GST_ERROR_OBJECT (rtpilbcpay, "Mode has changed from %d to %d! "
+        "Mode cannot change while streaming", rtpilbcpay->mode, mode);
     return FALSE;
   }
   rtpilbcpay->mode = mode;

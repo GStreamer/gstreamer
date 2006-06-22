@@ -20,7 +20,7 @@
 
 #include "gstrtpdepay.h"
 
-GST_DEBUG_CATEGORY (rtpdepay_debug);
+GST_DEBUG_CATEGORY_STATIC (rtpdepay_debug);
 #define GST_CAT_DEFAULT (rtpdepay_debug)
 
 /* elementfactory information */

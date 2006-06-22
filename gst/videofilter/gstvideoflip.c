@@ -60,7 +60,7 @@ enum
       /* FILL ME */
 };
 
-GST_DEBUG_CATEGORY (video_flip_debug);
+GST_DEBUG_CATEGORY_STATIC (video_flip_debug);
 #define GST_CAT_DEFAULT video_flip_debug
 
 static const GstElementDetails video_flip_details =

@@ -33,7 +33,7 @@
 
 #include "gstrtpdec.h"
 
-GST_DEBUG_CATEGORY (rtpdec_debug);
+GST_DEBUG_CATEGORY_STATIC (rtpdec_debug);
 #define GST_CAT_DEFAULT (rtpdec_debug)
 
 /* elementfactory information */

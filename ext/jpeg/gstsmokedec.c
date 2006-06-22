@@ -34,7 +34,7 @@ GST_ELEMENT_DETAILS ("Smoke video decoder",
     "Decode video from Smoke format",
     "Wim Taymans <wim@fluendo.com>");
 
-GST_DEBUG_CATEGORY (smokedec_debug);
+GST_DEBUG_CATEGORY_STATIC (smokedec_debug);
 #define GST_CAT_DEFAULT smokedec_debug
 
 /* SmokeDec signals and args */

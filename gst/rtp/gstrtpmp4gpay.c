@@ -27,7 +27,7 @@
 
 #include "gstrtpmp4gpay.h"
 
-GST_DEBUG_CATEGORY (rtpmp4gpay_debug);
+GST_DEBUG_CATEGORY_STATIC (rtpmp4gpay_debug);
 #define GST_CAT_DEFAULT (rtpmp4gpay_debug)
 
 /* elementfactory information */

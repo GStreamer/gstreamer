@@ -64,7 +64,7 @@ GST_ELEMENT_DETAILS ("DV video decoder",
 #define DV_DEFAULT_QUALITY DV_QUALITY_BEST
 #define DV_DEFAULT_DECODE_NTH 1
 
-GST_DEBUG_CATEGORY (dvdec_debug);
+GST_DEBUG_CATEGORY_STATIC (dvdec_debug);
 #define GST_CAT_DEFAULT dvdec_debug
 
 enum

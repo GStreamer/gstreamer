@@ -29,7 +29,7 @@ GST_ELEMENT_DETAILS ("PNG image decoder",
     "Decode a png video frame to a raw image",
     "Wim Taymans <wim@fluendo.com>");
 
-GST_DEBUG_CATEGORY (pngdec_debug);
+GST_DEBUG_CATEGORY_STATIC (pngdec_debug);
 #define GST_CAT_DEFAULT pngdec_debug
 
 static void gst_pngdec_base_init (gpointer g_class);

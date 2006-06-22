@@ -26,8 +26,6 @@
 extern gboolean gst_multipart_demux_plugin_init (GstPlugin * plugin);
 extern gboolean gst_multipart_mux_plugin_init (GstPlugin * plugin);
 
-GST_DEBUG_CATEGORY (vorbisdec_debug);
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {

@@ -29,7 +29,7 @@
 #include "gstannodex.h"
 #include "gstcmmlutils.h"
 
-GST_DEBUG_CATEGORY (cmmlparser);
+GST_DEBUG_CATEGORY_STATIC (cmmlparser);
 #define GST_CAT_DEFAULT cmmlparser
 
 static void gst_cmml_parser_generic_error (void *ctx, const char *msg, ...);

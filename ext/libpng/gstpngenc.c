@@ -34,7 +34,7 @@ GST_ELEMENT_DETAILS ("PNG image encoder",
     "Encode a video frame to a .png image",
     "Jeremy SIMON <jsimon13@yahoo.fr>");
 
-GST_DEBUG_CATEGORY (pngenc_debug);
+GST_DEBUG_CATEGORY_STATIC (pngenc_debug);
 #define GST_CAT_DEFAULT pngenc_debug
 
 /* Filter signals and args */

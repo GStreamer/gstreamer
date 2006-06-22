@@ -33,7 +33,7 @@ GST_ELEMENT_DETAILS ("Smoke video encoder",
     "Encode images into the Smoke format",
     "Wim Taymans <wim@fluendo.com>");
 
-GST_DEBUG_CATEGORY (smokeenc_debug);
+GST_DEBUG_CATEGORY_STATIC (smokeenc_debug);
 #define GST_CAT_DEFAULT smokeenc_debug
 
 #define SMOKEENC_DEFAULT_MIN_QUALITY 10

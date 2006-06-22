@@ -1,5 +1,40 @@
 2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/annodex/gstcmmldec.c:
+	* ext/annodex/gstcmmlenc.c:
+	* ext/annodex/gstcmmlparser.c:
+	* ext/dv/gstdvdec.c:
+	* ext/dv/gstdvdemux.c:
+	* ext/gdk_pixbuf/pixbufscale.c:
+	* ext/jpeg/gstjpegenc.c:
+	* ext/jpeg/gstsmokedec.c:
+	* ext/jpeg/gstsmokeenc.c:
+	* ext/libpng/gstpngdec.c:
+	* ext/libpng/gstpngenc.c:
+	* ext/speex/gstspeexenc.c:
+	* gst/alpha/gstalphacolor.c:
+	* gst/cutter/gstcutter.c:
+	* gst/debug/gstnavigationtest.c:
+	* gst/icydemux/gsticydemux.c:
+	* gst/level/gstlevel.c:
+	* gst/multipart/multipart.c:
+	* gst/rtp/gstrtpamrpay.c:
+	* gst/rtp/gstrtpdepay.c:
+	* gst/rtp/gstrtpilbcpay.c:
+	* gst/rtp/gstrtpmp4gpay.c:
+	* gst/rtp/gstrtpmp4vpay.c:
+	* gst/rtsp/gstrtpdec.c:
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/udp/gstdynudpsink.c:
+	* gst/udp/gstmultiudpsink.c:
+	* gst/udp/gstudpsrc.c:
+	* gst/videobox/gstvideobox.c:
+	* gst/videofilter/gstvideoflip.c:
+	  Use GST_DEBUG_CATEGORY_STATIC where possible (#342503)
+	  plus two minor macro fixes.
+
+2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/matroska/matroska-demux.c:
 	(gst_matroska_demux_check_subtitle_buffer),
 	(gst_matroska_demux_parse_blockgroup_or_simpleblock),

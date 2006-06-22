@@ -86,7 +86,7 @@
 #include <sys/filio.h>
 #endif
 
-GST_DEBUG_CATEGORY (udpsrc_debug);
+GST_DEBUG_CATEGORY_STATIC (udpsrc_debug);
 #define GST_CAT_DEFAULT (udpsrc_debug)
 
 /* the select call is also performed on the control sockets, that way

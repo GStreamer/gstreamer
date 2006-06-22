@@ -70,7 +70,7 @@
 #include "gstrtspsrc.h"
 #include "sdp.h"
 
-GST_DEBUG_CATEGORY (rtspsrc_debug);
+GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
 
 /* elementfactory information */

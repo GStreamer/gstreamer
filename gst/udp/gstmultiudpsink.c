@@ -36,7 +36,7 @@
 #include "gstudp-marshal.h"
 #include "gstmultiudpsink.h"
 
-GST_DEBUG_CATEGORY (multiudpsink_debug);
+GST_DEBUG_CATEGORY_STATIC (multiudpsink_debug);
 #define GST_CAT_DEFAULT (multiudpsink_debug)
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",

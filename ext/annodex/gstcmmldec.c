@@ -53,7 +53,7 @@
 #include "gstcmmldec.h"
 #include "gstcmmlutils.h"
 
-GST_DEBUG_CATEGORY (cmmldec);
+GST_DEBUG_CATEGORY_STATIC (cmmldec);
 #define GST_CAT_DEFAULT cmmldec
 
 #define CMML_IDENT_HEADER_SIZE 29

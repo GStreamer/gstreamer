@@ -83,7 +83,7 @@
 #include "gstlevel.h"
 #include "math.h"
 
-GST_DEBUG_CATEGORY (level_debug);
+GST_DEBUG_CATEGORY_STATIC (level_debug);
 #define GST_CAT_DEFAULT level_debug
 
 static const GstElementDetails level_details = GST_ELEMENT_DETAILS ("Level",

@@ -32,7 +32,7 @@
 #include <gst/tag/tag.h>
 #include "gstspeexenc.h"
 
-GST_DEBUG_CATEGORY (speexenc_debug);
+GST_DEBUG_CATEGORY_STATIC (speexenc_debug);
 #define GST_CAT_DEFAULT speexenc_debug
 
 static GstPadTemplate *gst_speexenc_src_template, *gst_speexenc_sink_template;

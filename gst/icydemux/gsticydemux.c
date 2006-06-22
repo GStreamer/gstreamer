@@ -56,7 +56,7 @@ GST_ELEMENT_DETAILS ("ICY tag demuxer",
 
 #define ICY_TYPE_FIND_MAX_SIZE (40*1024)
 
-GST_DEBUG_CATEGORY (icydemux_debug);
+GST_DEBUG_CATEGORY_STATIC (icydemux_debug);
 #define GST_CAT_DEFAULT (icydemux_debug)
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",

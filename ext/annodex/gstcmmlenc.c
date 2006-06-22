@@ -47,7 +47,7 @@
 #include "gstcmmlenc.h"
 #include "gstannodex.h"
 
-GST_DEBUG_CATEGORY (cmmlenc);
+GST_DEBUG_CATEGORY_STATIC (cmmlenc);
 #define GST_CAT_DEFAULT cmmlenc
 
 #define CMML_IDENT_HEADER_SIZE 29

@@ -26,7 +26,7 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY (alpha_color_debug);
+GST_DEBUG_CATEGORY_STATIC (alpha_color_debug);
 #define GST_CAT_DEFAULT alpha_color_debug
 
 #define GST_TYPE_ALPHA_COLOR \
@@ -37,7 +37,7 @@ GST_DEBUG_CATEGORY (alpha_color_debug);
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALPHA_COLOR,GstAlphaColorClass))
 #define GST_IS_ALPHA_COLOR(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALPHA_COLOR))
-#define GST_IS_ALPHA_COLOR_CLASS(obj) \
+#define GST_IS_ALPHA_COLOR_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALPHA_COLOR))
 
 typedef struct _GstAlphaColor GstAlphaColor;
