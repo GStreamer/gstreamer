@@ -1,3 +1,11 @@
+2006-06-22  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstelement.c: (gst_element_pads_activate):
+	We need to deactivate src pads first and then sink pads.
+	The reason is the src pads might be blocking while holding the streaming
+	lock, so we need to deactivate them first so that deactivating the sink
+	pads doesn't block (since it will require the streaming lock).
+
 2006-06-22  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasetransform.c:
