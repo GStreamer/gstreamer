@@ -156,7 +156,7 @@ gst_audioresample_class_init (GstAudioresampleClass * klass)
   gobject_class->set_property = gst_audioresample_set_property;
   gobject_class->get_property = gst_audioresample_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILTERLEN,
+  g_object_class_install_property (gobject_class, PROP_FILTERLEN,
       g_param_spec_int ("filter_length", "filter_length", "filter_length",
           0, G_MAXINT, DEFAULT_FILTERLEN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
