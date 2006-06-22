@@ -1049,13 +1049,8 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
       goto not_configured;
 
     sinkcaps = GST_PAD_CAPS (trans->sinkpad);
-    if (sinkcaps != NULL) {
-      if (sinkcaps != caps || !gst_caps_is_equal (sinkcaps, caps)) {
-        gst_caps_unref (sinkcaps);
-        gst_caps_unref (srccaps);
-        goto not_configured;
-      }
-    }
+    if (sinkcaps != NULL && !gst_caps_is_equal (sinkcaps, caps))
+      goto not_configured;
 
     GST_DEBUG_OBJECT (trans, "calling transform_size");
     if (!gst_base_transform_transform_size (trans,
@@ -1082,7 +1077,6 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
       goto not_configured;
 
     srccaps = GST_PAD_CAPS (trans->srcpad);
-
     if (!gst_base_transform_transform_size (trans,
             GST_PAD_DIRECTION (trans->srcpad), srccaps, GST_BUFFER_SIZE (*buf),
             sinkcaps, &new_size))

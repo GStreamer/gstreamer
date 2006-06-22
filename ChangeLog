@@ -1,5 +1,12 @@
 2006-06-22  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_buffer_alloc):
+	Forgot to remove two unneeded unrefs.
+	Simplify a check _is_equal allready checks the obvious case.
+
+2006-06-22  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-block.txt:
 	Some docs about what pad_block should do.
 
