@@ -1,3 +1,9 @@
+2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/id3v2frames.c: (parse_picture_frame):
+	  Set image type from APIC frame as "image-type" field
+	  of GST_TAG_IMAGE buffer caps (#344605).
+
 2006-06-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/Makefile.am:
