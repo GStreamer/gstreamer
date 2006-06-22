@@ -1,0 +1,94 @@
+Pad block
+---------
+
+The purpose of blocking a pad is to be notified of downstream dataflow
+and events. The notification can be used for
+
+ - (Re)connecting the pad.
+ - performing a seek 
+ - inspecting the data/events on the pad
+
+The pad block is performed on a source pad (push based) or sink pad (pull based)
+and will succeed when the following events happen on the pad:
+
+ - gst_pad_push()
+ - gst_pad_alloc_buffer()
+ - gst_pad_push_event() except for FLUSH_START and FLUSH_STOP events.
+
+Use cases:
+----------
+
+* Prerolling a partial pipeline
+
+ .---------.      .---------.                .----------.
+ | filesrc |      | demuxer |     .-----.    | decoder1 |
+ |        src -> sink      src1 ->|queue|-> sink       src 
+ '---------'      |         |     '-----'    '----------' X
+                  |         |                .----------.
+                  |         |     .-----.    | decoder2 |
+                  |        src2 ->|queue|-> sink       src
+		  '---------'     '-----'    '----------' X
+
+
+ The purpose is to create the pipeline dynamically up to the
+ decoders but not yet connect them to a sink and without losing
+ any data.
+
+ To do this, the source pads of the decoders is blocked so that no
+ events or buffers can escape and we don't interrupt the stream.
+
+ When all of the dynamic pad are created (no-more-pads emited by the
+ branching point, ie, the demuxer or the queues filled) and the pads
+ are blocked (blocked callback received) the pipeline is completely
+ prerolled.
+
+ It should then be possible to perform the following actions on the
+ prerolled pipeline:
+
+  - query duration/position
+  - perform a flushing seek to preroll a new position
+  - connect other elements and unblock the blocked pads.
+
+
+* dynamically switching an element in a PLAYING pipeline.
+
+
+  .----------.      .----------.      .----------.
+  | element1 |      | element2 |      | element3 |
+ ...        src -> sink       src -> sink       ...
+  '----------'      '----------'      '----------'
+                    .----------.
+                    | element4 |
+                   sink       src                  
+                    '----------'                     
+
+ The purpose is to replace element2 with element4 in the PLAYING 
+ pipeline. 
+
+  1) block element1 src pad. This can be done async.
+  2) wait for block to happen. at this point nothing flowing between
+     element1 and element2 and nothing will flow until unblocked.
+  3) unlink element1 and element2
+  4) optional step: make sure data is flushed out of element2:
+     4a) pad event probe on element2 src
+     4b) send EOS to element2, this makes sure that element2 flushes
+         out the last bits of data it holds.
+     4c) wait for EOS to appear in the probe, drop the EOS.
+  5) unlink element2 and element3
+  6) link element4 and element3
+  7) link element1 and element4 (FIXME, how about letting element4 know
+     about the currently running segment?)
+  8) unblock element1 src
+
+ The same flow can be used to replace an element in a PAUSED pipeline. Only
+ special care has to be taken when performing step 2) which has to be done
+ async or it might deadlock. In the async callback one can then perform the
+ steps from 3). In a playing pipeline one can of course use the async block
+ as well, so that there is a generic method for both PAUSED and PLAYING.
+
+ The same flow works as well for any chain of multiple elements and might 
+ be implemented with a helper function in the future.
+
+
+
+

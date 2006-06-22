@@ -1,5 +1,10 @@
 2006-06-22  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-block.txt:
+	Some docs about what pad_block should do.
+
+2006-06-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstcaps.c: (gst_caps_replace):
 	Fix crasher when passed NULL. Doc clarification.
 	Optimize for the trivial case.
