@@ -111,7 +111,7 @@ G_BEGIN_DECLS
  * Type of image contained in an image tag (specified as field in
  * the image buffer's caps structure)
  *
- * Since: 0.10.10
+ * Since: 0.10.9
  */
 typedef enum {
   GST_TAG_IMAGE_TYPE_UNDEFINED,

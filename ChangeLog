@@ -1,5 +1,10 @@
 2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/tag/tag.h:
+	  Oops, make that 'Since: 0.10.9'.
+
+2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/tag/tag.h:
 	* gst-libs/gst/tag/tags.c: (register_tag_image_type_enum),
