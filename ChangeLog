@@ -1,3 +1,12 @@
+2006-06-22  Wim Taymans  <wim@fluendo.com>
+
+	* sys/ximage/ximagesink.c: (gst_ximage_buffer_finalize),
+	(gst_ximage_buffer_free), (gst_ximagesink_ximage_put),
+	(gst_ximagesink_setcaps), (gst_ximagesink_buffer_alloc):
+	Avoid type checking in buffer casts.
+	Avoid caps copy in buffer_alloc when we can.
+	Use pad_peer_accept.
+
 2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/tag.h:

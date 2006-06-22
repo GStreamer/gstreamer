@@ -217,7 +217,7 @@ gst_ximage_buffer_finalize (GstXImageBuffer * ximage)
     /* In that case we can reuse the image and add it to our image pool. */
     GST_LOG_OBJECT (ximagesink, "recycling image %p in pool", ximage);
     /* need to increment the refcount again to recycle */
-    gst_buffer_ref (GST_BUFFER (ximage));
+    gst_buffer_ref (GST_BUFFER_CAST (ximage));
     g_mutex_lock (ximagesink->pool_lock);
     ximagesink->buffer_pool = g_slist_prepend (ximagesink->buffer_pool, ximage);
     g_mutex_unlock (ximagesink->pool_lock);
@@ -234,7 +234,7 @@ gst_ximage_buffer_free (GstXImageBuffer * ximage)
   /* make sure it is not recycled */
   ximage->width = -1;
   ximage->height = -1;
-  gst_buffer_unref (GST_BUFFER (ximage));
+  gst_buffer_unref (GST_BUFFER_CAST (ximage));
 }
 
 static void
@@ -618,7 +618,7 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
     }
     GST_LOG_OBJECT (ximagesink, "reffing %p as our current image", ximage);
     ximagesink->cur_image =
-        GST_XIMAGE_BUFFER (gst_buffer_ref (GST_BUFFER (ximage)));
+        GST_XIMAGE_BUFFER (gst_buffer_ref (GST_BUFFER_CAST (ximage)));
   }
 
   /* Expose sends a NULL image, we take the latest frame */
@@ -1298,7 +1298,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
           (GST_VIDEO_SINK_HEIGHT (ximagesink) != ximagesink->ximage->height))) {
     GST_DEBUG_OBJECT (ximagesink, "our image is not usable anymore, unref %p",
         ximagesink->ximage);
-    gst_buffer_unref (GST_BUFFER (ximagesink->ximage));
+    gst_buffer_unref (GST_BUFFER_CAST (ximagesink->ximage));
     ximagesink->ximage = NULL;
   }
 
@@ -1464,8 +1464,16 @@ no_ximage:
   }
 }
 
-/* Buffer management */
-
+/* Buffer management
+ *
+ * The buffer_alloc function must either return a buffer with given size and
+ * caps or create a buffer with different caps attached to the buffer. This
+ * last option is called reverse negotiation, ie, where the sink suggests a
+ * different format from the upstream peer. 
+ *
+ * We try to do reverse negotiation when our geometry changes and we like a
+ * resized buffer.
+ */
 static GstFlowReturn
 gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     GstCaps * caps, GstBuffer ** buf)
@@ -1473,9 +1481,9 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   GstXImageSink *ximagesink;
   GstXImageBuffer *ximage = NULL;
   GstStructure *structure = NULL;
-  GstCaps *desired_caps = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
-  gboolean rev_nego = FALSE;
+  GstCaps *alloc_caps;
+  gboolean alloc_unref = FALSE;
   gint width, height;
 
   ximagesink = GST_XIMAGESINK (bsink);
@@ -1484,9 +1492,14 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       "a buffer of %d bytes was requested with caps %" GST_PTR_FORMAT
       " and offset %" G_GUINT64_FORMAT, size, caps, offset);
 
-  desired_caps = gst_caps_copy (caps);
+  /* assume we're going to alloc what was requested, keep track of
+   * wheter we need to unref or not. When we suggest a new format 
+   * upstream we will create a new caps that we need to unref. */
+  alloc_caps = caps;
+  alloc_unref = FALSE;
 
-  structure = gst_caps_get_structure (desired_caps, 0);
+  /* get struct to see what is requested */
+  structure = gst_caps_get_structure (caps, 0);
 
   if (gst_structure_get_int (structure, "width", &width) &&
       gst_structure_get_int (structure, "height", &height)) {
@@ -1497,7 +1510,6 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
     /* We take the flow_lock because the window might go away */
     g_mutex_lock (ximagesink->flow_lock);
-
     if (!ximagesink->xwindow) {
       g_mutex_unlock (ximagesink->flow_lock);
       goto alloc;
@@ -1525,35 +1537,44 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
     /* We would like another geometry */
     if (width != result.w || height != result.h) {
       int nom, den;
-      GstPad *peer = gst_pad_get_peer (GST_VIDEO_SINK_PAD (ximagesink));
+      GstCaps *desired_caps;
+      GstStructure *desired_struct;
 
-      if (!GST_IS_PAD (peer)) {
-        /* Is this situation possible ? */
-        goto alloc;
-      }
+      /* make a copy of the incomming caps to create the new
+       * suggestion. We can't use make_writable because we might
+       * then destroy the original caps which we still need when the
+       * peer does not accept the suggestion. */
+      desired_caps = gst_caps_copy (caps);
+      desired_struct = gst_caps_get_structure (desired_caps, 0);
 
       GST_DEBUG ("we would love to receive a %dx%d video", result.w, result.h);
-      gst_structure_set (structure, "width", G_TYPE_INT, result.w, NULL);
-      gst_structure_set (structure, "height", G_TYPE_INT, result.h, NULL);
+      gst_structure_set (desired_struct, "width", G_TYPE_INT, result.w, NULL);
+      gst_structure_set (desired_struct, "height", G_TYPE_INT, result.h, NULL);
 
       /* PAR property overrides the X calculated one */
       if (ximagesink->par) {
         nom = gst_value_get_fraction_numerator (ximagesink->par);
         den = gst_value_get_fraction_denominator (ximagesink->par);
-        gst_structure_set (structure, "pixel-aspect-ratio",
+        gst_structure_set (desired_struct, "pixel-aspect-ratio",
             GST_TYPE_FRACTION, nom, den, NULL);
       } else if (ximagesink->xcontext->par) {
         nom = gst_value_get_fraction_numerator (ximagesink->xcontext->par);
         den = gst_value_get_fraction_denominator (ximagesink->xcontext->par);
-        gst_structure_set (structure, "pixel-aspect-ratio",
+        gst_structure_set (desired_struct, "pixel-aspect-ratio",
             GST_TYPE_FRACTION, nom, den, NULL);
       }
 
-      if (gst_pad_accept_caps (peer, desired_caps)) {
+      /* see if peer accepts our new suggestion, if there is no peer, this 
+       * function returns true. */
+      if (gst_pad_peer_accept_caps (GST_VIDEO_SINK_PAD (ximagesink),
+              desired_caps)) {
         gint bpp;
 
         bpp = size / height / width;
-        rev_nego = TRUE;
+        /* we will not alloc a buffer of the new suggested caps. Make sure
+         * we also unref this new caps after we set it on the buffer. */
+        alloc_caps = desired_caps;
+        alloc_unref = TRUE;
         width = result.w;
         height = result.h;
         size = bpp * width * height;
@@ -1562,11 +1583,10 @@ gst_ximagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
       } else {
         GST_DEBUG ("peer pad does not accept our desired caps %" GST_PTR_FORMAT,
             desired_caps);
-        rev_nego = FALSE;
+        /* we alloc a buffer with the original incomming caps */
         width = GST_VIDEO_SINK_WIDTH (ximagesink);
         height = GST_VIDEO_SINK_HEIGHT (ximagesink);
       }
-      gst_object_unref (peer);
     }
   }
 
@@ -1595,24 +1615,18 @@ alloc:
 
   /* We haven't found anything, creating a new one */
   if (!ximage) {
-    if (rev_nego) {
-      ximage = gst_ximagesink_ximage_new (ximagesink, desired_caps);
-    } else {
-      ximage = gst_ximagesink_ximage_new (ximagesink, caps);
-    }
+    ximage = gst_ximagesink_ximage_new (ximagesink, alloc_caps);
   }
   /* Now we should have a ximage, set appropriate caps on it */
   if (ximage) {
-    if (rev_nego) {
-      gst_buffer_set_caps (GST_BUFFER (ximage), desired_caps);
-    } else {
-      gst_buffer_set_caps (GST_BUFFER (ximage), caps);
-    }
+    gst_buffer_set_caps (GST_BUFFER_CAST (ximage), alloc_caps);
   }
 
-  gst_caps_unref (desired_caps);
+  /* could be our new reffed suggestion or the original unreffed caps */
+  if (alloc_unref)
+    gst_caps_unref (alloc_caps);
 
-  *buf = GST_BUFFER (ximage);
+  *buf = GST_BUFFER_CAST (ximage);
 
   return ret;
 }
