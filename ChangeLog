@@ -1,3 +1,14 @@
+2006-06-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_class_init),
+	(gst_decode_bin_init), (gst_decode_bin_finalize), (add_fakesink),
+	(remove_fakesink), (pad_probe), (gst_decode_bin_change_state):
+	Protect remove_fakesink using a mutex, so that we don't try and
+	remove the fakesink simultaneously from multiple threads.
+
+	When going from READY to PAUSED, restore the fakesink, so that
+	it is there when decodebin gets reused.
+
 2006-06-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:

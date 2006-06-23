@@ -73,6 +73,8 @@ struct _GstDecodeBin
   gboolean shutting_down;       /* stop pluggin if we're shutting down */
 
   GType queue_type;             /* store the GType of queues, to aid in recognising them */
+
+  GMutex *cb_mutex;             /* Mutex for multi-threaded callbacks, such as removing the fakesink */
 };
 
 struct _GstDecodeBinClass
@@ -120,9 +122,13 @@ GstDynamic;
 static void gst_decode_bin_class_init (GstDecodeBinClass * klass);
 static void gst_decode_bin_init (GstDecodeBin * decode_bin);
 static void gst_decode_bin_dispose (GObject * object);
+static void gst_decode_bin_finalize (GObject * object);
 
 static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
     GstStateChange transition);
+
+static void add_fakesink (GstDecodeBin * decode_bin);
+static void remove_fakesink (GstDecodeBin * decode_bin);
 
 static void free_dynamics (GstDecodeBin * decode_bin);
 static void type_found (GstElement * typefind, guint probability,
@@ -208,6 +214,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_TYPE_PAD, GST_TYPE_CAPS);
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_decode_bin_dispose);
+  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_decode_bin_finalize);
 
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&decoder_bin_sink_template));
@@ -293,6 +300,8 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
 {
   GList *factories;
 
+  decode_bin->cb_mutex = g_mutex_new ();
+
   /* first filter out the interesting element factories */
   factories = gst_default_registry_feature_filter (
       (GstPluginFeatureFilter) gst_decode_bin_factory_filter,
@@ -332,17 +341,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
         g_signal_connect (G_OBJECT (decode_bin->typefind), "have_type",
         G_CALLBACK (type_found), decode_bin);
   }
-  decode_bin->fakesink = gst_element_factory_make ("fakesink", "fakesink");
-  if (!decode_bin->fakesink) {
-    g_warning ("can't find fakesink element, decodebin will not work");
-  } else {
-    GST_OBJECT_FLAG_UNSET (decode_bin->fakesink, GST_ELEMENT_IS_SINK);
-    if (!gst_bin_add (GST_BIN (decode_bin), decode_bin->fakesink)) {
-      g_warning ("Could not add fakesink element, decodebin will not work");
-      gst_object_unref (decode_bin->fakesink);
-      decode_bin->fakesink = NULL;
-    }
-  }
+  add_fakesink (decode_bin);
 
   decode_bin->dynamics = NULL;
   decode_bin->queues = NULL;
@@ -368,6 +367,16 @@ gst_decode_bin_dispose (GObject * object)
    * etc. clean up the mess here. */
   /* FIXME do proper cleanup when going to NULL */
   free_dynamics (decode_bin);
+}
+
+static void
+gst_decode_bin_finalize (GObject * object)
+{
+  GstDecodeBin *decode_bin = GST_DECODE_BIN (object);
+
+  g_mutex_free (decode_bin->cb_mutex);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstDynamic *
@@ -492,8 +501,36 @@ free_pad_probes (GstDecodeBin * decode_bin)
 }
 
 static void
+add_fakesink (GstDecodeBin * decode_bin)
+{
+  if (decode_bin->fakesink != NULL)
+    return;
+
+  g_mutex_lock (decode_bin->cb_mutex);
+
+  decode_bin->fakesink = gst_element_factory_make ("fakesink", "fakesink");
+  if (!decode_bin->fakesink) {
+    g_warning ("can't find fakesink element, decodebin will not work");
+  } else {
+    GST_OBJECT_FLAG_UNSET (decode_bin->fakesink, GST_ELEMENT_IS_SINK);
+    if (!gst_bin_add (GST_BIN (decode_bin), decode_bin->fakesink)) {
+      g_warning ("Could not add fakesink element, decodebin will not work");
+      gst_object_unref (decode_bin->fakesink);
+      decode_bin->fakesink = NULL;
+    }
+  }
+  g_mutex_unlock (decode_bin->cb_mutex);
+}
+
+static void
 remove_fakesink (GstDecodeBin * decode_bin)
 {
+  gboolean removed_fakesink = FALSE;
+
+  if (decode_bin->fakesink == NULL)
+    return;
+
+  g_mutex_lock (decode_bin->cb_mutex);
   if (decode_bin->fakesink) {
     GST_DEBUG_OBJECT (decode_bin, "Removing fakesink and marking state dirty");
     gst_object_ref (decode_bin->fakesink);
@@ -506,6 +543,11 @@ remove_fakesink (GstDecodeBin * decode_bin)
     gst_object_unref (decode_bin->fakesink);
     decode_bin->fakesink = NULL;
 
+    removed_fakesink = TRUE;
+  }
+  g_mutex_unlock (decode_bin->cb_mutex);
+
+  if (removed_fakesink) {
     free_pad_probes (decode_bin);
 
     gst_element_post_message (GST_ELEMENT_CAST (decode_bin),
@@ -1462,6 +1504,9 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_LOCK (decode_bin);
       decode_bin->shutting_down = FALSE;
       GST_OBJECT_UNLOCK (decode_bin);
+
+      add_fakesink (decode_bin);
+      break;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
