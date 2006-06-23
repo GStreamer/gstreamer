@@ -43,12 +43,12 @@
         return gst_element_query_duration(Handle, ref format, out duration);
     }
 
-	static Type [] paramTypes;
+	//static Type [] paramTypes;
 
     public void AddCustomEvent(string name, Delegate onCustom ) {
 	System.Reflection.ParameterInfo [] pi = onCustom.Method.GetParameters();
 
-	paramTypes = new Type[pi.Length];
+	Type [] paramTypes = new Type[pi.Length];
 	for(int i=0; i < paramTypes.Length; i++) {
 		paramTypes[i] = pi[i].ParameterType;
 	}
@@ -68,6 +68,13 @@
 
 	public static void CustomMarshaller(params IntPtr [] args) {
 		GLib.Signal sig = ((GCHandle) args[args.Length - 1]).Target as GLib.Signal;
+		Delegate d = sig.Handler as Delegate;
+		System.Reflection.ParameterInfo [] pi = d.Method.GetParameters();
+
+		Type [] paramTypes = new Type[pi.Length];
+		for(int i=0; i<pi.Length; i++)
+			paramTypes[i] = pi[i].ParameterType;
+
 		object [] newargs = new object[args.Length - 1];
 		for(int i=0; i < newargs.Length; i++) {
 			if(paramTypes[i].IsSubclassOf(typeof(GLib.Object))) {
@@ -78,7 +85,6 @@
 			}
 		}
 
-		Delegate d = sig.Handler as Delegate;
 		d.DynamicInvoke(newargs);	
 	}
 
