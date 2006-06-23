@@ -1,5 +1,14 @@
 2006-06-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstinfo.c:
+	  Promote GST_DEBUG_CATEGORY_STATIC in example in docs.
+
+	* libs/gst/net/gstnetclientclock.c:
+	* libs/gst/net/gstnettimeprovider.c:
+	  Use GST_DEBUG_CATEGORY_STATIC here too (#342503).
+
+2006-06-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/manual/advanced-dataaccess.xml:
 	  Fix buffer probe example compilation in
 	  ADM (#345708).

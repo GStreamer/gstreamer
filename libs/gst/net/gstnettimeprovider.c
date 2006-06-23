@@ -49,7 +49,7 @@
 #include <sys/filio.h>
 #endif
 
-GST_DEBUG_CATEGORY (ntp_debug);
+GST_DEBUG_CATEGORY_STATIC (ntp_debug);
 #define GST_CAT_DEFAULT (ntp_debug)
 
 /* the select call is also performed on the control sockets, that way

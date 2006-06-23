@@ -55,7 +55,7 @@
 #include "gstnettimepacket.h"
 #include "gstnetclientclock.h"
 
-GST_DEBUG_CATEGORY (ncc_debug);
+GST_DEBUG_CATEGORY_STATIC (ncc_debug);
 #define GST_CAT_DEFAULT (ncc_debug)
 
 /* #define DEBUGGING_ENABLED */
