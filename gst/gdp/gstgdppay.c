@@ -56,7 +56,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-gdp"));
 
-GST_DEBUG_CATEGORY (gst_gdp_pay_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_gdp_pay_debug);
 #define GST_CAT_DEFAULT gst_gdp_pay_debug
 
 #define DEFAULT_CRC_HEADER TRUE
