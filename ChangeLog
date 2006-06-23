@@ -1,3 +1,9 @@
+2006-06-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_channels), (plugin_init):
+	  Treat dual-mono as stereo. It should really be output on 2 separate
+	  pads, but isn't for now.
+
 2006-06-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_negotiate_format):

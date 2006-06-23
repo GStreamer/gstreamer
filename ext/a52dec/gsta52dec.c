@@ -259,7 +259,7 @@ gst_a52dec_channels (int flags, GstAudioChannelPosition ** _pos)
       }
       chans += 3;
       break;
-      /*case A52_CHANNEL: */
+    case A52_CHANNEL:          /* Dual mono. Should really be handled as 2 src pads */
     case A52_STEREO:
     case A52_DOLBY:
       if (pos) {
@@ -750,7 +750,7 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "a52dec", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "a52dec", GST_RANK_SECONDARY,
           GST_TYPE_A52DEC))
     return FALSE;
 
