@@ -264,6 +264,8 @@ gst_goom_src_negotiate (GstGoom * goom)
 
   templ = gst_pad_get_pad_template_caps (goom->srcpad);
 
+  GST_DEBUG_OBJECT (goom, "performing negotiation");
+
   /* see what the peer can do */
   othercaps = gst_pad_peer_get_caps (goom->srcpad);
   if (othercaps) {
@@ -292,7 +294,6 @@ gst_goom_src_negotiate (GstGoom * goom)
 no_format:
   {
     gst_caps_unref (intersect);
-    gst_caps_unref (othercaps);
     return FALSE;
   }
 }

@@ -1,3 +1,8 @@
+2006-06-23  Wim Taymans  <wim@fluendo.com>
+
+	* gst/goom/gstgoom.c: (gst_goom_src_negotiate):
+	Fix double caps unref when negotiation fails.
+
 2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/annodex/gstcmmldec.c:
