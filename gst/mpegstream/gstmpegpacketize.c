@@ -57,6 +57,8 @@ gst_mpeg_packetize_flush_cache (GstMPEGPacketize * packetize)
 {
   g_return_if_fail (packetize != NULL);
 
+  packetize->cache_byte_pos += packetize->cache_tail;
+
   packetize->resync = TRUE;
   packetize->cache_head = 0;
   packetize->cache_tail = 0;
@@ -83,6 +85,13 @@ void
 gst_mpeg_packetize_put (GstMPEGPacketize * packetize, GstBuffer * buf)
 {
   int cache_len = packetize->cache_tail - packetize->cache_head;
+
+  if (packetize->cache_head == 0 && cache_len == 0 &&
+      GST_BUFFER_OFFSET_IS_VALID (buf)) {
+    packetize->cache_byte_pos = GST_BUFFER_OFFSET (buf);
+    GST_DEBUG ("cache byte position now %" G_GINT64_FORMAT,
+        packetize->cache_byte_pos);
+  }
 
   if (cache_len + GST_BUFFER_SIZE (buf) > packetize->cache_size) {
     /* the buffer does not fit into the cache so grow the cache */

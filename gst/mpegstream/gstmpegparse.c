@@ -691,6 +691,11 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
   GstClockTime time;
   guint64 size;
 
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+    GST_DEBUG_OBJECT (mpeg_parse, "buffer with DISCONT flag set");
+    gst_mpeg_packetize_flush_cache (mpeg_parse->packetize);
+  }
+
   gst_mpeg_packetize_put (mpeg_parse->packetize, buffer);
   buffer = NULL;
 

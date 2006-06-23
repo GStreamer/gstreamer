@@ -1,5 +1,14 @@
 2006-06-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/mpegstream/gstmpegpacketize.c:
+	(gst_mpeg_packetize_flush_cache), (gst_mpeg_packetize_put):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_chain):
+	  Also flush packetizer cache when we get a buffer that has the
+	  DISCONT flag set; update current byte position from buffer
+	  offset after a flush.
+
+2006-06-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/mpegstream/gstmpegpacketize.c: (gst_mpeg_packetize_new),
 	(gst_mpeg_packetize_flush_cache), (gst_mpeg_packetize_destroy),
 	(gst_mpeg_packetize_read):
