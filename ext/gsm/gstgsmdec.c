@@ -27,7 +27,7 @@
 
 #include "gstgsmdec.h"
 
-GST_DEBUG_CATEGORY (gsmdec_debug);
+GST_DEBUG_CATEGORY_STATIC (gsmdec_debug);
 #define GST_CAT_DEFAULT (gsmdec_debug)
 
 /* elementfactory information */

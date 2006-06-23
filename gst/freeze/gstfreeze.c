@@ -23,8 +23,8 @@
 
 #include "gstfreeze.h"
 
+GST_DEBUG_CATEGORY_STATIC (freeze_debug);
 #define GST_CAT_DEFAULT freeze_debug
-GST_DEBUG_CATEGORY (freeze_debug);
 
 enum
 {

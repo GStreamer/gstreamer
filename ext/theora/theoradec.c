@@ -48,7 +48,7 @@
 #include "theoradec.h"
 #include <gst/tag/tag.h>
 
-GST_DEBUG_CATEGORY (theoradecexp_debug);
+GST_DEBUG_CATEGORY_STATIC (theoradecexp_debug);
 #define GST_CAT_DEFAULT theoradecexp_debug
 
 static const GstElementDetails theora_dec_details =

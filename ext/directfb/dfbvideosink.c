@@ -98,7 +98,7 @@
 #include <string.h>
 
 /* Debugging category */
-GST_DEBUG_CATEGORY (dfbvideosink_debug);
+GST_DEBUG_CATEGORY_STATIC (dfbvideosink_debug);
 #define GST_CAT_DEFAULT dfbvideosink_debug
 
 /* ElementFactory information */

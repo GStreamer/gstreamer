@@ -33,7 +33,7 @@
 #include <GL/glx.h>
 #include <GL/gl.h>
 
-GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
+GST_DEBUG_CATEGORY_STATIC (gst_debug_glimage_sink);
 #define GST_CAT_DEFAULT gst_debug_glimage_sink
 
 #define GST_TYPE_GLIMAGE_SINK \
@@ -44,7 +44,7 @@ GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GLIMAGE_SINK,GstGLImageSinkClass))
 #define GST_IS_GLIMAGE_SINK(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GLIMAGE_SINK))
-#define GST_IS_GLIMAGE_SINK_CLASS(obj) \
+#define GST_IS_GLIMAGE_SINK_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GLIMAGE_SINK))
 
 typedef struct _GstGLImageSink GstGLImageSink;

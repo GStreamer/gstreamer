@@ -1,3 +1,18 @@
+2006-06-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/directfb/dfbvideosink.c:
+	* ext/gsm/gstgsmdec.c:
+	* ext/gsm/gstgsmenc.c:
+	* ext/libmms/gstmms.c:
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/theora/theoradec.c:
+	* gst/freeze/gstfreeze.c:
+	* gst/gdp/gstgdpdepay.c:
+	* gst/gdp/gstgdppay.c:
+	* sys/glsink/glimagesink.c:
+	  Use GST_DEBUG_CATEGORY_STATIC where possible (#342503)
+	  and fix one GObject boilerplate macro.
+
 2006-06-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/modplug/libmodplug/stdafx.h:

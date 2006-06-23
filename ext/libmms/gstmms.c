@@ -34,7 +34,7 @@ enum
 };
 
 
-GST_DEBUG_CATEGORY (mmssrc_debug);
+GST_DEBUG_CATEGORY_STATIC (mmssrc_debug);
 #define GST_CAT_DEFAULT mmssrc_debug
 
 static const GstElementDetails plugin_details =

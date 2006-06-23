@@ -28,7 +28,7 @@
 #define HTTP_DEFAULT_PORT        80
 #define HTTPS_DEFAULT_PORT       443
 
-GST_DEBUG_CATEGORY (neonhttpsrc_debug);
+GST_DEBUG_CATEGORY_STATIC (neonhttpsrc_debug);
 #define GST_CAT_DEFAULT neonhttpsrc_debug
 
 #define MAX_READ_SIZE                   (4 * 1024)
