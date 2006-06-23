@@ -1,3 +1,10 @@
+2006-06-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/a52dec/gsta52dec.c: (plugin_init):
+	  Call the channel positions get_type() method in plugin_init 
+	  to ensure that it isn't simultaneously called later from 
+	  multiple threads.
+
 2006-06-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/mpegstream/gstmpegpacketize.c:

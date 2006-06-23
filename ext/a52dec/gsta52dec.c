@@ -750,6 +750,10 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  /* ensure GstAudioChannelPosition type is registered */
+  if (!gst_audio_channel_position_get_type ())
+    return FALSE;
+
   if (!gst_element_register (plugin, "a52dec", GST_RANK_SECONDARY,
           GST_TYPE_A52DEC))
     return FALSE;
