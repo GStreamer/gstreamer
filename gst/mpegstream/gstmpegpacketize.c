@@ -25,21 +25,17 @@
 
 #include "gstmpegpacketize.h"
 
+GST_DEBUG_CATEGORY_STATIC (gstmpegpacketize_debug);
+#define GST_CAT_DEFAULT (gstmpegpacketize_debug)
+
 GstMPEGPacketize *
-gst_mpeg_packetize_new (GstPad * srcpad, GstMPEGPacketizeType type)
+gst_mpeg_packetize_new (GstMPEGPacketizeType type)
 {
   GstMPEGPacketize *new;
 
-  g_return_val_if_fail (srcpad != NULL, NULL);
-  g_return_val_if_fail (GST_IS_PAD (srcpad), NULL);
-  g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), NULL);
-
-  gst_object_ref (GST_OBJECT (srcpad));
-
-  new = g_malloc (sizeof (GstMPEGPacketize));
+  new = g_new0 (GstMPEGPacketize, 1);
   new->resync = TRUE;
   new->id = 0;
-  new->srcpad = srcpad;
   new->cache_head = 0;
   new->cache_tail = 0;
   new->cache_size = 0x4000;
@@ -48,15 +44,30 @@ gst_mpeg_packetize_new (GstPad * srcpad, GstMPEGPacketizeType type)
   new->MPEG2 = FALSE;
   new->type = type;
 
+  if (gstmpegpacketize_debug == NULL) {
+    GST_DEBUG_CATEGORY_INIT (gstmpegpacketize_debug, "mpegpacketize", 0,
+        "MPEG parser element packetizer");
+  }
+
   return new;
+}
+
+void
+gst_mpeg_packetize_flush_cache (GstMPEGPacketize * packetize)
+{
+  g_return_if_fail (packetize != NULL);
+
+  packetize->resync = TRUE;
+  packetize->cache_head = 0;
+  packetize->cache_tail = 0;
+
+  GST_DEBUG ("flushed packetize cache");
 }
 
 void
 gst_mpeg_packetize_destroy (GstMPEGPacketize * packetize)
 {
   g_return_if_fail (packetize != NULL);
-
-  gst_object_unref (GST_OBJECT (packetize->srcpad));
 
   g_free (packetize->cache);
   g_free (packetize);
@@ -332,27 +343,6 @@ gst_mpeg_packetize_read (GstMPEGPacketize * packetize, GstBuffer ** outbuf)
       g_assert_not_reached ();
     }
   }
-
-#if 0
-  /* TODO: flush cache when newsegment is received */
-  if (got_event) {
-    guint32 remaining;
-    GstEvent *event;
-    gint etype;
-
-    gst_bytestream_get_status (packetize->bs, &remaining, &event);
-    etype = event ? GST_EVENT_TYPE (event) : GST_EVENT_EOS;
-
-    switch (etype) {
-      case GST_EVENT_NEWSEGMENT:
-        GST_DEBUG ("packetize: discont\n");
-        gst_bytestream_flush_fast (packetize->bs, remaining);
-        break;
-    }
-
-    return GST_MINI_OBJECT (event);
-  }
-#endif
 
   g_assert_not_reached ();
 }

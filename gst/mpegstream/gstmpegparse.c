@@ -394,7 +394,7 @@ gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
       ret = TRUE;
       break;
     }
-    case GST_EVENT_FLUSH_STOP:
+    case GST_EVENT_FLUSH_STOP:{
       /* Forward the event. */
       if (CLASS (mpeg_parse)->send_event) {
         ret = CLASS (mpeg_parse)->send_event (mpeg_parse, event);
@@ -404,8 +404,9 @@ gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
 
       /* Reset the internal fields. */
       gst_mpeg_parse_reset (mpeg_parse);
-
+      gst_mpeg_packetize_flush_cache (mpeg_parse->packetize);
       break;
+    }
     default:
       if (CLASS (mpeg_parse)->send_event) {
         ret = CLASS (mpeg_parse)->send_event (mpeg_parse, event);
@@ -1232,8 +1233,7 @@ gst_mpeg_parse_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!mpeg_parse->packetize) {
         mpeg_parse->packetize =
-            gst_mpeg_packetize_new (mpeg_parse->srcpad,
-            GST_MPEG_PACKETIZE_SYSTEM);
+            gst_mpeg_packetize_new (GST_MPEG_PACKETIZE_SYSTEM);
       }
 
       /* Initialize parser state */

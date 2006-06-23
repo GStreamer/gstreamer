@@ -54,7 +54,6 @@ struct _GstMPEGPacketize {
   /* current parse state */
   guchar id;
 
-  GstPad *srcpad;
   GstMPEGPacketizeType type;
 
   guint8 *cache;            /* cache for incoming data */
@@ -67,8 +66,10 @@ struct _GstMPEGPacketize {
   gboolean resync;
 };
 
-GstMPEGPacketize* gst_mpeg_packetize_new     (GstPad *pad, GstMPEGPacketizeType type);
+GstMPEGPacketize* gst_mpeg_packetize_new     (GstMPEGPacketizeType type);
 void              gst_mpeg_packetize_destroy (GstMPEGPacketize *packetize);
+
+void              gst_mpeg_packetize_flush_cache (GstMPEGPacketize *packetize);
 
 guint64           gst_mpeg_packetize_tell    (GstMPEGPacketize *packetize);
 void              gst_mpeg_packetize_put     (GstMPEGPacketize *packetize, GstBuffer * buf);
