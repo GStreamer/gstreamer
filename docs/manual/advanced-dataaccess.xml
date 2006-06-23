@@ -66,7 +66,7 @@ main (gint   argc,
 {
   GMainLoop *loop;
   GstElement *pipeline, *src, *sink, *filter, *csp;
-  GstCaps *caps;
+  GstCaps *filtercaps;
   GstPad *pad;
 
   /* init GStreamer */
@@ -80,7 +80,7 @@ main (gint   argc,
     g_error ("Could not create 'videotestsrc' element");
 
   filter = gst_element_factory_make ("capsfilter", "filter");
-  g_assert (filer != NULL); /* should always exist */
+  g_assert (filter != NULL); /* should always exist */
 
   csp = gst_element_factory_make ("ffmpegcolorspace", "csp");
   if (csp == NULL)
