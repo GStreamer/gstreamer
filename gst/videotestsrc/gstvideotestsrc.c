@@ -49,7 +49,7 @@
 
 #define USE_PEER_BUFFERALLOC
 
-GST_DEBUG_CATEGORY (video_test_src_debug);
+GST_DEBUG_CATEGORY_STATIC (video_test_src_debug);
 #define GST_CAT_DEFAULT video_test_src_debug
 
 

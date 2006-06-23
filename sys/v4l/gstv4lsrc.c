@@ -37,7 +37,7 @@ GST_ELEMENT_DETAILS ("Video (video4linux/raw) Source",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
 
-GST_DEBUG_CATEGORY (v4lsrc_debug);
+GST_DEBUG_CATEGORY_STATIC (v4lsrc_debug);
 #define GST_CAT_DEFAULT v4lsrc_debug
 
 

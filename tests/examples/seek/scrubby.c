@@ -4,7 +4,7 @@
 #include <gst/gst.h>
 #include <string.h>
 
-GST_DEBUG_CATEGORY (scrubby_debug);
+GST_DEBUG_CATEGORY_STATIC (scrubby_debug);
 #define GST_CAT_DEFAULT (scrubby_debug)
 
 static GstElement *pipeline;

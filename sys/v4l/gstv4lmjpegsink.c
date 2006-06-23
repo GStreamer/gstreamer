@@ -27,7 +27,7 @@
 #include <string.h>
 #include "v4lmjpegsink_calls.h"
 
-GST_DEBUG_CATEGORY (v4lmjpegsink_debug);
+GST_DEBUG_CATEGORY_STATIC (v4lmjpegsink_debug);
 #define GST_CAT_DEFAULT v4lmjpegsink_debug
 
 /* elementfactory information */

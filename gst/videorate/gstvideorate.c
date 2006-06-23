@@ -70,7 +70,7 @@
 
 #include "gstvideorate.h"
 
-GST_DEBUG_CATEGORY (video_rate_debug);
+GST_DEBUG_CATEGORY_STATIC (video_rate_debug);
 #define GST_CAT_DEFAULT video_rate_debug
 
 /* elementfactory information */

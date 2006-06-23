@@ -50,7 +50,7 @@ G_STMT_START {                                 \
 } G_STMT_END
 
 
-GST_DEBUG_CATEGORY (tcpserversrc_debug);
+GST_DEBUG_CATEGORY_STATIC (tcpserversrc_debug);
 #define GST_CAT_DEFAULT tcpserversrc_debug
 
 #define TCP_DEFAULT_LISTEN_HOST         NULL    /* listen on all interfaces */

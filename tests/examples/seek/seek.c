@@ -4,7 +4,7 @@
 #include <gst/gst.h>
 #include <string.h>
 
-GST_DEBUG_CATEGORY (seek_debug);
+GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)
 
 static GList *seekable_pads = NULL;

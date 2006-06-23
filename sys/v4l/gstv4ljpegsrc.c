@@ -36,7 +36,7 @@ GST_ELEMENT_DETAILS ("Video (video4linux/raw) Jpeg Source",
     "Reads jpeg frames from a video4linux (eg ov519) device",
     "Jan Schmidt <thaytan@mad.scientist.com>");
 
-GST_DEBUG_CATEGORY (v4ljpegsrc_debug);
+GST_DEBUG_CATEGORY_STATIC (v4ljpegsrc_debug);
 #define GST_CAT_DEFAULT v4ljpegsrc_debug
 
 /* init functions */

@@ -155,7 +155,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_DEBUG_CATEGORY (multifdsink_debug);
+GST_DEBUG_CATEGORY_STATIC (multifdsink_debug);
 #define GST_CAT_DEFAULT (multifdsink_debug)
 
 /* MultiFdSink signals and args */

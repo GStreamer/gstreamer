@@ -20,7 +20,7 @@
 
 #include "gstbasertpdepayload.h"
 
-GST_DEBUG_CATEGORY (basertpdepayload_debug);
+GST_DEBUG_CATEGORY_STATIC (basertpdepayload_debug);
 #define GST_CAT_DEFAULT (basertpdepayload_debug)
 
 /* Filter signals and args */

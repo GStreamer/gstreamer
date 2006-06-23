@@ -50,7 +50,7 @@ GST_ELEMENT_DETAILS ("TCP server sink",
     "Send data as a server over the network via TCP",
     "Thomas Vander Stichele <thomas at apestaart dot org>");
 
-GST_DEBUG_CATEGORY (tcpserversink_debug);
+GST_DEBUG_CATEGORY_STATIC (tcpserversink_debug);
 #define GST_CAT_DEFAULT (tcpserversink_debug)
 
 enum

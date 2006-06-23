@@ -42,7 +42,7 @@ enum
   LAST_SIGNAL
 };
 
-GST_DEBUG_CATEGORY (tcpclientsink_debug);
+GST_DEBUG_CATEGORY_STATIC (tcpclientsink_debug);
 #define GST_CAT_DEFAULT (tcpclientsink_debug)
 
 enum

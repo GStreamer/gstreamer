@@ -27,7 +27,7 @@
 
 #include "gstbasertpaudiopayload.h"
 
-GST_DEBUG_CATEGORY (basertpaudiopayload_debug);
+GST_DEBUG_CATEGORY_STATIC (basertpaudiopayload_debug);
 #define GST_CAT_DEFAULT (basertpaudiopayload_debug)
 
 static void gst_basertpaudiopayload_finalize (GObject * object);

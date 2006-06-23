@@ -22,7 +22,7 @@
 
 #include "gstbasertppayload.h"
 
-GST_DEBUG_CATEGORY (basertppayload_debug);
+GST_DEBUG_CATEGORY_STATIC (basertppayload_debug);
 #define GST_CAT_DEFAULT (basertppayload_debug)
 
 /* BaseRTPPayload signals and args */

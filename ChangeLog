@@ -1,3 +1,23 @@
+2006-06-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	* gst/tcp/gstmultifdsink.c:
+	* gst/tcp/gsttcpclientsink.c:
+	* gst/tcp/gsttcpclientsrc.c:
+	* gst/tcp/gsttcpserversink.c:
+	* gst/tcp/gsttcpserversrc.c:
+	* gst/videorate/gstvideorate.c:
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* sys/v4l/gstv4ljpegsrc.c:
+	* sys/v4l/gstv4lmjpegsink.c:
+	* sys/v4l/gstv4lsrc.c:
+	* tests/examples/seek/scrubby.c:
+	* tests/examples/seek/seek.c:
+	  Use GST_DEBUG_CATEGORY_STATIC where possible (#342503).
+
 2006-06-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/tags.c: (register_tag_image_type_enum):

@@ -39,7 +39,7 @@
 #include "gstffmpegcolorspace.h"
 #include "gstffmpegcodecmap.h"
 
-GST_DEBUG_CATEGORY (ffmpegcolorspace_debug);
+GST_DEBUG_CATEGORY_STATIC (ffmpegcolorspace_debug);
 #define GST_CAT_DEFAULT ffmpegcolorspace_debug
 
 /* elementfactory information */
