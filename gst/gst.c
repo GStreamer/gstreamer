@@ -407,7 +407,7 @@ add_path_func (gpointer data, gpointer user_data)
 static void
 prepare_for_load_plugin_func (gpointer data, gpointer user_data)
 {
-  preload_plugins = g_slist_prepend (preload_plugins, data);
+  preload_plugins = g_slist_prepend (preload_plugins, g_strdup (data));
 }
 
 static void
@@ -455,7 +455,6 @@ split_and_iterate (const gchar * stringlist, gchar * separator, GFunc iterator,
       iterator (strings[j], user_data);
       if (++j == MAX_PATH_SPLIT) {
         lastlist = g_strdup (strings[j]);
-        g_strfreev (strings);
         j = 0;
         break;
       }

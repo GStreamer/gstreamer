@@ -1,3 +1,11 @@
+2006-06-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Peter Kjellerstedt <pkj at axis com>
+
+	* gst/gst.c: (prepare_for_load_plugin_func), (split_and_iterate):
+	  Fix missing g_strdup() and double free when using the
+	  --gst-plugin-load command line option (#346097).
+
 2006-06-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstinfo.c:
