@@ -1,3 +1,13 @@
+2006-06-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_setup_pad),
+	(gst_asf_demux_add_audio_stream), (gst_asf_demux_add_video_stream),
+	(gst_asf_demux_push_buffer):
+	* gst/asfdemux/gstasfdemux.h:
+	  Handle unknown codec IDs/fourccs properly (#345879); send tag
+	  events after newsegment event; fix use of GST_FOURCC_FORMAT
+	  macro.
+
 2006-06-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/a52dec/gsta52dec.c: (plugin_init):

@@ -60,6 +60,8 @@ typedef struct
   GstBuffer  *cache;
 
   GstCaps    *caps;
+
+  GstTagList *pending_tags;
 } asf_stream_context;
 
 typedef enum {

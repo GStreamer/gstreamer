@@ -809,7 +809,7 @@ gst_asf_demux_get_stream (GstASFDemux * demux, guint16 id)
 
 static void
 gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
-    GstCaps * caps, guint16 id, gboolean is_video)
+    GstCaps * caps, guint16 id, gboolean is_video, GstTagList * tags)
 {
   asf_stream_context *stream;
 
@@ -835,6 +835,7 @@ gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
   stream->fps_known = !is_video;        /* bit hacky for audio */
   stream->is_video = is_video;
   stream->need_newsegment = TRUE;
+  stream->pending_tags = tags;
 
   gst_pad_set_element_private (src_pad, stream);
 
@@ -844,20 +845,13 @@ gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
   ++demux->num_streams;
 
   gst_element_add_pad (GST_ELEMENT (demux), src_pad);
-
-  /* FIXME */
-#if 0
-  if (demux->taglist) {
-    /* ... push tag event downstream ... */
-  }
-#endif
 }
 
 static void
 gst_asf_demux_add_audio_stream (GstASFDemux * demux,
     asf_stream_audio * audio, guint16 id, guint8 ** p_data, guint64 * p_size)
 {
-  GstTagList *list = gst_tag_list_new ();
+  GstTagList *tags = NULL;
   GstBuffer *extradata = NULL;
   GstPad *src_pad;
   GstCaps *caps;
@@ -887,10 +881,18 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
   caps = gst_riff_create_audio_caps (audio->codec_tag, NULL,
       (gst_riff_strf_auds *) audio, extradata, NULL, &codec_name);
 
+  if (caps == NULL) {
+    caps = gst_caps_new_simple ("audio/x-asf-unknown", "codec_id",
+        G_TYPE_INT, (gint) audio->codec_tag, NULL);
+  }
+
   /* Informing about that audio format we just added */
-  gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
-      codec_name, NULL);
-  g_free (codec_name);
+  if (codec_name) {
+    tags = gst_tag_list_new ();
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
+        codec_name, NULL);
+    g_free (codec_name);
+  }
 
   if (extradata)
     gst_buffer_unref (extradata);
@@ -900,17 +902,15 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
 
   ++demux->num_audio_streams;
 
-  gst_asf_demux_setup_pad (demux, src_pad, caps, id, FALSE);
-
-  gst_element_found_tags_for_pad (GST_ELEMENT (demux), src_pad, list);
+  gst_asf_demux_setup_pad (demux, src_pad, caps, id, FALSE, tags);
 }
 
-static void
+static gboolean
 gst_asf_demux_add_video_stream (GstASFDemux * demux,
     asf_stream_video_format * video, guint16 id,
     guint8 ** p_data, guint64 * p_size)
 {
-  GstTagList *list = gst_tag_list_new ();
+  GstTagList *tags = NULL;
   GstBuffer *extradata = NULL;
   GstPad *src_pad;
   GstCaps *caps;
@@ -929,27 +929,35 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
     gst_asf_demux_get_buffer (&extradata, size_left, p_data, p_size);
   }
 
+  GST_DEBUG ("video codec %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (video->tag));
+
   /* yes, asf_stream_video_format and gst_riff_strf_vids are the same */
   caps = gst_riff_create_video_caps (video->tag, NULL,
       (gst_riff_strf_vids *) video, extradata, NULL, &codec_name);
 
-  gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
-      codec_name, NULL);
-  g_free (codec_name);
+  if (caps == NULL) {
+    caps = gst_caps_new_simple ("video/x-asf-unknown", "fourcc",
+        GST_TYPE_FOURCC, video->tag, NULL);
+  }
+
+  if (codec_name) {
+    tags = gst_tag_list_new ();
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
+        codec_name, NULL);
+    g_free (codec_name);
+  }
 
   if (extradata)
     gst_buffer_unref (extradata);
 
-  GST_INFO ("Adding video stream %u codec " GST_FOURCC_FORMAT " (0x%08x)",
+  GST_INFO ("Adding video stream %u codec %" GST_FOURCC_FORMAT " (0x%08x)",
       demux->num_video_streams, GST_FOURCC_ARGS (video->tag), video->tag);
 
   gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, 25, 1, NULL);
 
   ++demux->num_video_streams;
 
-  gst_asf_demux_setup_pad (demux, src_pad, caps, id, TRUE);
-
-  gst_element_found_tags_for_pad (GST_ELEMENT (demux), src_pad, list);
+  gst_asf_demux_setup_pad (demux, src_pad, caps, id, TRUE, tags);
 }
 
 static GstFlowReturn
@@ -1765,6 +1773,14 @@ gst_asf_demux_push_buffer (GstASFDemux * demux, asf_stream_context * stream,
             demux->segment.start, demux->segment.stop, demux->segment.start));
 
     stream->need_newsegment = FALSE;
+  }
+
+  /* need to send tags? */
+  if (stream->pending_tags) {
+    GST_LOG_OBJECT (demux, "tags %" GST_PTR_FORMAT, stream->pending_tags);
+    gst_element_found_tags_for_pad (GST_ELEMENT (demux), stream->pad,
+        stream->pending_tags);
+    stream->pending_tags = NULL;
   }
 
   /* don't set the same time stamp on multiple consecutive outgoing
