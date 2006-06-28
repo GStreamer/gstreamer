@@ -1,3 +1,14 @@
+2006-06-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Brian Cameron  <brian dot cameron at sun dot com>
+
+	* sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_prepare):
+	  Do not modify the ports value. If the user has turned off the
+	  built-in speakers, then we should not reset it in the prepare
+	  function, since this causes the built-in speakers to turn
+	  back on anytime the user changes a track in totem, rhythmbox,
+	  etc. (#346066).
+
 2006-06-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/goom/gstgoom.c: (gst_goom_src_negotiate):

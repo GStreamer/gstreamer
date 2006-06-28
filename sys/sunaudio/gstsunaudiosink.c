@@ -330,9 +330,6 @@ gst_sunaudiosink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
     return FALSE;
 
   ports = ainfo.play.port;
-  if (!(ports & AUDIO_SPEAKER) && (ainfo.play.avail_ports & AUDIO_SPEAKER)) {
-    ports = ports | AUDIO_SPEAKER;
-  }
 
   AUDIO_INITINFO (&ainfo);
 
