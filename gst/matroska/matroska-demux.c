@@ -945,15 +945,12 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
   GST_INFO_OBJECT (demux, "Adding pad '%s' with caps %" GST_PTR_FORMAT,
       padname, caps);
 
+  context->pending_tags = list;
+
   gst_pad_use_fixed_caps (context->pad);
   gst_pad_set_caps (context->pad, context->caps);
   gst_pad_set_active (context->pad, TRUE);
   gst_element_add_pad (GST_ELEMENT (demux), context->pad);
-
-  /* tags */
-  if (list) {
-    gst_element_found_tags_for_pad (GST_ELEMENT (demux), context->pad, list);
-  }
 
   g_free (padname);
 
@@ -1088,6 +1085,12 @@ gst_matroska_demux_send_event (GstMatroskaDemux * demux, GstEvent * event)
     stream = demux->src[i];
     gst_event_ref (event);
     gst_pad_push_event (stream->pad, event);
+
+    if (stream->pending_tags) {
+      gst_element_found_tags_for_pad (GST_ELEMENT (demux), stream->pad,
+          stream->pending_tags);
+      stream->pending_tags = NULL;
+    }
   }
   gst_event_unref (event);
   return ret;
@@ -2870,7 +2873,6 @@ gst_matroska_demux_loop_stream_parse_id (GstMatroskaDemux * demux,
             gst_event_new_new_segment (FALSE, 1.0,
                 GST_FORMAT_TIME, 0,
                 (demux->duration > 0) ? demux->duration : -1, 0));
-
         GST_DEBUG_OBJECT (demux, "signaling no more pads");
         gst_element_no_more_pads (GST_ELEMENT (demux));
       } else {

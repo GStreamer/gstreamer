@@ -257,6 +257,9 @@ typedef struct _GstMatroskaTrackContext {
   /* Special counter for muxer to skip the first N vorbis/theora headers -
    * they are put into codec private data, not muxed into the stream */
   guint         xiph_headers_to_skip;
+
+  /* Tags to send after newsegment event */
+  GstTagList   *pending_tags;
 } GstMatroskaTrackContext;
 
 typedef struct _GstMatroskaTrackVideoContext {
