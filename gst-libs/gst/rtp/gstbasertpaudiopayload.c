@@ -285,6 +285,8 @@ gst_basertpaudiopayload_handle_frame_based_buffer (GstBaseRTPPayload *
     data += payload_len;
   }
 
+  gst_buffer_unref (buffer);
+
   /* none should be available by now */
   if (available != 0) {
     GST_ERROR_OBJECT (basertpaudiopayload, "The buffer size is not a multiple"
@@ -377,6 +379,8 @@ gst_basertpaudiopayload_handle_sample_based_buffer (GstBaseRTPPayload *
     available -= payload_len;
     data += payload_len;
   }
+
+  gst_buffer_unref (buffer);
 
   return ret;
 }
