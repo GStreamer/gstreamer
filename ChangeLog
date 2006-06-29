@@ -1,5 +1,10 @@
 2006-06-29  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* autogen.sh:
+	  Check for automake-1.9 as well.
+
+2006-06-29  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_is_nav_pack):
 	  Make check stronger.
 
