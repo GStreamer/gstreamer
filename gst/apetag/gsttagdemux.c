@@ -434,7 +434,7 @@ gst_tag_demux_trim_buffer (GstTagDemux * tagdemux, GstBuffer ** buf_ref)
 no_out_buffer:
   gst_buffer_unref (buf);
   *buf_ref = NULL;
-  return TRUE;
+  return FALSE;
 }
 
 static void
@@ -1158,26 +1158,32 @@ gst_tag_demux_read_range (GstTagDemux * demux,
   if (!gst_tag_demux_get_upstream_size (demux))
     return GST_FLOW_ERROR;
 
-  if (in_offset + length >= demux->priv->upstream_size - demux->priv->strip_end)
+  if (in_offset + length >= demux->priv->upstream_size - demux->priv->strip_end) {
+    if (in_offset + demux->priv->strip_end >= demux->priv->upstream_size)
+      return GST_FLOW_UNEXPECTED;
     in_length = demux->priv->upstream_size - demux->priv->strip_end - in_offset;
-  else
+  } else {
     in_length = length;
+  }
 
   ret = gst_pad_pull_range (demux->priv->sinkpad, in_offset, in_length, buffer);
 
   if (ret == GST_FLOW_OK && *buffer) {
     if (!gst_tag_demux_trim_buffer (demux, buffer))
-      goto error;
+      goto read_beyond_end;
   }
 
   return ret;
 
-error:
-  if (*buffer != NULL) {
-    gst_buffer_unref (buffer);
-    *buffer = NULL;
+read_beyond_end:
+  {
+    GST_DEBUG_OBJECT (demux, "attempted read beyond end of file");
+    if (*buffer != NULL) {
+      gst_buffer_unref (buffer);
+      *buffer = NULL;
+    }
+    return GST_FLOW_UNEXPECTED;
   }
-  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn

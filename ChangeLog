@@ -1,3 +1,15 @@
+2006-06-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_trim_buffer),
+	(gst_id3demux_read_range):
+	  Make sure we don't return GST_FLOW_OK with a NULL buffer in
+	  certain cases where a read beyond the end of the file is
+	  requested. Fixes #345930.
+
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_trim_buffer),
+	(gst_tag_demux_read_range):
+	  Fix same issue here as well.
+
 2006-06-29  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/ximage/gstximagesrc.c: (gst_ximage_src_ximage_get):

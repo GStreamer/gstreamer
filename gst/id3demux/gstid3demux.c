@@ -384,7 +384,7 @@ gst_id3demux_trim_buffer (GstID3Demux * id3demux, GstBuffer ** buf_ref)
 no_out_buffer:
   gst_buffer_unref (buf);
   *buf_ref = NULL;
-  return TRUE;
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -933,25 +933,31 @@ gst_id3demux_read_range (GstID3Demux * id3demux,
   if (!id3demux_get_upstream_size (id3demux))
     return GST_FLOW_ERROR;
 
-  if (in_offset + length >= id3demux->upstream_size - id3demux->strip_end)
+  if (in_offset + length >= id3demux->upstream_size - id3demux->strip_end) {
+    if (in_offset + id3demux->strip_end >= id3demux->upstream_size)
+      return GST_FLOW_UNEXPECTED;
     in_length = id3demux->upstream_size - id3demux->strip_end - in_offset;
-  else
+  } else {
     in_length = length;
+  }
 
   ret = gst_pad_pull_range (id3demux->sinkpad, in_offset, in_length, buffer);
-
   if (ret == GST_FLOW_OK && *buffer) {
     if (!gst_id3demux_trim_buffer (id3demux, buffer))
-      goto error;
+      goto read_beyond_end;
   }
 
   return ret;
-error:
-  if (*buffer != NULL) {
-    gst_buffer_unref (buffer);
-    *buffer = NULL;
+
+read_beyond_end:
+  {
+    GST_DEBUG_OBJECT (id3demux, "attempted read beyond end of file");
+    if (*buffer != NULL) {
+      gst_buffer_unref (buffer);
+      *buffer = NULL;
+    }
+    return GST_FLOW_UNEXPECTED;
   }
-  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn
