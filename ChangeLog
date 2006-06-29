@@ -1,3 +1,8 @@
+2006-06-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/check/elements/level.c: (GST_START_TEST):
+	  fix a leak, clean up at the end
+
 2006-06-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream),

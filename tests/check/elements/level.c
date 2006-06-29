@@ -92,6 +92,7 @@ GST_START_TEST (test_int16)
   GstElement *level;
   GstBuffer *inbuffer, *outbuffer;
   GstBus *bus;
+  GstCaps *caps;
   GstMessage *message;
   const GstStructure *structure;
   int i, j;
@@ -114,7 +115,9 @@ GST_START_TEST (test_int16)
     *data = 16536;
     ++data;
   }
-  gst_buffer_set_caps (inbuffer, gst_caps_from_string (LEVEL_CAPS_STRING));
+  caps = gst_caps_from_string (LEVEL_CAPS_STRING);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
   /* create a bus to get the level message on */
@@ -175,7 +178,7 @@ GST_START_TEST (test_int16)
   fail_unless (gst_element_set_state (level,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
   ASSERT_OBJECT_REFCOUNT (level, "level", 1);
-  gst_object_unref (level);
+  cleanup_level (level);
 }
 
 GST_END_TEST;
