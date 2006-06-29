@@ -1,3 +1,9 @@
+2006-06-29  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/ximage/gstximagesrc.c: (gst_ximage_src_ximage_get):
+	
+	Fix hypothetical crash.
+
 2006-06-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Brian Cameron  <brian dot cameron at sun dot com>

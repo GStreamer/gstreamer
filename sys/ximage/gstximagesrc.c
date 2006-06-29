@@ -479,7 +479,11 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
       int cx, cy, i, j, count;
 
       cx = ximagesrc->cursor_image->x - ximagesrc->cursor_image->xhot;
+      if (cx < 0)
+        cx = 0;
       cy = ximagesrc->cursor_image->y - ximagesrc->cursor_image->yhot;
+      if (cy < 0)
+        cy = 0;
       count = ximagesrc->cursor_image->width * ximagesrc->cursor_image->height;
       for (i = 0; i < count; i++)
         ximagesrc->cursor_image->pixels[i] =
