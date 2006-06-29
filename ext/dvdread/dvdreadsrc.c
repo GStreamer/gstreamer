@@ -510,13 +510,32 @@ gst_dvd_read_src_get_next_cell_for (GstDvdReadSrc * src, gint cell)
   return cell + 1;              /* really +1? (tpm) */
 }
 
-/* Returns true if the pack is a NAV pack.  This check is clearly insufficient,
- * and sometimes we incorrectly think that valid other packs are NAV packs.  I
- * need to make this stronger. */
+/* Returns true if the pack is a NAV pack */
 static gboolean
-gst_dvd_read_src_is_nav_pack (const guint8 * buffer)
+gst_dvd_read_src_is_nav_pack (const guint8 * data)
 {
-  return (buffer[41] == 0xbf && buffer[1027] == 0xbf);
+  if (GST_READ_UINT32_BE (data + 0x26) != 0x000001BF)
+    return FALSE;
+
+  /* Check that this is substream 0 (PCI) */
+  if (data[0x2c] != 0)
+    return FALSE;
+
+  if (GST_READ_UINT32_BE (data + 0x400) != 0x000001BF)
+    return FALSE;
+
+  /* Check that this is substream 1 (DSI) */
+  if (data[0x406] != 1)
+    return FALSE;
+
+  /* Check sizes of PCI and DSI packets */
+  if (GST_READ_UINT16_BE (data + 0x2a) != 0x03d4)
+    return FALSE;
+
+  if (GST_READ_UINT16_BE (data + 0x404) != 0x03fa)
+    return FALSE;
+
+  return TRUE;
 }
 
 typedef enum
