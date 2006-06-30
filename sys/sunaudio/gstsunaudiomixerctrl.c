@@ -101,7 +101,7 @@ gst_sunaudiomixer_ctrl_build_list (GstSunAudioMixerCtrl * mixer)
     /* Monitor */
     mixer->tracklist = g_list_append (mixer->tracklist, track);
     track = gst_sunaudiomixer_track_new (GST_SUNAUDIO_TRACK_MONITOR,
-        2, GST_MIXER_TRACK_OUTPUT);
+        2, GST_MIXER_TRACK_INPUT);
     mixer->tracklist = g_list_append (mixer->tracklist, track);
   }
 }

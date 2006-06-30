@@ -1,3 +1,13 @@
+2006-06-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Brian Cameron  <brian dot cameron at sun dot com>
+
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	(gst_sunaudiomixer_ctrl_build_list):
+	  Move "Monitor" slider to input tab so it works more like
+	  sdtaudiocontrol, which is what people on Solaris are used
+	  to using for their mixer program (#346259).
+
 2006-06-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tests/check/elements/level.c: (GST_START_TEST):
