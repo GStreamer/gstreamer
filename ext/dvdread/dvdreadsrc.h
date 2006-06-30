@@ -73,15 +73,14 @@ struct _GstDvdReadSrc {
   vts_ptt_srpt_t  *vts_ptt_srpt;
   dvd_file_t      *dvd_title;
   gint             num_chapters;
+  gint             num_angles;
 
   /* which program chain to watch (based on title and chapter number) */
   pgc_t           *cur_pgc;
   gint             pgc_id;
   gint             pgn;
 
-  gboolean         seek_pend;
-  gboolean         flush_pend;
-  GstFormat        seek_pend_fmt;
+  gboolean         need_newsegment;
   GstEvent        *title_lang_event_pending;
   GstEvent        *pending_clut_event;
 };

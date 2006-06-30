@@ -1,3 +1,13 @@
+2006-06-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_init),
+	(gst_dvd_read_src_is_seekable), (gst_dvd_read_src_class_init),
+	(gst_dvd_read_src_stop), (gst_dvd_read_src_goto_title),
+	(gst_dvd_read_src_create), (gst_dvd_read_src_handle_seek_event),
+	(gst_dvd_read_src_do_seek), (gst_dvd_read_src_src_event):
+	* ext/dvdread/dvdreadsrc.h:
+	  Rewrite seeking code and make seeking in DVDs work (#337834).
+
 2006-06-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* autogen.sh:

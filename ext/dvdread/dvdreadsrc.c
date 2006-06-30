@@ -87,6 +87,7 @@ static void gst_dvd_read_src_get_property (GObject * object, guint prop_id,
 static GstEvent *gst_dvd_read_src_make_clut_change_event (GstDvdReadSrc * src,
     const guint * clut);
 static gboolean gst_dvd_read_src_get_size (GstDvdReadSrc * src, gint64 * size);
+static gboolean gst_dvd_read_src_do_seek (GstBaseSrc * src, GstSegment * s);
 
 GST_BOILERPLATE_FULL (GstDvdReadSrc, gst_dvd_read_src, GstPushSrc,
     GST_TYPE_PUSH_SRC, gst_dvd_read_src_do_init);
@@ -130,15 +131,18 @@ gst_dvd_read_src_init (GstDvdReadSrc * src, GstDvdReadSrcClass * klass)
   src->uri_chapter = 1;
   src->uri_angle = 1;
 
-  src->seek_pend = FALSE;
-  src->flush_pend = FALSE;
-  src->seek_pend_fmt = GST_FORMAT_UNDEFINED;
   src->title_lang_event_pending = NULL;
   src->pending_clut_event = NULL;
 
   gst_pad_use_fixed_caps (GST_BASE_SRC_PAD (src));
   gst_pad_set_caps (GST_BASE_SRC_PAD (src),
       gst_static_pad_template_get_caps (&srctemplate));
+}
+
+static gboolean
+gst_dvd_read_src_is_seekable (GstBaseSrc * src)
+{
+  return TRUE;
 }
 
 static void
@@ -169,6 +173,9 @@ gst_dvd_read_src_class_init (GstDvdReadSrcClass * klass)
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_dvd_read_src_stop);
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_dvd_read_src_src_query);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_dvd_read_src_src_event);
+  gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_dvd_read_src_do_seek);
+  gstbasesrc_class->is_seekable =
+      GST_DEBUG_FUNCPTR (gst_dvd_read_src_is_seekable);
 
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_dvd_read_src_create);
 }
@@ -264,9 +271,7 @@ gst_dvd_read_src_stop (GstBaseSrc * basesrc)
   src->change_cell = FALSE;
   src->chapter = 0;
   src->title = 0;
-  src->flush_pend = FALSE;
-  src->seek_pend = FALSE;
-  src->seek_pend_fmt = GST_FORMAT_UNDEFINED;
+  src->need_newsegment = TRUE;
   if (src->title_lang_event_pending) {
     gst_event_unref (src->title_lang_event_pending);
     src->title_lang_event_pending = NULL;
@@ -379,7 +384,6 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
   gchar lang_code[3] = { '\0', '\0', '\0' }, *t;
   gint title_set_nr;
   gint num_titles;
-  gint num_angles;
   gint i;
 
   /* make sure our title number is valid */
@@ -392,12 +396,12 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
   GST_INFO_OBJECT (src, "Title %d has %d chapters", title, src->num_chapters);
 
   /* make sure the angle number is valid for this title */
-  num_angles = src->tt_srpt->title[title].nr_of_angles;
-  GST_LOG_OBJECT (src, "Title %d has %d angles", title, num_angles);
-  if (angle < 0 || angle >= num_angles) {
+  src->num_angles = src->tt_srpt->title[title].nr_of_angles;
+  GST_LOG_OBJECT (src, "Title %d has %d angles", title, src->num_angles);
+  if (angle < 0 || angle >= src->num_angles) {
     GST_WARNING_OBJECT (src, "Invalid angle %d (only %d available)",
-        angle, num_angles);
-    angle = CLAMP (angle, 0, num_angles - 1);
+        angle, src->num_angles);
+    angle = CLAMP (angle, 0, src->num_angles - 1);
   }
 
   /* load the VTS information for the title set our title is in */
@@ -695,34 +699,11 @@ gst_dvd_read_src_create (GstPushSrc * pushsrc, GstBuffer ** p_buf)
 
   srcpad = GST_BASE_SRC (src)->srcpad;
 
-  /* handle events, if any */
-  if (src->seek_pend) {
-    if (src->flush_pend) {
-      gst_pad_push_event (srcpad, gst_event_new_flush_start ());
-      gst_pad_push_event (srcpad, gst_event_new_flush_stop ());
-      src->flush_pend = FALSE;
-    }
-
-    if (src->seek_pend_fmt != GST_FORMAT_UNDEFINED) {
-      if (src->seek_pend_fmt == title_format) {
-        gst_dvd_read_src_goto_title (src, src->title, src->angle);
-      }
-      gst_dvd_read_src_goto_chapter (src, src->chapter);
-
-      src->seek_pend_fmt = GST_FORMAT_UNDEFINED;
-    } else {
-      if (!gst_dvd_read_src_goto_sector (src, src->angle)) {
-        GST_DEBUG_OBJECT (src, "seek to sector failed, going EOS");
-        gst_pad_push_event (srcpad, gst_event_new_eos ());
-        return GST_FLOW_UNEXPECTED;
-      }
-    }
-
+  if (src->need_newsegment) {
     gst_pad_push_event (srcpad,
         gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
             src->cur_pack * DVD_VIDEO_LB_LEN, -1, 0));
-
-    src->seek_pend = FALSE;
+    src->need_newsegment = FALSE;
   }
 
   if (src->new_seek) {
@@ -876,128 +857,169 @@ gst_dvd_read_src_get_size (GstDvdReadSrc * src, gint64 * size)
 /*** Querying and seeking ***/
 
 static gboolean
-gst_dvd_read_src_do_seek (GstDvdReadSrc * src, GstEvent * event)
+gst_dvd_read_src_handle_seek_event (GstDvdReadSrc * src, GstEvent * event)
 {
   GstSeekFlags flags;
   GstSeekType cur_type, end_type;
-  gint64 new_off, total, cur;
+  gint64 new_off, total;
   GstFormat format;
   GstPad *srcpad;
   gboolean query_ok;
   gdouble rate;
 
-  srcpad = GST_BASE_SRC (src)->srcpad;
-
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &new_off,
       &end_type, NULL);
 
+  if (rate <= 0.0) {
+    GST_DEBUG_OBJECT (src, "cannot do backwards playback yet");
+    return FALSE;
+  }
+
+  if ((flags & GST_SEEK_FLAG_SEGMENT) != 0) {
+    GST_DEBUG_OBJECT (src, "segment seek not supported");
+    return FALSE;
+  }
+
+  if ((flags & GST_SEEK_FLAG_FLUSH) == 0) {
+    GST_DEBUG_OBJECT (src, "can only do flushing seeks at the moment");
+    return FALSE;
+  }
+
   if (end_type != GST_SEEK_TYPE_NONE) {
-    GST_WARNING_OBJECT (src, "End seek type not supported, will be ignored");
+    GST_DEBUG_OBJECT (src, "end seek type not supported");
+    return FALSE;
   }
 
-  switch (format) {
-    case GST_FORMAT_BYTES:
-      break;
-    default:{
-      if (format != chapter_format &&
-          format != sector_format &&
-          format != angle_format && format != title_format) {
-        GST_DEBUG_OBJECT (src, "Unsupported seek format %d (%s)", format,
-            gst_format_get_name (format));
-        return FALSE;
-      }
-      break;
-    }
+  if (cur_type != GST_SEEK_TYPE_SET) {
+    GST_DEBUG_OBJECT (src, "only SEEK_TYPE_SET is supported");
+    return FALSE;
   }
 
-  /* get current offset and length */
-  if (format == GST_FORMAT_BYTES) {
+  if (format == angle_format) {
     GST_OBJECT_LOCK (src);
-    query_ok = gst_dvd_read_src_get_size (src, &total);
-    cur = (gint64) src->cur_pack * DVD_VIDEO_LB_LEN;
-    GST_OBJECT_UNLOCK (src);
-  } else {
-    query_ok = gst_pad_query_duration (srcpad, &format, &total)
-        && gst_pad_query_position (srcpad, &format, &cur);
-  }
-
-  if (!query_ok) {
-    GST_DEBUG_OBJECT (src, "Failed to query duration/position");
-    return FALSE;
-  }
-
-  GST_DEBUG_OBJECT (src, "Current    %s: %12" G_GINT64_FORMAT,
-      gst_format_get_name (format), cur);
-  GST_DEBUG_OBJECT (src, "Total      %s: %12" G_GINT64_FORMAT,
-      gst_format_get_name (format), total);
-
-  /* get absolute */
-  switch (cur_type) {
-    case GST_SEEK_TYPE_SET:
-      /* no-op */
-      break;
-    case GST_SEEK_TYPE_CUR:
-      new_off += cur;
-      break;
-    case GST_SEEK_TYPE_END:
-      new_off = total - new_off;
-      break;
-    default:
-      GST_DEBUG_OBJECT (src, "Unsupported seek method");
+    if (new_off < 0 || new_off >= src->num_angles) {
+      GST_OBJECT_UNLOCK (src);
+      GST_DEBUG_OBJECT (src, "invalid angle %d, only %d available",
+          src->num_angles);
       return FALSE;
-  }
-
-  if (new_off < 0 || new_off >= total) {
-    GST_DEBUG_OBJECT (src, "Invalid seek position %" G_GINT64_FORMAT, new_off);
-    return FALSE;
-  }
-
-  if (cur == new_off) {
-    GST_DEBUG_OBJECT (src, "We're already at that position!");
+    }
+    src->angle = (gint) new_off;
+    GST_OBJECT_UNLOCK (src);
+    GST_DEBUG_OBJECT (src, "switched to angle %d", (gint) new_off);
     return TRUE;
   }
 
-  GST_LOG_OBJECT (src, "Seeking to %s: %12" G_GINT64_FORMAT,
-      gst_format_get_name (format), new_off);
-
-  GST_OBJECT_LOCK (src);
-
-  if (format == angle_format) {
-    src->angle = new_off;
-    goto done;
+  if (format != chapter_format && format != title_format &&
+      format != GST_FORMAT_BYTES) {
+    GST_DEBUG_OBJECT (src, "unsupported seek format %d (%s)", format,
+        gst_format_get_name (format));
+    return FALSE;
   }
 
-  if (format == sector_format) {
-    src->cur_pack = new_off;
-  } else if (format == GST_FORMAT_BYTES) {
-    src->cur_pack = new_off / DVD_VIDEO_LB_LEN;
-    if ((src->cur_pack * DVD_VIDEO_LB_LEN) != new_off) {
-      GST_LOG_OBJECT (src, "rounded down offset %" G_GINT64_FORMAT " => %"
-          G_GINT64_FORMAT, new_off, (gint64) src->cur_pack * DVD_VIDEO_LB_LEN);
-    }
-  } else if (format == chapter_format) {
-    src->cur_pack = 0;
-    src->chapter = new_off;
-    src->seek_pend_fmt = format;
-  } else if (format == title_format) {
-    src->cur_pack = 0;
-    src->title = new_off;
-    src->chapter = 0;
-    src->seek_pend_fmt = format;
-  } else {
+  if (format == GST_FORMAT_BYTES) {
+    GST_DEBUG_OBJECT (src, "Requested seek to byte %" G_GUINT64_FORMAT,
+        new_off);
+  } else if (format == GST_FORMAT_TIME) {
+    GST_DEBUG_OBJECT (src, "Requested seek to time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (new_off));
+  }
+
+  srcpad = GST_BASE_SRC_PAD (src);
+
+  /* check whether the seek looks reasonable (ie within possible range) */
+  if (format == GST_FORMAT_BYTES) {
+    GST_OBJECT_LOCK (src);
+    query_ok = gst_dvd_read_src_get_size (src, &total);
     GST_OBJECT_UNLOCK (src);
+  } else {
+    query_ok = gst_pad_query_duration (srcpad, &format, &total);
+  }
+
+  if (!query_ok) {
+    GST_DEBUG_OBJECT (src, "Failed to query duration in format %s",
+        gst_format_get_name (format));
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (src, "Total      %s: %12" G_GINT64_FORMAT,
+      gst_format_get_name (format), total);
+  GST_DEBUG_OBJECT (src, "Seek to    %s: %12" G_GINT64_FORMAT,
+      gst_format_get_name (format), new_off);
+
+  if (new_off >= total) {
+    GST_DEBUG_OBJECT (src, "Seek position out of range");
+    return FALSE;
+  }
+
+  /* set segment to seek format; this allows us to use the do_seek
+   * virtual function and let the base source handle all the tricky
+   * stuff for us. We don't use the segment internally anyway */
+  /* FIXME: can't take the stream lock here - what to do? */
+  GST_OBJECT_LOCK (src);
+  GST_BASE_SRC (src)->segment.format = format;
+  GST_BASE_SRC (src)->segment.start = 0;
+  GST_BASE_SRC (src)->segment.stop = total;
+  GST_BASE_SRC (src)->segment.duration = total;
+  GST_OBJECT_UNLOCK (src);
+
+  return GST_BASE_SRC_CLASS (parent_class)->event (GST_BASE_SRC (src), event);
+}
+
+static gboolean
+gst_dvd_read_src_do_seek (GstBaseSrc * basesrc, GstSegment * s)
+{
+  GstDvdReadSrc *src;
+
+  src = GST_DVD_READ_SRC (basesrc);
+
+  GST_DEBUG_OBJECT (src, "Seeking to %s: %12" G_GINT64_FORMAT,
+      gst_format_get_name (s->format), s->last_stop);
+
+  if (s->format == sector_format || s->format == GST_FORMAT_BYTES) {
+    guint old;
+
+    old = src->cur_pack;
+
+    if (s->format == sector_format) {
+      src->cur_pack = s->last_stop;
+    } else {
+      /* byte format */
+      src->cur_pack = s->last_stop / DVD_VIDEO_LB_LEN;
+      if ((src->cur_pack * DVD_VIDEO_LB_LEN) != s->last_stop) {
+        GST_LOG_OBJECT (src, "rounded down offset %" G_GINT64_FORMAT " => %"
+            G_GINT64_FORMAT, s->last_stop,
+            (gint64) src->cur_pack * DVD_VIDEO_LB_LEN);
+      }
+    }
+
+    if (!gst_dvd_read_src_goto_sector (src, src->angle)) {
+      GST_DEBUG_OBJECT (src, "seek to sector 0x%08x failed", src->cur_pack);
+      src->cur_pack = old;
+      return FALSE;
+    }
+
+    GST_LOG_OBJECT (src, "seek to sector 0x%08x ok", src->cur_pack);
+  } else if (s->format == chapter_format) {
+    if (!gst_dvd_read_src_goto_chapter (src, (gint) s->last_stop)) {
+      GST_DEBUG_OBJECT (src, "seek to chapter %d failed", (gint) s->last_stop);
+      return FALSE;
+    }
+    GST_INFO_OBJECT (src, "seek to chapter %d ok", (gint) s->last_stop);
+    src->chapter = s->last_stop;
+  } else if (s->format == title_format) {
+    if (!gst_dvd_read_src_goto_title (src, (gint) s->last_stop, src->angle) ||
+        !gst_dvd_read_src_goto_chapter (src, 0)) {
+      GST_DEBUG_OBJECT (src, "seek to title %d failed", (gint) s->last_stop);
+      return FALSE;
+    }
+    src->title = (gint) s->last_stop;
+    src->chapter = 0;
+    GST_INFO_OBJECT (src, "seek to title %d ok", src->title);
+  } else {
     g_return_val_if_reached (FALSE);
   }
 
-  /* leave for events */
-  src->seek_pend = TRUE;
-  if ((flags & GST_SEEK_FLAG_FLUSH) != 0)
-    src->flush_pend = TRUE;
-
-done:
-
-  GST_OBJECT_UNLOCK (src);
-
+  src->need_newsegment = TRUE;
   return TRUE;
 }
 
@@ -1011,7 +1033,7 @@ gst_dvd_read_src_src_event (GstBaseSrc * basesrc, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      res = gst_dvd_read_src_do_seek (src, event);
+      res = gst_dvd_read_src_handle_seek_event (src, event);
       break;
     default:
       res = GST_BASE_SRC_CLASS (parent_class)->event (basesrc, event);
