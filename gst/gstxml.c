@@ -450,8 +450,13 @@ gst_xml_make_element (xmlNodePtr cur, GstObject * parent)
 
   /* ne need to set the parent on this object bacause the pads */
   /* will go through the hierarchy to link to their peers */
-  if (parent)
-    gst_object_set_parent (GST_OBJECT (element), parent);
+  if (parent) {
+    if (GST_IS_BIN (parent)) {
+      gst_bin_add (GST_BIN (parent), element);
+    } else {
+      gst_object_set_parent (GST_OBJECT (element), parent);
+    }
+  }
 
   gst_object_restore_thyself (GST_OBJECT (element), cur);
 

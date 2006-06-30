@@ -1,3 +1,12 @@
+2006-06-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstbin.c: (gst_bin_restore_thyself):
+	* gst/gstxml.c: (gst_xml_make_element):
+	  Fix deserialisation from XML. Set parent manually
+	  instead of using gst_bin_add(), since gst_bin_add()
+	  will unlink all pads of the element being added.
+	  Fixes #341667.
+
 2006-06-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Peter Kjellerstedt <pkj at axis com>
