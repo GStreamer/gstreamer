@@ -369,6 +369,14 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Microsoft Windows Media 9");
       break;
 
+    case GST_MAKE_FOURCC ('W', 'M', 'V', 'A'):
+      caps = gst_caps_new_simple ("video/x-wmv",
+          "wmvversion", G_TYPE_INT, 3, "fourcc", GST_TYPE_FOURCC,
+          codec_fcc, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Microsoft Windows Media Advanced Profile");
+      break;
+
     case GST_MAKE_FOURCC ('c', 'v', 'i', 'd'):
       caps = gst_caps_new_simple ("video/x-cinepak", NULL);
       if (codec_name)
