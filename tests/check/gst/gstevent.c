@@ -419,7 +419,7 @@ GST_START_TEST (send_custom_events)
 GST_END_TEST;
 
 Suite *
-gstevents_suite (void)
+gst_event_suite (void)
 {
   Suite *s = suite_create ("GstEvent");
   TCase *tc_chain = tcase_create ("customevents");
@@ -432,19 +432,4 @@ gstevents_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = gstevents_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (gst_event);

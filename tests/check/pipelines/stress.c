@@ -1,8 +1,6 @@
 /* GStreamer
  * Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
  *
- * simple_launch_lines.c: Unit test for simple pipelines
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -56,8 +54,10 @@ GST_START_TEST (test_stress)
   gst_object_unref (pipeline);
 }
 
-GST_END_TEST Suite *
-simple_launch_lines_suite (void)
+GST_END_TEST;
+
+Suite *
+stress_suite (void)
 {
   Suite *s = suite_create ("stress");
   TCase *tc_chain = tcase_create ("linear");
@@ -70,19 +70,4 @@ simple_launch_lines_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = simple_launch_lines_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (stress);

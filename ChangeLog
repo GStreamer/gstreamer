@@ -1,5 +1,52 @@
 2006-07-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tests/check/elements/fakesink.c:
+	* tests/check/elements/fakesrc.c:
+	* tests/check/elements/fdsrc.c:
+	* tests/check/elements/identity.c:
+	* tests/check/generic/sinks.c: (gst_sinks_suite):
+	* tests/check/generic/states.c:
+	* tests/check/gst/gst.c:
+	* tests/check/gst/gstabi.c:
+	* tests/check/gst/gstbin.c:
+	* tests/check/gst/gstbuffer.c: (gst_buffer_suite):
+	* tests/check/gst/gstbus.c: (gst_bus_suite):
+	* tests/check/gst/gstcaps.c: (GST_START_TEST):
+	* tests/check/gst/gstelement.c:
+	* tests/check/gst/gstevent.c: (gst_event_suite):
+	* tests/check/gst/gstghostpad.c:
+	* tests/check/gst/gstiterator.c: (gst_iterator_suite):
+	* tests/check/gst/gstmessage.c: (gst_message_suite):
+	* tests/check/gst/gstminiobject.c:
+	* tests/check/gst/gstobject.c:
+	* tests/check/gst/gstpad.c:
+	* tests/check/gst/gstpipeline.c:
+	* tests/check/gst/gstplugin.c:
+	* tests/check/gst/gstquery.c: (gst_query_suite):
+	* tests/check/gst/gstsegment.c: (gst_segment_suite):
+	* tests/check/gst/gststructure.c:
+	* tests/check/gst/gstsystemclock.c:
+	* tests/check/gst/gsttag.c:
+	* tests/check/gst/gsttask.c: (gst_task_suite):
+	* tests/check/gst/gstutils.c:
+	* tests/check/gst/gstvalue.c:
+	* tests/check/libs/adapter.c:
+	* tests/check/libs/basesrc.c:
+	* tests/check/libs/collectpads.c:
+	* tests/check/libs/controller.c:
+	* tests/check/libs/gdp.c: (gst_dp_suite):
+	* tests/check/libs/gstnetclientclock.c:
+	* tests/check/libs/gstnettimeprovider.c:
+	* tests/check/libs/libsabi.c: (libsabi_suite):
+	* tests/check/libs/typefindhelper.c:
+	* tests/check/pipelines/cleanup.c:
+	* tests/check/pipelines/parse-launch.c:
+	* tests/check/pipelines/simple-launch-lines.c:
+	* tests/check/pipelines/stress.c: (stress_suite):
+	  use the new macro
+
+2006-07-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* libs/gst/check/gstcheck.c: (gst_check_run_suite):
 	* libs/gst/check/gstcheck.h:
 	  create a macro and function so that the simple unit test

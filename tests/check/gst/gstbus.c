@@ -230,8 +230,11 @@ GST_START_TEST (test_watch_with_poll)
 
   gst_object_unref (test_bus);
 }
-GST_END_TEST Suite *
-gstbus_suite (void)
+
+GST_END_TEST;
+
+Suite *
+gst_bus_suite (void)
 {
   Suite *s = suite_create ("GstBus");
   TCase *tc_chain = tcase_create ("stresstest");
@@ -245,19 +248,4 @@ gstbus_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = gstbus_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (gst_bus);

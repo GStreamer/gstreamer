@@ -345,19 +345,4 @@ gst_collect_pads_suite ()
   return suite;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *suite = gst_collect_pads_suite ();
-  SRunner *runner = srunner_create (suite);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (runner, CK_NORMAL);
-  nf = srunner_ntests_failed (runner);
-  srunner_free (runner);
-
-  return nf;
-}
+GST_CHECK_MAIN (gst_collect_pads);

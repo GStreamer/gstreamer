@@ -203,7 +203,8 @@ GST_START_TEST (test_diff)
     fail_if (d[i] != GST_CLOCK_DIFF (time1[i], time2[i]));
   }
 }
-GST_END_TEST Suite * gst_systemclock_suite (void)
+GST_END_TEST Suite *
+gst_systemclock_suite (void)
 {
   Suite *s = suite_create ("GstSystemClock");
   TCase *tc_chain = tcase_create ("waiting");
@@ -217,19 +218,4 @@ GST_END_TEST Suite * gst_systemclock_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = gst_systemclock_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (gst_systemclock);

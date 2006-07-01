@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
  *
- * gstabi.c: Unit test for ABI compatibility
+ * libsabi.c: Unit test for ABI compatibility
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -62,7 +62,7 @@ GST_START_TEST (test_ABI)
 GST_END_TEST;
 
 Suite *
-gstabi_suite (void)
+libsabi_suite (void)
 {
   Suite *s = suite_create ("LibsABI");
   TCase *tc_chain = tcase_create ("size check");
@@ -74,19 +74,4 @@ gstabi_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = gstabi_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (libsabi);

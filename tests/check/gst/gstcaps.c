@@ -41,6 +41,7 @@ GST_START_TEST (test_from_string)
     caps2 = gst_caps_from_string (caps_list[i]);
     fail_if (caps2 == NULL, "Could not create caps from string %s\n", to_str);
 
+    fail_unless (gst_caps_is_equal (caps, caps));
     fail_unless (gst_caps_is_equal (caps, caps2));
 
     gst_caps_unref (caps);
@@ -348,19 +349,4 @@ gst_caps_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = gst_caps_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (gst_caps);

@@ -185,7 +185,7 @@ GST_END_TEST;
 
 
 Suite *
-gst_element_suite (void)
+gst_task_suite (void)
 {
   Suite *s = suite_create ("GstTask");
   TCase *tc_chain = tcase_create ("task tests");
@@ -200,19 +200,4 @@ gst_element_suite (void)
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = gst_element_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (gst_task);
