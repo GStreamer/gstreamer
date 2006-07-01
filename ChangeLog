@@ -1,3 +1,10 @@
+2006-07-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* libs/gst/check/gstcheck.c: (gst_check_run_suite):
+	* libs/gst/check/gstcheck.h:
+	  create a macro and function so that the simple unit test
+	  case can be just one macro to create main()
+
 2006-06-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbin.c: (gst_bin_restore_thyself):

@@ -2,7 +2,7 @@
  *
  * Common code for GStreamer unittests
  *
- * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
+ * Copyright (C) 2004,2006 Thomas Vander Stichele <thomas at apestaart dot org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -291,4 +291,24 @@ gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes)
       g_print ("Run with GST_ABI environment variable set to output header.\n");
     }
   }
+}
+
+gint
+gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
+{
+  gint nf;
+
+  SRunner *sr = srunner_create (suite);
+
+  if (g_getenv ("GST_CHECK_XML")) {
+    /* how lucky we are to have __FILE__ end in .c */
+    gchar *xmlfilename = g_strdup_printf ("%sheck.xml", fname);
+
+    srunner_set_xml (sr, xmlfilename);
+  }
+
+  srunner_run_all (sr, CK_NORMAL);
+  nf = srunner_ntests_failed (sr);
+  srunner_free (sr);
+  return nf;
 }

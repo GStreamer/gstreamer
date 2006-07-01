@@ -73,8 +73,7 @@ GstPad * gst_check_setup_sink_pad (GstElement *element,
     GstStaticPadTemplate *template, GstCaps *caps);
 void gst_check_teardown_sink_pad (GstElement *element);
 void gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes);
-
-
+gint gst_check_run_suite (Suite *suite, const gchar *name, const gchar *fname);
 
 #define fail_unless_message_error(msg, domain, code)		\
 gst_check_message_error (msg, GST_MESSAGE_ERROR,		\
@@ -277,3 +276,10 @@ fail_unless (gst_element_set_state (element,			\
 
 #endif /* __GST_CHECK_H__ */
 
+#define GST_CHECK_MAIN(name)					\
+int main (int argc, char **argv)				\
+{								\
+  Suite *s = name ## _suite ();					\
+  gst_check_init (&argc, &argv);				\
+  return gst_check_run_suite (s, # name, __FILE__);		\
+}
