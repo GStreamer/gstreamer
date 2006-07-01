@@ -381,6 +381,7 @@ mutex
 GST_CAT_DEFAULT
 thread_list
 start_cond
+GST_CHECK_MAIN
 
 fail_unless_equals_int
 fail_unless_equals_string
@@ -397,4 +398,5 @@ gst_check_teardown_element
 gst_check_teardown_sink_pad
 gst_check_teardown_src_pad
 gst_check_abi_list
+gst_check_run_suite
 </SECTION>
