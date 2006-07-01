@@ -16,3 +16,9 @@ libgstnet_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstnet_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS)
 libgstnet_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
+CLEANFILES = *.gcno *.gcda *.gcov
+
+%.c.gcov: .libs/libgstnet_@GST_MAJORMINOR@_la-%.gcda %.c
+	$(GCOV) -b -f -o $^ > $@.out
+
+gcov: $(libgstnet_@GST_MAJORMINOR@_la_SOURCES:=.gcov)

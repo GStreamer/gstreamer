@@ -1,3 +1,21 @@
+2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  set CFLAGS and friends to -O0 if gcov is being used
+	  add GCOV LIBS
+	* gst/Makefile.am:
+	* libs/gst/base/Makefile.am:
+	* libs/gst/check/Makefile.am:
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/dataprotocol/Makefile.am:
+	* libs/gst/net/Makefile.am:
+	* plugins/elements/Makefile.am:
+	* plugins/indexers/Makefile.am:
+	  add makefile rules to generate gcov data and clean up
+	* tests/check/Makefile.am:
+	  add a coverage target that generates an html overview
+	  of coverage data
+
 2006-07-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tests/check/elements/fakesink.c:

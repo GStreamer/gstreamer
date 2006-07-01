@@ -14,3 +14,10 @@ libgstcontroller_@GST_MAJORMINOR@_la_SOURCES = \
 libgstcontroller_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstcontroller_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS)
 libgstcontroller_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
+
+CLEANFILES = *.gcno *.gcda *.gcov
+
+%.c.gcov: .libs/libgstcontroller_@GST_MAJORMINOR@_la-%.gcda %.c
+	$(GCOV) -b -f -o $^ > $@.out
+
+gcov: $(libgstcontroller_@GST_MAJORMINOR@_la_SOURCES:=.gcov)

@@ -2,14 +2,14 @@ lib_LTLIBRARIES = libgstbase-@GST_MAJORMINOR@.la
 
 libgstbase_@GST_MAJORMINOR@_la_DEPENDENCIES = \
 	$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
-libgstbase_@GST_MAJORMINOR@_la_SOURCES =	\
+libgstbase_@GST_MAJORMINOR@_la_SOURCES = \
 	gstadapter.c		\
 	gstbasesink.c		\
 	gstbasesrc.c		\
 	gstbasetransform.c	\
 	gstcollectpads.c	\
 	gstpushsrc.c		\
-	gsttypefindhelper.c	
+	gsttypefindhelper.c
 
 libgstbase_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstbase_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS)
@@ -27,3 +27,9 @@ libgstbase_@GST_MAJORMINOR@include_HEADERS =	\
 	gstpushsrc.h		\
 	gsttypefindhelper.h	
 
+CLEANFILES = *.gcno *.gcda *.gcov
+
+%.c.gcov: .libs/libgstbase_@GST_MAJORMINOR@_la-%.gcda %.c
+	$(GCOV) -b -f -o $^ > $@.out
+
+gcov: $(libgstbase_@GST_MAJORMINOR@_la_SOURCES:=.gcov)

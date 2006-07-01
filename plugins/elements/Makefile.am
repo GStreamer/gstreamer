@@ -51,3 +51,11 @@ noinst_HEADERS =		\
 
 EXTRA_DIST = gstfdsrc.c \
 	     gstfdsink.c
+
+
+CLEANFILES = *.gcno *.gcda *.gcov
+
+%.c.gcov: .libs/libgstcoreelements_la-%.gcda %.c
+	$(GCOV) -b -f -o $^ > $@.out
+
+gcov: $(libgstcoreelements_la_SOURCES:=.gcov)

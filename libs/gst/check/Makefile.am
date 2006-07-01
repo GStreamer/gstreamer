@@ -16,3 +16,10 @@ libgstcheck_@GST_MAJORMINOR@includedir =		\
 
 libgstcheck_@GST_MAJORMINOR@include_HEADERS =	\
 	gstcheck.h
+
+CLEANFILES = *.gcno *.gcda *.gcov
+
+%.c.gcov: .libs/libgstcheck_@GST_MAJORMINOR@_la-%.gcda %.c
+	$(GCOV) -b -f -o $^ > $@.out
+
+gcov: $(libgstcheck_@GST_MAJORMINOR@_la_SOURCES:=.gcov)

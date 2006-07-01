@@ -150,3 +150,56 @@ VALGRIND_TESTS_DISABLE = 					\
 	$(TESTS_THREADED)					\
 	$(VALGRIND_IGNORE)					\
 	$(VALGRIND_TO_FIX)
+
+# indexers does not get tested yet
+COVERAGE_DIRS = \
+	gst \
+	libs/gst/base \
+	libs/gst/controller \
+	libs/gst/check \
+	libs/gst/dataprotocol \
+	libs/gst/net \
+	plugins/elements
+COVERAGE_FILES = $(foreach dir,$(COVERAGE_DIRS),$(wildcard $(top_builddir)/$(dir)/*.gcov))
+COVERAGE_FILES_REL = $(subst $(top_builddir)/,,$(COVERAGE_FILES))
+COVERAGE_OUT_FILES = $(foreach dir,$(COVERAGE_DIRS),$(wildcard $(top_builddir)/$(dir)/*.gcov.out))
+COVERAGE_OUT_FILES_REL = $(subst $(top_builddir)/,,$(COVERAGE_OUT_FILES))
+
+debug:
+	echo $(COVERAGE_FILES)
+	echo $(COVERAGE_FILES_REL)
+
+.PHONY: coverage
+if GST_GCOV_ENABLED
+coverage:
+	for file in `find $(top_builddir) -name '*.gcda'`; do rm $$file; done
+	make check
+	make coverage-report
+else
+coverage:
+	echo "You need to configure with --enable-gcov to get coverage data"
+	exit 1
+endif
+
+coverage-report:
+	rm -r coverage
+	for dir in $(COVERAGE_DIRS); do 				\
+	  mkdir -p coverage/$$dir; 					\
+	  make -C $(top_builddir)/$$dir gcov;			\
+        done
+	for dir in $(COVERAGE_DIRS); do					\
+	    files="`ls $(top_builddir)/$$dir/*.gcov.out 2> /dev/null`"; \
+          if test ! -z "$$files"; then					\
+	    perl $(top_srcdir)/common/coverage/coverage-report.pl 	\
+	      $(top_builddir)/$$dir/*.gcov.out >			\
+	      coverage/$$dir/index.xml;					\
+	    xsltproc $(top_srcdir)/common/coverage/coverage-report.xsl	\
+	      coverage/$$dir/index.xml > coverage/$$dir/index.html;	\
+	  fi; \
+        done
+	
+	for file in $(COVERAGE_FILES_REL); do				\
+	  echo Generating coverage/$$file.html; 			\
+	  perl $(top_srcdir)/common/coverage/coverage-report-entry.pl   \
+	    $(top_builddir)/$$file > coverage/$$file.html; 		\
+	done

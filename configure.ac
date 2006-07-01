@@ -436,6 +436,20 @@ if test "x$USE_DEBUG" = xyes; then
 fi
 AC_SUBST(PROFILE_CFLAGS)
 
+dnl if gcov is used, we do not want default -O2 CFLAGS
+if test "x$GST_GCOV_ENABLED" = "xyes"
+then
+  CFLAGS="-O0"
+  AC_SUBST(CFLAGS)
+  CXXFLAGS="-O0"
+  AC_SUBST(CXXFLAGS)
+  FFLAGS="-O0"
+  AC_SUBST(FFLAGS)
+  CCASFLAGS="-O0"
+  AC_SUBST(CCASFLAGS)
+  AC_MSG_NOTICE([gcov enabled, setting CFLAGS and friends to $CFLAGS])
+fi
+
 DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
 AC_SUBST(DEPRECATED_CFLAGS)
 
@@ -454,7 +468,7 @@ dnl       from LibXML except for in the core library
 GST_ALL_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir) $GLIB_CFLAGS $XML_CFLAGS \$(GST_OPTION_CFLAGS)"
 dnl FIXME: check if LTLIBINTL is needed everywhere
 dnl I presume it is given that it contains the symbols that _() stuff maps to
-GST_ALL_LIBS="$GLIB_LIBS $LTLIBINTL"
+GST_ALL_LIBS="$GLIB_LIBS $LTLIBINTL \$(GCOV_LIBS)"
 dnl LDFLAGS really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"
