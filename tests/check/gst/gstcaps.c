@@ -198,15 +198,11 @@ GST_START_TEST (test_simplify)
 {
   GstStructure *s1, *s2;
   gboolean did_simplify;
-  GstCaps *caps, *simplecaps;
+  GstCaps *caps;
 
   caps = gst_caps_from_string (non_simple_caps_string);
   fail_unless (caps != NULL,
       "gst_caps_from_string (non_simple_caps_string) failed");
-
-  /* first get a new copy of simplified caps */
-  simplecaps = gst_caps_simplify (caps);
-  fail_unless (simplecaps != NULL, "simplifying caps failed");
 
   did_simplify = gst_caps_do_simplify (caps);
   fail_unless (did_simplify == TRUE,
