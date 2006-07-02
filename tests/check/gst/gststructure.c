@@ -20,6 +20,7 @@
  */
 
 
+#include <gst/gststructure.h>
 #include <gst/check/gstcheck.h>
 
 
@@ -129,9 +130,42 @@ GST_START_TEST (test_structure_new)
   GstStructure *s;
   GError *e;
   GQuark domain;
+  gboolean bool;
+  gint num, den;
+  GstClockTime clocktime;
+  guint32 fourcc;
 
-  s = gst_structure_new ("name", "key", G_TYPE_STRING, "value", NULL);
+  s = gst_structure_new ("name",
+      "key", G_TYPE_STRING, "value",
+      "bool", G_TYPE_BOOLEAN, TRUE,
+      "fraction", GST_TYPE_FRACTION, 1, 5,
+      "clocktime", GST_TYPE_CLOCK_TIME, GST_CLOCK_TIME_NONE,
+      "fourcc", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('f', 'o', 'u', 'r'), NULL);
+
+  fail_unless (gst_structure_get_field_type (s, "unknown") == G_TYPE_INVALID);
+  /* test setting a different name */
+  gst_structure_set_name (s, "newname");
   fail_unless (strcmp (gst_structure_get_string (s, "key"), "value") == 0);
+  fail_unless (gst_structure_has_field (s, "key"));
+  fail_unless_equals_int (gst_structure_n_fields (s), 5);
+  /* test removing a field */
+  gst_structure_remove_field (s, "key");
+  fail_if (gst_structure_get_string (s, "key"));
+  fail_if (gst_structure_has_field (s, "key"));
+  fail_unless_equals_int (gst_structure_n_fields (s), 4);
+
+  fail_unless (gst_structure_get_boolean (s, "bool", &bool));
+  fail_unless (bool);
+
+  fail_unless (gst_structure_get_fraction (s, "fraction", &num, &den));
+  fail_unless_equals_int (num, 1);
+  fail_unless_equals_int (den, 5);
+
+  fail_unless (gst_structure_get_clock_time (s, "clocktime", &clocktime));
+  fail_unless_equals_uint64 (clocktime, GST_CLOCK_TIME_NONE);
+
+  fail_unless (gst_structure_get_fourcc (s, "fourcc", &fourcc));
+
   gst_structure_free (s);
 
   domain = g_quark_from_string ("test");
@@ -142,6 +176,26 @@ GST_START_TEST (test_structure_new)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_fixate)
+{
+  GstStructure *s;
+
+  s = gst_structure_new ("name",
+      "int", G_TYPE_INT, 5,
+      "intrange", GST_TYPE_INT_RANGE, 5, 10,
+      "intrange2", GST_TYPE_INT_RANGE, 5, 10, NULL);
+
+  fail_if (gst_structure_fixate_field_nearest_int (s, "int", 5));
+  fail_unless (gst_structure_fixate_field_nearest_int (s, "intrange", 5));
+  fail_if (gst_structure_fixate_field_nearest_int (s, "intrange", 5));
+  fail_unless (gst_structure_fixate_field_nearest_int (s, "intrange2", 15));
+  fail_if (gst_structure_fixate_field_nearest_int (s, "intrange2", 15));
+  gst_structure_free (s);
+}
+
+GST_END_TEST;
+
 
 Suite *
 gst_structure_suite (void)
@@ -154,6 +208,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_from_string);
   tcase_add_test (tc_chain, test_complete_structure);
   tcase_add_test (tc_chain, test_structure_new);
+  tcase_add_test (tc_chain, test_fixate);
   return s;
 }
 
