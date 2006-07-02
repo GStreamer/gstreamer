@@ -444,7 +444,7 @@ gst_static_caps_get (GstStaticCaps * static_caps)
 static GstStructure *
 gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
 {
-  /* don't use index_fast, gst_caps_simplify relies on the order */
+  /* don't use index_fast, gst_caps_do_simplify relies on the order */
   GstStructure *s = g_ptr_array_remove_index (caps->structs, idx);
 
   gst_structure_set_parent_refcount (s, NULL);
@@ -1317,30 +1317,6 @@ gst_caps_compare_structures (gconstpointer one, gconstpointer two)
     return ret;
 
   return gst_structure_n_fields (struct2) - gst_structure_n_fields (struct1);
-}
-
-/**
- * gst_caps_simplify:
- * @caps: a #GstCaps to simplify
- *
- * Creates a new #GstCaps that represents the same set of formats as
- * @caps, but simpler.  Component structures that are identical are
- * merged.  Component structures that have ranges or lists that can
- * be merged are also merged.
- *
- * Returns: the new #GstCaps
- */
-GstCaps *
-gst_caps_simplify (const GstCaps * caps)
-{
-  GstCaps *ret;
-
-  g_return_val_if_fail (caps != NULL, NULL);
-
-  ret = gst_caps_copy (caps);
-  gst_caps_do_simplify (ret);
-
-  return ret;
 }
 
 typedef struct

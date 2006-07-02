@@ -1,5 +1,11 @@
 2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstcaps.c: (gst_caps_remove_and_get_structure):
+	  remove gst_caps_simplify; it was not declared and not used
+	  and deprecated in 0.8
+
+2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/faq/gst-uninstalled:
 	  don't put empty paths on PYTHONPATH
 	* docs/gst/gstreamer-sections.txt:
