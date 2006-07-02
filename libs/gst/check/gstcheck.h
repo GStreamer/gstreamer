@@ -78,6 +78,7 @@ gint gst_check_run_suite (Suite *suite, const gchar *name, const gchar *fname);
 #define fail_unless_message_error(msg, domain, code)		\
 gst_check_message_error (msg, GST_MESSAGE_ERROR,		\
   GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code)
+#define assert_message_error(m, d, c) fail_unless_message_error(m, d, c)
 
 /***
  * wrappers for START_TEST and END_TEST
@@ -98,6 +99,7 @@ G_STMT_START {								\
   fail_unless(first == second,						\
     "'" #a "' (%d) is not equal to '" #b"' (%d)", first, second);	\
 } G_STMT_END;
+#define assert_equals_int(a, b) fail_unless_equals_int(a, b)
 
 #define fail_unless_equals_uint64(a, b)					\
 G_STMT_START {								\
@@ -107,6 +109,7 @@ G_STMT_START {								\
     "'" #a "' (%" G_GUINT64_FORMAT ") is not equal to '" #b"' (%"	\
     G_GUINT64_FORMAT ")", first, second);				\
 } G_STMT_END;
+#define assert_equals_uint64(a, b) fail_unless_equals_uint64(a, b)
 
 #define fail_unless_equals_string(a, b)					\
 G_STMT_START {								\
@@ -115,6 +118,7 @@ G_STMT_START {								\
   fail_unless(strcmp (first, second) == 0,				\
     "'" #a "' (%s) is not equal to '" #b"' (%s)", first, second);	\
 } G_STMT_END;
+#define assert_equals_string(a, b) fail_unless_equals_string(a, b)
 
 
 /***

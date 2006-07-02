@@ -20,6 +20,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/gstversion.h>
 
 GST_START_TEST (test_init)
 {
@@ -76,6 +77,20 @@ GST_START_TEST (test_new_fakesrc)
 
 GST_END_TEST;
 
+GST_START_TEST (test_version)
+{
+  guint major, minor, micro, nano;
+  gchar *version;
+
+  gst_version (&major, &minor, &micro, &nano);
+  assert_equals_int (major, GST_VERSION_MAJOR);
+
+  version = gst_version_string ();
+  fail_if (version == NULL);
+  g_free (version);
+}
+
+GST_END_TEST;
 
 Suite *
 gst_suite (void)
@@ -89,6 +104,7 @@ gst_suite (void)
   tcase_add_test (tc_chain, test_deinit_sysclock);
   tcase_add_test (tc_chain, test_new_pipeline);
   tcase_add_test (tc_chain, test_new_fakesrc);
+  tcase_add_test (tc_chain, test_version);
 
   return s;
 }

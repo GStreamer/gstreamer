@@ -1,3 +1,10 @@
+2006-07-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* libs/gst/check/gstcheck.h:
+	  add some assert_ as alias for fail_unless_*
+	* tests/check/gst/gst.c: (GST_START_TEST), (gst_suite):
+	  increase test coverage
+
 2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
