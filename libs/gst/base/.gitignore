@@ -1,1 +1,3 @@
 *.gcno
+*.c.gcov
+*.c.gcov
