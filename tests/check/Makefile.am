@@ -171,8 +171,14 @@ debug:
 
 .PHONY: coverage
 if GST_GCOV_ENABLED
+# we rebuild a registry and do gst-inspect so that all the get/set codepaths
+# are also covered
+GST_INSPECT = $(top_builddir)/tools/gst-inspect-$(GST_MAJORMINOR)
 coverage:
 	for file in `find $(top_builddir) -name '*.gcda'`; do rm $$file; done
+	-rm $(CHECK_REGISTRY)
+	echo "Inspecting all elements"
+	for e in `$(GST_INSPECT) | head -n -2 | cut -d: -f2`; do $(GST_INSPECT) $$e > /dev/null 2>&1; done
 	make check
 	make coverage-report
 else
