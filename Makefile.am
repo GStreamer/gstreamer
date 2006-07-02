@@ -59,3 +59,5 @@ WIN32_COPY = \
 
 win32-update:
 	for f in $(WIN32_COPY); do cp $$f win32/common;done
+
+include $(top_srcdir)/common/coverage/lcov.mak

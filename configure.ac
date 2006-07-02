@@ -545,6 +545,8 @@ dnl also add builddir include for enumtypes and marshal
 dnl add GST_OPTION_CFLAGS, but overridable
 GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS \$(GST_OPTION_CFLAGS)"
 AC_SUBST(GST_CFLAGS)
+dnl add GCOV libs because libtool strips -fprofile-arcs -ftest-coverage
+GST_LIBS="$GST_LIBS \$(GCOV_LIBS)"
 AC_SUBST(GST_LIBS)
 
 dnl LDFLAGS really should only contain flags, not libs - they get added before

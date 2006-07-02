@@ -1,3 +1,10 @@
+2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	  include lcov.mak
+	* configure.ac:
+	  add GCOV_LIBS to GST_LIBS
+
 2006-07-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Michael Sheldon  <webmaster at mikeasoft com>
