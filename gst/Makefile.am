@@ -20,7 +20,7 @@ defs_DATA = gst-types.defs \
 	base.defs
 defsdir = $(pkgdatadir)/$(GST_MAJORMINOR)/defs
 
-noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstobject.h pygstexception.h
+noinst_HEADERS = common.h pygstvalue.h pygstminiobject.h pygstexception.h
 
 versioned_overrides = \
 	gst-0.10.3.ignore	\
@@ -44,7 +44,6 @@ _gst_la_SOURCES = 		\
 	gstmodule.c 		\
 	pygstiterator.c		\
 	pygstminiobject.c 	\
-	pygstobject.c		\
 	pygstvalue.c 		\
 	pygstexception.c
 

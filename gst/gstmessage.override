@@ -207,7 +207,7 @@ _wrap_gst_message_parse_clock_provide (PyGstMiniObject *self)
   gst_message_parse_clock_provide (GST_MESSAGE(self->obj), &clock, &ready);
 
   ret = PyList_New(2);
-  PyList_SET_ITEM(ret, 0, pygstobject_new(G_OBJECT (clock)));
+  PyList_SET_ITEM(ret, 0, pygobject_new(G_OBJECT (clock)));
   PyList_SET_ITEM(ret, 1, PyBool_FromLong(ready));
 
   return ret;
@@ -226,7 +226,7 @@ _wrap_gst_message_parse_clock_lost (PyGstMiniObject *self)
 
   gst_message_parse_clock_lost (GST_MESSAGE(self->obj), &clock);
 
-  return pygstobject_new(G_OBJECT(clock));
+  return pygobject_new(G_OBJECT(clock));
 }
 %%
 override gst_message_parse_new_clock noargs
@@ -242,7 +242,7 @@ _wrap_gst_message_parse_new_clock (PyGstMiniObject *self)
 
   gst_message_parse_new_clock (GST_MESSAGE(self->obj), &clock);
 
-  return pygstobject_new(G_OBJECT(clock));
+  return pygobject_new(G_OBJECT(clock));
 }
 %%
 override gst_message_parse_duration noargs

@@ -38,8 +38,8 @@ _wrap_gst_element_factory_make(PyObject *self, PyObject *args, PyObject *kwargs)
         PyErr_SetString(PyGstExc_PluginNotFoundError, factoryname);
         return NULL;
     }
-    py_ret = pygstobject_new((GObject *)ret);
-    pygst_object_unref((GObject *)ret);
+    py_ret = pygobject_new((GObject *)ret);
+    g_object_unref((GObject *)ret);
     return py_ret;
 }
 %%

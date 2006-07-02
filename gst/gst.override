@@ -475,7 +475,7 @@ _wrap_gst_registry_get_plugin_list (PyGObject *self)
 	list = PyList_New (g_list_length(plugins));
 	for (l = plugins, i = 0; l; l = l->next, ++i) {
 		GstPlugin *plugin = (GstPlugin *) l->data;
-		PyObject *object = pygstobject_new (G_OBJECT (plugin));
+		PyObject *object = pygobject_new (G_OBJECT (plugin));
 		gst_object_unref (plugin);
 
 		PyList_SetItem (list, i, object);
@@ -608,7 +608,7 @@ _wrap_gst_xml_get_topelements(PyGObject *self)
     py_list = PyList_New(g_list_length(xml_elements));
     for (l = xml_elements, i = 0; l; l = l->next, ++i) {
         GstElement *element = (GstElement*)l->data;
-        PyList_SetItem(py_list, i, pygstobject_new(G_OBJECT(element)));
+        PyList_SetItem(py_list, i, pygobject_new(G_OBJECT(element)));
         gst_object_unref (element);
     }
        
@@ -872,7 +872,7 @@ _wrap_gst_type_find_factory_get_list (PyObject *self)
 	GstTypeFindFactory *fact = (GstTypeFindFactory*) l->data;
 
 	PyList_SetItem(py_list, i,
-		       pygstobject_new (G_OBJECT (fact)));
+		       pygobject_new (G_OBJECT (fact)));
     }
     g_list_free (list);
 

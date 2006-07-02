@@ -514,13 +514,13 @@ class ObjectArg(ArgType):
             info.varlist.add('PyObject', '*py_ret')
             # < GLib 2.8: using our custom _new and _unref functions
             # makes sure we update the proper GstObject refcount
-            info.codeafter.append('    py_ret = pygstobject_new((GObject *)ret);\n'
+            info.codeafter.append('    py_ret = pygobject_new((GObject *)ret);\n'
                                   '    if (ret != NULL)\n'
-                                  '        pygst_object_unref((GObject *)ret);\n'
+                                  '        g_object_unref((GObject *)ret);\n'
                                   '    return py_ret;')
         else:
-            info.codeafter.append('    /* pygstobject_new handles NULL checking */\n' +
-                                  '    return pygstobject_new((GObject *)ret);')
+            info.codeafter.append('    /* pygobject_new handles NULL checking */\n' +
+                                  '    return pygobject_new((GObject *)ret);')
 
 class MiniObjectArg(ArgType):
     # should change these checks to more typesafe versions that check

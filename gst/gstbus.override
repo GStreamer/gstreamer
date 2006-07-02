@@ -49,7 +49,7 @@ bus_sync_handler (GstBus *bus, GstMessage *message, gpointer user_data)
 
     /* Using N we give away our references to the args tuple */
     args = Py_BuildValue ("(NN)",
-                          pygstobject_new (G_OBJECT (bus)),
+                          pygobject_new (G_OBJECT (bus)),
                           py_msg);
 
     /* add all *args to the args tuple object */
@@ -108,7 +108,7 @@ bus_func (GstBus *bus, GstMessage *message, gpointer user_data)
 
     /* Using N we give away our references to the args tuple */
     args = Py_BuildValue ("(NN)",
-                          pygstobject_new (G_OBJECT (bus)),
+                          pygobject_new (G_OBJECT (bus)),
                           py_msg);
     g_assert (args);
 

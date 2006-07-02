@@ -43,10 +43,7 @@ pygst_iterator_iter_next(PyGstIterator *self)
 	    PyErr_SetNone(PyExc_StopIteration);
 	    break;
 	case GST_ITERATOR_OK:
-	    if (g_type_is_a(self->iter->type, GST_TYPE_OBJECT)) {
-		retval = pygstobject_new(G_OBJECT(element));
-		pygst_object_unref (element);
-	    } else if (g_type_is_a(self->iter->type, G_TYPE_OBJECT)) {
+	    if (g_type_is_a(self->iter->type, G_TYPE_OBJECT)) {
 		retval = pygobject_new(G_OBJECT(element));
 		g_object_unref (element);
 	    } else if (g_type_is_a(self->iter->type, GST_TYPE_MINI_OBJECT)) {

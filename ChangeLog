@@ -1,3 +1,32 @@
+2006-07-02  Edward Hervey  <edward@fluendo.com>
+
+	Removal of all glib < 2.8 cruft since GStreamer core now requires
+	glib >= 2.8
+
+	* codegen/argtypes.py:
+	remove gstobject cruft from ObjectArg
+	* configure.ac:
+	Require glib >= 2.8.0
+	* gst/Makefile.am:
+	* gst/pygstobject.c:
+	* gst/pygstobject.h:
+	Remove pygstobject.[ch]
+	* gst/common.h:
+	Don't include removed header file.
+	* gst/gst.override:
+	* gst/gstbin.override:
+	* gst/gstbus.override:
+	* gst/gstelement.override:
+	* gst/gstelementfactory.override:
+	* gst/gstmessage.override:
+	* gst/gstobject.override:
+	* gst/gstpad.override:
+	* gst/interfaces.override:
+	* gst/pygstiterator.c: (pygst_iterator_iter_next):
+	Switch from using pygstobject* functions to using pygobject* functions.
+	* gst/gstmodule.c: (sink_gstobject), (init_gst):
+	Move GstObject sink function here and use standard gobject refcounting.
+
 2006-06-22  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac: (GST_LIBS): 
