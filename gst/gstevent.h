@@ -401,7 +401,7 @@ void		gst_event_parse_tag		(GstEvent *event, GstTagList **taglist);
 /* buffer */
 GstEvent *	gst_event_new_buffer_size	(GstFormat format, gint64 minsize, gint64 maxsize,
 						 gboolean async);
-void 		gst_event_parse_buffer_size	(GstEvent *event, GstFormat *format, gint64 *minsize,
+void		gst_event_parse_buffer_size	(GstEvent *event, GstFormat *format, gint64 *minsize,
 						 gint64 *maxsize, gboolean *async);
 
 /* QOS events */

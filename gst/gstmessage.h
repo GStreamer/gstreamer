@@ -156,7 +156,7 @@ typedef enum
  * @src: the src of the message
  * @structure: the #GstStructure containing the message info.
  *
- * A #GstMessage. 
+ * A #GstMessage.
  */
 struct _GstMessage
 {
@@ -184,9 +184,9 @@ struct _GstMessageClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-void 		_gst_message_initialize 	(void);
+void		_gst_message_initialize		(void);
 
-GType 		gst_message_get_type 		(void);
+GType		gst_message_get_type		(void);
 
 const gchar*	gst_message_type_get_name	(GstMessageType type);
 GQuark		gst_message_type_to_quark	(GstMessageType type);
@@ -216,8 +216,8 @@ gst_message_ref (GstMessage * msg)
  * gst_message_unref:
  * @msg: the message to unref
  *
- * Convenience macro to decrease the reference count of the message, possibly freeing
- * the it.
+ * Convenience macro to decrease the reference count of the message, possibly
+ * freeing it.
  */
 #define         gst_message_unref(msg)		gst_mini_object_unref (GST_MINI_OBJECT (msg))
 /* copy message */
@@ -241,22 +241,22 @@ gst_message_ref (GstMessage * msg)
  */
 #define         gst_message_make_writable(msg)	GST_MESSAGE (gst_mini_object_make_writable (GST_MINI_OBJECT (msg)))
 
-GstMessage *	gst_message_new_eos 		(GstObject * src);
-GstMessage *	gst_message_new_error 		(GstObject * src, GError * error, gchar * debug);
-GstMessage *	gst_message_new_warning 	(GstObject * src, GError * error, gchar * debug);
-GstMessage *	gst_message_new_tag 		(GstObject * src, GstTagList * tag_list);
-GstMessage *	gst_message_new_state_changed 	(GstObject * src, GstState oldstate,
+GstMessage *	gst_message_new_eos		(GstObject * src);
+GstMessage *	gst_message_new_error		(GstObject * src, GError * error, gchar * debug);
+GstMessage *	gst_message_new_warning		(GstObject * src, GError * error, gchar * debug);
+GstMessage *	gst_message_new_tag		(GstObject * src, GstTagList * tag_list);
+GstMessage *	gst_message_new_state_changed	(GstObject * src, GstState oldstate,
                                                  GstState newstate, GstState pending);
-GstMessage *	gst_message_new_state_dirty 	(GstObject * src);
+GstMessage *	gst_message_new_state_dirty	(GstObject * src);
 GstMessage *	gst_message_new_clock_provide	(GstObject * src, GstClock *clock, gboolean ready);
 GstMessage *	gst_message_new_clock_lost	(GstObject * src, GstClock *clock);
 GstMessage *	gst_message_new_new_clock	(GstObject * src, GstClock *clock);
 GstMessage *	gst_message_new_application	(GstObject * src, GstStructure * structure);
 GstMessage *	gst_message_new_element		(GstObject * src, GstStructure * structure);
-GstMessage *	gst_message_new_segment_start 	(GstObject * src, GstFormat format, gint64 position);
-GstMessage *	gst_message_new_segment_done 	(GstObject * src, GstFormat format, gint64 position);
+GstMessage *	gst_message_new_segment_start	(GstObject * src, GstFormat format, gint64 position);
+GstMessage *	gst_message_new_segment_done	(GstObject * src, GstFormat format, gint64 position);
 GstMessage *	gst_message_new_duration	(GstObject * src, GstFormat format, gint64 duration);
-GstMessage *	gst_message_new_custom 		(GstMessageType type,
+GstMessage *	gst_message_new_custom		(GstMessageType type,
 						 GstObject    * src,
 						 GstStructure * structure);
 
@@ -268,9 +268,9 @@ void		gst_message_parse_state_changed	(GstMessage *message, GstState *oldstate,
 void		gst_message_parse_clock_provide (GstMessage *message, GstClock **clock, gboolean *ready);
 void		gst_message_parse_clock_lost	(GstMessage *message, GstClock **clock);
 void		gst_message_parse_new_clock	(GstMessage *message, GstClock **clock);
-void 		gst_message_parse_segment_start (GstMessage *message, GstFormat *format, gint64 *position);
-void		gst_message_parse_segment_done 	(GstMessage *message, GstFormat *format, gint64 *position);
-void		gst_message_parse_duration 	(GstMessage *message, GstFormat *format, gint64 *duration);
+void		gst_message_parse_segment_start (GstMessage *message, GstFormat *format, gint64 *position);
+void		gst_message_parse_segment_done	(GstMessage *message, GstFormat *format, gint64 *position);
+void		gst_message_parse_duration	(GstMessage *message, GstFormat *format, gint64 *duration);
 
 const GstStructure *  gst_message_get_structure	(GstMessage *message);
 
