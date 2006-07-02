@@ -51,6 +51,7 @@ REGISTRY_CHECKS =				\
 	elements/fakesink			\
 	elements/fakesrc			\
 	elements/fdsrc		          	\
+	elements/filesrc	          	\
 	elements/identity			\
 	libs/basesrc				\
 	libs/controller				\
@@ -105,11 +106,14 @@ LDADD = $(top_builddir)/libs/gst/check/libgstcheck-@GST_MAJORMINOR@.la \
 	$(CHECK_LIBS)
 
 libs_gdp_SOURCES = \
-	libs/gdp.c \
-	$(top_srcdir)/libs/gst/dataprotocol/dataprotocol.c
+	libs/gdp.c
 libs_gdp_CFLAGS = $(AM_CFLAGS)
+libs_gdp_LDADD = \
+	$(top_builddir)/libs/gst/dataprotocol/libgstdataprotocol-@GST_MAJORMINOR@.la \
+	$(LDADD)
 
 elements_fdsrc_CFLAGS=$(GST_OBJ_CFLAGS) $(CHECK_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
+elements_filesrc_CFLAGS=$(GST_OBJ_CFLAGS) $(CHECK_CFLAGS) -DTESTFILE=\"$(top_srcdir)/configure.ac\"
 
 libs_basesrc_LDADD = \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \

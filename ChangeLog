@@ -1,5 +1,15 @@
 2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* libs/gst/dataprotocol/Makefile.am:
+	  build dataprotocol test by linking to the lib, instead of
+	  compiling the source, so we get coverage
+	* tests/check/Makefile.am:
+	* tests/check/elements/filesrc.c: (event_func), (setup_filesrc),
+	(cleanup_filesrc), (GST_START_TEST), (filesrc_suite):
+	  add a test for filesrc
+
+2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* tests/check/gst/gststructure.c: (GST_START_TEST),
 	(gst_structure_suite):
 	  Push coverage from 59.04% to 70.00%
