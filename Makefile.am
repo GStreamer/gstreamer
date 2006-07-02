@@ -109,3 +109,5 @@ win32-update:
 	for f in gstversion.h gstenumtypes.c gstenumtypes.h; do \
 		cp $(top_builddir)/gst/$$f win32/common; done
 	$(top_srcdir)/tools/gst-indent win32/common/gstenumtypes.c
+
+include $(top_srcdir)/common/coverage/lcov.mak

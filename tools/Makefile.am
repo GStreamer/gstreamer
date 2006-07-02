@@ -106,7 +106,7 @@ GST_OTHER_MAN = \
 
 manpages = $(GST_LOADSAVE_MAN) $(GST_PARSE_MAN) $(GST_OTHER_MAN)
 
-CLEANFILES = $(manpages) $(bin_SCRIPTS)
+CLEANFILES = $(manpages) $(bin_SCRIPTS) *.gcno *.gcda
 man_MANS = $(manpages)
 
 # developer helper tools, not meant for installation
