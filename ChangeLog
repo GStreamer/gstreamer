@@ -1,5 +1,12 @@
 2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/faq/gst-uninstalled:
+	  don't put empty paths on PYTHONPATH
+	* docs/gst/gstreamer-sections.txt:
+	  remove some symbols that are not there
+
+2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstcaps.c: (gst_caps_compare_structures):
 	  whitespace fixes
 	* tests/check/gst/gstbuffer.c: (GST_START_TEST):

@@ -60,7 +60,7 @@ export GST_PLUGIN_SYSTEM_PATH=
 export GST_REGISTRY=$GST/gstreamer/registry.xml
 export MANPATH=$GST/gstreamer/tools:$GST/prefix/share/man:$MANPATH
 pythonver=`python -c "import sys; print sys.version[:3]"`
-export PYTHONPATH=$GST/gst-python:$GST/prefix/lib/python$pythonver/site-packages:$PYTHONPATH
+export PYTHONPATH=$GST/gst-python:$GST/prefix/lib/python$pythonver/site-packages${PYTHONPATH:+:$PYTHONPATH}
 
 # if we got a command, run it, else start a shell
 if test ! -z "$1";

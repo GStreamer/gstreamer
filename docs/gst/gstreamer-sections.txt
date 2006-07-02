@@ -361,9 +361,6 @@ gst_clock_return_get_type
 <TITLE>GstCompat</TITLE>
 <SUBSECTION Standard>
 <SUBSECTION Private>
-g_mkdir_with_parents
-gst_flags_get_first_value
-g_value_dup_gst_object
 </SECTION>
 
 <SECTION>
@@ -1886,7 +1883,6 @@ gst_tag_setter_get_tag_merge_mode
 <SUBSECTION Standard>
 GST_TAG_SETTER
 GST_IS_TAG_SETTER
-GST_TAG_SETTER_CLASS
 GST_TAG_SETTER_GET_IFACE
 GST_TYPE_TAG_SETTER
 <SUBSECTION Private>
