@@ -1,11 +1,14 @@
 2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-	* tests/check/Makefile.am:
-	  gst-inspect every element; this makes sure that we also get
-	  coverage on element's get/set functions
 	* tests/check/gst/gststructure.c: (GST_START_TEST),
 	(gst_structure_suite):
 	  Push coverage from 59.04% to 70.00%
+
+2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/check/Makefile.am:
+	  gst-inspect every element; this makes sure that we also get
+	  coverage on element's get/set functions
 
 2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
