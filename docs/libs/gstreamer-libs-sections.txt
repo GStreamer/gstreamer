@@ -388,6 +388,11 @@ fail_unless_equals_string
 fail_unless_equals_uint64
 fail_unless_message_error
 
+assert_equals_int
+assert_equals_string
+assert_equals_uint64
+assert_message_error
+
 gst_check_chain_func
 gst_check_init
 gst_check_message_error
