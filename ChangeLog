@@ -1,5 +1,12 @@
 2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	  don't set CFLAGS and friends for gcov, done from GST_GCOV now
+	* tests/check/Makefile.am:
+	  clean up gcov files
+
+2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gstcaps.c: (gst_caps_remove_and_get_structure):
 	  remove gst_caps_simplify; it was not declared and not used
 	  and deprecated in 0.8
