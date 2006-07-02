@@ -471,6 +471,20 @@ GST_START_TEST (test_add_linked)
 
 GST_END_TEST;
 
+/* adding ourself should fail */
+GST_START_TEST (test_add_self)
+{
+  GstElement *bin;
+
+  bin = gst_bin_new (NULL);
+  fail_unless (bin != NULL, "Could not create bin");
+
+  ASSERT_WARNING (gst_bin_add (GST_BIN (bin), bin));
+}
+
+GST_END_TEST;
+
+
 /* g_print ("%10s: %4d => %4d\n", GST_OBJECT_NAME (msg->src), old, new); */
 
 #define ASSERT_STATE_CHANGE_MSG(bus,element,old_state,new_state,num)          \
@@ -804,6 +818,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_message_state_changed_children);
   tcase_add_test (tc_chain, test_watch_for_state_change);
   tcase_add_test (tc_chain, test_add_linked);
+  tcase_add_test (tc_chain, test_add_self);
 
   return s;
 }

@@ -1,5 +1,10 @@
 2006-07-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tests/check/gst/gstbin.c: (GST_START_TEST), (gst_bin_suite):
+	  add a test for adding self
+
+2006-07-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* libs/gst/check/gstcheck.h:
 	  add some assert_ as alias for fail_unless_*
 	* tests/check/gst/gst.c: (GST_START_TEST), (gst_suite):
