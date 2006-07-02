@@ -16,3 +16,5 @@ gstconfig.h
 *.da
 *.def
 *.gcno
+*.gcov
+*.gcov.out
