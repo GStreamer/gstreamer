@@ -29,8 +29,8 @@
  * given pad can handle. They are also stored in the registry along with
  * a description of the element.
  *
- * Caps are exposed on the element pads using the gst_pad_get_caps() pad 
- * function. This function describes the possible types that the pad can 
+ * Caps are exposed on the element pads using the gst_pad_get_caps() pad
+ * function. This function describes the possible types that the pad can
  * handle or produce at runtime.
  *
  * Caps are also attached to buffers to describe to content of the data
@@ -47,8 +47,8 @@
  *       "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
  *       "framerate", G_TYPE_DOUBLE, 25.0,
  *       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
- *       "width", G_TYPE_INT, 320, 
- *       "height", G_TYPE_INT, 240, 
+ *       "width", G_TYPE_INT, 320,
+ *       "height", G_TYPE_INT, 240,
  *       NULL);
  *  </programlisting>
  * </example>
@@ -875,9 +875,9 @@ gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
  * <note>This function does not work reliably if optional properties for caps
  * are included on one caps and omitted on the other.</note>
  *
- * This function deals correctly with passing NULL for any of the caps. 
+ * This function deals correctly with passing NULL for any of the caps.
  *
- * Returns: TRUE if both caps are equal. 
+ * Returns: TRUE if both caps are equal.
  */
 gboolean
 gst_caps_is_equal (const GstCaps * caps1, const GstCaps * caps2)
@@ -1309,7 +1309,7 @@ gst_caps_compare_structures (gconstpointer one, gconstpointer two)
   const GstStructure *struct1 = *((const GstStructure **) one);
   const GstStructure *struct2 = *((const GstStructure **) two);
 
-  /* FIXME: this orders aphabetically, but ordering the quarks might be faster
+  /* FIXME: this orders alphabetically, but ordering the quarks might be faster
      So what's the best way? */
   ret = strcmp (gst_structure_get_name (struct1),
       gst_structure_get_name (struct2));

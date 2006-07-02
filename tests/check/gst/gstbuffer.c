@@ -39,6 +39,10 @@ GST_START_TEST (test_caps)
   fail_unless (GST_BUFFER_CAPS (buffer) == caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
 
+  fail_unless (gst_buffer_get_caps (buffer) == caps);
+  gst_caps_unref (caps);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+
   caps2 = gst_caps_from_string ("audio/x-raw-float");
   ASSERT_CAPS_REFCOUNT (caps2, "caps2", 1);
 

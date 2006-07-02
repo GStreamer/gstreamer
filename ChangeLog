@@ -1,5 +1,13 @@
 2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/gstcaps.c: (gst_caps_compare_structures):
+	  whitespace fixes
+	* tests/check/gst/gstbuffer.c: (GST_START_TEST):
+	* tests/check/gst/gstcaps.c: (GST_START_TEST), (gst_caps_suite):
+	  add more tests
+
+2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* libs/gst/dataprotocol/Makefile.am:
 	  build dataprotocol test by linking to the lib, instead of
 	  compiling the source, so we get coverage

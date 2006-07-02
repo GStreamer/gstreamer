@@ -22,6 +22,7 @@
 
 
 #include <gst/check/gstcheck.h>
+#include <gst/gstcaps.h>
 #include "capslist.h"
 
 GST_START_TEST (test_from_string)
@@ -197,11 +198,15 @@ GST_START_TEST (test_simplify)
 {
   GstStructure *s1, *s2;
   gboolean did_simplify;
-  GstCaps *caps;
+  GstCaps *caps, *simplecaps;
 
   caps = gst_caps_from_string (non_simple_caps_string);
   fail_unless (caps != NULL,
       "gst_caps_from_string (non_simple_caps_string) failed");
+
+  /* first get a new copy of simplified caps */
+  simplecaps = gst_caps_simplify (caps);
+  fail_unless (simplecaps != NULL, "simplifying caps failed");
 
   did_simplify = gst_caps_do_simplify (caps);
   fail_unless (did_simplify == TRUE,
@@ -332,6 +337,22 @@ GST_START_TEST (test_simplify)
 
 GST_END_TEST;
 
+GST_START_TEST (test_truncate)
+{
+  GstCaps *caps;
+
+  caps = gst_caps_from_string (non_simple_caps_string);
+  fail_unless (caps != NULL,
+      "gst_caps_from_string (non_simple_caps_string) failed");
+  fail_unless_equals_int (gst_caps_get_size (caps), 4);
+  gst_caps_truncate (caps);
+  fail_unless_equals_int (gst_caps_get_size (caps), 1);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
+
 Suite *
 gst_caps_suite (void)
 {
@@ -345,6 +366,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_buffer);
   tcase_add_test (tc_chain, test_static_caps);
   tcase_add_test (tc_chain, test_simplify);
+  tcase_add_test (tc_chain, test_truncate);
 
   return s;
 }
