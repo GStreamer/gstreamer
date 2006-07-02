@@ -1,3 +1,8 @@
+2006-07-02  Edward Hervey  <edward@fluendo.com>
+
+	* tests/check/elements/.cvsignore:
+	moaping
+
 2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

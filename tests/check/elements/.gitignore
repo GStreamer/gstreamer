@@ -3,3 +3,4 @@ fakesrc
 fakesink
 fdsrc
 identity
+filesrc
