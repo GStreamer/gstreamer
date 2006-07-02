@@ -13,3 +13,4 @@ gstreamer-libs.hierarchy
 gstreamer-libs.interfaces
 gstreamer-libs.prerequisites
 gstreamer-libs.signals
+gstreamer-libs-scan.gcno

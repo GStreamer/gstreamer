@@ -4,3 +4,4 @@ fakesink
 fdsrc
 identity
 filesrc
+*.check.xml

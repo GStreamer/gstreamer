@@ -4,3 +4,5 @@ xmlTest.gst
 *.bb
 *.bbg
 *.da
+createxml-createxml.gcno
+runxml-runxml.gcno

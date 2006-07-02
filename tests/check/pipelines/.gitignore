@@ -3,3 +3,4 @@ cleanup
 simple-launch-lines
 stress
 parse-launch
+*.check.xml

@@ -8,3 +8,4 @@ gstnetclientclock
 gstnettimeprovider
 libsabi
 typefindhelper
+*.check.xml

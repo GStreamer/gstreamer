@@ -3,3 +3,4 @@ read-metadata
 *.bbg
 *.da
 
+read_metadata-read-metadata.gcno
