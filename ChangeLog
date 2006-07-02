@@ -1,3 +1,11 @@
+2006-07-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Michael Sheldon  <webmaster at mikeasoft com>
+
+	* ext/alsa/gstalsasrc.c:
+	  Add 32 bps to template caps and increase channels range
+	  from [1,2] to [1,MAX]. See #346326.
+
 2006-06-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):

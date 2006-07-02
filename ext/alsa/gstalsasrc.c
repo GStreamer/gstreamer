@@ -116,14 +116,20 @@ static GstStaticPadTemplate alsasrc_src_factory =
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "endianness = (int) { " ALSA_SRC_FACTORY_ENDIANNESS " }, "
         "signed = (boolean) { TRUE, FALSE }, "
+        "width = (int) 32, "
+        "depth = (int) 32, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
+        "audio/x-raw-int, "
+        "endianness = (int) { " ALSA_SRC_FACTORY_ENDIANNESS " }, "
+        "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 16, "
         "depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
         "audio/x-raw-int, "
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 8, "
         "depth = (int) 8, "
-        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]")
     );
 
 static void
