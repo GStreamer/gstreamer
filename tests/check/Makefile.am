@@ -177,7 +177,6 @@ debug:
 if GST_GCOV_ENABLED
 # we rebuild a registry and do gst-inspect so that all the get/set codepaths
 # are also covered
-GST_INSPECT = $(top_builddir)/tools/gst-inspect-$(GST_MAJORMINOR)
 coverage:
 	for file in `find $(top_builddir) -name '*.gcda'`; do rm $$file; done
 	-rm $(CHECK_REGISTRY)
