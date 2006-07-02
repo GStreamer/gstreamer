@@ -1,5 +1,15 @@
 2006-07-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* libs/gst/check/gstcheck.c: (gst_check_message_error),
+	(gst_check_run_suite):
+	  if we get the wrong message, give us the types as string
+	* plugins/elements/gstfilesrc.c: (gst_file_src_start):
+	  Fix a translatable
+	* tests/check/elements/filesrc.c: (GST_START_TEST):
+	  add a test for trying to open a non-existing file
+
+2006-07-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* tests/check/gst/gstbin.c: (GST_START_TEST), (gst_bin_suite):
 	  add a test for adding self
 

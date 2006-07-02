@@ -948,7 +948,7 @@ open_failed:
 no_stat:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("could not get info on \"%s\"."), src->filename), (NULL));
+        (_("Could not get info on \"%s\"."), src->filename), (NULL));
     close (src->fd);
     return FALSE;
   }

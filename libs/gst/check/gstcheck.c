@@ -108,7 +108,10 @@ gst_check_message_error (GstMessage * message, GstMessageType type,
   GError *error;
   gchar *debug;
 
-  fail_unless_equals_int (GST_MESSAGE_TYPE (message), type);
+  fail_unless (GST_MESSAGE_TYPE (message) == type,
+      "message is of type %s instead of expected type %s",
+      gst_message_type_get_name (GST_MESSAGE_TYPE (message)),
+      gst_message_type_get_name (type));
   gst_message_parse_error (message, &error, &debug);
   fail_unless_equals_int (error->domain, domain);
   fail_unless_equals_int (error->code, code);

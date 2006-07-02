@@ -104,18 +104,36 @@ GST_START_TEST (test_coverage)
 {
   GstElement *src;
   gchar *location;
+  GstBus *bus;
+  GstMessage *message;
 
   src = setup_filesrc ();
+  bus = gst_bus_new ();
+
+  gst_element_set_bus (src, bus);
 
   g_object_set (G_OBJECT (src), "location", "/i/do/not/exist", NULL);
   g_object_get (G_OBJECT (src), "location", &location, NULL);
   fail_unless_equals_string (location, "/i/do/not/exist");
   g_free (location);
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE,
+      "could set to playing with wrong location");
+
+  /* a state change and an error */
+  fail_if ((message = gst_bus_pop (bus)) == NULL);
+  gst_message_unref (message);
+  fail_if ((message = gst_bus_pop (bus)) == NULL);
+  fail_unless_message_error (message, RESOURCE, NOT_FOUND);
+  gst_message_unref (message);
+
   g_object_set (G_OBJECT (src), "location", NULL, NULL);
   g_object_get (G_OBJECT (src), "location", &location, NULL);
   fail_if (location);
 
   /* cleanup */
+  gst_element_set_bus (src, NULL);
+  gst_object_unref (GST_OBJECT (bus));
   cleanup_filesrc (src);
 }
 
