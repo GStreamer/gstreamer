@@ -53,7 +53,7 @@ EXTRA_DIST = gstfdsrc.c \
 	     gstfdsink.c
 
 
-CLEANFILES = *.gcno *.gcda *.gcov
+CLEANFILES = *.gcno *.gcda *.gcov *.gcov.out
 
 %.c.gcov: .libs/libgstcoreelements_la-%.gcda %.c
 	$(GCOV) -b -f -o $^ > $@.out
