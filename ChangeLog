@@ -1,3 +1,15 @@
+2006-07-03  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Peter Kjellerstedt <pkj at axis dot com>
+
+	* gst/gst-i18n-app.h:
+	* gst/gst-i18n-lib.h:
+	* tools/gst-inspect.c: (print_signal_info):
+	The attached patch will make the inclusion of gettext.h unconditional in
+	gst/gst-i18n-app.h and gst/gst-i18n-lib.h, and it will remove the inclusion of
+	libintl.h in tools/gst-inspect.c.
+	This allows use of --disable-nls again and fixes #344642.
+
 2006-07-03  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstpad.c: (handle_pad_block), (gst_pad_push_event):

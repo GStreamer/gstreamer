@@ -31,7 +31,6 @@
 
 #include <string.h>
 #include <locale.h>
-#include <libintl.h>
 #include <glib/gprintf.h>
 
 static char *_name;

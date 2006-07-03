@@ -23,8 +23,9 @@
 #ifndef __GST_I18N_APP_H__
 #define __GST_I18N_APP_H__
 
-#ifdef ENABLE_NLS
 #include "gettext.h" /* included with gettext distribution and copied */
+
+#ifdef ENABLE_NLS
 
 /* we want to use shorthand _() for translating and N_() for marking */
 #define _(String) gettext (String)
