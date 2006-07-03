@@ -140,7 +140,7 @@ init_gst (void)
 	       g_free (argv);
 	  }
           errstr = g_strdup_printf ("can't initialize module gst: %s",
-              GST_STR_NULL (error->message));
+              error ? GST_STR_NULL (error->message) : "no error given");
 	  PyErr_SetString (PyExc_RuntimeError, errstr);
           g_free (errstr);
 	  g_error_free (error);

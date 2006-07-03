@@ -1,3 +1,8 @@
+2006-07-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstmodule.c: (init_gst):
+	  don't crash when error is NULL
+
 2006-07-03  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstmessage.override:
