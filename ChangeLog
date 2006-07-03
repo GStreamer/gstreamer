@@ -1,3 +1,11 @@
+2006-07-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
+	(gst_qtdemux_loop_state_header), (qtdemux_video_caps):
+	  Fix silly crasher in state change function; add
+	  IV41 fourcc (see bug #171111); don't output confusing
+	  debug message when skipping atoms.
+
 2006-06-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/directfb/dfbvideosink.c:
