@@ -67,7 +67,7 @@ _wrap_gst_event_parse_new_segment (PyGstMiniObject *self)
      gst_event_parse_new_segment (GST_EVENT(self->obj), &update, &rate, &format,
 				 &start_value, &stop_value, &base);
 
-     return Py_BuildValue("(OfOKKK)",
+     return Py_BuildValue("(OdOLLL)",
 			  PyBool_FromLong(update),
 			  rate, pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
 			  start_value, stop_value, base);
@@ -108,7 +108,7 @@ _wrap_gst_event_parse_qos (PyGstMiniObject *self)
 	gst_event_parse_qos (GST_EVENT(self->obj), &proportion,
 			     &diff, &timestamp);
 	
-       return Py_BuildValue("(fLK)", proportion, diff, timestamp);
+       return Py_BuildValue("(dLK)", proportion, diff, timestamp);
 }
 %%
 override gst_event_parse_seek noargs
@@ -131,7 +131,7 @@ _wrap_gst_event_parse_seek (PyGstMiniObject *self)
 	gst_event_parse_seek (GST_EVENT(self->obj), &rate, &format, &flags,
 			      &cur_type, &cur, &stop_type, &stop);
 	
-	return Py_BuildValue("(fOOOKOK)",
+	return Py_BuildValue("(dOOOLOL)",
 			     rate,
 			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
 			     pyg_flags_from_gtype (GST_TYPE_SEEK_FLAGS, flags),

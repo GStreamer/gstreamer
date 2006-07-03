@@ -1,3 +1,13 @@
+2006-07-03  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstelement.override:
+	* gst/gstevent.override:
+	* gst/gstmessage.override:
+	* gst/gstquery.override:
+	Repeat 100 times : "I shouldn't commit patches without checking
+	them thoroughly, especially if they come from someone I trust".
+	Fix the broken Py_BuildValue.
+
 2006-07-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

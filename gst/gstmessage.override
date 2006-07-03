@@ -86,7 +86,7 @@ _wrap_gst_message_parse_segment_start (PyGstMiniObject *self)
 
   return Py_BuildValue("(OL)",
 		       pyg_enum_from_gtype(GST_TYPE_FORMAT, format),
-		       PyLong_FromLongLong(position));
+		       position);
 }
 
 %%
@@ -106,7 +106,7 @@ _wrap_gst_message_parse_segment_done (PyGstMiniObject *self)
 
   return Py_BuildValue("(OL)",
 		       pyg_enum_from_gtype(GST_TYPE_FORMAT, format),
-		       PyLong_FromLongLong(position));
+		       position);
 }
 
 %%
@@ -248,5 +248,5 @@ _wrap_gst_message_parse_duration (PyGstMiniObject *self)
 
   return Py_BuildValue("(OL)",
 		       pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
-		       PyLong_FromLongLong(duration));
+		       duration);
 }

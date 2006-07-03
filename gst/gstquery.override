@@ -37,8 +37,9 @@ _wrap_gst_query_parse_position (PyGstMiniObject *self)
 	
 	gst_query_parse_position (GST_QUERY(self->obj), &format, &cur);
 	
-	return Py_BuildValue("(LO)", cur,
-			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
+	return Py_BuildValue("(OL)",
+			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+			     cur);
 }
 %%
 override gst_query_parse_duration noargs
@@ -55,8 +56,9 @@ _wrap_gst_query_parse_duration (PyGstMiniObject *self)
 	
 	gst_query_parse_duration (GST_QUERY(self->obj), &format, &cur);
 	
-	return Py_BuildValue("(LO)", cur,
-			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
+	return Py_BuildValue("(OL)",
+			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+			     cur);
 }
 %%
 override gst_query_parse_convert noargs
@@ -100,7 +102,7 @@ _wrap_gst_query_parse_segment (PyGstMiniObject *self)
 				 &rate, &format,
 				 &start_value, &stop_value);
 	
-	return Py_BuildValue("(fOLL)",
+	return Py_BuildValue("(dOLL)",
 			     rate,
 			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
 			     start_value, stop_value);
@@ -123,9 +125,9 @@ _wrap_gst_query_parse_seeking (PyGstMiniObject *self)
 				 &format, &seekable,
 				 &segment_start, &segment_end);
 	
-	return Py_BuildValue("(OLKK)",
+	return Py_BuildValue("(OOLL)",
 			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
-			     seekable,
+			     PyBool_FromLong(seekable),
 			     segment_start,
 			     segment_end);
 }
