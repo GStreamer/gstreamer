@@ -90,6 +90,8 @@ typedef struct {
   GstClockTime   idx_duration;
 
   guint64       *indexes;
+
+  GstTagList	*taglist;
 } avi_stream_context;
 
 typedef enum {
@@ -126,6 +128,8 @@ typedef struct _GstAviDemux {
   /* seeking in TIME */
   GstSegment    segment;
   GstEvent      *seek_event;
+
+  gboolean	got_tags;
 
 } GstAviDemux;
 

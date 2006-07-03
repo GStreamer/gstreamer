@@ -1,3 +1,18 @@
+2006-07-03  Edward Hervey  <edward@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
+	(gst_avi_demux_read_subindexes), (gst_avi_demux_parse_stream),
+	(gst_avi_demux_handle_seek), (gst_avi_demux_aggregated_flow),
+	(gst_avi_demux_process_next_entry), (push_tag_lists),
+	(gst_avi_demux_stream_data), (gst_avi_demux_loop):
+	* gst/avi/gstavidemux.h:
+	Proper aggregation of each stream's GstFlowReturn in order to figure out
+	whether the task should stop or not.
+	Don't send inline events before pushing out a NEW_SEGMENT, more
+	specifically for GST_TAG_EVENT.
+	Change a GST_ERROR to a GST_WARNING for a non-fatal situation in reading
+	sub-indexes.
+
 2006-06-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Brian Cameron  <brian dot cameron at sun dot com>
