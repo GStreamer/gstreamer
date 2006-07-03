@@ -1,3 +1,10 @@
+2006-07-03  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstmessage.override:
+	State change is a list and not a tuple
+	* gst/gstpad.override:
+	query_position() got busted in previous commit.
+
 2006-07-03  Johan Dahlin  <jdahlin@async.com.br>
 
 	reviewed by: Edward Hervey  <edward@fluendo.com>
