@@ -87,12 +87,13 @@ GST_PLUGINS_ALL="\
 		debug \
 		effectv \
 		id3demux \
-                icydemux \
+		icydemux \
 		flx \
 		goom \
 		law \
 		level \
 		matroska \
+		monoscope \
 		multipart \
 		rtp	\
 		rtsp	\
@@ -765,6 +766,7 @@ gst/goom/Makefile
 gst/law/Makefile
 gst/level/Makefile
 gst/matroska/Makefile
+gst/monoscope/Makefile
 gst/multipart/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile

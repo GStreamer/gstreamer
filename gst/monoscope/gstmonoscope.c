@@ -1,5 +1,7 @@
 /* gstmonoscope.c: implementation of monoscope drawing element
  * Copyright (C) <2002> Richard Boulton <richard@tartarus.org>
+ * Copyright (C) <2006> Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) <2006> Wim Taymans <wim at fluendo dot com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,56 +19,32 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-monoscope
+ * @see_also: monoscope
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v audiotestsrc ! audioconvert ! monoscope ! ffmpegcolorspace ! ximagesink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/audio/audio.h>
+#include <string.h>
+#include "gstmonoscope.h"
 #include "monoscope.h"
 
-GST_DEBUG_CATEGORY (monoscope_debug);
+GST_DEBUG_CATEGORY_STATIC (monoscope_debug);
 #define GST_CAT_DEFAULT monoscope_debug
-
-
-#define GST_TYPE_MONOSCOPE (gst_monoscope_get_type())
-#define GST_MONOSCOPE(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MONOSCOPE,GstMonoscope))
-#define GST_MONOSCOPE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MONOSCOPE,GstMonoscope))
-#define GST_IS_MONOSCOPE(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MONOSCOPE))
-#define GST_IS_MONOSCOPE_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MONOSCOPE))
-
-typedef struct _GstMonoscope GstMonoscope;
-typedef struct _GstMonoscopeClass GstMonoscopeClass;
-
-struct _GstMonoscope
-{
-  GstElement element;
-
-  /* pads */
-  GstPad *sinkpad, *srcpad;
-
-  /* the timestamp of the next frame */
-  guint64 next_time;
-  gint16 datain[512];
-
-  /* video state */
-  gdouble fps;
-  gint width;
-  gint height;
-  gboolean first_buffer;
-
-  /* visualisation state */
-  struct monoscope_state *visstate;
-};
-
-struct _GstMonoscopeClass
-{
-  GstElementClass parent_class;
-};
-
-GType gst_monoscope_get_type (void);
-
 
 /* elementfactory information */
 static const GstElementDetails gst_monoscope_details =
@@ -74,19 +52,6 @@ GST_ELEMENT_DETAILS ("Monoscope",
     "Visualization",
     "Displays a highly stabilised waveform of audio input",
     "Richard Boulton <richard@tartarus.org>");
-
-/* signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-      /* FILL ME */
-};
 
 #if G_BYTE_ORDER == G_BIG_ENDIAN
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -125,42 +90,20 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 
-static void gst_monoscope_class_init (GstMonoscopeClass * klass);
-static void gst_monoscope_base_init (GstMonoscopeClass * klass);
-static void gst_monoscope_init (GstMonoscope * monoscope);
+GST_BOILERPLATE (GstMonoscope, gst_monoscope, GstElement, GST_TYPE_ELEMENT);
 
-static void gst_monoscope_chain (GstPad * pad, GstData * _data);
-
-static GstPadLinkReturn
-gst_monoscope_srcconnect (GstPad * pad, const GstCaps * caps);
-
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_monoscope_get_type (void)
-{
-  static GType type = 0;
-
-  if (!type) {
-    static const GTypeInfo info = {
-      sizeof (GstMonoscopeClass),
-      (GBaseInitFunc) gst_monoscope_base_init,
-      NULL,
-      (GClassInitFunc) gst_monoscope_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMonoscope),
-      0,
-      (GInstanceInitFunc) gst_monoscope_init,
-    };
-
-    type = g_type_register_static (GST_TYPE_ELEMENT, "GstMonoscope", &info, 0);
-  }
-  return type;
-}
+static void gst_monoscope_finalize (GObject * object);
+static GstFlowReturn gst_monoscope_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_monoscope_src_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_monoscope_sink_setcaps (GstPad * pad, GstCaps * caps);
+static void gst_monoscope_reset (GstMonoscope * monoscope);
+static gboolean gst_monoscope_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_monoscope_src_event (GstPad * pad, GstEvent * event);
+static GstStateChangeReturn gst_monoscope_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void
-gst_monoscope_base_init (GstMonoscopeClass * klass)
+gst_monoscope_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -180,122 +123,434 @@ gst_monoscope_class_init (GstMonoscopeClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
+  gobject_class->finalize = gst_monoscope_finalize;
 
-  GST_DEBUG_CATEGORY_INIT (monoscope_debug, "monoscope", 0,
-      "monoscope element");
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_monoscope_change_state);
 }
 
 static void
-gst_monoscope_init (GstMonoscope * monoscope)
+gst_monoscope_init (GstMonoscope * monoscope, GstMonoscopeClass * klass)
 {
-  /* create the sink and src pads */
   monoscope->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
-  monoscope->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
+      gst_pad_new_from_static_template (&sink_template, "sink");
+  gst_pad_set_chain_function (monoscope->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_monoscope_chain));
+  gst_pad_set_event_function (monoscope->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_monoscope_sink_event));
+  gst_pad_set_setcaps_function (monoscope->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_monoscope_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (monoscope), monoscope->sinkpad);
+
+  monoscope->srcpad = gst_pad_new_from_static_template (&src_template, "src");
+  gst_pad_set_setcaps_function (monoscope->srcpad,
+      GST_DEBUG_FUNCPTR (gst_monoscope_src_setcaps));
+  gst_pad_set_event_function (monoscope->srcpad,
+      GST_DEBUG_FUNCPTR (gst_monoscope_src_event));
   gst_element_add_pad (GST_ELEMENT (monoscope), monoscope->srcpad);
 
-  gst_pad_set_chain_function (monoscope->sinkpad, gst_monoscope_chain);
-  gst_pad_set_link_function (monoscope->srcpad, gst_monoscope_srcconnect);
-
-  monoscope->next_time = 0;
+  monoscope->adapter = gst_adapter_new ();
+  monoscope->next_ts = GST_CLOCK_TIME_NONE;
+  monoscope->bps = sizeof (gint16);
 
   /* reset the initial video state */
-  monoscope->first_buffer = TRUE;
   monoscope->width = 256;
   monoscope->height = 128;
-  monoscope->fps = 25.;         /* desired frame rate */
+  monoscope->fps_num = 25;      /* desired frame rate */
+  monoscope->fps_denom = 1;
+  monoscope->visstate = NULL;
 }
 
-static GstPadLinkReturn
-gst_monoscope_srcconnect (GstPad * pad, const GstCaps * caps)
+static void
+gst_monoscope_finalize (GObject * object)
 {
-  GstMonoscope *monoscope = GST_MONOSCOPE (gst_pad_get_parent (pad));
+  GstMonoscope *monoscope = GST_MONOSCOPE (object);
+
+  if (monoscope->visstate)
+    monoscope_close (monoscope->visstate);
+
+  g_object_unref (monoscope->adapter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_monoscope_reset (GstMonoscope * monoscope)
+{
+  monoscope->next_ts = GST_CLOCK_TIME_NONE;
+
+  gst_adapter_clear (monoscope->adapter);
+  gst_segment_init (&monoscope->segment, GST_FORMAT_UNDEFINED);
+
+  GST_OBJECT_LOCK (monoscope);
+  monoscope->proportion = 1.0;
+  monoscope->earliest_time = -1;
+  GST_OBJECT_UNLOCK (monoscope);
+}
+
+static gboolean
+gst_monoscope_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstMonoscope *monoscope = GST_MONOSCOPE (GST_PAD_PARENT (pad));
+  GstStructure *structure;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int (structure, "rate", &monoscope->rate);
+
+  GST_DEBUG_OBJECT (monoscope, "sample rate = %d", monoscope->rate);
+  return TRUE;
+}
+
+static gboolean
+gst_monoscope_src_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstMonoscope *monoscope = GST_MONOSCOPE (GST_PAD_PARENT (pad));
   GstStructure *structure;
 
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_get_int (structure, "width", &monoscope->width);
   gst_structure_get_int (structure, "height", &monoscope->height);
-  gst_structure_get_double (structure, "framerate", &monoscope->fps);
+  gst_structure_get_fraction (structure, "framerate", &monoscope->fps_num,
+      &monoscope->fps_denom);
 
-  gst_object_unref (monoscope);
+  monoscope->outsize = monoscope->width * monoscope->height * 4;
+  monoscope->frame_duration = gst_util_uint64_scale_int (GST_SECOND,
+      monoscope->fps_denom, monoscope->fps_num);
+  monoscope->spf =
+      gst_util_uint64_scale_int (monoscope->rate, monoscope->fps_denom,
+      monoscope->fps_num);
 
-  return GST_PAD_LINK_OK;
+  GST_DEBUG_OBJECT (monoscope, "dimension %dx%d, framerate %d/%d, spf %d",
+      monoscope->width, monoscope->height, monoscope->fps_num,
+      monoscope->fps_denom, monoscope->spf);
+
+  if (monoscope->visstate) {
+    monoscope_close (monoscope->visstate);
+    monoscope->visstate = NULL;
+  }
+
+  monoscope->visstate = monoscope_init (monoscope->width, monoscope->height);
+
+  return (monoscope->visstate != NULL);
 }
 
-static void
-gst_monoscope_chain (GstPad * pad, GstData * _data)
+static gboolean
+gst_monoscope_src_negotiate (GstMonoscope * monoscope)
 {
-  GstBuffer *bufin = GST_BUFFER (_data);
+  GstCaps *othercaps, *target, *intersect;
+  GstStructure *structure;
+  const GstCaps *templ;
+
+  templ = gst_pad_get_pad_template_caps (monoscope->srcpad);
+
+  GST_DEBUG_OBJECT (monoscope, "performing negotiation");
+
+  /* see what the peer can do */
+  othercaps = gst_pad_peer_get_caps (monoscope->srcpad);
+  if (othercaps) {
+    intersect = gst_caps_intersect (othercaps, templ);
+    gst_caps_unref (othercaps);
+
+    if (gst_caps_is_empty (intersect))
+      goto no_format;
+
+    target = gst_caps_copy_nth (intersect, 0);
+    gst_caps_unref (intersect);
+  } else {
+    target = gst_caps_ref ((GstCaps *) templ);
+  }
+
+  structure = gst_caps_get_structure (target, 0);
+  gst_structure_fixate_field_nearest_int (structure, "width", 320);
+  gst_structure_fixate_field_nearest_int (structure, "height", 240);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate", 25, 1);
+
+  gst_pad_set_caps (monoscope->srcpad, target);
+  gst_caps_unref (target);
+
+  return TRUE;
+
+no_format:
+  {
+    gst_caps_unref (intersect);
+    return FALSE;
+  }
+}
+
+static GstFlowReturn
+get_buffer (GstMonoscope * monoscope, GstBuffer ** outbuf)
+{
+  GstFlowReturn ret;
+
+  if (GST_PAD_CAPS (monoscope->srcpad) == NULL) {
+    if (!gst_monoscope_src_negotiate (monoscope))
+      return GST_FLOW_NOT_NEGOTIATED;
+  }
+
+  GST_LOG_OBJECT (monoscope, "allocating output buffer of size %d with caps %"
+      GST_PTR_FORMAT, monoscope->outsize, GST_PAD_CAPS (monoscope->srcpad));
+
+  ret =
+      gst_pad_alloc_buffer_and_set_caps (monoscope->srcpad,
+      GST_BUFFER_OFFSET_NONE, monoscope->outsize,
+      GST_PAD_CAPS (monoscope->srcpad), outbuf);
+
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  if (*outbuf == NULL)
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_monoscope_chain (GstPad * pad, GstBuffer * inbuf)
+{
   GstMonoscope *monoscope;
-  GstBuffer *bufout;
-  guint32 samples_in;
-  gint16 *data;
-  gint i;
+  GstFlowReturn flow_ret;
+
+  monoscope = GST_MONOSCOPE (GST_PAD_PARENT (pad));
+
+  /* don't try to combine samples from discont buffer */
+  if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DISCONT)) {
+    gst_adapter_clear (monoscope->adapter);
+    monoscope->next_ts = GST_CLOCK_TIME_NONE;
+  }
+
+  /* Match timestamps from the incoming audio */
+  if (GST_BUFFER_TIMESTAMP (inbuf) != GST_CLOCK_TIME_NONE)
+    monoscope->next_ts = GST_BUFFER_TIMESTAMP (inbuf);
+
+  GST_LOG_OBJECT (monoscope, "in buffer has %d samples, ts=%" GST_TIME_FORMAT,
+      GST_BUFFER_SIZE (inbuf) / monoscope->bps,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)));
+
+  gst_adapter_push (monoscope->adapter, inbuf);
+  inbuf = NULL;
+
+  flow_ret = GST_FLOW_OK;
+
+  /* Collect samples until we have enough for an output frame */
+  while (flow_ret == GST_FLOW_OK) {
+    gint16 *samples;
+    GstBuffer *outbuf = NULL;
+    guint32 *pixels, avail, bytesperframe;
+
+    avail = gst_adapter_available (monoscope->adapter);
+    GST_LOG_OBJECT (monoscope, "bytes avail now %u", avail);
+
+    /* do negotiation if not done yet, so ->spf etc. is set */
+    if (GST_PAD_CAPS (monoscope->srcpad) == NULL) {
+      flow_ret = get_buffer (monoscope, &outbuf);
+      if (flow_ret != GST_FLOW_OK) {
+        gst_buffer_unref (inbuf);
+        goto out;
+      }
+      gst_buffer_unref (outbuf);
+      outbuf = NULL;
+    }
+
+    bytesperframe = monoscope->spf * monoscope->bps;
+    if (avail < bytesperframe)
+      break;
+
+    /* FIXME: something is wrong with QoS, we are skipping way too much
+     * stuff even with very low CPU loads */
+#if 0
+    if (monoscope->next_ts != -1) {
+      gboolean need_skip;
+      gint64 qostime;
+
+      qostime = gst_segment_to_running_time (&monoscope->segment,
+          GST_FORMAT_TIME, monoscope->next_ts);
+
+      GST_OBJECT_LOCK (monoscope);
+      /* check for QoS, don't compute buffers that are known to be late */
+      need_skip =
+          GST_CLOCK_TIME_IS_VALID (monoscope->earliest_time) &&
+          qostime <= monoscope->earliest_time;
+      GST_OBJECT_UNLOCK (monoscope);
+
+      if (need_skip) {
+        GST_WARNING_OBJECT (monoscope,
+            "QoS: skip ts: %" GST_TIME_FORMAT ", earliest: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (qostime), GST_TIME_ARGS (monoscope->earliest_time));
+        goto skip;
+      }
+    }
+#endif
+
+    samples = (gint16 *) gst_adapter_peek (monoscope->adapter, bytesperframe);
+
+    if (monoscope->spf < 512) {
+      gint16 in_data[512], i;
+
+      for (i = 0; i < 512; ++i) {
+        gdouble off;
+
+        off = ((gdouble) i * (gdouble) monoscope->spf) / 512.0;
+        in_data[i] = samples[MIN ((guint) off, monoscope->spf)];
+      }
+      pixels = monoscope_update (monoscope->visstate, in_data);
+    } else {
+      /* not really correct, but looks much prettier */
+      pixels = monoscope_update (monoscope->visstate, samples);
+    }
+
+    flow_ret = get_buffer (monoscope, &outbuf);
+    if (flow_ret != GST_FLOW_OK) {
+      gst_buffer_unref (inbuf);
+      goto out;
+    }
+
+    memcpy (GST_BUFFER_DATA (outbuf), pixels, monoscope->outsize);
+
+    GST_BUFFER_TIMESTAMP (outbuf) = monoscope->next_ts;
+    GST_BUFFER_DURATION (outbuf) = monoscope->frame_duration;
+
+    flow_ret = gst_pad_push (monoscope->srcpad, outbuf);
+
+#if 0
+  skip:
+#endif
+
+    if (GST_CLOCK_TIME_IS_VALID (monoscope->next_ts))
+      monoscope->next_ts += monoscope->frame_duration;
+
+    gst_adapter_flush (monoscope->adapter, bytesperframe);
+  }
+
+out:
+
+  return flow_ret;
+}
+
+static gboolean
+gst_monoscope_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstMonoscope *monoscope;
+  gboolean res;
 
   monoscope = GST_MONOSCOPE (gst_pad_get_parent (pad));
 
-  GST_DEBUG ("Monoscope: chainfunc called");
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      res = gst_pad_push_event (monoscope->srcpad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_monoscope_reset (monoscope);
+      res = gst_pad_push_event (monoscope->srcpad, event);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat format;
+      gdouble rate, arate;
+      gint64 start, stop, time;
+      gboolean update;
 
-  samples_in = GST_BUFFER_SIZE (bufin) / sizeof (gint16);
+      /* the newsegment values are used to clip the input samples
+       * and to convert the incomming timestamps to running time so
+       * we can do QoS */
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
 
-  GST_DEBUG ("input buffer has %d samples", samples_in);
+      /* now configure the values */
+      gst_segment_set_newsegment_full (&monoscope->segment, update,
+          rate, arate, format, start, stop, time);
 
-  /* FIXME: should really select the first 1024 samples after the timestamp. */
-  if (GST_BUFFER_TIMESTAMP (bufin) < monoscope->next_time || samples_in < 1024) {
-    GST_DEBUG ("timestamp is %" G_GUINT64_FORMAT ": want >= %" G_GUINT64_FORMAT,
-        GST_BUFFER_TIMESTAMP (bufin), monoscope->next_time);
-    gst_buffer_unref (bufin);
-    gst_object_unref (monoscope);
-    return;
-  }
-
-  data = (gint16 *) GST_BUFFER_DATA (bufin);
-  /* FIXME: Select samples in a better way. */
-  for (i = 0; i < 512; i++) {
-    monoscope->datain[i] = *data++;
-  }
-
-  if (monoscope->first_buffer) {
-    monoscope->visstate = monoscope_init (monoscope->width, monoscope->height);
-    g_assert (monoscope->visstate != 0);
-    GST_DEBUG ("making new pad");
-    if (!gst_pad_is_negotiated (monoscope->srcpad)) {
-      if (gst_pad_renegotiate (monoscope->srcpad) <= 0) {
-        GST_ELEMENT_ERROR (monoscope, CORE, NEGOTIATION, (NULL), (NULL));
-        gst_object_unref (monoscope);
-        return;
-      }
+      res = gst_pad_push_event (monoscope->srcpad, event);
+      break;
     }
-    monoscope->first_buffer = FALSE;
+    default:
+      res = gst_pad_push_event (monoscope->srcpad, event);
+      break;
   }
 
-  bufout = gst_buffer_new ();
-  GST_BUFFER_SIZE (bufout) = monoscope->width * monoscope->height * 4;
-  GST_BUFFER_DATA (bufout) =
-      (guchar *) monoscope_update (monoscope->visstate, monoscope->datain);
-  GST_BUFFER_TIMESTAMP (bufout) = monoscope->next_time;
-  GST_BUFFER_FLAG_SET (bufout, GST_BUFFER_DONTFREE);
-
-  monoscope->next_time += GST_SECOND / monoscope->fps;
-
-  gst_pad_push (monoscope->srcpad, GST_DATA (bufout));
-
-  gst_buffer_unref (bufin);
   gst_object_unref (monoscope);
 
-  GST_DEBUG ("Monoscope: exiting chainfunc");
+  return res;
+}
 
+static gboolean
+gst_monoscope_src_event (GstPad * pad, GstEvent * event)
+{
+  GstMonoscope *monoscope;
+  gboolean res;
+
+  monoscope = GST_MONOSCOPE (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:{
+      gdouble proportion;
+      GstClockTimeDiff diff;
+      GstClockTime timestamp;
+
+      gst_event_parse_qos (event, &proportion, &diff, &timestamp);
+
+      /* save stuff for the _chain() function */
+      GST_OBJECT_LOCK (monoscope);
+      monoscope->proportion = proportion;
+      if (diff >= 0)
+        /* we're late, this is a good estimate for next displayable
+         * frame (see part-qos.txt) */
+        monoscope->earliest_time =
+            timestamp + 2 * diff + monoscope->frame_duration;
+      else
+        monoscope->earliest_time = timestamp + diff;
+      GST_OBJECT_UNLOCK (monoscope);
+
+      res = gst_pad_push_event (monoscope->sinkpad, event);
+      break;
+    }
+    default:
+      res = gst_pad_push_event (monoscope->sinkpad, event);
+      break;
+  }
+  gst_object_unref (monoscope);
+
+  return res;
+}
+
+static GstStateChangeReturn
+gst_monoscope_change_state (GstElement * element, GstStateChange transition)
+{
+  GstMonoscope *monoscope = GST_MONOSCOPE (element);
+  GstStateChangeReturn ret;
+
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_monoscope_reset (monoscope);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (monoscope_debug, "monoscope", 0,
+      "monoscope element");
+
   return gst_element_register (plugin, "monoscope",
       GST_RANK_NONE, GST_TYPE_MONOSCOPE);
 }

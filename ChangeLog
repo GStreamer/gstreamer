@@ -1,5 +1,19 @@
 2006-07-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	* gst/monoscope/Makefile.am:
+	* gst/monoscope/gstmonoscope.c: (gst_monoscope_base_init),
+	(gst_monoscope_class_init), (gst_monoscope_init),
+	(gst_monoscope_finalize), (gst_monoscope_reset),
+	(gst_monoscope_sink_setcaps), (gst_monoscope_src_setcaps),
+	(gst_monoscope_src_negotiate), (get_buffer), (gst_monoscope_chain),
+	(gst_monoscope_sink_event), (gst_monoscope_src_event),
+	(gst_monoscope_change_state), (plugin_init):
+	* gst/monoscope/gstmonoscope.h:
+	  Port monoscope visualisation to 0.10.
+
+2006-07-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_chain):
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain):
 	  Return FLOW_UNEXPECTED when at the end of the file, not
