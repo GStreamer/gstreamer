@@ -274,6 +274,7 @@ static void test_event
     gboolean expect_before_q, GstPad * fake_srcpad)
 {
   GstEvent *event;
+  GstPad *peer;
   gint i;
 
   got_event_before_q = got_event_after_q = NULL;
@@ -288,8 +289,14 @@ static void test_event
   got_event_time.tv_sec = 0;
   got_event_time.tv_usec = 0;
 
+  /* We block the pad so the stream lock is released and we can send the event */
   fail_unless (gst_pad_set_blocked (fake_srcpad, TRUE) == TRUE);
-  gst_pad_push_event (pad, event);
+
+  /* We send on the peer pad, since the pad is blocked */
+  fail_unless ((peer = gst_pad_get_peer (pad)) != NULL);
+  gst_pad_send_event (peer, event);
+  gst_object_unref (peer);
+
   fail_unless (gst_pad_set_blocked (fake_srcpad, FALSE) == TRUE);
 
   /* Wait up to 5 seconds for the event to appear */

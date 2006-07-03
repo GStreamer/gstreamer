@@ -1,3 +1,11 @@
+2006-07-03  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstpad.c: (handle_pad_block), (gst_pad_push_event):
+	Implement pad blocking on events according to part-block.txt.
+	More comments on behaviour.
+	* tests/check/gst/gstevent.c: (test_event):
+	Send event to peer pad of blocked pad (else it will block).
+
 2006-07-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* libs/gst/check/gstcheck.c: (gst_check_message_error),
