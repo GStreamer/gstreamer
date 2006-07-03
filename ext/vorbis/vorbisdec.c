@@ -770,12 +770,9 @@ static gboolean
 vorbis_do_clip (GstVorbisDec * dec, GstBuffer * buf)
 {
   gint64 start, stop, cstart, cstop, diff;
-  guint size;
 
   start = GST_BUFFER_TIMESTAMP (buf);
   stop = start + GST_BUFFER_DURATION (buf);
-
-  size = GST_BUFFER_SIZE (buf);
 
   if (!gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
           start, stop, &cstart, &cstop))

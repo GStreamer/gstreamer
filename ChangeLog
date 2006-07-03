@@ -1,3 +1,8 @@
+2006-07-03  Edward Hervey  <edward@fluendo.com>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_do_clip):
+	Remove unused variable.
+
 2006-07-02  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
