@@ -2304,30 +2304,42 @@ gst_element_pads_activate (GstElement * element, gboolean active)
   gboolean fold_ok;
 
   GST_DEBUG_OBJECT (element, "pads_activate with active %d", active);
+
   /* no need to unset this later, it's just a boolean */
   g_value_init (&ret, G_TYPE_BOOLEAN);
   g_value_set_boolean (&ret, TRUE);
 
   iter = gst_element_iterate_src_pads (element);
+
   fold_ok = iterator_fold_with_resync
       (iter, (GstIteratorFoldFunction) activate_pads, &ret, &active);
   gst_iterator_free (iter);
-  if (!fold_ok || !g_value_get_boolean (&ret)) {
-    GST_DEBUG_OBJECT (element, "pads_activate failed");
-    return FALSE;
-  }
+  if (G_UNLIKELY (!fold_ok || !g_value_get_boolean (&ret)))
+    goto src_failed;
 
   iter = gst_element_iterate_sink_pads (element);
+
   fold_ok = iterator_fold_with_resync
       (iter, (GstIteratorFoldFunction) activate_pads, &ret, &active);
   gst_iterator_free (iter);
-  if (!fold_ok || !g_value_get_boolean (&ret)) {
-    GST_DEBUG_OBJECT (element, "pads_activate failed");
-    return FALSE;
-  }
+  if (G_UNLIKELY (!fold_ok || !g_value_get_boolean (&ret)))
+    goto sink_failed;
 
   GST_DEBUG_OBJECT (element, "pads_activate successful");
+
   return TRUE;
+
+  /* ERRORS */
+src_failed:
+  {
+    GST_DEBUG_OBJECT (element, "source pads_activate failed");
+    return FALSE;
+  }
+sink_failed:
+  {
+    GST_DEBUG_OBJECT (element, "sink pads_activate failed");
+    return FALSE;
+  }
 }
 
 /* is called with STATE_LOCK */

@@ -1,5 +1,10 @@
 2006-07-03  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstelement.c: (gst_element_pads_activate):
+	Small cleanup in pad activation code.
+
+2006-07-03  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Peter Kjellerstedt <pkj at axis dot com>
 
 	* gst/gst-i18n-app.h:
