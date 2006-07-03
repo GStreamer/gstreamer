@@ -480,6 +480,8 @@ GST_START_TEST (test_add_self)
   fail_unless (bin != NULL, "Could not create bin");
 
   ASSERT_WARNING (gst_bin_add (GST_BIN (bin), bin));
+
+  gst_object_unref (bin);
 }
 
 GST_END_TEST;
