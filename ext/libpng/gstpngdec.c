@@ -158,6 +158,8 @@ gst_pngdec_init (GstPngDec * pngdec)
 
   pngdec->in_timestamp = GST_CLOCK_TIME_NONE;
   pngdec->in_duration = GST_CLOCK_TIME_NONE;
+
+  pngdec->segment = gst_segment_new ();
 }
 
 static void
@@ -230,6 +232,29 @@ user_endrow_callback (png_structp png_ptr, png_bytep new_row,
   }
 }
 
+static gboolean
+buffer_clip (GstPngDec * dec, GstBuffer * buffer)
+{
+  gboolean res = TRUE;
+  gint64 cstart, cstop;
+
+  if ((!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) ||
+      (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) ||
+      (dec->segment->format != GST_FORMAT_TIME))
+    goto beach;
+
+  if ((res = gst_segment_clip (dec->segment, GST_FORMAT_TIME,
+              GST_BUFFER_TIMESTAMP (buffer),
+              GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer),
+              &cstart, &cstop))) {
+    GST_BUFFER_TIMESTAMP (buffer) = cstart;
+    GST_BUFFER_DURATION (buffer) = cstop - cstart;
+  }
+
+beach:
+  return res;
+}
+
 static void
 user_end_callback (png_structp png_ptr, png_infop info)
 {
@@ -239,16 +264,25 @@ user_end_callback (png_structp png_ptr, png_infop info)
 
   GST_LOG_OBJECT (pngdec, "and we are done reading this image");
 
+  if (!pngdec->buffer_out)
+    return;
+
   if (GST_CLOCK_TIME_IS_VALID (pngdec->in_timestamp))
     GST_BUFFER_TIMESTAMP (pngdec->buffer_out) = pngdec->in_timestamp;
   if (GST_CLOCK_TIME_IS_VALID (pngdec->in_duration))
     GST_BUFFER_DURATION (pngdec->buffer_out) = pngdec->in_duration;
 
-  /* Push our buffer and then EOS if needed */
-  GST_LOG_OBJECT (pngdec, "pushing buffer with ts=%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (pngdec->buffer_out)));
+  /* buffer clipping */
+  if (buffer_clip (pngdec, pngdec->buffer_out)) {
+    /* Push our buffer and then EOS if needed */
+    GST_LOG_OBJECT (pngdec, "pushing buffer with ts=%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (pngdec->buffer_out)));
 
-  pngdec->ret = gst_pad_push (pngdec->srcpad, pngdec->buffer_out);
+    pngdec->ret = gst_pad_push (pngdec->srcpad, pngdec->buffer_out);
+  } else {
+    GST_LOG_OBJECT (pngdec, "dropped decoded buffer");
+    gst_buffer_unref (pngdec->buffer_out);
+  }
   pngdec->buffer_out = NULL;
 
   if (pngdec->framed) {
@@ -516,6 +550,7 @@ gst_pngdec_chain (GstPad * pad, GstBuffer * buffer)
   /* Progressive loading of the PNG image */
   png_process_data (pngdec->png, pngdec->info, GST_BUFFER_DATA (buffer),
       GST_BUFFER_SIZE (buffer));
+  ret = pngdec->ret;
 
   /* And release the buffer */
   gst_buffer_unref (buffer);
@@ -559,9 +594,15 @@ gst_pngdec_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:{
+      gdouble rate;
+      gboolean update;
+      gint64 start, stop, position;
       GstFormat fmt;
 
-      gst_event_parse_new_segment (event, NULL, NULL, &fmt, NULL, NULL, NULL);
+      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
+          &position);
+      gst_segment_set_newsegment (pngdec->segment, update, rate, fmt, start,
+          stop, position);
       GST_LOG_OBJECT (pngdec, "NEWSEGMENT (%s)", gst_format_get_name (fmt));
       if (fmt == GST_FORMAT_TIME) {
         pngdec->need_newsegment = FALSE;
@@ -572,6 +613,14 @@ gst_pngdec_sink_event (GstPad * pad, GstEvent * event)
       }
       break;
     }
+    case GST_EVENT_FLUSH_START:
+      gst_pngdec_libpng_clear (pngdec);
+      res = gst_pad_event_default (pad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_pngdec_libpng_init (pngdec);
+      res = gst_pad_event_default (pad, event);
+      break;
     case GST_EVENT_EOS:
       GST_LOG_OBJECT (pngdec, "EOS");
       gst_pngdec_libpng_clear (pngdec);
@@ -679,6 +728,8 @@ gst_pngdec_change_state (GstElement * element, GstStateChange transition)
       gst_pngdec_libpng_init (pngdec);
       pngdec->need_newsegment = TRUE;
       pngdec->framed = FALSE;
+      pngdec->segment = gst_segment_new ();
+      gst_segment_init (pngdec->segment, GST_FORMAT_UNDEFINED);
       break;
     default:
       break;
@@ -691,6 +742,10 @@ gst_pngdec_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_pngdec_libpng_clear (pngdec);
+      if (pngdec->segment) {
+        gst_segment_free (pngdec->segment);
+        pngdec->segment = NULL;
+      }
       break;
     default:
       break;

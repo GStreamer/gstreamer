@@ -67,6 +67,7 @@ struct _GstPngDec
   gboolean framed;
   GstClockTime in_timestamp;
   GstClockTime in_duration;
+  GstSegment *segment;
 };
 
 struct _GstPngDecClass
