@@ -116,6 +116,14 @@
 static GstAllocTrace *_gst_clock_entry_trace;
 #endif
 
+#if GLIB_CHECK_VERSION (2, 10, 0)
+#define ALLOC_ENTRY()     g_slice_new (GstClockEntry)
+#define FREE_ENTRY(entry) g_slice_free (GstClockEntry, entry)
+#else
+#define ALLOC_ENTRY()     g_new (GstClockEntry, 1)
+#define FREE_ENTRY(entry) g_free (entry)
+#endif
+
 /* #define DEBUGGING_ENABLED */
 
 #define DEFAULT_STATS                   FALSE
@@ -154,9 +162,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 {
   GstClockEntry *entry;
 
-  /* FIXME, use g_slice, we do this a lot and potentially from
-   * different threads. */
-  entry = g_new0 (GstClockEntry, 1);
+  entry = ALLOC_ENTRY ();
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_new (_gst_clock_entry_trace, entry);
 #endif
@@ -165,10 +171,12 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 
   gst_atomic_int_set (&entry->refcount, 1);
   entry->clock = clock;
+  entry->type = type;
   entry->time = time;
   entry->interval = interval;
-  entry->type = type;
   entry->status = GST_CLOCK_BUSY;
+  entry->func = NULL;
+  entry->user_data = NULL;
 
   return (GstClockID) entry;
 }
@@ -203,7 +211,7 @@ _gst_clock_id_free (GstClockID id)
 #ifndef GST_DISABLE_TRACE
   gst_alloc_trace_free (_gst_clock_entry_trace, id);
 #endif
-  g_free (id);
+  FREE_ENTRY (id);
 }
 
 /**

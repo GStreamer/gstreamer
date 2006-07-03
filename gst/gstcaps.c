@@ -91,6 +91,13 @@
 #define IS_WRITABLE(caps) \
   (g_atomic_int_get (&(caps)->refcount) == 1)
 
+#if GLIB_CHECK_VERSION (2, 10, 0)
+#define ALLOC_CAPS()    g_slice_new (GstCaps)
+#define FREE_CAPS(caps) g_slice_free (GstCaps, caps)
+#else
+#define ALLOC_CAPS()    g_new (GstCaps, 1)
+#define FREE_CAPS(caps) g_free (caps)
+#endif
 
 static void gst_caps_transform_to_string (const GValue * src_value,
     GValue * dest_value);
@@ -129,10 +136,11 @@ gst_caps_get_type (void)
 GstCaps *
 gst_caps_new_empty (void)
 {
-  GstCaps *caps = g_new0 (GstCaps, 1);
+  GstCaps *caps = ALLOC_CAPS ();
 
-  g_atomic_int_inc (&caps->refcount);
   caps->type = GST_TYPE_CAPS;
+  caps->refcount = 1;
+  caps->flags = 0;
   caps->structs = g_ptr_array_new ();
 
 #ifdef DEBUG_REFCOUNT
@@ -294,7 +302,7 @@ _gst_caps_free (GstCaps * caps)
 #ifdef USE_POISONING
   memset (caps, 0xff, sizeof (GstCaps));
 #endif
-  g_free (caps);
+  FREE_CAPS (caps);
 }
 
 /**
@@ -384,9 +392,8 @@ gst_caps_unref (GstCaps * caps)
   g_return_if_fail (GST_CAPS_REFCOUNT_VALUE (caps) > 0);
 
   /* if we ended up with the refcount at zero, free the caps */
-  if (g_atomic_int_dec_and_test (&caps->refcount)) {
+  if (G_UNLIKELY (g_atomic_int_dec_and_test (&caps->refcount)))
     _gst_caps_free (caps);
-  }
 }
 
 GType
@@ -414,33 +421,39 @@ gst_static_caps_get_type (void)
 GstCaps *
 gst_static_caps_get (GstStaticCaps * static_caps)
 {
-  GstCaps *caps = (GstCaps *) static_caps;
-  gboolean ret;
+  GstCaps *caps;
+
+  g_return_val_if_fail (static_caps != NULL, NULL);
+
+  caps = (GstCaps *) static_caps;
 
   if (caps->type == 0) {
-    if (static_caps->string == NULL) {
-      g_warning ("static caps is NULL");
-      return NULL;
-    }
+    if (G_UNLIKELY (static_caps->string == NULL))
+      goto no_string;
 
     caps->type = GST_TYPE_CAPS;
     /* initialize the caps to a refcount of 1 so the caps can be writable... */
     gst_atomic_int_set (&caps->refcount, 1);
     caps->structs = g_ptr_array_new ();
-    ret = gst_caps_from_string_inplace (caps, static_caps->string);
 
-    if (!ret) {
+    /* convert to string */
+    if (G_UNLIKELY (!gst_caps_from_string_inplace (caps, static_caps->string)))
       g_critical ("Could not convert static caps \"%s\"", static_caps->string);
-    }
   }
   /* ref the caps, makes it not writable */
   gst_caps_ref (caps);
 
   return caps;
+
+  /* ERRORS */
+no_string:
+  {
+    g_warning ("static caps string is NULL");
+    return NULL;
+  }
 }
 
 /* manipulation */
-
 static GstStructure *
 gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
 {
@@ -506,7 +519,7 @@ gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
   g_return_if_fail (GST_IS_CAPS (caps));
   g_return_if_fail (IS_WRITABLE (caps));
 
-  if (structure) {
+  if (G_LIKELY (structure)) {
     g_return_if_fail (structure->parent_refcount == NULL);
 #if 0
 #ifdef USE_POISONING

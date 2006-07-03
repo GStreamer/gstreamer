@@ -1,5 +1,13 @@
 2006-07-03  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstcaps.c: (gst_caps_new_empty), (_gst_caps_free),
+	(gst_caps_unref), (gst_static_caps_get),
+	(gst_caps_append_structure):
+	* gst/gstclock.c: (gst_clock_entry_new), (_gst_clock_id_free):
+	Use GSlice when the glib we build against is >= 2.10
+
+2006-07-03  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstelement.c: (gst_element_pads_activate):
 	Small cleanup in pad activation code.
 
