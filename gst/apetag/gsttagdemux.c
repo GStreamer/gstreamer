@@ -557,7 +557,7 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
       typefind_buf = demux->priv->collect;
       gst_buffer_ref (typefind_buf);
       if (!gst_tag_demux_trim_buffer (demux, &typefind_buf))
-        return GST_FLOW_ERROR;
+        return GST_FLOW_UNEXPECTED;
 
       if (typefind_buf == NULL)
         break;                  /* Still need more data */
@@ -609,7 +609,7 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
         outbuf = demux->priv->collect;
         demux->priv->collect = NULL;
         if (!gst_tag_demux_trim_buffer (demux, &outbuf))
-          return GST_FLOW_ERROR;
+          return GST_FLOW_UNEXPECTED;
       }
       if (outbuf) {
         if (G_UNLIKELY (demux->priv->srcpad == NULL)) {

@@ -444,7 +444,7 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
       typefind_buf = id3demux->collect;
       gst_buffer_ref (typefind_buf);
       if (!gst_id3demux_trim_buffer (id3demux, &typefind_buf))
-        return GST_FLOW_ERROR;
+        return GST_FLOW_UNEXPECTED;
 
       if (typefind_buf == NULL)
         break;                  /* Still need more data */
@@ -507,7 +507,7 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
         outbuf = id3demux->collect;
         id3demux->collect = NULL;
         if (!gst_id3demux_trim_buffer (id3demux, &outbuf))
-          return GST_FLOW_ERROR;
+          return GST_FLOW_UNEXPECTED;
       }
       if (outbuf) {
         if (G_UNLIKELY (id3demux->srcpad == NULL)) {

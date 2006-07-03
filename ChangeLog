@@ -1,3 +1,12 @@
+2006-07-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_chain):
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain):
+	  Return FLOW_UNEXPECTED when at the end of the file, not
+	  FLOW_ERROR. Fixes 'internal stream error' errors that
+	  would sometimes occur in totem when scrubbing to the
+	  end of an ID3v1 tagged mp3 file.
+
 2006-07-03  Edward Hervey  <edward@fluendo.com>
 
 	* ext/libpng/gstpngdec.c: (gst_pngdec_init), (user_info_callback),
