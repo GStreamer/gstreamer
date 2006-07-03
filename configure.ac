@@ -40,9 +40,10 @@ AC_SUBST(GTK_REQ,   2.6.0)
 AC_SUBST(GST_REQ,   0.10.2)
 AC_SUBST(GSTPB_REQ, 0.10.0.2)
 
-
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
+
+GST_ARG_GCOV
 
 dnl check for python
 dnl AM_PATH_PYTHON(2.2)
@@ -210,19 +211,13 @@ dnl PYGTK_CODEGEN="$PYTHON \$(top_srcdir)/codegen/codegen.py"
 AC_SUBST(PYGTK_CODEGEN)
 AC_MSG_RESULT($PYGTK_CODEGEN)
 
-dnl decide on error flags
-dnl if we support -Wall, set it unconditionally
-AS_COMPILER_FLAG(-Wall,
-                 PYGST_ERROR_CFLAGS="-Wall",
-                 PYGST_ERROR_CFLAGS="")
-dnl if we're in nano >= 1, add -Werror if supported
-if test "x$GST_CVS" = "xyes"
-then
-  AS_COMPILER_FLAG(-Werror, PYGST_ERROR_CFLAGS="$PYGST_ERROR_CFLAGS -Werror")
-fi
+dnl define an ERROR_CFLAGS Makefile variable
+GST_SET_ERROR_CFLAGS($GST_CVS)
 
-PYGST_CFLAGS="$PYGST_ERROR_CFLAGS"
-AC_SUBST(PYGST_CFLAGS)
+GST_OPTION_CFLAGS="\$(ERROR_CFLAGS) \$(GCOV_CFLAGS)"
+AC_SUBST(GST_OPTION_CFLAGS)
+GST_OPTION_LIBS="\$(GCOV_LIBS)"
+AC_SUBST(GST_OPTION_LIBS)
 
 dnl full installation path
 AS_AC_EXPAND(PYTHONDIR, $pythondir)

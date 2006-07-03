@@ -1,5 +1,5 @@
-common_cflags = $(PYGTK_CFLAGS) $(GST_CFLAGS) $(PYGST_CFLAGS) -fno-strict-aliasing
-common_libadd = $(GST_LIBS)
+common_cflags = $(PYGTK_CFLAGS) $(GST_CFLAGS) $(GST_OPTION_CFLAGS) -fno-strict-aliasing
+common_libadd = $(GST_LIBS) $(GST_OPTION_LIBS)
 common_ldflags = -module -avoid-version
 
 pkgpyexecdir = $(pyexecdir)/gst-$(GST_MAJORMINOR)/gst

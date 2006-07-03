@@ -38,3 +38,5 @@ check-valgrind:
 
 check-torture:
 	@true
+
+include $(top_srcdir)/common/coverage/lcov.mak
