@@ -4,7 +4,7 @@ Pad block
 The purpose of blocking a pad is to be notified of downstream dataflow
 and events. The notification can be used for
 
- - (Re)connecting the pad.
+ - (Re)connecting/disconnecting the pad.
  - performing a seek 
  - inspecting the data/events on the pad
 
@@ -14,6 +14,40 @@ and will succeed when the following events happen on the pad:
  - gst_pad_push()
  - gst_pad_alloc_buffer()
  - gst_pad_push_event() except for FLUSH_START and FLUSH_STOP events.
+ - gst_pad_pull_range () (on a sinkpad)
+
+
+Flushing
+--------
+
+ The flushing event is used to clear any data out of the
+ downstream elements.
+
+ Consider the following pipeline: 
+
+ .-----.      .-------.      .-------.
+ | src |      | elem1 |\/    | elem2 |
+ |    src -> sink    src -> sink    src ....
+ '-----'      '-------'/\    '-------'              
+
+ Where elem1.src is blocked. If the pad block is taken (the callback
+ is called or the sync block returned) no data is flowing in elem2.sink.
+ In this situation, the streaming thread is blocked on a GCond and is
+ waiting to be unblocked.
+
+ When sending a flushing seek upstream on elem1.src, the FLUSH_START and
+ will temporary unblock the streaming thread and make all pad functions that
+ triggers a block (_push/_alloc_buffer/_push_event/_pull_range) return
+ GST_FLOW_WRONG_STATE. This will then eventually pause the streaming thread
+ and release the STREAM_LOCK. 
+ 
+ Since no STREAM lock is taken after the pad block it is not needed to send
+ the FLUSH_START event further downstream.
+
+ The FLUSH_STOP will set the srcpad to non-flushing again and is dropped 
+ fr the same reason. From then on, the new data after the flushing seek 
+ will be queued when the pad block is taken again.
+
 
 Use cases:
 ----------
@@ -75,6 +109,7 @@ Use cases:
          out the last bits of data it holds.
      4c) wait for EOS to appear in the probe, drop the EOS.
   5) unlink element2 and element3
+     5a) optionally element2 can now be set to NULL.
   6) link element4 and element3
   7) link element1 and element4 (FIXME, how about letting element4 know
      about the currently running segment?)
