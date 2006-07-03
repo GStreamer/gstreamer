@@ -923,8 +923,8 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
         g_free (qtdemux->streams[n]->samples);
         if (qtdemux->streams[n]->caps)
           gst_caps_unref (qtdemux->streams[n]->caps);
-        g_free (qtdemux->streams[n]);
         g_free (qtdemux->streams[n]->segments);
+        g_free (qtdemux->streams[n]);
       }
       qtdemux->n_streams = 0;
       gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
@@ -994,7 +994,11 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
     case GST_MAKE_FOURCC ('w', 'i', 'd', 'e'):
     case GST_MAKE_FOURCC ('P', 'I', 'C', 'T'):
     case GST_MAKE_FOURCC ('p', 'n', 'o', 't'):
-      goto ed_edd_and_eddy;
+      GST_LOG ("skipping atom '%" GST_FOURCC_FORMAT "' at %" G_GUINT64_FORMAT,
+          GST_FOURCC_ARGS (fourcc), cur_offset);
+      cur_offset += length;
+      qtdemux->offset += length;
+      break;
     case GST_MAKE_FOURCC ('m', 'o', 'o', 'v'):{
       GstBuffer *moov;
 
@@ -1024,9 +1028,8 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
           qtdemux->state);
       break;
     }
-    ed_edd_and_eddy:
     default:{
-      GST_LOG ("unknown %08x '%" GST_FOURCC_FORMAT "' at %d",
+      GST_LOG ("unknown %08x '%" GST_FOURCC_FORMAT "' at %" G_GUINT64_FORMAT,
           fourcc, GST_FOURCC_ARGS (fourcc), cur_offset);
       cur_offset += length;
       qtdemux->offset += length;
@@ -4043,6 +4046,10 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     case GST_MAKE_FOURCC ('i', 'v', '3', '2'):
       _codec ("Indeo Video 3");
       return gst_caps_from_string ("video/x-indeo, indeoversion=(int)3");
+    case GST_MAKE_FOURCC ('I', 'V', '4', '1'):
+    case GST_MAKE_FOURCC ('i', 'v', '4', '1'):
+      _codec ("Intel Video 4");
+      return gst_caps_from_string ("video/x-indeo, indeoversion=(int)4");
     case GST_MAKE_FOURCC ('d', 'v', 'c', 'p'):
     case GST_MAKE_FOURCC ('d', 'v', 'c', ' '):
     case GST_MAKE_FOURCC ('d', 'v', 's', 'd'):
@@ -4057,18 +4064,13 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       return gst_caps_from_string ("video/x-vp3");
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
-#if 0
-      g_critical ("Don't know how to convert fourcc '%" GST_FOURCC_FORMAT
-          "' to caps", GST_FOURCC_ARGS (fourcc));
-      return NULL;
-#endif
-      {
-        char *s;
+    {
+      char *s;
 
-        s = g_strdup_printf ("video/x-gst-fourcc-%" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (fourcc));
-        return gst_caps_new_simple (s, NULL);
-      }
+      s = g_strdup_printf ("video/x-gst-fourcc-%" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (fourcc));
+      return gst_caps_new_simple (s, NULL);
+    }
   }
 }
 
