@@ -29,7 +29,6 @@ _wrap_gst_query_parse_position (PyGstMiniObject *self)
 {
 	GstFormat	format;
 	gint64		cur;
-	PyObject	*ret;
 
 	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_POSITION) {
 		PyErr_SetString(PyExc_TypeError, "Query is not a 'Position' query");
@@ -38,11 +37,8 @@ _wrap_gst_query_parse_position (PyGstMiniObject *self)
 	
 	gst_query_parse_position (GST_QUERY(self->obj), &format, &cur);
 	
-	ret = PyList_New(2);
-	PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
-	PyList_SetItem(ret, 1, PyLong_FromLongLong(cur));
-
-	return ret;
+	return Py_BuildValue("(LO)", cur,
+			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
 }
 %%
 override gst_query_parse_duration noargs
@@ -51,7 +47,6 @@ _wrap_gst_query_parse_duration (PyGstMiniObject *self)
 {
 	GstFormat	format;
 	gint64		cur;
-	PyObject	*ret;
 
 	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_DURATION) {
 		PyErr_SetString(PyExc_TypeError, "Query is not a 'Duration' query");
@@ -60,11 +55,8 @@ _wrap_gst_query_parse_duration (PyGstMiniObject *self)
 	
 	gst_query_parse_duration (GST_QUERY(self->obj), &format, &cur);
 	
-	ret = PyList_New(2);
-	PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
-	PyList_SetItem(ret, 1, PyLong_FromLongLong(cur));
-
-	return ret;
+	return Py_BuildValue("(LO)", cur,
+			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
 }
 %%
 override gst_query_parse_convert noargs
@@ -73,7 +65,6 @@ _wrap_gst_query_parse_convert (PyGstMiniObject *self)
 {
 	GstFormat	srcformat, destformat;
 	gint64		srcvalue, destvalue;
-	PyObject	*ret;
 
 	if (GST_QUERY_TYPE(self->obj) != GST_QUERY_CONVERT) {
 		PyErr_SetString(PyExc_TypeError, "Query is not a 'Convert' query");
@@ -84,20 +75,17 @@ _wrap_gst_query_parse_convert (PyGstMiniObject *self)
 				 &srcformat, &srcvalue,
 				 &destformat, &destvalue);
 	
-	ret = PyList_New(4);
-	PyList_SetItem(ret, 0, pyg_enum_from_gtype(GST_TYPE_FORMAT, srcformat));
-	PyList_SetItem(ret, 1, PyLong_FromLongLong(srcvalue));
-	PyList_SetItem(ret, 2, pyg_enum_from_gtype(GST_TYPE_FORMAT, destformat));
-	PyList_SetItem(ret, 3, PyLong_FromLongLong(destvalue));
-
-	return ret;
+	return Py_BuildValue("(OLOL)",
+			     pyg_enum_from_gtype(GST_TYPE_FORMAT, srcformat),
+			     srcvalue,
+			     pyg_enum_from_gtype(GST_TYPE_FORMAT, destformat),
+			     destvalue);
 }
 %%
 override gst_query_parse_segment noargs
 static PyObject *
 _wrap_gst_query_parse_segment (PyGstMiniObject *self)
 {
-	PyObject	*ret;
 	gdouble		rate;
 	GstFormat	format;
 	gint64		start_value;
@@ -112,20 +100,16 @@ _wrap_gst_query_parse_segment (PyGstMiniObject *self)
 				 &rate, &format,
 				 &start_value, &stop_value);
 	
-	ret = PyList_New(4);
-	PyList_SetItem (ret, 0, PyFloat_FromDouble(rate));
-	PyList_SetItem (ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
-	PyList_SetItem (ret, 2, PyLong_FromUnsignedLongLong(start_value));
-	PyList_SetItem (ret, 3, PyLong_FromUnsignedLongLong(stop_value));
-
-	return ret;
+	return Py_BuildValue("(fOLL)",
+			     rate,
+			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+			     start_value, stop_value);
 }
 %%
 override gst_query_parse_seeking noargs
 static PyObject *
 _wrap_gst_query_parse_seeking (PyGstMiniObject *self)
 {
-	PyObject	*ret;
 	GstFormat	format;
 	gboolean	seekable;
 	gint64		segment_start, segment_end;
@@ -139,13 +123,11 @@ _wrap_gst_query_parse_seeking (PyGstMiniObject *self)
 				 &format, &seekable,
 				 &segment_start, &segment_end);
 	
-	ret = PyList_New(4);
-	PyList_SetItem (ret, 0, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
-	PyList_SetItem (ret, 1, PyBool_FromLong (seekable));
-	PyList_SetItem (ret, 2, PyLong_FromLongLong(segment_start));
-	PyList_SetItem (ret, 3, PyLong_FromLongLong(segment_end));
-
-	return ret;
+	return Py_BuildValue("(OLKK)",
+			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+			     seekable,
+			     segment_start,
+			     segment_end);
 }
 %%
 override gst_query_parse_formats_length noargs

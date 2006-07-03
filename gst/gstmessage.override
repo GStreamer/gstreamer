@@ -56,7 +56,6 @@ _wrap_gst_message_parse_state_changed (PyGstMiniObject *self)
   GstState	old;
   GstState	new;
   GstState	pen;
-  PyObject      *ret;
 
   /* Should raise an exception if it's not a state-changed message */
   if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_STATE_CHANGED) {
@@ -64,12 +63,11 @@ _wrap_gst_message_parse_state_changed (PyGstMiniObject *self)
 	  return NULL;
   }
   gst_message_parse_state_changed (GST_MESSAGE(self->obj), &old, &new, &pen);
-  /* Return this as a tuple */
-  ret = PyList_New(3);
-  PyList_SET_ITEM(ret, 0, pyg_enum_from_gtype(GST_TYPE_STATE, old));
-  PyList_SET_ITEM(ret, 1, pyg_enum_from_gtype(GST_TYPE_STATE, new));
-  PyList_SET_ITEM(ret, 2, pyg_enum_from_gtype(GST_TYPE_STATE, pen));
-  return ret;
+
+  return Py_BuildValue("(OOO)",
+		       pyg_enum_from_gtype(GST_TYPE_STATE, old),
+		       pyg_enum_from_gtype(GST_TYPE_STATE, new),
+		       pyg_enum_from_gtype(GST_TYPE_STATE, pen));
 }
 %%
 override gst_message_parse_segment_start noargs
@@ -78,7 +76,6 @@ _wrap_gst_message_parse_segment_start (PyGstMiniObject *self)
 {
   gint64		position;
   GstFormat             format;
-  PyObject		*ret;
 
   /* Should raise an exception if it's not a segment start message */
   if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_SEGMENT_START) {
@@ -87,12 +84,9 @@ _wrap_gst_message_parse_segment_start (PyGstMiniObject *self)
   }
   gst_message_parse_segment_start (GST_MESSAGE(self->obj), &format, &position);
 
-  /* Return this as a tuple */
-  ret = PyList_New(2);
-  PyList_SET_ITEM(ret, 0, pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
-  PyList_SET_ITEM(ret, 1, PyLong_FromLongLong(position));
-
-  return ret;
+  return Py_BuildValue("(OL)",
+		       pyg_enum_from_gtype(GST_TYPE_FORMAT, format),
+		       PyLong_FromLongLong(position));
 }
 
 %%
@@ -102,7 +96,6 @@ _wrap_gst_message_parse_segment_done (PyGstMiniObject *self)
 {
   gint64		position;
   GstFormat             format;
-  PyObject		*ret;
 
   /* Should raise an exception if it's not a segment done message */
   if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_SEGMENT_DONE) {
@@ -111,12 +104,9 @@ _wrap_gst_message_parse_segment_done (PyGstMiniObject *self)
   }
   gst_message_parse_segment_done (GST_MESSAGE(self->obj), &format, &position);
 
-  /* Return this as a tuple */
-  ret = PyList_New(2);
-  PyList_SET_ITEM(ret, 0, pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
-  PyList_SET_ITEM(ret, 1, PyLong_FromLongLong(position));
-
-  return ret;
+  return Py_BuildValue("(OL)",
+		       pyg_enum_from_gtype(GST_TYPE_FORMAT, format),
+		       PyLong_FromLongLong(position));
 }
 
 %%
@@ -197,7 +187,6 @@ _wrap_gst_message_parse_clock_provide (PyGstMiniObject *self)
 {
   GstClock	*clock;
   gboolean	ready;
-  PyObject	*ret;
 
   if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_CLOCK_PROVIDE) {
 	  PyErr_SetString(PyExc_TypeError, "Message is not a 'clock provide' message");
@@ -206,11 +195,9 @@ _wrap_gst_message_parse_clock_provide (PyGstMiniObject *self)
 
   gst_message_parse_clock_provide (GST_MESSAGE(self->obj), &clock, &ready);
 
-  ret = PyList_New(2);
-  PyList_SET_ITEM(ret, 0, pygobject_new(G_OBJECT (clock)));
-  PyList_SET_ITEM(ret, 1, PyBool_FromLong(ready));
-
-  return ret;
+  return Py_BuildValue("(OO)",
+		       pygobject_new(G_OBJECT (clock)),
+		       PyBool_FromLong(ready));
 }
 %%
 override gst_message_parse_clock_lost noargs
@@ -251,7 +238,6 @@ _wrap_gst_message_parse_duration (PyGstMiniObject *self)
 {
   GstFormat	format;
   gint64	duration;
-  PyObject	*ret;
 
   if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_DURATION) {
 	  PyErr_SetString(PyExc_TypeError, "Message is not a 'duration' message");
@@ -260,9 +246,7 @@ _wrap_gst_message_parse_duration (PyGstMiniObject *self)
 
   gst_message_parse_duration (GST_MESSAGE(self->obj), &format, &duration);
 
-  ret = PyList_New(2);
-  PyList_SET_ITEM(ret, 0, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
-  PyList_SET_ITEM(ret, 1, PyLong_FromLongLong(duration));
-
-  return ret;
+  return Py_BuildValue("(OL)",
+		       pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+		       PyLong_FromLongLong(duration));
 }

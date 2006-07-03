@@ -1,3 +1,20 @@
+2006-07-03  Johan Dahlin  <jdahlin@async.com.br>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstelement.override:
+	* gst/gstevent.override:
+	* gst/gstmessage.override:
+	* gst/gstpad.override:
+	* gst/gstquery.override:
+	Use Py_BuildValue to construct tuples.
+	Use tuples for collection of different objects.
+	See http://www.python.org/doc/faq/general/#why-are-there-separate-tuple-and-list-data-types
+	* testsuite/test_event.py:
+	[message|query|event].parse_* now return tuples and not list.
+
+	Fixes #334548
+
 2006-07-02  Edward Hervey  <edward@fluendo.com>
 
 	Removal of all glib < 2.8 cruft since GStreamer core now requires

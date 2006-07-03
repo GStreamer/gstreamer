@@ -61,8 +61,8 @@ class EventTest(TestCase):
         self.sink.send_event(event)
         gst.debug('sent event')
 
-        self.assertEqual(event.parse_seek(), [1.0, gst.FORMAT_BYTES, gst.SEEK_FLAG_FLUSH,
-            gst.SEEK_TYPE_SET, 0, gst.SEEK_TYPE_NONE, 0])
+        self.assertEqual(event.parse_seek(), (1.0, gst.FORMAT_BYTES, gst.SEEK_FLAG_FLUSH,
+            gst.SEEK_TYPE_SET, 0, gst.SEEK_TYPE_NONE, 0))
 
     def testWrongEvent(self):
         buffer = gst.Buffer()

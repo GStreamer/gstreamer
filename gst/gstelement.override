@@ -370,7 +370,6 @@ _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
     gint64	cur;
     gint	format;
     PyObject	*pformat;
-    PyObject	*ret;
 
     pformat = (PyObject*)PyTuple_GetItem(args, 0);
     if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
@@ -384,11 +383,9 @@ _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
         return NULL;
     }
 
-    ret = PyList_New(2);
-    PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
-    PyList_SetItem(ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
-
-    return ret;
+    return Py_BuildValue("(OO)", 
+			 PyLong_FromLongLong(cur), 
+			 pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
 }
 %%
 override gst_element_query_duration args
@@ -398,7 +395,6 @@ _wrap_gst_element_query_duration (PyGObject *self, PyObject *args)
     gint64	cur;
     gint	format;
     PyObject	*pformat;
-    PyObject	*ret;
 
     pformat = (PyObject*)PyTuple_GetItem(args, 0);
     if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
@@ -412,11 +408,8 @@ _wrap_gst_element_query_duration (PyGObject *self, PyObject *args)
         return NULL;
     }
 
-    ret = PyList_New(2);
-    PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
-    PyList_SetItem(ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
-
-    return ret;
+    return Py_BuildValue("(OO)", PyLong_FromLongLong(cur),
+			 pyg_enum_from_gtype(GST_TYPE_FORMAT, format));
 }
 %%
 override gst_element_query_convert kwargs
@@ -427,7 +420,6 @@ _wrap_gst_element_query_convert (PyGObject *self, PyObject *args, PyObject *kwar
     PyObject	*pfromformat, *pdestformat;
     GstFormat	srcformat, destformat;
     gint64	fromval, dstval;
-    PyObject	*ret;
 
     /* Input : src_format, src_val, dst_format */
     /* Returns : dst_format, dst_val OR None */
@@ -453,11 +445,9 @@ _wrap_gst_element_query_convert (PyGObject *self, PyObject *args, PyObject *kwar
 	return Py_None;
     }
     
-    ret = PyList_New(2);
-    PyList_SetItem(ret, 0, pyg_enum_from_gtype (GST_TYPE_FORMAT, destformat));
-    PyList_SetItem(ret, 1, PyLong_FromLongLong(dstval));
-
-    return ret;
+    return Py_BuildValue("(OO)", 
+			 pyg_enum_from_gtype(GST_TYPE_FORMAT, destformat),
+			 PyLong_FromLongLong(dstval));					     
 }
 %%
 override gst_element_get_query_types noargs

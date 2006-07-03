@@ -54,7 +54,6 @@ override gst_event_parse_new_segment noargs
 static PyObject *
 _wrap_gst_event_parse_new_segment (PyGstMiniObject *self)
 {
-     PyObject	*ret;
      gboolean   update;
      gdouble	rate;
      GstFormat	format;
@@ -67,16 +66,11 @@ _wrap_gst_event_parse_new_segment (PyGstMiniObject *self)
      
      gst_event_parse_new_segment (GST_EVENT(self->obj), &update, &rate, &format,
 				 &start_value, &stop_value, &base);
-     
-     ret = PyList_New (6);
-     PyList_SetItem (ret, 0, PyBool_FromLong(update));
-     PyList_SetItem (ret, 1, PyFloat_FromDouble(rate));
-     PyList_SetItem (ret, 2, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
-     PyList_SetItem (ret, 3, PyLong_FromUnsignedLongLong(start_value));
-     PyList_SetItem (ret, 4, PyLong_FromUnsignedLongLong(stop_value));
-     PyList_SetItem (ret, 5, PyLong_FromUnsignedLongLong(base));
 
-     return ret;
+     return Py_BuildValue("(OfOKKK)",
+			  PyBool_FromLong(update),
+			  rate, pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+			  start_value, stop_value, base);
 }
 %%
 override gst_event_parse_tag noargs
@@ -102,7 +96,6 @@ override gst_event_parse_qos noargs
 static PyObject *
 _wrap_gst_event_parse_qos (PyGstMiniObject *self)
 {
-	PyObject	*ret;
 	gdouble		proportion;
 	GstClockTimeDiff	diff;
 	GstClockTime	timestamp;
@@ -115,19 +108,13 @@ _wrap_gst_event_parse_qos (PyGstMiniObject *self)
 	gst_event_parse_qos (GST_EVENT(self->obj), &proportion,
 			     &diff, &timestamp);
 	
-	ret = PyList_New (3);
-	PyList_SetItem (ret, 0, PyFloat_FromDouble(proportion));
-	PyList_SetItem (ret, 1, PyLong_FromLongLong(diff));
-	PyList_SetItem (ret, 2, PyLong_FromUnsignedLongLong(timestamp));
-
-	return ret;
+       return Py_BuildValue("(fLK)", proportion, diff, timestamp);
 }
 %%
 override gst_event_parse_seek noargs
 static PyObject *
 _wrap_gst_event_parse_seek (PyGstMiniObject *self)
 {
-	PyObject	*ret;
 	gdouble	        rate;
 	GstFormat	format;
 	GstSeekFlags	flags;
@@ -144,24 +131,20 @@ _wrap_gst_event_parse_seek (PyGstMiniObject *self)
 	gst_event_parse_seek (GST_EVENT(self->obj), &rate, &format, &flags,
 			      &cur_type, &cur, &stop_type, &stop);
 	
-	ret = PyList_New (7);
-	PyList_SetItem (ret, 0, PyFloat_FromDouble(rate));
-	PyList_SetItem (ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
-	PyList_SetItem (ret, 2, pyg_flags_from_gtype (GST_TYPE_SEEK_FLAGS, flags));
-	PyList_SetItem (ret, 3, pyg_enum_from_gtype (GST_TYPE_SEEK_TYPE, cur_type));
-	PyList_SetItem (ret, 4, PyLong_FromUnsignedLongLong (cur));
-	PyList_SetItem (ret, 5,
-            pyg_enum_from_gtype (GST_TYPE_SEEK_TYPE, stop_type));
-	PyList_SetItem (ret, 6, PyLong_FromUnsignedLongLong (stop));
-	
-	return ret;
+	return Py_BuildValue("(fOOOKOK)",
+			     rate,
+			     pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
+			     pyg_flags_from_gtype (GST_TYPE_SEEK_FLAGS, flags),
+			     pyg_enum_from_gtype (GST_TYPE_SEEK_TYPE, cur_type),
+			     cur,
+			     pyg_enum_from_gtype (GST_TYPE_SEEK_TYPE, stop_type),
+			     stop);
 }
 %%
 override gst_event_parse_buffer_size noargs
 static PyObject *
 _wrap_gst_event_parse_buffer_size (PyGstMiniObject *self)
 {
-     PyObject		*ret;
      GstFormat		format;
      gint64		minsize;
      gint64		maxsize;
@@ -176,11 +159,8 @@ _wrap_gst_event_parse_buffer_size (PyGstMiniObject *self)
 				  &format, &minsize,
 				  &maxsize, &async);
 
-     ret = PyList_New (4);
-     PyList_SetItem (ret, 0, pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
-     PyList_SetItem (ret, 1, PyLong_FromLongLong (minsize));
-     PyList_SetItem (ret, 2, PyLong_FromLongLong (maxsize));
-     PyList_SetItem (ret, 3, PyBool_FromLong (async));
-
-     return ret;
+     return Py_BuildValue("(OLLO)",
+			  pyg_enum_from_gtype(GST_TYPE_FORMAT, format),
+			  minsize, maxsize,
+			  PyBool_FromLong(async));
 }

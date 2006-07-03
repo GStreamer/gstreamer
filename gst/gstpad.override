@@ -680,36 +680,8 @@ _wrap_gst_pad_query_position (PyGObject *self, PyObject *args)
     }
 
     if ((gst_pad_query_position(GST_PAD (self->obj), (GstFormat*) &format, &cur))) {
-        ret = PyList_New(2);
-        PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
-        PyList_SetItem(ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
-    } else {
-        Py_INCREF(Py_None);
-        ret = Py_None;
-    }
-
-    return ret;
-}
-%%
-override gst_pad_query_duration args
-static PyObject *
-_wrap_gst_pad_query_duration (PyGObject *self, PyObject *args)
-{
-    gint64    cur;
-    gint    format;
-    PyObject    *pformat;
-    PyObject    *ret;
-
-    pformat = (PyObject*)PyTuple_GetItem(args, 0);
-    if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
-        PyErr_SetString(PyExc_TypeError, "argument should be a GstFormat");
-        return NULL;
-    }
-
-    if ((gst_pad_query_duration(GST_PAD (self->obj), (GstFormat*) &format, &cur))) {
-        ret = PyList_New(2);
-        PyList_SetItem(ret, 0, PyLong_FromLongLong(cur));
-        PyList_SetItem(ret, 1, pyg_enum_from_gtype (GST_TYPE_FORMAT, format ));
+	ret = Py_BuildValue("(LO)", cur,
+			    pyg_enum_from_gtype (GST_TYPE_FORMAT, format));
     } else {
         Py_INCREF(Py_None);
         ret = Py_None;
@@ -726,7 +698,6 @@ _wrap_gst_pad_query_convert (PyGObject *self, PyObject *args, PyObject *kwargs)
     PyObject    *pfromformat, *pdestformat;
     GstFormat    srcformat, destformat;
     gint64    fromval, dstval;
-    PyObject    *ret;
 
     /* Input : src_format, src_val, dst_format */
     /* Returns : dst_format, dst_val OR None */
@@ -751,11 +722,9 @@ _wrap_gst_pad_query_convert (PyGObject *self, PyObject *args, PyObject *kwargs)
     return Py_None;
     }
     
-    ret = PyList_New(2);
-    PyList_SetItem(ret, 0, pyg_enum_from_gtype (GST_TYPE_FORMAT, destformat));
-    PyList_SetItem(ret, 1, PyLong_FromLongLong(dstval));
-
-    return ret;
+    return Py_BuildValue("(OL)",
+			 pyg_enum_from_gtype (GST_TYPE_FORMAT, destformat),
+			 dstval);
 }
 %%
 override gst_pad_alloc_buffer kwargs
