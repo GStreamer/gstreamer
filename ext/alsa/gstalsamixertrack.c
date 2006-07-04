@@ -74,23 +74,23 @@ gst_alsa_mixer_track_new (snd_mixer_elem_t * element,
 {
   gint i;
   long min = 0, max = 0;
-  struct
+  const struct
   {
-    gchar *orig, *trans;
+    const gchar orig[12];
+    const gchar trans[12];
   } alsa_track_labels[] = {
     {
-    "Master", _("Master")}, {
-    "Bass", _("Bass")}, {
-    "Treble", _("Treble")}, {
-    "PCM", _("PCM")}, {
-    "Synth", _("Synth")}, {
-    "Line", _("Line-in")}, {
-    "CD", _("CD")}, {
-    "Mic", _("Microphone")}, {
-    "PC Speaker", _("PC Speaker")}, {
-    "Playback", _("Playback")}, {
-    "Capture", _("Capture")}, {
-    NULL, NULL}
+    "Master", N_("Master")}, {
+    "Bass", N_("Bass")}, {
+    "Treble", N_("Treble")}, {
+    "PCM", N_("PCM")}, {
+    "Synth", N_("Synth")}, {
+    "Line", N_("Line-in")}, {
+    "CD", N_("CD")}, {
+    "Mic", N_("Microphone")}, {
+    "PC Speaker", N_("PC Speaker")}, {
+    "Playback", N_("Playback")}, {
+    "Capture", N_("Capture")}
   };
 
   GstMixerTrack *track = g_object_new (GST_ALSA_MIXER_TRACK_TYPE, NULL);
@@ -102,19 +102,18 @@ gst_alsa_mixer_track_new (snd_mixer_elem_t * element,
   else
     track->label = g_strdup_printf ("%s %d",
         snd_mixer_selem_get_name (element), num + 1);
-  i = 0;
-  while (alsa_track_labels[i].orig != NULL) {
+
+  for (i = 0; i < G_N_ELEMENTS (alsa_track_labels); ++i) {
     if (!g_utf8_collate (snd_mixer_selem_get_name (element),
             alsa_track_labels[i].orig)) {
       g_free (track->label);
       if (num == 0)
-        track->label = g_strdup (alsa_track_labels[i].trans);
+        track->label = g_strdup (_(alsa_track_labels[i].trans));
       else
         track->label = g_strdup_printf ("%s %d",
-            alsa_track_labels[i].trans, num);
+            _(alsa_track_labels[i].trans), num);
       break;
     }
-    i++;
   }
   track->num_channels = channels;
   track->flags = flags;
