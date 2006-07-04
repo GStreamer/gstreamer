@@ -131,8 +131,9 @@ enum
 
 #define DEFAULT_BLOCKSIZE       4*1024
 #define DEFAULT_MMAPSIZE        4*1024*1024
-#define DEFAULT_TOUCH           FALSE
+#define DEFAULT_TOUCH           TRUE
 #define DEFAULT_USEMMAP         TRUE
+#define DEFAULT_SEQUENTIAL      FALSE
 
 enum
 {
@@ -140,6 +141,7 @@ enum
   ARG_LOCATION,
   ARG_FD,
   ARG_MMAPSIZE,
+  ARG_SEQUENTIAL,
   ARG_TOUCH,
   ARG_USEMMAP
 };
@@ -223,6 +225,11 @@ gst_file_src_class_init (GstFileSrcClass * klass)
       g_param_spec_boolean ("use-mmap", "Use mmap to read data",
           "Whether to use mmap. FALSE to force normal read() calls",
           DEFAULT_USEMMAP, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_SEQUENTIAL,
+      g_param_spec_boolean ("sequential", "Optimise for sequential mmap access",
+          "Whether to use madvise to hint to the kernel that access to "
+          "mmap pages will be sequential",
+          DEFAULT_SEQUENTIAL, G_PARAM_READWRITE));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_file_src_finalize);
 
@@ -253,6 +260,7 @@ gst_file_src_init (GstFileSrc * src, GstFileSrcClass * g_class)
   src->mapbuf = NULL;
   src->mapsize = DEFAULT_MMAPSIZE;      /* default is 4MB */
   src->use_mmap = DEFAULT_USEMMAP;
+  src->sequential = DEFAULT_SEQUENTIAL;
 
   src->is_regular = FALSE;
 }
@@ -337,6 +345,10 @@ gst_file_src_set_property (GObject * object, guint prop_id,
       src->touch = g_value_get_boolean (value);
       g_object_notify (G_OBJECT (src), "touch");
       break;
+    case ARG_SEQUENTIAL:
+      src->sequential = g_value_get_boolean (value);
+      g_object_notify (G_OBJECT (src), "sequential");
+      break;
     case ARG_USEMMAP:
       src->use_mmap = g_value_get_boolean (value);
       g_object_notify (G_OBJECT (src), "use-mmap");
@@ -369,6 +381,9 @@ gst_file_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_TOUCH:
       g_value_set_boolean (value, src->touch);
+      break;
+    case ARG_SEQUENTIAL:
+      g_value_set_boolean (value, src->sequential);
       break;
     case ARG_USEMMAP:
       g_value_set_boolean (value, src->use_mmap);
@@ -523,9 +538,11 @@ gst_file_src_map_region (GstFileSrc * src, off_t offset, size_t size,
   GST_MMAP_BUFFER (buf)->filesrc = src;
 
 #ifdef MADV_SEQUENTIAL
-  /* madvise to tell the kernel what to do with it */
-  if (madvise (mmapregion, size, MADV_SEQUENTIAL) < 0) {
-    GST_WARNING_OBJECT (src, "warning: madvise failed: %s", strerror (errno));
+  if (src->sequential) {
+    /* madvise to tell the kernel what to do with it */
+    if (madvise (mmapregion, size, MADV_SEQUENTIAL) < 0) {
+      GST_WARNING_OBJECT (src, "warning: madvise failed: %s", strerror (errno));
+    }
   }
 #endif
 

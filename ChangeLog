@@ -1,3 +1,14 @@
+2006-07-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_class_init),
+	(gst_file_src_init), (gst_file_src_set_property),
+	(gst_file_src_get_property), (gst_file_src_map_region):
+	* plugins/elements/gstfilesrc.h:
+	Add "sequential" property, off by default, to use madvise and hint
+	to the kernel that sequential access is desired.
+	Touch all retrieved pages by default to ensure they are pulled
+	into memory. (Closes #345720)
+
 2006-07-03  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-block.txt:
