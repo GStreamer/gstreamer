@@ -93,7 +93,6 @@ GST_PLUGINS_ALL="\
 		law \
 		level \
 		matroska \
-		monoscope \
 		multipart \
 		rtp	\
 		rtsp	\
