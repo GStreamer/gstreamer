@@ -1244,6 +1244,22 @@ setup_subtitle (GstPlayBaseBin * play_base_bin, gchar * sub_uri)
   return subbin;
 }
 
+/* lame - FIXME, maybe we can use seek_types/mask here? */
+static gboolean
+is_stream (GstPlayBaseBin * play_base_bin, gchar * uri)
+{
+  static const gchar *uris[] = { "http://", "mms://", "mmsh://",
+    "mmsu://", "mmst://", "rtp://", "rtsp://", NULL
+  };
+  gint i;
+
+  for (i = 0; uris[i]; i++) {
+    if (g_str_has_prefix (uri, uris[i]))
+      return TRUE;
+  }
+  return FALSE;
+}
+
 /*
  * Generate a source element that does caching for network streams.
  */
@@ -1276,11 +1292,7 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
   if (!source)
     return NULL;
 
-  /* lame - FIXME, maybe we can use seek_types/mask here? */
-  play_base_bin->is_stream = !strncmp (play_base_bin->uri, "http://", 7) ||
-      !strncmp (play_base_bin->uri, "mms://", 6) ||
-      !strncmp (play_base_bin->uri, "rtp://", 6) ||
-      !strncmp (play_base_bin->uri, "rtsp://", 7);
+  play_base_bin->is_stream = is_stream (play_base_bin, play_base_bin->uri);
 
   /* make HTTP sources send extra headers so we get icecast
    * metadata in case the stream is an icecast stream */
