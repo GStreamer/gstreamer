@@ -93,6 +93,7 @@ GST_PLUGINS_ALL="\
 		law \
 		level \
 		matroska \
+		monoscope \
 		multipart \
 		rtp	\
 		rtsp	\
@@ -132,6 +133,9 @@ if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
   GST_PLUGINS_NO="\tudp\n$GST_PLUGINS_NO"
   GST_PLUGINS_NO="\trtsp\n$GST_PLUGINS_NO"
 fi
+
+dnl disable monoscope plugin
+GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/monoscope//`
 
 AC_SUBST(GST_PLUGINS_SELECTED)
 

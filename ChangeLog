@@ -1,6 +1,11 @@
 2006-07-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
+	  Let's try that again.
+
+2006-07-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
 	  Disable monoscope plugin for now until it fulfills
 	  all the requirements.
 
