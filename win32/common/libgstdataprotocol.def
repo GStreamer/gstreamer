@@ -7,3 +7,4 @@ EXPORTS
 	gst_dp_validate_header
 	gst_dp_validate_packet
 	gst_dp_validate_payload
+	gst_dp_version_get_type

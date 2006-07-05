@@ -8,6 +8,7 @@ EXPORTS
 	gst_adapter_peek
 	gst_adapter_push
 	gst_adapter_take
+	gst_adapter_take_buffer
 	gst_base_sink_get_max_lateness
 	gst_base_sink_get_sync
 	gst_base_sink_get_type

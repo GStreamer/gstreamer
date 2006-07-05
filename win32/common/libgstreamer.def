@@ -257,7 +257,6 @@ EXPORTS
 	gst_event_type_flags_get_type
 	gst_event_type_get_name
 	gst_event_type_get_type
-	gst_flags_get_first_value
 	gst_flow_get_name
 	gst_flow_return_get_type
 	gst_format_get_by_nick
@@ -281,9 +280,11 @@ EXPORTS
 	gst_implements_interface_get_type
 	gst_index_add_association
 	gst_index_add_format
+	gst_index_add_id
 	gst_index_certainty_get_type
 	gst_index_commit
 	gst_index_entry_assoc_map
+	gst_index_entry_get_type
 	gst_index_entry_type_get_type
 	gst_index_factory_create
 	gst_index_factory_destroy
@@ -666,6 +667,7 @@ EXPORTS
 	gst_type_find_factory_get_list
 	gst_type_find_factory_get_type
 	gst_type_find_get_length
+	gst_type_find_get_type
 	gst_type_find_peek
 	gst_type_find_probability_get_type
 	gst_type_find_register
@@ -680,6 +682,7 @@ EXPORTS
 	gst_uri_handler_get_uri_type
 	gst_uri_handler_new_uri
 	gst_uri_handler_set_uri
+	gst_uri_has_protocol
 	gst_uri_is_valid
 	gst_uri_protocol_is_valid
 	gst_uri_type_get_type
