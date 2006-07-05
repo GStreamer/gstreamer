@@ -1,5 +1,17 @@
 2006-07-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_trim_buffer),
+	(gst_tag_demux_read_range):
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_trim_buffer),
+	(gst_id3demux_read_range):
+	  Don't return FLOW_UNEXPECTED when a buffer is before
+	  the start of the stream (which might happen with
+	  large ID3v2 tags if the tag reading was done pullrange
+	  based and we then switched to push mode later on).
+	  Fixes regression introduced by commit from June 29th.
+
+2006-07-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/taglib/gstid3v2mux.cc:
 	  Make UTF-8 the default encoding when writing string
 	  tags (before, our UTF-8 strings would automatically

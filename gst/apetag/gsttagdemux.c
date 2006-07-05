@@ -353,6 +353,10 @@ gst_tag_demux_remove_srcpad (GstTagDemux * demux)
   return res;
 };
 
+/* will return FALSE if buffer is beyond end of data; will return TRUE
+ * if buffer was trimmed successfully or didn't need trimming, but may
+ * also return TRUE and set *buf_ref to NULL if the buffer was before
+ * the start of the data */
 static gboolean
 gst_tag_demux_trim_buffer (GstTagDemux * tagdemux, GstBuffer ** buf_ref)
 {
@@ -377,7 +381,7 @@ gst_tag_demux_trim_buffer (GstTagDemux * tagdemux, GstBuffer ** buf_ref)
 
       if (out_offset >= v1tag_offset) {
         GST_DEBUG_OBJECT (tagdemux, "Buffer is past the end of the data");
-        goto no_out_buffer;
+        goto no_out_buffer_end;
       }
 
       if (out_offset + out_size > v1tag_offset) {
@@ -392,7 +396,7 @@ gst_tag_demux_trim_buffer (GstTagDemux * tagdemux, GstBuffer ** buf_ref)
     if (out_offset <= tagdemux->priv->strip_start) {
       if (out_offset + out_size <= tagdemux->priv->strip_start) {
         GST_DEBUG_OBJECT (tagdemux, "Buffer is before the start of the data");
-        goto no_out_buffer;
+        goto no_out_buffer_start;
       }
 
       trim_start = tagdemux->priv->strip_start - out_offset;
@@ -431,10 +435,18 @@ gst_tag_demux_trim_buffer (GstTagDemux * tagdemux, GstBuffer ** buf_ref)
 
   return TRUE;
 
-no_out_buffer:
-  gst_buffer_unref (buf);
-  *buf_ref = NULL;
-  return FALSE;
+no_out_buffer_end:
+  {
+    gst_buffer_unref (buf);
+    *buf_ref = NULL;
+    return FALSE;
+  }
+no_out_buffer_start:
+  {
+    gst_buffer_unref (buf);
+    *buf_ref = NULL;
+    return TRUE;
+  }
 }
 
 static void
@@ -1171,6 +1183,9 @@ gst_tag_demux_read_range (GstTagDemux * demux,
   if (ret == GST_FLOW_OK && *buffer) {
     if (!gst_tag_demux_trim_buffer (demux, buffer))
       goto read_beyond_end;
+
+    /* this should only happen in streaming mode */
+    g_assert (*buffer != NULL);
   }
 
   return ret;
