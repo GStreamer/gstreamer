@@ -858,6 +858,10 @@ failed_configure:
 /* Allocate a buffer using gst_pad_alloc_buffer
  *
  * This function does not do renegotiation on the source pad
+ *
+ * The output buffer is always writable. outbuf can be equal to
+ * inbuf, the caller should be prepared for this and perform 
+ * appropriate refcounting.
  */
 static GstFlowReturn
 gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
@@ -873,6 +877,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
    * the old buffer. We will therefore delay the reconfiguration of the
    * element until we have processed this last buffer. */
   trans->delay_configure = TRUE;
+
   /* out_caps is the caps of the src pad gathered through the GST_PAD_CAPS 
      macro. If a set_caps occurs during this function this caps will become
      invalid. We want to keep them during preparation of the output buffer. */
@@ -886,6 +891,13 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
         out_buf);
     if (ret != GST_FLOW_OK)
       goto done;
+
+    /* decrease refcount again if vmethod returned refcounted in_buf. This
+     * is because we need to make sure that the buffer is writable for the
+     * in_place transform. The docs of the vmethod say that you should return
+     * a reffed inbuf, which is exactly what we don't want :), oh well.. */
+    if (in_buf == *out_buf)
+      gst_buffer_unref (in_buf);
   }
 
   /* See if we want to prepare the buffer for in place output */
@@ -893,18 +905,24 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
       && bclass->transform_ip) {
     if (gst_buffer_is_writable (in_buf)) {
       if (trans->have_same_caps) {
-        /* Input buffer is already writable and caps are the same, just ref and return it */
+        /* Input buffer is already writable and caps are the same, return input as
+         * output buffer. We don't take an additional ref since that would make the
+         * output buffer not writable anymore. Caller should be prepared to deal
+         * with proper refcounting of input/output buffers. */
         *out_buf = in_buf;
-        gst_buffer_ref (in_buf);
+        GST_LOG_OBJECT (trans, "reuse input buffer");
       } else {
         /* Writable buffer, but need to change caps => subbuffer */
         *out_buf = gst_buffer_create_sub (in_buf, 0, GST_BUFFER_SIZE (in_buf));
         gst_caps_replace (&GST_BUFFER_CAPS (*out_buf), out_caps);
+        GST_LOG_OBJECT (trans, "created sub-buffer of input buffer");
       }
+      /* we are done now */
       goto done;
     } else {
       /* Make a writable buffer below and copy the data */
       copy_inbuf = TRUE;
+      GST_LOG_OBJECT (trans, "need to copy input buffer to new output buffer");
     }
   }
 
@@ -941,6 +959,7 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 done:
   if (out_caps)
     gst_caps_unref (out_caps);
+
   trans->delay_configure = FALSE;
 
   return ret;
@@ -1369,8 +1388,11 @@ no_qos:
     if (!success)
       goto configure_failed;
   }
+
 skip:
-  gst_buffer_unref (inbuf);
+  /* only unref input buffer if we allocated a new outbuf buffer */
+  if (*outbuf != inbuf)
+    gst_buffer_unref (inbuf);
 
   return ret;
 
@@ -1399,7 +1421,8 @@ no_buffer:
   }
 configure_failed:
   {
-    gst_buffer_unref (inbuf);
+    if (*outbuf != inbuf)
+      gst_buffer_unref (inbuf);
     GST_DEBUG_OBJECT (trans, "could not negotiate");
     return GST_FLOW_NOT_NEGOTIATED;
   }

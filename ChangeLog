@@ -1,3 +1,12 @@
+2006-07-05  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_prepare_output_buffer),
+	(gst_base_transform_buffer_alloc),
+	(gst_base_transform_handle_buffer):
+	Make sure the buffer we pass to transform_ip has a refcount of
+	1 and thus is writable. Fixes #343196
+
 2006-07-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* plugins/elements/gstfilesrc.c: (gst_file_src_class_init),
