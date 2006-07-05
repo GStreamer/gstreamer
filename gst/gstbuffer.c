@@ -210,7 +210,7 @@ _gst_buffer_copy (GstBuffer * buffer)
   /* we simply copy everything from our parent */
   copy->data = g_memdup (buffer->data, buffer->size);
   /* make sure it gets freed (even if the parent is subclassed, we return a
-     normal buffer */
+     normal buffer) */
   copy->malloc_data = copy->data;
 
   copy->size = buffer->size;
@@ -269,6 +269,8 @@ gst_buffer_new (void)
  *
  * Creates a newly allocated buffer with data of the given size.
  * The buffer memory is not cleared.
+ *
+ * Note that when @size == 0, the buffer data pointer will be NULL.
  *
  * MT safe.
  * Returns: the new #GstBuffer.
@@ -466,7 +468,7 @@ gst_subbuffer_init (GTypeInstance * instance, gpointer g_class)
  * @parent: a #GstBuffer.
  * @offset: the offset into parent #GstBuffer at which the new sub-buffer 
  *          begins.
- * @size: the size of the new #GstBuffer sub-buffer, in bytes (with size > 0).
+ * @size: the size of the new #GstBuffer sub-buffer, in bytes.
  *
  * Creates a sub-buffer from @parent at @offset and @size.
  * This sub-buffer uses the actual memory space of the parent buffer.
@@ -486,7 +488,6 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
 
   g_return_val_if_fail (buffer != NULL, NULL);
   g_return_val_if_fail (buffer->mini_object.refcount > 0, NULL);
-  g_return_val_if_fail (size > 0, NULL);
   g_return_val_if_fail (buffer->size >= offset + size, NULL);
 
   /* find real parent */

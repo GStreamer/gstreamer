@@ -81,6 +81,17 @@ GST_START_TEST (test_subbuffer)
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 2);
   ASSERT_BUFFER_REFCOUNT (sub, "subbuffer", 1);
 
+  gst_buffer_unref (sub);
+
+  /* create a subbuffer of size 0 */
+  sub = gst_buffer_create_sub (buffer, 1, 0);
+  fail_if (sub == NULL, "create_sub of buffer returned NULL");
+  fail_unless (GST_BUFFER_SIZE (sub) == 0, "subbuffer has wrong size");
+  fail_unless (memcmp (GST_BUFFER_DATA (buffer) + 1, GST_BUFFER_DATA (sub),
+          0) == 0, "subbuffer contains the wrong data");
+  ASSERT_BUFFER_REFCOUNT (buffer, "parent", 2);
+  ASSERT_BUFFER_REFCOUNT (sub, "subbuffer", 1);
+
   /* clean up */
   gst_buffer_unref (sub);
   gst_buffer_unref (buffer);
@@ -186,7 +197,7 @@ GST_START_TEST (test_span)
   gst_buffer_unref (span);
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 3);
 
-/* clean up */
+  /* clean up */
   gst_buffer_unref (sub1);
   gst_buffer_unref (sub2);
   gst_buffer_unref (buffer);
@@ -321,6 +332,39 @@ GST_START_TEST (test_metadata_writable)
 
 GST_END_TEST;
 
+GST_START_TEST (test_copy)
+{
+  GstBuffer *buffer, *copy;
+
+  buffer = gst_buffer_new_and_alloc (4);
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+
+  copy = gst_buffer_copy (buffer);
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  ASSERT_BUFFER_REFCOUNT (copy, "copy", 1);
+  /* data must be copied and thus point to different memory */
+  fail_if (GST_BUFFER_DATA (buffer) == GST_BUFFER_DATA (copy));
+
+  gst_buffer_unref (copy);
+  gst_buffer_unref (buffer);
+
+  /* a 0-sized buffer has NULL data as per docs */
+  buffer = gst_buffer_new_and_alloc (0);
+  fail_unless (GST_BUFFER_DATA (buffer) == NULL);
+  fail_unless (GST_BUFFER_SIZE (buffer) == 0);
+
+  /* copying a 0-sized buffer should not crash and also set
+   * the data member NULL. */
+  copy = gst_buffer_copy (buffer);
+  fail_unless (GST_BUFFER_DATA (copy) == NULL);
+  fail_unless (GST_BUFFER_SIZE (copy) == 0);
+
+  gst_buffer_unref (copy);
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_buffer_suite (void)
 {
@@ -335,6 +379,8 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_is_span_fast);
   tcase_add_test (tc_chain, test_span);
   tcase_add_test (tc_chain, test_metadata_writable);
+  tcase_add_test (tc_chain, test_copy);
+
   return s;
 }
 

@@ -1,5 +1,15 @@
 2006-07-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbuffer.c: (_gst_buffer_copy), (gst_buffer_create_sub):
+	* tests/check/gst/gstbuffer.c: (GST_START_TEST),
+	(gst_buffer_suite):
+	No point in checking if the size of the subbuffer > 0, the
+	code handles it correclty as demonstrated by unit test.
+	Also add a unit test for the zero sized _new_and_alloc and
+	_copy. Fixes #346663.
+
+2006-07-05  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasetransform.c:
 	(gst_base_transform_prepare_output_buffer),
 	(gst_base_transform_buffer_alloc),
