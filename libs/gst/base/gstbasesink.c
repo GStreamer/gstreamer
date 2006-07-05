@@ -1980,6 +1980,8 @@ gst_base_sink_loop (GstPad * pad)
   if (G_UNLIKELY (buf == NULL))
     goto no_buffer;
 
+  basesink->offset += GST_BUFFER_SIZE (buf);
+
   GST_PAD_PREROLL_LOCK (pad);
   result = gst_base_sink_chain_unlocked (basesink, pad, buf);
   GST_PAD_PREROLL_UNLOCK (pad);
