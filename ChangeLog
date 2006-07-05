@@ -1,3 +1,9 @@
+2006-07-05  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstmodule.c: (init_gst): 
+	Added gst.BUFFER_OFFSET_NONE for proper (guint64) -1 conversion between
+	python and C.
+
 2006-07-03  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstelement.override:

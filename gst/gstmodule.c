@@ -184,6 +184,7 @@ init_gst (void)
      PyModule_AddIntConstant(m, "NSECOND", GST_NSECOND);
 
      PyModule_AddObject(m, "CLOCK_TIME_NONE", PyLong_FromUnsignedLongLong(GST_CLOCK_TIME_NONE));
+     PyModule_AddObject(m, "BUFFER_OFFSET_NONE", PyLong_FromUnsignedLongLong(GST_BUFFER_OFFSET_NONE));
 
      pygst_exceptions_register_classes (d);
      
