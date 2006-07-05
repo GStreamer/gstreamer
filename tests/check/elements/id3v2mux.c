@@ -102,6 +102,38 @@ test_taglib_id3mux_create_tags (guint32 mask)
   return tags;
 }
 
+static gboolean
+utf8_string_in_buf (GstBuffer * buf, const gchar * s)
+{
+  gint i, len;
+
+  len = strlen (s);
+  for (i = 0; i < (GST_BUFFER_SIZE (buf) - len); ++i) {
+    if (memcmp (GST_BUFFER_DATA (buf) + i, s, len) == 0) {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+static void
+test_taglib_id3mux_check_tag_buffer (GstBuffer * buf, guint32 mask)
+{
+  /* make sure our UTF-8 string hasn't been put into the tag as ISO-8859-1 */
+  if (mask & (1 << 0)) {
+    fail_unless (utf8_string_in_buf (buf, TEST_ARTIST));
+  }
+  /* make sure our UTF-8 string hasn't been put into the tag as ISO-8859-1 */
+  if (mask & (1 << 1)) {
+    fail_unless (utf8_string_in_buf (buf, TEST_TITLE));
+  }
+  /* make sure our UTF-8 string hasn't been put into the tag as ISO-8859-1 */
+  if (mask & (1 << 2)) {
+    fail_unless (utf8_string_in_buf (buf, TEST_ALBUM));
+  }
+}
+
 static void
 test_taglib_id3mux_check_tags (GstTagList * tags, guint32 mask)
 {
@@ -277,14 +309,23 @@ test_taglib_id3mux_check_output_buffer (GstBuffer * buf)
 }
 
 static void
+identity_cb (GstElement * identity, GstBuffer * buf, GstBuffer ** p_tagbuf)
+{
+  if (*p_tagbuf == NULL) {
+    *p_tagbuf = gst_buffer_ref (buf);
+  }
+}
+
+static void
 test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
 {
   GstMessage *msg;
   GstTagList *tags_read = NULL;
-  GstElement *pipeline, *id3mux, *id3demux, *fakesrc;
+  GstElement *pipeline, *id3mux, *id3demux, *fakesrc, *identity;
   GstBus *bus;
   guint64 offset;
   GstBuffer *outbuf = NULL;
+  GstBuffer *tagbuf = NULL;
 
   pipeline = gst_pipeline_new ("pipeline");
   g_assert (pipeline != NULL);
@@ -295,6 +336,9 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
   id3mux = gst_element_factory_make ("id3v2mux", "id3v2mux");
   g_assert (id3mux != NULL);
 
+  identity = gst_element_factory_make ("identity", "identity");
+  g_assert (identity != NULL);
+
   id3demux = gst_element_factory_make ("id3demux", "id3demux");
   g_assert (id3demux != NULL);
 
@@ -304,12 +348,13 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
 
   gst_bin_add (GST_BIN (pipeline), fakesrc);
   gst_bin_add (GST_BIN (pipeline), id3mux);
+  gst_bin_add (GST_BIN (pipeline), identity);
   gst_bin_add (GST_BIN (pipeline), id3demux);
 
   gst_tag_setter_merge_tags (GST_TAG_SETTER (id3mux), tags,
       GST_TAG_MERGE_APPEND);
 
-  gst_element_link_many (fakesrc, id3mux, id3demux, NULL);
+  gst_element_link_many (fakesrc, id3mux, identity, id3demux, NULL);
 
   /* set up source */
   g_object_set (fakesrc, "signal-handoffs", TRUE, "can-activate-pull", FALSE,
@@ -318,6 +363,9 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
 
   offset = 0;
   g_signal_connect (fakesrc, "handoff", G_CALLBACK (fill_mp3_buffer), &offset);
+
+  /* set up identity to catch tag buffer */
+  g_signal_connect (identity, "handoff", G_CALLBACK (identity_cb), &tagbuf);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_unless (gst_element_get_state (pipeline, NULL, NULL,
@@ -349,6 +397,10 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask)
   GST_LOG ("Got tags: %" GST_PTR_FORMAT, tags_read);
   test_taglib_id3mux_check_tags (tags_read, mask);
   gst_tag_list_free (tags_read);
+
+  fail_unless (tagbuf != NULL);
+  test_taglib_id3mux_check_tag_buffer (tagbuf, mask);
+  gst_buffer_unref (tagbuf);
 
   GST_LOG ("Waiting for EOS ...");
   msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);

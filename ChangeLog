@@ -1,3 +1,17 @@
+2006-07-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/taglib/gstid3v2mux.cc:
+	  Make UTF-8 the default encoding when writing string
+	  tags (before, our UTF-8 strings would automatically
+	  be converted to ISO-8859-1 by taglib and written as
+	  ISO-8859-1 fields if that was possible).
+
+	* tests/check/elements/id3v2mux.c: (utf8_string_in_buf),
+	(test_taglib_id3mux_check_tag_buffer), (identity_cb),
+	(test_taglib_id3mux_with_tags):
+	  Add test case that makes sure our UTF-8 strings have
+	  actually been written into the tag as UTF-8.
+
 2006-07-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

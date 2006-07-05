@@ -408,6 +408,10 @@ gst_id3v2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
   GstBuffer *buf;
   guint tag_size;
 
+  /* write all strings as UTF-8 by default */
+  TagLib::ID3v2::FrameFactory::instance ()->
+      setDefaultTextEncoding (TagLib::String::UTF8);
+
   /* Render the tag */
   gst_tag_list_foreach (taglist, add_one_tag, &id3v2tag);
 
