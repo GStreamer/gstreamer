@@ -34,14 +34,18 @@
  *
  * Classes extending this base class will usually be scheduled
  * in a push based mode. If the peer accepts to operate without
- * offsets and withing the limits of the allowed block size, this
- * class can operate in getrange based mode automatically.
+ * offsets and within the limits of the allowed block size, this
+ * class can operate in getrange based mode automatically. To make
+ * this possible, the subclass should override the ::check_get_range
+ * method.
  *
  * The subclass should extend the methods from the baseclass in
- * addition to the create method.
+ * addition to the ::create method.
  *
  * Seeking, flushing, scheduling and sync is all handled by this
  * base class.
+ *
+ * Last reviewed on 2006-07-04 (0.10.9)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -94,6 +98,8 @@ gst_push_src_init (GstPushSrc * pushsrc, GstPushSrcClass * klass)
 static gboolean
 gst_push_src_check_get_range (GstBaseSrc * src)
 {
+  /* a pushsrc can by default never operate in pull mode override
+   * if you want something different. */
   return FALSE;
 }
 
