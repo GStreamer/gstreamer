@@ -1,3 +1,10 @@
+2006-07-05  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/common/libgsttag.def:
+	Export some new functions.
+	* win32/vs6/libgstogg.dsp:
+	Add a link to libgsttag-0.10.lib.
+
 2006-07-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_new):
