@@ -125,7 +125,7 @@ read_string (xmlTextReaderPtr reader, gchar ** write_to, gboolean allow_blank)
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_TEXT) {
       if (found)
         return FALSE;
-      *write_to = g_strdup ((gchar *) xmlTextReaderConstValue (reader));
+      *write_to = (gchar *) xmlTextReaderValue (reader);
       found = TRUE;
     }
   }

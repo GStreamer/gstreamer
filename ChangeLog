@@ -1,5 +1,13 @@
 2006-07-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstregistryxml.c: (read_string):
+	Avoid strdup. (will happen in libxml, but hey!)
+
+	* gst/gsturi.c:
+	Add some more docs.
+
+2006-07-05  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbuffer.c: (_gst_buffer_copy), (gst_buffer_create_sub):
 	* tests/check/gst/gstbuffer.c: (GST_START_TEST),
 	(gst_buffer_suite):

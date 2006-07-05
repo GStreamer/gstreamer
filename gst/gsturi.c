@@ -609,8 +609,9 @@ gst_uri_handler_get_protocols (GstURIHandler * handler)
  *
  * Gets the currently handled URI.
  *
- * Returns: the URI currently handler by the @handler.
- * Returns NULL if there are no URI currently handled.
+ * Returns: the URI currently handled by the @handler.
+ * Returns NULL if there are no URI currently handled. The returned
+ * string must not be modified or freed.
  */
 G_CONST_RETURN gchar *
 gst_uri_handler_get_uri (GstURIHandler * handler)
