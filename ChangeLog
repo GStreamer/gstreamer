@@ -1,5 +1,12 @@
 2006-07-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/typefind/gsttypefindfunctions.c: (utf8_type_find),
+	(xml_check_first_element), (xml_type_find), (smil_type_find):
+	  Fix SMIL typefinding, make xml_check_first_element() more
+	  useful.
+
+2006-07-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_init),
 	(gst_play_base_bin_finalize), (decodebin_element_added_cb),
 	(decodebin_element_removed_cb), (gst_play_base_bin_set_property):

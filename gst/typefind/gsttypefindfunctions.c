@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2003 Benjamion Otte <in7y118@public.uni-hamburg.de>
+ * Copyright (C) 2003 Benjamin Otte <in7y118@public.uni-hamburg.de>
  *
  * gsttypefindfunctions.c: collection of various typefind functions
  *
@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_STATIC (type_find_debug);
 
 /*** text/plain ***/
 static gboolean xml_check_first_element (GstTypeFind * tf,
-    const gchar * element, guint elen);
+    const gchar * element, guint elen, gboolean strict);
 
 
 static GstStaticCaps utf8_caps = GST_STATIC_CAPS ("text/plain");
@@ -86,7 +86,7 @@ utf8_type_find (GstTypeFind * tf, gpointer unused)
   guint64 length;
 
   /* leave xml to the xml typefinders */
-  if (xml_check_first_element (tf, "", 0))
+  if (xml_check_first_element (tf, "", 0, TRUE))
     return;
 
   /* check beginning of stream */
@@ -199,22 +199,33 @@ uri_type_find (GstTypeFind * tf, gpointer unused)
 }
 
 static gboolean
-xml_check_first_element (GstTypeFind * tf, const gchar * element, guint elen)
+xml_check_first_element (GstTypeFind * tf, const gchar * element, guint elen,
+    gboolean strict)
 {
-  guint8 *data = gst_type_find_peek (tf, 0, XML_BUFFER_SIZE);
+  gboolean got_xmldec;
+  guint8 *data;
   guint offset = 0;
   guint pos = 0;
 
-  /* look for the XMLDec,
-   * see XML spec 2.8, Prolog and Document Type Declaration
-   * http://www.w3.org/TR/2004/REC-xml-20040204/#sec-prolog-dtd */
-  if (!data || memcmp (data, "<?xml", 5) != 0)
+  data = gst_type_find_peek (tf, 0, XML_BUFFER_SIZE);
+  if (!data)
     return FALSE;
 
-  pos += 5;
-  data += 5;
+  /* look for the XMLDec
+   * see XML spec 2.8, Prolog and Document Type Declaration
+   * http://www.w3.org/TR/2004/REC-xml-20040204/#sec-prolog-dtd */
+  got_xmldec = (memcmp (data, "<?xml", 5) == 0);
 
-  /* look for the first element, it has to be a <smil> element */
+  if (strict && !got_xmldec)
+    return FALSE;
+
+  /* skip XMLDec in any case if we've got one */
+  if (got_xmldec) {
+    pos += 5;
+    data += 5;
+  }
+
+  /* look for the first element, it has to be the requested element */
   while (data) {
     while (*data != '<') {
       XML_INC_BUFFER;
@@ -242,7 +253,7 @@ static GstStaticCaps generic_xml_caps = GST_STATIC_CAPS ("application/xml");
 static void
 xml_type_find (GstTypeFind * tf, gpointer unused)
 {
-  if (xml_check_first_element (tf, "", 0)) {
+  if (xml_check_first_element (tf, "", 0, TRUE)) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MINIMUM, GENERIC_XML_CAPS);
   }
 }
@@ -255,7 +266,7 @@ static GstStaticCaps smil_caps = GST_STATIC_CAPS ("application/smil");
 static void
 smil_type_find (GstTypeFind * tf, gpointer unused)
 {
-  if (xml_check_first_element (tf, "smil", 4)) {
+  if (xml_check_first_element (tf, "smil", 4, FALSE)) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SMIL_CAPS);
   }
 }
