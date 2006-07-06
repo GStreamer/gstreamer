@@ -34,8 +34,9 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_BUFFER_TIME     500 * GST_USECOND
-#define DEFAULT_LATENCY_TIME    10 * GST_USECOND
+#define DEFAULT_BUFFER_TIME     ((200 * GST_MSECOND) / GST_USECOND)
+#define DEFAULT_LATENCY_TIME    ((10 * GST_MSECOND) / GST_USECOND)
+
 enum
 {
   PROP_0,
@@ -60,11 +61,14 @@ static GstStateChangeReturn gst_base_audio_src_change_state (GstElement *
     element, GstStateChange transition);
 
 static GstClock *gst_base_audio_src_provide_clock (GstElement * elem);
+static gboolean gst_base_audio_src_set_clock (GstElement * elem,
+    GstClock * clock);
 static GstClockTime gst_base_audio_src_get_time (GstClock * clock,
     GstBaseAudioSrc * src);
 
-static GstFlowReturn gst_base_audio_src_create (GstPushSrc * psrc,
-    GstBuffer ** buf);
+static GstFlowReturn gst_base_audio_src_create (GstBaseSrc * bsrc,
+    guint64 offset, guint length, GstBuffer ** buf);
+static gboolean gst_base_audio_src_check_get_range (GstBaseSrc * bsrc);
 
 static gboolean gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event);
 static void gst_base_audio_src_get_times (GstBaseSrc * bsrc,
@@ -81,7 +85,6 @@ gst_base_audio_src_base_init (gpointer g_class)
 static void
 gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
 {
-  gchar *longdesc;
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSrcClass *gstbasesrc_class;
@@ -97,33 +100,30 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_get_property);
 
-  longdesc =
-      g_strdup_printf
-      ("Size of audio buffer in microseconds (use -1 for default of %"
-      G_GUINT64_FORMAT " us)", DEFAULT_BUFFER_TIME / GST_USECOND);
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_TIME,
-      g_param_spec_int64 ("buffer-time", "Buffer Time", longdesc, -1,
+  g_object_class_install_property (gobject_class, PROP_BUFFER_TIME,
+      g_param_spec_int64 ("buffer-time", "Buffer Time",
+          "Size of audio buffer in microseconds", 1,
           G_MAXINT64, DEFAULT_BUFFER_TIME, G_PARAM_READWRITE));
-  g_free (longdesc);
-  longdesc =
-      g_strdup_printf ("Audio latency in microseconds (use -1 for default of %"
-      G_GUINT64_FORMAT " us)", DEFAULT_LATENCY_TIME / GST_USECOND);
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LATENCY_TIME,
-      g_param_spec_int64 ("latency-time", "Latency Time", longdesc, -1,
+
+  g_object_class_install_property (gobject_class, PROP_LATENCY_TIME,
+      g_param_spec_int64 ("latency-time", "Latency Time",
+          "Audio latency in microseconds", 1,
           G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
-  g_free (longdesc);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_change_state);
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_provide_clock);
+  gstelement_class->set_clock =
+      GST_DEBUG_FUNCPTR (gst_base_audio_src_set_clock);
 
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_base_audio_src_setcaps);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_base_audio_src_event);
   gstbasesrc_class->get_times =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_get_times);
-
-  gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_base_audio_src_create);
+  gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_base_audio_src_create);
+  gstbasesrc_class->check_get_range =
+      GST_DEBUG_FUNCPTR (gst_base_audio_src_check_get_range);
 }
 
 static void
@@ -132,6 +132,9 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
 {
   baseaudiosrc->buffer_time = DEFAULT_BUFFER_TIME;
   baseaudiosrc->latency_time = DEFAULT_LATENCY_TIME;
+  /* reset blocksize we use latency time to calculate a more useful 
+   * value based on negotiated format. */
+  GST_BASE_SRC (baseaudiosrc)->blocksize = 0;
 
   baseaudiosrc->clock = gst_audio_clock_new ("clock",
       (GstAudioClockGetTimeFunc) gst_base_audio_src_get_time, baseaudiosrc);
@@ -139,18 +142,59 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
   gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (baseaudiosrc),
       gst_base_audio_src_fixate);
 
+  /* we are always a live source */
   gst_base_src_set_live (GST_BASE_SRC (baseaudiosrc), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (baseaudiosrc), GST_FORMAT_TIME);
+}
+
+static gboolean
+gst_base_audio_src_set_clock (GstElement * elem, GstClock * clock)
+{
+  GstBaseAudioSrc *src;
+
+  src = GST_BASE_AUDIO_SRC (elem);
+
+  /* FIXME, we cannot slave to another clock yet, better fail 
+   * than to give a bad user experience (tm). */
+  if (clock && clock != src->clock)
+    goto wrong_clock;
+
+  return TRUE;
+
+  /* ERRORS */
+wrong_clock:
+  {
+    GST_ELEMENT_ERROR (src, CORE, CLOCK,
+        (NULL), ("Cannot operate with this clock."));
+    return FALSE;
+  }
 }
 
 static GstClock *
 gst_base_audio_src_provide_clock (GstElement * elem)
 {
   GstBaseAudioSrc *src;
+  GstClock *clock;
 
   src = GST_BASE_AUDIO_SRC (elem);
 
-  return GST_CLOCK (gst_object_ref (GST_OBJECT (src->clock)));
+  /* we have no ringbuffer (must be NULL state) */
+  if (src->ringbuffer == NULL)
+    goto wrong_state;
+
+  if (!gst_ring_buffer_is_acquired (src->ringbuffer))
+    goto wrong_state;
+
+  clock = GST_CLOCK_CAST (gst_object_ref (src->clock));
+
+  return clock;
+
+  /* ERRORS */
+wrong_state:
+  {
+    GST_DEBUG_OBJECT (src, "ringbuffer not acquired");
+    return NULL;
+  }
 }
 
 static GstClockTime
@@ -159,8 +203,8 @@ gst_base_audio_src_get_time (GstClock * clock, GstBaseAudioSrc * src)
   guint64 samples;
   GstClockTime result;
 
-  if (src->ringbuffer == NULL || src->ringbuffer->spec.rate == 0)
-    return 0;
+  if (G_UNLIKELY (src->ringbuffer == NULL || src->ringbuffer->spec.rate == 0))
+    return GST_CLOCK_TIME_NONE;
 
   samples = gst_ring_buffer_samples_done (src->ringbuffer);
 
@@ -168,6 +212,16 @@ gst_base_audio_src_get_time (GstClock * clock, GstBaseAudioSrc * src)
       src->ringbuffer->spec.rate);
 
   return result;
+}
+
+static gboolean
+gst_base_audio_src_check_get_range (GstBaseSrc * bsrc)
+{
+  /* we allow limited pull base operation of which the details
+   * will eventually exposed in an as of yet non-existing query.
+   * Basically pulling can be done on any number of bytes as long
+   * as the offset is -1 or sequentially increasing. */
+  return TRUE;
 }
 
 static void
@@ -315,59 +369,86 @@ gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_base_audio_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
+gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
+    GstBuffer ** outbuf)
 {
-  GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (psrc);
+  GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
   GstBuffer *buf;
   guchar *data;
-  guint len, samples;
+  guint samples;
   guint res;
   guint64 sample;
+  gint bps;
   GstRingBuffer *ringbuffer;
 
   ringbuffer = src->ringbuffer;
 
-  if (!gst_ring_buffer_is_acquired (ringbuffer))
+  if (G_UNLIKELY (!gst_ring_buffer_is_acquired (ringbuffer)))
     goto wrong_state;
 
-  buf = gst_buffer_new_and_alloc (ringbuffer->spec.segsize);
+  bps = ringbuffer->spec.bytes_per_sample;
 
-  data = GST_BUFFER_DATA (buf);
-  len = GST_BUFFER_SIZE (buf);
+  if ((length == 0 && bsrc->blocksize == 0) || length == -1)
+    /* no length given, use the default segment size */
+    length = ringbuffer->spec.segsize;
+  else
+    /* make sure we round down to an integral number of samples */
+    length -= length % bps;
 
-  if (src->next_sample != -1) {
-    sample = src->next_sample;
-  } else {
-    sample = 0;
+  /* calculate the sequentially next sample we need to read */
+  sample = (src->next_sample != -1 ? src->next_sample : 0);
+
+  if (G_UNLIKELY (offset != -1)) {
+    /* if a specific offset was given it must be the next
+     * sequential offset we expect or we fail. */
+    if (offset / bps != sample)
+      goto wrong_offset;
   }
 
-  samples = len / ringbuffer->spec.bytes_per_sample;
+  /* get the number of samples to read */
+  samples = length / bps;
+
+  /* FIXME, using a bufferpool would be nice here */
+  buf = gst_buffer_new_and_alloc (length);
+  data = GST_BUFFER_DATA (buf);
 
   res = gst_ring_buffer_read (ringbuffer, sample, data, samples);
-  if (res == -1)
+  if (G_UNLIKELY (res == -1))
     goto stopped;
 
+  /* FIXME, we timestamp against our own clock, also handle the case
+   * where we are slaved to another clock. We currently refuse to accept
+   * any other clock than the one we provide, so this code is fine for
+   * now. */
   GST_BUFFER_TIMESTAMP (buf) = gst_util_uint64_scale_int (sample,
       GST_SECOND, ringbuffer->spec.rate);
   src->next_sample = sample + samples;
   GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (src->next_sample,
       GST_SECOND, ringbuffer->spec.rate) - GST_BUFFER_TIMESTAMP (buf);
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (psrc)));
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (bsrc)));
 
   *outbuf = buf;
 
   return GST_FLOW_OK;
 
+  /* ERRORS */
 wrong_state:
   {
-    GST_DEBUG ("ringbuffer in wrong state");
+    GST_DEBUG_OBJECT (src, "ringbuffer in wrong state");
     return GST_FLOW_WRONG_STATE;
+  }
+wrong_offset:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, SEEK,
+        (NULL), ("resource can only be operated on sequentially but offset %"
+            G_GUINT64_FORMAT " was given", offset));
+    return GST_FLOW_ERROR;
   }
 stopped:
   {
     gst_buffer_unref (buf);
-    GST_DEBUG ("ringbuffer stopped");
+    GST_DEBUG_OBJECT (src, "ringbuffer stopped");
     return GST_FLOW_WRONG_STATE;
   }
 }
@@ -382,9 +463,8 @@ gst_base_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
   if (bclass->create_ringbuffer)
     buffer = bclass->create_ringbuffer (src);
 
-  if (buffer) {
-    gst_object_set_parent (GST_OBJECT (buffer), GST_OBJECT (src));
-  }
+  if (G_LIKELY (buffer))
+    gst_object_set_parent (GST_OBJECT_CAST (buffer), GST_OBJECT_CAST (src));
 
   return buffer;
 }

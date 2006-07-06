@@ -1,3 +1,24 @@
+2006-07-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_class_init),
+	(gst_base_audio_sink_provide_clock):
+	Use gobject_class instead of G_OBJECT_CLASS (klass)
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_class_init), (gst_base_audio_src_init),
+	(gst_base_audio_src_set_clock), (gst_base_audio_src_provide_clock),
+	(gst_base_audio_src_get_time),
+	(gst_base_audio_src_check_get_range), (gst_base_audio_src_create),
+	(gst_base_audio_src_create_ringbuffer):
+	Fix latency and buffer-time constants and properties ala basesink.
+	Implement pull based scheduling. Fixes #346527.
+	Set default blocksize in GstBaseSrc to 0, we default to pushing out
+	one segment.
+	Refuse slaving to another clock instead of silently not working.
+	Only provide a clock when we are actually able to do so.
+	Various small cleanups and compiler hints.
+
 2006-07-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Lutz Mueller <lutz at topfrose de>

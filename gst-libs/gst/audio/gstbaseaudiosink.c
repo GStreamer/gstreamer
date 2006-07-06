@@ -115,17 +115,17 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_property);
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_base_audio_sink_dispose);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_TIME,
+  g_object_class_install_property (gobject_class, PROP_BUFFER_TIME,
       g_param_spec_int64 ("buffer-time", "Buffer Time",
           "Size of audio buffer in microseconds", 1,
           G_MAXINT64, DEFAULT_BUFFER_TIME, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LATENCY_TIME,
+  g_object_class_install_property (gobject_class, PROP_LATENCY_TIME,
       g_param_spec_int64 ("latency-time", "Latency Time",
           "Audio latency in microseconds", 1,
           G_MAXINT64, DEFAULT_LATENCY_TIME, G_PARAM_READWRITE));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PROVIDE_CLOCK,
+  g_object_class_install_property (gobject_class, PROP_PROVIDE_CLOCK,
       g_param_spec_boolean ("provide-clock", "Provide Clock",
           "Provide a clock to be used as the global pipeline clock",
           DEFAULT_PROVIDE_CLOCK, G_PARAM_READWRITE));
@@ -184,7 +184,7 @@ gst_base_audio_sink_provide_clock (GstElement * elem)
 
   sink = GST_BASE_AUDIO_SINK (elem);
 
-  /* we have no ringbuffer (must be NULL state */
+  /* we have no ringbuffer (must be NULL state) */
   if (sink->ringbuffer == NULL)
     goto wrong_state;
 
