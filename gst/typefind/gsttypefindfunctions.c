@@ -271,6 +271,33 @@ smil_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** text/html ***/
+
+static GstStaticCaps html_caps = GST_STATIC_CAPS ("text/html");
+
+#define HTML_CAPS gst_static_caps_get (&html_caps)
+
+static void
+html_type_find (GstTypeFind * tf, gpointer unused)
+{
+  gchar *d, *data;
+
+  data = (gchar *) gst_type_find_peek (tf, 0, 16);
+  if (!data)
+    return;
+
+  if (!g_ascii_strncasecmp (data, "<!DOCTYPE HTML", 14)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, HTML_CAPS);
+  } else if (xml_check_first_element (tf, "html", 4, FALSE)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, HTML_CAPS);
+  } else if ((d = memchr (data, '<', 16))) {
+    data = (gchar *) gst_type_find_peek (tf, d - data, 6);
+    if (data && g_ascii_strncasecmp (data, "<html>", 6) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, HTML_CAPS);
+    }
+  }
+}
+
 /*** video/x-fli ***/
 
 static GstStaticCaps flx_caps = GST_STATIC_CAPS ("video/x-fli");
@@ -2343,6 +2370,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *ape_exts[] = { "ape", NULL };
   static gchar *uri_exts[] = { "ram", NULL };
   static gchar *smil_exts[] = { "smil", NULL };
+  static gchar *html_exts[] = { "htm", "html", NULL };
   static gchar *xml_exts[] = { "xml", NULL };
   static gchar *jpeg_exts[] = { "jpg", "jpe", "jpeg", NULL };
   static gchar *gif_exts[] = { "gif", NULL };
@@ -2439,6 +2467,8 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER (plugin, "video/quicktime", GST_RANK_SECONDARY,
       qt_type_find, qt_exts, QT_CAPS, NULL, NULL);
 
+  TYPE_FIND_REGISTER (plugin, "text/html", GST_RANK_SECONDARY, html_type_find,
+      html_exts, HTML_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/vnd.rn-realmedia",
       GST_RANK_SECONDARY, rm_exts, ".RMF", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "application/x-shockwave-flash",

@@ -1,5 +1,13 @@
 2006-07-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Lutz Mueller <lutz at topfrose de>
+
+	* gst/typefind/gsttypefindfunctions.c: (html_type_find),
+	(plugin_init):
+	  Add typefinding for text/html (#346581).
+
+2006-07-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/typefind/gsttypefindfunctions.c: (utf8_type_find),
 	(xml_check_first_element), (xml_type_find), (smil_type_find):
 	  Fix SMIL typefinding, make xml_check_first_element() more
