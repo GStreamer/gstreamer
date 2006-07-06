@@ -40,7 +40,7 @@ typedef enum {
   GST_ITERATOR_DONE	= 0,
   GST_ITERATOR_OK	= 1,
   GST_ITERATOR_RESYNC	= 2,
-  GST_ITERATOR_ERROR	= 3,
+  GST_ITERATOR_ERROR	= 3
 } GstIteratorResult;
 
 typedef struct _GstIterator GstIterator;
@@ -56,7 +56,7 @@ typedef struct _GstIterator GstIterator;
 typedef enum {
   GST_ITERATOR_ITEM_SKIP	= 0,
   GST_ITERATOR_ITEM_PASS	= 1,
-  GST_ITERATOR_ITEM_END		= 2,
+  GST_ITERATOR_ITEM_END		= 2
 } GstIteratorItem;
 
 /**

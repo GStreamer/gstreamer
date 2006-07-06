@@ -232,7 +232,7 @@ typedef enum
   GST_CLOCK_BUSY	=  3,
   GST_CLOCK_BADTIME	=  4,
   GST_CLOCK_ERROR	=  5,
-  GST_CLOCK_UNSUPPORTED	=  6,
+  GST_CLOCK_UNSUPPORTED	=  6
 } GstClockReturn;
 
 /**
@@ -329,7 +329,7 @@ typedef enum {
   GST_CLOCK_FLAG_CAN_SET_RESOLUTION     = (GST_OBJECT_FLAG_LAST << 4),
   GST_CLOCK_FLAG_CAN_SET_MASTER         = (GST_OBJECT_FLAG_LAST << 5),
   /* padding */
-  GST_CLOCK_FLAG_LAST		        = (GST_OBJECT_FLAG_LAST << 8),
+  GST_CLOCK_FLAG_LAST		        = (GST_OBJECT_FLAG_LAST << 8)
 } GstClockFlags;
 
 /**

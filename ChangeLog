@@ -1,3 +1,14 @@
+2006-07-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbus.h:
+	* gst/gstclock.h:
+	* gst/gstevent.h:
+	* gst/gstiterator.h:
+	* gst/gstpad.h:
+	* gst/gstplugin.h:
+	* gst/gsttask.h:
+	Remove comma at end of enumerator list. 
+
 2006-07-05  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/common/libgstbase.def:

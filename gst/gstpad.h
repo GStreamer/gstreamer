@@ -68,7 +68,7 @@ typedef enum {
   GST_PAD_LINK_WRONG_DIRECTION  = -3,
   GST_PAD_LINK_NOFORMAT         = -4,
   GST_PAD_LINK_NOSCHED          = -5,
-  GST_PAD_LINK_REFUSED          = -6,
+  GST_PAD_LINK_REFUSED          = -6
 } GstPadLinkReturn;
 
 /**
@@ -171,7 +171,7 @@ GQuark			gst_flow_to_quark	(GstFlowReturn ret);
 typedef enum {
   GST_ACTIVATE_NONE,
   GST_ACTIVATE_PUSH,
-  GST_ACTIVATE_PULL,
+  GST_ACTIVATE_PULL
 } GstActivateMode;
 
 /**

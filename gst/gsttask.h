@@ -59,7 +59,7 @@ typedef struct _GstTaskClass GstTaskClass;
 typedef enum {
   GST_TASK_STARTED,
   GST_TASK_STOPPED,
-  GST_TASK_PAUSED,
+  GST_TASK_PAUSED
 } GstTaskState;
 
 /**

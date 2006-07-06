@@ -65,7 +65,7 @@ typedef enum
 {
   GST_BUS_DROP = 0,
   GST_BUS_PASS = 1,
-  GST_BUS_ASYNC = 2,
+  GST_BUS_ASYNC = 2
 } GstBusSyncReply;
 
 /**

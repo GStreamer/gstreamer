@@ -48,7 +48,7 @@ G_BEGIN_DECLS
 typedef enum {
   GST_EVENT_TYPE_UPSTREAM	= 1 << 0,
   GST_EVENT_TYPE_DOWNSTREAM	= 1 << 1,
-  GST_EVENT_TYPE_SERIALIZED	= 1 << 2,
+  GST_EVENT_TYPE_SERIALIZED	= 1 << 2
 } GstEventTypeFlags;
 
 /**
