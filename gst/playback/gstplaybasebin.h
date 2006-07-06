@@ -81,9 +81,11 @@ struct _GstPlayBaseBin {
   GstElement    *decoder;
   GstElement    *subtitle;              /* additional filesrc ! subparse bin */
   gboolean       subtitle_done;
+  gboolean       need_rebuild;
+
   GSList        *subtitle_elements;     /* subtitle elements that have 'subtitle-encoding' property */
   gchar         *subencoding;           /* encoding to propagate to the above subtitle elements     */
-  gboolean       need_rebuild;
+  GMutex        *sub_lock;              /* protecting subtitle_elements and subencoding members     */
 
   /* group management - using own lock */
   GMutex        *group_lock;            /* lock and mutex to signal availability of new group */

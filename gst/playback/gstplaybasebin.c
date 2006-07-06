@@ -217,6 +217,7 @@ gst_play_base_bin_init (GstPlayBaseBin * play_base_bin)
   play_base_bin->subtitle = NULL;
   play_base_bin->subencoding = NULL;
   play_base_bin->subtitle_elements = NULL;
+  play_base_bin->sub_lock = g_mutex_new ();
 
   play_base_bin->group_lock = g_mutex_new ();
   play_base_bin->group_cond = g_cond_new ();
@@ -254,6 +255,8 @@ gst_play_base_bin_finalize (GObject * object)
 
   g_mutex_free (play_base_bin->group_lock);
   g_cond_free (play_base_bin->group_cond);
+
+  g_mutex_free (play_base_bin->sub_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1195,11 +1198,11 @@ decodebin_element_added_cb (GstBin * decodebin, GstElement * element,
     return;
   }
 
-  GST_OBJECT_LOCK (play_base_bin);
+  g_mutex_lock (play_base_bin->sub_lock);
   play_base_bin->subtitle_elements =
       g_slist_append (play_base_bin->subtitle_elements, element);
   encoding = g_strdup (play_base_bin->subencoding);
-  GST_OBJECT_UNLOCK (play_base_bin);
+  g_mutex_unlock (play_base_bin->sub_lock);
 
   set_encoding_element (element, encoding);
   g_free (encoding);
@@ -1211,10 +1214,10 @@ decodebin_element_removed_cb (GstBin * decodebin, GstElement * element,
 {
   GstPlayBaseBin *play_base_bin = GST_PLAY_BASE_BIN (data);
 
-  GST_OBJECT_LOCK (play_base_bin);
+  g_mutex_lock (play_base_bin->sub_lock);
   play_base_bin->subtitle_elements =
       g_slist_remove (play_base_bin->subtitle_elements, element);
-  GST_OBJECT_UNLOCK (play_base_bin);
+  g_mutex_unlock (play_base_bin->sub_lock);
 }
 
 
@@ -1923,12 +1926,12 @@ gst_play_base_bin_set_property (GObject * object, guint prop_id,
       if (encoding == NULL && play_base_bin->subencoding == NULL)
         return;
 
-      GST_OBJECT_LOCK (play_base_bin);
+      g_mutex_lock (play_base_bin->sub_lock);
       g_free (play_base_bin->subencoding);
       play_base_bin->subencoding = g_strdup (encoding);
       list = g_slist_copy (play_base_bin->subtitle_elements);
       g_slist_foreach (list, (GFunc) gst_object_ref, NULL);
-      GST_OBJECT_UNLOCK (play_base_bin);
+      g_mutex_unlock (play_base_bin->sub_lock);
 
       /* we can't hold a lock when calling g_object_set() on a child, since
        * the notify event will trigger GstObject to send a deep-notify event

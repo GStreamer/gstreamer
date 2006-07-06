@@ -1,3 +1,15 @@
+2006-07-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_init),
+	(gst_play_base_bin_finalize), (decodebin_element_added_cb),
+	(decodebin_element_removed_cb), (gst_play_base_bin_set_property):
+	* gst/playback/gstplaybasebin.h:
+	  Protect list of elements with a subtitle-encoding property and
+	  the subtitle encoding member itself with a lock of their own
+	  instead of using the object lock. This prevents a dead-lock in
+	  the element-remove callback in some circumstances when shutting
+	  down playbin.
+
 2006-07-05  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/common/libgsttag.def:
