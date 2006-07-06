@@ -59,7 +59,9 @@ typedef struct _GstMessageClass GstMessageClass;
  *
  * The different message types that are available.
  */
-/* NOTE: keep in sync with quark registration in gstmessage.c */
+/* NOTE: keep in sync with quark registration in gstmessage.c 
+ * NOTE: keep GST_MESSAGE_ANY a valid gint to avoid compiler warnings.
+ */ 
 typedef enum
 {
   GST_MESSAGE_UNKNOWN           = 0,
@@ -82,7 +84,7 @@ typedef enum
   GST_MESSAGE_SEGMENT_START     = (1 << 16),
   GST_MESSAGE_SEGMENT_DONE      = (1 << 17),
   GST_MESSAGE_DURATION          = (1 << 18),
-  GST_MESSAGE_ANY               = 0xffffffff
+  GST_MESSAGE_ANY               = 0x7fffffff 
 } GstMessageType;
 
 #include <gst/gstminiobject.h>

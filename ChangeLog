@@ -1,5 +1,11 @@
 2006-07-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstmessage.h:
+	Use a valid int for the _MESSAGE_ANY enum value to avoid compiler
+	warnings.
+
+2006-07-06  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
 	(gst_base_src_wait), (gst_base_src_update_length),
 	(gst_base_src_get_range), (gst_base_src_default_check_get_range),
