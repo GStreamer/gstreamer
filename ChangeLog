@@ -1,5 +1,14 @@
 2006-07-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_chain_unchecked), (gst_pad_chain),
+	(gst_pad_push), (gst_pad_check_pull_range), (gst_pad_get_range),
+	(gst_pad_pull_range):
+	* gst/gstpad.h:
+	Lots of comments and docs added to the pad functions.
+	Flesh out the expected behaviour of the get_range() functions.
+
+2006-07-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbus.h:
 	* gst/gstclock.h:
 	* gst/gstevent.h:

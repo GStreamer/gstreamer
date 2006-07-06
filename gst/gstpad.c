@@ -54,10 +54,10 @@
  * GstElements will use gst_pad_push() and gst_pad_pull_range() to push out
  * or pull in a buffer.
  *
- * To send a #GstEvent on a pad, use gst_pad_send_event().
+ * To send a #GstEvent on a pad, use gst_pad_send_event() and
+ * gst_pad_push_event().
  *
- * Last reviewed on 2005-11-23 (0.9.5)
- *
+ * Last reviewed on 2006-07-06 (0.10.9)
  */
 
 #include "gst_private.h"
@@ -1003,12 +1003,12 @@ gst_pad_is_blocked (GstPad * pad)
 
 /**
  * gst_pad_set_activate_function:
- * @pad: a sink #GstPad.
+ * @pad: a #GstPad.
  * @activate: the #GstPadActivateFunction to set.
  *
- * Sets the given activate function for the pad. The activate function will
- * dispatch to activate_push or activate_pull to perform the actual activation.
- * Only makes sense to set on sink pads.
+ * Sets the given activate function for @pad. The activate function will
+ * dispatch to gst_pad_activate_push() or gst_pad_activate_pull() to perform
+ * the actual activation. Only makes sense to set on sink pads.
  *
  * Call this function if your sink pad can start a pull-based task.
  */
@@ -1024,7 +1024,7 @@ gst_pad_set_activate_function (GstPad * pad, GstPadActivateFunction activate)
 
 /**
  * gst_pad_set_activatepull_function:
- * @pad: a sink #GstPad.
+ * @pad: a #GstPad.
  * @activatepull: the #GstPadActivateModeFunction to set.
  *
  * Sets the given activate_pull function for the pad. An activate_pull function
@@ -1044,7 +1044,7 @@ gst_pad_set_activatepull_function (GstPad * pad,
 
 /**
  * gst_pad_set_activatepush_function:
- * @pad: a sink #GstPad.
+ * @pad: a #GstPad.
  * @activatepush: the #GstPadActivateModeFunction to set.
  *
  * Sets the given activate_push function for the pad. An activate_push function
@@ -1067,7 +1067,7 @@ gst_pad_set_activatepush_function (GstPad * pad,
  * @chain: the #GstPadChainFunction to set.
  *
  * Sets the given chain function for the pad. The chain function is called to
- * process a #GstBuffer input buffer.
+ * process a #GstBuffer input buffer. see #GstPadChainFunction for more details.
  */
 void
 gst_pad_set_chain_function (GstPad * pad, GstPadChainFunction chain)
@@ -1086,8 +1086,8 @@ gst_pad_set_chain_function (GstPad * pad, GstPadChainFunction chain)
  * @get: the #GstPadGetRangeFunction to set.
  *
  * Sets the given getrange function for the pad. The getrange function is called to
- * produce a new #GstBuffer to start the processing pipeline. Getrange functions cannot
- * return %NULL.
+ * produce a new #GstBuffer to start the processing pipeline. see
+ * #GstPadGetRangeFunction for a description of the getrange function.
  */
 void
 gst_pad_set_getrange_function (GstPad * pad, GstPadGetRangeFunction get)
@@ -2628,13 +2628,12 @@ peer_error:
  * Allocates a new, empty buffer optimized to push to pad @pad.  This
  * function only works if @pad is a source pad and has a peer.
  *
+ * A new, empty #GstBuffer will be put in the @buf argument.
  * You need to check the caps of the buffer after performing this
  * function and renegotiate to the format if needed.
  *
- * A new, empty #GstBuffer will be put in the @buf argument.
- *
  * Returns: a result code indicating success of the operation. Any
- * result code other than GST_FLOW_OK is an error and @buf should
+ * result code other than #GST_FLOW_OK is an error and @buf should
  * not be used.
  * An error can occur if the pad is not connected or when the downstream
  * peer elements cannot provide an acceptable buffer.
@@ -2661,7 +2660,7 @@ gst_pad_alloc_buffer (GstPad * pad, guint64 offset, gint size, GstCaps * caps,
  * newly allocated buffer are different from the @pad caps.
  *
  * Returns: a result code indicating success of the operation. Any
- * result code other than GST_FLOW_OK is an error and @buf should
+ * result code other than #GST_FLOW_OK is an error and @buf should
  * not be used.
  * An error can occur if the pad is not connected or when the downstream
  * peer elements cannot provide an acceptable buffer.
@@ -3225,6 +3224,9 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
   return res;
 }
 
+/* this is the chain function that does not perform the additional argument
+ * checking for that little extra speed.
+ */
 static inline GstFlowReturn
 gst_pad_chain_unchecked (GstPad * pad, GstBuffer * buffer)
 {
@@ -3317,16 +3319,31 @@ no_function:
         ("push on pad %s:%s but it has no chainfunction",
             GST_DEBUG_PAD_NAME (pad)));
     GST_PAD_STREAM_UNLOCK (pad);
-    return GST_FLOW_ERROR;
+    return GST_FLOW_NOT_SUPPORTED;
   }
 }
 
 /**
  * gst_pad_chain:
- * @pad: a sink #GstPad.
- * @buffer: the #GstBuffer to send.
+ * @pad: a sink #GstPad, returns GST_FLOW_ERROR if not.
+ * @buffer: the #GstBuffer to send, return GST_FLOW_ERROR if not.
  *
  * Chain a buffer to @pad.
+ *
+ * The function returns #GST_FLOW_WRONG_STATE if the pad was flushing.
+ *
+ * If the caps on @buffer are different from the current caps on @pad, this
+ * function will call any setcaps function (see gst_pad_set_setcaps_function())
+ * installed on @pad. If the new caps are not acceptable for @pad, this function
+ * returns #GST_FLOW_NOT_NEGOTIATED.
+ *
+ * The function proceeds calling the chain function installed on @pad (see
+ * gst_pad_set_chain_function()) and the return value of that function is
+ * returned to the caller. #GST_FLOW_NOT_SUPPORTED is returned if @pad has no
+ * chain function.
+ *
+ * In all cases, success or failure, the caller loses its reference to @buffer
+ * after calling this function.
  *
  * Returns: a #GstFlowReturn from the pad.
  *
@@ -3338,7 +3355,6 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK,
       GST_FLOW_ERROR);
-  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   return gst_pad_chain_unchecked (pad, buffer);
@@ -3346,12 +3362,25 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
 
 /**
  * gst_pad_push:
- * @pad: a source #GstPad.
- * @buffer: the #GstBuffer to push.
+ * @pad: a source #GstPad, returns #GST_FLOW_ERROR if not.
+ * @buffer: the #GstBuffer to push returns GST_FLOW_ERROR if not.
  *
- * Pushes a buffer to the peer of @pad.  This gives away your reference to
- * the buffer.
- * Buffer probes will be triggered before the buffer gets pushed.
+ * Pushes a buffer to the peer of @pad.
+ *
+ * This function will call an installed pad block before triggering any
+ * installed pad probes.
+ *
+ * If the caps on @buffer are different from the currently configured caps on
+ * @pad, this function will call any installed setcaps function on @pad (see
+ * gst_pad_set_setcaps_function()). In case of failure to renegotiate the new
+ * format, this function returns #GST_FLOW_NOT_NEGOTIATED.
+ *
+ * The function proceeds calling gst_pad_chain() on the peer pad and returns the
+ * value from that function. If @pad has no peer, #GST_FLOW_NOT_LINKED will be
+ * returned.
+ *
+ * In all cases, success or failure, the caller loses its reference to @buffer
+ * after calling this function.
  *
  * Returns: a #GstFlowReturn from the peer pad.
  *
@@ -3368,13 +3397,12 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SRC, GST_FLOW_ERROR);
-  g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
   GST_OBJECT_LOCK (pad);
 
   /* FIXME: this check can go away; pad_set_blocked could be implemented with
-   * probes completely */
+   * probes completely or probes with an extended pad block. */
   while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
     if ((ret = handle_pad_block (pad)) != GST_FLOW_OK)
       goto flushed;
@@ -3395,6 +3423,8 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto not_linked;
+
+  /* take ref to peer pad before releasing the lock */
   gst_object_ref (peer);
 
   /* Before pushing the buffer to the peer pad, ensure that caps 
@@ -3503,6 +3533,8 @@ gst_pad_check_pull_range (GstPad * pad)
   /* ERROR recovery here */
 wrong_direction:
   {
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "checking pull range, but pad must be a sinkpad");
     GST_OBJECT_UNLOCK (pad);
     return FALSE;
   }
@@ -3517,12 +3549,18 @@ not_connected:
 
 /**
  * gst_pad_get_range:
- * @pad: a src #GstPad.
+ * @pad: a src #GstPad, returns #GST_FLOW_ERROR if not.
  * @offset: The start offset of the buffer
  * @size: The length of the buffer
- * @buffer: a pointer to hold the #GstBuffer.
+ * @buffer: a pointer to hold the #GstBuffer, returns #GST_FLOW_ERROR if %NULL.
  *
- * Calls the getrange function of @pad.
+ * When @pad is flushing this function returns #GST_FLOW_WRONG_STATE
+ * immediatly.
+ *
+ * Calls the getrange function of @pad, see #GstPadGetRangeFunction for a
+ * description of a getrange function. If @pad has no getrange function
+ * installed (see gst_pad_set_getrange_function()) this function returns
+ * #GST_FLOW_NOT_SUPPORTED.
  *
  * Returns: a #GstFlowReturn from the pad.
  *
@@ -3585,11 +3623,12 @@ no_function:
         ("pullrange on pad %s:%s but it has no getrangefunction",
             GST_DEBUG_PAD_NAME (pad)));
     GST_PAD_STREAM_UNLOCK (pad);
-    return GST_FLOW_ERROR;
+    return GST_FLOW_NOT_SUPPORTED;
   }
 dropping:
   {
-    GST_DEBUG ("Dropping data after FALSE probe return");
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "Dropping data after FALSE probe return");
     GST_PAD_STREAM_UNLOCK (pad);
     gst_buffer_unref (*buffer);
     *buffer = NULL;
@@ -3600,15 +3639,26 @@ dropping:
 
 /**
  * gst_pad_pull_range:
- * @pad: a sink #GstPad.
+ * @pad: a sink #GstPad, returns GST_FLOW_ERROR if not.
  * @offset: The start offset of the buffer
  * @size: The length of the buffer
- * @buffer: a pointer to hold the #GstBuffer.
+ * @buffer: a pointer to hold the #GstBuffer, returns GST_FLOW_ERROR if %NULL.
  *
- * Pulls a buffer from the peer pad. @pad must be a linked
- * sinkpad.
+ * Pulls a buffer from the peer pad. 
+ *
+ * This function will first trigger the pad block signal if it was 
+ * installed.
+ *
+ * When @pad is not linked #GST_FLOW_NOT_LINKED is returned else this
+ * function returns the result of gst_pad_get_range() on the peer pad.
+ * See gst_pad_get_range() for a list of return values and for the
+ * semantics of the arguments of this function.
  *
  * Returns: a #GstFlowReturn from the peer pad.
+ * When this function returns #GST_FLOW_OK, @buffer will contain a valid
+ * #GstBuffer that should be freed with gst_buffer_unref() after usage.
+ * @buffer may not be used or freed when any other return value than 
+ * #GST_FLOW_OK is returned.
  *
  * MT safe.
  */
@@ -3661,7 +3711,8 @@ not_connected:
   }
 dropping:
   {
-    GST_DEBUG ("Dropping data after FALSE probe return");
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "Dropping data after FALSE probe return");
     gst_buffer_unref (*buffer);
     *buffer = NULL;
     return GST_FLOW_UNEXPECTED;

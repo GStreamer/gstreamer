@@ -211,27 +211,62 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
 /* data passing */
 /**
  * GstPadChainFunction:
- * @pad: the #GstPad that performed the chain.
- * @buffer: the #GstBuffer that is chained.
+ * @pad: the sink #GstPad that performed the chain.
+ * @buffer: the #GstBuffer that is chained, not %NULL.
  *
  * A function that will be called on sinkpads when chaining buffers.
+ * The function typically processes the data contained in the buffer and 
+ * either consumes the data or passes it on to the internally linked pad(s).
  *
- * Returns: GST_FLOW_OK for success
+ * The implementer of this function receives a refcount to @buffer and should
+ * gst_buffer_unref() when the buffer is no longer needed.
+ *
+ * When a chain function detects an error in the data stream, it must post an
+ * error on the buffer and return an appropriate #GstFlowReturn value.
+ *
+ * Returns: #GST_FLOW_OK for success
  */
 typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstBuffer *buffer);
 /**
  * GstPadGetRangeFunction:
- * @pad: the #GstPad to perform the getrange on.
+ * @pad: the src #GstPad to perform the getrange on.
  * @offset: the offset of the range
  * @length: the length of the range
- * @buffer: a memory location to hold the result buffer
+ * @buffer: a memory location to hold the result buffer, cannot be NULL.
  *
- * This function will be called on sourcepads when a peer element
- * request a buffer at the specified offset and length. If this function
- * returns GST_FLOW_OK, the result buffer will be stored in @buffer. The 
+ * This function will be called on source pads when a peer element
+ * request a buffer at the specified @offset and @length. If this function
+ * returns #GST_FLOW_OK, the result buffer will be stored in @buffer. The 
  * contents of @buffer is invalid for any other return value.
  *
- * Returns: GST_FLOW_OK for success
+ * This function is installed on a source pad with
+ * gst_pad_set_getrange_function() and can only be called on source pads after 
+ * they are successfully activated with gst_pad_activate_pull().
+ *
+ * @offset and @length are always given in byte units. @offset must normally be a value
+ * between 0 and the length in bytes of the data available on @pad. The
+ * length (duration in bytes) can be retrieved with a #GST_QUERY_DURATION or with a
+ * #GST_QUERY_SEEKING. 
+ *
+ * Any @offset larger or equal than the length will make the function return
+ * #GST_FLOW_UNEXPECTED, which corresponds to EOS. In this case @buffer does not
+ * contain a valid buffer.
+ *
+ * The buffer size of @buffer might be smaller than @length when @offset is near
+ * the end of the stream.
+ *
+ * It is allowed to call this function with a 0 @length and valid @offset, in 
+ * which case @buffer will contain a 0-sized buffer and the function returns
+ * #GST_FLOW_OK.
+ *
+ * When this function is called with a -1 @offset, the sequentially next buffer
+ * of length @length in the stream is returned. 
+ *
+ * When this function is called with a -1 @length, a buffer with a default
+ * optimal length is returned in @buffer. The length might depend on the value
+ * of @offset.
+ *
+ * Returns: #GST_FLOW_OK for success
  */
 typedef GstFlowReturn		(*GstPadGetRangeFunction)	(GstPad *pad, guint64 offset,
 		                                                 guint length, GstBuffer **buffer);
@@ -383,15 +418,18 @@ typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
  * provide a hardware buffer in order to avoid additional memcpy operations.
  *
  * The function can return a buffer that does not have @caps, in which case the
- * upstream element requests a format change. 
+ * upstream element requests a format change. If a format change was requested,
+ * the returned buffer will be one to hold the data of said new caps, so its
+ * size might be different from @size.
  *
- * When this function returns anything else than GST_FLOW_OK, the buffer allocation
+ * When this function returns anything else than #GST_FLOW_OK, the buffer allocation
  * failed and @buf does not contain valid data.
  *
  * By default this function returns a new buffer of @size and with @caps containing
- * purely malloced data.
+ * purely malloced data. The buffer should be freed with gst_buffer_unref()
+ * after usage.
  *
- * Returns: GST_FLOW_OK if @buf contains a valid buffer, any other return
+ * Returns: #GST_FLOW_OK if @buf contains a valid buffer, any other return
  *  value means @buf does not hold a valid buffer.
  */
 typedef GstFlowReturn		(*GstPadBufferAllocFunction)	(GstPad *pad, guint64 offset, guint size,
