@@ -100,6 +100,132 @@ GST_START_TEST (test_seeking)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pull)
+{
+  GstElement *src;
+  GstQuery *seeking_query;
+  gboolean res, seekable;
+  gint64 start, stop;
+  GstPad *pad;
+  GstFlowReturn ret;
+  GstBuffer *buffer1, *buffer2;
+
+  src = setup_filesrc ();
+
+  g_object_set (G_OBJECT (src), "location", TESTFILE, NULL);
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to ready");
+
+  /* get the source pad */
+  pad = gst_element_get_pad (src, "src");
+  fail_unless (pad != NULL);
+
+  /* activate the pad in pull mode */
+  res = gst_pad_activate_pull (pad, TRUE);
+  fail_unless (res == TRUE);
+
+  /* not start playing */
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to paused");
+
+  /* Test that filesrc is seekable with a file fd */
+  fail_unless ((seeking_query = gst_query_new_seeking (GST_FORMAT_BYTES))
+      != NULL);
+  fail_unless (gst_element_query (src, seeking_query) == TRUE);
+
+  /* get the seeking capabilities */
+  gst_query_parse_seeking (seeking_query, NULL, &seekable, &start, &stop);
+  fail_unless (seekable == TRUE);
+  fail_unless (start == 0);
+  fail_unless (start != -1);
+  gst_query_unref (seeking_query);
+
+  /* do some pulls */
+  ret = gst_pad_get_range (pad, 0, 100, &buffer1);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (buffer1 != NULL);
+  fail_unless (GST_BUFFER_SIZE (buffer1) == 100);
+
+  ret = gst_pad_get_range (pad, 0, 50, &buffer2);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (buffer2 != NULL);
+  fail_unless (GST_BUFFER_SIZE (buffer2) == 50);
+
+  /* this should be the same */
+  fail_unless (memcmp (GST_BUFFER_DATA (buffer1), GST_BUFFER_DATA (buffer2),
+          50) == 0);
+
+  gst_buffer_unref (buffer2);
+
+  /* read next 50 bytes */
+  ret = gst_pad_get_range (pad, 50, 50, &buffer2);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (buffer2 != NULL);
+  fail_unless (GST_BUFFER_SIZE (buffer2) == 50);
+
+  /* compare with previously read data */
+  fail_unless (memcmp (GST_BUFFER_DATA (buffer1) + 50,
+          GST_BUFFER_DATA (buffer2), 50) == 0);
+
+  gst_buffer_unref (buffer1);
+  gst_buffer_unref (buffer2);
+
+  /* read 10 bytes at end-10 should give exactly 10 bytes */
+  ret = gst_pad_get_range (pad, stop - 10, 10, &buffer1);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (buffer1 != NULL);
+  fail_unless (GST_BUFFER_SIZE (buffer1) == 10);
+  gst_buffer_unref (buffer1);
+
+  /* read 20 bytes at end-10 should give exactly 10 bytes */
+  ret = gst_pad_get_range (pad, stop - 10, 20, &buffer1);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (buffer1 != NULL);
+  fail_unless (GST_BUFFER_SIZE (buffer1) == 10);
+  gst_buffer_unref (buffer1);
+
+  /* read 0 bytes at end-1 should return 0 bytes */
+  ret = gst_pad_get_range (pad, stop - 1, 0, &buffer1);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (buffer1 != NULL);
+  fail_unless (GST_BUFFER_SIZE (buffer1) == 0);
+  gst_buffer_unref (buffer1);
+
+  /* read 10 bytes at end-1 should return 1 byte */
+  ret = gst_pad_get_range (pad, stop - 1, 10, &buffer1);
+  fail_unless (ret == GST_FLOW_OK);
+  fail_unless (buffer1 != NULL);
+  fail_unless (GST_BUFFER_SIZE (buffer1) == 1);
+  gst_buffer_unref (buffer1);
+
+  /* read 0 bytes at end should EOS */
+  ret = gst_pad_get_range (pad, stop, 0, &buffer1);
+  fail_unless (ret == GST_FLOW_UNEXPECTED);
+
+  /* read 10 bytes before end should EOS */
+  ret = gst_pad_get_range (pad, stop, 10, &buffer1);
+  fail_unless (ret == GST_FLOW_UNEXPECTED);
+
+  /* read 0 bytes after end should EOS */
+  ret = gst_pad_get_range (pad, stop + 10, 0, &buffer1);
+  fail_unless (ret == GST_FLOW_UNEXPECTED);
+
+  /* read 10 bytes after end should EOS too */
+  ret = gst_pad_get_range (pad, stop + 10, 10, &buffer1);
+  fail_unless (ret == GST_FLOW_UNEXPECTED);
+
+  fail_unless (gst_element_set_state (src,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
+  /* cleanup */
+  gst_object_unref (pad);
+  cleanup_filesrc (src);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_coverage)
 {
   GstElement *src;
@@ -147,6 +273,7 @@ filesrc_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_seeking);
+  tcase_add_test (tc_chain, test_pull);
   tcase_add_test (tc_chain, test_coverage);
 
   return s;
