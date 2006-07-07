@@ -35,3 +35,4 @@ mkinstalldirs
 py-compile
 registry.xml
 coverage-report.txt
+gst-element-check.m4

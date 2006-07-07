@@ -1,5 +1,10 @@
 2006-07-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* .cvsignore:
+	  Ignore more.
+
+2006-07-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* Makefile.am:
 	* configure.ac:
 	* gst-element-check.m4:
