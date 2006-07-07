@@ -541,6 +541,7 @@ pkgconfig/gstreamer-dataprotocol.pc
 pkgconfig/gstreamer-dataprotocol-uninstalled.pc
 pkgconfig/gstreamer-net.pc
 pkgconfig/gstreamer-net-uninstalled.pc
+gst-element-check.m4
 gstreamer.spec
 )
 

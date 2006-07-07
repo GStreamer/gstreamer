@@ -29,7 +29,8 @@ debug:
 	echo $(win32)
 
 EXTRA_DIST = \
-	gstreamer.spec gstreamer.spec.in gst-element-check.m4 \
+	gstreamer.spec gstreamer.spec.in \
+	gst-element-check.m4 gst-element-check.m4.in \
 	configure.ac autogen.sh depcomp \
 	ABOUT-NLS RELEASE \
 	$(win32)

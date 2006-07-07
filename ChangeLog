@@ -1,3 +1,12 @@
+2006-07-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* Makefile.am:
+	* configure.ac:
+	* gst-element-check.m4:
+	* gst-element-check.m4.in:
+	  Make gst-element-check-$VERSION.m4 call gst-inspect-$VERSION
+	  instead of the unversioned gst-inspect (#324176, #168659).
+
 2006-07-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstmessage.h:
