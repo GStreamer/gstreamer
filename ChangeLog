@@ -1,5 +1,10 @@
 2006-07-07  Wim Taymans  <wim@fluendo.com>
 
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
+	Don't crash on twos/sowt/raw audio. #345830.
+
+2006-07-07  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Lutz Mueller <lutz at topfrose dot de>
 
 	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_class_init),

@@ -3256,10 +3256,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       GST_LOG ("bytes/frame:      %d", stream->bytes_per_frame);
       GST_LOG ("bytes/sample:     %d", stream->bytes_per_sample);
 
-      if (!stream->sampled) {
-        stream->samples_per_frame = (stream->bytes_per_frame /
-            stream->bytes_per_packet) * stream->samples_per_packet;
-        GST_LOG ("samples/frame:    %d", stream->samples_per_frame);
+      if (fourcc != GST_MAKE_FOURCC ('t', 'w', 'o', 's') &&
+          fourcc != GST_MAKE_FOURCC ('s', 'o', 'w', 't') &&
+          fourcc != GST_MAKE_FOURCC ('r', 'a', 'w', ' ')) {
+        if (!stream->sampled) {
+          stream->samples_per_frame = (stream->bytes_per_frame /
+              stream->bytes_per_packet) * stream->samples_per_packet;
+          GST_LOG ("samples/frame:    %d", stream->samples_per_frame);
+        }
       }
       offset = 68;
     } else if (version == 0x00020000) {
