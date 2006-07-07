@@ -1,3 +1,9 @@
+2006-07-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/goom/filters.c: (zoomFilterSetResolution):
+	Avoid goom coredumping by clearing memory. 
+	Fixes 345679.
+
 2006-07-05  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/vs6/libgstid3demux.dsp:

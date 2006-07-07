@@ -350,7 +350,7 @@ zoomFilterSetResolution (GoomData * gd, ZoomFilterData * zf)
   coeffs = (guint32 *) ((1 + ((unsigned int) (freecoeffs)) / 128) * 128);
 
 #else
-  zf->buffer = malloc (sizeof (guint32) * zf->buffsize * 5);
+  zf->buffer = calloc (sizeof (guint32), zf->buffsize * 5);
   zf->pos10 = zf->buffer;
   zf->c[0] = zf->pos10 + zf->buffsize;
   zf->c[1] = zf->c[0] + zf->buffsize;
