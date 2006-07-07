@@ -1,5 +1,18 @@
 2006-07-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstobject.c: (gst_object_set_name_default),
+	(gst_object_set_name):
+	  Random micro-optimisation: don't use a hash table
+	  with strings as keys and the usual strdup/strcmp
+	  involved, but rather just use the GQuark of the
+	  type name as key, since it needs to be looked up
+	  anyway to get the type name string.
+
+	* tests/check/gst/gstobject.c: (GST_START_TEST):
+	  Fix various leaks.
+
+2006-07-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstbin.c: (compare_interface), (gst_bin_get_by_interface),
 	(gst_bin_iterate_all_by_interface):
 	  Can't use GPOINTER_TO_INT and GINT_TO_POINTER with GTypes.

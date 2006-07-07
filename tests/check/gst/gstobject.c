@@ -85,6 +85,7 @@ GST_START_TEST (test_fake_object_new)
   fail_if (object == NULL, "Failed to create instance of GstFakeObject");
   fail_unless (GST_IS_OBJECT (object),
       "GstFakeObject instance is not a GstObject");
+  gst_object_unref (object);
 }
 
 GST_END_TEST
@@ -101,6 +102,7 @@ GST_START_TEST (test_fake_object_name)
   fail_if (name == NULL, "Newly created object has no name");
   fail_if (strncmp (name, "fakeobject", 10) != 0,
       "Random name %s does not start with Gst", name);
+  g_free (name);
 
   /* give a random name by setting with NULL;
    * GstFakeObject class -> fakeobject%d */
@@ -123,6 +125,8 @@ GST_START_TEST (test_fake_object_name)
       "Copy of object name affected actual object name");
   g_free (name);
   g_free (name2);
+
+  gst_object_unref (object);
 }
 
 GST_END_TEST
@@ -185,6 +189,8 @@ GST_START_TEST (test_fake_object_name_threaded_wrong)
   }
   MAIN_STOP_THREADS ();
 
+  gst_object_unref (object);
+
   fail_unless (expected_failure, "name did not get changed");
 }
 
@@ -220,6 +226,7 @@ GST_START_TEST (test_fake_object_name_threaded_right)
     g_free (name);
   }
   MAIN_STOP_THREADS ();
+  gst_object_unref (object);
 }
 
 GST_END_TEST
@@ -322,6 +329,7 @@ GST_START_TEST (test_fake_object_name_threaded_unique)
     g_free (name1);
     name1 = name2;
   }
+  g_free (name1);
 
   /* free stuff */
   g_list_foreach (object_list, (GFunc) g_object_unref, NULL);

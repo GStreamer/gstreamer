@@ -122,7 +122,8 @@ enum
   SO_LAST_SIGNAL
 };
 
-static GHashTable *object_name_counts = NULL;
+/* maps type name quark => count */
+static GData *object_name_counts = NULL;
 
 G_LOCK_DEFINE_STATIC (object_name_mutex);
 
@@ -150,8 +151,7 @@ static void gst_object_dispatch_properties_changed (GObject * object,
 static void gst_object_dispose (GObject * object);
 static void gst_object_finalize (GObject * object);
 
-static gboolean gst_object_set_name_default (GstObject * object,
-    const gchar * type_name);
+static gboolean gst_object_set_name_default (GstObject * object);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
 static void gst_object_real_restore_thyself (GstObject * object,
@@ -600,28 +600,30 @@ gst_object_default_deep_notify (GObject * object, GstObject * orig,
 }
 
 static gboolean
-gst_object_set_name_default (GstObject * object, const gchar * type_name)
+gst_object_set_name_default (GstObject * object)
 {
+  const gchar *type_name;
   gint count;
   gchar *name, *tmp;
   gboolean result;
+  GQuark q;
 
   /* to ensure guaranteed uniqueness across threads, only one thread
    * may ever assign a name */
   G_LOCK (object_name_mutex);
 
   if (!object_name_counts) {
-    object_name_counts = g_hash_table_new_full (g_str_hash, g_str_equal,
-        g_free, NULL);
+    g_datalist_init (&object_name_counts);
   }
 
-  count = GPOINTER_TO_INT (g_hash_table_lookup (object_name_counts, type_name));
-  g_hash_table_insert (object_name_counts, g_strdup (type_name),
-      GINT_TO_POINTER (count + 1));
+  q = g_type_qname (G_OBJECT_TYPE (object));
+  count = GPOINTER_TO_INT (g_datalist_id_get_data (&object_name_counts, q));
+  g_datalist_id_set_data (&object_name_counts, q, GINT_TO_POINTER (count + 1));
 
   G_UNLOCK (object_name_mutex);
 
   /* GstFooSink -> foosinkN */
+  type_name = g_quark_to_string (q);
   if (strncmp (type_name, "Gst", 3) == 0)
     type_name += 3;
   tmp = g_strdup_printf ("%s%d", type_name, count);
@@ -670,7 +672,7 @@ gst_object_set_name (GstObject * object, const gchar * name)
     result = TRUE;
   } else {
     GST_OBJECT_UNLOCK (object);
-    result = gst_object_set_name_default (object, G_OBJECT_TYPE_NAME (object));
+    result = gst_object_set_name_default (object);
   }
   return result;
 
