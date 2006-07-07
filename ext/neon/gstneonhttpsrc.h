@@ -17,7 +17,6 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
-#include <gst/base/gstadapter.h>
 #include <stdio.h>
 
 G_BEGIN_DECLS
@@ -40,12 +39,6 @@ G_BEGIN_DECLS
 typedef struct _GstNeonhttpSrc GstNeonhttpSrc;
 typedef struct _GstNeonhttpSrcClass GstNeonhttpSrcClass;
 
-typedef enum {
-  GST_NEONHTTP_SRC_OPEN       = (GST_ELEMENT_FLAG_LAST << 0),
-
-  GST_NEONHTTP_SRC_FLAG_LAST  = (GST_ELEMENT_FLAG_LAST << 2)
-} GstTCPClientSrcFlags;
-
 struct _GstNeonhttpSrc {
   GstPushSrc element;
 
@@ -60,8 +53,6 @@ struct _GstNeonhttpSrc {
   gboolean ishttps;
 
   guint64 content_size;
-
-  GstAdapter *adapter;
 
   gboolean eos;
 

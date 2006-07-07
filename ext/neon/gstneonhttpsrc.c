@@ -60,10 +60,10 @@ enum
 
 static void oom_callback ();
 
-static gboolean set_proxy (const char *uri, ne_uri * parsed,
-    gboolean set_default);
-static gboolean set_uri (const char *uri, ne_uri * parsed, gboolean * ishttps,
-    gchar ** uristr, gboolean set_default);
+static gboolean set_proxy (GstNeonhttpSrc * src, const char *uri,
+    ne_uri * parsed, gboolean set_default);
+static gboolean set_uri (GstNeonhttpSrc * src, const char *uri, ne_uri * parsed,
+    gboolean * ishttps, gchar ** uristr, gboolean set_default);
 
 static void gst_neonhttp_src_finalize (GObject * gobject);
 
@@ -71,7 +71,6 @@ static GstFlowReturn gst_neonhttp_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 static gboolean gst_neonhttp_src_start (GstBaseSrc * bsrc);
 static gboolean gst_neonhttp_src_stop (GstBaseSrc * bsrc);
-static gboolean gst_neonhttp_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_neonhttp_src_get_size (GstBaseSrc * bsrc, guint64 * size);
 
 static void gst_neonhttp_src_set_property (GObject * object, guint prop_id,
@@ -181,7 +180,6 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
 
   gstbasesrc_class->start = gst_neonhttp_src_start;
   gstbasesrc_class->stop = gst_neonhttp_src_stop;
-  gstbasesrc_class->unlock = gst_neonhttp_src_unlock;
   gstbasesrc_class->get_size = gst_neonhttp_src_get_size;
 
   gstpush_src_class->create = gst_neonhttp_src_create;
@@ -202,10 +200,8 @@ gst_neonhttp_src_init (GstNeonhttpSrc * this, GstNeonhttpSrcClass * g_class)
   this->ishttps = FALSE;
   this->content_size = -1;
 
-  set_uri (NULL, &this->uri, &this->ishttps, &this->uristr, TRUE);
-  set_proxy (NULL, &this->proxy, TRUE);
-
-  this->adapter = gst_adapter_new ();
+  set_uri (this, NULL, &this->uri, &this->ishttps, &this->uristr, TRUE);
+  set_proxy (this, NULL, &this->proxy, TRUE);
 
   this->user_agent = g_strdup ("neonhttpsrc");
 
@@ -215,8 +211,6 @@ gst_neonhttp_src_init (GstNeonhttpSrc * this, GstNeonhttpSrcClass * g_class)
   this->iradio_url = NULL;
   this->icy_caps = NULL;
   this->icy_metaint = 0;
-
-  GST_OBJECT_FLAG_UNSET (this, GST_NEONHTTP_SRC_OPEN);
 }
 
 static void
@@ -227,25 +221,10 @@ gst_neonhttp_src_finalize (GObject * gobject)
   ne_uri_free (&this->uri);
   ne_uri_free (&this->proxy);
 
-  if (this->user_agent) {
-    g_free (this->user_agent);
-    this->user_agent = NULL;
-  }
-
-  if (this->iradio_name) {
-    g_free (this->iradio_name);
-    this->iradio_name = NULL;
-  }
-
-  if (this->iradio_genre) {
-    g_free (this->iradio_genre);
-    this->iradio_genre = NULL;
-  }
-
-  if (this->iradio_url) {
-    g_free (this->iradio_url);
-    this->iradio_url = NULL;
-  }
+  g_free (this->user_agent);
+  g_free (this->iradio_name);
+  g_free (this->iradio_genre);
+  g_free (this->iradio_url);
 
   if (this->icy_caps) {
     gst_caps_unref (this->icy_caps);
@@ -263,21 +242,15 @@ gst_neonhttp_src_finalize (GObject * gobject)
     this->session = NULL;
   }
 
-  if (this->adapter) {
-    g_object_unref (this->adapter);
-  }
-
   if (this->uristr) {
     ne_free (this->uristr);
   }
 
-  if (G_OBJECT_CLASS (parent_class)->finalize)
-    G_OBJECT_CLASS (parent_class)->finalize (gobject);
-
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
 static int
-request_dispatch (GstNeonhttpSrc * src, GstBuffer * outbuf, gboolean * eos)
+request_dispatch (GstNeonhttpSrc * src, GstBuffer * outbuf)
 {
   int ret;
   int read = 0;
@@ -289,16 +262,6 @@ request_dispatch (GstNeonhttpSrc * src, GstBuffer * outbuf, gboolean * eos)
   ssize_t len = 0;
 
   while (sizetoread > 0) {
-
-    if (!GST_OBJECT_FLAG_IS_SET (src, GST_NEONHTTP_SRC_OPEN)) {
-      GST_BUFFER_SIZE (outbuf) = read;
-      ret = ne_end_request (src->request);
-      if (ret != NE_OK) {
-        GST_ERROR ("Request failed. code:%d, desc: %s\n", ret,
-            ne_get_error (src->session));
-      }
-      return read;
-    }
     len = ne_read_response_block (src->request,
         (char *) GST_BUFFER_DATA (outbuf) + read, sizetoread);
     if (len > 0) {
@@ -319,20 +282,16 @@ request_dispatch (GstNeonhttpSrc * src, GstBuffer * outbuf, gboolean * eos)
     ret = ne_end_request (src->request);
     if (ret != NE_RETRY) {
       if (ret == NE_OK) {
-        *eos = TRUE;
+        src->eos = TRUE;
       } else {
         read = -3;
-        GST_ERROR ("Request failed. code:%d, desc: %s\n", ret,
-            ne_get_error (src->session));
       }
     }
     goto done;
   }
 
 done:
-
   return read;
-
 }
 
 
@@ -340,53 +299,44 @@ static GstFlowReturn
 gst_neonhttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstNeonhttpSrc *src;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn ret;
   int read;
-  gboolean eos = FALSE;
 
   src = GST_NEONHTTP_SRC (psrc);
 
-  if (!GST_OBJECT_FLAG_IS_SET (src, GST_NEONHTTP_SRC_OPEN))
-    goto wrong_state;
+  /* The caller should know the number of bytes and not read beyond EOS. */
+  if (G_UNLIKELY (src->eos))
+    goto eos;
 
-  *outbuf = gst_buffer_new_and_alloc (GST_BASE_SRC (psrc)->blocksize);
+  /* Create the buffer. */
+  ret = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (GST_BASE_SRC (psrc)),
+      GST_BUFFER_OFFSET_NONE, GST_BASE_SRC (psrc)->blocksize,
+      src->icy_caps ? src->icy_caps :
+      GST_PAD_CAPS (GST_BASE_SRC_PAD (GST_BASE_SRC (psrc))), outbuf);
 
-  read = request_dispatch (src, *outbuf, &eos);
-  GST_LOG ("outbuffer size = %d", read);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto done;
 
-  if (read > 0) {
+  read = request_dispatch (src, *outbuf);
+  if (G_UNLIKELY (read < 0))
+    goto read_error;
 
-    if (*outbuf) {
-      if (src->icy_caps) {
-        gst_buffer_set_caps (*outbuf, src->icy_caps);
-      } else {
-        gst_buffer_set_caps (*outbuf, GST_PAD_CAPS (GST_BASE_SRC_PAD (src)));
-      }
-    }
-
-  } else if (read < 0) {
-    ret = GST_FLOW_ERROR;
-  }
-
-  if (eos) {
-    GstPad *peer;
-
-    GST_DEBUG ("Returning EOS");
-    peer = gst_pad_get_peer (GST_BASE_SRC_PAD (src));
-    if (!gst_pad_send_event (peer, gst_event_new_eos ())) {
-      ret = GST_FLOW_ERROR;
-    }
-    gst_object_unref (peer);
-  }
-
+done:
   return ret;
 
-wrong_state:
+  /* ERRORS */
+eos:
   {
-    GST_DEBUG ("connection to closed, cannot read data");
-    return GST_FLOW_WRONG_STATE;
+    GST_DEBUG_OBJECT (src, "EOS reached");
+    return GST_FLOW_UNEXPECTED;
   }
-
+read_error:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ,
+        (NULL), ("Could not read any bytes (%i, %s)", read,
+            ne_get_error (src->session)));
+    return GST_FLOW_ERROR;
+  }
 }
 
 /* The following two charset mangling functions were copied from gnomevfssrc.
@@ -429,16 +379,14 @@ gst_neonhttp_src_unicodify (const char *str)
 static gboolean
 gst_neonhttp_src_start (GstBaseSrc * bsrc)
 {
-  gboolean ret = TRUE;
   GstNeonhttpSrc *src = GST_NEONHTTP_SRC (bsrc);
   const char *content_length;
+  gint res;
 
   ne_oom_callback (oom_callback);
 
-  if (0 != ne_sock_init ()) {
-    ret = FALSE;
-    goto done;
-  }
+  if ((res = ne_sock_init ()) != 0)
+    goto init_failed;
 
   src->session =
       ne_session_create (src->uri.scheme, src->uri.host, src->uri.port);
@@ -447,8 +395,7 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
     ne_session_proxy (src->session, src->proxy.host, src->proxy.port);
   } else if (src->proxy.host || src->proxy.port) {
     /* both proxy host and port must be specified or none */
-    ret = FALSE;
-    goto done;
+    goto wrong_proxy;
   }
 
   src->request = ne_request_create (src->session, "GET", src->uri.path);
@@ -461,18 +408,15 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
     ne_add_request_header (src->request, "icy-metadata", "1");
   }
 
-  if (NE_OK != ne_begin_request (src->request)) {
-    ret = FALSE;
-    goto done;
-  }
+  if ((res = ne_begin_request (src->request)) != NE_OK)
+    goto begin_req_failed;
 
   content_length = ne_get_response_header (src->request, "Content-Length");
 
-  if (content_length) {
+  if (content_length)
     src->content_size = g_ascii_strtoull (content_length, NULL, 10);
-  } else {
+  else
     src->content_size = -1;
-  }
 
   if (src->iradio_mode) {
     /* Icecast stuff */
@@ -517,13 +461,27 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
       src->iradio_url = gst_neonhttp_src_unicodify (str_value);
     }
   }
+  return TRUE;
 
-  GST_OBJECT_FLAG_SET (src, GST_NEONHTTP_SRC_OPEN);
-
-done:
-
-  return ret;
-
+  /* ERRORS */
+init_failed:
+  {
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
+        (NULL), ("Could not initialize neon library (%i)", res));
+    return FALSE;
+  }
+wrong_proxy:
+  {
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
+        (NULL), ("Both proxy host and port must be specified or none"));
+    return FALSE;
+  }
+begin_req_failed:
+  {
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
+        (NULL), ("Could not begin request (%i)", res));
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -533,31 +491,15 @@ gst_neonhttp_src_get_size (GstBaseSrc * bsrc, guint64 * size)
 
   src = GST_NEONHTTP_SRC (bsrc);
 
-  if (src->content_size != -1) {
-    *size = src->content_size;
-    return TRUE;
-  }
+  if (src->content_size != -1)
+    return FALSE;
 
-  return FALSE;
-
-}
-
-static gboolean
-gst_neonhttp_src_unlock (GstBaseSrc * bsrc)
-{
-  GstNeonhttpSrc *src;
-
-  src = GST_NEONHTTP_SRC (bsrc);
-
-  GST_OBJECT_FLAG_UNSET (src, GST_NEONHTTP_SRC_OPEN);
+  *size = src->content_size;
 
   return TRUE;
-
 }
 
-
 /* close the socket and associated resources
- * unset OPEN flag
  * used both to recover from errors and go to NULL state */
 static gboolean
 gst_neonhttp_src_stop (GstBaseSrc * bsrc)
@@ -597,11 +539,14 @@ gst_neonhttp_src_stop (GstBaseSrc * bsrc)
     src->session = NULL;
   }
 
+  src->eos = FALSE;
+
   return TRUE;
 }
 
-gboolean
-set_proxy (const char *uri, ne_uri * parsed, gboolean set_default)
+static gboolean
+set_proxy (GstNeonhttpSrc * src, const char *uri, ne_uri * parsed,
+    gboolean set_default)
 {
   ne_uri_free (parsed);
 
@@ -609,48 +554,48 @@ set_proxy (const char *uri, ne_uri * parsed, gboolean set_default)
     const char *str = g_getenv ("http_proxy");
 
     if (str) {
-      if (0 != ne_uri_parse (str, parsed)) {
-        GST_WARNING ("The proxy set on http_proxy env var isn't well formated");
-        ne_uri_free (parsed);
-      }
+      if (ne_uri_parse (str, parsed) != 0)
+        goto cannot_parse;
     }
     return TRUE;
   }
 
-  if (0 != ne_uri_parse (uri, parsed)) {
-    goto clear;
-  }
+  if (ne_uri_parse (uri, parsed) != 0)
+    goto error;
 
-
-  if (parsed->scheme) {
+  if (parsed->scheme)
     GST_WARNING ("The proxy schema shouldn't be defined");
-  }
 
+  if (parsed->host && !parsed->port)
+    goto error;
 
-  if (parsed->host && !parsed->port) {
-    goto clear;
-  }
 #ifdef NEON_026_OR_LATER
   if (!parsed->path || parsed->userinfo)
-    goto clear;
+    goto error;
 #else
   if (!parsed->path || parsed->authinfo)
-    goto clear;
+    goto error;
 #endif
-
   return TRUE;
 
-clear:
-
-  ne_uri_free (parsed);
-
-  return FALSE;
-
+  /* ERRORS */
+error:
+  {
+    ne_uri_free (parsed);
+    return FALSE;
+  }
+cannot_parse:
+  {
+    GST_WARNING_OBJECT (src,
+        "The proxy set on http_proxy env var isn't well formated");
+    ne_uri_free (parsed);
+    return TRUE;
+  }
 }
 
-gboolean
-set_uri (const char *uri, ne_uri * parsed, gboolean * ishttps, gchar ** uristr,
-    gboolean set_default)
+static gboolean
+set_uri (GstNeonhttpSrc * src, const char *uri, ne_uri * parsed,
+    gboolean * ishttps, gchar ** uristr, gboolean set_default)
 {
 
   ne_uri_free (parsed);
@@ -668,23 +613,21 @@ set_uri (const char *uri, ne_uri * parsed, gboolean * ishttps, gchar ** uristr,
     goto done;
   }
 
-  if (0 != ne_uri_parse (uri, parsed)) {
-    goto clear;
-  }
+  if (ne_uri_parse (uri, parsed) != 0)
+    goto parse_error;
 
   if (parsed->scheme == NULL) {
     parsed->scheme = g_strdup ("http");
     *ishttps = FALSE;
   } else {
-    if (0 == strcmp (parsed->scheme, "https"))
+    if (strcmp (parsed->scheme, "https") == 0)
       *ishttps = TRUE;
     else
       *ishttps = FALSE;
   }
 
-  if (parsed->host == NULL) {
+  if (parsed->host == NULL)
     parsed->host = g_strdup (HTTP_DEFAULT_HOST);
-  }
 
   if (parsed->port == 0) {
     if (*ishttps)
@@ -693,33 +636,25 @@ set_uri (const char *uri, ne_uri * parsed, gboolean * ishttps, gchar ** uristr,
       parsed->port = HTTP_DEFAULT_PORT;
   }
 
-  if (!parsed->path) {
+  if (!parsed->path)
     parsed->path = g_strdup ("");
-  } else {
-    char *str = parsed->path;
-
-    parsed->path = ne_path_escape (parsed->path);
-    ne_free (str);
-  }
 
 done:
-
-  if (uristr) {
+  if (uristr)
     *uristr = ne_uri_unparse (parsed);
-  }
 
   return TRUE;
 
-clear:
-
-  if (uristr && *uristr) {
-    ne_free (*uristr);
-    *uristr = NULL;
+  /* ERRORS */
+parse_error:
+  {
+    if (uristr && *uristr) {
+      ne_free (*uristr);
+      *uristr = NULL;
+    }
+    ne_uri_free (parsed);
+    return FALSE;
   }
-  ne_uri_free (parsed);
-
-  return FALSE;
-
 }
 
 static void
@@ -731,19 +666,16 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PROXY:
     {
-
       if (!g_value_get_string (value)) {
         GST_WARNING ("proxy property cannot be NULL");
         goto done;
       }
-
-      if (!set_proxy (g_value_get_string (value), &this->proxy, FALSE)) {
-        GST_WARNING ("bad formated proxy");
+      if (!set_proxy (this, g_value_get_string (value), &this->proxy, FALSE)) {
+        GST_WARNING ("badly formated proxy");
         goto done;
       }
-    }
-
       break;
+    }
     case PROP_URI:
     case PROP_LOCATION:
     {
@@ -751,25 +683,22 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
         GST_WARNING ("location property cannot be NULL");
         goto done;
       }
-
-      if (!set_uri (g_value_get_string (value), &this->uri, &this->ishttps,
-              &this->uristr, FALSE)) {
-        GST_WARNING ("bad formated location");
+      if (!set_uri (this, g_value_get_string (value), &this->uri,
+              &this->ishttps, &this->uristr, FALSE)) {
+        GST_WARNING ("badly formated location");
         goto done;
       }
-    }
       break;
+    }
     case PROP_USER_AGENT:
     {
       if (this->user_agent) {
         g_free (this->user_agent);
         this->user_agent = NULL;
       }
-
       if (g_value_get_string (value)) {
         this->user_agent = g_strdup (g_value_get_string (value));
       }
-
       break;
     }
     case PROP_IRADIO_MODE:
@@ -781,11 +710,8 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-
 done:
-
   return;
-
 }
 
 static void
@@ -808,9 +734,8 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
       } else {
         g_value_set_string (value, "");
       }
-    }
       break;
-
+    }
     case PROP_URI:
     case PROP_LOCATION:
     {
@@ -825,8 +750,8 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
       } else {
         g_value_set_string (value, "");
       }
-    }
       break;
+    }
     case PROP_USER_AGENT:
     {
       g_value_set_string (value, neonhttpsrc->user_agent);
@@ -848,7 +773,6 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-
 }
 
 /* entry point to initialize the plug-in
@@ -898,7 +822,7 @@ gst_neonhttp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   GstNeonhttpSrc *src = GST_NEONHTTP_SRC (handler);
 
-  return set_uri (uri, &src->uri, &src->ishttps, &src->uristr, FALSE);
+  return set_uri (src, uri, &src->uri, &src->ishttps, &src->uristr, FALSE);
 
 }
 
@@ -915,7 +839,6 @@ gst_neonhttp_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 
 
 /* NEON CALLBACK */
-
 static void
 oom_callback ()
 {
@@ -928,6 +851,6 @@ size_header_handler (void *userdata, const char *value)
   GstNeonhttpSrc *src = GST_NEONHTTP_SRC (userdata);
 
   src->content_size = g_ascii_strtoull (value, NULL, 10);
-  GST_DEBUG ("content size = %lld bytes", src->content_size);
 
+  GST_DEBUG_OBJECT (src, "content size = %lld bytes", src->content_size);
 }

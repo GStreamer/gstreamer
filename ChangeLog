@@ -1,3 +1,21 @@
+2006-07-07  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Lutz Mueller <lutz at topfrose dot de>
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_class_init),
+	(gst_neonhttp_src_init), (gst_neonhttp_src_finalize),
+	(request_dispatch), (gst_neonhttp_src_create),
+	(gst_neonhttp_src_start), (gst_neonhttp_src_get_size),
+	(gst_neonhttp_src_stop), (set_proxy), (set_uri),
+	(gst_neonhttp_src_set_property), (gst_neonhttp_src_get_property),
+	(gst_neonhttp_src_uri_set_uri), (size_header_handler):
+	* ext/neon/gstneonhttpsrc.h:
+	Remove unlock function. start/stop will do everything needed
+	Removed code that was never called.
+	Use gst_pad_alloc_buffer. Don't send EOS - parent class does that for us.
+	Do not escape path. Fixes #346723.
+	Additional code cleanups.
+
 2006-07-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
