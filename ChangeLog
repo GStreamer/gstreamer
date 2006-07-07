@@ -1,5 +1,16 @@
 2006-07-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstbin.c: (compare_interface), (gst_bin_get_by_interface),
+	(gst_bin_iterate_all_by_interface):
+	  Can't use GPOINTER_TO_INT and GINT_TO_POINTER with GTypes.
+	  GTypes are gulongs and thus the top 4 bytes might be cut
+	  off on some platforms when doing GPOINTER_TO_INT, leading
+	  to invalid GTypes and bad things happening.
+	  Also add a check to make sure the type passed in is really
+	  an interface type.
+
+2006-07-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* .cvsignore:
 	  Ignore more.
 

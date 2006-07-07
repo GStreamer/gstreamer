@@ -2516,9 +2516,10 @@ gst_bin_get_by_name_recurse_up (GstBin * bin, const gchar * name)
 static gint
 compare_interface (GstElement * element, gpointer interface)
 {
+  GType interface_type = (GType) interface;
   gint ret;
 
-  if (G_TYPE_CHECK_INSTANCE_TYPE (element, GPOINTER_TO_INT (interface))) {
+  if (G_TYPE_CHECK_INSTANCE_TYPE (element, interface_type)) {
     ret = 0;
   } else {
     /* we did not find the element, need to release the ref
@@ -2548,13 +2549,14 @@ GstElement *
 gst_bin_get_by_interface (GstBin * bin, GType interface)
 {
   GstIterator *children;
-  GstIterator *result;
+  gpointer result;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+  g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
 
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_find_custom (children, (GCompareFunc) compare_interface,
-      GINT_TO_POINTER (interface));
+      (gpointer) interface);
   gst_iterator_free (children);
 
   return GST_ELEMENT_CAST (result);
@@ -2585,10 +2587,11 @@ gst_bin_iterate_all_by_interface (GstBin * bin, GType interface)
   GstIterator *result;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+  g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
 
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_filter (children, (GCompareFunc) compare_interface,
-      GINT_TO_POINTER (interface));
+      (gpointer) interface);
 
   return result;
 }
