@@ -125,6 +125,8 @@ struct _GstASFDemux {
   guint16              ds_chunk_size;
   guint16              ds_data_size;
 
+  /* for debugging only */
+  gchar               *objpath;
 };
 
 struct _GstASFDemuxClass {

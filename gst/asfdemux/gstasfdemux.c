@@ -419,12 +419,11 @@ gst_asf_demux_identify_guid (GstASFDemux * demux,
 {
   guint32 ret;
 
-  GST_LOG ("identifying 0x%08x-0x%08x-0x%08x-0x%08x",
-      guid->v1, guid->v2, guid->v3, guid->v4);
-
   ret = gst_asf_identify_guid (guids, guid);
 
-  GST_LOG ("identified as %s", gst_asf_get_guid_nick (guids, ret));
+  GST_LOG ("%s  0x%08x-0x%08x-0x%08x-0x%08x",
+      gst_asf_get_guid_nick (guids, ret),
+      guid->v1, guid->v2, guid->v3, guid->v4);
 
   return ret;
 }
@@ -1388,7 +1387,8 @@ gst_asf_demux_process_header (GstASFDemux * demux, guint8 ** p_data,
 
   /* Loop through the header's objects, processing those */
   for (i = 0; i < object.num_objects; ++i) {
-    GST_DEBUG ("reading header part %u: data=%p", i, *p_data);
+    GST_DEBUG ("reading header part %u: offset=0x%" G_GINT64_MODIFIER "x",
+        i, gst_asf_demux_get_current_offset (demux, *p_data));
     ret = gst_asf_demux_process_object (demux, p_data, p_size);
     if (ret != GST_FLOW_OK) {
       GST_WARNING ("process_object returned %s", gst_asf_get_flow_name (ret));
@@ -1585,6 +1585,41 @@ gst_asf_demux_process_header_ext (GstASFDemux * demux, guint8 ** p_data,
   return ret;
 }
 
+static const gchar *
+gst_asf_demux_push_obj (GstASFDemux * demux, guint32 obj_id)
+{
+  const gchar *nick;
+
+  nick = gst_asf_get_guid_nick (asf_object_guids, obj_id);
+  if (g_str_has_prefix (nick, "ASF_OBJ_"))
+    nick += strlen ("ASF_OBJ_");
+
+  if (demux->objpath == NULL) {
+    demux->objpath = g_strdup (nick);
+  } else {
+    gchar *newpath;
+
+    newpath = g_strdup_printf ("%s/%s", demux->objpath, nick);
+    g_free (demux->objpath);
+    demux->objpath = newpath;
+  }
+
+  return (const gchar *) demux->objpath;
+}
+
+static void
+gst_asf_demux_pop_obj (GstASFDemux * demux)
+{
+  gchar *s;
+
+  if ((s = g_strrstr (demux->objpath, "/"))) {
+    *s = '\0';
+  } else {
+    g_free (demux->objpath);
+    demux->objpath = NULL;
+  }
+}
+
 static GstFlowReturn
 gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     guint64 * p_size)
@@ -1606,8 +1641,9 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     return ASF_FLOW_NEED_MORE_DATA;
   }
 
-  GST_INFO ("processing object %s with size %" G_GUINT64_FORMAT,
-      gst_asf_get_guid_nick (asf_object_guids, obj_id),
+  gst_asf_demux_push_obj (demux, obj_id);
+
+  GST_INFO ("%s, size %" G_GUINT64_FORMAT, demux->objpath,
       obj_size + ASF_DEMUX_OBJECT_HEADER_SIZE);
 
   switch (obj_id) {
@@ -1645,6 +1681,11 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     case ASF_OBJ_LANGUAGE_LIST:
     case ASF_OBJ_METADATA_OBJECT:
     case ASF_OBJ_EXTENDED_STREAM_PROPS:
+    case ASF_OBJ_COMPATIBILITY:
+    case ASF_OBJ_INDEX_PLACEHOLDER:
+    case ASF_OBJ_INDEX_PARAMETERS:
+    case ASF_OBJ_ADVANCED_MUTUAL_EXCLUSION:
+    case ASF_OBJ_STREAM_PRIORITIZATION:
     default:
       /* Unknown/unhandled object read. Just ignore
        * it, people don't like fatal errors much */
@@ -1657,7 +1698,9 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
       break;
   }
 
-  GST_DEBUG ("ret = %s", gst_asf_get_flow_name (ret));
+  GST_LOG ("ret = %s (%s)", gst_asf_get_flow_name (ret), demux->objpath);
+
+  gst_asf_demux_pop_obj (demux);
 
   return ret;
 }
@@ -2543,6 +2586,8 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
         demux->taglist = NULL;
       }
       demux->state = GST_ASF_DEMUX_STATE_HEADER;
+      g_free (demux->objpath);
+      demux->objpath = NULL;
       break;
     }
     default:

@@ -25,11 +25,10 @@ const ASFGuidHash asf_correction_guids[] = {
   {ASF_CORRECTION_ON, "ASF_CORRECTION_ON",
         {0xBFC3CD50, 0x11CF618F, 0xAA00B28B, 0x20E2B400}
       },
-/*
-  { ASF_CORRECTION_OFF,  "ASF_CORRECTION_OFF",
-    {0x20FB5700, 0x11CF5B55, 0x8000FDA8, 0x2B445C5F}
-  },
-*/
+  {ASF_CORRECTION_OFF, "ASF_CORRECTION_OFF",
+        {0x20FB5700, 0x11CF5B55, 0x8000FDA8, 0x2B445C5F}
+      },
+  /* CHECKME: where does this 49F1A440... GUID come from? (tpm) */
   {ASF_CORRECTION_OFF, "ASF_CORRECTION_OFF",
         {0x49F1A440, 0x11D04ECE, 0xA000ACA3, 0xF64803C9}
       },
@@ -49,15 +48,6 @@ const ASFGuidHash asf_stream_guids[] = {
         {0, 0, 0, 0}
       }
 };
-
-/*
-
-2 unknown GUIDs found in an extended header object :
-
-(0x26f18b5d/0x47ec4584/0x650e5f9f/0xc952041f) with size=26
-(0xd9aade20/0x4f9c7c17/0x558528bc/0xa2e298dd) with size=34
-
-*/
 
 const ASFGuidHash asf_object_guids[] = {
   {ASF_OBJ_STREAM, "ASF_OBJ_STREAM",
@@ -113,6 +103,21 @@ const ASFGuidHash asf_object_guids[] = {
       },
   {ASF_OBJ_EXTENDED_STREAM_PROPS, "ASF_OBJ_EXTENDED_STREAM_PROPS",
         {0x14e6a5cb, 0x4332c672, 0x69a99983, 0x5a5b0652}
+      },
+  {ASF_OBJ_COMPATIBILITY, "ASF_OBJ_COMPATIBILITY",
+        {0x26f18b5d, 0x47ec4584, 0x650e5f9f, 0xc952041f}
+      },
+  {ASF_OBJ_INDEX_PLACEHOLDER, "ASF_OBJ_INDEX_PLACEHOLDER",
+        {0xd9aade20, 0x4f9c7c17, 0x558528bc, 0xa2e298dd}
+      },
+  {ASF_OBJ_INDEX_PARAMETERS, "ASF_OBJ_INDEX_PARAMETERS",
+        {0xd6e229df, 0x11d135da, 0xa0003490, 0xbe4903c9}
+      },
+  {ASF_OBJ_ADVANCED_MUTUAL_EXCLUSION, "ASF_OBJ_ADVANCED_MUTUAL_EXCLUSION",
+        {0xa08649cf, 0x46704775, 0x356e168a, 0xcd667535}
+      },
+  {ASF_OBJ_STREAM_PRIORITIZATION, "ASF_OBJ_STREAM_PRIORITIZATION",
+        {0xd4fed15b, 0x454f88d3, 0x5cedf081, 0x249e9945}
       },
   {ASF_OBJ_UNDEFINED, "ASF_OBJ_UNDEFINED",
         {0, 0, 0, 0}

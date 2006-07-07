@@ -1,3 +1,15 @@
+2006-07-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/asfheaders.c:
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_identify_guid),
+	(gst_asf_demux_process_header), (gst_asf_demux_push_obj),
+	(gst_asf_demux_pop_obj), (gst_asf_demux_process_object),
+	(gst_asf_demux_change_state):
+	* gst/asfdemux/gstasfdemux.h:
+	  Add some more GUIDs and make debug log more readable
+	  and easier to follow when parsing the headers.
+
 2006-06-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_init),
