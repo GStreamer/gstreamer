@@ -78,7 +78,8 @@ enum
   PROP_0,
   PROP_DISPLAY_NAME,
   PROP_SCREEN_NUM,
-  PROP_SHOW_POINTER
+  PROP_SHOW_POINTER,
+  PROP_USE_DAMAGE
 };
 
 GST_BOILERPLATE (GstXImageSrc, gst_ximage_src, GstPushSrc, GST_TYPE_PUSH_SRC);
@@ -383,7 +384,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
   g_return_val_if_fail (GST_IS_XIMAGE_SRC (ximagesrc), NULL);
 
 #ifdef HAVE_XDAMAGE
-  if (ximagesrc->have_xdamage) {
+  if (ximagesrc->have_xdamage && ximagesrc->use_damage) {
     XEvent ev;
 
     GST_DEBUG_OBJECT (ximagesrc, "Retrieving screen using XDamage");
@@ -449,6 +450,10 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 #endif
 
 
+  } else if (ximagesrc->have_xdamage && ximagesrc->damage) {
+    /* Free up XDamage we allocated earlier when we did not know whether
+     * we wanted to use damage or not */
+    XDamageDestroy (ximagesrc->xcontext->disp, ximagesrc->damage);
   } else {
 #endif
 
@@ -622,6 +627,9 @@ gst_ximage_src_set_property (GObject * object, guint prop_id,
     case PROP_SHOW_POINTER:
       src->show_pointer = g_value_get_boolean (value);
       break;
+    case PROP_USE_DAMAGE:
+      src->use_damage = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -647,6 +655,8 @@ gst_ximage_src_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_SHOW_POINTER:
       g_value_set_boolean (value, src->show_pointer);
       break;
+    case PROP_USE_DAMAGE:
+      g_value_set_boolean (value, src->use_damage);
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -789,6 +799,10 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
       g_param_spec_boolean ("show_pointer", "Show Mouse Pointer",
           "Show mouse pointer (if XFixes extension enabled)", TRUE,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gc, PROP_SHOW_POINTER,
+      g_param_spec_boolean ("use_damage", "Use XDamage",
+          "Use XDamage (if XDamage extension enabled)", TRUE,
+          G_PARAM_READWRITE));
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -810,6 +824,7 @@ gst_ximage_src_init (GstXImageSrc * ximagesrc, GstXImageSrcClass * klass)
   ximagesrc->pool_lock = g_mutex_new ();
   ximagesrc->x_lock = g_mutex_new ();
   ximagesrc->show_pointer = TRUE;
+  ximagesrc->use_damage = TRUE;
 }
 
 static gboolean

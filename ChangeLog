@@ -1,3 +1,12 @@
+2006-07-08  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/ximage/gstximagesrc.c: (gst_ximage_src_ximage_get),
+	(gst_ximage_src_set_property), (gst_ximage_src_get_property),
+	(gst_ximage_src_class_init), (gst_ximage_src_init):
+	* sys/ximage/gstximagesrc.h:
+	Add use_damage property to offer ability to choose whether to use
+	XDamage or not.
+
 2006-07-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/goom/filters.c: (zoomFilterSetResolution):

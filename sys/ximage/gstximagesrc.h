@@ -75,6 +75,7 @@ struct _GstXImageSrc
   gboolean have_xfixes;
   gboolean have_xdamage;
   gboolean show_pointer;
+  gboolean use_damage;
 #ifdef HAVE_XFIXES
   int fixes_event_base;
   XFixesCursorImage *cursor_image;
