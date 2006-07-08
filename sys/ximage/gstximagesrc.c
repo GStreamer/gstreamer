@@ -79,7 +79,11 @@ enum
   PROP_DISPLAY_NAME,
   PROP_SCREEN_NUM,
   PROP_SHOW_POINTER,
-  PROP_USE_DAMAGE
+  PROP_USE_DAMAGE,
+  PROP_STARTX,
+  PROP_STARTY,
+  PROP_ENDX,
+  PROP_ENDY
 };
 
 GST_BOILERPLATE (GstXImageSrc, gst_ximage_src, GstPushSrc, GST_TYPE_PUSH_SRC);
@@ -363,6 +367,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
     xcontext = ximagesrc->xcontext;
 
+
     caps = gst_caps_new_simple ("video/x-raw-rgb",
         "bpp", G_TYPE_INT, xcontext->bpp,
         "depth", G_TYPE_INT, xcontext->depth,
@@ -370,8 +375,8 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
         "red_mask", G_TYPE_INT, xcontext->r_mask_output,
         "green_mask", G_TYPE_INT, xcontext->g_mask_output,
         "blue_mask", G_TYPE_INT, xcontext->b_mask_output,
-        "width", G_TYPE_INT, xcontext->width,
-        "height", G_TYPE_INT, xcontext->height,
+        "width", G_TYPE_INT, ximagesrc->width,
+        "height", G_TYPE_INT, ximagesrc->height,
         "framerate", GST_TYPE_FRACTION, ximagesrc->fps_n, ximagesrc->fps_d,
         "pixel-aspect-ratio", GST_TYPE_FRACTION,
         gst_value_get_fraction_numerator (xcontext->par),
@@ -382,7 +387,6 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
   }
 
   g_return_val_if_fail (GST_IS_XIMAGE_SRC (ximagesrc), NULL);
-
 #ifdef HAVE_XDAMAGE
   if (ximagesrc->have_xdamage && ximagesrc->use_damage) {
     XEvent ev;
@@ -396,11 +400,11 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
 #ifdef HAVE_XSHM
         if (ximagesrc->xcontext->use_xshm &&
-            dev->area.width == ximagesrc->width &&
-            dev->area.height == ximagesrc->height) {
+            dev->area.width == ximagesrc->xcontext->width &&
+            dev->area.height == ximagesrc->xcontext->height) {
           GST_DEBUG_OBJECT (ximagesrc, "Entire screen was damaged");
           XShmGetImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
-              ximage->ximage, 0, 0, AllPlanes);
+              ximage->ximage, ximagesrc->startx, ximagesrc->starty, AllPlanes);
           /* No need to collect more events */
           while (XPending (ximagesrc->xcontext->disp)) {
             XNextEvent (ximagesrc->xcontext->disp, &ev);
@@ -409,20 +413,57 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
         } else
 #endif
         {
-          GST_LOG_OBJECT (ximagesrc,
-              "Retrieving damaged sub-region @ %d,%d size %dx%d",
-              dev->area.x, dev->area.y, dev->area.width, dev->area.height);
+          /* if we only want a small area, clip this damage region to
+           * area we want */
+          if (ximagesrc->endx > ximagesrc->startx &&
+              ximagesrc->endy > ximagesrc->starty) {
+            /* see if damage area intersects */
+            if (dev->area.x + dev->area.width < ximagesrc->startx ||
+                dev->area.x > ximagesrc->endx) {
+              /* trivial reject */
+            } else if (dev->area.y + dev->area.height < ximagesrc->starty ||
+                dev->area.y > ximagesrc->endy) {
+              /* trivial reject */
+            } else {
+              /* find intersect region */
+              int startx, starty, width, height;
 
-          XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
-              dev->area.x, dev->area.y,
-              dev->area.width, dev->area.height,
-              AllPlanes, ZPixmap, ximage->ximage, dev->area.x, dev->area.y);
+              startx = (dev->area.x < ximagesrc->startx) ? ximagesrc->startx :
+                  dev->area.x;
+              starty = (dev->area.y < ximagesrc->starty) ? ximagesrc->starty :
+                  dev->area.y;
+              width = (dev->area.x + dev->area.width < ximagesrc->endx) ?
+                  dev->area.x + dev->area.width - startx :
+                  ximagesrc->endx - startx;
+              height = (dev->area.y + dev->area.height < ximagesrc->endy) ?
+                  dev->area.y + dev->area.height - starty : ximagesrc->endy -
+                  starty;
+              GST_LOG_OBJECT (ximagesrc,
+                  "Retrieving damaged sub-region @ %d,%d size %dx%d as intersect region",
+                  startx, starty, width, height);
+              XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
+                  startx, starty, width, height, AllPlanes, ZPixmap,
+                  ximage->ximage, startx - ximagesrc->startx,
+                  starty - ximagesrc->starty);
+            }
+          } else {
+
+            GST_LOG_OBJECT (ximagesrc,
+                "Retrieving damaged sub-region @ %d,%d size %dx%d",
+                dev->area.x, dev->area.y, dev->area.width, dev->area.height);
+
+            XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
+                dev->area.x, dev->area.y,
+                dev->area.width, dev->area.height,
+                AllPlanes, ZPixmap, ximage->ximage, dev->area.x, dev->area.y);
+          }
         }
       }
     } while (XPending (ximagesrc->xcontext->disp));
     XDamageSubtract (ximagesrc->xcontext->disp, ximagesrc->damage, None, None);
 #ifdef HAVE_XFIXES
-    /* re-get area where last mouse pointer was */
+    /* re-get area where last mouse pointer was  but only if in our clipping
+     * bounds */
     if (ximagesrc->cursor_image) {
       gint x, y, width, height;
 
@@ -436,24 +477,50 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
         x = 0;
       if (y < 0)
         y = 0;
-      if (x + width > ximagesrc->width)
-        width = ximagesrc->width - x;
-      if (y + height > ximagesrc->height)
-        height = ximagesrc->height - y;
+      if (x + width > ximagesrc->xcontext->width)
+        width = ximagesrc->xcontext->width - x;
+      if (y + height > ximagesrc->xcontext->height)
+        height = ximagesrc->xcontext->height - y;
       g_assert (x >= 0);
       g_assert (y >= 0);
+      GST_DEBUG_OBJECT (ximagesrc,
+          "Cursor was at (%d,%d) width: %d, height: %d and our range is: (%d,%d) - (%d,%d)",
+          x, y, width, height, ximagesrc->startx, ximagesrc->starty,
+          ximagesrc->endx, ximagesrc->endy);
+      /* only get where cursor last was, if it is in our range */
+      if (ximagesrc->endx > ximagesrc->startx &&
+          ximagesrc->endy > ximagesrc->starty) {
+        /* check bounds */
+        if (x + width < ximagesrc->startx || x > ximagesrc->endx) {
+          /* trivial reject */
+        } else if (y + height < ximagesrc->starty || y > ximagesrc->endy) {
+          /* trivial reject */
+        } else {
+          /* find intersect region */
+          int startx, starty, iwidth, iheight;
 
-      GST_DEBUG_OBJECT (ximagesrc, "Removing cursor from %d,%d", x, y);
-      XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
-          x, y, width, height, AllPlanes, ZPixmap, ximage->ximage, x, y);
+          startx = (x < ximagesrc->startx) ? ximagesrc->startx : x;
+          starty = (y < ximagesrc->starty) ? ximagesrc->starty : y;
+          iwidth = (x + width < ximagesrc->endx) ?
+              x + width - startx : ximagesrc->endx - startx;
+          iheight = (y + height < ximagesrc->endy) ?
+              y + height - starty : ximagesrc->endy - starty;
+          GST_DEBUG_OBJECT (ximagesrc, "Removing cursor from %d,%d", x, y);
+          XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
+              startx, starty, iwidth, iheight, AllPlanes, ZPixmap,
+              ximage->ximage, startx - ximagesrc->startx,
+              starty - ximagesrc->starty);
+        }
+      } else {
+
+        GST_DEBUG_OBJECT (ximagesrc, "Removing cursor from %d,%d", x, y);
+        XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
+            x, y, width, height, AllPlanes, ZPixmap, ximage->ximage, x, y);
+      }
     }
 #endif
 
 
-  } else if (ximagesrc->have_xdamage && ximagesrc->damage) {
-    /* Free up XDamage we allocated earlier when we did not know whether
-     * we wanted to use damage or not */
-    XDamageDestroy (ximagesrc->xcontext->disp, ximagesrc->damage);
   } else {
 #endif
 
@@ -461,14 +528,15 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     if (ximagesrc->xcontext->use_xshm) {
       GST_DEBUG_OBJECT (ximagesrc, "Retrieving screen using XShm");
       XShmGetImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
-          ximage->ximage, 0, 0, AllPlanes);
+          ximage->ximage, ximagesrc->startx, ximagesrc->starty, AllPlanes);
 
     } else
 #endif /* HAVE_XSHM */
     {
       GST_DEBUG_OBJECT (ximagesrc, "Retrieving screen using XGetImage");
       ximage->ximage = XGetImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
-          0, 0, ximagesrc->width, ximagesrc->height, AllPlanes, ZPixmap);
+          ximagesrc->startx, ximagesrc->starty, ximagesrc->width,
+          ximagesrc->height, AllPlanes, ZPixmap);
     }
 #ifdef HAVE_XDAMAGE
   }
@@ -482,6 +550,9 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     ximagesrc->cursor_image = XFixesGetCursorImage (ximagesrc->xcontext->disp);
     if (ximagesrc->cursor_image != NULL) {
       int cx, cy, i, j, count;
+      int startx, starty, iwidth, iheight;
+      gboolean clipped = FALSE;
+      gboolean cursor_in_image = TRUE;
 
       cx = ximagesrc->cursor_image->x - ximagesrc->cursor_image->xhot;
       if (cx < 0)
@@ -490,28 +561,64 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
       if (cy < 0)
         cy = 0;
       count = ximagesrc->cursor_image->width * ximagesrc->cursor_image->height;
-      for (i = 0; i < count; i++)
-        ximagesrc->cursor_image->pixels[i] =
-            GUINT_TO_LE (ximagesrc->cursor_image->pixels[i]);
 
-      /* copy those pixels across */
-      for (j = cy;
-          j < cy + ximagesrc->cursor_image->height && j < ximagesrc->height;
-          j++) {
-        for (i = cx;
-            i < cx + ximagesrc->cursor_image->width && i < ximagesrc->width;
-            i++) {
-          guint8 *src, *dest;
+      /* only get where cursor last was, if it is in our range */
+      if (ximagesrc->endx > ximagesrc->startx &&
+          ximagesrc->endy > ximagesrc->starty) {
+        /* check bounds */
+        if (cx + ximagesrc->cursor_image->width < ximagesrc->startx ||
+            cx > ximagesrc->endx) {
+          /* trivial reject */
+          cursor_in_image = FALSE;
+        } else if (cy + ximagesrc->cursor_image->height < ximagesrc->starty ||
+            cy > ximagesrc->endy) {
+          /* trivial reject */
+          cursor_in_image = FALSE;
+        } else {
+          /* find intersect region */
 
-          src =
-              (guint8 *) & (ximagesrc->cursor_image->pixels[((j -
-                          cy) * ximagesrc->cursor_image->width + (i - cx))]);
-          dest =
-              (guint8 *) & (ximage->ximage->data[(j * ximagesrc->width +
-                      i) * (ximagesrc->xcontext->bpp / 8)]);
+          startx = (cx < ximagesrc->startx) ? ximagesrc->startx : cx;
+          starty = (cy < ximagesrc->starty) ? ximagesrc->starty : cy;
+          iwidth = (cx + ximagesrc->cursor_image->width < ximagesrc->endx) ?
+              cx + ximagesrc->cursor_image->width - startx :
+              ximagesrc->endx - startx;
+          iheight = (cy + ximagesrc->cursor_image->height < ximagesrc->endy) ?
+              cy + ximagesrc->cursor_image->height - starty :
+              ximagesrc->endy - starty;
+          clipped = TRUE;
+        }
+      } else {
+        startx = cx;
+        starty = cy;
+        iwidth = ximagesrc->cursor_image->width;
+        iheight = ximagesrc->cursor_image->height;
+      }
 
-          composite_pixel (ximagesrc->xcontext, (guint8 *) dest,
-              (guint8 *) src);
+      if (cursor_in_image) {
+        GST_DEBUG_OBJECT (ximagesrc, "Cursor is in image so trying to draw it");
+        for (i = 0; i < count; i++)
+          ximagesrc->cursor_image->pixels[i] =
+              GUINT_TO_LE (ximagesrc->cursor_image->pixels[i]);
+
+        /* copy those pixels across */
+        for (j = starty;
+            j < starty + iheight && j - starty < ximagesrc->height; j++) {
+          for (i = startx;
+              i < startx + iwidth && i - startx < ximagesrc->width; i++) {
+            guint8 *src, *dest;
+
+            src =
+                (guint8 *) & (ximagesrc->cursor_image->pixels[((j -
+                            cy) * ximagesrc->cursor_image->width + (i - cx))]);
+            dest =
+                (guint8 *) & (ximage->ximage->data[((j -
+                            ximagesrc->starty) * ximagesrc->width + (i -
+                            ximagesrc->startx)) * (ximagesrc->xcontext->bpp /
+                        8)]);
+
+            composite_pixel (ximagesrc->xcontext, (guint8 *) dest,
+                (guint8 *) src);
+          }
         }
       }
     }
@@ -630,6 +737,18 @@ gst_ximage_src_set_property (GObject * object, guint prop_id,
     case PROP_USE_DAMAGE:
       src->use_damage = g_value_get_boolean (value);
       break;
+    case PROP_STARTX:
+      src->startx = g_value_get_uint (value);
+      break;
+    case PROP_STARTY:
+      src->starty = g_value_get_uint (value);
+      break;
+    case PROP_ENDX:
+      src->endx = g_value_get_uint (value);
+      break;
+    case PROP_ENDY:
+      src->endy = g_value_get_uint (value);
+      break;
     default:
       break;
   }
@@ -657,6 +776,19 @@ gst_ximage_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_USE_DAMAGE:
       g_value_set_boolean (value, src->use_damage);
+      break;
+    case PROP_STARTX:
+      g_value_set_uint (value, src->startx);
+      break;
+    case PROP_STARTY:
+      g_value_set_uint (value, src->starty);
+      break;
+    case PROP_ENDX:
+      g_value_set_uint (value, src->endx);
+      break;
+    case PROP_ENDY:
+      g_value_set_uint (value, src->endy);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -713,6 +845,7 @@ gst_ximage_src_get_caps (GstBaseSrc * bs)
 {
   GstXImageSrc *s = GST_XIMAGE_SRC (bs);
   GstXContext *xcontext;
+  gint x, y, width, height;
 
   if ((!s->xcontext) && (!gst_ximage_src_open_display (s, NULL)))
     return gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC (s)->
@@ -724,6 +857,34 @@ gst_ximage_src_get_caps (GstBaseSrc * bs)
 
   xcontext = s->xcontext;
 
+  x = y = 0;
+  width = xcontext->width;
+  height = xcontext->height;
+  if (s->endx > s->startx && s->endy > s->starty) {
+    /* this means user has put in values */
+    if (s->startx < xcontext->width && s->endx < xcontext->width &&
+        s->starty < xcontext->height && s->endy < xcontext->height) {
+      /* values are fine */
+      x = s->startx;
+      y = s->starty;
+      s->width = width = s->endx - s->startx;
+      s->height = height = s->endy - s->starty;
+    } else {
+      GST_WARNING
+          ("User put in co-ordinates overshooting the X resolution, setting to full screen");
+      s->startx = 0;
+      s->starty = 0;
+      s->endx = 0;
+      s->endy = 0;
+    }
+  } else {
+    GST_WARNING ("User put in bogus co-ordinates, setting to full screen");
+    s->startx = 0;
+    s->starty = 0;
+    s->endx = 0;
+    s->endy = 0;
+  }
+  GST_DEBUG ("width = %d, height=%d", width, height);
   return gst_caps_new_simple ("video/x-raw-rgb",
       "bpp", G_TYPE_INT, xcontext->bpp,
       "depth", G_TYPE_INT, xcontext->depth,
@@ -731,8 +892,8 @@ gst_ximage_src_get_caps (GstBaseSrc * bs)
       "red_mask", G_TYPE_INT, xcontext->r_mask_output,
       "green_mask", G_TYPE_INT, xcontext->g_mask_output,
       "blue_mask", G_TYPE_INT, xcontext->b_mask_output,
-      "width", G_TYPE_INT, xcontext->width,
-      "height", G_TYPE_INT, xcontext->height,
+      "width", G_TYPE_INT, width,
+      "height", G_TYPE_INT, height,
       "framerate", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1,
       "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1,
       NULL);
@@ -799,10 +960,26 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
       g_param_spec_boolean ("show_pointer", "Show Mouse Pointer",
           "Show mouse pointer (if XFixes extension enabled)", TRUE,
           G_PARAM_READWRITE));
-  g_object_class_install_property (gc, PROP_SHOW_POINTER,
+  g_object_class_install_property (gc, PROP_USE_DAMAGE,
       g_param_spec_boolean ("use_damage", "Use XDamage",
           "Use XDamage (if XDamage extension enabled)", TRUE,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gc, PROP_STARTX,
+      g_param_spec_uint ("startx", "Start X co-ordinate",
+          "X coordinate of top left corner of area to be recorded (0 for top left of screen)",
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gc, PROP_STARTY,
+      g_param_spec_uint ("starty", "Start Y co-ordinate",
+          "Y coordinate of top left corner of area to be recorded (0 for top left of screen)",
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gc, PROP_ENDX,
+      g_param_spec_uint ("endx", "End X",
+          "X coordinate of bottom right corner of area to be recorded (0 for bottom right of screen)",
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gc, PROP_ENDY,
+      g_param_spec_uint ("endy", "End Y",
+          "Y coordinate of bottom right corner of area to be recorded (0 for bottom right of screen)",
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -825,6 +1002,10 @@ gst_ximage_src_init (GstXImageSrc * ximagesrc, GstXImageSrcClass * klass)
   ximagesrc->x_lock = g_mutex_new ();
   ximagesrc->show_pointer = TRUE;
   ximagesrc->use_damage = TRUE;
+  ximagesrc->startx = 0;
+  ximagesrc->starty = 0;
+  ximagesrc->endx = 0;
+  ximagesrc->endy = 0;
 }
 
 static gboolean

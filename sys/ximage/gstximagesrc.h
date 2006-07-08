@@ -76,6 +76,13 @@ struct _GstXImageSrc
   gboolean have_xdamage;
   gboolean show_pointer;
   gboolean use_damage;
+
+  /* co-ordinates for start and end */
+  guint startx;
+  guint starty;
+  guint endx;
+  guint endy;
+
 #ifdef HAVE_XFIXES
   int fixes_event_base;
   XFixesCursorImage *cursor_image;

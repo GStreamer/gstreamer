@@ -1,3 +1,14 @@
+2006-07-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/ximage/gstximagesrc.c: (gst_ximage_src_ximage_get),
+	(gst_ximage_src_set_property), (gst_ximage_src_get_property),
+	(gst_ximage_src_get_caps), (gst_ximage_src_class_init),
+	(gst_ximage_src_init):
+	* sys/ximage/gstximagesrc.h:
+	Fix use-damage property to actually work :)
+	Add startx, starty, endx, endy properties so screencasts other than full
+	screen ones can work.
+
 2006-07-08  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/ximage/gstximagesrc.c: (gst_ximage_src_ximage_get),
