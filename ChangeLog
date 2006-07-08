@@ -1,3 +1,11 @@
+2006-07-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_chunk):
+	  Skip chunks for unknown streams properly. Fixes broken sound
+	  and/or video for files that have additional streams that
+	  we don't recognise yet (e.g. if they are embedded in extended
+	  stream properties). Partly fixes #343763.
+
 2006-07-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/asfheaders.c:

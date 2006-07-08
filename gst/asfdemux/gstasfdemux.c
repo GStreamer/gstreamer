@@ -1869,6 +1869,8 @@ gst_asf_demux_process_chunk (GstASFDemux * demux,
   stream = gst_asf_demux_get_stream (demux, segment_info->stream_number);
   if (stream == NULL) {
     GST_WARNING ("invalid stream number %d", segment_info->stream_number);
+    if (!gst_asf_demux_skip_bytes (segment_info->chunk_size, p_data, p_size))
+      ret = ASF_FLOW_NEED_MORE_DATA;
     goto done;
   }
 
