@@ -547,7 +547,10 @@ main (int argc, char *argv[])
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
-    g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
+    if (err)
+      g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
+    else
+      g_print ("Error initializing: Unknown error!\n");
     exit (1);
   }
   g_option_context_free (ctx);

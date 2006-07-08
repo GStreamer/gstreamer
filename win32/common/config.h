@@ -175,7 +175,7 @@
 #define HAVE_WIN32 1
 
 /* Define host CPU */
-#define HOST_CPU "i686"
+#define HOST_CPU "powerpc"
 
 /* library dir */
 #ifdef _DEBUG

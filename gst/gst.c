@@ -634,6 +634,111 @@ scan_and_update_registry (GstRegistry * default_registry,
   return TRUE;
 }
 
+static gboolean
+ensure_current_registry_nonforking (GstRegistry * default_registry,
+    const gchar * registry_file)
+{
+  /* fork() not available */
+  GST_DEBUG ("updating registry cache");
+  scan_and_update_registry (default_registry, registry_file, TRUE);
+  return TRUE;
+}
+
+#ifdef HAVE_FORK
+static gboolean
+ensure_current_registry_forking (GstRegistry * default_registry,
+    const gchar * registry_file)
+{
+  pid_t pid;
+
+  /* We fork here, and let the child read and possibly rebuild the registry.
+   * After that, the parent will re-read the freshly generated registry. */
+
+  GST_DEBUG ("forking");
+  pid = fork ();
+  if (pid == -1) {
+    GST_ERROR ("Failed to fork()");
+    return FALSE;
+  }
+
+  if (pid == 0) {
+    gboolean res;
+
+    /* this is the child */
+    GST_DEBUG ("child reading registry cache");
+    res = scan_and_update_registry (default_registry, registry_file, TRUE);
+    _gst_registry_remove_cache_plugins (default_registry);
+
+    /* need to use _exit, so that any exit handlers registered don't
+     * bring down the main program */
+    GST_DEBUG ("child exiting: %s", (res) ? "SUCCESS" : "FAILURE");
+    _exit ((res) ? EXIT_SUCCESS : EXIT_FAILURE);
+  } else {
+    /* parent */
+    int status;
+    pid_t ret;
+
+    GST_DEBUG ("parent waiting on child");
+    ret = waitpid (pid, &status, 0);
+    GST_DEBUG ("parent done waiting on child");
+    if (ret == -1) {
+      GST_ERROR ("error during waitpid: %s", g_strerror (errno));
+      return FALSE;
+    }
+
+    if (!WIFEXITED (status)) {
+      GST_ERROR ("child did not exit normally, status: %d", status);
+      return FALSE;
+    }
+
+    GST_DEBUG ("child exited normally with return value %d",
+        WEXITSTATUS (status));
+
+    if (WEXITSTATUS (status) == EXIT_SUCCESS) {
+      GST_DEBUG ("parent reading registry cache");
+      gst_registry_xml_read_cache (default_registry, registry_file);
+    } else {
+      GST_DEBUG ("parent re-scanning registry");
+      scan_and_update_registry (default_registry, registry_file, FALSE);
+    }
+  }
+
+  return TRUE;
+}
+#endif /* HAVE_FORK */
+
+static gboolean
+ensure_current_registry (void)
+{
+  char *registry_file;
+  GstRegistry *default_registry;
+  gboolean ret;
+
+  default_registry = gst_registry_get_default ();
+  registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
+  if (registry_file == NULL) {
+    registry_file = g_build_filename (g_get_home_dir (),
+        ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".xml", NULL);
+  }
+#ifdef HAVE_FORK
+  if (g_getenv ("GST_REGISTRY_FORK") == NULL
+      || strcmp (g_getenv ("GST_REGISTRY_FORK"), "no") != 0) {
+    ret = ensure_current_registry_forking (default_registry, registry_file);
+  } else {
+    GST_DEBUG ("requested not to fork");
+#endif /* HAVE_FORK */
+
+    ret = ensure_current_registry_nonforking (default_registry, registry_file);
+
+#ifdef HAVE_FORK
+  }
+#endif /* HAVE_FORK */
+
+  g_free (registry_file);
+
+  return ret;
+}
+
 #endif /* GST_DISABLE_REGISTRY */
 
 /*
@@ -689,86 +794,8 @@ init_post (void)
   _gst_plugin_initialize ();
 
 #ifndef GST_DISABLE_REGISTRY
-  {
-    char *registry_file;
-    GstRegistry *default_registry;
-
-#ifdef HAVE_FORK
-    pid_t pid;
-#endif
-
-    default_registry = gst_registry_get_default ();
-    registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
-    if (registry_file == NULL) {
-      registry_file = g_build_filename (g_get_home_dir (),
-          ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".xml", NULL);
-    }
-#ifdef HAVE_FORK
-    /* We fork here, and let the child read and possibly rebuild the registry.
-     * After that, the parent will re-read the freshly generated registry. */
-
-    GST_DEBUG ("forking");
-    pid = fork ();
-    if (pid == -1) {
-      GST_ERROR ("Failed to fork()");
-      g_free (registry_file);
-      return FALSE;
-    }
-
-    if (pid == 0) {
-      gboolean res;
-
-      /* this is the child */
-      GST_DEBUG ("child reading registry cache");
-      res = scan_and_update_registry (default_registry, registry_file, TRUE);
-      _gst_registry_remove_cache_plugins (default_registry);
-      g_free (registry_file);
-
-      /* need to use _exit, so that any exit handlers registered don't
-       * bring down the main program */
-      GST_DEBUG ("child exiting: %s", (res) ? "SUCCESS" : "FAILURE");
-      _exit ((res) ? EXIT_SUCCESS : EXIT_FAILURE);
-    } else {
-      /* parent */
-      int status;
-      pid_t ret;
-
-      GST_DEBUG ("parent waiting on child");
-      ret = waitpid (pid, &status, 0);
-      GST_DEBUG ("parent done waiting on child");
-      if (ret == -1) {
-        GST_ERROR ("error during waitpid: %s", g_strerror (errno));
-        return FALSE;
-      }
-
-      if (!WIFEXITED (status)) {
-        GST_ERROR ("child did not exit normally, status: %d", status);
-        return FALSE;
-      }
-
-      GST_DEBUG ("child exited normally with return value %d",
-          WEXITSTATUS (status));
-
-      if (WEXITSTATUS (status) == EXIT_SUCCESS) {
-        GST_DEBUG ("parent reading registry cache");
-        gst_registry_xml_read_cache (default_registry, registry_file);
-      } else {
-        GST_DEBUG ("parent re-scanning registry");
-        scan_and_update_registry (default_registry, registry_file, FALSE);
-      }
-    }
-
-#else /* HAVE_FORK */
-
-    /* fork() not available */
-    GST_DEBUG ("updating registry cache");
-    scan_and_update_registry (default_registry, registry_file, TRUE);
-
-#endif /* HAVE_FORK */
-
-    g_free (registry_file);
-  }
-
+  if (!ensure_current_registry ())
+    return FALSE;
 #endif /* GST_DISABLE_REGISTRY */
 
   /* if we need to preload plugins */

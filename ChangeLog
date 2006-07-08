@@ -1,3 +1,14 @@
+2006-07-08  Andy Wingo  <wingo@pobox.com>
+
+	* tools/gst-launch.c (main): Handle err == NULL.
+
+	* gst/gst.c (init_post, ensure_current_registry)
+	(ensure_current_registry_forking)
+	(ensure_current_registry_nonforking): Reduce #ifdef ratnest by
+	factoring out the registry scanning into separate functions. Don't
+	fork for the rescan is GST_REGISTRY_FORK=no; useful in debugging.
+	Better environment var name/interface suggestions accepted.
+
 2006-07-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstobject.c: (gst_object_set_name_default),
