@@ -1,3 +1,10 @@
+2006-07-08  Andy Wingo  <wingo@pobox.com>
+
+	* theoraparse.c (theora_parse_push_buffer)
+	(theora_parse_drain_queue_prematurely, theora_parse_drain_queue):
+	Add some more debugging. Fix granulepos reconstruction in the face
+	of discontinuities.
+
 2006-07-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

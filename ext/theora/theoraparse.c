@@ -296,6 +296,9 @@ theora_parse_push_buffer (GstTheoraParse * parse, GstBuffer * buf,
 
   gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
 
+  GST_DEBUG_OBJECT (parse, "pushing buffer with granulepos %" G_GINT64_FORMAT
+      "|%" G_GINT64_FORMAT, keyframe, frame - keyframe);
+
   return gst_pad_push (parse->srcpad, buf);
 }
 
@@ -308,6 +311,8 @@ theora_parse_drain_queue_prematurely (GstTheoraParse * parse)
    * -- won't normally be the case, but this catches the
    * didn't-get-a-granulepos-on-the-last-packet case. Assuming a continuous
    * stream. */
+
+  GST_DEBUG_OBJECT (parse, "got EOS, draining queue");
 
   while (!g_queue_is_empty (parse->buffer_queue)) {
     GstBuffer *buf;
@@ -351,12 +356,27 @@ static GstFlowReturn
 theora_parse_drain_queue (GstTheoraParse * parse, gint64 granulepos)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  gint64 keyframe, frame;
+  gint64 keyframe, prev_frame, frame;
 
   parse_granulepos (granulepos, parse->shift, &keyframe, &frame);
 
-  parse->prev_frame = MAX (parse->prev_frame,
-      frame - g_queue_get_length (parse->buffer_queue));
+  prev_frame = frame - g_queue_get_length (parse->buffer_queue);
+  if (prev_frame < parse->prev_frame) {
+    GST_WARNING ("jumped %" G_GINT64_FORMAT
+        " frames backwards! not sure what to do here",
+        parse->prev_frame - prev_frame);
+    ret = GST_FLOW_ERROR;
+    goto done;
+  } else if (prev_frame > parse->prev_frame) {
+    GST_INFO ("discontinuity detected (%" G_GINT64_FORMAT
+        " frames)", prev_frame - parse->prev_frame);
+    if (keyframe <= prev_frame && keyframe > parse->prev_keyframe)
+      parse->prev_keyframe = keyframe;
+    parse->prev_frame = prev_frame;
+  }
+
+  GST_DEBUG ("draining queue of length %d",
+      g_queue_get_length (parse->buffer_queue));
 
   while (!g_queue_is_empty (parse->buffer_queue)) {
     GstBuffer *buf;
