@@ -917,7 +917,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
   gchar *codec_name = NULL;
   gint size_left = video->size - 40;
 
-  /* Create the audio pad */
+  /* Create the video pad */
   name = g_strdup_printf ("video_%02d", demux->num_video_streams);
   src_pad = gst_pad_new_from_template (videosrctempl, name);
   g_free (name);
@@ -2152,7 +2152,7 @@ gst_asf_demux_process_segment (GstASFDemux * demux,
 
     time_start = segment_info.frag_offset;
     segment_info.frag_offset = 0;
-    segment_info.frag_timestamp = demux->timestamp;
+    segment_info.frag_timestamp = time_start;
   }
 
   GST_DEBUG ("multiple = %u, compressed = %u",
