@@ -2252,8 +2252,10 @@ invalid_return:
   }
 }
 
-/* gst_iterator_fold functions for pads_activate */
-
+/* gst_iterator_fold functions for pads_activate
+ * Note how we don't stop the iterator when we fail an activation. This is
+ * probably a FIXME since when one pad activation fails, we don't want to
+ * continue our state change. */
 static gboolean
 activate_pads (GstPad * pad, GValue * ret, gboolean * active)
 {
@@ -2262,67 +2264,70 @@ activate_pads (GstPad * pad, GValue * ret, gboolean * active)
   else if (!*active)
     gst_pad_set_caps (pad, NULL);
 
+  /* unref the object that was reffed for us by _fold */
   gst_object_unref (pad);
   return TRUE;
 }
 
-/* returns false on error or early cutout of the fold, true otherwise */
+/* returns false on error or early cutout (will never happen because the fold
+ * function always returns TRUE, see FIXME above) of the fold, true if all
+ * pads in @iter were (de)activated successfully. */
 static gboolean
-iterator_fold_with_resync (GstIterator * iter, GstIteratorFoldFunction func,
-    GValue * ret, gpointer user_data)
+iterator_activate_fold_with_resync (GstIterator * iter, gpointer user_data)
 {
   GstIteratorResult ires;
-  gboolean res = TRUE;
-
-  while (1) {
-    ires = gst_iterator_fold (iter, func, ret, user_data);
-
-    switch (ires) {
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (iter);
-        break;
-      case GST_ITERATOR_DONE:
-        res = TRUE;
-        goto done;
-      default:
-        res = FALSE;
-        goto done;
-    }
-  }
-
-done:
-  return res;
-}
-
-/* is called with STATE_LOCK
- */
-static gboolean
-gst_element_pads_activate (GstElement * element, gboolean active)
-{
-  GValue ret = { 0, };
-  GstIterator *iter;
-  gboolean fold_ok;
-
-  GST_DEBUG_OBJECT (element, "pads_activate with active %d", active);
+  GValue ret = { 0 };
 
   /* no need to unset this later, it's just a boolean */
   g_value_init (&ret, G_TYPE_BOOLEAN);
   g_value_set_boolean (&ret, TRUE);
 
-  iter = gst_element_iterate_src_pads (element);
+  while (1) {
+    ires = gst_iterator_fold (iter, (GstIteratorFoldFunction) activate_pads,
+        &ret, user_data);
+    switch (ires) {
+      case GST_ITERATOR_RESYNC:
+        /* need to reset the result again */
+        g_value_set_boolean (&ret, TRUE);
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_DONE:
+        /* all pads iterated, return collected value */
+        goto done;
+      default:
+        /* iterator returned _ERROR or premature end with _OK, 
+         * mark an error and exit */
+        g_value_set_boolean (&ret, FALSE);
+        goto done;
+    }
+  }
+done:
+  /* return collected value */
+  return g_value_get_boolean (&ret);
+}
 
-  fold_ok = iterator_fold_with_resync
-      (iter, (GstIteratorFoldFunction) activate_pads, &ret, &active);
+/* is called with STATE_LOCK
+ *
+ * Pads are activated from source pads to sinkpads. 
+ */
+static gboolean
+gst_element_pads_activate (GstElement * element, gboolean active)
+{
+  GstIterator *iter;
+  gboolean res;
+
+  GST_DEBUG_OBJECT (element, "pads_activate with active %d", active);
+
+  iter = gst_element_iterate_src_pads (element);
+  res = iterator_activate_fold_with_resync (iter, &active);
   gst_iterator_free (iter);
-  if (G_UNLIKELY (!fold_ok || !g_value_get_boolean (&ret)))
+  if (G_UNLIKELY (!res))
     goto src_failed;
 
   iter = gst_element_iterate_sink_pads (element);
-
-  fold_ok = iterator_fold_with_resync
-      (iter, (GstIteratorFoldFunction) activate_pads, &ret, &active);
+  res = iterator_activate_fold_with_resync (iter, &active);
   gst_iterator_free (iter);
-  if (G_UNLIKELY (!fold_ok || !g_value_get_boolean (&ret)))
+  if (G_UNLIKELY (!res))
     goto sink_failed;
 
   GST_DEBUG_OBJECT (element, "pads_activate successful");

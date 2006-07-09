@@ -1,5 +1,12 @@
 2006-07-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstelement.c: (activate_pads),
+	(iterator_activate_fold_with_resync), (gst_element_pads_activate):
+	Better pad activation code: Reset the collect value too on resync.
+	Add some comments.
+
+2006-07-09  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_init), (gst_pad_activate_pull),
 	(gst_pad_activate_push):
 	Use some more macros where it makes sense.
