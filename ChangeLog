@@ -1,3 +1,13 @@
+2006-07-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_init), (gst_pad_activate_pull),
+	(gst_pad_activate_push):
+	Use some more macros where it makes sense.
+	Allow pad mode switching instead of asserting. When a pad
+	is activated in one mode and we activate it in another, 
+	deactivate it first before activating it in a different mode.
+	Fixes #329198.
+
 2006-07-08  Andy Wingo  <wingo@pobox.com>
 
 	* tools/gst-launch.c (main): Handle err == NULL.
