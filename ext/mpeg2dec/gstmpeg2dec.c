@@ -428,6 +428,7 @@ crop_buffer (GstMpeg2dec * mpeg2dec, GstBuffer ** buf)
 
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mpeg2dec->srcpad));
       gst_buffer_stamp (outbuf, input);
+      gst_buffer_unref (input);
 
       *buf = outbuf;
       result = TRUE;
@@ -851,14 +852,13 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
-  if ((mpeg2dec->decoded_height > mpeg2dec->height) ||
-      (mpeg2dec->decoded_width > mpeg2dec->width)) {
-    crop_buffer (mpeg2dec, &outbuf);
-  }
-
   /* ref before pushing it out, so we still have the ref in our
    * array of buffers */
   gst_buffer_ref (outbuf);
+
+  /* do cropping if needed */
+  crop_buffer (mpeg2dec, &outbuf);
+
   ret = gst_pad_push (mpeg2dec->srcpad, outbuf);
   GST_DEBUG_OBJECT (mpeg2dec, "pushed with result %s", gst_flow_get_name (ret));
 
