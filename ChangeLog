@@ -1,3 +1,11 @@
+2006-07-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/Makefile.am:
+	* gst/gstconfig.h.in:
+	* win32/common/config.h:
+        Fix build when disabling tracing (fixes #344016). Also start to document
+        the defines that disable the sub-systems.
+
 2006-07-10  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.c: (ensure_current_registry_forking):

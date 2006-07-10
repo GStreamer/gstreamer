@@ -26,8 +26,10 @@ endif
 
 if GST_DISABLE_TRACE
 GST_TRACE_SRC = 
+GST_TRACE_H = 
 else
 GST_TRACE_SRC = gsttrace.c
+GST_TRACE_H = gsttrace.h
 endif
 
 if GST_DISABLE_ENUMTYPES
@@ -91,7 +93,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstmessage.c		\
 	gstminiobject.c		\
 	gstpad.c		\
-        gstpadtemplate.c	\
+	gstpadtemplate.c	\
 	gstpipeline.c		\
 	gstplugin.c		\
 	gstpluginfeature.c	\
@@ -183,7 +185,7 @@ gst_headers =			\
 	gsttaglist.h		\
 	gsttagsetter.h		\
 	gsttask.h		\
-	gsttrace.h		\
+	$(GST_TRACE_H)		\
 	gsttypefind.h		\
 	gsttypefindfactory.h	\
 	gsturi.h		\
@@ -198,7 +200,8 @@ nodist_libgstreamer_@GST_MAJORMINOR@include_HEADERS = \
 	$(built_header_configure) $(built_header_make)
 
 EXTRA_DIST = \
-	gstparse.h
+	gstparse.h \
+        gsttrace.h
 
 noinst_HEADERS = 		\
 	gettext.h		\

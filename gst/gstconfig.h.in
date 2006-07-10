@@ -76,22 +76,31 @@
 
 /***** disabling of subsystems *****/
 
-/* wether or not the debugging subsystem is enabled */
+/* configures the inclusion of the debugging subsystem */
 @GST_DISABLE_GST_DEBUG_DEFINE@
 
-/* DOES NOT WORK */
+/* configures the inclusion of the plugin graph xml-serialisation 
+ * (was used in 0.8 by gst-editor)
+ */
 @GST_DISABLE_LOADSAVE_DEFINE@
 
-/* DOES NOT WORK */
+/* configures the inclusion of the gst-lauch parser */
 @GST_DISABLE_PARSE_DEFINE@
 
-/* DOES NOT WORK */
+/* configures the inclusion of a resource tracing facillity
+ * (seems to be unused)
+ */
 @GST_DISABLE_TRACE_DEFINE@
 
-/* DOES NOT WORK */
+/* configures the use of a memory tracer based on the resource tracer
+ * if TRACE is disabled, ALLOC_TRACE is disabled as well
+ */
 @GST_DISABLE_ALLOC_TRACE_DEFINE@
 
-/* DOES NOT WORK */
+/* configures the use of the plugin registry
+ * if one disables this, required plugins need to be loaded and registered
+ * manualy
+ */
 @GST_DISABLE_REGISTRY_DEFINE@
 
 /* DOES NOT WORK */
