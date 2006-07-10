@@ -1,6 +1,9 @@
-/* GStreamer
+/* -*- c-basic-offset: 2 -*-
+ * 
+ * GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ *               2000 Wim Taymans <wtay@chello.be>
+ *               2006 Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>
  *
  * gstfilter.h: element for filter plug-ins
  *
@@ -28,8 +31,5 @@
 GType gst_iir_get_type (void);
 GType gst_lpwsinc_get_type (void);
 GType gst_bpwsinc_get_type (void);
-
-extern GstStaticPadTemplate gst_filter_sink_template;
-extern GstStaticPadTemplate gst_filter_src_template;
 
 #endif /* __GST_FILTER_H__ */

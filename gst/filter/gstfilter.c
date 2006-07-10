@@ -1,6 +1,9 @@
-/* GStreamer
+/* -*- c-basic-offset: 2 -*-
+ * 
+ * GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ *               2000 Wim Taymans <wtay@chello.be>
+ *               2006 Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>
  *
  * gstfilter.c: element for filter plug-ins
  *
@@ -25,7 +28,7 @@
 #endif
 #include "gstfilter.h"
 #include <gst/audio/audio.h>
-
+#include <gst/controller/gstcontroller.h>
 
 struct _elements_entry
 {
@@ -40,21 +43,12 @@ static struct _elements_entry _elements[] = {
   {NULL, 0},
 };
 
-GstStaticPadTemplate gst_filter_src_template = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
-    );
-
-GstStaticPadTemplate gst_filter_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_FLOAT_STANDARD_PAD_TEMPLATE_CAPS)
-    );
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  /* initialize gst controller library */
+  gst_controller_init (NULL, NULL);
+
   gint i = 0;
 
   while (_elements[i].name) {

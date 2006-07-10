@@ -1,6 +1,8 @@
 /* -*- c-basic-offset: 2 -*-
+ * 
  * GStreamer
  * Copyright (C) 1999-2001 Erik Walthinsen <omega@cse.ogi.edu>
+ *               2006 Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,16 +23,27 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gst/gst.h>
-#include "gstfilter.h"
-#include "iir.h"
 
-static const GstElementDetails gst_iir_details =
-GST_ELEMENT_DETAILS ("Infinite Impulse Response(IIR) filter",
+#include <string.h>
+#include <math.h>
+#include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
+#include <gst/controller/gstcontroller.h>
+
+#include "gstiir.h"
+
+#define GST_CAT_DEFAULT gst_iir_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+
+static const GstElementDetails iir_details =
+GST_ELEMENT_DETAILS ("Infinite Impulse Response (IIR) filter",
     "Filter/Effect/Audio",
     "IIR filter based on vorbis code",
-    "Monty <monty@xiph.org>, " "Thomas <thomas@apestaart.org>");
+    "Monty <monty@xiph.org>, "
+    "Thomas <thomas@apestaart.org>, "
+    "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>");
 
+/* Filter signals and args */
 enum
 {
   /* FILL ME */
@@ -39,80 +52,53 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_A,
-  ARG_B,
-  ARG_GAIN,
-  ARG_STAGES
+  PROP_0,
+  PROP_A,
+  PROP_B,
+  PROP_GAIN,
+  PROP_STAGES
 };
 
-#define GST_TYPE_IIR \
-  (gst_iir_get_type())
-#define GST_IIR(obj) \
-      (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_IIR,GstIIR))
-#define GST_IIR_CLASS(klass) \
-      (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstIIR))
-#define GST_IS_IIR(obj) \
-      (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_IIR))
-#define GST_IS_IIR_CLASS(obj) \
-      (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_IIR))
+static GstStaticPadTemplate iir_sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-float, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, " "width = (int) 32")
+    );
 
-typedef struct _GstIIR GstIIR;
-typedef struct _GstIIRClass GstIIRClass;
+static GstStaticPadTemplate iir_src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-float, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, " "width = (int) 32")
+    );
 
-struct _GstIIR
-{
-  GstElement element;
+#define DEBUG_INIT(bla) \
+  GST_DEBUG_CATEGORY_INIT (gst_iir_debug, "iir", 0, "Infinite Impulse Response (IIR) filter plugin");
 
-  GstPad *sinkpad, *srcpad;
+GST_BOILERPLATE_FULL (GstIIR, gst_iir, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
-  double A, B;
-  double gain;
-  int stages;
-  IIR_state *state;
-};
-
-struct _GstIIRClass
-{
-  GstElementClass parent_class;
-};
-
-static void gst_iir_base_init (gpointer g_class);
-static void gst_iir_class_init (GstIIRClass * klass);
-static void gst_iir_init (GstIIR * filter);
-
-static void gst_iir_set_property (GObject * object, guint prop_id,
+static void iir_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_iir_get_property (GObject * object, guint prop_id,
+static void iir_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_iir_chain (GstPad * pad, GstData * _data);
-static GstPadLinkReturn
-gst_iir_sink_connect (GstPad * pad, const GstCaps * caps);
+static GstFlowReturn iir_transform_ip (GstBaseTransform * base,
+    GstBuffer * outbuf);
+static gboolean iir_set_caps (GstBaseTransform * base, GstCaps * incaps,
+    GstCaps * outcaps);
 
-static GstElementClass *parent_class = NULL;
+/* Element class */
 
-/*static guint gst_iir_signals[LAST_SIGNAL] = { 0 }; */
-
-GType
-gst_iir_get_type (void)
+static void
+gst_iir_dispose (GObject * object)
 {
-  static GType iir_type = 0;
-
-  if (!iir_type) {
-    static const GTypeInfo iir_info = {
-      sizeof (GstIIRClass),
-      gst_iir_base_init,
-      NULL,
-      (GClassInitFunc) gst_iir_class_init, NULL, NULL,
-      sizeof (GstIIR), 0,
-      (GInstanceInitFunc) gst_iir_init,
-    };
-
-    iir_type = g_type_register_static (GST_TYPE_ELEMENT, "GstIIR",
-        &iir_info, 0);
-  }
-  return iir_type;
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -120,157 +106,145 @@ gst_iir_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  /* register src pads */
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_filter_src_template));
+      gst_static_pad_template_get (&iir_src_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_filter_sink_template));
-
-  gst_element_class_set_details (element_class, &gst_iir_details);
+      gst_static_pad_template_get (&iir_sink_template));
+  gst_element_class_set_details (element_class, &iir_details);
 }
 
 static void
 gst_iir_class_init (GstIIRClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstBaseTransformClass *trans_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  trans_class = (GstBaseTransformClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
+  gobject_class->set_property = iir_set_property;
+  gobject_class->get_property = iir_get_property;
+  gobject_class->dispose = gst_iir_dispose;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_A,
+  g_object_class_install_property (gobject_class, PROP_A,
       g_param_spec_double ("A", "A", "A filter coefficient",
           -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_B,
+  g_object_class_install_property (gobject_class, PROP_B,
       g_param_spec_double ("B", "B", "B filter coefficient",
           -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GAIN,
+  g_object_class_install_property (gobject_class, PROP_GAIN,
       g_param_spec_double ("gain", "Gain", "Filter gain",
           -G_MAXDOUBLE, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STAGES,
+  g_object_class_install_property (gobject_class, PROP_STAGES,
       g_param_spec_int ("stages", "Stages", "Number of filter stages",
           1, G_MAXINT, 1, G_PARAM_READWRITE));
 
-  gobject_class->set_property = gst_iir_set_property;
-  gobject_class->get_property = gst_iir_get_property;
+  trans_class->transform_ip = GST_DEBUG_FUNCPTR (iir_transform_ip);
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (iir_set_caps);
 }
 
 static void
-gst_iir_init (GstIIR * filter)
+gst_iir_init (GstIIR * this, GstIIRClass * g_class)
 {
-  filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_filter_sink_template), "sink");
-  gst_pad_set_chain_function (filter->sinkpad, gst_iir_chain);
-  gst_pad_set_link_function (filter->sinkpad, gst_iir_sink_connect);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
-
-  filter->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_filter_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-
-  filter->A = 0.0;
-  filter->B = 0.0;
-  filter->gain = 1.0;           /* unity gain as default */
-  filter->stages = 1;
-  filter->state = NULL;
+  this->A = 0.0;
+  this->B = 0.0;
+  this->gain = 1.0;             /* unity gain as default */
+  this->stages = 1;
+  this->state = NULL;
 }
 
-static GstPadLinkReturn
-gst_iir_sink_connect (GstPad * pad, const GstCaps * caps)
+
+/* GstBaseTransform vmethod implementations */
+
+/* get notified of caps and plug in the correct process function */
+static gboolean
+iir_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
 {
-  GstIIR *filter;
-  GstPadLinkReturn set_retval;
+  GstIIR *this = GST_IIR (base);
 
-  filter = GST_IIR (gst_pad_get_parent (pad));
+  GST_DEBUG_OBJECT (this,
+      "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
 
-  set_retval = gst_pad_try_set_caps (filter->srcpad, caps);
-  if (set_retval > 0) {
-    /* connection works, so init the filter */
-    /* FIXME: remember to free it */
-    filter->state = (IIR_state *) g_malloc (sizeof (IIR_state));
-    IIR_init (filter->state, filter->stages,
-        filter->gain, &(filter->A), &(filter->B));
-  }
+  /* FIXME: remember to free it */
+  this->state = (IIR_state *) g_malloc (sizeof (IIR_state));
+  IIR_init (this->state, this->stages, this->gain, &(this->A), &(this->B));
 
-  return set_retval;
+  return TRUE;
 }
 
-static void
-gst_iir_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+iir_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
-  GstIIR *filter;
+  GstIIR *this = GST_IIR (base);
+  GstClockTime timestamp;
+
+  /* don't process data in passthrough-mode */
+  if (gst_base_transform_is_passthrough (base))
+    return GST_FLOW_OK;
+
+  /* FIXME: subdivide GST_BUFFER_SIZE into small chunks for smooth fades */
+  timestamp = GST_BUFFER_TIMESTAMP (outbuf);
+
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+    gst_object_sync_values (G_OBJECT (this), timestamp);
+
   gfloat *src;
   int i;
 
-  filter = GST_IIR (gst_pad_get_parent (pad));
-
-  src = (gfloat *) GST_BUFFER_DATA (buf);
-
-  /* get a writable buffer */
-  buf = gst_buffer_copy_on_write (buf);
+  src = (gfloat *) GST_BUFFER_DATA (outbuf);
 
   /* do an in-place edit */
-  for (i = 0; i < GST_BUFFER_SIZE (buf) / sizeof (gfloat); ++i)
-    *(src + i) = (gfloat) IIR_filter (filter->state, (double) *(src + i));
+  for (i = 0; i < GST_BUFFER_SIZE (outbuf) / sizeof (gfloat); ++i)
+    *(src + i) = (gfloat) IIR_filter (this->state, (double) *(src + i));
 
-  gst_pad_push (filter->srcpad, GST_DATA (buf));
+  return GST_FLOW_OK;
 }
 
 static void
-gst_iir_set_property (GObject * object, guint prop_id, const GValue * value,
+iir_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstIIR *filter;
+  GstIIR *this = GST_IIR (object);
 
-  g_return_if_fail (GST_IS_IIR (object));
-
-  filter = GST_IIR (object);
+  g_return_if_fail (GST_IS_IIR (this));
 
   switch (prop_id) {
-    case ARG_A:
-      filter->A = g_value_get_double (value);
+    case PROP_A:
+      this->A = g_value_get_double (value);
       break;
-    case ARG_B:
-      filter->B = g_value_get_double (value);
+    case PROP_B:
+      this->B = g_value_get_double (value);
       break;
-    case ARG_GAIN:
-      filter->gain = g_value_get_double (value);
+    case PROP_GAIN:
+      this->gain = g_value_get_double (value);
       break;
-    case ARG_STAGES:
-      filter->stages = g_value_get_int (value);
+    case PROP_STAGES:
+      this->stages = g_value_get_int (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
 static void
-gst_iir_get_property (GObject * object, guint prop_id, GValue * value,
+iir_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstIIR *filter;
-
-  g_return_if_fail (GST_IS_IIR (object));
-
-  filter = GST_IIR (object);
+  GstIIR *this = GST_IIR (object);
 
   switch (prop_id) {
-    case ARG_A:
-      g_value_set_double (value, filter->A);
+    case PROP_A:
+      g_value_set_double (value, this->A);
       break;
-    case ARG_B:
-      g_value_set_double (value, filter->B);
+    case PROP_B:
+      g_value_set_double (value, this->B);
       break;
-    case ARG_GAIN:
-      g_value_set_double (value, filter->gain);
+    case PROP_GAIN:
+      g_value_set_double (value, this->gain);
       break;
-    case ARG_STAGES:
-      g_value_set_int (value, filter->stages);
+    case PROP_STAGES:
+      g_value_set_int (value, this->stages);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

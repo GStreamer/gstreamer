@@ -77,6 +77,7 @@ GST_ARG_EXAMPLES
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
   cdxaparse \
+  filter \
   freeze \
   gdp \
   h264parse \
@@ -735,6 +736,7 @@ Makefile
 gst-plugins-bad.spec
 gst/Makefile
 gst/cdxaparse/Makefile
+gst/filter/Makefile
 gst/freeze/Makefile
 gst/gdp/Makefile
 gst/h264parse/Makefile
