@@ -1,3 +1,11 @@
+2006-07-10  Edward Hervey  <edward@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
+	(gst_avi_demux_stream_header), (push_tag_lists):
+	* gst/avi/gstavidemux.h:
+	Don't push tag events found by gst_riff_parse_info() before outputting
+	GST_EVENT_NEWSEGMENT.
+
 2006-07-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/Makefile.am:

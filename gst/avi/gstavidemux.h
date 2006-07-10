@@ -129,6 +129,8 @@ typedef struct _GstAviDemux {
   GstSegment    segment;
   GstEvent      *seek_event;
 
+  GstTagList	*globaltags;
+  
   gboolean	got_tags;
 
 } GstAviDemux;

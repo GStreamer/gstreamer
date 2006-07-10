@@ -232,6 +232,10 @@ gst_avi_demux_reset (GstAviDemux * avi)
     gst_event_unref (avi->seek_event);
   avi->seek_event = NULL;
 
+  if (avi->globaltags)
+    gst_tag_list_free (avi->globaltags);
+  avi->globaltags = NULL;
+
   avi->got_tags = FALSE;
 
   gst_segment_init (&avi->segment, GST_FORMAT_TIME);
@@ -2219,13 +2223,8 @@ gst_avi_demux_stream_header (GstAviDemux * avi)
                       &avi->offset, &tag, &buf)) != GST_FLOW_OK)
             return res;
           else {
-            GstTagList *t;
-
             sub = gst_buffer_create_sub (buf, 4, GST_BUFFER_SIZE (buf) - 4);
-            gst_riff_parse_info (GST_ELEMENT (avi), sub, &t);
-            if (t) {
-              gst_element_found_tags (GST_ELEMENT (avi), t);
-            }
+            gst_riff_parse_info (GST_ELEMENT (avi), sub, &avi->globaltags);
             if (sub) {
               gst_buffer_unref (sub);
               sub = NULL;
@@ -2603,12 +2602,18 @@ push_tag_lists (GstAviDemux * avi)
   if (!avi->got_tags)
     return;
 
+  GST_DEBUG_OBJECT (avi, "Pushing pending tag lists");
+
   for (i = 0; i < avi->num_streams; i++)
     if (avi->stream[i].pad && avi->stream[i].taglist) {
       gst_element_found_tags_for_pad (GST_ELEMENT (avi), avi->stream[i].pad,
           avi->stream[i].taglist);
       avi->stream[i].taglist = NULL;
     }
+  if (avi->globaltags) {
+    gst_element_found_tags (GST_ELEMENT (avi), avi->globaltags);
+    avi->globaltags = NULL;
+  }
   avi->got_tags = FALSE;
 }
 
