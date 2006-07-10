@@ -672,6 +672,10 @@ ensure_current_registry_forking (GstRegistry * default_registry,
     /* need to use _exit, so that any exit handlers registered don't
      * bring down the main program */
     GST_DEBUG ("child exiting: %s", (res) ? "SUCCESS" : "FAILURE");
+
+    /* make valgrind happy (yes, you can call it insane) */
+    g_free ((char *) registry_file);
+
     _exit ((res) ? EXIT_SUCCESS : EXIT_FAILURE);
   } else {
     /* parent */
