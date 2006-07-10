@@ -681,7 +681,11 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
       /* no compatible elements, we cannot go on */
       goto unknown_type;
 
-    try_to_link_1 (decode_bin, element, pad, to_try);
+    if (try_to_link_1 (decode_bin, element, pad, to_try) == NULL) {
+      GST_LOG_OBJECT (pad, "none of the allegedly available elements usable");
+      goto unknown_type;
+    }
+
     /* can free the list again now */
     g_list_free (to_try);
   }

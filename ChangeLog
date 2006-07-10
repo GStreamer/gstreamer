@@ -1,3 +1,12 @@
+2006-07-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstdecodebin.c: (close_pad_link):
+	  Also emit 'unknown-type' signal (which should really be
+	  called unhandled-type) if we found potential decoders/demuxers
+	  in the registry but none of them worked in the end (as in the
+	  case where the plugins don't exist any longer but are still
+	  listed in the registry). Fixes #329798.
+
 2006-07-08  Andy Wingo  <wingo@pobox.com>
 
 	* theoraparse.c (theora_parse_push_buffer)
