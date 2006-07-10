@@ -306,6 +306,8 @@ static void qtdemux_tag_add_num (GstQTDemux * qtdemux, const char *tag1,
     const char *tag2, GNode * node);
 static void qtdemux_tag_add_gnre (GstQTDemux * qtdemux, const char *tag,
     GNode * node);
+static void qtdemux_tag_add_date (GstQTDemux * qtdemux, const char *tag,
+    GNode * node);
 
 static void gst_qtdemux_handle_esds (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GNode * esds, GstTagList * list);
@@ -1936,6 +1938,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
 #define FOURCC__wrt     GST_MAKE_FOURCC(0xa9,'w','r','t')
 #define FOURCC__grp     GST_MAKE_FOURCC(0xa9,'g','r','p')
 #define FOURCC__alb     GST_MAKE_FOURCC(0xa9,'a','l','b')
+#define FOURCC__day     GST_MAKE_FOURCC(0xa9,'d','a','y')
 #define FOURCC_gnre     GST_MAKE_FOURCC('g','n','r','e')
 #define FOURCC_disc     GST_MAKE_FOURCC('d','i','s','c')
 #define FOURCC_disk     GST_MAKE_FOURCC('d','i','s','k')
@@ -2041,6 +2044,7 @@ QtNodeType qt_node_types[] = {
   {FOURCC__wrt, "Writer", QT_CONTAINER,},
   {FOURCC__grp, "Group", QT_CONTAINER,},
   {FOURCC__alb, "Album", QT_CONTAINER,},
+  {FOURCC__day, "Date", QT_CONTAINER,},
   {FOURCC_gnre, "Genre", QT_CONTAINER,},
   {FOURCC_trkn, "Track Number", QT_CONTAINER,},
   {FOURCC_disc, "Disc Number", QT_CONTAINER,},
@@ -3704,6 +3708,11 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
     qtdemux_tag_add_str (qtdemux, GST_TAG_ALBUM, node);
   }
 
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__day);
+  if (node) {
+    qtdemux_tag_add_date (qtdemux, GST_TAG_DATE, node);
+  }
+
   node = qtdemux_tree_get_child_by_type (ilst, FOURCC_trkn);
   if (node) {
     qtdemux_tag_add_num (qtdemux, GST_TAG_TRACK_NUMBER,
@@ -3773,6 +3782,40 @@ qtdemux_tag_add_num (GstQTDemux * qtdemux, const char *tag1,
       GST_DEBUG_OBJECT (qtdemux, "adding tag %d/%d", n1, n2);
       gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE,
           tag1, n1, tag2, n2, NULL);
+    }
+  }
+}
+
+static void
+qtdemux_tag_add_date (GstQTDemux * qtdemux, const char *tag, GNode * node)
+{
+  GNode *data;
+  char *s;
+  int len;
+  int type;
+
+  data = qtdemux_tree_get_child_by_type (node, FOURCC_data);
+  if (data) {
+    len = QTDEMUX_GUINT32_GET (data->data);
+    type = QTDEMUX_GUINT32_GET (data->data + 8);
+    if (type == 0x00000001) {
+      guint y, m = 1, d = 1;
+      gint ret;
+
+      s = g_strndup ((char *) data->data + 16, len - 16);
+      GST_DEBUG_OBJECT (qtdemux, "adding date '%s'", s);
+      ret = sscanf (s, "%u-%u-%u", &y, &m, &d);
+      if (ret >= 1 && y > 1500 && y < 3000) {
+        GDate *date;
+
+        date = g_date_new_dmy (d, m, y);
+        gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE, tag,
+            date, NULL);
+        g_date_free (date);
+      } else {
+        GST_DEBUG_OBJECT (qtdemux, "could not parse date string '%s'", s);
+      }
+      g_free (s);
     }
   }
 }

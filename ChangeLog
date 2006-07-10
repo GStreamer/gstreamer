@@ -1,3 +1,9 @@
+2006-07-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_udta),
+	(qtdemux_tag_add_date):
+	  Extract year/date information (fixes #347079).
+
 2006-07-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
