@@ -3713,6 +3713,11 @@ qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta)
     qtdemux_tag_add_date (qtdemux, GST_TAG_DATE, node);
   }
 
+  node = qtdemux_tree_get_child_by_type (ilst, FOURCC__too);
+  if (node) {
+    qtdemux_tag_add_str (qtdemux, GST_TAG_COMMENT, node);
+  }
+
   node = qtdemux_tree_get_child_by_type (ilst, FOURCC_trkn);
   if (node) {
     qtdemux_tag_add_num (qtdemux, GST_TAG_TRACK_NUMBER,
