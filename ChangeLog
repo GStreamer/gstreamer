@@ -1,5 +1,12 @@
 2006-07-10  Wim Taymans  <wim@fluendo.com>
 
+	* gst/filter/gstbpwsinc.h:
+	* gst/filter/gstiir.h:
+	* gst/filter/gstlpwsinc.h:
+	Don't forget new files.
+
+2006-07-10  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Mathis Hofer <mathis dot hofer at dreamlab dot net>
 
 	* configure.ac:
