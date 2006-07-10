@@ -18,6 +18,7 @@
 	(gst_lpwsinc_init), (lpwsinc_set_caps), (lpwsinc_transform_ip),
 	(lpwsinc_set_property), (lpwsinc_get_property):
 	Ported the gstfilter plugin to GStreamer 0.10.
+	Fixes #346853.
 
 2006-07-10  Wim Taymans  <wim@fluendo.com>
 
