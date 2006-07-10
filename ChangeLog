@@ -1,5 +1,11 @@
 2006-07-10  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstconfig.h.in:
+        More docs for configuration options, add docs to gtk-doc.
+
+2006-07-10  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/Makefile.am:
 	* gst/gstconfig.h.in:
 	* win32/common/config.h:

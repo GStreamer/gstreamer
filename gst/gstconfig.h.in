@@ -76,43 +76,65 @@
 
 /***** disabling of subsystems *****/
 
-/* configures the inclusion of the debugging subsystem */
+/**
+ * GST_DISABLE_GST_DEBUG:
+ *
+ * Configures the inclusion of the debugging subsystem
+ */
 @GST_DISABLE_GST_DEBUG_DEFINE@
 
-/* configures the inclusion of the plugin graph xml-serialisation 
+/**
+ * GST_DISABLE_LOADSAVE:
+ *
+ * Configures the inclusion of the plugin graph xml-serialisation 
  * (was used in 0.8 by gst-editor)
  */
 @GST_DISABLE_LOADSAVE_DEFINE@
 
-/* configures the inclusion of the gst-lauch parser */
+/**
+ * GST_DISABLE_PARSE:
+ *
+ * Configures the inclusion of the gst-lauch parser
+ */
 @GST_DISABLE_PARSE_DEFINE@
 
-/* configures the inclusion of a resource tracing facillity
+/**
+ * GST_DISABLE_TRACE:
+ *
+ * Configures the inclusion of a resource tracing facillity
  * (seems to be unused)
  */
 @GST_DISABLE_TRACE_DEFINE@
 
-/* configures the use of a memory tracer based on the resource tracer
+/**
+ * GST_DISABLE_ALLOC_TRACE:
+ *
+ * Configures the use of a memory tracer based on the resource tracer
  * if TRACE is disabled, ALLOC_TRACE is disabled as well
  */
 @GST_DISABLE_ALLOC_TRACE_DEFINE@
 
-/* configures the use of the plugin registry
+/**
+ * GST_DISABLE_REGISTRY:
+ *
+ * Configures the use of the plugin registry
  * if one disables this, required plugins need to be loaded and registered
  * manualy
  */
 @GST_DISABLE_REGISTRY_DEFINE@
 
-/* DOES NOT WORK */
+/* FIXME: test and document these! */
+/* Configure the use of glib enumtypes (useful for introspection)
+ * see http://bugzilla.gnome.org/show_bug.cgi?id=342564
+ */
 @GST_DISABLE_ENUMTYPES_DEFINE@
-
-/* DOES NOT WORK */
+/* Configure the use of indizies for seeking
+ * (not used in plugins right now)
+ */
 @GST_DISABLE_INDEX_DEFINE@
-
-/* DOES NOT WORK */
+/* Configures the use of external plugins */
 @GST_DISABLE_PLUGIN_DEFINE@
-
-/* DOES NOT WORK */
+/* Configures the use of uri-handlers */
 @GST_DISABLE_URI_DEFINE@
 
 /* printf extension format */
