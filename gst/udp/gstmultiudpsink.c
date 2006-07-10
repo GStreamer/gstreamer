@@ -370,6 +370,26 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+static void
+join_multicast (GstUDPClient * client)
+{
+  unsigned char ttl = 64;
+  unsigned char loop = 1;
+
+  /* Joining the multicast group */
+  /* FIXME, can we use multicast and unicast over the same
+   * socket? if not, search for socket of this multicast group or
+   * create a new one. */
+  if (setsockopt (*(client->sock), IPPROTO_IP, IP_ADD_MEMBERSHIP,
+          &(client->multi_addr), sizeof (client->multi_addr)) < 0)
+    perror ("setsockopt IP_ADD_MEMBERSHIP\n");
+  if (setsockopt (*(client->sock), IPPROTO_IP, IP_MULTICAST_TTL, &ttl,
+          sizeof (ttl)) < 0)
+    perror ("setsockopt IP_MULTICAST_TTL\n");
+  if (setsockopt (*(client->sock), IPPROTO_IP, IP_MULTICAST_LOOP, &loop,
+          sizeof (loop)) < 0)
+    perror ("setsockopt IP_MULTICAST_LOOP\n");
+}
 
 /* create a socket for sending to remote machine */
 static gboolean
@@ -377,6 +397,8 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
 {
   guint bc_val;
   gint ret;
+  GList *clients;
+  GstUDPClient *client;
 
   /* create sender socket */
   if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
@@ -391,8 +413,14 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   sink->bytes_to_serve = 0;
   sink->bytes_served = 0;
 
-  return TRUE;
+  /* look for multicast clients and join multicast groups approptiately */
 
+  for (clients = sink->clients; clients; clients = g_list_next (clients)) {
+    client = (GstUDPClient *) clients->data;
+    if (client->multi_addr.imr_multiaddr.s_addr)
+      join_multicast (client);
+  }
+  return TRUE;
   /* ERRORS */
 no_socket:
   {
@@ -420,7 +448,6 @@ gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
 {
   struct hostent *he;
   struct in_addr addr;
-  struct ip_mreq multi_addr;
   GstUDPClient *client;
   GTimeVal now;
 
@@ -431,6 +458,7 @@ gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
   client->sock = &sink->sock;
 
   memset (&client->theiraddr, 0, sizeof (client->theiraddr));
+  memset (&client->multi_addr, 0, sizeof (client->multi_addr));
   client->theiraddr.sin_family = AF_INET;       /* host byte order */
   client->theiraddr.sin_port = htons (port);    /* short, network byte order */
 
@@ -441,20 +469,18 @@ gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
   if (inet_aton (host, &addr)) {
     /* check if its a multicast address */
     if ((ntohl (addr.s_addr) & 0xe0000000) == 0xe0000000) {
+      printf ("multicast address  detected\n");
       client->multi_addr.imr_multiaddr.s_addr = addr.s_addr;
       client->multi_addr.imr_interface.s_addr = INADDR_ANY;
 
-      client->theiraddr.sin_addr = multi_addr.imr_multiaddr;
+      client->theiraddr.sin_addr = client->multi_addr.imr_multiaddr;
 
-      /* Joining the multicast group */
-      /* FIXME, can we use multicast and unicast over the same
-       * socket? if not, search for socket of this multicast group or
-       * create a new one. */
-      setsockopt (sink->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, &multi_addr,
-          sizeof (multi_addr));
     } else {
       client->theiraddr.sin_addr = *((struct in_addr *) &addr);
     }
+    /* if init_send has already been called, set sockopts for multicast */
+    if (*client->sock > 0)
+      join_multicast (client);
   }
   /* we dont need to lookup for localhost */
   else if (strcmp (host, "localhost") == 0 && inet_aton ("127.0.0.1", &addr)) {
