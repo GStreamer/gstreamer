@@ -25,14 +25,17 @@
 G_BEGIN_DECLS
 
 typedef enum {
-  RTSP_OK       =  0,
+  RTSP_OK          =  0,
   /* errors */
-  RTSP_EINVAL   = -1,
-  RTSP_ENOMEM   = -2,
-  RTSP_ERESOLV  = -3,
-  RTSP_ENOTIMPL = -4,
-  RTSP_ESYS     = -5,
-  RTSP_EPARSE   = -6,
+  RTSP_EINVAL      = -1,
+  RTSP_ENOMEM      = -2,
+  RTSP_ERESOLV     = -3,
+  RTSP_ENOTIMPL    = -4,
+  RTSP_ESYS        = -5,
+  RTSP_EPARSE      = -6,
+  RTSP_EWSASTART   = -7,
+  RTSP_EWSAVERSION = -8,
+
 } RTSPResult;
 
 typedef enum {

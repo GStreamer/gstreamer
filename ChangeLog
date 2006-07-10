@@ -1,3 +1,12 @@
+2006-07-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/Makefile.am:
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_send),
+	(rtsp_connection_close):
+	* gst/rtsp/rtspdefs.h:
+	replaced closesocket and close in code with one CLOSE_SOCKET. 
+	Some more cleanups. Fixes #345301.
+
 2006-07-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/autodetect/gstautoaudiosink.c:

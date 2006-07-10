@@ -26,18 +26,23 @@
 /* we include this here to get the G_OS_* defines */
 #include <glib.h>
 
-#ifdef G_OS_UNIX
+#ifdef G_OS_WIN32
+#include <winsock2.h>
+#else
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #endif
 
-#ifdef G_OS_WIN32
-#include <winsock2.h>
-#endif
 
 #include "rtspconnection.h"
+
+#ifdef G_OS_WIN32
+#define CLOSE_SOCKET(sock) closesocket(sock);
+#else
+#define CLOSE_SOCKET(sock) close(sock);
+#endif
 
 #ifdef G_OS_WIN32
 /* note that inet_aton is deprecated on unix because
@@ -224,12 +229,15 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
 startup_error:
   {
     GST_DEBUG_OBJECT (self, "Error %d on WSAStartup", error);
-    return RTSP_ERROR;
+    g_warning ("Error %d on WSAStartup", error);
+    return RTSP_EWSASTART;
   }
 version_error:
   {
+    g_warning ("Windows sockets are not version 0x202 (current 0x%x)",
+        w.wVersion);
     WSACleanup ();
-    return RTSP_ERROR;
+    return RTSP_EWSAVERSION;
   }
 #endif
 write_error:
@@ -586,13 +594,10 @@ rtsp_connection_close (RTSPConnection * conn)
   if (conn == NULL)
     return RTSP_EINVAL;
 
+  res = CLOSE_SOCKET (conn->fd);
 #ifdef G_OS_WIN32
-  res = socketclose (conn->fd);
   WSACleanup ();
-#else
-  res = close (conn->fd);
 #endif
-
   conn->fd = -1;
   if (res != 0)
     goto sys_error;
