@@ -31,7 +31,7 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch -v -m audiotestsrc ! autoaudiosink
+ * gst-launch -v -m audiotestsrc ! audioconvert ! audioresample ! autoaudiosink
  * </programlisting>
  * </para>
  * </refsect2>
