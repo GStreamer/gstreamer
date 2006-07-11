@@ -53,6 +53,8 @@
 	The comments about who has references were correct, but the refcount
 	being checked wasn't the same (!?!).
 
+	Fixes #341029
+
 2006-07-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
