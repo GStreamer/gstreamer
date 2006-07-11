@@ -306,27 +306,27 @@ GST_START_TEST (test_ghost_pads)
   while (GST_OBJECT_REFCOUNT_VALUE (fsrc) > 2)
     THREAD_SWITCH ();
 
-  ASSERT_OBJECT_REFCOUNT (fsrc, "fsrc", 2);     /* gisrc */
+  ASSERT_OBJECT_REFCOUNT (fsrc, "fsrc", 1);
   ASSERT_OBJECT_REFCOUNT (gsink, "gsink", 1);
   ASSERT_OBJECT_REFCOUNT (gsrc, "gsink", 1);
-  ASSERT_OBJECT_REFCOUNT (fsink, "fsink", 2);   /* gisink */
+  ASSERT_OBJECT_REFCOUNT (fsink, "fsink", 1);
 
-  ASSERT_OBJECT_REFCOUNT (gisrc, "gisrc", 1);   /* gsink */
+  ASSERT_OBJECT_REFCOUNT (gisrc, "gisrc", 2);   /* gsink */
   ASSERT_OBJECT_REFCOUNT (isink, "isink", 2);   /* gsink */
-  ASSERT_OBJECT_REFCOUNT (gisink, "gisink", 1); /* gsrc */
+  ASSERT_OBJECT_REFCOUNT (gisink, "gisink", 2); /* gsrc */
   ASSERT_OBJECT_REFCOUNT (isrc, "isrc", 2);     /* gsrc */
 
   gst_object_unref (gsink);
   ASSERT_OBJECT_REFCOUNT (isink, "isink", 1);
   ASSERT_OBJECT_REFCOUNT (gisrc, "gisrc", 1);
-  ASSERT_OBJECT_REFCOUNT (fsrc, "fsrc", 2);     /* gisrc */
+  ASSERT_OBJECT_REFCOUNT (fsrc, "fsrc", 1);
   gst_object_unref (gisrc);
   ASSERT_OBJECT_REFCOUNT (fsrc, "fsrc", 1);
 
   gst_object_unref (gsrc);
   ASSERT_OBJECT_REFCOUNT (isrc, "isrc", 1);
   ASSERT_OBJECT_REFCOUNT (gisink, "gisink", 1);
-  ASSERT_OBJECT_REFCOUNT (fsink, "fsink", 2);   /* gisrc */
+  ASSERT_OBJECT_REFCOUNT (fsink, "fsink", 1);
   gst_object_unref (gisink);
   ASSERT_OBJECT_REFCOUNT (fsink, "fsink", 1);
 

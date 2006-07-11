@@ -63,7 +63,6 @@
 #include "gst_private.h"
 
 #include "gstpad.h"
-#include "gstghostpad.h"
 #include "gstpadtemplate.h"
 #include "gstenumtypes.h"
 #include "gstmarshal.h"
@@ -939,17 +938,9 @@ gboolean
 gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
     GstPadBlockCallback callback, gpointer user_data)
 {
-  gboolean was_blocked, was_ghost = FALSE;
+  gboolean was_blocked = FALSE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-
-  if (GST_IS_GHOST_PAD (pad)) {
-    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-    if (!pad) {
-      return FALSE;
-    }
-    was_ghost = TRUE;
-  }
 
   GST_OBJECT_LOCK (pad);
 
@@ -990,10 +981,6 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
   }
   GST_OBJECT_UNLOCK (pad);
 
-  if (was_ghost) {
-    gst_object_unref (pad);
-  }
-
   return TRUE;
 
 had_right_state:
@@ -1003,9 +990,6 @@ had_right_state:
         was_blocked);
     GST_OBJECT_UNLOCK (pad);
 
-    if (was_ghost) {
-      gst_object_unref (pad);
-    }
     return FALSE;
   }
 }
@@ -1727,8 +1711,9 @@ not_srcpad:
   }
 src_was_linked:
   {
-    GST_CAT_INFO (GST_CAT_PADS, "src %s:%s was already linked",
-        GST_DEBUG_PAD_NAME (srcpad));
+    GST_CAT_INFO (GST_CAT_PADS, "src %s:%s was already linked to %s:%s",
+        GST_DEBUG_PAD_NAME (srcpad),
+        GST_DEBUG_PAD_NAME (GST_PAD_PEER (srcpad)));
     /* we do not emit a warning in this case because unlinking cannot
      * be made MT safe.*/
     GST_OBJECT_UNLOCK (srcpad);
@@ -1743,8 +1728,9 @@ not_sinkpad:
   }
 sink_was_linked:
   {
-    GST_CAT_INFO (GST_CAT_PADS, "sink %s:%s was already linked",
-        GST_DEBUG_PAD_NAME (sinkpad));
+    GST_CAT_INFO (GST_CAT_PADS, "sink %s:%s was already linked to %s:%s",
+        GST_DEBUG_PAD_NAME (sinkpad),
+        GST_DEBUG_PAD_NAME (GST_PAD_PEER (sinkpad)));
     /* we do not emit a warning in this case because unlinking cannot
      * be made MT safe.*/
     GST_OBJECT_UNLOCK (sinkpad);
@@ -3870,6 +3856,7 @@ dropping:
   }
 not_linked:
   {
+    GST_DEBUG_OBJECT (pad, "Dropping event because pad is not linked");
     gst_event_unref (event);
     GST_OBJECT_UNLOCK (pad);
     return FALSE;

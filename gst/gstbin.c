@@ -1762,6 +1762,87 @@ done:
   return ret;
 }
 
+/* gst_iterator_fold functions for pads_activate
+ * Note how we don't stop the iterator when we fail an activation. This is
+ * probably a FIXME since when one pad activation fails, we don't want to
+ * continue our state change. */
+static gboolean
+activate_pads (GstPad * pad, GValue * ret, gboolean * active)
+{
+  if (!gst_pad_set_active (pad, *active))
+    g_value_set_boolean (ret, FALSE);
+  else if (!*active)
+    gst_pad_set_caps (pad, NULL);
+
+  /* unref the object that was reffed for us by _fold */
+  gst_object_unref (pad);
+  return TRUE;
+}
+
+/* returns false on error or early cutout (will never happen because the fold
+ * function always returns TRUE, see FIXME above) of the fold, true if all
+ * pads in @iter were (de)activated successfully. */
+static gboolean
+iterator_activate_fold_with_resync (GstIterator * iter, gpointer user_data)
+{
+  GstIteratorResult ires;
+  GValue ret = { 0 };
+
+  /* no need to unset this later, it's just a boolean */
+  g_value_init (&ret, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&ret, TRUE);
+
+  while (1) {
+    ires = gst_iterator_fold (iter, (GstIteratorFoldFunction) activate_pads,
+        &ret, user_data);
+    switch (ires) {
+      case GST_ITERATOR_RESYNC:
+        /* need to reset the result again */
+        g_value_set_boolean (&ret, TRUE);
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_DONE:
+        /* all pads iterated, return collected value */
+        goto done;
+      default:
+        /* iterator returned _ERROR or premature end with _OK, 
+         * mark an error and exit */
+        g_value_set_boolean (&ret, FALSE);
+        goto done;
+    }
+  }
+done:
+  /* return collected value */
+  return g_value_get_boolean (&ret);
+}
+
+/* is called with STATE_LOCK
+ */
+static gboolean
+gst_bin_src_pads_activate (GstBin * bin, gboolean active)
+{
+  GstIterator *iter;
+  gboolean fold_ok;
+
+  GST_DEBUG_OBJECT (bin, "src_pads_activate with active %d", active);
+
+  iter = gst_element_iterate_src_pads ((GstElement *) bin);
+  fold_ok = iterator_activate_fold_with_resync (iter, &active);
+  gst_iterator_free (iter);
+  if (G_UNLIKELY (!fold_ok))
+    goto failed;
+
+  GST_DEBUG_OBJECT (bin, "pads_activate successful");
+
+  return TRUE;
+
+  /* ERRORS */
+failed:
+  {
+    GST_DEBUG_OBJECT (bin, "source pads_activate failed");
+    return FALSE;
+  }
+}
 static GstStateChangeReturn
 gst_bin_change_state_func (GstElement * element, GstStateChange transition)
 {
@@ -1791,6 +1872,9 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (element, "clearing EOS elements");
       bin_remove_messages (bin, NULL, GST_MESSAGE_EOS);
       GST_OBJECT_UNLOCK (bin);
+      if (current == GST_STATE_READY)
+        if (!(gst_bin_src_pads_activate (bin, TRUE)))
+          goto activate_failure;
       break;
     case GST_STATE_READY:
       /* Clear message list on next READY */
@@ -1798,6 +1882,14 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (element, "clearing all cached messages");
       bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
       GST_OBJECT_UNLOCK (bin);
+      if (current == GST_STATE_PAUSED)
+        if (!(gst_bin_src_pads_activate (bin, FALSE)))
+          goto activate_failure;
+      break;
+    case GST_STATE_NULL:
+      if (current == GST_STATE_READY)
+        if (!(gst_bin_src_pads_activate (bin, FALSE)))
+          goto activate_failure;
       break;
     default:
       break;
@@ -1897,6 +1989,11 @@ done:
       gst_element_state_get_name (GST_STATE (element)), ret);
 
   return ret;
+
+activate_failure:
+  GST_CAT_WARNING_OBJECT (GST_CAT_STATES, element,
+      "failure (de)activating src pads");
+  return GST_STATE_CHANGE_FAILURE;
 }
 
 /*

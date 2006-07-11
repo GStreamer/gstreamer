@@ -2783,18 +2783,9 @@ gulong
 gst_pad_add_data_probe (GstPad * pad, GCallback handler, gpointer data)
 {
   gulong sigid;
-  gboolean was_ghost = FALSE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), 0);
   g_return_val_if_fail (handler != NULL, 0);
-
-  if (GST_IS_GHOST_PAD (pad)) {
-    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-    if (!pad) {
-      return 0;
-    }
-    was_ghost = TRUE;
-  }
 
   GST_OBJECT_LOCK (pad);
   sigid = g_signal_connect (pad, "have-data", handler, data);
@@ -2804,10 +2795,6 @@ gst_pad_add_data_probe (GstPad * pad, GCallback handler, gpointer data)
       GST_DEBUG_PAD_NAME (pad),
       GST_PAD_DO_BUFFER_SIGNALS (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
-
-  if (was_ghost) {
-    gst_object_unref (pad);
-  }
 
   return sigid;
 }
@@ -2827,18 +2814,9 @@ gulong
 gst_pad_add_event_probe (GstPad * pad, GCallback handler, gpointer data)
 {
   gulong sigid;
-  gboolean was_ghost = FALSE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), 0);
   g_return_val_if_fail (handler != NULL, 0);
-
-  if (GST_IS_GHOST_PAD (pad)) {
-    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-    if (!pad) {
-      return 0;
-    }
-    was_ghost = TRUE;
-  }
 
   GST_OBJECT_LOCK (pad);
   sigid = g_signal_connect (pad, "have-data::event", handler, data);
@@ -2846,10 +2824,6 @@ gst_pad_add_event_probe (GstPad * pad, GCallback handler, gpointer data)
   GST_DEBUG ("adding event probe to pad %s:%s, now %d probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
-
-  if (was_ghost) {
-    gst_object_unref (pad);
-  }
 
   return sigid;
 }
@@ -2869,18 +2843,9 @@ gulong
 gst_pad_add_buffer_probe (GstPad * pad, GCallback handler, gpointer data)
 {
   gulong sigid;
-  gboolean was_ghost = FALSE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), 0);
   g_return_val_if_fail (handler != NULL, 0);
-
-  if (GST_IS_GHOST_PAD (pad)) {
-    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-    if (!pad) {
-      return 0;
-    }
-    was_ghost = TRUE;
-  }
 
   GST_OBJECT_LOCK (pad);
   sigid = g_signal_connect (pad, "have-data::buffer", handler, data);
@@ -2888,10 +2853,6 @@ gst_pad_add_buffer_probe (GstPad * pad, GCallback handler, gpointer data)
   GST_DEBUG ("adding buffer probe to pad %s:%s, now %d probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_BUFFER_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
-
-  if (was_ghost) {
-    gst_object_unref (pad);
-  }
 
   return sigid;
 }
@@ -2906,18 +2867,8 @@ gst_pad_add_buffer_probe (GstPad * pad, GCallback handler, gpointer data)
 void
 gst_pad_remove_data_probe (GstPad * pad, guint handler_id)
 {
-  gboolean was_ghost = FALSE;
-
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (handler_id > 0);
-
-  if (GST_IS_GHOST_PAD (pad)) {
-    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-    if (!pad) {
-      return;
-    }
-    was_ghost = TRUE;
-  }
 
   GST_OBJECT_LOCK (pad);
   g_signal_handler_disconnect (pad, handler_id);
@@ -2929,9 +2880,6 @@ gst_pad_remove_data_probe (GstPad * pad, guint handler_id)
       GST_PAD_DO_BUFFER_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
 
-  if (was_ghost) {
-    gst_object_unref (pad);
-  }
 }
 
 /**
@@ -2944,18 +2892,8 @@ gst_pad_remove_data_probe (GstPad * pad, guint handler_id)
 void
 gst_pad_remove_event_probe (GstPad * pad, guint handler_id)
 {
-  gboolean was_ghost = FALSE;
-
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (handler_id > 0);
-
-  if (GST_IS_GHOST_PAD (pad)) {
-    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-    if (!pad) {
-      return;
-    }
-    was_ghost = TRUE;
-  }
 
   GST_OBJECT_LOCK (pad);
   g_signal_handler_disconnect (pad, handler_id);
@@ -2963,10 +2901,6 @@ gst_pad_remove_event_probe (GstPad * pad, guint handler_id)
   GST_DEBUG ("removed event probe from pad %s:%s, now %d event probes",
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_EVENT_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
-
-  if (was_ghost) {
-    gst_object_unref (pad);
-  }
 }
 
 /**
@@ -2979,18 +2913,8 @@ gst_pad_remove_event_probe (GstPad * pad, guint handler_id)
 void
 gst_pad_remove_buffer_probe (GstPad * pad, guint handler_id)
 {
-  gboolean was_ghost = FALSE;
-
   g_return_if_fail (GST_IS_PAD (pad));
   g_return_if_fail (handler_id > 0);
-
-  if (GST_IS_GHOST_PAD (pad)) {
-    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-    if (!pad) {
-      return;
-    }
-    was_ghost = TRUE;
-  }
 
   GST_OBJECT_LOCK (pad);
   g_signal_handler_disconnect (pad, handler_id);
@@ -2999,9 +2923,6 @@ gst_pad_remove_buffer_probe (GstPad * pad, guint handler_id)
       GST_DEBUG_PAD_NAME (pad), GST_PAD_DO_BUFFER_SIGNALS (pad));
   GST_OBJECT_UNLOCK (pad);
 
-  if (was_ghost) {
-    gst_object_unref (pad);
-  }
 }
 
 /**
