@@ -1,3 +1,12 @@
+2006-07-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstvalue.c: (gst_value_compare_list),
+	(gst_value_compare_array), (_gst_value_initialize):
+	* tests/check/gst/gstvalue.c: (GST_START_TEST):
+	Make GstValueArray comparison be order dependent as designed.
+	Add checks for value lists and value array comparisons.
+	Fixes #347221
+
 2006-07-11  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstbin.c: (activate_pads),

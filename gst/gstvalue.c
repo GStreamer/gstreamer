@@ -456,8 +456,9 @@ gst_value_transform_array_string (const GValue * src_value, GValue * dest_value)
   gst_value_transform_any_list_string (src_value, dest_value, "< ", " >");
 }
 
+/* Do an unordered compare of the contents of a list */
 static int
-gst_value_compare_list_or_array (const GValue * value1, const GValue * value2)
+gst_value_compare_list (const GValue * value1, const GValue * value2)
 {
   guint i, j;
   GArray *array1 = value1->data[0].v_pointer;
@@ -478,6 +479,29 @@ gst_value_compare_list_or_array (const GValue * value1, const GValue * value2)
     if (j == array1->len) {
       return GST_VALUE_UNORDERED;
     }
+  }
+
+  return GST_VALUE_EQUAL;
+}
+
+/* Perform an ordered comparison of the contents of an array */
+static int
+gst_value_compare_array (const GValue * value1, const GValue * value2)
+{
+  guint i;
+  GArray *array1 = value1->data[0].v_pointer;
+  GArray *array2 = value2->data[0].v_pointer;
+  GValue *v1;
+  GValue *v2;
+
+  if (array1->len != array2->len)
+    return GST_VALUE_UNORDERED;
+
+  for (i = 0; i < array1->len; i++) {
+    v1 = &g_array_index (array1, GValue, i);
+    v2 = &g_array_index (array2, GValue, i);
+    if (gst_value_compare (v1, v2) != GST_VALUE_EQUAL)
+      return GST_VALUE_UNORDERED;
   }
 
   return GST_VALUE_EQUAL;
@@ -3879,7 +3903,7 @@ _gst_value_initialize (void)
   {
     static GstValueTable gst_value = {
       0,
-      gst_value_compare_list_or_array,
+      gst_value_compare_list,
       gst_value_serialize_list,
       gst_value_deserialize_list,
     };
@@ -3891,7 +3915,7 @@ _gst_value_initialize (void)
   {
     static GstValueTable gst_value = {
       0,
-      gst_value_compare_list_or_array,
+      gst_value_compare_array,
       gst_value_serialize_array,
       gst_value_deserialize_array,
     };

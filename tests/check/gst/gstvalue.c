@@ -470,6 +470,7 @@ GST_START_TEST (test_value_compare)
 {
   GValue value1 = { 0 };
   GValue value2 = { 0 };
+  GValue tmp = { 0 };
 
   g_value_init (&value1, G_TYPE_INT);
   g_value_set_int (&value1, 10);
@@ -552,6 +553,91 @@ GST_START_TEST (test_value_compare)
   g_value_unset (&value1);
   g_value_unset (&value2);
 
+  /* Check that lists are equal regardless of order */
+  g_value_init (&value1, GST_TYPE_LIST);
+  g_value_init (&tmp, G_TYPE_INT);
+  g_value_set_int (&tmp, 1);
+  gst_value_list_append_value (&value1, &tmp);
+  g_value_set_int (&tmp, 2);
+  gst_value_list_append_value (&value1, &tmp);
+  g_value_set_int (&tmp, 3);
+  gst_value_list_append_value (&value1, &tmp);
+  g_value_set_int (&tmp, 4);
+  gst_value_list_append_value (&value1, &tmp);
+
+  g_value_init (&value2, GST_TYPE_LIST);
+  g_value_set_int (&tmp, 4);
+  gst_value_list_append_value (&value2, &tmp);
+  g_value_set_int (&tmp, 3);
+  gst_value_list_append_value (&value2, &tmp);
+  g_value_set_int (&tmp, 2);
+  gst_value_list_append_value (&value2, &tmp);
+  g_value_set_int (&tmp, 1);
+  gst_value_list_append_value (&value2, &tmp);
+
+  fail_unless (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL,
+      "value lists with different order were not equal when they should be");
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL,
+      "value lists with same order were not equal when they should be");
+  fail_unless (gst_value_compare (&value2, &value2) == GST_VALUE_EQUAL,
+      "value lists with same order were not equal when they should be");
+
+  /* Carry over the lists to this next check: */
+  /* Lists with different sizes are unequal */
+  g_value_set_int (&tmp, 1);
+  gst_value_list_append_value (&value2, &tmp);
+
+  fail_if (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL,
+      "Value lists with different size were equal when they shouldn't be");
+
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+  g_value_unset (&tmp);
+
+  /* Arrays are only equal when in the same order */
+  g_value_init (&value1, GST_TYPE_ARRAY);
+  g_value_init (&tmp, G_TYPE_INT);
+  g_value_set_int (&tmp, 1);
+  gst_value_array_append_value (&value1, &tmp);
+  g_value_set_int (&tmp, 2);
+  gst_value_array_append_value (&value1, &tmp);
+  g_value_set_int (&tmp, 3);
+  gst_value_array_append_value (&value1, &tmp);
+  g_value_set_int (&tmp, 4);
+  gst_value_array_append_value (&value1, &tmp);
+
+  g_value_init (&value2, GST_TYPE_ARRAY);
+  g_value_set_int (&tmp, 4);
+  gst_value_array_append_value (&value2, &tmp);
+  g_value_set_int (&tmp, 3);
+  gst_value_array_append_value (&value2, &tmp);
+  g_value_set_int (&tmp, 2);
+  gst_value_array_append_value (&value2, &tmp);
+  g_value_set_int (&tmp, 1);
+  gst_value_array_append_value (&value2, &tmp);
+
+  fail_if (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL,
+      "Value arrays with different order were equal when they shouldn't be");
+  fail_unless (gst_value_compare (&value1, &value1) == GST_VALUE_EQUAL,
+      "Identical value arrays were not equal when they should be");
+  fail_unless (gst_value_compare (&value2, &value2) == GST_VALUE_EQUAL,
+      "Identical value arrays were not equal when they should be");
+
+  /* Carry over the arrays to this next check: */
+  /* Arrays with different sizes are unequal */
+  g_value_unset (&value2);
+  g_value_init (&value2, GST_TYPE_ARRAY);
+  g_value_copy (&value1, &value2);
+
+  g_value_set_int (&tmp, 1);
+  gst_value_array_append_value (&value2, &tmp);
+
+  fail_if (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL,
+      "Value arrays with different size were equal when they shouldn't be");
+
+  g_value_unset (&value1);
+  g_value_unset (&value2);
+  g_value_unset (&tmp);
 }
 
 GST_END_TEST;
