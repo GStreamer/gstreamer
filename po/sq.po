@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-06-10 13:03+0200\n"
+"POT-Creation-Date: 2006-07-12 00:49+0200\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -98,16 +98,16 @@ msgstr ""
 msgid "Show GStreamer Options"
 msgstr "Printo versionin e GStreamer"
 
-#: gst/gst.c:867
+#: gst/gst.c:941
 msgid "Unknown option"
 msgstr ""
 
-#: gst/gstelement.c:279
+#: gst/gstelement.c:279 gst/gstutils.c:2118
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "GABIM: nga elementi %s: %s\n"
 
-#: gst/gstelement.c:281
+#: gst/gstelement.c:281 gst/gstutils.c:2120
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -300,6 +300,10 @@ msgstr "Asnjë mesazh gabimi për domain %s."
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Asnjë mesazh gabimi standart për domain %s dhe kodin %d."
+
+#: gst/gstpipeline.c:558
+msgid "Selected clock cannot be used in pipeline."
+msgstr ""
 
 #: gst/gsttaglist.c:93
 msgid "title"
@@ -669,11 +673,11 @@ msgstr "e pamundur lidhja e elementit sink për URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "nuk lejohet konduktori bosh"
 
-#: libs/gst/base/gstbasesrc.c:1535 libs/gst/base/gstbasesrc.c:1546
+#: libs/gst/base/gstbasesrc.c:1564 libs/gst/base/gstbasesrc.c:1575
 msgid "Internal data flow error."
 msgstr ""
 
-#: libs/gst/base/gstbasesink.c:1877
+#: libs/gst/base/gstbasesink.c:1875
 msgid "Internal data flow problem."
 msgstr ""
 
@@ -681,45 +685,68 @@ msgstr ""
 msgid "Internal data stream error."
 msgstr ""
 
-#: plugins/elements/gstfilesink.c:230
+#: plugins/elements/gstcapsfilter.c:133
+msgid "Filter caps"
+msgstr ""
+
+#: plugins/elements/gstcapsfilter.c:134
+msgid "Restrict the possible allowed capabilities (NULL means ANY)"
+msgstr ""
+
+#: plugins/elements/gstfdsink.c:343
+#, fuzzy, c-format
+msgid "Error while writing to file descriptor \"%d\"."
+msgstr "Gabim gjatë shkrimit tek file \"%s\"."
+
+#: plugins/elements/gstfdsink.c:383
+#, c-format
+msgid "File descriptor \"%d\" is not valid."
+msgstr ""
+
+#: plugins/elements/gstfilesink.c:252
 msgid "No file name specified for writing."
 msgstr "Nuk është përcaktuar asnjë emër file për tu shkruar."
 
-#: plugins/elements/gstfilesink.c:237
+#: plugins/elements/gstfilesink.c:258
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "E pamundur hapja e file \"%s\" në shkrim."
 
-#: plugins/elements/gstfilesink.c:253
+#: plugins/elements/gstfilesink.c:279
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Gabim gjatë mbylljes së file \"%s\"."
 
-#: plugins/elements/gstfilesink.c:361 plugins/elements/gstfilesink.c:433
+#: plugins/elements/gstfilesink.c:400
+#, fuzzy, c-format
+msgid "Error while seeking in file \"%s\"."
+msgstr "Gabim gjatë shkrimit tek file \"%s\"."
+
+#: plugins/elements/gstfilesink.c:407 plugins/elements/gstfilesink.c:478
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Gabim gjatë shkrimit tek file \"%s\"."
 
-#: plugins/elements/gstfilesrc.c:930
+#: plugins/elements/gstfilesrc.c:947
 msgid "No file name specified for reading."
 msgstr "Nuk është përcaktuar asnjë emër file për tu lexuar."
 
-#: plugins/elements/gstfilesrc.c:942
+#: plugins/elements/gstfilesrc.c:959
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading: %s."
 msgstr "E pamundur hapja e file \"%s\" për lexim."
 
-#: plugins/elements/gstfilesrc.c:951
+#: plugins/elements/gstfilesrc.c:968
 #, fuzzy, c-format
-msgid "could not get info on \"%s\"."
+msgid "Could not get info on \"%s\"."
 msgstr "e pamundur lidhja e %s me %s"
 
-#: plugins/elements/gstfilesrc.c:958
+#: plugins/elements/gstfilesrc.c:975
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" është një directory."
 
-#: plugins/elements/gstfilesrc.c:965
+#: plugins/elements/gstfilesrc.c:982
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "File \"%s\" është një socket."
@@ -744,52 +771,52 @@ msgstr "minimum"
 msgid "maximum"
 msgstr "maksimum"
 
-#: tools/gst-inspect.c:251
+#: tools/gst-inspect.c:250
 msgid "Implemented Interfaces:\n"
 msgstr ""
 
-#: tools/gst-inspect.c:293
+#: tools/gst-inspect.c:292
 msgid "readable"
 msgstr ""
 
-#: tools/gst-inspect.c:298
+#: tools/gst-inspect.c:297
 #, fuzzy
 msgid "writable"
 msgstr "titulli"
 
-#: tools/gst-inspect.c:303
+#: tools/gst-inspect.c:302
 msgid "controllable"
 msgstr ""
 
-#: tools/gst-inspect.c:923
+#: tools/gst-inspect.c:925
 #, fuzzy
 msgid "Total count: "
 msgstr "numërimi i pjesës"
 
-#: tools/gst-inspect.c:924
+#: tools/gst-inspect.c:926
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] ""
 msgstr[1] ""
 
-#: tools/gst-inspect.c:926
+#: tools/gst-inspect.c:928
 #, fuzzy, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "karakteristika"
 msgstr[1] "karakteristikat"
 
-#: tools/gst-inspect.c:1107
+#: tools/gst-inspect.c:1109
 msgid "Print all elements"
 msgstr "Printo të gjithë elementët"
 
-#: tools/gst-inspect.c:1173
+#: tools/gst-inspect.c:1175
 #, fuzzy, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "E pamundur hapja e file \"%s\" në shkrim."
 
-#: tools/gst-inspect.c:1178
+#: tools/gst-inspect.c:1180
 #, fuzzy, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "asnjë element burues për URI \"%s\""
@@ -880,86 +907,86 @@ msgstr "Mos instalo një ushqyes të dëmtuar"
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Printo shenjat e alloc (nëse aktivuar në kohën e kompilimit)"
 
-#: tools/gst-launch.c:607
+#: tools/gst-launch.c:610
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "GABIM: i pamundur ndërtimi i pipeline: %s.\n"
 
-#: tools/gst-launch.c:611
+#: tools/gst-launch.c:614
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "GABIM: i pamundur ndërtimi i pipeline.\n"
 
-#: tools/gst-launch.c:615
+#: tools/gst-launch.c:618
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "KUJDES: pipline e gabuar: %s\n"
 
-#: tools/gst-launch.c:641
+#: tools/gst-launch.c:644
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "GABIM: elementi 'konduktor' nuk u gjet.\n"
 
-#: tools/gst-launch.c:647 tools/gst-launch.c:699
+#: tools/gst-launch.c:650 tools/gst-launch.c:702
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:652
+#: tools/gst-launch.c:655
 #, fuzzy, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
 
-#: tools/gst-launch.c:657
+#: tools/gst-launch.c:660
 #, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:660
+#: tools/gst-launch.c:663
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:663 tools/gst-launch.c:676
+#: tools/gst-launch.c:666 tools/gst-launch.c:679
 #, fuzzy, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
 
-#: tools/gst-launch.c:669
+#: tools/gst-launch.c:672
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:681
+#: tools/gst-launch.c:684
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:684
+#: tools/gst-launch.c:687
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
 
-#: tools/gst-launch.c:695
+#: tools/gst-launch.c:698
 msgid "Execution ended after %"
 msgstr "Ekzekutimi përfundoi mbas %"
 
-#: tools/gst-launch.c:695
+#: tools/gst-launch.c:698
 #, fuzzy
 msgid " ns.\n"
 msgstr " ns).\n"
 
-#: tools/gst-launch.c:702
+#: tools/gst-launch.c:705
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:707
+#: tools/gst-launch.c:710
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr ""
 
-#: tools/gst-launch.c:712
+#: tools/gst-launch.c:715
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "DUKE ZBATUAR pipeline ...\n"
