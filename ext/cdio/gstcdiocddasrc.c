@@ -318,8 +318,6 @@ gst_cdio_cdda_src_close (GstCddaBaseSrc * cddabasesrc)
 {
   GstCdioCddaSrc *src = GST_CDIO_CDDA_SRC (cddabasesrc);
 
-  g_assert (src->cdio != NULL);
-
   if (src->cdio) {
     cdio_destroy (src->cdio);
     src->cdio = NULL;
