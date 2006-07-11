@@ -44,17 +44,17 @@ static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("text/x-pango-markup")
     );
 
-GST_BOILERPLATE (GstSsaParse, gst_ssa_parse, GstElement, GST_TYPE_ELEMENT)
+GST_BOILERPLATE (GstSsaParse, gst_ssa_parse, GstElement, GST_TYPE_ELEMENT);
 
-     static GstStateChangeReturn gst_ssa_parse_change_state (GstElement *
+static GstStateChangeReturn gst_ssa_parse_change_state (GstElement *
     element, GstStateChange transition);
-     static gboolean gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps);
-     static gboolean gst_ssa_parse_src_event (GstPad * pad, GstEvent * event);
-     static gboolean gst_ssa_parse_sink_event (GstPad * pad, GstEvent * event);
-     static GstFlowReturn gst_ssa_parse_chain (GstPad * sinkpad,
-    GstBuffer * buf);
+static gboolean gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps);
+static gboolean gst_ssa_parse_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_ssa_parse_sink_event (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf);
 
-     static void gst_ssa_parse_base_init (gpointer klass)
+static void
+gst_ssa_parse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   static GstElementDetails ssa_parse_details = {
@@ -240,8 +240,11 @@ gst_ssa_parse_parse_line (GstSsaParse * parse, gchar * txt,
   escaped = g_markup_printf_escaped ("%s", t);
 
   len = strlen (escaped);
+
+  /* allocate enough for a terminating NUL, but don't include it in buf size */
   buf = gst_buffer_new_and_alloc (len + 1);
-  memcpy (GST_BUFFER_DATA (buf), escaped, len + 1);     /* incl. terminating NUL */
+  memcpy (GST_BUFFER_DATA (buf), escaped, len + 1);
+  GST_BUFFER_SIZE (buf) = len;
   g_free (escaped);
 
   GST_BUFFER_TIMESTAMP (buf) = start;

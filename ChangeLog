@@ -1,3 +1,13 @@
+2006-07-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/subparse/gstssaparse.c: (gst_ssa_parse_base_init),
+	(gst_ssa_parse_parse_line):
+	  Don't include the terminating NUL in the buffer size,
+	  it's only there for extra paranoia (would add random
+	  '*' characters at the end of each subtitle since the
+	  terminator itself is not valid UTF-8 technically).
+	  Also fix indenting after boilerplate macro.
+
 2006-07-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstdecodebin.c: (close_pad_link):
