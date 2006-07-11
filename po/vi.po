@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-06-07 12:55+0200\n"
+"POT-Creation-Date: 2006-07-12 00:38+0200\n"
 "PO-Revision-Date: 2005-01-22 17:17+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
@@ -16,50 +16,80 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/alsa/gstalsamixertrack.c:82
+#: ext/alsa/gstalsamixertrack.c:83
 msgid "Master"
 msgstr ""
 
-#: ext/alsa/gstalsamixertrack.c:83
+#: ext/alsa/gstalsamixertrack.c:84
 msgid "Bass"
 msgstr "Trầm"
 
-#: ext/alsa/gstalsamixertrack.c:84
+#: ext/alsa/gstalsamixertrack.c:85
 msgid "Treble"
 msgstr "Cao"
 
-#: ext/alsa/gstalsamixertrack.c:85
+#: ext/alsa/gstalsamixertrack.c:86
 msgid "PCM"
 msgstr "PCM"
 
-#: ext/alsa/gstalsamixertrack.c:86
+#: ext/alsa/gstalsamixertrack.c:87
 msgid "Synth"
 msgstr "Tổng hợp"
 
-#: ext/alsa/gstalsamixertrack.c:87
+#: ext/alsa/gstalsamixertrack.c:88
 msgid "Line-in"
 msgstr "Dây-vào"
 
-#: ext/alsa/gstalsamixertrack.c:88
+#: ext/alsa/gstalsamixertrack.c:89
 msgid "CD"
 msgstr "CD"
 
-#: ext/alsa/gstalsamixertrack.c:89
+#: ext/alsa/gstalsamixertrack.c:90
 msgid "Microphone"
 msgstr "Micrô"
 
-#: ext/alsa/gstalsamixertrack.c:90
+#: ext/alsa/gstalsamixertrack.c:91
 #, fuzzy
 msgid "PC Speaker"
 msgstr "Loa"
 
-#: ext/alsa/gstalsamixertrack.c:91
+#: ext/alsa/gstalsamixertrack.c:92
 msgid "Playback"
 msgstr ""
 
-#: ext/alsa/gstalsamixertrack.c:92
+#: ext/alsa/gstalsamixertrack.c:93
 msgid "Capture"
 msgstr ""
+
+#: ext/alsa/gstalsasink.c:453
+#, fuzzy
+msgid "Could not open device for playback in mono mode."
+msgstr "Đã không mở được thiết bị CD để đọc"
+
+#: ext/alsa/gstalsasink.c:455
+#, fuzzy
+msgid "Could not open device for playback in stereo mode."
+msgstr "Đã không mở được thiết bị CD để đọc"
+
+#: ext/alsa/gstalsasink.c:459
+#, fuzzy, c-format
+msgid "Could not open device for playback in %d-channel mode."
+msgstr "Đã không mở được thiết bị CD để đọc"
+
+#: ext/alsa/gstalsasrc.c:408
+#, fuzzy
+msgid "Could not open device for recording in mono mode."
+msgstr "Đã không mở được thiết bị CD để đọc"
+
+#: ext/alsa/gstalsasrc.c:410
+#, fuzzy
+msgid "Could not open device for recording in stereo mode."
+msgstr "Đã không mở được thiết bị CD để đọc"
+
+#: ext/alsa/gstalsasrc.c:414
+#, fuzzy, c-format
+msgid "Could not open device for recording in %d-channel mode"
+msgstr "Đã không mở được thiết bị CD để đọc"
 
 #: ext/cdparanoia/gstcdparanoiasrc.c:240 ext/cdparanoia/gstcdparanoiasrc.c:246
 msgid "Could not open CD device for reading."
@@ -94,50 +124,50 @@ msgstr "Đã không đóng được tập tin vfs \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Lỗi khi đóng tập tin \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2788
+#: ext/ogg/gstoggdemux.c:2842
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1262
+#: gst/playback/gstplaybasebin.c:1281
 msgid "RTSP streams cannot be played yet."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1566
+#: gst/playback/gstplaybasebin.c:1581
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1572
+#: gst/playback/gstplaybasebin.c:1587
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1576
+#: gst/playback/gstplaybasebin.c:1591
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1583
+#: gst/playback/gstplaybasebin.c:1598
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1656
+#: gst/playback/gstplaybasebin.c:1671
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1661
+#: gst/playback/gstplaybasebin.c:1676
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1665
+#: gst/playback/gstplaybasebin.c:1680
 #, fuzzy
 msgid "This is not a media file"
 msgstr "Thiết bị \"%s\" không bắt gì được."
 
-#: gst/playback/gstplaybasebin.c:1670
+#: gst/playback/gstplaybasebin.c:1685
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 
@@ -154,6 +184,26 @@ msgstr ""
 
 #: gst/playback/gstplaybin.c:785
 msgid "Both autoaudiosink and alsasink elements are missing."
+msgstr ""
+
+#: gst/tcp/gsttcp.c:519 gst/tcp/gsttcpclientsink.c:268
+#, fuzzy, c-format
+msgid "Error while sending data to \"%s:%d\"."
+msgstr "Lỗi khi đóng tập tin \"%s\"."
+
+#: gst/tcp/gsttcp.c:571
+#, fuzzy, c-format
+msgid "Error while sending gdp header data to \"%s:%d\"."
+msgstr "Lỗi khi đóng tập tin \"%s\"."
+
+#: gst/tcp/gsttcp.c:580
+#, c-format
+msgid "Error while sending gdp payload data to \"%s:%d\"."
+msgstr ""
+
+#: gst/tcp/gsttcpclientsink.c:380 gst/tcp/gsttcpclientsrc.c:364
+#, c-format
+msgid "Connection to %s:%d refused."
 msgstr ""
 
 #: gst-libs/gst/tag/tags.c:55
@@ -209,14 +259,24 @@ msgstr ""
 msgid "This CD has no audio tracks"
 msgstr ""
 
-#~ msgid "No device specified."
-#~ msgstr "Chưa ghi rõ thiết bị nào"
+#: sys/v4l/v4l_calls.c:159
+msgid "No device specified."
+msgstr "Chưa ghi rõ thiết bị nào"
 
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Không có thiết bị \"%s\" ."
+#: sys/v4l/v4l_calls.c:168
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Không có thiết bị \"%s\" ."
 
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Đã không mở được thiết bị \"%s\" để đọc và ghi."
+#: sys/v4l/v4l_calls.c:173
+#, fuzzy, c-format
+msgid "Device \"%s\" is already being used."
+msgstr "Một chương trình khác đang sử dụng thiết bị OSS \"%s\"."
+
+#: sys/v4l/v4l_calls.c:178
+#, c-format
+msgid "Could not open device \"%s\" for reading and writing."
+msgstr "Đã không mở được thiết bị \"%s\" để đọc và ghi."
 
 #~ msgid "Device is not open."
 #~ msgstr "Thiết bị chưa mở"
@@ -287,9 +347,6 @@ msgstr ""
 
 #~ msgid "Could not close video device \"%s\"."
 #~ msgstr "Đã không đóng được thiết bị ảnh động \"%s\"."
-
-#~ msgid "OSS device \"%s\" is already in use by another program."
-#~ msgstr "Một chương trình khác đang sử dụng thiết bị OSS \"%s\"."
 
 #~ msgid "Could not access device \"%s\", check its permissions."
 #~ msgstr "Đã không truy cập được thiết bị \"%s\", nên hãy kiểm tra quyền nó."
