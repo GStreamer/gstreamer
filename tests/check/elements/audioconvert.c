@@ -190,7 +190,42 @@ static GstAudioChannelPosition channelpositions[][6] = {
         GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
         GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
         GST_AUDIO_CHANNEL_POSITION_LFE,
+      }
+};
+
+/* these are a bunch of random positions, they are mostly just
+ * different from the ones above, don't use elsewhere */
+static GstAudioChannelPosition mixed_up_positions[][6] = {
+  {
+      GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT},
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT},
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
       },
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      },
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+      }
 };
 
 static void
@@ -219,24 +254,33 @@ set_channel_positions (GstCaps * caps, int channels,
  * ones. Only implemented for channels between 1 and 6.
  */
 static GstCaps *
-get_float_mc_caps (guint channels, gchar * endianness, guint width)
+get_float_mc_caps (guint channels, gchar * endianness, guint width,
+    gboolean mixed_up_layout)
 {
   GstCaps *caps = get_float_caps (channels, endianness, width);
 
-  if (channels <= 6)
-    set_channel_positions (caps, channels, channelpositions[channels - 1]);
+  if (channels <= 6) {
+    if (mixed_up_layout)
+      set_channel_positions (caps, channels, mixed_up_positions[channels - 1]);
+    else
+      set_channel_positions (caps, channels, channelpositions[channels - 1]);
+  }
 
   return caps;
 }
 
 static GstCaps *
 get_int_mc_caps (guint channels, gchar * endianness, guint width,
-    guint depth, gboolean signedness)
+    guint depth, gboolean signedness, gboolean mixed_up_layout)
 {
   GstCaps *caps = get_int_caps (channels, endianness, width, depth, signedness);
 
-  if (channels <= 6)
-    set_channel_positions (caps, channels, channelpositions[channels - 1]);
+  if (channels <= 6) {
+    if (mixed_up_layout)
+      set_channel_positions (caps, channels, mixed_up_positions[channels - 1]);
+    else
+      set_channel_positions (caps, channels, channelpositions[channels - 1]);
+  }
 
   return caps;
 }
@@ -436,8 +480,39 @@ GST_START_TEST (test_multichannel_conversion)
      * not produce exactly the same as the input due to floating
      * point rounding errors etc. */
     RUN_CONVERSION ("3 channels to 1", in, get_float_mc_caps (3,
-            "BYTE_ORDER", 32), out, get_float_caps (1, "BYTE_ORDER", 32));
+            "BYTE_ORDER", 32, FALSE), out, get_float_caps (1, "BYTE_ORDER",
+            32));
   }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_channel_remapping)
+{
+  /* float */
+  {
+    gfloat in[] = { 0.0, 1.0, -0.5 };
+    gfloat out[] = { -0.5, 1.0, 0.0 };
+    GstCaps *in_caps = get_float_mc_caps (3, "BYTE_ORDER", 32, FALSE);
+    GstCaps *out_caps = get_float_mc_caps (3, "BYTE_ORDER", 32, TRUE);
+
+    RUN_CONVERSION ("3 channels layout remapping float", in, in_caps,
+        out, out_caps);
+  }
+
+  /* int */
+  {
+    guint16 in[] = { 0, 65535, 0x9999 };
+    guint16 out[] = { 0x9999, 65535, 0 };
+    GstCaps *in_caps = get_int_mc_caps (3, "BYTE_ORDER", 16, 16, FALSE, FALSE);
+    GstCaps *out_caps = get_int_mc_caps (3, "BYTE_ORDER", 16, 16, FALSE, TRUE);
+
+    RUN_CONVERSION ("3 channels layout remapping int", in, in_caps,
+        out, out_caps);
+  }
+
+  /* TODO: float => int conversion with remapping and vice versa,
+   *       int   => int conversion with remapping */
 }
 
 GST_END_TEST;
@@ -453,6 +528,7 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_int_conversion);
   tcase_add_test (tc_chain, test_float_conversion);
   tcase_add_test (tc_chain, test_multichannel_conversion);
+  tcase_add_test (tc_chain, test_channel_remapping);
 
   return s;
 }

@@ -1,3 +1,10 @@
+2006-07-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/elements/audioconvert.c: (get_float_mc_caps),
+	(get_int_mc_caps), (GST_START_TEST), (audioconvert_suite):
+	  Patch from #347221 adding a test for audioconvert
+	  channel remappings.
+
 2006-07-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/subparse/gstssaparse.c: (gst_ssa_parse_base_init),
