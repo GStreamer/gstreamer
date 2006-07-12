@@ -1,3 +1,13 @@
+2006-07-12  Edward Hervey  <edward@fluendo.com>
+
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_init),
+	(gst_vorbis_dec_reset), (vorbis_dec_sink_event),
+	(vorbis_handle_comment_packet), (vorbis_handle_type_packet):
+	* ext/vorbis/vorbisdec.h:
+	Delay sending events (newsegment, tags) until the decoder is properly
+	initialized.
+	Fixes #347295
+
 2006-07-11  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/elements/audioconvert.c: (get_float_mc_caps),

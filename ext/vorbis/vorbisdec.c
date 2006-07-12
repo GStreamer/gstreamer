@@ -164,6 +164,8 @@ gst_vorbis_dec_init (GstVorbisDec * dec, GstVorbisDecClass * g_class)
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   dec->queued = NULL;
+  dec->pendingevents = NULL;
+  dec->taglist = NULL;
 }
 
 static void
@@ -198,6 +200,16 @@ gst_vorbis_dec_reset (GstVorbisDec * dec)
   }
   g_list_free (dec->queued);
   dec->queued = NULL;
+
+  for (walk = dec->pendingevents; walk; walk = g_list_next (walk)) {
+    gst_event_unref (GST_EVENT_CAST (walk->data));
+  }
+  g_list_free (dec->pendingevents);
+  dec->pendingevents = NULL;
+
+  if (dec->taglist)
+    gst_tag_list_free (dec->taglist);
+  dec->taglist = NULL;
 }
 
 
@@ -528,8 +540,14 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (&dec->segment, update,
           rate, arate, format, start, stop, time);
 
-      /* and forward */
-      ret = gst_pad_push_event (dec->srcpad, event);
+      if (dec->initialized)
+        /* and forward */
+        ret = gst_pad_push_event (dec->srcpad, event);
+      else {
+        /* store it to send once we're initialized */
+        dec->pendingevents = g_list_append (dec->pendingevents, event);
+        ret = TRUE;
+      }
       break;
     }
     default:
@@ -638,7 +656,6 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   guint bitrate = 0;
   gchar *encoder = NULL;
-  GstTagList *list;
   GstBuffer *buf;
 
   GST_DEBUG_OBJECT (vd, "parsing comment packet");
@@ -646,47 +663,52 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
   buf = gst_buffer_new_and_alloc (packet->bytes);
   GST_BUFFER_DATA (buf) = packet->packet;
 
-  list =
+  vd->taglist =
+      gst_tag_list_merge (vd->taglist,
       gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\003vorbis", 7,
-      &encoder);
+          &encoder), GST_TAG_MERGE_REPLACE);
 
   gst_buffer_unref (buf);
 
-  if (!list) {
+  if (!vd->taglist) {
     GST_ERROR_OBJECT (vd, "couldn't decode comments");
-    list = gst_tag_list_new ();
+    vd->taglist = gst_tag_list_new ();
   }
   if (encoder) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_ENCODER, encoder, NULL);
     g_free (encoder);
   }
-  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+  gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
       GST_TAG_ENCODER_VERSION, vd->vi.version,
       GST_TAG_AUDIO_CODEC, "Vorbis", NULL);
   if (vd->vi.bitrate_nominal > 0) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_NOMINAL_BITRATE, (guint) vd->vi.bitrate_nominal, NULL);
     bitrate = vd->vi.bitrate_nominal;
   }
   if (vd->vi.bitrate_upper > 0) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_MAXIMUM_BITRATE, (guint) vd->vi.bitrate_upper, NULL);
     if (!bitrate)
       bitrate = vd->vi.bitrate_upper;
   }
   if (vd->vi.bitrate_lower > 0) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_MINIMUM_BITRATE, (guint) vd->vi.bitrate_lower, NULL);
     if (!bitrate)
       bitrate = vd->vi.bitrate_lower;
   }
   if (bitrate) {
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+    gst_tag_list_add (vd->taglist, GST_TAG_MERGE_REPLACE,
         GST_TAG_BITRATE, (guint) bitrate, NULL);
   }
 
-  gst_element_found_tags_for_pad (GST_ELEMENT_CAST (vd), vd->srcpad, list);
+  if (vd->initialized) {
+    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (vd), vd->srcpad,
+        vd->taglist);
+    vd->taglist = NULL;
+  }
 
   return GST_FLOW_OK;
 }
@@ -694,11 +716,26 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 static GstFlowReturn
 vorbis_handle_type_packet (GstVorbisDec * vd)
 {
+  GList *walk;
+
   g_assert (vd->initialized == FALSE);
 
   vorbis_synthesis_init (&vd->vd, &vd->vi);
   vorbis_block_init (&vd->vd, &vd->vb);
   vd->initialized = TRUE;
+
+  if (vd->pendingevents) {
+    for (walk = vd->pendingevents; walk; walk = g_list_next (walk))
+      gst_pad_push_event (vd->srcpad, GST_EVENT_CAST (walk->data));
+    g_list_free (vd->pendingevents);
+    vd->pendingevents = NULL;
+  }
+
+  if (vd->taglist) {
+    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (vd), vd->srcpad,
+        vd->taglist);
+    vd->taglist = NULL;
+  }
 
   return GST_FLOW_OK;
 }

@@ -68,6 +68,9 @@ struct _GstVorbisDec {
 
   GstClockTime          cur_timestamp; /* only used with non-ogg container formats */
   GstClockTime          prev_timestamp; /* only used with non-ogg container formats */
+
+  GList			*pendingevents;
+  GstTagList		*taglist;
 };
 
 struct _GstVorbisDecClass {
