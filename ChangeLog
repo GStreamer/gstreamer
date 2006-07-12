@@ -1,3 +1,8 @@
+2006-07-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init):
+	  Fix typo in property nick.
+
 2006-07-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/filter/gstbpwsinc.h:
