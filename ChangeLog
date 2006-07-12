@@ -1,3 +1,11 @@
+2006-07-12  Edward Hervey  <edward@fluendo.com>
+
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_reset),
+	(vorbis_dec_sink_event), (vorbis_handle_comment_packet),
+	(vorbis_handle_type_packet):
+	Post tag messages on the bus even if we're not initialized.
+	If we're not initialized, we still postpone the event pushing of tags.
+
 2006-07-12  Wim Taymans  <wim@fluendo.com>
 
 	* ext/alsa/gstalsasink.c: (set_hwparams), (gst_alsasink_prepare):

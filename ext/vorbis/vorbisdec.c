@@ -708,6 +708,11 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
     gst_element_found_tags_for_pad (GST_ELEMENT_CAST (vd), vd->srcpad,
         vd->taglist);
     vd->taglist = NULL;
+  } else {
+    /* Only post them as messages for the time being. *
+     * They will be pushed on the pad once the decoder is initialized */
+    gst_element_post_message (GST_ELEMENT_CAST (vd),
+        gst_message_new_tag (GST_OBJECT (vd), gst_tag_list_copy (vd->taglist)));
   }
 
   return GST_FLOW_OK;
@@ -732,8 +737,8 @@ vorbis_handle_type_packet (GstVorbisDec * vd)
   }
 
   if (vd->taglist) {
-    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (vd), vd->srcpad,
-        vd->taglist);
+    /* The tags have already been sent on the bus as messages. */
+    gst_pad_push_event (vd->srcpad, gst_event_new_tag (vd->taglist));
     vd->taglist = NULL;
   }
 
