@@ -3,29 +3,16 @@
     <library name="gstreamer-0.10.dll">
       <namespace name="Gst">
         <dir>gstreamer-0.10.3/gst</dir>
-	<!--
-        <dir>gstreamer-0.10.3/gst/autoplug</dir>
-	-->
         <exclude>gstreamer-0.10.3/gst/gstinterface.h</exclude>
         <exclude>gstreamer-0.10.3/gst/gsturi.h</exclude>
       </namespace>
-    </library>
-    <!--
-    <library name="gstplay-0.8">
+<!--  
       <namespace name="Gst">
-        <dir>gst-plugins-0.8.7/gst-libs/gst/play</dir>
+        <file>gst-plugins-base-0.10.3/gst-libs/gst/interfaces/xoverlay.h</file>
+        <dir>gst-plugins-base-0.10.3/gst-libs/gst/video</dir>
+        <exclude>gst-plugins-base-0.10.3/gst-libs/gst/video/video.h</exclude>
       </namespace>
+-->
     </library>
-    <library name="gstinterfaces-0.8">
-      <namespace name="Gst">
-        <dir>gst-plugins-0.8.7/gst-libs/gst/colorbalance</dir>
-        <dir>gst-plugins-0.8.7/gst-libs/gst/mixer/</dir>
-        <dir>gst-plugins-0.8.7/gst-libs/gst/navigation</dir>
-        <dir>gst-plugins-0.8.7/gst-libs/gst/propertyprobe</dir>
-        <dir>gst-plugins-0.8.7/gst-libs/gst/tuner</dir>
-        <dir>gst-plugins-0.8.7/gst-libs/gst/xoverlay</dir>
-      </namespace>
-    </library>
-    -->
   </api>
 </gapi-parser-input>

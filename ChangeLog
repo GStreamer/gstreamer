@@ -1,3 +1,19 @@
+2006-07-12  Aaron Bockover  <aaron@abock.org>
+
+	* gstreamer-sharp.mds:
+	* gstreamer-sharp.mdp: Updated MonoDevelo project/solution
+
+	* source/gstreamer-sharp-source.xml: Cleaned up a bit
+
+	* sample/DecodeBinTranscoder.cs: Updated to reflect renaming of
+	Clock.GstSecond to Clock.Second, etc.
+
+	* gstreamer-sharp/glue/clock.c: Added gstsharp_gst_clock_get_time_none
+	and gstsharp_gst_clock_time_is_valid
+
+	* gstreamer-sharp/Clock.custom: Added bindings for new clock glue
+	and renamed GstNSecond to NSecond (and friends)
+
 2006-06-21  Khaled Mohammed <khaled.mohammed@gmail.com>
 
 	* gstreamer-sharp/DynamicSignalHandlerGenerator.cs: This class is 
