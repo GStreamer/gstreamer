@@ -1,5 +1,28 @@
 2006-07-12  Aaron Bockover  <aaron@abock.org>
 
+	* sample/HelloWorld.cs: Cleaned up, works with new dynamic signal stuff
+
+	* gstreamer-sharp.mdp: Updated MonoDevelop project
+
+	* gstreamer-sharp/glue/dynamicsignal.c:
+	* gstreamer-sharp/DynamicSignal.cs: Added DynamicSignal support for
+	runtime GObject signal binding
+
+	* gstreamer-sharp/glue/Makefile.am:
+	* gstreamer-sharp/Makefile.am: Updated build
+
+	* gstreamer-sharp/Element.custom: Removed old DynamicSignal 
+	stuff and added pass-thru/proxy Connect/Disconnect methods on 
+	top of GLib.DynamicSignal
+
+	* gstreamer-sharp/DynamicSignalHandlerGenerator.cs: 
+	* gstreamer-sharp/DynamicSignalMarshalHandler.cs: Removed
+
+	* gstreamer-sharp/gstreamer-sharp.dll.config.in: Updated maps, removed
+	old 0.8 maps
+
+2006-07-12  Aaron Bockover  <aaron@abock.org>
+
 	* gstreamer-sharp.mds:
 	* gstreamer-sharp.mdp: Updated MonoDevelo project/solution
 

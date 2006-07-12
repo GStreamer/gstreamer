@@ -43,48 +43,12 @@
         return gst_element_query_duration(Handle, ref format, out duration);
     }
 
-	//static Type [] paramTypes;
-
-    public void AddCustomEvent(string name, Delegate onCustom ) {
-	System.Reflection.ParameterInfo [] pi = onCustom.Method.GetParameters();
-
-	Type [] paramTypes = new Type[pi.Length];
-	for(int i=0; i < paramTypes.Length; i++) {
-		paramTypes[i] = pi[i].ParameterType;
+	public void Connect(string signal, GLib.DynamicSignalHandler handler)
+	{
+		GLib.DynamicSignal.Connect(this, signal, handler);
 	}
 
-	string DYNAMIC_ASSEMBLY = "Gst.DynamicSignals.Element." + Name + "." + name;
-	string DYNAMIC_CLASS = "NewDSMH";
-
-	DynamicSignalHandlerGenerator dshGenerator = new DynamicSignalHandlerGenerator(paramTypes, DYNAMIC_ASSEMBLY, DYNAMIC_CLASS);
-	Type NewType = System.Reflection.Assembly.LoadFile(DYNAMIC_ASSEMBLY +  ".dll").GetType(DYNAMIC_ASSEMBLY + "." + DYNAMIC_CLASS);
-
-	DynamicSignalMarshalHandler dsmh = Activator.CreateInstance(NewType) as DynamicSignalMarshalHandler;
-
-	GLib.Signal sig = GLib.Signal.Lookup (this, name, dsmh.Func());
-	
-	sig.AddDelegate(onCustom);
-    }
-
-	public static void CustomMarshaller(params IntPtr [] args) {
-		GLib.Signal sig = ((GCHandle) args[args.Length - 1]).Target as GLib.Signal;
-		Delegate d = sig.Handler as Delegate;
-		System.Reflection.ParameterInfo [] pi = d.Method.GetParameters();
-
-		Type [] paramTypes = new Type[pi.Length];
-		for(int i=0; i<pi.Length; i++)
-			paramTypes[i] = pi[i].ParameterType;
-
-		object [] newargs = new object[args.Length - 1];
-		for(int i=0; i < newargs.Length; i++) {
-			if(paramTypes[i].IsSubclassOf(typeof(GLib.Object))) {
-				newargs[i] = GLib.Object.GetObject(args[i]);
-			}
-			else if(paramTypes[i].IsSubclassOf(typeof(GLib.Opaque))) {
-				newargs[i] = GLib.Opaque.GetOpaque(args[i], paramTypes[i], true);
-			}
-		}
-
-		d.DynamicInvoke(newargs);	
+	public void Disconnect(string signal, GLib.DynamicSignalHandler handler)
+	{
+		GLib.DynamicSignal.Disconnect(this, signal, handler);
 	}
-

@@ -1,121 +1,104 @@
 using System;
 using Gst;
 using GLib;
-using System.Reflection;
 
-public class HelloWorld {
+public class HelloWorld 
+{
+    private MainLoop loop;
+    private Element pipeline, source, parser, decoder, conv, identity, sink;
+    
+    public static void Main(string [] args) 
+    {
+        new HelloWorld(args);
+    }
 
-	MainLoop loop;
-	Element pipeline, source, parser, decoder, conv, identity, sink;
-	
-	bool BusCall(Bus bus, Message message) {
-		
-		switch(message.Type) {
-			case MessageType.Error:
-				string err = String.Empty;
-				message.ParseError(out err);
-				Console.WriteLine ("Gstreamer error: {0}", err);
-				loop.Quit();
-				break;
-			case MessageType.Eos:
-				Console.WriteLine("End-of-stream");
-				loop.Quit();
-				break;
-			default:
-				//Console.WriteLine("Entered BusCall:\t" + message.Type);
-				break;
-		}
-		return true;
-	}
+    public HelloWorld(string [] args) 
+    {
+        Application.Init();
 
-	public static void Main(string [] args) {
-		new HelloWorld(args);
-	}
+        loop = new MainLoop();
 
-	public HelloWorld(string [] args) {
+        if((pipeline = new Pipeline("audio-player")) == null) {
+            Console.WriteLine("Could not create audio player pipeline");
+        }
+        
+        if((source = ElementFactory.Make("filesrc", "file-source")) == null) {
+            Console.WriteLine("Could not create file-source");
+        }
+        
+        parser = ElementFactory.Make("oggdemux", "ogg-parser");
+        decoder = ElementFactory.Make("vorbisdec", "vorbis-decoder");
+        conv = ElementFactory.Make("audioconvert", "converter");
+        identity = ElementFactory.Make("identity", "identitye");
+        sink = ElementFactory.Make("alsasink", "alsa-output");
+        
+        source.SetProperty("location", args[0]);
+        
+        Bin bin = (Bin) pipeline;
+        bin.Bus.AddWatch(new BusFunc(BusCall));
 
-// Initializes Gstreamer library
-		Application.Init();
+        bin.AddMany(source, parser, decoder, conv, identity, sink);
 
-		loop = new MainLoop();
+        if(!source.Link(parser)) {
+            Console.WriteLine("link failed between source and parser");
+        }
+        
+        if(!decoder.Link(conv)) {
+            Console.WriteLine("link failed between decoder and converter");
+        }
+        
+        if(!conv.Link(identity)) {
+            Console.WriteLine("link failed between converter and identity");
+        }
+        
+        if(!identity.Link(sink)) {
+            Console.Error.WriteLine("link failed between identity and sink");
+        }
+        
+        parser.PadAdded += new PadAddedHandler(OnPadAdded);
+        identity.Connect("handoff", OnHandoff);
 
-		// create elements
-		if((pipeline = new Pipeline("audio-player")) == null)
-		{
-			Console.WriteLine("Could not create audio player pipeline");
-		}
-		
-		if((source = ElementFactory.Make("filesrc", "file-source")) == null) 
-		{
-			Console.WriteLine("Could not create file-source");
-		}
-		
-		parser = ElementFactory.Make("oggdemux", "ogg-parser");
-		decoder = ElementFactory.Make("vorbisdec", "vorbis-decoder");
-		conv = ElementFactory.Make("audioconvert", "converter");
-		identity = ElementFactory.Make("identity", "identitye");
-		sink = ElementFactory.Make("alsasink", "alsa-output");
-		
-		// set source to read the filename from command line argdument
-		source.SetProperty("location", args[0]);
-		
-		Bin bin = (Bin) pipeline;
-		bin.Bus.AddWatch(new BusFunc(BusCall));
+        pipeline.SetState(State.Playing);
 
-		bin.Add(source);
-		bin.Add(parser);
-		bin.Add(decoder);
-		bin.Add(conv);
-		bin.Add(identity);
-		bin.Add(sink);
+        Console.WriteLine("Playing [" + args[0] + "]");
 
+        loop.Run();
 
-		if(!source.Link(parser))
-			Console.WriteLine("link failed");
-		if(!decoder.Link(conv))
-			Console.WriteLine("link failed between decoder and converter");
-		if(!conv.Link(identity))
-			Console.WriteLine("link failed between converter and identity");
-		if(!identity.Link(sink))
-			Console.Error.WriteLine("link failed between identity and sink");
+        pipeline.SetState(State.Null);
+        pipeline.Dispose();
+    }
 
-		parser.PadAdded += new PadAddedHandler(OnPadAdded);
+    private bool BusCall(Bus bus, Message message) 
+    {
+        switch(message.Type) {
+            case MessageType.Error:
+                string err = String.Empty;
+                message.ParseError(out err);
+                Console.WriteLine ("Gstreamer error: {0}", err);
+                loop.Quit();
+                break;
+            case MessageType.Eos:
+                Console.WriteLine("End-of-stream");
+                loop.Quit();
+                break;
+            default:
+                Console.WriteLine("Entered BusCall:\t{0}", message.Type);
+                break;
+        }
+        
+        return true;
+    }
 
-		Console.WriteLine("Adding custom event");
-
-
-		identity.AddCustomEvent("handoff", new MyEventHandler(handoff));
-
-		pipeline.SetState(State.Playing);
-		Console.WriteLine("Playing [" + args[0] + "]");
-
-
-		loop.Run();
-
-		pipeline.SetState(State.Null);
-
-		pipeline.Dispose();
-	}
-
-	delegate void MyEventHandler(object sender, Gst.Buffer buf);
-
-	ulong count = 0;
-
-
-	void handoff(object i, Gst.Buffer buf) {
-		Console.WriteLine(buf.Duration + "\t" + buf.Timestamp);
-		/*
-		ulong newcount = buf.Timestamp / buf.Duration * 20;
-		if(newcount > count)
-		{
-			Console.Write("*");
-			count = newcount;
-		}
-		*/
-	}
-	void OnPadAdded(object sender, PadAddedArgs e) {
-		Console.WriteLine("Entered OnPadAdded");
-		Pad sinkpad = decoder.GetPad("sink");
-		e.Pad.Link(sinkpad);
-	}
+    private void OnHandoff(object o, DynamicSignalArgs args) 
+    {
+        Gst.Buffer buffer = args[0] as Gst.Buffer;
+        Console.WriteLine(buffer.Duration + "\t" + buffer.Timestamp);
+    }
+    
+    void OnPadAdded(object o, PadAddedArgs args) 
+    {
+        Console.WriteLine("Entered OnPadAdded");
+        Pad sinkpad = decoder.GetPad("sink");
+        args.Pad.Link(sinkpad);
+    }
 }

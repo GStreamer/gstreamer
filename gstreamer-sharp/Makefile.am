@@ -37,12 +37,11 @@ clean-local:
 	rm -rf generated
 
 sources = \
+	DynamicSignal.cs \
 	Application.cs \
 	Version.cs \
 	AssemblyInfo.cs \
 	CommonTags.cs \
-	DynamicSignalMarshalHandler.cs \
-	DynamicSignalHandlerGenerator.cs \
 	plugins-base/PlayBin.cs \
 	plugins-base/DecodeBin.cs
 
