@@ -1,5 +1,13 @@
 2006-07-12  Edward Hervey  <edward@fluendo.com>
 
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_finalize),
+	(vorbis_handle_comment_packet):
+	gst_tag_list_merge() returns a new object. Take that into account when
+	using it. This avoids memleak.
+	Revert previous commit which is not needed.
+
+2006-07-12  Edward Hervey  <edward@fluendo.com>
+
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_finalize):
 	Reset the decoder in finalize so that all fields get cleared.
 

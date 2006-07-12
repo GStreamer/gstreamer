@@ -98,8 +98,6 @@ static gboolean vorbis_dec_convert (GstPad * pad,
 
 static gboolean vorbis_dec_sink_query (GstPad * pad, GstQuery * query);
 
-static void gst_vorbis_dec_reset (GstVorbisDec * dec);
-
 static void
 gst_vorbis_dec_base_init (gpointer g_class)
 {
@@ -182,8 +180,6 @@ vorbis_dec_finalize (GObject * object)
   vorbis_dsp_clear (&vd->vd);
   vorbis_comment_clear (&vd->vc);
   vorbis_info_clear (&vd->vi);
-
-  gst_vorbis_dec_reset (vd);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -660,6 +656,7 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   guint bitrate = 0;
   gchar *encoder = NULL;
+  GstTagList *list;
   GstBuffer *buf;
 
   GST_DEBUG_OBJECT (vd, "parsing comment packet");
@@ -667,11 +664,13 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
   buf = gst_buffer_new_and_alloc (packet->bytes);
   GST_BUFFER_DATA (buf) = packet->packet;
 
-  vd->taglist =
-      gst_tag_list_merge (vd->taglist,
+  list =
       gst_tag_list_from_vorbiscomment_buffer (buf, (guint8 *) "\003vorbis", 7,
-          &encoder), GST_TAG_MERGE_REPLACE);
+      &encoder);
 
+  vd->taglist = gst_tag_list_merge (vd->taglist, list, GST_TAG_MERGE_REPLACE);
+
+  gst_tag_list_free (list);
   gst_buffer_unref (buf);
 
   if (!vd->taglist) {
