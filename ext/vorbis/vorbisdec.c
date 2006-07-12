@@ -98,6 +98,8 @@ static gboolean vorbis_dec_convert (GstPad * pad,
 
 static gboolean vorbis_dec_sink_query (GstPad * pad, GstQuery * query);
 
+static void gst_vorbis_dec_reset (GstVorbisDec * dec);
+
 static void
 gst_vorbis_dec_base_init (gpointer g_class)
 {
@@ -180,6 +182,8 @@ vorbis_dec_finalize (GObject * object)
   vorbis_dsp_clear (&vd->vd);
   vorbis_comment_clear (&vd->vc);
   vorbis_info_clear (&vd->vi);
+
+  gst_vorbis_dec_reset (vd);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

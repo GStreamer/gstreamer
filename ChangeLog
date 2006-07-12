@@ -1,3 +1,8 @@
+2006-07-12  Edward Hervey  <edward@fluendo.com>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_finalize):
+	Reset the decoder in finalize so that all fields get cleared.
+
 2006-07-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:
