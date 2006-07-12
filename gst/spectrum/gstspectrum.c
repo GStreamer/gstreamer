@@ -168,7 +168,7 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
   trans_class->passthrough_on_same_caps = TRUE;
 
   g_object_class_install_property (gobject_class, PROP_SIGNAL_SPECTRUM,
-      g_param_spec_boolean ("message", "mesage",
+      g_param_spec_boolean ("message", "Message",
           "Post a level message for each passed interval",
           TRUE, G_PARAM_READWRITE));
 
