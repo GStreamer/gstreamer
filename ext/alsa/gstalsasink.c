@@ -657,6 +657,10 @@ gst_alsasink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   alsa->bytes_per_sample = spec->bytes_per_sample;
   spec->segsize = alsa->period_size * spec->bytes_per_sample;
   spec->segtotal = alsa->buffer_size / alsa->period_size;
+  spec->silence_sample[0] = 0;
+  spec->silence_sample[1] = 0;
+  spec->silence_sample[2] = 0;
+  spec->silence_sample[3] = 0;
 
   return TRUE;
 

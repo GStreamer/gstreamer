@@ -130,61 +130,55 @@ gst_ring_buffer_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (ringbuffer));
 }
 
-typedef struct
-{
-  GstBufferFormat format;
-  guint8 silence[4];
-} FormatDef;
-
-static const FormatDef linear_defs[4 * 2 * 2] = {
-  {GST_S8, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S8, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U8, {0x80, 0x80, 0x80, 0x80}},
-  {GST_U8, {0x80, 0x80, 0x80, 0x80}},
-  {GST_S16_LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S16_BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U16_LE, {0x00, 0x80, 0x00, 0x80}},
-  {GST_U16_BE, {0x80, 0x00, 0x80, 0x00}},
-  {GST_S24_LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S24_BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U24_LE, {0x00, 0x00, 0x80, 0x00}},
-  {GST_U24_BE, {0x80, 0x00, 0x00, 0x00}},
-  {GST_S32_LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S32_BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U32_LE, {0x00, 0x00, 0x00, 0x80}},
-  {GST_U32_BE, {0x80, 0x00, 0x00, 0x00}}
+static const int linear_formats[4 * 2 * 2] = {
+  GST_S8,
+  GST_S8,
+  GST_U8,
+  GST_U8,
+  GST_S16_LE,
+  GST_S16_BE,
+  GST_U16_LE,
+  GST_U16_BE,
+  GST_S24_LE,
+  GST_S24_BE,
+  GST_U24_LE,
+  GST_U24_BE,
+  GST_S32_LE,
+  GST_S32_BE,
+  GST_U32_LE,
+  GST_U32_BE
 };
 
-static const FormatDef linear24_defs[3 * 2 * 2] = {
-  {GST_S24_3LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S24_3BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U24_3LE, {0x00, 0x00, 0x80, 0x00}},
-  {GST_U24_3BE, {0x80, 0x00, 0x00, 0x00}},
-  {GST_S20_3LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S20_3BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U20_3LE, {0x00, 0x00, 0x08, 0x00}},
-  {GST_U20_3BE, {0x08, 0x00, 0x00, 0x00}},
-  {GST_S18_3LE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_S18_3BE, {0x00, 0x00, 0x00, 0x00}},
-  {GST_U18_3LE, {0x00, 0x00, 0x02, 0x00}},
-  {GST_U18_3BE, {0x02, 0x00, 0x00, 0x00}}
+static const int linear24_formats[3 * 2 * 2] = {
+  GST_S24_3LE,
+  GST_S24_3BE,
+  GST_U24_3LE,
+  GST_U24_3BE,
+  GST_S20_3LE,
+  GST_S20_3BE,
+  GST_U20_3LE,
+  GST_U20_3BE,
+  GST_S18_3LE,
+  GST_S18_3BE,
+  GST_U18_3LE,
+  GST_U18_3BE,
 };
 
-static const FormatDef *
+static GstBufferFormat
 build_linear_format (int depth, int width, int unsignd, int big_endian)
 {
-  const FormatDef *formats;
+  const gint *formats;
 
   if (width == 24) {
     switch (depth) {
       case 24:
-        formats = &linear24_defs[0];
+        formats = &linear24_formats[0];
         break;
       case 20:
-        formats = &linear24_defs[4];
+        formats = &linear24_formats[4];
         break;
       case 18:
-        formats = &linear24_defs[8];
+        formats = &linear24_formats[8];
         break;
       default:
         return GST_UNKNOWN;
@@ -192,16 +186,16 @@ build_linear_format (int depth, int width, int unsignd, int big_endian)
   } else {
     switch (depth) {
       case 8:
-        formats = &linear_defs[0];
+        formats = &linear_formats[0];
         break;
       case 16:
-        formats = &linear_defs[4];
+        formats = &linear_formats[4];
         break;
       case 24:
-        formats = &linear_defs[8];
+        formats = &linear_formats[8];
         break;
       case 32:
-        formats = &linear_defs[12];
+        formats = &linear_formats[12];
         break;
       default:
         return GST_UNKNOWN;
@@ -211,8 +205,7 @@ build_linear_format (int depth, int width, int unsignd, int big_endian)
     formats += 2;
   if (big_endian)
     formats += 1;
-
-  return formats;
+  return (GstBufferFormat) * formats;
 }
 
 /**
@@ -224,8 +217,6 @@ build_linear_format (int depth, int width, int unsignd, int big_endian)
 void
 gst_ring_buffer_debug_spec_caps (GstRingBufferSpec * spec)
 {
-  gint i, bytes;
-
   GST_DEBUG ("spec caps: %p %" GST_PTR_FORMAT, spec->caps, spec->caps);
   GST_DEBUG ("parsed caps: type:         %d", spec->type);
   GST_DEBUG ("parsed caps: format:       %d", spec->format);
@@ -236,10 +227,6 @@ gst_ring_buffer_debug_spec_caps (GstRingBufferSpec * spec)
   GST_DEBUG ("parsed caps: rate:         %d", spec->rate);
   GST_DEBUG ("parsed caps: channels:     %d", spec->channels);
   GST_DEBUG ("parsed caps: sample bytes: %d", spec->bytes_per_sample);
-  bytes = (spec->width >> 3) * spec->channels;
-  for (i = 0; i < bytes; i++) {
-    GST_DEBUG ("silence byte %d: %02x", i, spec->silence_sample[i]);
-  }
 }
 
 /**
@@ -283,15 +270,8 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
   /* we have to differentiate between int and float formats */
   mimetype = gst_structure_get_name (structure);
 
-  /* get rate and channels */
-  if (!(gst_structure_get_int (structure, "rate", &spec->rate) &&
-          gst_structure_get_int (structure, "channels", &spec->channels)))
-    goto parse_error;
-
   if (!strncmp (mimetype, "audio/x-raw-int", 15)) {
     gint endianness;
-    const FormatDef *def;
-    gint i, j, bytes;
 
     spec->type = GST_BUFTYPE_LINEAR;
 
@@ -311,18 +291,9 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
 
     spec->bigend = endianness == G_LITTLE_ENDIAN ? FALSE : TRUE;
 
-    def = build_linear_format (spec->depth, spec->width, spec->sign ? 0 : 1,
+    spec->format =
+        build_linear_format (spec->depth, spec->width, spec->sign ? 0 : 1,
         spec->bigend ? 1 : 0);
-
-    spec->format = def->format;
-
-    bytes = spec->width >> 3;
-
-    for (i = 0; i < spec->channels; i++) {
-      for (j = 0; j < bytes; j++) {
-        spec->silence_sample[i * bytes + j] = def->silence[j];
-      }
-    }
   } else if (!strncmp (mimetype, "audio/x-raw-float", 17)) {
 
     spec->type = GST_BUFTYPE_FLOAT;
@@ -357,6 +328,11 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
   } else {
     goto parse_error;
   }
+
+  /* get rate and channels */
+  if (!(gst_structure_get_int (structure, "rate", &spec->rate) &&
+          gst_structure_get_int (structure, "channels", &spec->channels)))
+    goto parse_error;
 
   spec->bytes_per_sample = (spec->width >> 3) * spec->channels;
 
