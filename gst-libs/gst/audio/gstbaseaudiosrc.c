@@ -164,8 +164,9 @@ gst_base_audio_src_set_clock (GstElement * elem, GstClock * clock)
   /* ERRORS */
 wrong_clock:
   {
-    GST_ELEMENT_ERROR (src, CORE, CLOCK,
-        (NULL), ("Cannot operate with this clock."));
+    /* no error message, this method is called with the parent
+     * lock helt.. sigh.. long live recursive locks.. */
+    GST_DEBUG_OBJECT (src, "Cannot operate with this clock.");
     return FALSE;
   }
 }
