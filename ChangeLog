@@ -1,5 +1,12 @@
 2006-07-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_event_from_packet_1_0):
+	  Fixes #347337: failure to deserialize event packets with
+	  empty payload (only event type)
+
+2006-07-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/Makefile.am:
 	  do not install a .c file in the header directory
 
