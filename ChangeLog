@@ -1,3 +1,17 @@
+2006-07-13  Wim Taymans  <wim@fluendo.com>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_class_init),
+	(gst_rmdemux_finalize), (gst_rmdemux_src_event),
+	(find_seek_offset_time), (gst_rmdemux_perform_seek),
+	(gst_rmdemux_src_query), (gst_rmdemux_change_state),
+	(gst_rmdemux_loop), (gst_rmdemux_chain), (gst_rmdemux_send_event),
+	(gst_rmdemux_add_stream), (gst_rmdemux_parse_mdpr),
+	(gst_rmdemux_combine_flows), (gst_rmdemux_parse_packet):
+	* gst/realmedia/rmdemux.h:
+	Cleanups, use GstSegment for seeking.
+	Fix error handling.
+	Combine flow return from all streams.
+
 2006-07-10  Wim Taymans  <wim@fluendo.com>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (crop_buffer), (handle_slice):

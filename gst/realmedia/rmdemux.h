@@ -105,9 +105,8 @@ struct _GstRMDemux {
   GstRMDemuxStream *index_stream;
 
   /* playback start/stop positions */
-  GstClockTime segment_start;
-  GstClockTime segment_stop;
-  gboolean segment_play;
+  GstSegment segment;
+  gboolean segment_running;
   gboolean running;
 
   /* Current timestamp */
