@@ -215,6 +215,8 @@ gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
 {
   GstXvImageSink *xvimagesink;
 
+  GST_DEBUG_OBJECT (xvimage, "Destroying buffer");
+
   xvimagesink = xvimage->xvimagesink;
   if (xvimagesink == NULL)
     goto no_sink;
@@ -226,7 +228,16 @@ gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
     xvimagesink->cur_image = NULL;
 
   /* We might have some buffers destroyed after changing state to NULL */
-  if (xvimagesink->xcontext) {
+  GST_OBJECT_LOCK (xvimagesink);
+  if (xvimagesink->xcontext == NULL) {
+    GST_DEBUG_OBJECT (xvimagesink, "Destroying XvImage after Xcontext");
+#ifdef HAVE_XSHM
+    /* Need to free the shared memory segment even if the x context
+     * was already cleaned up */
+    if (xvimage->SHMInfo.shmaddr != ((void *) -1)) {
+      shmdt (xvimage->SHMInfo.shmaddr);
+    }
+#endif
     goto beach;
   }
 
@@ -235,8 +246,11 @@ gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
 #ifdef HAVE_XSHM
   if (xvimagesink->xcontext->use_xshm) {
     if (xvimage->SHMInfo.shmaddr != ((void *) -1)) {
+      GST_DEBUG_OBJECT (xvimagesink, "XServer ShmDetaching from 0x%x id 0x%x\n",
+          xvimage->SHMInfo.shmid, xvimage->SHMInfo.shmseg);
       XShmDetach (xvimagesink->xcontext->disp, &xvimage->SHMInfo);
       XSync (xvimagesink->xcontext->disp, FALSE);
+
       shmdt (xvimage->SHMInfo.shmaddr);
     }
     if (xvimage->xvimage)
@@ -257,6 +271,7 @@ gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
   g_mutex_unlock (xvimagesink->x_lock);
 
 beach:
+  GST_OBJECT_UNLOCK (xvimagesink);
   xvimage->xvimagesink = NULL;
   gst_object_unref (xvimagesink);
 
@@ -273,13 +288,21 @@ static void
 gst_xvimage_buffer_finalize (GstXvImageBuffer * xvimage)
 {
   GstXvImageSink *xvimagesink;
+  gboolean running;
 
   xvimagesink = xvimage->xvimagesink;
-  if (xvimagesink == NULL)
+  if (G_UNLIKELY (xvimagesink == NULL))
     goto no_sink;
 
+  GST_OBJECT_LOCK (xvimagesink);
+  running = xvimagesink->running;
+  GST_OBJECT_UNLOCK (xvimagesink);
+
   /* If our geometry changed we can't reuse that image. */
-  if ((xvimage->width != xvimagesink->video_width) ||
+  if (running == FALSE) {
+    GST_LOG_OBJECT (xvimage, "destroy image as sink is shutting down");
+    gst_xvimage_buffer_destroy (xvimage);
+  } else if ((xvimage->width != xvimagesink->video_width) ||
       (xvimage->height != xvimagesink->video_height)) {
     GST_LOG_OBJECT (xvimage,
         "destroy image as its size changed %dx%d vs current %dx%d",
@@ -440,6 +463,9 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   /* Sync to ensure we see any errors we caused */
   XSync (xcontext->disp, FALSE);
 
+  GST_DEBUG ("XServer ShmAttached to 0x%x, id 0x%x\n", SHMInfo.shmid,
+      SHMInfo.shmseg);
+
   if (!error_caught) {
     did_attach = TRUE;
     /* store whether we succeeded in result */
@@ -454,6 +480,8 @@ beach:
   XSetErrorHandler (handler);
 
   if (did_attach) {
+    GST_DEBUG ("XServer ShmDetaching from 0x%x id 0x%x\n",
+        SHMInfo.shmid, SHMInfo.shmseg);
     XShmDetach (xcontext->disp, &SHMInfo);
     XSync (xcontext->disp, FALSE);
   }
@@ -476,6 +504,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
 
   xvimage = (GstXvImageBuffer *) gst_mini_object_new (GST_TYPE_XVIMAGE_BUFFER);
+  GST_DEBUG_OBJECT (xvimage, "Creating new XvImageBuffer");
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -556,6 +585,8 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     }
 
     XSync (xvimagesink->xcontext->disp, FALSE);
+    GST_DEBUG_OBJECT (xvimagesink, "XServer ShmAttached to 0x%x, id 0x%x\n",
+        xvimage->SHMInfo.shmid, xvimage->SHMInfo.shmseg);
   } else
 #endif /* HAVE_XSHM */
   {
@@ -691,9 +722,11 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
 #ifdef HAVE_XSHM
   if (xvimagesink->xcontext->use_xshm) {
     GST_LOG_OBJECT (xvimagesink,
-        "XvShmPutImage with image %dx%d and window %dx%d",
+        "XvShmPutImage with image %dx%d and window %dx%d, from xvimage %"
+        GST_PTR_FORMAT,
         xvimage->width, xvimage->height,
-        xvimagesink->xwindow->width, xvimagesink->xwindow->height);
+        xvimagesink->xwindow->width, xvimagesink->xwindow->height, xvimage);
+
     XvShmPutImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
         xvimagesink->xwindow->win,
@@ -1533,9 +1566,21 @@ static void
 gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
 {
   GList *formats_list, *channels_list;
+  GstXContext *xcontext;
 
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
-  g_return_if_fail (xvimagesink->xcontext != NULL);
+
+  GST_OBJECT_LOCK (xvimagesink);
+  if (xvimagesink->xcontext == NULL) {
+    GST_OBJECT_UNLOCK (xvimagesink);
+    return;
+  }
+
+  /* Take the XContext from the sink and clean it up */
+  xcontext = xvimagesink->xcontext;
+  xvimagesink->xcontext = NULL;
+
+  GST_OBJECT_UNLOCK (xvimagesink);
 
   /* Wait for our event thread */
   if (xvimagesink->event_thread) {
@@ -1543,7 +1588,7 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
     xvimagesink->event_thread = NULL;
   }
 
-  formats_list = xvimagesink->xcontext->formats_list;
+  formats_list = xcontext->formats_list;
 
   while (formats_list) {
     GstXvImageFormat *format = formats_list->data;
@@ -1553,10 +1598,10 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
     formats_list = g_list_next (formats_list);
   }
 
-  if (xvimagesink->xcontext->formats_list)
-    g_list_free (xvimagesink->xcontext->formats_list);
+  if (xcontext->formats_list)
+    g_list_free (xcontext->formats_list);
 
-  channels_list = xvimagesink->xcontext->channels_list;
+  channels_list = xcontext->channels_list;
 
   while (channels_list) {
     GstColorBalanceChannel *channel = channels_list->data;
@@ -1565,26 +1610,26 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
     channels_list = g_list_next (channels_list);
   }
 
-  if (xvimagesink->xcontext->channels_list)
-    g_list_free (xvimagesink->xcontext->channels_list);
+  if (xcontext->channels_list)
+    g_list_free (xcontext->channels_list);
 
-  gst_caps_unref (xvimagesink->xcontext->caps);
-  if (xvimagesink->xcontext->last_caps)
-    gst_caps_replace (&xvimagesink->xcontext->last_caps, NULL);
+  gst_caps_unref (xcontext->caps);
+  if (xcontext->last_caps)
+    gst_caps_replace (&xcontext->last_caps, NULL);
 
-  g_free (xvimagesink->xcontext->par);
+  g_free (xcontext->par);
 
   g_mutex_lock (xvimagesink->x_lock);
 
-  XvUngrabPort (xvimagesink->xcontext->disp,
-      xvimagesink->xcontext->xv_port_id, 0);
+  GST_DEBUG_OBJECT (xvimagesink, "Closing display and freeing X Context");
 
-  XCloseDisplay (xvimagesink->xcontext->disp);
+  XvUngrabPort (xcontext->disp, xcontext->xv_port_id, 0);
+
+  XCloseDisplay (xcontext->disp);
 
   g_mutex_unlock (xvimagesink->x_lock);
 
-  g_free (xvimagesink->xcontext);
-  xvimagesink->xcontext = NULL;
+  g_free (xcontext);
 }
 
 static void
@@ -1812,11 +1857,17 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      GST_OBJECT_LOCK (xvimagesink);
       xvimagesink->running = TRUE;
       /* Initializing the XContext */
       if (!xvimagesink->xcontext &&
-          !(xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink)))
+          !(xvimagesink->xcontext =
+              gst_xvimagesink_xcontext_get (xvimagesink))) {
+        GST_OBJECT_UNLOCK (xvimagesink);
         return GST_STATE_CHANGE_FAILURE;
+      }
+      GST_OBJECT_UNLOCK (xvimagesink);
+
       /* update object's par with calculated one if not set yet */
       if (!xvimagesink->par) {
         xvimagesink->par = g_new0 (GValue, 1);
@@ -1853,7 +1904,9 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
       GST_VIDEO_SINK_HEIGHT (xvimagesink) = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_OBJECT_LOCK (xvimagesink);
       xvimagesink->running = FALSE;
+      GST_OBJECT_UNLOCK (xvimagesink);
       if (xvimagesink->cur_image) {
         gst_buffer_unref (xvimagesink->cur_image);
         xvimagesink->cur_image = NULL;
@@ -1862,18 +1915,15 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
         gst_buffer_unref (xvimagesink->xvimage);
         xvimagesink->xvimage = NULL;
       }
-      if (xvimagesink->image_pool)
-        gst_xvimagesink_imagepool_clear (xvimagesink);
+
+      gst_xvimagesink_imagepool_clear (xvimagesink);
 
       if (xvimagesink->xwindow) {
         gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
         xvimagesink->xwindow = NULL;
       }
 
-      if (xvimagesink->xcontext) {
-        gst_xvimagesink_xcontext_clear (xvimagesink);
-        xvimagesink->xcontext = NULL;
-      }
+      gst_xvimagesink_xcontext_clear (xvimagesink);
       break;
     default:
       break;

@@ -196,6 +196,7 @@ gst_ximage_buffer_finalize (GstXImageBuffer * ximage)
 {
   GstXImageSink *ximagesink = NULL;
   gboolean recycled = FALSE;
+  gboolean running;
 
   g_return_if_fail (ximage != NULL);
 
@@ -205,9 +206,18 @@ gst_ximage_buffer_finalize (GstXImageBuffer * ximage)
     goto beach;
   }
 
-  /* If our geometry changed we can't reuse that image. */
-  if ((ximage->width != GST_VIDEO_SINK_WIDTH (ximagesink)) ||
+  GST_OBJECT_LOCK (ximagesink);
+  running = ximagesink->running;
+  GST_OBJECT_UNLOCK (ximagesink);
+
+  if (running == FALSE) {
+    /* If the sink is shutting down, need to clear the image */
+    GST_DEBUG_OBJECT (ximagesink,
+        "destroy image %p because the sink is shutting down", ximage);
+    gst_ximagesink_ximage_destroy (ximagesink, ximage);
+  } else if ((ximage->width != GST_VIDEO_SINK_WIDTH (ximagesink)) ||
       (ximage->height != GST_VIDEO_SINK_HEIGHT (ximagesink))) {
+    /* If our geometry changed we can't reuse that image. */
     GST_DEBUG_OBJECT (ximagesink,
         "destroy image %p as its size changed %dx%d vs current %dx%d",
         ximage, ximage->width, ximage->height,
@@ -523,8 +533,17 @@ gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
     ximagesink->cur_image = NULL;
   }
 
+  /* Hold the object lock to ensure the XContext doesn't disappear */
+  GST_OBJECT_LOCK (ximagesink);
+
   /* We might have some buffers destroyed after changing state to NULL */
   if (!ximagesink->xcontext) {
+    GST_DEBUG_OBJECT (ximagesink, "Destroying XImage after XContext");
+#ifdef HAVE_XSHM
+    if (ximage->SHMInfo.shmaddr != ((void *) -1)) {
+      shmdt (ximage->SHMInfo.shmaddr);
+    }
+#endif
     goto beach;
   }
 
@@ -553,6 +572,8 @@ gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
   g_mutex_unlock (ximagesink->x_lock);
 
 beach:
+  GST_OBJECT_UNLOCK (ximagesink);
+
   if (ximage->ximagesink) {
     /* Release the ref to our sink */
     ximage->ximagesink = NULL;
@@ -1144,8 +1165,23 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
 static void
 gst_ximagesink_xcontext_clear (GstXImageSink * ximagesink)
 {
+  GstXContext *xcontext;
+
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
-  g_return_if_fail (ximagesink->xcontext != NULL);
+
+  GST_OBJECT_LOCK (ximagesink);
+  if (ximagesink->xcontext == NULL) {
+    GST_OBJECT_UNLOCK (ximagesink);
+    return;
+  }
+
+  /* Take the xcontext reference and NULL it while we
+   * clean it up, so that any buffer-alloced buffers 
+   * arriving after this will be freed correctly */
+  xcontext = ximagesink->xcontext;
+  ximagesink->xcontext = NULL;
+
+  GST_OBJECT_UNLOCK (ximagesink);
 
   /* Wait for our event thread */
   if (ximagesink->event_thread) {
@@ -1153,19 +1189,18 @@ gst_ximagesink_xcontext_clear (GstXImageSink * ximagesink)
     ximagesink->event_thread = NULL;
   }
 
-  gst_caps_unref (ximagesink->xcontext->caps);
-  g_free (ximagesink->xcontext->par);
+  gst_caps_unref (xcontext->caps);
+  g_free (xcontext->par);
   g_free (ximagesink->par);
   ximagesink->par = NULL;
 
   g_mutex_lock (ximagesink->x_lock);
 
-  XCloseDisplay (ximagesink->xcontext->disp);
+  XCloseDisplay (xcontext->disp);
 
   g_mutex_unlock (ximagesink->x_lock);
 
   g_free (ximagesink->xcontext);
-  ximagesink->xcontext = NULL;
 }
 
 static void
@@ -1322,10 +1357,14 @@ gst_ximagesink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      GST_OBJECT_LOCK (ximagesink);
       ximagesink->running = TRUE;
+
       /* Initializing the XContext */
       if (!ximagesink->xcontext)
         ximagesink->xcontext = gst_ximagesink_xcontext_get (ximagesink);
+      GST_OBJECT_UNLOCK (ximagesink);
+
       if (!ximagesink->xcontext) {
         ret = GST_STATE_CHANGE_FAILURE;
         goto beach;
@@ -1361,7 +1400,10 @@ gst_ximagesink_change_state (GstElement * element, GstStateChange transition)
       GST_VIDEO_SINK_HEIGHT (ximagesink) = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_OBJECT_LOCK (ximagesink);
       ximagesink->running = FALSE;
+      GST_OBJECT_UNLOCK (ximagesink);
+
       if (ximagesink->ximage) {
         gst_buffer_unref (ximagesink->ximage);
         ximagesink->ximage = NULL;
@@ -1370,18 +1412,15 @@ gst_ximagesink_change_state (GstElement * element, GstStateChange transition)
         gst_buffer_unref (ximagesink->cur_image);
         ximagesink->cur_image = NULL;
       }
-      if (ximagesink->buffer_pool)
-        gst_ximagesink_bufferpool_clear (ximagesink);
+
+      gst_ximagesink_bufferpool_clear (ximagesink);
 
       if (ximagesink->xwindow) {
         gst_ximagesink_xwindow_destroy (ximagesink, ximagesink->xwindow);
         ximagesink->xwindow = NULL;
       }
 
-      if (ximagesink->xcontext) {
-        gst_ximagesink_xcontext_clear (ximagesink);
-        ximagesink->xcontext = NULL;
-      }
+      gst_ximagesink_xcontext_clear (ximagesink);
       break;
     default:
       break;
