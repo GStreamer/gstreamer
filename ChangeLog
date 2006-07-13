@@ -1,3 +1,37 @@
+2006-07-13  Wim Taymans  <wim@fluendo.com>
+
+	Based on patches by: Johan Dahlin <johan at gnome dot org>
+	        Ronald Bultje <rbultje at ronald dot bitfreak dot net>
+
+	* configure.ac:
+	* gst/nsf/Makefile.am:
+	* gst/nsf/dis6502.h:
+	* gst/nsf/fds_snd.c:
+	* gst/nsf/fds_snd.h:
+	* gst/nsf/fmopl.c:
+	* gst/nsf/fmopl.h:
+	* gst/nsf/gstnsf.c:
+	* gst/nsf/gstnsf.h:
+	* gst/nsf/log.c:
+	* gst/nsf/log.h:
+	* gst/nsf/memguard.c:
+	* gst/nsf/memguard.h:
+	* gst/nsf/mmc5_snd.c:
+	* gst/nsf/mmc5_snd.h:
+	* gst/nsf/nes6502.c:
+	* gst/nsf/nes6502.h:
+	* gst/nsf/nes_apu.c:
+	* gst/nsf/nes_apu.h:
+	* gst/nsf/nsf.c:
+	* gst/nsf/nsf.h:
+	* gst/nsf/osd.h:
+	* gst/nsf/types.h:
+	* gst/nsf/vrc7_snd.c:
+	* gst/nsf/vrc7_snd.h:
+	* gst/nsf/vrcvisnd.c:
+	* gst/nsf/vrcvisnd.h:
+	Added NSF decoder plugin. Fixes 151192. 
+
 2006-07-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:
