@@ -3,11 +3,11 @@
   <description>Wavpack lossless/lossy audio format handling</description>
   <filename>../../ext/wavpack/.libs/libgstwavpack.so</filename>
   <basename>libgstwavpack.so</basename>
-  <version>0.10.3</version>
+  <version>0.10.3.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>gst-wavpack</package>
-  <origin>http://www.wavpack.com</origin>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>wavpackdec</name>
@@ -15,6 +15,13 @@
       <class>Codec/Decoder/Audio</class>
       <description>Decode Wavpack audio data</description>
       <author>Arwed v. Merkatz &lt;v.merkatz@gmx.net&gt;</author>
+    </element>
+    <element>
+      <name>wavpackenc</name>
+      <longname>Wavpack audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>Encodes audio with the Wavpack lossless/lossy audio codec</description>
+      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
     </element>
     <element>
       <name>wavpackparse</name>
