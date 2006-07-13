@@ -1,4 +1,9 @@
 
+    public object this[string property] {
+        get { return GetProperty(property).Val; }
+        set { SetProperty(property, value); }
+    }
+    
     public new GLib.Value GetProperty(string propertyName) 
     {
         return base.GetProperty(propertyName);
@@ -9,22 +14,29 @@
         base.SetProperty(propertyName, value);
     }
 
-    public void SetProperty(string propertyName, string value) 
+    public void SetProperty(string propertyName, object value)
     {
-        GLib.Value val = new GLib.Value(value);
-        base.SetProperty(propertyName, val);
+        base.SetProperty(propertyName, new GLib.Value(value));
     }
 
-    public void SetProperty(string propertyName, double value) 
+    public void SetProperty(string propertyName, string value) 
     {
-        GLib.Value val = new GLib.Value(value);
-        base.SetProperty(propertyName, val);
+        base.SetProperty(propertyName, new GLib.Value(value));
+    }
+    
+    public void SetProperty(string propertyName, int value) 
+    {
+        base.SetProperty(propertyName, new GLib.Value(value));
+    }
+    
+    public void SetProperty(string propertyName, double value)
+    {
+        base.SetProperty(propertyName, new GLib.Value(value));
     }
 
     public void SetProperty(string propertyName, bool value) 
     {
-        GLib.Value val = new GLib.Value(value);
-        base.SetProperty(propertyName, val);
+        base.SetProperty(propertyName, new GLib.Value(value));
     }
 
     [DllImport("gstreamer-0.10.dll")]

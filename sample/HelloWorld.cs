@@ -17,11 +17,8 @@ public class HelloWorld
         Application.Init();
 
         loop = new MainLoop();
-
-        if((pipeline = new Pipeline("audio-player")) == null) {
-            Console.WriteLine("Could not create audio player pipeline");
-        }
-        
+        pipeline = new Pipeline("audio-player");
+		
         if((source = ElementFactory.Make("filesrc", "file-source")) == null) {
             Console.WriteLine("Could not create file-source");
         }
@@ -32,7 +29,7 @@ public class HelloWorld
         identity = ElementFactory.Make("identity", "identitye");
         sink = ElementFactory.Make("alsasink", "alsa-output");
         
-        source.SetProperty("location", args[0]);
+        source["location"] = args[0];
         
         Bin bin = (Bin) pipeline;
         bin.Bus.AddWatch(new BusFunc(BusCall));

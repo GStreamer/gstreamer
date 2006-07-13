@@ -1,3 +1,29 @@
+2006-07-13  Aaron Bockover  <aaron@abock.org>
+
+	* gstreamer-sharp/BindingHelper.cs: Static helper class to assist
+	in making element bindings (delegate manipulation/invocation)
+
+	* gstreamer-sharp/DynamicSignal.cs: Updated DynamicSignalArgs so they
+	can more easily be derived
+
+	* gstreamer-sharp/Makefile.am: Updated build
+
+	* sample/HelloWorld.cs: More cleaning
+
+	* sample/Makefile.am:
+	* sample/TypeFind.cs: Added typefind sample
+
+	* gstreamer-sharp.mdp: Updated MonoDevelop project
+
+	* gstreamer-sharp/plugins-base/DecodeBin.cs: Signal support rewritten
+	to use BindingHelper/DynamicSignal
+
+	* gstreamer-sharp/plugins-base/TypeFindElement.cs: New typefind 
+	element wrapper using BindingHelper/DynamicSignal
+
+	* gstreamer-sharp/Element.custom: Fixed property getter/setter methods
+	and added indexer wrapper for property lookup for syntax convenience
+
 2006-07-12  Aaron Bockover  <aaron@abock.org>
 
 	* sample/HelloWorld.cs: Cleaned up, works with new dynamic signal stuff

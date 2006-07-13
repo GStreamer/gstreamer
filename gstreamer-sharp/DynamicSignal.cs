@@ -19,23 +19,29 @@ namespace GLib
     {
         private GLib.Object sender;
         private object [] args;
-        
-        internal DynamicSignalArgs(GLib.Object sender, object [] args)
+
+        public DynamicSignalArgs()
         {
-            this.sender = sender;
-            this.args = args;
         }
         
+        public DynamicSignalArgs(DynamicSignalArgs args)
+        {
+            Sender = args.Sender;
+            Args = args.Args;
+        }
+
         public object this[int index] {
             get { return Args[index]; }
         }
 
         public GLib.Object Sender {
             get { return sender; }
+            internal set { sender = value; }
         }
         
         public object [] Args { 
             get { return args; }
+            internal set { args = value; }
         }
     }
 
@@ -124,7 +130,10 @@ namespace GLib
             
             DynamicSignalHandler handler = (DynamicSignalHandler)((GCHandle)userdata).Target;
             if(handler != null) {
-                handler(gobject, new DynamicSignalArgs(gobject, args));
+                DynamicSignalArgs dargs = new DynamicSignalArgs();
+                dargs.Sender = gobject;
+                dargs.Args = args;
+                handler(gobject, dargs);
             }
         }
 

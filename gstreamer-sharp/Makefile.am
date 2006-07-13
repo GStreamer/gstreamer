@@ -38,12 +38,14 @@ clean-local:
 
 sources = \
 	DynamicSignal.cs \
+	BindingHelper.cs \
 	Application.cs \
 	Version.cs \
 	AssemblyInfo.cs \
 	CommonTags.cs \
 	plugins-base/PlayBin.cs \
-	plugins-base/DecodeBin.cs
+	plugins-base/DecodeBin.cs \
+	plugins-base/TypeFindElement.cs
 
 build_sources = $(addprefix $(srcdir)/, $(sources))
 
