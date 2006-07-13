@@ -560,9 +560,9 @@ GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
     dnl libmpeg2enc was first included in mjpegtools-1.6.2-rc3 (1.6.1.92)
     dnl since many distros include mjpegtools specifically without mplex
     dnl and mpeg2enc, we check for mpeg2enc on its own, too.
-    dnl HACK because mpeg2enc 1.8.0 header files have a spurious 'include config.h'
-    touch config.h
     PKG_CHECK_MODULES(MPEG2ENC, mjpegtools >= 1.6.1.93, [
+      dnl HACK because mpeg2enc 1.8.0 header files have a spurious 'include config.h'
+      touch config.h
       dnl switch over to c++ to test things
       AC_LANG_CPLUSPLUS
       OLD_CPPFLAGS="$CPPFLAGS"
@@ -616,6 +616,8 @@ GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
 
       CPPFLAGS="$OLD_CPPFLAGS"
       AC_LANG_C
+    ], [
+      HAVE_MPEG2ENC="no"
     ])
   fi
 ])

@@ -1,5 +1,10 @@
 2006-07-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	  Don't error out in configure if mjpegtools dev is not there.
+
+2006-07-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Mark Nauwelaerts <manauw at skynet be>
 
 	* configure.ac:
