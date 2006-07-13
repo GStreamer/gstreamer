@@ -1,5 +1,10 @@
 2006-07-13  Wim Taymans  <wim@fluendo.com>
 
+	* gst/nsf/Makefile.am:
+	Fix build.
+
+2006-07-13  Wim Taymans  <wim@fluendo.com>
+
 	Based on patches by: Johan Dahlin <johan at gnome dot org>
 	        Ronald Bultje <rbultje at ronald dot bitfreak dot net>
 

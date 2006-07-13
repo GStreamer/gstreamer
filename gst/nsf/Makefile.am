@@ -15,6 +15,7 @@ NOSEFART_SOURCES=fmopl.c \
 NOSEFART_INCLUDES=fmopl.h \
 	log.h \
 	mmc5_snd.h \
+	dis6502.h \
 	nes_apu.h \
 	osd.h \
 	vrc7_snd.h \
