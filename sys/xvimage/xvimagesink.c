@@ -618,6 +618,8 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
   GST_BUFFER_DATA (xvimage) = (guchar *) xvimage->xvimage->data;
   GST_BUFFER_SIZE (xvimage) = xvimage->size;
 
+  g_mutex_unlock (xvimagesink->x_lock);
+
 beach_unlocked:
   if (!succeeded) {
     gst_xvimage_buffer_free (xvimage);

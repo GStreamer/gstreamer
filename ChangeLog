@@ -1,5 +1,10 @@
 2006-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new):
+	Fix missing g_unlock from the previous commit
+
+2006-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new),
 	(gst_ximagesink_change_state):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),
