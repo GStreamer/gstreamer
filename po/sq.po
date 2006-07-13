@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-07-12 00:49+0200\n"
+"POT-Creation-Date: 2006-07-13 21:32+0200\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -673,7 +673,7 @@ msgstr "e pamundur lidhja e elementit sink për URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "nuk lejohet konduktori bosh"
 
-#: libs/gst/base/gstbasesrc.c:1564 libs/gst/base/gstbasesrc.c:1575
+#: libs/gst/base/gstbasesrc.c:1568 libs/gst/base/gstbasesrc.c:1579
 msgid "Internal data flow error."
 msgstr ""
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-07-12 00:49+0200\n"
+"POT-Creation-Date: 2006-07-13 21:32+0200\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -657,7 +657,7 @@ msgstr "kon nie aan bestemming-element vir  URI \"%s\" verbind nie"
 msgid "empty pipeline not allowed"
 msgstr "leë pyplyn word nie toegelaat nie"
 
-#: libs/gst/base/gstbasesrc.c:1564 libs/gst/base/gstbasesrc.c:1575
+#: libs/gst/base/gstbasesrc.c:1568 libs/gst/base/gstbasesrc.c:1579
 msgid "Internal data flow error."
 msgstr "Interne datavloeifout."
 

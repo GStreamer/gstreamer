@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-07-12 00:49+0200\n"
+"POT-Creation-Date: 2006-07-13 21:32+0200\n"
 "PO-Revision-Date: 2006-01-20 16:15+0200\n"
 "Last-Translator: Taco Witte <tcwitte@cs.uu.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -656,7 +656,7 @@ msgstr "kon doelelement niet verbinden voor URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "lege pijplijn niet toegelaten"
 
-#: libs/gst/base/gstbasesrc.c:1564 libs/gst/base/gstbasesrc.c:1575
+#: libs/gst/base/gstbasesrc.c:1568 libs/gst/base/gstbasesrc.c:1579
 msgid "Internal data flow error."
 msgstr "Interne fout met gegevensdoorvoer."
 

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-07-12 00:49+0200\n"
+"POT-Creation-Date: 2006-07-13 21:32+0200\n"
 "PO-Revision-Date: 2006-04-07 18:23+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
@@ -663,7 +663,7 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr "không cho phép đường ống trống"
 
-#: libs/gst/base/gstbasesrc.c:1564 libs/gst/base/gstbasesrc.c:1575
+#: libs/gst/base/gstbasesrc.c:1568 libs/gst/base/gstbasesrc.c:1579
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
