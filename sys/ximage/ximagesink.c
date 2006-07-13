@@ -428,6 +428,7 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
         ximagesink->xcontext->depth,
         ZPixmap, NULL, &ximage->SHMInfo, ximage->width, ximage->height);
     if (!ximage->ximage) {
+      g_mutex_unlock (ximagesink->x_lock);
       GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               ximage->width, ximage->height),
@@ -444,6 +445,7 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
     ximage->SHMInfo.shmid = shmget (IPC_PRIVATE, ximage->size,
         IPC_CREAT | 0777);
     if (ximage->SHMInfo.shmid == -1) {
+      g_mutex_unlock (ximagesink->x_lock);
       GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               ximage->width, ximage->height),
@@ -453,6 +455,7 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
 
     ximage->SHMInfo.shmaddr = shmat (ximage->SHMInfo.shmid, 0, 0);
     if (ximage->SHMInfo.shmaddr == ((void *) -1)) {
+      g_mutex_unlock (ximagesink->x_lock);
       GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               ximage->width, ximage->height),
@@ -471,6 +474,7 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
     ximage->SHMInfo.readOnly = FALSE;
 
     if (XShmAttach (ximagesink->xcontext->disp, &ximage->SHMInfo) == 0) {
+      g_mutex_unlock (ximagesink->x_lock);
       GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               ximage->width, ximage->height), ("Failed to XShmAttach"));
@@ -487,6 +491,7 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
         ZPixmap, 0, NULL,
         ximage->width, ximage->height, ximagesink->xcontext->bpp, 0);
     if (!ximage->ximage) {
+      g_mutex_unlock (ximagesink->x_lock);
       GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               ximage->width, ximage->height),
@@ -509,9 +514,8 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
   /* Keep a ref to our sink */
   ximage->ximagesink = gst_object_ref (ximagesink);
 
-beach:
   g_mutex_unlock (ximagesink->x_lock);
-
+beach:
   if (!succeeded) {
     gst_ximage_buffer_free (ximage);
     ximage = NULL;
@@ -1352,17 +1356,21 @@ gst_ximagesink_change_state (GstElement * element, GstStateChange transition)
 {
   GstXImageSink *ximagesink;
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstXContext *xcontext = NULL;
 
   ximagesink = GST_XIMAGESINK (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      GST_OBJECT_LOCK (ximagesink);
-      ximagesink->running = TRUE;
 
       /* Initializing the XContext */
       if (!ximagesink->xcontext)
-        ximagesink->xcontext = gst_ximagesink_xcontext_get (ximagesink);
+        xcontext = gst_ximagesink_xcontext_get (ximagesink);
+
+      GST_OBJECT_LOCK (ximagesink);
+      ximagesink->running = TRUE;
+      if (xcontext)
+        ximagesink->xcontext = xcontext;
       GST_OBJECT_UNLOCK (ximagesink);
 
       if (!ximagesink->xcontext) {

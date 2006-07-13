@@ -1,5 +1,14 @@
 2006-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new),
+	(gst_ximagesink_change_state):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_change_state):
+	Implement a locking order to ensure we always take the object lock
+	before the x_lock and never vice-versa.
+
+2006-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/playback/gstdecodebin.c: (find_compatibles):
 	Fix a caps leak when linking (#347304)
 

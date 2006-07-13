@@ -536,12 +536,13 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
         xvimage->im_format, NULL,
         xvimage->width, xvimage->height, &xvimage->SHMInfo);
     if (!xvimage->xvimage) {
+      g_mutex_unlock (xvimagesink->x_lock);
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               xvimage->width, xvimage->height),
           ("could not XvShmCreateImage a %dx%d image",
               xvimage->width, xvimage->height));
-      goto beach;
+      goto beach_unlocked;
     }
 
     /* we have to use the returned data_size for our shm size */
@@ -551,22 +552,24 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
         IPC_CREAT | 0777);
     if (xvimage->SHMInfo.shmid == -1) {
+      g_mutex_unlock (xvimagesink->x_lock);
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               xvimage->width, xvimage->height),
           ("could not get shared memory of %d bytes", xvimage->size));
-      goto beach;
+      goto beach_unlocked;
     }
 
     xvimage->SHMInfo.shmaddr = shmat (xvimage->SHMInfo.shmid, 0, 0);
     if (xvimage->SHMInfo.shmaddr == ((void *) -1)) {
+      g_mutex_unlock (xvimagesink->x_lock);
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               xvimage->width, xvimage->height),
           ("Failed to shmat: %s", g_strerror (errno)));
       /* Clean up the shared memory segment */
       shmctl (xvimage->SHMInfo.shmid, IPC_RMID, 0);
-      goto beach;
+      goto beach_unlocked;
     }
 
     /* Delete the shared memory segment as soon as we manage to attach.
@@ -578,10 +581,11 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     xvimage->SHMInfo.readOnly = FALSE;
 
     if (XShmAttach (xvimagesink->xcontext->disp, &xvimage->SHMInfo) == 0) {
+      g_mutex_unlock (xvimagesink->x_lock);
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               xvimage->width, xvimage->height), ("Failed to XShmAttach"));
-      goto beach;
+      goto beach_unlocked;
     }
 
     XSync (xvimagesink->xcontext->disp, FALSE);
@@ -594,12 +598,13 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
         xvimagesink->xcontext->xv_port_id,
         xvimage->im_format, NULL, xvimage->width, xvimage->height);
     if (!xvimage->xvimage) {
+      g_mutex_unlock (xvimagesink->x_lock);
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create outputimage buffer of %dx%d pixels",
               xvimage->width, xvimage->height),
           ("could not XvCreateImage a %dx%d image",
               xvimage->width, xvimage->height));
-      goto beach;
+      goto beach_unlocked;
     }
 
     /* we have to use the returned data_size for our image size */
@@ -612,9 +617,6 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
 
   GST_BUFFER_DATA (xvimage) = (guchar *) xvimage->xvimage->data;
   GST_BUFFER_SIZE (xvimage) = xvimage->size;
-
-beach:
-  g_mutex_unlock (xvimagesink->x_lock);
 
 beach_unlocked:
   if (!succeeded) {
@@ -1852,20 +1854,23 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstXvImageSink *xvimagesink;
+  GstXContext *xcontext = NULL;
 
   xvimagesink = GST_XVIMAGESINK (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      /* Initializing the XContext */
+      if (xvimagesink->xcontext == NULL) {
+        xcontext = gst_xvimagesink_xcontext_get (xvimagesink);
+        if (xcontext == NULL)
+          return GST_STATE_CHANGE_FAILURE;
+      }
+
       GST_OBJECT_LOCK (xvimagesink);
       xvimagesink->running = TRUE;
-      /* Initializing the XContext */
-      if (!xvimagesink->xcontext &&
-          !(xvimagesink->xcontext =
-              gst_xvimagesink_xcontext_get (xvimagesink))) {
-        GST_OBJECT_UNLOCK (xvimagesink);
-        return GST_STATE_CHANGE_FAILURE;
-      }
+      if (xcontext)
+        xvimagesink->xcontext = xcontext;
       GST_OBJECT_UNLOCK (xvimagesink);
 
       /* update object's par with calculated one if not set yet */
