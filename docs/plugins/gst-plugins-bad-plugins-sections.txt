@@ -1,4 +1,20 @@
 <SECTION>
+<FILE>element-gdpdepay</FILE>
+GstGDPDepay
+<TITLE>gdpdepay</TITLE>
+<SUBSECTION Standard>
+GstGDPDepayClass
+</SECTION>
+
+<SECTION>
+<FILE>element-gdppay</FILE>
+GstGDPPay
+<TITLE>gdppay</TITLE>
+<SUBSECTION Standard>
+GstGDPPayClass
+</SECTION>
+
+<SECTION>
 <FILE>element-dfbvideosink</FILE>
 GstDfbVideoSink
 <TITLE>dfbvideosink</TITLE>

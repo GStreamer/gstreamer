@@ -1,3 +1,15 @@
+2006-07-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	  add more plugins and elements to docs
+	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_chain):
+	  fix segfaults due to wrong g_free
+	  add example
+	* gst/gdp/gstgdppay.c:
+	  add example
+
 2006-07-13  Wim Taymans  <wim@fluendo.com>
 
 	* gst/nsf/Makefile.am:

@@ -26,6 +26,13 @@
  * This element depayloads GStreamer Data Protocol buffers back to deserialized
  * buffers and events.
  * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch -v -m filesrc location=test.gdp ! gdpdepay ! xvimagesink
+ * </programlisting>
+ * This pipeline plays back a serialized video stream as created in the
+ * example for gdppay.
+ * </para>
  * </refsect2>
  */
 
@@ -231,6 +238,7 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
         payload = gst_adapter_take (this->adapter, this->payload_length);
         memcpy (GST_BUFFER_DATA (buf), payload, this->payload_length);
         g_free (payload);
+        payload = NULL;
 
         gst_buffer_set_caps (buf, this->caps);
         ret = gst_pad_push (this->srcpad, buf);
@@ -250,6 +258,7 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
         caps = gst_dp_caps_from_packet (GST_DP_HEADER_LENGTH, this->header,
             payload);
         g_free (payload);
+        payload = NULL;
         if (!caps) {
           GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
               ("could not create caps from GDP packet"));
@@ -273,8 +282,10 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
           payload = gst_adapter_take (this->adapter, this->payload_length);
         event = gst_dp_event_from_packet (GST_DP_HEADER_LENGTH, this->header,
             payload);
-        if (payload)
+        if (payload) {
           g_free (payload);
+          payload = NULL;
+        }
         if (!event) {
           GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
               ("could not create event from GDP packet"));
