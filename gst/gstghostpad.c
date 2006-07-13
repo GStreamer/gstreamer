@@ -290,7 +290,6 @@ static gboolean
 gst_proxy_pad_set_target_unlocked (GstPad * pad, GstPad * target)
 {
   GstPad *oldtarget;
-  GstPadTemplate **template_p;
 
   if (target) {
     GST_LOG_OBJECT (pad, "setting target %s:%s", GST_DEBUG_PAD_NAME (target));
@@ -304,25 +303,14 @@ gst_proxy_pad_set_target_unlocked (GstPad * pad, GstPad * target)
 
   /* clear old target */
   if ((oldtarget = GST_PROXY_PAD_TARGET (pad))) {
-
-    /* Clear previous pad template */
-    template_p = &GST_PAD_PAD_TEMPLATE (pad);
-    gst_object_replace ((GstObject **) template_p, NULL);
-
-    /* Get rid of target */
     GST_PROXY_PAD_TARGET (pad) = NULL;
     gst_object_unref (oldtarget);
   }
 
-  if (target) {
-    /* set and ref new target if any */
+  /* set and ref new target if any */
+  if (target)
     GST_PROXY_PAD_TARGET (pad) = gst_object_ref (target);
 
-    /* Set new pad template */
-    template_p = &GST_PAD_PAD_TEMPLATE (pad);
-    gst_object_replace ((GstObject **) template_p,
-        (GstObject *) GST_PAD_PAD_TEMPLATE (target));
-  }
   return TRUE;
 }
 
@@ -873,8 +861,8 @@ beach:
  * @name: the name of the new pad, or NULL to assign a default name.
  * @target: the pad to ghost.
  *
- * Create a new ghostpad with @target as the target. The direction and
- * padtemplate will be taken from the target pad.
+ * Create a new ghostpad with @target as the target. The direction will be taken
+ * from the target pad.
  *
  * Will ref the target.
  *

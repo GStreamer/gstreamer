@@ -1,3 +1,9 @@
+2006-07-13  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstghostpad.c: (gst_proxy_pad_set_target_unlocked):
+	GhostPad no longer implicitely use the padtemplates of the targets.
+	Fixes #347384
+
 2006-07-11  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstvalue.c: (gst_value_compare_list),
