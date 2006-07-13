@@ -70,6 +70,10 @@ built_source_make = $(GST_ENUMTYPES_SRC) gstmarshal.c
 EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstmarshal.list gstxml.c gstparse.c gsttrace.c gstregistryxml.c
 
+
+# temporarily not used
+#	glib-compat.c
+
 libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gst.c			\
 	gstobject.c		\
@@ -148,7 +152,6 @@ libgstreamer_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINO
 
 gst_headers =			\
 	gst.h			\
-	glib-compat.c		\
 	glib-compat.h		\
 	gstobject.h		\
 	gstbin.h		\
