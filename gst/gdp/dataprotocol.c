@@ -659,15 +659,16 @@ gst_dp_event_from_packet_1_0 (guint header_length, const guint8 * header,
 {
   GstEvent *event = NULL;
   GstEventType type;
-  gchar *string;
-  GstStructure *s;
+  gchar *string = NULL;
+  GstStructure *s = NULL;
 
   type = GST_DP_HEADER_PAYLOAD_TYPE (header) - GST_DP_PAYLOAD_EVENT_NONE;
-  string = g_strndup ((gchar *) payload, GST_DP_HEADER_PAYLOAD_LENGTH (header));
-  s = gst_structure_from_string (string, NULL);
-  g_free (string);
-  if (!s)
-    return NULL;
+  if (payload) {
+    string =
+        g_strndup ((gchar *) payload, GST_DP_HEADER_PAYLOAD_LENGTH (header));
+    s = gst_structure_from_string (string, NULL);
+    g_free (string);
+  }
   event = gst_event_new_custom (type, s);
   return event;
 }
