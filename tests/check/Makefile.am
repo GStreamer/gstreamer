@@ -28,7 +28,8 @@ clean-local: clean-local-check
 
 check_PROGRAMS = \
 	elements/gdppay \
-	elements/gdpdepay
+	elements/gdpdepay \
+	elements/mpeg2enc
 
 TESTS = $(check_PROGRAMS)
 

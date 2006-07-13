@@ -1,5 +1,6 @@
 /* GStreamer mpeg2enc (mjpegtools) wrapper
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2006 Mark Nauwelaerts <manauw@skynet.be>
  *
  * gstmpeg2encstreamwriter.cc: GStreamer/mpeg2enc output wrapper
  *
@@ -23,7 +24,55 @@
 #include "config.h"
 #endif
 
+#include "gstmpeg2enc.hh"
 #include "gstmpeg2encstreamwriter.hh"
+#include <string.h>
+
+#ifdef GST_MJPEGTOOLS_18x
+
+/*
+ * Class init stuff.
+ */
+
+GstMpeg2EncStreamWriter::GstMpeg2EncStreamWriter (GstPad * in_pad,
+    EncoderParams * params)
+{
+  pad = in_pad;
+  gst_object_ref (pad);
+  buf = NULL;
+}
+
+GstMpeg2EncStreamWriter::~GstMpeg2EncStreamWriter ()
+{
+  gst_object_unref (pad);
+}
+
+void
+GstMpeg2EncStreamWriter::WriteOutBufferUpto (const guint8 * buffer,
+    const guint32 flush_upto)
+{
+  GstBuffer *buf;
+  GstMpeg2enc *enc = GST_MPEG2ENC (GST_PAD_PARENT (pad));
+
+  buf = gst_buffer_new_and_alloc (flush_upto);
+
+  memcpy (GST_BUFFER_DATA (buf), buffer, flush_upto);
+  flushed += flush_upto;
+
+  /* this should not block anything else (e.g. chain), but if it does,
+   * it's ok as mpeg2enc is not really a loop-based element, but push-based */
+  GST_MPEG2ENC_MUTEX_LOCK (enc);
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
+  enc->srcresult = gst_pad_push (pad, buf);
+  GST_MPEG2ENC_MUTEX_UNLOCK (enc);
+}
+
+guint64 GstMpeg2EncStreamWriter::BitCount ()
+{
+  return flushed * 8ll;
+}
+
+#else
 
 #define BUFSIZE (128*1024)
 
@@ -35,7 +84,13 @@ GstMpeg2EncStreamWriter::GstMpeg2EncStreamWriter (GstPad * in_pad, EncoderParams
 ElemStrmWriter (*params)
 {
   pad = in_pad;
+  gst_object_ref (pad);
   buf = NULL;
+}
+
+GstMpeg2EncStreamWriter::~GstMpeg2EncStreamWriter ()
+{
+  gst_object_unref (pad);
 }
 
 /*
@@ -66,7 +121,7 @@ GstMpeg2EncStreamWriter::PutBits (guint32 val, gint n)
     outcnt = 8;
     bytecnt++;
 
-    if (GST_BUFFER_SIZE (buf) >= GST_BUFFER_MAXSIZE (buf))
+    if (GST_BUFFER_SIZE (buf) >= BUFSIZE)
       FrameFlush ();
   }
 
@@ -85,8 +140,15 @@ GstMpeg2EncStreamWriter::FrameBegin ()
 void
 GstMpeg2EncStreamWriter::FrameFlush ()
 {
+  GstMpeg2enc *enc = GST_MPEG2ENC (GST_PAD_PARENT (pad));
+
   if (buf) {
-    gst_pad_push (pad, GST_DATA (buf));
+    /* this should not block anything else (e.g. chain), but if it does,
+     * it's ok as mpeg2enc is not really a loop-based element, but push-based */
+    GST_MPEG2ENC_MUTEX_LOCK (enc);
+    gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
+    enc->srcresult = gst_pad_push (pad, buf);
+    GST_MPEG2ENC_MUTEX_UNLOCK (enc);
     buf = NULL;
   }
 }
@@ -95,3 +157,4 @@ void
 GstMpeg2EncStreamWriter::FrameDiscard ()
 {
 }
+#endif /* GST_MJPEGTOOLS_18x */

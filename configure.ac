@@ -542,6 +542,84 @@ GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
 ])
 AC_SUBST(LIBMMS_LIBS)
 
+dnl *** mjpegtools version info ***
+dnl some may prefer older version (given quirks above)
+dnl hm, no version info seems available within mjpegtools headers
+PKG_CHECK_EXISTS(mjpegtools >= 1.8.0 mjpegtools < 1.9.0, [
+  AC_DEFINE(GST_MJPEGTOOLS_18x, 1, [mjpegtools >= 1.8.0 is used])
+  have_mpjegtools_18x=yes
+  ], [
+  have_mpjegtools_18x=no])
+
+dnl *** mpeg2enc ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2ENC, true)
+GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
+  HAVE_MPEG2ENC="no"
+  dnl we require a c++ compiler for this one
+  if [ test x$HAVE_CXX = xyes ]; then
+    dnl libmpeg2enc was first included in mjpegtools-1.6.2-rc3 (1.6.1.92)
+    dnl since many distros include mjpegtools specifically without mplex
+    dnl and mpeg2enc, we check for mpeg2enc on its own, too.
+    dnl HACK because mpeg2enc 1.8.0 header files have a spurious 'include config.h'
+    touch config.h
+    PKG_CHECK_MODULES(MPEG2ENC, mjpegtools >= 1.6.1.93, [
+      dnl switch over to c++ to test things
+      AC_LANG_CPLUSPLUS
+      OLD_CPPFLAGS="$CPPFLAGS"
+      dnl HACK as above
+      CPPFLAGS_GOOD="$CPPFLAGS $MPEG2ENC_CFLAGS"
+      CPPFLAGS="$CPPFLAGS_GOOD -I."
+      dnl check headers
+      mpeg2enc_headers_ok=no
+      AC_CHECK_HEADER([mpeg2encoder.hh], [
+        MPEG2ENC_LIBS="$MPEG2ENC_LIBS -lmpeg2encpp -lm -lpthread"
+        OLD_LIBS="$LIBS"
+        LIBS="$LIBS $MPEG2ENC_LIBS"
+        AC_MSG_CHECKING([for valid mpeg2enc objects])
+        AC_TRY_RUN([
+          #include <mpeg2encoder.hh>
+          #include <mpeg2encoptions.hh>
+
+          int
+          main (int   argc,
+                char *argv[])
+          {
+            MPEG2EncOptions *options = new MPEG2EncOptions ();
+            MPEG2Encoder *encoder = new MPEG2Encoder (*options);
+            return 0;
+          }
+        ],[
+          AC_MSG_RESULT(yes)
+          dnl so far so good, let's check more things:
+          dnl mjpegtools-1.8.0 does not install the required
+          dnl mpeg2syntaxcodes.h header by default, and a new release
+          dnl is not in sight, so check for this oversight in case
+          dnl distros or folks have fixed this themselves
+          if test "x$have_mpjegtools_18x" = "xyes"; then
+            AC_CHECK_HEADER([mpeg2syntaxcodes.h], [
+                mpeg2enc_headers_ok=yes
+              ], [
+                mpeg2enc_headers_ok=no
+              ])
+          fi
+          if test "x$mpeg2enc_headers_ok" = "xyes"; then
+            HAVE_MPEG2ENC="yes"
+          fi
+          CPP_FLAGS="$CPPFLAGS_GOOD"
+          AC_SUBST(MPEG2ENC_CFLAGS)
+          AC_SUBST(MPEG2ENC_LIBS)
+        ], [
+          AC_MSG_RESULT(no)
+        ])
+        LIBS="$OLD_LIBS"
+      ])
+
+      CPPFLAGS="$OLD_CPPFLAGS"
+      AC_LANG_C
+    ])
+  fi
+])
+
 dnl *** musepack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MUSEPACK, true)
 GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
@@ -767,6 +845,7 @@ ext/gsm/Makefile
 ext/ivorbis/Makefile
 ext/libmms/Makefile
 ext/Makefile
+ext/mpeg2enc/Makefile
 ext/musepack/Makefile
 ext/musicbrainz/Makefile
 ext/neon/Makefile

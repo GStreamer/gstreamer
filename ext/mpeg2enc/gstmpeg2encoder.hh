@@ -1,5 +1,6 @@
 /* GStreamer mpeg2enc (mjpegtools) wrapper
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2006 Mark Nauwelaerts <manauw@skynet.be>
  *
  * gstmpeg2encoder.hh: gstreamer/mpeg2enc encoder class
  *
@@ -22,6 +23,7 @@
 #ifndef __GST_MPEG2ENCODER_H__
 #define __GST_MPEG2ENCODER_H__
 
+
 #include <mpeg2encoder.hh>
 #include "gstmpeg2encoptions.hh"
 #include "gstmpeg2encpicturereader.hh"
@@ -29,16 +31,23 @@
 
 class GstMpeg2Encoder : public MPEG2Encoder {
 public:
-  GstMpeg2Encoder (GstMpeg2EncOptions *options,
-		   GstPad             *sinkpad,
-		   const GstCaps      *caps,
-		   GstPad             *srcpad);
+  GstMpeg2Encoder (GstMpeg2EncOptions *options, 
+      GstElement *element, GstCaps *caps);
+  ~GstMpeg2Encoder ();
 
-  /* one image */
-  void encodePicture ();
+  gboolean setup ();
+  void init ();
+
+  /* process stream */
+  void encode ();
 
   /* get current output format */
   GstCaps *getFormat ();
+
+private:
+  GstElement *element;
+  GstCaps *caps;
+  gboolean init_done;
 };
 
 #endif /* __GST_MPEG2ENCODER_H__ */

@@ -1,3 +1,29 @@
+2006-07-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/mpeg2enc/Makefile.am:
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/mpeg2enc/gstmpeg2enc.hh:
+	* ext/mpeg2enc/gstmpeg2encoder.cc:
+	* ext/mpeg2enc/gstmpeg2encoder.hh:
+	* ext/mpeg2enc/gstmpeg2encoptions.cc:
+	* ext/mpeg2enc/gstmpeg2encpicturereader.cc:
+	* ext/mpeg2enc/gstmpeg2encpicturereader.hh:
+	* ext/mpeg2enc/gstmpeg2encstreamwriter.cc:
+	* ext/mpeg2enc/gstmpeg2encstreamwriter.hh:
+	  Port mpeg2enc to 0.10 (#343184).
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/mpeg2enc.c:
+	  Add unit test for mpeg2enc.
+
+	* tests/icles/.cvsignore:
+	  Ignore pitch-test.
+
 2006-07-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init):

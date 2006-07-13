@@ -64,13 +64,19 @@ enum
   ARG_DUMMY_SVCD_SOF,
   ARG_CORRECT_SVCD_HDS,
   ARG_ALTSCAN_MPEG2,
-  ARG_CONSTRAINTS
+  ARG_CONSTRAINTS,
+  ARG_DUALPRIME_MPEG2
       /* FILL ME */
 };
+
+/* MPEG1 VCD bitrate is used as default (also by mpeg2enc) */
+#define DEFAULT_BITRATE  1125
 
 /*
  * Property enumeration types.
  */
+
+/* FIXME: nick/name perhaps to be reversed (?) */
 
 #define GST_TYPE_MPEG2ENC_FORMAT \
   (gst_mpeg2enc_format_get_type ())
@@ -276,6 +282,9 @@ MPEG2EncOptions ()
     num_cpus = 1;
   if (num_cpus > 32)
     num_cpus = 32;
+
+  /* set some default(s) not set in base class */
+  bitrate = DEFAULT_BITRATE * 1024;
 }
 
 /*
@@ -306,7 +315,7 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
   /* general encoding stream options */
   g_object_class_install_property (klass, ARG_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Compressed video bitrate (kbps)",
-          0, 10 * 1024, 1125, (GParamFlags) G_PARAM_READWRITE));
+          0, 10 * 1024, DEFAULT_BITRATE, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_NONVIDEO_BITRATE,
       g_param_spec_int ("non-video-bitrate", "Non-video bitrate",
           "Assumed bitrate of non-video for sequence splitting (kbps)",
@@ -346,11 +355,11 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
   g_object_class_install_property (klass, ARG_MIN_GOP_SIZE,
       g_param_spec_int ("min-gop-size", "Min. GOP size",
           "Minimal size per Group-of-Pictures (-1=default)",
-          -1, 250, 0, (GParamFlags) G_PARAM_READWRITE));
+          -1, 250, -1, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_MAX_GOP_SIZE,
       g_param_spec_int ("max-gop-size", "Max. GOP size",
           "Maximal size per Group-of-Pictures (-1=default)",
-          -1, 250, 0, (GParamFlags) G_PARAM_READWRITE));
+          -1, 250, -1, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_CLOSED_GOP,
       g_param_spec_boolean ("closed-gop", "Closed GOP",
           "All Group-of-Pictures are closed (for multi-angle DVDs)",
@@ -362,7 +371,7 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
   g_object_class_install_property (klass, ARG_B_PER_REFFRAME,
       g_param_spec_int ("b-per-refframe", "B per ref. frame",
           "Number of B frames between each I/P frame",
-          0, 2, 2, (GParamFlags) G_PARAM_READWRITE));
+          0, 2, 0, (GParamFlags) G_PARAM_READWRITE));
 
   /* quantisation options */
   g_object_class_install_property (klass, ARG_QUANTISATION_REDUCTION,
@@ -372,12 +381,12 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
   g_object_class_install_property (klass, ARG_QUANT_REDUCTION_MAX_VAR,
       g_param_spec_float ("quant-reduction-max-var",
           "Max. quant. reduction variance",
-          "Maximal luma variance below which quantisation boost is used", 0.,
-          2500., 0., (GParamFlags) G_PARAM_READWRITE));
+          "Maximal luma variance below which quantisation boost is used",
+          0., 2500., 100., (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_INTRA_DC_PRECISION,
       g_param_spec_int ("intra-dc-prec", "Intra. DC precision",
-          "Number of bits precision for DC (base colour) in MPEG-2 blocks", 8,
-          11, 9, (GParamFlags) G_PARAM_READWRITE));
+          "Number of bits precision for DC (base colour) in MPEG-2 blocks",
+          8, 11, 9, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (klass, ARG_REDUCE_HF,
       g_param_spec_float ("reduce-hf", "Reduce HF",
           "How much to reduce high-frequency resolution (by increasing quantisation)",
@@ -395,7 +404,7 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
   /* general options */
   g_object_class_install_property (klass, ARG_BUFSIZE,
       g_param_spec_int ("bufsize", "Decoder buf. size",
-          "Target decoders video buffer size (kB)",
+          "Target decoders video buffer size (kB) (default depends on format)",
           20, 4000, 46, (GParamFlags) G_PARAM_READWRITE));
 
   /* header flag settings */
@@ -434,14 +443,19 @@ GstMpeg2EncOptions::initProperties (GObjectClass * klass)
           "Alternate MPEG-2 block scanning. Disabling this might "
           "make buggy players play SVCD streams",
           TRUE, (GParamFlags) G_PARAM_READWRITE));
-#if 0
-  "--dxr2-hack"
-#endif
-      /* dangerous/experimental stuff */
-      g_object_class_install_property (klass, ARG_CONSTRAINTS,
+
+  /* dangerous/experimental stuff */
+  g_object_class_install_property (klass, ARG_CONSTRAINTS,
       g_param_spec_boolean ("constraints", "Constraints",
           "Use strict video resolution and bitrate checks",
           TRUE, (GParamFlags) G_PARAM_READWRITE));
+#ifdef GST_MJPEGTOOLS_18x
+  g_object_class_install_property (klass, ARG_DUALPRIME_MPEG2,
+      g_param_spec_boolean ("dualprime", "Dual Prime Motion Estimation",
+          "Dual Prime Motion Estimation Mode for MPEG-2 I/P-frame only "
+          "streams.  Quite some players do not support this.",
+          FALSE, (GParamFlags) G_PARAM_READWRITE));
+#endif
 }
 
 /*
@@ -510,7 +524,7 @@ GstMpeg2EncOptions::getProperty (guint prop_id, GValue * value)
       g_value_set_float (value, boost_var_ceil);
       break;
     case ARG_INTRA_DC_PRECISION:
-      g_value_set_int (value, mpeg2_dc_prec - 8);
+      g_value_set_int (value, mpeg2_dc_prec + 8);
       break;
     case ARG_REDUCE_HF:
       g_value_set_float (value, hf_q_boost);
@@ -564,6 +578,11 @@ GstMpeg2EncOptions::getProperty (guint prop_id, GValue * value)
     case ARG_CONSTRAINTS:
       g_value_set_boolean (value, !ignore_constraints);
       break;
+#ifdef GST_MJPEGTOOLS_18x
+    case ARG_DUALPRIME_MPEG2:
+      g_value_set_boolean (value, hack_dualprime);
+      break;
+#endif
     default:
       break;
   }
@@ -631,7 +650,7 @@ GstMpeg2EncOptions::setProperty (guint prop_id, const GValue * value)
       boost_var_ceil = g_value_get_float (value);
       break;
     case ARG_INTRA_DC_PRECISION:
-      mpeg2_dc_prec = g_value_get_int (value) + 8;
+      mpeg2_dc_prec = g_value_get_int (value) - 8;
       break;
     case ARG_REDUCE_HF:
       hf_q_boost = g_value_get_float (value);
@@ -688,6 +707,11 @@ GstMpeg2EncOptions::setProperty (guint prop_id, const GValue * value)
     case ARG_CONSTRAINTS:
       ignore_constraints = !g_value_get_boolean (value);
       break;
+#ifdef GST_MJPEGTOOLS_18x
+    case ARG_DUALPRIME_MPEG2:
+      hack_dualprime = g_value_get_boolean (value);
+      break;
+#endif
     default:
       break;
   }

@@ -25,13 +25,11 @@
 #include <gst/gst.h>
 
 #include <picturereader.hh>
-#include "gstmpeg2encoptions.hh"
 
 class GstMpeg2EncPictureReader : public PictureReader {
 public:
-  GstMpeg2EncPictureReader (GstPad        *pad,
-			    const GstCaps *caps,
-			    EncoderParams *params);
+  GstMpeg2EncPictureReader (GstElement *element, GstCaps *caps,
+      EncoderParams *params);
   ~GstMpeg2EncPictureReader ();
 
   /* get input picture parameters (width/height etc.) */
@@ -42,7 +40,7 @@ protected:
   bool LoadFrame ();
 
 private:
-  GstPad *pad;
+  GstElement *element;
   GstCaps *caps;
 };
 

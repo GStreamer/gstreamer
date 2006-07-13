@@ -1,5 +1,6 @@
 /* GStreamer mpeg2enc (mjpegtools) wrapper
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2006 Mark Nauwelaerts <manauw@skynet.be>
  *
  * gstmpeg2enc.hh: object definition
  *
@@ -39,6 +40,30 @@ G_BEGIN_DECLS
 #define GST_IS_MPEG2ENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_MPEG2ENC))
 
+GST_DEBUG_CATEGORY_EXTERN (mpeg2enc_debug);
+#define GST_CAT_DEFAULT mpeg2enc_debug
+
+#define GST_MPEG2ENC_MUTEX_LOCK(m) G_STMT_START {                       \
+  GST_LOG_OBJECT (m, "locking tlock from thread %p", g_thread_self ()); \
+  g_mutex_lock (m->tlock);                                              \
+  GST_LOG_OBJECT (m, "locked tlock from thread %p", g_thread_self ());  \
+} G_STMT_END
+
+#define GST_MPEG2ENC_MUTEX_UNLOCK(m) G_STMT_START {                       \
+  GST_LOG_OBJECT (m, "unlocking tlock from thread %p", g_thread_self ()); \
+  g_mutex_unlock (m->tlock);                                              \
+} G_STMT_END
+
+#define GST_MPEG2ENC_WAIT(m) G_STMT_START {                             \
+  GST_LOG_OBJECT (m, "thread %p waiting", g_thread_self ());            \
+  g_cond_wait (m->cond, m->tlock);                                      \
+} G_STMT_END
+
+#define GST_MPEG2ENC_SIGNAL(m) G_STMT_START {                           \
+  GST_LOG_OBJECT (m, "signalling from thread %p", g_thread_self ());    \
+  g_cond_signal (m->cond);                                              \
+} G_STMT_END
+
 typedef struct _GstMpeg2enc {
   GstElement parent;
 
@@ -50,6 +75,20 @@ typedef struct _GstMpeg2enc {
 
   /* general encoding object (contains rest) */
   GstMpeg2Encoder *encoder;
+
+  /* lock for syncing with encoding task */
+  GMutex *tlock;
+  /* with TLOCK */
+  /* signals counterpart thread that something changed;
+   * buffer ready for task or buffer has been processed */
+  GCond *cond;
+  /* seen eos */
+  gboolean eos;
+  /* flowreturn obtained by encoding task */
+  GstFlowReturn srcresult;
+  /* buffer for encoding task */
+  GstBuffer *buffer;
+
 } GstMpeg2enc;
 
 typedef struct _GstMpeg2encClass {

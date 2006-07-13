@@ -1,5 +1,6 @@
 /* GStreamer mpeg2enc (mjpegtools) wrapper
  * (c) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2006 Mark Nauwelaerts <manauw@skynet.be>
  *
  * gstmpeg2encstreamwriter.hh: GStreamer/mpeg2enc output wrapper
  *
@@ -26,10 +27,29 @@
 
 #include <elemstrmwriter.hh>
 
+#ifdef GST_MJPEGTOOLS_18x
+
+class GstMpeg2EncStreamWriter : public ElemStrmWriter {
+  public:
+  GstMpeg2EncStreamWriter (GstPad *pad, EncoderParams *params);
+  ~GstMpeg2EncStreamWriter ();
+
+  /* output functions */
+  void WriteOutBufferUpto (const guint8 * buffer,
+      const guint32 flush_upto);
+  guint64 BitCount ();
+
+  private:
+  GstPad *pad;
+  GstBuffer *buf;
+};
+
+#else
+
 class GstMpeg2EncStreamWriter : public ElemStrmWriter {
 public:
-  GstMpeg2EncStreamWriter (GstPad        *pad,
-			   EncoderParams *params);
+  GstMpeg2EncStreamWriter (GstPad *pad, EncoderParams *params);
+  ~GstMpeg2EncStreamWriter ();
 
   /* output functions */
   void PutBits (guint32 val, gint n);
@@ -41,5 +61,6 @@ private:
   GstPad *pad;
   GstBuffer *buf;
 };
+#endif /* GST_MJPEGTOOLS_18x */
 
 #endif /* __GST_MPEG2ENCSTREAMWRITER_H__ */

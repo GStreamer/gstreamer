@@ -25,23 +25,26 @@
 
 #include <encoderparams.hh>
 
+#include "gstmpeg2enc.hh"
 #include "gstmpeg2encpicturereader.hh"
 
 /*
  * Class init stuff.
  */
 
-GstMpeg2EncPictureReader::GstMpeg2EncPictureReader (GstPad * in_pad,
-    const GstCaps * in_caps, EncoderParams * params):
+GstMpeg2EncPictureReader::GstMpeg2EncPictureReader (GstElement * in_element, GstCaps * in_caps, EncoderParams * params):
 PictureReader (*params)
 {
-  pad = in_pad;
-  caps = gst_caps_copy (in_caps);
+  element = in_element;
+  gst_object_ref (element);
+  caps = in_caps;
+  gst_caps_ref (caps);
 }
 
 GstMpeg2EncPictureReader::~GstMpeg2EncPictureReader ()
 {
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
+  gst_object_unref (element);
 }
 
 /*
@@ -53,83 +56,50 @@ GstMpeg2EncPictureReader::StreamPictureParams (MPEG2EncInVidParams & strm)
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   gint width, height;
-  gdouble fps;
+  const GValue *fps_val;
+  y4m_ratio_t fps;
 
   gst_structure_get_int (structure, "width", &width);
   gst_structure_get_int (structure, "height", &height);
-  gst_structure_get_double (structure, "framerate", &fps);
+  fps_val = gst_structure_get_value (structure, "framerate");
+  fps.n = gst_value_get_fraction_numerator (fps_val);
+  fps.d = gst_value_get_fraction_denominator (fps_val);
 
   strm.horizontal_size = width;
   strm.vertical_size = height;
-  strm.frame_rate_code = mpeg_framerate_code (mpeg_conform_framerate (fps));
+  strm.frame_rate_code = mpeg_framerate_code (fps);
   strm.interlacing_code = Y4M_ILACE_NONE;
+  /* FIXME perhaps involve pixel-aspect-ratio for 'better' sar */
   strm.aspect_ratio_code = mpeg_guess_mpeg_aspect_code (2, y4m_sar_SQUARE,
       strm.horizontal_size, strm.vertical_size);
-
-  /* FIXME:
-   * strm.interlacing_code = y4m_si_get_interlace(&si);
-   * sar = y4m_si_get_sampleaspect(&si);
-   * strm.aspect_ratio_code =
-   *     mpeg_guess_mpeg_aspect_code(2, sar,
-   *                                 strm.horizontal_size,
-   *                                 strm.vertical_size);
-   */
 }
 
 /*
  * Read a frame. Return true means EOS or error.
  */
 
-bool GstMpeg2EncPictureReader::LoadFrame ()
+bool
+GstMpeg2EncPictureReader::LoadFrame ()
 {
-  GstData *
-      data;
-  GstBuffer *
-      buf =
-      NULL;
+  gint i, x, y, n;
+  guint8 *frame;
+  GstMpeg2enc *enc;
 
-  gint
-      i,
-      x,
-      y,
-      n;
-  guint8 *
-      frame;
+  enc = GST_MPEG2ENC (element);
 
-  GstFormat
-      fmt =
-      GST_FORMAT_DEFAULT;
-  gint64
-      pos =
-      0,
-      tot =
-      0;
+  GST_MPEG2ENC_MUTEX_LOCK (enc);
 
-  gst_pad_query (GST_PAD_PEER (pad), GST_QUERY_POSITION, &fmt, &pos);
-  gst_pad_query (GST_PAD_PEER (pad), GST_QUERY_TOTAL, &fmt, &tot);
-
-  do {
-    if ((data = (GstData *) gst_pad_get_element_private (pad))) {
-      gst_pad_set_element_private (pad, NULL);
-    } else if (!(data = gst_pad_pull (pad))) {
-      GST_ELEMENT_ERROR (gst_pad_get_parent (pad), RESOURCE, READ,
-          (NULL), (NULL));
-      return true;
+  /* hang around until the element provides us with a buffer */
+  while (!enc->buffer) {
+    if (enc->eos) {
+      GST_MPEG2ENC_MUTEX_UNLOCK (enc);
+      /* inform the mpeg encoding loop that it can give up */
+      return TRUE;
     }
+    GST_MPEG2ENC_WAIT (enc);
+  }
 
-    if (GST_IS_EVENT (data)) {
-      if (GST_EVENT_TYPE (data) == GST_EVENT_EOS) {
-        gst_event_unref (GST_EVENT (data));
-        return true;
-      } else {
-        gst_pad_event_default (pad, GST_EVENT (data));
-      }
-    } else {
-      buf = GST_BUFFER (data);
-    }
-  } while (!buf);
-
-  frame = GST_BUFFER_DATA (buf);
+  frame = GST_BUFFER_DATA (enc->buffer);
   n = frames_read % input_imgs_buf_size;
   x = encparams.horizontal_size;
   y = encparams.vertical_size;
@@ -149,7 +119,12 @@ bool GstMpeg2EncPictureReader::LoadFrame ()
     memcpy (input_imgs_buf[n][2] + i * encparams.phy_chrom_width, frame, x);
     frame += x;
   }
-  gst_buffer_unref (buf);
+  gst_buffer_unref (enc->buffer);
+  enc->buffer = NULL;
 
-  return false;
+  /* inform the element the buffer has been processed */
+  GST_MPEG2ENC_SIGNAL (enc);
+  GST_MPEG2ENC_MUTEX_UNLOCK (enc);
+
+  return FALSE;
 }

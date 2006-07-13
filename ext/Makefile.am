@@ -130,11 +130,11 @@ else
 LIBMMS_DIR=
 endif
 
-# if USE_MPEG2ENC
-# MPEG2ENC_DIR=mpeg2enc
-# else
+if USE_MPEG2ENC
+MPEG2ENC_DIR=mpeg2enc
+else
 MPEG2ENC_DIR=
-# endif
+endif
 
 # if USE_MPLEX
 # MPLEX_DIR=mplex
@@ -286,6 +286,7 @@ DIST_SUBDIRS= \
 	libmms \
 	dts \
 	divx \
+	mpeg2enc \
 	musepack \
 	musicbrainz \
 	neon \
