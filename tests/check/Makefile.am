@@ -26,10 +26,16 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
 clean-local: clean-local-check
 
+if USE_MPEG2ENC
+check_mpeg2enc = elements/mpeg2enc
+else
+check_mpeg2enc =
+endif
+
 check_PROGRAMS = \
 	elements/gdppay \
 	elements/gdpdepay \
-	elements/mpeg2enc
+	$(check_mpeg2enc)
 
 TESTS = $(check_PROGRAMS)
 

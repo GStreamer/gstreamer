@@ -1,5 +1,10 @@
 2006-07-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	  Only run mpeg2enc unit test if we built the mpeg2enc plugin.
+
+2006-07-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Don't error out in configure if mjpegtools dev is not there.
 
