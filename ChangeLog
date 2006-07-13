@@ -1,3 +1,9 @@
+2006-07-13  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_update_length):
+	* tests/check/elements/filesrc.c: (GST_START_TEST):
+	Revert pull-0 fix for release. Disable check. Fixes #347408.
+
 2006-07-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* libs/gst/dataprotocol/dataprotocol.c:
