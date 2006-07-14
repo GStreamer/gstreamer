@@ -601,10 +601,8 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
               GUINT_TO_LE (ximagesrc->cursor_image->pixels[i]);
 
         /* copy those pixels across */
-        for (j = starty;
-            j < starty + iheight && j - starty < ximagesrc->height; j++) {
-          for (i = startx;
-              i < startx + iwidth && i - startx < ximagesrc->width; i++) {
+        for (j = starty; j < starty + iheight && j < ximagesrc->height; j++) {
+          for (i = startx; i < startx + iwidth && i < ximagesrc->width; i++) {
             guint8 *src, *dest;
 
             src =
