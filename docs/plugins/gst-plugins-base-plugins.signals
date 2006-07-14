@@ -55,6 +55,19 @@ gint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstMultiFdSink::add-full</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstMultiFdSink *gstmultifdsink
+gint  arg1
+gboolean  arg2
+GstTCPUnitType *arg3
+guint64  arg4
+GstTCPUnitType *arg5
+guint64  arg6
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstDecodeBin::new-decoded-pad</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>

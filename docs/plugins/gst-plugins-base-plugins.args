@@ -404,7 +404,7 @@
 <RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers max</NICK>
-<BLURB>max number of buffers to queue (-1 = no limit).</BLURB>
+<BLURB>max number of buffers to queue for a client (-1 = no limit).</BLURB>
 <DEFAULT>-1</DEFAULT>
 </ARG>
 
@@ -506,6 +506,56 @@
 <NICK>Timeout</NICK>
 <BLURB>Maximum inactivity timeout in nanoseconds for a client (0 = no limit).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::buffers-min</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffers min</NICK>
+<BLURB>min number of buffers to queue (-1 = as few as possible).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::burst-unit</NAME>
+<TYPE>GstTCPUnitType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Burst unit</NICK>
+<BLURB>The format of the burst units (when sync-method is burst[[-with]-keyframe]).</BLURB>
+<DEFAULT>Undefined</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::burst-value</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Burst value</NICK>
+<BLURB>The amount of burst expressed in burst-unit.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::bytes-min</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bytes min</NICK>
+<BLURB>min number of bytes to queue (-1 = as little as possible).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::time-min</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Time min</NICK>
+<BLURB>min number of time to queue (-1 = as little as possible).</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>

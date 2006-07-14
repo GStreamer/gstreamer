@@ -1,5 +1,39 @@
-This is GStreamer Base Plug-ins 0.10.8, "Moar gij ziet mij nie"
-  
+This is GStreamer Base Plug-ins 0.10.9, "I walk the line"
+
+Changes since 0.10.8:
+
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+      * Subtitle fixes
+      * Support for images in tags
+      * Playback improvements
+      * Gnomevfssrc now supports burn:// uris
+      * Videoscale now supports more RGBA formats
+      * Multifdsink improvements
+      * Testsuite can now generate coverage information
+
+Bugs fixed since 0.10.8:
+
+      * 347296 : Problems with clocks on alsasrc hangs the application
+      * 347295 : [vorbisdec] Pushes before being initialized
+      * 329798 : [playbin] doesn't always give correct error message for m...
+      * 342085 : [alsasink] doesn't set buffer-time correctly
+      * 342789 : [audioresample] doesn't clear state when stopped, causing...
+      * 343303 : [subparse] workaround for bad entities in sami parser
+      * 343385 : [gnomevfs] add support for burn:// URIs
+      * 343500 : [riff] gst_riff_parse_strf_vids() can't parse extra data.
+      * 343699 : oggmux leaks
+      * 344503 : [subparse] parse font face property in sami parser.
+      * 345131 : [PATCH] videoscale support for 32-bit RGB-formats
+      * 345206 : [textoverlay] crash with non-UTF8 input
+      * 345225 : [theoradec] Clipping for exact seeking
+      * 345641 : [API] [libgsttag] add enums for image tag type
+      * 345879 : [riff] won't play a .wmv file with WMVA video stream
+      * 346581 : [typefinding] recognise text/html
+      * 347221 : [audioconvert] channel remapping does not work right
+      * 347304 : Massive leaks with xvimagesink
+      * 346527 : alsasrc get_range does not respect requested size
+
 Changes since 0.10.7:
     
       * alsasink probing fixes

@@ -1,3 +1,10 @@
+=== release 0.10.9 ===
+
+2006-07-13  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.9, "I walk the line"
+
 2006-07-14  Michael Smith  <msmith@fluendo.com>
 
 	* tests/check/pipelines/vorbisenc.c: (stop_pipeline):
