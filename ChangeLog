@@ -1,3 +1,9 @@
+2006-07-14  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_update_length):
+	* tests/check/elements/filesrc.c: (GST_START_TEST):
+	Revert fix for regression in #347408 after release.
+
 2006-07-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Antoine Tremblay <hexa00 at gmail com>

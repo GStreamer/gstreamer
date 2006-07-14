@@ -1238,10 +1238,6 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
         *length = maxsize - offset;
     }
   }
-  /* FIXME, remove this check after release. Some elements pull 0 bytes
-   * and expect an UNEXPECTED return value (id3demux) */
-  if (*length == 0)
-    goto unexpected_length;
 
   /* keep track of current position. segment is in bytes, we checked 
    * that above. */
