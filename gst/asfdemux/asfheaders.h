@@ -130,13 +130,38 @@ struct _asf_obj_file {
 
 typedef struct _asf_obj_file asf_obj_file;
 
+struct _asf_obj_ext_stream_properties {
+  guint64  start_time;
+  guint64  end_time;
+  guint64  avg_time_per_frame;
+  guint32  data_bitrate;
+  guint32  buffer_size;
+  guint32  intial_buf_fullness;
+  guint32  data_bitrate2;
+  guint32  buffer_size2;
+  guint32  intial_buf_fullness2;
+  guint32  max_obj_size;
+  guint32  flags;
+  guint16  stream_num;
+  guint16  lang_idx;
+  /* missing: stream names */
+  /* missing: payload extension system stuff */
+
+  /* for delayed processing of these stream objects */
+  guint8   *stream_obj_data;
+  guint64   stream_obj_len;
+};
+
+typedef struct _asf_obj_ext_stream_properties asf_obj_ext_stream_properties;
+
 struct _asf_obj_stream {
   ASFGuid type;
   ASFGuid correction;
-  guint64 unknown1;
+  guint64 time_offset;
   guint32 type_specific_size;
   guint32 stream_specific_size;
-  guint16 id;
+  guint8  id;
+  guint8  encrypted;
   guint32 unknown2;
 };
 

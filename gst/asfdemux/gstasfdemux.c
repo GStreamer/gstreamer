@@ -1,5 +1,6 @@
-/* GStreamer
+/* GStreamer ASF/WMV/WMA demuxer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2006> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -664,16 +665,20 @@ static gboolean
 gst_asf_demux_get_obj_stream (asf_obj_stream * stream, guint8 ** p_data,
     guint64 * p_size)
 {
+  guint16 flags;
+
   if (*p_size < (16 + 16 + 8 + 4 + 4 + 2 + 4))
     return FALSE;
 
   gst_asf_demux_get_guid (&stream->type, p_data, p_size);
   gst_asf_demux_get_guid (&stream->correction, p_data, p_size);
 
-  stream->unknown1 = gst_asf_demux_get_uint64 (p_data, p_size);
+  stream->time_offset = gst_asf_demux_get_uint64 (p_data, p_size) * 100;
   stream->type_specific_size = gst_asf_demux_get_uint32 (p_data, p_size);
   stream->stream_specific_size = gst_asf_demux_get_uint32 (p_data, p_size);
-  stream->id = gst_asf_demux_get_uint16 (p_data, p_size);
+  flags = gst_asf_demux_get_uint16 (p_data, p_size);
+  stream->id = flags & 0x7f;
+  stream->encrypted = (flags & 0x8000) << 15;
   stream->unknown2 = gst_asf_demux_get_uint32 (p_data, p_size);
   return TRUE;
 }
@@ -971,6 +976,8 @@ gst_asf_demux_process_stream (GstASFDemux * demux, guint8 ** p_data,
   /* Get the rest of the header's header */
   if (!gst_asf_demux_get_obj_stream (&object, p_data, p_size))
     goto not_enough_data;
+
+  GST_DEBUG ("Found stream #%u", object.id);
 
   /* Identify the stream type */
   stream_id = gst_asf_demux_identify_guid (demux, asf_stream_guids,
@@ -1585,6 +1592,150 @@ gst_asf_demux_process_header_ext (GstASFDemux * demux, guint8 ** p_data,
   return ret;
 }
 
+static GstFlowReturn
+gst_asf_demux_process_language_list (GstASFDemux * demux, guint8 ** p_data,
+    guint64 * p_size)
+{
+  guint i;
+
+  if (*p_size < 2)
+    return ASF_FLOW_NEED_MORE_DATA;
+
+  if (demux->languages) {
+    GST_WARNING ("More than one LANGUAGE_LIST object in stream");
+    g_strfreev (demux->languages);
+    demux->languages = NULL;
+    demux->num_languages = 0;
+  }
+
+  demux->num_languages = gst_asf_demux_get_uint16 (p_data, p_size);
+  GST_LOG ("%u languages:", demux->num_languages);
+
+  demux->languages = g_new0 (gchar *, demux->num_languages + 1);
+  for (i = 0; i < demux->num_languages; ++i) {
+    guint8 len, *data = NULL;
+
+    len = gst_asf_demux_get_uint8 (p_data, p_size);
+    if (gst_asf_demux_get_bytes (&data, len, p_data, p_size)) {
+      gchar *utf8;
+
+      utf8 = g_convert ((gchar *) data, len, "UTF-8", "UTF-16LE", NULL,
+          NULL, NULL);
+
+      /* truncate "en-us" etc. to just "en" */
+      if (utf8 && strlen (utf8) >= 5 && (utf8[2] == '-' || utf8[2] == '_')) {
+        utf8[2] = '\0';
+      }
+      GST_DEBUG ("[%u] %s", i, GST_STR_NULL (utf8));
+      demux->languages[i] = utf8;
+      g_free (data);
+    }
+  }
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint obj_size,
+    guint8 ** p_data, guint64 * p_size)
+{
+  asf_obj_ext_stream_properties esp = { 0, };
+  guint16 stream_name_count;
+  guint16 payload_ext_sys_count;
+  guint64 len;
+  guint32 obj_id;
+  guint8 *data;
+  guint8 *data_start = *p_data;
+  guint i;
+
+  if (*p_size < 88)
+    return ASF_FLOW_NEED_MORE_DATA;
+
+  esp.start_time = gst_asf_demux_get_uint64 (p_data, p_size);
+  esp.end_time = gst_asf_demux_get_uint64 (p_data, p_size);
+  esp.data_bitrate = gst_asf_demux_get_uint32 (p_data, p_size);
+  esp.buffer_size = gst_asf_demux_get_uint32 (p_data, p_size);
+  esp.intial_buf_fullness = gst_asf_demux_get_uint32 (p_data, p_size);
+  esp.data_bitrate2 = gst_asf_demux_get_uint32 (p_data, p_size);
+  esp.buffer_size2 = gst_asf_demux_get_uint32 (p_data, p_size);
+  esp.intial_buf_fullness2 = gst_asf_demux_get_uint32 (p_data, p_size);
+  esp.max_obj_size = gst_asf_demux_get_uint32 (p_data, p_size);
+  esp.flags = gst_asf_demux_get_uint32 (p_data, p_size);
+  esp.stream_num = gst_asf_demux_get_uint16 (p_data, p_size);
+  esp.lang_idx = gst_asf_demux_get_uint16 (p_data, p_size);
+  esp.avg_time_per_frame = gst_asf_demux_get_uint64 (p_data, p_size);
+  stream_name_count = gst_asf_demux_get_uint16 (p_data, p_size);
+  payload_ext_sys_count = gst_asf_demux_get_uint16 (p_data, p_size);
+
+  GST_INFO ("start_time             = %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (esp.start_time * GST_MSECOND));
+  GST_INFO ("end_time               = %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (esp.end_time * GST_MSECOND));
+  GST_INFO ("flags                  = %08x", esp.flags);
+  GST_INFO ("average time per frame = %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (esp.avg_time_per_frame * 100));
+  GST_INFO ("stream number          = %u", esp.stream_num);
+  GST_INFO ("stream language ID idx = %u (%s)", esp.lang_idx,
+      (esp.lang_idx < demux->num_languages) ?
+      GST_STR_NULL (demux->languages[esp.lang_idx]) : "??");
+  GST_INFO ("stream name count      = %u", stream_name_count);
+
+  /* read stream names */
+  for (i = 0; i < stream_name_count; ++i) {
+    guint16 stream_lang_idx;
+    gchar *stream_name = NULL;
+
+    stream_lang_idx = gst_asf_demux_get_uint16 (p_data, p_size);
+    if (!gst_asf_demux_get_string (&stream_name, NULL, p_data, p_size))
+      return GST_FLOW_ERROR;
+    GST_INFO ("stream name %d: %s", i, GST_STR_NULL (stream_name));
+    g_free (stream_name);       /* TODO: store names in struct */
+  }
+
+  /* read payload extension systems stuff */
+  GST_LOG ("payload ext sys count = %u", payload_ext_sys_count);
+  for (i = 0; i < payload_ext_sys_count; ++i) {
+    guint32 sys_info_len;
+
+    if (!gst_asf_demux_skip_bytes (16 + 2, p_data, p_size) || *p_size < 4)
+      return GST_FLOW_ERROR;
+
+    sys_info_len = gst_asf_demux_get_uint32 (p_data, p_size);
+    GST_LOG ("payload systems info len = %u", sys_info_len);
+    if (!gst_asf_demux_skip_bytes (sys_info_len, p_data, p_size))
+      return GST_FLOW_ERROR;
+  }
+
+  GST_LOG ("bytes read: %u/%u", (guint) (*p_data - data_start), obj_size);
+
+  /* there might be an optional STREAM_INFO object here now */
+  if ((guint) (*p_data - data_start) == obj_size)
+    goto done;
+
+  /* get size of the stream object */
+  if (!gst_asf_demux_get_object_header (demux, &obj_id, &len, p_data, p_size) ||
+      obj_id != ASF_OBJ_STREAM || len > (10 * 1024 * 1024)) {
+    return GST_FLOW_ERROR;
+  }
+
+  len -= ASF_DEMUX_OBJECT_HEADER_SIZE;
+
+  /* process this stream object later after all the other 'normal' ones
+   * have been processed (since the others are more important/non-hidden) */
+  if (!gst_asf_demux_get_bytes (&data, (guint) len, p_data, p_size))
+    return GST_FLOW_ERROR;
+
+  esp.stream_obj_data = data;
+  esp.stream_obj_len = len;
+
+done:
+
+  demux->ext_stream_props = g_slist_append (demux->ext_stream_props,
+      g_memdup (&esp, sizeof (esp)));
+
+  return GST_FLOW_OK;
+}
+
 static const gchar *
 gst_asf_demux_push_obj (GstASFDemux * demux, guint32 obj_id)
 {
@@ -1620,13 +1771,42 @@ gst_asf_demux_pop_obj (GstASFDemux * demux)
   }
 }
 
+static void
+gst_asf_demux_process_queued_extended_stream_objects (GstASFDemux * demux)
+{
+  GSList *l;
+
+  GST_DEBUG ("parsing stream objects embedded in extended stream properties");
+
+  for (l = demux->ext_stream_props; l != NULL; l = l->next) {
+    asf_obj_ext_stream_properties *esp;
+    guint64 len;
+    guint8 *data;
+
+    esp = (asf_obj_ext_stream_properties *) l->data;
+    data = esp->stream_obj_data;
+    len = esp->stream_obj_len;
+
+    if (data
+        && gst_asf_demux_process_stream (demux, &data, &len) != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (demux,
+          "failed to parse stream object in extended "
+          "stream properties object for stream %u", esp->stream_num);
+    }
+    g_free (esp->stream_obj_data);
+    esp->stream_obj_data = NULL;
+    esp->stream_obj_data = 0;
+  }
+}
+
 static GstFlowReturn
 gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     guint64 * p_size)
 {
   GstFlowReturn ret;
   guint32 obj_id;
-  guint64 obj_size;
+  guint64 obj_size, obj_data_size;
+  gint64 processed;
 
   if (!gst_asf_demux_get_object_header (demux, &obj_id, &obj_size, p_data,
           p_size)) {
@@ -1634,24 +1814,27 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     return ASF_FLOW_NEED_MORE_DATA;
   }
 
-  obj_size -= ASF_DEMUX_OBJECT_HEADER_SIZE;
+  obj_data_size = obj_size - ASF_DEMUX_OBJECT_HEADER_SIZE;
 
-  if (obj_id != ASF_OBJ_DATA && *p_size < obj_size) {
-    demux->bytes_needed = obj_size + ASF_DEMUX_OBJECT_HEADER_SIZE;
+  if (obj_id != ASF_OBJ_DATA && *p_size < obj_data_size) {
+    demux->bytes_needed = obj_size;
     return ASF_FLOW_NEED_MORE_DATA;
   }
 
   gst_asf_demux_push_obj (demux, obj_id);
 
-  GST_INFO ("%s, size %" G_GUINT64_FORMAT, demux->objpath,
-      obj_size + ASF_DEMUX_OBJECT_HEADER_SIZE);
+  GST_INFO ("%s, size %" G_GUINT64_FORMAT, demux->objpath, obj_size);
 
   switch (obj_id) {
     case ASF_OBJ_STREAM:
       ret = gst_asf_demux_process_stream (demux, p_data, p_size);
       break;
     case ASF_OBJ_DATA:
-      ret = gst_asf_demux_process_data (demux, obj_size, p_data, p_size);
+      /* process pending stream objects and create pads for those */
+      gst_asf_demux_process_queued_extended_stream_objects (demux);
+
+      /* switch into data mode */
+      ret = gst_asf_demux_process_data (demux, obj_data_size, p_data, p_size);
       break;
     case ASF_OBJ_FILE:
       ret = gst_asf_demux_process_file (demux, p_data, p_size);
@@ -1671,6 +1854,13 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     case ASF_OBJ_EXT_CONTENT_DESC:
       ret = gst_asf_demux_process_ext_content_desc (demux, p_data, p_size);
       break;
+    case ASF_OBJ_EXTENDED_STREAM_PROPS:
+      ret = gst_asf_demux_process_ext_stream_props (demux, obj_data_size,
+          p_data, p_size);
+      break;
+    case ASF_OBJ_LANGUAGE_LIST:
+      ret = gst_asf_demux_process_language_list (demux, p_data, p_size);
+      break;
     case ASF_OBJ_CONCEAL_NONE:
     case ASF_OBJ_HEAD2:
     case ASF_OBJ_UNDEFINED:
@@ -1678,9 +1868,7 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     case ASF_OBJ_INDEX:
     case ASF_OBJ_PADDING:
     case ASF_OBJ_BITRATE_MUTEX:
-    case ASF_OBJ_LANGUAGE_LIST:
     case ASF_OBJ_METADATA_OBJECT:
-    case ASF_OBJ_EXTENDED_STREAM_PROPS:
     case ASF_OBJ_COMPATIBILITY:
     case ASF_OBJ_INDEX_PLACEHOLDER:
     case ASF_OBJ_INDEX_PARAMETERS:
@@ -1691,7 +1879,8 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
        * it, people don't like fatal errors much */
       GST_INFO ("Skipping object (size %" G_GUINT64_FORMAT ") ...", obj_size);
 
-      if (!gst_asf_demux_skip_bytes (obj_size, p_data, p_size))
+      if (!gst_asf_demux_skip_bytes (obj_size - ASF_DEMUX_OBJECT_HEADER_SIZE,
+              p_data, p_size))
         ret = ASF_FLOW_NEED_MORE_DATA;
       else
         ret = GST_FLOW_OK;
@@ -2590,6 +2779,12 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       demux->state = GST_ASF_DEMUX_STATE_HEADER;
       g_free (demux->objpath);
       demux->objpath = NULL;
+      g_strfreev (demux->languages);
+      demux->languages = NULL;
+      demux->num_languages = 0;
+      g_slist_foreach (demux->ext_stream_props, (GFunc) g_free, NULL);
+      g_slist_free (demux->ext_stream_props);
+      demux->ext_stream_props = NULL;
       break;
     }
     default:

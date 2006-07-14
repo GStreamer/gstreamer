@@ -78,7 +78,7 @@ typedef enum {
 struct _GstASFDemux {
   GstElement 	     element;
 
-  GstPad 	    *sinkpad;
+  GstPad            *sinkpad;
 
   GstAdapter        *adapter;
   GstTagList        *taglist;
@@ -98,6 +98,11 @@ struct _GstASFDemux {
 
   /* bitrates are unused at the moment */
   guint32              bitrate[GST_ASF_DEMUX_NUM_STREAM_IDS];
+
+  gchar              **languages;
+  guint                num_languages;
+
+  GSList              *ext_stream_props;
 
   guint32              num_audio_streams;
   guint32              num_video_streams;

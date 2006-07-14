@@ -1,3 +1,18 @@
+2006-07-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_get_obj_stream),
+	(gst_asf_demux_process_stream),
+	(gst_asf_demux_process_language_list),
+	(gst_asf_demux_process_ext_stream_props),
+	(gst_asf_demux_process_queued_extended_stream_objects),
+	(gst_asf_demux_process_object), (gst_asf_demux_change_state):
+	* gst/asfdemux/gstasfdemux.h:
+	  Parse extended stream properties objects and stream objects
+	  hidden inside them (but delay creation of the appropriate
+	  pads until after all the 'normal' stream objects have been
+	  dealt with) (#343763). Also parse language list object.
+
 2006-07-13  Wim Taymans  <wim@fluendo.com>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_class_init),
