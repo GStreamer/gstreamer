@@ -1,3 +1,14 @@
+2006-07-14  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Sebastien Cote <sebas642 at yahoo dot ca>
+
+	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_base_init),
+	(gst_rtp_amr_depay_class_init), (gst_rtp_amr_depay_init),
+	(gst_rtp_amr_depay_setcaps), (gst_rtp_amr_depay_process):
+	* gst/rtp/gstrtpamrdepay.h:
+	rtpamrdec isn't a subclass of GstBaseRtpDepayload.
+	Fixes #321191
+
 2006-07-14  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/ximage/gstximagesrc.c: (gst_ximage_src_ximage_get),

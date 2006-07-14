@@ -21,6 +21,7 @@
 #define __GST_RTP_AMR_DEPAY_H__
 
 #include <gst/gst.h>
+#include <gst/rtp/gstbasertpdepayload.h>
 
 G_BEGIN_DECLS
 
@@ -40,10 +41,7 @@ typedef struct _GstRtpAMRDepayClass GstRtpAMRDepayClass;
 
 struct _GstRtpAMRDepay
 {
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
+  GstBaseRTPDepayload depayload;
 
   gboolean negotiated;
 
@@ -57,12 +55,11 @@ struct _GstRtpAMRDepay
   gboolean interleaving;
   gint     ptime;
   gint     channels;
-  gint     rate;
 };
 
 struct _GstRtpAMRDepayClass
 {
-  GstElementClass parent_class;
+  GstBaseRTPDepayloadClass parent_class;
 };
 
 gboolean gst_rtp_amr_depay_plugin_init (GstPlugin * plugin);
