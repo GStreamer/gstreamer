@@ -1431,6 +1431,7 @@ gst_ogg_demux_finalize (GObject * object)
 
   ogg = GST_OGG_DEMUX (object);
 
+  g_array_free (ogg->chains, TRUE);
   g_mutex_free (ogg->chain_lock);
   ogg_sync_clear (&ogg->sync);
 

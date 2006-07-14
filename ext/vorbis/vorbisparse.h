@@ -57,6 +57,7 @@ struct _GstVorbisParse {
   gboolean              streamheader_sent;
   GList *               streamheader;
 
+  GQueue *		event_queue;
   GQueue *		buffer_queue;
 
   vorbis_info		vi;

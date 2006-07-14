@@ -1,3 +1,19 @@
+2006-07-14  Andy Wingo  <wingo@pobox.com>
+
+	* ext/vorbis/vorbisparse.h: 
+	* ext/vorbis/vorbisparse.c (vorbis_parse_drain_event_queue)
+	(vorbis_parse_push_headers, vorbis_parse_clear_queue)
+	(vorbis_parse_drain_queue_prematurely, )
+	(vorbis_parse_sink_event, vorbis_parse_change_state): Queue events
+	until we have initialized our state. Fixes seeking after an
+	initial pad block.
+
+2006-07-14  Andy Wingo  <wingo@pobox.com>
+
+	Patch by: Iain * <iaingnome@gmail.com>
+	
+	* ext/ogg/gstoggdemux.c (gst_ogg_demux_finalize): Fix memleak.
+
 2006-07-14  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

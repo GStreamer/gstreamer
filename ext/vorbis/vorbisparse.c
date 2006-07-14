@@ -192,11 +192,22 @@ vorbis_parse_set_header_on_caps (GstVorbisParse * parse, GstCaps * caps)
 }
 
 static void
+vorbis_parse_drain_event_queue (GstVorbisParse * parse)
+{
+  while (parse->event_queue->length) {
+    GstEvent *event;
+
+    event = GST_EVENT_CAST (g_queue_pop_head (parse->event_queue));
+    gst_pad_event_default (parse->sinkpad, event);
+  }
+}
+
+static void
 vorbis_parse_push_headers (GstVorbisParse * parse)
 {
   /* mark and put on caps */
   GstCaps *caps;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf, *outbuf1, *outbuf2, *outbuf3;
   ogg_packet packet;
 
   /* get the headers into the caps, passing them to vorbis as we go */
@@ -206,7 +217,6 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   gst_pad_set_caps (parse->srcpad, caps);
   gst_caps_unref (caps);
 
-  /* push out buffers, ignoring return value... */
   outbuf = GST_BUFFER_CAST (parse->streamheader->data);
   packet.packet = GST_BUFFER_DATA (outbuf);
   packet.bytes = GST_BUFFER_SIZE (outbuf);
@@ -215,9 +225,7 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   packet.e_o_s = 0;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
   parse->sample_rate = parse->vi.rate;
-
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (parse->srcpad));
-  gst_pad_push (parse->srcpad, outbuf);
+  outbuf1 = outbuf;
 
   outbuf = GST_BUFFER_CAST (parse->streamheader->next->data);
   packet.packet = GST_BUFFER_DATA (outbuf);
@@ -226,9 +234,7 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   packet.packetno = 2;
   packet.e_o_s = 0;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
-
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (parse->srcpad));
-  gst_pad_push (parse->srcpad, outbuf);
+  outbuf2 = outbuf;
 
   outbuf = GST_BUFFER_CAST (parse->streamheader->next->next->data);
   packet.packet = GST_BUFFER_DATA (outbuf);
@@ -237,9 +243,18 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   packet.packetno = 3;
   packet.e_o_s = 0;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
+  outbuf3 = outbuf;
 
-  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (parse->srcpad));
-  gst_pad_push (parse->srcpad, outbuf);
+  /* first process queued events */
+  vorbis_parse_drain_event_queue (parse);
+
+  /* push out buffers, ignoring return value... */
+  gst_buffer_set_caps (outbuf1, GST_PAD_CAPS (parse->srcpad));
+  gst_pad_push (parse->srcpad, outbuf1);
+  gst_buffer_set_caps (outbuf2, GST_PAD_CAPS (parse->srcpad));
+  gst_pad_push (parse->srcpad, outbuf2);
+  gst_buffer_set_caps (outbuf3, GST_PAD_CAPS (parse->srcpad));
+  gst_pad_push (parse->srcpad, outbuf3);
 
   g_list_free (parse->streamheader);
   parse->streamheader = NULL;
@@ -255,6 +270,12 @@ vorbis_parse_clear_queue (GstVorbisParse * parse)
 
     buf = GST_BUFFER_CAST (g_queue_pop_head (parse->buffer_queue));
     gst_buffer_unref (buf);
+  }
+  while (parse->event_queue->length) {
+    GstEvent *event;
+
+    event = GST_EVENT_CAST (g_queue_pop_head (parse->event_queue));
+    gst_event_unref (event);
   }
 }
 
@@ -288,6 +309,10 @@ vorbis_parse_drain_queue_prematurely (GstVorbisParse * parse)
    * -- won't normally be the case, but this catches the
    * didn't-get-a-granulepos-on-the-last-packet case. Assuming a continuous
    * stream. */
+
+  /* if we got EOS before any buffers came, go ahead and push the other events
+   * first */
+  vorbis_parse_drain_event_queue (parse);
 
   while (!g_queue_is_empty (parse->buffer_queue)) {
     GstBuffer *buf;
@@ -405,6 +430,16 @@ vorbis_parse_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
+vorbis_parse_queue_event (GstVorbisParse * parse, GstEvent * event)
+{
+  GstFlowReturn ret = TRUE;
+
+  g_queue_push_tail (parse->event_queue, event);
+
+  return ret;
+}
+
+static gboolean
 vorbis_parse_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret;
@@ -424,7 +459,10 @@ vorbis_parse_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_event_default (pad, event);
       break;
     default:
-      ret = gst_pad_event_default (pad, event);
+      if (!parse->streamheader_sent && GST_EVENT_IS_SERIALIZED (event))
+        ret = vorbis_parse_queue_event (parse, event);
+      else
+        ret = gst_pad_event_default (pad, event);
       break;
   }
 
@@ -597,6 +635,7 @@ vorbis_parse_change_state (GstElement * element, GstStateChange transition)
       parse->packetno = 0;
       parse->streamheader_sent = FALSE;
       parse->buffer_queue = g_queue_new ();
+      parse->event_queue = g_queue_new ();
       break;
     default:
       break;
@@ -611,6 +650,8 @@ vorbis_parse_change_state (GstElement * element, GstStateChange transition)
       vorbis_parse_clear_queue (parse);
       g_queue_free (parse->buffer_queue);
       parse->buffer_queue = NULL;
+      g_queue_free (parse->event_queue);
+      parse->event_queue = NULL;
       break;
     default:
       break;
