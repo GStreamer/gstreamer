@@ -1,3 +1,10 @@
+2006-07-14  Michael Smith  <msmith@fluendo.com>
+
+	* tests/check/pipelines/vorbisenc.c: (stop_pipeline):
+	  Move a g_cond_signal to earlier to avoid sometimes deadlocking
+	  (commonly happens when running this test under valgrind) when trying
+	  to remove the buffer probe.
+
 2006-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new):

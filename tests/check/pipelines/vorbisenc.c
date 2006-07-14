@@ -87,9 +87,9 @@ stop_pipeline (GstElement * bin, GstPad * pad)
   if (buf)
     gst_buffer_unref (buf);
   buf = NULL;
+  g_cond_signal (cond);
   gst_pad_remove_buffer_probe (pad, (guint) id);
   id = 0;
-  g_cond_signal (cond);
   g_mutex_unlock (lock);
 
   gst_element_set_state (bin, GST_STATE_NULL);
