@@ -215,9 +215,22 @@ theora_parse_set_streamheader (GstTheoraParse * parse)
 }
 
 static void
+theora_parse_drain_event_queue (GstTheoraParse * parse)
+{
+  while (parse->event_queue->length) {
+    GstEvent *event;
+
+    event = GST_EVENT_CAST (g_queue_pop_head (parse->event_queue));
+    gst_pad_event_default (parse->sinkpad, event);
+  }
+}
+
+static void
 theora_parse_push_headers (GstTheoraParse * parse)
 {
   gint i;
+
+  theora_parse_drain_event_queue (parse);
 
   if (!parse->streamheader_received)
     theora_parse_set_streamheader (parse);
@@ -238,6 +251,12 @@ theora_parse_clear_queue (GstTheoraParse * parse)
 
     buf = GST_BUFFER_CAST (g_queue_pop_head (parse->buffer_queue));
     gst_buffer_unref (buf);
+  }
+  while (parse->event_queue->length) {
+    GstEvent *event;
+
+    event = GST_EVENT_CAST (g_queue_pop_head (parse->event_queue));
+    gst_buffer_unref (event);
   }
 }
 
@@ -313,6 +332,10 @@ theora_parse_drain_queue_prematurely (GstTheoraParse * parse)
    * stream. */
 
   GST_DEBUG_OBJECT (parse, "got EOS, draining queue");
+
+  /* if we get an eos before pushing the streamheaders, drain our events before
+   * eos */
+  theora_parse_drain_event_queue (parse);
 
   while (!g_queue_is_empty (parse->buffer_queue)) {
     GstBuffer *buf;
@@ -453,6 +476,13 @@ theora_parse_chain (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
+theora_parse_queue_event (GstTheoraParse * parse, GstEvent * event)
+{
+  g_queue_push_tail (parse->event_queue, event);
+  return TRUE;
+}
+
+static gboolean
 theora_parse_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret;
@@ -472,7 +502,10 @@ theora_parse_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_event_default (pad, event);
       break;
     default:
-      ret = gst_pad_event_default (pad, event);
+      if (parse->send_streamheader && GST_EVENT_IS_SERIALIZED (event))
+        ret = theora_parse_queue_event (parse, event);
+      else
+        ret = gst_pad_event_default (pad, event);
       break;
   }
 
@@ -661,6 +694,7 @@ theora_parse_change_state (GstElement * element, GstStateChange transition)
       parse->packetno = 0;
       parse->send_streamheader = TRUE;
       parse->buffer_queue = g_queue_new ();
+      parse->event_queue = g_queue_new ();
       parse->prev_keyframe = -1;
       parse->prev_frame = -1;
       break;
@@ -676,6 +710,7 @@ theora_parse_change_state (GstElement * element, GstStateChange transition)
       theora_comment_clear (&parse->comment);
       theora_parse_clear_queue (parse);
       g_queue_free (parse->buffer_queue);
+      g_queue_free (parse->event_queue);
       parse->buffer_queue = NULL;
       for (i = 0; i < 3; i++) {
         if (parse->streamheader[i]) {

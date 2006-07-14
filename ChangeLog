@@ -1,5 +1,12 @@
 2006-07-14  Andy Wingo  <wingo@pobox.com>
 
+	* ext/theora/gsttheoraparse.h: 
+	* ext/theora/theoraparse.c (theora_parse_drain_event_queue)
+	(theora_parse_push_headers, theora_parse_clear_queue)
+	(theora_parse_drain_queue_prematurely, )
+	(theora_parse_sink_event, theora_parse_change_state): Queue events
+	until we initialized our state, like in vorbisparse.
+
 	* ext/vorbis/vorbisparse.h: 
 	* ext/vorbis/vorbisparse.c (vorbis_parse_drain_event_queue)
 	(vorbis_parse_push_headers, vorbis_parse_clear_queue)

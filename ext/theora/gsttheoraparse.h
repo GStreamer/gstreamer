@@ -59,6 +59,7 @@ struct _GstTheoraParse {
   gboolean              streamheader_received;
   GstBuffer *		streamheader[3];
 
+  GQueue *		event_queue;
   GQueue *		buffer_queue;
 
   theora_info		info;
