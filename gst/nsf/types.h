@@ -61,7 +61,6 @@ typedef  uint8    boolean;
 
 #ifdef NOFRENDO_DEBUG
 #include <stdlib.h>
-#include "memguard.h"
 #include "log.h"
 #define  ASSERT(expr)      if (FALSE == (expr))\
                            {\
@@ -75,7 +74,7 @@ typedef  uint8    boolean;
                              exit(1);\
                            }
 #else /* Not debugging */
-#include "memguard.h"
+#include <stdlib.h>
 #define  ASSERT(expr)
 #define  ASSERT_MSG(msg)
 #endif
@@ -84,6 +83,13 @@ typedef  uint8    boolean;
 
 /*
 ** $Log$
+** Revision 1.2  2006/07/14 09:11:11  wtay
+** * gst/nsf/Makefile.am:
+** * gst/nsf/memguard.c:
+** * gst/nsf/memguard.h:
+** * gst/nsf/types.h:
+** Remove crack malloc/free replacement.
+**
 ** Revision 1.1  2006/07/13 15:07:28  wtay
 ** Based on patches by: Johan Dahlin <johan at gnome dot org>
 ** Ronald Bultje <rbultje at ronald dot bitfreak dot net>

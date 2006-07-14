@@ -7,7 +7,6 @@ NOSEFART_SOURCES=fmopl.c \
 	nes_apu.c \
 	vrc7_snd.c \
 	fds_snd.c \
-	memguard.c \
 	nes6502.c \
 	nsf.c \
 	vrcvisnd.c
@@ -20,7 +19,6 @@ NOSEFART_INCLUDES=fmopl.h \
 	osd.h \
 	vrc7_snd.h \
 	fds_snd.h \
-	memguard.h \
 	nes6502.h \
 	nsf.h \
 	types.h \

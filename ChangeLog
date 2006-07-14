@@ -1,3 +1,11 @@
+2006-07-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/nsf/Makefile.am:
+	* gst/nsf/memguard.c:
+	* gst/nsf/memguard.h:
+	* gst/nsf/types.h:
+	Remove crack malloc/free replacement.
+
 2006-07-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/Makefile.am:
