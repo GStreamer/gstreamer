@@ -452,17 +452,33 @@ static void
 gst_base_rtp_depayload_wait (GstBaseRTPDepayload * filter, GstClockTime time)
 {
   GstClockID id;
+  GstClock *clock;
+  GstClockTime base;
 
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (time));
-  if (GST_ELEMENT_CLOCK (filter) == NULL) {
-    GST_DEBUG_OBJECT (filter, "No clock given yet");
-    return;
-  }
 
-  id = gst_clock_new_single_shot_id (GST_ELEMENT_CLOCK (filter), time);
+  GST_OBJECT_LOCK (filter);
+  if ((clock = GST_ELEMENT_CLOCK (filter)) == NULL)
+    goto no_clock;
+  gst_object_ref (clock);
+  GST_OBJECT_UNLOCK (filter);
+
+  base = gst_clock_get_time (clock);
+  id = gst_clock_new_single_shot_id (clock, base + time);
+
+  gst_object_unref (clock);
 
   gst_clock_id_wait (id, NULL);
   gst_clock_id_unref (id);
+
+  return;
+
+no_clock:
+  {
+    GST_DEBUG_OBJECT (filter, "No clock given yet");
+    GST_OBJECT_UNLOCK (filter);
+    return;
+  }
 }
 
 static GstStateChangeReturn
@@ -471,14 +487,11 @@ gst_base_rtp_depayload_change_state (GstElement * element,
 {
   GstBaseRTPDepayload *filter;
 
-  g_return_val_if_fail (GST_IS_BASE_RTP_DEPAYLOAD (element),
-      GST_STATE_CHANGE_FAILURE);
   filter = GST_BASE_RTP_DEPAYLOAD (element);
 
   /* we disallow changing the state from the thread */
   if (g_thread_self () == filter->thread)
-    return GST_STATE_CHANGE_FAILURE;
-
+    goto wrong_thread;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -507,8 +520,15 @@ gst_base_rtp_depayload_change_state (GstElement * element,
   return GST_STATE_CHANGE_SUCCESS;
 
   /* ERRORS */
+wrong_thread:
+  {
+    GST_ELEMENT_ERROR (filter, CORE, STATE_CHANGE,
+        (NULL), ("cannot perform a state change from this thread"));
+    return GST_STATE_CHANGE_FAILURE;
+  }
 start_failed:
   {
+    /* start method should have posted an error message */
     return GST_STATE_CHANGE_FAILURE;
   }
 }
@@ -519,7 +539,6 @@ gst_base_rtp_depayload_set_property (GObject * object, guint prop_id,
 {
   GstBaseRTPDepayload *filter;
 
-  g_return_if_fail (GST_IS_BASE_RTP_DEPAYLOAD (object));
   filter = GST_BASE_RTP_DEPAYLOAD (object);
 
   switch (prop_id) {
@@ -538,7 +557,6 @@ gst_base_rtp_depayload_get_property (GObject * object, guint prop_id,
 {
   GstBaseRTPDepayload *filter;
 
-  g_return_if_fail (GST_IS_BASE_RTP_DEPAYLOAD (object));
   filter = GST_BASE_RTP_DEPAYLOAD (object);
 
   switch (prop_id) {
