@@ -305,7 +305,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Touch mapped region read data</NICK>
 <BLURB>Touch mmapped data regions to force them to be read from disk.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -316,6 +316,16 @@
 <NICK>Use mmap to read data</NICK>
 <BLURB>Whether to use mmap. FALSE to force normal read() calls.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFileSrc::sequential</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Optimise for sequential mmap access</NICK>
+<BLURB>Whether to use madvise to hint to the kernel that access to mmap pages will be sequential.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>

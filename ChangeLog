@@ -1,3 +1,10 @@
+=== release 0.10.9 ===
+
+2006-07-13  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.9, "On the road again"
+
 2006-07-13  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_update_length):

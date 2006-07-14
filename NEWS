@@ -1,4 +1,33 @@
-This is GStreamer 0.10.8, "Soepeke, ik zie ou nog altijd nie"
+This is GStreamer 0.10.9, "On the road again"
+Changes since 0.10.8:
+
+      * The testsuite can now generate coverage information
+      * Better support for non-linear editing
+      * Removed Glib 2.6 compatibility
+      * Performance improvements on cpus that support branch hints
+      * Bug fixes
+
+Bugs fixed since 0.10.8:
+
+      * 346730 : some warnings about enums and macros
+      * 341029 : Ghostpads internal and target should be linked from the b...
+      * 346192 : [PATCH] Pad blocking on events
+      * 347384 : [ghostpad] padtemplates shouldn't be set automatically
+      * 344115 : [patch] make more internal data const
+      * 324176 : gst-element-check-0.x.m4 should use versioned gst-inspect
+      * 330379 : Bogus commits to basesink, basetransform, collectpads
+      * 341667 : restore_from_xml breaks pad links again after creating them
+      * 344642 : tools/gst-inspect.c does not compile if --disable-nls is ...
+      * 344748 : Fails with non-writable registry
+      * 344849 : GstController doesn't handle float properties correct
+      * 345086 : [gst-feedback] calls un-versioned tools
+      * 346097 : SIGSEGV when using --gst-plugin-load
+      * 347337 : GDP does not correctly deserialize events without a struc...
+      * 347408 : basesrc causes regressions in pull with 0 bytes
+      * 345720 : Bad performance playing files off CD
+      * 331727 : make probes and Ghostpads more elegant
+      * 343196 : basetransform not handles ro/rw buffer flagging for trans...
+      * 346663 : Segmentation error with fakesrc, fakesink and a filter
 
 Changes since 0.10.7:
     
