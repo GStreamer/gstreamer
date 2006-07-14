@@ -1,3 +1,8 @@
+2006-07-14  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	Bump nano back to CVS
+
 === release 0.10.9 ===
 
 2006-07-13  Jan Schmidt <thaytan@mad.scientist.com>
