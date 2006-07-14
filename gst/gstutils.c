@@ -1811,6 +1811,7 @@ gst_element_unlink (GstElement * src, GstElement * dest)
         break;
     }
   }
+  gst_iterator_free (pads);
 }
 
 /**

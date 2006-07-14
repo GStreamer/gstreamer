@@ -448,6 +448,20 @@ GST_START_TEST (test_element_found_tags)
 
 GST_END_TEST;
 
+GST_START_TEST (test_element_unlink)
+{
+  GstElement *src, *sink;
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (gst_element_link (src, sink) != FALSE);
+  gst_element_unlink (src, sink);
+  gst_object_unref (src);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_utils_suite (void)
 {
@@ -466,6 +480,7 @@ gst_utils_suite (void)
   tcase_add_test (tc_chain, test_parse_bin_from_description);
 #endif
   tcase_add_test (tc_chain, test_element_found_tags);
+  tcase_add_test (tc_chain, test_element_unlink);
   return s;
 }
 

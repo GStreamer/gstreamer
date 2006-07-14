@@ -1,3 +1,13 @@
+2006-07-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Antoine Tremblay <hexa00 at gmail com>
+
+	* gst/gstutils.c: (gst_element_unlink):
+	  Free iterator when done (#347311).
+
+	* tests/check/gst/gstutils.c: (GST_START_TEST), (gst_utils_suite):
+	  And add a test case for this.
+
 2006-07-14  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
