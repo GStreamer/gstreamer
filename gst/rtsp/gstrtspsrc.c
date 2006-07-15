@@ -337,10 +337,12 @@ gst_rtspsrc_set_state (GstRTSPSrc * src, GstState state)
     stream = (GstRTSPStream *) streams->data;
 
     /* first our rtp session manager */
-    if ((ret =
-            gst_element_set_state (stream->rtpdec,
-                state)) == GST_STATE_CHANGE_FAILURE)
-      goto done;
+    if (stream->rtpdec) {
+      if ((ret =
+              gst_element_set_state (stream->rtpdec,
+                  state)) == GST_STATE_CHANGE_FAILURE)
+        goto done;
+    }
 
     /* then our sources */
     if (stream->rtpsrc) {

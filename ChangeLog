@@ -1,3 +1,8 @@
+2006-07-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_set_state):
+	  Don't try doing state changes on a NULL pointer.
+
 2006-07-14  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sebastien Cote <sebas642 at yahoo dot ca>
