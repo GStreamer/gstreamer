@@ -580,6 +580,11 @@ gst_ivorbisfile_sink_activate (GstPad * sinkpad)
     /* FIX ME */
     /* ivorbisfile->vf.seekable = TRUE; */
     ivorbisfile->vf.seekable = FALSE;
+    if (ivorbisfile->adapter) {
+      gst_adapter_clear (ivorbisfile->adapter);
+      g_object_unref (ivorbisfile->adapter);
+      ivorbisfile->adapter = NULL;
+    }
     return gst_pad_activate_pull (sinkpad, TRUE);
   } else {
 

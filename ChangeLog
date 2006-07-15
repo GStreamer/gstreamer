@@ -1,5 +1,10 @@
 2006-07-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/ivorbis/vorbisfile.c: (gst_ivorbisfile_sink_activate):
+        Reset adapter.
+
+2006-07-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/spectrum/demo-audiotest.c: (main):
 	* gst/spectrum/demo-osssrc.c: (main):
         Do not use deprecated gtk functions.
