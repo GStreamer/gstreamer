@@ -143,7 +143,7 @@ main (int argc, char *argv[])
   gtk_container_add (GTK_CONTAINER (vbox), widget);
 
   drawingarea = gtk_drawing_area_new ();
-  gtk_drawing_area_size (GTK_DRAWING_AREA (drawingarea), SPECT_BANDS, 64);
+  gtk_widget_set_size_request (drawingarea, SPECT_BANDS, 64);
   gtk_container_add (GTK_CONTAINER (vbox), drawingarea);
 
   gtk_container_add (GTK_CONTAINER (appwindow), vbox);

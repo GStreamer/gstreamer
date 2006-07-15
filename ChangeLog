@@ -1,3 +1,9 @@
+2006-07-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/spectrum/demo-audiotest.c: (main):
+	* gst/spectrum/demo-osssrc.c: (main):
+        Do not use deprecated gtk functions.
+
 2006-07-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/nsf/Makefile.am:

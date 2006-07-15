@@ -120,7 +120,7 @@ main (int argc, char *argv[])
       G_CALLBACK (on_window_destroy), NULL);
 
   drawingarea = gtk_drawing_area_new ();
-  gtk_drawing_area_size (GTK_DRAWING_AREA (drawingarea), SPECT_BANDS, 64);
+  gtk_widget_set_size_request (drawingarea, SPECT_BANDS, 64);
   gtk_container_add (GTK_CONTAINER (appwindow), drawingarea);
   gtk_widget_show_all (appwindow);
 
