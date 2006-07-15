@@ -811,6 +811,22 @@ gst_asf_demux_get_stream (GstASFDemux * demux, guint16 id)
   return NULL;
 }
 
+static asf_obj_ext_stream_properties *
+gst_asf_demux_get_ext_stream_props_for_stream (GstASFDemux * demux, gint id)
+{
+  GSList *l;
+
+  for (l = demux->ext_stream_props; l != NULL; l = l->next) {
+    asf_obj_ext_stream_properties *esp;
+
+    esp = (asf_obj_ext_stream_properties *) l->data;
+    if (esp->stream_num == id)
+      return esp;
+  }
+
+  return NULL;
+}
+
 static void
 gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
     GstCaps * caps, guint16 id, gboolean is_video, GstTagList * tags)
@@ -855,6 +871,7 @@ static void
 gst_asf_demux_add_audio_stream (GstASFDemux * demux,
     asf_stream_audio * audio, guint16 id, guint8 ** p_data, guint64 * p_size)
 {
+  asf_obj_ext_stream_properties *ext_props;
   GstTagList *tags = NULL;
   GstBuffer *extradata = NULL;
   GstPad *src_pad;
@@ -898,11 +915,20 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
     g_free (codec_name);
   }
 
+  /* add language info if we have it */
+  ext_props = gst_asf_demux_get_ext_stream_props_for_stream (demux, id);
+  if (ext_props && ext_props->lang_idx < demux->num_languages) {
+    if (tags == NULL)
+      tags = gst_tag_list_new ();
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_LANGUAGE_CODE,
+        demux->languages[ext_props->lang_idx], NULL);
+  }
+
   if (extradata)
     gst_buffer_unref (extradata);
 
-  GST_INFO ("Adding audio stream %u codec %u (0x%x)",
-      demux->num_video_streams, audio->codec_tag, audio->codec_tag);
+  GST_INFO ("Adding audio stream %u codec %u (0x%04x), tags=%" GST_PTR_FORMAT,
+      demux->num_video_streams, audio->codec_tag, audio->codec_tag, tags);
 
   ++demux->num_audio_streams;
 
@@ -2785,6 +2811,7 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       g_slist_foreach (demux->ext_stream_props, (GFunc) g_free, NULL);
       g_slist_free (demux->ext_stream_props);
       demux->ext_stream_props = NULL;
+      memset (demux->stream, 0, sizeof (demux->stream));
       break;
     }
     default:

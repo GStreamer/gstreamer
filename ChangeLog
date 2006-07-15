@@ -1,3 +1,10 @@
+2006-07-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	(gst_asf_demux_get_ext_stream_props_for_stream),
+	(gst_asf_demux_add_audio_stream), (gst_asf_demux_change_state):
+	  Find language codes for audio streams if they are available.
+
 2006-07-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/asfheaders.h:
