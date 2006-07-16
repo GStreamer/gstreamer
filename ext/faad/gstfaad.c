@@ -299,10 +299,8 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
     /* someone forgot that char can be unsigned when writing the API */
     if ((gint8) faacDecInit2 (faad->handle,
             GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), &samplerate,
-            &channels) < 0) {
-      GST_DEBUG ("faacDecInit2() failed");
-      return FALSE;
-    }
+            &channels) < 0)
+      goto init_failed;
 
     GST_DEBUG_OBJECT (faad, "channels=%u, rate=%u", channels, samplerate);
 
@@ -351,6 +349,13 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
     gst_faad_send_tags (faad);
 
   return TRUE;
+
+  /* ERRORS */
+init_failed:
+  {
+    GST_DEBUG_OBJECT (faad, "faacDecInit2() failed");
+    return FALSE;
+  }
 }
 
 
@@ -1032,6 +1037,10 @@ gst_faad_sync (GstBuffer * buf, guint * off)
   gint snc;
 
   GST_DEBUG ("Finding syncpoint");
+
+  /* check for too small a buffer */
+  if (size < 3)
+    return FALSE;
 
   /* FIXME: for no-sync, we go over the same data for every new buffer.
    * We should save the information somewhere. */
