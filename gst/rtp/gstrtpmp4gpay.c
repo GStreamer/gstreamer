@@ -51,12 +51,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
-        "media = (string) \"video\", "
+        "media = (string) { \"video\", \"audio\", \"application\" }, "
         "payload = (int) [ 96, 127 ], "
         "clock-rate = (int) [1, MAX ], "
         "encoding-name = (string) \"mpeg4-generic\", "
         /* required string params */
-        "streamtype = (string) { \"4\", \"5\" }, "      /* 4 = video, 5 = audio */
+        "streamtype = (int) { \"4\", \"5\" }, " /* 4 = video, 5 = audio */
         "profile-level-id = (int) [1,MAX], "
         /* "config = (string) [1,MAX]" */
         "mode = (string) { \"generic\", \"CELP-cbr\", \"CELP-vbr\", \"AAC-lbr\", \"AAC-hbr\" }, "
@@ -64,7 +64,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "objecttype = (int) [1,MAX], " "constantsize = (int) [1,MAX], " /* constant size of each AU */
         "constantduration = (int) [1,MAX], "    /* constant duration of each AU */
         "maxdisplacement = (int) [1,MAX], "
-        "de-interleavebuffersize: = (int) [1,MAX], "
+        "de-interleavebuffersize = (int) [1,MAX], "
         /* Optional configuration parameters */
         "sizelength = (int) [1, 16], "  /* max 16 bits, should be enough... */
         "indexlength = (int) [1, 8], "
@@ -160,7 +160,6 @@ gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (rtpmp4gpay_debug, "rtpmp4gpay", 0,
       "MP4-generic RTP Payloader");
-
 }
 
 static void
@@ -237,7 +236,7 @@ gst_rtp_mp4g_pay_parse_audio_config (GstRtpMP4GPay * rtpmp4gpay,
   /* audio stream type */
   rtpmp4gpay->streamtype = 5;
   /* mode */
-  rtpmp4gpay->mode = "ACC-hbr";
+  rtpmp4gpay->mode = "AAC-hbr";
   /* profile (should be 1) */
   rtpmp4gpay->profile = objectType - 1;
 
@@ -363,7 +362,7 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   GstRtpMP4GPay *rtpmp4gpay;
   GstStructure *structure;
   const GValue *codec_data;
-  gboolean res = TRUE;
+  gchar *media_type = NULL;
 
   rtpmp4gpay = GST_RTP_MP4G_PAY (payload);
 
@@ -375,6 +374,7 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
     if (G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
       GstBuffer *buffer;
       const gchar *name;
+      gboolean res;
 
       buffer = gst_value_get_buffer (codec_data);
       GST_LOG_OBJECT (rtpmp4gpay, "configuring codec_data");
@@ -384,8 +384,10 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
       /* parse buffer */
       if (!strcmp (name, "audio/mpeg")) {
         res = gst_rtp_mp4g_pay_parse_audio_config (rtpmp4gpay, buffer);
+        media_type = "audio";
       } else if (!strcmp (name, "video/mpeg")) {
         res = gst_rtp_mp4g_pay_parse_video_config (rtpmp4gpay, buffer);
+        media_type = "video";
       } else {
         res = FALSE;
       }
@@ -399,13 +401,15 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
       rtpmp4gpay->config = gst_buffer_copy (buffer);
     }
   }
+  if (media_type == NULL)
+    goto config_failed;
 
-  gst_basertppayload_set_options (payload, "video", TRUE, "mpeg4-generic",
+  gst_basertppayload_set_options (payload, media_type, TRUE, "mpeg4-generic",
       rtpmp4gpay->rate);
 
   gst_rtp_mp4g_pay_new_caps (rtpmp4gpay);
 
-  return res;
+  return TRUE;
 
   /* ERRORS */
 config_failed:
@@ -503,7 +507,7 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
     gst_adapter_flush (rtpmp4gpay->adapter, payload_len);
 
     /* marker only if the packet is complete */
-    gst_rtp_buffer_set_marker (outbuf, avail > payload_len);
+    gst_rtp_buffer_set_marker (outbuf, avail <= payload_len);
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4gpay->first_ts;
 

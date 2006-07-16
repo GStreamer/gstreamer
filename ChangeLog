@@ -1,3 +1,21 @@
+2006-07-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_base_init),
+	(gst_rtp_mp4g_depay_class_init), (gst_rtp_mp4g_depay_init),
+	(gst_rtp_mp4g_depay_setcaps), (gst_rtp_mp4g_depay_process),
+	(gst_rtp_mp4g_depay_set_property),
+	(gst_rtp_mp4g_depay_get_property),
+	(gst_rtp_mp4g_depay_change_state),
+	(gst_rtp_mp4g_depay_plugin_init):
+	* gst/rtp/gstrtpmp4gdepay.h:
+	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_class_init),
+	(gst_rtp_mp4g_pay_parse_audio_config), (gst_rtp_mp4g_pay_setcaps),
+	(gst_rtp_mp4g_pay_flush):
+	Added simple generic mpeg4 depayloader.
+	Fix generic mpeg4 payloader.
+
 2006-07-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_set_state):
