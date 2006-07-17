@@ -1,3 +1,11 @@
+2006-07-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_class_init):
+	* gst/gdp/gstgdppay.c: (gst_gdp_pay_class_init),
+	  remove parent_class setting, BOILERPLATE does this
+	(gst_gdp_pay_reset_streamheader):
+	  fix typo in comment
+
 2006-07-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_perform_seek),
