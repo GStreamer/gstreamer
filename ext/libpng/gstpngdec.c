@@ -159,7 +159,7 @@ gst_pngdec_init (GstPngDec * pngdec)
   pngdec->in_timestamp = GST_CLOCK_TIME_NONE;
   pngdec->in_duration = GST_CLOCK_TIME_NONE;
 
-  pngdec->segment = gst_segment_new ();
+  gst_segment_init (&pngdec->segment, GST_FORMAT_UNDEFINED);
 }
 
 static void
@@ -240,10 +240,10 @@ buffer_clip (GstPngDec * dec, GstBuffer * buffer)
 
   if ((!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) ||
       (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) ||
-      (dec->segment->format != GST_FORMAT_TIME))
+      (dec->segment.format != GST_FORMAT_TIME))
     goto beach;
 
-  if ((res = gst_segment_clip (dec->segment, GST_FORMAT_TIME,
+  if ((res = gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
               GST_BUFFER_TIMESTAMP (buffer),
               GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer),
               &cstart, &cstop))) {
@@ -403,7 +403,7 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
     default:
       GST_ELEMENT_ERROR (pngdec, STREAM, NOT_IMPLEMENTED, (NULL),
           ("pngdec does not support this color type"));
-      ret = GST_FLOW_ERROR;
+      ret = GST_FLOW_NOT_SUPPORTED;
       goto beach;
   }
 
@@ -420,9 +420,8 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   gst_caps_unref (caps);
   gst_object_unref (templ);
 
-  if (!gst_pad_set_caps (pngdec->srcpad, res)) {
-    ret = GST_FLOW_ERROR;
-  }
+  if (!gst_pad_set_caps (pngdec->srcpad, res))
+    ret = GST_FLOW_NOT_NEGOTIATED;
 
   GST_DEBUG_OBJECT (pngdec, "our caps %" GST_PTR_FORMAT, res);
 
@@ -505,13 +504,15 @@ gst_pngdec_task (GstPad * pad)
   return;
 
 pause:
-  GST_LOG_OBJECT (pngdec, "pausing task, reason %s", gst_flow_get_name (ret));
-  gst_pad_pause_task (pngdec->sinkpad);
-  if (GST_FLOW_IS_FATAL (ret)) {
-    gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
-    GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
-        (_("Internal data stream error.")),
-        ("stream stopped, reason %s", gst_flow_get_name (ret)));
+  {
+    GST_LOG_OBJECT (pngdec, "pausing task, reason %s", gst_flow_get_name (ret));
+    gst_pad_pause_task (pngdec->sinkpad);
+    if (GST_FLOW_IS_FATAL (ret)) {
+      gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
+      GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
+          (_("Internal data stream error.")),
+          ("stream stopped, reason %s", gst_flow_get_name (ret)));
+    }
   }
 }
 
@@ -521,25 +522,23 @@ gst_pngdec_chain (GstPad * pad, GstBuffer * buffer)
   GstPngDec *pngdec;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  pngdec = GST_PNGDEC (GST_OBJECT_PARENT (pad));
+  pngdec = GST_PNGDEC (gst_pad_get_parent (pad));
 
   GST_LOG_OBJECT (pngdec, "Got buffer, size=%u", GST_BUFFER_SIZE (buffer));
 
-  if (!pngdec->setup) {
-    GST_LOG ("we are not configured yet");
-    ret = GST_FLOW_WRONG_STATE;
-    goto beach;
-  }
+  if (G_UNLIKELY (!pngdec->setup))
+    goto not_configured;
 
   /* Something is going wrong in our callbacks */
-  if (pngdec->ret != GST_FLOW_OK) {
-    ret = pngdec->ret;
+  ret = pngdec->ret;
+  if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    GST_WARNING_OBJECT (pngdec, "we have a pending return code of %d", ret);
     goto beach;
   }
 
   /* Let libpng come back here on error */
   if (setjmp (png_jmpbuf (pngdec->png))) {
-    GST_WARNING ("error during decoding");
+    GST_WARNING_OBJECT (pngdec, "error during decoding");
     ret = GST_FLOW_ERROR;
     goto beach;
   }
@@ -550,13 +549,25 @@ gst_pngdec_chain (GstPad * pad, GstBuffer * buffer)
   /* Progressive loading of the PNG image */
   png_process_data (pngdec->png, pngdec->info, GST_BUFFER_DATA (buffer),
       GST_BUFFER_SIZE (buffer));
+
+  /* grab new return code */
   ret = pngdec->ret;
 
   /* And release the buffer */
   gst_buffer_unref (buffer);
 
 beach:
+  gst_object_unref (pngdec);
+
   return ret;
+
+  /* ERRORS */
+not_configured:
+  {
+    GST_LOG_OBJECT (pngdec, "we are not configured yet");
+    ret = GST_FLOW_WRONG_STATE;
+    goto beach;
+  }
 }
 
 static gboolean
@@ -594,40 +605,49 @@ gst_pngdec_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:{
-      gdouble rate;
+      gdouble rate, arate;
       gboolean update;
       gint64 start, stop, position;
       GstFormat fmt;
 
-      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
-          &position);
-      gst_segment_set_newsegment (pngdec->segment, update, rate, fmt, start,
-          stop, position);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &fmt,
+          &start, &stop, &position);
+
+      gst_segment_set_newsegment_full (&pngdec->segment, update, rate, arate,
+          fmt, start, stop, position);
+
       GST_LOG_OBJECT (pngdec, "NEWSEGMENT (%s)", gst_format_get_name (fmt));
+
       if (fmt == GST_FORMAT_TIME) {
         pngdec->need_newsegment = FALSE;
-        res = gst_pad_event_default (pad, event);
+        res = gst_pad_push_event (pngdec->srcpad, event);
       } else {
         gst_event_unref (event);
         res = TRUE;
       }
       break;
     }
-    case GST_EVENT_FLUSH_START:
-      gst_pngdec_libpng_clear (pngdec);
-      res = gst_pad_event_default (pad, event);
-      break;
     case GST_EVENT_FLUSH_STOP:
+    {
+      gst_pngdec_libpng_clear (pngdec);
       gst_pngdec_libpng_init (pngdec);
-      res = gst_pad_event_default (pad, event);
+      png_set_progressive_read_fn (pngdec->png, pngdec,
+          user_info_callback, user_endrow_callback, user_end_callback);
+      pngdec->ret = GST_FLOW_OK;
+      gst_segment_init (&pngdec->segment, GST_FORMAT_UNDEFINED);
+      res = gst_pad_push_event (pngdec->srcpad, event);
       break;
+    }
     case GST_EVENT_EOS:
+    {
       GST_LOG_OBJECT (pngdec, "EOS");
       gst_pngdec_libpng_clear (pngdec);
-      res = gst_pad_event_default (pad, event);
+      pngdec->ret = GST_FLOW_UNEXPECTED;
+      res = gst_pad_push_event (pngdec->srcpad, event);
       break;
+    }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_push_event (pngdec->srcpad, event);
       break;
   }
 
@@ -679,40 +699,51 @@ gst_pngdec_libpng_init (GstPngDec * pngdec)
 {
   g_return_val_if_fail (GST_IS_PNGDEC (pngdec), FALSE);
 
-  if (pngdec->setup) {
-    goto beach;
-  }
+  if (pngdec->setup)
+    return TRUE;
+
+  GST_LOG ("init libpng structures");
 
   /* initialize png struct stuff */
   pngdec->png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
       (png_voidp) NULL, user_error_fn, user_warning_fn);
 
-  if (pngdec->png == NULL) {
-    GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
-        ("Failed to initialize png structure"));
-    goto beach;
-  }
+  if (pngdec->png == NULL)
+    goto init_failed;
 
   pngdec->info = png_create_info_struct (pngdec->png);
-  if (pngdec->info == NULL) {
-    gst_pngdec_libpng_clear (pngdec);
-    GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
-        ("Failed to initialize info structure"));
-    goto beach;
-  }
+  if (pngdec->info == NULL)
+    goto info_failed;
 
   pngdec->endinfo = png_create_info_struct (pngdec->png);
-  if (pngdec->endinfo == NULL) {
-    gst_pngdec_libpng_clear (pngdec);
-    GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
-        ("Failed to initialize endinfo structure"));
-    goto beach;
-  }
+  if (pngdec->endinfo == NULL)
+    goto endinfo_failed;
 
   pngdec->setup = TRUE;
 
-beach:
-  return pngdec->setup;
+  return TRUE;
+
+  /* ERRORS */
+init_failed:
+  {
+    GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
+        ("Failed to initialize png structure"));
+    return FALSE;
+  }
+info_failed:
+  {
+    gst_pngdec_libpng_clear (pngdec);
+    GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
+        ("Failed to initialize info structure"));
+    return FALSE;
+  }
+endinfo_failed:
+  {
+    gst_pngdec_libpng_clear (pngdec);
+    GST_ELEMENT_ERROR (pngdec, LIBRARY, INIT, (NULL),
+        ("Failed to initialize endinfo structure"));
+    return FALSE;
+  }
 }
 
 static GstStateChangeReturn
@@ -728,8 +759,8 @@ gst_pngdec_change_state (GstElement * element, GstStateChange transition)
       gst_pngdec_libpng_init (pngdec);
       pngdec->need_newsegment = TRUE;
       pngdec->framed = FALSE;
-      pngdec->segment = gst_segment_new ();
-      gst_segment_init (pngdec->segment, GST_FORMAT_UNDEFINED);
+      pngdec->ret = GST_FLOW_OK;
+      gst_segment_init (&pngdec->segment, GST_FORMAT_UNDEFINED);
       break;
     default:
       break;
@@ -742,10 +773,6 @@ gst_pngdec_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_pngdec_libpng_clear (pngdec);
-      if (pngdec->segment) {
-        gst_segment_free (pngdec->segment);
-        pngdec->segment = NULL;
-      }
       break;
     default:
       break;
@@ -766,18 +793,21 @@ gst_pngdec_sink_activate_push (GstPad * sinkpad, gboolean active)
 
   if (active) {
     /* Let libpng come back here on error */
-    if (setjmp (png_jmpbuf (pngdec->png))) {
-      GST_LOG ("failed setting up libpng jumb");
-      gst_pngdec_libpng_clear (pngdec);
-      return FALSE;
-    }
+    if (setjmp (png_jmpbuf (pngdec->png)))
+      goto setup_failed;
 
     GST_LOG ("setting up progressive loading callbacks");
     png_set_progressive_read_fn (pngdec->png, pngdec,
         user_info_callback, user_endrow_callback, user_end_callback);
   }
-
   return TRUE;
+
+setup_failed:
+  {
+    GST_LOG ("failed setting up libpng jmpbuf");
+    gst_pngdec_libpng_clear (pngdec);
+    return FALSE;
+  }
 }
 
 /* this function gets called when we activate ourselves in pull mode.

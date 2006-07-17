@@ -1,3 +1,15 @@
+2006-07-17  Wim Taymans  <wim@fluendo.com>
+
+	* ext/libpng/gstpngdec.c: (gst_pngdec_init), (buffer_clip),
+	(gst_pngdec_caps_create_and_set), (gst_pngdec_task),
+	(gst_pngdec_chain), (gst_pngdec_sink_event),
+	(gst_pngdec_libpng_init), (gst_pngdec_change_state),
+	(gst_pngdec_sink_activate_push):
+	* ext/libpng/gstpngdec.h:
+	Use statically allocated segment instead of leaking.
+	Various cleanups.
+	Fix flush and seek handling.
+
 2006-07-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/Makefile.am:
