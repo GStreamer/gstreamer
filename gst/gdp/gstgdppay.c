@@ -119,8 +119,6 @@ gst_gdp_pay_class_init (GstGDPPayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_gdp_pay_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_gdp_pay_get_property);
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_gdp_pay_dispose);
@@ -349,7 +347,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
         gst_value_array_append_value (&array, &value);
         g_value_unset (&value);
       }
-      /* FIXME: if one or more in this loop fail to produce and outbuffer,
+      /* FIXME: if one or more in this loop fail to produce an outbuffer,
        * should we error out ? Once ? Every time ? */
     }
   }

@@ -109,8 +109,6 @@ gst_gdp_depay_class_init (GstGDPDepayClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_gdp_depay_change_state);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_gdp_depay_finalize);
