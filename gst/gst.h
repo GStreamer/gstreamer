@@ -85,6 +85,9 @@ void		gst_version			(guint *major, guint *minor,
 						 guint *micro, guint *nano);
 gchar *		gst_version_string		(void);
 
+gboolean        gst_segtrap_is_enabled          (void);
+void            gst_segtrap_set_enabled         (gboolean enabled);
+
 G_END_DECLS
 
 #endif /* __GST_H__ */

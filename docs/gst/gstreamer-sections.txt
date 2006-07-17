@@ -25,6 +25,8 @@ gst_init_get_option_group
 gst_deinit
 gst_version
 gst_version_string
+gst_segtrap_is_enabled
+gst_segtrap_set_enabled
 <SUBSECTION Private>
 </SECTION>
 

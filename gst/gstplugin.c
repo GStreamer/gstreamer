@@ -279,6 +279,10 @@ _gst_plugin_fault_handler_restore (void)
 {
   struct sigaction action;
 
+  /* if asked to leave segfaults alone, just return */
+  if (_gst_disable_segtrap)
+    return;
+
   memset (&action, 0, sizeof (action));
   action.sa_handler = SIG_DFL;
 

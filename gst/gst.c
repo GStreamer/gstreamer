@@ -131,7 +131,6 @@ extern gint _gst_trace_on;
 /* set to TRUE when segfaults need to be left as is */
 gboolean _gst_disable_segtrap = FALSE;
 
-
 static void load_plugin_func (gpointer data, gpointer user_data);
 static gboolean init_pre (void);
 static gboolean init_post (void);
@@ -1054,4 +1053,41 @@ gst_version_string ()
   else
     return g_strdup_printf ("GStreamer %d.%d.%d (prerelease)", major, minor,
         micro);
+}
+
+/**
+ * gst_segtrap_is_enabled:
+ *
+ * Some functions in the GStreamer core might install a custom SIGSEGV handler to
+ * better catch and report errors to the application. Currently this feature is 
+ * enabled by default when loading plugins.
+ *
+ * Applications might want to disable this behaviour with the
+ * gst_segtrap_set_enabled() function. This is typically done if the application
+ * wants to install its own handler without GStreamer interfering.
+ *
+ * Returns: %TRUE if GStreamer is allowed to install a custom SIGSEGV handler.
+ *
+ * Since: 0.10.10
+ */
+gboolean
+gst_segtrap_is_enabled (void)
+{
+  /* yeps, it's enabled when it's not disabled */
+  return !_gst_disable_segtrap;
+}
+
+/**
+ * gst_segtrap_set_enabled:
+ * @enabled: whether a custom SIGSEGV handler should be installed.
+ *
+ * Applications might want to disable/enable the SIGSEGV handling of
+ * the GStreamer core. See gst_segtrap_is_enabled() for more information.
+ *
+ * Since: 0.10.10
+ */
+void
+gst_segtrap_set_enabled (gboolean enabled)
+{
+  _gst_disable_segtrap = !enabled;
 }
