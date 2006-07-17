@@ -1,3 +1,13 @@
+2006-07-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_perform_seek),
+	(gst_qtdemux_prepare_current_sample),
+	(gst_qtdemux_loop_state_movie):
+	Store duration in uint64 too instead of clipping.
+	When we do a keyframe seek and the requested time is at the
+	keyframe, don't seek back to the beginning of the keyframe.
+	Fixes #347439.
+
 2006-07-16  Wim Taymans  <wim@fluendo.com>
 
 	* ext/faad/gstfaad.c: (gst_faad_setcaps), (gst_faad_sync):
