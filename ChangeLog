@@ -1,3 +1,9 @@
+2006-07-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/alsa/gstalsa.c: (caps_add_channel_configuration):
+	  Fix typo, so that alsasink also advertises 8 channels
+	  if that's supported (tags: can, worms, open, alsa, ph34r).
+
 2006-07-17  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_internal_chain),

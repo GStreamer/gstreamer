@@ -211,7 +211,7 @@ caps_add_channel_configuration (GstCaps * caps,
   }
 
   /* everything else (4, 6, 8 channels) needs a channel layout */
-  for (c = 4; c < 8; c += 2) {
+  for (c = 4; c <= 8; c += 2) {
     if (max_chans >= c) {
       s = get_channel_free_structure (in_structure);
       gst_structure_set (s, "channels", G_TYPE_INT, c, NULL);
