@@ -1,0 +1,20 @@
+<plugin>
+  <name>spectrum</name>
+  <description>Run an FFT on the audio signal, output spectrum data</description>
+  <filename>../../gst/spectrum/.libs/libgstspectrum.so</filename>
+  <basename>libgstspectrum.so</basename>
+  <version>0.10.3.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>spectrum</name>
+      <longname>Spectrum analyzer</longname>
+      <class>Filter/Analyzer/Audio</class>
+      <description>Run an FFT on the audio signal, output spectrum data</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Stefan Kost &lt;ensonic@users.sf.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

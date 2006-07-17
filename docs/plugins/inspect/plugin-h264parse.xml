@@ -1,0 +1,20 @@
+<plugin>
+  <name>h264parse</name>
+  <description>Element parsing raw h264 streams</description>
+  <filename>../../gst/h264parse/.libs/libgsth264parse.so</filename>
+  <basename>libgsth264parse.so</basename>
+  <version>0.10.3.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>h264parse</name>
+      <longname>H264Parse</longname>
+      <class>Codec/Parser</class>
+      <description>Parses raw h264 stream</description>
+      <author>Michal Benes &lt;michal.benes@itonis.tv&gt;</author>
+    </element>
+  </elements>
+</plugin>

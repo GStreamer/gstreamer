@@ -1,5 +1,16 @@
 2006-07-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/plugins/inspect/plugin-alsaspdif.xml:
+	* docs/plugins/inspect/plugin-filter.xml:
+	* docs/plugins/inspect/plugin-h264parse.xml:
+	* docs/plugins/inspect/plugin-musepack.xml:
+	* docs/plugins/inspect/plugin-nsfdec.xml:
+	* docs/plugins/inspect/plugin-sdl.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	  adding more inspect docs
+
+2006-07-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/plugins/inspect/plugin-gdp.xml:
 	  actually commit inspectation of gdp element
 
