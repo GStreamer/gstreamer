@@ -756,6 +756,8 @@ gst_ogg_pad_internal_chain (GstPad * pad, GstBuffer * buffer)
 
   if (oggpad->start_time == GST_CLOCK_TIME_NONE) {
     oggpad->start_time = timestamp;
+    GST_DEBUG_OBJECT (oggpad, "new start time: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
   }
 
   gst_buffer_unref (buffer);
@@ -1089,7 +1091,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     /* correction for busted ogg, if the internal decoder outputed
      * a timestamp but we did not get a granulepos, it must have
      * been 0 and the time is therefore also 0 */
-    if (pad->first_time == -1) {
+    if (pad->first_granule == -1) {
       GST_DEBUG_OBJECT (ogg, "%p found start time without granulepos", pad);
       pad->first_granule = 0;
       pad->first_time = 0;
@@ -2296,11 +2298,17 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
     if (pad->is_skeleton)
       continue;
 
+    GST_LOG_OBJECT (ogg, "convert first granule %" G_GUINT64_FORMAT " to time ",
+        pad->first_granule);
+
     target = GST_FORMAT_TIME;
     if (!gst_ogg_pad_query_convert (pad,
             GST_FORMAT_DEFAULT, pad->first_granule, &target,
             (gint64 *) & pad->first_time)) {
       GST_WARNING_OBJECT (ogg, "could not convert granulepos to time");
+    } else {
+      GST_LOG_OBJECT (ogg, "converted to first time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (pad->first_time));
     }
 
     pad->mode = GST_OGG_PAD_MODE_STREAMING;

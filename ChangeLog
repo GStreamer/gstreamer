@@ -1,3 +1,11 @@
+2006-07-17  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_internal_chain),
+	(gst_ogg_pad_submit_packet), (gst_ogg_demux_read_chain):
+	*sigh*, when is the compiler going to warn when the comments
+	are out-of-sync with the code.. Refix case of busted theora
+	headers with 0 granule pos.
+
 2006-07-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
