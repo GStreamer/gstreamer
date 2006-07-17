@@ -42,10 +42,10 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
     gint channels)
 {
   gint i, n;
-  struct
+  const struct
   {
-    GstAudioChannelPosition pos1[2];
-    GstAudioChannelPosition pos2[1];
+    const GstAudioChannelPosition pos1[2];
+    const GstAudioChannelPosition pos2[1];
   } conf[] = {
     /* front: mono <-> stereo */
     { {
@@ -491,10 +491,10 @@ gst_audio_fixate_channel_positions (GstStructure * str)
    * either one until all unknown values are filled. This might not work in
    * corner cases but should work OK for the general case.
    */
-  struct
+  const struct
   {
-    GstAudioChannelPosition pos1[2];
-    GstAudioChannelPosition pos2[1];
+    const GstAudioChannelPosition pos1[2];
+    const GstAudioChannelPosition pos2[1];
   } conf[] = {
     /* front: mono <-> stereo */
     { {

@@ -1,5 +1,12 @@
 2006-07-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/audio/multichannel.c:
+	(gst_audio_check_channel_positions),
+	(gst_audio_fixate_channel_positions):
+	  Const-ify two arrays.
+
+2006-07-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/alsa/gstalsa.c: (caps_add_channel_configuration):
 	  Fix typo, so that alsasink also advertises 8 channels
 	  if that's supported (tags: can, worms, open, alsa, ph34r).
