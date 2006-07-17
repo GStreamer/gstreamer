@@ -79,7 +79,7 @@ struct _QtDemuxSample
   guint32 size;
   guint64 offset;
   guint64 timestamp;            /* In GstClockTime */
-  guint32 duration;             /* in GstClockTime */
+  guint64 duration;             /* in GstClockTime */
   gboolean keyframe;            /* TRUE when this packet is a keyframe */
 };
 
@@ -112,7 +112,7 @@ struct _QtDemuxStream
   guint32 n_samples;
   QtDemuxSample *samples;
   gboolean all_keyframe;        /* TRUE when all samples are keyframes (no stss) */
-  guint32 min_duration;         /* duration of dirst sample, used for figuring out
+  guint32 min_duration;         /* duration in timescale of dirst sample, used for figuring out
                                    the framerate, in timescale units */
 
   /* if we use chunks or samples */
@@ -659,7 +659,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
      * and move back to the previous keyframe. */
     for (n = 0; n < qtdemux->n_streams; n++) {
       QtDemuxStream *str;
-      guint32 index;
+      guint32 index, kindex;
       guint32 seg_idx;
       guint64 media_start;
       guint64 media_time;
@@ -686,31 +686,39 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
       index = gst_qtdemux_find_index (qtdemux, str, media_start);
       GST_DEBUG_OBJECT (qtdemux, "sample for %" GST_TIME_FORMAT " at %u",
           GST_TIME_ARGS (media_start), index);
+
       /* find previous keyframe */
-      index = gst_qtdemux_find_keyframe (qtdemux, str, index);
-      /* get timestamp of keyframe */
-      media_time = str->samples[index].timestamp;
+      kindex = gst_qtdemux_find_keyframe (qtdemux, str, index);
 
-      GST_DEBUG_OBJECT (qtdemux, "keyframe at %u with time %" GST_TIME_FORMAT,
-          index, GST_TIME_ARGS (media_time));
+      GST_DEBUG_OBJECT (qtdemux, "keyframe at %u", kindex);
 
-      /* keyframes in the segment get a chance to change the
-       * desired_offset. keyframes out of the segment are
-       * ignored. */
-      if (media_time >= seg->media_start) {
-        guint64 seg_time;
+      /* if the keyframe is at a different position, we need to update the
+       * requiested seek time */
+      if (index != kindex) {
+        index = kindex;
 
-        /* this keyframe is inside the segment, convert back to
-         * segment time */
-        seg_time = (media_time - seg->media_start) + seg->time;
-        if (seg_time < min_offset)
-          min_offset = seg_time;
+        /* get timestamp of keyframe */
+        media_time = str->samples[kindex].timestamp;
+        GST_DEBUG_OBJECT (qtdemux, "keyframe at %u with time %" GST_TIME_FORMAT,
+            kindex, GST_TIME_ARGS (media_time));
+
+        /* keyframes in the segment get a chance to change the
+         * desired_offset. keyframes out of the segment are
+         * ignored. */
+        if (media_time >= seg->media_start) {
+          guint64 seg_time;
+
+          /* this keyframe is inside the segment, convert back to
+           * segment time */
+          seg_time = (media_time - seg->media_start) + seg->time;
+          if (seg_time < min_offset)
+            min_offset = seg_time;
+        }
       }
     }
-    desired_offset = min_offset;
-
     GST_DEBUG_OBJECT (qtdemux, "keyframe seek, align to %"
         GST_TIME_FORMAT, GST_TIME_ARGS (desired_offset));
+    desired_offset = min_offset;
   }
 
   /* and set all streams to the final position */
@@ -1134,7 +1142,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
 static gboolean
 gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint64 * offset, guint * size, guint64 * timestamp,
-    guint32 * duration, gboolean * keyframe)
+    guint64 * duration, gboolean * keyframe)
 {
   QtDemuxSample *sample;
   guint64 time_position;
@@ -1283,7 +1291,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   guint64 min_time;
   guint64 offset;
   guint64 timestamp;
-  guint32 duration;
+  guint64 duration;
   gboolean keyframe;
   guint size;
   gint index;
@@ -1354,8 +1362,9 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
   GST_LOG_OBJECT (qtdemux,
-      "Pushing buffer with time %" GST_TIME_FORMAT " on pad %p",
-      GST_TIME_ARGS (timestamp), stream->pad);
+      "Pushing buffer with time %" GST_TIME_FORMAT ", duration %"
+      GST_TIME_FORMAT " on pad %p", GST_TIME_ARGS (timestamp),
+      GST_TIME_ARGS (duration), stream->pad);
 
   gst_buffer_set_caps (buf, stream->caps);
 
