@@ -1,5 +1,10 @@
 2006-07-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/plugins/inspect/plugin-gdp.xml:
+	  actually commit inspectation of gdp element
+
+2006-07-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_class_init):
 	* gst/gdp/gstgdppay.c: (gst_gdp_pay_class_init),
 	  remove parent_class setting, BOILERPLATE does this

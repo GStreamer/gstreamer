@@ -1,0 +1,27 @@
+<plugin>
+  <name>gdp</name>
+  <description>Payload/depayload GDP packets</description>
+  <filename>../../gst/gdp/.libs/libgstgdp.so</filename>
+  <basename>libgstgdp.so</basename>
+  <version>0.10.3.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>gdpdepay</name>
+      <longname>GDP Depayloader</longname>
+      <class>GDP/Depayloader</class>
+      <description>Depayloads GStreamer Data Protocol buffers</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+    </element>
+    <element>
+      <name>gdppay</name>
+      <longname>GDP Payloader</longname>
+      <class>GDP/Payloader</class>
+      <description>Payloads GStreamer Data Protocol buffers</description>
+      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+    </element>
+  </elements>
+</plugin>
