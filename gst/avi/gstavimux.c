@@ -434,13 +434,35 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
         case 43:
           avimux->vids.compression = GST_MAKE_FOURCC ('M', 'P', '4', '3');
           break;
+        default:
+          GST_INFO ("unhandled msmpegversion : %d, fall back to fourcc=MPEG",
+              msmpegversion);
+          avimux->vids.compression = GST_MAKE_FOURCC ('M', 'P', 'E', 'G');
+          break;
       }
     } else if (!strcmp (mimetype, "video/x-dv")) {
       avimux->vids.compression = GST_MAKE_FOURCC ('D', 'V', 'S', 'D');
     } else if (!strcmp (mimetype, "video/x-h263")) {
       avimux->vids.compression = GST_MAKE_FOURCC ('H', '2', '6', '3');
     } else if (!strcmp (mimetype, "video/mpeg")) {
-      avimux->vids.compression = GST_MAKE_FOURCC ('M', 'P', 'E', 'G');
+      gint mpegversion;
+
+      gst_structure_get_int (structure, "mpegversion", &mpegversion);
+
+      switch (mpegversion) {
+        case 2:
+          avimux->vids.compression = GST_MAKE_FOURCC ('M', 'P', 'G', '2');
+          break;
+        case 4:
+          /* mplayer/ffmpeg might not work with DIVX, but with FMP4 */
+          avimux->vids.compression = GST_MAKE_FOURCC ('D', 'I', 'V', 'X');
+          break;
+        default:
+          GST_INFO ("unhandled mpegversion : %d, fall back to fourcc=MPEG",
+              mpegversion);
+          avimux->vids.compression = GST_MAKE_FOURCC ('M', 'P', 'E', 'G');
+          break;
+      }
     }
 
     if (!avimux->vids.compression)

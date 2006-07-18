@@ -1,3 +1,9 @@
+2006-07-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavimux.c: (gst_avi_mux_vidsink_set_caps):
+          Respect mpegversion for "video/mpeg" and give message in case of
+          unhandled versions.
+
 2006-07-17  Wim Taymans  <wim@fluendo.com>
 
 	* ext/libpng/gstpngdec.c: (gst_pngdec_init), (buffer_clip),
