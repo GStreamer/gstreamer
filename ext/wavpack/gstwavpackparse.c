@@ -213,6 +213,11 @@ gst_wavpack_parse_reset (GstWavpackParse * wavpackparse)
     gst_object_unref (wavpackparse->srcpad);
     wavpackparse->srcpad = NULL;
   }
+
+  g_list_foreach (wavpackparse->queued_events, (GFunc) gst_mini_object_unref,
+      NULL);
+  g_list_free (wavpackparse->queued_events);
+  wavpackparse->queued_events = NULL;
 }
 
 static gboolean
@@ -532,6 +537,27 @@ gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
 }
 
 static gboolean
+gst_wavpack_parse_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstWavpackParse *parse;
+  gboolean ret = TRUE;
+
+  parse = GST_WAVPACK_PARSE (gst_pad_get_parent (pad));
+
+  /* stream lock is recursive, should be fine for all events */
+  GST_PAD_STREAM_LOCK (pad);
+  if (parse->srcpad == NULL) {
+    parse->queued_events = g_list_append (parse->queued_events, event);
+  } else {
+    ret = gst_pad_push_event (parse->srcpad, event);
+  }
+  GST_PAD_STREAM_UNLOCK (pad);
+
+  gst_object_unref (parse);
+  return ret;
+}
+
+static gboolean
 gst_wavpack_parse_src_event (GstPad * pad, GstEvent * event)
 {
   GstWavpackParse *wavpackparse;
@@ -564,9 +590,10 @@ gst_wavpack_parse_init (GstWavpackParse * wavpackparse,
 
   gst_pad_set_activate_function (wavpackparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavepack_parse_sink_activate));
-
   gst_pad_set_activatepull_function (wavpackparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavepack_parse_sink_activate_pull));
+  gst_pad_set_event_function (wavpackparse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_wavpack_parse_sink_event));
 
   gst_element_add_pad (GST_ELEMENT (wavpackparse), wavpackparse->sinkpad);
 
@@ -777,6 +804,17 @@ gst_wavpack_parse_loop (GstElement * element)
   if (wavpackparse->need_newsegment) {
     if (gst_wavpack_parse_send_newsegment (wavpackparse, FALSE))
       wavpackparse->need_newsegment = FALSE;
+  }
+
+  /* send any queued events */
+  if (wavpackparse->queued_events) {
+    GList *l;
+
+    for (l = wavpackparse->queued_events; l != NULL; l = l->next) {
+      gst_pad_push_event (wavpackparse->srcpad, GST_EVENT (l->data));
+    }
+    g_list_free (wavpackparse->queued_events);
+    wavpackparse->queued_events = NULL;
   }
 
   GST_BUFFER_TIMESTAMP (buf) = gst_util_uint64_scale_int (header.block_index,

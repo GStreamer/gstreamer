@@ -1,5 +1,17 @@
 2006-07-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):
+	  Fix caps after previous change to byte order endianness.
+
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_reset),
+	(gst_wavpack_parse_sink_event), (gst_wavpack_parse_init),
+	(gst_wavpack_parse_loop):
+	* ext/wavpack/gstwavpackparse.h:
+	  Queue incoming events if there's no source pad yet and
+	  send them downstream later when the pad is there.
+
+2006-07-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_init),
 	(gst_wavpack_dec_format_samples),
 	(gst_wavpack_dec_clip_outgoing_buffer), (gst_wavpack_dec_chain),
