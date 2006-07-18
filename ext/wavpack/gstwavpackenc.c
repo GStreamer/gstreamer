@@ -52,7 +52,7 @@ static int gst_wavpack_enc_push_block (void *id, void *data, int32_t count);
 static gboolean gst_wavpack_enc_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_wavpack_enc_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_wavpack_enc_dispose (GObject * object);
+static void gst_wavpack_enc_finalize (GObject * object);
 static void gst_wavpack_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_wavpack_enc_get_property (GObject * object, guint prop_id,
@@ -214,7 +214,7 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
   /* set state change handler */
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_wavpack_enc_change_state);
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_wavpack_enc_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_wavpack_enc_finalize);
 
   /* set property handlers */
   gobject_class->set_property =
@@ -270,15 +270,13 @@ gst_wavpack_enc_init (GstWavpackEnc * wavpack_enc, GstWavpackEncClass * gclass)
       GST_DEBUG_FUNCPTR (gst_wavpack_enc_chain));
   gst_pad_set_event_function (wavpack_enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavpack_enc_sink_event));
-  gst_element_add_pad (GST_ELEMENT (wavpack_enc),
-      GST_DEBUG_FUNCPTR (wavpack_enc->sinkpad));
+  gst_element_add_pad (GST_ELEMENT (wavpack_enc), wavpack_enc->sinkpad);
 
   /* setup src pad */
   wavpack_enc->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
-  gst_element_add_pad (GST_ELEMENT (wavpack_enc),
-      GST_DEBUG_FUNCPTR (wavpack_enc->srcpad));
+  gst_element_add_pad (GST_ELEMENT (wavpack_enc), wavpack_enc->srcpad);
 
   /* initialize object attributes */
   wavpack_enc->wp_config = NULL;
@@ -307,7 +305,7 @@ gst_wavpack_enc_init (GstWavpackEnc * wavpack_enc, GstWavpackEncClass * gclass)
 }
 
 static void
-gst_wavpack_enc_dispose (GObject * object)
+gst_wavpack_enc_finalize (GObject * object)
 {
   GstWavpackEnc *wavpack_enc = GST_WAVPACK_ENC (object);
 
@@ -315,7 +313,7 @@ gst_wavpack_enc_dispose (GObject * object)
   g_free (wavpack_enc->wv_id);
   g_free (wavpack_enc->wvc_id);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -410,29 +408,31 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * wavpack_enc)
           (GST_ELEMENT_GET_CLASS (wavpack_enc), "wvcsrc"), "wvcsrc");
 
       /* try to add correction src pad, don't set correction mode on failure */
-      if (gst_element_add_pad (GST_ELEMENT (wavpack_enc),
-              GST_DEBUG_FUNCPTR (wavpack_enc->wvcsrcpad))) {
-        GstCaps *caps = gst_caps_new_simple ("audio/x-wavpack-correction",
-            "framed", G_TYPE_BOOLEAN, FALSE, NULL);
+      GstCaps *caps = gst_caps_new_simple ("audio/x-wavpack-correction",
+          "framed", G_TYPE_BOOLEAN, FALSE, NULL);
 
-        gst_element_no_more_pads (GST_ELEMENT (wavpack_enc));
+      gst_element_no_more_pads (GST_ELEMENT (wavpack_enc));
 
-        if (!gst_pad_set_caps (wavpack_enc->wvcsrcpad, caps)) {
-          wavpack_enc->correction_mode = 0;
-          GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, INIT, (NULL),
-              ("setting correction caps failed: %", GST_PTR_FORMAT, caps));
-        } else {
-          gst_pad_use_fixed_caps (wavpack_enc->wvcsrcpad);
+      if (!gst_pad_set_caps (wavpack_enc->wvcsrcpad, caps)) {
+        wavpack_enc->correction_mode = 0;
+        GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, INIT, (NULL),
+            ("setting correction caps failed: %", GST_PTR_FORMAT, caps));
+      } else {
+        gst_pad_use_fixed_caps (wavpack_enc->wvcsrcpad);
+
+        if (gst_element_add_pad (GST_ELEMENT (wavpack_enc),
+                wavpack_enc->wvcsrcpad)) {
+
           wavpack_enc->wp_config->flags |= CONFIG_CREATE_WVC;
           if (wavpack_enc->correction_mode == 2) {
             wavpack_enc->wp_config->flags |= CONFIG_OPTIMIZE_WVC;
           }
+        } else {
+          wavpack_enc->correction_mode = 0;
+          GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, INIT, (NULL),
+              ("add correction pad failed. no correction file will be created."));
         }
         gst_caps_unref (caps);
-      } else {
-        wavpack_enc->correction_mode = 0;
-        GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, INIT, (NULL),
-            ("add correction pad failed. no correction file will be created."));
       }
     }
   } else {
@@ -442,6 +442,7 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * wavpack_enc)
           ("settings correction mode only has effect if a bitrate is provided."));
     }
   }
+  gst_element_no_more_pads (GST_ELEMENT (wavpack_enc));
 
   /* MD5, setup MD5 context */
   if ((wavpack_enc->md5) && !(wavpack_enc->md5_context)) {

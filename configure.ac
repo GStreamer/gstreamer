@@ -728,9 +728,14 @@ int main () { return 0; }
 dnl *** wavpack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_WAVPACK, true)
 GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
-  PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.2, HAVE_WAVPACK=yes, [
-    HAVE_WAVPACK=no
-    AC_MSG_RESULT(no)
+  PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.33, HAVE_WAVPACK=yes, [
+    PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.20, [
+      HAVE_WAVPACK=yes
+      AC_DEFINE(WAVPACK_OLD_API, 1, [old wavpack API])
+    ],[
+      HAVE_WAVPACK=no
+      AC_MSG_RESULT(no)
+    ])
   ])
   AC_SUBST(WAVPACK_CFLAGS)
   AC_SUBST(WAVPACK_LIBS)

@@ -1,5 +1,6 @@
 /* GStreamer Wavpack plugin
- * (c) 2004 Arwed v. Merkatz <v.merkatz@gmx.net>
+ * Copyright (c) 2004 Arwed v. Merkatz <v.merkatz@gmx.net>
+ * Copyright (c) 2006 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * gstwavpackdec.h: raw Wavpack bitstream decoder
  *
@@ -26,8 +27,9 @@
 
 #include <wavpack/wavpack.h>
 
-G_BEGIN_DECLS
+#include "gstwavpackstreamreader.h"
 
+G_BEGIN_DECLS
 /* #define's don't like whitespacey bits */
 #define GST_TYPE_WAVPACK_DEC \
   (gst_wavpack_dec_get_type())
@@ -39,48 +41,40 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WAVPACK_DEC))
 #define GST_IS_WAVPACK_DEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WAVPACK_DEC))
-
-typedef struct _GstWavpackDec      GstWavpackDec;
+typedef struct _GstWavpackDec GstWavpackDec;
 typedef struct _GstWavpackDecClass GstWavpackDecClass;
 
 struct _GstWavpackDec
 {
   GstElement element;
 
-  GstPad *sinkpad, *srcpad;
-#if 0
-  GstPad *wvcsinkpad;
-#endif
+  /* GstPad             *wvcsinkpad; */
+  GstPad              *sinkpad;
+  GstPad              *srcpad;
 
-  WavpackContext *context;
+  WavpackContext      *context;
+  WavpackStreamReader *stream_reader;
 
-  int32_t *decodebuf;
-  guint decodebuf_size;
+  read_id              wv_id;
+  /* read_id              wvc_id; */
 
-  WavpackStream *stream;
+  GstSegment           segment; /* used for clipping, TIME format */
 
-  guint32 samplerate;
-  guint channels;
-  guint width;
-  long frame_length;
+  guint                sample_rate;
+  guint                width;
+  guint                channels;
 
-  guint64 wvcflushed_bytes;
-  guint64 duration;
-  guint64 wvcduration;
-
-  guchar *decdata;
-  long *cache;
+  gint                 error_count;
 };
 
-struct _GstWavpackDecClass 
+struct _GstWavpackDecClass
 {
   GstElementClass parent;
 };
 
 GType gst_wavpack_dec_get_type (void);
 
-gboolean gst_wavpack_dec_plugin_init (GstPlugin *plugin);
+gboolean gst_wavpack_dec_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_WAVPACK_DEC_H__ */

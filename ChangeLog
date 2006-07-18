@@ -1,3 +1,37 @@
+2006-07-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
+
+	* configure.ac:
+	  Check for wavpack version and define WAVPACK_OLD_API if
+	  necessary.
+
+	* ext/wavpack/Makefile.am:
+	* ext/wavpack/gstwavpackcommon.c: (gst_wavpack_read_header),
+	(gst_wavpack_read_metadata):
+	* ext/wavpack/gstwavpackcommon.h:
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_base_init),
+	(gst_wavpack_dec_class_init), (gst_wavpack_dec_init),
+	(gst_wavpack_dec_finalize), (gst_wavpack_dec_format_samples),
+	(gst_wavpack_dec_clip_outgoing_buffer), (gst_wavpack_dec_chain),
+	(gst_wavpack_dec_sink_event), (gst_wavpack_dec_change_state),
+	(gst_wavpack_dec_request_new_pad), (gst_wavpack_dec_plugin_init):
+	* ext/wavpack/gstwavpackdec.h:
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_class_init),
+	(gst_wavpack_enc_init), (gst_wavpack_enc_finalize),
+	(gst_wavpack_enc_set_wp_config):
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_base_init),
+	(gst_wavpack_parse_finalize), (gst_wavpack_parse_class_init),
+	(gst_wavpack_parse_index_get_entry_from_sample),
+	(gst_wavpack_parse_scan_to_find_sample),
+	(gst_wavpack_parse_handle_seek_event),
+	(gst_wavpack_parse_create_src_pad):
+	* ext/wavpack/gstwavpackstreamreader.c:
+	* ext/wavpack/gstwavpackstreamreader.h:
+	  Port to new/official wavpack API, don't use API that was exported
+	  in wavpack header files and in the lib but meant to be private, at
+	  least not for recent wavpack versions; misc. 'cleanups' (#347443).
+
 2006-07-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/nsf/nsf.c: (nsf_load):
