@@ -1,6 +1,7 @@
 /* GStreamer wavpack plugin
- * (c) 2005 Arwed v. Merkatz <v.merkatz@gmx.net>
- * (c) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (c) 2005 Arwed v. Merkatz <v.merkatz@gmx.net>
+ * Copyright (c) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (c) 2006 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * gstwavpackparse.c: wavpack file parser
  *
@@ -27,6 +28,7 @@
 
 #include <wavpack/wavpack.h>
 #include "gstwavpackparse.h"
+#include "gstwavpackstreamreader.h"
 #include "gstwavpackcommon.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_wavpack_parse_debug);
@@ -45,7 +47,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "width = (int) { 8, 16, 24, 32 }, "
-        "channels = (int) { 1, 2 }, "
+        "channels = (int) [ 1, 2 ], "
         "rate = (int) [ 6000, 192000 ], " "framed = (boolean) true")
     );
 
@@ -77,7 +79,7 @@ gst_wavpack_parse_base_init (gpointer klass)
       GST_ELEMENT_DETAILS ("WavePack parser",
       "Codec/Demuxer/Audio",
       "Parses Wavpack files",
-      "Arwed v. Merkatz <v.merkatz@gmx.net>");
+      "Sebastian Dröge <slomo@circular-chaos.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
@@ -90,10 +92,11 @@ gst_wavpack_parse_base_init (gpointer klass)
 }
 
 static void
-gst_wavpack_parse_dispose (GObject * object)
+gst_wavpack_parse_finalize (GObject * object)
 {
   gst_wavpack_parse_reset (GST_WAVPACK_PARSE (object));
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -105,7 +108,7 @@ gst_wavpack_parse_class_init (GstWavpackParseClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->dispose = gst_wavpack_parse_dispose;
+  gobject_class->finalize = gst_wavpack_parse_finalize;
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_wavpack_parse_change_state);
 }
@@ -137,13 +140,19 @@ gst_wavpack_parse_index_get_entry_from_sample (GstWavpackParse * wvparse,
     entry = &g_array_index (wvparse->entries, GstWavpackParseIndexEntry, i);
 
     GST_LOG_OBJECT (wvparse, "Index entry %03u: sample %" G_GINT64_FORMAT " @"
-        " byte %" G_GINT64_FORMAT, entry->sample_offset, entry->byte_offset);
+        " byte %" G_GINT64_FORMAT, i, entry->sample_offset, entry->byte_offset);
 
     if (entry->sample_offset <= sample_offset &&
         sample_offset < entry->sample_offset_end) {
       GST_LOG_OBJECT (wvparse, "found match");
       return entry;
     }
+
+    /* as the list is sorted and we first look at the latest entry
+     * we can abort searching for an entry if the sample we want is
+     * after the latest one */
+    if (sample_offset >= entry->sample_offset_end)
+      break;
   }
   GST_LOG_OBJECT (wvparse, "no match in index");
   return NULL;
@@ -331,9 +340,7 @@ gst_wavpack_parse_scan_to_find_sample (GstWavpackParse * parse,
 
   /* now scan forward until we find the chunk we're looking for or hit EOS */
   do {
-    WavpackHeader header = { {0,}
-    , 0,
-    };
+    WavpackHeader header;
     GstBuffer *buf;
 
     buf = gst_wavpack_parse_pull_buffer (parse, off, sizeof (WavpackHeader),
@@ -450,6 +457,11 @@ gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
     if (stop_type != GST_SEEK_TYPE_NONE)
       stop = gst_util_uint64_scale_int (stop, rate, GST_SECOND);
   }
+
+  /* if seek is to something after the end of the stream seek only
+   * to the end. this can be caused by rounding errors */
+  if (start >= wvparse->total_samples)
+    start = wvparse->total_samples;
 
   flush = ((seek_flags & GST_SEEK_FLAG_FLUSH) != 0);
 
@@ -628,7 +640,7 @@ static gboolean
 gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
     WavpackHeader * header)
 {
-  WavpackMetadata meta;
+  GstWavpackMetadata meta;
   GstCaps *caps = NULL;
   guchar *bufptr;
 
@@ -636,7 +648,7 @@ gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
 
   bufptr = GST_BUFFER_DATA (buf) + sizeof (WavpackHeader);
 
-  while (read_metadata_buff (&meta, GST_BUFFER_DATA (buf), &bufptr)) {
+  while (gst_wavpack_read_metadata (&meta, GST_BUFFER_DATA (buf), &bufptr)) {
     switch (meta.id) {
       case ID_WVC_BITSTREAM:{
         caps = gst_caps_new_simple ("audio/x-wavpack-correction",
@@ -646,23 +658,41 @@ gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
             (GST_ELEMENT_GET_CLASS (wvparse), "wvcsrc"), "wvcsrc");
         break;
       }
-      case ID_RIFF_HEADER:{
-        WaveHeader wheader;
+      case ID_WV_BITSTREAM:
+      case ID_WVX_BITSTREAM:{
+        WavpackStreamReader *stream_reader = gst_wavpack_stream_reader_new ();
+        WavpackContext *wpc;
+        gchar error_msg[80];
+        read_id rid;
 
-        /* skip RiffChunkHeader and ChunkHeader */
-        g_memmove (&wheader, meta.data + 20, sizeof (WaveHeader));
-        little_endian_to_native (&wheader, WaveHeaderFormat);
-        wvparse->samplerate = wheader.SampleRate;
-        wvparse->channels = wheader.NumChannels;
+        rid.buffer = GST_BUFFER_DATA (buf);
+        rid.length = GST_BUFFER_SIZE (buf);
+        rid.position = 0;
+
+        wpc =
+            WavpackOpenFileInputEx (stream_reader, &rid, NULL, error_msg, 0, 0);
+
+        if (!wpc)
+          return FALSE;
+
+        wvparse->samplerate = WavpackGetSampleRate (wpc);
+        wvparse->channels = WavpackGetNumChannels (wpc);
         wvparse->total_samples = header->total_samples;
+        if (wvparse->total_samples == (int32_t) - 1)
+          wvparse->total_samples = 0;
+        else
+          wvparse->total_samples--;
+
         caps = gst_caps_new_simple ("audio/x-wavpack",
-            "width", G_TYPE_INT, wheader.BitsPerSample,
+            "width", G_TYPE_INT, WavpackGetBitsPerSample (wpc),
             "channels", G_TYPE_INT, wvparse->channels,
             "rate", G_TYPE_INT, wvparse->samplerate,
             "framed", G_TYPE_BOOLEAN, TRUE, NULL);
         wvparse->srcpad =
             gst_pad_new_from_template (gst_element_class_get_pad_template
             (GST_ELEMENT_GET_CLASS (wvparse), "src"), "src");
+        WavpackCloseFile (wpc);
+        g_free (stream_reader);
         break;
       }
       default:{
@@ -685,6 +715,7 @@ gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
       GST_DEBUG_FUNCPTR (gst_wavpack_parse_src_event));
 
   gst_pad_set_caps (wvparse->srcpad, caps);
+  gst_caps_unref (caps);
   gst_pad_use_fixed_caps (wvparse->srcpad);
 
   gst_object_ref (wvparse->srcpad);
