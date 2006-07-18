@@ -1,3 +1,8 @@
+2006-07-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/nsf/nsf.c: (nsf_load):
+	Fix compilation by not ignoring return values of fread.
+
 2006-07-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/inspect/plugin-alsaspdif.xml:

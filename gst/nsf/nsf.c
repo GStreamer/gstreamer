@@ -429,9 +429,13 @@ nsf_load (char *filename, void *source, int length)
     return NULL;
 
   /* Read in the header */
-  if (NULL == source)
-    fread (temp_nsf, 1, NSF_HEADER_SIZE, fp);
-  else
+  if (NULL == source) {
+    if (fread (temp_nsf, 1, NSF_HEADER_SIZE, fp) != NSF_HEADER_SIZE) {
+      log_printf ("error reading file\n");
+      free (temp_nsf);
+      return NULL;
+    }
+  } else
     memcpy (temp_nsf, source, NSF_HEADER_SIZE);
 
   if (memcmp (temp_nsf->id, NSF_MAGIC, 5)) {
@@ -472,7 +476,8 @@ nsf_load (char *filename, void *source, int length)
   /* seek to end of header, read in data */
   if (NULL == source) {
     fseek (fp, NSF_HEADER_SIZE, SEEK_SET);
-    fread (temp_nsf->data, temp_nsf->length, 1, fp);
+    if (fread (temp_nsf->data, temp_nsf->length, 1, fp) < 0)
+      log_printf ("error reading end of header\n");
 
     fclose (fp);
 
@@ -580,6 +585,10 @@ nsf_setfilter (nsf_t * nsf, int filter_type)
 
 /*
 ** $Log$
+** Revision 1.2  2006/07/18 09:36:46  wtay
+** * gst/nsf/nsf.c: (nsf_load):
+** Fix compilation by not ignoring return values of fread.
+**
 ** Revision 1.1  2006/07/13 15:07:28  wtay
 ** Based on patches by: Johan Dahlin <johan at gnome dot org>
 ** Ronald Bultje <rbultje at ronald dot bitfreak dot net>
