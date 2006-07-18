@@ -59,7 +59,7 @@
       type="http"
       url="../../gstreamer/html/GstElement.html"><classname>GstElement</classname></ulink>
       and <ulink type="http"
-      url="../../gstreamer/html/gstreamer-GstPlugin.html"><classname>GstPlugin</classname></ulink>.
+      url="../../gstreamer/html/GstPlugin.html"><classname>GstPlugin</classname></ulink>.
     </para>
   </sect1>
 
@@ -193,7 +193,7 @@
     <para>
       See the &GstLibRef; for the current implementation details of a <ulink
       type="http"
-      url="../../gstreamer/html/gstreamer-GstData.html"><classname>GstData</classname></ulink>, <ulink type="http"
+      url="../../gstreamer/html/gstreamer-GstMiniObject.html"><classname>GstMiniObject</classname></ulink>, <ulink type="http"
       url="../../gstreamer/html/gstreamer-GstBuffer.html"><classname>GstBuffer</classname></ulink> and <ulink type="http"
       url="../../gstreamer/html/gstreamer-GstEvent.html"><classname>GstEvent</classname></ulink>.
     </para>
