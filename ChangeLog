@@ -1,5 +1,20 @@
 2006-07-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_base_init),
+	(gst_wavpack_dec_class_init), (gst_wavpack_dec_init),
+	(gst_wavpack_dec_finalize), (gst_wavpack_dec_format_samples),
+	(gst_wavpack_dec_clip_outgoing_buffer), (gst_wavpack_dec_chain),
+	(gst_wavpack_dec_sink_event), (gst_wavpack_dec_change_state):
+	* ext/wavpack/gstwavpackdec.h:
+	  More clean-ups: remove most of the disfunctional correction
+	  pad stuff for now, if it ever gets implemented a lot of stuff
+	  will have to be rewritten anyway; redo chain function, move
+	  errors to end, error out instead of g_assert()ing. Also rename
+	  overly long variable 'wavpackdec' to just 'dec'; miscellaneous
+	  other small stuff.
+
+2006-07-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
 
 	* configure.ac:

@@ -48,7 +48,6 @@ struct _GstWavpackDec
 {
   GstElement element;
 
-  /* GstPad             *wvcsinkpad; */
   GstPad              *sinkpad;
   GstPad              *srcpad;
 
@@ -56,7 +55,6 @@ struct _GstWavpackDec
   WavpackStreamReader *stream_reader;
 
   read_id              wv_id;
-  /* read_id              wvc_id; */
 
   GstSegment           segment; /* used for clipping, TIME format */
 
