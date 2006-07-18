@@ -1,3 +1,11 @@
+2006-07-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstregistry.h:
+	* gst/gstregistryxml.c: (load_feature),
+	(gst_registry_xml_read_cache), (gst_registry_xml_save_feature):
+	* win32/common/config.h:
+        make --disable-index work (#342564)
+
 2006-07-18  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Peter Kjellerstedt <pkj at axis dot com>

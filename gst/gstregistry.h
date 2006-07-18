@@ -25,6 +25,7 @@
 #define __GST_REGISTRY_H__
 
 #include <stdio.h> /* FIXME: because of cache_file below */
+#include <gst/gstconfig.h>
 #include <gst/gstplugin.h>
 #include <gst/gstpluginfeature.h>
 
