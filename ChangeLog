@@ -1,5 +1,16 @@
 2006-07-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_init),
+	(gst_wavpack_dec_format_samples),
+	(gst_wavpack_dec_clip_outgoing_buffer), (gst_wavpack_dec_chain),
+	(gst_wavpack_dec_change_state):
+	* ext/wavpack/gstwavpackdec.h:
+	  Output audio in native byte order (which is also how we get
+	  samples from wavpack); output samples with 21-24 bit depth
+	  with 32 bit width (makes things easier for us).
+
+2006-07-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_base_init),
 	(gst_wavpack_dec_class_init), (gst_wavpack_dec_init),
 	(gst_wavpack_dec_finalize), (gst_wavpack_dec_format_samples),

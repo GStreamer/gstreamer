@@ -60,6 +60,7 @@ struct _GstWavpackDec
 
   guint                sample_rate;
   guint                width;
+  guint                depth;
   guint                channels;
 
   gint                 error_count;

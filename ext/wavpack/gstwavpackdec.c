@@ -51,11 +51,11 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "width = (int) { 8, 16, 24, 32 }, "
-        "depth = (int) { 8, 16, 24, 32 }, "
+        "width = (int) { 8, 16, 32 }, "
+        "depth = (int) [ 8, 32 ], "
         "channels = (int) [ 1, 2 ], "
         "rate = (int) [ 6000, 192000 ], "
-        "endianness = (int) LITTLE_ENDIAN, " "signed = (boolean) true")
+        "endianness = (int) BYTE_ORDER, " "signed = (boolean) true")
     );
 
 static GstFlowReturn gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buffer);
@@ -121,6 +121,7 @@ gst_wavpack_dec_init (GstWavpackDec * dec, GstWavpackDecClass * gklass)
   dec->channels = 0;
   dec->sample_rate = 0;
   dec->width = 0;
+  dec->depth = 0;
 
   gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
 }
@@ -137,39 +138,40 @@ gst_wavpack_dec_finalize (GObject * object)
 }
 
 static void
-gst_wavpack_dec_format_samples (GstWavpackDec * dec, guint8 * dst,
+gst_wavpack_dec_format_samples (GstWavpackDec * dec, guint8 * out_buffer,
     int32_t * samples, guint num_samples)
 {
-  gint i;
-  int32_t temp;
-
   switch (dec->width) {
-    case 8:
-      for (i = 0; i < num_samples * dec->channels; ++i)
-        *dst++ = (guint8) (*samples++);
-      break;
-    case 16:
-      for (i = 0; i < num_samples * dec->channels; ++i) {
-        *dst++ = (guint8) (temp = *samples++);
-        *dst++ = (guint8) (temp >> 8);
+    case 8:{
+      gint8 *dst = (gint8 *) out_buffer;
+      gint8 *end = dst + (num_samples * dec->channels);
+
+      while (dst < end) {
+        *dst++ = (gint8) * samples++;
       }
       break;
+    }
+    case 16:{
+      gint16 *dst = (gint16 *) out_buffer;
+      gint16 *end = dst + (num_samples * dec->channels);
+
+      while (dst < end) {
+        *dst++ = (gint16) * samples++;
+      }
+      break;
+    }
     case 24:
-      for (i = 0; i < num_samples * dec->channels; ++i) {
-        *dst++ = (guint8) (temp = *samples++);
-        *dst++ = (guint8) (temp >> 8);
-        *dst++ = (guint8) (temp >> 16);
+    case 32:{
+      gint32 *dst = (gint32 *) out_buffer;
+      gint32 *end = dst + (num_samples * dec->channels);
+
+      while (dst < end) {
+        *dst++ = *samples++;
       }
       break;
-    case 32:
-      for (i = 0; i < num_samples * dec->channels; ++i) {
-        *dst++ = (guint8) (temp = *samples++);
-        *dst++ = (guint8) (temp >> 8);
-        *dst++ = (guint8) (temp >> 16);
-        *dst++ = (guint8) (temp >> 24);
-      }
-      break;
+    }
     default:
+      g_return_if_reached ();
       break;
   }
 }
@@ -193,7 +195,7 @@ gst_wavpack_dec_clip_outgoing_buffer (GstWavpackDec * dec, GstBuffer * buf)
       GST_BUFFER_TIMESTAMP (buf) = cstart;
       GST_BUFFER_DURATION (buf) -= diff;
 
-      diff = ((dec->width + 7) >> 3) * dec->channels
+      diff = (dec->width / 8) * dec->channels
           * GST_CLOCK_TIME_TO_FRAMES (diff, dec->sample_rate);
       GST_BUFFER_DATA (buf) += diff;
       GST_BUFFER_SIZE (buf) -= diff;
@@ -203,7 +205,7 @@ gst_wavpack_dec_clip_outgoing_buffer (GstWavpackDec * dec, GstBuffer * buf)
     if (diff > 0) {
       GST_BUFFER_DURATION (buf) -= diff;
 
-      diff = ((dec->width + 7) >> 3) * dec->channels
+      diff = (dec->width / 8) * dec->channels
           * GST_CLOCK_TIME_TO_FRAMES (diff, dec->sample_rate);
       GST_BUFFER_SIZE (buf) -= diff;
     }
@@ -269,19 +271,21 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
   format_changed =
       (dec->sample_rate != WavpackGetSampleRate (dec->context)) ||
       (dec->channels != WavpackGetNumChannels (dec->context)) ||
-      (dec->width != WavpackGetBitsPerSample (dec->context));
+      (dec->depth != WavpackGetBitsPerSample (dec->context));
 
   if (!GST_PAD_CAPS (dec->srcpad) || format_changed) {
     GstCaps *caps;
 
     dec->sample_rate = WavpackGetSampleRate (dec->context);
     dec->channels = WavpackGetNumChannels (dec->context);
-    dec->width = WavpackGetBitsPerSample (dec->context);
+    dec->depth = WavpackGetBitsPerSample (dec->context);
+    dec->width =
+        (GST_ROUND_UP_8 (dec->depth) == 24) ? 32 : GST_ROUND_UP_8 (dec->depth);
 
     caps = gst_caps_new_simple ("audio/x-raw-int",
         "rate", G_TYPE_INT, dec->sample_rate,
         "channels", G_TYPE_INT, dec->channels,
-        "depth", G_TYPE_INT, dec->width,
+        "depth", G_TYPE_INT, dec->depth,
         "width", G_TYPE_INT, dec->width,
         "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
         "signed", G_TYPE_BOOLEAN, TRUE, NULL);
@@ -293,7 +297,7 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
     gst_caps_unref (caps);
   }
 
-  unpacked_size = wph.block_samples * ((dec->width + 7) >> 3) * dec->channels;
+  unpacked_size = wph.block_samples * (dec->width / 8) * dec->channels;
 
   /* alloc buffer */
   ret = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET (buf),
@@ -423,6 +427,7 @@ gst_wavpack_dec_change_state (GstElement * element, GstStateChange transition)
       dec->channels = 0;
       dec->sample_rate = 0;
       dec->width = 0;
+      dec->depth = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
