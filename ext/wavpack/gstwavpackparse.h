@@ -72,6 +72,9 @@ struct _GstWavpackParse
    * gaps (ie. append only and consecutive entries must always
    * map to consecutive chunks in the file). */
   GArray        *entries;
+
+  /* Queued events (e.g. tag events we receive before we create the src pad) */
+  GList         *queued_events;  /* STREAM_LOCK */
 };
 
 struct _GstWavpackParseClass 

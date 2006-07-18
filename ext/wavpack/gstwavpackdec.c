@@ -287,7 +287,7 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
         "channels", G_TYPE_INT, dec->channels,
         "depth", G_TYPE_INT, dec->depth,
         "width", G_TYPE_INT, dec->width,
-        "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
         "signed", G_TYPE_BOOLEAN, TRUE, NULL);
 
     GST_DEBUG_OBJECT (dec, "setting caps %" GST_PTR_FORMAT, caps);
