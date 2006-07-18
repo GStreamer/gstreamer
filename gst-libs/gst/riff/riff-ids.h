@@ -245,7 +245,12 @@ typedef struct _gst_riff_strh {
   guint32 bufsize;           /* suggested buffer size */
   guint32 quality;
   guint32 samplesize;
-  /* XXX 16 bytes ? */
+  /* rcFrame, RECT structure(struct of 4 shorts)
+  gint32  left;
+  gint32  top;
+  gint32  right;
+  gint32  bottom;
+  */
 } gst_riff_strh;
 
 typedef struct _gst_riff_strf_vids {       /* == BitMapInfoHeader */

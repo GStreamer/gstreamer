@@ -1,3 +1,12 @@
+2006-07-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/riff/riff-ids.h:
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_template_caps):
+          Add more FOURCCs (sort list to make stuff easier to find),
+          add comment what those 16 bytes in struct _gst_riff_strh according to
+          one avi-dumper are
+
 2006-07-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/multichannel.c:
