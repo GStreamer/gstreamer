@@ -52,6 +52,18 @@
   (return-type "gchar*")
 )
 
+(define-function segtrap_is_enabled
+  (c-name "gst_segtrap_is_enabled")
+  (return-type "gboolean")
+)
+
+(define-function segtrap_set_enabled
+  (c-name "gst_segtrap_set_enabled")
+  (return-type "none")
+  (parameters
+    '("gboolean" "enabled")
+  )
+)
 (define-function get_gst_version
   (c-name "gst_get_gst_version")
   (return-type "none")

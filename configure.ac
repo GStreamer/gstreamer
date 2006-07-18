@@ -115,24 +115,38 @@ then
     IGNORE_GST_0_10_6=""
   fi
 
+  dnl 0.10.8 was a brown paperbag release
+
   if test $GST_MINOR_VERSION -lt "8"
   then
     IGNORE_GST_0_10_7="gst-0.10.7.ignore"
   else
     IGNORE_GST_0_10_7=""
   fi
+
+  dnl 0.10.9 didn't bring any new wrappable API
+
+  if test $GST_MINOR_VERSION -lt "10"
+  then
+    IGNORE_GST_0_10_10="gst-0.10.10.ignore"
+  else
+    IGNORE_GST_0_10_10=""
+  fi
+
 else
   IGNORE_GST_0_10_3=""
   IGNORE_GST_0_10_4=""
   IGNORE_GST_0_10_5=""
   IGNORE_GST_0_10_6=""
   IGNORE_GST_0_10_7=""
+  IGNORE_GST_0_10_10=""
 fi
 AC_SUBST(IGNORE_GST_0_10_3)
 AC_SUBST(IGNORE_GST_0_10_4)
 AC_SUBST(IGNORE_GST_0_10_5)
 AC_SUBST(IGNORE_GST_0_10_6)
 AC_SUBST(IGNORE_GST_0_10_7)
+AC_SUBST(IGNORE_GST_0_10_10)
 
 dnl check for gstreamer-base; uninstalled is selected preferentially
 PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,

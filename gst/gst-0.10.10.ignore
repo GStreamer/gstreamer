@@ -1,0 +1,5 @@
+%%
+ignore
+   gst_segtrap_is_enabled
+   gst_segtrap_set_enabled
+%%
