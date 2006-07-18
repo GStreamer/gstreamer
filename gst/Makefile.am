@@ -26,10 +26,8 @@ endif
 
 if GST_DISABLE_TRACE
 GST_TRACE_SRC = 
-GST_TRACE_H = 
 else
 GST_TRACE_SRC = gsttrace.c
-GST_TRACE_H = gsttrace.h
 endif
 
 if GST_DISABLE_ENUMTYPES
@@ -188,7 +186,7 @@ gst_headers =			\
 	gsttaglist.h		\
 	gsttagsetter.h		\
 	gsttask.h		\
-	$(GST_TRACE_H)		\
+	gsttrace.h		\
 	gsttypefind.h		\
 	gsttypefindfactory.h	\
 	gsturi.h		\
@@ -203,8 +201,7 @@ nodist_libgstreamer_@GST_MAJORMINOR@include_HEADERS = \
 	$(built_header_configure) $(built_header_make)
 
 EXTRA_DIST = \
-	gstparse.h \
-        gsttrace.h
+	gstparse.h
 
 noinst_HEADERS = 		\
 	gettext.h		\

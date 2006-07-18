@@ -28,6 +28,37 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstAllocTraceFlags:
+ * @GST_ALLOC_TRACE_LIVE: Trace number of non-freed memory
+ * @GST_ALLOC_TRACE_MEM_LIVE: trace pointers of unfreed memory
+ *
+ * Flags indicating which tracing feature to enable.
+ */
+typedef enum {
+  GST_ALLOC_TRACE_LIVE		= (1 << 0),
+  GST_ALLOC_TRACE_MEM_LIVE	= (1 << 1)
+} GstAllocTraceFlags;
+
+typedef struct _GstAllocTrace 	GstAllocTrace;
+
+/**
+ * GstAllocTrace:
+ * @name: The name of the tracing object
+ * @flags: Flags for this object
+ * @live: counter for live memory
+ * @mem_live: list with pointers to unfreed memory
+ *
+ * The main tracing object
+ */
+struct _GstAllocTrace {
+  gchar		*name;
+  gint		 flags;
+
+  gint		 live;
+  GSList	*mem_live;
+};
+
 #ifndef GST_DISABLE_TRACE
 
 typedef struct _GstTrace 	GstTrace;
@@ -92,37 +123,6 @@ void 		_gst_trace_add_entry		(GstTrace *trace, guint32 seq,
 
 void 		gst_trace_read_tsc		(gint64 *dst);
 
-
-/**
- * GstAllocTraceFlags:
- * @GST_ALLOC_TRACE_LIVE: Trace number of non-freed memory
- * @GST_ALLOC_TRACE_MEM_LIVE: trace pointers of unfreed memory
- *
- * Flags indicating which tracing feature to enable.
- */
-typedef enum {
-  GST_ALLOC_TRACE_LIVE		= (1 << 0),
-  GST_ALLOC_TRACE_MEM_LIVE	= (1 << 1)
-} GstAllocTraceFlags;
-
-typedef struct _GstAllocTrace 	GstAllocTrace;
-
-/**
- * GstAllocTrace:
- * @name: The name of the tracing object
- * @flags: Flags for this object
- * @live: counter for live memory
- * @mem_live: list with pointers to unfreed memory
- *
- * The main tracing object
- */
-struct _GstAllocTrace {
-  gchar		*name;
-  gint		 flags;
-
-  gint		 live;
-  GSList	*mem_live;
-};
 
 gboolean		gst_alloc_trace_available	(void);
 G_CONST_RETURN GList*	gst_alloc_trace_list		(void);
@@ -218,7 +218,7 @@ extern gint _gst_trace_on;
 #pragma GCC poison 	gst_trace_add_entry
 #endif
 
-#define		gst_alloc_trace_register(name)
+#define		gst_alloc_trace_register(name)	(NULL)
 #define		gst_alloc_trace_new(trace, mem)
 #define		gst_alloc_trace_free(trace, mem)
 
@@ -226,7 +226,9 @@ extern gint _gst_trace_on;
 #define		gst_alloc_trace_list()		(NULL)
 #define		_gst_alloc_trace_register(name)	(NULL)
 
+#define		gst_alloc_trace_live_all()	(0)
 #define		gst_alloc_trace_print_all()
+#define		gst_alloc_trace_print_live()
 #define		gst_alloc_trace_set_flags_all(flags)
 
 #define		gst_alloc_trace_get(name)	(NULL)
