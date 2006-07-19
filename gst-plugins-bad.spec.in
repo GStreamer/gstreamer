@@ -120,8 +120,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
 %{_libdir}/gstreamer-%{majorminor}/libgsth264parse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspectrum.so
-%{_libdir}/gstreamer-%{majorminor}/libgstgdp.so.0
-%{_libdir}/gstreamer-%{majorminor}/libgstgdp.so.0.0.0
+%{_libdir}/gstreamer-%{majorminor}/libgstfilter.so
+%{_libdir}/gstreamer-%{majorminor}/libgstnsf.so
+
 %{_datadir}/locale
 
 %changelog
