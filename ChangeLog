@@ -1,3 +1,9 @@
+2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/pwg/advanced-scheduling.xml:
+	* gst/gstpad.c:
+	  Fix typos (#348000).
+
 2006-07-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/intro-basics.xml:

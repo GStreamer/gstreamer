@@ -3,7 +3,7 @@
   <para>
     Scheduling is, in short, a method for making sure that every element gets
     called once in a while to process data and prepare data for the next
-    element. Likewise, a kernel has a scheduler to for processes, and your
+    element. Likewise, a kernel has a scheduler for processes, and your
     brain is a very complex scheduler too in a way.
     Randomly calling elements' chain functions won't bring us far, however, so
     you'll understand that the schedulers in &GStreamer; are a bit more complex
@@ -11,8 +11,8 @@
   </para>
   <para>
     So far, we have only discussed <function>_chain ()</function>-operating
-    elements, i.e. elements that have a chain-function set on their sinkpad
-    and push buffers on their sinkpad. Pads (or elements) can also operate
+    elements, i.e. elements that have a chain-function set on their sink pad
+    and push buffers on their source pad(s). Pads (or elements) can also operate
     in two other scheduling modes, however. In this chapter, we will discuss
     what those scheduling modes are, how they can be enabled and in what
     cases they are useful. The other two scheduling modes are random access

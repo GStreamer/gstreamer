@@ -1622,7 +1622,7 @@ was_empty:
  * This check is required so that we don't try to link
  * pads from elements in different bins without ghostpads.
  *
- * The LOCK should be helt on both pads
+ * The LOCK should be held on both pads
  */
 static gboolean
 gst_pad_link_check_hierarchy (GstPad * src, GstPad * sink)
@@ -3111,7 +3111,7 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
 #endif /* GST_DISABLE_LOADSAVE */
 
 /*
- * should be called with pad OBJECT_LOCK and STREAM_LOCK helt. 
+ * should be called with pad OBJECT_LOCK and STREAM_LOCK held. 
  * GST_PAD_IS_BLOCK (pad) == TRUE when this function is
  * called.
  *
@@ -3125,7 +3125,7 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
  * Two methods are available for notifying the application of the
  * block: 
  * - the callback method, which happens in the STREAMING thread with
- *   the STREAM_LOCK helt. With this method, the most usefull way of
+ *   the STREAM_LOCK held. With this method, the most usefull way of
  *   dealing with the callback is to post a message to the main thread
  *   where the pad block can then be handled outside of the streaming
  *   thread. With the last method one can perform all operations such
