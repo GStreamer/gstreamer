@@ -73,7 +73,9 @@
 2006-07-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/cdio/gstcdiocddasrc.c: (gst_cdio_cdda_src_close):
-	  Remove g_assert that shouldn't be there.
+	  Remove g_assert that shouldn't be there and was triggered
+	  after trying to open a device that doesn't exist or can't
+	  be opened for some other reason (#347972).
 
 2006-07-10  Edward Hervey  <edward@fluendo.com>
 
