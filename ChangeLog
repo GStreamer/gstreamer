@@ -1,3 +1,11 @@
+2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Alex Lancaster <alexl at users sourceforge net>
+
+	* ext/taglib/gstid3v2mux.cc:
+	  Write GST_TAG_ENCODER and GST_TAG_ENCODER_VERSION as
+	  ID3v2 TSSE frames (#347898).
+
 2006-07-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavimux.c: (gst_avi_mux_vidsink_set_caps):

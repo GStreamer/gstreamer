@@ -139,6 +139,23 @@ add_one_txxx_musicbrainz_tag (ID3v2::Tag * id3v2tag, const gchar * spec_id,
   }
 }
 
+#if 0
+static void
+add_one_txxx_tag (ID3v2::Tag * id3v2tag, const gchar * key, const gchar * val)
+{
+  ID3v2::UserTextIdentificationFrame * frame;
+
+  if (val == NULL)
+    return;
+
+  GST_DEBUG ("Setting %s to %s", key, val);
+  frame = new ID3v2::UserTextIdentificationFrame (String::UTF8);
+  id3v2tag->addFrame (frame);
+  frame->setDescription (key);
+  frame->setText (val);
+}
+#endif
+
 static void
 add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
 {
@@ -307,6 +324,40 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
       frame->setText (copyright);
       g_free (copyright);
     }
+  } else if (strcmp (tag, GST_TAG_ENCODER) == 0) {
+    gchar *encoder;
+
+    result = gst_tag_list_get_string_index (list, tag, 0, &encoder);
+
+    if (result != FALSE && encoder != NULL) {
+      ID3v2::TextIdentificationFrame * frame;
+      guint encoder_version;
+      gchar *tag_str;
+
+      frame = new ID3v2::TextIdentificationFrame ("TSSE", String::UTF8);
+      if (gst_tag_list_get_uint_index (list, GST_TAG_ENCODER_VERSION, 0,
+              &encoder_version) && encoder_version > 0) {
+        tag_str = g_strdup_printf ("%s %u", encoder, encoder_version);
+      } else {
+        tag_str = g_strdup (encoder);
+      }
+
+      GST_DEBUG ("Setting encoder to %s", tag_str);
+
+      id3v2tag->addFrame (frame);
+      frame->setText (tag_str);
+      g_free (tag_str);
+      g_free (encoder);
+    }
+  } else if (strcmp (tag, GST_TAG_ENCODER_VERSION) == 0) {
+    gchar *tmp_str = NULL;
+
+    if (gst_tag_list_get_string_index (list, GST_TAG_ENCODER, 0, &tmp_str)) {
+      GST_DEBUG ("encoder-version handled with encoder, skipping");
+      g_free (tmp_str);
+    } else {
+      GST_WARNING ("encoder-version, but no encoder?! skipping");
+    }
   } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_ARTISTID) == 0) {
     gchar *id_str;
 
@@ -414,6 +465,18 @@ gst_id3v2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
 
   /* Render the tag */
   gst_tag_list_foreach (taglist, add_one_tag, &id3v2tag);
+
+#if 0
+  /* Do we want to add our own signature to the tag somewhere? */
+  {
+    gchar *tag_producer_str;
+
+    tag_producer_str = g_strdup_printf ("(GStreamer id3v2mux %s, using "
+        "taglib %u.%u)", VERSION, TAGLIB_MAJOR_VERSION, TAGLIB_MINOR_VERSION);
+    add_one_txxx_tag (id3v2tag, "tag_encoder", tag_producer_str);
+    g_free (tag_producer_str);
+  }
+#endif
 
   rendered_tag = id3v2tag.render ();
   tag_size = rendered_tag.size ();
