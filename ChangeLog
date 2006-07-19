@@ -1,3 +1,19 @@
+2006-07-19  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_lowres_get_type),
+	(gst_ffmpegdec_skipframe_get_type), (gst_ffmpegdec_class_init),
+	(gst_ffmpegdec_init), (gst_ffmpegdec_open),
+	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_negotiate),
+	(gst_ffmpegdec_do_qos), (clip_video_buffer), (check_keyframe),
+	(get_output_buffer), (gst_ffmpegdec_video_frame),
+	(gst_ffmpegdec_frame), (gst_ffmpegdec_sink_event),
+	(gst_ffmpegdec_chain):
+	Make some enums const.
+	Cleanups, refactoring.
+	Better video frame clipping.
+	Timestamp fixe: use timestamp from incomming buffer even if there
+	is no input framerate given (as this is totally unrelated).
+
 2006-06-12  Edward Hervey  <edward@fluendo.com>
 
 	* .cvsignore:
