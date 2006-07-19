@@ -414,8 +414,12 @@ gst_v4lelement_get_property (GObject * object,
     case PROP_DEVICE_NAME:{
       gchar *new = NULL;
 
-      if (GST_V4L_IS_OPEN (v4lelement))
+      if (GST_V4L_IS_OPEN (v4lelement)) {
         new = v4lelement->vcap.name;
+      } else if (gst_v4l_open (v4lelement)) {
+        new = v4lelement->vcap.name;
+        gst_v4l_close (v4lelement);
+      }
       g_value_set_string (value, new);
       break;
     }

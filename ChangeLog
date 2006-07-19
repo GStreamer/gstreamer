@@ -1,5 +1,14 @@
 2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Martin Szulecki
+
+	* sys/v4l/gstv4lelement.c: (gst_v4lelement_get_property):
+	  If "device-name" is requested and the device is not
+	  open, try to temporarily open it to obtain this
+	  information (#342494).
+
+2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/tag/gstid3tag.c:
 	  Add TSSE <=> GST_TAG_ENCODER mapping (see #347898).
 
