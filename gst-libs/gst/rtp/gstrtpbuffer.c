@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2005> Philippe Khalaf <burger@speedy.org> 
+ * Copyright (C) <2006> Wim Taymans <wim@fluendo.com> 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -15,6 +16,22 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ */
+
+/**
+ * SECTION:gstrtpbuffer
+ * @short_description: Helper methods for dealing with RTP buffers
+ * @see_also: gstbasertppayload, gstbasertpdepayload
+ *
+ * <refsect2>
+ * <para>
+ * The GstRTPBuffer helper functions makes it easy to parse and create regular 
+ * #GstBuffer objects that contain RTP payloads. These buffers are typically of
+ * 'application/x-rtp' #GstCaps.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-07-17 (0.10.10)
  */
 
 #include "gstrtpbuffer.h"
@@ -176,17 +193,13 @@ gst_rtp_buffer_validate_data (guint8 * data, guint len)
   g_return_val_if_fail (data != NULL, FALSE);
 
   header_len = GST_RTP_HEADER_LEN;
-  if (len < header_len) {
-    GST_DEBUG ("len < header_len check failed (%d < %d)", len, header_len);
-    return FALSE;
-  }
+  if (G_UNLIKELY (len < header_len))
+    goto wrong_length;
 
   /* check version */
   version = (data[0] & 0xc0) >> 6;
-  if (version != GST_RTP_VERSION) {
-    GST_DEBUG ("version check failed (%d != %d)", version, GST_RTP_VERSION);
-    return FALSE;
-  }
+  if (G_UNLIKELY (version != GST_RTP_VERSION))
+    goto wrong_version;
 
   /* calc header length with csrc */
   csrc_count = (data[0] & 0x0f);
@@ -199,13 +212,28 @@ gst_rtp_buffer_validate_data (guint8 * data, guint len)
     padding = 0;
 
   /* check if padding not bigger than packet and header */
-  if (len - header_len <= padding) {
+  if (G_UNLIKELY (len - header_len <= padding))
+    goto wrong_padding;
+
+  return TRUE;
+
+  /* ERRORS */
+wrong_length:
+  {
+    GST_DEBUG ("len < header_len check failed (%d < %d)", len, header_len);
+    return FALSE;
+  }
+wrong_version:
+  {
+    GST_DEBUG ("version check failed (%d != %d)", version, GST_RTP_VERSION);
+    return FALSE;
+  }
+wrong_padding:
+  {
     GST_DEBUG ("padding check failed (%d - %d <= %d)",
         len, header_len, padding);
     return FALSE;
   }
-
-  return TRUE;
 }
 
 gboolean

@@ -1,3 +1,17 @@
+2006-07-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_chain),
+	(gst_base_rtp_depayload_change_state):
+	Don't assert when not negotiated but post a meaningfull 
+	error message. Fixes #347918.
+
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	Add comment about better default MTU size.
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c: (gst_rtp_buffer_validate_data):
+	Small cleanups, start docs.
+
 2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Martin Szulecki

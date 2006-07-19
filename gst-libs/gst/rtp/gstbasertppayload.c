@@ -32,6 +32,12 @@ enum
   LAST_SIGNAL
 };
 
+/* FIXME 0.11, a better default is the Ethernet MTU of 
+ * 1500 - sizeof(headers) as pointed out by marcelm in IRC:
+ * So an Ethernet MTU of 1500, minus 60 for the max IP, minus 8 for UDP, gives
+ * 1432 bytes or so.  And that should be adjusted downward further for other
+ * encapsulations like PPPoE, so 1400 at most.
+ */
 #define DEFAULT_MTU                     1024
 #define DEFAULT_PT                      96
 #define DEFAULT_SSRC                    -1

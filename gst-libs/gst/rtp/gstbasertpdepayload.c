@@ -205,7 +205,8 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
 
   filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
 
-  g_return_val_if_fail (filter->clock_rate > 0, GST_FLOW_ERROR);
+  if (filter->clock_rate <= 0)
+    goto not_configured;
 
   bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
@@ -217,6 +218,14 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
       ret = bclass->add_to_queue (filter, in);
   }
   return ret;
+
+  /* ERRORS */
+not_configured:
+  {
+    GST_ELEMENT_ERROR (filter, STREAM, FORMAT,
+        (NULL), ("no clock rate was specified, likely incomplete input caps"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static gboolean
