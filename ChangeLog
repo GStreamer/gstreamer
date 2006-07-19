@@ -1,3 +1,11 @@
+2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/nsf/nsf.c: (nsf_load):
+	  Really fix compilation. Apparently it's not enough to
+	  just check the return value for errors, but we need to
+	  check for short reads as well (now if only we handled
+	  them too ...). Fixes #347935.
+
 2006-07-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):

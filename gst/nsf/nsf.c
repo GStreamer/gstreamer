@@ -476,7 +476,7 @@ nsf_load (char *filename, void *source, int length)
   /* seek to end of header, read in data */
   if (NULL == source) {
     fseek (fp, NSF_HEADER_SIZE, SEEK_SET);
-    if (fread (temp_nsf->data, temp_nsf->length, 1, fp) < 0)
+    if (fread (temp_nsf->data, temp_nsf->length, 1, fp) != 1)
       log_printf ("error reading end of header\n");
 
     fclose (fp);
@@ -585,6 +585,13 @@ nsf_setfilter (nsf_t * nsf, int filter_type)
 
 /*
 ** $Log$
+** Revision 1.3  2006/07/19 11:43:50  tpm
+** * gst/nsf/nsf.c: (nsf_load):
+** Really fix compilation. Apparently it's not enough to
+** just check the return value for errors, but we need to
+** check for short reads as well (now if only we handled
+** them too ...). Fixes #347935.
+**
 ** Revision 1.2  2006/07/18 09:36:46  wtay
 ** * gst/nsf/nsf.c: (nsf_load):
 ** Fix compilation by not ignoring return values of fread.
