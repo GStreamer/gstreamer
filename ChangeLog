@@ -1,5 +1,14 @@
 2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Martin Szulecki
+
+	* sys/v4l2/gstv4l2object.c: (gst_v4l2_object_get_property_helper):
+	  If "device-name" is requested and the device is not
+	  open, try to temporarily open it to obtain this
+	  information (#342494).
+
+2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/nsf/nsf.c: (nsf_load):
 	  Really fix compilation. Apparently it's not enough to
 	  just check the return value for errors, but we need to

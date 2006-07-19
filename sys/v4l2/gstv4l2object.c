@@ -406,8 +406,12 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
     {
       gchar *new = NULL;
 
-      if (GST_V4L2_IS_OPEN (v4l2object))
+      if (GST_V4L2_IS_OPEN (v4l2object)) {
         new = (gchar *) v4l2object->vcap.card;
+      } else if (gst_v4l2_open (v4l2object)) {
+        new = (gchar *) v4l2object->vcap.card;
+        gst_v4l2_close (v4l2object);
+      }
       g_value_set_string (value, new);
       break;
     }
