@@ -1,3 +1,12 @@
+2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/gstid3tag.c:
+	  Add TSSE <=> GST_TAG_ENCODER mapping (see #347898).
+
+	* gst-libs/gst/tag/gsttageditingprivate.h:
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  Some more random const-ifications.
+
 2006-07-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/riff/riff-ids.h:

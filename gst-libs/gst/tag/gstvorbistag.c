@@ -41,7 +41,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static GstTagEntryMatch tag_matches[] = {
+static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_TITLE, "TITLE"},
   {GST_TAG_VERSION, "VERSION"},
   {GST_TAG_ALBUM, "ALBUM"},

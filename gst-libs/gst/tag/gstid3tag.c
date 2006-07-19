@@ -192,7 +192,7 @@ static const gchar *genres[] = {
   "Synthpop"
 };
 
-static GstTagEntryMatch tag_matches[] = {
+static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_TITLE, "TIT2"},
   {GST_TAG_ALBUM, "TALB"},
   {GST_TAG_TRACK_NUMBER, "TRCK"},
@@ -205,6 +205,7 @@ static GstTagEntryMatch tag_matches[] = {
   {GST_TAG_DURATION, "TLEN"},
   {GST_TAG_ISRC, "TSRC"},
   {GST_TAG_IMAGE, "APIC"},
+  {GST_TAG_ENCODER, "TSSE"},
   {NULL, NULL}
 };
 
@@ -236,7 +237,7 @@ gst_tag_from_id3_tag (const gchar * id3_tag)
   return NULL;
 }
 
-static GstTagEntryMatch user_tag_matches[] = {
+static const GstTagEntryMatch user_tag_matches[] = {
   /* musicbrainz identifiers being used in the real world (foobar2000) */
   {GST_TAG_MUSICBRAINZ_ARTISTID, "TXXX|musicbrainz_artistid"},
   {GST_TAG_MUSICBRAINZ_ALBUMID, "TXXX|musicbrainz_albumid"},
