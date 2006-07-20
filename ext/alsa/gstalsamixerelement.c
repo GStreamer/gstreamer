@@ -208,10 +208,13 @@ gst_alsa_mixer_element_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!this->mixer) {
-        if (!this->device) {
-          this->mixer = gst_alsa_mixer_new ("default", GST_ALSA_MIXER_ALL);
-        } else {
-          this->mixer = gst_alsa_mixer_new (this->device, GST_ALSA_MIXER_ALL);
+        const gchar *device = (this->device) ? this->device : "default";
+
+        this->mixer = gst_alsa_mixer_new (device, GST_ALSA_MIXER_ALL);
+        if (!this->mixer) {
+          GST_ELEMENT_ERROR (element, RESOURCE, OPEN_READ_WRITE, (NULL),
+              ("Failed to open alsa mixer device '%s'", device));
+          return GST_STATE_CHANGE_FAILURE;
         }
       }
       break;
