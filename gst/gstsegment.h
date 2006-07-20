@@ -71,33 +71,33 @@ struct _GstSegment {
   guint8 _gst_reserved[(sizeof (gpointer) * GST_PADDING) - sizeof (gdouble)];
 };
 
-GType           gst_segment_get_type 		(void);
+GType        gst_segment_get_type            (void);
 
-GstSegment *    gst_segment_new 		(void);
-void 		gst_segment_free 		(GstSegment *segment);
+GstSegment * gst_segment_new                 (void);
+void         gst_segment_free                (GstSegment *segment);
 
-void		gst_segment_init		(GstSegment *segment, GstFormat format);
+void         gst_segment_init                (GstSegment *segment, GstFormat format);
 
-void		gst_segment_set_duration	(GstSegment *segment, GstFormat format, gint64 duration);
-void		gst_segment_set_last_stop	(GstSegment *segment, GstFormat format, gint64 position);
+void         gst_segment_set_duration        (GstSegment *segment, GstFormat format, gint64 duration);
+void         gst_segment_set_last_stop       (GstSegment *segment, GstFormat format, gint64 position);
 
-void		gst_segment_set_seek		(GstSegment *segment, gdouble rate, 
-						 GstFormat format, GstSeekFlags flags, 
-						 GstSeekType cur_type, gint64 cur,
-						 GstSeekType stop_type, gint64 stop,
-						 gboolean *update);
+void         gst_segment_set_seek            (GstSegment *segment, gdouble rate,
+                                              GstFormat format, GstSeekFlags flags,
+                                              GstSeekType cur_type, gint64 cur,
+                                              GstSeekType stop_type, gint64 stop,
+                                              gboolean *update);
 
-void		gst_segment_set_newsegment	(GstSegment *segment, gboolean update, gdouble rate,
-						 GstFormat format, gint64 start, gint64 stop, gint64 time);
-void		gst_segment_set_newsegment_full	(GstSegment *segment, gboolean update, gdouble rate,
-						 gdouble applied_rate, GstFormat format, gint64 start, 
-						 gint64 stop, gint64 time);
+void         gst_segment_set_newsegment      (GstSegment *segment, gboolean update, gdouble rate,
+                                              GstFormat format, gint64 start, gint64 stop, gint64 time);
+void         gst_segment_set_newsegment_full (GstSegment *segment, gboolean update, gdouble rate,
+                                              gdouble applied_rate, GstFormat format, gint64 start,
+                                              gint64 stop, gint64 time);
 
-gint64		gst_segment_to_stream_time	(GstSegment *segment, GstFormat format, gint64 position);
-gint64		gst_segment_to_running_time	(GstSegment *segment, GstFormat format, gint64 position);
+gint64       gst_segment_to_stream_time      (GstSegment *segment, GstFormat format, gint64 position);
+gint64       gst_segment_to_running_time     (GstSegment *segment, GstFormat format, gint64 position);
 
-gboolean	gst_segment_clip		(GstSegment *segment, GstFormat format, gint64 start, 
-						 gint64 stop, gint64 *clip_start, gint64 *clip_stop);
+gboolean     gst_segment_clip                (GstSegment *segment, GstFormat format, gint64 start,
+                                              gint64 stop, gint64 *clip_start, gint64 *clip_stop);
 
 G_END_DECLS
 
