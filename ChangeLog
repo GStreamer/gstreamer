@@ -1,5 +1,11 @@
 2006-07-20  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gsttaglist.c:
+	  Add some more docs, comments and FIXME 0.11s here and there
+	  and  also fix some typos.
+
+2006-07-20  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstsegment.h:
 	  Convert tabs to spaces for better readability. 
 

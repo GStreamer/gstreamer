@@ -44,6 +44,10 @@
 
 #define GST_TAG_IS_VALID(tag)           (gst_tag_get_info (tag) != NULL)
 
+/* FIXME 0.11: use GParamSpecs or something similar for tag registrations,
+ * possibly even gst_tag_register(). Especially value ranges might be
+ * useful for some tags. */
+
 typedef struct
 {
   GType type;                   /* type the data is in */
@@ -271,12 +275,29 @@ gst_tag_lookup (GQuark entry)
  * @type: the type this data is in
  * @nick: human-readable name
  * @blurb: a human-readable description about this tag
- * @func: function for merging multiple values of this tag
+ * @func: function for merging multiple values of this tag, or NULL
  *
  * Registers a new tag type for the use with GStreamer's type system. If a type
  * with that name is already registered, that one is used.
  * The old registration may have used a different type however. So don't rely
  * on your supplied values.
+ *
+ * Important: if you do not supply a merge function the implication will be
+ * that there can only be one single value for this tag in a tag list and
+ * any additional values will silenty be discarded when being added (unless
+ * #GST_TAG_MERGE_REPLACE, #GST_TAG_MERGE_REPLACE_ALL, or
+ * #GST_TAG_MERGE_PREPEND is used as merge mode, in which case the new
+ * value will replace the old one in the list). 
+ *
+ * The merge function will be called from gst_tag_list_copy_value() when
+ * it is required that one or more values for a tag be condensed into
+ * one single value. This may happen from gst_tag_list_get_string(),
+ * gst_tag_list_get_int(), gst_tag_list_get_double() etc. What will happen
+ * exactly in that case depends on how the tag was registered and if a
+ * merge function was supplied and if so which one.
+ *
+ * Two default merge functions are provided: gst_tag_merge_use_first() and
+ * gst_tag_merge_strings_with_commas().
  */
 void
 gst_tag_register (const gchar * name, GstTagFlag flag, GType type,
@@ -771,7 +792,7 @@ gst_tag_list_add_valist_values (GstTagList * list, GstTagMergeMode mode,
  * @list: list to remove tag from
  * @tag: tag to remove
  *
- * Removes the goven tag from the taglist.
+ * Removes the given tag from the taglist.
  */
 void
 gst_tag_list_remove_tag (GstTagList * list, const gchar * tag)
@@ -825,7 +846,7 @@ gst_tag_list_foreach (const GstTagList * list, GstTagForeachFunc func,
 
 /**
  * gst_tag_list_get_value_index:
- * @list: a #GStTagList
+ * @list: a #GstTagList
  * @tag: tag to read out
  * @index: number of entry to read out
  *
@@ -901,6 +922,15 @@ gst_tag_list_copy_value (GValue * dest, const GstTagList * list,
   return TRUE;
 }
 
+/* FIXME 0.11: this whole merge function business is overdesigned, and the
+ * _get_foo() API is misleading as well - how many application developers will
+ * expect gst_tag_list_get_string (list, GST_TAG_ARTIST, &val) might return a
+ * string with multiple comma-separated artists? _get_foo() should just be
+ * a convenience wrapper around _get_foo_index (list, tag, 0, &val),
+ * supplemented by a special _tag_list_get_string_merged() function if needed
+ * (unless someone can actually think of real use cases where the merge
+ * function is not 'use first' for non-strings and merge for strings) */
+
 /***** evil macros to get all the gst_tag_list_get_*() functions right *****/
 
 #define TAG_MERGE_FUNCS(name,type)                                      \
@@ -938,10 +968,14 @@ gst_tag_list_get_ ## name ## _index (const GstTagList *list,            \
   return TRUE;                                                          \
 }
 
+/* FIXME 0.11: maybe get rid of _get_char*(), _get_uchar*(), _get_long*(),
+ * _get_ulong*() and _get_pointer*()? - they are not really useful/common
+ * enough to warrant convenience accessor functions */
+
 #define COPY_FUNC /**/
 /**
  * gst_tag_list_get_char:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -953,7 +987,7 @@ gst_tag_list_get_ ## name ## _index (const GstTagList *list,            \
  */
 /**
  * gst_tag_list_get_char_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -967,7 +1001,7 @@ gst_tag_list_get_ ## name ## _index (const GstTagList *list,            \
 TAG_MERGE_FUNCS (char, gchar)
 /**
  * gst_tag_list_get_uchar:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -979,7 +1013,7 @@ TAG_MERGE_FUNCS (char, gchar)
  */
 /**
  * gst_tag_list_get_uchar_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -993,7 +1027,7 @@ TAG_MERGE_FUNCS (char, gchar)
 TAG_MERGE_FUNCS (uchar, guchar)
 /**
  * gst_tag_list_get_boolean:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -1005,7 +1039,7 @@ TAG_MERGE_FUNCS (uchar, guchar)
  */
 /**
  * gst_tag_list_get_boolean_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -1019,7 +1053,7 @@ TAG_MERGE_FUNCS (uchar, guchar)
 TAG_MERGE_FUNCS (boolean, gboolean)
 /**
  * gst_tag_list_get_int:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -1031,7 +1065,7 @@ TAG_MERGE_FUNCS (boolean, gboolean)
  */
 /**
  * gst_tag_list_get_int_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -1045,7 +1079,7 @@ TAG_MERGE_FUNCS (boolean, gboolean)
 TAG_MERGE_FUNCS (int, gint)
 /**
  * gst_tag_list_get_uint:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -1057,7 +1091,7 @@ TAG_MERGE_FUNCS (int, gint)
  */
 /**
  * gst_tag_list_get_uint_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -1071,7 +1105,7 @@ TAG_MERGE_FUNCS (int, gint)
 TAG_MERGE_FUNCS (uint, guint)
 /**
  * gst_tag_list_get_long:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -1083,7 +1117,7 @@ TAG_MERGE_FUNCS (uint, guint)
  */
 /**
  * gst_tag_list_get_long_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -1097,7 +1131,7 @@ TAG_MERGE_FUNCS (uint, guint)
 TAG_MERGE_FUNCS (long, glong)
 /**
  * gst_tag_list_get_ulong:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -1109,7 +1143,7 @@ TAG_MERGE_FUNCS (long, glong)
  */
 /**
  * gst_tag_list_get_ulong_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -1123,7 +1157,7 @@ TAG_MERGE_FUNCS (long, glong)
 TAG_MERGE_FUNCS (ulong, gulong)
 /**
  * gst_tag_list_get_int64:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -1135,7 +1169,7 @@ TAG_MERGE_FUNCS (ulong, gulong)
  */
 /**
  * gst_tag_list_get_int64_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -1149,7 +1183,7 @@ TAG_MERGE_FUNCS (ulong, gulong)
 TAG_MERGE_FUNCS (int64, gint64)
 /**
  * gst_tag_list_get_uint64:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -1161,7 +1195,7 @@ TAG_MERGE_FUNCS (int64, gint64)
  */
 /**
  * gst_tag_list_get_uint64_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -1175,7 +1209,7 @@ TAG_MERGE_FUNCS (int64, gint64)
 TAG_MERGE_FUNCS (uint64, guint64)
 /**
  * gst_tag_list_get_float:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -1187,7 +1221,7 @@ TAG_MERGE_FUNCS (uint64, guint64)
  */
 /**
  * gst_tag_list_get_float_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -1201,7 +1235,7 @@ TAG_MERGE_FUNCS (uint64, guint64)
 TAG_MERGE_FUNCS (float, gfloat)
 /**
  * gst_tag_list_get_double:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -1213,7 +1247,7 @@ TAG_MERGE_FUNCS (float, gfloat)
  */
 /**
  * gst_tag_list_get_double_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -1227,7 +1261,7 @@ TAG_MERGE_FUNCS (float, gfloat)
 TAG_MERGE_FUNCS (double, gdouble)
 /**
  * gst_tag_list_get_pointer:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -1239,7 +1273,7 @@ TAG_MERGE_FUNCS (double, gdouble)
  */
 /**
  * gst_tag_list_get_pointer_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -1255,12 +1289,15 @@ TAG_MERGE_FUNCS (pointer, gpointer)
 #define COPY_FUNC g_strdup
 /**
  * gst_tag_list_get_string:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
- * Copies the contents for the given tag into the value, merging multiple values
- * into one if multiple values are associated with the tag.
+ * Copies the contents for the given tag into the value, possibly merging
+ * multiple values into one if multiple values are associated with the tag.
+ *
+ * Use gst_tag_list_get_string_index (list, tag, 0, value) if you want
+ * to retrieve the first string associated with this tag unmodified.
  * 
  * The resulting string in @value should be freed by the caller using g_free 
  * when no longer needed
@@ -1270,7 +1307,7 @@ TAG_MERGE_FUNCS (pointer, gpointer)
  */
 /**
  * gst_tag_list_get_string_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
@@ -1288,7 +1325,7 @@ TAG_MERGE_FUNCS (string, gchar *)
 
 /**
  * gst_tag_list_get_date:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @value: location for the result
  *
@@ -1317,7 +1354,7 @@ gst_tag_list_get_date (const GstTagList * list, const gchar * tag,
 
 /**
  * gst_tag_list_get_date_index:
- * @list: a #GStTagList to get the tag from
+ * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
  * @value: location for the result
