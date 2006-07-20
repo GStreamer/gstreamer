@@ -136,7 +136,7 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
 GstElement *
 gst_parse_launch (const gchar * pipeline_description, GError ** error)
 {
-  GstElement *element;
+  GstElement *element = NULL;
   static GStaticMutex flex_lock = G_STATIC_MUTEX_INIT;
 
   g_return_val_if_fail (pipeline_description != NULL, NULL);
@@ -145,9 +145,12 @@ gst_parse_launch (const gchar * pipeline_description, GError ** error)
       pipeline_description);
 
   /* the need for the mutex will go away with flex 2.5.6 */
-  g_static_mutex_lock (&flex_lock);
-  element = _gst_parse_launch (pipeline_description, error);
-  g_static_mutex_unlock (&flex_lock);
+  if (g_static_mutex_trylock (&flex_lock)) {
+    element = _gst_parse_launch (pipeline_description, error);
+    g_static_mutex_unlock (&flex_lock);
+  } else {
+    GST_WARNING ("gst_parse_launch() cannot be nested");
+  }
 
   return element;
 }
