@@ -20,18 +20,19 @@
     <xi:include href="xml/element-avimux.xml" />
     <xi:include href="xml/element-cairotimeoverlay.xml" />
     <xi:include href="xml/element-cdiocddasrc.xml" />
+    <xi:include href="xml/element-cmmldec.xml" />
     <xi:include href="xml/element-dvdec.xml" />
     <xi:include href="xml/element-dvdemux.xml" />
     <xi:include href="xml/element-flacdec.xml" />
     <xi:include href="xml/element-goom.xml" />
     <xi:include href="xml/element-halaudiosink.xml" />
     <xi:include href="xml/element-halaudiosrc.xml" />
+    <xi:include href="xml/element-icydemux.xml" />
     <xi:include href="xml/element-id3demux.xml" />
     <xi:include href="xml/element-id3v2mux.xml" />
     <xi:include href="xml/element-jpegdec.xml" />
     <xi:include href="xml/element-jpegenc.xml" />
     <xi:include href="xml/element-level.xml" />
-    <xi:include href="xml/element-udpsrc.xml" />
     <xi:include href="xml/element-multiudpsink.xml" />
     <xi:include href="xml/element-multipartmux.xml" />
     <xi:include href="xml/element-multipartdemux.xml" />
@@ -39,6 +40,7 @@
     <xi:include href="xml/element-rtpdec.xml" />
     <xi:include href="xml/element-smokedec.xml" />
     <xi:include href="xml/element-smokeenc.xml" />
+    <xi:include href="xml/element-udpsrc.xml" />
     <xi:include href="xml/element-videobalance.xml" />
     <xi:include href="xml/element-videoflip.xml" />
     <xi:include href="xml/element-videomixer.xml" />
@@ -54,6 +56,7 @@
     <xi:include href="xml/plugin-alaw.xml" />
     <xi:include href="xml/plugin-alpha.xml" />
     <xi:include href="xml/plugin-alphacolor.xml" />
+    <xi:include href="xml/plugin-annodex.xml" />
     <xi:include href="xml/plugin-apetag.xml" />
     <xi:include href="xml/plugin-autodetect.xml" />
     <xi:include href="xml/plugin-avi.xml" />
@@ -71,6 +74,7 @@
     <xi:include href="xml/plugin-gconfelements.xml" />
     <xi:include href="xml/plugin-goom.xml" />
     <xi:include href="xml/plugin-halelements.xml" />
+    <xi:include href="xml/plugin-icydemux.xml" />
     <xi:include href="xml/plugin-id3demux.xml" />
     <xi:include href="xml/plugin-jpeg.xml" />
     <xi:include href="xml/plugin-ladspa.xml" />

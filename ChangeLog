@@ -1,3 +1,9 @@
+2006-07-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+          Add annodex and icydemux, cleanup the sections a bit
+
 2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Alex Lancaster <alexl at users sourceforge net>

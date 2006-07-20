@@ -13,11 +13,28 @@ GST_IS_APE_DEMUX_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-apev2mux</FILE>
+GstApev2Mux
+<TITLE>apev2mux</TITLE>
+<SUBSECTION Standard>
+GstApev2MuxClass
+GST_APEV2_MUX
+GST_IS_APEV2_MUX
+GST_TYPE_APEV2_MUX
+gst_apev2_mux_get_type
+GST_APEV2_MUX_CLASS
+GST_IS_APEV2_MUX_CLASS
+gst_apev2_mux_plugin_init
+</SECTION>
+
+<SECTION>
 <FILE>element-autoaudiosink</FILE>
 GstAutoAudioSink
 <TITLE>autoaudiosink</TITLE>
 <SUBSECTION Standard>
 GstAutoAudioSinkClass
+GST_AUTO_AUDIO_SINK
+GST_AUTO_AUDIO_SINK_CLASS
 </SECTION>
 
 <SECTION>
@@ -26,6 +43,8 @@ GstAutoVideoSink
 <TITLE>autovideosink</TITLE>
 <SUBSECTION Standard>
 GstAutoVideoSinkClass
+GST_AUTO_VIDEO_SINK
+GST_AUTO_VIDEO_SINK_CLASS
 </SECTION>
 
 <SECTION>
@@ -34,6 +53,9 @@ GstAviDemux
 <TITLE>avidemux</TITLE>
 <SUBSECTION Standard>
 GstAviDemuxClass
+GST_AVI_DEMUX
+GST_AVI_DEMUX_CLASS
+GST_AVI_DEMUX_MAX_STREAMS
 </SECTION>
 
 <SECTION>
@@ -42,6 +64,8 @@ GstAviMux
 <TITLE>avimux</TITLE>
 <SUBSECTION Standard>
 GstAviMuxClass
+GST_AVI_MUX
+GST_AVI_MUX_CLASS
 </SECTION>
 
 <SECTION>
@@ -50,6 +74,8 @@ GstCairoTimeOverlay
 <TITLE>cairotimeoverlay</TITLE>
 <SUBSECTION Standard>
 GstCairoTimeOverlayClass
+GST_CAIRO_TIME_OVERLAY
+GST_CAIRO_TIME_OVERLAY_CLASS
 </SECTION>
 
 <SECTION>
@@ -66,6 +92,8 @@ GstCdioCddaSrc
 <TITLE>cdiocddasrc</TITLE>
 <SUBSECTION Standard>
 GstCdioCddaSrcClass
+GST_CDIO_CDDA_SRC
+GST_CDIO_CDDA_SRC_CLASS
 </SECTION>
 
 <SECTION>
@@ -74,6 +102,8 @@ GstDVDec
 <TITLE>dvdec</TITLE>
 <SUBSECTION Standard>
 GstDVDecClass
+GST_DVDEC
+GST_DVDEC_CLASS
 </SECTION>
 
 <SECTION>
@@ -82,6 +112,8 @@ GstDVDemux
 <TITLE>dvdemux</TITLE>
 <SUBSECTION Standard>
 GstDVDemuxClass
+GST_DVDEMUX
+GST_DVDEMUX_CLASS
 </SECTION>
 
 <SECTION>
@@ -90,6 +122,8 @@ GstFlacDec
 <TITLE>flacdec</TITLE>
 <SUBSECTION Standard>
 GstFlacDecClass
+GST_FLAC_DEC
+GST_FLAC_DEC_CLASS
 </SECTION>
 
 <SECTION>
@@ -113,6 +147,8 @@ GstHalAudioSink
 <TITLE>halaudiosink</TITLE>
 <SUBSECTION Standard>
 GstHalAudioSinkClass
+GST_HAL_AUDIO_SINK
+GST_HAL_AUDIO_SINK_CLASS
 </SECTION>
 
 <SECTION>
@@ -121,6 +157,26 @@ GstHalAudioSrc
 <TITLE>halaudiosrc</TITLE>
 <SUBSECTION Standard>
 GstHalAudioSrcClass
+GST_HAL_AUDIO_SRC
+GST_HAL_AUDIO_SRC_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-icydemux</FILE>
+GstICYDemux
+<TITLE>icydemux</TITLE>
+<SUBSECTION Standard>
+GstICYDemuxClass
+</SECTION>
+
+<SECTION>
+<FILE>element-id3demux</FILE>
+GstID3Demux
+<TITLE>id3demux</TITLE>
+<SUBSECTION Standard>
+GstID3DemuxClass
+GST_ID3DEMUX
+GST_ID3DEMUX_CLASS
 </SECTION>
 
 <SECTION>
@@ -129,21 +185,8 @@ GstId3v2Mux
 <TITLE>id3v2mux</TITLE>
 <SUBSECTION Standard>
 GstId3v2MuxClass
-</SECTION>
-
-<SECTION>
-<FILE>element-apev2mux</FILE>
-GstApev2Mux
-<TITLE>apev2mux</TITLE>
-<SUBSECTION Standard>
-GstApev2MuxClass
-GST_APEV2_MUX
-GST_IS_APEV2_MUX
-GST_TYPE_APEV2_MUX
-gst_apev2_mux_get_type
-GST_APEV2_MUX_CLASS
-GST_IS_APEV2_MUX_CLASS
-gst_apev2_mux_plugin_init
+GST_ID3V2_MUX
+GST_ID3V2_MUX_CLASS
 </SECTION>
 
 <SECTION>
@@ -174,6 +217,49 @@ GST_TYPE_JPEGENC
 gst_jpegenc_get_type
 GST_JPEGENC_CLASS
 GST_IS_JPEGENC_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-level</FILE>
+GstLevel
+<TITLE>level</TITLE>
+<SUBSECTION Standard>
+GstLevelClass
+</SECTION>
+
+<SECTION>
+<FILE>element-multipartmux</FILE>
+GstMultipartMux
+<TITLE>multipartmux</TITLE>
+<SUBSECTION Standard>
+GstMultipartMuxClass
+</SECTION>
+
+<SECTION>
+<FILE>element-multipartdemux</FILE>
+GstMultipartDemux
+<TITLE>multipartdemux</TITLE>
+<SUBSECTION Standard>
+GstMultipartDemuxClass
+</SECTION>
+
+<SECTION>
+<FILE>element-multiudpsink</FILE>
+GstUDPClient
+GstMultiUDPSink
+<TITLE>multiudpsink</TITLE>
+<SUBSECTION Standard>
+GstMultiUDPSinkClass
+gst_multiudpsink_add
+gst_multiudpsink_remove
+gst_multiudpsink_clear
+gst_multiudpsink_get_stats
+GST_MULTIUDPSINK
+GST_IS_MULTIUDPSINK
+GST_TYPE_MULTIUDPSINK
+gst_multiudpsink_get_type
+GST_MULTIUDPSINK_CLASS
+GST_IS_MULTIUDPSINK_CLASS
 </SECTION>
 
 <SECTION>
@@ -233,57 +319,6 @@ GST_TYPE_SMOKEENC
 gst_smokeenc_get_type
 GST_SMOKEENC_CLASS
 GST_IS_SMOKEENC_CLASS
-</SECTION>
-
-<SECTION>
-<FILE>element-id3demux</FILE>
-GstID3Demux
-<TITLE>id3demux</TITLE>
-<SUBSECTION Standard>
-GstID3DemuxClass
-</SECTION>
-
-<SECTION>
-<FILE>element-level</FILE>
-GstLevel
-<TITLE>level</TITLE>
-<SUBSECTION Standard>
-GstLevelClass
-</SECTION>
-
-<SECTION>
-<FILE>element-multipartmux</FILE>
-GstMultipartMux
-<TITLE>multipartmux</TITLE>
-<SUBSECTION Standard>
-GstMultipartMuxClass
-</SECTION>
-
-<SECTION>
-<FILE>element-multipartdemux</FILE>
-GstMultipartDemux
-<TITLE>multipartdemux</TITLE>
-<SUBSECTION Standard>
-GstMultipartDemuxClass
-</SECTION>
-
-<SECTION>
-<FILE>element-multiudpsink</FILE>
-GstUDPClient
-GstMultiUDPSink
-<TITLE>multiudpsink</TITLE>
-<SUBSECTION Standard>
-GstMultiUDPSinkClass
-gst_multiudpsink_add
-gst_multiudpsink_remove
-gst_multiudpsink_clear
-gst_multiudpsink_get_stats
-GST_MULTIUDPSINK
-GST_IS_MULTIUDPSINK
-GST_TYPE_MULTIUDPSINK
-gst_multiudpsink_get_type
-GST_MULTIUDPSINK_CLASS
-GST_IS_MULTIUDPSINK_CLASS
 </SECTION>
 
 <SECTION>
