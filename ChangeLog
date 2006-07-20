@@ -1,3 +1,10 @@
+=== release 0.10.5 ===
+
+2006-07-20   <>
+
+	* configure.ac:
+	  releasing 0.10.5, "My Little Poney wants some Funk"
+
 2006-07-19  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac: 0.10.4.2 pre-release

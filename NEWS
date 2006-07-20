@@ -1,4 +1,26 @@
-This is GStreamer Python Bindings 0.10.4, "Alegre"
+This is GStreamer Python Bindings 0.10.5, "My Little Poney wants some Funk"
+
+Changes since 0.10.4:
+
+      * now requires glib >= 2.8
+      * switch to up-to-date pygtk codegenerator
+
+Bugs fixed since 0.10.4:
+
+      * 319871 : drop GIL state lock when doing something that can cause a...
+      * 338982 : python refcounting problems in gstpad.override
+      * 313138 : Need to update constructors to use properties
+      * 329075 : __gsignals__ doesn' t work in classes derived from gst.Pi...
+      * 334548 : Proper use of PyTuple and PyList for return values
+      * 339040 : [patch] Error domains from gsterror are not wrapped
+      * 339248 : Wrapper for virtual method GstBaseTransform.get_unit_size
+      * 339308 : MiniObject arguments for virtual methods shouldn't have t...
+      * 339767 : An example of subclassing GstBaseTransform
+      * 339938 : filesrc.py example still uses 0.8 API
+      * 341114 : pygst.require uses asserts rather than real error checking
+      * 341799 : patch to make gst-python work on OSes without dl.so
+      * 342493 : audio-controller.py needs slight updates for 0.10
+      * 343652 : gstfile.py sometimes results in &quot; *** glibc detected *** c...
 
 Changes since 0.10.3:
 
