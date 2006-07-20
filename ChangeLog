@@ -1,3 +1,12 @@
+2006-07-20  Edward Hervey  <edward@fluendo.com>
+
+	* tests/check/libs/gdp.c: (gst_dp_suite):
+	the test_buffer test fails at line 140 on ppc64 at the following
+	check:
+	fail_unless (GST_BUFFER_FLAG_IS_SET (newbuffer, GST_BUFFER_FLAG_IN_CAPS),
+		"GST_BUFFER_IN_CAPS flag should have been copied !");
+	See bug #348114 for more details.
+
 2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/advanced-scheduling.xml:
