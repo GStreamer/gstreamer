@@ -1,3 +1,9 @@
+2006-07-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/test.c: (gen_video_element), (gen_audio_element),
+	(cb_newpad), (main):
+	Example of a small audio/video player using decodebin.
+
 2006-07-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/riff/riff-ids.h:
