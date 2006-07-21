@@ -404,4 +404,8 @@ gst_check_teardown_sink_pad
 gst_check_teardown_src_pad
 gst_check_abi_list
 gst_check_run_suite
+
+gst_buffer_straw_start_pipeline
+gst_buffer_straw_get_buffer
+gst_buffer_straw_stop_pipeline
 </SECTION>

@@ -1,5 +1,7 @@
 2006-07-21  Andy Wingo  <wingo@pobox.com>
 
+	* docs/libs/gstreamer-libs-sections.txt: Attempt to pacify buildbot.
+
 	* libs/gst/check/Makefile.am
 	(libgstcheck_@GST_MAJORMINOR@include_HEADERS)
 	(libgstcheck_@GST_MAJORMINOR@_la_SOURCES): 
