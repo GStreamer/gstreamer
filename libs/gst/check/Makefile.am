@@ -3,6 +3,7 @@ lib_LTLIBRARIES = libgstcheck-@GST_MAJORMINOR@.la
 libgstcheck_@GST_MAJORMINOR@_la_DEPENDENCIES = \
 	$(top_builddir)/gst/libgstreamer-@GST_MAJORMINOR@.la
 libgstcheck_@GST_MAJORMINOR@_la_SOURCES =	\
+	gstbufferstraw.c			\
 	gstcheck.c
 
 libgstcheck_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS) $(CHECK_CFLAGS)
@@ -15,6 +16,7 @@ libgstcheck_@GST_MAJORMINOR@includedir =		\
 	$(includedir)/gstreamer-@GST_MAJORMINOR@/gst/check
 
 libgstcheck_@GST_MAJORMINOR@include_HEADERS =	\
+	gstbufferstraw.h			\
 	gstcheck.h
 
 CLEANFILES = *.gcno *.gcda *.gcov

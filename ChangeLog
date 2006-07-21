@@ -1,3 +1,13 @@
+2006-07-21  Andy Wingo  <wingo@pobox.com>
+
+	* libs/gst/check/Makefile.am
+	(libgstcheck_@GST_MAJORMINOR@include_HEADERS)
+	(libgstcheck_@GST_MAJORMINOR@_la_SOURCES): 
+	* libs/gst/check/gstbufferstraw.h:
+	* libs/gst/check/gstbufferstraw.c: Add some new hype testing
+	functions, thus proving I am still a GStreamer haxor. OK I wrote
+	them a long time ago, but anyways.
+
 2006-07-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
