@@ -139,7 +139,7 @@ GST_START_TEST (test_granulepos_offset)
 
   {
     GstClockTime next_timestamp;
-    gint64 last_granulepos;
+    gint64 last_granulepos = 0;
 
     /* first buffer should have timestamp of TIMESTAMP_OFFSET, granulepos to
      * match the timestamp of the end of the last sample in the output buffer.
@@ -263,6 +263,117 @@ GST_START_TEST (test_timestamps)
 
 GST_END_TEST;
 
+#if 0
+static gboolean
+drop_second_data_buffer (GstPad * droppad, GstBuffer * buffer, gpointer unused)
+{
+  return !(GST_BUFFER_OFFSET (buffer) == 1024);
+}
+
+GST_START_TEST (test_discontinuity)
+{
+  GstElement *bin;
+  GstPad *pad, *droppad;
+  gchar *pipe_str;
+  GstBuffer *buffer;
+  GError *error = NULL;
+  GstClockTime timestamp;
+  guint drop_id;
+
+  pipe_str = g_strdup_printf ("audiotestsrc samplesperbuffer=1024"
+      " ! audio/x-raw-int,rate=44100" " ! audioconvert ! vorbisenc ! fakesink");
+
+  bin = gst_parse_launch (pipe_str, &error);
+  fail_unless (bin != NULL, "Error parsing pipeline: %s",
+      error ? error->message : "(invalid error)");
+  g_free (pipe_str);
+
+  /* the plan: same as test_timestamps, but dropping a buffer and seeing if
+     vorbisenc correctly notes the discontinuity */
+
+  /* get the pad to use to drop buffers */
+  {
+    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "vorbisenc0");
+
+    fail_unless (sink != NULL, "Could not get vorbisenc out of bin");
+    droppad = gst_element_get_pad (sink, "sink");
+    fail_unless (droppad != NULL, "Could not get pad out of vorbisenc");
+    gst_object_unref (sink);
+  }
+
+  /* get the pad */
+  {
+    GstElement *sink = gst_bin_get_by_name (GST_BIN (bin), "fakesink0");
+
+    fail_unless (sink != NULL, "Could not get fakesink out of bin");
+    pad = gst_element_get_pad (sink, "sink");
+    fail_unless (pad != NULL, "Could not get pad out of fakesink");
+    gst_object_unref (sink);
+  }
+
+  drop_id = gst_pad_add_buffer_probe (droppad, drop_second_data_buffer, NULL);
+  gst_buffer_straw_start_pipeline (bin, pad);
+
+  /* check header packets */
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
+  check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
+  check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
+  check_buffer_granulepos (buffer, 0);
+  gst_buffer_unref (buffer);
+
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
+  check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
+  check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
+  check_buffer_granulepos (buffer, 0);
+  gst_buffer_unref (buffer);
+
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
+  check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
+  check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
+  check_buffer_granulepos (buffer, 0);
+  gst_buffer_unref (buffer);
+
+  /* two phases: continuous granulepos values up to 1024, then a first
+     discontinuous granulepos whose granulepos corresponds to a gap ending at
+     2048. */
+  {
+    GstClockTime next_timestamp = 0;
+    gint64 last_granulepos = 0;
+
+    while (last_granulepos < 1024) {
+      buffer = gst_buffer_straw_get_buffer (bin, pad);
+      last_granulepos = GST_BUFFER_OFFSET_END (buffer);
+      check_buffer_timestamp (buffer, next_timestamp);
+      fail_if (GST_BUFFER_IS_DISCONT (buffer), "expected continuous buffer");
+      next_timestamp += GST_BUFFER_DURATION (buffer);
+      gst_buffer_unref (buffer);
+    }
+
+    fail_unless (last_granulepos == 1024,
+        "unexpected granulepos: %" G_GUINT64_FORMAT, last_granulepos);
+  }
+
+  {
+    buffer = gst_buffer_straw_get_buffer (bin, pad);
+    fail_unless (GST_BUFFER_OFFSET_END (buffer) > 2048,
+        "expected granulepos after gap: %" G_GUINT64_FORMAT,
+        GST_BUFFER_OFFSET_END (buffer));
+    fail_unless (GST_BUFFER_IS_DISCONT (buffer),
+        "expected discontinuous buffer");
+    gst_buffer_unref (buffer);
+  }
+
+  gst_buffer_straw_stop_pipeline (bin, pad);
+  gst_pad_remove_buffer_probe (droppad, drop_id);
+
+  gst_object_unref (droppad);
+  gst_object_unref (pad);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+#endif /* 0 */
+
 #endif /* #ifndef GST_DISABLE_PARSE */
 
 Suite *
@@ -275,6 +386,9 @@ vorbisenc_suite (void)
 #ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_granulepos_offset);
   tcase_add_test (tc_chain, test_timestamps);
+#if 0
+  tcase_add_test (tc_chain, test_discontinuity);
+#endif /* 0 */
 #endif
 
   return s;

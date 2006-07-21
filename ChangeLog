@@ -1,6 +1,9 @@
 2006-07-21  Andy Wingo  <wingo@pobox.com>
 
 	* tests/check/pipelines/vorbisenc.c: 
+	(test_discontinuity): New test, commented out until Mike lands
+	some elite vorbisenc patches.
+
 	* tests/check/pipelines/theoraenc.c: Port to bufferstraw.
 	Bufferstraw was actually factored out of these tests. Now we share
 	code yay.
