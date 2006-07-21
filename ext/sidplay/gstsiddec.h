@@ -60,8 +60,6 @@ struct _GstSidDec {
   emuConfig     *config;
 
   gulong         blocksize;
-
-  GstCaps       *metadata;
 };
 
 struct _GstSidDecClass {

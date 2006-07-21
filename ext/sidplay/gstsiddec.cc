@@ -749,7 +749,7 @@ gst_siddec_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_ulong (value, siddec->blocksize);
       break;
     case PROP_METADATA:
-      g_value_set_boxed (value, siddec->metadata);
+      g_value_set_boxed (value, NULL);
       break;
     default:
       /* G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec); */
