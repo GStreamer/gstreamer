@@ -36,10 +36,9 @@
 #include "gstparse.h"
 #include "gstinfo.h"
 
+#ifndef HAVE_MT_SAVE_FLEX
 /* the need for the mutex will go away with flex 2.5.6 */
 static gboolean flex_busy = FALSE;
-
-#ifndef HAVE_MT_SAVE_FLEX
 static GStaticRecMutex flex_lock = G_STATIC_REC_MUTEX_INIT;
 #endif
 
@@ -152,28 +151,28 @@ gst_parse_launch (const gchar * pipeline_description, GError ** error)
 
 #ifndef HAVE_MT_SAVE_FLEX
   g_static_rec_mutex_lock (&flex_lock);
-#endif
   if (flex_busy)
     goto recursive_call;
   flex_busy = TRUE;
+#endif
 
   element = _gst_parse_launch (pipeline_description, error);
 
-  flex_busy = FALSE;
 #ifndef HAVE_MT_SAVE_FLEX
+  flex_busy = FALSE;
   g_static_rec_mutex_unlock (&flex_lock);
 #endif
 
   return element;
 
   /* ERRORS */
+#ifndef HAVE_MT_SAVE_FLEX
 recursive_call:
   {
     GST_WARNING ("calls to gst_parse_launch() cannot be nested");
-#ifndef HAVE_MT_SAVE_FLEX
     g_static_rec_mutex_unlock (&flex_lock);
-#endif
     g_warning ("calls to gst_parse_launch() cannot be nested");
     return NULL;
   }
+#endif
 }
