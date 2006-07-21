@@ -1,5 +1,8 @@
 2006-07-21  Andy Wingo  <wingo@pobox.com>
 
+	* tests/check/pipelines/theoraenc.c (test_discontinuity): Similar
+	test to the one in vorbisenc. Also commented out.
+
 	* tests/check/pipelines/vorbisenc.c: 
 	(test_discontinuity): New test, commented out until Mike lands
 	some elite vorbisenc patches.
