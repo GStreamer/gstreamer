@@ -1,5 +1,10 @@
 2006-07-21  Wim Taymans  <wim@fluendo.com>
 
+	* ext/theora/theoradec.c: (clip_buffer):
+	Better clipping.
+
+2006-07-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/gstaudiosink.c: (audioringbuffer_thread_func),
 	(gst_audioringbuffer_finalize), (gst_audioringbuffer_acquire),
 	(gst_audioringbuffer_release), (gst_audioringbuffer_stop):

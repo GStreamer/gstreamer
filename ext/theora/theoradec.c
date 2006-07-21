@@ -865,35 +865,45 @@ header_read_error:
 
 /* returns TRUE if buffer is within segment, else FALSE.
  * if Buffer is on segment border, it's timestamp and duration will be clipped */
-
 static gboolean
 clip_buffer (GstTheoraDec * dec, GstBuffer * buf)
 {
-  gboolean res = FALSE;
+  gboolean res = TRUE;
+  GstClockTime in_ts, in_dur, stop;
   gint64 cstart, cstop;
+
+  in_ts = GST_BUFFER_TIMESTAMP (buf);
+  in_dur = GST_BUFFER_DURATION (buf);
 
   GST_LOG_OBJECT (dec,
       "timestamp:%" GST_TIME_FORMAT " , duration:%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+      GST_TIME_ARGS (in_ts), GST_TIME_ARGS (in_dur));
 
-  if (dec->segment.format != GST_FORMAT_TIME) {
-    res = TRUE;
-    goto beach;
-  }
-
-  if (!(gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
-              GST_BUFFER_TIMESTAMP (buf),
-              GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf),
-              &cstart, &cstop)))
+  /* can't clip without TIME segment */
+  if (dec->segment.format != GST_FORMAT_TIME)
     goto beach;
 
+  /* we need a start time */
+  if (!GST_CLOCK_TIME_IS_VALID (in_ts))
+    goto beach;
+
+  /* generate valid stop, if duration unknown, we have unknown stop */
+  stop =
+      GST_CLOCK_TIME_IS_VALID (in_dur) ? (in_ts + in_dur) : GST_CLOCK_TIME_NONE;
+
+  /* now clip */
+  if (!(res = gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
+              in_ts, stop, &cstart, &cstop)))
+    goto beach;
+
+  /* update timestamp and possibly duration if the clipped stop time is
+   * valid */
   GST_BUFFER_TIMESTAMP (buf) = cstart;
-  GST_BUFFER_DURATION (buf) = cstop - cstart;
-  res = TRUE;
+  if (GST_CLOCK_TIME_IS_VALID (cstop))
+    GST_BUFFER_DURATION (buf) = cstop - cstart;
 
 beach:
-  GST_LOG_OBJECT (dec, "dropping : %d", res);
+  GST_LOG_OBJECT (dec, "%sdropping", (res ? "not " : ""));
   return res;
 }
 
