@@ -1,3 +1,14 @@
+2006-07-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstaudiosink.c: (audioringbuffer_thread_func),
+	(gst_audioringbuffer_finalize), (gst_audioringbuffer_acquire),
+	(gst_audioringbuffer_release), (gst_audioringbuffer_stop):
+	Fix leak.
+	Avoid type casting when we can.
+
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_dispose):
+	Fix mem leak.
+
 2006-07-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/alsa/gstalsamixerelement.c:

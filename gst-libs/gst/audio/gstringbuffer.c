@@ -116,6 +116,8 @@ gst_ring_buffer_dispose (GObject * object)
 {
   GstRingBuffer *ringbuffer = GST_RING_BUFFER (object);
 
+  gst_caps_replace (&ringbuffer->spec.caps, NULL);
+
   G_OBJECT_CLASS (parent_class)->dispose (G_OBJECT (ringbuffer));
 }
 
