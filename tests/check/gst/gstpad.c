@@ -90,6 +90,7 @@ GST_START_TEST (test_link_unlink_threaded)
   caps = gst_caps_from_string ("foo/bar");
   gst_pad_set_caps (src, caps);
   gst_pad_set_caps (sink, caps);
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
   MAIN_START_THREADS (5, thread_link_unlink, NULL);
   for (i = 0; i < 1000; ++i) {
@@ -98,6 +99,13 @@ GST_START_TEST (test_link_unlink_threaded)
     THREAD_SWITCH ();
   }
   MAIN_STOP_THREADS ();
+
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
+  gst_caps_unref (caps);
+
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 2);
+  gst_object_unref (src);
+  gst_object_unref (sink);
 }
 
 GST_END_TEST;
@@ -437,7 +445,6 @@ GST_START_TEST (test_flowreturn)
   fail_if (strcmp (gst_flow_get_name (ret), "unknown"));
   quark = gst_flow_to_quark (ret);
   fail_unless (quark == 0);
-
 }
 
 GST_END_TEST;
