@@ -21,6 +21,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstbufferstraw.h>
 
 #ifndef GST_DISABLE_PARSE
 
@@ -29,104 +30,6 @@
 
 /* I know all of these have a shift of 6 bits */
 #define GRANULEPOS_SHIFT 6
-
-static GCond *cond = NULL;
-static GMutex *lock = NULL;
-static GstBuffer *buf = NULL;
-static gulong id;
-
-/* called for every buffer.  Waits until the global "buf" variable is unset,
- * then sets it to the buffer received, and signals. */
-static gboolean
-buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
-{
-  g_mutex_lock (lock);
-
-  while (buf != NULL)
-    g_cond_wait (cond, lock);
-
-  /* increase the refcount because we store it globally for others to use */
-  buf = gst_buffer_ref (buffer);
-
-  g_cond_signal (cond);
-
-  g_mutex_unlock (lock);
-
-  return TRUE;
-}
-
-static void
-start_pipeline (GstElement * bin, GstPad * pad)
-{
-  GstStateChangeReturn ret;
-
-  id = gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe), NULL);
-
-  cond = g_cond_new ();
-  lock = g_mutex_new ();
-
-  ret = gst_element_set_state (bin, GST_STATE_PLAYING);
-  fail_if (ret == GST_STATE_CHANGE_FAILURE, "Could not start test pipeline");
-  if (ret == GST_STATE_CHANGE_ASYNC) {
-    ret = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
-    fail_if (ret != GST_STATE_CHANGE_SUCCESS, "Could not start test pipeline");
-  }
-}
-
-/* waits until the probe receives a buffer.  will catch every buffer */
-static GstBuffer *
-get_buffer (GstElement * bin, GstPad * pad)
-{
-  GstBuffer *ret;
-
-  g_mutex_lock (lock);
-
-  while (buf == NULL)
-    g_cond_wait (cond, lock);
-
-  ret = buf;
-  buf = NULL;
-
-  g_cond_signal (cond);
-
-  g_mutex_unlock (lock);
-
-  return ret;
-}
-
-static void
-stop_pipeline (GstElement * bin, GstPad * pad)
-{
-  GstStateChangeReturn ret;
-
-  g_mutex_lock (lock);
-  if (buf)
-    gst_buffer_unref (buf);
-  buf = NULL;
-  gst_pad_remove_buffer_probe (pad, (guint) id);
-  id = 0;
-  g_cond_signal (cond);
-  g_mutex_unlock (lock);
-
-  ret = gst_element_set_state (bin, GST_STATE_NULL);
-  fail_if (ret == GST_STATE_CHANGE_FAILURE, "Could not stop test pipeline");
-  if (ret == GST_STATE_CHANGE_ASYNC) {
-    ret = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
-    fail_if (ret != GST_STATE_CHANGE_SUCCESS, "Could not stop test pipeline");
-  }
-
-  g_mutex_lock (lock);
-  if (buf)
-    gst_buffer_unref (buf);
-  buf = NULL;
-  g_mutex_unlock (lock);
-
-  g_mutex_free (lock);
-  g_cond_free (cond);
-
-  lock = NULL;
-  cond = NULL;
-}
 
 static void
 check_buffer_is_header (GstBuffer * buffer, gboolean is_header)
@@ -228,24 +131,24 @@ GST_START_TEST (test_granulepos_offset)
     gst_object_unref (sink);
   }
 
-  start_pipeline (bin, pad);
+  gst_buffer_straw_start_pipeline (bin, pad);
 
   /* header packets should have timestamp == NONE, granulepos 0, IN_CAPS */
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
   check_buffer_is_header (buffer, TRUE);
   gst_buffer_unref (buffer);
 
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
   check_buffer_is_header (buffer, TRUE);
   gst_buffer_unref (buffer);
 
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
@@ -262,7 +165,7 @@ GST_START_TEST (test_granulepos_offset)
      * same value due to loss of precision with granulepos. theoraenc does
      * take care to timestamp correctly based on the offset of the input data
      * however, so it does do sub-granulepos timestamping. */
-    buffer = get_buffer (bin, pad);
+    buffer = gst_buffer_straw_get_buffer (bin, pad);
     last_granulepos = GST_BUFFER_OFFSET_END (buffer);
     check_buffer_timestamp (buffer, TIMESTAMP_OFFSET);
     /* don't really have a good way of checking duration... */
@@ -274,7 +177,7 @@ GST_START_TEST (test_granulepos_offset)
     gst_buffer_unref (buffer);
 
     /* check continuity with the next buffer */
-    buffer = get_buffer (bin, pad);
+    buffer = gst_buffer_straw_get_buffer (bin, pad);
     check_buffer_timestamp (buffer, next_timestamp);
     check_buffer_duration (buffer,
         gst_util_uint64_scale (GST_BUFFER_OFFSET_END (buffer), GST_SECOND,
@@ -286,7 +189,7 @@ GST_START_TEST (test_granulepos_offset)
     gst_buffer_unref (buffer);
   }
 
-  stop_pipeline (bin, pad);
+  gst_buffer_straw_stop_pipeline (bin, pad);
 
   gst_object_unref (pad);
   gst_object_unref (bin);
@@ -322,24 +225,24 @@ GST_START_TEST (test_continuity)
     gst_object_unref (sink);
   }
 
-  start_pipeline (bin, pad);
+  gst_buffer_straw_start_pipeline (bin, pad);
 
   /* header packets should have timestamp == NONE, granulepos 0 */
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
   check_buffer_is_header (buffer, TRUE);
   gst_buffer_unref (buffer);
 
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
   check_buffer_is_header (buffer, TRUE);
   gst_buffer_unref (buffer);
 
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
@@ -356,7 +259,7 @@ GST_START_TEST (test_continuity)
      * same value due to loss of precision with granulepos. theoraenc does
      * take care to timestamp correctly based on the offset of the input data
      * however, so it does do sub-granulepos timestamping. */
-    buffer = get_buffer (bin, pad);
+    buffer = gst_buffer_straw_get_buffer (bin, pad);
     last_granulepos = GST_BUFFER_OFFSET_END (buffer);
     check_buffer_timestamp (buffer, 0);
     /* plain division because I know the answer is exact */
@@ -369,7 +272,7 @@ GST_START_TEST (test_continuity)
     gst_buffer_unref (buffer);
 
     /* check continuity with the next buffer */
-    buffer = get_buffer (bin, pad);
+    buffer = gst_buffer_straw_get_buffer (bin, pad);
     check_buffer_timestamp (buffer, next_timestamp);
     check_buffer_duration (buffer, GST_SECOND / 10);
     check_buffer_granulepos (buffer, 1);
@@ -378,7 +281,7 @@ GST_START_TEST (test_continuity)
     gst_buffer_unref (buffer);
   }
 
-  stop_pipeline (bin, pad);
+  gst_buffer_straw_stop_pipeline (bin, pad);
 
   gst_object_unref (pad);
   gst_object_unref (bin);

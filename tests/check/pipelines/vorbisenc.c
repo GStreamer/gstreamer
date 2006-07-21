@@ -21,91 +21,11 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstbufferstraw.h>
 
 #ifndef GST_DISABLE_PARSE
 
 #define TIMESTAMP_OFFSET G_GINT64_CONSTANT(3249870963)
-
-static GCond *cond = NULL;
-static GMutex *lock = NULL;
-static GstBuffer *buf = NULL;
-static gulong id;
-
-static gboolean
-buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
-{
-  g_mutex_lock (lock);
-
-  while (buf != NULL)
-    g_cond_wait (cond, lock);
-
-  buf = gst_buffer_ref (buffer);
-
-  g_cond_signal (cond);
-
-  g_mutex_unlock (lock);
-
-  return TRUE;
-}
-
-static void
-start_pipeline (GstElement * bin, GstPad * pad)
-{
-  id = gst_pad_add_buffer_probe (pad, G_CALLBACK (buffer_probe), NULL);
-
-  cond = g_cond_new ();
-  lock = g_mutex_new ();
-
-  gst_element_set_state (bin, GST_STATE_PLAYING);
-
-}
-
-static GstBuffer *
-get_buffer (GstElement * bin, GstPad * pad)
-{
-  GstBuffer *ret;
-
-  g_mutex_lock (lock);
-
-  while (buf == NULL)
-    g_cond_wait (cond, lock);
-
-  ret = buf;
-  buf = NULL;
-
-  g_cond_signal (cond);
-
-  g_mutex_unlock (lock);
-
-  return ret;
-}
-
-static void
-stop_pipeline (GstElement * bin, GstPad * pad)
-{
-  g_mutex_lock (lock);
-  if (buf)
-    gst_buffer_unref (buf);
-  buf = NULL;
-  g_cond_signal (cond);
-  gst_pad_remove_buffer_probe (pad, (guint) id);
-  id = 0;
-  g_mutex_unlock (lock);
-
-  gst_element_set_state (bin, GST_STATE_NULL);
-
-  g_mutex_lock (lock);
-  if (buf)
-    gst_buffer_unref (buf);
-  buf = NULL;
-  g_mutex_unlock (lock);
-
-  g_mutex_free (lock);
-  g_cond_free (cond);
-
-  lock = NULL;
-  cond = NULL;
-}
 
 static void
 check_buffer_timestamp (GstBuffer * buffer, GstClockTime timestamp)
@@ -194,10 +114,10 @@ GST_START_TEST (test_granulepos_offset)
     gst_object_unref (sink);
   }
 
-  start_pipeline (bin, pad);
+  gst_buffer_straw_start_pipeline (bin, pad);
 
   /* header packets should have timestamp == NONE, granulepos 0 */
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   GST_DEBUG ("Got buffer in test");
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
@@ -205,13 +125,13 @@ GST_START_TEST (test_granulepos_offset)
   gst_buffer_unref (buffer);
   GST_DEBUG ("Unreffed buffer in test");
 
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
   gst_buffer_unref (buffer);
 
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
@@ -227,7 +147,7 @@ GST_START_TEST (test_granulepos_offset)
      * value due to loss of precision with granulepos. vorbisenc does take care
      * to timestamp correctly based on the offset of the input data however, so
      * it does do sub-granulepos timestamping. */
-    buffer = get_buffer (bin, pad);
+    buffer = gst_buffer_straw_get_buffer (bin, pad);
     last_granulepos = GST_BUFFER_OFFSET_END (buffer);
     check_buffer_timestamp (buffer, TIMESTAMP_OFFSET);
     /* don't really have a good way of checking duration... */
@@ -239,7 +159,7 @@ GST_START_TEST (test_granulepos_offset)
     gst_buffer_unref (buffer);
 
     /* check continuity with the next buffer */
-    buffer = get_buffer (bin, pad);
+    buffer = gst_buffer_straw_get_buffer (bin, pad);
     check_buffer_timestamp (buffer, next_timestamp);
     check_buffer_duration (buffer,
         gst_util_uint64_scale (GST_BUFFER_OFFSET_END (buffer), GST_SECOND,
@@ -251,7 +171,7 @@ GST_START_TEST (test_granulepos_offset)
     gst_buffer_unref (buffer);
   }
 
-  stop_pipeline (bin, pad);
+  gst_buffer_straw_stop_pipeline (bin, pad);
 
   gst_object_unref (pad);
   gst_object_unref (bin);
@@ -286,22 +206,22 @@ GST_START_TEST (test_timestamps)
     gst_object_unref (sink);
   }
 
-  start_pipeline (bin, pad);
+  gst_buffer_straw_start_pipeline (bin, pad);
 
   /* check header packets */
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
   gst_buffer_unref (buffer);
 
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
   gst_buffer_unref (buffer);
 
-  buffer = get_buffer (bin, pad);
+  buffer = gst_buffer_straw_get_buffer (bin, pad);
   check_buffer_timestamp (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_duration (buffer, GST_CLOCK_TIME_NONE);
   check_buffer_granulepos (buffer, 0);
@@ -312,7 +232,7 @@ GST_START_TEST (test_timestamps)
     gint64 last_granulepos;
 
     /* first buffer has timestamp 0 */
-    buffer = get_buffer (bin, pad);
+    buffer = gst_buffer_straw_get_buffer (bin, pad);
     last_granulepos = GST_BUFFER_OFFSET_END (buffer);
     check_buffer_timestamp (buffer, 0);
     /* don't really have a good way of checking duration... */
@@ -323,7 +243,7 @@ GST_START_TEST (test_timestamps)
     gst_buffer_unref (buffer);
 
     /* check continuity with the next buffer */
-    buffer = get_buffer (bin, pad);
+    buffer = gst_buffer_straw_get_buffer (bin, pad);
     check_buffer_timestamp (buffer, next_timestamp);
     check_buffer_duration (buffer,
         gst_util_uint64_scale (GST_BUFFER_OFFSET_END (buffer), GST_SECOND,
@@ -335,7 +255,7 @@ GST_START_TEST (test_timestamps)
     gst_buffer_unref (buffer);
   }
 
-  stop_pipeline (bin, pad);
+  gst_buffer_straw_stop_pipeline (bin, pad);
 
   gst_object_unref (pad);
   gst_object_unref (bin);

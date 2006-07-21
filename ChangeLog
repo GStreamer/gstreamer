@@ -1,3 +1,13 @@
+2006-07-21  Andy Wingo  <wingo@pobox.com>
+
+	* tests/check/pipelines/vorbisenc.c: 
+	* tests/check/pipelines/theoraenc.c: Port to bufferstraw.
+	Bufferstraw was actually factored out of these tests. Now we share
+	code yay.
+
+	* configure.ac (GST_MAJORMINOR): Rev core requirements to 0.10.9.1
+	for bufferstraw addition to gstcheck.
+
 2006-07-21  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoradec.c: (clip_buffer):
