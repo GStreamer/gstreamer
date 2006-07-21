@@ -36,6 +36,10 @@
 #include "gstparse.h"
 #include "gstinfo.h"
 
+/* the need for the mutex will go away with flex 2.5.6 */
+static gboolean flex_busy = FALSE;
+static GStaticRecMutex flex_lock = G_STATIC_REC_MUTEX_INIT;
+
 extern GstElement *_gst_parse_launch (const gchar *, GError **);
 
 /**
@@ -136,21 +140,31 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
 GstElement *
 gst_parse_launch (const gchar * pipeline_description, GError ** error)
 {
-  GstElement *element = NULL;
-  static GStaticMutex flex_lock = G_STATIC_MUTEX_INIT;
+  GstElement *element;
 
   g_return_val_if_fail (pipeline_description != NULL, NULL);
 
   GST_CAT_INFO (GST_CAT_PIPELINE, "parsing pipeline description %s",
       pipeline_description);
 
-  /* the need for the mutex will go away with flex 2.5.6 */
-  if (g_static_mutex_trylock (&flex_lock)) {
-    element = _gst_parse_launch (pipeline_description, error);
-    g_static_mutex_unlock (&flex_lock);
-  } else {
-    GST_WARNING ("gst_parse_launch() cannot be nested");
-  }
+  g_static_rec_mutex_lock (&flex_lock);
+  if (flex_busy)
+    goto recursive_call;
+  flex_busy = TRUE;
+
+  element = _gst_parse_launch (pipeline_description, error);
+
+  flex_busy = FALSE;
+  g_static_rec_mutex_unlock (&flex_lock);
 
   return element;
+
+  /* ERRORS */
+recursive_call:
+  {
+    GST_WARNING ("calls to gst_parse_launch() cannot be nested");
+    g_static_rec_mutex_unlock (&flex_lock);
+    g_warning ("calls to gst_parse_launch() cannot be nested");
+    return NULL;
+  }
 }

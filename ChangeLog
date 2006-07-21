@@ -1,5 +1,11 @@
 2006-07-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstparse.c: (gst_parse_launch):
+	Protect recursive calls to _parse with a recursive mutex
+	and busy flag.
+
+2006-07-21  Wim Taymans  <wim@fluendo.com>
+
 	* tests/check/gst/gstpad.c: (GST_START_TEST):
 	Fix leak in test.
 
