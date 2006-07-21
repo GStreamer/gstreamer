@@ -1,3 +1,12 @@
+2006-07-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),
+	(gst_avi_demux_process_next_entry):
+	Fix some leaks.
+
+	* gst/id3demux/id3tags.c: (id3demux_id3v2_frames_to_tag_list):
+	Don't use \n in debug lines.
+
 2006-07-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:

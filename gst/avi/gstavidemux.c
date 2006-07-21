@@ -1210,6 +1210,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
   gst_element_add_pad (GST_ELEMENT (avi), pad);
   GST_LOG_OBJECT (element, "Added pad %s with caps %" GST_PTR_FORMAT,
       GST_PAD_NAME (pad), caps);
+  gst_caps_unref (caps);
 
   if (codec_name) {
     if (!stream->taglist)
@@ -1219,6 +1220,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
 
     gst_tag_list_add (stream->taglist, GST_TAG_MERGE_APPEND, tag_name,
         codec_name, NULL);
+    g_free (codec_name);
   }
 
   return TRUE;
@@ -1231,6 +1233,7 @@ fail:
       gst_buffer_unref (buf);
     if (sub)
       gst_buffer_unref (sub);
+    g_free (codec_name);
     g_free (stream->strh);
     g_free (stream->strf.data);
     g_free (stream->name);
@@ -2552,6 +2555,7 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
         GST_WARNING_OBJECT (avi, "Short read at offset %" G_GUINT64_FORMAT
             ", only got %d/%d bytes (truncated file?)", entry->offset +
             avi->index_offset, GST_BUFFER_SIZE (buf), entry->size);
+        gst_buffer_unref (buf);
         res = stream->last_flow = GST_FLOW_UNEXPECTED;
         goto beach;
       }
