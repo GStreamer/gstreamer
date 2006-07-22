@@ -1,3 +1,10 @@
+2006-07-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (xml_check_first_element):
+	  Limit search for the first markup tag to the first few kB of
+	  the file. If we don't find one there, it's highly unlikely that
+	  this is an XML(-ish) file.
+
 2006-07-21  Andy Wingo  <wingo@pobox.com>
 
 	* tests/check/pipelines/theoraenc.c (test_discontinuity): Similar

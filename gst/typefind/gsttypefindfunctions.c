@@ -225,9 +225,10 @@ xml_check_first_element (GstTypeFind * tf, const gchar * element, guint elen,
     data += 5;
   }
 
-  /* look for the first element, it has to be the requested element */
-  while (data) {
-    while (*data != '<') {
+  /* look for the first element, it has to be the requested element. Bail
+   * out if it is not within the first 4kB. */
+  while (data && (offset + pos) < 4096) {
+    while (*data != '<' && (offset + pos) < 4096) {
       XML_INC_BUFFER;
     }
 
