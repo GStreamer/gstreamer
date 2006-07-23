@@ -277,7 +277,7 @@
 	  Can't use GPOINTER_TO_INT and GINT_TO_POINTER with GTypes.
 	  GTypes are gulongs and thus the top 4 bytes might be cut
 	  off on some platforms when doing GPOINTER_TO_INT, leading
-	  to invalid GTypes and bad things happening.
+	  to invalid GTypes and bad things happening (see RH bug #179654).
 	  Also add a check to make sure the type passed in is really
 	  an interface type.
 
