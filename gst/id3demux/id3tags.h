@@ -23,6 +23,9 @@
 
 G_BEGIN_DECLS
 
+/* private tag for storing unprocessed ID3v2 frames */
+#define GST_ID3_DEMUX_TAG_ID3V2_FRAME "private-id3v2-frame"
+
 #define ID3V1_TAG_SIZE 128
 #define ID3V2_MARK_SIZE 3
 #define ID3V2_HDR_SIZE 10

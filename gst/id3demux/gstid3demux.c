@@ -1090,6 +1090,11 @@ plugin_init (GstPlugin * plugin)
 
   gst_tag_register_musicbrainz_tags ();
 
+  /* ensure private tag is registered */
+  gst_tag_register (GST_ID3_DEMUX_TAG_ID3V2_FRAME, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, "ID3v2 frame", "unparsed id3v2 tag frame",
+      gst_tag_merge_use_first);
+
   return gst_element_register (plugin, "id3demux",
       GST_RANK_PRIMARY, GST_TYPE_ID3DEMUX);
 }
