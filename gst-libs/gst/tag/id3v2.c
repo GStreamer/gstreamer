@@ -330,8 +330,6 @@ convert_fid_to_v240 (gchar * frame_id)
 }
 
 
-#define GST_ID3_DEMUX_TAG_ID3V2_FRAME "private-id3v2-frame"
-
 /* add unknown or unhandled ID3v2 frames to the taglist as binary blobs */
 static void
 id3demux_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
@@ -341,11 +339,6 @@ id3demux_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
   guint8 *frame_data;
   gchar *media_type;
   guint frame_size;
-
-  /* ensure private tag is registered */
-  gst_tag_register (GST_ID3_DEMUX_TAG_ID3V2_FRAME, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, "ID3v2 frame", "unparsed id3v2 tag frame",
-      gst_tag_merge_use_first);
 
   frame_data = work->hdr.frame_data - ID3V2_HDR_SIZE;
   frame_size = size + ID3V2_HDR_SIZE;
