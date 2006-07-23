@@ -674,6 +674,22 @@ GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
   fi
 ])
 
+dnl *** spc ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SPC, true)
+GST_CHECK_FEATURE(SPC, [spc decoder], spc, [
+  AC_CHECK_HEADER(openspc.h, [
+    AC_CHECK_LIB(openspc, OSPC_Init, [
+      SPC_LIBS="-lopenspc"
+      AC_SUBST(SPC_LIBS)
+      HAVE_SPC=yes
+    ], [
+      HAVE_SPC=no
+    ])
+  ], [
+    HAVE_SPC=no
+  ])
+])
+
 dnl *** swfdec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
 GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
@@ -765,6 +781,7 @@ AM_CONDITIONAL(USE_MUSICBRAINZ, false)
 AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_SDL, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
+AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_SWFDEC, false)
 AM_CONDITIONAL(USE_THEORADEC, false)
 AM_CONDITIONAL(USE_XVID, false)
@@ -860,6 +877,7 @@ ext/musicbrainz/Makefile
 ext/neon/Makefile
 ext/sdl/Makefile
 ext/soundtouch/Makefile
+ext/spc/Makefile
 ext/swfdec/Makefile
 ext/theora/Makefile
 ext/wavpack/Makefile

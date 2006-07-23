@@ -202,6 +202,12 @@ else
 SOUNDTOUCH_DIR=
 endif
 
+if USE_SPC
+SDL_DIR=spc
+else
+SDL_DIR=
+endif
+
 if USE_SWFDEC
 SWFDEC_DIR=swfdec
 else
@@ -267,6 +273,7 @@ SUBDIRS=\
 	$(SMOOTHWAVE_DIR) \
 	$(SNDFILE_DIR) \
 	$(SOUNDTOUCH_DIR) \
+	$(SPC_DIR) \
 	$(SWFDEC_DIR) \
 	$(TARKIN_DIR) \
 	$(THEORA_DIR) \
@@ -291,8 +298,9 @@ DIST_SUBDIRS= \
 	musicbrainz \
 	neon \
 	sdl \
-	swfdec \
 	soundtouch \
+	spc \
+	swfdec \
 	theora \
 	wavpack \
 	xvid

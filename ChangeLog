@@ -1,3 +1,18 @@
+2006-07-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Chris Lee  <clee at kde org>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/spc/Makefile.am:
+	* ext/spc/gstspc.c: (spc_negotiate), (gst_spc_dec_base_init),
+	(gst_spc_dec_class_init), (gst_spc_dec_init), (gst_spc_dec_chain),
+	(gst_spc_dec_sink_event), (gst_spc_dec_src_event),
+	(gst_spc_dec_src_query), (spc_play), (spc_setup),
+	(gst_spc_dec_change_state), (plugin_init):
+	* ext/spc/gstspc.h:
+	  Add libopenspc-based SPC decoder element (#348220).
+
 2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Martin Szulecki
