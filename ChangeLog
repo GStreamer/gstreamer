@@ -1,3 +1,13 @@
+2006-07-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/id3tags.c:
+	(id3demux_add_id3v2_frame_blob_to_taglist),
+	(id3demux_id3v2_frames_to_tag_list):
+	  Put ID3v2 frames we can't parse as binary blobs into private
+	  tags, so that they are not lost when retagging, at least once
+	  id3v2mux has been taught to re-inject those frames again.
+	  See bug #334375.
+
 2006-07-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),

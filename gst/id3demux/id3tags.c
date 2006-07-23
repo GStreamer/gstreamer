@@ -329,11 +329,47 @@ convert_fid_to_v240 (gchar * frame_id)
   return FALSE;
 }
 
+
+#define GST_ID3_DEMUX_TAG_ID3V2_FRAME "private-id3v2-frame"
+
+/* add unknown or unhandled ID3v2 frames to the taglist as binary blobs */
+static void
+id3demux_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
+{
+  GstBuffer *blob;
+  GstCaps *caps;
+  guint8 *frame_data;
+  gchar *media_type;
+  guint frame_size;
+
+  /* ensure private tag is registered */
+  gst_tag_register (GST_ID3_DEMUX_TAG_ID3V2_FRAME, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, "ID3v2 frame", "unparsed id3v2 tag frame",
+      gst_tag_merge_use_first);
+
+  frame_data = work->hdr.frame_data - ID3V2_HDR_SIZE;
+  frame_size = size + ID3V2_HDR_SIZE;
+
+  blob = gst_buffer_new_and_alloc (frame_size);
+  memcpy (GST_BUFFER_DATA (blob), frame_data, frame_size);
+
+  media_type = g_strdup_printf ("application/x-gst-id3v2-%c%c%c%c-frame",
+      g_ascii_tolower (frame_data[0]), g_ascii_tolower (frame_data[1]),
+      g_ascii_tolower (frame_data[2]), g_ascii_tolower (frame_data[3]));
+  caps = gst_caps_new_simple (media_type, NULL);
+  gst_buffer_set_caps (blob, caps);
+  gst_caps_unref (caps);
+  g_free (media_type);
+
+  gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
+      GST_ID3_DEMUX_TAG_ID3V2_FRAME, blob, NULL);
+  gst_buffer_unref (blob);
+}
+
 static ID3TagsResult
 id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
 {
   guint frame_hdr_size;
-  gboolean read_a_frame = FALSE;
   guint8 *start;
 
   /* Extended header if present */
@@ -438,16 +474,18 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
       work->frame_flags = frame_flags;
 
       if (id3demux_id3v2_parse_frame (work)) {
-        read_a_frame = TRUE;
         GST_LOG ("Extracted frame with id %s", frame_id);
+      } else {
+        GST_LOG ("Failed to extract frame with id %s", frame_id);
+        id3demux_add_id3v2_frame_blob_to_taglist (work, frame_size);
       }
     }
     work->hdr.frame_data += frame_size;
     work->hdr.frame_data_size -= frame_size;
   }
 
-  if (!read_a_frame) {
-    GST_DEBUG ("Could not extract any frames from tag. Broken tag");
+  if (gst_structure_n_fields (GST_STRUCTURE (work->tags)) == 0) {
+    GST_DEBUG ("Could not extract any frames from tag. Broken or empty tag");
     gst_tag_list_free (work->tags);
     work->tags = NULL;
     return ID3TAGS_BROKEN_TAG;
