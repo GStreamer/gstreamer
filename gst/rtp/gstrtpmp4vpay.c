@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpmp4vpay_debug);
 static const GstElementDetails gst_rtp_mp4vpay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
     "Codec/Payloader/Network",
-    "Paload MPEG4 video as RTP packets (RFC 3016)",
+    "Payload MPEG4 video as RTP packets (RFC 3016)",
     "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate gst_rtp_mp4v_pay_sink_template =

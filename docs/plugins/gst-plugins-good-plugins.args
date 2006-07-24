@@ -253,8 +253,8 @@
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>skip</NICK>
-<BLURB>skip.</BLURB>
+<NICK>Skip</NICK>
+<BLURB>skip (unused).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -13269,6 +13269,56 @@
 </ARG>
 
 <ARG>
+<NAME>GstXImageSrc::endx</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= G_MAXINT</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>End X</NICK>
+<BLURB>X coordinate of bottom right corner of area to be recorded (0 for bottom right of screen).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXImageSrc::endy</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= G_MAXINT</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>End Y</NICK>
+<BLURB>Y coordinate of bottom right corner of area to be recorded (0 for bottom right of screen).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXImageSrc::startx</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= G_MAXINT</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start X co-ordinate</NICK>
+<BLURB>X coordinate of top left corner of area to be recorded (0 for top left of screen).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXImageSrc::starty</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= G_MAXINT</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Y co-ordinate</NICK>
+<BLURB>Y coordinate of top left corner of area to be recorded (0 for top left of screen).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXImageSrc::use-damage</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use XDamage</NICK>
+<BLURB>Use XDamage (if XDamage extension enabled).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstVideoBalance::brightness</NAME>
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
@@ -13336,5 +13386,15 @@
 <NICK>Bigfile Support (>2GB)</NICK>
 <BLURB>Support for openDML-2.0 (big) AVI files.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstJpegDec::idct-method</NAME>
+<TYPE>GstIDCTMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IDCT Method</NICK>
+<BLURB>The IDCT algorithm to use.</BLURB>
+<DEFAULT>Faster, less accurate integer method</DEFAULT>
 </ARG>
 

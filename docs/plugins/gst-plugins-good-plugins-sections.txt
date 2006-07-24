@@ -117,6 +117,16 @@ GST_DVDEMUX_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-esdsink</FILE>
+GstEsdSink
+<TITLE>esdsink</TITLE>
+<SUBSECTION Standard>
+GstEsdSinkClass
+GST_ESDSINK
+GST_ESDSINK_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-flacdec</FILE>
 GstFlacDec
 <TITLE>flacdec</TITLE>

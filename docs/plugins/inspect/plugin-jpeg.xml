@@ -3,10 +3,10 @@
   <description>JPeg plugin library</description>
   <filename>../../ext/jpeg/.libs/libgstjpeg.so</filename>
   <basename>libgstjpeg.so</basename>
-  <version>0.10.3</version>
+  <version>0.10.3.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,7 +14,7 @@
       <longname>JPEG image decoder</longname>
       <class>Codec/Decoder/Image</class>
       <description>Decode images from JPEG format</description>
-      <author>Wim Taymans &lt;wim.taymans@tvd.be&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>jpegenc</name>
