@@ -205,7 +205,7 @@ _gst_tag_initialize (void)
       _("language code"),
       _("language code for this stream, conforming to ISO-639-1"), NULL);
   gst_tag_register (GST_TAG_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
-      _("image"), _("image related to this stream"), NULL);
+      _("image"), _("image related to this stream"), gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_PREVIEW_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
       _("preview image"), _("preview image related to this stream"), NULL);
 }
