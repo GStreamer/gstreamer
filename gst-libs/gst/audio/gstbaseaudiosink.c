@@ -593,6 +593,12 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     goto no_align;
   }
 
+  if (G_UNLIKELY (sink->next_sample == -1)) {
+    GST_DEBUG_OBJECT (sink,
+        "no align possible: no previous sample position known");
+    goto no_align;
+  }
+
   /* now try to align the sample to the previous one */
   diff = ABS ((gint64) render_offset - (gint64) sink->next_sample);
 
@@ -600,7 +606,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * should be enough to compensate for various rounding errors in the timestamp
    * and sample offset position. We always resync if we got a discont anyway and
    * non-discont should be aligned by definition. */
-  if (diff < ringbuf->spec.rate / DIFF_TOLERANCE) {
+  if (G_LIKELY (diff < ringbuf->spec.rate / DIFF_TOLERANCE)) {
     GST_DEBUG_OBJECT (sink,
         "align with prev sample, %" G_GINT64_FORMAT " < %lu", diff,
         ringbuf->spec.rate / DIFF_TOLERANCE);
