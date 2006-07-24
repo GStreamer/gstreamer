@@ -31,7 +31,6 @@
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (directsoundsink_debug);
-#define GST_CAT_DEFAULT directsoundsink_debug
 
 /* elementfactory information */
 static const GstElementDetails gst_directsoundsink_details =
@@ -42,8 +41,10 @@ GST_ELEMENT_DETAILS ("Audio Sink (DIRECTSOUND)",
 
 static void gst_directsoundsink_base_init (gpointer g_class);
 static void gst_directsoundsink_class_init (GstDirectSoundSinkClass * klass);
-static void gst_directsoundsink_init (GstDirectSoundSink * alsasink);
+static void gst_directsoundsink_init (GstDirectSoundSink * dsoundsink,
+    GstDirectSoundSinkClass * g_class);
 static void gst_directsoundsink_dispose (GObject * object);
+static void gst_directsoundsink_finalise (GObject * object);
 static void gst_directsoundsink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_directsoundsink_get_property (GObject * object,
@@ -79,6 +80,12 @@ static GstStaticPadTemplate directsoundsink_sink_factory =
         "depth = (int) 8, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]"));
 
+enum
+{
+  PROP_0,
+  PROP_ATTENUATION
+};
+
 static void
 _do_init (GType directsoundsink_type)
 {
@@ -93,6 +100,16 @@ static void
 gst_directsoundsink_dispose (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_directsoundsink_finalise (GObject * object)
+{
+  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (object);
+
+  g_mutex_free (dsoundsink->dsound_lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -124,6 +141,7 @@ gst_directsoundsink_class_init (GstDirectSoundSinkClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_directsoundsink_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_directsoundsink_finalise);
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_directsoundsink_get_property);
   gobject_class->set_property =
@@ -140,6 +158,12 @@ gst_directsoundsink_class_init (GstDirectSoundSinkClass * klass)
 
   gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_directsoundsink_delay);
   gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_directsoundsink_reset);
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ATTENUATION,
+      g_param_spec_long ("attenuation", "Attenuation of the sound",
+          "The attenuation for the directsound buffer (default is 0 so the directsound buffer will not be attenuated)",
+          -10000, 0, 0, G_PARAM_READWRITE));
+
 }
 
 static void
@@ -151,6 +175,20 @@ gst_directsoundsink_set_property (GObject * object, guint prop_id,
   dsoundsink = GST_DIRECTSOUND_SINK (object);
 
   switch (prop_id) {
+    case PROP_ATTENUATION:
+    {
+      glong attenuation = g_value_get_long (value);
+
+      if (attenuation != dsoundsink->attenuation) {
+        dsoundsink->attenuation = attenuation;
+
+        if (dsoundsink->pDSBSecondary)
+          IDirectSoundBuffer_SetVolume (dsoundsink->pDSBSecondary,
+              dsoundsink->attenuation);
+      }
+
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -166,6 +204,9 @@ gst_directsoundsink_get_property (GObject * object, guint prop_id,
   dsoundsink = GST_DIRECTSOUND_SINK (object);
 
   switch (prop_id) {
+    case PROP_ATTENUATION:
+      g_value_set_long (value, dsoundsink->attenuation);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -174,14 +215,15 @@ gst_directsoundsink_get_property (GObject * object, guint prop_id,
 
 static void
 gst_directsoundsink_init (GstDirectSoundSink * dsoundsink,
-    GstDirectSoundSinkClass g_class)
+    GstDirectSoundSinkClass * g_class)
 {
-  GST_DEBUG ("initializing directsoundsink");
-
   dsoundsink->pDS = NULL;
   dsoundsink->pDSBSecondary = NULL;
   dsoundsink->current_circular_offset = 0;
   dsoundsink->buffer_size = DSBSIZE_MIN;
+  dsoundsink->attenuation = 0;
+  dsoundsink->dsound_lock = g_mutex_new ();
+  dsoundsink->first_buffer_after_reset = FALSE;
 }
 
 static GstCaps *
@@ -246,15 +288,15 @@ gst_directsoundsink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
   wfx.nBlockAlign = spec->bytes_per_sample;
   wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
 
-
-  GST_DEBUG
-      ("GstRingBufferSpec->channels: %d, GstRingBufferSpec->rate: %d, GstRingBufferSpec->bytes_per_sample: %d\n"
-      "WAVEFORMATEX.nSamplesPerSec: %ld, WAVEFORMATEX.wBitsPerSample: %d, WAVEFORMATEX.nBlockAlign: %d, WAVEFORMATEX.nAvgBytesPerSec: %ld\n",
-      spec->channels, spec->rate, spec->bytes_per_sample, wfx.nSamplesPerSec,
-      wfx.wBitsPerSample, wfx.nBlockAlign, wfx.nAvgBytesPerSec);
-
-  /* directsound buffer size can handle 2 secs of the stream */
+  /* directsound buffer size can handle 1/2 sec of the stream */
   dsoundsink->buffer_size = wfx.nAvgBytesPerSec / 2;
+
+  GST_CAT_INFO (directsoundsink_debug,
+      "GstRingBufferSpec->channels: %d, GstRingBufferSpec->rate: %d, GstRingBufferSpec->bytes_per_sample: %d\n"
+      "WAVEFORMATEX.nSamplesPerSec: %ld, WAVEFORMATEX.wBitsPerSample: %d, WAVEFORMATEX.nBlockAlign: %d, WAVEFORMATEX.nAvgBytesPerSec: %ld\n"
+      "Size of dsound cirucular buffe=>%d\n", spec->channels, spec->rate,
+      spec->bytes_per_sample, wfx.nSamplesPerSec, wfx.wBitsPerSample,
+      wfx.nBlockAlign, wfx.nAvgBytesPerSec, dsoundsink->buffer_size);
 
   /* create a secondary directsound buffer */
   memset (&descSecondary, 0, sizeof (DSBUFFERDESC));
@@ -273,6 +315,10 @@ gst_directsoundsink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
             DXGetErrorString9 (hRes)), (NULL));
     return FALSE;
   }
+
+  if (dsoundsink->attenuation != 0)
+    IDirectSoundBuffer_SetVolume (dsoundsink->pDSBSecondary,
+        dsoundsink->attenuation);
 
   return TRUE;
 }
@@ -318,12 +364,15 @@ gst_directsoundsink_write (GstAudioSink * asink, gpointer data, guint length)
 
   dsoundsink = GST_DIRECTSOUND_SINK (asink);
 
+  GST_DSOUND_LOCK (dsoundsink);
+
   /* get current buffer status */
   hRes = IDirectSoundBuffer_GetStatus (dsoundsink->pDSBSecondary, &dwStatus);
 
   /* get current play cursor position */
   hRes = IDirectSoundBuffer_GetCurrentPosition (dsoundsink->pDSBSecondary,
       &dwCurrentPlayCursor, NULL);
+
   if (SUCCEEDED (hRes) && (dwStatus & DSBSTATUS_PLAYING)) {
     DWORD dwFreeBufferSize;
 
@@ -341,7 +390,16 @@ gst_directsoundsink_write (GstAudioSink * asink, gpointer data, guint length)
       Sleep (100);
       hRes = IDirectSoundBuffer_GetCurrentPosition (dsoundsink->pDSBSecondary,
           &dwCurrentPlayCursor, NULL);
-      goto calculate_freesize;
+
+      hRes =
+          IDirectSoundBuffer_GetStatus (dsoundsink->pDSBSecondary, &dwStatus);
+      if (SUCCEEDED (hRes) && (dwStatus & DSBSTATUS_PLAYING))
+        goto calculate_freesize;
+      else {
+        dsoundsink->first_buffer_after_reset = FALSE;
+        GST_DSOUND_UNLOCK (dsoundsink);
+        return 0;
+      }
     }
   }
 
@@ -369,11 +427,17 @@ gst_directsoundsink_write (GstAudioSink * asink, gpointer data, guint length)
         dwSizeBuffer1, pLockedBuffer2, dwSizeBuffer2);
   }
 
-  /* if the buffer was not in playing state yet, call play on the buffer */
-  if (!(dwStatus & DSBSTATUS_PLAYING)) {
+  /* if the buffer was not in playing state yet, call play on the buffer 
+     except if this buffer is the fist after a reset (base class call reset and write a buffer when setting the sink to pause) */
+  if (!(dwStatus & DSBSTATUS_PLAYING) &&
+      dsoundsink->first_buffer_after_reset == FALSE) {
     hRes = IDirectSoundBuffer_Play (dsoundsink->pDSBSecondary, 0, 0,
         DSBPLAY_LOOPING);
   }
+
+  dsoundsink->first_buffer_after_reset = FALSE;
+
+  GST_DSOUND_UNLOCK (dsoundsink);
 
   return length;
 }
@@ -386,23 +450,29 @@ gst_directsoundsink_delay (GstAudioSink * asink)
   DWORD dwCurrentPlayCursor;
   DWORD dwBytesInQueue = 0;
   gint nNbSamplesInQueue = 0;
+  DWORD dwStatus;
 
   dsoundsink = GST_DIRECTSOUND_SINK (asink);
 
-  /*evaluate the number of samples in queue in the circular buffer */
-  hRes = IDirectSoundBuffer_GetCurrentPosition (dsoundsink->pDSBSecondary,
-      &dwCurrentPlayCursor, NULL);
+  /* get current buffer status */
+  hRes = IDirectSoundBuffer_GetStatus (dsoundsink->pDSBSecondary, &dwStatus);
 
-  if (hRes == S_OK) {
-    if (dwCurrentPlayCursor < dsoundsink->current_circular_offset)
-      dwBytesInQueue =
-          dsoundsink->current_circular_offset - dwCurrentPlayCursor;
-    else
-      dwBytesInQueue =
-          dsoundsink->current_circular_offset + (dsoundsink->buffer_size -
-          dwCurrentPlayCursor);
+  if (dwStatus & DSBSTATUS_PLAYING) {
+    /*evaluate the number of samples in queue in the circular buffer */
+    hRes = IDirectSoundBuffer_GetCurrentPosition (dsoundsink->pDSBSecondary,
+        &dwCurrentPlayCursor, NULL);
 
-    nNbSamplesInQueue = dwBytesInQueue / dsoundsink->bytes_per_sample;
+    if (hRes == S_OK) {
+      if (dwCurrentPlayCursor < dsoundsink->current_circular_offset)
+        dwBytesInQueue =
+            dsoundsink->current_circular_offset - dwCurrentPlayCursor;
+      else
+        dwBytesInQueue =
+            dsoundsink->current_circular_offset + (dsoundsink->buffer_size -
+            dwCurrentPlayCursor);
+
+      nNbSamplesInQueue = dwBytesInQueue / dsoundsink->bytes_per_sample;
+    }
   }
 
   return nNbSamplesInQueue;
@@ -413,8 +483,36 @@ gst_directsoundsink_reset (GstAudioSink * asink)
 {
   /*not tested for seeking */
   GstDirectSoundSink *dsoundsink;
+  LPBYTE pLockedBuffer = NULL;
+  DWORD dwSizeBuffer = 0;
 
   dsoundsink = GST_DIRECTSOUND_SINK (asink);
 
-  IDirectSoundBuffer_Stop (dsoundsink->pDSBSecondary);
+  GST_DSOUND_LOCK (dsoundsink);
+
+  if (dsoundsink->pDSBSecondary) {
+    /*stop playing */
+    HRESULT hRes = IDirectSoundBuffer_Stop (dsoundsink->pDSBSecondary);
+
+    /*reset position */
+    hRes = IDirectSoundBuffer_SetCurrentPosition (dsoundsink->pDSBSecondary, 0);
+    dsoundsink->current_circular_offset = 0;
+
+    /*reset the buffer */
+    hRes = IDirectSoundBuffer_Lock (dsoundsink->pDSBSecondary,
+        dsoundsink->current_circular_offset, dsoundsink->buffer_size,
+        &pLockedBuffer, &dwSizeBuffer, NULL, NULL, 0L);
+
+    if (SUCCEEDED (hRes)) {
+      memset (pLockedBuffer, 0, dwSizeBuffer);
+
+      hRes =
+          IDirectSoundBuffer_Unlock (dsoundsink->pDSBSecondary, pLockedBuffer,
+          dwSizeBuffer, NULL, 0);
+    }
+  }
+
+  dsoundsink->first_buffer_after_reset = TRUE;
+
+  GST_DSOUND_UNLOCK (dsoundsink);
 }
