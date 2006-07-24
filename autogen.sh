@@ -25,7 +25,7 @@ then
 fi
 . common/gst-autogen.sh
 
-CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-failing-tests --enable-poisoning --enable-gtk-doc --enable-docbook --enable-plugin-docs'
+CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-failing-tests --enable-poisoning --enable-gtk-doc --enable-docbook'
 
 autogen_options $@
 
