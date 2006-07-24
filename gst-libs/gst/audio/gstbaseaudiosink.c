@@ -200,6 +200,7 @@ gst_base_audio_sink_provide_clock (GstElement * elem)
 
   return clock;
 
+  /* ERRORS */
 wrong_state:
   {
     GST_DEBUG_OBJECT (sink, "ringbuffer not acquired");
@@ -490,11 +491,6 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   sink = GST_BASE_AUDIO_SINK (bsink);
 
-  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
-    /* always resync after a discont */
-    sink->next_sample = -1;
-  }
-
   ringbuf = sink->ringbuffer;
 
   /* can't do anything when we don't have the device */
@@ -581,30 +577,43 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       ", render offset %llu, samples %lu",
       GST_TIME_ARGS (render_time), render_offset, samples);
 
-  /* roundoff errors in timestamp conversion */
-  if (G_LIKELY (sink->next_sample != -1)) {
-    diff = ABS ((gint64) render_offset - (gint64) sink->next_sample);
 
-    /* we tollerate half a second diff before we start resyncing. This
-     * should be enough to compensate for various rounding errors in the timestamp
-     * and sample offset position. We always resync if we got a discont anyway and
-     * non-discont should be aligned by definition. */
-    if (diff < ringbuf->spec.rate / DIFF_TOLERANCE) {
-      GST_DEBUG_OBJECT (sink,
-          "align with prev sample, %" G_GINT64_FORMAT " < %lu", diff,
-          ringbuf->spec.rate / DIFF_TOLERANCE);
-      /* just align with previous sample then */
-      render_offset = sink->next_sample;
-    } else {
-      /* timestamps drifted apart from previous samples too much, we need to
-       * resync. */
-      GST_WARNING_OBJECT (sink,
-          "resync after discont with previous sample of diff: %lu", diff);
-    }
-  } else {
-    GST_DEBUG_OBJECT (sink, "resync after discont");
+  /* never try to align samples when we are slaved to another clock, just
+   * trust the rate control algorithm to align the two clocks. We don't take
+   * the LOCK to read the clock because it does not really matter here and the
+   * clock is not changed while playing normally. */
+  if (GST_ELEMENT_CLOCK (sink) != sink->provided_clock) {
+    GST_DEBUG_OBJECT (sink, "no align needed: we are slaved");
+    goto no_align;
   }
 
+  /* always resync after a discont */
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
+    GST_DEBUG_OBJECT (sink, "resync after discont");
+    goto no_align;
+  }
+
+  /* now try to align the sample to the previous one */
+  diff = ABS ((gint64) render_offset - (gint64) sink->next_sample);
+
+  /* we tollerate half a second diff before we start resyncing. This
+   * should be enough to compensate for various rounding errors in the timestamp
+   * and sample offset position. We always resync if we got a discont anyway and
+   * non-discont should be aligned by definition. */
+  if (diff < ringbuf->spec.rate / DIFF_TOLERANCE) {
+    GST_DEBUG_OBJECT (sink,
+        "align with prev sample, %" G_GINT64_FORMAT " < %lu", diff,
+        ringbuf->spec.rate / DIFF_TOLERANCE);
+    /* just align with previous sample then */
+    render_offset = sink->next_sample;
+  } else {
+    /* timestamps drifted apart from previous samples too much, we need to
+     * resync. We log this as an element warning. */
+    GST_ELEMENT_WARNING (sink, CORE, CLOCK, (NULL),
+        ("Unexpected discontinuity in audio timestamps of more than half a second"));
+  }
+
+no_align:
   crate =
       gst_guint64_to_gdouble (crate_num) / gst_guint64_to_gdouble (crate_denom);
   GST_DEBUG_OBJECT (sink,

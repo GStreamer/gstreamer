@@ -1,5 +1,12 @@
 2006-07-24  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_provide_clock), (gst_base_audio_sink_render):
+	When the audio clock is slaved to another clock, never try to align
+	samples but trust the rate interpolation algorithm.
+
+2006-07-24  Wim Taymans  <wim@fluendo.com>
+
 	* ext/alsa/gstalsasink.c: (set_hwparams), (gst_alsasink_prepare):
 	Don't try to calculate silence samples, base class does this much
 	better now.
