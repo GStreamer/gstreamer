@@ -228,7 +228,6 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
 #ifdef G_OS_WIN32
 startup_error:
   {
-    GST_DEBUG_OBJECT (self, "Error %d on WSAStartup", error);
     g_warning ("Error %d on WSAStartup", error);
     return RTSP_EWSASTART;
   }

@@ -1,3 +1,8 @@
+2006-07-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_send):
+	Remove unwanted DEBUG line.
+
 2006-07-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/gstid3demux.c: (plugin_init):
