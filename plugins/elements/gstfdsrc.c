@@ -278,7 +278,10 @@ gst_fd_src_set_property (GObject * object, guint prop_id, const GValue * value,
        * so it is reflected in get_properties and uri */
       GST_OBJECT_LOCK (object);
       if (GST_STATE (GST_ELEMENT (src)) <= GST_STATE_READY) {
+        GST_DEBUG_OBJECT (src, "state ready or lower, updating to use new fd");
         gst_fd_src_update_fd (src);
+      } else {
+        GST_DEBUG_OBJECT (src, "state above ready, not updating to new fd yet");
       }
       GST_OBJECT_UNLOCK (object);
       break;
@@ -368,7 +371,7 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   src->curoffset += readbytes;
 
-  GST_DEBUG_OBJECT (psrc, "Read buffer of size %u.", readbytes);
+  GST_LOG_OBJECT (psrc, "Read buffer of size %u.", readbytes);
 
   /* we're done, return the buffer */
   *outbuf = buf;

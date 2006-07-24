@@ -1,8 +1,17 @@
+2006-07-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gstminiobject.c:
+	  update docs
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_set_property),
+	(gst_fd_src_create):
+	  log recurring events at LOG level
+	  add more debug for when the fd gets set
+
 2006-07-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstparse.c: (gst_parse_launch):
-          Also remove reentrance checks if flex is MT save (#348179)
-          Fix my empty ChangeLog entry below
+	  Also remove reentrance checks if flex is MT save (#348179)
+	 Fix my empty ChangeLog entry below
 
 2006-07-21  Andy Wingo  <wingo@pobox.com>
 
@@ -20,8 +29,8 @@
 
 	* configure.ac:
 	* gst/gstparse.c: (gst_parse_launch):
-          Check for flex version and omit mutex if we have a MT save flex
-          (fixes #348179)
+	  Check for flex version and omit mutex if we have a MT save flex
+	  (fixes #348179)
 
 2006-07-21  Wim Taymans  <wim@fluendo.com>
 

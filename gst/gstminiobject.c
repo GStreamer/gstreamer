@@ -204,12 +204,13 @@ gst_mini_object_is_writable (const GstMiniObject * mini_object)
  * gst_mini_object_make_writable:
  * @mini_object: the mini-object to make writable
  *
- * Checks if a mini-object is writable.  If not, a witeable copy is made and
- * returned.
+ * Checks if a mini-object is writable.  If not, a writeable copy is made and
+ * returned.  This gives away the reference to the original mini object,
+ * and returns a reference to the new object.
  *
  * MT safe
  *
- * Returns: a mini-object (possibly a duplicate) that is writable.
+ * Returns: a mini-object (possibly the same pointer) that is writable.
  */
 GstMiniObject *
 gst_mini_object_make_writable (GstMiniObject * mini_object)
