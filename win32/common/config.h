@@ -6,7 +6,7 @@
 #undef ENABLE_NLS
 
 /* gettext package name */
-#define GETTEXT_PACKAGE "gstreamer-0.10"
+#define GETTEXT_PACKAGE "gst-plugins-bad-0.10"
 
 /* PREFIX - specifically added for Windows for easier moving */
 #define PREFIX "C:\\gstreamer"
@@ -30,10 +30,10 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer CVS/prerelease"
+#define GST_PACKAGE_NAME "GStreamer Bad Plug-ins source release"
 
 /* Define the version */
-#define GST_VERSION "0.10.0"
+#define GST_VERSION "0.10.3"
 
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
@@ -178,7 +178,7 @@
 #define LOCALEDIR PREFIX "\\share\\locale"
 
 /* Name of package */
-#define PACKAGE "gstreamer"
+#define PACKAGE "gst-plugins-bad"
 
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
@@ -187,7 +187,7 @@
 #undef PACKAGE_NAME
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
+#undef PACKAGE_STRING "GStreamer Bad Plug-ins 0.10.3"
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
@@ -205,7 +205,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.0"
+#define VERSION "0.10.3"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
@@ -224,6 +224,6 @@
    calls it, or to nothing if 'inline' is not supported under any name.  */
 /* #undef inline */
 
-#define GST_PACKAGE "Gstreamer"
-#define PACKAGE "gstreamer"
+#define GST_PACKAGE "Gst-plugins-bad"
+#define PACKAGE "gst-plugins-bad"
 #define GST_ORIGIN "gstreamer.freedesktop.org"

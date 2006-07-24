@@ -1,3 +1,23 @@
+2006-07-24  Sebastien Moutte  <sebastien@moutte.net>
+
+	* sys/directsound/gstdirectsoundsink.h:
+	* sys/directsound/gstdirectsoundsink.c:
+	Add an attenuation property that will directly attenuate the 
+	directsound buffer.
+	Change the size of the directsound secondary buffer to a half second.
+	Add more debug logs.
+	Add a lock to protect dsound buffer write access.
+	Fix a bad implementation of reset.
+	* sys/directsound/gstdirectdrawsink.c:
+	* sys/directsound/gstdirectdrawsink.h:
+	Add a keep_aspect_ratio property.
+	Do not use overlay if not supported.
+	Add more debug logs.
+	Remove overwrite of WM_ERASEBKGND message handling. It was not
+	redrawing border when keep_aspect_ratio was enabled.
+	* win32/common/config.h:
+	update version waiting an auto-generated config.h
+
 2006-07-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Chris Lee  <clee at kde org>
