@@ -30,7 +30,7 @@
 	* gst/law/mulaw-encode.c: (mulawenc_getcaps):
 	Fix negotiation to deal with ANY/EMPTY caps instead of leaking.
 
-2006-07-24  Stefan Kost,,,  <set EMAIL_ADDRESS environment variable>
+2006-07-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_reset),
 	(gst_wavparse_other), (gst_wavparse_perform_seek),
