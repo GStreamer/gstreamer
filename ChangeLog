@@ -1,3 +1,11 @@
+2006-07-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/law/alaw-decode.c: (alawdec_getcaps):
+	* gst/law/alaw-encode.c: (alawenc_getcaps), (gst_alawenc_chain):
+	* gst/law/mulaw-decode.c: (mulawdec_getcaps):
+	* gst/law/mulaw-encode.c: (mulawenc_getcaps):
+	Fix negotiation to deal with ANY/EMPTY caps instead of leaking.
+
 2006-07-24  Stefan Kost,,,  <set EMAIL_ADDRESS environment variable>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_reset),
