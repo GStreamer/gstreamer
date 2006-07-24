@@ -125,13 +125,16 @@ dnl disable gst plugins we might not be able to build on this
 dnl platform: udp and rtsp (ugly but minimally invasive)
 dnl FIXME: maybe move to sys
 AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
-AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
+AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
 
-if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
+if test "x$HAVE_SYS_SOCKET_H" != "xyes" -a "x$HAVE_WINSOCK2_H" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/udp//`
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/rtsp//`
-  GST_PLUGINS_NO="\tudp\n$GST_PLUGINS_NO"
-  GST_PLUGINS_NO="\trtsp\n$GST_PLUGINS_NO"
+fi
+
+if test "x$HAVE_WINSOCK2_H" = "xyes"; then
+  WIN32_LIBS="-lws2_32"
+  AC_SUBST(WIN32_LIBS)
 fi
 
 dnl disable monoscope plugin

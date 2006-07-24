@@ -32,12 +32,9 @@ G_BEGIN_DECLS
 #include <string.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
+
+#include "gstudpnetutils.h"
+
 #include "gstudp.h"
 
 #define GST_TYPE_DYNUDPSINK             (gst_dynudpsink_get_type())

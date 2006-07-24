@@ -1,3 +1,25 @@
+2006-07-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: Joni Valtanen  <joni dot valtanen at movial fi>
+
+	* configure.ac:
+	* gst/udp/Makefile.am:
+	* gst/udp/gstdynudpsink.c: (gst_dynudpsink_init),
+	(gst_dynudpsink_finalize), (gst_dynudpsink_close):
+	* gst/udp/gstdynudpsink.h:
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_init),
+	(gst_multiudpsink_finalize), (gst_multiudpsink_close):
+	* gst/udp/gstmultiudpsink.h:
+	* gst/udp/gstudp.c: (plugin_init):
+	* gst/udp/gstudpsink.h:
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_init), (gst_udpsrc_create),
+	(gst_udpsrc_start), (gst_udpsrc_stop):
+	* gst/udp/gstudpsrc.h:
+	* gst/udp/gstudpnetutils.c: (gst_udp_net_utils_win32_inet_aton),
+	(gst_udp_net_utils_win32_wsa_startup):
+	* gst/udp/gstudpnetutils.h:
+	  Port udp plugin to win32 (#345288).
+
 2006-07-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/rtspconnection.c: (rtsp_connection_send):

@@ -30,14 +30,8 @@ G_BEGIN_DECLS
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
+
+#include "gstudpnetutils.h"
 #include "gstudp.h"
 
 #define GST_TYPE_MULTIUDPSINK            (gst_multiudpsink_get_type())

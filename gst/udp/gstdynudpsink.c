@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <2005> Philippe Khalaf <burger@speedy.org>
  * Copyright (C) <2005> Nokia Corporation <kai.vehmanen@nokia.com>
+ * Copyright (C) <2006> Joni Valtanen <joni.valtanen@movial.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -157,6 +158,8 @@ gst_dynudpsink_init (GstDynUDPSink * sink)
 {
   GstDynUDPSink *udpsink;
 
+  WSA_STARTUP (sink);
+
   udpsink = GST_DYNUDPSINK (sink);
 
   sink->sock = -1;
@@ -166,6 +169,8 @@ static void
 gst_dynudpsink_finalize (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->finalize (object);
+
+  WSA_CLEANUP (object);
 }
 
 static GstFlowReturn
@@ -307,7 +312,7 @@ gst_dynudpsink_get_stats (GstDynUDPSink * sink, const gchar * host, gint port)
 static void
 gst_dynudpsink_close (GstDynUDPSink * sink)
 {
-  close (sink->sock);
+  CLOSE_SOCKET (sink->sock);
 }
 
 static GstStateChangeReturn

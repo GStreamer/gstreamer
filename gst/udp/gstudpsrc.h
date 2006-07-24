@@ -29,12 +29,9 @@ G_BEGIN_DECLS
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 
-#include <fcntl.h>
+#include "gstudpnetutils.h"
+
 #include "gstudp.h"
 
 #define GST_TYPE_UDPSRC \

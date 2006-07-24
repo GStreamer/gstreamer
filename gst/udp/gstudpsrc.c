@@ -79,7 +79,7 @@
 
 #include "gstudpsrc.h"
 #include <unistd.h>
-#include <sys/ioctl.h>
+
 #include <gst/netbuffer/gstnetbuffer.h>
 
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
@@ -222,6 +222,8 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
 static void
 gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
 {
+  WSA_STARTUP (udpsrc);
+
   gst_base_src_set_live (GST_BASE_SRC (udpsrc), TRUE);
   udpsrc->port = UDP_DEFAULT_PORT;
   udpsrc->sock = UDP_DEFAULT_SOCKFD;
@@ -253,7 +255,13 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   guint max_sock;
   gchar *pktdata;
   gint pktsize;
+
+#ifdef G_OS_UNIX
   gint readsize;
+#endif
+#ifdef G_OS_WIN32
+  gulong readsize;
+#endif
   gint ret;
   gboolean try_again;
 
@@ -261,7 +269,9 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   FD_ZERO (&read_fds);
   FD_SET (udpsrc->sock, &read_fds);
+#ifdef G_OS_UNIX
   FD_SET (READ_SOCKET (udpsrc), &read_fds);
+#endif
   max_sock = MAX (udpsrc->sock, READ_SOCKET (udpsrc));
 
   do {
@@ -271,13 +281,26 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
     stop = FALSE;
 
     GST_LOG_OBJECT (udpsrc, "doing select");
+#ifdef G_OS_WIN32
+    if (((max_sock + 1) != READ_SOCKET (udpsrc)) ||
+        ((max_sock + 1) != WRITE_SOCKET (udpsrc))) {
+      ret = select (max_sock + 1, &read_fds, NULL, NULL, NULL);
+    } else {
+      ret = 1;
+    }
+#else
     ret = select (max_sock + 1, &read_fds, NULL, NULL, NULL);
+#endif
     GST_LOG_OBJECT (udpsrc, "select returned %d", ret);
     if (ret <= 0) {
+#ifdef G_OS_WIN32
+      if (WSAGetLastError () != WSAEINTR)
+        goto select_error;
+#else
       if (errno != EAGAIN && errno != EINTR)
         goto select_error;
-      else
-        try_again = TRUE;
+#endif
+      try_again = TRUE;
     } else {
       if (FD_ISSET (READ_SOCKET (udpsrc), &read_fds)) {
         /* got control message */
@@ -312,7 +335,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   } while (try_again);
 
   /* ask how much is available for reading on the socket */
-  if ((ret = ioctl (udpsrc->sock, FIONREAD, &readsize)) < 0)
+  if ((ret = IOCTL_SOCKET (udpsrc->sock, FIONREAD, &readsize)) < 0)
     goto ioctl_failed;
 
   GST_LOG_OBJECT (udpsrc, "ioctl says %d bytes available", readsize);
@@ -515,12 +538,21 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
 
   src = GST_UDPSRC (bsrc);
 
+#ifdef G_OS_WIN32
+  GST_DEBUG_OBJECT (src, "creating pipe");
+
+  /* This should work on UNIX too. PF_UNIX sockets replaced with pipe */
+  /* pipe( CONTROL_SOCKETS(src) ) */
+  if ((ret = pipe (CONTROL_SOCKETS (src))) < 0)
+    goto no_socket_pair;
+#else
   GST_DEBUG_OBJECT (src, "creating socket pair");
   if ((ret = socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (src))) < 0)
     goto no_socket_pair;
 
   fcntl (READ_SOCKET (src), F_SETFL, O_NONBLOCK);
   fcntl (WRITE_SOCKET (src), F_SETFL, O_NONBLOCK);
+#endif
 
   if (src->sock == -1) {
     if ((ret = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
@@ -593,7 +625,7 @@ no_socket:
   }
 setsockopt_error:
   {
-    close (src->sock);
+    CLOSE_SOCKET (src->sock);
     src->sock = -1;
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("setsockopt failed %d: %s (%d)", ret, g_strerror (errno), errno));
@@ -601,7 +633,7 @@ setsockopt_error:
   }
 bind_error:
   {
-    close (src->sock);
+    CLOSE_SOCKET (src->sock);
     src->sock = -1;
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("bind failed %d: %s (%d)", ret, g_strerror (errno), errno));
@@ -609,7 +641,7 @@ bind_error:
   }
 membership:
   {
-    close (src->sock);
+    CLOSE_SOCKET (src->sock);
     src->sock = -1;
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("could add membership %d: %s (%d)", ret, g_strerror (errno), errno));
@@ -617,7 +649,7 @@ membership:
   }
 getsockname_error:
   {
-    close (src->sock);
+    CLOSE_SOCKET (src->sock);
     src->sock = -1;
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("getsockname failed %d: %s (%d)", ret, g_strerror (errno), errno));
@@ -625,7 +657,7 @@ getsockname_error:
   }
 no_broadcast:
   {
-    close (src->sock);
+    CLOSE_SOCKET (src->sock);
     src->sock = -1;
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("could not configure socket for broadcast %d: %s (%d)", ret,
@@ -655,10 +687,11 @@ gst_udpsrc_stop (GstBaseSrc * bsrc)
   src = GST_UDPSRC (bsrc);
 
   if (src->sock != -1) {
-    close (src->sock);
+    CLOSE_SOCKET (src->sock);
     src->sock = -1;
   }
 
+  /* pipes on WIN32 else sockets */
   if (src->control_sock[0] != -1) {
     close (src->control_sock[0]);
     src->control_sock[0] = -1;
@@ -667,6 +700,9 @@ gst_udpsrc_stop (GstBaseSrc * bsrc)
     close (src->control_sock[1]);
     src->control_sock[1] = -1;
   }
+
+  WSA_CLEANUP (src);
+
   return TRUE;
 }
 

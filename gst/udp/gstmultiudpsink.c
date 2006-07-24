@@ -257,6 +257,8 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
 static void
 gst_multiudpsink_init (GstMultiUDPSink * sink)
 {
+  WSA_STARTUP (sink);
+
   sink->client_lock = g_mutex_new ();
 }
 
@@ -268,6 +270,8 @@ gst_multiudpsink_finalize (GObject * object)
   sink = GST_MULTIUDPSINK (object);
 
   g_mutex_free (sink->client_lock);
+
+  WSA_CLEANUP (object);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -440,7 +444,7 @@ no_broadcast:
 static void
 gst_multiudpsink_close (GstMultiUDPSink * sink)
 {
-  close (sink->sock);
+  CLOSE_SOCKET (sink->sock);
 }
 
 void

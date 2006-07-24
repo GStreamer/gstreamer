@@ -31,15 +31,9 @@ G_BEGIN_DECLS
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
+
 #include "gstudp.h"
+#include "gstudpnetutils.h"
 
 #define GST_TYPE_UDPSINK                (gst_udpsink_get_type())
 #define GST_UDPSINK(obj)                (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_UDPSINK,GstUDPSink))
