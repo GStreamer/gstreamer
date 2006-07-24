@@ -181,13 +181,28 @@ gst_esdsink_open (GstAudioSink * asink)
   esd_server_info_t *server_info;
   GstPadTemplate *pad_template;
   GstEsdSink *esdsink;
+  gchar *saved_env;
   gint i;
 
   esdsink = GST_ESDSINK (asink);
 
   GST_DEBUG_OBJECT (esdsink, "open");
 
+  /* ensure libesd doesn't auto-spawn a sound daemon if none is running yet */
+  saved_env = g_strdup (g_getenv ("ESD_NO_SPAWN"));
+  g_setenv ("ESD_NO_SPAWN", "1", TRUE);
+
+  /* now try to connect to any existing/running sound daemons */
   esdsink->ctrl_fd = esd_open_sound (esdsink->host);
+
+  /* and restore the previous state */
+  if (saved_env != NULL) {
+    g_setenv ("ESD_NO_SPAWN", saved_env, TRUE);
+  } else {
+    g_unsetenv ("ESD_NO_SPAWN");
+  }
+  g_free (saved_env);
+
   if (esdsink->ctrl_fd < 0)
     goto couldnt_connect;
 
@@ -434,7 +449,7 @@ gst_esdsink_get_property (GObject * object, guint prop_id, GValue * value,
 gboolean
 gst_esdsink_factory_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "esdsink", GST_RANK_NONE,
+  if (!gst_element_register (plugin, "esdsink", GST_RANK_MARGINAL,
           GST_TYPE_ESDSINK))
     return FALSE;
 

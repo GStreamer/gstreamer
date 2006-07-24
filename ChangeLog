@@ -1,5 +1,15 @@
 2006-07-24  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/esd/esdsink.c: (gst_esdsink_open),
+	(gst_esdsink_factory_init):
+	  Prevent libesd from auto-spawning a sound daemon if it
+	  is not already running. Now that we don't do evil stuff
+	  like that any longer we can give esdsink a rank so that
+	  autoaudiosink will try it as well if all other audio
+	  sinks fail (#343051).
+
+2006-07-24  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/esd/Makefile.am:
 	  Oops, need to remove README from EXTRA_DIST as well.
 
