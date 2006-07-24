@@ -1,3 +1,17 @@
+2006-07-24  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsasink.c: (set_hwparams), (gst_alsasink_prepare):
+	Don't try to calculate silence samples, base class does this much
+	better now.
+
+	* gst-libs/gst/audio/gstringbuffer.c: (build_linear_format),
+	(gst_ring_buffer_debug_spec_caps), (gst_ring_buffer_parse_caps),
+	(gst_ring_buffer_acquire):
+	Calculate silence samples correctly.
+
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Add _CAST macro.
+
 2006-07-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/typefind/gsttypefindfunctions.c: (xml_check_first_element):
