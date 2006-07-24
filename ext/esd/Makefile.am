@@ -8,4 +8,4 @@ libgstesd_la_LIBADD = \
 libgstesd_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = esdsink.h esdmon.h
-EXTRA_DIST = README
+EXTRA_DIST =
