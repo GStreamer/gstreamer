@@ -58,7 +58,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) " G_STRINGIFY (G_BYTE_ORDER) ", "
+        "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) TRUE, "
         "width = (int) 16, "
         "depth = (int) 16, "
@@ -71,9 +71,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]")
     );
 
-static void gst_esdsink_base_init (gpointer g_class);
-static void gst_esdsink_class_init (GstEsdSinkClass * klass);
-static void gst_esdsink_init (GstEsdSink * esdsink);
 static void gst_esdsink_finalize (GObject * object);
 
 static GstCaps *gst_esdsink_getcaps (GstBaseSink * bsink);
@@ -93,32 +90,7 @@ static void gst_esdsink_set_property (GObject * object, guint prop_id,
 static void gst_esdsink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_esdsink_get_type (void)
-{
-  static GType esdsink_type = 0;
-
-  if (!esdsink_type) {
-    static const GTypeInfo esdsink_info = {
-      sizeof (GstEsdSinkClass),
-      gst_esdsink_base_init,
-      NULL,
-      (GClassInitFunc) gst_esdsink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstEsdSink),
-      0,
-      (GInstanceInitFunc) gst_esdsink_init,
-    };
-
-    esdsink_type =
-        g_type_register_static (GST_TYPE_AUDIO_SINK, "GstEsdSink",
-        &esdsink_info, 0);
-  }
-  return esdsink_type;
-}
+GST_BOILERPLATE (GstEsdSink, gst_esdsink, GstAudioSink, GST_TYPE_AUDIO_SINK);
 
 static void
 gst_esdsink_base_init (gpointer g_class)
@@ -167,7 +139,7 @@ gst_esdsink_class_init (GstEsdSinkClass * klass)
 }
 
 static void
-gst_esdsink_init (GstEsdSink * esdsink)
+gst_esdsink_init (GstEsdSink * esdsink, GstEsdSinkClass * klass)
 {
   esdsink->fd = -1;
   esdsink->ctrl_fd = -1;
@@ -322,6 +294,9 @@ gst_esdsink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   spec->segsize = ESD_BUF_SIZE;
   spec->segtotal = (ESD_MAX_WRITE_SIZE / spec->segsize);
+
+  /* FIXME: this is wrong for signed ints (and the
+   * audioringbuffers should do it for us anyway) */
   spec->silence_sample[0] = 0;
   spec->silence_sample[1] = 0;
   spec->silence_sample[2] = 0;
@@ -411,7 +386,7 @@ gst_esdsink_delay (GstAudioSink * asink)
 
   /* latency is measured in samples at a rate of 44100, this 
    * cannot overflow. */
-  latency = latency * 44100LL / esdsink->rate;
+  latency = latency * G_GINT64_CONSTANT (44100) / esdsink->rate;
 
   GST_DEBUG_OBJECT (asink, "got latency: %u", latency);
 

@@ -1,3 +1,12 @@
+2006-07-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/esd/README:
+	  Remove, it contains nothing useful anyway.
+
+	* ext/esd/esdsink.c: (gst_esdsink_init), (gst_esdsink_prepare),
+	(gst_esdsink_delay):
+	  Some small clean-ups; use GST_BOILERPLATE etc.
+
 2006-07-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/law/alaw-decode.c: (alawdec_getcaps):
