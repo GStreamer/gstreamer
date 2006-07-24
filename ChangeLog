@@ -1,3 +1,16 @@
+2006-07-24  Stefan Kost,,,  <set EMAIL_ADDRESS environment variable>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_reset),
+	(gst_wavparse_other), (gst_wavparse_perform_seek),
+	(gst_wavparse_get_upstream_size), (gst_wavparse_stream_headers),
+	(gst_wavparse_add_src_pad), (gst_wavparse_stream_data),
+	(gst_wavparse_pad_query):
+	* gst/wavparse/gstwavparse.h:
+	  Use information from 'fact' chunk for length calculation of compressed
+	  samples. Calculate bps if bogus value is found in wav header (embeded
+	  mp2/mp3).
+	  
+
 2006-07-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Based on patch by: Joni Valtanen  <joni dot valtanen at movial fi>
