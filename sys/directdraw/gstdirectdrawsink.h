@@ -93,8 +93,11 @@ struct _GstDirectDrawSink
   LPDIRECTDRAWSURFACE primary_surface;
   LPDIRECTDRAWSURFACE offscreen_surface;
   LPDIRECTDRAWSURFACE overlays;
-  LPDIRECTDRAWCLIPPER clipper;
-  LPDIRECTDRAWSURFACE extern_surface;
+  LPDIRECTDRAWCLIPPER clipper; 
+
+  /*DDCAPS DDDriverCaps;
+  DDCAPS DDHELCaps;
+  gboolean can_blit;*/
 
   /*Directdraw caps */
   GstCaps *caps;
@@ -110,6 +113,11 @@ struct _GstDirectDrawSink
   gint fps_n;
   gint fps_d;
 
+  /*properties*/
+  LPDIRECTDRAWSURFACE extern_surface;
+  gboolean keep_aspect_ratio;
+  gboolean fullscreen;
+
   /*pixel format */
   DDPIXELFORMAT dd_pixel_format;
 
@@ -117,7 +125,6 @@ struct _GstDirectDrawSink
 
   gboolean bUseOverlay;
   gboolean bIsOverlayVisible;
-  gboolean bFullScreen;
   gboolean setup;
 
   GMutex *pool_lock;
