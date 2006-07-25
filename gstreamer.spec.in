@@ -177,6 +177,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/base
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
 %{_includedir}/gstreamer-%{majorminor}/gst/check/gstcheck.h
+%{_includedir}/gstreamer-%{majorminor}/gst/check/gstbufferstraw.h
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstdataprotocol-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
@@ -194,7 +195,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
 %doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
-# %doc %{_datadir}/gtk-doc/html/gstreamer-plugins-%{majorminor}
+%doc %{_datadir}/gtk-doc/html/gstreamer-plugins-%{majorminor}
                                                                                 
 %changelog
 * Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
