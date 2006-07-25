@@ -1,3 +1,9 @@
+2006-07-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstinfo.h:
+	  Move the Win32 version from gst-plugins-good/gst/avi/avidemux.c to
+	  here.
+
 2006-07-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsttaglist.c: (_gst_tag_initialize):
