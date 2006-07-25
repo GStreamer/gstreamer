@@ -1,3 +1,10 @@
+2006-07-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_read_subindexes),
+	(gst_avi_demux_parse_stream):
+	 Moved win32 variant of GST_DEBUG_CATEGORY_EXTERN to gstinfo.h. Fixed
+	 indentation and spacing.
+
 2006-07-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/Makefile.am:
