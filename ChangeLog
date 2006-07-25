@@ -1,5 +1,13 @@
 2006-07-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* sys/ximage/gstximagesrc.c: (gst_ximage_src_class_init):
+	  Document newly-added properties properly, so that there is a
+	  'Since: 0.10.4' in the plugin docs. Convert some property
+	  names into canonical GObject style (GObject will do that
+	  internally anyway).
+
+2006-07-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/id3demux/id3tags.c:
 	(id3demux_add_id3v2_frame_blob_to_taglist):
 	  Extract frames for ID3v2 versions prior to ID3v2.3.0 properly as

@@ -949,31 +949,70 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
   gc->finalize = gst_ximage_src_finalize;
 
   g_object_class_install_property (gc, PROP_DISPLAY_NAME,
-      g_param_spec_string ("display_name", "Display", "X Display Name", NULL,
+      g_param_spec_string ("display-name", "Display", "X Display Name", NULL,
           G_PARAM_READWRITE));
   g_object_class_install_property (gc, PROP_SCREEN_NUM,
-      g_param_spec_uint ("screen_num", "Screen number", "X Screen Number",
+      g_param_spec_uint ("screen-num", "Screen number", "X Screen Number",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gc, PROP_SHOW_POINTER,
-      g_param_spec_boolean ("show_pointer", "Show Mouse Pointer",
+      g_param_spec_boolean ("show-pointer", "Show Mouse Pointer",
           "Show mouse pointer (if XFixes extension enabled)", TRUE,
           G_PARAM_READWRITE));
+  /**
+   * GstXImageSrc:use-damage
+   *
+   * Use XDamage (if the XDamage extension is enabled)
+   *
+   * Since: 0.10.4
+   **/
   g_object_class_install_property (gc, PROP_USE_DAMAGE,
-      g_param_spec_boolean ("use_damage", "Use XDamage",
+      g_param_spec_boolean ("use-damage", "Use XDamage",
           "Use XDamage (if XDamage extension enabled)", TRUE,
           G_PARAM_READWRITE));
+  /**
+   * GstXImageSrc:startx
+   *
+   * X coordinate of top left corner of area to be recorded
+   * (0 for top left of screen)
+   *
+   * Since: 0.10.4
+   **/
   g_object_class_install_property (gc, PROP_STARTX,
       g_param_spec_uint ("startx", "Start X co-ordinate",
           "X coordinate of top left corner of area to be recorded (0 for top left of screen)",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
+  /**
+   * GstXImageSrc:starty
+   *
+   * Y coordinate of top left corner of area to be recorded
+   * (0 for top left of screen)
+   *
+   * Since: 0.10.4
+   **/
   g_object_class_install_property (gc, PROP_STARTY,
       g_param_spec_uint ("starty", "Start Y co-ordinate",
           "Y coordinate of top left corner of area to be recorded (0 for top left of screen)",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
+  /**
+   * GstXImageSrc:endx
+   *
+   * X coordinate of bottom right corner of area to be recorded
+   * (0 for bottom right of screen)
+   *
+   * Since: 0.10.4
+   **/
   g_object_class_install_property (gc, PROP_ENDX,
       g_param_spec_uint ("endx", "End X",
           "X coordinate of bottom right corner of area to be recorded (0 for bottom right of screen)",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
+  /**
+   * GstXImageSrc:endy
+   *
+   * Y coordinate of bottom right corner of area to be recorded
+   * (0 for bottom right of screen)
+   *
+   * Since: 0.10.4
+   **/
   g_object_class_install_property (gc, PROP_ENDY,
       g_param_spec_uint ("endy", "End Y",
           "Y coordinate of bottom right corner of area to be recorded (0 for bottom right of screen)",
