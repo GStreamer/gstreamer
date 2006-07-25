@@ -1,3 +1,9 @@
+2006-07-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_set_property):
+	  Remove superfluous g_object_notify() calls, GObject does
+	  that for us automatically.
+
 2006-07-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstinfo.h:

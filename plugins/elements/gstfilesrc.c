@@ -334,7 +334,6 @@ gst_file_src_set_property (GObject * object, guint prop_id,
     case ARG_MMAPSIZE:
       if ((src->mapsize % src->pagesize) == 0) {
         src->mapsize = g_value_get_ulong (value);
-        g_object_notify (G_OBJECT (src), "mmapsize");
       } else {
         GST_INFO_OBJECT (src,
             "invalid mapsize, must be a multiple of pagesize, which is %d",
@@ -343,15 +342,12 @@ gst_file_src_set_property (GObject * object, guint prop_id,
       break;
     case ARG_TOUCH:
       src->touch = g_value_get_boolean (value);
-      g_object_notify (G_OBJECT (src), "touch");
       break;
     case ARG_SEQUENTIAL:
       src->sequential = g_value_get_boolean (value);
-      g_object_notify (G_OBJECT (src), "sequential");
       break;
     case ARG_USEMMAP:
       src->use_mmap = g_value_get_boolean (value);
-      g_object_notify (G_OBJECT (src), "use-mmap");
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
