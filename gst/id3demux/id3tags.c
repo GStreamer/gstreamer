@@ -338,10 +338,23 @@ id3demux_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
   GstCaps *caps;
   guint8 *frame_data;
   gchar *media_type;
-  guint frame_size;
+  guint frame_size, header_size;
 
-  frame_data = work->hdr.frame_data - ID3V2_HDR_SIZE;
-  frame_size = size + ID3V2_HDR_SIZE;
+  switch (ID3V2_VER_MAJOR (work->hdr.version)) {
+    case 1:
+    case 2:
+      header_size = 3 + 3;
+      break;
+    case 3:
+    case 4:
+      header_size = 4 + 4 + 2;
+      break;
+    default:
+      g_return_if_reached ();
+  }
+
+  frame_data = work->hdr.frame_data - header_size;
+  frame_size = size + header_size;
 
   blob = gst_buffer_new_and_alloc (frame_size);
   memcpy (GST_BUFFER_DATA (blob), frame_data, frame_size);
@@ -349,10 +362,13 @@ id3demux_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
   media_type = g_strdup_printf ("application/x-gst-id3v2-%c%c%c%c-frame",
       g_ascii_tolower (frame_data[0]), g_ascii_tolower (frame_data[1]),
       g_ascii_tolower (frame_data[2]), g_ascii_tolower (frame_data[3]));
-  caps = gst_caps_new_simple (media_type, NULL);
+  caps = gst_caps_new_simple (media_type, "version", G_TYPE_INT,
+      (gint) ID3V2_VER_MAJOR (work->hdr.version), NULL);
   gst_buffer_set_caps (blob, caps);
   gst_caps_unref (caps);
   g_free (media_type);
+
+  /* gst_util_dump_mem (GST_BUFFER_DATA (blob), GST_BUFFER_SIZE (blob)); */
 
   gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
       GST_ID3_DEMUX_TAG_ID3V2_FRAME, blob, NULL);
