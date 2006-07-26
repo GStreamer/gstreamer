@@ -1,3 +1,12 @@
+2006-07-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/basics-elements.xml:
+	  Fix gst_element_link() example.
+
+	* gst/gstutils.c:
+	  Mention in API docs that one should usually gst_bin_add()
+	  elements to a bin or pipeline before doing the linking.
+	  
 2006-07-26  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbuffer.c: (gst_buffer_get_type), (gst_buffer_new),

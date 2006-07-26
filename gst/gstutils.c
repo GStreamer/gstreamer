@@ -1617,6 +1617,9 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
  * existing pads that aren't linked yet. It will request new pads if necessary.
  * If multiple links are possible, only one is established.
  *
+ * Make sure you have added your elements to a bin or pipeline with
+ * gst_bin_add() before trying to link them.
+ *
  * Returns: TRUE if the elements could be linked, FALSE otherwise.
  */
 gboolean
@@ -1632,6 +1635,8 @@ gst_element_link (GstElement * src, GstElement * dest)
  * @...: the NULL-terminated list of elements to link in order.
  *
  * Chain together a series of elements. Uses gst_element_link().
+ * Make sure you have added your elements to a bin or pipeline with
+ * gst_bin_add() before trying to link them.
  *
  * Returns: TRUE on success, FALSE otherwise.
  */
@@ -1669,6 +1674,9 @@ gst_element_link_many (GstElement * element_1, GstElement * element_2, ...)
  * destination; the other direction will not be tried. The function looks for
  * existing pads that aren't linked yet. It will request new pads if necessary.
  * If multiple links are possible, only one is established.
+ *
+ * Make sure you have added your elements to a bin or pipeline with
+ * gst_bin_add() before trying to link them.
  *
  * Returns: TRUE if the pads could be linked, FALSE otherwise.
  */

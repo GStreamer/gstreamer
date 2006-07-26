@@ -430,18 +430,27 @@ int
 main (int   argc,
       char *argv[])
 {
+  GstElement *pipeline;
   GstElement *source, *filter, *sink;
 
   /* init */
   gst_init (&amp;argc, &amp;argv);
+
+  /* create pipeline */
+  pipeline = gst_pipeline_new ("my-pipeline");
 
   /* create elements */
   source = gst_element_factory_make ("fakesrc", "source");
   filter = gst_element_factory_make ("identity", "filter");
   sink = gst_element_factory_make ("fakesink", "sink");
 
+  /* must add elements to pipeline before linking them */
+  gst_bin_add_many (GST_BIN (pipeline), source, filter, sink, NULL);
+
   /* link */
-  gst_element_link_many (source, filter, sink, NULL);
+  if (!gst_element_link_many (source, filter, sink, NULL)) {
+    g_warning ("Failed to link elements!");
+  }
 <!-- example-end elementlink.c a -->
 [..]<!-- example-begin elementlink.c b --><!--
   return 0;
@@ -456,6 +465,14 @@ main (int   argc,
       references to individual pads and link those using various
       <function>gst_pad_link_* ()</function> functions. See the API
       references for more details.
+    </para>
+    <para>
+      Important: you must add elements to a bin or pipeline
+      <emphasis>before</emphasis> linking them, since adding an element to
+      a bin will disconnect any already existing links. Also, you cannot
+      directly link elements that are not in the same bin or pipeline; if
+      you want to link elements or pads at different hierarchy levels, you
+      will need to use ghost pads (more about ghost pads later).
     </para>
   </sect1>
 
