@@ -116,12 +116,14 @@
 #include "gstutils.h"
 #include "gstminiobject.h"
 
-
 static void gst_buffer_init (GTypeInstance * instance, gpointer g_class);
 static void gst_buffer_class_init (gpointer g_class, gpointer class_data);
 static void gst_buffer_finalize (GstBuffer * buffer);
 static GstBuffer *_gst_buffer_copy (GstBuffer * buffer);
 static GType gst_subbuffer_get_type (void);
+
+static GType _gst_subbuffer_type = 0;
+static GType _gst_buffer_type = 0;
 
 void
 _gst_buffer_initialize (void)
@@ -141,8 +143,6 @@ _gst_buffer_initialize (void)
 GType
 gst_buffer_get_type (void)
 {
-  static GType _gst_buffer_type = 0;
-
   if (G_UNLIKELY (_gst_buffer_type == 0)) {
     static const GTypeInfo buffer_info = {
       sizeof (GstBufferClass),
@@ -256,7 +256,7 @@ gst_buffer_new (void)
 {
   GstBuffer *newbuf;
 
-  newbuf = (GstBuffer *) gst_mini_object_new (GST_TYPE_BUFFER);
+  newbuf = (GstBuffer *) gst_mini_object_new (_gst_buffer_type);
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p", newbuf);
 
@@ -388,10 +388,7 @@ gst_buffer_make_metadata_writable (GstBuffer * buf)
 typedef struct _GstSubBuffer GstSubBuffer;
 typedef struct _GstSubBufferClass GstSubBufferClass;
 
-#define GST_TYPE_SUBBUFFER                         (gst_subbuffer_get_type())
-
-#define GST_IS_SUBBUFFER(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_SUBBUFFER))
-#define GST_SUBBUFFER(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SUBBUFFER, GstSubBuffer))
+#define GST_IS_SUBBUFFER(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), _gst_subbuffer_type))
 #define GST_SUBBUFFER_CAST(obj) ((GstSubBuffer *)(obj))
 
 struct _GstSubBuffer
@@ -415,8 +412,6 @@ static void gst_subbuffer_finalize (GstSubBuffer * buffer);
 static GType
 gst_subbuffer_get_type (void)
 {
-  static GType _gst_subbuffer_type = 0;
-
   if (G_UNLIKELY (_gst_subbuffer_type == 0)) {
     static const GTypeInfo subbuffer_info = {
       sizeof (GstSubBufferClass),
@@ -499,7 +494,7 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
   gst_buffer_ref (parent);
 
   /* create the new buffer */
-  subbuffer = (GstSubBuffer *) gst_mini_object_new (GST_TYPE_SUBBUFFER);
+  subbuffer = (GstSubBuffer *) gst_mini_object_new (_gst_subbuffer_type);
   subbuffer->parent = parent;
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new subbuffer %p (parent %p)", subbuffer,

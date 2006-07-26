@@ -1,3 +1,13 @@
+2006-07-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbuffer.c: (gst_buffer_get_type), (gst_buffer_new),
+	(gst_subbuffer_get_type), (gst_buffer_create_sub):
+	Avoid function call for known types by keeping the buffer and
+	subbuffer GType global.
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_create_read):
+	Random silly optimisations in read() path.
+
 2006-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tools/gst-launch.c: (main):

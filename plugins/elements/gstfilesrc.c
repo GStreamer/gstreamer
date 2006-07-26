@@ -751,11 +751,11 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
   int ret;
   GstBuffer *buf;
 
-  if (src->read_position != offset) {
+  if (G_UNLIKELY (src->read_position != offset)) {
     off_t res;
 
     res = lseek (src->fd, offset, SEEK_SET);
-    if (res < 0 || res != offset)
+    if (G_UNLIKELY (res < 0 || res != offset))
       goto seek_failed;
 
     src->read_position = offset;
@@ -765,19 +765,17 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
 
   GST_LOG_OBJECT (src, "Reading %d bytes", length);
   ret = read (src->fd, GST_BUFFER_DATA (buf), length);
-  if (ret < 0)
+  if (G_UNLIKELY (ret < 0))
     goto could_not_read;
 
   /* regular files should have given us what we expected */
-  if ((guint) ret < length && src->is_regular)
+  if (G_UNLIKELY ((guint) ret < length && src->is_regular))
     goto unexpected_eos;
 
   /* other files should eos if they read 0 */
-  if (ret == 0) {
-    GST_DEBUG ("non-regular file hits EOS");
-    gst_buffer_unref (buf);
-    return GST_FLOW_UNEXPECTED;
-  }
+  if (G_UNLIKELY (ret == 0))
+    goto eos;
+
   length = ret;
 
   GST_BUFFER_SIZE (buf) = length;
@@ -808,6 +806,12 @@ unexpected_eos:
         ("unexpected end of file."));
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
+  }
+eos:
+  {
+    GST_DEBUG ("non-regular file hits EOS");
+    gst_buffer_unref (buf);
+    return GST_FLOW_UNEXPECTED;
   }
 }
 
