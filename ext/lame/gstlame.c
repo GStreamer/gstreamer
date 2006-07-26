@@ -1041,6 +1041,7 @@ gst_lame_setup (GstLame * lame)
   CHECK_ERROR (lame_set_allow_diff_short (lame->lgf, lame->allow_diff_short));
   CHECK_ERROR (lame_set_no_short_blocks (lame->lgf, lame->no_short_blocks));
   CHECK_ERROR (lame_set_emphasis (lame->lgf, lame->emphasis));
+  CHECK_ERROR (lame_set_bWriteVbrTag (lame->lgf, 0));
 #ifdef GSTLAME_PRESET
   if (lame->preset > 0) {
     CHECK_ERROR (lame_set_preset (lame->lgf, lame->preset));
