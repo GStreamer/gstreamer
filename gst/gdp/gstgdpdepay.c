@@ -119,10 +119,6 @@ gst_gdp_depay_init (GstGDPDepay * gdpdepay, GstGDPDepayClass * g_class)
 {
   gdpdepay->sinkpad =
       gst_pad_new_from_static_template (&gdp_depay_sink_template, "sink");
-  gst_pad_set_setcaps_function (gdpdepay->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
-  gst_pad_set_getcaps_function (gdpdepay->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (gdpdepay->sinkpad,
       GST_DEBUG_FUNCPTR (gst_gdp_depay_chain));
   gst_element_add_pad (GST_ELEMENT (gdpdepay), gdpdepay->sinkpad);
