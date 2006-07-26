@@ -638,7 +638,7 @@ gst_multi_fd_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-/* "add-full" signal implemntation */
+/* "add-full" signal implementation */
 void
 gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
     GstSyncMethod sync_method, GstUnitType min_unit, guint64 min_value,
@@ -650,7 +650,10 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
   gint flags, res;
   struct stat statbuf;
 
-  GST_DEBUG_OBJECT (sink, "[fd %5d] adding client", fd);
+  GST_DEBUG_OBJECT (sink, "[fd %5d] adding client, sync_method %d, "
+      "min_unit %d, min_value %" G_GUINT64_FORMAT
+      ", max_unit %d, max_value %" G_GUINT64_FORMAT, fd, sync_method,
+      min_unit, min_value, max_unit, max_value);
 
   /* do limits check if we can */
   if (min_unit == max_unit) {
@@ -1401,7 +1404,7 @@ assign_value (GstUnitType unit, guint64 value, gint * bytes, gint * buffers,
 /* count the index in the buffer queue to satisfy the given unit
  * and value pair starting from buffer at index 0.
  *
- * Returns: TRUE if there was enuough data in the queue to satisfy the
+ * Returns: TRUE if there was enough data in the queue to satisfy the
  * burst values. @idx contains the index in the buffer that contains enough
  * data to satisfy the limits or the last buffer in the queue when the
  * function returns FALSE.
@@ -1434,11 +1437,14 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
 {
   gint result;
 
+  GST_DEBUG_OBJECT (sink,
+      "[fd %5d] new client, deciding where to start in queue", client->fd.fd);
   switch (client->sync_method) {
     case GST_SYNC_METHOD_LATEST:
       /* no syncing, we are happy with whatever the client is going to get */
-      GST_LOG_OBJECT (sink, "no client sync needed");
       result = client->bufpos;
+      GST_DEBUG_OBJECT (sink,
+          "[fd %5d] SYNC_METHOD_LATEST, position %d", client->fd.fd, result);
       break;
     case GST_SYNC_METHOD_NEXT_KEYFRAME:
     {
@@ -1455,7 +1461,7 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
       if (is_sync_frame (sink, buf)) {
         GST_LOG_OBJECT (sink, "[fd %5d] new client, found sync", client->fd.fd);
         result = 0;
-        goto done;
+        break;
       }
       /* client is not on a syncbuffer, need to skip this buffer and
        * wait some more */
@@ -1467,19 +1473,25 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
     }
     case GST_SYNC_METHOD_LATEST_KEYFRAME:
     {
-      GST_LOG_OBJECT (sink, "[fd %5d] new client, bufpos %d, bursting keyframe",
-          client->fd.fd, client->bufpos);
+      GST_DEBUG_OBJECT (sink,
+          "[fd %5d] SYNC_METHOD_LATEST_KEYFRAME", client->fd.fd);
 
-      /* for new clients we initially scan the complete buffer queue for 
+      /* for new clients we initially scan the complete buffer queue for
        * a sync point when a buffer is added. If we don't find a keyframe,
        * we need to wait for the next keyframe and so we change the client's
        * sync method to GST_SYNC_METHOD_NEXT_KEYFRAME.
        */
       result = find_next_syncframe (sink, 0);
-      if (result != -1)
-        goto done;
+      if (result != -1) {
+        GST_DEBUG_OBJECT (sink,
+            "[fd %5d] SYNC_METHOD_LATEST_KEYFRAME: result %d", client->fd.fd,
+            result);
+        break;
+      }
 
-      GST_LOG_OBJECT (sink, "no keyframe found");
+      GST_DEBUG_OBJECT (sink,
+          "[fd %5d] SYNC_METHOD_LATEST_KEYFRAME: no keyframe found, "
+          "switching to SYNC_METHOD_NEXT_KEYFRAME", client->fd.fd);
       /* throw client to the waiting state */
       client->bufpos = -1;
       /* and make client sync to next keyframe */
@@ -1494,17 +1506,23 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
       /* move to the position where we satisfy the client's burst
        * parameters. If we could not satisfy the parameters because there
        * is not enough data, we just send what we have (which is in result).
-       * We use the max value to limit the search 
+       * We use the max value to limit the search
        */
       ok = count_burst_unit (sink, &result, client->burst_min_unit,
           client->burst_min_value, &max, client->burst_max_unit,
           client->burst_max_value);
+      GST_DEBUG_OBJECT (sink,
+          "[fd %5d] SYNC_METHOD_BURST: burst_unit returned %d, result %d",
+          client->fd.fd, ok, result);
 
       GST_LOG_OBJECT (sink, "min %d, max %d", result, max);
 
       /* we hit the max and it is below the min, use that then */
       if (max != -1 && max <= result) {
         result = MAX (max - 1, 0);
+        GST_DEBUG_OBJECT (sink,
+            "[fd %5d] SYNC_METHOD_BURST: result above max, taken down to %d",
+            client->fd.fd, result);
       }
       break;
     }
@@ -1602,7 +1620,6 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
       result = client->bufpos;
       break;
   }
-done:
   return result;
 }
 

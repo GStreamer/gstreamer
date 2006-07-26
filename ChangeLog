@@ -1,3 +1,11 @@
+2006-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_add_full),
+	(gst_multi_fd_sink_new_client):
+	  debug a little more understandably
+	  do not use goto as a substitute for break, especially if
+	  break is also being used
+
 2006-07-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_property):
