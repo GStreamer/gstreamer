@@ -276,7 +276,7 @@ gst_tcp_read_buffer (GstElement * this, int socket, int cancel_fd,
     /* but mom, you promised to give me readsize bytes! */
     goto short_read;
 
-  GST_DEBUG_OBJECT (this, "returning buffer of size %d", GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (this, "returning buffer of size %d", GST_BUFFER_SIZE (*buf));
   return GST_FLOW_OK;
 
   /* ERRORS */
