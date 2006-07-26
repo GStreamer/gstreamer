@@ -28,6 +28,63 @@
  *
  * One registry holds the metadata of a set of plugins.
  * All registries build the #GstRegistryPool.
+ * 
+ * <emphasis role="bold">Design:</emphasis>
+ *
+ * The #GstRegistry object is a list of plugins and some functions for dealing
+ * with them. #GstPlugins are matched 1-1 with a file on disk, and may or may
+ * not be loaded at a given time. There may be multiple #GstRegistry objects,
+ * but the "default registry" is the only object that has any meaning to the
+ * core.
+ *
+ * The registry.xml file is actually a cache of plugin information. This is
+ * unlike versions prior to 0.10, where the registry file was the primary source
+ * of plugin information, and was created by the gst-register command.
+ *
+ * The primary source, at all times, of plugin information is each plugin file
+ * itself. Thus, if an application wants information about a particular plugin,
+ * or wants to search for a feature that satisfies given criteria, the primary
+ * means of doing so is to load every plugin and look at the resulting
+ * information that is gathered in the default registry. Clearly, this is a time
+ * consuming process, so we cache information in the registry.xml file.
+ *
+ * On startup, plugins are searched for in the plugin search path. This path can
+ * be set directly using the %GST_PLUGIN_PATH environment variable. The registry
+ * file is loaded from ~/.gstreamer-$GST_MAJORMINOR/registry-$ARCH.xml or the
+ * file listed in the %GST_REGISTRY env var. The only reason to change the
+ * registry location is for testing.
+ *
+ * For each plugin that is found in the plugin search path, there could be 3
+ * possibilities for cached information:
+ * <itemizedlist>
+ *   <listitem>
+ *     <para>the cache may not contain information about a given file.</para>
+ *   </listitem>
+ *   <listitem>
+ *     <para>the cache may have stale information.</para>
+ *   </listitem>
+ *   <listitem>
+ *     <para>the cache may have current information.</para>
+ *   </listitem>
+ * </itemizedlist>
+ *
+ * In the first two cases, the plugin is loaded and the cache updated. In
+ * addition to these cases, the cache may have entries for plugins that are not
+ * relevant to the current process. These are marked as not available to the
+ * current process. If the cache is updated for whatever reason, it is marked
+ * dirty.
+ *
+ * A dirty cache is written out at the end of initialization. Each entry is
+ * checked to make sure the information is minimally valid. If not, the entry is
+ * simply dropped.
+ *
+ * <emphasis role="bold">Implementation notes:</emphasis>
+ *
+ * The "cache" and "default registry" are different concepts and can represent
+ * different sets of plugins. For various reasons, at init time, the cache is
+ * stored in the default registry, and plugins not relevant to the current
+ * process are marked with the %GST_PLUGIN_FLAG_CACHED bit. These plugins are
+ * removed at the end of intitialization.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -56,58 +113,6 @@
  * variable. */
 static GStaticMutex _gst_registry_mutex = G_STATIC_MUTEX_INIT;
 static GstRegistry *_gst_registry_default = NULL;
-
-/*
- * Design:
- *
- * The GstRegistry object is a list of plugins and some functions for dealing
- * with them. Plugins are matched 1-1 with a file on disk, and may or may not be
- * loaded at a given time. There may be multiple GstRegistry objects, but the
- * "default registry" is the only object that has any meaning to the core.
- *
- * The registry.xml file is actually a cache of plugin information. This is
- * unlike versions prior to 0.10, where the registry file was the primary source
- * of plugin information, and was created by the gst-register command.
- *
- * The primary source, at all times, of plugin information is each plugin file
- * itself. Thus, if an application wants information about a particular plugin,
- * or wants to search for a feature that satisfies given criteria, the primary
- * means of doing so is to load every plugin and look at the resulting
- * information that is gathered in the default registry. Clearly, this is a time
- * consuming process, so we cache information in the registry.xml file.
- *
- * On startup, plugins are searched for in the plugin search path. This path can
- * be set directly using the GST_PLUGIN_PATH environment variable. The registry
- * file is loaded from ~/.gstreamer-$GST_MAJORMINOR/registry-$ARCH.xml or the
- * file listed in the GST_REGISTRY env var. The only reason to change the
- * registry location is for testing.
- *
- * For each plugin that is found in the plugin search path, there could be 3
- * possibilities for cached information:
- *
- *  - the cache may not contain information about a given file.
- *  - the cache may have stale information.
- *  - the cache may have current information.
- *
- * In the first two cases, the plugin is loaded and the cache updated. In
- * addition to these cases, the cache may have entries for plugins that are not
- * relevant to the current process. These are marked as not available to the
- * current process. If the cache is updated for whatever reason, it is marked
- * dirty.
- *
- * A dirty cache is written out at the end of initialization. Each entry is
- * checked to make sure the information is minimally valid. If not, the entry is
- * simply dropped.
- *
- * Implementation notes:
- *
- * The "cache" and "default registry" are different concepts and can represent
- * different sets of plugins. For various reasons, at init time, the cache is
- * stored in the default registry, and plugins not relevant to the current
- * process are marked with the GST_PLUGIN_FLAG_CACHED bit. These plugins are
- * removed at the end of intitialization.
- *
- */
 
 /* Element signals and args */
 enum
