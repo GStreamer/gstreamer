@@ -1,5 +1,12 @@
 2006-07-26  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/wavparse/gstwavparse.c:
+	  #define 'fact' RIFF chunk if we are not compiling against
+	  -base CVS (we don't want to depend on -base CVS for this
+	  one define only, and also not for release order reasons).
+
+2006-07-26  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/taglib/gstid3v2mux.cc:
 	  Handle multiple tags of the same type properly. Re-inject
 	  unparsed ID3v2 frames that we get as binary blobs from
