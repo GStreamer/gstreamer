@@ -1552,7 +1552,6 @@ GstQuery
 GstQueryType
 GST_QUERY_TYPE
 GST_QUERY_TYPE_NAME
-GST_QUERY_TYPE_RATE_DEN
 GstQueryTypeDefinition
 
 
@@ -1702,6 +1701,8 @@ gst_structure_get_value
 gst_structure_set_value
 gst_structure_set
 gst_structure_set_valist
+gst_structure_id_set
+gst_structure_id_set_valist
 gst_structure_remove_field
 gst_structure_remove_fields
 gst_structure_remove_fields_valist

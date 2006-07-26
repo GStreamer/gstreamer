@@ -1,5 +1,11 @@
 2006-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	Oops. Commit the docs additions too for new API.
+	Also, remove the mention of the non-existent GST_QUERY_TYPE_RATE_DEN
+
+2006-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/gststructure.c: (gst_structure_id_set),
 	(gst_structure_id_set_valist):
 	* gst/gststructure.h:
