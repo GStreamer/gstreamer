@@ -1,3 +1,12 @@
+2006-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_init):
+	  proxying get/set caps is the wrong thing to do, since we really
+	  do change caps quite fundamentally
+	* tests/check/elements/gdpdepay.c:
+	* tests/check/elements/gdppay.c:
+	  remove declaration of buffers, it's already done in gstcheck.h
+
 2006-07-24  Sebastien Moutte  <sebastien@moutte.net>
 
 	* sys/directsound/gstdirectsoundsink.h:
