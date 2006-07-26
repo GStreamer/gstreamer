@@ -1,5 +1,13 @@
 2006-07-26  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/taglib/gstid3v2mux.cc:
+	  Fix writing of comment frames (should be COMM not TCOM),
+	  is still sub-optimal though, since we don't retain or
+	  extract the comment descriptions properly (#334375,
+	  also see #334375).
+
+2006-07-26  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/wavparse/gstwavparse.c:
 	  #define 'fact' RIFF chunk if we are not compiling against
 	  -base CVS (we don't want to depend on -base CVS for this

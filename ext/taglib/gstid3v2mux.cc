@@ -60,6 +60,7 @@
 #include <textidentificationframe.h>
 #include <uniquefileidentifierframe.h>
 #include <attachedpictureframe.h>
+#include <commentsframe.h>
 #include <id3v2tag.h>
 #include <gst/tag/tag.h>
 
@@ -445,6 +446,37 @@ add_image_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
 }
 
 static void
+add_comment_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * unused)
+{
+  TagLib::StringList string_list;
+  guint n;
+
+  GST_LOG ("Adding comment frames");
+  for (n = 0; n < num_tags; ++n) {
+    gchar *s = NULL;
+
+    if (gst_tag_list_get_string_index (list, tag, n, &s) && s != NULL) {
+      ID3v2::CommentsFrame * f;
+      gchar *desc;
+
+      GST_LOG ("%s[%u] = '%s'", tag, n, s);
+      f = new ID3v2::CommentsFrame (String::UTF8);
+
+      /* FIXME: we should somehow try to preserve the original descriptions */
+      desc = g_strdup_printf ("c%u", n);
+      f->setDescription (desc);
+      g_free (desc);
+
+      f->setText (s);
+      g_free (s);
+
+      id3v2tag->addFrame (f);
+    }
+  }
+}
+
+static void
 add_text_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
     const gchar * tag, guint num_tags, const gchar * frame_id)
 {
@@ -485,9 +517,9 @@ static const struct
   GST_TAG_ARTIST, add_text_tag, "TPE1"}, {
   GST_TAG_TITLE, add_text_tag, "TIT2"}, {
   GST_TAG_ALBUM, add_text_tag, "TALB"}, {
-  GST_TAG_COMMENT, add_text_tag, "TCOM"}, {
   GST_TAG_COPYRIGHT, add_text_tag, "TCOP"}, {
   GST_TAG_GENRE, add_text_tag, "TCON"}, {
+  GST_TAG_COMMENT, add_comment_tag, ""}, {
   GST_TAG_DATE, add_date_tag, ""}, {
   GST_TAG_IMAGE, add_image_tag, ""}, {
   GST_TAG_PREVIEW_IMAGE, add_image_tag, ""}, {
