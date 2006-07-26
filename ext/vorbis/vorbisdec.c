@@ -1110,7 +1110,7 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
   /* switch depending on packet type */
   if (packet.packet[0] & 1) {
     if (vd->initialized) {
-      GST_WARNING_OBJECT (vd, "Ignoring header");
+      GST_WARNING_OBJECT (vd, "Already initialized, so ignoring header packet");
       goto done;
     }
     result = vorbis_handle_header_packet (vd, &packet);
