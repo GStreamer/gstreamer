@@ -1,3 +1,14 @@
+2006-07-26  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Kai Vehmanen <kv2004 at eca dot cx>
+
+	* gst/rtp/gstrtppcmapay.c: (gst_rtp_pcma_pay_flush),
+	(gst_rtp_pcma_pay_handle_buffer):
+	* gst/rtp/gstrtppcmupay.c: (gst_rtp_pcmu_pay_flush),
+	(gst_rtp_pcmu_pay_handle_buffer):
+	Fix timestamp calculation on outgoing RTP packets.
+	Fixes #348675.
+
 2006-07-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/taglib/gstid3v2mux.cc:

@@ -129,7 +129,7 @@ gst_rtp_pcma_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 }
 
 static GstFlowReturn
-gst_rtp_pcma_pay_flush (GstRtpPmcaPay * rtppcmapay)
+gst_rtp_pcma_pay_flush (GstRtpPmcaPay * rtppcmapay, guint32 clock_rate)
 {
   guint avail;
   GstBuffer *outbuf;
@@ -141,8 +141,8 @@ gst_rtp_pcma_pay_flush (GstRtpPmcaPay * rtppcmapay)
     /* calculate octet count with:
        maxptime-nsec * samples-per-sec / nsecs-per-sec * octets-per-sample */
     maxptime_octets =
-        GST_BASE_RTP_PAYLOAD (rtppcmapay)->max_ptime *
-        GST_BASE_RTP_PAYLOAD (rtppcmapay)->clock_rate / GST_SECOND;
+        gst_util_uint64_scale_int (GST_BASE_RTP_PAYLOAD (rtppcmapay)->max_ptime,
+        clock_rate, GST_SECOND);
   }
 
   /* the data available in the adapter is either smaller
@@ -181,6 +181,14 @@ gst_rtp_pcma_pay_flush (GstRtpPmcaPay * rtppcmapay)
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtppcmapay->first_ts;
     ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtppcmapay), outbuf);
+
+    /* increase count (in ts) of data pushed to basertppayload */
+    rtppcmapay->first_ts +=
+        gst_util_uint64_scale_int (payload_len, GST_SECOND, clock_rate);
+
+    /* store amount of unpushed data (in ts) */
+    rtppcmapay->duration =
+        gst_util_uint64_scale_int (avail, GST_SECOND, clock_rate);
   }
 
   return ret;
@@ -194,11 +202,14 @@ gst_rtp_pcma_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint size, packet_len, avail;
   GstFlowReturn ret;
   GstClockTime duration;
+  guint32 clock_rate;
 
   rtppcmapay = GST_RTP_PCMA_PAY (basepayload);
 
+  clock_rate = basepayload->clock_rate;
+
   size = GST_BUFFER_SIZE (buffer);
-  duration = GST_BUFFER_TIMESTAMP (buffer);
+  duration = gst_util_uint64_scale_int (size, GST_SECOND, clock_rate);
 
   avail = gst_adapter_available (rtppcmapay->adapter);
   if (avail == 0) {
@@ -213,9 +224,8 @@ gst_rtp_pcma_pay_handle_buffer (GstBaseRTPPayload * basepayload,
    * have. */
   if (gst_basertppayload_is_filled (basepayload,
           packet_len, rtppcmapay->duration + duration)) {
-    ret = gst_rtp_pcma_pay_flush (rtppcmapay);
-    rtppcmapay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
-    rtppcmapay->duration = 0;
+    ret = gst_rtp_pcma_pay_flush (rtppcmapay, clock_rate);
+    /* note: first_ts and duration updated in ...pay_flush() */
   } else {
     ret = GST_FLOW_OK;
   }
