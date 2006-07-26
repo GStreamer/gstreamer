@@ -1,3 +1,11 @@
+2006-07-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/taglib/gstid3v2mux.cc:
+	  Handle multiple tags of the same type properly. Re-inject
+	  unparsed ID3v2 frames that we get as binary blobs from
+	  id3demux into the tag again so we don't lose information
+	  when retagging (#334375).
+
 2006-07-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/ximage/gstximagesrc.c: (gst_ximage_src_class_init):

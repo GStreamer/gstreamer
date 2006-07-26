@@ -113,32 +113,6 @@ gst_id3v2_mux_init (GstId3v2Mux * id3v2mux, GstId3v2MuxClass * id3v2mux_class)
   /* nothing to do */
 }
 
-static void
-add_one_txxx_musicbrainz_tag (ID3v2::Tag * id3v2tag, const gchar * spec_id,
-    const gchar * realworld_id, const gchar * id_str)
-{
-  ID3v2::UserTextIdentificationFrame * frame;
-
-  if (id_str == NULL)
-    return;
-
-  GST_DEBUG ("Setting %s to %s", GST_STR_NULL (spec_id), id_str);
-
-  if (spec_id) {
-    frame = new ID3v2::UserTextIdentificationFrame (String::Latin1);
-    id3v2tag->addFrame (frame);
-    frame->setDescription (spec_id);
-    frame->setText (id_str);
-  }
-
-  if (realworld_id) {
-    frame = new ID3v2::UserTextIdentificationFrame (String::Latin1);
-    id3v2tag->addFrame (frame);
-    frame->setDescription (realworld_id);
-    frame->setText (id_str);
-  }
-}
-
 #if 0
 static void
 add_one_txxx_tag (ID3v2::Tag * id3v2tag, const gchar * key, const gchar * val)
@@ -156,260 +130,277 @@ add_one_txxx_tag (ID3v2::Tag * id3v2tag, const gchar * key, const gchar * val)
 }
 #endif
 
+typedef void (*GstId3v2MuxAddTagFunc) (ID3v2::Tag * id3v2tag,
+    const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * data);
+
 static void
-add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
+add_encoder_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * unused)
 {
-  ID3v2::Tag * id3v2tag = (ID3v2::Tag *) user_data;
-  gboolean result;
+  TagLib::StringList string_list;
+  guint n;
 
-  /* FIXME: if there are several values set for the same tag, this won't
-   * work, only the first value will be taken into account
-   */
-  if (strcmp (tag, GST_TAG_TITLE) == 0) {
-    char *title;
+  /* ENCODER_VERSION is either handled with the ENCODER tag or not at all */
+  if (strcmp (tag, GST_TAG_ENCODER_VERSION) == 0)
+    return;
 
-    result = gst_tag_list_get_string_index (list, tag, 0, &title);
-    if (result != FALSE) {
-      GST_DEBUG ("Setting title to %s", title);
-      id3v2tag->setTitle (String::String (title, String::UTF8));
-    }
-    g_free (title);
-  } else if (strcmp (tag, GST_TAG_ALBUM) == 0) {
-    char *album;
+  for (n = 0; n < num_tags; ++n) {
+    gchar *encoder = NULL;
 
-    result = gst_tag_list_get_string_index (list, tag, 0, &album);
-    if (result != FALSE) {
-      GST_DEBUG ("Setting album to %s", album);
-      id3v2tag->setAlbum (String::String (album, String::UTF8));
-    }
-    g_free (album);
-  } else if (strcmp (tag, GST_TAG_ARTIST) == 0) {
-    char *artist;
-
-    result = gst_tag_list_get_string_index (list, tag, 0, &artist);
-    if (result != FALSE) {
-      GST_DEBUG ("Setting artist to %s", artist);
-      id3v2tag->setArtist (String::String (artist, String::UTF8));
-    }
-    g_free (artist);
-  } else if (strcmp (tag, GST_TAG_GENRE) == 0) {
-    char *genre;
-
-    result = gst_tag_list_get_string_index (list, tag, 0, &genre);
-    if (result != FALSE) {
-      GST_DEBUG ("Setting genre to %s", genre);
-      id3v2tag->setGenre (String::String (genre, String::UTF8));
-    }
-    g_free (genre);
-  } else if (strcmp (tag, GST_TAG_COMMENT) == 0) {
-    char *comment;
-
-    result = gst_tag_list_get_string_index (list, tag, 0, &comment);
-    if (result != FALSE) {
-      GST_DEBUG ("Setting comment to %s", comment);
-      id3v2tag->setComment (String::String (comment, String::UTF8));
-    }
-    g_free (comment);
-  } else if (strcmp (tag, GST_TAG_DATE) == 0) {
-    GDate *date;
-
-    result = gst_tag_list_get_date_index (list, tag, 0, &date);
-    if (result != FALSE) {
-      GDateYear year;
-
-      year = g_date_get_year (date);
-      GST_DEBUG ("Setting track year to %d", year);
-      id3v2tag->setYear (year);
-      g_date_free (date);
-    }
-  } else if (strcmp (tag, GST_TAG_TRACK_NUMBER) == 0) {
-    guint track_number;
-
-    result = gst_tag_list_get_uint_index (list, tag, 0, &track_number);
-    if (result != FALSE) {
-      guint total_tracks;
-
-      result = gst_tag_list_get_uint_index (list, GST_TAG_TRACK_COUNT,
-          0, &total_tracks);
-      if (result) {
-        gchar *tag_str;
-
-        ID3v2::TextIdentificationFrame * frame;
-
-        frame = new ID3v2::TextIdentificationFrame ("TRCK", String::UTF8);
-        tag_str = g_strdup_printf ("%d/%d", track_number, total_tracks);
-        GST_DEBUG ("Setting track number to %s", tag_str);
-        id3v2tag->addFrame (frame);
-        frame->setText (tag_str);
-        g_free (tag_str);
-      } else {
-        GST_DEBUG ("Setting track number to %d", track_number);
-        id3v2tag->setTrack (track_number);
-      }
-    }
-  } else if (strcmp (tag, GST_TAG_TRACK_COUNT) == 0) {
-    guint n;
-
-    if (gst_tag_list_get_uint_index (list, GST_TAG_TRACK_NUMBER, 0, &n)) {
-      GST_DEBUG ("track-count handled with track-number, skipping");
-    } else if (gst_tag_list_get_uint_index (list, GST_TAG_TRACK_COUNT, 0, &n)) {
-      ID3v2::TextIdentificationFrame * frame;
-      gchar *tag_str;
-
-      frame = new ID3v2::TextIdentificationFrame ("TRCK", String::UTF8);
-      tag_str = g_strdup_printf ("0/%u", n);
-      GST_DEBUG ("Setting track number/count to %s", tag_str);
-
-      id3v2tag->addFrame (frame);
-      frame->setText (tag_str);
-      g_free (tag_str);
-    }
-  } else if (strcmp (tag, GST_TAG_ALBUM_VOLUME_NUMBER) == 0) {
-    guint volume_number;
-
-    result = gst_tag_list_get_uint_index (list, tag, 0, &volume_number);
-
-    if (result != FALSE) {
-      guint volume_count;
-      gchar *tag_str;
-
-      ID3v2::TextIdentificationFrame * frame;
-
-      frame = new ID3v2::TextIdentificationFrame ("TPOS", String::UTF8);
-      result = gst_tag_list_get_uint_index (list, GST_TAG_ALBUM_VOLUME_COUNT,
-          0, &volume_count);
-      if (result) {
-        tag_str = g_strdup_printf ("%d/%d", volume_number, volume_count);
-      } else {
-        tag_str = g_strdup_printf ("%d", volume_number);
-      }
-
-      GST_DEBUG ("Setting album number to %s", tag_str);
-
-      id3v2tag->addFrame (frame);
-      frame->setText (tag_str);
-      g_free (tag_str);
-    }
-  } else if (strcmp (tag, GST_TAG_ALBUM_VOLUME_COUNT) == 0) {
-    guint n;
-
-    if (gst_tag_list_get_uint_index (list, GST_TAG_ALBUM_VOLUME_NUMBER, 0, &n)) {
-      GST_DEBUG ("volume-count handled with volume-number, skipping");
-    } else if (gst_tag_list_get_uint_index (list, GST_TAG_ALBUM_VOLUME_COUNT,
-            0, &n)) {
-      ID3v2::TextIdentificationFrame * frame;
-      gchar *tag_str;
-
-      frame = new ID3v2::TextIdentificationFrame ("TPOS", String::UTF8);
-      tag_str = g_strdup_printf ("0/%u", n);
-      GST_DEBUG ("Setting album volume number/count to %s", tag_str);
-
-      id3v2tag->addFrame (frame);
-      frame->setText (tag_str);
-      g_free (tag_str);
-    }
-  } else if (strcmp (tag, GST_TAG_COPYRIGHT) == 0) {
-    gchar *copyright;
-
-    result = gst_tag_list_get_string_index (list, tag, 0, &copyright);
-
-    if (result != FALSE) {
-      ID3v2::TextIdentificationFrame * frame;
-
-      GST_DEBUG ("Setting copyright to %s", copyright);
-
-      frame = new ID3v2::TextIdentificationFrame ("TCOP", String::UTF8);
-
-      id3v2tag->addFrame (frame);
-      frame->setText (copyright);
-      g_free (copyright);
-    }
-  } else if (strcmp (tag, GST_TAG_ENCODER) == 0) {
-    gchar *encoder;
-
-    result = gst_tag_list_get_string_index (list, tag, 0, &encoder);
-
-    if (result != FALSE && encoder != NULL) {
-      ID3v2::TextIdentificationFrame * frame;
+    if (gst_tag_list_get_string_index (list, tag, n, &encoder) && encoder) {
       guint encoder_version;
-      gchar *tag_str;
+      gchar *s;
 
-      frame = new ID3v2::TextIdentificationFrame ("TSSE", String::UTF8);
-      if (gst_tag_list_get_uint_index (list, GST_TAG_ENCODER_VERSION, 0,
+      if (gst_tag_list_get_uint_index (list, GST_TAG_ENCODER_VERSION, n,
               &encoder_version) && encoder_version > 0) {
-        tag_str = g_strdup_printf ("%s %u", encoder, encoder_version);
+        s = g_strdup_printf ("%s %u", encoder, encoder_version);
       } else {
-        tag_str = g_strdup (encoder);
+        s = g_strdup (encoder);
       }
 
-      GST_DEBUG ("Setting encoder to %s", tag_str);
-
-      id3v2tag->addFrame (frame);
-      frame->setText (tag_str);
-      g_free (tag_str);
+      GST_LOG ("encoder[%u] = '%s'", n, s);
+      string_list.append (String (s, String::UTF8));
+      g_free (s);
       g_free (encoder);
     }
-  } else if (strcmp (tag, GST_TAG_ENCODER_VERSION) == 0) {
-    gchar *tmp_str = NULL;
+  }
 
-    if (gst_tag_list_get_string_index (list, GST_TAG_ENCODER, 0, &tmp_str)) {
-      GST_DEBUG ("encoder-version handled with encoder, skipping");
-      g_free (tmp_str);
-    } else {
-      GST_WARNING ("encoder-version, but no encoder?! skipping");
+  if (!string_list.isEmpty ()) {
+    ID3v2::TextIdentificationFrame * f;
+
+    f = new ID3v2::TextIdentificationFrame ("TSSE", String::UTF8);
+    id3v2tag->addFrame (f);
+    f->setText (string_list);
+  } else {
+    GST_WARNING ("Empty list for tag %s, skipping", tag);
+  }
+}
+
+static void
+add_date_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * unused)
+{
+  TagLib::StringList string_list;
+  guint n;
+
+  GST_LOG ("Adding date frame");
+
+  for (n = 0; n < num_tags; ++n) {
+    GDate *date = NULL;
+
+    if (gst_tag_list_get_date_index (list, tag, n, &date) && date != NULL) {
+      GDateYear year;
+      gchar *s;
+
+      year = g_date_get_year (date);
+      if (year > 500 && year < 2100) {
+        s = g_strdup_printf ("%u", year);
+        GST_LOG ("%s[%u] = '%s'", tag, n, s);
+        string_list.append (String (s, String::UTF8));
+        g_free (s);
+      } else {
+        GST_WARNING ("invalid year %u, skipping", year);
+      }
+
+      g_date_free (date);
     }
-  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_ARTISTID) == 0) {
-    gchar *id_str;
+  }
 
-    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
-      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz Artist Id",
-          "musicbrainz_artistid", id_str);
-      g_free (id_str);
-    }
-  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_ALBUMID) == 0) {
-    gchar *id_str;
+  if (!string_list.isEmpty ()) {
+    ID3v2::TextIdentificationFrame * f;
 
-    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
-      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz Album Id",
-          "musicbrainz_albumid", id_str);
-      g_free (id_str);
-    }
-  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_ALBUMARTISTID) == 0) {
-    gchar *id_str;
+    f = new ID3v2::TextIdentificationFrame ("TDRC", String::UTF8);
+    id3v2tag->addFrame (f);
+    f->setText (string_list);
+  } else {
+    GST_WARNING ("Empty list for tag %s, skipping", tag);
+  }
+}
 
-    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
-      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz Album Artist Id",
-          "musicbrainz_albumartistid", id_str);
-      g_free (id_str);
-    }
-  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_TRMID) == 0) {
-    gchar *id_str;
+static void
+add_count_or_num_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * frame_id)
+{
+  static const struct
+  {
+    const gchar *gst_tag;
+    const gchar *corr_count;    /* corresponding COUNT tag (if number) */
+    const gchar *corr_num;      /* corresponding NUMBER tag (if count) */
+  } corr[] = {
+    {
+    GST_TAG_TRACK_NUMBER, GST_TAG_TRACK_COUNT, NULL}, {
+    GST_TAG_TRACK_COUNT, NULL, GST_TAG_TRACK_NUMBER}, {
+    GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT, NULL}, {
+    GST_TAG_ALBUM_VOLUME_COUNT, NULL, GST_TAG_ALBUM_VOLUME_NUMBER}
+  };
+  guint idx;
 
-    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
-      add_one_txxx_musicbrainz_tag (id3v2tag, "MusicBrainz TRM Id",
-          "musicbrainz_trmid", id_str);
-      g_free (id_str);
-    }
-  } else if (strcmp (tag, GST_TAG_MUSICBRAINZ_TRACKID) == 0) {
-    gchar *id_str;
+  for (idx = 0; idx < G_N_ELEMENTS (corr); ++idx) {
+    if (strcmp (corr[idx].gst_tag, tag) == 0)
+      break;
+  }
 
-    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
-      ID3v2::UniqueFileIdentifierFrame * frame;
+  g_assert (idx < G_N_ELEMENTS (corr));
+  g_assert (frame_id && strlen (frame_id) == 4);
 
-      GST_DEBUG ("Setting Musicbrainz Track Id to %s", id_str);
+  if (corr[idx].corr_num == NULL) {
+    guint number;
 
-      frame = new ID3v2::UniqueFileIdentifierFrame ("http://musicbrainz.org",
-          id_str);
+    /* number tag */
+    if (gst_tag_list_get_uint_index (list, tag, 0, &number)) {
+      ID3v2::TextIdentificationFrame * frame;
+      gchar *tag_str;
+      guint count;
+
+      if (gst_tag_list_get_uint_index (list, corr[idx].corr_count, 0, &count))
+        tag_str = g_strdup_printf ("%u/%u", number, count);
+      else
+        tag_str = g_strdup_printf ("%u", number);
+
+      GST_DEBUG ("Setting %s to %s (frame_id = %s)", tag, tag_str, frame_id);
+      frame = new ID3v2::TextIdentificationFrame (frame_id, String::UTF8);
       id3v2tag->addFrame (frame);
+      frame->setText (tag_str);
+      g_free (tag_str);
+    }
+  } else if (corr[idx].corr_count == NULL) {
+    guint count;
+
+    /* count tag */
+    if (gst_tag_list_get_uint_index (list, corr[idx].corr_num, 0, &count)) {
+      GST_DEBUG ("%s handled with %s, skipping", tag, corr[idx].corr_num);
+    } else if (gst_tag_list_get_uint_index (list, tag, 0, &count)) {
+      ID3v2::TextIdentificationFrame * frame;
+      gchar *tag_str;
+
+      tag_str = g_strdup_printf ("0/%u", count);
+      GST_DEBUG ("Setting %s to %s (frame_id = %s)", tag, tag_str, frame_id);
+      frame = new ID3v2::TextIdentificationFrame (frame_id, String::UTF8);
+      id3v2tag->addFrame (frame);
+      frame->setText (tag_str);
+      g_free (tag_str);
+    }
+  }
+
+  if (num_tags > 1) {
+    GST_WARNING ("more than one %s, can only handle one", tag);
+  }
+}
+
+static void
+add_unique_file_id_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * unused)
+{
+  const gchar *origin = "http://musicbrainz.org";
+  gchar *id_str = NULL;
+
+  if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
+    ID3v2::UniqueFileIdentifierFrame * frame;
+
+    GST_LOG ("Adding %s (%s): %s", tag, origin, id_str);
+    frame = new ID3v2::UniqueFileIdentifierFrame (origin, id_str);
+    id3v2tag->addFrame (frame);
+    g_free (id_str);
+  }
+}
+
+static void
+add_musicbrainz_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * data)
+{
+  static const struct
+  {
+    const gchar gst_tag[28];
+    const gchar spec_id[28];
+    const gchar realworld_id[28];
+  } mb_ids[] = {
+    {
+    GST_TAG_MUSICBRAINZ_ARTISTID, "MusicBrainz Artist Id",
+          "musicbrainz_artistid"}, {
+    GST_TAG_MUSICBRAINZ_ALBUMID, "MusicBrainz Album Id", "musicbrainz_albumid"}, {
+    GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "MusicBrainz Album Artist Id",
+          "musicbrainz_albumartistid"}, {
+    GST_TAG_MUSICBRAINZ_TRMID, "MusicBrainz TRM Id", "musicbrainz_trmid"}
+  };
+  guint i, idx;
+
+  idx = (guint8) data[0];
+  g_assert (idx < G_N_ELEMENTS (mb_ids));
+
+  for (i = 0; i < num_tags; ++i) {
+    ID3v2::UserTextIdentificationFrame * frame;
+    gchar *id_str;
+
+    if (gst_tag_list_get_string_index (list, tag, 0, &id_str) && id_str) {
+      GST_DEBUG ("Setting '%s' to '%s'", mb_ids[idx].spec_id, id_str);
+
+      /* add two frames, one with the ID the musicbrainz.org spec mentions
+       * and one with the ID that applications use in the real world */
+      frame = new ID3v2::UserTextIdentificationFrame (String::Latin1);
+      id3v2tag->addFrame (frame);
+      frame->setDescription (mb_ids[idx].spec_id);
+      frame->setText (id_str);
+
+      frame = new ID3v2::UserTextIdentificationFrame (String::Latin1);
+      id3v2tag->addFrame (frame);
+      frame->setDescription (mb_ids[idx].realworld_id);
+      frame->setText (id_str);
+
       g_free (id_str);
     }
-  } else if (strcmp (tag, GST_TAG_IMAGE) == 0) {
+  }
+}
+
+static void
+add_id3v2frame_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * frame_id)
+{
+  ID3v2::FrameFactory * factory = ID3v2::FrameFactory::instance ();
+  guint i;
+
+  for (i = 0; i < num_tags; ++i) {
+    ID3v2::Frame * frame;
+    const GValue *val;
+    GstBuffer *buf;
+
+    val = gst_tag_list_get_value_index (list, tag, i);
+    buf = (GstBuffer *) gst_value_get_mini_object (val);
+
+    if (buf && GST_BUFFER_CAPS (buf)) {
+      GstStructure *s;
+      gint version = 0;
+
+      s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+      if (s && gst_structure_get_int (s, "version", &version) && version > 0) {
+        ByteVector bytes ((char *) GST_BUFFER_DATA (buf),
+            GST_BUFFER_SIZE (buf));
+
+        GST_DEBUG ("Injecting ID3v2.%u frame %u/%u of length %u and type %"
+            GST_PTR_FORMAT, version, i, num_tags, GST_BUFFER_SIZE (buf), s);
+
+        frame = factory->createFrame (bytes, (TagLib::uint) version);
+        id3v2tag->addFrame (frame);
+      }
+    }
+  }
+}
+
+static void
+add_image_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * unused)
+{
+  guint n;
+
+  for (n = 0; n < num_tags; ++n) {
     const GValue *val;
     GstBuffer *image;
 
-    GST_LOG ("image tag");
-    val = gst_tag_list_get_value_index (list, tag, 0);
+    GST_DEBUG ("image %u/%u", n + 1, num_tags);
+
+    val = gst_tag_list_get_value_index (list, tag, n);
     image = (GstBuffer *) gst_value_get_mini_object (val);
+
     if (GST_IS_BUFFER (image) && GST_BUFFER_SIZE (image) > 0 &&
         GST_BUFFER_CAPS (image) != NULL &&
         !gst_caps_is_empty (GST_BUFFER_CAPS (image))) {
@@ -439,15 +430,107 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
         desc = gst_structure_get_string (s, "image-description");
         frame->setDescription ((desc) ? desc : "");
 
-        /* FIXME */
-        frame->setType (ID3v2::AttachedPictureFrame::Other);
+        /* FIXME set image type properly from caps */
+        if (strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0) {
+          frame->setType (ID3v2::AttachedPictureFrame::FileIcon);
+        } else {
+          frame->setType (ID3v2::AttachedPictureFrame::Other);
+        }
       }
     } else {
       GST_WARNING ("NULL image or no caps on image buffer (%p, caps=%"
           GST_PTR_FORMAT ")", image, (image) ? GST_BUFFER_CAPS (image) : NULL);
     }
+  }
+}
+
+static void
+add_text_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * frame_id)
+{
+  ID3v2::TextIdentificationFrame * f;
+  TagLib::StringList string_list;
+  guint n;
+
+  GST_LOG ("Adding '%s' frame", frame_id);
+  for (n = 0; n < num_tags; ++n) {
+    gchar *s = NULL;
+
+    if (gst_tag_list_get_string_index (list, tag, n, &s) && s != NULL) {
+      GST_LOG ("%s: %s[%u] = '%s'", frame_id, tag, n, s);
+      string_list.append (String (s, String::UTF8));
+      g_free (s);
+    }
+  }
+
+  if (!string_list.isEmpty ()) {
+    f = new ID3v2::TextIdentificationFrame (frame_id, String::UTF8);
+    id3v2tag->addFrame (f);
+    f->setText (string_list);
   } else {
-    GST_WARNING ("Unsupported tag: %s", tag);
+    GST_WARNING ("Empty list for tag %s, skipping", tag);
+  }
+}
+
+/* id3demux produces these for frames it cannot parse */
+#define GST_ID3_DEMUX_TAG_ID3V2_FRAME "private-id3v2-frame"
+
+static const struct
+{
+  const gchar *gst_tag;
+  const GstId3v2MuxAddTagFunc func;
+  const gchar data[5];
+} add_funcs[] = {
+  {
+  GST_TAG_ARTIST, add_text_tag, "TPE1"}, {
+  GST_TAG_TITLE, add_text_tag, "TIT2"}, {
+  GST_TAG_ALBUM, add_text_tag, "TALB"}, {
+  GST_TAG_COMMENT, add_text_tag, "TCOM"}, {
+  GST_TAG_COPYRIGHT, add_text_tag, "TCOP"}, {
+  GST_TAG_GENRE, add_text_tag, "TCON"}, {
+  GST_TAG_DATE, add_date_tag, ""}, {
+  GST_TAG_IMAGE, add_image_tag, ""}, {
+  GST_TAG_PREVIEW_IMAGE, add_image_tag, ""}, {
+  GST_ID3_DEMUX_TAG_ID3V2_FRAME, add_id3v2frame_tag, ""}, {
+  GST_TAG_MUSICBRAINZ_ARTISTID, add_musicbrainz_tag, "\000"}, {
+  GST_TAG_MUSICBRAINZ_ALBUMID, add_musicbrainz_tag, "\001"}, {
+  GST_TAG_MUSICBRAINZ_ALBUMARTISTID, add_musicbrainz_tag, "\002"}, {
+  GST_TAG_MUSICBRAINZ_TRMID, add_musicbrainz_tag, "\003"}, {
+  GST_TAG_MUSICBRAINZ_TRACKID, add_unique_file_id_tag, ""}, {
+  GST_TAG_TRACK_NUMBER, add_count_or_num_tag, "TRCK"}, {
+  GST_TAG_TRACK_COUNT, add_count_or_num_tag, "TRCK"}, {
+  GST_TAG_ALBUM_VOLUME_NUMBER, add_count_or_num_tag, "TPOS"}, {
+  GST_TAG_ALBUM_VOLUME_COUNT, add_count_or_num_tag, "TPOS"}, {
+  GST_TAG_ENCODER, add_encoder_tag, ""}, {
+  GST_TAG_ENCODER_VERSION, add_encoder_tag, ""}
+};
+
+
+static void
+foreach_add_tag (const GstTagList * list, const gchar * tag, gpointer userdata)
+{
+  ID3v2::Tag * id3v2tag = (ID3v2::Tag *) userdata;
+  TagLib::StringList string_list;
+  guint num_tags, i;
+
+  num_tags = gst_tag_list_get_tag_size (list, tag);
+
+  GST_LOG ("Processing tag %s (num=%u)", tag, num_tags);
+
+  if (num_tags > 1 && gst_tag_is_fixed (tag)) {
+    GST_WARNING ("Multiple occurences of fixed tag '%s', ignoring some", tag);
+    num_tags = 1;
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (add_funcs); ++i) {
+    if (strcmp (add_funcs[i].gst_tag, tag) == 0) {
+      add_funcs[i].func (id3v2tag, list, tag, num_tags, add_funcs[i].data);
+      break;
+    }
+  }
+
+  if (i == G_N_ELEMENTS (add_funcs)) {
+    GST_WARNING ("Unsupported tag '%s' - not written", tag);
   }
 }
 
@@ -464,7 +547,7 @@ gst_id3v2_mux_render_tag (GstTagLibMux * mux, GstTagList * taglist)
       setDefaultTextEncoding (TagLib::String::UTF8);
 
   /* Render the tag */
-  gst_tag_list_foreach (taglist, add_one_tag, &id3v2tag);
+  gst_tag_list_foreach (taglist, foreach_add_tag, &id3v2tag);
 
 #if 0
   /* Do we want to add our own signature to the tag somewhere? */
