@@ -1,3 +1,9 @@
+2006-07-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_property):
+	* gst/playback/gstplaybin.c: (gst_play_bin_get_property):
+	  Remove GLib-2.6 compatibility cruft.
+
 2006-07-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

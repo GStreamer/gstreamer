@@ -43,20 +43,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_base_bin_debug);
 #define GROUP_WAIT(pbb) g_cond_wait (pbb->group_cond, pbb->group_lock)
 #define GROUP_SIGNAL(pbb) g_cond_signal (pbb->group_cond)
 
-#ifndef GST_HAVE_GLIB_2_8
-#define _gst_gvalue_set_gstobject(gvalue,obj)  \
-      if (obj != NULL) {                       \
-        gst_object_ref (obj);                  \
-        g_value_set_object (gvalue, obj);      \
-        g_object_unref (obj);                  \
-      } else {                                 \
-        g_value_set_object (gvalue, NULL);     \
-      }
-#else
-#define _gst_gvalue_set_gstobject(gvalue,obj)  \
-      g_value_set_object (gvalue, obj);
-#endif
-
 /* props */
 enum
 {
@@ -1995,7 +1981,7 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     }
     case ARG_SOURCE:
-      _gst_gvalue_set_gstobject (value, play_base_bin->source);
+      g_value_set_object (value, play_base_bin->source);
       break;
     case ARG_VIDEO:
       GROUP_LOCK (play_base_bin);

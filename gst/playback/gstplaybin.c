@@ -39,20 +39,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 
 #define VOLUME_MAX_DOUBLE 4.0
 
-#ifndef GST_HAVE_GLIB_2_8
-#define _gst_gvalue_set_gstobject(gvalue,obj)  \
-      if (obj != NULL) {                       \
-        gst_object_ref (obj);                  \
-        g_value_set_object (gvalue, obj);      \
-        g_object_unref (obj);                  \
-      } else {                                 \
-        g_value_set_object (gvalue, NULL);     \
-      }
-#else
-#define _gst_gvalue_set_gstobject(gvalue,obj)  \
-      g_value_set_object (gvalue, obj);
-#endif
-
 typedef struct _GstPlayBin GstPlayBin;
 typedef struct _GstPlayBinClass GstPlayBinClass;
 
@@ -518,13 +504,13 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case ARG_VIDEO_SINK:
-      _gst_gvalue_set_gstobject (value, play_bin->video_sink);
+      g_value_set_object (value, play_bin->video_sink);
       break;
     case ARG_AUDIO_SINK:
-      _gst_gvalue_set_gstobject (value, play_bin->audio_sink);
+      g_value_set_object (value, play_bin->audio_sink);
       break;
     case ARG_VIS_PLUGIN:
-      _gst_gvalue_set_gstobject (value, play_bin->visualisation);
+      g_value_set_object (value, play_bin->visualisation);
       break;
     case ARG_VOLUME:
       g_value_set_double (value, play_bin->volume);
