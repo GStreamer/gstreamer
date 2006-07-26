@@ -497,6 +497,72 @@ gst_structure_set_valist (GstStructure * structure,
   }
 }
 
+/**
+ * gst_structure_id_set:
+ * @structure: a #GstStructure
+ * @fieldname: the GQuark for the name of the field to set
+ * @...: variable arguments
+ *
+ * Identical to gst_structure_set, except that field names are
+ * passed using the GQuark for the field name. This allows more efficient
+ * setting of the structure if the caller already knows the associated
+ * quark values.
+ * The last variable argument must be NULL.
+ */
+void
+gst_structure_id_set (GstStructure * structure, GQuark field, ...)
+{
+  va_list varargs;
+
+  g_return_if_fail (structure != NULL);
+
+  va_start (varargs, field);
+  gst_structure_id_set_valist (structure, field, varargs);
+  va_end (varargs);
+}
+
+/**
+ * gst_structure_id_set_valist:
+ * @structure: a #GstStructure
+ * @fieldname: the name of the field to set
+ * @varargs: variable arguments
+ *
+ * va_list form of gst_structure_id_set().
+ */
+void
+gst_structure_id_set_valist (GstStructure * structure,
+    GQuark fieldname, va_list varargs)
+{
+  gchar *err = NULL;
+  GType type;
+
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
+
+  while (fieldname) {
+    GstStructureField field = { 0 };
+
+    field.name = fieldname;
+
+    type = va_arg (varargs, GType);
+
+    if (type == G_TYPE_DATE) {
+      g_warning ("Don't use G_TYPE_DATE, use GST_TYPE_DATE instead\n");
+      type = GST_TYPE_DATE;
+    }
+
+    g_value_init (&field.value, type);
+    G_VALUE_COLLECT (&field.value, varargs, 0, &err);
+    if (err) {
+      g_critical ("%s", err);
+      return;
+    }
+    gst_structure_set_field (structure, &field);
+
+    fieldname = va_arg (varargs, GQuark);
+  }
+}
+
 /* If the structure currently contains a field with the same name, it is
  * replaced with the provided field. Otherwise, the field is added to the
  * structure. The field's value is not deeply copied.

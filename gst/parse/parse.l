@@ -127,11 +127,7 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)
 }
 {_url} {
   PRINT ("URL: %s", yytext);
-  if (gst_uri_is_valid (yytext)) {
-    lvalp->s = g_strdup (yytext);
-  } else {
-    lvalp->s = gst_uri_construct ("file", yytext);
-  }
+  lvalp->s = g_strdup (yytext);
   gst_parse_unescape (lvalp->s);
   BEGIN (INITIAL);
   return PARSE_URL;

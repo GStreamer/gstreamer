@@ -1,3 +1,33 @@
+2006-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gststructure.c: (gst_structure_id_set),
+	(gst_structure_id_set_valist):
+	* gst/gststructure.h:
+	Add API for setting values into structures without performing
+	a quark lookup, if the appropriate quark is already known.
+
+	API: gst_structure_id_set
+	API: gst_structure_id_set_valist
+
+	* gst/parse/grammar.y:
+	* gst/parse/parse.l:
+	Remove some dead code shown by the coverage information.
+	Don't throw a critical g_warning when encountering a syntax error,
+	just warn and let the normal error path handle it.
+
+	* plugins/elements/gstelements.c:
+	Bump the rank of filesink up to PRIMARY so that it is preferred over
+	gnomevfssink for file:// sink uri's
+
+	* tests/check/pipelines/parse-launch.c: (expected_fail_pipe),
+	(GST_START_TEST), (run_delayed_test),
+	(gst_parse_test_element_base_init),
+	(gst_parse_test_element_class_init), (gst_parse_test_element_init),
+	(gst_parse_test_element_change_state),
+	(gst_register_parse_element), (parse_suite):
+	Beef up the tests for parse syntax to check that more error cases
+	fail as they are supposed to. Increases the test coverage a bit.
+
 2006-07-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/basics-elements.xml:

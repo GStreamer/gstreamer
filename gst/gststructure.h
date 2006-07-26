@@ -116,9 +116,20 @@ void                    gst_structure_set_value            (GstStructure        
 void                    gst_structure_set                  (GstStructure            *structure,
 							    const gchar             *fieldname,
 							    ...) G_GNUC_NULL_TERMINATED;
+
 void                    gst_structure_set_valist           (GstStructure            *structure,
 							    const gchar             *fieldname,
 							    va_list varargs);
+
+void                    gst_structure_id_set                (GstStructure            *structure,
+							    GQuark                   fieldname,
+							    ...) G_GNUC_NULL_TERMINATED;
+
+void                    gst_structure_id_set_valist         (GstStructure            *structure,
+							    GQuark                   fieldname,
+							    va_list varargs);
+
+
 G_CONST_RETURN GValue * gst_structure_id_get_value         (const GstStructure      *structure,
 							    GQuark                   field);
 G_CONST_RETURN GValue * gst_structure_get_value            (const GstStructure      *structure,

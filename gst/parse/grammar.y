@@ -258,7 +258,6 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   GParamSpec *pspec;
   gchar *pos = value;
   GValue v = { 0, }; 
-  GValue v2 = { 0, };
   GstObject *target;
   GType value_type;
 
@@ -299,8 +298,6 @@ out:
   gst_parse_strfree (value);
   if (G_IS_VALUE (&v))
     g_value_unset (&v);
-  if (G_IS_VALUE (&v2))
-    g_value_unset (&v2);
   return;
   
 error:
@@ -798,7 +795,7 @@ static int
 yyerror (const char *s)
 {
   /* FIXME: This should go into the GError somehow, but how? */
-  g_warning ("error: %s", s);
+  GST_WARNING ("Error during parsing: %s", s);
   return -1;
 }
 

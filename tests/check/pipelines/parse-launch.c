@@ -19,6 +19,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 
 #include <gst/check/gstcheck.h>
 
@@ -49,7 +52,8 @@ expected_fail_pipe (const gchar * pipe_descr)
 #endif
 
   pipeline = gst_parse_launch (pipe_descr, &error);
-  fail_unless (error != NULL, "Expected failure pipeline %s: succeeded!");
+  fail_unless (pipeline == NULL || error != NULL,
+      "Expected failure pipeline %s: succeeded!", pipe_descr);
   g_error_free (error);
 
   /* We get a pipeline back even when parsing has failed, sometimes! */
@@ -84,6 +88,7 @@ static const gchar *test_lines[] = {
   "fakesrc ! video/x-raw-yuv ! fakesink",
   "fakesrc !   video/raw,  format=(fourcc)YUY2; video/raw, format=(fourcc)YV12 ! fakesink",
   "fakesrc ! audio/x-raw-int, width=[16,  32], depth={16, 24, 32}, signed=TRUE ! fakesink",
+  "fakesrc ! identity ! identity ! identity ! fakesink",
   NULL
 };
 
@@ -114,8 +119,8 @@ GST_END_TEST;
 #define PIPELINE9  "fakesrc num-buffers=4 ! test. fakesink name=test"
 #define PIPELINE10 "( fakesrc num-buffers=\"4\" ! ) identity ! fakesink"
 #define PIPELINE11 "fakesink name = sink identity name=id ( fakesrc num-buffers=\"4\" ! id. ) id. ! sink."
-#define PIPELINE12 "fakesrc num-buffers=4 name=\"a=b\"  a=b. ! fakesink"
-#define PIPELINE13 "file:///tmp/test.file ! fakesink"
+#define PIPELINE12 "file:///tmp/test.file ! fakesink"
+#define PIPELINE13 "fakesrc ! file:///tmp/test.file"
 
 GST_START_TEST (test_launch_lines2)
 {
@@ -240,20 +245,273 @@ GST_START_TEST (test_launch_lines2)
   gst_object_unref (cur);
 
   /**
-   * checks:    
-   * - fails because a=b. is not a valid element reference in parse.l 
-   */
-  expected_fail_pipe (PIPELINE12);
-
-  /**
    * checks:
    * - URI detection works
    */
+  cur = setup_pipeline (PIPELINE12);
+  gst_object_unref (cur);
+
+  /** * checks:
+   * - URI sink detection works
+   */
   cur = setup_pipeline (PIPELINE13);
+  gst_object_unref (cur);
+
+  /* Checks handling of a assignment followed by error inside a bin. 
+   * This should warn, but ignore the error and carry on */
+  cur = setup_pipeline ("( filesrc blocksize=4 location=/dev/null @ )");
   gst_object_unref (cur);
 }
 
 GST_END_TEST;
+
+static const gchar *expected_failures[] = {
+  /* checks: fails because a=b. is not a valid element reference in parse.l */
+  "fakesrc num-buffers=4 name=\"a=b\"  a=b. ! fakesink",
+  /* checks: Error branch for a non-deserialisable property value */
+  "filesrc blocksize=absdff",
+  /* checks: That requesting an element which doesn't exist doesn't work */
+  "error-does-not-exist-src",
+  /* checks: That broken caps which don't parse can't create a pipeline */
+  "fakesrc ! video/raw,format=(antwerp)monkeys ! fakesink",
+  /* checks: Empty pipeline is invalid */
+  "",
+  /* checks: Link without sink element failes */
+  "fakesrc ! ",
+  /* checks: Link without src element failes */
+  " ! fakesink",
+  /* checks: Source URI for which no element exists is a failure */
+  "borky://fdaffd ! fakesink",
+  /* checks: Sink URI for which no element exists is a failure */
+  "fakesrc ! borky://fdaffd",
+  /* checks: Referencing non-existent source element by name can't link */
+  "fakesrc name=src fakesink name=sink noexiste. ! sink.",
+  /* checks: Referencing non-existent sink element by name can't link */
+  "fakesrc name=src fakesink name=sink src. ! noexiste.",
+  /* checks: Invalid pipeline syntax fails */
+  "fakesrc ! identity ! sgsdfagfd @ gfdgfdsgfsgSF",
+  /* checks: Can't link 2 elements that only have sink pads */
+  "fakesink ! fakesink",
+  /* checks: Attempting to link to a non-existent pad on an element 
+   * created via URI handler should fail */
+  "fakesrc ! .foo file:///dev/null",
+  /* checks multi-chain link without src element fails. */
+  "! identity ! identity ! fakesink",
+  /* END: */
+  NULL
+};
+
+GST_START_TEST (expected_to_fail_pipes)
+{
+  const gchar **s;
+
+  for (s = expected_failures; *s != NULL; s++) {
+    expected_fail_pipe (*s);
+  }
+}
+
+GST_END_TEST;
+
+/* Helper function to test delayed linking support in parse_launch by creating
+ * a test element based on bin, which contains a fakesrc and a sometimes 
+ * pad-template, and trying to link to a fakesink. When the bin transitions
+ * to paused it adds a pad, which should get linked to the fakesink */
+static void
+run_delayed_test (const gchar * pipe_str, const gchar * peer,
+    gboolean expect_link)
+{
+  GstElement *pipe, *src, *sink;
+  GstPad *srcpad, *sinkpad, *peerpad = NULL;
+
+  pipe = setup_pipeline (pipe_str);
+
+  src = gst_bin_get_by_name (GST_BIN (pipe), "src");
+  fail_if (src == NULL, "Test source element was not created");
+
+  sink = gst_bin_get_by_name (GST_BIN (pipe), "sink");
+  fail_if (sink == NULL, "Test sink element was not created");
+
+  /* The src should not yet have a src pad */
+  srcpad = gst_element_get_pad (src, "src");
+  fail_unless (srcpad == NULL, "Source element already has a source pad");
+
+  /* Set the state to PAUSED and wait until the src at least reaches that
+   * state */
+  fail_if (gst_element_set_state (pipe, GST_STATE_PAUSED) ==
+      GST_STATE_CHANGE_FAILURE);
+
+  /* Also set the src state manually to make sure it is changing to that
+   * state */
+  fail_if (gst_element_set_state (src, GST_STATE_PAUSED) ==
+      GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_get_state (src, NULL, NULL, GST_CLOCK_TIME_NONE) ==
+      GST_STATE_CHANGE_FAILURE);
+
+  /* Now, the source element should have a src pad, and if "peer" was passed, 
+   * then the src pad should have gotten linked to the 'sink' pad of that 
+   * peer */
+  srcpad = gst_element_get_pad (src, "src");
+  fail_if (srcpad == NULL, "Source element did not create source pad");
+
+  peerpad = gst_pad_get_peer (srcpad);
+
+  if (expect_link == TRUE) {
+    fail_if (peerpad == NULL, "Source element pad did not get linked");
+  } else {
+    fail_if (peerpad != NULL,
+        "Source element pad got linked but should not have");
+  }
+  if (peerpad != NULL)
+    gst_object_unref (peerpad);
+
+  if (peer != NULL) {
+    GstElement *peer_elem = gst_bin_get_by_name (GST_BIN (pipe), peer);
+
+    fail_if (peer_elem == NULL, "Could not retrieve peer %s", peer);
+
+    sinkpad = gst_element_get_pad (peer_elem, "sink");
+    fail_if (sinkpad == NULL, "Peer element did not have a 'sink' pad");
+
+    fail_unless (peerpad == sinkpad,
+        "Source src pad got connected to the wrong peer");
+    gst_object_unref (sinkpad);
+  }
+
+  gst_object_unref (srcpad);
+
+  gst_object_unref (src);
+  gst_object_unref (sink);
+  gst_object_unref (pipe);
+}
+
+GST_START_TEST (delayed_link)
+{
+  /* This tests the delayed linking support in parse_launch by creating
+   * a test element based on bin, which contains a fakesrc and a sometimes 
+   * pad-template, and trying to link to a fakesink. When the bin transitions
+   * to paused it adds a pad, which should get linked to the fakesink */
+  run_delayed_test ("parsetestelement name=src ! fakesink name=sink",
+      "sink", TRUE);
+
+  /* Test, but this time specifying both pad names */
+  run_delayed_test ("parsetestelement name=src .src ! "
+      ".sink fakesink name=sink", "sink", TRUE);
+
+  /* Now try with a caps filter, but not testing that
+   * the peerpad == sinkpad, because the peer will actually
+   * be a capsfilter */
+  run_delayed_test ("parsetestelement name=src ! application/x-test-caps ! "
+      "fakesink name=sink", NULL, TRUE);
+
+  /* Now try with mutually exclusive caps filters that 
+   * will prevent linking, but only once gets around to happening -
+   * ie, the pipeline should create ok but fail to change state */
+  run_delayed_test ("parsetestelement name=src ! application/x-test-caps ! "
+      "identity ! application/x-other-caps ! "
+      "fakesink name=sink", NULL, FALSE);
+}
+
+GST_END_TEST;
+
+#define GST_TYPE_PARSE_TEST_ELEMENT (gst_parse_test_element_get_type())
+
+typedef struct _GstParseTestElement
+{
+  GstBin parent;
+
+  GstElement *fakesrc;
+} GstParseTestElement;
+
+typedef struct _GstParseTestElementClass
+{
+  GstBinClass parent;
+} GstParseTestElementClass;
+
+static GstStaticPadTemplate test_element_pad_template =
+GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
+    GST_PAD_SOMETIMES, GST_STATIC_CAPS ("application/x-test-caps"));
+
+GST_BOILERPLATE (GstParseTestElement, gst_parse_test_element, GstBin,
+    GST_TYPE_BIN);
+
+static GstStateChangeReturn
+gst_parse_test_element_change_state (GstElement * element,
+    GstStateChange transition);
+
+static void
+gst_parse_test_element_base_init (gpointer g_class)
+{
+  static const GstElementDetails cdfoo_details =
+      GST_ELEMENT_DETAILS ("Test element for parse launch tests",
+      "Source",
+      "Test element for parse launch tests in core",
+      "GStreamer Devel <gstreamer-devel@lists.sf.net>");
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &cdfoo_details);
+}
+
+static void
+gst_parse_test_element_class_init (GstParseTestElementClass * klass)
+{
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&test_element_pad_template));
+
+  gstelement_class->change_state = gst_parse_test_element_change_state;
+}
+
+static void
+gst_parse_test_element_init (GstParseTestElement * src,
+    GstParseTestElementClass * klass)
+{
+  /* Create a fakesrc and add it to ourselves */
+  src->fakesrc = gst_element_factory_make ("fakesrc", NULL);
+  if (src->fakesrc)
+    gst_bin_add (GST_BIN (src), src->fakesrc);
+}
+
+static GstStateChangeReturn
+gst_parse_test_element_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstParseTestElement *src = (GstParseTestElement *) element;
+
+  if (transition == GST_STATE_CHANGE_READY_TO_PAUSED) {
+    /* Add our pad */
+    GstPad *pad;
+    GstPad *ghost;
+
+    if (src->fakesrc == NULL)
+      return GST_STATE_CHANGE_FAILURE;
+
+    pad = gst_element_get_pad (src->fakesrc, "src");
+    if (pad == NULL)
+      return GST_STATE_CHANGE_FAILURE;
+
+    ghost = gst_ghost_pad_new ("src", pad);
+    fail_if (ghost == NULL, "Failed to create ghost pad");
+    gst_element_add_pad (GST_ELEMENT (src), ghost);
+    gst_object_unref (pad);
+  }
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+}
+
+static gboolean
+gst_register_parse_element (GstPlugin * plugin)
+{
+  if (!gst_element_register (plugin, "parsetestelement", GST_RANK_NONE,
+          GST_TYPE_PARSE_TEST_ELEMENT))
+    return FALSE;
+  return TRUE;
+}
+
+GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR, GST_VERSION_MINOR,
+    "parsetestelement", "Test element for parse launch",
+    gst_register_parse_element, VERSION, GST_LICENSE, GST_PACKAGE_NAME,
+    GST_PACKAGE_ORIGIN);
 
 Suite *
 parse_suite (void)
@@ -267,6 +525,8 @@ parse_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_launch_lines);
   tcase_add_test (tc_chain, test_launch_lines2);
+  tcase_add_test (tc_chain, expected_to_fail_pipes);
+  tcase_add_test (tc_chain, delayed_link);
   return s;
 }
 
