@@ -1,3 +1,10 @@
+2006-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tools/gst-launch.c: (main):
+	  If the top-level of the parse is a normal bin, it doesn't do the
+	  right logic to run as a top-level element, so place it inside a
+	  pipeline.
+
 2006-07-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gstfilesrc.c: (gst_file_src_set_property):
