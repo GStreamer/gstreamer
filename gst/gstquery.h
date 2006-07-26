@@ -64,13 +64,6 @@ typedef enum {
   GST_QUERY_FORMATS
 } GstQueryType;
 
-/**
- * GST_QUERY_TYPE_RATE_DEN:
- *
- * Rates are relative to this value
- */
-#define GST_QUERY_TYPE_RATE_DEN          G_GINT64_CONSTANT (1000000)
-
 typedef struct _GstQueryTypeDefinition GstQueryTypeDefinition;
 typedef struct _GstQuery GstQuery;
 typedef struct _GstQueryClass GstQueryClass;

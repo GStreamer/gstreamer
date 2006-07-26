@@ -1,3 +1,9 @@
+2006-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstquery.h:
+	Delete unused and misleading define of GST_QUERY_TYPE_RATE_DEN -
+	rates are a gdouble
+
 2006-07-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstregistry.c:
