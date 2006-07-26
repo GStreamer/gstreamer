@@ -1,3 +1,10 @@
+2006-07-26  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_internal_chain),
+	(gst_ogg_demux_do_seek), (gst_ogg_demux_read_chain):
+	Make seeking in ogg more accurate again by doing the more correct
+	granuletime to stream time conversion.
+
 2006-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_add_full),

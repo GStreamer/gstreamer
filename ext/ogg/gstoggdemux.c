@@ -135,7 +135,7 @@ struct _GstOggPad
   GstClockTime start_time;      /* the timestamp of the first sample */
 
   gint64 first_granule;         /* the granulepos of first page == first sample in next page */
-  GstClockTime first_time;      /* the timestamp of the second page */
+  GstClockTime first_time;      /* the timestamp of the second page or granuletime of first page */
 
   ogg_stream_state stream;
 
@@ -1878,12 +1878,12 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
           GST_WARNING_OBJECT (ogg, "could not convert granulepos to time");
           granuletime = target;
         } else {
-          if (granuletime < pad->first_time)
+          if (granuletime < pad->start_time)
             continue;
-          GST_LOG_OBJECT (ogg, "granulepos %" G_GINT64_FORMAT "maps to time %"
+          GST_LOG_OBJECT (ogg, "granulepos %" G_GINT64_FORMAT " maps to time %"
               GST_TIME_FORMAT, granulepos, GST_TIME_ARGS (granuletime));
 
-          granuletime -= pad->first_time;
+          granuletime -= pad->start_time;
         }
 
         GST_DEBUG_OBJECT (ogg,
