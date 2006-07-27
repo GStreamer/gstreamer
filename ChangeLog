@@ -1,3 +1,16 @@
+2006-07-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstcaps.c: (gst_static_caps_get), (gst_caps_get_structure):
+	Fix useless assert, a uint is always positive.
+
+	* gst/gststructure.c: (gst_structure_nth_field_name),
+	(gst_structure_foreach), (gst_structure_map_in_place):
+	Check input arguments for public functions to avoid obvious crashes.
+
+	* plugins/elements/gstfakesink.c: (gst_fake_sink_render):
+	* plugins/elements/gstfakesink.h:
+	Do less useless typechecking.
+
 2006-07-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gstfilesrc.c: (gst_file_src_class_init):

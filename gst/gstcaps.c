@@ -604,7 +604,6 @@ GstStructure *
 gst_caps_get_structure (const GstCaps * caps, guint index)
 {
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
-  g_return_val_if_fail (index >= 0, NULL);
   g_return_val_if_fail (index < caps->structs->len, NULL);
 
   return g_ptr_array_index (caps->structs, index);

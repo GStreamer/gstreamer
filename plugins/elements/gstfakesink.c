@@ -361,7 +361,7 @@ gst_fake_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 static GstFlowReturn
 gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
-  GstFakeSink *sink = GST_FAKE_SINK (bsink);
+  GstFakeSink *sink = GST_FAKE_SINK_CAST (bsink);
 
   if (!sink->silent) {
     gchar ts_str[64], dur_str[64];

@@ -40,6 +40,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FAKE_SINK))
 #define GST_IS_FAKE_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKE_SINK))
+#define GST_FAKE_SINK_CAST(obj) ((GstFakeSink *)obj)
 
 /**
  * GstFakeSinkStateError:
