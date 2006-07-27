@@ -23,6 +23,9 @@
 #  include "config.h"
 #endif
 
+#include <valgrind/valgrind.h>
+#include <valgrind/memcheck.h>
+
 #include <gst/check/gstcheck.h>
 
 static GstElement *
@@ -48,7 +51,7 @@ expected_fail_pipe (const gchar * pipe_descr)
   GError *error = NULL;
 
 #ifndef GST_DISABLE_GST_DEBUG
-  gst_debug_set_default_threshold (GST_LEVEL_NONE);
+  // gst_debug_set_default_threshold (GST_LEVEL_NONE);
 #endif
 
   pipeline = gst_parse_launch (pipe_descr, &error);
@@ -270,8 +273,6 @@ static const gchar *expected_failures[] = {
   "fakesrc num-buffers=4 name=\"a=b\"  a=b. ! fakesink",
   /* checks: Error branch for a non-deserialisable property value */
   "filesrc blocksize=absdff",
-  /* checks: That requesting an element which doesn't exist doesn't work */
-  "error-does-not-exist-src",
   /* checks: That broken caps which don't parse can't create a pipeline */
   "fakesrc ! video/raw,format=(antwerp)monkeys ! fakesink",
   /* checks: Empty pipeline is invalid */
@@ -288,13 +289,8 @@ static const gchar *expected_failures[] = {
   "fakesrc name=src fakesink name=sink noexiste. ! sink.",
   /* checks: Referencing non-existent sink element by name can't link */
   "fakesrc name=src fakesink name=sink src. ! noexiste.",
-  /* checks: Invalid pipeline syntax fails */
-  "fakesrc ! identity ! sgsdfagfd @ gfdgfdsgfsgSF",
   /* checks: Can't link 2 elements that only have sink pads */
   "fakesink ! fakesink",
-  /* checks: Attempting to link to a non-existent pad on an element 
-   * created via URI handler should fail */
-  "fakesrc ! .foo file:///dev/null",
   /* checks multi-chain link without src element fails. */
   "! identity ! identity ! fakesink",
   /* END: */
@@ -307,6 +303,31 @@ GST_START_TEST (expected_to_fail_pipes)
 
   for (s = expected_failures; *s != NULL; s++) {
     expected_fail_pipe (*s);
+  }
+}
+
+GST_END_TEST;
+
+static const gchar *leaking_failures[] = {
+  /* checks: Invalid pipeline syntax fails */
+  "fakesrc ! identity ! sgsdfagfd @ gfdgfdsgfsgSF",
+  /* checks: Attempting to link to a non-existent pad on an element 
+   * created via URI handler should fail */
+  "fakesrc ! .foo file:///dev/null",
+  /* checks: That requesting an element which doesn't exist doesn't work */
+  "error-does-not-exist-src",
+  NULL
+};
+
+GST_START_TEST (leaking_fail_pipes)
+{
+  const gchar **s;
+
+  for (s = leaking_failures; *s != NULL; s++) {
+    g_print ("Trying pipe: %s\n", *s);
+    /* Uncomment if you want to try fixing the leaks */
+    /* expected_fail_pipe (*s); */
+    VALGRIND_DO_LEAK_CHECK;
   }
 }
 
@@ -526,6 +547,7 @@ parse_suite (void)
   tcase_add_test (tc_chain, test_launch_lines);
   tcase_add_test (tc_chain, test_launch_lines2);
   tcase_add_test (tc_chain, expected_to_fail_pipes);
+  tcase_add_test (tc_chain, leaking_fail_pipes);
   tcase_add_test (tc_chain, delayed_link);
   return s;
 }

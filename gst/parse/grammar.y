@@ -571,11 +571,12 @@ static int yyerror (const char *s);
 %%
 
 element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL); 
-						if (!$$)
+						if ($$ == NULL) {
 						  SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, _("no element \"%s\""), $1);
-						gst_parse_strfree ($1);
-						if (!$$)
+						  gst_parse_strfree ($1);
 						  YYERROR;
+						}
+						gst_parse_strfree ($1);
                                               }
 	|	element ASSIGNMENT	      { gst_parse_element_set ($2, $1, graph);
 						$$ = $1;
@@ -617,7 +618,7 @@ linkpart:	reference		      { $$ = $1; }
 link:		linkpart LINK linkpart	      { $$ = $1;
 						if ($2) {
 						  $$->caps = gst_caps_from_string ($2);
-						  if (!$$->caps)
+						  if ($$->caps == NULL)
 						    SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_LINK, _("could not parse caps \"%s\""), $2);
 						  gst_parse_strfree ($2);
 						}
@@ -741,10 +742,15 @@ chain:   	element			      { $$ = gst_parse_chain_new ();
 						if (!element) {
 						  SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, 
 							  _("no sink element for URI \"%s\""), $2);
+						  gst_parse_link_free ($1);
+						  g_free ($2);
 						  YYERROR;
 						} else if ($1->sink_name || $1->sink_pads) {
+                                                  gst_object_unref (element);
 						  SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_LINK, 
 							  _("could not link sink element for URI \"%s\""), $2);
+						  gst_parse_link_free ($1);
+						  g_free ($2);
 						  YYERROR;
 						} else {
 						  $$ = gst_parse_chain_new ();
@@ -856,8 +862,10 @@ _gst_parse_launch (const gchar *str, GError **error)
     bin = GST_BIN (gst_element_factory_make ("pipeline", NULL));
     g_assert (bin);
     
-    for (walk = g.chain->elements; walk; walk = walk->next)
-      gst_bin_add (bin, GST_ELEMENT (walk->data));
+    for (walk = g.chain->elements; walk; walk = walk->next) {
+      if (walk->data != NULL)
+        gst_bin_add (bin, GST_ELEMENT (walk->data));
+    }
     
     g_slist_free (g.chain->elements);
     ret = GST_ELEMENT (bin);

@@ -138,7 +138,7 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)
 [[:space:]]+ { PRINT ("SPACE: [%s]", yytext); }
 
 . {
-    printf ("???: %s\n", yytext);
+    PRINT ("Invalid Lexer element: %s\n", yytext);
     return *yytext;
 }
 
