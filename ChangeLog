@@ -1,3 +1,10 @@
+2006-07-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/gsm/gstgsmdec.c: (gst_gsmdec_init),
+	(gst_gsmdec_sink_setcaps), (gst_gsmdec_sink_event):
+	* ext/gsm/gstgsmenc.c: (gst_gsmenc_init), (gst_gsmenc_setcaps):
+	Fix negotiation.
+
 2006-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_init):

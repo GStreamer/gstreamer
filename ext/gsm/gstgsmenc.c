@@ -55,6 +55,7 @@ static void gst_gsmenc_class_init (GstGSMEnc * klass);
 static void gst_gsmenc_init (GstGSMEnc * gsmenc);
 static void gst_gsmenc_finalize (GObject * object);
 
+static gboolean gst_gsmenc_setcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_gsmenc_chain (GstPad * pad, GstBuffer * buf);
 
 static GstElementClass *parent_class = NULL;
@@ -138,8 +139,9 @@ gst_gsmenc_init (GstGSMEnc * gsmenc)
   gsmenc->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gsmenc_sink_template), "sink");
-  gst_element_add_pad (GST_ELEMENT (gsmenc), gsmenc->sinkpad);
   gst_pad_set_chain_function (gsmenc->sinkpad, gst_gsmenc_chain);
+  gst_pad_set_setcaps_function (gsmenc->sinkpad, gst_gsmenc_setcaps);
+  gst_element_add_pad (GST_ELEMENT (gsmenc), gsmenc->sinkpad);
 
   gsmenc->srcpad =
       gst_pad_new_from_template (gst_static_pad_template_get
@@ -168,6 +170,24 @@ gst_gsmenc_finalize (GObject * object)
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
+
+static gboolean
+gst_gsmenc_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstGSMEnc *gsmenc;
+  GstCaps *srccaps;
+
+  gsmenc = GST_GSMENC (gst_pad_get_parent (pad));
+
+  srccaps = gst_static_pad_template_get_caps (&gsmenc_src_template);
+
+  gst_pad_set_caps (gsmenc->srcpad, srccaps);
+
+  gst_object_unref (gsmenc);
+
+  return TRUE;
+}
+
 
 static GstFlowReturn
 gst_gsmenc_chain (GstPad * pad, GstBuffer * buf)

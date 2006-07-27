@@ -55,6 +55,7 @@ static void gst_gsmdec_class_init (GstGSMDec * klass);
 static void gst_gsmdec_init (GstGSMDec * gsmdec);
 static void gst_gsmdec_finalize (GObject * object);
 
+static gboolean gst_gsmdec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_gsmdec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_gsmdec_chain (GstPad * pad, GstBuffer * buf);
 
@@ -141,6 +142,7 @@ gst_gsmdec_init (GstGSMDec * gsmdec)
   gsmdec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&gsmdec_sink_template), "sink");
+  gst_pad_set_setcaps_function (gsmdec->sinkpad, gst_gsmdec_sink_setcaps);
   gst_pad_set_event_function (gsmdec->sinkpad, gst_gsmdec_sink_event);
   gst_pad_set_chain_function (gsmdec->sinkpad, gst_gsmdec_chain);
   gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->sinkpad);
@@ -175,6 +177,23 @@ gst_gsmdec_finalize (GObject * object)
 }
 
 static gboolean
+gst_gsmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstGSMDec *gsmdec;
+  GstCaps *srccaps;
+
+  gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
+
+  srccaps = gst_static_pad_template_get_caps (&gsmdec_src_template);
+
+  gst_pad_set_caps (gsmdec->srcpad, srccaps);
+
+  gst_object_unref (gsmdec);
+
+  return TRUE;
+}
+
+static gboolean
 gst_gsmdec_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res;
@@ -194,15 +213,15 @@ gst_gsmdec_sink_event (GstPad * pad, GstEvent * event)
     {
       gboolean update;
       GstFormat format;
-      gdouble rate;
+      gdouble rate, arate;
       gint64 start, stop, time;
 
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
 
       /* now configure the values */
-      gst_segment_set_newsegment (&gsmdec->segment, update,
-          rate, format, start, stop, time);
+      gst_segment_set_newsegment_full (&gsmdec->segment, update,
+          rate, arate, format, start, stop, time);
 
       /* and forward */
       res = gst_pad_push_event (gsmdec->srcpad, event);
