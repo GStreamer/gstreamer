@@ -151,90 +151,76 @@ gst_auto_audio_sink_compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 }
 
 static GstElement *
+gst_auto_audio_sink_create_element_with_pretty_name (GstAutoAudioSink * sink,
+    GstElementFactory * factory)
+{
+  GstElement *element;
+  gchar *name, *marker;
+
+  marker = g_strdup (GST_PLUGIN_FEATURE (factory)->name);
+  if (g_str_has_suffix (marker, "sink"))
+    marker[strlen (marker) - 4] = '\0';
+  if (g_str_has_prefix (marker, "gst"))
+    g_memmove (marker, marker + 3, strlen (marker + 3) + 1);
+  name = g_strdup_printf ("%s-actual-sink-%s", GST_OBJECT_NAME (sink), marker);
+  g_free (marker);
+
+  element = gst_element_factory_create (factory, name);
+  g_free (name);
+
+  return element;
+}
+
+static GstElement *
 gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
 {
   GList *list, *item;
   GstElement *choice = NULL;
-  gboolean ss = TRUE;
   GstMessage *message = NULL;
   GSList *errors = NULL;
   GstBus *bus = gst_bus_new ();
-  gchar *child_name = g_strdup_printf ("%s-actual-sink",
-      GST_OBJECT_NAME (sink));
 
   list = gst_registry_feature_filter (gst_registry_get_default (),
       (GstPluginFeatureFilter) gst_auto_audio_sink_factory_filter, FALSE, sink);
   list = g_list_sort (list, (GCompareFunc) gst_auto_audio_sink_compare_ranks);
 
-  /* FIXME:
-   * - soundservers have no priority yet.
-   * - soundserversinks should only be chosen if already running, or if
-   *    the user explicitly wants this to run... That is not easy.
-   */
+  /* We don't treat sound server sinks special. Our policy is that sound
+   * server sinks that have a rank must not auto-spawn a daemon under any
+   * circumstances, so there's nothing for us to worry about here */
+  GST_LOG_OBJECT (sink, "Trying to find usable audio devices ...");
 
-  while (1) {
-    GST_DEBUG_OBJECT (sink, "Trying to find %s",
-        ss ? "soundservers" : "audio devices");
+  for (item = list; item != NULL; item = item->next) {
+    GstElementFactory *f = GST_ELEMENT_FACTORY (item->data);
+    GstElement *el;
 
-    for (item = list; item != NULL; item = item->next) {
-      GstElementFactory *f = GST_ELEMENT_FACTORY (item->data);
-      GstElement *el;
+    if ((el = gst_auto_audio_sink_create_element_with_pretty_name (sink, f))) {
+      GstStateChangeReturn ret;
 
-      if ((el = gst_element_factory_create (f, child_name))) {
-        /* FIXME: no element actually has this property as far as I can tell.
-         * also, this is a nasty uncheckable way of supporting something that
-         * amounts to being an interface. */
-        gboolean has_p = g_object_class_find_property (G_OBJECT_GET_CLASS (el),
-            "soundserver-running") ? TRUE : FALSE;
-
-        if (ss == has_p) {
-          if (ss) {
-            gboolean r;
-
-            g_object_get (el, "soundserver-running", &r, NULL);
-            if (r) {
-              GST_DEBUG_OBJECT (sink, "%s - soundserver is running",
-                  GST_PLUGIN_FEATURE (f)->name);
-            } else {
-              GST_DEBUG_OBJECT (sink, "%s - Soundserver is not running",
-                  GST_PLUGIN_FEATURE (f)->name);
-              goto next;
-            }
-          }
-          GST_DEBUG_OBJECT (sink, "Testing %s", GST_PLUGIN_FEATURE (f)->name);
-          gst_element_set_bus (el, bus);
-          if (gst_element_set_state (el,
-                  GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS) {
-            gst_element_set_state (el, GST_STATE_NULL);
-            GST_DEBUG_OBJECT (sink, "This worked!");
-            choice = el;
-            goto done;
-          } else {
-            /* collect all error messages */
-            while ((message = gst_bus_pop (bus))) {
-              if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
-                GST_DEBUG_OBJECT (sink, "appending error message %"
-                    GST_PTR_FORMAT, message);
-                errors = g_slist_append (errors, message);
-              } else {
-                gst_message_unref (message);
-              }
-            }
-            gst_element_set_state (el, GST_STATE_NULL);
-          }
-        }
-
-      next:
-        gst_object_unref (el);
+      GST_DEBUG_OBJECT (sink, "Testing %s", GST_PLUGIN_FEATURE (f)->name);
+      gst_element_set_bus (el, bus);
+      ret = gst_element_set_state (el, GST_STATE_READY);
+      if (ret == GST_STATE_CHANGE_SUCCESS) {
+        gst_element_set_state (el, GST_STATE_NULL);
+        GST_DEBUG_OBJECT (sink, "This worked!");
+        choice = el;
+        break;
       }
-    }
 
-    if (!ss)
-      break;
-    ss = FALSE;
+      /* collect all error messages */
+      while ((message = gst_bus_pop (bus))) {
+        if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
+          GST_DEBUG_OBJECT (sink, "error message %" GST_PTR_FORMAT, message);
+          errors = g_slist_append (errors, message);
+        } else {
+          gst_message_unref (message);
+        }
+      }
+
+      gst_element_set_state (el, GST_STATE_NULL);
+      gst_object_unref (el);
+    }
   }
 
-done:
   GST_DEBUG_OBJECT (sink, "done trying");
   if (!choice) {
     if (errors) {
@@ -249,7 +235,6 @@ done:
           ("Failed to find a supported audio sink"));
     }
   }
-  g_free (child_name);
   gst_object_unref (bus);
   gst_plugin_feature_list_free (list);
   g_slist_foreach (errors, (GFunc) gst_mini_object_unref, NULL);
@@ -307,6 +292,8 @@ gst_auto_audio_sink_change_state (GstElement * element,
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:

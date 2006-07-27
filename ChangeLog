@@ -1,3 +1,13 @@
+2006-07-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/autodetect/gstautoaudiosink.c:
+	(gst_auto_audio_sink_create_element_with_pretty_name),
+	(gst_auto_audio_sink_find_best),
+	(gst_auto_audio_sink_change_state):
+	  Get rid of old and unused magic sound-server properties stuff.
+	  Add suffix to child sink's name that makes it easy to see from
+	  the name alone which type it actually is (alsa, oss, esd, etc.).
+
 2006-07-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init), (gst_udpsrc_init),
