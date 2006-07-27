@@ -707,7 +707,7 @@ getsockname_error:
   }
 udpbuffer_error:
   {
-    close (src->sock);
+    CLOSE_SOCKET (src->sock);
     src->sock = -1;
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Could not create a buffer of the size requested, %d: %s (%d)", ret,

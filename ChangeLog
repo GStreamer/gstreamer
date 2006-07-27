@@ -1,3 +1,9 @@
+2006-07-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_start):
+	  Use CLOSE_SOCKET() here instead of close() to maintain
+	  win32 workiness.
+
 2006-07-27  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Thijs Vermeir <thijs dot vermeir at barco dot com>
