@@ -286,7 +286,7 @@ gst_dp_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_conversion);
-#ifndef __PPC64__
+#if !defined (__ppc64)
   tcase_add_test (tc_chain, test_buffer);
 #endif
   tcase_add_test (tc_chain, test_caps);

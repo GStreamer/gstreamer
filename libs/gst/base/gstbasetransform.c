@@ -770,7 +770,8 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
   if (!peer_checked && otherpeer && !gst_pad_accept_caps (otherpeer, othercaps))
     goto peer_no_accept;
 
-  GST_DEBUG_OBJECT (trans, "got final caps %" GST_PTR_FORMAT, othercaps);
+  GST_DEBUG_OBJECT (trans, "Input caps were %" GST_PTR_FORMAT
+      ", and got final caps %" GST_PTR_FORMAT, caps, othercaps);
 
   trans->have_same_caps = gst_caps_is_equal (caps, othercaps);
   GST_DEBUG_OBJECT (trans, "have_same_caps: %d", trans->have_same_caps);

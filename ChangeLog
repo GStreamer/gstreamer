@@ -1,3 +1,14 @@
+2006-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* libs/gst/base/gstbasetransform.c: (gst_base_transform_setcaps):
+	Extra debug output
+	* tests/check/libs/gdp.c: (gst_dp_suite):
+	Take a whack at fixing the ppc compile using a different define to
+	disable the broken test.
+
+	* tests/check/pipelines/parse-launch.c: (GST_START_TEST):
+	Remove excess g_print()
+
 2006-07-27  Jan Schmidt <thaytan@mad.scientist.com>
 
 	* tests/check/pipelines/parse-launch.c: (expected_fail_pipe):

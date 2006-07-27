@@ -324,9 +324,11 @@ GST_START_TEST (leaking_fail_pipes)
   const gchar **s;
 
   for (s = leaking_failures; *s != NULL; s++) {
-    g_print ("Trying pipe: %s\n", *s);
     /* Uncomment if you want to try fixing the leaks */
-    /* expected_fail_pipe (*s); */
+#if 0
+    g_print ("Trying pipe: %s\n", *s);
+    expected_fail_pipe (*s);
+#endif
     VALGRIND_DO_LEAK_CHECK;
   }
 }
