@@ -1,3 +1,13 @@
+2006-07-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_class_init):
+	  Do not use mmap() by default since there are a number of error
+	  conditions that we would like to handle in a non-fatal way that
+	  will result in a SIGBUS if we use mmap(). Examples: external
+	  devices (USB harddrive, portable music player) being unplugged
+	  while in use; file on mounted CD/DVD that can't be read because
+	  the medium is partly damaged. Fixes #348455 and #348475.
+
 2006-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstquery.h:

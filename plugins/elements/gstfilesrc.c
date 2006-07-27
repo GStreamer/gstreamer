@@ -24,8 +24,7 @@
  * @short_description: read from arbitrary point in a file
  * @see_also: #GstFileSrc
  *
- * Read data from a file in the local file system. The implementation is using
- * mmap(2) to read chunks from the file in an efficient way.
+ * Read data from a file in the local file system.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -81,6 +80,9 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
  * GStreamer Default File Source
  * Theory of Operation
  *
+ * Update: see GstFileSrc:use-mmap property documentation below
+ *         for why use of mmap() is disabled by default.
+ *
  * This source uses mmap(2) to efficiently load data from a file.
  * To do this without seriously polluting the applications' memory
  * space, it must do so in smaller chunks, say 1-4MB at a time.
@@ -132,7 +134,7 @@ enum
 #define DEFAULT_BLOCKSIZE       4*1024
 #define DEFAULT_MMAPSIZE        4*1024*1024
 #define DEFAULT_TOUCH           TRUE
-#define DEFAULT_USEMMAP         TRUE
+#define DEFAULT_USEMMAP         FALSE
 #define DEFAULT_SEQUENTIAL      FALSE
 
 enum
@@ -221,9 +223,27 @@ gst_file_src_class_init (GstFileSrcClass * klass)
       g_param_spec_boolean ("touch", "Touch mapped region read data",
           "Touch mmapped data regions to force them to be read from disk",
           DEFAULT_TOUCH, G_PARAM_READWRITE));
+  /**
+   * GstFileSrc:use-mmap
+   *
+   * Whether to use mmap(). Set to TRUE to force use of mmap() instead of
+   * read() for reading data.
+   *
+   * Use of mmap() is disabled by default since with mmap() there are a
+   * number of occasions where the process/application will be notified of
+   * read errors via a SIGBUS signal from the kernel, which will lead to
+   * the application being killed if not handled by the application. This
+   * is something that is difficult to work around for a library like
+   * GStreamer, hence use of mmap() is disabled by default. Said errors
+   * can occur for example when an external device (e.g. an external hard
+   * drive or a portable music player) are unplugged while in use, or when
+   * a CD/DVD medium cannot be be read because the medium is scratched or
+   * otherwise damaged.
+   *
+   **/
   g_object_class_install_property (gobject_class, ARG_USEMMAP,
       g_param_spec_boolean ("use-mmap", "Use mmap to read data",
-          "Whether to use mmap. FALSE to force normal read() calls",
+          "Whether to use mmap() instead of read()",
           DEFAULT_USEMMAP, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_SEQUENTIAL,
       g_param_spec_boolean ("sequential", "Optimise for sequential mmap access",
