@@ -1,4 +1,9 @@
-2006-07-27  Jan Schmidt,,,  <set EMAIL_ADDRESS environment variable>
+2006-07-27  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* tests/check/pipelines/parse-launch.c: (expected_fail_pipe):
+	Oops, meant to uncomment this line too to dampen the noise a bit.
+
+2006-07-27  Jan Schmidt <thaytan@mad.scientist.com>
 
 	* gst/parse/grammar.y:
 	* gst/parse/parse.l:

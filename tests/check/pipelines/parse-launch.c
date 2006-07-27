@@ -51,7 +51,7 @@ expected_fail_pipe (const gchar * pipe_descr)
   GError *error = NULL;
 
 #ifndef GST_DISABLE_GST_DEBUG
-  // gst_debug_set_default_threshold (GST_LEVEL_NONE);
+  gst_debug_set_default_threshold (GST_LEVEL_NONE);
 #endif
 
   pipeline = gst_parse_launch (pipe_descr, &error);
