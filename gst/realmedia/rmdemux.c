@@ -5,6 +5,7 @@
  * Copyright (C) <2005> Owen Fraser-Green <owen@discobabe.net>
  * Copyright (C) <2005> Michael Smith <fluendo.com>
  * Copyright (C) <2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2006> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -69,6 +70,10 @@ struct _GstRMDemuxStream
   guint16 version;
   guint32 extra_data_size;      /* codec_data_length  */
   guint8 *extra_data;           /* extras             */
+
+  gboolean needs_descrambling;
+  guint subpackets_needed;      /* subpackets needed for descrambling    */
+  GPtrArray *subpackets;        /* array containing subpacket GstBuffers */
 };
 
 struct _GstRMDemuxIndex
@@ -82,16 +87,6 @@ static GstElementDetails gst_rmdemux_details = {
   "Codec/Demuxer",
   "Demultiplex a RealMedia file into audio and video streams",
   "David Schleef <ds@schleef.org>"
-};
-
-enum
-{
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
 };
 
 static GstStaticPadTemplate gst_rmdemux_sink_template =
@@ -207,7 +202,7 @@ gst_rmdemux_class_init (GstRMDemuxClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gstelement_class->change_state = gst_rmdemux_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rmdemux_change_state);
 
   GST_DEBUG_CATEGORY_INIT (rmdemux_debug, "rmdemux",
       0, "Demuxer for Realmedia streams");
@@ -232,8 +227,7 @@ static void
 gst_rmdemux_init (GstRMDemux * rmdemux)
 {
   rmdemux->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_rmdemux_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_rmdemux_sink_template, "sink");
   gst_pad_set_event_function (rmdemux->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rmdemux_sink_event));
   gst_pad_set_chain_function (rmdemux->sinkpad,
@@ -1117,7 +1111,7 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
 
         data = gst_adapter_peek (rmdemux->adapter, 2);
         version = RMDEMUX_GUINT16_GET (data);
-        GST_DEBUG_OBJECT (rmdemux, "Data packet with version=%d", version);
+        GST_LOG_OBJECT (rmdemux, "Data packet with version=%d", version);
 
         if (version == 0 || version == 1) {
           guint16 length;
@@ -1288,6 +1282,9 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         stream->caps =
             gst_caps_new_simple ("audio/x-ac3", "rate", G_TYPE_INT,
             (int) stream->rate, NULL);
+        stream->needs_descrambling = TRUE;
+        stream->subpackets_needed = 1;
+        stream->subpackets = NULL;
         break;
 
         /* RealAudio 10 (AAC) */
@@ -1314,6 +1311,9 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
       case GST_RM_AUD_COOK:
         codec_name = "Real Audio G2 (Cook)";
         version = 8;
+        stream->needs_descrambling = TRUE;
+        stream->subpackets_needed = stream->height;
+        stream->subpackets = NULL;
         break;
 
         /* RALF is lossless */
@@ -1596,9 +1596,11 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
       stream->version = RMDEMUX_GUINT16_GET (data + offset + 4);
       stream->flavor = RMDEMUX_GUINT16_GET (data + offset + 22);
       stream->packet_size = RMDEMUX_GUINT32_GET (data + offset + 24);
+      /* stream->frame_size = RMDEMUX_GUINT32_GET (data + offset + 42); */
       stream->leaf_size = RMDEMUX_GUINT16_GET (data + offset + 44);
       stream->height = RMDEMUX_GUINT16_GET (data + offset + 40);
 
+      GST_INFO ("stream version = %u", stream->version);
       switch (stream->version) {
         case 4:
           stream->rate = RMDEMUX_GUINT16_GET (data + offset + 48);
@@ -1721,9 +1723,8 @@ gst_rmdemux_parse_data (GstRMDemux * rmdemux, const void *data, int length)
   rmdemux->n_chunks = RMDEMUX_GUINT32_GET (data);
   rmdemux->data_offset = RMDEMUX_GUINT32_GET (data + 4);
   rmdemux->chunk_index = 0;
-  GST_DEBUG_OBJECT (rmdemux,
-      "Data chunk found with %d packets (next data at %p)", rmdemux->n_chunks,
-      rmdemux->data_offset);
+  GST_DEBUG_OBJECT (rmdemux, "Data chunk found with %d packets "
+      "(next data at 0x%08x)", rmdemux->n_chunks, rmdemux->data_offset);
 }
 
 static void
@@ -1779,35 +1780,6 @@ gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const void *data, int length)
   }
 }
 
-static void
-gst_rmdemux_fill_audio_packet (GstRMDemux * rmdemux, GstBuffer * buf,
-    GstRMDemuxStream * stream, const void *in_data, guint size)
-{
-  switch (stream->fourcc) {
-    case GST_RM_AUD_DNET:{
-      guint8 *data, *end;
-
-      data = (guint8 *) GST_BUFFER_DATA (buf);
-      end = (guint8 *) GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
-      while (data < (end - 1)) {
-        *((guint16 *) data) = GUINT16_SWAP_LE_BE (*((guint16 *) in_data));
-        data += 2;
-        in_data += 2;
-      }
-      break;
-    }
-    case GST_RM_AUD_28_8:
-    case GST_RM_AUD_COOK:
-      /* FIXME: might need to descramble packet */
-      /* fallthrough for now */
-    default:{
-      /* nothing to do, just do a copy */
-      memcpy (GST_BUFFER_DATA (buf), in_data, size);
-      break;
-    }
-  }
-}
-
 static GstFlowReturn
 gst_rmdemux_combine_flows (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     GstFlowReturn ret)
@@ -1841,6 +1813,126 @@ done:
   return ret;
 }
 
+static void
+gst_rmdemux_stream_clear_cached_subpackets (GstRMDemux * rmdemux,
+    GstRMDemuxStream * stream)
+{
+  if (stream->subpackets == NULL || stream->subpackets->len == 0)
+    return;
+
+  GST_DEBUG_OBJECT (rmdemux, "discarding %u previously collected subpackets",
+      stream->subpackets->len);
+  g_ptr_array_foreach (stream->subpackets, (GFunc) gst_mini_object_unref, NULL);
+  g_ptr_array_set_size (stream->subpackets, 0);
+}
+
+static GstFlowReturn
+gst_rmdemux_descramble_cook_audio (GstRMDemux * rmdemux,
+    GstRMDemuxStream * stream)
+{
+  GstFlowReturn ret;
+  GstBuffer *outbuf;
+  guint packet_size = stream->packet_size;
+  guint height = stream->subpackets->len;
+  guint leaf_size = stream->leaf_size;
+  guint p, x;
+
+  g_assert (stream->height == height);
+
+  GST_LOG ("packet_size = %u, leaf_size = %u, height= %u", packet_size,
+      leaf_size, height);
+
+  ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
+      GST_BUFFER_OFFSET_NONE, height * packet_size, stream->caps, &outbuf);
+
+  if (ret != GST_FLOW_OK)
+    goto done;
+
+  for (p = 0; p < height; ++p) {
+    GstBuffer *b = g_ptr_array_index (stream->subpackets, p);
+    guint8 *b_data = GST_BUFFER_DATA (b);
+
+    if (p == 0)
+      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (b);
+
+    for (x = 0; x < packet_size / leaf_size; ++x) {
+      guint idx;
+
+      idx = height * x + ((height + 1) / 2) * (p % 2) + (p / 2);
+      /* GST_LOG ("%3u => %3u", (height * p) + x, idx); */
+      memcpy (GST_BUFFER_DATA (outbuf) + leaf_size * idx, b_data, leaf_size);
+      b_data += leaf_size;
+    }
+  }
+
+  ret = gst_pad_push (stream->pad, outbuf);
+
+done:
+
+  gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_rmdemux_descramble_dnet_audio (GstRMDemux * rmdemux,
+    GstRMDemuxStream * stream)
+{
+  GstBuffer *buf;
+  guint16 *data, *end;
+
+  buf = g_ptr_array_index (stream->subpackets, 0);
+  g_ptr_array_index (stream->subpackets, 0) = NULL;
+  g_ptr_array_set_size (stream->subpackets, 0);
+
+  /* descramble is a bit of a misnomer, it's just byte-order swapped AC3 .. */
+  data = (guint16 *) GST_BUFFER_DATA (buf);
+  end = (guint16 *) (GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf));
+  while (data < end) {
+    *data = GUINT16_SWAP_LE_BE (*data);
+    ++data;
+  }
+
+  return gst_pad_push (stream->pad, buf);
+}
+
+static GstFlowReturn
+gst_rmdemux_handle_scrambled_packet (GstRMDemux * rmdemux,
+    GstRMDemuxStream * stream, GstBuffer * buf, gboolean keyframe)
+{
+  GstFlowReturn ret;
+
+  if (stream->subpackets == NULL)
+    stream->subpackets = g_ptr_array_new ();
+
+  GST_LOG ("Got subpacket %u/%u, len=%u, key=%d", stream->subpackets->len + 1,
+      stream->subpackets_needed, GST_BUFFER_SIZE (buf), keyframe);
+
+  if (keyframe && stream->subpackets->len > 0) {
+    gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
+  }
+
+  g_ptr_array_add (stream->subpackets, buf);
+
+  if (stream->subpackets->len < stream->subpackets_needed)
+    return GST_FLOW_OK;
+
+  g_assert (stream->subpackets->len >= 1);
+
+  switch (stream->fourcc) {
+    case GST_RM_AUD_DNET:
+      ret = gst_rmdemux_descramble_dnet_audio (rmdemux, stream);
+      break;
+    case GST_RM_AUD_COOK:
+      ret = gst_rmdemux_descramble_cook_audio (rmdemux, stream);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
     guint16 version, guint16 length)
@@ -1851,6 +1943,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
   guint16 packet_size;
   GstFlowReturn cret, ret;
   GstClockTime timestamp;
+  gboolean key = FALSE;
 
   id = RMDEMUX_GUINT16_GET (data);
   /* timestamp in Msec */
@@ -1858,18 +1951,25 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
 
   gst_segment_set_last_stop (&rmdemux->segment, GST_FORMAT_TIME, timestamp);
 
-  GST_DEBUG_OBJECT (rmdemux,
-      "Parsing a packet for stream=%d, timestamp=%" GST_TIME_FORMAT
-      ", version=%d", id, GST_TIME_ARGS (timestamp), version);
+  GST_LOG_OBJECT (rmdemux, "Parsing a packet for stream=%d, timestamp=%"
+      GST_TIME_FORMAT ", version=%d", id, GST_TIME_ARGS (timestamp), version);
 
-  /* TODO: We read 6 bytes previously; this is skipping over either 2 or 3 
-   * bytes (version dependent) without even reading it. What are these for? */
+  /* skip stream_id and timestamp */
+  data += 2 + 4;
+  packet_size = length - (2 + 4);
+
+  /* skip other stuff */
   if (version == 0) {
-    data += 8;
-    packet_size = length - 8;
+    /* uint8 packet_group */
+    /* uint8 flags        */
+    key = ((GST_READ_UINT8 (data + 1) & 0x02) != 0);
+    data += 2;
+    packet_size -= 2;
   } else {
-    data += 9;
-    packet_size = length - 9;
+    /* uint16 asm_rule */
+    /* uint8 asm_flags */
+    data += 3;
+    packet_size -= 3;
   }
 
   stream = gst_rmdemux_get_stream_by_id (rmdemux, id);
@@ -1891,18 +1991,17 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
   if (ret != GST_FLOW_OK)
     goto beach;
 
-  if (stream->subtype == GST_RMDEMUX_STREAM_AUDIO) {
-    gst_rmdemux_fill_audio_packet (rmdemux, buffer, stream, data, packet_size);
-  } else {
-    memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, packet_size);
-  }
-
+  memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, packet_size);
   GST_BUFFER_TIMESTAMP (buffer) = timestamp;
 
-  GST_LOG_OBJECT (rmdemux, "Pushing buffer of size %d to pad %s",
-      GST_BUFFER_SIZE (buffer), GST_PAD_NAME (stream->pad));
+  if (stream->needs_descrambling) {
+    ret = gst_rmdemux_handle_scrambled_packet (rmdemux, stream, buffer, key);
+  } else {
+    GST_LOG_OBJECT (rmdemux, "Pushing buffer of size %d to pad %s",
+        GST_BUFFER_SIZE (buffer), GST_PAD_NAME (stream->pad));
 
-  ret = gst_pad_push (stream->pad, buffer);
+    ret = gst_pad_push (stream->pad, buffer);
+  }
 
   cret = gst_rmdemux_combine_flows (rmdemux, stream, ret);
 

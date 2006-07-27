@@ -1,3 +1,16 @@
+2006-07-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_class_init),
+	(gst_rmdemux_init), (gst_rmdemux_chain), (gst_rmdemux_add_stream),
+	(gst_rmdemux_parse_mdpr), (gst_rmdemux_parse_data),
+	(gst_rmdemux_stream_clear_cached_subpackets),
+	(gst_rmdemux_descramble_cook_audio),
+	(gst_rmdemux_descramble_dnet_audio),
+	(gst_rmdemux_handle_scrambled_packet), (gst_rmdemux_parse_packet):
+	  Descramble cook audio streams before sending them to the
+	  decoder. Fixes #347292.
+	  Also miscellaneous clean-ups and log-level changes.
+
 2006-07-26  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/lame/gstlame.c: (gst_lame_setup):
