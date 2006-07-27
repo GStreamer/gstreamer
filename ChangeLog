@@ -1,3 +1,12 @@
+2006-07-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init), (gst_udpsrc_init),
+	(gst_udpsrc_set_property), (gst_udpsrc_get_property),
+	(gst_udpsrc_start):
+	* gst/udp/gstudpsrc.h:
+	Rename "buffer" to "buffer-size" to make clear it is a size we set and
+	not some sort of feature we enable.
+
 2006-07-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_start):
@@ -12,10 +21,10 @@
 	(gst_udpsrc_create), (gst_udpsrc_set_property),
 	(gst_udpsrc_get_property), (gst_udpsrc_start):
 	* gst/udp/gstudpsrc.h:
-	Added "buffer" property to control the kernel receive buffer size.
+	Added "buffer-size" property to control the kernel receive buffer size.
 	Update documentation.
 	Small cleanups. Fixes #348752.
-	API: buffer property
+	API: buffer-size property
 
 2006-07-26  Wim Taymans  <wim@fluendo.com>
 

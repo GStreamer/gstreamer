@@ -133,7 +133,7 @@ GST_ELEMENT_DETAILS ("UDP packet receiver",
 
 #define UDP_DEFAULT_PORT                4951
 #define UDP_DEFAULT_MULTICAST_GROUP     "0.0.0.0"
-#define UDP_DEFAULT_BUFFER		0
+#define UDP_DEFAULT_BUFFER_SIZE		0
 #define UDP_DEFAULT_URI                 "udp://"UDP_DEFAULT_MULTICAST_GROUP":"G_STRINGIFY(UDP_DEFAULT_PORT)
 #define UDP_DEFAULT_CAPS                NULL
 #define UDP_DEFAULT_SOCKFD              -1
@@ -146,8 +146,7 @@ enum
   PROP_URI,
   PROP_CAPS,
   PROP_SOCKFD,
-  PROP_BUFFER
-      /* FILL ME */
+  PROP_BUFFER_SIZE
 };
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
@@ -224,10 +223,10 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
       g_param_spec_int ("sockfd", "Socket Handle",
           "Socket to use for UDP reception. (-1 == allocate)",
           -1, G_MAXINT, UDP_DEFAULT_SOCKFD, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER,
-      g_param_spec_int ("buffer", "Buffer",
-          "Number of bytes of the UDP Buffer, 0=default", 0, G_MAXINT,
-          UDP_DEFAULT_BUFFER, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_SIZE,
+      g_param_spec_int ("buffer-size", "Buffer Size",
+          "Size of the kernel receive buffer in bytes, 0=default", 0, G_MAXINT,
+          UDP_DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
@@ -247,7 +246,7 @@ gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
   udpsrc->sock = UDP_DEFAULT_SOCKFD;
   udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
   udpsrc->uri = g_strdup (UDP_DEFAULT_URI);
-  udpsrc->buffer = UDP_DEFAULT_BUFFER;
+  udpsrc->buffer_size = UDP_DEFAULT_BUFFER_SIZE;
 }
 
 static GstCaps *
@@ -473,8 +472,8 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
   GstUDPSrc *udpsrc = GST_UDPSRC (object);
 
   switch (prop_id) {
-    case PROP_BUFFER:
-      udpsrc->buffer = g_value_get_int (value);
+    case PROP_BUFFER_SIZE:
+      udpsrc->buffer_size = g_value_get_int (value);
       break;
     case PROP_PORT:
       udpsrc->port = g_value_get_int (value);
@@ -527,8 +526,8 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
   GstUDPSrc *udpsrc = GST_UDPSRC (object);
 
   switch (prop_id) {
-    case PROP_BUFFER:
-      g_value_set_int (value, udpsrc->buffer);
+    case PROP_BUFFER_SIZE:
+      g_value_set_int (value, udpsrc->buffer_size);
       break;
     case PROP_PORT:
       g_value_set_int (value, udpsrc->port);
@@ -621,8 +620,8 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     goto getsockname_error;
 
   len = sizeof (rcvsize);
-  if (src->buffer != 0) {
-    rcvsize = src->buffer;
+  if (src->buffer_size != 0) {
+    rcvsize = src->buffer_size;
 
     GST_DEBUG_OBJECT (src, "setting udp buffer of %d bytes", rcvsize);
     /* set buffer size, Note that on Linux this is typically limited to a

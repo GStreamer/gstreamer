@@ -56,7 +56,7 @@ struct _GstUDPSrc {
   int port;
   gchar *multi_group;
   gint ttl;
-  gint buffer;
+  gint buffer_size;
 
   int sock;
   int control_sock[2];
