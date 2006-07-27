@@ -249,18 +249,33 @@ gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
         gst_event_unref (event);
         break;
       } else {
+        GstFormat format;
+
+        gst_event_parse_new_segment (event, NULL, NULL, &format, NULL, NULL,
+            NULL);
+        if (format != GST_FORMAT_TIME)
+          goto wrong_format;
+
         GST_DEBUG_OBJECT (filter,
             "Upstream sent a NEWSEGMENT, passing through.");
       }
-    }
       /* note: pass through to default if no thread running */
+    }
     default:
       /* pass other events forward */
       res = gst_pad_push_event (filter->srcpad, event);
       break;
   }
-
   return res;
+
+  /* ERRORS */
+wrong_format:
+  {
+    GST_DEBUG_OBJECT (filter,
+        "Upstream sent a NEWSEGMENT in wrong format, dropping.");
+    gst_event_unref (event);
+    return TRUE;
+  }
 }
 
 static GstFlowReturn

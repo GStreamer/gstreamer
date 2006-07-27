@@ -1,3 +1,14 @@
+2006-07-27  Wim Taymans  <wim@fluendo.com>
+
+	patch by: Kai Vehmanen <kv2004 eca cx>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_chain),
+	(gst_base_rtp_depayload_handle_sink_event),
+	(gst_base_rtp_depayload_change_state):
+	Don't send multiple newsegments with different formats.
+	Fixes #348677.
+
 2006-07-26  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_internal_chain),
