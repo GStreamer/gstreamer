@@ -51,11 +51,12 @@ typedef struct _GstUDPSrcClass GstUDPSrcClass;
 struct _GstUDPSrc {
   GstPushSrc parent;
 
+  /* properties */
   gchar *uri;
   int port;
-
   gchar *multi_group;
   gint ttl;
+  gint buffer;
 
   int sock;
   int control_sock[2];

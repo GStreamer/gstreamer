@@ -46,6 +46,8 @@
  * <programlisting>
  * gst-launch -v udpsrc port=0 ! fakesink
  * </programlisting>
+ * After setting the udpsrc to PAUSED, the allocated port can be obtained by
+ * reading the port property.
  * </para>
  * <para>
  * udpsrc can read from multicast groups by setting the multicast_group property
@@ -62,6 +64,13 @@
  * using SDP or other means. 
  * </para>
  * <para>
+ * The "buffer" property is used to change the default kernel buffer sizes used for
+ * receiving packets. The buffer size may be increased for high-volume connections,
+ * or may be decreased to limit the possible backlog of incoming data.
+ * The system places an absolute limit on these values, on Linux, for example, the
+ * default buffer size is typically 50K and can be increased to maximally 100K.
+ * </para>
+ * <para>
  * The udpsrc is always a live source. It does however not provide a GstClock, this
  * is left for upstream elements such as an RTP session manager or demuxer (such
  * as an MPEG demuxer).
@@ -70,9 +79,11 @@
  * udpsrc implements a GstURIHandler interface that handles udp://host:port type
  * URIs.
  * </para>
+ *
+ * Last reviewed on 2006-07-27 (0.10.4)
+ *
  * </refsect2>
  */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -117,10 +128,12 @@ static const GstElementDetails gst_udpsrc_details =
 GST_ELEMENT_DETAILS ("UDP packet receiver",
     "Source/Network",
     "Receive data over the network via UDP",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim@fluendo.com>\n"
+    "Thijs Vermeir <thijs.vermeir@barco.com>");
 
 #define UDP_DEFAULT_PORT                4951
 #define UDP_DEFAULT_MULTICAST_GROUP     "0.0.0.0"
+#define UDP_DEFAULT_BUFFER		0
 #define UDP_DEFAULT_URI                 "udp://"UDP_DEFAULT_MULTICAST_GROUP":"G_STRINGIFY(UDP_DEFAULT_PORT)
 #define UDP_DEFAULT_CAPS                NULL
 #define UDP_DEFAULT_SOCKFD              -1
@@ -132,7 +145,8 @@ enum
   PROP_MULTICAST_GROUP,
   PROP_URI,
   PROP_CAPS,
-  PROP_SOCKFD
+  PROP_SOCKFD,
+  PROP_BUFFER
       /* FILL ME */
 };
 
@@ -192,11 +206,11 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
   gobject_class->get_property = gst_udpsrc_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
-      g_param_spec_int ("port", "port",
+      g_param_spec_int ("port", "Port",
           "The port to receive the packets from, 0=allocate", 0, G_MAXUINT16,
           UDP_DEFAULT_PORT, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_MULTICAST_GROUP,
-      g_param_spec_string ("multicast_group", "multicast_group",
+      g_param_spec_string ("multicast_group", "Multicast Group",
           "The Address of multicast group to join", UDP_DEFAULT_MULTICAST_GROUP,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_URI,
@@ -207,9 +221,13 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
       g_param_spec_boxed ("caps", "Caps",
           "The caps of the source pad", GST_TYPE_CAPS, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_SOCKFD,
-      g_param_spec_int ("sockfd", "socket handle",
+      g_param_spec_int ("sockfd", "Socket Handle",
           "Socket to use for UDP reception. (-1 == allocate)",
           -1, G_MAXINT, UDP_DEFAULT_SOCKFD, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER,
+      g_param_spec_int ("buffer", "Buffer",
+          "Number of bytes of the UDP Buffer, 0=default", 0, G_MAXINT,
+          UDP_DEFAULT_BUFFER, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
@@ -229,6 +247,7 @@ gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
   udpsrc->sock = UDP_DEFAULT_SOCKFD;
   udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
   udpsrc->uri = g_strdup (UDP_DEFAULT_URI);
+  udpsrc->buffer = UDP_DEFAULT_BUFFER;
 }
 
 static GstCaps *
@@ -354,6 +373,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
       break;
   }
 
+  /* special case buffer so receivers can also track the address */
   outbuf = gst_netbuffer_new ();
   GST_BUFFER_DATA (outbuf) = (guint8 *) pktdata;
   GST_BUFFER_MALLOCDATA (outbuf) = (guint8 *) pktdata;
@@ -362,14 +382,15 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   gst_netaddress_set_ip4_address (&outbuf->from, tmpaddr.sin_addr.s_addr,
       tmpaddr.sin_port);
 
-  gst_buffer_set_caps (GST_BUFFER (outbuf), udpsrc->caps);
+  gst_buffer_set_caps (GST_BUFFER_CAST (outbuf), udpsrc->caps);
 
   GST_LOG_OBJECT (udpsrc, "read %d bytes", readsize);
 
-  *buf = GST_BUFFER (outbuf);
+  *buf = GST_BUFFER_CAST (outbuf);
 
   return GST_FLOW_OK;
 
+  /* ERRORS */
 select_error:
   {
     GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
@@ -452,6 +473,9 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
   GstUDPSrc *udpsrc = GST_UDPSRC (object);
 
   switch (prop_id) {
+    case PROP_BUFFER:
+      udpsrc->buffer = g_value_get_int (value);
+      break;
     case PROP_PORT:
       udpsrc->port = g_value_get_int (value);
       gst_udpsrc_update_uri (udpsrc);
@@ -503,6 +527,9 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
   GstUDPSrc *udpsrc = GST_UDPSRC (object);
 
   switch (prop_id) {
+    case PROP_BUFFER:
+      g_value_set_int (value, udpsrc->buffer);
+      break;
     case PROP_PORT:
       g_value_set_int (value, udpsrc->port);
       break;
@@ -535,6 +562,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   int port;
   GstUDPSrc *src;
   gint ret;
+  int rcvsize;
 
   src = GST_UDPSRC (bsrc);
 
@@ -592,6 +620,34 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   if ((ret = getsockname (src->sock, (struct sockaddr *) &my_addr, &len)) < 0)
     goto getsockname_error;
 
+  len = sizeof (rcvsize);
+  if (src->buffer != 0) {
+    rcvsize = src->buffer;
+
+    GST_DEBUG_OBJECT (src, "setting udp buffer of %d bytes", rcvsize);
+    /* set buffer size, Note that on Linux this is typically limited to a
+     * maximum of around 100K. Also a minimum of 128 bytes is required on
+     * Linux. */
+    ret = setsockopt (src->sock, SOL_SOCKET, SO_RCVBUF, (void *) &rcvsize, len);
+    if (ret != 0)
+      goto udpbuffer_error;
+  }
+
+  /* read the value of the receive buffer. Note that on linux this returns 2x the
+   * value we set because the kernel allocates extra memory for metadata.
+   * The default on Linux is about 100K (which is about 50K without metadata) */
+  ret = getsockopt (src->sock, SOL_SOCKET, SO_RCVBUF, (void *) &rcvsize, &len);
+  if (ret == 0)
+    GST_DEBUG_OBJECT (src, "have udp buffer of %d bytes", rcvsize);
+  else
+    GST_DEBUG_OBJECT (src, "could not get udp buffer size");
+
+  bc_val = 1;
+  if ((ret =
+          setsockopt (src->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
+              sizeof (bc_val))) < 0)
+    goto no_broadcast;
+
   port = ntohs (my_addr.sin_port);
   GST_DEBUG_OBJECT (src, "bound, on port %d", port);
   if (port != src->port) {
@@ -599,12 +655,6 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     GST_DEBUG_OBJECT (src, "notifying %d", port);
     g_object_notify (G_OBJECT (src), "port");
   }
-
-  bc_val = 1;
-  if ((ret =
-          setsockopt (src->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
-              sizeof (bc_val))) < 0)
-    goto no_broadcast;
 
   src->myaddr.sin_port = htons (src->port + 1);
 
@@ -653,6 +703,15 @@ getsockname_error:
     src->sock = -1;
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("getsockname failed %d: %s (%d)", ret, g_strerror (errno), errno));
+    return FALSE;
+  }
+udpbuffer_error:
+  {
+    close (src->sock);
+    src->sock = -1;
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Could not create a buffer of the size requested, %d: %s (%d)", ret,
+            g_strerror (errno), errno));
     return FALSE;
   }
 no_broadcast:
