@@ -792,8 +792,8 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
   if (G_UNLIKELY ((guint) ret < length && src->is_regular))
     goto unexpected_eos;
 
-  /* other files should eos if they read 0 */
-  if (G_UNLIKELY (ret == 0))
+  /* other files should eos if they read 0 and more was requested */
+  if (G_UNLIKELY (ret == 0 && length > 0))
     goto eos;
 
   length = ret;

@@ -1,3 +1,10 @@
+2006-07-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_create_read):
+	  Requesting 0 bytes before the end of the file should result in
+	  FLOW_OK and an empty buffer, not FLOW_UNEXPECTED. Thank you
+	  unit test.
+
 2006-07-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstcaps.c: (gst_static_caps_get), (gst_caps_get_structure):
