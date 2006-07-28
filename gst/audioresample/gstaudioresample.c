@@ -223,6 +223,9 @@ audioresample_stop (GstBaseTransform * base)
     audioresample->resample = NULL;
   }
 
+  gst_caps_replace (&audioresample->sinkcaps, NULL);
+  gst_caps_replace (&audioresample->srccaps, NULL);
+
   return TRUE;
 }
 
@@ -438,10 +441,7 @@ audioresample_set_caps (GstBaseTransform * base, GstCaps * incaps,
 
   /* save caps so we can short-circuit in the size_transform if the caps
    * are the same */
-  /* FIXME: clean them up in state change ? */
-  gst_caps_ref (incaps);
   gst_caps_replace (&audioresample->sinkcaps, incaps);
-  gst_caps_ref (outcaps);
   gst_caps_replace (&audioresample->srccaps, outcaps);
 
   return TRUE;
