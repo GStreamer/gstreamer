@@ -1,5 +1,12 @@
 2006-07-28  Michael Smith  <msmith@fluendo.com>
 
+	* tests/check/pipelines/vorbisenc.c: (GST_START_TEST),
+	(vorbisenc_suite):
+	  Enable Andy's extra vorbisenc test, now that it passes. Also fix one
+	  aspect of it.
+
+2006-07-28  Michael Smith  <msmith@fluendo.com>
+
 	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_generate_sink_caps),
 	(gst_vorbis_enc_sink_getcaps), (gst_vorbis_enc_buffer_from_packet),
 	(gst_vorbis_enc_push_buffer),

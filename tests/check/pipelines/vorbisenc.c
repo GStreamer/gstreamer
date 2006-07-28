@@ -263,7 +263,6 @@ GST_START_TEST (test_timestamps)
 
 GST_END_TEST;
 
-#if 0
 static gboolean
 drop_second_data_buffer (GstPad * droppad, GstBuffer * buffer, gpointer unused)
 {
@@ -355,7 +354,11 @@ GST_START_TEST (test_discontinuity)
 
   {
     buffer = gst_buffer_straw_get_buffer (bin, pad);
-    fail_unless (GST_BUFFER_OFFSET_END (buffer) > 2048,
+    /* The first buffer after the discontinuity will produce zero output
+     * samples (because of the overlap/add), so it won't increment the 
+     * granulepos, which should be 2048 after the discontinuity.
+     */
+    fail_unless (GST_BUFFER_OFFSET_END (buffer) == 2048,
         "expected granulepos after gap: %" G_GUINT64_FORMAT,
         GST_BUFFER_OFFSET_END (buffer));
     fail_unless (GST_BUFFER_IS_DISCONT (buffer),
@@ -372,7 +375,6 @@ GST_START_TEST (test_discontinuity)
 }
 
 GST_END_TEST;
-#endif /* 0 */
 
 #endif /* #ifndef GST_DISABLE_PARSE */
 
@@ -386,9 +388,7 @@ vorbisenc_suite (void)
 #ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_granulepos_offset);
   tcase_add_test (tc_chain, test_timestamps);
-#if 0
   tcase_add_test (tc_chain, test_discontinuity);
-#endif /* 0 */
 #endif
 
   return s;
