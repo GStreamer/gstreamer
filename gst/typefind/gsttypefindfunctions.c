@@ -927,9 +927,47 @@ wavpack_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** multipart/x-mixed-replace mimestream ***/
+
+static GstStaticCaps multipart_caps =
+GST_STATIC_CAPS ("multipart/x-mixed-replace");
+#define MULTIPART_CAPS gst_static_caps_get(&multipart_caps)
+
+/* multipart/x-mixed replace is: 
+ *   --<some ascii chars>[\r]\n
+ *   <more ascii chars>[\r]\nContent-type:<more ascii>[\r]\n */
+static void
+multipart_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data;
+  guint8 *x;
+
+  data = gst_type_find_peek (tf, 0, 2);
+  if (!data || data[0] != '-' || data[1] != '-')
+    return;
+
+  /* Could be okay, peek what should be enough for a complete header */
+#define MULTIPART_MAX_HEADER_SIZE 256
+  data = gst_type_find_peek (tf, 0, MULTIPART_MAX_HEADER_SIZE);
+  if (!data)
+    return;
+
+  for (x = data; x - data < MULTIPART_MAX_HEADER_SIZE - 14; x++) {
+    if (!isascii (*x)) {
+      return;
+    }
+    if (*x == '\n' &&
+        !g_ascii_strncasecmp ("content-type:", (gchar *) x + 1, 13)) {
+      GstCaps *caps = gst_caps_copy (MULTIPART_CAPS);
+
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
+      gst_caps_unref (caps);
+      return;
+    }
+  }
+}
 
 /*** video/mpeg systemstream ***/
-
 static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
     "systemstream = (boolean) true, mpegversion = (int) [ 1, 2 ]");
 
@@ -2588,7 +2626,8 @@ plugin_init (GstPlugin * plugin)
 #endif
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-dirac",
       GST_RANK_PRIMARY, NULL, "KW-DIRAC", 8, GST_TYPE_FIND_MAXIMUM);
-
+  TYPE_FIND_REGISTER (plugin, "multipart/x-mixed-replace", GST_RANK_SECONDARY,
+      multipart_type_find, NULL, MULTIPART_CAPS, NULL, NULL);
   return TRUE;
 }
 
