@@ -1,3 +1,10 @@
+2006-07-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/adder/gstadder.c: (gst_adder_setcaps),
+	(gst_adder_query_duration):
+	Fix leak in duration query.
+	Reflow some docs and notes.
+
 2006-07-28  Michael Smith  <msmith@fluendo.com>
 
 	* tests/check/pipelines/vorbisenc.c: (GST_START_TEST),

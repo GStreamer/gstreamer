@@ -230,6 +230,7 @@ gst_adder_setcaps (GstPad * pad, GstCaps * caps)
 
   return TRUE;
 
+  /* ERRORS */
 not_supported:
   {
     GST_DEBUG_OBJECT (adder, "unsupported format set as caps");
@@ -239,17 +240,20 @@ not_supported:
 
 /* FIXME, the duration query should reflect how long you will produce
  * data, that is the amount of stream time until you will emit EOS. 
- * For synchronized mixing this
- * is always the max of all the durations of upstream since we emit
- * EOS when all of them finished.
+ *
+ * For synchronized mixing this is always the max of all the durations
+ * of upstream since we emit EOS when all of them finished.
+ *
  * We don't do synchronized mixing so this really depends on where the
  * streams where punched in and what their relative offsets are against
  * eachother which we can get from the first timestamps we see.
+ *
  * When we add a new stream (or remove a stream) the duration might
  * also become invalid again and we need to post a new DURATION
  * message to notify this fact to the parent.
  * For now we take the max of all the upstream elements so the simple
- * cases work at least somewhat. */
+ * cases work at least somewhat. 
+ */
 static gboolean
 gst_adder_query_duration (GstAdder * adder, GstQuery * query)
 {
@@ -306,6 +310,7 @@ gst_adder_query_duration (GstAdder * adder, GstQuery * query)
         break;
     }
   }
+  gst_iterator_free (it);
 
   if (res) {
     /* and store the max */
