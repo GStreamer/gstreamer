@@ -899,6 +899,11 @@ gst_vorbis_enc_buffer_from_packet (GstVorbisEnc * vorbisenc,
   GST_BUFFER_DURATION (outbuf) =
       vorbisenc->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
 
+  if (vorbisenc->next_discont) {
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    vorbisenc->next_discont = FALSE;
+  }
+
   GST_LOG_OBJECT (vorbisenc, "encoded buffer of %d bytes",
       GST_BUFFER_SIZE (outbuf));
   return outbuf;
@@ -932,6 +937,8 @@ gst_vorbis_enc_push_buffer (GstVorbisEnc * vorbisenc, GstBuffer * buffer)
 {
   vorbisenc->bytes_out += GST_BUFFER_SIZE (buffer);
 
+  GST_DEBUG_OBJECT (vorbisenc, "Pushing buffer with GP %lld",
+      GST_BUFFER_OFFSET_END (buffer));
   return gst_pad_push (vorbisenc->srcpad, buffer);
 }
 
@@ -1027,6 +1034,33 @@ gst_vorbis_enc_sink_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+static gboolean
+gst_vorbis_enc_buffer_check_discontinuous (GstVorbisEnc * vorbisenc,
+    GstBuffer * buffer)
+{
+  gboolean ret = FALSE;
+
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+    GST_DEBUG_OBJECT (vorbisenc, "Discont set on incoming buffer");
+    ret = TRUE;
+  } else if (vorbisenc->expected_ts != GST_CLOCK_TIME_NONE &&
+      GST_BUFFER_TIMESTAMP (buffer) != vorbisenc->expected_ts) {
+    GST_DEBUG_OBJECT (vorbisenc, "Expected TS % " GST_TIME_FORMAT
+        ", buffer TS % " GST_TIME_FORMAT,
+        GST_TIME_ARGS (vorbisenc->expected_ts),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+    ret = TRUE;
+  }
+
+  if (vorbisenc->expected_ts != GST_CLOCK_TIME_NONE) {
+    vorbisenc->expected_ts = GST_BUFFER_TIMESTAMP (buffer) +
+        GST_BUFFER_DURATION (buffer);
+  } else
+    vorbisenc->expected_ts = GST_CLOCK_TIME_NONE;
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -1037,6 +1071,7 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
   gulong i, j;
   float **vorbis_buffer;
   GstBuffer *buf1, *buf2, *buf3;
+  gboolean first = FALSE;
 
   vorbisenc = GST_VORBISENC (GST_PAD_PARENT (pad));
 
@@ -1099,6 +1134,7 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
     /* now adjust starting granulepos accordingly if the buffer's timestamp is
        nonzero */
     vorbisenc->next_ts = GST_BUFFER_TIMESTAMP (buffer);
+    vorbisenc->expected_ts = GST_BUFFER_TIMESTAMP (buffer);
     vorbisenc->granulepos_offset = gst_util_uint64_scale
         (GST_BUFFER_TIMESTAMP (buffer), vorbisenc->frequency, GST_SECOND);
     vorbisenc->subgranule_offset = 0;
@@ -1106,6 +1142,41 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
         vorbisenc->next_ts - granulepos_to_timestamp_offset (vorbisenc, 0);
 
     vorbisenc->header_sent = TRUE;
+    first = TRUE;
+  }
+
+  if (vorbisenc->expected_ts != GST_CLOCK_TIME_NONE &&
+      GST_BUFFER_TIMESTAMP (buffer) < vorbisenc->expected_ts) {
+    GST_WARNING_OBJECT (vorbisenc, "Buffer is older than previous "
+        "timestamp + duration, cannot handle. Dropping buffer.");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
+
+  if (gst_vorbis_enc_buffer_check_discontinuous (vorbisenc, buffer) && !first) {
+    GST_WARNING_OBJECT (vorbisenc, "Buffer is discontinuous, flushing encoder "
+        "and restarting (Discont from %" GST_TIME_FORMAT
+        " to %" GST_TIME_FORMAT ")", GST_TIME_ARGS (vorbisenc->next_ts),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+    /* Re-initialise encoder (there's unfortunately no API to flush it) */
+    if ((ret = gst_vorbis_enc_clear (vorbisenc)) != GST_FLOW_OK)
+      return ret;
+    if (!gst_vorbis_enc_setup (vorbisenc))
+      return GST_FLOW_ERROR;    /* Should be impossible, we can only get here if
+                                   we successfully initialised earlier */
+
+    /* Now, set our granulepos offset appropriately. */
+    vorbisenc->next_ts = GST_BUFFER_TIMESTAMP (buffer);
+    /* We need to round to the nearest whole number of samples, not just do
+     * a truncating division here */
+    vorbisenc->granulepos_offset = gst_util_uint64_scale
+        (GST_BUFFER_TIMESTAMP (buffer) + GST_SECOND / vorbisenc->frequency / 2
+        - vorbisenc->subgranule_offset, vorbisenc->frequency, GST_SECOND);
+
+    vorbisenc->header_sent = TRUE;
+
+    /* And our next output buffer must have DISCONT set on it */
+    vorbisenc->next_discont = TRUE;
   }
 
   /* data to encode */
@@ -1304,6 +1375,7 @@ gst_vorbis_enc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       vorbisenc->setup = FALSE;
+      vorbisenc->next_discont = FALSE;
       vorbisenc->header_sent = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:

@@ -1,3 +1,15 @@
+2006-07-28  Michael Smith  <msmith@fluendo.com>
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_generate_sink_caps),
+	(gst_vorbis_enc_sink_getcaps), (gst_vorbis_enc_buffer_from_packet),
+	(gst_vorbis_enc_push_buffer),
+	(gst_vorbis_enc_buffer_check_discontinuous),
+	(gst_vorbis_enc_chain), (gst_vorbis_enc_change_state):
+	* ext/vorbis/vorbisenc.h:
+	  Handle discontinuities in the input vorbis stream correctly,
+	  so that the output is properly timestamped (and has good granulepos
+	  values). Needs some oggmux fixes too.
+
 2006-07-27  Wim Taymans  <wim@fluendo.com>
 
 	patch by: Kai Vehmanen <kv2004 eca cx>
