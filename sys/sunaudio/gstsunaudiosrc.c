@@ -243,7 +243,7 @@ gst_sunaudiosrc_open (GstAudioSrc * asrc)
   GstSunAudioSrc *sunaudiosrc = GST_SUNAUDIO_SRC (asrc);
   int fd, ret;
 
-  fd = open (sunaudiosrc->device, O_RDWR);
+  fd = open (sunaudiosrc->device, O_RDWR | O_NONBLOCK);
 
   if (fd == -1) {
     GST_ELEMENT_ERROR (sunaudiosrc, RESOURCE, OPEN_READ, (NULL),

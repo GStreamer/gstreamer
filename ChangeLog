@@ -1,3 +1,10 @@
+2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Brian Cameron <brian dot cameron at sun com>
+
+	* sys/sunaudio/gstsunaudiosrc.c: (gst_sunaudiosrc_open):
+	  Open source with O_NONBLOCK (#349015).
+
 2006-07-28  Stefan Kost,,,  <ensonic@users.sf.net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_index),
