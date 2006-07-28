@@ -56,7 +56,8 @@ run_pipeline (GstElement * pipe, const gchar * descr,
   bus = gst_element_get_bus (pipe);
   g_assert (bus);
 
-  ret = gst_element_set_state (pipe, GST_STATE_PLAYING);
+  fail_if (gst_element_set_state (pipe, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE, "Could not set pipeline %s to playing", descr);
   ret = gst_element_get_state (pipe, NULL, NULL, GST_CLOCK_TIME_NONE);
   if (ret != GST_STATE_CHANGE_SUCCESS) {
     g_critical ("Couldn't set pipeline to PLAYING");
@@ -89,22 +90,34 @@ run_pipeline (GstElement * pipe, const gchar * descr,
   }
 
 done:
-  gst_element_set_state (pipe, GST_STATE_NULL);
+  fail_if (gst_element_set_state (pipe, GST_STATE_NULL) ==
+      GST_STATE_CHANGE_FAILURE, "Could not set pipeline %s to NULL", descr);
+  gst_element_get_state (pipe, NULL, NULL, GST_CLOCK_TIME_NONE);
   gst_object_unref (pipe);
+
+  gst_bus_set_flushing (bus, TRUE);
+  gst_object_unref (bus);
 }
 
 GST_START_TEST (test_element_negotiation)
 {
   gchar *s;
 
-  /* see http://bugzilla.gnome.org/show_bug.cgi?id=315126 */
-  s = "fakesrc ! audio/x-raw-int,width=16,depth=16,rate=22050,channels=1 ! audioconvert ! audio/x-raw-int,width=16,depth=16,rate=22050,channels=1 ! fakesink";
+  /* Ensures that filtering buffers with unknown caps down to fixed-caps 
+   * will apply those caps to the buffers.
+   * see http://bugzilla.gnome.org/show_bug.cgi?id=315126 */
+  s = "fakesrc num-buffers=2 ! "
+      "audio/x-raw-int,width=16,depth=16,rate=22050,channels=1,"
+      "signed=(boolean)true,endianness=1234 ! "
+      "audioconvert ! audio/x-raw-int,width=16,depth=16,rate=22050,channels=1 "
+      "! fakesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
 
 #ifdef HAVE_LIBVISUAL
-  s = "audiotestsrc ! tee name=t ! alsasink t. ! audioconvert ! libvisual_lv_scope ! ffmpegcolorspace ! xvimagesink";
+  s = "audiotestsrc num-buffers=30 ! tee name=t ! alsasink t. ! audioconvert ! "
+      "libvisual_lv_scope ! ffmpegcolorspace ! xvimagesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
@@ -114,20 +127,22 @@ GST_START_TEST (test_element_negotiation)
 GST_END_TEST
 GST_START_TEST (test_basetransform_based)
 {
-  /* Each of these tests is to check whether various basetransform based elements can
-   * select output caps when not allowed to do passthrough and going to a generic sink
-   * such as fakesink or filesink */
+  /* Each of these tests is to check whether various basetransform based 
+   * elements can select output caps when not allowed to do passthrough 
+   * and going to a generic sink such as fakesink or filesink */
   const gchar *s;
 
   /* Check that videoscale can pick a height given only a width */
-  s = "videotestsrc ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! " "videoscale ! video/x-raw-yuv,width=640 ! fakesink";
+  s = "videotestsrc num-buffers=2 ! "
+      "video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! "
+      "videoscale ! video/x-raw-yuv,width=640 ! fakesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
 
   /* Test that ffmpegcolorspace can pick an output format that isn't
    * passthrough without completely specified output caps */
-  s = "videotestsrc ! "
+  s = "videotestsrc num-buffers=2 ! "
       "video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! "
       "ffmpegcolorspace ! video/x-raw-rgb ! fakesink";
   run_pipeline (setup_pipeline (s), s,
@@ -136,15 +151,16 @@ GST_START_TEST (test_basetransform_based)
 
   /* Check that audioresample can pick a samplerate to use from a
    * range that doesn't include the input */
-  s = "audiotestsrc ! audio/x-raw-int,width=16,depth=16,rate=8000 ! "
+  s = "audiotestsrc num-buffers=2 ! "
+      "audio/x-raw-int,width=16,depth=16,rate=8000 ! "
       "audioresample ! audio/x-raw-int,rate=[16000,48000] ! fakesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
 
   /* Check that audioconvert can pick a depth to use, given a width */
-  s = "audiotestsrc ! audio/x-raw-int,width=16,depth=16 ! audioconvert ! "
-      "audio/x-raw-int,width=32 ! fakesink";
+  s = "audiotestsrc num-buffers=30 ! audio/x-raw-int,width=16,depth=16 ! "
+      "audioconvert ! " "audio/x-raw-int,width=32 ! fakesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
@@ -157,12 +173,12 @@ GST_END_TEST
   Suite *s = suite_create ("Pipelines");
   TCase *tc_chain = tcase_create ("linear");
 
-  /* time out after 20s, not the default 3 */
-  tcase_set_timeout (tc_chain, 20);
+  /* time out after 60s, not the default 3 */
+  tcase_set_timeout (tc_chain, 60);
 
   suite_add_tcase (s, tc_chain);
 #ifndef GST_DISABLE_PARSE
-//  tcase_add_test (tc_chain, test_element_negotiation);
+  tcase_add_test (tc_chain, test_element_negotiation);
   tcase_add_test (tc_chain, test_basetransform_based);
 #endif
   return s;

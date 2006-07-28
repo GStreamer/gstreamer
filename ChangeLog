@@ -1,3 +1,20 @@
+2006-07-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/audioresample/gstaudioresample.c: (audioresample_stop),
+	(audioresample_set_caps):
+	Don't leak references to the incoming caps. Clean them up when
+	stopping.
+
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_class_init),
+	(gst_video_scale_finalize):
+	Don't leak our temporary pixel buffer.
+
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/simple-launch-lines.c: (run_pipeline),
+	(GST_START_TEST), (simple_launch_lines_suite):
+
+	Fix leaks and re-enable the test for valgrind checking.
+
 2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sjoerd Simons  <sjoerd at luon net>

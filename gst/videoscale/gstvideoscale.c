@@ -187,6 +187,7 @@ gst_video_scale_sink_template_factory (void)
 static void gst_video_scale_base_init (gpointer g_class);
 static void gst_video_scale_class_init (GstVideoScaleClass * klass);
 static void gst_video_scale_init (GstVideoScale * videoscale);
+static void gst_video_scale_finalize (GstVideoScale * videoscale);
 static gboolean gst_video_scale_src_event (GstBaseTransform * trans,
     GstEvent * event);
 
@@ -257,6 +258,7 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
   gobject_class = (GObjectClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
 
+  gobject_class->finalize = (GObjectFinalizeFunc) gst_video_scale_finalize;
   gobject_class->set_property = gst_video_scale_set_property;
   gobject_class->get_property = gst_video_scale_get_property;
 
@@ -286,6 +288,14 @@ gst_video_scale_init (GstVideoScale * videoscale)
   videoscale->method = DEFAULT_PROP_METHOD;
 }
 
+static void
+gst_video_scale_finalize (GstVideoScale * videoscale)
+{
+  if (videoscale->tmp_buf)
+    g_free (videoscale->tmp_buf);
+
+  G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (videoscale));
+}
 
 static void
 gst_video_scale_set_property (GObject * object, guint prop_id,
