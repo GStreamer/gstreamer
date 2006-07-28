@@ -320,7 +320,7 @@ gst_xvid_image_fill (xvid_image_t * im, void *ptr, gint csp,
 
       im->plane[2] = im->plane[1] + (stride * h2);
       im->stride[2] = stride;
-      size += 2 * (stride * height);
+      size += 2 * (stride * h2);
       break;
     case XVID_CSP_RGB555:
     case XVID_CSP_RGB565:

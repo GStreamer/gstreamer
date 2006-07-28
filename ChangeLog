@@ -1,3 +1,8 @@
+2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/xvid/gstxvid.c: (gst_xvid_image_fill):
+	  Fix size calculation for I420/YV12. Fixes #348976.
+
 2006-07-27  Wim Taymans  <wim@fluendo.com>
 
 	* ext/gsm/gstgsmdec.c: (gst_gsmdec_init),
