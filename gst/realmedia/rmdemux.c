@@ -47,7 +47,6 @@ struct _GstRMDemuxStream
   guint32 format;
 
   int id;
-  GstCaps *caps;
   GstPad *pad;
   GstFlowReturn last_flow;
   int timescale;
@@ -150,9 +149,8 @@ static GstFlowReturn gst_rmdemux_parse_packet (GstRMDemux * rmdemux,
     const void *data, guint16 version, guint16 length);
 static void gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux, const void *data,
     int length);
-
-static GstCaps *gst_rmdemux_src_getcaps (GstPad * pad);
-
+static void gst_rmdemux_stream_clear_cached_subpackets (GstRMDemux * rmdemux,
+    GstRMDemuxStream * stream);
 static GstRMDemuxStream *gst_rmdemux_get_stream_by_id (GstRMDemux * rmdemux,
     int id);
 
@@ -646,6 +644,34 @@ gst_rmdemux_src_query_types (GstPad * pad)
   return query_types;
 }
 
+static void
+gst_rmdemux_reset (GstRMDemux * rmdemux)
+{
+  guint n;
+
+  GST_OBJECT_LOCK (rmdemux);
+  rmdemux->running = FALSE;
+  GST_OBJECT_UNLOCK (rmdemux);
+
+  for (n = 0; n < rmdemux->n_streams; ++n) {
+    gst_rmdemux_stream_clear_cached_subpackets (rmdemux, rmdemux->streams[n]);
+    gst_element_remove_pad (GST_ELEMENT (rmdemux), rmdemux->streams[n]->pad);
+    if (rmdemux->streams[n]->subpackets)
+      g_ptr_array_free (rmdemux->streams[n]->subpackets, TRUE);
+    g_free (rmdemux->streams[n]);
+    rmdemux->streams[n] = NULL;
+  }
+  rmdemux->n_streams = 0;
+  rmdemux->n_audio_streams = 0;
+  rmdemux->n_video_streams = 0;
+
+  gst_adapter_clear (rmdemux->adapter);
+  rmdemux->state = RMDEMUX_STATE_HEADER;
+  rmdemux->have_pads = FALSE;
+
+  gst_segment_init (&rmdemux->segment, GST_FORMAT_UNDEFINED);
+}
+
 static GstStateChangeReturn
 gst_rmdemux_change_state (GstElement * element, GstStateChange transition)
 {
@@ -672,12 +698,10 @@ gst_rmdemux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_adapter_clear (rmdemux->adapter);
-      GST_OBJECT_LOCK (rmdemux);
-      rmdemux->running = FALSE;
-      GST_OBJECT_UNLOCK (rmdemux);
+    case GST_STATE_CHANGE_PAUSED_TO_READY:{
+      gst_rmdemux_reset (rmdemux);
       break;
+    }
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
@@ -685,24 +709,6 @@ gst_rmdemux_change_state (GstElement * element, GstStateChange transition)
   }
 
   return res;
-}
-
-static GstCaps *
-gst_rmdemux_src_getcaps (GstPad * pad)
-{
-  guint n;
-  GstRMDemux *rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
-
-  GST_DEBUG_OBJECT (rmdemux, "getcaps");
-
-  for (n = 0; n < rmdemux->n_streams; n++) {
-    if (rmdemux->streams[n] != NULL && rmdemux->streams[n]->pad == pad) {
-      return gst_caps_copy (rmdemux->streams[n]->caps);
-    }
-  }
-
-  /* Base case */
-  return gst_caps_new_empty ();
 }
 
 /* this function is called when the pad is activated and should start
@@ -1202,6 +1208,7 @@ gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event)
 static void
 gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 {
+  GstCaps *stream_caps = NULL;
   const gchar *codec_tag = NULL;
   const gchar *codec_name = NULL;
   int version = 0;
@@ -1237,7 +1244,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     }
 
     if (version) {
-      stream->caps =
+      stream_caps =
           gst_caps_new_simple ("video/x-pn-realvideo", "rmversion", G_TYPE_INT,
           (int) version,
           "format", G_TYPE_INT,
@@ -1245,8 +1252,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
           "subformat", G_TYPE_INT, (int) stream->subformat, NULL);
     }
 
-    if (stream->caps) {
-      gst_caps_set_simple (stream->caps,
+    if (stream_caps) {
+      gst_caps_set_simple (stream_caps,
           "width", G_TYPE_INT, stream->width,
           "height", G_TYPE_INT, stream->height,
           "framerate", GST_TYPE_FRACTION, stream->framerate_numerator,
@@ -1279,7 +1286,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         /* DolbyNet (Dolby AC3, low bitrate) */
       case GST_RM_AUD_DNET:
         codec_name = "AC-3 audio";
-        stream->caps =
+        stream_caps =
             gst_caps_new_simple ("audio/x-ac3", "rate", G_TYPE_INT,
             (int) stream->rate, NULL);
         stream->needs_descrambling = TRUE;
@@ -1296,7 +1303,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         /* MPEG-4 based */
       case GST_RM_AUD_RACP:
         /* FIXME: codec_name = */
-        stream->caps =
+        stream_caps =
             gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT,
             (int) 4, NULL);
         break;
@@ -1304,7 +1311,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         /* Sony ATRAC3 */
       case GST_RM_AUD_ATRC:
         codec_name = "Sony ATRAC3";
-        stream->caps = gst_caps_new_simple ("audio/x-vnd.sony.atrac3", NULL);
+        stream_caps = gst_caps_new_simple ("audio/x-vnd.sony.atrac3", NULL);
         break;
 
         /* RealAudio G2 audio */
@@ -1320,13 +1327,13 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
       case GST_RM_AUD_RALF:
         /* FIXME: codec_name = */
         GST_DEBUG_OBJECT (rmdemux, "RALF");
-        stream->caps = gst_caps_new_simple ("audio/x-ralf-mpeg4-generic", NULL);
+        stream_caps = gst_caps_new_simple ("audio/x-ralf-mpeg4-generic", NULL);
         break;
 
         /* Sipro/ACELP.NET Voice Codec (MIME unknown) */
       case GST_RM_AUD_SIPR:
         /* FIXME: codec_name = */
-        stream->caps = gst_caps_new_simple ("audio/x-sipro", NULL);
+        stream_caps = gst_caps_new_simple ("audio/x-sipro", NULL);
         break;
 
       default:
@@ -1337,13 +1344,13 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     }
 
     if (version) {
-      stream->caps =
+      stream_caps =
           gst_caps_new_simple ("audio/x-pn-realaudio", "raversion", G_TYPE_INT,
           (int) version, NULL);
     }
 
-    if (stream->caps) {
-      gst_caps_set_simple (stream->caps,
+    if (stream_caps) {
+      gst_caps_set_simple (stream_caps,
           "flavor", G_TYPE_INT, (int) stream->flavor,
           "rate", G_TYPE_INT, (int) stream->rate,
           "channels", G_TYPE_INT, (int) stream->n_channels,
@@ -1365,7 +1372,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   rmdemux->n_streams++;
   GST_LOG_OBJECT (rmdemux, "n_streams is now %d", rmdemux->n_streams);
 
-  if (stream->pad && stream->caps) {
+  if (stream->pad && stream_caps) {
 
     GST_LOG_OBJECT (rmdemux, "%d bytes of extra data for stream %s",
         stream->extra_data_size, GST_PAD_NAME (stream->pad));
@@ -1378,17 +1385,15 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
       memcpy (GST_BUFFER_DATA (buffer), stream->extra_data,
           stream->extra_data_size);
 
-      gst_caps_set_simple (stream->caps, "codec_data", GST_TYPE_BUFFER,
+      gst_caps_set_simple (stream_caps, "codec_data", GST_TYPE_BUFFER,
           buffer, NULL);
 
       gst_buffer_unref (buffer);
     }
 
-    gst_pad_set_caps (stream->pad, stream->caps);
-    gst_caps_unref (stream->caps);
+    gst_pad_use_fixed_caps (stream->pad);
 
-    gst_pad_set_getcaps_function (stream->pad,
-        GST_DEBUG_FUNCPTR (gst_rmdemux_src_getcaps));
+    gst_pad_set_caps (stream->pad, stream_caps);
     gst_pad_set_event_function (stream->pad,
         GST_DEBUG_FUNCPTR (gst_rmdemux_src_event));
     gst_pad_set_query_type_function (stream->pad,
@@ -1397,7 +1402,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         GST_DEBUG_FUNCPTR (gst_rmdemux_src_query));
 
     GST_DEBUG_OBJECT (rmdemux, "adding pad %s with caps %" GST_PTR_FORMAT
-        ", stream_id=%d", GST_PAD_NAME (stream->pad), stream->caps, stream->id);
+        ", stream_id=%d", GST_PAD_NAME (stream->pad), stream_caps, stream->id);
     gst_element_add_pad (GST_ELEMENT (rmdemux), stream->pad);
 
     gst_pad_push_event (stream->pad,
@@ -1414,7 +1419,9 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   }
 
 beach:
-  return;
+
+  if (stream_caps)
+    gst_caps_unref (stream_caps);
 }
 
 G_GNUC_UNUSED static void
@@ -1770,6 +1777,7 @@ gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const void *data, int length)
       if (str != NULL && *str != '\0') {
         gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, gst_tags[i], str, NULL);
       }
+      g_free (str);
     }
   }
 
@@ -1843,7 +1851,8 @@ gst_rmdemux_descramble_cook_audio (GstRMDemux * rmdemux,
       leaf_size, height);
 
   ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
-      GST_BUFFER_OFFSET_NONE, height * packet_size, stream->caps, &outbuf);
+      GST_BUFFER_OFFSET_NONE, height * packet_size,
+      GST_PAD_CAPS (stream->pad), &outbuf);
 
   if (ret != GST_FLOW_OK)
     goto done;
@@ -1903,7 +1912,7 @@ gst_rmdemux_handle_scrambled_packet (GstRMDemux * rmdemux,
   GstFlowReturn ret;
 
   if (stream->subpackets == NULL)
-    stream->subpackets = g_ptr_array_new ();
+    stream->subpackets = g_ptr_array_sized_new (stream->subpackets_needed);
 
   GST_LOG ("Got subpacket %u/%u, len=%u, key=%d", stream->subpackets->len + 1,
       stream->subpackets_needed, GST_BUFFER_SIZE (buf), keyframe);
@@ -1985,7 +1994,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
   }
 
   ret = gst_pad_alloc_buffer_and_set_caps (stream->pad,
-      GST_BUFFER_OFFSET_NONE, packet_size, stream->caps, &buffer);
+      GST_BUFFER_OFFSET_NONE, packet_size, GST_PAD_CAPS (stream->pad), &buffer);
 
   cret = gst_rmdemux_combine_flows (rmdemux, stream, ret);
   if (ret != GST_FLOW_OK)

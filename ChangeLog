@@ -1,3 +1,12 @@
+2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_reset),
+	(gst_rmdemux_change_state), (gst_rmdemux_add_stream),
+	(gst_rmdemux_parse_cont), (gst_rmdemux_descramble_cook_audio),
+	(gst_rmdemux_handle_scrambled_packet), (gst_rmdemux_parse_packet):
+	  Don't leak streams, strings or caps. Get rid of unnecessary
+	  getcaps() function.
+
 2006-07-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_class_init),
