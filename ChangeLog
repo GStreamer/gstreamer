@@ -1,3 +1,23 @@
+2006-07-28  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_base_init),
+	(gst_multipart_demux_class_init), (gst_multipart_demux_init),
+	(gst_multipart_demux_finalize), (get_line_end),
+	(multipart_parse_header), (multipart_find_boundary),
+	(gst_multipart_demux_chain), (gst_multipart_demux_change_state),
+	(gst_multipart_set_property), (gst_multipart_get_property):
+	Uses GstAdapter instead of own buffering.
+	Actually parses the mime-type correctly (In tests the mime-type was
+	always "" with the old version).
+	Uses the Content-length header if available to speed up things.
+	Reliably autoscans the boundary name by default.
+	Fixes #349068.
+
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_collected):
+	Don't start the stream with a \n.
+
 2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Brian Cameron <brian dot cameron at sun com>

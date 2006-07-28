@@ -445,6 +445,8 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   size_t newlen, headerlen;
   GstBuffer *newbuf = NULL;
   GstStructure *structure = NULL;
+  guint8 *data;
+  guint datasize;
 
   GST_DEBUG_OBJECT (mux, "all pads are collected");
 
@@ -483,11 +485,14 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
     goto beach;
   }
 
-  header = g_strdup_printf ("\n--%s\nContent-type: %s\n\n",
+  header = g_strdup_printf ("--%s\nContent-type: %s\n\n",
       mux->boundary, gst_structure_get_name (structure));
 
+  datasize = GST_BUFFER_SIZE (best->buffer);
+
   headerlen = strlen (header);
-  newlen = headerlen + GST_BUFFER_SIZE (best->buffer);
+  /* header, data, trailing \n */
+  newlen = headerlen + datasize + 1;
 
   ret =
       gst_pad_alloc_buffer_and_set_caps (mux->srcpad, GST_BUFFER_OFFSET_NONE,
@@ -498,9 +503,13 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
     goto beach;
   }
 
-  memcpy (GST_BUFFER_DATA (newbuf), header, headerlen);
-  memcpy (GST_BUFFER_DATA (newbuf) + headerlen,
-      GST_BUFFER_DATA (best->buffer), GST_BUFFER_SIZE (best->buffer));
+  data = GST_BUFFER_DATA (newbuf);
+
+  memcpy (data, header, headerlen);
+  memcpy (data + headerlen, GST_BUFFER_DATA (best->buffer), datasize);
+
+  /* trailing \n */
+  data[headerlen + datasize] = '\n';
 
   gst_buffer_stamp (newbuf, best->buffer);
   GST_BUFFER_OFFSET (newbuf) = mux->offset;

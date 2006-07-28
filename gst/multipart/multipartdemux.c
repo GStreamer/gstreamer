@@ -1,4 +1,5 @@
 /* GStreamer
+ * Copyright (C) 2006 Sjoerd Simons <sjoerd@luon.net>
  * Copyright (C) 2004 Wim Taymans <wim@fluendo.com>
  *
  * gstmultipartdemux.c: multipart stream demuxer
@@ -46,8 +47,8 @@
  * </para>
  * <para>
  * the content in multipart files is separated with a boundary string that can be 
- * configured specifically with the "boundary" property or can be autodetected by
- * setting the "autoscan" property to TRUE.
+ * configured specifically with the "boundary" property otherwise it will be 
+ * autodetected. 
  * </para>
  * </refsect2>
  */
@@ -57,6 +58,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 #include <string.h>
 
@@ -69,7 +71,9 @@
 typedef struct _GstMultipartDemux GstMultipartDemux;
 typedef struct _GstMultipartDemuxClass GstMultipartDemuxClass;
 
-#define MAX_LINE_LEN 500
+#define MULTIPART_NEED_MORE_DATA -1
+#define MULTIPART_DATA_ERROR     -2
+#define MULTIPART_DATA_EOS       -3
 
 /* all information needed for one multipart stream */
 typedef struct
@@ -77,11 +81,6 @@ typedef struct
   GstPad *pad;                  /* reference for this pad is held by element we belong to */
 
   gchar *mime;
-
-  guint64 offset;               /* end offset of last buffer */
-  guint64 known_offset;         /* last known offset */
-
-  guint flags;
 }
 GstMultipartPad;
 
@@ -100,17 +99,20 @@ struct _GstMultipartDemux
   GSList *srcpads;
   gint numpads;
 
-  gchar *parsing_mime;
-  gchar *buffer;
-  gint maxlen;
-  gint bufsize;
-  gint scanpos;
-  gint lastpos;
+  GstAdapter *adapter;
 
-  gchar *prefix;
-  gint prefixLen;
-  gboolean first_frame;
+  /* Header information of the current frame */
+  gboolean header_completed;
+  gchar *boundary;
+  guint boundary_len;
+  gchar *mime_type;
+  gint content_length;
+
+  /* deprecated, unused */
   gboolean autoscan;
+
+  /* Index inside the current data when manually looking for the boundary */
+  gint scanpos;
 };
 
 struct _GstMultipartDemuxClass
@@ -126,7 +128,7 @@ static const GstElementDetails gst_multipart_demux_details =
 GST_ELEMENT_DETAILS ("Multipart demuxer",
     "Codec/Demuxer",
     "demux multipart streams",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim@fluendo.com>, Sjoerd Simons <sjoerd@luon.net>");
 
 
 /* signals and args */
@@ -136,14 +138,14 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_BOUNDARY	"ThisRandomString"
-#define DEFAULT_AUTOSCAN 	FALSE
+#define DEFAULT_AUTOSCAN	FALSE
+#define DEFAULT_BOUNDARY	NULL
+
 enum
 {
   PROP_0,
-  PROP_BOUNDARY,
-  PROP_AUTOSCAN
-      /* FILL ME */
+  PROP_AUTOSCAN,
+  PROP_BOUNDARY
 };
 
 static GstStaticPadTemplate multipart_demux_src_template_factory =
@@ -172,7 +174,6 @@ static void gst_multipart_get_property (GObject * object, guint prop_id,
 
 static void gst_multipart_demux_finalize (GObject * object);
 
-
 GST_BOILERPLATE (GstMultipartDemux, gst_multipart_demux, GstElement,
     GST_TYPE_ELEMENT);
 
@@ -180,37 +181,35 @@ static void
 gst_multipart_demux_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
-
-  gst_element_class_set_details (element_class, &gst_multipart_demux_details);
-  gobject_class->set_property = gst_multipart_set_property;
-  gobject_class->get_property = gst_multipart_get_property;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&multipart_demux_sink_template_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&multipart_demux_src_template_factory));
-
-  g_object_class_install_property (gobject_class, PROP_BOUNDARY,
-      g_param_spec_string ("boundary", "Boundary",
-          "The boundary string separating data", DEFAULT_BOUNDARY,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
-  g_object_class_install_property (gobject_class, PROP_AUTOSCAN,
-      g_param_spec_boolean ("autoscan", "autoscan",
-          "Try to autofind the prefix", DEFAULT_AUTOSCAN,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-
+  gst_element_class_set_details (element_class, &gst_multipart_demux_details);
 }
 
 static void
 gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->finalize = gst_multipart_demux_finalize;
+  gobject_class->set_property = gst_multipart_set_property;
+  gobject_class->get_property = gst_multipart_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_BOUNDARY,
+      g_param_spec_string ("boundary", "Boundary",
+          "The boundary string separating data, automatic if NULL",
+          DEFAULT_BOUNDARY, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  g_object_class_install_property (gobject_class, PROP_AUTOSCAN,
+      g_param_spec_boolean ("autoscan", "autoscan",
+          "Try to autofind the prefix (deprecated unused, see boundary)",
+          DEFAULT_AUTOSCAN, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_multipart_demux_change_state;
-  gobject_class->finalize = gst_multipart_demux_finalize;
 }
 
 static void
@@ -225,15 +224,24 @@ gst_multipart_demux_init (GstMultipartDemux * multipart,
   gst_pad_set_chain_function (multipart->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multipart_demux_chain));
 
-  multipart->maxlen = 4096;
+  multipart->adapter = gst_adapter_new ();
+  multipart->boundary = DEFAULT_BOUNDARY;
+  multipart->mime_type = NULL;
+  multipart->content_length = -1;
+  multipart->header_completed = FALSE;
+  multipart->scanpos = 0;
+  multipart->autoscan = DEFAULT_AUTOSCAN;
 }
+
 
 static void
 gst_multipart_demux_finalize (GObject * object)
 {
   GstMultipartDemux *demux = GST_MULTIPART_DEMUX (object);
 
-  g_free (demux->prefix);
+  g_object_unref (demux->adapter);
+  g_free (demux->boundary);
+  g_free (demux->mime_type);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -292,162 +300,226 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
   }
 }
 
+static gboolean
+get_line_end (const guint8 * data, const guint8 * dataend, guint8 ** end,
+    guint8 ** next)
+{
+  guint8 *x;
+  gboolean foundr = FALSE;
+
+  for (x = (guint8 *) data; x < dataend; x++) {
+    if (*x == '\r') {
+      foundr = TRUE;
+    } else if (*x == '\n') {
+      *end = x - (foundr ? 1 : 0);
+      *next = x + 1;
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+static gint
+multipart_parse_header (GstMultipartDemux * multipart)
+{
+  const guint8 *data;
+  const guint8 *dataend;
+  gchar *boundary;
+  int boundary_len;
+  int datalen;
+  guint8 *pos;
+  guint8 *end, *next;
+
+  datalen = gst_adapter_available (multipart->adapter);
+  data = gst_adapter_peek (multipart->adapter, datalen);
+  dataend = data + datalen;
+
+  /* First the boundary */
+  if (!get_line_end (data, dataend, &end, &next))
+    return MULTIPART_NEED_MORE_DATA;
+
+  /* Ignore the leading -- */
+  boundary_len = end - data - 2;
+  boundary = (gchar *) data + 2;
+  if (boundary_len < 1) {
+    GST_DEBUG_OBJECT (multipart, "No boundary available");
+    goto wrong_header;
+  }
+
+  if (G_UNLIKELY (multipart->boundary == NULL)) {
+    /* First time we see the boundary, copy it */
+    multipart->boundary = g_strndup (boundary, boundary_len);
+    multipart->boundary_len = boundary_len;
+  } else if (G_UNLIKELY (boundary_len != multipart->boundary_len)) {
+    /* Something odd is going on, either the boundary indicated EOS or it's
+     * invalid */
+    if (G_UNLIKELY (boundary_len == multipart->boundary_len + 2 &&
+            !strncmp (boundary, multipart->boundary, multipart->boundary_len) &&
+            !strncmp (boundary + multipart->boundary_len, "--", 2))) {
+      return MULTIPART_DATA_EOS;
+    }
+    GST_DEBUG_OBJECT (multipart,
+        "Boundary length doesn't match detected boundary (%d <> %d",
+        boundary_len, multipart->boundary_len);
+    goto wrong_header;
+  } else if (G_UNLIKELY (strncmp (boundary, multipart->boundary, boundary_len))) {
+    GST_DEBUG_OBJECT (multipart, "Boundary doesn't match previous boundary");
+    goto wrong_header;
+  }
+
+
+  pos = next;
+  while (get_line_end (pos, dataend, &end, &next)) {
+    guint len = end - pos;
+
+    if (len == 0) {
+      /* empty line, data starts behind us */
+      GST_DEBUG_OBJECT (multipart,
+          "Parsed the header - boundary: %s, mime-type: %s, content-length: %d",
+          multipart->boundary, multipart->mime_type, multipart->content_length);
+      return next - data;
+    }
+
+    if (len >= 14 && !g_ascii_strncasecmp ("content-type:", (gchar *) pos, 13)) {
+      g_free (multipart->mime_type);
+      multipart->mime_type = g_strndup ((gchar *) pos + 14, len - 14);
+    } else if (len >= 15 &&
+        !g_ascii_strncasecmp ("content-length:", (gchar *) pos, 15)) {
+      multipart->content_length =
+          g_ascii_strtoull ((gchar *) pos + 15, NULL, 10);
+    }
+    pos = next;
+  }
+  GST_DEBUG_OBJECT (multipart, "Need more data for the header");
+  return MULTIPART_NEED_MORE_DATA;
+
+wrong_header:
+  {
+    GST_ELEMENT_ERROR (multipart, STREAM, DEMUX, (NULL),
+        ("Boundary not found in the multipart header"));
+    return MULTIPART_DATA_ERROR;
+  }
+}
+
+static gint
+multipart_find_boundary (GstMultipartDemux * multipart, gint * datalen)
+{
+  /* Adaptor is positioned at the start of the data */
+  const guint8 *data, *pos;
+  const guint8 *dataend;
+  gint len;
+
+  if (multipart->content_length >= 0) {
+    /* fast path, known content length :) */
+    len = multipart->content_length;
+    if (gst_adapter_available (multipart->adapter) >= len + 2) {
+      *datalen = len;
+      data = gst_adapter_peek (multipart->adapter, len + 1);
+
+      /* If data[len] contains \r then assume a newline is \r\n */
+      if (data[len] == '\r')
+        len += 2;
+      else if (data[len] == '\n')
+        len += 1;
+      /* Don't check if boundary is actually there, but let the header parsing 
+       * bail out if it isn't */
+      return len;
+    } else {
+      /* need more data */
+      return MULTIPART_NEED_MORE_DATA;
+    }
+  }
+
+  len = gst_adapter_available (multipart->adapter);
+  if (len == 0)
+    return MULTIPART_NEED_MORE_DATA;
+  data = gst_adapter_peek (multipart->adapter, len);
+  dataend = data + len;
+
+  for (pos = data + multipart->scanpos;
+      pos <= dataend - multipart->boundary_len - 2; pos++) {
+    if (*pos == '-' && pos[1] == '-' &&
+        !strncmp ((gchar *) pos + 2,
+            multipart->boundary, multipart->boundary_len)) {
+      /* Found the boundary! Check if there was a newline before the boundary */
+      len = pos - data;
+      if (pos - 2 > data && pos[-2] == '\r')
+        len -= 2;
+      else if (pos - 1 > data && pos[-1] == '\n')
+        len -= 1;
+      *datalen = len;
+
+      multipart->scanpos = 0;
+      return pos - data;
+    }
+  }
+  multipart->scanpos = pos - data;
+  return MULTIPART_NEED_MORE_DATA;
+}
+
 static GstFlowReturn
 gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
 {
   GstMultipartDemux *multipart;
-  gint size, matchpos;
-  guchar *data;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstAdapter *adapter;
+  gint size = 1;
 
   multipart = GST_MULTIPART_DEMUX (gst_pad_get_parent (pad));
+  adapter = multipart->adapter;
 
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
-
-  /* first make sure our buffer is long enough */
-  if (multipart->bufsize + size > multipart->maxlen) {
-    gint newsize = (multipart->bufsize + size) * 2;
-
-    multipart->buffer = g_realloc (multipart->buffer, newsize);
-    multipart->maxlen = newsize;
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+    gst_adapter_clear (adapter);
   }
-  /* copy bytes into the buffer */
-  memcpy (multipart->buffer + multipart->bufsize, data, size);
-  multipart->bufsize += size;
+  gst_adapter_push (adapter, buf);
 
-  if (multipart->first_frame && multipart->autoscan) {
-    /* find the prefix if this is the first buffer */
-    /* the prefix is like --prefix\r\n */
-    size_t i, start;
+  while (gst_adapter_available (adapter) > 0) {
+    GstMultipartPad *srcpad;
+    GstBuffer *outbuf;
+    gboolean created;
+    gint datalen;
 
-    i = 0;
-    start = -1;
-
-    while ((i + 1) < multipart->bufsize) {
-
-      if (-1 == start) {
-        if ((multipart->buffer[i] == '-') && (multipart->buffer[i + 1] == '-')) {
-          start = i + 2;        /* discart -- */
-        }
+    if (G_UNLIKELY (!multipart->header_completed)) {
+      if ((size = multipart_parse_header (multipart)) < 0) {
+        goto nodata;
       } else {
-        /* look for \r\n or \n\n */
-        if ((multipart->buffer[i] == '\n') ||
-            ((multipart->buffer[i] == '\r') &&
-                (multipart->buffer[i + 1] == '\n'))) {
-
-          /* found first \r\n, the prefix is from 0 to i */
-
-          g_free (multipart->prefix);
-          multipart->prefix =
-              g_strndup (multipart->buffer + start, (i - start));
-          multipart->prefixLen = strlen (multipart->prefix);
-          GST_DEBUG_OBJECT (multipart,
-              "set prefix to [%s]\n", multipart->prefix);
-
-          multipart->first_frame = FALSE;
-          break;
-        }
+        gst_adapter_flush (adapter, size);
+        multipart->header_completed = TRUE;
       }
-
-      i++;
     }
-
-  }
-
-
-
-  /* find \n */
-  while (multipart->scanpos < multipart->bufsize) {
-    if (multipart->buffer[multipart->scanpos] == '\n') {
-      break;
+    if ((size = multipart_find_boundary (multipart, &datalen)) < 0) {
+      goto nodata;
     }
-    multipart->scanpos++;
-  }
+    srcpad =
+        gst_multipart_find_pad_by_mime (multipart,
+        multipart->mime_type, &created);
+    outbuf = gst_adapter_take_buffer (adapter, datalen);
+    gst_adapter_flush (adapter, size - datalen);
 
-  /* then scan for the boundary */
-  for (matchpos = 0;
-      multipart->scanpos + multipart->prefixLen + MAX_LINE_LEN - matchpos <
-      multipart->bufsize; multipart->scanpos++) {
-    if (multipart->buffer[multipart->scanpos] == multipart->prefix[matchpos]) {
+    /* Invalidate header info */
+    multipart->header_completed = FALSE;
+    multipart->content_length = -1;
 
-      matchpos++;
-      if (matchpos == multipart->prefixLen) {
-        int datalen;
-        int i, start;
-        gchar *mime_type;
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (srcpad->pad));
+    if (created) {
+      GstEvent *event;
 
-        multipart->scanpos++;
-
-        start = multipart->scanpos;
-        /* find \n */
-        for (i = 0; i < MAX_LINE_LEN; i++) {
-          if (multipart->buffer[multipart->scanpos] == '\n')
-            break;
-          multipart->scanpos++;
-          matchpos++;
-        }
-        mime_type =
-            g_strndup (multipart->buffer + start, multipart->scanpos - start);
-        multipart->scanpos += 2;
-        matchpos += 3;
-
-        datalen = multipart->scanpos - matchpos;
-        if (datalen > 0 && multipart->parsing_mime) {
-          GstBuffer *outbuf;
-          GstMultipartPad *srcpad;
-          gboolean created = FALSE;
-
-          srcpad =
-              gst_multipart_find_pad_by_mime (multipart,
-              multipart->parsing_mime, &created);
-          if (srcpad != NULL) {
-            ret =
-                gst_pad_alloc_buffer_and_set_caps (srcpad->pad,
-                GST_BUFFER_OFFSET_NONE, datalen, GST_PAD_CAPS (srcpad->pad),
-                &outbuf);
-            if (ret != GST_FLOW_OK) {
-              GST_WARNING_OBJECT (multipart, "failed allocating a %d bytes "
-                  "buffer", datalen);
-            } else {
-              memcpy (GST_BUFFER_DATA (outbuf), multipart->buffer, datalen);
-              if (created) {
-                GstEvent *event;
-
-                /* Push new segment */
-                event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-                    0, -1, 0);
-                if (GST_IS_EVENT (event)) {
-                  gst_pad_push_event (srcpad->pad, event);
-                }
-                GST_BUFFER_TIMESTAMP (outbuf) = 0;
-              } else {
-                GST_BUFFER_TIMESTAMP (outbuf) = -1;
-              }
-              ret = gst_pad_push (srcpad->pad, outbuf);
-            }
-          }
-        }
-        /* move rest downward */
-        multipart->bufsize -= multipart->scanpos;
-        memmove (multipart->buffer, multipart->buffer + multipart->scanpos,
-            multipart->bufsize);
-
-        g_free (multipart->parsing_mime);
-        multipart->parsing_mime = mime_type;
-        multipart->scanpos = 0;
-      }
+      /* Push new segment, first buffer has 0 timestamp */
+      event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1, 0);
+      gst_pad_push_event (srcpad->pad, event);
+      GST_BUFFER_TIMESTAMP (outbuf) = 0;
     } else {
-      matchpos = 0;
+      GST_BUFFER_TIMESTAMP (outbuf) = -1;
     }
-    if (ret != GST_FLOW_OK)
-      break;
+    gst_pad_push (srcpad->pad, outbuf);
   }
 
-  gst_buffer_unref (buf);
+nodata:
   gst_object_unref (multipart);
-
-  return ret;
+  if (G_UNLIKELY (size == MULTIPART_DATA_ERROR))
+    return GST_FLOW_ERROR;
+  if (G_UNLIKELY (size == MULTIPART_DATA_EOS))
+    return GST_FLOW_UNEXPECTED;
+  return GST_FLOW_OK;
 }
 
 static GstStateChangeReturn
@@ -459,23 +531,6 @@ gst_multipart_demux_change_state (GstElement * element,
 
   multipart = GST_MULTIPART_DEMUX (element);
 
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      multipart->buffer = g_malloc (multipart->maxlen);
-      multipart->first_frame = TRUE;
-      multipart->parsing_mime = NULL;
-      multipart->numpads = 0;
-      multipart->scanpos = 0;
-      multipart->lastpos = 0;
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
     return ret;
@@ -484,10 +539,12 @@ gst_multipart_demux_change_state (GstElement * element,
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      g_free (multipart->parsing_mime);
-      multipart->parsing_mime = NULL;
-      g_free (multipart->buffer);
-      multipart->buffer = NULL;
+      multipart->header_completed = FALSE;
+      g_free (multipart->boundary);
+      multipart->boundary = NULL;
+      g_free (multipart->mime_type);
+      multipart->mime_type = NULL;
+      gst_adapter_clear (multipart->adapter);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -509,9 +566,12 @@ gst_multipart_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_BOUNDARY:
-      g_free (filter->prefix);
-      filter->prefix = g_value_dup_string (value);
-      filter->prefixLen = strlen (filter->prefix);
+      /* Not really that usefull anymore as we can reliably autoscan */
+      g_free (filter->boundary);
+      filter->boundary = g_value_dup_string (value);
+      if (filter->boundary != NULL) {
+        filter->boundary_len = strlen (filter->boundary);
+      }
       break;
     case PROP_AUTOSCAN:
       filter->autoscan = g_value_get_boolean (value);
@@ -533,7 +593,7 @@ gst_multipart_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_BOUNDARY:
-      g_value_set_string (value, filter->prefix);
+      g_value_set_string (value, filter->boundary);
       break;
     case PROP_AUTOSCAN:
       g_value_set_boolean (value, filter->autoscan);
