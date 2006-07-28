@@ -22,7 +22,8 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/riff/riff-media.h>
+#include <gst/riff/riff-read.h>
+#include "gst/gst-i18n-plugin.h"
 
 #include "gstasfdemux.h"
 /* #include "gstasfmux.h" */
@@ -30,6 +31,11 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#ifdef ENABLE_NLS
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
+
   gst_riff_init ();
 
   if (!gst_element_register (plugin, "asfdemux", GST_RANK_SECONDARY,

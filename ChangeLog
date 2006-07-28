@@ -1,5 +1,15 @@
 2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/asfdemux/Makefile.am:
+	* gst/asfdemux/asfheaders.c:
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/gstasf.c: (plugin_init):
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_object):
+	  Error out when the stream is encrypted (rather than feeding
+	  garbage to the decoders). Fixes #349025.
+
+2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* Makefile.am:
 	* autogen.sh:
 	* configure.ac:

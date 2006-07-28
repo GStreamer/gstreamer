@@ -25,6 +25,7 @@
 
 #include <gst/gstutils.h>
 #include <gst/riff/riff-media.h>
+#include "gst/gst-i18n-plugin.h"
 #include <string.h>
 
 #include "gstasfdemux.h"
@@ -935,7 +936,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
   gst_asf_demux_setup_pad (demux, src_pad, caps, id, FALSE, tags);
 }
 
-static gboolean
+static void
 gst_asf_demux_add_video_stream (GstASFDemux * demux,
     asf_stream_video_format * video, guint16 id,
     guint8 ** p_data, guint64 * p_size)
@@ -1832,7 +1833,6 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
   GstFlowReturn ret;
   guint32 obj_id;
   guint64 obj_size, obj_data_size;
-  gint64 processed;
 
   if (!gst_asf_demux_get_object_header (demux, &obj_id, &obj_size, p_data,
           p_size)) {
@@ -1887,6 +1887,10 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     case ASF_OBJ_LANGUAGE_LIST:
       ret = gst_asf_demux_process_language_list (demux, p_data, p_size);
       break;
+    case ASF_OBJ_CONTENT_ENCRYPTION:
+    case ASF_OBJ_EXT_CONTENT_ENCRYPTION:
+    case ASF_OBJ_DIGITAL_SIGNATURE_OBJECT:
+      goto error_encrypted;
     case ASF_OBJ_CONCEAL_NONE:
     case ASF_OBJ_HEAD2:
     case ASF_OBJ_UNDEFINED:
@@ -1900,6 +1904,7 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     case ASF_OBJ_INDEX_PARAMETERS:
     case ASF_OBJ_ADVANCED_MUTUAL_EXCLUSION:
     case ASF_OBJ_STREAM_PRIORITIZATION:
+    case ASF_OBJ_SCRIPT_COMMAND:
     default:
       /* Unknown/unhandled object read. Just ignore
        * it, people don't like fatal errors much */
@@ -1918,6 +1923,14 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
   gst_asf_demux_pop_obj (demux);
 
   return ret;
+
+/* ERRORS */
+error_encrypted:
+  {
+    GST_ELEMENT_ERROR (demux, STREAM, DECODE,
+        (_("This file is encrypted and cannot be played.")), (NULL));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static void
