@@ -3,7 +3,7 @@
 	* examples/remuxer.py (RemuxBin._do_seek, Remuxer._bus_watch): Use
 	normal seeks instead of segment seeks so that EOS is handled
 	properly. Patch by James "Doc" Livingston <doclivingston at
-	gmail.com>.
+	gmail.com>. (#348416)
 
 	* examples/remuxer.py (RemuxBin._new_demuxed_pad): Increase the
 	buffer size for dealing with terribly muxed files.
