@@ -1,5 +1,19 @@
 2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/xvid/gstxviddec.c: (gst_xviddec_init), (gst_xviddec_reset),
+	(gst_xviddec_unset), (gst_xviddec_handle_sink_event),
+	(gst_xviddec_setup), (gst_xviddec_negotiate), (gst_xviddec_chain),
+	(gst_xviddec_flush_buffers), (gst_xviddec_src_getcaps),
+	(gst_xviddec_setcaps), (gst_xviddec_change_state):
+	* ext/xvid/gstxviddec.h:
+	  Clean-ups and code reflows. Pass return value from
+	  gst_pad_alloc_buffer() upstream among other things. Also check
+	  for NULL GValue before using GST_VALUE_TYPE macro (#348976).
+	  Mass rename of xviddec -> dec variable for better
+	  code readability.
+
+2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/xvid/gstxvid.c: (gst_xvid_image_fill):
 	  Fix size calculation for I420/YV12. Fixes #348976.
 

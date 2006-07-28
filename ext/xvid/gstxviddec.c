@@ -56,45 +56,22 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
             0xff0000) "; " GST_VIDEO_CAPS_RGB_15 "; " GST_VIDEO_CAPS_RGB_16)
     );
 
-
-/* XvidDec signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-      /* FILL ME */
-};
-
 GST_DEBUG_CATEGORY_STATIC (xviddec_debug);
 #define GST_CAT_DEFAULT xviddec_debug
 
 static void gst_xviddec_base_init (GstXvidDecClass * klass);
 static void gst_xviddec_class_init (GstXvidDecClass * klass);
-static void gst_xviddec_init (GstXvidDec * xviddec);
-static void gst_xviddec_reset (GstXvidDec * xviddec);
+static void gst_xviddec_init (GstXvidDec * dec);
+static void gst_xviddec_reset (GstXvidDec * dec);
 static gboolean gst_xviddec_handle_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_xviddec_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_xviddec_setcaps (GstPad * pad, GstCaps * caps);
-static void gst_xviddec_flush_buffers (GstXvidDec * xviddec, gboolean send);
-
-#if 0
-static GstPadLinkReturn
-gst_xviddec_src_link (GstPad * pad, const GstCaps * vscapslist);
-*/static GstCaps *gst_xviddec_src_getcaps (GstPad * pad);
-#endif
+static void gst_xviddec_flush_buffers (GstXvidDec * dec, gboolean send);
 static GstStateChangeReturn gst_xviddec_change_state (GstElement * element,
     GstStateChange transition);
 
 
 static GstElementClass *parent_class = NULL;
-
-/* static guint gst_xviddec_signals[LAST_SIGNAL] = { 0 }; */
-
 
 GType
 gst_xviddec_get_type (void)
@@ -147,72 +124,68 @@ gst_xviddec_class_init (GstXvidDecClass * klass)
 
 
 static void
-gst_xviddec_init (GstXvidDec * xviddec)
+gst_xviddec_init (GstXvidDec * dec)
 {
   /* create the sink pad */
-  xviddec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
-  gst_element_add_pad (GST_ELEMENT (xviddec), xviddec->sinkpad);
-
-  gst_pad_set_chain_function (xviddec->sinkpad,
+  dec->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
+  gst_pad_set_chain_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_xviddec_chain));
-  gst_pad_set_setcaps_function (xviddec->sinkpad,
+  gst_pad_set_setcaps_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_xviddec_setcaps));
-  gst_pad_set_event_function (xviddec->sinkpad,
+  gst_pad_set_event_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_xviddec_handle_sink_event));
+  gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 
   /* create the src pad */
-  xviddec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
-  gst_element_add_pad (GST_ELEMENT (xviddec), xviddec->srcpad);
-  gst_pad_use_fixed_caps (xviddec->srcpad);
+  dec->srcpad = gst_pad_new_from_static_template (&src_template, "src");
+  gst_pad_use_fixed_caps (dec->srcpad);
+  gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
-  gst_xviddec_reset (xviddec);
+  gst_xviddec_reset (dec);
 }
 
 
 static void
-gst_xviddec_reset (GstXvidDec * xviddec)
+gst_xviddec_reset (GstXvidDec * dec)
 {
   /* size, etc. */
-  xviddec->width = xviddec->height = xviddec->csp = -1;
-  xviddec->fps_n = xviddec->par_n = -1;
-  xviddec->fps_d = xviddec->par_d = 1;
-  xviddec->next_ts = xviddec->next_dur = GST_CLOCK_TIME_NONE;
+  dec->width = dec->height = dec->csp = -1;
+  dec->fps_n = dec->par_n = -1;
+  dec->fps_d = dec->par_d = 1;
+  dec->next_ts = dec->next_dur = GST_CLOCK_TIME_NONE;
+  dec->outbuf_size = 0;
 
   /* set xvid handle to NULL */
-  xviddec->handle = NULL;
+  dec->handle = NULL;
 
   /* no delayed timestamp to start with */
-  xviddec->have_ts = FALSE;
+  dec->have_ts = FALSE;
 
   /* need keyframe to get going */
-  xviddec->waiting_for_key = TRUE;
+  dec->waiting_for_key = TRUE;
 }
 
 
 static void
-gst_xviddec_unset (GstXvidDec * xviddec)
+gst_xviddec_unset (GstXvidDec * dec)
 {
   /* release XviD decoder */
-  xvid_decore (xviddec->handle, XVID_DEC_DESTROY, NULL, NULL);
-  xviddec->handle = NULL;
+  xvid_decore (dec->handle, XVID_DEC_DESTROY, NULL, NULL);
+  dec->handle = NULL;
 }
 
 
 static gboolean
 gst_xviddec_handle_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstXvidDec *xviddec = GST_XVIDDEC (GST_PAD_PARENT (pad));
+  GstXvidDec *dec = GST_XVIDDEC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      gst_xviddec_flush_buffers (xviddec, TRUE);
+      gst_xviddec_flush_buffers (dec, TRUE);
       break;
     case GST_EVENT_FLUSH_STOP:
-      gst_xviddec_flush_buffers (xviddec, FALSE);
+      gst_xviddec_flush_buffers (dec, FALSE);
       break;
     case GST_EVENT_NEWSEGMENT:
       /* don't really mind about the actual segment info,
@@ -225,18 +198,18 @@ gst_xviddec_handle_sink_event (GstPad * pad, GstEvent * event)
        * The DISCONT flag on buffers should be used to detect
        * discontinuities. 
        */
-      xviddec->waiting_for_key = TRUE;
+      dec->waiting_for_key = TRUE;
       break;
     default:
       break;
   }
 
-  return gst_pad_push_event (xviddec->srcpad, event);
+  return gst_pad_push_event (dec->srcpad, event);
 }
 
 
 static gboolean
-gst_xviddec_setup (GstXvidDec * xviddec)
+gst_xviddec_setup (GstXvidDec * dec)
 {
   xvid_dec_create_t xdec;
   gint ret;
@@ -248,15 +221,16 @@ gst_xviddec_setup (GstXvidDec * xviddec)
   xdec.height = 0;
   xdec.handle = NULL;
 
+  GST_DEBUG_OBJECT (dec, "Initializing xvid decoder with parameters "
+      "%dx%d@%d", dec->width, dec->height, dec->csp);
+
   if ((ret = xvid_decore (NULL, XVID_DEC_CREATE, &xdec, NULL)) < 0) {
-    GST_DEBUG_OBJECT (xviddec,
-        "Initializing xvid decoder with parameters %dx%d@%d failed: %s (%d)",
-        xviddec->width, xviddec->height, xviddec->csp,
+    GST_WARNING_OBJECT (dec, "Initializing xvid decoder failed: %s (%d)",
         gst_xvid_error (ret), ret);
     return FALSE;
   }
 
-  xviddec->handle = xdec.handle;
+  dec->handle = xdec.handle;
 
   return TRUE;
 }
@@ -280,8 +254,9 @@ gst_xviddec_add_par (GstStructure * structure,
 /* based on the decoder info, if provided, and xviddec info,
    construct a caps and send on to src pad */
 static gboolean
-gst_xviddec_negotiate (GstXvidDec * xviddec, xvid_dec_stats_t * xstats)
+gst_xviddec_negotiate (GstXvidDec * dec, xvid_dec_stats_t * xstats)
 {
+  gboolean ret;
   gint par_width, par_height;
   GstCaps *caps;
 
@@ -289,8 +264,8 @@ gst_xviddec_negotiate (GstXvidDec * xviddec, xvid_dec_stats_t * xstats)
      so definitely need to negotiate then */
   if (xstats && (xstats->type != XVID_TYPE_VOL
           || (xstats->type == XVID_TYPE_VOL
-              && xviddec->width == xstats->data.vol.width
-              && xviddec->height == xstats->data.vol.height)))
+              && dec->width == xstats->data.vol.width
+              && dec->height == xstats->data.vol.height)))
     return TRUE;
 
   switch (xstats ? xstats->data.vol.par : XVID_PAR_11_VGA) {
@@ -313,58 +288,28 @@ gst_xviddec_negotiate (GstXvidDec * xviddec, xvid_dec_stats_t * xstats)
       par_height = xstats->data.vol.par_height;
   }
 
-  caps = gst_xvid_csp_to_caps (xviddec->csp, xviddec->width, xviddec->height);
+  caps = gst_xvid_csp_to_caps (dec->csp, dec->width, dec->height);
 
   /* can only provide framerate if we received one */
-  if (xviddec->fps_n != -1) {
+  if (dec->fps_n != -1) {
     gst_structure_set (gst_caps_get_structure (caps, 0), "framerate",
-        GST_TYPE_FRACTION, xviddec->fps_n, xviddec->fps_d, NULL);
+        GST_TYPE_FRACTION, dec->fps_n, dec->fps_d, NULL);
   }
 
   gst_xviddec_add_par (gst_caps_get_structure (caps, 0),
-      xviddec->par_n, xviddec->par_d, par_width, par_height);
+      dec->par_n, dec->par_d, par_width, par_height);
 
-  return gst_pad_set_caps (xviddec->srcpad, caps);
-}
+  GST_LOG ("setting caps on source pad: %" GST_PTR_FORMAT, caps);
+  ret = gst_pad_set_caps (dec->srcpad, caps);
+  gst_caps_unref (caps);
 
-
-/* decodes frame according to info in xframe;
-   - outbuf must not be NULL
-   - xstats can be NULL, if not, it has been init'ed
-   - output placed in outbuf, which is also allocated if NULL,
-     caller must unref when needed
-   - xvid stats placed in xstats, if not NULL
-   - xvid return code is returned, which is usually the size of the output frame
-*/
-static gint
-gst_xviddec_decode (GstXvidDec * xviddec, xvid_dec_frame_t xframe,
-    GstBuffer ** outbuf, xvid_dec_stats_t * xstats)
-{
-
-  g_return_val_if_fail (outbuf, -1);
-
-  if (!*outbuf) {
-    gint size = gst_xvid_image_get_size (xviddec->csp,
-        xviddec->width, xviddec->height);
-
-    gst_pad_alloc_buffer (xviddec->srcpad, GST_BUFFER_OFFSET_NONE, size,
-        GST_PAD_CAPS (xviddec->srcpad), outbuf);
-  }
-
-  gst_xvid_image_fill (&xframe.output, GST_BUFFER_DATA (*outbuf),
-      xviddec->csp, xviddec->width, xviddec->height);
-
-  GST_DEBUG_OBJECT (xviddec, "decoding into buffer %" GST_PTR_FORMAT
-      ", data %" GST_PTR_FORMAT ", %" GST_PTR_FORMAT, *outbuf,
-      GST_BUFFER_MALLOCDATA (*outbuf), GST_BUFFER_DATA (*outbuf));
-
-  return xvid_decore (xviddec->handle, XVID_DEC_DECODE, &xframe, xstats);
+  return ret;
 }
 
 static GstFlowReturn
 gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstXvidDec *xviddec;
+  GstXvidDec *dec;
   GstBuffer *outbuf = NULL;
   xvid_dec_frame_t xframe;
   xvid_dec_stats_t xstats;
@@ -373,16 +318,19 @@ gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
   guint size;
   GstFlowReturn fret;
 
-  xviddec = GST_XVIDDEC (GST_OBJECT_PARENT (pad));
+  dec = GST_XVIDDEC (GST_OBJECT_PARENT (pad));
 
-  if (!xviddec->handle)
+  if (!dec->handle)
     goto not_negotiated;
 
   fret = GST_FLOW_OK;
 
-  GST_DEBUG_OBJECT (xviddec,
-      "Received buffer of time %" GST_TIME_FORMAT ", size %d",
+  GST_LOG_OBJECT (dec, "Received buffer of time %" GST_TIME_FORMAT ", size %d",
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_SIZE (buf));
+
+  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+    /* FIXME: should we do anything here, like flush the decoder? */
+  }
 
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
@@ -396,56 +344,68 @@ gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
 
     gst_xvid_init_struct (xstats);
 
-    if ((ret = gst_xviddec_decode (xviddec, xframe, &outbuf, &xstats)) < 0)
+    if (outbuf == NULL) {
+      fret = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET_NONE,
+          dec->outbuf_size, GST_PAD_CAPS (dec->srcpad), &outbuf);
+      if (fret != GST_FLOW_OK)
+        goto done;
+    }
+
+    gst_xvid_image_fill (&xframe.output, GST_BUFFER_DATA (outbuf),
+        dec->csp, dec->width, dec->height);
+
+    ret = xvid_decore (dec->handle, XVID_DEC_DECODE, &xframe, &xstats);
+    if (ret < 0)
       goto decode_error;
 
-    GST_DEBUG_OBJECT (xviddec, "xvid produced output, type %d, consumed %d",
+    GST_LOG_OBJECT (dec, "xvid produced output, type %d, consumed %d",
         xstats.type, ret);
 
     if (xstats.type == XVID_TYPE_VOL)
-      gst_xviddec_negotiate (xviddec, &xstats);
+      gst_xviddec_negotiate (dec, &xstats);
 
     data += ret;
     size -= ret;
   } while (xstats.type <= 0 && size > 0);
 
-  if (size > 1)                 /* 1 byte is frequently left over */
-    GST_WARNING_OBJECT (xviddec,
-        "xvid decoder returned frame without consuming all input");
+  /* 1 byte is frequently left over */
+  if (size > 1) {
+    GST_WARNING_OBJECT (dec, "decoder did not consume all input");
+  }
 
   /* FIXME, reflow the multiple return exit points */
   if (xstats.type > 0) {        /* some real output was produced */
-    if (G_UNLIKELY (xviddec->waiting_for_key)) {
+    if (G_UNLIKELY (dec->waiting_for_key)) {
       if (xstats.type != XVID_TYPE_IVOP)
         goto dropping;
 
-      xviddec->waiting_for_key = FALSE;
+      dec->waiting_for_key = FALSE;
     }
     /* bframes can cause a delay in frames being returned
        non keyframe timestamps can permute a bit between
        encode and display order, but should match for keyframes */
-    if (xviddec->have_ts) {
-      GST_BUFFER_TIMESTAMP (outbuf) = xviddec->next_ts;
-      GST_BUFFER_DURATION (outbuf) = xviddec->next_dur;
-      xviddec->next_ts = GST_BUFFER_TIMESTAMP (buf);
-      xviddec->next_dur = GST_BUFFER_DURATION (buf);
+    if (dec->have_ts) {
+      GST_BUFFER_TIMESTAMP (outbuf) = dec->next_ts;
+      GST_BUFFER_DURATION (outbuf) = dec->next_dur;
+      dec->next_ts = GST_BUFFER_TIMESTAMP (buf);
+      dec->next_dur = GST_BUFFER_DURATION (buf);
     } else {
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
       GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
     }
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (xviddec->srcpad));
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (dec->srcpad));
 
-    fret = gst_pad_push (xviddec->srcpad, outbuf);
+    fret = gst_pad_push (dec->srcpad, outbuf);
 
   } else {                      /* no real output yet, delay in frames being returned */
-    if (G_UNLIKELY (xviddec->have_ts)) {
-      GST_WARNING_OBJECT (xviddec,
+    if (G_UNLIKELY (dec->have_ts)) {
+      GST_WARNING_OBJECT (dec,
           "xvid decoder produced no output, but timestamp %" GST_TIME_FORMAT
-          " already queued", GST_TIME_ARGS (xviddec->next_ts));
+          " already queued", GST_TIME_ARGS (dec->next_ts));
     } else {
-      xviddec->have_ts = TRUE;
-      xviddec->next_ts = GST_BUFFER_TIMESTAMP (buf);
-      xviddec->next_dur = GST_BUFFER_TIMESTAMP (buf);
+      dec->have_ts = TRUE;
+      dec->next_ts = GST_BUFFER_TIMESTAMP (buf);
+      dec->next_dur = GST_BUFFER_TIMESTAMP (buf);
     }
     gst_buffer_unref (outbuf);
   }
@@ -458,14 +418,15 @@ done:
   /* ERRORS */
 not_negotiated:
   {
-    GST_ELEMENT_ERROR (xviddec, CORE, NEGOTIATION, (NULL),
+    GST_ELEMENT_ERROR (dec, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before chain function"));
     fret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
   }
 decode_error:
   {
-    GST_ELEMENT_WARNING (xviddec, STREAM, DECODE, (NULL),
+    /* FIXME: shouldn't error out fatally/properly after N decoding errors? */
+    GST_ELEMENT_WARNING (dec, STREAM, DECODE, (NULL),
         ("Error decoding xvid frame: %s (%d)", gst_xvid_error (ret), ret));
     if (outbuf)
       gst_buffer_unref (outbuf);
@@ -473,7 +434,7 @@ decode_error:
   }
 dropping:
   {
-    GST_WARNING_OBJECT (xviddec, "Dropping non-keyframe (seek/init)");
+    GST_WARNING_OBJECT (dec, "Dropping non-keyframe (seek/init)");
     if (outbuf)
       gst_buffer_unref (outbuf);
     goto done;
@@ -484,7 +445,7 @@ dropping:
 /* flush xvid encoder buffers caused by bframe usage;
    not well tested */
 static void
-gst_xviddec_flush_buffers (GstXvidDec * xviddec, gboolean send)
+gst_xviddec_flush_buffers (GstXvidDec * dec, gboolean send)
 {
 #if 0
   gint ret;
@@ -493,18 +454,18 @@ gst_xviddec_flush_buffers (GstXvidDec * xviddec, gboolean send)
   xvid_dec_stats_t xstats;
 #endif
 
-  GST_DEBUG_OBJECT (xviddec, "flushing buffers with send %d, have_ts %d",
-      send, xviddec->have_ts);
+  GST_DEBUG_OBJECT (dec, "flushing buffers with send %d, have_ts %d",
+      send, dec->have_ts);
 
   /* no need to flush if there is no delayed time-stamp */
-  if (!xviddec->have_ts)
+  if (!dec->have_ts)
     return;
 
   /* flushing must reset the timestamp keeping */
-  xviddec->have_ts = FALSE;
+  dec->have_ts = FALSE;
 
   /* also no need to flush if no handle */
-  if (!xviddec->handle)
+  if (!dec->handle)
     return;
 
   /* unlike encoder, decoder does not seem to like flushing, disable for now */
@@ -516,17 +477,17 @@ gst_xviddec_flush_buffers (GstXvidDec * xviddec, gboolean send)
   xframe.bitstream = NULL;
   xframe.length = -1;
 
-  ret = gst_xviddec_decode (xviddec, xframe, &outbuf, &xstats);
-  GST_DEBUG_OBJECT (xviddec, "received frame when flushing, type %d, size %d",
+  ret = gst_xviddec_decode (dec, xframe, &outbuf, &xstats);
+  GST_DEBUG_OBJECT (dec, "received frame when flushing, type %d, size %d",
       xstats.type, ret);
 
   if (ret > 0 && send) {
     /* we have some valid return frame, give it the delayed timestamp and send */
-    GST_BUFFER_TIMESTAMP (outbuf) = xviddec->next_ts;
-    GST_BUFFER_DURATION (outbuf) = xviddec->next_dur;
+    GST_BUFFER_TIMESTAMP (outbuf) = dec->next_ts;
+    GST_BUFFER_DURATION (outbuf) = dec->next_dur;
 
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (xviddec->srcpad));
-    gst_pad_push (xviddec->srcpad, outbuf);
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (dec->srcpad));
+    gst_pad_push (dec->srcpad, outbuf);
     return;
   }
 
@@ -541,7 +502,7 @@ gst_xviddec_flush_buffers (GstXvidDec * xviddec, gboolean send)
 static GstCaps *
 gst_xviddec_src_getcaps (GstPad * pad)
 {
-  GstXvidDec *xviddec = GST_XVIDDEC (GST_PAD_PARENT (pad));
+  GstXvidDec *dec = GST_XVIDDEC (GST_PAD_PARENT (pad));
   GstCaps *caps;
   gint csp[] = {
     XVID_CSP_I420,
@@ -561,7 +522,7 @@ gst_xviddec_src_getcaps (GstPad * pad)
     0
   }, i;
 
-  if (!GST_PAD_CAPS (xviddec->sinkpad)) {
+  if (!GST_PAD_CAPS (dec->sinkpad)) {
     GstPadTemplate *templ = gst_static_pad_template_get (&src_template);
 
     return gst_caps_copy (gst_pad_template_get_caps (templ));
@@ -569,123 +530,102 @@ gst_xviddec_src_getcaps (GstPad * pad)
 
   caps = gst_caps_new_empty ();
   for (i = 0; csp[i] != 0; i++) {
-    GstCaps *one = gst_xvid_csp_to_caps (csp[i], xviddec->width,
-        xviddec->height, xviddec->fps, xviddec->par);
+    GstCaps *one = gst_xvid_csp_to_caps (csp[i], dec->width,
+        dec->height, dec->fps, dec->par);
 
     gst_caps_append (caps, one);
   }
 
   return caps;
 }
-
-
-static GstPadLinkReturn
-gst_xviddec_src_link (GstPad * pad, const GstCaps * vscaps)
-{
-  GstXvidDec *xviddec = GST_XVIDDEC (gst_pad_get_parent (pad));
-  GstStructure *structure = gst_caps_get_structure (vscaps, 0);
-
-  if (!GST_PAD_CAPS (xviddec->sinkpad))
-    return GST_PAD_LINK_DELAYED;
-
-  /* if there's something old around, remove it */
-  if (xviddec->handle) {
-    gst_xviddec_unset (xviddec);
-  }
-  xviddec->csp = gst_xvid_structure_to_csp (structure);
-
-  if (xviddec->csp < 0)
-    return GST_PAD_LINK_REFUSED;
-
-  if (!gst_xviddec_setup (xviddec))
-    return GST_PAD_LINK_REFUSED;
-
-  return GST_PAD_LINK_OK;
-}
 #endif
 
 static gboolean
 gst_xviddec_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstXvidDec *xviddec = GST_XVIDDEC (GST_PAD_PARENT (pad));
+  GstXvidDec *dec = GST_XVIDDEC (GST_PAD_PARENT (pad));
   GstStructure *structure;
+  GstCaps *allowed_caps;
   const GValue *val;
 
-  GST_DEBUG ("setcaps called");
+  GST_LOG_OBJECT (dec, "caps %" GST_PTR_FORMAT, caps);
 
   /* if there's something old around, remove it */
-  if (xviddec->handle) {
-    gst_xviddec_unset (xviddec);
+  if (dec->handle) {
+    gst_xviddec_unset (dec);
   }
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &xviddec->width);
-  gst_structure_get_int (structure, "height", &xviddec->height);
+  gst_structure_get_int (structure, "width", &dec->width);
+  gst_structure_get_int (structure, "height", &dec->height);
 
   /* perhaps some fps info */
   val = gst_structure_get_value (structure, "framerate");
   if ((val != NULL) && GST_VALUE_HOLDS_FRACTION (val)) {
-    xviddec->fps_n = gst_value_get_fraction_numerator (val);
-    xviddec->fps_d = gst_value_get_fraction_denominator (val);
+    dec->fps_n = gst_value_get_fraction_numerator (val);
+    dec->fps_d = gst_value_get_fraction_denominator (val);
   } else {
-    xviddec->fps_n = -1;
-    xviddec->fps_d = 1;
+    dec->fps_n = -1;
+    dec->fps_d = 1;
   }
 
   /* perhaps some par info */
   val = gst_structure_get_value (structure, "pixel-aspect-ratio");
-  if ((val != NULL) && GST_VALUE_HOLDS_FRACTION (val)) {
-    xviddec->par_n = gst_value_get_fraction_numerator (val);
-    xviddec->par_d = gst_value_get_fraction_denominator (val);
+  if (val != NULL && GST_VALUE_HOLDS_FRACTION (val)) {
+    dec->par_n = gst_value_get_fraction_numerator (val);
+    dec->par_d = gst_value_get_fraction_denominator (val);
   } else {
-    xviddec->par_n = 1;
-    xviddec->par_d = 1;
+    dec->par_n = 1;
+    dec->par_d = 1;
   }
 
-  if (gst_xviddec_setup (xviddec)) {
-    GstCaps *allowed_caps;
+  /* we try to find the preferred/accept csp */
+  allowed_caps = gst_pad_get_allowed_caps (dec->srcpad);
+  if (!allowed_caps) {
+    GST_DEBUG_OBJECT (dec, "... but no peer, using template caps");
+    /* need to copy because get_allowed_caps returns a ref,
+       and get_pad_template_caps doesn't */
+    allowed_caps = gst_caps_copy (gst_pad_get_pad_template_caps (dec->srcpad));
+  }
+  GST_LOG_OBJECT (dec, "allowed source caps %" GST_PTR_FORMAT, allowed_caps);
 
-    /* we try to find the preferred/accept csp */
-    allowed_caps = gst_pad_get_allowed_caps (xviddec->srcpad);
-    if (!allowed_caps) {
-      GST_DEBUG_OBJECT (xviddec, "... but no peer, using template caps");
-      /* need to copy because get_allowed_caps returns a ref,
-         and get_pad_template_caps doesn't */
-      allowed_caps =
-          gst_caps_copy (gst_pad_get_pad_template_caps (xviddec->srcpad));
-    }
-    /* pick the first one ... */
-    structure = gst_caps_get_structure (allowed_caps, 0);
-    val = gst_structure_get_value (structure, "format");
-    if (G_VALUE_TYPE (val) == GST_TYPE_LIST) {
-      GValue temp = { 0 };
-      gst_value_init_and_copy (&temp, gst_value_list_get_value (val, 0));
-      gst_structure_set_value (structure, "format", &temp);
-      g_value_unset (&temp);
-    }
+  /* pick the first one ... */
+  structure = gst_caps_get_structure (allowed_caps, 0);
+  val = gst_structure_get_value (structure, "format");
+  if (val != NULL && G_VALUE_TYPE (val) == GST_TYPE_LIST) {
+    GValue temp = { 0, };
+    gst_value_init_and_copy (&temp, gst_value_list_get_value (val, 0));
+    gst_structure_set_value (structure, "format", &temp);
+    g_value_unset (&temp);
+  }
 
-    /* ... and use its info to get the csp */
-    xviddec->csp = gst_xvid_structure_to_csp (structure);
-    if (xviddec->csp == -1) {
-      gchar *sstr = gst_structure_to_string (structure);
+  /* ... and use its info to get the csp */
+  dec->csp = gst_xvid_structure_to_csp (structure);
+  if (dec->csp == -1) {
+    GST_WARNING_OBJECT (dec, "failed to decide on colorspace, using I420");
+    dec->csp = XVID_CSP_I420;
+  }
 
-      GST_INFO_OBJECT (xviddec,
-          "failed to decide upon csp from caps %s, trying I420", sstr);
-      g_free (sstr);
-      xviddec->csp = XVID_CSP_I420;
-    }
-    gst_caps_unref (allowed_caps);
+  dec->outbuf_size =
+      gst_xvid_image_get_size (dec->csp, dec->width, dec->height);
 
-    return gst_xviddec_negotiate (xviddec, NULL);
+  GST_LOG_OBJECT (dec, "csp=%d, outbuf_size=%d", dec->csp, dec->outbuf_size);
 
-  } else                        /* setup did not work out */
+  gst_caps_unref (allowed_caps);
+
+  /* now set up xvid ... */
+  if (!gst_xviddec_setup (dec)) {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), LIBRARY, INIT, (NULL), (NULL));
     return FALSE;
+  }
+
+  return gst_xviddec_negotiate (dec, NULL);
 }
 
 static GstStateChangeReturn
 gst_xviddec_change_state (GstElement * element, GstStateChange transition)
 {
-  GstXvidDec *xviddec = GST_XVIDDEC (element);
+  GstXvidDec *dec = GST_XVIDDEC (element);
   GstStateChangeReturn ret;
 
   switch (transition) {
@@ -703,11 +643,11 @@ gst_xviddec_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_xviddec_flush_buffers (xviddec, FALSE);
-      if (xviddec->handle) {
-        gst_xviddec_unset (xviddec);
+      gst_xviddec_flush_buffers (dec, FALSE);
+      if (dec->handle) {
+        gst_xviddec_unset (dec);
       }
-      gst_xviddec_reset (xviddec);
+      gst_xviddec_reset (dec);
       break;
     default:
       break;

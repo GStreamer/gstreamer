@@ -52,6 +52,7 @@ struct _GstXvidDec {
   gint csp;
   gint width, height;
   gint fps_n, fps_d, par_n, par_d;
+  gint outbuf_size;
 
   /* whether in need for keyframe */
   gboolean waiting_for_key;
