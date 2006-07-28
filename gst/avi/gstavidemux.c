@@ -1473,6 +1473,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
 
   return;
 
+  /* ERRORS */
 no_index:
   {
     GST_ERROR_OBJECT (avi,
@@ -1629,7 +1630,7 @@ done:
 
 /**
  * gst_avi_demux_peek_tag:
- * 
+ *
  * Returns the tag and size of the next chunk
  */
 
@@ -1658,7 +1659,7 @@ beach:
 
 /**
  * gst_avi_demux_next_data_buffer:
- * 
+ *
  * Returns the offset and size of the next buffer
  * Position is the position of the buffer (after tag and size)
 */
@@ -2029,6 +2030,10 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
     entry = one->data;
     memcpy (&avi->index_entries[i], entry, sizeof (gst_avi_index_entry));
     avi->index_entries[i].index_nr = i;
+    GST_DEBUG ("Adding index entry %d for stream %d of size %u "
+        "at offset %" G_GUINT64_FORMAT " and time %" GST_TIME_FORMAT,
+        avi->index_entries[i].index_nr, entry->stream_nr, entry->size,
+        entry->offset, GST_TIME_ARGS (entry->ts));
   }
 
   GST_LOG_OBJECT (avi, "Freeing original index list");
