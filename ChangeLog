@@ -1,3 +1,13 @@
+2006-07-28  Andy Wingo  <wingo@pobox.com>
+
+	* examples/remuxer.py (RemuxBin._do_seek, Remuxer._bus_watch): Use
+	normal seeks instead of segment seeks so that EOS is handled
+	properly. Patch by James "Doc" Livingston <doclivingston at
+	gmail.com>.
+
+	* examples/remuxer.py (RemuxBin._new_demuxed_pad): Increase the
+	buffer size for dealing with terribly muxed files.
+	
 2006-07-20  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:
@@ -331,7 +341,7 @@
 	* examples/remuxer.py (PlayerWindow.update_scale_cb): Fix a race
 	condition getting the initial cutin time via inserting whitespace.
 	(all over): UI fixes to make Mike happy.
-	
+
 	* examples/remuxer.py: Updates! Nothing gstreamery, it's all ui,
 	so I won't bother you with the details.
 	

@@ -441,7 +441,7 @@ class Remuxer(gst.Pipeline):
             self.response(FAILURE)
         elif message.type == gst.MESSAGE_WARNING:
             print 'warning', message
-        elif message.type == gst.MESSAGE_SEGMENT_DONE:
+        elif message.type == gst.MESSAGE_EOS:
             # print 'eos, woot', message.src
             name = self.touri
             if name.startswith('file://'):
@@ -542,6 +542,7 @@ class RemuxBin(gst.Bin):
             return
 
         queue = gst.element_factory_make('queue', 'queue_' + format)
+        queue.set_property('max-size-buffers', 1000)
         parser = gst.element_factory_make(self.parsefactories[format])
         self.add(queue)
         self.add(parser)
@@ -552,8 +553,8 @@ class RemuxBin(gst.Bin):
         parser.link(self.mux)
         self.parsers.append(parser)
 
-    def _do_segment_seek(self):
-        flags = gst.SEEK_FLAG_SEGMENT | gst.SEEK_FLAG_FLUSH
+    def _do_seek(self):
+        flags = gst.SEEK_FLAG_FLUSH
         # HACK: self.seek should work, should try that at some point
         return self.demux.seek(1.0, gst.FORMAT_TIME, flags,
                                gst.SEEK_TYPE_SET, self.start_time,
@@ -562,7 +563,7 @@ class RemuxBin(gst.Bin):
     def _no_more_pads(self, element):
         pads = [x.get_pad('src') for x in self.parsers]
         set_connection_blocked_async_marshalled(pads,
-                                                self._do_segment_seek)
+                                                self._do_seek)
 
 
 class PlayerWindow(gtk.Window):
