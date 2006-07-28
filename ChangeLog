@@ -1,3 +1,8 @@
+2006-07-28  Wim Taymans  <wim@fluendo.com>
+
+	* docs/random/phonon-gst:
+	Random notes about a Phonon backend.
+
 2006-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* libs/gst/base/gstbasetransform.c: (gst_base_transform_setcaps):

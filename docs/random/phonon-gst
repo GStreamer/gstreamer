@@ -1,0 +1,269 @@
+Phonon backend
+--------------
+
+ The phonon design is based around forming graphs using 3 basic components:
+
+ - a source component that generates raw audio/video/subtitle data, aka
+   MediaObject. 
+ - an effect component that applies effects to raw audio/video known as
+   AudioPath/VideoPath respectively. Subtitles are routed to a VideoPath
+ - output components that render audio or video called AudioOutput and
+   VideoOutput.
+
+  there is also a special input object that allows for feeding raw data in the
+  pipeline and specialized sinks to retrieve audio samples and video frames from
+  the pipeline.
+
+ A typical graph or a source that produces an audio and a video stream that
+ need to be played. The VideoPath and AudioPath typically contain no filters
+ in this case:
+
+                     +----+  +---
+                     | FX |  | ...
+                     +----+  +---
+                       V       V
+                      +-----------+      +-------------+
+                ----->| VideoPath |----->| VideoOutput |
+                |     +-----------+      +-------------+
+    +-------------+
+    | MediaObject |
+    +-------------+
+                |     +-----------+      +-------------+
+                +---->| AudioPath |----->| AudioOutput |
+                      +-----------+      +-------------+
+                       ^       ^
+                     +----+  +---
+                     | FX |  | ...
+                     +-+--+  +---
+
+   - This is very similar to a regular gstreamer playback pipeline.
+
+  A typical graph of playing and crosfading two sources:
+
+                          +--------+
+                          | volume |
+                          +--------+
+                              V  
+     +-------------+    +-----------+                    
+     | MediaObject |--->| AudioPath |\                    
+     +-------------+    +-----------+ \     +-------------+
+                                       ---->| AudioOutput |
+     +-------------+    +-----------+ /     +-------------+
+     | MediaObject |--->| AudioPath |/                    
+     +-------------+    +-----------+                    
+                              ^  
+                          +--------+
+                          | volume |
+                          +--------+
+
+  - As soon as two audio paths are connected to one sink, the input signals are
+    mixed before sending them to the sink. The mixing is typically done in the
+    audio sink by an element such as adder.
+
+  Other types of graphs are possible too:
+
+                        +-----------+                    
+                       /| AudioPath |\                    
+     +-------------+  / +-----------+ \     +-------------+
+     | MediaObject |--                 ---->| AudioOutput |
+     +-------------+  \ +-----------+ /     +-------------+
+                       \| AudioPath |/
+                        +-----------+                    
+
+  - This graph sends the same out data to 2 effect filter graphs and then mixes
+    it to an audio output. The splitting of the graph typically happens with a
+    tee element after the media object.
+
+
+Questions
+---------
+
+ 1) do the following chains run
+ 
+    - synchronized with a shared clock?
+
+     +-------------+    +-----------+    +-------------+                
+     | MediaObject |--->| AudioPath |--->| AudioOutput |
+     +-------------+    +-----------+    +-------------+
+
+     +-------------+    +-----------+    +-------------+                
+     | MediaObject |--->| VideoPath |--->| VideoOutput |
+     +-------------+    +-----------+    +-------------+
+
+    - no API to set both MediaObjects atomically to play so it is assumed that
+      the playback starts and follows the rate of the global clock as soon as
+      the MediaObject is set to play. This makes unconnected chains run as if
+      they were in different GstPipelines.
+
+ 2) Threading:
+
+   - Can signals be emited from any thread?
+   - what operations are permited from a signal handler?
+
+ 3) Error reporting
+
+   - How does error reporting work?
+     * an audio/video device/port is busy.
+     * a fatal decoding error occured.
+     * a media type is not supported
+
+
+General
+-------
+
+ - Setting up KDE and Phonon build environment
+ - Testing, identifying test applications, building test cases
+ - Asking questions to Phonon maintainers/designers
+
+Essential classes
+-----------------
+
+These classes are essential to implement a backend and should be implemented
+first. 
+
+Phonon::BackendCapabilities
+
+  Mostly exposes features in the registry like available decoders and effects.
+
+Phonon::Factory
+
+  Entry point for the GStreamer backend. Provides methods to create instances of
+  object from our backed.
+
+
+Simple playback
+---------------
+
+The following classes need to be implemented in order to have simple playback
+capabilities from the backend.
+
+Phonon::AudioOutput
+
+  - Wrapper around audiosinks. Also needs provision for rate and format
+    conversions.  
+  - Mixing capabilities in the case when 2 audio paths are routed to it. 
+
+ Notes:
+
+  * is the volume related to the device or to the connection to the device.
+
+Phonon::VideoWidget
+
+  - Wrapper around videosinks. Also needs provision for colorspace and size
+    conversions.  Extends QWidget and probably needs to hook into the XOverlay
+    stuff to draw in the QT widget.  Supports fullscreen mode with a switch.
+
+  - Needs mixing capabilities in the case when 2 video paths are routed to it. 
+
+Phonon::AbstractMediaProducer
+
+  - contains stream selection
+  - play/pause/stop
+  - seeking
+  - periodically performs tick callbacks.
+
+Phonon::MediaObject:
+
+  - The object that decodes the media into raw audio/video/subtitle.
+    This object will use the GStreamer decodebin element to perform the
+    typefinding and decoding.
+
+Phonon::AudioPath/Phonon::VideoPath
+
+  - Simple container for audio/video effect plugins. 
+  - Handles adding/removing of effects, making sure that the streaming is not
+    interrupted and the formats are all compatible.
+
+
+Effect support
+--------------
+
+Phonon::Visualization
+
+  Connects an AudioPath to a VideoWidget and allows for selection of a
+  visualisation plugin.
+
+Phonon::AudioEffect/Phonon::VideoEffect
+
+  Base classes
+
+Phonon::VolumeFaderEffect
+
+  Alows fade-in and fade-out with a configurable curve and time. Needs
+  GstController.
+
+Phonon::BrightnessControl
+
+  Controls the brightness of video.
+
+
+Playlist support
+----------------
+
+Phonon::MediaQueue:
+
+  ?? don't know yet where this fits in.
+
+
+Capture
+-------
+
+Phonon::AvCapture
+
+  Synchronized audio and video capture. 
+
+Phonon::AudioWriter
+
+  Compress audio.
+
+
+Advanced features
+-----------------
+ 
+Phonon::ByteStream
+
+  Feed raw data into the pipeline. Used for streaming network access.
+
+ Implementation:
+
+  Possibly a specialized source element connected to a decodebin.
+
+ Notes:
+
+  * Phonon::ByteStream::writeData
+   - can it block?
+
+  * Phonon::ByteStream::setStreamSeekable
+   - If called before starting the ByteStream, decodebin might operate in pull
+     based mode when supported. Else the source is activated in push mode.
+   - If called after starting ByteStream, the Phonon::ByteStream::seekStream
+     signal can be called for push-based seekable streams.
+
+  * Can the signals be emited from a streaming thread?
+   
+
+Phonon::AudioDataOutput/Phonon::VideoDataOutput/
+
+  Receive raw audio/video data from the pipeline. Used to allow applications to
+  deal with the raw data themselves.
+
+ Implementation:
+
+  Possibly a specialized sink element.
+
+ Notes :
+
+  * Phonon::AudioDataOutput::dataReady
+    - can this be emited from the streaming threads?
+
+  * Phonon::AudioDataOutput::endOfMedia 
+    - can this be emited from the streaming threads?
+    - We need to grab this EOS message synchronously from the bus.
+    - should be emited _before_ sending the last dataReady. This means we need
+      to cache at least one dataReady.
+
+  * Phonon::AudioDataOutput::setDataSize
+    - can this be a _suggested_ data size or does every callback need to be of
+      this size?
+
+  
