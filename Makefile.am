@@ -1,7 +1,7 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
 SUBDIRS = \
-	gst ext docs m4 tests common
+	gst ext docs m4 tests common po
 
 EXTRA_DIST = \
 	gst-plugins-ugly.spec depcomp \

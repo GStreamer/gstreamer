@@ -56,9 +56,10 @@ dnl Add parameters for aclocal
 AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
 
 dnl set up gettext
-dnl AM_GNU_GETTEXT_VERSION(0.11.5)
-dnl AM_GNU_GETTEXT([external])
-dnl GST_GETTEXT([gst-plugins-ugly-$GST_MAJOR_MINOR])
+dnl the version check needs to stay here because autopoint greps for it
+AM_GNU_GETTEXT_VERSION(0.11.5)
+AM_GNU_GETTEXT([external])
+GST_GETTEXT([gst-plugins-ugly-$GST_MAJORMINOR])
 
 dnl *** check for arguments to configure ***
 
@@ -408,8 +409,6 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl *** output files ***
 
-dnl po/Makefile.in
-
 AC_CONFIG_FILES(
 Makefile
 gst/Makefile
@@ -437,6 +436,7 @@ tests/check/Makefile
 common/Makefile
 common/m4/Makefile
 m4/Makefile
+po/Makefile.in
 gst-plugins-ugly.spec
 )
 AC_OUTPUT

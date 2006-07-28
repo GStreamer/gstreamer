@@ -1,5 +1,13 @@
 2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* Makefile.am:
+	* autogen.sh:
+	* configure.ac:
+	* po/POTFILES.in:
+	  Add/enable autofoo magic for translations.
+
+2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_reset),
 	(gst_rmdemux_change_state), (gst_rmdemux_add_stream),
 	(gst_rmdemux_parse_cont), (gst_rmdemux_descramble_cook_audio),
