@@ -79,6 +79,8 @@ GST_DEBUG_CATEGORY_STATIC (collect_pads_debug);
 
 GST_BOILERPLATE (GstCollectPads, gst_collect_pads, GstObject, GST_TYPE_OBJECT);
 
+static void gst_collect_pads_clear (GstCollectPads * pads,
+    GstCollectData * data);
 static GstFlowReturn gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_collect_pads_event (GstPad * pad, GstEvent * event);
 static void gst_collect_pads_finalize (GObject * object);
@@ -417,6 +419,7 @@ gst_collect_pads_set_flushing_unlocked (GstCollectPads * pads,
       else
         GST_PAD_UNSET_FLUSHING (cdata->pad);
       cdata->abidata.ABI.flushing = flushing;
+      gst_collect_pads_clear (pads, cdata);
       GST_OBJECT_UNLOCK (cdata->pad);
     }
   }
@@ -590,15 +593,13 @@ GstBuffer *
 gst_collect_pads_pop (GstCollectPads * pads, GstCollectData * data)
 {
   GstBuffer *result;
-  GstBuffer **buffer_p;
 
   g_return_val_if_fail (pads != NULL, NULL);
   g_return_val_if_fail (GST_IS_COLLECT_PADS (pads), NULL);
   g_return_val_if_fail (data != NULL, NULL);
 
   if ((result = data->buffer)) {
-    buffer_p = &data->buffer;
-    gst_buffer_replace (buffer_p, NULL);
+    data->buffer = NULL;
     data->pos = 0;
     /* one less pad with queued data now */
     pads->queuedpads--;
@@ -610,6 +611,17 @@ gst_collect_pads_pop (GstCollectPads * pads, GstCollectData * data)
       GST_DEBUG_PAD_NAME (data->pad), result);
 
   return result;
+}
+
+/* pop and unref the currently queued buffer, should e called with the LOCK
+ * helt. */
+static void
+gst_collect_pads_clear (GstCollectPads * pads, GstCollectData * data)
+{
+  GstBuffer *buf;
+
+  if ((buf = gst_collect_pads_pop (pads, data)))
+    gst_buffer_unref (buf);
 }
 
 /**
@@ -755,13 +767,9 @@ gst_collect_pads_flush (GstCollectPads * pads, GstCollectData * data,
 
   data->pos += size;
 
-  if (data->pos >= GST_BUFFER_SIZE (buffer)) {
-    GstBuffer *buf;
-
-    /* _pop will also reset data->pos to 0 */
-    buf = gst_collect_pads_pop (pads, data);
-    gst_buffer_unref (buf);
-  }
+  if (data->pos >= GST_BUFFER_SIZE (buffer))
+    /* _clear will also reset data->pos to 0 */
+    gst_collect_pads_clear (pads, data);
 
   return flushsize;
 }
@@ -894,7 +902,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
        * non-flushing block again */
       GST_OBJECT_LOCK (pads);
       data->abidata.ABI.flushing = TRUE;
-      GST_COLLECT_PADS_BROADCAST (pads);
+      gst_collect_pads_clear (pads, data);
       GST_OBJECT_UNLOCK (pads);
 
       /* event already cleaned up by forwarding */
@@ -905,7 +913,7 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
       /* flush the 1 buffer queue */
       GST_OBJECT_LOCK (pads);
       data->abidata.ABI.flushing = FALSE;
-      gst_collect_pads_pop (pads, data);
+      gst_collect_pads_clear (pads, data);
       /* we need new segment info after the flush */
       gst_segment_init (&data->segment, GST_FORMAT_UNDEFINED);
       data->abidata.ABI.new_segment = FALSE;
@@ -1079,7 +1087,11 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
   }
   while (data->buffer != NULL);
 
+unlock_done:
   GST_OBJECT_UNLOCK (pads);
+
+done:
+  gst_buffer_unref (buffer);
 
   return ret;
 
@@ -1088,34 +1100,37 @@ not_ours:
   {
     /* pretty fatal this one, can't post an error though... */
     GST_WARNING ("not our pad");
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 not_started:
   {
-    GST_OBJECT_UNLOCK (pads);
     GST_DEBUG ("not started");
-    return GST_FLOW_WRONG_STATE;
+    gst_collect_pads_clear (pads, data);
+    ret = GST_FLOW_WRONG_STATE;
+    goto unlock_done;
   }
 flushing:
   {
-    GST_OBJECT_UNLOCK (pads);
     GST_DEBUG ("pad %s:%s is flushing", GST_DEBUG_PAD_NAME (pad));
-    return GST_FLOW_WRONG_STATE;
+    gst_collect_pads_clear (pads, data);
+    ret = GST_FLOW_WRONG_STATE;
+    goto unlock_done;
   }
 unexpected:
   {
-    GST_OBJECT_UNLOCK (pads);
     /* we should not post an error for this, just inform upstream that
      * we don't expect anything anymore */
     GST_DEBUG ("pad %s:%s is eos", GST_DEBUG_PAD_NAME (pad));
-    return GST_FLOW_UNEXPECTED;
+    ret = GST_FLOW_UNEXPECTED;
+    goto unlock_done;
   }
 error:
   {
-    GST_OBJECT_UNLOCK (pads);
     /* we print the error, the element should post a reasonable error
      * message for fatal errors */
     GST_DEBUG ("collect failed, reason %d (%s)", ret, gst_flow_get_name (ret));
-    return ret;
+    gst_collect_pads_clear (pads, data);
+    goto unlock_done;
   }
 }

@@ -1,5 +1,17 @@
 2006-07-28  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstcollectpads.c:
+	(gst_collect_pads_set_flushing_unlocked), (gst_collect_pads_pop),
+	(gst_collect_pads_clear), (gst_collect_pads_flush),
+	(gst_collect_pads_event), (gst_collect_pads_chain):
+	When flushing a pad, also clear the queued buffer so that we don't
+	accidentally use it when we shouldn't.
+	Fix leaks by inreffing incomming buffer.
+	Flush out queued buffers in case of errors.
+	Fixes #347452.
+
+2006-07-28  Wim Taymans  <wim@fluendo.com>
+
 	* docs/random/phonon-gst:
 	Random notes about a Phonon backend.
 
