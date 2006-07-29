@@ -32,9 +32,7 @@
 
 #include "dvdreadsrc.h"
 
-/* #include <gst/gst-i18n-plugin.h> */
-/* FIXME: remove once GETTEXT_PACKAGE etc. is set */
-#define _(s) s
+#include <gst/gst-i18n-plugin.h>
 
 GST_DEBUG_CATEGORY_STATIC (gstgst_dvd_read_src_debug);
 #define GST_CAT_DEFAULT (gstgst_dvd_read_src_debug)
@@ -1403,6 +1401,12 @@ gst_dvd_read_src_do_init (GType dvdreadsrc_type)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#ifdef ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
+
   GST_DEBUG_CATEGORY_INIT (gstgst_dvd_read_src_debug, "dvdreadsrc", 0,
       "DVD reader element based on dvdreadsrc");
 

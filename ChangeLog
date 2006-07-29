@@ -1,3 +1,13 @@
+2006-07-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dvdread/dvdreadsrc.c: (plugin_init):
+	* po/POTFILES.in:
+	  Make custom error messages translatable.
+
+	* gst/asfdemux/gstasf.c: (plugin_init):
+	  Remove setlocale() call, doesn't seem to be needed or recommended for
+	  plugins, at least not according to gstreamer/docs/random/i18n.
+
 2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/Makefile.am:

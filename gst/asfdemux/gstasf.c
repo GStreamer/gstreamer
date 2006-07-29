@@ -32,7 +32,8 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
 #ifdef ENABLE_NLS
-  setlocale (LC_ALL, "");
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 #endif /* ENABLE_NLS */
 

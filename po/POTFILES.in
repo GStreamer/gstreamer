@@ -1,4 +1,5 @@
 # not activated yet:
 # ext/dvdnav/dvdnavsrc.c
 
+ext/dvdread/dvdreadsrc.c
 gst/asfdemux/gstasfdemux.c
