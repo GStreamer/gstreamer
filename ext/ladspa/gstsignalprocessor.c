@@ -196,6 +196,8 @@ gst_signal_processor_add_pad_from_template (GstSignalProcessor * self,
       GST_DEBUG_FUNCPTR (gst_signal_processor_setcaps));
 
   if (templ->direction == GST_PAD_SINK) {
+    GST_DEBUG ("added new sink pad");
+
     gst_pad_set_event_function (new,
         GST_DEBUG_FUNCPTR (gst_signal_processor_event));
     gst_pad_set_chain_function (new,
@@ -203,6 +205,8 @@ gst_signal_processor_add_pad_from_template (GstSignalProcessor * self,
     gst_pad_set_activatepush_function (new,
         GST_DEBUG_FUNCPTR (gst_signal_processor_sink_activate_push));
   } else {
+    GST_DEBUG ("added new src pad");
+
     gst_pad_set_getrange_function (new,
         GST_DEBUG_FUNCPTR (gst_signal_processor_getrange));
     gst_pad_set_activatepull_function (new,
@@ -232,6 +236,11 @@ gst_signal_processor_init (GstSignalProcessor * self,
   self->control_in = g_new0 (gfloat, klass->num_control_in);
   self->audio_out = g_new0 (gfloat *, klass->num_audio_out);
   self->control_out = g_new0 (gfloat, klass->num_control_out);
+
+  /* defaults */
+  self->sample_rate = 44100;
+  self->buffer_frames = 16384;
+
 }
 
 static void
@@ -260,21 +269,32 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
   self = GST_SIGNAL_PROCESSOR (GST_PAD_PARENT (pad));
   klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
+  /* FIXME: why this? */
   if (caps != self->caps) {
     GstStructure *s;
     gint sample_rate, buffer_frames;
 
     s = gst_caps_get_structure (caps, 0);
-    if (!gst_structure_get_int (s, "rate", &sample_rate))
+    if (!gst_structure_get_int (s, "rate", &sample_rate)) {
+      GST_WARNING ("got no sample-rate");
       return FALSE;
-    if (!gst_structure_get_int (s, "buffer-frames", &buffer_frames))
-      return FALSE;
+    } else
+      self->sample_rate = sample_rate;
+    if (!gst_structure_get_int (s, "buffer-frames", &buffer_frames)) {
+      GST_WARNING ("got no buffer-frames");
+      /* FIXME: this is not critical
+         return FALSE;
+       */
+    } else
+      self->buffer_frames = buffer_frames;
 
     if (!klass->setup (self, sample_rate))
       return FALSE;
 
-    self->sample_rate = sample_rate;
-    self->buffer_frames = buffer_frames;
+    GST_DEBUG ("Got rate=%d, buffer-frames=%d", self->sample_rate,
+        self->buffer_frames);
+  } else {
+    GST_DEBUG ("skipping, have caps already");
   }
 
   /* FIXME: handle was_active, etc */
@@ -332,6 +352,7 @@ gst_signal_processor_process (GstSignalProcessor * self)
             self->buffer_frames, GST_PAD_CAPS (srcpad), &srcpad->pen);
 
         if (ret != GST_FLOW_OK) {
+          GST_WARNING ("gst_pad_alloc_buffer_and_set_caps() returned %d", ret);
           self->state = ret;
           return;
         } else {
@@ -350,6 +371,9 @@ gst_signal_processor_process (GstSignalProcessor * self)
       sinkpad->pen = NULL;
       self->audio_out[srcpad->index] = (gfloat *) GST_BUFFER_DATA (srcpad->pen);
       self->pending_out++;
+      /* FIXME: doesn't this need to have:
+         self->pending_in--;
+       */
     }
   }
 
@@ -376,7 +400,7 @@ gst_signal_processor_pen_buffer (GstSignalProcessor * self, GstPad * pad,
   GstSignalProcessorPad *spad = (GstSignalProcessorPad *) pad;
 
   if (spad->pen) {
-    g_critical ("Pad %s:%s already has penned buffer",
+    GST_WARNING ("Pad %s:%s already has penned buffer",
         GST_DEBUG_PAD_NAME (pad));
     gst_buffer_unref (buffer);
     return;
@@ -386,6 +410,9 @@ gst_signal_processor_pen_buffer (GstSignalProcessor * self, GstPad * pad,
   spad->pen = buffer;
   self->audio_in[spad->index] = (gfloat *) GST_BUFFER_DATA (buffer);
 
+  /* FIXME: isn't that bogus? Should it be just:
+     self->pending_in++;
+   */
   g_assert (self->pending_in != 0);
 
   self->pending_in--;
@@ -417,7 +444,7 @@ gst_signal_processor_do_pulls (GstSignalProcessor * self)
 {
   GList *sinkpads;
 
-  /* not threadsafe atm */
+  /* FIXME: not threadsafe atm */
 
   sinkpads = GST_ELEMENT (self)->sinkpads;
 
@@ -461,7 +488,7 @@ gst_signal_processor_getrange (GstPad * pad, guint64 offset,
 {
   GstSignalProcessor *self;
   GstSignalProcessorPad *spad = (GstSignalProcessorPad *) pad;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_ERROR;
 
   self = GST_SIGNAL_PROCESSOR (GST_PAD_PARENT (pad));
 
@@ -483,6 +510,8 @@ gst_signal_processor_getrange (GstPad * pad, guint64 offset,
       ret = GST_FLOW_OK;
     }
   }
+
+  GST_DEBUG ("returns %s", gst_flow_get_name (ret));
 
   return ret;
 }
@@ -601,6 +630,8 @@ gst_signal_processor_sink_activate_push (GstPad * pad, gboolean active)
     }
   }
 
+  GST_DEBUG ("result : %d", TRUE);
+
   return result;
 }
 
@@ -645,6 +676,8 @@ gst_signal_processor_src_activate_pull (GstPad * pad, gboolean active)
     }
   }
 
+  GST_DEBUG ("result : %d", TRUE);
+
   return result;
 }
 
@@ -671,7 +704,10 @@ gst_signal_processor_change_state (GstElement * element,
       break;
   }
 
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if ((result =
+          GST_ELEMENT_CLASS (parent_class)->change_state (element,
+              transition)) == GST_STATE_CHANGE_FAILURE)
+    goto failure;
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
@@ -686,4 +722,11 @@ gst_signal_processor_change_state (GstElement * element,
   }
 
   return result;
+
+  /* ERRORS */
+failure:
+  {
+    GST_DEBUG ("parent failed state change");
+    return result;
+  }
 }
