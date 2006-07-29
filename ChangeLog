@@ -1,3 +1,9 @@
+2006-07-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/base/gstbasesrc.h:
+	  Note in the docs that the ::newsegment vfunc is not actually used by
+	  GstBaseSrc.
+
 2006-07-28  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstcollectpads.c:
