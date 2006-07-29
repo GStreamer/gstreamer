@@ -1,3 +1,16 @@
+2006-07-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/ladspa/gstsignalprocessor.c:
+	(gst_signal_processor_add_pad_from_template),
+	(gst_signal_processor_init), (gst_signal_processor_setcaps),
+	(gst_signal_processor_process), (gst_signal_processor_pen_buffer),
+	(gst_signal_processor_do_pulls), (gst_signal_processor_getrange),
+	(gst_signal_processor_sink_activate_push),
+	(gst_signal_processor_src_activate_pull),
+	(gst_signal_processor_change_state):
+          Add debugs logs here and there, add more error handling, add some
+          FIXME comments, filed #349189
+
 2006-07-29  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_getcaps),
