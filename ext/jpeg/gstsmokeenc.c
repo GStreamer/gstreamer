@@ -210,7 +210,7 @@ gst_smokeenc_getcaps (GstPad * pad)
   otherpad = (pad == smokeenc->srcpad) ? smokeenc->sinkpad : smokeenc->srcpad;
   caps = gst_pad_get_allowed_caps (otherpad);
   if (pad == smokeenc->srcpad) {
-    name = "image/x-smoke";
+    name = "video/x-smoke";
   } else {
     name = "video/x-raw-yuv";
   }
@@ -242,7 +242,6 @@ gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps)
   const GValue *framerate;
 
   otherpad = (pad == smokeenc->srcpad) ? smokeenc->sinkpad : smokeenc->srcpad;
-
   structure = gst_caps_get_structure (caps, 0);
   framerate = gst_structure_get_value (structure, "framerate");
   if (framerate) {
@@ -257,13 +256,15 @@ gst_smokeenc_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "height", &smokeenc->height);
 
   othercaps = gst_caps_copy (gst_pad_get_pad_template_caps (otherpad));
+
   gst_caps_set_simple (othercaps,
       "width", G_TYPE_INT, smokeenc->width,
       "height", G_TYPE_INT, smokeenc->height,
       "framerate", GST_TYPE_FRACTION, smokeenc->fps_num, smokeenc->fps_denom,
       NULL);
+  GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, othercaps);
 
-  ret = gst_pad_set_caps (smokeenc->srcpad, othercaps);
+  ret = gst_pad_set_caps (otherpad, othercaps);
   gst_caps_unref (othercaps);
 
   if (GST_PAD_LINK_SUCCESSFUL (ret)) {
@@ -299,6 +300,7 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
   GstBuffer *outbuf;
   SmokeCodecFlags flags;
   GstFlowReturn ret;
+  GstCaps *caps;
 
   smokeenc = GST_SMOKEENC (GST_OBJECT_PARENT (pad));
 
@@ -316,7 +318,8 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
     GST_BUFFER_MALLOCDATA (outbuf) = outdata;
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
-
+    caps = GST_PAD_CAPS (smokeenc->srcpad);
+    gst_buffer_set_caps (outbuf, caps);
     smokecodec_encode_id (smokeenc->info, outdata, &encsize);
 
     GST_BUFFER_SIZE (outbuf) = encsize;
@@ -334,6 +337,8 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
   GST_BUFFER_DURATION (outbuf) =
       smokeenc->fps_denom * GST_SECOND / smokeenc->fps_num;
+  caps = GST_PAD_CAPS (smokeenc->srcpad);
+  gst_buffer_set_caps (outbuf, caps);
 
   flags = 0;
   if ((smokeenc->frame % smokeenc->keyframe) == 0) {
