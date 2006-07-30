@@ -1,3 +1,10 @@
+2006-07-31  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/pipelines/parse-launch.c: (GST_START_TEST):
+	Make all uses of identity and fakesink have silent=true to avoid
+	serialising every passing data structure, which is breaking tests
+	on FC4 for some unknown reason.
+
 2006-07-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/parse/Makefile.am:

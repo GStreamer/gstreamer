@@ -84,14 +84,14 @@ check_pipeline_runs (GstElement * p)
 }
 
 static const gchar *test_lines[] = {
-  "filesrc location=music.mp3 ! identity ! fakesink",
-  "filesrc location=music.ogg ! tee ! identity ! identity ! fakesink",
-  "filesrc location=http://domain.com/music.mp3 ! identity ! fakesink",
-  "filesrc location=movie.avi ! tee name=demuxer ! ( queue ! identity ! fakesink ) ( demuxer. ! queue ! identity ! fakesink )",
-  "fakesrc ! video/x-raw-yuv ! fakesink",
-  "fakesrc !   video/raw,  format=(fourcc)YUY2; video/raw, format=(fourcc)YV12 ! fakesink",
-  "fakesrc ! audio/x-raw-int, width=[16,  32], depth={16, 24, 32}, signed=TRUE ! fakesink",
-  "fakesrc ! identity ! identity ! identity ! fakesink",
+  "filesrc location=music.mp3 ! identity silent=true ! fakesink silent=true",
+  "filesrc location=music.ogg ! tee ! identity silent=true ! identity silent=true ! fakesink silent=true",
+  "filesrc location=http://domain.com/music.mp3 ! identity silent=true ! fakesink silent=true",
+  "filesrc location=movie.avi ! tee name=demuxer ! ( queue ! identity silent=true ! fakesink silent=true ) ( demuxer. ! queue ! identity silent=true ! fakesink silent=true )",
+  "fakesrc ! video/x-raw-yuv ! fakesink silent=true",
+  "fakesrc !   video/raw,  format=(fourcc)YUY2; video/raw, format=(fourcc)YV12 ! fakesink silent=true",
+  "fakesrc ! audio/x-raw-int, width=[16,  32], depth={16, 24, 32}, signed=TRUE ! fakesink silent=true",
+  "fakesrc ! identity silent=true ! identity silent=true ! identity silent=true ! fakesink silent=true",
   NULL
 };
 
@@ -110,19 +110,19 @@ GST_END_TEST;
 
 #define PIPELINE1  "fakesrc"
 #define PIPELINE2  "fakesrc name=donald num-buffers= 27 silent =TruE sizetype = 3 data=   Subbuffer\\ data"
-#define PIPELINE3  "fakesrc identity fakesink"
-#define PIPELINE4  "fakesrc num-buffers=4 .src ! identity !.sink identity .src ! .sink fakesink"
-#define PIPELINE5  "fakesrc num-buffers=4 name=src identity name=id1 identity name = id2 fakesink name =sink src. ! id1. id1.! id2.sink id2.src!sink.sink"
-#define PIPELINE6  "pipeline.(name=\"john\" fakesrc num-buffers=4 ( bin. ( ! queue ! identity !( queue ! fakesink )) ))"
-#define PIPELINE7  "fakesrc num-buffers=4 ! tee name=tee .src%d! queue ! fakesink tee.src%d ! queue ! fakesink queue name =\"foo\" ! fakesink tee.src%d ! foo."
+#define PIPELINE3  "fakesrc identity silent=true fakesink silent=true"
+#define PIPELINE4  "fakesrc num-buffers=4 .src ! identity silent=true !.sink identity silent=true .src ! .sink fakesink silent=true"
+#define PIPELINE5  "fakesrc num-buffers=4 name=src identity silent=true name=id1 identity silent=true name = id2 fakesink silent=true name =sink src. ! id1. id1.! id2.sink id2.src!sink.sink"
+#define PIPELINE6  "pipeline.(name=\"john\" fakesrc num-buffers=4 ( bin. ( ! queue ! identity silent=true !( queue ! fakesink silent=true )) ))"
+#define PIPELINE7  "fakesrc num-buffers=4 ! tee name=tee .src%d! queue ! fakesink silent=true tee.src%d ! queue ! fakesink silent=true queue name =\"foo\" ! fakesink silent=true tee.src%d ! foo."
 /* aggregator is borked
- * #define PIPELINE8  "fakesrc num-buffers=4 ! tee name=tee1 .src0,src1 ! .sink0, sink1 aggregator ! fakesink"
+ * #define PIPELINE8  "fakesrc num-buffers=4 ! tee name=tee1 .src0,src1 ! .sink0, sink1 aggregator ! fakesink silent=true"
  * */
-#define PIPELINE8  "fakesrc num-buffers=4 ! fakesink"
-#define PIPELINE9  "fakesrc num-buffers=4 ! test. fakesink name=test"
-#define PIPELINE10 "( fakesrc num-buffers=\"4\" ! ) identity ! fakesink"
-#define PIPELINE11 "fakesink name = sink identity name=id ( fakesrc num-buffers=\"4\" ! id. ) id. ! sink."
-#define PIPELINE12 "file:///tmp/test.file ! fakesink"
+#define PIPELINE8  "fakesrc num-buffers=4 ! fakesink silent=true"
+#define PIPELINE9  "fakesrc num-buffers=4 ! test. fakesink silent=true name=test"
+#define PIPELINE10 "( fakesrc num-buffers=\"4\" ! ) identity silent=true ! fakesink silent=true"
+#define PIPELINE11 "fakesink silent=true name = sink identity silent=true name=id ( fakesrc num-buffers=\"4\" ! id. ) id. ! sink."
+#define PIPELINE12 "file:///tmp/test.file ! fakesink silent=true"
 #define PIPELINE13 "fakesrc ! file:///tmp/test.file"
 
 GST_START_TEST (test_launch_lines2)
@@ -270,29 +270,29 @@ GST_END_TEST;
 
 static const gchar *expected_failures[] = {
   /* checks: fails because a=b. is not a valid element reference in parse.l */
-  "fakesrc num-buffers=4 name=\"a=b\"  a=b. ! fakesink",
+  "fakesrc num-buffers=4 name=\"a=b\"  a=b. ! fakesink silent=true",
   /* checks: Error branch for a non-deserialisable property value */
   "filesrc blocksize=absdff",
   /* checks: That broken caps which don't parse can't create a pipeline */
-  "fakesrc ! video/raw,format=(antwerp)monkeys ! fakesink",
+  "fakesrc ! video/raw,format=(antwerp)monkeys ! fakesink silent=true",
   /* checks: Empty pipeline is invalid */
   "",
   /* checks: Link without sink element failes */
   "fakesrc ! ",
   /* checks: Link without src element failes */
-  " ! fakesink",
+  " ! fakesink silent=true",
   /* checks: Source URI for which no element exists is a failure */
-  "borky://fdaffd ! fakesink",
+  "borky://fdaffd ! fakesink silent=true",
   /* checks: Sink URI for which no element exists is a failure */
   "fakesrc ! borky://fdaffd",
   /* checks: Referencing non-existent source element by name can't link */
-  "fakesrc name=src fakesink name=sink noexiste. ! sink.",
+  "fakesrc name=src fakesink silent=true name=sink noexiste. ! sink.",
   /* checks: Referencing non-existent sink element by name can't link */
-  "fakesrc name=src fakesink name=sink src. ! noexiste.",
+  "fakesrc name=src fakesink silent=true name=sink src. ! noexiste.",
   /* checks: Can't link 2 elements that only have sink pads */
-  "fakesink ! fakesink",
+  "fakesink silent=true ! fakesink silent=true",
   /* checks multi-chain link without src element fails. */
-  "! identity ! identity ! fakesink",
+  "! identity silent=true ! identity silent=true ! fakesink silent=true",
   /* END: */
   NULL
 };
@@ -310,7 +310,7 @@ GST_END_TEST;
 
 static const gchar *leaking_failures[] = {
   /* checks: Invalid pipeline syntax fails */
-  "fakesrc ! identity ! sgsdfagfd @ gfdgfdsgfsgSF",
+  "fakesrc ! identity silent=true ! sgsdfagfd @ gfdgfdsgfsgSF",
   /* checks: Attempting to link to a non-existent pad on an element 
    * created via URI handler should fail */
   "fakesrc ! .foo file:///dev/null",
@@ -413,25 +413,26 @@ GST_START_TEST (delayed_link)
    * a test element based on bin, which contains a fakesrc and a sometimes 
    * pad-template, and trying to link to a fakesink. When the bin transitions
    * to paused it adds a pad, which should get linked to the fakesink */
-  run_delayed_test ("parsetestelement name=src ! fakesink name=sink",
-      "sink", TRUE);
+  run_delayed_test
+      ("parsetestelement name=src ! fakesink silent=true name=sink", "sink",
+      TRUE);
 
   /* Test, but this time specifying both pad names */
   run_delayed_test ("parsetestelement name=src .src ! "
-      ".sink fakesink name=sink", "sink", TRUE);
+      ".sink fakesink silent=true name=sink", "sink", TRUE);
 
   /* Now try with a caps filter, but not testing that
    * the peerpad == sinkpad, because the peer will actually
    * be a capsfilter */
   run_delayed_test ("parsetestelement name=src ! application/x-test-caps ! "
-      "fakesink name=sink", NULL, TRUE);
+      "fakesink silent=true name=sink", NULL, TRUE);
 
   /* Now try with mutually exclusive caps filters that 
    * will prevent linking, but only once gets around to happening -
    * ie, the pipeline should create ok but fail to change state */
   run_delayed_test ("parsetestelement name=src ! application/x-test-caps ! "
-      "identity ! application/x-other-caps ! "
-      "fakesink name=sink", NULL, FALSE);
+      "identity silent=true ! application/x-other-caps ! "
+      "fakesink silent=true name=sink silent=true", NULL, FALSE);
 }
 
 GST_END_TEST;
