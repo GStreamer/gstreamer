@@ -1,5 +1,13 @@
 2006-07-30  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/parse/Makefile.am:
+	* gst/parse/grammar.y:
+	* gst/parse/parse.l:
+          Reverted previous patch as it required to bump the flex dependency to
+          2.5.31, where fc4/5 seem to ship only the ancient 2.5.4a :(
+
+2006-07-30  Stefan Kost  <ensonic@users.sf.net>
+
 	Patch by: Marc-Andre Lureau <marcandre.lureau@gmail.com>
 
 	* gst/parse/Makefile.am:

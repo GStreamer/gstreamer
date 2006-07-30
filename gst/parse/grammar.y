@@ -24,17 +24,7 @@
  */
   
 #define YYERROR_VERBOSE 1
-#define YYLEX_PARAM   scanner
-
-typedef void* yyscan_t;
-
-int _gst_parse_yylex (void * yylval_param , yyscan_t yyscanner);
-int _gst_parse_yylex_init (yyscan_t scanner);
-int _gst_parse_yylex_destroy (yyscan_t scanner);
-struct yy_buffer_state * _gst_parse_yy_scan_string (char* , yyscan_t);
-void _gst_parse_yypush_buffer_state (void * new_buffer ,yyscan_t yyscanner );
-void _gst_parse_yypop_buffer_state (yyscan_t yyscanner );
-
+#define YYPARSE_PARAM graph
 
 #ifdef __GST_PARSE_TRACE
 static guint __strings;
@@ -543,7 +533,8 @@ error:
 }
 
 
-static int yyerror (graph_t *graph, const char *s);
+static int yylex (void *lvalp);
+static int yyerror (const char *s);
 %}
 
 %union {
@@ -574,8 +565,7 @@ static int yyerror (graph_t *graph, const char *s);
 %right '.'
 %left '!' '='
 
-%parse-param { void *scanner, graph_t *graph }
-%pure-parser
+%pure_parser
 
 %start graph
 %%
@@ -800,16 +790,23 @@ graph:		/* NOP */		      { SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERRO
 
 %%
 
+extern FILE *_gst_parse_yyin;
+int _gst_parse_yylex (YYSTYPE *lvalp);
+
+static int yylex (void *lvalp) {
+    return _gst_parse_yylex ((YYSTYPE*) lvalp);
+}
 
 static int
-yyerror (graph_t *graph, const char *s)
+yyerror (const char *s)
 {
   /* FIXME: This should go into the GError somehow, but how? */
   GST_WARNING ("Error during parsing: %s", s);
   return -1;
 }
 
-
+struct yy_buffer_state * _gst_parse_yy_scan_string (char*);
+void _gst_parse_yy_delete_buffer (struct yy_buffer_state *);
 GstElement *
 _gst_parse_launch (const gchar *str, GError **error)
 {
@@ -818,8 +815,8 @@ _gst_parse_launch (const gchar *str, GError **error)
   GSList *walk;
   GstBin *bin = NULL;
   GstElement *ret;
-  yyscan_t scanner;
-
+  struct yy_buffer_state *buf;
+  
   g_return_val_if_fail (str != NULL, NULL);
 
   g.chain = NULL;
@@ -832,22 +829,21 @@ _gst_parse_launch (const gchar *str, GError **error)
 #endif /* __GST_PARSE_TRACE */
 
   dstr = g_strdup (str);
-  _gst_parse_yylex_init( &scanner );
-  _gst_parse_yy_scan_string (dstr, scanner);
+  buf = _gst_parse_yy_scan_string (dstr);
 
 #ifndef YYDEBUG
   yydebug = 1;
 #endif
 
-  if (yyparse (scanner, &g) != 0) {
+  if (yyparse (&g) != 0) {
     SET_ERROR (error, GST_PARSE_ERROR_SYNTAX,
         "Unrecoverable syntax error while parsing pipeline %s", str);
     
     goto error1;
   }
-  _gst_parse_yylex_destroy( scanner );
   g_free (dstr);
-
+  _gst_parse_yy_delete_buffer (buf);
+  
   GST_CAT_DEBUG (GST_CAT_PIPELINE, "got %u elements and %u links",
       g.chain ? g_slist_length (g.chain->elements) : 0,
       g_slist_length (g.links));

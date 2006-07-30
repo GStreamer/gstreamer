@@ -32,6 +32,7 @@ PRINT (const char *format, ...)
 }
 #endif
 
+#define YY_DECL int _gst_parse_yylex (YYSTYPE *lvalp)
 %}
 
 _operator [(){}.!,;=]
@@ -64,14 +65,12 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)
 %x value
 %option noyywrap
 %option nounput
-%option reentrant
-%option bison-bridge
 %%
 
 {_assignment} {
     /* "=" */
     PRINT ("ASSIGNMENT: %s", yytext);
-    yylval->s = gst_parse_strdup (yytext);
+    lvalp->s = gst_parse_strdup (yytext);
     BEGIN (INITIAL);
     return ASSIGNMENT;
 }
@@ -79,14 +78,14 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)
 {_padref} {
     yytext++;
     PRINT ("PADREF: %s", yytext);
-    yylval->s = gst_parse_strdup (yytext);
+    lvalp->s = gst_parse_strdup (yytext);
     BEGIN (INITIAL);
     return PADREF;
 }
 
 {_ref} {
     PRINT ("REF: %s", yytext);
-    yylval->s = gst_parse_strdup (yytext);
+    lvalp->s = gst_parse_strdup (yytext);
     BEGIN (INITIAL);
     return REF;
 }
@@ -96,14 +95,14 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)
     while (!g_ascii_isspace (*pos) && (*pos != '.')) pos++;
     *pos = '\0';
     PRINT ("BINREF: %s", yytext);
-    yylval->s = gst_parse_strdup (yytext);
+    lvalp->s = gst_parse_strdup (yytext);
     BEGIN (INITIAL);
     return BINREF;
 }
 
 {_identifier} {
     PRINT ("IDENTIFIER: %s", yytext);
-    yylval->s = gst_parse_strdup (yytext);
+    lvalp->s = gst_parse_strdup (yytext);
     BEGIN (INITIAL);
     return IDENTIFIER;
 }
@@ -114,22 +113,22 @@ _link ("!"[[:space:]]*{_caps}([[:space:]]*(";"[[:space:]]*{_caps})*[[:space:]]*)
     c++;
     if (*c) {
       while (g_ascii_isspace (*c)) c++;
-      c = yylval->s = gst_parse_strdup (c);
+      c = lvalp->s = gst_parse_strdup (c);
       while (*c) c++;
       if (*--c != '!')
 	g_assert_not_reached ();
       while (g_ascii_isspace (*--c));
       *++c = '\0';
     } else {
-      yylval->s = NULL;
+      lvalp->s = NULL;
     }
     BEGIN (INITIAL);
     return LINK;
 }
 {_url} {
   PRINT ("URL: %s", yytext);
-  yylval->s = g_strdup (yytext);
-  gst_parse_unescape (yylval->s);
+  lvalp->s = g_strdup (yytext);
+  gst_parse_unescape (lvalp->s);
   BEGIN (INITIAL);
   return PARSE_URL;
 }
