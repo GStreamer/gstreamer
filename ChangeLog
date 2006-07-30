@@ -1,3 +1,13 @@
+2006-07-30  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: Marc-Andre Lureau <marcandre.lureau@gmail.com>
+
+	* gst/parse/Makefile.am:
+	* gst/parse/grammar.y:
+	* gst/parse/parse.l:
+	  push & pop the state of the lexer for reentrant use case
+	  Fixes #349180
+
 2006-07-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gstbasesrc.h:

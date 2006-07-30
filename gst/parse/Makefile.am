@@ -18,7 +18,7 @@ libgstparse_la_LIBADD = $(GST_ALL_LIBS)
 noinst_HEADERS = grammar.tab.h
 
 grammar.tab.c grammar.tab.h: grammar.y 
-	$(BISON_PATH) -d -v -p_gst_parse__yy $(srcdir)/grammar.y -o grammar.tab.c && \
+	$(BISON_PATH) -d -v -p_gst_parse_yy $(srcdir)/grammar.y -o grammar.tab.c && \
 	mv grammar.tab.c grammar.tab_tmp.c && \
 	echo '#ifdef HAVE_CONFIG_H' > grammar.tab_tmp2.c && \
 	echo '#include <config.h>' >> grammar.tab_tmp2.c && \
