@@ -1,5 +1,10 @@
 2006-07-31  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstutils.c: (gst_pad_get_fixed_caps_func):
+	Protect _PAD_CAPS with OBJECT_LOCK.
+
+2006-07-31  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_class_init), (gst_pad_dispose),
 	(gst_pad_get_property), (gst_pad_activate_pull),
 	(gst_pad_activate_push), (gst_pad_set_blocked_async),

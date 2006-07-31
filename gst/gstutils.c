@@ -2054,6 +2054,7 @@ gst_pad_get_fixed_caps_func (GstPad * pad)
 
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
+  GST_OBJECT_LOCK (pad);
   if (GST_PAD_CAPS (pad)) {
     result = GST_PAD_CAPS (pad);
 
@@ -2078,6 +2079,8 @@ gst_pad_get_fixed_caps_func (GstPad * pad)
   result = gst_caps_new_empty ();
 
 done:
+  GST_OBJECT_UNLOCK (pad);
+
   return result;
 }
 
