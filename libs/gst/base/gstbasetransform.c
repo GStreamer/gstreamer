@@ -1063,24 +1063,37 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     /* if we are configured, request a buffer with the src caps */
     GstCaps *srccaps;
     GstCaps *sinkcaps;
+    gboolean configured;
 
-    srccaps = GST_PAD_CAPS (trans->srcpad);
-    if (!srccaps)
+    /* take lock, peek if the caps are ok */
+    GST_OBJECT_LOCK (trans->sinkpad);
+    sinkcaps = GST_PAD_CAPS (trans->sinkpad);
+    configured = (sinkcaps == NULL || gst_caps_is_equal (sinkcaps, caps));
+    GST_OBJECT_UNLOCK (trans->sinkpad);
+    if (!configured)
       goto not_configured;
 
-    sinkcaps = GST_PAD_CAPS (trans->sinkpad);
-    if (sinkcaps != NULL && !gst_caps_is_equal (sinkcaps, caps))
+    /* take lock on srcpad to grab the caps, caps can change when pushing a
+     * buffer. */
+    GST_OBJECT_LOCK (trans->srcpad);
+    if ((srccaps = GST_PAD_CAPS (trans->srcpad)))
+      gst_caps_ref (srccaps);
+    GST_OBJECT_UNLOCK (trans->srcpad);
+    if (!srccaps)
       goto not_configured;
 
     GST_DEBUG_OBJECT (trans, "calling transform_size");
     if (!gst_base_transform_transform_size (trans,
             GST_PAD_DIRECTION (pad), caps, size, srccaps, &new_size)) {
+      gst_caps_unref (srccaps);
       goto unknown_size;
     }
 
     res =
         gst_pad_alloc_buffer_and_set_caps (trans->srcpad, offset, new_size,
         srccaps, buf);
+
+    gst_caps_unref (srccaps);
   }
 
   if (res == GST_FLOW_OK && !trans->have_same_caps) {
@@ -1092,21 +1105,39 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
     GstCaps *sinkcaps;
     GstCaps *srccaps;
 
-    sinkcaps = GST_PAD_CAPS (trans->sinkpad);
+    GST_OBJECT_LOCK (trans->sinkpad);
+    if ((sinkcaps = GST_PAD_CAPS (trans->sinkpad)))
+      gst_caps_ref (sinkcaps);
+    GST_OBJECT_UNLOCK (trans->sinkpad);
     if (!sinkcaps)
       goto not_configured;
 
-    srccaps = GST_PAD_CAPS (trans->srcpad);
+    GST_OBJECT_LOCK (trans->srcpad);
+    if ((srccaps = GST_PAD_CAPS (trans->srcpad)))
+      gst_caps_ref (srccaps);
+    GST_OBJECT_UNLOCK (trans->srcpad);
+    if (!srccaps) {
+      gst_caps_unref (sinkcaps);
+      goto not_configured;
+    }
+
     if (!gst_base_transform_transform_size (trans,
             GST_PAD_DIRECTION (trans->srcpad), srccaps, GST_BUFFER_SIZE (*buf),
-            sinkcaps, &new_size))
+            sinkcaps, &new_size)) {
+      gst_caps_unref (srccaps);
+      gst_caps_unref (sinkcaps);
       goto unknown_size;
+    }
+    /* don't need the caps anymore now */
+    gst_caps_unref (srccaps);
 
     gst_buffer_unref (*buf);
 
     *buf = gst_buffer_new_and_alloc (new_size);
-    gst_buffer_set_caps (*buf, sinkcaps);
     GST_BUFFER_OFFSET (*buf) = offset;
+    /* set caps, gives away the ref */
+    GST_BUFFER_CAPS (*buf) = sinkcaps;
+
     res = GST_FLOW_OK;
   }
 
