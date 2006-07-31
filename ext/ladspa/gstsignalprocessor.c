@@ -272,27 +272,19 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
   /* FIXME: why this? */
   if (caps != self->caps) {
     GstStructure *s;
-    gint sample_rate, buffer_frames;
+    gint sample_rate;
 
     s = gst_caps_get_structure (caps, 0);
     if (!gst_structure_get_int (s, "rate", &sample_rate)) {
       GST_WARNING ("got no sample-rate");
       return FALSE;
-    } else
+    } else {
+      GST_DEBUG ("Got rate=%d", self->sample_rate);
       self->sample_rate = sample_rate;
-    if (!gst_structure_get_int (s, "buffer-frames", &buffer_frames)) {
-      GST_WARNING ("got no buffer-frames");
-      /* FIXME: this is not critical
-         return FALSE;
-       */
-    } else
-      self->buffer_frames = buffer_frames;
+    }
 
     if (!klass->setup (self, sample_rate))
       return FALSE;
-
-    GST_DEBUG ("Got rate=%d, buffer-frames=%d", self->sample_rate,
-        self->buffer_frames);
   } else {
     GST_DEBUG ("skipping, have caps already");
   }
@@ -380,6 +372,9 @@ gst_signal_processor_process (GstSignalProcessor * self)
   klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
   klass->process (self, self->buffer_frames);
+
+  self->pending_in = klass->num_audio_in;
+  GST_DEBUG ("pending in=%d, out=%d", self->pending_in, self->pending_out);
 
   /* free unneeded input buffers */
 
