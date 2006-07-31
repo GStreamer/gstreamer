@@ -237,6 +237,10 @@ gst_signal_processor_init (GstSignalProcessor * self,
   self->audio_out = g_new0 (gfloat *, klass->num_audio_out);
   self->control_out = g_new0 (gfloat, klass->num_control_out);
 
+  /* init */
+  self->pending_in = klass->num_audio_in;
+  self->pending_out = 0;
+
   self->sample_rate = 0;
 }
 
@@ -348,8 +352,11 @@ gst_signal_processor_process (GstSignalProcessor * self)
       l1 = l1 ? l1->next : NULL, l2 = l2 ? l2->next : NULL) {
     GstSignalProcessorPad *srcpad, *sinkpad;
 
-    if (l1)
-      nframes = MIN (nframes, GST_BUFFER_SIZE (l1->data) / sizeof (gfloat));
+    if (l1) {
+      GstSignalProcessorPad *tmp = (GstSignalProcessorPad *) l1->data;
+
+      nframes = MIN (nframes, GST_BUFFER_SIZE (tmp->pen) / sizeof (gfloat));
+    }
 
     if (!l2) {
       /* the output buffers have been covered, yay -- just keep looping to check
@@ -394,6 +401,8 @@ gst_signal_processor_process (GstSignalProcessor * self)
   g_assert (nframes < G_MAXUINT);
 
   klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
+
+  GST_INFO_OBJECT (self, "process(%u)", nframes);
 
   klass->process (self, nframes);
 
