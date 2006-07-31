@@ -18,6 +18,14 @@
 
 2006-07-31  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_buffer_alloc):
+	Use OBJECT_LOCK and refcounting to get the pad caps in the
+	buffer_alloc function because the caps could change while we are
+	busy with them. Fixes #349105
+
+2006-07-31  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstutils.c: (gst_pad_get_fixed_caps_func):
 	Protect _PAD_CAPS with OBJECT_LOCK.
 
