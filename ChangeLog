@@ -1,3 +1,10 @@
+2006-07-31  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* gst/asfdemux/gstasfdemux.c:
+	Fix dist by including gst-libs/
+
 2006-07-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/dvdreadsrc.c: (plugin_init):

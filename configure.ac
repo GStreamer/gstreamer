@@ -411,6 +411,8 @@ dnl *** output files ***
 
 AC_CONFIG_FILES(
 Makefile
+gst-libs/Makefile
+gst-libs/gst/Makefile
 gst/Makefile
 gst/asfdemux/Makefile
 gst/dvdlpcmdec/Makefile
