@@ -1,5 +1,9 @@
 2006-08-01  Andy Wingo  <wingo@pobox.com>
 
+	* ext/ladspa/gstsignalprocessor.c (gst_signal_processor_process):
+	Fix nframes-choosing.
+	(gst_signal_processor_init): Init pending_in and pending_out.
+
 	* ext/ladspa/gstsignalprocessor.c (gst_signal_processor_init): No
 	more default sample rate, although we never check that the sample
 	rate actually gets set. Something for the future.
