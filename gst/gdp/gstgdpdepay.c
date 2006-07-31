@@ -81,7 +81,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_gdp_depay_debug);
 GST_BOILERPLATE_FULL (GstGDPDepay, gst_gdp_depay, GstElement,
     GST_TYPE_ELEMENT, _do_init);
 
+static gboolean gst_gdp_depay_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer);
+
 static GstStateChangeReturn gst_gdp_depay_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -121,14 +123,15 @@ gst_gdp_depay_init (GstGDPDepay * gdpdepay, GstGDPDepayClass * g_class)
       gst_pad_new_from_static_template (&gdp_depay_sink_template, "sink");
   gst_pad_set_chain_function (gdpdepay->sinkpad,
       GST_DEBUG_FUNCPTR (gst_gdp_depay_chain));
+  gst_pad_set_event_function (gdpdepay->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_gdp_depay_sink_event));
   gst_element_add_pad (GST_ELEMENT (gdpdepay), gdpdepay->sinkpad);
 
   gdpdepay->srcpad =
       gst_pad_new_from_static_template (&gdp_depay_src_template, "src");
-  gst_element_add_pad (GST_ELEMENT (gdpdepay), gdpdepay->srcpad);
-
   /* our caps will always be decided by the incoming GDP caps buffers */
   gst_pad_use_fixed_caps (gdpdepay->srcpad);
+  gst_element_add_pad (GST_ELEMENT (gdpdepay), gdpdepay->srcpad);
 
   gdpdepay->adapter = gst_adapter_new ();
 }
@@ -147,6 +150,32 @@ gst_gdp_depay_finalize (GObject * gobject)
   g_object_unref (this->adapter);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (gobject));
+}
+
+/* we ignore most events because the only events we want to output are those
+ * found in the gdp data stream.
+ * An exception is the EOS event, if we get that on the sinkpad, we certainly
+ * are not going to produce more data.
+ */
+static gboolean
+gst_gdp_depay_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstGDPDepay *this;
+  gboolean res = TRUE;
+
+  this = GST_GDP_DEPAY (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      res = gst_pad_push_event (this->srcpad, event);
+      break;
+    default:
+      gst_event_unref (event);
+      break;
+  }
+  gst_object_unref (this);
+
+  return res;
 }
 
 static GstFlowReturn
@@ -286,7 +315,6 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
           ret = GST_FLOW_ERROR;
           goto done;
         }
-        /* FIXME: set me as source ? */
         GST_DEBUG_OBJECT (this, "sending deserialized event %p of type %s",
             event, gst_event_type_get_name (event->type));
         gst_pad_push_event (this->srcpad, event);
