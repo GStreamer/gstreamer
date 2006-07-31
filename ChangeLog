@@ -1,3 +1,11 @@
+2006-07-31  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstvalue.c: (gst_value_compare_list):
+	Fix GstValueList comparison code. Fixes #347293.
+
+	* tests/check/gst/gstvalue.c: (GST_START_TEST):
+	Check to test GstValueList comparison.
+
 2006-07-31  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstelementfactory.c: (gst_element_factory_create):

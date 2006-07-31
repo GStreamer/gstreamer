@@ -590,6 +590,16 @@ GST_START_TEST (test_value_compare)
   fail_if (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL,
       "Value lists with different size were equal when they shouldn't be");
 
+  /* Carry over the lists to this next check: */
+  /* Lists with same size but list1 contains one more element not in list2 */
+  g_value_set_int (&tmp, 5);
+  gst_value_list_append_value (&value1, &tmp);
+
+  fail_if (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL,
+      "Value lists with different elements were equal when they shouldn't be");
+  fail_if (gst_value_compare (&value2, &value1) == GST_VALUE_EQUAL,
+      "Value lists with different elements were equal when they shouldn't be");
+
   g_value_unset (&value1);
   g_value_unset (&value2);
   g_value_unset (&tmp);
@@ -633,6 +643,9 @@ GST_START_TEST (test_value_compare)
   gst_value_array_append_value (&value2, &tmp);
 
   fail_if (gst_value_compare (&value1, &value2) == GST_VALUE_EQUAL,
+      "Value arrays with different size were equal when they shouldn't be");
+  /* order should not matter */
+  fail_if (gst_value_compare (&value2, &value1) == GST_VALUE_EQUAL,
       "Value arrays with different size were equal when they shouldn't be");
 
   g_value_unset (&value1);

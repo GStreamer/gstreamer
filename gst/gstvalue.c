@@ -465,22 +465,45 @@ gst_value_compare_list (const GValue * value1, const GValue * value2)
   GArray *array2 = value2->data[0].v_pointer;
   GValue *v1;
   GValue *v2;
+  gint len, to_remove;
+  guint8 *removed;
 
-  if (array1->len != array2->len)
+  /* get length and do initial length check. */
+  len = array1->len;
+  if (len != array2->len)
     return GST_VALUE_UNORDERED;
 
-  for (i = 0; i < array1->len; i++) {
-    v1 = &g_array_index (array1, GValue, i);
-    for (j = 0; j < array1->len; j++) {
-      v2 = &g_array_index (array2, GValue, j);
-      if (gst_value_compare (v1, v2) == GST_VALUE_EQUAL)
-        break;
-    }
-    if (j == array1->len) {
-      return GST_VALUE_UNORDERED;
-    }
-  }
+  /* place to mark removed value indices of array2 */
+  removed = g_newa (guint8, len);
+  memset (removed, 0, len);
+  to_remove = len;
 
+  /* loop over array1, all items should be in array2. When we find an
+   * item in array2, remove it from array2 by marking it as removed */
+  for (i = 0; i < len; i++) {
+    v1 = &g_array_index (array1, GValue, i);
+    for (j = 0; j < len; j++) {
+      /* item is removed, we can skip it */
+      if (removed[j])
+        continue;
+      v2 = &g_array_index (array2, GValue, j);
+      if (gst_value_compare (v1, v2) == GST_VALUE_EQUAL) {
+        /* mark item as removed now that we found it in array2 and 
+         * decrement the number of remaining items in array2. */
+        removed[j] = 1;
+        to_remove--;
+        break;
+      }
+    }
+    /* item in array1 and not in array2, UNORDERED */
+    if (j == len)
+      return GST_VALUE_UNORDERED;
+  }
+  /* if not all items were removed, array2 contained something not in array1 */
+  if (to_remove != 0)
+    return GST_VALUE_UNORDERED;
+
+  /* arrays are equal */
   return GST_VALUE_EQUAL;
 }
 
