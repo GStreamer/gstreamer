@@ -1428,6 +1428,8 @@ gst_dfbvideosink_change_state (GstElement * element, GstStateChange transition)
         if (!gst_dfbvideosink_setup (dfbvideosink)) {
           GST_DEBUG_OBJECT (dfbvideosink, "setup failed when changing state "
               "from NULL to READY");
+          GST_ELEMENT_ERROR (dfbvideosink, RESOURCE, OPEN_WRITE,
+              (NULL), ("Failed initializing DirectFB system"));
           return GST_STATE_CHANGE_FAILURE;
         }
       }
