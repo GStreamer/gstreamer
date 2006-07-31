@@ -1,3 +1,10 @@
+2006-07-31  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_init),
+	(gst_gdp_depay_sink_event), (gst_gdp_depay_chain):
+	Consume all events except EOS because we generate events from
+	the gdp payload instead. Fixes #349204
+
 2006-07-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/xvid/gstxviddec.c: (gst_xviddec_init), (gst_xviddec_reset),
