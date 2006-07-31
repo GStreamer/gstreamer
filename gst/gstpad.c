@@ -313,6 +313,7 @@ gst_pad_class_init (GstPadClass * klass)
       g_param_spec_enum ("direction", "Direction", "The direction of the pad",
           GST_TYPE_PAD_DIRECTION, GST_PAD_UNKNOWN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
+  /* FIXME, Make G_PARAM_CONSTRUCT_ONLY when we fix ghostpads. */
   g_object_class_install_property (gobject_class, PAD_PROP_TEMPLATE,
       g_param_spec_object ("template", "Template",
           "The GstPadTemplate of this pad", GST_TYPE_PAD_TEMPLATE,
@@ -368,8 +369,7 @@ gst_pad_dispose (GObject * object)
 {
   GstPad *pad = GST_PAD (object);
 
-  GST_CAT_DEBUG (GST_CAT_REFCOUNTING, "dispose %s:%s",
-      GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, pad, "dispose");
 
   /* we don't hold a ref to the peer so we can just set the
    * peer to NULL. */
@@ -443,7 +443,9 @@ gst_pad_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PAD_PROP_CAPS:
+      GST_OBJECT_LOCK (object);
       g_value_set_boxed (value, GST_PAD_CAPS (object));
+      GST_OBJECT_UNLOCK (object);
       break;
     case PAD_PROP_DIRECTION:
       g_value_set_enum (value, GST_PAD_DIRECTION (object));
@@ -766,8 +768,8 @@ was_ok:
 deactivate_failed:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
-        "failed to %s pad (%s:%s) in switch to pull from mode %d",
-        (active ? "activate" : "deactivate"), GST_DEBUG_PAD_NAME (pad), old);
+        "failed to %s in switch to pull from mode %d",
+        (active ? "activate" : "deactivate"), old);
     return FALSE;
   }
 peer_failed:
@@ -871,8 +873,8 @@ was_ok:
 deactivate_failed:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
-        "failed to %s pad (%s:%s) in switch to push from mode %d",
-        (active ? "activate" : "deactivate"), GST_DEBUG_PAD_NAME (pad), old);
+        "failed to %s in switch to push from mode %d",
+        (active ? "activate" : "deactivate"), old);
     return FALSE;
   }
 failure:
@@ -950,8 +952,7 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
     goto had_right_state;
 
   if (blocked) {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocking pad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocking pad");
 
     GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKED);
     pad->block_callback = callback;
@@ -962,8 +963,7 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "blocked");
     }
   } else {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocking pad %s:%s",
-        GST_DEBUG_PAD_NAME (pad));
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocking pad");
 
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKED);
 
@@ -986,8 +986,7 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
 had_right_state:
   {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pad %s:%s was in right state (%d)", GST_DEBUG_PAD_NAME (pad),
-        was_blocked);
+        "pad was in right state (%d)", was_blocked);
     GST_OBJECT_UNLOCK (pad);
 
     return FALSE;
@@ -1058,8 +1057,8 @@ gst_pad_set_activate_function (GstPad * pad, GstPadActivateFunction activate)
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_PAD_ACTIVATEFUNC (pad) = activate;
-  GST_CAT_DEBUG (GST_CAT_PADS, "activatefunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (activate));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "activatefunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (activate));
 }
 
 /**
@@ -1078,8 +1077,8 @@ gst_pad_set_activatepull_function (GstPad * pad,
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_PAD_ACTIVATEPULLFUNC (pad) = activatepull;
-  GST_CAT_DEBUG (GST_CAT_PADS, "activatepullfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (activatepull));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "activatepullfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (activatepull));
 }
 
 /**
@@ -1097,8 +1096,8 @@ gst_pad_set_activatepush_function (GstPad * pad,
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_PAD_ACTIVATEPUSHFUNC (pad) = activatepush;
-  GST_CAT_DEBUG (GST_CAT_PADS, "activatepushfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (activatepush));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "activatepushfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (activatepush));
 }
 
 /**
@@ -1116,8 +1115,8 @@ gst_pad_set_chain_function (GstPad * pad, GstPadChainFunction chain)
   g_return_if_fail (GST_PAD_DIRECTION (pad) == GST_PAD_SINK);
 
   GST_PAD_CHAINFUNC (pad) = chain;
-  GST_CAT_DEBUG (GST_CAT_PADS, "chainfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (chain));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "chainfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (chain));
 }
 
 /**
@@ -1137,8 +1136,8 @@ gst_pad_set_getrange_function (GstPad * pad, GstPadGetRangeFunction get)
 
   GST_PAD_GETRANGEFUNC (pad) = get;
 
-  GST_CAT_DEBUG (GST_CAT_PADS, "getrangefunc for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (get));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "getrangefunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (get));
 }
 
 /**
@@ -1158,8 +1157,8 @@ gst_pad_set_checkgetrange_function (GstPad * pad,
 
   GST_PAD_CHECKGETRANGEFUNC (pad) = check;
 
-  GST_CAT_DEBUG (GST_CAT_PADS, "checkgetrangefunc for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (check));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "checkgetrangefunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (check));
 }
 
 /**
@@ -1176,8 +1175,8 @@ gst_pad_set_event_function (GstPad * pad, GstPadEventFunction event)
 
   GST_PAD_EVENTFUNC (pad) = event;
 
-  GST_CAT_DEBUG (GST_CAT_PADS, "eventfunc for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (event));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "eventfunc for set to %s",
+      GST_DEBUG_FUNCPTR_NAME (event));
 }
 
 /**
@@ -1194,8 +1193,8 @@ gst_pad_set_query_function (GstPad * pad, GstPadQueryFunction query)
 
   GST_PAD_QUERYFUNC (pad) = query;
 
-  GST_CAT_DEBUG (GST_CAT_PADS, "queryfunc for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (query));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "queryfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (query));
 }
 
 /**
@@ -1213,8 +1212,8 @@ gst_pad_set_query_type_function (GstPad * pad,
 
   GST_PAD_QUERYTYPEFUNC (pad) = type_func;
 
-  GST_CAT_DEBUG (GST_CAT_PADS, "querytypefunc for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (type_func));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "querytypefunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (type_func));
 }
 
 /**
@@ -1288,8 +1287,8 @@ gst_pad_set_internal_link_function (GstPad * pad, GstPadIntLinkFunction intlink)
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_PAD_INTLINKFUNC (pad) = intlink;
-  GST_CAT_DEBUG (GST_CAT_PADS, "internal link for %s:%s  set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (intlink));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "internal link set to %s",
+      GST_DEBUG_FUNCPTR_NAME (intlink));
 }
 
 /**
@@ -1315,8 +1314,8 @@ gst_pad_set_link_function (GstPad * pad, GstPadLinkFunction link)
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_PAD_LINKFUNC (pad) = link;
-  GST_CAT_DEBUG (GST_CAT_PADS, "linkfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (link));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "linkfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (link));
 }
 
 /**
@@ -1333,8 +1332,8 @@ gst_pad_set_unlink_function (GstPad * pad, GstPadUnlinkFunction unlink)
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_PAD_UNLINKFUNC (pad) = unlink;
-  GST_CAT_DEBUG (GST_CAT_PADS, "unlinkfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (unlink));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "unlinkfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (unlink));
 }
 
 /**
@@ -1369,8 +1368,8 @@ gst_pad_set_getcaps_function (GstPad * pad, GstPadGetCapsFunction getcaps)
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_PAD_GETCAPSFUNC (pad) = getcaps;
-  GST_CAT_DEBUG (GST_CAT_PADS, "getcapsfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (getcaps));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "getcapsfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (getcaps));
 }
 
 /**
@@ -1390,8 +1389,8 @@ gst_pad_set_acceptcaps_function (GstPad * pad,
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_PAD_ACCEPTCAPSFUNC (pad) = acceptcaps;
-  GST_CAT_DEBUG (GST_CAT_PADS, "acceptcapsfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (acceptcaps));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "acceptcapsfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (acceptcaps));
 }
 
 /**
@@ -1410,8 +1409,8 @@ gst_pad_set_fixatecaps_function (GstPad * pad,
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_PAD_FIXATECAPSFUNC (pad) = fixatecaps;
-  GST_CAT_DEBUG (GST_CAT_PADS, "fixatecapsfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (fixatecaps));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "fixatecapsfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (fixatecaps));
 }
 
 /**
@@ -1431,8 +1430,8 @@ gst_pad_set_setcaps_function (GstPad * pad, GstPadSetCapsFunction setcaps)
   g_return_if_fail (GST_IS_PAD (pad));
 
   GST_PAD_SETCAPSFUNC (pad) = setcaps;
-  GST_CAT_DEBUG (GST_CAT_PADS, "setcapsfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (setcaps));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "setcapsfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (setcaps));
 }
 
 /**
@@ -1451,8 +1450,8 @@ gst_pad_set_bufferalloc_function (GstPad * pad,
   g_return_if_fail (GST_PAD_IS_SINK (pad));
 
   GST_PAD_BUFFERALLOCFUNC (pad) = bufalloc;
-  GST_CAT_DEBUG (GST_CAT_PADS, "bufferallocfunc for %s:%s set to %s",
-      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_FUNCPTR_NAME (bufalloc));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "bufferallocfunc set to %s",
+      GST_DEBUG_FUNCPTR_NAME (bufalloc));
 }
 
 /**
@@ -1636,17 +1635,14 @@ gst_pad_link_check_hierarchy (GstPad * src, GstPad * sink)
   /* if one of the pads has no parent, we allow the link */
   if (psrc && psink) {
     /* if the parents are the same, we have a loop */
-    if (psrc == psink) {
-      GST_CAT_DEBUG (GST_CAT_CAPS, "pads have same parent %" GST_PTR_FORMAT,
-          psrc);
-      res = FALSE;
-      goto done;
-    }
+    if (G_UNLIKELY (psrc == psink))
+      goto same_parents;
+
     /* if they both have a parent, we check the grandparents */
     psrc = gst_object_get_parent (psrc);
     psink = gst_object_get_parent (psink);
 
-    if (psrc != psink) {
+    if (G_UNLIKELY (psrc != psink)) {
       /* if they have grandparents but they are not the same */
       GST_CAT_DEBUG (GST_CAT_CAPS,
           "pads have different grandparents %" GST_PTR_FORMAT " and %"
@@ -1660,10 +1656,20 @@ gst_pad_link_check_hierarchy (GstPad * src, GstPad * sink)
   }
 done:
   return res;
+
+  /* ERRORS */
+same_parents:
+  {
+    GST_CAT_DEBUG (GST_CAT_CAPS, "pads have same parent %" GST_PTR_FORMAT,
+        psrc);
+    res = FALSE;
+    goto done;
+  }
 }
 
 /* FIXME leftover from an attempt at refactoring... */
-/* call with the two pads unlocked */
+/* call with the two pads unlocked, when this function returns GST_PAD_LINK_OK,
+ * the two pads will be locked in the srcpad, sinkpad order. */
 static GstPadLinkReturn
 gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad)
 {
@@ -1871,11 +1877,11 @@ gst_pad_get_caps_unlocked (GstPad * pad)
 {
   GstCaps *result = NULL;
 
-  GST_CAT_DEBUG (GST_CAT_CAPS, "get pad caps of %s:%s (%p)",
-      GST_DEBUG_PAD_NAME (pad), pad);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get pad caps");
 
   if (GST_PAD_GETCAPSFUNC (pad)) {
-    GST_CAT_DEBUG (GST_CAT_CAPS, "dispatching to pad getcaps function");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "dispatching to pad getcaps function");
 
     GST_OBJECT_FLAG_SET (pad, GST_PAD_IN_GETCAPS);
     GST_OBJECT_UNLOCK (pad);
@@ -1887,9 +1893,8 @@ gst_pad_get_caps_unlocked (GstPad * pad)
       g_critical ("pad %s:%s returned NULL caps from getcaps function",
           GST_DEBUG_PAD_NAME (pad));
     } else {
-      GST_CAT_DEBUG (GST_CAT_CAPS,
-          "pad getcaps %s:%s returned %" GST_PTR_FORMAT,
-          GST_DEBUG_PAD_NAME (pad), result);
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+          "pad getcaps returned %" GST_PTR_FORMAT, result);
 #ifndef G_DISABLE_ASSERT
       /* check that the returned caps are a real subset of the template caps */
       if (GST_PAD_PAD_TEMPLATE (pad)) {
@@ -1918,7 +1923,7 @@ gst_pad_get_caps_unlocked (GstPad * pad)
     GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 
     result = GST_PAD_TEMPLATE_CAPS (templ);
-    GST_CAT_DEBUG (GST_CAT_CAPS,
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, result,
         result);
 
@@ -1928,14 +1933,14 @@ gst_pad_get_caps_unlocked (GstPad * pad)
   if (GST_PAD_CAPS (pad)) {
     result = GST_PAD_CAPS (pad);
 
-    GST_CAT_DEBUG (GST_CAT_CAPS,
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "using pad caps %p %" GST_PTR_FORMAT, result, result);
 
     result = gst_caps_ref (result);
     goto done;
   }
 
-  GST_CAT_DEBUG (GST_CAT_CAPS, "pad has no caps");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "pad has no caps");
   result = gst_caps_new_empty ();
 
 done:
@@ -1966,8 +1971,7 @@ gst_pad_get_caps (GstPad * pad)
 
   GST_OBJECT_LOCK (pad);
 
-  GST_CAT_DEBUG (GST_CAT_CAPS, "get pad caps of %s:%s (%p)",
-      GST_DEBUG_PAD_NAME (pad), pad);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get pad caps");
 
   result = gst_pad_get_caps_unlocked (pad);
   GST_OBJECT_UNLOCK (pad);
@@ -1995,8 +1999,7 @@ gst_pad_peer_get_caps (GstPad * pad)
 
   GST_OBJECT_LOCK (pad);
 
-  GST_CAT_DEBUG (GST_CAT_CAPS, "get peer caps of %s:%s (%p)",
-      GST_DEBUG_PAD_NAME (pad), pad);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get peer caps");
 
   peerpad = GST_PAD_PEER (pad);
   if (G_UNLIKELY (peerpad == NULL))
@@ -2157,21 +2160,16 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
   if (caps == NULL)
     return TRUE;
 
+  /* lock for checking the existing caps */
   GST_OBJECT_LOCK (pad);
   acceptfunc = GST_PAD_ACCEPTCAPSFUNC (pad);
-  if (GST_PAD_CAPS (pad) != NULL)
-    existing = gst_caps_ref (GST_PAD_CAPS (pad));
-
-  GST_CAT_DEBUG (GST_CAT_CAPS, "pad accept caps of %s:%s (%p)",
-      GST_DEBUG_PAD_NAME (pad), pad);
-  GST_OBJECT_UNLOCK (pad);
-
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "accept caps of %p", caps);
   /* The current caps on a pad are trivially acceptable */
-  if (existing) {
+  if (G_LIKELY ((existing = GST_PAD_CAPS (pad)))) {
     if (caps == existing || gst_caps_is_equal (caps, existing))
       goto is_same_caps;
-    gst_caps_unref (existing);
   }
+  GST_OBJECT_UNLOCK (pad);
 
   if (G_LIKELY (acceptfunc)) {
     /* we can call the function */
@@ -2183,18 +2181,21 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
   return result;
 
 is_same_caps:
-  gst_caps_unref (existing);
-  return TRUE;
+  {
+    GST_OBJECT_UNLOCK (pad);
+    return TRUE;
+  }
 }
 
 /**
  * gst_pad_peer_accept_caps:
- * @pad: a  #GstPad to check
+ * @pad: a  #GstPad to check the peer of
  * @caps: a #GstCaps to check on the pad
  *
- * Check if the given pad accepts the caps.
+ * Check if the peer of @pad accepts @caps. If @pad has no peer, this function
+ * returns TRUE.
  *
- * Returns: TRUE if the pad can accept the caps.
+ * Returns: TRUE if the peer of @pad can accept the caps or @pad has no peer.
  */
 gboolean
 gst_pad_peer_accept_caps (GstPad * pad, GstCaps * caps)
@@ -2206,8 +2207,7 @@ gst_pad_peer_accept_caps (GstPad * pad, GstCaps * caps)
 
   GST_OBJECT_LOCK (pad);
 
-  GST_CAT_DEBUG (GST_CAT_CAPS, "peer accept caps of %s:%s (%p)",
-      GST_DEBUG_PAD_NAME (pad), pad);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "peer accept caps of (%p)", pad);
 
   peerpad = GST_PAD_PEER (pad);
   if (G_UNLIKELY (peerpad == NULL))
@@ -2251,16 +2251,14 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
   g_return_val_if_fail (caps == NULL || gst_caps_is_fixed (caps), FALSE);
 
   GST_OBJECT_LOCK (pad);
-  setcaps = GST_PAD_SETCAPSFUNC (pad);
-
   existing = GST_PAD_CAPS (pad);
-  if (existing == caps) {
-    GST_OBJECT_UNLOCK (pad);
-    return TRUE;
-  }
+  if (existing == caps)
+    goto was_ok;
 
   if (gst_caps_is_equal (caps, existing))
     goto setting_same_caps;
+
+  setcaps = GST_PAD_SETCAPSFUNC (pad);
 
   /* call setcaps function to configure the pad only if the
    * caps is not NULL */
@@ -2273,37 +2271,39 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
       GST_OBJECT_LOCK (pad);
       GST_OBJECT_FLAG_UNSET (pad, GST_PAD_IN_SETCAPS);
     } else {
-      GST_CAT_DEBUG (GST_CAT_CAPS, "pad %s:%s was dispatching",
-          GST_DEBUG_PAD_NAME (pad));
+      GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "pad was dispatching");
     }
   }
 
   gst_caps_replace (&GST_PAD_CAPS (pad), caps);
-  GST_CAT_DEBUG (GST_CAT_CAPS, "%s:%s caps %" GST_PTR_FORMAT,
-      GST_DEBUG_PAD_NAME (pad), caps);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "caps %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (pad);
 
   g_object_notify (G_OBJECT (pad), "caps");
 
   return TRUE;
 
+was_ok:
+  {
+    GST_OBJECT_UNLOCK (pad);
+    return TRUE;
+  }
 setting_same_caps:
   {
     gst_caps_replace (&GST_PAD_CAPS (pad), caps);
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "caps %" GST_PTR_FORMAT " same as existing, updating ptr only", caps);
     GST_OBJECT_UNLOCK (pad);
-
     return TRUE;
   }
-/* errors */
+
+  /* ERRORS */
 could_not_set:
   {
     GST_OBJECT_LOCK (pad);
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_IN_SETCAPS);
-    GST_CAT_DEBUG (GST_CAT_CAPS,
-        "pad %s:%s, caps %" GST_PTR_FORMAT " could not be set",
-        GST_DEBUG_PAD_NAME (pad), caps);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "caps %" GST_PTR_FORMAT " could not be set", caps);
     GST_OBJECT_UNLOCK (pad);
 
     return FALSE;
@@ -2333,7 +2333,8 @@ gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
 
 not_accepted:
   {
-    GST_CAT_DEBUG (GST_CAT_CAPS, "caps %" GST_PTR_FORMAT " not accepted", caps);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "caps %" GST_PTR_FORMAT " not accepted", caps);
     return FALSE;
   }
 }
@@ -2362,7 +2363,8 @@ gst_pad_configure_src (GstPad * pad, GstCaps * caps, gboolean dosetcaps)
 
 not_accepted:
   {
-    GST_CAT_DEBUG (GST_CAT_CAPS, "caps %" GST_PTR_FORMAT " not accepted", caps);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "caps %" GST_PTR_FORMAT " not accepted", caps);
     return FALSE;
   }
 }
@@ -2448,8 +2450,7 @@ gst_pad_get_allowed_caps (GstPad * srcpad)
   if (G_UNLIKELY (peer == NULL))
     goto no_peer;
 
-  GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: getting allowed caps",
-      GST_DEBUG_PAD_NAME (srcpad));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PROPERTIES, srcpad, "getting allowed caps");
 
   gst_object_ref (peer);
   GST_OBJECT_UNLOCK (srcpad);
@@ -2462,14 +2463,14 @@ gst_pad_get_allowed_caps (GstPad * srcpad)
   gst_caps_unref (peercaps);
   gst_caps_unref (mycaps);
 
-  GST_CAT_DEBUG (GST_CAT_CAPS, "allowed caps %" GST_PTR_FORMAT, caps);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, srcpad, "allowed caps %" GST_PTR_FORMAT,
+      caps);
 
   return caps;
 
 no_peer:
   {
-    GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: no peer",
-        GST_DEBUG_PAD_NAME (srcpad));
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PROPERTIES, srcpad, "no peer");
     GST_OBJECT_UNLOCK (srcpad);
 
     return NULL;
@@ -2506,25 +2507,97 @@ gst_pad_get_negotiated_caps (GstPad * pad)
   if (G_UNLIKELY ((peer = GST_PAD_PEER (pad)) == NULL))
     goto no_peer;
 
-  GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: getting negotiated caps",
-      GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PROPERTIES, pad, "getting negotiated caps");
 
   caps = GST_PAD_CAPS (pad);
   if (caps)
     gst_caps_ref (caps);
   GST_OBJECT_UNLOCK (pad);
 
-  GST_CAT_DEBUG (GST_CAT_CAPS, "negotiated caps %" GST_PTR_FORMAT, caps);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "negotiated caps %" GST_PTR_FORMAT,
+      caps);
 
   return caps;
 
 no_peer:
   {
-    GST_CAT_DEBUG (GST_CAT_PROPERTIES, "%s:%s: no peer",
-        GST_DEBUG_PAD_NAME (pad));
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PROPERTIES, pad, "no peer");
     GST_OBJECT_UNLOCK (pad);
 
     return NULL;
+  }
+}
+
+/* calls the buffer_alloc function on the given pad */
+static GstFlowReturn
+gst_pad_buffer_alloc_unchecked (GstPad * pad, guint64 offset, gint size,
+    GstCaps * caps, GstBuffer ** buf)
+{
+  GstFlowReturn ret;
+  GstPadBufferAllocFunction bufferallocfunc;
+
+  GST_OBJECT_LOCK (pad);
+  /* when the pad is flushing we cannot give a buffer */
+  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+    goto flushing;
+
+  if (offset == GST_BUFFER_OFFSET_NONE) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+        "calling bufferallocfunc &%s (@%p) for size %d offset NONE",
+        GST_DEBUG_FUNCPTR_NAME (bufferallocfunc), &bufferallocfunc, size);
+  } else {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+        "calling bufferallocfunc &%s (@%p) of for size %d offset %"
+        G_GUINT64_FORMAT, GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
+        &bufferallocfunc, size, offset);
+  }
+  GST_OBJECT_UNLOCK (pad);
+
+  /* G_LIKELY for now since most elements don't implement a buffer alloc
+   * function and there is no default alloc proxy function as this is usually
+   * not possible. */
+  if (G_LIKELY ((bufferallocfunc = pad->bufferallocfunc) == NULL))
+    goto fallback;
+
+  ret = bufferallocfunc (pad, offset, size, caps, buf);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto error;
+  /* no error, but NULL buffer means fallback to the default */
+  if (G_UNLIKELY (*buf == NULL))
+    goto fallback;
+
+  /* If the buffer alloc function didn't set up the caps like it should,
+   * do it for it */
+  if (G_UNLIKELY (caps && (GST_BUFFER_CAPS (*buf) == NULL))) {
+    GST_WARNING_OBJECT (pad,
+        "Buffer allocation function did not set caps. Setting");
+    gst_buffer_set_caps (*buf, caps);
+  }
+  return ret;
+
+flushing:
+  {
+    /* pad was flushing */
+    GST_OBJECT_UNLOCK (pad);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "pad was flushing");
+    return GST_FLOW_WRONG_STATE;
+  }
+error:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+        "alloc function returned error (%d) %s", ret, gst_flow_get_name (ret));
+    return ret;
+  }
+fallback:
+  {
+    /* fallback case, allocate a buffer of our own, add pad caps. */
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "fallback buffer alloc");
+
+    *buf = gst_buffer_new_and_alloc (size);
+    GST_BUFFER_OFFSET (*buf) = offset;
+    gst_buffer_set_caps (*buf, caps);
+
+    return GST_FLOW_OK;
   }
 }
 
@@ -2534,7 +2607,6 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
 {
   GstPad *peer;
   GstFlowReturn ret;
-  GstPadBufferAllocFunction bufferallocfunc;
   gboolean caps_changed;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
@@ -2552,52 +2624,26 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
   gst_object_ref (peer);
   GST_OBJECT_UNLOCK (pad);
 
-  if (G_LIKELY ((bufferallocfunc = peer->bufferallocfunc) == NULL))
-    goto fallback;
-
-  GST_OBJECT_LOCK (peer);
-  /* when the peer is flushing we cannot give a buffer */
-  if (G_UNLIKELY (GST_PAD_IS_FLUSHING (peer)))
-    goto flushing;
-
-  if (offset == GST_BUFFER_OFFSET_NONE) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
-        "calling bufferallocfunc &%s (@%p) of peer pad %s:%s for size %d offset NONE",
-        GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
-        &bufferallocfunc, GST_DEBUG_PAD_NAME (peer), size);
-  } else {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
-        "calling bufferallocfunc &%s (@%p) of peer pad %s:%s for size %d offset %"
-        G_GUINT64_FORMAT, GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
-        &bufferallocfunc, GST_DEBUG_PAD_NAME (peer), size, offset);
-  }
-  GST_OBJECT_UNLOCK (peer);
-
-  ret = bufferallocfunc (peer, offset, size, caps, buf);
+  ret = gst_pad_buffer_alloc_unchecked (peer, offset, size, caps, buf);
+  gst_object_unref (peer);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto peer_error;
-  if (G_UNLIKELY (*buf == NULL))
-    goto fallback;
-
-  /* If the buffer alloc function didn't set up the caps like it should,
-   * do it for it */
-  if (caps && (GST_BUFFER_CAPS (*buf) == NULL)) {
-    GST_WARNING ("Buffer allocation function for pad % " GST_PTR_FORMAT
-        " did not set up caps. Setting", peer);
-
-    gst_buffer_set_caps (*buf, caps);
-  }
-
-do_caps:
-  gst_object_unref (peer);
 
   /* FIXME, move capnego this into a base class? */
   caps = GST_BUFFER_CAPS (*buf);
+
+  /* Lock for checking caps, pretty pointless as the _pad_push() function might
+   * change it concurrently, one of the problems with automatic caps setting in
+   * pad_alloc_and_set_caps. Worst case, if does a check too much, but only when
+   * there is heavy renegotiation going on in both directions. */
+  GST_OBJECT_LOCK (pad);
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
+  GST_OBJECT_UNLOCK (pad);
+
   /* we got a new datatype on the pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
-    GST_DEBUG_OBJECT (pad, "caps changed to %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
     if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, setcaps)))
       goto not_negotiated;
   }
@@ -2605,42 +2651,23 @@ do_caps:
 
 flushed:
   {
-    GST_CAT_DEBUG (GST_CAT_PADS, "%s:%s pad block stopped by flush",
-        GST_DEBUG_PAD_NAME (pad));
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad, "pad block stopped by flush");
     GST_OBJECT_UNLOCK (pad);
     return ret;
   }
 no_peer:
   {
     /* pad has no peer */
-    GST_CAT_DEBUG (GST_CAT_PADS,
-        "%s:%s called bufferallocfunc but had no peer",
-        GST_DEBUG_PAD_NAME (pad));
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+        "called bufferallocfunc but had no peer");
     GST_OBJECT_UNLOCK (pad);
     return GST_FLOW_NOT_LINKED;
   }
-flushing:
+peer_error:
   {
-    /* peer was flushing */
-    GST_OBJECT_UNLOCK (peer);
-    gst_object_unref (peer);
-    GST_CAT_DEBUG (GST_CAT_PADS,
-        "%s:%s called bufferallocfunc but peer was flushing",
-        GST_DEBUG_PAD_NAME (pad));
-    return GST_FLOW_WRONG_STATE;
-  }
-  /* fallback case, allocate a buffer of our own, add pad caps. */
-fallback:
-  {
-    GST_CAT_DEBUG (GST_CAT_PADS,
-        "%s:%s fallback buffer alloc", GST_DEBUG_PAD_NAME (pad));
-    *buf = gst_buffer_new_and_alloc (size);
-    GST_BUFFER_OFFSET (*buf) = offset;
-    gst_buffer_set_caps (*buf, caps);
-
-    ret = GST_FLOW_OK;
-
-    goto do_caps;
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "alloc function returned error %s", gst_flow_get_name (ret));
+    return ret;
   }
 not_negotiated:
   {
@@ -2649,13 +2676,6 @@ not_negotiated:
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "alloc function returned unacceptable buffer");
     return GST_FLOW_NOT_NEGOTIATED;
-  }
-peer_error:
-  {
-    gst_object_unref (peer);
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "alloc function returned error %s", gst_flow_get_name (ret));
-    return ret;
   }
 }
 
@@ -2928,7 +2948,7 @@ gst_pad_query (GstPad * pad, GstQuery * query)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
-  GST_DEBUG ("sending query %p to pad %s:%s", query, GST_DEBUG_PAD_NAME (pad));
+  GST_DEBUG_OBJECT (pad, "sending query %p", query);
 
   if ((func = GST_PAD_QUERYFUNC (pad)) == NULL)
     goto no_func;
@@ -2937,7 +2957,7 @@ gst_pad_query (GstPad * pad, GstQuery * query)
 
 no_func:
   {
-    GST_DEBUG ("pad had no query function");
+    GST_DEBUG_OBJECT (pad, "had no query function");
     return FALSE;
   }
 }
@@ -3011,9 +3031,8 @@ gst_pad_load_and_link (xmlNodePtr self, GstObject * parent)
   split = g_strsplit (peer, ".", 2);
 
   if (split[0] == NULL || split[1] == NULL) {
-    GST_CAT_DEBUG (GST_CAT_XML,
-        "Could not parse peer '%s' for pad %s:%s, leaving unlinked",
-        peer, GST_DEBUG_PAD_NAME (pad));
+    GST_CAT_DEBUG_OBJECT (GST_CAT_XML, pad,
+        "Could not parse peer '%s', leaving unlinked", peer);
 
     g_free (peer);
     return;
@@ -3143,8 +3162,7 @@ handle_pad_block (GstPad * pad)
   gpointer user_data;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "signal block taken on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "signal block taken");
 
   /* flushing, don't bother trying to block and return WRONG_STATE
    * right away */
@@ -3216,14 +3234,12 @@ handle_pad_block (GstPad * pad)
 
 flushingnonref:
   {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pad %s:%s was flushing", GST_DEBUG_PAD_NAME (pad));
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pad was flushing");
     return GST_FLOW_WRONG_STATE;
   }
 flushing:
   {
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pad %s:%s became flushing", GST_DEBUG_PAD_NAME (pad));
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "pad became flushing");
     gst_object_unref (pad);
     return GST_FLOW_WRONG_STATE;
   }
@@ -3299,7 +3315,7 @@ gst_pad_chain_unchecked (GstPad * pad, GstBuffer * buffer)
 
   /* we got a new datatype on the pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
-    GST_DEBUG_OBJECT (pad, "caps changed to %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
     if (G_UNLIKELY (!gst_pad_configure_sink (pad, caps)))
       goto not_negotiated;
   }
@@ -3313,15 +3329,13 @@ gst_pad_chain_unchecked (GstPad * pad, GstBuffer * buffer)
     goto no_function;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "calling chainfunction &%s of pad %s:%s",
-      GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_DEBUG_PAD_NAME (pad));
+      "calling chainfunction &%s", GST_DEBUG_FUNCPTR_NAME (chainfunc));
 
   ret = chainfunc (pad, buffer);
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "called chainfunction &%s of pad %s:%s, returned %s",
-      GST_DEBUG_FUNCPTR_NAME (chainfunc), GST_DEBUG_PAD_NAME (pad),
-      gst_flow_get_name (ret));
+      "called chainfunction &%s, returned %s",
+      GST_DEBUG_FUNCPTR_NAME (chainfunc), gst_flow_get_name (ret));
 
   GST_PAD_STREAM_UNLOCK (pad);
 
@@ -3478,7 +3492,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 
   /* we got a new datatype from the pad, it had better handle it */
   if (G_UNLIKELY (caps_changed)) {
-    GST_DEBUG_OBJECT (pad, "caps changed to %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
     if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, TRUE)))
       goto not_negotiated;
   }
@@ -3633,10 +3647,9 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
     goto no_function;
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-      "calling getrangefunc %s of peer pad %s:%s, offset %"
+      "calling getrangefunc %s, offset %"
       G_GUINT64_FORMAT ", size %u",
-      GST_DEBUG_FUNCPTR_NAME (getrangefunc), GST_DEBUG_PAD_NAME (pad),
-      offset, size);
+      GST_DEBUG_FUNCPTR_NAME (getrangefunc), offset, size);
 
   ret = getrangefunc (pad, offset, size, buffer);
 
@@ -3940,19 +3953,18 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      GST_CAT_DEBUG (GST_CAT_EVENT,
-          "have event type %d (FLUSH_START) on pad %s:%s",
-          GST_EVENT_TYPE (event), GST_DEBUG_PAD_NAME (pad));
+      GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad,
+          "have event type %d (FLUSH_START)", GST_EVENT_TYPE (event));
 
       /* can't even accept a flush begin event when flushing */
       if (GST_PAD_IS_FLUSHING (pad))
         goto flushing;
       GST_PAD_SET_FLUSHING (pad);
-      GST_CAT_DEBUG (GST_CAT_EVENT, "set flush flag");
+      GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "set flush flag");
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_PAD_UNSET_FLUSHING (pad);
-      GST_CAT_DEBUG (GST_CAT_EVENT, "cleared flush flag");
+      GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "cleared flush flag");
       GST_OBJECT_UNLOCK (pad);
       /* grab stream lock */
       GST_PAD_STREAM_LOCK (pad);
@@ -3960,8 +3972,8 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_LOCK (pad);
       break;
     default:
-      GST_CAT_DEBUG (GST_CAT_EVENT, "have event type %s on pad %s:%s",
-          GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (pad));
+      GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "have event type %s",
+          GST_EVENT_TYPE_NAME (event));
 
       /* make this a little faster, no point in grabbing the lock
        * if the pad is allready flushing. */
@@ -4020,13 +4032,14 @@ flushing:
     GST_OBJECT_UNLOCK (pad);
     if (need_unlock)
       GST_PAD_STREAM_UNLOCK (pad);
-    GST_CAT_INFO (GST_CAT_EVENT, "Received event on flushing pad. Discarding");
+    GST_CAT_INFO_OBJECT (GST_CAT_EVENT, pad,
+        "Received event on flushing pad. Discarding");
     gst_event_unref (event);
     return FALSE;
   }
 dropping:
   {
-    GST_DEBUG ("Dropping event after FALSE probe return");
+    GST_DEBUG_OBJECT (pad, "Dropping event after FALSE probe return");
     gst_event_unref (event);
     return FALSE;
   }

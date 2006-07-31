@@ -1,3 +1,37 @@
+2006-07-31  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_class_init), (gst_pad_dispose),
+	(gst_pad_get_property), (gst_pad_activate_pull),
+	(gst_pad_activate_push), (gst_pad_set_blocked_async),
+	(gst_pad_set_activate_function),
+	(gst_pad_set_activatepull_function),
+	(gst_pad_set_activatepush_function), (gst_pad_set_chain_function),
+	(gst_pad_set_getrange_function),
+	(gst_pad_set_checkgetrange_function), (gst_pad_set_event_function),
+	(gst_pad_set_query_function), (gst_pad_set_query_type_function),
+	(gst_pad_set_internal_link_function), (gst_pad_set_link_function),
+	(gst_pad_set_unlink_function), (gst_pad_set_getcaps_function),
+	(gst_pad_set_acceptcaps_function),
+	(gst_pad_set_fixatecaps_function), (gst_pad_set_setcaps_function),
+	(gst_pad_set_bufferalloc_function), (gst_pad_link_check_hierarchy),
+	(gst_pad_get_caps_unlocked), (gst_pad_get_caps),
+	(gst_pad_peer_get_caps), (gst_pad_accept_caps),
+	(gst_pad_peer_accept_caps), (gst_pad_set_caps),
+	(gst_pad_configure_sink), (gst_pad_configure_src),
+	(gst_pad_get_allowed_caps), (gst_pad_get_negotiated_caps),
+	(gst_pad_buffer_alloc_unchecked), (gst_pad_alloc_buffer_full),
+	(gst_pad_query), (gst_pad_load_and_link), (handle_pad_block),
+	(gst_pad_chain_unchecked), (gst_pad_push), (gst_pad_get_range),
+	(gst_pad_send_event):
+	Use _DEBUG_OBJECT when it makes sense.
+	Protect GST_PAD_CAPS with the OBJECT_LOCK.
+	Small cleanups and code reflows.
+	Avoid caps refcounting in _accept_caps.
+	Refactor alloc_buffer so that the code performed on the peer is in a
+	separate function. Also if the pad does not implement a buffer alloc
+	function, we should still check if the pad is flushing before falling
+	back to the default allocator.
+
 2006-07-31  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/pipelines/parse-launch.c: (GST_START_TEST):
