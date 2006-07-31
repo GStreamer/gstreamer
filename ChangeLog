@@ -1,3 +1,9 @@
+2006-07-31  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_change_state),
+	(gst_dfbvideosink_buffer_alloc): Don't try allocating if we are not
+	setup yet. Fail changing state if setup fails.
+
 2006-07-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_init),

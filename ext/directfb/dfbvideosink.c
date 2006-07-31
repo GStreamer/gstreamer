@@ -1425,7 +1425,11 @@ gst_dfbvideosink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       dfbvideosink->running = TRUE;
       if (!dfbvideosink->setup) {
-        gst_dfbvideosink_setup (dfbvideosink);
+        if (!gst_dfbvideosink_setup (dfbvideosink)) {
+          GST_DEBUG_OBJECT (dfbvideosink, "setup failed when changing state "
+              "from NULL to READY");
+          return GST_STATE_CHANGE_FAILURE;
+        }
       }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -1696,6 +1700,12 @@ gst_dfbvideosink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
   GST_DEBUG_OBJECT (dfbvideosink, "a buffer of %d bytes was requested "
       "with caps %" GST_PTR_FORMAT " and offset %llu", size, caps, offset);
+
+  if (G_UNLIKELY (!dfbvideosink->setup)) {
+    GST_DEBUG_OBJECT (dfbvideosink, "we are not setup yet, can't allocate!");
+    *buf = NULL;
+    return ret;
+  }
 
   desired_caps = gst_caps_copy (caps);
 
