@@ -1,3 +1,23 @@
+2006-08-01  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ladspa/gstsignalprocessor.c (gst_signal_processor_init): No
+	more default sample rate, although we never check that the sample
+	rate actually gets set. Something for the future.
+	(gst_signal_processor_setcaps): Some refcount fixes, flow fixes.
+	(gst_signal_processor_event): Refcount fixen.
+	(gst_signal_processor_process): Pull the number of frames to
+	process from the sizes of the buffers in the input pens.
+	(gst_signal_processor_pen_buffer): Remove an incorrect FIXME :)
+	(gst_signal_processor_do_pulls): Add an nframes argument, and use
+	it instead of buffer_frames.
+	(gst_signal_processor_getrange): Refcount fixen, pass nframes on
+	to do_pulls.
+	(gst_signal_processor_chain)
+	(gst_signal_processor_sink_activate_push)
+	(gst_signal_processor_src_activate_pull):  Refcount fixen.
+
+	* ext/ladspa/gstsignalprocessor.h: No more buffer_frames, yay.
+
 2006-07-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/ladspa/gstsignalprocessor.c: (gst_signal_processor_setcaps),

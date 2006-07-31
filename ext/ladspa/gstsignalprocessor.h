@@ -48,7 +48,6 @@ struct _GstSignalProcessor {
   GstCaps *caps;
 
   guint sample_rate;
-  guint buffer_frames;
 
   GstFlowReturn state;
 
