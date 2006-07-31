@@ -347,15 +347,13 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
 
   g_return_val_if_fail (factory != NULL, NULL);
 
-  gst_object_ref (factory);
-
   newfactory =
       GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
+
   if (newfactory == NULL)
     goto load_failed;
 
-  gst_object_unref (factory);
   factory = newfactory;
 
   if (name)

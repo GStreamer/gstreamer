@@ -299,22 +299,26 @@ static void test_event
 
   fail_unless (gst_pad_set_blocked (fake_srcpad, FALSE) == TRUE);
 
-  /* Wait up to 5 seconds for the event to appear */
   if (expect_before_q) {
+    /* Wait up to 5 seconds for the event to appear */
     for (i = 0; i < 500; i++) {
       g_usleep (G_USEC_PER_SEC / 100);
       if (got_event_before_q != NULL)
         break;
     }
-    fail_if (got_event_before_q == NULL);
+    fail_if (got_event_before_q == NULL,
+        "Expected event failed to appear upstream of the queue "
+        "within 5 seconds");
     fail_unless (GST_EVENT_TYPE (got_event_before_q) == type);
   } else {
-    for (i = 0; i < 500; i++) {
+    /* Wait up to 10 seconds for the event to appear */
+    for (i = 0; i < 1000; i++) {
       g_usleep (G_USEC_PER_SEC / 100);
       if (got_event_after_q != NULL)
         break;
     }
-    fail_if (got_event_after_q == NULL);
+    fail_if (got_event_after_q == NULL,
+        "Expected event failed to appear after the queue within 10 seconds");
     fail_unless (GST_EVENT_TYPE (got_event_after_q) == type);
   }
 

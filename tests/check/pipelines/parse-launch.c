@@ -363,10 +363,6 @@ run_delayed_test (const gchar * pipe_str, const gchar * peer,
   fail_if (gst_element_set_state (pipe, GST_STATE_PAUSED) ==
       GST_STATE_CHANGE_FAILURE);
 
-  /* Also set the src state manually to make sure it is changing to that
-   * state */
-  fail_if (gst_element_set_state (src, GST_STATE_PAUSED) ==
-      GST_STATE_CHANGE_FAILURE);
   fail_if (gst_element_get_state (src, NULL, NULL, GST_CLOCK_TIME_NONE) ==
       GST_STATE_CHANGE_FAILURE);
 

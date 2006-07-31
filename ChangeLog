@@ -1,3 +1,21 @@
+2006-07-31  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstelementfactory.c: (gst_element_factory_create):
+	Remove unnecessary ref/unref pair
+
+	* gst/parse/grammar.y:
+	Make sure to free the parse buffer on all code paths.
+	Move a g_free up to the error handler where it's easier to see.
+
+	* tests/check/gst/gstevent.c: (test_event):
+	Extending timeout for downstream travelling events to 10 seconds to
+	hopefully avoid intermittent failure on the buildbots.
+
+	* tests/check/pipelines/parse-launch.c: (run_delayed_test):
+	Don't manually set the state of the src element - it will happen as a
+	natural consequence of the pipeline changing state, and that way it
+	will do it in the right order too.
+
 2006-07-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstutils.c: (gst_pad_get_fixed_caps_func):

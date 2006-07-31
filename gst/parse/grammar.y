@@ -839,6 +839,9 @@ _gst_parse_launch (const gchar *str, GError **error)
     SET_ERROR (error, GST_PARSE_ERROR_SYNTAX,
         "Unrecoverable syntax error while parsing pipeline %s", str);
     
+    _gst_parse_yy_delete_buffer (buf);
+    g_free (dstr);
+  
     goto error1;
   }
   g_free (dstr);
@@ -927,8 +930,6 @@ out:
   return ret;
   
 error1:
-  g_free (dstr);
-  
   if (g.chain) {
     g_slist_foreach (g.chain->elements, (GFunc)gst_object_unref, NULL);
     g_slist_free (g.chain->elements);
