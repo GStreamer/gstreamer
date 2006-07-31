@@ -79,9 +79,9 @@
  * udpsrc implements a GstURIHandler interface that handles udp://host:port type
  * URIs.
  * </para>
- *
+ * <para>
  * Last reviewed on 2006-07-27 (0.10.4)
- *
+ * </para>
  * </refsect2>
  */
 #ifdef HAVE_CONFIG_H
