@@ -56,7 +56,6 @@ GST_ELEMENT_DETAILS ("GDP Depayloader",
 enum
 {
   PROP_0,
-  /* FILL ME */
 };
 
 static GstStaticPadTemplate gdp_depay_sink_template =
@@ -82,6 +81,8 @@ GST_BOILERPLATE_FULL (GstGDPDepay, gst_gdp_depay, GstElement,
     GST_TYPE_ELEMENT, _do_init);
 
 static gboolean gst_gdp_depay_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_gdp_depay_src_event (GstPad * pad, GstEvent * event);
+
 static GstFlowReturn gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer);
 
 static GstStateChangeReturn gst_gdp_depay_change_state (GstElement *
@@ -129,6 +130,8 @@ gst_gdp_depay_init (GstGDPDepay * gdpdepay, GstGDPDepayClass * g_class)
 
   gdpdepay->srcpad =
       gst_pad_new_from_static_template (&gdp_depay_src_template, "src");
+  gst_pad_set_event_function (gdpdepay->srcpad,
+      GST_DEBUG_FUNCPTR (gst_gdp_depay_src_event));
   /* our caps will always be decided by the incoming GDP caps buffers */
   gst_pad_use_fixed_caps (gdpdepay->srcpad);
   gst_element_add_pad (GST_ELEMENT (gdpdepay), gdpdepay->srcpad);
@@ -144,19 +147,13 @@ gst_gdp_depay_finalize (GObject * gobject)
   this = GST_GDP_DEPAY (gobject);
   if (this->caps)
     gst_caps_unref (this->caps);
-  if (this->header)
-    g_free (this->header);
+  g_free (this->header);
   gst_adapter_clear (this->adapter);
   g_object_unref (this->adapter);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (gobject));
 }
 
-/* we ignore most events because the only events we want to output are those
- * found in the gdp data stream.
- * An exception is the EOS event, if we get that on the sinkpad, we certainly
- * are not going to produce more data.
- */
 static gboolean
 gst_gdp_depay_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -166,11 +163,47 @@ gst_gdp_depay_sink_event (GstPad * pad, GstEvent * event)
   this = GST_GDP_DEPAY (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_EOS:
+    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_FLUSH_STOP:
+      /* forward flush start and stop */
       res = gst_pad_push_event (this->srcpad, event);
       break;
+    case GST_EVENT_EOS:
+      /* after EOS, we don't expect to output anything anymore */
+      res = gst_pad_push_event (this->srcpad, event);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_TAG:
+    case GST_EVENT_BUFFERSIZE:
     default:
+      /* we unref most events as we take them from the datastream */
       gst_event_unref (event);
+      break;
+  }
+  gst_object_unref (this);
+
+  return res;
+}
+
+static gboolean
+gst_gdp_depay_src_event (GstPad * pad, GstEvent * event)
+{
+  GstGDPDepay *this;
+  gboolean res = TRUE;
+
+  this = GST_GDP_DEPAY (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      /* we refuse seek for now. */
+      gst_event_unref (event);
+      res = FALSE;
+      break;
+    case GST_EVENT_QOS:
+    case GST_EVENT_NAVIGATION:
+    default:
+      /* everything else is passed */
+      res = gst_pad_push_event (this->sinkpad, event);
       break;
   }
   gst_object_unref (this);
@@ -186,108 +219,124 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
   GstCaps *caps;
   GstBuffer *buf;
   GstEvent *event;
-  guint8 *header = NULL;
-  guint8 *payload = NULL;
   guint available;
-  gboolean running = TRUE;
 
   this = GST_GDP_DEPAY (gst_pad_get_parent (pad));
 
+  /* On DISCONT, get rid of accumulated data. We assume a buffer after the
+   * DISCONT contains (part of) a new valid header, if not we error because we
+   * lost sync */
+  if (GST_BUFFER_IS_DISCONT (buffer)) {
+    gst_adapter_clear (this->adapter);
+    this->state = GST_GDP_DEPAY_STATE_HEADER;
+  }
   gst_adapter_push (this->adapter, buffer);
 
-  while (running) {
+  while (TRUE) {
     switch (this->state) {
       case GST_GDP_DEPAY_STATE_HEADER:
-        available = gst_adapter_available (this->adapter);
-        if (available < GST_DP_HEADER_LENGTH) {
-          running = FALSE;
-          break;
-        }
+      {
+        guint8 *header;
 
-        if (this->header)
-          g_free (this->header);
+        /* collect a complete header, validate and store the header. Figure out
+         * the payload length and switch to the PAYLOAD state */
+        available = gst_adapter_available (this->adapter);
+        if (available < GST_DP_HEADER_LENGTH)
+          goto done;
+
         GST_LOG_OBJECT (this, "reading GDP header from adapter");
         header = gst_adapter_take (this->adapter, GST_DP_HEADER_LENGTH);
-        if (!gst_dp_validate_header (GST_DP_HEADER_LENGTH, header))
+        if (!gst_dp_validate_header (GST_DP_HEADER_LENGTH, header)) {
+          g_free (header);
           goto header_validate_error;
+        }
 
+        /* store types and payload length. Also store the header, which we need
+         * to make the payload. */
         this->payload_length = gst_dp_header_payload_length (header);
         this->payload_type = gst_dp_header_payload_type (header);
+        /* free previous header and store new one. */
+        g_free (this->header);
         this->header = header;
+
         GST_LOG_OBJECT (this,
             "read GDP header, payload size %d, switching to state PAYLOAD",
             this->payload_length);
         this->state = GST_GDP_DEPAY_STATE_PAYLOAD;
         break;
-
+      }
       case GST_GDP_DEPAY_STATE_PAYLOAD:
+      {
+        /* in this state we wait for all the payload data to be available in the
+         * adapter. Then we switch to the state where we actually process the
+         * payload. */
         available = gst_adapter_available (this->adapter);
-        if (available < this->payload_length) {
-          running = FALSE;
-          break;
-        }
+        if (available < this->payload_length)
+          goto done;
 
         /* change state based on type */
-        if (this->payload_type == GST_DP_PAYLOAD_BUFFER) {
-          GST_LOG_OBJECT (this, "switching to state BUFFER");
-          this->state = GST_GDP_DEPAY_STATE_BUFFER;
-        } else if (this->payload_type == GST_DP_PAYLOAD_CAPS) {
-          GST_LOG_OBJECT (this, "switching to state CAPS");
-          this->state = GST_GDP_DEPAY_STATE_CAPS;
-        } else if (this->payload_type >= GST_DP_PAYLOAD_EVENT_NONE) {
-          GST_LOG_OBJECT (this, "switching to state EVENT");
-          this->state = GST_GDP_DEPAY_STATE_EVENT;
-        } else
-          goto wrong_type;
-        break;
-
-      case GST_GDP_DEPAY_STATE_BUFFER:
-        if (!this->caps) {
-          GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
-              ("Received a buffer without first receiving caps"));
-          ret = GST_FLOW_NOT_NEGOTIATED;
-          goto done;
+        switch (this->payload_type) {
+          case GST_DP_PAYLOAD_BUFFER:
+            GST_LOG_OBJECT (this, "switching to state BUFFER");
+            this->state = GST_GDP_DEPAY_STATE_BUFFER;
+            break;
+          case GST_DP_PAYLOAD_CAPS:
+            GST_LOG_OBJECT (this, "switching to state CAPS");
+            this->state = GST_GDP_DEPAY_STATE_CAPS;
+            break;
+          case GST_DP_PAYLOAD_EVENT_NONE:
+            GST_LOG_OBJECT (this, "switching to state EVENT");
+            this->state = GST_GDP_DEPAY_STATE_EVENT;
+            break;
+          default:
+            goto wrong_type;
         }
+        break;
+      }
+      case GST_GDP_DEPAY_STATE_BUFFER:
+      {
+
+        /* if we receive a buffer without caps first, we error out */
+        if (!this->caps)
+          goto no_caps;
 
         GST_LOG_OBJECT (this, "reading GDP buffer from adapter");
         buf = gst_dp_buffer_from_header (GST_DP_HEADER_LENGTH, this->header);
-        if (!buf) {
-          GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
-              ("could not create buffer from GDP packet"));
-          ret = GST_FLOW_ERROR;
-          goto done;
+        if (!buf)
+          goto buffer_failed;
+
+        /* now take the payload if there is any */
+        if (this->payload_length > 0) {
+          guint8 *payload;
+
+          payload = gst_adapter_take (this->adapter, this->payload_length);
+          memcpy (GST_BUFFER_DATA (buf), payload, this->payload_length);
+          g_free (payload);
         }
 
-        payload = gst_adapter_take (this->adapter, this->payload_length);
-        memcpy (GST_BUFFER_DATA (buf), payload, this->payload_length);
-        g_free (payload);
-        payload = NULL;
-
+        /* set caps and push */
         gst_buffer_set_caps (buf, this->caps);
         ret = gst_pad_push (this->srcpad, buf);
-        if (ret != GST_FLOW_OK) {
-          GST_WARNING_OBJECT (this, "pushing depayloaded buffer returned %d",
-              ret);
-          goto done;
-        }
+        if (ret != GST_FLOW_OK)
+          goto push_error;
 
         GST_LOG_OBJECT (this, "switching to state HEADER");
         this->state = GST_GDP_DEPAY_STATE_HEADER;
         break;
-
+      }
       case GST_GDP_DEPAY_STATE_CAPS:
+      {
+        guint8 *payload;
+
+        /* take the payload of the caps */
         GST_LOG_OBJECT (this, "reading GDP caps from adapter");
         payload = gst_adapter_take (this->adapter, this->payload_length);
         caps = gst_dp_caps_from_packet (GST_DP_HEADER_LENGTH, this->header,
             payload);
         g_free (payload);
-        payload = NULL;
-        if (!caps) {
-          GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
-              ("could not create caps from GDP packet"));
-          ret = GST_FLOW_ERROR;
-          goto done;
-        }
+        if (!caps)
+          goto caps_failed;
+
         GST_DEBUG_OBJECT (this, "read caps %" GST_PTR_FORMAT, caps);
         gst_caps_replace (&(this->caps), caps);
         gst_pad_set_caps (this->srcpad, caps);
@@ -297,24 +346,24 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
         GST_LOG_OBJECT (this, "switching to state HEADER");
         this->state = GST_GDP_DEPAY_STATE_HEADER;
         break;
-
+      }
       case GST_GDP_DEPAY_STATE_EVENT:
+      {
+        guint8 *payload;
+
         GST_LOG_OBJECT (this, "reading GDP event from adapter");
+
         /* adapter doesn't like 0 length payload */
         if (this->payload_length > 0)
           payload = gst_adapter_take (this->adapter, this->payload_length);
+        else
+          payload = NULL;
         event = gst_dp_event_from_packet (GST_DP_HEADER_LENGTH, this->header,
             payload);
-        if (payload) {
-          g_free (payload);
-          payload = NULL;
-        }
-        if (!event) {
-          GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
-              ("could not create event from GDP packet"));
-          ret = GST_FLOW_ERROR;
-          goto done;
-        }
+        g_free (payload);
+        if (!event)
+          goto event_failed;
+
         GST_DEBUG_OBJECT (this, "sending deserialized event %p of type %s",
             event, gst_event_type_get_name (event->type));
         gst_pad_push_event (this->srcpad, event);
@@ -322,27 +371,62 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
         GST_LOG_OBJECT (this, "switching to state HEADER");
         this->state = GST_GDP_DEPAY_STATE_HEADER;
         break;
+      }
     }
   }
-  goto done;
-
-header_validate_error:
-  GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
-      ("GDP packet header does not validate"));
-  g_free (header);
-  ret = GST_FLOW_ERROR;
-  goto done;
-
-wrong_type:
-  GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
-      ("GDP packet header is of wrong type"));
-  g_free (header);
-  ret = GST_FLOW_ERROR;
-  goto done;
 
 done:
   gst_object_unref (this);
   return ret;
+
+  /* ERRORS */
+header_validate_error:
+  {
+    GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
+        ("GDP packet header does not validate"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+wrong_type:
+  {
+    GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
+        ("GDP packet header is of wrong type"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+no_caps:
+  {
+    GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
+        ("Received a buffer without first receiving caps"));
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
+buffer_failed:
+  {
+    GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
+        ("could not create buffer from GDP packet"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+push_error:
+  {
+    GST_WARNING_OBJECT (this, "pushing depayloaded buffer returned %d", ret);
+    goto done;
+  }
+caps_failed:
+  {
+    GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
+        ("could not create caps from GDP packet"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+event_failed:
+  {
+    GST_ELEMENT_ERROR (this, STREAM, DECODE, (NULL),
+        ("could not create event from GDP packet"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 }
 
 static GstStateChangeReturn
@@ -354,7 +438,7 @@ gst_gdp_depay_change_state (GstElement * element, GstStateChange transition)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (this->caps) {
         gst_caps_unref (this->caps);
         this->caps = NULL;
@@ -363,7 +447,6 @@ gst_gdp_depay_change_state (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-
   return ret;
 }
 
