@@ -1,3 +1,13 @@
+2006-08-02  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Marcel Moreaux <marcelm at luon dot net>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_add_to_queue):
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	Handle RTP sequence number rollover.
+	Disable jitterbuffer by default.
+
 2006-07-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/audioresample/gstaudioresample.c: (audioresample_stop),

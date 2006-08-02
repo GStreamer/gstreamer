@@ -300,7 +300,10 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
     /* look for right place to insert it */
     i = 0;
 
-    while (seqnum > queueseq) {
+    /* Check for seqnum wraparound.
+     * Seqnums in the lowest quadrant of the 0-65535 space are considered to
+     * be greater than seqnums in the highest quadrant of this space. */
+    while (seqnum > queueseq || (seqnum < 16384 && queueseq > 49150)) {
       gpointer data;
 
       i++;
