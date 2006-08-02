@@ -41,6 +41,7 @@ typedef struct _GstGDPPayClass GstGDPPayClass;
 struct _GstGDPPay
 {
   GstElement element;
+
   GstPad *sinkpad;
   GstPad *srcpad;
 

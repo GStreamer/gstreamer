@@ -1,3 +1,28 @@
+2006-08-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_init),
+	(gst_gdp_depay_finalize), (gst_gdp_depay_sink_event),
+	(gst_gdp_depay_src_event), (gst_gdp_depay_chain),
+	(gst_gdp_depay_change_state):
+	Disable seeking.
+	Small cleanups.
+	Clear adapter on disconts.
+	Clear caps when going to READY instead of NULL
+
+	* gst/gdp/gstgdppay.c: (gst_gdp_pay_class_init),
+	(gst_gdp_pay_init), (gst_gdp_pay_finalize), (gst_gdp_pay_reset),
+	(gst_gdp_buffer_from_caps), (gst_gdp_pay_buffer_from_buffer),
+	(gst_gdp_buffer_from_event), (gst_gdp_pay_reset_streamheader),
+	(gst_gdp_queue_buffer), (gst_gdp_pay_chain),
+	(gst_gdp_pay_sink_event), (gst_gdp_pay_src_event),
+	(gst_gdp_pay_change_state):
+	* gst/gdp/gstgdppay.h:
+	Reset payloader when going to READY.
+	Fix leaked buffers in ->queue on push errors.
+	Disable seeking.
+	Code cleanups.
+	Create packetizer in _init, free in _finalize.
+
 2006-07-31  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_change_state),
