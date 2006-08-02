@@ -77,7 +77,7 @@
 #include "dp-private.h"
 
 /* debug category */
-GST_DEBUG_CATEGORY (data_protocol_debug);
+GST_DEBUG_CATEGORY_STATIC (data_protocol_debug);
 #define GST_CAT_DEFAULT data_protocol_debug
 
 /* helper macros */
@@ -136,6 +136,7 @@ gst_dp_header_from_buffer_any (const GstBuffer * buffer, GstDPHeaderFlag flags,
   guint16 flags_mask;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (length, FALSE);
   g_return_val_if_fail (header, FALSE);
 
   *length = GST_DP_HEADER_LENGTH;
@@ -175,9 +176,8 @@ gst_dp_packet_from_caps_any (const GstCaps * caps, GstDPHeaderFlag flags,
   guchar *string;
   guint payload_length;
 
-  /* FIXME: GST_IS_CAPS doesn't work
-     g_return_val_if_fail (GST_IS_CAPS (caps), FALSE); */
-  g_return_val_if_fail (caps, FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (length, FALSE);
   g_return_val_if_fail (header, FALSE);
   g_return_val_if_fail (payload, FALSE);
 
@@ -209,8 +209,45 @@ gst_dp_packet_from_caps_any (const GstCaps * caps, GstDPHeaderFlag flags,
 
 /*** PUBLIC FUNCTIONS ***/
 
+static const guint16 gst_dp_crc_table[256] = {
+  0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
+  0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
+  0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
+  0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de,
+  0x2462, 0x3443, 0x0420, 0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485,
+  0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,
+  0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6, 0x5695, 0x46b4,
+  0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc,
+  0x48c4, 0x58e5, 0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823,
+  0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b,
+  0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0x0a50, 0x3a33, 0x2a12,
+  0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a,
+  0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0x0c60, 0x1c41,
+  0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49,
+  0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70,
+  0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78,
+  0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f,
+  0x1080, 0x00a1, 0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,
+  0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e,
+  0x02b1, 0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256,
+  0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,
+  0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405,
+  0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c,
+  0x26d3, 0x36f2, 0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,
+  0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,
+  0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x08e1, 0x3882, 0x28a3,
+  0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
+  0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0, 0x2ab3, 0x3a92,
+  0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,
+  0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1,
+  0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
+  0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0
+};
+
 /**
  * gst_dp_crc:
+ * @buffer: array of bytes
+ * @length: the length of @buffer
  *
  * Calculate a CRC for the given buffer over the given number of bytes.
  * This is only provided for verification purposes; typical GDP users
@@ -221,27 +258,14 @@ gst_dp_packet_from_caps_any (const GstCaps * caps, GstDPHeaderFlag flags,
 guint16
 gst_dp_crc (const guint8 * buffer, guint length)
 {
-  static gboolean initialized = FALSE;
-  static guint16 crc_table[256];
   guint16 crc_register = CRC_INIT;
-  unsigned long i, j, k;
 
-  if (!initialized) {
-    for (i = 0; i < 256; i++) {
-      j = i << 8;
-      for (k = 8; k--;) {
-        j = j & 0x8000 ? (j << 1) ^ POLY : j << 1;
-      }
-
-      crc_table[i] = (guint16) j;
-    }
-    initialized = TRUE;
-  }
+  g_return_val_if_fail (buffer != NULL || length == 0, 0);
 
   /* calc CRC */
   for (; length--;) {
     crc_register = (guint16) ((crc_register << 8) ^
-        crc_table[((crc_register >> 8) & 0x00ff) ^ *buffer++]);
+        gst_dp_crc_table[((crc_register >> 8) & 0x00ff) ^ *buffer++]);
   }
   return (0xffff ^ crc_register);
 }
@@ -320,6 +344,8 @@ gst_dp_init (void)
 guint32
 gst_dp_header_payload_length (const guint8 * header)
 {
+  g_return_val_if_fail (header != NULL, 0);
+
   return GST_DP_HEADER_PAYLOAD_LENGTH (header);
 }
 
@@ -334,6 +360,8 @@ gst_dp_header_payload_length (const guint8 * header)
 GstDPPayloadType
 gst_dp_header_payload_type (const guint8 * header)
 {
+  g_return_val_if_fail (header != NULL, GST_DP_PAYLOAD_NONE);
+
   return GST_DP_HEADER_PAYLOAD_TYPE (header);
 }
 
@@ -390,7 +418,7 @@ gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
       GST_DP_VERSION_0_2);
 }
 
-gboolean
+static gboolean
 gst_dp_packet_from_caps_1_0 (const GstCaps * caps, GstDPHeaderFlag flags,
     guint * length, guint8 ** header, guint8 ** payload)
 {
@@ -419,20 +447,15 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
   guint8 *h;
   guint pl_length;              /* length of payload */
 
-  g_return_val_if_fail (event, FALSE);
   g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+  g_return_val_if_fail (length, FALSE);
   g_return_val_if_fail (header, FALSE);
   g_return_val_if_fail (payload, FALSE);
-
-  *length = GST_DP_HEADER_LENGTH;
-  h = g_malloc0 (GST_DP_HEADER_LENGTH);
 
   /* first construct payload, since we need the length */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_UNKNOWN:
       GST_WARNING ("Unknown event, ignoring");
-      *length = 0;
-      g_free (h);
       return FALSE;
     case GST_EVENT_EOS:
     case GST_EVENT_FLUSH_START:
@@ -467,15 +490,15 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_TAG:
       GST_WARNING ("Unhandled event type %d, ignoring", GST_EVENT_TYPE (event));
-      *length = 0;
-      g_free (h);
       return FALSE;
     default:
       GST_WARNING ("Unknown event type %d, ignoring", GST_EVENT_TYPE (event));
-      *length = 0;
-      g_free (h);
       return FALSE;
   }
+
+  /* now we can create and fill the header */
+  h = g_malloc0 (GST_DP_HEADER_LENGTH);
+  *length = GST_DP_HEADER_LENGTH;
 
   /* version, flags, type */
   GST_DP_INIT_HEADER (h, GST_DP_VERSION_0_2, flags,
@@ -490,6 +513,7 @@ gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
 
   GST_LOG ("created header from event:");
   gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
+
   *header = h;
   return TRUE;
 }
@@ -502,8 +526,8 @@ gst_dp_packet_from_event_1_0 (const GstEvent * event, GstDPHeaderFlag flags,
   guint32 pl_length;            /* length of payload */
   guchar *string = NULL;
 
-  g_return_val_if_fail (event, FALSE);
   g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
+  g_return_val_if_fail (length, FALSE);
   g_return_val_if_fail (header, FALSE);
   g_return_val_if_fail (payload, FALSE);
 
@@ -550,6 +574,9 @@ gst_dp_packet_from_event_1_0 (const GstEvent * event, GstDPHeaderFlag flags,
  * Use this function if you want to pre-allocate a buffer based on the
  * packet header to read the packet payload in to.
  *
+ * This function does not check the header passed to it, use
+ * gst_dp_validate_header() first if the header data is unchecked.
+ *
  * Returns: A #GstBuffer if the buffer was successfully created, or NULL.
  */
 GstBuffer *
@@ -557,10 +584,14 @@ gst_dp_buffer_from_header (guint header_length, const guint8 * header)
 {
   GstBuffer *buffer;
 
+  g_return_val_if_fail (header != NULL, NULL);
+  g_return_val_if_fail (header_length >= GST_DP_HEADER_LENGTH, NULL);
   g_return_val_if_fail (GST_DP_HEADER_PAYLOAD_TYPE (header) ==
       GST_DP_PAYLOAD_BUFFER, NULL);
+
   buffer =
       gst_buffer_new_and_alloc ((guint) GST_DP_HEADER_PAYLOAD_LENGTH (header));
+
   GST_BUFFER_TIMESTAMP (buffer) = GST_DP_HEADER_TIMESTAMP (header);
   GST_BUFFER_DURATION (buffer) = GST_DP_HEADER_DURATION (header);
   GST_BUFFER_OFFSET (buffer) = GST_DP_HEADER_OFFSET (header);
@@ -578,6 +609,10 @@ gst_dp_buffer_from_header (guint header_length, const guint8 * header)
  *
  * Creates a newly allocated #GstCaps from the given packet.
  *
+ * This function does not check the arguments passed to it, use
+ * gst_dp_validate_packet() first if the header and payload data are
+ * unchecked.
+ *
  * Returns: A #GstCaps containing the caps represented in the packet,
  *          or NULL if the packet could not be converted.
  */
@@ -589,13 +624,16 @@ gst_dp_caps_from_packet (guint header_length, const guint8 * header,
   gchar *string;
 
   g_return_val_if_fail (header, NULL);
-  g_return_val_if_fail (payload, NULL);
+  g_return_val_if_fail (header_length >= GST_DP_HEADER_LENGTH, NULL);
   g_return_val_if_fail (GST_DP_HEADER_PAYLOAD_TYPE (header) ==
       GST_DP_PAYLOAD_CAPS, NULL);
+  g_return_val_if_fail (payload, NULL);
 
+  /* 0 sized payload length will work create NULL string */
   string = g_strndup ((gchar *) payload, GST_DP_HEADER_PAYLOAD_LENGTH (header));
   caps = gst_caps_from_string (string);
   g_free (string);
+
   return caps;
 }
 
@@ -625,6 +663,8 @@ gst_dp_event_from_packet_0_2 (guint header_length, const guint8 * header,
       GstSeekFlags flags;
       GstSeekType cur_type, stop_type;
       gint64 cur, stop;
+
+      g_return_val_if_fail (payload != NULL, NULL);
 
       /* FIXME, read rate */
       rate = 1.0;
@@ -682,6 +722,10 @@ gst_dp_event_from_packet_1_0 (guint header_length, const guint8 * header,
  *
  * Creates a newly allocated #GstEvent from the given packet.
  *
+ * This function does not check the arguments passed to it, use
+ * gst_dp_validate_packet() first if the header and payload data are
+ * unchecked.
+ *
  * Returns: A #GstEvent if the event was successfully created,
  *          or NULL if an event could not be read from the payload.
  */
@@ -692,6 +736,7 @@ gst_dp_event_from_packet (guint header_length, const guint8 * header,
   guint8 major, minor;
 
   g_return_val_if_fail (header, NULL);
+  g_return_val_if_fail (header_length >= GST_DP_HEADER_LENGTH, NULL);
 
   major = GST_DP_HEADER_MAJOR_VERSION (header);
   minor = GST_DP_HEADER_MINOR_VERSION (header);
@@ -720,18 +765,29 @@ gst_dp_validate_header (guint header_length, const guint8 * header)
 {
   guint16 crc_read, crc_calculated;
 
+  g_return_val_if_fail (header != NULL, FALSE);
+  g_return_val_if_fail (header_length >= GST_DP_HEADER_LENGTH, FALSE);
+
   if (!(GST_DP_HEADER_FLAGS (header) & GST_DP_HEADER_FLAG_CRC_HEADER))
     return TRUE;
+
   crc_read = GST_DP_HEADER_CRC_HEADER (header);
+
   /* don't include the last two crc fields for the crc check */
   crc_calculated = gst_dp_crc (header, header_length - 4);
-  if (crc_read != crc_calculated) {
+  if (crc_read != crc_calculated)
+    goto crc_error;
+
+  GST_LOG ("header crc validation: %02x", crc_read);
+  return TRUE;
+
+  /* ERRORS */
+crc_error:
+  {
     GST_WARNING ("header crc mismatch: read %02x, calculated %02x", crc_read,
         crc_calculated);
     return FALSE;
   }
-  GST_LOG ("header crc validation: %02x", crc_read);
-  return TRUE;
 }
 
 /**
@@ -751,17 +807,27 @@ gst_dp_validate_payload (guint header_length, const guint8 * header,
 {
   guint16 crc_read, crc_calculated;
 
+  g_return_val_if_fail (header != NULL, FALSE);
+  g_return_val_if_fail (header_length >= GST_DP_HEADER_LENGTH, FALSE);
+
   if (!(GST_DP_HEADER_FLAGS (header) & GST_DP_HEADER_FLAG_CRC_PAYLOAD))
     return TRUE;
+
   crc_read = GST_DP_HEADER_CRC_PAYLOAD (header);
   crc_calculated = gst_dp_crc (payload, GST_DP_HEADER_PAYLOAD_LENGTH (header));
-  if (crc_read != crc_calculated) {
+  if (crc_read != crc_calculated)
+    goto crc_error;
+
+  GST_LOG ("payload crc validation: %02x", crc_read);
+  return TRUE;
+
+  /* ERRORS */
+crc_error:
+  {
     GST_WARNING ("payload crc mismatch: read %02x, calculated %02x", crc_read,
         crc_calculated);
     return FALSE;
   }
-  GST_LOG ("payload crc validation: %02x", crc_read);
-  return TRUE;
 }
 
 /**
