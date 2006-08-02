@@ -278,6 +278,124 @@ GST_START_TEST (test_event)
 
 GST_END_TEST;
 
+/* try to segfault the thing by passing NULLs, short headers, etc.. */
+GST_START_TEST (test_memory)
+{
+  guint8 foo[5];
+  GstBuffer *buffer;
+  GstCaps *caps;
+  GstEvent *event;
+  guint length;
+  guint8 *header;
+  guint8 *payload;
+
+  /* check 0 sized input, data pointer can be NULL or anything. CRC is always 0,
+   * though. */
+  fail_if (gst_dp_crc (NULL, 0) != 0);
+  fail_if (gst_dp_crc (foo, 0) != 0);
+
+  /* this is very invalid input and gives a warning. */
+  ASSERT_CRITICAL (gst_dp_crc (NULL, 1));
+  ASSERT_CRITICAL (gst_dp_header_payload_length (NULL));
+  ASSERT_CRITICAL (gst_dp_header_payload_type (NULL));
+
+  /* wrong */
+  ASSERT_CRITICAL (gst_dp_header_from_buffer (NULL, 0, NULL, NULL));
+
+  /* empty buffer has NULL as data pointer */
+  buffer = gst_buffer_new_and_alloc (0);
+
+  /* no place to store the length and/or header data */
+  ASSERT_CRITICAL (gst_dp_header_from_buffer (buffer, 0, NULL, NULL));
+  ASSERT_CRITICAL (gst_dp_header_from_buffer (buffer, 0, &length, NULL));
+
+  /* this should work fine */
+  fail_if (gst_dp_header_from_buffer (buffer, 0, &length, &header) != TRUE);
+  fail_unless (length != 0);
+  fail_unless (header != NULL);
+
+  /* this should validate */
+  fail_if (gst_dp_validate_header (length, header) == FALSE);
+
+  /* NULL header pointer */
+  ASSERT_CRITICAL (gst_dp_validate_header (length, NULL));
+  /* short header */
+  ASSERT_CRITICAL (gst_dp_validate_header (5, header));
+
+  g_free (header);
+
+  /* this should work and not crash trying to calc a CRC on a 0 sized buffer */
+  fail_if (gst_dp_header_from_buffer (buffer,
+          GST_DP_HEADER_FLAG_CRC_HEADER | GST_DP_HEADER_FLAG_CRC_PAYLOAD,
+          &length, &header) != TRUE);
+
+  /* this should validate */
+  fail_if (gst_dp_validate_header (length, header) == FALSE);
+
+  /* there was no payload, NULL as payload data should validate the CRC
+   * checks and all. */
+  fail_if (gst_dp_validate_payload (length, header, NULL) == FALSE);
+
+  /* and the whole packet as well */
+  fail_if (gst_dp_validate_packet (length, header, NULL) == FALSE);
+
+  /* some bogus length */
+  ASSERT_CRITICAL (gst_dp_validate_packet (5, header, NULL));
+  gst_buffer_unref (buffer);
+
+  /* create buffer from header data, integrity tested elsewhere */
+  buffer = gst_dp_buffer_from_header (length, header);
+  fail_if (buffer == NULL);
+  gst_buffer_unref (buffer);
+  g_free (header);
+
+  ASSERT_CRITICAL (gst_dp_packet_from_caps (NULL, 0, NULL, NULL, NULL));
+
+  /* some caps stuff */
+  caps = gst_caps_new_empty ();
+  ASSERT_CRITICAL (gst_dp_packet_from_caps (caps, 0, NULL, NULL, NULL));
+  ASSERT_CRITICAL (gst_dp_packet_from_caps (caps, 0, &length, NULL, NULL));
+  ASSERT_CRITICAL (gst_dp_packet_from_caps (caps, 0, &length, &header, NULL));
+
+  fail_if (gst_dp_packet_from_caps (caps, 0, &length, &header,
+          &payload) != TRUE);
+  fail_if (strcmp ((const gchar *) payload, "EMPTY") != 0);
+  gst_caps_unref (caps);
+
+  caps = gst_dp_caps_from_packet (length, header, payload);
+  fail_if (caps == NULL);
+  gst_caps_unref (caps);
+
+  g_free (header);
+  g_free (payload);
+
+  /* some event stuff */
+  event = gst_event_new_eos ();
+  ASSERT_CRITICAL (gst_dp_packet_from_event (event, 0, NULL, NULL, NULL));
+  ASSERT_CRITICAL (gst_dp_packet_from_event (event, 0, &length, NULL, NULL));
+  ASSERT_CRITICAL (gst_dp_packet_from_event (event, 0, &length, &header, NULL));
+
+  /* payload is not NULL from previous test and points to freed memory, very
+   * invalid. */
+  fail_if (payload == NULL);
+  fail_if (gst_dp_packet_from_event (event, 0, &length, &header,
+          &payload) != TRUE);
+
+  /* the EOS event has no payload */
+  fail_if (payload != NULL);
+  gst_event_unref (event);
+
+  event = gst_dp_event_from_packet (length, header, payload);
+  fail_if (event == NULL);
+  fail_if (GST_EVENT_TYPE (event) != GST_EVENT_EOS);
+  gst_event_unref (event);
+
+  g_free (header);
+  g_free (payload);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_dp_suite (void)
 {
@@ -291,6 +409,7 @@ gst_dp_suite (void)
 #endif
   tcase_add_test (tc_chain, test_caps);
   tcase_add_test (tc_chain, test_event);
+  tcase_add_test (tc_chain, test_memory);
 
   return s;
 }

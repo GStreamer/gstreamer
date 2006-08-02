@@ -1,3 +1,21 @@
+2006-08-02  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_header_from_buffer_any), (gst_dp_packet_from_caps_any),
+	(gst_dp_crc), (gst_dp_header_payload_length),
+	(gst_dp_header_payload_type), (gst_dp_packet_from_event),
+	(gst_dp_packet_from_event_1_0), (gst_dp_buffer_from_header),
+	(gst_dp_caps_from_packet), (gst_dp_event_from_packet_0_2),
+	(gst_dp_event_from_packet), (gst_dp_validate_header),
+	(gst_dp_validate_payload):
+	Make debug category static
+	Constify the crc table.
+	Do some more arg checking in public functions.
+	Fix some docs and do some small cleanups.
+
+	* tests/check/libs/gdp.c: (GST_START_TEST), (gst_dp_suite):
+	Add some more checks to see if GDP deals with bogus input.
+
 2006-07-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstvalue.c: (gst_value_compare_list):
