@@ -1,5 +1,14 @@
 2006-08-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	* tests/check/libs/.cvsignore:
+	* tests/check/libs/audio.c: (structure_contains_channel_positions),
+	(fixed_caps_have_channel_positions), (GST_START_TEST),
+	(audio_suite), (main):
+	  Add a few tests for the channel position stuff in libgstaudio.
+
+2006-08-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/alsa/gstalsa.c: (caps_add_channel_configuration),
 	(gst_alsa_detect_channels):
 	* ext/alsa/gstalsasink.c:

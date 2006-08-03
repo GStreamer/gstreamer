@@ -53,6 +53,7 @@ check_PROGRAMS = \
 	elements/volume \
 	generic/clock-selection \
 	generic/states \
+	libs/audio \
 	libs/cddabasesrc \
 	libs/video \
         pipelines/simple-launch-lines
@@ -77,6 +78,11 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-base.supp
+
+libs_audio_LDADD = \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(LDADD)
+libs_audio_CFLAGS = -I$(top_srcdir)/gst-libs $(CFLAGS) $(AM_CFLAGS)
 
 libs_cddabasesrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
