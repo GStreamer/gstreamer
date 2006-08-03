@@ -2417,6 +2417,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *bmp_exts[] = { "bmp", NULL };
   static gchar *tiff_exts[] = { "tif", "tiff", NULL };
   static gchar *matroska_exts[] = { "mkv", "mka", NULL };
+  static gchar *mve_exts[] = { "mve", NULL };
   static gchar *dv_exts[] = { "dv", "dif", NULL };
   static gchar *amr_exts[] = { "amr", NULL };
   static gchar *ilbc_exts[] = { "ilbc", NULL };
@@ -2556,6 +2557,9 @@ plugin_init (GstPlugin * plugin)
       tiff_exts, TIFF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-matroska", GST_RANK_PRIMARY,
       matroska_type_find, matroska_exts, MATROSKA_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-mve", GST_RANK_SECONDARY,
+      mve_exts, "Interplay MVE File\032\000\032\000\000\001\063\021", 26,
+      GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "video/x-dv", GST_RANK_SECONDARY, dv_type_find,
       dv_exts, DV_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-amr-nb-sh", GST_RANK_PRIMARY,

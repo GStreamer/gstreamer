@@ -1,3 +1,10 @@
+2006-08-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Jens Granseuer  <jensgr at gmx net>
+
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	  Add typefinder for Interplay's MVE format (#348973).
+
 2006-08-02  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Marcel Moreaux <marcelm at luon dot net>
