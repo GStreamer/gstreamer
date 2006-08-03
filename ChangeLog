@@ -1,5 +1,10 @@
 2006-08-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
+	  Recognise ancient RealAudio files (see #349779).
+
+2006-08-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Jens Granseuer  <jensgr at gmx net>
 
 	* gst/typefind/gsttypefindfunctions.c: (plugin_init):

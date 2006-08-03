@@ -2511,6 +2511,8 @@ plugin_init (GstPlugin * plugin)
       html_exts, HTML_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/vnd.rn-realmedia",
       GST_RANK_SECONDARY, rm_exts, ".RMF", 4, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-pn-realaudio",
+      GST_RANK_SECONDARY, rm_exts, ".ra\375", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "application/x-shockwave-flash",
       GST_RANK_SECONDARY, swf_type_find, swf_exts, SWF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-flv", GST_RANK_SECONDARY,
