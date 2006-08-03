@@ -203,9 +203,9 @@ SOUNDTOUCH_DIR=
 endif
 
 if USE_SPC
-SDL_DIR=spc
+SPC_DIR=spc
 else
-SDL_DIR=
+SPC_DIR=
 endif
 
 if USE_SWFDEC

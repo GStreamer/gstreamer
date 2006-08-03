@@ -1,3 +1,10 @@
+2006-08-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by:  cascardo at holoscopio dot com
+
+	* ext/Makefile.am:
+	  Use right variables when USE_SPC is defined.
+
 2006-08-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_init),
