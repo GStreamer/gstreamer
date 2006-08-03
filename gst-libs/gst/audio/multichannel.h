@@ -51,6 +51,11 @@ typedef enum {
   GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
   GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
 
+  /* for multi-channel input and output with more than 8 channels,
+   * incompatible with all other positions, either all positions
+   * are defined or all positions are undefined, but can't mix'n'match  */
+  GST_AUDIO_CHANNEL_POSITION_NONE,
+
   /* don't use - counter */
   GST_AUDIO_CHANNEL_POSITION_NUM
 } GstAudioChannelPosition;

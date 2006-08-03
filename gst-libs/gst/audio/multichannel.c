@@ -65,12 +65,30 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
     GST_AUDIO_CHANNEL_POSITION_INVALID}}
   };
 
+  g_assert (pos != NULL && channels > 0);
+
   /* check for invalid channel positions */
   for (n = 0; n < channels; n++) {
-    if (pos[n] == GST_AUDIO_CHANNEL_POSITION_INVALID) {
-      g_warning ("Position %d is invalid, not allowed", n);
+    if (pos[n] <= GST_AUDIO_CHANNEL_POSITION_INVALID ||
+        pos[n] >= GST_AUDIO_CHANNEL_POSITION_NUM) {
+      g_warning ("Channel position %d is invalid, not allowed", n);
       return FALSE;
     }
+  }
+
+  /* either all channel positions are NONE or all are defined,
+   * but having only some channel positions NONE and others not
+   * is not allowed */
+  if (pos[0] == GST_AUDIO_CHANNEL_POSITION_NONE) {
+    for (n = 1; n < channels; ++n) {
+      if (pos[n] != GST_AUDIO_CHANNEL_POSITION_NONE) {
+        g_warning ("Either all channel positions must be defined, or all "
+            "be set to NONE, having only some defined is not allowed");
+        return FALSE;
+      }
+    }
+    /* all positions are NONE, we are done here */
+    return TRUE;
   }
 
   /* check for multiple position occurrences */
@@ -81,6 +99,13 @@ gst_audio_check_channel_positions (const GstAudioChannelPosition * pos,
     for (n = 0; n < channels; n++) {
       if (pos[n] == i)
         count++;
+    }
+
+    /* NONE may not occur mixed with other channel positions */
+    if (i == GST_AUDIO_CHANNEL_POSITION_NONE && count > 0) {
+      g_warning ("Either all channel positions must be defined, or all "
+          "be set to NONE, having only some defined is not allowed");
+      return FALSE;
     }
 
     if (count > 1) {

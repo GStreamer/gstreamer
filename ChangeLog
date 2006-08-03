@@ -1,5 +1,21 @@
 2006-08-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/alsa/gstalsa.c: (caps_add_channel_configuration),
+	(gst_alsa_detect_channels):
+	* ext/alsa/gstalsasink.c:
+	  Add support for cards that (only) do more than 8 channels,
+	  like the Delta 44 (#345188).
+
+	* gst-libs/gst/audio/multichannel.c:
+	(gst_audio_check_channel_positions):
+	* gst-libs/gst/audio/multichannel.h:
+	  API: add GST_AUDIO_CHANNEL_POSITION_NONE, which stands for an
+	  unspecified channel position and cannot be combined with any
+	  of the other audio channel positions; adjust position layout
+	  checks accordingly (#345188).
+
+2006-08-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/typefind/gsttypefindfunctions.c: (plugin_init):
 	  Recognise ancient RealAudio files (see #349779).
 

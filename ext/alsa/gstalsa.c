@@ -174,7 +174,7 @@ caps_add_channel_configuration (GstCaps * caps,
   GstStructure *s = NULL;
   gint c;
 
-  if (min_chans == max_chans) {
+  if (min_chans == max_chans && max_chans <= 2) {
     s = get_channel_free_structure (in_structure);
     gst_structure_set (s, "channels", G_TYPE_INT, max_chans, NULL);
     gst_caps_append_structure (caps, s);
@@ -197,7 +197,7 @@ caps_add_channel_configuration (GstCaps * caps,
   /* don't know whether to use 2.1 or 3.0 here - but I suspect
    * alsa might work around that/fix it somehow. Can we tell alsa
    * what our channel layout is like? */
-  if (max_chans >= 3) {
+  if (max_chans >= 3 && min_chans <= 3) {
     GstAudioChannelPosition pos_21[3] = {
       GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
       GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
@@ -211,13 +211,28 @@ caps_add_channel_configuration (GstCaps * caps,
   }
 
   /* everything else (4, 6, 8 channels) needs a channel layout */
-  for (c = 4; c <= 8; c += 2) {
+  for (c = MAX (4, min_chans); c <= 8; c += 2) {
     if (max_chans >= c) {
       s = get_channel_free_structure (in_structure);
       gst_structure_set (s, "channels", G_TYPE_INT, c, NULL);
       gst_audio_set_channel_positions (s, pos);
       gst_caps_append_structure (caps, s);
     }
+  }
+
+  for (c = MAX (9, min_chans); c <= max_chans; ++c) {
+    GstAudioChannelPosition *ch_layout;
+    guint i;
+
+    ch_layout = g_new (GstAudioChannelPosition, c);
+    for (i = 0; i < c; ++i) {
+      ch_layout[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+    }
+    s = get_channel_free_structure (in_structure);
+    gst_structure_set (s, "channels", G_TYPE_INT, c, NULL);
+    gst_audio_set_channel_positions (s, ch_layout);
+    gst_caps_append_structure (caps, s);
+    g_free (ch_layout);
   }
 }
 
@@ -259,8 +274,20 @@ gst_alsa_detect_channels (GstObject * obj, snd_pcm_hw_params_t * hw_params,
     max_chans = temp;
   }
 
-  min_chans = MAX (min_chans, 1);
-  max_chans = MIN (GST_ALSA_MAX_CHANNELS, max_chans);
+  /* pro cards seem to return large numbers for min_channels */
+  if (min_chans > GST_ALSA_MAX_CHANNELS) {
+    GST_DEBUG_OBJECT (obj, "min_chans = %u, looks like a pro card", min_chans);
+    if (max_chans < min_chans) {
+      max_chans = min_chans;
+    } else {
+      /* only support [max_chans; max_chans] for these cards for now
+       * to avoid inflating the source caps with loads of structures ... */
+      min_chans = max_chans;
+    }
+  } else {
+    min_chans = MAX (min_chans, 1);
+    max_chans = MIN (GST_ALSA_MAX_CHANNELS, max_chans);
+  }
 
   GST_DEBUG_OBJECT (obj, "Min. channels = %d (%d)", min_chans, min);
   GST_DEBUG_OBJECT (obj, "Max. channels = %d (%d)", max_chans, max);
