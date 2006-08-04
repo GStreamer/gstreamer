@@ -29,6 +29,26 @@
 G_BEGIN_DECLS
 
 
+typedef enum 
+{
+  GST_SIGNAL_PROCESSOR_CLASS_FLAG_CAN_PROCESS_IN_PLACE = 1<<0
+} GstSignalProcessorClassFlags;
+
+#define GST_SIGNAL_PROCESSOR_CLASS_CAN_PROCESS_IN_PLACE(klass)		\
+  (GST_SIGNAL_PROCESSOR_CLASS (klass)->flags & 				\
+   GST_SIGNAL_PROCESSOR_CLASS_FLAG_CAN_PROCESS_IN_PLACE)
+#define GST_SIGNAL_PROCESSOR_CLASS_SET_CAN_PROCESS_IN_PLACE(klass)	\
+  GST_SIGNAL_PROCESSOR_CLASS (klass)->flags |=				\
+    GST_SIGNAL_PROCESSOR_CLASS_FLAG_CAN_PROCESS_IN_PLACE
+
+typedef enum 
+{
+  GST_SIGNAL_PROCESSOR_STATE_NULL,
+  GST_SIGNAL_PROCESSOR_STATE_INITIALIZED,
+  GST_SIGNAL_PROCESSOR_STATE_RUNNING
+} GstSignalProcessorState;
+
+
 #define GST_TYPE_SIGNAL_PROCESSOR            (gst_signal_processor_get_type())
 #define GST_SIGNAL_PROCESSOR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SIGNAL_PROCESSOR,GstSignalProcessor))
 #define GST_SIGNAL_PROCESSOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SIGNAL_PROCESSOR,GstSignalProcessorClass))
@@ -37,6 +57,10 @@ G_BEGIN_DECLS
 #define GST_IS_SIGNAL_PROCESSOR(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SIGNAL_PROCESSOR))
 #define GST_IS_SIGNAL_PROCESSOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SIGNAL_PROCESSOR))
 
+#define GST_SIGNAL_PROCESSOR_IS_INITIALIZED(obj) \
+  (GST_SIGNAL_PROCESSOR (obj)->state >= GST_SIGNAL_PROCESSOR_STATE_INITIALIZED)
+#define GST_SIGNAL_PROCESSOR_IS_RUNNING(obj) \
+  (GST_SIGNAL_PROCESSOR (obj)->state == GST_SIGNAL_PROCESSOR_STATE_RUNNING)
 
 typedef struct _GstSignalProcessor GstSignalProcessor;
 typedef struct _GstSignalProcessorClass GstSignalProcessorClass;
@@ -49,7 +73,9 @@ struct _GstSignalProcessor {
 
   guint sample_rate;
 
-  GstFlowReturn state;
+  GstSignalProcessorState state;
+
+  GstFlowReturn flow_state;
 
   GstActivateMode mode;
 
@@ -70,6 +96,8 @@ struct _GstSignalProcessorClass {
   guint num_audio_in;
   guint num_control_out;
   guint num_audio_out;
+
+  guint flags;
 
   /* virtual methods for subclasses */
 
