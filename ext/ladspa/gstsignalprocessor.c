@@ -110,6 +110,10 @@ struct _GstSignalProcessorPad
   GstBuffer *pen;
 
   guint index;
+
+  /* these are only used for sink pads */
+  guint samples_avail;
+  gfloat *data;
 };
 
 static GType
@@ -281,15 +285,17 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
       GST_WARNING ("got no sample-rate");
       goto impossible;
     } else {
-      GST_DEBUG ("Got rate=%d", sample_rate);
+      GST_DEBUG_OBJECT (self, "Got rate=%d", sample_rate);
     }
 
-    if (!klass->setup (self, sample_rate))
+    if (!klass->setup (self, sample_rate)) {
       goto setup_failed;
-    else
+    } else {
       self->sample_rate = sample_rate;
+      gst_caps_replace (&self->caps, caps);
+    }
   } else {
-    GST_DEBUG ("skipping, have caps already");
+    GST_DEBUG_OBJECT (self, "skipping, have caps already");
   }
 
   /* FIXME: handle was_active, etc */
@@ -334,90 +340,138 @@ gst_signal_processor_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static guint
+gst_signal_processor_prepare (GstSignalProcessor * self)
+{
+  GstElement *elem = (GstElement *) self;
+  GList *sinks, *srcs;
+  guint samples_avail = G_MAXUINT;
+
+  /* first, assign audio_in pointers, and determine the number of samples that
+   * we can process */
+  for (sinks = elem->sinkpads; sinks; sinks = sinks->next) {
+    GstSignalProcessorPad *sinkpad;
+
+    sinkpad = (GstSignalProcessorPad *) sinks->data;
+    g_assert (sinkpad->samples_avail > 0);
+    samples_avail = MIN (samples_avail, sinkpad->samples_avail);
+    self->audio_in[sinkpad->index] = sinkpad->data;
+  }
+
+  if (samples_avail == G_MAXUINT) {
+    /* we don't have any sink pads, just choose a size -- should fix this
+     * function to have a suggested number of samples in the case of
+     * gst_pad_pull_range */
+    samples_avail = 256;
+  }
+
+  /* now assign output buffers. we can avoid allocation by reusing input
+     buffers, but only if process() can work in place, and if the input buffer
+     is the exact size of the number of samples we are processing. */
+  sinks = elem->sinkpads;
+  srcs = elem->srcpads;
+  while (sinks && srcs) {
+    GstSignalProcessorPad *sinkpad, *srcpad;
+
+    sinkpad = (GstSignalProcessorPad *) sinks->data;
+    srcpad = (GstSignalProcessorPad *) srcs->data;
+
+    if (GST_BUFFER_SIZE (sinkpad->pen) == samples_avail * sizeof (gfloat)) {
+      /* reusable, yay */
+      g_assert (sinkpad->samples_avail == samples_avail);
+      srcpad->pen = sinkpad->pen;
+      sinkpad->pen = NULL;
+      self->audio_out[srcpad->index] = sinkpad->data;
+      self->pending_out++;
+
+      srcs = srcs->next;
+    }
+
+    sinks = sinks->next;
+  }
+
+  /* now allocate for any remaining outputs */
+  while (srcs) {
+    GstSignalProcessorPad *srcpad;
+    GstFlowReturn ret;
+
+    srcpad = (GstSignalProcessorPad *) srcs->data;
+
+    ret =
+        gst_pad_alloc_buffer_and_set_caps (GST_PAD (srcpad), -1,
+        samples_avail, GST_PAD_CAPS (srcpad), &srcpad->pen);
+
+    if (ret != GST_FLOW_OK) {
+      self->state = ret;
+      return 0;
+    } else {
+      self->audio_out[srcpad->index] = (gfloat *) GST_BUFFER_DATA (srcpad->pen);
+      self->pending_out++;
+    }
+
+    srcs = srcs->next;
+  }
+
+  return samples_avail;
+}
+
+static void
+gst_signal_processor_update_inputs (GstSignalProcessor * self, guint nprocessed)
+{
+  GstElement *elem = (GstElement *) self;
+  GList *sinks;
+
+  for (sinks = elem->sinkpads; sinks; sinks = sinks->next) {
+    GstSignalProcessorPad *sinkpad;
+
+    sinkpad = (GstSignalProcessorPad *) sinks->data;
+    g_assert (sinkpad->samples_avail >= nprocessed);
+
+    if (sinkpad->pen && sinkpad->samples_avail == nprocessed) {
+      /* used up this buffer, unpen */
+      gst_buffer_unref (sinkpad->pen);
+      sinkpad->pen = NULL;
+    }
+
+    if (!sinkpad->pen) {
+      /* this buffer was used up */
+      self->pending_in++;
+      sinkpad->data = NULL;
+      sinkpad->samples_avail = 0;
+    } else {
+      /* advance ->data pointers and decrement ->samples_avail, unreffing buffer
+         if no samples are left */
+      sinkpad->samples_avail -= nprocessed;
+      sinkpad->data += nprocessed;      /* gfloat* arithmetic */
+    }
+  }
+}
+
 static void
 gst_signal_processor_process (GstSignalProcessor * self)
 {
   GstElement *elem;
-  GList *l1, *l2;
   GstSignalProcessorClass *klass;
-  guint nframes = G_MAXUINT;
+  guint nframes;
 
   g_return_if_fail (self->pending_in == 0);
   g_return_if_fail (self->pending_out == 0);
 
   elem = GST_ELEMENT (self);
 
-  /* arrange the output buffers */
-  for (l1 = elem->sinkpads, l2 = elem->srcpads; l1 || l2;
-      l1 = l1 ? l1->next : NULL, l2 = l2 ? l2->next : NULL) {
-    GstSignalProcessorPad *srcpad, *sinkpad;
-
-    if (l1) {
-      GstSignalProcessorPad *tmp = (GstSignalProcessorPad *) l1->data;
-
-      nframes = MIN (nframes, GST_BUFFER_SIZE (tmp->pen) / sizeof (gfloat));
-    }
-
-    if (!l2) {
-      /* the output buffers have been covered, yay -- just keep looping to check
-         available frames */
-    } else if (!l1) {
-      /* need to alloc some output buffers */
-      for (; l2; l2 = l2->next) {
-        GstFlowReturn ret;
-
-        srcpad = (GstSignalProcessorPad *) l2->data;
-
-        ret =
-            gst_pad_alloc_buffer_and_set_caps (GST_PAD (srcpad), -1,
-            nframes, GST_PAD_CAPS (srcpad), &srcpad->pen);
-
-        if (ret != GST_FLOW_OK) {
-          self->state = ret;
-          goto flow_error;
-        } else {
-          self->audio_out[srcpad->index] =
-              (gfloat *) GST_BUFFER_DATA (srcpad->pen);
-          self->pending_out++;
-        }
-      }
-
-      /* the for condition should cut out because of this, but I assert to be
-         clear */
-      g_assert (l2 == NULL);
-    } else {
-      /* copy input to output */
-      sinkpad = (GstSignalProcessorPad *) l1->data;
-      srcpad = (GstSignalProcessorPad *) l2->data;
-
-      srcpad->pen = sinkpad->pen;
-      sinkpad->pen = NULL;
-      self->audio_out[srcpad->index] = (gfloat *) GST_BUFFER_DATA (srcpad->pen);
-      self->pending_out++;
-    }
-  }
-
-  /* will fail in the ladspa src case, need to check that :-/ */
-  g_assert (nframes < G_MAXUINT);
+  nframes = gst_signal_processor_prepare (self);
+  if (G_UNLIKELY (nframes == 0))
+    goto flow_error;
 
   klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
-  GST_INFO_OBJECT (self, "process(%u)", nframes);
+  GST_LOG_OBJECT (self, "process(%u)", nframes);
 
   klass->process (self, nframes);
 
-  /* reset */
-  self->pending_in = klass->num_audio_in;
+  gst_signal_processor_update_inputs (self, nframes);
 
-  /* free unneeded input buffers */
-  for (l1 = elem->sinkpads; l1; l1 = l1->next) {
-    GstSignalProcessorPad *sinkpad = (GstSignalProcessorPad *) l1->data;
-
-    if (sinkpad->pen) {
-      gst_buffer_unref (sinkpad->pen);
-      sinkpad->pen = NULL;
-    }
-  }
+  return;
 
 flow_error:
   {
@@ -442,15 +496,12 @@ gst_signal_processor_pen_buffer (GstSignalProcessor * self, GstPad * pad,
 
   /* keep the reference */
   spad->pen = buffer;
-  self->audio_in[spad->index] = (gfloat *) GST_BUFFER_DATA (buffer);
+  spad->data = (gfloat *) GST_BUFFER_DATA (buffer);
+  spad->samples_avail = GST_BUFFER_SIZE (buffer) / sizeof (float);
 
   g_assert (self->pending_in != 0);
 
   self->pending_in--;
-
-  if (self->pending_in == 0) {
-    gst_signal_processor_process (self);
-  }
 }
 
 static void
@@ -466,6 +517,8 @@ gst_signal_processor_flush (GstSignalProcessor * self)
     if (spad->pen) {
       gst_buffer_unref (spad->pen);
       spad->pen = NULL;
+      spad->data = NULL;
+      spad->samples_avail = 0;
     }
   }
 }
@@ -666,7 +719,7 @@ gst_signal_processor_sink_activate_push (GstPad * pad, gboolean active)
     }
   }
 
-  GST_DEBUG ("result : %d", TRUE);
+  GST_DEBUG_OBJECT (self, "result : %d", result);
 
   gst_object_unref (self);
 
@@ -714,7 +767,7 @@ gst_signal_processor_src_activate_pull (GstPad * pad, gboolean active)
     }
   }
 
-  GST_DEBUG ("result : %d", TRUE);
+  GST_DEBUG_OBJECT ("result : %d", result);
 
   gst_object_unref (self);
 
@@ -766,7 +819,7 @@ gst_signal_processor_change_state (GstElement * element,
   /* ERRORS */
 failure:
   {
-    GST_DEBUG ("parent failed state change");
+    GST_DEBUG_OBJECT (element, "parent failed state change");
     return result;
   }
 }
