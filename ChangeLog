@@ -1,3 +1,16 @@
+2006-08-04  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ladspa/gstsignalprocessor.c (gst_signal_processor_setcaps)
+	(gst_signal_processor_prepare)
+	(gst_signal_processor_update_inputs)
+	(gst_signal_processor_process, gst_signal_processor_pen_buffer)
+	(gst_signal_processor_flush)
+	(gst_signal_processor_sink_activate_push)
+	(gst_signal_processor_src_activate_pull)
+	(gst_signal_processor_change_state): Remove the last of the code
+	that assumes that we process whole buffers at a time. Fix some
+	debugging. Seems to work now in some cases.
+
 2006-08-01  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ladspa/gstsignalprocessor.c (gst_signal_processor_process):
