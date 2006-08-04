@@ -1,3 +1,25 @@
+2006-08-04  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ladspa/gstsignalprocessor.h: Add infrastructure for storing
+	whether a processor can work in place or not, and for keeping
+	track of its state. Change the FlowReturn instance variable from
+	"state" to "flow_state", all callers changed.
+
+	* ext/ladspa/gstsignalprocessor.c (gst_signal_processor_setup)
+	(gst_signal_processor_start, gst_signal_processor_stop)
+	(gst_signal_processor_cleanup): New functions to manage the
+	processor's state.
+	(gst_signal_processor_setcaps): start() as well as setup() here.
+	(gst_signal_processor_prepare): Respect CAN_PROCESS_IN_PLACE.
+	(gst_signal_processor_change_state): Stop and cleanup the
+	processor as we go to NULL.
+
+	* ext/ladspa/gstladspa.c (gst_ladspa_base_init): Reuse buffers if
+	INPLACE_BROKEN is not set.
+
+	* ext/ladspa/gstsignalprocessor.c (gst_signal_processor_prepare):
+	Do the alloc_buffer in bytes, not frames.
+	
 2006-08-04  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/ximage/ximageutil.c: (ximageutil_xcontext_get):

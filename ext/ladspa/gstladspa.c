@@ -132,6 +132,9 @@ gst_ladspa_base_init (gpointer g_class)
     }
   }
 
+  if (!LADSPA_IS_INPLACE_BROKEN (desc->Properties))
+    GST_SIGNAL_PROCESSOR_CLASS_SET_CAN_PROCESS_IN_PLACE (klass);
+
   klass->descriptor = desc;
 }
 
