@@ -27,6 +27,7 @@
 #  include "config.h"
 #endif
 #include "rmdemux.h"
+#include "rmutils.h"
 #include <string.h>
 #include <ctype.h>
 #include <zlib.h>
@@ -1454,15 +1455,6 @@ re_hexdump_bytes (guint8 * ptr, int len, int offset)
   }
 }
 
-static char *
-re_get_pascal_string (const guint8 * ptr)
-{
-  int length;
-
-  length = ptr[0];
-  return g_strndup ((char *) ptr + 1, length);
-}
-
 static int
 re_skip_pascal_string (const guint8 * ptr)
 {
@@ -1512,6 +1504,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
   GstRMDemuxStream *stream;
   char *stream1_type_string;
   char *stream2_type_string;
+  guint str_len = 0;
   int stream_type;
   int offset;
 
@@ -1527,10 +1520,12 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
 
   offset = 30;
   stream_type = GST_RMDEMUX_STREAM_UNKNOWN;
-  stream1_type_string = re_get_pascal_string (data + offset);
-  offset += re_skip_pascal_string (data + offset);
-  stream2_type_string = re_get_pascal_string (data + offset);
-  offset += re_skip_pascal_string (data + offset);
+  stream1_type_string = gst_rm_utils_read_string8 (data + offset,
+      length - offset, &str_len);
+  offset += str_len;
+  stream2_type_string = gst_rm_utils_read_string8 (data + offset,
+      length - offset, &str_len);
+  offset += str_len;
 
   /* stream1_type_string for audio and video stream is a "put_whatever_you_want" field :
    * observed values :
@@ -1737,54 +1732,11 @@ gst_rmdemux_parse_data (GstRMDemux * rmdemux, const void *data, int length)
 static void
 gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const void *data, int length)
 {
-  const gchar *gst_tags[] = { GST_TAG_TITLE, GST_TAG_ARTIST,
-    GST_TAG_COPYRIGHT, GST_TAG_COMMENT
-  };
   GstTagList *tags;
-  guint i;
 
-  GST_DEBUG_OBJECT (rmdemux, "File Content : (CONT) len = %d", length);
-
-  tags = gst_tag_list_new ();
-
-  for (i = 0; i < G_N_ELEMENTS (gst_tags); ++i) {
-    if (length > 2) {
-      gchar *str;
-      guint str_length;
-
-      str = (gchar *) re_get_pascal_string (data);
-      str_length = (str != NULL) ? strlen (str) : 0;
-      data += 2 + str_length;
-      length -= 2 + str_length;
-
-      if (str != NULL && !g_utf8_validate (str, -1, NULL)) {
-        const gchar *encoding;
-        gchar *tmp;
-
-        encoding = g_getenv ("GST_TAG_ENCODING");
-        if (encoding == NULL || *encoding == '\0') {
-          if (g_get_charset (&encoding))
-            encoding = "ISO-8859-15";
-        }
-        GST_DEBUG_OBJECT (rmdemux, "converting tag from %s to UTF-8", encoding);
-        tmp = g_convert_with_fallback (str, -1, "UTF-8", encoding, "*",
-            NULL, NULL, NULL);
-        g_free (str);
-        str = tmp;
-      }
-
-      GST_DEBUG_OBJECT (rmdemux, "%s = %s", gst_tags[i], GST_STR_NULL (str));
-      if (str != NULL && *str != '\0') {
-        gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, gst_tags[i], str, NULL);
-      }
-      g_free (str);
-    }
-  }
-
-  if (gst_structure_n_fields ((GstStructure *) tags) > 0) {
+  tags = gst_rm_utils_read_tags (data, length, gst_rm_utils_read_string16);
+  if (tags) {
     gst_element_found_tags (GST_ELEMENT (rmdemux), tags);
-  } else {
-    gst_tag_list_free (tags);
   }
 }
 
