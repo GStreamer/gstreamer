@@ -275,21 +275,17 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
           goto done;
 
         /* change state based on type */
-        switch (this->payload_type) {
-          case GST_DP_PAYLOAD_BUFFER:
-            GST_LOG_OBJECT (this, "switching to state BUFFER");
-            this->state = GST_GDP_DEPAY_STATE_BUFFER;
-            break;
-          case GST_DP_PAYLOAD_CAPS:
-            GST_LOG_OBJECT (this, "switching to state CAPS");
-            this->state = GST_GDP_DEPAY_STATE_CAPS;
-            break;
-          case GST_DP_PAYLOAD_EVENT_NONE:
-            GST_LOG_OBJECT (this, "switching to state EVENT");
-            this->state = GST_GDP_DEPAY_STATE_EVENT;
-            break;
-          default:
-            goto wrong_type;
+        if (this->payload_type == GST_DP_PAYLOAD_BUFFER) {
+          GST_LOG_OBJECT (this, "switching to state BUFFER");
+          this->state = GST_GDP_DEPAY_STATE_BUFFER;
+        } else if (this->payload_type == GST_DP_PAYLOAD_CAPS) {
+          GST_LOG_OBJECT (this, "switching to state CAPS");
+          this->state = GST_GDP_DEPAY_STATE_CAPS;
+        } else if (this->payload_type >= GST_DP_PAYLOAD_EVENT_NONE) {
+          GST_LOG_OBJECT (this, "switching to state EVENT");
+          this->state = GST_GDP_DEPAY_STATE_EVENT;
+        } else {
+          goto wrong_type;
         }
         break;
       }
