@@ -6,6 +6,9 @@
 	DynamicSignal class. Got rid of DynamicSignalArgs and is using 
 	GLib.SignalArgs.
 
+	* tests/PipelineTest.cs: NUnit Test Suite for Pipeline. Most of 
+	the tests are duplicate of the c test suite.
+
 2006-07-13  Aaron Bockover  <aaron@abock.org>
 
 	* gstreamer-sharp/BindingHelper.cs: Static helper class to assist
