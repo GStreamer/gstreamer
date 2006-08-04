@@ -1,3 +1,8 @@
+2006-08-04  Andy Wingo  <wingo@pobox.com>
+
+	* examples/synchronizer.py: New file, a bit of a hack to
+	remuxer.py, but for resyncing a bad ogg. Only UI at the moment..
+
 2006-07-28  Andy Wingo  <wingo@pobox.com>
 
 	* examples/remuxer.py (RemuxBin._do_seek, Remuxer._bus_watch): Use
