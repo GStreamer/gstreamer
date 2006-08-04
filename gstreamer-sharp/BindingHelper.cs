@@ -37,10 +37,10 @@ namespace Gst
         }
         
         public static void InvokeProxySignalDelegate(Delegate raiseDelegate, Type type, 
-            object o, GLib.DynamicSignalArgs args)
+            object o, GLib.SignalArgs args)
         {
-            if(!type.IsSubclassOf(typeof(GLib.DynamicSignalArgs))) {
-                throw new ArgumentException("Args type must derive DynamicSignalArgs");
+            if(!type.IsSubclassOf(typeof(GLib.SignalArgs))) {
+                throw new ArgumentException("Args type must derive SignalArgs");
             }
             
             if(raiseDelegate != null) {

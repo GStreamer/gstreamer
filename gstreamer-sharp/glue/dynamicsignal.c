@@ -20,9 +20,23 @@
 typedef void (* DynamicSignalHandler)(GObject *sender, guint argc, 
     GValue *argv, gpointer userdata);
 
+//typedef gpointer (* DynamicSignalHandlerGPointer) (GObject *sender, guint argc,
+//    GValue *argv, gpointer userdata);
+
+//typedef gint64 (* DynamicSignalHandlerGint64) (GObject *sender, guint argc, GValue *argv, gpointer userdata);
+
 typedef struct {
     GObject *object;
     gpointer userdata;
+
+/*
+    typedef union {
+   	DynamicSignalHandler CBVoid;
+	DynamicSignalHandlerGPointer CBGPointer;
+	DynamicSignalHandlerGInt64 CBGInt64;  
+    }
+    CallBack;
+*/
     DynamicSignalHandler callback;
     
     guint id;
@@ -158,6 +172,7 @@ g_dynamic_signal_connect(GObject *object, const gchar *signal_name,
     
     return entry->id;
 }
+
 
 void 
 g_dynamic_signal_disconnect(GObject *object, const gchar *signal_name)

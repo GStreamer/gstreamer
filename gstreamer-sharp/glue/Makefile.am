@@ -1,7 +1,6 @@
 lib_LTLIBRARIES = libgstreamersharpglue-0.10.la
 
 libgstreamersharpglue_0_10_la_SOURCES =	\
-	dynamicsignal.c \
 	clock.c \
 	message.c \
 	miniobject.c \

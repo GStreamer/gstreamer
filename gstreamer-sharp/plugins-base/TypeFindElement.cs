@@ -13,18 +13,18 @@ namespace Gst
 {
     public delegate void HaveTypeHandler(object o, HaveTypeArgs args);
 
-    public class HaveTypeArgs : GLib.DynamicSignalArgs 
+    public class HaveTypeArgs : GLib.SignalArgs 
     {
-        public HaveTypeArgs(GLib.DynamicSignalArgs args) : base(args)
+        public HaveTypeArgs(GLib.SignalArgs args) : base(args)
         {
         }
     
         public uint Probability {
-            get { return (uint)Args[0]; }
+            get { return (uint)Args[1]; }
         }
         
         public Gst.Caps Caps {
-            get { return (Gst.Caps)Args[1]; }
+            get { return (Gst.Caps)Args[2]; }
         }
     }
 
@@ -41,7 +41,7 @@ namespace Gst
             return ElementFactory.Make("typefind", name) as TypeFindElement;
         }
      
-        protected virtual void OnHaveType(object o, GLib.DynamicSignalArgs args)
+        protected virtual void OnHaveType(object o, GLib.SignalArgs args)
         {
             BindingHelper.InvokeProxySignalDelegate(have_type_delegate, typeof(HaveTypeArgs), o, args);
         }

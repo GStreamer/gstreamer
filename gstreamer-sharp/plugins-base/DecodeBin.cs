@@ -14,18 +14,18 @@ namespace Gst
 {
     public delegate void NewDecodedPadHandler(object o, NewDecodedPadArgs args);
 
-    public class NewDecodedPadArgs : GLib.DynamicSignalArgs 
+    public class NewDecodedPadArgs : GLib.SignalArgs 
     {
-        public NewDecodedPadArgs(GLib.DynamicSignalArgs args) : base(args)
+        public NewDecodedPadArgs(GLib.SignalArgs args) : base(args)
         {
         }
     
         public Gst.Pad Pad {
-            get { return (Gst.Pad)Args[0]; }
+            get { return (Gst.Pad)Args[1]; }
         }
         
         public bool Last {
-            get { return (bool)Args[1]; }
+            get { return (bool)Args[2]; }
         }
     }
 
@@ -37,7 +37,7 @@ namespace Gst
         {
         } 
         
-        protected virtual void OnNewDecodedPad(object o, GLib.DynamicSignalArgs args)
+        protected virtual void OnNewDecodedPad(object o, GLib.SignalArgs args)
         {
             BindingHelper.InvokeProxySignalDelegate(new_decoded_pad_delegate, 
                 typeof(NewDecodedPadArgs), o, args);

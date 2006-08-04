@@ -86,9 +86,9 @@ public class HelloWorld
         return true;
     }
 
-    private void OnHandoff(object o, DynamicSignalArgs args) 
+    private void OnHandoff(object o, SignalArgs args) 
     {
-        Gst.Buffer buffer = args[0] as Gst.Buffer;
+        Gst.Buffer buffer = args.Args[0] as Gst.Buffer;
         Console.WriteLine(buffer.Duration + "\t" + buffer.Timestamp);
     }
     
