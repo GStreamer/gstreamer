@@ -210,6 +210,10 @@ ximageutil_xcontext_get (GstElement * parent, const gchar * display_name)
       xcontext->g_mask_output >>= 8;
       xcontext->b_mask_output >>= 8;
     }
+  } else {
+    xcontext->r_mask_output = xcontext->visual->red_mask;
+    xcontext->g_mask_output = xcontext->visual->green_mask;
+    xcontext->b_mask_output = xcontext->visual->blue_mask;
   }
 
   return xcontext;

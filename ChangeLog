@@ -1,3 +1,8 @@
+2006-08-04  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/ximage/ximageutil.c: (ximageutil_xcontext_get):
+	Fix rgb masks when recording in < 24bpp.
+
 2006-08-04  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ladspa/gstsignalprocessor.c (gst_signal_processor_setcaps)
