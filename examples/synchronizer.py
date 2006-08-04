@@ -130,25 +130,27 @@ class SyncPoints(gtk.VBox):
         self.pwindow = window
         self.create_ui()
 
+    def get_time_as_str(self, iter, i):
+        value = self.model.get_value(iter, i)
+        ret = ''
+        for div, sep, mod, pad in ((gst.SECOND*60, '', 0, 0),
+                                   (gst.SECOND, ':', 60, 2),
+                                   (gst.MSECOND, '.', 1000, 3)):
+            n = value // div
+            if mod:
+                n %= mod
+            ret += sep + ('%%0%dd' % pad) % n
+        return ret
+
     def create_ui(self):
         self.model = model = gtk.ListStore(gobject.TYPE_UINT64,
                                            gobject.TYPE_UINT64)
         self.view = view = gtk.TreeView(self.model)
 
-        def time_to_text(column, cell, method, iter, i):
-            value = model.get_value(iter, i)
-            ret = ''
-            for div, sep, mod, pad in ((gst.SECOND*60, '', 0, 0),
-                                       (gst.SECOND, ':', 60, 2),
-                                       (gst.MSECOND, '.', 1000, 3)):
-                n = value // div
-                if mod:
-                    n %= mod
-                ret += sep + ('%%0%dd' % pad) % n
-            cell.set_property('text', ret)
-
         renderer = gtk.CellRendererText()
         column = gtk.TreeViewColumn("Audio time", renderer)
+        def time_to_text(column, cell, method, iter, i):
+            cell.set_property('text', self.get_time_as_str(iter, i))
         column.set_cell_data_func(renderer, time_to_text, 0)
         column.set_expand(True)
         column.set_clickable(True)
@@ -172,6 +174,7 @@ class SyncPoints(gtk.VBox):
         def add_and_select(*x):
             iter = model.append()
             self.view.get_selection().select_iter(iter)
+            self.changed()
         add.connect("clicked", add_and_select)
         hbox.pack_end(add, False, False, 0)
         
@@ -180,6 +183,7 @@ class SyncPoints(gtk.VBox):
         def remove_selected(*x):
             model, iter = self.view.get_selection().get_selected()
             model.remove(iter)
+            self.changed()
         remove.connect("clicked", remove_selected)
         hbox.pack_end(remove, False, False, 0)
         
@@ -205,24 +209,29 @@ class SyncPoints(gtk.VBox):
         v.connect("clicked", lambda *x: self.set_selected_video_now())
         hbox.pack_start(v)
 
+    def changed(self):
+        print 'Sync times now:'
+        for index, row in enumerate(self.model):
+            print 'A/V %d: %s -- %s' % (index,
+                                        self.get_time_as_str(row.iter, 0),
+                                        self.get_time_as_str(row.iter, 1))
+            
+
     def set_selected_audio(self, time):
         sel = self.view.get_selection()
         model, iter = sel.get_selected()
         if iter:
             model.set_value(iter, 0, time)
+        self.changed()
 
     def set_selected_video(self, time):
         sel = self.view.get_selection()
         model, iter = sel.get_selected()
         if iter:
             model.set_value(iter, 1, time)
+        self.changed()
 
     def set_selected_audio_now(self):
-        # pause and preroll first
-        if self.pwindow.player.is_playing():
-            self.pwindow.play_toggled()
-        self.pwindow.player.get_state(timeout=gst.MSECOND * 200)
-
         time, dur = self.pwindow.player.query_position()
         self.set_selected_audio(time)
 
