@@ -10,6 +10,7 @@
 	(gst_signal_processor_change_state): Remove the last of the code
 	that assumes that we process whole buffers at a time. Fix some
 	debugging. Seems to work now in some cases.
+	(gst_signal_processor_src_activate_pull): BPB
 
 2006-08-01  Andy Wingo  <wingo@pobox.com>
 

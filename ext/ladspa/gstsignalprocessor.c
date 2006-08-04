@@ -767,7 +767,7 @@ gst_signal_processor_src_activate_pull (GstPad * pad, gboolean active)
     }
   }
 
-  GST_DEBUG_OBJECT ("result : %d", result);
+  GST_DEBUG_OBJECT (self, "result : %d", result);
 
   gst_object_unref (self);
 
