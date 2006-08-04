@@ -746,8 +746,7 @@ not_our_pad:
     /* FIXME, locking order? */
     GST_OBJECT_LOCK (element);
     g_critical ("Padname %s:%s does not belong to element %s when removing",
-        GST_ELEMENT_NAME (GST_PAD_PARENT (pad)), GST_PAD_NAME (pad),
-        GST_ELEMENT_NAME (element));
+        GST_DEBUG_PAD_NAME (pad), GST_ELEMENT_NAME (element));
     GST_OBJECT_UNLOCK (element);
     GST_OBJECT_UNLOCK (pad);
     return FALSE;

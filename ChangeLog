@@ -1,3 +1,8 @@
+2006-08-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstelement.c: (gst_element_remove_pad):
+	  Don't crash printing the warning if the pad has no parent.
+
 2006-08-02  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/dataprotocol/dataprotocol.c:
