@@ -1,3 +1,4 @@
+/* vim: set sw=2: -*- Mode: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2; c-indent-level: 2 -*- */
 /* GStreamer
  * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
  *
@@ -63,6 +64,12 @@ struct _GstNeonhttpSrc {
   gchar *iradio_url;
   GstCaps *icy_caps;
   gint icy_metaint;
+
+  /* enable Neon HTTP redirects (HTTP 302 status code) */
+  gboolean neon_http_redirect;
+
+  /* enable Neon HTTP debug messages */
+  gboolean neon_http_msgs_dbg;
 };
 
 struct _GstNeonhttpSrcClass {

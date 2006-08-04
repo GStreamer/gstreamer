@@ -1,3 +1,11 @@
+2006-08-04  Edgard Lima <edgard.lima@indt.org.br>
+
+	Patch by: rosfran dot borges at indt dot org dot br
+
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/neon/gstneonhttpsrc.h:
+	Allow HTTP redirect (HTTP status code 302).
+
 2006-08-04  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/gdp/gstgdpdepay.c: (gst_gdp_depay_chain):

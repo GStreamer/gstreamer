@@ -1,3 +1,4 @@
+/* vim: set sw=2: -*- Mode: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2; c-indent-level: 2 -*- */
 /* GStreamer
  * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
  *
@@ -20,6 +21,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <ne_redirect.h>
+
 #ifndef NE_FREE
 #define NEON_026_OR_LATER  1
 #endif
@@ -33,6 +36,8 @@ GST_DEBUG_CATEGORY_STATIC (neonhttpsrc_debug);
 
 #define MAX_READ_SIZE                   (4 * 1024)
 
+/* max number of HTTP redirects, when iterating over a sequence of HTTP 302 status code */
+#define MAX_HTTP_REDIRECTS_NUMBER	5
 
 static const GstElementDetails gst_neonhttp_src_details =
 GST_ELEMENT_DETAILS ("HTTP client source",
@@ -55,7 +60,11 @@ enum
   PROP_IRADIO_MODE,
   PROP_IRADIO_NAME,
   PROP_IRADIO_GENRE,
-  PROP_IRADIO_URL
+  PROP_IRADIO_URL,
+  PROP_NEON_HTTP_REDIRECT
+#ifndef GST_DISABLE_GST_DEBUG
+      , PROP_NEON_HTTP_DBG
+#endif
 };
 
 static void oom_callback ();
@@ -177,6 +186,19 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
       g_param_spec_string ("iradio-url",
           "iradio-url",
           "Homepage URL for radio stream", NULL, G_PARAM_READABLE));
+
+  g_object_class_install_property
+      (gobject_class, PROP_NEON_HTTP_REDIRECT,
+      g_param_spec_boolean ("automatic-redirect", "automatic-redirect",
+          "Enable Neon HTTP Redirects (HTTP Status Code 302)",
+          FALSE, G_PARAM_READWRITE));
+
+#ifndef GST_DISABLE_GST_DEBUG
+  g_object_class_install_property
+      (gobject_class, PROP_NEON_HTTP_DBG,
+      g_param_spec_boolean ("neon-http-debug", "neon-http-debug",
+          "Enable Neon HTTP debug messages", FALSE, G_PARAM_READWRITE));
+#endif
 
   gstbasesrc_class->start = gst_neonhttp_src_start;
   gstbasesrc_class->stop = gst_neonhttp_src_stop;
@@ -375,41 +397,134 @@ gst_neonhttp_src_unicodify (const char *str)
   return unicodify (str, -1, "locale", "ISO-8859-1", NULL);
 }
 
+#define HTTP_SOCKET_ERROR		-2
+#define HTTP_REQUEST_WRONG_PROXY	-1
+
+/**
+ * Try to send the HTTP request to the Icecast server, and if possible deals with
+ * all the probable redirections (HTTP status code == 302)
+ */
+static gint
+send_request_and_redirect (GstNeonhttpSrc * src, gboolean do_redir)
+{
+  gint res;
+  gint http_status = 0;
+
+  const gchar *redir = g_strdup ("");
+
+  guint request_count = 0;
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (src->neon_http_msgs_dbg)
+    ne_debug_init (stderr, NE_DBG_HTTP);
+#endif
+
+  ne_oom_callback (oom_callback);
+
+  if ((res = ne_sock_init ()) != 0)
+    return HTTP_SOCKET_ERROR;
+
+  do {
+
+    src->session =
+        ne_session_create (src->uri.scheme, src->uri.host, src->uri.port);
+
+    if (src->proxy.host && src->proxy.port) {
+      ne_session_proxy (src->session, src->proxy.host, src->proxy.port);
+    } else if (src->proxy.host || src->proxy.port) {
+      /* both proxy host and port must be specified or none */
+      return HTTP_REQUEST_WRONG_PROXY;
+    }
+
+    src->request = ne_request_create (src->session, "GET", src->uri.path);
+
+    if (src->user_agent) {
+      ne_add_request_header (src->request, "User-Agent", src->user_agent);
+    }
+
+    if (src->iradio_mode) {
+      ne_add_request_header (src->request, "icy-metadata", "1");
+    }
+
+    res = ne_begin_request (src->request);
+
+    if (res == NE_OK) {
+      /* When the HTTP status code is 302, it is not the SHOUTcast streaming content yet;
+       * Reload the HTTP request with a new URI value */
+      http_status = ne_get_status (src->request)->code;
+      if (http_status == 302) {
+        /* the new URI value to go when redirecting can be found on the 'Location' HTTP header */
+        redir = ne_get_response_header (src->request, "Location");
+        if (redir != NULL) {
+          ne_uri_free (&src->uri);
+          set_uri (src, redir, &src->uri, &src->ishttps, &src->uristr, FALSE);
+#ifndef GST_DISABLE_GST_DEBUG
+          if (src->neon_http_msgs_dbg)
+            GST_LOG_OBJECT (src,
+                "--> Got HTTP Status Code %d; Using 'Location' header [%s]\n",
+                http_status, src->uri.host);
+#endif
+        }
+
+      }
+      /* if - http_status == 302 */
+    }
+    /* if - NE_OK */
+    ++request_count;
+    if (http_status == 302) {
+      GST_WARNING_OBJECT (src, "%s %s.\n",
+          (request_count < MAX_HTTP_REDIRECTS_NUMBER)
+          && do_redir ? "Redirecting to" :
+          "WILL NOT redirect, try it again with a different URI; an alternative is",
+          src->uri.host);
+    }
+#ifndef GST_DISABLE_GST_DEBUG
+    if (src->neon_http_msgs_dbg)
+      GST_LOG_OBJECT (src, "--> request_count = %d\n", request_count);
+#endif
+
+    /* do the redirect, go back to send another HTTP request now using the 'Location' */
+  } while (do_redir && (request_count < MAX_HTTP_REDIRECTS_NUMBER)
+      && http_status == 302);
+
+  return res;
+
+}
+
 /* create a socket for connecting to remote server */
 static gboolean
 gst_neonhttp_src_start (GstBaseSrc * bsrc)
 {
   GstNeonhttpSrc *src = GST_NEONHTTP_SRC (bsrc);
   const char *content_length;
-  gint res;
 
-  ne_oom_callback (oom_callback);
+  gint res = send_request_and_redirect (src, src->neon_http_redirect);
 
-  if ((res = ne_sock_init ()) != 0)
-    goto init_failed;
-
-  src->session =
-      ne_session_create (src->uri.scheme, src->uri.host, src->uri.port);
-
-  if (src->proxy.host && src->proxy.port) {
-    ne_session_proxy (src->session, src->proxy.host, src->proxy.port);
-  } else if (src->proxy.host || src->proxy.port) {
-    /* both proxy host and port must be specified or none */
-    goto wrong_proxy;
+  if (res != NE_OK) {
+    if (res == HTTP_SOCKET_ERROR) {
+#ifndef GST_DISABLE_GST_DEBUG
+      if (src->neon_http_msgs_dbg) {
+        GST_ERROR_OBJECT (src, "HTTP Request failed when opening socket!\n");
+      }
+#endif
+      goto init_failed;
+    } else if (res == HTTP_REQUEST_WRONG_PROXY) {
+#ifndef GST_DISABLE_GST_DEBUG
+      if (src->neon_http_msgs_dbg) {
+        GST_ERROR_OBJECT (src,
+            "Proxy Server URI is invalid to the HTTP Request!\n");
+      }
+#endif
+      goto wrong_proxy;
+    } else {
+#ifndef GST_DISABLE_GST_DEBUG
+      if (src->neon_http_msgs_dbg) {
+        GST_ERROR_OBJECT (src, "HTTP Request failed, error unrecognized!\n");
+      }
+#endif
+      goto begin_req_failed;
+    }
   }
-
-  src->request = ne_request_create (src->session, "GET", src->uri.path);
-
-  if (src->user_agent) {
-    ne_add_request_header (src->request, "User-Agent", src->user_agent);
-  }
-
-  if (src->iradio_mode) {
-    ne_add_request_header (src->request, "icy-metadata", "1");
-  }
-
-  if ((res = ne_begin_request (src->request)) != NE_OK)
-    goto begin_req_failed;
 
   content_length = ne_get_response_header (src->request, "Content-Length");
 
@@ -461,6 +576,7 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
       src->iradio_url = gst_neonhttp_src_unicodify (str_value);
     }
   }
+
   return TRUE;
 
   /* ERRORS */
@@ -706,6 +822,18 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
       this->iradio_mode = g_value_get_boolean (value);
       break;
     }
+    case PROP_NEON_HTTP_REDIRECT:
+    {
+      this->neon_http_redirect = g_value_get_boolean (value);
+      break;
+    }
+#ifndef GST_DISABLE_GST_DEBUG
+    case PROP_NEON_HTTP_DBG:
+    {
+      this->neon_http_msgs_dbg = g_value_get_boolean (value);
+      break;
+    }
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -769,6 +897,14 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
     case PROP_IRADIO_URL:
       g_value_set_string (value, neonhttpsrc->iradio_url);
       break;
+    case PROP_NEON_HTTP_REDIRECT:
+      g_value_set_boolean (value, neonhttpsrc->neon_http_redirect);
+      break;
+#ifndef GST_DISABLE_GST_DEBUG
+    case PROP_NEON_HTTP_DBG:
+      g_value_set_boolean (value, neonhttpsrc->neon_http_msgs_dbg);
+      break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
