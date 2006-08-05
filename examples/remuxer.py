@@ -675,8 +675,8 @@ class PlayerWindow(gtk.Window):
         button.show()
         table.attach(button, 2, 3, 1, 2, gtk.FILL, gtk.FILL)
 
-        self.cutin.connect('notify::time', lambda *x: self.check_cutout())
-        self.cutout.connect('notify::time', lambda *x: self.check_cutin())
+        #self.cutin.connect('notify::time', lambda *x: self.check_cutout())
+        #self.cutout.connect('notify::time', lambda *x: self.check_cutin())
 
     def do_remux(self):
         if self.player.is_playing():

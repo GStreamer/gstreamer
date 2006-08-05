@@ -209,6 +209,18 @@ class SyncPoints(gtk.VBox):
         v.connect("clicked", lambda *x: self.set_selected_video_now())
         hbox.pack_start(v)
 
+    def get_sync_points(self):
+        def get_value(row, i):
+            return self.model.get_value(row.iter, i)
+        pairs = [(get_value(row, 1), get_value(row, 0)) for row in self.model]
+        pairs.sort()
+        ret = []
+        maxdiff = 0
+        for pair in pairs:
+            maxdiff = max(maxdiff, abs(pair[1] - pair[0]))
+            ret.extend(pair)
+        return ret, maxdiff
+
     def changed(self):
         print 'Sync times now:'
         for index, row in enumerate(self.model):
@@ -302,10 +314,10 @@ FAILURE = 2
 CANCELLED = 3
 
 class RemuxProgressDialog(ProgressDialog):
-    def __init__(self, parent, start, stop, fromname, toname):
+    def __init__(self, parent, fromname, toname):
         ProgressDialog.__init__(self,
                                 "Writing to disk",
-                                ('Writing the selected segment of <b>%s</b> '
+                                ('Writing the newly synchronized <b>%s</b> '
                                  'to <b>%s</b>. This may take some time.'
                                  % (fromname, toname)),
                                 'Starting media pipeline',
@@ -313,71 +325,34 @@ class RemuxProgressDialog(ProgressDialog):
                                 gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
                                 (gtk.STOCK_CANCEL, CANCELLED,
                                  gtk.STOCK_CLOSE, SUCCESS))
-        self.start = start
-        self.stop = stop
-        self.update_position(start)
         self.set_completed(False)
         
-    def update_position(self, pos):
-        pos = min(max(pos, self.start), self.stop)
-        remaining = self.stop - pos
+    def update_position(self, pos, dur):
+        remaining = dur - pos
         minutes = remaining // (gst.SECOND * 60)
         seconds = (remaining - minutes * gst.SECOND * 60) // gst.SECOND
         self.progress.set_text('%d:%02d of video remaining' % (minutes, seconds))
-        self.progress.set_fraction(1.0 - float(remaining) / (self.stop - self.start))
+        self.progress.set_fraction(1.0 - float(remaining) / dur)
 
     def set_completed(self, completed):
         self.set_response_sensitive(CANCELLED, not completed)
         self.set_response_sensitive(SUCCESS, completed)
 
-def set_connection_blocked_async_marshalled(pads, proc, *args, **kwargs):
-    def clear_list(l):
-        while l:
-            l.pop()
-
-    to_block = list(pads)
-    to_relink = [(x, x.get_peer()) for x in pads]
-
-    def on_pad_blocked_sync(pad, is_blocked):
-        if pad not in to_block:
-            # can happen after the seek and before unblocking -- racy,
-            # but no prob, bob.
-            return
-        to_block.remove(pad)
-        if not to_block:
-            # marshal to main thread
-            gobject.idle_add(on_pads_blocked)
-
-    def on_pads_blocked():
-        for src, sink in to_relink:
-            src.link(sink)
-        proc(*args, **kwargs)
-        for src, sink in to_relink:
-            src.set_blocked_async(False, lambda *x: None)
-        clear_list(to_relink)
-
-    for src, sink in to_relink:
-        src.unlink(sink)
-        src.set_blocked_async(True, on_pad_blocked_sync)
-
-class Remuxer(gst.Pipeline):
+class Resynchronizer(gst.Pipeline):
 
     __gsignals__ = {'done': (gobject.SIGNAL_RUN_LAST, None, (int,))}
 
-    def __init__(self, fromuri, touri, start, stop):
+    def __init__(self, fromuri, touri, (syncpoints, maxdiff)):
         # HACK: should do Pipeline.__init__, but that doesn't do what we
         # want; there's a bug open aboooot that
         self.__gobject_init__()
 
-        assert start >= 0
-        assert stop > start
-
         self.fromuri = fromuri
         self.touri = None
-        self.start_time = start
-        self.stop_time = stop
+        self.syncpoints = syncpoints
+        self.maxdiff = maxdiff
 
-        self.src = self.remuxbin = self.sink = None
+        self.src = self.resyncbin = self.sink = None
         self.resolution = UNKNOWN
 
         self.window = None
@@ -387,17 +362,17 @@ class Remuxer(gst.Pipeline):
 
     def do_setup_pipeline(self):
         self.src = gst.element_make_from_uri(gst.URI_SRC, self.fromuri)
-        self.remuxbin = RemuxBin(self.start_time, self.stop_time)
+        self.resyncbin = ResyncBin(self.syncpoints, self.maxdiff)
         self.sink = gst.element_make_from_uri(gst.URI_SINK, self.touri)
         self.resolution = UNKNOWN
 
         if gobject.signal_lookup('allow-overwrite', self.sink.__class__):
             self.sink.connect('allow-overwrite', lambda *x: True)
 
-        self.add(self.src, self.remuxbin, self.sink)
+        self.add(self.src, self.resyncbin, self.sink)
 
-        self.src.link(self.remuxbin)
-        self.remuxbin.link(self.sink)
+        self.src.link(self.resyncbin)
+        self.resyncbin.link(self.sink)
 
     def do_get_touri(self):
         chooser = gtk.FileChooserDialog('Save as...',
@@ -429,10 +404,11 @@ class Remuxer(gst.Pipeline):
                 # although i think it's possible)
                 # HACK: why does self.query_position(..) not give useful
                 # answers? 
-                pad = self.remuxbin.get_pad('src')
-                pos, duration = pad.query_position(gst.FORMAT_TIME)
+                pad = self.resyncbin.get_pad('src')
+                pos, format = pad.query_position(gst.FORMAT_TIME)
+                dur, format = pad.query_duration(gst.FORMAT_TIME)
                 if pos != gst.CLOCK_TIME_NONE:
-                    self.pdialog.update_position(pos)
+                    self.pdialog.update_position(pos, duration)
             except:
                 # print 'query failed'
                 pass
@@ -470,7 +446,7 @@ class Remuxer(gst.Pipeline):
             if name.startswith('file://'):
                 name = name[7:]
             self.pdialog.set_task('Finished writing %s' % name)
-            self.pdialog.update_position(self.stop_time)
+            self.pdialog.update_position(1,1)
             self._stop_queries()
             self.pdialog.set_completed(True)
         elif message.type == gst.MESSAGE_STATE_CHANGED:
@@ -480,7 +456,6 @@ class Remuxer(gst.Pipeline):
                     (gst.STATE_READY, gst.STATE_PAUSED,
                      gst.STATE_VOID_PENDING)):
                     self.pdialog.set_task('Processing file')
-                    self.pdialog.update_position(self.start_time)
                     self._start_queries()
                     self.set_state(gst.STATE_PLAYING)
 
@@ -507,8 +482,7 @@ class Remuxer(gst.Pipeline):
             self.window.set_sensitive(False)
         fromname = self.fromuri.split('/')[-1]
         toname = self.touri.split('/')[-1]
-        self.pdialog = RemuxProgressDialog(main_window, self.start_time,
-                                           self.stop_time, fromname, toname)
+        self.pdialog = RemuxProgressDialog(main_window, fromname, toname)
         self.pdialog.show()
         self.pdialog.connect('response', lambda w, r: self.response(r))
 
@@ -524,8 +498,8 @@ class Remuxer(gst.Pipeline):
             self.resolution = CANCELLED
         return self.resolution
         
-class RemuxBin(gst.Bin):
-    def __init__(self, start_time, stop_time):
+class ResyncBin(gst.Bin):
+    def __init__(self, sync_points, maxdiff):
         self.__gobject_init__()
 
         self.parsefactories = self._find_parsers()
@@ -540,10 +514,9 @@ class RemuxBin(gst.Bin):
         self.add_pad(gst.GhostPad('src', self.mux.get_pad('src')))
 
         self.demux.connect('pad-added', self._new_demuxed_pad)
-        self.demux.connect('no-more-pads', self._no_more_pads)
 
-        self.start_time = start_time
-        self.stop_time = stop_time
+        self.sync_points = sync_points
+        self.maxdiff = maxdiff
 
     def _find_parsers(self):
         registry = gst.registry_get_default()
@@ -565,7 +538,10 @@ class RemuxBin(gst.Bin):
             return
 
         queue = gst.element_factory_make('queue', 'queue_' + format)
-        queue.set_property('max-size-buffers', 1000)
+        queue.set_property('max-size-buffers', 0)
+        queue.set_property('max-size-bytes', 0)
+        print self.maxdiff
+        queue.set_property('max-size-time', int(self.maxdiff * 1.5))
         parser = gst.element_factory_make(self.parsefactories[format])
         self.add(queue)
         self.add(parser)
@@ -576,18 +552,11 @@ class RemuxBin(gst.Bin):
         parser.link(self.mux)
         self.parsers.append(parser)
 
-    def _do_seek(self):
-        flags = gst.SEEK_FLAG_FLUSH
-        # HACK: self.seek should work, should try that at some point
-        return self.demux.seek(1.0, gst.FORMAT_TIME, flags,
-                               gst.SEEK_TYPE_SET, self.start_time,
-                               gst.SEEK_TYPE_SET, self.stop_time)
+        print repr(self.sync_points)
 
-    def _no_more_pads(self, element):
-        pads = [x.get_pad('src') for x in self.parsers]
-        set_connection_blocked_async_marshalled(pads,
-                                                self._do_seek)
-
+        if 'video' in format:
+            parser.set_property('synchronization-points',
+                                self.sync_points)
 
 class PlayerWindow(gtk.Window):
     UPDATE_INTERVAL = 500
@@ -706,9 +675,7 @@ class PlayerWindow(gtk.Window):
             self.play_toggled()
         in_uri = self.player.get_location()
         out_uri = in_uri[:-4] + '-remuxed.ogg'
-        raise NotImplementedError()
-        r = Remuxer(in_uri, out_uri,
-                    self.cutin.get_time(), self.cutout.get_time())
+        r = Resynchronizer(in_uri, out_uri, self.sync.get_sync_points())
         r.run(self)
 
     def do_choose_file(self):

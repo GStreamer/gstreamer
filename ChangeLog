@@ -1,3 +1,11 @@
+2006-08-05  Andy Wingo  <wingo@pobox.com>
+
+	* examples/synchronizer.py: Actually appears to work now, will
+	have to try with guadec videos on Monday.
+
+	* examples/remuxer.py (PlayerWindow.create_ui): Disable the
+	auto-adjusting of cut in and cut out times, it's annoying.
+
 2006-08-04  Andy Wingo  <wingo@pobox.com>
 
 	* examples/synchronizer.py: New file, a bit of a hack to
@@ -416,6 +424,14 @@
 
 2006-04-19  Andy Wingo  <wingo@pobox.com>
 
+<<<<<<< ChangeLog
+	* gst/gstpad.override (pad_block_callback_marshal) 
+	(_wrap_gst_pad_set_blocked_async): Fix refcounting problems and
+	indent.
+
+2006-04-19  Andy Wingo  <wingo@pobox.com>
+
+=======
 	* gst/arg-types.py (GstCapsArg.write_const_param) 
 	(GstCapsArg.write_param): If there is a default value, initialize
 	the py_caps variable to NULL. PyArgs_Parse* doesn't touch c
@@ -428,6 +444,7 @@
 
 2006-04-19  Andy Wingo  <wingo@pobox.com>
 
+>>>>>>> 1.447
 	* examples/remuxer.py: Another code dump. I know it breaks the
 	freeze but it's just a wee example :)
 
