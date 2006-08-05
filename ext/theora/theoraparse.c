@@ -37,6 +37,14 @@
  * vorbisparse outputs have all of the metadata that oggmux expects to receive,
  * which allows you to (for example) remux an ogg/theora file.
  * </para>
+ * <para>
+ * In addition, this element allows you to fix badly synchronized streams. You
+ * pass in an array of (granule time, buffer time) synchronization points via
+ * the synchronization-points GValueArray property, and this element will adjust
+ * the granulepos values that it outputs. The adjustment will be made by
+ * offsetting all buffers that it outputs by a specified amount, and updating
+ * that offset from the value array whenever a keyframe is processed.
+ * </para>
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
@@ -88,9 +96,22 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-theora")
     );
 
+enum
+{
+  PROP_0,
+  PROP_SYNCHRONIZATION_POINTS
+};
+
 GST_BOILERPLATE (GstTheoraParse, gst_theora_parse, GstElement,
     GST_TYPE_ELEMENT);
 
+static void theora_parse_dispose (GObject * object);
+static void theora_parse_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void theora_parse_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+
+static gboolean theora_parse_src_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn theora_parse_chain (GstPad * pad, GstBuffer * buffer);
 static GstStateChangeReturn theora_parse_change_state (GstElement * element,
     GstStateChange transition);
@@ -112,7 +133,20 @@ gst_theora_parse_base_init (gpointer g_class)
 static void
 gst_theora_parse_class_init (GstTheoraParseClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->dispose = theora_parse_dispose;
+  gobject_class->get_property = theora_parse_get_property;
+  gobject_class->set_property = theora_parse_set_property;
+
+  g_object_class_install_property (gobject_class, PROP_SYNCHRONIZATION_POINTS,
+      g_param_spec_value_array ("synchronization-points",
+          "Synchronization points", "An array of (granuletime, buffertime) "
+          "pairs",
+          g_param_spec_uint64 ("time", "Time",
+              "Time (either granuletime or buffertime)", 0, G_MAXUINT64, 0,
+              G_PARAM_READWRITE), (GParamFlags) G_PARAM_READWRITE));
 
   gstelement_class->change_state = theora_parse_change_state;
 
@@ -133,6 +167,95 @@ gst_theora_parse_init (GstTheoraParse * parse, GstTheoraParseClass * g_class)
       gst_pad_new_from_static_template (&theora_parse_src_factory, "src");
   gst_pad_set_query_function (parse->srcpad, theora_parse_src_query);
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
+}
+
+static void
+theora_parse_dispose (GObject * object)
+{
+  GstTheoraParse *parse = GST_THEORA_PARSE (object);
+
+  g_free (parse->times);
+  parse->times = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+theora_parse_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstTheoraParse *parse = GST_THEORA_PARSE (object);
+
+  switch (prop_id) {
+    case PROP_SYNCHRONIZATION_POINTS:
+    {
+      GValueArray *array;
+      guint i;
+
+      array = g_value_get_boxed (value);
+
+      if (array) {
+        if (array->n_values % 2)
+          goto odd_values;
+
+        g_free (parse->times);
+        parse->times = g_new (GstClockTime, array->n_values);
+        parse->npairs = array->n_values / 2;
+        for (i = 0; i < array->n_values; i++)
+          parse->times[i] = g_value_get_uint64 (&array->values[i]);
+      } else {
+        g_free (parse->times);
+        parse->npairs = 0;
+      }
+    }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  return;
+
+odd_values:
+  {
+    g_critical ("expected an even number of time values for "
+        "synchronization-points");
+    return;
+  }
+}
+
+static void
+theora_parse_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstTheoraParse *parse = GST_THEORA_PARSE (object);
+
+  switch (prop_id) {
+    case PROP_SYNCHRONIZATION_POINTS:
+    {
+      GValueArray *array = NULL;
+      guint i;
+
+      array = g_value_array_new (parse->npairs * 2);
+
+      for (i = 0; i < parse->npairs; i++) {
+        GValue v = { 0, };
+
+        g_value_init (&v, G_TYPE_UINT64);
+        g_value_set_uint64 (&v, parse->times[i * 2]);
+        g_value_array_append (array, &v);
+        g_value_set_uint64 (&v, parse->times[i * 2 + 1]);
+        g_value_array_append (array, &v);
+        g_value_unset (&v);
+      }
+
+      g_value_set_boxed (value, array);
+    }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -295,6 +418,42 @@ is_keyframe (GstBuffer * buf)
   return ((GST_BUFFER_DATA (buf)[0] & 0x40) == 0);
 }
 
+static void
+theora_parse_munge_granulepos (GstTheoraParse * parse, GstBuffer * buf,
+    gint64 keyframe, gint64 frame)
+{
+  gint64 frames_diff;
+  GstClockTimeDiff time_diff;
+
+  if (keyframe == frame) {
+    gint i;
+
+    /* update granule_offset */
+    for (i = 0; i < parse->npairs; i++) {
+      if (parse->times[i * 2] >= GST_BUFFER_OFFSET (buf))
+        break;
+    }
+    if (i > 0) {
+      /* time_diff gets reset below */
+      time_diff = parse->times[i * 2 - 1] - parse->times[i * 2 - 2];
+      parse->granule_offset = gst_util_uint64_scale (time_diff,
+          parse->fps_n, parse->fps_d * GST_SECOND);
+      parse->granule_offset <<= parse->shift;
+    }
+  }
+
+  frames_diff = parse->granule_offset >> parse->shift;
+  time_diff = gst_util_uint64_scale_int (GST_SECOND * frames_diff,
+      parse->fps_d, parse->fps_n);
+
+  GST_DEBUG_OBJECT (parse, "offsetting theora stream by %" G_GINT64_FORMAT
+      " frames (%" GST_TIME_FORMAT ")", frames_diff, GST_TIME_ARGS (time_diff));
+
+  GST_BUFFER_OFFSET_END (buf) += parse->granule_offset;
+  GST_BUFFER_OFFSET (buf) += time_diff;
+  GST_BUFFER_TIMESTAMP (buf) += time_diff;
+}
+
 static GstFlowReturn
 theora_parse_push_buffer (GstTheoraParse * parse, GstBuffer * buf,
     gint64 keyframe, gint64 frame)
@@ -314,6 +473,9 @@ theora_parse_push_buffer (GstTheoraParse * parse, GstBuffer * buf,
   GST_BUFFER_DURATION (buf) = next_time - this_time;
 
   gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
+
+  if (parse->times)
+    theora_parse_munge_granulepos (parse, buf, keyframe, frame);
 
   GST_DEBUG_OBJECT (parse, "pushing buffer with granulepos %" G_GINT64_FORMAT
       "|%" G_GINT64_FORMAT, keyframe, frame - keyframe);
@@ -697,6 +859,7 @@ theora_parse_change_state (GstElement * element, GstStateChange transition)
       parse->event_queue = g_queue_new ();
       parse->prev_keyframe = -1;
       parse->prev_frame = -1;
+      parse->granule_offset = 0;
       break;
     default:
       break;

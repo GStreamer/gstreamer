@@ -1,3 +1,12 @@
+2006-08-05  Andy Wingo  <wingo@pobox.com>
+
+	* ext/theora/gsttheoraparse.h:
+	* ext/theora/theoraparse.c (gst_theora_parse_class_init)
+	(theora_parse_dispose, theora_parse_set_property)
+	(theora_parse_get_property, theora_parse_munge_granulepos)
+	(theora_parse_push_buffer, theora_parse_change_state): Add a
+	property 'synchronization-points' to fix badly synchronized oggs.
+
 2006-08-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:

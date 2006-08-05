@@ -70,6 +70,10 @@ struct _GstTheoraParse {
   guint32		fps_n;
   guint32		fps_d;
   gint			shift;
+  gint64		granule_offset;
+
+  GstClockTime		*times;
+  gint			npairs;
 };
 
 struct _GstTheoraParseClass {
