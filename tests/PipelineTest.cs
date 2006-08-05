@@ -170,4 +170,25 @@ public class PipelineTest
 		pipeline.Dispose();
 		bus.Dispose();
 	}
+
+	[Test]
+	public void TestBaseTime() {
+		Element pipeline = ElementFactory.Make("pipeline", "pipeline");
+		Element fakesrc = ElementFactory.Make("fakesrc", "fakesrc");
+		Element fakesink = ElementFactory.Make("fakesink", "fakesink");
+
+		Assert.IsNotNull(pipeline, "Could not create pipeline");
+		Assert.IsNotNull(fakesrc, "Could not create fakesrc");
+		Assert.IsNotNull(fakesink, "Could not create fakesink");
+		
+		fakesrc.SetProperty("is-live", true);
+
+		Bin bin = (Bin) pipeline;
+		bin.AddMany(fakesrc, fakesink);
+		Assert.IsTrue(fakesrc.Link(fakesink));
+
+		Pad sink = fakesink.GetPad("sink");
+		
+		pipeline.Dispose();
+	}
 }

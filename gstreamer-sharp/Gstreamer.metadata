@@ -3,6 +3,7 @@
   <attr path="/api/namespace/object[@name='Bin']" name="disable_gtype_ctor">1</attr>
   <attr path="/api/namespace/object[@name='Pipeline']" name="disable_gtype_ctor">1</attr>
 
+  <attr path="/api/namespace/object[@name='Object']/field[@name='Refcount']" name="hidden">1</attr>
 
   <attr path="/api/namespace/object[@name='Bin']/field[@name='Children']" name="hidden">1</attr>
 

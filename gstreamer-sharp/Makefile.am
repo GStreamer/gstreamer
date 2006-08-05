@@ -56,7 +56,8 @@ customs = 			\
 	Debug.custom		\
 	Element.custom		\
 	Message.custom		\
-	Pad.custom
+	Pad.custom		\
+	Object.custom	
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 

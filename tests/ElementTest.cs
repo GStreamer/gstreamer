@@ -28,43 +28,27 @@ public class ElementTest
 	}
 
 	[Test]
-	public void TestGoodConstructor()
+	public void TestAddRemovePad() 
 	{
-		Element sink = ElementFactory.Make("fakesink", "fake-sink");
-
-		Assert.IsNotNull(sink, "fakesink plugin is not installed?");
-		Assert.IsFalse(sink.Handle == IntPtr.Zero, "sink Element has null handle");
-		//Assert.IsInstanceOfType(typeof(Element), sink, "sink is not an Element?");
-		Assert.AreEqual(sink.Name, "fake-sink");
-
-		sink.Dispose();
-	}
-
-	[Test]
-	public void TestAddingAndRemovingPads()
-	{
-		Element src = ElementFactory.Make("fakesrc", "fake-src");
-
-		Assert.IsNotNull(src, "fakesrc plugin is not installed?");
+		Element e = ElementFactory.Make("fakesrc", "source");
+		/* create a new floating pad with refcount 1 */
+		Pad p = new Pad("source", PadDirection.Src);
+		Assert.AreEqual(p.Refcount, 1, "pad");
 		
-		Pad [] pads = new Pad[2];
+		/* ref it for ourselves */
+		Gst.Object.Ref(p.Handle);
+		Assert.AreEqual(p.Refcount, 2, "pad");
+		/* adding it sinks the pad -> not floating, same refcount */
+		e.AddPad(p);
+		Assert.AreEqual(p.Refcount, 2, "pad");
 
-		pads[0] = new Pad("src1", PadDirection.Src);
-		pads[1] = new Pad("src2", PadDirection.Sink);
+		/* removing it reduces the refcount */
+		e.RemovePad(p);
+		Assert.AreEqual(p.Refcount, 1, "pad");
 
-		foreach(Pad P in pads) {
-			src.AddPad(P);
-		}
-
-
-		foreach(Pad P in pads) {
-			//Assert.IsTrue(src.Pads.IndexOf(P) >= 0);
-		}
-
-		foreach(Pad P in pads) {
-			Assert.IsTrue(src.RemovePad(P));
-		}
-
+		/* clean up our own reference */
+		p.Dispose();
+		e.Dispose();
 	}
 }
 

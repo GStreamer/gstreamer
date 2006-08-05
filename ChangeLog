@@ -1,3 +1,11 @@
+2006-08-05  Khaled Mohammed <khaled.mohammed@gmail.com>
+	* gstreamer-sharp/GStreamer.metadata: added a new xml node to hide 
+	generation of Refcount by GAPI.
+
+	* gstreamer-sharp/Object.custom: added Refcount property there.
+
+	* tests/ElementTest.cs: Adding test to Add/Remove Pad.
+
 2006-08-03  Khaled Mohammed <khaled.mohammed@gmail.com>
 	* gstreamer-sharp/DynamicSignal.cs: Added the support for Retval.
 	Also changed the design to use only managed code. 
