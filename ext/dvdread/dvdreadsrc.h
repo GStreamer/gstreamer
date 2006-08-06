@@ -1,5 +1,7 @@
-/* GStreamer
+/* GStreamer DVD title source
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2001> Billy Biggs <vektor@dumbterm.net>.
+ * Copyright (C) <2006> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -71,9 +73,12 @@ struct _GstDvdReadSrc {
   tt_srpt_t       *tt_srpt;
   ifo_handle_t    *vts_file;
   vts_ptt_srpt_t  *vts_ptt_srpt;
+  vts_tmapt_t     *vts_tmapt;
   dvd_file_t      *dvd_title;
   gint             num_chapters;
   gint             num_angles;
+
+  GstClockTime    *chapter_starts;  /* start time of chapters within title   */
 
   /* which program chain to watch (based on title and chapter number) */
   pgc_t           *cur_pgc;

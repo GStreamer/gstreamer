@@ -1,3 +1,22 @@
+2006-08-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_stop),
+	(gst_dvd_read_src_goto_chapter),
+	(gst_dvd_read_src_get_chapter_starts),
+	(gst_dvd_read_src_goto_title), (gst_dvd_read_src_get_next_cell),
+	(gst_dvd_read_src_get_time_for_sector),
+	(gst_dvd_read_src_get_sector_from_time), (gst_dvd_read_src_read),
+	(gst_dvd_read_src_handle_seek_event), (gst_dvd_read_src_do_seek),
+	(gst_dvd_read_src_goto_sector):
+	* ext/dvdread/dvdreadsrc.h:
+	  Add basic support for time-based seeking; set timestamps on
+	  outgoing buffers if we have them; create table with
+	  chapter to time mapping when opening a title; rename
+	  gst_dvd_read_src_get_next_cell_for() to _get_next_cell() and
+	  make it take an explicit pgc argument; fix up some debugging
+	  messages so that title/chapter numbers are printed as starting
+	  from 1 for easier readability.
+
 2006-08-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/realmedia/Makefile.am:
