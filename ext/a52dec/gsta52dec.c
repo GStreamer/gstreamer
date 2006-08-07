@@ -548,9 +548,9 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
         ret = gst_a52dec_chain_raw (pad, subbuf);
       }
     } else {
-      /* No first_access, so no timestamp */
+      /* first_access = 0 or 1, so if there's a timestamp it applies to the first byte */
       subbuf = gst_buffer_create_sub (buf, offset, size - offset);
-      GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
       ret = gst_a52dec_chain_raw (pad, subbuf);
     }
   } else {

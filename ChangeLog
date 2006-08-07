@@ -1,3 +1,9 @@
+2006-08-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_chain):
+	  When the first_access is 1 or 0, we should copy the timestamp from 
+	  the incoming buffer if there is one.
+
 2006-08-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_channels), (gst_a52dec_push),
