@@ -1,3 +1,13 @@
+2006-08-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Frédéric Riss  <frederic.riss at gmail com>
+
+	* gst/dvdsub/gstdvdsubdec.c: (gst_send_subtitle_frame):
+	  Don't set negative durations on outgoing buffers (#350044),
+	  which happens when you use macros that got changed during
+	  the last unstable cycle because they were thought not to
+	  be used anywhere.
+	  
 2006-08-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_stop),
