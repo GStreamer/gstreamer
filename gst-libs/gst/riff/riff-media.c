@@ -856,6 +856,12 @@ gst_riff_create_audio_caps (guint16 codec_id,
       if (codec_name)
         *codec_name = g_strdup ("AC-3 audio");
       break;
+    case GST_RIFF_WAVE_FORMAT_DTS:
+      channels_max = 6;
+      caps = gst_caps_new_simple ("audio/x-dts", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("DTS audio");
+      break;
     case GST_RIFF_WAVE_FORMAT_WMAV1:
     case GST_RIFF_WAVE_FORMAT_WMAV2:
     case GST_RIFF_WAVE_FORMAT_WMAV3:
@@ -1100,6 +1106,7 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_PCM,
     GST_RIFF_WAVE_FORMAT_VORBIS1,
     GST_RIFF_WAVE_FORMAT_A52,
+    GST_RIFF_WAVE_FORMAT_DTS,
     GST_RIFF_WAVE_FORMAT_ALAW,
     GST_RIFF_WAVE_FORMAT_MULAW,
     GST_RIFF_WAVE_FORMAT_ADPCM,

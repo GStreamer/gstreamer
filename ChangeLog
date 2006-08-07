@@ -1,3 +1,12 @@
+2006-08-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Young-Ho Cha  <ganadist at chollian net>
+
+	* gst-libs/gst/riff/riff-ids.h:
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps),
+	(gst_riff_create_audio_template_caps):
+	  Detect DTS audio streams (#350157).
+
 2006-08-05  Andy Wingo  <wingo@pobox.com>
 
 	* ext/theora/gsttheoraparse.h:

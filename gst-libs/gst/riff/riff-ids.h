@@ -299,6 +299,7 @@ typedef struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_WAVE_FORMAT_WMAV3          (0x0162)
 #define GST_RIFF_WAVE_FORMAT_SONY_ATRAC3    (0x0270)
 #define GST_RIFF_WAVE_FORMAT_A52            (0x2000)
+#define GST_RIFF_WAVE_FORMAT_DTS            (0x2001)
 #define GST_RIFF_WAVE_FORMAT_VORBIS1        (0x674f)
 #define GST_RIFF_WAVE_FORMAT_VORBIS2        (0x6750)
 #define GST_RIFF_WAVE_FORMAT_VORBIS3        (0x6751)
