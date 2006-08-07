@@ -1,5 +1,14 @@
 2006-08-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream),
+	(gst_rmdemux_parse_mdpr):
+	  Handle audio streams with stream_version 3 properly; warn about 
+	  unknown stream versions; handle unknown fourccs a tad more
+	  gracefully (setting bogus caps). Also, use GST_FOURCC_ARGS
+	  with GST_FOURCC_FORMAT.
+
+2006-08-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_goto_title):
 	  Error out properly if this is an interactive DVD (fixes #345694).
 

@@ -1241,7 +1241,11 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         version = 4;
         break;
       default:
-        GST_WARNING_OBJECT (rmdemux, "Unknown video FOURCC code");
+        stream_caps = gst_caps_new_simple ("video/x-unknown-fourcc",
+            "fourcc", GST_TYPE_FOURCC, stream->fourcc, NULL);
+        GST_WARNING_OBJECT (rmdemux,
+            "Unknown video FOURCC code \"%" GST_FOURCC_FORMAT "\" (%08x)",
+            GST_FOURCC_ARGS (stream->fourcc), stream->fourcc);
     }
 
     if (version) {
@@ -1338,9 +1342,11 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         break;
 
       default:
+        stream_caps = gst_caps_new_simple ("video/x-unknown-fourcc",
+            "fourcc", GST_TYPE_FOURCC, stream->fourcc, NULL);
         GST_WARNING_OBJECT (rmdemux,
-            "Unknown audio FOURCC code \"%" GST_FOURCC_FORMAT "\"",
-            stream->fourcc);
+            "Unknown audio FOURCC code \"%" GST_FOURCC_FORMAT "\" (%08x)",
+            GST_FOURCC_ARGS (stream->fourcc), stream->fourcc);
         break;
     }
 
@@ -1596,15 +1602,24 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
       break;
     case GST_RMDEMUX_STREAM_AUDIO:{
       stream->version = RMDEMUX_GUINT16_GET (data + offset + 4);
-      stream->flavor = RMDEMUX_GUINT16_GET (data + offset + 22);
-      stream->packet_size = RMDEMUX_GUINT32_GET (data + offset + 24);
-      /* stream->frame_size = RMDEMUX_GUINT32_GET (data + offset + 42); */
-      stream->leaf_size = RMDEMUX_GUINT16_GET (data + offset + 44);
-      stream->height = RMDEMUX_GUINT16_GET (data + offset + 40);
-
       GST_INFO ("stream version = %u", stream->version);
       switch (stream->version) {
+        case 3:
+          stream->fourcc = GST_RM_AUD_14_4;
+          stream->packet_size = 20;
+          stream->rate = 8000;
+          stream->n_channels = 1;
+          stream->sample_width = 16;
+          stream->flavor = 1;
+          stream->leaf_size = 0;
+          stream->height = 0;
+          break;
         case 4:
+          stream->flavor = RMDEMUX_GUINT16_GET (data + offset + 22);
+          stream->packet_size = RMDEMUX_GUINT32_GET (data + offset + 24);
+          /* stream->frame_size = RMDEMUX_GUINT32_GET (data + offset + 42); */
+          stream->leaf_size = RMDEMUX_GUINT16_GET (data + offset + 44);
+          stream->height = RMDEMUX_GUINT16_GET (data + offset + 40);
           stream->rate = RMDEMUX_GUINT16_GET (data + offset + 48);
           stream->sample_width = RMDEMUX_GUINT16_GET (data + offset + 52);
           stream->n_channels = RMDEMUX_GUINT16_GET (data + offset + 54);
@@ -1613,6 +1628,11 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
           stream->extra_data = (guint8 *) data + offset + 71;
           break;
         case 5:
+          stream->flavor = RMDEMUX_GUINT16_GET (data + offset + 22);
+          stream->packet_size = RMDEMUX_GUINT32_GET (data + offset + 24);
+          /* stream->frame_size = RMDEMUX_GUINT32_GET (data + offset + 42); */
+          stream->leaf_size = RMDEMUX_GUINT16_GET (data + offset + 44);
+          stream->height = RMDEMUX_GUINT16_GET (data + offset + 40);
           stream->rate = RMDEMUX_GUINT16_GET (data + offset + 54);
           stream->sample_width = RMDEMUX_GUINT16_GET (data + offset + 58);
           stream->n_channels = RMDEMUX_GUINT16_GET (data + offset + 60);
@@ -1620,6 +1640,11 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
           stream->extra_data_size = RMDEMUX_GUINT32_GET (data + offset + 74);
           stream->extra_data = (guint8 *) data + offset + 78;
           break;
+        default:{
+          GST_WARNING_OBJECT (rmdemux, "Unhandled audio stream version %d",
+              stream->version);
+          break;
+        }
       }
 
       /*  14_4, 28_8, cook, dnet, sipr, raac, racp, ralf, atrc */
