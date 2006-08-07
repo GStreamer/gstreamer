@@ -269,8 +269,7 @@ gst_a52dec_channels (int flags, GstAudioChannelPosition ** _pos)
       chans += 2;
       break;
     default:
-      /* error */
-      g_warning ("a52dec invalid flags %d", flags);
+      /* error, caller should post error message */
       g_free (pos);
       return 0;
   }
@@ -289,6 +288,8 @@ gst_a52dec_push (GstA52Dec * a52dec,
   flags &= (A52_CHANNEL_MASK | A52_LFE);
   chans = gst_a52dec_channels (flags, NULL);
   if (!chans) {
+    GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), STREAM, DECODE, (NULL),
+        ("invalid channel flags: %d", flags));
     return GST_FLOW_ERROR;
   }
 
@@ -316,10 +317,9 @@ gst_a52dec_push (GstA52Dec * a52dec,
 }
 
 static gboolean
-gst_a52dec_reneg (GstPad * pad)
+gst_a52dec_reneg (GstA52Dec * a52dec, GstPad * pad)
 {
   GstAudioChannelPosition *pos;
-  GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
   gint channels = gst_a52dec_channels (a52dec->using_channels, &pos);
   GstCaps *caps = NULL;
   gboolean result = FALSE;
@@ -327,7 +327,7 @@ gst_a52dec_reneg (GstPad * pad)
   if (!channels)
     goto done;
 
-  GST_INFO ("a52dec: reneg channels:%d rate:%d\n",
+  GST_INFO_OBJECT (a52dec, "reneg channels:%d rate:%d",
       channels, a52dec->sample_rate);
 
   caps = gst_caps_new_simple ("audio/x-raw-float",
@@ -346,7 +346,6 @@ gst_a52dec_reneg (GstPad * pad)
 done:
   if (caps)
     gst_caps_unref (caps);
-  gst_object_unref (GST_OBJECT (a52dec));
   return result;
 }
 
@@ -455,9 +454,9 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
 
   /* negotiate if required */
   if (need_reneg == TRUE) {
-    GST_DEBUG ("a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d\n",
+    GST_DEBUG ("a52dec reneg: sample_rate:%d stream_chans:%d using_chans:%d",
         a52dec->sample_rate, a52dec->stream_channels, a52dec->using_channels);
-    if (!gst_a52dec_reneg (a52dec->srcpad)) {
+    if (!gst_a52dec_reneg (a52dec, a52dec->srcpad)) {
       GST_ELEMENT_ERROR (a52dec, CORE, NEGOTIATION, (NULL), (NULL));
       return GST_FLOW_ERROR;
     }
@@ -507,23 +506,19 @@ gst_a52dec_sink_setcaps (GstPad * pad, GstCaps * caps)
 static GstFlowReturn
 gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstA52Dec *a52dec = GST_A52DEC (gst_pad_get_parent (pad));
+  GstA52Dec *a52dec = GST_A52DEC (GST_PAD_PARENT (pad));
   GstFlowReturn ret;
+  gint first_access;
 
   if (a52dec->dvdmode) {
     gint size = GST_BUFFER_SIZE (buf);
     guchar *data = GST_BUFFER_DATA (buf);
-    gint first_access;
     gint offset;
     gint len;
     GstBuffer *subbuf;
 
-    if (size < 2) {
-      GST_ERROR_OBJECT (pad, "Insufficient data in buffer. "
-          "Can't determine first_acess");
-      ret = GST_FLOW_ERROR;
-      goto done;
-    }
+    if (size < 2)
+      goto not_enough_data;
 
     first_access = (data[0] << 8) | data[1];
 
@@ -534,12 +529,8 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
       /* Length of data before first_access */
       len = first_access - 1;
 
-      if (len <= 0 || offset + len > size) {
-        GST_ERROR_OBJECT (pad, "Bad first_access parameter (%d) in buffer",
-            first_access);
-        ret = GST_FLOW_ERROR;
-        goto done;
-      }
+      if (len <= 0 || offset + len > size)
+        goto bad_first_access_parameter;
 
       subbuf = gst_buffer_create_sub (buf, offset, len);
       GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
@@ -567,9 +558,22 @@ gst_a52dec_chain (GstPad * pad, GstBuffer * buf)
   }
 
 done:
-  gst_object_unref (a52dec);
 
   return ret;
+
+/* ERRORS */
+not_enough_data:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), STREAM, DECODE, (NULL),
+        ("Insufficient data in buffer. Can't determine first_acess"));
+    return GST_FLOW_ERROR;
+  }
+bad_first_access_parameter:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (a52dec), STREAM, DECODE, (NULL),
+        ("Bad first_access parameter (%d) in buffer", first_access));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn

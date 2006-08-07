@@ -1,5 +1,12 @@
 2006-08-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_channels), (gst_a52dec_push),
+	(gst_a52dec_reneg), (gst_a52dec_handle_frame), (gst_a52dec_chain):
+	  Use GST_ELEMENT_ERROR for error reporting; post errors in some
+	  more places; remove superfluous newlines from debug statements.
+
+2006-08-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Frédéric Riss  <frederic.riss at gmail com>
 
 	* gst/dvdsub/gstdvdsubdec.c: (gst_send_subtitle_frame):
