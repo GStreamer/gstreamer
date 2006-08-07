@@ -464,6 +464,12 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
   src->ttn = src->tt_srpt->title[title].vts_ttn;
   src->vts_ptt_srpt = src->vts_file->vts_ptt_srpt;
 
+  /* interactive title? */
+  if (src->num_chapters > 0 &&
+      src->vts_ptt_srpt->title[src->ttn - 1].ptt[0].pgn == 0) {
+    goto commands_only_pgc;
+  }
+
   /* we've got enough info, time to open the title set data */
   src->dvd_title = DVDOpenFile (src->dvd, title_set_nr, DVD_READ_TITLE_VOBS);
   if (src->dvd_title == NULL)
@@ -577,6 +583,14 @@ title_open_failed:
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (_("Could not open DVD title %d"), title_set_nr),
         ("Can't open title VOBS (VTS_%02d_1.VOB)", title_set_nr));
+    return FALSE;
+  }
+commands_only_pgc:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("Could not open DVD title %d. Interactive titles are not supported "
+                "by this element"), title_set_nr),
+        ("Commands-only PGC, not supported, use dvdnavsrc"));
     return FALSE;
   }
 }
