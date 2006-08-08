@@ -2922,7 +2922,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
     rmra = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_rmra);
     if (rmra) {
       rmda = qtdemux_tree_get_child_by_type (rmra, FOURCC_rmda);
-      if (rmra) {
+      if (rmda) {
         rdrf = qtdemux_tree_get_child_by_type (rmda, FOURCC_rdrf);
         if (rdrf) {
           GstStructure *s;

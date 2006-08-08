@@ -1,3 +1,8 @@
+2006-08-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_tree):
+	  Fix silly typo.
+
 2006-08-08  Edward Hervey  <edward@fluendo.com>
 
 	* tests/check/elements/gdpdepay.c: (gdpdepay_suite):
