@@ -683,17 +683,16 @@ gst_ghost_pad_do_unlink (GstPad * pad)
   GstPad *target = gst_proxy_pad_get_target (pad);
   GstPad *internal = gst_proxy_pad_get_internal (pad);
 
-  g_return_if_fail (target != NULL);
-
   GST_DEBUG_OBJECT (pad, "unlinking ghostpad");
 
   /* The target of the internal pad is no longer valid */
   gst_proxy_pad_set_target (internal, NULL);
 
-  if (target->unlinkfunc)
+  if (target && target->unlinkfunc)
     target->unlinkfunc (target);
 
-  gst_object_unref (target);
+  if (target)
+    gst_object_unref (target);
   gst_object_unref (internal);
 }
 
