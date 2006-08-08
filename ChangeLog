@@ -1,3 +1,12 @@
+2006-08-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sjoerd Simons  <sjoerd at luon net>
+
+	* gst/typefind/gsttypefindfunctions.c: (multipart_type_find):
+	  Better detection for multipart/x-mixed-replace: accept leading
+	  whitespaces before the boundary marker as well (as our very own
+	  multipartmux used to produce) (#349068).
+
 2006-08-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Young-Ho Cha  <ganadist at chollian net>
