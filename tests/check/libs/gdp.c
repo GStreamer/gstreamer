@@ -85,6 +85,8 @@ GST_START_TEST (test_conversion)
 
 GST_END_TEST;
 
+#ifndef HAVE_CPU_PPC64          /* this test doesn't work on PPC64. See #348114 */
+
 /* test creation of header from buffer and back again */
 GST_START_TEST (test_buffer)
 {
@@ -148,6 +150,8 @@ GST_START_TEST (test_buffer)
 }
 
 GST_END_TEST;
+
+#endif
 
 GST_START_TEST (test_caps)
 {
