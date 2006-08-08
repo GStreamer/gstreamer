@@ -990,7 +990,7 @@ not_handled:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "dvdsubdec", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "dvdsubdec", GST_RANK_NONE,
           GST_TYPE_DVD_SUB_DEC)) {
     return FALSE;
   }

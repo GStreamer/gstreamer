@@ -1,3 +1,11 @@
+2006-08-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/dvdsub/gstdvdsubdec.c: (plugin_init):
+	  Set rank to NONE for the time being until we make playbin handle
+	  subtitle pictures again (dvdsubdec seems to be a bit shaky at
+	  times when seeking, so it's probably better if it doesn't get
+	  autoplugged for the time being).
+
 2006-08-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream),
