@@ -1,3 +1,8 @@
+2006-08-08  Edward Hervey  <edward@fluendo.com>
+
+	* tests/check/elements/gdpdepay.c: (gdpdepay_suite):
+	Ignore test known to fail on PPC64. See #348114.
+
 2006-08-04  Edgard Lima <edgard.lima@indt.org.br>
 
 	Patch by: rosfran dot borges at indt dot org dot br
