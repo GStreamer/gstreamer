@@ -1,6 +1,12 @@
 2006-08-08  Edward Hervey  <edward@fluendo.com>
 
 	* tests/check/elements/gdpdepay.c: (gdpdepay_suite):
+	I forgot to include the file containing the #define :)
+	Now includes "config.h"
+
+2006-08-08  Edward Hervey  <edward@fluendo.com>
+
+	* tests/check/elements/gdpdepay.c: (gdpdepay_suite):
 	Ignore test known to fail on PPC64. See #348114.
 
 2006-08-04  Edgard Lima <edgard.lima@indt.org.br>
