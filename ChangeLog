@@ -4,9 +4,9 @@
 	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_setcaps),
 	(gst_smokeenc_resync), (gst_smokeenc_chain):
 	  Refuse sink caps in the encoder if width or height is not a
-	  multiple of 16, the encoder does not support that yet; along the
-	  same lines, check the return value of the encoder setup function;
-	  also remove some debug log clutter.
+	  multiple of 16, the encoder does not support that yet (#349939);
+	  along the same lines, check the return value of the encoder
+	  setup function; also remove some debug log clutter.
 
 2006-08-04  Andy Wingo  <wingo@pobox.com>
 
