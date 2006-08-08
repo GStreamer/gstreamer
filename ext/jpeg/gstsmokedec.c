@@ -171,9 +171,7 @@ gst_smokedec_chain (GstPad * pad, GstBuffer * buf)
   size = GST_BUFFER_SIZE (buf);
   time = GST_BUFFER_TIMESTAMP (buf);
 
-  GST_DEBUG_OBJECT (smokedec,
-      "gst_smokedec_chain: got buffer of %ld bytes in '%s'", size,
-      GST_OBJECT_NAME (smokedec));
+  GST_LOG_OBJECT (smokedec, "got buffer of %u bytes", size);
 
   /* have the ID packet. */
   if (data[0] == SMOKECODEC_TYPE_ID) {
@@ -186,14 +184,16 @@ gst_smokedec_chain (GstPad * pad, GstBuffer * buf)
   }
 
   /* now handle data packets */
-  GST_DEBUG_OBJECT (smokedec, "gst_smokedec_chain: reading header %08lx",
-      *(gulong *) data);
+  GST_DEBUG_OBJECT (smokedec, "reading header %08lx", *(gulong *) data);
   smokecodec_parse_header (smokedec->info, data, size, &flags, &width, &height,
       &fps_num, &fps_denom);
 
   if (smokedec->height != height || smokedec->width != width ||
       smokedec->fps_num != fps_num || smokedec->fps_denom != fps_denom) {
     GstCaps *caps;
+
+    GST_DEBUG_OBJECT (smokedec, "parameter change: %dx%d @ %d/%dfps",
+        width, height, fps_num, fps_denom);
 
     smokedec->height = height;
     smokedec->width = width;
