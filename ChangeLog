@@ -1,3 +1,10 @@
+2006-08-08  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/codegen.py:
+	newer pygobject's pyg_constant_strip_prefix() now return a const gchar *
+	whereas PyModule_AddIntConstant() takes a normal gchar*.
+	Closes #349623
+
 2006-08-05  Andy Wingo  <wingo@pobox.com>
 
 	* examples/synchronizer.py: Actually appears to work now, will

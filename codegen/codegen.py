@@ -1341,7 +1341,7 @@ def write_enums(parser, overrides, prefix, fp=sys.stdout):
             for nick, value in enum.values:
                 fp.write(
                     '    PyModule_AddIntConstant(module, '
-                    'pyg_constant_strip_prefix("%s", strip_prefix), %s);\n'
+                    '(char *) pyg_constant_strip_prefix("%s", strip_prefix), %s);\n'
                     % (value, value))
         else:
             if enum.deftype == 'enum':
