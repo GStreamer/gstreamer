@@ -1,3 +1,9 @@
+2006-08-08  Edward Hervey  <edward@fluendo.com>
+
+	* tests/check/libs/gdp.c: (gst_dp_suite):
+	Use the architecture information from config.h and not gcc macros
+	in order to properly disable a test that fails on PPC64.
+
 2006-08-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstelement.c: (gst_element_remove_pad):

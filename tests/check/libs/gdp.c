@@ -20,6 +20,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "config.h"
+
 #include <gst/check/gstcheck.h>
 
 #include <gst/dataprotocol/dataprotocol.h>
@@ -404,7 +406,7 @@ gst_dp_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_conversion);
-#if !defined (__ppc64)
+#ifndef HAVE_CPU_PPC64
   tcase_add_test (tc_chain, test_buffer);
 #endif
   tcase_add_test (tc_chain, test_caps);
