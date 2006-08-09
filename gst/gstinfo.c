@@ -106,6 +106,7 @@
 #include <string.h>             /* G_VA_COPY */
 #include "gst_private.h"
 #include "gstutils.h"
+#include "gstsegment.h"
 #ifdef HAVE_VALGRIND
 #  include <valgrind/valgrind.h>
 #endif
@@ -149,7 +150,9 @@ static void gst_debug_reset_threshold (gpointer category, gpointer unused);
 static void gst_debug_reset_all_thresholds (void);
 
 #ifdef HAVE_PRINTF_EXTENSION
-static int _gst_info_printf_extension (FILE * stream,
+static int _gst_info_printf_extension_ptr (FILE * stream,
+    const struct printf_info *info, const void *const *args);
+static int _gst_info_printf_extension_segment (FILE * stream,
     const struct printf_info *info, const void *const *args);
 static int _gst_info_printf_extension_arginfo (const struct printf_info *info,
     size_t n, int *argtypes);
@@ -279,8 +282,10 @@ _gst_debug_init (void)
   start_time = GST_TIMEVAL_TO_TIME (current);
 
 #ifdef HAVE_PRINTF_EXTENSION
-  register_printf_function (GST_PTR_FORMAT[0], _gst_info_printf_extension,
+  register_printf_function (GST_PTR_FORMAT[0], _gst_info_printf_extension_ptr,
       _gst_info_printf_extension_arginfo);
+  register_printf_function (GST_SEGMENT_FORMAT[0],
+      _gst_info_printf_extension_segment, _gst_info_printf_extension_arginfo);
 #endif
 
   /* do NOT use a single debug function before this line has been run */
@@ -488,6 +493,48 @@ gst_debug_print_object (gpointer ptr)
   }
 
   return g_strdup_printf ("%p", ptr);
+}
+
+static gchar *
+gst_debug_print_segment (gpointer ptr)
+{
+  GstSegment *segment = (GstSegment *) ptr;
+
+  /* nicely printed segment */
+  if (segment == NULL) {
+    return g_strdup ("(NULL)");
+  }
+
+  switch (segment->format) {
+    case GST_FORMAT_UNDEFINED:{
+      return g_strdup_printf ("UNDEFINED segment");
+    }
+    case GST_FORMAT_TIME:{
+      return g_strdup_printf ("time segment start=%" GST_TIME_FORMAT
+          ", stop=%" GST_TIME_FORMAT ", last_stop=%" GST_TIME_FORMAT
+          ", duration=%" GST_TIME_FORMAT ", rate=%f, applied_rate=%f"
+          ", flags=0x%02x, time=%" GST_TIME_FORMAT ", accum=%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (segment->start), GST_TIME_ARGS (segment->stop),
+          GST_TIME_ARGS (segment->last_stop), GST_TIME_ARGS (segment->duration),
+          segment->rate, segment->applied_rate, (guint) segment->flags,
+          GST_TIME_ARGS (segment->time), GST_TIME_ARGS (segment->accum));
+    }
+    default:{
+      const gchar *format_name;
+
+      format_name = gst_format_get_name (segment->format);
+      if (G_UNLIKELY (format_name == NULL))
+        format_name = "(UNKNOWN FORMAT)";
+      return g_strdup_printf ("%s segment start=%" G_GINT64_FORMAT
+          ", stop=%" G_GINT64_FORMAT ", last_stop=%" G_GINT64_FORMAT
+          ", duration=%" G_GINT64_FORMAT ", rate=%f, applied_rate=%f"
+          ", flags=0x%02x, time=%" GST_TIME_FORMAT ", accum=%" GST_TIME_FORMAT,
+          format_name, segment->start, segment->stop, segment->last_stop,
+          segment->duration, segment->rate, segment->applied_rate,
+          (guint) segment->flags, GST_TIME_ARGS (segment->time),
+          GST_TIME_ARGS (segment->accum));
+    }
+  }
 }
 
 /**
@@ -1174,7 +1221,7 @@ _gst_debug_register_funcptr (GstDebugFuncPtr func, gchar * ptrname)
 
 #ifdef HAVE_PRINTF_EXTENSION
 static int
-_gst_info_printf_extension (FILE * stream, const struct printf_info *info,
+_gst_info_printf_extension_ptr (FILE * stream, const struct printf_info *info,
     const void *const *args)
 {
   char *buffer;
@@ -1188,7 +1235,26 @@ _gst_info_printf_extension (FILE * stream, const struct printf_info *info,
   len = fprintf (stream, "%*s", (info->left ? -info->width : info->width),
       buffer);
 
-  free (buffer);
+  g_free (buffer);
+  return len;
+}
+
+static int
+_gst_info_printf_extension_segment (FILE * stream,
+    const struct printf_info *info, const void *const *args)
+{
+  char *buffer;
+  int len;
+  void *ptr;
+
+  buffer = NULL;
+  ptr = *(void **) args[0];
+
+  buffer = gst_debug_print_segment (ptr);
+  len = fprintf (stream, "%*s", (info->left ? -info->width : info->width),
+      buffer);
+
+  g_free (buffer);
   return len;
 }
 

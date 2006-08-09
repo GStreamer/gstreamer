@@ -144,7 +144,16 @@
  * printf format type used to debug GStreamer types.
  * This can only be used on types whose size is >= sizeof(gpointer).
  */
-@GST_PRINTF_EXTENSION_FORMAT_DEFINE@
+@GST_PRINTF_EXTENSION_POINTER_FORMAT_DEFINE@
+/**
+ * GST_SEGMENT_FORMAT:
+ *
+ * printf format type used to debug GStreamer segments.
+ * This can only be used on pointers to GstSegment structures.
+ *
+ * Since: 0.10.10
+ */
+@GST_PRINTF_EXTENSION_SEGMENT_FORMAT_DEFINE@
 
 /* whether or not the CPU supports unaligned access */
 @GST_HAVE_UNALIGNED_ACCESS_DEFINE@

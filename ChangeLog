@@ -1,3 +1,20 @@
+2006-08-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstconfig.h.in:
+	* gst/gstinfo.c: (_gst_debug_init), (gst_debug_print_segment),
+	(_gst_info_printf_extension_ptr),
+	(_gst_info_printf_extension_segment):
+	  API: add GST_SEGMENT_FORMAT, which is a printf extension we
+	  register that lets us easily dump GstSegments into debug
+	  logs (#350419).
+
+	* tests/check/gst/gstinfo.c: (segment_printf_extension_log_func),
+	(info_segment_format_printf_extension), (gst_info_suite):
+	  Add simple unit test that logs a bunch of different segments (not
+	  valgrinded at the moment because of leaks in gst_debug_add_log_function).
+
 2006-08-09  Edward Hervey  <edward@fluendo.com>
 
 	* libs/gst/base/gstbasetransform.c:
