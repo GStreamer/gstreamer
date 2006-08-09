@@ -859,7 +859,7 @@ gst_xvidenc_chain (GstPad * pad, GstBuffer * buf)
   };
 
   if (!xvidenc->handle) {
-    GST_ELEMENT_ERROR ("xvidenc", CORE, NEGOTIATION, (NULL),
+    GST_ELEMENT_ERROR (xvidenc, CORE, NEGOTIATION, (NULL),
         ("format wasn't negotiated before chain function"));
     gst_buffer_unref (buf);
     return GST_FLOW_NOT_NEGOTIATED;
