@@ -64,6 +64,7 @@ check_PROGRAMS =				\
         gst/gstbuffer				\
         gst/gstbus				\
 	gst/gstcaps     			\
+	gst/gstinfo		 			\
 	gst/gstiterator 			\
 	gst/gstmessage	 			\
 	gst/gstminiobject 			\
@@ -140,6 +141,7 @@ libs_typefindhelper_LDADD = \
 # valgrind testing
 # these just need valgrind fixing, period
 VALGRIND_TO_FIX = \
+	gst/gstinfo \
 	libs/collectpads
 
 VALGRIND_IGNORE = \

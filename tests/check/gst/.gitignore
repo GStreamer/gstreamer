@@ -25,3 +25,4 @@ gstvalue
 gstquery
 gsttask
 *.check.xml
+gstinfo

@@ -1,3 +1,9 @@
+2006-08-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/.cvsignore:
+	  Let's enable the new unit test as well.
+
 2006-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
