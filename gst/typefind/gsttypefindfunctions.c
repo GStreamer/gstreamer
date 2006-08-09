@@ -1024,7 +1024,7 @@ suggest:
 
     gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
         G_TYPE_INT, mpegversion, NULL);
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, caps);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, caps);
     gst_caps_unref (caps);
   }
 };

@@ -1,3 +1,12 @@
+2006-08-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (mpeg2_sys_type_find):
+	  The checks here are not even close to anything that would
+	  justify MAXIMUM probability, lowering to POSSIBLE until someone
+	  fixes the checks (case at hand: quicktime redirection files
+	  might start with 00 00 01 XX and pass the checks here just
+	  fine, see #350399).
+
 2006-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sjoerd Simons  <sjoerd at luon net>
