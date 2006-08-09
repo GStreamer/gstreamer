@@ -1,3 +1,13 @@
+2006-08-09  Edward Hervey  <edward@fluendo.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_buffer_alloc):
+	Even if we can't figure out the proper format to request downstream,
+	call buffer_alloc() downstream with the input parameters without setting
+	the caps on the srcpad. This will force negotiation in the chain
+	function.
+	Closes #350449
+
 2006-08-08  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstghostpad.c: (gst_ghost_pad_do_unlink):

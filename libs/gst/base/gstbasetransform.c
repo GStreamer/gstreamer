@@ -1149,18 +1149,22 @@ done:
 
 not_configured:
   {
-    /* let the default allocator handle it */
+    /* let the default allocator handle it... */
     GST_DEBUG_OBJECT (trans, "not configured");
     gst_buffer_replace (buf, NULL);
-    res = GST_FLOW_OK;
+    /* ...by calling alloc_buffer without setting caps on the src pad, which
+     * will force negotiation in the chain function. */
+    res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
     goto done;
   }
 unknown_size:
   {
-    /* let the default allocator handle it */
+    /* let the default allocator handle it... */
     GST_DEBUG_OBJECT (trans, "unknown size");
     gst_buffer_replace (buf, NULL);
-    res = GST_FLOW_OK;
+    /* ...by calling alloc_buffer without setting caps on the src pad, which
+     * will force negotiation in the chain function. */
+    res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
     goto done;
   }
 }
