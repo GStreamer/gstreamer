@@ -1,5 +1,13 @@
 2006-08-10  Stefan Kost  <ensonic@users.sf.net>
 
+	* libs/gst/controller/gstcontroller.h:
+          fix ABI size-correction
+
+	* tests/check/libs/gdp.c: (gst_dp_suite):
+          make tests that use deprecated API conditional
+
+2006-08-10  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/controller/gstcontroller.c:
 	(_gst_controller_get_property), (_gst_controller_set_property),

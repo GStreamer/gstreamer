@@ -85,6 +85,8 @@ GST_START_TEST (test_conversion)
 
 GST_END_TEST;
 
+#ifndef GST_DISABLE_DEPRECATED  /* these tests use deprecated API, that we disable by default */
+
 #ifndef HAVE_CPU_PPC64          /* this test doesn't work on PPC64. See #348114 */
 
 /* test creation of header from buffer and back again */
@@ -150,7 +152,6 @@ GST_START_TEST (test_buffer)
 }
 
 GST_END_TEST;
-
 #endif
 
 GST_START_TEST (test_caps)
@@ -402,6 +403,8 @@ GST_START_TEST (test_memory)
 
 GST_END_TEST;
 
+#endif
+
 Suite *
 gst_dp_suite (void)
 {
@@ -410,12 +413,14 @@ gst_dp_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_conversion);
+#ifndef GST_DISABLE_DEPRECATED
 #ifndef HAVE_CPU_PPC64
   tcase_add_test (tc_chain, test_buffer);
 #endif
   tcase_add_test (tc_chain, test_caps);
   tcase_add_test (tc_chain, test_event);
   tcase_add_test (tc_chain, test_memory);
+#endif
 
   return s;
 }

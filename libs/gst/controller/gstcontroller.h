@@ -130,7 +130,7 @@ struct _GstController
 
   /*< private >*/
   GstControllerPrivate *priv;
-  gpointer       _gst_reserved[GST_PADDING - sizeof (GstControllerPrivate *)];
+  gpointer       _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstControllerClass
