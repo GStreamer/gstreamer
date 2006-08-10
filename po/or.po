@@ -2,13 +2,13 @@
 # Copyright (C) 2004, Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-0.8.3 package.
 # Gora Mohanty <gora_mohanty@yahoo.co.in>, 2004.
-# $Id: or.po,v 1.23 2006/05/01 11:43:31 thomasvs Exp $
+# $Id: or.po,v 1.24 2006/05/03 18:44:38 thaytan Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-03 19:51+0200\n"
+"POT-Creation-Date: 2006-08-08 19:05+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -16,13 +16,17 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/libpng/gstpngdec.c:296 ext/libpng/gstpngdec.c:479
-#: gst/wavparse/gstwavparse.c:1507 gst/wavparse/gstwavparse.c:1558
+#: ext/libpng/gstpngdec.c:330 ext/libpng/gstpngdec.c:513
+#: gst/wavparse/gstwavparse.c:1617 gst/wavparse/gstwavparse.c:1672
 msgid "Internal data stream error."
 msgstr ""
 
-#: ext/esd/esdsink.c:251 ext/esd/esdsink.c:345
+#: ext/esd/esdsink.c:261 ext/esd/esdsink.c:366
 msgid "Could not establish connection to sound server"
+msgstr ""
+
+#: ext/esd/esdsink.c:268
+msgid "Failed to query sound server capabilities"
 msgstr ""
 
 #: ext/shout2/gstshout2.c:518
@@ -30,11 +34,11 @@ msgstr ""
 msgid "Could not connect to server"
 msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
 
-#: gst/avi/gstavimux.c:1141
+#: gst/avi/gstavimux.c:1357
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "ନିବେଶ ଧ୍ବନି ନାହିଁ ବା ଅବୈଧ ଅଛି. ଏ.ଭି.ଆଇ. ଧାରା ଭ୍ରଷ୍ଟ ହୋଇଯିବ."
 
-#: sys/ximage/gstximagesrc.c:527
+#: sys/ximage/gstximagesrc.c:641
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 

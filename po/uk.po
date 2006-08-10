@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-03 19:51+0200\n"
+"POT-Creation-Date: 2006-08-08 19:05+0200\n"
 "PO-Revision-Date: 2004-08-03 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -15,13 +15,17 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/libpng/gstpngdec.c:296 ext/libpng/gstpngdec.c:479
-#: gst/wavparse/gstwavparse.c:1507 gst/wavparse/gstwavparse.c:1558
+#: ext/libpng/gstpngdec.c:330 ext/libpng/gstpngdec.c:513
+#: gst/wavparse/gstwavparse.c:1617 gst/wavparse/gstwavparse.c:1672
 msgid "Internal data stream error."
 msgstr ""
 
-#: ext/esd/esdsink.c:251 ext/esd/esdsink.c:345
+#: ext/esd/esdsink.c:261 ext/esd/esdsink.c:366
 msgid "Could not establish connection to sound server"
+msgstr ""
+
+#: ext/esd/esdsink.c:268
+msgid "Failed to query sound server capabilities"
 msgstr ""
 
 #: ext/shout2/gstshout2.c:518
@@ -29,11 +33,11 @@ msgstr ""
 msgid "Could not connect to server"
 msgstr "Не вдається закрити пристрій керування \"%s\"."
 
-#: gst/avi/gstavimux.c:1141
+#: gst/avi/gstavimux.c:1357
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Відсутній або неправильний вхід звуку, AVI потік буде пошкоджений."
 
-#: sys/ximage/gstximagesrc.c:527
+#: sys/ximage/gstximagesrc.c:641
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 

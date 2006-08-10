@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-03 19:51+0200\n"
+"POT-Creation-Date: 2006-08-08 19:05+0200\n"
 "PO-Revision-Date: 2004-08-08 22:58+0200\n"
 "Last-Translator: Miloslav Trmac <mitr@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -18,13 +18,17 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
 "10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: ext/libpng/gstpngdec.c:296 ext/libpng/gstpngdec.c:479
-#: gst/wavparse/gstwavparse.c:1507 gst/wavparse/gstwavparse.c:1558
+#: ext/libpng/gstpngdec.c:330 ext/libpng/gstpngdec.c:513
+#: gst/wavparse/gstwavparse.c:1617 gst/wavparse/gstwavparse.c:1672
 msgid "Internal data stream error."
 msgstr ""
 
-#: ext/esd/esdsink.c:251 ext/esd/esdsink.c:345
+#: ext/esd/esdsink.c:261 ext/esd/esdsink.c:366
 msgid "Could not establish connection to sound server"
+msgstr ""
+
+#: ext/esd/esdsink.c:268
+msgid "Failed to query sound server capabilities"
 msgstr ""
 
 #: ext/shout2/gstshout2.c:518
@@ -32,11 +36,11 @@ msgstr ""
 msgid "Could not connect to server"
 msgstr "Nemohu zavřít řídicí zařízení \"%s\"."
 
-#: gst/avi/gstavimux.c:1141
+#: gst/avi/gstavimux.c:1357
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Žádný nebo neplatný vstup zvuku, proud AVI bude poškozen."
 
-#: sys/ximage/gstximagesrc.c:527
+#: sys/ximage/gstximagesrc.c:641
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 
