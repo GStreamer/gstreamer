@@ -776,7 +776,6 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
 {
   gboolean res;
   gdouble rate;
-  GstEvent *newsegment;
   GstFormat format, bformat;
   GstSeekFlags flags;
   GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type;
@@ -910,17 +909,12 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   GST_DEBUG_OBJECT (wav, "Sending newsegment from %" G_GINT64_FORMAT
       " to %" G_GINT64_FORMAT, wav->segment.start, stop);
 
-  newsegment =
+  /* store the newsegment event so it can be sent from the streaming thread. */
+  if (wav->newsegment)
+    gst_event_unref (wav->newsegment);
+  wav->newsegment =
       gst_event_new_new_segment (FALSE, wav->segment.rate,
       wav->segment.format, wav->segment.last_stop, stop, wav->segment.time);
-
-  if (wav->srcpad) {
-    gst_pad_push_event (wav->srcpad, newsegment);
-  } else {
-    /* send later when we actually create the source pad */
-    g_assert (wav->newsegment == NULL);
-    wav->newsegment = newsegment;
-  }
 
   wav->segment_running = TRUE;
   if (!wav->streaming) {
@@ -1480,6 +1474,12 @@ iterate_adapter:
   if (G_UNLIKELY (wav->first)) {
     wav->first = FALSE;
     gst_wavparse_add_src_pad (wav, buf);
+  }
+
+  /* If we have a pending newsegment send it now. */
+  if (G_UNLIKELY (wav->newsegment != NULL)) {
+    gst_pad_push_event (wav->srcpad, wav->newsegment);
+    wav->newsegment = NULL;
   }
 
   obtained = GST_BUFFER_SIZE (buf);

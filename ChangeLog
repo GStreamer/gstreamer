@@ -1,3 +1,13 @@
+2006-08-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Patch by: Edward Hervey <edward@fluendo.com>
+
+	* configure.ac:
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
+	(gst_wavparse_stream_data):
+	Send the newsegment event in the streaming thread.
+	Fixes #347529
+
 2006-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/jpeg/gstsmokedec.c: (gst_smokedec_chain):
