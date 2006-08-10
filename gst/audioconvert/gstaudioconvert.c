@@ -324,9 +324,10 @@ static GstStructure *
 make_lossless_changes (GstStructure * s, gboolean isfloat)
 {
   if (isfloat) {
-    /* float doesn't have depth, and only supports width 32, and native-endian
-     */
+    /* float doesn't have a depth or signedness field and only supports a
+     * width of 32 and native endianness */
     gst_structure_remove_field (s, "depth");
+    gst_structure_remove_field (s, "signed");
     gst_structure_set (s, "width", G_TYPE_INT, 32, NULL);
     gst_structure_set (s, "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
   } else {

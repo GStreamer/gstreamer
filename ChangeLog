@@ -1,5 +1,10 @@
 2006-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/audioconvert/gstaudioconvert.c: (make_lossless_changes):
+	  Float caps shouldn't have a "signed" field.
+
+2006-08-10  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_src_query):
 	  Implement SEEKING query in its most basic form, so that we can
 	  at least check if we're seekable or not (#350655).
