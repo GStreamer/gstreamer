@@ -416,6 +416,20 @@ gst_ogg_pad_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_duration (query, GST_FORMAT_TIME, ogg->total_time);
       break;
     }
+    case GST_QUERY_SEEKING:
+    {
+      GstFormat format;
+
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      if (format == GST_FORMAT_TIME) {
+        gst_query_set_seeking (query, GST_FORMAT_TIME, ogg->seekable,
+            0, ogg->total_time);
+      } else {
+        res = FALSE;
+      }
+      break;
+    }
+
     default:
       res = gst_pad_query_default (pad, query);
       break;
