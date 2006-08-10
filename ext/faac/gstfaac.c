@@ -30,7 +30,7 @@
     "width = (int) 16, "               \
     "depth = (int) 16, "               \
     "rate = (int) [ 8000, 96000 ], "   \
-    "channels = (int) [ 1, 6] "
+    "channels = (int) [ 1, 6 ] "
 
 /* these don't seem to work? */
 #if 0
@@ -401,7 +401,7 @@ gst_faac_configure_source_pad (GstFaac * faac)
     conf->allowMidside = faac->midside;
     conf->useLfe = 0;
     conf->useTns = faac->tns;
-    conf->bitRate = faac->bitrate;
+    conf->bitRate = faac->bitrate / faac->channels;
     conf->inputFormat = faac->format;
     conf->outputFormat = faac->outputformat;
     conf->shortctl = faac->shortctl;
