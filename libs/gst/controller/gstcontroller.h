@@ -111,6 +111,8 @@ typedef enum
 
 typedef struct _GstController GstController;
 typedef struct _GstControllerClass GstControllerClass;
+typedef struct _GstControllerPrivate GstControllerPrivate;
+
 
 /**
  * GstController:
@@ -127,7 +129,8 @@ struct _GstController
   GObject *object;    /* the object we control */
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  GstControllerPrivate *priv;
+  gpointer       _gst_reserved[GST_PADDING - sizeof (GstControllerPrivate *)];
 };
 
 struct _GstControllerClass
@@ -193,6 +196,9 @@ gboolean gst_object_get_value_arrays (GObject * object,
     GstClockTime timestamp, GSList * value_arrays);
 gboolean gst_object_get_value_array (GObject * object,
     GstClockTime timestamp, GstValueArray * value_array);
+
+guint gst_object_get_control_rate (GObject * object);
+void gst_object_set_control_rate (GObject * object, guint control_rate);
 
 /* lib init/done */
 

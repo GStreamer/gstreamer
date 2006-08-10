@@ -78,6 +78,16 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 static GObjectClass *parent_class = NULL;
 GQuark __gst_controller_key;
 
+/* property ids */
+enum
+{
+  PROP_CONTROL_RATE = 1
+};
+
+struct _GstControllerPrivate
+{
+  guint control_rate;
+};
 
 /* imports from gst-interpolation.c */
 
@@ -1104,6 +1114,62 @@ gst_controller_set_live_value(GstController * self, gchar *property_name,
 /* gobject handling */
 
 static void
+_gst_controller_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstController *self = GST_CONTROLLER (object);
+
+  switch (property_id) {
+    case PROP_CONTROL_RATE:{
+      /* FIXME: don't change if element is playing, controller works for GObject
+         so this wont work
+
+         GstState c_state, p_state;
+         GstStateChangeReturn ret;
+
+         ret = gst_element_get_state (self->object, &c_state, &p_state, 0);
+         if ((ret == GST_STATE_CHANGE_SUCCESS &&
+         (c_state == GST_STATE_NULL || c_state == GST_STATE_READY)) ||
+         (ret == GST_STATE_CHANGE_ASYNC &&
+         (p_state == GST_STATE_NULL || p_state == GST_STATE_READY))) {
+       */
+      g_value_set_uint (value, self->priv->control_rate);
+      /*
+         }
+         else {
+         GST_WARNING ("Changing the control rate is only allowed if the elemnt"
+         " is in NULL or READY");
+         }
+       */
+    }
+      break;
+    default:{
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    }
+      break;
+  }
+}
+
+/* sets the given properties for this object */
+static void
+_gst_controller_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstController *self = GST_CONTROLLER (object);
+
+  switch (property_id) {
+    case PROP_CONTROL_RATE:{
+      self->priv->control_rate = g_value_get_uint (value);
+    }
+      break;
+    default:{
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+    }
+      break;
+  }
+}
+
+static void
 _gst_controller_finalize (GObject * object)
 {
   GstController *self = GST_CONTROLLER (object);
@@ -1134,7 +1200,9 @@ _gst_controller_init (GTypeInstance * instance, gpointer g_class)
   GstController *self = GST_CONTROLLER (instance);
 
   self->lock = g_mutex_new ();
-
+  self->priv =
+      G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_CONTROLLER,
+      GstControllerPrivate);
 }
 
 static void
@@ -1143,17 +1211,23 @@ _gst_controller_class_init (GstControllerClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
+  g_type_class_add_private (klass, sizeof (GstControllerPrivate));
 
+  gobject_class->set_property = _gst_controller_set_property;
+  gobject_class->get_property = _gst_controller_get_property;
   gobject_class->finalize = _gst_controller_finalize;
 
   __gst_controller_key = g_quark_from_string ("gst::controller");
 
   /* register properties */
+  g_object_class_install_property (gobject_class, PROP_CONTROL_RATE,
+      g_param_spec_uint ("control-rate",
+          "control rate",
+          "Controlled properties will be updated this many times per second",
+          1, G_MAXUINT, 10, G_PARAM_READWRITE));
+
   /* register signals */
   /* set defaults for overridable methods */
-  /* TODO which of theses do we need ?
-     BilboEd : none :)
-   */
 }
 
 GType

@@ -80,6 +80,7 @@ gst_controller_set_interpolation_mode
 GST_PARAM_CONTROLLABLE
 <SUBSECTION Standard>
 GstControllerClass
+GstControllerPrivate
 GST_CONTROLLER
 GST_IS_CONTROLLER
 GST_CONTROLLER_CLASS
@@ -104,6 +105,8 @@ gst_object_set_controller
 gst_object_sync_values
 gst_object_get_value_arrays
 gst_object_get_value_array
+gst_object_get_control_rate
+gst_object_set_control_rate
 <SUBSECTION Standard>
 <SUBSECTION Private>
 </SECTION>

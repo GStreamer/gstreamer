@@ -107,6 +107,8 @@ gst_object_uncontrol_properties (GObject * object, ...)
  * gst_object_get_controller:
  * @object: the object that has controlled properties
  *
+ * Gets the controller for the given GObject
+ * 
  * Returns: the controller handling some of the given element's properties, %NULL if no controller
  * Since: 0.9
  */
@@ -229,4 +231,63 @@ gst_object_get_value_array (GObject * object, GstClockTime timestamp,
     return gst_controller_get_value_array (ctrl, timestamp, value_array);
   }
   return (FALSE);
+}
+
+/**
+ * gst_object_get_control_rate:
+ * @object: the object that has controlled properties
+ *
+ * Obtain the control-rate for this @object. Audio processing #GstElement
+ * objects will use this rate to sub-divide their processing loop and call
+ * gst_object_sync_values() inbetween. The length of the processing segment
+ * should be sampling-rate/control-rate.
+ *
+ * If the @object is not under property control, this will return 0. This allows
+ * the element to avoid the sub-dividing.
+ *
+ * The control-rate is not expected to change if the elemnt is in
+ * %GST_STATE_PAUSED or %GST_STATE_PLAYING.
+ *
+ * Returns: the control rate
+ * Since: 0.10.10
+ */
+guint
+gst_object_get_control_rate (GObject * object)
+{
+  GstController *ctrl;
+  guint control_rate = 0;
+
+  g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
+
+  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+    g_object_get (ctrl, "control-rate", &control_rate, NULL);
+  }
+  return (control_rate);
+}
+
+/**
+ * gst_object_set_control_rate:
+ * @object: the object that has controlled properties
+ * @control_rate: the new control-rate (1 .. sampling_rate)
+ *
+ * Change the control-rate for this @object. Audio processing #GstElement
+ * objects will use this rate to sub-divide their processing loop and call
+ * gst_object_sync_values() inbetween. The length of the processing segment
+ * should be sampling-rate/control-rate.
+ *
+ * The control-rate should not change if the elemnt is in %GST_STATE_PAUSED or
+ * %GST_STATE_PLAYING.
+ *
+ * Since: 0.10.10
+ */
+void
+gst_object_set_control_rate (GObject * object, guint control_rate)
+{
+  GstController *ctrl;
+
+  g_return_if_fail (G_IS_OBJECT (object));
+
+  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+    g_object_set (ctrl, "control-rate", control_rate, NULL);
+  }
 }

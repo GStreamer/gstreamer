@@ -1,3 +1,19 @@
+2006-08-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/controller/gstcontroller.c:
+	(_gst_controller_get_property), (_gst_controller_set_property),
+	(_gst_controller_init), (_gst_controller_class_init):
+	* libs/gst/controller/gstcontroller.h:
+	* libs/gst/controller/gsthelper.c: (gst_object_get_control_rate),
+	(gst_object_set_control_rate):
+          API: add gst_object_{s,g}et_control_rate(), add private data section,
+          fix docs
+
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packetizer_new):
+	* libs/gst/dataprotocol/dataprotocol.h:
+          add deprecation guards to make gtk-doc happy and allow disabling cruft
+
 2006-08-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:
