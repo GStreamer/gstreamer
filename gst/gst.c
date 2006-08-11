@@ -385,7 +385,7 @@ gst_init (int *argc, char **argv[])
   GError *err = NULL;
 
   if (!gst_init_check (argc, argv, &err)) {
-    g_print ("Could not initialized GStreamer: %s\n",
+    g_print ("Could not initialize GStreamer: %s\n",
         err ? err->message : "unknown error occurred");
     if (err) {
       g_error_free (err);
