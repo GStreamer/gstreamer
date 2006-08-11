@@ -94,7 +94,8 @@ typedef enum {
  */
 #define GST_DEBUG_CAPS(string, caps) \
   GST_DEBUG ( string "%s: " GST_PTR_FORMAT, caps)
-#endif
+
+#endif /* GST_DISABLE_DEPRECATED */
 
 /**
  * GST_STATIC_CAPS:

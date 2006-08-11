@@ -1,3 +1,26 @@
+2006-08-11  Wim Taymans  <wim@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	Add GstClockClass vmethod docs.
+
+	* gst/gstcaps.h:
+	Mark #endif with comment for associated #if
+
+	* gst/gstclock.c: (gst_clock_id_wait):
+	* gst/gstclock.h:
+	Add vmethod wait_jitter to avoid an unneeded _get_time() for
+	most clock implementations.
+	Document vmethods.
+	Flesh out docs about resolution methods.
+	API: GstClockClass::wait_jitter
+
+	* gst/gstsystemclock.c: (gst_system_clock_class_init),
+	(gst_system_clock_async_thread),
+	(gst_system_clock_id_wait_jitter_unlocked),
+	(gst_system_clock_id_wait_jitter):
+	Use base class wait_jitter variant for improved performance
+	due to less clock polling.
+
 2006-08-11  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.c: (gst_init_check), (init_post):

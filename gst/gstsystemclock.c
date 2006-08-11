@@ -55,10 +55,10 @@ static void gst_system_clock_dispose (GObject * object);
 
 static GstClockTime gst_system_clock_get_internal_time (GstClock * clock);
 static guint64 gst_system_clock_get_resolution (GstClock * clock);
-static GstClockReturn gst_system_clock_id_wait (GstClock * clock,
-    GstClockEntry * entry);
-static GstClockReturn gst_system_clock_id_wait_unlocked
-    (GstClock * clock, GstClockEntry * entry);
+static GstClockReturn gst_system_clock_id_wait_jitter (GstClock * clock,
+    GstClockEntry * entry, GstClockTimeDiff * jitter);
+static GstClockReturn gst_system_clock_id_wait_jitter_unlocked
+    (GstClock * clock, GstClockEntry * entry, GstClockTimeDiff * jitter);
 static GstClockReturn gst_system_clock_id_wait_async (GstClock * clock,
     GstClockEntry * entry);
 static void gst_system_clock_id_unschedule (GstClock * clock,
@@ -113,7 +113,7 @@ gst_system_clock_class_init (GstSystemClockClass * klass)
 
   gstclock_class->get_internal_time = gst_system_clock_get_internal_time;
   gstclock_class->get_resolution = gst_system_clock_get_resolution;
-  gstclock_class->wait = gst_system_clock_id_wait;
+  gstclock_class->wait_jitter = gst_system_clock_id_wait_jitter;
   gstclock_class->wait_async = gst_system_clock_id_wait_async;
   gstclock_class->unschedule = gst_system_clock_id_unschedule;
 }
@@ -270,7 +270,9 @@ gst_system_clock_async_thread (GstClock * clock)
     }
 
     /* now wait for the entry, we already hold the lock */
-    res = gst_system_clock_id_wait_unlocked (clock, (GstClockID) entry);
+    res =
+        gst_system_clock_id_wait_jitter_unlocked (clock, (GstClockID) entry,
+        NULL);
 
     switch (res) {
       case GST_CLOCK_UNSCHEDULED:
@@ -362,7 +364,8 @@ gst_system_clock_get_resolution (GstClock * clock)
  * MT safe.
  */
 static GstClockReturn
-gst_system_clock_id_wait_unlocked (GstClock * clock, GstClockEntry * entry)
+gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
+    GstClockEntry * entry, GstClockTimeDiff * jitter)
 {
   GstClockTime entryt, real, now, target;
   GstClockTimeDiff diff;
@@ -372,6 +375,9 @@ gst_system_clock_id_wait_unlocked (GstClock * clock, GstClockEntry * entry)
   entryt = GST_CLOCK_ENTRY_TIME (entry);
 
   now = gst_clock_adjust_unlocked (clock, real);
+  if (jitter) {
+    *jitter = GST_CLOCK_DIFF (entryt, now);
+  }
   diff = entryt - now;
   target = gst_system_clock_get_internal_time (clock) + diff;
 
@@ -413,13 +419,13 @@ gst_system_clock_id_wait_unlocked (GstClock * clock, GstClockEntry * entry)
             (final - target),
             ((double) (GstClockTimeDiff) (final - target)) / GST_SECOND);
 #endif
-
         break;
       } else {
         /* the waiting is interrupted because the GCond was signaled. This can
          * be because this or some other entry was unscheduled. */
         GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p unlocked with signal", entry);
-        /* if the entry is unscheduled, we can stop waiting for it */
+        /* if the entry is unscheduled, we can stop waiting for it, else we
+         * continue our while loop. */
         if (entry->status == GST_CLOCK_UNSCHEDULED)
           break;
       }
@@ -433,12 +439,13 @@ gst_system_clock_id_wait_unlocked (GstClock * clock, GstClockEntry * entry)
 }
 
 static GstClockReturn
-gst_system_clock_id_wait (GstClock * clock, GstClockEntry * entry)
+gst_system_clock_id_wait_jitter (GstClock * clock, GstClockEntry * entry,
+    GstClockTimeDiff * jitter)
 {
   GstClockReturn ret;
 
   GST_OBJECT_LOCK (clock);
-  ret = gst_system_clock_id_wait_unlocked (clock, entry);
+  ret = gst_system_clock_id_wait_jitter_unlocked (clock, entry, jitter);
   GST_OBJECT_UNLOCK (clock);
 
   return ret;

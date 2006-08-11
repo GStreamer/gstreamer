@@ -285,6 +285,7 @@ gst_child_proxy_get_type
 <FILE>gstclock</FILE>
 <TITLE>GstClock</TITLE>
 GstClock
+GstClockClass
 GstClockTime
 GstClockTimeDiff
 GstClockID
@@ -338,7 +339,6 @@ gst_clock_id_unref
 GST_TYPE_CLOCK_TIME
 
 <SUBSECTION Standard>
-GstClockClass
 GST_CLOCK
 GST_IS_CLOCK
 GST_TYPE_CLOCK

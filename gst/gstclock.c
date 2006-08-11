@@ -333,7 +333,6 @@ gst_clock_id_get_time (GstClockID id)
   return GST_CLOCK_ENTRY_TIME ((GstClockEntry *) id);
 }
 
-
 /**
  * gst_clock_id_wait
  * @id: The #GstClockID to wait on
@@ -386,20 +385,29 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
 
   cclass = GST_CLOCK_GET_CLASS (clock);
 
-  if (G_UNLIKELY (cclass->wait == NULL))
-    goto not_supported;
-
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "waiting on clock entry %p", id);
 
-  if (jitter) {
-    GstClockTime now = gst_clock_get_time (clock);
+  /* if we have a wait_jitter function, use that */
+  if (G_LIKELY (cclass->wait_jitter)) {
+    res = cclass->wait_jitter (clock, entry, jitter);
+  } else {
+    /* check if we have a simple _wait function otherwise. The function without
+     * the jitter arg is less optimal as we need to do an additional _get_time()
+     * which is not atomic with the _wait() and a typical _wait() function does
+     * yet another _get_time() anyway. */
+    if (G_UNLIKELY (cclass->wait == NULL))
+      goto not_supported;
 
-    /* jitter is the diff against the clock when this entry is scheduled. Negative
-     * values mean that the entry was in time, a positive value means that the
-     * entry was too late. */
-    *jitter = GST_CLOCK_DIFF (requested, now);
+    if (jitter) {
+      GstClockTime now = gst_clock_get_time (clock);
+
+      /* jitter is the diff against the clock when this entry is scheduled. Negative
+       * values mean that the entry was in time, a positive value means that the
+       * entry was too late. */
+      *jitter = GST_CLOCK_DIFF (requested, now);
+    }
+    res = cclass->wait (clock, entry);
   }
-  res = cclass->wait (clock, entry);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
       "done waiting entry %p, res: %d", id, res);
@@ -669,7 +677,11 @@ gst_clock_finalize (GObject * object)
  * @clock: a #GstClock
  * @resolution: The resolution to set
  *
- * Set the accuracy of the clock.
+ * Set the accuracy of the clock. Some clocks have the possibility to operate
+ * with different accuracy at the expense of more resource usage. There is
+ * normally no need to change the default resolution of a clock. The resolution
+ * of a clock can only be changed if the clock has the
+ * #GST_CLOCK_FLAG_CAN_SET_RESOLUTION flag set.
  *
  * Returns: the new resolution of the clock.
  */
@@ -694,7 +706,8 @@ gst_clock_set_resolution (GstClock * clock, GstClockTime resolution)
  * gst_clock_get_resolution
  * @clock: a #GstClock
  *
- * Get the accuracy of the clock.
+ * Get the accuracy of the clock. The accuracy of the clock is the granularity
+ * of the values returned by gst_clock_get_time().
  *
  * Returns: the resolution of the clock in units of #GstClockTime.
  *
