@@ -3,7 +3,7 @@ NUNIT_FLAGS = @MONO_NUNIT_LIBS@
 
 ASSEMBLY_NAME = gstreamer-tests
 ASSEMBLY = $(ASSEMBLY_NAME).dll
-ASSEMBLY_CSFILES = $(srcdir)/ApplicationTest.cs $(srcdir)/BinTest.cs $(srcdir)/CapsTest.cs $(srcdir)/PadTest.cs $(srcdir)/ElementTest.cs $(srcdir)/PipelineTest.cs
+ASSEMBLY_CSFILES = $(srcdir)/ApplicationTest.cs $(srcdir)/BinTest.cs $(srcdir)/BufferTest.cs $(srcdir)/CapsTest.cs $(srcdir)/PadTest.cs $(srcdir)/ElementTest.cs $(srcdir)/MessageTest.cs $(srcdir)/PipelineTest.cs
 
 
 NUNIT_TESTER_NAME = ConsoleUi

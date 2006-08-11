@@ -3,6 +3,7 @@
 //
 // Authors:
 //   Aaron Bockover (abockover@novell.com)
+//   Khaled Mohammed (Khaled.Mohammed@gmail.com)
 //
 // (C) 2006 Novell, Inc.
 //
@@ -33,15 +34,21 @@ public class BinTest
         Bin bin = new Bin("test-bin");
         Element e1 = ElementFactory.Make("fakesrc", "fakesrc");
         Element e2 = ElementFactory.Make("fakesink", "fakesink");
+
+		Assert.IsNotNull(bin, "Could not create bin");
+		Assert.IsNotNull(e1, "Could not create fakesrc");
+		Assert.IsNotNull(e2, "Could not create fakesink");
+
         bin.AddMany(e1, e2);
         
         Assert.AreEqual(bin.ChildrenCount, 2);
         
-        e1.Dispose();
         e2.Dispose();
+        e1.Dispose();
         bin.Dispose();
     }
-    
+
+/*    
     [Test]
     public void TestGetByName()
     {
@@ -54,8 +61,8 @@ public class BinTest
         Assert.IsNotNull(e1);
         Assert.AreEqual(e1.Name, "element-name");
         
-        e1.Dispose();
         bin.Dispose();
+        e1.Dispose();
     }
 
     [Test]
@@ -83,5 +90,22 @@ public class BinTest
 
         bin.Dispose();
     }
+	
+	[Test]
+	public void TestInterface()
+	{
+		Bin bin = new Bin(String.Empty);
+		Assert.IsNotNull(bin, "Could not create bin");
+
+		Element filesrc = ElementFactory.Make("filesrc", String.Empty);
+		Assert.IsNotNull(filesrc, "Could not create filesrc");
+
+		bin.Add(filesrc);
+		
+		bin.Dispose();
+		filesrc.Dispose();
+	
+	}
+*/
 }
 

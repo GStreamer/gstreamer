@@ -1,3 +1,7 @@
+2006-08-11  Khaled Mohammed <khaled.mohammed@gmail.com>
+	* gstreamer-sharp/Object.custom: overriden Dispose() function.
+    * gstreamer-sharp/tests: added more tests
+
 2006-08-05  Khaled Mohammed <khaled.mohammed@gmail.com>
 	* gstreamer-sharp/GStreamer.metadata: added a new xml node to hide 
 	generation of Refcount by GAPI.

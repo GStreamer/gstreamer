@@ -26,7 +26,7 @@ public class PipelineTest
 	{
 		Application.Deinit();
 	}
-
+/*
 	[Test]
 	public void TestAsyncStateChangeEmpty()
 	{
@@ -52,8 +52,10 @@ public class PipelineTest
 		Assert.AreEqual(((Element)pipeline).SetState(State.Ready), StateChangeReturn.Success);
 
 		pipeline.Dispose();
+		src.Dispose();
+		sink.Dispose();
 	}
-/*
+
 	[Test]
 	public void TestAsyncStateChangeFake()
 	{
@@ -88,7 +90,7 @@ public class PipelineTest
 		//bus.Dispose();
 		pipeline.Dispose();
 	}
-*/
+
 	[Test]
 	public void TestGetBus()
 	{
@@ -190,5 +192,8 @@ public class PipelineTest
 		Pad sink = fakesink.GetPad("sink");
 		
 		pipeline.Dispose();
+		fakesrc.Dispose();
+		fakesink.Dispose();
 	}
+*/
 }

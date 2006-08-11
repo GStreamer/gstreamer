@@ -3,6 +3,7 @@
 //
 // Authors:
 //   Michael Dominic K. (michaldominik@gmail.com)
+//   Khaled Mohammed (khaled.mohammed@gmail.com)
 //   
 // (C) 2006 Novell, Inc.
 //
@@ -26,7 +27,7 @@ public class PadTest
     {
         Application.Deinit();
     }
-
+/*
     [Test]
     public void TestPlainCreation()
     {
@@ -89,11 +90,11 @@ public class PadTest
         Caps sinkcaps = sink.Caps;
         Assert.IsTrue(sinkcaps.IsAny, "How come sink pad caps is not ANY?");
 
+        element.Dispose();
         src.Dispose();
         sink.Dispose();
         srccaps.Dispose();
         sinkcaps.Dispose();
-        element.Dispose();
     }
 
     [Test]
@@ -123,4 +124,26 @@ public class PadTest
         element.Dispose();
     }
 
+	[Test]
+	public void TestLink()
+	{
+		Pad src = new Pad("source", PadDirection.Src);
+		Assert.IsNotNull(src, "Pad could not be created");
+		Assert.AreEqual(src.Refcount, 1, "source pad");
+
+		string name = src.Name;
+		Assert.AreEqual(name, "source");
+		Assert.AreEqual(src.Refcount, 1, "source pad");
+
+		Pad sink = new Pad("sink", PadDirection.Sink);
+		Assert.IsNotNull(sink, "Pad could not be created");
+
+		Assert.AreEqual(src.Link(sink), PadLinkReturn.Noformat);
+		Assert.AreEqual(src.Refcount, 1, "source pad");
+		Assert.AreEqual(sink.Refcount, 1, "sink pad");
+
+		sink.Dispose();
+		src.Dispose();
+	}
+*/
 }
