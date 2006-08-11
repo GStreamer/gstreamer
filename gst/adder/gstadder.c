@@ -132,11 +132,20 @@ gst_adder_get_type (void)
   return adder_type;
 }
 
+/* clipping versions */
 #define MAKE_FUNC(name,type,ttype,min,max)                      \
 static void name (type *out, type *in, gint bytes) {            \
   gint i;                                                       \
   for (i = 0; i < bytes / sizeof (type); i++)                   \
     out[i] = CLAMP ((ttype)out[i] + (ttype)in[i], min, max);    \
+}
+
+/* non-clipping versions (for float) */
+#define MAKE_FUNC_NC(name,type,ttype)                           \
+static void name (type *out, type *in, gint bytes) {            \
+  gint i;                                                       \
+  for (i = 0; i < bytes / sizeof (type); i++)                   \
+    out[i] = (ttype)out[i] + (ttype)in[i];                      \
 }
 
 /* *INDENT-OFF* */
@@ -146,8 +155,8 @@ MAKE_FUNC (add_int8, gint8, gint16, MIN_INT_8, MAX_INT_8)
 MAKE_FUNC (add_uint32, guint32, guint64, MIN_UINT_32, MAX_UINT_32)
 MAKE_FUNC (add_uint16, guint16, guint32, MIN_UINT_16, MAX_UINT_16)
 MAKE_FUNC (add_uint8, guint8, guint16, MIN_UINT_8, MAX_UINT_8)
-MAKE_FUNC (add_float64, gdouble, gdouble, -1.0, 1.0)
-MAKE_FUNC (add_float32, gfloat, gfloat, -1.0, 1.0)
+MAKE_FUNC_NC (add_float64, gdouble, gdouble)
+MAKE_FUNC_NC (add_float32, gfloat, gfloat)
 /* *INDENT-ON* */
 
 static gboolean
