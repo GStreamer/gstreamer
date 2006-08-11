@@ -27,6 +27,8 @@ gst_version
 gst_version_string
 gst_segtrap_is_enabled
 gst_segtrap_set_enabled
+gst_registry_fork_is_enabled
+gst_registry_fork_set_enabled
 <SUBSECTION Private>
 </SECTION>
 

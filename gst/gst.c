@@ -38,8 +38,7 @@
  * GStreamer borrows heavily from both the <ulink
  * url="http://www.cse.ogi.edu/sysl/">OGI media pipeline</ulink> and
  * Microsoft's DirectShow, hopefully taking the best of both and leaving the
- * cruft behind.  Its interface is still very fluid and thus can be changed
- * to increase the sanity/noise ratio.
+ * cruft behind. Its interface is slowly getting stable.
  *
  * The <application>GStreamer</application> library should be initialized with
  * gst_init() before it can be used. You should pass pointers to the main argc
@@ -98,7 +97,7 @@
  * by <application>GStreamer</application>. It is mostly used in unit tests 
  * to check for leaks.
  *
- * Last reviewed on 2005-11-23 (0.9.5)
+ * Last reviewed on 2006-08-11 (0.10.10)
  */
 
 #include "gst_private.h"
@@ -107,7 +106,7 @@
 #include <sys/types.h>
 #ifdef HAVE_FORK
 #include <sys/wait.h>
-#endif //HAVE_FORK
+#endif /* HAVE_FORK */
 #include <unistd.h>
 
 #include "gst-i18n-lib.h"
@@ -128,8 +127,19 @@ static GList *plugin_paths = NULL;      /* for delayed processing in post_init *
 
 extern gint _gst_trace_on;
 
-/* set to TRUE when segfaults need to be left as is */
+/* defaults */
+#ifdef HAVE_FORK
+#define DEFAULT_FORK TRUE;
+#else
+#define DEFAULT_FORK FALSE;
+#endif /* HAVE_FORK */
+
+/* set to TRUE when segfaults need to be left as is, FIXME, this variable is
+ * global. */
 gboolean _gst_disable_segtrap = FALSE;
+
+/* control the behaviour of registry rebuild */
+static gboolean _gst_enable_registry_fork = DEFAULT_FORK;
 
 static void load_plugin_func (gpointer data, gpointer user_data);
 static gboolean init_pre (void);
@@ -165,7 +175,8 @@ enum
   ARG_PLUGIN_SPEW,
   ARG_PLUGIN_PATH,
   ARG_PLUGIN_LOAD,
-  ARG_SEGTRAP_DISABLE
+  ARG_SEGTRAP_DISABLE,
+  ARG_REGISTRY_FORK_DISABLE
 };
 
 /* debug-spec ::= category-spec [, category-spec]*
@@ -269,7 +280,7 @@ GOptionGroup *
 gst_init_get_option_group (void)
 {
   GOptionGroup *group;
-  static GOptionEntry gst_args[] = {
+  const static GOptionEntry gst_args[] = {
     {"gst-version", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
         parse_goption_arg, N_("Print the GStreamer version"), NULL},
     {"gst-fatal-warnings", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
@@ -304,6 +315,11 @@ gst_init_get_option_group (void)
     {"gst-disable-segtrap", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
           parse_goption_arg,
           N_("Disable trapping of segmentation faults during plugin loading"),
+        NULL},
+    {"gst-disable-registry-fork", 0, G_OPTION_FLAG_NO_ARG,
+          G_OPTION_ARG_CALLBACK,
+          parse_goption_arg,
+          N_("Disable the use of fork() while scanning the registry"),
         NULL},
     {NULL}
   };
@@ -341,6 +357,8 @@ gst_init_check (int *argc, char **argv[], GError ** err)
   GOptionContext *ctx;
   gboolean res;
 
+  GST_INFO ("initializing GStreamer");
+
   if (gst_initialized) {
     GST_DEBUG ("already initialized gst");
     return TRUE;
@@ -355,6 +373,9 @@ gst_init_check (int *argc, char **argv[], GError ** err)
 
   if (res) {
     gst_initialized = TRUE;
+    GST_INFO ("initialized GStreamer successfully");
+  } else {
+    GST_INFO ("failed to initialize GStreamer");
   }
 
   return res;
@@ -643,16 +664,17 @@ ensure_current_registry_nonforking (GstRegistry * default_registry,
   return TRUE;
 }
 
-#ifdef HAVE_FORK
+/* when forking is not available this function always does nothing but return
+ * TRUE immediatly */
 static gboolean
 ensure_current_registry_forking (GstRegistry * default_registry,
     const gchar * registry_file)
 {
+#ifdef HAVE_FORK
   pid_t pid;
 
   /* We fork here, and let the child read and possibly rebuild the registry.
    * After that, the parent will re-read the freshly generated registry. */
-
   GST_DEBUG ("forking");
   pid = fork ();
   if (pid == -1) {
@@ -705,10 +727,9 @@ ensure_current_registry_forking (GstRegistry * default_registry,
       scan_and_update_registry (default_registry, registry_file, FALSE);
     }
   }
-
+#endif /* HAVE_FORK */
   return TRUE;
 }
-#endif /* HAVE_FORK */
 
 static gboolean
 ensure_current_registry (void)
@@ -716,6 +737,7 @@ ensure_current_registry (void)
   char *registry_file;
   GstRegistry *default_registry;
   gboolean ret;
+  gboolean do_fork;
 
   default_registry = gst_registry_get_default ();
   registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
@@ -723,25 +745,32 @@ ensure_current_registry (void)
     registry_file = g_build_filename (g_get_home_dir (),
         ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".xml", NULL);
   }
-#ifdef HAVE_FORK
-  if (g_getenv ("GST_REGISTRY_FORK") == NULL
-      || strcmp (g_getenv ("GST_REGISTRY_FORK"), "no") != 0) {
+
+  /* first see if forking is enabled */
+  do_fork = _gst_enable_registry_fork;
+  if (do_fork) {
+    const gchar *fork_env;
+
+    /* forking enabled, see if it is disabled with an env var */
+    if ((fork_env = g_getenv ("GST_REGISTRY_FORK"))) {
+      /* fork enabled for any value different from "no" */
+      do_fork = strcmp (fork_env, "no") != 0;
+    }
+  }
+
+  /* now check registry with or without forking */
+  if (do_fork) {
+    GST_DEBUG ("forking for registry rebuild");
     ret = ensure_current_registry_forking (default_registry, registry_file);
   } else {
-    GST_DEBUG ("requested not to fork");
-#endif /* HAVE_FORK */
-
+    GST_DEBUG ("requested not to fork for registry rebuild");
     ret = ensure_current_registry_nonforking (default_registry, registry_file);
-
-#ifdef HAVE_FORK
   }
-#endif /* HAVE_FORK */
 
   g_free (registry_file);
 
   return ret;
 }
-
 #endif /* GST_DISABLE_REGISTRY */
 
 /*
@@ -935,6 +964,9 @@ parse_one_option (gint opt, const gchar * arg, GError ** err)
     case ARG_SEGTRAP_DISABLE:
       _gst_disable_segtrap = TRUE;
       break;
+    case ARG_REGISTRY_FORK_DISABLE:
+      _gst_enable_registry_fork = FALSE;
+      break;
     default:
       g_set_error (err, G_OPTION_ERROR, G_OPTION_ERROR_UNKNOWN_OPTION,
           _("Unknown option"));
@@ -948,7 +980,7 @@ static gboolean
 parse_goption_arg (const gchar * opt,
     const gchar * arg, gpointer data, GError ** err)
 {
-  const struct
+  static const struct
   {
     gchar *opt;
     int val;
@@ -969,6 +1001,7 @@ parse_goption_arg (const gchar * opt,
     "--gst-plugin-path", ARG_PLUGIN_PATH}, {
     "--gst-plugin-load", ARG_PLUGIN_LOAD}, {
     "--gst-disable-segtrap", ARG_SEGTRAP_DISABLE}, {
+    "--gst-disable-registry-fork", ARG_REGISTRY_FORK_DISABLE}, {
     NULL}
   };
   gint val = 0, n;
@@ -983,21 +1016,32 @@ parse_goption_arg (const gchar * opt,
   return parse_one_option (val, arg, err);
 }
 
+extern GstRegistry *_gst_registry_default;
+
 /**
  * gst_deinit:
  *
- * Clean up.
- * Call only once, before exiting.
- * After this call GStreamer should not be used anymore.
+ * Clean up any resources created by GStreamer in gst_init().
+ *
+ * It is normally not needed to call this function in a normal application
+ * as the resources will automatically be freed when the program terminates.
+ * This function is therefore mostly used by testsuites and other memory
+ * profiling tools.
+ *
+ * After this call GStreamer (including this method) should not be used anymore. 
  */
-
-extern GstRegistry *_gst_registry_default;
 void
 gst_deinit (void)
 {
   GstClock *clock;
 
   GST_INFO ("deinitializing GStreamer");
+
+  if (!gst_initialized) {
+    GST_DEBUG ("already deinitialized");
+    return;
+  }
+
   clock = gst_system_clock_obtain ();
   gst_object_unref (clock);
   gst_object_unref (clock);
@@ -1090,4 +1134,44 @@ void
 gst_segtrap_set_enabled (gboolean enabled)
 {
   _gst_disable_segtrap = !enabled;
+}
+
+/**
+ * gst_registry_fork_is_enabled:
+ *
+ * By default GStreamer will perform a fork() when scanning and rebuilding the
+ * registry file. 
+ *
+ * Applications might want to disable this behaviour with the
+ * gst_registry_fork_set_enabled() function. 
+ *
+ * Returns: %TRUE if GStreamer will use fork() when rebuilding the registry. On
+ * platforms without fork(), this function will always return %FALSE.
+ *
+ * Since: 0.10.10
+ */
+gboolean
+gst_registry_fork_is_enabled (void)
+{
+  return _gst_enable_registry_fork;
+}
+
+/**
+ * gst_registry_fork_set_enabled:
+ * @enabled: whether rebuilding the registry may fork
+ *
+ * Applications might want to disable/enable the usage of fork() when rebuilding
+ * the registry. See gst_registry_fork_is_enabled() for more information.
+ *
+ * On platforms without fork(), this function will have no effect on the return
+ * value of gst_registry_fork_is_enabled().
+ *
+ * Since: 0.10.10
+ */
+void
+gst_registry_fork_set_enabled (gboolean enabled)
+{
+#ifdef HAVE_FORK
+  _gst_enable_registry_fork = enabled;
+#endif /* HAVE_FORK */
 }

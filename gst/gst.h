@@ -88,6 +88,9 @@ gchar *		gst_version_string		(void);
 gboolean        gst_segtrap_is_enabled          (void);
 void            gst_segtrap_set_enabled         (gboolean enabled);
 
+gboolean        gst_registry_fork_is_enabled    (void);
+void            gst_registry_fork_set_enabled   (gboolean enabled);
+
 G_END_DECLS
 
 #endif /* __GST_H__ */

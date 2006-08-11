@@ -1,3 +1,21 @@
+2006-08-11  Wim Taymans  <wim@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gst.c: (gst_init_get_option_group), (gst_init_check),
+	(ensure_current_registry_forking), (ensure_current_registry),
+	(parse_one_option), (parse_goption_arg), (gst_deinit),
+	(gst_registry_fork_is_enabled), (gst_registry_fork_set_enabled):
+	* gst/gst.h:
+	Doc updates.
+	Added API and command line option to disable registry forking in
+	addition to the environment variable.
+	Constify some static arrays.
+	Added some more debug.
+	Don't deinit twice.
+	API: gst_registry_fork_is_enabled()
+	API: gst_registry_fork_set_enabled()
+	API: --gst-disable-registry-fork command line option
+
 2006-08-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (gst_init):
