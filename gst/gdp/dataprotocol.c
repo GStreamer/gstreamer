@@ -380,7 +380,7 @@ gst_dp_header_payload_type (const guint8 * header)
  *
  * Returns: %TRUE if the header was successfully created.
  */
-#ifndef GST_DISABLE_DEPRECATED
+#ifndef GST_REMOVE_DEPRECATED
 gboolean
 gst_dp_header_from_buffer (const GstBuffer * buffer, GstDPHeaderFlag flags,
     guint * length, guint8 ** header)
@@ -412,7 +412,7 @@ gst_dp_header_from_buffer_1_0 (const GstBuffer * buffer, GstDPHeaderFlag flags,
  *
  * Returns: %TRUE if the packet was successfully created.
  */
-#ifndef GST_DISABLE_DEPRECATED
+#ifndef GST_REMOVE_DEPRECATED
 gboolean
 gst_dp_packet_from_caps (const GstCaps * caps, GstDPHeaderFlag flags,
     guint * length, guint8 ** header, guint8 ** payload)
@@ -444,7 +444,7 @@ gst_dp_packet_from_caps_1_0 (const GstCaps * caps, GstDPHeaderFlag flags,
  *
  * Returns: %TRUE if the packet was successfully created.
  */
-#ifndef GST_DISABLE_DEPRECATED
+#ifndef GST_REMOVE_DEPRECATED
 gboolean
 gst_dp_packet_from_event (const GstEvent * event, GstDPHeaderFlag flags,
     guint * length, guint8 ** header, guint8 ** payload)
@@ -875,7 +875,7 @@ gst_dp_packetizer_new (GstDPVersion version)
   ret->version = version;
 
   switch (version) {
-#ifndef GST_DISABLE_DEPRECATED
+#ifndef GST_REMOVE_DEPRECATED
     case GST_DP_VERSION_0_2:
       ret->header_from_buffer = gst_dp_header_from_buffer;
       ret->packet_from_caps = gst_dp_packet_from_caps;
