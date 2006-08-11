@@ -1,3 +1,13 @@
+2006-08-11  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac:
+	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packetizer_new):
+	* tests/check/libs/gdp.c: (gst_dp_suite): GST_DISABLE_DEPRECATED
+	is only for users of API that don't want to see deprecated
+	functions in the headers; people that want to compile out
+	deprecated code should pass -DGST_REMOVE_DEPRECATED into the
+	CFLAGS. Fixes the build of multifdsink, or will soon..
+
 2006-08-11  Wim Taymans  <wim@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:

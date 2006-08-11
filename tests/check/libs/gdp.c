@@ -24,6 +24,10 @@
 
 #include <gst/check/gstcheck.h>
 
+#ifndef GST_REMOVE_DEPRECATED
+#undef GST_DISABLE_DEPRECATED
+#endif
+
 #include <gst/dataprotocol/dataprotocol.h>
 #include "libs/gst/dataprotocol/dp-private.h"   /* private header */
 
@@ -85,7 +89,7 @@ GST_START_TEST (test_conversion)
 
 GST_END_TEST;
 
-#ifndef GST_DISABLE_DEPRECATED  /* these tests use deprecated API, that we disable by default */
+#ifndef GST_REMOVE_DEPRECATED   /* these tests use deprecated API, that we disable by default */
 
 #ifndef HAVE_CPU_PPC64          /* this test doesn't work on PPC64. See #348114 */
 
@@ -413,7 +417,7 @@ gst_dp_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_conversion);
-#ifndef GST_DISABLE_DEPRECATED
+#ifndef GST_REMOVE_DEPRECATED
 #ifndef HAVE_CPU_PPC64
   tcase_add_test (tc_chain, test_buffer);
 #endif

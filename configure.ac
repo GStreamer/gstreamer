@@ -414,6 +414,9 @@ if test "x$USE_DEBUG" = xyes; then
 fi
 AC_SUBST(PROFILE_CFLAGS)
 
+# GST_DISABLE_DEPRECATED: hide the visibility of deprecated
+# functionality from the API that gstreamer uses
+# GST_REMOVE_DEPRECATED: don't compile deprecated functionality (breaks ABI)
 DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
 AC_SUBST(DEPRECATED_CFLAGS)
 
