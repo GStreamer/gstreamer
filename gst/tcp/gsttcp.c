@@ -37,10 +37,8 @@
 #include <sys/filio.h>
 #endif
 
-#include <glib.h>
-#include <gst/gst.h>
+#include "gsttcp.h"
 #include <gst/gst-i18n-plugin.h>
-#include <gst/dataprotocol/dataprotocol.h>
 
 GST_DEBUG_CATEGORY_EXTERN (tcp_debug);
 #define GST_CAT_DEFAULT tcp_debug

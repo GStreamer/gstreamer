@@ -1,5 +1,7 @@
 2006-08-11  Andy Wingo  <wingo@pobox.com>
 
+	* gst/tcp/gsttcp.c: Really fix the build?
+
 	* gst/tcp/gsttcp.h: For now, always disable deprecation here --
 	fixes the build.
 
