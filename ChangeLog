@@ -15,6 +15,7 @@
 	API: gst_registry_fork_is_enabled()
 	API: gst_registry_fork_set_enabled()
 	API: --gst-disable-registry-fork command line option
+	Fixes #348918.
 
 2006-08-11  Tim-Philipp Müller  <tim at centricular dot net>
 
