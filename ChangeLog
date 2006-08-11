@@ -2,7 +2,7 @@
 
 	* docs/design/part-qos.txt:
 	Bring docs in line with the code. Mostly the sign of the jitter was
-	wrong in the docs.
+	wrong in the docs. Fixes #349943.
 
 	* gst/gstclock.c:
 	Fix the docs for the jitter.
