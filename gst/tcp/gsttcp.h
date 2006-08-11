@@ -25,6 +25,7 @@
 
 #include "gsttcp-enumtypes.h"
 #include <gst/gst.h>
+#undef GST_DISABLE_DEPRECATED
 #include <gst/dataprotocol/dataprotocol.h>
 
 #define TCP_HIGHEST_PORT        65535

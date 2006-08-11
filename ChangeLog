@@ -1,3 +1,8 @@
+2006-08-11  Andy Wingo  <wingo@pobox.com>
+
+	* gst/tcp/gsttcp.h: For now, always disable deprecation here --
+	fixes the build.
+
 2006-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/audioconvert/gstaudioconvert.c: (make_lossless_changes):
