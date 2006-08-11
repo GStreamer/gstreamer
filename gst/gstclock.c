@@ -99,7 +99,7 @@
  * "window-threshold" defines the minimum number of samples before the 
  * calibration is performed.
  *
- * Last reviewed on 2006-03-09 (0.10.4)
+ * Last reviewed on 2006-08-11 (0.10.10)
  */
 
 
@@ -347,9 +347,10 @@ gst_clock_id_get_time (GstClockID id)
  * If the @jitter argument is not NULL and this function returns #GST_CLOCK_OK
  * or #GST_CLOCK_EARLY, it will contain the difference
  * against the clock and the time of @id when this method was
- * called. Negative values indicate how late @id was relative to the clock
+ * called. 
+ * Positive values indicate how late @id was relative to the clock
  * (in which case this function will return #GST_CLOCK_EARLY). 
- * Positive values indicate how much time was spent waiting on the clock 
+ * Negative values indicate how much time was spent waiting on the clock 
  * before this function returned.
  *
  * Returns: the result of the blocking wait. #GST_CLOCK_EARLY will be returned
@@ -390,10 +391,12 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "waiting on clock entry %p", id);
 
-  /* jitter is the diff against the clock when this entry is scheduled */
   if (jitter) {
     GstClockTime now = gst_clock_get_time (clock);
 
+    /* jitter is the diff against the clock when this entry is scheduled. Negative
+     * values mean that the entry was in time, a positive value means that the
+     * entry was too late. */
     *jitter = GST_CLOCK_DIFF (requested, now);
   }
   res = cclass->wait (clock, entry);

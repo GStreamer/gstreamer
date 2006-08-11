@@ -22,6 +22,7 @@ Sources of quality problems
 
  - High CPU load
  - Network problems
+ - Other resource problems such as disk load, memory bottlenecks etc.
 
 
 QoS event
@@ -30,14 +31,19 @@ QoS event
 The QoS event travels upstream and contains the following fields:
 
  - timestamp:  The timestamp on the buffer that generated the QoS
-               event
- - jitter:     The difference of that timestamp against the clock.
+               event. These timestamps are expressed in total running time in
+	       the sink so that the value is every increasing.
+
+ - jitter:     The difference of that timestamp against the currentl clock time.
+               Negative values mean the timestamp was on time. Positive values
+	       indicate the timestamp was late by that amount.
 
  - proportion: Long term prediction of the ideal rate relative to
                normal rate to get optimal quality.
 
 The rest of this document deals with how these values can be calculated
-in a sink.
+in a sink and how the values can be used by other elements to adjust their
+operations.
 
 
 Collecting statistics
@@ -47,30 +53,31 @@ A buffer with timestamp B1 arrives in the sink at time T1. The buffer
 timestamp is then synchronized against the clock which yields a jitter J1
 return value from the clock. The jitter J1 is simply calculated as
 
-  J1 = B1 - CT
+  J1 = CT - B1
 
 Where CT is the clock time when the entry arrives in the sink. This value
 is calculated inside the clock when we perform gst_clock_entry_wait().
 
-If the jitter is positive, the entry arrived in time and can be rendered
-after waiting for the clock to reach time B1 (which is also CT + J1).
+If the jitter is negative, the entry arrived in time and can be rendered
+after waiting for the clock to reach time B1 (which is also CT - J1).
 
-If the jitter is negative however, the entry arrived too late in the sink 
-and should therefore be dropped. A dropped buffer should generate a QoS
-event upstream. J1 is the amount of time the entry was late.
+If the jitter is positive however, the entry arrived too late in the sink 
+and should therefore be dropped. J1 is the amount of time the entry was late.
+
+Any buffer that arrives in the sink should generate a QoS event upstream.
 
 Using the jitter we can calculate the time when the buffer arrived in the
 sink: 
      
-  T1 = B1 - J1.                                (1)
+  T1 = B1 + J1.                                (1)
 
 The time the buffer leaves the sink after synchronisation is measured as:
 
-  T2 = B1 - (J1 < 0 ? J1 : 0)                  (2)
+  T2 = B1 + (J1 < 0 ? 0 : J1)                  (2)
 
-For buffers that arrive in time (J1 >= 0) the buffer leaves after synchronisation
-which is exactly B1. Late buffers (J1 < 0) leave the sink when they arrive,
-whithout any synchronisation, which is T1 = B1 - J1.
+For buffers that arrive in time (J1 < 0) the buffer leaves after synchronisation
+which is exactly B1. Late buffers (J1 >= 0) leave the sink when they arrive,
+whithout any synchronisation, which is T2 = T1 = B1 + J1.
 
 Using a previous T0 and a new T1, we can calculate the time it took for
 upstream to generate a buffer with timestamp B1.
@@ -114,11 +121,11 @@ for upstream elements. Indeed, given arrival time T1 as given in (1)
 we can be certain that buffers with a timestamp B2 < T1 will be too late
 in the sink.
 
-In case of a negative jitter we can therefore send a QoS message with
+In case of a positive jitter we can therefore send a QoS message with
 a timestamp B1, jitter J1 and proportion given by (4).
 
 This allows an upstream element to not generate any data with a timestamps
-B2 < T1, where the element can derive T1 as B1 - J1.
+B2 < T1, where the element can derive T1 as B1 + J1.
 
 This will effectively result in frame drops.
 
@@ -127,7 +134,7 @@ should output.
 
 Indeed, given the element generated a buffer with timestamp B0 that arrived
 in time in the sink but then received a QoS message stating B1 arrived J1
-too late. This means generating B1 took (B1 - J1) - B0 = T1 - T0 = PT1, as 
+too late. This means generating B1 took (B1 + J1) - B0 = T1 - T0 = PT1, as 
 given in (3). Given the buffer B1 had a duration D1 and assuming that
 generating a new buffer B2 will take the same amount of processing time,
 a better estimation for B2 would then be:
@@ -136,15 +143,15 @@ a better estimation for B2 would then be:
 
  expanding gives:
 
-  B2 = (B1 - J1) + D2 * (B1 - J1 - B0)
+  B2 = (B1 + J1) + D2 * (B1 + J1 - B0)
                         --------------  
 		             D1
 
  assuming the durations of the frames are equal and thus D1 = D2:
 
-  B2 = (B1 - J1) + (B1 - J1 - B0)
+  B2 = (B1 + J1) + (B1 + J1 - B0)
 
-  B2 =  2 * (B1 - J1) - B0
+  B2 =  2 * (B1 + J1) - B0
 
  also:
 
@@ -152,11 +159,11 @@ a better estimation for B2 would then be:
 
  so:
 
-  B2 =  2 * (B1 - J1) - (B1 - D1)
+  B2 =  2 * (B1 + J1) - (B1 - D1)
 
 Which yields a more accurate prediction for the next buffer given as:
 
-  B2 =  B1 - 2 * J1 + D1                          (5)
+  B2 =  B1 + 2 * J1 + D1                          (5)
 
 
 Long term correction
@@ -226,7 +233,7 @@ A QoS message with the most current values is sent upstream for each buffer
 that was received by the sink.
 
 Normally QoS is only enabled for video pipelines. The reason being that drops
-in audio is more disturbing than dropping frames. Also video requires in 
+in audio are more disturbing than dropping video frames. Also video requires in 
 general more processing than audio.
 
 Normally there is a threshold for when buffers get dropped in a video sink. Frames
@@ -259,13 +266,13 @@ the CPU usage and framerate.
 
 If each frame is independantly decodable, any arbitrary frame can be skipped based
 on the timestamp and jitter values of the latest QoS message. In addition can the
-proportion member be used to skip frames.
+proportion member be used to permanently skip frames.
 
 
 Demuxers
 --------
 
-Demuxer usually cannot do a lot regarding QoS except for skipping frames to the next
+Demuxers usually cannot do a lot regarding QoS except for skipping frames to the next
 keyframe when a lateness QoS message arrives on a source pad.
 
 A demuxer can however measure if the performance problems are upstream or downstream

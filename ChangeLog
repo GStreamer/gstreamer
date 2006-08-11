@@ -1,5 +1,24 @@
 2006-08-11  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-qos.txt:
+	Bring docs in line with the code. Mostly the sign of the jitter was
+	wrong in the docs.
+
+	* gst/gstclock.c:
+	Fix the docs for the jitter.
+
+	* gst/gstevent.c: (gst_event_new_custom), (gst_event_new_tag),
+	(gst_event_parse_tag), (gst_event_new_buffer_size),
+	(gst_event_parse_buffer_size), (gst_event_parse_qos),
+	(gst_event_new_seek), (gst_event_parse_seek),
+	(gst_event_new_navigation):
+	Make sure the GstStructure has no parent when creating custom
+	events.
+	Add some more argument checking so that we avoid 0.0 rates.
+	Flesh out the docs for the QoS event some more.
+
+2006-08-11  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gst.c: (gst_init_get_option_group), (gst_init_check),
 	(ensure_current_registry_forking), (ensure_current_registry),

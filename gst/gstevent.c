@@ -72,7 +72,7 @@
  *   </programlisting>
  * </example>
  *
- * Last reviewed on 2006-01-24 (0.10.2)
+ * Last reviewed on 2006-08-11 (0.10.10)
  */
 
 
@@ -315,6 +315,10 @@ gst_event_new_custom (GstEventType type, GstStructure * structure)
 {
   GstEvent *event;
 
+  /* structure must not have a parent */
+  if (structure)
+    g_return_val_if_fail (structure->parent_refcount == NULL, NULL);
+
   event = gst_event_new (type);
   if (structure) {
     gst_structure_set_parent_refcount (structure, &event->mini_object.refcount);
@@ -473,7 +477,7 @@ gst_event_parse_new_segment (GstEvent * event, gboolean * update,
  * The newsegment event marks the range of buffers to be processed. All
  * data not within the segment range is not to be processed. This can be
  * used intelligently by plugins to apply more efficient methods of skipping
- * unneeded packets.
+ * unneeded data.
  *
  * The position value of the segment is used in conjunction with the start
  * value to convert the buffer timestamps into the stream time. This is 
@@ -599,6 +603,7 @@ GstEvent *
 gst_event_new_tag (GstTagList * taglist)
 {
   g_return_val_if_fail (taglist != NULL, NULL);
+
   return gst_event_new_custom (GST_EVENT_TAG, (GstStructure *) taglist);
 }
 
@@ -614,6 +619,7 @@ gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
 {
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_TAG);
+
   if (taglist)
     *taglist = (GstTagList *) event->structure;
 }
@@ -641,6 +647,7 @@ gst_event_new_buffer_size (GstFormat format, gint64 minsize,
       "creating buffersize format %d, minsize %" G_GINT64_FORMAT
       ", maxsize %" G_GINT64_FORMAT ", async %d", format,
       minsize, maxsize, async);
+
   return gst_event_new_custom (GST_EVENT_BUFFERSIZE,
       gst_structure_new ("GstEventBufferSize",
           "format", GST_TYPE_FORMAT, format,
@@ -667,6 +674,7 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
 
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_BUFFERSIZE);
+
   structure = gst_event_get_structure (event);
   if (format)
     *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
@@ -690,24 +698,31 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
  * The QOS event is generated in an element that wants an upstream
  * element to either reduce or increase its rate because of
  * high/low CPU load or other resource usage such as network performance.
+ * Typically sinks generate these events for each buffer they receive.
  *
- * @proportion is the requested adjustment in datarate, 1.0 is the normal
- * datarate, 0.75 means increase datarate by 75%, 1.5 is 150%. Negative
- * values request a slow down, so -0.75 means a decrease by 75%.
+ * @proportion indicates the real-time performance of the streaming in the
+ * element that generated the QoS event (usually the sink). The value is
+ * generally computed based on more long term statistics about the streams
+ * timestamps compared to the clock.
+ * A value < 1.0 indicates that the upstream element is producing data faster
+ * than real-time. A value > 1.0 indicates that the upstream element is not
+ * producing data fast enough. 1.0 is the ideal @proportion value. The
+ * proportion value can safely be used to lower or increase the quality of
+ * the element.
  *
- * @diff is the difference against the clock in stream time of the last
- * buffer that caused the element to generate the QOS event.
+ * @diff is the difference against the clock in running time of the last
+ * buffer that caused the element to generate the QOS event. A negative value
+ * means that the buffer with @timestamp arrived in time. A positive value
+ * indicates how late the buffer with @timestamp was.
  *
  * @timestamp is the timestamp of the last buffer that cause the element
- * to generate the QOS event. 
+ * to generate the QOS event. It is expressed in running time and thus an ever
+ * increasing value.
  *
  * The upstream element can use the @diff and @timestamp values to decide
- * whether to process more buffers. All buffers with timestamp <=
- * @timestamp + @diff will certainly arrive late in the sink as well. 
- *
- * The @proportion value is generally computed based on more long
- * term statistics about the stream quality and can be used in various ways
- * such as lowering or increasing processing quality.
+ * whether to process more buffers. For possitive @diff, all buffers with
+ * timestamp <= @timestamp + @diff will certainly arrive late in the sink
+ * as well. 
  *
  * The application can use general event probes to intercept the QoS
  * event and implement custom application specific QoS handling.
@@ -737,7 +752,8 @@ gst_event_new_qos (gdouble proportion, GstClockTimeDiff diff,
  * @diff: A pointer to store the diff in
  * @timestamp: A pointer to store the timestamp in
  *
- * Get the proportion, diff and timestamp in the qos event.
+ * Get the proportion, diff and timestamp in the qos event. See
+ * gst_event_new_qos() for more information about the different QoS values.
  */
 void
 gst_event_parse_qos (GstEvent * event, gdouble * proportion,
@@ -747,6 +763,7 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
 
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_QOS);
+
   structure = gst_event_get_structure (event);
   if (proportion)
     *proportion =
@@ -779,9 +796,10 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  * rate is not allowed.
  *
  * @cur_type and @stop_type specify how to adjust the current and stop
- * time, relative or absolute. A type of #GST_SEEK_TYPE_NONE means that
- * the position should not be updated. The currently configured playback
- * segment can be queried with #GST_QUERY_SEGMENT.
+ * time, relative or absolute to the last configured positions. A type
+ * of #GST_SEEK_TYPE_NONE means that the position should not be updated.
+ * The currently configured playback segment can be queried with
+ * #GST_QUERY_SEGMENT. 
  *
  * Note that updating the @cur position will actually move the current
  * playback pointer to that new position. It is not possible to seek 
@@ -795,6 +813,8 @@ GstEvent *
 gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
     GstSeekType cur_type, gint64 cur, GstSeekType stop_type, gint64 stop)
 {
+  g_return_val_if_fail (rate != 0.0, NULL);
+
   if (format == GST_FORMAT_TIME) {
     GST_CAT_INFO (GST_CAT_EVENT,
         "creating seek rate %lf, format TIME, flags %d, "
@@ -842,6 +862,7 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate,
 
   g_return_if_fail (GST_IS_EVENT (event));
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEEK);
+
   structure = gst_event_get_structure (event);
   if (rate)
     *rate = g_value_get_double (gst_structure_get_value (structure, "rate"));
@@ -873,5 +894,6 @@ GstEvent *
 gst_event_new_navigation (GstStructure * structure)
 {
   g_return_val_if_fail (structure != NULL, NULL);
+
   return gst_event_new_custom (GST_EVENT_NAVIGATION, structure);
 }
