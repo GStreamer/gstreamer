@@ -1,3 +1,11 @@
+2006-08-11  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.c: (gst_init_check), (init_post):
+	Set gst as being initialized before scanning/updating the registry,
+	since there might be some plugins that call gst_init() and we don't
+	want to loop back in.
+	Closes #350879
+
 2006-08-11  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-qos.txt:

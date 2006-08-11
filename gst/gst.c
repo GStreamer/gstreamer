@@ -371,8 +371,9 @@ gst_init_check (int *argc, char **argv[], GError ** err)
   res = g_option_context_parse (ctx, argc, argv, err);
   g_option_context_free (ctx);
 
+  gst_initialized = res;
+
   if (res) {
-    gst_initialized = TRUE;
     GST_INFO ("initialized GStreamer successfully");
   } else {
     GST_INFO ("failed to initialize GStreamer");
@@ -824,6 +825,17 @@ init_post (void)
   _gst_plugin_register_static (&plugin_desc);
 
   _gst_plugin_initialize ();
+
+  /*
+   * Any errors happening below this point are non-fatal, we therefore mark
+   * gstreamer as being initialized, since it is the case from a plugin point of
+   * view.
+   *
+   * If anything fails, it will be put back to FALSE in gst_init_check().
+   * This allows some special plugins that would call gst_init() to not cause a
+   * looping effect (i.e. initializing GStreamer twice).
+   */
+  gst_initialized = TRUE;
 
 #ifndef GST_DISABLE_REGISTRY
   if (!ensure_current_registry ())
