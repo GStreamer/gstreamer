@@ -1,3 +1,22 @@
+2006-08-13  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_detect_rates),
+	(gst_alsa_detect_channels), (gst_alsa_probe_supported_formats):
+	Small code cleanup.
+
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_open),
+	(gst_alsa_mixer_new):
+	Remove hack that always set the device to hw:0*.
+	Properly find the card name for whatever device was configured.
+	Do some better debugging.
+	Fixes #350784.
+
+	* ext/alsa/gstalsamixerelement.c:
+	(gst_alsa_mixer_element_set_property),
+	(gst_alsa_mixer_element_change_state):
+	Cleanups.
+	Handle setting of a NULL device name better.
+
 2006-08-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/adder/gstadder.c:

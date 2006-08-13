@@ -65,6 +65,7 @@ gst_alsa_detect_rates (GstObject * obj, snd_pcm_hw_params_t * hw_params,
 
   return caps;
 
+  /* ERRORS */
 min_rate_err:
   {
     GST_ERROR_OBJECT (obj, "failed to query minimum sample rate: %s",
@@ -328,6 +329,7 @@ gst_alsa_detect_channels (GstObject * obj, snd_pcm_hw_params_t * hw_params,
 
   return caps;
 
+  /* ERRORS */
 min_chan_error:
   {
     GST_ERROR_OBJECT (obj, "failed to query minimum channel count: %s",
@@ -375,12 +377,12 @@ gst_alsa_probe_supported_formats (GstObject * obj, snd_pcm_t * handle,
 
   return caps;
 
+  /* ERRORS */
 error:
   {
     GST_ERROR_OBJECT (obj, "failed to query formats: %s", snd_strerror (err));
     return NULL;
   }
-
 subroutine_error:
   {
     GST_ERROR_OBJECT (obj, "failed to query formats");

@@ -44,76 +44,78 @@
 
 
 /* First some utils, then the mixer implementation */
-
 static gboolean
 gst_alsa_mixer_open (GstAlsaMixer * mixer)
 {
-  gint err, devicenum;
+  gint err;
+  snd_ctl_t *ctl;
+  snd_ctl_card_info_t *card_info;
 
   g_return_val_if_fail (mixer->handle == NULL, FALSE);
 
   /* open and initialize the mixer device */
   err = snd_mixer_open (&mixer->handle, 0);
-  if (err < 0 || mixer->handle == NULL) {
-    GST_WARNING ("Cannot open empty mixer.");
-    mixer->handle = NULL;
-    return FALSE;
-  }
-
-  /* hack hack hack hack hack!!!!! */
-  if (strncmp (mixer->device, "default", 7) == 0) {
-    /* hack! */
-    g_free (mixer->device);
-    mixer->device = g_strdup ("hw:0");
-  } else if (strncmp (mixer->device, "hw:", 3) == 0) {
-    /* ok */
-  } else if (strncmp (mixer->device, "plughw:", 7) == 0) {
-    gchar *freeme = mixer->device;
-
-    mixer->device = g_strdup (freeme + 4);
-    g_free (freeme);
-  } else {
-    goto error;
-  }
-
-  if (strchr (mixer->device, ','))
-    strchr (mixer->device, ',')[0] = '\0';
+  if (err < 0 || mixer->handle == NULL)
+    goto open_failed;
 
   if ((err = snd_mixer_attach (mixer->handle, mixer->device)) < 0) {
-    GST_WARNING ("Cannot open mixer for sound device `%s'.", mixer->device);
+    GST_WARNING ("Cannot open mixer for sound device '%s': %s", mixer->device,
+        snd_strerror (err));
     goto error;
   }
 
   if ((err = snd_mixer_selem_register (mixer->handle, NULL, NULL)) < 0) {
-    GST_WARNING ("Cannot register mixer elements.");
+    GST_WARNING ("Cannot register mixer elements: %s", snd_strerror (err));
     goto error;
   }
 
   if ((err = snd_mixer_load (mixer->handle)) < 0) {
-    GST_WARNING ("Cannot load mixer settings.");
+    GST_WARNING ("Cannot load mixer settings: %s", snd_strerror (err));
     goto error;
   }
 
-  /* I don't know how to get a device name from a mixer handle. So on
-   * to the ugly hacks here, then... */
-  if (sscanf (mixer->device, "hw:%d", &devicenum) == 1) {
-    gchar *name;
 
-    if (!snd_card_get_name (devicenum, &name)) {
-      mixer->cardname = g_strdup (name);
-      free (name);
-      GST_DEBUG ("Card name = %s", GST_STR_NULL (mixer->cardname));
-    }
+  /* now get the device name, any of this is not fatal */
+  g_free (mixer->cardname);
+  if ((err = snd_ctl_open (&ctl, mixer->device, 0)) < 0) {
+    GST_WARNING ("Cannot open CTL: %s", snd_strerror (err));
+    goto no_card_name;
   }
 
-  GST_INFO ("Successfully opened mixer for device `%s'.", mixer->device);
+  snd_ctl_card_info_alloca (&card_info);
+  if ((err = snd_ctl_card_info (ctl, card_info)) < 0) {
+    GST_WARNING ("Cannot get card info: %s", snd_strerror (err));
+    snd_ctl_close (ctl);
+    goto no_card_name;
+  }
+
+  mixer->cardname = g_strdup (snd_ctl_card_info_get_name (card_info));
+  GST_DEBUG ("Card name = %s", GST_STR_NULL (mixer->cardname));
+  snd_ctl_close (ctl);
+
+  if (FALSE) {
+  no_card_name:
+    mixer->cardname = g_strdup ("Unknown");
+    GST_DEBUG ("Cannot find card name");
+  }
+
+  GST_INFO ("Successfully opened mixer for device '%s'.", mixer->device);
 
   return TRUE;
 
+  /* ERROR */
+open_failed:
+  {
+    GST_WARNING ("Cannot open mixer: %s", snd_strerror (err));
+    mixer->handle = NULL;
+    return FALSE;
+  }
 error:
-  snd_mixer_close (mixer->handle);
-  mixer->handle = NULL;
-  return FALSE;
+  {
+    snd_mixer_close (mixer->handle);
+    mixer->handle = NULL;
+    return FALSE;
+  }
 }
 
 static void
@@ -230,11 +232,12 @@ gst_alsa_mixer_new (const char *device, GstAlsaMixerDirection dir)
 
   return ret;
 
+  /* ERRORS */
 error:
-  if (ret)
+  {
     gst_alsa_mixer_free (ret);
-
-  return NULL;
+    return NULL;
+  }
 }
 
 void

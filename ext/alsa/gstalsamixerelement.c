@@ -35,7 +35,6 @@ enum
   PROP_DEVICE_NAME
 };
 
-
 static const GstElementDetails gst_alsa_mixer_element_details =
 GST_ELEMENT_DETAILS ("Alsa mixer",
     "Generic/Audio",
@@ -160,6 +159,10 @@ gst_alsa_mixer_element_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (this);
       g_free (this->device);
       this->device = g_value_dup_string (value);
+      /* make sure we never set NULL, this is nice when we want to open the
+       * device. */
+      if (this->device == NULL)
+        this->device = g_strdup (DEFAULT_PROP_DEVICE);
       GST_OBJECT_UNLOCK (this);
       break;
     }
@@ -208,14 +211,9 @@ gst_alsa_mixer_element_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!this->mixer) {
-        const gchar *device = (this->device) ? this->device : "default";
-
-        this->mixer = gst_alsa_mixer_new (device, GST_ALSA_MIXER_ALL);
-        if (!this->mixer) {
-          GST_ELEMENT_ERROR (element, RESOURCE, OPEN_READ_WRITE, (NULL),
-              ("Failed to open alsa mixer device '%s'", device));
-          return GST_STATE_CHANGE_FAILURE;
-        }
+        this->mixer = gst_alsa_mixer_new (this->device, GST_ALSA_MIXER_ALL);
+        if (!this->mixer)
+          goto open_failed;
       }
       break;
     default:
@@ -238,4 +236,12 @@ gst_alsa_mixer_element_change_state (GstElement * element,
   }
 
   return ret;
+
+  /* ERRORS */
+open_failed:
+  {
+    GST_ELEMENT_ERROR (element, RESOURCE, OPEN_READ_WRITE, (NULL),
+        ("Failed to open alsa mixer device '%s'", this->device));
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
