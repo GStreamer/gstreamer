@@ -1,3 +1,17 @@
+2006-08-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbuffer.c:
+	* gst/gsttask.c: (gst_task_join):
+	Small doc updates.
+
+	* gst/gstpad.c: (gst_pad_activate_pull), (gst_pad_activate_push),
+	(gst_pad_stop_task):
+	When pad (de)activation failed for some reason, restore the old
+	activation mode and set the pad to flushing instead of assuming the
+	pad is deactivated.
+	If the _task_join() failed, reinstall the task on the pad so that it can
+	be stopped later and return an error.
+
 2006-08-11  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac:

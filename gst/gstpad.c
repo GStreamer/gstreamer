@@ -783,10 +783,12 @@ peer_failed:
   }
 failure:
   {
+    GST_OBJECT_LOCK (pad);
     GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in pull mode",
         active ? "activate" : "deactivate");
-    pre_activate (pad, GST_ACTIVATE_NONE);
-    post_activate (pad, GST_ACTIVATE_NONE);
+    GST_PAD_SET_FLUSHING (pad);
+    GST_PAD_ACTIVATE_MODE (pad) = old;
+    GST_OBJECT_UNLOCK (pad);
     return FALSE;
   }
 }
@@ -879,10 +881,12 @@ deactivate_failed:
   }
 failure:
   {
+    GST_OBJECT_LOCK (pad);
     GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "failed to %s in push mode",
         active ? "activate" : "deactivate");
-    pre_activate (pad, GST_ACTIVATE_NONE);
-    post_activate (pad, GST_ACTIVATE_NONE);
+    GST_PAD_SET_FLUSHING (pad);
+    GST_PAD_ACTIVATE_MODE (pad) = old;
+    GST_OBJECT_UNLOCK (pad);
     return FALSE;
   }
 }
@@ -4180,7 +4184,8 @@ gst_pad_stop_task (GstPad * pad)
   GST_PAD_STREAM_LOCK (pad);
   GST_PAD_STREAM_UNLOCK (pad);
 
-  gst_task_join (task);
+  if (!gst_task_join (task))
+    goto join_failed;
 
   gst_object_unref (task);
 
@@ -4193,6 +4198,20 @@ no_task:
     GST_PAD_STREAM_LOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
 
+    /* this is not an error */
     return TRUE;
+  }
+join_failed:
+  {
+    /* this is bad, possibly the application tried to join the task from
+     * the task's thread. We install the task again so that it will be stopped
+     * again from the right thread next time hopefully. */
+    GST_OBJECT_LOCK (pad);
+    /* we can only install this task if there was no other task */
+    if (GST_PAD_TASK (pad) == NULL)
+      GST_PAD_TASK (pad) = task;
+    GST_OBJECT_UNLOCK (pad);
+
+    return FALSE;
   }
 }

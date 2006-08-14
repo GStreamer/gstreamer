@@ -522,6 +522,8 @@ gst_task_join (GstTask * task)
 
   GST_DEBUG_OBJECT (task, "Joining task %p, thread %p", task, tself);
 
+  /* we don't use a real thread join here because we are using
+   * threadpools */
   GST_OBJECT_LOCK (task);
   if (tself == task->abidata.ABI.thread)
     goto joining_self;

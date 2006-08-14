@@ -175,7 +175,7 @@
 #define HAVE_WIN32 1
 
 /* Define host CPU */
-#define HOST_CPU "x86_64"
+#define HOST_CPU "mos6502"
 
 /* library dir */
 #ifdef _DEBUG

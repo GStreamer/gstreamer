@@ -53,6 +53,10 @@
  * Alternatively, use gst_buffer_new_and_alloc()
  * to create a buffer with preallocated data of a given size.
  *
+ * The data pointed to by the buffer can be retrieved with the GST_BUFFER_DATA()
+ * macro. The size of the data can be found with GST_BUFFER_SIZE(). For buffers
+ * of size 0, the data pointer is undefined (usually NULL) and should never be used.
+ *
  * If an element knows what pad you will push the buffer out on, it should use
  * gst_pad_alloc_buffer() instead to create a buffer.  This allows downstream
  * elements to provide special buffers to write in, like hardware buffers.
@@ -107,7 +111,7 @@
  * the refcount drops to 0, any data pointed to by GST_BUFFER_MALLOCDATA() will
  * also be freed.
  *
- * Last reviewed on November 23th, 2005 (0.9.5)
+ * Last reviewed on August 11th, 2006 (0.10.10)
  */
 #include "gst_private.h"
 
