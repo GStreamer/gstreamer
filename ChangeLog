@@ -1,3 +1,10 @@
+2006-08-14  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	Don't build programs in ffmpeg checkout, since we're never going to use
+	them in the gstreamer plugin. Also it allows building the plugin on
+	systems that don't have UI-specific libraries (like X).
+
 2006-07-19  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_lowres_get_type),

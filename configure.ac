@@ -161,7 +161,7 @@ dnl *** configure external libs ***
 
 AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1,
                    [Defined if building against uninstalled FFmpeg source])
-ac_configure_args="$ac_configure_args --disable-v4l --disable-audio-oss --disable-dv1394 --disable-vhook --disable-ffmpeg --disable-ffserver --enable-pp"
+ac_configure_args="$ac_configure_args --disable-v4l --disable-audio-oss --disable-dv1394 --disable-vhook --disable-ffmpeg --disable-ffserver --disable-ffplay --disable-sdltest --enable-pp"
 AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg)
 
 AC_CONFIG_FILES(
