@@ -1,5 +1,11 @@
 2006-08-14  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_change_state):
+	If the parent state change function failed, don't assume we can safely
+	stop the source, this will be done when the pads are deactivated.
+
+2006-08-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbuffer.c:
 	* gst/gsttask.c: (gst_task_join):
 	Small doc updates.

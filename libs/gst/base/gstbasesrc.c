@@ -2018,7 +2018,6 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
 failure:
   {
     GST_DEBUG_OBJECT (basesrc, "parent failed state change");
-    gst_base_src_stop (basesrc);
     return result;
   }
 error_stop:
