@@ -1,3 +1,10 @@
+2006-08-14  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstelementfactory.c: (gst_element_register):
+	If the GstElementClass doesn't have a GstElementDetails with all fields
+	filled up correctly (longname, description AND author), then error out
+	nicely instead of crashing.
+
 2006-08-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gststructure.c:

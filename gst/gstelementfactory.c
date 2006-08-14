@@ -271,6 +271,10 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
       g_type_name (type));
 
   klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
+  if ((klass->details.longname == NULL) ||
+      (klass->details.klass == NULL) || (klass->details.author == NULL))
+    goto detailserror;
+
   factory->type = type;
   __gst_element_details_copy (&factory->details, &klass->details);
   for (item = klass->padtemplates; item; item = item->next) {
@@ -294,13 +298,13 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
         g_type_interface_peek (klass, GST_TYPE_URI_HANDLER);
 
     if (!iface || !iface->get_type || !iface->get_protocols)
-      goto error;
+      goto urierror;
     factory->uri_type = iface->get_type ();
     if (!GST_URI_TYPE_IS_VALID (factory->uri_type))
-      goto error;
+      goto urierror;
     factory->uri_protocols = g_strdupv (iface->get_protocols ());
     if (!factory->uri_protocols)
-      goto error;
+      goto urierror;
   }
 
   interfaces = g_type_interfaces (type, &n_interfaces);
@@ -319,9 +323,17 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   return TRUE;
 
   /* ERRORS */
-error:
+urierror:
   {
     GST_WARNING_OBJECT (factory, "error with uri handler!");
+    gst_element_factory_cleanup (factory);
+    return FALSE;
+  }
+
+detailserror:
+  {
+    GST_WARNING_OBJECT (factory,
+        "The GstElementDetails don't seem to have been set properly");
     gst_element_factory_cleanup (factory);
     return FALSE;
   }
