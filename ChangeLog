@@ -1,3 +1,8 @@
+2006-08-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybin.c:
+	  Update max volume to the same value that the volume element uses.
+
 2006-08-14  Wim Taymans  <wim@fluendo.com>
 
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_open):

@@ -37,7 +37,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 #define GST_IS_PLAY_BIN(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PLAY_BIN))
 #define GST_IS_PLAY_BIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAY_BIN))
 
-#define VOLUME_MAX_DOUBLE 4.0
+#define VOLUME_MAX_DOUBLE 10.0
 
 typedef struct _GstPlayBin GstPlayBin;
 typedef struct _GstPlayBinClass GstPlayBinClass;
