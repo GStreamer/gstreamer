@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2005-08-25 11:45+0200\n"
+"POT-Creation-Date: 2006-08-08 13:20+0200\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -15,78 +15,76 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/audiofile/gstafsink.c:342 ext/sndfile/gstsf.c:624
+#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
+msgid "Could not open DVD"
+msgstr ""
+
+#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:577
+#: ext/dvdread/dvdreadsrc.c:584
+#, fuzzy, c-format
+msgid "Could not open DVD title %d"
+msgstr "Kon het VFS-bestand \"%s\" niet sluiten."
+
+#: ext/dvdread/dvdreadsrc.c:248
 #, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "Kon \"%s\" niet openen om te schrijven."
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr ""
 
-#: ext/audiofile/gstafsink.c:364 ext/audiofile/gstafsrc.c:369
+#: ext/dvdread/dvdreadsrc.c:591
 #, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Fout bij sluiten bestand \"%s\"."
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
 
-#: ext/audiofile/gstafsrc.c:316
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "Kon \"%s\" niet openen om te lezen."
+#: gst/asfdemux/gstasfdemux.c:1931
+msgid "This file is encrypted and cannot be played."
+msgstr ""
 
-#: ext/sndfile/gstsf.c:585
-msgid "No filename specified."
-msgstr "Geen bestandsnaam opgegeven."
+#~ msgid "Could not open file \"%s\" for writing."
+#~ msgstr "Kon \"%s\" niet openen om te schrijven."
 
-#: ext/sndfile/gstsf.c:838
-#, c-format
-msgid "Could not write to file \"%s\"."
-msgstr "Kon niet schrijven naar bestand \"%s\"."
+#~ msgid "Error closing file \"%s\"."
+#~ msgstr "Fout bij sluiten bestand \"%s\"."
 
-#: gst/avi/gstavimux.c:1007
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
+#~ msgid "Could not open file \"%s\" for reading."
+#~ msgstr "Kon \"%s\" niet openen om te lezen."
 
-#: sys/dxr3/dxr3audiosink.c:296
-#, c-format
-msgid "Could not open audio device \"%s\" for writing."
-msgstr "Kon geluidsapparaat \"%s\" niet openen om te schrijven."
+#~ msgid "No filename specified."
+#~ msgstr "Geen bestandsnaam opgegeven."
 
-#: sys/dxr3/dxr3audiosink.c:308 sys/dxr3/dxr3videosink.c:281
-#, c-format
-msgid "Could not open control device \"%s\" for writing."
-msgstr "Kon instelapparaat \"%s\" niet openen om te schrijven."
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "Kon niet schrijven naar bestand \"%s\"."
 
-#: sys/dxr3/dxr3audiosink.c:341
-#, c-format
-msgid "Could not configure audio device \"%s\"."
-msgstr "Kon geluidsapparaat \"%s\" niet configureren."
+#~ msgid "No or invalid input audio, AVI stream will be corrupt."
+#~ msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
 
-#: sys/dxr3/dxr3audiosink.c:355 sys/dxr3/dxr3audiosink.c:392
-#, c-format
-msgid "Could not set audio device \"%s\" to %d Hz."
-msgstr "Kon geluidsapparaat \"%s\" niet instellen op %d Hz."
+#~ msgid "Could not open audio device \"%s\" for writing."
+#~ msgstr "Kon geluidsapparaat \"%s\" niet openen om te schrijven."
 
-#: sys/dxr3/dxr3audiosink.c:420
-#, c-format
-msgid "Could not close audio device \"%s\"."
-msgstr "Kon geluidsapparaat \"%s\" niet sluiten."
+#~ msgid "Could not open control device \"%s\" for writing."
+#~ msgstr "Kon instelapparaat \"%s\" niet openen om te schrijven."
 
-#: sys/dxr3/dxr3audiosink.c:427 sys/dxr3/dxr3videosink.c:306
-#, c-format
-msgid "Could not close control device \"%s\"."
-msgstr "Kon instelapparaat \"%s\" niet sluiten."
+#~ msgid "Could not configure audio device \"%s\"."
+#~ msgstr "Kon geluidsapparaat \"%s\" niet configureren."
 
-#: sys/dxr3/dxr3videosink.c:269
-#, c-format
-msgid "Could not open video device \"%s\" for writing."
-msgstr "Kon videoapparaat \"%s\" niet openen om te schrijven."
+#~ msgid "Could not set audio device \"%s\" to %d Hz."
+#~ msgstr "Kon geluidsapparaat \"%s\" niet instellen op %d Hz."
 
-#: sys/dxr3/dxr3videosink.c:299
-#, c-format
-msgid "Could not close video device \"%s\"."
-msgstr "Kon videoapparaat \"%s\" niet sluiten."
+#~ msgid "Could not close audio device \"%s\"."
+#~ msgstr "Kon geluidsapparaat \"%s\" niet sluiten."
 
-#: sys/dxr3/dxr3videosink.c:451
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "Kon niet schrijven naar apparaat \"%s\"."
+#~ msgid "Could not close control device \"%s\"."
+#~ msgstr "Kon instelapparaat \"%s\" niet sluiten."
+
+#~ msgid "Could not open video device \"%s\" for writing."
+#~ msgstr "Kon videoapparaat \"%s\" niet openen om te schrijven."
+
+#~ msgid "Could not close video device \"%s\"."
+#~ msgstr "Kon videoapparaat \"%s\" niet sluiten."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "Kon niet schrijven naar apparaat \"%s\"."
 
 #~ msgid "OSS device \"%s\" is already in use by another program."
 #~ msgstr "OSS-apparaat \"%s\" is al in gebruik door een ander programma."
@@ -202,9 +200,6 @@ msgstr "Kon niet schrijven naar apparaat \"%s\"."
 
 #~ msgid "No filename given"
 #~ msgstr "Geen bestandsnaam opgegeven"
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Kon het VFS-bestand \"%s\" niet sluiten."
 
 #, fuzzy
 #~ msgid "Your OSS device doesn't support mono or stereo."
