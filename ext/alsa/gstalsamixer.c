@@ -93,8 +93,8 @@ gst_alsa_mixer_open (GstAlsaMixer * mixer)
   GST_DEBUG ("Card name = %s", GST_STR_NULL (mixer->cardname));
   snd_ctl_close (ctl);
 
-  if (FALSE) {
-  no_card_name:
+no_card_name:
+  if (mixer->cardname == NULL) {
     mixer->cardname = g_strdup ("Unknown");
     GST_DEBUG ("Cannot find card name");
   }

@@ -1,5 +1,10 @@
 2006-08-14  Wim Taymans  <wim@fluendo.com>
 
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_open):
+	Less uglyness..
+
+2006-08-14  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_submit_buffer),
 	(gst_ogg_demux_get_next_page), (gst_ogg_demux_perform_seek),
 	(gst_ogg_demux_read_chain), (gst_ogg_demux_loop):
