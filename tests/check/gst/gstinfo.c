@@ -23,7 +23,7 @@
 #include <gst/check/gstcheck.h>
 
 static void
-segment_printf_extension_log_func (GstDebugCategory * category,
+printf_extension_log_func (GstDebugCategory * category,
     GstDebugLevel level, const gchar * file, const gchar * function,
     gint line, GObject * object, GstDebugMessage * message, gpointer unused)
 {
@@ -41,13 +41,81 @@ segment_printf_extension_log_func (GstDebugCategory * category,
   }
 }
 
+/* check our GST_PTR_FORMAT printf extension stuff */
+GST_START_TEST (info_ptr_format_printf_extension)
+{
+  /* set up our own log function to make sure the code in gstinfo is actually
+   * executed without GST_DEBUG being set or it being output to stdout */
+  gst_debug_remove_log_function (gst_debug_log_default);
+  gst_debug_add_log_function (printf_extension_log_func, NULL);
+
+  gst_debug_set_default_threshold (GST_LEVEL_LOG);
+
+  /* NULL object */
+  GST_LOG ("NULL: %" GST_PTR_FORMAT, NULL);
+
+  /* structure */
+  {
+    GstStructure *s;
+
+    s = gst_structure_new ("foo/bar", "number", G_TYPE_INT, 1,
+        "string", G_TYPE_STRING, "s", "float-number", G_TYPE_DOUBLE,
+        (gdouble) 424242.42, NULL);
+
+    GST_LOG ("STRUCTURE: %" GST_PTR_FORMAT, s);
+    gst_structure_free (s);
+  }
+
+  /* message */
+  {
+    GstMessage *msg;
+
+    msg = gst_message_new_element (NULL,
+        gst_structure_new ("redirect", "new-location", G_TYPE_STRING,
+            "http://foobar.com/r0x0r.ogg", "minimum-bitrate", G_TYPE_INT,
+            56000, NULL));
+
+    GST_LOG ("MESSAGE: %" GST_PTR_FORMAT, msg);
+    gst_message_unref (msg);
+  }
+
+#if 0
+  /* TODO: GObject */
+  {
+    GST_LOG ("GOBJECT: %" GST_PTR_FORMAT, obj);
+  }
+
+  /* TODO: GstObject */
+  {
+    GST_LOG ("GSTOBJECT: %" GST_PTR_FORMAT, obj);
+  }
+
+  /* TODO: GstPad */
+  {
+    GST_LOG ("PAD: %" GST_PTR_FORMAT, pad);
+  }
+
+  /* TODO: GstCaps */
+  {
+    GST_LOG ("PAD: %" GST_PTR_FORMAT, pad);
+  }
+#endif
+
+  /* clean up */
+  gst_debug_set_default_threshold (GST_LEVEL_NONE);
+  gst_debug_add_log_function (gst_debug_log_default, NULL);
+  gst_debug_remove_log_function (printf_extension_log_func);
+}
+
+GST_END_TEST;
+
 /* check our GST_SEGMENT_FORMAT printf extension stuff */
 GST_START_TEST (info_segment_format_printf_extension)
 {
   /* set up our own log function to make sure the code in gstinfo is actually
    * executed without GST_DEBUG being set or it being output to stdout */
   gst_debug_remove_log_function (gst_debug_log_default);
-  gst_debug_add_log_function (segment_printf_extension_log_func, NULL);
+  gst_debug_add_log_function (printf_extension_log_func, NULL);
 
   gst_debug_set_default_threshold (GST_LEVEL_LOG);
 
@@ -105,7 +173,7 @@ GST_START_TEST (info_segment_format_printf_extension)
   /* clean up */
   gst_debug_set_default_threshold (GST_LEVEL_NONE);
   gst_debug_add_log_function (gst_debug_log_default, NULL);
-  gst_debug_remove_log_function (segment_printf_extension_log_func);
+  gst_debug_remove_log_function (printf_extension_log_func);
 }
 
 GST_END_TEST;
@@ -120,6 +188,7 @@ gst_info_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, info_segment_format_printf_extension);
+  tcase_add_test (tc_chain, info_ptr_format_printf_extension);
 
   return s;
 }

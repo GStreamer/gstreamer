@@ -491,6 +491,22 @@ gst_debug_print_object (gpointer ptr)
   if (G_IS_OBJECT (object)) {
     return g_strdup_printf ("<%s@%p>", G_OBJECT_TYPE_NAME (object), object);
   }
+  if (GST_IS_MESSAGE (object)) {
+    GstMessage *msg = GST_MESSAGE_CAST (object);
+    gchar *s, *ret;
+
+    if (msg->structure) {
+      s = gst_structure_to_string (msg->structure);
+    } else {
+      s = g_strdup ("(NULL)");
+    }
+
+    ret = g_strdup_printf ("%s message from element '%s': %s",
+        GST_MESSAGE_TYPE_NAME (msg), (msg->src != NULL) ?
+        GST_ELEMENT_NAME (msg->src) : "(NULL)", s);
+    g_free (s);
+    return ret;
+  }
 
   return g_strdup_printf ("%p", ptr);
 }

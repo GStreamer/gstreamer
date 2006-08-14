@@ -1,3 +1,12 @@
+2006-08-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstinfo.c: (gst_debug_print_object):
+	  Make GST_PTR_FORMAT print messages as well.
+
+	* tests/check/gst/gstinfo.c: (printf_extension_log_func),
+	(GST_START_TEST), (gst_info_suite):
+	  More tests.
+
 2006-08-14  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstelementfactory.c: (gst_element_register):
