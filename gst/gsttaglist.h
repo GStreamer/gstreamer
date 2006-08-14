@@ -315,6 +315,21 @@ gboolean        gst_tag_list_get_date_index     (const GstTagList     * list,
  */
 #define GST_TAG_COMMENT			"comment"
 /**
+ * GST_TAG_EXTENDED_COMMENT:
+ *
+ * key/value text commenting the data (string)
+ *
+ * Must be in the form of 'key=comment' or
+ * 'key[lc]=comment' where 'lc' is an ISO-639
+ * language code.
+ *
+ * This tag is used for unknown Vorbis comment tags,
+ * unknown APE tags and certain ID3v2 comment fields.
+ *
+ * Since: 0.10.10
+ */
+#define GST_TAG_EXTENDED_COMMENT	"extended-comment"
+/**
  * GST_TAG_TRACK_NUMBER:
  *
  * track number inside a collection (unsigned integer)

@@ -1,5 +1,12 @@
 2006-08-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttaglist.c: (_gst_tag_initialize):
+	* gst/gsttaglist.h:
+	  API: add GST_TAG_EXTENDED_COMMENT (#350935).
+
+2006-08-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstinfo.c: (gst_debug_print_object):
 	  Make GST_PTR_FORMAT print messages as well.
 

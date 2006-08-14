@@ -113,7 +113,12 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_COMMENT, GST_TAG_FLAG_META,
       G_TYPE_STRING,
       _("comment"),
-      _("free text commenting the data"), gst_tag_merge_strings_with_comma);
+      _("free text commenting the data"), gst_tag_merge_use_first);
+  gst_tag_register (GST_TAG_EXTENDED_COMMENT, GST_TAG_FLAG_META,
+      G_TYPE_STRING,
+      _("extended comment"),
+      _("free text commenting the data in key=value or key[en]=comment form"),
+      gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_TRACK_NUMBER, GST_TAG_FLAG_META,
       G_TYPE_UINT,
       _("track number"),
