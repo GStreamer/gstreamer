@@ -1,3 +1,15 @@
+2006-08-14  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_submit_buffer),
+	(gst_ogg_demux_get_next_page), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_read_chain), (gst_ogg_demux_loop):
+	Add some more debug info.
+	Don't crash when a seek failed.
+	Actually return the result of the seek instead of TRUE.
+	Ignore multiple BOS pages with the same serial so that we don't create
+	the same stream multiple times.
+	Post an error when we fail to do the initial seek.
+
 2006-08-13  Wim Taymans  <wim@fluendo.com>
 
 	* ext/alsa/gstalsa.c: (gst_alsa_detect_rates),

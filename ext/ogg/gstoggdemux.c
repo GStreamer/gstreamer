@@ -1494,6 +1494,8 @@ gst_ogg_demux_submit_buffer (GstOggDemux * ogg, GstBuffer * buffer)
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
 
+  GST_DEBUG_OBJECT (ogg, "submitting %u bytes", size);
+
   oggbuffer = ogg_sync_buffer (&ogg->sync, size);
   memcpy (oggbuffer, data, size);
   ogg_sync_wrote (&ogg->sync, size);
@@ -1584,6 +1586,8 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary)
     }
 
     more = ogg_sync_pageseek (&ogg->sync, og);
+
+    GST_LOG_OBJECT (ogg, "pageseek gave %ld", more);
 
     if (more < 0) {
       GST_LOG_OBJECT (ogg, "skipped %ld bytes", more);
@@ -2069,6 +2073,11 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
 
   res = gst_ogg_demux_do_seek (ogg, ogg->segment.last_stop, accurate, &chain);
 
+  /* seek failed, make sure we continue the current chain */
+  if (!res) {
+    chain = ogg->current_chain;
+  }
+
   /* now we have a new position, prepare for streaming again */
   {
     GstEvent *event;
@@ -2119,7 +2128,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
   /* streaming can continue now */
   GST_PAD_STREAM_UNLOCK (ogg->sinkpad);
 
-  return TRUE;
+  return res;
 
 error:
   {
@@ -2240,6 +2249,12 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
     }
 
     serial = ogg_page_serialno (&op);
+    if (gst_ogg_chain_get_stream (chain, serial) != NULL) {
+      GST_WARNING_OBJECT (ogg, "found serial %08x BOS page twice, ignoring",
+          serial);
+      continue;
+    }
+
     pad = gst_ogg_chain_new_stream (chain, serial);
     gst_ogg_pad_submit_page (pad, &op);
   }
@@ -2769,8 +2784,9 @@ gst_ogg_demux_loop (GstOggPad * pad)
 
   if (ogg->need_chains) {
     gboolean got_chains;
+    gboolean res;
 
-    /* this is the only place where we write chains */
+    /* this is the only place where we write chains and thus need to lock. */
     GST_CHAIN_LOCK (ogg);
     ogg->chain_error = GST_FLOW_OK;
     got_chains = gst_ogg_demux_find_chains (ogg);
@@ -2787,9 +2803,12 @@ gst_ogg_demux_loop (GstOggPad * pad)
     GST_OBJECT_UNLOCK (ogg);
 
     /* and seek to configured positions without FLUSH */
-    gst_ogg_demux_perform_seek (ogg, event);
+    res = gst_ogg_demux_perform_seek (ogg, event);
     if (event)
       gst_event_unref (event);
+
+    if (!res)
+      goto seek_failed;
   }
 
   if (ogg->offset == ogg->length) {
@@ -2825,6 +2844,13 @@ chain_read_failed:
   {
     GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL), ("could not read chains"));
     ret = ogg->chain_error;
+    goto pause;
+  }
+seek_failed:
+  {
+    GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL),
+        ("failed to start demuxing ogg"));
+    ret = GST_FLOW_ERROR;
     goto pause;
   }
 eos:
