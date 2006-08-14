@@ -3,10 +3,10 @@
   <description>multipart stream manipulation</description>
   <filename>../../gst/multipart/.libs/libgstmultipart.so</filename>
   <basename>libgstmultipart.so</basename>
-  <version>0.10.3.1</version>
+  <version>0.10.4</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,7 +14,7 @@
       <longname>Multipart demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>demux multipart streams</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Sjoerd Simons &lt;sjoerd@luon.net&gt;</author>
     </element>
     <element>
       <name>multipartmux</name>

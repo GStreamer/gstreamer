@@ -1,3 +1,10 @@
+=== release 0.10.4 ===
+
+2006-08-14  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.4, "Dear Leader"
+
 2006-08-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	Patch by: Edward Hervey <edward@fluendo.com>
@@ -87,8 +94,8 @@
 
 	* ext/ladspa/gstsignalprocessor.c: (gst_signal_processor_setcaps),
 	(gst_signal_processor_process):
-          don't query buffer-frames from caps, add lots of debug-log,
-          try fix for assert (#349189)
+	  don't query buffer-frames from caps, add lots of debug-log,
+	  try fix for assert (#349189)
 
 2006-07-31  Wim Taymans  <wim@fluendo.com>
 
@@ -105,8 +112,8 @@
 	(gst_signal_processor_sink_activate_push),
 	(gst_signal_processor_src_activate_pull),
 	(gst_signal_processor_change_state):
-          Add debugs logs here and there, add more error handling, add some
-          FIXME comments, filed #349189
+	 Add debugs logs here and there, add more error handling, add some
+	 FIXME comments, filed #349189
 
 2006-07-29  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
@@ -409,7 +416,7 @@
 
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
-          Add annodex and icydemux, cleanup the sections a bit
+	  Add annodex and icydemux, cleanup the sections a bit
 
 2006-07-19  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -422,8 +429,8 @@
 2006-07-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavimux.c: (gst_avi_mux_vidsink_set_caps):
-          Respect mpegversion for "video/mpeg" and give message in case of
-          unhandled versions.
+	  Respect mpegversion for "video/mpeg" and give message in case of
+	  unhandled versions.
 
 2006-07-17  Wim Taymans  <wim@fluendo.com>
 
@@ -1016,18 +1023,18 @@
 	* sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_class_init),
 	(gst_sunaudiosink_init), (gst_sunaudiosink_prepare),
 	(gst_sunaudiosink_write):
-	Attached find a patch that fixes a number of bugs with the SunAudio mixer
-	plugin and fixes #344101:
-	1. The gst_sunaudiomixer_ctrl_build_list kept appending the same 3 tracks onto 
-	   the tracklist causing gnome-volume-control's preferences dialog to be messed
-	   up and would core dump if you checked/unchecked any item.
-	2. We weren't previously setting the MUTE flag properly.  Fixing this makes 
-	   gnome-volume-control work better.
-	3. Now we properly define the input track to be GST_MIXER_TRACK_INPUT and
-	   the monitor to be GST_MIXER_TRACK_OUTPUT, so that makes gnome-volume-control
-	   look better.
+	Attached find a patch that fixes a number of bugs with the SunAudio
+	mixer plugin and fixes #344101:
+	1. The gst_sunaudiomixer_ctrl_build_list kept appending the same 3
+	   tracks onto the tracklist causing gnome-volume-control's preferences
+	   dialog to be messed up and would core dump if you checked/unchecked
+	   any item.
+	2. We weren't previously setting the MUTE flag properly.  Fixing this
+	   makes gnome-volume-control work better.
+	3. Now we properly define the input track to be GST_MIXER_TRACK_INPUT
+	   and the monitor to be GST_MIXER_TRACK_OUTPUT, so that makes
+	   gnome-volume-control look better.
 	Also some minor cleanup in gstsunaudiosink.c.
-
 
 2006-06-09  Wim Taymans  <wim@fluendo.com>
 

@@ -133,7 +133,7 @@
 <TYPE>gchararray</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>multicast_group</NICK>
+<NICK>Multicast Group</NICK>
 <BLURB>The Address of multicast group to join.</BLURB>
 <DEFAULT>"0.0.0.0"</DEFAULT>
 </ARG>
@@ -143,7 +143,7 @@
 <TYPE>gint</TYPE>
 <RANGE>[0,65535]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>port</NICK>
+<NICK>Port</NICK>
 <BLURB>The port to receive the packets from, 0=allocate.</BLURB>
 <DEFAULT>4951</DEFAULT>
 </ARG>
@@ -163,9 +163,19 @@
 <TYPE>gint</TYPE>
 <RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>socket handle</NICK>
+<NICK>Socket Handle</NICK>
 <BLURB>Socket to use for UDP reception. (-1 == allocate).</BLURB>
 <DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUDPSrc::buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>Size of the kernel receive buffer in bytes, 0=default.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -13362,9 +13372,9 @@
 <NAME>GstMultipartDemux::autoscan</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
-<FLAGS>rwx</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>autoscan</NICK>
-<BLURB>Try to autofind the prefix.</BLURB>
+<BLURB>Try to autofind the prefix (deprecated unused, see boundary).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -13374,8 +13384,8 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Boundary</NICK>
-<BLURB>The boundary string separating data.</BLURB>
-<DEFAULT>"ThisRandomString"</DEFAULT>
+<BLURB>The boundary string separating data, automatic if NULL.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
