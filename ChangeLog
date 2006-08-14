@@ -1,3 +1,11 @@
+2006-08-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Patch by: Edward Hervey (edward at fluendo dot com)
+
+	* ext/dvdread/dvdreadsrc.c: (plugin_init):
+	Put debug category initialization before use of GST_DEBUG, in order
+	to remove a fatal warning.  Fixes #350895
+
 2006-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/dvdsub/gstdvdsubdec.c: (plugin_init):

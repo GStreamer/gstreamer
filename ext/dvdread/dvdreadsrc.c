@@ -1572,14 +1572,14 @@ gst_dvd_read_src_do_init (GType dvdreadsrc_type)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (gstgst_dvd_read_src_debug, "dvdreadsrc", 0,
+      "DVD reader element based on dvdreadsrc");
+
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
       LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 #endif /* ENABLE_NLS */
-
-  GST_DEBUG_CATEGORY_INIT (gstgst_dvd_read_src_debug, "dvdreadsrc", 0,
-      "DVD reader element based on dvdreadsrc");
 
   if (!gst_element_register (plugin, "dvdreadsrc", GST_RANK_SECONDARY,
           GST_TYPE_DVD_READ_SRC)) {
