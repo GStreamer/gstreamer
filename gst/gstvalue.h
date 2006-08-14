@@ -203,7 +203,11 @@ G_BEGIN_DECLS
 /**
  * GST_TYPE_LIST:
  *
- * a #GValue type that represents an unordered list of #GValue values
+ * a #GValue type that represents an unordered list of #GValue values. This
+ * is used for example to express a list of possible values for a field in
+ * a caps structure, like a list of possible sample rates, of which only one
+ * will be chosen in the end. This means that all values in the list are
+ * meaningful on their own.
  *
  * Returns: the #GType of GstValueList (which is not explicitly typed)
  */
@@ -212,7 +216,12 @@ G_BEGIN_DECLS
 /**
  * GST_TYPE_ARRAY:
  *
- * a #GValue type that represents an ordered list of #GValue values
+ * a #GValue type that represents an ordered list of #GValue values. This is
+ * used to express a set of values that is meaningful only in their specific
+ * combination and order of values. Each value on its own is not particularly
+ * meaningful, only the ordered array in its entirety is meaningful. This is
+ * used for example to express channel layouts for multichannel audio where
+ * each channel needs to be mapped to a position in the room.
  *
  * Returns: the #GType of GstArrayList (which is not explicitly typed)
  */

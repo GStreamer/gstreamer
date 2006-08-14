@@ -1,3 +1,11 @@
+2006-08-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gststructure.c:
+	  Fix typo in docs and re-wrap docs blurb to not exceed 80 chars/line.
+
+	* gst/gstvalue.h:
+	  Expand on the difference between arrays and lists as we use them.
+	  
 2006-08-14  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_change_state):

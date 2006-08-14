@@ -24,27 +24,29 @@
  * @short_description: Generic structure containing fields of names and values
  * @see_also: #GstCaps, #GstMessage, #GstEvent, #GstQuery
  *
- * A #GstStructure is a collection of key/value pairs. The keys are expressed as
- * GQuarks and the values can be of any GType.
+ * A #GstStructure is a collection of key/value pairs. The keys are expressed
+ * as GQuarks and the values can be of any GType.
  *
  * In addition to the key/value pairs, a #GstStructure also has a name.
  * 
- * #GstStructure is used by various GStreamer subsystems to store information in
- * a flexible an extensible way. A #GstStructure does not have a refcount because it
- * usually is part of a higher level object such as #GstCaps. It provides a means to 
- * enforce mutability using the refcount of the parent with the 
- * gst_structure_set_parent_refcount() method.
+ * #GstStructure is used by various GStreamer subsystems to store information
+ * in a flexible and extensible way. A #GstStructure does not have a refcount
+ * because it usually is part of a higher level object such as #GstCaps. It
+ * provides a means to enforce mutability using the refcount of the parent
+ * with the gst_structure_set_parent_refcount() method.
  *
- * A #GstStructure can be created with gst_structure_empty_new() or gst_structure_new(),
- * which both take a name and an optional set of key/value pairs along with the types
- * of the values.
+ * A #GstStructure can be created with gst_structure_empty_new() or
+ * gst_structure_new(), which both take a name and an optional set of
+ * key/value pairs along with the types of the values.
  * 
- * Field values can be changed with gst_structure_set_value() or gst_structure_set().
+ * Field values can be changed with gst_structure_set_value() or
+ * gst_structure_set().
  *
- * Field values can be retrieved with gst_structure_get_value() or the more convenient
- * gst_structure_get_*() functions.
+ * Field values can be retrieved with gst_structure_get_value() or the more
+ * convenient gst_structure_get_*() functions.
  *
- * Fields can be removed with gst_structure_remove_field() or gst_structure_remove_fields().
+ * Fields can be removed with gst_structure_remove_field() or
+ * gst_structure_remove_fields().
  *
  * Last reviewed on 2005-11-09 (0.9.4)
  */
@@ -975,8 +977,8 @@ gst_structure_has_field_typed (const GstStructure * structure,
  * and has the correct type.
  *
  * Returns: TRUE if the value could be set correctly. If there was no field
- * with @fieldname or the existing field did not contain a boolean, this function
- * returns FALSE.
+ * with @fieldname or the existing field did not contain a boolean, this
+ * function returns FALSE.
  */
 gboolean
 gst_structure_get_boolean (const GstStructure * structure,
