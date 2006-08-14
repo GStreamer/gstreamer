@@ -1,6 +1,15 @@
 2006-08-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-	Patch by: Edward Hervey (edward at fluendo dot com)
+	Patch by: Wim Taymans <wim at fluendo dot com>
+
+	* ext/a52dec/gsta52dec.c: (gst_a52dec_sink_event):
+	  Instead of forwarding the event in the wrong format, unref it and set
+	  a boolean that we still need to send it in the streaming thread.
+	  Fixes #350554
+
+2006-08-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Patch by: Edward Hervey <edward at fluendo dot com>
 
 	* ext/dvdread/dvdreadsrc.c: (plugin_init):
 	Put debug category initialization before use of GST_DEBUG, in order

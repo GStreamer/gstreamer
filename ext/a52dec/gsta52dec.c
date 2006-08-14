@@ -366,16 +366,18 @@ gst_a52dec_sink_event (GstPad * pad, GstEvent * event)
           NULL);
       if (format != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (val)) {
         GST_WARNING ("No time in newsegment event %p", event);
+        gst_event_unref (event);
+        a52dec->sent_segment = FALSE;
       } else {
         a52dec->time = val;
         a52dec->sent_segment = TRUE;
+        ret = gst_pad_event_default (pad, event);
       }
 
       if (a52dec->cache) {
         gst_buffer_unref (a52dec->cache);
         a52dec->cache = NULL;
       }
-      ret = gst_pad_event_default (pad, event);
       break;
     }
     case GST_EVENT_TAG:
