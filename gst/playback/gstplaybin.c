@@ -38,6 +38,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 #define GST_IS_PLAY_BIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAY_BIN))
 
 #define VOLUME_MAX_DOUBLE 10.0
+#define CONNECTION_SPEED_DEFAULT 0
 
 typedef struct _GstPlayBin GstPlayBin;
 typedef struct _GstPlayBinClass GstPlayBinClass;
@@ -67,6 +68,9 @@ struct _GstPlayBin
 
   /* font description */
   gchar *font_desc;
+
+  /* connection speed in bits/sec (0 = unknown) */
+  guint connection_speed;
 };
 
 struct _GstPlayBinClass
@@ -83,7 +87,8 @@ enum
   ARG_VIS_PLUGIN,
   ARG_VOLUME,
   ARG_FRAME,
-  ARG_FONT_DESC
+  ARG_FONT_DESC,
+  ARG_CONNECTION_SPEED
 };
 
 /* signals */
@@ -109,6 +114,7 @@ static gboolean gst_play_bin_send_event (GstElement * element,
     GstEvent * event);
 static GstStateChangeReturn gst_play_bin_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_play_bin_handle_message (GstBin * bin, GstMessage * message);
 
 static GstElementClass *parent_class;
 
@@ -188,6 +194,17 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Subtitle font description",
           "Pango font description of font "
           "to be used for subtitle rendering", NULL, G_PARAM_WRITABLE));
+  /**
+   * GstPlayBin:connection-speed
+   *
+   * Network connection speed in kbps (0 = unknown)
+   *
+   * Since: 0.10.10
+   **/
+  g_object_class_install_property (gobject_klass, ARG_CONNECTION_SPEED,
+      g_param_spec_uint ("connection-speed", "Connection Speed",
+          "Network connection speed in kbps (0 = unknown)",
+          0, G_MAXUINT, CONNECTION_SPEED_DEFAULT, G_PARAM_READWRITE));
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_bin_dispose);
 
@@ -196,6 +213,9 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_bin_change_state);
   gstelement_klass->send_event = GST_DEBUG_FUNCPTR (gst_play_bin_send_event);
+
+  gstbin_klass->handle_message =
+      GST_DEBUG_FUNCPTR (gst_play_bin_handle_message);
 
   playbasebin_klass->setup_output_pads = setup_sinks;
 }
@@ -376,8 +396,6 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
 {
   GstPlayBin *play_bin;
 
-  g_return_if_fail (GST_IS_PLAY_BIN (object));
-
   play_bin = GST_PLAY_BIN (object);
 
   switch (prop_id) {
@@ -486,6 +504,9 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
             "font-desc", g_value_get_string (value), NULL);
       }
       break;
+    case ARG_CONNECTION_SPEED:
+      play_bin->connection_speed = g_value_get_uint (value) * 1000;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -497,8 +518,6 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstPlayBin *play_bin;
-
-  g_return_if_fail (GST_IS_PLAY_BIN (object));
 
   play_bin = GST_PLAY_BIN (object);
 
@@ -517,6 +536,9 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_FRAME:
       gst_value_set_mini_object (value, GST_MINI_OBJECT (play_bin->frame));
+      break;
+    case ARG_CONNECTION_SPEED:
+      g_value_set_uint (value, play_bin->connection_speed / 1000);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1347,6 +1369,104 @@ gst_play_bin_send_event (GstElement * element, GstEvent * event)
   }
 
   return res;
+}
+
+static void
+value_list_append_structure_list (GValue * list_val, GstStructure ** first,
+    GList * structure_list)
+{
+  GList *l;
+
+  for (l = structure_list; l != NULL; l = l->next) {
+    GValue val = { 0, };
+
+    if (*first == NULL)
+      *first = gst_structure_copy ((GstStructure *) l->data);
+
+    g_value_init (&val, GST_TYPE_STRUCTURE);
+    g_value_take_boxed (&val, gst_structure_copy ((GstStructure *) l->data));
+    gst_value_list_append_value (list_val, &val);
+    g_value_unset (&val);
+  }
+}
+
+/* if it's a redirect message with multiple redirect locations we might
+ * want to pick a different 'best' location depending on the required
+ * bitrates and the connection speed */
+static GstMessage *
+gst_play_bin_handle_redirect_message (GstPlayBin * playbin, GstMessage * msg)
+{
+  const GValue *locations_list, *location_val;
+  GstMessage *new_msg;
+  GstStructure *new_structure = NULL;
+  GList *l_good = NULL, *l_neutral = NULL, *l_bad = NULL;
+  GValue new_list = { 0, };
+  guint size, i;
+
+  GST_DEBUG_OBJECT (playbin, "redirect message: %" GST_PTR_FORMAT, msg);
+  GST_DEBUG_OBJECT (playbin, "connection speed: %u", playbin->connection_speed);
+
+  if (playbin->connection_speed == 0 || msg->structure == NULL)
+    return msg;
+
+  locations_list = gst_structure_get_value (msg->structure, "locations");
+  if (locations_list == NULL)
+    return msg;
+
+  size = gst_value_list_get_size (locations_list);
+  if (size < 2)
+    return msg;
+
+  /* maintain existing order as much as possible, just sort references
+   * with too high a bitrate to the end (the assumption being that if
+   * bitrates are given they are given for all interesting streams and
+   * that the you-need-at-least-version-xyz redirect has the same bitrate
+   * as the lowest referenced redirect alternative) */
+  for (i = 0; i < size; ++i) {
+    const GstStructure *s;
+    gint bitrate = 0;
+
+    location_val = gst_value_list_get_value (locations_list, i);
+    s = (const GstStructure *) g_value_get_boxed (location_val);
+    if (!gst_structure_get_int (s, "minimum-bitrate", &bitrate) || bitrate <= 0) {
+      GST_DEBUG_OBJECT (playbin, "no bitrate: %" GST_PTR_FORMAT, s);
+      l_neutral = g_list_append (l_neutral, (gpointer) s);
+    } else if (bitrate > playbin->connection_speed) {
+      GST_DEBUG_OBJECT (playbin, "bitrate too high: %" GST_PTR_FORMAT, s);
+      l_bad = g_list_append (l_bad, (gpointer) s);
+    } else if (bitrate <= playbin->connection_speed) {
+      GST_DEBUG_OBJECT (playbin, "bitrate OK: %" GST_PTR_FORMAT, s);
+      l_good = g_list_append (l_good, (gpointer) s);
+    }
+  }
+
+  g_value_init (&new_list, GST_TYPE_LIST);
+  value_list_append_structure_list (&new_list, &new_structure, l_good);
+  value_list_append_structure_list (&new_list, &new_structure, l_neutral);
+  value_list_append_structure_list (&new_list, &new_structure, l_bad);
+  gst_structure_set_value (new_structure, "locations", &new_list);
+  g_value_unset (&new_list);
+
+  g_list_free (l_good);
+  g_list_free (l_neutral);
+  g_list_free (l_bad);
+
+  new_msg = gst_message_new_element (msg->src, new_structure);
+  gst_message_unref (msg);
+
+  GST_DEBUG_OBJECT (playbin, "new redirect message: %" GST_PTR_FORMAT, new_msg);
+  return new_msg;
+}
+
+static void
+gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
+{
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ELEMENT && msg->structure != NULL
+      && gst_structure_has_name (msg->structure, "redirect")) {
+    msg = gst_play_bin_handle_redirect_message (GST_PLAY_BIN (bin), msg);
+  }
+
+  GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
 }
 
 static GstStateChangeReturn
