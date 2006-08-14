@@ -1,3 +1,10 @@
+=== release 0.10.4 ===
+
+2006-08-14  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.4, "Metal Molly"
+
 2006-08-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	Patch by: Wim Taymans <wim at fluendo dot com>
@@ -411,7 +418,7 @@
 	* win32/MANIFEST:
 	Add a manifest for futures ugly win32 releases.
 	* gst/iec958/ac3iec.c: (ac3iec_chain_raw):
-	Move bufcaps declaration at the begining of the instructions 
+	Move bufcaps declaration at the beginning of the instructions 
 	block.
 	
 2006-06-02  Stefan Kost  <ensonic@users.sf.net>
@@ -694,16 +701,18 @@
 	* gst/dvdsub/gstdvdsubdec.c: (gst_dvd_sub_dec_parse_subpic):
 	  use gst_guint64_to_gdouble for conversions
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_sync_stream_to_time):
-	  replace __FUNCTION__ which is not supported by MSVC by the current function name
+	  replace __FUNCTION__ which is not supported by MSVC by the current
+	  function name
 	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_reset):
 	  remove LL suffix by using G_GINT64_CONSTANT
-	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_parse_packhead),(gst_mpeg_parse_get_rate):
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_parse_packhead),
+	  (gst_mpeg_parse_get_rate):
 	  use gst_guint64_to_gdouble for conversions
 	* gst/mpegstream/gstmpegparse.h:
 	  remove LL suffix by using G_GINT64_CONSTANT
 	* win32/vs6:
-	  add project files for tagac3parse, asfdemux, dvdlpcmdec, dvdsub, iec958, lame,
-	  mad, mpegaudioparse, mpegstream, realmedia, synaesthesia
+	  add project files for tagac3parse, asfdemux, dvdlpcmdec, dvdsub,
+	  iec958, lame, mad, mpegaudioparse, mpegstream, realmedia, synaesthesia
 	
 2006-04-08  Stefan Kost  <ensonic@users.sf.net>
 

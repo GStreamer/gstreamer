@@ -1,4 +1,33 @@
-This is GStreamer Ugly Plug-ins 0.10.3, "Late Plane".
+This is GStreamer Ugly Plug-ins 0.10.4, "Metal Molly".
+
+Bugs fixed since 0.10.3:
+    
+      * 329184 : [lame] remove tag writing support
+      * 345694 : [dvdreadsrc] crash with 'who wants to be a millionnaire' ...
+      * 349035 : [asfdemux] should error out on encrypted WMV stream
+      * 341677 : massive memory leak with mpeg2 video in AVI
+      * 321609 : [mpegstream] flush packetizer cache on discontinuities
+      * 323658 : [id3mux] Changing of ID3 tags is broken in gstreamer
+      * 335288 : Totem Crashes on Certain .mpg Files
+      * 336550 : [asfdemux] only first video frames are displayed with som...
+      * 336824 : [mad] returns incorrect duration to queries in BYTES format
+      * 337834 : [dvddemux] seeking in DVDs doesn't work
+      * 339287 : [lame] segfault if EOS before setcaps
+      * 340594 : [mad] does not publish supported query formats
+      * 340710 : [lame] typo in event handler
+      * 341254 : [asfdemux] gst_tag_list_get_string_index assertion
+      * 342222 : [amrnb] can't play AMR Narrowband from cellphone (S.E. W800)
+      * 342594 : [mad] should send new-segment before pad_alloc_buffer
+      * 343763 : [asfdemux] broken audio and unrecognised 2nd audio stream
+      * 345184 : [mpeg2dec] crash with video with pixel_width and pixel_he...
+      * 347029 : Minor mistake in comment
+      * 347292 : [rmdemux] Realaudio files with 'cook' audio 'stutter'
+      * 348786 : lame put lots of 0's at start of mp3
+      * 350044 : [dvdsubdec] outputs buffers with negative durations
+      * 350895 : [dvdreadsrc] wrong use of debugging causes fatal warning
+      * 343627 : Add QoS to mpeg2dec
+      * 344667 : [siddec] sounds very broken
+      * 350554 : [patch] assertation failed trying to play .ac3 files
 
 Features since 0.10.2:
 

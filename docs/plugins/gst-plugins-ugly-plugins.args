@@ -324,7 +324,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Output Xing Header</NICK>
-<BLURB>Output Xing Header.</BLURB>
+<BLURB>Output Xing Header (BROKEN, use xingmux instead).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -445,7 +445,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>force_speed</NICK>
 <BLURB>force_speed.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -465,7 +465,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>memory</NICK>
 <BLURB>memory.</BLURB>
-<DEFAULT>Playsid Environment</DEFAULT>
+<DEFAULT>Bank Switching</DEFAULT>
 </ARG>
 
 <ARG>
@@ -485,17 +485,17 @@
 <FLAGS>rw</FLAGS>
 <NICK>mos8580</NICK>
 <BLURB>mos8580.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstSidDec::tune</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[1,100]</RANGE>
+<RANGE>[0,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>tune</NICK>
 <BLURB>tune.</BLURB>
-<DEFAULT>1</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
