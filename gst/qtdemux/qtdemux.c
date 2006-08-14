@@ -1963,6 +1963,9 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
 #define FOURCC_rmda     GST_MAKE_FOURCC('r','m','d','a')
 #define FOURCC_rdrf     GST_MAKE_FOURCC('r','d','r','f')
 #define FOURCC__gen     GST_MAKE_FOURCC(0xa9, 'g', 'e', 'n')
+#define FOURCC_rmdr     GST_MAKE_FOURCC('r','m','d','r')
+#define FOURCC_rmvc     GST_MAKE_FOURCC('r','m','v','c')
+#define FOURCC_qtim     GST_MAKE_FOURCC('q','t','i','m')
 
 static void qtdemux_dump_mvhd (GstQTDemux * qtdemux, void *buffer, int depth);
 static void qtdemux_dump_tkhd (GstQTDemux * qtdemux, void *buffer, int depth);
@@ -2908,6 +2911,86 @@ qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc)
 
 static void qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak);
 
+typedef struct
+{
+  GstStructure *structure;      /* helper for sort function */
+  gchar *location;
+  guint min_req_bitrate;
+  guint min_req_qt_version;
+} GstQtReference;
+
+static gint
+qtdemux_redirects_sort_func (gconstpointer a, gconstpointer b)
+{
+  GstQtReference *ref_a = (GstQtReference *) a;
+  GstQtReference *ref_b = (GstQtReference *) b;
+
+  if (ref_b->min_req_qt_version != ref_a->min_req_qt_version)
+    return ref_b->min_req_qt_version - ref_a->min_req_qt_version;
+
+  /* known bitrates go before unknown; higher bitrates go first */
+  return ref_b->min_req_bitrate - ref_a->min_req_bitrate;
+}
+
+static void
+qtdemux_process_redirects (GstQTDemux * qtdemux, GList * references)
+{
+  GstQtReference *best;
+  GstStructure *s;
+  GstMessage *msg;
+  GValue list_val = { 0, };
+  GList *l;
+
+  g_assert (references != NULL);
+
+  references = g_list_sort (references, qtdemux_redirects_sort_func);
+
+  best = (GstQtReference *) references->data;
+
+  g_value_init (&list_val, GST_TYPE_LIST);
+
+  for (l = references; l != NULL; l = l->next) {
+    GstQtReference *ref = (GstQtReference *) l->data;
+    GValue struct_val = { 0, };
+
+    ref->structure = gst_structure_new ("redirect",
+        "new-location", G_TYPE_STRING, ref->location, NULL);
+
+    if (ref->min_req_bitrate > 0) {
+      gst_structure_set (ref->structure, "minimum-bitrate", G_TYPE_INT,
+          ref->min_req_bitrate, NULL);
+    }
+
+    g_value_init (&struct_val, GST_TYPE_STRUCTURE);
+    g_value_set_boxed (&struct_val, ref->structure);
+    gst_value_list_append_value (&list_val, &struct_val);
+    g_value_unset (&struct_val);
+    /* don't free anything here yet, since we need best->structure below */
+  }
+
+  g_assert (best != NULL);
+  s = gst_structure_copy (best->structure);
+
+  if (g_list_length (references) > 1) {
+    gst_structure_set_value (s, "locations", &list_val);
+  }
+
+  g_value_unset (&list_val);
+
+  for (l = references; l != NULL; l = l->next) {
+    GstQtReference *ref = (GstQtReference *) l->data;
+
+    gst_structure_free (ref->structure);
+    g_free (ref->location);
+    g_free (ref);
+  }
+  g_list_free (references);
+
+  GST_INFO_OBJECT (qtdemux, "posting redirect message: %" GST_PTR_FORMAT, s);
+  msg = gst_message_new_element (GST_OBJECT (qtdemux), s);
+  gst_element_post_message (GST_ELEMENT (qtdemux), msg);
+}
+
 static void
 qtdemux_parse_tree (GstQTDemux * qtdemux)
 {
@@ -2921,20 +3004,48 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
 
     rmra = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_rmra);
     if (rmra) {
+      GList *redirects = NULL;
+
       rmda = qtdemux_tree_get_child_by_type (rmra, FOURCC_rmda);
-      if (rmda) {
+      while (rmda) {
+        GstQtReference ref = { NULL, NULL, 0, 0 };
+        GNode *rmdr, *rmvc;
+
+        if ((rmdr = qtdemux_tree_get_child_by_type (rmda, FOURCC_rmdr))) {
+          ref.min_req_bitrate =
+              QTDEMUX_GUINT32_GET ((guint8 *) rmdr->data + 12);
+          GST_LOG ("data rate atom, required bitrate = %u",
+              ref.min_req_bitrate);
+        }
+
+        if ((rmvc = qtdemux_tree_get_child_by_type (rmda, FOURCC_rmvc))) {
+          guint32 package = QTDEMUX_FOURCC_GET ((guint8 *) rmvc->data + 12);
+          guint version = QTDEMUX_GUINT32_GET ((guint8 *) rmvc->data + 16);
+          guint bitmask = QTDEMUX_GUINT32_GET ((guint8 *) rmvc->data + 20);
+          guint check_type = QTDEMUX_GUINT16_GET ((guint8 *) rmvc->data + 24);
+
+          GST_LOG ("version check atom [%" GST_FOURCC_FORMAT "], version=0x%08x"
+              ", mask=%08x, check_type=%u", GST_FOURCC_ARGS (package), version,
+              bitmask, check_type);
+          if (package == FOURCC_qtim && check_type == 0) {
+            ref.min_req_qt_version = version;
+          }
+        }
+
         rdrf = qtdemux_tree_get_child_by_type (rmda, FOURCC_rdrf);
         if (rdrf) {
-          GstStructure *s;
-          GstMessage *msg;
-
-          GST_LOG ("New location: %s", (char *) rdrf->data + 20);
-          s = gst_structure_new ("redirect", "new-location", G_TYPE_STRING,
-              (char *) rdrf->data + 20, NULL);
-          msg = gst_message_new_element (GST_OBJECT (qtdemux), s);
-          gst_element_post_message (GST_ELEMENT (qtdemux), msg);
-          return;
+          ref.location = g_strdup ((gchar *) rdrf->data + 20);
+          GST_LOG ("New location: %s", ref.location);
+          redirects = g_list_prepend (redirects, g_memdup (&ref, sizeof (ref)));
         }
+
+        /* look for others */
+        rmda = qtdemux_tree_get_sibling_by_type (rmda, FOURCC_rmda);
+      }
+
+      if (redirects != NULL) {
+        qtdemux_process_redirects (qtdemux, redirects);
+        return;
       }
     }
 

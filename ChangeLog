@@ -1,3 +1,11 @@
+2006-08-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_redirects_sort_func),
+	(qtdemux_process_redirects), (qtdemux_parse_tree):
+	  Extract all references/redirections if there is more
+	  than one and sort them; also extract minimum required
+	  bitrate information if available. (#350399)
+	  
 2006-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Michal Benes  <michal.benes at itonis tv>
