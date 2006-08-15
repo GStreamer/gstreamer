@@ -200,6 +200,20 @@ gst_gnome_vfs_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-playbin</FILE>
+<TITLE>playbin</TITLE>
+GstPlayBin
+<SUBSECTION Standard>
+GST_PLAY_BIN
+GST_PLAY_BIN_CLASS
+GST_IS_GST_PLAY_BIN
+GST_IS_GST_PLAY_BIN_CLASS
+GST_TYPE_GST_PLAY_BIN
+GstPlayBinClass
+gst_play_bin_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-tcpserversink</FILE>
 <TITLE>tcpserversink</TITLE>
 GstTCPServerSink

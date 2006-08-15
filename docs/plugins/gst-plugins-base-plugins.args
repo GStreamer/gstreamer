@@ -621,11 +621,21 @@
 <ARG>
 <NAME>GstPlayBin::volume</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,4]</RANGE>
+<RANGE>[0,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>volume</NICK>
 <BLURB>volume.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::connection-speed</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection Speed</NICK>
+<BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1526,5 +1536,15 @@
 <NICK>subtitle charset encoding</NICK>
 <BLURB>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTheoraParse::synchronization-points</NAME>
+<TYPE>GValueArray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synchronization points</NICK>
+<BLURB>An array of (granuletime, buffertime) pairs.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
