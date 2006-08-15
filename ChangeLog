@@ -1,5 +1,12 @@
 2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* libs/gst/check/gstcheck.h:
+	  Use const gchar * variables in fail_unless_equals_string
+	  macro to avoid compiler warnings (and don't use tabs for
+	  indenting).
+
+2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tools/gst-launch.c: (print_tag):
 	  More space on the left for the tag names, to cater
 	  for the 'extended comment' tag (not touching the

@@ -111,12 +111,12 @@ G_STMT_START {								\
 } G_STMT_END;
 #define assert_equals_uint64(a, b) fail_unless_equals_uint64(a, b)
 
-#define fail_unless_equals_string(a, b)					\
-G_STMT_START {								\
-  gchar * first = a;							\
-  gchar * second = b;							\
-  fail_unless(strcmp (first, second) == 0,				\
-    "'" #a "' (%s) is not equal to '" #b"' (%s)", first, second);	\
+#define fail_unless_equals_string(a, b)                             \
+G_STMT_START {                                                      \
+  const gchar * first = a;                                          \
+  const gchar * second = b;                                         \
+  fail_unless(strcmp (first, second) == 0,                          \
+    "'" #a "' (%s) is not equal to '" #b"' (%s)", first, second);   \
 } G_STMT_END;
 #define assert_equals_string(a, b) fail_unless_equals_string(a, b)
 
