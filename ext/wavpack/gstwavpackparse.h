@@ -23,6 +23,7 @@
 #define __GST_WAVPACK_PARSE_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -66,6 +67,8 @@ struct _GstWavpackParse
 
   GstSegment     segment;     /* the currently configured segment, in
                                * samples/audio frames (DEFAULT format) */
+
+  GstAdapter    *adapter;     /* when operating chain-based, otherwise NULL */
 
   /* Array of GstWavpackParseIndexEntry structs, mapping known
    * sample offsets to byte offsets. Is kept increasing without

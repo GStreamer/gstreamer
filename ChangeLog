@@ -1,5 +1,23 @@
 2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_class_init),
+	(gst_wavpack_parse_reset), (gst_wavpack_parse_get_src_query_types),
+	(gst_wavpack_parse_src_query),
+	(gst_wavpack_parse_handle_seek_event),
+	(gst_wavpack_parse_sink_event), (gst_wavpack_parse_init),
+	(gst_wavpack_parse_create_src_pad),
+	(gst_wavpack_parse_push_buffer), (gst_wavpack_parse_loop),
+	(gst_wavpack_parse_chain), (gst_wavpack_parse_sink_activate),
+	(gst_wavpack_parse_sink_activate_pull):
+	* ext/wavpack/gstwavpackparse.h:
+	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
+
+	  Make wavpackparse also work in push-mode (not seekable yet though);
+	  some small clean-ups along the way; add support for SEEKING query
+	  and query types function. (#351495).
+
+2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/libfame/gstlibfame.c: (gst_fameenc_get_property):
 	* sys/glsink/glimagesink.c: (gst_glimage_sink_get_property):
 	  Fix leaks (#351502).
