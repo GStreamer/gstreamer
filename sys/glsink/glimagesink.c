@@ -241,7 +241,7 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_DISPLAY:
-      g_value_set_string (value, g_strdup (glimage_sink->display_name));
+      g_value_set_string (value, glimage_sink->display_name);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -551,7 +551,7 @@ gst_fameenc_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, fameenc->fp.quality);
       break;
     case ARG_PATTERN:
-      g_value_set_string (value, g_strdup (fameenc->pattern));
+      g_value_set_string (value, fameenc->pattern);
       break;
     case ARG_FAME_VERBOSE:
       g_value_set_boolean (value, fameenc->verbose);
