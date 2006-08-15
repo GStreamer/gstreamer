@@ -266,9 +266,9 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
     }
 
     if (i == 0) {
-      g_print ("%15s: %s\n", gst_tag_get_nick (tag), str);
+      g_print ("%16s: %s\n", gst_tag_get_nick (tag), str);
     } else {
-      g_print ("               : %s\n", str);
+      g_print ("%16s: %s\n", "", str);
     }
 
     g_free (str);
