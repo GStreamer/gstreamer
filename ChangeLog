@@ -1,3 +1,12 @@
+2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Jens Granseuer <jensgr at gmx net>
+
+	* gconf/Makefile.am:
+	  Make --disable-schemas work right (they still need
+	  to be copied to the installation directory, just not
+	  applied). Fixes #351347 (also #344100).
+	  
 2006-08-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac: back to HEAD
