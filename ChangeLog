@@ -10,6 +10,8 @@
 	* gst/gsttaglist.c: (_gst_tag_initialize):
 	* gst/gsttaglist.h:
 	  API: add GST_TAG_EXTENDED_COMMENT (#350935).
+	  Also change merge function for GST_TAG_COMMENT to
+	  use_first.
 
 2006-08-14  Tim-Philipp Müller  <tim at centricular dot net>
 
