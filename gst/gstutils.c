@@ -99,7 +99,7 @@ gst_util_set_value_from_string (GValue * value, const gchar * value_str)
 
   switch (G_VALUE_TYPE (value)) {
     case G_TYPE_STRING:
-      g_value_set_string (value, g_strdup (value_str));
+      g_value_set_string (value, value_str);
       break;
     case G_TYPE_ENUM:
     case G_TYPE_INT:{

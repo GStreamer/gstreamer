@@ -1,5 +1,14 @@
 2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstutils.c: (gst_util_set_value_from_string):
+	  Fix memleak (#351502).
+
+	* tests/check/gst/gstutils.c: (GST_START_TEST), (gst_utils_suite):
+	  Add unit test for most of gst_util_set_value_from_string()
+	  (not that one would want to encourage use of this function).
+
+2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* libs/gst/check/gstcheck.h:
 	  Use const gchar * variables in fail_unless_equals_string
 	  macro to avoid compiler warnings (and don't use tabs for

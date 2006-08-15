@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
+ * Copyright (C) <2006> Tim-Philipp Müller <tim centricular net>
  *
  * gstutils.c: Unit test for functions in gstutils
  *
@@ -462,6 +463,133 @@ GST_START_TEST (test_element_unlink)
 
 GST_END_TEST;
 
+GST_START_TEST (test_set_value_from_string)
+{
+  GValue val = { 0, };
+
+  /* g_return_if_fail */
+  ASSERT_CRITICAL (gst_util_set_value_from_string (NULL, "xyz"));
+
+  g_value_init (&val, G_TYPE_STRING);
+  ASSERT_CRITICAL (gst_util_set_value_from_string (&val, NULL));
+  g_value_unset (&val);
+
+  /* string => string */
+  g_value_init (&val, G_TYPE_STRING);
+  gst_util_set_value_from_string (&val, "Y00");
+  fail_unless (g_value_get_string (&val) != NULL);
+  fail_unless_equals_string (g_value_get_string (&val), "Y00");
+  g_value_unset (&val);
+
+  /* string => int */
+  g_value_init (&val, G_TYPE_INT);
+  gst_util_set_value_from_string (&val, "987654321");
+  fail_unless (g_value_get_int (&val) == 987654321);
+  g_value_unset (&val);
+
+  g_value_init (&val, G_TYPE_INT);
+  ASSERT_CRITICAL (gst_util_set_value_from_string (&val, "xyz"));
+  g_value_unset (&val);
+
+  /* string => uint */
+  g_value_init (&val, G_TYPE_UINT);
+  gst_util_set_value_from_string (&val, "987654321");
+  fail_unless (g_value_get_uint (&val) == 987654321);
+  g_value_unset (&val);
+
+  /* CHECKME: is this really desired behaviour? (tpm) */
+  g_value_init (&val, G_TYPE_UINT);
+  gst_util_set_value_from_string (&val, "-999");
+  fail_unless (g_value_get_uint (&val) == ((guint) 0 - (guint) 999));
+  g_value_unset (&val);
+
+  g_value_init (&val, G_TYPE_UINT);
+  ASSERT_CRITICAL (gst_util_set_value_from_string (&val, "xyz"));
+  g_value_unset (&val);
+
+  /* string => long */
+  g_value_init (&val, G_TYPE_LONG);
+  gst_util_set_value_from_string (&val, "987654321");
+  fail_unless (g_value_get_long (&val) == 987654321);
+  g_value_unset (&val);
+
+  g_value_init (&val, G_TYPE_LONG);
+  ASSERT_CRITICAL (gst_util_set_value_from_string (&val, "xyz"));
+  g_value_unset (&val);
+
+  /* string => ulong */
+  g_value_init (&val, G_TYPE_ULONG);
+  gst_util_set_value_from_string (&val, "987654321");
+  fail_unless (g_value_get_ulong (&val) == 987654321);
+  g_value_unset (&val);
+
+  /* CHECKME: is this really desired behaviour? (tpm) */
+  g_value_init (&val, G_TYPE_ULONG);
+  gst_util_set_value_from_string (&val, "-999");
+  fail_unless (g_value_get_ulong (&val) == ((gulong) 0 - (gulong) 999));
+  g_value_unset (&val);
+
+  g_value_init (&val, G_TYPE_ULONG);
+  ASSERT_CRITICAL (gst_util_set_value_from_string (&val, "xyz"));
+  g_value_unset (&val);
+
+  /* string => boolean */
+  g_value_init (&val, G_TYPE_BOOLEAN);
+  gst_util_set_value_from_string (&val, "true");
+  fail_unless_equals_int (g_value_get_boolean (&val), TRUE);
+  g_value_unset (&val);
+
+  g_value_init (&val, G_TYPE_BOOLEAN);
+  gst_util_set_value_from_string (&val, "TRUE");
+  fail_unless_equals_int (g_value_get_boolean (&val), TRUE);
+  g_value_unset (&val);
+
+  g_value_init (&val, G_TYPE_BOOLEAN);
+  gst_util_set_value_from_string (&val, "false");
+  fail_unless_equals_int (g_value_get_boolean (&val), FALSE);
+  g_value_unset (&val);
+
+  g_value_init (&val, G_TYPE_BOOLEAN);
+  gst_util_set_value_from_string (&val, "FALSE");
+  fail_unless_equals_int (g_value_get_boolean (&val), FALSE);
+  g_value_unset (&val);
+
+  g_value_init (&val, G_TYPE_BOOLEAN);
+  gst_util_set_value_from_string (&val, "bleh");
+  fail_unless_equals_int (g_value_get_boolean (&val), FALSE);
+  g_value_unset (&val);
+
+#if 0
+  /* string => float (yay, localisation issues involved) */
+  g_value_init (&val, G_TYPE_FLOAT);
+  gst_util_set_value_from_string (&val, "987.654");
+  fail_unless (g_value_get_float (&val) >= 987.653 &&
+      g_value_get_float (&val) <= 987.655);
+  g_value_unset (&val);
+
+  g_value_init (&val, G_TYPE_FLOAT);
+  gst_util_set_value_from_string (&val, "987,654");
+  fail_unless (g_value_get_float (&val) >= 987.653 &&
+      g_value_get_float (&val) <= 987.655);
+  g_value_unset (&val);
+
+  /* string => double (yay, localisation issues involved) */
+  g_value_init (&val, G_TYPE_DOUBLE);
+  gst_util_set_value_from_string (&val, "987.654");
+  fail_unless (g_value_get_double (&val) >= 987.653 &&
+      g_value_get_double (&val) <= 987.655);
+  g_value_unset (&val);
+
+  g_value_init (&val, G_TYPE_DOUBLE);
+  gst_util_set_value_from_string (&val, "987,654");
+  fail_unless (g_value_get_double (&val) >= 987.653 &&
+      g_value_get_double (&val) <= 987.655);
+  g_value_unset (&val);
+#endif
+}
+
+GST_END_TEST;
+
 Suite *
 gst_utils_suite (void)
 {
@@ -481,6 +609,7 @@ gst_utils_suite (void)
 #endif
   tcase_add_test (tc_chain, test_element_found_tags);
   tcase_add_test (tc_chain, test_element_unlink);
+  tcase_add_test (tc_chain, test_set_value_from_string);
   return s;
 }
 
