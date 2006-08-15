@@ -1904,7 +1904,7 @@ gst_ximagesink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DISPLAY:
-      g_value_set_string (value, g_strdup (ximagesink->display_name));
+      g_value_set_string (value, ximagesink->display_name);
       break;
     case PROP_SYNCHRONOUS:
       g_value_set_boolean (value, ximagesink->synchronous);

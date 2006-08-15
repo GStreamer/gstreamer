@@ -2534,7 +2534,7 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
       g_value_set_int (value, xvimagesink->saturation);
       break;
     case ARG_DISPLAY:
-      g_value_set_string (value, g_strdup (xvimagesink->display_name));
+      g_value_set_string (value, xvimagesink->display_name);
       break;
     case ARG_SYNCHRONOUS:
       g_value_set_boolean (value, xvimagesink->synchronous);
