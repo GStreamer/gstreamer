@@ -220,7 +220,7 @@ G_STMT_START {							\
   _gst_check_raised_critical = FALSE;				\
   code;								\
   _fail_unless (_gst_check_raised_critical, __FILE__, __LINE__, \
-                "Expected g_critical, got nothing");            \
+                "Expected g_critical, got nothing", NULL);      \
   _gst_check_expecting_log = FALSE;				\
 } G_STMT_END
 
@@ -230,7 +230,7 @@ G_STMT_START {							\
   _gst_check_raised_warning = FALSE;				\
   code;								\
   _fail_unless (_gst_check_raised_warning, __FILE__, __LINE__,  \
-                "Expected g_warning, got nothing");             \
+                "Expected g_warning, got nothing", NULL);       \
   _gst_check_expecting_log = FALSE;				\
 } G_STMT_END
 

@@ -1,3 +1,9 @@
+2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/check/gstcheck.h:
+	  Fix ASSERT_CRITICAL and ASSERT_WARNING macros to actually
+	  print something when they fail.
+
 2006-08-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
