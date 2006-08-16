@@ -1,5 +1,11 @@
 2006-08-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	  Don't try to run annodex unit tests if the annodex
+	  plugin has not been built (Fixes #351116).
+
+2006-08-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/autodetect/gstautoaudiosink.c:
 	(gst_auto_audio_sink_find_best):
 	  When we can't find a usable audiosink, don't error out,

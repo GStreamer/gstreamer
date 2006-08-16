@@ -15,6 +15,14 @@ CLEANFILES = core.* test-registry.xml
 
 clean-local: clean-local-check
 
+if USE_ANNODEX
+check_annodex = \
+	elements/cmmldec \
+	elements/cmmlenc
+else
+check_annodex = 
+endif
+
 if USE_TAGLIB
 check_taglib = \
 	elements/id3v2mux \
@@ -24,11 +32,10 @@ check_taglib =
 endif
 
 check_PROGRAMS = \
+	$(check_annodex) \
 	elements/avimux \
 	elements/level \
 	elements/matroskamux \
-	elements/cmmldec \
-	elements/cmmlenc \
 	elements/icydemux \
 	$(check_taglib)
     
