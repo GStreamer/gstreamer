@@ -91,7 +91,10 @@ gst_ladspa_base_init (gpointer g_class)
     if (LADSPA_IS_PORT_AUDIO (p)) {
       gchar *name = g_strdup ((gchar *) desc->PortNames[j]);
 
-      g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-", '-');
+      GST_DEBUG ("LADSPA port name: \"%s\"", name);
+      g_strdelimit (name, " ", '_');
+      g_strcanon (name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "_-><=", '-');
+      GST_DEBUG ("GStreamer pad name: \"%s\"", name);
 
       if (LADSPA_IS_PORT_INPUT (p))
         gst_signal_processor_class_add_pad_template (gsp_class, name,
