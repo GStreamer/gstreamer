@@ -1,4 +1,17 @@
+2006-08-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
+
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_class_init):
+	* ext/wavpack/gstwavpackparse.c:
+	(gst_wavpack_parse_resync_adapter), (gst_wavpack_parse_chain):
+	  In push mode, re-sync to next wavpack header if sync is lost
+	  (#351557). Also use hyphens instead of underscores in
+	  GObject property names.
+
 2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
 
 	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_class_init),
 	(gst_wavpack_parse_reset), (gst_wavpack_parse_get_src_query_types),
@@ -10,8 +23,6 @@
 	(gst_wavpack_parse_chain), (gst_wavpack_parse_sink_activate),
 	(gst_wavpack_parse_sink_activate_pull):
 	* ext/wavpack/gstwavpackparse.h:
-	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
-
 	  Make wavpackparse also work in push-mode (not seekable yet though);
 	  some small clean-ups along the way; add support for SEEKING query
 	  and query types function. (#351495).
