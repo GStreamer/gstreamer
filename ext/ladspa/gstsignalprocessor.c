@@ -602,8 +602,6 @@ gst_signal_processor_flush (GstSignalProcessor * self)
 {
   GList *pads;
 
-  pads = GST_ELEMENT (self)->pads;
-
   for (pads = GST_ELEMENT (self)->pads; pads; pads = pads->next) {
     GstSignalProcessorPad *spad = (GstSignalProcessorPad *) pads->data;
 
@@ -708,6 +706,7 @@ gst_signal_processor_do_pushes (GstSignalProcessor * self)
   for (; srcpads; srcpads = srcpads->next) {
     GstSignalProcessorPad *spad = (GstSignalProcessorPad *) srcpads->data;
     GstFlowReturn ret = GST_FLOW_OK;
+    GstBuffer *buffer;
 
     if (!spad->pen) {
       g_warning ("Unexpectedly empty buffer pen for pad %s:%s",
@@ -715,14 +714,17 @@ gst_signal_processor_do_pushes (GstSignalProcessor * self)
       continue;
     }
 
-    ret = gst_pad_push (GST_PAD (spad), spad->pen);
+    /* take buffer from pen */
+    buffer = spad->pen;
+    spad->pen = NULL;
+
+    ret = gst_pad_push (GST_PAD (spad), buffer);
 
     if (ret != GST_FLOW_OK) {
       self->flow_state = ret;
       gst_signal_processor_flush (self);
       return;
     } else {
-      spad->pen = NULL;
       g_assert (self->pending_out > 0);
       self->pending_out--;
     }
