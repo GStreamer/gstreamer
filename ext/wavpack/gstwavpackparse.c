@@ -935,6 +935,34 @@ pause:
   }
 }
 
+static gboolean
+gst_wavpack_parse_resync_adapter (GstAdapter * adapter)
+{
+  const guint8 *buf;
+  guint avail = gst_adapter_available (adapter);
+  gchar *marker;
+
+  if (avail < 4)
+    return FALSE;
+
+  /* if the marker is at the beginning don't do the expensive search */
+  buf = gst_adapter_peek (adapter, 4);
+  if (memcmp (buf, "wvpk", 4) == 0)
+    return TRUE;
+
+  if (avail == 4)
+    return FALSE;
+
+  /* search for the marker in the complete content of the adapter */
+  buf = gst_adapter_peek (adapter, avail);
+  if (buf && (marker = g_strstr_len ((gchar *) buf, avail, "wvpk"))) {
+    gst_adapter_flush (adapter, marker - (gchar *) buf);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static GstFlowReturn
 gst_wavpack_parse_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -956,10 +984,11 @@ gst_wavpack_parse_chain (GstPad * pad, GstBuffer * buf)
   if (gst_adapter_available (wvparse->adapter) < sizeof (WavpackHeader))
     return ret;
 
+  if (!gst_wavpack_parse_resync_adapter (wvparse->adapter))
+    return ret;
+
   tmp_buf = gst_adapter_peek (wvparse->adapter, sizeof (WavpackHeader));
   gst_wavpack_read_header (&wph, (guint8 *) tmp_buf);
-
-  /* FIXME: should check for wavpack marker here and re-sync if not */
 
   while (gst_adapter_available (wvparse->adapter) >= wph.ckSize + 4 * 1 + 4) {
     GstBuffer *outbuf =
@@ -983,6 +1012,10 @@ gst_wavpack_parse_chain (GstPad * pad, GstBuffer * buf)
 
     if (gst_adapter_available (wvparse->adapter) >= sizeof (WavpackHeader)) {
       tmp_buf = gst_adapter_peek (wvparse->adapter, sizeof (WavpackHeader));
+
+      if (!gst_wavpack_parse_resync_adapter (wvparse->adapter))
+        break;
+
       gst_wavpack_read_header (&wph, (guint8 *) tmp_buf);
     }
   }

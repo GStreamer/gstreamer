@@ -238,7 +238,7 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
           "This enables lossy encoding! A value smaller than 2.0 disables this.",
           0.0, 24.0, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_CORRECTION_MODE,
-      g_param_spec_enum ("correction_mode", "Correction file mode",
+      g_param_spec_enum ("correction-mode", "Correction file mode",
           "Use this mode for correction file creation. Only works in lossy mode!",
           GST_TYPE_WAVPACK_ENC_CORRECTION_MODE, DEFAULT_CORRECTION_MODE,
           G_PARAM_READWRITE));
@@ -247,10 +247,10 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
           "Store MD5 hash of raw samples within the file.", FALSE,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_EXTRA_PROCESSING,
-      g_param_spec_boolean ("extra_processing", "Extra processing",
+      g_param_spec_boolean ("extra-processing", "Extra processing",
           "Extra encode processing.", FALSE, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_JOINT_STEREO_MODE,
-      g_param_spec_enum ("joint_stereo_mode", "Joint-Stereo mode",
+      g_param_spec_enum ("joint-stereo-mode", "Joint-Stereo mode",
           "Use this joint-stereo mode.", GST_TYPE_WAVPACK_ENC_JOINT_STEREO_MODE,
           DEFAULT_JS_MODE, G_PARAM_READWRITE));
 }
