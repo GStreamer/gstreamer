@@ -1,8 +1,20 @@
 2006-08-16  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Andy Wingo <wingo at pobox dot com>
+
+	* ext/ladspa/gstsignalprocessor.c: (gst_signal_processor_setup),
+	(gst_signal_processor_start), (gst_signal_processor_stop),
+	(gst_signal_processor_cleanup), (gst_signal_processor_setcaps),
+	(gst_signal_processor_pen_buffer), (gst_signal_processor_flush),
+	(gst_signal_processor_do_pulls), (gst_signal_processor_do_pushes),
+	(gst_signal_processor_change_state):
+	Make ladspa elements reusable. Fixes #350006.
+
+2006-08-16  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ladspa/gstladspa.c: (gst_ladspa_base_init):
 	Convert ' ' into '_'. Try to keep as many characters in the padtemplate
-	names as possible.
+	names as possible. Fixes #349901.
 
 2006-08-16  Wim Taymans  <wim@fluendo.com>
 
