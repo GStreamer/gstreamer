@@ -65,6 +65,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "clock-rate = (int) 8000, "
         "encoding-name = (string) \"AMR\", "
         "encoding-params = (string) \"1\", "
+        /* NOTE that all values must be strings in orde to be able to do SDP <->
+         * GstCaps mapping. */
         "octet-align = (string) \"1\", "
         "crc = (string) { \"0\", \"1\" }, "
         "robust-sorting = (string) \"0\", " "interleaving = (string) \"0\""

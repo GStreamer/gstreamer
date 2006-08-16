@@ -68,24 +68,25 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "clock-rate = (int) [1, MAX ], "
         "encoding-name = (string) \"mpeg4-generic\", "
         /* required string params */
-        "streamtype = (int) { \"4\", \"5\" }, " /* 4 = video, 5 = audio */
-        "profile-level-id = (int) [1,MAX], "
+        "streamtype = (string) { \"4\", \"5\" }, "      /* 4 = video, 5 = audio */
+        /* "profile-level-id = (string) [1,MAX], " */
         /* "config = (string) [1,MAX]" */
-        "mode = (string) { \"generic\", \"CELP-cbr\", \"CELP-vbr\", \"AAC-lbr\", \"AAC-hbr\" }, "
+        "mode = (string) { \"generic\", \"CELP-cbr\", \"CELP-vbr\", \"AAC-lbr\", \"AAC-hbr\" } "
         /* Optional general parameters */
-        "objecttype = (int) [1,MAX], " "constantsize = (int) [1,MAX], " /* constant size of each AU */
-        "constantduration = (int) [1,MAX], "    /* constant duration of each AU */
-        "maxdisplacement = (int) [1,MAX], "
-        "de-interleavebuffersize = (int) [1,MAX], "
+        /* "objecttype = (string) [1,MAX], " */
+        /* "constantsize = (string) [1,MAX], " *//* constant size of each AU */
+        /* "constantduration = (string) [1,MAX], " *//* constant duration of each AU */
+        /* "maxdisplacement = (string) [1,MAX], " */
+        /* "de-interleavebuffersize = (string) [1,MAX], " */
         /* Optional configuration parameters */
-        "sizelength = (int) [1, 16], "  /* max 16 bits, should be enough... */
-        "indexlength = (int) [1, 8], "
-        "indexdeltalength = (int) [1, 8], "
-        "ctsdeltalength = (int) [1, 64], "
-        "dtsdeltalength = (int) [1, 64], "
-        "randomaccessindication = (int) {0, 1}, "
-        "streamstateindication = (int) [0, 64], "
-        "auxiliarydatasizelength = (int) [0, 64]")
+        /* "sizelength = (string) [1, 16], " *//* max 16 bits, should be enough... */
+        /* "indexlength = (string) [1, 8], " */
+        /* "indexdeltalength = (string) [1, 8], " */
+        /* "ctsdeltalength = (string) [1, 64], " */
+        /* "dtsdeltalength = (string) [1, 64], " */
+        /* "randomaccessindication = (string) {0, 1}, " */
+        /* "streamstateindication = (string) [0, 64], " */
+        /* "auxiliarydatasizelength = (string) [0, 64]" */ )
     );
 
 GST_BOILERPLATE (GstRtpMP4GDepay, gst_rtp_mp4g_depay, GstBaseRTPDepayload,
