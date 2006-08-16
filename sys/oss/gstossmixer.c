@@ -66,12 +66,8 @@ gst_ossmixer_open (GstOssMixer * mixer)
   g_return_val_if_fail (mixer->mixer_fd == -1, FALSE);
 
   mixer->mixer_fd = open (mixer->device, O_RDWR);
-  if (mixer->mixer_fd == -1) {
-    /* this is valid. OSS devices don't need to expose a mixer */
-    GST_DEBUG ("Failed to open mixer device %s, mixing disabled: %s",
-        mixer->device, strerror (errno));
-    return FALSE;
-  }
+  if (mixer->mixer_fd == -1)
+    goto open_failed;
 
   /* get masks */
   if (ioctl (mixer->mixer_fd, SOUND_MIXER_READ_RECMASK, &mixer->recmask) < 0
@@ -79,23 +75,40 @@ gst_ossmixer_open (GstOssMixer * mixer)
       || ioctl (mixer->mixer_fd, SOUND_MIXER_READ_STEREODEVS,
           &mixer->stereomask) < 0
       || ioctl (mixer->mixer_fd, SOUND_MIXER_READ_DEVMASK, &mixer->devmask) < 0
-      || ioctl (mixer->mixer_fd, SOUND_MIXER_READ_CAPS, &mixer->mixcaps) < 0) {
+      || ioctl (mixer->mixer_fd, SOUND_MIXER_READ_CAPS, &mixer->mixcaps) < 0)
+    goto masks_failed;
+
+  /* get name, not fatal */
+  g_free (mixer->cardname);
+#ifdef SOUND_MIXER_INFO
+  if (ioctl (mixer->mixer_fd, SOUND_MIXER_INFO, &minfo) == 0) {
+    mixer->cardname = g_strdup (minfo.name);
+    GST_INFO ("Card name = %s", GST_STR_NULL (mixer->cardname));
+  } else
+#endif
+  {
+    mixer->cardname = g_strdup ("Unknown");
+    GST_INFO ("Unknown card name");
+  }
+  GST_INFO ("Opened mixer for device %s", mixer->device);
+
+  return TRUE;
+
+  /* ERRORS */
+open_failed:
+  {
+    /* this is valid. OSS devices don't need to expose a mixer */
+    GST_DEBUG ("Failed to open mixer device %s, mixing disabled: %s",
+        mixer->device, strerror (errno));
+    return FALSE;
+  }
+masks_failed:
+  {
     GST_DEBUG ("Failed to get device masks");
     close (mixer->mixer_fd);
     mixer->mixer_fd = -1;
     return FALSE;
   }
-
-  /* get name */
-#ifdef SOUND_MIXER_INFO
-  if (ioctl (mixer->mixer_fd, SOUND_MIXER_INFO, &minfo) == 0) {
-    mixer->cardname = g_strdup (minfo.name);
-  }
-#else
-  oss->cardname = g_strdup ("Unknown");
-#endif
-
-  return TRUE;
 }
 
 static void
@@ -166,11 +179,12 @@ gst_ossmixer_new (const char *device, GstOssMixerDirection dir)
 
   return ret;
 
+  /* ERRORS */
 error:
-  if (ret)
+  {
     gst_ossmixer_free (ret);
-
-  return NULL;
+    return NULL;
+  }
 }
 
 void

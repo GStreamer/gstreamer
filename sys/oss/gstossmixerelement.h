@@ -41,6 +41,7 @@ typedef struct _GstOssMixerElementClass GstOssMixerElementClass;
 struct _GstOssMixerElement {
   GstElement            parent;
 
+  gchar                 *device;
   GstOssMixer           *mixer;
 };
 

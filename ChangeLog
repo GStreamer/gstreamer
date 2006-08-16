@@ -1,3 +1,16 @@
+2006-08-13  Wim Taymans  <wim@fluendo.com>
+
+	* sys/oss/gstossmixer.c: (gst_ossmixer_open), (gst_ossmixer_new):
+	* sys/oss/gstossmixerelement.c: (gst_oss_mixer_element_class_init),
+	(gst_oss_mixer_element_init), (gst_oss_mixer_element_set_property),
+	(gst_oss_mixer_element_get_property),
+	(gst_oss_mixer_element_change_state):
+	* sys/oss/gstossmixerelement.h:
+	Small cleanups. Better error reporting.
+	Add device property for the mixer instead of the hardcoded
+	/dev/mixer. Fixes #350785.
+	API: GstOssMixerElement::device property
+
 2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Jens Granseuer <jensgr at gmx net>

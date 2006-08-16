@@ -27,9 +27,14 @@
 GST_DEBUG_CATEGORY_EXTERN (oss_debug);
 #define GST_CAT_DEFAULT oss_debug
 
+#define DEFAULT_DEVICE       "/dev/mixer"
+#define DEFAULT_DEVICE_NAME  NULL
+
 enum
 {
-  PROP_DEVICE_NAME = 1
+  PROP_0,
+  PROP_DEVICE,
+  PROP_DEVICE_NAME
 };
 
 
@@ -49,6 +54,8 @@ GST_IMPLEMENT_OSS_MIXER_METHODS (GstOssMixerElement, gst_oss_mixer_element);
 static GstStateChangeReturn gst_oss_mixer_element_change_state (GstElement *
     element, GstStateChange transition);
 
+static void gst_oss_mixer_element_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_oss_mixer_element_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
@@ -68,11 +75,18 @@ gst_oss_mixer_element_class_init (GstOssMixerElementClass * klass)
   element_class = (GstElementClass *) klass;
   gobject_class = (GObjectClass *) klass;
 
+  gobject_class->set_property = gst_oss_mixer_element_set_property;
   gobject_class->get_property = gst_oss_mixer_element_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "OSS mixer device (usually /dev/mixer)", DEFAULT_DEVICE,
+          G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", "", G_PARAM_READABLE));
+          "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
+          G_PARAM_READABLE));
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_oss_mixer_element_change_state);
@@ -83,6 +97,28 @@ gst_oss_mixer_element_init (GstOssMixerElement * this,
     GstOssMixerElementClass * g_class)
 {
   this->mixer = NULL;
+  this->device = g_strdup (DEFAULT_DEVICE);
+}
+
+static void
+gst_oss_mixer_element_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstOssMixerElement *this = GST_OSS_MIXER_ELEMENT (object);
+
+  switch (prop_id) {
+    case PROP_DEVICE:
+      g_free (this->device);
+      this->device = g_value_dup_string (value);
+      /* make sure we never set NULL */
+      if (this->device == NULL) {
+        this->device = g_strdup (DEFAULT_DEVICE);
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -92,6 +128,9 @@ gst_oss_mixer_element_get_property (GObject * object, guint prop_id,
   GstOssMixerElement *this = GST_OSS_MIXER_ELEMENT (object);
 
   switch (prop_id) {
+    case PROP_DEVICE:
+      g_value_set_string (value, this->device);
+      break;
     case PROP_DEVICE_NAME:
       if (this->mixer) {
         g_value_set_string (value, this->mixer->cardname);
@@ -115,7 +154,9 @@ gst_oss_mixer_element_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!this->mixer) {
-        this->mixer = gst_ossmixer_new ("/dev/mixer", GST_OSS_MIXER_ALL);
+        this->mixer = gst_ossmixer_new (this->device, GST_OSS_MIXER_ALL);
+        if (!this->mixer)
+          goto open_failed;
       }
       break;
       break;
@@ -137,6 +178,13 @@ gst_oss_mixer_element_change_state (GstElement * element,
     default:
       break;
   }
-
   return ret;
+
+  /* ERRORS */
+open_failed:
+  {
+    GST_ELEMENT_ERROR (element, RESOURCE, OPEN_READ_WRITE, (NULL),
+        ("Failed to open oss mixer device '%s'", this->device));
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
