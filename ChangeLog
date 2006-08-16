@@ -1,3 +1,8 @@
+2006-08-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_add):
+	Turn a g_print into a DEBUG line.
+
 2006-08-13  Wim Taymans  <wim@fluendo.com>
 
 	* sys/oss/gstossmixer.c: (gst_ossmixer_open), (gst_ossmixer_new):

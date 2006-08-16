@@ -473,7 +473,7 @@ gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
   if (inet_aton (host, &addr)) {
     /* check if its a multicast address */
     if ((ntohl (addr.s_addr) & 0xe0000000) == 0xe0000000) {
-      printf ("multicast address  detected\n");
+      GST_DEBUG_OBJECT (sink, "multicast address  detected");
       client->multi_addr.imr_multiaddr.s_addr = addr.s_addr;
       client->multi_addr.imr_interface.s_addr = INADDR_ANY;
 
