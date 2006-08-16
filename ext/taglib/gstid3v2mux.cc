@@ -458,21 +458,34 @@ add_comment_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
 
     if (gst_tag_list_get_string_index (list, tag, n, &s) && s != NULL) {
       ID3v2::CommentsFrame * f;
-      gchar *desc;
+      gchar *desc = NULL, *val = NULL, *lang = NULL;
 
-      GST_LOG ("%s[%u] = '%s'", tag, n, s);
       f = new ID3v2::CommentsFrame (String::UTF8);
 
-      /* FIXME: we should somehow try to preserve the original descriptions */
-      desc = g_strdup_printf ("c%u", n);
-      f->setDescription (desc);
-      g_free (desc);
+      if (strcmp (tag, GST_TAG_COMMENT) == 0 ||
+          !gst_tag_parse_extended_comment (s, &desc, &lang, &val, TRUE)) {
+        /* create dummy description to allow for multiple comment frames
+         * (taglib will drop comment frames if descriptions are not unique) */
+        desc = g_strdup_printf ("c%u", n);
+        val = g_strdup (s);
+      }
 
-      f->setText (s);
-      g_free (s);
+      GST_LOG ("%s[%u] = '%s' (%s|%s|%s)", tag, n, s, GST_STR_NULL (desc),
+          GST_STR_NULL (lang), GST_STR_NULL (val));
+
+      f->setDescription (desc);
+      f->setText (val);
+      if (lang) {
+        f->setLanguage (lang);
+      }
+
+      g_free (lang);
+      g_free (desc);
+      g_free (val);
 
       id3v2tag->addFrame (f);
     }
+    g_free (s);
   }
 }
 
@@ -520,6 +533,7 @@ static const struct
   GST_TAG_COPYRIGHT, add_text_tag, "TCOP"}, {
   GST_TAG_GENRE, add_text_tag, "TCON"}, {
   GST_TAG_COMMENT, add_comment_tag, ""}, {
+  GST_TAG_EXTENDED_COMMENT, add_comment_tag, ""}, {
   GST_TAG_DATE, add_date_tag, ""}, {
   GST_TAG_IMAGE, add_image_tag, ""}, {
   GST_TAG_PREVIEW_IMAGE, add_image_tag, ""}, {

@@ -1,5 +1,20 @@
 2006-08-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	  Require CVS of GStreamer core and -base (for
+	  GST_TAG_EXTENDED_COMMENT and gst_tag_parse_extended_comment()).
+
+	* ext/taglib/gstid3v2mux.cc:
+	  Write extended comment tags properly (#348762).
+
+	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame),
+	(parse_comment_frame):
+	  Extract COMM frames into extended comments, which makes it
+	  easier to properly retain the description bit of the tag
+	  and maintain this information when re-tagging (#348762).
+
+2006-08-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/Makefile.am:
 	  Don't try to run annodex unit tests if the annodex
 	  plugin has not been built (Fixes #351116).

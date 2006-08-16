@@ -37,7 +37,7 @@
 GST_DEBUG_CATEGORY_EXTERN (id3demux_debug);
 #define GST_CAT_DEFAULT (id3demux_debug)
 
-static gchar *parse_comment_frame (ID3TagsWorking * work);
+static gboolean parse_comment_frame (ID3TagsWorking * work);
 static GArray *parse_text_identification_frame (ID3TagsWorking * work);
 static gchar *parse_user_text_identification_frame (ID3TagsWorking * work,
     const gchar ** tag_name);
@@ -156,7 +156,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     }
   } else if (!strcmp (work->frame_id, "COMM")) {
     /* Comment */
-    tag_str = parse_comment_frame (work);
+    result = parse_comment_frame (work);
   } else if (!strcmp (work->frame_id, "APIC")) {
     /* Attached picture */
     result = parse_picture_frame (work);
@@ -195,17 +195,17 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
   return result;
 }
 
-static gchar *
+static gboolean
 parse_comment_frame (ID3TagsWorking * work)
 {
+  guint dummy;
   guint8 encoding;
   gchar language[4];
   GArray *fields = NULL;
-  gchar *out_str = NULL;
   gchar *description, *text;
 
   if (work->parse_size < 6)
-    return NULL;
+    return FALSE;
 
   encoding = work->parse_data[0];
   language[0] = work->parse_data[1];
@@ -226,19 +226,37 @@ parse_comment_frame (ID3TagsWorking * work)
   if (!g_utf8_validate (text, -1, NULL)) {
     GST_WARNING ("Converted string is not valid utf-8");
     goto fail;
-  } else {
-    if (strlen (description) > 0 && g_utf8_validate (description, -1, NULL)) {
-      out_str = g_strdup_printf ("Description: %s\nComment: %s",
-          description, text);
-    } else {
-      out_str = g_strdup (text);
-    }
   }
 
-fail:
-  free_tag_strings (fields);
+  /* skip our own dummy descriptions (from id3v2mux) */
+  if (strlen (description) > 0 && g_utf8_validate (description, -1, NULL) &&
+      sscanf (description, "c%u", &dummy) != 1) {
+    gchar *s;
 
-  return out_str;
+    if (language[0] != '\0') {
+      s = g_strdup_printf ("%s[%s]=%s", description, language, text);
+    } else {
+      s = g_strdup_printf ("%s=%s", description, text);
+    }
+    gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
+        GST_TAG_EXTENDED_COMMENT, s, NULL);
+    g_free (s);
+  } else if (text != NULL && *text != '\0') {
+    gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
+        GST_TAG_COMMENT, text, NULL);
+  } else {
+    goto fail;
+  }
+
+  free_tag_strings (fields);
+  return TRUE;
+
+fail:
+  {
+    GST_WARNING ("failed to parse COMM frame");
+    free_tag_strings (fields);
+    return FALSE;
+  }
 }
 
 static GArray *
