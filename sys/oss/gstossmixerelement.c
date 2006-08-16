@@ -17,6 +17,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-ossmixer
+ * @short_description: element to control sound input and output levels with OSS
+ *
+ * <refsect2>
+ * <para>
+ * This element lets you adjust sound input and output levels with the
+ * Open Sound System (OSS). It supports the GstMixer interface, which can be
+ * used to obtain a list of available mixer tracks. Set the mixer element to
+ * READY state before using the GstMixer interface on it.
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * ossmixer can't be used in a sensible way in gst-launch.
+ * </para>
+ * </refsect2>
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -78,6 +95,13 @@ gst_oss_mixer_element_class_init (GstOssMixerElementClass * klass)
   gobject_class->set_property = gst_oss_mixer_element_set_property;
   gobject_class->get_property = gst_oss_mixer_element_get_property;
 
+  /**
+   * GstOssMixerElement:device
+   *
+   * OSS mixer device (usually /dev/mixer)
+   *
+   * Since: 0.10.5
+   **/
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
           "OSS mixer device (usually /dev/mixer)", DEFAULT_DEVICE,

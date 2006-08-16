@@ -20,6 +20,26 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-osssrc
+ * @short_description: record sound from your sound card using OSS
+ *
+ * <refsect2>
+ * <para>
+ * This element lets you record sound using the Open Sound System (OSS).
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v osssrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=mymusic.ogg
+ * </programlisting>
+ * will record sound from your sound card using OSS and encode it to an
+ * Ogg/Vorbis file (this will only work if your mixer settings are right
+ * and the right inputs enabled etc.)
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

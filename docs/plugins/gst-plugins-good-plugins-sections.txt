@@ -273,6 +273,30 @@ GST_IS_MULTIUDPSINK_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-ossmixer</FILE>
+GstOssMixerElement
+<TITLE>ossmixer</TITLE>
+<SUBSECTION Standard>
+GstOssMixerElementClass
+</SECTION>
+
+<SECTION>
+<FILE>element-osssink</FILE>
+GstOssSink
+<TITLE>osssink</TITLE>
+<SUBSECTION Standard>
+GstOssSinkClass
+</SECTION>
+
+<SECTION>
+<FILE>element-osssrc</FILE>
+GstOssSrc
+<TITLE>osssrc</TITLE>
+<SUBSECTION Standard>
+GstOssSrcClass
+</SECTION>
+
+<SECTION>
 <FILE>element-rtspsrc</FILE>
 GstRTSPProto
 GstRTSPSrc
