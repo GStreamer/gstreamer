@@ -230,9 +230,12 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
       GST_DEBUG_OBJECT (sink, "reposting message %p", errors->data);
       gst_element_post_message (GST_ELEMENT (sink), GST_MESSAGE (errors->data));
     } else {
-      /* general fallback */
-      GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
-          ("Failed to find a supported audio sink"));
+      /* send warning message to application and use a fakesink */
+      GST_ELEMENT_WARNING (sink, RESOURCE, NOT_FOUND, (NULL),
+          ("Failed to find a usable audio sink"));
+      choice = gst_element_factory_make ("fakesink", "fake-audio-sink");
+      g_object_set (choice, "sync", TRUE, NULL);
+      gst_element_set_state (choice, GST_STATE_READY);
     }
   }
   gst_object_unref (bus);

@@ -1,5 +1,13 @@
 2006-08-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/autodetect/gstautoaudiosink.c:
+	(gst_auto_audio_sink_find_best):
+	  When we can't find a usable audiosink, don't error out,
+	  but use a fake sink instead and post a warning message
+	  on the bus (#341278).
+
+2006-08-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* sys/oss/gstossmixerelement.c: (gst_oss_mixer_element_class_init):
 	* sys/oss/gstosssink.c:
 	* sys/oss/gstosssrc.c:
