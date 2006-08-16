@@ -55,6 +55,7 @@ check_PROGRAMS = \
 	generic/states \
 	libs/audio \
 	libs/cddabasesrc \
+	libs/tag \
 	libs/video \
         pipelines/simple-launch-lines
 
@@ -91,6 +92,10 @@ libs_cddabasesrc_LDADD = \
 libs_cddabasesrc_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	$(CFLAGS) $(AM_CFLAGS)
+
+libs_tag_LDADD = \
+	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la $(LDADD)
+libs_tag_CFLAGS = -I$(top_srcdir)/gst-libs $(CFLAGS) $(AM_CFLAGS)
 
 elements_alsa_LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \

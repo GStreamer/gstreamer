@@ -1,7 +1,6 @@
-/* GStreamer
+/* GStreamer non-core tag registration and tag utility functions
  * Copyright (C) 2005 Ross Burton <ross@burtonini.com>
- *
- * tags.c: Non-core tag registration
+ * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,6 +25,8 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/gst.h>
 #include "tag.h"
+
+#include <string.h>
 
 /**
  * SECTION:gsttag
@@ -136,4 +137,68 @@ gst_tag_image_type_get_type (void)
 
   g_once (&once, (GThreadFunc) register_tag_image_type_enum, &id);
   return id;
+}
+
+/**
+ * gst_tag_parse_extended_comment:
+ * @ext_comment: an extended comment string, see #GST_TAG_EXTENDED_COMMENT
+ * @key: return location for the comment description key, or NULL
+ * @lang: return location for the comment ISO-639 language code, or NULL
+ * @value: return location for the actual comment string, or NULL
+ * @fail_if_no_key: whether to fail if strings are not in key=value form
+ *
+ * Convenience function to parse a GST_TAG_EXTENDED_COMMENT string and
+ * separate it into its components.
+ *
+ * If successful, @key, @lang and/or @value will be set to newly allocated
+ * strings that you need to free with g_free() when done. @key and @lang
+ * may also be set to NULL by this function if there is no key or no language
+ * code in the extended comment string.
+ *
+ * Returns: TRUE if the string could be parsed, otherwise FALSE
+ *
+ * Since: 0.10.10
+ */
+gboolean
+gst_tag_parse_extended_comment (const gchar * ext_comment, gchar ** key,
+    gchar ** lang, gchar ** value, gboolean fail_if_no_key)
+{
+  const gchar *div, *bop, *bcl;
+
+  g_return_val_if_fail (ext_comment != NULL, FALSE);
+  g_return_val_if_fail (g_utf8_validate (ext_comment, -1, NULL), FALSE);
+
+  if (key)
+    *key = NULL;
+  if (lang)
+    *lang = NULL;
+
+  div = strchr (ext_comment, '=');
+  bop = strchr (ext_comment, '[');
+  bcl = strchr (ext_comment, ']');
+
+  if (div == NULL) {
+    if (fail_if_no_key)
+      return FALSE;
+    if (value)
+      *value = g_strdup (ext_comment);
+    return TRUE;
+  }
+
+  if (bop != NULL && bop < div) {
+    if (bcl < bop || bcl > div)
+      return FALSE;
+    if (key)
+      *key = g_strndup (ext_comment, bop - ext_comment);
+    if (lang)
+      *lang = g_strndup (bop + 1, bcl - bop - 1);
+  } else {
+    if (key)
+      *key = g_strndup (ext_comment, div - ext_comment);
+  }
+
+  if (value)
+    *value = g_strdup (div + 1);
+
+  return TRUE;
 }

@@ -171,6 +171,15 @@ G_CONST_RETURN gchar *  gst_tag_from_id3_user_tag               (const gchar *  
                                                                  const gchar *          id3_user_tag);
 G_CONST_RETURN gchar *  gst_tag_to_id3_tag                      (const gchar *          gst_tag);
 
+/* other tag-related functions */
+
+gboolean                gst_tag_parse_extended_comment (const gchar  * ext_comment,
+                                                        gchar       ** key,
+                                                        gchar       ** lang,
+                                                        gchar       ** value,
+                                                        gboolean       fail_if_no_key);
+
+/* FIXME 0.11: replace with a more general gst_tag_library_init() */
 void gst_tag_register_musicbrainz_tags (void);
 
 G_END_DECLS

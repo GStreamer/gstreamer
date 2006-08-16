@@ -1,3 +1,15 @@
+2006-08-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/tag/tag.h:
+	* gst-libs/gst/tag/tags.c: (gst_tag_parse_extended_comment):
+	  API: add gst_tag_parse_extended_comment() (#351426).
+
+	* tests/check/Makefile.am:
+	* tests/check/libs/.cvsignore:
+	* tests/check/libs/tag.c: (GST_START_TEST), (tag_suite), (main):
+	  Add unit test for gst_tag_parse_extended_comment().
+
 2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_get_property):
