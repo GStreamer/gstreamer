@@ -797,6 +797,7 @@ init_post (void)
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
   g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
 
+  _priv_gst_quarks_initialize ();
   _gst_format_initialize ();
   _gst_query_initialize ();
   gst_object_get_type ();

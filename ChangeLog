@@ -1,3 +1,24 @@
+2006-08-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/Makefile.am:
+	* gst/gst.c: (init_post):
+	* gst/gst_private.h:
+	* gst/gstquark.c: (_priv_gst_quarks_initialize):
+	* gst/gstquark.h:
+	* gst/gstquery.c: (gst_query_new_position),
+	(gst_query_set_position), (gst_query_parse_position),
+	(gst_query_new_duration), (gst_query_set_duration),
+	(gst_query_parse_duration), (gst_query_new_convert),
+	(gst_query_set_convert), (gst_query_parse_convert),
+	(gst_query_new_segment), (gst_query_set_segment),
+	(gst_query_parse_segment), (gst_query_new_seeking),
+	(gst_query_set_seeking), (gst_query_parse_seeking):
+	Add internal helpers for pre-registering quarks from static strings
+	and using the quark values directly instead of looking them up when
+	creating and parsing queries. Can be used for event construction too.
+	Closes #350432.
+
 2006-08-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c:

@@ -99,6 +99,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	gstpipeline.c		\
 	gstplugin.c		\
 	gstpluginfeature.c	\
+	gstquark.c		\
 	gstquery.c		\
 	gstregistry.c		\
 	gstsegment.c		\
@@ -208,6 +209,7 @@ noinst_HEADERS = 		\
 	glib-compat-private.h	\
 	gst-i18n-lib.h		\
 	gst-i18n-app.h		\
+	gstquark.h		\
 	gst_private.h
 
 gstmarshal.h: gstmarshal.list

@@ -41,6 +41,9 @@ G_BEGIN_DECLS
 
 gboolean __gst_in_valgrind (void);
 
+/* Initialize GStreamer private quark storage */
+void _priv_gst_quarks_initialize (void);
+
 /*** debugging categories *****************************************************/
 
 #ifndef GST_DISABLE_GST_DEBUG
