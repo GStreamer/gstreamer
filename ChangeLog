@@ -1,5 +1,11 @@
 2006-08-16  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ladspa/gstladspa.c: (gst_ladspa_base_init):
+	Convert ' ' into '_'. Try to keep as many characters in the padtemplate
+	names as possible.
+
+2006-08-16  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ladspa/gstsignalprocessor.c: (gst_signal_processor_flush),
 	(gst_signal_processor_do_pushes):
 	A push() gives away our refcount so we should not use the buffer on the
