@@ -170,16 +170,16 @@ gst_rtpdec_init (GstRTPDec * rtpdec)
   rtpdec->sink_rtp =
       gst_pad_new_from_static_template (&gst_rtpdec_sink_rtp_template,
       "sinkrtp");
-  gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->sink_rtp);
   gst_pad_set_getcaps_function (rtpdec->sink_rtp, gst_rtpdec_getcaps);
   gst_pad_set_chain_function (rtpdec->sink_rtp, gst_rtpdec_chain_rtp);
+  gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->sink_rtp);
 
   /* the input rtcp pad */
   rtpdec->sink_rtcp =
       gst_pad_new_from_static_template (&gst_rtpdec_sink_rtcp_template,
       "sinkrtcp");
-  gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->sink_rtcp);
   gst_pad_set_chain_function (rtpdec->sink_rtcp, gst_rtpdec_chain_rtcp);
+  gst_element_add_pad (GST_ELEMENT (rtpdec), rtpdec->sink_rtcp);
 
   /* the output rtp pad */
   rtpdec->src_rtp =
@@ -203,7 +203,7 @@ gst_rtpdec_getcaps (GstPad * pad)
 
   src = GST_RTPDEC (GST_PAD_PARENT (pad));
 
-  other = pad == src->src_rtp ? src->sink_rtp : src->src_rtp;
+  other = (pad == src->src_rtp ? src->sink_rtp : src->src_rtp);
 
   caps = gst_pad_peer_get_caps (other);
 

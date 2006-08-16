@@ -55,19 +55,23 @@ typedef struct _GstRTSPStream GstRTSPStream;
 struct _GstRTSPStream {
   gint        id;
 
-  gint        rtpchannel;
-  gint        rtcpchannel;
-
   GstRTSPSrc *parent;
 
-  /* our udp sources */
+  GstFlowReturn last_ret;
+
+  /* for interleaved mode */
+  gint        rtpchannel;
+  gint        rtcpchannel;
+  GstCaps    *caps;
+
+  /* our udp sources for RTP */
   GstElement *rtpsrc;
   GstElement *rtcpsrc;
 
   /* our udp sink back to the server */
   GstElement *rtcpsink;
 
-  /* the rtp decoder */
+  /* the RTP decoder */
   GstElement *rtpdec;
   GstPad     *rtpdecrtp;
   GstPad     *rtpdecrtcp;
@@ -76,23 +80,25 @@ struct _GstRTSPStream {
 struct _GstRTSPSrc {
   GstElement element;
 
-  gboolean       interleaved;
-  GstTask       *task;
+  /* task and mutex for interleaved mode */
+  gboolean         interleaved;
+  GstTask         *task;
+  GStaticRecMutex *stream_rec_lock;
 
-  gint           numstreams;
-  GList         *streams;
+  gint             numstreams;
+  GList           *streams;
 
-  gchar         *location;
-  gboolean       debug;
-  guint 	 retry;
+  gchar           *location;
+  gboolean         debug;
+  guint   	   retry;
 
-  GstRTSPProto   protocols;
+  GstRTSPProto     protocols;
   /* supported options */
-  gint           options;
+  gint             options;
 
-  RTSPConnection *connection;
-  RTSPMessage   *request;
-  RTSPMessage   *response;
+  RTSPConnection  *connection;
+  RTSPMessage     *request;
+  RTSPMessage     *response;
 };
 
 struct _GstRTSPSrcClass {

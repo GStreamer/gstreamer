@@ -1,5 +1,27 @@
 2006-08-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtpdec.c: (gst_rtpdec_init), (gst_rtpdec_getcaps):
+	Add pads after setting them up.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_class_init),
+	(gst_rtspsrc_init), (gst_rtspsrc_finalize),
+	(gst_rtspsrc_free_stream), (gst_rtspsrc_media_to_caps),
+	(gst_rtspsrc_stream_setup_rtp),
+	(gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_combine_flows), (gst_rtspsrc_loop),
+	(gst_rtspsrc_open), (gst_rtspsrc_close), (gst_rtspsrc_play),
+	(gst_rtspsrc_pause):
+	* gst/rtsp/gstrtspsrc.h:
+	Fix interleaved mode.
+	 - Protect streaming with lock.
+	 - Combine flows
+	 - set caps on outgoing buffers.
+	 - strip trailing \0 from data packets.
+	 - Configure RTP/RTCP in stream.
+	Use DEBUG_OBJECT more.
+
+2006-08-16  Wim Taymans  <wim@fluendo.com>
+
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_add):
 	Turn a g_print into a DEBUG line.
 
