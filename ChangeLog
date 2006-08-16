@@ -1,3 +1,13 @@
+2006-08-16  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_setcaps):
+	If we are not operating in RTP mode, leave the default rtp encoder
+	settings as they are so that we don't unintentionally activate it.
+	Fixes #351415.
+
+
 2006-08-14  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

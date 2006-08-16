@@ -409,9 +409,6 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   if (ffmpegenc->rtp_payload_size) {
     ffmpegenc->context->rtp_mode = 1;
     ffmpegenc->context->rtp_payload_size = ffmpegenc->rtp_payload_size;
-  } else {
-    ffmpegenc->context->rtp_mode = 0;
-    ffmpegenc->context->rtp_payload_size = 512;
   }
 
   /* general properties */
