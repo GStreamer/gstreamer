@@ -1,3 +1,8 @@
+2006-08-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c:
+	Fix bogus docs.
+
 2006-08-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstutils.c: (gst_util_set_value_from_string):
