@@ -242,6 +242,9 @@ gst_alsasrc_set_property (GObject * object, guint prop_id,
     case PROP_DEVICE:
       g_free (src->device);
       src->device = g_value_dup_string (value);
+      if (src->device == NULL) {
+        src->device = g_strdup (DEFAULT_PROP_DEVICE);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -601,10 +604,12 @@ gst_alsasrc_open (GstAudioSrc * asrc)
 open_error:
   {
     if (err == -EBUSY) {
-      GST_ELEMENT_ERROR (alsa, RESOURCE, BUSY, (NULL), (NULL));
+      GST_ELEMENT_ERROR (alsa, RESOURCE, BUSY, (NULL), ("Device '%s' is busy",
+              alsa->device));
     } else {
-      GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-          (NULL), ("Recording open error: %s", snd_strerror (err)));
+      GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_WRITE,
+          (NULL), ("Recording open error on device '%s': %s", alsa->device,
+              snd_strerror (err)));
     }
     return FALSE;
   }

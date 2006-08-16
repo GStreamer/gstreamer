@@ -1,3 +1,12 @@
+2006-08-16  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_set_property),
+	(gst_alsasink_open):
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_set_property),
+	(gst_alsasrc_open):
+	Avoid setting and using a NULL device name.
+	Print more info when we fail to open a device.
+
 2006-08-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:

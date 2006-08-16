@@ -227,9 +227,12 @@ gst_alsasink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE:
-      if (sink->device)
-        g_free (sink->device);
-      sink->device = g_strdup (g_value_get_string (value));
+      g_free (sink->device);
+      sink->device = g_value_dup_string (value);
+      /* setting NULL restores the default device */
+      if (sink->device == NULL) {
+        sink->device = g_strdup (DEFAULT_DEVICE);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -629,10 +632,12 @@ gst_alsasink_open (GstAudioSink * asink)
 open_error:
   {
     if (err == -EBUSY) {
-      GST_ELEMENT_ERROR (alsa, RESOURCE, BUSY, (NULL), ("Device is busy"));
+      GST_ELEMENT_ERROR (alsa, RESOURCE, BUSY, (NULL), ("Device '%s' is busy",
+              alsa->device));
     } else {
       GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_WRITE,
-          (NULL), ("Playback open error: %s", snd_strerror (err)));
+          (NULL), ("Playback open error on device '%s': %s", alsa->device,
+              snd_strerror (err)));
     }
     return FALSE;
   }
