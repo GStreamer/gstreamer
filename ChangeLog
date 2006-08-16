@@ -1,3 +1,13 @@
+2006-08-16  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Michal Benes <michal dot benes at itonis dot tv>
+
+	* ext/mad/gstmad.c: (gst_mad_chain):
+	Fix timestamping in mad by only activating a new timestamp when the
+	previous frame has been decoded. Fixes #350723.
+	Also clean up some of the non fatal warnings when the input buffer is
+	too small to decode a header.
+
 === release 0.10.4 ===
 
 2006-08-14  Thomas Vander Stichele <thomas at apestaart dot org>

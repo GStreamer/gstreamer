@@ -1288,7 +1288,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstMad *mad;
   guint8 *data;
-  glong size;
+  glong size, tempsize;
   gboolean new_pts = FALSE;
   GstClockTime timestamp;
   GstFlowReturn result = GST_FLOW_OK;
@@ -1328,6 +1328,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
+  tempsize = mad->tempsize;
+
   /* process the incoming buffer in chunks of maximum MAD_BUFFER_MDLEN bytes;
    * this is the upper limit on processable chunk sizes set by mad */
   while (size > 0) {
@@ -1358,7 +1360,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
     mad_input_buffer = mad->tempbuffer;
 
     /* while we have data we can consume it */
-    while (mad->tempsize >= 0) {
+    while (mad->tempsize > 0) {
       gint consumed = 0;
       guint nsamples;
       guint64 time_offset;
@@ -1374,8 +1376,14 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
        * some weird decoding errors... */
       GST_LOG ("decoding the header now");
       if (mad_header_decode (&mad->frame.header, &mad->stream) == -1) {
-        GST_WARNING ("mad_header_decode had an error: %s",
-            mad_stream_errorstr (&mad->stream));
+        if (mad->stream.error == MAD_ERROR_BUFLEN) {
+          GST_LOG ("not enough data in tempbuffer (%d), breaking to get more",
+              mad->tempsize);
+          break;
+        } else {
+          GST_WARNING ("mad_header_decode had an error: %s",
+              mad_stream_errorstr (&mad->stream));
+        }
       }
 
       GST_LOG ("decoding one frame now");
@@ -1468,6 +1476,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         GstTagList *list;
         int frame_len = mad->stream.next_frame - mad->stream.this_frame;
 
+        mad->check_for_xing = FALSE;
+
         /* Assume Xing headers can only be the first frame in a mp3 file */
         if (mpg123_parse_xing_header (&mad->frame.header,
                 mad->stream.this_frame, frame_len, &bitrate, &time)) {
@@ -1479,10 +1489,9 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           gst_element_post_message (GST_ELEMENT (mad),
               gst_message_new_tag (GST_OBJECT (mad), gst_tag_list_copy (list)));
           gst_pad_push_event (mad->srcpad, gst_event_new_tag (list));
-        }
 
-        mad->check_for_xing = FALSE;
-        goto next_no_samples;
+          goto next_no_samples;
+        }
       }
 
       /* if we're not resyncing/in error, check if caps need to be set again */
@@ -1596,12 +1605,13 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 
       /* we have a queued timestamp on the incoming buffer that we should
        * use for the next frame */
-      if (new_pts) {
-        mad->last_ts = timestamp;
+      if (new_pts && (mad->stream.next_frame - mad_input_buffer >= tempsize)) {
         new_pts = FALSE;
+        mad->last_ts = timestamp;
         mad->base_byte_offset = GST_BUFFER_OFFSET (buffer);
         mad->bytes_consumed = 0;
       }
+      tempsize = 0;
 
       if (gst_mad_check_restart (mad)) {
         goto end;
