@@ -75,6 +75,7 @@ static void gst_oss_mixer_element_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_oss_mixer_element_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
+static void gst_oss_mixer_element_finalize (GObject * object);
 
 static void
 gst_oss_mixer_element_base_init (gpointer klass)
@@ -92,6 +93,7 @@ gst_oss_mixer_element_class_init (GstOssMixerElementClass * klass)
   element_class = (GstElementClass *) klass;
   gobject_class = (GObjectClass *) klass;
 
+  gobject_class->finalize = gst_oss_mixer_element_finalize;
   gobject_class->set_property = gst_oss_mixer_element_set_property;
   gobject_class->get_property = gst_oss_mixer_element_get_property;
 
@@ -114,6 +116,16 @@ gst_oss_mixer_element_class_init (GstOssMixerElementClass * klass)
 
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_oss_mixer_element_change_state);
+}
+
+static void
+gst_oss_mixer_element_finalize (GObject * obj)
+{
+  GstOssMixerElement *this = GST_OSS_MIXER_ELEMENT (obj);
+
+  g_free (this->device);
+
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void

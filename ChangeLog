@@ -1,5 +1,11 @@
 2006-08-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* sys/oss/gstossmixerelement.c: (gst_oss_mixer_element_class_init),
+	(gst_oss_mixer_element_finalize):
+	  Don't leak device string.
+
+2006-08-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Require CVS of GStreamer core and -base (for
 	  GST_TAG_EXTENDED_COMMENT and gst_tag_parse_extended_comment()).
