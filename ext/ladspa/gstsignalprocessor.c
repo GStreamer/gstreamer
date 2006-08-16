@@ -275,6 +275,8 @@ gst_signal_processor_setup (GstSignalProcessor * self, guint sample_rate)
 
   klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
 
+  GST_INFO_OBJECT (self, "setup()");
+
   g_return_val_if_fail (self->state == GST_SIGNAL_PROCESSOR_STATE_NULL, FALSE);
 
   if (klass->setup)
@@ -305,6 +307,8 @@ gst_signal_processor_start (GstSignalProcessor * self)
   g_return_val_if_fail (self->state == GST_SIGNAL_PROCESSOR_STATE_INITIALIZED,
       FALSE);
 
+  GST_INFO_OBJECT (self, "start()");
+
   if (klass->start)
     ret = klass->start (self);
 
@@ -326,13 +330,22 @@ static void
 gst_signal_processor_stop (GstSignalProcessor * self)
 {
   GstSignalProcessorClass *klass;
+  GstElement *elem;
+  GList *sinks;
 
   klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
+  elem = GST_ELEMENT (self);
+
+  GST_INFO_OBJECT (self, "stop()");
 
   g_return_if_fail (self->state == GST_SIGNAL_PROCESSOR_STATE_RUNNING);
 
   if (klass->stop)
     klass->stop (self);
+
+  for (sinks = elem->sinkpads; sinks; sinks = sinks->next)
+    /* force set_caps when going to RUNNING, see note in set_caps */
+    gst_pad_set_caps (GST_PAD (sinks->data), NULL);
 
   /* should also flush our buffers perhaps? */
 
@@ -345,6 +358,8 @@ gst_signal_processor_cleanup (GstSignalProcessor * self)
   GstSignalProcessorClass *klass;
 
   klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
+
+  GST_INFO_OBJECT (self, "cleanup()");
 
   g_return_if_fail (self->state == GST_SIGNAL_PROCESSOR_STATE_INITIALIZED);
 
@@ -363,7 +378,7 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
 
   /* the whole processor has one caps; if the sample rate changes, let subclass
      implementations know */
-  if (caps != self->caps) {
+  if (!gst_caps_is_equal (caps, self->caps)) {
     GstStructure *s;
     gint sample_rate;
 
@@ -375,9 +390,12 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
       GST_DEBUG_OBJECT (self, "Got rate=%d", sample_rate);
     }
 
+    if (GST_SIGNAL_PROCESSOR_IS_RUNNING (self))
+      gst_signal_processor_stop (self);
+    if (GST_SIGNAL_PROCESSOR_IS_INITIALIZED (self))
+      gst_signal_processor_cleanup (self);
+
     if (!gst_signal_processor_setup (self, sample_rate)) {
-      goto start_failed;
-    } else if (!gst_signal_processor_start (self)) {
       goto start_failed;
     } else {
       self->sample_rate = sample_rate;
@@ -387,7 +405,17 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (self, "skipping, have caps already");
   }
 
-  /* FIXME: handle was_active, etc */
+  /* we use this method to manage the processor's state, hence the caps clearing
+     in stop(). so it can be that we enter here just to manage the processor's
+     state, to take it to RUNNING from already being INITIALIZED with the right
+     sample rate (e.g., when having gone PLAYING->READY->PLAYING). make sure
+     when we leave that the processor is RUNNING. */
+  if (!GST_SIGNAL_PROCESSOR_IS_INITIALIZED (self)
+      && !gst_signal_processor_setup (self, self->sample_rate))
+    goto start_failed;
+  if (!GST_SIGNAL_PROCESSOR_IS_RUNNING (self)
+      && !gst_signal_processor_start (self))
+    goto start_failed;
 
   gst_object_unref (self);
 
@@ -580,12 +608,8 @@ gst_signal_processor_pen_buffer (GstSignalProcessor * self, GstPad * pad,
 {
   GstSignalProcessorPad *spad = (GstSignalProcessorPad *) pad;
 
-  if (spad->pen) {
-    GST_WARNING ("Pad %s:%s already has penned buffer",
-        GST_DEBUG_PAD_NAME (pad));
-    gst_buffer_unref (buffer);
-    return;
-  }
+  if (spad->pen)
+    goto had_buffer;
 
   /* keep the reference */
   spad->pen = buffer;
@@ -595,12 +619,28 @@ gst_signal_processor_pen_buffer (GstSignalProcessor * self, GstPad * pad,
   g_assert (self->pending_in != 0);
 
   self->pending_in--;
+
+  return;
+
+  /* ERRORS */
+had_buffer:
+  {
+    GST_WARNING ("Pad %s:%s already has penned buffer",
+        GST_DEBUG_PAD_NAME (pad));
+    gst_buffer_unref (buffer);
+    return;
+  }
 }
 
 static void
 gst_signal_processor_flush (GstSignalProcessor * self)
 {
   GList *pads;
+  GstSignalProcessorClass *klass;
+
+  klass = GST_SIGNAL_PROCESSOR_GET_CLASS (self);
+
+  GST_INFO_OBJECT (self, "flush()");
 
   for (pads = GST_ELEMENT (self)->pads; pads; pads = pads->next) {
     GstSignalProcessorPad *spad = (GstSignalProcessorPad *) pads->data;
@@ -612,6 +652,9 @@ gst_signal_processor_flush (GstSignalProcessor * self)
       spad->samples_avail = 0;
     }
   }
+
+  self->pending_out = 0;
+  self->pending_in = klass->num_audio_in;
 }
 
 static void
@@ -637,8 +680,8 @@ gst_signal_processor_do_pulls (GstSignalProcessor * self, guint nframes)
     ret = gst_pad_pull_range (GST_PAD (spad), -1, nframes, &buf);
 
     if (ret != GST_FLOW_OK) {
-      self->flow_state = ret;
       gst_signal_processor_flush (self);
+      self->flow_state = ret;
       return;
     } else if (!buf) {
       g_critical ("Pull failed to make a buffer!");
@@ -721,8 +764,8 @@ gst_signal_processor_do_pushes (GstSignalProcessor * self)
     ret = gst_pad_push (GST_PAD (spad), buffer);
 
     if (ret != GST_FLOW_OK) {
-      self->flow_state = ret;
       gst_signal_processor_flush (self);
+      self->flow_state = ret;
       return;
     } else {
       g_assert (self->pending_out > 0);
@@ -882,6 +925,7 @@ gst_signal_processor_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      self->flow_state = GST_FLOW_OK;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -900,6 +944,7 @@ gst_signal_processor_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (GST_SIGNAL_PROCESSOR_IS_RUNNING (self))
         gst_signal_processor_stop (self);
+      gst_signal_processor_flush (self);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (GST_SIGNAL_PROCESSOR_IS_INITIALIZED (self))
