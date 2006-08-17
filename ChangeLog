@@ -1,5 +1,16 @@
 2006-08-17  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/multipart/multipartdemux.c: (multipart_parse_header):
+	Accept leading whitespace before the boundary
+	This patch makes the demuxer allow some whitespace before the actual
+	boundary. This makes the demuxer work with the ``old'' gstreamer
+	multipartmuxer again (which placed an extra \n before the start
+	of the stream) Fixes #349068.
+
+2006-08-17  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_process):
 	Error out on non-implemented stuff.
 

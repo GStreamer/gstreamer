@@ -334,13 +334,27 @@ multipart_parse_header (GstMultipartDemux * multipart)
   data = gst_adapter_peek (multipart->adapter, datalen);
   dataend = data + datalen;
 
+  /* Skip leading whitespace, pos endposition should at least leave space for
+   * the boundary and a \n */
+  for (pos = (guint8 *) data; pos < dataend - 4 && g_ascii_isspace (*pos);
+      pos++);
+
+  if (pos >= dataend - 4) {
+    return MULTIPART_NEED_MORE_DATA;
+  }
+
+  if (G_UNLIKELY (pos[0] != '-' || pos[1] != '-')) {
+    GST_DEBUG_OBJECT (multipart, "No boundary available");
+    goto wrong_header;
+  }
+
   /* First the boundary */
-  if (!get_line_end (data, dataend, &end, &next))
+  if (!get_line_end (pos, dataend, &end, &next))
     return MULTIPART_NEED_MORE_DATA;
 
   /* Ignore the leading -- */
-  boundary_len = end - data - 2;
-  boundary = (gchar *) data + 2;
+  boundary_len = end - pos - 2;
+  boundary = (gchar *) pos + 2;
   if (boundary_len < 1) {
     GST_DEBUG_OBJECT (multipart, "No boundary available");
     goto wrong_header;
