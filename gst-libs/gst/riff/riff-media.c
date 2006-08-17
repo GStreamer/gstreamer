@@ -900,13 +900,15 @@ gst_riff_create_audio_caps (guint16 codec_id,
       guint32 subformat_guid[4];
       const guint8 *data;
 
-      if (strf_data == NULL || GST_BUFFER_SIZE (strf_data) != 22) {
+      /* should be at least 22 bytes */
+      if (strf_data == NULL || GST_BUFFER_SIZE (strf_data) < 22) {
         GST_WARNING ("WAVE_FORMAT_EXTENSIBLE data size is %d (expected: 22)",
             (strf_data) ? GST_BUFFER_SIZE (strf_data) : -1);
         return NULL;
       }
 
       data = GST_BUFFER_DATA (strf_data);
+
       valid_bits_per_sample = GST_READ_UINT16_LE (data);
       channel_mask = GST_READ_UINT32_LE (data + 2);
       subformat_guid[0] = GST_READ_UINT32_LE (data + 6);
@@ -953,12 +955,18 @@ gst_riff_create_audio_caps (guint16 codec_id,
           }
         } else if (subformat_guid[0] == 0x00000003) {
           GST_DEBUG ("FIXME: handle IEEE float format");
+        } else if (subformat_guid[0] == 0x00000092) {
+          GST_DEBUG ("FIXME: handle DOLBY AC3 SPDIF format");
         }
+      } else if (subformat_guid[0] == 0x6ba47966 &&
+          subformat_guid[1] == 0x41783f83 &&
+          subformat_guid[2] == 0xf0006596 && subformat_guid[3] == 0xe59262bf) {
+        caps = gst_caps_new_simple ("application/x-ogg-avi", NULL);
+      }
 
-        if (caps == NULL) {
-          GST_WARNING ("Unknown WAVE_FORMAT_EXTENSIBLE audio format");
-          return NULL;
-        }
+      if (caps == NULL) {
+        GST_WARNING ("Unknown WAVE_FORMAT_EXTENSIBLE audio format");
+        return NULL;
       }
       break;
     }
@@ -1127,6 +1135,8 @@ gst_riff_create_audio_template_caps (void)
     if (one)
       gst_caps_append (caps, one);
   }
+  one = gst_caps_new_simple ("application/x-ogg-avi", NULL);
+  gst_caps_append (caps, one);
 
   return caps;
 }

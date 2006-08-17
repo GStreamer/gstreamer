@@ -5,6 +5,7 @@ libgstogg_la_SOURCES = \
 	gstoggdemux.c \
 	gstoggmux.c \
 	gstogmparse.c \
+	gstoggaviparse.c \
 	gstoggparse.c
 
 libgstogg_la_CFLAGS = $(GST_CFLAGS) $(OGG_CFLAGS) 

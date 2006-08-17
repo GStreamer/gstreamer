@@ -27,6 +27,7 @@ extern gboolean gst_ogg_demux_plugin_init (GstPlugin * plugin);
 extern gboolean gst_ogg_mux_plugin_init (GstPlugin * plugin);
 extern gboolean gst_ogm_parse_plugin_init (GstPlugin * plugin);
 extern gboolean gst_ogg_parse_plugin_init (GstPlugin * plugin);
+extern gboolean gst_ogg_avi_parse_plugin_init (GstPlugin * plugin);
 
 GST_DEBUG_CATEGORY (vorbisdec_debug);
 
@@ -37,6 +38,7 @@ plugin_init (GstPlugin * plugin)
   gst_ogg_mux_plugin_init (plugin);
   gst_ogm_parse_plugin_init (plugin);
   gst_ogg_parse_plugin_init (plugin);
+  gst_ogg_avi_parse_plugin_init (plugin);
 
   return TRUE;
 }

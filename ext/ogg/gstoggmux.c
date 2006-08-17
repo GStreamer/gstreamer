@@ -502,7 +502,7 @@ gst_ogg_mux_buffer_from_page (GstOggMux * mux, ogg_page * page, gboolean delta)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
   GST_LOG_OBJECT (mux, GST_GP_FORMAT
-      " created buffer %p from ogg page", ogg_page_granulepos (page));
+      " created buffer %p from ogg page", ogg_page_granulepos (page), buffer);
 
   return buffer;
 }

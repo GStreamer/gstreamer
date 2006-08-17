@@ -1,3 +1,22 @@
+2006-08-17  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/Makefile.am:
+	* ext/ogg/gstogg.c: (plugin_init):
+	* ext/ogg/gstoggaviparse.c: (gst_ogg_avi_parse_get_type),
+	(gst_ogg_avi_parse_base_init), (gst_ogg_avi_parse_class_init),
+	(gst_ogg_avi_parse_init), (gst_ogg_avi_parse_finalize),
+	(gst_ogg_avi_parse_setcaps), (gst_ogg_avi_parse_event),
+	(gst_ogg_avi_parse_push_packet), (gst_ogg_avi_parse_chain),
+	(gst_ogg_avi_parse_change_state), (gst_ogg_avi_parse_plugin_init):
+	Added ogg-in-avi parser element. Fixes #140139.
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_buffer_from_page):
+	Fixed a bug in oggdemux debug code.
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps),
+	(gst_riff_create_audio_template_caps):
+	Recognise Ogg in the AVI extensible wave format.
+
 2006-08-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/cdda/gstcddabasesrc.c: (gst_cdda_base_src_create):
