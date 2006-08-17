@@ -1,3 +1,15 @@
+2006-08-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add),
+	(gst_tag_to_vorbis_comments):
+	  Serialise unknown vorbis comments into GST_TAG_EXTENDED_COMMENT
+	  tags and deserialise them properly as well (#351768).
+	  Add some more gtk-doc blurbs and also some g_return_if_fail().
+
+	* tests/check/libs/tag.c: (GST_START_TEST),
+	(back_to_vorbis_comments), (taglists_are_equal), (tag_suite):
+	  More tests.
+
 2006-08-17  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/Makefile.am:

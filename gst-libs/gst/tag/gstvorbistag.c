@@ -130,14 +130,43 @@ gst_tag_to_vorbis_tag (const gchar * gst_tag)
 }
 
 
+/**
+ * gst_vorbis_tag_add:
+ * @list: a #GstTagList
+ * @tag: a vorbiscomment tag string (key in key=value), must be valid UTF-8
+ * @val: a vorbiscomment value string (value in key=value), must be valid UTF-8
+ *
+ * Convenience function using gst_tag_from_vorbis_tag(), parsing
+ * a vorbis comment string into the right type and adding it to the
+ * given taglist @list.
+ *
+ * Unknown vorbiscomment tags will be added to the tag list in form
+ * of a #GST_TAG_EXTENDED_COMMENT (since 0.10.10 at least).
+ */
 void
 gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
 {
-  const gchar *gst_tag = gst_tag_from_vorbis_tag (tag);
+  const gchar *gst_tag;
   GType tag_type;
 
-  if (gst_tag == NULL)
+  g_return_if_fail (list != NULL);
+  g_return_if_fail (tag != NULL);
+  g_return_if_fail (value != NULL);
+
+  g_return_if_fail (g_utf8_validate (tag, -1, NULL));
+  g_return_if_fail (g_utf8_validate (value, -1, NULL));
+  g_return_if_fail (strchr (tag, '=') == NULL);
+
+  gst_tag = gst_tag_from_vorbis_tag (tag);
+  if (gst_tag == NULL) {
+    gchar *ext_comment;
+
+    ext_comment = g_strdup_printf ("%s=%s", tag, value);
+    gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_EXTENDED_COMMENT,
+        ext_comment, NULL);
+    g_free (ext_comment);
     return;
+  }
 
   tag_type = gst_tag_get_type (gst_tag);
   switch (tag_type) {
@@ -177,22 +206,18 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
       if (strcmp (tag, "LANGUAGE") == 0) {
         const gchar *s = strchr (value, '[');
 
-        /* FIXME: gsttaglist.h says our language tag contains ISO-639-1
-         * codes, which are 2 letter codes. The code below extracts 3-letter
-         * identifiers, which would be ISO-639-2. Mixup? Oversight? Wrong core
-         * docs? What do files in the wild contain? (tpm) */
+        /* Accept both ISO-639-1 and ISO-639-2 codes */
         if (s && strchr (s, ']') == s + 4) {
           valid = g_strndup (s + 1, 3);
+        } else if (s && strchr (s, ']') == s + 3) {
+          valid = g_strndup (s + 1, 2);
+        } else if (strlen (value) != 2 && strlen (value) != 3) {
+          GST_WARNING ("doesn't contain an ISO-639 language code: %s", value);
         }
       }
 
       if (!valid) {
-        if (!g_utf8_validate (value, -1, (const gchar **) &valid)) {
-          valid = g_strndup (value, valid - value);
-          GST_DEBUG ("Invalid vorbis comment tag, truncated it to %s", valid);
-        } else {
-          valid = g_strdup (value);
-        }
+        valid = g_strdup (value);
       }
       gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, valid, NULL);
       g_free (valid);
@@ -322,15 +347,32 @@ typedef struct
 }
 MyForEach;
 
+/**
+ * gst_tag_to_vorbis_comments:
+ * @list: a #GstTagList
+ * @tag: a GStreamer tag identifier, such as #GST_TAG_ARTIST
+ *
+ * Creates a new tag list that contains the information parsed out of a 
+ * vorbiscomment packet.
+ *
+ * Returns: A #GList of newly-allowcated key=value strings. Free with
+ *          g_list_foreach (list, (GFunc) g_free, NULL) plus g_list_free (list)
+ */
 GList *
 gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
 {
+  const gchar *vorbis_tag = NULL;
   GList *l = NULL;
   guint i;
-  const gchar *vorbis_tag = gst_tag_to_vorbis_tag (tag);
 
-  if (!vorbis_tag)
-    return NULL;
+  g_return_val_if_fail (list != NULL, NULL);
+  g_return_val_if_fail (tag != NULL, NULL);
+
+  if (strcmp (tag, GST_TAG_EXTENDED_COMMENT) != 0) {
+    vorbis_tag = gst_tag_to_vorbis_tag (tag);
+    if (!vorbis_tag)
+      return NULL;
+  }
 
   for (i = 0; i < gst_tag_list_get_tag_size (list, tag); i++) {
     GType tag_type = gst_tag_get_type (tag);
@@ -346,11 +388,25 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
         break;
       }
       case G_TYPE_STRING:{
-        gchar *str;
+        gchar *str = NULL;
 
         if (!gst_tag_list_get_string_index (list, tag, i, &str))
           g_return_val_if_reached (NULL);
-        result = g_strdup_printf ("%s=%s", vorbis_tag, str);
+
+        /* special case: GST_TAG_EXTENDED_COMMENT */
+        if (vorbis_tag == NULL) {
+          gchar *key = NULL, *val = NULL;
+
+          if (gst_tag_parse_extended_comment (str, &key, NULL, &val, TRUE)) {
+            result = g_strdup_printf ("%s=%s", key, val);
+            g_free (key);
+            g_free (val);
+          } else {
+            GST_WARNING ("Not a valid extended comment string: %s", str);
+          }
+        } else {
+          result = g_strdup_printf ("%s=%s", vorbis_tag, str);
+        }
         g_free (str);
         break;
       }
@@ -404,6 +460,8 @@ write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
     data->data_count += strlen (result);
     data->entries = g_list_prepend (data->entries, result);
   }
+
+  g_list_free (comments);
 }
 
 /**
