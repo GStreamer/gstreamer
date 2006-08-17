@@ -1,3 +1,11 @@
+2006-08-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/check/gstbufferstraw.c:
+	  Make gstcheck stuff show up in docs (still needs to
+	  be documented properly though).
+
 2006-08-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/gst/gstreamer-sections.txt:

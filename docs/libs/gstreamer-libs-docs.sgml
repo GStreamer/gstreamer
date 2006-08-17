@@ -13,6 +13,7 @@
 <!ENTITY GstTypeFindHelper SYSTEM "xml/gsttypefindhelper.xml">
 
 <!ENTITY GstCheck SYSTEM "xml/gstcheck.xml">
+<!ENTITY GstCheckBufferStraw SYSTEM "xml/gstcheckbufferstraw.xml">
 
 <!ENTITY GstController SYSTEM "xml/gstcontroller.xml">
 <!ENTITY GstControllerGObject SYSTEM "xml/gstcontrollergobject.xml">
@@ -90,6 +91,7 @@
       </para>
   
       &GstCheck;
+      &GstCheckBufferStraw;
     </chapter>
   </part>
 

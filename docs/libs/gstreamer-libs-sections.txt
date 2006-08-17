@@ -353,10 +353,14 @@ GST_IS_NET_TIME_PROVIDER_CLASS
 <SUBSECTION Private>
 gst_net_time_provider_get_type
 </SECTION>
+
 <SECTION>
 <FILE>gstcheck</FILE>
 <TITLE>GstCheck</TITLE>
-<SUBSECTION Private>
+<INCLUDE>gst/check/gstcheck.h</INCLUDE>
+GST_START_TEST
+GST_END_TEST
+
 ASSERT_BUFFER_REFCOUNT
 ASSERT_CAPS_REFCOUNT
 ASSERT_CRITICAL
@@ -365,26 +369,6 @@ ASSERT_MINI_OBJECT_REFCOUNT
 ASSERT_OBJECT_REFCOUNT
 ASSERT_OBJECT_REFCOUNT_BETWEEN
 ASSERT_SET_STATE
-MAIN_INIT
-MAIN_START_THREADS
-MAIN_START_THREAD_FUNCTION
-MAIN_START_THREAD_FUNCTIONS
-MAIN_STOP_THREADS
-MAIN_SYNCHRONIZE
-THREAD_START
-THREAD_STARTED
-THREAD_SWITCH
-THREAD_SYNCHRONIZE
-THREAD_TEST_RUNNING
-GST_START_TEST
-GST_END_TEST
-
-sync_cond
-mutex
-GST_CAT_DEFAULT
-thread_list
-start_cond
-GST_CHECK_MAIN
 
 fail_unless_equals_int
 fail_unless_equals_string
@@ -396,7 +380,6 @@ assert_equals_string
 assert_equals_uint64
 assert_message_error
 
-gst_check_chain_func
 gst_check_init
 gst_check_message_error
 gst_check_setup_element
@@ -405,9 +388,36 @@ gst_check_setup_src_pad
 gst_check_teardown_element
 gst_check_teardown_sink_pad
 gst_check_teardown_src_pad
-gst_check_abi_list
 gst_check_run_suite
 
+<SUBSECTION Private>
+MAIN_INIT
+MAIN_START_THREADS
+MAIN_START_THREAD_FUNCTION
+MAIN_START_THREAD_FUNCTIONS
+MAIN_STOP_THREADS
+MAIN_SYNCHRONIZE
+THREAD_START
+THREAD_STARTED
+THREAD_SWITCH
+THREAD_SYNCHRONIZE
+THREAD_TEST_RUNNING
+
+sync_cond
+mutex
+GST_CAT_DEFAULT
+thread_list
+start_cond
+GST_CHECK_MAIN
+
+gst_check_chain_func
+gst_check_abi_list
+</SECTION>
+
+<SECTION>
+<FILE>gstcheckbufferstraw</FILE>
+<TITLE>GstBufferStraw</TITLE>
+<INCLUDE>gst/check/gstbufferstraw.h</INCLUDE>
 gst_buffer_straw_start_pipeline
 gst_buffer_straw_get_buffer
 gst_buffer_straw_stop_pipeline

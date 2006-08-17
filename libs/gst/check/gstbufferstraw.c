@@ -20,6 +20,14 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstcheckbufferstraw
+ * @short_description: Buffer interception code for GStreamer unit tests
+ *
+ * These macros and functions are for internal use of the unit tests found
+ * inside the 'check' directories of various GStreamer packages.
+ */
+
 #include "gstbufferstraw.h"
 
 static GCond *cond = NULL;
