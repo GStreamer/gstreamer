@@ -1,3 +1,18 @@
+2006-08-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c: (gst_cdda_base_src_create):
+	  Make buffer durations add up (duration should be next_ts-ts for
+	  perfect streams). Fixes CD ripping to Ogg/Vorbis with vorbisenc
+	  from CVS.
+
+	* tests/check/libs/cddabasesrc.c: (gst_cd_foo_src_close),
+	(test_buffer_timestamps), (cddabasesrc_suite):
+	  Add unit test for the above.
+
+	* tests/check/Makefile.am:
+	  Don't know why cddabasesrc test was in VALGRIND_TO_FIX, remove
+	  to see what happens.
+
 2006-08-16  Wim Taymans  <wim@fluendo.com>
 
 	* ext/alsa/gstalsasink.c: (gst_alsasink_set_property),

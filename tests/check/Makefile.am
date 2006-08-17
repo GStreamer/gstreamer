@@ -66,7 +66,6 @@ VALGRIND_TO_FIX = \
 	elements/alsa \
 	elements/audioresample \
 	generic/states \
-	libs/cddabasesrc \
 	libs/video
 
 # these tests don't even pass

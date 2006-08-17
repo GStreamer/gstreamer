@@ -1496,8 +1496,8 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   GstBuffer *buf;
   GstFormat format;
   gboolean eos;
-  gint64 position;
-  gint64 duration;
+  gint64 position = GST_CLOCK_TIME_NONE;
+  gint64 duration = GST_CLOCK_TIME_NONE;
 
   g_assert (klass->read_sector != NULL);
 
@@ -1551,13 +1551,21 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   }
 
   format = GST_FORMAT_TIME;
-  if (!gst_pad_query_position (GST_BASE_SRC_PAD (src), &format, &position)) {
-    position = GST_CLOCK_TIME_NONE;
+  if (gst_pad_query_position (GST_BASE_SRC_PAD (src), &format, &position)) {
+    gint64 next_ts = 0;
+
+    ++src->cur_sector;
+    if (gst_pad_query_position (GST_BASE_SRC_PAD (src), &format, &next_ts)) {
+      duration = next_ts - position;
+    }
+    --src->cur_sector;
   }
 
-  /* 4 bytes per sample, 44100 samples per second */
-  duration = gst_util_uint64_scale_int (GST_BUFFER_SIZE (buf) >> 2, GST_SECOND,
-      44100);
+  /* fallback duration: 4 bytes per sample, 44100 samples per second */
+  if (duration == GST_CLOCK_TIME_NONE) {
+    duration = gst_util_uint64_scale_int (GST_BUFFER_SIZE (buf) >> 2,
+        GST_SECOND, 44100);
+  }
 
   GST_BUFFER_TIMESTAMP (buf) = position;
   GST_BUFFER_DURATION (buf) = duration;

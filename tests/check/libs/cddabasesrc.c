@@ -20,6 +20,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* TODO:
+ *  - test different modes (when seeking to tracks in track mode, buffer
+ *    timestamps should start from 0, when seeking to tracks in disc mode,
+ *    buffer timestamps should increment, etc.)
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -27,6 +33,7 @@
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstbufferstraw.h>
 
 #include <gst/cdda/gstcddabasesrc.h>
 #include <string.h>
@@ -250,8 +257,6 @@ gst_cd_foo_src_close (GstCddaBaseSrc * cddabasesrc)
     g_assert (g_str_equal (cddabasesrc->mb_discid,
             src->cur_test->musicbrainz_discid));
   }
-
-  ++src->cur_disc;
 }
 
 static GstBuffer *
@@ -280,9 +285,9 @@ GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "cdfoosrc",
     "Read audio from CD",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
-    GST_START_TEST (test_discid_calculations)
+GST_START_TEST (test_discid_calculations)
 {
   GstElement *foosrc;
   gint i;
@@ -290,7 +295,8 @@ GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
   foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
 
   for (i = 0; i < G_N_ELEMENTS (test_discs); ++i) {
-    /* g_print ("Testing test disc layout %u ...\n", i); */
+    GST_LOG ("Testing disc layout %u ...\n", i);
+    GST_CD_FOO_SRC (foosrc)->cur_disc = i;
     gst_element_set_state (foosrc, GST_STATE_PLAYING);
     gst_element_get_state (foosrc, NULL, NULL, -1);
     gst_element_set_state (foosrc, GST_STATE_NULL);
@@ -301,7 +307,53 @@ GST_PLUGIN_DEFINE_STATIC (GST_VERSION_MAJOR,
 
 GST_END_TEST;
 
-Suite *
+GST_START_TEST (test_buffer_timestamps)
+{
+  GstElement *foosrc, *pipeline, *fakesink;
+  GstClockTime prev_ts, prev_duration, ts;
+  GstPad *sinkpad;
+  gint i;
+
+  pipeline = gst_pipeline_new ("pipeline");
+  foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
+  fakesink = gst_element_factory_make ("fakesink", "fakesink");
+  gst_bin_add_many (GST_BIN (pipeline), foosrc, fakesink, NULL);
+  fail_unless (gst_element_link (foosrc, fakesink));
+  sinkpad = gst_element_get_pad (fakesink, "sink");
+
+  GST_CD_FOO_SRC (foosrc)->cur_disc = 0;
+
+  gst_buffer_straw_start_pipeline (pipeline, sinkpad);
+
+  for (i = 0; i < 100; ++i) {
+    GstBuffer *buf;
+
+    buf = gst_buffer_straw_get_buffer (pipeline, sinkpad);
+    GST_LOG ("buffer, ts=%" GST_TIME_FORMAT ", dur=%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+    ts = GST_BUFFER_TIMESTAMP (buf);
+    fail_unless (GST_CLOCK_TIME_IS_VALID (ts));
+    fail_unless (GST_BUFFER_DURATION_IS_VALID (buf));
+    if (i > 0) {
+      fail_unless (GST_CLOCK_TIME_IS_VALID (prev_ts));
+      fail_unless (GST_CLOCK_TIME_IS_VALID (prev_duration));
+      fail_unless ((prev_ts + prev_duration) == ts);
+    }
+    prev_ts = ts;
+    prev_duration = GST_BUFFER_DURATION (buf);
+    gst_buffer_unref (buf);
+  }
+
+  gst_buffer_straw_stop_pipeline (pipeline, sinkpad);
+
+  gst_object_unref (pipeline);
+  gst_object_unref (sinkpad);
+}
+
+GST_END_TEST;
+
+static Suite *
 cddabasesrc_suite (void)
 {
   Suite *s = suite_create ("cddabasesrc");
@@ -309,6 +361,7 @@ cddabasesrc_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_discid_calculations);
+  tcase_add_test (tc_chain, test_buffer_timestamps);
 
   return s;
 }
