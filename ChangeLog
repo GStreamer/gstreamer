@@ -1,3 +1,8 @@
+2006-08-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_process):
+	Error out on non-implemented stuff.
+
 2006-08-16  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Andy Wingo <wingo at pobox dot com>

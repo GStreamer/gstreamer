@@ -302,6 +302,7 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       case 24:
         /* STAP-A    Single-time aggregation packet     5.7.1 */
         header_len = 1;
+        goto not_implemented;
         break;
       case 25:
         /* STAP-B    Single-time aggregation packet     5.7.1 */
@@ -310,6 +311,7 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       case 27:
         /* MTAP24    Multi-time aggregation packet      5.7.2 */
         header_len = 3;
+        goto not_implemented;
         break;
       case 28:
       case 29:
@@ -423,6 +425,12 @@ undefined_type:
   {
     GST_ELEMENT_WARNING (rtph264depay, STREAM, DECODE,
         ("Undefined packet type"), (NULL));
+    return NULL;
+  }
+not_implemented:
+  {
+    GST_ELEMENT_ERROR (rtph264depay, STREAM, FORMAT,
+        (NULL), ("NAL unit type not supported yet"));
     return NULL;
   }
 }
