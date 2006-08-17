@@ -1,5 +1,12 @@
 2006-08-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/pwg/advanced-events.xml:
+	* docs/pwg/titlepage.xml:
+	  Update for 0.10 API (#340627). Add myself
+	  to authors list.
+
+2006-08-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/libs/gstreamer-libs-docs.sgml:
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/check/gstbufferstraw.c:

@@ -1,9 +1,9 @@
 <chapter id="chapter-advanced-events">
   <title>Events: Seeking, Navigation and More</title>
   <para>
-    There are many different event types but only 2 ways they can travel across
+    There are many different event types but only two ways they can travel in
     the pipeline: downstream or upstream. It is very important to understand
-    how both of those methods work because if one element in the pipeline is not
+    how both of these methods work because if one element in the pipeline is not
     handling them correctly the whole event system of the pipeline is broken.
     We will try to explain here how these methods work and how elements are 
     supposed to implement them.
@@ -11,76 +11,96 @@
   <sect1 id="section-events-downstream" xreflabel="Downstream events">
     <title>Downstream events</title>
     <para>
-      Downstream events are received through the sink pad's dataflow. Depending
-      if your element is loop or chain based you will receive events in your
-      loop/chain function as a GstData with <function>gst_pad_pull</function>
-      or directly in the function call arguments. So when receiving dataflow
-      from the sink pad you have to check first if this data chunk is an event.
-      If that's the case you check what kind of event it is to react on relevant
-      ones and then forward others downstream using
-      <function>gst_pad_event_default</function>. Here is an example for both
-      loop and chain based elements.
+      Downstream events are received through the sink pad's event handler,
+      as set using <function>gst_pad_set_event_function ()</function> when
+      the pad was created.
+    </para>
+    <para>
+      Downstream events can travel in two ways: they can be in-band (serialised
+      with the buffer flow) or out-of-band (travelling through the pipeline
+      instantly, possibly not in the same thread as the streaming thread that
+      is processing the buffers, skipping ahead of buffers being processed
+      or queued in the pipeline). The most common downstream events
+      (NEWSEGMENT, EOS, TAG) are all serialised with the buffer flow.
+    </para>
+    <para>
+      Here is a typical event function:
     </para>
     <programlisting>
-/* Chain based element */
-static void
-gst_my_filter_chain (GstPad  *pad,
-                     GstData *data)
+static gboolean
+gst_my_filter_sink_event (GstPad  *pad, GstEvent * event)
 {
-  GstMyFilter *filter = GST_MY_FILTER (gst_pad_get_parent (pad));
-  ...
-  if (GST_IS_EVENT (data)) {
-    GstEvent *event = GST_EVENT (data);
+  GstMyFilter *filter;
+  gboolean ret;
 
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_EOS:
-        /* end-of-stream, we should close down all stream leftovers here */
-        gst_my_filter_stop_processing (filter);
-        /* fall-through to default event handling */
-      default:
-        gst_pad_event_default (pad, event);
-        break;
-    }
-    return;
+  filter = GST_MY_FILTER (gst_pad_get_parent (pad));
+  ...
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      /* maybe save and/or update the current segment (e.g. for output
+       * clipping) or convert the event into one in a different format
+       * (e.g. BYTES to TIME) or drop it and set a flag to send a newsegment
+       * event in a different format later */
+      ret = gst_pad_push_event (filter-&gt;src_pad, event);
+      break;
+    case GST_EVENT_EOS:
+      /* end-of-stream, we should close down all stream leftovers here */
+      gst_my_filter_stop_processing (filter);
+      ret = gst_pad_push_event (filter-&gt;src_pad, event);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_my_filter_clear_temporary_buffers (filter);
+      ret = gst_pad_push_event (filter-&gt;src_pad, event);
+      break;      
+    default:
+      ret = gst_pad_event_default (pad, event);
+      break;
   }
-  ...
-}
 
-/* Loop based element */
-static void
-gst_my_filter_loop (GstElement *element)
-{
-  GstMyFilter *filter = GST_MY_FILTER (element);
-  GstData *data = NULL;
-  
-  data = gst_pad_pull (filter->sinkpad);
-  
-  if (GST_IS_EVENT (data)) {
-    GstEvent *event = GST_EVENT (data);
-
-    switch (GST_EVENT_TYPE (event)) {
-      case GST_EVENT_EOS:
-        /* end-of-stream, we should close down all stream leftovers here */
-        gst_my_filter_stop_processing (filter);
-        /* fall-through to default event handling */
-      default:
-        gst_pad_event_default (filter->sinkpad, event);
-        break;
-    }
-    return;
-  }
   ...
+  gst_object_unref (filter);
+  return ret;
 }
     </programlisting>
+  <para>
+    If your element is chain-based, you will almost always have to implement
+    a sink event function, since that is how you are notified about
+    new segments and the end of the stream.
+  </para>
+  <para>
+    If your element is exclusively loop-based, you may or may not want a
+    sink event function (since the element is driving the pipeline it will
+    know the length of the stream in advance or be notified by the flow
+    return value of <function>gst_pad_pull_range()</function>. In some cases
+    even loop-based element may receive events from upstream though (for
+    example audio decoders with an id3demux or apedemux element in front of
+    them, or demuxers that are being fed input from sources that send
+    additional information about the stream in custom events, as DVD sources
+    do).
+  </para>
   </sect1>
   <sect1 id="section-events-upstream" xreflabel="Upstream events">
     <title>Upstream events</title>
     <para>
-      Upstream events are generated by an element somewhere in the pipeline and
-      sent using the <function>gst_pad_send_event</function> function. This
-      function simply realizes the pad and call the default event handler of that
-      pad. The default event handler of pads is <function>gst_pad_event_default</function>
-      , it basically sends the event to the peer pad. So upstream events always
+      Upstream events are generated by an element somewhere downstream in
+      the pipeline (example: a video sink may generate navigation
+      events that informs upstream elements about the current position of
+      the mouse pointer). This may also happen indirectly on request of the
+      application, for example when the application executes a seek on a
+      pipeline this seek request will be passed on to a sink element which
+      will then in turn generate an upstream seek event.
+    </para>
+    <para>
+      The most common upstream events are seek events and Quality-of-Service
+      (QoS) events.
+    </para>
+    <para>
+      An upstream event can be sent using the
+      <function>gst_pad_send_event</function> function. This
+      function simply call the default event handler of that pad. The default
+      event handler of pads is <function>gst_pad_event_default</function>, and
+      it basically sends the event to the peer pad. So upstream events always
       arrive on the src pad of your element and are handled by the default event
       handler except if you override that handler to handle it yourself. There
       are some specific cases where you have to do that :
@@ -89,13 +109,15 @@ gst_my_filter_loop (GstElement *element)
       <listitem>
         <para>
           If you have multiple sink pads in your element. In that case you will
-          have to decide which one of the sink pads you will send the event to.
+          have to decide which one of the sink pads you will send the event to
+          (if not all of them).
         </para>
       </listitem>
       <listitem>
         <para>
           If you need to handle that event locally. For example a navigation 
-          event that you will want to convert before sending it upstream.
+          event that you will want to convert before sending it upstream, or
+          a QoS event that you want to handle.
         </para>
       </listitem>
     </itemizedlist>
@@ -126,94 +148,84 @@ gst_my_filter_loop (GstElement *element)
           event.
         </para>
       </listitem>
+      <listitem>
+        <para>
+          Remember that the event handler might be called from a different
+          thread than the streaming thread, so make sure you use
+          appropriate locking everywhere and at the beginning of the function
+          obtain a reference to your element via the
+          <function>gst_pad_get_parent()</function> (and release it again at
+          the end of the function with <function>gst_object_unref ()</function>.
+        </para>
+      </listitem>
     </itemizedlist>
-    <para>
-      Here is an example of correct upstream event handling for a plugin
-      that wants to modify navigation events.
-    </para>
-    <programlisting>
-static gboolean
-gst_my_filter_handle_src_event (GstPad   *pad,
-				GstEvent *event)
-{
-  GstMyFilter *filter = GST_MY_FILTER (gst_pad_get_parent (pad));
-  
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NAVIGATION:
-      GstEvent *new_event = gst_event_new (GST_EVENT_NAVIGATION);;
-      /* Create a new event based on received one and then send it */
-      ...
-      gst_event_unref (event);
-      return gst_pad_event_default (pad, new_event);
-    default:
-      /* Falling back to default event handling for that pad */
-      return gst_pad_event_default (pad, event);
-  }
-}
-    </programlisting>
   </sect1>
 
   <sect1 id="section-events-definitions" xreflabel="All Events Together">
     <title>All Events Together</title>
     <para>
       In this chapter follows a list of all defined events that are currently
-      being used, plus how they should be used/interpreted. Events are stored
-      in a <ulink type="http"
-      url="../../gstreamer/html/gstreamer-GstEvent.html"><classname>GstEvent
-      </classname></ulink> structure, which is simply a big C union with the
-      types for each event in it. For the next development cycle, we intend to
-      switch events over to <ulink type="http"
-      url="../../gstreamer/html/gstreamer-GstStructure.html"><classname>GstStructure
-      </classname></ulink>,
-      but you don't need to worry about that too much for now.
+      being used, plus how they should be used/interpreted. You can check the
+      what type a certain event is using the GST_EVENT_TYPE macro (or if you
+      need a string for debugging purposes you can use GST_EVENT_TYPE_NAME).
     </para>
     <para>
       In this chapter, we will discuss the following events:
     </para>
     <itemizedlist>
       <listitem><para><xref linkend="section-events-eos"/></para></listitem>
-      <listitem><para><xref linkend="section-events-flush"/></para></listitem>
-      <listitem><para><xref linkend="section-events-discont"/></para></listitem>
+      <listitem><para><xref linkend="section-events-flush-start"/></para></listitem>
+      <listitem><para><xref linkend="section-events-flush-stop"/></para></listitem>
+      <listitem><para><xref linkend="section-events-newsegment"/></para></listitem>
       <listitem><para><xref linkend="section-events-seek"/></para></listitem>
-      <listitem><para><xref linkend="section-events-filler"/></para></listitem>
-      <listitem><para><xref linkend="section-events-interrupt"/></para></listitem>
       <listitem><para><xref linkend="section-events-nav"/></para></listitem>
       <listitem><para><xref linkend="section-events-tag"/></para></listitem>
     </itemizedlist>
+    <para>
+      For more comprehensive information about events and how they should be
+      used correctly in various circumstances please consult the GStreamer
+      design documentation. This section only gives a general overview.      
+    </para>
 
     <sect2 id="section-events-eos" xreflabel="End of Stream (EOS)">
       <title>End of Stream (EOS)</title>
       <para>
         End-of-stream events are sent if the stream that an element sends out
         is finished. An element receiving this event (from upstream, so it
-        receives it on its sinkpad) will generally forward the event further
-        downstream and set itself to EOS (<function>gst_element_set_eos ()</function>).
-        <function>gst_pad_event_default ()</function> takes care of all this,
-        so most elements do not need to support this event. Exceptions are
+        receives it on its sinkpad) will generally just process any buffered
+        data (if there is any) and then forward the event further downstream.
+        The <function>gst_pad_event_default ()</function> takes care of all
+        this, so most elements do not need to support this event. Exceptions are
         elements that explicitly need to close a resource down on EOS, and
         N-to-1 elements. Note that the stream itself is <emphasis>not</emphasis>
         a resource that should be closed down on EOS! Applications might seek
-        back to a point before EOS and set the pipeline to PLAYING again.
+        back to a point before EOS and continue playing again.
       </para>
       <para>
-        The EOS event (<symbol>GST_EVENT_EOS</symbol>) has no properties,
-        and that makes it one of the simplest events in &GStreamer;. It is
-        created using <function>gst_event_new (GST_EVENT_EOS);</function>.
+        The EOS event has no properties, which makes it one of the simplest
+        events in &GStreamer;. It is created using the 
+        <function>gst_event_new_eos()</function> function.
       </para>
       <para>
-        Some elements support the EOS event upstream, too. This signals the
-        element to go into EOS as soon as possible and signal the EOS event
-        forward downstream. This is useful for elements that have no concept
-        of end-of-stream themselves. Examples are TV card sources, audio card
-        sources, etc. This is not (yet) part of the official specifications of
-        this event, though.
+        It is important to note that <emphasis>only elements driving the
+        pipeline should ever send an EOS event</emphasis>. If your element
+        is chain-based, it is not driving the pipeline. Chain-based elements
+        should just return GST_FLOW_UNEXPECTED from their chain function at
+        the end of the stream (or the configured segment), the upstream
+        element that is driving the pipeline will then take care of
+        sending the EOS event (or alternatively post a SEGMENT_DONE message
+        on the bus depending on the mode of operation). If you are implementing
+        your own source element, you also do not need to ever manually send
+        an EOS event, you should also just return GST_FLOW_UNEXPECTED in
+        your create function (assuming your element derives from GstBaseSrc
+        or GstPushSrc).
       </para>
     </sect2>
 
-    <sect2 id="section-events-flush" xreflabel="Flush">
-      <title>Flush</title>
+    <sect2 id="section-events-flush-start" xreflabel="Flush Start">
+      <title>Flush Start</title>
       <para>
-        The flush event is being sent downstream if all buffers and caches
+        The flush start event is sent downstream if all buffers and caches
         in the pipeline should be emptied. <quote>Queue</quote> elements will
         empty their internal list of buffers when they receive this event, for
         example. File sink elements (e.g. <quote>filesink</quote>) will flush
@@ -226,21 +238,64 @@ gst_my_filter_handle_src_event (GstPad   *pad,
         event handler.
       </para>
       <para>
-        The flush event is created with <function>gst_event_new (GST_EVENT_FLUSH);</function>.
-        Like the EOS event, it has no properties.
+        As a side-effect of flushing all data from the pipeline, this event
+        unblocks the streaming thread by making all pads reject data until
+        they receive a <xref linkend="section-events-flush-stop"/> signal
+        (elements trying to push data will get a WRONG_STATE flow return
+         and stop processing data).
+      </para>
+      <para>
+        The flush-start event is created with the
+        <function>gst_event_new_flush_start ()</function>.
+        Like the EOS event, it has no properties. This event is usually
+        only created by elements driving the pipeline, like source elements
+        operating in push-mode or pull-range based demuxers/decoders.
       </para>
     </sect2>
 
-    <sect2 id="section-events-discont" xreflabel="Stream Discontinuity">
-      <title>Stream Discontinuity</title>
+    <sect2 id="section-events-flush-stop" xreflabel="Flush Stop">
+      <title>Flush Stop</title>
       <para>
-        A discontinuity event is sent downstream to indicate a discontinuity in
-        the data stream. This can happen because the application used the seek
-        event to seek to a different position in the stream, but it can also be
-        because a real-time network source temporarily lost the connection.
-        After the connection is restored, the data stream will continue, but
-        not at the same point where it got lost. Therefore, a discontinuity
-        event is being sent downstream, too.
+        The flush-stop event is sent by an element driving the pipeline
+        after a flush-start and tells pads and elements downstream that
+        they should accept events and buffers again (there will be at
+        least a NEWSEGMENT event before any buffers first though).
+      </para>
+      <para>
+        If your element keeps temporary caches of stream data, it should
+        clear them when it receives a FLUSH-STOP event (and also whenever
+        its chain function receives a buffer with the DISCONT flag set).
+      </para>
+      <para>
+        The flush-stop event is created with
+        <function>gst_event_new_flush_stop ()</function>. Like the EOS event,
+        it has no properties.
+      </para>
+    </sect2>
+
+    <sect2 id="section-events-newsegment" xreflabel="New Segment">
+      <title>New Segment</title>
+      <para>
+        A new segment event is sent downstream to either announce a new
+        segment of data in the data stream or to update the current segment
+        with new values. A new segment event must always be sent before the
+        first buffer of data and after a flush (see above).
+      </para>
+      <para>
+        The first new segment event is created by the element driving the 
+        pipeline, like a source operating in push-mode or a demuxer/decoder
+        operating pull-based. This new segment event then travels down the
+        pipeline and may be transformed on the way (a decoder, for example,
+        might receive a new-segment event in BYTES format and might transform
+        this into a new-segment event in TIMES format based on the average
+        bitrate).
+      </para>
+      <para>
+        New segment events may also be used to indicate 'gaps' in the stream,
+        like in a subtitle stream for example where there may not be any
+        data at all for a considerable amount of (stream) time. This is done
+        by updating the segment start of the current segment (see the design
+        documentation for more details).
       </para>
       <para>
         Depending on the element type, the event can simply be forwarded using
@@ -249,43 +304,22 @@ gst_my_filter_handle_src_event (GstPad   *pad,
         which generally have a byte-to-time conversion concept. Their input
         is usually byte-based, so the incoming event will have an offset in
         byte units (<symbol>GST_FORMAT_BYTES</symbol>), too. Elements
-        downstream, however, expect discontinuity events in time units, so that
+        downstream, however, expect new segment events in time units, so that
         it can be used to update the pipeline clock. Therefore, demuxers and
         similar elements should not forward the event, but parse it, free it
-        and send a new discontinuity event (in time units,
+        and send a new newsegment event (in time units,
         <symbol>GST_FORMAT_TIME</symbol>) further downstream.
       </para>
       <para>
-        The discontinuity event is created using the function
-        <function>gst_event_new_discontinuous ()</function>. It should set a
-        boolean value which indicates if the discontinuity event is sent
-        because of a new media type (this can happen if - during iteration -
-        a new location was set on a network source or on a file source).
-        then, it should give a list of formats and offsets in that format. The
-        list should be terminated by 0 as format.
+        The newsegment event is created using the function
+        <function>gst_event_new_new_segment ()</function>. See the API
+        reference and design document for details about its parameters. 
       </para>
-      <programlisting>
-static void
-my_filter_some_function (GstMyFilter *filter)
-{
-  GstEvent *event;
-[..]
-  event = gst_event_new_discontinuous (FALSE,
-				       GST_FORMAT_BYTES, 0,
-				       GST_FORMAT_TIME,  0,
-				       0);
-  gst_pad_push (filter->srcpad, GST_DATA (event));
-[..]
-}
-      </programlisting>
       <para>
-        Elements parsing this event can use macros and functions to access the
-        various properties. <function>GST_EVENT_DISCONT_NEW_MEDIA (event)</function>
-        checks the new-media boolean value.
-        <function>gst_event_discont_get_value (event, format, &amp;value)</function>
-        gets the offset of the new stream position in the specified format. If
-        that format was not specified when creating the event, the function
-        returns FALSE.
+        Elements parsing this event can use gst_event_parse_new_segment_full()
+        to extract the event details. Elements may find the GstSegment
+        API useful to keep track of the current segment (if they want to use
+        it for output clipping, for example).
       </para>
     </sect2>
 
@@ -294,100 +328,50 @@ my_filter_some_function (GstMyFilter *filter)
       <para>
         Seek events are meant to request a new stream position to elements.
         This new position can be set in several formats (time, bytes or
-        <quote>units</quote> [a term indicating frames for video, samples for
-        audio, etc.]). Seeking can be done with respect to the end-of-file,
-        start-of-file or current position, and can happen in both upstream and
-        downstream direction. Elements receiving seek events should, depending
-        on the element type, either forward it (filters, decoders), change the
-        format in which the event is given and forward it (demuxers), handle
-        the event by changing the file pointer in their internal stream
-        resource (file sources) or something else.
+        <quote>default units</quote> [a term indicating frames for video,
+        channel-independent samples for audio, etc.]). Seeking can be done with
+        respect to the end-of-file, start-of-file or current position, and
+        usually happens in upstream direction (downstream seeking is done by
+        sending a NEWSEGMENT event with the appropriate offsets for elements
+        that support that, like filesink).
       </para>
       <para>
-        Seek events are, like discontinuity events, built up using positions in
-        specified formats (time, bytes, units). They are created using the
-        function <function>gst_event_new_seek ()</function>, where the first
-        argument is the seek type (indicating with respect to which position
-        [current, end, start] the seek should be applied, and the format in
-        which the new position is given (time, bytes, units), and an offset
-        which is the requested position in the specified format.
-      </para>
-      <programlisting>
-static void
-my_filter_some_function (GstMyFilter *filter)
-{
-  GstEvent *event;
-[..]
-  /* seek to the start of a resource */
-  event = gst_event_new_seek (GST_SEEK_SET | GST_FORMAT_BYTES, 0);
-  gst_pad_push (filter->srcpad, GST_DATA (event));
-[..]
-}
-      </programlisting>
-      <para>
-        Elements parsing this event can use macros and functions to access the
-        properties. The seek type can be retrieved using
-        <function>GST_EVENT_SEEK_TYPE (event)</function>. This seek type
-        contains both the indicator of with respect to what position the seek
-        should be applied, and the format in which the seek event is given.
-        To get either one of these properties separately, use
-        <function>GST_EVENT_SEEK_FORMAT (event)</function> or
-        <function>GST_EVENT_SEEK_METHOD (event)</function>. The requested
-        position is available through <function>GST_EVENT_SEEK_OFFSET (event)</function>,
-        and is given in the specified format.
-      </para>
-    </sect2>
-
-    <sect2 id="section-events-filler" xreflabel="Stream Filler">
-      <title>Stream Filler</title>
-      <para>
-        The filler event is, as the name says, a <quote>filler</quote> of the
-        stream which has no special meaning associated with itself. It is used
-        to provide data to downstream elements and should be interpreted as a
-        way of assuring that the normal data flow will continue further
-        downstream. The event is especially intended for real-time MIDI source
-        elements, which only generate data when something <emphasis>changes</emphasis>.
-        MIDI decoders will therefore stall if nothing changes for several
-        seconds, and therefore playback will stop. The filler event is sent
-        downstream to assure the MIDI decoder that nothing changed, so that the
-        normal decoding process will continue and playback will, too. Unless
-        you intend to work with MIDI or other control-language-based data
-        types, you don't need this event. You can mostly simply forward it
-        with <function>gst_pad_event_default ()</function>.
+        Elements receiving seek events should, depending on the element type,
+        either just forward it upstream (filters, decoders), change the
+        format in which the event is given and then forward it (demuxers),
+        or handle the event by changing the file pointer in their internal
+        stream resource (file sources, demuxers/decoders driving the pipeline
+        in pull-mode) or something else.
       </para>
       <para>
-        The stream filler is created using <function>gst_event_new (GST_EVENT_FILLER);</function>.
-        It has no properties.
-      </para>
-    </sect2>
-
-    <sect2 id="section-events-interrupt" xreflabel="Interruption">
-      <title>Interruption</title>
-      <para>
-        The interrupt event is generated by queue elements and sent downstream
-        if a timeout occurs on the stream. The scheduler will use this event to
-        get back in its own main loop and schedule other elements. This
-        prevents deadlocks or a stream stall if no data is generated over a
-        part of the pipeline for a considerable amount of time. The scheduler
-        will process this event internally, so any normal elements do not need
-        to generate or handle this event at all.
+        Seek events are built up using positions in specified formats (time,
+        bytes, units). They are created using the function
+        <function>gst_event_new_seek ()</function>. Note that many plugins do
+        not support seeking from the end of the stream or from the current
+        position. An element not driving the pipeline and forwarding a seek
+        request should not assume that the seek succeeded or actually happened,
+        it should operate based on the NEWSEGMENT events it receives.
       </para>
       <para>
-        The difference between the filler event and the interrupt event is that
-        the filler event is a real part of a pipeline, so it will reach fellow
-        elements, which can use it to "do nothing else than what I used to do".
-        The interrupt event never reaches fellow elements.
-      </para>
-      <para>
-        The interrupt event (<function>gst_event_new (GST_EVENT_INTERRUPT);</function>)
-        has no properties.
+        Elements parsing this event can do this using
+        <function>gst_event_parse_seek()</function>.
       </para>
     </sect2>
 
     <sect2 id="section-events-nav" xreflabel="Navigation">
       <title>Navigation</title>
       <para>
-        WRITEME
+        Navigation events are sent upstream by video sinks to inform upstream
+        elements of where the mouse pointer is, if and where mouse pointer
+        clicks have happened, or if keys have been pressed or released.
+      </para>
+      <para>
+        All this information is contained in the event structure which can
+        be obtained with <function>gst_event_get_structure ()</function>.
+      </para>
+      <para>
+        Check out the navigationtest element in gst-plugins-good for an idea
+        how to extract navigation information from this event.
       </para>
     </sect2>
 
@@ -403,13 +387,17 @@ my_filter_some_function (GstMyFilter *filter)
       </para>
       <para>
         The tag event is created using the function
-        <function>gst_event_new_tag ()</function>. It requires a filled
-        taglist as argument.
+        <function>gst_event_new_tag ()</function>, but more often elements will
+        use either the <function>gst_element_found_tags ()</function> function
+        or the <function>gst_element_found_tags_for_pad ()</function>, which
+        will do both: post a tag message on the bus and send a tag event
+        downstream. All of these functions require a filled-in taglist as
+        argument, which they will take ownership of.
       </para>
       <para>
         Elements parsing this event can use the function
-        <function>gst_event_tag_get_list (event)</function> to acquire the
-        taglist that was parsed.
+        <function>gst_event_parse_tag ()</function> to acquire the
+        taglist that the event contains.
       </para>
     </sect2>
   </sect1>

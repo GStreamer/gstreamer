@@ -62,6 +62,16 @@
 	</para>
       </authorblurb>
     </author>
+
+    <author>
+      <firstname>Tim-Philipp</firstname>
+      <surname>Müller</surname>
+      <authorblurb>
+        <para>
+	      <email>tim centricular . net</email>
+        </para>
+      </authorblurb>
+    </author>
   </authorgroup>
 
   <legalnotice id="misc-legalnotice">
