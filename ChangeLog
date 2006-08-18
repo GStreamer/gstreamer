@@ -1,5 +1,10 @@
 2006-08-18  Wim Taymans  <wim@fluendo.com>
 
+	* docs/plugins/Makefile.am:
+	More Oss docs fixage. 
+
+2006-08-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtp.c: (plugin_init):
 	* gst/rtp/gstrtpsv3vdepay.c: (gst_rtp_sv3v_depay_base_init),
