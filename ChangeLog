@@ -1,3 +1,12 @@
+2006-08-18  Edward Hervey  <edward@fluendo.com>
+
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_handle_pull_seek),
+	(gst_dvdemux_loop), (gst_dvdemux_change_state):
+	* ext/dv/gstdvdemux.h:
+	When handling seek requests, don't send the newsegment event from the
+	calling thread. Instead save it so it can be sent from the streaming
+	thread.
+
 2006-08-17  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>

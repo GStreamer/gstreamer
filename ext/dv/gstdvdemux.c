@@ -1071,15 +1071,15 @@ gst_dvdemux_handle_pull_seek (GstDVDemux * demux, GstPad * pad,
     if ((stop = demux->time_segment.stop) == -1)
       stop = demux->time_segment.duration;
 
-    /* now send the newsegment */
-    GST_DEBUG_OBJECT (demux, "Sending newsegment from %" GST_TIME_FORMAT
-        " to %" GST_TIME_FORMAT, GST_TIME_ARGS (demux->time_segment.start),
-        GST_TIME_ARGS (stop));
+    GST_INFO_OBJECT (demux,
+        "Saving newsegment event to be sent in streaming thread");
 
-    gst_dvdemux_push_event (demux,
-        gst_event_new_new_segment (FALSE,
-            demux->time_segment.rate, demux->time_segment.format,
-            demux->time_segment.last_stop, stop, demux->time_segment.time));
+    if (demux->pending_segment)
+      gst_event_unref (demux->pending_segment);
+
+    demux->pending_segment = gst_event_new_new_segment (FALSE,
+        demux->time_segment.rate, demux->time_segment.format,
+        demux->time_segment.last_stop, stop, demux->time_segment.time);
 
     demux->need_segment = FALSE;
   }
@@ -1610,6 +1610,17 @@ gst_dvdemux_loop (GstPad * pad)
       }
     }
   }
+
+
+  if (G_UNLIKELY (dvdemux->pending_segment)) {
+
+    /* now send the newsegment */
+    GST_DEBUG_OBJECT (dvdemux, "Sending newsegment from");
+
+    gst_dvdemux_push_event (dvdemux, dvdemux->pending_segment);
+    dvdemux->pending_segment = NULL;
+  }
+
   if (G_LIKELY (buffer == NULL)) {
     GST_DEBUG_OBJECT (dvdemux, "pulling buffer at offset %" G_GINT64_FORMAT,
         dvdemux->byte_segment.last_stop);
@@ -1770,6 +1781,9 @@ gst_dvdemux_change_state (GstElement * element, GstStateChange transition)
 
       event_p = &dvdemux->seek_event;
       gst_event_replace (event_p, NULL);
+      if (dvdemux->pending_segment)
+        gst_event_unref (dvdemux->pending_segment);
+      dvdemux->pending_segment = NULL;
       break;
     }
     default:
