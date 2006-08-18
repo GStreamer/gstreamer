@@ -76,6 +76,18 @@ typedef struct _GstRTPHeader
 
 #define GST_RTP_HEADER_CSRC_SIZE(buf)   (GST_RTP_HEADER_CSRC_COUNT(buf) * sizeof (guint32))
 
+/**
+ * gst_rtp_buffer_allocate_data:
+ * @buffer: a #GstBuffer
+ * @payload_len: the length of the payload
+ * @pad_len: the amount of padding
+ * @csrc_count: the number of CSRC entries
+ *
+ * Allocate enough data in @buffer to hold an RTP packet with @csrc_count CSRCs,
+ * a payload length of @payload_len and padding of @pad_len.
+ * MALLOCDATA of @buffer will be overwritten and will not be freed. 
+ * All other RTP header fields will be set to 0/FALSE.
+ */
 void
 gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,
     guint8 pad_len, guint8 csrc_count)
@@ -104,6 +116,17 @@ gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,
   GST_RTP_HEADER_SSRC (buffer) = 0;
 }
 
+/**
+ * gst_rtp_buffer_new_take_data:
+ * @data: data for the new buffer
+ * @len: the length of data
+ *
+ * Create a new buffer and set the data and size of the buffer to @data and @len
+ * respectively. @data will be freed when the buffer is unreffed, so this
+ * function transfers ownership of @data to the new buffer.
+ *
+ * Returns: A newly allocated buffer with @data and of size @len.
+ */
 GstBuffer *
 gst_rtp_buffer_new_take_data (gpointer data, guint len)
 {
@@ -121,12 +144,36 @@ gst_rtp_buffer_new_take_data (gpointer data, guint len)
   return result;
 }
 
+/**
+ * gst_rtp_buffer_new_copy_data:
+ * @data: data for the new buffer
+ * @len: the length of data
+ *
+ * Create a new buffer and set the data to a copy of @len
+ * bytes of @data and the size to @len. The data will be freed when the buffer
+ * is freed.
+ *
+ * Returns: A newly allocated buffer with a copy of @data and of size @len.
+ */
 GstBuffer *
 gst_rtp_buffer_new_copy_data (gpointer data, guint len)
 {
   return gst_rtp_buffer_new_take_data (g_memdup (data, len), len);
 }
 
+/**
+ * gst_rtp_buffer_new_allocate:
+ * @payload_len: the length of the payload
+ * @pad_len: the amount of padding
+ * @csrc_count: the number of CSRC entries
+ *
+ * Allocate a new #Gstbuffer with enough data to hold an RTP packet with @csrc_count CSRCs,
+ * a payload length of @payload_len and padding of @pad_len.
+ * All other RTP header fields will be set to 0/FALSE.
+ *
+ * Returns: A newly allocated buffer that can hold an RTP packet with given
+ * parameters.
+ */
 GstBuffer *
 gst_rtp_buffer_new_allocate (guint payload_len, guint8 pad_len,
     guint8 csrc_count)
@@ -141,6 +188,19 @@ gst_rtp_buffer_new_allocate (guint payload_len, guint8 pad_len,
   return result;
 }
 
+/**
+ * gst_rtp_buffer_new_allocate_len:
+ * @packet_len: the total length of the packet
+ * @pad_len: the amount of padding
+ * @csrc_count: the number of CSRC entries
+ *
+ * Create a new #GstBuffer that can hold an RTP packet that is exactly
+ * @packet_len long. The length of the payload depends on @pad_len and
+ * @csrc_count and can be calculated with gst_rtp_buffer_calc_payload_len().
+ * All RTP header fields will be set to 0/FALSE.
+ *
+ * Returns: A newly allocated buffer that can hold an RTP packet of @packet_len.
+ */
 GstBuffer *
 gst_rtp_buffer_new_allocate_len (guint packet_len, guint8 pad_len,
     guint8 csrc_count)
@@ -154,6 +214,15 @@ gst_rtp_buffer_new_allocate_len (guint packet_len, guint8 pad_len,
   return gst_rtp_buffer_new_allocate (len, pad_len, csrc_count);
 }
 
+/**
+ * gst_rtp_buffer_calc_header_len:
+ * @csrc_count: the number of CSRC entries
+ *
+ * Calculate the header length of an RTP packet with @csrc_count CSRC entries.
+ * An RTP packet can have at most 15 CSRC entries.
+ *
+ * Returns: The length of an RTP header with @csrc_count CSRC entries.
+ */
 guint
 gst_rtp_buffer_calc_header_len (guint8 csrc_count)
 {
@@ -162,6 +231,17 @@ gst_rtp_buffer_calc_header_len (guint8 csrc_count)
   return GST_RTP_HEADER_LEN + (csrc_count * sizeof (guint32));
 }
 
+/**
+ * gst_rtp_buffer_calc_packet_len:
+ * @payload_len: the length of the payload
+ * @pad_len: the amount of padding
+ * @csrc_count: the number of CSRC entries
+ *
+ * Calculate the total length of an RTP packet with a payload size of @payload_len,
+ * a padding of @pad_len and a @csrc_count CSRC entries.
+ *
+ * Returns: The total length of an RTP header with given parameters.
+ */
 guint
 gst_rtp_buffer_calc_packet_len (guint payload_len, guint8 pad_len,
     guint8 csrc_count)
@@ -172,6 +252,17 @@ gst_rtp_buffer_calc_packet_len (guint payload_len, guint8 pad_len,
       + pad_len;
 }
 
+/**
+ * gst_rtp_buffer_calc_payload_len:
+ * @packet_len: the length of the total RTP packet
+ * @pad_len: the amount of padding
+ * @csrc_count: the number of CSRC entries
+ *
+ * Calculate the length of the payload of an RTP packet with size @packet_len,
+ * a padding of @pad_len and a @csrc_count CSRC entries.
+ *
+ * Returns: The length of the payload of an RTP packet  with given parameters.
+ */
 guint
 gst_rtp_buffer_calc_payload_len (guint packet_len, guint8 pad_len,
     guint8 csrc_count)
@@ -182,6 +273,18 @@ gst_rtp_buffer_calc_payload_len (guint packet_len, guint8 pad_len,
       - pad_len;
 }
 
+/**
+ * gst_rtp_buffer_validate_data:
+ * @data: the data to validate
+ * @len: the length of @data to validate
+ *
+ * Check if the @data and @size point to the data of a valid RTP packet.
+ * This function checks the length, version and padding of the packet data.
+ * Use this function to validate a packet before using the other functions in
+ * this module.
+ *
+ * Returns: TRUE if the data points to a valid RTP packet.
+ */
 gboolean
 gst_rtp_buffer_validate_data (guint8 * data, guint len)
 {
@@ -236,6 +339,15 @@ wrong_padding:
   }
 }
 
+/**
+ * gst_rtp_buffer_validate:
+ * @buffer: the buffer to validate
+ *
+ * Check if the data pointed to by @buffer is a valid RTP packet using
+ * gst_rtp_buffer_validate_data().
+ *
+ * Returns: TRUE if @buffer is a valid RTP packet.
+ */
 gboolean
 gst_rtp_buffer_validate (GstBuffer * buffer)
 {
@@ -250,7 +362,14 @@ gst_rtp_buffer_validate (GstBuffer * buffer)
   return gst_rtp_buffer_validate_data (data, len);
 }
 
-
+/**
+ * gst_rtp_buffer_set_packet_len:
+ * @buffer: the buffer
+ * @len: the new packet length
+ *
+ * Set the total @buffer size to @len. The data in the buffer will be made
+ * larger if needed. Any padding will be removed from the packet. 
+ */
 void
 gst_rtp_buffer_set_packet_len (GstBuffer * buffer, guint len)
 {
@@ -271,9 +390,16 @@ gst_rtp_buffer_set_packet_len (GstBuffer * buffer, guint len)
 
   /* remove any padding */
   GST_RTP_HEADER_PADDING (buffer) = FALSE;
-
 }
 
+/**
+ * gst_rtp_buffer_get_packet_len:
+ * @buffer: the buffer
+ *
+ * Return the total length of the packet in @buffer.
+ *
+ * Returns: The total length of the packet in @buffer.
+ */
 guint
 gst_rtp_buffer_get_packet_len (GstBuffer * buffer)
 {
@@ -282,6 +408,14 @@ gst_rtp_buffer_get_packet_len (GstBuffer * buffer)
   return GST_BUFFER_SIZE (buffer);
 }
 
+/**
+ * gst_rtp_buffer_get_version:
+ * @buffer: the buffer
+ *
+ * Get the version number of the RTP packet in @buffer.
+ *
+ * Returns: The version of @buffer.
+ */
 guint8
 gst_rtp_buffer_get_version (GstBuffer * buffer)
 {
@@ -291,6 +425,13 @@ gst_rtp_buffer_get_version (GstBuffer * buffer)
   return GST_RTP_HEADER_VERSION (buffer);
 }
 
+/**
+ * gst_rtp_buffer_set_version:
+ * @buffer: the buffer
+ * @version: the new version
+ *
+ * Set the version of the RTP packet in @buffer to @version.
+ */
 void
 gst_rtp_buffer_set_version (GstBuffer * buffer, guint8 version)
 {
@@ -301,7 +442,14 @@ gst_rtp_buffer_set_version (GstBuffer * buffer, guint8 version)
   GST_RTP_HEADER_VERSION (buffer) = version;
 }
 
-
+/**
+ * gst_rtp_buffer_get_padding:
+ * @buffer: the buffer
+ *
+ * Check if the padding bit is set on the RTP packet in @buffer.
+ *
+ * Returns: TRUE if @buffer has the padding bit set.
+ */
 gboolean
 gst_rtp_buffer_get_padding (GstBuffer * buffer)
 {
@@ -311,6 +459,13 @@ gst_rtp_buffer_get_padding (GstBuffer * buffer)
   return GST_RTP_HEADER_PADDING (buffer);
 }
 
+/**
+ * gst_rtp_buffer_set_padding:
+ * @buffer: the buffer
+ * @padding: the new padding
+ *
+ * Set the padding bit on the RTP packet in @buffer to @padding.
+ */
 void
 gst_rtp_buffer_set_padding (GstBuffer * buffer, gboolean padding)
 {
@@ -320,6 +475,16 @@ gst_rtp_buffer_set_padding (GstBuffer * buffer, gboolean padding)
   GST_RTP_HEADER_PADDING (buffer) = padding;
 }
 
+/**
+ * gst_rtp_buffer_pad_to:
+ * @buffer: the buffer
+ * @len: the new amount of padding
+ *
+ * Set the amount of padding in the RTP packing in @buffer to
+ * @len. If @len is 0, the padding is removed.
+ *
+ * NOTE: This function does not work correctly.
+ */
 void
 gst_rtp_buffer_pad_to (GstBuffer * buffer, guint len)
 {
@@ -330,9 +495,18 @@ gst_rtp_buffer_pad_to (GstBuffer * buffer, guint len)
     GST_RTP_HEADER_PADDING (buffer) = TRUE;
   else
     GST_RTP_HEADER_PADDING (buffer) = FALSE;
+
+  /* FIXME, set the padding byte at the end of the payload data */
 }
 
-
+/**
+ * gst_rtp_buffer_get_extension:
+ * @buffer: the buffer
+ *
+ * Check if the extension bit is set on the RTP packet in @buffer.
+ * 
+ * Returns: TRUE if @buffer has the extension bit set.
+ */
 gboolean
 gst_rtp_buffer_get_extension (GstBuffer * buffer)
 {
@@ -342,6 +516,13 @@ gst_rtp_buffer_get_extension (GstBuffer * buffer)
   return GST_RTP_HEADER_EXTENSION (buffer);
 }
 
+/**
+ * gst_rtp_buffer_set_extension:
+ * @buffer: the buffer
+ * @extension: the new extension
+ *
+ * Set the extension bit on the RTP packet in @buffer to @extension.
+ */
 void
 gst_rtp_buffer_set_extension (GstBuffer * buffer, gboolean extension)
 {
@@ -351,6 +532,14 @@ gst_rtp_buffer_set_extension (GstBuffer * buffer, gboolean extension)
   GST_RTP_HEADER_EXTENSION (buffer) = extension;
 }
 
+/**
+ * gst_rtp_buffer_get_ssrc:
+ * @buffer: the buffer
+ *
+ * Get the SSRC of the RTP packet in @buffer.
+ * 
+ * Returns: the SSRC of @buffer in host order.
+ */
 guint32
 gst_rtp_buffer_get_ssrc (GstBuffer * buffer)
 {
@@ -360,6 +549,13 @@ gst_rtp_buffer_get_ssrc (GstBuffer * buffer)
   return g_ntohl (GST_RTP_HEADER_SSRC (buffer));
 }
 
+/**
+ * gst_rtp_buffer_set_ssrc:
+ * @buffer: the buffer
+ * @ssrc: the new SSRC
+ *
+ * Set the SSRC on the RTP packet in @buffer to @ssrc.
+ */
 void
 gst_rtp_buffer_set_ssrc (GstBuffer * buffer, guint32 ssrc)
 {
@@ -369,6 +565,14 @@ gst_rtp_buffer_set_ssrc (GstBuffer * buffer, guint32 ssrc)
   GST_RTP_HEADER_SSRC (buffer) = g_htonl (ssrc);
 }
 
+/**
+ * gst_rtp_buffer_get_csrc_count:
+ * @buffer: the buffer
+ *
+ * Get the CSRC count of the RTP packet in @buffer.
+ * 
+ * Returns: the CSRC count of @buffer.
+ */
 guint8
 gst_rtp_buffer_get_csrc_count (GstBuffer * buffer)
 {
@@ -378,6 +582,15 @@ gst_rtp_buffer_get_csrc_count (GstBuffer * buffer)
   return GST_RTP_HEADER_CSRC_COUNT (buffer);
 }
 
+/**
+ * gst_rtp_buffer_get_csrc:
+ * @buffer: the buffer
+ * @idx: the index of the CSRC to get
+ *
+ * Get the CSRC at index @idx in @buffer.
+ * 
+ * Returns: the CSRC at index @idx in host order.
+ */
 guint32
 gst_rtp_buffer_get_csrc (GstBuffer * buffer, guint8 idx)
 {
@@ -388,6 +601,14 @@ gst_rtp_buffer_get_csrc (GstBuffer * buffer, guint8 idx)
   return g_ntohl (GST_RTP_HEADER_CSRC (buffer, idx));
 }
 
+/**
+ * gst_rtp_buffer_set_csrc:
+ * @buffer: the buffer
+ * @idx: the CSRC index to set
+ * @csrc: the CSRC in host order to set at @idx
+ *
+ * Modify the CSRC at index @idx in @buffer to @csrc.
+ */
 void
 gst_rtp_buffer_set_csrc (GstBuffer * buffer, guint8 idx, guint32 csrc)
 {
@@ -398,6 +619,14 @@ gst_rtp_buffer_set_csrc (GstBuffer * buffer, guint8 idx, guint32 csrc)
   GST_RTP_HEADER_CSRC (buffer, idx) = g_htonl (csrc);
 }
 
+/**
+ * gst_rtp_buffer_get_marker:
+ * @buffer: the buffer
+ *
+ * Check if the marker bit is set on the RTP packet in @buffer.
+ *
+ * Returns: TRUE if @buffer has the marker bit set.
+ */
 gboolean
 gst_rtp_buffer_get_marker (GstBuffer * buffer)
 {
@@ -407,6 +636,13 @@ gst_rtp_buffer_get_marker (GstBuffer * buffer)
   return GST_RTP_HEADER_MARKER (buffer);
 }
 
+/**
+ * gst_rtp_buffer_set_marker:
+ * @buffer: the buffer
+ * @marker: the new marker
+ *
+ * Set the marker bit on the RTP packet in @buffer to @marker.
+ */
 void
 gst_rtp_buffer_set_marker (GstBuffer * buffer, gboolean marker)
 {
@@ -416,7 +652,14 @@ gst_rtp_buffer_set_marker (GstBuffer * buffer, gboolean marker)
   GST_RTP_HEADER_MARKER (buffer) = marker;
 }
 
-
+/**
+ * gst_rtp_buffer_get_payload_type:
+ * @buffer: the buffer
+ *
+ * Get the payload type of the RTP packet in @buffer.
+ *
+ * Returns: The payload type.
+ */
 guint8
 gst_rtp_buffer_get_payload_type (GstBuffer * buffer)
 {
@@ -426,6 +669,13 @@ gst_rtp_buffer_get_payload_type (GstBuffer * buffer)
   return GST_RTP_HEADER_PAYLOAD_TYPE (buffer);
 }
 
+/**
+ * gst_rtp_buffer_set_payload_type:
+ * @buffer: the buffer
+ * @payload_type: the new type
+ *
+ * Set the payload type of the RTP packet in @buffer to @payload_type.
+ */
 void
 gst_rtp_buffer_set_payload_type (GstBuffer * buffer, guint8 payload_type)
 {
@@ -436,7 +686,14 @@ gst_rtp_buffer_set_payload_type (GstBuffer * buffer, guint8 payload_type)
   GST_RTP_HEADER_PAYLOAD_TYPE (buffer) = payload_type;
 }
 
-
+/**
+ * gst_rtp_buffer_get_seq:
+ * @buffer: the buffer
+ *
+ * Get the sequence number of the RTP packet in @buffer.
+ *
+ * Returns: The sequence number in host order.
+ */
 guint16
 gst_rtp_buffer_get_seq (GstBuffer * buffer)
 {
@@ -446,6 +703,13 @@ gst_rtp_buffer_get_seq (GstBuffer * buffer)
   return g_ntohs (GST_RTP_HEADER_SEQ (buffer));
 }
 
+/**
+ * gst_rtp_buffer_set_seq:
+ * @buffer: the buffer
+ * @seq: the new sequence number
+ *
+ * Set the sequence number of the RTP packet in @buffer to @seq.
+ */
 void
 gst_rtp_buffer_set_seq (GstBuffer * buffer, guint16 seq)
 {
@@ -455,7 +719,14 @@ gst_rtp_buffer_set_seq (GstBuffer * buffer, guint16 seq)
   GST_RTP_HEADER_SEQ (buffer) = g_htons (seq);
 }
 
-
+/**
+ * gst_rtp_buffer_get_timestamp:
+ * @buffer: the buffer
+ *
+ * Get the timestamp of the RTP packet in @buffer.
+ *
+ * Returns: The timestamp in host order.
+ */
 guint32
 gst_rtp_buffer_get_timestamp (GstBuffer * buffer)
 {
@@ -465,6 +736,13 @@ gst_rtp_buffer_get_timestamp (GstBuffer * buffer)
   return g_ntohl (GST_RTP_HEADER_TIMESTAMP (buffer));
 }
 
+/**
+ * gst_rtp_buffer_set_timestamp:
+ * @buffer: the buffer
+ * @timestamp: the new timestamp
+ *
+ * Set the timestamp of the RTP packet in @buffer to @timestamp.
+ */
 void
 gst_rtp_buffer_set_timestamp (GstBuffer * buffer, guint32 timestamp)
 {
@@ -474,20 +752,66 @@ gst_rtp_buffer_set_timestamp (GstBuffer * buffer, guint32 timestamp)
   GST_RTP_HEADER_TIMESTAMP (buffer) = g_htonl (timestamp);
 }
 
+/**
+ * gst_rtp_buffer_get_payload_subbuffer:
+ * @buffer: the buffer
+ * @offset: the offset in the payload
+ * @len: the length in the payload
+ *
+ * Create a subbuffer of the payload of the RTP packet in @buffer. @offset bytes
+ * are skipped in the payload and the subbuffer will be of size @len.
+ * If @len is -1 the total payload starting from @offset if subbuffered.
+ *
+ * Returns: A new buffer with the specified data of the payload.
+ */
+GstBuffer *
+gst_rtp_buffer_get_payload_subbuffer (GstBuffer * buffer, guint offset,
+    guint len)
+{
+  guint poffset, plen;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, NULL);
+
+  plen = gst_rtp_buffer_get_payload_len (buffer);
+  /* we can't go past the length */
+  g_return_val_if_fail (offset < plen, NULL);
+
+  /* apply offset */
+  poffset = GST_RTP_HEADER_LEN + GST_RTP_HEADER_CSRC_SIZE (buffer) + offset;
+  plen -= offset;
+
+  /* see if we need to shrink the buffer even based on @len */
+  if (len != -1 && len < plen)
+    plen = len;
+
+  return gst_buffer_create_sub (buffer, poffset, plen);
+}
+
+/**
+ * gst_rtp_buffer_get_payload_buffer:
+ * @buffer: the buffer
+ *
+ * Create a buffer of the payload of the RTP packet in @buffer. This function
+ * will internally create a subbuffer of @buffer so that a memcopy can be
+ * avoided.
+ *
+ * Returns: A new buffer with the data of the payload.
+ */
 GstBuffer *
 gst_rtp_buffer_get_payload_buffer (GstBuffer * buffer)
 {
-  guint len;
-
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
-  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
-
-  len = gst_rtp_buffer_get_payload_len (buffer);
-
-  return gst_buffer_create_sub (buffer, GST_RTP_HEADER_LEN
-      + GST_RTP_HEADER_CSRC_SIZE (buffer), len);
+  return gst_rtp_buffer_get_payload_subbuffer (buffer, 0, -1);
 }
 
+/**
+ * gst_rtp_buffer_get_payload_len:
+ * @buffer: the buffer
+ *
+ * Get the length of the payload of the RTP packet in @buffer.
+ *
+ * Returns: The length of the payload in @buffer.
+ */
 guint
 gst_rtp_buffer_get_payload_len (GstBuffer * buffer)
 {
@@ -505,6 +829,15 @@ gst_rtp_buffer_get_payload_len (GstBuffer * buffer)
   return len;
 }
 
+/**
+ * gst_rtp_buffer_get_payload:
+ * @buffer: the buffer
+ *
+ * Get a pointer to the payload data in @buffer. This pointer is valid as long
+ * as a reference to @buffer is helt.
+ *
+ * Returns: A pointer to the payload data in @buffer.
+ */
 gpointer
 gst_rtp_buffer_get_payload (GstBuffer * buffer)
 {

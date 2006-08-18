@@ -1,3 +1,14 @@
+2006-08-18  Wim Taymans  <wim@fluendo.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/rtp/gstrtpbuffer.c: (gst_rtp_buffer_set_packet_len),
+	(gst_rtp_buffer_pad_to), (gst_rtp_buffer_get_payload_subbuffer),
+	(gst_rtp_buffer_get_payload_buffer):
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	Document GstRTPBuffer.
+	Added function to efficiently strip payload headers.
+	API: gst_rtp_buffer_get_payload_subbuffer()
+
 2006-08-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add),

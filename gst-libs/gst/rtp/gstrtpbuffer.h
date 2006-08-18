@@ -28,26 +28,50 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_RTP_VERSION:
+ *
+ * The supported RTP version 2.
+ */
 #define GST_RTP_VERSION 2
 
+/** 
+ * GstRTPPayload:
+ * @GST_RTP_PAYLOAD_PCMU: ITU-T G.711. mu-law audio (RFC 3551)
+ * @GST_RTP_PAYLOAD_GSM: GSM audio
+ * @GST_RTP_PAYLOAD_PCMA: ITU-T G.711 A-law audio (RFC 3551)
+ * @GST_RTP_PAYLOAD_L16_STEREO: stereo PCM
+ * @GST_RTP_PAYLOAD_L16_MONO: mono PCM
+ * @GST_RTP_PAYLOAD_MPA: Audio MPEG 1-3.
+ * @GST_RTP_PAYLOAD_G723_63: Not standard
+ * @GST_RTP_PAYLOAD_G723_53: Not standard
+ * @GST_RTP_PAYLOAD_TS48: Not standard
+ * @GST_RTP_PAYLOAD_TS41: Not standard
+ * @GST_RTP_PAYLOAD_G728: Not standard
+ * @GST_RTP_PAYLOAD_G729: Not standard
+ * @GST_RTP_PAYLOAD_MPV: Video MPEG 1 & 2
+ * @GST_RTP_PAYLOAD_H263: Video H263
+ *
+ * Standard predefined fixed payload types.
+ */
 typedef enum
 {
   /* Audio: */
-  GST_RTP_PAYLOAD_PCMU = 0,             /* ITU-T G.711. mu-law audio (RFC 3551) */
+  GST_RTP_PAYLOAD_PCMU = 0,
   GST_RTP_PAYLOAD_GSM = 3,
-  GST_RTP_PAYLOAD_PCMA = 8,             /* ITU-T G.711 A-law audio (RFC 3551) */
+  GST_RTP_PAYLOAD_PCMA = 8,
   GST_RTP_PAYLOAD_L16_STEREO = 10,
   GST_RTP_PAYLOAD_L16_MONO = 11,
-  GST_RTP_PAYLOAD_MPA = 14,             /* Audio MPEG 1-3 */
-  GST_RTP_PAYLOAD_G723_63 = 16,         /* Not standard */
-  GST_RTP_PAYLOAD_G723_53 = 17,         /* Not standard */
-  GST_RTP_PAYLOAD_TS48 = 18,            /* Not standard */
-  GST_RTP_PAYLOAD_TS41 = 19,            /* Not standard */
-  GST_RTP_PAYLOAD_G728 = 20,            /* Not standard */
-  GST_RTP_PAYLOAD_G729 = 21,            /* Not standard */
+  GST_RTP_PAYLOAD_MPA = 14,
+  GST_RTP_PAYLOAD_G723_63 = 16,
+  GST_RTP_PAYLOAD_G723_53 = 17,
+  GST_RTP_PAYLOAD_TS48 = 18,
+  GST_RTP_PAYLOAD_TS41 = 19,
+  GST_RTP_PAYLOAD_G728 = 20,
+  GST_RTP_PAYLOAD_G729 = 21,
 
   /* Video: */
-  GST_RTP_PAYLOAD_MPV = 32,             /* Video MPEG 1 & 2 */
+  GST_RTP_PAYLOAD_MPV = 32,
   GST_RTP_PAYLOAD_H263 = 34,
 
   /* BOTH */
@@ -74,7 +98,6 @@ typedef enum
 #define GST_RTP_PAYLOAD_DYNAMIC_STRING "[96, 127]"
 
 /* creating buffers */
-GstBuffer*      gst_rtp_buffer_new              (void);
 void            gst_rtp_buffer_allocate_data    (GstBuffer *buffer, guint payload_len, 
                                                  guint8 pad_len, guint8 csrc_count);
 
@@ -122,7 +145,9 @@ void            gst_rtp_buffer_set_seq          (GstBuffer *buffer, guint16 seq)
 guint32         gst_rtp_buffer_get_timestamp    (GstBuffer *buffer);
 void            gst_rtp_buffer_set_timestamp    (GstBuffer *buffer, guint32 timestamp);
 
-GstBuffer* gst_rtp_buffer_get_payload_buffer (GstBuffer *buffer);
+GstBuffer* 	gst_rtp_buffer_get_payload_buffer    (GstBuffer *buffer);
+GstBuffer* 	gst_rtp_buffer_get_payload_subbuffer (GstBuffer *buffer, guint offset, guint len);
+
 guint           gst_rtp_buffer_get_payload_len  (GstBuffer *buffer);
 gpointer        gst_rtp_buffer_get_payload      (GstBuffer *buffer);
 
