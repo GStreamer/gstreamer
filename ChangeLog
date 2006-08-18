@@ -1,6 +1,15 @@
 2006-08-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/ensonic/logging.txt:
+	  update ideas
+	  
+	* gst/gstinfo.c: (gst_debug_log_default):
+	  reorder fields, save some columns, add optinal color codes for log-
+	  levels
+
+2006-08-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/random/ensonic/logging.txt:
 	  add ideas about making the logs abit more useful
 
 2006-08-17  Tim-Philipp Müller  <tim at centricular dot net>

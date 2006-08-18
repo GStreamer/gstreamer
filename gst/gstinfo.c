@@ -618,11 +618,20 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   gchar *clear;
   gchar *obj = NULL;
   gchar pidcolor[10];
+  const gchar *levelcolor;
   gint pid;
   GTimeVal now;
   GstClockTime elapsed;
   gboolean free_color = TRUE;
   gboolean free_obj = TRUE;
+  static const gchar *levelcolormap[] = {
+    "\033[37m",                 /* GST_LEVEL_NONE */
+    "\033[31;01m",              /* GST_LEVEL_ERROR */
+    "\033[33;01m",              /* GST_LEVEL_WARNING */
+    "\033[32;01m",              /* GST_LEVEL_INFO */
+    "\033[36m",                 /* GST_LEVEL_DEBUG */
+    "\033[37m"                  /* GST_LEVEL_LOG */
+  };
 
   if (level > gst_debug_category_get_threshold (category))
     return;
@@ -635,11 +644,13 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
         (category));
     clear = "\033[00m";
     g_sprintf (pidcolor, "\033[3%1dm", pid % 6 + 31);
+    levelcolor = levelcolormap[level];
   } else {
     color = "\0";
     free_color = FALSE;
     clear = "";
     pidcolor[0] = '\0';
+    levelcolor = "\0";
   }
 
   if (object) {
@@ -651,12 +662,21 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 
   g_get_current_time (&now);
   elapsed = GST_TIMEVAL_TO_TIME (now) - start_time;
-  g_printerr ("%s (%p - %" GST_TIME_FORMAT
-      ") %s%20s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",
-      gst_debug_level_get_name (level), g_thread_self (),
-      GST_TIME_ARGS (elapsed), color,
-      gst_debug_category_get_name (category), clear, pidcolor, pid, clear,
-      color, file, line, function, obj, clear, gst_debug_message_get (message));
+
+  /*
+     g_printerr ("%s (%p - %" GST_TIME_FORMAT ") %s%20s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",
+     gst_debug_level_get_name (level), g_thread_self (),
+     GST_TIME_ARGS (elapsed), color,
+     gst_debug_category_get_name (category), clear, pidcolor, pid, clear,
+     color, file, line, function, obj, clear, gst_debug_message_get (message));
+   */
+
+  g_printerr ("%" GST_TIME_FORMAT
+      " %s%5d%s %p %s%s%s %s%20s %s:%d:%s:%s%s %s\n", GST_TIME_ARGS (elapsed),
+      pidcolor, pid, clear, g_thread_self (), levelcolor,
+      gst_debug_level_get_name (level), clear, color,
+      gst_debug_category_get_name (category), file, line, function, obj, clear,
+      gst_debug_message_get (message));
 
   if (free_color)
     g_free (color);
