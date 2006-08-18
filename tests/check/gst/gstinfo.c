@@ -22,6 +22,8 @@
 
 #include <gst/check/gstcheck.h>
 
+#ifndef GST_DISABLE_GST_DEBUG
+
 static void
 printf_extension_log_func (GstDebugCategory * category,
     GstDebugLevel level, const gchar * file, const gchar * function,
@@ -178,6 +180,8 @@ GST_START_TEST (info_segment_format_printf_extension)
 
 GST_END_TEST;
 
+#endif
+
 static Suite *
 gst_info_suite (void)
 {
@@ -187,8 +191,10 @@ gst_info_suite (void)
   tcase_set_timeout (tc_chain, 30);
 
   suite_add_tcase (s, tc_chain);
+#ifndef GST_DISABLE_GST_DEBUG
   tcase_add_test (tc_chain, info_segment_format_printf_extension);
   tcase_add_test (tc_chain, info_ptr_format_printf_extension);
+#endif
 
   return s;
 }

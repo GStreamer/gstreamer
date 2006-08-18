@@ -1,3 +1,8 @@
+2006-08-18  Edward Hervey  <edward@fluendo.com>
+
+	* tests/check/gst/gstinfo.c: (gst_info_suite):
+	Disable test that require gstdebug if it wasn't built in core.
+
 2006-08-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/ensonic/logging.txt:
