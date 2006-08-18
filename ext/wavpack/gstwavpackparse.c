@@ -594,7 +594,7 @@ gst_wavpack_parse_sink_event (GstPad * pad, GstEvent * event)
       if (parse->adapter) {
         gst_adapter_clear (parse->adapter);
       }
-      ret = gst_pad_push_event (pad, event);
+      ret = gst_pad_push_event (parse->srcpad, event);
       break;
     }
     case GST_EVENT_NEWSEGMENT:{
@@ -609,7 +609,7 @@ gst_wavpack_parse_sink_event (GstPad * pad, GstEvent * event)
          * be a complete Wavpack block and we can't do anything with them */
         gst_adapter_clear (parse->adapter);
       }
-      ret = gst_pad_push_event (pad, event);
+      ret = gst_pad_push_event (parse->srcpad, event);
       break;
     }
     default:{
@@ -678,23 +678,15 @@ gst_wavpack_parse_init (GstWavpackParse * wavpackparse,
 static gint64
 gst_wavpack_parse_get_upstream_length (GstWavpackParse * wavpackparse)
 {
-  GstPad *peer;
   gint64 length = -1;
 
-  peer = gst_pad_get_peer (wavpackparse->sinkpad);
-  if (peer) {
-    GstFormat format = GST_FORMAT_BYTES;
+  GstFormat format = GST_FORMAT_BYTES;
 
-    if (!gst_pad_query_duration (peer, &format, &length)) {
-      length = -1;
-    } else {
-      GST_DEBUG ("upstream length: %" G_GINT64_FORMAT, length);
-    }
-    gst_object_unref (peer);
+  if (!gst_pad_query_peer_duration (wavpackparse->sinkpad, &format, &length)) {
+    length = -1;
   } else {
-    GST_DEBUG ("no peer!");
+    GST_DEBUG ("upstream length: %" G_GINT64_FORMAT, length);
   }
-
   return length;
 }
 
@@ -865,6 +857,89 @@ gst_wavpack_parse_push_buffer (GstWavpackParse * wvparse, GstBuffer * buf,
   return gst_pad_push (wvparse->srcpad, buf);
 }
 
+static guint8 *
+gst_wavpack_parse_find_marker (guint8 * buf, guint size)
+{
+  int i;
+  guint8 *ret = NULL;
+
+  if (G_UNLIKELY (size < 4))
+    return NULL;
+
+  for (i = 0; i < size - 4; i++) {
+    if (memcmp (buf + i, "wvpk", 4) == 0) {
+      ret = buf + i;
+      break;
+    }
+  }
+  return ret;
+}
+
+static GstFlowReturn
+gst_wavpack_parse_resync_loop (GstWavpackParse * parse, WavpackHeader * header)
+{
+  GstFlowReturn flow_ret = GST_FLOW_UNEXPECTED;
+  GstBuffer *buf = NULL;
+
+  /* loop until we have a frame header or reach the end of the stream */
+  while (1) {
+    guint8 *data, *marker;
+    guint len, size;
+
+    if (buf) {
+      gst_buffer_unref (buf);
+      buf = NULL;
+    }
+
+    if (parse->upstream_length == 0 ||
+        parse->upstream_length <= parse->current_offset) {
+      parse->upstream_length = gst_wavpack_parse_get_upstream_length (parse);
+      if (parse->upstream_length == 0 ||
+          parse->upstream_length <= parse->current_offset) {
+        break;
+      }
+    }
+
+    len = MIN (parse->upstream_length - parse->current_offset, 2048);
+
+    GST_LOG_OBJECT (parse, "offset: %" G_GINT64_FORMAT, parse->current_offset);
+
+    buf = gst_wavpack_parse_pull_buffer (parse, parse->current_offset,
+        len, &flow_ret);
+
+    /* whatever the problem is, there's nothing more for us to do for now */
+    if (buf == NULL)
+      break;
+
+    data = GST_BUFFER_DATA (buf);
+    size = GST_BUFFER_SIZE (buf);
+
+    /* not enough data for a header? */
+    if (size < sizeof (WavpackHeader))
+      break;
+
+    /* got a header right where we are at now? */
+    if (gst_wavpack_read_header (header, data))
+      break;
+
+    /* nope, let's see if we can find one */
+    marker = gst_wavpack_parse_find_marker (data + 1, size - 1);
+
+    if (marker) {
+      parse->current_offset += marker - data;
+      /* do one more loop iteration to make sure we pull enough
+       * data for a full header, we'll bail out then */
+    } else {
+      parse->current_offset += len - 4;
+    }
+  }
+
+  if (buf)
+    gst_buffer_unref (buf);
+
+  return flow_ret;
+}
+
 static void
 gst_wavpack_parse_loop (GstElement * element)
 {
@@ -873,20 +948,13 @@ gst_wavpack_parse_loop (GstElement * element)
   WavpackHeader header = { {0,}, 0, };
   GstBuffer *buf = NULL;
 
-  GST_LOG_OBJECT (wavpackparse, "Current offset: %" G_GINT64_FORMAT,
-      wavpackparse->current_offset);
+  flow_ret = gst_wavpack_parse_resync_loop (wavpackparse, &header);
 
-  buf = gst_wavpack_parse_pull_buffer (wavpackparse,
-      wavpackparse->current_offset, sizeof (WavpackHeader), &flow_ret);
-
-  if (buf == NULL && flow_ret == GST_FLOW_UNEXPECTED) {
+  if (flow_ret == GST_FLOW_UNEXPECTED) {
     goto eos;
-  } else if (buf == NULL) {
+  } else if (flow_ret != GST_FLOW_OK) {
     goto pause;
   }
-
-  gst_wavpack_read_header (&header, GST_BUFFER_DATA (buf));
-  gst_buffer_unref (buf);
 
   GST_LOG_OBJECT (wavpackparse, "Read header at offset %" G_GINT64_FORMAT
       ": chunk size = %u+8", wavpackparse->current_offset, header.ckSize);
@@ -938,9 +1006,8 @@ pause:
 static gboolean
 gst_wavpack_parse_resync_adapter (GstAdapter * adapter)
 {
-  const guint8 *buf;
+  const guint8 *buf, *marker;
   guint avail = gst_adapter_available (adapter);
-  gchar *marker;
 
   if (avail < 4)
     return FALSE;
@@ -955,10 +1022,14 @@ gst_wavpack_parse_resync_adapter (GstAdapter * adapter)
 
   /* search for the marker in the complete content of the adapter */
   buf = gst_adapter_peek (adapter, avail);
-  if (buf && (marker = g_strstr_len ((gchar *) buf, avail, "wvpk"))) {
-    gst_adapter_flush (adapter, marker - (gchar *) buf);
+  if (buf && (marker = gst_wavpack_parse_find_marker ((guint8 *) buf, avail))) {
+    gst_adapter_flush (adapter, marker - buf);
     return TRUE;
   }
+
+  /* flush everything except the last 4 bytes. they could contain
+   * the start of a new marker */
+  gst_adapter_flush (adapter, avail - 4);
 
   return FALSE;
 }
