@@ -485,11 +485,6 @@ gint		gst_value_compare		(const GValue	*value1,
 						 const GValue	*value2);
 gboolean	gst_value_can_compare		(const GValue	*value1,
 						 const GValue	*value2);
-GstValueCompareFunc gst_value_get_compare_func  (const GValue * value1);
-gint            gst_value_compare_with_func     (const GValue * value1,
-                                                 const GValue * value2,
-                                                 GstValueCompareFunc compare);
-						 
 /* union */
 gboolean	gst_value_union			(GValue		*dest,
 						 const GValue	*value1,

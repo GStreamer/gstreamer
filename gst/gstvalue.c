@@ -82,6 +82,10 @@ static GArray *gst_value_subtract_funcs;
 static gint gst_greatest_common_divisor (gint a, gint b);
 static gchar *gst_value_serialize_fraction (const GValue * value);
 
+static GstValueCompareFunc gst_value_get_compare_func (const GValue * value1);
+static gint gst_value_compare_with_func (const GValue * value1,
+    const GValue * value2, GstValueCompareFunc compare);
+
 /********
  * list *
  ********/
@@ -2680,7 +2684,7 @@ gst_value_can_compare (const GValue * value1, const GValue * value2)
   return FALSE;
 }
 
-/**
+/*
  * gst_value_get_compare_func:
  * @value1: a value to get the compare function for
  *
@@ -2689,7 +2693,7 @@ gst_value_can_compare (const GValue * value1, const GValue * value2)
  *
  * Returns: A #GstValueCompareFunc value
  */
-GstValueCompareFunc
+static GstValueCompareFunc
 gst_value_get_compare_func (const GValue * value1)
 {
   GstValueTable *table, *best = NULL;
@@ -2743,7 +2747,7 @@ gst_value_compare (const GValue * value1, const GValue * value2)
   return GST_VALUE_UNORDERED;
 }
 
-/**
+/*
  * gst_value_compare_with_func:
  * @value1: a value to compare
  * @value2: another value to compare
@@ -2755,7 +2759,7 @@ gst_value_compare (const GValue * value1, const GValue * value2)
  *
  * Returns: A #GstValueCompareType value
  */
-gint
+static gint
 gst_value_compare_with_func (const GValue * value1, const GValue * value2,
     GstValueCompareFunc compare)
 {
