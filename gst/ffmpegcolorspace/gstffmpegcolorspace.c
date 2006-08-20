@@ -384,7 +384,7 @@ gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
   AVCodecContext *ctx = NULL;
   gint width, height;
 
-  g_return_val_if_fail (size, FALSE);
+  g_assert (size);
 
   space = GST_FFMPEGCSP (btrans);
 

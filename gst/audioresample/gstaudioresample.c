@@ -237,7 +237,7 @@ audioresample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
   GstStructure *structure;
   gboolean ret;
 
-  g_return_val_if_fail (size, FALSE);
+  g_assert (size);
 
   /* this works for both float and int */
   structure = gst_caps_get_structure (caps, 0);

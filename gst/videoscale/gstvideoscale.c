@@ -532,7 +532,7 @@ gst_video_scale_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   gint format, width, height;
   VSImage img;
 
-  g_return_val_if_fail (size, FALSE);
+  g_assert (size);
 
   videoscale = GST_VIDEO_SCALE (trans);
 

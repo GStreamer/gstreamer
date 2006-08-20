@@ -299,7 +299,7 @@ gst_audio_convert_get_unit_size (GstBaseTransform * base, GstCaps * caps,
 {
   AudioConvertFmt fmt = { 0 };
 
-  g_return_val_if_fail (size, FALSE);
+  g_assert (size);
 
   if (!gst_audio_convert_parse_caps (caps, &fmt))
     goto parse_error;
@@ -399,7 +399,7 @@ set_structure_widths (GstStructure * s, int min, int max)
   for (width = min; width <= max; width += 8) {
     g_value_set_int (&val, width);
     gst_value_list_append_value (&list, &val);
-    GST_DEBUG ("Appended width %d to widths available", width);
+    GST_LOG ("Appended width %d to widths available", width);
   }
   gst_structure_set_value (s, "width", &list);
   g_value_unset (&val);
