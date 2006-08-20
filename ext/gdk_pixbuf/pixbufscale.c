@@ -306,7 +306,7 @@ gst_pixbufscale_get_unit_size (GstBaseTransform * trans,
   GstPixbufScale *pixbufscale;
   gint width, height;
 
-  g_return_val_if_fail (size, FALSE);
+  g_assert (size);
 
   pixbufscale = GST_PIXBUFSCALE (trans);
 

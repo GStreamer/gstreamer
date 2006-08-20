@@ -1,5 +1,11 @@
 2006-08-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_get_unit_size):
+	* gst/videobox/gstvideobox.c: (gst_video_box_get_unit_size):
+          use g_assert in _get_unit_size
+
+2006-08-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
 	* docs/plugins/inspect/plugin-audiofxgood.xml:

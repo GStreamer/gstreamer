@@ -440,7 +440,8 @@ gst_video_box_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   guint32 fourcc;
   gint width, height;
 
-  g_return_val_if_fail (size, FALSE);
+  g_assert (size);
+
   video_box = GST_VIDEO_BOX (trans);
 
   structure = gst_caps_get_structure (caps, 0);
