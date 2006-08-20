@@ -1,5 +1,13 @@
 2006-08-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gst.c:
+	* gst/gstpad.c: (gst_pad_set_active):
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_transform_caps):
+          Simplify caps to get rid of duplicates, fixes #345444
+
+2006-08-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstvalue.c:
 	* gst/gstvalue.h:
           Use these optimizations only internaly.

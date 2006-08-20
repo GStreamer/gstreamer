@@ -662,10 +662,14 @@ gst_pad_set_active (GstPad * pad, gboolean active)
     }
   }
 
-  if (!active && !ret) {
+  if (!ret) {
     GST_OBJECT_LOCK (pad);
-    g_critical ("Failed to deactivate pad %s:%s, very bad",
-        GST_DEBUG_PAD_NAME (pad));
+    if (!active) {
+      g_critical ("Failed to deactivate pad %s:%s, very bad",
+          GST_DEBUG_PAD_NAME (pad));
+    } else {
+      GST_WARNING ("Failed to activate pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+    }
     GST_OBJECT_UNLOCK (pad);
   }
 

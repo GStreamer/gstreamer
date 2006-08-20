@@ -431,10 +431,11 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
 
     /* start with empty caps */
     ret = gst_caps_new_empty ();
+    GST_DEBUG_OBJECT (trans, "transform caps (direction = %d)", direction);
 
     if (gst_caps_is_any (caps)) {
       /* for any caps we still have to call the transform function */
-      GST_DEBUG_OBJECT (trans, "from ANY:");
+      GST_DEBUG_OBJECT (trans, "from: ANY");
       temp = klass->transform_caps (trans, direction, caps);
       GST_DEBUG_OBJECT (trans, "  to: %" GST_PTR_FORMAT, temp);
 
@@ -452,16 +453,23 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
         gst_caps_unref (nth);
         GST_DEBUG_OBJECT (trans, "  to[%d]: %" GST_PTR_FORMAT, i, temp);
 
+        /* FIXME: here we need to only append those structures, that are not yet
+         * in there */
         temp = gst_caps_make_writable (temp);
         gst_caps_append (ret, temp);
       }
+      /* for now simplify caps */
+      GST_DEBUG_OBJECT (trans, "merged: (%d)", gst_caps_get_size (ret));
+      gst_caps_do_simplify (ret);
+      GST_DEBUG_OBJECT (trans, "simplified: (%d)", gst_caps_get_size (ret));
     }
   } else {
     /* else use the identity transform */
     ret = gst_caps_ref (caps);
   }
 
-  GST_DEBUG_OBJECT (trans, "to:   %" GST_PTR_FORMAT, ret);
+  GST_DEBUG_OBJECT (trans, "to: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (ret),
+      ret);
 
   return ret;
 }

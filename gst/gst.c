@@ -565,6 +565,16 @@ static GstPluginDesc plugin_desc = {
 
 #ifndef GST_DISABLE_REGISTRY
 
+/*
+ * scan_and_update_registry:
+ * @default_registry: the #GstRegistry
+ * @registry_file: registry filename
+ * @write_changes: write registry if it has changed?
+ *
+ * Scans for registry changes and evntualy updates the registry cache. 
+ *
+ * Return: %TRUE if the registry could be updated
+ */
 static gboolean
 scan_and_update_registry (GstRegistry * default_registry,
     const gchar * registry_file, gboolean write_changes)
