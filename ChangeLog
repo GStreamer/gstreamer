@@ -1,7 +1,16 @@
 2006-08-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* ChangeLog:
+          ChangeLog surgery to add comments to previous changes
+
+2006-08-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gst.c:
+          Add comments
+
 	* gst/gstpad.c: (gst_pad_set_active):
+          Be more verbose in the log
+
 	* libs/gst/base/gstbasetransform.c:
 	(gst_base_transform_transform_caps):
           Simplify caps to get rid of duplicates, fixes #345444
