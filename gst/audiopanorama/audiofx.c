@@ -1,6 +1,6 @@
-/* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (C) <2003> David A. Schleef <ds@schleef.org>
+/*
+ * GStreamer
+ * Copyright (C) 2006 Stefan Kost <ensonic@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,39 +21,29 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include "esdsink.h"
-#if 0
-#include "esdmon.h"
-#endif
 
-#include "gst/gst-i18n-plugin.h"
+#include <gst/gst.h>
+#include <gst/controller/gstcontroller.h>
 
-GST_DEBUG_CATEGORY (esd_debug);
+#include "audiopanorama.h"
 
+/* entry point to initialize the plug-in
+ * initialize the plug-in itself
+ * register the element factories and pad templates
+ * register the features
+ */
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "esdsink", GST_RANK_MARGINAL,
-          GST_TYPE_ESDSINK))
-    return FALSE;
+  /* initialize gst controller library */
+  gst_controller_init (NULL, NULL);
 
-#if 0
-  if (!gst_element_register (plugin, "esdmon", GST_RANK_NONE, GST_TYPE_ESDMON))
-    return FALSE;
-#endif
-
-  GST_DEBUG_CATEGORY_INIT (esd_debug, "esd", 0, "ESounD elements");
-
-#ifdef ENABLE_NLS
-  setlocale (LC_ALL, "");
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-#endif /* ENABLE_NLS */
-
-  return TRUE;
+  return gst_element_register (plugin, "audiopanorama", GST_RANK_NONE,
+      GST_TYPE_AUDIO_PANORAMA);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "esdsink",
-    "ESD Element Plugins",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+    "audiofxgood",
+    "Audio effects plugin",
+    plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")

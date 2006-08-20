@@ -359,15 +359,6 @@ gst_esdmon_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-gboolean
-gst_esdmon_factory_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "esdmon", GST_RANK_NONE, GST_TYPE_ESDMON))
-    return FALSE;
-
-  return TRUE;
-}
-
 static gboolean
 gst_esdmon_open_audio (GstEsdmon * src)
 {

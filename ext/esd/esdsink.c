@@ -470,13 +470,3 @@ gst_esdsink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
   }
 }
-
-gboolean
-gst_esdsink_factory_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "esdsink", GST_RANK_MARGINAL,
-          GST_TYPE_ESDSINK))
-    return FALSE;
-
-  return TRUE;
-}

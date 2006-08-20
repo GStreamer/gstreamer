@@ -1,5 +1,21 @@
 2006-08-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-audiofxgood.xml:
+          cleanup -unused.txt to make it useful, add previously missing docs
+
+	* ext/Makefile.am:
+	* ext/esd/esdmon.c:
+	* ext/esd/esdsink.c:
+	* ext/esd/gstesd.c: (plugin_init):
+          reflow to get rid of two external symbols
+
+	* gst/audiofxgood/audiofx.c: (plugin_init):
+          re-add
+
+2006-08-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* gst/audiofxgood/.cvsignore:
 	* gst/audiofxgood/Makefile.am:
