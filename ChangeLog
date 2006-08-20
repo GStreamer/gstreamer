@@ -1,3 +1,17 @@
+2006-08-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstvalue.c: (gst_value_compare_list),
+	(gst_value_compare_fraction_range),
+	(gst_value_intersect_fraction_fraction_range),
+	(gst_value_intersect_fraction_range_fraction_range),
+	(gst_value_subtract_fraction_fraction_range),
+	(gst_value_subtract_fraction_range_fraction_range),
+	(gst_value_get_compare_func), (gst_value_compare),
+	(gst_value_compare_with_func):
+	* gst/gstvalue.h:
+        Saves the expensive lookup of the compare function in many cases
+       (#345444)
+
 2006-08-18  Edward Hervey  <edward@fluendo.com>
 
 	* tests/check/gst/gstinfo.c: (gst_info_suite):

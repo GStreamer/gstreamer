@@ -467,6 +467,7 @@ gst_value_compare_list (const GValue * value1, const GValue * value2)
   GValue *v2;
   gint len, to_remove;
   guint8 *removed;
+  GstValueCompareFunc compare;
 
   /* get length and do initial length check. */
   len = array1->len;
@@ -482,21 +483,24 @@ gst_value_compare_list (const GValue * value1, const GValue * value2)
    * item in array2, remove it from array2 by marking it as removed */
   for (i = 0; i < len; i++) {
     v1 = &g_array_index (array1, GValue, i);
-    for (j = 0; j < len; j++) {
-      /* item is removed, we can skip it */
-      if (removed[j])
-        continue;
-      v2 = &g_array_index (array2, GValue, j);
-      if (gst_value_compare (v1, v2) == GST_VALUE_EQUAL) {
-        /* mark item as removed now that we found it in array2 and 
-         * decrement the number of remaining items in array2. */
-        removed[j] = 1;
-        to_remove--;
-        break;
+    if ((compare = gst_value_get_compare_func (v1))) {
+      for (j = 0; j < len; j++) {
+        /* item is removed, we can skip it */
+        if (removed[j])
+          continue;
+        v2 = &g_array_index (array2, GValue, j);
+        if (gst_value_compare_with_func (v1, v2, compare) == GST_VALUE_EQUAL) {
+          /* mark item as removed now that we found it in array2 and 
+           * decrement the number of remaining items in array2. */
+          removed[j] = 1;
+          to_remove--;
+          break;
+        }
       }
-    }
-    /* item in array1 and not in array2, UNORDERED */
-    if (j == len)
+      /* item in array1 and not in array2, UNORDERED */
+      if (j == len)
+        return GST_VALUE_UNORDERED;
+    } else
       return GST_VALUE_UNORDERED;
   }
   /* if not all items were removed, array2 contained something not in array1 */
@@ -1195,6 +1199,7 @@ static gint
 gst_value_compare_fraction_range (const GValue * value1, const GValue * value2)
 {
   GValue *vals1, *vals2;
+  GstValueCompareFunc compare;
 
   if (value2->data[0].v_pointer == value1->data[0].v_pointer)
     return GST_VALUE_EQUAL;     /* Only possible if both are NULL */
@@ -1204,10 +1209,13 @@ gst_value_compare_fraction_range (const GValue * value1, const GValue * value2)
 
   vals1 = (GValue *) value1->data[0].v_pointer;
   vals2 = (GValue *) value2->data[0].v_pointer;
-  if (gst_value_compare (&vals1[0], &vals2[0]) == GST_VALUE_EQUAL &&
-      gst_value_compare (&vals1[1], &vals2[1]) == GST_VALUE_EQUAL)
-    return GST_VALUE_EQUAL;
-
+  if ((compare = gst_value_get_compare_func (&vals1[0]))) {
+    if (gst_value_compare_with_func (&vals1[0], &vals2[0], compare) ==
+        GST_VALUE_EQUAL &&
+        gst_value_compare_with_func (&vals1[1], &vals2[1], compare) ==
+        GST_VALUE_EQUAL)
+      return GST_VALUE_EQUAL;
+  }
   return GST_VALUE_UNORDERED;
 }
 
@@ -2216,19 +2224,22 @@ gst_value_intersect_fraction_fraction_range (GValue * dest, const GValue * src1,
 {
   int res1, res2;
   GValue *vals;
+  GstValueCompareFunc compare;
 
   vals = src2->data[0].v_pointer;
 
   if (vals == NULL)
     return FALSE;
 
-  res1 = gst_value_compare (&vals[0], src1);
-  res2 = gst_value_compare (&vals[1], src1);
+  if ((compare = gst_value_get_compare_func (src1))) {
+    res1 = gst_value_compare_with_func (&vals[0], src1, compare);
+    res2 = gst_value_compare_with_func (&vals[1], src1, compare);
 
-  if ((res1 == GST_VALUE_EQUAL || res1 == GST_VALUE_LESS_THAN) &&
-      (res2 == GST_VALUE_EQUAL || res2 == GST_VALUE_GREATER_THAN)) {
-    gst_value_init_and_copy (dest, src1);
-    return TRUE;
+    if ((res1 == GST_VALUE_EQUAL || res1 == GST_VALUE_LESS_THAN) &&
+        (res2 == GST_VALUE_EQUAL || res2 == GST_VALUE_GREATER_THAN)) {
+      gst_value_init_and_copy (dest, src1);
+      return TRUE;
+    }
   }
 
   return FALSE;
@@ -2242,39 +2253,42 @@ static gboolean
   GValue *max;
   int res;
   GValue *vals1, *vals2;
+  GstValueCompareFunc compare;
 
   vals1 = src1->data[0].v_pointer;
   vals2 = src2->data[0].v_pointer;
   g_return_val_if_fail (vals1 != NULL && vals2 != NULL, FALSE);
 
-  /* min = MAX (src1.start, src2.start) */
-  res = gst_value_compare (&vals1[0], &vals2[0]);
-  g_return_val_if_fail (res != GST_VALUE_UNORDERED, FALSE);
-  if (res == GST_VALUE_LESS_THAN)
-    min = &vals2[0];            /* Take the max of the 2 */
-  else
-    min = &vals1[0];
+  if ((compare = gst_value_get_compare_func (&vals1[0]))) {
+    /* min = MAX (src1.start, src2.start) */
+    res = gst_value_compare_with_func (&vals1[0], &vals2[0], compare);
+    g_return_val_if_fail (res != GST_VALUE_UNORDERED, FALSE);
+    if (res == GST_VALUE_LESS_THAN)
+      min = &vals2[0];          /* Take the max of the 2 */
+    else
+      min = &vals1[0];
 
-  /* max = MIN (src1.end, src2.end) */
-  res = gst_value_compare (&vals1[1], &vals2[1]);
-  g_return_val_if_fail (res != GST_VALUE_UNORDERED, FALSE);
-  if (res == GST_VALUE_GREATER_THAN)
-    max = &vals2[1];            /* Take the min of the 2 */
-  else
-    max = &vals1[1];
+    /* max = MIN (src1.end, src2.end) */
+    res = gst_value_compare_with_func (&vals1[1], &vals2[1], compare);
+    g_return_val_if_fail (res != GST_VALUE_UNORDERED, FALSE);
+    if (res == GST_VALUE_GREATER_THAN)
+      max = &vals2[1];          /* Take the min of the 2 */
+    else
+      max = &vals1[1];
 
-  res = gst_value_compare (min, max);
-  g_return_val_if_fail (res != GST_VALUE_UNORDERED, FALSE);
-  if (res == GST_VALUE_LESS_THAN) {
-    g_value_init (dest, GST_TYPE_FRACTION_RANGE);
-    vals1 = dest->data[0].v_pointer;
-    g_value_copy (min, &vals1[0]);
-    g_value_copy (max, &vals1[1]);
-    return TRUE;
-  }
-  if (res == GST_VALUE_EQUAL) {
-    gst_value_init_and_copy (dest, min);
-    return TRUE;
+    res = gst_value_compare_with_func (min, max, compare);
+    g_return_val_if_fail (res != GST_VALUE_UNORDERED, FALSE);
+    if (res == GST_VALUE_LESS_THAN) {
+      g_value_init (dest, GST_TYPE_FRACTION_RANGE);
+      vals1 = dest->data[0].v_pointer;
+      g_value_copy (min, &vals1[0]);
+      g_value_copy (max, &vals1[1]);
+      return TRUE;
+    }
+    if (res == GST_VALUE_EQUAL) {
+      gst_value_init_and_copy (dest, min);
+      return TRUE;
+    }
   }
 
   return FALSE;
@@ -2543,14 +2557,19 @@ gst_value_subtract_fraction_fraction_range (GValue * dest,
 {
   const GValue *min = gst_value_get_fraction_range_min (subtrahend);
   const GValue *max = gst_value_get_fraction_range_max (subtrahend);
+  GstValueCompareFunc compare;
 
-  /* subtracting a range from an fraction only works if the fraction
-   * is not in the range */
-  if (gst_value_compare (minuend, min) == GST_VALUE_LESS_THAN ||
-      gst_value_compare (minuend, max) == GST_VALUE_GREATER_THAN) {
-    /* and the result is the value */
-    gst_value_init_and_copy (dest, minuend);
-    return TRUE;
+  if ((compare = gst_value_get_compare_func (minuend))) {
+    /* subtracting a range from an fraction only works if the fraction
+     * is not in the range */
+    if (gst_value_compare_with_func (minuend, min, compare) ==
+        GST_VALUE_LESS_THAN ||
+        gst_value_compare_with_func (minuend, max, compare) ==
+        GST_VALUE_GREATER_THAN) {
+      /* and the result is the value */
+      gst_value_init_and_copy (dest, minuend);
+      return TRUE;
+    }
   }
   return FALSE;
 }
@@ -2579,21 +2598,25 @@ gst_value_subtract_fraction_range_fraction_range (GValue * dest,
   GValue v1 = { 0, };
   GValue v2 = { 0, };
   GValue *pv1, *pv2;            /* yeah, hungarian! */
+  GstValueCompareFunc compare;
 
   g_return_val_if_fail (min1 != NULL && max1 != NULL, FALSE);
   g_return_val_if_fail (min2 != NULL && max2 != NULL, FALSE);
 
-  cmp1 = gst_value_compare (max2, max1);
+  compare = gst_value_get_compare_func (min1);
+  g_return_val_if_fail (compare, FALSE);
+
+  cmp1 = gst_value_compare_with_func (max2, max1, compare);
   g_return_val_if_fail (cmp1 != GST_VALUE_UNORDERED, FALSE);
   if (cmp1 == GST_VALUE_LESS_THAN)
     max1 = max2;
-  cmp1 = gst_value_compare (min1, min2);
+  cmp1 = gst_value_compare_with_func (min1, min2, compare);
   g_return_val_if_fail (cmp1 != GST_VALUE_UNORDERED, FALSE);
   if (cmp1 == GST_VALUE_GREATER_THAN)
     min2 = min1;
 
-  cmp1 = gst_value_compare (min1, max1);
-  cmp2 = gst_value_compare (min2, max2);
+  cmp1 = gst_value_compare_with_func (min1, max1, compare);
+  cmp2 = gst_value_compare_with_func (min2, max2, compare);
 
   if (cmp1 == GST_VALUE_LESS_THAN && cmp2 == GST_VALUE_LESS_THAN) {
     pv1 = &v1;
@@ -2658,26 +2681,19 @@ gst_value_can_compare (const GValue * value1, const GValue * value2)
 }
 
 /**
- * gst_value_compare:
- * @value1: a value to compare
- * @value2: another value to compare
+ * gst_value_get_compare_func:
+ * @value1: a value to get the compare function for
  *
- * Compares @value1 and @value2.  If @value1 and @value2 cannot be
- * compared, the function returns GST_VALUE_UNORDERED.  Otherwise,
- * if @value1 is greater than @value2, GST_VALUE_GREATER is returned.
- * If @value1 is less than @value2, GST_VALUE_LESSER is returned.
- * If the values are equal, GST_VALUE_EQUAL is returned.
+ * Determines the compare function to be used with values of the same type as
+ * @value1. The function can be given to gst_value_compare_with_func().
  *
- * Returns: A GstValueCompareType value
+ * Returns: A #GstValueCompareFunc value
  */
-int
-gst_value_compare (const GValue * value1, const GValue * value2)
+GstValueCompareFunc
+gst_value_get_compare_func (const GValue * value1)
 {
   GstValueTable *table, *best = NULL;
   guint i;
-
-  if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
-    return GST_VALUE_UNORDERED;
 
   for (i = 0; i < gst_value_table->len; i++) {
     table = &g_array_index (gst_value_table, GstValueTable, i);
@@ -2691,12 +2707,64 @@ gst_value_compare (const GValue * value1, const GValue * value2)
     }
   }
   if (best) {
-    return best->compare (value1, value2);
+    return best->compare;
+  }
+  return NULL;
+}
+
+/**
+ * gst_value_compare:
+ * @value1: a value to compare
+ * @value2: another value to compare
+ *
+ * Compares @value1 and @value2.  If @value1 and @value2 cannot be
+ * compared, the function returns GST_VALUE_UNORDERED.  Otherwise,
+ * if @value1 is greater than @value2, GST_VALUE_GREATER is returned.
+ * If @value1 is less than @value2, GST_VALUE_LESSER is returned.
+ * If the values are equal, GST_VALUE_EQUAL is returned.
+ *
+ * Returns: A #GstValueCompareType value
+ */
+gint
+gst_value_compare (const GValue * value1, const GValue * value2)
+{
+  GstValueCompareFunc compare;
+
+  if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
+    return GST_VALUE_UNORDERED;
+
+  compare = gst_value_get_compare_func (value1);
+  if (compare) {
+    return compare (value1, value2);
   }
 
   g_critical ("unable to compare values of type %s\n",
       g_type_name (G_VALUE_TYPE (value1)));
   return GST_VALUE_UNORDERED;
+}
+
+/**
+ * gst_value_compare_with_func:
+ * @value1: a value to compare
+ * @value2: another value to compare
+ * @compare: compare function
+ *
+ * Compares @value1 and @value2 using the @compare function. Works like
+ * gst_value_compare() but allows to save time determining the compare function
+ * a multiple times. 
+ *
+ * Returns: A #GstValueCompareType value
+ */
+gint
+gst_value_compare_with_func (const GValue * value1, const GValue * value2,
+    GstValueCompareFunc compare)
+{
+  g_assert (compare);
+
+  if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
+    return GST_VALUE_UNORDERED;
+
+  return compare (value1, value2);
 }
 
 /* union */
