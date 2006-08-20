@@ -29,12 +29,9 @@ public class BufferTest {
 		Gst.Buffer buffer = new Gst.Buffer(4);
 		Caps caps = Caps.FromString("audio/x-raw-int");
 		Assert.AreEqual(caps.Refcount, 1, "caps");
-		Assert.IsNull(buffer.Caps);
+		Assert.IsNull(buffer.Caps, "buffer.Caps is null???");
 
 		buffer.Caps = caps;
-		Assert.AreEqual(caps.Refcount, 2, "caps");
-
-		Assert.AreEqual(caps, buffer.Caps);
 		Assert.AreEqual(caps.Refcount, 2, "caps");
 
 		Caps caps2 = Caps.FromString("audio/x-raw-float");
@@ -55,7 +52,7 @@ public class BufferTest {
 		caps.Dispose();
 		caps2.Dispose();
 	}
-
+*/
 	[Test]
 	public void TestSubbuffer() 
 	{
@@ -87,6 +84,6 @@ public class BufferTest {
 
 		buffer.Dispose();
 	}
-*/
+
 }
 

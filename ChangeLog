@@ -1,3 +1,11 @@
+2006-08-20  Khaled Mohammed <khaled.mohammed@gmail.com>
+	* gstreamer-sharp/Buffer.custom: added Ref(), Unref() and Refcount()
+	functionality
+	* gstreamer-sharp/Gstreamer.metadata: suppressed auto generation of 
+	few functions to remove build warnings.
+    * gstreamer-sharp/Pad.custom: added AddBufferProbe() and AddDataProbe()
+	* tests: Added few more tests. 
+
 2006-08-11  Khaled Mohammed <khaled.mohammed@gmail.com>
 	* gstreamer-sharp/Object.custom: overriden Dispose() function.
     * gstreamer-sharp/tests: added more tests

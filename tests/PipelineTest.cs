@@ -26,7 +26,7 @@ public class PipelineTest
 	{
 		Application.Deinit();
 	}
-/*
+
 	[Test]
 	public void TestAsyncStateChangeEmpty()
 	{
@@ -195,5 +195,4 @@ public class PipelineTest
 		fakesrc.Dispose();
 		fakesink.Dispose();
 	}
-*/
 }

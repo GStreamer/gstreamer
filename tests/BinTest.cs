@@ -48,7 +48,7 @@ public class BinTest
         bin.Dispose();
     }
 
-/*    
+    
     [Test]
     public void TestGetByName()
     {
@@ -61,8 +61,8 @@ public class BinTest
         Assert.IsNotNull(e1);
         Assert.AreEqual(e1.Name, "element-name");
         
-        bin.Dispose();
         e1.Dispose();
+        bin.Dispose();
     }
 
     [Test]
@@ -71,7 +71,7 @@ public class BinTest
         Bin bin = new Bin("test-bin");
 
         Element [] elements = new Element [] {
-            ElementFactory.Make("fakesrc", "fakesrc"),
+	    	ElementFactory.Make("fakesrc", "fakesrc"),
             ElementFactory.Make("audioconvert", "audioconvert"),
             ElementFactory.Make("wavenc", "wavenc"),
             ElementFactory.Make("fakesink", "fakesink")
@@ -82,30 +82,32 @@ public class BinTest
         }
       
         Assert.AreEqual(elements.Length, bin.ChildrenCount);
-         Element [] children = bin.Children;
+        Element [] children = bin.Children;
      
-         for(int i = 0; i < elements.Length; i++) {
+        for(int i = 0; i < elements.Length; i++) {
             Assert.AreEqual(elements[elements.Length - i - 1], children[i]);
         }
 
         bin.Dispose();
+
+		foreach(Element e in elements)
+			e.Dispose();
     }
-	
+
 	[Test]
 	public void TestInterface()
 	{
 		Bin bin = new Bin(String.Empty);
 		Assert.IsNotNull(bin, "Could not create bin");
 
-		Element filesrc = ElementFactory.Make("filesrc", String.Empty);
+		Element filesrc = ElementFactory.Make("filesrc", null);
 		Assert.IsNotNull(filesrc, "Could not create filesrc");
 
 		bin.Add(filesrc);
 		
-		bin.Dispose();
 		filesrc.Dispose();
-	
+		bin.Dispose();
 	}
-*/
+
 }
 

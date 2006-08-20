@@ -51,5 +51,18 @@
         return true;
     }
 
+	public bool RemoveMany(params Element[] elements)
+	{
+		if(elements == null) {
+			return false;
+		}
+		
+		foreach(Element element in elements) {
+			if(element == null || !Remove(element)) {
+				return false;
+			}
+		}
 
+		return true;
+	}
    

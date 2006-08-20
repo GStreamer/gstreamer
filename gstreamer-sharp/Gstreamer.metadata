@@ -4,9 +4,17 @@
   <attr path="/api/namespace/object[@name='Pipeline']" name="disable_gtype_ctor">1</attr>
   <attr path="/api/namespace/object[@cname='GstPipeline']/method[@name='GetBus']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='ElementFactory']/method[@name='Make']/return-type" name="owned">true</attr>
+
   <attr path="/api/namespace/boxed[@name='Caps']/method[@name='FromString']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Buffer']/method[@name='GetCaps']/return-type" name="owned">true</attr>
   <attr path="/api/namespace/object[@name='Object']/field[@name='Refcount']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='GetAllowedCaps']/return-type" name="owned">true</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='RemoveBufferProbe']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='AddBufferProbe']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='AddDataProbe']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Pad']/method[@name='RemoveDataProbe']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Bin']/method[@name='AddMany']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Bin']/method[@name='RemoveMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Message']/method[@cname='gst_message_new_error']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_add_pad']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/field[@name='Children']" name="hidden">1</attr>

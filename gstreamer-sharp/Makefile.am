@@ -51,13 +51,16 @@ build_sources = $(addprefix $(srcdir)/, $(sources))
 
 customs = 			\
 	Bin.custom		\
+	Buffer.custom	\
 	Bus.custom		\
+	Caps.custom		\
 	Clock.custom		\
 	Debug.custom		\
 	Element.custom		\
 	Message.custom		\
 	Pad.custom		\
 	Object.custom	
+		
 
 build_customs = $(addprefix $(srcdir)/, $(customs))
 

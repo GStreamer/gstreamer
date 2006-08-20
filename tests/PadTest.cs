@@ -27,7 +27,7 @@ public class PadTest
     {
         Application.Deinit();
     }
-/*
+
     [Test]
     public void TestPlainCreation()
     {
@@ -145,5 +145,130 @@ public class PadTest
 		sink.Dispose();
 		src.Dispose();
 	}
+	
+	[Test]
+	public void TestRefcount()
+	{
+		Pad sink = new Pad("sink", PadDirection.Sink);
+		Assert.IsNotNull(sink, "Pad could not be created");
+		
+		Pad src = new Pad("src", PadDirection.Src);
+		Assert.IsNotNull(src, "Pad could not be created");
+
+		Caps caps = Caps.FromString("foo/bar");
+
+		Assert.AreEqual(caps.Refcount, 1, "caps");
+
+		src.SetCaps(caps);
+		sink.SetCaps(caps);
+
+		Assert.AreEqual(caps.Refcount, 3, "caps");
+
+		PadLinkReturn plr = src.Link(sink);
+		Assert.AreEqual(plr, PadLinkReturn.Ok, "Pad link failed");	
+
+		Assert.AreEqual(caps.Refcount, 3, "caps");
+		
+		src.Unlink(sink);
+		Assert.AreEqual(caps.Refcount, 3, "caps");
+
+		src.Dispose();
+		sink.Dispose();
+		Assert.AreEqual(caps.Refcount, 1, "caps");
+
+		caps.Dispose();
+	}
+
+	[Test]
+	public void TestGetAllowedCaps()
+	{
+/*
+		Gst.Buffer buffer = new Gst.Buffer();
+
+		try {
+			Pad pbuffer = (Pad) buffer;
+			Caps pcaps = pbuffer.AllowedCaps;
+		}
+		catch (Exception ex) {
+			Assert.Fail("buffer.AllowedCaps failed");
+		}
+
+		buffer.Dispose();
 */
+		Pad sink = new Pad("sink", PadDirection.Sink);
+//		try { Caps tcaps = sink.AllowedCaps; }
+//		catch (Exception) { Assert.Fail("sink.AllowedCaps failed"); }
+
+		Pad src = new Pad("src", PadDirection.Src);
+		Assert.IsNotNull(src);
+		Caps caps = src.AllowedCaps;
+		Assert.IsNull(caps);
+
+		caps = Caps.FromString("foo/bar");
+
+		src.SetCaps(caps);
+		sink.SetCaps(caps);
+		Assert.AreEqual(caps.Refcount, 3, "caps");
+
+		PadLinkReturn plr = src.Link(sink);
+		Assert.AreEqual(plr, PadLinkReturn.Ok);
+
+		Caps gotcaps = src.AllowedCaps;
+		Assert.IsNotNull(gotcaps);
+		Assert.IsTrue(gotcaps.IsEqual(caps));
+
+		Assert.AreEqual(gotcaps.Refcount, 1, "gotcaps");
+		gotcaps.Dispose();
+
+		src.Unlink(sink);
+		Assert.AreEqual(caps.Refcount, 3, "caps");
+		Assert.AreEqual(src.Refcount, 1, "src");
+		Assert.AreEqual(sink.Refcount, 1, "sink");
+
+		src.Dispose();
+		sink.Dispose();
+		
+		Assert.AreEqual(caps.Refcount, 1, "caps");
+		caps.Dispose();
+	}
+
+	bool ProbeHandler(Pad pad, Gst.Buffer buffer)
+	{
+		//Assert.Fail("event worked");
+		return false;
+	}
+	
+	[Test]
+	public void TestPushUnlinked()
+	{
+		Pad src = new Pad("src", PadDirection.Src);
+		Assert.IsNotNull(src, "Could not create src");
+		Caps caps = src.AllowedCaps;
+		Assert.IsNull(caps);
+
+		caps = Caps.FromString("foo/bar");
+		src.SetCaps(caps);
+		Assert.AreEqual(caps.Refcount, 2, "caps");
+
+		Gst.Buffer buffer = new Gst.Buffer();
+		buffer.Ref();
+		Assert.AreEqual(src.Push(buffer), FlowReturn.NotLinked);
+		Assert.AreEqual(buffer.Refcount, 1, "buffer");
+		buffer.Dispose();
+
+		ulong handler_id = src.AddBufferProbe(new Pad.BufferProbeDelegate(ProbeHandler));
+		buffer = new Gst.Buffer();
+		buffer.Ref();
+		Assert.AreEqual(src.Push(buffer), FlowReturn.Ok);
+		buffer.Dispose();
+		src.RemoveBufferProbe((uint)handler_id);
+
+		Assert.AreEqual(caps.Refcount, 2, "caps");
+		Assert.AreEqual(src.Refcount, 1, "src");
+		
+		src.Dispose();
+
+		Assert.AreEqual(caps.Refcount, 1, "caps");
+		caps.Dispose();	
+	}
 }
