@@ -1,3 +1,24 @@
+2006-08-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst/audiofxgood/.cvsignore:
+	* gst/audiofxgood/Makefile.am:
+	* gst/audiofxgood/audiofx.c
+	* gst/audiofxgood/audiopanorama.c: (gst_audio_panorama_base_init),
+	(gst_audio_panorama_class_init), (gst_audio_panorama_init),
+	(gst_audio_panorama_set_property),
+	(gst_audio_panorama_get_property),
+	(gst_audio_panorama_get_unit_size),
+	(gst_audio_panorama_transform_caps), (gst_audio_panorama_set_caps),
+	(gst_audio_panorama_transform_m2s),
+	(gst_audio_panorama_transform_s2s), (gst_audio_panorama_transform):
+	* gst/audiofxgood/audiopanorama.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/audiopanorama.c: (setup_panorama_m),
+	(setup_panorama_s), (cleanup_panorama), (GST_START_TEST),
+	(panorama_suite), (main):
+        Add audiofxgood plugin with audiopanorama element
+
 2006-08-18  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/Makefile.am:

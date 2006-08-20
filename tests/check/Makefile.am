@@ -33,6 +33,7 @@ endif
 
 check_PROGRAMS = \
 	$(check_annodex) \
+	elements/audiopanorama \
 	elements/avimux \
 	elements/level \
 	elements/matroskamux \
@@ -51,6 +52,14 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 VALGRIND_TESTS_DISABLE =
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
+
+elements_audiopanorama_LDADD = \
+	$(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) \
+	$(LDADD)
+
+elements_audiopanorama_CFLAGS = \
+	$(GST_BASE_CFLAGS) $(GST_CONTROLLER_CFLAGS) \
+	$(CFLAGS) $(AM_CFLAGS)
 
 elements_cmmldec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)
 elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)
