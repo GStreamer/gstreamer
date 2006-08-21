@@ -1,3 +1,12 @@
+2006-08-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiopanorama/.cvsignore:
+	* gst/audiopanorama/Makefile.am:
+	* gst/audiopanorama/audiofx.c:
+	* gst/audiopanorama/audiopanorama.c:
+	* gst/audiopanorama/audiopanorama.h:
+          die! die! die! you should never have been there
+
 2006-08-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/elements/audiopanorama.c: (GST_START_TEST):
