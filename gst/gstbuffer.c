@@ -368,7 +368,8 @@ gst_buffer_is_metadata_writable (GstBuffer * buf)
  * is solely owned by the caller, by creating a subbuffer of the original
  * buffer if necessary.
  * 
- * After calling this function, @buf should not be referenced anymore.
+ * After calling this function, @buf should not be referenced anymore. The
+ * result of this function has guaranteed writable metadata.
  *
  * Returns: A new #GstBuffer with writable metadata.
  */
@@ -381,8 +382,13 @@ gst_buffer_make_metadata_writable (GstBuffer * buf)
     ret = buf;
   } else {
     ret = gst_buffer_create_sub (buf, 0, GST_BUFFER_SIZE (buf));
+
+    /* copy all the flags except IN_CAPS */
     GST_BUFFER_FLAGS (ret) = GST_BUFFER_FLAGS (buf);
     GST_BUFFER_FLAG_UNSET (ret, GST_BUFFER_FLAG_IN_CAPS);
+    /* data should always be set to READONLY */
+    GST_BUFFER_FLAG_SET (ret, GST_BUFFER_FLAG_READONLY);
+
     gst_buffer_unref (buf);
   }
 
@@ -472,8 +478,11 @@ gst_subbuffer_init (GTypeInstance * instance, gpointer g_class)
  * Creates a sub-buffer from @parent at @offset and @size.
  * This sub-buffer uses the actual memory space of the parent buffer.
  * This function will copy the offset and timestamp fields when the
- * offset is 0, else they are set to #GST_CLOCK_TIME_NONE/#GST_BUFFER_OFFSET_NONE.
- * The duration field of the new buffer is set to #GST_CLOCK_TIME_NONE.
+ * offset is 0. If not, they will be set to #GST_CLOCK_TIME_NONE and 
+ * #GST_BUFFER_OFFSET_NONE.
+ * If @offset equals 0 and @size equals the total size of @buffer, the
+ * duration and offset end fields are also copied. If not they will be set
+ * to #GST_CLOCK_TIME_NONE and #GST_BUFFER_OFFSET_NONE.
  *
  * MT safe.
  * Returns: the new #GstBuffer.
@@ -484,6 +493,7 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
 {
   GstSubBuffer *subbuffer;
   GstBuffer *parent;
+  gboolean complete;
 
   g_return_val_if_fail (buffer != NULL, NULL);
   g_return_val_if_fail (buffer->mini_object.refcount > 0, NULL);
@@ -513,16 +523,28 @@ gst_buffer_create_sub (GstBuffer * buffer, guint offset, guint size)
   if (offset == 0) {
     GST_BUFFER_TIMESTAMP (subbuffer) = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_OFFSET (subbuffer) = GST_BUFFER_OFFSET (buffer);
+    complete = (buffer->size == size);
   } else {
     GST_BUFFER_TIMESTAMP (subbuffer) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_OFFSET (subbuffer) = GST_BUFFER_OFFSET_NONE;
+    complete = FALSE;
   }
 
-  GST_BUFFER_DURATION (subbuffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_OFFSET_END (subbuffer) = GST_BUFFER_OFFSET_NONE;
+  if (complete) {
+    GstCaps *caps;
 
-  GST_BUFFER_CAPS (subbuffer) = NULL;
-
+    /* if we copied the complete buffer we can copy the duration,
+     * offset_end and caps as well */
+    GST_BUFFER_DURATION (subbuffer) = GST_BUFFER_DURATION (buffer);
+    GST_BUFFER_OFFSET_END (subbuffer) = GST_BUFFER_OFFSET_END (buffer);
+    if ((caps = GST_BUFFER_CAPS (buffer)))
+      gst_caps_ref (caps);
+    GST_BUFFER_CAPS (subbuffer) = caps;
+  } else {
+    GST_BUFFER_DURATION (subbuffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_OFFSET_END (subbuffer) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_CAPS (subbuffer) = NULL;
+  }
   return GST_BUFFER_CAST (subbuffer);
 }
 

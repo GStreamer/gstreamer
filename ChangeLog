@@ -1,3 +1,15 @@
+2006-08-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbuffer.c: (gst_buffer_make_metadata_writable),
+	(gst_buffer_create_sub):
+	Copy duration/offset_end/caps when creating a subbuffer of the
+	complete parent.
+	Make the subbuffer read-only when we make the metadata writable for
+	now. Fixes #351768.
+
+	* tests/check/gst/gstbuffer.c: (GST_START_TEST):
+	Added check for metadata copy when creating subbuffers.
+
 2006-08-21  Edward Hervey  <edward@fluendo.com>
 
 	* libs/gst/base/gstbasetransform.c:

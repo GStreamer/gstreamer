@@ -72,6 +72,11 @@ GST_START_TEST (test_subbuffer)
 
   buffer = gst_buffer_new_and_alloc (4);
   memset (GST_BUFFER_DATA (buffer), 0, 4);
+  /* set some metadata */
+  GST_BUFFER_TIMESTAMP (buffer) = 1;
+  GST_BUFFER_DURATION (buffer) = 2;
+  GST_BUFFER_OFFSET (buffer) = 3;
+  GST_BUFFER_OFFSET_END (buffer) = 4;
 
   sub = gst_buffer_create_sub (buffer, 1, 2);
   fail_if (sub == NULL, "create_sub of buffer returned NULL");
@@ -80,7 +85,12 @@ GST_START_TEST (test_subbuffer)
           2) == 0, "subbuffer contains the wrong data");
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 2);
   ASSERT_BUFFER_REFCOUNT (sub, "subbuffer", 1);
-
+  fail_unless (GST_BUFFER_TIMESTAMP (sub) == -1,
+      "subbuffer has wrong timestamp");
+  fail_unless (GST_BUFFER_DURATION (sub) == -1, "subbuffer has wrong duration");
+  fail_unless (GST_BUFFER_OFFSET (sub) == -1, "subbuffer has wrong offset");
+  fail_unless (GST_BUFFER_OFFSET_END (sub) == -1,
+      "subbuffer has wrong offset end");
   gst_buffer_unref (sub);
 
   /* create a subbuffer of size 0 */
@@ -91,6 +101,32 @@ GST_START_TEST (test_subbuffer)
           0) == 0, "subbuffer contains the wrong data");
   ASSERT_BUFFER_REFCOUNT (buffer, "parent", 2);
   ASSERT_BUFFER_REFCOUNT (sub, "subbuffer", 1);
+  gst_buffer_unref (sub);
+
+  /* test if metadata is coppied, not a complete buffer copy so only the
+   * timestamp and offset fields are copied. */
+  sub = gst_buffer_create_sub (buffer, 0, 1);
+  fail_if (sub == NULL, "create_sub of buffer returned NULL");
+  fail_unless (GST_BUFFER_SIZE (sub) == 1, "subbuffer has wrong size");
+  fail_unless (GST_BUFFER_TIMESTAMP (sub) == 1,
+      "subbuffer has wrong timestamp");
+  fail_unless (GST_BUFFER_OFFSET (sub) == 3, "subbuffer has wrong offset");
+  fail_unless (GST_BUFFER_DURATION (sub) == -1, "subbuffer has wrong duration");
+  fail_unless (GST_BUFFER_OFFSET_END (sub) == -1,
+      "subbuffer has wrong offset end");
+  gst_buffer_unref (sub);
+
+  /* test if metadata is coppied, a complete buffer is copied so all the timing
+   * fields should be copied. */
+  sub = gst_buffer_create_sub (buffer, 0, 4);
+  fail_if (sub == NULL, "create_sub of buffer returned NULL");
+  fail_unless (GST_BUFFER_SIZE (sub) == 4, "subbuffer has wrong size");
+  fail_unless (GST_BUFFER_TIMESTAMP (sub) == 1,
+      "subbuffer has wrong timestamp");
+  fail_unless (GST_BUFFER_DURATION (sub) == 2, "subbuffer has wrong duration");
+  fail_unless (GST_BUFFER_OFFSET (sub) == 3, "subbuffer has wrong offset");
+  fail_unless (GST_BUFFER_OFFSET_END (sub) == 4,
+      "subbuffer has wrong offset end");
 
   /* clean up */
   gst_buffer_unref (sub);
