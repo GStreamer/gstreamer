@@ -1160,9 +1160,14 @@ not_configured:
     /* let the default allocator handle it... */
     GST_DEBUG_OBJECT (trans, "not configured");
     gst_buffer_replace (buf, NULL);
-    /* ...by calling alloc_buffer without setting caps on the src pad, which
-     * will force negotiation in the chain function. */
-    res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
+    if (trans->passthrough || trans->always_in_place) {
+      /* ...by calling alloc_buffer without setting caps on the src pad, which
+       * will force negotiation in the chain function. */
+      res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
+    } else {
+      /* ...by letting the default handler create a buffer */
+      res = GST_FLOW_OK;
+    }
     goto done;
   }
 unknown_size:
@@ -1170,9 +1175,14 @@ unknown_size:
     /* let the default allocator handle it... */
     GST_DEBUG_OBJECT (trans, "unknown size");
     gst_buffer_replace (buf, NULL);
-    /* ...by calling alloc_buffer without setting caps on the src pad, which
-     * will force negotiation in the chain function. */
-    res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
+    if (trans->passthrough || trans->always_in_place) {
+      /* ...by calling alloc_buffer without setting caps on the src pad, which
+       * will force negotiation in the chain function. */
+      res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
+    } else {
+      /* ...by letting the default handler create a buffer */
+      res = GST_FLOW_OK;
+    }
     goto done;
   }
 }

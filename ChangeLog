@@ -1,3 +1,10 @@
+2006-08-21  Edward Hervey  <edward@fluendo.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_buffer_alloc):
+	Only call downstream buffer_alloc if transform element is passthrough
+	or always_in_place. Closes #350449.
+
 2006-08-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* ChangeLog:
