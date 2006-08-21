@@ -1,3 +1,14 @@
+2006-08-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstcaps.c: (gst_structure_is_equal_foreach),
+	(gst_caps_merge):
+	* gst/gstcaps.h:
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_transform_caps):
+	  API: Add gst_caps_merge() and use it in basetransform, fixes #345444
+	  in a better way
+
 2006-08-21  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstxml.c: (gst_xml_class_init), (gst_xml_dispose):

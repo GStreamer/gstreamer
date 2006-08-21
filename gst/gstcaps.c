@@ -464,6 +464,22 @@ gst_caps_remove_and_get_structure (GstCaps * caps, guint idx)
   return s;
 }
 
+static gboolean
+gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
+    gpointer data)
+{
+  GstStructure *struct1 = (GstStructure *) data;
+  const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
+
+  if (val1 == NULL)
+    return FALSE;
+  if (gst_value_compare (val1, val2) == GST_VALUE_EQUAL) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 /**
  * gst_caps_append:
  * @caps1: the #GstCaps that will be appended to
@@ -506,6 +522,51 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
 }
 
 /**
+ * gst_caps_merge:
+ * @caps1: the #GstCaps that will take the new entries
+ * @caps2: the #GstCaps to merge in
+ *
+ * Appends the structures contained in @caps2 to @caps1 if they are not yet in
+ * @caps1. The structures in @caps2 are not copied -- they are transferred to
+ * @caps1, and then @caps2 is freed.
+ * If either caps is ANY, the resulting caps will be ANY.
+ */
+void
+gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
+{
+  GstStructure *structure;
+  int i;
+
+  g_return_if_fail (GST_IS_CAPS (caps1));
+  g_return_if_fail (GST_IS_CAPS (caps2));
+  g_return_if_fail (IS_WRITABLE (caps1));
+  g_return_if_fail (IS_WRITABLE (caps2));
+
+#ifdef USE_POISONING
+  CAPS_POISON (caps2);
+#endif
+  if (gst_caps_is_any (caps1) || gst_caps_is_any (caps2)) {
+    /* FIXME: this leaks */
+    caps1->flags |= GST_CAPS_FLAGS_ANY;
+    for (i = caps2->structs->len - 1; i >= 0; i--) {
+      structure = gst_caps_remove_and_get_structure (caps2, i);
+      gst_structure_free (structure);
+    }
+  } else {
+    GstCaps *com = gst_caps_intersect (caps1, caps2);
+    GstCaps *add = gst_caps_subtract (caps2, com);
+
+    /*
+       GST_DEBUG ("common : %d", gst_caps_get_size (com));
+       GST_DEBUG ("adding : %d", gst_caps_get_size (add));
+     */
+    gst_caps_append (caps1, add);
+    gst_caps_unref (com);
+  }
+  gst_caps_unref (caps2);       /* guaranteed to free it */
+}
+
+/**
  * gst_caps_append_structure:
  * @caps: the #GstCaps that will be appended to
  * @structure: the #GstStructure to append
@@ -531,7 +592,7 @@ gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
   }
 }
 
-/*
+/**
  * gst_caps_remove_structure:
  * @caps: the #GstCaps to remove from
  * @idx: Index of the structure to remove
@@ -550,23 +611,6 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
 
   structure = gst_caps_remove_and_get_structure (caps, idx);
   gst_structure_free (structure);
-}
-
-/**
- * gst_caps_split_one:
- * @caps: a #GstCaps
- *
- * This function is not implemented.
- *
- * Returns: NULL
- */
-GstCaps *
-gst_caps_split_one (GstCaps * caps)
-{
-  /* FIXME */
-  g_critical ("unimplemented");
-
-  return NULL;
 }
 
 /**
@@ -777,22 +821,6 @@ gst_caps_is_fixed (const GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   return gst_structure_foreach (structure, gst_caps_is_fixed_foreach, NULL);
-}
-
-static gboolean
-gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
-    gpointer data)
-{
-  GstStructure *struct1 = (GstStructure *) data;
-  const GValue *val1 = gst_structure_id_get_value (struct1, field_id);
-
-  if (val1 == NULL)
-    return FALSE;
-  if (gst_value_compare (val1, val2) == GST_VALUE_EQUAL) {
-    return TRUE;
-  }
-
-  return FALSE;
 }
 
 /**
