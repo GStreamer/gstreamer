@@ -1,3 +1,9 @@
+2006-08-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/elements/audioconvert.c: (GST_START_TEST):
+	Fix leaks. Wait for state transitions that might happen ASYNC, as well
+	as some that won't.
+
 2006-08-21  Wim Taymans  <wim@fluendo.com>
 
 	* docs/libs/Makefile.am:

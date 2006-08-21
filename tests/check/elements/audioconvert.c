@@ -537,21 +537,48 @@ GST_START_TEST (test_caps_negotiation)
   /* test with 2 audioconvert elements */
   gst_bin_add_many (GST_BIN (pipeline), src, ac1, ac3, sink, NULL);
   gst_element_link_many (src, ac1, ac3, sink, NULL);
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+  /* Set to PAUSED and wait for PREROLL */
+  fail_if (gst_element_set_state (pipeline, GST_STATE_PAUSED) ==
+      GST_STATE_CHANGE_FAILURE, "Failed to set test pipeline to PAUSED");
+  fail_if (gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE) !=
+      GST_STATE_CHANGE_SUCCESS, "Failed to set test pipeline to PAUSED");
+
   caps1 = gst_pad_get_caps (ac3_src);
+  fail_if (caps1 == NULL, "gst_pad_get_caps returned NULL");
   GST_DEBUG ("Caps size 1 : %d", gst_caps_get_size (caps1));
-  gst_element_set_state (pipeline, GST_STATE_READY);
+
+  fail_if (gst_element_set_state (pipeline, GST_STATE_READY) ==
+      GST_STATE_CHANGE_FAILURE, "Failed to set test pipeline back to READY");
+  fail_if (gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE) !=
+      GST_STATE_CHANGE_SUCCESS, "Failed to set test pipeline back to READY");
 
   /* test with 3 audioconvert elements */
   gst_element_unlink (ac1, ac3);
   gst_bin_add (GST_BIN (pipeline), ac2);
   gst_element_link_many (ac1, ac2, ac3, NULL);
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+  fail_if (gst_element_set_state (pipeline, GST_STATE_PAUSED) ==
+      GST_STATE_CHANGE_FAILURE, "Failed to set test pipeline back to PAUSED");
+  fail_if (gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE) !=
+      GST_STATE_CHANGE_SUCCESS, "Failed to set test pipeline back to PAUSED");
+
   caps2 = gst_pad_get_caps (ac3_src);
+
+  fail_if (caps2 == NULL, "gst_pad_get_caps returned NULL");
   GST_DEBUG ("Caps size 2 : %d", gst_caps_get_size (caps2));
   fail_unless (gst_caps_get_size (caps1) == gst_caps_get_size (caps2));
 
-  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+
+  fail_if (gst_element_set_state (pipeline, GST_STATE_NULL) ==
+      GST_STATE_CHANGE_FAILURE, "Failed to set test pipeline back to NULL");
+  fail_if (gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE) !=
+      GST_STATE_CHANGE_SUCCESS, "Failed to set test pipeline back to NULL");
+
+  gst_object_unref (ac3_src);
+  gst_object_unref (pipeline);
 }
 
 GST_END_TEST;
