@@ -1,3 +1,8 @@
+2006-08-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/elements/audiopanorama.c: (GST_START_TEST):
+	Fix invalid memory access in audiopanorama test suite.
+
 2006-08-21  Edward Hervey  <edward@fluendo.com>
 
 	* tests/check/elements/.cvsignore:

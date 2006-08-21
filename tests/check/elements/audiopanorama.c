@@ -271,7 +271,9 @@ GST_START_TEST (test_stereo_middle)
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-  /* pushing gives away my reference ... */
+  /* pushing gives away my reference ... so keep an extra one */
+  gst_buffer_ref (inbuffer);
+
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   /* ... but it ends up being collected on the global buffer list */
   fail_unless_equals_int (g_list_length (buffers), 1);
@@ -283,6 +285,7 @@ GST_START_TEST (test_stereo_middle)
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), in, 8) == 0);
 
   /* cleanup */
+  gst_buffer_unref (inbuffer);
   cleanup_panorama (panorama);
 }
 
