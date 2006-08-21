@@ -28,7 +28,8 @@
 #include <wavpack/md5.h>
 
 G_BEGIN_DECLS
-/* #define's don't like whitespacey bits */
+
+/* defines don't like whitespacey bits */
 #define GST_TYPE_WAVPACK_ENC \
   (gst_wavpack_enc_get_type())
 #define GST_WAVPACK_ENC(obj) \
@@ -39,6 +40,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WAVPACK_ENC))
 #define GST_IS_WAVPACK_ENC_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WAVPACK_ENC))
+
 typedef struct _GstWavpackEnc GstWavpackEnc;
 typedef struct _GstWavpackEncClass GstWavpackEncClass;
 
@@ -46,7 +48,7 @@ typedef struct
 {
   gboolean correction;
   GstWavpackEnc *wavpack_enc;
-} write_id;
+} GstWavpackEncWriteID;
 
 
 struct _GstWavpackEnc
@@ -66,7 +68,8 @@ struct _GstWavpackEnc
   gint channels;
   gint width;
 
-  write_id *wv_id, *wvc_id;
+  GstWavpackEncWriteID *wv_id;
+  GstWavpackEncWriteID *wvc_id;
 
   guint mode;
   gdouble bitrate;
@@ -90,4 +93,5 @@ GType gst_wavpack_enc_get_type (void);
 gboolean gst_wavpack_enc_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
+
 #endif /* __GST_WAVPACK_ENC_H__ */
