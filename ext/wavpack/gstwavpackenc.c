@@ -67,7 +67,7 @@ enum
   ARG_CORRECTION_MODE,
   ARG_MD5,
   ARG_EXTRA_PROCESSING,
-  ARG_JOINT_STEREO_MODE,
+  ARG_JOINT_STEREO_MODE
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_wavpack_enc_debug);
@@ -108,13 +108,13 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "width = (int) { 8, 16, 24, 32 }, "
         "channels = (int) [ 1, 2 ], "
-        "rate = (int) [ 6000, 192000 ], " "framed = (boolean) FALSE")
+        "rate = (int) [ 6000, 192000 ], " "framed = (boolean) TRUE")
     );
 
 static GstStaticPadTemplate wvcsrc_factory = GST_STATIC_PAD_TEMPLATE ("wvcsrc",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("audio/x-wavpack-correction, " "framed = (boolean) FALSE")
+    GST_STATIC_CAPS ("audio/x-wavpack-correction, " "framed = (boolean) TRUE")
     );
 
 #define DEFAULT_MODE 1
@@ -258,12 +258,8 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
 static void
 gst_wavpack_enc_init (GstWavpackEnc * wavpack_enc, GstWavpackEncClass * gclass)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (wavpack_enc);
-
-  /* setup sink pad, add handlers */
   wavpack_enc->sinkpad =
-      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-          "sink"), "sink");
+      gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_setcaps_function (wavpack_enc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_wavpack_enc_sink_set_caps));
   gst_pad_set_chain_function (wavpack_enc->sinkpad,
@@ -273,9 +269,7 @@ gst_wavpack_enc_init (GstWavpackEnc * wavpack_enc, GstWavpackEncClass * gclass)
   gst_element_add_pad (GST_ELEMENT (wavpack_enc), wavpack_enc->sinkpad);
 
   /* setup src pad */
-  wavpack_enc->srcpad =
-      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
-          "src"), "src");
+  wavpack_enc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (wavpack_enc), wavpack_enc->srcpad);
 
   /* initialize object attributes */
@@ -404,42 +398,34 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * wavpack_enc)
   if (wavpack_enc->wp_config->flags & CONFIG_HYBRID_FLAG) {
     if (wavpack_enc->correction_mode > 0) {
       wavpack_enc->wvcsrcpad =
-          gst_pad_new_from_template (gst_element_class_get_pad_template
-          (GST_ELEMENT_GET_CLASS (wavpack_enc), "wvcsrc"), "wvcsrc");
+          gst_pad_new_from_static_template (&wvcsrc_factory, "wvcsrc");
 
       /* try to add correction src pad, don't set correction mode on failure */
       GstCaps *caps = gst_caps_new_simple ("audio/x-wavpack-correction",
-          "framed", G_TYPE_BOOLEAN, FALSE, NULL);
+          "framed", G_TYPE_BOOLEAN, TRUE, NULL);
 
       gst_element_no_more_pads (GST_ELEMENT (wavpack_enc));
 
+      GST_DEBUG_OBJECT (wavpack_enc, "Adding correction pad with caps %"
+          GST_PTR_FORMAT, caps);
       if (!gst_pad_set_caps (wavpack_enc->wvcsrcpad, caps)) {
         wavpack_enc->correction_mode = 0;
-        GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, INIT, (NULL),
-            ("setting correction caps failed: %", GST_PTR_FORMAT, caps));
+        GST_WARNING_OBJECT (wavpack_enc, "setting correction caps failed");
       } else {
         gst_pad_use_fixed_caps (wavpack_enc->wvcsrcpad);
-
-        if (gst_element_add_pad (GST_ELEMENT (wavpack_enc),
-                wavpack_enc->wvcsrcpad)) {
-
-          wavpack_enc->wp_config->flags |= CONFIG_CREATE_WVC;
-          if (wavpack_enc->correction_mode == 2) {
-            wavpack_enc->wp_config->flags |= CONFIG_OPTIMIZE_WVC;
-          }
-        } else {
-          wavpack_enc->correction_mode = 0;
-          GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, INIT, (NULL),
-              ("add correction pad failed. no correction file will be created."));
+        gst_element_add_pad (GST_ELEMENT (wavpack_enc), wavpack_enc->wvcsrcpad);
+        wavpack_enc->wp_config->flags |= CONFIG_CREATE_WVC;
+        if (wavpack_enc->correction_mode == 2) {
+          wavpack_enc->wp_config->flags |= CONFIG_OPTIMIZE_WVC;
         }
-        gst_caps_unref (caps);
       }
+      gst_caps_unref (caps);
     }
   } else {
     if (wavpack_enc->correction_mode > 0) {
       wavpack_enc->correction_mode = 0;
-      GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, SETTINGS, (NULL),
-          ("settings correction mode only has effect if a bitrate is provided."));
+      GST_WARNING_OBJECT (wavpack_enc, "setting correction mode only has "
+          "any effect if a bitrate is provided.");
     }
   }
   gst_element_no_more_pads (GST_ELEMENT (wavpack_enc));
@@ -516,153 +502,78 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
 {
   write_id *wid = (write_id *) id;
   GstWavpackEnc *wavpack_enc = GST_WAVPACK_ENC (wid->wavpack_enc);
-  GstFlowReturn ret;
+  GstFlowReturn *flow;
   GstBuffer *buffer;
+  GstPad *pad;
   guchar *block = (guchar *) data;
 
-  if (wid->correction == FALSE) {
-    /* we got something that should be pushed to the (non-correction) src pad */
+  pad = (wid->correction) ? wavpack_enc->wvcsrcpad : wavpack_enc->srcpad;
+  flow =
+      (wid->correction) ? &wavpack_enc->wvcsrcpad_last_return : &wavpack_enc->
+      srcpad_last_return;
 
-    /* try to allocate a buffer, compatible with the pad, fail otherwise */
-    ret = gst_pad_alloc_buffer_and_set_caps (wavpack_enc->srcpad,
-        GST_BUFFER_OFFSET_NONE, count, GST_PAD_CAPS (wavpack_enc->srcpad),
-        &buffer);
-    if (ret != GST_FLOW_OK) {
-      wavpack_enc->srcpad_last_return = ret;
-      GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, ENCODE, (NULL),
-          ("Dropped one block (%d bytes) of encoded data while allocating buffer! Reason: '%s'\n",
-              count, gst_flow_get_name (ret)));
-      return FALSE;
-    }
+  *flow = gst_pad_alloc_buffer_and_set_caps (pad, GST_BUFFER_OFFSET_NONE,
+      count, GST_PAD_CAPS (pad), &buffer);
 
-    g_memmove (GST_BUFFER_DATA (buffer), block, count);
+  if (*flow != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (wavpack_enc, "flow on %s:%s = %s",
+        GST_DEBUG_PAD_NAME (pad), gst_flow_get_name (*flow));
+    return FALSE;
+  }
 
-    if ((block[0] == 'w') && (block[1] == 'v') && (block[2] == 'p')
-        && (block[3] == 'k')) {
-      /* if it's a Wavpack block set buffer timestamp and duration, etc */
-      WavpackHeader wph;
+  g_memmove (GST_BUFFER_DATA (buffer), block, count);
 
-      GST_DEBUG ("got %d bytes of encoded wavpack data", count);
-      gst_wavpack_read_header (&wph, block);
+  if (count > sizeof (WavpackHeader) && memcmp (block, "wvpk", 4) == 0) {
+    /* if it's a Wavpack block set buffer timestamp and duration, etc */
+    WavpackHeader wph;
 
-      /* if it's the first wavpack block save it for later reference
-       * i.e. sample count correction and send a NEW_SEGMENT event */
-      if (wph.block_index == 0) {
-        GstEvent *event = gst_event_new_new_segment (FALSE,
-            1.0, GST_FORMAT_BYTES, 0, GST_BUFFER_OFFSET_NONE, 0);
+    GST_LOG_OBJECT (wavpack_enc, "got %d bytes of encoded wavpack %sdata",
+        count, (wid->correction) ? "correction " : "");
 
+    gst_wavpack_read_header (&wph, block);
+
+    /* if it's the first wavpack block, send a NEW_SEGMENT event */
+    if (wph.block_index == 0) {
+      GstEvent *event = gst_event_new_new_segment (FALSE,
+          1.0, GST_FORMAT_BYTES, 0, GST_BUFFER_OFFSET_NONE, 0);
+
+      /* save header for later reference, so we can re-send it later on
+       * EOS with fixed up values for total sample count etc. */
+      if (wavpack_enc->first_block == NULL && !wid->correction) {
         gst_pad_push_event (wavpack_enc->srcpad, event);
-        wavpack_enc->first_block = g_malloc0 (count);
-        g_memmove (wavpack_enc->first_block, block, count);
+        wavpack_enc->first_block = g_memdup (block, count);
         wavpack_enc->first_block_size = count;
       }
-
-      /* set buffer timestamp, duration, offset, offset_end from
-       * the wavpack header */
-      GST_BUFFER_TIMESTAMP (buffer) =
-          gst_util_uint64_scale_int (GST_SECOND, wph.block_index,
-          wavpack_enc->samplerate);
-      GST_BUFFER_DURATION (buffer) =
-          gst_util_uint64_scale_int (GST_SECOND, wph.block_samples,
-          wavpack_enc->samplerate);
-      GST_BUFFER_OFFSET (buffer) = wph.block_index;
-      GST_BUFFER_OFFSET_END (buffer) = wph.block_index + wph.block_samples;
-    } else {
-      /* if it's something else set no timestamp and duration on the buffer */
-      GST_DEBUG ("got %d bytes of unknown data", count);
-
-      GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
-      GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
     }
 
-    /* push the buffer and forward errors */
-    ret = gst_pad_push (wavpack_enc->srcpad, buffer);
-    wavpack_enc->srcpad_last_return = ret;
-    if (ret == GST_FLOW_OK) {
-      return TRUE;
-    } else {
-      GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, ENCODE, (NULL),
-          ("Dropped one block (%d bytes) of encoded data while pushing! Reason: '%s'\n",
-              count, gst_flow_get_name (ret)));
-      return FALSE;
-    }
-  } else if (wid->correction == TRUE) {
-    /* we got something that should be pushed to the correction src pad */
-
-    /* is the correction pad linked? */
-    if (!gst_pad_is_linked (wavpack_enc->wvcsrcpad)) {
-      GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, ENCODE, (NULL),
-          ("Dropped one block (%d bytes) of encoded correction data because of unlinked pad",
-              count));
-      wavpack_enc->wvcsrcpad_last_return = GST_FLOW_NOT_LINKED;
-      return FALSE;
-    }
-
-    /* try to allocate a buffer, compatible with the pad, fail otherwise */
-    ret = gst_pad_alloc_buffer_and_set_caps (wavpack_enc->wvcsrcpad,
-        GST_BUFFER_OFFSET_NONE, count,
-        GST_PAD_CAPS (wavpack_enc->wvcsrcpad), &buffer);
-    if (ret != GST_FLOW_OK) {
-      wavpack_enc->wvcsrcpad_last_return = ret;
-      GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, ENCODE, (NULL),
-          ("Dropped one block (%d bytes) of encoded correction data while allocating buffer! Reason: '%s'\n",
-              count, gst_flow_get_name (ret)));
-      return FALSE;
-    }
-
-    g_memmove (GST_BUFFER_DATA (buffer), block, count);
-
-    if ((block[0] == 'w') && (block[1] == 'v') && (block[2] == 'p')
-        && (block[3] == 'k')) {
-      /* if it's a Wavpack block set buffer timestamp and duration, etc */
-      WavpackHeader wph;
-
-      GST_DEBUG ("got %d bytes of encoded wavpack correction data", count);
-      gst_wavpack_read_header (&wph, block);
-
-      /* if it's the first wavpack block send a NEW_SEGMENT
-       * event */
-      if (wph.block_index == 0) {
-        GstEvent *event = gst_event_new_new_segment (FALSE,
-            1.0, GST_FORMAT_BYTES, 0, GST_BUFFER_OFFSET_NONE, 0);
-
-        gst_pad_push_event (wavpack_enc->wvcsrcpad, event);
-      }
-
-      /* set buffer timestamp, duration, offset, offset_end from
-       * the wavpack header */
-      GST_BUFFER_TIMESTAMP (buffer) =
-          gst_util_uint64_scale_int (GST_SECOND, wph.block_index,
-          wavpack_enc->samplerate);
-      GST_BUFFER_DURATION (buffer) =
-          gst_util_uint64_scale_int (GST_SECOND, wph.block_samples,
-          wavpack_enc->samplerate);
-      GST_BUFFER_OFFSET (buffer) = wph.block_index;
-      GST_BUFFER_OFFSET_END (buffer) = wph.block_index + wph.block_samples;
-    } else {
-      /* if it's something else set no timestamp and duration on the buffer */
-      GST_DEBUG ("got %d bytes of unknown data", count);
-
-      GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
-      GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
-    }
-
-    /* push the buffer and forward errors */
-    ret = gst_pad_push (wavpack_enc->wvcsrcpad, buffer);
-    wavpack_enc->wvcsrcpad_last_return = ret;
-    if (ret == GST_FLOW_OK)
-      return TRUE;
-    else {
-      GST_ELEMENT_WARNING (wavpack_enc, LIBRARY, ENCODE, (NULL),
-          ("Dropped one block (%d bytes) of encoded correction data while pushing! Reason: '%s'\n",
-              count, gst_flow_get_name (ret)));
-      return FALSE;
-    }
+    /* set buffer timestamp, duration, offset, offset_end from
+     * the wavpack header */
+    GST_BUFFER_TIMESTAMP (buffer) =
+        gst_util_uint64_scale_int (GST_SECOND, wph.block_index,
+        wavpack_enc->samplerate);
+    GST_BUFFER_DURATION (buffer) =
+        gst_util_uint64_scale_int (GST_SECOND, wph.block_samples,
+        wavpack_enc->samplerate);
+    GST_BUFFER_OFFSET (buffer) = wph.block_index;
+    GST_BUFFER_OFFSET_END (buffer) = wph.block_index + wph.block_samples;
   } else {
-    /* (correction != TRUE) && (correction != FALSE), wtf? ignore this */
-    g_assert_not_reached ();
-    return TRUE;
+    /* if it's something else set no timestamp and duration on the buffer */
+    GST_DEBUG_OBJECT (wavpack_enc, "got %d bytes of unknown data", count);
+
+    GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
   }
+
+  /* push the buffer and forward errors */
+  *flow = gst_pad_push (pad, buffer);
+
+  if (*flow != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (wavpack_enc, "flow on %s:%s = %s",
+        GST_DEBUG_PAD_NAME (pad), gst_flow_get_name (*flow));
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -733,7 +644,7 @@ gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buf)
   /* encode and handle return values from encoding */
   if (WavpackPackSamples (wavpack_enc->wp_context, data,
           sample_count / wavpack_enc->channels)) {
-    GST_DEBUG ("encoding samples successfull");
+    GST_DEBUG ("encoding samples successful");
     ret = GST_FLOW_OK;
   } else {
     if ((wavpack_enc->srcpad_last_return == GST_FLOW_RESEND) ||
@@ -777,17 +688,12 @@ gst_wavpack_enc_rewrite_first_block (GstWavpackEnc * wavpack_enc)
   ret = gst_pad_push_event (wavpack_enc->srcpad, event);
   if (ret) {
     /* try to rewrite the first block */
+    GST_DEBUG_OBJECT (wavpack_enc, "rewriting first block ...");
     ret = gst_wavpack_enc_push_block (wavpack_enc->wv_id,
         wavpack_enc->first_block, wavpack_enc->first_block_size);
-    if (ret) {
-      GST_DEBUG ("rewriting of first block succeeded!");
-    } else {
-      GST_ELEMENT_WARNING (wavpack_enc, RESOURCE, WRITE, (NULL),
-          ("rewriting of first block failed while pushing!"));
-    }
   } else {
-    GST_ELEMENT_WARNING (wavpack_enc, RESOURCE, SEEK, (NULL),
-        ("rewriting of first block failed. Seeking to first block failed!"));
+    GST_WARNING_OBJECT (wavpack_enc, "rewriting of first block failed. "
+        "Seeking to first block failed!");
   }
 }
 
@@ -826,8 +732,8 @@ gst_wavpack_enc_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_NEWSEGMENT:
       if (wavpack_enc->wp_context) {
-        GST_ELEMENT_WARNING (wavpack_enc, RESOURCE, SEEK, (NULL),
-            ("got NEWSEGMENT after encoding already started"));
+        GST_WARNING_OBJECT (wavpack_enc, "got NEWSEGMENT after encoding "
+            "already started");
       }
       /* drop NEWSEGMENT events, we create our own when pushing
        * the first buffer to the pads */

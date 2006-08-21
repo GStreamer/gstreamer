@@ -1,3 +1,14 @@
+2006-08-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_init),
+	(gst_wavpack_enc_set_wp_config), (gst_wavpack_enc_push_block),
+	(gst_wavpack_enc_chain), (gst_wavpack_enc_rewrite_first_block),
+	(gst_wavpack_enc_sink_event):
+	  Fix caps set on buffers and template caps (output is framed)
+	  and make them match (#351663); use GST_WARNING_OBJECT instead of
+	  GST_ELEMENT_WARNING; simplify push_block(); do some small
+	  clean-ups here and there; fix memleak (#351663).
+
 2006-08-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Based on patch by: Sebastian Dröge <slomo at circular-chaos.org>
