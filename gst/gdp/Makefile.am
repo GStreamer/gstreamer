@@ -5,8 +5,8 @@ libgstgdp_la_SOURCES = \
 	gstgdppay.c \
 	gstgdpdepay.c
 
-libgstgdp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
-libgstgdp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_GDP_LIBS)
+libgstgdp_la_CFLAGS = $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstgdp_la_LIBADD = $(GST_BASE_LIBS) $(GST_GDP_LIBS)
 libgstgdp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS =			\
