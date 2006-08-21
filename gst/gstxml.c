@@ -120,7 +120,13 @@ gst_xml_init (GstXML * xml)
 static void
 gst_xml_dispose (GObject * object)
 {
-  g_list_free (GST_XML (object)->topelements);
+  GstXML *xml = GST_XML (object);
+
+  g_list_foreach (xml->topelements, (GFunc) gst_object_unref, NULL);
+  g_list_free (xml->topelements);
+  xml->topelements = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 /**
@@ -309,6 +315,7 @@ gboolean
 gst_xml_parse_file (GstXML * xml, const guchar * fname, const guchar * root)
 {
   xmlDocPtr doc;
+  gboolean ret;
 
   g_return_val_if_fail (fname != NULL, FALSE);
 
@@ -319,7 +326,10 @@ gst_xml_parse_file (GstXML * xml, const guchar * fname, const guchar * root)
     return FALSE;
   }
 
-  return gst_xml_parse_doc (xml, doc, root);
+  ret = gst_xml_parse_doc (xml, doc, root);
+
+  xmlFreeDoc (doc);
+  return ret;
 }
 
 /* FIXME 0.9: guchar* */
@@ -340,12 +350,16 @@ gst_xml_parse_memory (GstXML * xml, guchar * buffer, guint size,
     const gchar * root)
 {
   xmlDocPtr doc;
+  gboolean ret;
 
   g_return_val_if_fail (buffer != NULL, FALSE);
 
   doc = xmlParseMemory ((char *) buffer, size);
 
-  return gst_xml_parse_doc (xml, doc, (const xmlChar *) root);
+  ret = gst_xml_parse_doc (xml, doc, (const xmlChar *) root);
+
+  xmlFreeDoc (doc);
+  return ret;
 }
 
 static void
@@ -375,7 +389,7 @@ gst_xml_get_topelements (GstXML * xml)
   return xml->topelements;
 }
 
-/* FIXME 0.9: why is the arg guchar* instead of gchar*? */
+/* FIXME 0.11: why is the arg guchar* instead of gchar*? */
 /**
  * gst_xml_get_element:
  * @xml: The GstXML to get the element from
@@ -385,7 +399,7 @@ gst_xml_get_topelements (GstXML * xml)
  * to name in the pipeline description. You would use this if you have
  * to do anything to the element after loading.
  *
- * Returns: a pointer to a new GstElement
+ * Returns: a pointer to a new GstElement, caller owns returned reference.
  */
 GstElement *
 gst_xml_get_element (GstXML * xml, const guchar * name)
@@ -405,7 +419,7 @@ gst_xml_get_element (GstXML * xml, const guchar * name)
 
     GST_DEBUG ("gstxml: getting element \"%s\"", name);
     if (!strcmp (GST_ELEMENT_NAME (top), (char *) name)) {
-      return top;
+      return GST_ELEMENT_CAST (gst_object_ref (top));
     } else {
       if (GST_IS_BIN (top)) {
         element = gst_bin_get_by_name (GST_BIN (top), (gchar *) name);

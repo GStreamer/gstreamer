@@ -129,8 +129,10 @@ xmllaunch_parse_cmdline (const gchar ** argv)
 
   if (!l)
     return NULL;
-  else
-    return l->data;
+
+  gst_object_ref (pipeline);
+  gst_object_unref (xml);
+  return pipeline;
 }
 #endif
 

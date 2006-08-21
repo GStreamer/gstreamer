@@ -1,3 +1,16 @@
+2006-08-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstxml.c: (gst_xml_dispose), (gst_xml_parse_file),
+	(gst_xml_parse_memory), (gst_xml_get_element):
+	  Chain up to parent class in dispose function and also
+	  unref the elements in the toplevel_elements GList.
+	  Don't leak XmlDocPtr in _parse_file() and _parse_memory().
+	  Always return a reference in gst_xml_get_element() rather
+	  than only sometimes.
+
+	* tools/gst-launch.c: (xmllaunch_parse_cmdline):
+	  Don't leak GstXml object.
+
 2006-08-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
