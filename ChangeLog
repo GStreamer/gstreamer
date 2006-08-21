@@ -1,3 +1,13 @@
+2006-08-21  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	If pygobject is available, only build with it, else try to find pygtk
+	to stay compatible with older version.
+	* gst/Makefile.am:
+	Switch to pygobject CFLAGS.
+	* testsuite/Makefile.am:
+	Switch to pygobject CFLAGS.	
+
 2006-08-08  Edward Hervey  <edward@fluendo.com>
 
 	* codegen/codegen.py:

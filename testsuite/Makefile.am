@@ -1,6 +1,6 @@
 INCLUDES = \
 	$(PYTHON_INCLUDES) \
-	$(PYGTK_CFLAGS) \
+	$(PYGOBJET_CFLAGS) \
 	$(PYGST_CFLAGS) \
 	$(GST_CFLAGS)
 
@@ -9,6 +9,7 @@ linked_LIBS = testhelper.la
 
 testhelper_la_LDFLAGS = -module -avoid-version
 testhelper_la_LIBADD = $(GLIB_LIBS)
+testhelper_la_CFLAGS = $(PYGOBJECT_CFLAGS)
 testhelper_la_SOURCES = \
 	testhelpermodule.c \
 	test-object.c

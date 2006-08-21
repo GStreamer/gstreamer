@@ -35,6 +35,7 @@ AC_SUBST(ACLOCAL_AMFLAGS, "-I common/m4")
 
 dnl required versions of other packages
 AC_SUBST(PYGTK_REQ, 2.6.3)
+AC_SUBST(PYGOBJECT_REQ, 2.11.2)
 AC_SUBST(GLIB_REQ,  2.8.0)
 AC_SUBST(GTK_REQ,   2.6.0)
 AC_SUBST(GST_REQ,   0.10.2)
@@ -205,25 +206,17 @@ AC_SUBST(GST_PLUGINS_BASE_LIBS)
 AC_SUBST(GST_PLUGINS_BASE_CFLAGS)
 
 
-dnl check for pygtk
-PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
-AC_SUBST(PYGTK_CFLAGS)
+dnl check for pygobject
+PKG_CHECK_MODULES(PYGOBJECT, pygobject-2.0 >= $PYGOBJECT_REQ,
+  HAVE_PYGOBJECT="yes", HAVE_PYGOBJECT="no")
 
-AC_MSG_CHECKING(for pygtk defs)
-PYGTK_DEFSDIR=`$PKG_CONFIG --variable=defsdir pygtk-2.0`
-AC_SUBST(PYGTK_DEFSDIR)
-AC_MSG_RESULT($PYGTK_DEFSDIR)
-
-AC_MSG_CHECKING(for pygtk h2def)
-PYGTK_H2DEF=`$PKG_CONFIG --variable=codegendir pygtk-2.0`/h2def.py
-AC_SUBST(PYGTK_H2DEF)
-AC_MSG_RESULT($PYGTK_H2DEF)
-
-AC_MSG_CHECKING(for pygtk codegen)
-PYGTK_CODEGEN="$PYTHON `$PKG_CONFIG --variable=codegendir pygtk-2.0`/codegen.py"
-dnl PYGTK_CODEGEN="$PYTHON \$(top_srcdir)/codegen/codegen.py"
-AC_SUBST(PYGTK_CODEGEN)
-AC_MSG_RESULT($PYGTK_CODEGEN)
+if test "x$HAVE_PYGOBJECT" = "xno"; then
+  dnl If we don't have pygobject, then check for pygtk
+  dnl check for pygtk
+  PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
+  PYGOBJET_CFLAGS="\$(PYGTK_CFLAGS)"
+fi
+AC_SUBST(PYGOBJECT_CFLAGS)
 
 dnl define an ERROR_CFLAGS Makefile variable
 GST_SET_ERROR_CFLAGS($GST_CVS)
