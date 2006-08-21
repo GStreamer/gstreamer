@@ -1,3 +1,9 @@
+2006-08-21  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstxml.c: (gst_xml_class_init), (gst_xml_dispose):
+	Implement GObject::dispose virtual method in GstXML so we can free the
+	top_elements GList.
+
 2006-08-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbuffer.c: (gst_buffer_make_metadata_writable),

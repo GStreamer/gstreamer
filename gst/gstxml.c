@@ -49,6 +49,7 @@ enum
 
 static void gst_xml_class_init (GstXMLClass * klass);
 static void gst_xml_init (GstXML * xml);
+static void gst_xml_dispose (GObject * object);
 
 static void gst_xml_object_loaded (GstObject * private, GstObject * object,
     xmlNodePtr self, gpointer data);
@@ -89,6 +90,8 @@ gst_xml_class_init (GstXMLClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_xml_dispose);
+
   /* FIXME G_TYPE_POINTER should be GType of xmlNodePtr
    * (ensonic) can't be fixed, as libxml does not use GObject (unfortunately)
    */
@@ -112,6 +115,12 @@ static void
 gst_xml_init (GstXML * xml)
 {
   xml->topelements = NULL;
+}
+
+static void
+gst_xml_dispose (GObject * object)
+{
+  g_list_free (GST_XML (object)->topelements);
 }
 
 /**
