@@ -86,8 +86,6 @@ EXAMPLE_CFILES = \
         $(top_srcdir)/ext/directfb/dfb-example.c
 
 EXTRA_HFILES = \
-	$(top_srcdir)/gst/gdp/gstgdpdepay.h \
-	$(top_srcdir)/gst/gdp/gstgdppay.h \
 	$(top_srcdir)/ext/directfb/dfbvideosink.h \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h
 

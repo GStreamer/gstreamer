@@ -1,3 +1,20 @@
+2006-08-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* gst/gdp/Makefile.am:
+	* gst/gdp/gstgdp.c:
+	* gst/gdp/gstgdpdepay.c:
+	* gst/gdp/gstgdpdepay.h:
+	* gst/gdp/gstgdppay.c:
+	* gst/gdp/gstgdppay.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/gdpdepay.c:
+	* tests/check/elements/gdppay.c:
+	  move gdp plugin to good.
+
 2006-08-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream), (qtdemux_parse),

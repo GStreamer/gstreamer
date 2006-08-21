@@ -33,14 +33,9 @@ check_mpeg2enc =
 endif
 
 check_PROGRAMS = \
-	elements/gdppay \
-	elements/gdpdepay \
 	$(check_mpeg2enc)
 
 TESTS = $(check_PROGRAMS)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
-
-elements_gdpdepay_LDFLAGS = $(LDADD) $(GST_GDP_LIBS)
-elements_gdppay_LDFLAGS = $(LDADD) $(GST_GDP_LIBS)

@@ -79,7 +79,6 @@ GST_PLUGINS_ALL="\
   cdxaparse \
   filter \
   freeze \
-  gdp \
   h264parse \
   modplug \
   nsf \
@@ -841,7 +840,6 @@ gst/Makefile
 gst/cdxaparse/Makefile
 gst/filter/Makefile
 gst/freeze/Makefile
-gst/gdp/Makefile
 gst/h264parse/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
