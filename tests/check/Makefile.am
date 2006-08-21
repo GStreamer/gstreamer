@@ -47,6 +47,8 @@ check_PROGRAMS = \
 	elements/audioconvert \
 	elements/audioresample \
 	elements/audiotestsrc \
+	elements/gdpdepay \
+	elements/gdppay \
 	elements/multifdsink \
 	elements/videorate \
 	elements/videotestsrc \
@@ -111,6 +113,9 @@ elements_audioconvert_LDADD = \
 elements_audioconvert_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \
 	$(CFLAGS) $(AM_CFLAGS)
+
+elements_gdpdepay_LDADD = $(GST_GDP_LIBS) $(LDADD)
+elements_gdppay_LDADD = $(GST_GDP_LIBS) $(LDADD)
 
 elements_volume_LDADD = \
 	$(GST_BASE_LIBS) \

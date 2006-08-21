@@ -89,6 +89,7 @@ GST_PLUGINS_ALL="\
 	audioresample \
 	audiotestsrc \
 	ffmpegcolorspace \
+	gdp \
 	playback \
 	typefind \
 	videotestsrc \
@@ -577,6 +578,7 @@ gst/audiorate/Makefile
 gst/audioresample/Makefile
 gst/audiotestsrc/Makefile
 gst/ffmpegcolorspace/Makefile
+gst/gdp/Makefile
 gst/playback/Makefile
 gst/subparse/Makefile
 gst/tcp/Makefile

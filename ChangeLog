@@ -1,10 +1,21 @@
+2006-08-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* gst/gdp/Makefile.am:
+	* tests/check/Makefile.am:
+	  Move GDP plugin to -base from -bad.  Closes #347783.
+
 2006-08-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gstvorbistag.c:
 	(gst_tag_list_from_vorbiscomment_buffer):
 	  Allow id_data_len == 0 (needed for vorbis comments in Speex files).
 	  Also add some checks to make sure we don't memcmp() beyond the end of
-      vorbiscomment buffer if the ID to check for is larger than the buffer.
+	  vorbiscomment buffer if the ID to check for is larger than the buffer.
 
 	* tests/check/libs/tag.c: (GST_START_TEST):
 	  Some more tests for gst_tag_list_from_vorbiscomment_buffer().
@@ -44,7 +55,7 @@
 
 	* gst/audioconvert/gstaudioconvert.c:
 	(gst_audio_convert_get_unit_size), (set_structure_widths):
-          Lower debug, use g_assert in _get_unit_size
+	  Lower debug, use g_assert in _get_unit_size
 
 	* gst/audioresample/gstaudioresample.c:
 	(audioresample_get_unit_size):
@@ -399,6 +410,11 @@
 	(gst_ogg_demux_do_seek), (gst_ogg_demux_read_chain):
 	Make seeking in ogg more accurate again by doing the more correct
 	granuletime to stream time conversion.
+
+2006-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_new_client):
+	  
 
 2006-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
