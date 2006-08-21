@@ -1,6 +1,11 @@
 2006-08-21  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:
+	attempt to fix build.
+
+2006-08-21  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
 	If pygobject is available, only build with it, else try to find pygtk
 	to stay compatible with older version.
 	* gst/Makefile.am:

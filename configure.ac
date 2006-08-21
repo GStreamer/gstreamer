@@ -214,6 +214,7 @@ if test "x$HAVE_PYGOBJECT" = "xno"; then
   dnl If we don't have pygobject, then check for pygtk
   dnl check for pygtk
   PKG_CHECK_MODULES(PYGTK, pygtk-2.0 >= $PYGTK_REQ)
+  AC_SUBST(PYGTK_CFLAGS)
   PYGOBJET_CFLAGS="\$(PYGTK_CFLAGS)"
 fi
 AC_SUBST(PYGOBJECT_CFLAGS)
