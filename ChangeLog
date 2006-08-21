@@ -1,3 +1,8 @@
+2006-08-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/Makefile.am:
+	Fix the build again.
+
 2006-08-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audiofxgood/.cvsignore:

@@ -66,4 +66,4 @@ noinst_HEADERS =			\
 		 gstasteriskh263.h	\
 		 gstrtpspeexdepay.h	\
 		 gstrtpspeexpay.h	\
-		 gstrtpsv3vdepay.c
+		 gstrtpsv3vdepay.h
