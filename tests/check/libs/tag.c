@@ -380,6 +380,94 @@ GST_START_TEST (test_vorbis_tags)
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "English");
 
   gst_tag_list_free (list);
+
+  /* make sure gst_tag_list_from_vorbiscomment_buffer() works with an
+   * empty ID (for Speex) */
+  {
+    const guint8 speex_comments_buf1[] = { 0x03, 0x00, 0x00, 0x00, 'f', 'o',
+      'o', 0x00, 0x00, 0x00, 0x00
+    };
+    GstBuffer *buf;
+    gchar *vendor = NULL;
+
+    buf = gst_buffer_new ();
+    GST_BUFFER_DATA (buf) = (guint8 *) speex_comments_buf1;
+    GST_BUFFER_SIZE (buf) = sizeof (speex_comments_buf1);
+
+    /* make sure it doesn't memcmp over the end of the buffer */
+    fail_unless (gst_tag_list_from_vorbiscomment_buffer (buf,
+            (const guint8 *) "averylongstringbrownfoxjumpoverthefence", 39,
+            &vendor) == NULL);
+    fail_unless (vendor == NULL);
+
+    /* make sure it bails out if the ID doesn't match */
+    fail_unless (gst_tag_list_from_vorbiscomment_buffer (buf,
+            (guint8 *) "short", 4, &vendor) == NULL);
+    fail_unless (vendor == NULL);
+
+    /* now read properly */
+    list = gst_tag_list_from_vorbiscomment_buffer (buf, NULL, 0, &vendor);
+    fail_unless (vendor != NULL);
+    fail_unless_equals_string (vendor, "foo");
+    fail_unless (list != NULL);
+    fail_unless (gst_structure_n_fields ((GstStructure *) list) == 0);
+    g_free (vendor);
+    gst_tag_list_free (list);
+
+    /* now again without vendor */
+    list = gst_tag_list_from_vorbiscomment_buffer (buf, NULL, 0, NULL);
+    fail_unless (list != NULL);
+    fail_unless (gst_structure_n_fields ((GstStructure *) list) == 0);
+    gst_tag_list_free (list);
+
+    gst_buffer_unref (buf);
+  }
+
+  /* the same with an ID */
+  {
+    const guint8 vorbis_comments_buf[] = { 0x03, 'v', 'o', 'r', 'b', 'i', 's',
+      0x03, 0x00, 0x00, 0x00, 'f', 'o', 'o', 0x01, 0x00, 0x00, 0x00,
+      strlen ("ARTIST=foo bar"), 0x00, 0x00, 0x00, 'A', 'R', 'T', 'I', 'S',
+      'T', '=', 'f', 'o', 'o', ' ', 'b', 'a', 'r'
+    };
+    GstBuffer *buf;
+    gchar *vendor = NULL;
+
+    buf = gst_buffer_new ();
+    GST_BUFFER_DATA (buf) = (guint8 *) vorbis_comments_buf;
+    GST_BUFFER_SIZE (buf) = sizeof (vorbis_comments_buf);
+
+    /* make sure it doesn't memcmp over the end of the buffer */
+    fail_unless (gst_tag_list_from_vorbiscomment_buffer (buf,
+            (const guint8 *) "averylongstringbrownfoxjumpoverthefence", 39,
+            &vendor) == NULL);
+    fail_unless (vendor == NULL);
+
+    /* make sure it bails out if the ID doesn't match */
+    fail_unless (gst_tag_list_from_vorbiscomment_buffer (buf,
+            (guint8 *) "short", 4, &vendor) == NULL);
+    fail_unless (vendor == NULL);
+
+    /* now read properly */
+    list = gst_tag_list_from_vorbiscomment_buffer (buf,
+        (guint8 *) "\003vorbis", 7, &vendor);
+    fail_unless (vendor != NULL);
+    fail_unless_equals_string (vendor, "foo");
+    fail_unless (list != NULL);
+    fail_unless (gst_structure_n_fields ((GstStructure *) list) == 1);
+    ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ARTIST, "foo bar");
+    g_free (vendor);
+    gst_tag_list_free (list);
+
+    /* now again without vendor */
+    list = gst_tag_list_from_vorbiscomment_buffer (buf, "\003vorbis", 7, NULL);
+    fail_unless (list != NULL);
+    fail_unless (gst_structure_n_fields ((GstStructure *) list) == 1);
+    ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ARTIST, "foo bar");
+    gst_tag_list_free (list);
+
+    gst_buffer_unref (buf);
+  }
 }
 
 GST_END_TEST;
@@ -422,7 +510,6 @@ GST_START_TEST (test_id3_tags)
 }
 
 GST_END_TEST;
-
 
 static Suite *
 tag_suite (void)

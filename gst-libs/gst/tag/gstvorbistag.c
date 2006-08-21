@@ -296,16 +296,15 @@ gst_tag_list_from_vorbiscomment_buffer (const GstBuffer * buffer,
   GstTagList *list;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-  g_return_val_if_fail (id_data != NULL, NULL);
-  g_return_val_if_fail (id_data_length > 0, NULL);
+  g_return_val_if_fail (id_data != NULL || id_data_length == 0, NULL);
 
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
   list = gst_tag_list_new ();
 
-  if (size < 11)
+  if (size < 11 || size <= id_data_length + 4)
     goto error;
-  if (memcmp (data, id_data, id_data_length) != 0)
+  if (id_data_length > 0 && memcmp (data, id_data, id_data_length) != 0)
     goto error;
   ADVANCE (id_data_length);
   if (vendor_string)

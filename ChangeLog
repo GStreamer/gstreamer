@@ -1,5 +1,16 @@
 2006-08-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/tag/gstvorbistag.c:
+	(gst_tag_list_from_vorbiscomment_buffer):
+	  Allow id_data_len == 0 (needed for vorbis comments in Speex files).
+	  Also add some checks to make sure we don't memcmp() beyond the end of
+      vorbiscomment buffer if the ID to check for is larger than the buffer.
+
+	* tests/check/libs/tag.c: (GST_START_TEST):
+	  Some more tests for gst_tag_list_from_vorbiscomment_buffer().
+
+2006-08-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_metadata_set1),
 	(gst_vorbis_enc_set_metadata):
 	  Use vorbis comment utility functions from libgsttag
