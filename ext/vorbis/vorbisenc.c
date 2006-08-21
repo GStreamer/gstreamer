@@ -624,92 +624,52 @@ gst_vorbis_enc_init (GstVorbisEnc * vorbisenc, GstVorbisEncClass * klass)
   vorbisenc->last_message = NULL;
 }
 
-
-static gchar *
-gst_vorbis_enc_get_tag_value (const GstTagList * list, const gchar * tag,
-    int index)
-{
-  GType tag_type;
-  gchar *vorbisvalue = NULL;
-
-  if (tag == NULL)
-    return NULL;
-
-  tag_type = gst_tag_get_type (tag);
-
-  /* get tag name right */
-  if ((strcmp (tag, GST_TAG_TRACK_NUMBER) == 0)
-      || (strcmp (tag, GST_TAG_ALBUM_VOLUME_NUMBER) == 0)
-      || (strcmp (tag, GST_TAG_TRACK_COUNT) == 0)
-      || (strcmp (tag, GST_TAG_ALBUM_VOLUME_COUNT) == 0)) {
-    guint track_no;
-
-    if (!gst_tag_list_get_uint_index (list, tag, index, &track_no))
-      g_return_val_if_reached (NULL);
-
-    vorbisvalue = g_strdup_printf ("%u", track_no);
-  } else if (tag_type == GST_TYPE_DATE) {
-    GDate *date;
-
-    if (!gst_tag_list_get_date_index (list, tag, index, &date))
-      g_return_val_if_reached (NULL);
-
-    vorbisvalue =
-        g_strdup_printf ("%04d-%02d-%02d", (gint) g_date_get_year (date),
-        (gint) g_date_get_month (date), (gint) g_date_get_day (date));
-    g_date_free (date);
-  } else if (tag_type == G_TYPE_STRING) {
-    if (!gst_tag_list_get_string_index (list, tag, index, &vorbisvalue))
-      g_return_val_if_reached (NULL);
-  }
-
-  return vorbisvalue;
-}
-
 static void
 gst_vorbis_enc_metadata_set1 (const GstTagList * list, const gchar * tag,
     gpointer vorbisenc)
 {
-  const gchar *vorbistag = NULL;
-  gchar *vorbisvalue = NULL;
-  guint i, count;
   GstVorbisEnc *enc = GST_VORBISENC (vorbisenc);
+  GList *vc_list, *l;
 
-  vorbistag = gst_tag_to_vorbis_tag (tag);
-  if (vorbistag == NULL) {
-    return;
-  }
+  vc_list = gst_tag_to_vorbis_comments (list, tag);
 
-  count = gst_tag_list_get_tag_size (list, tag);
-  for (i = 0; i < count; i++) {
-    vorbisvalue = gst_vorbis_enc_get_tag_value (list, tag, i);
+  for (l = vc_list; l != NULL; l = l->next) {
+    const gchar *vc_string = (const gchar *) l->data;
+    gchar *key = NULL, *val = NULL;
 
-    if (vorbisvalue != NULL) {
-      gchar *tmptag = g_strdup (vorbistag);
-
-      vorbis_comment_add_tag (&enc->vc, tmptag, vorbisvalue);
-      g_free (tmptag);
-      g_free (vorbisvalue);
+    if (gst_tag_parse_extended_comment (vc_string, &key, NULL, &val, TRUE)) {
+      vorbis_comment_add_tag (&enc->vc, key, val);
+      g_free (key);
+      g_free (val);
     }
   }
+
+  g_list_foreach (vc_list, (GFunc) g_free, NULL);
+  g_list_free (vc_list);
 }
 
 static void
-gst_vorbis_enc_set_metadata (GstVorbisEnc * vorbisenc)
+gst_vorbis_enc_set_metadata (GstVorbisEnc * enc)
 {
-  GstTagList *copy;
+  GstTagList *merged_tags;
   const GstTagList *user_tags;
 
-  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (vorbisenc));
-  if (!(vorbisenc->tags || user_tags))
-    return;
+  vorbis_comment_init (&enc->vc);
 
-  copy =
-      gst_tag_list_merge (user_tags, vorbisenc->tags,
-      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (vorbisenc)));
-  vorbis_comment_init (&vorbisenc->vc);
-  gst_tag_list_foreach (copy, gst_vorbis_enc_metadata_set1, vorbisenc);
-  gst_tag_list_free (copy);
+  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc));
+
+  GST_DEBUG_OBJECT (enc, "upstream tags = %" GST_PTR_FORMAT, enc->tags);
+  GST_DEBUG_OBJECT (enc, "user-set tags = %" GST_PTR_FORMAT, user_tags);
+
+  /* gst_tag_list_merge() will handle NULL for either or both lists fine */
+  merged_tags = gst_tag_list_merge (user_tags, enc->tags,
+      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (enc)));
+
+  if (merged_tags) {
+    GST_DEBUG_OBJECT (enc, "merged   tags = %" GST_PTR_FORMAT, merged_tags);
+    gst_tag_list_foreach (merged_tags, gst_vorbis_enc_metadata_set1, enc);
+    gst_tag_list_free (merged_tags);
+  }
 }
 
 static gchar *
