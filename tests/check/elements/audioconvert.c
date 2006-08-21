@@ -517,6 +517,46 @@ GST_START_TEST (test_channel_remapping)
 
 GST_END_TEST;
 
+GST_START_TEST (test_caps_negotiation)
+{
+  GstElement *src, *ac1, *ac2, *ac3, *sink;
+  GstElement *pipeline;
+  GstPad *ac3_src;
+  GstCaps *caps1, *caps2;
+
+  pipeline = gst_pipeline_new ("test");
+
+  /* create elements */
+  src = gst_element_factory_make ("audiotestsrc", "src");
+  ac1 = gst_element_factory_make ("audioconvert", "ac1");
+  ac2 = gst_element_factory_make ("audioconvert", "ac2");
+  ac3 = gst_element_factory_make ("audioconvert", "ac3");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  ac3_src = gst_element_get_pad (ac3, "src");
+
+  /* test with 2 audioconvert elements */
+  gst_bin_add_many (GST_BIN (pipeline), src, ac1, ac3, sink, NULL);
+  gst_element_link_many (src, ac1, ac3, sink, NULL);
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  caps1 = gst_pad_get_caps (ac3_src);
+  GST_DEBUG ("Caps size 1 : %d", gst_caps_get_size (caps1));
+  gst_element_set_state (pipeline, GST_STATE_READY);
+
+  /* test with 3 audioconvert elements */
+  gst_element_unlink (ac1, ac3);
+  gst_bin_add (GST_BIN (pipeline), ac2);
+  gst_element_link_many (ac1, ac2, ac3, NULL);
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  caps2 = gst_pad_get_caps (ac3_src);
+  GST_DEBUG ("Caps size 2 : %d", gst_caps_get_size (caps2));
+  fail_unless (gst_caps_get_size (caps1) == gst_caps_get_size (caps2));
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+}
+
+GST_END_TEST;
+
+
 Suite *
 audioconvert_suite (void)
 {
@@ -529,6 +569,7 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_float_conversion);
   tcase_add_test (tc_chain, test_multichannel_conversion);
   tcase_add_test (tc_chain, test_channel_remapping);
+  tcase_add_test (tc_chain, test_caps_negotiation);
 
   return s;
 }
