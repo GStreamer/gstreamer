@@ -1,6 +1,24 @@
 2006-08-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_init),
+	(gst_wavpack_enc_finalize), (gst_wavpack_enc_sink_set_caps),
+	(gst_wavpack_enc_set_wp_config), (gst_wavpack_enc_format_samples),
+	(gst_wavpack_enc_push_block), (gst_wavpack_enc_chain),
+	(gst_wavpack_enc_rewrite_first_block),
+	(gst_wavpack_enc_sink_event), (gst_wavpack_enc_change_state),
+	(gst_wavpack_enc_set_property), (gst_wavpack_enc_get_property):
+	* ext/wavpack/gstwavpackenc.h:
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_reset),
+	(gst_wavpack_parse_src_query), (gst_wavpack_parse_src_event),
+	(gst_wavpack_parse_init), (gst_wavpack_parse_get_upstream_length),
+	(gst_wavpack_parse_loop):
+	  More clean-ups: use shorter variable names to make code easier to
+	  read; prefix structures we define with 'Gst' to make it clearer
+	  where they come from.
+
+2006-08-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_init),
 	(gst_wavpack_enc_set_wp_config), (gst_wavpack_enc_push_block),
 	(gst_wavpack_enc_chain), (gst_wavpack_enc_rewrite_first_block),
 	(gst_wavpack_enc_sink_event):
