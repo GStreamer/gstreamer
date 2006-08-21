@@ -20,6 +20,14 @@
 /**
  * SECTION:gstnetbuffer
  * @short_description: Buffer for use in network sources and sinks
+ *
+ * #GstNetBuffer is a subclass of a normal #GstBuffer that contains two
+ * additional metadata fields of type #GstNetAddress named 'to' and 'from'. The
+ * buffer can be used to store additional information about the origin of the
+ * buffer data and is used in various network elements to track the to and from
+ * addresses.
+ *
+ * Last reviewed on 2006-08-21 (0.10.10)
  */
 
 #include <string.h>
@@ -95,6 +103,13 @@ gst_netbuffer_copy (GstNetBuffer * nbuf)
   return copy;
 }
 
+/**
+ * gst_netbuffer_new:
+ *
+ * Create a new network buffer.
+ *
+ * Returns: a new #GstNetBuffer.
+ */
 GstNetBuffer *
 gst_netbuffer_new (void)
 {
@@ -105,6 +120,14 @@ gst_netbuffer_new (void)
   return buf;
 }
 
+/**
+ * gst_netaddress_set_ip4_address:
+ * @naddr: a network address
+ * @address: an IPv4 network address.
+ * @port: a port number to set.
+ *
+ * Set @naddr with the IPv4 @address and @port pair.
+ */
 void
 gst_netaddress_set_ip4_address (GstNetAddress * naddr, guint32 address,
     guint16 port)
@@ -116,6 +139,14 @@ gst_netaddress_set_ip4_address (GstNetAddress * naddr, guint32 address,
   naddr->port = port;
 }
 
+/**
+ * gst_netaddress_set_ip6_address:
+ * @naddr: a network address
+ * @address: an IPv6 network address.
+ * @port: a port number to set.
+ *
+ * Set @naddr with the IPv6 @address and @port pair.
+ */
 void
 gst_netaddress_set_ip6_address (GstNetAddress * naddr, guint8 address[16],
     guint16 port)
@@ -127,7 +158,14 @@ gst_netaddress_set_ip6_address (GstNetAddress * naddr, guint8 address[16],
   naddr->port = port;
 }
 
-
+/**
+ * gst_netaddress_get_net_type:
+ * @naddr: a network address
+ *
+ * Get the type of address stored in @naddr.
+ *
+ * Returns: the network type stored in @naddr.
+ */
 GstNetType
 gst_netaddress_get_net_type (GstNetAddress * naddr)
 {
@@ -136,6 +174,16 @@ gst_netaddress_get_net_type (GstNetAddress * naddr)
   return naddr->type;
 }
 
+/**
+ * gst_netaddress_get_ip4_address:
+ * @naddr: a network address
+ * @address: a location to store the address.
+ * @port: a location to store the port.
+ *
+ * Get the IPv4 address stored in @naddr into @address.
+ *
+ * Returns: TRUE if the address could be retrieved.
+ */
 gboolean
 gst_netaddress_get_ip4_address (GstNetAddress * naddr, guint32 * address,
     guint16 * port)
@@ -153,6 +201,16 @@ gst_netaddress_get_ip4_address (GstNetAddress * naddr, guint32 * address,
   return TRUE;
 }
 
+/**
+ * gst_netaddress_get_ip6_address:
+ * @naddr: a network address
+ * @address: a location to store the result.
+ * @port: a location to store the port.
+ *
+ * Get the IPv6 address stored in @naddr into @address.
+ *
+ * Returns: TRUE if the address could be retrieved.
+ */
 gboolean
 gst_netaddress_get_ip6_address (GstNetAddress * naddr, guint8 address[16],
     guint16 * port)

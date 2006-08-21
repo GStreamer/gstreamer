@@ -1,3 +1,15 @@
+2006-08-21  Wim Taymans  <wim@fluendo.com>
+
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* docs/libs/gst-plugins-base-libs.types:
+	Don't try to GObject scan the netbuffer as it's not a GObject.
+	Fixes #351308.
+
+	* gst-libs/gst/netbuffer/gstnetbuffer.c:
+	* gst-libs/gst/netbuffer/gstnetbuffer.h:
+	Document GstNetBuffer.
+
 2006-08-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/elements/audioconvert.c: (GST_START_TEST),

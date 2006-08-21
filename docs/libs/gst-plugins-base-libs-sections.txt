@@ -489,6 +489,7 @@ gst_x_overlay_get_type
 <INCLUDE>gst/netbuffer/gstnetbuffer.h</INCLUDE>
 GstNetBuffer
 GstNetType
+GstNetAddress
 
 gst_netbuffer_new
 gst_netaddress_get_ip4_address
