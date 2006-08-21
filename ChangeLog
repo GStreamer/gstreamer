@@ -1,5 +1,17 @@
 2006-08-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream), (qtdemux_parse),
+	(qtdemux_node_dump_foreach), (qtdemux_parse_trak),
+	(qtdemux_video_caps), (qtdemux_audio_caps):
+	Some more constification.
+	Fix some paletted data formats again.
+	Fix ulaw/alaw in qt.
+	Set correct caps for raw RGB.
+	Add support for yuv2, which is like Yuv2.
+	Add support for raw audio with the NONE fourcc, which is like raw.
+
+2006-08-21  Wim Taymans  <wim@fluendo.com>
+
 	* ext/gsm/gstgsm.c: (plugin_init):
 	Make rank PRIMARY now that GSM seems to work fine.
 

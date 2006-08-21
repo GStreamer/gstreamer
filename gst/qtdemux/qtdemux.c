@@ -68,7 +68,7 @@ struct _QtNode
 struct _QtNodeType
 {
   guint32 fourcc;
-  gchar *name;
+  const gchar *name;
   gint flags;
   void (*dump) (GstQTDemux * qtdemux, void *buffer, int depth);
 };
@@ -296,7 +296,7 @@ static gboolean gst_qtdemux_handle_sink_event (GstPad * pad, GstEvent * event);
 static void qtdemux_parse_moov (GstQTDemux * qtdemux, void *buffer, int length);
 static void qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer,
     int length);
-static QtNodeType *qtdemux_type_get (guint32 fourcc);
+static const QtNodeType *qtdemux_type_get (guint32 fourcc);
 static void qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node);
 static void qtdemux_parse_tree (GstQTDemux * qtdemux);
 static void qtdemux_parse_udta (GstQTDemux * qtdemux, GNode * udta);
@@ -1826,28 +1826,47 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     }
 
     if (stream->caps) {
+      gboolean gray;
+      gint depth, palette_count;
+
       gst_caps_set_simple (stream->caps,
           "width", G_TYPE_INT, stream->width,
           "height", G_TYPE_INT, stream->height,
           "framerate", GST_TYPE_FRACTION, stream->fps_n, stream->fps_d, NULL);
 
-      if ((stream->bits_per_sample & 0x1F) == 8) {
-        const guint32 *palette_data = NULL;
+      depth = stream->bits_per_sample;
 
-        if ((stream->bits_per_sample & 0x20) != 0)
+      /* more than 32 bits means grayscale */
+      gray = (depth > 32);
+      /* low 32 bits specify the depth  */
+      depth &= 0x1F;
+
+      /* different number of palette entries is determined by depth. */
+      palette_count = 0;
+      if ((depth == 1) || (depth == 2) || (depth == 4) || (depth == 8))
+        palette_count = (1 << depth);
+
+      if (palette_count == 256) {
+        const guint32 *palette_data;
+        GstBuffer *palette;
+
+        if (gray)
           palette_data = ff_qt_grayscale_palette_256;
-        if ((stream->color_table_id & 0x08) != 0)
+        else
           palette_data = ff_qt_default_palette_256;
 
-        if (palette_data) {
-          GstBuffer *palette = gst_buffer_new ();
+        /* make sure it's not writable. We leave MALLOCDATA to NULL so that we
+         * don't free any of the buffer data. */
+        palette = gst_buffer_new ();
+        GST_BUFFER_FLAG_SET (palette, GST_BUFFER_FLAG_READONLY);
+        GST_BUFFER_DATA (palette) = (guint8 *) palette_data;
+        GST_BUFFER_SIZE (palette) = sizeof (guint32) * 256;
 
-          GST_BUFFER_DATA (palette) = (guint8 *) palette_data;
-          GST_BUFFER_SIZE (palette) = sizeof (guint32) * 256;
-          gst_caps_set_simple (stream->caps, "palette_data",
-              GST_TYPE_BUFFER, palette, NULL);
-          gst_buffer_unref (palette);
-        }
+        gst_caps_set_simple (stream->caps, "palette_data",
+            GST_TYPE_BUFFER, palette, NULL);
+        gst_buffer_unref (palette);
+      } else if (palette_count != 0) {
+        g_warning ("unsupported palette depth %d", palette_count);
       }
     }
     qtdemux->n_video_streams++;
@@ -1986,7 +2005,7 @@ static void qtdemux_dump_cmvd (GstQTDemux * qtdemux, void *buffer, int depth);
 static void qtdemux_dump_unknown (GstQTDemux * qtdemux, void *buffer,
     int depth);
 
-QtNodeType qt_node_types[] = {
+static const QtNodeType qt_node_types[] = {
   {FOURCC_moov, "movie", QT_CONTAINER,},
   {FOURCC_mvhd, "movie header", 0,
       qtdemux_dump_mvhd},
@@ -2171,7 +2190,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
 {
   guint32 fourcc;
   guint32 node_length;
-  QtNodeType *type;
+  const QtNodeType *type;
   void *end;
 
   GST_LOG ("qtdemux_parse buffer %p length %d", buffer, length);
@@ -2450,7 +2469,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
   }
 }
 
-static QtNodeType *
+static const QtNodeType *
 qtdemux_type_get (guint32 fourcc)
 {
   int i;
@@ -2471,7 +2490,7 @@ qtdemux_node_dump_foreach (GNode * node, gpointer data)
   void *buffer = node->data;
   guint32 node_length;
   guint32 fourcc;
-  QtNodeType *type;
+  const QtNodeType *type;
   int depth;
 
   node_length = GST_READ_UINT32_BE (buffer);
@@ -3306,10 +3325,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     guint16 compression_id;
 
     len = QTDEMUX_GUINT32_GET (stsd->data + 16);
-    GST_LOG ("st type:          %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (stsd->data + 16 + 4)));
+    GST_LOG ("stsd len:           %d", len);
 
     stream->fourcc = fourcc = QTDEMUX_FOURCC_GET (stsd->data + 16 + 4);
+    GST_LOG ("stsd type:          %" GST_FOURCC_FORMAT, stream->fourcc);
+
     offset = 32;
 
     version = QTDEMUX_GUINT32_GET (stsd->data + offset);
@@ -3366,8 +3386,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         stream->samples_per_packet = 1;
         stream->bytes_per_packet = 1;
         stream->bytes_per_frame = 1 * stream->n_channels;
-        stream->bytes_per_sample = 2;
-        stream->samples_per_frame = 6 * stream->n_channels;
+        stream->bytes_per_sample = 1;
+        stream->samples_per_frame = 1 * stream->n_channels;
       }
     } else if (version == 0x00010000) {
       stream->samples_per_packet = QTDEMUX_GUINT32_GET (stsd->data + offset);
@@ -3669,6 +3689,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         if (stream->samples_per_frame * stream->bytes_per_frame) {
           samples[j].size = (samples_per_chunk * stream->n_channels) /
               stream->samples_per_frame * stream->bytes_per_frame;
+        } else {
+          samples[j].size = samples_per_chunk;
         }
 
         GST_INFO_OBJECT (qtdemux, "sample %d: timestamp %" GST_TIME_FORMAT
@@ -4154,14 +4176,56 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       _codec ("Sorensen video v.1");
       return gst_caps_from_string ("video/x-svq, " "svqversion = (int) 1");
     case GST_MAKE_FOURCC ('r', 'a', 'w', ' '):
+    {
+      guint16 bps;
+      GstCaps *caps;
+
       _codec ("Raw RGB video");
-      return gst_caps_from_string ("video/x-raw-rgb, "
-          "endianness = (int) BIG_ENDIAN");
-      /*"bpp", GST_PROPS_INT(x),
-         "depth", GST_PROPS_INT(x),
-         "red_mask", GST_PROPS_INT(x),
-         "green_mask", GST_PROPS_INT(x),
-         "blue_mask", GST_PROPS_INT(x), FIXME! */
+      bps = QTDEMUX_GUINT16_GET (stsd_data + 98);
+      caps = gst_caps_new_simple ("video/x-raw-rgb",
+          "endianness", G_TYPE_INT, G_BYTE_ORDER, "bpp", G_TYPE_INT, bps, NULL);
+
+      switch (bps) {
+        case 15:
+          gst_caps_set_simple (caps,
+              "depth", G_TYPE_INT, 16,
+              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+              "red_mask", G_TYPE_INT, 0x7c00,
+              "green_mask", G_TYPE_INT, 0x03e0,
+              "blue_mask", G_TYPE_INT, 0x001f, NULL);
+          break;
+        case 16:
+          gst_caps_set_simple (caps,
+              "depth", G_TYPE_INT, 16,
+              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+              "red_mask", G_TYPE_INT, 0xf800,
+              "green_mask", G_TYPE_INT, 0x07e0,
+              "blue_mask", G_TYPE_INT, 0x001f, NULL);
+          break;
+        case 24:
+          gst_caps_set_simple (caps,
+              "depth", G_TYPE_INT, 24,
+              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+              "red_mask", G_TYPE_INT, 0xff0000,
+              "green_mask", G_TYPE_INT, 0x00ff00,
+              "blue_mask", G_TYPE_INT, 0x0000ff, NULL);
+          break;
+        case 32:
+          gst_caps_set_simple (caps,
+              "depth", G_TYPE_INT, 32,
+              "endianness", G_TYPE_INT, G_BIG_ENDIAN,
+              "alpha_mask", G_TYPE_INT, 0xff000000,
+              "red_mask", G_TYPE_INT, 0x00ff0000,
+              "green_mask", G_TYPE_INT, 0x0000ff00,
+              "blue_mask", G_TYPE_INT, 0x000000ff, NULL);
+          break;
+        default:
+          /* unknown */
+          break;
+      }
+      return caps;
+    }
+    case GST_MAKE_FOURCC ('y', 'u', 'v', '2'):
     case GST_MAKE_FOURCC ('Y', 'u', 'v', '2'):
       _codec ("Raw packed YUV 4:2:2");
       return gst_caps_from_string ("video/x-raw-yuv, "
@@ -4251,10 +4315,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     guint32 fourcc, const guint8 * data, int len, const gchar ** codec_name)
 {
   switch (fourcc) {
-#if 0
     case GST_MAKE_FOURCC ('N', 'O', 'N', 'E'):
-      return NULL;              /*gst_caps_from_string ("audio/raw"); */
-#endif
     case GST_MAKE_FOURCC ('r', 'a', 'w', ' '):
       _codec ("Raw 8-bit PCM audio");
       /* FIXME */
