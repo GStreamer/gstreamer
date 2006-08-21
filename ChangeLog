@@ -1,6 +1,11 @@
 2006-08-21  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:
+	Whoops, typo error :)
+
+2006-08-21  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
 	attempt to fix build.
 
 2006-08-21  Edward Hervey  <edward@fluendo.com>
