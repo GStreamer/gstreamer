@@ -1,3 +1,19 @@
+2006-08-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiofxgood/.cvsignore:
+	* gst/audiofxgood/Makefile.am:
+	* gst/audiofxgood/audiofx.c: (plugin_init):
+	* gst/audiofxgood/audiopanorama.c: (gst_audio_panorama_base_init),
+	(gst_audio_panorama_class_init), (gst_audio_panorama_init),
+	(gst_audio_panorama_set_property),
+	(gst_audio_panorama_get_property),
+	(gst_audio_panorama_get_unit_size),
+	(gst_audio_panorama_transform_caps), (gst_audio_panorama_set_caps),
+	(gst_audio_panorama_transform_m2s),
+	(gst_audio_panorama_transform_s2s), (gst_audio_panorama_transform):
+	* gst/audiofxgood/audiopanorama.h:
+	  resubmit with the desired name *again*
+
 2006-08-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_get_unit_size):
