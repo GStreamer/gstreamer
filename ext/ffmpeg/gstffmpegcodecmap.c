@@ -1367,11 +1367,21 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
   /* extradata parsing (esds [mpeg4], wma/wmv, msmpeg4v1/2/3, etc.) */
   if ((value = gst_structure_get_value (str, "codec_data"))) {
-    buf = GST_BUFFER (gst_value_get_mini_object (value));
-    context->extradata = av_mallocz (GST_ROUND_UP_16 (GST_BUFFER_SIZE (buf)));
-    memcpy (context->extradata, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf));
-    context->extradata_size = GST_BUFFER_SIZE (buf);
+    gint size;
+
+    buf = GST_BUFFER_CAST (gst_value_get_mini_object (value));
+    size = GST_BUFFER_SIZE (buf);
+
+    /* allocate with enough padding */
+    context->extradata = av_mallocz (GST_ROUND_UP_16 (size + FF_INPUT_BUFFER_PADDING_SIZE));
+    memcpy (context->extradata, GST_BUFFER_DATA (buf), size);
+    context->extradata_size = size;
+  }
+  else {
+    /* no extradata, alloc dummy with 0 sized, some codecs insist on reading
+     * extradata anyway which makes then segfault. */
+    context->extradata = av_mallocz (GST_ROUND_UP_16 (FF_INPUT_BUFFER_PADDING_SIZE));
+    context->extradata_size = 0;
   }
 
   switch (codec_id) {
