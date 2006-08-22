@@ -564,8 +564,7 @@ speex_dec_chain_parse_comments (GstSpeexDec * dec, GstBuffer * buf)
   GstTagList *list;
   gchar *ver, *encoder = NULL;
 
-  list = gst_tag_list_from_vorbiscomment_buffer (buf,
-      (const guint8 *) "", 1, &encoder);
+  list = gst_tag_list_from_vorbiscomment_buffer (buf, NULL, 0, &encoder);
 
   if (!list) {
     GST_WARNING_OBJECT (dec, "couldn't decode comments");

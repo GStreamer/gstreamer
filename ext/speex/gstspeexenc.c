@@ -35,21 +35,27 @@
 GST_DEBUG_CATEGORY_STATIC (speexenc_debug);
 #define GST_CAT_DEFAULT speexenc_debug
 
-static GstPadTemplate *gst_speexenc_src_template, *gst_speexenc_sink_template;
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+        "rate = (int) [ 6000, 48000 ], "
+        "channels = (int) [ 1, 2 ], "
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) TRUE, " "width = (int) 16, " "depth = (int) 16")
+    );
 
-/* elementfactory information */
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-speex")
+    );
+
 static const GstElementDetails speexenc_details =
 GST_ELEMENT_DETAILS ("Speex audio encoder",
     "Codec/Encoder/Audio",
     "Encodes audio in Speex format",
     "Wim Taymans <wim@fluendo.com>");
-
-/* GstSpeexEnc signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
 
 #define DEFAULT_QUALITY         8.0
 #define DEFAULT_BITRATE         0
@@ -112,8 +118,6 @@ static GstStateChangeReturn gst_speexenc_change_state (GstElement * element,
 
 static GstElementClass *parent_class = NULL;
 
-/*static guint gst_speexenc_signals[LAST_SIGNAL] = { 0 }; */
-
 GType
 gst_speexenc_get_type (void)
 {
@@ -149,40 +153,15 @@ gst_speexenc_get_type (void)
   return speexenc_type;
 }
 
-static GstCaps *
-speex_caps_factory (void)
-{
-  return gst_caps_new_simple ("audio/x-speex", NULL);
-}
-
-static GstCaps *
-raw_caps_factory (void)
-{
-  return
-      gst_caps_new_simple ("audio/x-raw-int",
-      "rate", GST_TYPE_INT_RANGE, 6000, 48000,
-      "channels", GST_TYPE_INT_RANGE, 1, 2,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
-}
-
 static void
 gst_speexenc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstCaps *raw_caps, *speex_caps;
 
-  raw_caps = raw_caps_factory ();
-  speex_caps = speex_caps_factory ();
-
-  gst_speexenc_sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
-      GST_PAD_ALWAYS, raw_caps);
-  gst_speexenc_src_template = gst_pad_template_new ("src", GST_PAD_SRC,
-      GST_PAD_ALWAYS, speex_caps);
   gst_element_class_add_pad_template (element_class,
-      gst_speexenc_sink_template);
-  gst_element_class_add_pad_template (element_class, gst_speexenc_src_template);
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &speexenc_details);
 }
 
@@ -498,17 +477,18 @@ error:
 static void
 gst_speexenc_init (GstSpeexEnc * speexenc)
 {
-  speexenc->sinkpad =
-      gst_pad_new_from_template (gst_speexenc_sink_template, "sink");
+  speexenc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (speexenc), speexenc->sinkpad);
-  gst_pad_set_event_function (speexenc->sinkpad, gst_speexenc_sinkevent);
-  gst_pad_set_chain_function (speexenc->sinkpad, gst_speexenc_chain);
-  gst_pad_set_setcaps_function (speexenc->sinkpad, gst_speexenc_sink_setcaps);
+  gst_pad_set_event_function (speexenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_speexenc_sinkevent));
+  gst_pad_set_chain_function (speexenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_speexenc_chain));
+  gst_pad_set_setcaps_function (speexenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_speexenc_sink_setcaps));
   gst_pad_set_query_function (speexenc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_speexenc_sink_query));
 
-  speexenc->srcpad =
-      gst_pad_new_from_template (gst_speexenc_src_template, "src");
+  speexenc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_query_function (speexenc->srcpad,
       GST_DEBUG_FUNCPTR (gst_speexenc_src_query));
   gst_pad_set_query_type_function (speexenc->srcpad,
@@ -533,150 +513,34 @@ gst_speexenc_init (GstSpeexEnc * speexenc)
   speexenc->adapter = gst_adapter_new ();
 }
 
-
-/* FIXME: why are we not using the from/to vorbiscomment 
- * functions that are in -lgsttagedit-0.9 here? */
-
-static gchar *
-gst_speexenc_get_tag_value (const GstTagList * list, const gchar * tag,
-    int index)
+static GstBuffer *
+gst_speexenc_create_metadata_buffer (GstSpeexEnc * enc)
 {
-  GType tag_type;
-  gchar *speexvalue = NULL;
-
-  if (tag == NULL)
-    return NULL;
-
-  tag_type = gst_tag_get_type (tag);
-
-  /* get tag name right */
-  if ((strcmp (tag, GST_TAG_TRACK_NUMBER) == 0)
-      || (strcmp (tag, GST_TAG_ALBUM_VOLUME_NUMBER) == 0)
-      || (strcmp (tag, GST_TAG_TRACK_COUNT) == 0)
-      || (strcmp (tag, GST_TAG_ALBUM_VOLUME_COUNT) == 0)) {
-    guint track_no;
-
-    if (gst_tag_list_get_uint_index (list, tag, index, &track_no)) {
-      speexvalue = g_strdup_printf ("%u", track_no);
-    } else {
-      GST_WARNING ("Failed to extract int tag %d for '%s'", index, tag);
-    }
-  } else if (tag_type == GST_TYPE_DATE) {
-    /* FIXME: how are dates represented in speex files? */
-    GDate *date;
-
-    if (gst_tag_list_get_date_index (list, tag, index, &date)) {
-      speexvalue =
-          g_strdup_printf ("%04d-%02d-%02d", (gint) g_date_get_year (date),
-          (gint) g_date_get_month (date), (gint) g_date_get_day (date));
-      g_date_free (date);
-    } else {
-      GST_WARNING ("Failed to extract date tag %d for '%s'", index, tag);
-    }
-  } else if (tag_type == G_TYPE_STRING) {
-    if (!gst_tag_list_get_string_index (list, tag, index, &speexvalue))
-      GST_WARNING ("Failed to extract string tag %d for '%s'", index, tag);
-  }
-
-  return speexvalue;
-}
-
-/*
- *  Comments will be stored in the Vorbis style.
- *  It is describled in the "Structure" section of
- *  http://www.xiph.org/ogg/vorbis/doc/v-comment.html
- *
- *  The comment header is decoded as follows:
- *  1) [vendor_length] = read an unsigned integer of 32 bits
- *  2) [vendor_string] = read a UTF-8 vector as [vendor_length] octets
- *  3) [user_comment_list_length] = read an unsigned integer of 32 bits
- *  4) iterate [user_comment_list_length] times {
- *     5) [length] = read an unsigned integer of 32 bits
- *     6) this iteration's user comment = read a UTF-8 vector as [length] octets
- *     }
- *  7) [framing_bit] = read a single bit as boolean
- *  8) if ( [framing_bit]  unset or end of packet ) then ERROR
- *  9) done.
- *
- *  If you have troubles, please write to ymnk@jcraft.com.
- */
-static void
-comment_init (guint8 ** comments, int *length, char *vendor_string)
-{
-  int vendor_length = strlen (vendor_string);
-  int user_comment_list_length = 0;
-  int len = 4 + vendor_length + 4;
-  guint8 *p = g_malloc (len);
-
-  GST_WRITE_UINT32_LE (p, vendor_length);
-  memcpy (p + 4, vendor_string, vendor_length);
-  GST_WRITE_UINT32_LE (p + 4 + vendor_length, user_comment_list_length);
-  *length = len;
-  *comments = p;
-}
-static void
-comment_add (guint8 ** comments, int *length, const char *tag, char *val)
-{
-  guint8 *p = *comments;
-  int vendor_length = GST_READ_UINT32_LE (p);
-  int user_comment_list_length = GST_READ_UINT32_LE (p + 4 + vendor_length);
-  int tag_len = (tag ? strlen (tag) : 0);
-  int val_len = strlen (val);
-  int len = (*length) + 4 + tag_len + val_len;
-
-  p = g_realloc (p, len);
-
-  GST_WRITE_UINT32_LE (p + *length, tag_len + val_len); /* length of comment */
-  if (tag)
-    memcpy (p + *length + 4, (guint8 *) tag, tag_len);  /* comment */
-  memcpy (p + *length + 4 + tag_len, val, val_len);     /* comment */
-  GST_WRITE_UINT32_LE (p + 4 + vendor_length, user_comment_list_length + 1);
-
-  *comments = p;
-  *length = len;
-}
-
-static void
-gst_speexenc_metadata_set1 (const GstTagList * list, const gchar * tag,
-    gpointer speexenc)
-{
-  const gchar *speextag = NULL;
-  gchar *speexvalue = NULL;
-  guint i, count;
-  GstSpeexEnc *enc = GST_SPEEXENC (speexenc);
-
-  speextag = gst_tag_to_vorbis_tag (tag);
-  if (speextag == NULL) {
-    return;
-  }
-
-  count = gst_tag_list_get_tag_size (list, tag);
-  for (i = 0; i < count; i++) {
-    speexvalue = gst_speexenc_get_tag_value (list, tag, i);
-
-    if (speexvalue != NULL) {
-      comment_add (&enc->comments, &enc->comment_len, speextag, speexvalue);
-    }
-  }
-}
-
-static void
-gst_speexenc_set_metadata (GstSpeexEnc * speexenc)
-{
-  GstTagList *copy;
   const GstTagList *user_tags;
+  GstTagList *merged_tags;
+  GstBuffer *comments = NULL;
 
-  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (speexenc));
-  if (!(speexenc->tags || user_tags))
-    return;
+  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (enc));
 
-  comment_init (&speexenc->comments, &speexenc->comment_len,
-      "Encoded with GStreamer Speexenc");
-  copy =
-      gst_tag_list_merge (user_tags, speexenc->tags,
-      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (speexenc)));
-  gst_tag_list_foreach (copy, gst_speexenc_metadata_set1, speexenc);
-  gst_tag_list_free (copy);
+  GST_DEBUG_OBJECT (enc, "upstream tags = %" GST_PTR_FORMAT, enc->tags);
+  GST_DEBUG_OBJECT (enc, "user-set tags = %" GST_PTR_FORMAT, user_tags);
+
+  /* gst_tag_list_merge() will handle NULL for either or both lists fine */
+  merged_tags = gst_tag_list_merge (user_tags, enc->tags,
+      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (enc)));
+
+  if (merged_tags == NULL)
+    merged_tags = gst_tag_list_new ();
+
+  GST_DEBUG_OBJECT (enc, "merged   tags = %" GST_PTR_FORMAT, merged_tags);
+  comments = gst_tag_list_to_vorbiscomment_buffer (merged_tags, NULL,
+      0, "Encoded with GStreamer Speexenc");
+  gst_tag_list_free (merged_tags);
+
+  GST_BUFFER_OFFSET (comments) = enc->bytes_out;
+  GST_BUFFER_OFFSET_END (comments) = 0;
+
+  return comments;
 }
 
 static gboolean
@@ -849,6 +713,9 @@ gst_speexenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   caps = gst_caps_make_writable (caps);
   structure = gst_caps_get_structure (caps, 0);
 
+  g_assert (gst_buffer_is_metadata_writable (buf1));
+  g_assert (gst_buffer_is_metadata_writable (buf2));
+
   /* mark buffers */
   GST_BUFFER_FLAG_SET (buf1, GST_BUFFER_FLAG_IN_CAPS);
   GST_BUFFER_FLAG_SET (buf2, GST_BUFFER_FLAG_IN_CAPS);
@@ -911,7 +778,7 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
   GstSpeexEnc *speexenc;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  speexenc = GST_SPEEXENC (gst_pad_get_parent (pad));
+  speexenc = GST_SPEEXENC (GST_PAD_PARENT (pad));
 
   if (!speexenc->setup)
     goto not_setup;
@@ -928,16 +795,13 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
     guchar *data;
     gint data_len;
 
-    gst_speexenc_set_metadata (speexenc);
-
     /* create header buffer */
     data = (guint8 *) speex_header_to_packet (&speexenc->header, &data_len);
     buf1 = gst_speexenc_buffer_from_data (speexenc, data, data_len, 0);
+    free (data);
 
     /* create comment buffer */
-    buf2 =
-        gst_speexenc_buffer_from_data (speexenc, speexenc->comments,
-        speexenc->comment_len, 0);
+    buf2 = gst_speexenc_create_metadata_buffer (speexenc);
 
     /* mark and put on caps */
     caps = gst_pad_get_caps (speexenc->srcpad);
@@ -949,23 +813,21 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
 
     gst_buffer_set_caps (buf1, caps);
     gst_buffer_set_caps (buf2, caps);
+    gst_caps_unref (caps);
 
     /* push out buffers */
     ret = gst_speexenc_push_buffer (speexenc, buf1);
 
-    if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret)) {
-      /* unref buf2 as we are not going to push it anymore */
-
+    if (ret != GST_FLOW_OK) {
       gst_buffer_unref (buf2);
       goto done;
     }
 
     ret = gst_speexenc_push_buffer (speexenc, buf2);
 
-    if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret))
+    if (ret != GST_FLOW_OK)
       goto done;
 
-    speex_bits_init (&speexenc->bits);
     speex_bits_reset (&speexenc->bits);
 
     speexenc->header_sent = TRUE;
@@ -1038,7 +900,6 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
   }
 
 done:
-  gst_object_unref (speexenc);
   return ret;
 
   /* ERRORS */
@@ -1150,6 +1011,7 @@ gst_speexenc_change_state (GstElement * element, GstStateChange transition)
       speexenc->tags = gst_tag_list_new ();
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      speex_bits_init (&speexenc->bits);
       speexenc->frameno = 0;
       speexenc->samples_in = 0;
       break;
@@ -1167,6 +1029,11 @@ gst_speexenc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       speexenc->setup = FALSE;
       speexenc->header_sent = FALSE;
+      if (speexenc->state) {
+        speex_encoder_destroy (speexenc->state);
+        speexenc->state = NULL;
+      }
+      speex_bits_destroy (&speexenc->bits);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_tag_list_free (speexenc->tags);
