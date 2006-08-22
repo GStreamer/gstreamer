@@ -1,3 +1,12 @@
+2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	  There is no taglibmux element ...
+
+	* gst/rtsp/gstrtspsrc.c:
+	  Use '%' rather than '&perc;' in gtk-doc blurb, docs build
+	  was complaining about unknown entity here.
+
 2006-08-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),

@@ -33,7 +33,7 @@
  * </para>
  * <para>
  * rtspsrc currently understands SDP as the format of the session description.
- * For each stream listed in the SDP a new rtp_stream&perc;d pad will be created
+ * For each stream listed in the SDP a new rtp_stream%d pad will be created
  * with caps derived from the SDP media description. This is a caps of mime type
  * "application/x-rtp" that can be connected to any available rtp depayloader
  * element. 
