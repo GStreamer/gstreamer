@@ -1,5 +1,14 @@
 2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/flac/gstflacdec.c: (gst_flac_dec_scan_got_frame),
+	(gst_flac_dec_write), (gst_flac_dec_loop),
+	(gst_flac_dec_sink_event), (gst_flac_dec_chain),
+	(gst_flac_dec_src_query):
+	* ext/flac/gstflacdec.h:
+	  Make flac-in-ogg work (#352100).
+
+2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/monoscope/gstmonoscope.c: (gst_monoscope_chain):
 	  Don't unref buffers of which we've already given away
 	  ownership to the adapter.

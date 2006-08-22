@@ -73,6 +73,8 @@ struct _GstFlacDec {
   /* from the stream info, needed for scanning */
   guint16        min_blocksize;
   guint16        max_blocksize;
+
+  gint64         cur_granulepos; /* only used in framed mode (flac-in-ogg) */
 };
 
 struct _GstFlacDecClass {

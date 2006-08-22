@@ -444,9 +444,11 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
     *last_sample_num = val;     /* FIXME: + length of last block in samples */
   }
 
-  GST_DEBUG_OBJECT (flacdec, "last sample %" G_GINT64_FORMAT " = %"
-      GST_TIME_FORMAT, *last_sample_num,
-      GST_TIME_ARGS (*last_sample_num * GST_SECOND / flacdec->sample_rate));
+  if (flacdec->sample_rate > 0) {
+    GST_DEBUG_OBJECT (flacdec, "last sample %" G_GINT64_FORMAT " = %"
+        GST_TIME_FORMAT, *last_sample_num,
+        GST_TIME_ARGS (*last_sample_num * GST_SECOND / flacdec->sample_rate));
+  }
 
   return TRUE;
 }
@@ -805,6 +807,13 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     goto done;
   }
 
+  if (flacdec->cur_granulepos != GST_BUFFER_OFFSET_NONE) {
+    /* this should be fine since it should be one flac frame per ogg packet */
+    flacdec->segment.last_stop = flacdec->cur_granulepos - samples;
+    GST_LOG_OBJECT (flacdec, "granulepos = %" G_GINT64_FORMAT ", samples = %u",
+        flacdec->cur_granulepos, samples);
+  }
+
   GST_BUFFER_TIMESTAMP (outbuf) =
       gst_util_uint64_scale_int (flacdec->segment.last_stop, GST_SECOND,
       frame->header.sample_rate);
@@ -843,7 +852,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
 
   if (!flacdec->seeking) {
     GST_DEBUG ("pushing %d samples at offset %" G_GINT64_FORMAT
-        "(%" GST_TIME_FORMAT " + %" GST_TIME_FORMAT ")",
+        " (%" GST_TIME_FORMAT " + %" GST_TIME_FORMAT ")",
         samples, GST_BUFFER_OFFSET (outbuf),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
@@ -907,6 +916,8 @@ gst_flac_dec_loop (GstPad * sinkpad)
     /*    FLAC__seekable_stream_decoder_process_metadata (flacdec->seekable_decoder); */
     flacdec->init = FALSE;
   }
+
+  flacdec->cur_granulepos = GST_BUFFER_OFFSET_NONE;
 
   flacdec->last_flow = GST_FLOW_OK;
 
@@ -1032,13 +1043,32 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_NEWSEGMENT:{
       GstFormat fmt;
+      gboolean update;
+      gdouble rate, applied_rate;
+      gint64 cur, stop, time;
 
-      gst_event_parse_new_segment (event, NULL, NULL, &fmt, NULL, NULL, NULL);
+      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+          &fmt, &cur, &stop, &time);
+
       if (fmt == GST_FORMAT_TIME) {
+        GstFormat dformat = GST_FORMAT_DEFAULT;
+
         GST_DEBUG_OBJECT (dec, "newsegment event in TIME format => framed");
         dec->framed = TRUE;
         res = gst_pad_push_event (dec->srcpad, event);
         dec->need_newsegment = FALSE;
+
+        /* this won't work for the first newsegment event though ... */
+        if (gst_flac_dec_convert_src (dec->srcpad, GST_FORMAT_TIME, cur,
+                &dformat, &cur) && cur != -1 &&
+            gst_flac_dec_convert_src (dec->srcpad, GST_FORMAT_TIME, stop,
+                &dformat, &stop) && stop != -1) {
+          gst_segment_set_newsegment_full (&dec->segment, update, rate,
+              applied_rate, dformat, cur, stop, time);
+          GST_DEBUG_OBJECT (dec, "segment %" GST_SEGMENT_FORMAT, &dec->segment);
+        } else {
+          GST_WARNING_OBJECT (dec, "couldn't convert time => samples");
+        }
       } else if (fmt == GST_FORMAT_BYTES || TRUE) {
         GST_DEBUG_OBJECT (dec, "newsegment event in %s format => not framed",
             gst_format_get_name (fmt));
@@ -1075,6 +1105,7 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
 {
   FLAC__SeekableStreamDecoderState s;
   GstFlacDec *dec;
+  gboolean got_audio_frame;
 
   dec = GST_FLAC_DEC (GST_PAD_PARENT (pad));
 
@@ -1099,6 +1130,22 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
     FLAC__stream_decoder_flush (dec->stream_decoder);
   }
 
+  if (dec->framed) {
+    gint64 unused;
+
+    /* check if this is a flac audio frame (rather than a header or junk) */
+    got_audio_frame = gst_flac_dec_scan_got_frame (dec, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf), &unused);
+
+    /* oggdemux will set granulepos in OFFSET_END instead of timestamp */
+    if (got_audio_frame && !GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+      dec->cur_granulepos = GST_BUFFER_OFFSET_END (buf);
+    }
+  } else {
+    dec->cur_granulepos = GST_BUFFER_OFFSET_NONE;
+    got_audio_frame = TRUE;
+  }
+
   gst_adapter_push (dec->adapter, buf);
   buf = NULL;
 
@@ -1109,8 +1156,10 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
      * interface is a bit dumb it seems (if we don't have as much data as
      * it wants it will call our read callback repeatedly and the only
      * way to stop that is to error out or EOS, which will affect the
-     * decoder state). Requiring MAX_BLOCK_SIZE should make sure it
-     * always gets enough data to decode at least one block */
+     * decoder state). And the decoder seems to always ask for MAX_BLOCK_SIZE
+     * bytes rather than the max. block size from the header). Requiring
+     * MAX_BLOCK_SIZE bytes here should make sure it always gets enough data
+     * to decode at least one block */
     while (gst_adapter_available (dec->adapter) >= FLAC__MAX_BLOCK_SIZE &&
         dec->last_flow == GST_FLOW_OK) {
       GST_LOG_OBJECT (dec, "%u bytes available",
@@ -1120,13 +1169,15 @@ gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
         break;
       }
     }
-  } else {
+  } else if (dec->framed && got_audio_frame) {
     /* framed - there should always be enough data to decode something */
     GST_LOG_OBJECT (dec, "%u bytes available",
         gst_adapter_available (dec->adapter));
     if (!FLAC__stream_decoder_process_single (dec->stream_decoder)) {
       GST_DEBUG_OBJECT (dec, "process_single failed");
     }
+  } else {
+    GST_DEBUG_OBJECT (dec, "don't have all headers yet");
   }
 
   return dec->last_flow;
@@ -1367,7 +1418,7 @@ gst_flac_dec_src_query (GstPad * pad, GstQuery * query)
       if (fmt == GST_FORMAT_TIME && peer && gst_pad_query (peer, query)) {
         gst_query_parse_duration (query, NULL, &len);
         GST_DEBUG_OBJECT (flacdec, "peer returned duration %" GST_TIME_FORMAT,
-            len);
+            GST_TIME_ARGS (len));
         res = TRUE;
         goto done;
       }
