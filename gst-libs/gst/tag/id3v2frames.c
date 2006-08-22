@@ -273,12 +273,12 @@ parse_text_identification_frame (ID3TagsWorking * work)
       work->parse_size - 1, &fields);
   if (fields) {
     if (fields->len > 0) {
-      GST_LOG ("Read %d fields from Text ID frame of size %d. First is '%s'",
-          fields->len, work->parse_size - 1,
+      GST_LOG ("Read %d fields from Text ID frame of size %d with encoding %d"
+          ". First is '%s'", fields->len, work->parse_size - 1, encoding,
           g_array_index (fields, gchar *, 0));
     } else {
-      GST_LOG ("Read %d fields from Text ID frame of size %d", fields->len,
-          work->parse_size - 1);
+      GST_LOG ("Read 0 fields from Text ID frame of size %d with encoding %d",
+          work->parse_size - 1, encoding);
     }
   }
 
@@ -911,8 +911,11 @@ parse_insert_string_field (guint8 encoding, gchar * data, gint data_size,
 
       break;
     case ID3V2_ENCODING_ISO8859:
-      field = g_convert (data, data_size, "UTF-8", "ISO-8859-1",
-          NULL, NULL, NULL);
+      if (g_utf8_validate (data, data_size, NULL))
+        field = g_strndup (data, data_size);
+      else
+        field = g_convert (data, data_size, "UTF-8", "ISO-8859-1",
+            NULL, NULL, NULL);
       break;
     default:
       field = g_strndup (data, data_size);
