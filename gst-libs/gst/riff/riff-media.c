@@ -970,6 +970,27 @@ gst_riff_create_audio_caps (guint16 codec_id,
       }
       break;
     }
+
+      /* can anything decode these? pitfdll? */
+    case GST_RIFF_WAVE_FORMAT_VOXWARE:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_BYTE_ALIGNED:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_AC8:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_AC10:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_AC16:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_AC20:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_METAVOICE:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_METASOUND:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_RT29HW:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_VR12:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_VR18:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_TQ40:
+    case GST_RIFF_WAVE_FORMAT_VOXWARE_TQ60:{
+      caps = gst_caps_new_simple ("audio/x-voxware",
+          "voxwaretype", G_TYPE_INT, (gint) codec_id, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Voxware");
+      break;
+    }
     default:
       GST_WARNING ("Unknown audio tag 0x%04x", codec_id);
       return NULL;

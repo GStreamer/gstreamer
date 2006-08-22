@@ -1,5 +1,11 @@
 2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/riff/riff-ids.h:
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	  Add voxware audio IDs (even if we can't play it) (#351795).
+
+2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/riff/riff-media.c:
 	(gst_riff_create_video_template_caps),
 	(gst_riff_create_audio_template_caps),
