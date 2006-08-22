@@ -33,7 +33,7 @@
  * </para>
  * <para>
  * rtspsrc currently understands SDP as the format of the session description.
- * For each stream listed in the SDP a new rtp_stream%d pad will be created
+ * For each stream listed in the SDP a new rtp_stream&perc;d pad will be created
  * with caps derived from the SDP media description. This is a caps of mime type
  * "application/x-rtp" that can be connected to any available rtp depayloader
  * element. 
@@ -57,7 +57,7 @@
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2006-06-20 (0.10.4)
+ * Last reviewed on 2006-08-18 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -553,7 +553,7 @@ gst_rtspsrc_media_to_caps (SDPMedia * media)
         if (valpos) {
           /* we have a '=' and thus a value, remove the '=' with \0 */
           *valpos = '\0';
-          /* value is everything between '=' and ';' */
+          /* value is everything between '=' and ';'. FIXME, strip? */
           val = g_strstrip (valpos + 1);
         } else {
           /* simple <param>;.. is translated into <param>=1;... */
@@ -962,6 +962,7 @@ gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
 
   return TRUE;
 
+  /* ERRORS */
 send_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
@@ -1329,6 +1330,7 @@ gst_rtspsrc_close (GstRTSPSrc * src)
 
   return TRUE;
 
+  /* ERRORS */
 create_request_failed:
   {
     GST_ELEMENT_ERROR (src, LIBRARY, INIT,
@@ -1377,6 +1379,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
 
   return TRUE;
 
+  /* ERRORS */
 create_request_failed:
   {
     GST_ELEMENT_ERROR (src, LIBRARY, INIT,
@@ -1412,6 +1415,7 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
 
   return TRUE;
 
+  /* ERRORS */
 create_request_failed:
   {
     GST_ELEMENT_ERROR (src, LIBRARY, INIT,

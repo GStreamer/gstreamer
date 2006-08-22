@@ -42,7 +42,14 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPSrc GstRTSPSrc;
 typedef struct _GstRTSPSrcClass GstRTSPSrcClass;
 
-/* flags with allowed protocols */
+/**
+ * GstRTSPProto:
+ * @GST_RTSP_PROTO_UDP_UNICAST: Use unicast UDP transfer.
+ * @GST_RTSP_PROTO_UDP_MULTICAST: Use multicast UDP transfer
+ * @GST_RTSP_PROTO_TCP: Use TCP transfer.
+ *
+ * Flags with allowed protocols for the datatransfer.
+ */
 typedef enum
 {
   GST_RTSP_PROTO_UDP_UNICAST    = (1 << 0),

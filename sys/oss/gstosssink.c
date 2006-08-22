@@ -396,12 +396,12 @@ gst_oss_sink_open (GstAudioSink * asink)
 
   return TRUE;
 
+  /* ERRORS */
 busy:
   {
     GST_ELEMENT_ERROR (oss, RESOURCE, BUSY, (NULL), (NULL));
     return FALSE;
   }
-
 open_failed:
   {
     GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE, (NULL), GST_ERROR_SYSTEM);
@@ -465,6 +465,7 @@ gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   return TRUE;
 
+  /* ERRORS */
 non_block:
   {
     GST_ELEMENT_ERROR (oss, RESOURCE, SETTINGS, (NULL),
@@ -499,6 +500,7 @@ gst_oss_sink_unprepare (GstAudioSink * asink)
 
   return TRUE;
 
+  /* ERRORS */
 couldnt_close:
   {
     GST_DEBUG_OBJECT (asink, "Could not close the audio device");

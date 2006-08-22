@@ -1,5 +1,15 @@
 2006-08-22  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_media_to_caps),
+	(gst_rtspsrc_send), (gst_rtspsrc_close), (gst_rtspsrc_play),
+	(gst_rtspsrc_pause):
+	* gst/rtsp/gstrtspsrc.h:
+	* sys/oss/gstosssink.c: (gst_oss_sink_open),
+	(gst_oss_sink_prepare), (gst_oss_sink_unprepare):
+	Small documentation updates.
+
+2006-08-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
 	(gst_avi_demux_index_entry_for_time),
 	(gst_avi_demux_handle_src_query), (gst_avi_demux_handle_src_event),
