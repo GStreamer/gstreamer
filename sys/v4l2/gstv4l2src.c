@@ -399,8 +399,8 @@ gst_v4l2src_fixate (GstPad * pad, GstCaps * caps)
     structure = gst_caps_get_structure (caps, i);
     const GValue *v;
 
-    gst_structure_fixate_field_nearest_int (structure, "width", G_MAXINT);
-    gst_structure_fixate_field_nearest_int (structure, "height", G_MAXINT);
+    gst_structure_fixate_field_nearest_int (structure, "width", 4096);
+    gst_structure_fixate_field_nearest_int (structure, "height", 4096);
     gst_structure_fixate_field_nearest_fraction (structure, "framerate", 15, 2);
 
     v = gst_structure_get_value (structure, "format");

@@ -592,8 +592,8 @@ gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
   GST_LOG_OBJECT (v4l2src, "got min size %dx%d", fmt.fmt.pix.width,
       fmt.fmt.pix.height);
 
-  fmt.fmt.pix.width = G_MAXINT;
-  fmt.fmt.pix.height = G_MAXINT;
+  fmt.fmt.pix.width = 4096;
+  fmt.fmt.pix.height = 4096;
   if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_TRY_FMT, &fmt) < 0) {
     return FALSE;
   }
