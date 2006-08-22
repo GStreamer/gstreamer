@@ -1,5 +1,14 @@
 2006-08-22  Wim Taymans  <wim@fluendo.com>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),
+	(gst_avi_demux_do_seek), (gst_avi_demux_handle_seek),
+	(gst_avi_demux_process_next_entry):
+	* gst/avi/gstavidemux.h:
+	Mark DISCONT.
+	Remove old unused fields and reorder the struct a bit.
+
+2006-08-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_media_to_caps),
 	(gst_rtspsrc_send), (gst_rtspsrc_close), (gst_rtspsrc_play),
 	(gst_rtspsrc_pause):

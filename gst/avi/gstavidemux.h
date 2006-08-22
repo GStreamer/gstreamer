@@ -60,9 +60,10 @@ typedef struct {
   /* index of this streamcontext */
   guint          num;
 
-  /* pad, strh */
+  /* pad*/
   GstPad        *pad;
-  GstFlowReturn  last_flow;
+
+  /* stream info and headers */
   gst_riff_strh *strh;
   union {
     gst_riff_strf_vids *vids;
@@ -73,21 +74,22 @@ typedef struct {
   GstBuffer     *extradata, *initdata;
   gchar         *name;
 
-  /* current position (byte, frame, time) */
+  /* current position (byte, frame, time) and other status vars */
   guint          current_frame;
   guint64        current_byte;
-  gint           current_entry;
+  GstFlowReturn  last_flow;
+  gboolean       discont;
 
   /* stream length */
   guint64        total_bytes;
   guint32        total_frames;
   guint64        total_time;
 
-  /* VBR indicator */
-  gboolean       is_vbr;
-
   /* stream length according to index */
   GstClockTime   idx_duration;
+
+  /* VBR indicator */
+  gboolean       is_vbr;
 
   guint64       *indexes;
 
@@ -125,14 +127,14 @@ typedef struct _GstAviDemux {
   /* some stream info for length */
   gst_riff_avih *avih;
 
-  /* seeking in TIME */
-  gboolean      streaming;
-  GstSegment    segment;
-  gboolean      segment_running;
-  GstEvent      *seek_event;
+  /* segment in TIME */
+  GstSegment     segment;
+  gboolean       segment_running;
+  gboolean       streaming;
 
+  /* pending tags/events */
+  GstEvent      *seek_event;
   GstTagList	*globaltags;
-  
   gboolean	got_tags;
 
 } GstAviDemux;

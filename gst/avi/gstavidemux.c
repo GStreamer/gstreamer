@@ -1084,6 +1084,7 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
     gst_object_unref (stream->pad);
   pad = stream->pad = gst_pad_new_from_template (templ, padname);
   stream->last_flow = GST_FLOW_OK;
+  stream->discont = TRUE;
   stream->idx_duration = GST_CLOCK_TIME_NONE;
   g_free (padname);
 
@@ -1100,7 +1101,6 @@ gst_avi_demux_parse_stream (GstElement * element, GstBuffer * buf)
   stream->total_frames = 0;
   stream->current_frame = 0;
   stream->current_byte = 0;
-  stream->current_entry = -1;
   gst_pad_set_element_private (pad, stream);
   avi->num_streams++;
   gst_pad_set_caps (pad, caps);
@@ -2278,12 +2278,16 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   GstClockTime seek_time;
   gboolean keyframe;
   gst_avi_index_entry *entry;
+  gint old_entry;
 
   seek_time = segment->last_stop;
   keyframe = !!(segment->flags & GST_SEEK_FLAG_KEY_UNIT);
 
   /* FIXME: if we seek in an openDML file, we will have multiple
    * primary levels. Seeking in between those will cause havoc. */
+
+  /* save old position so we can see if we must mark a discont. */
+  old_entry = avi->current_entry;
 
   /* get the entry for the requested position, which is always in last_stop.
    * we search the index intry for stream 0, since all entries are sorted by
@@ -2305,6 +2309,15 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
         GST_TIME_ARGS (seek_time));
     if (avi->current_entry >= avi->index_size && avi->index_size > 0)
       avi->current_entry = avi->index_size - 1;
+  }
+
+  /* if we changed position, mark a DISCONT on all streams */
+  if (avi->current_entry != old_entry) {
+    gint i;
+
+    for (i = 0; i < avi->num_streams; i++) {
+      avi->stream[i].discont = TRUE;
+    }
   }
 
   GST_DEBUG_OBJECT (avi, "seek: %" GST_TIME_FORMAT
@@ -2401,9 +2414,10 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
     GST_DEBUG_OBJECT (avi, "sending flush stop");
     gst_avi_demux_push_event (avi, gst_event_new_flush_stop ());
     gst_pad_push_event (avi->sinkpad, gst_event_new_flush_stop ());
-    /* reset the last flow */
+    /* reset the last flow and mark discont, FLUSH is always DISCONT */
     for (i = 0; i < avi->num_streams; i++) {
       avi->stream[i].last_flow = GST_FLOW_OK;
+      avi->stream[i].discont = TRUE;
     }
   } else if (avi->segment_running) {
     GstEvent *seg;
@@ -2611,6 +2625,12 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
 
     /* update current position in the segment */
     gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, entry->ts);
+
+    /* mark discont when pending */
+    if (stream->discont) {
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      stream->discont = FALSE;
+    }
 
     res = stream->last_flow = gst_pad_push (stream->pad, buf);
     /* mark as processed, we increment the frame and byte counters then
