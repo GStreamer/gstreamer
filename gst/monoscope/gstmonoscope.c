@@ -345,10 +345,8 @@ gst_monoscope_chain (GstPad * pad, GstBuffer * inbuf)
     /* do negotiation if not done yet, so ->spf etc. is set */
     if (GST_PAD_CAPS (monoscope->srcpad) == NULL) {
       flow_ret = get_buffer (monoscope, &outbuf);
-      if (flow_ret != GST_FLOW_OK) {
-        gst_buffer_unref (inbuf);
+      if (flow_ret != GST_FLOW_OK)
         goto out;
-      }
       gst_buffer_unref (outbuf);
       outbuf = NULL;
     }
@@ -401,10 +399,8 @@ gst_monoscope_chain (GstPad * pad, GstBuffer * inbuf)
     }
 
     flow_ret = get_buffer (monoscope, &outbuf);
-    if (flow_ret != GST_FLOW_OK) {
-      gst_buffer_unref (inbuf);
+    if (flow_ret != GST_FLOW_OK)
       goto out;
-    }
 
     memcpy (GST_BUFFER_DATA (outbuf), pixels, monoscope->outsize);
 

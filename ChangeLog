@@ -1,5 +1,11 @@
 2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/monoscope/gstmonoscope.c: (gst_monoscope_chain):
+	  Don't unref buffers of which we've already given away
+	  ownership to the adapter.
+
+2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/speex/gstspeexdec.c: (speex_dec_chain_parse_comments):
 	  Make metadata extraction actually work.
 
