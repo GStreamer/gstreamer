@@ -1,3 +1,11 @@
+2006-08-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3v2frames.c: (parse_text_identification_frame),
+	(parse_insert_string_field):
+	  If strings in text fields are marked ISO8859-1, but contain
+	  valid UTF-8 already, then handle them as UTF-8 and ignore
+	  the encoding. (#351794)
+
 2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_scan_got_frame),
