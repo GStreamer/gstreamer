@@ -1,3 +1,11 @@
+2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_base_init),
+	(gst_asf_demux_add_audio_stream), (gst_asf_demux_add_video_stream):
+	  Use static pad templates with ANY caps for the source pads for
+	  simplicity and to avoid warnings when creating pads for unhandled
+	  codec IDs (#351795).
+
 2006-08-16  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Michal Benes <michal dot benes at itonis dot tv>

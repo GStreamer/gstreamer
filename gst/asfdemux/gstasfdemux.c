@@ -38,6 +38,18 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-ms-asf")
     );
 
+static GstStaticPadTemplate audio_src_template =
+GST_STATIC_PAD_TEMPLATE ("audio_%02d",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS_ANY);
+
+static GstStaticPadTemplate video_src_template =
+GST_STATIC_PAD_TEMPLATE ("video_%02d",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS_ANY);
+
 
 /* abuse this GstFlowReturn enum for internal usage */
 #define ASF_FLOW_NEED_MORE_DATA  99
@@ -65,9 +77,6 @@ static GstFlowReturn gst_asf_demux_process_object (GstASFDemux * demux,
 
 GST_BOILERPLATE (GstASFDemux, gst_asf_demux, GstElement, GST_TYPE_ELEMENT);
 
-static GstPadTemplate *videosrctempl;
-static GstPadTemplate *audiosrctempl;
-
 static void
 gst_asf_demux_base_init (gpointer g_class)
 {
@@ -78,16 +87,11 @@ gst_asf_demux_base_init (gpointer g_class)
     "Demultiplexes ASF Streams",
     "Owen Fraser-Green <owen@discobabe.net>"
   };
-  GstCaps *audcaps = gst_riff_create_audio_template_caps (),
-      *vidcaps = gst_riff_create_video_template_caps ();
 
-  audiosrctempl = gst_pad_template_new ("audio_%02d",
-      GST_PAD_SRC, GST_PAD_SOMETIMES, audcaps);
-  videosrctempl = gst_pad_template_new ("video_%02d",
-      GST_PAD_SRC, GST_PAD_SOMETIMES, vidcaps);
-
-  gst_element_class_add_pad_template (element_class, audiosrctempl);
-  gst_element_class_add_pad_template (element_class, videosrctempl);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&audio_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&video_src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_asf_demux_sink_template));
 
@@ -886,7 +890,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
   /* Create the audio pad */
   name = g_strdup_printf ("audio_%02d", demux->num_audio_streams);
 
-  src_pad = gst_pad_new_from_template (audiosrctempl, name);
+  src_pad = gst_pad_new_from_static_template (&audio_src_template, name);
   g_free (name);
 
   /* Swallow up any left over data and set up the 
@@ -951,7 +955,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
 
   /* Create the video pad */
   name = g_strdup_printf ("video_%02d", demux->num_video_streams);
-  src_pad = gst_pad_new_from_template (videosrctempl, name);
+  src_pad = gst_pad_new_from_static_template (&video_src_template, name);
   g_free (name);
 
   /* Now try some gstreamer formatted MIME types (from gst_avi_demux_strf_vids) */
