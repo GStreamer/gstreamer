@@ -1,3 +1,14 @@
+2006-08-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_chunk),
+	(gst_riff_parse_chunk), (gst_riff_parse_file_header),
+	(gst_riff_parse_strh), (gst_riff_parse_strf_vids),
+	(gst_riff_parse_strf_auds), (gst_riff_parse_strf_iavs),
+	(gst_riff_parse_info):
+	Protect public functions against bad input.
+	Do some cleanups.
+	Fix documentation.
+
 2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-ids.h:

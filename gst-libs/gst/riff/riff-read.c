@@ -54,15 +54,18 @@ gst_riff_read_chunk (GstElement * element,
   guint size;
   guint64 offset = *_offset;
 
-skip_junk:
+  g_return_val_if_fail (element != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (_offset != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (tag != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (_chunk_data != NULL, GST_FLOW_ERROR);
 
-  if ((res = gst_pad_pull_range (pad, offset, 8, &buf)) != GST_FLOW_OK)
+skip_junk:
+  size = 8;
+  if ((res = gst_pad_pull_range (pad, offset, size, &buf)) != GST_FLOW_OK)
     return res;
-  else if (!buf || GST_BUFFER_SIZE (buf) < 8) {
-    if (buf)
-      gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
-  }
+  else if (GST_BUFFER_SIZE (buf) < size)
+    goto too_small;
 
   *tag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
   size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
@@ -73,26 +76,32 @@ skip_junk:
 
   /* skip 'JUNK' chunks */
   if (*tag == GST_RIFF_TAG_JUNK) {
-    *_offset += 8 + GST_ROUND_UP_2 (size);
-    offset += 8 + GST_ROUND_UP_2 (size);
+    size = GST_ROUND_UP_2 (size);
+    *_offset += 8 + size;
+    offset += 8 + size;
     GST_DEBUG_OBJECT (element, "skipping JUNK chunk");
     goto skip_junk;
   }
 
   if ((res = gst_pad_pull_range (pad, offset + 8, size, &buf)) != GST_FLOW_OK)
     return res;
-  else if (!buf || GST_BUFFER_SIZE (buf) < size) {
-    GST_DEBUG_OBJECT (element, "not enough data (available=%u, needed=%u)",
-        (buf) ? GST_BUFFER_SIZE (buf) : 0, size);
-    if (buf)
-      gst_buffer_unref (buf);
-    return GST_FLOW_UNEXPECTED;
-  }
+  else if (GST_BUFFER_SIZE (buf) < size)
+    goto too_small;
 
   *_chunk_data = buf;
   *_offset += 8 + ((size + 1) & ~1);
 
   return GST_FLOW_OK;
+
+  /* ERRORS */
+too_small:
+  {
+    /* short read, we return UNEXPECTED to mark the EOS case */
+    GST_DEBUG_OBJECT (element, "not enough data (available=%u, needed=%u)",
+        GST_BUFFER_SIZE (buf), size);
+    gst_buffer_unref (buf);
+    return GST_FLOW_UNEXPECTED;
+  }
 }
 
 /**
@@ -109,55 +118,70 @@ skip_junk:
  *
  * Returns: the fourcc tag of this chunk, or FALSE on error
  */
-
 gboolean
 gst_riff_parse_chunk (GstElement * element, GstBuffer * buf,
     guint * _offset, guint32 * _fourcc, GstBuffer ** chunk_data)
 {
-  guint size;
+  guint size, bufsize;
   guint32 fourcc;
   guint8 *data;
-  gchar dbg[5] = { 0, };
   guint offset = *_offset;
+
+  g_return_val_if_fail (element != NULL, FALSE);
+  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (_offset != NULL, FALSE);
+  g_return_val_if_fail (_fourcc != NULL, FALSE);
+  g_return_val_if_fail (chunk_data != NULL, FALSE);
 
   *chunk_data = NULL;
   *_fourcc = 0;
 
-  if (buf && GST_BUFFER_SIZE (buf) == offset) {
-    GST_DEBUG_OBJECT (element, "End of chunk (offset %d)", offset);
-    return FALSE;
-  }
+  bufsize = GST_BUFFER_SIZE (buf);
 
-  if (!buf || GST_BUFFER_SIZE (buf) < offset + 8) {
-    GST_DEBUG_OBJECT (element,
-        "Failed to parse chunk header (offset %d, %d available, %d needed)",
-        offset, (buf) ? GST_BUFFER_SIZE (buf) : 0, 8);
-    return FALSE;
-  }
+  if (bufsize == offset)
+    goto end_offset;
+
+  if (bufsize < offset + 8)
+    goto too_small;
 
   /* read header */
   data = GST_BUFFER_DATA (buf) + offset;
   fourcc = GST_READ_UINT32_LE (data);
   size = GST_READ_UINT32_LE (data + 4);
 
-  memcpy (dbg, data, 4);
-  GST_DEBUG_OBJECT (element, "fourcc=%s, size=%u", dbg, size);
+  GST_DEBUG_OBJECT (element, "fourcc=%" GST_FOURCC_FORMAT ", size=%u",
+      GST_FOURCC_ARGS (fourcc), size);
 
-  if (GST_BUFFER_SIZE (buf) < size + 8 + offset) {
+  if (bufsize < size + 8 + offset) {
     GST_DEBUG_OBJECT (element,
         "Needed chunk data (%d) is more than available (%d), shortcutting",
-        size, GST_BUFFER_SIZE (buf) - 8 - offset);
-    size = GST_BUFFER_SIZE (buf) - 8 - offset;
+        size, bufsize - 8 - offset);
+    size = bufsize - 8 - offset;
   }
 
   if (size)
     *chunk_data = gst_buffer_create_sub (buf, offset + 8, size);
   else
     *chunk_data = NULL;
+
   *_fourcc = fourcc;
   *_offset += 8 + ((size + 1) & ~1);
 
   return TRUE;
+
+  /* ERRORS */
+end_offset:
+  {
+    GST_DEBUG_OBJECT (element, "End of chunk (offset %d)", offset);
+    return FALSE;
+  }
+too_small:
+  {
+    GST_DEBUG_OBJECT (element,
+        "Failed to parse chunk header (offset %d, %d available, %d needed)",
+        offset, bufsize, 8);
+    return FALSE;
+  }
 }
 
 /**
@@ -170,43 +194,54 @@ gst_riff_parse_chunk (GstElement * element, GstBuffer * buf,
  *
  * Reads the first few bytes from the provided buffer, checks
  * if this stream is a RIFF stream, and determines document type.
- * The input data is discarded after use.
+ * This function takes ownership of @buf so it should not be used anymore
+ * after calling this function.
  *
  * Returns: FALSE if this is not a RIFF stream (in which case the
  * caller should error out; we already throw an error), or TRUE
  * if it is.
  */
-
 gboolean
 gst_riff_parse_file_header (GstElement * element,
     GstBuffer * buf, guint32 * doctype)
 {
-  guint8 *data = GST_BUFFER_DATA (buf);
+  guint8 *data;
   guint32 tag;
 
-  if (!buf || GST_BUFFER_SIZE (buf) < 12) {
-    GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
-        ("Not enough data to parse RIFF header (%d available, %d needed)",
-            buf ? GST_BUFFER_SIZE (buf) : 0, 12));
-    if (buf)
-      gst_buffer_unref (buf);
-    return FALSE;
-  }
+  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (doctype != NULL, FALSE);
 
+  if (GST_BUFFER_SIZE (buf) < 12)
+    goto too_small;
+
+  data = GST_BUFFER_DATA (buf);
   tag = GST_READ_UINT32_LE (data);
-  if (tag != GST_RIFF_TAG_RIFF) {
-    GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
-        ("Stream is no RIFF stream: %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (tag)));
-    gst_buffer_unref (buf);
-    return FALSE;
-  }
+  if (tag != GST_RIFF_TAG_RIFF)
+    goto not_riff;
 
   *doctype = GST_READ_UINT32_LE (data + 8);
 
   gst_buffer_unref (buf);
 
   return TRUE;
+
+  /* ERRORS */
+too_small:
+  {
+    GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
+        ("Not enough data to parse RIFF header (%d available, %d needed)",
+            GST_BUFFER_SIZE (buf), 12));
+    gst_buffer_unref (buf);
+    return FALSE;
+  }
+not_riff:
+  {
+    GST_ELEMENT_ERROR (element, STREAM, WRONG_TYPE, (NULL),
+        ("Stream is no RIFF stream: %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (tag)));
+    gst_buffer_unref (buf);
+    return FALSE;
+  }
 }
 
 /**
@@ -216,8 +251,7 @@ gst_riff_parse_file_header (GstElement * element,
  * @strh: a pointer (returned by this function) to a filled-in
  *        strh structure. Caller should free it.
  *
- * Parses a strh structure from input data. The input data is
- * discarded after use.
+ * Parses a strh structure from input data. Takes ownership of @buf.
  *
  * Returns: TRUE if parsing succeeded, otherwise FALSE. The stream
  *          should be skipped on error, but it is not fatal.
@@ -229,14 +263,11 @@ gst_riff_parse_strh (GstElement * element,
 {
   gst_riff_strh *strh;
 
-  if (!buf || GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strh)) {
-    GST_ERROR_OBJECT (element,
-        "Too small strh (%d available, %d needed)",
-        buf ? GST_BUFFER_SIZE (buf) : 0, (int) sizeof (gst_riff_strh));
-    if (buf)
-      gst_buffer_unref (buf);
-    return FALSE;
-  }
+  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (_strh != NULL, FALSE);
+
+  if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strh))
+    goto too_small;
 
   strh = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   gst_buffer_unref (buf);
@@ -282,6 +313,16 @@ gst_riff_parse_strh (GstElement * element,
   *_strh = strh;
 
   return TRUE;
+
+  /* ERRORS */
+too_small:
+  {
+    GST_ERROR_OBJECT (element,
+        "Too small strh (%d available, %d needed)",
+        GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strh));
+    gst_buffer_unref (buf);
+    return FALSE;
+  }
 }
 
 /**
@@ -295,8 +336,7 @@ gst_riff_parse_strh (GstElement * element,
  *        palette, codec initialization data).
  *
  * Parses a video stream´s strf structure plus optionally some
- * extradata from input data. The input data is discarded after
- * use.
+ * extradata from input data. This function takes ownership of @buf.
  *
  * Returns: TRUE if parsing succeeded, otherwise FALSE. The stream
  *          should be skipped on error, but it is not fatal.
@@ -308,14 +348,12 @@ gst_riff_parse_strf_vids (GstElement * element,
 {
   gst_riff_strf_vids *strf;
 
-  if (!buf || GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_vids)) {
-    GST_ERROR_OBJECT (element,
-        "Too small strf_vids (%d available, %d needed)",
-        buf ? GST_BUFFER_SIZE (buf) : 0, (int) sizeof (gst_riff_strf_vids));
-    if (buf)
-      gst_buffer_unref (buf);
-    return FALSE;
-  }
+  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (_strf != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+
+  if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_vids))
+    goto too_small;
 
   strf = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
@@ -368,6 +406,16 @@ gst_riff_parse_strf_vids (GstElement * element,
   *_strf = strf;
 
   return TRUE;
+
+  /* ERRORS */
+too_small:
+  {
+    GST_ERROR_OBJECT (element,
+        "Too small strf_vids (%d available, %d needed)",
+        GST_BUFFER_SIZE (buf), (int) sizeof (gst_riff_strf_vids));
+    gst_buffer_unref (buf);
+    return FALSE;
+  }
 }
 
 /**
@@ -381,29 +429,29 @@ gst_riff_parse_strf_vids (GstElement * element,
  *        codec initialization data).
  *
  * Parses an audio stream´s strf structure plus optionally some
- * extradata from input data. The input data is discarded after
+ * extradata from input data. This function takes ownership of @buf.
  * use.
  *
  * Returns: TRUE if parsing succeeded, otherwise FALSE. The stream
  *          should be skipped on error, but it is not fatal.
  */
-
 gboolean
 gst_riff_parse_strf_auds (GstElement * element,
     GstBuffer * buf, gst_riff_strf_auds ** _strf, GstBuffer ** data)
 {
   gst_riff_strf_auds *strf;
+  guint bufsize;
 
-  if (!buf || GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_auds)) {
-    GST_ERROR_OBJECT (element,
-        "Too small strf_auds (%d available, %d needed)",
-        buf ? GST_BUFFER_SIZE (buf) : 0, (int) sizeof (gst_riff_strf_auds));
-    if (buf)
-      gst_buffer_unref (buf);
-    return FALSE;
-  }
+  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (_strf != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
 
-  strf = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+  bufsize = GST_BUFFER_SIZE (buf);
+
+  if (bufsize < sizeof (gst_riff_strf_auds))
+    goto too_small;
+
+  strf = g_memdup (GST_BUFFER_DATA (buf), bufsize);
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
   strf->format = GUINT16_FROM_LE (strf->format);
@@ -416,15 +464,15 @@ gst_riff_parse_strf_auds (GstElement * element,
 
   /* size checking */
   *data = NULL;
-  if (GST_BUFFER_SIZE (buf) > sizeof (gst_riff_strf_auds) + 2) {
+  if (bufsize > sizeof (gst_riff_strf_auds) + 2) {
     gint len;
 
     len = GST_READ_UINT16_LE (&GST_BUFFER_DATA (buf)[16]);
-    if (len + 2 + sizeof (gst_riff_strf_auds) > GST_BUFFER_SIZE (buf)) {
+    if (len + 2 + sizeof (gst_riff_strf_auds) > bufsize) {
       GST_WARNING_OBJECT (element,
           "Extradata indicated %d bytes, but only %d available",
-          len, GST_BUFFER_SIZE (buf) - 2 - sizeof (gst_riff_strf_auds));
-      len = GST_BUFFER_SIZE (buf) - 2 - sizeof (gst_riff_strf_auds);
+          len, bufsize - 2 - sizeof (gst_riff_strf_auds));
+      len = bufsize - 2 - sizeof (gst_riff_strf_auds);
     }
     if (len)
       *data = gst_buffer_create_sub (buf, sizeof (gst_riff_strf_auds) + 2, len);
@@ -446,6 +494,16 @@ gst_riff_parse_strf_auds (GstElement * element,
   *_strf = strf;
 
   return TRUE;
+
+  /* ERROR */
+too_small:
+  {
+    GST_ERROR_OBJECT (element,
+        "Too small strf_auds (%d available, %d needed)",
+        bufsize, sizeof (gst_riff_strf_auds));
+    gst_buffer_unref (buf);
+    return FALSE;
+  }
 }
 
 /**
@@ -459,8 +517,8 @@ gst_riff_parse_strf_auds (GstElement * element,
  *        codec initialization data).
  *
  * Parses a interleaved (also known as "complex")  stream´s strf
- * structure plus optionally some extradata from input data. The
- * input data is discarded after use.
+ * structure plus optionally some extradata from input data. This 
+ * function takes ownership of @buf.
  *
  * Returns: TRUE if parsing succeeded, otherwise FALSE.
  */
@@ -471,13 +529,12 @@ gst_riff_parse_strf_iavs (GstElement * element,
 {
   gst_riff_strf_iavs *strf;
 
-  if (!buf || GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_iavs)) {
-    GST_ERROR_OBJECT (element,
-        "Too small strf_iavs (%d available, %d needed)",
-        buf ? GST_BUFFER_SIZE (buf) : 0, (int) sizeof (gst_riff_strf_iavs));
-    gst_buffer_unref (buf);
-    return FALSE;
-  }
+  g_return_val_if_fail (buf != NULL, FALSE);
+  g_return_val_if_fail (_strf != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+
+  if (GST_BUFFER_SIZE (buf) < sizeof (gst_riff_strf_iavs))
+    goto too_small;
 
   strf = g_memdup (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   gst_buffer_unref (buf);
@@ -508,6 +565,16 @@ gst_riff_parse_strf_iavs (GstElement * element,
   *data = NULL;
 
   return TRUE;
+
+  /* ERRORS */
+too_small:
+  {
+    GST_ERROR_OBJECT (element,
+        "Too small strf_iavs (%d available, %d needed)",
+        GST_BUFFER_SIZE (buf), sizeof (gst_riff_strf_iavs));
+    gst_buffer_unref (buf);
+    return FALSE;
+  }
 }
 
 /**
@@ -518,10 +585,8 @@ gst_riff_parse_strf_iavs (GstElement * element,
  *           containing information about this stream. May be
  *           NULL if no supported tags were found.
  *
- * Parses stream metadata from input data. The input data is
- * discarded after use.
+ * Parses stream metadata from input data.
  */
-
 void
 gst_riff_parse_info (GstElement * element,
     GstBuffer * buf, GstTagList ** _taglist)
@@ -533,6 +598,9 @@ gst_riff_parse_info (GstElement * element,
   gchar *name;
   GstTagList *taglist;
   gboolean have_tags = FALSE;
+
+  g_return_if_fail (_taglist != NULL);
+  g_return_if_fail (buf != NULL);
 
   if (!buf) {
     *_taglist = NULL;
