@@ -1,3 +1,11 @@
+2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	(gst_tag_list_to_vorbiscomment_buffer):
+	* tests/check/libs/tag.c: (GST_START_TEST):
+	  And the same for _to_vorbiscomment_buffer(): allow
+	  id_data_len == 0 for speex.
+
 2006-08-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

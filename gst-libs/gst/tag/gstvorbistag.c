@@ -467,13 +467,13 @@ write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
  * gst_tag_list_to_vorbiscomment_buffer:
  * @list: tag list to convert
  * @id_data: identification data at start of stream
- * @id_data_length: length of identification data
+ * @id_data_length: length of identification data, may be 0 if @id_data is NULL
  * @vendor_string: string that describes the vendor string or NULL
  *
  * Creates a new vorbiscomment buffer from a tag list.
  *
- * Returns: A new #GstBuffer containing a vorbiscomment buffer with all tags that 
- *          could be converted from the given tag list.
+ * Returns: A new #GstBuffer containing a vorbiscomment buffer with all tags
+ *          that could be converted from the given tag list.
  */
 GstBuffer *
 gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
@@ -489,8 +489,7 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
   int required_size;
 
   g_return_val_if_fail (GST_IS_TAG_LIST (list), NULL);
-  g_return_val_if_fail (id_data != NULL, NULL);
-  g_return_val_if_fail (id_data_length > 0, NULL);
+  g_return_val_if_fail (id_data != NULL || id_data_length == 0, NULL);
 
   if (vendor_string == NULL)
     vendor_string = "GStreamer encoded vorbiscomment";
@@ -500,8 +499,10 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
   required_size += 4 * my_data.count + my_data.data_count;
   buffer = gst_buffer_new_and_alloc (required_size);
   data = GST_BUFFER_DATA (buffer);
-  memcpy (data, id_data, id_data_length);
-  data += id_data_length;
+  if (id_data_length > 0) {
+    memcpy (data, id_data, id_data_length);
+    data += id_data_length;
+  }
   *((guint32 *) data) = GUINT32_TO_LE (vendor_len);
   data += 4;
   memcpy (data, vendor_string, vendor_len);

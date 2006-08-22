@@ -379,6 +379,27 @@ GST_START_TEST (test_vorbis_tags)
   gst_vorbis_tag_add (list, "LANGUAGE", "English");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "English");
 
+  /* now, while we still have a taglist, test _to_vorbiscomment_buffer() */
+  {
+    GstBuffer *buf1, *buf2;
+
+    ASSERT_CRITICAL (gst_tag_list_to_vorbiscomment_buffer (NULL,
+            (const guint8 *) "x", 1, "x"));
+
+    buf1 = gst_tag_list_to_vorbiscomment_buffer (list, NULL, 0, NULL);
+    fail_unless (buf1 != NULL);
+
+    buf2 = gst_tag_list_to_vorbiscomment_buffer (list,
+        (const guint8 *) "foo", 3, NULL);
+    fail_unless (buf2 != NULL);
+
+    fail_unless (memcmp (GST_BUFFER_DATA (buf1), GST_BUFFER_DATA (buf2) + 3,
+            GST_BUFFER_SIZE (buf1)) == 0);
+
+    gst_buffer_unref (buf1);
+    gst_buffer_unref (buf2);
+  }
+
   gst_tag_list_free (list);
 
   /* make sure gst_tag_list_from_vorbiscomment_buffer() works with an
