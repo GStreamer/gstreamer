@@ -1039,7 +1039,7 @@ gst_riff_create_iavs_caps (guint32 codec_fcc,
 GstCaps *
 gst_riff_create_video_template_caps (void)
 {
-  guint32 tags[] = {
+  static const guint32 tags[] = {
     GST_MAKE_FOURCC ('3', 'I', 'V', '1'),
     GST_MAKE_FOURCC ('A', 'S', 'V', '1'),
     GST_MAKE_FOURCC ('A', 'S', 'V', '2'),
@@ -1088,15 +1088,14 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('Z', 'L', 'I', 'B'),
     GST_MAKE_FOURCC ('c', 'v', 'i', 'd'),
     GST_MAKE_FOURCC ('h', '2', '6', '4'),
-    GST_MAKE_FOURCC ('m', 's', 'v', 'c'),
-    /* FILL ME */
-    0
+    GST_MAKE_FOURCC ('m', 's', 'v', 'c')
+        /* FILL ME */
   };
   guint i;
   GstCaps *caps, *one;
 
   caps = gst_caps_new_empty ();
-  for (i = 0; tags[i] != 0; i++) {
+  for (i = 0; i < G_N_ELEMENTS (tags); i++) {
     one = gst_riff_create_video_caps (tags[i], NULL, NULL, NULL, NULL, NULL);
     if (one)
       gst_caps_append (caps, one);
@@ -1108,7 +1107,7 @@ gst_riff_create_video_template_caps (void)
 GstCaps *
 gst_riff_create_audio_template_caps (void)
 {
-  guint16 tags[] = {
+  static const guint16 tags[] = {
     GST_RIFF_WAVE_FORMAT_MPEGL3,
     GST_RIFF_WAVE_FORMAT_MPEGL12,
     GST_RIFF_WAVE_FORMAT_PCM,
@@ -1122,15 +1121,14 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_WMAV1,
     GST_RIFF_WAVE_FORMAT_WMAV2,
     GST_RIFF_WAVE_FORMAT_WMAV3,
-    GST_RIFF_WAVE_FORMAT_SONY_ATRAC3,
-    /* FILL ME */
-    0
+    GST_RIFF_WAVE_FORMAT_SONY_ATRAC3
+        /* FILL ME */
   };
   guint i;
   GstCaps *caps, *one;
 
   caps = gst_caps_new_empty ();
-  for (i = 0; tags[i] != 0; i++) {
+  for (i = 0; i < G_N_ELEMENTS (tags); i++) {
     one = gst_riff_create_audio_caps (tags[i], NULL, NULL, NULL, NULL, NULL);
     if (one)
       gst_caps_append (caps, one);
@@ -1144,16 +1142,15 @@ gst_riff_create_audio_template_caps (void)
 GstCaps *
 gst_riff_create_iavs_template_caps (void)
 {
-  guint32 tags[] = {
-    GST_MAKE_FOURCC ('D', 'V', 'S', 'D'),
-    /* FILL ME */
-    0
+  static const guint32 tags[] = {
+    GST_MAKE_FOURCC ('D', 'V', 'S', 'D')
+        /* FILL ME */
   };
   guint i;
   GstCaps *caps, *one;
 
   caps = gst_caps_new_empty ();
-  for (i = 0; tags[i] != 0; i++) {
+  for (i = 0; i < G_N_ELEMENTS (tags); i++) {
     one = gst_riff_create_iavs_caps (tags[i], NULL, NULL, NULL, NULL, NULL);
     if (one)
       gst_caps_append (caps, one);

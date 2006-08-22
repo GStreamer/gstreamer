@@ -1,5 +1,14 @@
 2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/riff/riff-media.c:
+	(gst_riff_create_video_template_caps),
+	(gst_riff_create_audio_template_caps),
+	(gst_riff_create_iavs_template_caps):
+	  Const-ify some arrays and use G_N_ELEMENTS instead
+	  of wasting oodles of RAM on terminator bits.
+
+2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/tag/gstvorbistag.c:
 	(gst_tag_list_to_vorbiscomment_buffer):
 	* tests/check/libs/tag.c: (GST_START_TEST):
