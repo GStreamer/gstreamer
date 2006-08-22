@@ -1,3 +1,23 @@
+2006-08-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_reset),
+	(gst_avi_demux_index_entry_for_time),
+	(gst_avi_demux_handle_src_query), (gst_avi_demux_handle_src_event),
+	(gst_avi_demux_stream_init), (gst_avi_demux_parse_stream),
+	(gst_avi_demux_stream_index), (gst_avi_demux_peek_tag),
+	(gst_avi_demux_next_data_buffer),
+	(gst_avi_demux_calculate_durations_from_index),
+	(gst_avi_demux_stream_header), (gst_avi_demux_do_seek),
+	(gst_avi_demux_handle_seek), (gst_avi_demux_aggregated_flow),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_loop),
+	(gst_avi_demux_sink_activate_pull), (gst_avi_demux_change_state):
+	* gst/avi/gstavidemux.h:
+	Precalc most of the duration query for each stream.
+	Make seeking more correct.
+	Use GstSegment to track position and duration.
+	Code cleanups and leak fixes.
+	Calculate correct total duration based on index length.
+
 2006-08-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3v2frames.c: (parse_text_identification_frame),

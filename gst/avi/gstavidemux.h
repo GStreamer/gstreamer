@@ -126,7 +126,9 @@ typedef struct _GstAviDemux {
   gst_riff_avih *avih;
 
   /* seeking in TIME */
+  gboolean      streaming;
   GstSegment    segment;
+  gboolean      segment_running;
   GstEvent      *seek_event;
 
   GstTagList	*globaltags;
