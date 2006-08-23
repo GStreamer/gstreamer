@@ -295,7 +295,7 @@ GST_START_TEST (test_discid_calculations)
   foosrc = gst_element_factory_make ("cdfoosrc", "cdfoosrc");
 
   for (i = 0; i < G_N_ELEMENTS (test_discs); ++i) {
-    GST_LOG ("Testing disc layout %u ...\n", i);
+    GST_LOG ("Testing disc layout %u ...", i);
     GST_CD_FOO_SRC (foosrc)->cur_disc = i;
     gst_element_set_state (foosrc, GST_STATE_PLAYING);
     gst_element_get_state (foosrc, NULL, NULL, -1);
@@ -303,6 +303,8 @@ GST_START_TEST (test_discid_calculations)
   }
 
   gst_object_unref (foosrc);
+
+  gst_task_cleanup_all ();
 }
 
 GST_END_TEST;
@@ -347,6 +349,7 @@ GST_START_TEST (test_buffer_timestamps)
 
   gst_buffer_straw_stop_pipeline (pipeline, sinkpad);
 
+  gst_task_cleanup_all ();
   gst_object_unref (pipeline);
   gst_object_unref (sinkpad);
 }

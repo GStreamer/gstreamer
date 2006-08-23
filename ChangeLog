@@ -1,3 +1,9 @@
+2006-08-23  Wim Taymans  <wim@fluendo.com>
+
+	* tests/check/libs/cddabasesrc.c: (GST_START_TEST):
+	Waits for tasks to settle down so that we clean up correctly for 
+	valgrind.
+
 2006-08-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/libs/tag.c: (GST_START_TEST), (taglists_are_equal):
