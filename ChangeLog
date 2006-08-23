@@ -1,5 +1,20 @@
 2006-08-23  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_start_task), (gst_pad_pause_task),
+	(gst_pad_stop_task):
+	Improve debugging for task functions.
+
+	* gst/gsttask.c: (gst_task_func), (gst_task_set_lock),
+	(gst_task_start), (gst_task_pause), (gst_task_join):
+	Make sure that the task function started and finished after a 
+	join(). 
+	Don't try to push the task function on the threadpool multiple
+	times.
+	Improve the g_warning message with some useful suggestions
+	about how to fix the problem. 
+
+2006-08-23  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstutils.c: (gst_pad_proxy_getcaps):
 	Handle RESYNC correctly in _proxy_getcaps.
 

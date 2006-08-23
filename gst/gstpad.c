@@ -4104,12 +4104,15 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (func != NULL, FALSE);
 
+  GST_DEBUG_OBJECT (pad, "start task");
+
   GST_OBJECT_LOCK (pad);
   task = GST_PAD_TASK (pad);
   if (task == NULL) {
     task = gst_task_create (func, data);
     gst_task_set_lock (task, GST_PAD_GET_STREAM_LOCK (pad));
     GST_PAD_TASK (pad) = task;
+    GST_DEBUG_OBJECT (pad, "created task");
   }
   gst_task_start (task);
   GST_OBJECT_UNLOCK (pad);
@@ -4133,6 +4136,8 @@ gst_pad_pause_task (GstPad * pad)
   GstTask *task;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+
+  GST_DEBUG_OBJECT (pad, "pause task");
 
   GST_OBJECT_LOCK (pad);
   task = GST_PAD_TASK (pad);
@@ -4177,6 +4182,8 @@ gst_pad_stop_task (GstPad * pad)
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
+  GST_DEBUG_OBJECT (pad, "stop task");
+
   GST_OBJECT_LOCK (pad);
   task = GST_PAD_TASK (pad);
   if (task == NULL)
@@ -4197,6 +4204,7 @@ gst_pad_stop_task (GstPad * pad)
 
 no_task:
   {
+    GST_DEBUG_OBJECT (pad, "no task");
     GST_OBJECT_UNLOCK (pad);
 
     GST_PAD_STREAM_LOCK (pad);
@@ -4211,6 +4219,7 @@ join_failed:
      * the task's thread. We install the task again so that it will be stopped
      * again from the right thread next time hopefully. */
     GST_OBJECT_LOCK (pad);
+    GST_DEBUG_OBJECT (pad, "join failed");
     /* we can only install this task if there was no other task */
     if (GST_PAD_TASK (pad) == NULL)
       GST_PAD_TASK (pad) = task;

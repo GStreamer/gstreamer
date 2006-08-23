@@ -162,7 +162,6 @@ gst_task_func (GstTask * task, GstTaskClass * tclass)
   lock = GST_TASK_GET_LOCK (task);
   if (G_UNLIKELY (lock == NULL))
     goto no_lock;
-  task->running = TRUE;
   task->abidata.ABI.thread = tself;
   GST_OBJECT_UNLOCK (task);
 
@@ -198,11 +197,18 @@ done:
   GST_OBJECT_UNLOCK (task);
   g_static_rec_mutex_unlock (lock);
 
-  /* now we allow messing with the lock again */
   GST_OBJECT_LOCK (task);
-  task->running = FALSE;
   task->abidata.ABI.thread = NULL;
+
 exit:
+  /* now we allow messing with the lock again by setting the running flag to
+   * FALSE. Together with the SIGNAL this is the sign for the _join() to 
+   * complete. 
+   * Note that we still have not dropped the final ref on the task. We could
+   * check here if there is a pending join() going on and drop the last ref
+   * before releasing the lock as we can be sure that a ref is held by the
+   * caller of the join(). */
+  task->running = FALSE;
   GST_TASK_SIGNAL (task);
   GST_OBJECT_UNLOCK (task);
 
@@ -256,6 +262,9 @@ gst_task_cleanup_all (void)
  * with @data as a parameter. Typically the task will run in
  * a new thread.
  *
+ * The function cannot be changed after the task has been created. You
+ * must create a new GstTask to change the function.
+ *
  * Returns: A new #GstTask.
  *
  * MT safe.
@@ -291,7 +300,7 @@ void
 gst_task_set_lock (GstTask * task, GStaticRecMutex * mutex)
 {
   GST_OBJECT_LOCK (task);
-  if (task->running)
+  if (G_UNLIKELY (task->running))
     goto is_running;
   GST_TASK_GET_LOCK (task) = mutex;
   GST_OBJECT_UNLOCK (task);
@@ -362,11 +371,20 @@ gst_task_start (GstTask * task)
     {
       GstTaskClass *tclass;
 
-      tclass = GST_TASK_GET_CLASS (task);
+      /* If the task already has a thread scheduled we don't have to do
+       * anything. */
+      if (task->running)
+        break;
 
       /* new task, push on threadpool. We ref before so
        * that it remains alive while on the threadpool. */
       gst_object_ref (task);
+      /* mark task as running so that a join will wait until we schedule
+       * and exit the task function. */
+      task->running = TRUE;
+
+      tclass = GST_TASK_GET_CLASS (task);
+
       g_static_mutex_lock (&pool_lock);
       g_thread_pool_push (tclass->pool, task, NULL);
       g_static_mutex_unlock (&pool_lock);
@@ -468,9 +486,14 @@ gst_task_pause (GstTask * task)
     {
       GstTaskClass *tclass;
 
-      tclass = GST_TASK_GET_CLASS (task);
+      if (task->running)
+        break;
 
       gst_object_ref (task);
+      task->running = TRUE;
+
+      tclass = GST_TASK_GET_CLASS (task);
+
       g_static_mutex_lock (&pool_lock);
       g_thread_pool_push (tclass->pool, task, NULL);
       g_static_mutex_unlock (&pool_lock);
@@ -505,7 +528,8 @@ no_lock:
  * The task will automatically be stopped with this call.
  *
  * This function cannot be called from within a task function as this
- * will cause a deadlock.
+ * would cause a deadlock. The function will detect this and print a 
+ * g_warning.
  *
  * Returns: TRUE if the task could be joined.
  *
@@ -525,11 +549,15 @@ gst_task_join (GstTask * task)
   /* we don't use a real thread join here because we are using
    * threadpools */
   GST_OBJECT_LOCK (task);
-  if (tself == task->abidata.ABI.thread)
+  if (G_UNLIKELY (tself == task->abidata.ABI.thread))
     goto joining_self;
   task->state = GST_TASK_STOPPED;
+  /* signal the state change for when it was blocked in PAUSED. */
   GST_TASK_SIGNAL (task);
-  while (task->running)
+  /* we set the running flag when pushing the task on the threadpool. 
+   * This means that the task function might not be called when we try
+   * to join it here. */
+  while (G_LIKELY (task->running))
     GST_TASK_WAIT (task);
   GST_OBJECT_UNLOCK (task);
 
@@ -542,7 +570,10 @@ joining_self:
   {
     GST_WARNING_OBJECT (task, "trying to join task from its thread");
     GST_OBJECT_UNLOCK (task);
-    g_warning ("trying to join task %p from its thread would deadlock", task);
+    g_warning ("\nTrying to join task %p from its thread would deadlock.\n"
+        "You cannot change the state of an element from its streaming\n"
+        "thread. Use g_idle_add() or post a GstMessage on the bus to\n"
+        "schedule the state change from the main thread.\n", task);
     return FALSE;
   }
 }
