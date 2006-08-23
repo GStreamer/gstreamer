@@ -22,7 +22,7 @@ install-pluginLTLIBRARIES:
 # the core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.xml
 
-SUPPRESSIONS = $(top_srcdir)/common/gst.supp
+SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-bad.supp
 
 clean-local: clean-local-check
 
@@ -42,8 +42,7 @@ check_wavpack =
 endif
 
 VALGRIND_TO_FIX = \
-	elements/mpeg2enc \
-	elements/wavpackenc
+	elements/mpeg2enc
 
 # valgrind testing
 VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)

@@ -1,5 +1,20 @@
 2006-08-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_push_block):
+	  Fix mem leak, send newsegment event on correction pad
+	  as well (#352476).
+
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_base_init):
+	  Restore original author (on Sebastian's request).
+
+	* tests/check/Makefile.am:
+	* tests/check/gst-plugins-bad.supp:
+	  Add (so far empty) suppression file for -bad. Remove
+	  wavpackenc test from VALGRIND_TO_FIX now that the leak
+	  is fixed.
+
+2006-08-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
 
 	* tests/check/Makefile.am:
