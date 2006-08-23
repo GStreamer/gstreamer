@@ -2432,17 +2432,39 @@ gst_pad_proxy_getcaps (GstPad * pad)
   if (element == NULL)
     return NULL;
 
-  iter = gst_element_iterate_pads (element);
-
+  /* value to hold the return, by default it holds ANY, the ref is taken by
+   * the GValue. */
   g_value_init (&ret, G_TYPE_POINTER);
   g_value_set_pointer (&ret, gst_caps_new_any ());
 
-  res = gst_iterator_fold (iter, (GstIteratorFoldFunction) intersect_caps_func,
-      &ret, pad);
+  iter = gst_element_iterate_pads (element);
+  while (1) {
+    res =
+        gst_iterator_fold (iter, (GstIteratorFoldFunction) intersect_caps_func,
+        &ret, pad);
+    switch (res) {
+      case GST_ITERATOR_RESYNC:
+        /* unref any value stored */
+        if ((caps = g_value_get_pointer (&ret)))
+          gst_caps_unref (caps);
+        /* need to reset the result again to ANY */
+        g_value_set_pointer (&ret, gst_caps_new_any ());
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_DONE:
+        /* all pads iterated, return collected value */
+        goto done;
+      default:
+        /* iterator returned _ERROR or premature end with _OK,
+         * mark an error and exit */
+        if ((caps = g_value_get_pointer (&ret)))
+          gst_caps_unref (caps);
+        g_value_set_pointer (&ret, NULL);
+        goto error;
+    }
+  }
+done:
   gst_iterator_free (iter);
-
-  if (res != GST_ITERATOR_DONE)
-    goto pads_changed;
 
   gst_object_unref (element);
 
@@ -2455,10 +2477,11 @@ gst_pad_proxy_getcaps (GstPad * pad)
   return intersected;
 
   /* ERRORS */
-pads_changed:
+error:
   {
-    g_warning ("Pad list changed during capsnego for element %s",
+    g_warning ("Pad list returned error on element %s",
         GST_ELEMENT_NAME (element));
+    gst_iterator_free (iter);
     gst_object_unref (element);
     return NULL;
   }

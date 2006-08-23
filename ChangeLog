@@ -1,3 +1,8 @@
+2006-08-23  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstutils.c: (gst_pad_proxy_getcaps):
+	Handle RESYNC correctly in _proxy_getcaps.
+
 2006-08-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstxml.c: (gst_xml_dispose), (gst_xml_parse_file),
