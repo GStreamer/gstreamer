@@ -29,7 +29,6 @@
 
 G_BEGIN_DECLS
 
-/* defines don't like whitespacey bits */
 #define GST_TYPE_WAVPACK_ENC \
   (gst_wavpack_enc_get_type())
 #define GST_WAVPACK_ENC(obj) \
@@ -55,6 +54,7 @@ struct _GstWavpackEnc
 {
   GstElement element;
 
+  /*< private >*/
   GstPad *sinkpad, *srcpad;
   GstPad *wvcsrcpad;
 

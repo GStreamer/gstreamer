@@ -30,7 +30,7 @@
 #include "gstwavpackstreamreader.h"
 
 G_BEGIN_DECLS
-/* #define's don't like whitespacey bits */
+
 #define GST_TYPE_WAVPACK_DEC \
   (gst_wavpack_dec_get_type())
 #define GST_WAVPACK_DEC(obj) \
@@ -48,6 +48,7 @@ struct _GstWavpackDec
 {
   GstElement element;
 
+  /*< private >*/
   GstPad              *sinkpad;
   GstPad              *srcpad;
 

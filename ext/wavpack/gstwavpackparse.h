@@ -27,7 +27,6 @@
 
 G_BEGIN_DECLS
 
-/* #define's don't like whitespacey bits */
 #define GST_TYPE_WAVPACK_PARSE \
   (gst_wavpack_parse_get_type())
 #define GST_WAVPACK_PARSE(obj) \
@@ -53,6 +52,7 @@ struct _GstWavpackParse
 {
   GstElement     element;
 
+  /*< private >*/
   GstPad        *sinkpad;
   GstPad        *srcpad;
   

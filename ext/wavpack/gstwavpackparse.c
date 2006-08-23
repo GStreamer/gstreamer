@@ -21,6 +21,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-wavpackparse
+ *
+ * <refsect2>
+ * Wavpackparse takes raw, unframed Wavpack streams and splits them into
+ * single Wavpack chunks with information like bit depth and the position
+ * in the stream.
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=test.wv ! wavpackparse ! wavpackdec ! fakesink
+ * </programlisting>
+ * This pipeline decodes the Wavpack file test.wv into raw audio buffers.
+ * </para>
+ * </refsect2>
+ */
+
 #include <gst/gst.h>
 
 #include <math.h>
