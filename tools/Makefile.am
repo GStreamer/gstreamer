@@ -122,7 +122,8 @@ EXTRA_DIST = \
 	gst-typefind.1.in \
 	gst-xmlinspect.1.in \
 	gst-xmllaunch.1.in \
-	gst-feedback-m.m
+	gst-feedback-m.m \
+	gst-plot-timeline.py
 
 %-@GST_MAJORMINOR@.1: %.1.in
 	sed \
