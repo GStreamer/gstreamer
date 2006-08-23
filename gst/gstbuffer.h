@@ -393,8 +393,7 @@ GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, 
  * @v: a #GstValue to receive the data
  * @b: a #GstBuffer to assign to the GstValue
  *
- * Sets @b as the value of @v, correclty incrementing the refcount of
- * the buffer.
+ * Sets @b as the value of @v.  Caller retains reference to buffer.
  */
 #define		gst_value_set_buffer(v,b)	gst_value_set_mini_object(v, GST_MINI_OBJECT_CAST(b))
 /**
@@ -402,17 +401,16 @@ GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, 
  * @v: a #GstValue to receive the data
  * @b: a #GstBuffer to assign to the GstValue
  *
- * Sets @b as the value of @v, this function lets the GstValue
- * take ownership of the buffer.
+ * Sets @b as the value of @v.  Caller gives away reference to buffer.
  */
 #define		gst_value_take_buffer(v,b)	gst_value_take_mini_object(v, GST_MINI_OBJECT_CAST(b))
 /**
  * gst_value_get_buffer:
  * @v: a #GstValue to qeury
  *
- * Receives a #GstBuffer as the value of @v. This function does not
- * increase the refcount of the returned buffer so the buffer remains
- * valid as long as you own a refcount to the GstValue.
+ * Receives a #GstBuffer as the value of @v. Does not return a reference to
+ * the buffer, so the pointer is only valid for as long as the caller owns
+ * a reference to @v.
  */
 #define		gst_value_get_buffer(v)		GST_BUFFER_CAST (gst_value_get_mini_object(v))
 
