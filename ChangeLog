@@ -1,3 +1,26 @@
+2006-08-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_class_init),
+	(gst_avi_demux_init), (gst_avi_demux_dispose),
+	(gst_avi_demux_reset), (gst_avi_demux_index_next),
+	(gst_avi_demux_index_entry_for_time), (gst_avi_demux_src_convert),
+	(gst_avi_demux_handle_src_query), (gst_avi_demux_handle_src_event),
+	(gst_avi_demux_peek_chunk_info), (gst_avi_demux_peek_chunk),
+	(gst_avi_demux_stream_init_push), (gst_avi_demux_stream_init_pull),
+	(gst_avi_demux_parse_subindex),
+	(gst_avi_demux_read_subindexes_push),
+	(gst_avi_demux_read_subindexes_pull), (gst_avi_demux_parse_stream),
+	(sort), (gst_avi_demux_parse_index), (gst_avi_demux_stream_index),
+	(gst_avi_demux_sync), (gst_avi_demux_peek_tag),
+	(gst_avi_demux_massage_index), (gst_avi_demux_stream_header_push),
+	(gst_avi_demux_stream_header_pull),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_stream_data),
+	(push_tag_lists), (gst_avi_demux_loop), (gst_avi_demux_chain),
+	(gst_avi_demux_sink_activate), (gst_avi_demux_activate_push),
+	(gst_avi_demux_change_state):
+	* gst/avi/gstavidemux.h:
+	  Initial streaming support for avidemux (fixes #336465)
+
 2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:

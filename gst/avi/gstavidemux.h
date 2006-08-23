@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2006> Nokia Corporation (contact <stefan.kost@nokia.com>)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,6 +26,7 @@
 #include "avi-ids.h"
 #include "gst/riff/riff-ids.h"
 #include "gst/riff/riff-read.h"
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -102,6 +104,15 @@ typedef enum {
   GST_AVI_DEMUX_MOVI,
 } GstAviDemuxState;
 
+typedef enum {
+  GST_AVI_DEMUX_HEADER_TAG_LIST,
+  GST_AVI_DEMUX_HEADER_AVIH,
+  GST_AVI_DEMUX_HEADER_ELEMENTS,
+  GST_AVI_DEMUX_HEADER_INFO,
+  GST_AVI_DEMUX_HEADER_JUNK,
+  GST_AVI_DEMUX_HEADER_DATA
+} GstAviDemuxHeaderState;
+
 typedef struct _GstAviDemux {
   GstElement     parent;
 
@@ -110,6 +121,7 @@ typedef struct _GstAviDemux {
 
   /* AVI decoding state */
   GstAviDemuxState state;
+  GstAviDemuxHeaderState header_state;
   guint64        offset;
 
   /* index */
@@ -122,7 +134,13 @@ typedef struct _GstAviDemux {
   guint          num_streams;
   guint          num_v_streams;
   guint          num_a_streams;
+
   avi_stream_context stream[GST_AVI_DEMUX_MAX_STREAMS];
+
+  /* for streaming mode */
+  gboolean      streaming;
+  gboolean      have_eos;
+  GstAdapter    *adapter;
 
   /* some stream info for length */
   gst_riff_avih *avih;
@@ -130,7 +148,6 @@ typedef struct _GstAviDemux {
   /* segment in TIME */
   GstSegment     segment;
   gboolean       segment_running;
-  gboolean       streaming;
 
   /* pending tags/events */
   GstEvent      *seek_event;
