@@ -4,6 +4,8 @@ alsa
 audioconvert
 audioresample
 audiotestsrc
+gdpdepay
+gdppay
 multifdsink
 videorate
 videotestsrc

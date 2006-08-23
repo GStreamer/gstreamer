@@ -1,3 +1,8 @@
+2006-08-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/elements/.cvsignore:
+	  make buildbot happy
+
 2006-08-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ogg/gstogmparse.c: (gst_ogm_audio_parse_base_init),
