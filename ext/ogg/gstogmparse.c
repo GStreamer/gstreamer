@@ -1,7 +1,6 @@
-/* GStreamer
+/* GStreamer OGM parsing
  * Copyright (C) 2004 Ronald Bultje <rbultje@ronald.bitfreak.net>
- *
- * gstogmparse.c: OGM stream header parsing (and data passthrough)
+ * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -94,7 +93,7 @@ typedef struct _stream_header_audio
 typedef struct _stream_header
 {
   gchar streamtype[8];
-  gchar subtype[4];
+  gchar subtype[4 + 1];
 
   /* size of the structure */
   gint32 size;
@@ -126,6 +125,9 @@ typedef struct _GstOgmParse
   GstPad *srcpad, *sinkpad;
   GstPadTemplate *srcpadtempl;
 
+  /* we need to cache events that we receive before creating the source pad */
+  GList *cached_events;
+
   /* audio or video */
   stream_header hdr;
 
@@ -138,13 +140,13 @@ typedef struct _GstOgmParseClass
   GstElementClass parent_class;
 } GstOgmParseClass;
 
-static GstStaticPadTemplate ogm_video_parse_sink_template_factory =
+static GstStaticPadTemplate sink_factory_video =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-ogm-video"));
-static GstStaticPadTemplate ogm_audio_parse_sink_template_factory =
+static GstStaticPadTemplate sink_factory_audio =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-ogm-audio"));
-static GstStaticPadTemplate ogm_text_parse_sink_template_factory =
+static GstStaticPadTemplate sink_factory_text =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-ogm-text"));
 static GstPadTemplate *video_src_templ, *audio_src_templ, *text_src_templ;
@@ -164,6 +166,7 @@ static void gst_ogm_audio_parse_init (GstOgmParse * ogm);
 static void gst_ogm_text_parse_init (GstOgmParse * ogm);
 
 static const GstQueryType *gst_ogm_parse_get_sink_querytypes (GstPad * pad);
+static gboolean gst_ogm_parse_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query);
 static gboolean gst_ogm_parse_sink_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
@@ -288,7 +291,7 @@ gst_ogm_audio_parse_base_init (GstOgmParseClass * klass)
   gst_element_class_set_details (element_class, &gst_ogm_audio_parse_details);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&ogm_audio_parse_sink_template_factory));
+      gst_static_pad_template_get (&sink_factory_audio));
   audio_src_templ = gst_pad_template_new ("src",
       GST_PAD_SRC, GST_PAD_SOMETIMES, caps);
   gst_element_class_add_pad_template (element_class, audio_src_templ);
@@ -303,7 +306,7 @@ gst_ogm_video_parse_base_init (GstOgmParseClass * klass)
   gst_element_class_set_details (element_class, &gst_ogm_video_parse_details);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&ogm_video_parse_sink_template_factory));
+      gst_static_pad_template_get (&sink_factory_video));
   video_src_templ = gst_pad_template_new ("src",
       GST_PAD_SRC, GST_PAD_SOMETIMES, caps);
   gst_element_class_add_pad_template (element_class, video_src_templ);
@@ -318,7 +321,7 @@ gst_ogm_text_parse_base_init (GstOgmParseClass * klass)
   gst_element_class_set_details (element_class, &gst_ogm_text_parse_details);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&ogm_text_parse_sink_template_factory));
+      gst_static_pad_template_get (&sink_factory_text));
   text_src_templ = gst_pad_template_new ("src",
       GST_PAD_SRC, GST_PAD_SOMETIMES, caps);
   gst_element_class_add_pad_template (element_class, text_src_templ);
@@ -338,23 +341,22 @@ gst_ogm_parse_class_init (GstOgmParseClass * klass)
 static void
 gst_ogm_parse_init (GstOgmParse * ogm)
 {
-  /* initalize */
   memset (&ogm->hdr, 0, sizeof (ogm->hdr));
   ogm->next_granulepos = 0;
   ogm->srcpad = NULL;
+  ogm->cached_events = NULL;
 }
 
 static void
 gst_ogm_audio_parse_init (GstOgmParse * ogm)
 {
-  /* create the pads */
-  ogm->sinkpad =
-      gst_pad_new_from_static_template (&ogm_audio_parse_sink_template_factory,
-      "sink");
+  ogm->sinkpad = gst_pad_new_from_static_template (&sink_factory_audio, "sink");
   gst_pad_set_query_function (ogm->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ogm_parse_sink_query));
   gst_pad_set_chain_function (ogm->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ogm_parse_chain));
+  gst_pad_set_event_function (ogm->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_ogm_parse_sink_event));
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->sinkpad);
 
   ogm->srcpad = NULL;
@@ -364,14 +366,13 @@ gst_ogm_audio_parse_init (GstOgmParse * ogm)
 static void
 gst_ogm_video_parse_init (GstOgmParse * ogm)
 {
-  /* create the pads */
-  ogm->sinkpad =
-      gst_pad_new_from_static_template (&ogm_video_parse_sink_template_factory,
-      "sink");
+  ogm->sinkpad = gst_pad_new_from_static_template (&sink_factory_video, "sink");
   gst_pad_set_query_function (ogm->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ogm_parse_sink_query));
   gst_pad_set_chain_function (ogm->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ogm_parse_chain));
+  gst_pad_set_event_function (ogm->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_ogm_parse_sink_event));
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->sinkpad);
 
   ogm->srcpad = NULL;
@@ -381,16 +382,15 @@ gst_ogm_video_parse_init (GstOgmParse * ogm)
 static void
 gst_ogm_text_parse_init (GstOgmParse * ogm)
 {
-  /* create the pads */
-  ogm->sinkpad =
-      gst_pad_new_from_static_template (&ogm_text_parse_sink_template_factory,
-      "sink");
+  ogm->sinkpad = gst_pad_new_from_static_template (&sink_factory_text, "sink");
   gst_pad_set_query_type_function (ogm->sinkpad,
       gst_ogm_parse_get_sink_querytypes);
   gst_pad_set_query_function (ogm->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ogm_parse_sink_query));
   gst_pad_set_chain_function (ogm->sinkpad,
       GST_DEBUG_FUNCPTR (gst_ogm_parse_chain));
+  gst_pad_set_event_function (ogm->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_ogm_parse_sink_event));
   gst_element_add_pad (GST_ELEMENT (ogm), ogm->sinkpad);
 
   ogm->srcpad = NULL;
@@ -516,215 +516,395 @@ gst_ogm_parse_sink_query (GstPad * pad, GstQuery * query)
 }
 
 static GstFlowReturn
-gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
+gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstOgmParse *ogm = GST_OGM_PARSE (GST_PAD_PARENT (pad));
-  GstBuffer *buf = GST_BUFFER (buffer);
-  guint8 *data = GST_BUFFER_DATA (buf);
-  guint size = GST_BUFFER_SIZE (buf);
+  GstCaps *caps = NULL;
 
-  GST_DEBUG_OBJECT (ogm, "New packet with packet start code 0x%02x", data[0]);
+  /* stream header */
+  if (size < OGM_STREAM_HEADER_SIZE)
+    goto buffer_too_small;
 
-  switch (data[0]) {
-    case 0x01:{
-      GstCaps *caps = NULL;
+  if (!memcmp (data, "video\000\000\000", 8)) {
+    ogm->hdr.s.video.width = GST_READ_UINT32_LE (&data[44]);
+    ogm->hdr.s.video.height = GST_READ_UINT32_LE (&data[48]);
+  } else if (!memcmp (data, "audio\000\000\000", 8)) {
+    ogm->hdr.s.audio.channels = GST_READ_UINT32_LE (&data[44]);
+    ogm->hdr.s.audio.blockalign = GST_READ_UINT32_LE (&data[46]);
+    ogm->hdr.s.audio.avgbytespersec = GST_READ_UINT32_LE (&data[48]);
+  } else if (!memcmp (data, "text\000\000\000\000", 8)) {
+    /* nothing here */
+  } else {
+    goto cannot_decode;
+  }
+  memcpy (ogm->hdr.streamtype, &data[0], 8);
+  memcpy (ogm->hdr.subtype, &data[8], 4);
+  ogm->hdr.subtype[4] = '\0';
+  ogm->hdr.size = GST_READ_UINT32_LE (&data[12]);
+  ogm->hdr.time_unit = GST_READ_UINT64_LE (&data[16]);
+  ogm->hdr.samples_per_unit = GST_READ_UINT64_LE (&data[24]);
+  ogm->hdr.default_len = GST_READ_UINT32_LE (&data[32]);
+  ogm->hdr.buffersize = GST_READ_UINT32_LE (&data[36]);
+  ogm->hdr.bits_per_sample = GST_READ_UINT32_LE (&data[40]);
 
-      /* stream header */
-      if (size < (1 + OGM_STREAM_HEADER_SIZE)) {
-        GST_ELEMENT_ERROR (ogm, STREAM, WRONG_TYPE,
-            ("Buffer too small"), (NULL));
-        break;
+  switch (ogm->hdr.streamtype[0]) {
+    case 'a':{
+      guint codec_id = 0;
+
+      if (sscanf (ogm->hdr.subtype, "%04x", &codec_id) != 1) {
+        GST_WARNING_OBJECT (ogm, "cannot parse subtype %s", ogm->hdr.subtype);
       }
 
-      if (!memcmp (&data[1], "video\000\000\000", 8)) {
-        ogm->hdr.s.video.width = GST_READ_UINT32_LE (&data[45]);
-        ogm->hdr.s.video.height = GST_READ_UINT32_LE (&data[49]);
-      } else if (!memcmp (&data[1], "audio\000\000\000", 8)) {
-        ogm->hdr.s.audio.channels = GST_READ_UINT32_LE (&data[45]);
-        ogm->hdr.s.audio.blockalign = GST_READ_UINT32_LE (&data[47]);
-        ogm->hdr.s.audio.avgbytespersec = GST_READ_UINT32_LE (&data[49]);
-      } else if (!memcmp (&data[1], "text\000\000\000\000", 8)) {
-        /* nothing here */
-      } else {
-        GST_ELEMENT_ERROR (ogm, STREAM, WRONG_TYPE,
-            ("Unknown stream type"), (NULL));
-        break;
-      }
-      memcpy (ogm->hdr.streamtype, &data[1], 8);
-      memcpy (ogm->hdr.subtype, &data[9], 4);
-      ogm->hdr.size = GST_READ_UINT32_LE (&data[13]);
-      ogm->hdr.time_unit = GST_READ_UINT64_LE (&data[17]);
-      ogm->hdr.samples_per_unit = GST_READ_UINT64_LE (&data[25]);
-      ogm->hdr.default_len = GST_READ_UINT32_LE (&data[33]);
-      ogm->hdr.buffersize = GST_READ_UINT32_LE (&data[37]);
-      ogm->hdr.bits_per_sample = GST_READ_UINT32_LE (&data[41]);
+      caps =
+          gst_riff_create_audio_caps (codec_id, NULL, NULL, NULL, NULL, NULL);
 
-      switch (ogm->hdr.streamtype[0]) {
-        case 'a':{
-          guint codec_id;
-
-          if (!sscanf (ogm->hdr.subtype, "%04x", &codec_id)) {
-            caps = NULL;
-            break;
-          }
-          caps = gst_riff_create_audio_caps (codec_id,
-              NULL, NULL, NULL, NULL, NULL);
-          gst_caps_set_simple (caps,
-              "channels", G_TYPE_INT, ogm->hdr.s.audio.channels,
-              "rate", G_TYPE_INT, ogm->hdr.samples_per_unit, NULL);
-          GST_LOG_OBJECT (ogm, "Type: %s, subtype: 0x%04x, "
-              "channels: %d, samplerate: %d, blockalign: %d, bps: %d",
-              ogm->hdr.streamtype, codec_id, ogm->hdr.s.audio.channels,
-              ogm->hdr.samples_per_unit,
-              ogm->hdr.s.audio.blockalign, ogm->hdr.s.audio.avgbytespersec);
-          break;
-        }
-        case 'v':{
-          guint32 fcc;
-
-          fcc = GST_MAKE_FOURCC (ogm->hdr.subtype[0],
-              ogm->hdr.subtype[1], ogm->hdr.subtype[2], ogm->hdr.subtype[3]);
-          GST_LOG_OBJECT (ogm, "Type: %s, subtype: %" GST_FOURCC_FORMAT
-              ", size: %dx%d, timeunit: %" G_GINT64_FORMAT
-              " (fps: %lf), s/u: %" G_GINT64_FORMAT ", "
-              "def.len: %d, bufsize: %d, bps: %d",
-              ogm->hdr.streamtype, GST_FOURCC_ARGS (fcc),
-              ogm->hdr.s.video.width, ogm->hdr.s.video.height,
-              ogm->hdr.time_unit, 10000000. / ogm->hdr.time_unit,
-              ogm->hdr.samples_per_unit, ogm->hdr.default_len,
-              ogm->hdr.buffersize, ogm->hdr.bits_per_sample);
-          caps = gst_riff_create_video_caps (fcc, NULL, NULL, NULL, NULL, NULL);
-          gst_caps_set_simple (caps,
-              "width", G_TYPE_INT, ogm->hdr.s.video.width,
-              "height", G_TYPE_INT, ogm->hdr.s.video.height,
-              "framerate", GST_TYPE_FRACTION, 10000000, ogm->hdr.time_unit,
-              NULL);
-          break;
-        }
-        case 't':
-          GST_LOG_OBJECT (ogm, "Type: %s, s/u: %" G_GINT64_FORMAT
-              ", timeunit=%" G_GINT64_FORMAT,
-              ogm->hdr.streamtype, ogm->hdr.samples_per_unit,
-              ogm->hdr.time_unit);
-          caps = gst_caps_new_simple ("text/plain", NULL);
-          break;
-        default:
-          g_assert_not_reached ();
+      if (caps == NULL) {
+        GST_WARNING_OBJECT (ogm, "no audio caps for codec %u found", codec_id);
+        caps = gst_caps_new_simple ("audio/x-ogm-unknown", "codec_id",
+            G_TYPE_INT, (gint) codec_id, NULL);
       }
 
-      if (ogm->srcpad) {
-        GstCaps *current_caps = GST_PAD_CAPS (ogm->srcpad);
+      gst_caps_set_simple (caps,
+          "channels", G_TYPE_INT, ogm->hdr.s.audio.channels,
+          "rate", G_TYPE_INT, ogm->hdr.samples_per_unit, NULL);
 
-        if (current_caps && !gst_caps_is_equal (current_caps, caps)) {
-          GST_WARNING_OBJECT (ogm, "Already an existing pad %s:%s",
-              GST_DEBUG_PAD_NAME (ogm->srcpad));
-          gst_element_remove_pad (GST_ELEMENT (ogm), ogm->srcpad);
-          ogm->srcpad = NULL;
-        } else {
-          GST_DEBUG_OBJECT (ogm, "Existing pad has the same caps, do nothing");
-        }
-      }
-      if (ogm->srcpad == NULL) {
-        if (caps) {
-          ogm->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-          gst_pad_set_caps (ogm->srcpad, caps);
-        } else {
-          GST_WARNING_OBJECT (ogm,
-              "No fixed caps were found, carrying on with template");
-          ogm->srcpad = gst_pad_new_from_template (ogm->srcpadtempl, "src");
-        }
-        gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
-      }
+      GST_LOG_OBJECT (ogm, "Type: %s, subtype: 0x%04x, channels: %d, "
+          "samplerate: %d, blockalign: %d, bps: %d, caps = %" GST_PTR_FORMAT,
+          ogm->hdr.streamtype, codec_id, ogm->hdr.s.audio.channels,
+          ogm->hdr.samples_per_unit, ogm->hdr.s.audio.blockalign,
+          ogm->hdr.s.audio.avgbytespersec, caps);
       break;
     }
-    case 0x03:{
-      /* vorbis comment - need to extract the tags ourself for subtitle
-       * streams since we want to know the language and there won't be a
-       * decoder to do this for us like with vorbis */
-      if (ogm->hdr.streamtype[0] == 't') {
-        GstTagList *tags;
+    case 'v':{
+      guint32 fourcc;
 
-        tags = gst_tag_list_from_vorbiscomment_buffer (buffer,
-            (guint8 *) "\003vorbis", 7, NULL);
+      fourcc = GST_MAKE_FOURCC (ogm->hdr.subtype[0],
+          ogm->hdr.subtype[1], ogm->hdr.subtype[2], ogm->hdr.subtype[3]);
 
-        if (tags) {
-          GST_DEBUG_OBJECT (ogm, "tags = %" GST_PTR_FORMAT, tags);
-          gst_element_found_tags_for_pad (GST_ELEMENT (ogm), ogm->srcpad, tags);
-        } else {
-          GST_DEBUG_OBJECT (ogm, "failed to extract tags from vorbis comment");
-        }
+      caps = gst_riff_create_video_caps (fourcc, NULL, NULL, NULL, NULL, NULL);
+
+      if (caps == NULL) {
+        GST_WARNING_OBJECT (ogm, "could not find video caps for fourcc %"
+            GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+        caps = gst_caps_new_simple ("video/x-ogm-unknown", "fourcc",
+            GST_TYPE_FOURCC, fourcc, NULL);
+        break;
       }
+
+      GST_LOG_OBJECT (ogm, "Type: %s, subtype: %" GST_FOURCC_FORMAT
+          ", size: %dx%d, timeunit: %" G_GINT64_FORMAT
+          " (fps: %lf), s/u: %" G_GINT64_FORMAT ", "
+          "def.len: %d, bufsize: %d, bps: %d, caps = %" GST_PTR_FORMAT,
+          ogm->hdr.streamtype, GST_FOURCC_ARGS (fourcc),
+          ogm->hdr.s.video.width, ogm->hdr.s.video.height,
+          ogm->hdr.time_unit, 10000000. / ogm->hdr.time_unit,
+          ogm->hdr.samples_per_unit, ogm->hdr.default_len,
+          ogm->hdr.buffersize, ogm->hdr.bits_per_sample, caps);
+
+      gst_caps_set_simple (caps,
+          "width", G_TYPE_INT, ogm->hdr.s.video.width,
+          "height", G_TYPE_INT, ogm->hdr.s.video.height,
+          "framerate", GST_TYPE_FRACTION, 10000000, ogm->hdr.time_unit, NULL);
+      break;
+    }
+    case 't':{
+      GST_LOG_OBJECT (ogm, "Type: %s, s/u: %" G_GINT64_FORMAT
+          ", timeunit=%" G_GINT64_FORMAT,
+          ogm->hdr.streamtype, ogm->hdr.samples_per_unit, ogm->hdr.time_unit);
+      caps = gst_caps_new_simple ("text/plain", NULL);
       break;
     }
     default:
-      if ((data[0] & 0x01) == 0) {
-        /* data - push on */
-        guint len = ((data[0] & 0xc0) >> 6) | ((data[0] & 0x02) << 1);
-        guint xsize = 0, n;
-        GstBuffer *sbuf;
-        gboolean keyframe = (data[0] & 0x08) >> 3;
+      g_assert_not_reached ();
+  }
 
-        if (size < len + 1) {
-          GST_ELEMENT_ERROR (ogm, STREAM, WRONG_TYPE,
-              ("Buffer too small"), (NULL));
-          break;
-        }
-        for (n = len; n > 0; n--) {
-          xsize = (xsize << 8) | data[n];
-        }
+  if (caps == NULL)
+    goto cannot_decode;
 
-        GST_LOG_OBJECT (ogm,
-            "[0x%02x] samples: %d, hdrbytes: %d, datasize: %d",
-            data[0], xsize, len, size - len - 1);
+  if (ogm->srcpad) {
+    GstCaps *current_caps = GST_PAD_CAPS (ogm->srcpad);
 
-        sbuf = gst_buffer_create_sub (buf, len + 1, size - len - 1);
-        if (GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
-          ogm->next_granulepos = GST_BUFFER_OFFSET_END (buf);
-        }
-        switch (ogm->hdr.streamtype[0]) {
-          case 't':
-          case 'v':{
-            gint samples = (ogm->hdr.streamtype[0] == 'v') ? 1 : xsize;
+    if (current_caps && caps && !gst_caps_is_equal (current_caps, caps)) {
+      GST_WARNING_OBJECT (ogm, "Already an existing pad %s:%s",
+          GST_DEBUG_PAD_NAME (ogm->srcpad));
+      gst_element_remove_pad (GST_ELEMENT (ogm), ogm->srcpad);
+      ogm->srcpad = NULL;
+    } else {
+      GST_DEBUG_OBJECT (ogm, "Existing pad has the same caps, do nothing");
+    }
+  }
 
-            if (!keyframe)
-              GST_BUFFER_FLAG_SET (sbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+  if (ogm->srcpad == NULL) {
+    GList *l, *cached_events;
 
-            GST_BUFFER_TIMESTAMP (sbuf) = (GST_SECOND / 10000000) *
-                ogm->next_granulepos * ogm->hdr.time_unit;
-            GST_BUFFER_DURATION (sbuf) = (GST_SECOND / 10000000) *
-                ogm->hdr.time_unit * samples;
-            ogm->next_granulepos += samples;
-            break;
-          }
-          case 'a':
-            GST_BUFFER_TIMESTAMP (sbuf) = GST_SECOND *
-                ogm->next_granulepos / ogm->hdr.samples_per_unit;
-            GST_BUFFER_DURATION (sbuf) = GST_SECOND * xsize /
-                ogm->hdr.samples_per_unit;
-            ogm->next_granulepos += xsize;
-            break;
-          default:
-            gst_buffer_unref (sbuf);
-            sbuf = NULL;
-            GST_ELEMENT_ERROR (ogm, RESOURCE, SYNC, (NULL), (NULL));
-            break;
-        }
-        gst_buffer_set_caps (sbuf, GST_PAD_CAPS (ogm->srcpad));
-        ret = gst_pad_push (ogm->srcpad, sbuf);
-        if (ret != GST_FLOW_OK) {
-          GST_DEBUG_OBJECT (ogm, "Flow return: %s", gst_flow_get_name (ret));
-        }
-      } else {
-        GST_ELEMENT_ERROR (ogm, STREAM, WRONG_TYPE,
-            ("Wrong packet startcode 0x%02x", data[0]), (NULL));
+    ogm->srcpad = gst_pad_new_from_template (ogm->srcpadtempl, "src");
+    gst_pad_use_fixed_caps (ogm->srcpad);
+    gst_pad_set_caps (ogm->srcpad, caps);
+    gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
+    GST_INFO_OBJECT (ogm, "Added pad %s:%s with caps %" GST_PTR_FORMAT,
+        GST_DEBUG_PAD_NAME (ogm->srcpad), caps);
+
+    GST_OBJECT_LOCK (ogm);
+    cached_events = ogm->cached_events;
+    ogm->cached_events = NULL;
+    GST_OBJECT_UNLOCK (ogm);
+
+    for (l = cached_events; l; l = l->next) {
+      GstEvent *event = GST_EVENT_CAST (l->data);
+
+      GST_DEBUG_OBJECT (ogm, "Pushing cached event %" GST_PTR_FORMAT, event);
+      gst_pad_push_event (ogm->srcpad, event);
+    }
+    g_list_free (cached_events);
+  }
+
+  gst_caps_unref (caps);
+
+  return GST_FLOW_OK;
+
+/* ERRORS */
+buffer_too_small:
+  {
+    GST_ELEMENT_ERROR (ogm, STREAM, WRONG_TYPE, ("Buffer too small"), (NULL));
+    return GST_FLOW_ERROR;
+  }
+cannot_decode:
+  {
+    GST_ELEMENT_ERROR (ogm, STREAM, DECODE, (NULL), ("unknown ogm format"));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+gst_ogm_parse_comment_packet (GstOgmParse * ogm, GstBuffer * buf)
+{
+  GstFlowReturn ret;
+
+  if (ogm->srcpad == NULL) {
+    GST_DEBUG ("no source pad");
+    return GST_FLOW_WRONG_STATE;
+  }
+
+  /* if this is not a subtitle stream, push the vorbiscomment packet
+   * on downstream, the respective decoder will handle it; if it is
+   * a subtitle stream, we will have to handle the comment ourself */
+  if (ogm->hdr.streamtype[0] == 't') {
+    GstTagList *tags;
+
+    tags = gst_tag_list_from_vorbiscomment_buffer (buf,
+        (guint8 *) "\003vorbis", 7, NULL);
+
+    if (tags) {
+      GST_DEBUG_OBJECT (ogm, "tags = %" GST_PTR_FORMAT, tags);
+      gst_element_found_tags_for_pad (GST_ELEMENT (ogm), ogm->srcpad, tags);
+    } else {
+      GST_DEBUG_OBJECT (ogm, "failed to extract tags from vorbis comment");
+    }
+    /* do not push packet downstream, just let parent unref it */
+    ret = GST_FLOW_OK;
+  } else {
+    buf = gst_buffer_copy (buf);
+    gst_buffer_set_caps (buf, GST_PAD_CAPS (ogm->srcpad));
+    ret = gst_pad_push (ogm->srcpad, buf);
+  }
+
+  return ret;
+}
+
+static void
+gst_ogm_text_parse_strip_trailing_zeroes (GstOgmParse * ogm, GstBuffer * buf)
+{
+  const guint8 *data;
+  guint size;
+
+  g_assert (gst_buffer_is_metadata_writable (buf));
+
+  /* zeroes are not valid UTF-8 characters, so strip them from output */
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+  while (size > 0 && data[size - 1] == '\0') {
+    --size;
+  }
+
+  GST_BUFFER_SIZE (buf) = size;
+}
+
+static GstFlowReturn
+gst_ogm_parse_data_packet (GstOgmParse * ogm, GstBuffer * buf)
+{
+  GstFlowReturn ret;
+  const guint8 *data;
+  GstBuffer *sbuf;
+  gboolean keyframe;
+  guint size, len, n, xsize = 0;
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  if ((data[0] & 0x01) != 0)
+    goto invalid_startcode;
+
+  /* data - push on */
+  len = ((data[0] & 0xc0) >> 6) | ((data[0] & 0x02) << 1);
+  keyframe = (((data[0] & 0x08) >> 3) != 0);
+
+  if ((1 + len) > size)
+    goto buffer_too_small;
+
+  for (n = len; n > 0; n--) {
+    xsize = (xsize << 8) | data[n];
+  }
+
+  GST_LOG_OBJECT (ogm, "[0x%02x] samples: %d, hdrbytes: %d, datasize: %d",
+      data[0], xsize, len, size - len - 1);
+
+  sbuf = gst_buffer_create_sub (buf, len + 1, size - len - 1);
+
+  if (GST_BUFFER_OFFSET_END_IS_VALID (buf))
+    ogm->next_granulepos = GST_BUFFER_OFFSET_END (buf);
+
+  switch (ogm->hdr.streamtype[0]) {
+    case 't':
+    case 'v':{
+      GstClockTime ts, next_ts;
+      guint samples;
+
+      samples = (ogm->hdr.streamtype[0] == 'v') ? 1 : xsize;
+
+      if (!keyframe) {
+        GST_BUFFER_FLAG_SET (sbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+      }
+
+      /* shouldn't this be granulepos - samples? (tpm) */
+      ts = gst_util_uint64_scale (ogm->next_granulepos,
+          ogm->hdr.time_unit * GST_SECOND, 10000000);
+      next_ts = gst_util_uint64_scale (ogm->next_granulepos + samples,
+          ogm->hdr.time_unit * GST_SECOND, 10000000);
+
+      GST_BUFFER_TIMESTAMP (sbuf) = ts;
+      GST_BUFFER_DURATION (sbuf) = next_ts - ts;
+
+      ogm->next_granulepos += samples;
+
+      if (ogm->hdr.streamtype[0] == 't') {
+        gst_ogm_text_parse_strip_trailing_zeroes (ogm, sbuf);
       }
       break;
+    }
+    case 'a':{
+      GstClockTime ts, next_ts;
+
+      /* shouldn't this be granulepos - samples? (tpm) */
+      ts = gst_util_uint64_scale_int (ogm->next_granulepos,
+          GST_SECOND, ogm->hdr.samples_per_unit);
+      next_ts = gst_util_uint64_scale_int (ogm->next_granulepos + xsize,
+          GST_SECOND, ogm->hdr.samples_per_unit);
+
+      GST_BUFFER_TIMESTAMP (sbuf) = ts;
+      GST_BUFFER_DURATION (sbuf) = next_ts - ts;
+
+      ogm->next_granulepos += xsize;
+      break;
+    }
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  if (ogm->srcpad) {
+    gst_buffer_set_caps (sbuf, GST_PAD_CAPS (ogm->srcpad));
+    GST_LOG_OBJECT (ogm, "Pushing buffer with ts=%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (sbuf)));
+    ret = gst_pad_push (ogm->srcpad, sbuf);
+    if (ret != GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (ogm, "Flow on %s:%s = %s",
+          GST_DEBUG_PAD_NAME (ogm->srcpad), gst_flow_get_name (ret));
+    }
+  } else {
+    ret = GST_FLOW_WRONG_STATE;
+  }
+
+  return ret;
+
+/* ERRORS */
+invalid_startcode:
+  {
+    GST_ELEMENT_ERROR (ogm, STREAM, DECODE, (NULL),
+        ("unexpected packet startcode 0x%02x", data[0]));
+    return GST_FLOW_ERROR;
+  }
+buffer_too_small:
+  {
+    GST_ELEMENT_ERROR (ogm, STREAM, DECODE, (NULL),
+        ("buffer too small, len+1=%u, size=%u", len + 1, size));
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+gst_ogm_parse_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstOgmParse *ogm = GST_OGM_PARSE (GST_PAD_PARENT (pad));
+  guint8 *data = GST_BUFFER_DATA (buf);
+  guint size = GST_BUFFER_SIZE (buf);
+
+  if (size < 1)
+    goto buffer_too_small;
+
+  GST_LOG_OBJECT (ogm, "Packet with start code 0x%02x", data[0]);
+
+  switch (data[0]) {
+    case 0x01:{
+      ret = gst_ogm_parse_stream_header (ogm, data + 1, size - 1);
+      break;
+    }
+    case 0x03:{
+      ret = gst_ogm_parse_comment_packet (ogm, buf);
+      break;
+    }
+    default:{
+      ret = gst_ogm_parse_data_packet (ogm, buf);
+      break;
+    }
   }
 
   gst_buffer_unref (buf);
 
+  if (ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (ogm, "Flow: %s", gst_flow_get_name (ret));
+  }
+
   return ret;
+
+/* ERRORS */
+buffer_too_small:
+  {
+    GST_ELEMENT_ERROR (ogm, STREAM, DECODE, (NULL), ("buffer too small"));
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
+}
+
+static gboolean
+gst_ogm_parse_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstOgmParse *ogm = GST_OGM_PARSE (gst_pad_get_parent (pad));
+  gboolean res;
+
+  GST_LOG_OBJECT (ogm, "processing %s event", GST_EVENT_TYPE_NAME (event));
+
+  GST_OBJECT_LOCK (ogm);
+  if (ogm->srcpad == NULL) {
+    ogm->cached_events = g_list_append (ogm->cached_events, event);
+    GST_OBJECT_UNLOCK (ogm);
+    res = TRUE;
+  } else {
+    GST_OBJECT_UNLOCK (ogm);
+    res = gst_pad_event_default (pad, event);
+  }
+
+  gst_object_unref (ogm);
+  return res;
 }
 
 static GstStateChangeReturn
@@ -745,6 +925,9 @@ gst_ogm_parse_change_state (GstElement * element, GstStateChange transition)
       }
       memset (&ogm->hdr, 0, sizeof (ogm->hdr));
       ogm->next_granulepos = 0;
+      g_list_foreach (ogm->cached_events, (GFunc) gst_mini_object_unref, NULL);
+      g_list_free (ogm->cached_events);
+      ogm->cached_events = NULL;
       break;
     default:
       break;

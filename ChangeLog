@@ -1,3 +1,21 @@
+2006-08-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ogg/gstogmparse.c: (gst_ogm_audio_parse_base_init),
+	(gst_ogm_video_parse_base_init), (gst_ogm_text_parse_base_init),
+	(gst_ogm_parse_class_init), (gst_ogm_parse_dispose),
+	(gst_ogm_parse_init), (gst_ogm_audio_parse_init),
+	(gst_ogm_video_parse_init), (gst_ogm_text_parse_init),
+	(gst_ogm_parse_stream_header), (gst_ogm_parse_comment_packet),
+	(gst_ogm_text_parse_strip_trailing_zeroes),
+	(gst_ogm_parse_data_packet), (gst_ogm_parse_chain),
+	(gst_ogm_parse_sink_event), (gst_ogm_parse_change_state):
+	  Refactor ogm parse, do better input checking, misc. clean-ups.
+	  Cache incoming events and push them once the source pad has
+	  been created. Don't pass unterminated strings to sscanf().
+	  Strip trailing zeroes from subtitle text output, since they
+	  are not valid UTF-8. Don't push vorbiscomment packets on
+	  the subtitle text pad. Output perfect streams if possible.
+
 2006-08-23  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/libs/cddabasesrc.c: (GST_START_TEST):
