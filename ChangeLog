@@ -1,3 +1,20 @@
+2006-08-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* ext/wavpack/gstwavpackdec.c:
+	* ext/wavpack/gstwavpackdec.h:
+	* ext/wavpack/gstwavpackenc.c:
+	* ext/wavpack/gstwavpackenc.h:
+	* ext/wavpack/gstwavpackparse.c:
+	* ext/wavpack/gstwavpackparse.h:
+	  Add docs for wavpack elements (#352476).
+
 2006-08-22  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_get_size_limits)

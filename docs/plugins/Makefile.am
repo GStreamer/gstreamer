@@ -87,7 +87,10 @@ EXAMPLE_CFILES = \
 
 EXTRA_HFILES = \
 	$(top_srcdir)/ext/directfb/dfbvideosink.h \
-	$(top_srcdir)/ext/musicbrainz/gsttrm.h
+	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
+	$(top_srcdir)/ext/wavpack/gstwavpackdec.h \
+	$(top_srcdir)/ext/wavpack/gstwavpackenc.h \
+	$(top_srcdir)/ext/wavpack/gstwavpackparse.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

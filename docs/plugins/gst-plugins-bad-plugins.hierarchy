@@ -13,6 +13,9 @@ GObject
         GstVideoSink
           GstDfbVideoSink
       GstTRM
+      GstWavpackDec
+      GstWavpackEnc
+      GstWavpackParse
     GstPlugin
     GstRegistry
     GstPadTemplate
