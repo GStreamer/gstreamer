@@ -2,6 +2,21 @@
 
 	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
 
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/wavpackdec.c: (setup_wavpackdec),
+	(cleanup_wavpackdec), (GST_START_TEST), (wavpackdec_suite), (main):
+	* tests/check/elements/wavpackenc.c: (setup_wavpackenc),
+	(cleanup_wavpackenc), (GST_START_TEST), (wavpackenc_suite), (main):
+	* tests/check/elements/wavpackparse.c: (wavpackparse_found_pad),
+	(setup_wavpackparse), (cleanup_wavpackparse), (GST_START_TEST),
+	(wavpackparse_suite), (main):
+	  Add unit tests for wavpack elements (#352476).
+
+2006-08-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:

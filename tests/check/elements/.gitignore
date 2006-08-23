@@ -4,3 +4,6 @@ tagid3v2mux
 gdpdepay
 gdppay
 mpeg2enc
+wavpackdec
+wavpackenc
+wavpackparse

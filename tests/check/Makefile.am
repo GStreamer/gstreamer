@@ -32,8 +32,25 @@ else
 check_mpeg2enc =
 endif
 
+if USE_WAVPACK
+check_wavpack = \
+       elements/wavpackparse \
+       elements/wavpackdec \
+       elements/wavpackenc
+else
+check_wavpack =
+endif
+
+VALGRIND_TO_FIX = \
+	elements/mpeg2enc \
+	elements/wavpackenc
+
+# valgrind testing
+VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
+
 check_PROGRAMS = \
-	$(check_mpeg2enc)
+	$(check_mpeg2enc) \
+	$(check_wavpack)
 
 TESTS = $(check_PROGRAMS)
 
