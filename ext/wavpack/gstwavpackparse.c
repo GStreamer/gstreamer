@@ -97,7 +97,7 @@ gst_wavpack_parse_base_init (gpointer klass)
       GST_ELEMENT_DETAILS ("WavePack parser",
       "Codec/Demuxer/Audio",
       "Parses Wavpack files",
-      "Sebastian Dröge <slomo@circular-chaos.org>");
+      "Arwed v. Merkatz <v.merkatz@gmx.net>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
