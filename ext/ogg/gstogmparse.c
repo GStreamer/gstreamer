@@ -51,7 +51,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogm_parse_debug);
   (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_OGM_PARSE, GstOgmParse))
 #define GST_IS_OGM_PARSE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_OGM_PARSE))
-#define GST_IS_OGM_PARSE_CLASS(obj) \
+#define GST_IS_OGM_PARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_OGM_PARSE))
 #define GST_OGM_PARSE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_OGM_PARSE, GstOgmParseClass))
@@ -86,6 +86,10 @@ typedef struct _stream_header_audio
   gint16 blockalign;
   gint32 avgbytespersec;
 } stream_header_audio;
+
+/* sizeof(stream_header) might differ due to structure packing and
+ * alignment differences on some architectures, so not using that */
+#define OGM_STREAM_HEADER_SIZE (8+4+4+8+8+4+4+4+8)
 
 typedef struct _stream_header
 {
@@ -527,7 +531,7 @@ gst_ogm_parse_chain (GstPad * pad, GstBuffer * buffer)
       GstCaps *caps = NULL;
 
       /* stream header */
-      if (size < sizeof (stream_header) + 1) {
+      if (size < (1 + OGM_STREAM_HEADER_SIZE)) {
         GST_ELEMENT_ERROR (ogm, STREAM, WRONG_TYPE,
             ("Buffer too small"), (NULL));
         break;
