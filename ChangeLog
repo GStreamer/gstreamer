@@ -1,5 +1,11 @@
 2006-08-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/libs/tag.c: (GST_START_TEST), (taglists_are_equal):
+	  Unit test fixes: \377 is more likely to fit into 8 bits than \777;
+	  actually return return value in taglists_are_equal.
+
+2006-08-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/ogg/gstogmparse.c: (gst_ogm_parse_chain):
 	  Fix crash due to broken bitstream parsing on x86-64: can't make
 	  any assumptions about sizeof(struct) due to alignment/packing

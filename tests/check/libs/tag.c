@@ -36,7 +36,7 @@ GST_START_TEST (test_parse_extended_comment)
   /* first check the g_return_val_if_fail conditions */
   ASSERT_CRITICAL (gst_tag_parse_extended_comment (NULL, NULL, NULL, NULL,
           FALSE));
-  ASSERT_CRITICAL (gst_tag_parse_extended_comment ("\777\000", NULL, NULL, NULL,
+  ASSERT_CRITICAL (gst_tag_parse_extended_comment ("\377\000", NULL, NULL, NULL,
           FALSE));
 
   key = val = lang = NULL;
@@ -212,6 +212,8 @@ taglists_are_equal (const GstTagList * list_1, const GstTagList * list_2)
 
   gst_caps_unref (c_list_1);
   gst_caps_unref (c_list_2);
+
+  return ret;
 }
 
 GST_START_TEST (test_vorbis_tags)
@@ -226,8 +228,8 @@ GST_START_TEST (test_vorbis_tags)
   ASSERT_CRITICAL (gst_vorbis_tag_add (list, "key", NULL));
 
   /* must be UTF-8 */
-  ASSERT_CRITICAL (gst_vorbis_tag_add (list, "key", "v\777lue"));
-  ASSERT_CRITICAL (gst_vorbis_tag_add (list, "k\777y", "value"));
+  ASSERT_CRITICAL (gst_vorbis_tag_add (list, "key", "v\377lue"));
+  ASSERT_CRITICAL (gst_vorbis_tag_add (list, "k\377y", "value"));
 
   /* key can't have a '=' in it */
   ASSERT_CRITICAL (gst_vorbis_tag_add (list, "k=y", "value"));
@@ -298,11 +300,16 @@ GST_START_TEST (test_vorbis_tags)
 #if 0
   /* TODO: test these as well */
   {
-  GST_TAG_TRACK_GAIN, "REPLAYGAIN_TRACK_GAIN"}, {
-  GST_TAG_TRACK_PEAK, "REPLAYGAIN_TRACK_PEAK"}, {
-  GST_TAG_ALBUM_GAIN, "REPLAYGAIN_ALBUM_GAIN"}, {
-  GST_TAG_ALBUM_PEAK, "REPLAYGAIN_ALBUM_PEAK"}, {
-  GST_TAG_LANGUAGE_CODE, "LANGUAGE"},
+  GST_TAG_TRACK_GAIN, "REPLAYGAIN_TRACK_GAIN"}
+  , {
+  GST_TAG_TRACK_PEAK, "REPLAYGAIN_TRACK_PEAK"}
+  , {
+  GST_TAG_ALBUM_GAIN, "REPLAYGAIN_ALBUM_GAIN"}
+  , {
+  GST_TAG_ALBUM_PEAK, "REPLAYGAIN_ALBUM_PEAK"}
+  , {
+  GST_TAG_LANGUAGE_CODE, "LANGUAGE"}
+  ,
 #endif
       /* make sure we can convert back and forth without loss */
   {
@@ -481,7 +488,8 @@ GST_START_TEST (test_vorbis_tags)
     gst_tag_list_free (list);
 
     /* now again without vendor */
-    list = gst_tag_list_from_vorbiscomment_buffer (buf, "\003vorbis", 7, NULL);
+    list = gst_tag_list_from_vorbiscomment_buffer (buf,
+        (guint8 *) "\003vorbis", 7, NULL);
     fail_unless (list != NULL);
     fail_unless (gst_structure_n_fields ((GstStructure *) list) == 1);
     ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ARTIST, "foo bar");
