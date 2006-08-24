@@ -401,6 +401,7 @@ GST_START_TEST (test_merge_same)
   gst_caps_merge (c2, c1);
   GST_DEBUG ("merged: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (c2), c2);
   fail_unless (gst_caps_get_size (c2) == 1, NULL);
+  gst_caps_unref (c2);
 
   /* and so is this */
   c1 = gst_caps_from_string ("audio/x-raw-int,rate=44100,channels=1");
@@ -408,7 +409,34 @@ GST_START_TEST (test_merge_same)
   gst_caps_merge (c2, c1);
   GST_DEBUG ("merged: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (c2), c2);
   fail_unless (gst_caps_get_size (c2) == 1, NULL);
+  gst_caps_unref (c2);
 
+  c1 = gst_caps_from_string ("video/x-foo, data=(buffer)AA");
+  c2 = gst_caps_from_string ("video/x-foo, data=(buffer)AABB");
+  gst_caps_merge (c2, c1);
+  GST_DEBUG ("merged: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (c2), c2);
+  fail_unless (gst_caps_get_size (c2) == 2, NULL);
+  gst_caps_unref (c2);
+
+  c1 = gst_caps_from_string ("video/x-foo, data=(buffer)AABB");
+  c2 = gst_caps_from_string ("video/x-foo, data=(buffer)AA");
+  gst_caps_merge (c2, c1);
+  GST_DEBUG ("merged: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (c2), c2);
+  fail_unless (gst_caps_get_size (c2) == 2, NULL);
+  gst_caps_unref (c2);
+
+  c1 = gst_caps_from_string ("video/x-foo, data=(buffer)AA");
+  c2 = gst_caps_from_string ("video/x-foo, data=(buffer)AA");
+  gst_caps_merge (c2, c1);
+  GST_DEBUG ("merged: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (c2), c2);
+  fail_unless (gst_caps_get_size (c2) == 1, NULL);
+  gst_caps_unref (c2);
+
+  c1 = gst_caps_from_string ("video/x-foo, data=(buffer)AA");
+  c2 = gst_caps_from_string ("video/x-bar, data=(buffer)AA");
+  gst_caps_merge (c2, c1);
+  GST_DEBUG ("merged: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (c2), c2);
+  fail_unless (gst_caps_get_size (c2) == 2, NULL);
   gst_caps_unref (c2);
 }
 
@@ -424,6 +452,7 @@ GST_START_TEST (test_merge_subset)
   gst_caps_merge (c2, c1);
   GST_DEBUG ("merged: (%d) %" GST_PTR_FORMAT, gst_caps_get_size (c2), c2);
   fail_unless (gst_caps_get_size (c2) == 1, NULL);
+  gst_caps_unref (c2);
 
   /* here it is not */
   c2 = gst_caps_from_string ("audio/x-raw-int,channels=1,rate=44100");

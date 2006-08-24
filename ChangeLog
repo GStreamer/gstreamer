@@ -1,3 +1,9 @@
+2006-08-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/gst/gstcaps.c: (GST_START_TEST):
+	  Don't leak caps in unit test; add a few more simple
+	  checks. 
+
 2006-08-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
