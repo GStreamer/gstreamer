@@ -15,7 +15,8 @@ static gboolean accurate_seek = FALSE;
 static gboolean keyframe_seek = FALSE;
 static gboolean loop_seek = FALSE;
 static gboolean flush_seek = TRUE;
-static gboolean scrub = FALSE;
+static gboolean scrub = TRUE;
+static gboolean play_scrub = FALSE;
 
 static GstElement *pipeline;
 static gint64 position;
@@ -1089,7 +1090,7 @@ static void
 seek_cb (GtkWidget * widget)
 {
   /* If the timer hasn't expired yet, then the pipeline is running */
-  if (scrub && seek_timeout_id != 0) {
+  if (play_scrub && seek_timeout_id != 0) {
     GST_DEBUG ("do scrub seek, PAUSED");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
   }
@@ -1097,7 +1098,7 @@ seek_cb (GtkWidget * widget)
   GST_DEBUG ("do seek");
   do_seek (widget);
 
-  if (scrub) {
+  if (play_scrub) {
     GST_DEBUG ("do scrub seek, PLAYING");
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
@@ -1130,14 +1131,14 @@ start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
   if (event->type != GDK_BUTTON_PRESS)
     return FALSE;
 
-  if (state == GST_STATE_PLAYING && flush_seek) {
+  if (state == GST_STATE_PLAYING && flush_seek && scrub) {
     GST_DEBUG ("start scrub seek, PAUSE");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
   }
 
   set_update_scale (FALSE);
 
-  if (changed_id == 0 && flush_seek) {
+  if (changed_id == 0 && flush_seek && scrub) {
     changed_id = gtk_signal_connect (GTK_OBJECT (hscale),
         "value_changed", G_CALLBACK (seek_cb), pipeline);
   }
@@ -1153,7 +1154,7 @@ stop_seek (GtkWidget * widget, gpointer user_data)
     changed_id = 0;
   }
 
-  if (!flush_seek) {
+  if (!flush_seek || !scrub) {
     GST_DEBUG ("do final seek");
     do_seek (widget);
   }
@@ -1272,6 +1273,12 @@ scrub_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 }
 
 static void
+play_scrub_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
+{
+  play_scrub = gtk_toggle_button_get_active (button);
+}
+
+static void
 segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   GstEvent *event;
@@ -1363,7 +1370,7 @@ main (int argc, char **argv)
 {
   GtkWidget *window, *hbox, *vbox, *play_button, *pause_button, *stop_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
-  GtkWidget *scrub_checkbox;
+  GtkWidget *scrub_checkbox, *play_scrub_checkbox;
   GOptionEntry options[] = {
     {"stats", 's', 0, G_OPTION_ARG_NONE, &stats,
         "Show pad stats", NULL},
@@ -1418,8 +1425,10 @@ main (int argc, char **argv)
   loop_checkbox = gtk_check_button_new_with_label ("Loop");
   flush_checkbox = gtk_check_button_new_with_label ("Flush");
   scrub_checkbox = gtk_check_button_new_with_label ("Scrub");
+  play_scrub_checkbox = gtk_check_button_new_with_label ("Play Scrub");
 
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (flush_checkbox), TRUE);
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (scrub_checkbox), TRUE);
 
   adjustment =
       GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, 100.0, 0.1, 1.0, 1.0));
@@ -1446,6 +1455,7 @@ main (int argc, char **argv)
   gtk_box_pack_start (GTK_BOX (hbox), loop_checkbox, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), flush_checkbox, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), scrub_checkbox, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (hbox), play_scrub_checkbox, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (vbox), hscale, TRUE, TRUE, 2);
 
   /* connect things ... */
@@ -1465,6 +1475,8 @@ main (int argc, char **argv)
       G_CALLBACK (flush_toggle_cb), pipeline);
   g_signal_connect (G_OBJECT (scrub_checkbox), "toggled",
       G_CALLBACK (scrub_toggle_cb), pipeline);
+  g_signal_connect (G_OBJECT (play_scrub_checkbox), "toggled",
+      G_CALLBACK (play_scrub_toggle_cb), pipeline);
 
   g_signal_connect (G_OBJECT (window), "destroy", gtk_main_quit, NULL);
 
