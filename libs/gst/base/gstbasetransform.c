@@ -453,10 +453,11 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
         gst_caps_unref (nth);
         GST_DEBUG_OBJECT (trans, "  to[%d]: %" GST_PTR_FORMAT, i, temp);
 
-        /* FIXME: here we need to only append those structures, that are not yet
-         * in there */
         temp = gst_caps_make_writable (temp);
-        /*gst_caps_append (ret, temp); */
+        /* FIXME: here we need to only append those structures, that are not yet
+         * in there
+         * gst_caps_append (ret, temp);
+         */
         gst_caps_merge (ret, temp);
       }
       GST_DEBUG_OBJECT (trans, "merged: (%d)", gst_caps_get_size (ret));

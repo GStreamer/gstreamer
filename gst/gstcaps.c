@@ -480,6 +480,75 @@ gst_structure_is_equal_foreach (GQuark field_id, const GValue * val2,
   return FALSE;
 }
 
+static gboolean
+gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
+    gpointer user_data)
+{
+  GstStructure *subtract_from = user_data;
+  GValue subtraction = { 0, };
+  const GValue *other;
+  gint res;
+
+  other = gst_structure_id_get_value (subtract_from, field_id);
+  if (!other) {
+    /* field is missing in one set */
+    return FALSE;
+  }
+  /*{
+     gchar *str = g_strdup_value_contents (value);
+     GST_DEBUG ("    value: '%s'", str);
+     g_free (str);
+     str  = g_strdup_value_contents (other);
+     GST_DEBUG ("    other: '%s'", str);
+     g_free (str);
+     } */
+  /*
+     [1,2] - 1 = 2
+     1 - [1,2] = �   ???
+   */
+  if (!gst_value_subtract (&subtraction, other, value)) {
+    /* empty result -> values are the same, or first was a value and
+     * second was a list
+     */
+    /* verify that result is empty by swapping args */
+    if (!gst_value_subtract (&subtraction, value, other)) {
+      /*GST_DEBUG ("  values are the same"); */
+      return TRUE;
+    }
+    g_value_unset (&subtraction);
+    return FALSE;
+  }
+  /*{
+     gchar *str = g_strdup_value_contents (&subtraction);
+     GST_DEBUG ("    diff: '%s'", str);
+     g_free (str);
+     } */
+  res = gst_value_compare (&subtraction, other);
+  if (res == GST_VALUE_EQUAL) {
+    /* value was empty ? */
+    g_value_unset (&subtraction);
+    /*GST_DEBUG ("  compare = equal (%d)",res); */
+    return FALSE;
+  } else {
+    /*GST_DEBUG ("  compare = unequal/unordered (%d)",res); */
+    return TRUE;
+  }
+}
+
+static gboolean
+gst_caps_structure_is_subset (const GstStructure * minuend,
+    const GstStructure * subtrahend)
+{
+  if ((minuend->name != subtrahend->name) ||
+      (gst_structure_n_fields (minuend) !=
+          gst_structure_n_fields (subtrahend))) {
+    return FALSE;
+  }
+
+  return gst_structure_foreach ((GstStructure *) subtrahend,
+      gst_caps_structure_is_subset_field, (gpointer) minuend);
+}
+
 /**
  * gst_caps_append:
  * @caps1: the #GstCaps that will be appended to
@@ -526,9 +595,9 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
  * @caps1: the #GstCaps that will take the new entries
  * @caps2: the #GstCaps to merge in
  *
- * Appends the structures contained in @caps2 to @caps1 if they are not yet in
- * @caps1. The structures in @caps2 are not copied -- they are transferred to
- * @caps1, and then @caps2 is freed.
+ * Appends the structures contained in @caps2 to @caps1 if they are not yet
+ * expressed by @caps1. The structures in @caps2 are not copied -- they are
+ * transferred to @caps1, and then @caps2 is freed.
  * If either caps is ANY, the resulting caps will be ANY.
  */
 void
@@ -545,23 +614,33 @@ gst_caps_merge (GstCaps * caps1, GstCaps * caps2)
 #ifdef USE_POISONING
   CAPS_POISON (caps2);
 #endif
-  if (gst_caps_is_any (caps1) || gst_caps_is_any (caps2)) {
-    /* FIXME: this leaks */
-    caps1->flags |= GST_CAPS_FLAGS_ANY;
+  if (gst_caps_is_any (caps1)) {
     for (i = caps2->structs->len - 1; i >= 0; i--) {
       structure = gst_caps_remove_and_get_structure (caps2, i);
       gst_structure_free (structure);
     }
+  } else if (gst_caps_is_any (caps2)) {
+    caps1->flags |= GST_CAPS_FLAGS_ANY;
+    for (i = caps1->structs->len - 1; i >= 0; i--) {
+      structure = gst_caps_remove_and_get_structure (caps1, i);
+      gst_structure_free (structure);
+    }
   } else {
-    GstCaps *com = gst_caps_intersect (caps1, caps2);
-    GstCaps *add = gst_caps_subtract (caps2, com);
+    int len = caps2->structs->len;
 
-    /*
+    for (i = 0; i < len; i++) {
+      structure = gst_caps_remove_and_get_structure (caps2, 0);
+      gst_caps_merge_structure (caps1, structure);
+    }
+    /* this is too naive
+       GstCaps *com = gst_caps_intersect (caps1, caps2);
+       GstCaps *add = gst_caps_subtract (caps2, com);
+
        GST_DEBUG ("common : %d", gst_caps_get_size (com));
        GST_DEBUG ("adding : %d", gst_caps_get_size (add));
+       gst_caps_append (caps1, add);
+       gst_caps_unref (com);
      */
-    gst_caps_append (caps1, add);
-    gst_caps_unref (com);
   }
   gst_caps_unref (caps2);       /* guaranteed to free it */
 }
@@ -612,6 +691,54 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
   structure = gst_caps_remove_and_get_structure (caps, idx);
   gst_structure_free (structure);
 }
+
+/**
+ * gst_caps_merge_structure:
+ * @caps: the #GstCaps that will the the new structure
+ * @structure: the #GstStructure to merge
+ *
+ * Appends @structure to @caps if its not already expressed by @caps.  The
+ * structure is not copied; @caps becomes the owner of @structure.
+ */
+void
+gst_caps_merge_structure (GstCaps * caps, GstStructure * structure2)
+{
+  g_return_if_fail (GST_IS_CAPS (caps));
+  g_return_if_fail (IS_WRITABLE (caps));
+
+  if (G_LIKELY (structure2)) {
+    GstStructure *structure1;
+    int i;
+    gboolean unique = TRUE;
+
+    g_return_if_fail (structure2->parent_refcount == NULL);
+#if 0
+#ifdef USE_POISONING
+    STRUCTURE_POISON (structure2);
+#endif
+#endif
+    /*GST_DEBUG ("merge ?: %" GST_PTR_FORMAT, structure2); */
+    /* check each structure */
+    for (i = caps->structs->len - 1; i >= 0; i--) {
+      structure1 = gst_caps_get_structure (caps, i);
+      /*GST_DEBUG ("  with: %" GST_PTR_FORMAT, structure1); */
+      /* if structure2 is a subset of structure1, then skip it */
+      if (gst_caps_structure_is_subset (structure1, structure2)) {
+        /*GST_DEBUG ("  no"); */
+        unique = FALSE;
+        break;
+      }
+    }
+    if (unique) {
+      /*GST_DEBUG ("  yes"); */
+      gst_structure_set_parent_refcount (structure2, &caps->refcount);
+      g_ptr_array_add (caps->structs, structure2);
+    } else {
+      gst_structure_free (structure2);
+    }
+  }
+}
+
 
 /**
  * gst_caps_get_size:

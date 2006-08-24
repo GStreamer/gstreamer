@@ -1,3 +1,15 @@
+2006-08-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstcaps.c: (gst_caps_structure_is_subset_field),
+	(gst_caps_structure_is_subset), (gst_caps_merge),
+	(gst_caps_merge_structure):
+	* gst/gstcaps.h:
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_transform_caps):
+	* tests/check/gst/gstcaps.c: (GST_START_TEST), (gst_caps_suite):
+	  implement caps merging (fixes #352580)
+
 2006-08-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* tools/Makefile.am:
