@@ -807,11 +807,14 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
   GST_DEBUG_OBJECT (v4l2src, "trying to set_capture %dx%d, format %s",
       w, h, format->description);
   /* this only fills in v4l2src->mmap values */
-  if (!gst_v4l2src_set_capture (v4l2src, format, w, h)) {
+  if (!gst_v4l2src_set_capture (v4l2src, format, &w, &h)) {
     GST_WARNING_OBJECT (v4l2src, "could not set_capture %dx%d, format %s",
         w, h, format->description);
     return FALSE;
   }
+
+  gst_structure_set (structure, "width", G_TYPE_INT, w, "height", G_TYPE_INT, h,
+      NULL);
 
   if (!gst_v4l2src_capture_init (v4l2src))
     return FALSE;
@@ -881,8 +884,9 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
         continue;
       } else {
         GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC, (NULL),
-            ("error read()ing a buffer on device %s: %s",
-                v4l2src->v4l2object->videodev, g_strerror (errno)));
+            ("error read()ing %d bytes on device %s: %d - %s",
+                buffersize, v4l2src->v4l2object->videodev, errno,
+                g_strerror (errno)));
         gst_buffer_unref (*buf);
         return GST_FLOW_ERROR;
       }
