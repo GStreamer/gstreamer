@@ -219,6 +219,7 @@ gst_v4l2src_get_capture (GstV4l2Src * v4l2src)
 
   GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
 
+  memset (&v4l2src->format, 0, sizeof (struct v4l2_format));
   v4l2src->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_G_FMT, &v4l2src->format) < 0) {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS, (NULL),
@@ -239,17 +240,20 @@ gst_v4l2src_get_capture (GstV4l2Src * v4l2src)
 
 gboolean
 gst_v4l2src_set_capture (GstV4l2Src * v4l2src,
-    struct v4l2_fmtdesc * fmt, gint width, gint height)
+    struct v4l2_fmtdesc * fmt, gint * width, gint * height)
 {
   DEBUG ("Setting capture format to %dx%d, format %s",
-      width, height, fmt->description);
+      *width, *height, fmt->description);
 
   GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2src->v4l2object);
 
-  memset (&v4l2src->format, 0, sizeof (struct v4l2_format));
-  v4l2src->format.fmt.pix.width = width;
-  v4l2src->format.fmt.pix.height = height;
+  if (!gst_v4l2src_get_capture (v4l2src)) {
+    goto fail;
+  }
+
+  v4l2src->format.fmt.pix.width = *width;
+  v4l2src->format.fmt.pix.height = *height;
   v4l2src->format.fmt.pix.pixelformat = fmt->pixelformat;
   v4l2src->format.fmt.pix.field = V4L2_FIELD_INTERLACED;
   v4l2src->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -257,13 +261,36 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src,
   if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_S_FMT, &v4l2src->format) < 0) {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS, (NULL),
         ("failed to set pixelformat to %s @ %dx%d for device %s: %s",
-            fmt->description, width, height,
+            fmt->description, *width, *height,
             v4l2src->v4l2object->videodev, g_strerror (errno)));
-    return FALSE;
+    goto fail;
+  }
+
+  if (*width != v4l2src->format.fmt.pix.width ||
+      *height != v4l2src->format.fmt.pix.height) {
+    DEBUG ("Updating size from %dx%d to %dx%d, format %s",
+        *width, *height, v4l2src->format.fmt.pix.width,
+        v4l2src->format.fmt.pix.height, fmt->description);
   }
 
   /* update internal info */
-  return gst_v4l2src_get_capture (v4l2src);
+  if (!gst_v4l2src_get_capture (v4l2src)) {
+    goto fail;
+  }
+
+  if (fmt->pixelformat != v4l2src->format.fmt.pix.pixelformat) {
+    goto fail;
+  }
+
+  *width = v4l2src->format.fmt.pix.width;
+  *height = v4l2src->format.fmt.pix.height;
+
+  return TRUE;
+
+fail:
+
+  return FALSE;
+
 }
 
 
@@ -568,6 +595,7 @@ gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
     struct v4l2_fmtdesc * format,
     gint * min_w, gint * max_w, gint * min_h, gint * max_h)
 {
+
   struct v4l2_format fmt;
 
   GST_LOG_OBJECT (v4l2src,

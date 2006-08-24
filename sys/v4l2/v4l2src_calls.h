@@ -28,7 +28,7 @@
 gboolean gst_v4l2src_get_capture (GstV4l2Src * v4l2src);
 gboolean gst_v4l2src_set_capture (GstV4l2Src * v4l2src,
                                   struct v4l2_fmtdesc *fmt,
-                                  gint width, gint height);
+                                  gint * width, gint * height);
 gboolean gst_v4l2src_capture_init (GstV4l2Src * v4l2src);
 gboolean gst_v4l2src_capture_start (GstV4l2Src * v4l2src);
 gint gst_v4l2src_grab_frame (GstV4l2Src * v4l2src);
