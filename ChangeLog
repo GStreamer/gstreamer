@@ -1,5 +1,19 @@
 2006-08-24  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/audiofxgood/audiopanorama.c: (gst_audio_panorama_class_init),
+	(gst_audio_panorama_set_property),
+	(gst_audio_panorama_get_property),
+	(gst_audio_panorama_transform_m2s_int),
+	(gst_audio_panorama_transform_s2s_int),
+	(gst_audio_panorama_transform_m2s_float),
+	(gst_audio_panorama_transform_s2s_float):
+	* gst/audiofxgood/audiopanorama.h:
+	* tests/check/elements/audiopanorama.c: (GST_START_TEST):
+          Make also the pan-property float (saves scaling and yields better
+          resolution)
+
+2006-08-24  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/audiofxgood/audiopanorama.c: (gst_audio_panorama_set_caps),
 	(gst_audio_panorama_transform_m2s_float),
 	(gst_audio_panorama_transform_s2s_float):

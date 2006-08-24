@@ -181,7 +181,7 @@ GST_START_TEST (test_mono_left)
   gint16 *res;
 
   panorama = setup_panorama_m ();
-  g_object_set (G_OBJECT (panorama), "panorama", -100, NULL);
+  g_object_set (G_OBJECT (panorama), "panorama", -1.0, NULL);
   fail_unless (gst_element_set_state (panorama,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -221,7 +221,7 @@ GST_START_TEST (test_mono_right)
   gint16 *res;
 
   panorama = setup_panorama_m ();
-  g_object_set (G_OBJECT (panorama), "panorama", 100, NULL);
+  g_object_set (G_OBJECT (panorama), "panorama", 1.0, NULL);
   fail_unless (gst_element_set_state (panorama,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -301,7 +301,7 @@ GST_START_TEST (test_stereo_left)
   gint16 *res;
 
   panorama = setup_panorama_s ();
-  g_object_set (G_OBJECT (panorama), "panorama", -100, NULL);
+  g_object_set (G_OBJECT (panorama), "panorama", -1.0, NULL);
   fail_unless (gst_element_set_state (panorama,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -341,7 +341,7 @@ GST_START_TEST (test_stereo_right)
   gint16 *res;
 
   panorama = setup_panorama_s ();
-  g_object_set (G_OBJECT (panorama), "panorama", 100, NULL);
+  g_object_set (G_OBJECT (panorama), "panorama", 1.0, NULL);
   fail_unless (gst_element_set_state (panorama,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");

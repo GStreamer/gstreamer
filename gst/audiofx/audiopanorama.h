@@ -41,7 +41,7 @@ typedef void (*GstAudioPanoramaProcessFunc)(GstAudioPanorama*, guint8*, guint8*,
 struct _GstAudioPanorama {
   GstBaseTransform element;
 
-  gint panorama;
+  gfloat panorama;
   
   /* < private > */
   GstAudioPanoramaProcessFunc process;

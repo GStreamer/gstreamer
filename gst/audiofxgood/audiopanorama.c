@@ -73,8 +73,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-raw-float, "
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, 2 ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32, " "signed = (boolean) true; "
+        "endianness = (int) BYTE_ORDER, " "width = (int) 32; "
         "audio/x-raw-int, "
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, 2 ], "
@@ -88,8 +87,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw-float, "
         "rate = (int) [ 1, MAX ], "
         "channels = (int) 2, "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32, " "signed = (boolean) true; "
+        "endianness = (int) BYTE_ORDER, " "width = (int) 32; "
         "audio/x-raw-int, "
         "rate = (int) [ 1, MAX ], "
         "channels = (int) 2, "
@@ -151,9 +149,9 @@ gst_audio_panorama_class_init (GstAudioPanoramaClass * klass)
   gobject_class->get_property = gst_audio_panorama_get_property;
 
   g_object_class_install_property (gobject_class, PROP_PANORAMA,
-      g_param_spec_int ("panorama", "Panorama",
-          "Position in stereo panorama (-100 left -> 100 right)", -100, 100, 0,
-          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+      g_param_spec_float ("panorama", "Panorama",
+          "Position in stereo panorama (-1.0 left -> 1.0 right)", -1.0, 1.0,
+          0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_panorama_get_unit_size);
@@ -180,7 +178,7 @@ gst_audio_panorama_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PANORAMA:
-      filter->panorama = g_value_get_int (value);
+      filter->panorama = g_value_get_float (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -196,7 +194,7 @@ gst_audio_panorama_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PANORAMA:
-      g_value_set_int (value, filter->panorama);
+      g_value_set_float (value, filter->panorama);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -310,13 +308,13 @@ gst_audio_panorama_transform_m2s_int (GstAudioPanorama * filter, gint16 * idata,
   glong lval, rval;
   gdouble rpan, lpan;
 
-  /* pan:  -100   0   100
+  /* pan:  -1.0  0.0  1.0
    * lpan:  1.0  0.5  0.0  
    * rpan:  0.0  0.5  1.0
    *
    * FIXME: we should use -3db (1/sqtr(2)) for 50:50
    */
-  rpan = (gdouble) (filter->panorama + 100) / 200.0;
+  rpan = (gdouble) (filter->panorama + 1.0) / 2.0;
   lpan = 1.0 - rpan;
 
   for (i = 0; i < num_samples; i++) {
@@ -339,19 +337,19 @@ gst_audio_panorama_transform_s2s_int (GstAudioPanorama * filter, gint16 * idata,
   gdouble lival, rival;
   gdouble lrpan, llpan, rrpan, rlpan;
 
-  /* pan:  -100   0   100
+  /* pan:  -1.0  0.0  1.0
    * llpan: 1.0  1.0  0.0
    * lrpan: 1.0  0.0  0.0
    * rrpan: 0.0  1.0  1.0
    * rlpan: 0.0  0.0  1.0
    */
   if (filter->panorama > 0) {
-    rlpan = (gdouble) filter->panorama / 100.0;
+    rlpan = (gdouble) filter->panorama;
     llpan = 1.0 - rlpan;
     lrpan = 0.0;
     rrpan = 1.0;
   } else {
-    rrpan = (gdouble) (100 + filter->panorama) / 100.0;
+    rrpan = (gdouble) (1.0 + filter->panorama);
     lrpan = 1.0 - rrpan;
     rlpan = 0.0;
     llpan = 1.0;
@@ -377,13 +375,13 @@ gst_audio_panorama_transform_m2s_float (GstAudioPanorama * filter,
   gfloat val;
   gdouble rpan, lpan;
 
-  /* pan:  -100   0   100
+  /* pan:  -1.0  0.0  1.0
    * lpan:  1.0  0.5  0.0  
    * rpan:  0.0  0.5  1.0
    *
    * FIXME: we should use -3db (1/sqtr(2)) for 50:50
    */
-  rpan = (gdouble) (filter->panorama + 100) / 200.0;
+  rpan = (gdouble) (filter->panorama + 1.0) / 2.0;
   lpan = 1.0 - rpan;
 
   for (i = 0; i < num_samples; i++) {
@@ -402,19 +400,19 @@ gst_audio_panorama_transform_s2s_float (GstAudioPanorama * filter,
   gfloat lival, rival;
   gdouble lrpan, llpan, rrpan, rlpan;
 
-  /* pan:  -100   0   100
+  /* pan:  -1.0  0.0  1.0
    * llpan: 1.0  1.0  0.0
    * lrpan: 1.0  0.0  0.0
    * rrpan: 0.0  1.0  1.0
    * rlpan: 0.0  0.0  1.0
    */
   if (filter->panorama > 0) {
-    rlpan = (gdouble) filter->panorama / 100.0;
+    rlpan = (gdouble) filter->panorama;
     llpan = 1.0 - rlpan;
     lrpan = 0.0;
     rrpan = 1.0;
   } else {
-    rrpan = (gdouble) (100 + filter->panorama) / 100.0;
+    rrpan = (gdouble) (1.0 + filter->panorama);
     lrpan = 1.0 - rrpan;
     rlpan = 0.0;
     llpan = 1.0;
