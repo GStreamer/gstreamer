@@ -301,31 +301,29 @@ gst_flac_dec_update_metadata (GstFlacDec * flacdec,
     const FLAC__StreamMetadata * metadata)
 {
   GstTagList *list;
-  guint32 number_of_comments, cursor, str_len;
-  gchar *p_value, *value, *name, *str_ptr;
+  guint num, i;
 
   list = gst_tag_list_new ();
-  if (list == NULL) {
-    return FALSE;
-  }
 
-  number_of_comments = metadata->data.vorbis_comment.num_comments;
-  value = NULL;
-  GST_DEBUG ("%d tag(s) found", number_of_comments);
-  for (cursor = 0; cursor < number_of_comments; cursor++) {
-    str_ptr = (gchar *) metadata->data.vorbis_comment.comments[cursor].entry;
-    str_len = metadata->data.vorbis_comment.comments[cursor].length;
-    p_value = g_strstr_len (str_ptr, str_len, "=");
-    if (p_value) {
-      name = g_strndup (str_ptr, p_value - str_ptr);
-      value = g_strndup (p_value + 1, str_ptr + str_len - p_value - 1);
+  num = metadata->data.vorbis_comment.num_comments;
+  GST_DEBUG ("%u tag(s) found", num);
 
+  for (i = 0; i < num; ++i) {
+    gchar *vc, *name, *value;
+
+    vc = g_strndup ((gchar *) metadata->data.vorbis_comment.comments[i].entry,
+        metadata->data.vorbis_comment.comments[i].length);
+
+    if (gst_tag_parse_extended_comment (vc, &name, NULL, &value, TRUE)) {
       GST_DEBUG ("%s : %s", name, value);
       gst_vorbis_tag_add (list, name, value);
       g_free (name);
       g_free (value);
     }
+
+    g_free (vc);
   }
+
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
       GST_TAG_AUDIO_CODEC, "FLAC", NULL);
 
