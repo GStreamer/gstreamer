@@ -89,10 +89,15 @@ typedef struct {
 
   /* stream length according to index */
   GstClockTime   idx_duration;
+  /* stream length according to header */
+  GstClockTime   hdr_duration;
+  /* stream length based on header/index */
+  GstClockTime   duration;
 
   /* VBR indicator */
   gboolean       is_vbr;
 
+  gboolean       superindex;
   guint64       *indexes;
 
   GstTagList	*taglist;
