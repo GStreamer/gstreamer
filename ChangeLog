@@ -1,13 +1,23 @@
 2006-08-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audiofxgood/audiopanorama.c: (gst_audio_panorama_set_caps),
+	(gst_audio_panorama_transform_m2s_float),
+	(gst_audio_panorama_transform_s2s_float):
+          ChangeLog surgery to add cymax's real name
+
+
+2006-08-24  Stefan Kost  <ensonic@users.sf.net>
+
+        Patch by: René Stadler <mail@renestadler.de>
+
+	* gst/audiofxgood/audiopanorama.c: (gst_audio_panorama_set_caps),
 	(gst_audio_panorama_transform_m2s_int),
 	(gst_audio_panorama_transform_s2s_int),
 	(gst_audio_panorama_transform_m2s_float),
 	(gst_audio_panorama_transform_s2s_float),
 	(gst_audio_panorama_transform):
 	* gst/audiofxgood/audiopanorama.h:
-          Added float support (thanks cymax)
+          Added float support
 
 2006-08-24  Stefan Kost  <ensonic@users.sf.net>
 

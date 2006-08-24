@@ -35,8 +35,6 @@
  * </refsect2>
  */
 
-/* FIXME: also support 32/64 bit float audio, and maybe 8/24 bit integer */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
