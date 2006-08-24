@@ -1,5 +1,16 @@
 2006-08-24  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/audiofxgood/audiopanorama.c: (gst_audio_panorama_set_caps),
+	(gst_audio_panorama_transform_m2s_int),
+	(gst_audio_panorama_transform_s2s_int),
+	(gst_audio_panorama_transform_m2s_float),
+	(gst_audio_panorama_transform_s2s_float),
+	(gst_audio_panorama_transform):
+	* gst/audiofxgood/audiopanorama.h:
+          Added float support (thanks cymax)
+
+2006-08-24  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/audiofxgood/audiopanorama.c:
 	(gst_audio_panorama_transform_m2s):
 	  Fix docs & debug category. Add Fixme for volume pan levels.

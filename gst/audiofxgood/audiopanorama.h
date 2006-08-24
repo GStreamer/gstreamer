@@ -36,13 +36,15 @@ G_BEGIN_DECLS
 typedef struct _GstAudioPanorama      GstAudioPanorama;
 typedef struct _GstAudioPanoramaClass GstAudioPanoramaClass;
 
+typedef void (*GstAudioPanoramaProcessFunc)(GstAudioPanorama*, guint8*, guint8*, guint);
+
 struct _GstAudioPanorama {
   GstBaseTransform element;
 
   gint panorama;
   
   /* < private > */
-  void (*process)(GstAudioPanorama*, gint16*, gint16*, guint);
+  GstAudioPanoramaProcessFunc process;
 };
 
 struct _GstAudioPanoramaClass {

@@ -29,6 +29,7 @@
  * <programlisting>
  * gst-launch audiotestsrc wave=saw ! audiopanorama panorama=-100 ! alsasink
  * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiopanorama panorama=-100 ! alsasink
+ * gst-launch audiotestsrc wave=saw ! audioconvert ! audiopanorama panorama=-100 ! audioconvert ! alsasink
  * </programlisting>
  * </para>
  * </refsect2>
@@ -71,7 +72,12 @@ enum
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
+    GST_STATIC_CAPS ("audio/x-raw-float, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, 2 ], "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 32, " "signed = (boolean) true; "
+        "audio/x-raw-int, "
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, 2 ], "
         "endianness = (int) BYTE_ORDER, "
@@ -81,7 +87,12 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
+    GST_STATIC_CAPS ("audio/x-raw-float, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) 2, "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) 32, " "signed = (boolean) true; "
+        "audio/x-raw-int, "
         "rate = (int) [ 1, MAX ], "
         "channels = (int) 2, "
         "endianness = (int) BYTE_ORDER, "
@@ -106,10 +117,14 @@ static GstCaps *gst_audio_panorama_transform_caps (GstBaseTransform * base,
 static gboolean gst_audio_panorama_set_caps (GstBaseTransform * base,
     GstCaps * incaps, GstCaps * outcaps);
 
-static void gst_audio_panorama_transform_m2s (GstAudioPanorama * filter,
+static void gst_audio_panorama_transform_m2s_int (GstAudioPanorama * filter,
     gint16 * idata, gint16 * odata, guint num_samples);
-static void gst_audio_panorama_transform_s2s (GstAudioPanorama * filter,
+static void gst_audio_panorama_transform_s2s_int (GstAudioPanorama * filter,
     gint16 * idata, gint16 * odata, guint num_samples);
+static void gst_audio_panorama_transform_m2s_float (GstAudioPanorama * filter,
+    gfloat * idata, gfloat * odata, guint num_samples);
+static void gst_audio_panorama_transform_s2s_float (GstAudioPanorama * filter,
+    gfloat * idata, gfloat * odata, guint num_samples);
 
 static GstFlowReturn gst_audio_panorama_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
@@ -243,6 +258,7 @@ gst_audio_panorama_set_caps (GstBaseTransform * base, GstCaps * incaps,
   const GstStructure *structure;
   gboolean ret;
   gint channels;
+  const gchar *fmt;
 
   /*GST_INFO ("incaps are %" GST_PTR_FORMAT, incaps); */
 
@@ -250,18 +266,29 @@ gst_audio_panorama_set_caps (GstBaseTransform * base, GstCaps * incaps,
   ret = gst_structure_get_int (structure, "channels", &channels);
   if (!ret)
     goto no_channels;
-  /* FIXME: also check width and gst_structure_get_name()?int/float */
 
-  GST_DEBUG ("try to process input with %d channels", channels);
+  fmt = gst_structure_get_name (structure);
+
+  GST_DEBUG ("try to process %s input with %d channels", fmt, channels);
 
   /* set processing function */
   switch (channels) {
     case 1:
-      filter->process = gst_audio_panorama_transform_m2s;
+      if (!strcmp (fmt, "audio/x-raw-int"))
+        filter->process = (GstAudioPanoramaProcessFunc)
+            gst_audio_panorama_transform_m2s_int;
+      else
+        filter->process = (GstAudioPanoramaProcessFunc)
+            gst_audio_panorama_transform_m2s_float;
       ret = TRUE;
       break;
     case 2:
-      filter->process = gst_audio_panorama_transform_s2s;
+      if (!strcmp (fmt, "audio/x-raw-int"))
+        filter->process = (GstAudioPanoramaProcessFunc)
+            gst_audio_panorama_transform_s2s_int;
+      else
+        filter->process = (GstAudioPanoramaProcessFunc)
+            gst_audio_panorama_transform_s2s_float;
       ret = TRUE;
       break;
     default:
@@ -269,6 +296,7 @@ gst_audio_panorama_set_caps (GstBaseTransform * base, GstCaps * incaps,
       ret = FALSE;
       GST_WARNING ("can't process input with %d channels", channels);
   }
+  return ret;
 
 no_channels:
   GST_DEBUG ("no channels in caps");
@@ -276,7 +304,7 @@ no_channels:
 }
 
 static void
-gst_audio_panorama_transform_m2s (GstAudioPanorama * filter, gint16 * idata,
+gst_audio_panorama_transform_m2s_int (GstAudioPanorama * filter, gint16 * idata,
     gint16 * odata, guint num_samples)
 {
   guint i;
@@ -305,7 +333,7 @@ gst_audio_panorama_transform_m2s (GstAudioPanorama * filter, gint16 * idata,
 }
 
 static void
-gst_audio_panorama_transform_s2s (GstAudioPanorama * filter, gint16 * idata,
+gst_audio_panorama_transform_s2s_int (GstAudioPanorama * filter, gint16 * idata,
     gint16 * odata, guint num_samples)
 {
   guint i;
@@ -343,6 +371,66 @@ gst_audio_panorama_transform_s2s (GstAudioPanorama * filter, gint16 * idata,
   }
 }
 
+static void
+gst_audio_panorama_transform_m2s_float (GstAudioPanorama * filter,
+    gfloat * idata, gfloat * odata, guint num_samples)
+{
+  guint i;
+  gfloat val;
+  gdouble rpan, lpan;
+
+  /* pan:  -100   0   100
+   * lpan:  1.0  0.5  0.0  
+   * rpan:  0.0  0.5  1.0
+   *
+   * FIXME: we should use -3db (1/sqtr(2)) for 50:50
+   */
+  rpan = (gdouble) (filter->panorama + 100) / 200.0;
+  lpan = 1.0 - rpan;
+
+  for (i = 0; i < num_samples; i++) {
+    val = *idata++;
+
+    *odata++ = val * lpan;
+    *odata++ = val * rpan;
+  }
+}
+
+static void
+gst_audio_panorama_transform_s2s_float (GstAudioPanorama * filter,
+    gfloat * idata, gfloat * odata, guint num_samples)
+{
+  guint i;
+  gfloat lival, rival;
+  gdouble lrpan, llpan, rrpan, rlpan;
+
+  /* pan:  -100   0   100
+   * llpan: 1.0  1.0  0.0
+   * lrpan: 1.0  0.0  0.0
+   * rrpan: 0.0  1.0  1.0
+   * rlpan: 0.0  0.0  1.0
+   */
+  if (filter->panorama > 0) {
+    rlpan = (gdouble) filter->panorama / 100.0;
+    llpan = 1.0 - rlpan;
+    lrpan = 0.0;
+    rrpan = 1.0;
+  } else {
+    rrpan = (gdouble) (100 + filter->panorama) / 100.0;
+    lrpan = 1.0 - rrpan;
+    rlpan = 0.0;
+    llpan = 1.0;
+  }
+
+  for (i = 0; i < num_samples; i++) {
+    lival = *idata++;
+    rival = *idata++;
+
+    *odata++ = lival * llpan + rival * lrpan;
+    *odata++ = lival * rlpan + rival * rrpan;
+  }
+}
+
 /* this function does the actual processing
  */
 static GstFlowReturn
@@ -358,8 +446,8 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (outbuf)))
     gst_object_sync_values (G_OBJECT (filter), GST_BUFFER_TIMESTAMP (outbuf));
 
-  filter->process (filter, (gint16 *) GST_BUFFER_DATA (inbuf),
-      (gint16 *) GST_BUFFER_DATA (outbuf), num_samples);
+  filter->process (filter, GST_BUFFER_DATA (inbuf),
+      GST_BUFFER_DATA (outbuf), num_samples);
 
   return GST_FLOW_OK;
 }
