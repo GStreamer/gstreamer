@@ -1,3 +1,16 @@
+2006-08-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
+
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_post_tags),
+	(gst_wavpack_dec_chain):
+	  Post audio codec and average bitrate tags on bus (#344472).
+
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_base_init),
+	(gst_wavpack_parse_src_query):
+	  Forward queries in other formats (BYTE format in particular)
+	  upstream; add Sebastian to authors.
+
 2006-08-23  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2src.c:
@@ -5,7 +18,6 @@
 	* sys/v4l2/v4l2src_calls.h:
 	Fix set_caps to set width and height to the values the driver is
 	really working with.
-	
 
 2006-08-23  Tim-Philipp Müller  <tim at centricular dot net>
 

@@ -97,7 +97,8 @@ gst_wavpack_parse_base_init (gpointer klass)
       GST_ELEMENT_DETAILS ("WavePack parser",
       "Codec/Demuxer/Audio",
       "Parses Wavpack files",
-      "Arwed v. Merkatz <v.merkatz@gmx.net>");
+      "Arwed v. Merkatz <v.merkatz@gmx.net>, "
+      "Sebastian Dröge <slomo@circular-chaos.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
@@ -292,7 +293,8 @@ gst_wavpack_parse_src_query (GstPad * pad, GstQuery * query)
           break;
         default:
           GST_DEBUG_OBJECT (parse, "cannot handle position query in "
-              "%s format", gst_format_get_name (format));
+              "%s format. Forwarding upstream.", gst_format_get_name (format));
+          ret = gst_pad_query_default (pad, query);
           break;
       }
       break;
@@ -327,7 +329,8 @@ gst_wavpack_parse_src_query (GstPad * pad, GstQuery * query)
           break;
         default:
           GST_DEBUG_OBJECT (parse, "cannot handle duration query in "
-              "%s format", gst_format_get_name (format));
+              "%s format. Forwarding upstream.", gst_format_get_name (format));
+          ret = gst_pad_query_default (pad, query);
           break;
       }
       break;
