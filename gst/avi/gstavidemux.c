@@ -1057,7 +1057,9 @@ gst_avi_demux_read_subindexes_pull (GstAviDemux * avi,
       if (!gst_avi_demux_parse_subindex (GST_ELEMENT (avi), buf, stream, &list))
         continue;
       if (list) {
-        GST_DEBUG_OBJECT (avi, "  adding %d entries", g_list_length (list));
+        GST_DEBUG_OBJECT (avi, "  adding %5d entries, total %2d %5d",
+            g_list_length (list), g_list_length (*alloc_list),
+            g_list_length (*index));
         *alloc_list = g_list_append (*alloc_list, list->data);
         *index = g_list_concat (*index, list);
       }
@@ -2399,7 +2401,6 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
 
                 gst_riff_parse_info (GST_ELEMENT (avi), buf, &avi->globaltags);
                 gst_buffer_unref (buf);
-                gst_adapter_flush (avi->adapter, 4);
                 //gst_adapter_flush(avi->adapter, ((size + 1) & ~1) - 4);
                 avi->offset += ((size + 1) & ~1) - 4;
                 //goto iterate;
@@ -2437,7 +2438,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
   }
 skipping_done:
 
-  GST_DEBUG_OBJECT (avi, "skipping done ... (streams=%d, stream[0].indexes=%p)",
+  GST_DEBUG_OBJECT (avi, "skipping done ... (streams=%u, stream[0].indexes=%p)",
       avi->num_streams, avi->stream[0].indexes);
 
   GST_DEBUG ("Found movi chunk. Starting to stream data");
@@ -2449,15 +2450,14 @@ skipping_done:
   if (avi->stream[0].indexes != NULL) {
     gst_avi_demux_read_subindexes_push (avi, &index, &alloc);
   }
-  /* FIXME: why was this there? 
-     if (!index) { */
-  if (avi->avih->flags & GST_RIFF_AVIH_HASINDEX) {
-    gst_avi_demux_stream_index (avi, &index, &alloc);
+  if (!index) {
+    if (avi->avih->flags & GST_RIFF_AVIH_HASINDEX) {
+      gst_avi_demux_stream_index (avi, &index, &alloc);
+    }
+    /* some indexes are incomplete, continue streaming from there */
+    if (!index)
+      gst_avi_demux_stream_scan (avi, &index, &alloc);
   }
-  /* some indexes are incomplete, continue streaming from there */
-  if (!index)
-    gst_avi_demux_stream_scan (avi, &index, &alloc);
-  /*} */
 
   /* this is a fatal error */
   if (!index) {
@@ -2656,22 +2656,21 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
   } while (1);
 skipping_done:
 
-  GST_DEBUG_OBJECT (avi, "skipping done ... (streams=%d, stream[0].indexes=%p)",
+  GST_DEBUG_OBJECT (avi, "skipping done ... (streams=%u, stream[0].indexes=%p)",
       avi->num_streams, avi->stream[0].indexes);
 
   /* create or read stream index (for seeking) */
   if (avi->stream[0].indexes != NULL) {
     gst_avi_demux_read_subindexes_pull (avi, &index, &alloc);
   }
-  /* FIXME: why was this there? 
-     if (!index) { */
-  if (avi->avih->flags & GST_RIFF_AVIH_HASINDEX) {
-    gst_avi_demux_stream_index (avi, &index, &alloc);
+  if (!index) {
+    if (avi->avih->flags & GST_RIFF_AVIH_HASINDEX) {
+      gst_avi_demux_stream_index (avi, &index, &alloc);
+    }
+    /* some indexes are incomplete, continue streaming from there */
+    if (!index)
+      gst_avi_demux_stream_scan (avi, &index, &alloc);
   }
-  /* some indexes are incomplete, continue streaming from there */
-  if (!index)
-    gst_avi_demux_stream_scan (avi, &index, &alloc);
-  /*} */
 
   /* this is a fatal error */
   if (!index) {
@@ -3058,7 +3057,8 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
     /* see if we have a valid stream, ignore if not */
     if (entry->stream_nr >= avi->num_streams) {
       GST_DEBUG_OBJECT (avi,
-          "Entry has non-existing stream nr %d", entry->stream_nr);
+          "Entry %d has non-existing stream nr %d",
+          avi->current_entry - 1, entry->stream_nr);
       continue;
     }
 
@@ -3082,6 +3082,9 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
     res = gst_pad_pull_range (avi->sinkpad, entry->offset +
         avi->index_offset, entry->size, &buf);
     if (res != GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (avi,
+          "pull range failed: pos=%" G_GUINT64_FORMAT " size=%d",
+          entry->offset + avi->index_offset, entry->size);
       stream->last_flow = res;
       goto beach;
     }
@@ -3426,7 +3429,6 @@ pause:
 static GstFlowReturn
 gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
 {
-
   GstFlowReturn res = GST_FLOW_OK;
   GstAviDemux *avi = GST_AVI_DEMUX (GST_PAD_PARENT (pad));
 
