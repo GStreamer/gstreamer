@@ -23,15 +23,13 @@
  * @short_description: audio strereo pan effect
  *
  * <refsect2>
- * Echo effect with controllable effect-ratio, delay-time and feedback.
+ * Stereo panorama effect with controllable pan position.
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
  * gst-launch audiotestsrc wave=saw ! audiopanorama panorama=-100 ! alsasink
  * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiopanorama panorama=-100 ! alsasink
  * </programlisting>
- * In the latter example the echo is applied to the input signal of the
- * soundcard (like a microphone).
  * </para>
  * </refsect2>
  */
@@ -91,7 +89,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_audio_panorama_debug, "audiopanorama", 0, "audiopanorama plugin");
+  GST_DEBUG_CATEGORY_INIT (gst_audio_panorama_debug, "audiopanorama", 0, "audiopanorama element");
 
 GST_BOILERPLATE_FULL (GstAudioPanorama, gst_audio_panorama, GstBaseTransform,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
@@ -289,6 +287,8 @@ gst_audio_panorama_transform_m2s (GstAudioPanorama * filter, gint16 * idata,
   /* pan:  -100   0   100
    * lpan:  1.0  0.5  0.0  
    * rpan:  0.0  0.5  1.0
+   *
+   * FIXME: we should use -3db (1/sqtr(2)) for 50:50
    */
   rpan = (gdouble) (filter->panorama + 100) / 200.0;
   lpan = 1.0 - rpan;
