@@ -236,6 +236,33 @@ gst_wavpack_dec_clip_outgoing_buffer (GstWavpackDec * dec, GstBuffer * buf)
   return TRUE;
 }
 
+static void
+gst_wavpack_dec_post_tags (GstWavpackDec * dec, WavpackHeader * wph)
+{
+  GstTagList *list;
+  GstFormat format_time = GST_FORMAT_TIME, format_bytes = GST_FORMAT_BYTES;
+  gint64 duration, size;
+
+  list = gst_tag_list_new ();
+
+  gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+      GST_TAG_AUDIO_CODEC, "Wavpack", NULL);
+
+  /* try to estimate the average bitrate */
+  if (gst_pad_query_peer_duration (dec->sinkpad, &format_bytes, &size) &&
+      gst_pad_query_peer_duration (dec->sinkpad, &format_time, &duration) &&
+      size > 0 && duration > 0) {
+    guint64 bitrate;
+
+    bitrate = gst_util_uint64_scale (size, 8 * GST_SECOND, duration);
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
+        (guint) bitrate, NULL);
+  }
+
+  gst_element_post_message (GST_ELEMENT (dec),
+      gst_message_new_tag (GST_OBJECT (dec), list));
+}
+
 static GstFlowReturn
 gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -314,6 +341,10 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
     /* should always succeed */
     gst_pad_set_caps (dec->srcpad, caps);
     gst_caps_unref (caps);
+
+    /* send GST_TAG_AUDIO_CODEC and GST_TAG_BITRATE tags before something
+     * is decoded or after the format has changed */
+    gst_wavpack_dec_post_tags (dec, &wph);
   }
 
   unpacked_size = wph.block_samples * (dec->width / 8) * dec->channels;
