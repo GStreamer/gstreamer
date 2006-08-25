@@ -63,7 +63,7 @@ gst_cmml_clock_time_from_npt (const gchar * time)
     /* parse npt-sec */
     hours_t = 0;
     minutes = 0;
-    fields = sscanf (time, "%llu.%d", &u64seconds, &mseconds);
+    fields = sscanf (time, "%" G_GUINT64_FORMAT ".%d", &u64seconds, &mseconds);
     if (seconds < 0)
       goto bad_input;
 

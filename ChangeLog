@@ -1,5 +1,10 @@
 2006-08-25  Wim Taymans  <wim@fluendo.com>
 
+	* ext/annodex/gstcmmlutils.c: (gst_cmml_clock_time_from_npt):
+	Fix build.
+
+2006-08-25  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Alessandro Decina <alessandro at nnva dot org>
 
 	* ext/annodex/gstannodex.c: (gst_annodex_granule_to_time):
