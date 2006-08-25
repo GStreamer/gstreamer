@@ -183,6 +183,7 @@ gst_gdp_pay_finalize (GObject * gobject)
 static void
 gst_gdp_pay_reset (GstGDPPay * this)
 {
+  GST_DEBUG_OBJECT (this, "Resetting GDP object");
   /* clear the queued buffers */
   while (this->queue) {
     GstBuffer *buffer;
@@ -326,8 +327,10 @@ static GstFlowReturn
 gst_gdp_pay_reset_streamheader (GstGDPPay * this)
 {
   GstCaps *caps;
+
+  /* We use copies of these to avoid circular refcounts */
+  GstBuffer *new_segment_buf, *caps_buf, *tag_buf;
   GstStructure *structure;
-  GstBuffer *new_segment_buf = NULL, *caps_buf, *tag_buf = NULL;
   GstFlowReturn r = GST_FLOW_OK;
   gboolean version_one_zero = TRUE;
 
@@ -355,6 +358,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     gst_value_set_buffer (&value, new_segment_buf);
     gst_value_array_append_value (&array, &value);
     g_value_unset (&value);
+    gst_buffer_unref (new_segment_buf);
 
     if (this->tag_buf) {
       tag_buf = gst_buffer_copy (this->tag_buf);
@@ -362,6 +366,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
       gst_value_set_buffer (&value, tag_buf);
       gst_value_array_append_value (&array, &value);
       g_value_unset (&value);
+      gst_buffer_unref (tag_buf);
     }
   }
 
@@ -370,6 +375,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
   gst_value_set_buffer (&value, caps_buf);
   gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
+  gst_buffer_unref (caps_buf);
 
   /* we also need to add GDP serializations of the streamheaders of the
    * incoming caps */
@@ -392,13 +398,17 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
       bufval = &g_array_index (buffers, GValue, i);
       buffer = g_value_peek_pointer (bufval);
       outbuffer = gst_gdp_pay_buffer_from_buffer (this, buffer);
-      if (!outbuffer)
+      if (!outbuffer) {
+        g_value_unset (&array);
         goto no_buffer;
+      }
 
       g_value_init (&value, GST_TYPE_BUFFER);
       gst_value_set_buffer (&value, outbuffer);
       gst_value_array_append_value (&array, &value);
       g_value_unset (&value);
+
+      gst_buffer_unref (outbuffer);
     }
   }
 
@@ -407,11 +417,6 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
 
   gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&array);
-
-  /* Unref our copies */
-  if (new_segment_buf)
-    gst_buffer_unref (new_segment_buf);
-  gst_buffer_unref (caps_buf);
 
   GST_DEBUG_OBJECT (this, "Setting caps on src pad %" GST_PTR_FORMAT, caps);
   gst_pad_set_caps (this->srcpad, caps);
@@ -425,7 +430,8 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     GST_DEBUG_OBJECT (this, "Sending out new_segment event %p", event);
     if (!gst_pad_push_event (this->srcpad, event)) {
       GST_WARNING_OBJECT (this, "pushing new segment failed");
-      return GST_FLOW_ERROR;
+      r = GST_FLOW_ERROR;
+      goto done;
     }
   }
 
@@ -436,7 +442,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
   r = gst_pad_push (this->srcpad, gst_buffer_ref (this->new_segment_buf));
   if (r != GST_FLOW_OK) {
     GST_WARNING_OBJECT (this, "pushing GDP newsegment buffer returned %d", r);
-    return r;
+    goto done;
   }
   if (this->tag_buf) {
     GST_DEBUG_OBJECT (this, "Pushing GDP tag buffer %p", this->tag_buf);
@@ -444,14 +450,14 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     r = gst_pad_push (this->srcpad, gst_buffer_ref (this->tag_buf));
     if (r != GST_FLOW_OK) {
       GST_WARNING_OBJECT (this, "pushing GDP tag buffer returned %d", r);
-      return r;
+      goto done;
     }
   }
-  GST_DEBUG_OBJECT (this, "Pushing GDP caps buffer %p", this->new_segment_buf);
+  GST_DEBUG_OBJECT (this, "Pushing GDP caps buffer %p", this->caps_buf);
   r = gst_pad_push (this->srcpad, gst_buffer_ref (this->caps_buf));
   if (r != GST_FLOW_OK) {
     GST_WARNING_OBJECT (this, "pushing GDP caps buffer returned %d", r);
-    return r;
+    goto done;
   }
   this->sent_streamheader = TRUE;
   GST_DEBUG_OBJECT (this, "need to push %d queued buffers",
@@ -465,14 +471,17 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     /* delete buffer from queue now */
     this->queue = g_list_delete_link (this->queue, this->queue);
 
-    /* set caps en push */
+    /* set caps and push */
     gst_buffer_set_caps (buffer, caps);
     r = gst_pad_push (this->srcpad, buffer);
     if (r != GST_FLOW_OK) {
       GST_WARNING_OBJECT (this, "pushing queued GDP buffer returned %d", r);
-      return r;
+      goto done;
     }
   }
+
+done:
+  gst_caps_unref (caps);
   return r;
 
   /* ERRORS */
@@ -558,6 +567,9 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
     this->caps_buf = outbuffer;
     gst_gdp_pay_reset_streamheader (this);
   }
+
+  if (caps)
+    gst_caps_unref (caps);
 
   /* create a GDP header packet,
    * then create a GST buffer of the header packet and the buffer contents */
