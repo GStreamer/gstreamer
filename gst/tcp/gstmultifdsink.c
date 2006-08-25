@@ -2223,7 +2223,7 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if (!bufcaps) {
     if (!gst_buffer_is_metadata_writable (buf)) {
       /* metadata is not writable, copy will be made and original buffer
-       * will be unreffed so we need to ref so that we don't loose the
+       * will be unreffed so we need to ref so that we don't lose the
        * buffer in the render method. */
       gst_buffer_ref (buf);
       /* the new buffer is ours only, we keep it out of the scope of this
@@ -2235,7 +2235,6 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       gst_buffer_ref (buf);
     }
     /* buffer metadata is writable now, set the caps */
-    GST_DEBUG_OBJECT (sink, "result is %p", buf);
     gst_buffer_set_caps (buf, padcaps);
   } else {
     gst_caps_unref (bufcaps);
