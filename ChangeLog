@@ -1,5 +1,18 @@
 2006-08-25  Michael Smith  <msmith@fluendo.com>
 
+	* gst/gdp/gstgdppay.c: (gst_gdp_pay_reset),
+	(gst_gdp_pay_reset_streamheader), (gst_gdp_pay_chain):
+	  Fix memory leaks and misleading debug messages, add a couple of
+	  comments.
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_get_stats),
+	(gst_multi_fd_sink_render):
+	  Do not use gst_buffer_make_writable() in a basesink render method,
+	  as it may incorrectly unref the buffer. Instead, use convoluted
+	  dance to avoid copying the buffer except when we need to.
+
+2006-08-25  Michael Smith  <msmith@fluendo.com>
+
 	* ext/vorbis/vorbisenc.c:
 	(gst_vorbis_enc_buffer_check_discontinuous):
 	  Allow very small discontinuities in the timestamps. These we can't

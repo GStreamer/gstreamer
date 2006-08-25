@@ -2223,14 +2223,23 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   /* stamp the buffer with previous caps if no caps set */
   if (!bufcaps) {
-    buf = gst_buffer_make_writable (buf);
+    /* We keep this buffer around, and need to write it, but we can't just use
+     * gst_buffer_make_writable(), because we're not allowed to unref this buf,
+     * basesink will do that for us */
+    if (!gst_buffer_is_writable (buf))
+      buf = gst_buffer_copy (buf);
+    else
+      gst_buffer_ref (buf);
+
+    GST_DEBUG_OBJECT (sink, "result is %p", buf);
     gst_buffer_set_caps (buf, padcaps);
   } else {
     gst_caps_unref (bufcaps);
+
+    /* since we keep this buffer out of the scope of this method */
+    gst_buffer_ref (buf);
   }
 
-  /* since we keep this buffer out of the scope of this method */
-  gst_buffer_ref (buf);
 
   g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_MULTI_FD_SINK_OPEN),
       GST_FLOW_ERROR);
