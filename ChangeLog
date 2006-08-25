@@ -1,3 +1,10 @@
+2006-08-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/basics-bus.xml:
+	  Docs update: fix wrong callback return value explanation; add
+	  some lines about the implicit relationship between main loop
+	  and main context; remove duplicate main loop variable declaration.
+
 2006-08-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/gst/gstcaps.c: (GST_START_TEST):
