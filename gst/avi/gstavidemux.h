@@ -85,8 +85,6 @@ typedef struct {
   /* stream length */
   guint64        total_bytes;
   guint32        total_frames;
-  guint64        total_time;
-
   /* stream length according to index */
   GstClockTime   idx_duration;
   /* stream length according to header */

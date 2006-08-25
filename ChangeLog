@@ -1,5 +1,26 @@
 2006-08-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_class_init),
+	(gst_avi_demux_init), (gst_avi_demux_finalize),
+	(gst_avi_demux_reset), (gst_avi_demux_index_last),
+	(gst_avi_demux_index_next), (gst_avi_demux_index_entry_for_time),
+	(gst_avi_demux_parse_subindex), (gst_avi_demux_parse_index),
+	(gst_avi_demux_stream_index), (gst_avi_demux_peek_tag),
+	(gst_avi_demux_next_data_buffer), (gst_avi_demux_stream_scan),
+	(gst_avi_demux_massage_index),
+	(gst_avi_demux_calculate_durations_from_index),
+	(gst_avi_demux_stream_header_pull), (gst_avi_demux_do_seek),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_loop),
+	(gst_avi_demux_chain), (gst_avi_demux_sink_activate),
+	(gst_avi_demux_change_state):
+	* gst/avi/gstavidemux.h:
+	More attempts to turn this into readable code.
+	Don't leak adapters.
+	Calculate duration according to index more efficiently.
+	Don't try to act like we drive the pipeline in chain mode.
+
+2006-08-25  Wim Taymans  <wim@fluendo.com>
+
 	* ext/annodex/gstcmmlutils.c: (gst_cmml_clock_time_from_npt):
 	Fix build.
 
