@@ -2207,30 +2207,34 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   sink = GST_MULTI_FD_SINK (bsink);
 
+  g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_MULTI_FD_SINK_OPEN),
+      GST_FLOW_WRONG_STATE);
+
   /* since we check every buffer for streamheader caps, we need to make
    * sure every buffer has caps set */
   bufcaps = gst_buffer_get_caps (buf);
   padcaps = GST_PAD_CAPS (GST_BASE_SINK_PAD (bsink));
 
   /* make sure we have caps on the pad */
-  if (!padcaps) {
-    if (!bufcaps) {
-      GST_ELEMENT_ERROR (sink, CORE, NEGOTIATION, (NULL),
-          ("Received first buffer without caps set"));
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-  }
+  if (!padcaps && !bufcaps)
+    goto no_caps;
 
   /* stamp the buffer with previous caps if no caps set */
   if (!bufcaps) {
-    /* We keep this buffer around, and need to write it, but we can't just use
-     * gst_buffer_make_writable(), because we're not allowed to unref this buf,
-     * basesink will do that for us */
-    if (!gst_buffer_is_writable (buf))
-      buf = gst_buffer_copy (buf);
-    else
+    if (!gst_buffer_is_metadata_writable (buf)) {
+      /* metadata is not writable, copy will be made and original buffer
+       * will be unreffed so we need to ref so that we don't loose the
+       * buffer in the render method. */
       gst_buffer_ref (buf);
-
+      /* the new buffer is ours only, we keep it out of the scope of this
+       * function */
+      buf = gst_buffer_make_metadata_writable (buf);
+    } else {
+      /* else the metadata is writable, we ref because we keep the buffer
+       * out of the scope of this method */
+      gst_buffer_ref (buf);
+    }
+    /* buffer metadata is writable now, set the caps */
     GST_DEBUG_OBJECT (sink, "result is %p", buf);
     gst_buffer_set_caps (buf, padcaps);
   } else {
@@ -2239,10 +2243,6 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     /* since we keep this buffer out of the scope of this method */
     gst_buffer_ref (buf);
   }
-
-
-  g_return_val_if_fail (GST_OBJECT_FLAG_IS_SET (sink, GST_MULTI_FD_SINK_OPEN),
-      GST_FLOW_ERROR);
 
   in_caps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 
@@ -2281,8 +2281,15 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
     sink->bytes_to_serve += GST_BUFFER_SIZE (buf);
   }
-
   return GST_FLOW_OK;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_ELEMENT_ERROR (sink, CORE, NEGOTIATION, (NULL),
+        ("Received first buffer without caps set"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static void

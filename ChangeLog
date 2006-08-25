@@ -1,3 +1,11 @@
+2006-08-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_render):
+	Small cleanups.
+	If a buffer is received with no caps, make the buffer metadata
+	writable and set the caps, making sure that we don't screw up the
+	refcounts.
+
 2006-08-25  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gdp/gstgdppay.c: (gst_gdp_pay_reset),
