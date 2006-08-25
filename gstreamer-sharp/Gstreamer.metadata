@@ -14,6 +14,8 @@
   <attr path="/api/namespace/object[@name='Pad']/method[@name='AddDataProbe']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Pad']/method[@name='RemoveDataProbe']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@name='AddMany']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@name='LinkMany']" name="hidden">1</attr>
+  <attr path="/api/namespace/object[@name='Element']/method[@name='UnlinkMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Bin']/method[@name='RemoveMany']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Message']/method[@cname='gst_message_new_error']" name="hidden">1</attr>
   <attr path="/api/namespace/object[@name='Element']/method[@cname='gst_element_add_pad']" name="hidden">1</attr>

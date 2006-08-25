@@ -19,6 +19,9 @@ helloworld.exe: $(srcdir)/HelloWorld.cs $(assemblies)
 typefind.exe: $(srcdir)/TypeFind.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/TypeFind.cs
 
+queueexample.exe: $(srcdir)/QueueExample.cs $(assemblies)
+	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/QueueExample.cs
+
 link:
 	ln -sf $(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll gstreamer-sharp.dll
 	ln -sf $(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll.config gstreamer-sharp.dll.config

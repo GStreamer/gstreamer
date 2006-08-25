@@ -24,7 +24,10 @@ public static class GstTypefindTest
 
         pipeline.SetState(State.Paused);
         pipeline.SetState(State.Null);
-
+		
+		source.Dispose();
+		typefind.Dispose();
+		sink.Dispose();
         pipeline.Dispose();
     }
     

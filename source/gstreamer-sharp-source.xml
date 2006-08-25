@@ -6,13 +6,13 @@
         <exclude>gstreamer-0.10.3/gst/gstinterface.h</exclude>
         <exclude>gstreamer-0.10.3/gst/gsturi.h</exclude>
       </namespace>
-<!--  
+	</library>
+<!--
+	<library name="gstcontroller-0.10.dll">
       <namespace name="Gst">
-        <file>gst-plugins-base-0.10.3/gst-libs/gst/interfaces/xoverlay.h</file>
-        <dir>gst-plugins-base-0.10.3/gst-libs/gst/video</dir>
-        <exclude>gst-plugins-base-0.10.3/gst-libs/gst/video/video.h</exclude>
+        <dir>gstreamer-0.10.3/libs/gst/controller</dir>
       </namespace>
--->
     </library>
+-->
   </api>
 </gapi-parser-input>

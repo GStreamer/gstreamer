@@ -68,6 +68,26 @@
 			Gst.Object.Ref(p.Handle);
 		return ret;
 	}
+	
+	public static bool LinkMany(params Element [] elements) 
+	{
+		for(int i=0; i < elements.Length - 1; i++) 
+		{
+			if(!elements[i].Link(elements[i+1]))
+				return false;
+		}
+		
+		return true;
+	}
+
+	public static void UnlinkMany(params Element [] elements) 
+	{
+		for(int i=0; i < elements.Length - 1; i++)
+		{
+			elements[i].Unlink(elements[i+1]);
+		}
+	}
+
 
     [DllImport("gstreamer-0.10.dll")]
     private static extern bool gst_element_query_position(IntPtr raw, ref Format format, out long cur);
