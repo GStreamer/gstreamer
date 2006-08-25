@@ -1003,16 +1003,27 @@ gst_vorbis_enc_buffer_check_discontinuous (GstVorbisEnc * vorbisenc,
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
     GST_DEBUG_OBJECT (vorbisenc, "Discont set on incoming buffer");
     ret = TRUE;
-  } else if (vorbisenc->expected_ts != GST_CLOCK_TIME_NONE &&
+  } else if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE &&
+      vorbisenc->expected_ts != GST_CLOCK_TIME_NONE &&
       GST_BUFFER_TIMESTAMP (buffer) != vorbisenc->expected_ts) {
-    GST_DEBUG_OBJECT (vorbisenc, "Expected TS % " GST_TIME_FORMAT
-        ", buffer TS % " GST_TIME_FORMAT,
-        GST_TIME_ARGS (vorbisenc->expected_ts),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
-    ret = TRUE;
+    /* It turns out that a lot of elements don't generate perfect streams due
+     * to rounding errors. So, we permit small errors (< 1/2 a sample) without
+     * causing a discont.
+     */
+    int halfsample = GST_SECOND / vorbisenc->frequency / 2;
+
+    if ((GstClockTimeDiff) (GST_BUFFER_TIMESTAMP (buffer) -
+            vorbisenc->expected_ts) > halfsample) {
+      GST_DEBUG_OBJECT (vorbisenc, "Expected TS % " GST_TIME_FORMAT
+          ", buffer TS % " GST_TIME_FORMAT,
+          GST_TIME_ARGS (vorbisenc->expected_ts),
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+      ret = TRUE;
+    }
   }
 
-  if (vorbisenc->expected_ts != GST_CLOCK_TIME_NONE) {
+  if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE &&
+      GST_BUFFER_DURATION (buffer) != GST_CLOCK_TIME_NONE) {
     vorbisenc->expected_ts = GST_BUFFER_TIMESTAMP (buffer) +
         GST_BUFFER_DURATION (buffer);
   } else

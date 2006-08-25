@@ -1,3 +1,13 @@
+2006-08-25  Michael Smith  <msmith@fluendo.com>
+
+	* ext/vorbis/vorbisenc.c:
+	(gst_vorbis_enc_buffer_check_discontinuous):
+	  Allow very small discontinuities in the timestamps. These we can't
+	  do anything useful with anyway (because vorbis's timestamps have
+	  only sample granularity), and are commonly produced by elements with
+	  minor bugs. Allow up to 1/2 a sample out.
+	  Fixes #351742.
+
 2006-08-24  Wim Taymans  <wim@fluendo.com>
 
 	* tests/examples/seek/seek.c: (seek_cb), (start_seek), (stop_seek),
