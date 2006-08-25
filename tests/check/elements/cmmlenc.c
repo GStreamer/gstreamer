@@ -71,11 +71,16 @@
 
 #define HEAD_TAG_ENCODED HEAD_TAG
 
-#define END_TAG \
-  "</cmml>"
-
 #define CLIP_TEMPLATE \
   "<clip id=\"%s\" track=\"%s\" start=\"%s\">"\
+    "<a href=\"http://www.annodex.org/\">http://www.annodex.org</a>"\
+    "<img src=\"images/index.jpg\"/>"\
+    "<desc>Annodex Foundation</desc>"\
+    "<meta name=\"test\" content=\"test content\"/>"\
+  "</clip>"
+
+#define ENDED_CLIP_TEMPLATE \
+  "<clip id=\"%s\" track=\"%s\" start=\"%s\" end=\"%s\">"\
     "<a href=\"http://www.annodex.org/\">http://www.annodex.org</a>"\
     "<img src=\"images/index.jpg\"/>"\
     "<desc>Annodex Foundation</desc>"\
@@ -90,12 +95,28 @@
     "<meta name=\"test\" content=\"test content\"/>"\
   "</clip>"
 
-GList *buffers;
-GList *current_buf = NULL;
-guint64 granulerate;
-guint8 granuleshift;
+#define EMPTY_CLIP_TEMPLATE_ENCODED \
+  "<clip track=\"%s\"/>"
 
-GstPad *srcpad, *sinkpad;
+#define fail_unless_equals_flow_return(a, b)                            \
+G_STMT_START {                                                          \
+  gchar *a_up = g_ascii_strup (gst_flow_get_name (a), -1);              \
+  gchar *b_up = g_ascii_strup (gst_flow_get_name (b), -1);              \
+  fail_unless (a == b,                                                  \
+      "'" #a "' (GST_FLOW_%s) is not equal to '" #b "' (GST_FLOW_%s)",  \
+      a_up, b_up);                                                      \
+  g_free (a_up);                                                        \
+  g_free (b_up);                                                        \
+} G_STMT_END;
+
+GList *buffers;
+static GList *current_buf;
+static guint64 granulerate;
+static guint8 granuleshift;
+static GstElement *cmmlenc;
+static GstBus *bus;
+static GstFlowReturn flow;
+static GstPad *srcpad, *sinkpad;
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -109,7 +130,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (SRC_CAPS)
     );
 
-GstBuffer *
+static GstBuffer *
 buffer_new (const gchar * buffer_data, guint size)
 {
   GstBuffer *buffer;
@@ -130,11 +151,9 @@ buffer_unref (void *buffer, void *user_data)
   gst_buffer_unref (GST_BUFFER (buffer));
 }
 
-GstElement *
+static void
 setup_cmmlenc ()
 {
-  GstElement *cmmlenc;
-  GstBus *bus;
   guint64 granulerate_n, granulerate_d;
 
   GST_DEBUG ("setup_cmmlenc");
@@ -155,25 +174,21 @@ setup_cmmlenc ()
       "granule-shift", &granuleshift, NULL);
 
   granulerate = GST_SECOND * granulerate_d / granulerate_n;
-  buffers = NULL;
-  return cmmlenc;
 }
 
 static void
-cleanup_cmmlenc (GstElement * cmmlenc)
+teardown_cmmlenc ()
 {
-  GstBus *bus;
-
   /* free encoded buffers */
   g_list_foreach (buffers, buffer_unref, NULL);
   g_list_free (buffers);
   buffers = NULL;
+  current_buf = NULL;
 
-  bus = GST_ELEMENT_BUS (cmmlenc);
   gst_bus_set_flushing (bus, TRUE);
   gst_object_unref (bus);
 
-  GST_DEBUG ("cleanup_cmmlenc");
+  GST_DEBUG ("teardown_cmmlenc");
   gst_check_teardown_src_pad (cmmlenc);
   gst_check_teardown_sink_pad (cmmlenc);
   gst_check_teardown_element (cmmlenc);
@@ -183,7 +198,15 @@ static void
 check_output_buffer_is_equal (const gchar * name,
     const gchar * data, gint refcount)
 {
-  GstBuffer *buffer = GST_BUFFER (current_buf->data);
+  GstBuffer *buffer;
+
+  if (current_buf == NULL)
+    current_buf = buffers;
+  else
+    current_buf = g_list_next (current_buf);
+
+  fail_unless (current_buf != NULL);
+  buffer = GST_BUFFER (current_buf->data);
 
   ASSERT_OBJECT_REFCOUNT (buffer, name, refcount);
   fail_unless (memcmp (GST_BUFFER_DATA (buffer), data,
@@ -191,58 +214,75 @@ check_output_buffer_is_equal (const gchar * name,
       "'%s' (%s) is not equal to (%s)", name, GST_BUFFER_DATA (buffer), data);
 }
 
-static void
-push_data (const gchar * name,
-    const gchar * data, gint size, GstFlowReturn expected_return)
+static GstFlowReturn
+push_data (const gchar * name, const gchar * data, gint size)
 {
   GstBuffer *buffer;
   GstFlowReturn res;
 
   buffer = buffer_new (data, size);
   res = gst_pad_push (srcpad, buffer);
-  fail_unless (res == expected_return,
-      "pushing %s returned %d not %d", name, res, expected_return);
+
+  return res;
 }
 
 static void
 check_headers ()
 {
   /* push the cmml start tag */
-  push_data ("preamble", PREAMBLE, strlen (PREAMBLE), GST_FLOW_OK);
-  /* push the stream tag */
-  push_data ("stream", STREAM_TAG, strlen (STREAM_TAG), GST_FLOW_OK);
-  /* push the head tag */
-  push_data ("head", HEAD_TAG, strlen (HEAD_TAG), GST_FLOW_OK);
+  flow = push_data ("preamble", PREAMBLE, strlen (PREAMBLE));
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
 
-  /* should output the cmml ident header and the cmml start tag transformed
-   * into a processing instruction */
-  current_buf = buffers;
-  fail_unless_equals_int (g_list_length (current_buf), 3);
+  /* push the stream tag */
+  flow = push_data ("stream", STREAM_TAG, strlen (STREAM_TAG));
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  /* push the head tag */
+  flow = push_data ("head", HEAD_TAG, strlen (HEAD_TAG));
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+
+  /* should output 3 buffers: the ident, preamble and head headers */
+  fail_unless_equals_int (g_list_length (buffers), 3);
 
   /* check the ident header */
   check_output_buffer_is_equal ("cmml-ident-buffer", IDENT_HEADER, 1);
 
   /* check the cmml processing instruction */
-  current_buf = current_buf->next;
   check_output_buffer_is_equal ("cmml-preamble-buffer", PREAMBLE_ENCODED, 1);
 
   /* check the encoded head tag */
-  current_buf = current_buf->next;
   check_output_buffer_is_equal ("head-tag-buffer", HEAD_TAG_ENCODED, 1);
 }
 
-static void
+static GstFlowReturn
 push_clip (const gchar * name, const gchar * track,
-    const gchar * start, const gchar * end, GstFlowReturn expected_return)
+    const gchar * start, const gchar * end)
 {
   gchar *clip;
+  GstFlowReturn res;
 
-  if (track == NULL)
-    track = "default";
-
-  clip = g_strdup_printf (CLIP_TEMPLATE, name, track, start);
-  push_data (name, clip, strlen (clip), expected_return);
+  if (end != NULL)
+    clip = g_strdup_printf (ENDED_CLIP_TEMPLATE, name, track, start, end);
+  else
+    clip = g_strdup_printf (CLIP_TEMPLATE, name, track, start);
+  res = push_data (name, clip, strlen (clip));
   g_free (clip);
+
+  return res;
+}
+
+static void
+check_clip_times (GstBuffer * buffer, GstClockTime start, GstClockTime prev)
+{
+  guint64 keyindex, keyoffset, granulepos;
+
+  granulepos = GST_BUFFER_OFFSET_END (buffer);
+  if (granuleshift == 0 || granuleshift == 64)
+    keyindex = 0;
+  else
+    keyindex = granulepos >> granuleshift;
+  keyoffset = granulepos - (keyindex << granuleshift);
+  fail_unless_equals_uint64 (keyindex * granulerate, prev);
+  fail_unless_equals_uint64 ((keyindex + keyoffset) * granulerate, start);
 }
 
 static void
@@ -251,126 +291,198 @@ check_clip (const gchar * name, const gchar * track,
 {
   gchar *encoded_clip;
   GstBuffer *buffer;
-  gint64 keyindex, keyoffset, granulepos;
 
-  if (track == NULL)
-    track = "default";
-
-  current_buf = current_buf->next;
-  fail_unless (g_list_length (current_buf));
   encoded_clip = g_strdup_printf (CLIP_TEMPLATE_ENCODED, name, track);
   check_output_buffer_is_equal (name, encoded_clip, 1);
   g_free (encoded_clip);
   buffer = GST_BUFFER (current_buf->data);
-  granulepos = GST_BUFFER_OFFSET_END (GST_BUFFER (buffer));
-  keyindex = granulepos >> granuleshift;
-  keyoffset = granulepos - (keyindex << granuleshift);
-  fail_unless_equals_uint64 (keyindex * granulerate, prev);
-  fail_unless_equals_uint64 ((keyindex + keyoffset) * granulerate, start);
+  check_clip_times (buffer, start, prev);
 }
 
 static void
-push_end ()
+check_empty_clip (const gchar * name, const gchar * track,
+    GstClockTime start, GstClockTime prev)
 {
-  push_data ("end", END_TAG, strlen (END_TAG), GST_FLOW_OK);
-}
+  gchar *encoded_clip;
+  GstBuffer *buffer;
 
-static void
-check_end ()
-{
-  /* should output the EOS page */
-  current_buf = current_buf->next;
-  fail_unless_equals_int (g_list_length (current_buf), 1);
-  check_output_buffer_is_equal ("cmml-eos-buffer", NULL, 1);
+  encoded_clip = g_strdup_printf (EMPTY_CLIP_TEMPLATE_ENCODED, track);
+  check_output_buffer_is_equal (name, encoded_clip, 1);
+  g_free (encoded_clip);
+  buffer = GST_BUFFER (current_buf->data);
+  check_clip_times (buffer, start, prev);
 }
 
 GST_START_TEST (test_enc)
 {
-  GstElement *cmmlenc;
-
-  cmmlenc = setup_cmmlenc ();
-
   check_headers ();
 
-  push_clip ("clip-1", "default", "1.234", NULL, GST_FLOW_OK);
-  check_clip ("clip-1", "default", 1234 * granulerate, 0);
+  flow = push_clip ("clip-1", "default", "1.234", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_clip ("clip-1", "default", 1 * GST_SECOND + 234 * GST_MSECOND, 0);
 
-  push_clip ("clip-2", NULL, "5.678", NULL, GST_FLOW_OK);
-  check_clip ("clip-2", "default", 5678 * granulerate, 1234 * granulerate);
+  flow = push_clip ("clip-2", "default", "5.678", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_clip ("clip-2", "default",
+      5 * GST_SECOND + 678 * GST_MSECOND, 1 * GST_SECOND + 234 * GST_MSECOND);
 
-  push_clip ("clip-3", "othertrack", "9.123", NULL, GST_FLOW_OK);
-  check_clip ("clip-3", "othertrack", 9123 * granulerate, 0);
+  flow = push_clip ("clip-3", "othertrack", "9.123", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_clip ("clip-3", "othertrack", 9 * GST_SECOND + 123 * GST_MSECOND, 0);
 
-  push_end ();
-  check_end ();
-
-  cleanup_cmmlenc (cmmlenc);
+  flow = push_data ("end-tag", "</cmml>", strlen ("</cmml>"));
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_output_buffer_is_equal ("cmml-eos", NULL, 1);
 }
 
 GST_END_TEST;
 
-GST_START_TEST (test_bad_start_time)
+GST_START_TEST (test_clip_end_time)
 {
-  GstElement *cmmlenc;
-
-  cmmlenc = setup_cmmlenc ();
-
   check_headers ();
 
-  push_clip ("clip-1", "default", "1000:00:00.000", NULL, GST_FLOW_OK);
-  check_clip ("clip-1", "default", (guint64) 3600000 * 1000 * granulerate, 0);
+  /* push a clip that starts at 1.234 an ends at 2.234 */
+  flow = push_clip ("clip-1", "default", "1.234", "2.234");
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_clip ("clip-1", "default", 1 * GST_SECOND + 234 * GST_MSECOND, 0);
 
-  /* keyindex overflow: npt:1000:00:00.000 doesn't fit in 32 bits */
-  push_clip ("clip-2", NULL, "5.678", NULL, GST_FLOW_ERROR);
+  /* now check that the encoder created an empty clip starting at 2.234 to mark
+   * the end of clip-1 */
+  check_empty_clip ("clip-1-end", "default",
+      2 * GST_SECOND + 234 * GST_MSECOND, 1 * GST_SECOND + 234 * GST_MSECOND);
 
-  /* other tracks should work */
-  push_clip ("clip-3", "othertrack", "9.123", NULL, GST_FLOW_OK);
-  check_clip ("clip-3", "othertrack", 9123 * granulerate, 0);
-
-  /* bad msecs */
-  push_clip ("clip-bad-msecs", "default", "0.1000", NULL, GST_FLOW_ERROR);
-
-  /* bad secs */
-  push_clip ("clip-bad-secs", "default", "00:00:60.123", NULL, GST_FLOW_ERROR);
-
-  /* bad minutes */
-  push_clip ("clip-bad-minutes", "default", "00:60:12.345",
-      NULL, GST_FLOW_ERROR);
-
-  /* bad hours */
-  push_clip ("clip-bad-hours", "default", "10000:12:34.567",
-      NULL, GST_FLOW_ERROR);
-
-  push_end ();
-  check_end ();
-
-  cleanup_cmmlenc (cmmlenc);
+  /* now push another clip on the same track and check that the keyindex part of
+   * the granulepos points to clip-1 and not to the empty clip */
+  flow = push_clip ("clip-2", "default", "5", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_clip ("clip-2", "default",
+      5 * GST_SECOND, 1 * GST_SECOND + 234 * GST_MSECOND);
 }
-GST_END_TEST static Suite *
+
+GST_END_TEST;
+
+GST_START_TEST (test_time_order)
+{
+  check_headers ();
+
+  /* clips belonging to the same track must have start times in non decreasing
+   * order */
+  flow = push_clip ("clip-1", "default", "1000:00:00.000", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_clip ("clip-1", "default", 3600 * 1000 * GST_SECOND, 0);
+
+  /* this will make the encoder throw an error message */
+  flow = push_clip ("clip-2", "default", "5.678", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_ERROR);
+
+  flow = push_clip ("clip-3", "default", "1000:00:00.001", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_clip ("clip-3", "default",
+      3600 * 1000 * GST_SECOND + 1 * GST_MSECOND, 3600 * 1000 * GST_SECOND);
+
+  /* tracks don't interfere with each other */
+  flow = push_clip ("clip-4", "othertrack", "9.123", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_clip ("clip-4", "othertrack", 9 * GST_SECOND + 123 * GST_MSECOND, 0);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_time_parsing)
+{
+  check_headers ();
+
+  flow = push_clip ("bad-msecs", "default", "0.1000", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_ERROR);
+
+  flow = push_clip ("bad-secs", "default", "00:00:60.123", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_ERROR);
+
+  flow = push_clip ("bad-minutes", "default", "00:60:12.345", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_ERROR);
+
+  /* this fails since we can't store 5124096 * 3600 * GST_SECOND in a
+   * GstClockTime */
+  flow = push_clip ("bad-hours", "default", "5124096:00:00.000", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_ERROR);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_time_limits)
+{
+  check_headers ();
+
+  /* ugly hack to make sure that the following checks actually overflow parsing
+   * the times in gst_cmml_clock_time_from_npt rather than converting them to
+   * granulepos in gst_cmml_clock_time_to_granule */
+  granuleshift = 64;
+  g_object_set (cmmlenc, "granule-shift", granuleshift, NULL);
+
+  /* 5124095:34:33.709 is the max npt-hhmmss time representable with
+   * GstClockTime */
+  flow = push_clip ("max-npt-hhmmss", "foo", "5124095:34:33.709", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_clip ("max-npt-hhmmss", "foo",
+      (GstClockTime) 5124095 * 3600 * GST_SECOND + 34 * 60 * GST_SECOND +
+      33 * GST_SECOND + 709 * GST_MSECOND, 0);
+
+  flow = push_clip ("overflow-max-npt-hhmmss", "overflows",
+      "5124095:34:33.710", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_ERROR);
+
+  /* 18446744073.709 is the max ntp-sec time */
+  flow = push_clip ("max-npt-secs", "bar", "18446744073.709", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_clip ("max-npt-secs", "bar",
+      (GstClockTime) 5124095 * 3600 * GST_SECOND + 34 * 60 * GST_SECOND +
+      33 * GST_SECOND + 709 * GST_MSECOND, 0);
+
+  /* overflow doing 18446744074 * GST_SECOND */
+  flow = push_clip ("overflow-max-npt-secs", "overflows",
+      "18446744074.000", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_ERROR);
+
+  /* overflow doing seconds + milliseconds */
+  flow = push_clip ("overflow-max-npt-secs-msecs", "overflows",
+      "18446744073.710", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_ERROR);
+
+  /* reset granuleshift to 32 to check keyoffset overflows in
+   * gst_cmml_clock_time_to_granule */
+  granuleshift = 32;
+  g_object_set (cmmlenc, "granule-shift", granuleshift, NULL);
+
+  /* 1193:02:47.295 is the max time we can encode in the keyoffset part of a
+   * granulepos given a granuleshift of 32 */
+  flow = push_clip ("max-granule-keyoffset", "baz", "1193:02:47.295", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_OK);
+  check_clip ("max-granule-keyoffset", "baz",
+      1193 * 3600 * GST_SECOND + 2 * 60 * GST_SECOND +
+      47 * GST_SECOND + 295 * GST_MSECOND, 0);
+
+  flow = push_clip ("overflow-max-granule-keyoffset", "overflows",
+      "1193:02:47.296", NULL);
+  fail_unless_equals_flow_return (flow, GST_FLOW_ERROR);
+}
+
+GST_END_TEST;
+
+static Suite *
 cmmlenc_suite ()
 {
   Suite *s = suite_create ("cmmlenc");
-  TCase *tc_chain = tcase_create ("general");
+  TCase *tc_general = tcase_create ("general");
 
-  suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_enc);
-  tcase_add_test (tc_chain, test_bad_start_time);
+  suite_add_tcase (s, tc_general);
+  tcase_add_checked_fixture (tc_general, setup_cmmlenc, teardown_cmmlenc);
+  tcase_add_test (tc_general, test_enc);
+  tcase_add_test (tc_general, test_clip_end_time);
+  tcase_add_test (tc_general, test_time_order);
+  tcase_add_test (tc_general, test_time_parsing);
+  tcase_add_test (tc_general, test_time_limits);
+
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = cmmlenc_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (cmmlenc);

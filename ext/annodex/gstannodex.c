@@ -39,13 +39,15 @@ gst_annodex_granule_to_time (gint64 granulepos, gint64 granulerate_n,
   gint64 granulerate;
   GstClockTime res;
 
+  g_return_val_if_fail (granuleshift <= 64, GST_CLOCK_TIME_NONE);
+
   if (granulepos == -1)
     return GST_CLOCK_TIME_NONE;
 
   if (granulepos == 0 || granulerate_n == 0 || granulerate_d == 0)
     return 0;
 
-  if (granuleshift != 0) {
+  if (granuleshift != 0 && granuleshift != 64) {
     keyindex = granulepos >> granuleshift;
     keyoffset = granulepos - (keyindex << granuleshift);
     granulepos = keyindex + keyoffset;

@@ -259,6 +259,7 @@ gst_cmml_enc_change_state (GstElement * element, GstStateChange transition)
       gst_cmml_track_list_destroy (enc->tracks);
       enc->tracks = NULL;
       g_free (enc->preamble);
+      enc->preamble = NULL;
       gst_cmml_parser_free (enc->parser);
       break;
     }
@@ -468,7 +469,7 @@ gst_cmml_enc_parse_tag_head (GstCmmlEnc * enc, GstCmmlTagHead * head)
 flow_unexpected:
   GST_ELEMENT_ERROR (enc, STREAM, ENCODE,
       (NULL), ("got head tag before preamble"));
-  enc->flow_return = GST_FLOW_UNEXPECTED;
+  enc->flow_return = GST_FLOW_ERROR;
   return;
 push_error:
   gst_caps_unref (caps);
@@ -507,6 +508,14 @@ gst_cmml_enc_parse_tag_clip (GstCmmlEnc * enc, GstCmmlTagClip * clip)
       (gchar *) clip->track);
   if (prev_clip) {
     prev_clip_time = prev_clip->start_time;
+    if (prev_clip_time > clip->start_time) {
+      GST_ELEMENT_ERROR (enc, STREAM, ENCODE,
+          (NULL), ("previous clip start time > current clip (%s) start time",
+              clip->id));
+      enc->flow_return = GST_FLOW_ERROR;
+      return;
+    }
+
     /* we don't need the prev clip anymore */
     gst_cmml_track_list_del_clip (enc->tracks, prev_clip);
   }
@@ -525,12 +534,6 @@ gst_cmml_enc_push_clip (GstCmmlEnc * enc, GstCmmlTagClip * clip,
   GstBuffer *buffer;
   gchar *clip_string;
   gint64 granulepos;
-
-  if (prev_clip_time != GST_CLOCK_TIME_NONE &&
-      prev_clip_time > clip->start_time) {
-    GST_WARNING_OBJECT (enc,
-        "previous clip start time > current clip (%s) start time", clip->id);
-  }
 
   /* encode the clip */
   clip_string =
@@ -591,8 +594,7 @@ gst_cmml_enc_push (GstCmmlEnc * enc, GstBuffer * buffer)
 
   res = gst_pad_push (enc->srcpad, buffer);
   if (GST_FLOW_IS_FATAL (res))
-    GST_ELEMENT_ERROR (enc, STREAM, ENCODE,
-        (NULL), ("could not push buffer: %s", gst_flow_get_name (res)));
+    GST_WARNING_OBJECT (enc, "push returned: %s", gst_flow_get_name (res));
 
   return res;
 }

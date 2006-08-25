@@ -58,15 +58,17 @@ gst_cmml_clock_time_from_npt (const gchar * time)
 
     seconds_t = seconds * GST_SECOND;
   } else {
+    guint64 u64seconds;
+
     /* parse npt-sec */
     hours_t = 0;
     minutes = 0;
-    fields = sscanf (time, "%d.%d", &seconds, &mseconds);
+    fields = sscanf (time, "%llu.%d", &u64seconds, &mseconds);
     if (seconds < 0)
       goto bad_input;
 
-    seconds_t = gst_util_uint64_scale (seconds, GST_SECOND, 1);
-    if (seconds == G_MAXUINT64)
+    seconds_t = gst_util_uint64_scale_int (u64seconds, GST_SECOND, 1);
+    if (seconds_t == G_MAXUINT64)
       goto overflow;
   }
 
@@ -177,8 +179,12 @@ gst_cmml_clock_time_to_granule (GstClockTime prev_time,
     GstClockTime current_time, gint64 granulerate_n, gint64 granulerate_d,
     guint8 granuleshift)
 {
-  gint64 keyindex, keyoffset, granulepos;
+  guint64 keyindex, keyoffset, granulepos, maxoffset;
   gint64 granulerate;
+
+  g_return_val_if_fail (granulerate_d != 0, -1);
+  g_return_val_if_fail (granuleshift > 0, -1);
+  g_return_val_if_fail (granuleshift <= 64, -1);
 
   if (prev_time == GST_CLOCK_TIME_NONE)
     prev_time = 0;
@@ -191,14 +197,23 @@ gst_cmml_clock_time_to_granule (GstClockTime prev_time,
       granulerate_d, granulerate_n);
 
   prev_time = prev_time / granulerate;
-  if (prev_time > (((guint64) 1 << (64 - granuleshift)) - 1))
+
+  /* granuleshift == 64 should be a << 0 shift, which is defined */
+  maxoffset = ((guint64) 1 << (64 - granuleshift)) - 1;
+  if (prev_time > maxoffset)
     /* we need more than 64 - granuleshift bits to encode prev_time */
     goto overflow;
 
   keyindex = prev_time << granuleshift;
 
   keyoffset = (current_time / granulerate) - prev_time;
-  if (keyoffset > ((guint64) 1 << granuleshift) - 1)
+  /* make sure we don't shift to the limits of the types as this is undefined. */
+  if (granuleshift == 64)
+    maxoffset = G_MAXUINT64;
+  else
+    maxoffset = ((guint64) 1 << granuleshift) - 1;
+
+  if (keyoffset > maxoffset)
     /* we need more than granuleshift bits to encode prev_time - current_time */
     goto overflow;
 
@@ -301,16 +316,13 @@ gst_cmml_track_list_has_clip (GHashTable * tracks, GstCmmlTagClip * clip)
   GstCmmlTrack *track;
   GList *walk;
   GstCmmlTagClip *tmp;
-  gchar *clip_id = (gchar *) clip->id;
   gboolean res = FALSE;
 
-  g_return_val_if_fail (clip_id != NULL, FALSE);
-
-  track = g_hash_table_lookup (tracks, clip_id);
+  track = g_hash_table_lookup (tracks, (gchar *) clip->track);
   if (track) {
     for (walk = track->clips; walk; walk = g_list_next (walk)) {
       tmp = GST_CMML_TAG_CLIP (walk->data);
-      if (!strcmp ((gchar *) tmp->id, clip_id)) {
+      if (tmp->start_time == clip->start_time) {
         res = TRUE;
         break;
       }

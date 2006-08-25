@@ -1,3 +1,43 @@
+2006-08-25  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Alessandro Decina <alessandro at nnva dot org>
+
+	* ext/annodex/gstannodex.c: (gst_annodex_granule_to_time):
+	Do some extra sanity checks.
+	Fixes #350340.
+
+	* ext/annodex/gstcmmlenc.c: (gst_cmml_enc_change_state),
+	(gst_cmml_enc_parse_tag_head), (gst_cmml_enc_parse_tag_clip),
+	(gst_cmml_enc_push_clip), (gst_cmml_enc_push):
+	Check if clip->start_time is valid before adding the clip to the
+	track list.
+	Reset enc->preamble going from PAUSED to READY.
+	Don't use GST_FLOW_UNEXPECTED for wrong usage of the element, it is
+	only used for EOS.
+	Only post an error message if we were the one that created the fatal
+	GstFlowReturn value.
+
+	* ext/annodex/gstcmmlutils.c: (gst_cmml_clock_time_from_npt),
+	(gst_cmml_clock_time_to_granule), (gst_cmml_track_list_has_clip):
+	Parse the seconds field of the npt-sec time format using %llu rather than
+	%d and check that the value scaled by GST_SECOND doesn't overflow.
+	Use guint64(s) to represent the keyindex and keyoffset fields of a granulepos.
+	Lookup a clip's track with clip->track rather than clip->id which
+	makes no sense.
+	Identify a clip by its track and start time and not its xml id.
+	do some more input checking and make sure we don't do undefined shifts.
+
+	* tests/check/elements/cmmldec.c: (setup_cmmldec),
+	(teardown_cmmldec), (check_output_buffer_is_equal), (push_data),
+	(cmml_tag_message_pop), (check_headers), (push_clip_full),
+	(push_clip), (push_empty_clip), (check_output_clip),
+	(GST_START_TEST), (cmmldec_suite):
+	* tests/check/elements/cmmlenc.c: (setup_cmmlenc),
+	(teardown_cmmlenc), (check_output_buffer_is_equal), (push_data),
+	(check_headers), (push_clip), (check_clip_times), (check_clip),
+	(check_empty_clip), (GST_START_TEST), (cmmlenc_suite):
+	Added some more checks.
+
 2006-08-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audiofxgood/audiopanorama.c: (gst_audio_panorama_class_init),
