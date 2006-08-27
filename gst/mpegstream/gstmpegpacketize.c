@@ -44,10 +44,12 @@ gst_mpeg_packetize_new (GstMPEGPacketizeType type)
   new->MPEG2 = FALSE;
   new->type = type;
 
+#ifndef GST_DISABLE_GST_DEBUG
   if (gstmpegpacketize_debug == NULL) {
     GST_DEBUG_CATEGORY_INIT (gstmpegpacketize_debug, "mpegpacketize", 0,
         "MPEG parser element packetizer");
   }
+#endif
 
   return new;
 }
