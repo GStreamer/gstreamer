@@ -1,3 +1,9 @@
+2006-08-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_next_data_buffer),
+	(gst_avi_demux_stream_scan):
+          Initialze variables.
+
 2006-08-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_class_init),

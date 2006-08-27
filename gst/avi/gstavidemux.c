@@ -1814,18 +1814,18 @@ gst_avi_demux_next_data_buffer (GstAviDemux * avi, guint64 * offset,
     guint32 * tag, guint * size)
 {
   guint64 off = *offset;
-  guint siz;
+  guint _size = 0;
   GstFlowReturn res;
 
   do {
-    res = gst_avi_demux_peek_tag (avi, off, tag, &siz);
+    res = gst_avi_demux_peek_tag (avi, off, tag, &_size);
     if (res != GST_FLOW_OK)
       break;
     if (*tag == GST_RIFF_TAG_LIST)
       off += 12;
     else {
       *offset = off + 8;
-      *size = siz;
+      *size = _size;
       break;
     }
   } while (TRUE);
@@ -1851,7 +1851,7 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
   guint64 pos = avi->offset;
   guint64 length;
   gint64 tmplength;
-  guint32 tag;
+  guint32 tag = 0;
   GList *list = NULL;
   guint index_size = 0;
 
