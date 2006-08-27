@@ -64,7 +64,7 @@
     <xi:include href="xml/plugin-alphacolor.xml" />
     <xi:include href="xml/plugin-annodex.xml" />
     <xi:include href="xml/plugin-apetag.xml" />
-    <xi:include href="xml/plugin-audiofxgood.xml" />
+    <xi:include href="xml/plugin-audiofx.xml" />
     <xi:include href="xml/plugin-autodetect.xml" />
     <xi:include href="xml/plugin-avi.xml" />
     <xi:include href="xml/plugin-cacasink.xml" />

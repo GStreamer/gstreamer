@@ -1,5 +1,20 @@
 2006-08-27  Stefan Kost  <ensonic@users.sf.net>
 
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audiofxgood.xml:
+	* gst/audiofx/Makefile.am:
+	* gst/audiofx/audiofx.c:
+	* gst/audiofxgood/.cvsignore:
+	* gst/audiofxgood/Makefile.am:
+	* gst/audiofxgood/audiofx.c:
+	* gst/audiofxgood/audiopanorama.c:
+	* gst/audiofxgood/audiopanorama.h:
+          Rename again (audiofxgood -> audiofx).
+
+2006-08-27  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_next_data_buffer),
 	(gst_avi_demux_stream_scan):
           Initialze variables.

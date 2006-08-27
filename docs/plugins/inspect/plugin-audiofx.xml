@@ -1,8 +1,8 @@
 <plugin>
-  <name>audiofxgood</name>
+  <name>audiofx</name>
   <description>Audio effects plugin</description>
-  <filename>../../gst/audiofxgood/.libs/libgstaudiofxgood.so</filename>
-  <basename>libgstaudiofxgood.so</basename>
+  <filename>../../gst/audiofx/.libs/libgstaudiofx.so</filename>
+  <basename>libgstaudiofx.so</basename>
   <version>0.10.4.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>

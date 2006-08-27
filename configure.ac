@@ -80,7 +80,7 @@ GST_PLUGINS_ALL="\
 		videofilter \
 		alpha \
 		apetag \
-		audiofxgood \
+		audiofx \
 		auparse \
 		autodetect \
 		avi \
@@ -761,7 +761,7 @@ Makefile
 gst/Makefile
 gst/alpha/Makefile
 gst/apetag/Makefile
-gst/audiofxgood/Makefile
+gst/audiofx/Makefile
 gst/auparse/Makefile
 gst/autodetect/Makefile
 gst/avi/Makefile
