@@ -701,40 +701,36 @@ gst_caps_remove_structure (GstCaps * caps, guint idx)
  * structure is not copied; @caps becomes the owner of @structure.
  */
 void
-gst_caps_merge_structure (GstCaps * caps, GstStructure * structure2)
+gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
 {
   g_return_if_fail (GST_IS_CAPS (caps));
   g_return_if_fail (IS_WRITABLE (caps));
 
-  if (G_LIKELY (structure2)) {
+  if (G_LIKELY (structure)) {
     GstStructure *structure1;
     int i;
     gboolean unique = TRUE;
 
-    g_return_if_fail (structure2->parent_refcount == NULL);
+    g_return_if_fail (structure->parent_refcount == NULL);
 #if 0
 #ifdef USE_POISONING
-    STRUCTURE_POISON (structure2);
+    STRUCTURE_POISON (structure);
 #endif
 #endif
-    /*GST_DEBUG ("merge ?: %" GST_PTR_FORMAT, structure2); */
     /* check each structure */
     for (i = caps->structs->len - 1; i >= 0; i--) {
       structure1 = gst_caps_get_structure (caps, i);
-      /*GST_DEBUG ("  with: %" GST_PTR_FORMAT, structure1); */
-      /* if structure2 is a subset of structure1, then skip it */
-      if (gst_caps_structure_is_subset (structure1, structure2)) {
-        /*GST_DEBUG ("  no"); */
+      /* if structure is a subset of structure1, then skip it */
+      if (gst_caps_structure_is_subset (structure1, structure)) {
         unique = FALSE;
         break;
       }
     }
     if (unique) {
-      /*GST_DEBUG ("  yes"); */
-      gst_structure_set_parent_refcount (structure2, &caps->refcount);
-      g_ptr_array_add (caps->structs, structure2);
+      gst_structure_set_parent_refcount (structure, &caps->refcount);
+      g_ptr_array_add (caps->structs, structure);
     } else {
-      gst_structure_free (structure2);
+      gst_structure_free (structure);
     }
   }
 }

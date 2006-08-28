@@ -79,7 +79,7 @@ GST_START_TEST (create_queries)
     GstFormat format;
     gint64 start, stop;
 
-    format = GST_FORMAT_TIME;
+    format = GST_FORMAT_BYTES;
     query = gst_query_new_segment (format);
 
     fail_if (query == NULL);
@@ -88,10 +88,24 @@ GST_START_TEST (create_queries)
     gst_query_parse_segment (query, &rate, &format, &start, &stop);
 
     /* see if empty gives undefined formats */
-    fail_if (rate == 1.0);
-    fail_if (format != GST_FORMAT_TIME);
+    fail_if (rate != 0.0);
+    fail_if (format != GST_FORMAT_BYTES);
     fail_if (start != -1);
     fail_if (stop != -1);
+
+    /* change all values */
+    gst_query_set_segment (query, 2.0, GST_FORMAT_TIME, 1 * GST_SECOND,
+        3 * GST_SECOND);
+
+    gst_query_parse_segment (query, &rate, &format, &start, &stop);
+
+    /* see if the values were changed */
+    fail_if (rate != 2.0);
+    fail_if (format != GST_FORMAT_TIME);
+    fail_if (start != 1 * GST_SECOND);
+    fail_if (stop != 3 * GST_SECOND);
+
+    gst_query_unref (query);
   }
 
   /* FORMATS */
