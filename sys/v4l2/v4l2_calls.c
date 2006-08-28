@@ -85,6 +85,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   if (dir != GST_PAD_SINK) {
 #endif /* #if 0 - output not handled by now */
 
+    GST_DEBUG_OBJECT (v4l2object->element, "  inputs");
     /* and now, the inputs */
     for (n = 0;; n++) {
       struct v4l2_input input;
@@ -180,6 +181,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   }
 #endif /* #if 0 - output not handled by now */
 
+  GST_DEBUG_OBJECT (v4l2object->element, "  norms");
   /* norms... */
   for (n = 0;; n++) {
     struct v4l2_standard standard;
@@ -208,20 +210,24 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     v4l2object->stds = g_list_append (v4l2object->stds, (gpointer) norm);
   }
 
+  GST_DEBUG_OBJECT (v4l2object->element, "  controls+menus");
   /* and lastly, controls+menus (if appropriate) */
   for (n = V4L2_CID_BASE;; n++) {
     struct v4l2_queryctrl control;
     GstV4l2ColorBalanceChannel *v4l2channel;
     GstColorBalanceChannel *channel;
 
-    /* hacky... */
-    if (n == V4L2_CID_LASTP1)
+    /* when we reached the last official CID, continue with private CIDs */
+    if (n == V4L2_CID_LASTP1) {
+      GST_DEBUG_OBJECT (v4l2object->element, "chhecking private CIDs");
       n = V4L2_CID_PRIVATE_BASE;
+    }
 
     control.id = n;
     if (ioctl (v4l2object->video_fd, VIDIOC_QUERYCTRL, &control) < 0) {
       if (errno == EINVAL) {
         if (n < V4L2_CID_PRIVATE_BASE)
+          /* continue so that we also check private controls */
           continue;
         else
           break;
@@ -249,17 +255,19 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       case V4L2_CID_EXPOSURE:
       case V4L2_CID_AUTOGAIN:
       case V4L2_CID_GAIN:
-        /* we only handle these for now */
+        /* we only handle these for now (why?) */
         break;
       default:
         GST_DEBUG_OBJECT (v4l2object->element,
-            "ControlID %s (%d) unhandled, FIXME", control.name, n);
+            "ControlID %s (%x) unhandled, FIXME", control.name, n);
         control.id++;
         break;
     }
     if (n != control.id)
       continue;
 
+    GST_DEBUG_OBJECT (v4l2object->element,
+        "Adding ControlID %s (%x)", control.name, n);
     v4l2channel = g_object_new (GST_TYPE_V4L2_COLOR_BALANCE_CHANNEL, NULL);
     channel = GST_COLOR_BALANCE_CHANNEL (v4l2channel);
     channel->label = g_strdup ((const gchar *) control.name);
@@ -301,6 +309,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         channel->max_value = TRUE;
         break;
       default:
+        GST_DEBUG_OBJECT (v4l2object->element,
+            "No range for ControlID %s (%x), type=%d",
+            control.name, n, control.type);
         channel->min_value = channel->max_value = 0;
         break;
     }
@@ -308,6 +319,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     v4l2object->colors = g_list_append (v4l2object->colors, (gpointer) channel);
   }
 
+  GST_DEBUG_OBJECT (v4l2object->element, "done");
   return TRUE;
 }
 
