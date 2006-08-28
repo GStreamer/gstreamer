@@ -82,8 +82,13 @@ GST_END_TEST;
 GST_START_TEST (test_error_no_bus)
 {
   GstElement *e;
+  GstBus *bus;
 
   e = gst_element_factory_make ("fakesrc", "source");
+
+  /* get the bus, should be NULL */
+  bus = gst_element_get_bus (e);
+  fail_if (bus != NULL);
 
   /* I don't want errors shown */
   gst_debug_set_default_threshold (GST_LEVEL_NONE);

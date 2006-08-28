@@ -1,3 +1,11 @@
+2006-08-28  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Torsten Schoenfeld <kaffeetisch at gmx dot de>
+
+	* gst/gstelement.c: (gst_element_get_bus):
+	* tests/check/gst/gstelement.c: (GST_START_TEST):
+	Check for NULL before _reffing the bus. Fixes #353122.
+
 2006-08-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/basics-bus.xml:

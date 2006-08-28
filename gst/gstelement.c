@@ -2695,8 +2695,8 @@ gst_element_get_bus (GstElement * element)
   g_return_val_if_fail (GST_IS_ELEMENT (element), result);
 
   GST_OBJECT_LOCK (element);
-  result = GST_ELEMENT_BUS (element);
-  gst_object_ref (result);
+  if ((result = GST_ELEMENT_BUS (element)))
+    gst_object_ref (result);
   GST_OBJECT_UNLOCK (element);
 
   GST_DEBUG_OBJECT (element, "got bus %" GST_PTR_FORMAT, result);
