@@ -460,9 +460,6 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GST_BUFFER_TIMESTAMP (buf) = runtimestamp;
     GST_BUFFER_OFFSET (buf) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_OFFSET_END (buf) = GST_CLOCK_TIME_NONE;
-    /* We're using single-segment to generate a continuous stream, so drop the
-     * DISCONT flag if it was previously set */
-    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
   return ret;
