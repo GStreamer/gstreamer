@@ -933,6 +933,9 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
         GST_TIME_ARGS (cstop));
   }
 
+  /* set last stop position */
+  gst_segment_set_last_stop (segment, GST_FORMAT_TIME, cstop);
+
 do_times:
   /* this can produce wrong values if we accumulated non-TIME segments. If this happens,
    * upstream is behaving very badly */

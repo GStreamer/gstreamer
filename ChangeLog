@@ -1,3 +1,13 @@
+2006-08-28  Edward Hervey  <edward@fluendo.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times):
+	Inform GstSegment of the last stop position in order for the current
+	segment to have a proper duration if it doesn't have a specific stop
+	position from which a duration could be calculated.
+	This bug was noticeable when a non-flushing, non-update new segment was
+	followed by another segment (all buffers from the new segment were being
+	dropped).
+
 2006-08-28  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek):
