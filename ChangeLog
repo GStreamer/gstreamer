@@ -9,6 +9,7 @@
 	Handle the DISCONT flag correctly.
 	Use GstSegment to track position.
 	Fail when not negotiated.
+	Fixes #353234.
 
 2006-08-25  Michael Smith  <msmith@fluendo.com>
 
