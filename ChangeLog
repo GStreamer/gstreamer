@@ -1,3 +1,10 @@
+2006-08-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/appendix-win32.xml:
+	  Remove mention of popt, we don't depend on that any
+	  longer (#353136). Add some comments pointing out that
+	  this section is slightly outdated.
+
 2006-08-28  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Torsten Schoenfeld <kaffeetisch at gmx dot de>
