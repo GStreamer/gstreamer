@@ -3857,14 +3857,14 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   if (peerpad == NULL)
     goto not_linked;
 
-  GST_LOG_OBJECT (peerpad, "sending event on peerpad");
+  GST_LOG_OBJECT (pad, "sending event to peerpad %" GST_PTR_FORMAT, peerpad);
   gst_object_ref (peerpad);
   GST_OBJECT_UNLOCK (pad);
 
   result = gst_pad_send_event (peerpad, event);
 
+  GST_LOG_OBJECT (pad, "sent event to peerpad %" GST_PTR_FORMAT, peerpad);
   gst_object_unref (peerpad);
-  GST_LOG_OBJECT (peerpad, "sent event on peerpad");
 
   return result;
 
