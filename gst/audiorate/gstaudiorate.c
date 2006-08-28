@@ -501,6 +501,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   if (audiorate->discont) {
     /* we need to output a discont buffer, do so now */
     GST_DEBUG_OBJECT (audiorate, "marking DISCONT on output buffer");
+    buf = gst_buffer_make_metadata_writable (buf);
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     audiorate->discont = FALSE;
   } else if (GST_BUFFER_IS_DISCONT (buf)) {

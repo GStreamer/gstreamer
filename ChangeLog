@@ -1,5 +1,12 @@
 2006-08-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_sink_event),
+	(gst_audio_rate_chain):
+	Make the metadata of the buffer writable before changing its
+	flags.
+
+2006-08-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_reset),
 	(gst_audio_rate_setcaps), (gst_audio_rate_init),
 	(gst_audio_rate_sink_event), (gst_audio_rate_src_event),
