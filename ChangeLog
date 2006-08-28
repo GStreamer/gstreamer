@@ -1,3 +1,8 @@
+2006-08-28  Michael Smith  <msmith@fluendo.com>
+
+	* plugins/elements/gstidentity.c: (gst_identity_transform_ip):
+	  Unset DISCONT on buffers when using single-segment mode.
+
 2006-08-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstcaps.c: (gst_caps_merge_structure):
