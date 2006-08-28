@@ -48,14 +48,20 @@ struct _GstAudioRate
 
   GstPad *sinkpad, *srcpad;
 
+  /* audio format */
   gint bytes_per_sample;
+  gint rate;
+
+  /* stats */
+  guint64 in, out, add, drop;
+  gboolean silent;
 
   /* audio state */
   guint64 offset;
   guint64 next_offset;
 
-  guint64 in, out, add, drop;
-  gboolean silent;
+  gboolean discont;
+  GstSegment segment;
 };
 
 struct _GstAudioRateClass
@@ -109,6 +115,8 @@ static GstStaticPadTemplate gst_audio_rate_sink_template =
 static void gst_audio_rate_base_init (gpointer g_class);
 static void gst_audio_rate_class_init (GstAudioRateClass * klass);
 static void gst_audio_rate_init (GstAudioRate * audiorate);
+static gboolean gst_audio_rate_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_audio_rate_src_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_audio_rate_chain (GstPad * pad, GstBuffer * buf);
 
 static void gst_audio_rate_set_property (GObject * object,
@@ -191,6 +199,17 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
   element_class->change_state = gst_audio_rate_change_state;
 }
 
+static void
+gst_audio_rate_reset (GstAudioRate * audiorate)
+{
+  audiorate->offset = -1;
+  audiorate->next_offset = -1;
+  audiorate->discont = TRUE;
+  gst_segment_init (&audiorate->segment, GST_FORMAT_UNDEFINED);
+
+  GST_DEBUG_OBJECT (audiorate, "handle reset");
+}
+
 static gboolean
 gst_audio_rate_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -198,31 +217,46 @@ gst_audio_rate_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   GstPad *otherpad;
   gboolean ret = FALSE;
-  gint channels, width;
+  gint channels, width, rate;
 
   audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
 
-  otherpad = (pad == audiorate->srcpad) ? audiorate->sinkpad :
-      audiorate->srcpad;
-
-  if (!gst_pad_set_caps (otherpad, caps))
-    goto beach;
-
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_int (structure, "channels", &channels) ||
-      !gst_structure_get_int (structure, "width", &width)) {
-    goto beach;
-  }
+  if (!gst_structure_get_int (structure, "channels", &channels))
+    goto wrong_caps;
+  if (!gst_structure_get_int (structure, "width", &width))
+    goto wrong_caps;
+  if (!gst_structure_get_int (structure, "rate", &rate))
+    goto wrong_caps;
 
   audiorate->bytes_per_sample = channels * (width / 8);
   if (audiorate->bytes_per_sample == 0)
-    audiorate->bytes_per_sample = 1;
-  ret = TRUE;
+    goto wrong_format;
 
-beach:
+  audiorate->rate = rate;
+
+  /* the format is correct, configure caps on other pad */
+  otherpad = (pad == audiorate->srcpad) ? audiorate->sinkpad :
+      audiorate->srcpad;
+
+  ret = gst_pad_set_caps (otherpad, caps);
+
+done:
   gst_object_unref (audiorate);
   return ret;
+
+  /* ERRORS */
+wrong_caps:
+  {
+    GST_DEBUG_OBJECT (audiorate, "could not get channels/width from caps");
+    goto done;
+  }
+wrong_format:
+  {
+    GST_DEBUG_OBJECT (audiorate, "bytes_per_samples gave 0");
+    goto done;
+  }
 }
 
 static void
@@ -230,23 +264,102 @@ gst_audio_rate_init (GstAudioRate * audiorate)
 {
   audiorate->sinkpad =
       gst_pad_new_from_static_template (&gst_audio_rate_sink_template, "sink");
-  gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->sinkpad);
+  gst_pad_set_event_function (audiorate->sinkpad, gst_audio_rate_sink_event);
   gst_pad_set_chain_function (audiorate->sinkpad, gst_audio_rate_chain);
   gst_pad_set_setcaps_function (audiorate->sinkpad, gst_audio_rate_setcaps);
   gst_pad_set_getcaps_function (audiorate->sinkpad, gst_pad_proxy_getcaps);
+  gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->sinkpad);
 
   audiorate->srcpad =
       gst_pad_new_from_static_template (&gst_audio_rate_src_template, "src");
-  gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->srcpad);
+  gst_pad_set_event_function (audiorate->srcpad, gst_audio_rate_src_event);
   gst_pad_set_setcaps_function (audiorate->srcpad, gst_audio_rate_setcaps);
   gst_pad_set_getcaps_function (audiorate->srcpad, gst_pad_proxy_getcaps);
+  gst_element_add_pad (GST_ELEMENT (audiorate), audiorate->srcpad);
 
-  audiorate->bytes_per_sample = 1;
   audiorate->in = 0;
   audiorate->out = 0;
   audiorate->drop = 0;
   audiorate->add = 0;
   audiorate->silent = DEFAULT_SILENT;
+}
+
+static gboolean
+gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res;
+  GstAudioRate *audiorate;
+
+  audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      GST_DEBUG_OBJECT (audiorate, "handling FLUSH_STOP");
+      gst_audio_rate_reset (audiorate);
+      res = gst_pad_push_event (audiorate->srcpad, event);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat format;
+      gdouble rate, arate;
+      gint64 start, stop, time;
+      gboolean update;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
+
+      GST_DEBUG_OBJECT (audiorate, "handle NEWSEGMENT");
+      /* FIXME:
+       * - sparse stream support. For this, the update flag is TRUE and the
+       *   start/time positions are updated, meaning that time progressed by
+       *   time - old_time amount and we need to fill that gap with empty
+       *   samples.
+       * - fill the current segment if it has a valid stop position. This
+       *   happens when the update flag is FALSE. With the segment helper we can
+       *   calculate the accumulated time and compare this to the next_offset.
+       */
+      if (!update) {
+        /* a new segment starts. We need to figure out what will be the next
+         * sample offset. We mark the offsets as invalid so that the _chain
+         * function will perform this calculation. */
+        audiorate->offset = -1;
+        audiorate->next_offset = -1;
+      }
+
+      gst_segment_set_newsegment_full (&audiorate->segment, update, rate, arate,
+          format, start, stop, time);
+
+      res = gst_pad_push_event (audiorate->srcpad, event);
+      break;
+    }
+    case GST_EVENT_EOS:
+    default:
+      res = gst_pad_push_event (audiorate->srcpad, event);
+      break;
+  }
+
+  gst_object_unref (audiorate);
+
+  return res;
+}
+
+static gboolean
+gst_audio_rate_src_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res;
+  GstAudioRate *audiorate;
+
+  audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      res = gst_pad_push_event (audiorate->sinkpad, event);
+      break;
+  }
+
+  gst_object_unref (audiorate);
+
+  return res;
 }
 
 static GstFlowReturn
@@ -259,6 +372,32 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
 
   audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
+
+  if (audiorate->bytes_per_sample == 0)
+    goto not_negotiated;
+
+  if (audiorate->offset == -1) {
+    gint64 pos;
+
+    /* first buffer, we are negotiated and we have a segment, calculate the
+     * current expected offsets based on the segment.time, which is the first
+     * media time of the segment and should match the media time of the first
+     * buffer in that segment, which is the offset expressed in DEFAULT units.
+     */
+    pos = audiorate->segment.time;
+    if (pos != 0) {
+      if (audiorate->segment.format == GST_FORMAT_TIME) {
+        /* convert first timestamp of segment to sample position */
+        pos = gst_util_uint64_scale_int (pos, audiorate->rate, GST_SECOND);
+      } else {
+        /* FIXME, we don't know, start from 0 then... */
+        pos = 0;
+      }
+    }
+    GST_DEBUG_OBJECT (audiorate, "resync to offset %" G_GINT64_FORMAT, pos);
+    audiorate->offset = pos;
+    audiorate->next_offset = pos;
+  }
 
   audiorate->in++;
 
@@ -301,7 +440,17 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     GST_BUFFER_OFFSET (fill) = audiorate->next_offset;
     GST_BUFFER_OFFSET_END (fill) = in_offset;
 
-    if ((ret = gst_pad_push (audiorate->srcpad, fill) != GST_FLOW_OK))
+    /* we created this buffer to filla gap */
+    GST_BUFFER_FLAG_SET (fill, GST_BUFFER_FLAG_GAP);
+    /* set discont if it's pending, this is mostly done for the first buffer and
+     * after a flushing seek */
+    if (audiorate->discont) {
+      GST_BUFFER_FLAG_SET (fill, GST_BUFFER_FLAG_DISCONT);
+      audiorate->discont = FALSE;
+    }
+
+    ret = gst_pad_push (audiorate->srcpad, fill);
+    if (ret != GST_FLOW_OK)
       goto beach;
     audiorate->out++;
     audiorate->add += fillsamples;
@@ -349,13 +498,36 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       audiorate->drop += truncsamples;
     }
   }
+  if (audiorate->discont) {
+    /* we need to output a discont buffer, do so now */
+    GST_DEBUG_OBJECT (audiorate, "marking DISCONT on output buffer");
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    audiorate->discont = FALSE;
+  } else if (GST_BUFFER_IS_DISCONT (buf)) {
+    /* else we make everything continuous so we can safely remove the DISCONT
+     * flag from the buffer if there was one */
+    GST_DEBUG_OBJECT (audiorate, "removing DISCONT from buffer");
+    buf = gst_buffer_make_metadata_writable (buf);
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
+  }
   ret = gst_pad_push (audiorate->srcpad, buf);
   audiorate->out++;
 
   audiorate->next_offset = in_offset_end;
 beach:
   audiorate->offset += in_size / audiorate->bytes_per_sample;
+
+  gst_object_unref (audiorate);
+
   return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (audiorate, STREAM, FORMAT,
+        (NULL), ("pipeline error, format was not negotiated"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static void
@@ -411,8 +583,12 @@ gst_audio_rate_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      audiorate->offset = 0;
-      audiorate->next_offset = 0;
+      audiorate->in = 0;
+      audiorate->out = 0;
+      audiorate->drop = 0;
+      audiorate->bytes_per_sample = 0;
+      audiorate->add = 0;
+      gst_audio_rate_reset (audiorate);
       break;
     default:
       break;

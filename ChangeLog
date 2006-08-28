@@ -1,3 +1,15 @@
+2006-08-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_reset),
+	(gst_audio_rate_setcaps), (gst_audio_rate_init),
+	(gst_audio_rate_sink_event), (gst_audio_rate_src_event),
+	(gst_audio_rate_chain), (gst_audio_rate_change_state):
+	Fix audiorate some more.
+	Reset and resync counters on flush and READY.
+	Handle the DISCONT flag correctly.
+	Use GstSegment to track position.
+	Fail when not negotiated.
+
 2006-08-25  Michael Smith  <msmith@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_render):
