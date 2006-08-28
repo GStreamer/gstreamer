@@ -73,6 +73,26 @@ GST_START_TEST (create_queries)
      * CONVERT
      */
   }
+  /* SEGMENT */
+  {
+    gdouble rate;
+    GstFormat format;
+    gint64 start, stop;
+
+    format = GST_FORMAT_TIME;
+    query = gst_query_new_segment (format);
+
+    fail_if (query == NULL);
+    fail_unless (GST_QUERY_TYPE (query) == GST_QUERY_SEGMENT);
+
+    gst_query_parse_segment (query, &rate, &format, &start, &stop);
+
+    /* see if empty gives undefined formats */
+    fail_if (rate == 1.0);
+    fail_if (format != GST_FORMAT_TIME);
+    fail_if (start != -1);
+    fail_if (stop != -1);
+  }
 
   /* FORMATS */
   {

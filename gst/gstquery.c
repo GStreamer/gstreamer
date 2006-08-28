@@ -647,7 +647,10 @@ gst_query_new_segment (GstFormat format)
 
   structure = gst_structure_empty_new ("GstQuerySegment");
   gst_structure_id_set (structure,
-      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format, NULL);
+      GST_QUARK (RATE), G_TYPE_DOUBLE, (gdouble) 0.0,
+      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
+      GST_QUARK (START_VALUE), G_TYPE_INT64, (gint64) - 1,
+      GST_QUARK (STOP_VALUE), G_TYPE_INT64, (gint64) - 1, NULL);
 
   query = gst_query_new (GST_QUERY_SEGMENT, structure);
 

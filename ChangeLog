@@ -2,6 +2,15 @@
 
 	Patch by: Torsten Schoenfeld <kaffeetisch at gmx dot de>
 
+	* gst/gstquery.c: (gst_query_new_segment):
+	* tests/check/gst/gstquery.c: (GST_START_TEST):
+	Initialize variables when creating a new segment query.
+	Fixes #353121.
+
+2006-08-28  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Torsten Schoenfeld <kaffeetisch at gmx dot de>
+
 	* gst/gstelement.c: (gst_element_get_bus):
 	* tests/check/gst/gstelement.c: (GST_START_TEST):
 	Check for NULL before _reffing the bus. Fixes #353122.
