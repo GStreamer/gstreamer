@@ -182,7 +182,8 @@ gst_identity_class_init (GstIdentityClass * klass)
           G_MININT, G_MAXINT, DEFAULT_ERROR_AFTER, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class,
       PROP_DROP_PROBABILITY, g_param_spec_float ("drop_probability",
-          "Drop Probability", "The Probability a buffer is dropped", 0.0, 1.0,
+          "Drop Probability",
+          "The Probability a buffer is dropped (not implemented)", 0.0, 1.0,
           DEFAULT_DROP_PROBABILITY, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_DATARATE,
       g_param_spec_int ("datarate", "Datarate",
@@ -364,19 +365,24 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   if (identity->drop_probability > 0.0) {
     if ((gfloat) (1.0 * rand () / (RAND_MAX)) < identity->drop_probability) {
-      GST_OBJECT_LOCK (identity);
-      g_free (identity->last_message);
-      identity->last_message =
-          g_strdup_printf ("dropping   ******* (%s:%s)i (%d bytes, timestamp: %"
-          GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
-          G_GINT64_FORMAT ", offset_end: % " G_GINT64_FORMAT ", flags: %d) %p",
-          GST_DEBUG_PAD_NAME (trans->sinkpad), GST_BUFFER_SIZE (buf),
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
-          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
-          GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf),
-          GST_BUFFER_FLAGS (buf), buf);
-      GST_OBJECT_UNLOCK (identity);
-      g_object_notify (G_OBJECT (identity), "last-message");
+      if (!identity->silent) {
+        GST_OBJECT_LOCK (identity);
+        g_free (identity->last_message);
+        identity->last_message =
+            g_strdup_printf
+            ("dropping   ******* (%s:%s)i (%d bytes, timestamp: %"
+            GST_TIME_FORMAT ", duration: %" GST_TIME_FORMAT ", offset: %"
+            G_GINT64_FORMAT ", offset_end: % " G_GINT64_FORMAT
+            ", flags: %d) %p", GST_DEBUG_PAD_NAME (trans->sinkpad),
+            GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+            GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_OFFSET (buf),
+            GST_BUFFER_OFFSET_END (buf), GST_BUFFER_FLAGS (buf), buf);
+        GST_OBJECT_UNLOCK (identity);
+        g_object_notify (G_OBJECT (identity), "last-message");
+      }
+      /* FIXME, this does not drop the buffer in basetransform. Actually
+       * dropping the buffer in transform_ip is not possible without a new
+       * custom GstFlowReturn value. */
       return GST_FLOW_OK;
     }
   }

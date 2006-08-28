@@ -855,6 +855,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     GST_DEBUG_OBJECT (src, "closing running segment %" G_GINT64_FORMAT
         " to %" G_GINT64_FORMAT, src->segment.start, src->segment.last_stop);
 
+    /* queue the segment for sending in the stream thread */
     if (src->priv->close_segment)
       gst_event_unref (src->priv->close_segment);
     src->priv->close_segment =
@@ -874,13 +875,16 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
               src->segment.format, src->segment.last_stop));
     }
 
+    /* for deriving a stop position for the playback segment form the seek
+     * segment, we must take the duration when the stop is not set */
     if ((stop = src->segment.stop) == -1)
       stop = src->segment.duration;
 
-    /* now send the newsegment */
     GST_DEBUG_OBJECT (src, "Sending newsegment from %" G_GINT64_FORMAT
         " to %" G_GINT64_FORMAT, src->segment.start, stop);
 
+    /* now replace the old segment so that we send it in the stream thread the
+     * next time it is scheduled. */
     if (src->priv->start_segment)
       gst_event_unref (src->priv->start_segment);
     src->priv->start_segment =

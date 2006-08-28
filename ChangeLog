@@ -1,3 +1,14 @@
+2006-08-28  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek):
+	Small comment update.
+
+	* plugins/elements/gstidentity.c: (gst_identity_class_init),
+	(gst_identity_transform_ip):
+	Drop-probability is broken, mention this in the code with a 
+	FIXME and also in the property description.
+	Make silent also be silent about the drop messages.
+
 2006-08-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/appendix-win32.xml:
