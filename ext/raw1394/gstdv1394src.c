@@ -1,4 +1,3 @@
-/* -*- Mode: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2 -*- */
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *               <2000> Daniel Fischer <dan@f3c.com>
@@ -332,6 +331,22 @@ gst_dv1394src_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+#ifdef HAVE_LIBIEC61883
+static GstDV1394Src *
+gst_dv1394src_from_raw1394handle (raw1394handle_t handle)
+{
+  iec61883_dv_t dv = (iec61883_dv_t) raw1394_get_userdata (handle);
+  iec61883_dv_fb_t dv_fb =
+      (iec61883_dv_fb_t) iec61883_dv_get_callback_data (dv);
+  return GST_DV1394SRC (iec61883_dv_fb_get_callback_data (dv_fb));
+}
+#else /* HAVE_LIBIEC61883 */
+static GstDV1394Src *
+gst_dv1394src_from_raw1394handle (raw1394handle_t handle)
+{
+  return GST_DV1394SRC (raw1394_get_userdata (handle));
+}
+#endif /* HAVE_LIBIEC61883 */
 
 #ifdef HAVE_LIBIEC61883
 static int
@@ -400,7 +415,7 @@ static int
 gst_dv1394src_iso_receive (raw1394handle_t handle, int channel, size_t len,
     quadlet_t * data)
 {
-  GstDV1394Src *dv1394src = GST_DV1394SRC (raw1394_get_userdata (handle));
+  GstDV1394Src *dv1394src = gst_dv1394src_from_raw1394handle (handle);
 
   if (len > 16) {
     /*
@@ -538,14 +553,7 @@ gst_dv1394src_bus_reset (raw1394handle_t handle, unsigned int generation)
   gint current_device_change;
   gint i;
 
-#ifdef HAVE_LIBIEC61883
-  iec61883_dv_t dv = (iec61883_dv_t) raw1394_get_userdata (handle);
-  iec61883_dv_fb_t dv_fb =
-      (iec61883_dv_fb_t) iec61883_dv_get_callback_data (dv);
-  src = GST_DV1394SRC (iec61883_dv_fb_get_callback_data (dv_fb));
-#else
-  src = GST_DV1394SRC (raw1394_get_userdata (handle));
-#endif
+  src = gst_dv1394src_from_raw1394handle (handle);
 
   GST_INFO_OBJECT (src, "have bus reset");
 
@@ -590,20 +598,13 @@ gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstDV1394Src *dv1394src = GST_DV1394SRC (psrc);
   GstCaps *caps;
-  int numfds;
-
-  GST_DEBUG ("_create");
   struct pollfd pollfds[2];
 
   pollfds[0].fd = raw1394_get_fd (dv1394src->handle);
   pollfds[0].events = POLLIN | POLLERR | POLLHUP | POLLPRI;
   pollfds[1].fd = READ_SOCKET (dv1394src);
   pollfds[1].events = POLLIN | POLLERR | POLLHUP | POLLPRI;
-#ifdef HAVE_LIBIEC61883
-  numfds = 1;
-#else
-  numfds = 2;
-#endif
+
   if (dv1394src->buf) {
     /* maybe we had an error before, and there's a stale buffer? */
     gst_buffer_unref (dv1394src->buf);
@@ -611,7 +612,7 @@ gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
   }
 
   while (TRUE) {
-    int res = poll (pollfds, numfds, -1);
+    int res = poll (pollfds, 2, -1);
 
     if (res < 0) {
       if (errno == EAGAIN || errno == EINTR)
@@ -619,28 +620,20 @@ gst_dv1394src_create (GstPushSrc * psrc, GstBuffer ** buf)
       else
         goto error_while_polling;
     }
-#ifdef HAVE_LIBIEC61883
-    if ((pollfds[0].revents & POLLIN) | (pollfds[0].revents & POLLPRI)) {
-      res = raw1394_loop_iterate (dv1394src->handle);
-      if (dv1394src->buf)
-        break;
-    }
-#else
-    if (pollfds[1].revents) {
+    if (G_UNLIKELY (pollfds[1].revents)) {
       char command;
 
       if (pollfds[1].revents & POLLIN)
         READ_COMMAND (dv1394src, command, res);
 
       goto told_to_stop;
-    } else if (pollfds[0].revents & POLLIN) {
+    } else if (G_LIKELY (pollfds[0].revents & POLLIN)) {
       /* shouldn't block in theory */
       raw1394_loop_iterate (dv1394src->handle);
 
       if (dv1394src->buf)
         break;
     }
-#endif
   }
 
   g_assert (dv1394src->buf);
@@ -658,13 +651,11 @@ error_while_polling:
     GST_ELEMENT_ERROR (dv1394src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
     return GST_FLOW_UNEXPECTED;
   }
-#ifndef HAVE_LIBIEC61883
 told_to_stop:
   {
     GST_DEBUG_OBJECT (dv1394src, "told to stop, shutting down");
     return GST_FLOW_WRONG_STATE;
   }
-#endif
 }
 
 static int
@@ -784,6 +775,8 @@ gst_dv1394src_start (GstBaseSrc * bsrc)
   if (!src->handle)
     goto cannot_set_port;
 
+  raw1394_set_userdata (src->handle, src);
+  raw1394_set_bus_reset_handler (src->handle, gst_dv1394src_bus_reset);
 
 #ifdef HAVE_LIBIEC61883
   if ((src->iec61883dv =
@@ -792,11 +785,9 @@ gst_dv1394src_start (GstBaseSrc * bsrc)
     goto cannot_initialise_dv;
 
 #else
-  raw1394_set_userdata (src->handle, src);
   raw1394_set_iso_handler (src->handle, src->channel,
       gst_dv1394src_iso_receive);
 #endif
-  raw1394_set_bus_reset_handler (src->handle, gst_dv1394src_bus_reset);
 
   GST_DEBUG_OBJECT (src, "successfully opened up 1394 connection");
   src->connected = TRUE;
@@ -810,11 +801,19 @@ gst_dv1394src_start (GstBaseSrc * bsrc)
 #endif
 
   if (src->use_avc) {
+    raw1394handle_t avc_handle = raw1394_new_handle_on_port (src->port);
+
     /* start the VCR */
-    if (!avc1394_vcr_is_recording (src->handle, src->avc_node)
-        && avc1394_vcr_is_playing (src->handle, src->avc_node)
-        != AVC1394_VCR_OPERAND_PLAY_FORWARD)
-      avc1394_vcr_play (src->handle, src->avc_node);
+    if (avc_handle) {
+      if (!avc1394_vcr_is_recording (avc_handle, src->avc_node)
+          && avc1394_vcr_is_playing (avc_handle, src->avc_node)
+          != AVC1394_VCR_OPERAND_PLAY_FORWARD)
+        avc1394_vcr_play (avc_handle, src->avc_node);
+      raw1394_destroy_handle (avc_handle);
+    } else {
+      GST_WARNING_OBJECT (src, "Starting VCR via avc1394 failed: %s",
+          g_strerror (errno));
+    }
   }
 
   return TRUE;
@@ -883,17 +882,23 @@ gst_dv1394src_stop (GstBaseSrc * bsrc)
 #else
   raw1394_stop_iso_rcv (src->handle, src->channel);
 #endif
-  if (src->use_avc) {
-    /* pause the VCR */
-    if (!avc1394_vcr_is_recording (src->handle, src->avc_node)
-        && (avc1394_vcr_is_playing (src->handle, src->avc_node)
-            != AVC1394_VCR_OPERAND_PLAY_FORWARD_PAUSE))
-      avc1394_vcr_pause (src->handle, src->avc_node);
-  }
 
-  if (src->use_avc)
-    /* stop the VCR */
-    avc1394_vcr_stop (src->handle, src->avc_node);
+  if (src->use_avc) {
+    raw1394handle_t avc_handle = raw1394_new_handle_on_port (src->port);
+
+    /* pause and stop the VCR */
+    if (avc_handle) {
+      if (!avc1394_vcr_is_recording (avc_handle, src->avc_node)
+          && (avc1394_vcr_is_playing (avc_handle, src->avc_node)
+              != AVC1394_VCR_OPERAND_PLAY_FORWARD_PAUSE))
+        avc1394_vcr_pause (avc_handle, src->avc_node);
+      avc1394_vcr_stop (avc_handle, src->avc_node);
+      raw1394_destroy_handle (avc_handle);
+    } else {
+      GST_WARNING_OBJECT (src, "Starting VCR via avc1394 failed: %s",
+          g_strerror (errno));
+    }
+  }
 
   raw1394_destroy_handle (src->handle);
 

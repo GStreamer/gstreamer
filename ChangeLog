@@ -1,3 +1,14 @@
+2006-08-28  Andy Wingo  <wingo@pobox.com>
+
+	* ext/raw1394/gstdv1394src.c (gst_dv1394src_from_raw1394handle):
+	New helper function to lessen the ifdefs.
+	(GST_INFO_OBJECT): 
+	(gst_dv1394src_iso_receive): Use it.
+	(gst_dv1394src_create): Also use the control sockets in iec61883
+	mode.
+	(gst_dv1394src_start, gst_dv1394src_stop): Always use a separate
+	handle for AVC operations; fixes #348233.
+
 2006-08-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
