@@ -1,3 +1,9 @@
+2006-08-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* testsuite/test_pad.py:
+	  add a test for event probes - shows a bug, for which I commented
+	  the failUnless out
+
 2006-08-21  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

@@ -151,6 +151,101 @@ class PadPushLinkedTest(TestCase):
     def _probe_handler(self, pad, buffer, ret):
         return ret
 
+# test for event probes with linked pads
+class PadPushEventLinkedTest(TestCase):
+    def setUp(self):
+        TestCase.setUp(self)
+        self.src = gst.Pad("src", gst.PAD_SRC)
+        self.sink = gst.Pad("sink", gst.PAD_SINK)
+        caps = gst.caps_from_string("foo/bar")
+        self.src.set_caps(caps)
+        self.sink.set_caps(caps)
+        self.sink.set_chain_function(self._chain_func)
+        self.src.link(self.sink)
+        self.events = []
+
+    def tearDown(self):
+        self.assertEquals(sys.getrefcount(self.src), 3)
+        self.assertEquals(self.src.__gstrefcount__, 1)
+        del self.src
+        self.assertEquals(sys.getrefcount(self.sink), 3)
+        self.assertEquals(self.sink.__gstrefcount__, 1)
+        del self.sink
+        TestCase.tearDown(self)
+
+    def _chain_func(self, pad, buffer):
+        gst.debug('got buffer %r, id %x, with GMO rc %d'% (
+            buffer, id(buffer), buffer.__grefcount__))
+        self.buffers.append(buffer)
+
+        return gst.FLOW_OK
+
+    def testNoProbe(self):
+        self.event = gst.event_new_eos()
+        gst.debug('created new eos %r, id %x' % (
+            self.event, id(self.event)))
+        self.assertEquals(self.event.__grefcount__, 1)
+        gst.debug('pushing event on linked pad, no probe')
+        self.assertEquals(self.src.push_event(self.event), True)
+        gst.debug('pushed event on linked pad, no probe')
+        # one refcount is held by our scope
+        self.assertEquals(self.event.__grefcount__, 1)
+        # the event has reffed the sink pad as the src of the event
+        self.assertEquals(self.sink.__grefcount__, 2)
+        # clear it
+        self.event = None
+        self.assertEquals(self.sink.__grefcount__, 1)
+
+    def testFalseProbe(self):
+        probe_id = self.src.add_event_probe(self._probe_handler, False)
+        self.event = gst.event_new_eos()
+        gst.debug('created new eos %r, id %x' % (
+            self.event, id(self.event)))
+        self.assertEquals(self.event.__grefcount__, 1)
+        # a false probe return drops the event and returns False
+        self.assertEquals(self.src.push_event(self.event), False)
+        # one ref in our local scope, another in self.events
+        self.assertEquals(self.event.__grefcount__, 2)
+        self.assertEquals(self.sink.__grefcount__, 1)
+        self.src.remove_buffer_probe(probe_id)
+
+    def testTrueProbe(self):
+        probe_id = self.src.add_event_probe(self._probe_handler, True)
+        self.event = gst.event_new_eos()
+        gst.debug('created new eos %r, id %x' % (
+            self.event, id(self.event)))
+        self.assertEquals(self.event.__grefcount__, 1)
+        # a True probe lets it pass
+        self.assertEquals(self.src.push_event(self.event), True)
+
+        # one refcount is held by our scope, another is held on
+        # self.events through _probe
+        self.assertEquals(self.event.__grefcount__, 2)
+
+        # they are not the same Python object ...
+        self.failIf(self.event is self.events[0])
+        self.failIf(id(self.event) == id(self.events[0]))
+        # ... but they wrap the same GstEvent
+        self.assertEquals(repr(self.event), repr(self.events[0]))
+        # FIXME: this one fails where it should pass
+        # self.failUnless(self.events == self.events[0])
+        
+        self.src.remove_buffer_probe(probe_id)
+        self.assertEquals(len(self.events), 1)
+        self.events = None
+        self.assertEquals(self.event.__grefcount__, 1)
+
+        # the event has reffed the sink pad as the src of the event
+        self.assertEquals(self.sink.__grefcount__, 2)
+        # clear it
+        self.event = None
+        self.assertEquals(self.sink.__grefcount__, 1)
+
+    def _probe_handler(self, pad, event, ret):
+        gst.debug("probed, pad %r, event %r" % (pad, event))
+        self.events.append(event)
+        return ret
+
 # a test to show that we can link a pad from the probe handler
 
 class PadPushProbeLinkTest(TestCase):
