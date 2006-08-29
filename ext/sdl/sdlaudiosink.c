@@ -284,7 +284,7 @@ gst_sdlaudio_sink_close (GstAudioSink * asink)
   sdlaudio->eos = TRUE;
   SEMAPHORE_UP (sdlaudio->semA);
   SEMAPHORE_UP (sdlaudio->semB);
-  SDL_Quit ();
+  SDL_QuitSubSystem (SDL_INIT_AUDIO);
   return TRUE;
 }
 

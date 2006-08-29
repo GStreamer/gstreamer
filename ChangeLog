@@ -1,3 +1,14 @@
+2006-08-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Andrew Andkjar  <enki at goodship net>
+
+	* ext/sdl/sdlaudiosink.c: (gst_sdlaudio_sink_close):
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_supported),
+	(gst_sdlvideosink_deinitsdl):
+	  Only de-init the subsystem we previously initialised. Avoids
+	  borkage when both sdlvideosink and sdlaudiosink are used
+	  at the same time and one is shut down.
+
 2006-08-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment),

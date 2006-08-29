@@ -338,7 +338,7 @@ gst_sdlvideosink_supported (GstImplementsInterface * interface,
 
       /* True if the video driver is X11 */
       result = (strcmp ("x11", SDL_VideoDriverName (tmp, 4)) == 0);
-      SDL_Quit ();
+      SDL_QuitSubSystem (SDL_INIT_VIDEO);
       g_mutex_unlock (sdlvideosink->lock);
     } else
       result = sdlvideosink->is_xwindows;
@@ -484,7 +484,7 @@ gst_sdlvideosink_deinitsdl (GstSDLVideoSink * sdlvideosink)
       sdlvideosink->event_thread = NULL;
     }
 
-    SDL_Quit ();
+    SDL_QuitSubSystem (SDL_INIT_VIDEO);
     sdlvideosink->init = FALSE;
 
   }
