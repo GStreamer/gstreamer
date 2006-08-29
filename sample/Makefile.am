@@ -22,6 +22,9 @@ typefind.exe: $(srcdir)/TypeFind.cs $(assemblies)
 queueexample.exe: $(srcdir)/QueueExample.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/QueueExample.cs
 
+metadata.exe: $(srcdir)/MetaData.cs $(assemblies)
+	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/MetaData.cs
+
 link:
 	ln -sf $(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll gstreamer-sharp.dll
 	ln -sf $(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll.config gstreamer-sharp.dll.config

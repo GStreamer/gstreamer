@@ -1,3 +1,7 @@
+2006-08-29  Khaled Mohammed <khaled.mohammed@gmail.com>
+	* sample/MetaData.cs: a sample file which extracts tag information
+	from media files and displays them to console.
+
 2006-08-25  Khaled Mohammed <khaled.mohammed@gmail.com>
 	* sample/QueueExample.cs: a sample file showcasing 
 	use of the queue element
