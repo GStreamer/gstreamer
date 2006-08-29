@@ -161,6 +161,27 @@
  * new_state=PAUSED), since before that the list might not be complete yet or
  * not contain all available information (like language-codes).
  * </para>
+ * <title>Buffering status</title>
+ * <para>
+ * Playbin handles buffering automatically. When playbin is buffering, it
+ * will post BUFFERING messages on the bus with a percentage value that
+ * shows the progress of the buffering. Applications may want to show this
+ * information to the user in some form or another. Here is how to extract
+ * the percentage information from the message:
+ * </para>
+ * <para>
+ * <programlisting>
+ * switch (GST_MESSAGE_TYPE (msg)) {
+ *   case GST_MESSAGE_BUFFERING: {
+ *     gint percent = 0;
+ *     gst_structure_get_int (msg-&gt;structure, "buffer-percent", &amp;percent);
+ *     g_print ("Buffering (%%u percent done)", percent);
+ *     break;
+ *   }
+ *   ...
+ * }
+ * </programlisting>
+ * </para>
  * <title>Embedding the video window in your application</title>
  * <para>
  * By default, playbin (or rather the video sinks used) will create their own
