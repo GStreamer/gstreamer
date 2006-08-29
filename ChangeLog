@@ -1,3 +1,8 @@
+2006-08-29  Edward Hervey  <edward@fluendo.com>
+
+	* testsuite/test_pad.py:
+	The bug was not a bug. Fixed the typo.
+
 2006-08-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* testsuite/test_pad.py:

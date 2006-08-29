@@ -227,8 +227,7 @@ class PadPushEventLinkedTest(TestCase):
         self.failIf(id(self.event) == id(self.events[0]))
         # ... but they wrap the same GstEvent
         self.assertEquals(repr(self.event), repr(self.events[0]))
-        # FIXME: this one fails where it should pass
-        # self.failUnless(self.events == self.events[0])
+        self.failUnless(self.event == self.events[0])
         
         self.src.remove_buffer_probe(probe_id)
         self.assertEquals(len(self.events), 1)
