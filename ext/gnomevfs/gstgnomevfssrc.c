@@ -107,7 +107,6 @@ static GStaticMutex count_lock = G_STATIC_MUTEX_INIT;
 static gint ref_count = 0;
 static gboolean vfs_owner = FALSE;
 
-
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -633,7 +632,7 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
       size);
 
   /* seek if required */
-  if (src->curoffset != offset) {
+  if (G_UNLIKELY (src->curoffset != offset)) {
     GST_DEBUG ("need to seek");
     if (src->seekable) {
       GST_DEBUG ("seeking to %lld", offset);
@@ -656,12 +655,13 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
 
   res = gnome_vfs_read (src->handle, data, size, &readbytes);
 
-  if (res == GNOME_VFS_ERROR_EOF || (res == GNOME_VFS_OK && readbytes == 0))
+  if (G_UNLIKELY (res == GNOME_VFS_ERROR_EOF || (res == GNOME_VFS_OK
+              && readbytes == 0)))
     goto eos;
 
   GST_BUFFER_SIZE (buf) = readbytes;
 
-  if (res != GNOME_VFS_OK)
+  if (G_UNLIKELY (res != GNOME_VFS_OK))
     goto read_failed;
 
   src->curoffset += readbytes;
@@ -776,6 +776,7 @@ gst_gnome_vfs_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 static gboolean
 gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
 {
+  GnomeVFSFileInfoOptions options;
   GnomeVFSResult res;
   GnomeVFSFileInfo *info;
   GstGnomeVFSSrc *src;
@@ -785,9 +786,12 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
   gst_gnome_vfs_src_push_callbacks (src);
 
   if (src->uri != NULL) {
+    GnomeVFSOpenMode mode;
+
     /* this can block... */
-    if ((res = gnome_vfs_open_uri (&src->handle, src->uri,
-                GNOME_VFS_OPEN_READ)) != GNOME_VFS_OK)
+    mode = GNOME_VFS_OPEN_READ | GNOME_VFS_OPEN_RANDOM;
+    res = gnome_vfs_open_uri (&src->handle, src->uri, mode);
+    if (res != GNOME_VFS_OK)
       goto open_failed;
     src->own_handle = TRUE;
   } else if (!src->handle) {
@@ -798,13 +802,23 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
 
   src->size = (GnomeVFSFileSize) - 1;
   info = gnome_vfs_file_info_new ();
-  if ((res = gnome_vfs_get_file_info_from_handle (src->handle,
-              info, GNOME_VFS_FILE_INFO_DEFAULT)) == GNOME_VFS_OK) {
-    if (info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_SIZE) {
+  options = GNOME_VFS_FILE_INFO_DEFAULT | GNOME_VFS_FILE_INFO_FOLLOW_LINKS;
+  res = gnome_vfs_get_file_info_from_handle (src->handle, info, options);
+  if (res == GNOME_VFS_OK) {
+    if ((info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_SIZE) != 0) {
       src->size = info->size;
-      GST_DEBUG_OBJECT (src, "size: %llu bytes", src->size);
-    } else
-      GST_LOG_OBJECT (src, "filesize not known");
+      GST_DEBUG_OBJECT (src, "size: %" G_GUINT64_FORMAT " bytes", src->size);
+    } else if (src->own_handle && gnome_vfs_uri_is_local (src->uri)) {
+      GST_DEBUG_OBJECT (src, "file size not known, trying fallback");
+      res = gnome_vfs_get_file_info_uri (src->uri, info, options);
+      if (res == GNOME_VFS_OK &&
+          (info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_SIZE) != 0) {
+        src->size = info->size;
+        GST_DEBUG_OBJECT (src, "size: %" G_GUINT64_FORMAT " bytes", src->size);
+      }
+    }
+    if (src->size == (GnomeVFSFileSize) - 1)
+      GST_DEBUG_OBJECT (src, "file size not known");
   } else {
     GST_WARNING_OBJECT (src, "getting info failed: %s",
         gnome_vfs_result_to_string (res));

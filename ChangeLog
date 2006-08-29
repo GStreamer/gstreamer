@@ -1,3 +1,14 @@
+2006-08-29  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_create),
+	(gst_gnome_vfs_src_start):
+	Try harder to get the size from a uri by using _info_uri() when
+	_info_from_handle() does not give us enough info. 
+	Also follow symlinks when getting the size.
+	Partially Fixes #332864.
+
 2006-08-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Viktor Peters  <viktor dot peters at gmail dot com>
