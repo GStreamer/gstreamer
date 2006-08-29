@@ -609,7 +609,6 @@ _wrap_gst_xml_get_topelements(PyGObject *self)
     for (l = xml_elements, i = 0; l; l = l->next, ++i) {
         GstElement *element = (GstElement*)l->data;
         PyList_SetItem(py_list, i, pygobject_new(G_OBJECT(element)));
-        gst_object_unref (element);
     }
        
     return py_list;

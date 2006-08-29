@@ -1,5 +1,11 @@
 2006-08-29  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst.override:
+	We don't own a reference on the elements contained in the list
+	returned by gst_xml_get_topelements().
+
+2006-08-29  Edward Hervey  <edward@fluendo.com>
+
 	* testsuite/test_pad.py:
 	The bug was not a bug. Fixed the typo.
 
