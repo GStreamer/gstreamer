@@ -1,3 +1,12 @@
+2006-08-29  Michael Smith  <msmith@fluendo.com>
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_push_buffer),
+	(gst_vorbis_enc_buffer_check_discontinuous),
+	(gst_vorbis_enc_chain):
+	  Ignore explicit DISCONT marked on buffers (which is often spurious,
+	  particularly when using multiple segments), in favour of solely
+	  using the timestamps/durations.
+
 2006-08-29  Edward Hervey  <edward@fluendo.com>
 
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain):

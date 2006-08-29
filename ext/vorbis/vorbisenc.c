@@ -897,8 +897,8 @@ gst_vorbis_enc_push_buffer (GstVorbisEnc * vorbisenc, GstBuffer * buffer)
 {
   vorbisenc->bytes_out += GST_BUFFER_SIZE (buffer);
 
-  GST_DEBUG_OBJECT (vorbisenc, "Pushing buffer with GP %lld",
-      GST_BUFFER_OFFSET_END (buffer));
+  GST_DEBUG_OBJECT (vorbisenc, "Pushing buffer with GP %lld, ts %lld",
+      GST_BUFFER_OFFSET_END (buffer), GST_BUFFER_TIMESTAMP (buffer));
   return gst_pad_push (vorbisenc->srcpad, buffer);
 }
 
@@ -1000,10 +1000,7 @@ gst_vorbis_enc_buffer_check_discontinuous (GstVorbisEnc * vorbisenc,
 {
   gboolean ret = FALSE;
 
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
-    GST_DEBUG_OBJECT (vorbisenc, "Discont set on incoming buffer");
-    ret = TRUE;
-  } else if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE &&
+  if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE &&
       vorbisenc->expected_ts != GST_CLOCK_TIME_NONE &&
       GST_BUFFER_TIMESTAMP (buffer) != vorbisenc->expected_ts) {
     /* It turns out that a lot of elements don't generate perfect streams due
