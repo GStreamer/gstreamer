@@ -1,3 +1,13 @@
+2006-08-29  Edward Hervey  <edward@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain):
+	Don't rely on incoming buffers offset anymore, since it is completely
+	broken when using multiple segments.
+	Instead convert the incoming buffers timestamp to running time, and
+	then convert that value to the offsets.
+	Also inform GstSegment of the last outputted stop position, which is
+	needed if we received several segments with an unknown stop value.
+
 2006-08-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_chain):

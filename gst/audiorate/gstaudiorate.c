@@ -366,7 +366,7 @@ static GstFlowReturn
 gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 {
   GstAudioRate *audiorate;
-  GstClockTime in_time, in_duration;
+  GstClockTime in_time, in_duration, run_time;
   guint64 in_offset, in_offset_end;
   guint in_size;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -404,22 +404,22 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   in_time = GST_BUFFER_TIMESTAMP (buf);
   in_duration = GST_BUFFER_DURATION (buf);
   in_size = GST_BUFFER_SIZE (buf);
-  in_offset = GST_BUFFER_OFFSET (buf);
-  in_offset_end = GST_BUFFER_OFFSET_END (buf);
+
+  /* don't really on buffer's offset */
+  /* We instead figure out using the runningtime version of the incoming buffer timestamp */
+  run_time =
+      gst_segment_to_running_time (&audiorate->segment, GST_FORMAT_TIME,
+      in_time);
+  in_offset = gst_util_uint64_scale_int (run_time, audiorate->rate, GST_SECOND);
+  in_offset_end = in_offset + in_size / audiorate->bytes_per_sample;
 
   GST_LOG_OBJECT (audiorate,
-      "in_time:%" GST_TIME_FORMAT ", in_duration:%" GST_TIME_FORMAT
+      "in_time:%" GST_TIME_FORMAT ", run_time:%" GST_TIME_FORMAT
+      ", in_duration:%" GST_TIME_FORMAT
       ", in_size:%u, in_offset:%lld, in_offset_end:%lld" ", ->next_offset:%lld",
-      GST_TIME_ARGS (in_time), GST_TIME_ARGS (in_duration), in_size, in_offset,
-      in_offset_end, audiorate->next_offset);
-
-  if (in_offset == GST_CLOCK_TIME_NONE || in_offset_end == GST_CLOCK_TIME_NONE) {
-    GST_WARNING_OBJECT (audiorate, "audiorate got buffer without offsets");
-    in_offset = audiorate->offset;
-    in_offset_end = audiorate->offset + in_size / audiorate->bytes_per_sample;
-    GST_WARNING_OBJECT (audiorate, "in_offset:%lld, in_offset_end:%lld",
-        in_offset, in_offset_end);
-  }
+      GST_TIME_ARGS (in_time), GST_TIME_ARGS (run_time),
+      GST_TIME_ARGS (in_duration), in_size, in_offset, in_offset_end,
+      audiorate->next_offset);
 
   /* do we need to insert samples */
   if (in_offset > audiorate->next_offset) {
@@ -511,6 +511,11 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     buf = gst_buffer_make_metadata_writable (buf);
     GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
   }
+
+  /* set last_stop on segment */
+  gst_segment_set_last_stop (&audiorate->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf));
+
   ret = gst_pad_push (audiorate->srcpad, buf);
   audiorate->out++;
 
