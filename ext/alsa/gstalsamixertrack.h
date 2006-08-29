@@ -38,15 +38,24 @@ G_BEGIN_DECLS
 typedef struct _GstAlsaMixerTrack GstAlsaMixerTrack;
 typedef struct _GstAlsaMixerTrackClass GstAlsaMixerTrackClass;
 
-#define GST_ALSA_MIXER_TRACK_CAPTURE  (1<<0)
-#define GST_ALSA_MIXER_TRACK_PLAYBACK (1<<1)
+#define GST_ALSA_MIXER_TRACK_VOLUME         (1<<0)           /* common volume */
+#define GST_ALSA_MIXER_TRACK_PVOLUME        (1<<1)
+#define GST_ALSA_MIXER_TRACK_CVOLUME        (1<<2)
+#define GST_ALSA_MIXER_TRACK_SWITCH         (1<<3)           /* common switch */
+#define GST_ALSA_MIXER_TRACK_PSWITCH        (1<<4)
+#define GST_ALSA_MIXER_TRACK_CSWITCH        (1<<5)
+#define GST_ALSA_MIXER_TRACK_CSWITCH_EXCL   (1<<6)
 
-#define GST_ALSA_MAX_CHANNELS   32 /* tracks can have up to 32 channels */
+#define GST_ALSA_MAX_CHANNELS   (SND_MIXER_SCHN_LAST+1)
+
 struct _GstAlsaMixerTrack {
   GstMixerTrack          parent;
-  snd_mixer_elem_t      *element; /* the ALSA mixer element for this track */
+  snd_mixer_elem_t      *element;    /* the ALSA mixer element for this track */
+  GstAlsaMixerTrack     *shared_mute;  
   gint                  track_num;
-  gint                  alsa_flags;
+  guint32               alsa_flags;                /* alsa track capabilities */
+  gint                  alsa_channels;  
+  gint                  capture_group;  
   gint                  volumes[GST_ALSA_MAX_CHANNELS];
 };
 
@@ -58,10 +67,11 @@ GType           gst_alsa_mixer_track_get_type   (void);
 GstMixerTrack * gst_alsa_mixer_track_new        (snd_mixer_elem_t *     element,
                                                  gint                   num,
                                                  gint                   track_num,
-                                                 gint                   channels,
                                                  gint                   flags,
-                                                 gint                   alsa_flags);
-
+                                                 gboolean               sw,  /* is simple switch? */
+                                                 GstAlsaMixerTrack *    shared_mute_track,
+                                                 gboolean               label_append_capture);
+void            gst_alsa_mixer_track_update      (GstAlsaMixerTrack * alsa_track);
 
 G_END_DECLS
 

@@ -1,5 +1,31 @@
 2006-08-29  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Viktor Peters  <viktor dot peters at gmail dot com>
+
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_ensure_track_list),
+	(gst_alsa_mixer_update), (gst_alsa_mixer_get_volume),
+	(gst_alsa_mixer_set_volume), (gst_alsa_mixer_set_mute),
+	(gst_alsa_mixer_set_record):
+	* ext/alsa/gstalsamixertrack.c:
+	(gst_alsa_mixer_track_update_alsa_capabilities),
+	(alsa_track_has_cap), (gst_alsa_mixer_track_new),
+	(gst_alsa_mixer_track_update):
+	* ext/alsa/gstalsamixertrack.h:
+	  Improve and fix mixer track handling, in particular better handling
+	  of alsa's pvolume/pswitch/cvolume/cswitch capabilities; create separate
+	  track objects for tracks that have both capture and playback volume
+	  (and label them differently as well so they're not mistakenly
+	  assumed to be duplicates); classify mixer tracks that only affect
+	  the audible volume of something (rather than the capture volume)
+	  as playback tracks. Redefine/fix meaning of RECORD and MUTE flags
+	  for capture tracks to correspond to alsa-pswitch alsa-cswitch
+	  (following the meaning documented in the mixer interface header
+	  file); add support for alsa's exclusive cswitch groups; update/sync
+	  state/flags better if mixer settings are changed by another
+	  application. Fixes #336075.
+
+2006-08-29  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstplaybin.c:
 	  Improve docs: add section about BUFFERING messages sent by playbin.
 
