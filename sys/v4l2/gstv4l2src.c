@@ -755,13 +755,9 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
       gst_structure_set (structure,
           "width", GST_TYPE_INT_RANGE, min_w, max_w,
           "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
-      if (fps_n > 0) {
-        gst_structure_set (structure, "framerate", GST_TYPE_FRACTION,
-            fps_n, fps_d, NULL);
-      } else {
-        gst_structure_set (structure, "framerate", GST_TYPE_FRACTION_RANGE,
-            1, 1, 100, 1, NULL);
-      }
+
+      gst_structure_set (structure, "framerate", GST_TYPE_FRACTION_RANGE,
+          1, 1, 100, 1, NULL);
 
       gst_caps_append_structure (caps, structure);
 
@@ -778,6 +774,8 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
   gint w, h;
   GstStructure *structure;
   struct v4l2_fmtdesc *format;
+  const GValue *framerate;
+  guint fps_n, fps_d;
 
   v4l2src = GST_V4L2SRC (src);
 
@@ -803,24 +801,57 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 
   gst_structure_get_int (structure, "width", &w);
   gst_structure_get_int (structure, "height", &h);
+  framerate = gst_structure_get_value (structure, "framerate");
 
   GST_DEBUG_OBJECT (v4l2src, "trying to set_capture %dx%d, format %s",
       w, h, format->description);
-  /* this only fills in v4l2src->mmap values */
-  if (!gst_v4l2src_set_capture (v4l2src, format, &w, &h)) {
+
+  if (framerate) {
+    fps_n = gst_value_get_fraction_numerator (framerate);
+    fps_d = gst_value_get_fraction_denominator (framerate);
+  } else {
+    fps_n = 0;
+    fps_d = 1;
+  }
+
+  if (!gst_v4l2src_set_capture (v4l2src, format, &w, &h, &fps_n, &fps_d)) {
     GST_WARNING_OBJECT (v4l2src, "could not set_capture %dx%d, format %s",
         w, h, format->description);
     return FALSE;
   }
 
-  gst_structure_set (structure, "width", G_TYPE_INT, w, "height", G_TYPE_INT, h,
-      NULL);
+  if (fps_n) {
+    gst_structure_set (structure,
+        "width", G_TYPE_INT, w,
+        "height", G_TYPE_INT, h,
+        "framerate", GST_TYPE_FRACTION,
+        gst_value_get_fraction_numerator (framerate),
+        gst_value_get_fraction_denominator (framerate), NULL);
+  } else {
+    gst_structure_set (structure,
+        "width", G_TYPE_INT, w,
+        "height", G_TYPE_INT, h, "framerate", GST_TYPE_FRACTION, NULL);
+  }
 
   if (!gst_v4l2src_capture_init (v4l2src))
     return FALSE;
 
   if (!gst_v4l2src_capture_start (v4l2src))
     return FALSE;
+
+  if (v4l2src->fps_n != fps_n || v4l2src->fps_d != fps_d) {
+    GST_WARNING_OBJECT (v4l2src,
+        "framerate changed after start capturing from %u/%u to %u/%u", fps_n,
+        fps_d, v4l2src->fps_n, v4l2src->fps_d);
+    if (fps_n) {
+      gst_structure_set (structure,
+          "width", G_TYPE_INT, w,
+          "height", G_TYPE_INT, h,
+          "framerate", GST_TYPE_FRACTION,
+          gst_value_get_fraction_numerator (framerate),
+          gst_value_get_fraction_denominator (framerate), NULL);
+    }
+  }
 
   return TRUE;
 }
@@ -948,7 +979,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 
   if (v4l2src->use_fixed_fps && v4l2src->fps_n == 0) {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS, (NULL),
-        ("could not get frame rate for element"));
+        ("could not get frame rate for element, try to set use-fixed-fps property to false"));
     return GST_FLOW_ERROR;
   }
 

@@ -240,8 +240,13 @@ gst_v4l2src_get_capture (GstV4l2Src * v4l2src)
 
 gboolean
 gst_v4l2src_set_capture (GstV4l2Src * v4l2src,
-    struct v4l2_fmtdesc * fmt, gint * width, gint * height)
+    struct v4l2_fmtdesc * fmt, gint * width, gint * height,
+    guint * fps_n, guint * fps_d)
 {
+
+  guint new_fps_n = *fps_n;
+  guint new_fps_d = *fps_d;
+
   DEBUG ("Setting capture format to %dx%d, format %s",
       *width, *height, fmt->description);
 
@@ -279,8 +284,30 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src,
   }
 
   if (fmt->pixelformat != v4l2src->format.fmt.pix.pixelformat) {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS, (NULL),
+        ("failed to set pixelformat to %s @ %dx%d for device %s: %s",
+            fmt->description, *width, *height,
+            v4l2src->v4l2object->videodev, g_strerror (errno)));
     goto fail;
   }
+
+  if (*fps_n) {
+    if (gst_v4l2src_set_fps (v4l2src, &new_fps_n, &new_fps_d)) {
+      if (new_fps_n != *fps_n || new_fps_d != *fps_d) {
+        DEBUG ("Updating framerate from %u/%u to %u%u",
+            *fps_n, *fps_d, new_fps_n, new_fps_d);
+        *fps_n = new_fps_n;
+        *fps_d = new_fps_d;
+      }
+    }
+  } else {
+    if (gst_v4l2src_get_fps (v4l2src, &new_fps_n, &new_fps_d)) {
+      DEBUG ("framerate is %u/%u", new_fps_n, new_fps_d);
+      *fps_n = new_fps_n;
+      *fps_d = new_fps_d;
+    }
+  }
+
 
   *width = v4l2src->format.fmt.pix.width;
   *height = v4l2src->format.fmt.pix.height;
@@ -644,6 +671,34 @@ gst_v4l2src_update_fps (GstV4l2Object * v4l2object)
   return gst_v4l2src_get_fps (v4l2src, &v4l2src->fps_n, &v4l2src->fps_d);
 }
 
+
+gboolean
+gst_v4l2src_set_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
+{
+
+  GstV4l2Object *v4l2object = v4l2src->v4l2object;
+  struct v4l2_streamparm stream;
+
+  memset (&stream, 0x00, sizeof (struct v4l2_streamparm));
+  stream.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  if (ioctl (v4l2object->video_fd, VIDIOC_G_PARM, &stream) == 0 &&
+      stream.parm.capture.capability & V4L2_CAP_TIMEPERFRAME) {
+
+    stream.parm.capture.timeperframe.denominator = *fps_n;
+    stream.parm.capture.timeperframe.numerator = *fps_d;
+
+    if (ioctl (v4l2object->video_fd, VIDIOC_S_PARM, &stream) == 0) {
+      *fps_n = stream.parm.capture.timeperframe.denominator;
+      *fps_d = stream.parm.capture.timeperframe.numerator;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+
+}
+
+
 gboolean
 gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
 {
@@ -656,6 +711,7 @@ gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
     return FALSE;
 
   /* Try to get the frame rate directly from the device using VIDIOC_G_PARM */
+  memset (&stream, 0x00, sizeof (struct v4l2_streamparm));
   stream.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   if (ioctl (v4l2object->video_fd, VIDIOC_G_PARM, &stream) == 0 &&
       stream.parm.capture.capability & V4L2_CAP_TIMEPERFRAME) {
