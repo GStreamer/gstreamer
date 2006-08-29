@@ -1,3 +1,11 @@
+2006-08-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstelement.c: (activate_pads), (clear_caps),
+	(iterator_activate_fold_with_resync), (gst_element_pads_activate):
+	Clear the pad caps when the element shut down all of the pads and
+	is not streaming data that could modify the caps. 
+	Fixes #352958.
+
 2006-08-28  Michael Smith  <msmith@fluendo.com>
 
 	* plugins/elements/gstidentity.c: (gst_identity_transform_ip):

@@ -2260,10 +2260,17 @@ activate_pads (GstPad * pad, GValue * ret, gboolean * active)
 {
   if (!gst_pad_set_active (pad, *active))
     g_value_set_boolean (ret, FALSE);
-  else if (!*active)
-    gst_pad_set_caps (pad, NULL);
 
   /* unref the object that was reffed for us by _fold */
+  gst_object_unref (pad);
+  return TRUE;
+}
+
+/* set the caps on the pad to NULL */
+static gboolean
+clear_caps (GstPad * pad, GValue * ret, gboolean * active)
+{
+  gst_pad_set_caps (pad, NULL);
   gst_object_unref (pad);
   return TRUE;
 }
@@ -2272,7 +2279,8 @@ activate_pads (GstPad * pad, GValue * ret, gboolean * active)
  * function always returns TRUE, see FIXME above) of the fold, true if all
  * pads in @iter were (de)activated successfully. */
 static gboolean
-iterator_activate_fold_with_resync (GstIterator * iter, gpointer user_data)
+iterator_activate_fold_with_resync (GstIterator * iter,
+    GstIteratorFoldFunction func, gpointer user_data)
 {
   GstIteratorResult ires;
   GValue ret = { 0 };
@@ -2282,8 +2290,7 @@ iterator_activate_fold_with_resync (GstIterator * iter, gpointer user_data)
   g_value_set_boolean (&ret, TRUE);
 
   while (1) {
-    ires = gst_iterator_fold (iter, (GstIteratorFoldFunction) activate_pads,
-        &ret, user_data);
+    ires = gst_iterator_fold (iter, func, &ret, user_data);
     switch (ires) {
       case GST_ITERATOR_RESYNC:
         /* need to reset the result again */
@@ -2318,16 +2325,31 @@ gst_element_pads_activate (GstElement * element, gboolean active)
   GST_DEBUG_OBJECT (element, "pads_activate with active %d", active);
 
   iter = gst_element_iterate_src_pads (element);
-  res = iterator_activate_fold_with_resync (iter, &active);
+  res =
+      iterator_activate_fold_with_resync (iter,
+      (GstIteratorFoldFunction) activate_pads, &active);
   gst_iterator_free (iter);
   if (G_UNLIKELY (!res))
     goto src_failed;
 
   iter = gst_element_iterate_sink_pads (element);
-  res = iterator_activate_fold_with_resync (iter, &active);
+  res =
+      iterator_activate_fold_with_resync (iter,
+      (GstIteratorFoldFunction) activate_pads, &active);
   gst_iterator_free (iter);
   if (G_UNLIKELY (!res))
     goto sink_failed;
+
+  if (!active) {
+    /* clear the caps on all pads, this should never fail */
+    iter = gst_element_iterate_pads (element);
+    res =
+        iterator_activate_fold_with_resync (iter,
+        (GstIteratorFoldFunction) clear_caps, &active);
+    gst_iterator_free (iter);
+    if (G_UNLIKELY (!res))
+      goto caps_failed;
+  }
 
   GST_DEBUG_OBJECT (element, "pads_activate successful");
 
@@ -2342,6 +2364,11 @@ src_failed:
 sink_failed:
   {
     GST_DEBUG_OBJECT (element, "sink pads_activate failed");
+    return FALSE;
+  }
+caps_failed:
+  {
+    GST_DEBUG_OBJECT (element, "failed to clear caps on pads");
     return FALSE;
   }
 }
