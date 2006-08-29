@@ -33,6 +33,12 @@ else
 PARSE_CHECKS = pipelines/simple-launch-lines pipelines/cleanup pipelines/parse-launch
 endif
 
+if GST_DISABLE_LOADSAVE
+LOADSAVE_CHECKS = 
+else
+LOADSAVE_CHECKS = gst/gstxml
+endif
+
 # if it's calling gst_element_factory_make(), it will probably not work without
 # a registry
 if GST_DISABLE_REGISTRY
@@ -76,6 +82,7 @@ check_PROGRAMS =				\
 	gst/gsttag				\
 	gst/gsttask				\
 	gst/gstvalue				\
+	$(LOADSAVE_CHECKS)          \
 	generic/states				\
 	$(PARSE_CHECKS)				\
 	$(REGISTRY_CHECKS)			\

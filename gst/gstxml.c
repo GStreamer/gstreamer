@@ -377,9 +377,12 @@ gst_xml_object_loaded (GstObject * private, GstObject * object, xmlNodePtr self,
  * gst_xml_get_topelements:
  * @xml: The GstXML to get the elements from
  *
- * Retrive a list of toplevel elements.
+ * Retrieve a list of toplevel elements.
  *
- * Returns: a GList of elements
+ * Returns: a GList of top-level elements. The caller does not own a copy
+ * of the list and must not free or modify the list. The caller also does not
+ * own a reference to any of the elements in the list and should obtain its own
+ * reference using gst_object_ref() if necessary.
  */
 GList *
 gst_xml_get_topelements (GstXML * xml)

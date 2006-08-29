@@ -1,3 +1,13 @@
+2006-08-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstxml.c:
+	  Improve and detypofy docs.
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/.cvsignore:
+	* tests/check/gst/gstxml.c: (GST_START_TEST), (gst_xml_suite):
+	  Add a basic test suite for GstXML.
+
 2006-08-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstelement.c: (activate_pads), (clear_caps),
