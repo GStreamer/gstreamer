@@ -63,10 +63,12 @@ struct _GstFFMpegDec
     } video;
     struct
     {
-      gint channels, samplerate;
+      gint channels;
+      gint samplerate;
     } audio;
   } format;
   gboolean waiting_for_key;
+  gboolean discont;
   guint64 next_ts;
 
   /* parsing */
@@ -503,7 +505,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
     default:
       break;
   }
-  ffmpegdec->next_ts = 0;
+  ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
   ffmpegdec->last_buffer = NULL;
   /* FIXME, reset_qos holds the LOCK */
   ffmpegdec->proportion = 0.0;
@@ -847,14 +849,24 @@ gst_ffmpegdec_negotiate (GstFFMpegDec * ffmpegdec)
   if (caps == NULL)
     goto no_caps;
 
-  /* If a demuxer provided a framerate then use it (#313970) */
-  if (ffmpegdec->format.video.fps_n != -1) {
-    gst_caps_set_simple (caps, "framerate",
-        GST_TYPE_FRACTION, ffmpegdec->format.video.fps_n,
-        ffmpegdec->format.video.fps_d, NULL);
+  switch (oclass->in_plugin->type) {
+    case CODEC_TYPE_VIDEO:
+      /* If a demuxer provided a framerate then use it (#313970) */
+      if (ffmpegdec->format.video.fps_n != -1) {
+        gst_caps_set_simple (caps, "framerate",
+            GST_TYPE_FRACTION, ffmpegdec->format.video.fps_n,
+            ffmpegdec->format.video.fps_d, NULL);
+      }
+      gst_ffmpegdec_add_pixel_aspect_ratio (ffmpegdec,
+          gst_caps_get_structure (caps, 0));
+      break;
+    case CODEC_TYPE_AUDIO:
+    {
+      break;
+    }
+    default:
+      break;
   }
-  gst_ffmpegdec_add_pixel_aspect_ratio (ffmpegdec,
-      gst_caps_get_structure (caps, 0));
 
   if (!gst_pad_set_caps (ffmpegdec->srcpad, caps))
     goto caps_failed;
@@ -1002,7 +1014,7 @@ clip_video_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
       GST_TIME_ARGS (in_ts), GST_TIME_ARGS (in_dur));
 
   /* can't clip without TIME segment */
-  if (dec->segment.format != GST_FORMAT_TIME)
+  if (G_UNLIKELY (dec->segment.format != GST_FORMAT_TIME))
     goto beach;
 
   /* we need a start time */
@@ -1014,8 +1026,10 @@ clip_video_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
       GST_CLOCK_TIME_IS_VALID (in_dur) ? (in_ts + in_dur) : GST_CLOCK_TIME_NONE;
 
   /* now clip */
-  if (G_UNLIKELY (!(res = gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
-                  in_ts, stop, &cstart, &cstop))))
+  res =
+      gst_segment_clip (&dec->segment, GST_FORMAT_TIME, in_ts, stop, &cstart,
+      &cstop);
+  if (G_UNLIKELY (!res))
     goto beach;
 
   /* update timestamp and possibly duration if the clipped stop time is
@@ -1309,6 +1323,75 @@ clipped:
   }
 }
 
+/* returns TRUE if buffer is within segment, else FALSE.
+ * if Buffer is on segment border, it's timestamp and duration will be clipped */
+static gboolean
+clip_audio_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
+    GstClockTime in_dur)
+{
+  GstClockTime stop;
+  gint64 diff, ctime, cstop;
+  gboolean res = TRUE;
+
+  GST_LOG_OBJECT (dec,
+      "timestamp:%" GST_TIME_FORMAT ", duration:%" GST_TIME_FORMAT
+      ", size %u", GST_TIME_ARGS (in_ts), GST_TIME_ARGS (in_dur),
+      GST_BUFFER_SIZE (buf));
+
+  /* can't clip without TIME segment */
+  if (G_UNLIKELY (dec->segment.format != GST_FORMAT_TIME))
+    goto beach;
+
+  /* we need a start time */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (in_ts)))
+    goto beach;
+
+  /* trust duration */
+  stop = in_ts + in_dur;
+
+  res = gst_segment_clip (&dec->segment, GST_FORMAT_TIME, in_ts, stop, &ctime,
+          &cstop);
+  if (G_UNLIKELY (!res))
+    goto out_of_segment;
+
+  /* see if some clipping happened */
+  if (G_UNLIKELY ((diff = ctime - in_ts) > 0)) {
+    /* bring clipped time to bytes */
+    diff =
+        gst_util_uint64_scale_int (diff, dec->format.audio.samplerate,
+        GST_SECOND) * (2 * dec->format.audio.channels);
+
+    GST_DEBUG_OBJECT (dec, "clipping start to %" GST_TIME_FORMAT " %"
+        G_GINT64_FORMAT " bytes", GST_TIME_ARGS (ctime), diff);
+
+    GST_BUFFER_SIZE (buf) -= diff;
+    GST_BUFFER_DATA (buf) += diff;
+  }
+  if (G_UNLIKELY ((diff = stop - cstop) > 0)) {
+    /* bring clipped time to bytes */
+    diff =
+        gst_util_uint64_scale_int (diff, dec->format.audio.samplerate,
+        GST_SECOND) * (2 * dec->format.audio.channels);
+
+    GST_DEBUG_OBJECT (dec, "clipping stop to %" GST_TIME_FORMAT " %"
+        G_GINT64_FORMAT " bytes", GST_TIME_ARGS (cstop), diff);
+
+    GST_BUFFER_SIZE (buf) -= diff;
+  }
+  GST_BUFFER_TIMESTAMP (buf) = ctime;
+  GST_BUFFER_DURATION (buf) = cstop - ctime;
+
+beach:
+  GST_LOG_OBJECT (dec, "%sdropping", (res ? "not " : ""));
+  return res;
+
+  /* ERRORS */
+out_of_segment:
+  {
+    GST_LOG_OBJECT (dec, "out of segment");
+    goto beach;
+  }
+}
 
 static gint
 gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
@@ -1317,10 +1400,13 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
 {
   gint len = -1;
   gint have_data;
+  GstClockTime in_ts, in_dur;
+
+  in_ts = GST_BUFFER_TIMESTAMP (inbuf);
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "size:%d, inbuf.ts %" GST_TIME_FORMAT " , ffmpegdec->next_ts:%"
-      GST_TIME_FORMAT, size, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
+      GST_TIME_FORMAT, size, GST_TIME_ARGS (in_ts),
       GST_TIME_ARGS (ffmpegdec->next_ts));
 
   /* outgoing buffer */
@@ -1345,62 +1431,42 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
       goto beach;
     }
 
-    /* Buffer size timestamp and duration */
+    /* Buffer size */
     GST_BUFFER_SIZE (*outbuf) = have_data;
-    GST_BUFFER_TIMESTAMP (*outbuf) = ffmpegdec->next_ts;
-    GST_BUFFER_DURATION (*outbuf) = (have_data * GST_SECOND) /
-        (2 * ffmpegdec->context->channels * ffmpegdec->context->sample_rate);
+
+    /*
+     * Timestamps:
+     *
+     *  1) Copy input timestamp if valid
+     *  2) else interpolate from previous input timestamp
+     */
+    /* always take timestamps from the input buffer if any */
+    if (!GST_CLOCK_TIME_IS_VALID (in_ts)) {
+      in_ts = ffmpegdec->next_ts;
+    }
+
+    /*
+     * Duration:
+     *
+     *  1) calculate based on number of samples
+     */
+    in_dur = gst_util_uint64_scale_int (have_data, GST_SECOND,
+        2 * ffmpegdec->context->channels * ffmpegdec->context->sample_rate);
 
     GST_DEBUG_OBJECT (ffmpegdec,
         "Buffer created. Size:%d , timestamp:%" GST_TIME_FORMAT " , duration:%"
-        GST_TIME_FORMAT, GST_BUFFER_SIZE (*outbuf),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*outbuf)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (*outbuf)));
+        GST_TIME_FORMAT, have_data,
+        GST_TIME_ARGS (in_ts), GST_TIME_ARGS (in_dur));
 
-    ffmpegdec->next_ts =
-        GST_BUFFER_TIMESTAMP (*outbuf) + GST_BUFFER_DURATION (*outbuf);
+    GST_BUFFER_TIMESTAMP (*outbuf) = in_ts;
+    GST_BUFFER_DURATION (*outbuf) = in_dur;
 
-    /* clipping/dropping of outgoing audio buffers */
-    if (ffmpegdec->segment.format == GST_FORMAT_TIME) {
-      gint64 start, stop, cstart, cstop, diff;
+    /* the next timestamp we'll use when interpolating */
+    ffmpegdec->next_ts = in_ts + in_dur;
 
-      start = GST_BUFFER_TIMESTAMP (*outbuf);
-      stop = ffmpegdec->next_ts;
-
-      if (!gst_segment_clip (&ffmpegdec->segment, GST_FORMAT_TIME, start, stop,
-              &cstart, &cstop)) {
-        GST_DEBUG_OBJECT (ffmpegdec, "Dropping buffer outside segment");
-        gst_buffer_unref (*outbuf);
-        *outbuf = NULL;
-      } else {
-        diff = cstart - start;
-        if (diff > 0) {
-          GST_BUFFER_TIMESTAMP (*outbuf) = cstart;
-          GST_BUFFER_DURATION (*outbuf) -= diff;
-
-          /* time -> bytes *//* FIXME : should go to samples first */
-          diff =
-              gst_util_uint64_scale (diff,
-              (2 * ffmpegdec->context->channels *
-                  ffmpegdec->context->sample_rate), GST_SECOND);
-          GST_BUFFER_DATA (*outbuf) += diff;
-          GST_BUFFER_SIZE (*outbuf) -= diff;
-        }
-        diff = stop - cstop;
-        if (diff > 0) {
-          GST_BUFFER_DURATION (*outbuf) -= diff;
-          diff =
-              gst_util_uint64_scale (diff,
-              (2 * ffmpegdec->context->channels *
-                  ffmpegdec->context->sample_rate), GST_SECOND);
-          GST_BUFFER_SIZE (*outbuf) -= diff;
-        }
-        GST_DEBUG_OBJECT (ffmpegdec,
-            "clipped buffer to %" GST_TIME_FORMAT " / duration:%"
-            GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (*outbuf)),
-            GST_TIME_ARGS (GST_BUFFER_DURATION (*outbuf)));
-      }
-    }
+    /* now see if we need to clip the buffer against the segment boundaries. */
+    if (G_UNLIKELY (!clip_audio_buffer (ffmpegdec, *outbuf, in_ts, in_dur)))
+      goto clipped;
 
   } else if (len > 0 && have_data == 0) {
     /* cache output, because it may be used for caching (in-place) */
@@ -1412,7 +1478,18 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
   }
 
 beach:
+  GST_DEBUG_OBJECT (ffmpegdec, "return flow %d, out %p, len %d",
+      *ret, *outbuf, len);
   return len;
+
+  /* ERRORS */
+clipped:
+  {
+    GST_DEBUG_OBJECT (ffmpegdec, "buffer clipped");
+    gst_buffer_unref (*outbuf);
+    *outbuf = NULL;
+    goto beach;
+  }
 }
 
 
@@ -1481,7 +1558,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
     goto beach;
   } else {
     /* this is where I lost my last clue on ffmpeg... */
-    *got_data = 1;              //(ffmpegdec->pctx || have_data) ? 1 : 0;
+    *got_data = 1; 
   }
 
   if (outbuf) {
@@ -1491,7 +1568,14 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
 
+    /* mark pending discont */
+    if (ffmpegdec->discont) {
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      ffmpegdec->discont = FALSE;
+    }
+    /* set caps */
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegdec->srcpad));
+    /* and off we go */
     *ret = gst_pad_push (ffmpegdec->srcpad, outbuf);
   } else {
     GST_DEBUG_OBJECT (ffmpegdec, "We didn't get a decoded buffer");
@@ -1561,6 +1645,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       if (ffmpegdec->opened) {
         avcodec_flush_buffers (ffmpegdec->context);
       }
+      ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
       gst_ffmpegdec_reset_qos (ffmpegdec);
       gst_ffmpegdec_flush_pcache (ffmpegdec);
       ffmpegdec->waiting_for_key = TRUE;
@@ -1622,7 +1707,7 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       }
 
       GST_DEBUG_OBJECT (ffmpegdec,
-          "NEWSEGMENT in time (next_ts) %" GST_TIME_FORMAT " -- %"
+          "NEWSEGMENT in time start %" GST_TIME_FORMAT " -- stop %"
           GST_TIME_FORMAT, GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
       /* and store the values */
@@ -1671,7 +1756,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   guint8 *bdata, *data;
   gint bsize, size, len, have_data;
   guint64 in_ts;
-  guint64 next_ts = GST_CLOCK_TIME_NONE;
   GstFlowReturn ret = GST_FLOW_OK;
 
   ffmpegdec = (GstFFMpegDec *) (GST_PAD_PARENT (pad));
@@ -1693,6 +1777,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     gst_ffmpegdec_flush_pcache (ffmpegdec);
     avcodec_flush_buffers (ffmpegdec->context);
     ffmpegdec->waiting_for_key = TRUE;
+    ffmpegdec->discont = TRUE;
+    ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
   }
 
   /* do early keyframe check pretty bad to rely on the keyframe flag in the
@@ -1739,8 +1825,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 
     ffmpegdec->pcache = NULL;
 
-    /* If we're decoding something else, we'll use next_ts */
-    next_ts = in_ts = timestamp;
+    in_ts = timestamp;
   }
   /* workarounds, functions write to buffers:
    *  libavcodec/svq1.c:svq1_decode_frame writes to the given buffer.
@@ -1809,9 +1894,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 
     /* now we don;t know the timestamp anymore, the parser should help */
     GST_BUFFER_TIMESTAMP (inbuf) = in_ts = GST_CLOCK_TIME_NONE;
-
-    if (!GST_CLOCK_TIME_IS_VALID (next_ts))
-      next_ts = ffmpegdec->next_ts;
 
     GST_LOG_OBJECT (ffmpegdec, "Before (while bsize>0).  bsize:%d , bdata:%p",
         bsize, bdata);

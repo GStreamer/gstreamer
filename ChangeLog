@@ -1,3 +1,16 @@
+2006-08-29  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
+	(gst_ffmpegdec_negotiate), (clip_video_buffer),
+	(clip_audio_buffer), (gst_ffmpegdec_audio_frame),
+	(gst_ffmpegdec_frame), (gst_ffmpegdec_sink_event),
+	(gst_ffmpegdec_chain):
+	Mark outgoing buffers with DISCONT when needed.
+	Small cleanups.
+	Fix timestamps on audio decoders.
+	better audio clipping.
+	Fixes #352579.
+
 2006-08-21  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):
