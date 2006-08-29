@@ -1091,16 +1091,17 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
     gst_buffer_set_caps (buf3, caps);
 
     /* push out buffers */
+    /* push_buffer takes the reference even for failure */
     if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf1)) != GST_FLOW_OK)
       goto failed_header_push;
-    buf1 = NULL;
-    if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf2)) != GST_FLOW_OK)
+    if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf2)) != GST_FLOW_OK) {
+      buf2 = NULL;
       goto failed_header_push;
-    buf2 = NULL;
-    if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf3)) != GST_FLOW_OK)
+    }
+    if ((ret = gst_vorbis_enc_push_buffer (vorbisenc, buf3)) != GST_FLOW_OK) {
+      buf3 = NULL;
       goto failed_header_push;
-    buf3 = NULL;
-
+    }
 
     /* now adjust starting granulepos accordingly if the buffer's timestamp is
        nonzero */
@@ -1186,8 +1187,7 @@ not_setup:
 failed_header_push:
   {
     GST_WARNING_OBJECT (vorbisenc, "Failed to push headers");
-    if (buf1)
-      gst_buffer_unref (buf1);
+    /* buf1 is always already unreffed */
     if (buf2)
       gst_buffer_unref (buf2);
     if (buf3)
