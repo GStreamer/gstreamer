@@ -1,3 +1,9 @@
+2006-08-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstcaps.c: (gst_caps_structure_is_subset_field):
+	Code cleanups.
+	Fix memleak.
+
 2006-08-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstxml.c:

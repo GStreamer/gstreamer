@@ -494,43 +494,28 @@ gst_caps_structure_is_subset_field (GQuark field_id, const GValue * value,
     /* field is missing in one set */
     return FALSE;
   }
-  /*{
-     gchar *str = g_strdup_value_contents (value);
-     GST_DEBUG ("    value: '%s'", str);
-     g_free (str);
-     str  = g_strdup_value_contents (other);
-     GST_DEBUG ("    other: '%s'", str);
-     g_free (str);
-     } */
   /*
-     [1,2] - 1 = 2
-     1 - [1,2] = �   ???
+   * [1,2] - 1 = 2
+   * 1 - [1,2] = ???
    */
   if (!gst_value_subtract (&subtraction, other, value)) {
     /* empty result -> values are the same, or first was a value and
      * second was a list
-     */
-    /* verify that result is empty by swapping args */
+     * verify that result is empty by swapping args */
     if (!gst_value_subtract (&subtraction, value, other)) {
-      /*GST_DEBUG ("  values are the same"); */
       return TRUE;
     }
     g_value_unset (&subtraction);
     return FALSE;
   }
-  /*{
-     gchar *str = g_strdup_value_contents (&subtraction);
-     GST_DEBUG ("    diff: '%s'", str);
-     g_free (str);
-     } */
+
   res = gst_value_compare (&subtraction, other);
+  g_value_unset (&subtraction);
+
   if (res == GST_VALUE_EQUAL) {
     /* value was empty ? */
-    g_value_unset (&subtraction);
-    /*GST_DEBUG ("  compare = equal (%d)",res); */
     return FALSE;
   } else {
-    /*GST_DEBUG ("  compare = unequal/unordered (%d)",res); */
     return TRUE;
   }
 }
