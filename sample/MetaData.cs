@@ -46,6 +46,9 @@ public class MetaData
 
 			switch(message.Type) {
 				case MessageType.Error:
+					string error;
+					message.ParseError(out error);
+					Console.Error.WriteLine("Error: {0}", error);
 					message.Dispose();
 					return true;
 				case MessageType.Eos:
@@ -84,10 +87,15 @@ public class MetaData
 		source = ElementFactory.Make("filesrc", "source");
 		decodebin = ElementFactory.Make("decodebin", "decodebin");
 
+		if(pipeline == null) Console.Error.WriteLine("Pipeline count not be created");
+		if(source == null) Console.Error.WriteLine("Element filesrc could not be created");
+		if(decodebin == null) Console.Error.WriteLine("Element decodebin coult not be created");
+
 		Bin bin = (Bin) pipeline;
 		bin.AddMany(source, decodebin);
-		source.Link(decodebin);
-		decodebin.Dispose();
+		if(!source.Link(decodebin))
+			Console.Error.WriteLine("filesrc could not be linked with decodebin");
+		//decodebin.Dispose();
 	}
 
 	public static void Main(string [] args) 

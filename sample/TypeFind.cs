@@ -31,10 +31,11 @@ public static class GstTypefindTest
         pipeline.Dispose();
     }
     
-    private static void OnHaveType(object o, HaveTypeArgs args) 
+    private static void OnHaveType(object o, GLib.SignalArgs args) 
     {
-        args.Caps.Refcount++;
-        Console.WriteLine("MimeType: {0}, {1}", args.Caps, typefind.Caps);            
+		Caps caps = args.Args[1] as Caps;
+		caps.Refcount++;
+        Console.WriteLine("MimeType: {0}, {1}", caps , typefind.Caps);            
     }
 }
 

@@ -1,6 +1,8 @@
 2006-08-29  Khaled Mohammed <khaled.mohammed@gmail.com>
 	* sample/MetaData.cs: a sample file which extracts tag information
 	from media files and displays them to console.
+	* sample/TypeFind.cs: fixed to make it work with the new DynamicSignal
+	class.
 
 2006-08-25  Khaled Mohammed <khaled.mohammed@gmail.com>
 	* sample/QueueExample.cs: a sample file showcasing 
