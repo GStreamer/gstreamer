@@ -382,6 +382,7 @@ gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
   GstFFMpegCsp *space = NULL;
   GstStructure *structure = NULL;
   AVCodecContext *ctx = NULL;
+  gboolean ret = TRUE;
   gint width, height;
 
   g_assert (size);
@@ -396,7 +397,14 @@ gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
 
   g_assert (ctx != NULL);
 
+  ctx->pix_fmt = PIX_FMT_NB;
+
   gst_ffmpegcsp_caps_with_codectype (CODEC_TYPE_VIDEO, caps, ctx);
+
+  if (G_UNLIKELY (ctx->pix_fmt == PIX_FMT_NB)) {
+    ret = FALSE;
+    goto beach;
+  }
 
   *size = avpicture_get_size (ctx->pix_fmt, width, height);
 
@@ -408,11 +416,13 @@ gst_ffmpegcsp_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
     *size -= 4 * 256;           /* = AVPALETTE_SIZE */
   }
 
+beach:
+
   if (ctx->palctrl)
     av_free (ctx->palctrl);
   av_free (ctx);
 
-  return TRUE;
+  return ret;
 }
 
 #if 0

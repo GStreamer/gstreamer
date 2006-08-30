@@ -1,3 +1,11 @@
+2006-08-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_get_unit_size):
+	  Return FALSE instead of returning a random false unit
+	  size when the format isn't known/supported (even if
+	  this shouldn't happen under normal circumstances).
+
 2006-08-29  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Tim-Philipp Müller  <tim at centricular dot net>
