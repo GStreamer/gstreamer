@@ -829,8 +829,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
         gst_value_get_fraction_denominator (framerate), NULL);
   } else {
     gst_structure_set (structure,
-        "width", G_TYPE_INT, w,
-        "height", G_TYPE_INT, h, "framerate", GST_TYPE_FRACTION, NULL);
+        "width", G_TYPE_INT, w, "height", G_TYPE_INT, h, NULL);
   }
 
   if (!gst_v4l2src_capture_init (v4l2src))
