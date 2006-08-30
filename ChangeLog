@@ -1,3 +1,8 @@
+2006-08-30  Edgard Lima <edgard.lima@indt.org.br>
+
+	* sys/v4l2/gstv4l2src.c:
+	A small fix to set_caps function.
+
 2006-08-30  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c:
