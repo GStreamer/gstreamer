@@ -1,4 +1,11 @@
-2006-08-30  Stefan Kost,,,  <ensonic@users.sf.net>
+2006-08-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment),
+	(qtdemux_parse_tree):
+	  put back 'segment start<=stop' change that was mystically reverted by
+	  the last commit
+
+2006-08-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment),
 	(qtdemux_parse_tree):
