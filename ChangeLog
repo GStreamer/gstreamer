@@ -1,3 +1,11 @@
+2006-08-30  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c:
+	(gst_qtdemux_do_seek):
+	Reset each streams last_flow to GST_FLOW_OK.
+	(gst_qtdemux_activate_segment):
+	Removing mystic modifications for good.
+
 2006-08-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment),

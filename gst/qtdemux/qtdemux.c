@@ -753,6 +753,7 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   gboolean res;
   gboolean update;
   GstSegment seeksegment;
+  int i;
 
   if (event) {
     GST_DEBUG_OBJECT (qtdemux, "doing seek with event");
@@ -843,6 +844,9 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   /* restart streaming, NEWSEGMENT will be sent from the streaming
    * thread. */
   qtdemux->segment_running = TRUE;
+  for (i = 0; i < qtdemux->n_streams; i++) {
+    qtdemux->streams[i]->last_ret = GST_FLOW_OK;
+  }
   gst_pad_start_task (qtdemux->sinkpad, (GstTaskFunction) gst_qtdemux_loop,
       qtdemux->sinkpad);
 
@@ -1088,7 +1092,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     stop = segment->media_stop;
   else
     stop = MIN (segment->media_stop, qtdemux->segment.stop);
-  start = segment->media_start + seg_time;
+  start = MIN (segment->media_start + seg_time, stop);
 
   GST_DEBUG_OBJECT (qtdemux, "newsegment %d from %" GST_TIME_FORMAT
       " to %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT, seg_idx,
