@@ -1,6 +1,6 @@
 $Id$
 
-Could schedulers do a little profiling?
+= core profiling =
 
 * scheduler keeps a list of usecs the process function of each element was
   running
@@ -23,4 +23,37 @@ Could schedulers do a little profiling?
 
 * the profile_percentage shows how much CPU time the element uses in relation
   to the whole pipeline
+
+= qos profiling =
+
+* what data is needed ?
+  * streamtime,propotion pairs from sinks
+    draw a graph with gnuplot or similar
+  * number of frames in total
+  * number of frames dropped from each element that support QOS
+    elements that don't support QOS wont have this information anyway
+
+* idea1: parse data from debug log
+   GST_QOS gstbasesink.c:1188:gst_base_sink_send_qos:<xvimagesink0> qos: proportion: 0.895615, diff -16437500, timestamp 0:00:09.208333333
+  basesink gstbasesink.c:1542:gst_base_sink_render_object:<xvimagesink0> buffer late, dropping
+  basesink gstbasesink.c:2534:gst_base_sink_change_state:<alsasink0> rendered: 1028, dropped: 0
+   basesink gstbasesink.c:2534:gst_base_sink_change_state:<xvimagesink0> rendered: 598, dropped: 10
+
+  + easy to do
+  - debug log changes timing
+
+* idea2: query data (via gst-launch)
+  * add -r, --report option to gst-launch
+  * send duration to get total number of frames (GST_FORMAT_DEFAULT for video is frames)
+  * during playing we need to somehow listen to/capture/intercept QOS-events to record
+    'streamtime,proportion' pairs
+  * after EOS, send qos-queries to each element in the pipeline
+    * qos-query will return:
+      number of frames rendered
+      number of frames dropped
+    * print a nice table with the results
+    
+  + robust
+  + also available to application
+  - changes in core
 
