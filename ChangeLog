@@ -1,6 +1,11 @@
 2006-08-30  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2src.c:
+	Another small fix to set_caps function (sucks copy/paste error).
+	
+2006-08-30  Edgard Lima <edgard.lima@indt.org.br>
+
+	* sys/v4l2/gstv4l2src.c:
 	Send new_segment in GST_FORMAT_TIME instead of in GST_FORMAT_BYTES.
 
 2006-08-30  Edgard Lima <edgard.lima@indt.org.br>
