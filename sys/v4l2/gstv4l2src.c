@@ -309,6 +309,7 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
   gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (v4l2src),
       gst_v4l2src_fixate);
 
+  gst_base_src_set_format (GST_BASE_SRC (v4l2src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (v4l2src), TRUE);
 }
 
