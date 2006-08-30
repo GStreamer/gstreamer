@@ -1084,11 +1084,11 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     return FALSE;
 
   /* calc media start/stop */
+  start = segment->media_start + seg_time;
   if (qtdemux->segment.stop == -1)
     stop = segment->media_stop;
   else
     stop = MIN (segment->media_stop, qtdemux->segment.stop);
-  start = MIN (segment->media_start + seg_time, stop);
 
   GST_DEBUG_OBJECT (qtdemux, "newsegment %d from %" GST_TIME_FORMAT
       " to %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT, seg_idx,
@@ -3040,7 +3040,10 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
         if ((rmvc = qtdemux_tree_get_child_by_type (rmda, FOURCC_rmvc))) {
           guint32 package = QTDEMUX_FOURCC_GET ((guint8 *) rmvc->data + 12);
           guint version = QTDEMUX_GUINT32_GET ((guint8 *) rmvc->data + 16);
+
+#ifndef GST_DISABLE_GST_DEBUG
           guint bitmask = QTDEMUX_GUINT32_GET ((guint8 *) rmvc->data + 20);
+#endif
           guint check_type = QTDEMUX_GUINT16_GET ((guint8 *) rmvc->data + 24);
 
           GST_LOG ("version check atom [%" GST_FOURCC_FORMAT "], version=0x%08x"

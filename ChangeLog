@@ -1,3 +1,9 @@
+2006-08-30  Stefan Kost,,,  <ensonic@users.sf.net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment),
+	(qtdemux_parse_tree):
+	Fix the build for disabled debug
+
 2006-08-29  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2src.c:
