@@ -1084,11 +1084,11 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     return FALSE;
 
   /* calc media start/stop */
-  start = segment->media_start + seg_time;
   if (qtdemux->segment.stop == -1)
     stop = segment->media_stop;
   else
     stop = MIN (segment->media_stop, qtdemux->segment.stop);
+  start = segment->media_start + seg_time;
 
   GST_DEBUG_OBJECT (qtdemux, "newsegment %d from %" GST_TIME_FORMAT
       " to %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT, seg_idx,
