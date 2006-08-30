@@ -825,9 +825,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
     gst_structure_set (structure,
         "width", G_TYPE_INT, w,
         "height", G_TYPE_INT, h,
-        "framerate", GST_TYPE_FRACTION,
-        gst_value_get_fraction_numerator (framerate),
-        gst_value_get_fraction_denominator (framerate), NULL);
+        "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
   } else {
     gst_structure_set (structure,
         "width", G_TYPE_INT, w, "height", G_TYPE_INT, h, NULL);
@@ -847,9 +845,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
       gst_structure_set (structure,
           "width", G_TYPE_INT, w,
           "height", G_TYPE_INT, h,
-          "framerate", GST_TYPE_FRACTION,
-          gst_value_get_fraction_numerator (framerate),
-          gst_value_get_fraction_denominator (framerate), NULL);
+          "framerate", GST_TYPE_FRACTION, v4l2src->fps_n, v4l2src->fps_d, NULL);
     }
   }
 
