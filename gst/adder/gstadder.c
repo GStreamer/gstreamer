@@ -436,7 +436,7 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
     {
       GstSeekFlags flags;
       GstSeekType curtype;
-      guint64 cur;
+      gint64 cur;
 
       /* parse the flushing flag */
       gst_event_parse_seek (event, NULL, NULL, &flags, &curtype, &cur, NULL,
