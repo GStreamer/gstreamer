@@ -182,6 +182,7 @@ struct _GstOggDemux
   gboolean segment_running;
 
   GstEvent *event;
+  GstEvent *newsegment;         /* pending newsegment to be sent from _loop */
 
   gint64 current_granule;
 
@@ -1438,6 +1439,7 @@ gst_ogg_demux_init (GstOggDemux * ogg, GstOggDemuxClass * g_class)
   ogg->chain_lock = g_mutex_new ();
   ogg->chains = g_array_new (FALSE, TRUE, sizeof (GstOggChain *));
 
+  ogg->newsegment = NULL;
 }
 
 static void
@@ -1450,6 +1452,9 @@ gst_ogg_demux_finalize (GObject * object)
   g_array_free (ogg->chains, TRUE);
   g_mutex_free (ogg->chain_lock);
   ogg_sync_clear (&ogg->sync);
+
+  if (ogg->newsegment)
+    gst_event_unref (ogg->newsegment);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2108,7 +2113,10 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
     } else {
       /* mark discont and send segment on current chain */
       gst_ogg_chain_mark_discont (chain);
-      gst_ogg_demux_send_event (ogg, event);
+      /* This event should be sent from the streaming thread (sink pad task) */
+      if (ogg->newsegment)
+        gst_event_unref (ogg->newsegment);
+      ogg->newsegment = event;
     }
 
     /* notify start of new segment */
@@ -2825,6 +2833,11 @@ gst_ogg_demux_loop (GstOggPad * pad)
   }
 
   ogg->offset += GST_BUFFER_SIZE (buffer);
+
+  if (G_UNLIKELY (ogg->newsegment)) {
+    gst_ogg_demux_send_event (ogg, ogg->newsegment);
+    ogg->newsegment = NULL;
+  }
 
   ret = gst_ogg_demux_chain (ogg->sinkpad, buffer);
   if (ret != GST_FLOW_OK) {

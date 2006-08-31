@@ -1,3 +1,10 @@
+2006-08-31  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_init),
+	(gst_ogg_demux_finalize), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_loop):
+	Send the GST_EVENT_NEW_SEGMENT from the streaming thread.
+
 2006-08-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
