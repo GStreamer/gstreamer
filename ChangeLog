@@ -1,3 +1,13 @@
+2006-08-31  Michael Smith  <msmith@fluendo.com>
+
+	* gst/gstutils.c: (gst_element_link_pads),
+	(gst_element_link_pads_filtered):
+	  Ensure that we set a capsfilter to NULL if we failed to link it
+	  when doing filtered linking, to avoid criticals.
+
+	  No need to check for unreffing srcpad, which is explicly NULLed
+	  above (a trivial code cleanup).
+
 2006-08-31  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-gstghostpad.txt:

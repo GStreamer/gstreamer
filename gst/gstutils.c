@@ -1482,13 +1482,8 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "no link possible from %s to %s:%s",
         GST_ELEMENT_NAME (src), GST_DEBUG_PAD_NAME (destpad));
     gst_object_unref (destpad);
-    if (srcpad)
-      gst_object_unref (srcpad);
     return FALSE;
   } else {
-    if (srcpad)
-      gst_object_unref (srcpad);
-    srcpad = NULL;
     if (destpad)
       gst_object_unref (destpad);
     destpad = NULL;
@@ -1598,8 +1593,9 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
       return TRUE;
     } else {
       GST_INFO ("Could not link elements");
+      gst_element_set_state (capsfilter, GST_STATE_NULL);
+      /* this will unlink and unref as appropriate */
       gst_bin_remove (GST_BIN (GST_OBJECT_PARENT (capsfilter)), capsfilter);
-      /* will unref and unlink as appropriate */
       return FALSE;
     }
   } else {
