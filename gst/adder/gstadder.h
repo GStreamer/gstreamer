@@ -80,6 +80,7 @@ struct _GstAdder {
   GstPadEventFunction  collect_event;
   GstSegment      segment;
   gboolean        segment_pending;
+  guint64	  segment_position;
 };
 
 struct _GstAdderClass {

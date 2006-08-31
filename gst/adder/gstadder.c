@@ -375,6 +375,7 @@ static gboolean
 forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
 {
   gst_event_ref (event);
+  GST_LOG_OBJECT (pad, "About to send event %s", GST_EVENT_TYPE_NAME (event));
   if (!gst_pad_push_event (pad, event)) {
     g_value_set_boolean (ret, FALSE);
     GST_WARNING_OBJECT (pad, "Sending event  %p (%s) failed.",
@@ -434,9 +435,12 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:
     {
       GstSeekFlags flags;
+      GstSeekType curtype;
+      guint64 cur;
 
       /* parse the flushing flag */
-      gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
+      gst_event_parse_seek (event, NULL, NULL, &flags, &curtype, &cur, NULL,
+          NULL);
 
       /* if we are not flushing, just forward */
       if (!flags & GST_SEEK_FLAG_FLUSH)
@@ -452,6 +456,10 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       /* now wait for the collected to be finished and mark a new 
        * segment */
       GST_OBJECT_LOCK (adder->collect);
+      if (curtype == GST_SEEK_TYPE_SET)
+        adder->segment_position = cur;
+      else
+        adder->segment_position = 0;
       adder->segment_pending = TRUE;
       GST_OBJECT_UNLOCK (adder->collect);
 
@@ -741,10 +749,11 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
      * match.
      */
     event = gst_event_new_new_segment_full (FALSE, 1.0,
-        1.0, GST_FORMAT_TIME, adder->timestamp, -1, 0);
+        1.0, GST_FORMAT_TIME, adder->timestamp, -1, adder->segment_position);
 
     gst_pad_push_event (adder->srcpad, event);
     adder->segment_pending = FALSE;
+    adder->segment_position = 0;
   }
 
   /* set timestamps on the output buffer */
@@ -798,6 +807,7 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
       adder->timestamp = 0;
       adder->offset = 0;
       adder->segment_pending = TRUE;
+      adder->segment_position = 0;
       gst_segment_init (&adder->segment, GST_FORMAT_UNDEFINED);
       gst_collect_pads_start (adder->collect);
       break;
