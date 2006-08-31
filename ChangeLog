@@ -1,3 +1,10 @@
+2006-08-31  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst-0.10.10.ignore:
+	API addition
+	* gst/gst.defs:
+	Added new ghostpad functions.
+
 2006-08-29  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override:

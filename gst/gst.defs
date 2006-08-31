@@ -2094,6 +2094,25 @@
   )
 )
 
+(define-function ghost_pad_new_from_template
+  (c-name "gst_ghost_pad_new_from_template")
+  (return-type "GstPad*")
+  (parameters
+    '("const-gchar*" "name")
+    '("GstPad*" "target")
+    '("GstPadTemplate*" "templ")
+  )
+)
+
+(define-function ghost_pad_new_no_target_from_template
+  (c-name "gst_ghost_pad_new_no_target_from_template")
+  (return-type "GstPad*")
+  (parameters
+    '("const-gchar*" "name")
+    '("GstPadTemplate*" "templ")
+  )
+)
+
 (define-method get_target
   (of-object "GstGhostPad")
   (c-name "gst_ghost_pad_get_target")
