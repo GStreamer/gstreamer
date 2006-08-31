@@ -1,3 +1,8 @@
+2006-08-31  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/nsf/Makefile.am:
+	Add missing GST_LIBS
+
 2006-08-30  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2src.c:
