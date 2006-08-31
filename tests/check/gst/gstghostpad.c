@@ -479,6 +479,84 @@ GST_START_TEST (test_ghost_pads_probes)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ghost_pads_new_from_template)
+{
+  GstPad *sinkpad, *ghostpad;
+  GstPadTemplate *padtempl, *ghosttempl;
+  GstCaps *padcaps, *ghostcaps, *newcaps;
+
+  padcaps = gst_caps_from_string ("some/caps");
+  fail_unless (padcaps != NULL);
+  ghostcaps = gst_caps_from_string ("some/caps;some/other-caps");
+  fail_unless (ghostcaps != NULL);
+
+  padtempl = gst_pad_template_new ("padtempl", GST_PAD_SINK,
+      GST_PAD_ALWAYS, padcaps);
+  fail_unless (padtempl != NULL);
+  ghosttempl = gst_pad_template_new ("ghosttempl", GST_PAD_SINK,
+      GST_PAD_ALWAYS, ghostcaps);
+
+  sinkpad = gst_pad_new_from_template (padtempl, "sinkpad");
+  fail_unless (sinkpad != NULL);
+
+  ghostpad = gst_ghost_pad_new_from_template ("ghostpad", sinkpad, ghosttempl);
+  fail_unless (ghostpad != NULL);
+
+  /* check template is properly set */
+  fail_unless (GST_PAD_PAD_TEMPLATE (ghostpad) == ghosttempl);
+
+  /* check ghostpad caps are from the sinkpad */
+  newcaps = gst_pad_get_caps (ghostpad);
+  fail_unless (newcaps != NULL);
+  fail_unless (gst_caps_is_equal (newcaps, padcaps));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_ghost_pads_new_no_target_from_template)
+{
+  GstPad *sinkpad, *ghostpad;
+  GstPadTemplate *padtempl, *ghosttempl;
+  GstCaps *padcaps, *ghostcaps, *newcaps;
+
+  padcaps = gst_caps_from_string ("some/caps");
+  fail_unless (padcaps != NULL);
+  ghostcaps = gst_caps_from_string ("some/caps;some/other-caps");
+  fail_unless (ghostcaps != NULL);
+
+  padtempl = gst_pad_template_new ("padtempl", GST_PAD_SINK,
+      GST_PAD_ALWAYS, padcaps);
+  fail_unless (padtempl != NULL);
+  ghosttempl = gst_pad_template_new ("ghosttempl", GST_PAD_SINK,
+      GST_PAD_ALWAYS, ghostcaps);
+
+  sinkpad = gst_pad_new_from_template (padtempl, "sinkpad");
+  fail_unless (sinkpad != NULL);
+
+  ghostpad = gst_ghost_pad_new_no_target_from_template ("ghostpad", ghosttempl);
+  fail_unless (ghostpad != NULL);
+
+  /* check template is properly set */
+  fail_unless (GST_PAD_PAD_TEMPLATE (ghostpad) == ghosttempl);
+
+  /* check ghostpad caps are from the ghostpad template */
+  newcaps = gst_pad_get_caps (ghostpad);
+  fail_unless (newcaps != NULL);
+  fail_unless (gst_caps_is_equal (newcaps, ghostcaps));
+  gst_caps_unref (newcaps);
+
+  fail_unless (gst_ghost_pad_set_target ((GstGhostPad *) ghostpad, sinkpad));
+
+  /* check ghostpad caps are now from the target pad */
+  newcaps = gst_pad_get_caps (ghostpad);
+  fail_unless (newcaps != NULL);
+  fail_unless (gst_caps_is_equal (newcaps, padcaps));
+  gst_caps_unref (newcaps);
+
+}
+
+GST_END_TEST;
+
 Suite *
 gst_ghost_pad_suite (void)
 {
@@ -494,6 +572,8 @@ gst_ghost_pad_suite (void)
 /*  tcase_add_test (tc_chain, test_ghost_pad_notarget); */
   tcase_add_test (tc_chain, test_ghost_pads_block);
   tcase_add_test (tc_chain, test_ghost_pads_probes);
+  tcase_add_test (tc_chain, test_ghost_pads_new_from_template);
+  tcase_add_test (tc_chain, test_ghost_pads_new_no_target_from_template);
 
   return s;
 }

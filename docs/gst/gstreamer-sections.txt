@@ -714,6 +714,8 @@ gst_format_get_type
 GstGhostPad
 gst_ghost_pad_new
 gst_ghost_pad_new_no_target
+gst_ghost_pad_new_from_template
+gst_ghost_pad_new_no_target_from_template
 gst_ghost_pad_set_target
 gst_ghost_pad_get_target
 <SUBSECTION Standard>
@@ -723,6 +725,7 @@ GST_IS_GHOST_PAD
 GST_GHOST_PAD_CLASS
 GST_IS_GHOST_PAD_CLASS
 GST_TYPE_GHOST_PAD
+GST_GHOST_PAD_CAST
 <SUBSECTION Private>
 gst_ghost_pad_get_type
 </SECTION>
