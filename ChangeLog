@@ -1,3 +1,12 @@
+2006-08-31  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/lame/Makefile.am:
+	* ext/mpeg2dec/Makefile.am:
+	* gst/dvdlpcmdec/Makefile.am:
+	* gst/dvdsub/Makefile.am:
+	* gst/mpegaudioparse/Makefile.am:
+	  Add missing GST_LIBS to the link flags
+
 2006-08-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
