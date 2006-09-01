@@ -58,7 +58,9 @@ GST_DEBUG_CATEGORY_STATIC (a52dec_debug);
 enum
 {
   ARG_0,
-  ARG_DRC
+  ARG_DRC,
+  ARG_MODE,
+  ARG_LFE,
 };
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -93,6 +95,30 @@ static void gst_a52dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstElementClass *parent_class = NULL;
+
+#define GST_TYPE_A52DEC_MODE (gst_a52dec_mode_get_type())
+static GType
+gst_a52dec_mode_get_type (void)
+{
+  static GType a52dec_mode_type = 0;
+  static const GEnumValue a52dec_modes[] = {
+    {A52_MONO, "Mono", "mono"},
+    {A52_STEREO, "Stereo", "stereo"},
+    {A52_3F, "3 Front", "3f"},
+    {A52_2F1R, "2 Front, 1 Rear", "2f1r"},
+    {A52_3F1R, "3 Front, 1 Rear", "3f1r"},
+    {A52_2F2R, "2 Front, 2 Rear", "2f2r"},
+    {A52_3F2R, "3 Front, 2 Rear", "3f2r"},
+    {A52_DOLBY, "Dolby", "dolby"},
+    {0, NULL, NULL},
+  };
+
+  if (!a52dec_mode_type) {
+    a52dec_mode_type = g_enum_register_static ("GstA52DecMode", a52dec_modes);
+  }
+  return a52dec_mode_type;
+}
+
 
 GType
 gst_a52dec_get_type (void)
@@ -153,6 +179,11 @@ gst_a52dec_class_init (GstA52DecClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DRC,
       g_param_spec_boolean ("drc", "Dynamic Range Compression",
           "Use Dynamic Range Compression", FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MODE,
+      g_param_spec_enum ("mode", "Decoder Mode", "Decoding Mode (default 3f2r)",
+          GST_TYPE_A52DEC_MODE, A52_3F2R, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LFE,
+      g_param_spec_boolean ("lfe", "LFE", "LFE", TRUE, G_PARAM_READWRITE));
 
   oil_init ();
 
@@ -191,6 +222,7 @@ gst_a52dec_init (GstA52Dec * a52dec)
   gst_pad_use_fixed_caps (a52dec->srcpad);
   gst_element_add_pad (GST_ELEMENT (a52dec), a52dec->srcpad);
 
+  a52dec->request_channels = A52_CHANNEL;
   a52dec->dynamic_range_compression = FALSE;
   a52dec->cache = NULL;
 }
@@ -267,6 +299,12 @@ gst_a52dec_channels (int flags, GstAudioChannelPosition ** _pos)
         pos[1 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
       }
       chans += 2;
+      break;
+    case A52_MONO:
+      if (pos) {
+        pos[0 + chans] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+      }
+      chans += 1;
       break;
     default:
       /* error, caller should post error message */
@@ -439,6 +477,49 @@ gst_a52dec_handle_frame (GstA52Dec * a52dec, guint8 * data,
   if (bit_rate != a52dec->bit_rate) {
     a52dec->bit_rate = bit_rate;
     gst_a52dec_update_streaminfo (a52dec);
+  }
+
+  /* If we haven't had an explicit number of channels chosen through properties
+   * at this point, choose what to downmix to now, based on what the peer will 
+   * accept - this allows a52dec to do downmixing in preference to a 
+   * downstream element such as audioconvert.
+   */
+  if (a52dec->request_channels == A52_CHANNEL) {
+    GstCaps *caps;
+
+    caps = gst_pad_get_allowed_caps (a52dec->srcpad);
+    if (caps && gst_caps_get_size (caps) > 0) {
+      GstCaps *copy = gst_caps_copy_nth (caps, 0);
+      GstStructure *structure = gst_caps_get_structure (copy, 0);
+      gint channels;
+      const int a52_channels[6] = {
+        A52_MONO,
+        A52_STEREO,
+        A52_STEREO | A52_LFE,
+        A52_2F2R,
+        A52_2F2R | A52_LFE,
+        A52_3F2R | A52_LFE,
+      };
+
+      /* Prefer the original number of channels, but fixate to something 
+       * preferred (first in the caps) downstream if possible.
+       */
+      gst_structure_fixate_field_nearest_int (structure, "channels",
+          flags ? gst_a52dec_channels (flags, NULL) : 6);
+      gst_structure_get_int (structure, "channels", &channels);
+      if (channels <= 6)
+        a52dec->request_channels = a52_channels[channels - 1];
+      else
+        a52dec->request_channels = a52_channels[5];
+
+      gst_caps_unref (copy);
+    } else if (flags)
+      a52dec->request_channels = a52dec->stream_channels;
+    else
+      a52dec->request_channels = A52_3F2R | A52_LFE;
+
+    if (caps)
+      gst_caps_unref (caps);
   }
 
   /* process */
@@ -681,7 +762,6 @@ gst_a52dec_change_state (GstElement * element, GstStateChange transition)
       a52dec->bit_rate = -1;
       a52dec->sample_rate = -1;
       a52dec->stream_channels = A52_CHANNEL;
-      a52dec->request_channels = A52_3F2R | A52_LFE;
       a52dec->using_channels = A52_CHANNEL;
       a52dec->level = 1;
       a52dec->bias = 0;
@@ -729,6 +809,18 @@ gst_a52dec_set_property (GObject * object, guint prop_id, const GValue * value,
       src->dynamic_range_compression = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (src);
       break;
+    case ARG_MODE:
+      GST_OBJECT_LOCK (src);
+      src->request_channels &= ~A52_CHANNEL_MASK;
+      src->request_channels |= g_value_get_enum (value);
+      GST_OBJECT_UNLOCK (src);
+      break;
+    case ARG_LFE:
+      GST_OBJECT_LOCK (src);
+      src->request_channels &= ~A52_LFE;
+      src->request_channels |= g_value_get_boolean (value) ? A52_LFE : 0;
+      GST_OBJECT_UNLOCK (src);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -745,6 +837,16 @@ gst_a52dec_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_DRC:
       GST_OBJECT_LOCK (src);
       g_value_set_boolean (value, src->dynamic_range_compression);
+      GST_OBJECT_UNLOCK (src);
+      break;
+    case ARG_MODE:
+      GST_OBJECT_LOCK (src);
+      g_value_set_enum (value, src->request_channels & A52_CHANNEL_MASK);
+      GST_OBJECT_UNLOCK (src);
+      break;
+    case ARG_LFE:
+      GST_OBJECT_LOCK (src);
+      g_value_set_boolean (value, src->request_channels & A52_LFE);
       GST_OBJECT_UNLOCK (src);
       break;
     default:

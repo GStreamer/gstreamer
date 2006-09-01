@@ -73,6 +73,31 @@ struct _GstA52DecClass {
 
 GType gst_a52dec_get_type (void);
 
+#ifndef A52_MONO
+#define A52_MONO 1
+#endif
+#ifndef A52_STEREO
+#define A52_STEREO 2
+#endif
+#ifndef A52_3F
+#define A52_3F 3
+#endif
+#ifndef A52_2F1R
+#define A52_2F1R 4
+#endif
+#ifndef A52_3F1R
+#define A52_3F1R 5
+#endif
+#ifndef A52_2F2R
+#define A52_2F2R 6
+#endif
+#ifndef A52_3F2R
+#define A52_3F2R 7
+#endif
+#ifndef A52_DOLBY
+#define A52_DOLBY 10
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_A52DEC_H__ */
