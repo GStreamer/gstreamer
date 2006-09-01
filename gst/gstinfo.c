@@ -1215,12 +1215,17 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr ptr)
   Dl_info dlinfo;
 #endif
 
+  if (G_UNLIKELY (func == NULL))
+    return "(NULL)";
+
+  g_static_mutex_lock (&__dbg_functions_mutex);
   if (G_LIKELY (__gst_function_pointers)) {
-    g_static_mutex_lock (&__dbg_functions_mutex);
     ptrname = g_hash_table_lookup (__gst_function_pointers, ptr);
     g_static_mutex_unlock (&__dbg_functions_mutex);
     if (G_LIKELY (ptrname))
       return ptrname;
+  } else {
+    g_static_mutex_unlock (&__dbg_functions_mutex);
   }
   /* we need to create an entry in the hash table for this one so we don't leak
    * the name */

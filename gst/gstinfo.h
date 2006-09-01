@@ -887,12 +887,13 @@ G_CONST_RETURN gchar *
 
 /**
  * GST_DEBUG_FUNCPTR_NAME:
- * @ptr: pointer to the function to look up the name
+ * @ptr: address of the function of which to look up the name
  *
  * Retrieves the name of the function, if it was previously registered with
  * GST_DEBUG_FUNCPTR(). If not, it returns a description of the pointer.
  *
- * Make sure you free the string after use.
+ * This macro returns a constant string which must not be modified or
+ * freed by the caller.
  */
 #define GST_DEBUG_FUNCPTR_NAME(ptr) \
   _gst_debug_nameof_funcptr((GstDebugFuncPtr)ptr)

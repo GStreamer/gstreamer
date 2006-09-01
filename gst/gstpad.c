@@ -2549,22 +2549,24 @@ gst_pad_buffer_alloc_unchecked (GstPad * pad, guint64 offset, gint size,
   if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
+  bufferallocfunc = pad->bufferallocfunc;
+
   if (offset == GST_BUFFER_OFFSET_NONE) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
         "calling bufferallocfunc &%s (@%p) for size %d offset NONE",
-        GST_DEBUG_FUNCPTR_NAME (bufferallocfunc), &bufferallocfunc, size);
+        GST_DEBUG_FUNCPTR_NAME (bufferallocfunc), bufferallocfunc, size);
   } else {
     GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
         "calling bufferallocfunc &%s (@%p) of for size %d offset %"
         G_GUINT64_FORMAT, GST_DEBUG_FUNCPTR_NAME (bufferallocfunc),
-        &bufferallocfunc, size, offset);
+        bufferallocfunc, size, offset);
   }
   GST_OBJECT_UNLOCK (pad);
 
   /* G_LIKELY for now since most elements don't implement a buffer alloc
    * function and there is no default alloc proxy function as this is usually
    * not possible. */
-  if (G_LIKELY ((bufferallocfunc = pad->bufferallocfunc) == NULL))
+  if (G_LIKELY (bufferallocfunc == NULL))
     goto fallback;
 
   ret = bufferallocfunc (pad, offset, size, caps, buf);
