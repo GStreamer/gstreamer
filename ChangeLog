@@ -1,5 +1,18 @@
 2006-09-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_video_test_src_pattern_get_type),
+	(gst_video_test_src_set_pattern):
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/videotestsrc/videotestsrc.c: (gst_video_test_src_unicolor),
+	(gst_video_test_src_black), (gst_video_test_src_white),
+	(gst_video_test_src_red), (gst_video_test_src_green),
+	(gst_video_test_src_blue):
+	* gst/videotestsrc/videotestsrc.h:
+	  Add more uni-colour patterns ("white", "red", "green", and "blue").
+
+2006-09-01  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/videotestsrc/videotestsrc.c: (paint_setup_YVYU):
 	  Fix stride for YVYU, should be word-aligned (#353658).
 

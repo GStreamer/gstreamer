@@ -42,6 +42,10 @@ G_BEGIN_DECLS
  * @GST_VIDEO_TEST_SRC_SMPTE: A standard SMPTE test pattern
  * @GST_VIDEO_TEST_SRC_SNOW: Random noise
  * @GST_VIDEO_TEST_SRC_BLACK: A black image
+ * @GST_VIDEO_TEST_SRC_WHITE: A white image
+ * @GST_VIDEO_TEST_SRC_RED: A red image
+ * @GST_VIDEO_TEST_SRC_GREEN: A green image
+ * @GST_VIDEO_TEST_SRC_BLUE: A blue image
  *
  * The test pattern to produce.
  */
@@ -49,6 +53,10 @@ typedef enum {
   GST_VIDEO_TEST_SRC_SMPTE,
   GST_VIDEO_TEST_SRC_SNOW,
   GST_VIDEO_TEST_SRC_BLACK,
+  GST_VIDEO_TEST_SRC_WHITE,
+  GST_VIDEO_TEST_SRC_RED,
+  GST_VIDEO_TEST_SRC_GREEN,
+  GST_VIDEO_TEST_SRC_BLUE
 } GstVideoTestSrcPattern;
 
 typedef struct _GstVideoTestSrc GstVideoTestSrc;

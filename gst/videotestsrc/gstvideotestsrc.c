@@ -105,7 +105,11 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_SMPTE, "SMPTE 100% color bars", "smpte"},
     {GST_VIDEO_TEST_SRC_SNOW, "Random (television snow)", "snow"},
     {GST_VIDEO_TEST_SRC_BLACK, "100% Black", "black"},
-    {0, NULL, NULL},
+    {GST_VIDEO_TEST_SRC_WHITE, "100% White", "white"},
+    {GST_VIDEO_TEST_SRC_RED, "Red", "red"},
+    {GST_VIDEO_TEST_SRC_GREEN, "Green", "green"},
+    {GST_VIDEO_TEST_SRC_BLUE, "Blue", "blue"},
+    {0, NULL, NULL}
   };
 
   if (!video_test_src_pattern_type) {
@@ -210,6 +214,18 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
       break;
     case GST_VIDEO_TEST_SRC_BLACK:
       videotestsrc->make_image = gst_video_test_src_black;
+      break;
+    case GST_VIDEO_TEST_SRC_WHITE:
+      videotestsrc->make_image = gst_video_test_src_white;
+      break;
+    case GST_VIDEO_TEST_SRC_RED:
+      videotestsrc->make_image = gst_video_test_src_red;
+      break;
+    case GST_VIDEO_TEST_SRC_GREEN:
+      videotestsrc->make_image = gst_video_test_src_green;
+      break;
+    case GST_VIDEO_TEST_SRC_BLUE:
+      videotestsrc->make_image = gst_video_test_src_blue;
       break;
     default:
       g_assert_not_reached ();

@@ -67,11 +67,19 @@ struct fourcc_list_struct *
 GstStructure *
         paint_get_structure             (struct fourcc_list_struct *format);
 int     gst_video_test_src_get_size     (GstVideoTestSrc * v, int w, int h);
-void    gst_video_test_src_smpte                (GstVideoTestSrc * v,
+void    gst_video_test_src_smpte        (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
 void    gst_video_test_src_snow         (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
-void    gst_video_test_src_black                (GstVideoTestSrc * v,
+void    gst_video_test_src_black        (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_white        (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_red          (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_green        (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_blue         (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
 
 extern struct fourcc_list_struct fourcc_list[];

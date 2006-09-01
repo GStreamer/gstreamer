@@ -656,9 +656,9 @@ gst_video_test_src_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
   }
 }
 
-void
-gst_video_test_src_black (GstVideoTestSrc * v, unsigned char *dest, int w,
-    int h)
+static void
+gst_video_test_src_unicolor (GstVideoTestSrc * v, unsigned char *dest, int w,
+    int h, struct vts_color_struct *color)
 {
   int i;
   paintinfo pi;
@@ -674,11 +674,41 @@ gst_video_test_src_black (GstVideoTestSrc * v, unsigned char *dest, int w,
   fourcc->paint_setup (p, dest);
   p->paint_hline = fourcc->paint_hline;
 
-  p->color = vts_colors + COLOR_BLACK;
+  p->color = color;
 
   for (i = 0; i < h; i++) {
     p->paint_hline (p, 0, i, w);
   }
+}
+
+void
+gst_video_test_src_black (GstVideoTestSrc * v, guchar * dest, int w, int h)
+{
+  gst_video_test_src_unicolor (v, dest, w, h, vts_colors + COLOR_BLACK);
+}
+
+void
+gst_video_test_src_white (GstVideoTestSrc * v, guchar * dest, int w, int h)
+{
+  gst_video_test_src_unicolor (v, dest, w, h, vts_colors + COLOR_WHITE);
+}
+
+void
+gst_video_test_src_red (GstVideoTestSrc * v, guchar * dest, int w, int h)
+{
+  gst_video_test_src_unicolor (v, dest, w, h, vts_colors + COLOR_RED);
+}
+
+void
+gst_video_test_src_green (GstVideoTestSrc * v, guchar * dest, int w, int h)
+{
+  gst_video_test_src_unicolor (v, dest, w, h, vts_colors + COLOR_GREEN);
+}
+
+void
+gst_video_test_src_blue (GstVideoTestSrc * v, guchar * dest, int w, int h)
+{
+  gst_video_test_src_unicolor (v, dest, w, h, vts_colors + COLOR_BLUE);
 }
 
 static void
