@@ -7,7 +7,7 @@
 	  Fix docs.
 
 	* gst/gstpad.c: (gst_pad_buffer_alloc_unchecked):
-	  Initialised variable before using it and fix debug statement to
+	  Initialise variable before using it and fix debug statement to
 	  print the address of the function rather than the address of the
 	  variable on the stack holding the address of the function.
 
@@ -105,7 +105,7 @@
 	API additions: gst_ghost_pad_new_from_template,
 	gst_ghost_pad_new_no_target_from_template
 
-2006-08-30  Stefan Kost,,,  <ensonic@users.sf.net>
+2006-08-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/ensonic/profiling.txt:
 	  Ideas about qos profiling.
