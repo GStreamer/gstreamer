@@ -1,5 +1,28 @@
 2006-09-01  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstghostpad.c: (gst_proxy_pad_do_event),
+	(gst_proxy_pad_do_bufferalloc), (gst_proxy_pad_do_chain),
+	(gst_proxy_pad_do_getrange), (gst_proxy_pad_do_checkgetrange),
+	(gst_proxy_pad_set_target_unlocked), (gst_ghost_pad_parent_set),
+	(gst_ghost_pad_parent_unset),
+	(gst_ghost_pad_internal_do_activate_push),
+	(gst_ghost_pad_internal_do_activate_pull),
+	(gst_ghost_pad_do_activate_push), (gst_ghost_pad_do_activate_pull),
+	(gst_ghost_pad_do_link), (gst_ghost_pad_do_unlink),
+	(gst_ghost_pad_init), (gst_ghost_pad_dispose),
+	(gst_ghost_pad_new_full), (gst_ghost_pad_new_no_target),
+	(gst_ghost_pad_new), (gst_ghost_pad_new_from_template),
+	(gst_ghost_pad_new_no_target_from_template),
+	(gst_ghost_pad_get_target), (gst_ghost_pad_set_target):
+	More cleanups.
+	Avoid needless typechecking in macros.
+	Since the internal pad is always present and never changes, there is
+	no need to locking or ref when retrieving it.
+	Improve debugging a bit.
+	Handle link errors when setting the target. Fixes #341029.
+
+2006-09-01  Wim Taymans  <wim@fluendo.com>
+
 	* docs/libs/gstreamer-libs-sections.txt:
 	* docs/plugins/gstreamer-plugins-sections.txt:
 	Fix docs some more.
