@@ -746,7 +746,7 @@ paint_setup_YVYU (paintinfo * p, unsigned char *dest)
   p->yp = dest;
   p->up = dest + 3;
   p->vp = dest + 1;
-  p->ystride = GST_ROUND_UP_2 (p->width * 2);
+  p->ystride = GST_ROUND_UP_2 (p->width) * 2;
   p->endptr = dest + p->ystride * p->height;
 }
 
