@@ -196,7 +196,7 @@ gst_collect_pads_set_function (GstCollectPads * pads,
  * gst_collect_pads_add_pad:
  * @pads: the collectspads to use
  * @pad: the pad to add
- * @size: the size of the returned GstCollectData structure
+ * @size: the size of the returned #GstCollectData structure
  *
  * Add a pad to the collection of collect pads. The pad has to be
  * a sinkpad. The refcount of the pad is incremented. Use
@@ -259,15 +259,18 @@ find_pad (GstCollectData * data, GstPad * pad)
  * @pads: the collectspads to use
  * @pad: the pad to remove
  *
- * Remove a pad from the collection of collect pads.
+ * Remove a pad from the collection of collect pads. This function will also
+ * free the #GstCollectData and all the resources that were allocated with 
+ * gst_collect_pads_add_pad().
  *
- * Returns: TRUE if the pad could be removed.
+ * Returns: %TRUE if the pad could be removed.
  *
  * MT safe.
  */
 gboolean
 gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
 {
+  GstCollectData *data;
   GSList *list;
 
   g_return_val_if_fail (pads != NULL, FALSE);
@@ -284,7 +287,10 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
   if (!list)
     goto unknown_pad;
 
-  GST_DEBUG ("found pad %s:%s at %p", GST_DEBUG_PAD_NAME (pad), list->data);
+  data = (GstCollectData *) list->data;
+
+  GST_DEBUG ("found pad %s:%s at %p", GST_DEBUG_PAD_NAME (pad), data);
+
   /* clear the stuff we configured */
   gst_pad_set_chain_function (pad, NULL);
   gst_pad_set_event_function (pad, NULL);
@@ -301,11 +307,17 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
       pads->data = g_slist_delete_link (pads->data, dlist);
     }
   }
-  gst_object_unref (pad);
-  g_free (list->data);
+  /* remove from the pad list */
   pads->abidata.ABI.pad_list =
       g_slist_delete_link (pads->abidata.ABI.pad_list, list);
   pads->abidata.ABI.pad_cookie++;
+
+  /* clean and free the collect data */
+  gst_object_unref (data->pad);
+  if (data->buffer)
+    gst_buffer_unref (data->buffer);
+  g_free (data);
+
   /* signal waiters because something changed */
   GST_COLLECT_PADS_BROADCAST (pads);
   GST_COLLECT_PADS_PAD_UNLOCK (pads);
@@ -329,7 +341,7 @@ unknown_pad:
  *
  * This function is currently not implemented.
  *
- * Returns: TRUE if the pad is active.
+ * Returns: %TRUE if the pad is active.
  *
  * MT safe.
  */
@@ -351,11 +363,11 @@ gst_collect_pads_is_active (GstCollectPads * pads, GstPad * pad)
  * @pads: the collectspads to use
  *
  * Collect data on all pads. This function is usually called
- * from a GstTask function in an element. 
+ * from a #GstTask function in an element. 
  *
  * This function is currently not implemented.
  *
- * Returns: GstFlowReturn of the operation.
+ * Returns: #GstFlowReturn of the operation.
  *
  * MT safe.
  */
@@ -381,7 +393,7 @@ gst_collect_pads_collect (GstCollectPads * pads)
  *
  * This function is currently not implemented.
  *
- * Returns: GstFlowReturn of the operation.
+ * Returns: #GstFlowReturn of the operation.
  *
  * MT safe.
  */
@@ -824,7 +836,7 @@ gst_collect_pads_check_pads (GstCollectPads * pads)
  *
  * Should be called with LOCK.
  *
- * Returns: The GstFlowReturn of collection.
+ * Returns: The #GstFlowReturn of collection.
  */
 static GstFlowReturn
 gst_collect_pads_check_collected (GstCollectPads * pads)
@@ -970,14 +982,14 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
        * accumulated and this is certainly not what we want. */
       gst_event_unref (event);
       /* FIXME: collect-pads based elements need to create their own newsegment
-         event (and only one really)
-         (a) make the segment part of the GstCollectData structure of each pad,
-         so you can just check that once you have a buffer queued on that pad,
-         (b) you can override a pad's event function with your own,
-         catch the newsegment event and then pass it on to the original
-         gstcollectpads event function
-         (that's what avimux does for something IIRC)
-         see #340060
+       * event (and only one really)
+       * (a) make the segment part of the GstCollectData structure of each pad,
+       * so you can just check that once you have a buffer queued on that pad,
+       * (b) you can override a pad's event function with your own,
+       * catch the newsegment event and then pass it on to the original
+       * gstcollectpads event function
+       * (that's what avimux does for something IIRC)
+       * see #340060
        */
       goto done;
     }

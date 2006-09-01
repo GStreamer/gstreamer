@@ -75,7 +75,7 @@ struct _GstCollectData
  *
  * A function that will be called when all pads have received data.
  *
- * Returns: GST_FLOW_OK for success
+ * Returns: #GST_FLOW_OK for success
  */
 typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer user_data);
 

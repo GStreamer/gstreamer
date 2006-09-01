@@ -1,3 +1,15 @@
+2006-09-01  Wim Taymans  <wim@fluendo.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/plugins/gstreamer-plugins-sections.txt:
+	Fix docs some more.
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_remove_pad),
+	(gst_collect_pads_event):
+	* libs/gst/base/gstcollectpads.h:
+	Documentation updates.
+	Free queued buffer when removing a pad.
+
 2006-08-31  Michael Smith  <msmith@fluendo.com>
 
 	* gst/gstutils.c: (gst_element_link_pads),
