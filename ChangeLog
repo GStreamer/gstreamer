@@ -1,3 +1,20 @@
+2006-09-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videotestsrc/videotestsrc.c: (paintinfo_find_by_structure),
+	(paint_get_structure), (gst_video_test_src_get_size),
+	(gst_video_test_src_smpte), (gst_video_test_src_snow),
+	(gst_video_test_src_unicolor), (paint_setup_AYUV),
+	(paint_hline_AYUV), (paint_setup_ARGB8888), (paint_setup_ABGR8888),
+	(paint_setup_RGBA8888), (paint_setup_BGRA8888), (paint_hline_str4):
+	* gst/videotestsrc/videotestsrc.h:
+	  Add support for AYUV and the various RGBA formats. Initialise
+	  fields of paintinfo structs allocated on the stack.
+
+	* tests/check/elements/videotestsrc.c: (right_shift_colour),
+	(fix_expected_colour), (check_rgb_buf), (got_buf_cb),
+	(GST_START_TEST), (videotestsrc_suite):
+	  Add unit tests for videotestsrc's RGB output.
+
 2006-09-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videotestsrc/gstvideotestsrc.c:

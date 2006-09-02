@@ -34,6 +34,7 @@ struct paintinfo_struct
   unsigned char *dest;          /* pointer to first byte of video data */
   unsigned char *yp, *up, *vp;  /* pointers to first byte of each component
                                  * for both packed/planar YUV and RGB */
+  unsigned char *ap;            /* pointer to first byte of alpha component */
   unsigned char *endptr;        /* pointer to byte beyond last video data */
   int ystride;
   int ustride;
@@ -56,6 +57,7 @@ struct fourcc_list_struct
   unsigned int red_mask;
   unsigned int green_mask;
   unsigned int blue_mask;
+  unsigned int alpha_mask;
 };
 
 struct fourcc_list_struct *

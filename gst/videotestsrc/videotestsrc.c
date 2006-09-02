@@ -257,6 +257,7 @@ static void paint_setup_IYU2 (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y41B (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y42B (paintinfo * p, unsigned char *dest);
 static void paint_setup_Y800 (paintinfo * p, unsigned char *dest);
+static void paint_setup_AYUV (paintinfo * p, unsigned char *dest);
 
 #if 0
 static void paint_setup_IMC1 (paintinfo * p, unsigned char *dest);
@@ -266,6 +267,10 @@ static void paint_setup_IMC4 (paintinfo * p, unsigned char *dest);
 #endif
 static void paint_setup_YUV9 (paintinfo * p, unsigned char *dest);
 static void paint_setup_YVU9 (paintinfo * p, unsigned char *dest);
+static void paint_setup_ARGB8888 (paintinfo * p, unsigned char *dest);
+static void paint_setup_ABGR8888 (paintinfo * p, unsigned char *dest);
+static void paint_setup_RGBA8888 (paintinfo * p, unsigned char *dest);
+static void paint_setup_BGRA8888 (paintinfo * p, unsigned char *dest);
 static void paint_setup_xRGB8888 (paintinfo * p, unsigned char *dest);
 static void paint_setup_xBGR8888 (paintinfo * p, unsigned char *dest);
 static void paint_setup_RGBx8888 (paintinfo * p, unsigned char *dest);
@@ -281,6 +286,7 @@ static void paint_hline_IYU2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y41B (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y42B (paintinfo * p, int x, int y, int w);
 static void paint_hline_Y800 (paintinfo * p, int x, int y, int w);
+static void paint_hline_AYUV (paintinfo * p, int x, int y, int w);
 
 #if 0
 static void paint_hline_IMC1 (paintinfo * p, int x, int y, int w);
@@ -298,6 +304,7 @@ struct fourcc_list_struct fourcc_list[] = {
   {"Y422", "Y422", 16, paint_setup_UYVY, paint_hline_YUY2},
   {"UYNV", "UYNV", 16, paint_setup_UYVY, paint_hline_YUY2},     /* FIXME: UYNV? */
   {"YVYU", "YVYU", 16, paint_setup_YVYU, paint_hline_YUY2},
+  {"AYUV", "AYUV", 32, paint_setup_AYUV, paint_hline_AYUV},
 
   /* interlaced */
   /*{ "IUYV", "IUY2", 16, paint_setup_YVYU, paint_hline_YUY2 }, */
@@ -356,6 +363,14 @@ struct fourcc_list_struct fourcc_list[] = {
       0xff000000, 0x00ff0000, 0x0000ff00},
   {"RGB ", "BGRx8888", 32, paint_setup_BGRx8888, paint_hline_str4, 1, 24,
       0x0000ff00, 0x00ff0000, 0xff000000},
+  {"RGB ", "ARGB8888", 32, paint_setup_ARGB8888, paint_hline_str4, 1, 32,
+      0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000},
+  {"RGB ", "ABGR8888", 32, paint_setup_ABGR8888, paint_hline_str4, 1, 32,
+      0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000},
+  {"RGB ", "RGBA8888", 32, paint_setup_RGBA8888, paint_hline_str4, 1, 32,
+      0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff},
+  {"RGB ", "BGRA8888", 32, paint_setup_BGRA8888, paint_hline_str4, 1, 32,
+      0x0000ff00, 0x00ff0000, 0xff000000, 0x000000ff},
   {"RGB ", "RGB888", 24, paint_setup_RGB888, paint_hline_str3, 1, 24,
       0x00ff0000, 0x0000ff00, 0x000000ff},
   {"RGB ", "BGR888", 24, paint_setup_BGR888, paint_hline_str3, 1, 24,
@@ -396,6 +411,7 @@ paintinfo_find_by_structure (const GstStructure * structure)
     int red_mask;
     int green_mask;
     int blue_mask;
+    int alpha_mask;
     int depth;
     int bpp;
 
@@ -405,14 +421,26 @@ paintinfo_find_by_structure (const GstStructure * structure)
     ret &= gst_structure_get_int (structure, "depth", &depth);
     ret &= gst_structure_get_int (structure, "bpp", &bpp);
 
+    if (depth == 32) {
+      ret &= gst_structure_get_int (structure, "alpha_mask", &alpha_mask);
+      ret &= (alpha_mask != 0);
+    } else {
+      alpha_mask = 0;
+    }
+
+    if (!ret) {
+      GST_WARNING ("incomplete caps structure: %" GST_PTR_FORMAT, structure);
+      return NULL;
+    }
+
     for (i = 0; i < n_fourccs; i++) {
       if (strcmp (fourcc_list[i].fourcc, "RGB ") == 0 &&
           fourcc_list[i].red_mask == red_mask &&
           fourcc_list[i].green_mask == green_mask &&
           fourcc_list[i].blue_mask == blue_mask &&
+          (alpha_mask == 0 || fourcc_list[i].alpha_mask == alpha_mask) &&
           fourcc_list[i].depth == depth && fourcc_list[i].bitspp == bpp) {
         return fourcc_list + i;
-
       }
     }
     return NULL;
@@ -463,6 +491,7 @@ paintrect_find_name (const char *name)
 GstStructure *
 paint_get_structure (struct fourcc_list_struct * format)
 {
+  GstStructure *structure = NULL;
   unsigned int fourcc;
 
   g_return_val_if_fail (format, NULL);
@@ -479,17 +508,22 @@ paint_get_structure (struct fourcc_list_struct * format)
     } else {
       endianness = G_BIG_ENDIAN;
     }
-    return gst_structure_new ("video/x-raw-rgb",
+    structure = gst_structure_new ("video/x-raw-rgb",
         "bpp", G_TYPE_INT, format->bitspp,
         "endianness", G_TYPE_INT, endianness,
         "depth", G_TYPE_INT, format->depth,
         "red_mask", G_TYPE_INT, format->red_mask,
         "green_mask", G_TYPE_INT, format->green_mask,
         "blue_mask", G_TYPE_INT, format->blue_mask, NULL);
+    if (format->depth == 32 && format->alpha_mask > 0) {
+      gst_structure_set (structure, "alpha_mask", G_TYPE_INT,
+          format->alpha_mask, NULL);
+    }
   } else {
-    return gst_structure_new ("video/x-raw-yuv",
+    structure = gst_structure_new ("video/x-raw-yuv",
         "format", GST_TYPE_FOURCC, fourcc, NULL);
   }
+  return structure;
 }
 
 /* returns the size in bytes for one video frame of the given dimensions
@@ -497,7 +531,7 @@ paint_get_structure (struct fourcc_list_struct * format)
 int
 gst_video_test_src_get_size (GstVideoTestSrc * v, int w, int h)
 {
-  paintinfo pi = { 0 };
+  paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
 
@@ -519,7 +553,7 @@ gst_video_test_src_smpte (GstVideoTestSrc * v, unsigned char *dest, int w,
   int i;
   int y1, y2;
   int j;
-  paintinfo pi;
+  paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
 
@@ -627,7 +661,7 @@ gst_video_test_src_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 {
   int i;
   int j;
-  paintinfo pi;
+  paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
   struct vts_color_struct color;
@@ -661,7 +695,7 @@ gst_video_test_src_unicolor (GstVideoTestSrc * v, unsigned char *dest, int w,
     int h, struct vts_color_struct *color)
 {
   int i;
-  paintinfo pi;
+  paintinfo pi = { NULL, };
   paintinfo *p = &pi;
   struct fourcc_list_struct *fourcc;
 
@@ -751,6 +785,17 @@ paint_setup_YV12 (paintinfo * p, unsigned char *dest)
 }
 
 static void
+paint_setup_AYUV (paintinfo * p, unsigned char *dest)
+{
+  p->ap = dest;
+  p->yp = dest + 1;
+  p->up = dest + 2;
+  p->vp = dest + 3;
+  p->ystride = p->width * 4;
+  p->endptr = dest + p->ystride * p->height;
+}
+
+static void
 paint_setup_YUY2 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest;
@@ -778,6 +823,20 @@ paint_setup_YVYU (paintinfo * p, unsigned char *dest)
   p->vp = dest + 1;
   p->ystride = GST_ROUND_UP_2 (p->width) * 2;
   p->endptr = dest + p->ystride * p->height;
+}
+
+static void
+paint_hline_AYUV (paintinfo * p, int x, int y, int w)
+{
+  /* TODO: put into colour struct or take value from property maybe */
+  const uint8_t alpha_color = 128;
+  int offset;
+
+  offset = (y * p->ystride) + (x * 4);
+  oil_splat_u8 (p->yp + offset, 4, &p->color->Y, w);
+  oil_splat_u8 (p->up + offset, 4, &p->color->U, w);
+  oil_splat_u8 (p->vp + offset, 4, &p->color->V, w);
+  oil_splat_u8 (p->ap + offset, 4, &alpha_color, w);
 }
 
 static void
@@ -980,6 +1039,34 @@ paint_hline_YUV9 (paintinfo * p, int x, int y, int w)
 }
 
 static void
+paint_setup_ARGB8888 (paintinfo * p, unsigned char *dest)
+{
+  paint_setup_xRGB8888 (p, dest);
+  p->ap = dest;
+}
+
+static void
+paint_setup_ABGR8888 (paintinfo * p, unsigned char *dest)
+{
+  paint_setup_xBGR8888 (p, dest);
+  p->ap = dest;
+}
+
+static void
+paint_setup_RGBA8888 (paintinfo * p, unsigned char *dest)
+{
+  paint_setup_RGBx8888 (p, dest);
+  p->ap = dest + 3;
+}
+
+static void
+paint_setup_BGRA8888 (paintinfo * p, unsigned char *dest)
+{
+  paint_setup_BGRx8888 (p, dest);
+  p->ap = dest + 3;
+}
+
+static void
 paint_setup_xRGB8888 (paintinfo * p, unsigned char *dest)
 {
   p->yp = dest + 1;
@@ -1047,6 +1134,13 @@ paint_hline_str4 (paintinfo * p, int x, int y, int w)
   oil_splat_u8 (p->yp + offset + x * 4, 4, &p->color->R, w);
   oil_splat_u8 (p->up + offset + x * 4, 4, &p->color->G, w);
   oil_splat_u8 (p->vp + offset + x * 4, 4, &p->color->B, w);
+
+  if (p->ap != NULL) {
+    /* TODO: put into colour struct or take value from property maybe */
+    const uint8_t alpha_color = 128;
+
+    oil_splat_u8 (p->ap + offset + (x * 4), 4, &alpha_color, w);
+  }
 }
 
 static void
