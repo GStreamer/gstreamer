@@ -58,65 +58,14 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/base/gstbasetransform.h>
+
+#include "gstvideocrop.h"
+
 #include <liboil/liboil.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (videocrop_debug);
 #define GST_CAT_DEFAULT videocrop_debug
-
-#define GST_TYPE_VIDEO_CROP \
-  (gst_video_crop_get_type())
-#define GST_VIDEO_CROP(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VIDEO_CROP,GstVideoCrop))
-#define GST_VIDEO_CROP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_CROP,GstVideoCropClass))
-#define GST_IS_VIDEO_CROP(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_CROP))
-#define GST_IS_VIDEO_CROP_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_CROP))
-
-typedef struct _GstVideoCropImageDetails GstVideoCropImageDetails;
-struct _GstVideoCropImageDetails
-{
-  gboolean packed;              /* TRUE if packed, FALSE if planar */
-
-  guint width;
-  guint height;
-  guint size;
-
-  /* for packed RGB and YUV */
-  guint stride;
-  guint bytes_per_pixel;
-
-  /* for planar YUV */
-  guint y_stride, y_off;
-  guint u_stride, u_off;
-  guint v_stride, v_off;
-};
-
-typedef struct _GstVideoCrop GstVideoCrop;
-typedef struct _GstVideoCropClass GstVideoCropClass;
-
-struct _GstVideoCrop
-{
-  GstBaseTransform basetransform;
-
-  gboolean noop;                /* TRUE if crop_left,_right,_top and _bottom are all 0 */
-
-  gint crop_left;
-  gint crop_right;
-  gint crop_top;
-  gint crop_bottom;
-
-  GstVideoCropImageDetails in;  /* details of input image */
-  GstVideoCropImageDetails out; /* details of output image */
-};
-
-struct _GstVideoCropClass
-{
-  GstBaseTransformClass basetransform_class;
-};
 
 static const GstElementDetails video_crop_details = GST_ELEMENT_DETAILS ("Crop",
     "Filter/Effect/Video",

@@ -7,3 +7,4 @@ mpeg2enc
 wavpackdec
 wavpackenc
 wavpackparse
+videocrop

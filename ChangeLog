@@ -1,5 +1,26 @@
 2006-09-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	  Add videocrop to docs.
+
+	* gst/videocrop/Makefile.am:
+	* gst/videocrop/gstvideocrop.c:
+	* gst/videocrop/gstvideocrop.h:
+	  Move boilerplate stuff and structures into a header file.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/videocrop.c: (video_crop_get_test_caps),
+	(test_unit_sizes), (videocrop_test_cropping_init_context),
+	(videocrop_test_cropping_deinit_context),
+	(videocrop_test_cropping), (test_cropping), (videocrop_suite):
+	  Add unit tests for videocrop.
+
+2006-09-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	* gst/videocrop/Makefile.am:
 	* gst/videocrop/gstvideocrop.c: (gst_video_crop_base_init),

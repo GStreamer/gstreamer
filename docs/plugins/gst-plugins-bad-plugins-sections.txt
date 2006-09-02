@@ -15,6 +15,14 @@ GstTRMClass
 </SECTION>
 
 <SECTION>
+<FILE>element-videocrop</FILE>
+GstVideoCrop
+<TITLE>videocrop</TITLE>
+<SUBSECTION Standard>
+GstVideoCropClass
+</SECTION>
+
+<SECTION>
 <FILE>element-wavpackdec</FILE>
 GstWavpackDec
 <TITLE>wavpackdec</TITLE>

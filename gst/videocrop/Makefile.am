@@ -9,4 +9,4 @@ libgstvideocrop_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 libgstvideocrop_la_LIBADD = $(GST_BASE_LIBS) $(LIBOIL_LIBS)
 libgstvideocrop_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = 
+noinst_HEADERS = gstvideocrop.h

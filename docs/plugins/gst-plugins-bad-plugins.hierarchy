@@ -12,6 +12,8 @@ GObject
       GstBaseSink
         GstVideoSink
           GstDfbVideoSink
+      GstBaseTransform
+        GstVideoCrop
       GstTRM
       GstWavpackDec
       GstWavpackEnc
