@@ -1,6 +1,7 @@
-/* GStreamer Color Balance interface implementation
+/* GStreamer
+ *
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
- * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * gstv4l2colorbalance.c: color balance interface implementation for V4L2
  *

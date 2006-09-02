@@ -1,6 +1,9 @@
-/* G-Streamer Video4linux2 video-capture plugin - system calls
+/* GStreamer
+ *
  * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
- * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@indt.org.br>
+ *
+ * v4l2src.h - system calls
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

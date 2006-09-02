@@ -1,6 +1,7 @@
-/* GStreamer X-based overlay interface implementation
+/* GStreamer
+ *
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
- * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * gstv4l2xoverlay.c: X-based overlay interface implementation for V4L2
  *
@@ -98,8 +99,8 @@ gst_v4l2_xoverlay_open (GstV4l2Object * v4l2object)
   }
   if (fstat (v4l2object->video_fd, &s) < 0) {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
-        (_("Cannot identify '%s': %d, %s\n"), v4l2object->videodev, errno,
-            strerror (errno)), (NULL));
+        (_("Cannot identify device '%s': %s\n"), v4l2object->videodev,
+            g_strerror (errno)), GST_ERROR_SYSTEM);
     XCloseDisplay (dpy);
     return;
   }

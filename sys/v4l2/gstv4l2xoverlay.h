@@ -1,6 +1,7 @@
-/* G-Streamer generic V4L2 element - X overlay interface implementation
+/* GStreamer
+ *
  * Copyright (C) 2003 Ronald Bultje <rbultje@ronald.bitfreak.net>
- * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@indt.org.br>
  *
  * gstv4l2xoverlay.h: tv mixer interface implementation for V4L2
  *

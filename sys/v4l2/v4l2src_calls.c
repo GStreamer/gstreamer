@@ -1,6 +1,9 @@
-/* G-Streamer Video4linux2 video-capture plugin - system calls
+/* GStreamer
+ *
  * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
- * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@indt.org.br>
+ *
+ * v4l2src.c - system calls
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -124,7 +127,7 @@ gst_v4l2src_queue_frame (GstV4l2Src * v4l2src, guint i)
   if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QBUF,
           &v4l2src->pool->buffers[i].buffer) < 0) {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, WRITE,
-        (_("Could not write to device \"%s\"."),
+        (_("Could not write to device '%s'."),
             v4l2src->v4l2object->videodev),
         ("Error queueing buffer %u on device %s", i, g_strerror (errno)));
     return FALSE;
@@ -352,7 +355,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
     if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_REQBUFS,
             &v4l2src->breq) < 0) {
       GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-          (_("Could not get buffers from device \"%s\"."),
+          (_("Could not get buffers from device '%s'."),
               v4l2src->v4l2object->videodev),
           ("error requesting %d buffers: %s",
               v4l2src->breq.count, g_strerror (errno)));
@@ -364,7 +367,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
     GST_INFO_OBJECT (v4l2src, "using fallback read method");
   } else {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("the driver of device \"%s\" is broken."),
+        (_("the driver of device '%s' is broken."),
             v4l2src->v4l2object->videodev),
         ("no supported read capability from %s",
             v4l2src->v4l2object->videodev));
@@ -381,7 +384,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
   if (v4l2src->breq.memory > 0) {
     if (v4l2src->breq.count < GST_V4L2_MIN_BUFFERS) {
       GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-          (_("Could not get enough buffers from device \"%s\"."),
+          (_("Could not get enough buffers from device '%s'."),
               v4l2src->v4l2object->videodev),
           ("we received %d, we want at least %d",
               v4l2src->breq.count, GST_V4L2_MIN_BUFFERS));

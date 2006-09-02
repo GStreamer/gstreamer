@@ -1,9 +1,9 @@
 /* GStreamer
  *
- * gstv4l2src.h: BT8x8/V4L2 video source element
- *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
- * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@indt.org.br>
+ *
+ * gstv4l2src.h: BT8x8/V4L2 source element
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
