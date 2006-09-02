@@ -34,15 +34,15 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_V4L2SRC			\
+#define GST_TYPE_V4L2SRC \
   (gst_v4l2src_get_type())
-#define GST_V4L2SRC(obj)						\
+#define GST_V4L2SRC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_V4L2SRC,GstV4l2Src))
-#define GST_V4L2SRC_CLASS(klass)					\
+#define GST_V4L2SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_V4L2SRC,GstV4l2SrcClass))
-#define GST_IS_V4L2SRC(obj)				\
+#define GST_IS_V4L2SRC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_V4L2SRC))
-#define GST_IS_V4L2SRC_CLASS(klass)			\
+#define GST_IS_V4L2SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_V4L2SRC))
 
 typedef struct _GstV4l2BufferPool GstV4l2BufferPool;

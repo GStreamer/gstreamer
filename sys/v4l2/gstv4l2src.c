@@ -272,7 +272,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
 
   g_object_class_install_property
       (gobject_class, PROP_USE_FIXED_FPS,
-      g_param_spec_boolean ("use_fixed_fps", "Use Fixed FPS",
+      g_param_spec_boolean ("use-fixed-fps", "Use Fixed FPS",
           "Drop/Insert frames to reach a certain FPS (TRUE) "
           "or adapt FPS to suit the number of frabbed frames",
           TRUE, G_PARAM_READWRITE));
