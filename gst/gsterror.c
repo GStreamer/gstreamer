@@ -82,7 +82,11 @@
  *     parentheses.</para></listitem>
  *   <listitem><para>If you do supply a custom message, it should be
  *     marked for translation.  The message should start with a capital
- *     and end with a period.</para></listitem>
+ *     and end with a period.  The message should describe the error in short,
+ *     in a human-readable form, and without any complex technical terms.
+ *     A user interface will present this message as the first thing a user
+ *     sees.  Details, technical info, ... should go in the debug string.
+ *   </para></listitem>
  *   <listitem><para>The debug string can be as you like.  Again, use (NULL)
  *     if there's nothing to add - file and line number will still be
  *     passed.  #GST_ERROR_SYSTEM can be used as a shortcut to give
