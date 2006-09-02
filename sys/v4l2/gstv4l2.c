@@ -35,7 +35,8 @@
 /* #include "gstv4l2mjpegsrc.h" */
 /* #include "gstv4l2mjpegsink.h" */
 
-GST_DEBUG_CATEGORY (v4l2_debug);        /* used in v4l2_calls.c and v4l2src_calls.c */
+/* used in v4l2_calls.c and v4l2src_calls.c */
+GST_DEBUG_CATEGORY (v4l2_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)

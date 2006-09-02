@@ -238,7 +238,6 @@ gst_v4l2_device_get_type (void)
 void
 gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class)
 {
-
   g_object_class_install_property
       (G_OBJECT_CLASS (gobject_class), PROP_DEVICE,
       g_param_spec_string ("device",
@@ -246,7 +245,7 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class)
   g_object_class_install_property
       (G_OBJECT_CLASS (gobject_class),
       PROP_DEVICE_NAME,
-      g_param_spec_string ("device_name",
+      g_param_spec_string ("device-name",
           "Device name", "Name of the device", NULL, G_PARAM_READABLE));
   g_object_class_install_property
       (G_OBJECT_CLASS (gobject_class), PROP_FLAGS,

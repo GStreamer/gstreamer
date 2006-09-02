@@ -39,7 +39,6 @@ gst_v4l2_color_balance_channel_base_init (gpointer g_class)
 {
 }
 
-
 static void
 gst_v4l2_color_balance_channel_class_init (GstV4l2ColorBalanceChannelClass *
     klass)

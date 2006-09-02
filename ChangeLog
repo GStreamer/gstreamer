@@ -2,6 +2,16 @@
 
 	* sys/v4l2/gstv4l2.c:
 	* sys/v4l2/gstv4l2colorbalance.c:
+	* sys/v4l2/gstv4l2object.c:
+	(gst_v4l2_object_install_properties_helper):
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_class_init):
+	* sys/v4l2/gstv4l2src.h:
+          Whitespace cleanups, dashify property-names.
+
+2006-09-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/v4l2/gstv4l2.c:
+	* sys/v4l2/gstv4l2colorbalance.c:
 	* sys/v4l2/gstv4l2colorbalance.h:
 	* sys/v4l2/gstv4l2object.c:
 	* sys/v4l2/gstv4l2object.h:
