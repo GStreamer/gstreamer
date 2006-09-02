@@ -85,8 +85,9 @@ GST_PLUGINS_ALL="\
   spectrum \
   speed \
   qtdemux \
-  xingheader \
   tta \
+  videocrop \
+  xingheader \
   "
 
 AC_SUBST(GST_PLUGINS_ALL)
@@ -848,6 +849,7 @@ gst/spectrum/Makefile
 gst/speed/Makefile
 gst/qtdemux/Makefile
 gst/tta/Makefile
+gst/videocrop/Makefile
 gst/xingheader/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile

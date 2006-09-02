@@ -1,3 +1,20 @@
+2006-09-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/videocrop/Makefile.am:
+	* gst/videocrop/gstvideocrop.c: (gst_video_crop_base_init),
+	(gst_video_crop_class_init), (gst_video_crop_init),
+	(gst_video_crop_get_image_details_from_caps),
+	(gst_video_crop_get_unit_size), (gst_video_crop_transform_packed),
+	(gst_video_crop_transform_planar), (gst_video_crop_transform),
+	(gst_video_crop_transform_dimension),
+	(gst_video_crop_transform_dimension_value),
+	(gst_video_crop_transform_caps), (gst_video_crop_set_caps),
+	(gst_video_crop_set_property), (gst_video_crop_get_property),
+	(plugin_init):
+	  Port/rewrite videocrop from scratch for GStreamer-0.10, and make
+	  it support all formats videoscale supports (#345653).
+
 2006-09-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/v4l2/gstv4l2.c:
