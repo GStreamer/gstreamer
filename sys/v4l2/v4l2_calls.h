@@ -1,6 +1,9 @@
-/* G-Streamer generic V4L2 element - generic V4L2 calls handling
+/* GStreamer
+ *
  * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
- * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@indt.org.br>
+ *
+ * v4l2_calls.h - generic V4L2 calls handling
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

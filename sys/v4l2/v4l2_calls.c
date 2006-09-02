@@ -1,6 +1,9 @@
-/* G-Streamer generic V4L2 element - generic V4L2 calls handling
+/* GStreamer
+ *
  * Copyright (C) 2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
- * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@indt.org.br>
+ *
+ * v4l2_calls.c - generic V4L2 calls handling
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -55,7 +58,7 @@ gst_v4l2_get_capabilities (GstV4l2Object * v4l2object)
 
   if (ioctl (v4l2object->video_fd, VIDIOC_QUERYCAP, &(v4l2object->vcap)) < 0) {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Error getting capabilities '%s': %d, %s. It isn't a v4l2 driver. Check if it is a v4l1 driver\n"), v4l2object->videodev, errno, strerror (errno)), GST_ERROR_SYSTEM);
+        (_("Error getting capabilities for device '%s': %s. It isn't a v4l2 driver. Check if it is a v4l1 driver\n"), v4l2object->videodev, g_strerror (errno)), GST_ERROR_SYSTEM);
     return FALSE;
   }
 
@@ -365,14 +368,14 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
   /* check if it is a device */
   if (-1 == stat (v4l2object->videodev, &st)) {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
-        (_("Cannot identify '%s': %d, %s\n"),
-            v4l2object->videodev, errno, strerror (errno)), GST_ERROR_SYSTEM);
+        (_("Cannot identify device '%s': %s\n"), v4l2object->videodev,
+            g_strerror (errno)), GST_ERROR_SYSTEM);
     goto error;
   }
   if (!S_ISCHR (st.st_mode)) {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
-        (_("It isn't a device '%s': %d, %s\n"),
-            v4l2object->videodev, errno, strerror (errno)), GST_ERROR_SYSTEM);
+        (_("This isn't a device '%s': %s\n"), v4l2object->videodev,
+            g_strerror (errno)), GST_ERROR_SYSTEM);
     goto error;
   }
 

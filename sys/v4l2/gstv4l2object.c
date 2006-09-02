@@ -1,7 +1,9 @@
-/*
- * GStreamer gstv4l2object.c: base class for V4L2 elements
+/* GStreamer
+ *
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
- * Copyright (C) 2006 Edgard Lima <edgard.lima@indt.org.br>
+ *               2006 Edgard Lima <edgard.lima@indt.org.br>
+ *
+ * gstv4l2object.c: base class for V4L2 elements
  *
  * This library is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Library General Public License as published
