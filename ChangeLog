@@ -1,5 +1,12 @@
 2006-09-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/elements/videotestsrc.c: (check_rgb_buf):
+	  Returning a return value often helps. In this case, we
+	  don't need the return value anyway, so just get rid of it.
+	  Should make build bots much happier.
+
+2006-09-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/videotestsrc/videotestsrc.c: (paintinfo_find_by_structure),
 	(paint_get_structure), (gst_video_test_src_get_size),
 	(gst_video_test_src_smpte), (gst_video_test_src_snow),
@@ -12,7 +19,7 @@
 
 	* tests/check/elements/videotestsrc.c: (right_shift_colour),
 	(fix_expected_colour), (check_rgb_buf), (got_buf_cb),
-	(GST_START_TEST), (videotestsrc_suite):
+	(check_rgb_buf), (videotestsrc_suite):
 	  Add unit tests for videotestsrc's RGB output.
 
 2006-09-01  Tim-Philipp Müller  <tim at centricular dot net>

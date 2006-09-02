@@ -155,7 +155,7 @@ fix_expected_colour (guint32 col_mask, guint8 col_expected)
   return col_expected & mask;
 }
 
-static gboolean
+static void
 check_rgb_buf (const guint8 * pixels, guint32 r_mask, guint32 g_mask,
     guint32 b_mask, guint32 a_mask, guint8 r_expected, guint8 g_expected,
     guint8 b_expected, guint endianness, guint bpp, guint depth)
@@ -378,12 +378,11 @@ GST_START_TEST (test_rgb_formats)
 
 
           /* now check the first pixel */
-          fail_unless (check_rgb_buf (GST_BUFFER_DATA (buf),
-                  rgb_formats[i].red_mask, rgb_formats[i].green_mask,
-                  rgb_formats[i].blue_mask, rgb_formats[i].alpha_mask,
-                  test_patterns[p].r_expected, test_patterns[p].g_expected,
-                  test_patterns[p].b_expected, endianness, rgb_formats[i].bpp,
-                  rgb_formats[i].depth));
+          check_rgb_buf (GST_BUFFER_DATA (buf), rgb_formats[i].red_mask,
+              rgb_formats[i].green_mask, rgb_formats[i].blue_mask,
+              rgb_formats[i].alpha_mask, test_patterns[p].r_expected,
+              test_patterns[p].g_expected, test_patterns[p].b_expected,
+              endianness, rgb_formats[i].bpp, rgb_formats[i].depth);
 
           gst_buffer_unref (buf);
           buf = NULL;
