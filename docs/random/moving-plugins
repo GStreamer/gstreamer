@@ -120,6 +120,10 @@ CHECKLIST
 - All error conditions should be correctly handled using GST_ELEMENT_ERROR
   and following practice outlined in
   http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/gstreamer-GstGError.html
+  - this includes:
+    - message strings need to be marked for translation 
+    - should be short, well-written, clear
+    - in particular, should *not* contain debug info, strerror, errno, ...
 
 - Decision should be made if it should go into good (LGPL license,
   LGPL dependencies, no patent issues) or ugly
