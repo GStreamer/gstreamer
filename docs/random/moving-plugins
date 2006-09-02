@@ -33,7 +33,7 @@ PROCESS
   to good/ugly
   This is "requesting" the move.
 - a second person reviews the request and code, and verifies that the
-  plugin meets the checklist items below, by commenting on he bug
+  plugin meets the checklist items below, by commenting on the bug
   and giving a rundown of what still needs to be done
   This is "sponsoring" the move.
 - when the checklist is met, a third person can approve the move.
@@ -110,7 +110,7 @@ CHECKLIST
   - the unit tests in check/ dirs are valgrinded by default
   - the manual tests should have a valgrind target
   - leaks in the supporting library (and verified to be in the supporting
-    library !) can be added to suppressions files
+    library !) can be added to suppression files
 
 - The elements should not segfault under any circumstance.  This includes:
   - wrong pipelines
