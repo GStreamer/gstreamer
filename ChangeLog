@@ -1,3 +1,9 @@
+2006-09-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstregistryxml.c: (gst_registry_xml_save_feature):
+	  Print a warning rather than g_assert() if a plugin feature
+	  is a URI handler but returns no protocols (#353976).
+
 2006-09-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/moving-plugins:

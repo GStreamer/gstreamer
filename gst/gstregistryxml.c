@@ -717,18 +717,22 @@ gst_registry_xml_save_feature (GstRegistry * registry,
     }
 
     if (GST_URI_TYPE_IS_VALID (factory->uri_type)) {
-      gchar **protocol;
-
       if (!gst_registry_save_escaped (registry, "  ", "uri_type",
               factory->uri_type == GST_URI_SINK ? "sink" : "source"))
         return FALSE;
-      g_assert (factory->uri_protocols);
-      protocol = factory->uri_protocols;
-      while (*protocol) {
-        if (!gst_registry_save_escaped (registry, "  ", "uri_protocol",
-                *protocol))
-          return FALSE;
-        protocol++;
+      if (factory->uri_protocols) {
+        gchar **protocol;
+
+        protocol = factory->uri_protocols;
+        while (*protocol) {
+          if (!gst_registry_save_escaped (registry, "  ", "uri_protocol",
+                  *protocol))
+            return FALSE;
+          protocol++;
+        }
+      } else {
+        g_warning ("GStreamer feature '%s' is URI handler but does not provide"
+            " any protocols it can handle", feature->name);
       }
     }
   } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
