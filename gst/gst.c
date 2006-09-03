@@ -723,7 +723,12 @@ ensure_current_registry_forking (GstRegistry * default_registry,
     }
 
     if (!WIFEXITED (status)) {
-      GST_ERROR ("child did not exit normally, status: %d", status);
+      if (WIFSIGNALED (status)) {
+        GST_ERROR ("child did not exit normally, terminated by signal %d",
+            WTERMSIG (status));
+      } else {
+        GST_ERROR ("child did not exit normally, status: %d", status);
+      }
       return FALSE;
     }
 

@@ -1,5 +1,10 @@
 2006-09-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gst.c: (ensure_current_registry_forking):
+	  Print better details when child was terminated by signal.
+
+2006-09-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstregistryxml.c: (gst_registry_xml_save_feature):
 	  Print a warning rather than g_assert() if a plugin feature
 	  is a URI handler but returns no protocols (#353976).
