@@ -1,3 +1,11 @@
+2006-09-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/elements/videocrop.c: (handoff_cb),
+	(buffer_probe_cb), (test_caps_transform), (test_passthrough),
+	(notgst_value_list_get_nth_int), (videocrop_suite):
+	  More tests: check passthrough mode and caps transform in
+	  both directions with fixed values, ranges and lists.
+
 2006-09-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/Makefile.am:
