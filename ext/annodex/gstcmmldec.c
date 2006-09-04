@@ -391,10 +391,15 @@ gst_cmml_dec_chain (GstPad * pad, GstBuffer * buffer)
   /* handle the packet. the handler will set dec->flow_return */
   switch (packet) {
     case GST_CMML_PACKET_IDENT_HEADER:
-      gst_cmml_dec_parse_ident_header (dec, buffer);
+      if (dec->sent_root == FALSE)
+        /* don't parse the ident again in case of seeking to the beginning */
+        gst_cmml_dec_parse_ident_header (dec, buffer);
       break;
     case GST_CMML_PACKET_FIRST_HEADER:
-      gst_cmml_dec_parse_first_header (dec, buffer);
+      if (dec->sent_root == FALSE)
+        /* don't parse the xml preamble if it has already been parsed because it
+         * would error out, so seeking to the beginning would fail */
+        gst_cmml_dec_parse_first_header (dec, buffer);
       break;
     case GST_CMML_PACKET_SECOND_HEADER:
     case GST_CMML_PACKET_CLIP:

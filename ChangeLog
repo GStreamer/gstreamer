@@ -1,3 +1,18 @@
+2006-09-04  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Alessandro Decina <alessandro at nnva dot org>
+
+	* ext/annodex/gstcmmldec.c: (gst_cmml_dec_chain):
+	Seeking back in a file containing a CMML stream errors out if the seek
+	goes back up to the CMML headers. This is because after the seek the xml
+	processing instruction <?xml ...?> is submitted to the xml parser again, 
+	which results in an error. The attached patch fixes the problem. 
+	Fixes #353908.
+
+	* ext/annodex/gstcmmlenc.h:
+	Fix authors name.
+
+
 2006-08-28  Andy Wingo  <wingo@pobox.com>
 
 	* ext/raw1394/gstdv1394src.c (gst_dv1394src_from_raw1394handle):
