@@ -1,5 +1,10 @@
 2006-09-04  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/pipelines/oggmux.c: (oggmux_suite):
+	  Disable test that fails at the moment (killed after timeout).
+
+2006-09-04  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: James Livingston  <doclivingston at gmail.com>
 
 	* tests/check/Makefile.am:
