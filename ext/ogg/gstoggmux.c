@@ -174,7 +174,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_STATIC_CAPS ("video/x-theora; "
         "audio/x-vorbis; audio/x-flac; audio/x-speex; "
         "application/x-ogm-video; application/x-ogm-audio; video/x-dirac; "
-        "video/x-smoke")
+        "video/x-smoke; text/x-cmml, encoded = (boolean) TRUE")
     );
 
 static void gst_ogg_mux_base_init (gpointer g_class);

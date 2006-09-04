@@ -1,3 +1,10 @@
+2006-09-04  Wim Taymans  <wim@fluendo.com>
+
+	patch by: Alessandro Dessina <alessandro nnva org>
+
+	* ext/ogg/gstoggmux.c:
+	Add cmml caps to oggmux. Fixes #353912
+
 2006-09-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/elements/videotestsrc.c: (check_rgb_buf):
