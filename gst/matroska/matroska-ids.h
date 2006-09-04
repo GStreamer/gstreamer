@@ -156,6 +156,7 @@
 #define GST_MATROSKA_CODEC_ID_AUDIO_AC3          "A_AC3"
 #define GST_MATROSKA_CODEC_ID_AUDIO_DTS          "A_DTS"
 #define GST_MATROSKA_CODEC_ID_AUDIO_VORBIS       "A_VORBIS"
+#define GST_MATROSKA_CODEC_ID_AUDIO_FLAC         "A_FLAC"
 #define GST_MATROSKA_CODEC_ID_AUDIO_ACM          "A_MS/ACM"
 #define GST_MATROSKA_CODEC_ID_AUDIO_MPEG2        "A_AAC/MPEG2/"
 #define GST_MATROSKA_CODEC_ID_AUDIO_MPEG4        "A_AAC/MPEG4/"
@@ -253,6 +254,11 @@ typedef struct _GstMatroskaTrackContext {
    * codec_priv first before sending any data, and just testing
    * for time == 0 is not enough to detect that. Used by demuxer */
   gboolean      send_xiph_headers;
+
+  /* Special flag for Flac, for which we need to reconstruct the header
+   * buffer from the codec_priv data before sending any data, and just
+   * testing for time == 0 is not enough to detect that. Used by demuxer */
+  gboolean      send_flac_headers;
 
   /* Special counter for muxer to skip the first N vorbis/theora headers -
    * they are put into codec private data, not muxed into the stream */

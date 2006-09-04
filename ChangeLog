@@ -1,3 +1,16 @@
+2006-09-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_push_hdr_buf),
+	(gst_matroska_demux_push_flac_codec_priv_data),
+	(gst_matroska_demux_push_xiph_codec_priv_data),
+	(gst_matroska_demux_parse_blockgroup_or_simpleblock),
+	(gst_matroska_demux_video_caps), (gst_matroska_demux_audio_caps):
+	* gst/matroska/matroska-ids.h:
+	  Add basic FLAC support (#311586), not perfect yet though, needs some
+	  tweaking in flacdec; also, seeking could be better.
+	  Do better bounds checking when deserialising vorbis stream headers
+	  to make sure we don't read beyond the end of the buffer on bad input.
+
 2006-09-04  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Alessandro Decina <alessandro at nnva dot org>
