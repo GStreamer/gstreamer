@@ -71,6 +71,7 @@
 #define GST_MATROSKA_ID_TRACKMINCACHE 0x6DE7
 #define GST_MATROSKA_ID_TRACKMAXCACHE 0x6DF8
 #define GST_MATROSKA_ID_TRACKDEFAULTDURATION 0x23E383
+#define GST_MATROSKA_ID_CONTENTENCODINGS 0x6D80
 
 /* IDs in the trackvideo master */
 #define GST_MATROSKA_ID_VIDEOFRAMERATE 0x2383E3
@@ -126,6 +127,21 @@
 #define GST_MATROSKA_ID_BLOCK      0xA1
 #define GST_MATROSKA_ID_BLOCKDURATION 0x9B
 
+/* IDs in the contentencodings master */
+#define GST_MATROSKA_ID_CONTENTENCODING 0x6240
+
+/* IDS IN THE CONTENTENCODING MASTER */
+#define GST_MATROSKA_ID_CONTENTENCODINGORDER 0X5031
+#define GST_MATROSKA_ID_CONTENTENCODINGSCOPE 0X5032
+#define GST_MATROSKA_ID_CONTENTENCODINGTYPE  0X5033
+#define GST_MATROSKA_ID_CONTENTCOMPRESSION   0X5034
+#define GST_MATROSKA_ID_CONTENTENCRYPTION    0X5035
+
+/* IDS IN THE CONTENTCOMPRESSION MASTER */
+#define GST_MATROSKA_ID_CONTENTCOMPALGO      0X4254
+#define GST_MATROSKA_ID_CONTENTCOMPSETTINGS  0X4255
+
+
 /*
  * Matroska Codec IDs. Strings.
  */
@@ -175,6 +191,7 @@
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_SSA       "S_TEXT/SSA"
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_ASS       "S_TEXT/ASS" 
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_USF       "S_TEXT/USF"
+#define GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB    "S_VOBSUB"
 
 /*
  * Matrodka tags. Strings.
@@ -266,6 +283,10 @@ typedef struct _GstMatroskaTrackContext {
 
   /* Tags to send after newsegment event */
   GstTagList   *pending_tags;
+
+  /* A GArray of GstMatroskaTrackEncoding structures which contain the
+   * encoding (compression/encryption) settings for this track, if any */
+  GArray       *encodings;
 } GstMatroskaTrackContext;
 
 typedef struct _GstMatroskaTrackVideoContext {
@@ -315,6 +336,15 @@ typedef struct _Wavpack4Header {
   guint32 flags;         /* various flags for id and decoding              */
   guint32 crc;           /* crc for actual decoded data                    */
 } Wavpack4Header;
+
+typedef struct _GstMatroskaTrackEncoding {
+  guint   order;
+  guint   scope     : 3;
+  guint   type      : 1;
+  guint   comp_algo : 2;
+  guint8 *comp_settings;
+  guint   comp_settings_length;
+} GstMatroskaTrackEncoding;
 
 gboolean gst_matroska_track_init_video_context    (GstMatroskaTrackContext ** p_context);
 gboolean gst_matroska_track_init_audio_context    (GstMatroskaTrackContext ** p_context);

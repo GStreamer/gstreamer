@@ -33,6 +33,10 @@
 #include <gst/riff/riff-ids.h>
 #include <gst/riff/riff-media.h>
 
+#ifdef HAVE_ZLIB
+#include <zlib.h>
+#endif
+
 #include "matroska-demux.h"
 #include "matroska-ids.h"
 
@@ -71,7 +75,8 @@ static GstStaticPadTemplate subtitle_src_templ =
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("text/plain; application/x-ssa; application/x-ass; "
-        "application/x-usf; application/x-subtitle-unknown")
+        "application/x-usf; video/x-dvd-subpicture; "
+        "application/x-subtitle-unknown")
     );
 
 static void gst_matroska_demux_base_init (GstMatroskaDemuxClass * klass);
@@ -213,6 +218,31 @@ gst_matroska_demux_init (GstMatroskaDemux * demux)
 }
 
 static void
+gst_matroska_track_free (GstMatroskaTrackContext * track)
+{
+  g_free (track->codec_id);
+  g_free (track->codec_name);
+  g_free (track->name);
+  g_free (track->language);
+  g_free (track->codec_priv);
+
+  if (track->encodings != NULL) {
+    int i;
+
+    for (i = 0; i < track->encodings->len; ++i) {
+      GstMatroskaTrackEncoding *enc = &g_array_index (track->encodings,
+          GstMatroskaTrackEncoding,
+          i);
+
+      g_free (enc->comp_settings);
+    }
+    g_array_free (track->encodings, TRUE);
+  }
+
+  g_free (track);
+}
+
+static void
 gst_matroska_demux_reset (GstElement * element)
 {
   GstMatroskaDemux *demux = GST_MATROSKA_DEMUX (element);
@@ -228,12 +258,7 @@ gst_matroska_demux_reset (GstElement * element)
         gst_element_remove_pad (GST_ELEMENT (demux), demux->src[i]->pad);
       }
       gst_caps_replace (&demux->src[i]->caps, NULL);
-      g_free (demux->src[i]->codec_id);
-      g_free (demux->src[i]->codec_name);
-      g_free (demux->src[i]->name);
-      g_free (demux->src[i]->language);
-      g_free (demux->src[i]->codec_priv);
-      g_free (demux->src[i]);
+      gst_matroska_track_free (demux->src[i]);
       demux->src[i] = NULL;
     }
   }
@@ -286,6 +311,181 @@ gst_matroska_demux_stream_from_num (GstMatroskaDemux * demux, guint track_num)
   }
 
   return -1;
+}
+
+static gboolean
+gst_matroska_demux_read_track_encodings (GstEbmlRead * ebml,
+    GstMatroskaDemux * demux, GstMatroskaTrackContext * context)
+{
+  gboolean res = TRUE;
+  guint32 id;
+
+  if (!gst_ebml_read_master (ebml, &id))
+    return FALSE;
+
+  context->encodings =
+      g_array_sized_new (FALSE, FALSE, sizeof (GstMatroskaTrackEncoding), 1);
+
+  while (res) {
+    if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
+      res = FALSE;
+      break;
+    } else if (demux->level_up > 0) {
+      demux->level_up--;
+      break;
+    }
+
+    switch (id) {
+      case GST_MATROSKA_ID_CONTENTENCODING:{
+        GstMatroskaTrackEncoding enc = { 0, };
+
+        if (!gst_ebml_read_master (ebml, &id)) {
+          res = FALSE;
+          break;
+        }
+
+        while (res) {
+          if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
+            res = FALSE;
+            break;
+          } else if (demux->level_up > 0) {
+            demux->level_up--;
+            break;
+          }
+
+          switch (id) {
+            case GST_MATROSKA_ID_CONTENTENCODINGORDER:{
+              guint64 num;
+
+              if (!gst_ebml_read_uint (ebml, &id, &num)) {
+                res = FALSE;
+                break;
+              }
+              enc.order = num;
+              break;
+            }
+            case GST_MATROSKA_ID_CONTENTENCODINGSCOPE:{
+              guint64 num;
+
+              if (!gst_ebml_read_uint (ebml, &id, &num)) {
+                res = FALSE;
+                break;
+              }
+              if (num > 7)
+                GST_WARNING ("Unknown scope value in contents encoding.");
+              else
+                enc.scope = num;
+              break;
+            }
+            case GST_MATROSKA_ID_CONTENTENCODINGTYPE:{
+              guint64 num;
+
+              if (!gst_ebml_read_uint (ebml, &id, &num)) {
+                res = FALSE;
+                break;
+              }
+              if (num > 1)
+                GST_WARNING ("Unknown type value in contents encoding.");
+              else
+                enc.type = num;
+              break;
+            }
+            case GST_MATROSKA_ID_CONTENTCOMPRESSION:{
+
+              if (!gst_ebml_read_master (ebml, &id)) {
+                res = FALSE;
+                break;
+              }
+
+              while (res) {
+
+                if (!gst_ebml_peek_id (ebml, &demux->level_up, &id)) {
+                  res = FALSE;
+                  break;
+                } else if (demux->level_up > 0) {
+                  demux->level_up--;
+                  break;
+                }
+
+                switch (id) {
+                  case GST_MATROSKA_ID_CONTENTCOMPALGO:{
+                    guint64 num;
+
+                    if (!gst_ebml_read_uint (ebml, &id, &num)) {
+                      res = FALSE;
+                      break;
+                    }
+                    if (num > 3)
+                      GST_WARNING ("Unknown scope value in encoding compalgo.");
+                    else
+                      enc.comp_algo = num;
+                    break;
+                  }
+                  case GST_MATROSKA_ID_CONTENTCOMPSETTINGS:{
+                    guint8 *data;
+                    guint64 size;
+
+
+                    if (!gst_ebml_read_binary (ebml, &id, &data, &size)) {
+                      res = FALSE;
+                      break;
+                    }
+                    enc.comp_settings = data;
+                    enc.comp_settings_length = size;
+                    break;
+                  }
+                  default:
+                    GST_WARNING ("Unknown track compression header entry 0x%x"
+                        " - ignoring", id);
+                    if (!gst_ebml_read_skip (ebml))
+                      res = FALSE;
+                    break;
+                }
+
+                if (demux->level_up) {
+                  demux->level_up--;
+                  break;
+                }
+              }
+              break;
+            }
+
+            case GST_MATROSKA_ID_CONTENTENCRYPTION:
+              GST_WARNING ("Encrypted tracks not yet supported");
+              /* pass-through */
+            default:
+              GST_WARNING
+                  ("Unknown track encoding header entry 0x%x - ignoring", id);
+              if (!gst_ebml_read_skip (ebml))
+                res = FALSE;
+              break;
+          }
+
+          if (demux->level_up) {
+            demux->level_up--;
+            break;
+          }
+        }
+
+        g_array_append_val (context->encodings, enc);
+        break;
+      }
+
+      default:
+        GST_WARNING ("Unknown track encodings header entry 0x%x - ignoring",
+            id);
+        if (!gst_ebml_read_skip (ebml))
+          res = FALSE;
+        break;
+    }
+
+    if (demux->level_up) {
+      demux->level_up--;
+      break;
+    }
+  }
+
+  return res;
 }
 
 static gboolean
@@ -795,6 +995,13 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
         break;
       }
 
+      case GST_MATROSKA_ID_CONTENTENCODINGS:{
+        if (!gst_matroska_demux_read_track_encodings (ebml, demux, context)) {
+          res = FALSE;
+        }
+        break;
+      }
+
       default:
         GST_WARNING ("Unknown track header entry 0x%x - ignoring", id);
         /* pass-through */
@@ -823,12 +1030,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
     demux->num_streams--;
     demux->src[demux->num_streams] = NULL;
     if (context) {
-      g_free (context->codec_id);
-      g_free (context->codec_name);
-      g_free (context->name);
-      g_free (context->language);
-      g_free (context->codec_priv);
-      g_free (context);
+      gst_matroska_track_free (context);
     }
 
     return res;
@@ -2269,6 +2471,83 @@ gst_matroska_demux_check_subtitle_buffer (GstMatroskaDemux * demux,
   return newbuf;
 }
 
+static GstBuffer *
+gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
+{
+  gint i;
+  guint8 *new_data = NULL;
+  guint new_size = 0;
+  GstBuffer *res;
+
+  g_assert (context->encodings != NULL);
+
+  for (i = 0; i < context->encodings->len; i++) {
+    GstMatroskaTrackEncoding *enc;
+
+    enc = &g_array_index (context->encodings, GstMatroskaTrackEncoding, i);
+
+    /* FIXME: use enc->scope ? */
+
+    if (enc->comp_algo == 0) {
+#ifdef HAVE_ZLIB
+      /* zlib encoded track */
+      z_stream zstream;
+      guint orig_size;
+      int result;
+
+      orig_size = GST_BUFFER_SIZE (buf);
+      zstream.zalloc = (alloc_func) 0;
+      zstream.zfree = (free_func) 0;
+      zstream.opaque = (voidpf) 0;
+      if (inflateInit (&zstream) != Z_OK) {
+        GST_WARNING ("zlib initialization failed.\n");
+        return buf;
+      }
+      zstream.next_in = (Bytef *) GST_BUFFER_DATA (buf);
+      zstream.avail_in = orig_size;
+      new_size = orig_size;
+      new_data = g_malloc (new_size);
+      zstream.avail_out = new_size;
+      do {
+        new_size += 4000;
+        new_data = g_realloc (new_data, new_size);
+        zstream.next_out = (Bytef *) (new_data + zstream.total_out);
+        result = inflate (&zstream, Z_NO_FLUSH);
+        if (result != Z_OK && result != Z_STREAM_END) {
+          GST_WARNING ("zlib decompression failed.\n");
+          g_free (new_data);
+          inflateEnd (&zstream);
+          return buf;
+        }
+        zstream.avail_out += 4000;
+      } while (zstream.avail_out == 4000 &&
+          zstream.avail_in != 0 && result != Z_STREAM_END);
+
+      new_size = zstream.total_out;
+      inflateEnd (&zstream);
+#else
+      GST_WARNING ("GZIP encoded tracks not supported.");
+      return buf;
+#endif
+    } else if (enc->comp_algo == 1) {
+      GST_WARNING ("BZIP encoded tracks not supported.");
+      return buf;
+    } else if (enc->comp_algo == 2) {
+      GST_WARNING ("LZO encoded tracks not supported.");
+      return buf;
+    }
+  }
+
+  res = gst_buffer_new ();
+  GST_BUFFER_MALLOCDATA (res) = (guint8 *) new_data;
+  GST_BUFFER_DATA (res) = (guint8 *) new_data;
+  GST_BUFFER_SIZE (res) = new_size;
+  gst_buffer_stamp (res, buf);
+
+  gst_buffer_unref (buf);
+  return res;
+}
+
 static gboolean
 gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     guint64 cluster_time, gboolean is_simpleblock)
@@ -2286,6 +2565,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
   gint64 time = 0;
   gint64 lace_time = 0;
   gint flags = 0;
+  gint64 referenceblock = 0;
 
   while (!got_error) {
     if (!is_simpleblock) {
@@ -2456,15 +2736,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       }
 
       case GST_MATROSKA_ID_REFERENCEBLOCK:{
-        /* FIXME: implement support for ReferenceBlock
-           gint64 num;
-           if (!gst_ebml_read_sint (ebml, &id, &num)) {
-           res = FALSE;
-           break;
-           }
-           GST_WARNING ("FIXME: implement support for ReferenceBlock");
-         */
-        if (!gst_ebml_read_skip (ebml))
+        if (!gst_ebml_read_sint (ebml, &id, &referenceblock))
           got_error = TRUE;
         break;
       }
@@ -2497,6 +2769,13 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     lace_time = GST_CLOCK_TIME_NONE;
   }
 
+  if (referenceblock && readblock && demux->src[stream_num]->set_discont) {
+    /* When doing seeks or such, we need to restart on key frames or
+       decoders might choke. */
+    readblock = FALSE;
+    gst_buffer_unref (buf);
+  }
+
   if (!got_error && readblock) {
     guint64 duration = 0;
 
@@ -2517,6 +2796,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       sub = gst_buffer_create_sub (buf,
           GST_BUFFER_SIZE (buf) - size, lace_size[n]);
+
+      if (stream->encodings != NULL && stream->encodings->len > 0)
+        sub = gst_matroska_decode_buffer (stream, sub);
 
       GST_BUFFER_TIMESTAMP (sub) = lace_time;
       if (lace_time != GST_CLOCK_TIME_NONE)
@@ -3609,6 +3891,9 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_USF)) {
     caps = gst_caps_new_simple ("application/x-usf", NULL);
     subtitlecontext->check_utf8 = TRUE;
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB)) {
+    caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
+    subtitlecontext->check_utf8 = FALSE;
   } else {
     GST_DEBUG ("Unknown subtitle stream: codec_id='%s'", codec_id);
     caps = gst_caps_new_simple ("application/x-subtitle-unknown", NULL);
