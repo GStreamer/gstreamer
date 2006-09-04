@@ -1,3 +1,17 @@
+2006-09-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: James Livingston  <doclivingston at gmail.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/.cvsignore:
+	* tests/check/pipelines/oggmux.c: (get_page_codec),
+	(check_chain_final_state), (fail_if_audio), (validate_ogg_page),
+	(eos_buffer_probe), (start_pipeline), (stop_pipeline), (eos_watch),
+	(test_pipeline), (test_vorbis), (test_theora), (test_vorbis_theora),
+	(test_theora_vorbis), (oggmux_suite):
+	  Add simple unit test for oggmux from #337026 with checking for the
+	  EOS flags disabled for the time being.
+
 2006-09-04  Wim Taymans  <wim@fluendo.com>
 
 	patch by: Alessandro Dessina <alessandro nnva org>

@@ -27,6 +27,12 @@ else
 check_alsa =
 endif
 
+if USE_OGG
+check_ogg = pipelines/oggmux
+else
+check_ogg = 
+endif
+
 if USE_VORBIS
 check_vorbis = elements/vorbisdec pipelines/vorbisenc
 else
@@ -41,9 +47,10 @@ endif
 
 check_PROGRAMS = \
 	$(check_alsa) \
+	$(check_ogg) \
 	$(check_vorbis) \
 	$(check_theora) \
-        elements/adder	\
+	elements/adder	\
 	elements/audioconvert \
 	elements/audioresample \
 	elements/audiotestsrc \
@@ -59,7 +66,7 @@ check_PROGRAMS = \
 	libs/cddabasesrc \
 	libs/tag \
 	libs/video \
-        pipelines/simple-launch-lines
+	pipelines/simple-launch-lines
 
 # TORTURE_TO_FIX = \
 #       elements/adder
@@ -129,5 +136,8 @@ libs_video_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
 	$(LDADD)
 libs_video_CFLAGS = -I$(top_srcdir)/gst-libs $(CFLAGS) $(AM_CFLAGS)
+
+pipelines_oggmux_LDADD = $(OGG_LIBS) $(LDADD)
+pipelines_oggmux_CFLAGS = $(OGG_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 EXTRA_DIST = gst-plugins-base.supp
