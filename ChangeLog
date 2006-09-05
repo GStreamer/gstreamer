@@ -1,3 +1,8 @@
+2006-09-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/advanced-position.xml:
+	  Fix typo in sample code.
+
 2006-09-05  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/net/gstnetclientclock.c: (inet_aton),
