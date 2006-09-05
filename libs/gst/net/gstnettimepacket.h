@@ -28,10 +28,16 @@ G_BEGIN_DECLS
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+
+#ifdef G_OS_WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
 
 /**
  * GST_NET_TIME_PACKET_SIZE:

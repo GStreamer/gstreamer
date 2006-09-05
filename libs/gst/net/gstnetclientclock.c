@@ -89,6 +89,10 @@ G_STMT_START {                                  \
 #define DEFAULT_PORT            5637
 #define DEFAULT_TIMEOUT         GST_SECOND
 
+#ifdef G_OS_WIN32
+#define getsockname(sock,addr,len) getsockname(sock,addr,(int *)len)
+#endif
+
 enum
 {
   PROP_0,
@@ -109,6 +113,21 @@ static void gst_net_client_clock_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void gst_net_client_clock_stop (GstNetClientClock * self);
+
+#ifdef G_OS_WIN32
+static int
+inet_aton (const char *c, struct in_addr *paddr)
+{
+  /* note that inet_addr is deprecated on unix because
+   * inet_addr returns -1 (INADDR_NONE) for the valid 255.255.255.255
+   * address. */
+  paddr->s_addr = inet_addr (c);
+  if (paddr->s_addr == INADDR_NONE)
+    return 0;
+
+  return 1;
+}
+#endif
 
 static void
 gst_net_client_clock_base_init (gpointer g_class)
@@ -142,6 +161,18 @@ gst_net_client_clock_init (GstNetClientClock * self,
     GstNetClientClockClass * g_class)
 {
   GstClock *clock = GST_CLOCK_CAST (self);
+
+#ifdef G_OS_WIN32
+  WSADATA w;
+  int error = WSAStartup (0x0202, &w);
+
+  if (error) {
+    GST_DEBUG_OBJECT (self, "Error on WSAStartup");
+  }
+  if (w.wVersion != 0x0202) {
+    WSACleanup ();
+  }
+#endif
 
   self->port = DEFAULT_PORT;
   self->address = g_strdup (DEFAULT_ADDRESS);
@@ -179,6 +210,10 @@ gst_net_client_clock_finalize (GObject * object)
 
   g_free (self->servaddr);
   self->servaddr = NULL;
+
+#ifdef G_OS_WIN32
+  WSACleanup ();
+#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -284,8 +319,17 @@ gst_net_client_clock_do_select (GstNetClientClock * self, fd_set * readfds)
       diff = gst_clock_get_internal_time (GST_CLOCK (self));
       GST_TIME_TO_TIMEVAL (self->current_timeout, tv);
 
+#ifdef G_OS_WIN32
+      if (((max_sock + 1) != READ_SOCKET (self)) ||
+          ((max_sock + 1) != WRITE_SOCKET (self))) {
+        ret =
+            select (max_sock + 1, readfds, NULL, NULL, (struct timeval *) ptv);
+      } else {
+        ret = 1;
+      }
+#else
       ret = select (max_sock + 1, readfds, NULL, NULL, (struct timeval *) ptv);
-
+#endif
       diff = gst_clock_get_internal_time (GST_CLOCK (self)) - diff;
 
       if (diff > self->current_timeout)
@@ -569,12 +613,18 @@ gst_net_client_clock_new (gchar * name, const gchar * remote_address,
       g_warning ("unable to set the base time, expect sync problems!");
   }
 
+#ifdef G_OS_WIN32
+  GST_DEBUG_OBJECT (ret, "creating pipe");
+  if ((iret = pipe (CONTROL_SOCKETS (ret))) < 0)
+    goto no_socket_pair;
+#else
   GST_DEBUG_OBJECT (ret, "creating socket pair");
   if ((iret = socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (ret))) < 0)
     goto no_socket_pair;
 
   fcntl (READ_SOCKET (ret), F_SETFL, O_NONBLOCK);
   fcntl (WRITE_SOCKET (ret), F_SETFL, O_NONBLOCK);
+#endif
 
   if (!gst_net_client_clock_start (ret))
     goto failed_start;

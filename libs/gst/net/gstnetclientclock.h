@@ -34,10 +34,15 @@ G_BEGIN_DECLS
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+
+#ifdef G_OS_WIN32
+# include <winsock2.h>
+#else
+# include <netdb.h>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+#endif /*G_OS_WIN32 */
 
 #include <fcntl.h>
 

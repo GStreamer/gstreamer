@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
+ *               2006 Joni Valtanen <joni.valtanen@movial.fi>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,6 +22,9 @@
 #ifndef __GST_NET_TIME_PROVIDER_H__
 #define __GST_NET_TIME_PROVIDER_H__
 
+/* to determinate os */
+#include <glib.h>
+
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
@@ -28,10 +32,15 @@ G_BEGIN_DECLS
 #include <errno.h>
 #include <string.h>
 #include <sys/types.h>
+
+#ifdef G_OS_WIN32
+#include <winsock2.h>
+#else
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
 
 #include <fcntl.h>
 
