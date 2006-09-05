@@ -137,7 +137,7 @@ libs_video_LDADD = \
 	$(LDADD)
 libs_video_CFLAGS = -I$(top_srcdir)/gst-libs $(CFLAGS) $(AM_CFLAGS)
 
-pipelines_oggmux_LDADD = $(OGG_LIBS) $(LDADD)
-pipelines_oggmux_CFLAGS = $(OGG_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+pipelines_oggmux_LDADD = $(LDADD) $(OGG_LIBS)
+pipelines_oggmux_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(OGG_CFLAGS)
 
 EXTRA_DIST = gst-plugins-base.supp

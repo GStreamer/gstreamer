@@ -1,3 +1,9 @@
+2006-09-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	  Random variation in Makefile line to see if it makes the
+	  gen64-base-full bot any happier.
+
 2006-09-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/pipelines/oggmux.c: (oggmux_suite):
