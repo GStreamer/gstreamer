@@ -1,3 +1,9 @@
+2006-09-05  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	Fix timestamping some more by actually using the ffmpeg parsers
+	correctly. Fixes #341736
+
 2006-08-29  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
