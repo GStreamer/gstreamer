@@ -1,5 +1,11 @@
 2006-09-05  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	Disable early keyframe check, it causes crashes and is not really
+	needed. 
+
+2006-09-05  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
 	(gst_ffmpegdec_chain):
 	Even more timestamp fixage.

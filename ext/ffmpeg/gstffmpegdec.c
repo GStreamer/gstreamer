@@ -1770,6 +1770,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
   }
 
+#ifdef EARLY_KEYFRAME_CHECK
   /* do early keyframe check pretty bad to rely on the keyframe flag in the
    * source for this as it might not even be parsed (UDP/file/..).  */
   if (G_UNLIKELY (ffmpegdec->waiting_for_key)) {
@@ -1779,6 +1780,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     GST_DEBUG_OBJECT (ffmpegdec, "got keyframe");
     ffmpegdec->waiting_for_key = FALSE;
   }
+#endif
 
   pending_timestamp = GST_BUFFER_TIMESTAMP (inbuf);
   pending_duration  = GST_BUFFER_DURATION (inbuf);
@@ -1943,12 +1945,14 @@ not_negotiated:
     gst_buffer_unref (inbuf);
     return GST_FLOW_NOT_NEGOTIATED;
   }
+#ifdef EARLY_KEYFRAME_CHECK
 skip_keyframe:
   {
     GST_DEBUG_OBJECT (ffmpegdec, "skipping non keyframe");
     gst_buffer_unref (inbuf);
     return GST_FLOW_OK;
   }
+#endif
 }
 
 static GstStateChangeReturn
