@@ -1,5 +1,16 @@
 2006-09-05  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_video_frame),
+	(gst_ffmpegdec_audio_frame), (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_sink_event), (gst_ffmpegdec_chain):
+	More timestamp fixage.
+	Don't pass around buffers just to pass its timestamp since we
+	cannot update it.
+	After decoding a buffer, don't use the timestamp of the buffer
+	anymore but let the interpolation do its work.
+
+2006-09-05  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
 	Fix timestamping some more by actually using the ffmpeg parsers
 	correctly. Fixes #341736
