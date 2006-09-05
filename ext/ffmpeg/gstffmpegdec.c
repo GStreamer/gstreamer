@@ -1512,7 +1512,7 @@ gst_ffmpegdec_frame (GstFFMpegDec * ffmpegdec,
 
   GST_LOG_OBJECT (ffmpegdec,
       "data:%p, size:%d, ts:%" GST_TIME_FORMAT", dur:%"GST_TIME_FORMAT, 
-      data, size, in_timestamp, in_duration);
+      data, size, GST_TIME_ARGS (in_timestamp), GST_TIME_ARGS (in_duration));
 
   *ret = GST_FLOW_OK;
   ffmpegdec->context->frame_number++;
@@ -1749,7 +1749,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   GstFlowReturn ret = GST_FLOW_OK;
   guint left;
   GstClockTime in_timestamp, in_duration;
-  GstClockTime next_timestamp;
+  GstClockTime next_timestamp, next_duration;
+  GstClockTime pending_timestamp, pending_duration;
 
   ffmpegdec = (GstFFMpegDec *) (GST_PAD_PARENT (pad));
 
@@ -1779,12 +1780,12 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     ffmpegdec->waiting_for_key = FALSE;
   }
 
-  in_timestamp = GST_BUFFER_TIMESTAMP (inbuf);
-  in_duration  = GST_BUFFER_DURATION (inbuf);
+  pending_timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+  pending_duration  = GST_BUFFER_DURATION (inbuf);
 
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %d, ts:%" GST_TIME_FORMAT ", dur:%"GST_TIME_FORMAT, 
-      GST_BUFFER_SIZE (inbuf), GST_TIME_ARGS (in_timestamp), GST_TIME_ARGS (in_duration)); 
+      GST_BUFFER_SIZE (inbuf), GST_TIME_ARGS (pending_timestamp), GST_TIME_ARGS (pending_duration)); 
 
   oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
@@ -1792,13 +1793,15 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
    * send to the parse. */
   if (ffmpegdec->pcache) {
     /* keep track of how many bytes to consume before we can use the incomming
-     * timestamp. */
+     * timestamp, which we have stored in pending_timestamp. */
     left = GST_BUFFER_SIZE (ffmpegdec->pcache);
+
+    /* use timestamp and duration of what is in the cache */
+    in_timestamp = GST_BUFFER_TIMESTAMP (ffmpegdec->pcache);
+    in_duration  = GST_BUFFER_DURATION (ffmpegdec->pcache);
+
     /* join with previous data */
     inbuf = gst_buffer_join (ffmpegdec->pcache, inbuf);
-
-    in_timestamp = GST_BUFFER_TIMESTAMP (inbuf);
-    in_duration  = GST_BUFFER_DURATION (inbuf);
 
     GST_LOG_OBJECT (ffmpegdec,
         "joined parse cache, inbuf now has ts:%" GST_TIME_FORMAT,
@@ -1810,6 +1813,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   else {
     /* no cache, input timestamp matches the buffer we try to decode */
     left = 0;
+    in_timestamp = pending_timestamp;
+    in_duration  = pending_timestamp;
   }
 
   /* workarounds, functions write to buffers:
@@ -1857,18 +1862,24 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       bdata += size;
       if (left <= size) {
         left = 0;
-	/* activate the input timestamp */
-	next_timestamp = in_timestamp;
-        GST_LOG_OBJECT (ffmpegdec, "activated ts %" GST_TIME_FORMAT,
-			GST_TIME_ARGS (next_timestamp));
+	/* activate the pending timestamp/duration and mark it invalid */
+	next_timestamp = pending_timestamp;
+	next_duration = pending_duration;
+
+	pending_timestamp = GST_CLOCK_TIME_NONE;
+	pending_duration = GST_CLOCK_TIME_NONE;
+
+        GST_LOG_OBJECT (ffmpegdec, "activated ts:%" GST_TIME_FORMAT", dur:%"GST_TIME_FORMAT,
+			GST_TIME_ARGS (next_timestamp), GST_TIME_ARGS (next_duration));
       }
       else {
         left -= size;
         /* get new timestamp from the parser, this could be interpolated by the
-	 * parser. */
+	 * parser. We lost track of duration here. */
         next_timestamp = gst_ffmpeg_time_ff_to_gst (ffmpegdec->pctx->pts,
             ffmpegdec->context->time_base);
-        GST_LOG_OBJECT (ffmpegdec, "new ts %" GST_TIME_FORMAT,
+	next_duration = GST_CLOCK_TIME_NONE;
+        GST_LOG_OBJECT (ffmpegdec, "parse context next ts:%" GST_TIME_FORMAT,
 			GST_TIME_ARGS (next_timestamp));
       }
     }
@@ -1879,6 +1890,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
        * of any other decodable frame in this buffer, we let the interpolation
        * code work. */
       next_timestamp = GST_CLOCK_TIME_NONE;
+      next_duration = GST_CLOCK_TIME_NONE;
     }
 
     /* decode a frame of audio/video now */
@@ -1888,7 +1900,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
 
     /* we decoded something, prepare to use next_timestamp in the next round */
     in_timestamp = next_timestamp;
-    in_duration = GST_CLOCK_TIME_NONE;
+    in_duration = next_duration;
 
     if (!ffmpegdec->pctx) {
       bsize -= len;

@@ -1,5 +1,13 @@
 2006-09-05  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_frame),
+	(gst_ffmpegdec_chain):
+	Even more timestamp fixage.
+	Also keep track of pending durations.
+	don't lose our timestamp when joining the cache.
+
+2006-09-05  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_video_frame),
 	(gst_ffmpegdec_audio_frame), (gst_ffmpegdec_frame),
 	(gst_ffmpegdec_sink_event), (gst_ffmpegdec_chain):
