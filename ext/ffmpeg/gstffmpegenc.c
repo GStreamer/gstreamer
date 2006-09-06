@@ -23,6 +23,10 @@
 
 #include <assert.h>
 #include <string.h>
+/* for stats file handling */
+#include <stdio.h>
+#include <glib/gstdio.h>
+#include <errno.h>
 
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
@@ -34,64 +38,16 @@
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"
+#include "gstffmpegenc.h"
+#include "gstffmpegcfg.h"
 
-#define DEFAULT_VIDEO_BITRATE 300000 /* in bps */
+#define DEFAULT_VIDEO_BITRATE 300000    /* in bps */
 #define DEFAULT_VIDEO_GOP_SIZE 15
 #define DEFAULT_AUDIO_BITRATE 128000
 
 #define DEFAULT_WIDTH 352
 #define DEFAULT_HEIGHT 288
 
-typedef struct _GstFFMpegEnc GstFFMpegEnc;
-
-struct _GstFFMpegEnc
-{
-  GstElement element;
-
-  /* We need to keep track of our pads, so we do so here. */
-  GstPad *srcpad;
-  GstPad *sinkpad;
-
-  AVCodecContext *context;
-  AVFrame *picture;
-  gboolean opened;
-  GstBuffer *cache;
-
-  /* cache */
-  gulong bitrate;
-  gint me_method;
-  gint gop_size;
-  gulong buffer_size;
-  gulong rtp_payload_size;
-};
-
-typedef struct _GstFFMpegEncClass GstFFMpegEncClass;
-
-struct _GstFFMpegEncClass
-{
-  GstElementClass parent_class;
-
-  AVCodec *in_plugin;
-  GstPadTemplate *srctempl, *sinktempl;
-  GstCaps *sinkcaps;
-};
-
-typedef struct
-{
-  AVCodec *in_plugin;
-  GstCaps *srccaps, *sinkcaps;
-} GstFFMpegEncClassParams;
-
-#define GST_TYPE_FFMPEGENC \
-  (gst_ffmpegenc_get_type())
-#define GST_FFMPEGENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGENC,GstFFMpegEnc))
-#define GST_FFMPEGENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGENC,GstFFMpegEncClass))
-#define GST_IS_FFMPEGENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGENC))
-#define GST_IS_FFMPEGENC_CLASS(obj) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGENC))
 
 #define VIDEO_BUFFER_SIZE (1024*1024)
 
@@ -108,8 +64,8 @@ enum
   ARG_GOP_SIZE,
   ARG_ME_METHOD,
   ARG_BUFSIZE,
-  ARG_RTP_PAYLOAD_SIZE
-  /* FILL ME */
+  ARG_RTP_PAYLOAD_SIZE,
+  ARG_CFG_BASE
 };
 
 #define GST_TYPE_ME_METHOD (gst_ffmpegenc_me_method_get_type())
@@ -142,9 +98,12 @@ static void gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc);
 static void gst_ffmpegenc_dispose (GObject * object);
 
 static gboolean gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps);
-static GstCaps * gst_ffmpegenc_getcaps (GstPad * pad);
-static GstFlowReturn gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer *buffer);
-static GstFlowReturn gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer *buffer);
+static GstCaps *gst_ffmpegenc_getcaps (GstPad * pad);
+static GstFlowReturn gst_ffmpegenc_chain_video (GstPad * pad,
+    GstBuffer * buffer);
+static GstFlowReturn gst_ffmpegenc_chain_audio (GstPad * pad,
+    GstBuffer * buffer);
+static gboolean gst_ffmpegenc_event_video (GstPad * pad, GstEvent * event);
 
 static void gst_ffmpegenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -221,26 +180,30 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
   if (klass->in_plugin->type == CODEC_TYPE_VIDEO) {
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
         g_param_spec_ulong ("bitrate", "Bit Rate",
-            "Target Video Bitrate", 0, G_MAXULONG, DEFAULT_VIDEO_BITRATE, G_PARAM_READWRITE));
+            "Target Video Bitrate", 0, G_MAXULONG, DEFAULT_VIDEO_BITRATE,
+            G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GOP_SIZE,
         g_param_spec_int ("gop_size", "GOP Size",
-            "Number of frames within one GOP",
-            0, G_MAXINT, DEFAULT_VIDEO_GOP_SIZE, G_PARAM_READWRITE));
+            "Number of frames within one GOP", 0, G_MAXINT,
+            DEFAULT_VIDEO_GOP_SIZE, G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ME_METHOD,
-        g_param_spec_enum ("me_method", "ME Method",
-            "Motion Estimation Method",
+        g_param_spec_enum ("me_method", "ME Method", "Motion Estimation Method",
             GST_TYPE_ME_METHOD, ME_LOG, G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
         g_param_spec_ulong ("buffer_size", "Buffer Size",
             "Size of the video buffers", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass),
-        ARG_RTP_PAYLOAD_SIZE,
-        g_param_spec_ulong ("rtp_payload_size", "RTP Payload Size",
-            "Target GOB length", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
+        ARG_RTP_PAYLOAD_SIZE, g_param_spec_ulong ("rtp_payload_size",
+            "RTP Payload Size", "Target GOB length", 0, G_MAXULONG, 0,
+            G_PARAM_READWRITE));
+
+    /* register additional properties, possibly dependent on the exact CODEC */
+    gst_ffmpeg_cfg_install_property (klass, ARG_CFG_BASE);
   } else if (klass->in_plugin->type == CODEC_TYPE_AUDIO) {
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
         g_param_spec_ulong ("bitrate", "Bit Rate",
-            "Target Audio Bitrate", 0, G_MAXULONG, DEFAULT_AUDIO_BITRATE, G_PARAM_READWRITE));
+            "Target Audio Bitrate", 0, G_MAXULONG, DEFAULT_AUDIO_BITRATE,
+            G_PARAM_READWRITE));
   }
 
   gstelement_class->change_state = gst_ffmpegenc_change_state;
@@ -266,13 +229,20 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
   ffmpegenc->picture = avcodec_alloc_frame ();
   ffmpegenc->opened = FALSE;
 
+  ffmpegenc->file = NULL;
+  ffmpegenc->delay = g_queue_new ();
+
   if (oclass->in_plugin->type == CODEC_TYPE_VIDEO) {
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_video);
+    /* so we know when to flush the buffers on EOS */
+    gst_pad_set_event_function (ffmpegenc->sinkpad, gst_ffmpegenc_event_video);
 
     ffmpegenc->bitrate = DEFAULT_VIDEO_BITRATE;
     ffmpegenc->buffer_size = 512 * 1024;
     ffmpegenc->gop_size = DEFAULT_VIDEO_GOP_SIZE;
     ffmpegenc->rtp_payload_size = 0;
+
+    gst_ffmpeg_cfg_set_defaults (ffmpegenc);
   } else if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_audio);
 
@@ -297,6 +267,9 @@ gst_ffmpegenc_dispose (GObject * object)
   /* clean up remaining allocated data */
   av_free (ffmpegenc->context);
   av_free (ffmpegenc->picture);
+
+  g_queue_free (ffmpegenc->delay);
+  g_free (ffmpegenc->filename);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -336,12 +309,12 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   /* makes it silent */
   ctx->strict_std_compliance = -1;
 
-   /* shut up the logging while we autoprobe; we don't want warnings and
-    * errors about unsupported formats */
-   /* FIXME: if someone cares about this disabling the logging for other
-    * instances/threads/..., one could investigate if there is a way to
-    * set this as a struct member on the av context, and check it from the
-    * log handler */
+  /* shut up the logging while we autoprobe; we don't want warnings and
+   * errors about unsupported formats */
+  /* FIXME: if someone cares about this disabling the logging for other
+   * instances/threads/..., one could investigate if there is a way to
+   * set this as a struct member on the av context, and check it from the
+   * log handler */
 #ifndef GST_DISABLE_GST_DEBUG
   _shut_up_I_am_probing = TRUE;
 #endif
@@ -411,10 +384,66 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
     ffmpegenc->context->rtp_payload_size = ffmpegenc->rtp_payload_size;
   }
 
-  /* general properties */
-  ffmpegenc->context->qmin = 1;
-  ffmpegenc->context->qmax = 31;
-  ffmpegenc->context->max_qdiff = 15;
+  /* additional avcodec settings */
+  /* first fill in the majority by copying over */
+  gst_ffmpeg_cfg_fill_context (ffmpegenc, ffmpegenc->context);
+
+  /* then handle some special cases */
+  ffmpegenc->context->lmin = (ffmpegenc->lmin * FF_QP2LAMBDA + 0.5);
+  ffmpegenc->context->lmax = (ffmpegenc->lmax * FF_QP2LAMBDA + 0.5);
+
+  if (ffmpegenc->interlaced) {
+    ffmpegenc->context->flags |=
+        CODEC_FLAG_INTERLACED_DCT | CODEC_FLAG_INTERLACED_ME;
+    ffmpegenc->picture->interlaced_frame = TRUE;
+    /* if this is not the case, a filter element should be used to swap fields */
+    ffmpegenc->picture->top_field_first = TRUE;
+  }
+
+  /* some other defaults */
+  ffmpegenc->context->rc_strategy = 2;
+  ffmpegenc->context->b_frame_strategy = 0;
+  ffmpegenc->context->coder_type = 0;
+  ffmpegenc->context->context_model = 0;
+  ffmpegenc->context->scenechange_threshold = 0;
+  ffmpegenc->context->inter_threshold = 0;
+
+  /* and last but not least the pass; CBR, 2-pass, etc */
+  ffmpegenc->context->flags |= ffmpegenc->pass;
+  switch (ffmpegenc->pass) {
+      /* some additional action depends on type of pass */
+    case CODEC_FLAG_QSCALE:
+      ffmpegenc->context->global_quality
+          = ffmpegenc->picture->quality = FF_QP2LAMBDA * ffmpegenc->quantizer;
+      break;
+    case CODEC_FLAG_PASS1:     /* need to prepare a stats file */
+      /* we don't close when changing caps, fingers crossed */
+      if (!ffmpegenc->file)
+        ffmpegenc->file = g_fopen (ffmpegenc->filename, "w");
+      if (!ffmpegenc->file) {
+        GST_ELEMENT_ERROR (ffmpegenc, RESOURCE, OPEN_WRITE,
+            (("Could not open file \"%s\" for writing."), ffmpegenc->filename),
+            GST_ERROR_SYSTEM);
+        return FALSE;
+      }
+      break;
+    case CODEC_FLAG_PASS2:
+    {                           /* need to read the whole stats file ! */
+      gsize size;
+
+      if (!g_file_get_contents (ffmpegenc->filename,
+              &ffmpegenc->context->stats_in, &size, NULL)) {
+        GST_ELEMENT_ERROR (ffmpegenc, RESOURCE, READ,
+            (("Could not get contents of file \"%s\"."), ffmpegenc->filename),
+            GST_ERROR_SYSTEM);
+        return FALSE;
+      }
+
+      break;
+    }
+    default:
+      break;
+  }
 
   /* fetch pix_fmt and so on */
   gst_ffmpeg_caps_with_codectype (oclass->in_plugin->type,
@@ -426,19 +455,38 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
 
   pix_fmt = ffmpegenc->context->pix_fmt;
 
+  /* max-key-interval may need the framerate set above */
+  if (ffmpegenc->max_key_interval) {
+    AVCodecContext *ctx;
+
+    /* override gop-size */
+    ctx = ffmpegenc->context;
+    ctx->gop_size = (ffmpegenc->max_key_interval < 0) ?
+        (-ffmpegenc->max_key_interval
+        * (ctx->time_base.den / ctx->time_base.num))
+        : ffmpegenc->max_key_interval;
+  }
+
   /* open codec */
   if (gst_ffmpeg_avcodec_open (ffmpegenc->context, oclass->in_plugin) < 0) {
     if (ffmpegenc->context->priv_data)
       gst_ffmpeg_avcodec_close (ffmpegenc->context);
+    if (ffmpegenc->context->stats_in)
+      g_free (ffmpegenc->context->stats_in);
     GST_DEBUG_OBJECT (ffmpegenc, "ffenc_%s: Failed to open FFMPEG codec",
         oclass->in_plugin->name);
     return FALSE;
   }
 
+  /* second pass stats buffer no longer needed */
+  if (ffmpegenc->context->stats_in)
+    g_free (ffmpegenc->context->stats_in);
+
   /* is the colourspace correct? */
   if (pix_fmt != ffmpegenc->context->pix_fmt) {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
-    GST_DEBUG_OBJECT (ffmpegenc, "ffenc_%s: AV wants different colourspace (%d given, %d wanted)",
+    GST_DEBUG_OBJECT (ffmpegenc,
+        "ffenc_%s: AV wants different colourspace (%d given, %d wanted)",
         oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
     return FALSE;
   }
@@ -450,8 +498,8 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (ffmpegenc, "... but no peer, using template caps");
     /* we need to copy because get_allowed_caps returns a ref, and
      * get_pad_template_caps doesn't */
-    allowed_caps = gst_caps_copy (
-        gst_pad_get_pad_template_caps (ffmpegenc->srcpad));
+    allowed_caps =
+        gst_caps_copy (gst_pad_get_pad_template_caps (ffmpegenc->srcpad));
   }
   GST_DEBUG_OBJECT (ffmpegenc, "chose caps %" GST_PTR_FORMAT, allowed_caps);
   gst_ffmpeg_caps_with_codecid (oclass->in_plugin->id,
@@ -480,7 +528,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
 
     newcaps =
         gst_caps_new_full (gst_structure_copy (gst_caps_get_structure (icaps,
-            0)), NULL);
+                0)), NULL);
     gst_caps_unref (icaps);
     icaps = newcaps;
   }
@@ -517,17 +565,16 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
 
   ffmpegenc->picture->pts =
       gst_ffmpeg_time_gst_to_ff (GST_BUFFER_TIMESTAMP (inbuf),
-          ffmpegenc->context->time_base);
+      ffmpegenc->context->time_base);
 
   outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
   ret_size = avcodec_encode_video (ffmpegenc->context,
-      GST_BUFFER_DATA (outbuf),
-      GST_BUFFER_SIZE (outbuf), ffmpegenc->picture);
+      GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), ffmpegenc->picture);
 
   if (ret_size < 0) {
 #ifndef GST_DISABLE_GST_DEBUG
     GstFFMpegEncClass *oclass =
-      (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));	    
+        (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
     GST_ERROR_OBJECT (ffmpegenc,
         "ffenc_%s: failed to encode buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
@@ -535,6 +582,22 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
     gst_buffer_unref (outbuf);
     return GST_FLOW_OK;
   }
+
+  /* handle b-frame delay when no output, so we don't output empty frames;
+   * timestamps and so can permute a bit between coding and display order
+   * but keyframes should still end up with the proper metadata */
+  g_queue_push_tail (ffmpegenc->delay, inbuf);
+  if (ret_size)
+    inbuf = g_queue_pop_head (ffmpegenc->delay);
+  else
+    return GST_FLOW_OK;
+
+  /* save stats info if there is some as well as a stats file */
+  if (ffmpegenc->file && ffmpegenc->context->stats_out)
+    if (fprintf (ffmpegenc->file, "%s", ffmpegenc->context->stats_out) < 0)
+      GST_ELEMENT_ERROR (ffmpegenc, RESOURCE, WRITE,
+          (("Could not write to file \"%s\"."), ffmpegenc->filename),
+          GST_ERROR_SYSTEM);
 
   GST_BUFFER_SIZE (outbuf) = ret_size;
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
@@ -616,8 +679,7 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
 
     outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (subbuf));
     ret_size = avcodec_encode_audio (ffmpegenc->context,
-        GST_BUFFER_DATA (outbuf),
-        GST_BUFFER_SIZE (outbuf), (const short int *)
+        GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), (const short int *)
         GST_BUFFER_DATA (subbuf));
 
     if (ret_size < 0) {
@@ -640,6 +702,85 @@ gst_ffmpegenc_chain_audio (GstPad * pad, GstBuffer * inbuf)
   }
 
   return ret;
+}
+
+static void
+gst_ffmpegenc_flush_buffers (GstFFMpegEnc * ffmpegenc, gboolean send)
+{
+  GstBuffer *outbuf, *inbuf;
+  gint ret_size;
+
+  GST_DEBUG_OBJECT (ffmpegenc, "flushing buffers with sending %d", send);
+
+  /* no need to empty codec if there is none */
+  if (!ffmpegenc->opened)
+    goto flush;
+
+  while (!g_queue_is_empty (ffmpegenc->delay)) {
+
+    outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
+    ret_size = avcodec_encode_video (ffmpegenc->context,
+        GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), NULL);
+
+    if (ret_size < 0) {         /* there should be something, notify and give up */
+#ifndef GST_DISABLE_GST_DEBUG
+      GstFFMpegEncClass *oclass =
+          (GstFFMpegEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
+      GST_WARNING_OBJECT (ffmpegenc,
+          "ffenc_%s: failed to flush buffer", oclass->in_plugin->name);
+#endif /* GST_DISABLE_GST_DEBUG */
+      break;
+    }
+
+    /* save stats info if there is some as well as a stats file */
+    if (ffmpegenc->file && ffmpegenc->context->stats_out)
+      if (fprintf (ffmpegenc->file, "%s", ffmpegenc->context->stats_out) < 0)
+        GST_ELEMENT_ERROR (ffmpegenc, RESOURCE, WRITE,
+            (("Could not write to file \"%s\"."), ffmpegenc->filename),
+            GST_ERROR_SYSTEM);
+
+    /* handle b-frame delay when no output, so we don't output empty frames */
+    inbuf = g_queue_pop_head (ffmpegenc->delay);
+
+    GST_BUFFER_SIZE (outbuf) = ret_size;
+    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
+    GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
+    if (!ffmpegenc->context->coded_frame->key_frame)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegenc->srcpad));
+
+    gst_buffer_unref (inbuf);
+
+    if (send)
+      gst_pad_push (ffmpegenc->srcpad, outbuf);
+    else
+      gst_buffer_unref (outbuf);
+  }
+
+flush:
+  {
+    /* make sure that we empty the queue, is still needed if we had to break */
+    while (!g_queue_is_empty (ffmpegenc->delay))
+      gst_buffer_unref (g_queue_pop_head (ffmpegenc->delay));
+  }
+}
+
+static gboolean
+gst_ffmpegenc_event_video (GstPad * pad, GstEvent * event)
+{
+  GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) (GST_PAD_PARENT (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      gst_ffmpegenc_flush_buffers (ffmpegenc, TRUE);
+      break;
+      /* no flushing if flush received,
+       * buffers in encoder are considered (in the) past */
+    default:
+      break;
+  }
+
+  return gst_pad_push_event (ffmpegenc->srcpad, event);
 }
 
 static void
@@ -669,7 +810,8 @@ gst_ffmpegenc_set_property (GObject * object,
       ffmpegenc->rtp_payload_size = g_value_get_ulong (value);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      if (!gst_ffmpeg_cfg_set_property (object, value, pspec))
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -701,7 +843,8 @@ gst_ffmpegenc_get_property (GObject * object,
       g_value_set_ulong (value, ffmpegenc->rtp_payload_size);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      if (!gst_ffmpeg_cfg_get_property (object, value, pspec))
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -721,6 +864,7 @@ gst_ffmpegenc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_ffmpegenc_flush_buffers (ffmpegenc, FALSE);
       if (ffmpegenc->opened) {
         gst_ffmpeg_avcodec_close (ffmpegenc->context);
         ffmpegenc->opened = FALSE;
@@ -728,6 +872,10 @@ gst_ffmpegenc_change_state (GstElement * element, GstStateChange transition)
       if (ffmpegenc->cache) {
         gst_buffer_unref (ffmpegenc->cache);
         ffmpegenc->cache = NULL;
+      }
+      if (ffmpegenc->file) {
+        fclose (ffmpegenc->file);
+        ffmpegenc->file = NULL;
       }
       break;
     default:
@@ -757,6 +905,9 @@ gst_ffmpegenc_register (GstPlugin * plugin)
 
   enc_global_plugins = g_hash_table_new (NULL, NULL);
 
+  /* build global ffmpeg param/property info */
+  gst_ffmpeg_cfg_init ();
+
   while (in_plugin) {
     gchar *type_name;
     GstCaps *srccaps, *sinkcaps;
@@ -777,8 +928,7 @@ gst_ffmpegenc_register (GstPlugin * plugin)
 
     /* name */
     if (!gst_ffmpeg_get_codecid_longname (in_plugin->id)) {
-      g_warning ("Add encoder %s (%d) please",
-          in_plugin->name, in_plugin->id);
+      g_warning ("Add encoder %s (%d) please", in_plugin->name, in_plugin->id);
       goto next;
     }
 

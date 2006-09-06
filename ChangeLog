@@ -1,3 +1,35 @@
+2006-09-06  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_pass_get_type),
+	(gst_ffmpeg_lim_pass_get_type), (gst_ffmpeg_mb_decision_get_type),
+	(gst_ffmpeg_mb_cmp_get_type), (gst_ffmpeg_dct_algo_get_type),
+	(gst_ffmpeg_idct_algo_get_type), (gst_ffmpeg_quant_type_get_type),
+	(gst_ffmpeg_pre_me_get_type), (gst_ffmpeg_pred_method_get_type),
+	(gst_ffmpeg_flags_get_type), (gst_ffmpeg_cfg_init),
+	(gst_ffmpeg_cfg_codec_has_pspec),
+	(gst_ffmpeg_cfg_install_property), (gst_ffmpeg_cfg_set_property),
+	(gst_ffmpeg_cfg_get_property), (gst_ffmpeg_cfg_set_defaults),
+	(gst_ffmpeg_cfg_fill_context):
+	* ext/ffmpeg/gstffmpegcfg.h:
+	Added helper object to handle extra properties.
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_class_init),
+	(gst_ffmpegenc_init), (gst_ffmpegenc_dispose),
+	(gst_ffmpegenc_getcaps), (gst_ffmpegenc_setcaps),
+	(gst_ffmpegenc_chain_video), (gst_ffmpegenc_chain_audio),
+	(gst_ffmpegenc_flush_buffers), (gst_ffmpegenc_event_video),
+	(gst_ffmpegenc_set_property), (gst_ffmpegenc_get_property),
+	(gst_ffmpegenc_change_state), (gst_ffmpegenc_register):
+	* ext/ffmpeg/gstffmpegenc.h:
+	Exposes (quite some of) the AVCodecContext configurable
+	settings, as well as some additional (though simple) logic for b-frame
+	delay handling.
+	Most of the properties are only enabled for mpeg4-like codecs.
+	Fixes #344583.
+
 2006-09-05  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):

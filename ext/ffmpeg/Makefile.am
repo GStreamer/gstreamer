@@ -5,6 +5,7 @@ libgstffmpeg_la_SOURCES = gstffmpeg.c	\
 			  gstffmpegcodecmap.c	\
 			  gstffmpegenc.c	\
 			  gstffmpegdec.c	\
+			  gstffmpegcfg.c	\
 			  gstffmpegdemux.c	\
 			  gstffmpegdeinterlace.c	\
 			  gstffmpegscale.c
@@ -21,4 +22,6 @@ libgstffmpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
 	gstffmpeg.h \
-	gstffmpegcodecmap.h
+	gstffmpegcodecmap.h \
+	gstffmpegenc.h \
+	gstffmpegcfg.h
