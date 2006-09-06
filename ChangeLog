@@ -1,3 +1,10 @@
+2006-09-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_read_subindexes_pull),
+	(gst_avi_demux_sync), (gst_avi_demux_stream_header_push),
+	(gst_avi_demux_stream_data):
+	  Revert one change to fix streaming avi (adapter size != data size).
+
 2006-09-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Frédéric Riss  <frederic.riss at gmail dot com>

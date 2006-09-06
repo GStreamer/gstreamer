@@ -101,7 +101,7 @@ static GstStateChangeReturn gst_avi_demux_change_state (GstElement * element,
 
 static GstElementClass *parent_class = NULL;
 
-/* GObject mathods */
+/* GObject methods */
 
 GType
 gst_avi_demux_get_type (void)
@@ -1619,7 +1619,6 @@ no_index:
 /*
  * Sync to next data chunk.
  */
-
 static gboolean
 gst_avi_demux_skip (GstAviDemux * avi, gboolean prevent_eos)
 {
@@ -2854,6 +2853,9 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   return TRUE;
 }
 
+/*
+ * Handle seek.
+ */
 static gboolean
 gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 {
@@ -3201,7 +3203,8 @@ short_buffer:
 }
 
 /*
- * Read data. If we have an index it delegates to gst_avi_demux_process_next_entry().
+ * Read data. If we have an index it delegates to
+ * gst_avi_demux_process_next_entry().
  */
 static GstFlowReturn
 gst_avi_demux_stream_data (GstAviDemux * avi)
@@ -3282,20 +3285,20 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         GstClockTime next_ts = 0;
         GstFormat format;
         GstBuffer *buf;
-
-        //const guint8 * data = NULL;
+        const guint8 *data = NULL;
 
         gst_adapter_flush (avi->adapter, 8);
 
         /* get buffer */
-        buf = gst_adapter_take_buffer (avi->adapter, ((size + 1) & ~1));
-        /*
-           buf = gst_buffer_new_and_alloc (size);
-           data = gst_adapter_peek (avi->adapter, ((size + 1) & ~1));
-           gst_adapter_flush (avi->adapter, ((size + 1) & ~1));
-           memcpy (GST_BUFFER_DATA (buf), data, size);
-           GST_BUFFER_SIZE (buf) = size;
+        /* this does not work, as the data-size is 'size', but we eventually
+         * need to flush more data from the adapter.
+         buf = gst_adapter_take_buffer (avi->adapter, ((size + 1) & ~1));
          */
+        buf = gst_buffer_new_and_alloc (size);
+        data = gst_adapter_peek (avi->adapter, ((size + 1) & ~1));
+        gst_adapter_flush (avi->adapter, ((size + 1) & ~1));
+        memcpy (GST_BUFFER_DATA (buf), data, size);
+        GST_BUFFER_SIZE (buf) = size;
         avi->offset += 8 + ((size + 1) & ~1);
 
         /* get time of this buffer */
@@ -3319,6 +3322,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
            gst_buffer_unref (buf);
            } else { */
         if (!stream->pad || !gst_pad_is_linked (stream->pad)) {
+          GST_WARNING ("No pad or not linked.");
           gst_buffer_unref (buf);
         } else {
           GstClockTime dur_ts = 0;
