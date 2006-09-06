@@ -1,5 +1,11 @@
 2006-09-06  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	Do early keyframe check again, feeding bad data in ffmpeg is not a good
+	idea after all.
+
+2006-09-06  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
 
 	* ext/ffmpeg/Makefile.am:
