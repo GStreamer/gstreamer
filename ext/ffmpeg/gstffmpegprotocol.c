@@ -262,11 +262,12 @@ gst_ffmpegdata_close (URLContext * h)
   return 0;
 }
 
+
 URLProtocol gstreamer_protocol = {
-  .name = "gstreamer",
-  .url_open = gst_ffmpegdata_open,
-  .url_read = gst_ffmpegdata_read,
-  .url_write = gst_ffmpegdata_write,
-  .url_seek = gst_ffmpegdata_seek,
-  .url_close = gst_ffmpegdata_close,
+  /*.name = */"gstreamer",
+  /*.url_open = */gst_ffmpegdata_open,
+  /*.url_read = */gst_ffmpegdata_read,
+  /*.url_write = */gst_ffmpegdata_write,
+  /*.url_seek = */gst_ffmpegdata_seek,
+  /*.url_close = */gst_ffmpegdata_close,
 };

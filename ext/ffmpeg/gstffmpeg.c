@@ -34,6 +34,7 @@
 #endif
 
 #include "gstffmpeg.h"
+#include "gstffmpegcodecmap.h"
 
 GST_DEBUG_CATEGORY (ffmpeg_debug);
 
@@ -105,6 +106,9 @@ plugin_init (GstPlugin * plugin)
 
   av_log_set_callback (gst_ffmpeg_log_callback);
 #endif
+
+  gst_ffmpeg_init_pix_fmt_info();
+
   av_register_all ();
 
   gst_ffmpegenc_register (plugin);

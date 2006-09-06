@@ -606,8 +606,8 @@ gst_ffmpegdemux_send_event (GstElement * element, GstEvent *event)
     case GST_EVENT_SEEK:
       GST_OBJECT_LOCK (demux);
       if (!demux->opened) {
-        GST_DEBUG_OBJECT (demux, "caching seek event");
 	GstEvent **event_p = &demux->seek_event;
+        GST_DEBUG_OBJECT (demux, "caching seek event");
 	gst_event_replace (event_p, event);
         GST_OBJECT_UNLOCK (demux);
 	res = TRUE;
