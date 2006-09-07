@@ -8,6 +8,7 @@
 	* tests/check/elements/multifdsink.c: (GST_START_TEST),
 	(multifdsink_suite):
 	  Fix implementation of sync-method 'next-keyframe'
+	  Closes #354594
 
 2006-09-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
