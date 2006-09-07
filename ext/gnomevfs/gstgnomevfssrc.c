@@ -789,7 +789,7 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
     GnomeVFSOpenMode mode;
 
     /* this can block... */
-    mode = GNOME_VFS_OPEN_READ | GNOME_VFS_OPEN_RANDOM;
+    mode = GNOME_VFS_OPEN_READ;
     res = gnome_vfs_open_uri (&src->handle, src->uri, mode);
     if (res != GNOME_VFS_OK)
       goto open_failed;
