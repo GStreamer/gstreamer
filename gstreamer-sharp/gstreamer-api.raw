@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
-<api
-  ><!--
+<api>
+  <!--
 
         This file was automatically generated.
         Please DO NOT MODIFY THIS FILE, modify .metadata files instead.
 
---><namespace name="Gst" library="gstreamer-0.10.dll">
+-->
+  <namespace name="Gst" library="gstreamer-0.10.dll">
     <enum name="ActivateMode" cname="GstActivateMode" type="enum">
       <member cname="GST_ACTIVATE_NONE" name="None" />
       <member cname="GST_ACTIVATE_PUSH" name="Push" />
@@ -5745,4 +5746,6 @@
           <parameter type="const-GValue*" name="value2" />
         </parameters>
       </method>
-    </class></namespace></api>
+    </class>
+  </namespace>
+</api>

@@ -25,6 +25,9 @@ queueexample.exe: $(srcdir)/QueueExample.cs $(assemblies)
 metadata.exe: $(srcdir)/MetaData.cs $(assemblies)
 	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/MetaData.cs
 
+mp3launchparse.exe: $(srcdir)/MP3LaunchParse.cs $(assemblies)
+	$(CSC) -out:$@ $(GLIBSHARP_LIBS) $(references) $(srcdir)/MP3LaunchParse.cs
+
 link:
 	ln -sf $(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll gstreamer-sharp.dll
 	ln -sf $(top_builddir)/gstreamer-sharp/gstreamer-sharp.dll.config gstreamer-sharp.dll.config

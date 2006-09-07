@@ -1,5 +1,12 @@
 <gapi-parser-input>
   <api filename="../gstreamer-sharp/gstreamer-api.raw">
+<!--
+	<library name="gstcontroller-0.10.dll">
+	  <namespace name="Gst">
+        <dir>gstreamer-0.10.3/libs/gst/controller</dir>
+      </namespace>
+    </library>
+-->	
     <library name="gstreamer-0.10.dll">
       <namespace name="Gst">
         <dir>gstreamer-0.10.3/gst</dir>
@@ -7,12 +14,5 @@
         <exclude>gstreamer-0.10.3/gst/gsturi.h</exclude>
       </namespace>
 	</library>
-<!--
-	<library name="gstcontroller-0.10.dll">
-      <namespace name="Gst">
-        <dir>gstreamer-0.10.3/libs/gst/controller</dir>
-      </namespace>
-    </library>
--->
   </api>
 </gapi-parser-input>

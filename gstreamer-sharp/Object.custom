@@ -1,0 +1,13 @@
+
+	public int Refcount {
+		get { return this.RefCount; }
+	}
+
+
+	public override void Dispose() {
+		if(this.Handle != IntPtr.Zero) {
+			Gst.Object.Unref(this.Handle);
+			this.Raw = IntPtr.Zero;
+		}
+	}
+

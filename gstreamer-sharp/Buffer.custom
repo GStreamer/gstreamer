@@ -1,0 +1,25 @@
+	[DllImport("gstreamer-0.10")]
+	static extern IntPtr gst_mini_object_ref (IntPtr buf);
+
+	public void Ref() 
+	{
+		IntPtr tmp = gst_mini_object_ref(this.Handle);
+	}
+
+	[DllImport("gstreamer-0.10")]
+	static extern void gst_mini_object_unref(IntPtr buf);
+
+	public void Unref()
+	{
+		gst_mini_object_unref(this.Handle);
+	} 
+
+	[DllImport("gstreamersharpglue-0.10")]
+	static extern uint gstsharp_gst_buffer_refcount(IntPtr buf);
+
+	public uint Refcount 
+	{
+		get { 
+			return gstsharp_gst_buffer_refcount(this.Handle);
+		}
+	}

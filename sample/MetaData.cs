@@ -16,7 +16,7 @@ public class MetaData
 
 	static void PrintTag( TagList list, string tag) {
 		uint count = list.GetTagSize(tag);
-
+		Console.WriteLine("Tags found = " + count);
 		for(uint i =0; i < count; i++) 
 		{
 			string str;
@@ -34,7 +34,7 @@ public class MetaData
 		}
 	}
 
-	static bool MessageLoop(Element element, TagList tags) 
+	static bool MessageLoop(Element element, ref TagList tags) 
 	{
 		Bus bus = element.Bus;
 		bool done = false;
@@ -48,7 +48,6 @@ public class MetaData
 				case MessageType.Error:
 					string error;
 					message.ParseError(out error);
-					Console.Error.WriteLine("Error: {0}", error);
 					message.Dispose();
 					return true;
 				case MessageType.Eos:
@@ -63,7 +62,8 @@ public class MetaData
 					else {
 						tags = new_tags;
 					}
-					new_tags.Dispose();
+					//tags.Foreach(PrintTag);
+					//new_tags.Dispose();
 					break;
 				}
 				default:
@@ -95,7 +95,7 @@ public class MetaData
 		bin.AddMany(source, decodebin);
 		if(!source.Link(decodebin))
 			Console.Error.WriteLine("filesrc could not be linked with decodebin");
-		//decodebin.Dispose();
+		decodebin.Dispose();
 	}
 
 	public static void Main(string [] args) 
@@ -131,13 +131,13 @@ public class MetaData
 				continue;
 			}
 
-			if(!MessageLoop(pipeline, tags)) {
+			if(!MessageLoop(pipeline, ref tags)) {
 				Console.Error.WriteLine("Failed in message reading for {0}", args[i]);
 			}
 
 			if(tags != null) {
 				Console.WriteLine("Metadata for {0}:", args[i]);
-				tags.Foreach(PrintTag);
+				tags.Foreach(new TagForeachFunc(PrintTag));
 				tags.Dispose();
 				tags = null;
 			} else Console.Error.WriteLine("No metadata found for {0}", args[0]);
