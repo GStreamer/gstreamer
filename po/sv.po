@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.47 2006/07/11 22:40:13 thaytan Exp $
+# $Id: sv.po,v 1.48 2006/09/07 14:56:31 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-07-12 00:38+0200\n"
+"POT-Creation-Date: 2006-09-05 18:16+0200\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -16,79 +16,80 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/alsa/gstalsamixertrack.c:83
+#: ext/alsa/gstalsamixertrack.c:130
 msgid "Master"
 msgstr "Övergripande"
 
-#: ext/alsa/gstalsamixertrack.c:84
+#: ext/alsa/gstalsamixertrack.c:131
 msgid "Bass"
 msgstr "Bass"
 
-#: ext/alsa/gstalsamixertrack.c:85
+#: ext/alsa/gstalsamixertrack.c:132
 msgid "Treble"
 msgstr "Diskant"
 
-#: ext/alsa/gstalsamixertrack.c:86
+#: ext/alsa/gstalsamixertrack.c:133
 msgid "PCM"
 msgstr "PCM"
 
-#: ext/alsa/gstalsamixertrack.c:87
+#: ext/alsa/gstalsamixertrack.c:134
 msgid "Synth"
 msgstr "Synt"
 
-#: ext/alsa/gstalsamixertrack.c:88
+#: ext/alsa/gstalsamixertrack.c:135
 msgid "Line-in"
 msgstr "Linje-in"
 
-#: ext/alsa/gstalsamixertrack.c:89
+#: ext/alsa/gstalsamixertrack.c:136
 msgid "CD"
 msgstr "Cd"
 
-#: ext/alsa/gstalsamixertrack.c:90
+#: ext/alsa/gstalsamixertrack.c:137
 msgid "Microphone"
 msgstr "Mikrofon"
 
-#: ext/alsa/gstalsamixertrack.c:91
+#: ext/alsa/gstalsamixertrack.c:138
 #, fuzzy
 msgid "PC Speaker"
 msgstr "Högtalare"
 
-#: ext/alsa/gstalsamixertrack.c:92
+#: ext/alsa/gstalsamixertrack.c:139
 #, fuzzy
 msgid "Playback"
 msgstr "Spela"
 
-#: ext/alsa/gstalsamixertrack.c:93
+#: ext/alsa/gstalsamixertrack.c:140 ext/alsa/gstalsamixertrack.c:201
+#: ext/alsa/gstalsamixertrack.c:204
 #, fuzzy
 msgid "Capture"
 msgstr "Satir"
 
-#: ext/alsa/gstalsasink.c:453
+#: ext/alsa/gstalsasink.c:456
 #, fuzzy
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/alsa/gstalsasink.c:455
+#: ext/alsa/gstalsasink.c:458
 #, fuzzy
 msgid "Could not open device for playback in stereo mode."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/alsa/gstalsasink.c:459
+#: ext/alsa/gstalsasink.c:462
 #, fuzzy, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/alsa/gstalsasrc.c:408
+#: ext/alsa/gstalsasrc.c:411
 #, fuzzy
 msgid "Could not open device for recording in mono mode."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/alsa/gstalsasrc.c:410
+#: ext/alsa/gstalsasrc.c:413
 #, fuzzy
 msgid "Could not open device for recording in stereo mode."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/alsa/gstalsasrc.c:414
+#: ext/alsa/gstalsasrc.c:417
 #, fuzzy, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "Kunde inte öppna cd-enheten för läsning."
@@ -126,79 +127,79 @@ msgstr "Kunde inte stänga vfs-filen \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:2842
+#: ext/ogg/gstoggdemux.c:2904
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1281
+#: gst/playback/gstplaybasebin.c:1267
 msgid "RTSP streams cannot be played yet."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1581
+#: gst/playback/gstplaybasebin.c:1567
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1587
+#: gst/playback/gstplaybasebin.c:1573
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1591
+#: gst/playback/gstplaybasebin.c:1577
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1598
+#: gst/playback/gstplaybasebin.c:1584
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1671
+#: gst/playback/gstplaybasebin.c:1657
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1676
+#: gst/playback/gstplaybasebin.c:1662
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1680
+#: gst/playback/gstplaybasebin.c:1666
 #, fuzzy
 msgid "This is not a media file"
 msgstr "%s är ingen cdrom-enhet"
 
-#: gst/playback/gstplaybasebin.c:1685
+#: gst/playback/gstplaybasebin.c:1671
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:609
+#: gst/playback/gstplaybin.c:831
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:652 gst/playback/gstplaybin.c:661
-#: gst/playback/gstplaybin.c:819 gst/playback/gstplaybin.c:828
-#: gst/playback/gstplaybin.c:931
+#: gst/playback/gstplaybin.c:874 gst/playback/gstplaybin.c:883
+#: gst/playback/gstplaybin.c:1041 gst/playback/gstplaybin.c:1050
+#: gst/playback/gstplaybin.c:1153
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:785
+#: gst/playback/gstplaybin.c:1007
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
-#: gst/tcp/gsttcp.c:519 gst/tcp/gsttcpclientsink.c:268
+#: gst/tcp/gsttcp.c:517 gst/tcp/gsttcpclientsink.c:268
 #, fuzzy, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: gst/tcp/gsttcp.c:571
+#: gst/tcp/gsttcp.c:569
 #, fuzzy, c-format
 msgid "Error while sending gdp header data to \"%s:%d\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: gst/tcp/gsttcp.c:580
+#: gst/tcp/gsttcp.c:578
 #, c-format
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr ""
@@ -208,54 +209,54 @@ msgstr ""
 msgid "Connection to %s:%d refused."
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:55
+#: gst-libs/gst/tag/tags.c:56
 #, fuzzy
 msgid "track ID"
 msgstr "Spår %d"
 
-#: gst-libs/gst/tag/tags.c:55
+#: gst-libs/gst/tag/tags.c:56
 msgid "MusicBrainz track ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:57
+#: gst-libs/gst/tag/tags.c:58
 #, fuzzy
 msgid "artist ID"
 msgstr "Skiv-ID"
 
-#: gst-libs/gst/tag/tags.c:57
+#: gst-libs/gst/tag/tags.c:58
 msgid "MusicBrainz artist ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:59
+#: gst-libs/gst/tag/tags.c:60
 msgid "album ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:59
+#: gst-libs/gst/tag/tags.c:60
 msgid "MusicBrainz album ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:62
+#: gst-libs/gst/tag/tags.c:63
 msgid "album artist ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:62
+#: gst-libs/gst/tag/tags.c:63
 msgid "MusicBrainz album artist ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:64
+#: gst-libs/gst/tag/tags.c:65
 msgid "track TRM ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:64
+#: gst-libs/gst/tag/tags.c:65
 msgid "MusicBrainz TRM ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:67
+#: gst-libs/gst/tag/tags.c:68
 #, fuzzy
 msgid "artist sortname"
 msgstr "Artistrad"
 
-#: gst-libs/gst/tag/tags.c:67
+#: gst-libs/gst/tag/tags.c:68
 msgid "MusicBrainz artist sortname"
 msgstr ""
 
