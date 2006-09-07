@@ -35,7 +35,7 @@ public static class GstTypefindTest
     {
 		Caps caps = args.Args[1] as Caps;
 		caps.Refcount++;
-        Console.WriteLine("MimeType: {0}, {1}", caps , typefind.Caps);            
+        Console.WriteLine("MimeType: {0}", caps);            
     }
 }
 

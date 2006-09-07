@@ -1,6 +1,6 @@
 //
 //
-// (C) 2006
+// (C) 2006 Novell Inc.
 //
 // This class implements the functionalities to bind a callback
 // function to a signal dynamically.  
@@ -116,6 +116,9 @@ namespace GLib {
 			}
 		}
 
+		[DllImport("libgobject-2.0-0.dll")]
+		static extern IntPtr g_value_peek_pointer(IntPtr ptr);
+
 		static void OnMarshal(IntPtr closure, ref GLib.Value retval, uint argc, IntPtr argsPtr, 
 			IntPtr ihint, IntPtr data) 
 		{
@@ -124,8 +127,14 @@ namespace GLib {
 
 			for(int i=1; i < argc; i++) {
 				IntPtr struct_ptr = (IntPtr)((long) argsPtr + (i * gvalue_struct_size));
-				GLib.Value argument = (GLib.Value) Marshal.PtrToStructure(struct_ptr, typeof(GLib.Value));
-				args[i - 1] = argument.Val;
+				Type detectedType = GLib.GType.LookupType(Marshal.ReadIntPtr(struct_ptr));
+				if(detectedType.IsSubclassOf(typeof(Opaque))) {
+					args[i - 1] = (Opaque) Opaque.GetOpaque(g_value_peek_pointer(struct_ptr), detectedType, false);
+				}
+				else {
+					GLib.Value argument = (GLib.Value) Marshal.PtrToStructure(struct_ptr, typeof(GLib.Value));
+					args[i - 1] = argument.Val;
+				}
 			}
 
 			if(data == IntPtr.Zero) {

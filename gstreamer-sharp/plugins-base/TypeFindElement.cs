@@ -20,11 +20,13 @@ namespace Gst
         }
     
         public uint Probability {
-            get { return (uint)Args[1]; }
+            get { return (uint)Args[0]; }
         }
         
         public Gst.Caps Caps {
-            get { return (Gst.Caps)Args[2]; }
+            get { 
+				return (Gst.Caps)Args[1]; 
+			}
         }
     }
 
