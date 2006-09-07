@@ -1,5 +1,16 @@
 2006-09-07  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	patch by: Michael Smith <msmith at fluendo dot com>
+
+	* gst/tcp/gstmultifdsink.c: (is_sync_frame),
+	(gst_multi_fd_sink_client_queue_buffer),
+	(gst_multi_fd_sink_new_client):
+	* tests/check/elements/multifdsink.c: (GST_START_TEST),
+	(multifdsink_suite):
+	  Fix implementation of sync-method 'next-keyframe'
+
+2006-09-07  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	patch by: Wim Taymans <wim at fluendo dot com>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_start):

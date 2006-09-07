@@ -794,6 +794,65 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
 
 GST_END_TEST;
 
+/* Check that we can get data when multifdsink is configured in next-keyframe
+ * mode */
+GST_START_TEST (test_client_next_keyframe)
+{
+  GstElement *sink;
+  GstBuffer *buffer;
+  GstCaps *caps;
+  int pfd1[2];
+  gchar data[16];
+  guint64 bytes_served;
+  gint i;
+  guint buffers_queued;
+
+  sink = setup_multifdsink ();
+  g_object_set (sink, "sync-method", 1, NULL);  /* 1 = next-keyframe */
+
+  fail_if (pipe (pfd1) == -1);
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  caps = gst_caps_from_string ("application/x-gst-check");
+  GST_DEBUG ("Created test caps %p %" GST_PTR_FORMAT, caps, caps);
+
+  /* now add our client */
+  g_signal_emit_by_name (sink, "add", pfd1[1]);
+
+  /* push buffers in: keyframe, then non-keyframe */
+  for (i = 0; i < 2; i++) {
+    gchar *data;
+
+    buffer = gst_buffer_new_and_alloc (16);
+    gst_buffer_set_caps (buffer, caps);
+
+    /* copy some id */
+    data = (gchar *) GST_BUFFER_DATA (buffer);
+    g_snprintf (data, 16, "deadbee%08x", i);
+    if (i > 0)
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  /* now we should be able to read some data */
+  GST_DEBUG ("Reading from client 1");
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000000", 16) == 0);
+  fail_if (read (pfd1[0], data, 16) < 16);
+  fail_unless (strncmp (data, "deadbee00000001", 16) == 0);
+
+  GST_DEBUG ("cleaning up multifdsink");
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_multifdsink (sink);
+
+  ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 /* FIXME: add test simulating chained oggs where:
  * sync-method is burst-on-connect
  * (when multifdsink actually does burst-on-connect based on byte size, not
@@ -815,6 +874,7 @@ multifdsink_suite (void)
   tcase_add_test (tc_chain, test_burst_client_bytes);
   tcase_add_test (tc_chain, test_burst_client_bytes_keyframe);
   tcase_add_test (tc_chain, test_burst_client_bytes_with_keyframe);
+  tcase_add_test (tc_chain, test_client_next_keyframe);
 
   return s;
 }

@@ -1090,6 +1090,7 @@ is_sync_frame (GstMultiFdSink * sink, GstBuffer * buffer)
   } else if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
     return TRUE;
   }
+
   return FALSE;
 }
 
@@ -1104,7 +1105,6 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
   /* TRUE: send them if the new caps have them */
   gboolean send_streamheader = FALSE;
   GstStructure *s;
-
 
   /* before we queue the buffer, we check if we need to queue streamheader
    * buffers (because it's a new client, or because they changed) */
@@ -1448,27 +1448,26 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
       break;
     case GST_SYNC_METHOD_NEXT_KEYFRAME:
     {
-      GstBuffer *buf;
-
-      /* if the buffer at the head of the queue is a sync point we can proceed,
-       * else we need to skip the buffer and wait for a new one */
+      /* if one of the new buffers (between client->bufpos and 0) in the queue
+       * is a sync point, we can proceed, otherwise we need to keep waiting */
       GST_LOG_OBJECT (sink,
           "[fd %5d] new client, bufpos %d, waiting for keyframe", client->fd.fd,
           client->bufpos);
 
-      /* get the buffer for the client */
-      buf = g_array_index (sink->bufqueue, GstBuffer *, 0);
-      if (is_sync_frame (sink, buf)) {
-        GST_LOG_OBJECT (sink, "[fd %5d] new client, found sync", client->fd.fd);
-        result = 0;
+      result = find_prev_syncframe (sink, client->bufpos);
+      if (result != -1) {
+        GST_DEBUG_OBJECT (sink,
+            "[fd %5d] SYNC_METHOD_NEXT_KEYFRAME: result %d",
+            client->fd.fd, result);
         break;
       }
-      /* client is not on a syncbuffer, need to skip this buffer and
+
+      /* client is not on a syncbuffer, need to skip these buffers and
        * wait some more */
-      GST_LOG_OBJECT (sink, "[fd %5d] new client, skipping buffer",
+      GST_LOG_OBJECT (sink,
+          "[fd %5d] new client, skipping buffer(s), no syncpoint found",
           client->fd.fd);
       client->bufpos = -1;
-      result = -1;
       break;
     }
     case GST_SYNC_METHOD_LATEST_KEYFRAME:
