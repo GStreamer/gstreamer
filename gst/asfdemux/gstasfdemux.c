@@ -1173,6 +1173,8 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf16le,
     return NULL;
   }
 
+  GST_DEBUG ("map tagname '%s'", name_utf8);
+
   for (i = 0; i < G_N_ELEMENTS (tags); ++i) {
     if (strncmp (tags[i].asf_name, name_utf8, out) == 0) {
       g_free (name_utf8);
@@ -1273,7 +1275,7 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 ** p_data,
       goto not_enough_data;
 
     gst_tag_name = gst_asf_demux_get_gst_tag_from_tag_name (name, name_len);
-    if (gst_tag_name != NULL) {
+    if (datatype && (gst_tag_name != NULL)) {
       switch (datatype) {
         case ASF_DEMUX_DATA_TYPE_UTF16LE_STRING:{
           gchar *value_utf8;
@@ -1338,7 +1340,7 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 ** p_data,
 
   return GST_FLOW_OK;
 
-
+  /* Errors */
 not_enough_data:
   {
     /* avoid compiler warning when disabling logging at compile time */

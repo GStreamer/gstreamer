@@ -1,3 +1,10 @@
+2006-09-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	(gst_asf_demux_get_gst_tag_from_tag_name),
+	(gst_asf_demux_process_ext_content_desc):
+	  Skip tags that are unknown (was producing an uninialized GValue).	  
+
 2006-09-01  Michael Smith  <msmith@fluendo.com>
 
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_mode_get_type),
