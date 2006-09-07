@@ -1156,7 +1156,7 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf16le,
     "WM/Genre", GST_TAG_GENRE}, {
     "WM/AlbumTitle", GST_TAG_ALBUM}, {
     "WM/AlbumArtist", GST_TAG_ARTIST}, {
-    "WM/TrackNumber", GST_TAG_TRACK_NUMBER}, {
+    "WM/Track", GST_TAG_TRACK_NUMBER}, {
     "WM/Year", GST_TAG_DATE}
     /* { "WM/Composer", GST_TAG_COMPOSER } */
   };
@@ -1173,15 +1173,15 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf16le,
     return NULL;
   }
 
-  GST_DEBUG ("map tagname '%s'", name_utf8);
-
   for (i = 0; i < G_N_ELEMENTS (tags); ++i) {
     if (strncmp (tags[i].asf_name, name_utf8, out) == 0) {
+      GST_LOG ("map tagname '%s' -> '%s'", name_utf8, tags[i].gst_name);
       g_free (name_utf8);
       return tags[i].gst_name;
     }
   }
 
+  GST_LOG ("unhandled tagname '%s'", name_utf8);
   g_free (name_utf8);
   return NULL;
 }
@@ -1227,10 +1227,10 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 ** p_data,
    *   WM/ProviderRating = 8
    *   WM/ProviderStyle = Rock (similar to WM/Genre)
    *   WM/GenreID (similar to WM/Genre)
+   *   WM/TrackNumber (same as WM/Track but as a string)
    *
    * Other known (and unused) 'non-text' metadata available :
    *
-   *   WM/Track (same as WM/TrackNumber but starts at 0)
    *   WM/EncodingTime
    *   WM/MCDI
    *   IsVBR
@@ -1275,7 +1275,7 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 ** p_data,
       goto not_enough_data;
 
     gst_tag_name = gst_asf_demux_get_gst_tag_from_tag_name (name, name_len);
-    if (datatype && (gst_tag_name != NULL)) {
+    if (gst_tag_name != NULL) {
       switch (datatype) {
         case ASF_DEMUX_DATA_TYPE_UTF16LE_STRING:{
           gchar *value_utf8;
@@ -1310,8 +1310,9 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 ** p_data,
           break;
         }
         case ASF_DEMUX_DATA_TYPE_DWORD:{
-          g_value_init (&tag_value, G_TYPE_INT);
-          g_value_set_int (&tag_value, (gint) GST_READ_UINT32_LE (value));
+          /* this is the track number */
+          g_value_init (&tag_value, G_TYPE_UINT);
+          g_value_set_uint (&tag_value, (guint) GST_READ_UINT32_LE (value));
           break;
         }
         default:{

@@ -3,6 +3,16 @@
 	* gst/asfdemux/gstasfdemux.c:
 	(gst_asf_demux_get_gst_tag_from_tag_name),
 	(gst_asf_demux_process_ext_content_desc):
+	  Erm, lets properly fix it. The only non-text tag that we support is
+	  the track-number and that is an UINT. asfdemux was returning a GValue
+	  initialized as INT. Further the Track and not the TrackNumber tag
+	  (the latter is a string too).
+
+2006-09-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	(gst_asf_demux_get_gst_tag_from_tag_name),
+	(gst_asf_demux_process_ext_content_desc):
 	  Skip tags that are unknown (was producing an uninialized GValue).	  
 
 2006-09-01  Michael Smith  <msmith@fluendo.com>
