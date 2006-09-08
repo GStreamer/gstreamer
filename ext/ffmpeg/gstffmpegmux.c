@@ -42,9 +42,6 @@ struct _GstFFMpegMuxPad
   GstCollectData collect;       /* we extend the CollectData */
 
   gint padnum;
-
-  /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
 };
 
 struct _GstFFMpegMux
@@ -63,7 +60,8 @@ struct _GstFFMpegMux
   gint videopads, audiopads;
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  /* event_function is the collectpads default eventfunction */
+  GstPadEventFunction	event_function;
 };
 
 typedef struct _GstFFMpegMuxClassParams
@@ -116,6 +114,8 @@ static gboolean gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps);
 static GstPad *gst_ffmpegmux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static GstFlowReturn gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data);
+
+static gboolean gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event);
 
 static GstStateChangeReturn gst_ffmpegmux_change_state (GstElement * element,
     GstStateChange transition);
@@ -263,6 +263,10 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
       gst_collect_pads_add_pad (ffmpegmux->collect, pad, sizeof (GstFFMpegMuxPad));
   collect_pad->padnum = ffmpegmux->context->nb_streams;
 
+  /* small hack to put our own event pad function and chain up to collect pad */
+  ffmpegmux->event_function = GST_PAD_EVENTFUNC(pad);
+  gst_pad_set_event_function (pad, gst_ffmpegmux_sink_event);
+
   gst_pad_set_setcaps_function (pad, gst_ffmpegmux_setcaps);
   gst_element_add_pad (element, pad);
 
@@ -313,21 +317,32 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 
-/* This is old tags handling code. It is not yet ported to 0.10 because
-   collectpads do not support events easily. */
+static gboolean
+gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstFFMpegMux * ffmpegmux = (GstFFMpegMux*) gst_pad_get_parent(pad);
+  gboolean res = TRUE;
 
-#if 0
-          case GST_EVENT_TAG:
-            if (ffmpegmux->tags) {
-              gst_tag_list_insert (ffmpegmux->tags,
-                  gst_event_tag_get_list (event), GST_TAG_MERGE_PREPEND);
-            } else {
-              ffmpegmux->tags =
-                  gst_tag_list_copy (gst_event_tag_get_list (event));
-            }
-            gst_event_unref (event);
-            break;
-#endif
+  switch (GST_EVENT_TYPE (event)) {
+  case GST_EVENT_TAG: {
+    GstTagList * taglist = NULL;
+    
+    gst_event_parse_tag (event, &taglist);
+    ffmpegmux->tags = gst_tag_list_merge(ffmpegmux->tags, taglist, 
+					 GST_TAG_MERGE_PREPEND);
+    
+    break;
+  }
+  default:
+    break;
+  }
+
+  /* chaining up to collectpads default event function */
+  res = ffmpegmux->event_function (pad, event);
+
+  gst_object_unref (ffmpegmux);
+  return res;
+}
 
 static GstFlowReturn
 gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
@@ -336,6 +351,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
   GSList *collected;
   GstFFMpegMuxPad *best_pad;
   GstClockTime best_time;
+  const GstTagList *iface_tags;
 
   /* open "file" (gstreamer protocol to next element) */
   if (!ffmpegmux->opened) {
@@ -371,23 +387,15 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       }
     }
 
-#if 0
-    /* TODO: tags not ported to gst 0.10 */
     /* tags */
-    iface_tags = gst_tag_setter_get_list (GST_TAG_SETTER (ffmpegmux));
+    iface_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (ffmpegmux));
     if (ffmpegmux->tags || iface_tags) {
       GstTagList *tags;
       gint i;
       gchar *s;
 
-      if (iface_tags && ffmpegmux->tags) {
-        gst_tag_list_merge (iface_tags, ffmpegmux->tags,
-            GST_TAG_MERGE_APPEND);
-      } else if (iface_tags) {
-        tags = gst_tag_list_copy (iface_tags);
-      } else {
-        tags = gst_tag_list_copy (ffmpegmux->tags);
-      }
+      tags = gst_tag_list_merge (iface_tags, ffmpegmux->tags,
+				 GST_TAG_MERGE_APPEND);
 
       /* get the interesting ones */
       if (gst_tag_list_get_string (tags, GST_TAG_TITLE, &s)) {
@@ -414,12 +422,11 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
         strncpy (ffmpegmux->context->genre, s,
             sizeof (ffmpegmux->context->genre));
       }
-      if (gst_tag_list_get_uint (tags, GST_TAG_TRACK_NUMBER, &i)) {
+      if (gst_tag_list_get_int (tags, GST_TAG_TRACK_NUMBER, &i)) {
         ffmpegmux->context->track = i;
       }
       gst_tag_list_free (tags);
     }
-#endif
 
     /* set the streamheader flag for gstffmpegprotocol if codec supports it */
     if (!strcmp (ffmpegmux->context->oformat->name, "flv") ) {

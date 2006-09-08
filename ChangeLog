@@ -1,5 +1,11 @@
 2006-09-08  Edward Hervey  <edward@fluendo.com>
 
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_request_new_pad),
+	(gst_ffmpegmux_sink_event), (gst_ffmpegmux_collected):
+	Port tag-writing support in the muxers.
+
+2006-09-08  Edward Hervey  <edward@fluendo.com>
+
 	Patch by: Michal Benes  <michal dot benes at xeris dot cz>
 	
 	* ext/ffmpeg/Makefile.am:
