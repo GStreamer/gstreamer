@@ -61,7 +61,6 @@
 
 #include "gstvideocrop.h"
 
-#include <liboil/liboil.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (videocrop_debug);
@@ -178,8 +177,6 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_crop_get_unit_size);
 
   basetransform_class->passthrough_on_same_caps = TRUE;
-
-  oil_init ();
 }
 
 static void
@@ -317,7 +314,7 @@ gst_video_crop_transform_packed (GstVideoCrop * vcrop, GstBuffer * inbuf,
   dx = vcrop->out.width * vcrop->out.bytes_per_pixel;
 
   for (i = 0; i < vcrop->out.height; ++i) {
-    oil_memcpy (out_data, in_data, dx);
+    memcpy (out_data, in_data, dx);
     in_data += vcrop->in.stride;
     out_data += vcrop->out.stride;
   }
@@ -339,7 +336,7 @@ gst_video_crop_transform_planar (GstVideoCrop * vcrop, GstBuffer * inbuf,
   dx = vcrop->out.width * 1;
 
   for (i = 0; i < vcrop->out.height; ++i) {
-    oil_memcpy (y_out, y_in, dx);
+    memcpy (y_out, y_in, dx);
     y_in += vcrop->in.y_stride;
     y_out += vcrop->out.y_stride;
   }
@@ -360,8 +357,8 @@ gst_video_crop_transform_planar (GstVideoCrop * vcrop, GstBuffer * inbuf,
   dx = GST_ROUND_UP_2 (vcrop->out.width) / 2;
 
   for (i = 0; i < GST_ROUND_UP_2 (vcrop->out.height) / 2; ++i) {
-    oil_memcpy (u_out, u_in, dx);
-    oil_memcpy (v_out, v_in, dx);
+    memcpy (u_out, u_in, dx);
+    memcpy (v_out, v_in, dx);
     u_in += vcrop->in.u_stride;
     u_out += vcrop->out.u_stride;
     v_in += vcrop->in.v_stride;
