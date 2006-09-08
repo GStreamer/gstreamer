@@ -1,3 +1,14 @@
+2006-09-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videocrop/Makefile.am:
+	* gst/videocrop/gstvideocrop.c: (gst_video_crop_class_init),
+	(gst_video_crop_transform_packed),
+	(gst_video_crop_transform_planar):
+	  Some quick tests indicate that it doesn't make a great deal
+	  of sense to use liboil here, at least not for the memcpy()s
+	  we do, so remove liboil usage until there is clear evidence
+	  it actually makes a positive difference somewhere.
+
 2006-09-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/elements/videocrop.c: (handoff_cb),
