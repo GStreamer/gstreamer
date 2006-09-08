@@ -158,7 +158,15 @@ typedef struct
   GstElement *filter;
   GstElement *crop;
   GstElement *sink;
+  GstBuffer *last_buf;
 } GstVideoCropTestContext;
+
+static void
+handoff_cb (GstElement * sink, GstBuffer * buf, GstPad * pad,
+    GstBuffer ** p_buf)
+{
+  gst_buffer_replace (p_buf, buf);
+}
 
 static void
 videocrop_test_cropping_init_context (GstVideoCropTestContext * ctx)
@@ -180,6 +188,15 @@ videocrop_test_cropping_init_context (GstVideoCropTestContext * ctx)
       ctx->crop, ctx->sink, NULL);
   gst_element_link_many (ctx->src, ctx->filter, ctx->crop, ctx->sink, NULL);
 
+  /* set pattern to 'red' - for our purposes it doesn't matter anyway */
+  g_object_set (ctx->src, "pattern", 4, NULL);
+
+  g_object_set (ctx->sink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (ctx->sink, "preroll-handoff", G_CALLBACK (handoff_cb),
+      &ctx->last_buf);
+
+  ctx->last_buf = NULL;
+
   GST_LOG ("context inited");
 }
 
@@ -190,12 +207,15 @@ videocrop_test_cropping_deinit_context (GstVideoCropTestContext * ctx)
 
   gst_element_set_state (ctx->pipeline, GST_STATE_NULL);
   gst_object_unref (ctx->pipeline);
+  gst_buffer_replace (&ctx->last_buf, NULL);
   memset (ctx, 0x00, sizeof (GstVideoCropTestContext));
 }
+typedef void (*GstVideoCropTestBufferFunc) (GstBuffer * buffer);
 
 static void
 videocrop_test_cropping (GstVideoCropTestContext * ctx, GstCaps * in_caps,
-    gint left, gint right, gint top, gint bottom)
+    gint left, gint right, gint top, gint bottom,
+    GstVideoCropTestBufferFunc func)
 {
   GST_LOG ("lrtb = %03u %03u %03u %03u, caps = %" GST_PTR_FORMAT, left, right,
       top, bottom, in_caps);
@@ -212,8 +232,145 @@ videocrop_test_cropping (GstVideoCropTestContext * ctx, GstCaps * in_caps,
   fail_unless (gst_element_get_state (ctx->pipeline, NULL, NULL,
           -1) == GST_STATE_CHANGE_SUCCESS);
 
+  if (func != NULL) {
+    func (ctx->last_buf);
+  }
+
   gst_element_set_state (ctx->pipeline, GST_STATE_NULL);
 }
+
+static void
+check_1x1_buffer (GstBuffer * buf)
+{
+  GstStructure *s;
+
+  fail_unless (buf != NULL);
+  fail_unless (GST_BUFFER_CAPS (buf) != NULL);
+
+  s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+  if (gst_structure_has_name (s, "video/x-raw-yuv")) {
+    guint32 format = 0;
+
+    fail_unless (gst_structure_get_fourcc (s, "format", &format));
+
+    /* the exact values we check for come from videotestsrc */
+    switch (format) {
+      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 76);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[8], 85);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[12], 255);
+        break;
+      case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 76);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[8], 255);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[12], 85);
+        break;
+      case GST_MAKE_FOURCC ('Y', '8', '0', '0'):
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[0], 76);
+        /* no chroma planes */
+        break;
+      case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[1], 76);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[2], 85);
+        fail_unless_equals_int (GST_BUFFER_DATA (buf)[3], 255);
+        /* no chroma planes */
+        break;
+      default:
+        GST_LOG ("not checking %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (format));
+        break;
+    }
+  } else if (gst_structure_has_name (s, "video/x-raw-rgb")) {
+    guint32 pixel;
+    gint rmask = 0, bmask = 0, gmask = 0, endianness = 0, bpp = 0;
+    gint rshift, gshift, bshift;
+
+    fail_unless (gst_structure_get_int (s, "red_mask", &rmask));
+    fail_unless (gst_structure_get_int (s, "blue_mask", &bmask));
+    fail_unless (gst_structure_get_int (s, "green_mask", &gmask));
+    fail_unless (gst_structure_get_int (s, "bpp", &bpp));
+    fail_unless (gst_structure_get_int (s, "endianness", &endianness));
+
+    fail_unless (rmask != 0);
+    fail_unless (gmask != 0);
+    fail_unless (bmask != 0);
+    fail_unless (bpp != 0);
+    fail_unless (endianness != 0);
+
+    rshift = g_bit_nth_lsf (rmask, -1);
+    gshift = g_bit_nth_lsf (gmask, -1);
+    bshift = g_bit_nth_lsf (bmask, -1);
+
+    switch (bpp) {
+      case 32:{
+        if (endianness == G_LITTLE_ENDIAN)
+          pixel = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
+        else
+          pixel = GST_READ_UINT32_BE (GST_BUFFER_DATA (buf));
+        break;
+      }
+      case 24:{
+        if (endianness == G_BIG_ENDIAN) {
+          pixel = (GST_READ_UINT8 (GST_BUFFER_DATA (buf)) << 16) |
+              (GST_READ_UINT8 (GST_BUFFER_DATA (buf) + 1) << 8) |
+              (GST_READ_UINT8 (GST_BUFFER_DATA (buf) + 2) << 0);
+        } else {
+          pixel = (GST_READ_UINT8 (GST_BUFFER_DATA (buf) + 2) << 16) |
+              (GST_READ_UINT8 (GST_BUFFER_DATA (buf) + 1) << 8) |
+              (GST_READ_UINT8 (GST_BUFFER_DATA (buf) + 0) << 0);
+        }
+        break;
+      }
+      default:{
+        GST_LOG ("not checking RGB-format buffer with %ubpp", bpp);
+        return;
+      }
+    }
+
+    fail_unless_equals_int ((pixel & rmask) >> rshift, 0xff);
+    fail_unless_equals_int ((pixel & gmask) >> gshift, 0x00);
+    fail_unless_equals_int ((pixel & bmask) >> bshift, 0x00);
+  }
+}
+
+GST_START_TEST (test_crop_to_1x1)
+{
+  GstVideoCropTestContext ctx;
+  GList *caps_list, *node;
+
+  videocrop_test_cropping_init_context (&ctx);
+
+  caps_list = video_crop_get_test_caps (ctx.crop);
+
+  for (node = caps_list; node != NULL; node = node->next) {
+    GstStructure *s;
+    GstCaps *caps;
+
+    caps = gst_caps_copy (GST_CAPS (node->data));
+    s = gst_caps_get_structure (caps, 0);
+    fail_unless (s != NULL);
+
+    GST_INFO ("testing format: %" GST_PTR_FORMAT, caps);
+
+    gst_structure_set (s, "width", G_TYPE_INT, 160,
+        "height", G_TYPE_INT, 160, NULL);
+
+    videocrop_test_cropping (&ctx, caps, 159, 0, 159, 0, check_1x1_buffer);
+    /* commented out because they don't really add anything useful check-wise:
+       videocrop_test_cropping (&ctx, caps, 0, 159, 0, 159, check_1x1_buffer);
+       videocrop_test_cropping (&ctx, caps, 159, 0, 0, 159, check_1x1_buffer);
+       videocrop_test_cropping (&ctx, caps, 0, 159, 159, 0, check_1x1_buffer);
+     */
+    gst_caps_unref (caps);
+  }
+  g_list_foreach (caps_list, (GFunc) gst_caps_unref, NULL);
+  g_list_free (caps_list);
+
+  videocrop_test_cropping_deinit_context (&ctx);
+}
+
+GST_END_TEST;
+
+
 
 GST_START_TEST (test_cropping)
 {
@@ -255,42 +412,39 @@ GST_START_TEST (test_cropping)
 
       GST_INFO (" - %d x %d", sizes_to_try[i].width, sizes_to_try[i].height);
 
-      videocrop_test_cropping (&ctx, caps, 0, 0, 0, 0);
-      videocrop_test_cropping (&ctx, caps, 1, 0, 0, 0);
-      videocrop_test_cropping (&ctx, caps, 0, 1, 0, 0);
-      videocrop_test_cropping (&ctx, caps, 0, 0, 1, 0);
-      videocrop_test_cropping (&ctx, caps, 0, 0, 0, 1);
-      videocrop_test_cropping (&ctx, caps, 63, 0, 0, 0);
-      videocrop_test_cropping (&ctx, caps, 0, 63, 0, 0);
-      videocrop_test_cropping (&ctx, caps, 0, 0, 63, 0);
-      videocrop_test_cropping (&ctx, caps, 0, 0, 0, 63);
-      videocrop_test_cropping (&ctx, caps, 63, 0, 0, 1);
-      videocrop_test_cropping (&ctx, caps, 0, 63, 1, 0);
-      videocrop_test_cropping (&ctx, caps, 0, 1, 63, 0);
-      videocrop_test_cropping (&ctx, caps, 1, 0, 0, 63);
-      videocrop_test_cropping (&ctx, caps, 0, 0, 0, 0);
-      videocrop_test_cropping (&ctx, caps, 32, 0, 0, 128);
-      videocrop_test_cropping (&ctx, caps, 0, 32, 128, 0);
-      videocrop_test_cropping (&ctx, caps, 0, 128, 32, 0);
-      videocrop_test_cropping (&ctx, caps, 128, 0, 0, 32);
-      videocrop_test_cropping (&ctx, caps, 1, 1, 1, 1);
-      videocrop_test_cropping (&ctx, caps, 63, 63, 63, 63);
-      videocrop_test_cropping (&ctx, caps, 64, 64, 64, 64);
+      videocrop_test_cropping (&ctx, caps, 0, 0, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 1, 0, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 0, 1, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 0, 0, 1, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 0, 0, 0, 1, NULL);
+      videocrop_test_cropping (&ctx, caps, 63, 0, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 0, 63, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 0, 0, 63, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 0, 0, 0, 63, NULL);
+      videocrop_test_cropping (&ctx, caps, 63, 0, 0, 1, NULL);
+      videocrop_test_cropping (&ctx, caps, 0, 63, 1, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 0, 1, 63, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 1, 0, 0, 63, NULL);
+      videocrop_test_cropping (&ctx, caps, 0, 0, 0, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 32, 0, 0, 128, NULL);
+      videocrop_test_cropping (&ctx, caps, 0, 32, 128, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 0, 128, 32, 0, NULL);
+      videocrop_test_cropping (&ctx, caps, 128, 0, 0, 32, NULL);
+      videocrop_test_cropping (&ctx, caps, 1, 1, 1, 1, NULL);
+      videocrop_test_cropping (&ctx, caps, 63, 63, 63, 63, NULL);
+      videocrop_test_cropping (&ctx, caps, 64, 64, 64, 64, NULL);
     }
+
+    gst_caps_unref (caps);
   }
+  g_list_foreach (caps_list, (GFunc) gst_caps_unref, NULL);
+  g_list_free (caps_list);
 
   videocrop_test_cropping_deinit_context (&ctx);
 }
 
 GST_END_TEST;
 
-
-static void
-handoff_cb (GstElement * sink, GstBuffer * buf, GstPad * pad,
-    GstBuffer ** p_buf)
-{
-  gst_buffer_replace (p_buf, buf);
-}
 
 static gboolean
 buffer_probe_cb (GstPad * pad, GstBuffer * buf, GstBuffer ** p_buf)
@@ -305,7 +459,6 @@ GST_START_TEST (test_passthrough)
   GstVideoCropTestContext ctx;
   GstPad *srcpad;
   GstBuffer *gen_buf = NULL;    /* buffer generated by videotestsrc */
-  GstBuffer *buf = NULL;
 
   videocrop_test_cropping_init_context (&ctx);
 
@@ -318,10 +471,6 @@ GST_START_TEST (test_passthrough)
 
   g_object_set (ctx.crop, "left", 0, "right", 0, "top", 0, "bottom", 0, NULL);
 
-  g_object_set (ctx.sink, "signal-handoffs", TRUE, NULL);
-
-  g_signal_connect (ctx.sink, "preroll-handoff", G_CALLBACK (handoff_cb), &buf);
-
   state_ret = gst_element_set_state (ctx.pipeline, GST_STATE_PAUSED);
   fail_unless (state_ret != GST_STATE_CHANGE_FAILURE,
       "couldn't set pipeline to PAUSED state");
@@ -331,16 +480,14 @@ GST_START_TEST (test_passthrough)
       "pipeline failed to go to PAUSED state");
 
   fail_unless (gen_buf != NULL);
-  fail_unless (buf != NULL);
+  fail_unless (ctx.last_buf != NULL);
 
   /* pass through should do nothing */
-  fail_unless (gen_buf == buf);
+  fail_unless (gen_buf == ctx.last_buf);
 
   videocrop_test_cropping_deinit_context (&ctx);
 
-  fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (gen_buf) == 2);
-  gst_buffer_unref (buf);
-  fail_unless (GST_MINI_OBJECT_REFCOUNT_VALUE (gen_buf) == 1);
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT_VALUE (gen_buf), 1);
   gst_buffer_unref (gen_buf);
 }
 
@@ -609,12 +756,9 @@ videocrop_suite (void)
 
 #ifdef HAVE_VALGRIND
   if (RUNNING_ON_VALGRIND) {
-    /* otherwise valgrind errors out when liboil probes CPU extensions
-     * during which it causes SIGILLs etc. to be fired */
-    g_setenv ("OIL_CPU_FLAGS", "0", 0);
     /* our tests take quite a long time, so increase
-     * timeout (~10 minutes on my 1.6GHz AMD K7) */
-    tcase_set_timeout (tc_chain, 20 * 60);
+     * timeout (~25 minutes on my 1.6GHz AMD K7) */
+    tcase_set_timeout (tc_chain, 30 * 60);
   } else
 #endif
   {
@@ -623,6 +767,7 @@ videocrop_suite (void)
   }
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_crop_to_1x1);
   tcase_add_test (tc_chain, test_caps_transform);
   tcase_add_test (tc_chain, test_passthrough);
   tcase_add_test (tc_chain, test_unit_sizes);
@@ -631,4 +776,27 @@ videocrop_suite (void)
   return s;
 }
 
-GST_CHECK_MAIN (videocrop);
+int
+main (int argc, char **argv)
+{
+  int nf;
+
+  Suite *s = videocrop_suite ();
+  SRunner *sr = srunner_create (s);
+
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+    /* otherwise valgrind errors out when liboil probes CPU extensions
+     * in oil_init() during which it causes SIGILLs etc. to be fired */
+    g_setenv ("OIL_CPU_FLAGS", "0", 0);
+  }
+#endif
+
+  gst_check_init (&argc, &argv);
+
+  srunner_run_all (sr, CK_NORMAL);
+  nf = srunner_ntests_failed (sr);
+  srunner_free (sr);
+
+  return nf;
+}

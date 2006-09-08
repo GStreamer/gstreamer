@@ -1,5 +1,22 @@
 2006-09-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	  Bump requirements of -base (videocrop test case needs this).
+
+	* gst/videocrop/gstvideocrop.c:
+	  Document sloppy handling of subsampled chroma planes if
+	  left/top cropping is an odd number.
+
+	* tests/check/elements/videocrop.c: (handoff_cb),
+	(videocrop_test_cropping_init_context),
+	(videocrop_test_cropping_deinit_context),
+	(videocrop_test_cropping), (check_1x1_buffer), (GST_START_TEST),
+	(videocrop_suite), (main):
+	  Add another unit test that crops the input to 1x1 (and checks
+	  that that pixel has the expected values in a number of formats).
+
+2006-09-08  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/videocrop/Makefile.am:
 	* gst/videocrop/gstvideocrop.c: (gst_video_crop_class_init),
 	(gst_video_crop_transform_packed),
