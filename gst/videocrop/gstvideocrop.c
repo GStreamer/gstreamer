@@ -37,6 +37,13 @@
  * <para>
  * If there is nothing to crop, the element will operate in pass-through mode.
  * </para>
+ * <para>
+ * Note that no special efforts are made to handle chroma-subsampled formats
+ * in the case of odd-valued cropping and compensate for sub-unit chroma plane
+ * shifts for such formats in the case where the "left" or "top" property is
+ * set to an odd number. This doesn't matter for most use cases, but it might
+ * matter for yours.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
