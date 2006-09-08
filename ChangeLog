@@ -1,3 +1,20 @@
+2006-09-08  Edward Hervey  <edward@fluendo.com>
+
+	Patch by: Michal Benes  <michal dot benes at xeris dot cz>
+	
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c: (plugin_init):
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_codecid):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_base_init),
+	(gst_ffmpegmux_init), (gst_ffmpegmux_finalize),
+	(gst_ffmpegmux_request_new_pad), (gst_ffmpegmux_setcaps),
+	(gst_ffmpegmux_collected), (gst_ffmpegmux_change_state),
+	(gst_ffmpegmux_register):
+	Port of FFMpeg muxers to 0.10.
+	Still needs some loving in gstffmpegcodecmap to have them all supported
+	with correct input formats.
+	Closes #332339
+
 2006-09-06  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sebastien Moutte <sebastien at moutte dot net>

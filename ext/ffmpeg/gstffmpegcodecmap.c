@@ -2110,6 +2110,20 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "video/x-h264")) {
     id = CODEC_ID_H264;
     video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-flash-video")) {
+    gint flvversion = 0;
+    
+    if ((gst_structure_get_int (structure, "flvversion", &flvversion))) {
+      switch (flvversion) {
+      case 1:
+	id = CODEC_ID_FLV1;
+	video = TRUE;
+	break;
+      default:
+	break;
+      }
+    }
+
   } else if (!strncmp (mimetype, "audio/x-gst_ff-", 15) ) {
     gchar ext[16];
     AVCodec *codec;
@@ -2150,6 +2164,11 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     char *str = gst_caps_to_string (caps);
 
     GST_DEBUG ("The id=%d belongs to the caps %s", id, str);
+    g_free (str);
+  } else {
+    gchar * str = gst_caps_to_string (caps);
+
+    GST_WARNING ("Couldn't figure out the id for caps %s", str);
     g_free (str);
   }
 

@@ -7,9 +7,9 @@ libgstffmpeg_la_SOURCES = gstffmpeg.c	\
 			  gstffmpegdec.c	\
 			  gstffmpegcfg.c	\
 			  gstffmpegdemux.c	\
+			  gstffmpegmux.c    \
 			  gstffmpegdeinterlace.c	\
 			  gstffmpegscale.c
-#			  gstffmpegmux.c
 
 libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	-I $(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
