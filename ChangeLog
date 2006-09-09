@@ -1,3 +1,9 @@
+2006-09-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_read):
+	  Add convert query (needed for later when we just operate in time
+	  format and let the base source class handle all the seeking stuff).
+
 2006-09-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/asfdemux/gstasfdemux.c:
@@ -17,13 +23,13 @@
 
 2006-09-01  Michael Smith  <msmith@fluendo.com>
 
+	Patch by: Michal Benes <michal.benes@itonis.tv>:
+
 	* ext/a52dec/gsta52dec.c: (gst_a52dec_mode_get_type),
 	(gst_a52dec_class_init), (gst_a52dec_init), (gst_a52dec_channels),
 	(gst_a52dec_handle_frame), (gst_a52dec_change_state),
 	(gst_a52dec_set_property), (gst_a52dec_get_property):
 	* ext/a52dec/gsta52dec.h:
-	  Patch from from Michal Benes <michal.benes@itonis.tv>:
-
 	  Add two things to a52dec: configure the exact output format for ac3
 	  decoding through properties, if desired.
 	  By default, configure an output format preferred by downstream. Now
@@ -48,7 +54,7 @@
 2006-08-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/mpegstream/gstmpegpacketize.c: (gst_mpeg_packetize_new):
-          fix build for debug disabled
+	  Fix build for debug disabled
 
 2006-08-22  Tim-Philipp Müller  <tim at centricular dot net>
 

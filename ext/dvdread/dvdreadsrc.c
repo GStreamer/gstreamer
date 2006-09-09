@@ -1340,6 +1340,103 @@ gst_dvd_read_src_do_position_query (GstDvdReadSrc * src, GstQuery * query)
 }
 
 static gboolean
+gst_dvd_read_src_do_convert_query (GstBaseSrc * basesrc, GstQuery * query)
+{
+  GstDvdReadSrc *src = GST_DVD_READ_SRC (basesrc);
+  GstFormat src_format, dest_format;
+  gboolean ret = FALSE;
+  gint64 src_val, dest_val;
+
+  gst_query_parse_convert (query, &src_format, &src_val, &dest_format, NULL);
+
+  if (src_format == dest_format) {
+    dest_val = src_val;
+    ret = TRUE;
+    goto done;
+  }
+
+  /* Formats to consider: TIME, DEFAULT, BYTES, title, chapter, sector.
+   * Note: title and chapter are counted as starting from 0 here, just like
+   * in the context of seek events. Another note: DEFAULT format is undefined */
+
+  if (src_format == GST_FORMAT_BYTES) {
+    src_format = sector_format;
+    src_val /= DVD_VIDEO_LB_LEN;
+  }
+
+  if (src_format == sector_format) {
+    /* SECTOR => xyz */
+    if (dest_format == GST_FORMAT_TIME && src_val < G_MAXUINT) {
+      dest_val = gst_dvd_read_src_get_time_for_sector (src, (guint) src_val);
+      ret = (dest_val >= 0);
+    } else if (dest_format == GST_FORMAT_BYTES) {
+      dest_val = src_val * DVD_VIDEO_LB_LEN;
+      ret = TRUE;
+    } else {
+      ret = FALSE;
+    }
+  } else if (src_format == title_format) {
+    /* TITLE => xyz */
+    if (dest_format == GST_FORMAT_TIME) {
+      /* not really true, but we use this to trick the base source into
+       * handling seeks in title-format for us (the source won't know that
+       * we changed the title in this case) (changing titles should really
+       * be done with an interface rather than a seek, but for now we're
+       * stuck with this mechanism. Fix in 0.11) */
+      dest_val = (GstClockTime) 0;
+      ret = TRUE;
+    } else {
+      ret = FALSE;
+    }
+  } else if (src_format == chapter_format) {
+    /* CHAPTER => xyz */
+    if (dest_format == GST_FORMAT_TIME) {
+      if (src->num_chapters >= 0 && src_val < src->num_chapters) {
+        dest_val = src->chapter_starts[src_val];
+        ret = TRUE;
+      }
+    } else if (dest_format == sector_format) {
+    } else {
+      ret = FALSE;
+    }
+  } else if (src_format == GST_FORMAT_TIME) {
+    /* TIME => xyz */
+    if (dest_format == sector_format || dest_format == GST_FORMAT_BYTES) {
+      dest_val = gst_dvd_read_src_get_sector_from_time (src, src_val);
+      ret = (dest_val >= 0);
+      if (dest_format == GST_FORMAT_BYTES)
+        dest_val *= DVD_VIDEO_LB_LEN;
+    } else if (dest_format == chapter_format) {
+      if (src->chapter_starts != NULL) {
+        gint i;
+
+        for (i = src->num_chapters - 1; i >= 0; --i) {
+          if (src->chapter_starts && src->chapter_starts[i] >= src_val) {
+            dest_val = i;
+            ret = TRUE;
+            break;
+          }
+        }
+      } else {
+        ret = FALSE;
+      }
+    } else {
+      ret = FALSE;
+    }
+  } else {
+    ret = FALSE;
+  }
+
+done:
+
+  if (ret) {
+    gst_query_set_convert (query, src_format, src_val, dest_format, dest_val);
+  }
+
+  return ret;
+}
+
+static gboolean
 gst_dvd_read_src_src_query (GstBaseSrc * basesrc, GstQuery * query)
 {
   GstDvdReadSrc *src = GST_DVD_READ_SRC (basesrc);
@@ -1367,6 +1464,11 @@ gst_dvd_read_src_src_query (GstBaseSrc * basesrc, GstQuery * query)
     case GST_QUERY_POSITION:
       GST_OBJECT_LOCK (src);
       res = gst_dvd_read_src_do_position_query (src, query);
+      GST_OBJECT_UNLOCK (src);
+      break;
+    case GST_QUERY_CONVERT:
+      GST_OBJECT_LOCK (src);
+      res = gst_dvd_read_src_do_convert_query (src, query);
       GST_OBJECT_UNLOCK (src);
       break;
     default:
