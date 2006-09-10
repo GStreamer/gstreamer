@@ -1,5 +1,7 @@
 2006-09-10  Edward Hervey  <edward@fluendo.com>
 
+	Patch by: Rene Stadler <mail@renestadler.de>
+	
 	* gst/libs.defs:
 	Add definition for GstParamFlags, extension of the GParamFlags.
 	Only contains one flag, gst.PARAM_CONTROLLABLE.
