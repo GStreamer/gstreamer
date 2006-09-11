@@ -48,7 +48,7 @@ struct _GstSpectrum {
 
   /* properties */
   gboolean message;             /* whether or not to post messages */
-  gdouble interval;             /* how many seconds between emits */
+  guint64 interval;             /* how many seconds between emits */
   guint bands;                  /* number of spectrum bands */
   gint threshold;               /* energy level treshold */
 

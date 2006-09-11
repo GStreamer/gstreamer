@@ -208,6 +208,7 @@ gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
 
   spectrum->adapter = gst_adapter_new ();
 
+  spectrum->interval = GST_SECOND / 10;
   spectrum->bands = 128;
   spectrum->base = 9;
   spectrum->len = 1024;         /* 2 ^ (base+1) */
@@ -252,7 +253,7 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
       filter->message = g_value_get_boolean (value);
       break;
     case PROP_SIGNAL_INTERVAL:
-      filter->interval = gst_guint64_to_gdouble (g_value_get_uint64 (value));
+      filter->interval = g_value_get_uint64 (value);
       break;
     case PROP_BANDS:
       filter->bands = g_value_get_uint (value);
