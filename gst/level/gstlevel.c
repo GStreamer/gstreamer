@@ -238,7 +238,7 @@ gst_level_set_property (GObject * object, guint prop_id,
       filter->message = g_value_get_boolean (value);
       break;
     case PROP_SIGNAL_INTERVAL:
-      filter->interval = gst_guint64_to_gdouble (g_value_get_uint64 (value));
+      filter->interval = g_value_get_uint64 (value);
       break;
     case PROP_PEAK_TTL:
       filter->decay_peak_ttl =

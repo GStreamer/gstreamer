@@ -53,7 +53,7 @@ struct _GstLevel {
   GstBaseTransform element;
 
   gboolean message;             /* whether or not to post messages */
-  gdouble interval;             /* how many seconds between emits */
+  guint64 interval;             /* how many seconds between emits */
 
   gint rate;                    /* caps variables */
   gint width;

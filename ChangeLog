@@ -1,3 +1,10 @@
+2006-09-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c: (gst_level_set_property):
+	* gst/level/gstlevel.h:
+          Fix type mixup in level->interval (gdouble<->guint64). Spotted by
+          René Stadler
+
 2006-09-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_read_subindexes_pull),
