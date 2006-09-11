@@ -213,10 +213,8 @@ gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
   spectrum->len = 1024;         /* 2 ^ (base+1) */
 
   spectrum->loud = g_malloc (spectrum->len * sizeof (gint16));
-  spectrum->im = g_malloc (spectrum->len * sizeof (gint16));
-  memset (spectrum->im, 0, spectrum->len * sizeof (gint16));
-  spectrum->re = g_malloc (spectrum->len * sizeof (gint16));
-  memset (spectrum->re, 0, spectrum->len * sizeof (gint16));
+  spectrum->im = g_malloc0 (spectrum->len * sizeof (gint16));
+  spectrum->re = g_malloc0 (spectrum->len * sizeof (gint16));
   spectrum->spect = g_malloc (spectrum->bands * sizeof (guchar));
 }
 
@@ -234,6 +232,11 @@ gst_spectrum_dispose (GObject * object)
   g_free (spectrum->im);
   g_free (spectrum->loud);
   g_free (spectrum->spect);
+
+  spectrum->re = NULL;
+  spectrum->im = NULL;
+  spectrum->loud = NULL;
+  spectrum->spect = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -335,7 +338,6 @@ gst_spectrum_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 
   structure = gst_caps_get_structure (in, 0);
   gst_structure_get_int (structure, "rate", &filter->rate);
-  gst_structure_get_int (structure, "width", &filter->width);
   gst_structure_get_int (structure, "channels", &filter->channels);
 
   return TRUE;
@@ -397,17 +399,17 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   GstClockTime blktime =
       GST_FRAMES_TO_CLOCK_TIME (spectrum->len, spectrum->rate);
 
-  GST_DEBUG ("transform : %ld bytes", GST_BUFFER_SIZE (in));
+  GST_LOG ("transform : %ld bytes", GST_BUFFER_SIZE (in));
 
   gst_adapter_push (spectrum->adapter, gst_buffer_ref (in));
   /* required number of bytes */
-  wanted = spectrum->channels * spectrum->len * 2;
+  wanted = spectrum->channels * spectrum->len * sizeof (gint16);
   /* FIXME: 4.0 was 2.0 before, but that include the mirrored spectrum */
   step = (gfloat) spectrum->len / (spectrum->bands * 4.0);
 
   while (gst_adapter_available (spectrum->adapter) > wanted) {
 
-    GST_DEBUG ("  adapter loop");
+    GST_LOG ("  adapter loop");
     samples = (gint16 *) gst_adapter_take (spectrum->adapter, wanted);
 
     for (i = 0, j = 0; i < spectrum->len; i++) {
@@ -416,14 +418,14 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       spectrum->re[i] = (gint16) (acc / spectrum->channels);
     }
 
-    GST_DEBUG ("  fft");
+    GST_LOG ("  fft");
 
     gst_spectrum_window (spectrum->re, spectrum->len);
     gst_spectrum_fix_fft (spectrum->re, spectrum->im, spectrum->base, FALSE);
     gst_spectrum_fix_loud (spectrum->loud, spectrum->re, spectrum->im,
         spectrum->len, 0);
 
-    GST_DEBUG ("  resampling");
+    GST_LOG ("  resampling");
 
     /* resample to requested number of bands */
     for (i = 0, pos = 0.0; i < spectrum->bands; i++, pos += step) {
@@ -438,7 +440,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
         spect[i] = 0;
     }
 
-    GST_DEBUG ("  send message?");
+    GST_LOG ("  send message?");
     //ret = gst_pad_push (spectrum->srcpad, outbuf);
     spectrum->num_frames += spectrum->len;
     endtime += blktime;
@@ -448,7 +450,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       if (spectrum->message) {
         GstMessage *m = gst_spectrum_message_new (spectrum, endtime);
 
-        GST_DEBUG ("  sending message");
+        GST_LOG ("  sending message");
         gst_element_post_message (GST_ELEMENT (spectrum), m);
       }
       spectrum->num_frames = 0;

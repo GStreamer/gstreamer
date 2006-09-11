@@ -27,6 +27,8 @@
 
 #define DEFAULT_AUDIOSRC "alsasrc"
 #define SPECT_BANDS 256
+#define SPECT_WIDTH (SPECT_BANDS)
+#define SPECT_HEIGHT 64
 
 static GtkWidget *drawingarea = NULL;
 
@@ -42,17 +44,17 @@ static void
 draw_spectrum (guchar * data)
 {
   gint i;
-  GdkRectangle rect = { 0, 0, SPECT_BANDS, 50 };
+  GdkRectangle rect = { 0, 0, SPECT_WIDTH, SPECT_HEIGHT };
 
   if (!drawingarea)
     return;
 
   gdk_window_begin_paint_rect (drawingarea->window, &rect);
   gdk_draw_rectangle (drawingarea->window, drawingarea->style->black_gc,
-      TRUE, 0, 0, SPECT_BANDS, 50);
+      TRUE, 0, 0, SPECT_BANDS, SPECT_HEIGHT);
   for (i = 0; i < SPECT_BANDS; i++) {
     gdk_draw_rectangle (drawingarea->window, drawingarea->style->white_gc,
-        TRUE, i, 64 - data[i], 1, data[i]);
+        TRUE, i, SPECT_HEIGHT - data[i], 1, data[i]);
   }
   gdk_window_end_paint (drawingarea->window);
 }
@@ -120,7 +122,7 @@ main (int argc, char *argv[])
       G_CALLBACK (on_window_destroy), NULL);
 
   drawingarea = gtk_drawing_area_new ();
-  gtk_widget_set_size_request (drawingarea, SPECT_BANDS, 64);
+  gtk_widget_set_size_request (drawingarea, SPECT_WIDTH, SPECT_HEIGHT);
   gtk_container_add (GTK_CONTAINER (appwindow), drawingarea);
   gtk_widget_show_all (appwindow);
 
