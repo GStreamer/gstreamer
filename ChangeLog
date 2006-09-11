@@ -1,5 +1,13 @@
 2006-09-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_init),
+	(gst_spectrum_set_property):
+	* gst/spectrum/gstspectrum.h:
+          Fix type mixup in spectrum->interval (gdouble<->guint64). Spotted by
+          René Stadler
+
+2006-09-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/spectrum/demo-osssrc.c: (draw_spectrum), (main):
           Use more defines
 
