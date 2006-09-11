@@ -56,7 +56,6 @@ struct _GstSpectrum {
                                  * since last emit */
                                  
   gint rate;                    /* caps variables */
-  gint width;
   gint channels;
 
   /* <private> */
