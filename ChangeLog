@@ -1,21 +1,28 @@
+2006-09-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init),
+	(gst_spectrum_start), (gst_spectrum_stop), (gst_spectrum_event):
+	  Implements stop() to clear the adapter and event() to clear the
+	  adapter on FLUSH_STOP and EOS.
+
 2006-09-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_init),
 	(gst_spectrum_set_property):
 	* gst/spectrum/gstspectrum.h:
-          Fix type mixup in spectrum->interval (gdouble<->guint64). Spotted by
-          René Stadler
+	  Fix type mixup in spectrum->interval (gdouble<->guint64). Spotted by
+	  René Stadler
 
 2006-09-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/spectrum/demo-osssrc.c: (draw_spectrum), (main):
-          Use more defines
+	  Use more defines
 
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_init),
 	(gst_spectrum_dispose), (gst_spectrum_set_caps),
 	(gst_spectrum_transform_ip):
 	* gst/spectrum/gstspectrum.h:
-          Apply some of the spectrum cleanup changes suggested in #348085.
+	  Apply some of the spectrum cleanup changes suggested in #348085.
 
 2006-09-08  Tim-Philipp Müller  <tim at centricular dot net>
 
