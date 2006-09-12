@@ -129,6 +129,8 @@ static GstStateChangeReturn gst_spectrum_change_state (GstElement * element,
 static gboolean gst_spectrum_set_caps (GstBaseTransform * trans, GstCaps * in,
     GstCaps * out);
 static gboolean gst_spectrum_start (GstBaseTransform * trans);
+static gboolean gst_spectrum_stop (GstBaseTransform * trans);
+static gboolean gst_spectrum_event (GstBaseTransform * trans, GstEvent * event);
 static GstFlowReturn gst_spectrum_transform_ip (GstBaseTransform * trans,
     GstBuffer * in);
 
@@ -161,9 +163,10 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
   gobject_class->get_property = gst_spectrum_get_property;
   gobject_class->dispose = gst_spectrum_dispose;
 
-  /*element->change_state = gst_spectrum_change_state; */
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_spectrum_set_caps);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_spectrum_start);
+  trans_class->stop = GST_DEBUG_FUNCPTR (gst_spectrum_stop);
+  trans_class->event = GST_DEBUG_FUNCPTR (gst_spectrum_event);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_spectrum_transform_ip);
   trans_class->passthrough_on_same_caps = TRUE;
 
@@ -349,8 +352,34 @@ gst_spectrum_start (GstBaseTransform * trans)
 {
   GstSpectrum *filter = GST_SPECTRUM (trans);
 
-  gst_adapter_clear (filter->adapter);
   filter->num_frames = 0;
+
+  return TRUE;
+}
+
+static gboolean
+gst_spectrum_stop (GstBaseTransform * trans)
+{
+  GstSpectrum *filter = GST_SPECTRUM (trans);
+
+  gst_adapter_clear (filter->adapter);
+
+  return TRUE;
+}
+
+static gboolean
+gst_spectrum_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstSpectrum *filter = GST_SPECTRUM (trans);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+    case GST_EVENT_EOS:
+      gst_adapter_clear (filter->adapter);
+      break;
+    default:
+      break;
+  }
 
   return TRUE;
 }
