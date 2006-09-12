@@ -1,3 +1,11 @@
+2006-09-12  Edward Hervey  <edward@fluendo.com>
+
+	* gst/extend/jukebox.py:
+	* gst/extend/leveller.py:
+	* gst/extend/sources.py:
+	Revival of the jukebox (and leveller) using 0.10 and gnonlin.
+	Still needs a bit of love, but functionnal enough.
+
 2006-09-10  Edward Hervey  <edward@fluendo.com>
 
 	Patch by: Rene Stadler <mail@renestadler.de>
