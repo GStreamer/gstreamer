@@ -1,5 +1,11 @@
 2006-09-12  Edward Hervey  <edward@fluendo.com>
 
+	* gst/extend/Makefile.am:
+	Forgot to add 3 previous files to the Makefile so they get
+	installed.
+
+2006-09-12  Edward Hervey  <edward@fluendo.com>
+
 	* gst/extend/jukebox.py:
 	* gst/extend/leveller.py:
 	* gst/extend/sources.py:
