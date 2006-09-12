@@ -85,7 +85,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
-# %find_lang gst-plugins-ugly-%{majorminor}
+%find_lang gst-plugins-ugly-%{majorminor}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -94,13 +94,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %postun
 
-%files
-#%files -f gst-plugins-ugly-%{majorminor}.lang
+%files -f gst-plugins-ugly-%{majorminor}.lang
 %defattr(-, root, root, -)
 %doc AUTHORS COPYING README REQUIREMENTS
-
-# plugins without external dependencies
-#%{_libdir}/gstreamer-%{majorminor}/libgstac3parse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstasf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdlpcmdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstiec958.so
