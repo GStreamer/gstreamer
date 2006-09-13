@@ -1,3 +1,14 @@
+2006-09-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_peek_chunk),
+	(gst_avi_demux_stream_index), (gst_avi_demux_sync),
+	(gst_avi_demux_stream_header_push),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_stream_data),
+	(gst_avi_demux_loop):
+	  More code reuse and better logging in _peek_chunk(). Reintroduce check
+	  for chunk sizes before reading them (avoid oom). Better handling for 
+	  invalid chunksizes when streaming.
+
 2006-09-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/level/gstlevel.c: (gst_level_set_property):

@@ -595,18 +595,15 @@ gst_avi_demux_peek_chunk_info (GstAviDemux * avi, guint32 * tag, guint32 * size)
 static gboolean
 gst_avi_demux_peek_chunk (GstAviDemux * avi, guint32 * tag, guint32 * size)
 {
-  const guint8 *data = NULL;
   guint32 peek_size = 0;
 
-  if (gst_adapter_available (avi->adapter) < 8) {
+  if (!gst_avi_demux_peek_chunk_info (avi, tag, size)) {
     return FALSE;
   }
-
-  data = gst_adapter_peek (avi->adapter, 8);
-  *tag = GST_READ_UINT32_LE (data);
-  *size = GST_READ_UINT32_LE (data + 4);
+  /* FIXME: shouldn't this check go to gst_avi_demux_peek_chunk_info() already */
   if (!(*size) || (*size) == -1) {
-    GST_DEBUG ("Invalid chunk size");
+    GST_INFO ("Invalid chunk size %d for tag %" GST_FOURCC_FORMAT,
+        *size, GST_FOURCC_ARGS (*tag));
     return FALSE;
   }
   GST_DEBUG ("Need to peek chunk of %d bytes to read chunk %" GST_FOURCC_FORMAT,
@@ -1568,21 +1565,24 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
   *alloc_list = NULL;
   *index = NULL;
 
-  /* get position */
+  /* get chunk information */
   if (gst_pad_pull_range (avi->sinkpad, offset, 8, &buf) != GST_FLOW_OK)
     return;
   else if (GST_BUFFER_SIZE (buf) < 8)
     goto too_small;
 
+  /* check tag first before blindy trying to read 'offset' bytes */
+  tag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
+  if (tag != GST_RIFF_TAG_idx1)
+    goto no_index;
+
   offset += 8 + GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
   gst_buffer_unref (buf);
 
-  /* get size */
+  /* read chunk, advance offset */
   if (gst_riff_read_chunk (GST_ELEMENT_CAST (avi),
           avi->sinkpad, &offset, &tag, &buf) != GST_FLOW_OK)
     return;
-  else if (tag != GST_RIFF_TAG_idx1)
-    goto no_index;
 
   gst_avi_demux_parse_index (avi, buf, index);
   if (*index)
@@ -1607,7 +1607,7 @@ too_small:
   }
 no_index:
   {
-    GST_ERROR_OBJECT (avi,
+    GST_WARNING_OBJECT (avi,
         "No index data after movi chunk, but %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (tag));
     gst_buffer_unref (buf);
@@ -2276,8 +2276,6 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
   guint32 size = 0;
   const guint8 *data;
   GstBuffer *buf = NULL, *sub = NULL;
-
-  /*GList *index = NULL, *alloc = NULL; */
   guint offset = 4;
   gint64 stop;
 
@@ -2465,6 +2463,8 @@ skipping_done:
   avi->state = GST_AVI_DEMUX_MOVI;
 
 #if 0
+  /*GList *index = NULL, *alloc = NULL; */
+
   // ######################## this need to be integrated with the state 
   /* create or read stream index (for seeking) */
   if (avi->stream[0].indexes != NULL) {
@@ -3156,6 +3156,7 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
     /* mark as processed, we increment the frame and byte counters then
      * leave the while loop and return the GstFlowReturn */
     processed = TRUE;
+    GST_DEBUG_OBJECT (avi, "Processed buffer %s", gst_flow_get_name (res));
 
   next:
     stream->current_frame = entry->frames_before + 1;
@@ -3233,7 +3234,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
   /* Iterate until need more data, so adapter won't grow too much */
   while (1) {
     if (!gst_avi_demux_peek_chunk_info (avi, &tag, &size)) {
-      return res;
+      return GST_FLOW_OK;
     }
 
     GST_DEBUG ("Trying chunk (%" GST_FOURCC_FORMAT "), size %d",
@@ -3264,102 +3265,100 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
     }
 
     if (!gst_avi_demux_peek_chunk (avi, &tag, &size)) {
-      return res;
+      if ((size == 0) || (size == -1))
+        gst_adapter_flush (avi->adapter, 8);
+      return GST_FLOW_OK;
     }
     GST_DEBUG ("chunk ID %" GST_FOURCC_FORMAT ", size %lu",
         GST_FOURCC_ARGS (tag), size);
 
-    if ((size > 0) && (size != -1)) {
-      stream_nr = CHUNKID_TO_STREAMNR (tag);
+    stream_nr = CHUNKID_TO_STREAMNR (tag);
 
-      if (stream_nr < 0 || stream_nr >= avi->num_streams) {
-        /* recoverable */
-        GST_WARNING ("Invalid stream ID %d (%" GST_FOURCC_FORMAT ")",
-            stream_nr, GST_FOURCC_ARGS (tag));
-        /*   
-           if (!gst_riff_read_skip (riff))
-           return FALSE;
-         */
-      } else {
-        avi_stream_context *stream;
-        GstClockTime next_ts = 0;
-        GstFormat format;
-        GstBuffer *buf;
-        const guint8 *data = NULL;
-
-        gst_adapter_flush (avi->adapter, 8);
-
-        /* get buffer */
-        /* this does not work, as the data-size is 'size', but we eventually
-         * need to flush more data from the adapter.
-         buf = gst_adapter_take_buffer (avi->adapter, ((size + 1) & ~1));
-         */
-        buf = gst_buffer_new_and_alloc (size);
-        data = gst_adapter_peek (avi->adapter, ((size + 1) & ~1));
-        gst_adapter_flush (avi->adapter, ((size + 1) & ~1));
-        memcpy (GST_BUFFER_DATA (buf), data, size);
-        GST_BUFFER_SIZE (buf) = size;
-        avi->offset += 8 + ((size + 1) & ~1);
-
-        /* get time of this buffer */
-        stream = &avi->stream[stream_nr];
-        format = GST_FORMAT_TIME;
-        gst_pad_query_position (stream->pad, &format, (gint64 *) & next_ts);
-
-        /* set delay (if any)
-           if (stream->strh->init_frames == stream->current_frame &&
-           stream->delay == 0)
-           stream->delay = next_ts;
-         */
-
-        stream->current_frame++;
-        stream->current_byte += GST_BUFFER_SIZE (buf);
-
-        /* should we skip this data? */
-        /*
-           if (stream->skip) {
-           stream->skip--;
-           gst_buffer_unref (buf);
-           } else { */
-        if (!stream->pad || !gst_pad_is_linked (stream->pad)) {
-          GST_WARNING ("No pad or not linked.");
-          gst_buffer_unref (buf);
-        } else {
-          GstClockTime dur_ts = 0;
-
-          /* invert the picture if needed */
-          if (stream->strh->fcc_handler == GST_MAKE_FOURCC ('D', 'I', 'B', ' ')) {
-            buf = gst_avi_demux_invert (stream, buf);
-          }
-
-          GST_BUFFER_TIMESTAMP (buf) = next_ts;
-          gst_pad_query_position (stream->pad, &format, (gint64 *) & dur_ts);
-          GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
-          gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
-          GST_DEBUG_OBJECT (avi,
-              "Pushing buffer with time=%" GST_TIME_FORMAT
-              " and size %d over pad %s", GST_TIME_ARGS (next_ts), size,
-              GST_PAD_NAME (stream->pad));
-
-          /* update current position in the segment */
-          gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, next_ts);
-
-          /* mark discont when pending */
-          if (stream->discont) {
-            GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-            stream->discont = FALSE;
-          }
-          res = gst_pad_push (stream->pad, buf);
-          if (res != GST_FLOW_OK) {
-            GST_DEBUG ("Push failed; %s", gst_flow_get_name (res));
-            return res;
-          }
-        }
-        /*} */
-      }
+    if (stream_nr < 0 || stream_nr >= avi->num_streams) {
+      /* recoverable */
+      GST_WARNING ("Invalid stream ID %d (%" GST_FOURCC_FORMAT ")",
+          stream_nr, GST_FOURCC_ARGS (tag));
+      /*   
+         if (!gst_riff_read_skip (riff))
+         return FALSE;
+       */
+      gst_adapter_flush (avi->adapter, 8 + ((size + 1) & ~1));
     } else {
-      GST_DEBUG ("Chunk with invalid size %d. Skip it", size);
+      avi_stream_context *stream;
+      GstClockTime next_ts = 0;
+      GstFormat format;
+      GstBuffer *buf;
+      const guint8 *data = NULL;
+
       gst_adapter_flush (avi->adapter, 8);
+
+      /* get buffer */
+      /* this does not work, as the data-size is 'size', but we eventually
+       * need to flush more data from the adapter.
+       buf = gst_adapter_take_buffer (avi->adapter, ((size + 1) & ~1));
+       */
+      buf = gst_buffer_new_and_alloc (size);
+      data = gst_adapter_peek (avi->adapter, ((size + 1) & ~1));
+      gst_adapter_flush (avi->adapter, ((size + 1) & ~1));
+      memcpy (GST_BUFFER_DATA (buf), data, size);
+      GST_BUFFER_SIZE (buf) = size;
+      avi->offset += 8 + ((size + 1) & ~1);
+
+      /* get time of this buffer */
+      stream = &avi->stream[stream_nr];
+      format = GST_FORMAT_TIME;
+      gst_pad_query_position (stream->pad, &format, (gint64 *) & next_ts);
+
+      /* set delay (if any)
+         if (stream->strh->init_frames == stream->current_frame &&
+         stream->delay == 0)
+         stream->delay = next_ts;
+       */
+
+      stream->current_frame++;
+      stream->current_byte += GST_BUFFER_SIZE (buf);
+
+      /* should we skip this data? */
+      /*
+         if (stream->skip) {
+         stream->skip--;
+         gst_buffer_unref (buf);
+         } else { */
+      if (!stream->pad || !gst_pad_is_linked (stream->pad)) {
+        GST_WARNING ("No pad or not linked.");
+        gst_buffer_unref (buf);
+      } else {
+        GstClockTime dur_ts = 0;
+
+        /* invert the picture if needed */
+        if (stream->strh->fcc_handler == GST_MAKE_FOURCC ('D', 'I', 'B', ' ')) {
+          buf = gst_avi_demux_invert (stream, buf);
+        }
+
+        GST_BUFFER_TIMESTAMP (buf) = next_ts;
+        gst_pad_query_position (stream->pad, &format, (gint64 *) & dur_ts);
+        GST_BUFFER_DURATION (buf) = dur_ts - next_ts;
+        gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
+        GST_DEBUG_OBJECT (avi,
+            "Pushing buffer with time=%" GST_TIME_FORMAT
+            " and size %d over pad %s", GST_TIME_ARGS (next_ts), size,
+            GST_PAD_NAME (stream->pad));
+
+        /* update current position in the segment */
+        gst_segment_set_last_stop (&avi->segment, GST_FORMAT_TIME, next_ts);
+
+        /* mark discont when pending */
+        if (stream->discont) {
+          GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+          stream->discont = FALSE;
+        }
+        res = stream->last_flow = gst_pad_push (stream->pad, buf);
+        if (res != GST_FLOW_OK) {
+          GST_DEBUG ("Push failed; %s", gst_flow_get_name (res));
+          return res;
+        }
+      }
+      /*} */
     }
   }
 
@@ -3443,7 +3442,7 @@ gst_avi_demux_loop (GstPad * pad)
 pause:
   GST_LOG_OBJECT (avi, "pausing task, reason %s", gst_flow_get_name (res));
   gst_pad_pause_task (avi->sinkpad);
-  if (GST_FLOW_IS_FATAL (res) || (res == GST_FLOW_NOT_LINKED)) {
+  if (GST_FLOW_IS_FATAL (res) /* || (res == GST_FLOW_NOT_LINKED) */ ) {
     gboolean push_eos = TRUE;
 
     if (res == GST_FLOW_UNEXPECTED) {
