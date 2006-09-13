@@ -1,3 +1,11 @@
+2006-09-13  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
+	(check_keyframe), (gst_ffmpegdec_video_frame),
+	(gst_ffmpegdec_chain):
+	Add some more timestamp debugging.
+	Fixed wrong duration whn not using a parser.
+
 2006-09-08  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_request_new_pad),

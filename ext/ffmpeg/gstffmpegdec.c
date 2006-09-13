@@ -482,14 +482,19 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
   GST_LOG_OBJECT (ffmpegdec, "Opened ffmpeg codec %s, id %d",
       oclass->in_plugin->name, oclass->in_plugin->id);
 
-  /* open a parser if we can - exclude mp3 because it doesn't work (?),
-   * and mjpeg because ... */
-  if (oclass->in_plugin->id != CODEC_ID_MPEG4 &&
-      oclass->in_plugin->id != CODEC_ID_MJPEG &&
-      oclass->in_plugin->id != CODEC_ID_MP3 &&
-      oclass->in_plugin->id != CODEC_ID_H264) {
-    GST_LOG_OBJECT (ffmpegdec, "Using parser");
-    ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
+  /* open a parser if we can */
+  switch (oclass->in_plugin->id) {
+    case CODEC_ID_MPEG4:
+    case CODEC_ID_MJPEG:
+    case CODEC_ID_MP3:
+    case CODEC_ID_H264:
+      GST_LOG_OBJECT (ffmpegdec, "not using parser, blacklisted codec");
+      ffmpegdec->pctx = NULL;
+      break;
+    default:
+      GST_LOG_OBJECT (ffmpegdec, "Using parser");
+      ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
+      break;
   }
 
   switch (oclass->in_plugin->type) {
@@ -1068,8 +1073,8 @@ check_keyframe (GstFFMpegDec * ffmpegdec)
       || (oclass->in_plugin->id == CODEC_ID_HUFFYUV);
 
   GST_LOG_OBJECT (ffmpegdec,
-      "current picture: is_keyframe:%d, is_itype:%d, is_reference:%d",
-      iskeyframe, is_itype, is_reference);
+      "current picture: type: %d, is_keyframe:%d, is_itype:%d, is_reference:%d",
+      ffmpegdec->picture->pict_type, iskeyframe, is_itype, is_reference);
 
   return iskeyframe;
 }
@@ -1203,6 +1208,10 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   if (len < 0 || have_data <= 0)
     goto beach;
 
+  GST_DEBUG_OBJECT (ffmpegdec, "picture: pts %"G_GUINT64_FORMAT, ffmpegdec->picture->pts);
+  GST_DEBUG_OBJECT (ffmpegdec, "picture: num %d", ffmpegdec->picture->coded_picture_number);
+  GST_DEBUG_OBJECT (ffmpegdec, "picture: display %d", ffmpegdec->picture->display_picture_number);
+
   /* check if we are dealing with a keyframe here */
   iskeyframe = check_keyframe (ffmpegdec);
 
@@ -1224,10 +1233,22 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   /*
    * Timestamps:
    *
-   *  1) Copy input timestamp if valid
-   *  2) else interpolate from previous input timestamp
+   *  1) Copy parse context timestamp if present and valid (FIXME)
+   *  2) Copy input timestamp if valid
+   *  3) else interpolate from previous input timestamp
    */
-  /* always take timestamps from the input buffer if any */
+#if 0
+  /* this does not work reliably, for some files this works fine, for other
+   * files it returns the same timestamp twice. Leaving the code here for when
+   * the parsers are improved in ffmpeg. */
+  if (ffmpegdec->pctx) {
+    GST_DEBUG_OBJECT (ffmpegdec, "picture: ffpts %"G_GUINT64_FORMAT, ffmpegdec->pctx->pts);
+    if (ffmpegdec->pctx->pts != AV_NOPTS_VALUE) {
+      in_timestamp = gst_ffmpeg_time_ff_to_gst (ffmpegdec->pctx->pts,
+            ffmpegdec->context->time_base);
+    }
+  }
+#endif
   if (!GST_CLOCK_TIME_IS_VALID (in_timestamp)) {
     GST_LOG_OBJECT (ffmpegdec, "using timestamp returned by ffmpeg");
     /* Get (interpolated) timestamp from FFMPEG */
@@ -1814,7 +1835,7 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     /* no cache, input timestamp matches the buffer we try to decode */
     left = 0;
     in_timestamp = pending_timestamp;
-    in_duration  = pending_timestamp;
+    in_duration  = pending_duration;
   }
 
   /* workarounds, functions write to buffers:
@@ -1835,12 +1856,12 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       gint res;
       gint64 ffpts;
 
-      GST_LOG_OBJECT (ffmpegdec,
-          "Calling av_parser_parse with ts:%" GST_TIME_FORMAT,
-          GST_TIME_ARGS (in_timestamp));
-
       /* convert timestamp to ffmpeg timestamp */
       ffpts = gst_ffmpeg_time_gst_to_ff (in_timestamp, ffmpegdec->context->time_base);
+
+      GST_LOG_OBJECT (ffmpegdec,
+          "Calling av_parser_parse with ts:%" GST_TIME_FORMAT", ffpts:%"G_GINT64_FORMAT,
+          GST_TIME_ARGS (in_timestamp), ffpts);
 
       /* feed the parser */
       res = av_parser_parse (ffmpegdec->pctx, ffmpegdec->context,
@@ -1854,8 +1875,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       if (size == 0)
         break;
 
-      GST_LOG_OBJECT (ffmpegdec, "consuming %d bytes. Next ts at %d",
-		      size, left);
+      GST_LOG_OBJECT (ffmpegdec, "consuming %d bytes. Next ts at %d, ffpts:%"G_GINT64_FORMAT,
+		      size, left, ffmpegdec->pctx->pts);
 
       /* there is output, set pointers for next round. */
       bsize -= size;
@@ -1879,8 +1900,8 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
         next_timestamp = gst_ffmpeg_time_ff_to_gst (ffmpegdec->pctx->pts,
             ffmpegdec->context->time_base);
 	next_duration = GST_CLOCK_TIME_NONE;
-        GST_LOG_OBJECT (ffmpegdec, "parse context next ts:%" GST_TIME_FORMAT,
-			GST_TIME_ARGS (next_timestamp));
+        GST_LOG_OBJECT (ffmpegdec, "parse context next ts:%" GST_TIME_FORMAT", ffpts:%"G_GINT64_FORMAT,
+			GST_TIME_ARGS (next_timestamp), ffpts);
       }
     }
     else {
