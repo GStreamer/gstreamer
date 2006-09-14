@@ -1,3 +1,10 @@
+=== release 0.10.10 ===
+
+2006-09-14  Thomas Vander Stichele <thomas at apestaart dot org>
+
+	* configure.ac:
+	  releasing 0.10.10, "Pais"
+
 2006-09-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/manual/advanced-position.xml:
@@ -31,7 +38,7 @@
 2006-09-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/moving-plugins:
-        Fix two typos.         
+	Fix two typos.         
 
 2006-09-01  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -262,7 +269,7 @@
 
 	* tools/Makefile.am:
 	* tools/gst-plot-timeline.py:
-          add debug-log plotting developer tool (#340674)
+	  add debug-log plotting developer tool (#340674)
 
 2006-08-23  Wim Taymans  <wim@fluendo.com>
 
@@ -336,25 +343,25 @@
 2006-08-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* ChangeLog:
-          ChangeLog surgery to add comments to previous changes
+	  ChangeLog surgery to add comments to previous changes
 
 2006-08-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gst.c:
-          Add comments
+	  Add comments
 
 	* gst/gstpad.c: (gst_pad_set_active):
-          Be more verbose in the log
+	  Be more verbose in the log
 
 	* libs/gst/base/gstbasetransform.c:
 	(gst_base_transform_transform_caps):
-          Simplify caps to get rid of duplicates, fixes #345444
+	  Simplify caps to get rid of duplicates, fixes #345444
 
 2006-08-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstvalue.c:
 	* gst/gstvalue.h:
-          Use these optimizations only internaly.
+	  Use these optimizations only internally.
 
 2006-08-20  Stefan Kost  <ensonic@users.sf.net>
 
@@ -367,8 +374,8 @@
 	(gst_value_get_compare_func), (gst_value_compare),
 	(gst_value_compare_with_func):
 	* gst/gstvalue.h:
-          Saves the expensive lookup of the compare function in many cases
-         (#345444)
+	  Saves the expensive lookup of the compare function in many cases
+	 (#345444)
 
 2006-08-18  Edward Hervey  <edward@fluendo.com>
 
@@ -381,13 +388,13 @@
 	  update ideas
 	  
 	* gst/gstinfo.c: (gst_debug_log_default):
-	  reorder fields, save some columns, add optinal color codes for log-
+	  reorder fields, save some columns, add optional color codes for log
 	  levels
 
 2006-08-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/ensonic/logging.txt:
-	  add ideas about making the logs abit more useful
+	  add ideas about making the logs a bit more useful
 
 2006-08-17  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -549,8 +556,8 @@
 
 	* gst/gst.c: (gst_init_check), (init_post):
 	Set gst as being initialized before scanning/updating the registry,
-	since there might be some plugins that call gst_init() and we don't
-	want to loop back in.
+	since there might be my python plugin loader that calls gst_init() and
+	we don't want to loop back in.
 	Closes #350879
 
 2006-08-11  Wim Taymans  <wim@fluendo.com>
@@ -599,10 +606,10 @@
 2006-08-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/controller/gstcontroller.h:
-          fix ABI size-correction
+	  fix ABI size-correction
 
 	* tests/check/libs/gdp.c: (gst_dp_suite):
-          make tests that use deprecated API conditional
+	  make tests that use deprecated API conditional
 
 2006-08-10  Stefan Kost  <ensonic@users.sf.net>
 
@@ -613,12 +620,12 @@
 	* libs/gst/controller/gstcontroller.h:
 	* libs/gst/controller/gsthelper.c: (gst_object_get_control_rate),
 	(gst_object_set_control_rate):
-          API: add gst_object_{s,g}et_control_rate(), add private data section,
-          fix docs
+	  API: add gst_object_{s,g}et_control_rate(), add private data section,
+	  fix docs
 
 	* libs/gst/dataprotocol/dataprotocol.c: (gst_dp_packetizer_new):
 	* libs/gst/dataprotocol/dataprotocol.h:
-          add deprecation guards to make gtk-doc happy and allow disabling cruft
+	  add deprecation guards to make gtk-doc happy and allow disabling cruft
 
 2006-08-09  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -641,7 +648,8 @@
 	* tests/check/gst/gstinfo.c: (segment_printf_extension_log_func),
 	(info_segment_format_printf_extension), (gst_info_suite):
 	  Add simple unit test that logs a bunch of different segments (not
-	  valgrinded at the moment because of leaks in gst_debug_add_log_function).
+	  valgrinded at the moment because of leaks in
+	  gst_debug_add_log_function).
 
 2006-08-09  Edward Hervey  <edward@fluendo.com>
 
@@ -780,8 +788,8 @@
 	* gst/parse/Makefile.am:
 	* gst/parse/grammar.y:
 	* gst/parse/parse.l:
-          Reverted previous patch as it required to bump the flex dependency to
-          2.5.31, where fc4/5 seem to ship only the ancient 2.5.4a :(
+	  Reverted previous patch as it required to bump the flex dependency to
+	  2.5.31, where fc4/5 seem to ship only the ancient 2.5.4a :(
 
 2006-07-30  Stefan Kost  <ensonic@users.sf.net>
 
@@ -881,8 +889,8 @@
 2006-07-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstregistry.c:
-          Move big documentation comment into class section header, so that it
-          appears in the API docs.
+	  Move big documentation comment into class section header, so that it
+	  appears in the API docs.
 
 2006-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
@@ -955,8 +963,7 @@
 2006-07-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstinfo.h:
-	  Move the Win32 version from gst-plugins-good/gst/avi/avidemux.c to
-	  here.
+	  on Win32, use dllspec to export the debug category symbols
 
 2006-07-24  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -975,7 +982,7 @@
 2006-07-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstparse.c: (gst_parse_launch):
-	  Also remove reentrance checks if flex is MT save (#348179)
+	  Also remove reentrance checks if flex is MT safe (#348179)
 	 Fix my empty ChangeLog entry below
 
 2006-07-21  Andy Wingo  <wingo@pobox.com>
@@ -1011,13 +1018,13 @@
 2006-07-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstparse.c: (gst_parse_launch):
-          Do not hange on recursive uasge of gst_parse_launch()
+	  Do not hang on recursive usage of gst_parse_launch()
 
 2006-07-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsttaglist.c:
 	  Add some more docs, comments and FIXME 0.11s here and there
-	  and  also fix some typos.
+	  and also fix some typos.
 
 2006-07-20  Tim-Philipp Müller  <tim at centricular dot net>
 
@@ -1029,7 +1036,8 @@
 	* tests/check/libs/gdp.c: (gst_dp_suite):
 	the test_buffer test fails at line 140 on ppc64 at the following
 	check:
-	fail_unless (GST_BUFFER_FLAG_IS_SET (newbuffer, GST_BUFFER_FLAG_IN_CAPS),
+	fail_unless (GST_BUFFER_FLAG_IS_SET (newbuffer,
+	        GST_BUFFER_FLAG_IN_CAPS),
 		"GST_BUFFER_IN_CAPS flag should have been copied !");
 	See bug #348114 for more details.
 
@@ -1050,7 +1058,7 @@
 	* gst/gstregistryxml.c: (load_feature),
 	(gst_registry_xml_read_cache), (gst_registry_xml_save_feature):
 	* win32/common/config.h:
-        make --disable-index work (#342564)
+	  make --disable-index work (#342564)
 
 2006-07-18  Wim Taymans  <wim@fluendo.com>
 
@@ -1188,15 +1196,15 @@
 
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstconfig.h.in:
-        More docs for configuration options, add docs to gtk-doc.
+	More docs for configuration options, add docs to gtk-doc.
 
 2006-07-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/Makefile.am:
 	* gst/gstconfig.h.in:
 	* win32/common/config.h:
-        Fix build when disabling tracing (fixes #344016). Also start to document
-        the defines that disable the sub-systems.
+	Fix build when disabling tracing (fixes #344016). Also start to document
+	the defines that disable the sub-systems.
 
 2006-07-10  Edward Hervey  <edward@fluendo.com>
 
@@ -2576,7 +2584,7 @@
 	* plugins/elements/gsttee.c: (gst_tee_class_init):
 	* tests/old/examples/plugins/example.c: (gst_example_class_init):
 	* tests/old/testsuite/threads/signals.c: (gst_test_class_init):
-          G_OBJECT_CLASS macro usage batch cleanup, fixes #337747 for core
+	  G_OBJECT_CLASS macro usage batch cleanup, fixes #337747 for core
 
 2006-05-11  Wim Taymans  <wim@fluendo.com>
 

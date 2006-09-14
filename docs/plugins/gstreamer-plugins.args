@@ -314,8 +314,8 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Use mmap to read data</NICK>
-<BLURB>Whether to use mmap. FALSE to force normal read() calls.</BLURB>
-<DEFAULT>TRUE</DEFAULT>
+<BLURB>Whether to use mmap() instead of read().</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -354,7 +354,7 @@
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Drop Probability</NICK>
-<BLURB>The Probability a buffer is dropped.</BLURB>
+<BLURB>The Probability a buffer is dropped (not implemented).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 

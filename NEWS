@@ -1,4 +1,50 @@
-This is GStreamer 0.10.9, "On the road again"
+This is GStreamer 0.10.10, "Pais"
+
+Bugs fixed since 0.10.9:
+     
+      * 349180 : gst_parse_launch is not reentrant (or recursively callable)
+      * 348455 : [filesrc] should not use mmap() by default, since it migh...
+      * 340674 : marry gst-debugs & plot-timeline.py
+      * 350449 : [GstBaseTransform] buffer_alloc should alway try downstream
+      * 352580 : implement proper caps merging
+      * 345444 : Linking to an audioconvert (pad-added callback) multiple ...
+      * 347293 : GstValueList comparison is flawed
+      * 347311 : element_unlink leaks its iterator wich will leak the src ...
+      * 348179 : gst_parse_lauch is not reentrant
+      * 348354 : failure in bison version detection breaks build
+      * 350419 : API: GST_SEGMENT_FORMAT printf extension for GstSegments
+      * 350879 : [init] Mark gstreamer as being initialized during registr...
+      * 350935 : API: add GST_TAG_EXTENDED_COMMENT
+      * 353976 : asssertion about element sanity in gst_registry_xml_write...
+      * 350432 : micro-optimising quarks
+      * 341029 : Ghostpads internal and target should be linked from the b...
+      * 345295 : [PATCH] gstreamer/libs/gst/net for Windows
+      * 347756 : Allow --disable-trace without --disable-parse
+      * 347794 : Do not reset SIGSEGV handler when --gst-disable-segtrap i...
+      * 348918 : application should decide whether or not to use fork() to...
+      * 349943 : [QOS] documentation/code mismatch
+      * 351768 : Unwanted concurent buffer modifications
+      * 352958 : pad_alloc_buffer and stream lock
+      * 353121 : gst_query_new_segment should initialize all structure fields
+      * 353122 : gst_element_get_bus refs the bus unconditionally
+      * 347385 : [ghostpad] gst_ghost_pad_new_from_template() method
+      * 348677 : Upgrade to 0.10.9 breaks existing applications (failed se...
+
+API added since 0.10.9:
+     
+      * gst_segtrap_is_enabled
+      * gst_segtrap_set_enabled
+      * gst_registry_fork_is_enabled
+      * gst_registry_fork_set_enabled
+      * gst_ghost_pad_new_from_template
+      * gst_ghost_pad_new_no_target_from_template
+      * gst_caps_merge
+      * GST_TAG_EXTENDED_COMMENT
+      * GstClockCLass:wait_jitter
+      * GST_SEGMENT_FORMAT
+      * gst_structure_id_set
+      * gst_structure_id_set_valist
+
 Changes since 0.10.8:
 
       * The testsuite can now generate coverage information

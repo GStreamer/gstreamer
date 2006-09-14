@@ -419,13 +419,13 @@ struct _GstClock {
  * @change_resolution: change the resolution of the clock. Not all values might
  *                     be acceptable. The new resolution should be returned.
  * @get_resolution: get the resolution of the clock.
- * @get_internal_time: get the internal unadjusted time of the clock. 
+ * @get_internal_time: get the internal unadjusted time of the clock.
  * @wait: perform a blocking wait for the given GstClockEntry. Deprecated,
  *        implement @wait_jitter instead.
  * @wait_async: perform an asynchronous wait for the given GstClockEntry.
  * @unschedule: unblock a blocking or async wait operation.
  * @wait_jitter: perform a blocking wait on the given GstClockEntry and return
- *               the jitter.
+ *               the jitter. (Since: 0.10.10)
  *
  * GStreamer clock class. Override the vmethods to implement the clock
  * functionality.

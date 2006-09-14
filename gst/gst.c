@@ -1130,9 +1130,9 @@ gst_version_string ()
 /**
  * gst_segtrap_is_enabled:
  *
- * Some functions in the GStreamer core might install a custom SIGSEGV handler to
- * better catch and report errors to the application. Currently this feature is 
- * enabled by default when loading plugins.
+ * Some functions in the GStreamer core might install a custom SIGSEGV handler
+ * to better catch and report errors to the application. Currently this feature
+ * is enabled by default when loading plugins.
  *
  * Applications might want to disable this behaviour with the
  * gst_segtrap_set_enabled() function. This is typically done if the application

@@ -584,6 +584,8 @@ gst_caps_append (GstCaps * caps1, GstCaps * caps2)
  * expressed by @caps1. The structures in @caps2 are not copied -- they are
  * transferred to @caps1, and then @caps2 is freed.
  * If either caps is ANY, the resulting caps will be ANY.
+ *
+ * Since: 0.10.10
  */
 void
 gst_caps_merge (GstCaps * caps1, GstCaps * caps2)

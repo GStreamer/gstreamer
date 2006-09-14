@@ -510,6 +510,8 @@ gst_structure_set_valist (GstStructure * structure,
  * setting of the structure if the caller already knows the associated
  * quark values.
  * The last variable argument must be NULL.
+ *
+ * Since: 0.10.10
  */
 void
 gst_structure_id_set (GstStructure * structure, GQuark field, ...)
@@ -530,6 +532,8 @@ gst_structure_id_set (GstStructure * structure, GQuark field, ...)
  * @varargs: variable arguments
  *
  * va_list form of gst_structure_id_set().
+ *
+ * Since: 0.10.10
  */
 void
 gst_structure_id_set_valist (GstStructure * structure,
