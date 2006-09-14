@@ -193,6 +193,7 @@ gst_fd_src_update_fd (GstFdSrc * src)
   struct stat stat_results;
 
   src->fd = src->new_fd;
+  GST_INFO_OBJECT (src, "Updating to fd %d", src->fd);
   g_free (src->uri);
   src->uri = g_strdup_printf ("fd://%d", src->fd);
 

@@ -1,5 +1,10 @@
 2006-09-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_update_fd):
+	  add an INFO line for when we actually update the fd
+
+2006-09-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  back to TRUNK
 
