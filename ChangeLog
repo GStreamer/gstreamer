@@ -1,5 +1,13 @@
 2006-09-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_chain_parse_tag):
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain):
+	  Don't interpret a first buffer with an offset of NONE as
+	  'from the middle of the stream', but only a first buffer
+	  that has a valid buffer offset that's non-zero (see #345449).
+
+2006-09-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/icydemux/gsticydemux.c: (gst_icydemux_reset),
 	(gst_icydemux_typefind_or_forward):
 	* gst/icydemux/gsticydemux.h:

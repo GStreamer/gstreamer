@@ -461,7 +461,7 @@ gst_tag_demux_chain_parse_tag (GstTagDemux * demux, GstBuffer * collect)
 
   /* If we receive a buffer that's from the middle of the file, 
    * we can't read tags so move to typefinding */
-  if (GST_BUFFER_OFFSET (collect) != 0) {
+  if (GST_BUFFER_OFFSET_IS_VALID (collect) && GST_BUFFER_OFFSET (collect) != 0) {
     GST_DEBUG_OBJECT (demux, "Received buffer from non-zero offset %"
         G_GINT64_FORMAT ". Can't read tags", GST_BUFFER_OFFSET (collect));
     demux->priv->state = GST_TAG_DEMUX_TYPEFINDING;

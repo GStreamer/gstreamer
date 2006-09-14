@@ -419,9 +419,11 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
     case GST_ID3DEMUX_READID3V2:
       /* If we receive a buffer that's from the middle of the file, 
        * we can't read tags so move to typefinding */
-      if (GST_BUFFER_OFFSET (id3demux->collect) != 0) {
+      if (GST_BUFFER_OFFSET_IS_VALID (id3demux->collect) &&
+          GST_BUFFER_OFFSET (id3demux->collect) != 0) {
         GST_DEBUG_OBJECT (id3demux,
-            "Received buffer from non-zero offset. Can't read tags");
+            "Received buffer with non-zero offset %" G_GINT64_FORMAT
+            ". Can't read tags", GST_BUFFER_OFFSET (id3demux->collect));
       } else {
         ID3TagsResult tag_result;
 
