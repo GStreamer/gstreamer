@@ -54,18 +54,22 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (SINK_CAPS)
     );
 
-GstElement *icydemux;
-GstBus *bus;
+static GstElement *icydemux;
+static GstBus *bus;
 GstPad *srcpad, *sinkpad;
 
 static GstStaticCaps typefind_caps =
 GST_STATIC_CAPS ("application/octet-stream");
 
+static gboolean fake_typefind_caps;     /* FALSE */
+
 static void
 typefind_succeed (GstTypeFind * tf, gpointer private)
 {
-  gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
-      gst_static_caps_get (&typefind_caps));
+  if (fake_typefind_caps) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM,
+        gst_static_caps_get (&typefind_caps));
+  }
 }
 
 static gboolean
@@ -124,20 +128,27 @@ cleanup_icydemux (void)
 {
   gst_bus_set_flushing (bus, TRUE);
   gst_object_unref (bus);
+  bus = NULL;
 
   gst_check_teardown_src_pad (icydemux);
   gst_check_teardown_sink_pad (icydemux);
   gst_check_teardown_element (icydemux);
+
+  srcpad = NULL;
+  sinkpad = NULL;
+  icydemux = NULL;
 }
 
 static void
-push_data (guint8 * data, int len, GstCaps * caps)
+push_data (const guint8 * data, int len, GstCaps * caps, gint64 offset)
 {
   GstFlowReturn res;
   GstBuffer *buffer = gst_buffer_new_and_alloc (len);
 
   memcpy (GST_BUFFER_DATA (buffer), data, len);
   gst_buffer_set_caps (buffer, caps);
+
+  GST_BUFFER_OFFSET (buffer) = offset;
 
   res = gst_pad_push (srcpad, buffer);
 
@@ -152,11 +163,13 @@ GST_START_TEST (test_demux)
   const gchar *tag;
   GstCaps *caps;
 
+  fake_typefind_caps = TRUE;
+
   caps = gst_caps_from_string (ICYCAPS);
 
   create_icydemux ();
 
-  push_data ((guint8 *) ICY_DATA, sizeof (ICY_DATA), caps);
+  push_data ((guint8 *) ICY_DATA, sizeof (ICY_DATA), caps, -1);
 
   message = gst_bus_poll (bus, GST_MESSAGE_TAG, -1);
   fail_unless (message != NULL);
@@ -177,18 +190,64 @@ GST_START_TEST (test_demux)
   gst_caps_unref (caps);
 
   cleanup_icydemux ();
+
+  fake_typefind_caps = FALSE;
 }
 
 GST_END_TEST;
 
-Suite *
-icydemux_suite ()
+/* run this test first before the custom typefind function is set up */
+GST_START_TEST (test_first_buf_offset_when_merged_for_typefinding)
+{
+  const guint8 buf1[] = { 'M' };
+  const guint8 buf2[] = { 'P', '+', 0xff, 0xfb, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  };
+  GstCaps *icy_caps;
+  GstPad *icy_srcpad;
+
+  fake_typefind_caps = FALSE;
+
+  create_icydemux ();
+
+  icy_caps = gst_caps_from_string (ICYCAPS);
+
+  push_data (buf1, G_N_ELEMENTS (buf1), icy_caps, 0);
+
+  /* one byte isn't really enough for typefinding, can't have a srcpad yet */
+  fail_unless (gst_element_get_pad (icydemux, "src") == NULL);
+
+  push_data (buf2, G_N_ELEMENTS (buf2), icy_caps, -1);
+
+  /* should have been enough to create a audio/x-musepack source pad .. */
+  icy_srcpad = gst_element_get_pad (icydemux, "src");
+  fail_unless (icy_srcpad != NULL);
+  gst_object_unref (icy_srcpad);
+
+  fail_unless (g_list_length (buffers) > 0);
+
+  /* first buffer should have offset 0 even after it was merged with 2nd buf */
+  fail_unless (GST_BUFFER_OFFSET (GST_BUFFER_CAST (buffers->data)) == 0);
+
+  /* first buffer should have caps set */
+  fail_unless (GST_BUFFER_CAPS (GST_BUFFER_CAST (buffers->data)) != NULL);
+
+  gst_caps_unref (icy_caps);
+
+  cleanup_icydemux ();
+}
+
+GST_END_TEST;
+
+static Suite *
+icydemux_suite (void)
 {
   Suite *s = suite_create ("icydemux");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_demux);
+  tcase_add_test (tc_chain, test_first_buf_offset_when_merged_for_typefinding);
 
   return s;
 }

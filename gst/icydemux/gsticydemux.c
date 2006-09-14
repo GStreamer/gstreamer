@@ -177,10 +177,9 @@ gst_icydemux_reset (GstICYDemux * icydemux)
     icydemux->meta_adapter = NULL;
   }
 
-  if (icydemux->typefind_adapter) {
-    gst_adapter_clear (icydemux->typefind_adapter);
-    g_object_unref (icydemux->typefind_adapter);
-    icydemux->typefind_adapter = NULL;
+  if (icydemux->typefind_buf) {
+    gst_buffer_unref (icydemux->typefind_buf);
+    icydemux->typefind_buf = NULL;
   }
 }
 
@@ -427,49 +426,38 @@ static GstFlowReturn
 gst_icydemux_typefind_or_forward (GstICYDemux * icydemux, GstBuffer * buf)
 {
   if (icydemux->typefinding) {
-    GstBuffer *typefind_buf;
-    const guint8 *data;
+    GstBuffer *tf_buf;
     GstCaps *caps;
-    int size;
     guint prob;
 
-    if (!icydemux->typefind_adapter)
-      icydemux->typefind_adapter = gst_adapter_new ();
-
-    gst_adapter_push (icydemux->typefind_adapter, buf);
-
-    size = gst_adapter_available (icydemux->typefind_adapter);
-    typefind_buf = gst_buffer_new ();
-
-    data = gst_adapter_peek (icydemux->typefind_adapter, size);
-
-    GST_BUFFER_DATA (typefind_buf) = (guint8 *) data;
-    GST_BUFFER_SIZE (typefind_buf) = size;
+    if (icydemux->typefind_buf) {
+      icydemux->typefind_buf = gst_buffer_join (icydemux->typefind_buf, buf);
+    } else {
+      icydemux->typefind_buf = buf;
+    }
 
     caps = gst_type_find_helper_for_buffer (GST_OBJECT (icydemux),
-        typefind_buf, &prob);
+        icydemux->typefind_buf, &prob);
 
     if (caps == NULL) {
-      if (size < ICY_TYPE_FIND_MAX_SIZE) {
-        gst_buffer_unref (typefind_buf);
+      if (GST_BUFFER_SIZE (icydemux->typefind_buf) < ICY_TYPE_FIND_MAX_SIZE) {
         /* Just break for more data */
         return GST_FLOW_OK;
       }
 
       /* We failed typefind */
-      GST_ELEMENT_ERROR (icydemux, CORE, CAPS,
-          ("Could not determine the mime type of the file"),
+      GST_ELEMENT_ERROR (icydemux, STREAM, TYPE_NOT_FOUND, (NULL),
           ("No caps found for contents within an ICY stream"));
-      gst_buffer_unref (typefind_buf);
-      gst_adapter_clear (icydemux->typefind_adapter);
+      gst_buffer_unref (icydemux->typefind_buf);
+      icydemux->typefind_buf = NULL;
       return GST_FLOW_ERROR;
     }
 
     if (!gst_icydemux_add_srcpad (icydemux, caps)) {
       GST_DEBUG_OBJECT (icydemux, "Failed to add srcpad");
       gst_caps_unref (caps);
-      gst_buffer_unref (typefind_buf);
-      gst_adapter_clear (icydemux->typefind_adapter);
+      gst_buffer_unref (icydemux->typefind_buf);
+      icydemux->typefind_buf = NULL;
       return GST_FLOW_ERROR;
     }
     gst_caps_unref (caps);
@@ -487,21 +475,23 @@ gst_icydemux_typefind_or_forward (GstICYDemux * icydemux, GstBuffer * buf)
      * to get that forwarded. */
     icydemux->typefinding = FALSE;
 
-    data = gst_adapter_take (icydemux->typefind_adapter, size);
-    GST_BUFFER_DATA (typefind_buf) = (guint8 *) data;
-    GST_BUFFER_MALLOCDATA (typefind_buf) = (guint8 *) data;
-
-    return gst_icydemux_typefind_or_forward (icydemux, typefind_buf);
+    tf_buf = icydemux->typefind_buf;
+    icydemux->typefind_buf = NULL;
+    return gst_icydemux_typefind_or_forward (icydemux, tf_buf);
   } else {
     if (G_UNLIKELY (icydemux->srcpad == NULL)) {
       gst_buffer_unref (buf);
       return GST_FLOW_ERROR;
     }
 
+    buf = gst_buffer_make_metadata_writable (buf);
     gst_buffer_set_caps (buf, icydemux->src_caps);
 
-    /* Most things don't care, and it's a pain to track */
-    GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+    /* Most things don't care, and it's a pain to track (we should preserve a
+     * 0 offset on the first buffer though if it's there, for id3demux etc.) */
+    if (GST_BUFFER_OFFSET (buf) != 0) {
+      GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+    }
 
     return gst_pad_push (icydemux->srcpad, buf);
   }

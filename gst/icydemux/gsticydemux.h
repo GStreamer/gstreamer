@@ -69,7 +69,7 @@ struct _GstICYDemux
 
   GstAdapter *meta_adapter;
 
-  GstAdapter *typefind_adapter;
+  GstBuffer *typefind_buf;
 };
 
 struct _GstICYDemuxClass 

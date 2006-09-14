@@ -1,3 +1,18 @@
+2006-09-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/icydemux/gsticydemux.c: (gst_icydemux_reset),
+	(gst_icydemux_typefind_or_forward):
+	* gst/icydemux/gsticydemux.h:
+	  When we merge/collect multiple incoming buffers for typefinding
+	  purposes, keep an initial 0 offset on the first outgoing buffer
+	  as well (otherwise id3demux won't work right). Fixes #345449.
+	  Also Make buffer metadata writable before setting buffer caps.
+
+	* tests/check/elements/icydemux.c: (typefind_succeed),
+	(cleanup_icydemux), (push_data), (GST_START_TEST),
+	(icydemux_suite):
+	  Small test case for the above.
+
 2006-09-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_peek_chunk),
