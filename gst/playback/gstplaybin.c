@@ -409,7 +409,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Pango font description of font "
           "to be used for subtitle rendering", NULL, G_PARAM_WRITABLE));
   /**
-   * GstPlayBin:connection-speed
+   * GstPlayBin::connection-speed
    *
    * Network connection speed in kbps (0 = unknown)
    *

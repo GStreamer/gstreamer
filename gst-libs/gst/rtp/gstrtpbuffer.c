@@ -1,6 +1,6 @@
 /* GStreamer
- * Copyright (C) <2005> Philippe Khalaf <burger@speedy.org> 
- * Copyright (C) <2006> Wim Taymans <wim@fluendo.com> 
+ * Copyright (C) <2005> Philippe Khalaf <burger@speedy.org>
+ * Copyright (C) <2006> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -763,6 +763,8 @@ gst_rtp_buffer_set_timestamp (GstBuffer * buffer, guint32 timestamp)
  * If @len is -1 the total payload starting from @offset if subbuffered.
  *
  * Returns: A new buffer with the specified data of the payload.
+ *
+ * Since: 0.10.10
  */
 GstBuffer *
 gst_rtp_buffer_get_payload_subbuffer (GstBuffer * buffer, guint offset,

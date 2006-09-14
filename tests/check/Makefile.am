@@ -80,8 +80,8 @@ VALGRIND_TO_FIX = \
 # these tests don't even pass
 noinst_PROGRAMS =
 
-AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
-LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
+AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS)
+LDADD = $(GST_LIBS) $(GST_CHECK_LIBS)
 
 # valgrind testing
 VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
@@ -91,35 +91,21 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-base.supp
 libs_audio_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
 	$(LDADD)
-libs_audio_CFLAGS = -I$(top_srcdir)/gst-libs $(CFLAGS) $(AM_CFLAGS)
 
 libs_cddabasesrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
-libs_cddabasesrc_CFLAGS = \
-	-I$(top_srcdir)/gst-libs \
-	$(CFLAGS) $(AM_CFLAGS)
-
 libs_tag_LDADD = \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la $(LDADD)
-libs_tag_CFLAGS = -I$(top_srcdir)/gst-libs $(CFLAGS) $(AM_CFLAGS)
 
 elements_alsa_LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
-elements_alsa_CFLAGS = \
-	-I$(top_srcdir)/gst-libs \
-	$(CFLAGS) $(AM_CFLAGS)
-
 elements_audioconvert_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
 	$(LDADD)
-
-elements_audioconvert_CFLAGS = \
-	-I$(top_srcdir)/gst-libs \
-	$(CFLAGS) $(AM_CFLAGS)
 
 elements_gdpdepay_LDADD = $(GST_GDP_LIBS) $(LDADD)
 elements_gdppay_LDADD = $(GST_GDP_LIBS) $(LDADD)
@@ -130,14 +116,13 @@ elements_volume_LDADD = \
 
 elements_volume_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
-	$(CFLAGS) $(AM_CFLAGS)
+	$(AM_CFLAGS)
 
 libs_video_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
 	$(LDADD)
-libs_video_CFLAGS = -I$(top_srcdir)/gst-libs $(CFLAGS) $(AM_CFLAGS)
 
 pipelines_oggmux_LDADD = $(LDADD) $(OGG_LIBS)
-pipelines_oggmux_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(OGG_CFLAGS)
+pipelines_oggmux_CFLAGS = $(AM_CFLAGS) $(OGG_CFLAGS)
 
 EXTRA_DIST = gst-plugins-base.supp

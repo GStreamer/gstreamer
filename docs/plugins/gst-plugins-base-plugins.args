@@ -1548,3 +1548,33 @@
 <DEFAULT></DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstGDPPay::crc-header</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CRC Header</NICK>
+<BLURB>Calculate and store a CRC checksum on the header.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGDPPay::crc-payload</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CRC Payload</NICK>
+<BLURB>Calculate and store a CRC checksum on the payload.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGDPPay::version</NAME>
+<TYPE>GstDPVersion</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Version</NICK>
+<BLURB>Version of the GStreamer Data Protocol.</BLURB>
+<DEFAULT>GDP Version 1.0</DEFAULT>
+</ARG>
+

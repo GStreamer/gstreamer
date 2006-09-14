@@ -3,12 +3,19 @@
   <description>ogg stream manipulation (info about ogg: http://xiph.org)</description>
   <filename>../../ext/ogg/.libs/libgstogg.so</filename>
   <basename>libgstogg.so</basename>
-  <version>0.10.9.1</version>
+  <version>0.10.10</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins CVS/prerelease</package>
+  <package>GStreamer Base Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
+    <element>
+      <name>oggaviparse</name>
+      <longname>Ogg AVI parser</longname>
+      <class>Codec/Parser</class>
+      <description>parse an ogg avi stream into pages (info about ogg: http://xiph.org)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
     <element>
       <name>oggdemux</name>
       <longname>Ogg demuxer</longname>

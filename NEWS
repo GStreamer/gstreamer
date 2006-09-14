@@ -1,4 +1,45 @@
-This is GStreamer Base Plug-ins 0.10.9, "I walk the line"
+This is GStreamer Base Plug-ins 0.10.10, "Chorizo"
+
+Changes since 0.10.9:
+
+      * New elements: gdppay, gdpdepay
+
+Bugs fixed since 0.10.9:
+     
+      * 343787 : The adder cannot handle when multiple elements tries to l...
+      * 336075 : ALSA emu10k1 mixer tracks are wrongly classified as playb...
+      * 349105 : crash with playbin and resizing screen
+      * 342494 : [v4l] Query " device-name " even if device is not open
+      * 342680 : [adder] seeking with multiple ogg files fails to work
+      * 345188 : [alsa] can't handle more than 8 channels
+      * 347091 : converting vorbis comments to GstTagLists is lossy
+      * 348157 : Changed " Change Device " menu behaviour in gnome-volume-co...
+      * 348916 : [typefind] add multipart/x-mixed-replace typefinder
+      * 350157 : [riff] riff parser can't detect dts audio stream
+      * 350655 : [oggdemux] should process seeking queries
+      * 350900 : [adder] should not clamp floating point values
+      * 351426 : API: add gst_tag_parse_extended_comment
+      * 351502 : g_value_set_string leaks
+      * 351742 : [vorbisenc] discontinuity detection too sensitive, might ...
+      * 353658 : [videotestsrc] doesn't round strides correctly for YVYU
+      * 354594 : multifdsink doesn't work reliably with sync-method = 'nex...
+      * 351790 : [ogmparse] crash parsing video stream on x86-64
+      * 140139 : [avidemux] can't play broken avi with ogg (not vorbis) au...
+      * 347783 : [PLUGIN-MOVE] GDP elements should be moved
+      * 347918 : Internal data flow error in udpsrc
+      * 349656 : jitterbuffer in GstBaseRtp fails to handle rtp seqnum rol...
+      * 350784 : element alsamixer doesn't respect asoundrc
+      * 351308 : [netbuffer] build fails with gkt-doc critical warnings
+      * 353234 : audiorate preserves DISCONT on buffers
+      * 353912 : Add cmml caps to oggmux
+
+API added since 0.10.9:
+     
+      * gst_rtp_buffer_get_payload_subbuffer()
+      * gst_tag_parse_extended_comment()
+      * GstPlayBin::connection-speed
+      * GstTheoraParse::synchronization-points
+      * GST_AUDIO_CHANNEL_POSITION_NONE
 
 Changes since 0.10.8:
 

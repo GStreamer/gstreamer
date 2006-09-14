@@ -140,10 +140,17 @@ gst_theora_parse_class_init (GstTheoraParseClass * klass)
   gobject_class->get_property = theora_parse_get_property;
   gobject_class->set_property = theora_parse_set_property;
 
+  /**
+   * GstTheoraParse:sychronization-points
+   *
+   * An array of (granuletime, buffertime) pairs
+   *
+   * Since: 0.10.10
+   */
   g_object_class_install_property (gobject_class, PROP_SYNCHRONIZATION_POINTS,
       g_param_spec_value_array ("synchronization-points",
-          "Synchronization points", "An array of (granuletime, buffertime) "
-          "pairs",
+          "Synchronization points",
+          "An array of (granuletime, buffertime) pairs",
           g_param_spec_uint64 ("time", "Time",
               "Time (either granuletime or buffertime)", 0, G_MAXUINT64, 0,
               G_PARAM_READWRITE), (GParamFlags) G_PARAM_READWRITE));
