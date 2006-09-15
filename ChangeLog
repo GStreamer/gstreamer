@@ -1,3 +1,28 @@
+2006-09-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c:
+	Update documentation.
+
+	* gst/gstelement.c: (gst_element_class_init),
+	(gst_element_release_request_pad), (gst_element_set_clock),
+	(gst_element_get_index), (gst_element_add_pad),
+	(gst_element_remove_pad), (gst_element_get_random_pad),
+	(gst_element_send_event), (gst_element_get_query_types),
+	(gst_element_query), (gst_element_post_message),
+	(gst_element_message_full), (gst_element_continue_state),
+	(gst_element_lost_state), (gst_element_save_thyself),
+	(gst_element_restore_thyself):
+	Documentation updates.
+	Rename last bit of the new-pad -> pad-added signal rename.
+	Fix the case where an element query would only work if the source
+	pad was linked.
+	Avoid some useless type checking in message handling.
+
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* gst/gstutils.c:
+	Documentation updates.
+
 2006-09-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* plugins/elements/gstfdsrc.c: (gst_fd_src_update_fd):

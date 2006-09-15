@@ -72,7 +72,7 @@
  *   </programlisting>
  * </example>
  *
- * Last reviewed on 2006-08-11 (0.10.10)
+ * Last reviewed on 2006-09-6 (0.10.10)
  */
 
 
@@ -352,7 +352,12 @@ gst_event_get_structure (GstEvent * event)
  *
  * Allocate a new flush start event. The flush start event can be send
  * upstream and downstream and travels out-of-bounds with the dataflow.
- * It marks pads as being in a WRONG_STATE to process more data.
+ *
+ * It marks pads as being flushing and will make them return
+ * #GST_FLOW_WRONG_STATE when used for data flow with gst_pad_push(),
+ * gst_pad_chain(), gst_pad_alloc_buffer(), gst_pad_get_range() and
+ * gst_pad_pull_range(). Any event (except a #GST_EVENT_FLUSH_STOP) received
+ * on a flushing pad will return %FALSE immediatly.
  *
  * Elements unlock and blocking functions and exit their streaming functions
  * as fast as possible.
@@ -395,11 +400,11 @@ gst_event_new_flush_stop (void)
  *
  * Create a new EOS event. The eos event can only travel downstream
  * synchronized with the buffer flow. Elements that receive the EOS
- * event on a pad can return UNEXPECTED as a GstFlowReturn when data
- * after the EOS event arrives.
+ * event on a pad can return #GST_FLOW_UNEXPECTED as a #GstFlowReturn
+ * when data after the EOS event arrives.
  *
  * The EOS event will travel down to the sink elements in the pipeline
- * which will then post the GST_MESSAGE_EOS on the bus after they have
+ * which will then post the #GST_MESSAGE_EOS on the bus after they have
  * finished playing any buffered data.
  *
  * When all sinks have posted an EOS message, the EOS message is
@@ -635,7 +640,7 @@ gst_event_parse_tag (GstEvent * event, GstTagList ** taglist)
  * Create a new buffersize event. The event is sent downstream and notifies
  * elements that they should provide a buffer of the specified dimensions.
  *
- * When the async flag is set, a thread boundary is prefered.
+ * When the @async flag is set, a thread boundary is prefered.
  *
  * Returns: a new #GstEvent
  */
@@ -788,24 +793,30 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  * Allocate a new seek event with the given parameters.
  *
  * The seek event configures playback of the pipeline from
- * @cur to @stop at the speed given in @rate, also called a segment.
+ * @cur to @stop at the speed given in @rate, also called a playback segment.
  * The @cur and @stop values are expressed in format @format.
  *
  * A @rate of 1.0 means normal playback rate, 2.0 means double speed.
  * Negatives values means backwards playback. A value of 0.0 for the
- * rate is not allowed.
+ * rate is not allowed and should be accomplished instead by PAUSING the
+ * pipeline.
+ *
+ * A pipeline has a default playback segment configured with a current
+ * position of 0, a stop position of the total duration of the stream(s) and
+ * a rate of 1.0. The currently configured playback segment can be queried
+ * with #GST_QUERY_SEGMENT. 
  *
  * @cur_type and @stop_type specify how to adjust the current and stop
- * time, relative or absolute to the last configured positions. A type
+ * time, relative or absolute to the last configured playback segment. A type
  * of #GST_SEEK_TYPE_NONE means that the position should not be updated.
- * The currently configured playback segment can be queried with
- * #GST_QUERY_SEGMENT. 
  *
- * Note that updating the @cur position will actually move the current
- * playback pointer to that new position. It is not possible to seek 
- * relative to the current playing position, to do this, pause the pipeline,
- * get the current position and perform a GST_SEEK_TYPE_SET to the desired
- * position.
+ * Updating the @cur position will actually move the current playback position
+ * to that new position. 
+ *
+ * It is not possible to seek relative to the current playback position, to do
+ * this, PAUSE the pipeline, query the current playback position with
+ * #GST_QUERY_POSITION and update the playback segment current position with a
+ * #GST_SEEK_TYPE_SET to the desired position.
  *
  * Returns: A new seek event.
  */

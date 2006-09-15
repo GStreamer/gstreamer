@@ -2083,13 +2083,17 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 
 /* handle child messages:
  *
+ * This method is called synchronously when a child posts a message on
+ * the internal bus. 
+ *
  * GST_MESSAGE_EOS: This message is only posted by sinks
  *     in the PLAYING state. If all sinks posted the EOS message, post
  *     one upwards.
  *
  * GST_MESSAGE_STATE_DIRTY: if we are the toplevel bin we do a state
  *     recalc. If we are not toplevel (we have a parent) we just post
- *     the message upwards.
+ *     the message upwards. This makes sure only the toplevel bin will
+ *     run over all its children to check if a state change happened.
  *
  * GST_MESSAGE_SEGMENT_START: just collect, never forward upwards. If an
  *     element posts segment_start twice, only the last message is kept.
@@ -2102,13 +2106,15 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
  *     Whenever someone performs a duration query on the bin, we store the
  *     result so we can answer it quicker the next time. Any element that
  *     changes its duration marks our cached values invalid.
- *     This message is also posted upwards.
+ *     This message is also posted upwards. This is currently disabled
+ *     because too many elements don't post DURATION messages when the
+ *     duration changes.
  *
  * GST_MESSAGE_CLOCK_LOST: This message is posted by an element when it
  *     can no longer provide a clock. The default bin behaviour is to
  *     check if the lost clock was the one provided by the bin. If so and
  *     we are currently in the PLAYING state, we forward the message to 
- *     our parent.
+ *     our parent. 
  *     This message is also generated when we remove a clock provider from
  *     a bin. If this message is received by the application, it should
  *     PAUSE the pipeline and set it back to PLAYING to force a new clock
@@ -2119,7 +2125,7 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
  *     provider to the bin. The default behaviour of the bin is to mark the
  *     currently selected clock as dirty, which will perform a clock
  *     recalculation the next time we are asked to provide a clock.
- *     This message is never sent tot the application but is forwarded to
+ *     This message is never sent to the application but is forwarded to
  *     the parent.
  *
  * OTHER: post upwards.

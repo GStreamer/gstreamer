@@ -1934,13 +1934,20 @@ gst_element_query_convert (GstElement * element, GstFormat src_format,
  * Simple API to perform a seek on the given element, meaning it just seeks
  * to the given position relative to the start of the stream. For more complex
  * operations like segment seeks (e.g. for looping) or changing the playback
- * rate or seeking relative to the current position or seeking relative to
- * the end of the stream you should use gst_element_seek ().
+ * rate or seeking relative to the last configured playback segment you should
+ * use gst_element_seek().
  *
- * Note that seeking is usually only possible in PAUSED or PLAYING state.
+ * In a completely prerolled PAUSED or PLAYING pipeline, seeking is always
+ * guaranteed to return %TRUE on a seekable media type or %FALSE when the media
+ * type is certainly not seekable (such as a live stream).
  *
- * Returns: TRUE if the seek operation succeeded (the seek
- *          might not always be executed instantly though)
+ * Some elements allow for seeking in the READY state, in this
+ * case they will store the seek event and execute it when they are put to
+ * PAUSED. If the element supports seek in READY, it will always return %TRUE when
+ * it receives the event in the READY state.
+ *
+ * Returns: %TRUE if the seek operation succeeded (the seek might not always be
+ * executed instantly though)
  *
  * Since: 0.10.7
  */

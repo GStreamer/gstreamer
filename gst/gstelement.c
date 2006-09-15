@@ -93,7 +93,7 @@
 /* Element signals and args */
 enum
 {
-  NEW_PAD,
+  PAD_ADDED,
   PAD_REMOVED,
   NO_MORE_PADS,
   /* add more above */
@@ -180,7 +180,7 @@ gst_element_class_init (GstElementClass * klass)
    *
    * a new #GstPad has been added to the element.
    */
-  gst_element_signals[NEW_PAD] =
+  gst_element_signals[PAD_ADDED] =
       g_signal_new ("pad-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, pad_added), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
@@ -303,6 +303,8 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
+  /* if the element implements a custom release function we call that, else we
+   * simply remove the pad from the element */
   if (oclass->release_pad)
     (oclass->release_pad) (element, pad);
   else
@@ -315,7 +317,7 @@ gst_element_release_request_pad (GstElement * element, GstPad * pad)
  *
  * Query if the element requires a clock.
  *
- * Returns: TRUE if the element requires a clock
+ * Returns: %TRUE if the element requires a clock
  *
  * MT safe.
  */
@@ -337,8 +339,11 @@ gst_element_requires_clock (GstElement * element)
  *
  * Query if the element provides a clock. A #GstClock provided by an
  * element can be used as the global #GstClock for the pipeline. 
+ * An element that can provide a clock is only required to do so in the PAUSED
+ * state, this means when it is fully negotiated and has allocated the resources
+ * to operate the clock.
  *
- * Returns: TRUE if the element provides a clock
+ * Returns: %TRUE if the element provides a clock
  *
  * MT safe.
  */
@@ -358,10 +363,12 @@ gst_element_provides_clock (GstElement * element)
  * gst_element_provide_clock:
  * @element: a #GstElement to query
  *
- * Get the clock provided by the given element.
+ * Get the clock provided by the given element. 
+ * <note>An element is only required to provide a clock in the PAUSED
+ * state. Some elements can provide a clock in other states.</note>
  *
  * Returns: the GstClock provided by the element or NULL
- * if no clock could be provided. Unref after usage.
+ * if no clock could be provided.  Unref after usage.
  *
  * MT safe.
  */
@@ -390,7 +397,9 @@ gst_element_provide_clock (GstElement * element)
  * refcount on the clock. Any previously set clock on the object
  * is unreffed.
  *
- * Returns: TRUE if the element accepted the clock.
+ * Returns: %TRUE if the element accepted the clock. An element can refuse a
+ * clock when it, for example, is not able to slave its internal clock to the
+ * @clock or when it requires a specific clock to operate.
  *
  * MT safe.
  */
@@ -411,6 +420,7 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
     res = oclass->set_clock (element, clock);
 
   if (res) {
+    /* only update the clock pointer if the element accepted the clock */
     GST_OBJECT_LOCK (element);
     clock_p = &element->clock;
     gst_object_replace ((GstObject **) clock_p, (GstObject *) clock);
@@ -423,7 +433,8 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
  * gst_element_get_clock:
  * @element: a #GstElement to get the clock of.
  *
- * Gets the currently configured clock of the element.
+ * Gets the currently configured clock of the element. This is the clock as was
+ * last set with gst_element_set_clock().
  *
  * Returns: the #GstClock of the element. unref after usage.
  *
@@ -555,15 +566,16 @@ GstIndex *
 gst_element_get_index (GstElement * element)
 {
   GstElementClass *oclass;
+  GstIndex *result = NULL;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   if (oclass->get_index)
-    return oclass->get_index (element);
+    result = oclass->get_index (element);
 
-  return NULL;
+  return result;
 }
 #endif
 
@@ -577,11 +589,13 @@ gst_element_get_index (GstElement * element)
  *
  * Pads are not automatically activated so elements should perform the needed
  * steps to activate the pad in case this pad is added in the PAUSED or PLAYING
- * state.
+ * state. See gst_pad_set_active() for more information about activating pads.
  *
  * The pad and the element should be unlocked when calling this function.
  *
- * Returns: TRUE if the pad could be added. This function can fail when
+ * This function will emit the #GstElement::pad-added signal on the element.
+ *
+ * Returns: %TRUE if the pad could be added. This function can fail when
  * a pad with the same name already existed or the pad already had another
  * parent.
  *
@@ -632,8 +646,8 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   element->pads_cookie++;
   GST_OBJECT_UNLOCK (element);
 
-  /* emit the NEW_PAD signal */
-  g_signal_emit (G_OBJECT (element), gst_element_signals[NEW_PAD], 0, pad);
+  /* emit the PAD_ADDED signal */
+  g_signal_emit (element, gst_element_signals[PAD_ADDED], 0, pad);
 
   return TRUE;
 
@@ -673,15 +687,23 @@ no_direction:
  * @pad: the #GstPad to remove from the element.
  *
  * Removes @pad from @element. @pad will be destroyed if it has not been
- * referenced elsewhere.
+ * referenced elsewhere using gst_object_unparent().
  *
  * This function is used by plugin developers and should not be used
  * by applications. Pads that were dynamically requested from elements
  * with gst_element_get_request_pad() should be released with the
  * gst_element_release_request_pad() function instead.
  *
- * Returns: TRUE if the pad could be removed. Can return FALSE if the
- * pad is not belonging to the provided element.
+ * Pads are not automatically deactivated so elements should perform the needed
+ * steps to deactivate the pad in case this pad is removed in the PAUSED or PLAYING
+ * state. See gst_pad_set_active() for more information about deactivating pads.
+ *
+ * The pad and the element should be unlocked when calling this function.
+ *
+ * This function will emit the #GstElement::pad-removed signal on the element.
+ *
+ * Returns: %TRUE if the pad could be removed. Can return %FALSE if the
+ * pad does not belong to the provided element.
  *
  * MT safe.
  */
@@ -735,12 +757,14 @@ gst_element_remove_pad (GstElement * element, GstPad * pad)
   element->pads_cookie++;
   GST_OBJECT_UNLOCK (element);
 
-  g_signal_emit (G_OBJECT (element), gst_element_signals[PAD_REMOVED], 0, pad);
+  /* emit the PAD_REMOVED signal before unparenting and losing the last ref. */
+  g_signal_emit (element, gst_element_signals[PAD_REMOVED], 0, pad);
 
-  gst_object_unparent (GST_OBJECT (pad));
+  gst_object_unparent (GST_OBJECT_CAST (pad));
 
   return TRUE;
 
+  /* ERRORS */
 not_our_pad:
   {
     /* FIXME, locking order? */
@@ -762,6 +786,8 @@ not_our_pad:
  * pads have been added by the element itself. Elements with #GST_PAD_SOMETIMES
  * pad templates use this in combination with autopluggers to figure out that
  * the element is done initializing its pads.
+ *
+ * This function emits the #GstElement::no-more-pads signal.
  *
  * MT safe.
  */
@@ -854,7 +880,7 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * request pads. The pad should be released with 
  * gst_element_release_request_pad().
  *
- * Returns: requested #GstPad if found, otherwise NULL. Unref after usage.
+ * Returns: requested #GstPad if found, otherwise NULL. Release after usage.
  */
 GstPad *
 gst_element_get_request_pad (GstElement * element, const gchar * name)
@@ -930,7 +956,12 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
  * Retrieves a pad from @element by name. Tries gst_element_get_static_pad()
  * first, then gst_element_get_request_pad().
  *
- * Returns: the #GstPad if found, otherwise %NULL. Unref after usage.
+ * <note>Usage of this function is not recommended as it is unclear if the reference
+ * to the result pad should be released with gst_object_unref() in case of a static pad
+ * or gst_element_release_request_pad() in case of a request pad.</note>
+ *
+ * Returns: the #GstPad if found, otherwise %NULL. Unref or Release after usage,
+ * depending on the type of the pad.
  */
 GstPad *
 gst_element_get_pad (GstElement * element, const gchar * name)
@@ -1128,8 +1159,12 @@ gst_element_class_get_pad_template (GstElementClass * element_class,
   return NULL;
 }
 
+/* get a random pad on element of the given direction.
+ * The pad is random in a sense that it is the first pad that is (optionaly) linked.
+ */
 static GstPad *
-gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
+gst_element_get_random_pad (GstElement * element, gboolean need_linked,
+    GstPadDirection dir)
 {
   GstPad *result = NULL;
   GList *pads;
@@ -1149,21 +1184,27 @@ gst_element_get_random_pad (GstElement * element, GstPadDirection dir)
       goto wrong_direction;
   }
   for (; pads; pads = g_list_next (pads)) {
-    GstPad *pad = GST_PAD (pads->data);
+    GstPad *pad = GST_PAD_CAST (pads->data);
 
     GST_OBJECT_LOCK (pad);
     GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "checking pad %s:%s",
         GST_DEBUG_PAD_NAME (pad));
 
-    if (GST_PAD_IS_LINKED (pad)) {
+    if (need_linked && !GST_PAD_IS_LINKED (pad)) {
+      /* if we require a linked pad, and it is not linked, continue the
+       * search */
+      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not linked",
+          GST_DEBUG_PAD_NAME (pad));
+      GST_OBJECT_UNLOCK (pad);
+      continue;
+    } else {
+      /* found a pad, stop search */
+      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "found pad %s:%s",
+          GST_DEBUG_PAD_NAME (pad));
       GST_OBJECT_UNLOCK (pad);
       result = pad;
       break;
-    } else {
-      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "pad %s:%s is not linked",
-          GST_DEBUG_PAD_NAME (pad));
     }
-    GST_OBJECT_UNLOCK (pad);
   }
   if (result)
     gst_object_ref (result);
@@ -1185,13 +1226,14 @@ wrong_direction:
  * @element: a #GstElement to send the event to.
  * @event: the #GstEvent to send to the element.
  *
- * Sends an event to an element. If the element doesn't
- * implement an event handler, the event will be forwarded
- * to a random sink pad. This function takes owership of the
- * provided event so you should gst_event_ref() it if you want to reuse
- * the event after this call.
+ * Sends an event to an element. If the element doesn't implement an
+ * event handler, the event will be pushed on a random linked sink pad for
+ * upstream events or a random linked source pad for downstream events. 
  *
- * Returns: TRUE if the event was handled.
+ * This function takes owership of the provided event so you should
+ * gst_event_ref() it if you want to reuse the event after this call.
+ *
+ * Returns: %TRUE if the event was handled.
  *
  * MT safe.
  */
@@ -1212,8 +1254,8 @@ gst_element_send_event (GstElement * element, GstEvent * event)
     result = oclass->send_event (element, event);
   } else {
     GstPad *pad = GST_EVENT_IS_DOWNSTREAM (event) ?
-        gst_element_get_random_pad (element, GST_PAD_SRC) :
-        gst_element_get_random_pad (element, GST_PAD_SINK);
+        gst_element_get_random_pad (element, TRUE, GST_PAD_SRC) :
+        gst_element_get_random_pad (element, TRUE, GST_PAD_SINK);
 
     if (pad) {
       GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
@@ -1243,7 +1285,9 @@ gst_element_send_event (GstElement * element, GstEvent * event)
  * @stop_type: The type and flags for the new stop position
  * @stop: The value of the new stop position
  *
- * Sends a seek event to an element.
+ * Sends a seek event to an element. See gst_event_new_seek() for the details of
+ * the parameters. The seek event is sent to the element using
+ * gst_element_send_event().
  *
  * Returns: %TRUE if the event was handled.
  *
@@ -1272,7 +1316,7 @@ gst_element_seek (GstElement * element, gdouble rate, GstFormat format,
  *
  * Get an array of query types from the element.
  * If the element doesn't implement a query types function,
- * the query will be forwarded to a random sink pad.
+ * the query will be forwarded to the peer of a random linked sink pad.
  *
  * Returns: An array of #GstQueryType elements that should not
  * be freed or modified.
@@ -1292,7 +1336,7 @@ gst_element_get_query_types (GstElement * element)
   if (oclass->get_query_types) {
     result = oclass->get_query_types (element);
   } else {
-    GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SINK);
+    GstPad *pad = gst_element_get_random_pad (element, TRUE, GST_PAD_SINK);
 
     if (pad) {
       GstPad *peer = gst_pad_get_peer (pad);
@@ -1313,11 +1357,11 @@ gst_element_get_query_types (GstElement * element)
  * @element: a #GstElement to perform the query on.
  * @query: the #GstQuery.
  *
- * Performs a query on the given element. If the format is set
- * to #GST_FORMAT_DEFAULT and this function returns TRUE, the
- * format pointer will hold the default format.
- * For element that don't implement a query handler, this function
- * forwards the query to a random usable sinkpad of this element.
+ * Performs a query on the given element.
+ *
+ * For elements that don't implement a query handler, this function
+ * forwards the query to a random srcpad or to the peer of a
+ * random linked sinkpad of this element.
  *
  * Returns: TRUE if the query could be performed.
  *
@@ -1339,14 +1383,14 @@ gst_element_query (GstElement * element, GstQuery * query)
         GST_ELEMENT_NAME (element));
     result = oclass->query (element, query);
   } else {
-    GstPad *pad = gst_element_get_random_pad (element, GST_PAD_SRC);
+    GstPad *pad = gst_element_get_random_pad (element, FALSE, GST_PAD_SRC);
 
     if (pad) {
       result = gst_pad_query (pad, query);
 
       gst_object_unref (pad);
     } else {
-      pad = gst_element_get_random_pad (element, GST_PAD_SINK);
+      pad = gst_element_get_random_pad (element, TRUE, GST_PAD_SINK);
       if (pad) {
         GstPad *peer = gst_pad_get_peer (pad);
 
@@ -1371,7 +1415,8 @@ gst_element_query (GstElement * element, GstQuery * query)
  * message; if you want to access the message after this call, you should add an
  * additional reference before calling.
  *
- * Returns: TRUE if the message was successfully posted.
+ * Returns: %TRUE if the message was successfully posted. The function returns
+ * %FALSE if the element did not have a bus.
  *
  * MT safe.
  */
@@ -1393,11 +1438,14 @@ gst_element_post_message (GstElement * element, GstMessage * message)
   gst_object_ref (bus);
   GST_OBJECT_UNLOCK (element);
 
+  /* we release the element lock when posting the message so that any
+   * (synchronous) message handlers can operate on the element */
   result = gst_bus_post (bus, message);
   gst_object_unref (bus);
 
   return result;
 
+  /* ERRORS */
 no_bus:
   {
     GST_DEBUG ("not posting message %p: no bus", message);
@@ -1484,7 +1532,7 @@ void gst_element_message_full
     has_debug = FALSE;
   }
 
-  name = gst_object_get_path_string (GST_OBJECT (element));
+  name = gst_object_get_path_string (GST_OBJECT_CAST (element));
   if (has_debug)
     sent_debug = g_strdup_printf ("%s(%d): %s (): %s:\n%s",
         file, line, function, name, debug);
@@ -1500,9 +1548,10 @@ void gst_element_message_full
   gerror = g_error_new_literal (domain, code, sent_text);
 
   if (type == GST_MESSAGE_ERROR) {
-    message = gst_message_new_error (GST_OBJECT (element), gerror, sent_debug);
+    message =
+        gst_message_new_error (GST_OBJECT_CAST (element), gerror, sent_debug);
   } else if (type == GST_MESSAGE_WARNING) {
-    message = gst_message_new_warning (GST_OBJECT (element), gerror,
+    message = gst_message_new_warning (GST_OBJECT_CAST (element), gerror,
         sent_debug);
   } else {
     g_assert_not_reached ();
@@ -1918,7 +1967,7 @@ gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
       gst_element_state_get_name (old_next),
       gst_element_state_get_name (pending));
 
-  message = gst_message_new_state_changed (GST_OBJECT (element),
+  message = gst_message_new_state_changed (GST_OBJECT_CAST (element),
       old_state, old_next, pending);
   gst_element_post_message (element, message);
 
@@ -1952,7 +2001,7 @@ complete:
      * We do signal the cond though as a _get_state() might be blocking 
      * on it. */
     if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
-      message = gst_message_new_state_changed (GST_OBJECT (element),
+      message = gst_message_new_state_changed (GST_OBJECT_CAST (element),
           old_state, old_next, GST_STATE_VOID_PENDING);
       gst_element_post_message (element, message);
     }
@@ -2004,12 +2053,12 @@ gst_element_lost_state (GstElement * element)
   GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
   GST_OBJECT_UNLOCK (element);
 
-  message = gst_message_new_state_changed (GST_OBJECT (element),
+  message = gst_message_new_state_changed (GST_OBJECT_CAST (element),
       current_state, current_state, current_state);
   gst_element_post_message (element, message);
 
   /* and mark us dirty */
-  message = gst_message_new_state_dirty (GST_OBJECT (element));
+  message = gst_message_new_state_dirty (GST_OBJECT_CAST (element));
   gst_element_post_message (element, message);
 
   return;
@@ -2604,13 +2653,13 @@ gst_element_save_thyself (GstObject * object, xmlNodePtr parent)
   pads = GST_ELEMENT_PADS (element);
 
   while (pads) {
-    GstPad *pad = GST_PAD (pads->data);
+    GstPad *pad = GST_PAD_CAST (pads->data);
 
     /* figure out if it's a direct pad or a ghostpad */
     if (GST_ELEMENT (GST_OBJECT_PARENT (pad)) == element) {
       xmlNodePtr padtag = xmlNewChild (parent, NULL, (xmlChar *) "pad", NULL);
 
-      gst_object_save_thyself (GST_OBJECT (pad), padtag);
+      gst_object_save_thyself (GST_OBJECT_CAST (pad), padtag);
     }
     pads = g_list_next (pads);
   }
@@ -2656,7 +2705,7 @@ gst_element_restore_thyself (GstObject * object, xmlNodePtr self)
   children = self->xmlChildrenNode;
   while (children) {
     if (!strcmp ((char *) children->name, "pad")) {
-      gst_pad_load_and_link (children, GST_OBJECT (element));
+      gst_pad_load_and_link (children, GST_OBJECT_CAST (element));
     }
     children = children->next;
   }

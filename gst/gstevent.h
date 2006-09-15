@@ -230,10 +230,10 @@ typedef struct _GstEventClass GstEventClass;
  * @GST_SEEK_TYPE_SET: absolute position is requested
  * @GST_SEEK_TYPE_END: relative position to duration is requested
  *
- * The different types of seek events. When constructing a seek event, a format,
- * a seek method and optional flags are to be provided. The seek event is then
- * inserted into the graph with gst_pad_send_event() or
- * gst_element_send_event().
+ * The different types of seek events. When constructing a seek event with
+ * gst_event_new_seek(), a format, a seek method and optional flags are to
+ * be provided. The seek event is then inserted into the graph with
+ * gst_pad_send_event() or gst_element_send_event().
  */
 typedef enum {
   /* one of these */
@@ -264,10 +264,10 @@ typedef enum {
  *
  * When performing a segment seek: after the playback of the segment completes,
  * no EOS will be emmited by the element that performed the seek, but a
- * SEGMENT_DONE message will be posted on the bus by the element. When this
- * message is posted, it is possible to send a new seek event to continue
- * playback. With this seek method it is possible to perform seemless looping
- * or simple linear editing.
+ * #GST_MESSAGE_SEGMENT_DONE message will be posted on the bus by the element.
+ * When this message is posted, it is possible to send a new seek event to
+ * continue playback. With this seek method it is possible to perform seemless
+ * looping or simple linear editing.
  */
 typedef enum {
   GST_SEEK_FLAG_NONE		= 0,
