@@ -91,7 +91,7 @@ static void gst_base_audio_sink_get_times (GstBaseSink * bsink,
 static gboolean gst_base_audio_sink_setcaps (GstBaseSink * bsink,
     GstCaps * caps);
 
-//static guint gst_base_audio_sink_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_base_audio_sink_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
 gst_base_audio_sink_base_init (gpointer g_class)
@@ -217,17 +217,31 @@ clock_disabled:
 static GstClockTime
 gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
 {
-  guint64 samples;
+  guint64 raw, samples;
+  guint delay;
   GstClockTime result;
 
   if (sink->ringbuffer == NULL || sink->ringbuffer->spec.rate == 0)
     return GST_CLOCK_TIME_NONE;
 
   /* our processed samples are always increasing */
-  samples = gst_ring_buffer_samples_done (sink->ringbuffer);
+  raw = samples = gst_ring_buffer_samples_done (sink->ringbuffer);
+
+  /* the number of samples not yet processed, this is still queued in the
+   * device (not played for playback). */
+  delay = gst_ring_buffer_delay (sink->ringbuffer);
+
+  if (G_LIKELY (samples >= delay))
+    samples -= delay;
+  else
+    samples = 0;
 
   result = gst_util_uint64_scale_int (samples, GST_SECOND,
       sink->ringbuffer->spec.rate);
+
+  GST_DEBUG_OBJECT (sink,
+      "processed samples: raw %llu, delay %u, real %llu, time %"
+      GST_TIME_FORMAT, raw, delay, samples, GST_TIME_ARGS (result));
 
   return result;
 }
@@ -707,7 +721,7 @@ static void
 gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
     gpointer user_data)
 {
-  //GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (data);
+  /* GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (data); */
 }
 
 /* should be called with the LOCK */

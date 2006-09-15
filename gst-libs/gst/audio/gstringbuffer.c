@@ -920,6 +920,7 @@ gst_ring_buffer_pause (GstRingBuffer * buf)
 
   return res;
 
+  /* ERRORS */
 flushing:
   {
     GST_OBJECT_UNLOCK (buf);
@@ -989,6 +990,12 @@ done:
  * implementation uses another internal buffer between the audio
  * device.
  *
+ * For playback ringbuffers this is the amount of samples transfered from the
+ * ringbuffer to the device but still not played.
+ *
+ * For capture ringbuffers this is the amount of samples in the device that are
+ * not yet transfered to the ringbuffer.
+ *
  * Returns: The number of samples queued in the audio device.
  *
  * MT safe.
@@ -1020,7 +1027,8 @@ done:
  * @buf: the #GstRingBuffer to query
  *
  * Get the number of samples that were processed by the ringbuffer
- * since it was last started.
+ * since it was last started. This does not include the number of samples not
+ * yet processed (see gst_ring_buffer_delay()).
  *
  * Returns: The number of samples processed by the ringbuffer.
  *
@@ -1038,18 +1046,8 @@ gst_ring_buffer_samples_done (GstRingBuffer * buf)
   /* get the amount of segments we processed */
   segdone = g_atomic_int_get (&buf->segdone);
 
-  /* and the number of samples not yet processed */
-  delay = gst_ring_buffer_delay (buf);
-
-  raw = samples = ((guint64) segdone) * buf->samples_per_seg;
-
-  if (G_LIKELY (samples >= delay))
-    samples -= delay;
-  else
-    samples = 0;
-
-  GST_DEBUG_OBJECT (buf, "processed samples: raw %llu, delay %u, real %llu",
-      raw, delay, samples);
+  /* convert to samples */
+  samples = ((guint64) segdone) * buf->samples_per_seg;
 
   return samples;
 }
@@ -1237,9 +1235,10 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
 
       GST_DEBUG
           ("pointer at %d, sample %llu, write to %d-%d, to_write %d, diff %d, segtotal %d, segsize %d",
-          segdone, sample, writeseg, sampleoff, to_write, diff, segtotal, sps);
+          segdone, sample, writeseg, sampleoff, to_write, diff, segtotal,
+          segsize);
 
-      /* segment too far ahead, we need to drop, hopefully UNLIKELY */
+      /* segment too far ahead, writer too slow, we need to drop, hopefully UNLIKELY */
       if (G_UNLIKELY (diff < 0)) {
         /* we need to drop one segment at a time, pretend we wrote a
          * segment. */
@@ -1310,6 +1309,7 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
   gint segdone;
   gint segsize, segtotal, bps, sps;
   guint8 *dest;
+  guint to_read;
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), -1);
   g_return_val_if_fail (buf->data != NULL, -1);
@@ -1321,13 +1321,14 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
   bps = buf->spec.bytes_per_sample;
   sps = buf->samples_per_seg;
 
+  to_read = len;
   /* read enough samples */
-  while (len > 0) {
+  while (to_read > 0) {
     gint sampleslen;
     gint readseg, sampleoff;
 
     /* figure out the segment and the offset inside the segment where
-     * the sample should be written. */
+     * the sample should be read from. */
     readseg = sample / sps;
     sampleoff = (sample % sps);
 
@@ -1337,32 +1338,28 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
       /* get the currently processed segment */
       segdone = g_atomic_int_get (&buf->segdone) - buf->segbase;
 
-      /* see how far away it is from the read segment */
+      /* see how far away it is from the read segment, normally segdone (where
+       * the hardware is writing) is bigger than readseg (where software is
+       * reading) */
       diff = segdone - readseg;
 
       GST_DEBUG
-          ("pointer at %d, sample %llu, read from %d-%d, len %d, diff %d, segtotal %d, segsize %d",
-          segdone, sample, readseg, sampleoff, len, diff, segtotal, segsize);
+          ("pointer at %d, sample %llu, read from %d-%d, to_read %d, diff %d, segtotal %d, segsize %d",
+          segdone, sample, readseg, sampleoff, to_read, diff, segtotal,
+          segsize);
 
-      /* segment too far ahead, we need to drop */
-      if (diff < 0) {
-        /* we need to drop one segment at a time, pretend we read an
-         * empty segment. */
-        sampleslen = MIN (sps, len);
+      /* segment too far ahead, reader too slow */
+      if (G_UNLIKELY (diff >= segtotal)) {
+        /* pretend we read an empty segment. */
+        sampleslen = MIN (sps, to_read);
         memcpy (data, buf->empty_seg, sampleslen * bps);
         goto next;
       }
 
       /* read segment is within readable range, we can break the loop and
        * start reading the data. */
-      if (diff > 0 && diff < segtotal)
+      if (diff > 0)
         break;
-
-      /* flush if diff has grown bigger than ringbuffer */
-      if (diff >= segtotal) {
-        gst_ring_buffer_clear_all (buf);
-        buf->segdone = readseg;
-      }
 
       /* else we need to wait for the segment to become readable. */
       if (!wait_segment (buf))
@@ -1371,26 +1368,27 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
 
     /* we can read now */
     readseg = readseg % segtotal;
-    sampleslen = MIN (sps - sampleoff, len);
+    sampleslen = MIN (sps - sampleoff, to_read);
 
-    GST_DEBUG_OBJECT (buf, "read @%p seg %d, off %d, len %d",
+    GST_DEBUG_OBJECT (buf, "read @%p seg %d, off %d, sampleslen %d",
         dest + readseg * segsize, readseg, sampleoff, sampleslen);
 
     memcpy (data, dest + (readseg * segsize) + (sampleoff * bps),
         (sampleslen * bps));
 
   next:
-    len -= sampleslen;
+    to_read -= sampleslen;
     sample += sampleslen;
     data += sampleslen * bps;
   }
 
-  return len;
+  return len - to_read;
 
   /* ERRORS */
 not_started:
   {
     GST_DEBUG_OBJECT (buf, "stopped processing");
+    /* FIXME, return len - to_read after fixing caller */
     return -1;
   }
 }

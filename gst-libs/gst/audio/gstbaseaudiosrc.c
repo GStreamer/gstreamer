@@ -75,7 +75,7 @@ static void gst_base_audio_src_get_times (GstBaseSrc * bsrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static gboolean gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
 
-//static guint gst_base_audio_src_signals[LAST_SIGNAL] = { 0 };
+/* static guint gst_base_audio_src_signals[LAST_SIGNAL] = { 0 }; */
 
 static void
 gst_base_audio_src_base_init (gpointer g_class)
@@ -201,16 +201,27 @@ wrong_state:
 static GstClockTime
 gst_base_audio_src_get_time (GstClock * clock, GstBaseAudioSrc * src)
 {
-  guint64 samples;
+  guint64 raw, samples;
+  guint delay;
   GstClockTime result;
 
   if (G_UNLIKELY (src->ringbuffer == NULL || src->ringbuffer->spec.rate == 0))
     return GST_CLOCK_TIME_NONE;
 
-  samples = gst_ring_buffer_samples_done (src->ringbuffer);
+  raw = samples = gst_ring_buffer_samples_done (src->ringbuffer);
+
+  /* the number of samples not yet processed, this is still queued in the
+   * device (not yet read for capture). */
+  delay = gst_ring_buffer_delay (src->ringbuffer);
+
+  samples += delay;
 
   result = gst_util_uint64_scale_int (samples, GST_SECOND,
       src->ringbuffer->spec.rate);
+
+  GST_DEBUG_OBJECT (src,
+      "processed samples: raw %llu, delay %u, real %llu, time %"
+      GST_TIME_FORMAT, raw, delay, samples, GST_TIME_ARGS (result));
 
   return result;
 }
@@ -271,14 +282,24 @@ static void
 gst_base_audio_src_fixate (GstPad * pad, GstCaps * caps)
 {
   GstStructure *s;
+  gint width, depth;
 
   s = gst_caps_get_structure (caps, 0);
 
+  /* fields for all formats */
   gst_structure_fixate_field_nearest_int (s, "rate", 44100);
   gst_structure_fixate_field_nearest_int (s, "channels", 2);
-  gst_structure_fixate_field_nearest_int (s, "depth", 16);
   gst_structure_fixate_field_nearest_int (s, "width", 16);
-  gst_structure_set (s, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+  /* fields for int */
+  if (gst_structure_has_field (s, "depth")) {
+    gst_structure_get_int (s, "width", &width);
+    /* round width to nearest multiple of 8 for the depth */
+    depth = GST_ROUND_UP_8 (width);
+    gst_structure_fixate_field_nearest_int (s, "depth", depth);
+  }
+  if (gst_structure_has_field (s, "signed"))
+    gst_structure_fixate_field_boolean (s, "signed", TRUE);
   if (gst_structure_has_field (s, "endianness"))
     gst_structure_fixate_field_nearest_int (s, "endianness", G_BYTE_ORDER);
 }
@@ -341,9 +362,8 @@ static void
 gst_base_audio_src_get_times (GstBaseSrc * bsrc, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
-  /* ne need to sync to a clock here, we schedule the samples based
-   * on our own clock for the moment. FIXME, implement this when
-   * we are not using our own clock */
+  /* no need to sync to a clock here, we schedule the samples based
+   * on our own clock for the moment. */
   *start = GST_CLOCK_TIME_NONE;
   *end = GST_CLOCK_TIME_NONE;
 }
@@ -367,6 +387,45 @@ gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event)
       break;
   }
   return TRUE;
+}
+
+/* get the next offset in the ringbuffer for reading samples.
+ * If the next sample is too far away, this function will position itself to the
+ * next most recent sample, creating discontinuity */
+static guint64
+gst_base_audio_src_get_offset (GstBaseAudioSrc * src)
+{
+  guint64 sample;
+  gint readseg, segdone, segtotal, sps;
+  gint diff;
+
+  /* assume we can append to the previous sample */
+  sample = src->next_sample;
+  /* no previous sample, try to read from position 0 */
+  if (sample == -1)
+    sample = 0;
+
+  sps = src->ringbuffer->samples_per_seg;
+  segtotal = src->ringbuffer->spec.segtotal;
+
+  /* figure out the segment and the offset inside the segment where
+   * the sample should be read from. */
+  readseg = sample / sps;
+
+  /* get the currently processed segment */
+  segdone = g_atomic_int_get (&src->ringbuffer->segdone)
+      - src->ringbuffer->segbase;
+
+  /* see how far away it is from the read segment, normally segdone (where new
+   * data is written in the ringbuffer) is bigger than readseg (where we are
+   * reading). */
+  diff = segdone - readseg;
+  if (diff >= segtotal) {
+    /* sample would be dropped, position to next playable position */
+    sample = (segdone - segtotal + 1) * sps;
+  }
+
+  return sample;
 }
 
 static GstFlowReturn
@@ -396,14 +455,17 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     /* make sure we round down to an integral number of samples */
     length -= length % bps;
 
-  /* calculate the sequentially next sample we need to read */
-  sample = (src->next_sample != -1 ? src->next_sample : 0);
-
+  /* figure out the offset in the ringbuffer */
   if (G_UNLIKELY (offset != -1)) {
-    /* if a specific offset was given it must be the next
-     * sequential offset we expect or we fail. */
-    if (offset / bps != sample)
+    sample = offset / bps;
+    /* if a specific offset was given it must be the next sequential
+     * offset we expect or we fail for now. */
+    if (src->next_sample != -1 && sample != src->next_sample)
       goto wrong_offset;
+  } else {
+    /* calculate the sequentially next sample we need to read. This can jump and
+     * create a DISCONT. */
+    sample = gst_base_audio_src_get_offset (src);
   }
 
   /* get the number of samples to read */
@@ -413,9 +475,18 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   buf = gst_buffer_new_and_alloc (length);
   data = GST_BUFFER_DATA (buf);
 
+  /* read the sample */
   res = gst_ring_buffer_read (ringbuffer, sample, data, samples);
   if (G_UNLIKELY (res == -1))
     goto stopped;
+
+  /* mark discontinuity if needed */
+  if (G_UNLIKELY (sample != src->next_sample) && src->next_sample != -1) {
+    GST_WARNING_OBJECT (src,
+        "create DISCONT of %" G_GUINT64_FORMAT " samples at sample %"
+        G_GUINT64_FORMAT, sample - src->next_sample, sample);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+  }
 
   /* FIXME, we timestamp against our own clock, also handle the case
    * where we are slaved to another clock. We currently refuse to accept
@@ -426,6 +497,8 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   src->next_sample = sample + samples;
   GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (src->next_sample,
       GST_SECOND, ringbuffer->spec.rate) - GST_BUFFER_TIMESTAMP (buf);
+  GST_BUFFER_OFFSET (buf) = sample;
+  GST_BUFFER_OFFSET_END (buf) = sample + samples;
 
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (bsrc)));
 
@@ -470,13 +543,6 @@ gst_base_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
   return buffer;
 }
 
-void
-gst_base_audio_src_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
-    gpointer user_data)
-{
-  //GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (data);
-}
-
 static GstStateChangeReturn
 gst_base_audio_src_change_state (GstElement * element,
     GstStateChange transition)
@@ -488,12 +554,10 @@ gst_base_audio_src_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (src->ringbuffer == NULL) {
         src->ringbuffer = gst_base_audio_src_create_ringbuffer (src);
-        gst_ring_buffer_set_callback (src->ringbuffer,
-            gst_base_audio_src_callback, src);
       }
       if (!gst_ring_buffer_open_device (src->ringbuffer))
         return GST_STATE_CHANGE_FAILURE;
-      src->next_sample = 0;
+      src->next_sample = -1;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_ring_buffer_set_flushing (src->ringbuffer, FALSE);
@@ -515,7 +579,7 @@ gst_base_audio_src_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ring_buffer_set_flushing (src->ringbuffer, TRUE);
       gst_ring_buffer_release (src->ringbuffer);
-      src->next_sample = 0;
+      src->next_sample = -1;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_ring_buffer_close_device (src->ringbuffer);
