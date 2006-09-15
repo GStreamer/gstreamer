@@ -747,6 +747,9 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   gboolean post_paused = FALSE;
   gboolean post_playing = FALSE;
 
+  /* we are certainly not playing async anymore now */
+  basesink->playing_async = FALSE;
+
   GST_OBJECT_LOCK (basesink);
   current = GST_STATE (basesink);
   next = GST_STATE_NEXT (basesink);
@@ -820,7 +823,25 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
 
 nothing_pending:
   {
-    GST_DEBUG_OBJECT (basesink, "nothing to commit");
+    /* Depending on the state, set our vars. We get in this situation when the
+     * state change function got a change to update the state vars before the
+     * streaming thread did. This is fine but we need to make sure that we
+     * update the need_preroll var since it was TRUE when we got here and might
+     * become FALSE if we got to PLAYING. */
+    GST_DEBUG_OBJECT (basesink, "nothing to commit, now in %s",
+        gst_element_state_get_name (current));
+    switch (current) {
+      case GST_STATE_PLAYING:
+        basesink->need_preroll = FALSE;
+        break;
+      case GST_STATE_PAUSED:
+        basesink->need_preroll = TRUE;
+        break;
+      default:
+        basesink->need_preroll = FALSE;
+        basesink->flushing = TRUE;
+        break;
+    }
     GST_OBJECT_UNLOCK (basesink);
     return TRUE;
   }
@@ -1143,7 +1164,6 @@ again:
     GST_DEBUG_OBJECT (basesink, "prerolling object %p", obj);
 
     if (G_LIKELY (basesink->playing_async)) {
-      basesink->playing_async = FALSE;
       /* commit state */
       if (G_UNLIKELY (!gst_base_sink_commit_state (basesink)))
         goto stopping;
@@ -1615,7 +1635,6 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, GstPad * pad,
 
   /* commit state */
   if (G_LIKELY (basesink->playing_async)) {
-    basesink->playing_async = FALSE;
     if (G_UNLIKELY (!gst_base_sink_commit_state (basesink)))
       goto stopping;
   }
