@@ -1,3 +1,11 @@
+2006-09-15  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Yves Lefebvre <ivanohe at abacom dot com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (init_dummybuf):
+	Fix initialisation dummy buffer, the offsets are relative to the start
+	of the buffers. Fixes #356004.
+
 2006-09-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_read):

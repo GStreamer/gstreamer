@@ -593,7 +593,7 @@ init_dummybuf (GstMpeg2dec * mpeg2dec)
 
   mpeg2dec->dummybuf[0] = g_malloc (mpeg2dec->size);
   mpeg2dec->dummybuf[1] = mpeg2dec->dummybuf[0] + mpeg2dec->u_offs;
-  mpeg2dec->dummybuf[2] = mpeg2dec->dummybuf[1] + mpeg2dec->v_offs;
+  mpeg2dec->dummybuf[2] = mpeg2dec->dummybuf[0] + mpeg2dec->v_offs;
 }
 
 static GstFlowReturn
