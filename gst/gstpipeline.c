@@ -341,12 +341,12 @@ do_pipeline_seek (GstElement * element, GstEvent * event)
     /* need to call _get_state() since a bin state is only updated
      * with this call. */
     gst_element_get_state (element, &state, NULL, 0);
-    was_playing = state == GST_STATE_PLAYING;
+    was_playing = (state == GST_STATE_PLAYING);
 
     if (was_playing) {
       /* and PAUSE when the pipeline was PLAYING, we don't need
        * to wait for the state change to complete since we are going
-       * to flush out any preroll sample anyway */
+       * to flush out any preroll sample anyway. */
       gst_element_set_state (element, GST_STATE_PAUSED);
     }
   }

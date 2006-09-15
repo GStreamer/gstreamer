@@ -1,5 +1,16 @@
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstobject.c: (gst_object_set_parent):
+	* gst/gstpipeline.c: (do_pipeline_seek):
+	Small cleanups in docs and code.
+
+	* gst/gstsegment.c: (gst_segment_clip):
+	* tests/check/gst/gstsegment.c: (GST_START_TEST):
+	if stop == start and start is in the segment, no clipping should be
+	done. Also add a test for this.
+
+2006-09-15  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-buffering.txt:
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstmessage.c: (gst_message_new_buffering),

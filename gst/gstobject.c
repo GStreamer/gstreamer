@@ -810,6 +810,8 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
   /* ERROR handling */
 had_parent:
   {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_REFCOUNTING, object,
+        "set parent failed, object already had a parent");
     GST_OBJECT_UNLOCK (object);
     return FALSE;
   }
