@@ -1,5 +1,11 @@
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
+	* tools/gst-inspect.c: (print_element_properties_info),
+	(print_signal_info):
+	List flags as hex so it's easier to deal with.
+
+2006-09-15  Wim Taymans  <wim@fluendo.com>
+
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_wait_preroll),
 	(gst_base_sink_do_sync):

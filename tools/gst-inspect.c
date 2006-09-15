@@ -488,7 +488,7 @@ print_element_properties_info (GstElement * element)
 
           j = 0;
           while (values[j].value_name) {
-            g_print ("\n%s%-23.23s    (%d): \t%s", "",
+            g_print ("\n%s%-23.23s    (0x%08x): \t%s", "",
                 _name, values[j].value, values[j].value_nick);
             j++;
           }
