@@ -1,3 +1,13 @@
+2006-09-15  Edgard Lima <edgard.lima@indt.org.br>
+
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2src.h:
+	* sys/v4l2/gstv4l2xoverlay.c:
+	* sys/v4l2/v4l2_calls.c:
+	* sys/v4l2/v4l2src_calls.c:
+	* tests/icles/v4l2src-test.c:
+	The test application and the plgind error messages has been improved.
+	
 2006-09-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init),
