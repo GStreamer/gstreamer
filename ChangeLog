@@ -1,5 +1,14 @@
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
+	* configure.ac:
+	We require 0.10.10.1 now because of _wait_preroll().
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render):
+	Use gst_base_sink_wait_preroll().
+
+2006-09-15  Wim Taymans  <wim@fluendo.com>
+
 	* ext/alsa/gstalsasink.c: (xrun_recovery), (gst_alsasink_write):
 	* ext/alsa/gstalsasrc.c: (xrun_recovery), (gst_alsasrc_read):
 	Use DEBUG_OBJECT more.

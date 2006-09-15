@@ -640,15 +640,9 @@ no_sync:
     if (written == samples)
       break;
 
-    /* else something interrupted us */
-    GST_DEBUG_OBJECT (sink, "wait for preroll...");
-    bsink->have_preroll = TRUE;
-    GST_PAD_PREROLL_WAIT (bsink->sinkpad);
-    bsink->have_preroll = FALSE;
-    GST_DEBUG_OBJECT (sink, "preroll done");
-    if (G_UNLIKELY (bsink->flushing))
+    /* else something interrupted us and we wait for preroll. */
+    if (gst_base_sink_wait_preroll (bsink) != GST_FLOW_OK)
       goto stopping;
-    GST_DEBUG_OBJECT (sink, "continue after preroll");
 
     render_offset += written;
     samples -= written;
