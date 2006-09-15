@@ -1,5 +1,20 @@
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
+	(gst_play_base_bin_init), (fill_buffer), (check_queue),
+	(queue_threshold_reached), (gst_play_base_bin_set_property),
+	(gst_play_base_bin_get_property):
+	* gst/playback/gstplaybasebin.h:
+	Don't use a 0 low watermark when buffering, it is catching starvation
+	way too late. Instead, use a 3 second queue with 30 and 95
+	percent low/high watermarks. 
+	Added queue-min-threshold property to configure low watermark.
+	Use new _buffering message API.
+	Make queue_threshold variable big enough to store a uint64 time value.
+	API: playbin::queue-min-threshold property.
+
+2006-09-15  Wim Taymans  <wim@fluendo.com>
+
 	* configure.ac:
 	We require 0.10.10.1 now because of _wait_preroll().
 

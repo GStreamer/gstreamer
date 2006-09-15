@@ -30,13 +30,9 @@
 GST_DEBUG_CATEGORY_STATIC (gst_play_base_bin_debug);
 #define GST_CAT_DEFAULT gst_play_base_bin_debug
 
-#if 0
-#define DEFAULT_QUEUE_THRESHOLD ((2 * GST_SECOND) / 3)
-#define DEFAULT_QUEUE_SIZE  (GST_SECOND / 2)
-#else
-#define DEFAULT_QUEUE_THRESHOLD (2 * GST_SECOND)
-#define DEFAULT_QUEUE_SIZE  (3 * GST_SECOND)
-#endif
+#define DEFAULT_QUEUE_SIZE          (3 * GST_SECOND)
+#define DEFAULT_QUEUE_MIN_THRESHOLD ((DEFAULT_QUEUE_SIZE * 30)/100)
+#define DEFAULT_QUEUE_THRESHOLD     ((DEFAULT_QUEUE_SIZE * 95) / 100)
 
 #define GROUP_LOCK(pbb) g_mutex_lock (pbb->group_lock)
 #define GROUP_UNLOCK(pbb) g_mutex_unlock (pbb->group_lock)
@@ -51,6 +47,7 @@ enum
   ARG_SUBURI,
   ARG_QUEUE_SIZE,
   ARG_QUEUE_THRESHOLD,
+  ARG_QUEUE_MIN_THRESHOLD,
   ARG_NSTREAMS,
   ARG_STREAMINFO,
   ARG_STREAMINFO_VALUES,
@@ -146,6 +143,10 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
       g_param_spec_uint64 ("queue-threshold", "Queue threshold",
           "Buffering threshold of internal queues in nanoseconds", 0,
           G_MAXINT64, DEFAULT_QUEUE_THRESHOLD, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_klass, ARG_QUEUE_MIN_THRESHOLD,
+      g_param_spec_uint64 ("queue-min-threshold", "Queue min threshold",
+          "Buffering low threshold of internal queues in nanoseconds", 0,
+          G_MAXINT64, DEFAULT_QUEUE_MIN_THRESHOLD, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_klass, ARG_NSTREAMS,
       g_param_spec_int ("nstreams", "NStreams", "number of streams",
@@ -213,6 +214,7 @@ gst_play_base_bin_init (GstPlayBaseBin * play_base_bin)
 
   play_base_bin->queue_size = DEFAULT_QUEUE_SIZE;
   play_base_bin->queue_threshold = DEFAULT_QUEUE_THRESHOLD;
+  play_base_bin->queue_min_threshold = DEFAULT_QUEUE_MIN_THRESHOLD;
 }
 
 static void
@@ -490,11 +492,8 @@ group_is_muted (GstPlayBaseGroup * group)
 static inline void
 fill_buffer (GstPlayBaseBin * play_base_bin, gint percent)
 {
-  gst_element_post_message (GST_ELEMENT (play_base_bin),
-      gst_message_new_custom (GST_MESSAGE_BUFFERING,
-          GST_OBJECT (play_base_bin),
-          gst_structure_new ("GstMessageBuffering",
-              "buffer-percent", G_TYPE_INT, percent, NULL)));
+  gst_element_post_message (GST_ELEMENT_CAST (play_base_bin),
+      gst_message_new_buffering (GST_OBJECT_CAST (play_base_bin), percent));
 }
 
 static gboolean
@@ -509,11 +508,11 @@ check_queue (GstPad * pad, GstBuffer * data, gpointer user_data)
   g_object_get (G_OBJECT (queue), "current-level-time", &level, NULL);
   GST_DEBUG ("Queue size: %" GST_TIME_FORMAT, GST_TIME_ARGS (level));
   if (play_base_bin->queue_threshold > 0) {
-    level = level * 100 / play_base_bin->queue_threshold;
-    if (level > 100)
-      level = 100;
+    level = level * 99 / play_base_bin->queue_threshold;
+    if (level > 99)
+      level = 99;
   } else
-    level = 100;
+    level = 99;
 
   fill_buffer (play_base_bin, level);
 
@@ -580,7 +579,8 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
   /* play */
   g_signal_handlers_disconnect_by_func (queue,
       G_CALLBACK (queue_threshold_reached), play_base_bin);
-  g_object_set (queue, "min-threshold-time", (guint64) 0, NULL);
+  g_object_set (queue, "min-threshold-time", play_base_bin->queue_min_threshold,
+      NULL);
 
   data = g_object_get_data (G_OBJECT (queue), "probe");
   if (data) {
@@ -591,13 +591,12 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
         "Removing buffer probe from pad %s:%s (%p)",
         GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
 
-    fill_buffer (play_base_bin, 100);
-
     g_object_set_data (G_OBJECT (queue), "probe", NULL);
     gst_pad_remove_buffer_probe (sinkpad, GPOINTER_TO_INT (data));
 
     gst_object_unref (sinkpad);
   }
+  fill_buffer (play_base_bin, 100);
 }
 
 /* this signal is only added when in streaming mode to catch underruns
@@ -1881,6 +1880,9 @@ gst_play_base_bin_set_property (GObject * object, guint prop_id,
     case ARG_QUEUE_THRESHOLD:
       play_base_bin->queue_threshold = g_value_get_uint64 (value);
       break;
+    case ARG_QUEUE_MIN_THRESHOLD:
+      play_base_bin->queue_min_threshold = g_value_get_uint64 (value);
+      break;
     case ARG_VIDEO:
       GROUP_LOCK (play_base_bin);
       set_active_source (play_base_bin,
@@ -1969,6 +1971,9 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_QUEUE_THRESHOLD:
       g_value_set_uint64 (value, play_base_bin->queue_threshold);
+      break;
+    case ARG_QUEUE_MIN_THRESHOLD:
+      g_value_set_uint64 (value, play_base_bin->queue_min_threshold);
       break;
     case ARG_STREAMINFO:
       /* FIXME: hold some kind of lock here, use iterator */
