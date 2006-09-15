@@ -755,14 +755,15 @@ close_error:
  *   Underrun and suspend recovery
  */
 static gint
-xrun_recovery (snd_pcm_t * handle, gint err)
+xrun_recovery (GstAlsaSink * alsa, snd_pcm_t * handle, gint err)
 {
-  GST_DEBUG ("xrun recovery %d", err);
+  GST_DEBUG_OBJECT (alsa, "xrun recovery %d", err);
 
   if (err == -EPIPE) {          /* under-run */
     err = snd_pcm_prepare (handle);
     if (err < 0)
-      GST_WARNING ("Can't recovery from underrun, prepare failed: %s",
+      GST_WARNING_OBJECT (alsa,
+          "Can't recovery from underrun, prepare failed: %s",
           snd_strerror (err));
     return 0;
   } else if (err == -ESTRPIPE) {
@@ -772,7 +773,8 @@ xrun_recovery (snd_pcm_t * handle, gint err)
     if (err < 0) {
       err = snd_pcm_prepare (handle);
       if (err < 0)
-        GST_WARNING ("Can't recovery from suspend, prepare failed: %s",
+        GST_WARNING_OBJECT (alsa,
+            "Can't recovery from suspend, prepare failed: %s",
             snd_strerror (err));
     }
     return 0;
@@ -802,7 +804,7 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
       GST_DEBUG_OBJECT (asink, "Write error: %s", snd_strerror (err));
       if (err == -EAGAIN) {
         continue;
-      } else if (xrun_recovery (alsa->handle, err) < 0) {
+      } else if (xrun_recovery (alsa, alsa->handle, err) < 0) {
         goto write_error;
       }
       continue;

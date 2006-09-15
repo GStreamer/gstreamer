@@ -1,3 +1,9 @@
+2006-09-15  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsasink.c: (xrun_recovery), (gst_alsasink_write):
+	* ext/alsa/gstalsasrc.c: (xrun_recovery), (gst_alsasrc_read):
+	Use DEBUG_OBJECT more.
+
 === release 0.10.10 ===
 
 2006-09-07  Thomas Vander Stichele  <thomas at apestaart dot org>
