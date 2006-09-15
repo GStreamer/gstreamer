@@ -44,7 +44,9 @@
  * processing.  In short, an element doesn't know what it is being used for.
  *
  * It is the application or compound element using the given element that
- * has more context about the use of the element.  The thrown errors should
+ * has more context about the use of the element. Errors can be received by
+ * listening to the #GstBus of the element/pipeline for #GstMessage objects with
+ * the type %GST_MESSAGE_ERROR or %GST_MESSAGE_WARNING. The thrown errors should
  * be inspected, and filtered if appropriate.
  *
  * An application is expected to, by default, present the user with a
@@ -92,6 +94,8 @@
  *     passed.  #GST_ERROR_SYSTEM can be used as a shortcut to give
  *     debug information on a system call error.</para></listitem>
  * </itemizedlist>
+ *
+ * Last reviewed on 2006-09-15 (0.10.10)
  */
 
 #ifdef HAVE_CONFIG_H
