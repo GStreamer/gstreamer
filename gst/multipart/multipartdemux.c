@@ -36,9 +36,9 @@
  * <title>Sample pipelines</title>
  * <para>
  * Here is a simple pipeline to demux a multipart file muxed with
- * #GstMultipartMux containing JPEG frames at a rate of 5 frames per second :
+ * #GstMultipartMux containing JPEG frames:
  * <programlisting>
- * gst-launch filesrc location=/tmp/test.multipart ! multipartdemux ! jpegdec ! video/x-raw-yuv, framerate=(fraction)5/1 ! ffmpegcolorspace ! ximagesink
+ * gst-launch filesrc location=/tmp/test.multipart ! multipartdemux ! jpegdec ! ffmpegcolorspace ! ximagesink
  * </programlisting>
  * </para>
  * <para>
@@ -477,9 +477,12 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
   GstMultipartDemux *multipart;
   GstAdapter *adapter;
   gint size = 1;
+  GstFlowReturn res;
 
   multipart = GST_MULTIPART_DEMUX (gst_pad_get_parent (pad));
   adapter = multipart->adapter;
+
+  res = GST_FLOW_OK;
 
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
     gst_adapter_clear (adapter);
@@ -524,16 +527,20 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
     } else {
       GST_BUFFER_TIMESTAMP (outbuf) = -1;
     }
-    gst_pad_push (srcpad->pad, outbuf);
+    res = gst_pad_push (srcpad->pad, outbuf);
+    if (res != GST_FLOW_OK)
+      break;
   }
 
 nodata:
   gst_object_unref (multipart);
+
   if (G_UNLIKELY (size == MULTIPART_DATA_ERROR))
     return GST_FLOW_ERROR;
   if (G_UNLIKELY (size == MULTIPART_DATA_EOS))
     return GST_FLOW_UNEXPECTED;
-  return GST_FLOW_OK;
+
+  return res;
 }
 
 static GstStateChangeReturn

@@ -1,3 +1,11 @@
+2006-09-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_chain):
+	Fix documentation, it is not possible to control the framerate of jpegdec
+	using filtered caps yet. Fixes #355210.
+	Return the downstream GstFlowReturn instead of GST_FLOW_OK so that we
+	stop when there is an error.
+
 2006-09-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_chain_parse_tag):
