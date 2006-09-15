@@ -1,5 +1,16 @@
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
+	* tools/gst-launch.c: (sigint_handler_sighandler), (check_intr),
+	(event_loop), (main):
+	Added some comments here and there.
+	Post an application message when an interrupt is caught instead of doing
+	an uncontrolled state change.
+	Clean up the event loop.
+	Handle buffering messages, pause/resume the pipeline.
+	Make shutdown because of an interrupt more reliable.
+
+2006-09-15  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_commit_state),
 	(gst_base_sink_wait_preroll), (gst_base_sink_do_sync),
 	(gst_base_sink_preroll_object):
