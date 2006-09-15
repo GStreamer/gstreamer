@@ -74,9 +74,9 @@ gst_sunaudiomixer_ctrl_build_list (GstSunAudioMixerCtrl * mixer)
   if (mixer->tracklist == NULL) {
     g_return_if_fail (mixer->mixer_fd != -1);
 
-    /* Output */
+    /* Output & should be MASTER when it's the only one. */
     track = gst_sunaudiomixer_track_new (GST_SUNAUDIO_TRACK_OUTPUT,
-        2, GST_MIXER_TRACK_OUTPUT);
+        2, GST_MIXER_TRACK_OUTPUT | GST_MIXER_TRACK_MASTER);
     mixer->tracklist = g_list_append (mixer->tracklist, track);
 
     /* Input */

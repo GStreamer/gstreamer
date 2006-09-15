@@ -1,5 +1,15 @@
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Darren Kenny <darren dot kenny at sun dot com>
+
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	(gst_sunaudiomixer_ctrl_build_list):
+	Set the output track as the MASTER so that the gnome-settings-daemon
+	keybindings for changing the volume using the keyboard works.
+	Fixes #356142.
+
+2006-09-15  Wim Taymans  <wim@fluendo.com>
+
 	* gst/multipart/multipartdemux.c: (gst_multipart_demux_chain):
 	Fix documentation, it is not possible to control the framerate of jpegdec
 	using filtered caps yet. Fixes #355210.
