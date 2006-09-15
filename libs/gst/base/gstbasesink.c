@@ -1034,6 +1034,47 @@ no_clock:
   }
 }
 
+/**
+ * gst_base_sink_wait_preroll:
+ * @sink: the sink
+ *
+ * If the #GstBaseSinkClass::render method performs its own synchronisation against
+ * the clock it must unblock when going from PLAYING to the PAUSED state and call
+ * this method before continuing to render the remaining data.
+ *
+ * This function will block until a state change to PLAYING happens (in which
+ * case this function returns #GST_FLOW_OK) or the processing must be stopped due
+ * to a state change to READY or a FLUSH event (in which case this function
+ * returns #GST_FLOW_WRONG_STATE).
+ *
+ * Since: 0.10.11
+ *
+ * Returns: #GST_FLOW_OK if the preroll completed and processing can
+ * continue. Any other return value should be returned from the render vmethod.
+ */
+GstFlowReturn
+gst_base_sink_wait_preroll (GstBaseSink * sink)
+{
+  /* block until the state changes, or we get a flush, or something */
+  GST_DEBUG_OBJECT (sink, "wait for preroll...");
+  sink->have_preroll = TRUE;
+  GST_PAD_PREROLL_WAIT (sink->sinkpad);
+  sink->have_preroll = FALSE;
+  GST_DEBUG_OBJECT (sink, "preroll done");
+  if (G_UNLIKELY (sink->flushing))
+    goto stopping;
+  GST_DEBUG_OBJECT (sink, "continue after preroll");
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+stopping:
+  {
+    GST_DEBUG_OBJECT (sink, "preroll interrupted");
+    return GST_FLOW_WRONG_STATE;
+  }
+}
+
 /* with STREAM_LOCK, PREROLL_LOCK
  *
  * Make sure we are in PLAYING and synchronize an object to the clock.
@@ -1112,12 +1153,7 @@ again:
      * made us not need the preroll anymore */
     if (G_LIKELY (basesink->need_preroll)) {
       /* block until the state changes, or we get a flush, or something */
-      GST_DEBUG_OBJECT (basesink, "waiting to finish preroll");
-      basesink->have_preroll = TRUE;
-      GST_PAD_PREROLL_WAIT (pad);
-      basesink->have_preroll = FALSE;
-      GST_DEBUG_OBJECT (basesink, "done preroll");
-      if (G_UNLIKELY (basesink->flushing))
+      if (gst_base_sink_wait_preroll (basesink) != GST_FLOW_OK)
         goto flushing;
     }
   }

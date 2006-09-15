@@ -1,5 +1,15 @@
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_wait_preroll),
+	(gst_base_sink_do_sync):
+	* libs/gst/base/gstbasesink.h:
+	Expose logic to wait for preroll so that subclasses such as audiosink
+	can also use this method.
+	API: gst_base_sink_wait_preroll()
+
+2006-09-15  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstobject.c: (gst_object_set_parent):
 	* gst/gstpipeline.c: (do_pipeline_seek):
 	Small cleanups in docs and code.

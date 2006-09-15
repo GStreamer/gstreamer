@@ -167,7 +167,6 @@ GST_BASE_SRC_GET_CLASS
 gst_base_src_get_type
 </SECTION>
 
-
 <SECTION>
 <FILE>gstbasesink</FILE>
 <TITLE>GstBaseSink</TITLE>
@@ -175,6 +174,7 @@ gst_base_src_get_type
 GstBaseSink
 GstBaseSinkClass
 
+gst_base_sink_wait_preroll
 gst_base_sink_set_sync
 gst_base_sink_get_sync
 gst_base_sink_set_max_lateness

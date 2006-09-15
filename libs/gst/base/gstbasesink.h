@@ -166,6 +166,8 @@ struct _GstBaseSinkClass {
 
 GType gst_base_sink_get_type(void);
 
+GstFlowReturn	gst_base_sink_wait_preroll 	(GstBaseSink *sink);
+
 void		gst_base_sink_set_sync 		(GstBaseSink *sink, gboolean sync);
 gboolean	gst_base_sink_get_sync 		(GstBaseSink *sink);
 
