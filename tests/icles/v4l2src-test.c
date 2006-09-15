@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <getopt.h>
 
 #include <gst/gst.h>
 #include <gst/interfaces/tuner.h>
@@ -10,10 +13,9 @@ volatile int exit_read = 0;
 void
 print_options ()
 {
-  printf
-      ("\nLaunch \"./v4l2src-test.c devname\" to choose the device (default: /dev/video0)\n");
   printf ("\nf - to change the fequency\n");
   printf ("i - to change the input\n");
+  printf ("n - to change the norm\n");
   printf ("c - list color balance\n");
   printf ("e - to exit\n");
 }
@@ -25,14 +27,56 @@ run_options (char opt)
     case 'f':
     {
       GstTuner *tuner = GST_TUNER (source);
-      GstTunerChannel *channel = gst_tuner_get_channel (tuner);
+      GstTunerChannel *channel;
       guint freq;
 
-      printf ("type the new frequency (current = %lu) (-1 to cancel): ",
-          gst_tuner_get_frequency (tuner, channel));
+      channel = gst_tuner_get_channel (tuner);
+
+      freq = gst_tuner_get_frequency (tuner, channel);
+
+      printf ("type the new frequency (current = %lu) (-1 to cancel): ", freq);
       scanf ("%u", &freq);
       if (freq != -1)
         gst_tuner_set_frequency (tuner, channel, freq);
+    }
+      break;
+    case 'n':
+    {
+      GstTuner *tuner = GST_TUNER (source);
+      const GList *item, *list;
+      const GstTunerNorm *current_norm;
+      GstTunerNorm *norm = NULL;
+      gint index, next_norm;
+
+
+      list = gst_tuner_list_norms (tuner);
+
+      current_norm = gst_tuner_get_norm (tuner);
+
+      printf ("\nlist of norms:\n");
+      for (item = list, index = 0; item != NULL; item = item->next, ++index) {
+        norm = item->data;
+        if (current_norm == norm) {
+          printf (" * %u - %s\n", index, norm->label);
+        } else {
+          printf ("   %u - %s\n", index, norm->label);
+        }
+      }
+      printf ("\ntype the number of norm you want (-1 to cancel): ");
+      scanf ("%d", &next_norm);
+      if (next_norm < 0) {
+        break;
+      }
+      if (index <= next_norm) {
+        printf ("Norm %d not available\n", next_norm);
+        break;
+      }
+      for (item = list, index = 0; item != NULL && index <= next_norm;
+          item = item->next, ++index) {
+        norm = item->data;
+      }
+      if (norm)
+        gst_tuner_set_norm (tuner, norm);
     }
       break;
     case 'i':
@@ -43,7 +87,9 @@ run_options (char opt)
       GstTunerChannel *channel = NULL;
       gint index, next_channel;
 
+
       list = gst_tuner_list_channels (tuner);
+
       current_channel = gst_tuner_get_channel (tuner);
 
       printf ("\nlist of inputs:\n");
@@ -57,7 +103,11 @@ run_options (char opt)
       }
       printf ("\ntype the number of input you want (-1 to cancel): ");
       scanf ("%d", &next_channel);
-      if (next_channel < 0 || index <= next_channel) {
+      if (next_channel < 0) {
+        break;
+      }
+      if (index <= next_channel) {
+        printf ("Input %d not available\n", next_channel);
         break;
       }
       for (item = list, index = 0; item != NULL && index <= next_channel;
@@ -77,10 +127,17 @@ run_options (char opt)
     case 'c':
     {
       GstColorBalance *balance = GST_COLOR_BALANCE (source);
-      const GList *controls = gst_color_balance_list_channels (balance);
+      const GList *controls;
       GstColorBalanceChannel *channel;
       const GList *item;
       gint index, new_value;
+
+      controls = gst_color_balance_list_channels (balance);
+
+      if (controls == NULL) {
+        printf ("There is no list of colorbalance controls\n");
+        goto done;
+      }
 
       if (controls) {
         printf ("\nlist of controls:\n");
@@ -99,7 +156,7 @@ run_options (char opt)
             item = item->next, ++index) {
           channel = item->data;
         }
-        printf ("   %u - %s (%d - %d) = %d, type the new value: ", index,
+        printf ("   %u - %s (%d - %d) = %d, type the new value: ", index - 1,
             channel->label, channel->min_value, channel->max_value,
             gst_color_balance_get_value (balance, channel));
         scanf ("%d", &new_value);
@@ -115,6 +172,10 @@ run_options (char opt)
       break;
   }
 
+done:
+
+  return;
+
 }
 
 gpointer
@@ -127,10 +188,12 @@ read_user (gpointer data)
 
     print_options ();
 
-    opt = getchar ();
-    if (exit_read) {
-      break;
-    }
+    do {
+      opt = getchar ();
+      if (exit_read) {
+        break;
+      }
+    } while (opt == '\n');
 
     run_options (opt);
 
@@ -150,12 +213,14 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       gchar *debug;
 
       gst_message_parse_error (message, &err, &debug);
-      g_print ("Error: %s - element %s\n", err->message,
-          gst_element_get_name (message->src));
+      g_print ("%s error: %s\n",
+          gst_element_get_name (message->src), err->message);
+      g_print ("Debug: %s\n", debug);
+
       g_error_free (err);
       g_free (debug);
 
-      printf ("presse any key to exit\n");
+      printf ("presse <ENTER> key to exit\n");
       exit_read = 1;
       g_main_loop_quit (loop);
       break;
@@ -177,6 +242,105 @@ main (int argc, char *argv[])
 {
 
   GThread *input_thread;
+  gint numbuffers = -1;
+  gchar device[128] = { '\0' };
+  gchar input[128] = { '\0' };
+  gulong frequency = 0;
+  gboolean nofixedfps = TRUE;
+
+
+  /* see for input option */
+
+  int c;
+
+  while (1) {
+    static char long_options_desc[][64] = {
+      {"Number of buffers to output before sending EOS"},
+      {"Device location. Common in /dev/video0"},
+      {"input/output (channel) to switch to"},
+      {"frequency to tune to (in Hz)"},
+      {"set use-fixed-fps to FALSE"},
+      {0, 0, 0, 0}
+    };
+    static struct option long_options[] = {
+      {"numbuffers", 1, 0, 'n'},
+      {"device", 1, 0, 'd'},
+      {"input", 1, 0, 'i'},
+      {"frequency", 1, 0, 'f'},
+      {"nofixedfps", 0, 0, 's'},
+      {0, 0, 0, 0}
+    };
+    /* getopt_long stores the option index here. */
+    int option_index = 0;
+
+    c = getopt_long (argc, argv, "n:d:i:f:sh:", long_options, &option_index);
+
+    /* Detect the end of the options. */
+    if (c == -1) {
+      printf ("tip: use -h to see help message.\n");
+      break;
+    }
+
+    switch (c) {
+      case 0:
+        /* If this option set a flag, do nothing else now. */
+        if (long_options[option_index].flag != 0)
+          break;
+        printf ("option %s", long_options[option_index].name);
+        if (optarg)
+          printf (" with arg %s", optarg);
+        printf ("\n");
+        break;
+
+      case 'n':
+        numbuffers = atoi (optarg);
+        break;
+
+      case 'd':
+        strncpy (device, optarg, sizeof (device) / sizeof (device[0]));
+        break;
+
+      case 'i':
+        strncpy (input, optarg, sizeof (input) / sizeof (input[0]));
+        break;
+
+      case 'f':
+        frequency = atol (optarg);
+        break;
+
+      case 's':
+        nofixedfps = FALSE;
+        break;
+
+      case 'h':
+        printf ("Usage: v4l2src-test [OPTION]...\n");
+        for (c = 0; long_options[c].name; ++c) {
+          printf ("-%c, --%s\r\t\t\t\t%s\n", long_options[c].val,
+              long_options[c].name, long_options_desc[c]);
+        }
+        exit (0);
+        break;
+
+      case '?':
+        /* getopt_long already printed an error message. */
+        printf ("Use -h to see help message.\n");
+        break;
+
+      default:
+        abort ();
+    }
+  }
+
+
+  /* Print any remaining command line arguments (not options). */
+  if (optind < argc) {
+    printf ("Use -h to see help message.\n" "non-option ARGV-elements: ");
+    while (optind < argc)
+      printf ("%s ", argv[optind++]);
+    putchar ('\n');
+  }
+
+
 
   /* init */
   gst_init (&argc, &argv);
@@ -199,10 +363,20 @@ main (int argc, char *argv[])
     return -1;
   }
 
-  if (argc < 2) {
-    g_object_set (source, "device", "/dev/video0", NULL);
-  } else {
-    g_object_set (source, "device", argv[1], NULL);
+  if (numbuffers > -1) {
+    g_object_set (source, "num-buffers", numbuffers, NULL);
+  }
+  if (device[0]) {
+    g_object_set (source, "device", device, NULL);
+  }
+  if (input[0]) {
+    g_object_set (source, "input", input, NULL);
+  }
+  if (frequency) {
+    g_object_set (source, "frequency", frequency, NULL);
+  }
+  if (!nofixedfps) {
+    g_object_set (source, "use-fixed-fps", nofixedfps, NULL);
   }
 
   /* you would normally check that the elements were created properly */
@@ -221,11 +395,6 @@ main (int argc, char *argv[])
     fprintf (stderr, "error: g_thread_create return NULL");
     return -1;
   }
-
-  if (argc < 2)
-    printf
-        ("\nOpening /dev/video0. Launch ./v4l2src-test.c devname to try another one\n");
-
 
   g_main_loop_run (loop);
   g_thread_join (input_thread);

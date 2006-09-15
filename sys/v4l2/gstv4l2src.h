@@ -99,7 +99,7 @@ struct _GstV4l2Src
   /* True if we want to stop */
   gboolean quit, is_capturing;
 
-  gint offset;
+  guint64 offset;
 
   /* how are we going to push buffers? */
   guint fps_n, fps_d;

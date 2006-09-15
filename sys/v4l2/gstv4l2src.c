@@ -899,7 +899,6 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
 
   do {
     *buf = gst_v4l2src_buffer_new (v4l2src, buffersize, NULL, NULL);
-    GST_BUFFER_OFFSET (*buf) = GST_BUFFER_OFFSET_NONE;
 
     amount =
         read (v4l2src->v4l2object->video_fd, GST_BUFFER_DATA (*buf),
@@ -910,10 +909,9 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
       if (errno == EAGAIN || errno == EINTR) {
         continue;
       } else {
-        GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC, (NULL),
-            ("error read()ing %d bytes on device %s: %d - %s",
-                buffersize, v4l2src->v4l2object->videodev, errno,
-                g_strerror (errno)));
+        GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC,
+            (_("error read()ing %d bytes on device %s"),
+                buffersize, v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
         gst_buffer_unref (*buf);
         return GST_FLOW_ERROR;
       }
@@ -974,8 +972,8 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   GstFlowReturn ret;
 
   if (v4l2src->use_fixed_fps && v4l2src->fps_n == 0) {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS, (NULL),
-        ("could not get frame rate for element, try to set use-fixed-fps property to false"));
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
+        (_("could not get frame rate for %s, try to set use-fixed-fps property to false"), v4l2src->v4l2object->videodev), (NULL));
     return GST_FLOW_ERROR;
   }
 
