@@ -84,7 +84,7 @@ typedef enum
   GST_MESSAGE_SEGMENT_START     = (1 << 16),
   GST_MESSAGE_SEGMENT_DONE      = (1 << 17),
   GST_MESSAGE_DURATION          = (1 << 18),
-  GST_MESSAGE_ANY               = 0x7fffffff 
+  GST_MESSAGE_ANY               = ~0
 } GstMessageType;
 
 #include <gst/gstminiobject.h>
@@ -247,6 +247,7 @@ GstMessage *	gst_message_new_eos		(GstObject * src);
 GstMessage *	gst_message_new_error		(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_warning		(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_tag		(GstObject * src, GstTagList * tag_list);
+GstMessage *	gst_message_new_buffering	(GstObject * src, gint percent);
 GstMessage *	gst_message_new_state_changed	(GstObject * src, GstState oldstate,
                                                  GstState newstate, GstState pending);
 GstMessage *	gst_message_new_state_dirty	(GstObject * src);
@@ -265,6 +266,7 @@ GstMessage *	gst_message_new_custom		(GstMessageType type,
 void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
+void 		gst_message_parse_buffering	(GstMessage *message, gint *percent);
 void		gst_message_parse_state_changed	(GstMessage *message, GstState *oldstate,
                                                  GstState *newstate, GstState *pending);
 void		gst_message_parse_clock_provide (GstMessage *message, GstClock **clock, gboolean *ready);

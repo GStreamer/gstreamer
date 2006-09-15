@@ -4,4 +4,17 @@ Buffering
 This document outlines the buffering policy used in the GStreamer
 core that can be used by plugins and applications.
 
+The purpose of buffering is to accumulate enough data in a pipeline so that
+playback can occur smoothly and without interruptions. It is typically done when
+reading from a (slow) and non-live network source.
+
+While data is buffered, the pipeline should remain in the PAUSED state. It is
+also possible that more data should be buffered while the pipeline is PLAYING,
+in which case the pipeline should be PAUSED until the buffering finished.
+
+
+Messages
+--------
+
+
 

@@ -328,7 +328,8 @@ gst_message_new_eos (GstObject * src)
  *
  * Create a new error message. The message will copy @error and
  * @debug. This message is posted by element when a fatal event
- * occured. The pipeline will probably (partially) stop.
+ * occured. The pipeline will probably (partially) stop. The application
+ * receiving this message should stop the pipeline.
  *
  * Returns: The new error message.
  *
@@ -392,6 +393,35 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
 
   message =
       gst_message_new_custom (GST_MESSAGE_TAG, src, (GstStructure *) tag_list);
+
+  return message;
+}
+
+/**
+ * gst_message_new_buffering:
+ * @src: The object originating the message.
+ * @percent: The buffering percent
+ *
+ * Create a new buffering message. This message can be posted by an element that
+ * needs to buffer data before it can continue processing. @percent should be a
+ * value between 0 and 100. A value of 100 means that the buffering completed.
+ *
+ * Returns: The new buffering message.
+ *
+ * Since: 0.10.11
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_buffering (GstObject * src, gint percent)
+{
+  GstMessage *message;
+
+  g_return_val_if_fail (percent >= 0 && percent <= 100, NULL);
+
+  message = gst_message_new_custom (GST_MESSAGE_BUFFERING, src,
+      gst_structure_new ("GstMessageBuffering",
+          "buffer-percent", G_TYPE_INT, percent, NULL));
 
   return message;
 }
@@ -697,6 +727,27 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
   g_return_if_fail (tag_list != NULL);
 
   *tag_list = (GstTagList *) gst_structure_copy (message->structure);
+}
+
+/**
+ * gst_message_parse_buffering:
+ * @message: A valid #GstMessage of type GST_MESSAGE_BUFFERING.
+ * @percent: Return location for the percent.
+ *
+ * Extracts the buffering percent from the GstMessage. 
+ *
+ * Since: 0.10.11
+ *
+ * MT safe.
+ */
+void
+gst_message_parse_buffering (GstMessage * message, gint * percent)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_BUFFERING);
+
+  if (percent)
+    gst_structure_get_int (message->structure, "buffer-percent", percent);
 }
 
 /**

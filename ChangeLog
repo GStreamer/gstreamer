@@ -1,3 +1,15 @@
+2006-09-15  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-buffering.txt:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstmessage.c: (gst_message_new_buffering),
+	(gst_message_parse_buffering):
+	* gst/gstmessage.h:
+	Added methods to create and parse BUFFERING messages.
+	Added preliminary docs about buffering.
+	API: gst_message_new_buffering
+	API: gst_message_parse_buffering
+
 2006-09-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c:
