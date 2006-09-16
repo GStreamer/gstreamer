@@ -90,7 +90,7 @@ cleanup_vorbisdec (GstElement * vorbisdec)
 GST_START_TEST (test_wrong_channels_identification_header)
 {
   GstElement *vorbisdec;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   GstBus *bus;
   GstMessage *message;
 
@@ -131,7 +131,7 @@ GST_END_TEST;
 GST_START_TEST (test_empty_identification_header)
 {
   GstElement *vorbisdec;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   GstBus *bus;
   GstMessage *message;
 
@@ -168,7 +168,7 @@ GST_END_TEST;
 GST_START_TEST (test_identification_header)
 {
   GstElement *vorbisdec;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   GstBus *bus;
   GstMessage *message;
   GstTagList *tag_list;

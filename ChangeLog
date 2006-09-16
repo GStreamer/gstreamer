@@ -1,5 +1,17 @@
 2006-09-17  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/elements/audioresample.c: (GST_START_TEST):
+	* tests/check/elements/videotestsrc.c: (check_rgb_buf):
+	* tests/check/elements/volume.c: (GST_START_TEST):
+	* tests/check/elements/vorbisdec.c: (GST_START_TEST):
+	* tests/check/pipelines/oggmux.c: (validate_ogg_page), (eos_watch),
+	(test_pipeline), (GST_START_TEST):
+	* tests/check/pipelines/theoraenc.c: (GST_START_TEST):
+	* tests/check/pipelines/vorbisenc.c: (GST_START_TEST):
+          Fix big batch of compiler warnings.
+
+2006-09-17  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/gnomevfs/gstgnomevfssrc.c:
           Add docs about icydemux usage in connection with gnomevfssrc
 

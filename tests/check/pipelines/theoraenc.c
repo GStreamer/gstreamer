@@ -110,7 +110,6 @@ GST_START_TEST (test_granulepos_offset)
   gchar *pipe_str;
   GstBuffer *buffer;
   GError *error = NULL;
-  GstClockTime timestamp;
 
   pipe_str = g_strdup_printf ("videotestsrc timestamp-offset=%" G_GUINT64_FORMAT
       " ! video/x-raw-yuv,format=(fourcc)I420,framerate=10/1"
@@ -204,7 +203,6 @@ GST_START_TEST (test_continuity)
   gchar *pipe_str;
   GstBuffer *buffer;
   GError *error = NULL;
-  GstClockTime timestamp;
 
   pipe_str = g_strdup_printf ("videotestsrc"
       " ! video/x-raw-yuv,format=(fourcc)I420,framerate=10/1"

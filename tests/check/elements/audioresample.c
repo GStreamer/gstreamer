@@ -205,8 +205,6 @@ test_perfect_stream_instance (int inrate, int outrate, int samples,
  */
 GST_START_TEST (test_perfect_stream)
 {
-  guint inrate, outrate, bytes;
-
   /* integral scalings */
   test_perfect_stream_instance (48000, 24000, 500, 20);
   test_perfect_stream_instance (48000, 12000, 500, 20);

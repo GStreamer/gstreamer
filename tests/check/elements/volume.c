@@ -285,7 +285,7 @@ GST_END_TEST;
 GST_START_TEST (test_wrong_caps)
 {
   GstElement *volume;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   gint16 in[2] = { 16384, -256 };
   GstBus *bus;
   GstMessage *message;

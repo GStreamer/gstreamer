@@ -93,7 +93,6 @@ GST_START_TEST (test_granulepos_offset)
   gchar *pipe_str;
   GstBuffer *buffer;
   GError *error = NULL;
-  GstClockTime timestamp;
 
   pipe_str = g_strdup_printf ("audiotestsrc timestamp-offset=%" G_GUINT64_FORMAT
       " ! audio/x-raw-int,rate=44100"
@@ -186,7 +185,6 @@ GST_START_TEST (test_timestamps)
   gchar *pipe_str;
   GstBuffer *buffer;
   GError *error = NULL;
-  GstClockTime timestamp;
 
   pipe_str = g_strdup_printf ("audiotestsrc"
       " ! audio/x-raw-int,rate=44100" " ! audioconvert ! vorbisenc ! fakesink");
@@ -276,7 +274,6 @@ GST_START_TEST (test_discontinuity)
   gchar *pipe_str;
   GstBuffer *buffer;
   GError *error = NULL;
-  GstClockTime timestamp;
   guint drop_id;
 
   pipe_str = g_strdup_printf ("audiotestsrc samplesperbuffer=1024"
@@ -310,7 +307,8 @@ GST_START_TEST (test_discontinuity)
     gst_object_unref (sink);
   }
 
-  drop_id = gst_pad_add_buffer_probe (droppad, drop_second_data_buffer, NULL);
+  drop_id = gst_pad_add_buffer_probe (droppad,
+      G_CALLBACK (drop_second_data_buffer), NULL);
   gst_buffer_straw_start_pipeline (bin, pad);
 
   /* check header packets */
