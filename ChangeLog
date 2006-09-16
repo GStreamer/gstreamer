@@ -1,3 +1,12 @@
+2006-09-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegenc.h:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/ffmpeg/gstffmpegscale.c:
+	  More G_OBJECT macro fixing.
+
 2006-09-13  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),

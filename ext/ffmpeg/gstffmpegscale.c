@@ -64,7 +64,7 @@ typedef struct _GstFFMpegScaleClass
 	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGSCALE,GstFFMpegScaleClass))
 #define GST_IS_FFMPEGSCALE(obj) \
 	(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGSCALE))
-#define GST_IS_FFMPEGSCALE_CLASS(obj) \
+#define GST_IS_FFMPEGSCALE_CLASS(klass) \
 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGSCALE))
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
