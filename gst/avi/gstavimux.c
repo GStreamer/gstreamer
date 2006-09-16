@@ -1370,7 +1370,7 @@ gst_avi_mux_stop_file (GstAviMux * avimux)
   /* statistics/total_frames/... */
   avimux->avi_hdr.tot_frames = avimux->num_frames;
   if (avimux->video_pad_connected) {
-    avimux->vids_hdr.length = avimux->num_frames;
+    avimux->vids_hdr.length = avimux->total_frames;
   }
   if (avimux->audio_pad_connected) {
     avimux->auds_hdr.length =
