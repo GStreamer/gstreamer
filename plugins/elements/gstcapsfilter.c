@@ -44,7 +44,7 @@ GST_ELEMENT_DETAILS ("CapsFilter",
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CAPSFILTER,GstCapsFilterClass))
 #define GST_IS_CAPSFILTER(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CAPSFILTER))
-#define GST_IS_CAPSFILTER_CLASS(obj) \
+#define GST_IS_CAPSFILTER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CAPSFILTER))
 
 typedef struct _GstCapsFilter GstCapsFilter;

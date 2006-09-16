@@ -1,3 +1,10 @@
+2006-09-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/pwg/building-boiler.xml:
+	* plugins/elements/gstcapsfilter.c:
+          More G_OBJECT macro fixing. Also Fix some details on the plugin-stamp
+          section.
+
 2006-09-16  Edward Hervey  <edward@fluendo.com>
 
 	* libs/gst/base/gstbasetransform.c:
