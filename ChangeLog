@@ -1,7 +1,12 @@
+2006-09-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* win32/common/config.h:
+	  update for version
+
 2006-09-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gsterror.c:
-          Documents how to receive errors.
+	  Documents how to receive errors.
 
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
