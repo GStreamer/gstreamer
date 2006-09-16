@@ -1,8 +1,5 @@
 /* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
- *
- * gstsinesrc.h: 
+ * Copyright (C) 2005 Stefan Kost <ensonic@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,7 +16,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 
 #ifndef __GST_AUDIO_TEST_SRC_H__
 #define __GST_AUDIO_TEST_SRC_H__

@@ -36,7 +36,7 @@ GST_DEBUG_CATEGORY_STATIC (audio_rate_debug);
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_RATE,GstAudioRate))
 #define GST_IS_AUDIO_RATE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_RATE))
-#define GST_IS_AUDIO_RATE_CLASS(obj) \
+#define GST_IS_AUDIO_RATE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_RATE))
 
 typedef struct _GstAudioRate GstAudioRate;

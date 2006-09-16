@@ -51,7 +51,7 @@ typedef struct _GstAudioFilterTemplateClass GstAudioFilterTemplateClass;
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_AUDIO_FILTER_TEMPLATE,GstAudioFilterTemplateClass))
 #define GST_IS_AUDIO_FILTER_TEMPLATE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIO_FILTER_TEMPLATE))
-#define GST_IS_AUDIO_FILTER_TEMPLATE_CLASS(obj) \
+#define GST_IS_AUDIO_FILTER_TEMPLATE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_FILTER_TEMPLATE))
 
 struct _GstAudioFilterTemplate

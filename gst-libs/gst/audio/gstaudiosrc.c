@@ -37,7 +37,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_audio_src_debug);
         (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_AUDIORING_BUFFER, GstAudioRingBufferClass))
 #define GST_IS_AUDIORING_BUFFER(obj)     \
         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_AUDIORING_BUFFER))
-#define GST_IS_AUDIORING_BUFFER_CLASS(obj)\
+#define GST_IS_AUDIORING_BUFFER_CLASS(klass)\
         (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIORING_BUFFER))
 
 typedef struct _GstAudioRingBuffer GstAudioRingBuffer;

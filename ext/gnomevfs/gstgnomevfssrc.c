@@ -35,6 +35,10 @@
  * the GnomeVFS library. Common protocols are 'file', 'http', 'ftp', or 'smb'.
  * </para>
  * <para>
+ * In case the element-gnomevfssrc::iradio-mode is enabled, the #ICYDemux should
+ * be used as the follow-up element.
+ * </para>
+ * <para>
  * Example pipeline:
  * <programlisting>
  * gst-launch -v gnomevfssrc location=file:///home/joe/foo.xyz ! fakesink

@@ -1,3 +1,22 @@
+2006-09-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/gnomevfs/gstgnomevfssrc.c:
+          Add docs about icydemux usage in connection with gnomevfssrc
+
+	* ext/libvisual/visual.c:
+	* ext/ogg/gstoggaviparse.c:
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggmux.c:
+	* ext/ogg/gstoggparse.c:
+	* gst-libs/gst/audio/gstaudiofiltertemplate.c:
+	* gst-libs/gst/audio/gstaudiosink.c:
+	* gst-libs/gst/audio/gstaudiosrc.c:
+	* gst/audiorate/gstaudiorate.c:
+	  More G_OBJECT macro fixing.
+
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+          Fix wrong info in header due to copy & paste
+
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
