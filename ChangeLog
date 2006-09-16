@@ -1,3 +1,10 @@
+2006-09-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/mad/gstid3tag.c:
+	* gst/mpegstream/gstrfc2250enc.h:
+	* gst/synaesthesia/gstsynaesthesia.c:
+	  More G_OBJECT macro fixing.
+
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Yves Lefebvre <ivanohe at abacom dot com>
