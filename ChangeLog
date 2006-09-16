@@ -1,3 +1,12 @@
+2006-09-16  Edward Hervey  <edward@fluendo.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_buffer_alloc):
+	Check if requested caps are the same as the sinks caps IF
+	->have_same_caps is TRUE. If they are not, act as if have_same_caps
+	is FALSE.
+	This fixes the renegotiation issues stated in #352827.
+
 2006-09-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

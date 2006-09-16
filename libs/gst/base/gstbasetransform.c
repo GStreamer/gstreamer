@@ -1046,6 +1046,7 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   GstBaseTransform *trans;
   GstFlowReturn res;
   guint new_size;
+  gboolean issinkcaps = TRUE;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
 
@@ -1061,9 +1062,26 @@ gst_base_transform_buffer_alloc (GstPad * pad, guint64 offset, guint size,
   else
     GST_DEBUG_OBJECT (trans, "... and offset %" G_GUINT64_FORMAT, offset);
 
+  /* if have_same_caps was previously set to TRUE we need to double check if it
+   * hasn't changed */
+  if (trans->have_same_caps) {
+    GstCaps *sinkcaps;
+
+    GST_OBJECT_LOCK (trans->sinkpad);
+    sinkcaps = GST_PAD_CAPS (trans->sinkpad);
+    issinkcaps = sinkcaps && (gst_caps_is_equal (sinkcaps, caps));
+    GST_OBJECT_UNLOCK (trans->sinkpad);
+  }
+
   /* before any buffers are pushed, have_same_caps is TRUE; allocating can trigger
    * a renegotiation and change that to FALSE */
-  if (trans->have_same_caps) {
+
+  /* bilboed: This seems wrong, from all debug logs, have_same_caps is
+   * initialized to FALSE */
+
+  /* checking against trans->have_same_caps is not enough !! It should also
+   *  check to see if the requested caps are equal to the sink caps */
+  if (trans->have_same_caps && issinkcaps) {
     /* request a buffer with the same caps */
     GST_DEBUG_OBJECT (trans, "requesting buffer with same caps, size %d", size);
 
