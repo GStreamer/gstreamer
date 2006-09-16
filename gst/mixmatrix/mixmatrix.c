@@ -34,7 +34,7 @@
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MIXMATRIX,GstMixMatrix))
 #define GST_IS_MIXMATRIX(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MIXMATRIX))
-#define GST_IS_MIXMATRIX_CLASS(obj) \
+#define GST_IS_MIXMATRIX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MIXMATRIX))
 
 typedef struct _GstMixMatrix GstMixMatrix;

@@ -31,7 +31,7 @@
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstXsharpen))
 #define GST_IS_XSHARPEN(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XSHARPEN))
-#define GST_IS_XSHARPEN_CLASS(obj) \
+#define GST_IS_XSHARPEN_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XSHARPEN))
 
 typedef struct _GstXsharpen GstXsharpen;

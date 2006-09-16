@@ -33,7 +33,7 @@
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_XINE_AUDIO_SINK,GstXineAudioSinkClass))
 #define GST_IS_XINE_AUDIO_SINK(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XINE_AUDIO_SINK))
-#define GST_IS_XINE_AUDIO_SINK_CLASS(obj) \
+#define GST_IS_XINE_AUDIO_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XINE_AUDIO_SINK))
 
 GType gst_xine_audio_sink_get_type (void);

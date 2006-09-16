@@ -28,7 +28,7 @@
 #define GST_CHART(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CHART,GstChart))
 #define GST_CHART_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CHART,GstChart))
 #define GST_IS_CHART(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CHART))
-#define GST_IS_CHART_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CHART))
+#define GST_IS_CHART_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CHART))
 
 typedef struct _GstChart GstChart;
 typedef struct _GstChartClass GstChartClass;

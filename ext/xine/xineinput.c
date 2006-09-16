@@ -33,7 +33,7 @@
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_XINE_INPUT,GstXineInputClass))
 #define GST_IS_XINE_INPUT(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_XINE_INPUT))
-#define GST_IS_XINE_INPUT_CLASS(obj) \
+#define GST_IS_XINE_INPUT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_XINE_INPUT))
 
 GType gst_xine_input_get_type (void);

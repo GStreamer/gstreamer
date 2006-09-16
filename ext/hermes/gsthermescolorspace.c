@@ -33,7 +33,7 @@
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ULAW,GstHermesColorspace))
 #define GST_IS_COLORSPACE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_COLORSPACE))
-#define GST_IS_COLORSPACE_CLASS(obj) \
+#define GST_IS_COLORSPACE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_COLORSPACE))
 
 typedef struct _GstHermesColorspace GstHermesColorspace;

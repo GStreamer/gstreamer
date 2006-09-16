@@ -37,7 +37,7 @@
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VBIDEC,GstVBIDec))
 #define GST_IS_VBIDEC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VBIDEC))
-#define GST_IS_VBIDEC_CLASS(obj) \
+#define GST_IS_VBIDEC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VBIDEC))
 
 //typedef struct _GstVBIDec GstVBIDec;
