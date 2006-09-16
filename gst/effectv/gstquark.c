@@ -40,7 +40,7 @@
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_QUARKTV,GstQuarkTVClass))
 #define GST_IS_QUARKTV(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_QUARKTV))
-#define GST_IS_QUARKTV_CLASS(obj) \
+#define GST_IS_QUARKTV_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QUARKTV))
 
 /* number of frames of time-buffer. It should be as a configurable paramater */

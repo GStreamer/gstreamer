@@ -41,7 +41,7 @@
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEOTEMPLATE,GstVideotemplateClass))
 #define GST_IS_VIDEOTEMPLATE(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEOTEMPLATE))
-#define GST_IS_VIDEOTEMPLATE_CLASS(obj) \
+#define GST_IS_VIDEOTEMPLATE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEOTEMPLATE))
 
 typedef struct _GstVideotemplate GstVideotemplate;

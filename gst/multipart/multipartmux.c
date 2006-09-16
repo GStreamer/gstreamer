@@ -55,7 +55,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_multipart_mux_debug);
 #define GST_MULTIPART_MUX(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTIPART_MUX, GstMultipartMux))
 #define GST_MULTIPART_MUX_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTIPART_MUX, GstMultipartMux))
 #define GST_IS_MULTIPART_MUX(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTIPART_MUX))
-#define GST_IS_MULTIPART_MUX_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIPART_MUX))
+#define GST_IS_MULTIPART_MUX_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIPART_MUX))
 
 typedef struct _GstMultipartMux GstMultipartMux;
 typedef struct _GstMultipartMuxClass GstMultipartMuxClass;

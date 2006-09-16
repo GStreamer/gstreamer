@@ -37,7 +37,7 @@
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_NEGOTIATION,GstNegotiation))
 #define GST_IS_NEGOTIATION(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_NEGOTIATION))
-#define GST_IS_NEGOTIATION_CLASS(obj) \
+#define GST_IS_NEGOTIATION_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_NEGOTIATION))
 
 typedef struct _GstNegotiation GstNegotiation;

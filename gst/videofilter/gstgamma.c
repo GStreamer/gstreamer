@@ -43,7 +43,7 @@
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GAMMA,GstGammaClass))
 #define GST_IS_GAMMA(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GAMMA))
-#define GST_IS_GAMMA_CLASS(obj) \
+#define GST_IS_GAMMA_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GAMMA))
 
 typedef struct _GstGamma GstGamma;

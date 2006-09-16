@@ -41,7 +41,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_test_debug);
   (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_TEST,GstTestClass))
 #define GST_IS_TEST(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_TEST))
-#define GST_IS_TEST_CLASS(obj) \
+#define GST_IS_TEST_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_TEST))
 
 typedef struct _GstTest GstTest;

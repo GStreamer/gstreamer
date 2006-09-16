@@ -31,7 +31,7 @@
 #define GST_FLAC_TAG(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FLAC_TAG, GstFlacTag))
 #define GST_FLAC_TAG_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FLAC_TAG, GstFlacTag))
 #define GST_IS_FLAC_TAG(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FLAC_TAG))
-#define GST_IS_FLAC_TAG_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FLAC_TAG))
+#define GST_IS_FLAC_TAG_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FLAC_TAG))
 
 typedef struct _GstFlacTag GstFlacTag;
 typedef struct _GstFlacTagClass GstFlacTagClass;

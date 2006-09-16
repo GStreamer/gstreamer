@@ -1,3 +1,27 @@
+2006-09-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/flac/gstflactag.c:
+	* gst/alpha/gstalpha.c:
+	* gst/debug/breakmydata.c:
+	* gst/debug/negotiation.c:
+	* gst/debug/testplugin.c:
+	* gst/effectv/gstaging.c:
+	* gst/effectv/gstdice.c:
+	* gst/effectv/gstedge.c:
+	* gst/effectv/gstquark.c:
+	* gst/effectv/gstrev.c:
+	* gst/effectv/gstshagadelic.c:
+	* gst/effectv/gstvertigo.c:
+	* gst/effectv/gstwarp.c:
+	* gst/multipart/multipartdemux.c:
+	* gst/multipart/multipartmux.c:
+	* gst/videobox/gstvideobox.c:
+	* gst/videofilter/gstgamma.c:
+	* gst/videofilter/gstvideotemplate.c:
+	* gst/videomixer/videomixer.c:
+	* sys/sunaudio/gstsunaudiosrc.h:
+          More G_OBJECT macro fixing.
+
 2006-09-16  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Yves Lefebvre <ivanohe at abacom dot com>

@@ -64,7 +64,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_videomixer_debug);
         (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MIXER_PAD, GstVideoMixerPadiClass))
 #define GST_IS_VIDEO_MIXER_PAD(obj) \
         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_MIXER_PAD))
-#define GST_IS_VIDEO_MIXER_PAD_CLASS(obj) \
+#define GST_IS_VIDEO_MIXER_PAD_CLASS(klass) \
         (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_MIXER_PAD))
 
 typedef struct _GstVideoMixerPad GstVideoMixerPad;
@@ -78,7 +78,7 @@ typedef struct _GstVideoMixerCollect GstVideoMixerCollect;
         (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VIDEO_MIXER, GstVideoMixerClass))
 #define GST_IS_VIDEO_MIXER(obj) \
         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_MIXER))
-#define GST_IS_VIDEO_MIXER_CLASS(obj) \
+#define GST_IS_VIDEO_MIXER_CLASS(klass) \
         (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_MIXER))
 
 static GType gst_videomixer_get_type (void);

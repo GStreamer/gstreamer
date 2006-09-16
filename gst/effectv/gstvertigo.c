@@ -41,7 +41,7 @@
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VERTIGOTV,GstVertigoTVClass))
 #define GST_IS_VERTIGOTV(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VERTIGOTV))
-#define GST_IS_VERTIGOTV_CLASS(obj) \
+#define GST_IS_VERTIGOTV_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VERTIGOTV))
 
 typedef struct _GstVertigoTV GstVertigoTV;
