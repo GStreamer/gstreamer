@@ -488,6 +488,7 @@ tests/examples/Makefile
 tests/examples/controller/Makefile
 tests/examples/helloworld/Makefile
 tests/examples/launch/Makefile
+tests/examples/manual/Makefile
 tests/examples/metadata/Makefile
 tests/examples/queue/Makefile
 tests/examples/typefind/Makefile

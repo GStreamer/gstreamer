@@ -1,5 +1,16 @@
 2006-09-16  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	* docs/manual/advanced-autoplugging.xml:
+	* tests/examples/Makefile.am:
+	* tests/examples/manual/.cvsignore:
+	* tests/examples/manual/Makefile.am:
+	* tests/examples/manual/extract.pl:
+	  Extract the manual examples again like we used to do.
+	  Fix one of them.
+
+2006-09-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* win32/common/config.h:
 	  update for version
 

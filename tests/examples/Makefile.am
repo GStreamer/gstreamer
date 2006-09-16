@@ -13,6 +13,7 @@ endif
 always_dirs = \
 	controller			\
 	helloworld			\
+	manual                          \
 	metadata                        \
 	queue
 

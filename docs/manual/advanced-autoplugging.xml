@@ -306,7 +306,8 @@ static void
 init_factories (void)
 {
   /* first filter out the interesting element factories */
-  factories = gst_registry_pool_feature_filter (
+  factories = gst_registry_feature_filter (
+      gst_registry_get_default (),
       (GstPluginFeatureFilter) cb_feature_filter, FALSE, NULL);
 
   /* sort them according to their ranks */
@@ -547,6 +548,7 @@ main (gint   argc,
 {
   GMainLoop *loop;
   GstElement *typefind, *realsink;
+  GstBus *bus;
   GError *err = NULL;
   gchar *p;
 
