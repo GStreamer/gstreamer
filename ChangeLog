@@ -1,5 +1,14 @@
 2006-09-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybasebin.c: (get_active_source):
+	  Make stream-switching appear instant to the application
+	  (ie. make sure that a g_object_get on 'current-foo' returns
+	  the stream previously set with g_object_set(). Totem needs
+	  this to update stream-related meta-info (like audio-codec)
+	  correctly when switching streams.
+
+2006-09-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_find_master_mixer),
 	(gst_alsa_mixer_ensure_track_list):
 	  Try harder to guess which mixer track is the master mixer
@@ -80,6 +89,7 @@
 	Make queue_threshold variable big enough to store a uint64 time value.
 	API: playbin::queue-min-threshold property.
 
+>>>>>>> 1.2883
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:

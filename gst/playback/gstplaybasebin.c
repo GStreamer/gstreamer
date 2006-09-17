@@ -1694,7 +1694,7 @@ get_active_source (GstPlayBaseBin * play_base_bin, GstStreamType type)
     GstStreamInfo *info = s->data;
 
     if (info->type == type) {
-      if (!info->mute) {
+      if (!info->mute && !g_object_get_data (G_OBJECT (info), "mute_probe")) {
         return num;
       } else {
         num++;
