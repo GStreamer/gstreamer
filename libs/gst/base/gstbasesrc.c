@@ -642,9 +642,6 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       res = TRUE;
       break;
     }
-    case GST_QUERY_LATENCY:
-    case GST_QUERY_JITTER:
-    case GST_QUERY_RATE:
     case GST_QUERY_CONVERT:
     {
       GstFormat src_fmt, dest_fmt;
@@ -662,6 +659,9 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
+    case GST_QUERY_LATENCY:
+    case GST_QUERY_JITTER:
+    case GST_QUERY_RATE:
     default:
       res = FALSE;
       break;

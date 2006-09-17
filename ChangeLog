@@ -1,5 +1,11 @@
 2006-09-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_query):
+	  JITTER, RATE, and LATENCY query should be handled by the
+	  default case and not by the CONVERT query code.
+
+2006-09-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstformat.c: (gst_format_register):
 	  Fix locking order (must take lock before using n_values).
 
