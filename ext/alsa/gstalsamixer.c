@@ -118,17 +118,69 @@ error:
   }
 }
 
+static snd_mixer_elem_t *
+gst_alsa_mixer_find_master_mixer (GstAlsaMixer * mixer, snd_mixer_t * handle)
+{
+  snd_mixer_elem_t *element;
+  gint i, count;
+
+  count = snd_mixer_get_count (handle);
+
+  /* Check if we have a playback mixer labelled as 'Master' */
+  element = snd_mixer_first_elem (handle);
+  for (i = 0; i < count; i++) {
+    if (snd_mixer_selem_has_playback_volume (element) &&
+        strcmp (snd_mixer_selem_get_name (element), "Master") == 0) {
+      return element;
+    }
+    element = snd_mixer_elem_next (element);
+  }
+
+  /* If not, check if we have a playback mixer labelled as 'Front' */
+  element = snd_mixer_first_elem (handle);
+  for (i = 0; i < count; i++) {
+    if (snd_mixer_selem_has_playback_volume (element) &&
+        strcmp (snd_mixer_selem_get_name (element), "Front") == 0) {
+      return element;
+    }
+    element = snd_mixer_elem_next (element);
+  }
+
+  /* If not, check if we have a playback mixer with both volume and switch */
+  element = snd_mixer_first_elem (handle);
+  for (i = 0; i < count; i++) {
+    if (snd_mixer_selem_has_playback_volume (element) &&
+        snd_mixer_selem_has_playback_switch (element)) {
+      return element;
+    }
+    element = snd_mixer_elem_next (element);
+  }
+
+  /* If not, take any playback mixer with a volume control */
+  element = snd_mixer_first_elem (handle);
+  for (i = 0; i < count; i++) {
+    if (snd_mixer_selem_has_playback_volume (element)) {
+      return element;
+    }
+    element = snd_mixer_elem_next (element);
+  }
+
+  /* Looks like we're out of luck ... */
+  return NULL;
+}
+
 static void
 gst_alsa_mixer_ensure_track_list (GstAlsaMixer * mixer)
 {
   gint i, count;
-  snd_mixer_elem_t *element;
-  gboolean first = TRUE;
+  snd_mixer_elem_t *element, *master;
 
   g_return_if_fail (mixer->handle != NULL);
 
   if (mixer->tracklist)
     return;
+
+  master = gst_alsa_mixer_find_master_mixer (mixer, mixer->handle);
 
   count = snd_mixer_get_count (mixer->handle);
   element = snd_mixer_first_elem (mixer->handle);
@@ -169,16 +221,16 @@ gst_alsa_mixer_ensure_track_list (GstAlsaMixer * mixer)
       has_playback_switch = snd_mixer_selem_has_playback_switch (element);
       has_playback_volume = snd_mixer_selem_has_playback_volume (element);
 
-      GST_LOG ("[%s] PLAYBACK: has_playback_volume=%d, has_playback_switch=%d",
-          name, has_playback_volume, has_playback_switch);
+      GST_LOG ("[%s] PLAYBACK: has_playback_volume=%d, has_playback_switch=%d"
+          "%s", name, has_playback_volume, has_playback_switch,
+          (element == master) ? " MASTER" : "");
 
       if (has_playback_volume) {
         gint flags = GST_MIXER_TRACK_OUTPUT;
 
-        if (first) {
-          first = FALSE;
+        if (element == master)
           flags |= GST_MIXER_TRACK_MASTER;
-        }
+
         play_track = gst_alsa_mixer_track_new (element, samename, i,
             flags, FALSE, NULL, FALSE);
 
