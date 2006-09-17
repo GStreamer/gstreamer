@@ -1,3 +1,9 @@
+2006-09-17  Michael Smith  <msmith@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (ogganx_type_find):
+	  Don't crash on truncated files - check that we got an 8 byte buffer
+	  before trying to memcmp it.
+
 2006-09-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (get_active_source):
