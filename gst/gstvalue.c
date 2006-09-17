@@ -1911,8 +1911,28 @@ gst_value_serialize_enum (const GValue * value)
   g_return_val_if_fail (klass, NULL);
   en = g_enum_get_value (klass, g_value_get_enum (value));
   g_type_class_unref (klass);
+
+  /* might be one of the custom formats registered later */
+  if (G_UNLIKELY (en == NULL && G_VALUE_TYPE (value) == GST_TYPE_FORMAT)) {
+    const GstFormatDefinition *format_def;
+
+    format_def = gst_format_get_details (g_value_get_enum (value));
+    g_return_val_if_fail (format_def != NULL, NULL);
+    return g_strdup (format_def->description);
+  }
+
   g_return_val_if_fail (en, NULL);
   return g_strdup (en->value_name);
+}
+
+static gint
+gst_value_deserialize_enum_iter_cmp (const GstFormatDefinition * format_def,
+    const gchar * s)
+{
+  if (g_ascii_strcasecmp (s, format_def->nick) == 0)
+    return 0;
+
+  return g_ascii_strcasecmp (s, format_def->description);
 }
 
 static gboolean
@@ -1933,6 +1953,23 @@ gst_value_deserialize_enum (GValue * dest, const gchar * s)
     }
   }
   g_type_class_unref (klass);
+
+  /* might be one of the custom formats registered later */
+  if (G_UNLIKELY (en == NULL && G_VALUE_TYPE (dest) == GST_TYPE_FORMAT)) {
+    const GstFormatDefinition *format_def;
+    GstIterator *iter;
+
+    iter = gst_format_iterate_definitions ();
+
+    format_def = gst_iterator_find_custom (iter,
+        (GCompareFunc) gst_value_deserialize_enum_iter_cmp, (gpointer) s);
+
+    g_return_val_if_fail (format_def != NULL, FALSE);
+    g_value_set_enum (dest, (gint) format_def->value);
+    gst_iterator_free (iter);
+    return TRUE;
+  }
+
   g_return_val_if_fail (en, FALSE);
   g_value_set_enum (dest, en->value);
   return TRUE;

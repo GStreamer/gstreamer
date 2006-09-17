@@ -1579,6 +1579,45 @@ GST_START_TEST (test_fraction_range)
 
 GST_END_TEST;
 
+GST_START_TEST (test_serialize_deserialize_format_enum)
+{
+  GstStructure *s, *s2;
+  GstFormat foobar_fmt;
+  gchar *str, *str2, *end = NULL;
+
+  /* make sure custom formats are serialised properly as well */
+  foobar_fmt = gst_format_register ("foobar", "GST_FORMAT_FOOBAR");
+  fail_unless (foobar_fmt != GST_FORMAT_UNDEFINED);
+
+  s = gst_structure_new ("foo/bar", "format1", GST_TYPE_FORMAT,
+      GST_FORMAT_BYTES, "format2", GST_TYPE_FORMAT, GST_FORMAT_TIME,
+      "format3", GST_TYPE_FORMAT, GST_FORMAT_DEFAULT, "format4",
+      GST_TYPE_FORMAT, foobar_fmt, NULL);
+
+  str = gst_structure_to_string (s);
+  GST_LOG ("Got structure string '%s'", GST_STR_NULL (str));
+  fail_unless (str != NULL);
+  fail_unless (strstr (str, "TIME") != NULL);
+  fail_unless (strstr (str, "BYTE") != NULL);
+  fail_unless (strstr (str, "DEFAULT") != NULL);
+  fail_unless (strstr (str, "FOOBAR") != NULL);
+
+  s2 = gst_structure_from_string (str, &end);
+  fail_unless (s2 != NULL);
+
+  str2 = gst_structure_to_string (s2);
+  fail_unless (str2 != NULL);
+
+  fail_unless (g_str_equal (str, str2));
+
+  g_free (str);
+  g_free (str2);
+  gst_structure_free (s);
+  gst_structure_free (s2);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_value_suite (void)
 {
@@ -1596,6 +1635,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_gstfraction);
   tcase_add_test (tc_chain, test_serialize_flags);
   tcase_add_test (tc_chain, test_deserialize_flags);
+  tcase_add_test (tc_chain, test_serialize_deserialize_format_enum);
   tcase_add_test (tc_chain, test_string);
   tcase_add_test (tc_chain, test_deserialize_string);
   tcase_add_test (tc_chain, test_value_compare);

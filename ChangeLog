@@ -1,3 +1,16 @@
+2006-09-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstformat.c: (gst_format_register):
+	  Fix locking order (must take lock before using n_values).
+
+	* gst/gstvalue.c: (gst_value_serialize_enum),
+	(gst_value_deserialize_enum_iter_cmp),
+	(gst_value_deserialize_enum):
+	  Fix serialisation/deserialisation of custom registered GstFormats.
+
+	* tests/check/gst/gstvalue.c: (GST_START_TEST), (gst_value_suite):
+	  Unit test for custom format serialisation/deserialisation.
+
 2006-09-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/pwg/building-boiler.xml:
