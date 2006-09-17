@@ -1,5 +1,11 @@
 2006-09-17  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/audioconvert/gstaudioconvert.c: (set_structure_widths),
+	(gst_audio_convert_transform_caps):
+          Get structure-name just once.
+
+2006-09-17  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/check/elements/audioresample.c: (GST_START_TEST):
 	* tests/check/elements/videotestsrc.c: (check_rgb_buf):
 	* tests/check/elements/volume.c: (GST_START_TEST):

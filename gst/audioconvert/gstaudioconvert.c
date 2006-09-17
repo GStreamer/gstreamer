@@ -399,7 +399,6 @@ set_structure_widths (GstStructure * s, int min, int max)
   for (width = min; width <= max; width += 8) {
     g_value_set_int (&val, width);
     gst_value_list_append_value (&list, &val);
-    GST_LOG ("Appended width %d to widths available", width);
   }
   gst_structure_set_value (s, "width", &list);
   g_value_unset (&val);
@@ -425,21 +424,22 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
   GstStructure *s, *structure;
   gboolean isfloat;
   gint width, depth, channels;
-  gchar *fields_used[] = { "width", "depth", "rate", "channels", "endianness",
-    "signed"
+  gchar *fields_used[] = {
+    "width", "depth", "rate", "channels", "endianness", "signed"
   };
+  const gchar *structure_name;
   int i;
 
   g_return_val_if_fail (GST_CAPS_IS_SIMPLE (caps), NULL);
 
   structure = gst_caps_get_structure (caps, 0);
+  structure_name = gst_structure_get_name (structure);
 
-  isfloat = strcmp (gst_structure_get_name (structure),
-      "audio/x-raw-float") == 0;
+  isfloat = strcmp (structure_name, "audio/x-raw-float") == 0;
 
   /* We operate on a version of the original structure with any additional
    * fields absent */
-  s = gst_structure_empty_new (gst_structure_get_name (structure));
+  s = gst_structure_empty_new (structure_name);
   for (i = 0; i < sizeof (fields_used) / sizeof (*fields_used); i++) {
     if (gst_structure_has_field (structure, fields_used[i]))
       gst_structure_set_value (s, fields_used[i],
@@ -462,6 +462,8 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
 
   /* Same, plus a float<->int conversion */
   append_with_other_format (ret, s, isfloat);
+  GST_DEBUG_OBJECT (base, "  step1: (%d) %" GST_PTR_FORMAT,
+      gst_caps_get_size (ret), ret);
 
   /* We don't mind increasing width/depth/channels, but reducing them is 
    * Very Bad. Only available if width, depth, channels are already fixed. */
