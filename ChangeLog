@@ -1,3 +1,22 @@
+2006-09-18  Stefan Kost,,,  <ensonic@users.sf.net>
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs.types:
+	* gst-libs/gst/interfaces/Makefile.am:
+	* gst-libs/gst/interfaces/videoorientation.c:
+	(gst_video_orientation_get_type),
+	(gst_video_orientation_iface_init),
+	(gst_video_orientation_get_hflip),
+	(gst_video_orientation_get_vflip),
+	(gst_video_orientation_get_hcenter),
+	(gst_video_orientation_get_vcenter),
+	(gst_video_orientation_set_hflip),
+	(gst_video_orientation_set_vflip),
+	(gst_video_orientation_set_hcenter),
+	(gst_video_orientation_set_vcenter):
+	* gst-libs/gst/interfaces/videoorientation.h:
+	  Add new interface to control video orientation (fixes #354908)
+
 2006-09-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/videotestsrc/gstvideotestsrc.c:

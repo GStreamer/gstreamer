@@ -30,6 +30,7 @@
 <!ENTITY GstTuner SYSTEM "xml/gsttuner.xml">
 <!ENTITY GstTunerChannel SYSTEM "xml/gsttunerchannel.xml">
 <!ENTITY GstTunerNorm SYSTEM "xml/gsttunernorm.xml">
+<!ENTITY GstVideoOrientation SYSTEM "xml/gstvideoorientation.xml">
 <!ENTITY GstXOverlay SYSTEM "xml/gstxoverlay.xml">
 <!-- netbuffer -->
 <!ENTITY GstNetBuffer SYSTEM "xml/gstnetbuffer.xml">
@@ -123,6 +124,7 @@
       &GstTuner;
       &GstTunerChannel;
       &GstTunerNorm;
+      &GstVideoorientation;
       &GstXOverlay;
     </chapter>
 

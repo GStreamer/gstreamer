@@ -13,6 +13,7 @@ headers_interfaces = 		\
 	tuner.h			\
 	tunernorm.h		\
 	tunerchannel.h		\
+	videoorientation.h	\
 	xoverlay.h
 
 # variables used for enum/marshal generation
@@ -47,6 +48,7 @@ libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = \
 	tuner.c			\
 	tunernorm.c		\
 	tunerchannel.c		\
+	videoorientation.c	\
 	xoverlay.c
 
 nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = 	\
