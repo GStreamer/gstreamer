@@ -34,10 +34,10 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
   RTSPUrl *res;
   gchar *p, *slash, *at, *col;
 
-  res = g_new0 (RTSPUrl, 1);
+  g_return_val_if_fail (urlstr != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (url != NULL, RTSP_EINVAL);
 
-  if (urlstr == NULL)
-    goto invalid;
+  res = g_new0 (RTSPUrl, 1);
 
   p = (gchar *) urlstr;
   if (g_str_has_prefix (p, RTSP_PROTO)) {

@@ -103,8 +103,8 @@ struct _GstRTSPSrc {
   guint   	   retry;
 
   GstRTSPProto     protocols;
-  /* supported options */
-  gint             options;
+  /* supported methods */
+  gint             methods;
 
   RTSPConnection  *connection;
   RTSPMessage     *request;

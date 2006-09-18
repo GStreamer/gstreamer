@@ -27,8 +27,7 @@ rtsp_transport_new (RTSPTransport ** transport)
 {
   RTSPTransport *trans;
 
-  if (transport == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (transport != NULL, RTSP_EINVAL);
 
   trans = g_new0 (RTSPTransport, 1);
 
@@ -40,6 +39,8 @@ rtsp_transport_new (RTSPTransport ** transport)
 RTSPResult
 rtsp_transport_init (RTSPTransport * transport)
 {
+  g_return_val_if_fail (transport != NULL, RTSP_EINVAL);
+
   g_free (transport->destination);
   g_free (transport->source);
   g_free (transport->ssrc);
@@ -83,8 +84,8 @@ rtsp_transport_parse (gchar * str, RTSPTransport * transport)
   gchar **split, *down;
   gint i;
 
-  if (str == NULL || transport == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (transport != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (str != NULL, RTSP_EINVAL);
 
   rtsp_transport_init (transport);
 
@@ -141,6 +142,8 @@ rtsp_transport_parse (gchar * str, RTSPTransport * transport)
 RTSPResult
 rtsp_transport_free (RTSPTransport * transport)
 {
+  g_return_val_if_fail (transport != NULL, RTSP_EINVAL);
+
   rtsp_transport_init (transport);
   g_free (transport);
   return RTSP_OK;

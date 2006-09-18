@@ -50,6 +50,7 @@ typedef enum {
 } RTSPFamily;
 
 typedef enum {
+  RTSP_STATE_INVALID,
   RTSP_STATE_INIT,
   RTSP_STATE_READY,
   RTSP_STATE_PLAYING,
@@ -57,6 +58,7 @@ typedef enum {
 } RTSPState;
 
 typedef enum {
+  RTSP_INVALID          = 0,
   RTSP_DESCRIBE         = (1 <<  0),
   RTSP_ANNOUNCE         = (1 <<  1),
   RTSP_GET_PARAMETER    = (1 <<  2),
@@ -120,6 +122,7 @@ typedef enum {
 } RTSPHeaderField;
 
 typedef enum {
+  RTSP_STS_INVALID                              = 0, 
   RTSP_STS_CONTINUE                             = 100, 
   RTSP_STS_OK                                   = 200, 
   RTSP_STS_CREATED                              = 201, 

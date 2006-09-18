@@ -28,6 +28,7 @@ G_BEGIN_DECLS
 
 typedef enum
 {
+  RTSP_MESSAGE_INVALID,
   RTSP_MESSAGE_REQUEST,
   RTSP_MESSAGE_RESPONSE,
   RTSP_MESSAGE_DATA,
@@ -58,15 +59,16 @@ typedef struct _RTSPMessage
 
 } RTSPMessage;
 
-RTSPResult      rtsp_message_new_request        (RTSPMethod method, gchar *uri, RTSPMessage **msg);
-RTSPResult      rtsp_message_init_request       (RTSPMethod method, gchar *uri, RTSPMessage *msg);
+RTSPResult      rtsp_message_new_request        (RTSPMessage **msg, RTSPMethod method, gchar *uri);
+RTSPResult      rtsp_message_init_request       (RTSPMessage *msg, RTSPMethod method, gchar *uri);
 
-RTSPResult      rtsp_message_new_response       (RTSPStatusCode code, gchar *reason, 
-                                                 RTSPMessage *request, RTSPMessage **msg);
-RTSPResult      rtsp_message_init_response      (RTSPStatusCode code, gchar *reason, 
-                                                 RTSPMessage *request, RTSPMessage *msg);
-RTSPResult      rtsp_message_init_data          (gint channel, RTSPMessage *msg);
+RTSPResult      rtsp_message_new_response       (RTSPMessage **msg, RTSPStatusCode code, gchar *reason, 
+                                                 RTSPMessage *request);
+RTSPResult      rtsp_message_init_response      (RTSPMessage *msg, RTSPStatusCode code, gchar *reason, 
+                                                 RTSPMessage *request);
+RTSPResult      rtsp_message_init_data          (RTSPMessage *msg, gint channel);
 
+RTSPResult      rtsp_message_unset              (RTSPMessage *msg);
 RTSPResult      rtsp_message_free               (RTSPMessage *msg);
 
 

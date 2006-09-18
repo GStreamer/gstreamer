@@ -71,8 +71,8 @@ rtsp_connection_open (RTSPUrl * url, RTSPConnection ** conn)
   struct in_addr addr;
   gint ret;
 
-  if (url == NULL || conn == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (url != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
 
   if (url->protocol != RTSP_PROTO_TCP)
     return RTSP_ENOTIMPL;
@@ -128,6 +128,8 @@ rtsp_connection_create (gint fd, RTSPConnection ** conn)
 {
   RTSPConnection *newconn;
 
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
+
   /* FIXME check fd, must be connected SOCK_STREAM */
 
   newconn = g_new (RTSPConnection, 1);
@@ -157,8 +159,8 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
   gint towrite;
   gchar *data;
 
-  if (conn == NULL || message == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (message != NULL, RTSP_EINVAL);
 
 #ifdef G_OS_WIN32
   WSADATA w;
@@ -333,7 +335,7 @@ parse_response_status (gchar * buffer, RTSPMessage * msg)
   while (g_ascii_isspace (*bptr))
     bptr++;
 
-  rtsp_message_init_response (code, bptr, NULL, msg);
+  rtsp_message_init_response (msg, code, bptr, NULL);
 
   return RTSP_OK;
 
@@ -365,7 +367,7 @@ parse_request_line (gchar * buffer, RTSPMessage * msg)
   if (strcmp (versionstr, "RTSP/1.0") != 0)
     goto wrong_version;
 
-  rtsp_message_init_request (method, urlstr, msg);
+  rtsp_message_init_request (msg, method, urlstr);
 
   return RTSP_OK;
 
@@ -456,8 +458,8 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
   RTSPResult res;
   gboolean need_body;
 
-  if (conn == NULL || msg == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
   line = 0;
 
@@ -490,7 +492,7 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
         goto error;
 
       /* now we create a data message */
-      rtsp_message_init_data ((gint) c, msg);
+      rtsp_message_init_data (msg, (gint) c);
 
       /* next two bytes are the length of the data */
       ret = read (conn->fd, &size, 2);
@@ -590,8 +592,7 @@ rtsp_connection_close (RTSPConnection * conn)
 {
   gint res;
 
-  if (conn == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
 
   res = CLOSE_SOCKET (conn->fd);
 #ifdef G_OS_WIN32
@@ -612,8 +613,7 @@ sys_error:
 RTSPResult
 rtsp_connection_free (RTSPConnection * conn)
 {
-  if (conn == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
 
 #ifdef G_OS_WIN32
   WSACleanup ();

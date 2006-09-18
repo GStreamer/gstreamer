@@ -76,8 +76,7 @@ sdp_message_new (SDPMessage ** msg)
 {
   SDPMessage *newmsg;
 
-  if (msg == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
   newmsg = g_new0 (SDPMessage, 1);
 
@@ -89,8 +88,7 @@ sdp_message_new (SDPMessage ** msg)
 RTSPResult
 sdp_message_init (SDPMessage * msg)
 {
-  if (msg == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
   FREE_STRING (msg->version);
   FREE_STRING (msg->origin.username);
@@ -123,8 +121,7 @@ sdp_message_init (SDPMessage * msg)
 RTSPResult
 sdp_message_clean (SDPMessage * msg)
 {
-  if (msg == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
   FREE_ARRAY (msg->emails);
   FREE_ARRAY (msg->phones);
@@ -140,8 +137,7 @@ sdp_message_clean (SDPMessage * msg)
 RTSPResult
 sdp_message_free (SDPMessage * msg)
 {
-  if (msg == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
   sdp_message_clean (msg);
 
@@ -156,8 +152,7 @@ sdp_media_new (SDPMedia ** media)
 {
   SDPMedia *newmedia;
 
-  if (media == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (media != NULL, RTSP_EINVAL);
 
   newmedia = g_new0 (SDPMedia, 1);
 
@@ -169,8 +164,7 @@ sdp_media_new (SDPMedia ** media)
 RTSPResult
 sdp_media_init (SDPMedia * media)
 {
-  if (media == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (media != NULL, RTSP_EINVAL);
 
   FREE_STRING (media->media);
   media->port = 0;
@@ -578,8 +572,9 @@ sdp_message_parse_buffer (guint8 * data, guint size, SDPMessage * msg)
   gchar buffer[4096];
   gint idx = 0;
 
-  if (msg == NULL || data == NULL || size == 0)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (data != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (size != 0, RTSP_EINVAL);
 
   c.state = SDP_SESSION;
   c.msg = msg;
@@ -651,8 +646,7 @@ print_media (SDPMedia * media)
 RTSPResult
 sdp_message_dump (SDPMessage * msg)
 {
-  if (msg == NULL)
-    return RTSP_EINVAL;
+  g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
   g_print ("sdp packet %p:\n", msg);
   g_print (" version:       '%s'\n", msg->version);
@@ -666,6 +660,7 @@ sdp_message_dump (SDPMessage * msg)
   g_print (" session_name:  '%s'\n", msg->session_name);
   g_print (" information:   '%s'\n", msg->information);
   g_print (" uri:           '%s'\n", msg->uri);
+
   if (msg->emails->len > 0) {
     gint i;
 
@@ -710,7 +705,5 @@ sdp_message_dump (SDPMessage * msg)
       print_media (&g_array_index (msg->medias, SDPMedia, i));
     }
   }
-
-
   return RTSP_OK;
 }
