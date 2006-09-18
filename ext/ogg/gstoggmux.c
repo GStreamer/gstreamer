@@ -523,7 +523,8 @@ gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer)
 
   /* Ensure we have monotonically increasing timestamps in the output. */
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
-    if (GST_BUFFER_TIMESTAMP (buffer) < mux->last_ts)
+    if (mux->last_ts != GST_CLOCK_TIME_NONE &&
+        GST_BUFFER_TIMESTAMP (buffer) < mux->last_ts)
       GST_BUFFER_TIMESTAMP (buffer) = mux->last_ts;
     else
       mux->last_ts = GST_BUFFER_TIMESTAMP (buffer);

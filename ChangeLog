@@ -1,3 +1,9 @@
+2006-09-18  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_push_buffer):
+	  Timestamps are unsigned; comparision against GST_CLOCK_TIME_NONE was
+	  always true, leading to dropping all timestamps.
+
 2006-09-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/libvisual/visual.c: (gst_vis_src_negotiate),
