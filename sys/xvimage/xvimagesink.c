@@ -1191,9 +1191,31 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
     for (i = 0; i < count; i++)
       if (!strcmp (attr[i].name, colorkey)) {
         const Atom atom = XInternAtom (xcontext->disp, colorkey, False);
+        int ckey = 0;
 
-        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
-            0x010203);
+        /* set a colorkey in the right format RGB555/RGB565/RGB888 */
+        switch (xcontext->depth) {
+          case 15:
+            ckey = (1 << 10) | (2 << 5) | 3;
+            break;
+          case 16:
+            ckey = (1 << 11) | (2 << 5) | 3;
+            break;
+          case 24:
+          case 32:
+            ckey = (1 << 16) | (2 << 8) | 3;
+            break;
+          default:
+            GST_WARNING ("unsupported color depth");
+            break;
+        }
+        ckey = CLAMP (ckey, attr[i].min_value, attr[i].max_value);
+
+        GST_LOG_OBJECT (xvimagesink,
+            "Setting color key for display depth %d to 0x%x",
+            xcontext->depth, ckey);
+
+        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom, ckey);
         break;
       }
 
@@ -1953,7 +1975,9 @@ gst_xvimagesink_get_times (GstBaseSink * bsink, GstBuffer * buf,
       *end = *start + GST_BUFFER_DURATION (buf);
     } else {
       if (xvimagesink->fps_n > 0) {
-        *end = *start + (GST_SECOND * xvimagesink->fps_d) / xvimagesink->fps_n;
+        *end = *start +
+            gst_util_uint64_scale_int (GST_SECOND, xvimagesink->fps_d,
+            xvimagesink->fps_n);
       }
     }
   }

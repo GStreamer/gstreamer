@@ -1,3 +1,10 @@
+2006-09-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),
+	(gst_xvimagesink_get_times):
+	  xvimage assumed that XV_COLORKEY can be set in RGB888 format (fixes
+	  #354773), use gst_util_uint64_scale_int in _get_times()
+
 2006-09-18  Michael Smith  <msmith@fluendo.com>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_push_buffer):
