@@ -78,7 +78,9 @@ static const GstElementDetails gst_rtspsrc_details =
 GST_ELEMENT_DETAILS ("RTSP packet receiver",
     "Source/Network",
     "Receive data over the network via RTSP (RFC 2326)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim@fluendo.com>\n"
+    "Thijs Vermeir <thijs.vermeir@barco.com>\n"
+    "Lutz Mueller <lutz@topfrose.de>");
 
 static GstStaticPadTemplate rtptemplate =
 GST_STATIC_PAD_TEMPLATE ("rtp_stream%d",
@@ -131,10 +133,7 @@ gst_rtsp_proto_get_type (void)
   return rtsp_proto_type;
 }
 
-
 static void gst_rtspsrc_base_init (gpointer g_class);
-static void gst_rtspsrc_class_init (GstRTSPSrc * klass);
-static void gst_rtspsrc_init (GstRTSPSrc * rtspsrc);
 static void gst_rtspsrc_finalize (GObject * object);
 
 static void gst_rtspsrc_uri_handler_init (gpointer g_iface,
@@ -150,45 +149,24 @@ static void gst_rtspsrc_get_property (GObject * object, guint prop_id,
 
 static void gst_rtspsrc_loop (GstRTSPSrc * src);
 
-static GstElementClass *parent_class = NULL;
-
 /*static guint gst_rtspsrc_signals[LAST_SIGNAL] = { 0 }; */
 
-GType
-gst_rtspsrc_get_type (void)
+static void
+_do_init (GType rtspsrc_type)
 {
-  static GType rtspsrc_type = 0;
+  static const GInterfaceInfo urihandler_info = {
+    gst_rtspsrc_uri_handler_init,
+    NULL,
+    NULL
+  };
 
-  if (!rtspsrc_type) {
-    static const GTypeInfo rtspsrc_info = {
-      sizeof (GstRTSPSrcClass),
-      gst_rtspsrc_base_init,
-      NULL,
-      (GClassInitFunc) gst_rtspsrc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstRTSPSrc),
-      0,
-      (GInstanceInitFunc) gst_rtspsrc_init,
-      NULL
-    };
-    static const GInterfaceInfo urihandler_info = {
-      gst_rtspsrc_uri_handler_init,
-      NULL,
-      NULL
-    };
+  GST_DEBUG_CATEGORY_INIT (rtspsrc_debug, "rtspsrc", 0, "RTSP src");
 
-    GST_DEBUG_CATEGORY_INIT (rtspsrc_debug, "rtspsrc", 0, "RTSP src");
-
-    rtspsrc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstRTSPSrc", &rtspsrc_info,
-        0);
-
-    g_type_add_interface_static (rtspsrc_type, GST_TYPE_URI_HANDLER,
-        &urihandler_info);
-  }
-  return rtspsrc_type;
+  g_type_add_interface_static (rtspsrc_type, GST_TYPE_URI_HANDLER,
+      &urihandler_info);
 }
+
+GST_BOILERPLATE_FULL (GstRTSPSrc, gst_rtspsrc, GstBin, GST_TYPE_BIN, _do_init);
 
 static void
 gst_rtspsrc_base_init (gpointer g_class)
@@ -204,15 +182,15 @@ gst_rtspsrc_base_init (gpointer g_class)
 }
 
 static void
-gst_rtspsrc_class_init (GstRTSPSrc * klass)
+gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBinClass *gstbin_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
+  gstbin_class = (GstBinClass *) klass;
 
   gobject_class->set_property = gst_rtspsrc_set_property;
   gobject_class->get_property = gst_rtspsrc_get_property;
@@ -244,7 +222,7 @@ gst_rtspsrc_class_init (GstRTSPSrc * klass)
 }
 
 static void
-gst_rtspsrc_init (GstRTSPSrc * src)
+gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
 {
   src->stream_rec_lock = g_new (GStaticRecMutex, 1);
   g_static_rec_mutex_init (src->stream_rec_lock);
@@ -347,52 +325,6 @@ gst_rtspsrc_free_stream (GstRTSPSrc * src, GstRTSPStream * stream)
   g_free (stream);
 }
 #endif
-
-static gboolean
-gst_rtspsrc_add_element (GstRTSPSrc * src, GstElement * element)
-{
-  gst_object_set_parent (GST_OBJECT (element), GST_OBJECT (src));
-
-  return TRUE;
-}
-
-static GstStateChangeReturn
-gst_rtspsrc_set_state (GstRTSPSrc * src, GstState state)
-{
-  GstStateChangeReturn ret;
-  GList *streams;
-
-  ret = GST_STATE_CHANGE_SUCCESS;
-
-  /* for all streams */
-  for (streams = src->streams; streams; streams = g_list_next (streams)) {
-    GstRTSPStream *stream;
-
-    stream = (GstRTSPStream *) streams->data;
-
-    /* first our RTP session manager */
-    if (stream->rtpdec) {
-      ret = gst_element_set_state (stream->rtpdec, state);
-      if (ret == GST_STATE_CHANGE_FAILURE)
-        goto done;
-    }
-
-    /* then our sources */
-    if (stream->rtpsrc) {
-      ret = gst_element_set_state (stream->rtpsrc, state);
-      if (ret == GST_STATE_CHANGE_FAILURE)
-        goto done;
-    }
-    if (stream->rtcpsrc) {
-      ret = gst_element_set_state (stream->rtcpsrc, state);
-      if (ret == GST_STATE_CHANGE_FAILURE)
-        goto done;
-    }
-  }
-
-done:
-  return ret;
-}
 
 #define PARSE_INT(p, del, res)          \
 G_STMT_START {                          \
@@ -648,9 +580,10 @@ again:
 
   /* we manage these elements, we set the caps in configure_transport */
   stream->rtpsrc = rtpsrc;
-  gst_rtspsrc_add_element (src, stream->rtpsrc);
   stream->rtcpsrc = rtcpsrc;
-  gst_rtspsrc_add_element (src, stream->rtcpsrc);
+
+  gst_bin_add (GST_BIN_CAST (src), stream->rtpsrc);
+  gst_bin_add (GST_BIN_CAST (src), stream->rtcpsrc);
 
   return TRUE;
 
@@ -722,7 +655,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     goto no_element;
 
   /* we manage this element */
-  gst_rtspsrc_add_element (src, stream->rtpdec);
+  gst_bin_add (GST_BIN_CAST (src), stream->rtpdec);
 
   ret = gst_element_set_state (stream->rtpdec, GST_STATE_PAUSED);
   if (ret != GST_STATE_CHANGE_SUCCESS)
@@ -773,8 +706,8 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
       gst_element_set_state (stream->rtcpsrc, GST_STATE_PAUSED);
 
       /* we manage these elements */
-      gst_rtspsrc_add_element (src, stream->rtpsrc);
-      gst_rtspsrc_add_element (src, stream->rtcpsrc);
+      gst_bin_add (GST_BIN_CAST (src), stream->rtpsrc);
+      gst_bin_add (GST_BIN_CAST (src), stream->rtcpsrc);
     }
 
     /* configure caps on the RTP source element */
@@ -1398,6 +1331,8 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   if (res < 0)
     goto create_request_failed;
 
+  rtsp_message_add_header (&request, RTSP_HDR_RANGE, "npt=0.000-");
+
   if (!gst_rtspsrc_send (src, &request, &response, NULL))
     goto send_error;
 
@@ -1487,10 +1422,6 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    goto done;
-
-  ret = gst_rtspsrc_set_state (rtspsrc, GST_STATE_PENDING (rtspsrc));
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto done;
 

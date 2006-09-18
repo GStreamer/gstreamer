@@ -85,7 +85,7 @@ struct _GstRTSPStream {
 };
 
 struct _GstRTSPSrc {
-  GstElement element;
+  GstBin           parent;
 
   /* task and mutex for interleaved mode */
   gboolean         interleaved;
@@ -109,7 +109,7 @@ struct _GstRTSPSrc {
 };
 
 struct _GstRTSPSrcClass {
-  GstElementClass parent_class;
+  GstBinClass parent_class;
 };
 
 GType gst_rtspsrc_get_type(void);
