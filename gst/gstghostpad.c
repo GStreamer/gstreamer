@@ -769,6 +769,7 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
 {
   GstPad *ret;
   GstPad *internal;
+  GstPadDirection otherdir;
 
   g_return_val_if_fail (dir != GST_PAD_UNKNOWN, NULL);
 
@@ -801,9 +802,16 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
 
 
   /* INTERNAL PAD, it always exists and is child of the ghostpad */
-  internal =
-      g_object_new (GST_TYPE_PROXY_PAD, "name", NULL,
-      "direction", (dir == GST_PAD_SRC) ? GST_PAD_SINK : GST_PAD_SRC, NULL);
+  otherdir = (dir == GST_PAD_SRC) ? GST_PAD_SINK : GST_PAD_SRC;
+  if (templ) {
+    internal =
+        g_object_new (GST_TYPE_PROXY_PAD, "name", NULL,
+        "direction", otherdir, "template", templ, NULL);
+  } else {
+    internal =
+        g_object_new (GST_TYPE_PROXY_PAD, "name", NULL,
+        "direction", otherdir, NULL);
+  }
 
   /* Set directional padfunctions for internal pad */
   if (dir == GST_PAD_SRC) {

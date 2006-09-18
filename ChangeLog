@@ -1,5 +1,11 @@
 2006-09-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstghostpad.c: (gst_ghost_pad_new_full):
+	  Also set template on the internal pad so that a getcaps from the target
+	  pad returns the template caps.
+
+2006-09-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstelement.c: (gst_element_post_message),
 	(gst_element_dispose):
 	Use _DEBUG_OBJECT some more.
@@ -34,8 +40,8 @@
 
 	* docs/pwg/building-boiler.xml:
 	* plugins/elements/gstcapsfilter.c:
-          More G_OBJECT macro fixing. Also Fix some details on the plugin-stamp
-          section.
+	More G_OBJECT macro fixing. Also Fix some details on the plugin-stamp
+	section.
 
 2006-09-16  Edward Hervey  <edward@fluendo.com>
 
