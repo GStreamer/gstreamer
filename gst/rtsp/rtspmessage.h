@@ -77,6 +77,7 @@ RTSPResult      rtsp_message_get_header         (RTSPMessage *msg, RTSPHeaderFie
 RTSPResult      rtsp_message_set_body           (RTSPMessage *msg, guint8 *data, guint size);
 RTSPResult      rtsp_message_take_body          (RTSPMessage *msg, guint8 *data, guint size);
 RTSPResult      rtsp_message_get_body           (RTSPMessage *msg, guint8 **data, guint *size);
+RTSPResult      rtsp_message_steal_body         (RTSPMessage *msg, guint8 **data, guint *size);
 
 RTSPResult      rtsp_message_dump               (RTSPMessage *msg);
 

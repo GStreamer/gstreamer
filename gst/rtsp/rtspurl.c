@@ -94,6 +94,7 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
 
   return RTSP_OK;
 
+  /* ERRORS */
 invalid:
   {
     rtsp_url_free (res);
@@ -104,6 +105,9 @@ invalid:
 void
 rtsp_url_free (RTSPUrl * url)
 {
+  if (url == NULL)
+    return;
+
   g_free (url->user);
   g_free (url->passwd);
   g_free (url->host);

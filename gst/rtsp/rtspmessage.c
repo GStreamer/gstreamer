@@ -196,6 +196,21 @@ rtsp_message_get_body (RTSPMessage * msg, guint8 ** data, guint * size)
   return RTSP_OK;
 }
 
+RTSPResult
+rtsp_message_steal_body (RTSPMessage * msg, guint8 ** data, guint * size)
+{
+  if (msg == NULL || data == NULL || size == NULL)
+    return RTSP_EINVAL;
+
+  *data = msg->body;
+  *size = msg->body_size;
+
+  msg->body = NULL;
+  msg->body_size = 0;
+
+  return RTSP_OK;
+}
+
 static void
 dump_mem (guint8 * mem, gint size)
 {

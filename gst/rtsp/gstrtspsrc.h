@@ -96,6 +96,7 @@ struct _GstRTSPSrc {
   GList           *streams;
 
   gchar           *location;
+  RTSPUrl         *url;
   gboolean         debug;
   guint   	   retry;
 

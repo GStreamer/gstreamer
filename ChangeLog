@@ -2,6 +2,23 @@
 
 	Based on patch by: Lutz Mueller <lutz at topfrose dot de>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_class_init),
+	(gst_rtspsrc_init), (gst_rtspsrc_set_property), (gst_rtspsrc_open),
+	(gst_rtspsrc_uri_get_uri), (gst_rtspsrc_uri_set_uri):
+	* gst/rtsp/gstrtspsrc.h:
+	Make sure we can never set an invalid location.
+
+	* gst/rtsp/rtspmessage.c: (rtsp_message_steal_body):
+	* gst/rtsp/rtspmessage.h:
+	Added _steal_body method for future use.
+
+	* gst/rtsp/rtspurl.c: (rtsp_url_parse), (rtsp_url_free):
+	Make freeing of NULL url return immediatly.
+
+2006-09-18  Wim Taymans  <wim@fluendo.com>
+
+	Based on patch by: Lutz Mueller <lutz at topfrose dot de>
+
 	* gst/rtsp/gstrtspsrc.c: (_do_init), (gst_rtspsrc_class_init),
 	(gst_rtspsrc_init), (gst_rtspsrc_stream_setup_rtp),
 	(gst_rtspsrc_stream_configure_transport), (gst_rtspsrc_play),

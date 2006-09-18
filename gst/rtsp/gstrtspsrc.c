@@ -147,6 +147,9 @@ static void gst_rtspsrc_set_property (GObject * object, guint prop_id,
 static void gst_rtspsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
+    const gchar * uri);
+
 static void gst_rtspsrc_loop (GstRTSPSrc * src);
 
 /*static guint gst_rtspsrc_signals[LAST_SIGNAL] = { 0 }; */
@@ -200,7 +203,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "RTSP Location",
           "Location of the RTSP url to read",
-          DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          DEFAULT_LOCATION, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
       g_param_spec_flags ("protocols", "Protocols", "Allowed protocols",
@@ -226,6 +229,9 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
 {
   src->stream_rec_lock = g_new (GStaticRecMutex, 1);
   g_static_rec_mutex_init (src->stream_rec_lock);
+
+  src->location = DEFAULT_LOCATION;
+  src->url = NULL;
 }
 
 static void
@@ -251,8 +257,8 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
 
   switch (prop_id) {
     case PROP_LOCATION:
-      g_free (rtspsrc->location);
-      rtspsrc->location = g_value_dup_string (value);
+      gst_rtspsrc_uri_set_uri (GST_URI_HANDLER (rtspsrc),
+          g_value_get_string (value));
       break;
     case PROP_PROTOCOLS:
       rtspsrc->protocols = g_value_get_flags (value);
@@ -947,7 +953,6 @@ error_response:
 static gboolean
 gst_rtspsrc_open (GstRTSPSrc * src)
 {
-  RTSPUrl *url;
   RTSPResult res;
   RTSPMessage request = { 0 };
   RTSPMessage response = { 0 };
@@ -956,14 +961,13 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   SDPMessage sdp = { 0 };
   GstRTSPProto protocols;
 
-  /* parse url */
-  GST_DEBUG_OBJECT (src, "parsing url...");
-  if ((res = rtsp_url_parse (src->location, &url)) < 0)
-    goto invalid_url;
+  /* can't continue without a valid url */
+  if (src->url == NULL)
+    goto no_url;
 
   /* open connection */
-  GST_DEBUG_OBJECT (src, "opening connection...");
-  if ((res = rtsp_connection_open (url, &src->connection)) < 0)
+  GST_DEBUG_OBJECT (src, "opening connection (%s)...", src->location);
+  if ((res = rtsp_connection_open (src->url, &src->connection)) < 0)
     goto could_not_open;
 
   /* create OPTIONS */
@@ -1197,10 +1201,10 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   return TRUE;
 
   /* ERRORS */
-invalid_url:
+no_url:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-        ("Not a valid RTSP url."), (NULL));
+        ("No valid RTSP url was provided"), (NULL));
     return FALSE;
   }
 could_not_open:
@@ -1470,18 +1474,49 @@ gst_rtspsrc_uri_get_uri (GstURIHandler * handler)
 {
   GstRTSPSrc *src = GST_RTSPSRC (handler);
 
-  return g_strdup (src->location);
+  return src->location;
 }
 
 static gboolean
 gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
-  GstRTSPSrc *src = GST_RTSPSRC (handler);
+  GstRTSPSrc *src;
+  RTSPResult res;
+  RTSPUrl *newurl;
 
+  src = GST_RTSPSRC (handler);
+
+  /* same URI, we're fine */
+  if (src->location && uri && !strcmp (uri, src->location))
+    goto was_ok;
+
+  /* try to parse */
+  if ((res = rtsp_url_parse (uri, &newurl)) < 0)
+    goto parse_error;
+
+  /* if worked, free previous and store new url object along with the original
+   * location. */
+  rtsp_url_free (src->url);
+  src->url = newurl;
   g_free (src->location);
   src->location = g_strdup (uri);
 
+  GST_DEBUG_OBJECT (src, "set uri: %s", GST_STR_NULL (uri));
+
   return TRUE;
+
+  /* Special cases */
+was_ok:
+  {
+    GST_DEBUG_OBJECT (src, "URI was ok: '%s'", GST_STR_NULL (uri));
+    return TRUE;
+  }
+parse_error:
+  {
+    GST_ERROR_OBJECT (src, "Not a valid RTSP url '%s' (%d)", GST_STR_NULL (uri),
+        res);
+    return FALSE;
+  }
 }
 
 static void
