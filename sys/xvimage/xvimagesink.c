@@ -1206,7 +1206,8 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
             ckey = (1 << 16) | (2 << 8) | 3;
             break;
           default:
-            GST_WARNING ("unsupported color depth");
+            GST_WARNING_OBJECT (xvimagesink, "unsupported color depth %d",
+                xcontext->depth);
             break;
         }
         ckey = CLAMP (ckey, attr[i].min_value, attr[i].max_value);

@@ -1,5 +1,10 @@
 2006-09-18  Stefan Kost  <ensonic@users.sf.net>
 
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support)
+	  Give better warning message (add object and detail).
+
+2006-09-18  Stefan Kost  <ensonic@users.sf.net>
+
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),
 	(gst_xvimagesink_get_times):
 	  xvimage assumed that XV_COLORKEY can be set in RGB888 format (fixes
