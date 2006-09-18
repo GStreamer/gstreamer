@@ -1,3 +1,17 @@
+2006-09-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/libvisual/visual.c: (gst_vis_src_negotiate),
+	(gst_visual_chain), (gst_visual_change_state):
+	  update to work also with libvisual 0.4 API
+	  
+	* tools/gst-launch-ext.1.in:
+	* tools/gst-visualise.1.in:
+	  remove references to old man-pages
+
+	* tests/examples/seek/seek.c: (main):
+	  add real meadi-buttons, add tool-tips for the seek-options, arrange
+	  seek options in a table
+
 2006-09-18  Michael Smith  <msmith@fluendo.com>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_clear),

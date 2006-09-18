@@ -411,7 +411,6 @@ no_format:
     GST_ELEMENT_ERROR (visual, STREAM, FORMAT, (NULL),
         ("could not negotiate output format"));
     gst_caps_unref (intersect);
-    gst_caps_unref (othercaps);
     return FALSE;
   }
 }
@@ -636,6 +635,7 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     visual_audio_analyze (&visual->audio);
     visual_actor_run (visual->actor, &visual->audio);
     visual_video_set_buffer (visual->video, NULL);
+    GST_DEBUG_OBJECT (visual, "rendered one frame");
 
     GST_BUFFER_TIMESTAMP (outbuf) = visual->next_ts;
     GST_BUFFER_DURATION (outbuf) = visual->duration;
@@ -682,7 +682,9 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
           visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
           plugname);
       visual->video = visual_video_new ();
-
+#if defined(VISUAL_API_VERSION) && VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
+      visual_audio_init (&visual->audio);
+#endif
       /* can't have a play without actors */
       if (!visual->actor || !visual->video)
         goto no_actors;

@@ -26,9 +26,6 @@ VIDEOSINK parameter in ~/.gst, defaulting to sdlvideosink.
 
 .SH "SEE ALSO"
 .BR gst\-launch\-ext (1),
-.BR gst\-guilaunch (1),
-.BR gst\-complete (1),
-.BR gst\-register (1),
 .BR gst\-inspect (1),
 .BR gst\-launch (1),
 .SH "AUTHOR"

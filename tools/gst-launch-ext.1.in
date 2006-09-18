@@ -36,9 +36,6 @@ or sdlvideosink.
 Other plug-ins might be used as well if GStreamer has them.
 
 .SH "SEE ALSO"
-.BR gst\-guilaunch (1),
-.BR gst\-complete (1),
-.BR gst\-register (1),
 .BR gst\-inspect (1),
 .BR gst\-launch (1),
 .SH "AUTHOR"

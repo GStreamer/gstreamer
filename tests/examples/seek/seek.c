@@ -1368,9 +1368,11 @@ print_usage (int argc, char **argv)
 int
 main (int argc, char **argv)
 {
-  GtkWidget *window, *hbox, *vbox, *play_button, *pause_button, *stop_button;
+  GtkWidget *window, *hbox, *vbox, *flagtable;
+  GtkWidget *play_button, *pause_button, *stop_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
   GtkWidget *scrub_checkbox, *play_scrub_checkbox;
+  GtkTooltips *tips;
   GOptionEntry options[] = {
     {"stats", 's', 0, G_OPTION_ARG_NONE, &stats,
         "Show pad stats", NULL},
@@ -1384,7 +1386,7 @@ main (int argc, char **argv)
   GOptionContext *ctx;
   GError *err = NULL;
 
-  ctx = g_option_context_new ("seek");
+  ctx = g_option_context_new ("- test seeking in gsteamer");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
 
@@ -1413,23 +1415,43 @@ main (int argc, char **argv)
   g_assert (pipeline);
 
   /* initialize gui elements ... */
+  tips = gtk_tooltips_new ();
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   hbox = gtk_hbox_new (FALSE, 0);
   vbox = gtk_vbox_new (FALSE, 0);
-  play_button = gtk_button_new_with_label ("play");
-  pause_button = gtk_button_new_with_label ("pause");
-  stop_button = gtk_button_new_with_label ("stop");
+  flagtable = gtk_table_new (3, 2, FALSE);
+  gtk_container_set_border_width (GTK_CONTAINER (vbox), 3);
 
+  /* media controls */
+  play_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_PLAY);
+  pause_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_PAUSE);
+  stop_button = gtk_button_new_from_stock (GTK_STOCK_MEDIA_STOP);
+
+  /* seek flags */
   accurate_checkbox = gtk_check_button_new_with_label ("Accurate Seek");
-  key_checkbox = gtk_check_button_new_with_label ("Key_unit Seek");
+  key_checkbox = gtk_check_button_new_with_label ("Key-unit Seek");
   loop_checkbox = gtk_check_button_new_with_label ("Loop");
   flush_checkbox = gtk_check_button_new_with_label ("Flush");
   scrub_checkbox = gtk_check_button_new_with_label ("Scrub");
   play_scrub_checkbox = gtk_check_button_new_with_label ("Play Scrub");
 
+  gtk_tooltips_set_tip (tips, accurate_checkbox,
+      "accurate position is requested, this might be considerably slower for some formats",
+      NULL);
+  gtk_tooltips_set_tip (tips, key_checkbox,
+      "seek to the nearest keyframe. This might be faster but less accurate",
+      NULL);
+  gtk_tooltips_set_tip (tips, loop_checkbox, "loop playback", NULL);
+  gtk_tooltips_set_tip (tips, flush_checkbox, "flush pipeline after seeking",
+      NULL);
+  /* FIXME: describe these */
+  gtk_tooltips_set_tip (tips, scrub_checkbox, "???", NULL);
+  gtk_tooltips_set_tip (tips, play_scrub_checkbox, "???", NULL);
+
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (flush_checkbox), TRUE);
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (scrub_checkbox), TRUE);
 
+  /* seek bar */
   adjustment =
       GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, 100.0, 0.1, 1.0, 1.0));
   hscale = gtk_hscale_new (adjustment);
@@ -1450,12 +1472,15 @@ main (int argc, char **argv)
   gtk_box_pack_start (GTK_BOX (hbox), play_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), pause_button, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (hbox), stop_button, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (hbox), accurate_checkbox, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (hbox), key_checkbox, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (hbox), loop_checkbox, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (hbox), flush_checkbox, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (hbox), scrub_checkbox, FALSE, FALSE, 2);
-  gtk_box_pack_start (GTK_BOX (hbox), play_scrub_checkbox, FALSE, FALSE, 2);
+  gtk_box_pack_start (GTK_BOX (hbox), flagtable, FALSE, FALSE, 2);
+  gtk_table_attach_defaults (GTK_TABLE (flagtable), accurate_checkbox, 0, 1, 0,
+      1);
+  gtk_table_attach_defaults (GTK_TABLE (flagtable), flush_checkbox, 1, 2, 0, 1);
+  gtk_table_attach_defaults (GTK_TABLE (flagtable), loop_checkbox, 2, 3, 0, 1);
+  gtk_table_attach_defaults (GTK_TABLE (flagtable), key_checkbox, 0, 1, 1, 2);
+  gtk_table_attach_defaults (GTK_TABLE (flagtable), scrub_checkbox, 1, 2, 1, 2);
+  gtk_table_attach_defaults (GTK_TABLE (flagtable), play_scrub_checkbox, 2, 3,
+      1, 2);
   gtk_box_pack_start (GTK_BOX (vbox), hscale, TRUE, TRUE, 2);
 
   /* connect things ... */
