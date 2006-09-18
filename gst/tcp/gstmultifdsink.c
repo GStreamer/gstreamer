@@ -27,8 +27,8 @@
  * <refsect2>
  * <para>
  * This plugin writes incoming data to a set of file descriptors. The
- * file descriptors can be added to multifdsink by emiting the "add" signal. For
- * each descriptor added, the "client-added" signal will be called.
+ * file descriptors can be added to multifdsink by emitting the "add" signal. 
+ * For each descriptor added, the "client-added" signal will be called.
  * </para>
  * <para>
  * As of version 0.10.8, a client can also be added with the "add-full" signal
@@ -36,22 +36,22 @@
  * initially receives.
  * </para>
  * <para>
- * Clients can be removed from multifdsink by emiting the "remove" signal. For
+ * Clients can be removed from multifdsink by emitting the "remove" signal. For
  * each descriptor removed, the "client-removed" signal will be called. The
  * "client-removed" signal can also be fired when multifdsink decides that a
  * client is not active anymore or, depending on the value of the
- * "recover-policy," if the client is reading to slow.
- * In all cases, multifdsink will never ever close a file descriptor itself.
+ * "recover-policy" property, if the client is reading too slowly.
+ * In all cases, multifdsink will never close a file descriptor itself.
  * The user of multifdsink is responsible for closing all file descriptors.
  * This can for example be done in response to the "client-fd-removed" signal.
  * Note that multifdsink still has a reference to the file descriptor when the
- * "client-removed" signal is emited so that "get-stats" can be performed on
- * the descriptor; It is therefore not allowed to close the file descriptor in
- * the "client-removed" signal, use the "client-fd-removed" signal to safely 
- * close the fd.
+ * "client-removed" signal is emitted, so that "get-stats" can be performed on
+ * the descriptor; it is therefore not safe to close the file descriptor in
+ * the "client-removed" signal handler, and you should use the 
+ * "client-fd-removed" signal to safely close the fd.
  * </para>
  * <para>
- * Multifdsink internally keeps a queue of the incomming buffers and uses a
+ * Multifdsink internally keeps a queue of the incoming buffers and uses a
  * separate thread to send the buffers to the clients. This ensures that no
  * client write can block the pipeline and that clients can read with different
  * speeds.
@@ -59,28 +59,37 @@
  * <para>
  * When adding a client to multifdsink, the "sync-method" property will define
  * which buffer in the queued buffers will be sent first to the client. Clients 
- * can be sent respectively the most recent buffer (which might not be decodable
- * by the client when it is not a keyframe), the next keyframe received in 
- * multifdsink (which can take some time depending on the keyframe rate, or the
- * last received keyframe (which will cause a simpl burst-on-connect). 
+ * can be sent the most recent buffer (which might not be decodable by the 
+ * client if it is not a keyframe), the next keyframe received in 
+ * multifdsink (which can take some time depending on the keyframe rate), or the
+ * last received keyframe (which will cause a simple burst-on-connect). 
  * Multifdsink will always keep at least one keyframe in its internal buffers
  * when the sync-mode is set to latest-keyframe.
+ * </para>
+ * <para>
+ * As of version 0.10.8, there are additional values for the sync-method 
+ * property to allow finer control over burst-on-connect behaviour. By selecting
+ * the 'burst' method a minimum burst size can be chosen, 'burst-keyframe'
+ * additionally requires that the burst begin with a keyframe, and 
+ * 'burst-with-keyframe' attempts to burst beginning with a keyframe, but will
+ * prefer a minimum burst size even if it requires not starting with a keyframe.
  * </para>
  * <para>
  * Multifdsink can be instructed to keep at least a minimum amount of data
  * expressed in time or byte units in its internal queues with the the 
  * "time-min" and "bytes-min" properties respectively. These properties are
- * usefull if the application adds clients with the "add-full" signal to
+ * useful if the application adds clients with the "add-full" signal to
  * make sure that a burst connect can actually be honored. 
  * </para>
  * <para>
  * When streaming data, clients are allowed to read at a different rate than
  * the rate at which multifdsink receives data. If the client is reading too
  * fast, no data will be send to the client until multifdsink receives more
- * data. If the client however reads too slow, data for that client will bunch
- * up in multifdsink. Two properties control the amount of data (buffers) that
- * is queued in multifdsink: "buffers-max" and "buffers-soft-max". A client
- * with a lag of "buffers-max" is removed from multifdsink forcibly.
+ * data. If the client, however, reads too slowly, data for that client will be 
+ * queued up in multifdsink. Two properties control the amount of data 
+ * (buffers) that is queued in multifdsink: "buffers-max" and 
+ * "buffers-soft-max". A client that falls behind by "buffers-max" is removed 
+ * from multifdsink forcibly.
  * </para>
  * <para>
  * A client with a lag of at least "buffers-soft-max" enters the recovery
@@ -88,18 +97,18 @@
  * policy of NONE will do nothing, RESYNC_LATEST will send the most recently
  * received buffer as the next buffer for the client, RESYNC_SOFT_LIMIT
  * positions the client to the soft limit in the buffer queue and
- * RESYNC_KEYFRAME positions the client to the most recent keyframe in the
+ * RESYNC_KEYFRAME positions the client at the most recent keyframe in the
  * buffer queue.
  * </para>
  * <para>
- * multifdsink will by default synchronize on the clock before serving the buffers
- * to the clients. This behaviour can be disabled by setting the sync 
- * property to FALSE. Multifdsink will be default not do QoS and will never
+ * multifdsink will by default synchronize on the clock before serving the 
+ * buffers to the clients. This behaviour can be disabled by setting the sync 
+ * property to FALSE. Multifdsink will by default not do QoS and will never
  * drop late buffers.
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2006-06-13 (0.10.9)
+ * Last reviewed on 2006-09-12 (0.10.10)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -471,9 +480,12 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * @gstmultifdsink: the multifdsink element to emit this signal on
    * @fd:             the file descriptor to add to multifdsink
    * @keyframe:       start bursting from a keyframe
-   * @unit_type:      the unit-type of @value
-   * @value:          the minimal amount of data to burst expressed in
-   *                  @format units.
+   * @unit_type_min:  the unit-type of @value_min
+   * @value_min:      the minimum amount of data to burst expressed in
+   *                  @unit_type_min units.
+   * @unit_type_max:  the unit-type of @value_max
+   * @value_max:      the maximum amount of data to burst expressed in
+   *                  @unit_type_max units.
    *
    * Hand the given open file descriptor to multifdsink to write to and
    * specify the burst parameters for the new connection.
@@ -501,7 +513,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    *
    * Remove all file descriptors from multifdsink.  Since multifdsink did not
    * open fd's itself, it does not explicitly close the fd.  The application
-   * should do so by connecting to the client-removed callback.
+   * should do so by connecting to the client-fd-removed callback.
    */
   gst_multi_fd_sink_signals[SIGNAL_CLEAR] =
       g_signal_new ("clear", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -534,7 +546,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * @fd:             the file descriptor that was added to multifdsink
    *
    * The given file descriptor was added to multifdsink. This signal will
-   * be emited from the streaming thread so application should be prepared
+   * be emitted from the streaming thread so application should be prepared
    * for that.
    */
   gst_multi_fd_sink_signals[SIGNAL_CLIENT_ADDED] =
@@ -548,7 +560,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * @status:         the reason why the client was removed
    *
    * The given file descriptor is about to be removed from multifdsink. This
-   * signal will be emited from the streaming thread so applications should
+   * signal will be emitted from the streaming thread so applications should
    * be prepared for that.
    *
    * @gstmultifdsink still holds a handle to @fd so it is possible to call
@@ -566,7 +578,7 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * @fd:             the file descriptor that was removed from multifdsink
    *
    * The given file descriptor was removed from multifdsink. This signal will
-   * be emited from the streaming thread so applications should be prepared
+   * be emitted from the streaming thread so applications should be prepared
    * for that.
    *
    * In this callback, @gstmultifdsink has removed all the information

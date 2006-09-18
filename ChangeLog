@@ -1,3 +1,10 @@
+2006-09-18  Michael Smith  <msmith@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_sync_method_get_type),
+	(gst_multi_fd_sink_class_init):
+	  Updates, fixes, and typo corrections for multifdsink. No functional
+	  changes.
+
 2006-09-17  Michael Smith  <msmith@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (ogganx_type_find):
