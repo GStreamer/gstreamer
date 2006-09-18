@@ -1,5 +1,13 @@
 2006-09-18  Michael Smith  <msmith@fluendo.com>
 
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_clear),
+	(gst_ogg_mux_push_buffer):
+	  Don't generate out-of-order timestamps from oggmux, instead clamp
+	  output timestamps to be >= the previously output ts.
+	  Fixes #355595
+
+2006-09-18  Michael Smith  <msmith@fluendo.com>
+
 	* gst/tcp/gstmultifdsink.c: (gst_sync_method_get_type),
 	(gst_multi_fd_sink_class_init):
 	  Updates, fixes, and typo corrections for multifdsink. No functional

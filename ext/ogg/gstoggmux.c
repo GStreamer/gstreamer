@@ -111,6 +111,9 @@ struct _GstOggMux
   /* next timestamp for the page */
   GstClockTime next_ts;
 
+  /* Last timestamp actually output on src pad */
+  GstClockTime last_ts;
+
   /* offset in stream */
   guint64 offset;
 
@@ -293,6 +296,7 @@ gst_ogg_mux_clear (GstOggMux * ogg_mux)
   ogg_mux->delta_pad = NULL;
   ogg_mux->offset = 0;
   ogg_mux->next_ts = 0;
+  ogg_mux->last_ts = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -516,6 +520,14 @@ gst_ogg_mux_push_buffer (GstOggMux * mux, GstBuffer * buffer)
   GST_BUFFER_OFFSET (buffer) = mux->offset;
   mux->offset += GST_BUFFER_SIZE (buffer);
   GST_BUFFER_OFFSET_END (buffer) = mux->offset;
+
+  /* Ensure we have monotonically increasing timestamps in the output. */
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer)) {
+    if (GST_BUFFER_TIMESTAMP (buffer) < mux->last_ts)
+      GST_BUFFER_TIMESTAMP (buffer) = mux->last_ts;
+    else
+      mux->last_ts = GST_BUFFER_TIMESTAMP (buffer);
+  }
 
   caps = gst_pad_get_negotiated_caps (mux->srcpad);
   gst_buffer_set_caps (buffer, caps);
