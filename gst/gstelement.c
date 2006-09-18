@@ -1448,7 +1448,7 @@ gst_element_post_message (GstElement * element, GstMessage * message)
   /* ERRORS */
 no_bus:
   {
-    GST_DEBUG ("not posting message %p: no bus", message);
+    GST_DEBUG_OBJECT (element, "not posting message %p: no bus", message);
     GST_OBJECT_UNLOCK (element);
     gst_message_unref (message);
     return FALSE;
@@ -2522,7 +2522,7 @@ gst_element_dispose (GObject * object)
 
   g_return_if_fail (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING);
 
-  GST_DEBUG ("removing %d pads", g_list_length (element->pads));
+  GST_DEBUG_OBJECT (element, "removing %d pads", g_list_length (element->pads));
   /* first we break all our links with the outside */
   while (element->pads && element->pads->data) {
     /* don't call _remove_pad with NULL */

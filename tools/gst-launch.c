@@ -679,10 +679,8 @@ main (int argc, char *argv[])
     GstState state, pending;
     GstStateChangeReturn ret;
 
-    /* If the top-level object is not a bin, or is just a normal bin that
-     * doesn't do top-level type logic, place it in a pipeline. Assumes any
-     * other top-level bin is a special kind (like playbin) */
-    if (!GST_IS_BIN (pipeline) || (G_OBJECT_TYPE (pipeline) == GST_TYPE_BIN)) {
+    /* If the top-level object is not a pipeline, place it in a pipeline. */
+    if (!GST_IS_PIPELINE (pipeline)) {
       GstElement *real_pipeline = gst_element_factory_make ("pipeline", NULL);
 
       if (real_pipeline == NULL) {

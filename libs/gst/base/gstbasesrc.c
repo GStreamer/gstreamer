@@ -1554,8 +1554,8 @@ pause:
       if (ret == GST_FLOW_UNEXPECTED) {
         /* perform EOS logic */
         if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gst_element_post_message (GST_ELEMENT (src),
-              gst_message_new_segment_done (GST_OBJECT (src),
+          gst_element_post_message (GST_ELEMENT_CAST (src),
+              gst_message_new_segment_done (GST_OBJECT_CAST (src),
                   src->segment.format, src->segment.last_stop));
         } else {
           gst_pad_push_event (pad, gst_event_new_eos ());

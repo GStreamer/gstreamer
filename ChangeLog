@@ -1,3 +1,16 @@
+2006-09-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstelement.c: (gst_element_post_message),
+	(gst_element_dispose):
+	Use _DEBUG_OBJECT some more.
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_loop):
+	Avoid typechecks.
+
+	* tools/gst-launch.c: (main):
+	If the toplevel element is not a GstPipeline, it must be put in a
+	pipeline so that a bus and clock is selected.
+
 2006-09-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_query):
