@@ -1,5 +1,14 @@
 2006-09-18  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/videotestsrc/gstvideotestsrc.c:
+	  Use G_UNLIKELY in _create and log one more detail.
+	  
+	(gst_video_test_src_get_times), (gst_video_test_src_create):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_get_times):
+	  Use gst_util_uint64_scale_int in _get_times().
+
+2006-09-18  Stefan Kost  <ensonic@users.sf.net>
+
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support)
 	  Give better warning message (add object and detail).
 

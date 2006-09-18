@@ -517,19 +517,20 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
 
   src = GST_VIDEO_TEST_SRC (psrc);
 
-  if (src->fourcc == NULL)
+  if (G_UNLIKELY (src->fourcc == NULL))
     goto not_negotiated;
 
   /* 0 framerate and we are at the second frame, eos */
-  if (src->rate_numerator == 0 && src->n_frames == 1)
+  if (G_UNLIKELY (src->rate_numerator == 0 && src->n_frames == 1))
     goto eos;
 
   newsize = gst_video_test_src_get_size (src, src->width, src->height);
 
   g_return_val_if_fail (newsize > 0, GST_FLOW_ERROR);
 
-  GST_LOG_OBJECT (src, "creating buffer of %ld bytes for %dx%d image",
-      newsize, src->width, src->height);
+  GST_LOG_OBJECT (src,
+      "creating buffer of %ld bytes with %dx%d image for frame %d", newsize,
+      src->width, src->height, src->n_frames);
 
 #ifdef USE_PEER_BUFFERALLOC
   res =

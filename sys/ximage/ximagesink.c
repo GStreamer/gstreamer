@@ -1452,7 +1452,9 @@ gst_ximagesink_get_times (GstBaseSink * bsink, GstBuffer * buf,
       *end = *start + GST_BUFFER_DURATION (buf);
     } else {
       if (ximagesink->fps_n > 0) {
-        *end = *start + (GST_SECOND * ximagesink->fps_d) / ximagesink->fps_n;
+        *end = *start +
+            gst_util_uint64_scale_int (GST_SECOND, ximagesink->fps_d,
+            ximagesink->fps_n);
       }
     }
   }
