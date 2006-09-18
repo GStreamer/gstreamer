@@ -1,3 +1,18 @@
+2006-09-18  Wim Taymans  <wim@fluendo.com>
+
+	Based on patch by: Thijs Vermeir <thijs dot vermeir at barco dot com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_set_state),
+	(gst_rtspsrc_media_to_caps), (gst_rtspsrc_stream_setup_rtp),
+	(gst_rtspsrc_stream_configure_transport), (gst_rtspsrc_open),
+	(gst_rtspsrc_close), (gst_rtspsrc_play), (gst_rtspsrc_pause):
+	* gst/rtsp/rtspconnection.c: (inet_aton):
+	Small cleanups.
+	when multicast is selected as the transport, create UDP sources and
+	connect to the multicast group.
+	Move parsing and setting of caps to a common place.
+	Fixes #349894.
+
 2006-09-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/flac/gstflactag.c:
@@ -20,7 +35,7 @@
 	* gst/videofilter/gstvideotemplate.c:
 	* gst/videomixer/videomixer.c:
 	* sys/sunaudio/gstsunaudiosrc.h:
-          More G_OBJECT macro fixing.
+	More G_OBJECT macro fixing.
 
 2006-09-16  Wim Taymans  <wim@fluendo.com>
 

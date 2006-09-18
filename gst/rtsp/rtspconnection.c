@@ -45,12 +45,12 @@
 #endif
 
 #ifdef G_OS_WIN32
-/* note that inet_aton is deprecated on unix because
- * inet_addr returns -1 (INADDR_NONE) for the valid 255.255.255.255
- * address. */
 static int
 inet_aton (const char *c, struct in_addr *paddr)
 {
+  /* note that inet_addr is deprecated on unix because
+   * inet_addr returns -1 (INADDR_NONE) for the valid 255.255.255.255
+   * address. */
   paddr->s_addr = inet_addr (c);
 
   if (paddr->s_addr == INADDR_NONE)
