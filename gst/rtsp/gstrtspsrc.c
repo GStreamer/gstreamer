@@ -86,13 +86,7 @@ static GstStaticPadTemplate rtptemplate =
 GST_STATIC_PAD_TEMPLATE ("rtp_stream%d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS_ANY);
-
-static GstStaticPadTemplate rtcptemplate =
-GST_STATIC_PAD_TEMPLATE ("rtcp_stream%d",
-    GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS_ANY);
+    GST_STATIC_CAPS ("application/x-rtp"));
 
 enum
 {
@@ -178,8 +172,6 @@ gst_rtspsrc_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&rtptemplate));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&rtcptemplate));
 
   gst_element_class_set_details (element_class, &gst_rtspsrc_details);
 }
@@ -649,7 +641,8 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     SDPMedia * media, RTSPTransport * transport)
 {
   GstRTSPSrc *src;
-  GstPad *pad;
+  GstPad *pad, *gpad;
+  GstPadTemplate *template;
   GstStateChangeReturn ret;
   gchar *name;
 
@@ -736,10 +729,17 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     gst_pad_use_fixed_caps (pad);
     gst_pad_set_caps (pad, stream->caps);
   }
+
+  /* create ghostpad */
   name = g_strdup_printf ("rtp_stream%d", stream->id);
-  gst_element_add_pad (GST_ELEMENT_CAST (src), gst_ghost_pad_new (name, pad));
+  template = gst_static_pad_template_get (&rtptemplate);
+  gpad = gst_ghost_pad_new_from_template (name, pad, template);
+  gst_object_unref (template);
   g_free (name);
+
   gst_object_unref (pad);
+
+  gst_element_add_pad (GST_ELEMENT_CAST (src), gpad);
 
   return TRUE;
 
@@ -802,6 +802,22 @@ done:
 }
 
 static void
+gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event)
+{
+  GList *streams;
+
+  for (streams = src->streams; streams; streams = g_list_next (streams)) {
+    GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
+
+    gst_event_ref (event);
+    gst_pad_push_event (ostream->rtpdecrtp, event);
+    gst_event_ref (event);
+    gst_pad_push_event (ostream->rtpdecrtcp, event);
+  }
+  gst_event_unref (event);
+}
+
+static void
 gst_rtspsrc_loop (GstRTSPSrc * src)
 {
   RTSPMessage response = { 0 };
@@ -838,7 +854,10 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
     outpad = stream->rtpdecrtcp;
   }
 
+  /* take a look at the body to figure out what we have */
   rtsp_message_get_body (&response, &data, &size);
+  if (size < 2)
+    goto invalid_length;
 
   /* channels are not correct on some servers, do extra check */
   if (data[1] >= 200 && data[1] <= 204) {
@@ -854,11 +873,15 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
   {
     GstBuffer *buf;
 
+    rtsp_message_steal_body (&response, &data, &size);
+
     /* strip the trailing \0 */
     size -= 1;
 
     buf = gst_buffer_new_and_alloc (size);
-    memcpy (GST_BUFFER_DATA (buf), data, size);
+    GST_BUFFER_DATA (buf) = data;
+    GST_BUFFER_MALLOCDATA (buf) = data;
+    GST_BUFFER_SIZE (buf) = size;
 
     if (caps)
       gst_buffer_set_caps (buf, caps);
@@ -869,7 +892,7 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
     /* chain to the peer pad */
     ret = gst_pad_chain (outpad, buf);
 
-    /* combine all streams */
+    /* combine all stream flows */
     ret = gst_rtspsrc_combine_flows (src, stream, ret);
     if (ret != GST_FLOW_OK)
       goto need_pause;
@@ -884,19 +907,43 @@ unknown_stream:
   }
 receive_error:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
+    GST_ELEMENT_ERROR (src, RESOURCE, READ,
         ("Could not receive message."), (NULL));
     ret = GST_FLOW_UNEXPECTED;
-    /*
-       gst_pad_push_event (src->srcpad, gst_event_new (GST_EVENT_EOS));
-     */
     goto need_pause;
+  }
+invalid_length:
+  {
+    GST_ELEMENT_WARNING (src, RESOURCE, READ,
+        ("Short message received."), (NULL));
+    return;
   }
 need_pause:
   {
-    GST_DEBUG_OBJECT (src, "pausing task, reason %d (%s)", ret,
-        gst_flow_get_name (ret));
+    const gchar *reason = gst_flow_get_name (ret);
+
+    GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
+    src->running = FALSE;
     gst_task_pause (src->task);
+    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+      if (ret == GST_FLOW_UNEXPECTED) {
+        /* perform EOS logic */
+        if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+          gst_element_post_message (GST_ELEMENT_CAST (src),
+              gst_message_new_segment_done (GST_OBJECT_CAST (src),
+                  src->segment.format, src->segment.last_stop));
+        } else {
+          gst_rtspsrc_push_event (src, gst_event_new_eos ());
+        }
+      } else {
+        /* for fatal errors we post an error message, post the error
+         * first so the app knows about the error first. */
+        GST_ELEMENT_ERROR (src, STREAM, FAILED,
+            ("Internal data flow error."),
+            ("streaming task paused, reason %s (%d)", reason, ret));
+        gst_rtspsrc_push_event (src, gst_event_new_eos ());
+      }
+    }
     return;
   }
 }

@@ -1,5 +1,18 @@
 2006-09-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_base_init),
+	(gst_rtspsrc_stream_configure_transport), (gst_rtspsrc_push_event),
+	(gst_rtspsrc_loop), (gst_rtspsrc_uri_set_uri):
+	* gst/rtsp/gstrtspsrc.h:
+	Export sometimes source pad with correct caps on the template, create
+	the ghostpad from the template.
+	Remove RTCP template as we never expose RTCP.
+	Protect against invalid body size.
+	Avoid memcpy when creating the output buffer.
+	Properly post an error and send EOS when the loop function is shut down.
+
+2006-09-18  Wim Taymans  <wim@fluendo.com>
+
 	Based on patch by: Lutz Mueller <lutz at topfrose dot de>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_class_init),

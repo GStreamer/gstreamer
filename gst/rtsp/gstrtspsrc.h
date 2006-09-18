@@ -91,6 +91,8 @@ struct _GstRTSPSrc {
   gboolean         interleaved;
   GstTask         *task;
   GStaticRecMutex *stream_rec_lock;
+  GstSegment       segment;
+  gboolean         running;
 
   gint             numstreams;
   GList           *streams;
