@@ -83,6 +83,7 @@ GST_PLUGINS_ALL="\
 	mpegaudioparse \
         mpegstream \
 	realmedia \
+        synaesthesia \
 	"
 
 AC_SUBST(GST_PLUGINS_ALL)
@@ -421,6 +422,7 @@ gst/iec958/Makefile
 gst/mpegaudioparse/Makefile
 gst/mpegstream/Makefile
 gst/realmedia/Makefile
+gst/synaesthesia/Makefile
 ext/Makefile
 ext/a52dec/Makefile
 ext/amrnb/Makefile
