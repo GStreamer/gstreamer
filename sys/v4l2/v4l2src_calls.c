@@ -858,7 +858,7 @@ gst_v4l2src_buffer_new (GstV4l2Src * v4l2src, guint size, guint8 * data,
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
   if (v4l2src->fps_n > 0) {
     GST_BUFFER_DURATION (buf) =
-        gst_util_uint64_scale_int (GST_SECOND, v4l2src->fps_n, v4l2src->fps_d);
+        gst_util_uint64_scale_int (GST_SECOND, v4l2src->fps_d, v4l2src->fps_n);
   } else {
     GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
   }
