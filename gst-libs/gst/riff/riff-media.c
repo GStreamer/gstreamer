@@ -720,20 +720,6 @@ gst_riff_create_audio_caps (guint16 codec_id,
   gint channels_max = 2;
 
   switch (codec_id) {
-    case GST_RIFF_WAVE_FORMAT_MPEGL3:  /* mp3 */
-      caps = gst_caps_new_simple ("audio/mpeg",
-          "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3, NULL);
-      if (codec_name)
-        *codec_name = g_strdup ("MPEG-1 layer 3");
-      break;
-
-    case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp1 or mp2 */
-      caps = gst_caps_new_simple ("audio/mpeg",
-          "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 2, NULL);
-      if (codec_name)
-        *codec_name = g_strdup ("MPEG-1 layer 2");
-      break;
-
     case GST_RIFF_WAVE_FORMAT_PCM:     /* PCM */
       if (strf != NULL) {
         gint ba = strf->blockalign;
@@ -793,6 +779,54 @@ gst_riff_create_audio_caps (guint16 codec_id,
       block_align = TRUE;
       break;
 
+    case GST_RIFF_WAVE_FORMAT_IBM_CVSD:
+      goto unknown;
+
+    case GST_RIFF_WAVE_FORMAT_ALAW:
+      if (strf != NULL) {
+        if (strf->size != 8) {
+          GST_WARNING ("invalid depth (%d) of alaw audio, overwriting.",
+              strf->size);
+          strf->size = 8;
+          strf->av_bps = 8;
+          strf->blockalign = strf->av_bps * strf->channels;
+        }
+        if (strf->av_bps == 0 || strf->blockalign == 0) {
+          GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of alaw audio",
+              strf->av_bps, strf->blockalign);
+          strf->av_bps = strf->size;
+          strf->blockalign = strf->av_bps * strf->channels;
+        }
+      }
+      caps = gst_caps_new_simple ("audio/x-alaw", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("A-law audio");
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_MULAW:
+      if (strf != NULL) {
+        if (strf->size != 8) {
+          GST_WARNING ("invalid depth (%d) of mulaw audio, overwriting.",
+              strf->size);
+          strf->size = 8;
+          strf->av_bps = 8;
+          strf->blockalign = strf->av_bps * strf->channels;
+        }
+        if (strf->av_bps == 0 || strf->blockalign == 0) {
+          GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of mulaw audio",
+              strf->av_bps, strf->blockalign);
+          strf->av_bps = strf->size;
+          strf->blockalign = strf->av_bps * strf->channels;
+        }
+      }
+      caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Mu-law audio");
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_OKI_ADPCM:
+      goto unknown;
+
     case GST_RIFF_WAVE_FORMAT_DVI_ADPCM:
       caps = gst_caps_new_simple ("audio/x-adpcm",
           "layout", G_TYPE_STRING, "dvi", NULL);
@@ -801,42 +835,25 @@ gst_riff_create_audio_caps (guint16 codec_id,
       block_align = TRUE;
       break;
 
-    case GST_RIFF_WAVE_FORMAT_MULAW:
-      if (strf != NULL && strf->size != 8) {
-        GST_WARNING ("invalid depth (%d) of mulaw audio, overwriting.",
-            strf->size);
-        strf->size = 8;
-        strf->av_bps = 8;
-        strf->blockalign = strf->av_bps * strf->channels;
-      }
-      if (strf != NULL && (strf->av_bps == 0 || strf->blockalign == 0)) {
-        GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of mulaw audio",
-            strf->av_bps, strf->blockalign);
-        strf->av_bps = strf->size;
-        strf->blockalign = strf->av_bps * strf->channels;
-      }
-      caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+    case GST_RIFF_WAVE_FORMAT_GSM610:
+    case GST_RIFF_WAVE_FORMAT_MSN:
+      caps = gst_caps_new_simple ("audio/ms-gsm", NULL);
       if (codec_name)
-        *codec_name = g_strdup ("Mu-law audio");
+        *codec_name = g_strdup ("MS GSM audio");
       break;
 
-    case GST_RIFF_WAVE_FORMAT_ALAW:
-      if (strf != NULL && strf->size != 8) {
-        GST_WARNING ("invalid depth (%d) of alaw audio, overwriting.",
-            strf->size);
-        strf->size = 8;
-        strf->av_bps = 8;
-        strf->blockalign = strf->av_bps * strf->channels;
-      }
-      if (strf != NULL && (strf->av_bps == 0 || strf->blockalign == 0)) {
-        GST_WARNING ("fixing av_bps (%d) and blockalign (%d) of alaw audio",
-            strf->av_bps, strf->blockalign);
-        strf->av_bps = strf->size;
-        strf->blockalign = strf->av_bps * strf->channels;
-      }
-      caps = gst_caps_new_simple ("audio/x-alaw", NULL);
+    case GST_RIFF_WAVE_FORMAT_MPEGL12: /* mp1 or mp2 */
+      caps = gst_caps_new_simple ("audio/mpeg",
+          "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 2, NULL);
       if (codec_name)
-        *codec_name = g_strdup ("A-law audio");
+        *codec_name = g_strdup ("MPEG-1 layer 2");
+      break;
+
+    case GST_RIFF_WAVE_FORMAT_MPEGL3:  /* mp3 */
+      caps = gst_caps_new_simple ("audio/mpeg",
+          "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("MPEG-1 layer 3");
       break;
 
     case GST_RIFF_WAVE_FORMAT_VORBIS1: /* ogg/vorbis mode 1 */
@@ -992,6 +1009,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
       break;
     }
     default:
+    unknown:
       GST_WARNING ("Unknown audio tag 0x%04x", codec_id);
       return NULL;
   }
@@ -1129,6 +1147,7 @@ GstCaps *
 gst_riff_create_audio_template_caps (void)
 {
   static const guint16 tags[] = {
+    GST_RIFF_WAVE_FORMAT_GSM610,
     GST_RIFF_WAVE_FORMAT_MPEGL3,
     GST_RIFF_WAVE_FORMAT_MPEGL12,
     GST_RIFF_WAVE_FORMAT_PCM,

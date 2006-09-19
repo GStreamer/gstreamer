@@ -1,3 +1,16 @@
+2006-09-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps),
+	(gst_riff_create_audio_template_caps):
+	Reorder the audio formats a bit for clarity.
+	Detect and create caps for MSGSM and MSN (WAV49).
+	Fixes #356596.
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_destroy),
+	(gst_xvimagesink_check_xshm_calls), (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_get_xv_support), (gst_xvimagesink_show_frame):
+	Small cleanups, move error handling out of normal flow for clarity.
+
 2006-09-18  Stefan Kost,,,  <ensonic@users.sf.net>
 
 	* docs/libs/gst-plugins-base-libs-docs.sgml:
