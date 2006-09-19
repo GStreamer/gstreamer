@@ -53,6 +53,7 @@ struct _GstGSMDec
   GstPad *sinkpad, *srcpad;
 
   gsm state;
+  gint use_wav49;
   gint64 next_of;
   GstClockTime next_ts;
 

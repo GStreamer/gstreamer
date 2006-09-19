@@ -88,10 +88,11 @@ gst_gsmdec_get_type (void)
 }
 
 static GstStaticPadTemplate gsmdec_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-gsm, " "rate = (int) 8000, " "channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-gsm, rate = (int) 8000, channels = (int) 1; "
+        "audio/ms-gsm, rate = (int) 8000, channels = (int) 1")
     );
 
 static GstStaticPadTemplate gsmdec_src_template =
@@ -136,8 +137,6 @@ gst_gsmdec_class_init (GstGSMDec * klass)
 static void
 gst_gsmdec_init (GstGSMDec * gsmdec)
 {
-  gint use_wav49;
-
   /* create the sink and src pads */
   gsmdec->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
@@ -153,10 +152,6 @@ gst_gsmdec_init (GstGSMDec * gsmdec)
   gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->srcpad);
 
   gsmdec->state = gsm_create ();
-
-  /* turn on WAV49 handling */
-  use_wav49 = 0;
-  gsm_option (gsmdec->state, GSM_OPT_WAV49, &use_wav49);
 
   gsmdec->adapter = gst_adapter_new ();
   gsmdec->next_of = 0;
@@ -181,9 +176,26 @@ gst_gsmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstGSMDec *gsmdec;
   GstCaps *srccaps;
+  GstStructure *s;
 
   gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
 
+  s = gst_caps_get_structure (caps, 0);
+  if (s == NULL)
+    goto wrong_caps;
+
+  /* figure out if we deal with plain or MSGSM */
+  if (gst_structure_has_name (s, "audio/x-gsm"))
+    gsmdec->use_wav49 = 0;
+  else if (gst_structure_has_name (s, "audio/ms-gsm"))
+    gsmdec->use_wav49 = 1;
+  else
+    goto wrong_caps;
+
+  /* MSGSM needs different framing */
+  gsm_option (gsmdec->state, GSM_OPT_WAV49, &gsmdec->use_wav49);
+
+  /* we only have one possible source caps, which is the same as our template. */
   srccaps = gst_static_pad_template_get_caps (&gsmdec_src_template);
 
   gst_pad_set_caps (gsmdec->srcpad, srccaps);
@@ -191,6 +203,14 @@ gst_gsmdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_object_unref (gsmdec);
 
   return TRUE;
+
+  /* ERRORS */
+wrong_caps:
+  {
+    GST_ERROR_OBJECT (gsmdec, "invalid caps received");
+    gst_object_unref (gsmdec);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -245,6 +265,7 @@ gst_gsmdec_chain (GstPad * pad, GstBuffer * buf)
   gsm_byte *data;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime timestamp;
+  gint needed;
 
   gsmdec = GST_GSMDEC (gst_pad_get_parent (pad));
 
@@ -252,47 +273,52 @@ gst_gsmdec_chain (GstPad * pad, GstBuffer * buf)
 
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
     gst_adapter_clear (gsmdec->adapter);
+    gsmdec->next_ts = GST_CLOCK_TIME_NONE;
+    /* FIXME, do some good offset */
+    gsmdec->next_of = 0;
   }
   gst_adapter_push (gsmdec->adapter, buf);
 
-  /* do we have enough bytes to read a header */
-  while (gst_adapter_available (gsmdec->adapter) >= 33) {
+  needed = 33;
+  /* do we have enough bytes to read a frame */
+  while (gst_adapter_available (gsmdec->adapter) >= needed) {
     GstBuffer *outbuf;
 
+    /* always the same amount of output samples */
     outbuf = gst_buffer_new_and_alloc (160 * sizeof (gsm_signal));
 
-    /* TODO take new segment in consideration, if not given restart
-     * timestamps at 0 */
-    if (timestamp == GST_CLOCK_TIME_NONE) {
-      /* If we are not given any timestamp */
-      GST_BUFFER_TIMESTAMP (outbuf) = gsmdec->next_ts;
-      if (gsmdec->next_ts != GST_CLOCK_TIME_NONE)
-        gsmdec->next_ts += 20 * GST_MSECOND;
-    }
+    /* If we are not given any timestamp, interpolate from last seen
+     * timestamp (if any). */
+    if (timestamp == GST_CLOCK_TIME_NONE)
+      timestamp = gsmdec->next_ts;
 
-    else {
-      /* upstream gave a timestamp, use it. */
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-      gsmdec->next_ts = timestamp + 20 * GST_MSECOND;
-      /* and make sure we interpollate in the next run */
-      timestamp = GST_CLOCK_TIME_NONE;
-    }
+    GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+
+    /* interpolate in the next run */
+    if (timestamp != GST_CLOCK_TIME_NONE)
+      gsmdec->next_ts = timestamp + (20 * GST_MSECOND);
+    timestamp = GST_CLOCK_TIME_NONE;
 
     GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
     GST_BUFFER_OFFSET (outbuf) = gsmdec->next_of;
-    gsmdec->next_of += 160;
+    if (gsmdec->next_of != -1)
+      gsmdec->next_of += 160;
     GST_BUFFER_OFFSET_END (outbuf) = gsmdec->next_of;
 
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (gsmdec->srcpad));
 
     /* now encode frame into the output buffer */
-    data = (gsm_byte *) gst_adapter_peek (gsmdec->adapter, 33);
+    data = (gsm_byte *) gst_adapter_peek (gsmdec->adapter, needed);
     if (gsm_decode (gsmdec->state, data,
             (gsm_signal *) GST_BUFFER_DATA (outbuf)) < 0) {
       /* invalid frame */
       GST_WARNING_OBJECT (gsmdec, "tried to decode an invalid frame, skipping");
     }
-    gst_adapter_flush (gsmdec->adapter, 33);
+    gst_adapter_flush (gsmdec->adapter, needed);
+
+    /* WAV49 requires alternating 33 and 32 bytes of input */
+    if (gsmdec->use_wav49)
+      needed = (needed == 33 ? 32 : 33);
 
     GST_DEBUG_OBJECT (gsmdec, "Pushing buffer of size %d ts %" GST_TIME_FORMAT,
         GST_BUFFER_SIZE (outbuf),

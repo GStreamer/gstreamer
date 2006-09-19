@@ -1,3 +1,12 @@
+2006-09-19  Wim Taymans  <wim@fluendo.com>
+
+	* ext/gsm/gstgsmdec.c: (gst_gsmdec_init),
+	(gst_gsmdec_sink_setcaps), (gst_gsmdec_sink_event),
+	(gst_gsmdec_chain):
+	* ext/gsm/gstgsmdec.h:
+	Handle WAV49 variant (GSM in WAV).
+	Some small cleanups.
+
 2006-09-18  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_buffer_new ):
