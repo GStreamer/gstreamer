@@ -54,6 +54,7 @@
 #include "gstv4l2colorbalance.h"
 #include "gstv4l2tuner.h"
 #include "gstv4l2xoverlay.h"
+#include "gstv4l2vidorient.h"
 
 static const GstElementDetails gst_v4l2src_details =
 GST_ELEMENT_DETAILS ("Video (video4linux2/raw) Source",
@@ -138,6 +139,7 @@ GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Src, gst_v4l2src);
 #ifdef HAVE_XVIDEO
 GST_IMPLEMENT_V4L2_XOVERLAY_METHODS (GstV4l2Src, gst_v4l2src);
 #endif
+GST_IMPLEMENT_V4L2_VIDORIENT_METHODS (GstV4l2Src, gst_v4l2src);
 
 static gboolean
 gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
@@ -146,10 +148,13 @@ gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
 
 #ifdef HAVE_XVIDEO
   g_assert (iface_type == GST_TYPE_TUNER ||
-      iface_type == GST_TYPE_X_OVERLAY || iface_type == GST_TYPE_COLOR_BALANCE);
+      iface_type == GST_TYPE_X_OVERLAY ||
+      iface_type == GST_TYPE_COLOR_BALANCE ||
+      iface_type == GST_TYPE_VIDEO_ORIENTATION);
 #else
   g_assert (iface_type == GST_TYPE_TUNER ||
-      iface_type == GST_TYPE_COLOR_BALANCE);
+      iface_type == GST_TYPE_COLOR_BALANCE ||
+      iface_type == GST_TYPE_VIDEO_ORIENTATION);
 #endif
 
   if (v4l2object->video_fd == -1)
@@ -197,6 +202,11 @@ gst_v4l2src_init_interfaces (GType type)
     NULL,
     NULL,
   };
+  static const GInterfaceInfo v4l2_videoorientation_info = {
+    (GInterfaceInitFunc) gst_v4l2src_video_orientation_interface_init,
+    NULL,
+    NULL,
+  };
   static const GInterfaceInfo v4l2_propertyprobe_info = {
     (GInterfaceInitFunc) gst_v4l2src_property_probe_interface_init,
     NULL,
@@ -211,6 +221,8 @@ gst_v4l2src_init_interfaces (GType type)
 #endif
   g_type_add_interface_static (type,
       GST_TYPE_COLOR_BALANCE, &v4l2_colorbalance_info);
+  g_type_add_interface_static (type,
+      GST_TYPE_VIDEO_ORIENTATION, &v4l2_videoorientation_info);
   g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
       &v4l2_propertyprobe_info);
 }
