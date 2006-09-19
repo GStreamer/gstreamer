@@ -1,3 +1,8 @@
+2006-09-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/wavparse/gstwavparse.c:
+	Add ms-gsm to the src template.
+
 2006-09-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_media_to_caps),
