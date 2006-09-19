@@ -1,5 +1,10 @@
 2006-09-19  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/test.c: (main):
+	Fix build.
+
+2006-09-19  Wim Taymans  <wim@fluendo.com>
+
 	* gst/wavparse/gstwavparse.c:
 	Add ms-gsm to the src template.
 

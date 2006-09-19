@@ -57,7 +57,7 @@ main (int argc, gchar * argv[])
 
   /* do describe */
   {
-    res = rtsp_message_init_request (RTSP_DESCRIBE, urlstr, &request);
+    res = rtsp_message_init_request (&request, RTSP_DESCRIBE, urlstr);
     if (res != RTSP_OK) {
       g_print ("error creating request\n");
       return (-1);
@@ -110,7 +110,7 @@ main (int argc, gchar * argv[])
       setup_url = g_strdup_printf ("%s/%s", urlstr, control_url);
 
       g_print ("setup %s\n", setup_url);
-      res = rtsp_message_init_request (RTSP_SETUP, setup_url, &request);
+      res = rtsp_message_init_request (&request, RTSP_SETUP, setup_url);
       if (res != RTSP_OK) {
         g_print ("error creating request\n");
         return (-1);
@@ -137,7 +137,7 @@ main (int argc, gchar * argv[])
   }
   /* do play */
   {
-    res = rtsp_message_init_request (RTSP_PLAY, urlstr, &request);
+    res = rtsp_message_init_request (&request, RTSP_PLAY, urlstr);
     if (res != RTSP_OK) {
       g_print ("error creating request\n");
       return (-1);
