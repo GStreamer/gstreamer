@@ -13,6 +13,7 @@ libgstvideo4linux2_la_SOURCES = gstv4l2.c \
 				gstv4l2object.c \
 				gstv4l2src.c \
 				gstv4l2tuner.c \
+				gstv4l2vidorient.c \
 				v4l2_calls.c \
 				v4l2src_calls.c \
 				$(xv_source)
@@ -33,4 +34,4 @@ libgstvideo4linux2_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 noinst_HEADERS = gstv4l2object.h v4l2_calls.h \
 		 gstv4l2src.h v4l2src_calls.h \
 		 gstv4l2tuner.h gstv4l2xoverlay.h \
-		 gstv4l2colorbalance.h
+		 gstv4l2colorbalance.h gstv4l2vidorient.h

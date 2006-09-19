@@ -1,3 +1,12 @@
+2006-09-19  Edgard Lima <edgard.lima@indt.org.br>
+
+	* sys/v4l2/Makefile.am:
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2vidorient.c:
+	* sys/v4l2/gstv4l2vidorient.h:
+	* tests/icles/v4l2src-test.c:
+	Add Video Orientation interface support to v4l2src.
+	
 2006-09-19  Wim Taymans  <wim@fluendo.com>
 
 	* ext/gsm/gstgsmdec.c: (gst_gsmdec_init),

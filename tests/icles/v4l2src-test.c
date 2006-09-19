@@ -5,6 +5,7 @@
 #include <gst/gst.h>
 #include <gst/interfaces/tuner.h>
 #include <gst/interfaces/colorbalance.h>
+#include <gst/interfaces/videoorientation.h>
 
 GstElement *pipeline, *source, *sink;
 GMainLoop *loop;
@@ -17,6 +18,7 @@ print_options ()
   printf ("i - to change the input\n");
   printf ("n - to change the norm\n");
   printf ("c - list color balance\n");
+  printf ("v - change video orientarion\n");
   printf ("e - to exit\n");
 }
 
@@ -34,7 +36,8 @@ run_options (char opt)
 
       freq = gst_tuner_get_frequency (tuner, channel);
 
-      printf ("type the new frequency (current = %lu) (-1 to cancel): ", freq);
+      printf ("\ntype the new frequency (current = %lu) (-1 to cancel): ",
+          freq);
       scanf ("%u", &freq);
       if (freq != -1)
         gst_tuner_set_frequency (tuner, channel, freq);
@@ -134,13 +137,15 @@ run_options (char opt)
 
       controls = gst_color_balance_list_channels (balance);
 
+      printf ("\n");
+
       if (controls == NULL) {
         printf ("There is no list of colorbalance controls\n");
         goto done;
       }
 
       if (controls) {
-        printf ("\nlist of controls:\n");
+        printf ("list of controls:\n");
         for (item = controls, index = 0; item != NULL;
             item = item->next, ++index) {
           channel = item->data;
@@ -165,6 +170,90 @@ run_options (char opt)
         gst_color_balance_set_value (balance, channel, new_value);
       }
     }
+    case 'v':
+    {
+      GstVideoOrientation *vidorient = GST_VIDEO_ORIENTATION (source);
+      gboolean flip = FALSE;
+      gint center = 0;
+
+      printf ("\n");
+
+      if (gst_video_orientation_get_hflip (vidorient, &flip)) {
+        gint new_value;
+
+        printf ("Horizontal flip is %s\n", flip ? "on" : "off");
+        printf ("\ntype 1 to toggle (-1 to cancel): ");
+        scanf ("%d", &new_value);
+        if (new_value == 1) {
+          flip = !flip;
+          if (gst_video_orientation_set_hflip (vidorient, flip)) {
+            gst_video_orientation_get_hflip (vidorient, &flip);
+            printf ("Now horizontal flip is %s\n", flip ? "on" : "off");
+          } else {
+            printf ("Error toggling horizontal flip\n");
+          }
+        } else {
+        }
+      } else {
+        printf ("Horizontal flip control not available\n");
+      }
+
+      if (gst_video_orientation_get_vflip (vidorient, &flip)) {
+        gint new_value;
+
+        printf ("\nVertical flip is %s\n", flip ? "on" : "off");
+        printf ("\ntype 1 to toggle (-1 to cancel): ");
+        scanf ("%d", &new_value);
+        if (new_value == 1) {
+          flip = !flip;
+          if (gst_video_orientation_set_vflip (vidorient, flip)) {
+            gst_video_orientation_get_vflip (vidorient, &flip);
+            printf ("Now vertical flip is %s\n", flip ? "on" : "off");
+          } else {
+            printf ("Error toggling vertical flip\n");
+          }
+        } else {
+        }
+      } else {
+        printf ("Vertical flip control not available\n");
+      }
+
+      if (gst_video_orientation_get_hcenter (vidorient, &center)) {
+        printf ("Horizontal center is %d\n", center);
+        printf ("\ntype the new horizontal center value (-1 to cancel): ");
+        scanf ("%d", &center);
+        if (center != -1) {
+          if (gst_video_orientation_set_hcenter (vidorient, center)) {
+            gst_video_orientation_get_hcenter (vidorient, &center);
+            printf ("Now horizontal center is %d\n", center);
+          } else {
+            printf ("Error setting horizontal center\n");
+          }
+        } else {
+        }
+      } else {
+        printf ("Horizontal center control not available\n");
+      }
+
+      if (gst_video_orientation_get_vcenter (vidorient, &center)) {
+        printf ("Vertical center is %d\n", center);
+        printf ("\ntype the new vertical center value (-1 to cancel): ");
+        scanf ("%d", &center);
+        if (center != -1) {
+          if (gst_video_orientation_set_vcenter (vidorient, center)) {
+            gst_video_orientation_get_vcenter (vidorient, &center);
+            printf ("Now vertical center is %d\n", center);
+          } else {
+            printf ("Error setting vertical center\n");
+          }
+        } else {
+        }
+      } else {
+        printf ("Vertical center control not available\n");
+      }
+
+    }
+      break;
       break;
     default:
       if (opt != 10)
