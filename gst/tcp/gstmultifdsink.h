@@ -213,8 +213,8 @@ struct _GstMultiFdSink {
   /* these values are used to check if a client is reading fast
    * enough and to control receovery */
   GstUnitType unit_type;/* the type of the units */
-  gint units_max;       /* max units to queue for a client */
-  gint units_soft_max;  /* max units a client can lag before recovery starts */
+  gint64 units_max;       /* max units to queue for a client */
+  gint64 units_soft_max;  /* max units a client can lag before recovery starts */
   GstRecoverPolicy recover_policy;
   GstClockTime timeout; /* max amount of nanoseconds to remain idle */
 

@@ -1,3 +1,16 @@
+2006-09-19  Michael Smith  <msmith@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_sync_method_get_type),
+	(gst_multi_fd_sink_class_init), (get_buffers_max), (find_limits),
+	(gst_multi_fd_sink_recover_client),
+	(gst_multi_fd_sink_queue_buffer), (gst_multi_fd_sink_set_property),
+	(gst_multi_fd_sink_get_property):
+	* gst/tcp/gstmultifdsink.h:
+	  Implement stubbed out properties unit-type, units-soft-max,
+	  units-max, to allow specifying maximum sizes in units other than
+	  buffers.
+	  Fixes #355935
+
 2006-09-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps),
