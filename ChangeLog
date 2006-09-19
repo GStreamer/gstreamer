@@ -1,5 +1,10 @@
 2006-09-19  Edgard Lima <edgard.lima@indt.org.br>
 
+	* tests/icles/v4l2src-test.c:
+	Just a small fix to the app options.
+
+2006-09-19  Edgard Lima <edgard.lima@indt.org.br>
+
 	* sys/v4l2/Makefile.am:
 	* sys/v4l2/gstv4l2src.c:
 	* sys/v4l2/gstv4l2vidorient.c:
