@@ -43,6 +43,10 @@ typedef struct {
   gint   addr_number;
 } SDPConnection;
 
+#define SDP_BWTYPE_CT 		"CT"  /* conference total */
+#define SDP_BWTYPE_AS 		"AS"  /* application specific */
+#define SDP_BWTYPE_EXT_PREFIX 	"X-"  /* extension prefix */
+
 typedef struct {
   gchar *bwtype;
   gint   bandwidth;

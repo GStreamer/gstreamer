@@ -132,6 +132,7 @@ static void gst_rtspsrc_finalize (GObject * object);
 
 static void gst_rtspsrc_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
+static GstCaps *gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media);
 
 static GstStateChangeReturn gst_rtspsrc_change_state (GstElement * element,
     GstStateChange transition);
@@ -294,18 +295,74 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
-static GstRTSPStream *
-gst_rtspsrc_create_stream (GstRTSPSrc * src)
+static gint
+find_stream_by_pt (GstRTSPStream * stream, gconstpointer a)
 {
-  GstRTSPStream *s;
+  gint pt = GPOINTER_TO_INT (a);
 
-  s = g_new0 (GstRTSPStream, 1);
-  s->parent = src;
-  s->id = src->numstreams++;
+  if (stream->pt == pt)
+    return 0;
 
-  src->streams = g_list_append (src->streams, s);
+  return -1;
+}
 
-  return s;
+static GstRTSPStream *
+gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMedia * media)
+{
+  GstRTSPStream *stream;
+  gchar *control_url;
+  gchar *payload;
+
+  stream = g_new0 (GstRTSPStream, 1);
+  stream->parent = src;
+  /* we mark the pad as not linked, we will mark it as OK when we add the pad to
+   * the element. */
+  stream->last_ret = GST_FLOW_NOT_LINKED;
+  stream->id = src->numstreams++;
+
+  /* we must have a payload. No payload means we cannot create caps */
+  /* FIXME, handle multiple formats. */
+  if ((payload = sdp_media_get_format (media, 0))) {
+    stream->pt = atoi (payload);
+    /* convert caps */
+    stream->caps = gst_rtspsrc_media_to_caps (stream->pt, media);
+
+    if (stream->pt >= 96) {
+      /* If we have a dynamic payload type, see if we have a stream with the
+       * same payload number. If there is one, they are part of the same
+       * container and we only need to add one pad. */
+      if (g_list_find_custom (src->streams, GINT_TO_POINTER (stream->pt),
+              (GCompareFunc) find_stream_by_pt)) {
+        stream->container = TRUE;
+      }
+    }
+  }
+
+  /* get control url to construct the setup url. The setup url is used to
+   * configure the transport of the stream and is used to identity the stream in
+   * the RTP-Info header field returned from PLAY. */
+  control_url = sdp_media_get_attribute_val (media, "control");
+
+  GST_DEBUG_OBJECT (src, "stream %d", stream->id);
+  GST_DEBUG_OBJECT (src, " pt: %d", stream->pt);
+  GST_DEBUG_OBJECT (src, " container: %d", stream->container);
+  GST_DEBUG_OBJECT (src, " caps: %" GST_PTR_FORMAT, stream->caps);
+  GST_DEBUG_OBJECT (src, " control: %s", GST_STR_NULL (control_url));
+
+  if (control_url != NULL) {
+    /* FIXME, what if the control_url starts with a '/' or a non rtsp: protocol? */
+    /* check absolute/relative URL */
+    if (g_str_has_prefix (control_url, "rtsp://"))
+      stream->setup_url = g_strdup (control_url);
+    else
+      stream->setup_url = g_strdup_printf ("%s/%s", src->location, control_url);
+  }
+  GST_DEBUG_OBJECT (src, " setup: %s", GST_STR_NULL (stream->setup_url));
+
+  /* we keep track of all streams */
+  src->streams = g_list_append (src->streams, stream);
+
+  return stream;
 }
 
 #if 0
@@ -314,8 +371,8 @@ gst_rtspsrc_free_stream (GstRTSPSrc * src, GstRTSPStream * stream)
 {
   if (stream->caps) {
     gst_caps_unref (stream->caps);
-    stream->caps = NULL;
   }
+  g_free (stream->setup_url);
 
   src->streams = g_list_remove (src->streams, stream);
   src->numstreams--;
@@ -404,23 +461,15 @@ gst_rtspsrc_parse_rtpmap (gchar * rtpmap, gint * payload, gchar ** name,
  *   a=fmtp:<payload> <param>[=<value>];...
  */
 static GstCaps *
-gst_rtspsrc_media_to_caps (SDPMedia * media)
+gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
 {
   GstCaps *caps;
-  gchar *payload;
   gchar *rtpmap;
   gchar *fmtp;
-  gint pt;
   gchar *name = NULL;
   gint rate = -1;
   gchar *params = NULL;
   GstStructure *s;
-
-  payload = sdp_media_get_format (media, 0);
-  if (payload == NULL)
-    goto no_payload;
-
-  pt = atoi (payload);
 
   /* dynamic payloads need rtpmap */
   if (pt >= 96) {
@@ -499,11 +548,6 @@ gst_rtspsrc_media_to_caps (SDPMedia * media)
   return caps;
 
   /* ERRORS */
-no_payload:
-  {
-    g_warning ("payload type not given");
-    return NULL;
-  }
 no_rtpmap:
   {
     g_warning ("rtpmap type not given for dynamic payload %d", pt);
@@ -512,7 +556,7 @@ no_rtpmap:
 }
 
 static gboolean
-gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream, SDPMedia * media,
+gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream,
     gint * rtpport, gint * rtcpport)
 {
   GstStateChangeReturn ret;
@@ -653,10 +697,10 @@ cleanup:
 
 static gboolean
 gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
-    SDPMedia * media, RTSPTransport * transport)
+    RTSPTransport * transport)
 {
   GstRTSPSrc *src;
-  GstPad *pad, *gpad;
+  GstPad *pad;
   GstPadTemplate *template;
   GstStateChangeReturn ret;
   gchar *name;
@@ -665,6 +709,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
 
   GST_DEBUG ("configuring RTP transport for stream %p", stream);
 
+  /* FIXME, the session manager needs to be shared with all the streams */
   if (!(stream->rtpdec = gst_element_factory_make ("rtpdec", NULL)))
     goto no_element;
 
@@ -686,12 +731,8 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     stream->rtcpchannel = transport->interleaved.max;
     GST_DEBUG ("stream %p on channels %d-%d", stream,
         stream->rtpchannel, stream->rtcpchannel);
-
-    /* also store the caps in the stream, we need this when setting caps on
-     * outgoing buffers */
-    stream->caps = gst_rtspsrc_media_to_caps (media);
   } else {
-    /* multicast was selected, create UDP sources and connect to the multicast
+    /* multicast was selected, create UDP sources and join the multicast
      * group. */
     if (transport->multicast) {
       gchar *uri;
@@ -714,7 +755,6 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
       if (stream->rtcpsrc == NULL)
         goto no_element;
 
-
       /* change state */
       gst_element_set_state (stream->rtpsrc, GST_STATE_PAUSED);
       gst_element_set_state (stream->rtcpsrc, GST_STATE_PAUSED);
@@ -724,8 +764,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
       gst_bin_add (GST_BIN_CAST (src), stream->rtcpsrc);
     }
 
-    /* configure caps on the RTP source element */
-    stream->caps = gst_rtspsrc_media_to_caps (media);
+    /* set caps */
     g_object_set (G_OBJECT (stream->rtpsrc), "caps", stream->caps, NULL);
 
     /* configure for UDP delivery, we need to connect the UDP pads to
@@ -748,13 +787,16 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
   /* create ghostpad */
   name = g_strdup_printf ("rtp_stream%d", stream->id);
   template = gst_static_pad_template_get (&rtptemplate);
-  gpad = gst_ghost_pad_new_from_template (name, pad, template);
+  stream->srcpad = gst_ghost_pad_new_from_template (name, pad, template);
   gst_object_unref (template);
   g_free (name);
 
   gst_object_unref (pad);
 
-  gst_element_add_pad (GST_ELEMENT_CAST (src), gpad);
+  /* mark pad as ok */
+  stream->last_ret = GST_FLOW_OK;
+  /* and add */
+  gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
 
   return TRUE;
 
@@ -772,7 +814,7 @@ start_rtpdec_failure:
 }
 
 static gint
-find_stream (GstRTSPStream * stream, gconstpointer a)
+find_stream_by_channel (GstRTSPStream * stream, gconstpointer a)
 {
   gint channel = GPOINTER_TO_INT (a);
 
@@ -824,6 +866,10 @@ gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event)
   for (streams = src->streams; streams; streams = g_list_next (streams)) {
     GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
 
+    /* only pads that have a connection to the outside world */
+    if (ostream->srcpad == NULL)
+      continue;
+
     gst_event_ref (event);
     gst_pad_push_event (ostream->rtpdecrtp, event);
     gst_event_ref (event);
@@ -857,7 +903,7 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
   channel = response.type_data.data.channel;
 
   lstream = g_list_find_custom (src->streams, GINT_TO_POINTER (channel),
-      (GCompareFunc) find_stream);
+      (GCompareFunc) find_stream_by_channel);
   if (!lstream)
     goto unknown_stream;
 
@@ -1062,9 +1108,9 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
     rtsp_message_get_header (response, RTSP_HDR_PUBLIC, &respoptions);
   if (!respoptions) {
     /* this field is not required, assume the server supports
-     * DESCRIBE and SETUP*/
+     * DESCRIBE, SETUP and PLAY */
     GST_DEBUG_OBJECT (src, "could not get OPTIONS");
-    src->methods = RTSP_DESCRIBE | RTSP_SETUP;
+    src->methods = RTSP_DESCRIBE | RTSP_SETUP | RTSP_PLAY;
     goto done;
   }
 
@@ -1075,8 +1121,7 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
    */
   options = g_strsplit (respoptions, ",", 0);
 
-  i = 0;
-  while (options[i]) {
+  for (i = 0; options[i]; i++) {
     gchar *stripped;
     gint method;
 
@@ -1086,7 +1131,6 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
     /* keep bitfield of supported methods */
     if (method != -1)
       src->methods |= method;
-    i++;
   }
   g_strfreev (options);
 
@@ -1196,36 +1240,24 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   n_streams = sdp_message_medias_len (&sdp);
   for (i = 0; i < n_streams; i++) {
     SDPMedia *media;
-    gchar *setup_url;
-    gchar *control_url;
     gchar *transports;
 
     media = sdp_message_get_media (&sdp, i);
 
-    GST_DEBUG_OBJECT (src, "setup media %d", i);
-    control_url = sdp_media_get_attribute_val (media, "control");
-    if (control_url == NULL) {
-      GST_DEBUG_OBJECT (src, "no control url found, skipping stream %d", i);
+    /* create stream from the media */
+    stream = gst_rtspsrc_create_stream (src, media);
+
+    /* skip setup if we have no URL for it */
+    if (stream->setup_url == NULL)
       continue;
-    }
 
-    /* check absolute/relative URL */
-    /* FIXME, what if the control_url starts with a '/' or a non rtsp: protocol? */
-    if (g_str_has_prefix (control_url, "rtsp://")) {
-      setup_url = g_strdup (control_url);
-    } else {
-      setup_url = g_strdup_printf ("%s/%s", src->location, control_url);
-    }
-
-    GST_DEBUG_OBJECT (src, "setup %s", setup_url);
+    GST_DEBUG_OBJECT (src, "doing setup of stream %d with %s", i,
+        stream->setup_url);
 
     /* create SETUP request */
-    res = rtsp_message_init_request (&request, RTSP_SETUP, setup_url);
-    g_free (setup_url);
+    res = rtsp_message_init_request (&request, RTSP_SETUP, stream->setup_url);
     if (res < 0)
       goto create_request_failed;
-
-    stream = gst_rtspsrc_create_stream (src);
 
     transports = g_strdup ("");
     if (protocols & GST_RTSP_PROTO_UDP_UNICAST) {
@@ -1234,7 +1266,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
       gchar *trxparams;
 
       /* allocate two UDP ports */
-      if (!gst_rtspsrc_stream_setup_rtp (stream, media, &rtpport, &rtcpport))
+      if (!gst_rtspsrc_stream_setup_rtp (stream, &rtpport, &rtcpport))
         goto setup_rtp_failed;
 
       GST_DEBUG_OBJECT (src, "setting up RTP ports %d-%d", rtpport, rtcpport);
@@ -1260,13 +1292,18 @@ gst_rtspsrc_open (GstRTSPSrc * src)
       transports = new;
     }
     if (protocols & GST_RTSP_PROTO_TCP) {
-      gchar *new;
+      gchar *new, *interleaved;
+      gint channel;
 
       GST_DEBUG_OBJECT (src, "setting up TCP");
 
+      /* the channels for this stream is by default the next available number */
+      channel = i * 2;
+      interleaved = g_strdup_printf ("interleaved=%d-%d", channel, channel + 1);
       new =
-          g_strconcat (transports, transports[0] ? "," : "", "RTP/AVP/TCP",
-          NULL);
+          g_strconcat (transports, transports[0] ? "," : "",
+          "RTP/AVP/TCP;unicast;", interleaved, NULL);
+      g_free (interleaved);
       g_free (transports);
       transports = new;
     }
@@ -1308,11 +1345,15 @@ gst_rtspsrc_open (GstRTSPSrc * src)
           protocols = GST_RTSP_PROTO_UDP_UNICAST;
         }
       }
-      /* now configure the stream with the transport */
-      if (!gst_rtspsrc_stream_configure_transport (stream, media, &transport)) {
-        GST_DEBUG_OBJECT (src,
-            "could not configure stream %d transport, skipping stream", i);
+
+      if (!stream->container || !src->interleaved) {
+        /* now configure the stream with the transport */
+        if (!gst_rtspsrc_stream_configure_transport (stream, &transport)) {
+          GST_DEBUG_OBJECT (src,
+              "could not configure stream %d transport, skipping stream", i);
+        }
       }
+
       /* clean up our transport struct */
       rtsp_transport_init (&transport);
     }
@@ -1450,12 +1491,37 @@ close_failed:
   }
 }
 
+/* RTP-Info is of the format:
+ *
+ * url=<URL>;[seq=<seqbase>;rtptime=<timebase>] [, url=...]
+ */
+static gboolean
+gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
+{
+  gchar **infos;
+  gint i;
+
+  infos = g_strsplit (rtpinfo, ",", 0);
+  for (i = 0; infos[i]; i++) {
+    /* FIXME, do something here:
+     * parse url, find stream for url.
+     * parse seq and rtptime. The seq number should be configured in the rtp
+     * depayloader or session manager to detect gaps. Same for the rtptime, it
+     * should be used to create an initial time newsegment.
+     */
+  }
+  g_strfreev (infos);
+
+  return TRUE;
+}
+
 static gboolean
 gst_rtspsrc_play (GstRTSPSrc * src)
 {
   RTSPMessage request = { 0 };
   RTSPMessage response = { 0 };
   RTSPResult res;
+  gchar *rtpinfo;
 
   if (!(src->methods & RTSP_PLAY))
     return TRUE;
@@ -1473,14 +1539,23 @@ gst_rtspsrc_play (GstRTSPSrc * src)
     goto send_error;
 
   rtsp_message_unset (&request);
+
+  /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
+   * for the RTP packets. If this is not present, we assume all starts from 0... 
+   * FIXME, this is info for the RTP session manager ideally. */
+  rtsp_message_get_header (&response, RTSP_HDR_RTP_INFO, &rtpinfo);
+  if (rtpinfo)
+    gst_rtspsrc_parse_rtpinfo (src, rtpinfo);
+
   rtsp_message_unset (&response);
 
   /* for interleaved transport, we receive the data on the RTSP connection
    * instead of UDP. We start a task to select and read from that connection. */
   if (src->interleaved) {
-    src->task = gst_task_create ((GstTaskFunction) gst_rtspsrc_loop, src);
-
-    gst_task_set_lock (src->task, src->stream_rec_lock);
+    if (src->task == NULL) {
+      src->task = gst_task_create ((GstTaskFunction) gst_rtspsrc_loop, src);
+      gst_task_set_lock (src->task, src->stream_rec_lock);
+    }
     src->running = TRUE;
     gst_task_start (src->task);
   }

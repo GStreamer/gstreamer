@@ -60,28 +60,37 @@ typedef enum
 typedef struct _GstRTSPStream GstRTSPStream;
 
 struct _GstRTSPStream {
-  gint        id;
+  gint          id;
 
-  GstRTSPSrc *parent;
+  GstRTSPSrc   *parent;
 
+  /* pad we expose or NULL when it does not have an actual pad */
+  GstPad       *srcpad;
   GstFlowReturn last_ret;
 
   /* for interleaved mode */
-  gint        rtpchannel;
-  gint        rtcpchannel;
-  GstCaps    *caps;
+  gint          rtpchannel;
+  gint          rtcpchannel;
+  GstCaps      *caps;
 
   /* our udp sources for RTP */
-  GstElement *rtpsrc;
-  GstElement *rtcpsrc;
+  GstElement   *rtpsrc;
+  GstElement   *rtcpsrc;
 
   /* our udp sink back to the server */
-  GstElement *rtcpsink;
+  GstElement   *rtcpsink;
 
   /* the RTP decoder */
-  GstElement *rtpdec;
-  GstPad     *rtpdecrtp;
-  GstPad     *rtpdecrtcp;
+  GstElement   *rtpdec;
+  GstPad       *rtpdecrtp;
+  GstPad       *rtpdecrtcp;
+
+  /* state */
+  gint          pt;
+  gboolean      container;
+  gchar        *setup_url;
+  guint32       ssrc; 
+  guint32       seqbase;
 };
 
 struct _GstRTSPSrc {
