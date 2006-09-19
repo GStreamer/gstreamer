@@ -59,6 +59,7 @@ struct _GstNeonhttpSrc {
 
   /* icecast/audiocast metadata extraction handling */
   gboolean iradio_mode;
+  gboolean lastfm_mode;
   gchar *iradio_name;
   gchar *iradio_genre;
   gchar *iradio_url;

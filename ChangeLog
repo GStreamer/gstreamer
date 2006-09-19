@@ -1,3 +1,14 @@
+2006-09019  Edgard Lima <edgard.lima@indt.org.br>
+
+	Patch by: deadchip <internalerror@gmail.com> and
+		  Rosfran Borges <rosfran.borges@indt.org.br>
+
+	* ext/neon/Makefile.am:
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/neon/gstneonhttpsrc.h:
+	Allow internal codes from last.fm
+	
+
 2006-09-19  Edgard Lima <edgard.lima@indt.org.br>
 
 	* tests/icles/v4l2src-test.c:

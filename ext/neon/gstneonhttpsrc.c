@@ -14,13 +14,17 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include <config.h>
+#endif
+
+#ifdef HAVE_MEMMEM
+#  include "memmem.h"
 #endif
 
 #include "gstneonhttpsrc.h"
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
-
 #include <ne_redirect.h>
 
 #ifndef NE_FREE
@@ -57,13 +61,14 @@ enum
   PROP_URI,
   PROP_PROXY,
   PROP_USER_AGENT,
+  PROP_LASTFM_MODE,
   PROP_IRADIO_MODE,
   PROP_IRADIO_NAME,
   PROP_IRADIO_GENRE,
   PROP_IRADIO_URL,
-  PROP_NEON_HTTP_REDIRECT
+  PROP_NEON_HTTP_REDIRECT,
 #ifndef GST_DISABLE_GST_DEBUG
-      , PROP_NEON_HTTP_DBG
+  PROP_NEON_HTTP_DBG
 #endif
 };
 
@@ -106,10 +111,9 @@ _urihandler_init (GType type)
 }
 
 GST_BOILERPLATE_FULL (GstNeonhttpSrc, gst_neonhttp_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, _urihandler_init);
+    GST_TYPE_PUSH_SRC, _urihandler_init)
 
-static void
-gst_neonhttp_src_base_init (gpointer g_class)
+     static void gst_neonhttp_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -171,6 +175,13 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
           "Enable internet radio mode (extraction of shoutcast/icecast metadata)",
           FALSE, G_PARAM_READWRITE));
 
+/* lastFM support - patch sent by deadcip <internalerror@gmail.com> */
+  g_object_class_install_property
+      (gobject_class, PROP_LASTFM_MODE,
+      g_param_spec_boolean ("lastfm-mode", "lastfm-mode",
+          "Enable LastFM mode (check for lastfm-stats and sync messages)",
+          FALSE, G_PARAM_READWRITE));
+
   g_object_class_install_property (gobject_class,
       PROP_IRADIO_NAME,
       g_param_spec_string ("iradio-name",
@@ -211,61 +222,64 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
 }
 
 static void
-gst_neonhttp_src_init (GstNeonhttpSrc * this, GstNeonhttpSrcClass * g_class)
+gst_neonhttp_src_init (GstNeonhttpSrc * neonhttpsrc,
+    GstNeonhttpSrcClass * g_class)
 {
-  this->session = NULL;
-  this->request = NULL;
+  neonhttpsrc->session = NULL;
+  neonhttpsrc->request = NULL;
 
-  memset (&this->uri, 0, sizeof (this->uri));
-  this->uristr = NULL;
-  memset (&this->proxy, 0, sizeof (this->proxy));
-  this->ishttps = FALSE;
-  this->content_size = -1;
+  memset (&neonhttpsrc->uri, 0, sizeof (neonhttpsrc->uri));
+  neonhttpsrc->uristr = NULL;
+  memset (&neonhttpsrc->proxy, 0, sizeof (neonhttpsrc->proxy));
+  neonhttpsrc->ishttps = FALSE;
+  neonhttpsrc->content_size = -1;
 
-  set_uri (this, NULL, &this->uri, &this->ishttps, &this->uristr, TRUE);
-  set_proxy (this, NULL, &this->proxy, TRUE);
+  set_uri (neonhttpsrc, NULL, &neonhttpsrc->uri, &neonhttpsrc->ishttps,
+      &neonhttpsrc->uristr, TRUE);
+  set_proxy (neonhttpsrc, NULL, &neonhttpsrc->proxy, TRUE);
 
-  this->user_agent = g_strdup ("neonhttpsrc");
+  neonhttpsrc->user_agent = g_strdup ("Neon HTTP 26");
 
-  this->iradio_mode = FALSE;
-  this->iradio_name = NULL;
-  this->iradio_genre = NULL;
-  this->iradio_url = NULL;
-  this->icy_caps = NULL;
-  this->icy_metaint = 0;
+  neonhttpsrc->lastfm_mode = FALSE;
+  neonhttpsrc->iradio_mode = FALSE;
+  neonhttpsrc->iradio_name = NULL;
+  neonhttpsrc->iradio_genre = NULL;
+  neonhttpsrc->iradio_url = NULL;
+  neonhttpsrc->icy_caps = NULL;
+  neonhttpsrc->icy_metaint = 0;
 }
 
 static void
 gst_neonhttp_src_finalize (GObject * gobject)
 {
-  GstNeonhttpSrc *this = GST_NEONHTTP_SRC (gobject);
+  GstNeonhttpSrc *neonhttpsrc = GST_NEONHTTP_SRC (gobject);
 
-  ne_uri_free (&this->uri);
-  ne_uri_free (&this->proxy);
+  ne_uri_free (&neonhttpsrc->uri);
+  ne_uri_free (&neonhttpsrc->proxy);
 
-  g_free (this->user_agent);
-  g_free (this->iradio_name);
-  g_free (this->iradio_genre);
-  g_free (this->iradio_url);
+  g_free (neonhttpsrc->user_agent);
+  g_free (neonhttpsrc->iradio_name);
+  g_free (neonhttpsrc->iradio_genre);
+  g_free (neonhttpsrc->iradio_url);
 
-  if (this->icy_caps) {
-    gst_caps_unref (this->icy_caps);
-    this->icy_caps = NULL;
+  if (neonhttpsrc->icy_caps) {
+    gst_caps_unref (neonhttpsrc->icy_caps);
+    neonhttpsrc->icy_caps = NULL;
   }
 
-  if (this->request) {
-    ne_request_destroy (this->request);
-    this->request = NULL;
+  if (neonhttpsrc->request) {
+    ne_request_destroy (neonhttpsrc->request);
+    neonhttpsrc->request = NULL;
   }
 
-  if (this->session) {
-    ne_close_connection (this->session);
-    ne_session_destroy (this->session);
-    this->session = NULL;
+  if (neonhttpsrc->session) {
+    ne_close_connection (neonhttpsrc->session);
+    ne_session_destroy (neonhttpsrc->session);
+    neonhttpsrc->session = NULL;
   }
 
-  if (this->uristr) {
-    ne_free (this->uristr);
+  if (neonhttpsrc->uristr) {
+    ne_free (neonhttpsrc->uristr);
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
@@ -284,8 +298,10 @@ request_dispatch (GstNeonhttpSrc * src, GstBuffer * outbuf)
   ssize_t len = 0;
 
   while (sizetoread > 0) {
-    len = ne_read_response_block (src->request,
+    len =
+        ne_read_response_block (src->request,
         (char *) GST_BUFFER_DATA (outbuf) + read, sizetoread);
+
     if (len > 0) {
       read += len;
       sizetoread -= len;
@@ -313,9 +329,66 @@ request_dispatch (GstNeonhttpSrc * src, GstBuffer * outbuf)
   }
 
 done:
+  /* lastFM support - patch sent by deadchip <internalerror@gmail.com> */
+  if (src->lastfm_mode) {
+    const void *buf = (const void *) (GST_BUFFER_DATA (outbuf));
+    static char SYNC[4] = { 'S', 'Y', 'N', 'C' };
+
+    if (memmem (buf, GST_BUFFER_SIZE (outbuf), &SYNC, 4) != NULL) {
+      GstStructure *structure =
+          gst_structure_new ("lastfm-sync", "sync", G_TYPE_BOOLEAN, TRUE, NULL);
+      GstMessage *message =
+          gst_message_new_application (GST_OBJECT (src), structure);
+      gst_element_post_message (GST_ELEMENT (src), message);
+    }
+
+    static const struct
+    {
+      gchar *status_msg;
+      gint msg_code;
+    } http_status_msgs_tb[4] = {
+      {
+      "HTTP/1.0 401", 401}, {
+      "HTTP/1.0 503", 503}, {
+      "HTTP/1.0 666", 666}, {
+    "HTTP/1.0 667", 667},};
+
+    guint iter;
+
+    gchar *http_chunk = g_new0 (gchar, sizeof (gchar));
+
+    while ((http_chunk =
+            memmem (buf, GST_BUFFER_SIZE (outbuf), "HTTP/1.0", 8)) != NULL) {
+
+      for (iter = 0; iter < 4; iter++) {
+
+        if (strncmp (http_chunk, http_status_msgs_tb[iter].status_msg, 12) == 0) {
+#ifndef GST_DISABLE_GST_DEBUG
+          g_print ("[%s] ok, we found a HTTP/1.0 tag = %s\n", __FUNCTION__,
+              http_status_msgs_tb[iter].status_msg);
+#endif
+          GstStructure *structure =
+              gst_structure_new ("lastfm-status", "status", G_TYPE_INT,
+              http_status_msgs_tb[iter].msg_code, NULL);
+          GstMessage *message =
+              gst_message_new_application (GST_OBJECT (src), structure);
+          gst_element_post_message (GST_ELEMENT (src), message);
+          gst_element_post_message (GST_ELEMENT (src),
+              gst_message_new_eos (GST_OBJECT (src)));
+          src->eos = TRUE;
+          break;
+        }
+      }                         /* for */
+
+      /* do move by 8-bytes offset */
+      buf = http_chunk + 8;
+
+    }                           /* while - ( all the HTTP/1.0 occurrences ) */
+
+  }
+  /* lastFM packet discarding code */
   return read;
 }
-
 
 static GstFlowReturn
 gst_neonhttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
@@ -452,6 +525,7 @@ send_request_and_redirect (GstNeonhttpSrc * src, gboolean do_redir)
       /* When the HTTP status code is 302, it is not the SHOUTcast streaming content yet;
        * Reload the HTTP request with a new URI value */
       http_status = ne_get_status (src->request)->code;
+
       if (http_status == 302) {
         /* the new URI value to go when redirecting can be found on the 'Location' HTTP header */
         redir = ne_get_response_header (src->request, "Location");
@@ -777,7 +851,7 @@ static void
 gst_neonhttp_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstNeonhttpSrc *this = GST_NEONHTTP_SRC (object);
+  GstNeonhttpSrc *neonhttpsrc = GST_NEONHTTP_SRC (object);
 
   switch (prop_id) {
     case PROP_PROXY:
@@ -786,7 +860,8 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
         GST_WARNING ("proxy property cannot be NULL");
         goto done;
       }
-      if (!set_proxy (this, g_value_get_string (value), &this->proxy, FALSE)) {
+      if (!set_proxy (neonhttpsrc, g_value_get_string (value),
+              &neonhttpsrc->proxy, FALSE)) {
         GST_WARNING ("badly formated proxy");
         goto done;
       }
@@ -799,8 +874,8 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
         GST_WARNING ("location property cannot be NULL");
         goto done;
       }
-      if (!set_uri (this, g_value_get_string (value), &this->uri,
-              &this->ishttps, &this->uristr, FALSE)) {
+      if (!set_uri (neonhttpsrc, g_value_get_string (value), &neonhttpsrc->uri,
+              &neonhttpsrc->ishttps, &neonhttpsrc->uristr, FALSE)) {
         GST_WARNING ("badly formated location");
         goto done;
       }
@@ -808,29 +883,34 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
     }
     case PROP_USER_AGENT:
     {
-      if (this->user_agent) {
-        g_free (this->user_agent);
-        this->user_agent = NULL;
+      if (neonhttpsrc->user_agent) {
+        g_free (neonhttpsrc->user_agent);
+        neonhttpsrc->user_agent = NULL;
       }
       if (g_value_get_string (value)) {
-        this->user_agent = g_strdup (g_value_get_string (value));
+        neonhttpsrc->user_agent = g_strdup (g_value_get_string (value));
       }
+      break;
+    }
+    case PROP_LASTFM_MODE:
+    {
+      neonhttpsrc->lastfm_mode = g_value_get_boolean (value);
       break;
     }
     case PROP_IRADIO_MODE:
     {
-      this->iradio_mode = g_value_get_boolean (value);
+      neonhttpsrc->iradio_mode = g_value_get_boolean (value);
       break;
     }
     case PROP_NEON_HTTP_REDIRECT:
     {
-      this->neon_http_redirect = g_value_get_boolean (value);
+      neonhttpsrc->neon_http_redirect = g_value_get_boolean (value);
       break;
     }
 #ifndef GST_DISABLE_GST_DEBUG
     case PROP_NEON_HTTP_DBG:
     {
-      this->neon_http_msgs_dbg = g_value_get_boolean (value);
+      neonhttpsrc->neon_http_msgs_dbg = g_value_get_boolean (value);
       break;
     }
 #endif
@@ -885,6 +965,9 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, neonhttpsrc->user_agent);
       break;
     }
+    case PROP_LASTFM_MODE:
+      g_value_set_boolean (value, neonhttpsrc->lastfm_mode);
+      break;
     case PROP_IRADIO_MODE:
       g_value_set_boolean (value, neonhttpsrc->iradio_mode);
       break;
@@ -923,7 +1006,7 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_NEONHTTP_SRC);
 }
 
-/* this is the structure that gst-register looks for
+/* neonhttpsrc is the structure that gst-register looks for
  * so keep the name plugin_desc, or you cannot get your plug-in registered */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
@@ -933,7 +1016,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
-     static guint gst_neonhttp_src_uri_get_type (void)
+     static GstURIType gst_neonhttp_src_uri_get_type (void)
 {
   return GST_URI_SRC;
 }
