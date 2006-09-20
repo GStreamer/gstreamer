@@ -1,3 +1,12 @@
+2006-09-20  Wim Taymans  <wim@fluendo.com>
+
+	* tests/check/elements/gdpdepay.c: (GST_START_TEST):
+	* tests/check/elements/multifdsink.c: (GST_START_TEST):
+	* tests/check/elements/videorate.c: (GST_START_TEST):
+	* tests/check/libs/cddabasesrc.c: (GST_START_TEST):
+	* tests/check/pipelines/oggmux.c: (eos_buffer_probe):
+	Fix some warnings.
+
 2006-09-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),

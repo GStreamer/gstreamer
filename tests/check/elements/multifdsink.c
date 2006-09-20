@@ -106,7 +106,6 @@ GST_START_TEST (test_add_client)
   GstCaps *caps;
   int pfd[2];
   gchar data[4];
-  guint64 bytes_served;
 
   sink = setup_multifdsink ();
 
@@ -236,11 +235,7 @@ GST_START_TEST (test_streamheader)
   GstElement *sink;
   GstBuffer *hbuf1, *hbuf2, *buf;
   GstCaps *caps;
-  GstStructure *structure;
   int pfd1[2], pfd2[2];
-  guint8 data[12];
-  guint64 bytes_served;
-  int avail;
 
   sink = setup_multifdsink ();
 
@@ -330,13 +325,7 @@ GST_START_TEST (test_change_streamheader)
   GstElement *sink;
   GstBuffer *hbuf1, *hbuf2, *buf;
   GstCaps *caps;
-  GstStructure *structure;
   int pfd1[2], pfd2[2];
-  guint8 data[12];
-  GValue array = { 0 };
-  GValue value = { 0 };
-  guint64 bytes_served;
-  int avail;
 
   sink = setup_multifdsink ();
 
@@ -452,7 +441,6 @@ GST_START_TEST (test_burst_client_bytes)
   int pfd2[2];
   int pfd3[2];
   gchar data[16];
-  guint64 bytes_served;
   gint i;
   guint buffers_queued;
 
@@ -566,7 +554,6 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
   int pfd2[2];
   int pfd3[2];
   gchar data[16];
-  guint64 bytes_served;
   gint i;
   guint buffers_queued;
 
@@ -682,7 +669,6 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
   int pfd2[2];
   int pfd3[2];
   gchar data[16];
-  guint64 bytes_served;
   gint i;
   guint buffers_queued;
 
@@ -803,9 +789,7 @@ GST_START_TEST (test_client_next_keyframe)
   GstCaps *caps;
   int pfd1[2];
   gchar data[16];
-  guint64 bytes_served;
   gint i;
-  guint buffers_queued;
 
   sink = setup_multifdsink ();
   g_object_set (sink, "sync-method", 1, NULL);  /* 1 = next-keyframe */

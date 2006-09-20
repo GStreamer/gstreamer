@@ -105,11 +105,9 @@ GST_START_TEST (test_audio_per_byte)
   GstCaps *caps;
   GstPad *srcpad;
   GstElement *gdpdepay;
-  GstBuffer *buffer, *inbuffer, *outbuffer;
-  gint length;
+  GstBuffer *buffer, *outbuffer;
   guint8 *header, *payload;
   guint len;
-  guint i;
 
   gdpdepay = setup_gdpdepay ();
   srcpad = gst_element_get_pad (gdpdepay, "src");
@@ -177,9 +175,8 @@ GST_START_TEST (test_audio_in_one_buffer)
   GstCaps *caps;
   GstPad *srcpad;
   GstElement *gdpdepay;
-  GstBuffer *buffer, *inbuffer, *outbuffer;
-  gint length;
-  guint8 *caps_header, *caps_payload, *buf_header, *buf_payload;
+  GstBuffer *buffer, *inbuffer;
+  guint8 *caps_header, *caps_payload, *buf_header;
   guint header_len, payload_len;
   guint i;
 
@@ -273,8 +270,7 @@ GST_START_TEST (test_streamheader)
   GstPad *srcpad;
   GstElement *gdpdepay;
   GstBuffer *buffer, *inbuffer, *outbuffer, *shbuffer;
-  gint length;
-  guint8 *caps_header, *caps_payload, *buf_header, *buf_payload;
+  guint8 *caps_header, *caps_payload, *buf_header;
   guint header_len, payload_len;
   guint i;
   GstStructure *structure;

@@ -118,7 +118,7 @@ cleanup_videorate (GstElement * videorate)
 GST_START_TEST (test_one)
 {
   GstElement *videorate;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   GstCaps *caps;
 
   videorate = setup_videorate ();
@@ -259,7 +259,6 @@ GST_START_TEST (test_wrong_order_from_zero)
   GstElement *videorate;
   GstBuffer *first, *second, *third, *outbuffer;
   GstCaps *caps;
-  guint64 in, out, dropped, duplicated;
 
   videorate = setup_videorate ();
   fail_unless (gst_element_set_state (videorate,
@@ -349,7 +348,6 @@ GST_START_TEST (test_wrong_order)
   GstElement *videorate;
   GstBuffer *first, *second, *third, *fourth, *outbuffer;
   GstCaps *caps;
-  guint64 in, out, dropped, duplicated;
 
   videorate = setup_videorate ();
   fail_unless (gst_element_set_state (videorate,
@@ -458,7 +456,7 @@ GST_END_TEST;
 GST_START_TEST (test_no_framerate)
 {
   GstElement *videorate;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   GstCaps *caps;
 
   videorate = setup_videorate ();

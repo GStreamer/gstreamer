@@ -164,13 +164,14 @@ eos_buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
   memcpy (oggbuffer, data, size);
   ogg_sync_wrote (&oggsync, size);
 
-  while (ret != 0) {
+  do {
     ogg_page page;
 
     ret = ogg_sync_pageout (&oggsync, &page);
     if (ret > 0)
       validate_ogg_page (&page);
   }
+  while (ret != 0);
 
   return TRUE;
 }

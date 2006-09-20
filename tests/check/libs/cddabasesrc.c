@@ -327,6 +327,9 @@ GST_START_TEST (test_buffer_timestamps)
 
   gst_buffer_straw_start_pipeline (pipeline, sinkpad);
 
+  prev_ts = GST_CLOCK_TIME_NONE;
+  prev_duration = GST_CLOCK_TIME_NONE;
+
   for (i = 0; i < 100; ++i) {
     GstBuffer *buf;
 
