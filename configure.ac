@@ -83,6 +83,7 @@ GST_PLUGINS_ALL="\
 	mpegaudioparse \
         mpegstream \
 	realmedia \
+	synaesthesia \
 	"
 
 AC_SUBST(GST_PLUGINS_ALL)
@@ -101,6 +102,9 @@ AC_ARG_WITH(plugins,
         fi
     done],
     [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
+
+dnl disable synaesthesia plugin
+GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/synaesthesia//`
 
 AC_SUBST(GST_PLUGINS_SELECTED)
 
