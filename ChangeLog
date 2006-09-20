@@ -1,5 +1,10 @@
 2006-09-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/Makefile.am:
+	And makefile too.
+
+2006-09-20  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtp.c: (plugin_init):
 	* gst/rtp/gstrtpasfdepay.c: (gst_rtp_asf_depay_base_init),
 	(gst_rtp_asf_depay_class_init), (gst_rtp_asf_depay_init),
