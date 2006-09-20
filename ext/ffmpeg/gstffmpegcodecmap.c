@@ -462,6 +462,18 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, "video/x-vp3", NULL);
       break;
 
+    case CODEC_ID_VP5:
+      caps = gst_ff_vid_caps_new (context, "video/x-vp5", NULL);
+      break;
+
+    case CODEC_ID_VP6:
+      caps = gst_ff_vid_caps_new (context, "video/x-vp6", NULL);
+      break;
+
+    case CODEC_ID_VP6F:
+      caps = gst_ff_vid_caps_new (context, "video/x-vp6-flash", NULL);
+      break;
+
     case CODEC_ID_THEORA:
       caps = gst_ff_vid_caps_new (context, "video/x-theora", NULL);
       break;
@@ -625,6 +637,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ZMBV:
     case CODEC_ID_AVS:
     case CODEC_ID_TRUESPEECH:
+    case CODEC_ID_CAVS:
       buildcaps = TRUE;
       break;
 
@@ -1917,6 +1930,15 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "video/x-vp3")) {
     id = CODEC_ID_VP3;
     video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-vp5")) {
+    id = CODEC_ID_VP5;
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-vp6")) {
+    id = CODEC_ID_VP6;
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-vp6-flash")) {
+    id = CODEC_ID_VP6F;
+    video = TRUE;
   } else if (!strcmp (mimetype, "video/x-indeo")) {
     gint indeoversion = 0;
 
@@ -2307,6 +2329,15 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_VP3:
       name = "VP3 video";
       break;
+    case CODEC_ID_VP5:
+      name = "VP5 video";
+      break;
+    case CODEC_ID_VP6:
+      name = "VP6 video";
+      break;
+    case CODEC_ID_VP6F:
+      name = "VP6 Flash video";
+      break;
     case CODEC_ID_THEORA:
       name = "Theora video";
       break;
@@ -2574,6 +2605,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_AVS:
       name = "AVS Video";
+      break;
+    case CODEC_ID_CAVS:
+      name = "Chinese AVS Video";
       break;
     case CODEC_ID_TTA:
       name = "Lossless True Audio";
