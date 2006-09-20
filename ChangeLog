@@ -196,7 +196,6 @@
 	Make queue_threshold variable big enough to store a uint64 time value.
 	API: playbin::queue-min-threshold property.
 
->>>>>>> 1.2883
 2006-09-15  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
