@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -16,11 +16,37 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/*
+ * Unless otherwise indicated, Source Code is licensed under MIT license.
+ * See further explanation attached in License Statement (distributed in the file
+ * LICENSE).
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "sdpmessage.h"
+
+/* FIXME, is currently allocated on the stack */
+#define MAX_LINE_LEN	1024 * 16
 
 #define FREE_STRING(field)      g_free ((field)); (field) = NULL;
 #define FREE_ARRAY(field)       \
@@ -54,15 +80,15 @@ char* sdp_message_get_##field (SDPMessage *msg) {                       \
 gint sdp_message_##field##_len (SDPMessage *msg) {                      \
   return ((msg)->field->len);                                           \
 }
-#define DEFINE_ARRAY_GETTER(method,field,type)                                  \
-type sdp_message_get_##method (SDPMessage *msg, gint i) {               \
-  return g_array_index ((msg)->field, type, i);                         \
+#define DEFINE_ARRAY_GETTER(method,field,type)                          \
+type sdp_message_get_##method (SDPMessage *msg, guint idx) {            \
+  return g_array_index ((msg)->field, type, idx);                       \
 }
-#define DEFINE_ARRAY_P_GETTER(method,field,type)                                        \
-type * sdp_message_get_##method (SDPMessage *msg, gint i) {             \
-  return &g_array_index ((msg)->field, type, i);                                \
+#define DEFINE_ARRAY_P_GETTER(method,field,type)                        \
+type * sdp_message_get_##method (SDPMessage *msg, guint idx) {          \
+  return &g_array_index ((msg)->field, type, idx);                      \
 }
-#define DEFINE_ARRAY_ADDER(method,field,type,dup_method)                        \
+#define DEFINE_ARRAY_ADDER(method,field,type,dup_method)                \
 RTSPResult sdp_message_add_##method (SDPMessage *msg, type val) {       \
   type v = dup_method(val);                                             \
   g_array_append_val((msg)->field, v);                                  \
@@ -294,7 +320,7 @@ sdp_message_get_key (SDPMessage * msg)
 DEFINE_ARRAY_LEN (attributes);
 DEFINE_ARRAY_P_GETTER (attribute, attributes, SDPAttribute);
 gchar *
-sdp_message_get_attribute_val (SDPMessage * msg, gchar * key)
+sdp_message_get_attribute_val_n (SDPMessage * msg, gchar * key, guint nth)
 {
   gint i;
 
@@ -302,10 +328,20 @@ sdp_message_get_attribute_val (SDPMessage * msg, gchar * key)
     SDPAttribute *attr;
 
     attr = &g_array_index (msg->attributes, SDPAttribute, i);
-    if (!strcmp (attr->key, key))
-      return attr->value;
+    if (!strcmp (attr->key, key)) {
+      if (nth == 0)
+        return attr->value;
+      else
+        nth--;
+    }
   }
   return NULL;
+}
+
+gchar *
+sdp_message_get_attribute_val (SDPMessage * msg, gchar * key)
+{
+  return sdp_message_get_attribute_val_n (msg, key, 0);
 }
 
 RTSPResult
@@ -378,8 +414,14 @@ sdp_media_add_format (SDPMedia * media, gchar * format)
   return RTSP_OK;
 }
 
+SDPAttribute *
+sdp_media_get_attribute (SDPMedia * media, guint idx)
+{
+  return &g_array_index (media->attributes, SDPAttribute, idx);
+}
+
 gchar *
-sdp_media_get_attribute_val (SDPMedia * media, gchar * key)
+sdp_media_get_attribute_val_n (SDPMedia * media, gchar * key, guint nth)
 {
   gint i;
 
@@ -387,18 +429,28 @@ sdp_media_get_attribute_val (SDPMedia * media, gchar * key)
     SDPAttribute *attr;
 
     attr = &g_array_index (media->attributes, SDPAttribute, i);
-    if (!strcmp (attr->key, key))
-      return attr->value;
+    if (!strcmp (attr->key, key)) {
+      if (nth == 0)
+        return attr->value;
+      else
+        nth--;
+    }
   }
   return NULL;
 }
 
 gchar *
-sdp_media_get_format (SDPMedia * media, gint i)
+sdp_media_get_attribute_val (SDPMedia * media, gchar * key)
 {
-  if (i >= media->fmts->len)
+  return sdp_media_get_attribute_val_n (media, key, 0);
+}
+
+gchar *
+sdp_media_get_format (SDPMedia * media, guint idx)
+{
+  if (idx >= media->fmts->len)
     return NULL;
-  return g_array_index (media->fmts, gchar *, i);
+  return g_array_index (media->fmts, gchar *, idx);
 }
 
 static void
@@ -455,7 +507,7 @@ typedef struct
 static gboolean
 sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
 {
-  gchar str[4096];
+  gchar str[8192];
   gchar *p = buffer;
 
 #define READ_STRING(field) read_string (str, sizeof(str), &p);REPLACE_STRING (field, str);
@@ -503,7 +555,7 @@ sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
       break;
     case 'b':
     {
-      gchar str2[4096];
+      gchar str2[MAX_LINE_LEN];
 
       read_string_del (str, sizeof (str), ':', &p);
       read_string (str2, sizeof (str2), &p);
@@ -520,7 +572,7 @@ sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
       break;
     case 'a':
       read_string_del (str, sizeof (str), ':', &p);
-      if (p != '\0')
+      if (*p != '\0')
         p++;
       if (c->state == SDP_SESSION)
         sdp_message_add_attribute (c->msg, str, p);
@@ -569,7 +621,7 @@ sdp_message_parse_buffer (guint8 * data, guint size, SDPMessage * msg)
   gchar *p;
   SDPContext c;
   gchar type;
-  gchar buffer[4096];
+  gchar buffer[MAX_LINE_LEN];
   gint idx = 0;
 
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);

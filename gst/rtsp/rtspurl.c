@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -16,6 +16,30 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/*
+ * Unless otherwise indicated, Source Code is licensed under MIT license.
+ * See further explanation attached in License Statement (distributed in the file
+ * LICENSE).
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -78,7 +102,8 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
     if (slash)
       p = slash + 1;
   } else {
-    res->port = RTSP_DEFAULT_PORT;
+    /* no port specified, set to 0. _get_port() will return the default port. */
+    res->port = 0;
     if (!slash) {
       res->host = g_strdup (p);
       p = NULL;
@@ -87,6 +112,7 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
       p = slash + 1;
     }
   }
+  /* FIXME, this strips the slash from the absolute path */
   if (p)
     res->abspath = g_strdup (p);
 
@@ -113,4 +139,29 @@ rtsp_url_free (RTSPUrl * url)
   g_free (url->host);
   g_free (url->abspath);
   g_free (url);
+}
+
+RTSPResult
+rtsp_url_set_port (RTSPUrl * url, guint16 port)
+{
+  g_return_val_if_fail (url != NULL, RTSP_EINVAL);
+
+  url->port = port;
+
+  return RTSP_OK;
+}
+
+RTSPResult
+rtsp_url_get_port (RTSPUrl * url, guint16 * port)
+{
+  g_return_val_if_fail (url != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (port != NULL, RTSP_EINVAL);
+
+  /* if a port was specified, use that else use the default port. */
+  if (url->port != 0)
+    *port = url->port;
+  else
+    *port = RTSP_DEFAULT_PORT;
+
+  return RTSP_OK;
 }

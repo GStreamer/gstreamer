@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -16,12 +16,37 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/*
+ * Unless otherwise indicated, Source Code is licensed under MIT license.
+ * See further explanation attached in License Statement (distributed in the file
+ * LICENSE).
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 
 /* we include this here to get the G_OS_* defines */
 #include <glib.h>
@@ -35,8 +60,26 @@
 #include <arpa/inet.h>
 #endif
 
-
 #include "rtspconnection.h"
+
+/* the select call is also performed on the control sockets, that way
+ * we can send special commands to unlock or restart the select call */
+#define CONTROL_RESTART        'R'      /* restart the select call */
+#define CONTROL_STOP           'S'      /* stop the select call */
+#define CONTROL_SOCKETS(conn)  conn->control_sock
+#define WRITE_SOCKET(conn)     conn->control_sock[1]
+#define READ_SOCKET(conn)      conn->control_sock[0]
+
+#define SEND_COMMAND(conn, command)              \
+G_STMT_START {                                  \
+  unsigned char c; c = command;                 \
+  write (WRITE_SOCKET(conn), &c, 1);             \
+} G_STMT_END
+
+#define READ_COMMAND(conn, command, res)         \
+G_STMT_START {                                  \
+  res = read(READ_SOCKET(conn), &command, 1);    \
+} G_STMT_END
 
 #ifdef G_OS_WIN32
 #define CLOSE_SOCKET(sock) closesocket(sock);
@@ -61,7 +104,52 @@ inet_aton (const char *c, struct in_addr *paddr)
 #endif
 
 RTSPResult
-rtsp_connection_open (RTSPUrl * url, RTSPConnection ** conn)
+rtsp_connection_create (RTSPUrl * url, RTSPConnection ** conn)
+{
+  gint ret;
+  RTSPConnection *newconn;
+
+  g_return_val_if_fail (url != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
+
+  if (url->protocol != RTSP_PROTO_TCP)
+    return RTSP_ENOTIMPL;
+
+  newconn = g_new (RTSPConnection, 1);
+
+#ifdef G_OS_WIN32
+  /* This should work on UNIX too. PF_UNIX sockets replaced with pipe */
+  /* pipe( CONTROL_SOCKETS(newconn) ) */
+  if ((ret = pipe (CONTROL_SOCKETS (newconn))) < 0)
+    goto no_socket_pair;
+#else
+  if ((ret =
+          socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (newconn))) < 0)
+    goto no_socket_pair;
+
+  fcntl (READ_SOCKET (newconn), F_SETFL, O_NONBLOCK);
+  fcntl (WRITE_SOCKET (newconn), F_SETFL, O_NONBLOCK);
+#endif
+
+  newconn->url = url;
+  newconn->cseq = 0;
+  newconn->session_id[0] = 0;
+  newconn->state = RTSP_STATE_INIT;
+
+  *conn = newconn;
+
+  return RTSP_OK;
+
+  /* ERRORS */
+no_socket_pair:
+  {
+    g_free (newconn);
+    return RTSP_ESYS;
+  }
+}
+
+RTSPResult
+rtsp_connection_connect (RTSPConnection * conn)
 {
   gint fd;
   struct sockaddr_in sin;
@@ -70,12 +158,12 @@ rtsp_connection_open (RTSPUrl * url, RTSPConnection ** conn)
   gchar *ip;
   struct in_addr addr;
   gint ret;
+  guint16 port;
+  RTSPUrl *url;
 
-  g_return_val_if_fail (url != NULL, RTSP_EINVAL);
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
 
-  if (url->protocol != RTSP_PROTO_TCP)
-    return RTSP_ENOTIMPL;
+  url = conn->url;
 
   /* first check if it already is an IP address */
   if (inet_aton (url->host, &addr)) {
@@ -92,20 +180,25 @@ rtsp_connection_open (RTSPUrl * url, RTSPConnection ** conn)
     ip = inet_ntoa (*(struct in_addr *) *addrs);
   }
 
-  fd = socket (AF_INET, SOCK_STREAM, 0);
-  if (fd == -1)
-    goto sys_error;
+  /* get the port from the url */
+  rtsp_url_get_port (url, &port);
 
   memset (&sin, 0, sizeof (sin));
   sin.sin_family = AF_INET;     /* network socket */
-  sin.sin_port = htons (url->port);     /* on port */
+  sin.sin_port = htons (port);  /* on port */
   sin.sin_addr.s_addr = inet_addr (ip); /* on host ip */
+
+  fd = socket (AF_INET, SOCK_STREAM, 0);
+  if (fd == -1)
+    goto sys_error;
 
   ret = connect (fd, (struct sockaddr *) &sin, sizeof (sin));
   if (ret != 0)
     goto sys_error;
 
-  return rtsp_connection_create (fd, conn);
+  conn->fd = fd;
+
+  return RTSP_OK;
 
 sys_error:
   {
@@ -121,27 +214,6 @@ not_ip:
     g_warning ("host \"%s\" is not IP\n", url->host);
     return RTSP_ESYS;
   }
-}
-
-RTSPResult
-rtsp_connection_create (gint fd, RTSPConnection ** conn)
-{
-  RTSPConnection *newconn;
-
-  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
-
-  /* FIXME check fd, must be connected SOCK_STREAM */
-
-  newconn = g_new (RTSPConnection, 1);
-
-  newconn->fd = fd;
-  newconn->cseq = 0;
-  newconn->session_id[0] = 0;
-  newconn->state = RTSP_STATE_INIT;
-
-  *conn = newconn;
-
-  return RTSP_OK;
 }
 
 static void
@@ -408,11 +480,99 @@ parse_line (gchar * buffer, RTSPMessage * msg)
   return RTSP_OK;
 }
 
-static RTSPResult
-read_body (gint fd, glong content_length, RTSPMessage * msg)
+RTSPResult
+rtsp_connection_read (RTSPConnection * conn, gpointer data, guint size)
 {
-  gchar *body, *bodyptr;
-  gint to_read, r;
+  fd_set readfds;
+  guint toread;
+  gint retval;
+  gint avail;
+
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (data != NULL, RTSP_EINVAL);
+
+  if (size == 0)
+    return RTSP_OK;
+
+  toread = size;
+
+  /* if the call fails, just go in the select.. it should not fail. Else if
+   * there is enough data to read, skip the select call al together.*/
+  if (ioctl (conn->fd, FIONREAD, &avail) < 0)
+    avail = 0;
+  else if (avail >= toread)
+    goto do_read;
+
+  FD_ZERO (&readfds);
+  FD_SET (conn->fd, &readfds);
+  FD_SET (READ_SOCKET (conn), &readfds);
+
+  while (toread > 0) {
+    gint bytes;
+
+    do {
+      retval = select (FD_SETSIZE, &readfds, NULL, NULL, NULL);
+    } while ((retval == -1 && errno == EINTR));
+
+    if (retval == -1)
+      goto select_error;
+
+    if (FD_ISSET (READ_SOCKET (conn), &readfds)) {
+      /* read all stop commands */
+      while (TRUE) {
+        gchar command;
+        int res;
+
+        READ_COMMAND (conn, command, res);
+        if (res < 0) {
+          /* no more commands */
+          break;
+        }
+      }
+      goto stopped;
+    }
+
+  do_read:
+    /* if we get here there is activity on the real fd since the select
+     * completed and the control socket was not readable. */
+    bytes = read (conn->fd, data, toread);
+
+    if (bytes == 0) {
+      goto eof;
+    } else if (bytes < 0) {
+      if (errno != EAGAIN && errno != EINTR)
+        goto read_error;
+    } else {
+      toread -= bytes;
+      data += bytes;
+    }
+  }
+  return RTSP_OK;
+
+  /* ERRORS */
+select_error:
+  {
+    return RTSP_ESYS;
+  }
+stopped:
+  {
+    return RTSP_EINTR;
+  }
+eof:
+  {
+    return RTSP_EEOF;
+  }
+read_error:
+  {
+    return RTSP_ESYS;
+  }
+}
+
+static RTSPResult
+read_body (RTSPConnection * conn, glong content_length, RTSPMessage * msg)
+{
+  gchar *body;
+  RTSPResult res;
 
   if (content_length <= 0) {
     body = NULL;
@@ -422,29 +582,19 @@ read_body (gint fd, glong content_length, RTSPMessage * msg)
 
   body = g_malloc (content_length + 1);
   body[content_length] = '\0';
-  bodyptr = body;
-  to_read = content_length;
-  while (to_read > 0) {
-    r = read (fd, bodyptr, to_read);
-    if (r < 0) {
-      if (errno != EAGAIN && errno != EINTR)
-        goto read_error;
-    } else {
-      to_read -= r;
-      bodyptr += r;
-    }
-  }
-  content_length += 1;
+
+  RTSP_CHECK (rtsp_connection_read (conn, body, content_length), read_error);
 
 done:
-  rtsp_message_set_body (msg, (guint8 *) body, content_length);
+  rtsp_message_take_body (msg, (guint8 *) body, content_length + 1);
 
   return RTSP_OK;
 
+  /* ERRORS */
 read_error:
   {
     g_free (body);
-    return RTSP_ESYS;
+    return res;
   }
 }
 
@@ -469,14 +619,9 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
   /* parse first line and headers */
   while (res == RTSP_OK) {
     gchar c;
-    gint ret;
 
     /* read first character, this identifies data messages */
-    ret = read (conn->fd, &c, 1);
-    if (ret < 0)
-      goto read_error;
-    if (ret < 1)
-      break;
+    RTSP_CHECK (rtsp_connection_read (conn, &c, 1), read_error);
 
     /* check for data packet, first character is $ */
     if (c == '$') {
@@ -485,26 +630,18 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
       /* data packets are $<1 byte channel><2 bytes length,BE><data bytes> */
 
       /* read channel, which is the next char */
-      ret = read (conn->fd, &c, 1);
-      if (ret < 0)
-        goto read_error;
-      if (ret < 1)
-        goto error;
+      RTSP_CHECK (rtsp_connection_read (conn, &c, 1), read_error);
 
       /* now we create a data message */
       rtsp_message_init_data (msg, (gint) c);
 
       /* next two bytes are the length of the data */
-      ret = read (conn->fd, &size, 2);
-      if (ret < 0)
-        goto read_error;
-      if (ret < 2)
-        goto error;
+      RTSP_CHECK (rtsp_connection_read (conn, &size, 2), read_error);
 
       size = GUINT16_FROM_BE (size);
 
       /* and read the body */
-      res = read_body (conn->fd, size, msg);
+      res = read_body (conn, size, msg);
       need_body = FALSE;
       break;
     } else {
@@ -520,9 +657,8 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
         break;
 
       /* read lines */
-      res = read_line (conn->fd, buffer + offset, sizeof (buffer) - offset);
-      if (res != RTSP_OK)
-        goto read_error;
+      RTSP_CHECK (read_line (conn->fd, buffer + offset,
+              sizeof (buffer) - offset), read_error);
 
       if (buffer[0] == '\0')
         break;
@@ -549,7 +685,7 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
             &hdrval) == RTSP_OK) {
       /* there is, read the body */
       content_length = atol (hdrval);
-      res = read_body (conn->fd, content_length, msg);
+      RTSP_CHECK (read_body (conn, content_length, msg), read_error);
     }
 
     /* save session id in the connection for further use */
@@ -577,13 +713,9 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
   }
   return res;
 
-error:
-  {
-    return RTSP_EPARSE;
-  }
 read_error:
   {
-    return RTSP_ESYS;
+    return res;
   }
 }
 

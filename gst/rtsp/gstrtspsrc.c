@@ -1,5 +1,6 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005,2006> Wim Taymans <wim at fluendo dot com>
+ *               <2006> Lutz Mueller <lutz at topfrose dot de>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -15,6 +16,29 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ */
+/*
+ * Unless otherwise indicated, Source Code is licensed under MIT license.
+ * See further explanation attached in License Statement (distributed in the file
+ * LICENSE).
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 /**
  * SECTION:element-rtspsrc
@@ -307,11 +331,17 @@ find_stream_by_pt (GstRTSPStream * stream, gconstpointer a)
 }
 
 static GstRTSPStream *
-gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMedia * media)
+gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
 {
   GstRTSPStream *stream;
   gchar *control_url;
   gchar *payload;
+  SDPMedia *media;
+
+  /* get media, should not return NULL */
+  media = sdp_message_get_media (sdp, idx);
+  if (media == NULL)
+    return NULL;
 
   stream = g_new0 (GstRTSPStream, 1);
   stream->parent = src;
@@ -891,6 +921,7 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
   guint size;
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps = NULL;
+  GstBuffer *buf;
 
   do {
     GST_DEBUG_OBJECT (src, "doing receive");
@@ -922,7 +953,7 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
 
   /* channels are not correct on some servers, do extra check */
   if (data[1] >= 200 && data[1] <= 204) {
-    /* hmm RTCP message */
+    /* hmm RTCP message switch to the RTCP pad of the same stream. */
     outpad = stream->rtpdecrtcp;
   }
 
@@ -931,45 +962,58 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
     goto unknown_stream;
 
   /* and chain buffer to internal element */
-  {
-    GstBuffer *buf;
+  rtsp_message_steal_body (&response, &data, &size);
 
-    rtsp_message_steal_body (&response, &data, &size);
+  /* strip the trailing \0 */
+  size -= 1;
 
-    /* strip the trailing \0 */
-    size -= 1;
+  buf = gst_buffer_new ();
+  GST_BUFFER_DATA (buf) = data;
+  GST_BUFFER_MALLOCDATA (buf) = data;
+  GST_BUFFER_SIZE (buf) = size;
 
-    buf = gst_buffer_new_and_alloc (size);
-    GST_BUFFER_DATA (buf) = data;
-    GST_BUFFER_MALLOCDATA (buf) = data;
-    GST_BUFFER_SIZE (buf) = size;
+  /* don't need message anymore */
+  rtsp_message_unset (&response);
 
-    if (caps)
-      gst_buffer_set_caps (buf, caps);
+  if (caps)
+    gst_buffer_set_caps (buf, caps);
 
-    GST_DEBUG_OBJECT (src, "pushing data of size %d on channel %d", size,
-        channel);
+  GST_DEBUG_OBJECT (src, "pushing data of size %d on channel %d", size,
+      channel);
 
-    /* chain to the peer pad */
-    ret = gst_pad_chain (outpad, buf);
+  /* chain to the peer pad */
+  ret = gst_pad_chain (outpad, buf);
 
-    /* combine all stream flows */
-    ret = gst_rtspsrc_combine_flows (src, stream, ret);
-    if (ret != GST_FLOW_OK)
-      goto need_pause;
-  }
+  /* combine all stream flows */
+  ret = gst_rtspsrc_combine_flows (src, stream, ret);
+  if (ret != GST_FLOW_OK)
+    goto need_pause;
+
   return;
 
   /* ERRORS */
 unknown_stream:
   {
     GST_DEBUG_OBJECT (src, "unknown stream on channel %d, ignored", channel);
+    rtsp_message_unset (&response);
     return;
   }
 receive_error:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ,
-        ("Could not receive message."), (NULL));
+    switch (res) {
+      case RTSP_ESYS:
+        GST_ELEMENT_ERROR (src, RESOURCE, READ,
+            ("Could not receive message. (%d: %s)", res, strerror (errno)),
+            GST_ERROR_SYSTEM);
+        break;
+      default:
+        GST_ELEMENT_ERROR (src, RESOURCE, READ,
+            ("Could not receive message. (%d)", res), (NULL));
+        break;
+    }
+    if (src->debug)
+      rtsp_message_dump (&response);
+    rtsp_message_unset (&response);
     ret = GST_FLOW_UNEXPECTED;
     goto need_pause;
   }
@@ -977,6 +1021,7 @@ invalid_length:
   {
     GST_ELEMENT_WARNING (src, RESOURCE, READ,
         ("Short message received."), (NULL));
+    rtsp_message_unset (&response);
     return;
   }
 need_pause:
@@ -1175,10 +1220,15 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   if (G_UNLIKELY (src->url == NULL))
     goto no_url;
 
-  /* open connection */
-  GST_DEBUG_OBJECT (src, "opening connection (%s)...", src->location);
-  if ((res = rtsp_connection_open (src->url, &src->connection)) < 0)
-    goto could_not_open;
+  /* create connection */
+  GST_DEBUG_OBJECT (src, "creating connection (%s)...", src->location);
+  if ((res = rtsp_connection_create (src->url, &src->connection)) < 0)
+    goto could_not_create;
+
+  /* connect */
+  GST_DEBUG_OBJECT (src, "connecting (%s)...", src->location);
+  if ((res = rtsp_connection_connect (src->connection)) < 0)
+    goto could_not_connect;
 
   /* create OPTIONS */
   GST_DEBUG_OBJECT (src, "create options...");
@@ -1232,6 +1282,30 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   if (src->debug)
     sdp_message_dump (&sdp);
 
+  /* prepare global stream caps properties */
+  if (src->props)
+    gst_structure_remove_all_fields (src->props);
+  else
+    src->props = gst_structure_empty_new ("RTSP Properties");
+
+  /* FIXME, WMServer specific, move to extensions */
+#define HEADER_PREFIX "data:application/vnd.ms.wms-hdr.asfv1;base64,"
+  {
+    gchar *config, *maxps;
+
+    for (i = 0; (config = sdp_message_get_attribute_val_n (&sdp, "pgmpu", i));
+        i++) {
+      if (g_str_has_prefix (config, HEADER_PREFIX)) {
+        config += strlen (HEADER_PREFIX);
+        gst_structure_set (src->props, "config", G_TYPE_STRING, config, NULL);
+        break;
+      }
+    }
+    maxps = sdp_message_get_attribute_val (&sdp, "maxps");
+    if (maxps)
+      gst_structure_set (src->props, "maxps", G_TYPE_STRING, maxps, NULL);
+  }
+
   /* we initially allow all configured protocols. based on the replies from the
    * server we narrow them down. */
   protocols = src->protocols;
@@ -1239,13 +1313,28 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   /* setup streams */
   n_streams = sdp_message_medias_len (&sdp);
   for (i = 0; i < n_streams; i++) {
-    SDPMedia *media;
     gchar *transports;
 
-    media = sdp_message_get_media (&sdp, i);
+    /* create stream from the media, can never return NULL */
+    stream = gst_rtspsrc_create_stream (src, &sdp, i);
 
-    /* create stream from the media */
-    stream = gst_rtspsrc_create_stream (src, media);
+    /* merge global caps */
+    if (stream->caps) {
+      guint j, num;
+      GstStructure *s;
+
+      s = gst_caps_get_structure (stream->caps, 0);
+
+      num = gst_structure_n_fields (src->props);
+      for (j = 0; j < num; j++) {
+        const gchar *name;
+        const GValue *val;
+
+        name = gst_structure_nth_field_name (src->props, j);
+        val = gst_structure_get_value (src->props, name);
+        gst_structure_set_value (s, name, val);
+      }
+    }
 
     /* skip setup if we have no URL for it */
     if (stream->setup_url == NULL)
@@ -1358,6 +1447,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
       rtsp_transport_init (&transport);
     }
   }
+
   /* if we got here all was configured. We have dynamic pads so we notify that
    * we are done */
   gst_element_no_more_pads (GST_ELEMENT_CAST (src));
@@ -1375,10 +1465,16 @@ no_url:
         ("No valid RTSP url was provided"), (NULL));
     goto cleanup_error;
   }
-could_not_open:
+could_not_create:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE,
-        ("Could not open connection."), (NULL));
+        ("Could not create connection."), (NULL));
+    goto cleanup_error;
+  }
+could_not_connect:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE,
+        ("Could not connect to server."), (NULL));
     goto cleanup_error;
   }
 create_request_failed:

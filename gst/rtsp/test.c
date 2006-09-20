@@ -47,9 +47,17 @@ main (int argc, gchar * argv[])
   g_print ("  url port: %d\n", url->port);
   g_print ("  url path: %s\n", url->abspath);
 
+  /* create and open connection */
+  g_print ("creating connection...\n");
+  res = rtsp_connection_create (url, &conn);
+  if (res != RTSP_OK) {
+    g_print ("error creating connection to \"%s\"\n", urlstr);
+    return (-1);
+  }
+
   /* open connection */
   g_print ("opening connection...\n");
-  res = rtsp_connection_open (url, &conn);
+  res = rtsp_connection_connect (conn);
   if (res != RTSP_OK) {
     g_print ("error opening connection to \"%s\"\n", urlstr);
     return (-1);

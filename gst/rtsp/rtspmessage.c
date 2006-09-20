@@ -1,5 +1,6 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
+ *               <2006> Lutz Mueller <lutz at topfrose dot de>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -15,6 +16,29 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ */
+/*
+ * Unless otherwise indicated, Source Code is licensed under MIT license.
+ * See further explanation attached in License Statement (distributed in the file
+ * LICENSE).
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 #include "rtspmessage.h"
@@ -282,36 +306,40 @@ rtsp_message_dump (RTSPMessage * msg)
 
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
-  if (msg->type == RTSP_MESSAGE_REQUEST) {
-    g_print ("request message %p\n", msg);
-    g_print (" request line:\n");
-    g_print ("   method: '%s'\n",
-        rtsp_method_as_text (msg->type_data.request.method));
-    g_print ("   uri:    '%s'\n", msg->type_data.request.uri);
-    g_print (" headers:\n");
-    g_hash_table_foreach (msg->hdr_fields, dump_key_value, NULL);
-    g_print (" body:\n");
-    rtsp_message_get_body (msg, &data, &size);
-    dump_mem (data, size);
-  } else if (msg->type == RTSP_MESSAGE_RESPONSE) {
-    g_print ("response message %p\n", msg);
-    g_print (" status line:\n");
-    g_print ("   code:   '%d'\n", msg->type_data.response.code);
-    g_print ("   reason: '%s'\n", msg->type_data.response.reason);
-    g_print (" headers:\n");
-    g_hash_table_foreach (msg->hdr_fields, dump_key_value, NULL);
-    rtsp_message_get_body (msg, &data, &size);
-    g_print (" body: length %d\n", size);
-    dump_mem (data, size);
-  } else if (msg->type == RTSP_MESSAGE_DATA) {
-    g_print ("data message %p\n", msg);
-    g_print (" channel: '%d'\n", msg->type_data.data.channel);
-    g_print (" size:    '%d'\n", msg->body_size);
-    rtsp_message_get_body (msg, &data, &size);
-    dump_mem (data, size);
-  } else {
-    g_print ("unsupported packet type %d\n", msg->type);
-    return RTSP_EINVAL;
+  switch (msg->type) {
+    case RTSP_MESSAGE_REQUEST:
+      g_print ("request message %p\n", msg);
+      g_print (" request line:\n");
+      g_print ("   method: '%s'\n",
+          rtsp_method_as_text (msg->type_data.request.method));
+      g_print ("   uri:    '%s'\n", msg->type_data.request.uri);
+      g_print (" headers:\n");
+      g_hash_table_foreach (msg->hdr_fields, dump_key_value, NULL);
+      g_print (" body:\n");
+      rtsp_message_get_body (msg, &data, &size);
+      dump_mem (data, size);
+      break;
+    case RTSP_MESSAGE_RESPONSE:
+      g_print ("response message %p\n", msg);
+      g_print (" status line:\n");
+      g_print ("   code:   '%d'\n", msg->type_data.response.code);
+      g_print ("   reason: '%s'\n", msg->type_data.response.reason);
+      g_print (" headers:\n");
+      g_hash_table_foreach (msg->hdr_fields, dump_key_value, NULL);
+      rtsp_message_get_body (msg, &data, &size);
+      g_print (" body: length %d\n", size);
+      dump_mem (data, size);
+      break;
+    case RTSP_MESSAGE_DATA:
+      g_print ("data message %p\n", msg);
+      g_print (" channel: '%d'\n", msg->type_data.data.channel);
+      g_print (" size:    '%d'\n", msg->body_size);
+      rtsp_message_get_body (msg, &data, &size);
+      dump_mem (data, size);
+      break;
+    default:
+      g_print ("unsupported message type %d\n", msg->type);
+      return RTSP_EINVAL;
   }
   return RTSP_OK;
 }
