@@ -246,7 +246,7 @@ gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
 #ifdef HAVE_XSHM
   if (xvimagesink->xcontext->use_xshm) {
     if (xvimage->SHMInfo.shmaddr != ((void *) -1)) {
-      GST_DEBUG_OBJECT (xvimagesink, "XServer ShmDetaching from 0x%x id 0x%x",
+      GST_DEBUG_OBJECT (xvimagesink, "XServer ShmDetaching from 0x%x id 0x%x\n",
           xvimage->SHMInfo.shmid, xvimage->SHMInfo.shmseg);
       XShmDetach (xvimagesink->xcontext->disp, &xvimage->SHMInfo);
       XSync (xvimagesink->xcontext->disp, FALSE);
@@ -463,7 +463,7 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   /* Sync to ensure we see any errors we caused */
   XSync (xcontext->disp, FALSE);
 
-  GST_DEBUG ("XServer ShmAttached to 0x%x, id 0x%x", SHMInfo.shmid,
+  GST_DEBUG ("XServer ShmAttached to 0x%x, id 0x%x\n", SHMInfo.shmid,
       SHMInfo.shmseg);
 
   if (!error_caught) {
@@ -480,7 +480,7 @@ beach:
   XSetErrorHandler (handler);
 
   if (did_attach) {
-    GST_DEBUG ("XServer ShmDetaching from 0x%x id 0x%x",
+    GST_DEBUG ("XServer ShmDetaching from 0x%x id 0x%x\n",
         SHMInfo.shmid, SHMInfo.shmseg);
     XShmDetach (xcontext->disp, &SHMInfo);
     XSync (xcontext->disp, FALSE);
@@ -589,7 +589,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     }
 
     XSync (xvimagesink->xcontext->disp, FALSE);
-    GST_DEBUG_OBJECT (xvimagesink, "XServer ShmAttached to 0x%x, id 0x%x",
+    GST_DEBUG_OBJECT (xvimagesink, "XServer ShmAttached to 0x%x, id 0x%x\n",
         xvimage->SHMInfo.shmid, xvimage->SHMInfo.shmseg);
   } else
 #endif /* HAVE_XSHM */
@@ -1115,13 +1115,21 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
   g_return_val_if_fail (xcontext != NULL, NULL);
 
   /* First let's check that XVideo extension is available */
-  if (!XQueryExtension (xcontext->disp, "XVideo", &i, &i, &i))
-    goto no_extension;
+  if (!XQueryExtension (xcontext->disp, "XVideo", &i, &i, &i)) {
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
+        ("Could not initialise Xv output"),
+        ("XVideo extension is not available"));
+    return NULL;
+  }
 
   /* Then we get adaptors list */
   if (Success != XvQueryAdaptors (xcontext->disp, xcontext->root,
-          &nb_adaptors, &adaptors))
-    goto no_adaptors;
+          &nb_adaptors, &adaptors)) {
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
+        ("Could not initialise Xv output"),
+        ("Failed getting XV adaptors list"));
+    return NULL;
+  }
 
   xcontext->xv_port_id = 0;
 
@@ -1143,11 +1151,15 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
     GST_DEBUG ("XV Adaptor %s with %ld ports", adaptors[i].name,
         adaptors[i].num_ports);
+
   }
   XvFreeAdaptorInfo (adaptors);
 
-  if (!xcontext->xv_port_id)
-    goto no_port;
+  if (!xcontext->xv_port_id) {
+    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, BUSY,
+        ("Could not initialise Xv output"), ("No port available"));
+    return NULL;
+  }
 
   /* Set XV_AUTOPAINT_COLORKEY and XV_DOUBLE_BUFFER and XV_COLORKEY */
   {
@@ -1179,25 +1191,14 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
     for (i = 0; i < count; i++)
       if (!strcmp (attr[i].name, colorkey)) {
         const Atom atom = XInternAtom (xcontext->disp, colorkey, False);
-        int ckey = 0;
+        int ckey;
 
-        /* set a colorkey in the right format RGB555/RGB565/RGB888 */
-        switch (xcontext->depth) {
-          case 15:
-            ckey = (1 << 10) | (2 << 5) | 3;
-            break;
-          case 16:
-            ckey = (1 << 11) | (2 << 5) | 3;
-            break;
-          case 24:
-          case 32:
-            ckey = (1 << 16) | (2 << 8) | 3;
-            break;
-          default:
-            GST_WARNING_OBJECT (xvimagesink, "unsupported color depth %d",
-                xcontext->depth);
-            break;
-        }
+        /* set a colorkey in the right format RGB565/RGB888
+         * note that the colorkey is independent from the display depth (xcontext->depth)
+         */
+        ckey =
+            attr[i].max_value <=
+            0xffff ? ((1 << 10) | (2 << 5) | 3) : ((1 << 16) | (2 << 8) | 3);
         ckey = CLAMP (ckey, attr[i].min_value, attr[i].max_value);
 
         GST_LOG_OBJECT (xvimagesink,
@@ -1322,40 +1323,15 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
   GST_DEBUG ("Generated the following caps: %" GST_PTR_FORMAT, caps);
 
-  if (gst_caps_is_empty (caps))
-    goto no_caps;
-
-  return caps;
-
-  /* ERRORS */
-no_extension:
-  {
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
-        ("Could not initialise Xv output"),
-        ("XVideo extension is not available"));
-    return NULL;
-  }
-no_adaptors:
-  {
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
-        ("Could not initialise Xv output"),
-        ("Failed getting XV adaptors list"));
-    return NULL;
-  }
-no_port:
-  {
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, BUSY,
-        ("Could not initialise Xv output"), ("No port available"));
-    return NULL;
-  }
-no_caps:
-  {
+  if (gst_caps_is_empty (caps)) {
     gst_caps_unref (caps);
     XvUngrabPort (xcontext->disp, xcontext->xv_port_id, 0);
     GST_ELEMENT_ERROR (xvimagesink, STREAM, WRONG_TYPE, (NULL),
         ("No supported format found"));
     return NULL;
   }
+
+  return caps;
 }
 
 static gpointer
@@ -2020,10 +1996,19 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
           GST_BUFFER_CAPS (buf));
 
       if (!xvimagesink->xvimage)
+        /* The create method should have posted an informative error */
         goto no_image;
 
-      if (xvimagesink->xvimage->size < GST_BUFFER_SIZE (buf))
-        goto wrong_size;
+      if (xvimagesink->xvimage->size < GST_BUFFER_SIZE (buf)) {
+        GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
+            ("Failed to create output image buffer of %dx%d pixels",
+                xvimagesink->xvimage->width, xvimagesink->xvimage->height),
+            ("XServer allocated buffer size did not match input buffer"));
+
+        gst_xvimage_buffer_destroy (xvimagesink->xvimage);
+        xvimagesink->xvimage = NULL;
+        goto no_image;
+      }
     }
 
     memcpy (xvimagesink->xvimage->xvimage->data,
@@ -2032,6 +2017,7 @@ gst_xvimagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
     gst_xvimagesink_xvimage_put (xvimagesink, xvimagesink->xvimage);
   }
+
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -2039,18 +2025,6 @@ no_image:
   {
     /* No image available. That's very bad ! */
     GST_WARNING_OBJECT (xvimagesink, "could not create image");
-    /* The create method should have posted an informative error */
-    return GST_FLOW_ERROR;
-  }
-wrong_size:
-  {
-    /* we have a buffer but the size was not what we expected */
-    GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
-        ("Failed to create output image buffer of %dx%d pixels",
-            xvimagesink->xvimage->width, xvimagesink->xvimage->height),
-        ("XServer allocated buffer size did not match input buffer"));
-    gst_xvimage_buffer_destroy (xvimagesink->xvimage);
-    xvimagesink->xvimage = NULL;
     return GST_FLOW_ERROR;
   }
 }

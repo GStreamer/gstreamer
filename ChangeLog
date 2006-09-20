@@ -1,3 +1,9 @@
+2006-09-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),
+	(gst_xvimagesink_get_times):
+	  change colorkey behaviour back according to #354773 comment 6/7
+
 2006-09-19  Michael Smith  <msmith@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_sync_method_get_type),
