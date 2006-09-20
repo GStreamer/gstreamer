@@ -1,8 +1,14 @@
+2006-09-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstcaps.h:
+	  Add extra initialisers for Caps things, to fix some plugin warnings
+	  when using -Wextra
+
 2006-09-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstghostpad.c: (gst_ghost_pad_new_full):
-	  Also set template on the internal pad so that a getcaps from the target
-	  pad returns the template caps.
+	  Also set template on the internal pad so that a getcaps from the 
+	  target pad returns the template caps.
 
 2006-09-18  Wim Taymans  <wim@fluendo.com>
 

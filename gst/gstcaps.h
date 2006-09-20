@@ -106,8 +106,9 @@ typedef enum {
  */
 #define GST_STATIC_CAPS(string) \
 { \
-  /* caps */ { 0 }, \
+  /* caps */ { 0, 0, (GstCapsFlags) 0, NULL, GST_PADDING_INIT }, \
   /* string */ string, \
+  GST_PADDING_INIT \
 }
 
 typedef struct _GstCaps GstCaps;
