@@ -1,3 +1,9 @@
+2006-09-20  Stefan Kost,,,  <ensonic@users.sf.net>
+
+	* configure.ac:
+	   Don't build synaesthesia by default, until someone confirms that it
+	   is okay (filed as #356882)
+
 2006-09-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
