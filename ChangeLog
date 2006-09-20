@@ -1,3 +1,10 @@
+2006-09-20  Philippe Kalaf  <philippe.kalaf at collabora.co.uk>
+
+  * gst/rtp/gstrtph263pdepay.c:
+	* gst/rtp/gstrtph263ppay.c:
+	Correctly calculate size of each H263+ RTP buffer taking into account MTU and
+	RTP header.
+
 2006-09-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/Makefile.am:

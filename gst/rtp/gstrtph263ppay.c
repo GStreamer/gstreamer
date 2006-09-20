@@ -163,6 +163,14 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
 
   fragmented = FALSE;
 
+  /* This algorithm assumes the H263+ encoder sends complete frames in each
+   * buffer */
+  /* This algorithm implements the Follow-on packets method for packetization.
+   * This assumes low packet loss network. A more resilient method would be to
+   * separate large frames at synchronisation points (Segments) (See RFC 2429
+   * section 6). It would be interesting to have a property such as network
+   * quality to select between both packetization methods */
+  /* TODO Add VRC supprt (See RFC 2429 section 4.2) */
   while (avail > 0) {
     guint towrite;
     guint8 *payload;
@@ -170,13 +178,13 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     guint payload_len;
     gint header_len;
 
-    /* FIXME, do better mtu packing, header len etc should be
-     * included in this calculation. */
-    towrite = MIN (avail, GST_BASE_RTP_PAYLOAD_MTU (rtph263ppay));
-    /* for fragmented frames we need 2 bytes header, for other
-     * frames we must reuse the first 2 bytes of the data as the
-     * header */
+    /* for picture start frames (non-fragmented), we need to remove the first
+     * two 0x00 bytes and set P=1 */
     header_len = (fragmented ? 2 : 0);
+
+    towrite = MIN (avail, gst_rtp_buffer_calc_payload_len
+        (GST_BASE_RTP_PAYLOAD_MTU (rtph263ppay) - header_len, 0, 0));
+
     payload_len = header_len + towrite;
 
     outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);

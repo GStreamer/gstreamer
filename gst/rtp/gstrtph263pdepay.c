@@ -205,6 +205,7 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       payload[header_len + 1] = 0;
     }
 
+    /* FIXME do not ignore the VRC header (See RFC 2429 section 4.2) */
     /* strip off header */
     payload += header_len;
     payload_len -= header_len;
