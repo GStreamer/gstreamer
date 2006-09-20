@@ -1,5 +1,20 @@
 2006-09-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpasfdepay.c: (gst_rtp_asf_depay_base_init),
+	(gst_rtp_asf_depay_class_init), (gst_rtp_asf_depay_init),
+	(decode_base64), (gst_rtp_asf_depay_setcaps),
+	(gst_rtp_asf_depay_process), (gst_rtp_asf_depay_set_property),
+	(gst_rtp_asf_depay_get_property), (gst_rtp_asf_depay_change_state),
+	(gst_rtp_asf_depay_plugin_init):
+	* gst/rtp/gstrtpasfdepay.h:
+	Added preliminary ASF depayloader.
+
+	* gst/rtp/gstrtph264depay.c: (decode_base64):
+	Fix base64 decoding.
+
+2006-09-20  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/URLS:
 	Added some test URLS.
 

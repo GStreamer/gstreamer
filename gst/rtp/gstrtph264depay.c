@@ -179,7 +179,7 @@ decode_base64 (gchar * in, guint8 * out)
   guint len = 0;
 
   v1 = a2bin[(gint) * in];
-  while (v1 < 63) {
+  while (v1 <= 63) {
     /* read 4 bytes, write 3 bytes, invalid base64 are zeroes */
     v2 = a2bin[(gint) * ++in];
     *out++ = (v1 << 2) | ((v2 & 0x3f) >> 4);
