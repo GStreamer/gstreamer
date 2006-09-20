@@ -1340,9 +1340,8 @@ gst_dvd_read_src_do_position_query (GstDvdReadSrc * src, GstQuery * query)
 }
 
 static gboolean
-gst_dvd_read_src_do_convert_query (GstBaseSrc * basesrc, GstQuery * query)
+gst_dvd_read_src_do_convert_query (GstDvdReadSrc * src, GstQuery * query)
 {
-  GstDvdReadSrc *src = GST_DVD_READ_SRC (basesrc);
   GstFormat src_format, dest_format;
   gboolean ret = FALSE;
   gint64 src_val, dest_val;
