@@ -550,7 +550,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_WMV3:
-    case CODEC_ID_VC9:
+    case CODEC_ID_VC1:
       caps = gst_ff_vid_caps_new (context, "video/x-wmv",
           "wmvversion", G_TYPE_INT, 3, NULL);
       break;
@@ -2253,7 +2253,7 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_WMV3:
       name = "Windows Media Video v9";
       break;
-    case CODEC_ID_VC9:
+    case CODEC_ID_VC1:
       name = "Microsoft Video Codec v1";
       break;
     case CODEC_ID_H263P:

@@ -1,3 +1,12 @@
+2006-09-20  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_get_codecid_longname):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	Seems like the ffmpeg folks finally understood that VC9 does not
+	exist, and that it's in fact VC1 (aka WMV9 or WMV3, but that's yet
+	another debate).
+
 2006-09-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/ffmpeg/gstffmpegdec.c:
