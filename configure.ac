@@ -83,7 +83,6 @@ GST_PLUGINS_ALL="\
 	mpegaudioparse \
         mpegstream \
 	realmedia \
-        synaesthesia \
 	"
 
 AC_SUBST(GST_PLUGINS_ALL)
