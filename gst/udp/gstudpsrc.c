@@ -485,7 +485,7 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       if (g_value_get_string (value) == NULL)
         udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
       else
-        udpsrc->multi_group = g_strdup (g_value_get_string (value));
+        udpsrc->multi_group = g_value_dup_string (value);
       gst_udpsrc_update_uri (udpsrc);
       break;
     case PROP_URI:

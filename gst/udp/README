@@ -1,25 +1,7 @@
 * What is UDP src/sink?
 
-This plugin is *not* meant to be a professional stream broadcast
-solution, like icecast or realaudio or whatever. But the future RTP plugins shall not do the actual transmission/reception of packets on the network themselve but the Application developer would be encouraged to use these plugins for that.
+It is a set of element to transfer data using UDP, nothing more, nothing less.
+Its main purpose is to be used in conjunction with RTP but they are kept as
+separate elements because we can.
 
-* Shortcomings
 
-Even given our modest ambitions, the current code doesn't handle
-caps negotiation robustly.
-
-* Todo
-
-The udp mode should include the caps every five packets
-(approx).  The tcp mode can do bi-directional negotiation.
-
-Perhaps this plugin can be the example of how to do caps negotiation
-via a point-to-point protocol.
-
-Add some example of udpsrc/udpsink .
-Update the man of gst-launch with some interesting pipelines .
-
-12 Sep 2001
-Wim Taymans <wim.taymans@chello.be>
-Joshua N Pritikin <vishnu@pobox.com>
-Zeeshan Ali <zak147@yahoo.com>

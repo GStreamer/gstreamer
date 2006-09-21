@@ -1,5 +1,11 @@
 2006-09-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/udp/README:
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_set_property):
+	Update README, simple cleanup.
+
+2006-09-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/README:
 	Update README with some examples.
 
