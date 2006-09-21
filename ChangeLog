@@ -1,5 +1,11 @@
 2006-09-21  Wim Taymans  <wim@fluendo.com>
 
+	* tests/check/elements/gdpdepay.c: (GST_START_TEST):
+	* tests/check/libs/audio.c:
+	Some more compilation fixes.
+
+2006-09-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/gstringbuffer.c:
 	(gst_ring_buffer_samples_done), (gst_ring_buffer_commit),
 	(gst_ring_buffer_read):

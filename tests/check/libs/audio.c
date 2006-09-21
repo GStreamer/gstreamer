@@ -36,6 +36,7 @@ structure_contains_channel_positions (const GstStructure * s)
   return (gst_structure_get_value (s, "channel-positions") != NULL);
 }
 
+#if 0
 static gboolean
 fixed_caps_have_channel_positions (const GstCaps * caps)
 {
@@ -48,6 +49,7 @@ fixed_caps_have_channel_positions (const GstCaps * caps)
 
   return structure_contains_channel_positions (s);
 }
+#endif
 
 GST_START_TEST (test_multichannel_checks)
 {
