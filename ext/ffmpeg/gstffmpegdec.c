@@ -2134,8 +2134,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       default:
         rank = GST_RANK_MARGINAL;
         break;
-      case CODEC_ID_WMV3:
-      case CODEC_ID_VC1:
         /* what's that? */
       case CODEC_ID_SP5X:
         /* MP3 and MPEG2 have better alternatives and
