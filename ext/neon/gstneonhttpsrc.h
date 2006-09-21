@@ -1,4 +1,3 @@
-/* vim: set sw=2: -*- Mode: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2; c-indent-level: 2 -*- */
 /* GStreamer
  * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
  *
@@ -59,7 +58,6 @@ struct _GstNeonhttpSrc {
 
   /* icecast/audiocast metadata extraction handling */
   gboolean iradio_mode;
-  gboolean lastfm_mode;
   gchar *iradio_name;
   gchar *iradio_genre;
   gchar *iradio_url;
@@ -82,3 +80,4 @@ GType gst_neonhttp_src_get_type (void);
 G_END_DECLS
 
 #endif /* __GST_NEONHTTP_SRC_H__ */
+

@@ -1,3 +1,12 @@
+2006-09-21  Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/neon/Makefile.am:
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/neon/gstneonhttpsrc.h:
+	Reverted previous commit (2006-09-19 - Allow internal codes from
+	last.fm). As dicussed on #gstreamer it should be done in separete
+	element.
+
 2006-09-21  Wim Taymans  <wim@fluendo.com>
 
 	* ext/faac/gstfaac.c: (gst_faac_configure_source_pad),
