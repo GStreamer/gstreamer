@@ -1,6 +1,19 @@
+2006-09-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/README:
+	Update README with some examples.
+
+	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_init),
+	(gst_rtp_mp4g_pay_finalize), (gst_rtp_mp4g_pay_parse_audio_config),
+	(gst_rtp_mp4g_pay_parse_video_config), (gst_rtp_mp4g_pay_new_caps),
+	(gst_rtp_mp4g_pay_setcaps):
+	* gst/rtp/gstrtpmp4gpay.h:
+	Make optional RTP parameters of type STRING, as required by the
+	application/x-rtp caps specification.
+
 2006-09-20  Philippe Kalaf  <philippe.kalaf at collabora.co.uk>
 
-  * gst/rtp/gstrtph263pdepay.c:
+	* gst/rtp/gstrtph263pdepay.c:
 	* gst/rtp/gstrtph263ppay.c:
 	Correctly calculate size of each H263+ RTP buffer taking into account MTU and
 	RTP header.

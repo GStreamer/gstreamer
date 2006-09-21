@@ -56,24 +56,25 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "clock-rate = (int) [1, MAX ], "
         "encoding-name = (string) \"mpeg4-generic\", "
         /* required string params */
-        "streamtype = (int) { \"4\", \"5\" }, " /* 4 = video, 5 = audio */
-        "profile-level-id = (int) [1,MAX], "
+        "streamtype = (string) { \"4\", \"5\" }, "      /* 4 = video, 5 = audio */
+        /* "profile-level-id = (string) [1,MAX], " */
         /* "config = (string) [1,MAX]" */
-        "mode = (string) { \"generic\", \"CELP-cbr\", \"CELP-vbr\", \"AAC-lbr\", \"AAC-hbr\" }, "
+        "mode = (string) { \"generic\", \"CELP-cbr\", \"CELP-vbr\", \"AAC-lbr\", \"AAC-hbr\" } "
         /* Optional general parameters */
-        "objecttype = (int) [1,MAX], " "constantsize = (int) [1,MAX], " /* constant size of each AU */
-        "constantduration = (int) [1,MAX], "    /* constant duration of each AU */
-        "maxdisplacement = (int) [1,MAX], "
-        "de-interleavebuffersize = (int) [1,MAX], "
+        /* "objecttype = (string) [1,MAX], " */
+        /* "constantsize = (string) [1,MAX], " *//* constant size of each AU */
+        /* "constantduration = (string) [1,MAX], " *//* constant duration of each AU */
+        /* "maxdisplacement = (string) [1,MAX], " */
+        /* "de-interleavebuffersize = (string) [1,MAX], " */
         /* Optional configuration parameters */
-        "sizelength = (int) [1, 16], "  /* max 16 bits, should be enough... */
-        "indexlength = (int) [1, 8], "
-        "indexdeltalength = (int) [1, 8], "
-        "ctsdeltalength = (int) [1, 64], "
-        "dtsdeltalength = (int) [1, 64], "
-        "randomaccessindication = (int) {0, 1}, "
-        "streamstateindication = (int) [0, 64], "
-        "auxiliarydatasizelength = (int) [0, 64]")
+        /* "sizelength = (string) [1, 16], " *//* max 16 bits, should be enough... */
+        /* "indexlength = (string) [1, 8], " */
+        /* "indexdeltalength = (string) [1, 8], " */
+        /* "ctsdeltalength = (string) [1, 64], " */
+        /* "dtsdeltalength = (string) [1, 64], " */
+        /* "randomaccessindication = (string) {0, 1}, " */
+        /* "streamstateindication = (string) [0, 64], " */
+        /* "auxiliarydatasizelength = (string) [0, 64]" */ )
     );
 
 enum
@@ -167,7 +168,7 @@ gst_rtp_mp4g_pay_init (GstRtpMP4GPay * rtpmp4gpay)
 {
   rtpmp4gpay->adapter = gst_adapter_new ();
   rtpmp4gpay->rate = 90000;
-  rtpmp4gpay->profile = 1;
+  rtpmp4gpay->profile = g_strdup ("1");
   rtpmp4gpay->mode = "";
 }
 
@@ -180,6 +181,8 @@ gst_rtp_mp4g_pay_finalize (GObject * object)
 
   g_object_unref (rtpmp4gpay->adapter);
   rtpmp4gpay->adapter = NULL;
+  g_free (rtpmp4gpay->params);
+  rtpmp4gpay->params = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -232,13 +235,15 @@ gst_rtp_mp4g_pay_parse_audio_config (GstRtpMP4GPay * rtpmp4gpay,
     rtpmp4gpay->rate = sampling_table[samplingIdx];
   }
   /* extra rtp params contain the number of channels */
-  rtpmp4gpay->params = channelCfg;
+  g_free (rtpmp4gpay->params);
+  rtpmp4gpay->params = g_strdup_printf ("%d", channelCfg);
   /* audio stream type */
-  rtpmp4gpay->streamtype = 5;
+  rtpmp4gpay->streamtype = "5";
   /* mode */
   rtpmp4gpay->mode = "AAC-hbr";
   /* profile (should be 1) */
-  rtpmp4gpay->profile = objectType - 1;
+  g_free (rtpmp4gpay->profile);
+  rtpmp4gpay->profile = g_strdup_printf ("%d", objectType - 1);
 
   GST_DEBUG_OBJECT (rtpmp4gpay,
       "objectType: %d, samplingIdx: %d (%d), channelCfg: %d", objectType,
@@ -290,25 +295,27 @@ gst_rtp_mp4g_pay_parse_video_config (GstRtpMP4GPay * rtpmp4gpay,
     goto too_short;
 
   code = GST_READ_UINT32_BE (data);
+
+  g_free (rtpmp4gpay->profile);
   if (code == VOS_STARTCODE) {
     /* get profile */
-    rtpmp4gpay->profile = data[4];
+    rtpmp4gpay->profile = g_strdup_printf ("%d", (gint) data[4]);
   } else {
     GST_ELEMENT_WARNING (rtpmp4gpay, STREAM, FORMAT,
-        (NULL), ("profile not found in config string"));
-    rtpmp4gpay->profile = 1;
+        (NULL), ("profile not found in config string, assuming \'1\'"));
+    rtpmp4gpay->profile = g_strdup ("1");
   }
 
   /* fixed rate */
   rtpmp4gpay->rate = 90000;
   /* video stream type */
-  rtpmp4gpay->streamtype = 4;
+  rtpmp4gpay->streamtype = "4";
   /* no params for video */
-  rtpmp4gpay->params = 0;
+  rtpmp4gpay->params = NULL;
   /* mode */
   rtpmp4gpay->mode = "generic";
 
-  GST_LOG_OBJECT (rtpmp4gpay, "profile %d", rtpmp4gpay->profile);
+  GST_LOG_OBJECT (rtpmp4gpay, "profile %s", rtpmp4gpay->profile);
 
   return TRUE;
 
@@ -327,14 +334,14 @@ gst_rtp_mp4g_pay_new_caps (GstRtpMP4GPay * rtpmp4gpay)
   gchar *config;
   GValue v = { 0 };
 
-#define MP4GCAPS					\
-  "streamtype", G_TYPE_INT, rtpmp4gpay->streamtype, 	\
-  "profile-level-id", G_TYPE_INT, rtpmp4gpay->profile,	\
-  "mode", G_TYPE_STRING, rtpmp4gpay->mode,		\
-  "config", G_TYPE_STRING, config,			\
-  "sizelength", G_TYPE_INT, 13,				\
-  "indexlength", G_TYPE_INT, 3,				\
-  "indexdeltalength", G_TYPE_INT, 3,			\
+#define MP4GCAPS						\
+  "streamtype", G_TYPE_STRING, rtpmp4gpay->streamtype, 		\
+  "profile-level-id", G_TYPE_STRING, rtpmp4gpay->profile,	\
+  "mode", G_TYPE_STRING, rtpmp4gpay->mode,			\
+  "config", G_TYPE_STRING, config,				\
+  "sizelength", G_TYPE_STRING, "13",				\
+  "indexlength", G_TYPE_STRING, "3",				\
+  "indexdeltalength", G_TYPE_STRING, "3",			\
   NULL
 
   g_value_init (&v, GST_TYPE_BUFFER);
@@ -344,7 +351,7 @@ gst_rtp_mp4g_pay_new_caps (GstRtpMP4GPay * rtpmp4gpay)
   /* hmm, silly */
   if (rtpmp4gpay->params) {
     gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
-        "encoding-params", G_TYPE_INT, rtpmp4gpay->params, MP4GCAPS);
+        "encoding-params", G_TYPE_STRING, rtpmp4gpay->params, MP4GCAPS);
   } else {
     gst_basertppayload_set_outcaps (GST_BASE_RTP_PAYLOAD (rtpmp4gpay),
         MP4GCAPS);
