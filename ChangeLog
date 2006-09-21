@@ -1,3 +1,18 @@
+2006-09-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/interfaces/videoorientation.c:
+	(gst_video_orientation_iface_init),
+	(gst_video_orientation_get_hflip),
+	(gst_video_orientation_get_vflip),
+	(gst_video_orientation_get_hcenter),
+	(gst_video_orientation_get_vcenter),
+	(gst_video_orientation_set_hflip),
+	(gst_video_orientation_set_vflip),
+	(gst_video_orientation_set_hcenter),
+	(gst_video_orientation_set_vcenter):
+	  Add since tags to new API docs, ChangeLog surgery (forgot API keyword
+	  in ChangeLog)
+
 2006-09-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:
@@ -46,6 +61,14 @@
 
 2006-09-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_destroy),
+	(gst_xvimagesink_check_xshm_calls), (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_get_xv_support), (gst_xvimagesink_show_frame):
+	  Handcrafted merge to help CVS understanding what I changed and what
+	  not.
+
+2006-09-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),
 	(gst_xvimagesink_get_times):
 	  change colorkey behaviour back according to #354773 comment 6/7
@@ -76,7 +99,7 @@
 	(gst_xvimagesink_get_xv_support), (gst_xvimagesink_show_frame):
 	Small cleanups, move error handling out of normal flow for clarity.
 
-2006-09-18  Stefan Kost,,,  <ensonic@users.sf.net>
+2006-09-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/libs/gst-plugins-base-libs-docs.sgml:
 	* docs/libs/gst-plugins-base-libs.types:
@@ -93,7 +116,7 @@
 	(gst_video_orientation_set_hcenter),
 	(gst_video_orientation_set_vcenter):
 	* gst-libs/gst/interfaces/videoorientation.h:
-	  Add new interface to control video orientation (fixes #354908)
+	  API: Add new interface to control video orientation (fixes #354908)
 
 2006-09-18  Stefan Kost  <ensonic@users.sf.net>
 

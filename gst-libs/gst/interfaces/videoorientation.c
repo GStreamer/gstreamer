@@ -35,6 +35,8 @@
  *
  * The interface allows unified access to control flipping and autocenter
  * operation of video-sources or operators.
+ *
+ * Since: 0.10.11
  */
 
 static void gst_video_orientation_iface_init (GstVideoOrientationInterface *
@@ -90,6 +92,7 @@ gst_video_orientation_iface_init (GstVideoOrientationInterface * iface)
  *
  * Get the horizontal flipping state (%TRUE for flipped) from the given object.
  *
+ * Since: 0.10.11
  * Returns: %TRUE in case the element supports flipping
  */
 gboolean
@@ -112,6 +115,7 @@ gst_video_orientation_get_hflip (GstVideoOrientation * video_orientation,
  *
  * Get the vertical flipping state (%TRUE for flipped) from the given object.
  *
+ * Since: 0.10.11
  * Returns: %TRUE in case the element supports flipping
  */
 gboolean
@@ -134,6 +138,7 @@ gst_video_orientation_get_vflip (GstVideoOrientation * video_orientation,
  *
  * Get the horizontal centering offset from the given object.
  *
+ * Since: 0.10.11
  * Returns: %TRUE in case the element supports centering
  */
 gboolean
@@ -156,6 +161,7 @@ gst_video_orientation_get_hcenter (GstVideoOrientation * video_orientation,
  *
  * Get the vertical centering offset from the given object.
  *
+ * Since: 0.10.11
  * Returns: %TRUE in case the element supports centering
  */
 gboolean
@@ -178,6 +184,7 @@ gst_video_orientation_get_vcenter (GstVideoOrientation * video_orientation,
  *
  * Set the horizontal flipping state (%TRUE for flipped) for the given object.
  *
+ * Since: 0.10.11
  * Returns: %TRUE in case the element supports flipping
  */
 gboolean
@@ -200,6 +207,7 @@ gst_video_orientation_set_hflip (GstVideoOrientation * video_orientation,
  *
  * Set the vertical flipping state (%TRUE for flipped) for the given object.
  *
+ * Since: 0.10.11
  * Returns: %TRUE in case the element supports flipping
  */
 gboolean
@@ -222,6 +230,7 @@ gst_video_orientation_set_vflip (GstVideoOrientation * video_orientation,
  *
  * Set the horizontal centering offset for the given object.
  *
+ * Since: 0.10.11
  * Returns: %TRUE in case the element supports centering
  */
 gboolean
@@ -244,6 +253,7 @@ gst_video_orientation_set_hcenter (GstVideoOrientation * video_orientation,
  *
  * Set the vertical centering offset for the given object.
  *
+ * Since: 0.10.11
  * Returns: %TRUE in case the element supports centering
  */
 gboolean
