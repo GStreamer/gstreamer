@@ -448,8 +448,8 @@ gst_dvd_demux_handle_dvd_event (GstDVDDemux * dvd_demux, GstEvent * event)
     gst_element_no_more_pads (GST_ELEMENT (dvd_demux));
 
     /* Keep video/audio/subtitle pads within 1/2 sec of the SCR */
-    mpeg_demux->max_gap = 0.5 * GST_SECOND;
-    mpeg_demux->max_gap_tolerance = 0.05 * GST_SECOND;
+    mpeg_demux->max_gap = GST_SECOND / 2;
+    mpeg_demux->max_gap_tolerance = GST_SECOND / 20;
   } else {
     GST_DEBUG_OBJECT (dvd_demux, "dvddemux Forwarding DVD event %s to all pads",
         event_type);
@@ -1052,7 +1052,7 @@ gst_dvd_demux_reset (GstDVDDemux * dvd_demux)
 {
   int i;
 
-  //GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (dvd_demux);
+  GstMPEGDemux *mpeg_demux = GST_MPEG_DEMUX (dvd_demux);
 
   GST_INFO ("Resetting the dvd demuxer");
   for (i = 0; i < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS; i++) {
@@ -1075,11 +1075,9 @@ gst_dvd_demux_reset (GstDVDDemux * dvd_demux)
   dvd_demux->cur_subpicture_nr = 0;
   dvd_demux->mpeg_version = 0;
 
-#if 0
   /* Reset max_gap handling */
-  mpeg_demux->max_gap = GST_CLOCK_TIME_NONE;
-  mpeg_demux->max_gap_tolerance = GST_CLOCK_TIME_NONE;
-#endif
+  mpeg_demux->max_gap = 0.5 * GST_SECOND;
+  mpeg_demux->max_gap_tolerance = 0.05 * GST_SECOND;
 }
 
 static void
@@ -1106,14 +1104,9 @@ gst_dvd_demux_sync_stream_to_time (GstMPEGDemux * mpeg_demux,
     GstMPEGStream * stream, GstClockTime last_ts)
 {
   GstDVDDemux *dvd_demux = GST_DVD_DEMUX (mpeg_demux);
-
-#if 0
-  GstClockTime start_ts;
-  GstEvent *filler = NULL;
-  GstFormat fmt = GST_FORMAT_TIME;
-#endif
-  GstPad *outpad = NULL;
-  gint cur_nr = 0;
+  GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (mpeg_demux);
+  GstPad *outpad;
+  gint cur_nr;
 
   parent_class->sync_stream_to_time (mpeg_demux, stream, last_ts);
 
@@ -1130,27 +1123,15 @@ gst_dvd_demux_sync_stream_to_time (GstMPEGDemux * mpeg_demux,
       outpad = dvd_demux->cur_subpicture;
       cur_nr = dvd_demux->cur_subpicture_nr;
       break;
+    default:
+      return;
   }
 
-#if 0
-  /* FIXME: fillers in 0.9 aren't specified properly yet */
-  if ((outpad != NULL) && (cur_nr == stream->number)) {
-    if (GST_PAD_PEER (stream->pad)
-        && gst_pad_query_position (GST_PAD_PEER (stream->pad), &fmt,
-            (gint64 *) & start_ts)) {
-      if (start_ts < last_ts)
-        filler =
-            gst_event_new_filler_stamped (start_ts, GST_CLOCK_DIFF (last_ts,
-                start_ts));
-    } else
-      filler = gst_event_new_filler_stamped (last_ts, GST_CLOCK_TIME_NONE);
-
-    if (filler) {
-      if (!gst_pad_push_event (stream->pad, filler))
-        gst_event_unref (filler);
-    }
+  if (outpad && (cur_nr == stream->number)) {
+    gst_pad_push_event (outpad, gst_event_new_new_segment (TRUE,
+            mpeg_parse->current_segment.rate, GST_FORMAT_TIME,
+            last_ts, -1, last_ts));
   }
-#endif
 }
 
 static GstStateChangeReturn

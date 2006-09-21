@@ -892,10 +892,9 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
 
   if (timestamp != GST_CLOCK_TIME_NONE) {
     outstream->cur_ts = timestamp;
-    outstream->scr_offs = GST_CLOCK_DIFF (timestamp,
-        PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
-            mpeg_parse->current_ts));
-    if (outstream->scr_offs < 0)
+    if (timestamp > mpeg_parse->current_ts)
+      outstream->scr_offs = timestamp - mpeg_parse->current_ts;
+    else
       outstream->scr_offs = 0;
 
     if (mpeg_demux->index != NULL) {
@@ -905,10 +904,8 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
           GST_FORMAT_BYTES,
           GST_BUFFER_OFFSET (buffer), GST_FORMAT_TIME, timestamp, 0);
     }
-  } else {
-    outstream->cur_ts = PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
-        mpeg_parse->current_ts + outstream->scr_offs);
-  }
+  } else
+    outstream->cur_ts = mpeg_parse->current_ts + outstream->scr_offs;
 
   if (size == 0)
     return GST_FLOW_OK;
@@ -928,16 +925,10 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
 
   if (GST_CLOCK_TIME_IS_VALID (mpeg_demux->max_gap) &&
       GST_CLOCK_TIME_IS_VALID (mpeg_parse->current_ts) &&
-      (PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
-              mpeg_parse->current_ts) > mpeg_demux->max_gap)) {
-    GstClockTime threshold =
-        GST_CLOCK_DIFF (PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
-            mpeg_parse->current_ts),
-        mpeg_demux->max_gap);
-
-    CLASS (mpeg_demux)->synchronise_pads (mpeg_demux, threshold,
-        PARSE_CLASS (mpeg_parse)->adjust_ts (mpeg_parse,
-            mpeg_parse->current_ts) - mpeg_demux->max_gap_tolerance);
+      (mpeg_parse->current_ts > mpeg_demux->max_gap)) {
+    CLASS (mpeg_demux)->synchronise_pads (mpeg_demux,
+        mpeg_parse->current_ts - mpeg_demux->max_gap,
+        mpeg_parse->current_ts - mpeg_demux->max_gap_tolerance);
   }
 
   return ret;
@@ -963,7 +954,7 @@ gst_mpeg_demux_synchronise_pads (GstMPEGDemux * mpeg_demux,
     GstClockTime threshold, GstClockTime new_ts)
 {
   /*
-   * Send a filler event to any pad with cur_ts < threshold to catch it up
+   * Send a new-segment event to any pad with cur_ts < threshold to catch it up
    */
   gint i;
 
@@ -992,47 +983,20 @@ gst_mpeg_demux_synchronise_pads (GstMPEGDemux * mpeg_demux,
     }
 }
 
-/* Send a filler event on the indicated pad to catch it up to
- * last_ts. Query the pad for current time, and use that time
- * to set the duration of the filler event, otherwise we use
- * the last timestamp of the stream and rely on the sinks
- * to absorb any overlap with the decoded data.
+/*
+ * Send a new-segment event on the indicated pad to catch it up to last_ts.
  */
 static void
 gst_mpeg_demux_sync_stream_to_time (GstMPEGDemux * mpeg_demux,
     GstMPEGStream * stream, GstClockTime last_ts)
 {
-  static gboolean beenhere;     /* FALSE */
+  GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (mpeg_demux);
 
-  if (!beenhere) {
-    g_message ("FIXME: gst_mpeg_demux_sync_stream_to_time\n");
-    beenhere = TRUE;
-  }
-#if 0
-  GstClockTime start_ts;
-  GstEvent *filler = NULL;
-  GstFormat fmt = GST_FORMAT_TIME;
+  gst_pad_push_event (stream->pad, gst_event_new_new_segment (TRUE,
+          mpeg_parse->current_segment.rate, GST_FORMAT_TIME,
+          last_ts, -1, last_ts));
 
-  if (!GST_PAD_PEER (stream->pad)
-      || !gst_pad_query (GST_PAD_PEER (stream->pad), GST_QUERY_POSITION, &fmt,
-          (gint64 *) & start_ts)) {
-    start_ts = stream->cur_ts;
-  }
-
-  if (start_ts < last_ts) {
-    filler = gst_event_new_filler_stamped (start_ts, GST_CLOCK_DIFF (last_ts,
-            start_ts));
-  }
-
-  if (filler) {
-    GST_LOG ("Advancing %s from %llu by %lld to %llu (diff %lld)",
-        GST_PAD_NAME (stream->pad), stream->cur_ts,
-        gst_event_filler_get_duration (filler), last_ts,
-        GST_CLOCK_DIFF (last_ts, stream->cur_ts));
-
-    gst_pad_push_event (stream->pad, filler);
-  }
-#endif
+  mpeg_parse->current_segment.start = last_ts;
 }
 
 #if 0

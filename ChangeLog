@@ -1,3 +1,14 @@
+2006-09-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Martin Zlomek <martin dot zlomek at itonis dot tv>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_reset),
+	(gst_dvd_demux_sync_stream_to_time):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_send_subbuffer),
+	(gst_mpeg_demux_synchronise_pads),
+	(gst_mpeg_demux_sync_stream_to_time):
+	  Send newsegment updates for sparse streams (#350778).
+	
 2006-09-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_do_convert_query):
