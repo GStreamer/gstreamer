@@ -1,3 +1,10 @@
+2006-09-21  Wim Taymans  <wim@fluendo.com>
+
+	* ext/faac/gstfaac.c: (gst_faac_configure_source_pad),
+	(gst_faac_chain):
+	Add decoder specific info on the caps.
+	Some cleanups here and there.
+
 2006-09019  Edgard Lima <edgard.lima@indt.org.br>
 
 	Patch by: deadchip <internalerror@gmail.com> and

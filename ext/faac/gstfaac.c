@@ -20,6 +20,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <string.h>
 
 #include "gstfaac.h"
 
@@ -354,9 +355,10 @@ static gboolean
 gst_faac_configure_source_pad (GstFaac * faac)
 {
   GstCaps *allowed_caps;
-  GstCaps *src_caps;
+  GstCaps *srccaps;
   gboolean ret = FALSE;
   gint n, ver, mpegversion;
+  faacEncConfiguration *conf;
 
   mpegversion = FAAC_DEFAULT_MPEGVERSION;
 
@@ -367,7 +369,7 @@ gst_faac_configure_source_pad (GstFaac * faac)
     return FALSE;
 
   if (gst_caps_is_empty (allowed_caps))
-    goto done;
+    goto empty_caps;
 
   if (!gst_caps_is_any (allowed_caps)) {
     for (n = 0; n < gst_caps_get_size (allowed_caps); n++) {
@@ -380,42 +382,66 @@ gst_faac_configure_source_pad (GstFaac * faac)
       }
     }
   }
+  gst_caps_unref (allowed_caps);
 
-  src_caps = gst_caps_new_simple ("audio/mpeg",
+  /* we negotiated caps update current configuration */
+  conf = faacEncGetCurrentConfiguration (faac->handle);
+  conf->mpegVersion = (mpegversion == 4) ? MPEG4 : MPEG2;
+  conf->aacObjectType = faac->profile;
+  conf->allowMidside = faac->midside;
+  conf->useLfe = 0;
+  conf->useTns = faac->tns;
+  conf->bitRate = faac->bitrate / faac->channels;
+  conf->inputFormat = faac->format;
+  conf->outputFormat = faac->outputformat;
+  conf->shortctl = faac->shortctl;
+  if (!faacEncSetConfiguration (faac->handle, conf))
+    goto set_failed;
+
+  /* now create a caps for it all */
+  srccaps = gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, mpegversion,
       "channels", G_TYPE_INT, faac->channels,
       "rate", G_TYPE_INT, faac->samplerate, NULL);
 
-  GST_DEBUG_OBJECT (faac, "src pad caps: %" GST_PTR_FORMAT, src_caps);
+  if (mpegversion == 4) {
+    GstBuffer *codec_data;
+    guint8 *config = NULL;
+    gulong config_len = 0;
 
-  ret = gst_pad_set_caps (faac->srcpad, src_caps);
-  gst_caps_unref (src_caps);
+    /* get the config string */
+    GST_DEBUG_OBJECT (faac, "retrieving decoder info");
+    faacEncGetDecoderSpecificInfo (faac->handle, &config, &config_len);
 
-  if (ret) {
-    faacEncConfiguration *conf;
+    /* copy it into a buffer */
+    codec_data = gst_buffer_new_and_alloc (config_len);
+    memcpy (GST_BUFFER_DATA (codec_data), config, config_len);
 
-    /* new conf */
-    conf = faacEncGetCurrentConfiguration (faac->handle);
-    conf->mpegVersion = (mpegversion == 4) ? MPEG4 : MPEG2;
-    conf->aacObjectType = faac->profile;
-    conf->allowMidside = faac->midside;
-    conf->useLfe = 0;
-    conf->useTns = faac->tns;
-    conf->bitRate = faac->bitrate / faac->channels;
-    conf->inputFormat = faac->format;
-    conf->outputFormat = faac->outputformat;
-    conf->shortctl = faac->shortctl;
-    if (!faacEncSetConfiguration (faac->handle, conf)) {
-      GST_WARNING ("Faac doesn't support the current configuration");
-      ret = FALSE;
-    }
+    /* add to caps */
+    gst_caps_set_simple (srccaps,
+        "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+
+    gst_buffer_unref (codec_data);
   }
 
-done:
+  GST_DEBUG_OBJECT (faac, "src pad caps: %" GST_PTR_FORMAT, srccaps);
 
-  gst_caps_unref (allowed_caps);
+  ret = gst_pad_set_caps (faac->srcpad, srccaps);
+  gst_caps_unref (srccaps);
 
   return ret;
+
+  /* ERROR */
+empty_caps:
+  {
+    gst_caps_unref (allowed_caps);
+    return FALSE;
+  }
+set_failed:
+  {
+    GST_WARNING_OBJECT (faac, "Faac doesn't support the current configuration");
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -480,22 +506,12 @@ gst_faac_chain (GstPad * pad, GstBuffer * inbuf)
 
   faac = GST_FAAC (gst_pad_get_parent (pad));
 
-  if (!faac->handle) {
-    GST_ELEMENT_ERROR (faac, CORE, NEGOTIATION, (NULL),
-        ("format wasn't negotiated before chain function"));
-    gst_buffer_unref (inbuf);
-    result = GST_FLOW_ERROR;
-    goto done;
-  }
+  if (!faac->handle)
+    goto no_handle;
 
   if (!GST_PAD_CAPS (faac->srcpad)) {
-    if (!gst_faac_configure_source_pad (faac)) {
-      GST_ELEMENT_ERROR (faac, CORE, NEGOTIATION, (NULL),
-          ("failed to negotiate MPEG/AAC format with next element"));
-      gst_buffer_unref (inbuf);
-      result = GST_FLOW_ERROR;
-      goto done;
-    }
+    if (!gst_faac_configure_source_pad (faac))
+      goto nego_failed;
   }
 
   size = GST_BUFFER_SIZE (inbuf);
@@ -607,7 +623,26 @@ gst_faac_chain (GstPad * pad, GstBuffer * inbuf)
 
 done:
   gst_object_unref (faac);
+
   return result;
+
+  /* ERRORS */
+no_handle:
+  {
+    GST_ELEMENT_ERROR (faac, CORE, NEGOTIATION, (NULL),
+        ("format wasn't negotiated before chain function"));
+    gst_buffer_unref (inbuf);
+    result = GST_FLOW_ERROR;
+    goto done;
+  }
+nego_failed:
+  {
+    GST_ELEMENT_ERROR (faac, CORE, NEGOTIATION, (NULL),
+        ("failed to negotiate MPEG/AAC format with next element"));
+    gst_buffer_unref (inbuf);
+    result = GST_FLOW_ERROR;
+    goto done;
+  }
 }
 
 static void
