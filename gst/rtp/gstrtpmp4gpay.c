@@ -208,10 +208,10 @@ gst_rtp_mp4g_pay_parse_audio_config (GstRtpMP4GPay * rtpmp4gpay,
   if (size < 2)
     goto too_short;
 
-  /* only AAC LC for now */
+  /* any object type is fine, we need to copy it to the profile-level-id field. */
   objectType = (data[0] & 0xf8) >> 3;
-  if (objectType != 2)
-    goto unsupported_type;
+  if (objectType == 0)
+    goto invalid_object;
 
   samplingIdx = ((data[0] & 0x07) << 1) | ((data[1] & 0x80) >> 7);
   /* only fixed values for now */
@@ -239,11 +239,11 @@ gst_rtp_mp4g_pay_parse_audio_config (GstRtpMP4GPay * rtpmp4gpay,
   rtpmp4gpay->params = g_strdup_printf ("%d", channelCfg);
   /* audio stream type */
   rtpmp4gpay->streamtype = "5";
-  /* mode */
+  /* mode only high bitrate for now */
   rtpmp4gpay->mode = "AAC-hbr";
-  /* profile (should be 1) */
+  /* profile */
   g_free (rtpmp4gpay->profile);
-  rtpmp4gpay->profile = g_strdup_printf ("%d", objectType - 1);
+  rtpmp4gpay->profile = g_strdup_printf ("%d", objectType);
 
   GST_DEBUG_OBJECT (rtpmp4gpay,
       "objectType: %d, samplingIdx: %d (%d), channelCfg: %d", objectType,
@@ -255,13 +255,13 @@ gst_rtp_mp4g_pay_parse_audio_config (GstRtpMP4GPay * rtpmp4gpay,
 too_short:
   {
     GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, FORMAT,
-        (NULL), ("config string too short"));
+        (NULL), ("config string too short, expected 2 bytes, got %d", size));
     return FALSE;
   }
-unsupported_type:
+invalid_object:
   {
-    GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, NOT_IMPLEMENTED,
-        (NULL), ("unsupported object type %d", objectType));
+    GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, FORMAT,
+        (NULL), ("invalid object type 0"));
     return FALSE;
   }
 wrong_freq:
@@ -273,7 +273,7 @@ wrong_freq:
 wrong_channels:
   {
     GST_ELEMENT_ERROR (rtpmp4gpay, STREAM, NOT_IMPLEMENTED,
-        (NULL), ("unsupported number of channels %d", channelCfg));
+        (NULL), ("unsupported number of channels %d, must < 8", channelCfg));
     return FALSE;
   }
 }

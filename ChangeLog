@@ -1,5 +1,10 @@
 2006-09-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_parse_audio_config):
+	Fix profile-level-id parsing and setup.
+
+2006-09-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/udp/README:
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_set_property):
 	Update README, simple cleanup.
