@@ -1,3 +1,15 @@
+2006-09-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/ffmpegcolorspace.c: (rgb_format_to_caps),
+	(create_rgb_conversions), (rgb_conversion_free),
+	(right_shift_colour), (fix_expected_colour), (check_rgb_buf),
+	(got_buf_cb), (GST_START_TEST), (ffmpegcolorspace_suite):
+	  Add unit test for ffmpegcolorspace (RGB <=> RGB only so far),
+	  but disable for now since it doesn't pass (something wrong with
+	  RGBA somewhere).
+
 2006-09-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (group_commit),
