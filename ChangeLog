@@ -1,5 +1,17 @@
 2006-09-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybasebin.c: (group_commit),
+	(queue_deadlock_check), (queue_overrun), (queue_threshold_reached),
+	(queue_out_of_data), (gen_preroll_element),
+	(preroll_remove_overrun), (probe_triggered):
+	Refactor handling of overrun detection.
+	Separate handling of group completion and deadlock detection when doing
+	network buffering. This should fix some deadlocks that were not detected
+	because the group was completed.
+	Add more comments, improve debugging.
+
+2006-09-21  Wim Taymans  <wim@fluendo.com>
+
 	* tests/check/elements/gdpdepay.c: (GST_START_TEST):
 	* tests/check/libs/audio.c:
 	Some more compilation fixes.
