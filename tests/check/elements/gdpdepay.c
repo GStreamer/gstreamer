@@ -108,6 +108,9 @@ GST_START_TEST (test_audio_per_byte)
   GstBuffer *buffer, *outbuffer;
   guint8 *header, *payload;
   guint len;
+  GstDPPacketizer *pk;
+
+  pk = gst_dp_packetizer_new (GST_DP_VERSION_1_0);
 
   gdpdepay = setup_gdpdepay ();
   srcpad = gst_element_get_pad (gdpdepay, "src");
@@ -123,7 +126,7 @@ GST_START_TEST (test_audio_per_byte)
 
   /* create caps and buffer packets and push them */
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
-  fail_unless (gst_dp_packet_from_caps (caps, 0, &len, &header, &payload));
+  fail_unless (pk->packet_from_caps (caps, 0, &len, &header, &payload));
   gst_caps_unref (caps);
   gdpdepay_push_per_byte ("caps header", header, len);
   fail_unless_equals_int (g_list_length (buffers), 0);
@@ -141,7 +144,7 @@ GST_START_TEST (test_audio_per_byte)
   memcpy (GST_BUFFER_DATA (buffer), "f00d", 4);
   GST_BUFFER_TIMESTAMP (buffer) = GST_SECOND;
   GST_BUFFER_DURATION (buffer) = GST_SECOND / 10;
-  fail_unless (gst_dp_header_from_buffer (buffer, 0, &len, &header));
+  fail_unless (pk->header_from_buffer (buffer, 0, &len, &header));
   gdpdepay_push_per_byte ("buffer header", header, len);
   fail_unless_equals_int (g_list_length (buffers), 0);
   gdpdepay_push_per_byte ("buffer payload", GST_BUFFER_DATA (buffer),
@@ -166,6 +169,8 @@ GST_START_TEST (test_audio_per_byte)
   buffers = NULL;
   gst_object_unref (srcpad);
   cleanup_gdpdepay (gdpdepay);
+
+  gst_dp_packetizer_free (pk);
 }
 
 GST_END_TEST;
@@ -179,6 +184,9 @@ GST_START_TEST (test_audio_in_one_buffer)
   guint8 *caps_header, *caps_payload, *buf_header;
   guint header_len, payload_len;
   guint i;
+  GstDPPacketizer *pk;
+
+  pk = gst_dp_packetizer_new (GST_DP_VERSION_1_0);
 
   gdpdepay = setup_gdpdepay ();
   srcpad = gst_element_get_pad (gdpdepay, "src");
@@ -195,12 +203,12 @@ GST_START_TEST (test_audio_in_one_buffer)
 
   /* create caps and buffer packets and push them as one buffer */
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
-  fail_unless (gst_dp_packet_from_caps (caps, 0, &header_len, &caps_header,
+  fail_unless (pk->packet_from_caps (caps, 0, &header_len, &caps_header,
           &caps_payload));
 
   buffer = gst_buffer_new_and_alloc (4);
   memcpy (GST_BUFFER_DATA (buffer), "f00d", 4);
-  fail_unless (gst_dp_header_from_buffer (buffer, 0, &header_len, &buf_header));
+  fail_unless (pk->header_from_buffer (buffer, 0, &header_len, &buf_header));
 
   payload_len = gst_dp_header_payload_length (caps_header);
 
@@ -237,6 +245,8 @@ GST_START_TEST (test_audio_in_one_buffer)
   buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdpdepay, "gdpdepay", 1);
   cleanup_gdpdepay (gdpdepay);
+
+  gst_dp_packetizer_free (pk);
 }
 
 GST_END_TEST;
@@ -276,6 +286,9 @@ GST_START_TEST (test_streamheader)
   GstStructure *structure;
   GValue array = { 0 };
   GValue value = { 0 };
+  GstDPPacketizer *pk;
+
+  pk = gst_dp_packetizer_new (GST_DP_VERSION_1_0);
 
   gdpdepay = setup_gdpdepay_streamheader ();
   srcpad = gst_element_get_pad (gdpdepay, "src");
@@ -311,10 +324,10 @@ GST_START_TEST (test_streamheader)
 
   /* create GDP packets for the caps and the buffer, and put them in one
    * GDP buffer */
-  fail_unless (gst_dp_packet_from_caps (caps, 0, &header_len, &caps_header,
+  fail_unless (pk->packet_from_caps (caps, 0, &header_len, &caps_header,
           &caps_payload));
 
-  fail_unless (gst_dp_header_from_buffer (buffer, 0, &header_len, &buf_header));
+  fail_unless (pk->header_from_buffer (buffer, 0, &header_len, &buf_header));
 
   payload_len = gst_dp_header_payload_length (caps_header);
 
@@ -370,6 +383,8 @@ GST_START_TEST (test_streamheader)
   buffers = NULL;
   ASSERT_OBJECT_REFCOUNT (gdpdepay, "gdpdepay", 1);
   cleanup_gdpdepay (gdpdepay);
+
+  gst_dp_packetizer_free (pk);
 }
 
 GST_END_TEST;
