@@ -1038,8 +1038,7 @@ guint64
 gst_ring_buffer_samples_done (GstRingBuffer * buf)
 {
   gint segdone;
-  guint64 raw, samples;
-  guint delay;
+  guint64 samples;
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), 0);
 

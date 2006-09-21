@@ -1,3 +1,10 @@
+2006-09-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ring_buffer_samples_done), (gst_ring_buffer_commit),
+	(gst_ring_buffer_read):
+	Early morning compilation fix.
+
 2006-09-20  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/elements/gdpdepay.c: (GST_START_TEST):
