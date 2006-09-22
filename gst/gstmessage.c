@@ -406,6 +406,13 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  * needs to buffer data before it can continue processing. @percent should be a
  * value between 0 and 100. A value of 100 means that the buffering completed.
  *
+ * When @percent is < 100 the application should PAUSE a PLAYING pipeline. When
+ * @percent is 100, the application can set the pipeline (back) to PLAYING.
+ * The application must be prepared to receive BUFFERING messages in the
+ * PREROLLING state and may only set the pipeline to PLAYING after receiving a
+ * message with @percent set to 100, which can happen after the pipeline
+ * completed prerolling. 
+ *
  * Returns: The new buffering message.
  *
  * Since: 0.10.11
@@ -734,7 +741,8 @@ gst_message_parse_tag (GstMessage * message, GstTagList ** tag_list)
  * @message: A valid #GstMessage of type GST_MESSAGE_BUFFERING.
  * @percent: Return location for the percent.
  *
- * Extracts the buffering percent from the GstMessage. 
+ * Extracts the buffering percent from the GstMessage. see also
+ * gst_message_new_buffering().
  *
  * Since: 0.10.11
  *

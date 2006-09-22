@@ -182,5 +182,5 @@ Notes:
 
  - The clock keeps running forward.
  - backwards playback potentially uses a lot of memory as frames and undecoded data
-   get buffered.
+   gets buffered.
 

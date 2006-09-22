@@ -5,16 +5,49 @@ This document outlines the buffering policy used in the GStreamer
 core that can be used by plugins and applications.
 
 The purpose of buffering is to accumulate enough data in a pipeline so that
-playback can occur smoothly and without interruptions. It is typically done when
-reading from a (slow) and non-live network source.
+playback can occur smoothly and without interruptions. It is typically done
+when reading from a (slow) and non-live network source.
 
-While data is buffered, the pipeline should remain in the PAUSED state. It is
-also possible that more data should be buffered while the pipeline is PLAYING,
-in which case the pipeline should be PAUSED until the buffering finished.
+ Some use cases:
+
+   +---------+     +--------+     +-------+
+   | httpsrc |     | buffer |     | demux |
+   |        src - sink     src - sink     ....
+   +---------+     +--------+     +-------+
+
+  In this case we are reading from a slow network source into a buffer element
+  (such as queue). 
+  
+  The buffer element has a low and high watermark expressed in bytes. The
+  buffer uses the watermarks as follows:
+  
+   - The buffer element will not produce data on the src pad until the high
+     watermark is hit. While accumulating data in the buffer, progress is
+     reported by posting BUFFERING messages.
+   - The source will stop to produce data on the src pad when the low watermark
+     is hit.
 
 
 Messages
 --------
 
+A GST_MESSAGE_BUFFERING must be posted on the bus when playback temporarily
+stops to buffer and when buffering finishes. When percentage field in the
+BUFFERING message is 100, buffering is done. Values less than 100 mean that
+buffering is in progress. 
 
+The BUFFERING message should be intercepted and acted upon by the application.
+
+
+Application
+-----------
+
+While data is buffered, the pipeline should remain in the PAUSED state. It is
+also possible that more data should be buffered while the pipeline is PLAYING,
+in which case the pipeline should be PAUSED until the buffering finished.
+
+BUFFERING messages can be posted while the pipeline is prerolling. The
+application should not set the pipeline to PLAYING before a BUFFERING message
+with 100 percent value is received, which might only happen after the pipeline
+prerolled.
 
