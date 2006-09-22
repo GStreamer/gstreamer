@@ -796,7 +796,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "glimagesink",
-          GST_RANK_SECONDARY, GST_TYPE_GLIMAGE_SINK))
+          GST_RANK_NONE, GST_TYPE_GLIMAGE_SINK))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_glimage_sink, "glimagesink", 0,
