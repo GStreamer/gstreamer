@@ -1431,7 +1431,7 @@ sort (gst_avi_index_entry * a, gst_avi_index_entry * b)
  *                is also a pointer to the allocated data and should be
  *                free'ed at some point.
  *
- * Read index entries from the provided buffer.
+ * Read index entries from the provided buffer. Takes ownership of @buf.
  */
 static void
 gst_avi_demux_parse_index (GstAviDemux * avi,
@@ -1571,11 +1571,6 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
   else if (GST_BUFFER_SIZE (buf) < 8)
     goto too_small;
 
-  /* check tag first before blindy trying to read 'offset' bytes */
-  tag = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
-  if (tag != GST_RIFF_TAG_idx1)
-    goto no_index;
-
   offset += 8 + GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
   gst_buffer_unref (buf);
 
@@ -1583,6 +1578,8 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
   if (gst_riff_read_chunk (GST_ELEMENT_CAST (avi),
           avi->sinkpad, &offset, &tag, &buf) != GST_FLOW_OK)
     return;
+  else if (tag != GST_RIFF_TAG_idx1)
+    goto no_index;
 
   gst_avi_demux_parse_index (avi, buf, index);
   if (*index)
@@ -3442,7 +3439,7 @@ gst_avi_demux_loop (GstPad * pad)
 pause:
   GST_LOG_OBJECT (avi, "pausing task, reason %s", gst_flow_get_name (res));
   gst_pad_pause_task (avi->sinkpad);
-  if (GST_FLOW_IS_FATAL (res) /* || (res == GST_FLOW_NOT_LINKED) */ ) {
+  if (GST_FLOW_IS_FATAL (res) || (res == GST_FLOW_NOT_LINKED)) {
     gboolean push_eos = TRUE;
 
     if (res == GST_FLOW_UNEXPECTED) {

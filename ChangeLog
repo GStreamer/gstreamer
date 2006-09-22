@@ -1,5 +1,12 @@
 2006-09-22  Wim Taymans  <wim@fluendo.com>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_index):
+	Don't check for a tag that is never there and check if we read the
+	correct tag. Fixes seeking again.
+	We must post an error when all pads are unlinked.
+
+2006-09-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtp.c: (plugin_init):
 	* gst/rtp/gstrtpvorbisdepay.c: (gst_rtp_vorbis_depay_process):
