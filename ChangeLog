@@ -1,5 +1,12 @@
 2006-09-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	  Up requirements to -base CVS and core CVS (the format for the
+	  video orientation interface used by v4l2src and the latter
+	  since that's what -base CVS requires).
+
+2006-09-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/directfb/dfbvideosink.c: (plugin_init):
 	  Lower rank from SECONDARY to MARGINAL. Plugins in -bad that might
 	  be autoplugged shouldn't trump plugins in -base, -good or -ugly
