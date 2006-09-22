@@ -1,3 +1,8 @@
+2006-09-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstghostpad.c: (gst_ghost_pad_set_target):
+	  Don't forget to release proxy lock when there's an error.
+
 2006-09-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstcaps.h:
