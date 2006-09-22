@@ -1,3 +1,20 @@
+2006-09-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/autodetect/gstautoaudiosink.c:
+	(gst_auto_audio_sink_base_init):
+	* gst/autodetect/gstautovideosink.c:
+	(gst_auto_video_sink_base_init):
+	  Make static pad templates static to appease valgrind's leak
+	  detector.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/autodetect.c: (GST_START_TEST),
+	(autodetect_suite):
+	  Add simple test for the ghostpad lockup on shutdown fixed in core
+	  CVS (audio bit disabled because it would need dozens of alsa
+	  suppressions and I'm too lazy to add those now).
+
 2006-09-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16depay_change_state):

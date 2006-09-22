@@ -34,6 +34,7 @@ endif
 check_PROGRAMS = \
 	$(check_annodex) \
 	elements/audiopanorama \
+	elements/autodetect \
 	elements/avimux \
 	elements/level \
 	elements/matroskamux \

@@ -52,19 +52,20 @@ gst_auto_audio_sink_change_state (GstElement * element,
 
 GST_BOILERPLATE (GstAutoAudioSink, gst_auto_audio_sink, GstBin, GST_TYPE_BIN);
 
+static const GstElementDetails gst_auto_audio_sink_details =
+GST_ELEMENT_DETAILS ("Auto audio sink",
+    "Sink/Audio",
+    "Wrapper audio sink for automatically detected audio sink",
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 static void
 gst_auto_audio_sink_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  const GstElementDetails gst_auto_audio_sink_details =
-      GST_ELEMENT_DETAILS ("Auto audio sink",
-      "Sink/Audio",
-      "Wrapper audio sink for automatically detected audio sink",
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-  GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      GST_STATIC_CAPS_ANY);
 
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&sink_template));
