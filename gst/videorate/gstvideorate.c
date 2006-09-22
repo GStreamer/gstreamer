@@ -19,21 +19,28 @@
 
 /**
  * SECTION:element-videorate
- * @short_description: adjusts the framerate of video
+ * @short_description: retimestamps and drops/duplicates video frames to
+ *  match the source pad's framerate and create a perfect stream
  *
  * <refsect2>
  * <para>
- * This element converts video from one framerate to another. This operation
- * is performed by dropping and duplicating frames, no fancy algorithm is
- * used to interpolate frames (yet).
+ * This element takes an incoming stream of timestamped video frames.
+ * It will produce a perfect stream that matches the source pad's framerate.
+ *
+ * The correction is performed by dropping and duplicating frames, no fancy
+ * algorithm is used to interpolate frames (yet).
  * </para>
  * <para>
  * By default the element will simply negotiate the same framerate on its
- * source and sink pad and will adjust timestamps/insert/drop frames in case
- * the input stream is not respecting that framerate.
+ * source and sink pad.
  * </para>
  * <para>
- * A conversion to another framerate can be forced by using filtered caps on
+ * This operation is useful to link to elements that require a perfect stream.
+ * Typical examples are formats that do not store timestamps for video frames,
+ * but only store a framerate, like Ogg and AVI.
+ * </para>
+ * <para>
+ * A conversion to a specific framerate can be forced by using filtered caps on
  * the source pad.
  * </para>
  * <para>
@@ -59,9 +66,16 @@
  * Decode an Ogg/Theora file and adjust the framerate to 15 fps before playing.
  * To create the test Ogg/Theora file refer to the documentation of theoraenc.
  * </para>
- * </refsect2>
+ * <para>
+ * <programlisting>
+ * gst-launch -v v4lsrc ! videorate ! video/x-raw-yuv,framerate=25/2 ! theoraenc ! oggmux ! filesink location=v4l.ogg
+ * </programlisting>
+ * Capture video from a V4L device, and adjust the stream to 12.5 fps before
+ * encoding to Ogg/Theora.
+ * </para>
+  * </refsect2>
  *
- * Last reviewed on 2006-03-02 (0.10.4)
+ * Last reviewed on 2006-09-02 (0.10.11)
  */
 
 #ifdef HAVE_CONFIG_H
