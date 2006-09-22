@@ -1,3 +1,9 @@
+2006-09-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist),
+	(gst_controller_new_list):
+	  Ref instances when returning them again (fixes #357180)
+
 2006-09-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstghostpad.c: (gst_ghost_pad_set_target):

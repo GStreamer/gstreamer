@@ -486,6 +486,7 @@ gst_controller_new_valist (GObject * object, va_list var_args)
           /* store the controller */
           g_object_set_qdata (object, __gst_controller_key, self);
         } else {
+          g_object_ref (self);
           GST_INFO ("returning existing controller");
         }
         self->properties = g_list_prepend (self->properties, prop);
@@ -538,6 +539,7 @@ gst_controller_new_list (GObject * object, GList * list)
           /* store the controller */
           g_object_set_qdata (object, __gst_controller_key, self);
         } else {
+          g_object_ref (self);
           GST_INFO ("returning existing controller");
         }
         self->properties = g_list_prepend (self->properties, prop);
