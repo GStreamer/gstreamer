@@ -64,8 +64,6 @@
  * static GstBusSyncReply
  * create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
  * {
- *  XGCValues values;
- *  
  *  // ignore anything but 'prepare-xwindow-id' element messages
  *  if (GST_MESSAGE_TYPE (message) != GST_MESSAGE_ELEMENT)
  *    return GST_BUS_PASS;
@@ -76,8 +74,6 @@
  *  win = XCreateSimpleWindow (disp, root, 0, 0, 320, 240, 0, 0, 0);
  *  
  *  XSetWindowBackgroundPixmap (disp, win, None);
- *  
- *  gc = XCreateGC (disp, win, 0, &amp;values);
  *  
  *  XMapRaised (disp, win);
  *  
