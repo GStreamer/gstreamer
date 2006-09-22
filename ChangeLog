@@ -1,3 +1,14 @@
+2006-09-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/directfb/dfbvideosink.c: (plugin_init):
+	  Lower rank from SECONDARY to MARGINAL. Plugins in -bad that might
+	  be autoplugged shouldn't trump plugins in -base, -good or -ugly
+	  (in this case ximagesink).
+
+	* sys/glsink/glimagesink.c: (plugin_init):
+	  Set rank to NONE to prevent it from being autoplugged until
+	  errors are handled properly (see #357212).
+
 2006-09-21  Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/neon/Makefile.am:

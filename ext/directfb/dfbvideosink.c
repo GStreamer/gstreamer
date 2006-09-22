@@ -2382,7 +2382,7 @@ gst_dfbvideosink_get_type (void)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "dfbvideosink", GST_RANK_PRIMARY,
+  if (!gst_element_register (plugin, "dfbvideosink", GST_RANK_MARGINAL,
           GST_TYPE_DFBVIDEOSINK))
     return FALSE;
 
