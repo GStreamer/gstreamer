@@ -1,3 +1,11 @@
+2006-09-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	  Fix misleading docs addition.
+
+	* tests/check/elements/videotestsrc.c: (check_rgb_buf):
+	  Get rid of compiler warning the right way.
+
 2006-09-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:

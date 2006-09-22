@@ -35,8 +35,15 @@
  * the GnomeVFS library. Common protocols are 'file', 'http', 'ftp', or 'smb'.
  * </para>
  * <para>
- * In case the element-gnomevfssrc::iradio-mode is enabled, the #ICYDemux should
- * be used as the follow-up element.
+ * In case the element-gnomevfssrc::iradio-mode property is set and the
+ * location is a http resource, gnomevfssrc will send special icecast http
+ * headers to the server to request additional icecast metainformation. If
+ * the server is not an icecast server, it will display the same behaviour
+ * as if the element-gnomevfssrc::iradio-mode property was not set. However,
+ * if the server is in fact an icecast server, gnomevfssrc will output
+ * data with a media type of application/x-icy, in which case you will
+ * need to use the #ICYDemux element as follow-up element to extract
+ * the icecast meta data and to determine the underlying media type.
  * </para>
  * <para>
  * Example pipeline:

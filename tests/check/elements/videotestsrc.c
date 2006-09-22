@@ -160,7 +160,7 @@ check_rgb_buf (const guint8 * pixels, guint32 r_mask, guint32 g_mask,
     guint32 b_mask, guint32 a_mask, guint8 r_expected, guint8 g_expected,
     guint8 b_expected, guint endianness, guint bpp, guint depth)
 {
-  guint32 pixel = 0, red, green, blue, alpha;
+  guint32 pixel, red, green, blue, alpha;
 
   switch (bpp) {
     case 32:{
@@ -189,6 +189,8 @@ check_rgb_buf (const guint8 * pixels, guint32 r_mask, guint32 g_mask,
         pixel = GST_READ_UINT16_BE (pixels);
       break;
     }
+    default:
+      g_return_if_reached ();
   }
 
   red = right_shift_colour (r_mask, pixel);
