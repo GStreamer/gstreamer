@@ -1,3 +1,30 @@
+2006-09-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16depay_change_state):
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_class_init):
+	Small cleanups.
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpvorbisdepay.c: (gst_rtp_vorbis_depay_base_init),
+	(gst_rtp_vorbis_depay_class_init), (gst_rtp_vorbis_depay_init),
+	(gst_rtp_vorbis_depay_finalize), (gst_rtp_vorbis_depay_setcaps),
+	(gst_rtp_vorbis_depay_process),
+	(gst_rtp_vorbis_depay_set_property),
+	(gst_rtp_vorbis_depay_get_property),
+	(gst_rtp_vorbis_depay_change_state),
+	(gst_rtp_vorbis_depay_plugin_init):
+	* gst/rtp/gstrtpvorbisdepay.h:
+	* gst/rtp/gstrtpvorbispay.c: (gst_rtp_vorbis_pay_base_init),
+	(gst_rtp_vorbis_pay_class_init), (gst_rtp_vorbis_pay_init),
+	(gst_rtp_vorbis_pay_setcaps), (gst_rtp_vorbis_pay_init_packet),
+	(gst_rtp_vorbis_pay_flush_packet),
+	(gst_rtp_vorbis_pay_append_buffer),
+	(gst_rtp_vorbis_pay_handle_buffer),
+	(gst_rtp_vorbis_pay_plugin_init):
+	* gst/rtp/gstrtpvorbispay.h:
+	Add experimental vorbis pay and depayloaders.
+
 2006-09-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_parse_audio_config):

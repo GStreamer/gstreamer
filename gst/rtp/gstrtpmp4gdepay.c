@@ -128,7 +128,6 @@ gst_rtp_mp4g_depay_class_init (GstRtpMP4GDepayClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);

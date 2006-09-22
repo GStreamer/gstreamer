@@ -26,7 +26,9 @@ libgstrtp_la_SOURCES = \
 	gstrtpmp4gpay.c \
 	gstrtpspeexdepay.c \
 	gstrtpspeexpay.c \
-	gstrtpsv3vdepay.c
+	gstrtpsv3vdepay.c \
+	gstrtpvorbisdepay.c \
+	gstrtpvorbispay.c
 	
 #gstrtpL16pay.c gstrtpL16depay.c
 
@@ -68,4 +70,6 @@ noinst_HEADERS =			\
 		 gstasteriskh263.h	\
 		 gstrtpspeexdepay.h	\
 		 gstrtpspeexpay.h	\
-		 gstrtpsv3vdepay.h
+		 gstrtpsv3vdepay.h	\
+	 	 gstrtpvorbisdepay.h    \
+	 	 gstrtpvorbispay.h

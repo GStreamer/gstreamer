@@ -318,28 +318,30 @@ static GstStateChangeReturn
 gst_rtp_L16depay_change_state (GstElement * element, GstStateChange transition)
 {
   GstRtpL16Depay *rtpL16depay;
-
-  g_return_val_if_fail (GST_IS_RTP_L16_DEPAY (element),
-      GST_STATE_CHANGE_FAILURE);
+  GstStateChangeReturn ret;
 
   rtpL16depay = GST_RTP_L16_DEPAY (element);
 
   GST_DEBUG ("state pending %d\n", GST_STATE_PENDING (element));
 
+
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
+    default:
+      break;
+  }
+  /* if we haven't failed already, give the parent class a chance to ;-) */
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
   }
 
-  /* if we haven't failed already, give the parent class a chance to ;-) */
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 }
 
 gboolean

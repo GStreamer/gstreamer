@@ -46,6 +46,8 @@
 #include "gstrtpspeexpay.h"
 #include "gstrtpspeexdepay.h"
 #include "gstrtpsv3vdepay.h"
+#include "gstrtpvorbisdepay.h"
+#include "gstrtpvorbispay.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -123,6 +125,12 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_sv3v_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_vorbis_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_vorbis_pay_plugin_init (plugin))
     return FALSE;
 
   return TRUE;
