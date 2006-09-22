@@ -1,3 +1,8 @@
+2006-09-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Need  -base CVS for gst_base_rtp_depayload_push_ts().
+
 2006-09-22  Wim Taymans  <wim@fluendo.com>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_index):
