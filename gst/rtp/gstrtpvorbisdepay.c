@@ -201,7 +201,7 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GST_DEBUG_OBJECT (depayload, "got RTP packet of size %d", payload_len);
 
   /* we need at least 4 bytes for the packet header */
-  if (payload_len < 4)
+  if (G_UNLIKELY (payload_len < 4))
     goto packet_short;
 
   payload = gst_rtp_buffer_get_payload (buf);
@@ -220,7 +220,7 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
    * pkts: number of packets.
    */
   VDT = (header & 0x30) >> 4;
-  if (VDT == 3)
+  if (G_UNLIKELY (VDT == 3))
     goto ignore_reserved;
 
   ident = (header >> 8) & 0xffffff;
@@ -235,8 +235,8 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   payload += 4;
   payload_len -= 4;
 
-  GST_DEBUG_OBJECT (depayload, "ident: %u, F: %d, packets: %d", ident, F,
-      packets);
+  GST_DEBUG_OBJECT (depayload, "ident: %u, F: %d, VDT: %d, packets: %d", ident,
+      F, VDT, packets);
 
   /* fragmented packets, assemble */
   if (F != 0) {
@@ -268,6 +268,7 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     /* construct assembled buffer */
     payload_len = gst_adapter_available (rtpvorbisdepay->adapter);
     payload = gst_adapter_take (rtpvorbisdepay->adapter, payload_len);
+    /* fix the length */
     payload[0] = ((payload_len - 2) >> 8) & 0xff;
     payload[1] = (payload_len - 2) & 0xff;
     to_free = payload;
@@ -307,11 +308,11 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         payload_len);
 
     /* skip packet if something odd happens */
-    if (length > payload_len)
+    if (G_UNLIKELY (length > payload_len))
       goto length_short;
 
     /* create buffer for packet */
-    if (to_free) {
+    if (G_UNLIKELY (to_free)) {
       outbuf = gst_buffer_new ();
       GST_BUFFER_DATA (outbuf) = payload;
       GST_BUFFER_MALLOCDATA (outbuf) = to_free;

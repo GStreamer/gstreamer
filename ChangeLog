@@ -1,3 +1,15 @@
+2006-09-22  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpvorbisdepay.c: (gst_rtp_vorbis_depay_process):
+	* gst/rtp/gstrtpvorbispay.c: (gst_rtp_vorbis_pay_setcaps),
+	(gst_rtp_vorbis_pay_reset_packet),
+	(gst_rtp_vorbis_pay_init_packet),
+	(gst_rtp_vorbis_pay_flush_packet), (gst_rtp_vorbis_pay_parse_id),
+	(gst_rtp_vorbis_pay_handle_buffer):
+	More fixage, set endoder-params correctly in the payloader.
+
 2006-09-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/autodetect/gstautoaudiosink.c:

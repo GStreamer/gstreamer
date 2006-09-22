@@ -123,38 +123,39 @@ gst_rtp_vorbis_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 
   rtpvorbispay = GST_RTP_VORBIS_PAY (basepayload);
 
-  gst_basertppayload_set_options (basepayload, "audio", TRUE, "vorbis", 8000);
-  gst_basertppayload_set_outcaps (basepayload,
-      "encoding-params", G_TYPE_STRING, "1",
-      /* don't set the defaults 
-       */
-      NULL);
-
   return TRUE;
 }
 
 static void
-gst_rtp_vorbis_pay_init_packet (GstRtpVorbisPay * rtpvorbispay)
+gst_rtp_vorbis_pay_reset_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT)
 {
   guint payload_len;
 
-  if (rtpvorbispay->packet)
-    gst_buffer_unref (rtpvorbispay->packet);
+  GST_DEBUG_OBJECT (rtpvorbispay, "reset packet");
 
-  GST_DEBUG_OBJECT (rtpvorbispay, "starting new packet");
-
-  /* new packet allocate max packet size */
-  rtpvorbispay->packet =
-      gst_rtp_buffer_new_allocate_len (GST_BASE_RTP_PAYLOAD_MTU
-      (rtpvorbispay), 0, 0);
   rtpvorbispay->payload_pos = 4;
   payload_len = gst_rtp_buffer_get_payload_len (rtpvorbispay->packet);
   rtpvorbispay->payload_left = payload_len - 4;
   rtpvorbispay->payload_duration = 0;
   rtpvorbispay->payload_ident = 0;
   rtpvorbispay->payload_F = 0;
-  rtpvorbispay->payload_VDT = 0;
+  rtpvorbispay->payload_VDT = VDT;
   rtpvorbispay->payload_pkts = 0;
+}
+
+static void
+gst_rtp_vorbis_pay_init_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT)
+{
+  GST_DEBUG_OBJECT (rtpvorbispay, "starting new packet, VDT: %d", VDT);
+
+  if (rtpvorbispay->packet)
+    gst_buffer_unref (rtpvorbispay->packet);
+
+  /* new packet allocate max packet size */
+  rtpvorbispay->packet =
+      gst_rtp_buffer_new_allocate_len (GST_BASE_RTP_PAYLOAD_MTU
+      (rtpvorbispay), 0, 0);
+  gst_rtp_vorbis_pay_reset_packet (rtpvorbispay, VDT);
 }
 
 static GstFlowReturn
@@ -165,7 +166,7 @@ gst_rtp_vorbis_pay_flush_packet (GstRtpVorbisPay * rtpvorbispay)
   guint hlen;
 
   /* check for empty packet */
-  if (!rtpvorbispay || rtpvorbispay->payload_pos <= 4)
+  if (!rtpvorbispay->packet || rtpvorbispay->payload_pos <= 4)
     return GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (rtpvorbispay, "flushing packet");
@@ -200,44 +201,162 @@ gst_rtp_vorbis_pay_flush_packet (GstRtpVorbisPay * rtpvorbispay)
       rtpvorbispay->packet);
   rtpvorbispay->packet = NULL;
 
-  /* prepare new packet */
-  gst_rtp_vorbis_pay_init_packet (rtpvorbispay);
-
   return ret;
 }
 
+static gboolean
+gst_rtp_vorbis_pay_parse_id (GstBaseRTPPayload * basepayload, guint8 * data,
+    guint size)
+{
+  guint8 channels;
+  gint32 rate, version;
+  gchar *cstr;
+
+  if (G_UNLIKELY (size < 16))
+    goto too_short;
+
+  if (G_UNLIKELY (memcmp (data, "\001vorbis", 7)))
+    goto invalid_start;
+  data += 7;
+
+  if (G_UNLIKELY ((version = GST_READ_UINT32_LE (data)) != 0))
+    goto invalid_version;
+  data += 4;
+
+  if (G_UNLIKELY ((channels = *data++) < 1))
+    goto invalid_channels;
+
+  if (G_UNLIKELY ((rate = GST_READ_UINT32_LE (data)) < 1))
+    goto invalid_rate;
+
+  cstr = g_strdup_printf ("%d", channels);
+  gst_basertppayload_set_options (basepayload, "audio", TRUE, "vorbis", rate);
+  gst_basertppayload_set_outcaps (basepayload,
+      "encoding-params", G_TYPE_STRING, cstr,
+      /* don't set the defaults 
+       */
+      NULL);
+  g_free (cstr);
+
+  return TRUE;
+
+  /* ERRORS */
+too_short:
+  {
+    GST_ELEMENT_ERROR (basepayload, STREAM, DECODE,
+        ("Identification packet is too short, need at least 16, got %d", size),
+        (NULL));
+    return FALSE;
+  }
+invalid_start:
+  {
+    GST_ELEMENT_ERROR (basepayload, STREAM, DECODE,
+        ("Invalid header start in identification packet"), (NULL));
+    return FALSE;
+  }
+invalid_version:
+  {
+    GST_ELEMENT_ERROR (basepayload, STREAM, DECODE,
+        ("Invalid version, expected 0, got %d", version), (NULL));
+    return FALSE;
+  }
+invalid_rate:
+  {
+    GST_ELEMENT_ERROR (basepayload, STREAM, DECODE,
+        ("Invalid rate %d", rate), (NULL));
+    return FALSE;
+  }
+invalid_channels:
+  {
+    GST_ELEMENT_ERROR (basepayload, STREAM, DECODE,
+        ("Invalid channels %d", channels), (NULL));
+    return FALSE;
+  }
+}
+
 static GstFlowReturn
-gst_rtp_vorbis_pay_append_buffer (GstRtpVorbisPay * rtpvorbispay,
+gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
-  GstFlowReturn res;
-  guint size;
-  GstClockTime duration;
+  GstRtpVorbisPay *rtpvorbispay;
+  GstFlowReturn ret;
+  guint size, newsize;
+  guint8 *data;
+  guint packet_len;
+  GstClockTime duration, newduration;
+  gboolean flush;
+  guint8 VDT;
   guint plen;
-  guint8 *ppos, *payload, *data;
+  guint8 *ppos, *payload;
   gboolean fragmented;
 
-  res = GST_FLOW_OK;
-
-  if (rtpvorbispay->payload_left < 2)
-    return res;
+  rtpvorbispay = GST_RTP_VORBIS_PAY (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
-  /* skip packets that are too big */
-  if (size > 0xffff)
-    return res;
-
   data = GST_BUFFER_DATA (buffer);
   duration = GST_BUFFER_DURATION (buffer);
+
+  GST_DEBUG_OBJECT (rtpvorbispay, "size %u, duration %" GST_TIME_FORMAT,
+      size, GST_TIME_ARGS (duration));
+
+  if (G_UNLIKELY (size < 1 || size > 0xffff))
+    goto wrong_size;
+
+  /* find packet type */
+  if (data[0] & 1) {
+    /* header */
+    if (data[0] == 1) {
+      /* identification, we need to parse this in order to get the clock rate. */
+      if (G_UNLIKELY (!gst_rtp_vorbis_pay_parse_id (basepayload, data, size)))
+        goto parse_id_failed;
+      VDT = 1;
+    } else if (data[0] == 5)
+      /* setup */
+      VDT = 1;
+    else if (data[0] == 3)
+      VDT = 2;
+    else
+      goto unknown_header;
+  } else
+    /* data */
+    VDT = 0;
+
+  /* size increases with packet length and 2 bytes size eader. */
+  newduration = rtpvorbispay->payload_duration;
+  if (duration != GST_CLOCK_TIME_NONE)
+    newduration += duration;
+
+  newsize = rtpvorbispay->payload_pos + 2 + size;
+  packet_len = gst_rtp_buffer_calc_packet_len (newsize, 0, 0);
+
+  /* check buffer filled against length and max latency */
+  flush = gst_basertppayload_is_filled (basepayload, packet_len, newduration);
+  /* we can store up to 15 vorbis packets in one RTP packet. */
+  flush |= (rtpvorbispay->payload_pkts == 15);
+  /* flush if we have a new VDT */
+  if (rtpvorbispay->packet)
+    flush |= (rtpvorbispay->payload_VDT != VDT);
+  if (flush)
+    ret = gst_rtp_vorbis_pay_flush_packet (rtpvorbispay);
+
+  /* create new packet if we must */
+  if (!rtpvorbispay->packet)
+    gst_rtp_vorbis_pay_init_packet (rtpvorbispay, VDT);
+
   payload = gst_rtp_buffer_get_payload (rtpvorbispay->packet);
   ppos = payload + rtpvorbispay->payload_pos;
   fragmented = FALSE;
 
+  ret = GST_FLOW_OK;
+
+  /* put buffer in packet, it either fits completely or needs to be fragmented
+   * over multiple RTP packets. */
   while (size) {
     plen = MIN (rtpvorbispay->payload_left - 2, size);
 
     GST_DEBUG_OBJECT (rtpvorbispay, "append %u bytes", plen);
 
+    /* data is copied in the payload with a 2 byte length header */
     ppos[0] = (plen >> 8) & 0xff;
     ppos[1] = (plen & 0xff);
     memcpy (&ppos[2], data, plen);
@@ -256,12 +375,7 @@ gst_rtp_vorbis_pay_append_buffer (GstRtpVorbisPay * rtpvorbispay,
         /* fragment continues, set F to 0x2. */
         rtpvorbispay->payload_F = 0x2;
     } else {
-      if (size == 0) {
-        /* unfragmented packet, update stats for next packet */
-        rtpvorbispay->payload_pkts++;
-        if (duration != GST_CLOCK_TIME_NONE)
-          rtpvorbispay->payload_duration += duration;
-      } else {
+      if (size > 0) {
         /* fragmented packet starts, set F to 0x1, mark ourselves as
          * fragmented. */
         rtpvorbispay->payload_F = 0x1;
@@ -271,58 +385,42 @@ gst_rtp_vorbis_pay_append_buffer (GstRtpVorbisPay * rtpvorbispay,
     if (fragmented) {
       /* fragmented packets are always flushed and have ptks of 0 */
       rtpvorbispay->payload_pkts = 0;
-      res = gst_rtp_vorbis_pay_flush_packet (rtpvorbispay);
-      /* get new pointers */
-      payload = gst_rtp_buffer_get_payload (rtpvorbispay->packet);
-      ppos = payload + rtpvorbispay->payload_pos;
+      ret = gst_rtp_vorbis_pay_flush_packet (rtpvorbispay);
+
+      if (size > 0) {
+        /* start new packet and get pointers. VDT stays the same. */
+        gst_rtp_vorbis_pay_init_packet (rtpvorbispay,
+            rtpvorbispay->payload_VDT);
+        payload = gst_rtp_buffer_get_payload (rtpvorbispay->packet);
+        ppos = payload + rtpvorbispay->payload_pos;
+      }
+    } else {
+      /* unfragmented packet, update stats for next packet, size == 0 and we
+       * exit the while loop */
+      rtpvorbispay->payload_pkts++;
+      if (duration != GST_CLOCK_TIME_NONE)
+        rtpvorbispay->payload_duration += duration;
     }
   }
-
-  return res;
-}
-
-static GstFlowReturn
-gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
-    GstBuffer * buffer)
-{
-  GstRtpVorbisPay *rtpvorbispay;
-  GstFlowReturn ret;
-  guint size, newsize;
-  guint packet_len;
-  GstClockTime duration, newduration;
-  gboolean flush;
-
-  rtpvorbispay = GST_RTP_VORBIS_PAY (basepayload);
-
-  size = GST_BUFFER_SIZE (buffer);
-  duration = GST_BUFFER_DURATION (buffer);
-
-  GST_DEBUG_OBJECT (rtpvorbispay, "size %u, duration %" GST_TIME_FORMAT,
-      size, GST_TIME_ARGS (duration));
-
-  if (!rtpvorbispay->packet)
-    gst_rtp_vorbis_pay_init_packet (rtpvorbispay);
-
-  /* size increases with packet length and 2 bytes size eader. */
-  newduration = rtpvorbispay->payload_duration;
-  if (duration != GST_CLOCK_TIME_NONE)
-    newduration += duration;
-
-  newsize = rtpvorbispay->payload_pos + 2 + size;
-  packet_len = gst_rtp_buffer_calc_packet_len (newsize, 0, 0);
-
-  /* check buffer filled against length and max latency */
-  flush = gst_basertppayload_is_filled (basepayload, packet_len, newduration);
-  /* we can store up to 15 vorbis packets in one RTP packet. */
-  flush |= (rtpvorbispay->payload_pkts == 15);
-
-  if (flush)
-    ret = gst_rtp_vorbis_pay_flush_packet (rtpvorbispay);
-
-  /* put buffer in packet */
-  ret = gst_rtp_vorbis_pay_append_buffer (rtpvorbispay, buffer);
-
   return ret;
+
+  /* ERRORS */
+wrong_size:
+  {
+    GST_ELEMENT_WARNING (rtpvorbispay, STREAM, DECODE,
+        ("Invalid packet size (1 < %d <= 0xffff)", size), (NULL));
+    return GST_FLOW_OK;
+  }
+parse_id_failed:
+  {
+    return GST_FLOW_ERROR;
+  }
+unknown_header:
+  {
+    GST_ELEMENT_WARNING (rtpvorbispay, STREAM, DECODE,
+        ("Ignoring unknown header received"), (NULL));
+    return GST_FLOW_OK;
+  }
 }
 
 gboolean
