@@ -44,8 +44,8 @@ static void gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass *
 static void gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter,
     gpointer g_class);
 
-static void gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter,
-    GstBuffer * rtp_buf);
+static GstFlowReturn gst_base_rtp_depayload_process (GstBaseRTPDepayload *
+    filter, GstBuffer * rtp_buf);
 
 GType
 gst_base_rtp_depayload_get_type (void)
@@ -165,13 +165,13 @@ static void
 gst_base_rtp_depayload_finalize (GObject * object)
 {
   GstBuffer *buf;
+  GstBaseRTPDepayload *filter = GST_BASE_RTP_DEPAYLOAD (object);
 
-  while ((buf = g_queue_pop_head (GST_BASE_RTP_DEPAYLOAD (object)->queue)))
+  while ((buf = g_queue_pop_head (filter->queue)))
     gst_buffer_unref (buf);
-  g_queue_free (GST_BASE_RTP_DEPAYLOAD (object)->queue);
+  g_queue_free (filter->queue);
 
-  if (G_OBJECT_CLASS (parent_class)->finalize)
-    G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -193,6 +193,7 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
     res = TRUE;
 
   gst_object_unref (filter);
+
   return res;
 }
 
@@ -212,10 +213,12 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
 
   if (filter->queue_delay == 0) {
     GST_DEBUG_OBJECT (filter, "Pushing directly!");
-    gst_base_rtp_depayload_push (filter, in);
+    ret = gst_base_rtp_depayload_process (filter, in);
   } else {
     if (bclass->add_to_queue)
       ret = bclass->add_to_queue (filter, in);
+    else
+      goto no_delay;
   }
   return ret;
 
@@ -224,7 +227,15 @@ not_configured:
   {
     GST_ELEMENT_ERROR (filter, STREAM, FORMAT,
         (NULL), ("no clock rate was specified, likely incomplete input caps"));
+    gst_buffer_unref (in);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+no_delay:
+  {
+    GST_ELEMENT_ERROR (filter, STREAM, NOT_IMPLEMENTED,
+        (NULL), ("This element cannot operate with delay"));
+    gst_buffer_unref (in);
+    return GST_FLOW_NOT_SUPPORTED;
   }
 }
 
@@ -327,62 +338,129 @@ gst_base_rtp_depayload_add_to_queue (GstBaseRTPDepayload * filter,
   return GST_FLOW_OK;
 }
 
-static void
-gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * rtp_buf)
+static GstFlowReturn
+gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
+    gboolean do_ts, guint32 timestamp, GstBuffer * out_buf)
 {
-  GstBaseRTPDepayloadClass *bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
-  GstBuffer *out_buf;
+  GstFlowReturn ret;
   GstCaps *srccaps;
+  GstBaseRTPDepayloadClass *bclass;
+
+  /* set the caps if any */
+  srccaps = GST_PAD_CAPS (filter->srcpad);
+  if (srccaps)
+    gst_buffer_set_caps (out_buf, srccaps);
+
+  bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
+
+  /* set the timestamp if we must and can */
+  if (bclass->set_gst_timestamp && do_ts)
+    bclass->set_gst_timestamp (filter, timestamp, out_buf);
+
+  /* push it */
+  GST_LOG_OBJECT (filter, "Pushing buffer size %d, timestamp %u",
+      GST_BUFFER_SIZE (out_buf), GST_BUFFER_TIMESTAMP (out_buf));
+  ret = gst_pad_push (filter->srcpad, out_buf);
+  GST_LOG_OBJECT (filter, "Pushed buffer: %s", gst_flow_get_name (ret));
+
+  return ret;
+}
+
+/**
+ * gst_base_rtp_depayload_push_ts:
+ * @filter: a #GstBaseRTPDepayload
+ * @timestamp: an RTP timestamp to apply
+ * @out_buf: a #GstBuffer
+ *
+ * Push @out_buf to the peer of @filter. This function takes ownership of
+ * @out_buf.
+ *
+ * Unlike gst_base_rtp_depayload_push(), this function will apply @timestamp
+ * on the outgoing buffer, using the configured clock_rate to convert the
+ * timestamp to a valid GStreamer clock time.
+ *
+ * Return: a #GstFlowReturn.
+ */
+GstFlowReturn
+gst_base_rtp_depayload_push_ts (GstBaseRTPDepayload * filter, guint32 timestamp,
+    GstBuffer * out_buf)
+{
+  return gst_base_rtp_depayload_push_full (filter, TRUE, timestamp, out_buf);
+}
+
+/**
+ * gst_base_rtp_depayload_push:
+ * @filter: a #GstBaseRTPDepayload
+ * @out_buf: a #GstBuffer
+ *
+ * Push @out_buf to the peer of @filter. This function takes ownership of
+ * @out_buf.
+ *
+ * Unlike gst_base_rtp_depayload_push_ts(), this function will not apply
+ * any timestamp on the outgoing buffer.
+ *
+ * Return: a #GstFlowReturn.
+ */
+GstFlowReturn
+gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * out_buf)
+{
+  return gst_base_rtp_depayload_push_full (filter, FALSE, 0, out_buf);
+}
+
+static GstFlowReturn
+gst_base_rtp_depayload_process (GstBaseRTPDepayload * filter,
+    GstBuffer * rtp_buf)
+{
+  GstBaseRTPDepayloadClass *bclass;
+  GstBuffer *out_buf;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
   /* let's send it out to processing */
   out_buf = bclass->process (filter, rtp_buf);
   if (out_buf) {
-    /* set the caps */
-    srccaps = GST_PAD_CAPS (filter->srcpad);
+    guint32 timestamp = gst_rtp_buffer_get_timestamp (rtp_buf);
 
-    if (srccaps)
-      gst_buffer_set_caps (GST_BUFFER (out_buf), srccaps);
-
-    /* set the timestamp
-     * I am assuming here that the timestamp of the last RTP buffer
-     * is the same as the timestamp wanted on the collector
-     * maybe i should add a way to override this timestamp from the
-     * depayloader child class
+    /* push buffer with timestamp 
+     * We are assuming here that the timestamp of the last RTP buffer
+     * is the same as the timestamp wanted on the collector. If this is not a
+     * desired result, the process function should push itself with another
+     * timestamp and return NULL.
      */
-    bclass->set_gst_timestamp (filter, gst_rtp_buffer_get_timestamp (rtp_buf),
-        out_buf);
-    /* push it */
-    GST_LOG_OBJECT (filter, "Pushing buffer size %d, timestamp %u",
-        GST_BUFFER_SIZE (out_buf), GST_BUFFER_TIMESTAMP (out_buf));
-    gst_pad_push (filter->srcpad, GST_BUFFER (out_buf));
-    GST_LOG_OBJECT (filter, "Pushed buffer");
+    ret = gst_base_rtp_depayload_push_ts (filter, timestamp, out_buf);
   }
   gst_buffer_unref (rtp_buf);
+
+  return ret;
 }
 
 static void
 gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
     guint32 timestamp, GstBuffer * buf)
 {
-  guint64 ts = ((timestamp * GST_SECOND) / filter->clock_rate);
+  GstClockTime ts, adjusted;
+
+  ts = gst_util_uint64_scale_int (timestamp, GST_SECOND, filter->clock_rate);
 
   /* rtp timestamps are based on the clock_rate
    * gst timesamps are in nanoseconds
    */
-  GST_DEBUG_OBJECT (filter, "calculating ts : timestamp : %u, clockrate : %u",
+  GST_DEBUG_OBJECT (filter, "ts : timestamp : %u, clockrate : %u",
       timestamp, filter->clock_rate);
 
   /* add delay to timestamp */
-  GST_BUFFER_TIMESTAMP (buf) = ts + (filter->queue_delay * GST_MSECOND);
+  adjusted = ts + (filter->queue_delay * GST_MSECOND);
 
-  GST_DEBUG_OBJECT (filter, "calculated ts %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+  GST_DEBUG_OBJECT (filter, "RTP: %u, GST: %" GST_TIME_FORMAT ", adjusted %"
+      GST_TIME_FORMAT, timestamp, GST_TIME_ARGS (ts), GST_TIME_ARGS (adjusted));
 
-  /* if this is the first buf send a discont */
+  GST_BUFFER_TIMESTAMP (buf) = adjusted;
+
+  /* if this is the first buf send a NEWSEGMENT */
   if (filter->need_newsegment) {
-    /* send discont */
     GstEvent *event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-        GST_BUFFER_TIMESTAMP (buf), GST_CLOCK_TIME_NONE, 0);
+        adjusted, GST_CLOCK_TIME_NONE, 0);
 
     gst_pad_push_event (filter->srcpad, event);
     filter->need_newsegment = FALSE;
@@ -424,7 +502,7 @@ gst_base_rtp_depayload_queue_release (GstBaseRTPDepayload * filter)
     if (bclass->process) {
       GstBuffer *in = g_queue_pop_head (queue);
 
-      gst_base_rtp_depayload_push (filter, in);
+      gst_base_rtp_depayload_process (filter, in);
     }
     headts =
         gst_rtp_buffer_get_timestamp (GST_BUFFER (g_queue_peek_head (queue)));

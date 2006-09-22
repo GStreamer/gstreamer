@@ -404,7 +404,7 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
 
     ts += rtime;
   }
-  GST_LOG_OBJECT (payload, "setting RTP timestamp %d", ts);
+  GST_LOG_OBJECT (payload, "setting RTP timestamp %lu", ts);
   gst_rtp_buffer_set_timestamp (buffer, ts);
 
   payload->timestamp = ts;

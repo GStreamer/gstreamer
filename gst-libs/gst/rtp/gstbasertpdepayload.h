@@ -98,7 +98,9 @@ struct _GstBaseRTPDepayloadClass
   GstFlowReturn (*add_to_queue) (GstBaseRTPDepayload *filter, GstBuffer *in);
 
   /* pure virtual function, child must use this to process incoming
-   * rtp packets
+   * rtp packets. If the child returns a buffer, the timestamp of @in will be
+   * applied to the result buffer and the buffer will be pushed. If this
+   * function returns %NULL, nothing is pushed.
    */
   GstBuffer * (*process) (GstBaseRTPDepayload *base, GstBuffer *in);
 
@@ -112,6 +114,10 @@ struct _GstBaseRTPDepayloadClass
 };
 
 GType gst_base_rtp_depayload_get_type (void);
+
+GstFlowReturn   gst_base_rtp_depayload_push              (GstBaseRTPDepayload *filter, GstBuffer *out_buf);
+GstFlowReturn   gst_base_rtp_depayload_push_ts           (GstBaseRTPDepayload *filter,
+		                                          guint32 timestamp, GstBuffer *out_buf);
 
 G_END_DECLS
 
