@@ -1,3 +1,10 @@
+2006-09-22  Edward Hervey  <edward@fluendo.com>
+
+	Patch by: Rene Stadler <mail@renestadler.de>
+	* gst/gstlibs.override:
+	Fixes for GstController creation
+	memleak fixes.
+
 2006-09-12  Edward Hervey  <edward@fluendo.com>
 
 	* gst/extend/Makefile.am:

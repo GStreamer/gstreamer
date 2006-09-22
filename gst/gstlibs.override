@@ -95,6 +95,7 @@ override gst_controller_new_list args
 static int
 _wrap_gst_controller_new_list(PyGObject *self, PyObject *args)
 {
+    PyObject    *target_pyobj;
     PyGObject	*target;
     gint	len;
     GList	*list = NULL;
@@ -103,7 +104,18 @@ _wrap_gst_controller_new_list(PyGObject *self, PyObject *args)
 	PyErr_SetString(PyExc_TypeError, "Controller requires at least a target object");
 	return -1;
     }
-    target = (PyGObject *) PyTuple_GetItem(args, 0);
+
+    target_pyobj = PyTuple_GetItem(args, 0);
+    if (!PyObject_TypeCheck(target_pyobj, &PyGObject_Type)) {
+	PyErr_Format(PyExc_TypeError,
+		     "argument 1 must be %s, not %s",
+		     PyGObject_Type.tp_name,
+		     target_pyobj == Py_None ? "None" : target_pyobj->ob_type->tp_name);
+	return -1;
+    }
+
+    target = (PyGObject *) target_pyobj;
+    
     if (len > 1)
 	while (len-- > 1) {
 	    PyObject	*temp;
@@ -111,11 +123,16 @@ _wrap_gst_controller_new_list(PyGObject *self, PyObject *args)
 
 	    temp = PyTuple_GetItem(args, len);
 	    str = PyString_AsString(temp);
+	    if (str == NULL) {
+		g_list_free (list);
+		return -1;
+	    }
 	    GST_INFO("prepending %s [%d]", str, len);
-	    list = g_list_prepend(list, PyString_AsString(temp));
+	    list = g_list_prepend(list, str);
 	}
 
     self->obj = (GObject *) gst_controller_new_list(target->obj, list);
+    g_list_free (list);
 
     if (!self->obj) {
 	PyErr_SetString(PyExc_RuntimeError, "could not create GstController object");
@@ -147,11 +164,16 @@ _wrap_gst_controller_remove_properties (PyGObject *self, PyObject *args)
 	
 	temp = PyTuple_GetItem(args, len);
 	str = PyString_AsString(temp);
+	if (str == NULL) {
+	    g_list_free (list);
+	    return NULL;
+	}
 	GST_INFO("prepending %s [%d]", str, len);
-	list = g_list_prepend(list, PyString_AsString(temp));
+	list = g_list_prepend(list, str);
     }
     
     res = gst_controller_remove_properties_list(controller, list);
+    g_list_free (list);
 
     if (res)
 	pret = Py_True;
@@ -213,6 +235,7 @@ _wrap_gst_controller_set_from_list (PyGObject *self, PyObject *args)
     }
     
     res = gst_controller_set_from_list(controller, pname, list);
+    g_slist_free (list);
 
     if (res)
 	pret = Py_True;
