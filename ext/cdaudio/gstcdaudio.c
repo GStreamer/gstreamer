@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ *               <2006> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,6 +26,9 @@
 
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY_STATIC (gst_cdaudio_debug);
+#define GST_CAT_DEFAULT gst_cdaudio_debug
+
 #define GST_TYPE_CDAUDIO                (gst_cdaudio_get_type())
 #define GST_CDAUDIO(obj)                (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CDAUDIO,GstCDAudio))
 #define GST_CDAUDIO_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CDAUDIO,GstCDAudioClass))
@@ -36,7 +40,7 @@ typedef struct _GstCDAudioClass GstCDAudioClass;
 
 struct _GstCDAudio
 {
-  GstBin element;
+  GstElement parent;
 
   /* properties */
   gchar *device;
@@ -55,7 +59,7 @@ struct _GstCDAudio
 
 struct _GstCDAudioClass
 {
-  GstBinClass parent_class;
+  GstElementClass parent_class;
 
   void (*close_tray) (GstElement * element);
   /* signal callbacks */
@@ -67,7 +71,6 @@ enum
 {
   ARG_0,
   ARG_DEVICE,
-  ARG_DISCID,
   ARG_VOLUME_FR,
   ARG_VOLUME_FL,
   ARG_VOLUME_BR,
@@ -82,7 +85,7 @@ enum
 };
 
 static void gst_cdaudio_class_init (GstCDAudioClass * klass);
-static void gst_cdaudio_init (GstCDAudio * cdaudio);
+static void gst_cdaudio_init (GstCDAudio * cdaudio, GstCDAudioClass * g_class);
 static void gst_cdaudio_finalize (GObject * object);
 
 static void gst_cdaudio_set_property (GObject * object, guint prop_id,
@@ -92,22 +95,17 @@ static void gst_cdaudio_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_cdaudio_change_state (GstElement * element,
     GstStateChange transition);
 
-static const GstEventMask *gst_cdaudio_get_event_masks (GstElement * element);
-static gboolean gst_cdaudio_send_event (GstElement * element, GstEvent * event);
-static const GstFormat *gst_cdaudio_get_formats (GstElement * element);
-static gboolean gst_cdaudio_convert (GstElement * element,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value);
 static const GstQueryType *gst_cdaudio_get_query_types (GstElement * element);
-static gboolean gst_cdaudio_query (GstElement * element, GstQueryType type,
-    GstFormat * format, gint64 * value);
+static gboolean gst_cdaudio_query (GstElement * element, GstQuery * query);
+
+static gboolean gst_cdaudio_send_event (GstElement * element, GstEvent * event);
 
 static void cdaudio_uri_handler_init (gpointer g_iface, gpointer iface_data);
 
 static GstFormat track_format;
 static GstFormat sector_format;
 
-static GstBinClass *parent_class;
+static GstElementClass *parent_class;
 static guint gst_cdaudio_signals[LAST_SIGNAL] = { 0 };
 
 static const GstElementDetails gst_cdaudio_details =
@@ -130,8 +128,8 @@ _do_init (GType cdaudio_type)
       &urihandler_info);
 }
 
-
-GST_BOILERPLATE_FULL (GstCDAudio, gst_cdaudio, GstBin, GST_TYPE_BIN, _do_init);
+GST_BOILERPLATE_FULL (GstCDAudio, gst_cdaudio, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
 
 static void
 gst_cdaudio_base_init (gpointer g_class)
@@ -150,11 +148,9 @@ gst_cdaudio_class_init (GstCDAudioClass * klass)
 {
   GObjectClass *gobject_klass;
   GstElementClass *gstelement_klass;
-  GstBinClass *gstbin_klass;
 
   gobject_klass = (GObjectClass *) klass;
   gstelement_klass = (GstElementClass *) klass;
-  gstbin_klass = (GstBinClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
@@ -164,9 +160,6 @@ gst_cdaudio_class_init (GstCDAudioClass * klass)
   g_object_class_install_property (gobject_klass, ARG_DEVICE,
       g_param_spec_string ("device", "Device", "CDROM device",
           NULL, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_klass, ARG_DISCID,
-      g_param_spec_ulong ("discid", "Disc ID", "CDDB Disc ID",
-          0, G_MAXULONG, 0, G_PARAM_READABLE));
   g_object_class_install_property (gobject_klass, ARG_VOLUME_FL,
       g_param_spec_int ("volume_fl", "Volume fl", "Front left volume",
           0, 255, 255, G_PARAM_READWRITE));
@@ -188,14 +181,12 @@ gst_cdaudio_class_init (GstCDAudioClass * klass)
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_cdaudio_finalize);
 
   gstelement_klass->change_state = GST_DEBUG_FUNCPTR (gst_cdaudio_change_state);
-  gstelement_klass->get_event_masks =
-      GST_DEBUG_FUNCPTR (gst_cdaudio_get_event_masks);
   gstelement_klass->send_event = GST_DEBUG_FUNCPTR (gst_cdaudio_send_event);
-  gstelement_klass->get_formats = GST_DEBUG_FUNCPTR (gst_cdaudio_get_formats);
-  gstelement_klass->convert = GST_DEBUG_FUNCPTR (gst_cdaudio_convert);
   gstelement_klass->get_query_types =
       GST_DEBUG_FUNCPTR (gst_cdaudio_get_query_types);
   gstelement_klass->query = GST_DEBUG_FUNCPTR (gst_cdaudio_query);
+
+  GST_DEBUG_CATEGORY_INIT (gst_cdaudio_debug, "cdaudio", 0, "CDAudio Element");
 }
 
 static void
@@ -205,8 +196,7 @@ gst_cdaudio_init (GstCDAudio * cdaudio, GstCDAudioClass * g_class)
   cdaudio->was_playing = FALSE;
   cdaudio->timer = g_timer_new ();
 
-  GST_OBJECT_FLAG_SET (cdaudio, GST_BIN_FLAG_MANAGER);
-  GST_OBJECT_FLAG_SET (cdaudio, GST_BIN_SELF_SCHEDULABLE);
+  GST_OBJECT_FLAG_SET (cdaudio, GST_ELEMENT_IS_SINK);
 }
 
 static void
@@ -225,8 +215,6 @@ gst_cdaudio_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * spec)
 {
   GstCDAudio *cdaudio;
-
-  g_return_if_fail (GST_IS_CDAUDIO (object));
 
   cdaudio = GST_CDAUDIO (object);
 
@@ -252,16 +240,11 @@ gst_cdaudio_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstCDAudio *cdaudio;
 
-  g_return_if_fail (GST_IS_CDAUDIO (object));
-
   cdaudio = GST_CDAUDIO (object);
 
   switch (prop_id) {
     case ARG_DEVICE:
       g_value_set_string (value, cdaudio->device);
-      break;
-    case ARG_DISCID:
-      g_value_set_ulong (value, cdaudio->discid);
       break;
     case ARG_VOLUME_FR:
       g_value_set_int (value, cdaudio->volume.vol_front.right);
@@ -298,6 +281,8 @@ static GstStateChangeReturn
 gst_cdaudio_change_state (GstElement * element, GstStateChange transition)
 {
   GstCDAudio *cdaudio;
+  GstStateChangeReturn ret;
+  gint res;
 
   cdaudio = GST_CDAUDIO (element);
 
@@ -305,76 +290,105 @@ gst_cdaudio_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      cdaudio->cd_desc = cd_init_device (cdaudio->device);
-      if (cdaudio->cd_desc < 0)
-        return GST_STATE_CHANGE_FAILURE;
+      if ((res = cd_init_device (cdaudio->device)) < 0)
+        goto init_failed;
+
+      cdaudio->cd_desc = res;
 
       /* close tray */
-      if (cd_close (cdaudio->cd_desc) < 0)
-        return GST_STATE_CHANGE_FAILURE;
+      if ((res = cd_close (cdaudio->cd_desc)) < 0)
+        goto close_failed;
 
-      if (cd_stat (cdaudio->cd_desc, &cdaudio->info) < 0)
-        return GST_STATE_CHANGE_FAILURE;
-
-      debug_track_info (cdaudio);
-
-      cdaudio->discid = cddb_discid (cdaudio->cd_desc);
-      g_object_notify (G_OBJECT (cdaudio), "discid");
-
+      if ((res = cd_stat (cdaudio->cd_desc, &cdaudio->info)) < 0) {
+        /* we just give a warning here */
+        GST_ELEMENT_WARNING (cdaudio, LIBRARY, INIT,
+            ("Could not retrieve CD track info."), (NULL));
+      } else {
+        debug_track_info (cdaudio);
+        cdaudio->discid = cddb_discid (cdaudio->cd_desc);
+        /* FIXME, post message with discid */
+      }
       cdaudio->was_playing = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
-      gint res;
-
       if (cdaudio->was_playing)
         res = cd_resume (cdaudio->cd_desc);
       else
         res = cd_play (cdaudio->cd_desc, 1);
 
       if (res < 0)
-        return GST_STATE_CHANGE_FAILURE;
+        goto play_failed;
 
       cdaudio->was_playing = TRUE;
       g_timer_start (cdaudio->timer);
       break;
     }
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      if (cd_pause (cdaudio->cd_desc) < 0)
-        return GST_STATE_CHANGE_FAILURE;
+      if ((res = cd_pause (cdaudio->cd_desc)) < 0)
+        goto pause_failed;
       g_timer_stop (cdaudio->timer);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (cd_stop (cdaudio->cd_desc) < 0)
-        return GST_STATE_CHANGE_FAILURE;
-      if (cd_finish (cdaudio->cd_desc) < 0)
-        return GST_STATE_CHANGE_FAILURE;
+      if ((res = cd_stop (cdaudio->cd_desc)) < 0)
+        goto stop_failed;
+      if ((res = cd_finish (cdaudio->cd_desc)) < 0)
+        goto finish_failed;
+      cdaudio->cd_desc = -1;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
       break;
   }
+  return ret;
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state) {
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  /* ERRORS */
+init_failed:
+  {
+    GST_ELEMENT_ERROR (cdaudio, LIBRARY, INIT,
+        ("Could not init CD device %s. (%d)", cdaudio->device, res), (NULL));
+    cdaudio->cd_desc = -1;
+    return GST_STATE_CHANGE_FAILURE;
   }
-
-  return GST_STATE_CHANGE_SUCCESS;
-}
-
-static const GstEventMask *
-gst_cdaudio_get_event_masks (GstElement * element)
-{
-  static const GstEventMask masks[] = {
-    {GST_EVENT_SEEK, GST_SEEK_METHOD_SET |
-          GST_SEEK_METHOD_CUR | GST_SEEK_METHOD_END | GST_SEEK_FLAG_FLUSH},
-    {GST_EVENT_SEEK_SEGMENT, GST_SEEK_METHOD_SET |
-          GST_SEEK_METHOD_CUR | GST_SEEK_METHOD_END | GST_SEEK_FLAG_FLUSH},
-    {0,}
-  };
-
-  return masks;
+close_failed:
+  {
+    GST_ELEMENT_ERROR (cdaudio, LIBRARY, INIT,
+        ("Could not close CD tray for device %s. (%d)", cdaudio->device, res),
+        (NULL));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+play_failed:
+  {
+    GST_ELEMENT_ERROR (cdaudio, LIBRARY, INIT,
+        ("Could not play CD device %s. (%d)", cdaudio->device, res), (NULL));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+pause_failed:
+  {
+    GST_ELEMENT_ERROR (cdaudio, LIBRARY, INIT,
+        ("Could not pause CD device %s. (%d)", cdaudio->device, res), (NULL));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+stop_failed:
+  {
+    GST_ELEMENT_ERROR (cdaudio, LIBRARY, INIT,
+        ("Could not stop CD device %s. (%d)", cdaudio->device, res), (NULL));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+finish_failed:
+  {
+    GST_ELEMENT_ERROR (cdaudio, LIBRARY, INIT,
+        ("Could not finish CD device %s. (%d)", cdaudio->device, res), (NULL));
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
 
 static gboolean
@@ -387,70 +401,82 @@ gst_cdaudio_send_event (GstElement * element, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      switch (GST_EVENT_SEEK_FORMAT (event)) {
-        case GST_FORMAT_TIME:
-        {
-          if (cd_play_pos (cdaudio->cd_desc, 1,
-                  (gint) (GST_EVENT_SEEK_OFFSET (event) / (GST_SECOND))) == -1)
-            res = FALSE;
-          break;
-        }
-        default:
-          res = FALSE;
-          break;
-      }
-      break;
+    {
+      gdouble rate;
+      GstFormat format;
+      GstSeekFlags flags;
+      GstSeekType start_type, stop_type;
+      gint64 start, stop;
+      gint ret;
+
+      gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
+          &stop_type, &stop);
+
+      /* FIXME, implement more formats */
+      if (format != GST_FORMAT_TIME)
+        goto wrong_format;
+
+      if (rate != 1.0)
+        goto wrong_rate;
+
+      if (start_type != GST_SEEK_TYPE_SET)
+        goto unsupported;
+
+      ret = cd_play_pos (cdaudio->cd_desc, 1, start / GST_SECOND);
+      if (ret < 0)
+        goto seek_failed;
+    }
     default:
       res = FALSE;
       break;
   }
+
+done:
   gst_event_unref (event);
+
   return res;
+
+  /* ERRORS */
+wrong_format:
+  {
+    GST_DEBUG_OBJECT (cdaudio, "only seek in TIME is supported");
+    res = FALSE;
+    goto done;
+  }
+wrong_rate:
+  {
+    GST_DEBUG_OBJECT (cdaudio, "only seek with 1.0 rate is supported");
+    res = FALSE;
+    goto done;
+  }
+unsupported:
+  {
+    GST_DEBUG_OBJECT (cdaudio, "only seek SET is supported");
+    res = FALSE;
+    goto done;
+  }
+seek_failed:
+  {
+    GST_DEBUG_OBJECT (cdaudio, "seek failed");
+    res = FALSE;
+    goto done;
+  }
 }
 
-const GstFormat *
-gst_cdaudio_get_formats (GstElement * element)
-{
-  static GstFormat formats[] = {
-    GST_FORMAT_TIME,
-    GST_FORMAT_BYTES,
-    GST_FORMAT_DEFAULT,
-    0,                          /* fillted below */
-    0,                          /* fillted below */
-    0,
-  };
-
-  formats[3] = track_format;
-  formats[4] = sector_format;
-
-  return formats;
-}
-
-gboolean
-gst_cdaudio_convert (GstElement * element,
-    GstFormat src_format, gint64 src_value,
-    GstFormat * dest_format, gint64 * dest_value)
-{
-  return FALSE;
-}
-
-const GstQueryType *
+static const GstQueryType *
 gst_cdaudio_get_query_types (GstElement * element)
 {
   static const GstQueryType query_types[] = {
-    GST_QUERY_TOTAL,
+    GST_QUERY_DURATION,
     GST_QUERY_POSITION,
-    GST_QUERY_START,
-    GST_QUERY_SEGMENT_END,
     0
   };
 
   return query_types;
 }
 
-gboolean
-gst_cdaudio_query (GstElement * element, GstQueryType type,
-    GstFormat * format, gint64 * value)
+static gboolean
+gst_cdaudio_query (GstElement * element, GstQuery * query)
 {
   GstCDAudio *cdaudio;
   gboolean res = TRUE;
@@ -459,6 +485,9 @@ gst_cdaudio_query (GstElement * element, GstQueryType type,
 
   cdaudio = GST_CDAUDIO (element);
 
+  GST_LOG_OBJECT (element, "handling %s query",
+      gst_query_type_get_name (GST_QUERY_TYPE (query)));
+
   /* take new snapshot every 1000 miliseconds */
   seconds = g_timer_elapsed (cdaudio->timer, &micros);
   if (micros > 1000 || seconds > 1) {
@@ -466,47 +495,66 @@ gst_cdaudio_query (GstElement * element, GstQueryType type,
     g_timer_start (cdaudio->timer);
   }
 
-  switch (type) {
-    case GST_QUERY_TOTAL:
-      switch (*format) {
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_DURATION:
+    {
+      GstFormat dest_format;
+      gint64 dest_val;
+
+      gst_query_parse_duration (query, &dest_format, NULL);
+
+      switch (dest_format) {
         case GST_FORMAT_TIME:
-          *value = (cdaudio->info.disc_length.minutes * 60 +
+          dest_val = (cdaudio->info.disc_length.minutes * 60 +
               cdaudio->info.disc_length.seconds) * GST_SECOND;
           break;
         default:
         {
-          if (*format == track_format) {
-            *value = cdaudio->info.disc_total_tracks;
+          if (dest_format == track_format) {
+            dest_val = cdaudio->info.disc_total_tracks;
           } else {
             res = FALSE;
           }
           break;
         }
       }
+      if (res)
+        gst_query_set_duration (query, dest_format, dest_val);
       break;
+    }
     case GST_QUERY_POSITION:
-      switch (*format) {
+    {
+      GstFormat dest_format;
+      gint64 dest_val;
+
+      gst_query_parse_position (query, &dest_format, NULL);
+
+      switch (dest_format) {
         case GST_FORMAT_TIME:
-          *value = (cdaudio->info.disc_time.minutes * 60 +
+          dest_val = (cdaudio->info.disc_time.minutes * 60 +
               cdaudio->info.disc_time.seconds) * GST_SECOND;
           break;
         default:
         {
-          if (*format == track_format) {
-            *value = cdaudio->info.disc_current_track;
+          if (dest_format == track_format) {
+            dest_val = cdaudio->info.disc_current_track;
           } else {
             res = FALSE;
           }
           break;
         }
       }
+      if (res)
+        gst_query_set_position (query, dest_format, dest_val);
       break;
+    }
     default:
       res = FALSE;
       break;
   }
   return res;
 }
+
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -551,10 +599,9 @@ cdaudio_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   //GstCDAudio *cdaudio = GST_CDAUDIO(handler);
 
   protocol = gst_uri_get_protocol (uri);
-  if (strcmp (protocol, "cd") != 0) {
-    g_free (protocol);
-    return FALSE;
-  }
+  if (strcmp (protocol, "cd") != 0)
+    goto wrong_protocol;
+
   g_free (protocol);
 
   location = gst_uri_get_location (uri);
@@ -567,6 +614,13 @@ cdaudio_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   g_free (location);
 
   return ret;
+
+  /* ERRORS */
+wrong_protocol:
+  {
+    g_free (protocol);
+    return FALSE;
+  }
 }
 
 static void

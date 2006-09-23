@@ -1,3 +1,12 @@
+2006-09-23  Wim Taymans  <wim@fluendo.com>
+
+	* ext/cdaudio/gstcdaudio.c: (gst_cdaudio_class_init),
+	(gst_cdaudio_init), (gst_cdaudio_set_property),
+	(gst_cdaudio_get_property), (gst_cdaudio_change_state),
+	(gst_cdaudio_send_event), (gst_cdaudio_get_query_types),
+	(gst_cdaudio_query), (cdaudio_uri_set_uri):
+	Port to 0.10.
+
 2006-09-22  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/glimagesink.c:
