@@ -44,7 +44,7 @@
 
 
 static gpointer
-gst_tag_register_musicbrainz_tags_internal (gpointer unused)
+gst_tag_register_tags_internal (gpointer unused)
 {
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
@@ -52,6 +52,7 @@ gst_tag_register_musicbrainz_tags_internal (gpointer unused)
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 #endif
 
+  /* musicbrainz tags */
   gst_tag_register (GST_TAG_MUSICBRAINZ_TRACKID, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("track ID"), _("MusicBrainz track ID"), NULL);
   gst_tag_register (GST_TAG_MUSICBRAINZ_ARTISTID, GST_TAG_FLAG_META,
@@ -67,9 +68,28 @@ gst_tag_register_musicbrainz_tags_internal (gpointer unused)
       G_TYPE_STRING,
       _("artist sortname"), _("MusicBrainz artist sortname"), NULL);
 
+  /* CDDA tags */
+  gst_tag_register (GST_TAG_CDDA_CDDB_DISCID, GST_TAG_FLAG_META,
+      G_TYPE_STRING, "discid", "CDDB discid for metadata retrieval",
+      gst_tag_merge_use_first);
+
+  gst_tag_register (GST_TAG_CDDA_CDDB_DISCID_FULL, GST_TAG_FLAG_META,
+      G_TYPE_STRING, "discid full",
+      "CDDB discid for metadata retrieval (full)", gst_tag_merge_use_first);
+
+  gst_tag_register (GST_TAG_CDDA_MUSICBRAINZ_DISCID, GST_TAG_FLAG_META,
+      G_TYPE_STRING, "musicbrainz-discid",
+      "Musicbrainz discid for metadata retrieval", gst_tag_merge_use_first);
+
+  gst_tag_register (GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL, GST_TAG_FLAG_META,
+      G_TYPE_STRING, "musicbrainz-discid-full",
+      "Musicbrainz discid for metadata retrieval (full)",
+      gst_tag_merge_use_first);
+
   return NULL;
 }
 
+/* FIXME 0.11: rename this to gst_tag_init() or gst_tag_register_tags() */
 /**
  * gst_tag_register_musicbrainz_tags
  *
@@ -82,7 +102,7 @@ gst_tag_register_musicbrainz_tags (void)
 {
   static GOnce mb_once = G_ONCE_INIT;
 
-  g_once (&mb_once, gst_tag_register_musicbrainz_tags_internal, NULL);
+  g_once (&mb_once, gst_tag_register_tags_internal, NULL);
 }
 
 static void

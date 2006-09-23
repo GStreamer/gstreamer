@@ -24,6 +24,10 @@
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
 
+/* must include this for backwards-compatibility so the
+ * GST_TAG_CDDA_* defines are included. Remove in 0.11 */
+#include <gst/tag/tag.h>
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_CDDA_BASE_SRC            (gst_cdda_base_src_get_type())
@@ -133,37 +137,6 @@ GType    gst_cdda_base_src_get_type (void);
 
 gboolean gst_cdda_base_src_add_track (GstCddaBaseSrc      * src,
                                       GstCddaBaseSrcTrack * track);
-
-
-/* tags */
-
-/**
- * GST_TAG_CDDA_CDDB_DISCID:
- *
- * CDDB disc id in its short form (e.g. 'aa063d0f')
- */
-#define GST_TAG_CDDA_CDDB_DISCID              "discid"
-
-/**
- * GST_TAG_CDDA_CDDB_DISCID_FULL:
- *
- * CDDB disc id including all details
- */
-#define GST_TAG_CDDA_CDDB_DISCID_FULL         "discid-full"
-
-/**
- * GST_TAG_CDDA_MUSICBRAINZ_DISCID:
- *
- * Musicbrainz disc id (e.g. 'ahg7JUcfR3vCYBphSDIogOOWrr0-')
- */
-#define GST_TAG_CDDA_MUSICBRAINZ_DISCID       "musicbrainz-discid"
-
-/**
- * GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL:
- *
- * Musicbrainz disc id details
- */
-#define GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL  "musicbrainz-discid-full"
 
 #if 0
 /*

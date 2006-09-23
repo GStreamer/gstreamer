@@ -1,3 +1,25 @@
+2006-09-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/cdda/Makefile.am:
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	(gst_cdda_base_src_base_init):
+	* gst-libs/gst/cdda/gstcddabasesrc.h:
+	* gst-libs/gst/tag/tag.h:
+	* gst-libs/gst/tag/tags.c: (gst_tag_register_tags_internal),
+	(gst_tag_register_musicbrainz_tags):
+	  Move GST_TAG_CDDA_* tags into libgsttag and make libgstcddabasesrc
+	  depend on libgsttag. This is required so we can extract/read tags like
+	  DISCID without depending on libgstcddabasesrc (which used to register
+	  them).
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  Add vorbiscomment mapping for CDDB_DISCID and MUSICBRAINZ_DISCID
+	  tags (also see #347848).
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_metadata_set1):
+	  Log vorbis comments we are actually writing. Const-ify array.
+
 2006-09-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (gen_preroll_element):

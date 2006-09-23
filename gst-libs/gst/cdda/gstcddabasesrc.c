@@ -70,6 +70,14 @@
  * setting a new cdda://n+1 URI on playbin (as setting a new URI on playbin
  * involves closing and re-opening the CD device, which is much much slower).
  * </para>
+ * <title>Tags and meta-information</title>
+ * <para>
+ * CDDA sources will automatically emit a number of tags, details about which
+ * can be found in the libgsttag documentation. Those tags are:
+ * #GST_TAG_CDDA_CDDB_DISCID, #GST_TAG_CDDA_CDDB_DISCID_FULL,
+ * #GST_TAG_CDDA_MUSICBRAINZ_DISCID, #GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL,
+ * among others.
+ * </para>
  * </refsect2>
  */
 
@@ -182,23 +190,8 @@ gst_cdda_base_src_base_init (gpointer g_class)
   track_format = gst_format_register ("track", "CD track");
   sector_format = gst_format_register ("sector", "CD sector");
 
-  /* tags */
-  gst_tag_register (GST_TAG_CDDA_CDDB_DISCID, GST_TAG_FLAG_META,
-      G_TYPE_STRING, "discid", "CDDB discid for metadata retrieval",
-      gst_tag_merge_use_first);
-
-  gst_tag_register (GST_TAG_CDDA_CDDB_DISCID_FULL, GST_TAG_FLAG_META,
-      G_TYPE_STRING, "discid full",
-      "CDDB discid for metadata retrieval (full)", gst_tag_merge_use_first);
-
-  gst_tag_register (GST_TAG_CDDA_MUSICBRAINZ_DISCID, GST_TAG_FLAG_META,
-      G_TYPE_STRING, "musicbrainz-discid",
-      "Musicbrainz discid for metadata retrieval", gst_tag_merge_use_first);
-
-  gst_tag_register (GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL, GST_TAG_FLAG_META,
-      G_TYPE_STRING, "musicbrainz-discid-full",
-      "Musicbrainz discid for metadata retrieval (full)",
-      gst_tag_merge_use_first);
+  /* register CDDA tags */
+  gst_tag_register_musicbrainz_tags ();
 
 #if 0
   ///// FIXME: what type to use here? ///////

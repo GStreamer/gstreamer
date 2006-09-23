@@ -237,7 +237,7 @@ gst_vorbis_enc_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
-static GstAudioChannelPosition vorbischannelpositions[][6] = {
+static const GstAudioChannelPosition vorbischannelpositions[][6] = {
   {                             /* Mono */
       GST_AUDIO_CHANNEL_POSITION_FRONT_MONO},
   {                             /* Stereo */
@@ -637,6 +637,7 @@ gst_vorbis_enc_metadata_set1 (const GstTagList * list, const gchar * tag,
     const gchar *vc_string = (const gchar *) l->data;
     gchar *key = NULL, *val = NULL;
 
+    GST_LOG_OBJECT (vorbisenc, "vorbis comment: %s", vc_string);
     if (gst_tag_parse_extended_comment (vc_string, &key, NULL, &val, TRUE)) {
       vorbis_comment_add_tag (&enc->vc, key, val);
       g_free (key);

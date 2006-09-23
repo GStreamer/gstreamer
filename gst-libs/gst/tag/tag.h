@@ -83,6 +83,37 @@ G_BEGIN_DECLS
  */
 #define GST_TAG_CMML_CLIP "cmml-clip"
 
+/* CDDA tags */
+
+/**
+ * GST_TAG_CDDA_CDDB_DISCID:
+ *
+ * CDDB disc id in its short form (e.g. 'aa063d0f')
+ */
+#define GST_TAG_CDDA_CDDB_DISCID              "discid"
+
+/**
+ * GST_TAG_CDDA_CDDB_DISCID_FULL:
+ *
+ * CDDB disc id including all details
+ */
+#define GST_TAG_CDDA_CDDB_DISCID_FULL         "discid-full"
+
+/**
+ * GST_TAG_CDDA_MUSICBRAINZ_DISCID:
+ *
+ * Musicbrainz disc id (e.g. 'ahg7JUcfR3vCYBphSDIogOOWrr0-')
+ */
+#define GST_TAG_CDDA_MUSICBRAINZ_DISCID       "musicbrainz-discid"
+
+/**
+ * GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL:
+ *
+ * Musicbrainz disc id details
+ */
+#define GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL  "musicbrainz-discid-full"
+
+
 
 /* additional information for image tags */
 
