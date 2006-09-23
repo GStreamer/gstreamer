@@ -766,6 +766,8 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
      * fire an underrun. */
     g_signal_connect (G_OBJECT (preroll), "underrun",
         G_CALLBACK (queue_out_of_data), play_base_bin);
+    /* configure threshold and callbacks */
+    queue_out_of_data (preroll, play_base_bin);
   }
 
   preroll_pad = gst_element_get_pad (preroll, "src");

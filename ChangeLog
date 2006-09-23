@@ -1,5 +1,11 @@
 2006-09-23  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybasebin.c: (gen_preroll_element):
+	Improve buffering a bit by avoiding a deadlock because we cannot assume
+	the underrun is always called.
+
+2006-09-23  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Young-Ho Cha <ganadist at chollian dot net>
 
 	* gst-libs/gst/riff/riff-ids.h:
