@@ -2,7 +2,7 @@
  *
  * unit test for cddabasesrc
  *
- * Copyright (C) <2005> Tim-Philipp M??ller  <tim centricular net>
+ * Copyright (C) <2005> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

@@ -1,5 +1,13 @@
 2006-09-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	  See if this makes the build bots happy.
+
+	* tests/check/libs/cddabasesrc.c:
+	  UTF8-ise my name.
+
+2006-09-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Young-Ho Cha <ganadist at chollian dot net>
 
 	* gst/subparse/samiparse.c: (handle_start_font),

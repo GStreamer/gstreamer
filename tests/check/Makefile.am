@@ -95,6 +95,7 @@ libs_audio_LDADD = \
 
 libs_cddabasesrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
 libs_tag_LDADD = \
