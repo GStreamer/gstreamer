@@ -458,6 +458,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           "indeoversion", G_TYPE_INT, 2, NULL);
       break;
 
+    case CODEC_ID_FLASHSV:
+      caps = gst_ff_vid_caps_new (context, "video/x-flash-screen", NULL);
+      break;
+
     case CODEC_ID_VP3:
       caps = gst_ff_vid_caps_new (context, "video/x-vp3", NULL);
       break;
@@ -1939,6 +1943,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "video/x-vp6-flash")) {
     id = CODEC_ID_VP6F;
     video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-flash-screen")) {
+    id = CODEC_ID_FLASHSV;
+    video = TRUE;
   } else if (!strcmp (mimetype, "video/x-indeo")) {
     gint indeoversion = 0;
 
@@ -2337,6 +2344,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_VP6F:
       name = "VP6 Flash video";
+      break;
+    case CODEC_ID_FLASHSV:
+      name = "Flash Screen Video";
       break;
     case CODEC_ID_THEORA:
       name = "Theora video";

@@ -1,3 +1,9 @@
+2006-09-23  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid), (gst_ffmpeg_get_codecid_longname):
+	Added definitions for FLASHSV, Flash Screen Video format.
+
 2006-09-21  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
