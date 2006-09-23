@@ -1,5 +1,10 @@
 2006-09-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/Makefile.am:
+	  Need to build tag directory before cdda.
+
+2006-09-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/cdda/Makefile.am:
 	* gst-libs/gst/cdda/gstcddabasesrc.c:
