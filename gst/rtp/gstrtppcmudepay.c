@@ -30,7 +30,7 @@
 /* elementfactory information */
 static const GstElementDetails gst_rtp_pcmudepay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
-    "Codec/Depayr/Network",
+    "Codec/Depayloader/Network",
     "Extracts PCMU audio from RTP packets",
     "Edgard Lima <edgard.lima@indt.org.br>, Zeeshan Ali <zeenix@gmail.com>");
 
@@ -161,5 +161,5 @@ gboolean
 gst_rtp_pcmu_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtppcmudepay",
-      GST_RANK_NONE, GST_TYPE_RTP_PCMU_DEPAY);
+      GST_RANK_MARGINAL, GST_TYPE_RTP_PCMU_DEPAY);
 }

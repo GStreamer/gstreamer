@@ -29,7 +29,7 @@
 /* elementfactory information */
 static const GstElementDetails gst_rtp_mp2tdepay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
-    "Codec/Depay/Network",
+    "Codec/Depayloader/Network",
     "Extracts MPEG2 TS from RTP packets (RFC 2250)",
     "Wim Taymans <wim@fluendo.com>");
 
@@ -256,5 +256,5 @@ gboolean
 gst_rtp_mp2t_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmp2tdepay",
-      GST_RANK_NONE, GST_TYPE_RTP_MP2T_DEPAY);
+      GST_RANK_MARGINAL, GST_TYPE_RTP_MP2T_DEPAY);
 }

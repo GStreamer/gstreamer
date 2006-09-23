@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpmp4gdepay_debug);
 /* elementfactory information */
 static const GstElementDetails gst_rtp_mp4gdepay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
-    "Codec/Depay/Network",
+    "Codec/Depayloader/Network",
     "Extracts MPEG4 elementary streams from RTP packets (RFC 3640)",
     "Wim Taymans <wim@fluendo.com>");
 
@@ -378,5 +378,5 @@ gboolean
 gst_rtp_mp4g_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpmp4gdepay",
-      GST_RANK_NONE, GST_TYPE_RTP_MP4G_DEPAY);
+      GST_RANK_MARGINAL, GST_TYPE_RTP_MP4G_DEPAY);
 }

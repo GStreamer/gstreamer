@@ -50,7 +50,7 @@ typedef struct _GstAsteriskH263Header
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h263p_depaydetails =
 GST_ELEMENT_DETAILS ("RTP packet parser",
-    "Codec/Depayr/Network",
+    "Codec/Depayloader/Network",
     "Extracts H263 video from RTP and encodes in Asterisk H263 format",
     "Neil Stratford <neils@vipadia.com>");
 
@@ -314,5 +314,5 @@ gboolean
 gst_asteriskh263_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "asteriskh263",
-      GST_RANK_NONE, GST_TYPE_ASTERISK_H263);
+      GST_RANK_MARGINAL, GST_TYPE_ASTERISK_H263);
 }

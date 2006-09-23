@@ -29,7 +29,7 @@
 /* elementfactory information */
 static const GstElementDetails gst_rtp_sv3vdepay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
-    "Codec/Depayr/Network",
+    "Codec/Depayloader/Network",
     "Extracts SVQ3 video from RTP packets (no RFC)",
     "Wim Taymans <wim@fluendo.com>");
 
@@ -344,5 +344,5 @@ gboolean
 gst_rtp_sv3v_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpsv3vdepay",
-      GST_RANK_NONE, GST_TYPE_RTP_SV3V_DEPAY);
+      GST_RANK_MARGINAL, GST_TYPE_RTP_SV3V_DEPAY);
 }

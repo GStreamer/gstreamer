@@ -36,7 +36,7 @@
 /* elementfactory information */
 static const GstElementDetails gst_rtp_amrdepay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
-    "Codec/Depayr/Network",
+    "Codec/Depayloader/Network",
     "Extracts AMR audio from RTP packets (RFC 3267)",
     "Wim Taymans <wim@fluendo.com>");
 
@@ -405,5 +405,5 @@ gboolean
 gst_rtp_amr_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpamrdepay",
-      GST_RANK_NONE, GST_TYPE_RTP_AMR_DEPAY);
+      GST_RANK_MARGINAL, GST_TYPE_RTP_AMR_DEPAY);
 }

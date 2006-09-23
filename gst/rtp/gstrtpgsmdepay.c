@@ -29,7 +29,7 @@
 /* elementfactory information */
 static GstElementDetails gst_rtp_gsmdepay_details = {
   "RTP packet parser",
-  "Codec/Depayr/Network",
+  "Codec/Depayloader/Network",
   "Extracts GSM audio from RTP packets",
   "Zeeshan Ali <zeenix@gmail.com>"
 };
@@ -138,5 +138,5 @@ gboolean
 gst_rtp_gsm_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpgsmdepay",
-      GST_RANK_NONE, GST_TYPE_RTP_GSM_DEPAY);
+      GST_RANK_MARGINAL, GST_TYPE_RTP_GSM_DEPAY);
 }

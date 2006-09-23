@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpvorbisdepay_debug);
 /* elementfactory information */
 static const GstElementDetails gst_rtp_vorbis_depay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
-    "Codec/Depay/Network",
+    "Codec/Depayloader/Network",
     "Extracts Vorbis Audio from RTP packets (draft-01 of RFC XXXX)",
     "Wim Taymans <wim@fluendo.com>");
 
@@ -437,5 +437,5 @@ gboolean
 gst_rtp_vorbis_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpvorbisdepay",
-      GST_RANK_NONE, GST_TYPE_RTP_VORBIS_DEPAY);
+      GST_RANK_MARGINAL, GST_TYPE_RTP_VORBIS_DEPAY);
 }

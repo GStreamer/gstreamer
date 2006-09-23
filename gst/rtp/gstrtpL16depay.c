@@ -27,7 +27,7 @@
 /* elementfactory information */
 static const GstElementDetails gst_rtp_L16depay_details =
 GST_ELEMENT_DETAILS ("RTP packet parser",
-    "Codec/Depayr/Network",
+    "Codec/Depayloader/Network",
     "Extracts raw audio from RTP packets",
     "Zeeshan Ali <zak147@yahoo.com>");
 
@@ -348,5 +348,5 @@ gboolean
 gst_rtp_L16depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpL16depay",
-      GST_RANK_NONE, GST_TYPE_RTP_L16_DEPAY);
+      GST_RANK_MARGINAL, GST_TYPE_RTP_L16_DEPAY);
 }
