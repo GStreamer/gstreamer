@@ -41,7 +41,7 @@ struct paintinfo_struct
   int vstride;
   int width;
   int height;
-  struct vts_color_struct *color;
+  const struct vts_color_struct *color;
   void (*paint_hline) (paintinfo * p, int x, int y, int w);
 };
 

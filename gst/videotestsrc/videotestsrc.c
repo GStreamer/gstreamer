@@ -204,7 +204,7 @@ enum
   COLOR_DARK_GREY
 };
 
-static struct vts_color_struct vts_colors[] = {
+static const struct vts_color_struct vts_colors[] = {
   /* 100% white */
   {255, 128, 128, 255, 255, 255},
   /* yellow */
@@ -380,7 +380,7 @@ struct fourcc_list_struct fourcc_list[] = {
   {"RGB ", "xRGB1555", 16, paint_setup_xRGB1555, paint_hline_xRGB1555, 1, 15,
       0x00007c00, 0x000003e0, 0x0000001f},
 };
-int n_fourccs = sizeof (fourcc_list) / sizeof (fourcc_list[0]);
+int n_fourccs = G_N_ELEMENTS (fourcc_list);
 
 struct fourcc_list_struct *
 paintinfo_find_by_structure (const GstStructure * structure)
@@ -692,7 +692,7 @@ gst_video_test_src_snow (GstVideoTestSrc * v, unsigned char *dest, int w, int h)
 
 static void
 gst_video_test_src_unicolor (GstVideoTestSrc * v, unsigned char *dest, int w,
-    int h, struct vts_color_struct *color)
+    int h, const struct vts_color_struct *color)
 {
   int i;
   paintinfo pi = { NULL, };

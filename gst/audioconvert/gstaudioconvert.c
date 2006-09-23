@@ -335,8 +335,8 @@ make_lossless_changes (GstStructure * s, gboolean isfloat)
     GValue list = { 0 };
     GValue val = { 0 };
     int i;
-    gint endian[] = { G_LITTLE_ENDIAN, G_BIG_ENDIAN };
-    gboolean booleans[] = { TRUE, FALSE };
+    const gint endian[] = { G_LITTLE_ENDIAN, G_BIG_ENDIAN };
+    const gboolean booleans[] = { TRUE, FALSE };
 
     g_value_init (&list, GST_TYPE_LIST);
     g_value_init (&val, G_TYPE_INT);
@@ -424,7 +424,7 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
   GstStructure *s, *structure;
   gboolean isfloat;
   gint width, depth, channels;
-  gchar *fields_used[] = {
+  const gchar *fields_used[] = {
     "width", "depth", "rate", "channels", "endianness", "signed"
   };
   const gchar *structure_name;

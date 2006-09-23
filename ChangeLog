@@ -1,5 +1,13 @@
 2006-09-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/audioconvert/gstaudioconvert.c: (make_lossless_changes),
+	(gst_audio_convert_transform_caps):
+	* gst/videotestsrc/videotestsrc.c: (gst_video_test_src_unicolor):
+	* gst/videotestsrc/videotestsrc.h:
+	  A few array const-ifications.
+
+2006-09-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/Makefile.am:
 	  See if this makes the build bots happy.
 
