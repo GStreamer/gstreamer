@@ -40,9 +40,34 @@
  * SOFTWARE.
  */
 
+#include <errno.h>
+
+extern int h_errno;
+
+#include <netdb.h>
+
 #include "rtspdefs.h"
 
-const gchar *rtsp_methods[] = {
+static const gchar *rtsp_results[] = {
+  "OK",
+  /* errors */
+  "Invalid parameter specified",
+  "Operation interrupted",
+  "Out of memory",
+  "Cannot resolve host",
+  "Function not implemented",
+  "System error: '%s'",
+  "Parse error",
+  "Error on WSAStartup",
+  "Windows sockets are not version 0x202",
+  "Received end-of-file",
+  "Network error: %s",
+  "Host is not a valid IP address",
+  "Unknown error (%d)",
+  NULL
+};
+
+static const gchar *rtsp_methods[] = {
   "DESCRIBE",
   "ANNOUNCE",
   "GET_PARAMETER",
@@ -57,7 +82,7 @@ const gchar *rtsp_methods[] = {
   NULL
 };
 
-const gchar *rtsp_headers[] = {
+static const gchar *rtsp_headers[] = {
   "Accept",                     /* Accept               R      opt.      entity */
   "Accept-Encoding",            /* Accept-Encoding      R      opt.      entity */
   "Accept-Language",            /* Accept-Language      R      opt.      all */
@@ -154,6 +179,32 @@ rtsp_init_status (void)
   DEF_STATUS (RTSP_STS_RTSP_VERSION_NOT_SUPPORTED,
       "RTSP Version not supported");
   DEF_STATUS (RTSP_STS_OPTION_NOT_SUPPORTED, "Option not supported");
+}
+
+gchar *
+rtsp_strresult (RTSPResult result)
+{
+  gint idx;
+  gchar *res;
+
+  idx = ABS (result);
+  idx = CLAMP (idx, 0, -RTSP_ELAST);
+
+  switch (idx) {
+    case -RTSP_ESYS:
+      res = g_strdup_printf (rtsp_results[idx], g_strerror (errno));
+      break;
+    case -RTSP_ENET:
+      res = g_strdup_printf (rtsp_results[idx], hstrerror (h_errno));
+      break;
+    case -RTSP_ELAST:
+      res = g_strdup_printf (rtsp_results[idx], result);
+      break;
+    default:
+      res = g_strdup (rtsp_results[idx]);
+      break;
+  }
+  return res;
 }
 
 const gchar *

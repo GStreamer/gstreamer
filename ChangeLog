@@ -1,5 +1,16 @@
 2006-09-23  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_loop), (gst_rtspsrc_send),
+	(gst_rtspsrc_open):
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_create),
+	(rtsp_connection_connect), (rtsp_connection_read), (read_body),
+	(rtsp_connection_receive):
+	* gst/rtsp/rtspdefs.c: (rtsp_strresult):
+	* gst/rtsp/rtspdefs.h:
+	Improve error reporting.
+
+2006-09-23  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstasteriskh263.c: (gst_asteriskh263_plugin_init):
 	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16depay_plugin_init):
 	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_plugin_init):

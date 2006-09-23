@@ -63,7 +63,10 @@ typedef enum {
   RTSP_EWSASTART   = -8,
   RTSP_EWSAVERSION = -9,
   RTSP_EEOF        = -10,
+  RTSP_ENET        = -11,
+  RTSP_ENOTIP      = -12,
 
+  RTSP_ELAST       = -13,
 } RTSPResult;
 
 typedef enum {
@@ -196,6 +199,8 @@ typedef enum {
   RTSP_STS_RTSP_VERSION_NOT_SUPPORTED           = 505, 
   RTSP_STS_OPTION_NOT_SUPPORTED                 = 551, 
 } RTSPStatusCode;
+
+gchar*          rtsp_strresult          (RTSPResult result);
 
 const gchar*    rtsp_method_as_text     (RTSPMethod method);
 const gchar*    rtsp_header_as_text     (RTSPHeaderField field);

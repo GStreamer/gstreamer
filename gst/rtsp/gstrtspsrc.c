@@ -1000,17 +1000,11 @@ unknown_stream:
   }
 receive_error:
   {
-    switch (res) {
-      case RTSP_ESYS:
-        GST_ELEMENT_ERROR (src, RESOURCE, READ,
-            ("Could not receive message. (%d: %s)", res, strerror (errno)),
-            GST_ERROR_SYSTEM);
-        break;
-      default:
-        GST_ELEMENT_ERROR (src, RESOURCE, READ,
-            ("Could not receive message. (%d)", res), (NULL));
-        break;
-    }
+    gchar *str = rtsp_strresult (res);
+
+    GST_ELEMENT_ERROR (src, RESOURCE, READ,
+        ("Could not receive message. (%s)", str), (NULL));
+    g_free (str);
     if (src->debug)
       rtsp_message_dump (&response);
     rtsp_message_unset (&response);
@@ -1103,14 +1097,20 @@ gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
   /* ERRORS */
 send_error:
   {
+    gchar *str = rtsp_strresult (res);
+
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
-        ("Could not send message."), (NULL));
+        ("Could not send message. (%s)", res), (NULL));
+    g_free (str);
     return FALSE;
   }
 receive_error:
   {
+    gchar *str = rtsp_strresult (res);
+
     GST_ELEMENT_ERROR (src, RESOURCE, READ,
-        ("Could not receive message."), (NULL));
+        ("Could not receive message. (%s)", str), (NULL));
+    g_free (str);
     return FALSE;
   }
 error_response:
@@ -1467,26 +1467,38 @@ no_url:
   }
 could_not_create:
   {
+    gchar *str = rtsp_strresult (res);
+
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE,
-        ("Could not create connection."), (NULL));
+        ("Could not create connection. (%s)", str), (NULL));
+    g_free (str);
     goto cleanup_error;
   }
 could_not_connect:
   {
+    gchar *str = rtsp_strresult (res);
+
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE,
-        ("Could not connect to server."), (NULL));
+        ("Could not connect to server. (%s)", str), (NULL));
+    g_free (str);
     goto cleanup_error;
   }
 create_request_failed:
   {
+    gchar *str = rtsp_strresult (res);
+
     GST_ELEMENT_ERROR (src, LIBRARY, INIT,
-        ("Could not create request."), (NULL));
+        ("Could not create request. (%s)", str), (NULL));
+    g_free (str);
     goto cleanup_error;
   }
 send_error:
   {
+    gchar *str = rtsp_strresult (res);
+
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
-        ("Could not send message."), (NULL));
+        ("Could not send message. (%s)", str), (NULL));
+    g_free (str);
     goto cleanup_error;
   }
 methods_error:

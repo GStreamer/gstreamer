@@ -206,13 +206,11 @@ sys_error:
   }
 not_resolved:
   {
-    g_warning ("could not resolve host \"%s\"\n", url->host);
-    return RTSP_ESYS;
+    return RTSP_ENET;
   }
 not_ip:
   {
-    g_warning ("host \"%s\" is not IP\n", url->host);
-    return RTSP_ESYS;
+    return RTSP_ENOTIP;
   }
 }
 
