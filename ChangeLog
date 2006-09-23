@@ -1,3 +1,10 @@
+2006-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* gst/__init__.py:
+	* gstltihooks.py:
+	  Fix #357310
+
 2006-09-22  Edward Hervey  <edward@fluendo.com>
 
 	Patch by: Rene Stadler <mail@renestadler.de>

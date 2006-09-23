@@ -1,7 +1,7 @@
 SUBDIRS = codegen gst examples testsuite pkgconfig
 
 EXTRA_DIST = \
-	ltihooks.py \
+	gstltihooks.py \
 	pygst.py.in \
 	gst-python.spec.in \
 	gst-python.spec \

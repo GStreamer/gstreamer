@@ -21,10 +21,10 @@
 # 
 # Author: David I. Lehn <dlehn@users.sourceforge.net>
 
-__ltihooks_used__ = False
+__gstltihooks_used__ = False
 try:
-    import ltihooks
-    __ltihooks_used__ = True
+    import gstltihooks
+    __gstltihooks_used__ = True
 except:
    pass
 
@@ -116,11 +116,11 @@ del sys
 # this restores previously installed importhooks, so we don't interfere
 # with other people's module importers
 # it also clears out the module completely as if it were never loaded,
-# so that if anyone else imports ltihooks the hooks get installed
-if __ltihooks_used__:
-    ltihooks.uninstall()
-    __ltihooks_used__ = False
-    del ltihooks
+# so that if anyone else imports gstltihooks the hooks get installed
+if __gstltihooks_used__:
+    gstltihooks.uninstall()
+    __gstltihooks_used__ = False
+    del gstltihooks
     import sys
-    del sys.modules['ltihooks']
+    del sys.modules['gstltihooks']
 
