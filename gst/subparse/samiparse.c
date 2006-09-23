@@ -177,12 +177,12 @@ handle_start_font (GstSamiContext * sctx, const xmlChar ** atts)
         }
         /* silver colour can be found in many sami files, but X RGB database
          * doesn't contain a colour by this name, so map explicitly */
-        if (!xmlStrncmp ((const xmlChar *) "silver", value, 6)) {
+        if (!xmlStrncasecmp ((const xmlChar *) "silver", value, 6)) {
           value = (const xmlChar *) "#c0c0c0";
         }
         g_string_append_printf (sctx->buf, " foreground=\"%s%s\"", sharp,
             value);
-      } else if (!xmlStrncmp ((const xmlChar *) "face", key, 4)) {
+      } else if (!xmlStrncasecmp ((const xmlChar *) "face", key, 4)) {
         g_string_append_printf (sctx->buf, " font_family=\"%s\"", value);
       }
     }
@@ -376,7 +376,8 @@ fix_invalid_entities (const gchar * line)
         && g_ascii_strncasecmp (cp, "apos;", 5)
         && g_ascii_strncasecmp (cp, "lt;", 3)
         && g_ascii_strncasecmp (cp, "gt;", 3)
-        && g_ascii_strncasecmp (cp, "nbsp;", 5)) {
+        && g_ascii_strncasecmp (cp, "nbsp;", 5)
+        && cp[0] != '#') {
       /* translate "&" to "&amp;" */
       ret = g_string_append_len (ret, "&amp;", 5);
     } else {
