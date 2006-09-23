@@ -1,3 +1,13 @@
+2006-09-23  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Young-Ho Cha <ganadist at chollian dot net>
+
+	* gst-libs/gst/riff/riff-ids.h:
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps),
+	(gst_riff_create_audio_template_caps):
+	Added MPEG-4 AAC and id and caps. Fixes #357289
+	Added WMA9 Lossless id.
+
 2006-09-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/gnomevfs/gstgnomevfssrc.c:

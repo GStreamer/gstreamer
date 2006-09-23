@@ -726,7 +726,9 @@ gst_riff_create_audio_caps (guint16 codec_id,
         gint ch = strf->channels;
         gint ws = strf->size;
 
-        caps = gst_caps_new_simple ("audio/x-raw-int", "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, "channels", G_TYPE_INT, ch,   /* needed for _add_layout() */
+        caps = gst_caps_new_simple ("audio/x-raw-int",
+            "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+            "channels", G_TYPE_INT, ch,
             "width", G_TYPE_INT, (int) (ba * 8 / ch),
             "depth", G_TYPE_INT, ws, "signed", G_TYPE_BOOLEAN, ws != 8, NULL);
 
@@ -879,6 +881,15 @@ gst_riff_create_audio_caps (guint16 codec_id,
       if (codec_name)
         *codec_name = g_strdup ("DTS audio");
       break;
+    case GST_RIFF_WAVE_FORMAT_AAC:
+    {
+      channels_max = 8;
+      caps = gst_caps_new_simple ("audio/mpeg",
+          "mpegversion", G_TYPE_INT, 4, NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("MPEG-4 AAC audio");
+      break;
+    }
     case GST_RIFF_WAVE_FORMAT_WMAV1:
     case GST_RIFF_WAVE_FORMAT_WMAV2:
     case GST_RIFF_WAVE_FORMAT_WMAV3:
@@ -886,7 +897,6 @@ gst_riff_create_audio_caps (guint16 codec_id,
       gint version = (codec_id - GST_RIFF_WAVE_FORMAT_WMAV1) + 1;
 
       channels_max = 6;
-
       block_align = TRUE;
 
       caps = gst_caps_new_simple ("audio/x-wma",
@@ -904,6 +914,11 @@ gst_riff_create_audio_caps (guint16 codec_id,
             "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
       }
       break;
+    }
+    case GST_RIFF_WAVE_FORMAT_WMAV3_L:
+    {
+      /* WMA Version 9 Lossless */
+      goto unknown;
     }
     case GST_RIFF_WAVE_FORMAT_SONY_ATRAC3:
       caps = gst_caps_new_simple ("audio/x-vnd.sony.atrac3", NULL);
@@ -979,6 +994,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
           subformat_guid[1] == 0x41783f83 &&
           subformat_guid[2] == 0xf0006596 && subformat_guid[3] == 0xe59262bf) {
         caps = gst_caps_new_simple ("application/x-ogg-avi", NULL);
+        if (codec_name)
+          *codec_name = g_strdup ("Ogg-AVI");
       }
 
       if (caps == NULL) {
@@ -987,7 +1004,6 @@ gst_riff_create_audio_caps (guint16 codec_id,
       }
       break;
     }
-
       /* can anything decode these? pitfdll? */
     case GST_RIFF_WAVE_FORMAT_VOXWARE:
     case GST_RIFF_WAVE_FORMAT_VOXWARE_BYTE_ALIGNED:
@@ -1154,6 +1170,7 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_VORBIS1,
     GST_RIFF_WAVE_FORMAT_A52,
     GST_RIFF_WAVE_FORMAT_DTS,
+    GST_RIFF_WAVE_FORMAT_AAC,
     GST_RIFF_WAVE_FORMAT_ALAW,
     GST_RIFF_WAVE_FORMAT_MULAW,
     GST_RIFF_WAVE_FORMAT_ADPCM,
