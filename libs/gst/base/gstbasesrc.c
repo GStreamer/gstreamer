@@ -1391,8 +1391,8 @@ gst_base_src_default_check_get_range (GstBaseSrc * src)
 
   if (!GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED)) {
     GST_LOG_OBJECT (src, "doing start/stop to check get_range support");
-    gst_base_src_start (src);
-    gst_base_src_stop (src);
+    if (G_LIKELY (gst_base_src_start (src)))
+      gst_base_src_stop (src);
   }
 
   /* we can operate in getrange mode if the native format is bytes
@@ -1780,7 +1780,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
 could_not_start:
   {
     GST_DEBUG_OBJECT (basesrc, "could not start");
-    /* subclass is supposed to post a message */
+    /* subclass is supposed to post a message. We don't have to call _stop. */
     return FALSE;
   }
 could_not_negotiate:
@@ -1788,6 +1788,7 @@ could_not_negotiate:
     GST_DEBUG_OBJECT (basesrc, "could not negotiate, stopping");
     GST_ELEMENT_ERROR (basesrc, STREAM, FORMAT,
         ("Could not negotiate format"), ("Check your filtered caps, if any"));
+    /* we must call stop */
     gst_base_src_stop (basesrc);
     return FALSE;
   }
@@ -1837,20 +1838,18 @@ static gboolean
 gst_base_src_activate_push (GstPad * pad, gboolean active)
 {
   GstBaseSrc *basesrc;
-  gboolean res;
+  GstEvent *event;
 
   basesrc = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
   /* prepare subclass first */
   if (active) {
-    GstEvent *event;
-
     GST_DEBUG_OBJECT (basesrc, "Activating in push mode");
 
-    if (!basesrc->can_activate_push)
+    if (G_UNLIKELY (!basesrc->can_activate_push))
       goto no_push_activation;
 
-    if (!gst_base_src_start (basesrc))
+    if (G_UNLIKELY (!gst_base_src_start (basesrc)))
       goto error_start;
 
     basesrc->priv->last_sent_eos = FALSE;
@@ -1862,27 +1861,52 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
     GST_OBJECT_UNLOCK (basesrc);
 
     /* no need to unlock anything, the task is certainly
-     * not running here. */
-    res = gst_base_src_perform_seek (basesrc, event, FALSE);
+     * not running here. The perform seek code will start the task when
+     * finished. */
+    if (G_UNLIKELY (!gst_base_src_perform_seek (basesrc, event, FALSE)))
+      goto seek_failed;
 
     if (event)
       gst_event_unref (event);
   } else {
     GST_DEBUG_OBJECT (basesrc, "Deactivating in push mode");
-    res = gst_base_src_deactivate (basesrc, pad);
+    /* call the unlock function and stop the task */
+    if (G_UNLIKELY (!gst_base_src_deactivate (basesrc, pad)))
+      goto deactivate_failed;
+
+    /* now we can stop the source */
+    if (G_UNLIKELY (!gst_base_src_stop (basesrc)))
+      goto error_stop;
   }
-  return res;
+  return TRUE;
 
   /* ERRORS */
 no_push_activation:
   {
-    GST_DEBUG_OBJECT (basesrc, "Subclass disabled push-mode activation");
+    GST_ERROR_OBJECT (basesrc, "Subclass disabled push-mode activation");
     return FALSE;
   }
 error_start:
   {
+    GST_ERROR_OBJECT (basesrc, "Failed to start in push mode");
+    return FALSE;
+  }
+seek_failed:
+  {
+    GST_ERROR_OBJECT (basesrc, "Failed to perform initial seek");
     gst_base_src_stop (basesrc);
-    GST_DEBUG_OBJECT (basesrc, "Failed to start in push mode");
+    if (event)
+      gst_event_unref (event);
+    return FALSE;
+  }
+deactivate_failed:
+  {
+    GST_ERROR_OBJECT (basesrc, "Failed to deactivate in push mode");
+    return FALSE;
+  }
+error_stop:
+  {
+    GST_DEBUG_OBJECT (basesrc, "Failed to stop in push mode");
     return FALSE;
   }
 }
@@ -1897,41 +1921,46 @@ gst_base_src_activate_pull (GstPad * pad, gboolean active)
   /* prepare subclass first */
   if (active) {
     GST_DEBUG_OBJECT (basesrc, "Activating in pull mode");
-    if (!gst_base_src_start (basesrc))
+    if (G_UNLIKELY (!gst_base_src_start (basesrc)))
       goto error_start;
 
     /* if not random_access, we cannot operate in pull mode for now */
-    if (!gst_base_src_check_get_range (basesrc))
+    if (G_UNLIKELY (!gst_base_src_check_get_range (basesrc)))
       goto no_get_range;
-
-    return TRUE;
   } else {
     GST_DEBUG_OBJECT (basesrc, "Deactivating in pull mode");
+    /* call the unlock function. We have no task to stop. */
+    if (G_UNLIKELY (!gst_base_src_deactivate (basesrc, pad)))
+      goto deactivate_failed;
 
     /* don't send EOS when going from PAUSED => READY when in pull mode */
     basesrc->priv->last_sent_eos = TRUE;
 
-    if (!gst_base_src_stop (basesrc))
+    if (G_UNLIKELY (!gst_base_src_stop (basesrc)))
       goto error_stop;
-
-    return gst_base_src_deactivate (basesrc, pad);
   }
+  return TRUE;
 
+  /* ERRORS */
 error_start:
   {
-    gst_base_src_stop (basesrc);
-    GST_DEBUG_OBJECT (basesrc, "Failed to start in pull mode");
+    GST_ERROR_OBJECT (basesrc, "Failed to start in pull mode");
     return FALSE;
   }
 no_get_range:
   {
-    GST_DEBUG_OBJECT (basesrc, "Cannot operate in pull mode, stopping");
+    GST_ERROR_OBJECT (basesrc, "Cannot operate in pull mode, stopping");
     gst_base_src_stop (basesrc);
+    return FALSE;
+  }
+deactivate_failed:
+  {
+    GST_ERROR_OBJECT (basesrc, "Failed to deactivate in pull mode");
     return FALSE;
   }
 error_stop:
   {
-    GST_DEBUG_OBJECT (basesrc, "Failed to stop in pull mode");
+    GST_ERROR_OBJECT (basesrc, "Failed to stop in pull mode");
     return FALSE;
   }
 }
@@ -1988,9 +2017,6 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
     {
       GstEvent **event_p;
 
-      if (!gst_base_src_stop (basesrc))
-        goto error_stop;
-
       /* FIXME, deprecate this behaviour, it is very dangerous.
        * the prefered way of sending EOS downstream is by sending
        * the EOS event to the element */
@@ -2023,10 +2049,5 @@ failure:
   {
     GST_DEBUG_OBJECT (basesrc, "parent failed state change");
     return result;
-  }
-error_stop:
-  {
-    GST_DEBUG_OBJECT (basesrc, "Failed to stop");
-    return GST_STATE_CHANGE_FAILURE;
   }
 }

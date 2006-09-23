@@ -1,3 +1,15 @@
+2006-09-23  Wim Taymans  <wim@fluendo.com>
+
+	Based on patch by: Antoine Tremblay <hexa00 at gmail dot com>
+
+	* libs/gst/base/gstbasesrc.c:
+	(gst_base_src_default_check_get_range), (gst_base_src_start),
+	(gst_base_src_activate_push), (gst_base_src_activate_pull),
+	(gst_base_src_change_state):
+	Match _start/_stop calls in the activate functions. Remove redundant
+	_stop call from the state change function. Fixes #356910.
+	Turn failure DEBUG into ERROR. 
+
 2006-09-22  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-buffering.txt:
