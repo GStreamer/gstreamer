@@ -180,10 +180,11 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink,
   int screen;
 
   glimage_sink->display = XOpenDisplay (NULL);
+  if (glimage_sink->display) {
+    screen = DefaultScreen (glimage_sink->display);
 
-  screen = DefaultScreen (glimage_sink->display);
-
-  XSynchronize (glimage_sink->display, True);
+    XSynchronize (glimage_sink->display, True);
+  }
   /* XSetErrorHandler (error_handler); */
   glimage_sink->width = 400;
   glimage_sink->height = 400;
@@ -204,6 +205,7 @@ gst_glimage_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_DISPLAY:
+      /* FIXME this should close/reopen display */
       if (glimage_sink->display_name) {
         g_free (glimage_sink->display_name);
       }
@@ -224,9 +226,14 @@ gst_glimage_sink_finalize (GObject * object)
 
   glimage_sink = GST_GLIMAGE_SINK (object);
 
-  gst_caps_unref (glimage_sink->caps);
+  if (glimage_sink->caps) {
+    gst_caps_unref (glimage_sink->caps);
+  }
   g_free (glimage_sink->display_name);
 
+  if (glimage_sink->display) {
+    XCloseDisplay (glimage_sink->display);
+  }
 }
 
 static void
@@ -453,8 +460,11 @@ gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
   GstCaps *caps;
   int max_size;
 
-  if (glimage_sink->display == NULL) {
+  if (glimage_sink->caps) {
     gst_caps_unref (glimage_sink->caps);
+  }
+
+  if (glimage_sink->display == NULL) {
     glimage_sink->caps =
         gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
             (glimage_sink)));
@@ -480,9 +490,6 @@ gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
       "width", GST_TYPE_INT_RANGE, 16, max_size,
       "height", GST_TYPE_INT_RANGE, 16, max_size, NULL);
 
-  if (glimage_sink->caps) {
-    gst_caps_unref (glimage_sink->caps);
-  }
   glimage_sink->caps = caps;
 }
 
@@ -571,7 +578,7 @@ gst_glimage_sink_init_display (GstGLImageSink * glimage_sink)
 
   glimage_sink->display = XOpenDisplay (NULL);
   if (glimage_sink->display == NULL) {
-    GST_ERROR_OBJECT (glimage_sink, "Could not open display");
+    GST_DEBUG_OBJECT (glimage_sink, "Could not open display");
     return FALSE;
   }
 

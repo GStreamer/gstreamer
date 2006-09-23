@@ -1,3 +1,9 @@
+2006-09-22  David Schleef  <ds@schleef.org>
+
+	* sys/glsink/glimagesink.c:
+	  Fix problems when the element cannot open the display.
+	  (fixes #357212)
+
 2006-09-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
