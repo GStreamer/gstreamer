@@ -475,8 +475,13 @@ search_by_entry (GstPluginFeature * feature, gpointer search_entry)
     return FALSE;
 
   protocols = gst_element_factory_get_uri_protocols (factory);
-  /* must be set when uri type is valid */
-  g_assert (protocols);
+
+  if (protocols == NULL) {
+    g_warning ("Factory '%s' implements GstUriHandler interface but returned "
+        "no supported protocols!", gst_plugin_feature_get_name (feature));
+    return FALSE;
+  }
+
   while (*protocols != NULL) {
     if (strcmp (*protocols, entry->protocol) == 0)
       return TRUE;

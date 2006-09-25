@@ -1,5 +1,13 @@
 2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gsturi.c: (search_by_entry):
+	  Don't assert/crash here if a uri handler doesn't return any
+	  supported protocols. The list of protocols could be generated
+	  dynamically at runtime or at plugin registration, and an error
+	  in the underlying library shouldn't be fatal (#353301).
+
+2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstinfo.c:
 	  Fix warning if HAVE_PRINTF_EXTENSION is undefined
 	  (spotted by Peter Kjellerstedt).
