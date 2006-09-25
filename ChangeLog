@@ -1,5 +1,12 @@
 2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
+	* gst/playback/test.c:
+	  Fix compilation with uClibc and -Werror (#357591).
+
+2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add):
 	  Parse dates that are followed by a time as well (#357532).
 

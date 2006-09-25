@@ -22,6 +22,8 @@
 #endif
 #include <gst/gst.h>
 
+#include <stdlib.h>
+
 static GMainLoop *loop;
 
 static GstElement *
