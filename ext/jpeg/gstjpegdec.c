@@ -36,7 +36,7 @@ GST_ELEMENT_DETAILS ("JPEG image decoder",
 
 #define MIN_WIDTH  16
 #define MAX_WIDTH  4096
-#define MIN_HEIGHT 16
+#define MIN_HEIGHT 8
 #define MAX_HEIGHT 4096
 
 #define DEFAULT_IDCT_METHOD	JDCT_FASTEST

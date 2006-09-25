@@ -1,3 +1,10 @@
+2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/jpeg/gstjpegdec.c:
+	  Set minimum height to 8 (from 16), our code should handle
+	  that fine. Some of the buttons on the apple trailer site
+	  are apparently only 15 pixels high (see #357470).
+
 2006-09-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_loop), (gst_rtspsrc_send),
