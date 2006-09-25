@@ -1,5 +1,10 @@
 2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstelementfactory.c:
+	  Fix typo in docs blurb.
+
+2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gsturi.c: (search_by_entry):
 	  Don't assert/crash here if a uri handler doesn't return any
 	  supported protocols. The list of protocols could be generated

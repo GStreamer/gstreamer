@@ -628,9 +628,10 @@ gst_element_factory_get_uri_type (GstElementFactory * factory)
  * gst_element_factory_get_uri_protocols:
  * @factory: a #GstElementFactory
  *
- * Gets a NULL-terminated array of protocols this element supports or NULL, if
+ * Gets a NULL-terminated array of protocols this element supports or NULL if
  * no protocols are supported. You may not change the contents of the returned
- * array as it is still ownt by the element factory. Use g_strdupv() if you want to.
+ * array, as it is still owned by the element factory. Use g_strdupv() to
+ * make a copy of the protocol string array if you need to.
  *
  * Returns: the supported protocols or NULL
  */
