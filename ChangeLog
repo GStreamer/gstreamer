@@ -1,3 +1,12 @@
+2006-09-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/autodetect/gstautoaudiosink.c:
+	(gst_auto_audio_sink_base_init), (gst_auto_audio_sink_class_init),
+	(gst_auto_audio_sink_find_best):
+	* gst/autodetect/gstautovideosink.c: (gst_auto_video_sink_detect):
+	Small cleanups.
+	don't try to set "sync" property when it is not available.
+
 2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Peter Kjellerstedt  <pkj at axis com>

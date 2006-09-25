@@ -57,6 +57,7 @@ GST_ELEMENT_DETAILS ("Auto audio sink",
     "Sink/Audio",
     "Wrapper audio sink for automatically detected audio sink",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -69,13 +70,16 @@ gst_auto_audio_sink_base_init (gpointer klass)
 
   gst_element_class_add_pad_template (eklass,
       gst_static_pad_template_get (&sink_template));
+
   gst_element_class_set_details (eklass, &gst_auto_audio_sink_details);
 }
 
 static void
 gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass)
 {
-  GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
+  GstElementClass *eklass;
+
+  eklass = GST_ELEMENT_CLASS (klass);
 
   eklass->change_state = GST_DEBUG_FUNCPTR (gst_auto_audio_sink_change_state);
 }
@@ -235,7 +239,8 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
       GST_ELEMENT_WARNING (sink, RESOURCE, NOT_FOUND, (NULL),
           ("Failed to find a usable audio sink"));
       choice = gst_element_factory_make ("fakesink", "fake-audio-sink");
-      g_object_set (choice, "sync", TRUE, NULL);
+      if (g_object_class_find_property (G_OBJECT_GET_CLASS (choice), "sync"))
+        g_object_set (choice, "sync", TRUE, NULL);
       gst_element_set_state (choice, GST_STATE_READY);
     }
   }

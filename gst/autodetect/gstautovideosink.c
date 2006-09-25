@@ -212,11 +212,8 @@ gst_auto_video_sink_detect (GstAutoVideoSink * sink)
 
   /* find element */
   GST_DEBUG_OBJECT (sink, "Creating new kid");
-  if (!(esink = gst_auto_video_sink_find_best (sink))) {
-    GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
-        ("Failed to find a supported video sink"));
-    return FALSE;
-  }
+  if (!(esink = gst_auto_video_sink_find_best (sink)))
+    goto no_sink;
 
   sink->kid = esink;
   gst_bin_add (GST_BIN (sink), esink);
@@ -229,6 +226,14 @@ gst_auto_video_sink_detect (GstAutoVideoSink * sink)
   GST_DEBUG_OBJECT (sink, "done changing auto video sink");
 
   return TRUE;
+
+  /* ERRORS */
+no_sink:
+  {
+    GST_ELEMENT_ERROR (sink, LIBRARY, INIT, (NULL),
+        ("Failed to find a supported video sink"));
+    return FALSE;
+  }
 }
 
 static GstStateChangeReturn
