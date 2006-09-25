@@ -1,5 +1,17 @@
 2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
+	* gst/alpha/gstalpha.c:
+	* gst/rtp/gstrtpamrdepay.c:
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/udp/gstudpsrc.c:
+	* gst/videomixer/videomixer.c:
+	  Include stdlib.h in some more places, makes things compile
+	  with uClibc and -Werror (#357592).
+
+2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/jpeg/gstjpegdec.c:
 	  Set minimum height to 8 (from 16), our code should handle
 	  that fine. Some of the buttons on the apple trailer site

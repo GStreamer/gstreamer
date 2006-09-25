@@ -23,6 +23,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include <stdlib.h>
 #include <string.h>
 #include "gstrtpamrdepay.h"
 

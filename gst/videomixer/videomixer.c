@@ -52,6 +52,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 
+#include <stdlib.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_videomixer_debug);

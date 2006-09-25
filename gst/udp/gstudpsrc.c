@@ -90,6 +90,7 @@
 
 #include "gstudpsrc.h"
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <gst/netbuffer/gstnetbuffer.h>
 

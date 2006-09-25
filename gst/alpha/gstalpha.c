@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
