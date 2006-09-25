@@ -1,3 +1,9 @@
+2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstinfo.c:
+	  Fix warning if HAVE_PRINTF_EXTENSION is undefined
+	  (spotted by Peter Kjellerstedt).
+
 2006-09-23  Wim Taymans  <wim@fluendo.com>
 
 	Based on patch by: Antoine Tremblay <hexa00 at gmail dot com>

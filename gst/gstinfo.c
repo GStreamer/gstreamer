@@ -511,6 +511,8 @@ gst_debug_print_object (gpointer ptr)
   return g_strdup_printf ("%p", ptr);
 }
 
+#ifdef HAVE_PRINTF_EXTENSION
+
 static gchar *
 gst_debug_print_segment (gpointer ptr)
 {
@@ -552,6 +554,8 @@ gst_debug_print_segment (gpointer ptr)
     }
   }
 }
+
+#endif /* HAVE_PRINTF_EXTENSION */
 
 /**
  * gst_debug_construct_term_color:
