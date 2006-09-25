@@ -1,3 +1,18 @@
+2006-09-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
+	(gst_play_bin_vis_blocked), (gst_play_bin_set_property),
+	(gen_video_element), (gen_text_element), (gen_audio_element),
+	(gen_vis_element), (remove_sinks), (add_sink), (setup_sinks),
+	(gst_play_bin_set_clock_func), (gst_play_bin_change_state):
+	Detect NO_PREROLL state change returns and disable clock distribution to
+	the sinks so that sync is disabled.
+	Avoid some type checking and do simple casts instead.
+	Small cleanups, fix some FIXMEs.
+	Be more robust when linking user specified elements, catch an report
+	errors. Fixes #357404.
+	Fix some leaks in the error paths.
+
 2006-09-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* ChangeLog:
