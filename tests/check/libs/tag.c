@@ -497,6 +497,23 @@ GST_START_TEST (test_vorbis_tags)
 
     gst_buffer_unref (buf);
   }
+
+  /* check date with time */
+  {
+    GDate *date = NULL;
+
+    list = gst_tag_list_new ();
+    gst_vorbis_tag_add (list, "DATE", "2006-09-25 22:02:38");
+
+    fail_unless (gst_tag_list_get_date_index (list, GST_TAG_DATE, 0, &date));
+    fail_unless (date != NULL);
+    fail_unless (g_date_get_day (date) == 25);
+    fail_unless (g_date_get_month (date) == G_DATE_SEPTEMBER);
+    fail_unless (g_date_get_year (date) == 2006);
+
+    g_date_free (date);
+    gst_tag_list_free (list);
+  }
 }
 
 GST_END_TEST;

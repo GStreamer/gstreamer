@@ -1,3 +1,11 @@
+2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add):
+	  Parse dates that are followed by a time as well (#357532).
+
+	* tests/check/libs/tag.c: (test_vorbis_tags):
+	  Add unit test for this.
+
 2006-09-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/audioconvert/gstaudioconvert.c: (make_lossless_changes),

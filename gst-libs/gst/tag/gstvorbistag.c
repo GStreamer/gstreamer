@@ -244,7 +244,10 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
             d = strtoul (check, &check, 10);
           }
         }
-        if (*check == '\0' && y != 0 && g_date_valid_dmy (d, m, y)) {
+
+        /* date might be followed by a time */
+        if ((*check == '\0' || g_ascii_isspace (*check)) && y != 0 &&
+            g_date_valid_dmy (d, m, y)) {
           GDate *date;
 
           date = g_date_new_dmy (d, m, y);
