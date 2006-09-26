@@ -1,3 +1,9 @@
+2006-09-26  Wim Taymans  <wim@fluendo.com>
+
+	* tools/gst-inspect.c: (print_element_properties_info),
+	(print_signal_info):
+	Fix printing of flags to match the look of enums.
+
 2006-09-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstelementfactory.c:
