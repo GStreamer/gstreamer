@@ -68,10 +68,17 @@ struct _GstV4l2Buffer
   GstV4l2BufferPool *pool;
 };
 
+/**
+ * GstV4l2Src:
+ * @pushsrc: parent #GstPushSrc.
+ *
+ * Opaque object.
+ */
 struct _GstV4l2Src
 {
   GstPushSrc pushsrc;
 
+  /*< private >*/
   GstV4l2Object * v4l2object;
 
   /* pads */

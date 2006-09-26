@@ -50,46 +50,46 @@ gst_v4l2_video_orientation_get_hflip (GstV4l2Object * v4l2object,
   return gst_v4l2_get_attribute (v4l2object, V4L2_CID_HFLIP, flip);
 }
 
-extern gboolean
+gboolean
 gst_v4l2_video_orientation_get_vflip (GstV4l2Object * v4l2object,
     gboolean * flip)
 {
   return gst_v4l2_get_attribute (v4l2object, V4L2_CID_VFLIP, flip);
 }
 
-extern gboolean
+gboolean
 gst_v4l2_video_orientation_get_hcenter (GstV4l2Object * v4l2object,
     gint * center)
 {
   return gst_v4l2_get_attribute (v4l2object, V4L2_CID_HCENTER, center);
 }
 
-extern gboolean
+gboolean
 gst_v4l2_video_orientation_get_vcenter (GstV4l2Object * v4l2object,
     gint * center)
 {
   return gst_v4l2_get_attribute (v4l2object, V4L2_CID_VCENTER, center);
 }
 
-extern gboolean
+gboolean
 gst_v4l2_video_orientation_set_hflip (GstV4l2Object * v4l2object, gboolean flip)
 {
   return gst_v4l2_set_attribute (v4l2object, V4L2_CID_HFLIP, flip);
 }
 
-extern gboolean
+gboolean
 gst_v4l2_video_orientation_set_vflip (GstV4l2Object * v4l2object, gboolean flip)
 {
   return gst_v4l2_set_attribute (v4l2object, V4L2_CID_VFLIP, flip);
 }
 
-extern gboolean
+gboolean
 gst_v4l2_video_orientation_set_hcenter (GstV4l2Object * v4l2object, gint center)
 {
   return gst_v4l2_set_attribute (v4l2object, V4L2_CID_HCENTER, center);
 }
 
-extern gboolean
+gboolean
 gst_v4l2_video_orientation_set_vcenter (GstV4l2Object * v4l2object, gint center)
 {
   return gst_v4l2_set_attribute (v4l2object, V4L2_CID_VCENTER, center);

@@ -1,5 +1,19 @@
 2006-09-26  Wim Taymans  <wim@fluendo.com>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	Add v4l2 plugin to the docs.
+
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_get_read),
+	(gst_v4l2src_get_mmap), (gst_v4l2src_create):
+	* sys/v4l2/gstv4l2src.h:
+	* sys/v4l2/gstv4l2vidorient.c:
+	Fix docs.
+	Remove some more externs.
+
+2006-09-26  Wim Taymans  <wim@fluendo.com>
+
 	* sys/v4l2/Makefile.am:
 	Fix makefile, list libs in stack order.
 
