@@ -53,7 +53,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 
 /* On some systems MAP_FAILED seems to be missing */
 #ifndef MAP_FAILED
-#define MAP_FAILED ( (caddr_t) -1 )
+#define MAP_FAILED ((caddr_t) -1)
 #endif
 
 /******************************************************
@@ -61,7 +61,6 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
  *   create list of supported capture formats
  * return value: TRUE on success, FALSE on error
  ******************************************************/
-
 gboolean
 gst_v4l2src_fill_format_list (GstV4l2Src * v4l2src)
 {
@@ -79,29 +78,32 @@ gst_v4l2src_fill_format_list (GstV4l2Src * v4l2src)
     if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_ENUM_FMT, format) < 0) {
       if (errno == EINVAL) {
         break;                  /* end of enumeration */
-      } else {
-        GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-            (_("failed to get number %d in pixelformat enumeration for %s: %s"),
-                n, v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
-        g_free (format);
-        return FALSE;
-      }
+      } else
+        goto failed;
     }
     GST_LOG_OBJECT (v4l2src, "got format %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (format->pixelformat));
+
     v4l2src->formats = g_slist_prepend (v4l2src->formats, format);
   }
-
   return TRUE;
-}
 
+  /* ERRORS */
+failed:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
+        (_("failed to get number %d in pixelformat enumeration for %s: %s"),
+            n, v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
+    g_free (format);
+    return FALSE;
+  }
+}
 
 /******************************************************
  * gst_v4l2src_clear_format_list():
  *   free list of supported capture formats
  * return value: TRUE on success, FALSE on error
  ******************************************************/
-
 gboolean
 gst_v4l2src_clear_format_list (GstV4l2Src * v4l2src)
 {
@@ -118,14 +120,20 @@ gst_v4l2src_clear_format_list (GstV4l2Src * v4l2src)
  *   queue a frame for capturing
  * return value: TRUE on success, FALSE on error
  ******************************************************/
-
 gboolean
 gst_v4l2src_queue_frame (GstV4l2Src * v4l2src, guint i)
 {
   GST_LOG_OBJECT (v4l2src, "queueing frame %u", i);
 
   if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QBUF,
-          &v4l2src->pool->buffers[i].buffer) < 0) {
+          &v4l2src->pool->buffers[i].buffer) < 0)
+    goto failed;
+
+  return TRUE;
+
+  /* ERRORS */
+failed:
+  {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, WRITE,
         (_("Could not write to device '%s'."),
             v4l2src->v4l2object->videodev),
@@ -133,17 +141,13 @@ gst_v4l2src_queue_frame (GstV4l2Src * v4l2src, guint i)
             v4l2src->v4l2object->videodev, g_strerror (errno)));
     return FALSE;
   }
-
-  return TRUE;
 }
-
 
 /******************************************************
  * gst_v4l2src_grab_frame ():
  *   grab a frame for capturing
- * return value: TRUE on success, FALSE on error
+ * return value: The captured frame number or -1 on error.
  ******************************************************/
-
 gint
 gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
 {
@@ -163,17 +167,9 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
             v4l2src->v4l2object->videodev);
         break;
       case EINVAL:
-        GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
-            (_("Failed trying to get frames from device %s"),
-                v4l2src->v4l2object->videodev),
-            (_("The buffer type is not supported, or the index is out of bounds," " or no buffers have been allocated yet, or the userptr" " or length are invalid. device %s"), v4l2src->v4l2object->videodev));
-        break;
+        goto einval;
       case ENOMEM:
-        GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
-            (_("Failed trying to get frames from device %s. Not enough memory"),
-                v4l2src->v4l2object->videodev),
-            (_("isufficient memory to enqueue a user pointer buffer. device %s"), v4l2src->v4l2object->videodev));
-        break;
+        goto nomem;
       case EIO:
         GST_DEBUG_OBJECT (v4l2src,
             "VIDIOC_DQBUF failed due to an internal error."
@@ -195,19 +191,49 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
     }
 
     if (--trials == -1) {
-      return -1;
+      goto too_many_trials;
     } else {
       ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QBUF, &buffer);
       memset (&buffer, 0x00, sizeof (buffer));
       buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       buffer.memory = v4l2src->breq.memory;
     }
-
   }
 
   GST_LOG_OBJECT (v4l2src, "grabbed frame %d", buffer.index);
 
   return buffer.index;
+
+  /* ERRORS */
+einval:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
+        (_("Failed trying to get frames from device %s"),
+            v4l2src->v4l2object->videodev),
+        (_("The buffer type is not supported, or the index is out of bounds,"
+                " or no buffers have been allocated yet, or the userptr"
+                " or length are invalid. device %s"),
+            v4l2src->v4l2object->videodev));
+    return -1;
+  }
+nomem:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
+        (_("Failed trying to get frames from device %s. Not enough memory"),
+            v4l2src->v4l2object->videodev),
+        (_("insufficient memory to enqueue a user pointer buffer. device %s"),
+            v4l2src->v4l2object->videodev));
+    return -1;
+  }
+too_many_trials:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
+        (_("Failed trying to get frames from device %s"),
+            v4l2src->v4l2object->videodev),
+        (_("Failed after 100 tries. device %s"),
+            v4l2src->v4l2object->videodev));
+    return -1;
+  }
 }
 
 
@@ -216,7 +242,6 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
  *   get capture parameters
  * return value: TRUE on success, FALSE on error
  ******************************************************/
-
 gboolean
 gst_v4l2src_get_capture (GstV4l2Src * v4l2src)
 {
@@ -226,14 +251,20 @@ gst_v4l2src_get_capture (GstV4l2Src * v4l2src)
 
   memset (&v4l2src->format, 0, sizeof (struct v4l2_format));
   v4l2src->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_G_FMT, &v4l2src->format) < 0) {
+
+  if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_G_FMT, &v4l2src->format) < 0)
+    goto fmt_failed;
+
+  return TRUE;
+
+  /* ERRORS */
+fmt_failed:
+  {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
         (_("failed to get pixelformat for device %s"),
             v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
-
-  return TRUE;
 }
 
 
@@ -242,13 +273,11 @@ gst_v4l2src_get_capture (GstV4l2Src * v4l2src)
  *   set capture parameters
  * return value: TRUE on success, FALSE on error
  ******************************************************/
-
 gboolean
 gst_v4l2src_set_capture (GstV4l2Src * v4l2src,
     struct v4l2_fmtdesc * fmt, gint * width, gint * height,
     guint * fps_n, guint * fps_d)
 {
-
   guint new_fps_n = *fps_n;
   guint new_fps_d = *fps_d;
 
@@ -258,9 +287,9 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src,
   GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2src->v4l2object);
 
-  if (!gst_v4l2src_get_capture (v4l2src)) {
+  /* error was posted */
+  if (!gst_v4l2src_get_capture (v4l2src))
     goto fail;
-  }
 
   v4l2src->format.fmt.pix.width = *width;
   v4l2src->format.fmt.pix.height = *height;
@@ -268,13 +297,8 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src,
   v4l2src->format.fmt.pix.field = V4L2_FIELD_INTERLACED;
   v4l2src->format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-  if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_S_FMT, &v4l2src->format) < 0) {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("failed to set pixelformat to %s @ %dx%d for device %s: %s"),
-            fmt->description, *width, *height, v4l2src->v4l2object->videodev),
-        GST_ERROR_SYSTEM);
-    goto fail;
-  }
+  if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_S_FMT, &v4l2src->format) < 0)
+    goto fmt_failed;
 
   if (*width != v4l2src->format.fmt.pix.width ||
       *height != v4l2src->format.fmt.pix.height) {
@@ -283,18 +307,12 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src,
         v4l2src->format.fmt.pix.height, fmt->description);
   }
 
-  /* update internal info */
-  if (!gst_v4l2src_get_capture (v4l2src)) {
+  /* update internal info, posted error */
+  if (!gst_v4l2src_get_capture (v4l2src))
     goto fail;
-  }
 
-  if (fmt->pixelformat != v4l2src->format.fmt.pix.pixelformat) {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("failed to set pixelformat to %s @ %dx%d for device %s: %s"),
-            fmt->description, *width, *height, v4l2src->v4l2object->videodev),
-        GST_ERROR_SYSTEM);
-    goto fail;
-  }
+  if (fmt->pixelformat != v4l2src->format.fmt.pix.pixelformat)
+    goto pixfmt_failed;
 
   if (*fps_n) {
     if (gst_v4l2src_set_fps (v4l2src, &new_fps_n, &new_fps_d)) {
@@ -313,30 +331,45 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src,
     }
   }
 
-
   *width = v4l2src->format.fmt.pix.width;
   *height = v4l2src->format.fmt.pix.height;
 
   return TRUE;
 
+  /* ERRORS */
+fmt_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
+        (_("failed to set pixelformat to %s @ %dx%d for device %s: %s"),
+            fmt->description, *width, *height, v4l2src->v4l2object->videodev),
+        GST_ERROR_SYSTEM);
+    return FALSE;
+  }
+pixfmt_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
+        (_("failed to set pixelformat to %s @ %dx%d for device %s: %s"),
+            fmt->description, *width, *height, v4l2src->v4l2object->videodev),
+        GST_ERROR_SYSTEM);
+    return FALSE;
+  }
 fail:
-
-  return FALSE;
-
+  {
+    return FALSE;
+  }
 }
-
 
 /******************************************************
  * gst_v4l2src_capture_init():
  *   initialize the capture system
  * return value: TRUE on success, FALSE on error
  ******************************************************/
-
 gboolean
 gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
 {
   gint n;
   guint buffers;
+  GstV4l2Buffer *buffer;
 
   GST_DEBUG_OBJECT (v4l2src, "initting the capture system");
 
@@ -345,36 +378,25 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
 
   /* request buffer info */
   buffers = v4l2src->breq.count;
-  if (v4l2src->breq.count > GST_V4L2_MAX_BUFFERS) {
+
+  if (v4l2src->breq.count > GST_V4L2_MAX_BUFFERS)
     v4l2src->breq.count = GST_V4L2_MAX_BUFFERS;
-  }
-  if (v4l2src->breq.count < GST_V4L2_MIN_BUFFERS) {
+  else if (v4l2src->breq.count < GST_V4L2_MIN_BUFFERS)
     v4l2src->breq.count = GST_V4L2_MIN_BUFFERS;
-  }
+
   v4l2src->breq.type = v4l2src->format.type;
   if (v4l2src->v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
     v4l2src->breq.memory = V4L2_MEMORY_MMAP;
     if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_REQBUFS,
-            &v4l2src->breq) < 0) {
-      GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-          (_("Could not get buffers from device '%s'."),
-              v4l2src->v4l2object->videodev),
-          ("error requesting %d buffers. system error: %s",
-              v4l2src->breq.count, g_strerror (errno)));
-      return FALSE;
-    }
+            &v4l2src->breq) < 0)
+      goto reqbufs_failed;
+
     GST_LOG_OBJECT (v4l2src, "using default mmap method");
   } else if (v4l2src->v4l2object->vcap.capabilities & V4L2_CAP_READWRITE) {
     v4l2src->breq.memory = 0;
     GST_INFO_OBJECT (v4l2src, "using fallback read method");
-  } else {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("the driver of device '%s' is broken."),
-            v4l2src->v4l2object->videodev),
-        ("no supported read capability from %s",
-            v4l2src->v4l2object->videodev));
-    return FALSE;
-  }
+  } else
+    goto broken_driver;
 
   /* Determine the device's framerate */
   if (!gst_v4l2src_update_fps (v4l2src->v4l2object)) {
@@ -384,15 +406,9 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
   }
 
   if (v4l2src->breq.memory > 0) {
-    if (v4l2src->breq.count < GST_V4L2_MIN_BUFFERS) {
-      GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-          (_("Could not get enough buffers from device '%s'."),
-              v4l2src->v4l2object->videodev),
-          ("we received %d, we want at least %d",
-              v4l2src->breq.count, GST_V4L2_MIN_BUFFERS));
-      v4l2src->breq.count = buffers;
-      return FALSE;
-    }
+    if (v4l2src->breq.count < GST_V4L2_MIN_BUFFERS)
+      goto no_buffers;
+
     if (v4l2src->breq.count != buffers)
       g_object_notify (G_OBJECT (v4l2src), "num_buffers");
 
@@ -412,7 +428,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
     v4l2src->pool->buffers = g_new0 (GstV4l2Buffer, v4l2src->breq.count);
 
     for (n = 0; n < v4l2src->breq.count; n++) {
-      GstV4l2Buffer *buffer = &v4l2src->pool->buffers[n];
+      buffer = &v4l2src->pool->buffers[n];
 
       gst_atomic_int_set (&buffer->refcount, 1);
       buffer->pool = v4l2src->pool;
@@ -422,28 +438,19 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
       buffer->buffer.memory = v4l2src->breq.memory;
 
       if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QUERYBUF,
-              &buffer->buffer) < 0) {
-        GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-            (_("Could not get buffer properties of buffer %d"), n),
-            GST_ERROR_SYSTEM);
-        gst_v4l2src_capture_deinit (v4l2src);
-        return FALSE;
-      }
+              &buffer->buffer) < 0)
+        goto querybuf_failed;
+
       buffer->start =
           mmap (0, buffer->buffer.length, PROT_READ | PROT_WRITE, MAP_SHARED,
           v4l2src->v4l2object->video_fd, buffer->buffer.m.offset);
-      if (buffer->start == MAP_FAILED) {
-        GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-            (_("Could not mmap video buffer %d: %s"), n), GST_ERROR_SYSTEM);
-        buffer->start = 0;
-        gst_v4l2src_capture_deinit (v4l2src);
-        return FALSE;
-      }
+
+      if (buffer->start == MAP_FAILED)
+        goto mmap_failed;
+
       buffer->length = buffer->buffer.length;
-      if (!gst_v4l2src_queue_frame (v4l2src, n)) {
-        gst_v4l2src_capture_deinit (v4l2src);
-        return FALSE;
-      }
+      if (!gst_v4l2src_queue_frame (v4l2src, n))
+        goto queue_failed;
     }
   } else {
     GST_LOG_OBJECT (v4l2src, "no buffer pool used");
@@ -453,6 +460,57 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
   GST_V4L2_SET_ACTIVE (v4l2src->v4l2object);
 
   return TRUE;
+
+  /* ERRORS */
+reqbufs_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
+        (_("Could not get buffers from device '%s'."),
+            v4l2src->v4l2object->videodev),
+        ("error requesting %d buffers. system error: %s",
+            v4l2src->breq.count, g_strerror (errno)));
+    return FALSE;
+  }
+broken_driver:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
+        (_("the driver of device '%s' is broken."),
+            v4l2src->v4l2object->videodev),
+        ("no supported read capability from %s",
+            v4l2src->v4l2object->videodev));
+    return FALSE;
+  }
+no_buffers:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
+        (_("Could not get enough buffers from device '%s'."),
+            v4l2src->v4l2object->videodev),
+        ("we received %d, we want at least %d",
+            v4l2src->breq.count, GST_V4L2_MIN_BUFFERS));
+    v4l2src->breq.count = buffers;
+    return FALSE;
+  }
+querybuf_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
+        (_("Could not get buffer properties of buffer %d"), n),
+        GST_ERROR_SYSTEM);
+    gst_v4l2src_capture_deinit (v4l2src);
+    return FALSE;
+  }
+mmap_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
+        (_("Could not mmap video buffer %d: %s"), n), GST_ERROR_SYSTEM);
+    gst_v4l2src_capture_deinit (v4l2src);
+    buffer->start = 0;
+    return FALSE;
+  }
+queue_failed:
+  {
+    gst_v4l2src_capture_deinit (v4l2src);
+    return FALSE;
+  }
 }
 
 
@@ -461,7 +519,6 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
  *   start streaming capture
  * return value: TRUE on success, FALSE on error
  ******************************************************/
-
 gboolean
 gst_v4l2src_capture_start (GstV4l2Src * v4l2src)
 {
@@ -470,52 +527,49 @@ gst_v4l2src_capture_start (GstV4l2Src * v4l2src)
   GST_DEBUG_OBJECT (v4l2src, "starting the capturing");
 
   GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
-  if (!GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
-    /* gst_pad_renegotiate (v4l2src->srcpad); FIX: is it still required in 0.10 */
-  }
   GST_V4L2_CHECK_ACTIVE (v4l2src->v4l2object);
 
   v4l2src->quit = FALSE;
 
   if (v4l2src->breq.memory != 0) {
-    if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_STREAMON, &type) < 0) {
-      GST_ELEMENT_ERROR (v4l2src, RESOURCE, OPEN_READ,
-          (_("Error starting streaming capture from device %s"),
-              v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
-      return FALSE;
-    }
+    if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_STREAMON, &type) < 0)
+      goto streamon_failed;
   }
 
   v4l2src->is_capturing = TRUE;
 
   return TRUE;
-}
 
+  /* ERRORS */
+streamon_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, OPEN_READ,
+        (_("Error starting streaming capture from device %s"),
+            v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
+    return FALSE;
+  }
+}
 
 /******************************************************
  * gst_v4l2src_capture_stop():
  *   stop streaming capture
  * return value: TRUE on success, FALSE on error
  ******************************************************/
-
 gboolean
 gst_v4l2src_capture_stop (GstV4l2Src * v4l2src)
 {
   gint type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
   GST_DEBUG_OBJECT (v4l2src, "stopping capturing");
+
   GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
   GST_V4L2_CHECK_ACTIVE (v4l2src->v4l2object);
 
   if (v4l2src->breq.memory != 0) {
     /* we actually need to sync on all queued buffers but not
      * on the non-queued ones */
-    if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_STREAMOFF, &type) < 0) {
-      GST_ELEMENT_ERROR (v4l2src, RESOURCE, CLOSE,
-          (_("Error stopping streaming capture from device %s: %s"),
-              v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
-      return FALSE;
-    }
+    if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_STREAMOFF, &type) < 0)
+      goto streamoff_failed;
   }
 
   /* make an optional pending wait stop */
@@ -523,6 +577,15 @@ gst_v4l2src_capture_stop (GstV4l2Src * v4l2src)
   v4l2src->is_capturing = FALSE;
 
   return TRUE;
+
+  /* ERRORS */
+streamoff_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, CLOSE,
+        (_("Error stopping streaming capture from device %s: %s"),
+            v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
+    return FALSE;
+  }
 }
 
 static void
@@ -570,7 +633,6 @@ gst_v4l2src_free_buffer (GstBuffer * buffer)
  *   deinitialize the capture system
  * return value: TRUE on success, FALSE on error
  ******************************************************/
-
 gboolean
 gst_v4l2src_capture_deinit (GstV4l2Src * v4l2src)
 {
@@ -608,20 +670,20 @@ gst_v4l2src_capture_deinit (GstV4l2Src * v4l2src)
      */
     if (try_reinit) {
       if (!gst_v4l2src_capture_start (v4l2src) ||
-          !gst_v4l2src_capture_stop (v4l2src))
+          !gst_v4l2src_capture_stop (v4l2src)) {
+        GST_DEBUG_OBJECT (v4l2src, "failed reinit device");
         return FALSE;
+      }
     }
   }
 
   GST_V4L2_SET_INACTIVE (v4l2src->v4l2object);
+
   return TRUE;
 }
 
-
 /*
-
  */
-
 gboolean
 gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
     struct v4l2_fmtdesc * format,
@@ -642,6 +704,8 @@ gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
   fmt.fmt.pix.pixelformat = format->pixelformat;
   fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
   if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_TRY_FMT, &fmt) < 0) {
+    GST_DEBUG_OBJECT (v4l2src, "failed to get min size: %s",
+        g_strerror (errno));
     return FALSE;
   }
 
@@ -649,12 +713,15 @@ gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
     *min_w = fmt.fmt.pix.width;
   if (min_h)
     *min_h = fmt.fmt.pix.height;
+
   GST_LOG_OBJECT (v4l2src,
       "got min size %dx%d", fmt.fmt.pix.width, fmt.fmt.pix.height);
 
   fmt.fmt.pix.width = 4096;
   fmt.fmt.pix.height = 4096;
   if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_TRY_FMT, &fmt) < 0) {
+    GST_DEBUG_OBJECT (v4l2src, "failed to get max size: %s",
+        g_strerror (errno));
     return FALSE;
   }
 
@@ -662,6 +729,7 @@ gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
     *max_w = fmt.fmt.pix.width;
   if (max_h)
     *max_h = fmt.fmt.pix.height;
+
   GST_LOG_OBJECT (v4l2src,
       "got max size %dx%d", fmt.fmt.pix.width, fmt.fmt.pix.height);
 
@@ -680,29 +748,49 @@ gst_v4l2src_update_fps (GstV4l2Object * v4l2object)
 gboolean
 gst_v4l2src_set_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
 {
-
   GstV4l2Object *v4l2object = v4l2src->v4l2object;
   struct v4l2_streamparm stream;
 
+  GST_LOG_OBJECT (v4l2src, "setting fps %d, %d", *fps_n, *fps_d);
+
   memset (&stream, 0x00, sizeof (struct v4l2_streamparm));
   stream.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  if (ioctl (v4l2object->video_fd, VIDIOC_G_PARM, &stream) == 0 &&
-      stream.parm.capture.capability & V4L2_CAP_TIMEPERFRAME) {
+  if (ioctl (v4l2object->video_fd, VIDIOC_G_PARM, &stream) < 0)
+    goto gparm_failed;
 
-    stream.parm.capture.timeperframe.denominator = *fps_n;
-    stream.parm.capture.timeperframe.numerator = *fps_d;
+  if (!(stream.parm.capture.capability & V4L2_CAP_TIMEPERFRAME))
+    goto no_timeperframe;
 
-    if (ioctl (v4l2object->video_fd, VIDIOC_S_PARM, &stream) == 0) {
-      *fps_n = stream.parm.capture.timeperframe.denominator;
-      *fps_d = stream.parm.capture.timeperframe.numerator;
-      return TRUE;
-    }
+  stream.parm.capture.timeperframe.denominator = *fps_n;
+  stream.parm.capture.timeperframe.numerator = *fps_d;
+
+  if (ioctl (v4l2object->video_fd, VIDIOC_S_PARM, &stream) < 0)
+    goto sparm_failed;
+
+  *fps_n = stream.parm.capture.timeperframe.denominator;
+  *fps_d = stream.parm.capture.timeperframe.numerator;
+
+  GST_LOG_OBJECT (v4l2src, "fps set to %d, %d", *fps_n, *fps_d);
+
+  return TRUE;
+
+  /* ERRORS */
+gparm_failed:
+  {
+    GST_DEBUG_OBJECT (v4l2src, "failed to get PARM: %s", g_strerror (errno));
+    return FALSE;
   }
-
-  return FALSE;
-
+no_timeperframe:
+  {
+    GST_DEBUG_OBJECT (v4l2src, "no V4L2_CAP_TIMEPERFRAME");
+    return FALSE;
+  }
+sparm_failed:
+  {
+    GST_DEBUG_OBJECT (v4l2src, "failed to set PARM: %s", g_strerror (errno));
+    return FALSE;
+  }
 }
-
 
 gboolean
 gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
@@ -711,6 +799,7 @@ gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
   v4l2_std_id std;
   struct v4l2_streamparm stream;
   const GList *item;
+  gboolean found;
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;
@@ -718,36 +807,60 @@ gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
   /* Try to get the frame rate directly from the device using VIDIOC_G_PARM */
   memset (&stream, 0x00, sizeof (struct v4l2_streamparm));
   stream.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  if (ioctl (v4l2object->video_fd, VIDIOC_G_PARM, &stream) == 0 &&
-      stream.parm.capture.capability & V4L2_CAP_TIMEPERFRAME) {
-    /* Note: V4L2 gives us the frame interval, we need the frame rate */
-    *fps_n = stream.parm.capture.timeperframe.denominator;
-    *fps_d = stream.parm.capture.timeperframe.numerator;
-    GST_DEBUG_OBJECT (v4l2src,
-        "frame rate returned by G_PARM: %d/%d fps", *fps_n, *fps_d);
-    return TRUE;
+
+  if (ioctl (v4l2object->video_fd, VIDIOC_G_PARM, &stream) < 0) {
+    GST_DEBUG_OBJECT (v4l2src, "failed to get PARM: %s", g_strerror (errno));
+    goto try_stds;
   }
 
+  if (!(stream.parm.capture.capability & V4L2_CAP_TIMEPERFRAME)) {
+    GST_DEBUG_OBJECT (v4l2src, "no V4L2_CAP_TIMEPERFRAME");
+    goto try_stds;
+  }
+
+  /* Note: V4L2 gives us the frame interval, we need the frame rate */
+  *fps_n = stream.parm.capture.timeperframe.denominator;
+  *fps_d = stream.parm.capture.timeperframe.numerator;
+
+  GST_DEBUG_OBJECT (v4l2src,
+      "frame rate returned by G_PARM: %d/%d fps", *fps_n, *fps_d);
+  /* and we are done now */
+  goto done;
+
+try_stds:
   /* If G_PARM failed, try to get the same information from the video standard */
   if (!gst_v4l2_get_norm (v4l2object, &std))
     return FALSE;
+
+  found = FALSE;
   for (item = v4l2object->stds; item != NULL; item = item->next) {
     GstV4l2TunerNorm *v4l2norm = item->data;
 
     if (v4l2norm->index == std) {
-      *fps_n =
-          gst_value_get_fraction_numerator (&GST_TUNER_NORM (v4l2norm)->
-          framerate);
-      *fps_d =
-          gst_value_get_fraction_denominator (&GST_TUNER_NORM (v4l2norm)->
-          framerate);
+      GValue *framerate = &GST_TUNER_NORM (v4l2norm)->framerate;
+
+      *fps_n = gst_value_get_fraction_numerator (framerate);
+      *fps_d = gst_value_get_fraction_denominator (framerate);
+
       GST_DEBUG_OBJECT (v4l2src,
           "frame rate returned by get_norm: %d/%d fps", *fps_n, *fps_d);
-      return TRUE;
+      found = TRUE;
+      break;
     }
   }
-  return FALSE;
+  /* nothing found, that's an error */
+  if (!found)
+    goto failed;
 
+done:
+  return TRUE;
+
+  /* ERRORS */
+failed:
+  {
+    GST_DEBUG_OBJECT (v4l2src, "failed to get framerate");
+    return FALSE;
+  }
 }
 
 #define GST_TYPE_V4L2SRC_BUFFER (gst_v4l2src_buffer_get_type())
@@ -812,7 +925,6 @@ gst_v4l2src_buffer_finalize (GstV4l2SrcBuffer * v4l2src_buffer)
   GstV4l2Buffer *buf = v4l2src_buffer->buf;
 
   if (buf) {
-
     GST_LOG ("freeing buffer %p (nr. %d)", buf, buf->buffer.index);
 
     if (!g_atomic_int_dec_and_test (&buf->refcount)) {
@@ -825,7 +937,6 @@ gst_v4l2src_buffer_finalize (GstV4l2SrcBuffer * v4l2src_buffer)
       /* we're last thing that used all this */
       gst_v4l2src_buffer_pool_free (buf->pool, TRUE);
     }
-
   }
 }
 
@@ -845,9 +956,6 @@ gst_v4l2src_buffer_new (GstV4l2Src * v4l2src, guint size, guint8 * data,
     GST_LOG_OBJECT (v4l2src,
         "creating buffer  %p (nr. %d)", srcbuf, srcbuf->buffer.index);
   }
-
-
-
   GST_BUFFER_SIZE (buf) = size;
 
   GST_BUFFER_TIMESTAMP (buf) =

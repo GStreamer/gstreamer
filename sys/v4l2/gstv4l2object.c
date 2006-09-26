@@ -110,7 +110,6 @@ gst_v4l2_class_probe_devices (GstElementClass * klass, gboolean check,
         g_free (device);
       }
     }
-
     init = TRUE;
   }
 
@@ -150,9 +149,7 @@ gst_v4l2_probe_needs_probe (GstPropertyProbe * probe,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
       break;
   }
-
   return ret;
-
 }
 
 static GValueArray *
@@ -254,19 +251,18 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class)
           GST_TYPE_V4L2_DEVICE_FLAGS, 0, G_PARAM_READABLE));
   g_object_class_install_property
       (gobject_class, PROP_STD,
-      g_param_spec_string ("std", "std",
-          "standard (norm) to use", NULL, G_PARAM_READWRITE));
+      g_param_spec_string ("std", "Std",
+          "Standard (norm) to use", NULL, G_PARAM_READWRITE));
   g_object_class_install_property
       (gobject_class, PROP_INPUT,
       g_param_spec_string ("input",
-          "input",
-          "input/output (channel) to switch to", NULL, G_PARAM_READWRITE));
+          "Input",
+          "Input/output (channel) to switch to", NULL, G_PARAM_READWRITE));
   g_object_class_install_property
       (gobject_class, PROP_FREQUENCY,
       g_param_spec_ulong ("frequency",
-          "frequency",
-          "frequency to tune to (in Hz)", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
-
+          "Frequency",
+          "Frequency to tune to (in Hz)", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
 }
 
 GstV4l2Object *
@@ -275,13 +271,11 @@ gst_v4l2_object_new (GstElement * element,
     GstV4l2SetInOutFunction set_in_out_func,
     GstV4l2UpdateFpsFunction update_fps_func)
 {
-
   GstV4l2Object *v4l2object;
 
   /*
    * some default values 
    */
-
   v4l2object = g_new0 (GstV4l2Object, 1);
 
   v4l2object->element = element;
@@ -300,16 +294,12 @@ gst_v4l2_object_new (GstElement * element,
   v4l2object->xwindow_id = 0;
 
   return v4l2object;
-
 }
-
 
 void
 gst_v4l2_object_destroy (GstV4l2Object ** v4l2object)
 {
-
   if (*v4l2object) {
-
     if ((*v4l2object)->videodev) {
       g_free ((*v4l2object)->videodev);
       (*v4l2object)->videodev = NULL;
@@ -317,29 +307,24 @@ gst_v4l2_object_destroy (GstV4l2Object ** v4l2object)
 
     g_free (*v4l2object);
     *v4l2object = NULL;
-
   }
-
 }
-
 
 gboolean
 gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-
   switch (prop_id) {
     case PROP_DEVICE:
       if (v4l2object->videodev)
         g_free (v4l2object->videodev);
-      v4l2object->videodev = g_strdup (g_value_get_string (value));
+      v4l2object->videodev = g_value_dup_string (value);
       break;
     case PROP_STD:
       if (GST_V4L2_IS_OPEN (v4l2object)) {
         GstTuner *tuner = GST_TUNER (v4l2object->element);
         GstTunerNorm *norm = gst_tuner_find_norm_by_name (tuner,
-            (gchar *)
-            g_value_get_string (value));
+            (gchar *) g_value_get_string (value));
 
         if (norm) {
           /* like gst_tuner_set_norm (tuner, norm)
@@ -355,8 +340,7 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
       if (GST_V4L2_IS_OPEN (v4l2object)) {
         GstTuner *tuner = GST_TUNER (v4l2object->element);
         GstTunerChannel *channel = gst_tuner_find_channel_by_name (tuner,
-            (gchar *)
-            g_value_get_string (value));
+            (gchar *) g_value_get_string (value));
 
         if (channel) {
           /* like gst_tuner_set_channel (tuner, channel)
@@ -389,9 +373,7 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
       return FALSE;
       break;
   }
-
   return TRUE;
-
 }
 
 
@@ -405,15 +387,15 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       break;
     case PROP_DEVICE_NAME:
     {
-      gchar *new = NULL;
+      const guchar *new = NULL;
 
       if (GST_V4L2_IS_OPEN (v4l2object)) {
-        new = (gchar *) v4l2object->vcap.card;
+        new = v4l2object->vcap.card;
       } else if (gst_v4l2_open (v4l2object)) {
-        new = (gchar *) v4l2object->vcap.card;
+        new = v4l2object->vcap.card;
         gst_v4l2_close (v4l2object);
       }
-      g_value_set_string (value, new);
+      g_value_set_string (value, (gchar *) new);
       break;
     }
     case PROP_FLAGS:
@@ -425,6 +407,8 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
             (V4L2_CAP_VIDEO_CAPTURE |
             V4L2_CAP_VIDEO_OUTPUT |
             V4L2_CAP_VIDEO_OVERLAY | V4L2_CAP_TUNER | V4L2_CAP_AUDIO);
+        /* FIXME. if there is something with AUDIO we add something with
+         * video? this needs some explanation.. */
         if (v4l2object->vcap.capabilities & V4L2_CAP_AUDIO)
           flags |= V4L2_FBUF_CAP_CHROMAKEY;
       }
@@ -444,9 +428,7 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       return FALSE;
       break;
   }
-
   return TRUE;
-
 }
 
 static void
@@ -464,6 +446,7 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
     norm =
         GST_TUNER_NORM (gst_tuner_get_norm (GST_TUNER (v4l2object->element)));
     if (norm) {
+      /* FIXME, free old? */
       v4l2object->std = g_strdup (norm->label);
       gst_tuner_norm_changed (tuner, norm);
       g_object_notify (G_OBJECT (v4l2object->element), "std");
@@ -478,6 +461,7 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
     channel =
         GST_TUNER_CHANNEL (gst_tuner_get_channel (GST_TUNER (v4l2object->
                 element)));
+    /* FIXME, free old? */
     v4l2object->input = g_strdup (channel->label);
     gst_tuner_channel_changed (tuner, channel);
     g_object_notify (G_OBJECT (v4l2object->element), "input");
@@ -498,7 +482,6 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
   }
 }
 
-
 gboolean
 gst_v4l2_object_start (GstV4l2Object * v4l2object)
 {
@@ -506,7 +489,6 @@ gst_v4l2_object_start (GstV4l2Object * v4l2object)
     gst_v4l2_set_defaults (v4l2object);
   else
     return FALSE;
-
 
 #ifdef HAVE_XVIDEO
   gst_v4l2_xoverlay_start (v4l2object);
@@ -518,7 +500,6 @@ gst_v4l2_object_start (GstV4l2Object * v4l2object)
 gboolean
 gst_v4l2_object_stop (GstV4l2Object * v4l2object)
 {
-
 #ifdef HAVE_XVIDEO
   gst_v4l2_xoverlay_stop (v4l2object);
 #endif

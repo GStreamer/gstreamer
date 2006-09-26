@@ -37,7 +37,7 @@
  * <programlisting>
  * gst-launch v4l2src use-fixed-fps=true ! xvimagesink
  * </programlisting>
- * This exemple should be used to capture from web-cams
+ * This example should be used to capture from web-cams
  * </para>
  * </refsect2>
  */
@@ -129,7 +129,6 @@ static const guint32 gst_v4l2_formats[] = {
   V4L2_PIX_FMT_PWC2,
 #endif
 };
-
 
 #define GST_V4L2_FORMAT_COUNT (G_N_ELEMENTS (gst_v4l2_formats))
 
@@ -297,13 +296,11 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   pushsrc_class->create = gst_v4l2src_create;
 
   gobject_class->dispose = gst_v4l2src_dispose;
-
 }
 
 static void
 gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
 {
-
   v4l2src->v4l2object = gst_v4l2_object_new (GST_ELEMENT (v4l2src),
       gst_v4l2_get_input, gst_v4l2_set_input, gst_v4l2src_update_fps);
 
@@ -335,8 +332,7 @@ gst_v4l2src_dispose (GObject * object)
     gst_v4l2src_clear_format_list (v4l2src);
   }
 
-  if (((GObjectClass *) parent_class)->dispose)
-    ((GObjectClass *) parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 
@@ -349,24 +345,19 @@ gst_v4l2src_set_property (GObject * object,
   g_return_if_fail (GST_IS_V4L2SRC (object));
   v4l2src = GST_V4L2SRC (object);
 
-
   if (!gst_v4l2_object_set_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
-
     switch (prop_id) {
       case PROP_USE_FIXED_FPS:
         if (!GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
           v4l2src->use_fixed_fps = g_value_get_boolean (value);
         }
         break;
-
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
     }
-
   }
-
 }
 
 
@@ -381,18 +372,15 @@ gst_v4l2src_get_property (GObject * object,
 
   if (!gst_v4l2_object_get_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
-
     switch (prop_id) {
       case PROP_USE_FIXED_FPS:
         g_value_set_boolean (value, v4l2src->use_fixed_fps);
         break;
-
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
     }
   }
-
 }
 
 
@@ -412,6 +400,8 @@ gst_v4l2src_fixate (GstPad * pad, GstCaps * caps)
     structure = gst_caps_get_structure (caps, i);
     const GValue *v;
 
+    /* FIXME such sizes? we usually fixate to something in the 320x200
+     * range... */
     gst_structure_fixate_field_nearest_int (structure, "width", 4096);
     gst_structure_fixate_field_nearest_int (structure, "height", 4096);
     gst_structure_fixate_field_nearest_fraction (structure, "framerate", 15, 2);
@@ -755,7 +745,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
             &min_w, &max_w, &min_h, &max_h)) {
       continue;
     }
-    /* template */
+    /* template, FIXME, why limit if the device reported correct results. */
     min_w = CLAMP (min_w, 1, 4096);
     min_h = CLAMP (min_h, 1, 4096);
     max_w = CLAMP (max_w, min_w, 4096);
@@ -769,11 +759,11 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
           "width", GST_TYPE_INT_RANGE, min_w, max_w,
           "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
 
+      /* FIXME, why random range? */
       gst_structure_set (structure, "framerate", GST_TYPE_FRACTION_RANGE,
           1, 1, 100, 1, NULL);
 
       gst_caps_append_structure (caps, structure);
-
     }
   }
 
@@ -860,14 +850,13 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
           "framerate", GST_TYPE_FRACTION, v4l2src->fps_n, v4l2src->fps_d, NULL);
     }
   }
-
   return TRUE;
 }
 
 /* start and stop are not symmetric -- start will open the device, but not start
-   capture. it's setcaps that will start capture, which is called via basesrc's
-   negotiate method. stop will both stop capture and close the device.
-*/
+ * capture. it's setcaps that will start capture, which is called via basesrc's
+ * negotiate method. stop will both stop capture and close the device.
+ */
 static gboolean
 gst_v4l2src_start (GstBaseSrc * src)
 {
@@ -920,37 +909,42 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
     } else if (amount == -1) {
       if (errno == EAGAIN || errno == EINTR) {
         continue;
-      } else {
-        GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC,
-            (_("error read()ing %d bytes on device %s"),
-                buffersize, v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
-        gst_buffer_unref (*buf);
-        return GST_FLOW_ERROR;
-      }
-    } else {
-      GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC, (NULL),
-          ("error read()ing a buffer on device %s: got only %d bytes instead of expected %d",
-              v4l2src->v4l2object->videodev, amount, buffersize));
-      gst_buffer_unref (*buf);
-      return GST_FLOW_ERROR;
-    }
+      } else
+        goto read_error;
+    } else
+      goto short_read;
   } while (TRUE);
 
   return GST_FLOW_OK;
 
+  /* ERRORS */
+read_error:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC,
+        (_("error read()ing %d bytes on device %s"),
+            buffersize, v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
+    gst_buffer_unref (*buf);
+    return GST_FLOW_ERROR;
+  }
+short_read:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC, (NULL),
+        ("error read()ing a buffer on device %s: got only %d bytes instead of expected %d",
+            v4l2src->v4l2object->videodev, amount, buffersize));
+    gst_buffer_unref (*buf);
+    return GST_FLOW_ERROR;
+  }
 }
-
 
 static GstFlowReturn
 gst_v4l2src_get_mmap (GstV4l2Src * v4l2src, GstBuffer ** buf)
 {
-  gint i, num = -1;
+  gint i, num;
 
-
-  /* grab a frame from the device */
+  /* grab a frame from the device, post an error */
   num = gst_v4l2src_grab_frame (v4l2src);
   if (num == -1)
-    return GST_FLOW_ERROR;
+    goto grab_failed;
 
   i = v4l2src->format.fmt.pix.sizeimage;
 
@@ -958,23 +952,37 @@ gst_v4l2src_get_mmap (GstV4l2Src * v4l2src, GstBuffer ** buf)
      to avoid framedrops and deadlocks because of stupid elements */
   if (g_atomic_int_get (&v4l2src->pool->refcount) == v4l2src->breq.count) {
     GST_LOG_OBJECT (v4l2src, "using memcpy'd buffer");
+
     *buf = gst_v4l2src_buffer_new (v4l2src, i, NULL, NULL);
     memcpy (GST_BUFFER_DATA (*buf), v4l2src->pool->buffers[num].start, i);
-    if (!gst_v4l2src_queue_frame (v4l2src, num)) {
-      gst_buffer_unref (*buf);
-      return GST_FLOW_ERROR;
-    }
+
+    /* posts an error message if something went wrong */
+    if (!gst_v4l2src_queue_frame (v4l2src, num))
+      goto queue_failed;
   } else {
     GST_LOG_OBJECT (v4l2src, "using mmap'd buffer");
     *buf =
         gst_v4l2src_buffer_new (v4l2src, i, v4l2src->pool->buffers[num].start,
         &v4l2src->pool->buffers[num]);
+
     /* no need to be careful here, both are > 0, because the element uses them */
     g_atomic_int_inc (&v4l2src->pool->buffers[num].refcount);
     g_atomic_int_inc (&v4l2src->pool->refcount);
   }
-
   return GST_FLOW_OK;
+
+  /* ERRORS */
+grab_failed:
+  {
+    GST_DEBUG_OBJECT (v4l2src, "failed to grab a frame");
+    return GST_FLOW_ERROR;
+  }
+queue_failed:
+  {
+    GST_DEBUG_OBJECT (v4l2src, "failed to queue frame");
+    gst_buffer_unref (*buf);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -983,17 +991,22 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
   GstFlowReturn ret;
 
-  if (v4l2src->use_fixed_fps && v4l2src->fps_n == 0) {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("could not get frame rate for %s, try to set use-fixed-fps property to false"), v4l2src->v4l2object->videodev), (NULL));
-    return GST_FLOW_ERROR;
-  }
+  if (v4l2src->use_fixed_fps && v4l2src->fps_n == 0)
+    goto no_framerate;
 
   if (v4l2src->breq.memory == V4L2_MEMORY_MMAP) {
     ret = gst_v4l2src_get_mmap (v4l2src, buf);
   } else {
     ret = gst_v4l2src_get_read (v4l2src, buf);
   }
-
   return ret;
+
+  /* ERRORS */
+no_framerate:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
+        (_("could not get frame rate for %s, try to set use-fixed-fps "
+                "property to false"), v4l2src->v4l2object->videodev), (NULL));
+    return GST_FLOW_ERROR;
+  }
 }

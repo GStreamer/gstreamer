@@ -99,21 +99,17 @@ struct _GstV4l2Object {
   GstV4l2GetInOutFunction get_in_out_func;
   GstV4l2SetInOutFunction set_in_out_func;
   GstV4l2UpdateFpsFunction   update_fps_func;
-
 };
 
 struct _GstV4l2ObjectClassHelper {
   /* probed devices */
   GList *devices;
-
 };
-
 
 GType gst_v4l2_object_get_type(void);
 
-
 #define V4L2_STD_OBJECT_PROPS			\
-    PROP_DEVICE,					\
+    PROP_DEVICE,				\
     PROP_DEVICE_NAME,				\
     PROP_FLAGS,					\
     PROP_STD,					\
