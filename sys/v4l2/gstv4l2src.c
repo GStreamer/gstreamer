@@ -67,6 +67,7 @@ GST_ELEMENT_DETAILS ("Video (video4linux2/raw) Source",
 GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
+#define DEFAULT_PROP_USE_FIXED_FPS  TRUE
 
 enum
 {
@@ -276,6 +277,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   basesrc_class = GST_BASE_SRC_CLASS (klass);
   pushsrc_class = GST_PUSH_SRC_CLASS (klass);
 
+  gobject_class->dispose = gst_v4l2src_dispose;
   gobject_class->set_property = gst_v4l2src_set_property;
   gobject_class->get_property = gst_v4l2src_get_property;
 
@@ -286,7 +288,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
       g_param_spec_boolean ("use-fixed-fps", "Use Fixed FPS",
           "Drop/Insert frames to reach a certain FPS (TRUE) "
           "or adapt FPS to suit the number of frabbed frames",
-          TRUE, G_PARAM_READWRITE));
+          DEFAULT_PROP_USE_FIXED_FPS, G_PARAM_READWRITE));
 
   basesrc_class->get_caps = gst_v4l2src_get_caps;
   basesrc_class->set_caps = gst_v4l2src_set_caps;
@@ -294,8 +296,6 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   basesrc_class->stop = gst_v4l2src_stop;
 
   pushsrc_class->create = gst_v4l2src_create;
-
-  gobject_class->dispose = gst_v4l2src_dispose;
 }
 
 static void
@@ -311,7 +311,7 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
   /* fps */
   v4l2src->fps_n = 0;
   v4l2src->fps_d = 1;
-  v4l2src->use_fixed_fps = TRUE;
+  v4l2src->use_fixed_fps = DEFAULT_PROP_USE_FIXED_FPS;
 
   v4l2src->is_capturing = FALSE;
 

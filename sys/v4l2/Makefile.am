@@ -27,9 +27,9 @@ libgstvideo4linux2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 libgstvideo4linux2_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 				 $(GST_BASE_LIBS) \
+				 -lgstinterfaces-$(GST_MAJORMINOR) \
 				 $(GST_LIBS) \
-				 $(xv_libs) \
-				 -lgstinterfaces-$(GST_MAJORMINOR) 
+				 $(xv_libs)
 
 noinst_HEADERS = gstv4l2object.h v4l2_calls.h \
 		 gstv4l2src.h v4l2src_calls.h \

@@ -35,6 +35,13 @@
 #endif
 #include "gstv4l2colorbalance.h"
 
+#define DEFAULT_PROP_DEVICE		"/dev/video0"
+#define DEFAULT_PROP_DEVICE_NAME 	NULL
+#define DEFAULT_PROP_FLAGS              0
+#define DEFAULT_PROP_STD                NULL
+#define DEFAULT_PROP_INPUT              NULL
+#define DEFAULT_PROP_FREQUENCY          0
+
 enum
 {
   PROP_0,
@@ -205,22 +212,15 @@ gst_v4l2_device_get_type (void)
 
   if (v4l2_device_type == 0) {
     static const GFlagsValue values[] = {
-      {V4L2_CAP_VIDEO_CAPTURE, "CAPTURE",
-          "Device supports video capture"},
-      {V4L2_CAP_VIDEO_OUTPUT, "PLAYBACK",
-          "Device supports video playback"},
-      {V4L2_CAP_VIDEO_OVERLAY, "OVERLAY",
-          "Device supports video overlay"},
+      {V4L2_CAP_VIDEO_CAPTURE, "Device supports video capture", "capture"},
+      {V4L2_CAP_VIDEO_OUTPUT, "Device supports video playback", "output"},
+      {V4L2_CAP_VIDEO_OVERLAY, "Device supports video overlay", "overlay"},
 
-      {V4L2_CAP_VBI_CAPTURE, "VBI_CAPTURE",
-          "Device supports the VBI capture"},
-      {V4L2_CAP_VBI_OUTPUT, "VBI_OUTPUT",
-          "Device supports the VBI output"},
+      {V4L2_CAP_VBI_CAPTURE, "Device supports the VBI capture", "vbi-capture"},
+      {V4L2_CAP_VBI_OUTPUT, "Device supports the VBI output", "vbi-output"},
 
-      {V4L2_CAP_TUNER, "TUNER",
-          "Device has a tuner or modulator"},
-      {V4L2_CAP_AUDIO, "AUDIO",
-          "Device has audio inputs or outputs"},
+      {V4L2_CAP_TUNER, "Device has a tuner or modulator", "tuner"},
+      {V4L2_CAP_AUDIO, "Device has audio inputs or outputs", "audio"},
 
       {0, NULL, NULL}
     };
@@ -235,34 +235,26 @@ gst_v4l2_device_get_type (void)
 void
 gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class)
 {
-  g_object_class_install_property
-      (G_OBJECT_CLASS (gobject_class), PROP_DEVICE,
-      g_param_spec_string ("device",
-          "Device", "Device location", NULL, G_PARAM_READWRITE));
-  g_object_class_install_property
-      (G_OBJECT_CLASS (gobject_class),
-      PROP_DEVICE_NAME,
-      g_param_spec_string ("device-name",
-          "Device name", "Name of the device", NULL, G_PARAM_READABLE));
-  g_object_class_install_property
-      (G_OBJECT_CLASS (gobject_class), PROP_FLAGS,
-      g_param_spec_flags ("flags", "Flags",
-          "Device type flags",
-          GST_TYPE_V4L2_DEVICE_FLAGS, 0, G_PARAM_READABLE));
-  g_object_class_install_property
-      (gobject_class, PROP_STD,
-      g_param_spec_string ("std", "Std",
-          "Standard (norm) to use", NULL, G_PARAM_READWRITE));
-  g_object_class_install_property
-      (gobject_class, PROP_INPUT,
-      g_param_spec_string ("input",
-          "Input",
-          "Input/output (channel) to switch to", NULL, G_PARAM_READWRITE));
-  g_object_class_install_property
-      (gobject_class, PROP_FREQUENCY,
-      g_param_spec_ulong ("frequency",
-          "Frequency",
-          "Frequency to tune to (in Hz)", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_string ("device", "Device", "Device location",
+          DEFAULT_PROP_DEVICE, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
+      g_param_spec_string ("device-name", "Device name",
+          "Name of the device", DEFAULT_PROP_DEVICE_NAME, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, PROP_FLAGS,
+      g_param_spec_flags ("flags", "Flags", "Device type flags",
+          GST_TYPE_V4L2_DEVICE_FLAGS, DEFAULT_PROP_FLAGS, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, PROP_STD,
+      g_param_spec_string ("std", "Std", "Standard (norm) to use",
+          DEFAULT_PROP_STD, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_INPUT,
+      g_param_spec_string ("input", "Input",
+          "Input/output (channel) to switch to", DEFAULT_PROP_INPUT,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_FREQUENCY,
+      g_param_spec_ulong ("frequency", "Frequency",
+          "Frequency to tune to (in Hz)", 0, G_MAXULONG, DEFAULT_PROP_FREQUENCY,
+          G_PARAM_READWRITE));
 }
 
 GstV4l2Object *
@@ -285,7 +277,7 @@ gst_v4l2_object_new (GstElement * element,
 
   v4l2object->video_fd = -1;
   v4l2object->buffer = NULL;
-  v4l2object->videodev = g_strdup ("/dev/video0");
+  v4l2object->videodev = g_strdup (DEFAULT_PROP_DEVICE);
 
   v4l2object->stds = NULL;
   v4l2object->inputs = NULL;

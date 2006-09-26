@@ -30,27 +30,17 @@
 
 G_BEGIN_DECLS
 
-extern gboolean
-gst_v4l2_video_orientation_get_hflip (GstV4l2Object *v4l2object, gboolean *flip);
-extern gboolean
-gst_v4l2_video_orientation_get_vflip (GstV4l2Object *v4l2object, gboolean *flip);
-extern gboolean
-gst_v4l2_video_orientation_get_hcenter (GstV4l2Object *v4l2object, gint *center);
-extern gboolean
-gst_v4l2_video_orientation_get_vcenter (GstV4l2Object *v4l2object, gint *center);
+void     gst_v4l2_video_orientation_interface_init (GstVideoOrientationInterface * klass);
 
-extern gboolean
-gst_v4l2_video_orientation_set_hflip (GstV4l2Object *v4l2object, gboolean flip);
-extern gboolean
-gst_v4l2_video_orientation_set_vflip (GstV4l2Object *v4l2object, gboolean flip);
-extern gboolean
-gst_v4l2_video_orientation_set_hcenter (GstV4l2Object *v4l2object, gint center);
-extern gboolean
-gst_v4l2_video_orientation_set_vcenter (GstV4l2Object *v4l2object, gint center);
+gboolean gst_v4l2_video_orientation_get_hflip 	(GstV4l2Object *v4l2object, gboolean *flip);
+gboolean gst_v4l2_video_orientation_get_vflip 	(GstV4l2Object *v4l2object, gboolean *flip);
+gboolean gst_v4l2_video_orientation_get_hcenter (GstV4l2Object *v4l2object, gint *center);
+gboolean gst_v4l2_video_orientation_get_vcenter (GstV4l2Object *v4l2object, gint *center);
 
-
-extern void
-gst_v4l2_video_orientation_interface_init (GstVideoOrientationInterface * klass);
+gboolean gst_v4l2_video_orientation_set_hflip 	(GstV4l2Object *v4l2object, gboolean flip);
+gboolean gst_v4l2_video_orientation_set_vflip 	(GstV4l2Object *v4l2object, gboolean flip);
+gboolean gst_v4l2_video_orientation_set_hcenter (GstV4l2Object *v4l2object, gint center);
+gboolean gst_v4l2_video_orientation_set_vcenter (GstV4l2Object *v4l2object, gint center);
 
 #define GST_IMPLEMENT_V4L2_VIDORIENT_METHODS(Type, interface_as_function)                         \
                                                                                                   \
