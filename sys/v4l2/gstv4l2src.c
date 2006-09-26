@@ -22,7 +22,7 @@
  */
 
 /**
- * SECTION:element-v4l2srcsrc
+ * SECTION:element-v4l2src
  *
  * <refsect2>
  * v4l2src can be used to capture video from v4l2 devices, like webcams and tv cards.
