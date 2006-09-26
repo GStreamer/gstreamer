@@ -1,3 +1,35 @@
+2006-09-26  Wim Taymans  <wim@fluendo.com>
+
+	* sys/v4l2/gstv4l2object.c: (gst_v4l2_class_probe_devices),
+	(gst_v4l2_probe_needs_probe),
+	(gst_v4l2_object_install_properties_helper), (gst_v4l2_object_new),
+	(gst_v4l2_object_destroy), (gst_v4l2_object_set_property_helper),
+	(gst_v4l2_object_get_property_helper), (gst_v4l2_set_defaults),
+	(gst_v4l2_object_start), (gst_v4l2_object_stop):
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_class_init),
+	(gst_v4l2src_init), (gst_v4l2src_dispose),
+	(gst_v4l2src_set_property), (gst_v4l2src_get_property),
+	(gst_v4l2src_fixate), (gst_v4l2src_get_caps),
+	(gst_v4l2src_set_caps), (gst_v4l2src_get_read),
+	(gst_v4l2src_get_mmap), (gst_v4l2src_create):
+	* sys/v4l2/v4l2_calls.c: (gst_v4l2_get_capabilities),
+	(gst_v4l2_open), (gst_v4l2_close), (gst_v4l2_get_norm),
+	(gst_v4l2_set_norm), (gst_v4l2_get_frequency),
+	(gst_v4l2_set_frequency), (gst_v4l2_signal_strength),
+	(gst_v4l2_get_attribute), (gst_v4l2_set_attribute),
+	(gst_v4l2_get_input), (gst_v4l2_set_input):
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_fill_format_list),
+	(gst_v4l2src_queue_frame), (gst_v4l2src_grab_frame),
+	(gst_v4l2src_get_capture), (gst_v4l2src_set_capture),
+	(gst_v4l2src_capture_init), (gst_v4l2src_capture_start),
+	(gst_v4l2src_capture_stop), (gst_v4l2src_capture_deinit),
+	(gst_v4l2src_get_size_limits), (gst_v4l2src_set_fps),
+	(gst_v4l2src_get_fps), (gst_v4l2src_buffer_finalize),
+	(gst_v4l2src_buffer_new):
+	Fix pass at code cleanups, move errors cases out of the normal
+	flow for additional code clarity.
+
 2006-09-23  Wim Taymans  <wim@fluendo.com>
 
 	* ext/cdaudio/gstcdaudio.c: (gst_cdaudio_class_init),
