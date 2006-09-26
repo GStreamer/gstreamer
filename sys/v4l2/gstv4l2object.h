@@ -55,9 +55,9 @@ typedef struct _GstV4l2Object GstV4l2Object;
 typedef struct _GstV4l2ObjectClassHelper GstV4l2ObjectClassHelper;
 typedef struct _GstV4l2Xv GstV4l2Xv;
 
-typedef gboolean  (*GstV4l2GetInOutFunction) (GstV4l2Object * v4l2object, gint * input);
-typedef gboolean  (*GstV4l2SetInOutFunction) (GstV4l2Object * v4l2object, gint input);
-typedef gboolean  (*GstV4l2UpdateFpsFunction)   (GstV4l2Object * v4l2object);
+typedef gboolean  (*GstV4l2GetInOutFunction)  (GstV4l2Object * v4l2object, gint * input);
+typedef gboolean  (*GstV4l2SetInOutFunction)  (GstV4l2Object * v4l2object, gint input);
+typedef gboolean  (*GstV4l2UpdateFpsFunction) (GstV4l2Object * v4l2object);
 
 struct _GstV4l2Object {
   GstElement * element;
@@ -90,15 +90,14 @@ struct _GstV4l2Object {
   gchar *input;
   gulong frequency;
 
-
   /* X-overlay */
   GstV4l2Xv *xv;
   gulong xwindow_id;
 
   /* funcs */
-  GstV4l2GetInOutFunction get_in_out_func;
-  GstV4l2SetInOutFunction set_in_out_func;
-  GstV4l2UpdateFpsFunction   update_fps_func;
+  GstV4l2GetInOutFunction  get_in_out_func;
+  GstV4l2SetInOutFunction  set_in_out_func;
+  GstV4l2UpdateFpsFunction update_fps_func;
 };
 
 struct _GstV4l2ObjectClassHelper {
@@ -117,48 +116,38 @@ GType gst_v4l2_object_get_type(void);
     PROP_FREQUENCY
 
 
-extern GstV4l2Object *
-gst_v4l2_object_new (GstElement * element,
-                    GstV4l2GetInOutFunction get_in_out_func,
-                    GstV4l2SetInOutFunction set_in_out_func,
-		    GstV4l2UpdateFpsFunction   update_fps_func);
+/* create/destroy */
+GstV4l2Object *	gst_v4l2_object_new 		 (GstElement * element,
+                   				  GstV4l2GetInOutFunction get_in_out_func,
+                   				  GstV4l2SetInOutFunction set_in_out_func,
+		   				  GstV4l2UpdateFpsFunction   update_fps_func);
+void 	        gst_v4l2_object_destroy 	 (GstV4l2Object ** v4l2object);
 
-extern void
-gst_v4l2_object_destroy (GstV4l2Object ** v4l2object);
+/* properties */
+void 	  gst_v4l2_object_install_properties_helper (GObjectClass *gobject_class);
 
-extern void
-gst_v4l2_object_install_properties_helper (GObjectClass *gobject_class);
+gboolean  gst_v4l2_object_set_property_helper       (GstV4l2Object *v4l2object,
+				                     guint prop_id, const GValue * value,
+						     GParamSpec * pspec);
+gboolean  gst_v4l2_object_get_property_helper       (GstV4l2Object *v4l2object,
+				                     guint prop_id, GValue * value,
+						     GParamSpec * pspec);
+/* starting/stopping */
+gboolean  gst_v4l2_object_start             (GstV4l2Object *v4l2object);
+gboolean  gst_v4l2_object_stop              (GstV4l2Object *v4l2object);
 
-extern gboolean
-gst_v4l2_object_set_property_helper (GstV4l2Object *v4l2object,
-				    guint prop_id, const GValue * value, GParamSpec * pspec);
-extern gboolean
-gst_v4l2_object_get_property_helper (GstV4l2Object *v4l2object,
-				    guint prop_id, GValue * value, GParamSpec * pspec);
+/* probing */
+const GList* gst_v4l2_probe_get_properties  (GstPropertyProbe * probe);
 
-extern gboolean gst_v4l2_object_start (GstV4l2Object *v4l2object);
-extern gboolean gst_v4l2_object_stop (GstV4l2Object *v4l2object);
-
-extern const GList *
-gst_v4l2_probe_get_properties (GstPropertyProbe * probe);
-
-extern void
-gst_v4l2_probe_probe_property (GstPropertyProbe * probe,
-			       guint prop_id,
-                               const GParamSpec * pspec,
-                               GList ** klass_devices);
-
-extern gboolean
-gst_v4l2_probe_needs_probe (GstPropertyProbe * probe,
-			    guint prop_id,
-                            const GParamSpec * pspec,
-                            GList ** klass_devices);
-
-extern GValueArray *
-gst_v4l2_probe_get_values (GstPropertyProbe * probe,
-			   guint prop_id,
-                           const GParamSpec * pspec,
-                           GList ** klass_devices);
+void         gst_v4l2_probe_probe_property  (GstPropertyProbe * probe, guint prop_id,
+                                             const GParamSpec * pspec,
+                                             GList ** klass_devices);
+gboolean     gst_v4l2_probe_needs_probe     (GstPropertyProbe * probe, guint prop_id,
+                                             const GParamSpec * pspec,
+                                             GList ** klass_devices);
+GValueArray* gst_v4l2_probe_get_values      (GstPropertyProbe * probe, guint prop_id,
+                                             const GParamSpec * pspec,
+                                             GList ** klass_devices);
 
 #define GST_IMPLEMENT_V4L2_PROBE_METHODS(Type_Class, interface_as_function)                 \
                                                                                             \

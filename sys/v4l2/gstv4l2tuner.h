@@ -79,38 +79,34 @@ typedef struct _GstV4l2TunerNormClass {
   GstTunerNormClass parent;
 } GstV4l2TunerNormClass;
 
-extern gboolean
-gst_v4l2_tuner_set_channel (GstV4l2Object * v4l2object, GstTunerChannel * channel);
-extern gboolean
-gst_v4l2_tuner_set_norm (GstV4l2Object * v4l2object, GstTunerNorm * norm);
-extern gboolean
-gst_v4l2_tuner_set_frequency (GstV4l2Object * v4l2object,
-                              GstTunerChannel * channel, gulong frequency);
-
 GType gst_v4l2_tuner_channel_get_type (void);
 GType gst_v4l2_tuner_norm_get_type (void);
 
-extern const GList *
-gst_v4l2_tuner_list_channels (GstV4l2Object * v4l2object);
-extern void
-gst_v4l2_tuner_set_channel_and_notify (GstV4l2Object * v4l2object, GstTunerChannel * channel);
-extern GstTunerChannel *
-gst_v4l2_tuner_get_channel (GstV4l2Object * v4l2object);
-
-extern const GList *
-gst_v4l2_tuner_list_norms (GstV4l2Object * v4l2object);
-extern void
-gst_v4l2_tuner_set_norm_and_notify (GstV4l2Object * v4l2object, GstTunerNorm * norm);
-extern GstTunerNorm *
-gst_v4l2_tuner_get_norm (GstV4l2Object * v4l2object);
-
-extern void
-gst_v4l2_tuner_set_frequency_and_notify (GstV4l2Object * v4l2object,
-                                         GstTunerChannel * channel, gulong frequency);
-extern gulong
-gst_v4l2_tuner_get_frequency (GstV4l2Object * v4l2object, GstTunerChannel * channel);
-extern gint
-gst_v4l2_tuner_signal_strength (GstV4l2Object * v4l2object, GstTunerChannel * channel);
+/* channels */
+const GList*      gst_v4l2_tuner_list_channels            (GstV4l2Object * v4l2object);
+void              gst_v4l2_tuner_set_channel_and_notify   (GstV4l2Object * v4l2object,
+		                                           GstTunerChannel * channel);
+GstTunerChannel*  gst_v4l2_tuner_get_channel              (GstV4l2Object * v4l2object);
+gboolean          gst_v4l2_tuner_set_channel              (GstV4l2Object * v4l2object,
+		                                           GstTunerChannel * channel);
+/* norms */
+const GList*      gst_v4l2_tuner_list_norms               (GstV4l2Object * v4l2object);
+void              gst_v4l2_tuner_set_norm_and_notify      (GstV4l2Object * v4l2object,
+		                                           GstTunerNorm * norm);
+GstTunerNorm*     gst_v4l2_tuner_get_norm                 (GstV4l2Object * v4l2object);
+gboolean          gst_v4l2_tuner_set_norm                 (GstV4l2Object * v4l2object,
+		                                           GstTunerNorm * norm);
+/* frequency */
+void              gst_v4l2_tuner_set_frequency_and_notify (GstV4l2Object * v4l2object,
+                                                           GstTunerChannel * channel, 
+							   gulong frequency);
+gint              gst_v4l2_tuner_signal_strength          (GstV4l2Object * v4l2object,
+		                                           GstTunerChannel * channel);
+gulong            gst_v4l2_tuner_get_frequency            (GstV4l2Object * v4l2object,
+		                                           GstTunerChannel * channel);
+gboolean          gst_v4l2_tuner_set_frequency            (GstV4l2Object * v4l2object,
+                                                           GstTunerChannel * channel, 
+							   gulong frequency);
 
 #define GST_IMPLEMENT_V4L2_TUNER_METHODS(Type, interface_as_function)                 \
                                                                                       \

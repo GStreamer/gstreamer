@@ -53,18 +53,16 @@ typedef struct _GstV4l2ColorBalanceChannelClass {
   GstColorBalanceChannelClass parent;
 } GstV4l2ColorBalanceChannelClass;
 
-GType	gst_v4l2_color_balance_channel_get_type	(void);
+GType gst_v4l2_color_balance_channel_get_type	(void);
 
-extern const GList *
-gst_v4l2_color_balance_list_channels (GstV4l2Object * v4l2object);
+const GList * 	gst_v4l2_color_balance_list_channels 	(GstV4l2Object * v4l2object);
 
-extern void
-gst_v4l2_color_balance_set_value (GstV4l2Object * v4l2object,
-      GstColorBalanceChannel * channel, gint value);
+void 		gst_v4l2_color_balance_set_value 	(GstV4l2Object * v4l2object,
+      							 GstColorBalanceChannel * channel,
+							 gint value);
 
-extern gint
-gst_v4l2_color_balance_get_value (GstV4l2Object * v4l2object,
-                                  GstColorBalanceChannel * channel);
+gint 		gst_v4l2_color_balance_get_value 	(GstV4l2Object * v4l2object,
+                                 			 GstColorBalanceChannel * channel);
 
 #define GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS(Type, interface_as_function)         \
                                                                                       \

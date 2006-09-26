@@ -24,7 +24,6 @@
 #ifndef __GST_V4L2SRC_H__
 #define __GST_V4L2SRC_H__
 
-
 #include <gstv4l2object.h>
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
@@ -69,15 +68,6 @@ struct _GstV4l2Buffer
   GstV4l2BufferPool *pool;
 };
 
-enum
-{
-  QUEUE_STATE_ERROR = -1,
-  QUEUE_STATE_READY_FOR_QUEUE,  /* the frame is ready to be queued for capture */
-  QUEUE_STATE_QUEUED,           /* the frame is queued for capture */
-  QUEUE_STATE_SYNCED            /* the frame is captured */
-};
-
-
 struct _GstV4l2Src
 {
   GstPushSrc pushsrc;
@@ -111,11 +101,10 @@ struct _GstV4l2SrcClass
   GstPushSrcClass parent_class;
   
   GList *v4l2_class_devices;
-
 };
-
 
 GType gst_v4l2src_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_V4L2SRC_H__ */

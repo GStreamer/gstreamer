@@ -43,7 +43,7 @@
 #define GST_V4L2_CHECK_OPEN(v4l2object)				\
   if (!GST_V4L2_IS_OPEN(v4l2object))				\
   {								\
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, TOO_LAZY,	\
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,	\
       (_("Device is not open.")), (NULL));                      \
     return FALSE;						\
   }
@@ -52,7 +52,7 @@
 #define GST_V4L2_CHECK_NOT_OPEN(v4l2object)			\
   if (GST_V4L2_IS_OPEN(v4l2object))				\
   {								\
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, TOO_LAZY,	\
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,	\
       (_("Device is open.")), (NULL));                          \
     return FALSE;						\
   }
@@ -61,7 +61,7 @@
 #define GST_V4L2_CHECK_OVERLAY(v4l2object)			\
   if (!GST_V4L2_IS_OVERLAY(v4l2object))				\
   {								\
-    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, TOO_LAZY, \
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS, \
       (NULL), ("Device cannot handle overlay"));                \
     return FALSE;						\
   }

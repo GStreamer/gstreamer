@@ -33,7 +33,6 @@ GST_BOILERPLATE (GstV4l2ColorBalanceChannel,
     gst_v4l2_color_balance_channel,
     GstColorBalanceChannel, GST_TYPE_COLOR_BALANCE_CHANNEL);
 
-
 static void
 gst_v4l2_color_balance_channel_base_init (gpointer g_class)
 {

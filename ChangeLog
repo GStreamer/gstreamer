@@ -1,5 +1,30 @@
 2006-09-26  Wim Taymans  <wim@fluendo.com>
 
+	* sys/v4l2/Makefile.am:
+	Fix makefile, list libs in stack order.
+
+	* sys/v4l2/gstv4l2colorbalance.c:
+	* sys/v4l2/gstv4l2colorbalance.h:
+	* sys/v4l2/gstv4l2object.c: (gst_v4l2_device_get_type),
+	(gst_v4l2_object_install_properties_helper):
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_get_read),
+	(gst_v4l2src_get_mmap), (gst_v4l2src_create):
+	* sys/v4l2/gstv4l2src.h:
+	* sys/v4l2/gstv4l2tuner.h:
+	* sys/v4l2/gstv4l2vidorient.h:
+	* sys/v4l2/gstv4l2xoverlay.h:
+	* sys/v4l2/v4l2_calls.h:
+	* sys/v4l2/v4l2src_calls.h:
+	Fix coding style:
+	- Remove extern from functions.
+	- Fix header indentation.
+	Fix Flags, add defaults for properties.
+	Remove unused enums.
+	Fix TOO_LAZY in error messages.
+
+2006-09-26  Wim Taymans  <wim@fluendo.com>
+
 	* sys/v4l2/gstv4l2object.c: (gst_v4l2_class_probe_devices),
 	(gst_v4l2_probe_needs_probe),
 	(gst_v4l2_object_install_properties_helper), (gst_v4l2_object_new),
