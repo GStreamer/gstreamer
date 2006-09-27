@@ -1344,7 +1344,7 @@ gst_dvd_read_src_do_convert_query (GstDvdReadSrc * src, GstQuery * query)
 {
   GstFormat src_format, dest_format;
   gboolean ret = FALSE;
-  gint64 src_val, dest_val;
+  gint64 src_val, dest_val = -1;
 
   gst_query_parse_convert (query, &src_format, &src_val, &dest_format, NULL);
 

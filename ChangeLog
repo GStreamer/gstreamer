@@ -1,3 +1,8 @@
+2006-09-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_do_convert_query):
+	Init a variable to make compilers happy.
+
 2006-09-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Martin Zlomek <martin dot zlomek at itonis dot tv>
