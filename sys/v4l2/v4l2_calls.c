@@ -83,113 +83,64 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
 {
   gint n;
 
-#if 0                           /* output not handled by now */
-  GstPadDirection dir = GST_PAD_UNKNOWN;
-#endif /* #if 0 - output not handled by now */
-
   GST_DEBUG_OBJECT (v4l2object->element, "getting enumerations");
   GST_V4L2_CHECK_OPEN (v4l2object);
 
-#if 0                           /* output not handled by now */
-  if (dir != GST_PAD_SINK) {
-#endif /* #if 0 - output not handled by now */
+  GST_DEBUG_OBJECT (v4l2object->element, "  inputs");
+  /* and now, the inputs */
+  for (n = 0;; n++) {
+    struct v4l2_input input;
+    GstV4l2TunerChannel *v4l2channel;
+    GstTunerChannel *channel;
 
-    GST_DEBUG_OBJECT (v4l2object->element, "  inputs");
-    /* and now, the inputs */
-    for (n = 0;; n++) {
-      struct v4l2_input input;
-      GstV4l2TunerChannel *v4l2channel;
-      GstTunerChannel *channel;
-
-      input.index = n;
-      if (ioctl (v4l2object->video_fd, VIDIOC_ENUMINPUT, &input) < 0) {
-        if (errno == EINVAL)
-          break;                /* end of enumeration */
-        else {
-          GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-              ("Failed to get %d in input enumeration for %s",
-                  n, v4l2object->videodev), GST_ERROR_SYSTEM);
-          return FALSE;
-        }
+    input.index = n;
+    if (ioctl (v4l2object->video_fd, VIDIOC_ENUMINPUT, &input) < 0) {
+      if (errno == EINVAL)
+        break;                  /* end of enumeration */
+      else {
+        GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+            ("Failed to get %d in input enumeration for %s",
+                n, v4l2object->videodev), GST_ERROR_SYSTEM);
+        return FALSE;
       }
-
-      v4l2channel = g_object_new (GST_TYPE_V4L2_TUNER_CHANNEL, NULL);
-      channel = GST_TUNER_CHANNEL (v4l2channel);
-      channel->label = g_strdup ((const gchar *) input.name);
-      channel->flags = GST_TUNER_CHANNEL_INPUT;
-      v4l2channel->index = n;
-      if (input.type == V4L2_INPUT_TYPE_TUNER) {
-        struct v4l2_tuner vtun;
-
-        v4l2channel->tuner = input.tuner;
-        channel->flags |= GST_TUNER_CHANNEL_FREQUENCY;
-
-        vtun.index = input.tuner;
-        if (ioctl (v4l2object->video_fd, VIDIOC_G_TUNER, &vtun) < 0) {
-          GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-              ("Failed to get tuner %d settings on %s",
-                  input.tuner, v4l2object->videodev), GST_ERROR_SYSTEM);
-          g_object_unref (G_OBJECT (channel));
-          return FALSE;
-        }
-        channel->freq_multiplicator =
-            62.5 * ((vtun.capability & V4L2_TUNER_CAP_LOW) ? 1 : 1000);
-        channel->min_frequency = vtun.rangelow * channel->freq_multiplicator;
-        channel->max_frequency = vtun.rangehigh * channel->freq_multiplicator;
-        channel->min_signal = 0;
-        channel->max_signal = 0xffff;
-      }
-      if (input.audioset) {
-        /* we take the first. We don't care for
-         * the others for now */
-        while (!(input.audioset & (1 << v4l2channel->audio)))
-          v4l2channel->audio++;
-        channel->flags |= GST_TUNER_CHANNEL_AUDIO;
-      }
-
-      v4l2object->inputs =
-          g_list_append (v4l2object->inputs, (gpointer) channel);
     }
 
-#if 0                           /* output not handled by now */
-  } else {
-    /* outputs */
-    for (n = 0;; n++) {
-      struct v4l2_output output;
-      GstV4l2TunerChannel *v4l2channel;
-      GstTunerChannel *channel;
+    v4l2channel = g_object_new (GST_TYPE_V4L2_TUNER_CHANNEL, NULL);
+    channel = GST_TUNER_CHANNEL (v4l2channel);
+    channel->label = g_strdup ((const gchar *) input.name);
+    channel->flags = GST_TUNER_CHANNEL_INPUT;
+    v4l2channel->index = n;
+    if (input.type == V4L2_INPUT_TYPE_TUNER) {
+      struct v4l2_tuner vtun;
 
-      output.index = n;
-      if (ioctl (v4l2object->video_fd, VIDIOC_ENUMOUTPUT, &output) < 0) {
-        if (errno == EINVAL)
-          break;                /* end of enumeration */
-        else {
-          GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-              ("Failed to get %d in output enumeration for %s",
-                  n, v4l2object->videodev)
-              , GST_ERROR_SYSTEM);
-          return FALSE;
-        }
+      v4l2channel->tuner = input.tuner;
+      channel->flags |= GST_TUNER_CHANNEL_FREQUENCY;
+
+      vtun.index = input.tuner;
+      if (ioctl (v4l2object->video_fd, VIDIOC_G_TUNER, &vtun) < 0) {
+        GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+            ("Failed to get tuner %d settings on %s",
+                input.tuner, v4l2object->videodev), GST_ERROR_SYSTEM);
+        g_object_unref (G_OBJECT (channel));
+        return FALSE;
       }
-
-      v4l2channel = g_object_new (GST_TYPE_V4L2_TUNER_CHANNEL, NULL);
-      channel = GST_TUNER_CHANNEL (v4l2channel);
-      channel->label = g_strdup ((const gchar *) output.name);
-      channel->flags = GST_TUNER_CHANNEL_OUTPUT;
-      v4l2channel->index = n;
-      if (output.audioset) {
-        /* we take the first. We don't care for
-         * the others for now */
-        while (!(output.audioset & (1 << v4l2channel->audio)))
-          v4l2channel->audio++;
-        channel->flags |= GST_TUNER_CHANNEL_AUDIO;
-      }
-
-      v4l2object->inputs =
-          g_list_append (v4l2object->inputs, (gpointer) channel);
+      channel->freq_multiplicator =
+          62.5 * ((vtun.capability & V4L2_TUNER_CAP_LOW) ? 1 : 1000);
+      channel->min_frequency = vtun.rangelow * channel->freq_multiplicator;
+      channel->max_frequency = vtun.rangehigh * channel->freq_multiplicator;
+      channel->min_signal = 0;
+      channel->max_signal = 0xffff;
     }
+    if (input.audioset) {
+      /* we take the first. We don't care for
+       * the others for now */
+      while (!(input.audioset & (1 << v4l2channel->audio)))
+        v4l2channel->audio++;
+      channel->flags |= GST_TUNER_CHANNEL_AUDIO;
+    }
+
+    v4l2object->inputs = g_list_append (v4l2object->inputs, (gpointer) channel);
   }
-#endif /* #if 0 - output not handled by now */
 
   GST_DEBUG_OBJECT (v4l2object->element, "  norms");
   /* norms... */
@@ -231,6 +182,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     if (n == V4L2_CID_LASTP1) {
       GST_DEBUG_OBJECT (v4l2object->element, "checking private CIDs");
       n = V4L2_CID_PRIVATE_BASE;
+      /* FIXME: We are still not handling private controls. We need a new GstInterface
+         to export those controls */
+      break;
     }
 
     control.id = n;
@@ -267,6 +221,21 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       case V4L2_CID_GAIN:
         /* we only handle these for now (why?) */
         break;
+      case V4L2_CID_HFLIP:
+      case V4L2_CID_VFLIP:
+      case V4L2_CID_HCENTER:
+      case V4L2_CID_VCENTER:
+        /* not handled here, handled by VideoOrientation interface */
+        control.id++;
+        break;
+      case V4L2_CID_AUDIO_VOLUME:
+      case V4L2_CID_AUDIO_BALANCE:
+      case V4L2_CID_AUDIO_BASS:
+      case V4L2_CID_AUDIO_TREBLE:
+      case V4L2_CID_AUDIO_MUTE:
+      case V4L2_CID_AUDIO_LOUDNESS:
+        /* FIXME: We should implement GstMixer interface */
+        /* fall through */
       default:
         GST_DEBUG_OBJECT (v4l2object->element,
             "ControlID %s (%x) unhandled, FIXME", control.name, n);
@@ -283,7 +252,8 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     channel->label = g_strdup ((const gchar *) control.name);
     v4l2channel->id = n;
 
-#if 0                           /* FIXME: will be be need just when handling private controls */
+#if 0                           /* FIXME: it will be need just when handling private controls
+                                   (currently none of base controls are of this type) */
     if (control.type == V4L2_CTRL_TYPE_MENU) {
       struct v4l2_querymenu menu, *mptr;
       int i;
@@ -319,9 +289,11 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         channel->max_value = TRUE;
         break;
       default:
-        /* FIX ME we should find out how to handle V4L2_CTRL_TYPE_BUTTON */
+        /* FIXME we should find out how to handle V4L2_CTRL_TYPE_BUTTON.
+           BUTTON controls like V4L2_CID_DO_WHITE_BALANCE can just be set (1) or
+           unset (0), but can't be queried */
         GST_DEBUG_OBJECT (v4l2object->element,
-            "No range for ControlID %s (%x), type=%d",
+            "Control with non supported type %s (%x), type=%d",
             control.name, n, control.type);
         channel->min_value = channel->max_value = 0;
         break;
@@ -497,9 +469,8 @@ gst_v4l2_get_norm (GstV4l2Object * v4l2object, v4l2_std_id * norm)
   /* ERRORS */
 std_failed:
   {
-    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to get the current norm for device %s"),
-            v4l2object->videodev), GST_ERROR_SYSTEM);
+    GST_DEBUG ("Failed to get the current norm for device %s",
+        v4l2object->videodev);
     return FALSE;
   }
 }
@@ -765,48 +736,3 @@ input_failed:
     return FALSE;
   }
 }
-
-
-#if 0                           /* output not handled by now, Indeed it will be another element */
-
-gboolean
-gst_v4l2_get_output (GstV4l2Object * v4l2object, gint * output)
-{
-  gint n;
-
-  GST_DEBUG_OBJECT (v4l2object->element, "trying to get output");
-  if (!GST_V4L2_IS_OPEN (v4l2object))
-    return FALSE;
-
-  if (ioctl (v4l2object->video_fd, VIDIOC_G_OUTPUT, &n) < 0) {
-    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to get current output on device %s"),
-            v4l2object->videodev), GST_ERROR_SYSTEM);
-    return FALSE;
-  }
-
-  *output = n;
-
-  return TRUE;
-}
-
-gboolean
-gst_v4l2_set_output (GstV4l2Object * v4l2object, gint output)
-{
-  GST_DEBUG_OBJECT (v4l2object->element, "trying to set output to %d", output);
-  if (!GST_V4L2_IS_OPEN (v4l2object))
-    return FALSE;
-  if (!GST_V4L2_IS_ACTIVE (v4l2object))
-    return FALSE;
-
-  if (ioctl (v4l2object->video_fd, VIDIOC_S_OUTPUT, &output) < 0) {
-    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to set current output on device %s to %d"),
-            v4l2object->videodev, output), GST_ERROR_SYSTEM);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-#endif /* #if 0 - output not handled by now , Indeed it will be another element */

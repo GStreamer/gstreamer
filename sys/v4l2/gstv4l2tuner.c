@@ -122,16 +122,6 @@ gst_v4l2_tuner_norm_init (GstV4l2TunerNorm * norm)
   norm->index = 0;
 }
 
-#if 0                           /* output not handled by now */
-static gboolean
-gst_v4l2_tuner_is_sink (GstV4l2Object * v4l2object)
-{
-  GstPadDirection dir = GST_PAD_UNKNOWN;
-
-  return (dir == GST_PAD_SINK);
-}
-#endif /* #if 0 - output not handled by now */
-
 static G_GNUC_UNUSED gboolean
 gst_v4l2_tuner_contains_channel (GstV4l2Object * v4l2object,
     GstV4l2TunerChannel * v4l2channel)
