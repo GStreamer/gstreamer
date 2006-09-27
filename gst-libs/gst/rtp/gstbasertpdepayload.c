@@ -150,6 +150,7 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter, gpointer g_class)
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
   g_return_if_fail (pad_template != NULL);
   filter->srcpad = gst_pad_new_from_template (pad_template, "src");
+  gst_pad_use_fixed_caps (filter->srcpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
   filter->queue = g_queue_new ();
