@@ -773,7 +773,7 @@ gboolean
 gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
 {
   GstV4l2Object *v4l2object = v4l2src->v4l2object;
-  v4l2_std_id std;
+  v4l2_std_id norm;
   struct v4l2_streamparm stream;
   const GList *item;
   gboolean found;
@@ -806,14 +806,14 @@ gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
 
 try_stds:
   /* If G_PARM failed, try to get the same information from the video standard */
-  if (!gst_v4l2_get_norm (v4l2object, &std))
+  if (!gst_v4l2_get_norm (v4l2object, &norm))
     return FALSE;
 
   found = FALSE;
-  for (item = v4l2object->stds; item != NULL; item = item->next) {
+  for (item = v4l2object->norms; item != NULL; item = item->next) {
     GstV4l2TunerNorm *v4l2norm = item->data;
 
-    if (v4l2norm->index == std) {
+    if (v4l2norm->index == norm) {
       GValue *framerate = &GST_TUNER_NORM (v4l2norm)->framerate;
 
       *fps_n = gst_value_get_fraction_numerator (framerate);

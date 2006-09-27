@@ -283,11 +283,10 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
 
   gst_v4l2_object_install_properties_helper (gobject_class);
 
-  g_object_class_install_property
-      (gobject_class, PROP_USE_UNDEF_FPS,
+  g_object_class_install_property (gobject_class, PROP_USE_UNDEF_FPS,
       g_param_spec_boolean ("use-undef-fps", "Use undefined FPS",
-          "For some devices that can't properly report its fps "
-          "set this property to TRUE. The 'caps' will have its "
+          "Set this property to TRUE for devices that cannot properly "
+          "determine a framerate. The 'caps' will have their "
           "'framerate' set to '0/1'.",
           DEFAULT_PROP_USE_UNDEF_FPS, G_PARAM_READWRITE));
 
@@ -1018,7 +1017,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 no_framerate:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("Could not get frame rate for %s, try to set use-undef-fps "
+        (_("Could not get frame rate for %s, try to set the use-undef-fps "
                 "property to true."), v4l2src->v4l2object->videodev), (NULL));
     return GST_FLOW_ERROR;
   }
