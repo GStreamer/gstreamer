@@ -1,3 +1,28 @@
+2006-09-27  Wim Taymans  <wim@fluendo.com>
+
+	* sys/v4l2/gstv4l2object.c: (gst_v4l2_object_set_property_helper),
+	(gst_v4l2_set_defaults):
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_get_read),
+	(gst_v4l2src_create):
+	* sys/v4l2/gstv4l2xoverlay.c: (gst_v4l2_xoverlay_open):
+	* sys/v4l2/v4l2_calls.c: (gst_v4l2_get_capabilities),
+	(gst_v4l2_fill_lists), (gst_v4l2_open), (gst_v4l2_set_norm),
+	(gst_v4l2_get_frequency), (gst_v4l2_set_frequency),
+	(gst_v4l2_signal_strength), (gst_v4l2_get_attribute),
+	(gst_v4l2_set_attribute), (gst_v4l2_get_input),
+	(gst_v4l2_set_input):
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_fill_format_list),
+	(gst_v4l2src_grab_frame), (gst_v4l2src_get_capture),
+	(gst_v4l2src_set_capture), (gst_v4l2src_capture_init),
+	(gst_v4l2src_capture_start), (gst_v4l2src_capture_stop),
+	(gst_v4l2src_buffer_new):
+	* tests/icles/v4l2src-test.c: (my_bus_callback), (main):
+	Small cleanups.
+	Fix error messages.
+	Use locks when getting timestamps.
+	Fix leaks in test.
+	Add licensing header to tests.
+
 2006-09-27  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2colorbalance.c:

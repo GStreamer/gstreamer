@@ -99,7 +99,7 @@ gst_v4l2_xoverlay_open (GstV4l2Object * v4l2object)
   }
   if (fstat (v4l2object->video_fd, &s) < 0) {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
-        (_("Cannot identify device '%s'"), v4l2object->videodev),
+        (_("Cannot identify device '%s'."), v4l2object->videodev),
         GST_ERROR_SYSTEM);
     XCloseDisplay (dpy);
     return;

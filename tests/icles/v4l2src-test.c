@@ -1,3 +1,24 @@
+/* GStreamer
+ *
+ * Copyright (C) 2006 Edgard Lima <edgard dot lima at indt dot org dot br>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -300,10 +321,12 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_ERROR:{
       GError *err;
       gchar *debug;
+      gchar *str;
 
       gst_message_parse_error (message, &err, &debug);
-      g_print ("%s error: %s\n",
-          gst_element_get_name (message->src), err->message);
+      str = gst_element_get_name (message->src);
+      g_print ("%s error: %s\n", str, err->message);
+      g_free (str);
       g_print ("Debug: %s\n", debug);
 
       g_error_free (err);
@@ -336,7 +359,7 @@ main (int argc, char *argv[])
   gchar input[128] = { '\0' };
   gulong frequency = 0;
   gboolean undeffps = FALSE;
-
+  GstBus *bus;
 
   /* see for input option */
 
@@ -420,7 +443,6 @@ main (int argc, char *argv[])
     }
   }
 
-
   /* Print any remaining command line arguments (not options). */
   if (optind < argc) {
     printf ("Use -h to see help message.\n" "non-option ARGV-elements: ");
@@ -428,8 +450,6 @@ main (int argc, char *argv[])
       printf ("%s ", argv[optind++]);
     putchar ('\n');
   }
-
-
 
   /* init */
   gst_init (&argc, &argv);
@@ -469,8 +489,8 @@ main (int argc, char *argv[])
   }
 
   /* you would normally check that the elements were created properly */
-  gst_bus_add_watch (gst_pipeline_get_bus (GST_PIPELINE (pipeline)),
-      my_bus_callback, NULL);
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_watch (bus, my_bus_callback, NULL);
 
   /* put together a pipeline */
   gst_bin_add_many (GST_BIN (pipeline), source, sink, NULL);
@@ -490,6 +510,7 @@ main (int argc, char *argv[])
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
+  gst_object_unref (bus);
   gst_object_unref (pipeline);
 
   gst_deinit ();

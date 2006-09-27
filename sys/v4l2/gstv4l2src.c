@@ -934,7 +934,7 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
 read_error:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC,
-        (_("error read()ing %d bytes on device %s"),
+        (_("Error read()ing %d bytes on device %s."),
             buffersize, v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
     gst_buffer_unref (*buf);
     return GST_FLOW_ERROR;
@@ -942,7 +942,7 @@ read_error:
 short_read:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC, (NULL),
-        ("error read()ing a buffer on device %s: got only %d bytes instead of expected %d",
+        ("Error read()ing a buffer on device %s: got only %d bytes instead of expected %d.",
             v4l2src->v4l2object->videodev, amount, buffersize));
     gst_buffer_unref (*buf);
     return GST_FLOW_ERROR;
@@ -1018,8 +1018,8 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 no_framerate:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("could not get frame rate for %s, try to set use-undef-fps "
-                "property to true"), v4l2src->v4l2object->videodev), (NULL));
+        (_("Could not get frame rate for %s, try to set use-undef-fps "
+                "property to true."), v4l2src->v4l2object->videodev), (NULL));
     return GST_FLOW_ERROR;
   }
 }
