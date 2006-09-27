@@ -100,6 +100,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiotestsrc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
 
 # Here are packages not in the base plugins package but not dependant
 # on an external lib
@@ -164,7 +165,7 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/netbuffer/gstnetbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/cdda/gstcddabasesrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/mixerutils.h
-
+%{_includedir}/gstreamer-%{majorminor}/gst/interfaces/videoorientation.h
 %{_libdir}/libgstaudio-%{majorminor}.so
 %{_libdir}/libgstriff-%{majorminor}.so
 %{_libdir}/libgsttag-%{majorminor}.so
@@ -179,7 +180,7 @@ GStreamer Plugins Base library development and header files.
 
 # gtk-doc documentation
 %doc %{_datadir}/gtk-doc/html/gst-plugins-base-libs-%{majorminor}
-# %doc %{_datadir}/gtk-doc/html/gst-plugins-base-plugins-%{majorminor}
+%doc %{_datadir}/gtk-doc/html/gst-plugins-base-plugins-%{majorminor}
 
 %changelog
 * Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
