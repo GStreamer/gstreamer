@@ -38,8 +38,8 @@
 #define DEFAULT_PROP_DEVICE		"/dev/video0"
 #define DEFAULT_PROP_DEVICE_NAME 	NULL
 #define DEFAULT_PROP_FLAGS              0
-#define DEFAULT_PROP_STD                NULL
-#define DEFAULT_PROP_INPUT              NULL
+#define DEFAULT_PROP_NORM               NULL
+#define DEFAULT_PROP_CHANNEL            NULL
 #define DEFAULT_PROP_FREQUENCY          0
 
 enum
@@ -244,12 +244,12 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class)
   g_object_class_install_property (gobject_class, PROP_FLAGS,
       g_param_spec_flags ("flags", "Flags", "Device type flags",
           GST_TYPE_V4L2_DEVICE_FLAGS, DEFAULT_PROP_FLAGS, G_PARAM_READABLE));
-  g_object_class_install_property (gobject_class, PROP_STD,
-      g_param_spec_string ("std", "Std", "Standard (norm) to use",
-          DEFAULT_PROP_STD, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, PROP_INPUT,
-      g_param_spec_string ("input", "Input",
-          "Input/output (channel) to switch to", DEFAULT_PROP_INPUT,
+  g_object_class_install_property (gobject_class, PROP_NORM,
+      g_param_spec_string ("norm", "Norm", "Standard norm to use",
+          DEFAULT_PROP_NORM, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_CHANNEL,
+      g_param_spec_string ("channel", "Channel",
+          "Input/output channel to switch to", DEFAULT_PROP_CHANNEL,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_FREQUENCY,
       g_param_spec_ulong ("frequency", "Frequency",
@@ -279,8 +279,8 @@ gst_v4l2_object_new (GstElement * element,
   v4l2object->buffer = NULL;
   v4l2object->videodev = g_strdup (DEFAULT_PROP_DEVICE);
 
-  v4l2object->stds = NULL;
-  v4l2object->inputs = NULL;
+  v4l2object->norms = NULL;
+  v4l2object->channels = NULL;
   v4l2object->colors = NULL;
 
   v4l2object->xwindow_id = 0;
@@ -311,7 +311,7 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
       g_free (v4l2object->videodev);
       v4l2object->videodev = g_value_dup_string (value);
       break;
-    case PROP_STD:
+    case PROP_NORM:
       if (GST_V4L2_IS_OPEN (v4l2object)) {
         GstTuner *tuner = GST_TUNER (v4l2object->element);
         GstTunerNorm *norm = gst_tuner_find_norm_by_name (tuner,
@@ -323,11 +323,11 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
           gst_v4l2_tuner_set_norm (v4l2object, norm);
         }
       } else {
-        g_free (v4l2object->std);
-        v4l2object->std = g_value_dup_string (value);
+        g_free (v4l2object->norm);
+        v4l2object->norm = g_value_dup_string (value);
       }
       break;
-    case PROP_INPUT:
+    case PROP_CHANNEL:
       if (GST_V4L2_IS_OPEN (v4l2object)) {
         GstTuner *tuner = GST_TUNER (v4l2object->element);
         GstTunerChannel *channel = gst_tuner_find_channel_by_name (tuner,
@@ -339,8 +339,8 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
           gst_v4l2_tuner_set_channel (v4l2object, channel);
         }
       } else {
-        g_free (v4l2object->input);
-        v4l2object->input = g_value_dup_string (value);
+        g_free (v4l2object->channel);
+        v4l2object->channel = g_value_dup_string (value);
       }
       break;
     case PROP_FREQUENCY:
@@ -404,11 +404,11 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       g_value_set_flags (value, flags);
       break;
     }
-    case PROP_STD:
-      g_value_set_string (value, v4l2object->std);
+    case PROP_NORM:
+      g_value_set_string (value, v4l2object->norm);
       break;
-    case PROP_INPUT:
-      g_value_set_string (value, v4l2object->input);
+    case PROP_CHANNEL:
+      g_value_set_string (value, v4l2object->channel);
       break;
     case PROP_FREQUENCY:
       g_value_set_ulong (value, v4l2object->frequency);
@@ -427,33 +427,33 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
   GstTunerChannel *channel = NULL;
   GstTuner *tuner = GST_TUNER (v4l2object->element);
 
-  if (v4l2object->std)
-    norm = gst_tuner_find_norm_by_name (tuner, v4l2object->std);
+  if (v4l2object->norm)
+    norm = gst_tuner_find_norm_by_name (tuner, v4l2object->norm);
   if (norm) {
     gst_tuner_set_norm (tuner, norm);
   } else {
     norm =
         GST_TUNER_NORM (gst_tuner_get_norm (GST_TUNER (v4l2object->element)));
     if (norm) {
-      g_free (v4l2object->std);
-      v4l2object->std = g_strdup (norm->label);
+      g_free (v4l2object->norm);
+      v4l2object->norm = g_strdup (norm->label);
       gst_tuner_norm_changed (tuner, norm);
-      g_object_notify (G_OBJECT (v4l2object->element), "std");
+      g_object_notify (G_OBJECT (v4l2object->element), "norm");
     }
   }
 
-  if (v4l2object->input)
-    channel = gst_tuner_find_channel_by_name (tuner, v4l2object->input);
+  if (v4l2object->channel)
+    channel = gst_tuner_find_channel_by_name (tuner, v4l2object->channel);
   if (channel) {
     gst_tuner_set_channel (tuner, channel);
   } else {
     channel =
         GST_TUNER_CHANNEL (gst_tuner_get_channel (GST_TUNER (v4l2object->
                 element)));
-    g_free (v4l2object->input);
-    v4l2object->input = g_strdup (channel->label);
+    g_free (v4l2object->channel);
+    v4l2object->channel = g_strdup (channel->label);
     gst_tuner_channel_changed (tuner, channel);
-    g_object_notify (G_OBJECT (v4l2object->element), "input");
+    g_object_notify (G_OBJECT (v4l2object->element), "channel");
   }
 
   if (GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {

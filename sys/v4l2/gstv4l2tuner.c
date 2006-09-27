@@ -128,7 +128,7 @@ gst_v4l2_tuner_contains_channel (GstV4l2Object * v4l2object,
 {
   const GList *item;
 
-  for (item = v4l2object->inputs; item != NULL; item = item->next)
+  for (item = v4l2object->channels; item != NULL; item = item->next)
     if (item->data == v4l2channel)
       return TRUE;
 
@@ -138,7 +138,7 @@ gst_v4l2_tuner_contains_channel (GstV4l2Object * v4l2object,
 const GList *
 gst_v4l2_tuner_list_channels (GstV4l2Object * v4l2object)
 {
-  return v4l2object->inputs;
+  return v4l2object->channels;
 }
 
 void
@@ -146,7 +146,7 @@ gst_v4l2_tuner_set_channel_and_notify (GstV4l2Object * v4l2object,
     GstTunerChannel * channel)
 {
   if (gst_v4l2_tuner_set_channel (v4l2object, channel)) {
-    g_object_notify (G_OBJECT (v4l2object->element), "input");
+    g_object_notify (G_OBJECT (v4l2object->element), "channel");
   }
 }
 
@@ -182,7 +182,7 @@ gst_v4l2_tuner_get_channel (GstV4l2Object * v4l2object)
 
   v4l2object->get_in_out_func (v4l2object, &channel);
 
-  for (item = v4l2object->inputs; item != NULL; item = item->next) {
+  for (item = v4l2object->channels; item != NULL; item = item->next) {
     if (channel == GST_V4L2_TUNER_CHANNEL (item->data)->index)
       return (GstTunerChannel *) item->data;
   }
@@ -196,7 +196,7 @@ gst_v4l2_tuner_contains_norm (GstV4l2Object * v4l2object,
 {
   const GList *item;
 
-  for (item = v4l2object->stds; item != NULL; item = item->next)
+  for (item = v4l2object->norms; item != NULL; item = item->next)
     if (item->data == v4l2norm)
       return TRUE;
 
@@ -206,7 +206,7 @@ gst_v4l2_tuner_contains_norm (GstV4l2Object * v4l2object,
 const GList *
 gst_v4l2_tuner_list_norms (GstV4l2Object * v4l2object)
 {
-  return v4l2object->stds;
+  return v4l2object->norms;
 }
 
 void
@@ -214,7 +214,7 @@ gst_v4l2_tuner_set_norm_and_notify (GstV4l2Object * v4l2object,
     GstTunerNorm * norm)
 {
   if (gst_v4l2_tuner_set_norm (v4l2object, norm)) {
-    g_object_notify (G_OBJECT (v4l2object->element), "std");
+    g_object_notify (G_OBJECT (v4l2object->element), "norm");
   }
 }
 
@@ -249,7 +249,7 @@ gst_v4l2_tuner_get_norm (GstV4l2Object * v4l2object)
 
   gst_v4l2_get_norm (v4l2object, &norm);
 
-  for (item = v4l2object->stds; item != NULL; item = item->next) {
+  for (item = v4l2object->norms; item != NULL; item = item->next) {
     if (norm == GST_V4L2_TUNER_NORM (item->data)->index)
       return (GstTunerNorm *) item->data;
   }

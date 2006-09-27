@@ -1,5 +1,25 @@
 2006-09-27  Wim Taymans  <wim@fluendo.com>
 
+	* sys/v4l2/gstv4l2object.c:
+	(gst_v4l2_object_install_properties_helper), (gst_v4l2_object_new),
+	(gst_v4l2_object_set_property_helper),
+	(gst_v4l2_object_get_property_helper), (gst_v4l2_set_defaults):
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_class_init),
+	(gst_v4l2src_create):
+	* sys/v4l2/gstv4l2tuner.c: (gst_v4l2_tuner_contains_channel),
+	(gst_v4l2_tuner_list_channels),
+	(gst_v4l2_tuner_set_channel_and_notify),
+	(gst_v4l2_tuner_get_channel), (gst_v4l2_tuner_contains_norm),
+	(gst_v4l2_tuner_list_norms), (gst_v4l2_tuner_set_norm_and_notify),
+	(gst_v4l2_tuner_get_norm):
+	* sys/v4l2/v4l2_calls.c: (gst_v4l2_get_capabilities),
+	(gst_v4l2_fill_lists), (gst_v4l2_empty_lists):
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_get_fps):
+	Renamed some properties to match the tuner interface naming.
+
+2006-09-27  Wim Taymans  <wim@fluendo.com>
+
 	* sys/v4l2/gstv4l2object.c: (gst_v4l2_object_set_property_helper),
 	(gst_v4l2_set_defaults):
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_get_read),

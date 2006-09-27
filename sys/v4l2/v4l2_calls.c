@@ -86,8 +86,8 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   GST_DEBUG_OBJECT (v4l2object->element, "getting enumerations");
   GST_V4L2_CHECK_OPEN (v4l2object);
 
-  GST_DEBUG_OBJECT (v4l2object->element, "  inputs");
-  /* and now, the inputs */
+  GST_DEBUG_OBJECT (v4l2object->element, "  channels");
+  /* and now, the channels */
   for (n = 0;; n++) {
     struct v4l2_input input;
     GstV4l2TunerChannel *v4l2channel;
@@ -99,7 +99,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         break;                  /* end of enumeration */
       else {
         GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-            (_("Failed to get %d in input enumeration for %s."),
+            (_("Failed to get %d in channel enumeration for %s."),
                 n, v4l2object->videodev), GST_ERROR_SYSTEM);
         return FALSE;
       }
@@ -139,7 +139,8 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       channel->flags |= GST_TUNER_CHANNEL_AUDIO;
     }
 
-    v4l2object->inputs = g_list_append (v4l2object->inputs, (gpointer) channel);
+    v4l2object->channels =
+        g_list_append (v4l2object->channels, (gpointer) channel);
   }
 
   GST_DEBUG_OBJECT (v4l2object->element, "  norms");
@@ -168,7 +169,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         standard.frameperiod.denominator, standard.frameperiod.numerator);
     v4l2norm->index = standard.id;
 
-    v4l2object->stds = g_list_append (v4l2object->stds, (gpointer) norm);
+    v4l2object->norms = g_list_append (v4l2object->norms, (gpointer) norm);
   }
 
   GST_DEBUG_OBJECT (v4l2object->element, "  controls+menus");
@@ -312,13 +313,13 @@ gst_v4l2_empty_lists (GstV4l2Object * v4l2object)
 {
   GST_DEBUG_OBJECT (v4l2object->element, "deleting enumerations");
 
-  g_list_foreach (v4l2object->inputs, (GFunc) g_object_unref, NULL);
-  g_list_free (v4l2object->inputs);
-  v4l2object->inputs = NULL;
+  g_list_foreach (v4l2object->channels, (GFunc) g_object_unref, NULL);
+  g_list_free (v4l2object->channels);
+  v4l2object->channels = NULL;
 
-  g_list_foreach (v4l2object->stds, (GFunc) g_object_unref, NULL);
-  g_list_free (v4l2object->stds);
-  v4l2object->stds = NULL;
+  g_list_foreach (v4l2object->norms, (GFunc) g_object_unref, NULL);
+  g_list_free (v4l2object->norms);
+  v4l2object->norms = NULL;
 
   g_list_foreach (v4l2object->colors, (GFunc) g_object_unref, NULL);
   g_list_free (v4l2object->colors);

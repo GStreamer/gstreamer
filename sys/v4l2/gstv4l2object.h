@@ -82,12 +82,12 @@ struct _GstV4l2Object {
 
   /* lists... */
   GList *colors;
-  GList *stds;
-  GList *inputs;
+  GList *norms;
+  GList *channels;
 
   /* properties */
-  gchar *std;
-  gchar *input;
+  gchar *norm;
+  gchar *channel;
   gulong frequency;
 
   /* X-overlay */
@@ -111,8 +111,8 @@ GType gst_v4l2_object_get_type(void);
     PROP_DEVICE,				\
     PROP_DEVICE_NAME,				\
     PROP_FLAGS,					\
-    PROP_STD,					\
-    PROP_INPUT,					\
+    PROP_NORM,					\
+    PROP_CHANNEL,					\
     PROP_FREQUENCY
 
 
