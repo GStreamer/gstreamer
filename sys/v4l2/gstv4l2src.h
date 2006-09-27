@@ -101,7 +101,6 @@ struct _GstV4l2Src
 
   /* how are we going to push buffers? */
   guint fps_n, fps_d;
-  gboolean use_undef_fps;
 };
 
 struct _GstV4l2SrcClass
