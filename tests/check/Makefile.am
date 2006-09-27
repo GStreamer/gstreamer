@@ -127,4 +127,8 @@ libs_video_LDADD = \
 pipelines_oggmux_LDADD = $(LDADD) $(OGG_LIBS)
 pipelines_oggmux_CFLAGS = $(AM_CFLAGS) $(OGG_CFLAGS)
 
+pipelines_simple_launch_lines_LDADD = \
+	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(LDADD)
+
 EXTRA_DIST = gst-plugins-base.supp
