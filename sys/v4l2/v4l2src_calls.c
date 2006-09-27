@@ -92,7 +92,7 @@ gst_v4l2src_fill_format_list (GstV4l2Src * v4l2src)
 failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("failed to get number %d in pixelformat enumeration for %s: %s"),
+        (_("Failed to get number %d in pixelformat enumeration for %s."),
             n, v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
     g_free (format);
     return FALSE;
@@ -185,7 +185,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
         break;
       default:
         GST_ELEMENT_WARNING (v4l2src, RESOURCE, FAILED,
-            (_("Grabbing frame got interrupted on %s. No expected reason"),
+            (_("Grabbing frame got interrupted on %s. No expected reason."),
                 v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
         break;
     }
@@ -208,7 +208,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
 einval:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
-        (_("Failed trying to get frames from device %s"),
+        (_("Failed trying to get frames from device %s."),
             v4l2src->v4l2object->videodev),
         (_("The buffer type is not supported, or the index is out of bounds,"
                 " or no buffers have been allocated yet, or the userptr"
@@ -219,18 +219,18 @@ einval:
 nomem:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
-        (_("Failed trying to get frames from device %s. Not enough memory"),
+        (_("Failed trying to get frames from device %s. Not enough memory."),
             v4l2src->v4l2object->videodev),
-        (_("insufficient memory to enqueue a user pointer buffer. device %s"),
+        (_("insufficient memory to enqueue a user pointer buffer. device %s."),
             v4l2src->v4l2object->videodev));
     return -1;
   }
 too_many_trials:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
-        (_("Failed trying to get frames from device %s"),
+        (_("Failed trying to get frames from device %s."),
             v4l2src->v4l2object->videodev),
-        (_("Failed after 100 tries. device %s"),
+        (_("Failed after 100 tries. device %s."),
             v4l2src->v4l2object->videodev));
     return -1;
   }
@@ -261,7 +261,7 @@ gst_v4l2src_get_capture (GstV4l2Src * v4l2src)
 fmt_failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("failed to get pixelformat for device %s"),
+        (_("Failed to get pixelformat for device %s."),
             v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -340,7 +340,7 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src,
 fmt_failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("failed to set pixelformat to %s @ %dx%d for device %s: %s"),
+        (_("Failed to set pixelformat to %s @ %dx%d for device %s: %s."),
             fmt->description, *width, *height, v4l2src->v4l2object->videodev),
         GST_ERROR_SYSTEM);
     return FALSE;
@@ -348,13 +348,14 @@ fmt_failed:
 pixfmt_failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("failed to set pixelformat to %s @ %dx%d for device %s: %s"),
+        (_("Failed to set pixelformat to %s @ %dx%d for device %s: %s."),
             fmt->description, *width, *height, v4l2src->v4l2object->videodev),
         GST_ERROR_SYSTEM);
     return FALSE;
   }
 fail:
   {
+    /* ERROR was posted */
     return FALSE;
   }
 }
@@ -474,7 +475,7 @@ reqbufs_failed:
 broken_driver:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("the driver of device '%s' is broken."),
+        (_("The driver of device '%s' is broken."),
             v4l2src->v4l2object->videodev),
         ("no supported read capability from %s",
             v4l2src->v4l2object->videodev));
@@ -493,7 +494,7 @@ no_buffers:
 querybuf_failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("Could not get buffer properties of buffer %d"), n),
+        (_("Could not get buffer properties of buffer %d."), n),
         GST_ERROR_SYSTEM);
     gst_v4l2src_capture_deinit (v4l2src);
     return FALSE;
@@ -501,7 +502,7 @@ querybuf_failed:
 mmap_failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("Could not mmap video buffer %d: %s"), n), GST_ERROR_SYSTEM);
+        (_("Could not mmap video buffer %d."), n), GST_ERROR_SYSTEM);
     gst_v4l2src_capture_deinit (v4l2src);
     buffer->start = 0;
     return FALSE;
@@ -544,7 +545,7 @@ gst_v4l2src_capture_start (GstV4l2Src * v4l2src)
 streamon_failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, OPEN_READ,
-        (_("Error starting streaming capture from device %s"),
+        (_("Error starting streaming capture from device %s."),
             v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -582,7 +583,7 @@ gst_v4l2src_capture_stop (GstV4l2Src * v4l2src)
 streamoff_failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, CLOSE,
-        (_("Error stopping streaming capture from device %s: %s"),
+        (_("Error stopping streaming capture from device %s."),
             v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -922,6 +923,8 @@ gst_v4l2src_buffer_new (GstV4l2Src * v4l2src, guint size, guint8 * data,
     GstV4l2Buffer * srcbuf)
 {
   GstBuffer *buf;
+  GstClockTime timestamp, duration;
+  GstClock *clock;
 
   if (data == NULL) {
     buf = gst_buffer_new_and_alloc (size);
@@ -934,18 +937,38 @@ gst_v4l2src_buffer_new (GstV4l2Src * v4l2src, guint size, guint8 * data,
   }
   GST_BUFFER_SIZE (buf) = size;
 
-  GST_BUFFER_TIMESTAMP (buf) =
-      gst_clock_get_time (GST_ELEMENT (v4l2src)->clock);
-  GST_BUFFER_TIMESTAMP (buf) -= GST_ELEMENT (v4l2src)->base_time;
-  GST_BUFFER_OFFSET (buf) = v4l2src->offset++;
-
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_READONLY);
+
+  /* timestamps, LOCK to get clock and base time. */
+  GST_OBJECT_LOCK (v4l2src);
+  if ((clock = GST_ELEMENT_CLOCK (v4l2src))) {
+    /* we have a clock, get base time and ref clock */
+    timestamp = GST_ELEMENT (v4l2src)->base_time;
+    gst_object_ref (clock);
+  } else {
+    /* no clock, can't set timestamps */
+    timestamp = GST_CLOCK_TIME_NONE;
+  }
+  GST_OBJECT_UNLOCK (v4l2src);
+
+  if (clock) {
+    /* the time now is the time of the clock minus the base time */
+    timestamp = gst_clock_get_time (clock) - timestamp;
+    gst_object_unref (clock);
+  }
+
   if (v4l2src->fps_n > 0) {
-    GST_BUFFER_DURATION (buf) =
+    duration =
         gst_util_uint64_scale_int (GST_SECOND, v4l2src->fps_d, v4l2src->fps_n);
   } else {
-    GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
+    duration = GST_CLOCK_TIME_NONE;
   }
+  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_DURATION (buf) = duration;
+
+  /* offsets */
+  GST_BUFFER_OFFSET (buf) = v4l2src->offset++;
+  GST_BUFFER_OFFSET_END (buf) = v4l2src->offset;
 
   /* the negotiate() method already set caps on the source pad */
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (v4l2src)));

@@ -308,8 +308,7 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
 {
   switch (prop_id) {
     case PROP_DEVICE:
-      if (v4l2object->videodev)
-        g_free (v4l2object->videodev);
+      g_free (v4l2object->videodev);
       v4l2object->videodev = g_value_dup_string (value);
       break;
     case PROP_STD:
@@ -436,9 +435,7 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
     norm =
         GST_TUNER_NORM (gst_tuner_get_norm (GST_TUNER (v4l2object->element)));
     if (norm) {
-      if (v4l2object->std) {
-        g_free (v4l2object->std);
-      }
+      g_free (v4l2object->std);
       v4l2object->std = g_strdup (norm->label);
       gst_tuner_norm_changed (tuner, norm);
       g_object_notify (G_OBJECT (v4l2object->element), "std");
@@ -453,9 +450,7 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
     channel =
         GST_TUNER_CHANNEL (gst_tuner_get_channel (GST_TUNER (v4l2object->
                 element)));
-    if (v4l2object->input) {
-      g_free (v4l2object->input);
-    }
+    g_free (v4l2object->input);
     v4l2object->input = g_strdup (channel->label);
     gst_tuner_channel_changed (tuner, channel);
     g_object_notify (G_OBJECT (v4l2object->element), "input");
