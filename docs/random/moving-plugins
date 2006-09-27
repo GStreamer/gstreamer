@@ -77,7 +77,7 @@ CHECKLIST
   ext/: plug-ins with external dependencies
 
 - The plug-in is documented:
-  - the compiled-in descriptions should be correct
+  - the compiled-in descriptions (element details) should be correct
   - every element in the plug-in should have gtk-doc documentation:
     - longer description of element
     - why you would use this element

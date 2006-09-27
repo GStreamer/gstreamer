@@ -149,6 +149,7 @@ GstBaseSrc
 GstBaseSrcClass
 GstBaseSrcFlags
 
+gst_base_src_wait_playing
 gst_base_src_is_live
 gst_base_src_set_live
 gst_base_src_set_format

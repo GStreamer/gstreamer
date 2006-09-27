@@ -35,7 +35,7 @@
  * #GstBaseSink infrastructure should be sufficient.
  *
  * #GstBaseSink provides support for exactly one sink pad, which should be
- * named "sink". A sink implementation (subclass of GstBaseSink) should
+ * named "sink". A sink implementation (subclass of #GstBaseSink) should
  * install a pad template in its base_init function, like so:
  * <programlisting>
  * static void
@@ -53,16 +53,16 @@
  * </programlisting>
  *
  * #GstBaseSink will handle the prerolling correctly. This means that it will
- * return GST_STATE_CHANGE_ASYNC from a state change to PAUSED until the first
+ * return #GST_STATE_CHANGE_ASYNC from a state change to PAUSED until the first
  * buffer arrives in this element. The base class will call the
- * GstBaseSink::preroll vmethod with this preroll buffer and will then commit
+ * #GstBaseSink::preroll vmethod with this preroll buffer and will then commit
  * the state change to the next asynchronously pending state.
  *
  * When the element is set to PLAYING, #GstBaseSink will synchronise on the
  * clock using the times returned from ::get_times. If this function returns
  * #GST_CLOCK_TIME_NONE for the start time, no synchronisation will be done.
  * Synchronisation can be disabled entirely by setting the object "sync"
- * property to FALSE.
+ * property to %FALSE.
  *
  * After synchronisation the virtual method #GstBaseSink::render will be called.
  * Subclasses should minimally implement this method.
@@ -70,7 +70,8 @@
  * Since 0.10.3 subclasses that synchronise on the clock in the ::render method
  * are supported as well. These classes typically receive a buffer in the render
  * method and can then potentially block on the clock while rendering. A typical
- * example is an audiosink.
+ * example is an audiosink. Since 0.10.11 these subclasses can use
+ * gst_base_sink_wait_preroll() to perform the blocking wait.
  *
  * Upon receiving the EOS event in the PLAYING state, #GstBaseSink will wait
  * for the clock to reach the time indicated by the stop time of the last
@@ -78,14 +79,14 @@
  * EOS in PAUSED, preroll completes, the event is queued and an EOS message is
  * posted when going to PLAYING.
  *
- * #GstBaseSink will internally use the GST_EVENT_NEW_SEGMENT events to schedule
+ * #GstBaseSink will internally use the #GST_EVENT_NEWSEGMENT events to schedule
  * synchronisation and clipping of buffers. Buffers that fall completely outside
  * of the current segment are dropped. Buffers that fall partially in the
  * segment are rendered (and prerolled). Subclasses should do any subbuffer
  * clipping themselves when needed.
  *
  * #GstBaseSink will by default report the current playback position in
- * GST_FORMAT_TIME based on the current clock time and segment information.
+ * #GST_FORMAT_TIME based on the current clock time and segment information.
  * If no clock has been set on the element, the query will be forwarded
  * upstream.
  *
@@ -127,7 +128,7 @@
  * synchronisation. For each dropped buffer it will also send a QoS message
  * upstream.
  *
- * Last reviewed on 2006-03-31 (0.10.5)
+ * Last reviewed on 2006-09-27 (0.10.11)
  */
 
 #ifdef HAVE_CONFIG_H

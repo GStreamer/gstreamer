@@ -205,10 +205,12 @@ struct _GstBaseSrcClass {
 
 GType gst_base_src_get_type (void);
 
-void		gst_base_src_set_live	(GstBaseSrc *src, gboolean live);
-gboolean	gst_base_src_is_live	(GstBaseSrc *src);
+GstFlowReturn   gst_base_src_wait_playing  (GstBaseSrc *src);
 
-void		gst_base_src_set_format	(GstBaseSrc *src, GstFormat format);
+void		gst_base_src_set_live	   (GstBaseSrc *src, gboolean live);
+gboolean	gst_base_src_is_live	   (GstBaseSrc *src);
+
+void		gst_base_src_set_format	   (GstBaseSrc *src, GstFormat format);
 
 G_END_DECLS
 

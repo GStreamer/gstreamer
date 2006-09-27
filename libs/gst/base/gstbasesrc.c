@@ -37,38 +37,38 @@
  * <para>
  * The source can be configured to operate in any #GstFormat with the
  * gst_base_src_set_format() method. The currently set format determines 
- * the format of the internal #GstSegment and any #GST_EVENT_NEW_SEGMENT 
+ * the format of the internal #GstSegment and any #GST_EVENT_NEWSEGMENT 
  * events. The default format for #GstBaseSrc is #GST_FORMAT_BYTES.
  * </para>
  * <para>
  * #GstBaseSrc always supports push mode scheduling. If the following
  * conditions are met, it also supports pull mode scheduling:
  * <itemizedlist>
- *   <listitem><para>The format is set to GST_FORMAT_BYTES (default).</para>
+ *   <listitem><para>The format is set to #GST_FORMAT_BYTES (default).</para>
  *   </listitem>
- *   <listitem><para>#GstBaseSrc::is_seekable returns TRUE.</para>
+ *   <listitem><para>#GstBaseSrc::is_seekable returns %TRUE.</para>
  *   </listitem>
  * </itemizedlist>
  * </para>
  * <para>
  * Since 0.10.9, any #GstBaseSrc can enable pull based scheduling at any 
- * time by overriding #GstBaseSrc::check_get_range so that it returns TRUE. 
+ * time by overriding #GstBaseSrc::check_get_range so that it returns %TRUE. 
  * </para>
  * <para>
  * If all the conditions are met for operating in pull mode, #GstBaseSrc is
  * automatically seekable in push mode as well. The following conditions must 
  * be met to make the element seekable in push mode when the format is not
- * GST_FORMAT_BYTES:
+ * #GST_FORMAT_BYTES:
  * <itemizedlist>
  *   <listitem><para>
- *     #GstBaseSrc::is_seekable returns TRUE.
+ *     #GstBaseSrc::is_seekable returns %TRUE.
  *   </para></listitem>
  *   <listitem><para>
  *     #GstBaseSrc::query can convert all supported seek formats to the
  *     internal format as set with gst_base_src_set_format().
  *   </para></listitem>
  *   <listitem><para>
- *     #GstBaseSrc::do_seek is implemented, performs the seek and returns TRUE.
+ *     #GstBaseSrc::do_seek is implemented, performs the seek and returns %TRUE.
  *   </para></listitem>
  * </itemizedlist>
  * </para>
@@ -91,13 +91,18 @@
  * A live source does not produce data in the PAUSED state. This means that the 
  * #GstBaseSrc::create method will not be called in PAUSED but only in PLAYING.
  * To signal the pipeline that the element will not produce data, the return
- * value from the READY to PAUSED state will be GST_STATE_CHANGE_NO_PREROLL.
+ * value from the READY to PAUSED state will be #GST_STATE_CHANGE_NO_PREROLL.
  * </para>
  * <para>
  * A typical live source will timestamp the buffers it creates with the 
  * current stream time of the pipeline. This is one reason why a live source
  * can only produce data in the PLAYING state, when the clock is actually 
  * distributed and running.
+ * </para>
+ * <para>
+ * Live sources that synchronize and block on the clock (and audio source, for
+ * example) can since 0.10.12 use gst_base_src_wait_playing() when the ::create
+ * function was interrupted by a state change to PAUSED.
  * </para>
  * <para>
  * The #GstBaseSrc::get_times method can be used to implement pseudo-live 
@@ -107,8 +112,8 @@
  * a live source.
  * </para>
  * <para>
- * There is only support in GstBaseSrc for exactly one source pad, which 
- * should be named "src". A source implementation (subclass of GstBaseSrc) 
+ * There is only support in #GstBaseSrc for exactly one source pad, which 
+ * should be named "src". A source implementation (subclass of #GstBaseSrc) 
  * should install a pad template in its base_init function, like so:
  * </para>
  * <para>
@@ -146,8 +151,8 @@
  * <programlisting>
  * ...
  * // stop recording
- * gst_element_set_state (audio_source, GST_STATE_NULL);
- * gst_element_set_locked_state (audio_source, TRUE);
+ * gst_element_set_state (audio_source, #GST_STATE_NULL);
+ * gst_element_set_locked_state (audio_source, %TRUE);
  * ...
  * </programlisting>
  * Now the application should wait for an EOS message
@@ -156,8 +161,8 @@
  * <programlisting>
  * ...
  * // everything done - shut down pipeline
- * gst_element_set_state (pipeline, GST_STATE_NULL);
- * gst_element_set_locked_state (audio_source, FALSE);
+ * gst_element_set_state (pipeline, #GST_STATE_NULL);
+ * gst_element_set_locked_state (audio_source, %FALSE);
  * ...
  * </programlisting>
  * </para>
@@ -167,7 +172,7 @@
  * thread might be blocked in PREROLL.
  * </para>
  * <para>
- * Last reviewed on 2006-07-06 (0.10.9)
+ * Last reviewed on 2006-09-27 (0.10.11)
  * </para>
  * </refsect2>
  */
@@ -418,6 +423,58 @@ gst_base_src_finalize (GObject * object)
   gst_event_replace ((GstEvent **) event_p, NULL);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+/**
+ * gst_base_src_wait_playing:
+ * @src: the src
+ *
+ * If the #GstBaseSrcClass::create method performs its own synchronisation against
+ * the clock it must unblock when going from PLAYING to the PAUSED state and call
+ * this method before continuing to produce the remaining data.
+ *
+ * This function will block until a state change to PLAYING happens (in which
+ * case this function returns #GST_FLOW_OK) or the processing must be stopped due
+ * to a state change to READY or a FLUSH event (in which case this function
+ * returns #GST_FLOW_WRONG_STATE).
+ *
+ * Since: 0.10.12
+ *
+ * Returns: #GST_FLOW_OK if @src is PLAYING and processing can
+ * continue. Any other return value should be returned from the create vmethod.
+ */
+GstFlowReturn
+gst_base_src_wait_playing (GstBaseSrc * src)
+{
+  /* block until the state changes, or we get a flush, or something */
+  GST_LIVE_LOCK (src);
+  if (src->is_live) {
+    while (G_UNLIKELY (!src->live_running)) {
+      GST_DEBUG ("live source signal waiting");
+      GST_LIVE_SIGNAL (src);
+      GST_DEBUG ("live source waiting for running state");
+      GST_LIVE_WAIT (src);
+      GST_DEBUG ("live source unlocked");
+    }
+    /* FIXME, use another variable to signal stopping so that we don't
+     * have to grab another lock. */
+    GST_OBJECT_LOCK (src->srcpad);
+    if (G_UNLIKELY (GST_PAD_IS_FLUSHING (src->srcpad)))
+      goto flushing;
+    GST_OBJECT_UNLOCK (src->srcpad);
+  }
+  GST_LIVE_UNLOCK (src);
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG_OBJECT (src, "pad is flushing");
+    GST_OBJECT_UNLOCK (src->srcpad);
+    GST_LIVE_UNLOCK (src);
+    return GST_FLOW_WRONG_STATE;
+  }
 }
 
 /**
@@ -1266,23 +1323,9 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
-  GST_LIVE_LOCK (src);
-  if (src->is_live) {
-    while (G_UNLIKELY (!src->live_running)) {
-      GST_DEBUG ("live source signal waiting");
-      GST_LIVE_SIGNAL (src);
-      GST_DEBUG ("live source waiting for running state");
-      GST_LIVE_WAIT (src);
-      GST_DEBUG ("live source unlocked");
-    }
-    /* FIXME, use another variable to signal stopping so that we don't
-     * have to grab another lock. */
-    GST_OBJECT_LOCK (src->srcpad);
-    if (G_UNLIKELY (GST_PAD_IS_FLUSHING (src->srcpad)))
-      goto flushing;
-    GST_OBJECT_UNLOCK (src->srcpad);
-  }
-  GST_LIVE_UNLOCK (src);
+  ret = gst_base_src_wait_playing (src);
+  if (ret != GST_FLOW_OK)
+    goto stopped;
 
   if (G_UNLIKELY (!GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED)))
     goto not_started;
@@ -1338,12 +1381,10 @@ done:
   return ret;
 
   /* ERROR */
-flushing:
+stopped:
   {
-    GST_DEBUG_OBJECT (src, "pad is flushing");
-    GST_OBJECT_UNLOCK (src->srcpad);
-    GST_LIVE_UNLOCK (src);
-    return GST_FLOW_WRONG_STATE;
+    GST_DEBUG_OBJECT (src, "wait_playing returned %d", ret);
+    return ret;
   }
 not_started:
   {
