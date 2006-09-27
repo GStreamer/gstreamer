@@ -51,7 +51,7 @@ struct _GstVisual
   GstSegment segment;
 
   /* libvisual stuff */
-  VisAudio audio;
+  VisAudio *audio;
   VisVideo *video;
   VisActor *actor;
 
@@ -109,8 +109,13 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "width = (int) 16, "
         "depth = (int) 16, "
         "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) TRUE, "
-        "channels = (int) { 1, 2 }, " "rate = (int) [ 1000, MAX ]")
+        "signed = (boolean) TRUE, " "channels = (int) { 1, 2 }, "
+#if defined(VISUAL_API_VERSION) && VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
+        "rate = (int) { 8000, 11250, 22500, 32000, 44100, 48000, 96000 }"
+#else
+        "rate = (int) [ 1000, MAX ]"
+#endif
+    )
     );
 
 
@@ -227,6 +232,10 @@ gst_visual_clear_actors (GstVisual * visual)
   if (visual->video) {
     visual_object_unref (VISUAL_OBJECT (visual->video));
     visual->video = NULL;
+  }
+  if (visual->audio) {
+    visual_object_unref (VISUAL_OBJECT (visual->audio));
+    visual->audio = NULL;
   }
 }
 
@@ -611,17 +620,78 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     data =
         (const guint16 *) gst_adapter_peek (visual->adapter, 512 * visual->bps);
 
+#if defined(VISUAL_API_VERSION) && VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
+    {
+      VisBuffer *lbuf, *rbuf;
+      guint16 ldata[512], rdata[512];
+      VisAudioSampleRateType rate;
+
+      lbuf = visual_buffer_new_with_buffer (ldata, sizeof (ldata), NULL);
+      rbuf = visual_buffer_new_with_buffer (rdata, sizeof (rdata), NULL);
+
+      if (visual->channels == 2) {
+        for (i = 0; i < 512; i++) {
+          ldata[i] = *data++;
+          rdata[i] = *data++;
+        }
+      } else {
+        for (i = 0; i < 512; i++) {
+          ldata[i] = *data;
+          rdata[i] = *data++;
+        }
+      }
+
+      switch (visual->rate) {
+        case 8000:
+          rate = VISUAL_AUDIO_SAMPLE_RATE_8000;
+          break;
+        case 11250:
+          rate = VISUAL_AUDIO_SAMPLE_RATE_11250;
+          break;
+        case 22500:
+          rate = VISUAL_AUDIO_SAMPLE_RATE_22500;
+          break;
+        case 32000:
+          rate = VISUAL_AUDIO_SAMPLE_RATE_32000;
+          break;
+        case 44100:
+          rate = VISUAL_AUDIO_SAMPLE_RATE_44100;
+          break;
+        case 48000:
+          rate = VISUAL_AUDIO_SAMPLE_RATE_48000;
+          break;
+        case 96000:
+          rate = VISUAL_AUDIO_SAMPLE_RATE_96000;
+          break;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+
+      visual_audio_samplepool_input_channel (visual->audio->samplepool,
+          lbuf,
+          rate, VISUAL_AUDIO_SAMPLE_FORMAT_S16, VISUAL_AUDIO_CHANNEL_LEFT);
+      visual_audio_samplepool_input_channel (visual->audio->samplepool,
+          rbuf,
+          rate, VISUAL_AUDIO_SAMPLE_FORMAT_S16, VISUAL_AUDIO_CHANNEL_RIGHT);
+
+      visual_object_unref (VISUAL_OBJECT (lbuf));
+      visual_object_unref (VISUAL_OBJECT (rbuf));
+
+    }
+#else
     if (visual->channels == 2) {
       for (i = 0; i < 512; i++) {
-        visual->audio.plugpcm[0][i] = *data++;
-        visual->audio.plugpcm[1][i] = *data++;
+        visual->audio->plugpcm[0][i] = *data++;
+        visual->audio->plugpcm[1][i] = *data++;
       }
     } else {
       for (i = 0; i < 512; i++) {
-        visual->audio.plugpcm[0][i] = *data;
-        visual->audio.plugpcm[1][i] = *data++;
+        visual->audio->plugpcm[0][i] = *data;
+        visual->audio->plugpcm[1][i] = *data++;
       }
     }
+#endif
 
     /* alloc a buffer if we don't have one yet, this happens
      * when we pushed a buffer in this while loop before */
@@ -632,8 +702,8 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
       }
     }
     visual_video_set_buffer (visual->video, GST_BUFFER_DATA (outbuf));
-    visual_audio_analyze (&visual->audio);
-    visual_actor_run (visual->actor, &visual->audio);
+    visual_audio_analyze (visual->audio);
+    visual_actor_run (visual->actor, visual->audio);
     visual_video_set_buffer (visual->video, NULL);
     GST_DEBUG_OBJECT (visual, "rendered one frame");
 
@@ -682,9 +752,7 @@ gst_visual_change_state (GstElement * element, GstStateChange transition)
           visual_actor_new (GST_VISUAL_GET_CLASS (visual)->plugin->info->
           plugname);
       visual->video = visual_video_new ();
-#if defined(VISUAL_API_VERSION) && VISUAL_API_VERSION >= 4000 && VISUAL_API_VERSION < 5000
-      visual_audio_init (&visual->audio);
-#endif
+      visual->audio = visual_audio_new ();
       /* can't have a play without actors */
       if (!visual->actor || !visual->video)
         goto no_actors;

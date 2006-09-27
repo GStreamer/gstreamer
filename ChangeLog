@@ -1,3 +1,12 @@
+2006-09-27  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: Jonathan Matthew <jonathan@kaolin.wh9.net>
+
+	* ext/libvisual/visual.c: (gst_visual_clear_actors),
+	(gst_visual_chain), (gst_visual_change_state):
+	  Libvisual plugin was not passing audio data to libvisual 0.4.0 
+	  correctly. Fixes #357800
+
 2006-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/pipelines/simple-launch-lines.c: (run_pipeline):
