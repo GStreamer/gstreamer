@@ -40,12 +40,29 @@ G_BEGIN_DECLS
 #define GST_IS_BASE_AUDIO_SRC(obj)              (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_AUDIO_SRC))
 #define GST_IS_BASE_AUDIO_SRC_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_AUDIO_SRC))
 
+/**
+ * GST_BASE_AUDIO_SRC_CLOCK:
+ * @obj: a #GstBaseAudioSrc
+ *
+ * Get the #GstClock of @obj.
+ */
 #define GST_BASE_AUDIO_SRC_CLOCK(obj)    (GST_BASE_AUDIO_SRC (obj)->clock)
+/**
+ * GST_BASE_AUDIO_SRC_PAD:
+ * @obj: a #GstBaseAudioSrc
+ *
+ * Get the source #GstPad of @obj.
+ */
 #define GST_BASE_AUDIO_SRC_PAD(obj)      (GST_BASE_SRC (obj)->srcpad)
 
 typedef struct _GstBaseAudioSrc GstBaseAudioSrc;
 typedef struct _GstBaseAudioSrcClass GstBaseAudioSrcClass;
 
+/**
+ * GstBaseAudioSrc:
+ *
+ * Opaque #GstBaseAudioSrc.
+ */
 struct _GstBaseAudioSrc {
   GstPushSrc     element;
 
@@ -67,6 +84,14 @@ struct _GstBaseAudioSrc {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstBaseAudioSrcClass:
+ * @parent_class: the parent class.
+ * @create_ringbuffer: create and return a #GstRingBuffer to read from.
+ *
+ * #GstBaseAudioSrc class. Override the vmethod to implement
+ * functionality.
+ */
 struct _GstBaseAudioSrcClass {
   GstPushSrcClass parent_class;
 

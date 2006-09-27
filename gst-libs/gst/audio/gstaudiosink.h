@@ -20,22 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* a base class for simple audio sinks.
- *
- * This base class only requires subclasses to implement a set
- * of simple functions.
- *
- * - open: open the device with the specified caps
- * - write: write the samples to the audio device
- * - close: close the device
- * - delay: the number of samples queued in the device
- * - reset: unblock a write to the device and reset.
- *
- * All scheduling of samples and timestamps is done in this
- * base class together with the GstBaseAudioSink using a
- * default implementation of a ringbuffer that uses threads.
- */
-
 #ifndef __GST_AUDIO_SINK_H__
 #define __GST_AUDIO_SINK_H__
 
@@ -54,6 +38,11 @@ G_BEGIN_DECLS
 typedef struct _GstAudioSink GstAudioSink;
 typedef struct _GstAudioSinkClass GstAudioSinkClass;
 
+/**
+ * GstAudioSink:
+ * 
+ * Opaque #GstAudioSink.
+ */
 struct _GstAudioSink {
   GstBaseAudioSink       element;
 
@@ -64,6 +53,22 @@ struct _GstAudioSink {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstAudioSinkClass:
+ * @parent_class: the parent class structure.
+ * @open: Open the device. No configuration needs to be done at this point.
+ *        This function is also used to check if the device is available.
+ * @prepare: Prepare the device to operate with the specified parameters.
+ * @unprepare: Undo operations done in prepare.
+ * @close: Close the device.
+ * @write: Write data to the device.
+ * @delay: Return how many samples are still in the device. This is used to
+ *         drive the synchronisation.
+ * @reset: Returns as quickly as possible from a write and flush any pending
+ *         samples from the device.
+ *
+ * #GstAudioSink class. Override the vmethods to implement functionality.
+ */
 struct _GstAudioSinkClass {
   GstBaseAudioSinkClass parent_class;
 

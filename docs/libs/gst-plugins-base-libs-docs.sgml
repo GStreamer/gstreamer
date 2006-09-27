@@ -124,7 +124,7 @@
       &GstTuner;
       &GstTunerChannel;
       &GstTunerNorm;
-      &GstVideoorientation;
+      &GstVideoOrientation;
       &GstXOverlay;
     </chapter>
 

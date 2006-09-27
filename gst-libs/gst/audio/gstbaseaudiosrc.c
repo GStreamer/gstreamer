@@ -20,6 +20,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbaseaudiosrc
+ * @short_description: Base class for audio sources
+ * @see_also: #GstAudioSrc, #GstRingBuffer.
+ *
+ * This is the base class for audio sources. Subclasses need to implement the
+ * ::create_ringbuffer vmethod. This base class will then take care of
+ * reading samples from the ringbuffer, synchronisation and flushing.
+ *
+ * Last reviewed on 2006-09-27 (0.10.12)
+ */
+
 #include <string.h>
 
 #include "gstbaseaudiosrc.h"
@@ -144,6 +156,7 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
 
   /* we are always a live source */
   gst_base_src_set_live (GST_BASE_SRC (baseaudiosrc), TRUE);
+  /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (baseaudiosrc), GST_FORMAT_TIME);
 }
 
@@ -527,6 +540,16 @@ stopped:
   }
 }
 
+/**
+ * gst_base_audio_src_create_ringbuffer:
+ * @src: a #GstBaseAudioSrc.
+ *
+ * Create and return the #GstRingBuffer for @src. This function will call the
+ * ::create_ringbuffer vmethod and will set @src as the parent of the returned
+ * buffer (see gst_object_set_parent()).
+ *
+ * Returns: The new ringbuffer of @src.
+ */
 GstRingBuffer *
 gst_base_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
 {

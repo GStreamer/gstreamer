@@ -20,6 +20,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstaudioclock
+ * @short_description: Helper object for implementing audio clocks
+ * @see_also: #GstBaseAudioSink, #GstSystemClock
+ *
+ * #GstAudioClock makes it easy for elements to implement a #GstClock, they
+ * simply need to provide a function that returns the current clock time.
+ *
+ * This object is internally used to implement the clock in #GstBaseAudioSink.
+ *
+ * Last reviewed on 2006-09-27 (0.10.12)
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -86,6 +99,18 @@ gst_audio_clock_init (GstAudioClock * clock)
   GST_OBJECT_FLAG_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER);
 }
 
+/**
+ * gst_audio_clock_new:
+ * @name: the name of the clock
+ * @func: a function
+ * @user_data: user data
+ *
+ * Create a new #GstAudioClock instance. Whenever the clock time should be
+ * calculated it will call @func with @user_data. When @func returns
+ * #GST_CLOCK_TIME_NONE, the clock will return the last reported time.
+ *
+ * Returns: a new #GstAudioClock casted to a #GstClock.
+ */
 GstClock *
 gst_audio_clock_new (gchar * name, GstAudioClockGetTimeFunc func,
     gpointer user_data)

@@ -23,17 +23,16 @@ gst_audio_structure_set_int
 <FILE>gstaudioclock</FILE>
 <INCLUDE>gst/audio/gstaudioclock.h</INCLUDE>
 GstAudioClock
-GstAudioClockClass
 GstAudioClockGetTimeFunc
 gst_audio_clock_new
 <SUBSECTION Standard>
+GstAudioClockClass
 GST_AUDIO_CLOCK
 GST_IS_AUDIO_CLOCK
 GST_TYPE_AUDIO_CLOCK
 gst_audio_clock_get_type
 GST_AUDIO_CLOCK_CLASS
 GST_IS_AUDIO_CLOCK_CLASS
-GST_AUDIO_CLOCK_GET_CLASS
 </SECTION>
 
 <SECTION>
@@ -459,6 +458,20 @@ gst_tuner_norm_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstvideoorientation</FILE>
+<INCLUDE>gst/interfaces/videoorientation.h</INCLUDE>
+GstVideoOrientation
+GstVideoOrientationInterface
+<SUBSECTION Standard>
+GST_TYPE_VIDEO_ORIENTATION
+GST_VIDEO_ORIENTATION
+GST_VIDEO_ORIENTATION_CLASS
+GST_IS_VIDEO_ORIENTATION
+GST_IS_VIDEO_ORIENTATION_CLASS
+gst_video_orientation_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstxoverlay</FILE>
 <INCLUDE>gst/interfaces/xoverlay.h</INCLUDE>
 GstXOverlay
@@ -800,7 +813,6 @@ gst_rtp_buffer_get_seq
 gst_rtp_buffer_get_ssrc
 gst_rtp_buffer_get_timestamp
 gst_rtp_buffer_get_version
-gst_rtp_buffer_new
 gst_rtp_buffer_new_allocate
 gst_rtp_buffer_new_allocate_len
 gst_rtp_buffer_new_copy_data

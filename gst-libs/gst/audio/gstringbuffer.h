@@ -39,7 +39,16 @@ typedef struct _GstRingBuffer GstRingBuffer;
 typedef struct _GstRingBufferClass GstRingBufferClass;
 typedef struct _GstRingBufferSpec GstRingBufferSpec;
 
-/* called to fill data with len bytes of samples */
+/**
+ * GstRingBufferCallback:
+ * @rbuf: a #GstRingBuffer
+ * @data: target to fill
+ * @len: amount to fill
+ * @user_data: user data
+ *
+ * This function is set with gst_ring_buffer_set_callback() and is
+ * called to fill the memory at @data with @len bytes of samples. 
+ */
 typedef void (*GstRingBufferCallback) (GstRingBuffer *rbuf, guint8* data, guint len, gpointer user_data);
 
 /**

@@ -20,6 +20,53 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstaudiosink
+ * @short_description: Simple base class for audio sinks
+ * @see_also: #GstBaseAudioSink, #GstRingBuffer, #GstAudioSink.
+ *
+ * This is the most simple base class for audio sinks that only requires
+ * subclasses to implement a set of simple functions:
+ *
+ * <variablelist>
+ *   <varlistentry>
+ *     <term>open()</term>
+ *     <listitem><para>Open the device.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>prepare()</term>
+ *     <listitem><para>Configure the device with the specified format.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>write()</term>
+ *     <listitem><para>Write samples to the device.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>reset()</term>
+ *     <listitem><para>Unblock writes and flush the device.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>delay()</term>
+ *     <listitem><para>Get the number of samples written but not yet played 
+ *     by the device.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>unprepare()</term>
+ *     <listitem><para>Undo operations done by prepare.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>close()</term>
+ *     <listitem><para>Close the device.</para></listitem>
+ *   </varlistentry>
+ * </variablelist>
+ *
+ * All scheduling of samples and timestamps is done in this base class
+ * together with #GstBaseAudioSink using a default implementation of a
+ * #GstRingBuffer that uses threads.
+ *
+ * Last reviewed on 2006-09-27 (0.10.12)
+ */
+
 #include <string.h>
 
 #include "gstaudiosink.h"

@@ -20,6 +20,53 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstaudiosrc
+ * @short_description: Simple base class for audio sources
+ * @see_also: #GstBaseAudioSrc, #GstRingBuffer, #GstAudioSrc.
+ *
+ * This is the most simple base class for audio sources that only requires
+ * subclasses to implement a set of simple functions:
+ *
+ * <variablelist>
+ *   <varlistentry>
+ *     <term>open()</term>
+ *     <listitem><para>Open the device.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>prepare()</term>
+ *     <listitem><para>Configure the device with the specified format.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>read()</term>
+ *     <listitem><para>Read samples from the device.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>reset()</term>
+ *     <listitem><para>Unblock reads and flush the device.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>delay()</term>
+ *     <listitem><para>Get the number of samples in the device but not yet read.
+ *     </para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>unprepare()</term>
+ *     <listitem><para>Undo operations done by prepare.</para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
+ *     <term>close()</term>
+ *     <listitem><para>Close the device.</para></listitem>
+ *   </varlistentry>
+ * </variablelist>
+ *
+ * All scheduling of samples and timestamps is done in this base class
+ * together with #GstBaseAudioSrc using a default implementation of a
+ * #GstRingBuffer that uses threads.
+ *
+ * Last reviewed on 2006-09-27 (0.10.12)
+ */
+
 #include <string.h>
 
 #include "gstaudiosrc.h"

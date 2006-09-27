@@ -63,12 +63,29 @@ G_BEGIN_DECLS
 #define GST_IS_BASE_AUDIO_SINK(obj)             (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_AUDIO_SINK))
 #define GST_IS_BASE_AUDIO_SINK_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_AUDIO_SINK))
 
+/**
+ * GST_BASE_AUDIO_SINK_CLOCK:
+ * @obj: a #GstBaseAudioSink
+ *
+ * Get the #GstClock of @obj.
+ */
 #define GST_BASE_AUDIO_SINK_CLOCK(obj)   (GST_BASE_AUDIO_SINK (obj)->clock)
+/**
+ * GST_BASE_AUDIO_SINK_PAD:
+ * @obj: a #GstBaseAudioSink
+ *
+ * Get the sink #GstPad of @obj.
+ */
 #define GST_BASE_AUDIO_SINK_PAD(obj)     (GST_BASE_SINK (obj)->sinkpad)
 
 typedef struct _GstBaseAudioSink GstBaseAudioSink;
 typedef struct _GstBaseAudioSinkClass GstBaseAudioSinkClass;
 
+/**
+ * GstBaseAudioSink:
+ *
+ * Opaque #GstBaseAudioSink.
+ */
 struct _GstBaseAudioSink {
   GstBaseSink    element;
 
@@ -77,8 +94,8 @@ struct _GstBaseAudioSink {
   GstRingBuffer *ringbuffer;
 
   /* required buffer and latency in microseconds */
-  guint64 buffer_time;
-  guint64 latency_time;
+  guint64        buffer_time;
+  guint64        latency_time;
 
   /* the next sample to write */
   guint64        next_sample;
@@ -91,6 +108,14 @@ struct _GstBaseAudioSink {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstBaseAudioSinkClass:
+ * @parent_class: the parent class.
+ * @create_ringbuffer: create and return a #GstRingBuffer to write to.
+ *
+ * #GstBaseAudioSink class. Override the vmethod to implement
+ * functionality.
+ */
 struct _GstBaseAudioSinkClass {
   GstBaseSinkClass parent_class;
 

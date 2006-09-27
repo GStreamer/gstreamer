@@ -20,7 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_AUDIO_CLOCK_H__
 #define __GST_AUDIO_CLOCK_H__
 
@@ -42,8 +41,26 @@ G_BEGIN_DECLS
 typedef struct _GstAudioClock GstAudioClock;
 typedef struct _GstAudioClockClass GstAudioClockClass;
 
+/**
+ * GstAudioClockGetTimeFunc:
+ * @clock: the #GstAudioClock
+ * @user_data: user data
+ *
+ * This function will be called whenever the current clock time needs to be
+ * calculated. If this function returns #GST_CLOCK_TIME_NONE, the last reported
+ * time will be returned by the clock.
+ *
+ * Returns: the current time or #GST_CLOCK_TIME_NONE if the previous time should
+ * be used.
+ */
 typedef GstClockTime (*GstAudioClockGetTimeFunc) (GstClock *clock, gpointer user_data);
 
+/**
+ * GstAudioClock:
+ * @clock: parent #GstSystemClock
+ *
+ * Opaque #GstAudioClock.
+ */
 struct _GstAudioClock {
   GstSystemClock clock;
 

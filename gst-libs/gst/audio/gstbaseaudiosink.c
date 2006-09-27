@@ -20,6 +20,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbaseaudiosink
+ * @short_description: Base class for audio sinks
+ * @see_also: #GstAudioSink, #GstRingBuffer.
+ *
+ * This is the base class for audio sinks. Subclasses need to implement the
+ * ::create_ringbuffer vmethod. This base class will then take care of
+ * writing samples to the ringbuffer, synchronisation, clipping and flushing.
+ *
+ * Last reviewed on 2006-09-27 (0.10.12)
+ */
+
 #include <string.h>
 
 #include "gstbaseaudiosink.h"
@@ -629,8 +641,11 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   } else {
     /* timestamps drifted apart from previous samples too much, we need to
      * resync. We log this as an element warning. */
-    GST_ELEMENT_WARNING (sink, CORE, CLOCK, (NULL),
-        ("Unexpected discontinuity in audio timestamps of more than half a second"));
+    GST_ELEMENT_WARNING (sink, CORE, CLOCK,
+        ("Compensating for audio synchronisation problems"),
+        ("Unexpected discontinuity in audio timestamps of more "
+            "than half a second (%" GST_TIME_FORMAT "), resyncing",
+            GST_TIME_ARGS (diff)));
   }
 
 no_align:
@@ -701,6 +716,16 @@ stopping:
   }
 }
 
+/**
+ * gst_base_audio_sink_create_ringbuffer:
+ * @sink: a #GstBaseAudioSink.
+ *
+ * Create and return the #GstRingBuffer for @sink. This function will call the
+ * ::create_ringbuffer vmethod and will set @sink as the parent of the returned
+ * buffer (see gst_object_set_parent()).
+ *
+ * Returns: The new ringbuffer of @sink.
+ */
 GstRingBuffer *
 gst_base_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
 {
