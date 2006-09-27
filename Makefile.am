@@ -3,7 +3,7 @@ DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc --enable-docbook
 all-local: gst-element-check-@GST_MAJORMINOR@.m4
 
 gst-element-check-@GST_MAJORMINOR@.m4: gst-element-check.m4
-	cp $(srcdir)/gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
+	cp gst-element-check.m4 gst-element-check-@GST_MAJORMINOR@.m4
 
 ACLOCAL_AMFLAGS = -I common/m4
 
@@ -30,7 +30,7 @@ debug:
 
 EXTRA_DIST = \
 	gstreamer.spec gstreamer.spec.in \
-	gst-element-check.m4 gst-element-check.m4.in \
+	gst-element-check.m4.in \
 	configure.ac autogen.sh depcomp \
 	ABOUT-NLS RELEASE \
 	$(win32)

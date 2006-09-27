@@ -1,5 +1,15 @@
 2006-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Peter Kjellerstedt <pkj at axis com>
+
+	* Makefile.am:
+	  gst-element-check.m4 is generated and should therefore be
+	  copied from the build dir rather than the source dir (#357593).
+	  'make distcheck' hasn't noticed this because we were disting
+	  the file as well, so stop doing that.
+
+2006-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/gst/gstcaps.c: (GST_START_TEST), (gst_caps_suite):
 	  Add some tests for gst_caps_intersect().
 
