@@ -28,8 +28,10 @@ G_BEGIN_DECLS
 typedef struct _GstBaseRTPAudioPayload GstBaseRTPAudioPayload;
 typedef struct _GstBaseRTPAudioPayloadClass GstBaseRTPAudioPayloadClass;
 
+typedef struct _GstBaseRTPAudioPayloadPrivate GstBaseRTPAudioPayloadPrivate;
+
 #define GST_TYPE_BASE_RTP_AUDIO_PAYLOAD \
-  (gst_basertpaudiopayload_get_type())
+  (gst_base_rtp_audio_payload_get_type())
 #define GST_BASE_RTP_AUDIO_PAYLOAD(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), \
   GST_TYPE_BASE_RTP_AUDIO_PAYLOAD,GstBaseRTPAudioPayload))
@@ -41,14 +43,10 @@ typedef struct _GstBaseRTPAudioPayloadClass GstBaseRTPAudioPayloadClass;
 #define GST_IS_BASE_RTP_AUDIO_PAYLOAD_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_RTP_AUDIO_PAYLOAD))
 
-typedef enum {
-  AUDIO_CODEC_TYPE_NONE,
-  AUDIO_CODEC_TYPE_FRAME_BASED,
-  AUDIO_CODEC_TYPE_SAMPLE_BASED
-} AudioCodecType;
-
 struct _GstBaseRTPAudioPayload
 {
+  GstBaseRTPAudioPayloadPrivate *priv;
+
   GstBaseRTPPayload payload;
 
   GstClockTime base_ts;
@@ -56,8 +54,6 @@ struct _GstBaseRTPAudioPayload
   gint frame_duration;
 
   gint sample_size;
-
-  AudioCodecType type;
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -69,22 +65,22 @@ struct _GstBaseRTPAudioPayloadClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_basertpaudiopayload_get_type (void);
+GType gst_base_rtp_audio_payload_get_type (void);
 
 void
-gst_basertpaudiopayload_set_frame_based (GstBaseRTPAudioPayload
+gst_base_rtp_audio_payload_set_frame_based (GstBaseRTPAudioPayload
     *basertpaudiopayload);
 
 void
-gst_basertpaudiopayload_set_sample_based (GstBaseRTPAudioPayload
+gst_base_rtp_audio_payload_set_sample_based (GstBaseRTPAudioPayload
     *basertpaudiopayload);
 
 void
-gst_basertpaudiopayload_set_frame_options (GstBaseRTPAudioPayload
+gst_base_rtp_audio_payload_set_frame_options (GstBaseRTPAudioPayload
     *basertpaudiopayload, gint frame_duration, gint frame_size);
 
 void
-gst_basertpaudiopayload_set_sample_options (GstBaseRTPAudioPayload
+gst_base_rtp_audio_payload_set_sample_options (GstBaseRTPAudioPayload
     *basertpaudiopayload, gint sample_size);
 
 G_END_DECLS

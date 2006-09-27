@@ -1,3 +1,10 @@
+2006-09-26 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.h:
+	Moved AudioCodecType into priv
+	Renamed all gst_basertpaudiopayload to gst_base_rtp_audio_payload prefixes
+
 2006-09-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_factory_filter),

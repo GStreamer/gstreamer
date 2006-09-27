@@ -30,60 +30,80 @@
 GST_DEBUG_CATEGORY_STATIC (basertpaudiopayload_debug);
 #define GST_CAT_DEFAULT (basertpaudiopayload_debug)
 
-static void gst_basertpaudiopayload_finalize (GObject * object);
+typedef enum
+{
+  AUDIO_CODEC_TYPE_NONE,
+  AUDIO_CODEC_TYPE_FRAME_BASED,
+  AUDIO_CODEC_TYPE_SAMPLE_BASED
+} AudioCodecType;
+
+struct _GstBaseRTPAudioPayloadPrivate
+{
+  AudioCodecType type;
+};
+
+#define GST_BASE_RTP_AUDIO_PAYLOAD_GET_PRIVATE(o) \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_BASE_RTP_AUDIO_PAYLOAD, \
+                                GstBaseRTPAudioPayloadPrivate))
+
+static void gst_base_rtp_audio_payload_finalize (GObject * object);
 
 static GstFlowReturn
-gst_basertpaudiopayload_push (GstBaseRTPPayload * basepayload, guint8 * data,
+gst_base_rtp_audio_payload_push (GstBaseRTPPayload * basepayload, guint8 * data,
     guint payload_len, GstClockTime timestamp);
 
-static GstFlowReturn gst_basertpaudiopayload_handle_buffer (GstBaseRTPPayload *
-    payload, GstBuffer * buffer);
+static GstFlowReturn gst_base_rtp_audio_payload_handle_buffer (GstBaseRTPPayload
+    * payload, GstBuffer * buffer);
 
 static GstFlowReturn
-gst_basertpaudiopayload_handle_frame_based_buffer (GstBaseRTPPayload *
+gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
     basepayload, GstBuffer * buffer);
 
 static GstFlowReturn
-gst_basertpaudiopayload_handle_sample_based_buffer (GstBaseRTPPayload *
+gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
     basepayload, GstBuffer * buffer);
 
-GST_BOILERPLATE (GstBaseRTPAudioPayload, gst_basertpaudiopayload,
+GST_BOILERPLATE (GstBaseRTPAudioPayload, gst_base_rtp_audio_payload,
     GstBaseRTPPayload, GST_TYPE_BASE_RTP_PAYLOAD);
 
 static void
-gst_basertpaudiopayload_base_init (gpointer klass)
+gst_base_rtp_audio_payload_base_init (gpointer klass)
 {
 }
 
 static void
-gst_basertpaudiopayload_class_init (GstBaseRTPAudioPayloadClass * klass)
+gst_base_rtp_audio_payload_class_init (GstBaseRTPAudioPayloadClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseRTPPayloadClass *gstbasertppayload_class;
 
+  g_type_class_add_private (klass, sizeof (GstBaseRTPAudioPayloadPrivate));
+
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
   gobject_class->finalize =
-      GST_DEBUG_FUNCPTR (gst_basertpaudiopayload_finalize);
+      GST_DEBUG_FUNCPTR (gst_base_rtp_audio_payload_finalize);
 
   parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
 
   gstbasertppayload_class->handle_buffer =
-      GST_DEBUG_FUNCPTR (gst_basertpaudiopayload_handle_buffer);
+      GST_DEBUG_FUNCPTR (gst_base_rtp_audio_payload_handle_buffer);
 
   GST_DEBUG_CATEGORY_INIT (basertpaudiopayload_debug, "basertpaudiopayload", 0,
       "base audio RTP payloader");
 }
 
 static void
-gst_basertpaudiopayload_init (GstBaseRTPAudioPayload * basertpaudiopayload,
+gst_base_rtp_audio_payload_init (GstBaseRTPAudioPayload * basertpaudiopayload,
     GstBaseRTPAudioPayloadClass * klass)
 {
+  basertpaudiopayload->priv = GST_BASE_RTP_AUDIO_PAYLOAD_GET_PRIVATE (self);
+
   basertpaudiopayload->base_ts = 0;
 
-  basertpaudiopayload->type = AUDIO_CODEC_TYPE_NONE;
+  basertpaudiopayload->priv->type = AUDIO_CODEC_TYPE_NONE;
 
   /* these need to be set by child object if frame based */
   basertpaudiopayload->frame_size = 0;
@@ -94,7 +114,7 @@ gst_basertpaudiopayload_init (GstBaseRTPAudioPayload * basertpaudiopayload,
 }
 
 static void
-gst_basertpaudiopayload_finalize (GObject * object)
+gst_base_rtp_audio_payload_finalize (GObject * object)
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
 
@@ -104,7 +124,7 @@ gst_basertpaudiopayload_finalize (GObject * object)
 }
 
 /**
- * gst_basertpaudiopayload_set_frame_based:
+ * gst_base_rtp_audio_payload_set_frame_based:
  * @basertpaudiopayload: a pointer to the element.
  *
  * Tells #GstBaseRTPAudioPayload that the child element is for a frame based
@@ -112,18 +132,18 @@ gst_basertpaudiopayload_finalize (GObject * object)
  *
  */
 void
-gst_basertpaudiopayload_set_frame_based (GstBaseRTPAudioPayload *
+gst_base_rtp_audio_payload_set_frame_based (GstBaseRTPAudioPayload *
     basertpaudiopayload)
 {
   g_return_if_fail (basertpaudiopayload != NULL);
 
-  g_return_if_fail (basertpaudiopayload->type == AUDIO_CODEC_TYPE_NONE);
+  g_return_if_fail (basertpaudiopayload->priv->type == AUDIO_CODEC_TYPE_NONE);
 
-  basertpaudiopayload->type = AUDIO_CODEC_TYPE_FRAME_BASED;
+  basertpaudiopayload->priv->type = AUDIO_CODEC_TYPE_FRAME_BASED;
 }
 
 /**
- * gst_basertpaudiopayload_set_sample_based:
+ * gst_base_rtp_audio_payload_set_sample_based:
  * @basertpaudiopayload: a pointer to the element.
  *
  * Tells #GstBaseRTPAudioPayload that the child element is for a sample based
@@ -131,18 +151,18 @@ gst_basertpaudiopayload_set_frame_based (GstBaseRTPAudioPayload *
  *
  */
 void
-gst_basertpaudiopayload_set_sample_based (GstBaseRTPAudioPayload *
+gst_base_rtp_audio_payload_set_sample_based (GstBaseRTPAudioPayload *
     basertpaudiopayload)
 {
   g_return_if_fail (basertpaudiopayload != NULL);
 
-  g_return_if_fail (basertpaudiopayload->type == AUDIO_CODEC_TYPE_NONE);
+  g_return_if_fail (basertpaudiopayload->priv->type == AUDIO_CODEC_TYPE_NONE);
 
-  basertpaudiopayload->type = AUDIO_CODEC_TYPE_SAMPLE_BASED;
+  basertpaudiopayload->priv->type = AUDIO_CODEC_TYPE_SAMPLE_BASED;
 }
 
 /**
- * gst_basertpaudiopayload_set_frame_options:
+ * gst_base_rtp_audio_payload_set_frame_options:
  * @basertpaudiopayload: a pointer to the element.
  * @frame_duration: The duraction of an audio frame in milliseconds. 
  * @frame_size: The size of an audio frame in bytes.
@@ -151,7 +171,7 @@ gst_basertpaudiopayload_set_sample_based (GstBaseRTPAudioPayload *
  *
  */
 void
-gst_basertpaudiopayload_set_frame_options (GstBaseRTPAudioPayload
+gst_base_rtp_audio_payload_set_frame_options (GstBaseRTPAudioPayload
     * basertpaudiopayload, gint frame_duration, gint frame_size)
 {
   g_return_if_fail (basertpaudiopayload != NULL);
@@ -161,7 +181,7 @@ gst_basertpaudiopayload_set_frame_options (GstBaseRTPAudioPayload
 }
 
 /**
- * gst_basertpaudiopayload_set_sample_options:
+ * gst_base_rtp_audio_payload_set_sample_options:
  * @basertpaudiopayload: a pointer to the element.
  * @sample_size: Size per sample in bytes.
  *
@@ -169,7 +189,7 @@ gst_basertpaudiopayload_set_frame_options (GstBaseRTPAudioPayload
  *
  */
 void
-gst_basertpaudiopayload_set_sample_options (GstBaseRTPAudioPayload
+gst_base_rtp_audio_payload_set_sample_options (GstBaseRTPAudioPayload
     * basertpaudiopayload, gint sample_size)
 {
   g_return_if_fail (basertpaudiopayload != NULL);
@@ -178,7 +198,7 @@ gst_basertpaudiopayload_set_sample_options (GstBaseRTPAudioPayload
 }
 
 static GstFlowReturn
-gst_basertpaudiopayload_handle_buffer (GstBaseRTPPayload * basepayload,
+gst_base_rtp_audio_payload_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
   GstFlowReturn ret;
@@ -188,11 +208,11 @@ gst_basertpaudiopayload_handle_buffer (GstBaseRTPPayload * basepayload,
 
   ret = GST_FLOW_ERROR;
 
-  if (basertpaudiopayload->type == AUDIO_CODEC_TYPE_FRAME_BASED) {
-    ret = gst_basertpaudiopayload_handle_frame_based_buffer (basepayload,
+  if (basertpaudiopayload->priv->type == AUDIO_CODEC_TYPE_FRAME_BASED) {
+    ret = gst_base_rtp_audio_payload_handle_frame_based_buffer (basepayload,
         buffer);
-  } else if (basertpaudiopayload->type == AUDIO_CODEC_TYPE_SAMPLE_BASED) {
-    ret = gst_basertpaudiopayload_handle_sample_based_buffer (basepayload,
+  } else if (basertpaudiopayload->priv->type == AUDIO_CODEC_TYPE_SAMPLE_BASED) {
+    ret = gst_base_rtp_audio_payload_handle_sample_based_buffer (basepayload,
         buffer);
   } else {
     GST_DEBUG_OBJECT (basertpaudiopayload, "Audio codec type not set");
@@ -203,7 +223,7 @@ gst_basertpaudiopayload_handle_buffer (GstBaseRTPPayload * basepayload,
 
 /* this assumes all frames have a constant duration and a constant size */
 static GstFlowReturn
-gst_basertpaudiopayload_handle_frame_based_buffer (GstBaseRTPPayload *
+gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
     basepayload, GstBuffer * buffer)
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
@@ -233,8 +253,9 @@ gst_basertpaudiopayload_handle_frame_based_buffer (GstBaseRTPPayload *
   if (!gst_basertppayload_is_filled (basepayload,
           gst_rtp_buffer_calc_packet_len (GST_BUFFER_SIZE (buffer), 0, 0),
           GST_BUFFER_DURATION (buffer))) {
-    ret = gst_basertpaudiopayload_push (basepayload, GST_BUFFER_DATA (buffer),
-        GST_BUFFER_SIZE (buffer), GST_BUFFER_TIMESTAMP (buffer));
+    ret = gst_base_rtp_audio_payload_push (basepayload,
+        GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+        GST_BUFFER_TIMESTAMP (buffer));
     gst_buffer_unref (buffer);
 
     return ret;
@@ -273,7 +294,7 @@ gst_basertpaudiopayload_handle_frame_based_buffer (GstBaseRTPPayload *
         /* currently available */
         (available / frame_size) * frame_size);
 
-    ret = gst_basertpaudiopayload_push (basepayload, data, payload_len,
+    ret = gst_base_rtp_audio_payload_push (basepayload, data, payload_len,
         basertpaudiopayload->base_ts);
 
     gfloat ts_inc = (payload_len * frame_duration) / frame_size;
@@ -298,7 +319,7 @@ gst_basertpaudiopayload_handle_frame_based_buffer (GstBaseRTPPayload *
 }
 
 static GstFlowReturn
-gst_basertpaudiopayload_handle_sample_based_buffer (GstBaseRTPPayload *
+gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
     basepayload, GstBuffer * buffer)
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
@@ -327,8 +348,9 @@ gst_basertpaudiopayload_handle_sample_based_buffer (GstBaseRTPPayload *
   if (!gst_basertppayload_is_filled (basepayload,
           gst_rtp_buffer_calc_packet_len (GST_BUFFER_SIZE (buffer), 0, 0),
           GST_BUFFER_DURATION (buffer))) {
-    ret = gst_basertpaudiopayload_push (basepayload, GST_BUFFER_DATA (buffer),
-        GST_BUFFER_SIZE (buffer), GST_BUFFER_TIMESTAMP (buffer));
+    ret = gst_base_rtp_audio_payload_push (basepayload,
+        GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer),
+        GST_BUFFER_TIMESTAMP (buffer));
     gst_buffer_unref (buffer);
 
     return ret;
@@ -364,7 +386,7 @@ gst_basertpaudiopayload_handle_sample_based_buffer (GstBaseRTPPayload *
         /* currently available */
         available);
 
-    ret = gst_basertpaudiopayload_push (basepayload, data, payload_len,
+    ret = gst_base_rtp_audio_payload_push (basepayload, data, payload_len,
         basertpaudiopayload->base_ts);
 
     gfloat num = payload_len;
@@ -386,7 +408,7 @@ gst_basertpaudiopayload_handle_sample_based_buffer (GstBaseRTPPayload *
 }
 
 static GstFlowReturn
-gst_basertpaudiopayload_push (GstBaseRTPPayload * basepayload, guint8 * data,
+gst_base_rtp_audio_payload_push (GstBaseRTPPayload * basepayload, guint8 * data,
     guint payload_len, GstClockTime timestamp)
 {
   GstBuffer *outbuf;
