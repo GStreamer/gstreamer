@@ -1,3 +1,37 @@
+2006-09-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gst.c: (init_pre), (scan_and_update_registry),
+	(ensure_current_registry_nonforking),
+	(ensure_current_registry_forking), (ensure_current_registry),
+	(init_post), (gst_debug_help), (gst_deinit):
+
+	  Make init_pre and init_post take the full complement of GOptionFunc
+	  args so they can return useful GErrors. Make the registry updating
+	  functions do so.
+
+	  Call _priv_gst_registry_remove_cache_plugins after scanning files to
+	  ensure that the registry we're about to write out doesn't contain
+	  stale information about old-deleted plugin files.
+
+	  Make _priv_gst_registry_remove_cache_plugins return a boolean so
+	  that deletion of plugin files is considered a registry change.
+
+	* gst/gst_private.h:
+	* gst/gstregistry.c: (gst_registry_finalize),
+	(gst_registry_remove_features_for_plugin_unlocked),
+	(gst_registry_remove_plugin), (gst_registry_scan_path_level),
+	(gst_registry_scan_path),
+	(_priv_gst_registry_remove_cache_plugins),
+	(_priv_gst_registry_cleanup):
+	* gst/gstregistry.h:
+	Rename _gst_registry_remove_cache_plugins and _gst_registry_cleanup
+	by adding _priv prefix, so that they won't appear in the global
+	symbol table. They still do atm though because of #318031. Move the
+	prototypes to gst_private.h
+
+	When removing a plugin, remove all features for that plugin too. 
+	Fixes #340878.
+
 2006-09-27  Wim Taymans  <wim@fluendo.com>
 
 	* docs/random/moving-plugins:

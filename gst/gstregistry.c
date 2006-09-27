@@ -180,7 +180,7 @@ gst_registry_finalize (GObject * object)
     if (plugin) {
       GST_DEBUG_OBJECT (registry, "removing plugin %s",
           gst_plugin_get_name (plugin));
-      gst_registry_remove_plugin (registry, plugin);
+      gst_object_unref (plugin);
     }
     p = g_list_next (p);
   }
@@ -194,7 +194,9 @@ gst_registry_finalize (GObject * object)
     GstPluginFeature *feature = f->data;
 
     if (feature) {
-      gst_registry_remove_feature (registry, feature);
+      GST_DEBUG_OBJECT (registry, "removing feature %p (%s)",
+          feature, gst_plugin_feature_get_name (feature));
+      gst_object_unref (feature);
     }
     f = g_list_next (f);
   }
@@ -344,6 +346,33 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
   return TRUE;
 }
 
+static void
+gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
+    GstPlugin * plugin)
+{
+  GList *f;
+
+  g_return_if_fail (GST_IS_REGISTRY (registry));
+  g_return_if_fail (GST_IS_PLUGIN (plugin));
+
+  /* Remove all features for this plugin */
+  f = registry->features;
+  while (f != NULL) {
+    GList *next = g_list_next (f);
+    GstPluginFeature *feature = f->data;
+
+    if (feature && !strcmp (feature->plugin_name, gst_plugin_get_name (plugin))) {
+      GST_DEBUG_OBJECT (registry, "removing feature %p (%s) for plugin %s",
+          feature, gst_plugin_feature_get_name (feature),
+          gst_plugin_get_name (plugin));
+
+      registry->features = g_list_delete_link (registry->features, f);
+      gst_object_unref (feature);
+    }
+    f = next;
+  }
+}
+
 /**
  * gst_registry_remove_plugin:
  * @registry: the registry to remove the plugin from
@@ -359,8 +388,12 @@ gst_registry_remove_plugin (GstRegistry * registry, GstPlugin * plugin)
   g_return_if_fail (GST_IS_REGISTRY (registry));
   g_return_if_fail (GST_IS_PLUGIN (plugin));
 
+  GST_DEBUG_OBJECT (registry, "removing plugin %p (%s)",
+      plugin, gst_plugin_get_name (plugin));
+
   GST_OBJECT_LOCK (registry);
   registry->plugins = g_list_remove (registry->plugins, plugin);
+  gst_registry_remove_features_for_plugin_unlocked (registry, plugin);
   GST_OBJECT_UNLOCK (registry);
   gst_object_unref (plugin);
 }
@@ -844,8 +877,6 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
 
   g_dir_close (dir);
 
-  GST_DEBUG_OBJECT (registry, "registry changed? %d", changed);
-
   return changed;
 }
 
@@ -871,19 +902,22 @@ gst_registry_scan_path (GstRegistry * registry, const gchar * path)
   GST_DEBUG_OBJECT (registry, "scanning path %s", path);
   changed = gst_registry_scan_path_level (registry, path, 10);
 
-  GST_DEBUG_OBJECT (registry, "registry changed? %d", changed);
+  GST_DEBUG_OBJECT (registry, "registry changed in path %s: %d", path, changed);
 
   return changed;
 }
 
-void
-_gst_registry_remove_cache_plugins (GstRegistry * registry)
+/* Unref all plugins marked 'cached', to clear old plugins that no
+ * longer exist. Returns TRUE if any plugins were removed */
+gboolean
+_priv_gst_registry_remove_cache_plugins (GstRegistry * registry)
 {
   GList *g;
   GList *g_next;
   GstPlugin *plugin;
+  gboolean changed = FALSE;
 
-  g_return_if_fail (GST_IS_REGISTRY (registry));
+  g_return_val_if_fail (GST_IS_REGISTRY (registry), FALSE);
 
   GST_OBJECT_LOCK (registry);
 
@@ -895,16 +929,16 @@ _gst_registry_remove_cache_plugins (GstRegistry * registry)
     if (plugin->flags & GST_PLUGIN_FLAG_CACHED) {
       GST_DEBUG_OBJECT (registry, "removing cached plugin \"%s\"",
           GST_STR_NULL (plugin->filename));
-      /* seems it would be sufficient just to do a delete_link for o(1) deletion
-       * -- we have to traverse the whole list anyway, and dup entries (if
-       * possible) should have dup refcounts */
-      registry->plugins = g_list_remove (registry->plugins, plugin);
+      registry->plugins = g_list_delete_link (registry->plugins, g);
       gst_object_unref (plugin);
+      changed = TRUE;
     }
     g = g_next;
   }
 
   GST_OBJECT_UNLOCK (registry);
+
+  return changed;
 }
 
 
@@ -935,8 +969,9 @@ gst_registry_get_feature_list_by_plugin (GstRegistry * registry,
       _gst_plugin_feature_filter_plugin_name, FALSE, (gpointer) name);
 }
 
+/* Unref and delete the default registry */
 void
-_gst_registry_cleanup ()
+_priv_gst_registry_cleanup ()
 {
   GstRegistry *registry;
 

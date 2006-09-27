@@ -37,12 +37,19 @@ extern const char             g_log_domain_gstreamer[];
 #include <stdlib.h>
 #include <string.h>
 
+/* Needed for GstRegistry * */
+#include "gstregistry.h"
+
 G_BEGIN_DECLS
 
 gboolean __gst_in_valgrind (void);
 
 /* Initialize GStreamer private quark storage */
 void _priv_gst_quarks_initialize (void);
+
+/* Private registry functions */
+gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);
+void _priv_gst_registry_cleanup (void);
 
 /*** debugging categories *****************************************************/
 
