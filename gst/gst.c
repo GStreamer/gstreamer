@@ -142,10 +142,8 @@ gboolean _gst_disable_segtrap = FALSE;
 static gboolean _gst_enable_registry_fork = DEFAULT_FORK;
 
 static void load_plugin_func (gpointer data, gpointer user_data);
-static gboolean init_pre (GOptionContext * context, GOptionGroup * group,
-    gpointer data, GError ** error);
-static gboolean init_post (GOptionContext * context, GOptionGroup * group,
-    gpointer data, GError ** error);
+static gboolean init_pre (void);
+static gboolean init_post (void);
 static gboolean parse_goption_arg (const gchar * s_opt,
     const gchar * arg, gpointer data, GError ** err);
 
@@ -488,8 +486,7 @@ split_and_iterate (const gchar * stringlist, gchar * separator, GFunc iterator,
 
 /* we have no fail cases yet, but maybe in the future */
 static gboolean
-init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
-    GError ** error)
+init_pre (void)
 {
   /* GStreamer was built against a GLib >= 2.8 and is therefore not doing
    * the refcount hack. Check that it isn't being run against an older GLib */
@@ -580,7 +577,7 @@ static GstPluginDesc plugin_desc = {
  */
 static gboolean
 scan_and_update_registry (GstRegistry * default_registry,
-    const gchar * registry_file, gboolean write_changes, GError ** error)
+    const gchar * registry_file, gboolean write_changes)
 {
   const gchar *plugin_path;
   gboolean changed = FALSE;
@@ -647,38 +644,34 @@ scan_and_update_registry (GstRegistry * default_registry,
     g_strfreev (list);
   }
 
-  /* Remove cached plugins so stale info is cleared. */
-  changed |= _priv_gst_registry_remove_cache_plugins (default_registry);
-
   if (!changed) {
-    GST_INFO ("Registry cache has not changed");
+    GST_DEBUG ("registry cache has not changed");
     return TRUE;
   }
 
   if (!write_changes) {
-    GST_INFO ("Registry cached changed, but writing is disabled. Not writing.");
+    GST_DEBUG ("not trying to write registry cache changes to file");
     return TRUE;
   }
 
-  GST_INFO ("Registry cache changed. Writing new registry cache");
+  GST_DEBUG ("writing registry cache");
   if (!gst_registry_xml_write_cache (default_registry, registry_file)) {
-    g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-        _("Error writing registry cache to %s: %s"),
-        registry_file, g_strerror (errno));
+    g_warning ("Problem writing registry cache to %s: %s", registry_file,
+        g_strerror (errno));
     return FALSE;
   }
 
-  GST_INFO ("Registry cache written successfully");
+  GST_DEBUG ("registry cache written successfully");
   return TRUE;
 }
 
 static gboolean
 ensure_current_registry_nonforking (GstRegistry * default_registry,
-    const gchar * registry_file, GError ** error)
+    const gchar * registry_file)
 {
   /* fork() not available */
-  GST_DEBUG ("Updating registry cache in-process");
-  scan_and_update_registry (default_registry, registry_file, TRUE, error);
+  GST_DEBUG ("updating registry cache");
+  scan_and_update_registry (default_registry, registry_file, TRUE);
   return TRUE;
 }
 
@@ -686,14 +679,14 @@ ensure_current_registry_nonforking (GstRegistry * default_registry,
  * TRUE immediatly */
 static gboolean
 ensure_current_registry_forking (GstRegistry * default_registry,
-    const gchar * registry_file, GError ** error)
+    const gchar * registry_file)
 {
 #ifdef HAVE_FORK
   pid_t pid;
 
   /* We fork here, and let the child read and possibly rebuild the registry.
    * After that, the parent will re-read the freshly generated registry. */
-  GST_DEBUG ("forking to update registry");
+  GST_DEBUG ("forking");
   pid = fork ();
   if (pid == -1) {
     GST_ERROR ("Failed to fork()");
@@ -705,8 +698,8 @@ ensure_current_registry_forking (GstRegistry * default_registry,
 
     /* this is the child */
     GST_DEBUG ("child reading registry cache");
-    res =
-        scan_and_update_registry (default_registry, registry_file, TRUE, NULL);
+    res = scan_and_update_registry (default_registry, registry_file, TRUE);
+    _gst_registry_remove_cache_plugins (default_registry);
 
     /* need to use _exit, so that any exit handlers registered don't
      * bring down the main program */
@@ -726,9 +719,6 @@ ensure_current_registry_forking (GstRegistry * default_registry,
     GST_DEBUG ("parent done waiting on child");
     if (ret == -1) {
       GST_ERROR ("error during waitpid: %s", g_strerror (errno));
-      g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-          _("Error re-scanning registry %s: %s"),
-          ", waitpid returned error", g_strerror (errno));
       return FALSE;
     }
 
@@ -736,14 +726,8 @@ ensure_current_registry_forking (GstRegistry * default_registry,
       if (WIFSIGNALED (status)) {
         GST_ERROR ("child did not exit normally, terminated by signal %d",
             WTERMSIG (status));
-        g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-            _("Error re-scanning registry %s: %d"),
-            ", child terminated by signal", WTERMSIG (status));
       } else {
         GST_ERROR ("child did not exit normally, status: %d", status);
-        g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-            _("Error re-scanning registry %s: %d"),
-            ", child did not exit normally, status", status);
       }
       return FALSE;
     }
@@ -755,8 +739,8 @@ ensure_current_registry_forking (GstRegistry * default_registry,
       GST_DEBUG ("parent reading registry cache");
       gst_registry_xml_read_cache (default_registry, registry_file);
     } else {
-      GST_DEBUG ("parent re-scanning registry. Ignoring errors.");
-      scan_and_update_registry (default_registry, registry_file, FALSE, NULL);
+      GST_DEBUG ("parent re-scanning registry");
+      scan_and_update_registry (default_registry, registry_file, FALSE);
     }
   }
 #endif /* HAVE_FORK */
@@ -764,7 +748,7 @@ ensure_current_registry_forking (GstRegistry * default_registry,
 }
 
 static gboolean
-ensure_current_registry (GError ** error)
+ensure_current_registry (void)
 {
   char *registry_file;
   GstRegistry *default_registry;
@@ -793,12 +777,10 @@ ensure_current_registry (GError ** error)
   /* now check registry with or without forking */
   if (do_fork) {
     GST_DEBUG ("forking for registry rebuild");
-    ret = ensure_current_registry_forking (default_registry, registry_file,
-        error);
+    ret = ensure_current_registry_forking (default_registry, registry_file);
   } else {
     GST_DEBUG ("requested not to fork for registry rebuild");
-    ret = ensure_current_registry_nonforking (default_registry, registry_file,
-        error);
+    ret = ensure_current_registry_nonforking (default_registry, registry_file);
   }
 
   g_free (registry_file);
@@ -819,8 +801,7 @@ ensure_current_registry (GError ** error)
  *   we might and then it's nice to be able to return that
  */
 static gboolean
-init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
-    GError ** error)
+init_post (void)
 {
   GLogLevelFlags llf;
 
@@ -873,7 +854,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   gst_initialized = TRUE;
 
 #ifndef GST_DISABLE_REGISTRY
-  if (!ensure_current_registry (error))
+  if (!ensure_current_registry ())
     return FALSE;
 #endif /* GST_DISABLE_REGISTRY */
 
@@ -913,8 +894,7 @@ gst_debug_help (void)
   GSList *list, *walk;
   GList *list2, *g;
 
-  /* Need to ensure the registry is loaded to get debug categories */
-  if (!init_post (NULL, NULL, NULL, NULL))
+  if (!init_post ())
     exit (1);
 
   list2 = gst_registry_plugin_filter (gst_registry_get_default (),
@@ -1094,7 +1074,7 @@ gst_deinit (void)
   gst_object_unref (clock);
   gst_object_unref (clock);
 
-  _priv_gst_registry_cleanup ();
+  _gst_registry_cleanup ();
 
   gst_initialized = FALSE;
   GST_INFO ("deinitialized GStreamer");

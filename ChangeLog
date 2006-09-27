@@ -4,6 +4,20 @@
 	(ensure_current_registry_nonforking),
 	(ensure_current_registry_forking), (ensure_current_registry),
 	(init_post), (gst_debug_help), (gst_deinit):
+	* gst/gst_private.h:
+	* gst/gstregistry.c: (gst_registry_finalize),
+	(gst_registry_remove_plugin), (gst_registry_scan_path_level),
+	(gst_registry_scan_path), (_gst_registry_remove_cache_plugins),
+	(_gst_registry_cleanup):
+	* gst/gstregistry.h:
+	  Revert previous change until I figure out why it breaks distcheck.
+
+2006-09-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gst.c: (init_pre), (scan_and_update_registry),
+	(ensure_current_registry_nonforking),
+	(ensure_current_registry_forking), (ensure_current_registry),
+	(init_post), (gst_debug_help), (gst_deinit):
 
 	  Make init_pre and init_post take the full complement of GOptionFunc
 	  args so they can return useful GErrors. Make the registry updating
