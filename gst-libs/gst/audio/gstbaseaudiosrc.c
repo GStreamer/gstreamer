@@ -449,10 +449,10 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   GstBuffer *buf;
   guchar *data;
   guint samples;
-  guint res;
   guint64 sample;
   gint bps;
   GstRingBuffer *ringbuffer;
+  guint read;
 
   ringbuffer = src->ringbuffer;
 
@@ -488,10 +488,22 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   buf = gst_buffer_new_and_alloc (length);
   data = GST_BUFFER_DATA (buf);
 
-  /* read the sample */
-  res = gst_ring_buffer_read (ringbuffer, sample, data, samples);
-  if (G_UNLIKELY (res == -1))
-    goto stopped;
+  do {
+    read = gst_ring_buffer_read (ringbuffer, sample, data, samples);
+    GST_DEBUG_OBJECT (src, "read %u of %u", read, samples);
+    /* if we read all, we're done */
+    if (read == samples)
+      break;
+
+    /* else something interrupted us and we wait for playing again. */
+    if (gst_base_src_wait_playing (bsrc) != GST_FLOW_OK)
+      goto stopped;
+
+    /* read next samples */
+    sample += read;
+    samples -= read;
+    data += read * bps;
+  } while (TRUE);
 
   /* mark discontinuity if needed */
   if (G_UNLIKELY (sample != src->next_sample) && src->next_sample != -1) {

@@ -1,3 +1,20 @@
+2006-09-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render):
+	Add some more info in a WARNING.
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_create):
+	Handle PAUSE in create function, use new -core addition to
+	wait for playing. Fixes pausing and resuming capture from an
+	audiosrc.
+
+	* gst-libs/gst/audio/gstringbuffer.c: (gst_ring_buffer_commit),
+	(gst_ring_buffer_read):
+	Constify some more.
+	Caller supports interrupted reads now.
+
 2006-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:

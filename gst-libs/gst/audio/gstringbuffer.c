@@ -134,8 +134,8 @@ gst_ring_buffer_finalize (GObject * object)
 
 typedef struct
 {
-  GstBufferFormat format;
-  guint8 silence[4];
+  const GstBufferFormat format;
+  const guint8 silence[4];
 } FormatDef;
 
 static const FormatDef linear_defs[4 * 2 * 2] = {
@@ -1387,8 +1387,7 @@ gst_ring_buffer_read (GstRingBuffer * buf, guint64 sample, guchar * data,
 not_started:
   {
     GST_DEBUG_OBJECT (buf, "stopped processing");
-    /* FIXME, return len - to_read after fixing caller */
-    return -1;
+    return len - to_read;
   }
 }
 

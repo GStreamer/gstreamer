@@ -649,6 +649,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
 no_align:
+  /* crate contains diff against the clock we are using in the pipeline. */
   crate =
       gst_guint64_to_gdouble (crate_num) / gst_guint64_to_gdouble (crate_denom);
   GST_DEBUG_OBJECT (sink,
