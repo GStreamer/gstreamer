@@ -483,6 +483,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         gint percent;
 
         gst_message_parse_buffering (message, &percent);
+        fprintf (stderr, "buffering... %d\r", percent);
 
         if (percent == 100) {
           /* a 100% message means buffering is done */
@@ -501,7 +502,6 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
             gst_element_set_state (pipeline, GST_STATE_PAUSED);
             buffering = TRUE;
           }
-          fprintf (stderr, "buffering... %d\r", percent);
         }
         break;
       }

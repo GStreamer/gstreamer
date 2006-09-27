@@ -466,6 +466,119 @@ GST_START_TEST (test_merge_subset)
 
 GST_END_TEST;
 
+GST_START_TEST (test_intersect)
+{
+  GstStructure *s;
+  GstCaps *c1, *c2, *ci1, *ci2;
+
+  /* field not specified = any value possible, so the intersection
+   * should keep fields which are only part of one set of caps */
+  c2 = gst_caps_from_string ("video/x-raw-yuv,format=(fourcc)I420,width=20");
+  c1 = gst_caps_from_string ("video/x-raw-yuv,format=(fourcc)I420");
+
+  ci1 = gst_caps_intersect (c2, c1);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci1);
+  fail_unless (gst_caps_get_size (ci1) == 1, NULL);
+  s = gst_caps_get_structure (ci1, 0);
+  fail_unless (gst_structure_has_name (s, "video/x-raw-yuv"));
+  fail_unless (gst_structure_get_value (s, "format") != NULL);
+  fail_unless (gst_structure_get_value (s, "width") != NULL);
+
+  /* with changed order */
+  ci2 = gst_caps_intersect (c1, c2);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci2);
+  fail_unless (gst_caps_get_size (ci2) == 1, NULL);
+  s = gst_caps_get_structure (ci2, 0);
+  fail_unless (gst_structure_has_name (s, "video/x-raw-yuv"));
+  fail_unless (gst_structure_get_value (s, "format") != NULL);
+  fail_unless (gst_structure_get_value (s, "width") != NULL);
+
+  fail_unless (gst_caps_is_equal (ci1, ci2));
+
+  gst_caps_unref (ci1);
+  gst_caps_unref (ci2);
+
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+
+  /* ========== */
+
+  c2 = gst_caps_from_string ("video/x-raw-yuv,format=(fourcc)I420,width=20");
+  c1 = gst_caps_from_string ("video/x-raw-yuv,format=(fourcc)I420,width=30");
+
+  ci1 = gst_caps_intersect (c2, c1);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci1);
+  fail_unless (gst_caps_is_empty (ci1), NULL);
+
+  /* with changed order */
+  ci2 = gst_caps_intersect (c1, c2);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci2);
+  fail_unless (gst_caps_is_empty (ci2), NULL);
+
+  fail_unless (gst_caps_is_equal (ci1, ci2));
+
+  gst_caps_unref (ci1);
+  gst_caps_unref (ci2);
+
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+
+  /* ========== */
+
+  c2 = gst_caps_from_string ("video/x-raw-yuv,format=(fourcc)I420,width=20");
+  c1 = gst_caps_from_string ("video/x-raw-rgb,format=(fourcc)I420,width=20");
+
+  ci1 = gst_caps_intersect (c2, c1);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci1);
+  fail_unless (gst_caps_is_empty (ci1), NULL);
+
+  /* with changed order */
+  ci2 = gst_caps_intersect (c1, c2);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci2);
+  fail_unless (gst_caps_is_empty (ci2), NULL);
+
+  fail_unless (gst_caps_is_equal (ci1, ci2));
+
+  gst_caps_unref (ci1);
+  gst_caps_unref (ci2);
+
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+
+  /* ========== */
+
+  c2 = gst_caps_from_string ("video/x-raw-yuv,format=(fourcc)I420,width=20");
+  c1 = gst_caps_from_string ("video/x-raw-yuv,format=(fourcc)I420,height=30");
+
+  ci1 = gst_caps_intersect (c2, c1);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci1);
+  fail_unless (gst_caps_get_size (ci1) == 1, NULL);
+  s = gst_caps_get_structure (ci1, 0);
+  fail_unless (gst_structure_has_name (s, "video/x-raw-yuv"));
+  fail_unless (gst_structure_get_value (s, "format") != NULL);
+  fail_unless (gst_structure_get_value (s, "width") != NULL);
+  fail_unless (gst_structure_get_value (s, "height") != NULL);
+
+  /* with changed order */
+  ci2 = gst_caps_intersect (c1, c2);
+  GST_DEBUG ("intersected: %" GST_PTR_FORMAT, ci2);
+  fail_unless (gst_caps_get_size (ci2) == 1, NULL);
+  s = gst_caps_get_structure (ci2, 0);
+  fail_unless (gst_structure_has_name (s, "video/x-raw-yuv"));
+  fail_unless (gst_structure_get_value (s, "format") != NULL);
+  fail_unless (gst_structure_get_value (s, "height") != NULL);
+  fail_unless (gst_structure_get_value (s, "width") != NULL);
+
+  fail_unless (gst_caps_is_equal (ci1, ci2));
+
+  gst_caps_unref (ci1);
+  gst_caps_unref (ci2);
+
+  gst_caps_unref (c1);
+  gst_caps_unref (c2);
+}
+
+GST_END_TEST;
 
 Suite *
 gst_caps_suite (void)
@@ -484,6 +597,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_merge_fundamental);
   tcase_add_test (tc_chain, test_merge_same);
   tcase_add_test (tc_chain, test_merge_subset);
+  tcase_add_test (tc_chain, test_intersect);
 
   return s;
 }

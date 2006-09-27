@@ -1,3 +1,11 @@
+2006-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/gst/gstcaps.c: (GST_START_TEST), (gst_caps_suite):
+	  Add some tests for gst_caps_intersect().
+
+	* tools/gst-launch.c: (event_loop):
+	  Print all buffering percentages we get, even the 100% one.
+
 2006-09-26  Wim Taymans  <wim@fluendo.com>
 
 	* tools/gst-inspect.c: (print_element_properties_info),
