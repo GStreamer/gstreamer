@@ -335,7 +335,7 @@ main (int argc, char *argv[])
   gchar device[128] = { '\0' };
   gchar input[128] = { '\0' };
   gulong frequency = 0;
-  gboolean nofixedfps = TRUE;
+  gboolean undeffps = FALSE;
 
 
   /* see for input option */
@@ -348,7 +348,7 @@ main (int argc, char *argv[])
       {"Device location. Common in /dev/video0"},
       {"input/output (channel) to switch to"},
       {"frequency to tune to (in Hz)"},
-      {"set use-fixed-fps to FALSE"},
+      {"set use-undef-fps to TRUE"},
       {0, 0, 0, 0}
     };
     static struct option long_options[] = {
@@ -356,7 +356,7 @@ main (int argc, char *argv[])
       {"device", 1, 0, 'd'},
       {"input", 1, 0, 'i'},
       {"frequency", 1, 0, 'f'},
-      {"nofixedfps", 0, 0, 's'},
+      {"undeffps", 0, 0, 's'},
       {0, 0, 0, 0}
     };
     /* getopt_long stores the option index here. */
@@ -398,7 +398,7 @@ main (int argc, char *argv[])
         break;
 
       case 's':
-        nofixedfps = FALSE;
+        undeffps = TRUE;
         break;
 
       case 'h':
@@ -464,8 +464,8 @@ main (int argc, char *argv[])
   if (frequency) {
     g_object_set (source, "frequency", frequency, NULL);
   }
-  if (!nofixedfps) {
-    g_object_set (source, "use-fixed-fps", nofixedfps, NULL);
+  if (undeffps) {
+    g_object_set (source, "use-undef-fps", undeffps, NULL);
   }
 
   /* you would normally check that the elements were created properly */

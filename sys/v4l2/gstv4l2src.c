@@ -35,7 +35,7 @@
  * </para>
  * <para>
  * <programlisting>
- * gst-launch v4l2src use-fixed-fps=true ! xvimagesink
+ * gst-launch v4l2src use-undef-fps=true ! xvimagesink
  * </programlisting>
  * This example should be used to capture from web-cams
  * </para>
@@ -67,13 +67,13 @@ GST_ELEMENT_DETAILS ("Video (video4linux2/raw) Source",
 GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
-#define DEFAULT_PROP_USE_FIXED_FPS  TRUE
+#define DEFAULT_PROP_USE_UNDEF_FPS  FALSE
 
 enum
 {
   PROP_0,
   V4L2_STD_OBJECT_PROPS,
-  PROP_USE_FIXED_FPS
+  PROP_USE_UNDEF_FPS
 };
 
 static const guint32 gst_v4l2_formats[] = {
@@ -284,11 +284,12 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   gst_v4l2_object_install_properties_helper (gobject_class);
 
   g_object_class_install_property
-      (gobject_class, PROP_USE_FIXED_FPS,
-      g_param_spec_boolean ("use-fixed-fps", "Use Fixed FPS",
-          "Drop/Insert frames to reach a certain FPS (TRUE) "
-          "or adapt FPS to suit the number of frabbed frames",
-          DEFAULT_PROP_USE_FIXED_FPS, G_PARAM_READWRITE));
+      (gobject_class, PROP_USE_UNDEF_FPS,
+      g_param_spec_boolean ("use-undef-fps", "Use undefined FPS",
+          "For some devices that can't properly report its fps "
+          "set this property to TRUE. The 'caps' will have its "
+          "'framerate' set to '0/1'.",
+          DEFAULT_PROP_USE_UNDEF_FPS, G_PARAM_READWRITE));
 
   basesrc_class->get_caps = gst_v4l2src_get_caps;
   basesrc_class->set_caps = gst_v4l2src_set_caps;
@@ -311,7 +312,7 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
   /* fps */
   v4l2src->fps_n = 0;
   v4l2src->fps_d = 1;
-  v4l2src->use_fixed_fps = DEFAULT_PROP_USE_FIXED_FPS;
+  v4l2src->use_undef_fps = DEFAULT_PROP_USE_UNDEF_FPS;
 
   v4l2src->is_capturing = FALSE;
 
@@ -348,9 +349,9 @@ gst_v4l2src_set_property (GObject * object,
   if (!gst_v4l2_object_set_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
-      case PROP_USE_FIXED_FPS:
+      case PROP_USE_UNDEF_FPS:
         if (!GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
-          v4l2src->use_fixed_fps = g_value_get_boolean (value);
+          v4l2src->use_undef_fps = g_value_get_boolean (value);
         }
         break;
       default:
@@ -373,8 +374,8 @@ gst_v4l2src_get_property (GObject * object,
   if (!gst_v4l2_object_get_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
-      case PROP_USE_FIXED_FPS:
-        g_value_set_boolean (value, v4l2src->use_fixed_fps);
+      case PROP_USE_UNDEF_FPS:
+        g_value_set_boolean (value, v4l2src->use_undef_fps);
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -402,8 +403,12 @@ gst_v4l2src_fixate (GstPad * pad, GstCaps * caps)
 
     /* FIXME such sizes? we usually fixate to something in the 320x200
      * range... */
-    gst_structure_fixate_field_nearest_int (structure, "width", 4096);
-    gst_structure_fixate_field_nearest_int (structure, "height", 4096);
+    /* We are fixating to greater possble size (limited to GST_V4L2_MAX_SIZE)
+       and framarate closer to 15/2 that is common in web-cams */
+    gst_structure_fixate_field_nearest_int (structure, "width",
+        GST_V4L2_MAX_SIZE);
+    gst_structure_fixate_field_nearest_int (structure, "height",
+        GST_V4L2_MAX_SIZE);
     gst_structure_fixate_field_nearest_fraction (structure, "framerate", 15, 2);
 
     v = gst_structure_get_value (structure, "format");
@@ -697,8 +702,8 @@ gst_v4l2src_get_all_caps (void)
       structure = gst_v4l2src_v4l2fourcc_to_caps (gst_v4l2_formats[i]);
       if (structure) {
         gst_structure_set (structure,
-            "width", GST_TYPE_INT_RANGE, 1, 4096,
-            "height", GST_TYPE_INT_RANGE, 1, 4096,
+            "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
+            "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
             "framerate", GST_TYPE_FRACTION_RANGE, 1, 1, 100, 1, NULL);
         gst_caps_append_structure (caps, structure);
       }
@@ -745,11 +750,12 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
             &min_w, &max_w, &min_h, &max_h)) {
       continue;
     }
-    /* template, FIXME, why limit if the device reported correct results. */
-    min_w = CLAMP (min_w, 1, 4096);
-    min_h = CLAMP (min_h, 1, 4096);
-    max_w = CLAMP (max_w, min_w, 4096);
-    max_h = CLAMP (max_h, min_h, 4096);
+    /* template, FIXME, why limit if the device reported correct results? */
+    /* we are doing it right now to avoid unexpected results */
+    min_w = CLAMP (min_w, 1, GST_V4L2_MAX_SIZE);
+    min_h = CLAMP (min_h, 1, GST_V4L2_MAX_SIZE);
+    max_w = CLAMP (max_w, min_w, GST_V4L2_MAX_SIZE);
+    max_h = CLAMP (max_h, min_h, GST_V4L2_MAX_SIZE);
 
     /* add to list */
     structure = gst_v4l2src_v4l2fourcc_to_caps (format->pixelformat);
@@ -760,6 +766,13 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
           "height", GST_TYPE_INT_RANGE, min_h, max_h, NULL);
 
       /* FIXME, why random range? */
+      /* AFAIK: in v4l2 standard we still don't have a good way to enum
+         for a range. Currently it is on discussion on v4l2 forum.
+         Currently, something more smart could be done for tvcard devices.
+         The maximum value could be determined by 'v4l2_standard.frameperiod'
+         and minimum also to the same if V4L2_CAP_TIMEPERFRAME is not set. */
+      /* another approach for web-cams would be to try to set a very
+         high(100/1) and low(1/1) FPSs and get the values returned */
       gst_structure_set (structure, "framerate", GST_TYPE_FRACTION_RANGE,
           1, 1, 100, 1, NULL);
 
@@ -794,7 +807,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
       return FALSE;
   }
 
-  /* it's fixed, one struct */
+  /* it's undef, one struct */
   structure = gst_caps_get_structure (caps, 0);
 
   /* we want our own v4l2 type of fourcc codes */
@@ -991,7 +1004,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
   GstFlowReturn ret;
 
-  if (v4l2src->use_fixed_fps && v4l2src->fps_n == 0)
+  if ((!v4l2src->use_undef_fps) && v4l2src->fps_n == 0)
     goto no_framerate;
 
   if (v4l2src->breq.memory == V4L2_MEMORY_MMAP) {
@@ -1005,8 +1018,8 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 no_framerate:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("could not get frame rate for %s, try to set use-fixed-fps "
-                "property to false"), v4l2src->v4l2object->videodev), (NULL));
+        (_("could not get frame rate for %s, try to set use-undef-fps "
+                "property to true"), v4l2src->v4l2object->videodev), (NULL));
     return GST_FLOW_ERROR;
   }
 }

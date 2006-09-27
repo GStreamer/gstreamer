@@ -30,6 +30,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2src_debug);
 
 #define GST_V4L2_MAX_BUFFERS 16
 #define GST_V4L2_MIN_BUFFERS 2
+#define GST_V4L2_MAX_SIZE (1<<15) /* 2^15 == 32768 */
 
 G_BEGIN_DECLS
 
@@ -100,7 +101,7 @@ struct _GstV4l2Src
 
   /* how are we going to push buffers? */
   guint fps_n, fps_d;
-  gboolean use_fixed_fps;
+  gboolean use_undef_fps;
 };
 
 struct _GstV4l2SrcClass

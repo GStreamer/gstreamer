@@ -604,30 +604,6 @@ gst_v4l2src_buffer_pool_free (GstV4l2BufferPool * pool, gboolean do_close)
   g_free (pool);
 }
 
-#if 0
-
-void
-gst_v4l2src_free_buffer (GstBuffer * buffer)
-{
-  GstV4l2Buffer *buf = (GstV4l2Buffer *) GST_BUFFER_PRIVATE (buffer);
-
-  GST_LOG ("freeing buffer %p (nr. %d)", buffer, buf->buffer.index);
-
-  if (!g_atomic_int_dec_and_test (&buf->refcount)) {
-    /* we're still in use, add to queue again 
-       note: this might fail because the device is already stopped (race) */
-    if (ioctl (buf->pool->video_fd, VIDIOC_QBUF, &buf->buffer) < 0)
-      GST_INFO ("readding to queue failed, assuming video device is stopped");
-  }
-  if (g_atomic_int_dec_and_test (&buf->pool->refcount)) {
-    /* we're last thing that used all this */
-    gst_v4l2src_buffer_pool_free (buf->pool, TRUE);
-  }
-}
-
-
-#endif
-
 /******************************************************
  * gst_v4l2src_capture_deinit():
  *   deinitialize the capture system
@@ -717,8 +693,8 @@ gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
   GST_LOG_OBJECT (v4l2src,
       "got min size %dx%d", fmt.fmt.pix.width, fmt.fmt.pix.height);
 
-  fmt.fmt.pix.width = 4096;
-  fmt.fmt.pix.height = 4096;
+  fmt.fmt.pix.width = GST_V4L2_MAX_SIZE;
+  fmt.fmt.pix.height = GST_V4L2_MAX_SIZE;
   if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_TRY_FMT, &fmt) < 0) {
     GST_DEBUG_OBJECT (v4l2src, "failed to get max size: %s",
         g_strerror (errno));

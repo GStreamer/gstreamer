@@ -398,11 +398,9 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
         flags |= v4l2object->vcap.capabilities &
             (V4L2_CAP_VIDEO_CAPTURE |
             V4L2_CAP_VIDEO_OUTPUT |
-            V4L2_CAP_VIDEO_OVERLAY | V4L2_CAP_TUNER | V4L2_CAP_AUDIO);
-        /* FIXME. if there is something with AUDIO we add something with
-         * video? this needs some explanation.. */
-        if (v4l2object->vcap.capabilities & V4L2_CAP_AUDIO)
-          flags |= V4L2_FBUF_CAP_CHROMAKEY;
+            V4L2_CAP_VIDEO_OVERLAY |
+            V4L2_CAP_VBI_CAPTURE |
+            V4L2_CAP_VBI_OUTPUT | V4L2_CAP_TUNER | V4L2_CAP_AUDIO);
       }
       g_value_set_flags (value, flags);
       break;
@@ -438,7 +436,9 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
     norm =
         GST_TUNER_NORM (gst_tuner_get_norm (GST_TUNER (v4l2object->element)));
     if (norm) {
-      /* FIXME, free old? */
+      if (v4l2object->std) {
+        g_free (v4l2object->std);
+      }
       v4l2object->std = g_strdup (norm->label);
       gst_tuner_norm_changed (tuner, norm);
       g_object_notify (G_OBJECT (v4l2object->element), "std");
@@ -453,7 +453,9 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
     channel =
         GST_TUNER_CHANNEL (gst_tuner_get_channel (GST_TUNER (v4l2object->
                 element)));
-    /* FIXME, free old? */
+    if (v4l2object->input) {
+      g_free (v4l2object->input);
+    }
     v4l2object->input = g_strdup (channel->label);
     gst_tuner_channel_changed (tuner, channel);
     g_object_notify (G_OBJECT (v4l2object->element), "input");
