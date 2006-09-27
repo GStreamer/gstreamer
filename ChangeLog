@@ -1,3 +1,10 @@
+2006-09-27  Edgard Lima <edgard.lima@indt.org.br>
+
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2src.h:
+	* tests/icles/v4l2src-test.c:
+	Removed set-undef-fps.
+
 2006-09-27  Wim Taymans  <wim@fluendo.com>
 
 	* sys/v4l2/gstv4l2object.c:

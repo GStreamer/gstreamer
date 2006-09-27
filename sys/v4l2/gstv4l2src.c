@@ -35,7 +35,7 @@
  * </para>
  * <para>
  * <programlisting>
- * gst-launch v4l2src use-undef-fps=true ! xvimagesink
+ * gst-launch v4l2src ! xvimagesink
  * </programlisting>
  * This example should be used to capture from web-cams
  * </para>
@@ -67,13 +67,10 @@ GST_ELEMENT_DETAILS ("Video (video4linux2/raw) Source",
 GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
-#define DEFAULT_PROP_USE_UNDEF_FPS  FALSE
-
 enum
 {
   PROP_0,
   V4L2_STD_OBJECT_PROPS,
-  PROP_USE_UNDEF_FPS
 };
 
 static const guint32 gst_v4l2_formats[] = {
@@ -283,13 +280,6 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
 
   gst_v4l2_object_install_properties_helper (gobject_class);
 
-  g_object_class_install_property (gobject_class, PROP_USE_UNDEF_FPS,
-      g_param_spec_boolean ("use-undef-fps", "Use undefined FPS",
-          "Set this property to TRUE for devices that cannot properly "
-          "determine a framerate. The 'caps' will have their "
-          "'framerate' set to '0/1'.",
-          DEFAULT_PROP_USE_UNDEF_FPS, G_PARAM_READWRITE));
-
   basesrc_class->get_caps = gst_v4l2src_get_caps;
   basesrc_class->set_caps = gst_v4l2src_set_caps;
   basesrc_class->start = gst_v4l2src_start;
@@ -311,7 +301,6 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
   /* fps */
   v4l2src->fps_n = 0;
   v4l2src->fps_d = 1;
-  v4l2src->use_undef_fps = DEFAULT_PROP_USE_UNDEF_FPS;
 
   v4l2src->is_capturing = FALSE;
 
@@ -348,11 +337,6 @@ gst_v4l2src_set_property (GObject * object,
   if (!gst_v4l2_object_set_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
-      case PROP_USE_UNDEF_FPS:
-        if (!GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
-          v4l2src->use_undef_fps = g_value_get_boolean (value);
-        }
-        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -373,9 +357,6 @@ gst_v4l2src_get_property (GObject * object,
   if (!gst_v4l2_object_get_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
-      case PROP_USE_UNDEF_FPS:
-        g_value_set_boolean (value, v4l2src->use_undef_fps);
-        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -806,7 +787,6 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
       return FALSE;
   }
 
-  /* it's undef, one struct */
   structure = gst_caps_get_structure (caps, 0);
 
   /* we want our own v4l2 type of fourcc codes */
@@ -1003,22 +983,10 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
   GstFlowReturn ret;
 
-  if ((!v4l2src->use_undef_fps) && v4l2src->fps_n == 0)
-    goto no_framerate;
-
   if (v4l2src->breq.memory == V4L2_MEMORY_MMAP) {
     ret = gst_v4l2src_get_mmap (v4l2src, buf);
   } else {
     ret = gst_v4l2src_get_read (v4l2src, buf);
   }
   return ret;
-
-  /* ERRORS */
-no_framerate:
-  {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("Could not get frame rate for %s, try to set the use-undef-fps "
-                "property to true."), v4l2src->v4l2object->videodev), (NULL));
-    return GST_FLOW_ERROR;
-  }
 }
