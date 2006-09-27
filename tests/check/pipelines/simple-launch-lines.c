@@ -58,9 +58,12 @@ run_pipeline (GstElement * pipe, const gchar * descr,
 
   fail_if (gst_element_set_state (pipe, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE, "Could not set pipeline %s to playing", descr);
-  ret = gst_element_get_state (pipe, NULL, NULL, GST_CLOCK_TIME_NONE);
-  if (ret != GST_STATE_CHANGE_SUCCESS) {
-    g_critical ("Couldn't set pipeline to PLAYING");
+  ret = gst_element_get_state (pipe, NULL, NULL, 10 * GST_SECOND);
+  if (ret == GST_STATE_CHANGE_ASYNC) {
+    g_critical ("Pipeline '%s' failed to go to PLAYING fast enough", descr);
+    goto done;
+  } else if (ret != GST_STATE_CHANGE_SUCCESS) {
+    g_critical ("Pipeline '%s' failed to go into PLAYING state", descr);
     goto done;
   }
 

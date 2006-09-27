@@ -1,3 +1,9 @@
+2006-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/pipelines/simple-launch-lines.c: (run_pipeline):
+	  Add timeout to _get_state() so we see which pipeline it is
+	  that causes trouble on the gen64 build bot.
+
 2006-09-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
