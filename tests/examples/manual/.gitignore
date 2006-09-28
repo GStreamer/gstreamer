@@ -37,3 +37,5 @@ README
 *.bb
 *.bbg
 *.da
+
+test-registry.xml

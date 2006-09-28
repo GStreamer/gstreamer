@@ -1,5 +1,10 @@
 2006-09-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/examples/manual/.cvsignore:
+	OK, so it's actually cvsignore that needs changing. Stop laughing.
+
+2006-09-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* tests/examples/manual/Makefile.am:
 	Gah, declare vars *before* using them
 
