@@ -553,6 +553,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       GST_BUFFER_FLAG_SET (fill, GST_BUFFER_FLAG_DISCONT);
       audiorate->discont = FALSE;
     }
+    gst_buffer_set_caps (fill, GST_PAD_CAPS (audiorate->srcpad));
 
     ret = gst_pad_push (audiorate->srcpad, fill);
     if (ret != GST_FLOW_OK)
@@ -599,6 +600,8 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
       gst_buffer_unref (buf);
       buf = trunc;
+
+      gst_buffer_set_caps (buf, GST_PAD_CAPS (audiorate->srcpad));
 
       audiorate->drop += truncsamples;
     }

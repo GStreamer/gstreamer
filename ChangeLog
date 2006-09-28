@@ -1,3 +1,13 @@
+2006-09-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain):
+	Set caps on outgoing buffers.
+
+	* gst/videorate/gstvideorate.c: (gst_video_rate_flush_prev),
+	(gst_video_rate_event), (gst_video_rate_chain):
+	* gst/videorate/gstvideorate.h:
+	Fix videorate some more. Fixes #357977
+
 2006-09-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/elements/adder.c: (adder_suite):

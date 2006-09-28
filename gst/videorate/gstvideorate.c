@@ -435,19 +435,20 @@ gst_video_rate_flush_prev (GstVideoRate * videorate)
 
   /* this is the timestamp we put on the buffer */
   push_ts = videorate->next_ts;
-  GST_BUFFER_TIMESTAMP (outbuf) = push_ts;
 
   videorate->out++;
   if (videorate->to_rate_numerator) {
-    videorate->next_ts =
+    /* interpolate next expected timestamp in the segment */
+    videorate->next_ts = videorate->segment.accum + videorate->segment.start +
         gst_util_uint64_scale (videorate->out,
         videorate->to_rate_denominator * GST_SECOND,
         videorate->to_rate_numerator);
-    GST_BUFFER_DURATION (outbuf) =
-        videorate->next_ts - GST_BUFFER_TIMESTAMP (outbuf);
+    GST_BUFFER_DURATION (outbuf) = videorate->next_ts - push_ts;
   }
+
   /* adapt for looping, bring back to time in current segment. */
-  GST_BUFFER_TIMESTAMP (outbuf) -= videorate->segment.accum;
+  GST_BUFFER_TIMESTAMP (outbuf) = push_ts - videorate->segment.accum;
+
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (videorate->srcpad));
 
   GST_LOG_OBJECT (videorate,
@@ -489,25 +490,24 @@ gst_video_rate_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_NEWSEGMENT:
     {
       gint64 start, stop, time;
-      gdouble rate;
+      gdouble rate, arate;
       gboolean update;
       GstFormat format;
 
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
 
-      if (format != videorate->segment.format)
+      if (format != GST_FORMAT_TIME)
         goto format_error;
 
+      GST_DEBUG_OBJECT (videorate, "handle NEWSEGMENT");
+
       /* We just want to update the accumulated stream_time  */
-      gst_segment_set_newsegment (&videorate->segment, update, rate,
+      gst_segment_set_newsegment_full (&videorate->segment, update, rate, arate,
           format, start, stop, time);
 
-      GST_DEBUG_OBJECT (videorate, "Updated segment.accum:%" GST_TIME_FORMAT
-          " segment.start:%" GST_TIME_FORMAT " segment.stop:%"
-          GST_TIME_FORMAT, GST_TIME_ARGS (videorate->segment.accum),
-          GST_TIME_ARGS (videorate->segment.start),
-          GST_TIME_ARGS (videorate->segment.stop));
+      GST_DEBUG_OBJECT (videorate, "updated segment: %" GST_SEGMENT_FORMAT,
+          &videorate->segment);
       break;
     }
     case GST_EVENT_EOS:
@@ -561,14 +561,17 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
   GST_DEBUG_OBJECT (videorate, "got buffer with timestamp %" GST_TIME_FORMAT,
       GST_TIME_ARGS (in_ts));
 
-  intime = gst_segment_to_running_time (&videorate->segment,
-      GST_FORMAT_TIME, in_ts);
+  /* the input time is the time in the segment + all previously accumulated
+   * segments */
+  intime = in_ts + videorate->segment.accum;
 
   /* we need to have two buffers to compare */
   if (videorate->prevbuf == NULL) {
     gst_video_rate_swap_prev (videorate, buffer, intime);
     videorate->in++;
-    videorate->next_ts = 0;
+    /* new buffer, we expect to output a buffer that matches the first
+     * timestamp in the segment */
+    videorate->next_ts = videorate->segment.start;
   } else {
     GstClockTime prevtime;
     gint count = 0;
