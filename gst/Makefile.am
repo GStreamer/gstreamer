@@ -37,7 +37,7 @@ GEN_FILES = arg-types.py gst-types.defs libs.defs base.defs
 # GStreamer bindings
 _gst_la_CFLAGS = $(common_cflags)
 _gst_la_LIBADD = $(common_libadd) $(GST_BASE_LIBS)
-_gst_la_LDFLAGS = $(common_ldflags) -export-symbols-regex init_gst \
+_gst_la_LDFLAGS = $(common_ldflags) -export-symbols-regex "^(init_gst|_PyGObject_API).*" \
 	$(GST_BASE_LIBS) $(GST_CONTROLLER_LIBS) $(GST_NET_LIBS) $(GST_DP_LIBS)
 _gst_la_SOURCES = 		\
 	gst-argtypes.c 		\
@@ -75,7 +75,8 @@ gst.c: $(GST_DEFS) $(GST_OVERRIDES) $(GEN_FILES) gstversion.override
 # GStreamer interfaces bindings
 interfaces_la_CFLAGS = $(common_cflags) $(GST_PLUGINS_BASE_CFLAGS)
 interfaces_la_LIBADD = $(common_libadd) -lgstinterfaces-$(GST_MAJORMINOR) 
-interfaces_la_LDFLAGS = $(common_ldflags) -export-symbols-regex initinterface $(GST_PLUGINS_BASE_LIBS)
+interfaces_la_LDFLAGS = $(common_ldflags) \
+	-export-symbols-regex "^(initinterface|_PyGObject_API).*" $(GST_PLUGINS_BASE_LIBS)
 interfaces_la_SOURCES = interfacesmodule.c
 nodist_interfaces_la_SOURCES = interfaces.c
 INTERFACES_OVERRIDES = interfaces.override xoverlay.override

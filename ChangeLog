@@ -1,3 +1,10 @@
+2006-09-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/Makefile.am:
+	Explicitly export _PyGObject_API from our modules, as it's apparently
+	needed for import. Previously we implicitly relied on a bug in the
+	core providing --export-dynamic as a link flag.
+
 2006-09-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
