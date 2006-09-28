@@ -1,3 +1,11 @@
+2006-09-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_handle_src_query):
+	  Reflow code so that compiler doesn't complain about possible use
+	  of uninitialised variable any longer; but just in case, initialise
+	  it anyway; also take object ref in query function and do peer pad
+	  stuff in a more thread-safe way.
+
 2006-09-27  Wim Taymans  <wim@fluendo.com>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_do_convert_query):

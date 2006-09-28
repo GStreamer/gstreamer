@@ -988,13 +988,14 @@ gboolean
 gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
-  GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (GST_PAD_PARENT (pad));
+  GstMPEGParse *mpeg_parse;
   GstFormat src_format = GST_FORMAT_UNDEFINED, format;
-  gint64 src_value = 0, value;
+  gint64 src_value = 0, value = -1;
+
+  mpeg_parse = GST_MPEG_PARSE (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_DURATION:
-    {
+    case GST_QUERY_DURATION:{
       gst_query_parse_duration (query, &format, NULL);
 
       switch (format) {
@@ -1005,7 +1006,7 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
           /* Try asking upstream if it knows the time - a DVD might
              know */
           src_format = GST_FORMAT_TIME;
-          if (gst_pad_query_duration (GST_PAD_PEER (mpeg_parse->sinkpad),
+          if (gst_pad_query_peer_duration (mpeg_parse->sinkpad,
                   &src_format, &src_value)) {
             res = TRUE;
             break;
@@ -1013,7 +1014,7 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
           /* Otherwise fallthrough */
         default:
           src_format = GST_FORMAT_BYTES;
-          if (!gst_pad_query_duration (GST_PAD_PEER (mpeg_parse->sinkpad),
+          if (!gst_pad_query_peer_duration (mpeg_parse->sinkpad,
                   &src_format, &src_value)) {
             res = FALSE;
             goto done;
@@ -1022,17 +1023,13 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
       }
 
       /* Convert the value to the desired format. */
-      if (!gst_mpeg_parse_convert (mpeg_parse, src_format, src_value,
-              &format, &value)) {
-        res = FALSE;
-        goto done;
+      if ((res = gst_mpeg_parse_convert (mpeg_parse, src_format, src_value,
+                  &format, &value))) {
+        gst_query_set_duration (query, format, value);
       }
-
-      gst_query_set_duration (query, format, value);
       break;
     }
-    case GST_QUERY_POSITION:
-    {
+    case GST_QUERY_POSITION:{
       gint64 cur;
 
       gst_query_parse_position (query, &format, NULL);
@@ -1055,26 +1052,19 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
       }
 
       /* Convert the value to the desired format. */
-      if (!gst_mpeg_parse_convert (mpeg_parse, src_format, src_value,
-              &format, &value)) {
-        res = FALSE;
-        goto done;
+      if ((res = gst_mpeg_parse_convert (mpeg_parse, src_format, src_value,
+                  &format, &value))) {
+        gst_query_set_position (query, format, value);
       }
-
-      gst_query_set_position (query, format, value);
       break;
     }
-    case GST_QUERY_CONVERT:
-    {
+    case GST_QUERY_CONVERT:{
       gst_query_parse_convert (query, &src_format, &src_value, &format, NULL);
 
-      if (!gst_mpeg_parse_convert (mpeg_parse, src_format, src_value,
-              &format, &value)) {
-        res = FALSE;
-        goto done;
+      if ((res = gst_mpeg_parse_convert (mpeg_parse, src_format, src_value,
+                  &format, &value))) {
+        gst_query_set_convert (query, src_format, src_value, format, value);
       }
-
-      gst_query_set_convert (query, src_format, src_value, format, value);
       break;
     }
     default:
@@ -1083,6 +1073,7 @@ gst_mpeg_parse_handle_src_query (GstPad * pad, GstQuery * query)
   }
 
 done:
+  gst_object_unref (mpeg_parse);
   return res;
 }
 
