@@ -111,11 +111,14 @@ typedef struct
  * at runtime */
 typedef struct
 {
-  gint np_sig_id;               /* signal id of new_pad */
-  gint unlink_sig_id;           /* signal id of unlinked */
-  gint nmp_sig_id;              /* signal id of no_more_pads */
-  GstElement *element;          /* the element sending the signal */
   GstDecodeBin *decode_bin;     /* pointer to ourself */
+
+  GstElement *element;          /* the element sending the signal */
+  gint np_sig_id;               /* signal id of new_pad */
+  gint nmp_sig_id;              /* signal id of no_more_pads */
+
+  GstPad *pad;                  /* the pad sending the signal */
+  gint caps_sig_id;             /* signal id of caps */
 }
 GstDynamic;
 
@@ -130,6 +133,7 @@ static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
 static void add_fakesink (GstDecodeBin * decode_bin);
 static void remove_fakesink (GstDecodeBin * decode_bin);
 
+static void dynamic_free (GstDynamic * dyn);
 static void free_dynamics (GstDecodeBin * decode_bin);
 static void type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin);
@@ -142,6 +146,7 @@ static void unlinked (GstPad * pad, GstPad * peerpad,
     GstDecodeBin * decode_bin);
 static void new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic);
 static void no_more_pads (GstElement * element, GstDynamic * dynamic);
+static void new_caps (GstPad * pad, GParamSpec * unused, GstDynamic * dynamic);
 
 static void queue_filled_cb (GstElement * queue, GstDecodeBin * decode_bin);
 static void queue_underrun_cb (GstElement * queue, GstDecodeBin * decode_bin);
@@ -237,8 +242,6 @@ gst_decode_bin_is_dynamic (GstDecodeBin * decode_bin)
 {
   return decode_bin->dynamics != NULL;
 }
-
-
 
 /* the filter function for selecting the elements we can use in
  * autoplugging */
@@ -351,8 +354,6 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   decode_bin->probes = NULL;
 }
 
-static void dynamic_free (GstDynamic * dyn);
-
 static void
 gst_decode_bin_dispose (GObject * object)
 {
@@ -383,23 +384,33 @@ gst_decode_bin_finalize (GObject * object)
 }
 
 static GstDynamic *
-dynamic_create (GstElement * element, GstDecodeBin * decode_bin)
+dynamic_create (GstElement * element, GstPad * pad, GstDecodeBin * decode_bin)
 {
   GstDynamic *dyn;
 
   GST_DEBUG_OBJECT (element, "dynamic create");
 
   /* take refs */
-  gst_object_ref (element);
-  gst_object_ref (decode_bin);
 
   dyn = g_new0 (GstDynamic, 1);
   dyn->element = element;
-  dyn->decode_bin = decode_bin;
-  dyn->np_sig_id = g_signal_connect (G_OBJECT (element), "pad-added",
-      G_CALLBACK (new_pad), dyn);
-  dyn->nmp_sig_id = g_signal_connect (G_OBJECT (element), "no-more-pads",
-      G_CALLBACK (no_more_pads), dyn);
+  dyn->pad = pad;
+  dyn->decode_bin = gst_object_ref (decode_bin);
+  if (element) {
+    gst_object_ref (element);
+    dyn->np_sig_id = g_signal_connect (G_OBJECT (element), "pad-added",
+        G_CALLBACK (new_pad), dyn);
+    dyn->nmp_sig_id = g_signal_connect (G_OBJECT (element), "no-more-pads",
+        G_CALLBACK (no_more_pads), dyn);
+  }
+  if (pad) {
+    gst_object_ref (pad);
+    dyn->caps_sig_id = g_signal_connect (G_OBJECT (pad), "notify::caps",
+        G_CALLBACK (new_caps), dyn);
+  }
+
+  /* and add this element to the dynamic elements */
+  decode_bin->dynamics = g_list_prepend (decode_bin->dynamics, dyn);
 
   return dyn;
 }
@@ -410,13 +421,23 @@ dynamic_free (GstDynamic * dyn)
   GST_DEBUG_OBJECT (dyn->decode_bin, "dynamic free");
 
   /* disconnect signals */
-  g_signal_handler_disconnect (G_OBJECT (dyn->element), dyn->np_sig_id);
-  g_signal_handler_disconnect (G_OBJECT (dyn->element), dyn->nmp_sig_id);
+  if (dyn->np_sig_id)
+    g_signal_handler_disconnect (G_OBJECT (dyn->element), dyn->np_sig_id);
+  if (dyn->nmp_sig_id)
+    g_signal_handler_disconnect (G_OBJECT (dyn->element), dyn->nmp_sig_id);
+  if (dyn->caps_sig_id)
+    g_signal_handler_disconnect (G_OBJECT (dyn->pad), dyn->caps_sig_id);
 
-  gst_object_unref (dyn->element);
-  gst_object_unref (dyn->decode_bin);
+  if (dyn->pad)
+    gst_object_unref (dyn->pad);
+  dyn->pad = NULL;
+  if (dyn->element)
+    gst_object_unref (dyn->element);
   dyn->element = NULL;
+
+  gst_object_unref (dyn->decode_bin);
   dyn->decode_bin = NULL;
+
   g_free (dyn);
 }
 
@@ -732,8 +753,12 @@ many_types:
   {
     /* FIXME, actually wait */
     GST_LOG_OBJECT (pad, "many possible types, implement delayed linking!");
-    g_signal_emit (G_OBJECT (decode_bin),
-        gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, pad, caps);
+    goto setup_caps_delay;
+  }
+setup_caps_delay:
+  {
+    GST_LOG_OBJECT (pad, "many possible types, delay link");
+    dynamic_create (element, pad, decode_bin);
     return;
   }
 }
@@ -1207,20 +1232,12 @@ shutting_down2:
   }
 }
 
-/* this signal is fired when an element signals the no_more_pads signal.
- * This means that the element will not generate more dynamic pads and
- * we can remove the element from the list of dynamic elements. When we
- * have no more dynamic elements in the pipeline, we can fire a no_more_pads
- * signal ourselves. */
 static void
-no_more_pads (GstElement * element, GstDynamic * dynamic)
+dynamic_remove (GstDynamic * dynamic)
 {
   GstDecodeBin *decode_bin = dynamic->decode_bin;
 
-  GST_DEBUG_OBJECT (decode_bin, "no more pads on element %s",
-      GST_ELEMENT_NAME (element));
-
-  /* remove the element from the list of dynamic elements */
+  /* remove the dynamic from the list of dynamics */
   decode_bin->dynamics = g_list_remove (decode_bin->dynamics, dynamic);
   dynamic_free (dynamic);
 
@@ -1240,6 +1257,34 @@ no_more_pads (GstElement * element, GstDynamic * dynamic)
   }
 }
 
+/* this signal is fired when an element signals the no_more_pads signal.
+ * This means that the element will not generate more dynamic pads and
+ * we can remove the element from the list of dynamic elements. When we
+ * have no more dynamic elements in the pipeline, we can fire a no_more_pads
+ * signal ourselves. */
+static void
+no_more_pads (GstElement * element, GstDynamic * dynamic)
+{
+  GstDecodeBin *decode_bin = dynamic->decode_bin;
+
+  GST_DEBUG_OBJECT (decode_bin, "no more pads on element %s",
+      GST_ELEMENT_NAME (element));
+
+  dynamic_remove (dynamic);
+}
+
+static void
+new_caps (GstPad * pad, GParamSpec * unused, GstDynamic * dynamic)
+{
+  g_print ("delayed link triggered\n");
+  new_pad (dynamic->element, pad, dynamic);
+
+  /* assume it worked and remove the dynamic */
+  dynamic_remove (dynamic);
+
+  return;
+}
+
 static gboolean
 is_our_kid (GstElement * e, GstDecodeBin * decode_bin)
 {
@@ -1253,6 +1298,12 @@ is_our_kid (GstElement * e, GstDecodeBin * decode_bin)
     gst_object_unref ((GstObject *) parent);
 
   return ret;
+}
+
+static gint
+find_dynamic (GstDynamic * dyn, GstElement * elem)
+{
+  return (dyn->element == elem ? 0 : 1);
 }
 
 /* This function will be called when a pad is disconnected for some reason */
@@ -1278,14 +1329,11 @@ unlinked (GstPad * pad, GstPad * peerpad, GstDecodeBin * decode_bin)
   remove_element_chain (decode_bin, peerpad);
 
   /* if an element removes two pads, then we don't want this twice */
-  /* FIXME: decode_bin->dynamics doesn't contain a list of GstElements, it
-   * has GstDynamic structures */
-  if (g_list_find (decode_bin->dynamics, element) != NULL)
+  if (g_list_find_custom (decode_bin->dynamics, element,
+          (GCompareFunc) find_dynamic) != NULL)
     goto exit;
 
-  dyn = dynamic_create (element, decode_bin);
-  /* and add this element to the dynamic elements */
-  decode_bin->dynamics = g_list_prepend (decode_bin->dynamics, dyn);
+  dyn = dynamic_create (element, NULL, decode_bin);
 
 exit:
   gst_object_unref (element);
@@ -1372,9 +1420,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
     /* ok, this element has dynamic pads, set up the signal handlers to be
      * notified of them */
 
-    dyn = dynamic_create (element, decode_bin);
-    /* and add this element to the dynamic elements */
-    decode_bin->dynamics = g_list_prepend (decode_bin->dynamics, dyn);
+    dyn = dynamic_create (element, NULL, decode_bin);
   }
 
   /* Check if this is an element with more than 1 pad. If this element

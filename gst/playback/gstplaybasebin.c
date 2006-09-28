@@ -67,13 +67,17 @@ static void gst_play_base_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
 static void gst_play_base_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
+
 static GstStateChangeReturn gst_play_base_bin_change_state (GstElement *
     element, GstStateChange transition);
+
 const GList *gst_play_base_bin_get_streaminfo (GstPlayBaseBin * play_base_bin);
 const GValueArray *gst_play_base_bin_get_streaminfo_value_array (GstPlayBaseBin
     * play_base_bin);
 static void preroll_remove_overrun (GstElement * element,
     GstPlayBaseBin * play_base_bin);
+static GstElement *make_decoder (GstPlayBaseBin * play_base_bin);
+static gboolean has_all_raw_caps (GstPad * pad, gboolean * all_raw);
 
 static gboolean prepare_output (GstPlayBaseBin * play_base_bin);
 static void set_active_source (GstPlayBaseBin * play_base_bin,
@@ -202,7 +206,7 @@ gst_play_base_bin_init (GstPlayBaseBin * play_base_bin)
   play_base_bin->need_rebuild = TRUE;
   play_base_bin->is_stream = FALSE;
   play_base_bin->source = NULL;
-  play_base_bin->decoder = NULL;
+  play_base_bin->decoders = NULL;
   play_base_bin->subtitle = NULL;
   play_base_bin->subencoding = NULL;
   play_base_bin->subtitle_elements = NULL;
@@ -352,7 +356,7 @@ group_destroy (GstPlayBaseGroup * group)
         GST_LOG ("removing fakesrc from %s:%s",
             GST_PAD_NAME (pad), GST_ELEMENT_NAME (GST_PAD_PARENT (pad)));
         gst_element_set_state (fakesrc, GST_STATE_NULL);
-        gst_bin_remove (GST_BIN (play_base_bin), fakesrc);
+        gst_bin_remove (GST_BIN_CAST (play_base_bin), fakesrc);
       }
     }
 
@@ -430,7 +434,7 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
       }
     } else {
       /* this is a special subtitle bin, we don't commit the group but
-       * mark the subtitles as detected before se signal. */
+       * mark the subtitles as detected before we signal. */
       GST_DEBUG_OBJECT (play_base_bin, "marking subtitle bin as complete");
       play_base_bin->subtitle_done = TRUE;
     }
@@ -492,7 +496,7 @@ fill_buffer (GstPlayBaseBin * play_base_bin, gint percent)
 static gboolean
 check_queue (GstPad * pad, GstBuffer * data, gpointer user_data)
 {
-  GstElement *queue = GST_ELEMENT (user_data);
+  GstElement *queue = GST_ELEMENT_CAST (user_data);
   GstPlayBaseBin *play_base_bin = g_object_get_data (G_OBJECT (queue), "pbb");
   guint64 level = 0;
 
@@ -578,7 +582,7 @@ queue_overrun (GstElement * queue, GstPlayBaseBin * play_base_bin)
 
   group_commit (play_base_bin, FALSE,
       GST_OBJECT_PARENT (GST_OBJECT_CAST (queue)) ==
-      GST_OBJECT (play_base_bin->subtitle));
+      GST_OBJECT_CAST (play_base_bin->subtitle));
 }
 
 /* Used for time-based buffering in streaming mode and is called when a queue
@@ -678,6 +682,8 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
   const gchar *prename;
   guint overrun_sig;
   GstPad *preroll_pad;
+  GstBin *target;
+  GstState state;
 
   if (type == GST_STREAM_TYPE_VIDEO)
     prename = "video";
@@ -692,7 +698,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
   selector = g_object_new (GST_TYPE_STREAM_SELECTOR, NULL);
   padname = gst_pad_get_name (pad);
   name = g_strdup_printf ("selector_%s_%s", prename, padname);
-  gst_object_set_name (GST_OBJECT (selector), name);
+  gst_object_set_name (GST_OBJECT_CAST (selector), name);
   g_free (name);
 
   /* create preroll queue */
@@ -719,7 +725,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
       ((type == GST_STREAM_TYPE_VIDEO) ? 25 : 1) * 1024 * 1024,
       "max-size-time", play_base_bin->queue_size, NULL);
 
-  /* the overrun signal is always attached and serves two pusposes:
+  /* the overrun signal is always attached and serves two purposes:
    *
    *  1) when we are building a group and the overrun is called, we commit the 
    *     group. The reason being that if we fill the entire queue without a
@@ -779,29 +785,24 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
   group->type[type - 1].selector = selector;
   group->type[type - 1].preroll = preroll;
 
-  /* gst_bin_add takes ownership, so we need to take a ref beforehand */
-  gst_object_ref (preroll);
-  gst_object_ref (selector);
-  if (type == GST_STREAM_TYPE_TEXT && play_base_bin->subtitle) {
-    group->type[type - 1].bin = GST_BIN (play_base_bin->subtitle);
-    gst_bin_add (GST_BIN (play_base_bin->subtitle), selector);
-    gst_bin_add (GST_BIN (play_base_bin->subtitle), preroll);
-  } else {
-    group->type[type - 1].bin = GST_BIN (play_base_bin);
-    gst_bin_add (GST_BIN (play_base_bin), selector);
-    gst_bin_add (GST_BIN (play_base_bin), preroll);
-  }
+  /* figure out where the preroll element should go */
+  if (type == GST_STREAM_TYPE_TEXT && play_base_bin->subtitle)
+    target = GST_BIN_CAST (play_base_bin->subtitle);
+  else
+    target = GST_BIN_CAST (play_base_bin);
+
+  group->type[type - 1].bin = target;
+  gst_bin_add (target, selector);
+  gst_bin_add (target, preroll);
+
   gst_element_link (selector, preroll);
 
-  gst_element_set_state (selector,
-      GST_STATE (play_base_bin) == GST_STATE_PLAYING ?
-      GST_STATE_PLAYING : GST_STATE_PAUSED);
-  gst_element_set_state (preroll,
-      GST_STATE (play_base_bin) == GST_STATE_PLAYING ?
+  /* figure out target state and set */
+  state = (GST_STATE (play_base_bin) == GST_STATE_PLAYING ?
       GST_STATE_PLAYING : GST_STATE_PAUSED);
 
-  gst_object_unref (preroll);
-  gst_object_unref (selector);
+  gst_element_set_state (selector, state);
+  gst_element_set_state (preroll, state);
 }
 
 static void
@@ -840,7 +841,7 @@ remove_groups (GstPlayBaseBin * play_base_bin)
   /* clear subs */
   if (play_base_bin->subtitle) {
     gst_element_set_state (play_base_bin->subtitle, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (play_base_bin), play_base_bin->subtitle);
+    gst_bin_remove (GST_BIN_CAST (play_base_bin), play_base_bin->subtitle);
     play_base_bin->subtitle = NULL;
   }
 
@@ -883,6 +884,8 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
   GstPlayBaseGroup *group;
 
   capsstr = gst_caps_to_string (caps);
+  GST_DEBUG_OBJECT (play_base_bin, "don't know how to handle %s", capsstr);
+  /* FIXME, g_message() ? */
   g_message ("don't know how to handle %s", capsstr);
 
   GROUP_LOCK (play_base_bin);
@@ -890,9 +893,9 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
   group = get_building_group (play_base_bin);
 
   /* add the stream to the list */
-  info = gst_stream_info_new (GST_OBJECT (pad), GST_STREAM_TYPE_UNKNOWN,
+  info = gst_stream_info_new (GST_OBJECT_CAST (pad), GST_STREAM_TYPE_UNKNOWN,
       NULL, caps);
-  info->origin = GST_OBJECT (pad);
+  info->origin = GST_OBJECT_CAST (pad);
   add_stream (group, info);
 
   GROUP_UNLOCK (play_base_bin);
@@ -900,7 +903,6 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
   g_free (capsstr);
 }
 
-#if 0
 /* add a streaminfo that indicates that the stream is handled by the
  * given element. This usually means that a stream without actual data is
  * produced but one that is sunken by an element. Examples of this are:
@@ -918,28 +920,66 @@ add_element_stream (GstElement * element, GstPlayBaseBin * play_base_bin)
 
   /* add the stream to the list */
   info =
-      gst_stream_info_new (GST_OBJECT (element), GST_STREAM_TYPE_ELEMENT,
+      gst_stream_info_new (GST_OBJECT_CAST (element), GST_STREAM_TYPE_ELEMENT,
       NULL, NULL);
-  info->origin = GST_OBJECT (element);
+  info->origin = GST_OBJECT_CAST (element);
   add_stream (group, info);
 
   GROUP_UNLOCK (play_base_bin);
 }
-#endif
 
 /* when the decoder element signals that no more pads will be generated, we
  * can commit the current group.
  */
 static void
-no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
+no_more_pads_full (GstElement * element, gboolean subs,
+    GstPlayBaseBin * play_base_bin)
 {
   /* setup phase */
-  GST_DEBUG ("no more pads");
+  GST_DEBUG_OBJECT (element, "no more pads, %d pending",
+      play_base_bin->pending);
 
-  /* we can commit this group for playback now */
-  group_commit (play_base_bin, play_base_bin->is_stream,
-      GST_OBJECT_PARENT (GST_OBJECT_CAST (element)) ==
-      GST_OBJECT (play_base_bin->subtitle));
+  /* nothing pending, we can exit */
+  if (play_base_bin->pending == 0)
+    return;
+
+  /* the object has no pending no_more_pads */
+  if (!g_object_get_data (G_OBJECT (element), "pending"))
+    return;
+
+  g_object_set_data (G_OBJECT (element), "pending", NULL);
+
+  play_base_bin->pending--;
+  if (play_base_bin->pending == 0) {
+    /* we can commit this group for playback now */
+    group_commit (play_base_bin, play_base_bin->is_stream, subs);
+  }
+}
+
+static void
+no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
+{
+  no_more_pads_full (element, FALSE, play_base_bin);
+}
+
+static void
+sub_no_more_pads (GstElement * element, GstPlayBaseBin * play_base_bin)
+{
+  no_more_pads_full (element, TRUE, play_base_bin);
+}
+
+static void
+source_no_more_pads (GstElement * element, GstPlayBaseBin * bin)
+{
+  GST_DEBUG_OBJECT (bin, "No more pads in source element %s.",
+      GST_ELEMENT_NAME (element));
+
+  g_signal_handler_disconnect (G_OBJECT (element), bin->src_np_sig_id);
+  bin->src_np_sig_id = 0;
+  g_signal_handler_disconnect (G_OBJECT (element), bin->src_nmp_sig_id);
+  bin->src_nmp_sig_id = 0;
+
+  no_more_pads_full (element, FALSE, bin);
 }
 
 static gboolean
@@ -1049,7 +1089,7 @@ preroll_unlinked (GstPad * pad, GstPad * peerpad,
   GST_DEBUG ("patching unlinked pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   srcpad = gst_element_get_pad (fakesrc, "src");
-  gst_bin_add (GST_BIN (play_base_bin), fakesrc);
+  gst_bin_add (GST_BIN_CAST (play_base_bin), fakesrc);
   gst_pad_link (srcpad, pad);
   gst_object_unref (srcpad);
 
@@ -1129,7 +1169,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   group->nstreams++;
 
-  parent = gst_object_get_parent (GST_OBJECT (element));
+  parent = gst_object_get_parent (GST_OBJECT_CAST (element));
   if (g_str_has_prefix (mimetype, "audio/") &&
       parent != GST_OBJECT_CAST (play_base_bin->subtitle)) {
     type = GST_STREAM_TYPE_AUDIO;
@@ -1143,7 +1183,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   }
   gst_object_unref (parent);
 
-  info = gst_stream_info_new (GST_OBJECT (pad), type, NULL, caps);
+  info = gst_stream_info_new (GST_OBJECT_CAST (pad), type, NULL, caps);
   if (type > 0 && type <= NUM_TYPES) {
     /* first pad of each type gets a selector + preroll queue */
     if (group->type[type - 1].npads == 0) {
@@ -1167,7 +1207,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   /* add the stream to the list */
   gst_caps_unref (caps);
-  info->origin = GST_OBJECT (pad);
+  info->origin = GST_OBJECT_CAST (pad);
 
   /* select 1st for now - we'll select a preferred one after preroll */
   if (type == GST_STREAM_TYPE_UNKNOWN || group->type[type - 1].npads > 0) {
@@ -1191,6 +1231,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   return;
 
+  /* ERRORS */
 no_type:
   {
     g_warning ("no type on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
@@ -1261,7 +1302,7 @@ setup_subtitle (GstPlayBaseBin * play_base_bin, gchar * sub_uri)
   g_signal_connect (subdecodebin, "element-removed",
       G_CALLBACK (decodebin_element_removed_cb), play_base_bin);
   subbin = gst_bin_new ("subtitle-bin");
-  gst_bin_add_many (GST_BIN (subbin), source, subdecodebin, NULL);
+  gst_bin_add_many (GST_BIN_CAST (subbin), source, subdecodebin, NULL);
 
   gst_element_link (source, subdecodebin);
 
@@ -1269,41 +1310,60 @@ setup_subtitle (GstPlayBaseBin * play_base_bin, gchar * sub_uri)
   return subbin;
 }
 
-/* lame - FIXME, maybe we can use seek_types/mask here? */
+/* helper function to lookup stuff in lists */
 static gboolean
-is_stream (GstPlayBaseBin * play_base_bin, gchar * uri)
+array_has_value (const gchar * values[], const gchar * value)
 {
-  static const gchar *uris[] = { "http://", "mms://", "mmsh://",
-    "mmsu://", "mmst://", "rtp://", "rtsp://", NULL
-  };
   gint i;
 
-  for (i = 0; uris[i]; i++) {
-    if (g_str_has_prefix (uri, uris[i]))
+  for (i = 0; values[i]; i++) {
+    if (g_str_has_prefix (value, values[i]))
       return TRUE;
   }
   return FALSE;
 }
 
-/*
- * Generate a source element that does caching for network streams.
- */
+/* list of URIs that we consider to be streams. We have no mechanism yet to
+ * figure this out with a query. */
+static const gchar *stream_uris[] = { "http://", "mms://", "mmsh://",
+  "mmsu://", "mmst://", NULL
+};
 
+/* blacklisted URIs, we know they will always fail. */
+//static const gchar *blacklisted_uris[] = { "rtsp://", NULL };
+static const gchar *blacklisted_uris[] = { NULL };
+
+/* mime types that we don't consider to be media types */
+static const gchar *no_media_mimes[] = {
+  "application/x-executable", "application/x-bzip", "application/x-gzip",
+  "application/zip", "application/x-compress", NULL
+};
+
+/* mime types we consider raw media */
+static const gchar *raw_mimes[] = {
+  "audio/x-raw", "video/x-raw", NULL
+};
+
+#define IS_STREAM_URI(uri)          (array_has_value (stream_uris, uri))
+#define IS_BLACKLISTED_URI(uri)     (array_has_value (blacklisted_uris, uri))
+#define IS_NO_MEDIA_MIME(mime)      (array_has_value (no_media_mimes, mime))
+#define IS_RAW_MIME(mime)           (array_has_value (raw_mimes, mime))
+
+/*
+ * Generate and configure a source element.
+ */
 static GstElement *
 gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
 {
   GstElement *source;
 
-  /* stip subtitle from uri */
   if (!play_base_bin->uri)
-    return NULL;
+    goto no_uri;
 
-  if (g_str_has_prefix (play_base_bin->uri, "rtsp://")) {
-    GST_ELEMENT_ERROR (play_base_bin, RESOURCE, FAILED,
-        (_("RTSP streams cannot be played yet.")), (NULL));
-    return NULL;
-  }
+  if (IS_BLACKLISTED_URI (play_base_bin->uri))
+    goto uri_blacklisted;
 
+  /* strip subtitle from uri */
   if (play_base_bin->suburi) {
     /* subtitle specified */
     *subbin = setup_subtitle (play_base_bin, play_base_bin->suburi);
@@ -1315,9 +1375,9 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
   source = gst_element_make_from_uri (GST_URI_SRC, play_base_bin->uri,
       "source");
   if (!source)
-    return NULL;
+    goto no_source;
 
-  play_base_bin->is_stream = is_stream (play_base_bin, play_base_bin->uri);
+  play_base_bin->is_stream = IS_STREAM_URI (play_base_bin->uri);
 
   /* make HTTP sources send extra headers so we get icecast
    * metadata in case the stream is an icecast stream */
@@ -1326,8 +1386,80 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
           "iradio-mode")) {
     g_object_set (source, "iradio-mode", TRUE, NULL);
   }
-
   return source;
+
+  /* ERRORS */
+no_uri:
+  {
+    GST_ELEMENT_ERROR (play_base_bin, RESOURCE, NOT_FOUND,
+        (_("No URI specified to play from.")), (NULL));
+    return NULL;
+  }
+uri_blacklisted:
+  {
+    GST_ELEMENT_ERROR (play_base_bin, RESOURCE, FAILED,
+        (_("RTSP streams cannot be played yet.")), (NULL));
+    return NULL;
+  }
+no_source:
+  {
+    gchar *prot;
+
+    /* whoops, could not create the source element, dig a little deeper to
+     * figure out what might be wrong. */
+    prot = gst_uri_get_protocol (play_base_bin->uri);
+    if (prot) {
+      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, FAILED,
+          (_("No URI handler implemented for \"%s\"."), prot), (NULL));
+      g_free (prot);
+    } else {
+      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, NOT_FOUND,
+          (_("Invalid URI \"%s\"."), play_base_bin->uri), (NULL));
+    }
+    return NULL;
+  }
+}
+
+/* is called when a dynamic source element created a new pad. */
+static void
+source_new_pad (GstElement * element, GstPad * pad, GstPlayBaseBin * bin)
+{
+  GstElement *decoder;
+  gboolean is_raw;
+
+  GST_DEBUG_OBJECT (bin, "Found new pad %s.%s in source element %s",
+      GST_DEBUG_PAD_NAME (pad), GST_ELEMENT_NAME (element));
+
+  /* if this is a pad with all raw caps, we can expose it */
+  if (has_all_raw_caps (pad, &is_raw) && is_raw) {
+    /* it's all raw, create output pads. */
+    new_decoded_pad (element, pad, FALSE, bin);
+    return;
+  }
+
+  /* not raw, create decoder */
+  decoder = make_decoder (bin);
+  if (!decoder)
+    goto no_decodebin;
+
+  /* and link to decoder */
+  if (!gst_element_link (bin->source, decoder))
+    goto could_not_link;
+
+  return;
+
+  /* ERRORS */
+no_decodebin:
+  {
+    /* error was posted */
+    return;
+  }
+could_not_link:
+  {
+    GST_ELEMENT_ERROR (bin, CORE, NEGOTIATION,
+        (NULL), ("Can't link source to decoder element"));
+    return;
+  }
 }
 
 /*
@@ -1336,7 +1468,6 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
  *
  * Should be called with group-lock held.
  */
-
 static void
 setup_substreams (GstPlayBaseBin * play_base_bin)
 {
@@ -1386,6 +1517,223 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
   }
 }
 
+/**
+ * has_all_raw_caps:
+ * @pad: a #GstPad
+ * @all_raw: pointer to hold the result
+ *
+ * check if the caps of the pad are all raw. The caps are all raw if
+ * all of its structures contain audio/x-raw or video/x-raw.
+ *
+ * Returns: %FALSE @pad has no caps. Else TRUE and @all_raw set t the result.
+ */
+static gboolean
+has_all_raw_caps (GstPad * pad, gboolean * all_raw)
+{
+  GstCaps *caps;
+  gint capssize;
+  guint i, num_raw = 0;
+  gboolean res = FALSE;
+
+  caps = gst_pad_get_caps (pad);
+  if (caps == NULL)
+    return FALSE;
+
+  capssize = gst_caps_get_size (caps);
+  /* no caps, skip and move to the next pad */
+  if (capssize == 0 || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
+    goto done;
+
+  /* count the number of raw formats in the caps */
+  for (i = 0; i < capssize; ++i) {
+    GstStructure *s;
+    const gchar *mime_type;
+
+    s = gst_caps_get_structure (caps, i);
+    mime_type = gst_structure_get_name (s);
+
+    if (IS_RAW_MIME (mime_type))
+      ++num_raw;
+  }
+
+  *all_raw = (num_raw == capssize);
+  res = TRUE;
+
+done:
+  gst_caps_unref (caps);
+  return res;
+}
+
+/**
+ * analyse_source:
+ * @play_base_bin: a #GstPlayBaseBin
+ * @is_raw: are all pads raw data
+ * @have_out: does the source have output
+ * @is_dynamic: is this a dynamic source
+ *
+ * Check the source of @play_base_bin and collect information about it.
+ *
+ * @is_raw will be set to TRUE if the source only produces raw pads. When this
+ * function returns, all of the raw pad of the source will be added
+ * to @play_base_bin.
+ *
+ * @have_out: will be set to TRUE if the source has output pads.
+ *
+ * @is_dynamic: TRUE if the element will create (more) pads dynamically later
+ * on.
+ *
+ * Returns: FALSE if a fatal error occured while scanning.
+ */
+static gboolean
+analyse_source (GstPlayBaseBin * play_base_bin, gboolean * is_raw,
+    gboolean * have_out, gboolean * is_dynamic)
+{
+  GstIterator *pads_iter;
+  gboolean done = FALSE;
+  gboolean res = TRUE;
+
+  *have_out = FALSE;
+  *is_raw = FALSE;
+  *is_dynamic = FALSE;
+
+  pads_iter = gst_element_iterate_src_pads (play_base_bin->source);
+  while (!done) {
+    GstPad *pad;
+
+    switch (gst_iterator_next (pads_iter, (gpointer) & pad)) {
+      case GST_ITERATOR_ERROR:
+        res = FALSE;
+        /* FALLTROUGH */
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_RESYNC:
+        /* reset results and resync */
+        *have_out = FALSE;
+        *is_raw = FALSE;
+        *is_dynamic = FALSE;
+        gst_iterator_resync (pads_iter);
+        break;
+      case GST_ITERATOR_OK:
+        /* we now officially have an ouput pad */
+        *have_out = TRUE;
+
+        /* if FALSE, this pad has no caps and we continue with the next pad. */
+        if (!has_all_raw_caps (pad, is_raw))
+          break;
+
+        /* caps on source pad are all raw, we can add the pad */
+        if (*is_raw)
+          new_decoded_pad (play_base_bin->source, pad, FALSE, play_base_bin);
+        break;
+    }
+  }
+  gst_iterator_free (pads_iter);
+
+  if (!*have_out) {
+    GstElementClass *elemclass;
+    GList *walk;
+
+    /* element has no output pads, check for padtemplates that list SOMETIMES
+     * pads. */
+    elemclass = GST_ELEMENT_GET_CLASS (play_base_bin->source);
+
+    walk = gst_element_class_get_pad_template_list (elemclass);
+    while (walk != NULL) {
+      GstPadTemplate *templ;
+
+      templ = (GstPadTemplate *) walk->data;
+      if (GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) {
+        if (GST_PAD_TEMPLATE_PRESENCE (templ) == GST_PAD_SOMETIMES)
+          *is_dynamic = TRUE;
+        break;
+      }
+      walk = g_list_next (walk);
+    }
+  }
+
+  return res;
+}
+
+static void
+remove_decoders (GstPlayBaseBin * bin)
+{
+  GSList *walk;
+
+  for (walk = bin->decoders; walk; walk = g_slist_next (walk)) {
+    GstElement *decoder = GST_ELEMENT_CAST (walk->data);
+
+    GST_DEBUG_OBJECT (bin, "removing old decoder element");
+    gst_element_set_state (decoder, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (bin), decoder);
+  }
+  g_slist_free (bin->decoders);
+  bin->decoders = NULL;
+}
+
+static GstElement *
+make_decoder (GstPlayBaseBin * play_base_bin)
+{
+  GstElement *decoder;
+
+  /* now create the decoder element */
+  decoder = gst_element_factory_make ("decodebin", NULL);
+  if (!decoder)
+    goto no_decodebin;
+
+  g_signal_connect (decoder, "element-added",
+      G_CALLBACK (decodebin_element_added_cb), play_base_bin);
+  g_signal_connect (decoder, "element-removed",
+      G_CALLBACK (decodebin_element_removed_cb), play_base_bin);
+
+  gst_bin_add (GST_BIN_CAST (play_base_bin), decoder);
+
+  /* set up callbacks to create the links between decoded data
+   * and video/audio/subtitle rendering/output. */
+  g_signal_connect (G_OBJECT (decoder),
+      "new-decoded-pad", G_CALLBACK (new_decoded_pad), play_base_bin);
+  g_signal_connect (G_OBJECT (decoder), "no-more-pads",
+      G_CALLBACK (no_more_pads), play_base_bin);
+  g_signal_connect (G_OBJECT (decoder),
+      "unknown-type", G_CALLBACK (unknown_type), play_base_bin);
+  g_object_set_data (G_OBJECT (decoder), "pending", "1");
+  play_base_bin->pending++;
+
+  play_base_bin->decoders = g_slist_prepend (play_base_bin->decoders, decoder);
+
+  return decoder;
+
+  /* ERRORS */
+no_decodebin:
+  {
+    GST_ELEMENT_ERROR (play_base_bin, CORE, MISSING_PLUGIN,
+        (_("Could not create \"decodebin\" element.")), (NULL));
+    return NULL;
+  }
+}
+
+static void
+remove_source (GstPlayBaseBin * bin)
+{
+  GstElement *source = bin->source;
+
+  if (source) {
+    GST_DEBUG_OBJECT (bin, "removing old src element");
+    gst_element_set_state (source, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (bin), source);
+
+    if (bin->src_np_sig_id) {
+      g_signal_handler_disconnect (G_OBJECT (source), bin->src_np_sig_id);
+      bin->src_np_sig_id = 0;
+    }
+    if (bin->src_nmp_sig_id) {
+      g_signal_handler_disconnect (G_OBJECT (source), bin->src_nmp_sig_id);
+      bin->src_nmp_sig_id = 0;
+    }
+    bin->source = NULL;
+  }
+}
+
 /* construct and run the source and decoder elements until we found
  * all the streams or until a preroll queue has been filled.
 */
@@ -1393,6 +1741,7 @@ static gboolean
 setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
 {
   GstElement *subbin = NULL;
+  gboolean is_raw, have_out, is_dynamic;
 
   if (!play_base_bin->need_rebuild)
     return TRUE;
@@ -1400,29 +1749,19 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
   GST_DEBUG_OBJECT (play_base_bin, "setup source");
 
   /* delete old src */
-  if (play_base_bin->source) {
-    GST_DEBUG_OBJECT (play_base_bin, "removing old src element");
-    gst_element_set_state (play_base_bin->source, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (play_base_bin), play_base_bin->source);
-  }
+  remove_source (play_base_bin);
 
   /* create and configure an element that can handle the uri */
   if (!(play_base_bin->source = gen_source_element (play_base_bin, &subbin)))
     goto no_source;
 
-  gst_bin_add (GST_BIN (play_base_bin), play_base_bin->source);
-  g_object_notify (G_OBJECT (play_base_bin), "source");
-
   /* state will be merged later - if file is not found, error will be
    * handled by the application right after. */
+  gst_bin_add (GST_BIN_CAST (play_base_bin), play_base_bin->source);
+  g_object_notify (G_OBJECT (play_base_bin), "source");
 
-  /* remove the old decoder now, if any */
-  if (play_base_bin->decoder) {
-    GST_DEBUG_OBJECT (play_base_bin, "removing old decoder element");
-    gst_element_set_state (play_base_bin->decoder, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (play_base_bin), play_base_bin->decoder);
-    play_base_bin->decoder = NULL;
-  }
+  /* remove the old decoders now, if any */
+  remove_decoders (play_base_bin);
 
   /* remove our previous preroll queues */
   remove_groups (play_base_bin);
@@ -1432,15 +1771,17 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
     GstElement *db;
 
     play_base_bin->subtitle = subbin;
-    db = gst_bin_get_by_name (GST_BIN (subbin), "subtitle-decoder");
+    db = gst_bin_get_by_name (GST_BIN_CAST (subbin), "subtitle-decoder");
 
     /* do type detection, without adding (so no preroll) */
     g_signal_connect (G_OBJECT (db), "new-decoded-pad",
         G_CALLBACK (new_decoded_pad), play_base_bin);
     g_signal_connect (G_OBJECT (db), "no-more-pads",
-        G_CALLBACK (no_more_pads), play_base_bin);
+        G_CALLBACK (sub_no_more_pads), play_base_bin);
     g_signal_connect (G_OBJECT (db), "unknown-type",
         G_CALLBACK (unknown_type), play_base_bin);
+    g_object_set_data (G_OBJECT (db), "pending", "1");
+    play_base_bin->pending++;
 
     if (!play_base_bin->is_stream) {
       /* either when the queues are filled or when the decoder element
@@ -1470,123 +1811,60 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
 
         GST_DEBUG ("No subtitle found - ignoring");
         gst_element_set_state (subbin, GST_STATE_NULL);
-        gst_object_unref (GST_OBJECT (play_base_bin->subtitle));
+        gst_object_unref (play_base_bin->subtitle);
         play_base_bin->subtitle = NULL;
       } else {
-        GST_DEBUG ("Subtitle set-up successful");
+        GST_DEBUG_OBJECT (play_base_bin, "Subtitle set-up successful");
       }
     }
   }
-
-  /* now see if the source element emits raw audio/video all by itself,
+  /* see if the source element emits raw audio/video all by itself,
    * if so, we can create streams for the pads and be done with it.
    * Also check that is has source pads, if not, we assume it will
-   * do everything itself.
-   */
-  {
-    GstIterator *pads_iter;
-    gboolean done = FALSE;
-    gboolean no_out = TRUE, is_raw = FALSE;
+   * do everything itself.  */
+  if (!analyse_source (play_base_bin, &is_raw, &have_out, &is_dynamic))
+    goto invalid_source;
 
-    pads_iter = gst_element_iterate_pads (play_base_bin->source);
-    while (!done) {
-      gpointer data;
+  if (is_raw) {
+    GST_DEBUG_OBJECT (play_base_bin, "Source provides all raw data");
+    /* source provides raw data, we added the pads and we can now signal a
+     * no_more pads because we are done. */
+    group_commit (play_base_bin, play_base_bin->is_stream, FALSE);
+    return TRUE;
+  }
+  if (!have_out && !is_dynamic) {
+    GST_DEBUG_OBJECT (play_base_bin, "Source has no output pads");
+    /* create a stream to indicate that this uri is handled by a self
+     * contained element. We are now done. */
+    add_element_stream (play_base_bin->source, play_base_bin);
+    group_commit (play_base_bin, play_base_bin->is_stream, FALSE);
+    return TRUE;
+  }
+  if (is_dynamic) {
+    GST_DEBUG_OBJECT (play_base_bin, "Source has dynamic output pads");
+    /* connect a handler for the new-pad signal */
+    play_base_bin->src_np_sig_id =
+        g_signal_connect (G_OBJECT (play_base_bin->source), "pad-added",
+        G_CALLBACK (source_new_pad), play_base_bin);
+    play_base_bin->src_nmp_sig_id =
+        g_signal_connect (G_OBJECT (play_base_bin->source), "no-more-pads",
+        G_CALLBACK (source_no_more_pads), play_base_bin);
+    g_object_set_data (G_OBJECT (play_base_bin->source), "pending", "1");
+    play_base_bin->pending++;
+  } else {
+    GstElement *decoder;
 
-      switch (gst_iterator_next (pads_iter, &data)) {
-        case GST_ITERATOR_DONE:
-          done = TRUE;
-        case GST_ITERATOR_ERROR:
-        case GST_ITERATOR_RESYNC:
-          break;
-        case GST_ITERATOR_OK:
-        {
-          GstCaps *caps;
-          GstPad *pad = GST_PAD (data);
-          guint i, num_raw = 0;
+    /* no dynamic source, we can link now */
+    decoder = make_decoder (play_base_bin);
+    if (!decoder)
+      goto no_decodebin;
 
-          if (GST_PAD_IS_SINK (pad))
-            break;
-
-          no_out = FALSE;
-
-          caps = gst_pad_get_caps (pad);
-          if (caps == NULL || gst_caps_is_empty (caps) ||
-              gst_caps_get_size (caps) == 0) {
-            if (caps)
-              gst_caps_unref (caps);
-            break;
-          }
-
-          for (i = 0; i < gst_caps_get_size (caps); ++i) {
-            GstStructure *s;
-            const gchar *mime_type;
-
-            s = gst_caps_get_structure (caps, i);
-            mime_type = gst_structure_get_name (s);
-
-            if (g_str_has_prefix (mime_type, "audio/x-raw") ||
-                g_str_has_prefix (mime_type, "video/x-raw")) {
-              ++num_raw;
-            }
-          }
-
-          /* if possible caps on source pad are all raw, just add the pad */
-          if (num_raw == gst_caps_get_size (caps)) {
-            new_decoded_pad (play_base_bin->source, pad, FALSE, play_base_bin);
-            is_raw = TRUE;
-          } else if (num_raw > 0 && num_raw < gst_caps_get_size (caps)) {
-            g_warning ("FIXME: handling of mixed raw/coded caps on source");
-          }
-
-          break;
-        }
-      }
-    }
-
-    gst_iterator_free (pads_iter);
-
-    if (is_raw) {
-      no_more_pads (play_base_bin->source, play_base_bin);
-      return TRUE;
-    }
-#if 0
-    if (no_out) {
-      /* create a stream to indicate that this uri is handled by a self
-       * contained element */
-      add_element_stream (play_base_bin->source, play_base_bin);
-      no_more_pads (play_base_bin->source, play_base_bin);
-      return TRUE;
-    }
-#endif
+    if (!gst_element_link (play_base_bin->source, decoder))
+      goto could_not_link;
   }
 
-  /* now create the decoder element */
-  if (!(play_base_bin->decoder =
-          gst_element_factory_make ("decodebin", "decoder")))
-    goto no_decodebin;
-
-  g_signal_connect (play_base_bin->decoder, "element-added",
-      G_CALLBACK (decodebin_element_added_cb), play_base_bin);
-  g_signal_connect (play_base_bin->decoder, "element-removed",
-      G_CALLBACK (decodebin_element_removed_cb), play_base_bin);
-
-  gst_bin_add (GST_BIN (play_base_bin), play_base_bin->decoder);
-
-  if (!gst_element_link (play_base_bin->source, play_base_bin->decoder))
-    goto could_not_link;
-
-  /* set up callbacks to create the links between decoded data
-   * and video/audio/subtitle rendering/output. */
-  g_signal_connect (G_OBJECT (play_base_bin->decoder),
-      "new-decoded-pad", G_CALLBACK (new_decoded_pad), play_base_bin);
-  g_signal_connect (G_OBJECT (play_base_bin->decoder), "no-more-pads",
-      G_CALLBACK (no_more_pads), play_base_bin);
-  g_signal_connect (G_OBJECT (play_base_bin->decoder),
-      "unknown-type", G_CALLBACK (unknown_type), play_base_bin);
-
-  if (play_base_bin->subtitle) {
-    gst_bin_add (GST_BIN (play_base_bin), play_base_bin->subtitle);
-  }
+  if (play_base_bin->subtitle)
+    gst_bin_add (GST_BIN_CAST (play_base_bin), play_base_bin->subtitle);
 
   play_base_bin->need_rebuild = FALSE;
 
@@ -1595,29 +1873,18 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
   /* ERRORS */
 no_source:
   {
-    gchar *prot;
-
-    /* whoops, could not create the source element */
-    if (play_base_bin->uri == NULL) {
-      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, NOT_FOUND,
-          (_("No URI specified to play from.")), (NULL));
-      return FALSE;
-    }
-    prot = gst_uri_get_protocol (play_base_bin->uri);
-    if (prot) {
-      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, FAILED,
-          (_("No URI handler implemented for \"%s\"."), prot), (NULL));
-      g_free (prot);
-    } else {
-      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, NOT_FOUND,
-          (_("Invalid URI \"%s\"."), play_base_bin->uri), (NULL));
-    }
+    /* error message was already posted */
+    return FALSE;
+  }
+invalid_source:
+  {
+    GST_ELEMENT_ERROR (play_base_bin, CORE, FAILED,
+        (_("Source element is invalid.")), (NULL));
     return FALSE;
   }
 no_decodebin:
   {
-    GST_ELEMENT_ERROR (play_base_bin, CORE, FAILED,
-        (_("Could not create \"decodebin\" element.")), (NULL));
+    /* message was posted */
     return FALSE;
   }
 could_not_link:
@@ -1634,15 +1901,17 @@ finish_source (GstPlayBaseBin * play_base_bin)
   if (get_active_group (play_base_bin) != NULL) {
     if (play_base_bin->subtitle) {
       /* make subs iterate from now on */
-      gst_bin_add (GST_BIN (play_base_bin), play_base_bin->subtitle);
+      gst_bin_add (GST_BIN_CAST (play_base_bin), play_base_bin->subtitle);
     }
   }
 }
 
 /*
  * Caller must have group-lock held.
+ *
+ * We iterate over all detected streams in the streaminfo and try to find
+ * impossible cases, like subtitles without video.
  */
-
 static gboolean
 prepare_output (GstPlayBaseBin * play_base_bin)
 {
@@ -1663,6 +1932,8 @@ prepare_output (GstPlayBaseBin * play_base_bin)
       stream_found = TRUE;
       got_video = TRUE;
       break;
+    } else if (info->type == GST_STREAM_TYPE_ELEMENT) {
+      stream_found = TRUE;
     } else if (info->type == GST_STREAM_TYPE_AUDIO) {
       stream_found = TRUE;
     } else if (info->type == GST_STREAM_TYPE_TEXT ||
@@ -1676,13 +1947,7 @@ prepare_output (GstPlayBaseBin * play_base_bin)
         const gchar *mime =
             gst_structure_get_name (gst_caps_get_structure (info->caps, 0));
 
-        if (!strcmp (mime, "application/x-executable") ||
-            !strcmp (mime, "application/x-bzip") ||
-            !strcmp (mime, "application/x-gzip") ||
-            !strcmp (mime, "application/zip") ||
-            !strcmp (mime, "application/x-compress")) {
-          no_media = TRUE;
-        }
+        no_media = IS_NO_MEDIA_MIME (mime);
       }
     }
   }
@@ -2076,17 +2341,16 @@ gst_play_base_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (ret != GST_STATE_CHANGE_FAILURE) {
-        finish_source (play_base_bin);
-      } else {
-        /* clean up leftover groups */
-        remove_groups (play_base_bin);
-        play_base_bin->need_rebuild = TRUE;
-      }
+      if (ret == GST_STATE_CHANGE_FAILURE)
+        goto cleanup_groups;
+
+      finish_source (play_base_bin);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       play_base_bin->need_rebuild = TRUE;
+      remove_decoders (play_base_bin);
       remove_groups (play_base_bin);
+      remove_source (play_base_bin);
       break;
     default:
       break;
@@ -2096,6 +2360,14 @@ gst_play_base_bin_change_state (GstElement * element, GstStateChange transition)
   /* ERRORS */
 source_failed:
   {
+    play_base_bin->need_rebuild = TRUE;
+
+    return GST_STATE_CHANGE_FAILURE;
+  }
+cleanup_groups:
+  {
+    /* clean up leftover groups */
+    remove_groups (play_base_bin);
     play_base_bin->need_rebuild = TRUE;
 
     return GST_STATE_CHANGE_FAILURE;

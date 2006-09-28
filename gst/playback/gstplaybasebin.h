@@ -79,7 +79,7 @@ struct _GstPlayBaseBin {
   gchar         *uri, *suburi;
   gboolean       is_stream;
   GstElement    *source;
-  GstElement    *decoder;
+  GSList        *decoders;
   GstElement    *subtitle;              /* additional filesrc ! subparse bin */
   gboolean       subtitle_done;
   gboolean       need_rebuild;
@@ -93,6 +93,11 @@ struct _GstPlayBaseBin {
   GCond         *group_cond;
   GstPlayBaseGroup *building_group;     /* the group that we are constructing */
   GList         *queued_groups;         /* the constructed groups, head is the active one */
+
+  /* for dynamic sources */
+  guint          src_np_sig_id;		/* new-pad signal id */
+  guint          src_nmp_sig_id;        /* no-more-pads signal id */
+  gint           pending;
 };
 
 struct _GstPlayBaseBinClass {
