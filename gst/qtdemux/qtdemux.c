@@ -4232,6 +4232,10 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       }
       return caps;
     }
+    case GST_MAKE_FOURCC ('y', 'v', '1', '2'):
+      _codec ("Raw planar YUV 4:2:0");
+      return gst_caps_from_string ("video/x-raw-yuv, "
+          "format = (fourcc) I420");
     case GST_MAKE_FOURCC ('y', 'u', 'v', '2'):
     case GST_MAKE_FOURCC ('Y', 'u', 'v', '2'):
       _codec ("Raw packed YUV 4:2:2");
