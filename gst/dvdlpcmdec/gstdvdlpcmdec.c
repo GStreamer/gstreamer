@@ -259,16 +259,30 @@ caps_parse_error:
 static void
 update_timestamps (GstDvdLpcmDec * dvdlpcmdec, GstBuffer * buf, int samples)
 {
+  gboolean take_buf_ts = FALSE;
+
   GST_BUFFER_DURATION (buf) =
       gst_util_uint64_scale (samples, GST_SECOND, dvdlpcmdec->rate);
 
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    /* Then leave it as-is, and save this timestamp */
+    if (GST_CLOCK_TIME_IS_VALID (dvdlpcmdec->timestamp)) {
+      GstClockTimeDiff one_sample = GST_SECOND / dvdlpcmdec->rate;
+      GstClockTimeDiff diff = GST_CLOCK_DIFF (GST_BUFFER_TIMESTAMP (buf),
+          dvdlpcmdec->timestamp);
+
+      if (diff > one_sample || diff < -one_sample)
+        take_buf_ts = TRUE;
+    } else {
+      take_buf_ts = TRUE;
+    }
+  } else if (!GST_CLOCK_TIME_IS_VALID (dvdlpcmdec->timestamp)) {
+    dvdlpcmdec->timestamp = dvdlpcmdec->segment_start;
+  }
+
+  if (take_buf_ts) {
+    /* Take buffer timestamp */
     dvdlpcmdec->timestamp = GST_BUFFER_TIMESTAMP (buf);
   } else {
-    if (!GST_CLOCK_TIME_IS_VALID (dvdlpcmdec->timestamp))
-      dvdlpcmdec->timestamp = dvdlpcmdec->segment_start;
-
     GST_BUFFER_TIMESTAMP (buf) = dvdlpcmdec->timestamp;
   }
 

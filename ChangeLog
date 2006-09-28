@@ -1,3 +1,10 @@
+2006-09-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (update_timestamps):
+	  If an incoming timestamp is within one sample of our current
+	  timestamp, then keep it. This prevents imprecision in the
+	  PTS (which only has 90khz granularity) from affecting our stream.
+
 2006-09-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_handle_src_query):
