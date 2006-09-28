@@ -1,5 +1,32 @@
 2006-09-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/gst.c: (init_pre), (scan_and_update_registry),
+	(ensure_current_registry_nonforking),
+	(ensure_current_registry_forking), (ensure_current_registry),
+	(init_post), (gst_debug_help), (gst_deinit):
+	* gst/gst_private.h:
+	* gst/gstregistry.c: (gst_registry_finalize),
+	(gst_registry_remove_features_for_plugin_unlocked),
+	(gst_registry_remove_plugin), (gst_registry_scan_path_level),
+	(gst_registry_scan_path),
+	(_priv_gst_registry_remove_cache_plugins),
+	(_priv_gst_registry_cleanup):
+	* gst/gstregistry.h:
+	Re-commit the registry changes, along with an extra fix:
+	  When a cached plugin is encountered at a different file path,
+	  update the stored path in the registry cache so that the parent
+	  process knows where it actually is now when it re-reads the registry
+	  cache. Fixes the thing that broke distcheck with the previous commit.
+
+	* tests/check/Makefile.am:
+	Clean up files named 'core' too when running make clean.
+
+	* tests/examples/manual/Makefile.am:
+	Set up a registry path for running these tests, and clean it properly
+	for distcheck.
+
+2006-09-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* configure.ac:
 	Don't pull in gmodule-2.0.pc as a dependency in our .pc files - we
 	want gmodule-no-export-2.0.pc instead so that we don't drag in

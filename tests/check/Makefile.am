@@ -18,7 +18,7 @@ plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 install-pluginLTLIBRARIES:
 
 # the core dumps of some machines have PIDs appended
-CLEANFILES = core.* test-registry.xml *.gcno *.gcda
+CLEANFILES = core core.* test-registry.xml *.gcno *.gcda
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 

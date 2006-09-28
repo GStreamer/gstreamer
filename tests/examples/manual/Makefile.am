@@ -15,6 +15,8 @@ INCLUDES = $(GST_OBJ_CFLAGS)
 # gnome_LDADD = $(GST_OBJ_LIBS) $(LIBGNOMEUI_LIBS)
 # gnome_CFLAGS = $(GST_OBJ_CFLAGS) $(LIBGNOMEUI_CFLAGS)
 
+CLEANFILES = core core.* test-registry.xml *.gcno *.gcda
+
 EXTRA_DIST = extract.pl
 
 EXAMPLES = \
@@ -80,6 +82,16 @@ playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-components.xml
 xml-mp3.c: $(top_srcdir)/docs/manual/highlevel-xml.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ \
 		$(top_srcdir)/docs/manual/highlevel-xml.xml 
+
+CHECK_REGISTRY = $(top_builddir)/tests/examples/manual/test-registry.xml
+
+REGISTRY_ENVIRONMENT = \
+        GST_REGISTRY=$(CHECK_REGISTRY)
+
+TESTS_ENVIRONMENT = \
+        $(REGISTRY_ENVIRONMENT)                                 \
+        GST_PLUGIN_SYSTEM_PATH=                                 \
+        GST_PLUGIN_PATH=$(top_builddir)/plugins
 
 TESTS = bin \
 	elementcreate elementfactory elementget elementlink elementmake \
