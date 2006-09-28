@@ -48,6 +48,7 @@
 	* libs/gst/check/Makefile.am:
 	The libgstcheck we build does however need export-dynamic, as it
 	produces some symbols that don't match our _gst... style regex.
+	Fixes: #318031
 
 2006-09-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
