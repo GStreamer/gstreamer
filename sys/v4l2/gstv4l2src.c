@@ -684,7 +684,7 @@ gst_v4l2src_get_all_caps (void)
         gst_structure_set (structure,
             "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
             "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
-            "framerate", GST_TYPE_FRACTION_RANGE, 1, 1, 100, 1, NULL);
+            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL);
         gst_caps_append_structure (caps, structure);
       }
     }
@@ -754,7 +754,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
       /* another approach for web-cams would be to try to set a very
          high(100/1) and low(1/1) FPSs and get the values returned */
       gst_structure_set (structure, "framerate", GST_TYPE_FRACTION_RANGE,
-          1, 1, 100, 1, NULL);
+          0, 1, 100, 1, NULL);
 
       gst_caps_append_structure (caps, structure);
     }
