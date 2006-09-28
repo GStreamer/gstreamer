@@ -1,5 +1,10 @@
 2006-09-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/examples/manual/Makefile.am:
+	Gah, declare vars *before* using them
+
+2006-09-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/gst.c: (init_pre), (scan_and_update_registry),
 	(ensure_current_registry_nonforking),
 	(ensure_current_registry_forking), (ensure_current_registry),
