@@ -57,11 +57,15 @@ struct _GstAudioRate
   gboolean silent;
 
   /* audio state */
-  guint64 offset;
   guint64 next_offset;
 
   gboolean discont;
-  GstSegment segment;
+
+  gboolean new_segment;
+  /* we accept all formats on the sink */
+  GstSegment sink_segment;
+  /* we output TIME format on the src */
+  GstSegment src_segment;
 };
 
 struct _GstAudioRateClass
@@ -202,10 +206,10 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
 static void
 gst_audio_rate_reset (GstAudioRate * audiorate)
 {
-  audiorate->offset = -1;
   audiorate->next_offset = -1;
   audiorate->discont = TRUE;
-  gst_segment_init (&audiorate->segment, GST_FORMAT_UNDEFINED);
+  gst_segment_init (&audiorate->sink_segment, GST_FORMAT_UNDEFINED);
+  gst_segment_init (&audiorate->src_segment, GST_FORMAT_TIME);
 
   GST_DEBUG_OBJECT (audiorate, "handle reset");
 }
@@ -322,17 +326,32 @@ gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
         /* a new segment starts. We need to figure out what will be the next
          * sample offset. We mark the offsets as invalid so that the _chain
          * function will perform this calculation. */
-        audiorate->offset = -1;
         audiorate->next_offset = -1;
       }
 
-      gst_segment_set_newsegment_full (&audiorate->segment, update, rate, arate,
-          format, start, stop, time);
+      /* we accept all formats */
+      gst_segment_set_newsegment_full (&audiorate->sink_segment, update, rate,
+          arate, format, start, stop, time);
 
-      res = gst_pad_push_event (audiorate->srcpad, event);
+      GST_DEBUG_OBJECT (audiorate, "updated segment: %" GST_SEGMENT_FORMAT,
+          &audiorate->sink_segment);
+
+      if (format == GST_FORMAT_TIME) {
+        /* TIME formats can be copied to src and forwarded */
+        res = gst_pad_push_event (audiorate->srcpad, event);
+        memcpy (&audiorate->src_segment, &audiorate->sink_segment,
+            sizeof (GstSegment));
+      } else {
+        /* other formats will be handled in the _chain function */
+        gst_event_unref (event);
+        res = TRUE;
+      }
       break;
     }
     case GST_EVENT_EOS:
+      /* FIXME, fill last segment */
+      res = gst_pad_push_event (audiorate->srcpad, event);
+      break;
     default:
       res = gst_pad_push_event (audiorate->srcpad, event);
       break;
@@ -362,56 +381,141 @@ gst_audio_rate_src_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+static gboolean
+gst_audio_rate_convert (GstAudioRate * audiorate,
+    GstFormat src_fmt, gint64 src_val, GstFormat dest_fmt, gint64 * dest_val)
+{
+  if (src_fmt == dest_fmt) {
+    *dest_val = src_val;
+    return TRUE;
+  }
+
+  switch (src_fmt) {
+    case GST_FORMAT_DEFAULT:
+      switch (dest_fmt) {
+        case GST_FORMAT_BYTES:
+          *dest_val = src_val * audiorate->bytes_per_sample;
+          break;
+        case GST_FORMAT_TIME:
+          *dest_val =
+              gst_util_uint64_scale_int (src_val, GST_SECOND, audiorate->rate);
+          break;
+        default:
+          return FALSE;;
+      }
+      break;
+    case GST_FORMAT_BYTES:
+      switch (dest_fmt) {
+        case GST_FORMAT_DEFAULT:
+          *dest_val = src_val / audiorate->bytes_per_sample;
+          break;
+        case GST_FORMAT_TIME:
+          *dest_val = gst_util_uint64_scale_int (src_val, GST_SECOND,
+              audiorate->rate * audiorate->bytes_per_sample);
+          break;
+        default:
+          return FALSE;;
+      }
+      break;
+    case GST_FORMAT_TIME:
+      switch (dest_fmt) {
+        case GST_FORMAT_BYTES:
+          *dest_val = gst_util_uint64_scale_int (src_val,
+              audiorate->rate * audiorate->bytes_per_sample, GST_SECOND);
+          break;
+        case GST_FORMAT_DEFAULT:
+          *dest_val =
+              gst_util_uint64_scale_int (src_val, audiorate->rate, GST_SECOND);
+          break;
+        default:
+          return FALSE;;
+      }
+      break;
+    default:
+      return FALSE;
+  }
+  return TRUE;
+}
+
+
+static gboolean
+gst_audio_rate_convert_segments (GstAudioRate * audiorate)
+{
+  GstFormat src_fmt, dst_fmt;
+
+  src_fmt = audiorate->sink_segment.format;
+  dst_fmt = audiorate->src_segment.format;
+
+#define CONVERT_VAL(field) gst_audio_rate_convert (audiorate, \
+		src_fmt, audiorate->sink_segment.field,       \
+		dst_fmt, &audiorate->src_segment.field);
+
+  audiorate->sink_segment.rate = audiorate->src_segment.rate;
+  audiorate->sink_segment.abs_rate = audiorate->src_segment.abs_rate;
+  audiorate->sink_segment.flags = audiorate->src_segment.flags;
+  audiorate->sink_segment.applied_rate = audiorate->src_segment.applied_rate;
+  CONVERT_VAL (start);
+  CONVERT_VAL (stop);
+  CONVERT_VAL (time);
+  CONVERT_VAL (accum);
+  CONVERT_VAL (last_stop);
+#undef CONVERT_VAL
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 {
   GstAudioRate *audiorate;
-  GstClockTime in_time, in_duration, run_time;
-  guint64 in_offset, in_offset_end;
+  GstClockTime in_time, in_duration, in_stop, run_time;
+  guint64 in_offset, in_offset_end, in_samples;
   guint in_size;
   GstFlowReturn ret = GST_FLOW_OK;
 
   audiorate = GST_AUDIO_RATE (gst_pad_get_parent (pad));
 
+  /* need to be negotiated now */
   if (audiorate->bytes_per_sample == 0)
     goto not_negotiated;
 
-  if (audiorate->offset == -1) {
+  /* we have a new pending segment */
+  if (audiorate->next_offset == -1) {
     gint64 pos;
 
+    /* update the TIME segment */
+    gst_audio_rate_convert_segments (audiorate);
+
     /* first buffer, we are negotiated and we have a segment, calculate the
-     * current expected offsets based on the segment.time, which is the first
+     * current expected offsets based on the segment.start, which is the first
      * media time of the segment and should match the media time of the first
      * buffer in that segment, which is the offset expressed in DEFAULT units.
      */
-    pos = audiorate->segment.time;
-    if (pos != 0) {
-      if (audiorate->segment.format == GST_FORMAT_TIME) {
-        /* convert first timestamp of segment to sample position */
-        pos = gst_util_uint64_scale_int (pos, audiorate->rate, GST_SECOND);
-      } else {
-        /* FIXME, we don't know, start from 0 then... */
-        pos = 0;
-      }
-    }
+    /* convert first timestamp of segment to sample position */
+    pos = gst_util_uint64_scale_int (audiorate->src_segment.start,
+        audiorate->rate, GST_SECOND);
+
     GST_DEBUG_OBJECT (audiorate, "resync to offset %" G_GINT64_FORMAT, pos);
-    audiorate->offset = pos;
+
     audiorate->next_offset = pos;
   }
 
   audiorate->in++;
 
   in_time = GST_BUFFER_TIMESTAMP (buf);
-  in_duration = GST_BUFFER_DURATION (buf);
   in_size = GST_BUFFER_SIZE (buf);
+  in_samples = in_size / audiorate->bytes_per_sample;
+  /* get duration from the size because we can and it's more accurate */
+  in_duration =
+      gst_util_uint64_scale_int (in_samples, GST_SECOND, audiorate->rate);
+  in_stop = in_time + in_duration;
 
-  /* don't really on buffer's offset */
-  /* We instead figure out using the runningtime version of the incoming buffer timestamp */
-  run_time =
-      gst_segment_to_running_time (&audiorate->segment, GST_FORMAT_TIME,
-      in_time);
+  /* Figure out the total accumulated segment time. */
+  run_time = in_time + audiorate->src_segment.accum;
+
+  /* calculate the buffer offset */
   in_offset = gst_util_uint64_scale_int (run_time, audiorate->rate, GST_SECOND);
-  in_offset_end = in_offset + in_size / audiorate->bytes_per_sample;
+  in_offset_end = in_offset + in_samples;
 
   GST_LOG_OBJECT (audiorate,
       "in_time:%" GST_TIME_FORMAT ", run_time:%" GST_TIME_FORMAT
@@ -431,6 +535,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     fillsize = fillsamples * audiorate->bytes_per_sample;
 
     fill = gst_buffer_new_and_alloc (fillsize);
+    /* FIXME, 0 might not be the silence byte for the negotiated format. */
     memset (GST_BUFFER_DATA (fill), 0, fillsize);
 
     GST_LOG_OBJECT (audiorate, "inserting %lld samples", fillsamples);
@@ -513,7 +618,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   }
 
   /* set last_stop on segment */
-  gst_segment_set_last_stop (&audiorate->segment, GST_FORMAT_TIME,
+  gst_segment_set_last_stop (&audiorate->src_segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf));
 
   ret = gst_pad_push (audiorate->srcpad, buf);
@@ -521,7 +626,6 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
   audiorate->next_offset = in_offset_end;
 beach:
-  audiorate->offset += in_size / audiorate->bytes_per_sample;
 
   gst_object_unref (audiorate);
 

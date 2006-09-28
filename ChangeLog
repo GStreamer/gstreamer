@@ -1,3 +1,14 @@
+2006-09-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_reset),
+	(gst_audio_rate_sink_event), (gst_audio_rate_convert),
+	(gst_audio_rate_convert_segments), (gst_audio_rate_chain):
+	Keep sink and src segment to keep track of time and support more
+	input formats.
+	Fix bogus next_offset and run_time calculation, don't understand how
+	this could have worked before. Fixes #357976.
+	Remove some unneeded vars.
+
 2006-09-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybin.c: (remove_sinks):
