@@ -1,3 +1,9 @@
+2006-09-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybin.c: (remove_sinks):
+	  Only remove visualisation from visbin if there is a visbin (or:
+	  don't throw warnings when closing totem without playing a file).
+
 2006-09-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

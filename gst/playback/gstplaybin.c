@@ -1311,9 +1311,11 @@ remove_sinks (GstPlayBin * play_bin)
         GST_ELEMENT_CAST (gst_element_get_parent (play_bin->visualisation));
 
     gst_element_set_state (play_bin->visualisation, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (vis_bin), play_bin->visualisation);
 
-    gst_object_unref (vis_bin);
+    if (vis_bin) {
+      gst_bin_remove (GST_BIN_CAST (vis_bin), play_bin->visualisation);
+      gst_object_unref (vis_bin);
+    }
   }
 
   if (play_bin->frame) {
