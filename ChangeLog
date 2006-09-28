@@ -1,3 +1,10 @@
+2006-09-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/elements/adder.c: (adder_suite):
+	  Don't set timeout to 6 seconds when we're running
+	  in valgrind ... (and how is 6 seconds longer than
+	  the default anyway?)
+
 2006-09-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_reset),

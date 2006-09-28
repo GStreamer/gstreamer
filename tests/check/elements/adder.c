@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * unit test for volume
+ * unit test for adder
  *
  * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
  *
@@ -19,6 +19,14 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
 
 #include <unistd.h>
 
@@ -441,7 +449,7 @@ GST_START_TEST (test_remove_pad)
 GST_END_TEST;
 
 
-Suite *
+static Suite *
 adder_suite (void)
 {
   Suite *s = suite_create ("adder");
@@ -454,7 +462,15 @@ adder_suite (void)
   tcase_add_test (tc_chain, test_remove_pad);
 
   /* Use a longer timeout */
-  tcase_set_timeout (tc_chain, 6);
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+    tcase_set_timeout (tc_chain, 5 * 60);
+  } else
+#endif
+  {
+    /* this is shorter than the default 60 seconds?! (tpm) */
+    /* tcase_set_timeout (tc_chain, 6); */
+  }
 
   return s;
 }
