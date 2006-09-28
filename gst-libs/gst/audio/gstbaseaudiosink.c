@@ -514,6 +514,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstClockTime crate_num;
   GstClockTime crate_denom;
   GstClockTime cinternal, cexternal;
+  GstClock *clock;
+  gboolean sync;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
 
@@ -540,9 +542,9 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       "time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->segment.start));
 
-  /* if not valid timestamp or we don't need to sync, try to play
+  /* if not valid timestamp or we can't clip or sync, try to play
    * sample ASAP */
-  if (!GST_CLOCK_TIME_IS_VALID (time) || !bsink->sync) {
+  if (!GST_CLOCK_TIME_IS_VALID (time)) {
     render_offset = gst_base_audio_sink_get_offset (sink);
     stop = -1;
     GST_DEBUG_OBJECT (sink,
@@ -585,6 +587,22 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     stop = cstop;
   }
 
+  /* figure out how to sync */
+  if ((clock = GST_ELEMENT_CLOCK (bsink)))
+    sync = bsink->sync;
+  else
+    sync = FALSE;
+
+  if (!sync) {
+    /* no sync needed, play sample ASAP */
+    render_offset = gst_base_audio_sink_get_offset (sink);
+    stop = -1;
+    GST_DEBUG_OBJECT (sink,
+        "no sync needed. Using render_offset=%" G_GUINT64_FORMAT,
+        render_offset);
+    goto no_sync;
+  }
+
   gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
       &crate_num, &crate_denom);
 
@@ -603,12 +621,11 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       ", render offset %llu, samples %lu",
       GST_TIME_ARGS (render_time), render_offset, samples);
 
-
   /* never try to align samples when we are slaved to another clock, just
    * trust the rate control algorithm to align the two clocks. We don't take
    * the LOCK to read the clock because it does not really matter here and the
    * clock is not changed while playing normally. */
-  if (GST_ELEMENT_CLOCK (sink) != sink->provided_clock) {
+  if (clock != sink->provided_clock) {
     GST_DEBUG_OBJECT (sink, "no align needed: we are slaved");
     goto no_align;
   }

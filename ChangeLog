@@ -1,5 +1,12 @@
 2006-09-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render):
+	When we have a timestamp, we can still perform clipping.
+	When we have no clock, we must play the sample ASAP.
+
+2006-09-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain):
 	Set caps on outgoing buffers.
 
