@@ -1,3 +1,17 @@
+2006-09-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	Don't pull in gmodule-2.0.pc as a dependency in our .pc files - we
+	want gmodule-no-export-2.0.pc instead so that we don't drag in
+	--export-dynamic on every project that links to GStreamer.
+
+	Also, make our export regex only match the start of symbols, rather 
+	than any symbol that contains '_gst' somewhere.
+
+	* libs/gst/check/Makefile.am:
+	The libgstcheck we build does however need export-dynamic, as it
+	produces some symbols that don't match our _gst... style regex.
+
 2006-09-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gst.c: (init_pre), (scan_and_update_registry),

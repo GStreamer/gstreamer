@@ -388,7 +388,7 @@ dnl set location of plugin directory
 GST_SET_PLUGINDIR
 
 dnl FIXME: add LIBXML_PKG here
-GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-2.0, gthread-2.0"
+GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-no-export-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
 
 dnl define an ERROR_CFLAGS Makefile variable
@@ -447,7 +447,7 @@ AC_SUBST(GST_ALL_LDFLAGS)
 dnl GST_LIB_LDFLAGS
 dnl linker flags shared by all libraries
 dnl LDFLAGS modifier defining exported symbols from built libraries
-GST_LIB_LDFLAGS="-export-symbols-regex [_]*\(gst_\|Gst\|GST_\).*"
+GST_LIB_LDFLAGS="-export-symbols-regex \^[_]*\(gst_\|Gst\|GST_\).*"
 AC_SUBST(GST_LIB_LDFLAGS)
 
 dnl GST_OBJ_*
