@@ -105,6 +105,8 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       }
     }
 
+    GST_DEBUG_OBJECT (v4l2object->element, "    '%s'", input.name);
+
     v4l2channel = g_object_new (GST_TYPE_V4L2_TUNER_CHANNEL, NULL);
     channel = GST_TUNER_CHANNEL (v4l2channel);
     channel->label = g_strdup ((const gchar *) input.name);
@@ -150,6 +152,9 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     GstV4l2TunerNorm *v4l2norm;
     GstTunerNorm *norm;
 
+    /* fill in defaults */
+    standard.frameperiod.denominator = 0;
+    standard.frameperiod.numerator = 1;
     standard.index = n;
     if (ioctl (v4l2object->video_fd, VIDIOC_ENUMSTD, &standard) < 0) {
       if (errno == EINVAL)
@@ -161,6 +166,10 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         return FALSE;
       }
     }
+
+    GST_DEBUG_OBJECT (v4l2object->element, "    '%s', fps: %d/%d",
+        standard.name, standard.frameperiod.denominator,
+        standard.frameperiod.numerator);
 
     v4l2norm = g_object_new (GST_TYPE_V4L2_TUNER_NORM, NULL);
     norm = GST_TUNER_NORM (v4l2norm);
