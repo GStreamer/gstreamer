@@ -1,3 +1,11 @@
+2006-09-29  Edward Hervey  <edward@fluendo.com>
+
+	* ltihooks.py:
+	Removed
+	* testsuite/common.py:
+	ltihooks is dead, long live gstltihooks. This should complete thomas'
+	fix of #357310.
+
 2006-09-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/Makefile.am:

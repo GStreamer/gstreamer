@@ -70,10 +70,10 @@ except ImportError:
 file = gst.interfaces.__file__
 assert file.startswith(path), 'bad gst.interfaces path: %s' % file
 
-# testhelper needs ltihooks
-import ltihooks
+# testhelper needs gstltihooks
+import gstltihooks
 import testhelper
-ltihooks.uninstall()
+gstltihooks.uninstall()
 
 _stderr = None
 
