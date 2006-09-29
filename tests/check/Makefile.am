@@ -63,6 +63,7 @@ check_PROGRAMS = \
 	generic/clock-selection \
 	generic/states \
 	libs/audio \
+	libs/cddabasesrc \
 	libs/tag \
 	libs/video \
 	pipelines/simple-launch-lines
@@ -78,7 +79,6 @@ VALGRIND_TO_FIX = \
 
 # these tests don't even pass
 noinst_PROGRAMS = \
-	libs/cddabasesrc \
 	elements/ffmpegcolorspace
 
 AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS)

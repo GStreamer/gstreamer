@@ -1,3 +1,9 @@
+2006-09-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	  Re-enable cddabasesrc test to see if it works again
+	  now.
+
 2006-09-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (setup_subtitle),
