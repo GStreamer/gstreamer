@@ -1,3 +1,18 @@
+2006-09-29  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_request_new_pad),
+	(gst_ogg_mux_release_pad), (gst_ogg_mux_push_buffer),
+	(gst_ogg_mux_compare_pads), (gst_ogg_mux_queue_pads),
+	(gst_ogg_mux_send_headers), (gst_ogg_mux_process_best_pad),
+	(gst_ogg_mux_collected):
+	  Commit patch from James "Doc" Livingston, adds proper EOS handling
+	  in oggmux. GStreamer can, for the first time ever, create a valid
+	  Ogg file! Yay!
+
+	* tests/check/pipelines/oggmux.c: (check_chain_final_state),
+	(oggmux_suite):
+	  Reenable tests now that they pass.
+
 2006-09-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_handle_clients):

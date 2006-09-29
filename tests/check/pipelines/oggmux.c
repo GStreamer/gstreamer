@@ -80,8 +80,7 @@ get_page_codec (ogg_page * page)
 static gboolean
 check_chain_final_state (gpointer key, ChainState * state, gpointer data)
 {
-  /* FIXME: check disabled until oggmux is fixed (#337026) */
-  /* fail_unless (state->eos, "missing EOS flag on chain %u", state->serialno); */
+  fail_unless (state->eos, "missing EOS flag on chain %u", state->serialno);
 
   /* return TRUE to empty the chain table */
   return TRUE;
@@ -294,7 +293,6 @@ GST_START_TEST (test_theora_vorbis)
 
 GST_END_TEST;
 
-#if 0
 /* THIS TEST FAILS AT THE MOMENT (KILLED AFTER TIMEOUT): */
 GST_START_TEST (test_vorbis_theora)
 {
@@ -304,7 +302,6 @@ GST_START_TEST (test_vorbis_theora)
 }
 
 GST_END_TEST;
-#endif
 
 static Suite *
 oggmux_suite (void)
@@ -323,8 +320,7 @@ oggmux_suite (void)
 #endif
 
 #if (defined (HAVE_THEORA) && defined (HAVE_VORBIS))
-  /* THIS TEST FAILS AT THE MOMENT (KILLED AFTER TIMEOUT): */
-  /* tcase_add_test (tc_chain, test_vorbis_theora); */
+  tcase_add_test (tc_chain, test_vorbis_theora);
   tcase_add_test (tc_chain, test_theora_vorbis);
 #endif
 
