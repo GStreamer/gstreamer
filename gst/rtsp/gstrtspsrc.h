@@ -61,9 +61,15 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTSPSRC))
 #define GST_IS_RTSPSRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTSPSRC))
+#define GST_RTSPSRC_CAST(obj) \
+  ((GstRTSPSrc *)(obj))
 
 typedef struct _GstRTSPSrc GstRTSPSrc;
 typedef struct _GstRTSPSrcClass GstRTSPSrcClass;
+
+#define GST_RTSP_LOOP_GET_COND(rtsp)     (GST_RTSPSRC_CAST(rtsp)->loop_cond)
+#define GST_RTSP_LOOP_WAIT(rtsp)         (g_cond_wait(GST_RTSP_LOOP_GET_COND (rtsp), GST_OBJECT_GET_LOCK (rtsp)))
+#define GST_RTSP_LOOP_SIGNAL(rtsp)       (g_cond_signal(GST_RTSP_LOOP_GET_COND (rtsp)))
 
 /**
  * GstRTSPProto:
@@ -126,16 +132,21 @@ struct _GstRTSPSrc {
   GstSegment       segment;
   gboolean         running;
 
+  /* cond to signal loop */
+  GCond           *loop_cond;
+  gint             loop_cmd;
+
   gint             numstreams;
   GList           *streams;
   GstStructure    *props;
 
   gchar           *location;
   RTSPUrl         *url;
+  GstRTSPProto     protocols;
   gboolean         debug;
   guint   	   retry;
+  guint64          timeout;
 
-  GstRTSPProto     protocols;
   /* supported methods */
   gint             methods;
 

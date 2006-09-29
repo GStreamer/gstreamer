@@ -123,6 +123,7 @@ enum
 #define DEFAULT_PROTOCOLS       GST_RTSP_PROTO_UDP_UNICAST | GST_RTSP_PROTO_UDP_MULTICAST | GST_RTSP_PROTO_TCP
 #define DEFAULT_DEBUG           FALSE
 #define DEFAULT_RETRY           20
+#define DEFAULT_TIMEOUT         5000000
 
 enum
 {
@@ -131,7 +132,7 @@ enum
   PROP_PROTOCOLS,
   PROP_DEBUG,
   PROP_RETRY,
-  /* FILL ME */
+  PROP_TIMEOUT,
 };
 
 #define GST_TYPE_RTSP_PROTO (gst_rtsp_proto_get_type())
@@ -161,6 +162,7 @@ static GstCaps *gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media);
 
 static GstStateChangeReturn gst_rtspsrc_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message);
 
 static void gst_rtspsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -171,6 +173,11 @@ static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
     const gchar * uri);
 
 static void gst_rtspsrc_loop (GstRTSPSrc * src);
+
+/* commands we send to out loop to notify it of events */
+#define CMD_WAIT	0
+#define CMD_RECONNECT	1
+#define CMD_STOP	2
 
 /*static guint gst_rtspsrc_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -239,7 +246,15 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           0, G_MAXUINT16, DEFAULT_RETRY,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  g_object_class_install_property (gobject_class, PROP_TIMEOUT,
+      g_param_spec_uint64 ("timeout", "Timeout",
+          "Retry TCP transport after timeout microseconds (0 = disabled)",
+          0, G_MAXUINT64, DEFAULT_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   gstelement_class->change_state = gst_rtspsrc_change_state;
+
+  gstbin_class->handle_message = gst_rtspsrc_handle_message;
 }
 
 static void
@@ -247,6 +262,8 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
 {
   src->stream_rec_lock = g_new (GStaticRecMutex, 1);
   g_static_rec_mutex_init (src->stream_rec_lock);
+
+  src->loop_cond = g_cond_new ();
 
   src->location = DEFAULT_LOCATION;
   src->url = NULL;
@@ -261,6 +278,7 @@ gst_rtspsrc_finalize (GObject * object)
 
   g_static_rec_mutex_free (rtspsrc->stream_rec_lock);
   g_free (rtspsrc->stream_rec_lock);
+  g_cond_free (rtspsrc->loop_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -286,6 +304,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case PROP_RETRY:
       rtspsrc->retry = g_value_get_uint (value);
+      break;
+    case PROP_TIMEOUT:
+      rtspsrc->timeout = g_value_get_uint64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -313,6 +334,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_RETRY:
       g_value_set_uint (value, rtspsrc->retry);
+      break;
+    case PROP_TIMEOUT:
+      g_value_set_uint64 (value, rtspsrc->timeout);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -666,6 +690,9 @@ again:
   if (*rtpport != tmp_rtp || *rtcpport != tmp_rtcp)
     goto port_error;
 
+  /* configure a timeout */
+  g_object_set (G_OBJECT (rtpsrc), "timeout", src->timeout, NULL);
+
   /* we manage these elements, we set the caps in configure_transport */
   stream->rtpsrc = rtpsrc;
   stream->rtcpsrc = rtcpsrc;
@@ -910,7 +937,7 @@ gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event)
 }
 
 static void
-gst_rtspsrc_loop (GstRTSPSrc * src)
+gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 {
   RTSPMessage response = { 0 };
   RTSPResult res;
@@ -928,6 +955,7 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
     GST_DEBUG_OBJECT (src, "doing receive");
     if ((res = rtsp_connection_receive (src->connection, &response)) < 0)
       goto receive_error;
+
     GST_DEBUG_OBJECT (src, "got packet type %d", response.type);
   }
   while (response.type != RTSP_MESSAGE_DATA);
@@ -1003,8 +1031,8 @@ receive_error:
   {
     gchar *str = rtsp_strresult (res);
 
-    GST_ELEMENT_ERROR (src, RESOURCE, READ,
-        ("Could not receive message. (%s)", str), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("Could not receive message. (%s)", str));
     g_free (str);
     if (src->debug)
       rtsp_message_dump (&response);
@@ -1014,8 +1042,8 @@ receive_error:
   }
 invalid_length:
   {
-    GST_ELEMENT_WARNING (src, RESOURCE, READ,
-        ("Short message received."), (NULL));
+    GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
+        ("Short message received."));
     rtsp_message_unset (&response);
     return;
   }
@@ -1047,6 +1075,55 @@ need_pause:
     }
     return;
   }
+}
+
+static void
+gst_rtspsrc_loop_udp (GstRTSPSrc * src)
+{
+  GST_OBJECT_LOCK (src);
+  if (src->loop_cmd == CMD_STOP)
+    goto stopping;
+  while (src->loop_cmd == CMD_WAIT) {
+    GST_DEBUG_OBJECT (src, "waiting");
+    GST_RTSP_LOOP_WAIT (src);
+    GST_DEBUG_OBJECT (src, "waiting done");
+    if (src->loop_cmd == CMD_STOP)
+      goto stopping;
+  }
+  if (src->loop_cmd == CMD_RECONNECT) {
+    /* FIXME, when we get here we have to reconnect using tcp */
+    src->loop_cmd = CMD_WAIT;
+  }
+  GST_OBJECT_UNLOCK (src);
+
+  return;
+
+  /* ERRORS */
+stopping:
+  {
+    GST_OBJECT_UNLOCK (src);
+    src->running = FALSE;
+    gst_task_pause (src->task);
+    return;
+  }
+}
+
+static void
+gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd)
+{
+  GST_OBJECT_LOCK (src);
+  src->loop_cmd = cmd;
+  GST_RTSP_LOOP_SIGNAL (src);
+  GST_OBJECT_UNLOCK (src);
+}
+
+static void
+gst_rtspsrc_loop (GstRTSPSrc * src)
+{
+  if (src->interleaved)
+    gst_rtspsrc_loop_interleaved (src);
+  else
+    gst_rtspsrc_loop_udp (src);
 }
 
 /**
@@ -1100,8 +1177,8 @@ send_error:
   {
     gchar *str = rtsp_strresult (res);
 
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
-        ("Could not send message. (%s)", res), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+        ("Could not send message. (%s)", res));
     g_free (str);
     return FALSE;
   }
@@ -1109,8 +1186,8 @@ receive_error:
   {
     gchar *str = rtsp_strresult (res);
 
-    GST_ELEMENT_ERROR (src, RESOURCE, READ,
-        ("Could not receive message. (%s)", str), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("Could not receive message. (%s)", str));
     g_free (str);
     return FALSE;
   }
@@ -1118,13 +1195,13 @@ error_response:
   {
     switch (response->type_data.response.code) {
       case RTSP_STS_NOT_FOUND:
-        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("%s",
-                response->type_data.response.reason), (NULL));
+        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), ("%s",
+                response->type_data.response.reason));
         break;
       default:
-        GST_ELEMENT_ERROR (src, RESOURCE, READ, ("Got error response: %d (%s).",
-                response->type_data.response.code,
-                response->type_data.response.reason), (NULL));
+        GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+            ("Got error response: %d (%s).", response->type_data.response.code,
+                response->type_data.response.reason));
         break;
     }
     /* we return FALSE so we should unset the response ourselves */
@@ -1192,14 +1269,14 @@ done:
   /* ERRORS */
 no_describe:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        ("Server does not support DESCRIBE."), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("Server does not support DESCRIBE."));
     return FALSE;
   }
 no_setup:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        ("Server does not support SETUP."), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+        ("Server does not support SETUP."));
     return FALSE;
   }
 }
@@ -1216,6 +1293,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   SDPMessage sdp = { 0 };
   GstRTSPProto protocols;
   GstRTSPStream *stream = NULL;
+  gchar *respcont = NULL;
 
   /* can't continue without a valid url */
   if (G_UNLIKELY (src->url == NULL))
@@ -1261,22 +1339,18 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     goto send_error;
 
   /* check if reply is SDP */
-  {
-    gchar *respcont = NULL;
-
-    rtsp_message_get_header (&response, RTSP_HDR_CONTENT_TYPE, &respcont);
-    /* could not be set but since the request returned OK, we assume it
-     * was SDP, else check it. */
-    if (respcont) {
-      if (!g_ascii_strcasecmp (respcont, "application/sdp") == 0)
-        goto wrong_content_type;
-    }
+  rtsp_message_get_header (&response, RTSP_HDR_CONTENT_TYPE, &respcont);
+  /* could not be set but since the request returned OK, we assume it
+   * was SDP, else check it. */
+  if (respcont) {
+    if (!g_ascii_strcasecmp (respcont, "application/sdp") == 0)
+      goto wrong_content_type;
   }
 
   /* get message body and parse as SDP */
   rtsp_message_get_body (&response, &data, &size);
 
-  GST_DEBUG_OBJECT (src, "parse sdp...");
+  GST_DEBUG_OBJECT (src, "parse SDP...");
   sdp_message_init (&sdp);
   sdp_message_parse_buffer (data, size, &sdp);
 
@@ -1462,16 +1536,16 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   /* ERRORS */
 no_url:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-        ("No valid RTSP url was provided"), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
+        ("No valid RTSP URL was provided"));
     goto cleanup_error;
   }
 could_not_create:
   {
     gchar *str = rtsp_strresult (res);
 
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE,
-        ("Could not create connection. (%s)", str), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
+        ("Could not create connection. (%s)", str));
     g_free (str);
     goto cleanup_error;
   }
@@ -1479,8 +1553,8 @@ could_not_connect:
   {
     gchar *str = rtsp_strresult (res);
 
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE,
-        ("Could not connect to server. (%s)", str), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
+        ("Could not connect to server. (%s)", str));
     g_free (str);
     goto cleanup_error;
   }
@@ -1488,8 +1562,8 @@ create_request_failed:
   {
     gchar *str = rtsp_strresult (res);
 
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
-        ("Could not create request. (%s)", str), (NULL));
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
+        ("Could not create request. (%s)", str));
     g_free (str);
     goto cleanup_error;
   }
@@ -1497,8 +1571,8 @@ send_error:
   {
     gchar *str = rtsp_strresult (res);
 
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
-        ("Could not send message. (%s)", str), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+        ("Could not send message. (%s)", str));
     g_free (str);
     goto cleanup_error;
   }
@@ -1509,20 +1583,20 @@ methods_error:
   }
 wrong_content_type:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS,
-        ("Server does not support SDP."), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Server does not support SDP, got %s.", respcont));
     goto cleanup_error;
   }
 setup_rtp_failed:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, ("Could not setup rtp."),
-        (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Could not setup rtp."));
     goto cleanup_error;
   }
 no_transport:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS,
-        ("Server did not select transport."), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Server did not select transport."));
     goto cleanup_error;
   }
 cleanup_error:
@@ -1541,6 +1615,8 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   RTSPResult res;
 
   GST_DEBUG_OBJECT (src, "TEARDOWN...");
+
+  gst_rtspsrc_loop_send_cmd (src, CMD_STOP);
 
   /* stop task if any */
   if (src->task) {
@@ -1582,20 +1658,20 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   /* ERRORS */
 create_request_failed:
   {
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
-        ("Could not create request."), (NULL));
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
+        ("Could not create request."));
     return FALSE;
   }
 send_error:
   {
     rtsp_message_unset (&request);
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
-        ("Could not send message."), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+        ("Could not send message."));
     return FALSE;
   }
 close_failed:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, CLOSE, ("Close failed."), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, CLOSE, (NULL), ("Close failed."));
     return FALSE;
   }
 }
@@ -1660,29 +1736,28 @@ gst_rtspsrc_play (GstRTSPSrc * src)
 
   /* for interleaved transport, we receive the data on the RTSP connection
    * instead of UDP. We start a task to select and read from that connection. */
-  if (src->interleaved) {
-    if (src->task == NULL) {
-      src->task = gst_task_create ((GstTaskFunction) gst_rtspsrc_loop, src);
-      gst_task_set_lock (src->task, src->stream_rec_lock);
-    }
-    src->running = TRUE;
-    gst_task_start (src->task);
+  if (src->task == NULL) {
+    src->task = gst_task_create ((GstTaskFunction) gst_rtspsrc_loop, src);
+    gst_task_set_lock (src->task, src->stream_rec_lock);
   }
+  src->running = TRUE;
+  gst_rtspsrc_loop_send_cmd (src, CMD_WAIT);
+  gst_task_start (src->task);
 
   return TRUE;
 
   /* ERRORS */
 create_request_failed:
   {
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
-        ("Could not create request."), (NULL));
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
+        ("Could not create request."));
     return FALSE;
   }
 send_error:
   {
     rtsp_message_unset (&request);
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
-        ("Could not send message."), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+        ("Could not send message."));
     return FALSE;
   }
 }
@@ -1714,16 +1789,46 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
   /* ERRORS */
 create_request_failed:
   {
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
-        ("Could not create request."), (NULL));
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
+        ("Could not create request."));
     return FALSE;
   }
 send_error:
   {
     rtsp_message_unset (&request);
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE,
-        ("Could not send message."), (NULL));
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+        ("Could not send message."));
     return FALSE;
+  }
+}
+
+static void
+gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ELEMENT:
+    {
+      GstRTSPSrc *rtspsrc;
+      const GstStructure *s = gst_message_get_structure (message);
+
+      rtspsrc = GST_RTSPSRC (bin);
+
+      if (gst_structure_has_name (s, "GstUDPSrcTimeout")) {
+        GST_DEBUG_OBJECT (bin, "timeout on UDP port");
+        gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_RECONNECT);
+        /* FIXME, we post an error message now to inform the user
+         * that nothing happened. It's most likely a firewall thing. */
+        GST_ELEMENT_ERROR (rtspsrc, RESOURCE, READ, (NULL),
+            ("Could not receive any UDP packets for %" G_GUINT64_FORMAT
+                ".%d seconds, maybe your firewall is blocking it.",
+                rtspsrc->timeout / 1000000, rtspsrc->timeout % 1000000));
+        return;
+      }
+    }
+      /* Fallthrough */
+    default:
+      GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+      break;
   }
 }
 
@@ -1734,7 +1839,6 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
 
   rtspsrc = GST_RTSPSRC (element);
-
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:

@@ -89,8 +89,8 @@
  * <listitem>
  *   <para>
  *   #guint64
- *   <classname>&quot;timeout&quot;</classname>: the timeout that expired when
- *   waiting for data.
+ *   <classname>&quot;timeout&quot;</classname>: the timeout in microseconds that
+ *   expired when waiting for data.
  *   </para>
  * </listitem>
  * </itemizedlist>
@@ -250,8 +250,8 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           UDP_DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
-          "Post a message after this timeout (in microseconds) (0 = disabled)",
-          0, G_MAXUINT64, UDP_DEFAULT_TIMEOUT, G_PARAM_READWRITE));
+          "Post a message after timeout microseconds (0 = disabled)", 0,
+          G_MAXUINT64, UDP_DEFAULT_TIMEOUT, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
@@ -331,8 +331,8 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
         udpsrc->timeout);
 
     if (udpsrc->timeout > 0) {
-      timeval.tv_sec = udpsrc->timeout / 1000;
-      timeval.tv_usec = (udpsrc->timeout % 1000) * 1000;
+      timeval.tv_sec = udpsrc->timeout / 1000000;
+      timeval.tv_usec = udpsrc->timeout % 1000000;
       timeout = &timeval;
     } else {
       timeout = NULL;

@@ -2,6 +2,7 @@ Some test URLS:
 
 SVQ3 video: 
   rtsp://cumulus.creative.auckland.ac.nz/~shado/nelson_iv_512k.mov
+  rtsp://streamr.hitpops.jp/ngc/mov/m0609.mov 
 
 ASF (audio/video): 
   rtsp://aod.mylisten.com/aod/8/03/069803_0903135.wma
@@ -11,3 +12,7 @@ ASF (audio/video):
 
 MP4V-ES/mpeg4-generic(ACC):
   rtsp://vod.nwec.jp/quicktime/505.mov
+  rtsp://203.140.68.241:554/hirakataeizou9.mp4
+
+REAL:
+  rtsp://213.254.239.61/farm/*/encoder/tagesschau/live1high.rm

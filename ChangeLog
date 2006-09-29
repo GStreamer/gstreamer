@@ -1,5 +1,32 @@
 2006-09-29  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/URLS:
+	Add some more URLs.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_class_init),
+	(gst_rtspsrc_init), (gst_rtspsrc_finalize),
+	(gst_rtspsrc_set_property), (gst_rtspsrc_get_property),
+	(gst_rtspsrc_stream_setup_rtp), (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_loop_udp), (gst_rtspsrc_loop_send_cmd),
+	(gst_rtspsrc_loop), (gst_rtspsrc_send),
+	(gst_rtspsrc_parse_methods), (gst_rtspsrc_open),
+	(gst_rtspsrc_close), (gst_rtspsrc_play), (gst_rtspsrc_pause),
+	(gst_rtspsrc_handle_message), (gst_rtspsrc_change_state):
+	* gst/rtsp/gstrtspsrc.h:
+	Add timeout property to control UDP timeouts.
+	Fix error messages.
+	Also start a loop function when operating in UDP mode so that we can
+	do some more stuff async.
+	Handle element messages from udpsrc to detect timeouts. If a timeout
+	happens we currently generate an error.
+	API: rtspsrc::timeout property.
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init),
+	(gst_udpsrc_create):
+	Really implement the timeout in microseconds and not milliseconds.
+
+2006-09-29  Wim Taymans  <wim@fluendo.com>
+
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init), (gst_udpsrc_init),
 	(gst_udpsrc_create), (gst_udpsrc_set_property),
 	(gst_udpsrc_get_property), (gst_udpsrc_unlock), (gst_udpsrc_stop):
