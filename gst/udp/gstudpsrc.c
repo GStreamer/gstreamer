@@ -328,7 +328,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
           int res;
 
           READ_COMMAND (udpsrc, command, res);
-          if (res < 0) {
+          if (res <= 0) {
             GST_LOG_OBJECT (udpsrc, "no more commands");
             /* no more commands */
             break;

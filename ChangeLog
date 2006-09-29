@@ -1,3 +1,11 @@
+2006-09-29  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):
+	Fix possible infinite loop when shutting down, a read can also return
+	0 to indicate no more messages are available. Fixes #358156.
+
 2006-09-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/autodetect/gstautoaudiosink.c:
