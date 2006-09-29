@@ -1,3 +1,8 @@
+2006-09-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_handle_clients):
+	Stop reading commands when EOF (we read 0) as well.
+
 2006-09-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (dynamic_create), (dynamic_free),

@@ -2190,7 +2190,7 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
           int res;
 
           READ_COMMAND (sink, command, res);
-          if (res < 0) {
+          if (res <= 0) {
             GST_LOG_OBJECT (sink, "no more commands");
             /* no more commands */
             break;
