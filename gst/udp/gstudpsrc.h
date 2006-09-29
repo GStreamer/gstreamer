@@ -52,19 +52,20 @@ struct _GstUDPSrc {
   GstPushSrc parent;
 
   /* properties */
-  gchar *uri;
-  int port;
-  gchar *multi_group;
-  gint ttl;
-  gint buffer_size;
-
-  int sock;
-  int control_sock[2];
-
-  struct sockaddr_in myaddr;
-  struct ip_mreq multi_addr;
-
+  gchar   *uri;
+  int      port;
+  gchar   *multi_group;
+  gint     ttl;
   GstCaps *caps;
+  gint     buffer_size;
+  guint64  timeout;
+
+  /* our sockets */
+  int      sock;
+  int      control_sock[2];
+
+  struct   sockaddr_in myaddr;
+  struct   ip_mreq multi_addr;
 };
 
 struct _GstUDPSrcClass {

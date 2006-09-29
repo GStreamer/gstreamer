@@ -1,5 +1,17 @@
 2006-09-29  Wim Taymans  <wim@fluendo.com>
 
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init), (gst_udpsrc_init),
+	(gst_udpsrc_create), (gst_udpsrc_set_property),
+	(gst_udpsrc_get_property), (gst_udpsrc_unlock), (gst_udpsrc_stop):
+	* gst/udp/gstudpsrc.h:
+	Added property to post a message on timeout.
+	Updated docs.
+	When restarting the select, initialize the fdsets again.
+	Init control sockets so we don't accidentally close a random socket.
+	API: GstUDPSrc::timeout property
+
+2006-09-29  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type):
 	Fix flag registration.
 
