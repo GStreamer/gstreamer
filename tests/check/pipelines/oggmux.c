@@ -293,7 +293,6 @@ GST_START_TEST (test_theora_vorbis)
 
 GST_END_TEST;
 
-/* THIS TEST FAILS AT THE MOMENT (KILLED AFTER TIMEOUT): */
 GST_START_TEST (test_vorbis_theora)
 {
   test_pipeline
