@@ -1,5 +1,13 @@
 2006-09-29  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type):
+	Fix flag registration.
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_read):
+	Reading 0 also means 'no more commands'
+
+2006-09-29  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
 
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):

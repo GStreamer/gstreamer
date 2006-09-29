@@ -522,7 +522,7 @@ rtsp_connection_read (RTSPConnection * conn, gpointer data, guint size)
         int res;
 
         READ_COMMAND (conn, command, res);
-        if (res < 0) {
+        if (res <= 0) {
           /* no more commands */
           break;
         }

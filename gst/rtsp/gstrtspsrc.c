@@ -140,9 +140,9 @@ gst_rtsp_proto_get_type (void)
 {
   static GType rtsp_proto_type = 0;
   static const GFlagsValue rtsp_proto[] = {
-    {GST_RTSP_PROTO_UDP_UNICAST, "UDP Unicast", "UDP unicast mode"},
-    {GST_RTSP_PROTO_UDP_MULTICAST, "UDP Multicast", "UDP Multicast mode"},
-    {GST_RTSP_PROTO_TCP, "TCP", "TCP interleaved mode"},
+    {GST_RTSP_PROTO_UDP_UNICAST, "UDP Unicast Mode", "udp-unicast"},
+    {GST_RTSP_PROTO_UDP_MULTICAST, "UDP Multicast Mode", "udp-multicast"},
+    {GST_RTSP_PROTO_TCP, "TCP interleaved mode", "tcp"},
     {0, NULL, NULL},
   };
 
