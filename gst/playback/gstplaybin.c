@@ -181,6 +181,8 @@
  *   ...
  * }
  * </programlisting>
+ * Note that application should keep the pipeline in the PAUSED state when a
+ * GST_MESSAGE_BUFFERING message is received with a buffer-percent < 100.
  * </para>
  * <title>Embedding the video window in your application</title>
  * <para>

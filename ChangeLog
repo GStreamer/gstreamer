@@ -1,3 +1,11 @@
+2006-09-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (new_caps):
+	Remove g_print
+
+	* gst/playback/gstplaybin.c:
+	Add some docs.
+
 2006-09-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:

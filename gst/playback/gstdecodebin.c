@@ -1276,7 +1276,8 @@ no_more_pads (GstElement * element, GstDynamic * dynamic)
 static void
 new_caps (GstPad * pad, GParamSpec * unused, GstDynamic * dynamic)
 {
-  g_print ("delayed link triggered\n");
+  GST_DEBUG_OBJECT (dynamic->decode_bin, "delayed link triggered\n");
+
   new_pad (dynamic->element, pad, dynamic);
 
   /* assume it worked and remove the dynamic */
