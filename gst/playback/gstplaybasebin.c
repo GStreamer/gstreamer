@@ -1293,9 +1293,13 @@ setup_subtitle (GstPlayBaseBin * play_base_bin, gchar * sub_uri)
 {
   GstElement *source, *subdecodebin, *subbin;
 
+  if (!gst_uri_is_valid (sub_uri))
+    goto invalid_uri;
+
   source = gst_element_make_from_uri (GST_URI_SRC, sub_uri, NULL);
   if (!source)
-    return NULL;
+    goto unknown_uri;
+
   subdecodebin = gst_element_factory_make ("decodebin", "subtitle-decoder");
   g_signal_connect (subdecodebin, "element-added",
       G_CALLBACK (decodebin_element_added_cb), play_base_bin);
@@ -1308,6 +1312,28 @@ setup_subtitle (GstPlayBaseBin * play_base_bin, gchar * sub_uri)
 
   /* return the subtitle GstElement object */
   return subbin;
+
+  /* WARNINGS */
+invalid_uri:
+  {
+    GST_ELEMENT_WARNING (play_base_bin, RESOURCE, NOT_FOUND,
+        (_("Invalid subtitle URI \"%s\", subtitles disabled."), sub_uri),
+        (NULL));
+    return NULL;
+  }
+unknown_uri:
+  {
+    gchar *prot = gst_uri_get_protocol (sub_uri);
+
+    if (prot) {
+      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, FAILED,
+          (_("No URI handler implemented for \"%s\"."), prot), (NULL));
+      g_free (prot);
+    } else
+      goto invalid_uri;
+
+    return NULL;
+  }
 }
 
 /* helper function to lookup stuff in lists */
@@ -1323,14 +1349,13 @@ array_has_value (const gchar * values[], const gchar * value)
   return FALSE;
 }
 
-/* list of URIs that we consider to be streams. We have no mechanism yet to
- * figure this out with a query. */
+/* list of URIs that we consider to be streams and that need buffering.
+ * We have no mechanism yet to figure this out with a query. */
 static const gchar *stream_uris[] = { "http://", "mms://", "mmsh://",
   "mmsu://", "mmst://", NULL
 };
 
 /* blacklisted URIs, we know they will always fail. */
-//static const gchar *blacklisted_uris[] = { "rtsp://", NULL };
 static const gchar *blacklisted_uris[] = { NULL };
 
 /* mime types that we don't consider to be media types */
@@ -1360,10 +1385,12 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
   if (!play_base_bin->uri)
     goto no_uri;
 
+  if (!gst_uri_is_valid (play_base_bin->uri))
+    goto invalid_uri;
+
   if (IS_BLACKLISTED_URI (play_base_bin->uri))
     goto uri_blacklisted;
 
-  /* strip subtitle from uri */
   if (play_base_bin->suburi) {
     /* subtitle specified */
     *subbin = setup_subtitle (play_base_bin, play_base_bin->suburi);
@@ -1395,6 +1422,12 @@ no_uri:
         (_("No URI specified to play from.")), (NULL));
     return NULL;
   }
+invalid_uri:
+  {
+    GST_ELEMENT_ERROR (play_base_bin, RESOURCE, NOT_FOUND,
+        (_("Invalid URI \"%s\"."), play_base_bin->uri), (NULL));
+    return NULL;
+  }
 uri_blacklisted:
   {
     GST_ELEMENT_ERROR (play_base_bin, RESOURCE, FAILED,
@@ -1403,19 +1436,17 @@ uri_blacklisted:
   }
 no_source:
   {
-    gchar *prot;
+    gchar *prot = gst_uri_get_protocol (play_base_bin->uri);
 
     /* whoops, could not create the source element, dig a little deeper to
      * figure out what might be wrong. */
-    prot = gst_uri_get_protocol (play_base_bin->uri);
     if (prot) {
       GST_ELEMENT_ERROR (play_base_bin, RESOURCE, FAILED,
           (_("No URI handler implemented for \"%s\"."), prot), (NULL));
       g_free (prot);
-    } else {
-      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, NOT_FOUND,
-          (_("Invalid URI \"%s\"."), play_base_bin->uri), (NULL));
-    }
+    } else
+      goto invalid_uri;
+
     return NULL;
   }
 }

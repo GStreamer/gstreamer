@@ -1,3 +1,9 @@
+2006-09-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c: (setup_subtitle),
+	(gen_source_element):
+	Handle invalid URIs a bit more gracefully.
+
 2006-09-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/pipelines/oggmux.c:
