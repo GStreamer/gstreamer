@@ -1,3 +1,8 @@
+2006-09-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/design/Makefile.am:
+          Dist some more files.
+
 2006-09-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/libs/controller.c: (GST_START_TEST),

@@ -1,8 +1,11 @@
 
 EXTRA_DIST = \
 	draft-ghostpads.txt \
+	draft-klass.txt \
 	draft-push-pull.txt \
 	part-activation.txt \
+        part-block.txt \
+        part-buffering.txt \
 	part-caps.txt \
 	part-clocks.txt \
 	part-conventions.txt \
@@ -23,6 +26,7 @@ EXTRA_DIST = \
 	part-overview.txt \
 	part-preroll.txt \
 	part-push-pull.txt \
+        part-qos.txt \
 	part-query.txt \
 	part-relations.txt \
 	part-scheduling.txt \
@@ -31,6 +35,7 @@ EXTRA_DIST = \
 	part-sparsestreams.txt \
 	part-standards.txt \
 	part-states.txt \
+        part-streams.txt \
 	part-TODO.txt \
 	part-trickmodes.txt
 
