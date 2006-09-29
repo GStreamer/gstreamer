@@ -249,6 +249,9 @@ _gst_plugin_static_init__plugin_init (void)
 GST_START_TEST (controller_init)
 {
   gst_controller_init (NULL, NULL);
+  gst_controller_init (NULL, NULL);
+  gst_controller_init (NULL, NULL);
+  gst_controller_init (NULL, NULL);
 }
 
 GST_END_TEST;
@@ -258,6 +261,8 @@ GST_START_TEST (controller_new_fail1)
 {
   GstController *ctrl;
   GstElement *elem;
+
+  gst_controller_init (NULL, NULL);
 
   elem = gst_element_factory_make ("fakesrc", "test_source");
 
@@ -276,6 +281,8 @@ GST_START_TEST (controller_new_fail2)
   GstController *ctrl;
   GstElement *elem;
 
+  gst_controller_init (NULL, NULL);
+
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
   /* no property given */
@@ -292,6 +299,8 @@ GST_START_TEST (controller_new_fail3)
 {
   GstController *ctrl;
   GstElement *elem;
+
+  gst_controller_init (NULL, NULL);
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
@@ -311,6 +320,8 @@ GST_START_TEST (controller_new_fail4)
   GstController *ctrl;
   GstElement *elem;
 
+  gst_controller_init (NULL, NULL);
+
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
   /* that property should exist and but is not controlable */
@@ -327,6 +338,8 @@ GST_START_TEST (controller_new_fail5)
 {
   GstController *ctrl;
   GstElement *elem;
+
+  gst_controller_init (NULL, NULL);
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
@@ -347,6 +360,8 @@ GST_START_TEST (controller_new_okay1)
   GstController *ctrl;
   GstElement *elem;
 
+  gst_controller_init (NULL, NULL);
+
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
   /* that property should exist and should be controllable */
@@ -363,8 +378,10 @@ GST_END_TEST;
 /* tests for an element with several controlled params */
 GST_START_TEST (controller_new_okay2)
 {
-  GstController *ctrl;
+  GstController *ctrl, *ctrl2, *ctrl3;
   GstElement *elem;
+
+  gst_controller_init (NULL, NULL);
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
@@ -373,7 +390,28 @@ GST_START_TEST (controller_new_okay2)
   fail_unless (ctrl != NULL, NULL);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  fail_unless (G_OBJECT (ctrl)->ref_count == 1);
+
+  ctrl2 = gst_controller_new (G_OBJECT (elem), "boolean", NULL);
+  fail_unless (ctrl2 != NULL, NULL);
+  fail_unless (ctrl2 == ctrl, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  fail_unless (G_OBJECT (ctrl)->ref_count == 2);
+
+  /* trying to control the same properties again should correctly
+   * increase the refcount of the object returned as well */
+  ctrl3 =
+      gst_controller_new (G_OBJECT (elem), "ulong", "double", "float", NULL);
+  fail_unless (ctrl3 != NULL, NULL);
+  fail_unless (ctrl3 == ctrl, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  fail_unless (G_OBJECT (ctrl)->ref_count == 3);
+
   g_object_unref (ctrl);
+  g_object_unref (ctrl2);
+  g_object_unref (ctrl3);
   gst_object_unref (elem);
 }
 
@@ -384,6 +422,8 @@ GST_START_TEST (controller_new_okay3)
 {
   GstController *ctrl1, *ctrl2, *ctrl3;
   GstElement *elem;
+
+  gst_controller_init (NULL, NULL);
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
@@ -402,7 +442,10 @@ GST_START_TEST (controller_new_okay3)
   fail_unless (ctrl1 == ctrl3, NULL);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl1)->ref_count);
+  fail_unless (G_OBJECT (ctrl1)->ref_count == 3);
   g_object_unref (ctrl1);
+  g_object_unref (ctrl2);
+  g_object_unref (ctrl3);
   gst_object_unref (elem);
 }
 
@@ -414,6 +457,8 @@ GST_START_TEST (controller_param_twice)
   GstController *ctrl;
   GstElement *elem;
   gboolean res;
+
+  gst_controller_init (NULL, NULL);
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
@@ -442,6 +487,8 @@ GST_START_TEST (controller_finalize)
   GstController *ctrl;
   GstElement *elem;
 
+  gst_controller_init (NULL, NULL);
+
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
   /* that property should exist and should be controllable */
@@ -467,6 +514,8 @@ GST_START_TEST (controller_interpolate_none)
   GstElement *elem;
   gboolean res;
   GValue val_ulong = { 0, };
+
+  gst_controller_init (NULL, NULL);
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
@@ -508,6 +557,8 @@ GST_START_TEST (controller_interpolate_trigger)
   GstElement *elem;
   gboolean res;
   GValue val_ulong = { 0, };
+
+  gst_controller_init (NULL, NULL);
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
@@ -552,6 +603,8 @@ GST_START_TEST (controller_interpolate_linear)
   gboolean res;
   GValue val_ulong = { 0, };
 
+  gst_controller_init (NULL, NULL);
+
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
   /* that property should exist and should be controllable */
@@ -592,6 +645,8 @@ GST_START_TEST (controller_unset)
   GstElement *elem;
   gboolean res;
   GValue val_ulong = { 0, };
+
+  gst_controller_init (NULL, NULL);
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
@@ -647,6 +702,8 @@ GST_START_TEST (controller_unset_all)
   gboolean res;
   GValue val_ulong = { 0, };
 
+  gst_controller_init (NULL, NULL);
+
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
   /* that property should exist and should be controllable */
@@ -693,6 +750,8 @@ GST_START_TEST (controller_live)
   GstElement *elem;
   gboolean res;
   GValue val_ulong = { 0, };
+
+  gst_controller_init (NULL, NULL);
 
   elem = gst_element_factory_make ("testmonosource", "test_source");
 
@@ -745,6 +804,8 @@ GST_START_TEST (controller_helper_any_gobject)
   GstElement *elem;
   gboolean res;
 
+  gst_controller_init (NULL, NULL);
+
   elem = gst_element_factory_make ("bin", "test_elem");
 
   /* that element is not controllable */
@@ -756,8 +817,48 @@ GST_START_TEST (controller_helper_any_gobject)
 
 GST_END_TEST;
 
+GST_START_TEST (controller_misc)
+{
+  GstController *ctrl;
+  GstTimedValue *tval;
+  GstElement *elem;
+  GSList *list = NULL;
 
-Suite *
+  gst_controller_init (NULL, NULL);
+
+  /* test that an invalid timestamp throws a warning of some sort */
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* set interpolation mode */
+  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_LINEAR);
+
+  /* set control value */
+  tval = g_new0 (GstTimedValue, 1);
+  tval->timestamp = GST_CLOCK_TIME_NONE;
+  g_value_init (&tval->value, G_TYPE_ULONG);
+  g_value_set_ulong (&tval->value, 0);
+
+  list = g_slist_append (list, tval);
+
+  ASSERT_WARNING (fail_if (gst_controller_set_from_list (ctrl, "ulong", list)));
+
+  /* try again with a valid stamp, should work now */
+  tval->timestamp = 0;
+  fail_unless (gst_controller_set_from_list (ctrl, "ulong", list));
+
+  /* allocated GstTimedValue now belongs to the controller, but list not */
+  g_slist_free (list);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+static Suite *
 gst_controller_suite (void)
 {
   Suite *s = suite_create ("Controller");
@@ -782,6 +883,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_unset_all);
   tcase_add_test (tc, controller_live);
   tcase_add_test (tc, controller_helper_any_gobject);
+  tcase_add_test (tc, controller_misc);
 
   return s;
 }

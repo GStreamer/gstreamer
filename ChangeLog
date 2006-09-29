@@ -1,5 +1,14 @@
 2006-09-29  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/libs/controller.c: (GST_START_TEST),
+	(gst_controller_suite):
+	  Add test for the previous fix; add some more tests
+	  for correct refcounting behaviour; fix a few leaks
+	  in test cases; call gst_controller_init() at start
+	  of all tests.
+
+2006-09-29  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist),
 	(gst_controller_set_from_list):
 	  Don't g_return_val_if_fail() on timed values with invalid timestamps
