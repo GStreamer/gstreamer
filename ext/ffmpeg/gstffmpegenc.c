@@ -910,7 +910,7 @@ gst_ffmpegenc_register (GstPlugin * plugin)
 
   while (in_plugin) {
     gchar *type_name;
-    GstCaps *srccaps, *sinkcaps;
+    GstCaps *srccaps = NULL, *sinkcaps = NULL;
     GstFFMpegEncClassParams *params;
 
     /* no quasi codecs, please */
@@ -953,8 +953,8 @@ gst_ffmpegenc_register (GstPlugin * plugin)
 
     params = g_new0 (GstFFMpegEncClassParams, 1);
     params->in_plugin = in_plugin;
-    params->srccaps = srccaps;
-    params->sinkcaps = sinkcaps;
+    params->srccaps = gst_caps_ref (srccaps);
+    params->sinkcaps = gst_caps_ref (sinkcaps);
 
     g_hash_table_insert (enc_global_plugins,
         GINT_TO_POINTER (0), (gpointer) params);
@@ -972,6 +972,10 @@ gst_ffmpegenc_register (GstPlugin * plugin)
         GINT_TO_POINTER (type), (gpointer) params);
 
   next:
+    if (sinkcaps)
+      gst_caps_unref (sinkcaps);
+    if (srccaps)
+      gst_caps_unref (srccaps);
     in_plugin = in_plugin->next;
   }
   g_hash_table_remove (enc_global_plugins, GINT_TO_POINTER (0));

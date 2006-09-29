@@ -1,3 +1,9 @@
+2006-09-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_register):
+	  Don't leak caps in some cases and make build bots happy again.
+
 2006-09-23  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),

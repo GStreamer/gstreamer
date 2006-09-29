@@ -2060,7 +2060,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
 
   while (in_plugin) {
     GstFFMpegDecClassParams *params;
-    GstCaps *srccaps, *sinkcaps;
+    GstCaps *srccaps = NULL, *sinkcaps = NULL;
     gchar *type_name;
 
     /* no quasi-codecs, please */
@@ -2088,13 +2088,8 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     } else {
       srccaps = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
     }
-    if (!sinkcaps || !srccaps) {
-      if (sinkcaps)
-        gst_caps_unref (sinkcaps);
-      if (srccaps)
-        gst_caps_unref (srccaps);
+    if (!sinkcaps || !srccaps)
       goto next;
-    }
 
     /* construct the type */
     type_name = g_strdup_printf ("ffdec_%s", in_plugin->name);
@@ -2107,8 +2102,8 @@ gst_ffmpegdec_register (GstPlugin * plugin)
 
     params = g_new0 (GstFFMpegDecClassParams, 1);
     params->in_plugin = in_plugin;
-    params->srccaps = srccaps;
-    params->sinkcaps = sinkcaps;
+    params->srccaps = gst_caps_ref (srccaps);
+    params->sinkcaps = gst_caps_ref (sinkcaps);
     g_hash_table_insert (global_plugins,
         GINT_TO_POINTER (0), (gpointer) params);
 
@@ -2156,6 +2151,10 @@ gst_ffmpegdec_register (GstPlugin * plugin)
         GINT_TO_POINTER (type), (gpointer) params);
 
   next:
+    if (sinkcaps)
+      gst_caps_unref (sinkcaps);
+    if (srccaps)
+      gst_caps_unref (srccaps);
     in_plugin = in_plugin->next;
   }
   g_hash_table_remove (global_plugins, GINT_TO_POINTER (0));
