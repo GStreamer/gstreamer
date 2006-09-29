@@ -34,7 +34,6 @@ endif
 check_PROGRAMS = \
 	$(check_annodex) \
 	elements/audiopanorama \
-	elements/autodetect \
 	elements/avimux \
 	elements/level \
 	elements/matroskamux \
@@ -44,7 +43,9 @@ check_PROGRAMS = \
 TESTS = $(check_PROGRAMS)
 
 # these tests don't even pass
-noinst_PROGRAMS =
+# autodetect: temporarily disabled because of broken videosinks in -bad
+noinst_PROGRAMS = \
+	elements/autodetect
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)

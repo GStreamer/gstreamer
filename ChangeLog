@@ -1,3 +1,12 @@
+2006-09-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	  Disable autodetect test temporarily, so that the build bots
+	  update -bad and the ranks of unreliable video sinks in there.
+
+	* tests/check/elements/autodetect.c: (GST_START_TEST):
+	  Skip test if no usable videosink is found.
+
 2006-09-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/URLS:
