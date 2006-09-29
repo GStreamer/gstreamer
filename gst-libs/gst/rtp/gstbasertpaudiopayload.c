@@ -17,6 +17,47 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbasertpaudiopayload
+ * @short_description: Base class for audio RTP payloader
+ *
+ * <refsect2>
+ * <para>
+ * Provides a base class for audio RTP payloaders for frame or sample based
+ * audio codecs (constant bitrate)
+ * </para>
+ *
+ * <para>
+ * This class derives from GstBaseRTPPayload. It can be used for payloading
+ * audio codecs. It will only work with constant bitrate codecs. It supports
+ * both frame based and sample based codecs. It takes care of packing up the
+ * audio data into RTP packets and filling up the headers accordingly. The
+ * payloading is done based on the maximum MTU (mtu) and the maximum time per
+ * packet (max-ptime). The general idea is to divide large data buffers into
+ * smaller RTP packets. The RTP packet size is the minimum of either the MTU,
+ * max-ptime (if set) or available data. Any residual data is always sent in a
+ * last RTP packet (no minimum RTP packet size). A minimum packet size might be
+ * added in future versions if the need arises. In the case of frame
+ * based codecs, the resulting RTP packets always contain full frames.
+ * </para>
+ *
+ * <title>Usage</title>
+ * <para>
+ * To use this base class, your child element needs to call either
+ * gst_basertpaudiopayload_set_frame_based() or
+ * gst_basertpaudiopayload_set_sample_based(). This is usually done in the
+ * element's _init() function. Then, the child element must call either
+ * gst_basertpaudiopayload_set_frame_options() or
+ * gst_basertpaudiopayload_set_sample_options(). Since GstBaseRTPAudioPayload
+ * derives from GstBaseRTPPayload, the child element must set any variables or
+ * call/override any functions required by that base class. The child element
+ * does not need to override any other functions specific to
+ * GstBaseRTPAudioPayload.
+ * </para>
+ * </refsect2>
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
