@@ -1265,9 +1265,7 @@ dynamic_remove (GstDynamic * dynamic)
 static void
 no_more_pads (GstElement * element, GstDynamic * dynamic)
 {
-  GstDecodeBin *decode_bin = dynamic->decode_bin;
-
-  GST_DEBUG_OBJECT (decode_bin, "no more pads on element %s",
+  GST_DEBUG_OBJECT (dynamic->decode_bin, "no more pads on element %s",
       GST_ELEMENT_NAME (element));
 
   dynamic_remove (dynamic);

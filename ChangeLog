@@ -1,5 +1,10 @@
 2006-09-29  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstdecodebin.c: (no_more_pads):
+	Fix compilation.
+
+2006-09-29  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstdecodebin.c: (new_caps):
 	Remove g_print
 
