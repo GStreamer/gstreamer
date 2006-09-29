@@ -455,6 +455,7 @@ gst_controller_new_valist (GObject * object, va_list var_args)
 {
   GstController *self;
   GstControlledProperty *prop;
+  gboolean ref_existing = TRUE;
   gchar *name;
 
   g_return_val_if_fail (G_IS_OBJECT (object), NULL);
@@ -485,14 +486,23 @@ gst_controller_new_valist (GObject * object, va_list var_args)
           self->object = object;
           /* store the controller */
           g_object_set_qdata (object, __gst_controller_key, self);
+          ref_existing = FALSE;
         } else {
-          g_object_ref (self);
-          GST_INFO ("returning existing controller");
+          /* only want one single _ref(), even for multiple properties */
+          if (ref_existing) {
+            g_object_ref (self);
+            ref_existing = FALSE;
+            GST_INFO ("returning existing controller");
+          }
         }
         self->properties = g_list_prepend (self->properties, prop);
       }
     } else {
       GST_WARNING ("trying to control property again");
+      if (ref_existing) {
+        g_object_ref (self);
+        ref_existing = FALSE;
+      }
     }
   }
   va_end (var_args);
@@ -760,11 +770,15 @@ gst_controller_set_from_list (GstController * self, gchar * property_name,
     for (node = timedvalues; node; node = g_slist_next (node)) {
       tv = node->data;
       if (G_VALUE_TYPE (&tv->value) == prop->type) {
-        g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (tv->timestamp), FALSE);
-        /* TODO copy the timed value or just link in? */
-        prop->values =
-            g_list_insert_sorted (prop->values, tv, gst_timed_value_compare);
-        res = TRUE;
+        if (GST_CLOCK_TIME_IS_VALID (tv->timestamp)) {
+          /* TODO copy the timed value or just link in? */
+          prop->values =
+              g_list_insert_sorted (prop->values, tv, gst_timed_value_compare);
+          res = TRUE;
+        } else {
+          g_warning ("GstTimedValued with invalid timestamp passed to %s "
+              "for property '%s'", GST_FUNCTION, property_name);
+        }
       } else {
         GST_WARNING ("incompatible value type for property '%s'", prop->name);
       }

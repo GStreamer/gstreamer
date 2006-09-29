@@ -1,3 +1,15 @@
+2006-09-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist),
+	(gst_controller_set_from_list):
+	  Don't g_return_val_if_fail() on timed values with invalid timestamps
+	  inside a critical section without unlocking the mutex. Spotted by
+	  René Stadler. (#357617)
+	  Also, fix up refcounting properly: when returning an existing
+	  controller, we should increase the reference only once and not
+	  once per property and when trying to control a property again
+	  we should also increase the refcount.
+
 2006-09-29  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/net/gstnetclientclock.c: (gst_net_client_clock_thread):
