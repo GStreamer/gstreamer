@@ -200,7 +200,7 @@ gst_identity_class_init (GstIdentityClass * klass)
       g_param_spec_string ("last-message", "last-message", "last-message", NULL,
           G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, PROP_DUMP,
-      g_param_spec_boolean ("dump", "Dump", "Dump buffer contents",
+      g_param_spec_boolean ("dump", "Dump", "Dump buffer contents to stdout",
           DEFAULT_DUMP, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_SYNC,
       g_param_spec_boolean ("sync", "Synchronize",

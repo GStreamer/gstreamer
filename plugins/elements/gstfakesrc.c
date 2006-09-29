@@ -310,7 +310,7 @@ gst_fake_src_class_init (GstFakeSrcClass * klass)
           "Send a signal before pushing the buffer", DEFAULT_SIGNAL_HANDOFFS,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_DUMP,
-      g_param_spec_boolean ("dump", "Dump", "Dump produced bytes to stdout",
+      g_param_spec_boolean ("dump", "Dump", "Dump buffer contents to stdout",
           DEFAULT_DUMP, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class,
       PROP_CAN_ACTIVATE_PUSH,

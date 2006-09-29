@@ -174,7 +174,7 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
           "Don't produce last_message events", DEFAULT_SILENT,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_DUMP,
-      g_param_spec_boolean ("dump", "Dump", "Dump received bytes to stdout",
+      g_param_spec_boolean ("dump", "Dump", "Dump buffer contents to stdout",
           DEFAULT_DUMP, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class,
       PROP_CAN_ACTIVATE_PUSH,

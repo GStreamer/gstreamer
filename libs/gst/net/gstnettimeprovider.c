@@ -260,7 +260,7 @@ gst_net_time_provider_thread (gpointer data)
         int res;
 
         READ_COMMAND (self, command, res);
-        if (res < 0) {
+        if (res <= 0) {
           GST_LOG_OBJECT (self, "no more commands");
           break;
         }

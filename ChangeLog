@@ -1,3 +1,15 @@
+2006-09-29  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/net/gstnetclientclock.c: (gst_net_client_clock_thread):
+	* libs/gst/net/gstnettimeprovider.c:
+	(gst_net_time_provider_thread):
+	Stop reading commands when EOF as well.
+
+	* plugins/elements/gstfakesink.c: (gst_fake_sink_class_init):
+	* plugins/elements/gstfakesrc.c: (gst_fake_src_class_init):
+	* plugins/elements/gstidentity.c: (gst_identity_class_init):
+	Unify description of the dump property.
+
 2006-09-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/examples/manual/.cvsignore:
