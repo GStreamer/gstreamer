@@ -736,7 +736,7 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
   /* ERRORS */
 unknown_type:
   {
-    GST_LOG_OBJECT (pad, "unkown type found, fire signal");
+    GST_LOG_OBJECT (pad, "unknown type found, fire signal");
     g_signal_emit (G_OBJECT (decode_bin),
         gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, pad, caps);
     return;

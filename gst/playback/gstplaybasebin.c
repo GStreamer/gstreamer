@@ -993,7 +993,7 @@ probe_triggered (GstPad * pad, GstEvent * event, gpointer user_data)
 
   type = GST_EVENT_TYPE (event);
 
-  GST_DEBUG ("probe triggered, (%d) %s", type, gst_event_type_get_name (type));
+  GST_LOG ("probe triggered, (%d) %s", type, gst_event_type_get_name (type));
 
   /* we only care about EOS */
   if (type != GST_EVENT_EOS)
@@ -1135,12 +1135,13 @@ silence_stream (GstPad * pad, GstMiniObject * data, gpointer user_data)
   return FALSE;
 }
 
-/* signal fired when decodebin has found a new raw pad. We create
- * a preroll element if needed and the appropriate streaminfo.
- */
+/* Called by the signal handlers when a decodebin (main or subtitle) has 
+ * found a new raw pad.  We create a preroll element if needed and the 
+ * appropriate streaminfo. Commits the group if there will be no more pads
+ * from decodebin */
 static void
-new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
-    GstPlayBaseBin * play_base_bin)
+new_decoded_pad_full (GstElement * element, GstPad * pad, gboolean last,
+    GstPlayBaseBin * play_base_bin, gboolean is_subs)
 {
   GstStructure *structure;
   const gchar *mimetype;
@@ -1152,7 +1153,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   guint sig;
   GstObject *parent;
 
-  GST_DEBUG ("play base: new decoded pad %d", last);
+  GST_DEBUG ("play base: new decoded pad. Last: %d", last);
 
   /* first see if this pad has interesting caps */
   caps = gst_pad_get_caps (pad);
@@ -1227,7 +1228,7 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
 
   /* signal the no more pads after adding the stream */
   if (last)
-    no_more_pads (element, play_base_bin);
+    no_more_pads_full (element, is_subs, play_base_bin);
 
   return;
 
@@ -1239,6 +1240,20 @@ no_type:
       gst_caps_unref (caps);
     return;
   }
+}
+
+static void
+new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
+    GstPlayBaseBin * play_base_bin)
+{
+  new_decoded_pad_full (element, pad, last, play_base_bin, FALSE);
+}
+
+static void
+subs_new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
+    GstPlayBaseBin * play_base_bin)
+{
+  new_decoded_pad_full (element, pad, last, play_base_bin, TRUE);
 }
 
 static void
@@ -1392,6 +1407,8 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
     goto uri_blacklisted;
 
   if (play_base_bin->suburi) {
+    GST_LOG_OBJECT (play_base_bin, "Creating decoder for subtitles URI %s",
+        play_base_bin->suburi);
     /* subtitle specified */
     *subbin = setup_subtitle (play_base_bin, play_base_bin->suburi);
   } else {
@@ -1464,7 +1481,7 @@ source_new_pad (GstElement * element, GstPad * pad, GstPlayBaseBin * bin)
   /* if this is a pad with all raw caps, we can expose it */
   if (has_all_raw_caps (pad, &is_raw) && is_raw) {
     /* it's all raw, create output pads. */
-    new_decoded_pad (element, pad, FALSE, bin);
+    new_decoded_pad_full (element, pad, FALSE, bin, FALSE);
     return;
   }
 
@@ -1655,7 +1672,8 @@ analyse_source (GstPlayBaseBin * play_base_bin, gboolean * is_raw,
 
         /* caps on source pad are all raw, we can add the pad */
         if (*is_raw)
-          new_decoded_pad (play_base_bin->source, pad, FALSE, play_base_bin);
+          new_decoded_pad_full (play_base_bin->source, pad, FALSE,
+              play_base_bin, FALSE);
         break;
     }
   }
@@ -1806,7 +1824,7 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
 
     /* do type detection, without adding (so no preroll) */
     g_signal_connect (G_OBJECT (db), "new-decoded-pad",
-        G_CALLBACK (new_decoded_pad), play_base_bin);
+        G_CALLBACK (subs_new_decoded_pad), play_base_bin);
     g_signal_connect (G_OBJECT (db), "no-more-pads",
         G_CALLBACK (sub_no_more_pads), play_base_bin);
     g_signal_connect (G_OBJECT (db), "unknown-type",

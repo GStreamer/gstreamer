@@ -1191,21 +1191,43 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
     for (i = 0; i < count; i++)
       if (!strcmp (attr[i].name, colorkey)) {
         const Atom atom = XInternAtom (xcontext->disp, colorkey, False);
-        int ckey;
+        guint32 ckey;
+        guint32 keymask;
+        gint bits;
+        gboolean set_attr = TRUE;
+
+        /* Count the bits in the colorkey mask 'max' value */
+        bits = 0;
+        for (keymask = (guint32) (attr[i].max_value);
+            keymask != 0; keymask >>= 1)
+          bits++;
 
         /* set a colorkey in the right format RGB565/RGB888
-         * note that the colorkey is independent from the display depth (xcontext->depth)
-         */
-        ckey =
-            attr[i].max_value <=
-            0xffff ? ((1 << 10) | (2 << 5) | 3) : ((1 << 16) | (2 << 8) | 3);
-        ckey = CLAMP (ckey, attr[i].min_value, attr[i].max_value);
+         * note that the colorkey is independent from the display 
+         * depth (xcontext->depth). We only handle these 2 cases, because
+         * they're the only types of devices we've encountered. If we don't
+         * recognise it, leave it alone  */
+        if (bits == 16)
+          ckey = (1 << 10) | (2 << 5) | 3;
+        else if (bits == 24 || bits == 32)
+          ckey = (1 << 16) | (2 << 8) | 3;
+        else
+          set_attr = FALSE;
 
-        GST_LOG_OBJECT (xvimagesink,
-            "Setting color key for display depth %d to 0x%x",
-            xcontext->depth, ckey);
 
-        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom, ckey);
+        if (set_attr) {
+          ckey = CLAMP (ckey, (guint32) attr[i].min_value,
+              (guint32) attr[i].max_value);
+          GST_LOG_OBJECT (xvimagesink,
+              "Setting color key for display depth %d to 0x%x",
+              xcontext->depth, ckey);
+
+          XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
+              (gint) ckey);
+        } else {
+          GST_LOG_OBJECT (xvimagesink,
+              "Unknown bit depth for Xv Colorkey - not adjusting ");
+        }
         break;
       }
 

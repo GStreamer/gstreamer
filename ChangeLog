@@ -1,3 +1,23 @@
+2006-09-30  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gstdecodebin.c: (close_pad_link):
+	Fix typo in a debug statement.
+
+	* gst/playback/gstplaybasebin.c: (probe_triggered),
+	(new_decoded_pad_full), (new_decoded_pad), (subs_new_decoded_pad),
+	(gen_source_element), (source_new_pad), (analyse_source),
+	(setup_source):
+	When handling no_more_pads in new_decoded_pad, make sure to treat
+	subtitle pads correctly. Fixes playback with subtitle files.
+
+	Move a recurring message to LOG level.
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support):
+	The maximum value for the Xv colorkey on this Radeon is 0xFFFFFFFF,
+	which ends up as -1 when cast to an int. Make the logic handle the
+	max value as an unsigned mask and only change the colorkey when it's
+	a value we recognise.
+
 2006-09-29 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
