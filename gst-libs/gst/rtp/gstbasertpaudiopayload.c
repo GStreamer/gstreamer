@@ -26,7 +26,6 @@
  * Provides a base class for audio RTP payloaders for frame or sample based
  * audio codecs (constant bitrate)
  * </para>
- *
  * <para>
  * This class derives from GstBaseRTPPayload. It can be used for payloading
  * audio codecs. It will only work with constant bitrate codecs. It supports
@@ -40,7 +39,6 @@
  * added in future versions if the need arises. In the case of frame
  * based codecs, the resulting RTP packets always contain full frames.
  * </para>
- *
  * <title>Usage</title>
  * <para>
  * To use this base class, your child element needs to call either
@@ -55,7 +53,6 @@
  * GstBaseRTPAudioPayload.
  * </para>
  * </refsect2>
- *
  */
 
 #ifdef HAVE_CONFIG_H

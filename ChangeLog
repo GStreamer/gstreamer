@@ -1,6 +1,11 @@
 2006-09-29 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	Removed empty * between paragraphs
+
+2006-09-29 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
 	* gst-libs/gst/rtp/README:
 	Moved some documentation into .c file
 
