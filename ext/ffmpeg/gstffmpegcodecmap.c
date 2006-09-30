@@ -604,6 +604,14 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, "image/png", NULL);
       break;
 
+    case CODEC_ID_PPM:
+      caps = gst_ff_vid_caps_new (context, "image/ppm", NULL);
+      break;
+      
+    case CODEC_ID_PBM:
+      caps = gst_ff_vid_caps_new (context, "image/pbm", NULL);
+      break;
+      
     case CODEC_ID_SMC:
       caps = gst_ff_vid_caps_new (context, "video/x-smc", NULL);
       break;
@@ -624,8 +632,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_VIXL:
     case CODEC_ID_QPEG:
     case CODEC_ID_XVID:
-    case CODEC_ID_PPM:
-    case CODEC_ID_PBM:
     case CODEC_ID_PGM:
     case CODEC_ID_PGMYUV:
     case CODEC_ID_PAM:

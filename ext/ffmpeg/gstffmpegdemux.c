@@ -1365,7 +1365,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     gchar *type_name, *typefind_name;
     gchar *p, *name = NULL;
     GstCaps *sinkcaps, *audiosrccaps, *videosrccaps;
-    gint rank = GST_RANK_NONE; /* don't autoplug unless more stable */
+    gint rank;
     gboolean register_typefind_func = TRUE;
 
     /* no emulators */
@@ -1374,7 +1374,13 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "audio_device") ||
         !strncmp (in_plugin->name, "image", 5) ||
         !strcmp (in_plugin->name, "mpegvideo") ||
-        !strcmp (in_plugin->name, "mjpeg"))
+        !strcmp (in_plugin->name, "mjpeg") ||
+	!strcmp (in_plugin->name, "redir"))
+      goto next;
+
+    /* no network demuxers */
+    if (!strcmp (in_plugin->name, "sdp") ||
+        !strcmp (in_plugin->name, "rtsp"))
       goto next;
 
     /* these don't do what one would expect or
@@ -1382,13 +1388,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     if (!strcmp (in_plugin->name, "aac"))
       goto next;
 
-    /* these are known to be buggy or broken or not
-     * tested enough to let them be autoplugged */
-    if (!strcmp (in_plugin->name, "mp3") ||     /* = application/x-id3 */
-        !strcmp (in_plugin->name, "avi") || !strcmp (in_plugin->name, "ogg")) {
-      rank = GST_RANK_NONE;
-    }
-
+    /* Don't use the typefind functions of formats for which we already have
+     * better typefind functions */
     if (!strcmp (in_plugin->name, "mov,mp4,m4a,3gp,3g2,mj2") ||
         !strcmp (in_plugin->name, "avi") ||
         !strcmp (in_plugin->name, "asf") ||
@@ -1401,6 +1402,14 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "tta") || !strcmp (in_plugin->name, "rm"))
       register_typefind_func = FALSE;
 
+    /* Set the rank of demuxers know to work to MARGINAL.
+     * Set demuxers for which we already have another implementation to NONE
+     * Set All others to NONE*/
+    if (!strcmp (in_plugin->name, "flv"))
+      rank = GST_RANK_MARGINAL;
+    else
+      rank = GST_RANK_NONE;
+    
     p = name = g_strdup (in_plugin->name);
     while (*p) {
       if (*p == '.' || *p == ',')

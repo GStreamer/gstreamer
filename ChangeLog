@@ -1,3 +1,14 @@
+2006-09-30  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	Clarify some CODEC_ID <=> mime type conversions for image formats.
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	Cleanup on demuxer registration.
+	Bumped flv demuxer to RANK_MARGINAL since it proved solid enough.
+	Will have to go over more demuxers, for which we don't have any
+	gst-plugins-* alternative, to figure out which ones can move to
+	RANK_MARGINAL too.
+
 2006-09-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
