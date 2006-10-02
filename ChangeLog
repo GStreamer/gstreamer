@@ -1,3 +1,9 @@
+2006-10-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/xvid/gstxvid.c: (plugin_init):
+	  Set rank of xviddec to NONE until someone fixes it (too many crasher
+	  bug reports against totem, people should use gst-ffmpeg).
+
 2006-09-28  Wim Taymans  <wim@fluendo.com>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_get_all_caps),
