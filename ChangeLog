@@ -1,5 +1,7 @@
 2006-10-02  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Alessandro Decina  <alessandro at nnva org>
+
 	* plugins/elements/gstfilesink.c: (gst_file_sink_init),
 	(gst_file_sink_set_location), (gst_file_sink_open_file),
 	(gst_file_sink_close_file), (gst_file_sink_event),
