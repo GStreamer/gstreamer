@@ -559,6 +559,8 @@ GST_START_TEST (test_ghost_pads_new_from_template)
   newcaps = gst_pad_get_caps (ghostpad);
   fail_unless (newcaps != NULL);
   fail_unless (gst_caps_is_equal (newcaps, padcaps));
+  gst_caps_unref (newcaps);
+  gst_caps_unref (padcaps);
 }
 
 GST_END_TEST;
