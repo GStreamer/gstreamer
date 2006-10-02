@@ -1058,6 +1058,8 @@ gst_pad_is_blocked (GstPad * pad)
  * Returns: TRUE if the pad is blocking.
  *
  * MT safe.
+ *
+ * Since: 0.10.11
  */
 gboolean
 gst_pad_is_blocking (GstPad * pad)

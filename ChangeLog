@@ -1,3 +1,8 @@
+2006-10-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstpad.c:
+	  Add 'Since: 0.10.11' to gst_pad_is_blocking() gtk-doc blurb.
+
 2006-10-02  Edward Hervey  <edward@fluendo.com>
 
 	* docs/design/part-block.txt:
@@ -14,7 +19,6 @@
 	API: GST_PAD_IS_BLOCKING() macro
 	API: GST_PAD_BLOCKING GstPadFlag
 	
-
 2006-10-02  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: mrcgran <mrc.gran at gmail dot com>
