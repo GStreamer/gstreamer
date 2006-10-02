@@ -1,3 +1,20 @@
+2006-10-02  Edward Hervey  <edward@fluendo.com>
+
+	* docs/design/part-block.txt:
+	Further explain the use of flushing on blocked pads.
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpad.c: (gst_pad_is_blocking), (handle_pad_block),
+	(gst_pad_push_event):
+	* gst/gstpad.h:
+	Added new GstPadFlag : GST_PAD_BLOCKING.
+	Adds the notion of pads really blocking, which enables to properly
+	handle FLUSH_START/FLUSH_STOP events on blocked pads.
+	Fixes #358999
+	API: gst_pad_is_blocking()
+	API: GST_PAD_IS_BLOCKING() macro
+	API: GST_PAD_BLOCKING GstPadFlag
+	
+
 2006-10-02  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: mrcgran <mrc.gran at gmail dot com>

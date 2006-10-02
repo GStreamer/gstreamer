@@ -479,6 +479,7 @@ typedef enum {
  * @GST_PAD_FLUSHING: is pad refusing buffers
  * @GST_PAD_IN_GETCAPS: GstPadGetCapsFunction() is running now
  * @GST_PAD_IN_SETCAPS: GstPadSetCapsFunction() is running now
+ * @GST_PAD_BLOCKING: is pad currently blocking on a buffer or event
  * @GST_PAD_FLAG_LAST: offset to define more flags
  *
  * Pad state flags
@@ -488,6 +489,7 @@ typedef enum {
   GST_PAD_FLUSHING      = (GST_OBJECT_FLAG_LAST << 1),
   GST_PAD_IN_GETCAPS    = (GST_OBJECT_FLAG_LAST << 2),
   GST_PAD_IN_SETCAPS    = (GST_OBJECT_FLAG_LAST << 3),
+  GST_PAD_BLOCKING	= (GST_OBJECT_FLAG_LAST << 4),
   /* padding */
   GST_PAD_FLAG_LAST     = (GST_OBJECT_FLAG_LAST << 8)
 } GstPadFlags;
@@ -655,6 +657,7 @@ struct _GstPadClass {
 
 #define GST_PAD_IS_LINKED(pad)		(GST_PAD_PEER(pad) != NULL)
 #define GST_PAD_IS_BLOCKED(pad)		(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKED))
+#define GST_PAD_IS_BLOCKING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKING))
 #define GST_PAD_IS_FLUSHING(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING))
 #define GST_PAD_IS_IN_GETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_GETCAPS))
 #define GST_PAD_IS_IN_SETCAPS(pad)	(GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_IN_SETCAPS))
@@ -771,6 +774,7 @@ gboolean		gst_pad_set_blocked			(GstPad *pad, gboolean blocked);
 gboolean		gst_pad_set_blocked_async		(GstPad *pad, gboolean blocked,
 								 GstPadBlockCallback callback, gpointer user_data);
 gboolean		gst_pad_is_blocked			(GstPad *pad);
+gboolean		gst_pad_is_blocking			(GstPad *pad);
 
 void			gst_pad_set_element_private		(GstPad *pad, gpointer priv);
 gpointer		gst_pad_get_element_private		(GstPad *pad);
