@@ -59,8 +59,10 @@
  * Last reviewed on 2006-02-14 (0.10.4)
  */
 
-#include "gst_private.h"
 #include <string.h>
+
+#include "gst_private.h"
+#include "gstinfo.h"
 #include "gstquery.h"
 #include "gstvalue.h"
 #include "gstenumtypes.h"

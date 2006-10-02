@@ -45,6 +45,7 @@
  */
 
 #include "gst_private.h"
+#include "gstinfo.h"
 
 #include "gstghostpad.h"
 
@@ -218,16 +219,30 @@ gst_proxy_pad_do_getcaps (GstPad * pad)
 {
   GstPad *target = gst_proxy_pad_get_target (pad);
   GstCaps *res;
+  GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 
   if (target) {
     /* if we have a real target, proxy the call */
-    GST_DEBUG_OBJECT (pad, "get caps of target");
     res = gst_pad_get_caps (target);
     gst_object_unref (target);
-  } else {
-    GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
 
-    /* else, if we have a template, use that */
+    GST_DEBUG_OBJECT (pad, "get caps of target: %" GST_PTR_FORMAT, res);
+
+    /* filter against the template */
+    if (templ && res) {
+      GstCaps *filt, *tmp;
+
+      filt = GST_PAD_TEMPLATE_CAPS (templ);
+      if (filt) {
+        tmp = gst_caps_intersect (filt, res);
+        gst_caps_unref (res);
+        res = tmp;
+        GST_DEBUG_OBJECT (pad,
+            "filtered against template gives %" GST_PTR_FORMAT, res);
+      }
+    }
+  } else {
+    /* else, if we have a template, use its caps. */
     if (templ) {
       res = GST_PAD_TEMPLATE_CAPS (templ);
       GST_DEBUG_OBJECT (pad,

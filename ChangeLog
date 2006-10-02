@@ -1,5 +1,16 @@
 2006-10-02  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: mrcgran <mrc.gran at gmail dot com>
+
+	* gst/gstghostpad.c: (gst_proxy_pad_do_getcaps):
+	Filter the proxied caps against the padtemplate if we have one.
+
+	* gst/gstquery.c: (gst_query_new_segment):
+	Add include for gstinfo.h so that compilation with
+	-DGST_DISABLE_GST_DEBUG works again. Fixes #358436.
+
+2006-10-02  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Alessandro Decina  <alessandro at nnva org>
 
 	* plugins/elements/gstfilesink.c: (gst_file_sink_init),
