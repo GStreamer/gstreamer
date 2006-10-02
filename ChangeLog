@@ -1,3 +1,12 @@
+2006-10-02  Wim Taymans  <wim@fluendo.com>
+
+	* plugins/elements/gstfilesink.c: (gst_file_sink_init),
+	(gst_file_sink_set_location), (gst_file_sink_open_file),
+	(gst_file_sink_close_file), (gst_file_sink_event),
+	(gst_file_sink_render):
+	Set file to NULL when closing filesink so that we can set a new filename
+	in READY. Fixes #358613.
+
 2006-10-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Alessandro Decina  <alessandro at nnva org>

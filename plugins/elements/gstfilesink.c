@@ -156,7 +156,7 @@ gst_file_sink_init (GstFileSink * filesink, GstFileSinkClass * g_class)
   filesink->filename = NULL;
   filesink->file = NULL;
 
-  GST_BASE_SINK (filesink)->sync = FALSE;
+  gst_base_sink_set_sync (GST_BASE_SINK (filesink), FALSE);
 }
 
 static void
@@ -175,11 +175,8 @@ gst_file_sink_dispose (GObject * object)
 static gboolean
 gst_file_sink_set_location (GstFileSink * sink, const gchar * location)
 {
-  if (sink->file) {
-    g_warning ("Changing the `location' property on filesink when "
-        "a file is open not supported.");
-    return FALSE;
-  }
+  if (sink->file)
+    goto was_open;
 
   g_free (sink->filename);
   g_free (sink->uri);
@@ -192,6 +189,14 @@ gst_file_sink_set_location (GstFileSink * sink, const gchar * location)
   }
 
   return TRUE;
+
+  /* ERRORS */
+was_open:
+  {
+    g_warning ("Changing the `location' property on filesink when "
+        "a file is open not supported.");
+    return FALSE;
+  }
 }
 static void
 gst_file_sink_set_property (GObject * object, guint prop_id,
@@ -269,6 +274,7 @@ gst_file_sink_close_file (GstFileSink * sink)
       goto close_failed;
 
     GST_DEBUG_OBJECT (sink, "closed file");
+    sink->file = NULL;
   }
   return;
 
