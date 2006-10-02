@@ -269,7 +269,7 @@ _gst_event_copy (GstEvent * event)
   if (event->structure) {
     copy->structure = gst_structure_copy (event->structure);
     gst_structure_set_parent_refcount (copy->structure,
-        &event->mini_object.refcount);
+        &copy->mini_object.refcount);
   }
   return copy;
 }

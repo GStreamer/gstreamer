@@ -217,6 +217,32 @@ GST_START_TEST (create_custom_events)
     /* The structure should have been duplicated */
     fail_if (gst_event_get_structure (event) ==
         gst_event_get_structure (event2));
+
+    gst_event_unref (event);
+    gst_event_unref (event2);
+  }
+
+  /* Make events writable */
+  {
+    structure = gst_structure_empty_new ("application/x-custom");
+    fail_if (structure == NULL);
+    event = gst_event_new_custom (GST_EVENT_CUSTOM_BOTH, structure);
+    /* ref the event so that it becomes non-writable */
+    gst_event_ref (event);
+    gst_event_ref (event);
+    /* this should fail if the structure isn't writable */
+    ASSERT_CRITICAL (gst_structure_remove_all_fields ((GstStructure *)
+            gst_event_get_structure (event)));
+
+    /* now make writable */
+    event2 =
+        GST_EVENT (gst_mini_object_make_writable (GST_MINI_OBJECT (event)));
+    fail_unless (event != event2);
+    /* this fail if the structure isn't writable */
+    gst_structure_remove_all_fields ((GstStructure *)
+        gst_event_get_structure (event2));
+
+    gst_event_unref (event);
     gst_event_unref (event);
     gst_event_unref (event2);
   }

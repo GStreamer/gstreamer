@@ -1,3 +1,17 @@
+2006-10-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Alessandro Decina  <alessandro at nnva org>
+
+	* gst/gstevent.c: (_gst_event_copy):
+	  Fix gst_mini_object_make_writable() and gst_event_copy() for events
+	  with event structures by setting the parent refcount address of the
+	  copied structure to the address of the refcount member of the newly
+	  copied event rather than the address of the refcount member of the
+	  original event. Fixes #358737.
+
+	* tests/check/gst/gstevent.c: (GST_START_TEST):
+	  Unit test for the above.
+
 2006-09-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/design/Makefile.am:
