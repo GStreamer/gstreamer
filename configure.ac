@@ -707,7 +707,6 @@ dnl but we still need to set the conditionals
 
 AM_CONDITIONAL(USE_OPENGL, false)
 AM_CONDITIONAL(USE_X, false)
-AM_CONDITIONAL(USE_GST_V4L2, false)
 AM_CONDITIONAL(USE_ALSA, false)
 AM_CONDITIONAL(USE_AMRWB, false)
 AM_CONDITIONAL(USE_BZ2, false)
