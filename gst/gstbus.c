@@ -184,6 +184,13 @@ gst_bus_class_init (GstBusClass * klass)
    *
    * A message has been posted on the bus. This signal is emitted from the
    * thread that posted the message so one has to be careful with locking.
+   *
+   * This signal will not be emitted by default, you have to set up
+   * gst_bus_sync_signal_handler() as a sync handler if you want this
+   * signal to be emitted when a message is posted on the bus, like this:
+   * <programlisting>
+   * gst_bus_set_sync_handler (bus, gst_bus_sync_signal_handler, yourdata);
+   * </programlisting>
    */
   gst_bus_signals[SYNC_MESSAGE] =
       g_signal_new ("sync-message", G_TYPE_FROM_CLASS (klass),
@@ -319,8 +326,8 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
   g_return_val_if_fail (GST_IS_MESSAGE (message), FALSE);
 
-  GST_DEBUG_OBJECT (bus, "[msg %p] posting on bus, type %s",
-      message, GST_MESSAGE_TYPE_NAME (message));
+  GST_DEBUG_OBJECT (bus, "[msg %p] posting on bus, type %s, %" GST_PTR_FORMAT,
+      message, GST_MESSAGE_TYPE_NAME (message), message->structure);
 
   GST_OBJECT_LOCK (bus);
   /* check if the bus is flushing */

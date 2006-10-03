@@ -1,3 +1,10 @@
+2006-10-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstbus.c: (gst_bus_class_init), (gst_bus_post):
+	  More docs for the sync-message signal (mention that it is not
+	  emitted by default); log message structures of messages posted on
+	  the bus as well.
+
 2006-10-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gst.c: (ensure_current_registry_forking):
