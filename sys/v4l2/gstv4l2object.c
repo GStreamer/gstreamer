@@ -244,6 +244,8 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class)
   g_object_class_install_property (gobject_class, PROP_FLAGS,
       g_param_spec_flags ("flags", "Flags", "Device type flags",
           GST_TYPE_V4L2_DEVICE_FLAGS, DEFAULT_PROP_FLAGS, G_PARAM_READABLE));
+/* FIXME norm, channel, frequency are part of the tuner interface, so they
+   should be removed from the properties
   g_object_class_install_property (gobject_class, PROP_NORM,
       g_param_spec_string ("norm", "Norm", "Standard norm to use",
           DEFAULT_PROP_NORM, G_PARAM_READWRITE));
@@ -255,6 +257,7 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class)
       g_param_spec_ulong ("frequency", "Frequency",
           "Frequency to tune to (in Hz)", 0, G_MAXULONG, DEFAULT_PROP_FREQUENCY,
           G_PARAM_READWRITE));
+*/
 }
 
 GstV4l2Object *
