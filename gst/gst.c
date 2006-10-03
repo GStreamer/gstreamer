@@ -690,20 +690,35 @@ ensure_current_registry_forking (GstRegistry * default_registry,
 {
 #ifdef HAVE_FORK
   pid_t pid;
+  int pfd[2];
 
   /* We fork here, and let the child read and possibly rebuild the registry.
    * After that, the parent will re-read the freshly generated registry. */
   GST_DEBUG ("forking to update registry");
+
+  if (pipe (pfd) == -1) {
+    g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
+        _("Error re-scanning registry %s: %s"),
+        ", could not create pipes. Error", g_strerror (errno));
+    return FALSE;
+  }
+
   pid = fork ();
   if (pid == -1) {
     GST_ERROR ("Failed to fork()");
+    g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
+        _("Error re-scanning registry %s: %s"),
+        ", failed to fork. Error", g_strerror (errno));
     return FALSE;
   }
 
   if (pid == 0) {
     gboolean res;
+    gchar res_byte;
 
-    /* this is the child */
+    /* this is the child. Close the read pipe */
+    close (pfd[0]);
+
     GST_DEBUG ("child reading registry cache");
     res =
         scan_and_update_registry (default_registry, registry_file, TRUE, NULL);
@@ -715,47 +730,46 @@ ensure_current_registry_forking (GstRegistry * default_registry,
     /* make valgrind happy (yes, you can call it insane) */
     g_free ((char *) registry_file);
 
-    _exit ((res) ? EXIT_SUCCESS : EXIT_FAILURE);
+    /* write a result byte to the pipe */
+    res_byte = res ? '1' : '0';
+    write (pfd[1], &res_byte, 1);
+    _exit (0);
   } else {
-    /* parent */
-    int status;
-    pid_t ret;
+    int ret;
+    gchar res_byte;
 
-    GST_DEBUG ("parent waiting on child");
-    ret = waitpid (pid, &status, 0);
-    GST_DEBUG ("parent done waiting on child");
+    /* parent. Close write pipe */
+    close (pfd[1]);
+
+    /* Wait for result from the pipe */
+    GST_DEBUG ("Waiting for data from child");
+    ret = read (pfd[0], &res_byte, 1);
     if (ret == -1) {
-      GST_ERROR ("error during waitpid: %s", g_strerror (errno));
       g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
           _("Error re-scanning registry %s: %s"),
-          ", waitpid returned error", g_strerror (errno));
+          ", read returned error", g_strerror (errno));
+      close (pfd[0]);
+      return FALSE;
+    }
+    close (pfd[0]);
+
+    /* Wait to ensure the child is reaped, but ignore the result */
+    GST_DEBUG ("parent waiting on child");
+    waitpid (pid, NULL, 0);
+    GST_DEBUG ("parent done waiting on child");
+
+    if (ret == 0) {
+      GST_ERROR ("child did not exit normally, terminated by signal");
+      g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
+          _("Error re-scanning registry %s"), ", child terminated by signal");
       return FALSE;
     }
 
-    if (!WIFEXITED (status)) {
-      if (WIFSIGNALED (status)) {
-        GST_ERROR ("child did not exit normally, terminated by signal %d",
-            WTERMSIG (status));
-        g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-            _("Error re-scanning registry %s: %d"),
-            ", child terminated by signal", WTERMSIG (status));
-      } else {
-        GST_ERROR ("child did not exit normally, status: %d", status);
-        g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
-            _("Error re-scanning registry %s: %d"),
-            ", child did not exit normally, status", status);
-      }
-      return FALSE;
-    }
-
-    GST_DEBUG ("child exited normally with return value %d",
-        WEXITSTATUS (status));
-
-    if (WEXITSTATUS (status) == EXIT_SUCCESS) {
-      GST_DEBUG ("parent reading registry cache");
+    if (res_byte == '1') {
+      GST_DEBUG ("Child succeeded. Parent reading registry cache");
       gst_registry_xml_read_cache (default_registry, registry_file);
     } else {
-      GST_DEBUG ("parent re-scanning registry. Ignoring errors.");
+      GST_DEBUG ("Child failed. Parent re-scanning registry, ignoring errors.");
       scan_and_update_registry (default_registry, registry_file, FALSE, NULL);
     }
   }

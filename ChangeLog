@@ -1,3 +1,9 @@
+2006-10-03  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gst.c: (ensure_current_registry_forking):
+	Use a pipe pair to receive status results from the forked child, and
+	ignore the result from waitpid. Fixes #355499
+
 2006-10-02  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/gst/gstghostpad.c: (GST_START_TEST),
