@@ -34,11 +34,11 @@ endif
 # QCAM_DIR=
 # endif
 
-# if USE_GST_V4L2
-# V4L2_DIR=v4l2
-# else
-# V4L2_DIR=
-# endif
+if USE_GST_V4L2
+V4L2_DIR=v4l2
+else
+V4L2_DIR=
+endif
 
 # if USE_VCD
 # VCD_DIR=vcd
@@ -64,6 +64,6 @@ else
 XIMAGE_DIR=
 endif
 
-SUBDIRS=$(OSS_DIR) $(SUNAUDIO_DIR) $(XIMAGE_DIR)
+SUBDIRS=$(OSS_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
 
-DIST_SUBDIRS=oss sunaudio ximage
+DIST_SUBDIRS=oss sunaudio v4l2 ximage
