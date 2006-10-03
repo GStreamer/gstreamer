@@ -3,7 +3,7 @@
  * Copyright (C) 2001-2002 Ronald Bultje <rbultje@ronald.bitfreak.net>
  *               2006 Edgard Lima <edgard.lima@indt.org.br>
  *
- * gstv4l2src.c: BT8x8/V4L2 source element
+ * gstv4l2src.c: Video4Linux2 source element
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -31,13 +31,8 @@
  * <programlisting>
  * gst-launch v4l2src ! xvimagesink
  * </programlisting>
- * This pipeline shows the video captured from /dev/video0 tv card.
- * </para>
- * <para>
- * <programlisting>
- * gst-launch v4l2src ! xvimagesink
- * </programlisting>
- * This example should be used to capture from web-cams
+ * This pipeline shows the video captured from /dev/video0 tv card and for
+ * webcams.
  * </para>
  * </refsect2>
  */
