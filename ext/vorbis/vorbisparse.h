@@ -70,6 +70,9 @@ struct _GstVorbisParse {
 
 struct _GstVorbisParseClass {
   GstElementClass parent_class;
+
+  /* virtual functions */
+  GstFlowReturn  (*parse_packet) (GstVorbisParse * parse, GstBuffer * buf);
 };
 
 GType gst_vorbis_parse_get_type(void);

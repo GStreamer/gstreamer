@@ -99,6 +99,8 @@ static gboolean vorbis_parse_src_query (GstPad * pad, GstQuery * query);
 static gboolean vorbis_parse_convert (GstPad * pad,
     GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value);
+static GstFlowReturn vorbis_parse_parse_packet (GstVorbisParse * parse,
+    GstBuffer * buf);
 
 static void
 gst_vorbis_parse_base_init (gpointer g_class)
@@ -118,6 +120,8 @@ gst_vorbis_parse_class_init (GstVorbisParseClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gstelement_class->change_state = vorbis_parse_change_state;
+
+  klass->parse_packet = GST_DEBUG_FUNCPTR (vorbis_parse_parse_packet);
 }
 
 static void
@@ -395,15 +399,10 @@ vorbis_parse_queue_buffer (GstVorbisParse * parse, GstBuffer * buf)
 }
 
 static GstFlowReturn
-vorbis_parse_chain (GstPad * pad, GstBuffer * buffer)
+vorbis_parse_parse_packet (GstVorbisParse * parse, GstBuffer * buf)
 {
   GstFlowReturn ret;
-  GstBuffer *buf;
-  GstVorbisParse *parse;
 
-  parse = GST_VORBIS_PARSE (GST_PAD_PARENT (pad));
-
-  buf = GST_BUFFER (buffer);
   parse->packetno++;
 
   if (parse->packetno <= 3) {
@@ -419,6 +418,20 @@ vorbis_parse_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   return ret;
+}
+
+static GstFlowReturn
+vorbis_parse_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstVorbisParseClass *klass;
+  GstVorbisParse *parse;
+
+  parse = GST_VORBIS_PARSE (GST_PAD_PARENT (pad));
+  klass = GST_VORBIS_PARSE_CLASS (G_OBJECT_GET_CLASS (parse));
+
+  g_assert (klass->parse_packet != NULL);
+
+  return klass->parse_packet (parse, buffer);
 }
 
 static gboolean

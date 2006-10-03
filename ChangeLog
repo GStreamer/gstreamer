@@ -1,5 +1,31 @@
 2006-10-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: James "Doc" Livingston <doclivingston at gmail com>
+
+	* ext/vorbis/Makefile.am:
+	* ext/vorbis/vorbis.c: (plugin_init):
+	* ext/vorbis/vorbisparse.c: (gst_vorbis_parse_class_init),
+	(vorbis_parse_parse_packet), (vorbis_parse_chain):
+	* ext/vorbis/vorbisparse.h:
+	* ext/vorbis/vorbistag.c: (gst_vorbis_tag_base_init),
+	(gst_vorbis_tag_class_init), (gst_vorbis_tag_init),
+	(gst_vorbis_tag_parse_packet):
+	* ext/vorbis/vorbistag.h:
+	  Add new vorbistag element which derives from vorbisparse
+	  and is essentially the same as well, only that it implements
+	  the GstTagSetter interface and can modify the stream's
+	  vorbiscomment on the fly (#335635).
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/vorbistag.c: (setup_vorbistag),
+	(cleanup_vorbistag), (buffer_probe), (start_pipeline),
+	(get_buffer), (stop_pipeline), (_create_codebook_header_buffer),
+	(_create_audio_buffer), (GST_START_TEST), (vorbistag_suite):
+	  Add unit test for new vorbistag element.
+
+2006-10-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/vorbis/vorbisparse.c: (gst_vorbis_parse_init),
 	(vorbis_parse_push_headers), (vorbis_parse_chain):
 	  Set BOS flag in packet structure to fix 'jump depends

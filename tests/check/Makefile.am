@@ -34,7 +34,7 @@ check_ogg =
 endif
 
 if USE_VORBIS
-check_vorbis = elements/vorbisdec pipelines/vorbisenc
+check_vorbis = elements/vorbisdec pipelines/vorbisenc elements/vorbistag
 else
 check_vorbis =
 endif
@@ -119,6 +119,14 @@ elements_volume_LDADD = \
 elements_volume_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
+
+elements_vorbistag_LDADD = \
+	$(VORBIS_LIBS) \
+	$(LDADD)
+
+elements_vorbistag_CFLAGS = \
+	$(VORBIS_CFLAGS) \
+	$(CFLAGS) $(AM_CFLAGS)
 
 libs_video_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
