@@ -10,12 +10,6 @@
 # QCAM_DIR=
 # endif
 
-if USE_GST_V4L2
-V4L2_DIR=v4l2
-else
-V4L2_DIR=
-endif
-
 # if USE_VCD
 # VCD_DIR=vcd
 # else
@@ -34,6 +28,6 @@ else
 GL_DIR=
 endif
 
-SUBDIRS = $(GL_DIR) $(V4L2_DIR)
+SUBDIRS = $(GL_DIR)
 
-DIST_SUBDIRS = glsink v4l2
+DIST_SUBDIRS = glsink
