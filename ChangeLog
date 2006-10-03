@@ -1,3 +1,11 @@
+2006-10-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/vorbis/vorbisparse.c: (gst_vorbis_parse_init),
+	(vorbis_parse_push_headers), (vorbis_parse_chain):
+	  Set BOS flag in packet structure to fix 'jump depends
+	  on unitialized value' errors in valgrind; various minor
+	  clean-ups.
+
 2006-09-30  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gstdecodebin.c: (close_pad_link):

@@ -67,23 +67,11 @@
 GST_DEBUG_CATEGORY_EXTERN (vorbisparse_debug);
 #define GST_CAT_DEFAULT vorbisparse_debug
 
-static GstElementDetails vorbis_parse_details = {
+static const GstElementDetails vorbis_parse_details = {
   "VorbisParse",
   "Codec/Parser/Audio",
   "parse raw vorbis streams",
   "Thomas Vander Stichele <thomas at apestaart dot org>"
-};
-
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
 };
 
 static GstStaticPadTemplate vorbis_parse_sink_factory =
@@ -137,13 +125,16 @@ gst_vorbis_parse_init (GstVorbisParse * parse, GstVorbisParseClass * g_class)
 {
   parse->sinkpad =
       gst_pad_new_from_static_template (&vorbis_parse_sink_factory, "sink");
-  gst_pad_set_chain_function (parse->sinkpad, vorbis_parse_chain);
-  gst_pad_set_event_function (parse->sinkpad, vorbis_parse_sink_event);
+  gst_pad_set_chain_function (parse->sinkpad,
+      GST_DEBUG_FUNCPTR (vorbis_parse_chain));
+  gst_pad_set_event_function (parse->sinkpad,
+      GST_DEBUG_FUNCPTR (vorbis_parse_sink_event));
   gst_element_add_pad (GST_ELEMENT (parse), parse->sinkpad);
 
   parse->srcpad =
       gst_pad_new_from_static_template (&vorbis_parse_src_factory, "src");
-  gst_pad_set_query_function (parse->srcpad, vorbis_parse_src_query);
+  gst_pad_set_query_function (parse->srcpad,
+      GST_DEBUG_FUNCPTR (vorbis_parse_src_query));
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 }
 
@@ -223,6 +214,7 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   packet.granulepos = GST_BUFFER_OFFSET_END (outbuf);
   packet.packetno = 1;
   packet.e_o_s = 0;
+  packet.b_o_s = 1;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
   parse->sample_rate = parse->vi.rate;
   outbuf1 = outbuf;
@@ -233,6 +225,7 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   packet.granulepos = GST_BUFFER_OFFSET_END (outbuf);
   packet.packetno = 2;
   packet.e_o_s = 0;
+  packet.b_o_s = 0;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
   outbuf2 = outbuf;
 
@@ -242,6 +235,7 @@ vorbis_parse_push_headers (GstVorbisParse * parse)
   packet.granulepos = GST_BUFFER_OFFSET_END (outbuf);
   packet.packetno = 3;
   packet.e_o_s = 0;
+  packet.b_o_s = 0;
   vorbis_synthesis_headerin (&parse->vi, &parse->vc, &packet);
   outbuf3 = outbuf;
 
@@ -407,7 +401,7 @@ vorbis_parse_chain (GstPad * pad, GstBuffer * buffer)
   GstBuffer *buf;
   GstVorbisParse *parse;
 
-  parse = GST_VORBIS_PARSE (gst_pad_get_parent (pad));
+  parse = GST_VORBIS_PARSE (GST_PAD_PARENT (pad));
 
   buf = GST_BUFFER (buffer);
   parse->packetno++;
@@ -423,8 +417,6 @@ vorbis_parse_chain (GstPad * pad, GstBuffer * buffer)
 
     ret = vorbis_parse_queue_buffer (parse, buf);
   }
-
-  gst_object_unref (parse);
 
   return ret;
 }
