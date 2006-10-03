@@ -441,7 +441,9 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
       g_free (v4l2object->norm);
       v4l2object->norm = g_strdup (norm->label);
       gst_tuner_norm_changed (tuner, norm);
+/* FIXME: remove
       g_object_notify (G_OBJECT (v4l2object->element), "norm");
+*/
     }
   }
 
@@ -456,7 +458,9 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
     g_free (v4l2object->channel);
     v4l2object->channel = g_strdup (channel->label);
     gst_tuner_channel_changed (tuner, channel);
+/* FIXME: remove
     g_object_notify (G_OBJECT (v4l2object->element), "channel");
+*/
   }
 
   if (GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
@@ -468,7 +472,9 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
         /* guess */
         gst_tuner_set_frequency (tuner, channel, 1000);
       } else {
+/* FIXME: remove
         g_object_notify (G_OBJECT (v4l2object->element), "frequency");
+*/
       }
     }
   }
