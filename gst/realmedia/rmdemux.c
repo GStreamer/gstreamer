@@ -27,6 +27,7 @@
 #  include "config.h"
 #endif
 #include "rmdemux.h"
+#include "rdtdepay.h"
 #include "rmutils.h"
 #include <string.h>
 #include <ctype.h>
@@ -1431,36 +1432,6 @@ beach:
     gst_caps_unref (stream_caps);
 }
 
-G_GNUC_UNUSED static void
-re_hexdump_bytes (guint8 * ptr, int len, int offset)
-{
-  guint8 *end = ptr + len;
-  int i;
-
-  while (1) {
-    if (ptr >= end)
-      return;
-    g_print ("%08x: ", offset);
-    for (i = 0; i < 16; i++) {
-      if (ptr + i >= end) {
-        g_print ("   ");
-      } else {
-        g_print ("%02x ", ptr[i]);
-      }
-    }
-    for (i = 0; i < 16; i++) {
-      if (ptr + i >= end) {
-        g_print (" ");
-      } else {
-        g_print ("%c", g_ascii_isprint (ptr[i]) ? ptr[i] : '.');
-      }
-    }
-    g_print ("\n");
-    ptr += 16;
-    offset += 16;
-  }
-}
-
 static int
 re_skip_pascal_string (const guint8 * ptr)
 {
@@ -1546,7 +1517,16 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
 
   if (strcmp (stream2_type_string, "video/x-pn-realvideo") == 0) {
     stream_type = GST_RMDEMUX_STREAM_VIDEO;
+  } else if (strcmp (stream2_type_string,
+          "video/x-pn-multirate-realvideo") == 0) {
+    stream_type = GST_RMDEMUX_STREAM_VIDEO;
   } else if (strcmp (stream2_type_string, "audio/x-pn-realaudio") == 0) {
+    stream_type = GST_RMDEMUX_STREAM_AUDIO;
+  } else if (strcmp (stream2_type_string,
+          "audio/x-pn-multirate-realaudio") == 0) {
+    stream_type = GST_RMDEMUX_STREAM_AUDIO;
+  } else if (strcmp (stream2_type_string,
+          "audio/x-pn-multirate-realaudio-live") == 0) {
     stream_type = GST_RMDEMUX_STREAM_AUDIO;
   } else if (strcmp (stream2_type_string, "audio/x-ralf-mpeg4-generic") == 0) {
     /* Another audio type found in the real testsuite */
@@ -2003,15 +1983,28 @@ unknown_stream:
   }
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+gboolean
+gst_rmdemux_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rmdemux",
       GST_RANK_PRIMARY, GST_TYPE_RMDEMUX);
 }
 
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  if (!gst_rmdemux_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rdt_depay_plugin_init (plugin))
+    return FALSE;
+
+  return TRUE;
+}
+
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "rmdemux",
-    "Realmedia stream demuxer",
+    "realmedia",
+    "RealMedia demuxer and depayloader",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
