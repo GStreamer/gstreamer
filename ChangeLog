@@ -1,3 +1,9 @@
+2006-10-03  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/argtypes.py:
+	Revert the UInt64Arg modifications from upstream. It forces us to give
+	a PyLong, whereas we can directly use the 'K' argument parsing for that.
+
 2006-09-29  Edward Hervey  <edward@fluendo.com>
 
 	* ltihooks.py:
