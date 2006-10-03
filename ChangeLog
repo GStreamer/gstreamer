@@ -1,3 +1,10 @@
+2006-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* sys/v4l2/gstv4l2object.c:
+	(gst_v4l2_object_install_properties_helper):
+	  comment out the properties that are already part of the tuner
+	  interface.
+
 2006-10-03  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/v4l2/gstv4l2src.c:
