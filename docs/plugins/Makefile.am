@@ -89,6 +89,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/vorbis/vorbisdec.h \
 	$(top_srcdir)/ext/vorbis/vorbisenc.h \
 	$(top_srcdir)/ext/vorbis/vorbisparse.h \
+	$(top_srcdir)/ext/vorbis/vorbistag.h \
 	$(top_srcdir)/gst/adder/gstadder.h \
 	$(top_srcdir)/gst/audioconvert/gstaudioconvert.h \
 	$(top_srcdir)/gst/audioresample/gstaudioresample.h \

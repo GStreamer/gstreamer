@@ -559,6 +559,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiFdSink::unit-type</NAME>
+<TYPE>GstTCPUnitType</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Units type</NICK>
+<BLURB>The unit to measure the max/soft-max/queued properties.</BLURB>
+<DEFAULT>Buffers</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::units-max</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Units max</NICK>
+<BLURB>max number of units to queue (-1 = no limit).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiFdSink::units-soft-max</NAME>
+<TYPE>gint64</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Units soft max</NICK>
+<BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecodeBin::threaded</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>

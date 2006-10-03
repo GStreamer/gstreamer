@@ -3,10 +3,10 @@
   <description>Vorbis plugin library</description>
   <filename>../../ext/vorbis/.libs/libgstvorbis.so</filename>
   <basename>libgstvorbis.so</basename>
-  <version>0.10.10</version>
+  <version>0.10.10.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -29,6 +29,13 @@
       <class>Codec/Parser/Audio</class>
       <description>parse raw vorbis streams</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+    </element>
+    <element>
+      <name>vorbistag</name>
+      <longname>VorbisTag</longname>
+      <class>Formatter/Metadata</class>
+      <description>Retags vorbis streams</description>
+      <author>James Livingston &lt;doclivingston@gmail.com&gt;</author>
     </element>
   </elements>
 </plugin>

@@ -421,6 +421,20 @@ GST_IS_VORBIS_PARSE_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-vorbistag</FILE>
+<TITLE>vorbistag</TITLE>
+GstVorbisTag
+<SUBSECTION Standard>
+GstVorbisTagClass
+GST_VORBIS_TAG
+GST_IS_VORBIS_TAG
+GST_TYPE_VORBIS_TAG
+gst_vorbis_tag_get_type
+GST_VORBIS_TAG_CLASS
+GST_IS_VORBIS_TAG_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-ximagesink</FILE>
 <TITLE>ximagesink</TITLE>
 GstXImageSink

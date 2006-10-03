@@ -73,6 +73,7 @@ GObject
       GstVorbisEnc
       GstVorbisDec
       GstVorbisParse
+        GstVorbisTag
       GstTextOverlay
         GstTimeOverlay
         GstClockOverlay

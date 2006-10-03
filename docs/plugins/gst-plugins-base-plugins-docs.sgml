@@ -41,6 +41,7 @@
     <xi:include href="xml/element-vorbisdec.xml" />
     <xi:include href="xml/element-vorbisenc.xml" />
     <xi:include href="xml/element-vorbisparse.xml" />
+    <xi:include href="xml/element-vorbistag.xml" />
     <xi:include href="xml/element-ximagesink.xml" />
     <xi:include href="xml/element-xvimagesink.xml" />
   </chapter>
