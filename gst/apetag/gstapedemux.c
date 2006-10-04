@@ -140,7 +140,12 @@ static const struct _GstApeDemuxTagTableEntry
   "copyright", GST_TAG_COPYRIGHT}, {
   "genre", GST_TAG_GENRE}, {
   "isrc", GST_TAG_ISRC}, {
+  "disc", GST_TAG_ALBUM_VOLUME_NUMBER}, {
+  "disk", GST_TAG_ALBUM_VOLUME_NUMBER}, {
+  "discnumber", GST_TAG_ALBUM_VOLUME_NUMBER}, {
+  "disknumber", GST_TAG_ALBUM_VOLUME_NUMBER}, {
   "track", GST_TAG_TRACK_NUMBER}, {
+  "tracknumber", GST_TAG_TRACK_NUMBER}, {
   "year", GST_TAG_DATE}, {
   "file", GST_TAG_LOCATION}
 };
@@ -203,6 +208,21 @@ ape_demux_parse_tags (const guint8 * data, gint size)
     tag = g_strndup ((gchar *) data + 8, n - 9);
     val = g_strndup ((gchar *) data + n, len);
 
+    /* special-case 'media' tag, could be e.g. "CD 1/2" */
+    if (g_ascii_strcasecmp (tag, "media") == 0) {
+      gchar *sp, *sp2;
+
+      g_free (tag);
+      tag = g_strdup ("discnumber");
+      /* get rid of the medium in front */
+      sp = strchr (val, ' ');
+      while (sp != NULL && (sp2 = strchr (sp + 1, ' ')) != NULL)
+        sp = sp2;
+      if (sp) {
+        g_memmove (val, sp + 1, strlen (sp + 1) + 1);
+      }
+    }
+
     if (ape_demux_get_gst_tag_from_tag (tag, &gst_tag, &gst_tag_type)) {
       GValue v = { 0, };
 
@@ -226,11 +246,24 @@ ape_demux_parse_tags (const guint8 * data, gint size)
               g_value_init (&v, G_TYPE_UINT);
               g_value_set_uint (&v, v_uint);
             }
-            GST_LOG ("checking for count: %s", val);
+            GST_LOG ("checking for track count: %s", val);
             /* might be 0/N or -1/N to specify that there is only a count */
             if (sscanf (val, "%d/%u", &dummy, &count) == 2 && count > 0) {
               gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
                   GST_TAG_TRACK_COUNT, count, NULL);
+            }
+          } else if (strcmp (gst_tag, GST_TAG_ALBUM_VOLUME_NUMBER) == 0) {
+            gint dummy;
+
+            if (sscanf (val, "%u", &v_uint) == 1 && v_uint > 0) {
+              g_value_init (&v, G_TYPE_UINT);
+              g_value_set_uint (&v, v_uint);
+            }
+            GST_LOG ("checking for volume count: %s", val);
+            /* might be 0/N or -1/N to specify that there is only a count */
+            if (sscanf (val, "%d/%u", &dummy, &count) == 2 && count > 0) {
+              gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
+                  GST_TAG_ALBUM_VOLUME_COUNT, count, NULL);
             }
           } else if (sscanf (val, "%u", &v_uint) == 1) {
             g_value_init (&v, G_TYPE_UINT);

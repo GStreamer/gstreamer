@@ -1,3 +1,9 @@
+2006-10-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/apetag/gstapedemux.c: (ape_demux_parse_tags):
+	  Extract disc/album/medium number and count and try harder
+	  to extract track number/count.
+
 2006-10-03  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
