@@ -95,6 +95,8 @@
 #include "gstrtspsrc.h"
 #include "sdp.h"
 
+#include "rtspextwms.h"
+
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
 
@@ -265,8 +267,12 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
 
   src->loop_cond = g_cond_new ();
 
-  src->location = DEFAULT_LOCATION;
+  src->location = g_strdup (DEFAULT_LOCATION);
   src->url = NULL;
+
+  /* install WMS extension by default */
+  src->extension = rtsp_ext_wms_get_context ();
+  src->extension->src = (gpointer) src;
 }
 
 static void
@@ -279,6 +285,9 @@ gst_rtspsrc_finalize (GObject * object)
   g_static_rec_mutex_free (rtspsrc->stream_rec_lock);
   g_free (rtspsrc->stream_rec_lock);
   g_cond_free (rtspsrc->loop_cond);
+  g_free (rtspsrc->location);
+  g_free (rtspsrc->content_base);
+  rtsp_url_free (rtspsrc->url);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -409,6 +418,9 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
     /* check absolute/relative URL */
     if (g_str_has_prefix (control_url, "rtsp://"))
       stream->setup_url = g_strdup (control_url);
+    else if (src->content_base)
+      stream->setup_url =
+          g_strdup_printf ("%s%s", src->content_base, control_url);
     else
       stream->setup_url = g_strdup_printf ("%s/%s", src->location, control_url);
   }
@@ -487,8 +499,12 @@ gst_rtspsrc_parse_rtpmap (gchar * rtpmap, gint * payload, gchar ** name,
     return FALSE;
 
   PARSE_STRING (p, "/", *name);
-  if (*name == NULL)
-    return FALSE;
+  if (*name == NULL) {
+    /* no rate, assume 0 then */
+    *name = p;
+    *rate = -1;
+    return TRUE;
+  }
 
   t = p;
   p = strstr (p, "/");
@@ -792,7 +808,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
   } else {
     /* multicast was selected, create UDP sources and join the multicast
      * group. */
-    if (transport->multicast) {
+    if (transport->lower_transport == RTSP_LOWER_TRANS_UDP_MCAST) {
       gchar *uri;
 
       /* creating RTP source */
@@ -1143,12 +1159,16 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
  *
  * Returns: TRUE if the processing was successful.
  */
-static gboolean
+gboolean
 gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
     RTSPMessage * response, RTSPStatusCode * code)
 {
   RTSPResult res;
   RTSPStatusCode thecode;
+  gchar *content_base = NULL;
+
+  if (src->extension && src->extension->before_send)
+    src->extension->before_send (src->extension, request);
 
   if (src->debug)
     rtsp_message_dump (request);
@@ -1169,6 +1189,16 @@ gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
     *code = thecode;
   else if (thecode != RTSP_STS_OK)
     goto error_response;
+
+  /* store new content base if any */
+  rtsp_message_get_header (response, RTSP_HDR_CONTENT_BASE, &content_base);
+  if (content_base) {
+    g_free (src->content_base);
+    src->content_base = g_strdup (content_base);
+  }
+
+  if (src->extension && src->extension->after_send)
+    src->extension->after_send (src->extension, request, response);
 
   return TRUE;
 
@@ -1233,7 +1263,7 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
     /* this field is not required, assume the server supports
      * DESCRIBE, SETUP and PLAY */
     GST_DEBUG_OBJECT (src, "could not get OPTIONS");
-    src->methods = RTSP_DESCRIBE | RTSP_SETUP | RTSP_PLAY;
+    src->methods = RTSP_DESCRIBE | RTSP_SETUP | RTSP_PLAY | RTSP_PAUSE;
     goto done;
   }
 
@@ -1333,6 +1363,12 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   /* we only accept SDP for now */
   rtsp_message_add_header (&request, RTSP_HDR_ACCEPT, "application/sdp");
 
+  /* prepare global stream caps properties */
+  if (src->props)
+    gst_structure_remove_all_fields (src->props);
+  else
+    src->props = gst_structure_empty_new ("RTSP Properties");
+
   /* send DESCRIBE */
   GST_DEBUG_OBJECT (src, "send describe...");
   if (!gst_rtspsrc_send (src, &request, &response, NULL))
@@ -1357,29 +1393,8 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   if (src->debug)
     sdp_message_dump (&sdp);
 
-  /* prepare global stream caps properties */
-  if (src->props)
-    gst_structure_remove_all_fields (src->props);
-  else
-    src->props = gst_structure_empty_new ("RTSP Properties");
-
-  /* FIXME, WMServer specific, move to extensions */
-#define HEADER_PREFIX "data:application/vnd.ms.wms-hdr.asfv1;base64,"
-  {
-    gchar *config, *maxps;
-
-    for (i = 0; (config = sdp_message_get_attribute_val_n (&sdp, "pgmpu", i));
-        i++) {
-      if (g_str_has_prefix (config, HEADER_PREFIX)) {
-        config += strlen (HEADER_PREFIX);
-        gst_structure_set (src->props, "config", G_TYPE_STRING, config, NULL);
-        break;
-      }
-    }
-    maxps = sdp_message_get_attribute_val (&sdp, "maxps");
-    if (maxps)
-      gst_structure_set (src->props, "maxps", G_TYPE_STRING, maxps, NULL);
-  }
+  if (src->extension && src->extension->parse_sdp)
+    src->extension->parse_sdp (src->extension, &sdp);
 
   /* we initially allow all configured protocols. based on the replies from the
    * server we narrow them down. */
@@ -1393,7 +1408,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     /* create stream from the media, can never return NULL */
     stream = gst_rtspsrc_create_stream (src, &sdp, i);
 
-    /* merge global caps */
+    /* merge/overwrite global caps */
     if (stream->caps) {
       guint j, num;
       GstStructure *s;
@@ -1408,6 +1423,8 @@ gst_rtspsrc_open (GstRTSPSrc * src)
         name = gst_structure_nth_field_name (src->props, j);
         val = gst_structure_get_value (src->props, name);
         gst_structure_set_value (s, name, val);
+
+        GST_DEBUG_OBJECT (src, "copied %s", name);
       }
     }
 
@@ -1494,20 +1511,26 @@ gst_rtspsrc_open (GstRTSPSrc * src)
       /* update allowed transports for other streams. once the transport of
        * one stream has been determined, we make sure that all other streams
        * are configured in the same way */
-      if (transport.lower_transport == RTSP_LOWER_TRANS_TCP) {
-        GST_DEBUG_OBJECT (src, "stream %d as TCP", i);
-        protocols = GST_RTSP_PROTO_TCP;
-        src->interleaved = TRUE;
-      } else {
-        if (transport.multicast) {
+      switch (transport.lower_transport) {
+        case RTSP_LOWER_TRANS_TCP:
+          GST_DEBUG_OBJECT (src, "stream %d as TCP interleaved", i);
+          protocols = GST_RTSP_PROTO_TCP;
+          src->interleaved = TRUE;
+          break;
+        case RTSP_LOWER_TRANS_UDP_MCAST:
           /* only allow multicast for other streams */
-          GST_DEBUG_OBJECT (src, "stream %d as MULTICAST", i);
+          GST_DEBUG_OBJECT (src, "stream %d as UDP multicast", i);
           protocols = GST_RTSP_PROTO_UDP_MULTICAST;
-        } else {
+          break;
+        case RTSP_LOWER_TRANS_UDP:
           /* only allow unicast for other streams */
-          GST_DEBUG_OBJECT (src, "stream %d as UNICAST", i);
+          GST_DEBUG_OBJECT (src, "stream %d as UDP unicast", i);
           protocols = GST_RTSP_PROTO_UDP_UNICAST;
-        }
+          break;
+        default:
+          GST_DEBUG_OBJECT (src, "stream %d unknown transport %d", i,
+              transport.lower_transport);
+          break;
       }
 
       if (!stream->container || !src->interleaved) {
@@ -1522,6 +1545,8 @@ gst_rtspsrc_open (GstRTSPSrc * src)
       rtsp_transport_init (&transport);
     }
   }
+  if (src->extension && src->extension->stream_select)
+    src->extension->stream_select (src->extension);
 
   /* if we got here all was configured. We have dynamic pads so we notify that
    * we are done */
@@ -1735,7 +1760,8 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   rtsp_message_unset (&response);
 
   /* for interleaved transport, we receive the data on the RTSP connection
-   * instead of UDP. We start a task to select and read from that connection. */
+   * instead of UDP. We start a task to select and read from that connection.
+   * For UDP we start the task as well to look for server info and UDP timeouts. */
   if (src->task == NULL) {
     src->task = gst_task_create ((GstTaskFunction) gst_rtspsrc_loop, src);
     gst_task_set_lock (src->task, src->stream_rec_lock);

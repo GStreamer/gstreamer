@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2006> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -40,70 +40,65 @@
  * SOFTWARE.
  */
 
-#ifndef __RTSP_TRANSPORT_H__
-#define __RTSP_TRANSPORT_H__
+#include <string.h>
 
-#include <rtspdefs.h>
+#include "gstrtspsrc.h"
+#include "rtspextwms.h"
 
-G_BEGIN_DECLS
+typedef struct _RTSPExtWMSCtx RTSPExtWMSCtx;
 
-typedef enum {
-  RTSP_TRANS_UNKNOWN =  0,
-  RTSP_TRANS_RTP     = (1 << 0),
-  RTSP_TRANS_RDT     = (1 << 1)
-} RTSPTransMode;
-
-typedef enum {
-  RTSP_PROFILE_UNKNOWN =  0,
-  RTSP_PROFILE_AVP     = (1 << 0),
-  RTSP_PROFILE_SAVP    = (1 << 1)
-} RTSPProfile;
-
-typedef enum {
-  RTSP_LOWER_TRANS_UNKNOWN   = 0,
-  RTSP_LOWER_TRANS_UDP       = (1 << 0),
-  RTSP_LOWER_TRANS_UDP_MCAST = (1 << 1),
-  RTSP_LOWER_TRANS_TCP       = (1 << 2)
-} RTSPLowerTrans;
-
-typedef struct
+struct _RTSPExtWMSCtx
 {
-  gint min;
-  gint max;
-} RTSPRange;
+  RTSPExtensionCtx ctx;
+};
 
-typedef struct _RTSPTransport {
-  RTSPTransMode  trans;
-  RTSPProfile    profile;
-  RTSPLowerTrans lower_transport;
+#define HEADER_PREFIX "data:application/vnd.ms.wms-hdr.asfv1;base64,"
 
-  gchar         *destination;
-  gchar         *source;
-  gint           layers;
-  gboolean       mode_play;
-  gboolean       mode_record;
-  gboolean       append;
-  RTSPRange      interleaved;
+static RTSPResult
+rtsp_ext_wms_parse_sdp (RTSPExtensionCtx * ctx, SDPMessage * sdp)
+{
+  GstRTSPSrc *src = (GstRTSPSrc *) ctx->src;
+  gchar *config, *maxps;
+  gint i;
 
-  /* mulitcast specific */
-  gint  ttl;
+  for (i = 0; (config = sdp_message_get_attribute_val_n (sdp, "pgmpu", i)); i++) {
+    if (g_str_has_prefix (config, HEADER_PREFIX)) {
+      config += strlen (HEADER_PREFIX);
+      gst_structure_set (src->props, "config", G_TYPE_STRING, config, NULL);
+      break;
+    }
+  }
+  if (config == NULL)
+    goto no_config;
 
-  /* UDP specific */
-  RTSPRange      port;
-  RTSPRange      client_port;
-  RTSPRange      server_port;
-  /* RTP specific */
-  gchar         *ssrc;
-  
-} RTSPTransport;
+  gst_structure_set (src->props, "config", G_TYPE_STRING, config, NULL);
 
-RTSPResult      rtsp_transport_new      (RTSPTransport **transport);
-RTSPResult      rtsp_transport_init     (RTSPTransport *transport);
+  maxps = sdp_message_get_attribute_val (sdp, "maxps");
+  if (maxps)
+    gst_structure_set (src->props, "maxps", G_TYPE_STRING, maxps, NULL);
 
-RTSPResult      rtsp_transport_parse    (const gchar *str, RTSPTransport *transport);
+  gst_structure_set (src->props, "encoding-name", G_TYPE_STRING, "x-asf-pf",
+      NULL);
+  gst_structure_set (src->props, "media", G_TYPE_STRING, "application", NULL);
 
-RTSPResult      rtsp_transport_free     (RTSPTransport *transport);
+  return RTSP_OK;
 
-G_END_DECLS
+  /* ERRORS */
+no_config:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("Could not find config SDP field."));
+    return RTSP_ENOTIMPL;
+  }
+}
 
-#endif /* __RTSP_TRANSPORT_H__ */
+RTSPExtensionCtx *
+rtsp_ext_wms_get_context (void)
+{
+  RTSPExtWMSCtx *res;
+
+  res = g_new0 (RTSPExtWMSCtx, 1);
+  res->ctx.parse_sdp = rtsp_ext_wms_parse_sdp;
+
+  return (RTSPExtensionCtx *) res;
+}

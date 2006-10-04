@@ -1,3 +1,30 @@
+2006-10-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/Makefile.am:
+	* gst/rtsp/gstrtpdec.c: (gst_rtpdec_getcaps),
+	(gst_rtpdec_chain_rtp), (gst_rtpdec_chain_rtcp):
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
+	(gst_rtspsrc_finalize), (gst_rtspsrc_create_stream),
+	(gst_rtspsrc_parse_rtpmap),
+	(gst_rtspsrc_stream_configure_transport), (gst_rtspsrc_send),
+	(gst_rtspsrc_parse_methods), (gst_rtspsrc_open),
+	(gst_rtspsrc_play), (gst_rtspsrc_handle_message):
+	* gst/rtsp/gstrtspsrc.h:
+	* gst/rtsp/rtspdefs.c: (rtsp_strresult):
+	* gst/rtsp/rtspdefs.h:
+	* gst/rtsp/rtspext.h:
+	* gst/rtsp/rtspextwms.c: (rtsp_ext_wms_parse_sdp),
+	(rtsp_ext_wms_get_context):
+	* gst/rtsp/rtspextwms.h:
+	* gst/rtsp/rtsptransport.c: (rtsp_transport_init), (parse_mode),
+	(rtsp_transport_parse):
+	* gst/rtsp/rtsptransport.h:
+	Factor out extension in separate module.
+	Fix getcaps to filter against the padtemplate.
+	Use Content-Base if the server gives one.
+	Rework the transport parsing a bit for future extensions.
+	Added some Real Header field definitions.
+
 2006-10-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/Makefile.am:

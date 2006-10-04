@@ -50,6 +50,7 @@ G_BEGIN_DECLS
 
 #include "gstrtsp.h"
 #include "rtsp.h"
+#include "rtspext.h"
 
 #define GST_TYPE_RTSPSRC \
   (gst_rtspsrc_get_type())
@@ -142,6 +143,7 @@ struct _GstRTSPSrc {
 
   gchar           *location;
   RTSPUrl         *url;
+  gchar           *content_base;
   GstRTSPProto     protocols;
   gboolean         debug;
   guint   	   retry;
@@ -153,6 +155,8 @@ struct _GstRTSPSrc {
   RTSPConnection  *connection;
   RTSPMessage     *request;
   RTSPMessage     *response;
+
+  RTSPExtensionCtx *extension;
 };
 
 struct _GstRTSPSrcClass {
@@ -160,6 +164,10 @@ struct _GstRTSPSrcClass {
 };
 
 GType gst_rtspsrc_get_type(void);
+
+gboolean   gst_rtspsrc_send 		(GstRTSPSrc * src, RTSPMessage * request,
+		   			 RTSPMessage * response, RTSPStatusCode * code);
+
 
 G_END_DECLS
 

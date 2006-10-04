@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2006> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -40,70 +40,17 @@
  * SOFTWARE.
  */
 
-#ifndef __RTSP_TRANSPORT_H__
-#define __RTSP_TRANSPORT_H__
+#ifndef __RTSP_EXT_WMS_H__
+#define __RTSP_EXT_WMS_H__
 
-#include <rtspdefs.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 
-typedef enum {
-  RTSP_TRANS_UNKNOWN =  0,
-  RTSP_TRANS_RTP     = (1 << 0),
-  RTSP_TRANS_RDT     = (1 << 1)
-} RTSPTransMode;
+#include "rtspext.h"
 
-typedef enum {
-  RTSP_PROFILE_UNKNOWN =  0,
-  RTSP_PROFILE_AVP     = (1 << 0),
-  RTSP_PROFILE_SAVP    = (1 << 1)
-} RTSPProfile;
-
-typedef enum {
-  RTSP_LOWER_TRANS_UNKNOWN   = 0,
-  RTSP_LOWER_TRANS_UDP       = (1 << 0),
-  RTSP_LOWER_TRANS_UDP_MCAST = (1 << 1),
-  RTSP_LOWER_TRANS_TCP       = (1 << 2)
-} RTSPLowerTrans;
-
-typedef struct
-{
-  gint min;
-  gint max;
-} RTSPRange;
-
-typedef struct _RTSPTransport {
-  RTSPTransMode  trans;
-  RTSPProfile    profile;
-  RTSPLowerTrans lower_transport;
-
-  gchar         *destination;
-  gchar         *source;
-  gint           layers;
-  gboolean       mode_play;
-  gboolean       mode_record;
-  gboolean       append;
-  RTSPRange      interleaved;
-
-  /* mulitcast specific */
-  gint  ttl;
-
-  /* UDP specific */
-  RTSPRange      port;
-  RTSPRange      client_port;
-  RTSPRange      server_port;
-  /* RTP specific */
-  gchar         *ssrc;
-  
-} RTSPTransport;
-
-RTSPResult      rtsp_transport_new      (RTSPTransport **transport);
-RTSPResult      rtsp_transport_init     (RTSPTransport *transport);
-
-RTSPResult      rtsp_transport_parse    (const gchar *str, RTSPTransport *transport);
-
-RTSPResult      rtsp_transport_free     (RTSPTransport *transport);
+RTSPExtensionCtx*     rtsp_ext_wms_get_context    (void);
 
 G_END_DECLS
 
-#endif /* __RTSP_TRANSPORT_H__ */
+#endif /* __RTSP_EXT_WMS_H__ */

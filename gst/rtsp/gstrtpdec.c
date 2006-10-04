@@ -222,6 +222,7 @@ gst_rtpdec_getcaps (GstPad * pad)
   GstRTPDec *src;
   GstPad *other;
   GstCaps *caps;
+  const GstCaps *templ;
 
   src = GST_RTPDEC (GST_PAD_PARENT (pad));
 
@@ -229,8 +230,20 @@ gst_rtpdec_getcaps (GstPad * pad)
 
   caps = gst_pad_peer_get_caps (other);
 
-  if (caps == NULL)
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  templ = gst_pad_get_pad_template_caps (pad);
+  if (caps == NULL) {
+    GST_DEBUG_OBJECT (src, "copy template");
+    caps = gst_caps_copy (templ);
+  } else {
+    GstCaps *intersect;
+
+    GST_DEBUG_OBJECT (src, "intersect with template");
+
+    intersect = gst_caps_intersect (caps, templ);
+    gst_caps_unref (caps);
+
+    caps = intersect;
+  }
 
   return caps;
 }
@@ -242,14 +255,18 @@ gst_rtpdec_chain_rtp (GstPad * pad, GstBuffer * buffer)
 
   src = GST_RTPDEC (GST_PAD_PARENT (pad));
 
-  GST_DEBUG ("got rtp packet");
+  GST_DEBUG_OBJECT (src, "got rtp packet");
   return gst_pad_push (src->src_rtp, buffer);
 }
 
 static GstFlowReturn
 gst_rtpdec_chain_rtcp (GstPad * pad, GstBuffer * buffer)
 {
-  GST_DEBUG ("got rtcp packet");
+  GstRTPDec *src;
+
+  src = GST_RTPDEC (GST_PAD_PARENT (pad));
+
+  GST_DEBUG_OBJECT (src, "got rtcp packet");
 
   gst_buffer_unref (buffer);
   return GST_FLOW_OK;

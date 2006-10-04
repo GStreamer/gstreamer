@@ -122,6 +122,13 @@ static const gchar *rtsp_headers[] = {
   "User-Agent",                 /* User-Agent           R      opt.      all */
   "Via",                        /* Via                  g      opt.      all */
   "WWW-Authenticate",           /* WWW-Authenticate     r      opt.      all */
+
+  /* Real extensions */
+  "ClientChallenge",            /* ClientChallenge */
+  "RealChallenge1",             /* RealChallenge1 */
+  "RealChallenge2",             /* RealChallenge2 */
+  "Subscribe",                  /* Subscribe */
+
   NULL
 };
 

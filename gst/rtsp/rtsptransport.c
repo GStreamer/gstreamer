@@ -45,6 +45,45 @@
 
 #include "rtsptransport.h"
 
+typedef struct
+{
+  const gchar *name;
+  const RTSPTransMode mode;
+  const gchar *gst_mime;
+} RTSPTransMap;
+
+static const RTSPTransMap transports[] = {
+  {"rtp", RTSP_TRANS_RTP, "application/x-rtp"},
+  {"x-real-rdt", RTSP_TRANS_RDT, "application/x-rdt"},
+  {"x-pn-tng", RTSP_TRANS_RDT, "application/x-rdt"},
+  {NULL, RTSP_TRANS_UNKNOWN, "application/x-unknown"}
+};
+
+typedef struct
+{
+  const gchar *name;
+  const RTSPProfile profile;
+} RTSPProfileMap;
+
+static const RTSPProfileMap profiles[] = {
+  {"avp", RTSP_PROFILE_AVP},
+  {"savp", RTSP_PROFILE_SAVP},
+  {NULL, RTSP_PROFILE_UNKNOWN}
+};
+
+typedef struct
+{
+  const gchar *name;
+  const RTSPLowerTrans ltrans;
+} RTSPLTransMap;
+
+static const RTSPLTransMap ltrans[] = {
+  {"udp", RTSP_LOWER_TRANS_UDP},
+  {"mcast", RTSP_LOWER_TRANS_UDP_MCAST},
+  {"tcp", RTSP_LOWER_TRANS_TCP},
+  {NULL, RTSP_LOWER_TRANS_UNKNOWN}
+};
+
 RTSPResult
 rtsp_transport_new (RTSPTransport ** transport)
 {
@@ -72,7 +111,7 @@ rtsp_transport_init (RTSPTransport * transport)
 
   transport->trans = RTSP_TRANS_RTP;
   transport->profile = RTSP_PROFILE_AVP;
-  transport->lower_transport = RTSP_LOWER_TRANS_UNKNOWN;
+  transport->lower_transport = RTSP_LOWER_TRANS_UDP;
   transport->mode_play = TRUE;
   transport->mode_record = FALSE;
 
@@ -82,8 +121,8 @@ rtsp_transport_init (RTSPTransport * transport)
 static void
 parse_mode (RTSPTransport * transport, gchar * str)
 {
-  transport->mode_play = (strstr (str, "\"PLAY\"") != NULL);
-  transport->mode_record = (strstr (str, "\"RECORD\"") != NULL);
+  transport->mode_play = (strstr (str, "\"play\"") != NULL);
+  transport->mode_record = (strstr (str, "\"record\"") != NULL);
 }
 
 static void
@@ -102,7 +141,7 @@ parse_range (RTSPTransport * transport, gchar * str, RTSPRange * range)
 }
 
 RTSPResult
-rtsp_transport_parse (gchar * str, RTSPTransport * transport)
+rtsp_transport_parse (const gchar * str, RTSPTransport * transport)
 {
   gchar **split, *down;
   gint i;
@@ -116,18 +155,30 @@ rtsp_transport_parse (gchar * str, RTSPTransport * transport)
   down = g_ascii_strdown (str, -1);
 
   split = g_strsplit (down, ";", 0);
+
+  /* First field contains the transport/profile/lower_transport */
   i = 0;
+  if (split[0]) {
+    for (i = 0; transports[i].name; i++)
+      if (strstr (split[0], transports[i].name))
+        break;
+    transport->trans = transports[i].mode;
+    for (i = 1; profiles[i].name; i++)
+      if (strstr (split[0], profiles[i].name))
+        break;
+    transport->profile = profiles[i].profile;
+    for (i = 1; ltrans[i].name; i++)
+      if (strstr (split[0], ltrans[i].name))
+        break;
+    transport->lower_transport = ltrans[i].ltrans;
+    i = 1;
+  }
   while (split[i]) {
-    if (g_str_has_prefix (split[i], "rtp/avp/udp")) {
-      transport->lower_transport = RTSP_LOWER_TRANS_UDP;
-    } else if (g_str_has_prefix (split[i], "rtp/avp/tcp")) {
-      transport->lower_transport = RTSP_LOWER_TRANS_TCP;
-    } else if (g_str_has_prefix (split[i], "rtp/avp")) {
-      transport->lower_transport = RTSP_LOWER_TRANS_UDP;
-    } else if (g_str_has_prefix (split[i], "multicast")) {
-      transport->multicast = TRUE;
+    if (g_str_has_prefix (split[i], "multicast")) {
+      transport->lower_transport = RTSP_LOWER_TRANS_UDP_MCAST;
     } else if (g_str_has_prefix (split[i], "unicast")) {
-      transport->multicast = FALSE;
+      if (transport->lower_transport == RTSP_LOWER_TRANS_UDP_MCAST)
+        transport->lower_transport = RTSP_LOWER_TRANS_UDP;
     } else if (g_str_has_prefix (split[i], "destination=")) {
       transport->destination = g_strdup (split[i] + 12);
     } else if (g_str_has_prefix (split[i], "source=")) {

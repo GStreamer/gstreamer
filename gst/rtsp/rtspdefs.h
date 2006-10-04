@@ -150,6 +150,12 @@ typedef enum {
   RTSP_HDR_VIA,                 /* Via                  g      opt.      all */
   RTSP_HDR_WWW_AUTHENTICATE,    /* WWW-Authenticate     r      opt.      all */
 
+  /* Real extensions */
+  RTSP_HDR_CLIENT_CHALLENGE,    /* ClientChallenge */
+  RTSP_HDR_REAL_CHALLENGE1,     /* RealChallenge1 */
+  RTSP_HDR_REAL_CHALLENGE2,     /* RealChallenge2 */
+  RTSP_HDR_SUBSCRIBE,           /* Subscribe */
+
 } RTSPHeaderField;
 
 typedef enum {
