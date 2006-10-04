@@ -91,8 +91,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/wavpack/gstwavpackdec.h \
 	$(top_srcdir)/ext/wavpack/gstwavpackenc.h \
 	$(top_srcdir)/ext/wavpack/gstwavpackparse.h \
-	$(top_srcdir)/gst/videocrop/gstvideocrop.h \
-	$(top_srcdir)/sys/v4l2/gstv4l2src.h
+	$(top_srcdir)/gst/videocrop/gstvideocrop.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

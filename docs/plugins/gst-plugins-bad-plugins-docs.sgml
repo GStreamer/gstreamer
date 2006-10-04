@@ -19,7 +19,6 @@
     <xi:include href="xml/element-wavpackdec.xml" />
     <xi:include href="xml/element-wavpackenc.xml" />
     <xi:include href="xml/element-wavpackparse.xml" />
-    <xi:include href="xml/element-v4l2src.xml" />
   </chapter>
 
   <chapter>
@@ -43,7 +42,6 @@
     <xi:include href="xml/plugin-spectrum.xml" />
     <xi:include href="xml/plugin-speed.xml" />
     <xi:include href="xml/plugin-tta.xml" />
-    <xi:include href="xml/plugin-video4linux2.xml" />
     <xi:include href="xml/plugin-videocrop.xml" />
     <xi:include href="xml/plugin-wavpack.xml" />
     <xi:include href="xml/plugin-xingheader.xml" />

@@ -69,7 +69,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
-# %find_lang gst-plugins-bad-%{majorminor}
+%find_lang gst-plugins-bad-%{majorminor}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -78,7 +78,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %postun
 
-%files
+%files -f gst-plugins-bad-%{majorminor}
+
 %defattr(-, root, root)
 %doc AUTHORS COPYING README REQUIREMENTS
 
@@ -107,13 +108,10 @@ rm -rf $RPM_BUILD_ROOT
 @USE_LIBMMS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmms.so
 @USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 @USE_BZ2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstbz2.so
-@USE_GST_V4L2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvideo4linux2.so
 @USE_WAVPACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwavpack.so
 @USE_IVORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstivorbis.so
 @USE_NEON_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstneonhttpsrc.so
 @USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsaspdif.so
-
-%{_datadir}/locale
 
 %changelog
 * Sun Nov 27 2005 Thomas Vander Stichele <thomas at apestaart dot org>
