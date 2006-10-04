@@ -1,3 +1,9 @@
+2006-10-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gsttcp.c: (gst_tcp_gdp_read_caps):
+	  Fix a simple mistake (see the docs)
+	  Fixes #359580
+
 2006-10-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/Makefile.am:

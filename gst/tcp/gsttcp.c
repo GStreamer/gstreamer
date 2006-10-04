@@ -432,7 +432,7 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket, int cancel_fd,
   if (ret != GST_FLOW_OK)
     goto payload_read_error;
 
-  if (!gst_dp_validate_payload (payload_length, header, payload))
+  if (!gst_dp_validate_payload (GST_DP_HEADER_LENGTH, header, payload))
     goto payload_validate_error;
 
   *caps = gst_dp_caps_from_packet (GST_DP_HEADER_LENGTH, header, payload);
