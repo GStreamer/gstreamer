@@ -1,5 +1,21 @@
 2006-10-04  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/videocrop/gstvideocrop.c: (gst_video_crop_class_init),
+	(gst_video_crop_init),
+	(gst_video_crop_get_image_details_from_caps),
+	(gst_video_crop_transform_packed_complex),
+	(gst_video_crop_transform_packed_simple),
+	(gst_video_crop_transform), (gst_video_crop_transform_caps),
+	(gst_video_crop_set_caps),
+	(gst_videocrop_clear_negotiated_caps_locked),
+	(gst_video_crop_set_property):
+	* gst/videocrop/gstvideocrop.h:
+	  Handle packed YUV formats (UYVY, YUY2, YUYV) separately; also, fix
+	  passthrough mode; lastly, clear negotiated basetransform caps when
+	  the cropping changes in order to force renegotiation.
+
+2006-10-04  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/icles/.cvsignore:
 	* tests/icles/Makefile.am:
 	* tests/icles/videocrop-test.c: (quit_mainloop), (tick_cb),
