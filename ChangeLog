@@ -1,3 +1,17 @@
+2006-10-04  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_averror),
+	(gst_ffmpegdemux_init), (gst_ffmpegdemux_close),
+	(gst_ffmpegdemux_push_event), (gst_ffmpegdemux_send_event),
+	(gst_ffmpegdemux_src_query), (gst_ffmpegdemux_open),
+	(gst_ffmpegdemux_loop), (gst_ffmpegdemux_sink_activate),
+	(gst_ffmpegdemux_sink_activate_push),
+	(gst_ffmpegdemux_sink_activate_pull):
+	Don't try to use or remove non-existing pads.
+	Use _scale some more.
+	Don't try to do maths with invalid timestamps. Fixes #359545.
+	Prepare for push based scheduling.
+
 2006-09-30  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):

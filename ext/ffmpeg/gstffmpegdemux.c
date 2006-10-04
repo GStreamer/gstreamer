@@ -69,6 +69,8 @@ struct _GstFFMpegDemux
   GstClockTime start_time;
   GstClockTime duration;
 
+  gboolean seekable;
+
   gboolean flushing;
 
   /* segment stuff */
@@ -108,6 +110,8 @@ static void gst_ffmpegdemux_loop (GstPad * pad);
 static gboolean gst_ffmpegdemux_sink_activate (GstPad * sinkpad);
 static gboolean
 gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, gboolean active);
+static gboolean
+gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, gboolean active);
 
 #if 0
 static gboolean
@@ -128,7 +132,6 @@ gst_ffmpegdemux_averror (gint av_errno)
   const gchar *message = NULL;
 
   switch (av_errno) {
-    default:
     case AVERROR_UNKNOWN:
       message = "Unknown error";
       break;
@@ -149,6 +152,9 @@ gst_ffmpegdemux_averror (gint av_errno)
       break;
     case AVERROR_NOTSUPP:
       message = "Operation not supported";
+      break;
+    default:
+      message = "Unhandled error code received";
       break;
   }
 
@@ -227,6 +233,8 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
   gst_pad_set_activate_function (demux->sinkpad, gst_ffmpegdemux_sink_activate);
   gst_pad_set_activatepull_function (demux->sinkpad,
       gst_ffmpegdemux_sink_activate_pull);
+  gst_pad_set_activatepush_function (demux->sinkpad,
+      gst_ffmpegdemux_sink_activate_push);
   gst_element_add_pad (GST_ELEMENT (demux), demux->sinkpad);
 
   demux->opened = FALSE;
@@ -256,7 +264,7 @@ gst_ffmpegdemux_close (GstFFMpegDemux * demux)
     GstFFStream *stream;
 
     stream = demux->streams[n];
-    if (stream) {
+    if (stream && stream->pad) {
       gst_element_remove_pad (GST_ELEMENT (demux), stream->pad);
       g_free (stream);
     }
@@ -294,7 +302,7 @@ gst_ffmpegdemux_push_event (GstFFMpegDemux * demux, GstEvent * event)
   for (n = 0; n < MAX_STREAMS; n++) {
     GstFFStream *s = demux->streams[n];
 
-    if (s) {
+    if (s && s->pad) {
       gst_event_ref (event);
       res &= gst_pad_push_event (s->pad, event);
     }
@@ -606,10 +614,12 @@ gst_ffmpegdemux_send_event (GstElement * element, GstEvent *event)
     case GST_EVENT_SEEK:
       GST_OBJECT_LOCK (demux);
       if (!demux->opened) {
-	GstEvent **event_p = &demux->seek_event;
+        GstEvent **event_p;
         GST_DEBUG_OBJECT (demux, "caching seek event");
+	event_p = &demux->seek_event;
 	gst_event_replace (event_p, event);
         GST_OBJECT_UNLOCK (demux);
+
 	res = TRUE;
       }
       else {
@@ -659,10 +669,9 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
           res = TRUE;
           break;
         case GST_FORMAT_DEFAULT:
-	  /* FIXME, use _scale */
           gst_query_set_position (query, GST_FORMAT_DEFAULT,
-              timeposition * avstream->r_frame_rate.num /
-              (GST_SECOND * avstream->r_frame_rate.den));
+              gst_util_uint64_scale (timeposition, avstream->r_frame_rate.num,
+               	GST_SECOND * avstream->r_frame_rate.den));
           res = TRUE;
           break;
         case GST_FORMAT_BYTES:
@@ -693,10 +702,9 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
           res = TRUE;
           break;
         case GST_FORMAT_DEFAULT:
-	  /* FIXME, use _scale */
           gst_query_set_duration (query, GST_FORMAT_DEFAULT,
-              timeduration * avstream->r_frame_rate.num /
-              (GST_SECOND * avstream->r_frame_rate.den));
+              gst_util_uint64_scale (timeduration, avstream->r_frame_rate.num,
+               	GST_SECOND * avstream->r_frame_rate.den));
           res = TRUE;
           break;
         case GST_FORMAT_BYTES:
@@ -1006,7 +1014,6 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   }
 
   /* transform some usefull info to GstClockTime and remember */
-  /* FIXME, use start_time */
   demux->start_time = gst_util_uint64_scale_int (demux->context->start_time,
       GST_SECOND, AV_TIME_BASE);
   GST_DEBUG_OBJECT (demux, "start time: %" GST_TIME_FORMAT,
@@ -1139,7 +1146,8 @@ gst_ffmpegdemux_loop (GstPad * pad)
   if (demux->start_time != -1 && demux->start_time > timestamp)
     goto drop;
 
-  timestamp -= demux->start_time;
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+    timestamp -= demux->start_time;
 
   /* check if we ran outside of the segment */
   if (demux->segment.stop != -1 && timestamp > demux->segment.stop)
@@ -1275,12 +1283,27 @@ gst_ffmpegdemux_sink_activate (GstPad * sinkpad)
   if (gst_pad_check_pull_range (sinkpad))
     res = gst_pad_activate_pull (sinkpad, TRUE);
   else {
-    GST_ELEMENT_ERROR (demux, STREAM, NOT_IMPLEMENTED,
-      (NULL),
-      ("failed to activate sinkpad in pull mode, push mode not implemented yet"));
+    res = gst_pad_activate_push (sinkpad, TRUE);
   }
   gst_object_unref (demux);
   return res;
+}
+
+static gboolean
+gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, gboolean active)
+{
+  GstFFMpegDemux *demux;
+  
+  demux = (GstFFMpegDemux *) (gst_pad_get_parent (sinkpad));
+
+  GST_ELEMENT_ERROR (demux, STREAM, NOT_IMPLEMENTED,
+     (NULL),
+     ("failed to activate sinkpad in pull mode, push mode not implemented yet"));
+
+  demux->seekable = FALSE;
+  gst_object_unref (demux);
+
+  return FALSE;
 }
 
 static gboolean
@@ -1293,11 +1316,13 @@ gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 
   if (active) {
     demux->running = TRUE;
+    demux->seekable = TRUE;
     res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_ffmpegdemux_loop,
         sinkpad);
   } else {
     demux->running = FALSE;
     res = gst_pad_stop_task (sinkpad);
+    demux->seekable = FALSE;
   }
 
   gst_object_unref (demux);
