@@ -1,6 +1,11 @@
 2006-10-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/Makefile.am:
+	Dist new .h file too.
+
+2006-10-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/Makefile.am:
 	* gst/rtsp/gstrtpdec.c: (gst_rtpdec_getcaps),
 	(gst_rtpdec_chain_rtp), (gst_rtpdec_chain_rtcp):
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
