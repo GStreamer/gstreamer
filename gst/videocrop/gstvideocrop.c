@@ -183,7 +183,7 @@ gst_video_crop_class_init (GstVideoCropClass * klass)
   basetransform_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_video_crop_get_unit_size);
 
-  basetransform_class->passthrough_on_same_caps = TRUE;
+  basetransform_class->passthrough_on_same_caps = FALSE;
 }
 
 static void
@@ -194,6 +194,7 @@ gst_video_crop_init (GstVideoCrop * vcrop, GstVideoCropClass * klass)
   vcrop->crop_top = 0;
   vcrop->crop_bottom = 0;
   vcrop->noop = TRUE;
+  GST_BASE_TRANSFORM (vcrop)->passthrough = vcrop->noop;
 }
 
 static gboolean
@@ -218,7 +219,7 @@ gst_video_crop_get_image_details_from_caps (GstVideoCrop * vcrop,
     if (!gst_structure_get_int (structure, "bpp", &bpp) || (bpp & 0x07) != 0)
       goto incomplete_format;
 
-    details->packed = TRUE;
+    details->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE;
     details->bytes_per_pixel = bpp / 8;
     details->stride = GST_ROUND_UP_4 (width * details->bytes_per_pixel);
     details->size = details->stride * height;
@@ -230,7 +231,7 @@ gst_video_crop_get_image_details_from_caps (GstVideoCrop * vcrop,
 
     switch (format) {
       case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
-        details->packed = TRUE;
+        details->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE;
         details->bytes_per_pixel = 4;
         details->stride = GST_ROUND_UP_4 (width * 4);
         details->size = details->stride * height;
@@ -238,20 +239,25 @@ gst_video_crop_get_image_details_from_caps (GstVideoCrop * vcrop,
       case GST_MAKE_FOURCC ('Y', 'V', 'Y', 'U'):
       case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
       case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
-        details->packed = TRUE;
+        details->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX;
         details->bytes_per_pixel = 2;
         details->stride = GST_ROUND_UP_4 (width * 2);
         details->size = details->stride * height;
+        if (format == GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y')) {
+          details->macro_y_off = 1;
+        } else {
+          details->macro_y_off = 0;
+        }
         break;
       case GST_MAKE_FOURCC ('Y', '8', '0', '0'):
-        details->packed = TRUE;
+        details->packing = VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE;
         details->bytes_per_pixel = 1;
         details->stride = GST_ROUND_UP_4 (width);
         details->size = details->stride * height;
         break;
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
       case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):{
-        details->packed = FALSE;
+        details->packing = VIDEO_CROP_PIXEL_FORMAT_PLANAR;
 
         details->y_stride = GST_ROUND_UP_4 (width);
         details->u_stride = GST_ROUND_UP_8 (width) / 2;
@@ -306,8 +312,53 @@ gst_video_crop_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
 }
 
 static void
-gst_video_crop_transform_packed (GstVideoCrop * vcrop, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_video_crop_transform_packed_complex (GstVideoCrop * vcrop,
+    GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  guint8 *in_data, *out_data;
+  guint i, dx;
+
+  in_data = GST_BUFFER_DATA (inbuf);
+  out_data = GST_BUFFER_DATA (outbuf);
+
+  in_data += vcrop->crop_top * vcrop->in.stride;
+  in_data += vcrop->crop_left * vcrop->in.bytes_per_pixel;
+
+  dx = vcrop->out.width * vcrop->out.bytes_per_pixel;
+
+  if ((vcrop->crop_left % 2) != 0) {
+    for (i = 0; i < vcrop->out.height; ++i) {
+      gint j;
+
+      memcpy (out_data, in_data, dx);
+
+      /* U/V is horizontally subsampled by a factor of 2, so must fix that up */
+      /* FIXME: this is obviously not quite right */
+      if (vcrop->in.macro_y_off == 0) {
+        for (j = 1; j < vcrop->out.stride; j += 2) {
+          out_data[j] = in_data[j - 1];
+        }
+      } else {
+        for (j = 0; j < vcrop->out.stride /* -2 */ ; j += 2) {
+          out_data[j] = in_data[j + 2];
+        }
+      }
+
+      in_data += vcrop->in.stride;
+      out_data += vcrop->out.stride;
+    }
+  } else {
+    for (i = 0; i < vcrop->out.height; ++i) {
+      memcpy (out_data, in_data, dx);
+      in_data += vcrop->in.stride;
+      out_data += vcrop->out.stride;
+    }
+  }
+}
+
+static void
+gst_video_crop_transform_packed_simple (GstVideoCrop * vcrop,
+    GstBuffer * inbuf, GstBuffer * outbuf)
 {
   guint8 *in_data, *out_data;
   guint i, dx;
@@ -390,10 +441,18 @@ gst_video_crop_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     goto cropping_too_much;
   }
 
-  if (vcrop->in.packed) {
-    gst_video_crop_transform_packed (vcrop, inbuf, outbuf);
-  } else {
-    gst_video_crop_transform_planar (vcrop, inbuf, outbuf);
+  switch (vcrop->in.packing) {
+    case VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE:
+      gst_video_crop_transform_packed_simple (vcrop, inbuf, outbuf);
+      break;
+    case VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX:
+      gst_video_crop_transform_packed_complex (vcrop, inbuf, outbuf);
+      break;
+    case VIDEO_CROP_PIXEL_FORMAT_PLANAR:
+      gst_video_crop_transform_planar (vcrop, inbuf, outbuf);
+      break;
+    default:
+      g_assert_not_reached ();
   }
 
   GST_OBJECT_UNLOCK (vcrop);
@@ -474,10 +533,17 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
 
   vcrop = GST_VIDEO_CROP (trans);
 
-  if (vcrop->noop)
-    return gst_caps_ref (caps);
-
   GST_OBJECT_LOCK (vcrop);
+
+  GST_LOG_OBJECT (vcrop, "l=%d,r=%d,b=%d,t=%d noop=%d",
+      vcrop->crop_left, vcrop->crop_right, vcrop->crop_bottom,
+      vcrop->crop_top, vcrop->noop);
+
+  if (vcrop->noop) {
+    GST_OBJECT_UNLOCK (vcrop);
+    return gst_caps_ref (caps);
+  }
+
   if (direction == GST_PAD_SRC) {
     dx = vcrop->crop_left + vcrop->crop_right;
     dy = vcrop->crop_top + vcrop->crop_bottom;
@@ -550,7 +616,27 @@ gst_video_crop_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     return FALSE;
   }
 
+  GST_LOG_OBJECT (crop, "incaps = %" GST_PTR_FORMAT ", outcaps = %"
+      GST_PTR_FORMAT, incaps, outcaps);
+
   return TRUE;
+}
+
+/* This is extremely hackish, but the only way to force basetransform to
+ * renegotiated at the moment. There should really be a basetransform
+ * function for this */
+static void
+gst_videocrop_clear_negotiated_caps_locked (GstVideoCrop * crop)
+{
+  GST_LOG_OBJECT (crop, "clearing negotiated caps");
+  GST_BASE_TRANSFORM (crop)->negotiated = FALSE;
+  gst_caps_replace (&GST_PAD_CAPS (GST_BASE_TRANSFORM (crop)->srcpad), NULL);
+  gst_caps_replace (&GST_PAD_CAPS (GST_BASE_TRANSFORM (crop)->sinkpad), NULL);
+  gst_caps_replace (&GST_BASE_TRANSFORM (crop)->cache_caps1, NULL);
+  GST_BASE_TRANSFORM (crop)->cache_caps1_size = 0;
+  gst_caps_replace (&GST_BASE_TRANSFORM (crop)->cache_caps2, NULL);
+  GST_BASE_TRANSFORM (crop)->cache_caps2_size = 0;
+  GST_LOG_OBJECT (crop, "clearing caps done");
 }
 
 static void
@@ -583,6 +669,12 @@ gst_video_crop_set_property (GObject * object, guint prop_id,
   video_crop->noop = ((video_crop->crop_left | video_crop->crop_right |
           video_crop->crop_top | video_crop->crop_bottom) == 0);
 
+  GST_LOG_OBJECT (video_crop, "l=%d,r=%d,b=%d,t=%d noop=%d",
+      video_crop->crop_left, video_crop->crop_right, video_crop->crop_bottom,
+      video_crop->crop_top, video_crop->noop);
+
+  GST_BASE_TRANSFORM (video_crop)->passthrough = video_crop->noop;
+  gst_videocrop_clear_negotiated_caps_locked (video_crop);
   GST_OBJECT_UNLOCK (video_crop);
 }
 

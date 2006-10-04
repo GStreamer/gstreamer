@@ -35,19 +35,26 @@ G_BEGIN_DECLS
 #define GST_IS_VIDEO_CROP_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_CROP))
 
+typedef enum {
+  VIDEO_CROP_PIXEL_FORMAT_PACKED_SIMPLE = 0,  /* RGBx, AYUV */
+  VIDEO_CROP_PIXEL_FORMAT_PACKED_COMPLEX,     /* UYVY, YVYU */
+  VIDEO_CROP_PIXEL_FORMAT_PLANAR              /* I420, YV12 */
+} VideoCropPixelFormat;
+
 typedef struct _GstVideoCropImageDetails GstVideoCropImageDetails;
 struct _GstVideoCropImageDetails
 {
   /*< private >*/
-  gboolean packed;              /* TRUE if packed, FALSE if planar */
+  VideoCropPixelFormat  packing;
 
   guint width;
   guint height;
   guint size;
 
   /* for packed RGB and YUV */
-  guint stride;
-  guint bytes_per_pixel;
+  guint   stride;
+  guint   bytes_per_pixel;
+  guint8  macro_y_off;            /* for YUY2, YVYU, UYVY, Y offset within macropixel in bytes */
 
   /* for planar YUV */
   guint y_stride, y_off;
