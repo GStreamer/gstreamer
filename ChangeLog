@@ -1,3 +1,12 @@
+2006-10-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	  added v4l2 stubs
+	* gst-plugins-good.spec.in:
+	  add v4l2
+
 2006-10-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/apetag/gstapedemux.c: (ape_demux_parse_tags):
