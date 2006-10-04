@@ -1,5 +1,15 @@
 2006-10-04  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/icles/.cvsignore:
+	* tests/icles/Makefile.am:
+	* tests/icles/videocrop-test.c: (quit_mainloop), (tick_cb),
+	(test_with_caps), (video_crop_get_test_caps), (main):
+	  Visual test for videocrop, shows that packed yuv doesn't work right
+	  yet. --with-ffmpegcolorspace option doesn't work yet for unknown
+	  reasons (another basetransform issue?)
+
+2006-10-04  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* po/POTFILES.in:
 	* sys/v4l2/.cvsignore:
 	  Remove more v4l2 stuff, hopefully fixing 'make distcheck' again.
