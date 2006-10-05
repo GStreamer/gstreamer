@@ -221,7 +221,7 @@ user_endrow_callback (png_structp png_ptr, png_bytep new_row,
   if (GST_IS_BUFFER (pngdec->buffer_out)) {
     size_t offset = row_num * GST_ROUND_UP_4 (pngdec->rowbytes);
 
-    GST_LOG ("got row %d, copying in buffer %p at offset %d", row_num,
+    GST_LOG ("got row %u, copying in buffer %p at offset %d", (guint) row_num,
         pngdec->buffer_out, offset);
     memcpy (GST_BUFFER_DATA (pngdec->buffer_out) + offset, new_row,
         pngdec->rowbytes);

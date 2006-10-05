@@ -413,7 +413,7 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
-  GST_DEBUG_OBJECT (jpegenc, "got buffer of %u bytes", size);
+  GST_DEBUG_OBJECT (jpegenc, "got buffer of %lu bytes", size);
 
   ret =
       gst_pad_alloc_buffer_and_set_caps (jpegenc->srcpad,

@@ -1206,7 +1206,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     peerpad = gst_pad_get_peer (thepad);
     GST_DEBUG_OBJECT (thepad, "querying duration");
     if (gst_pad_query_duration (peerpad, &format, &trackduration)) {
-      GST_DEBUG_OBJECT (thepad, "%duration: %" GST_TIME_FORMAT,
+      GST_DEBUG_OBJECT (thepad, "duration: %" GST_TIME_FORMAT,
           GST_TIME_ARGS (trackduration));
       if ((gdouble) trackduration > duration) {
         duration = (gdouble) trackduration;

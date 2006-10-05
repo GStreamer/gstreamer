@@ -133,8 +133,8 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     }
     if (destSize != work->parse_size) {
       GST_WARNING
-          ("Decompressing ID3v2 frame %s did not produce expected size %d bytes (got %d)",
-          tag_name, work->parse_data, destSize);
+          ("Decompressing ID3v2 frame %s did not produce expected size %d bytes (got %lu)",
+          tag_name, work->parse_size, destSize);
       return FALSE;
     }
 #else

@@ -140,7 +140,7 @@ ximageutil_xcontext_get (GstElement * parent, const gchar * display_name)
   xcontext = g_new0 (GstXContext, 1);
 
   xcontext->disp = XOpenDisplay (display_name);
-  GST_DEBUG_OBJECT (parent, "opened display 0x%x", xcontext->disp);
+  GST_DEBUG_OBJECT (parent, "opened display %p", xcontext->disp);
   if (!xcontext->disp) {
     g_free (xcontext);
     return NULL;

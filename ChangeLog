@@ -1,3 +1,29 @@
+2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/cairo/gsttimeoverlay.c:
+	(gst_cairo_time_overlay_update_font_height):
+	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_transform_caps):
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_parse_image_data):
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_chain):
+	* ext/jpeg/gstsmokedec.c: (gst_smokedec_chain):
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_chain):
+	* ext/libpng/gstpngdec.c: (user_endrow_callback):
+	* gst/auparse/gstauparse.c: (gst_au_parse_parse_header):
+	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_superindex),
+	(gst_avi_demux_parse_subindex), (gst_avi_demux_parse_stream),
+	(gst_avi_demux_stream_data):
+	* gst/cutter/gstcutter.c: (gst_cutter_chain):
+	* gst/debug/efence.c: (gst_efence_buffer_alloc),
+	(gst_fenced_buffer_copy):
+	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame):
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream):
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_start):
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send),
+	(gst_rtspsrc_handle_message):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):
+	* sys/ximage/ximageutil.c: (ximageutil_xcontext_get):
+	  Printf format fixes.
+
 2006-10-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/Makefile.am:

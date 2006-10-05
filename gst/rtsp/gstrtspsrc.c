@@ -1208,7 +1208,7 @@ send_error:
     gchar *str = rtsp_strresult (res);
 
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
-        ("Could not send message. (%s)", res));
+        ("Could not send message. (%s)", str));
     g_free (str);
     return FALSE;
   }
@@ -1845,9 +1845,9 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
         /* FIXME, we post an error message now to inform the user
          * that nothing happened. It's most likely a firewall thing. */
         GST_ELEMENT_ERROR (rtspsrc, RESOURCE, READ, (NULL),
-            ("Could not receive any UDP packets for %" G_GUINT64_FORMAT
-                ".%d seconds, maybe your firewall is blocking it.",
-                rtspsrc->timeout / 1000000, rtspsrc->timeout % 1000000));
+            ("Could not receive any UDP packets for %.4f seconds, maybe your "
+                "firewall is blocking it.",
+                (gdouble) rtspsrc->timeout / 1000000));
         return;
       }
     }

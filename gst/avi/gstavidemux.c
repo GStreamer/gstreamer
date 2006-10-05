@@ -823,7 +823,7 @@ gst_avi_demux_parse_superindex (GstAviDemux * avi,
   if (GST_READ_UINT16_LE (data) != 4 ||
       (data[2] & 0xfe) != 0x0 || data[3] != 0x0) {
     GST_WARNING_OBJECT (avi,
-        "Superindex for stream %d has unexpected "
+        "Superindex for stream has unexpected "
         "size_entry %d (bytes) or flags 0x%02x/0x%02x",
         GST_READ_UINT16_LE (data), data[2], data[3]);
     bpe = GST_READ_UINT16_LE (data) * 4;
@@ -904,7 +904,7 @@ gst_avi_demux_parse_subindex (GstElement * element,
     GST_WARNING_OBJECT (element,
         "Superindex for stream %d has unexpected "
         "size_entry %d (bytes) or flags 0x%02x/0x%02x",
-        GST_READ_UINT16_LE (data), data[2], data[3]);
+        stream->num, GST_READ_UINT16_LE (data), data[2], data[3]);
     bpe = GST_READ_UINT16_LE (data) * 4;
   }
   num = GST_READ_UINT32_LE (&data[4]);
@@ -1121,7 +1121,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   if (!gst_riff_parse_chunk (element, buf, &offset, &tag, &sub) ||
       tag != GST_RIFF_TAG_strh) {
     GST_ERROR_OBJECT (avi,
-        "Failed to find strh chunk (tag: %" GST_FOURCC_FORMAT ")",
+        "Failed to find strh chunk (bufsize: %d, tag: %" GST_FOURCC_FORMAT ")",
         GST_BUFFER_SIZE (buf), GST_FOURCC_ARGS (tag));
     goto fail;
   } else if (!gst_riff_parse_strh (element, sub, &stream->strh)) {
@@ -3266,7 +3266,7 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
         gst_adapter_flush (avi->adapter, 8);
       return GST_FLOW_OK;
     }
-    GST_DEBUG ("chunk ID %" GST_FOURCC_FORMAT ", size %lu",
+    GST_DEBUG ("chunk ID %" GST_FOURCC_FORMAT ", size %u",
         GST_FOURCC_ARGS (tag), size);
 
     stream_nr = CHUNKID_TO_STREAMNR (tag);

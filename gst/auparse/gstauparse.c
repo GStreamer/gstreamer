@@ -268,8 +268,8 @@ gst_au_parse_parse_header (GstAuParse * auparse)
   auparse->samplerate = GST_READ_UINT32_BE (head + 16);
   auparse->channels = GST_READ_UINT32_BE (head + 20);
 
-  GST_DEBUG_OBJECT (auparse, "offset %ld, size %u, encoding %u, "
-      "frequency %u, channels %u", auparse->offset, size,
+  GST_DEBUG_OBJECT (auparse, "offset %" G_GINT64_FORMAT ", size %u, "
+      "encoding %u, frequency %u, channels %u", auparse->offset, size,
       auparse->encoding, auparse->samplerate, auparse->channels);
 
   /* Docs:
@@ -389,7 +389,7 @@ gst_au_parse_parse_header (GstAuParse * auparse)
   if (!gst_au_parse_add_srcpad (auparse, tempcaps))
     goto add_pad_failed;
 
-  GST_DEBUG_OBJECT (auparse, "offset=%ld", auparse->offset);
+  GST_DEBUG_OBJECT (auparse, "offset=%" G_GINT64_FORMAT, auparse->offset);
   gst_adapter_flush (auparse->adapter, auparse->offset);
 
   gst_caps_unref (tempcaps);

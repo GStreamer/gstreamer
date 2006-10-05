@@ -306,7 +306,7 @@ gst_efence_buffer_alloc (GstPad * pad, guint64 offset,
 
   *buf = buffer;
 
-  GST_DEBUG_OBJECT (efence, "Allocated buffer of size %u, caps: % "
+  GST_DEBUG_OBJECT (efence, "Allocated buffer of size %u, caps: %"
       GST_PTR_FORMAT, GST_BUFFER_SIZE (buffer), GST_BUFFER_CAPS (buffer));
 
   return GST_FLOW_OK;
@@ -429,7 +429,7 @@ gst_fenced_buffer_copy (const GstBuffer * buffer)
     GST_BUFFER_CAPS (copy) = NULL;
 
   GST_DEBUG ("Copied buffer %p with ts %" GST_TIME_FORMAT
-      ", caps: % " GST_PTR_FORMAT, buffer,
+      ", caps: %" GST_PTR_FORMAT, buffer,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (copy)), GST_BUFFER_CAPS (copy));
 
   return GST_FENCED_BUFFER (copy);

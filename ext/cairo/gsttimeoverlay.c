@@ -91,7 +91,7 @@ gst_cairo_time_overlay_update_font_height (GstCairoTimeOverlay * timeoverlay)
   cairo_set_font_size (font_cairo, 20);
   cairo_font_extents (font_cairo, &font_extents);
   timeoverlay->text_height = font_extents.height;
-  GST_DEBUG_OBJECT (timeoverlay, "font height is %d", font_extents.height);
+  GST_DEBUG_OBJECT (timeoverlay, "font height is %f", font_extents.height);
   cairo_destroy (font_cairo);
   font_cairo = NULL;
 }

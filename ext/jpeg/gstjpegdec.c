@@ -467,7 +467,7 @@ gst_jpeg_dec_parse_image_data (GstJpegDec * dec)
         ++data;
         continue;
       }
-      GST_DEBUG ("found sync at 0x%08x", data - size);
+      GST_DEBUG ("found sync at %p", data - size);
     }
     while (*data == 0xff)
       ++data;

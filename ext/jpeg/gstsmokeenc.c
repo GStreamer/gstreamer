@@ -325,7 +325,7 @@ gst_smokeenc_chain (GstPad * pad, GstBuffer * buf)
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
 
-  GST_LOG_OBJECT (smokeenc, "got buffer of %u bytes", size);
+  GST_LOG_OBJECT (smokeenc, "got buffer of %lu bytes", size);
 
   if (smokeenc->need_header) {
     outbuf = gst_buffer_new_and_alloc (256);

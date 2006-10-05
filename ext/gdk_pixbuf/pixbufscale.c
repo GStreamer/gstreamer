@@ -253,7 +253,7 @@ gst_pixbufscale_transform_caps (GstBaseTransform * trans,
     gst_structure_remove_field (structure, "pixel-aspect-ratio");
   }
 
-  GST_DEBUG_OBJECT (trans, "returning caps: %", ret);
+  GST_DEBUG_OBJECT (trans, "returning caps: %" GST_PTR_FORMAT, ret);
   return ret;
 }
 

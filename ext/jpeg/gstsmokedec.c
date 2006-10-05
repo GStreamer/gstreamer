@@ -171,7 +171,7 @@ gst_smokedec_chain (GstPad * pad, GstBuffer * buf)
   size = GST_BUFFER_SIZE (buf);
   time = GST_BUFFER_TIMESTAMP (buf);
 
-  GST_LOG_OBJECT (smokedec, "got buffer of %u bytes", size);
+  GST_LOG_OBJECT (smokedec, "got buffer of %lu bytes", size);
 
   /* have the ID packet. */
   if (data[0] == SMOKECODEC_TYPE_ID) {

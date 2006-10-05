@@ -1183,7 +1183,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           /* We will continue parsing tags 'till end */
           wav->offset += size;
         }
-        GST_DEBUG_OBJECT (wav, "datasize = %ld", size);
+        GST_DEBUG_OBJECT (wav, "datasize = %d", size);
         break;
       }
       case GST_RIFF_TAG_fact:{
@@ -1237,7 +1237,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     wav->bps =
         (guint32) gst_util_uint64_scale ((guint64) wav->rate, wav->datasize,
         (guint64) wav->fact);
-    GST_DEBUG_OBJECT (wav, "calculated bps : %ld", wav->bps);
+    GST_DEBUG_OBJECT (wav, "calculated bps : %d", wav->bps);
   }
   if (wav->bps <= 0)
     goto no_bitrate;

@@ -590,7 +590,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
           case GST_MATROSKA_TRACK_TYPE_LOGO:
           case GST_MATROSKA_TRACK_TYPE_CONTROL:
           default:
-            GST_WARNING ("Unknown or unsupported track type 0x%x", track_type);
+            GST_WARNING ("Unknown or unsupported track type %"
+                G_GUINT64_FORMAT, track_type);
             context->type = 0;
             break;
         }
@@ -890,7 +891,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
         }
         context->codec_priv = data;
         context->codec_priv_size = size;
-        GST_LOG_OBJECT (demux, "%u bytes of codec private data", size);
+        GST_LOG_OBJECT (demux, "%u bytes of codec private data", (guint) size);
         break;
       }
 
