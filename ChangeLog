@@ -1,3 +1,8 @@
+2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/pygstiterator.c: (pygst_iterator_new):
+	  Printf format fix.
+
 2006-10-03  Edward Hervey  <edward@fluendo.com>
 
 	* codegen/argtypes.py:
