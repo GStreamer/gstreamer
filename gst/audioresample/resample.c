@@ -155,7 +155,7 @@ resample_input_pushthrough (ResampleState * r)
   buffer = audioresample_buffer_new_and_alloc (filter_bytes / 2);
   memset (buffer->data, 0, buffer->length);
 
-  RESAMPLE_DEBUG ("pushthrough", buffer->length);
+  RESAMPLE_DEBUG ("pushthrough %u", buffer->length);
 
   audioresample_buffer_queue_push (r->queue, buffer);
 }
