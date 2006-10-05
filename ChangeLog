@@ -1,5 +1,11 @@
 2006-10-05  Edward Hervey  <edward@fluendo.com>
 
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_seek):
+	Implement seeking for WRITE "gst" protocol.
+	This allows muxers to properly seek and output correctly muxed files.
+
+2006-10-05  Edward Hervey  <edward@fluendo.com>
+
 	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_change_state):
 	We need to stop the collectpads in PAUSED->READY BEFORE chaining up to
 	the parent class change_state. Else we end up in a locking behaviour

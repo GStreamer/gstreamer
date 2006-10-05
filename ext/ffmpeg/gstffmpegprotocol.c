@@ -220,7 +220,22 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
   case URL_WRONLY:
     {
       /* srcpad */
-      /* FIXME : implement */
+      switch (whence) {
+      case SEEK_SET:
+	info->offset = (guint64) pos;
+	gst_pad_push_event (info->pad,gst_event_new_new_segment
+			    (TRUE, 1.0, GST_FORMAT_BYTES, info->offset,
+			     GST_CLOCK_TIME_NONE, info->offset));
+	break;
+      case SEEK_CUR:
+	info->offset += pos;
+	gst_pad_push_event (info->pad,gst_event_new_new_segment
+			    (TRUE, 1.0, GST_FORMAT_BYTES, info->offset,
+			     GST_CLOCK_TIME_NONE, info->offset));
+	break;
+      default:
+	break;
+      }
       newpos = info->offset;
     }
     break;
