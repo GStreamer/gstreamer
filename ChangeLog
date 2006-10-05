@@ -1,5 +1,11 @@
 2006-10-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* gst/parse/grammar.y:
+	Remove static function gst_parse_element_lock as all it does
+	is return.  Looks like cruft from 0.8.
+
+2006-10-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	Patch by: Josep Torre Valles <josep@fluendo.com>
 
 	* common/m4/gst-error.m4:
