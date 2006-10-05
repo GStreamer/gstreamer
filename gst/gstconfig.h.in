@@ -155,6 +155,11 @@
  */
 @GST_PRINTF_EXTENSION_SEGMENT_FORMAT_DEFINE@
 
+/* whether or not GST_PTR_FORMAT or GST_SEGMENT_FORMAT are using
+ * the printf extension mechanism. This is for internal use in our
+ * header files so we know whether we can use G_GNUC_PRINTF or not */
+@GST_USING_PRINTF_EXTENSION_DEFINE@
+
 /* whether or not the CPU supports unaligned access */
 @GST_HAVE_UNALIGNED_ACCESS_DEFINE@
 

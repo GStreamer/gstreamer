@@ -227,68 +227,84 @@ typedef struct _GstDebugMessage GstDebugMessage;
  * gst_debug_add_log_function().
  * Use G_GNUC_NO_INSTRUMENT on that function.
  */
-typedef void (*GstLogFunction)	(GstDebugCategory *	category,
-				 GstDebugLevel		level,
-				 const gchar *		file,
-				 const gchar *		function,
-				 gint			line,
-				 GObject *		object,
-				 GstDebugMessage *	message,
-				 gpointer		data);
+typedef void (*GstLogFunction)  (GstDebugCategory * category,
+                                 GstDebugLevel      level,
+                                 const gchar      * file,
+                                 const gchar      * function,
+                                 gint               line,
+                                 GObject          * object,
+                                 GstDebugMessage  * message,
+                                 gpointer           data);
 
 #ifndef GST_DISABLE_GST_DEBUG
 
-void		_gst_debug_init			(void);
+void            _gst_debug_init (void);
 
-/* note we can't use G_GNUC_PRINTF (7, 8) because gcc chokes on %P, which
- * we use for GST_PTR_FORMAT. */
-void		gst_debug_log		(GstDebugCategory *	category,
-					 GstDebugLevel		level,
-					 const gchar *		file,
-					 const gchar *		function,
-					 gint			line,
-					 GObject *		object,
-					 const gchar *		format,
-					 ...) G_GNUC_NO_INSTRUMENT;
-void		gst_debug_log_valist	(GstDebugCategory *	category,
-					 GstDebugLevel		level,
-					 const gchar *		file,
-					 const gchar *		function,
-					 gint			line,
-					 GObject *		object,
-					 const gchar *		format,
-					 va_list		args) G_GNUC_NO_INSTRUMENT;
 
-const gchar *	gst_debug_message_get	(GstDebugMessage *	message);
+#ifdef GST_USING_PRINTF_EXTENSION
 
-void		gst_debug_log_default	(GstDebugCategory *	category,
-					 GstDebugLevel		level,
-					 const gchar *		file,
-					 const gchar *		function,
-					 gint			line,
-					 GObject *		object,
-					 GstDebugMessage *	message,
-					 gpointer		unused) G_GNUC_NO_INSTRUMENT;
+/* not using G_GNUC_PRINTF, since gcc will choke on GST_PTR_FORMAT being %P */
+void		    gst_debug_log            (GstDebugCategory * category,
+                                          GstDebugLevel      level,
+                                          const gchar      * file,
+                                          const gchar      * function,
+                                          gint               line,
+                                          GObject          * object,
+                                          const gchar      * format,
+                                          ...) G_GNUC_NO_INSTRUMENT;
+
+#else /* GST_USING_PRINTF_EXTENSION */
+
+void		    gst_debug_log            (GstDebugCategory * category,
+                                          GstDebugLevel      level,
+                                          const gchar      * file,
+                                          const gchar      * function,
+                                          gint               line,
+                                          GObject          * object,
+                                          const gchar      * format,
+                                          ...) G_GNUC_PRINTF (7, 8) G_GNUC_NO_INSTRUMENT;
+
+#endif /* GST_USING_PRINTF_EXTENSION */
+
+void            gst_debug_log_valist     (GstDebugCategory * category,
+                                          GstDebugLevel      level,
+                                          const gchar      * file,
+                                          const gchar      * function,
+                                          gint	              line,
+                                          GObject          * object,
+                                          const gchar      * format,
+                                          va_list            args) G_GNUC_NO_INSTRUMENT;
+
+const gchar   * gst_debug_message_get    (GstDebugMessage  * message);
+
+void            gst_debug_log_default    (GstDebugCategory * category,
+                                          GstDebugLevel      level,
+                                          const gchar      * file,
+                                          const gchar      * function,
+                                          gint               line,
+                                          GObject          * object,
+                                          GstDebugMessage  * message,
+                                          gpointer           unused) G_GNUC_NO_INSTRUMENT;
 
 G_CONST_RETURN gchar *
-		gst_debug_level_get_name	(GstDebugLevel		level);
+                gst_debug_level_get_name (GstDebugLevel level);
 
-void		gst_debug_add_log_function	(GstLogFunction		func,
-						 gpointer data);
-guint		gst_debug_remove_log_function	(GstLogFunction		func);
-guint		gst_debug_remove_log_function_by_data (gpointer		data);
+void            gst_debug_add_log_function            (GstLogFunction func,
+                                                       gpointer       data);
+guint           gst_debug_remove_log_function         (GstLogFunction func);
+guint           gst_debug_remove_log_function_by_data (gpointer       data);
 
-void		gst_debug_set_active		(gboolean active);
-gboolean	gst_debug_is_active		(void);
+void            gst_debug_set_active  (gboolean active);
+gboolean        gst_debug_is_active   (void);
 
-void		gst_debug_set_colored		(gboolean colored);
-gboolean	gst_debug_is_colored		(void);
+void            gst_debug_set_colored (gboolean colored);
+gboolean        gst_debug_is_colored  (void);
 
-void		gst_debug_set_default_threshold	(GstDebugLevel		level);
-GstDebugLevel	gst_debug_get_default_threshold	(void);
-void		gst_debug_set_threshold_for_name (const gchar *		name,
-						 GstDebugLevel		level);
-void		gst_debug_unset_threshold_for_name (const gchar *	name);
+void            gst_debug_set_default_threshold	    (GstDebugLevel level);
+GstDebugLevel   gst_debug_get_default_threshold	    (void);
+void            gst_debug_set_threshold_for_name    (const gchar * name,
+                                                     GstDebugLevel level);
+void            gst_debug_unset_threshold_for_name  (const gchar * name);
 
 /**
  * GST_DEBUG_CATEGORY:
@@ -911,10 +927,11 @@ G_CONST_RETURN gchar *
 #define gst_debug_set_default_threshold(level)		/* NOP */
 #define gst_debug_get_default_threshold()		(GST_LEVEL_NONE)
 
-#define gst_debug_level_get_name(level)			("NONE")
+#define gst_debug_level_get_name(level)				("NONE")
+#define gst_debug_message_get(message)  			("NONE")
 #define gst_debug_add_log_function(func,data)		/* NOP */
-guint		gst_debug_remove_log_function	(GstLogFunction		func);
-guint		gst_debug_remove_log_function_by_data (gpointer		data);
+#define gst_debug_remove_log_function(func)			(0)
+#define gst_debug_remove_log_function_by_data(data) (0)
 #define gst_debug_set_active(active)			/* NOP */
 #define gst_debug_is_active()				(FALSE)
 #define gst_debug_set_colored(colored)			/* NOP */

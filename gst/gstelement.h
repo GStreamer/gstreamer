@@ -570,7 +570,11 @@ gboolean		gst_element_query		(GstElement *element, GstQuery *query);
 gboolean		gst_element_post_message	(GstElement * element, GstMessage * message);
 
 /* error handling */
+#ifdef GST_USING_PRINTF_EXTENSION
 gchar *			_gst_element_error_printf	(const gchar *format, ...);
+#else
+gchar *			_gst_element_error_printf	(const gchar *format, ...) G_GNUC_PRINTF (1, 2);
+#endif
 void			gst_element_message_full	(GstElement * element, GstMessageType type,
 							 GQuark domain, gint code, gchar * text,
 							 gchar * debug, const gchar * file,

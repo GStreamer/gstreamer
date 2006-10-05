@@ -1,3 +1,18 @@
+2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstconfig.h.in:
+	* gst/gstelement.h:
+	* gst/gstinfo.h:
+	  Add GST_USING_PRINTF_EXTENSION to gstconfig.h so that we know
+	  whether we can use G_GNUC_PRINTF in other header files and at
+	  least check the printf format/arguments of debug messages and
+	  GST_ELEMENT_ERROR messages when the printf extension is not
+	  being used.
+	  Replace more tabs with spaces in gstinfo.h and remove two spurious
+	  function declarations in GST_DISABLE_DEBUG part with macros.
+
 2006-10-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbus.c: (gst_bus_class_init), (gst_bus_post):
