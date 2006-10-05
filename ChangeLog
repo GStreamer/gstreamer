@@ -1,3 +1,15 @@
+2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_goto_title),
+	(gst_dvd_read_src_handle_seek_event):
+	* ext/mad/gstid3tag.c: (gst_id3_tag_chain):
+	* ext/mad/gstmad.c: (gst_mad_src_query), (gst_mad_chain):
+	* ext/sidplay/gstsiddec.cc:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_parse_data):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_loop),
+	(gst_rmdemux_parse_packet):
+	  Printf format fixes.
+
 2006-10-03  Wim Taymans  <wim@fluendo.com>
 
 	* gst/realmedia/Makefile.am:

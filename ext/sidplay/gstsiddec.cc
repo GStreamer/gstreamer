@@ -318,7 +318,7 @@ siddec_negotiate (GstSidDec * siddec)
   if (!allowed)
     goto nothing_allowed;
 
-  GST_DEBUG_OBJECT (siddec, "allowed caps: " GST_PTR_FORMAT, allowed);
+  GST_DEBUG_OBJECT (siddec, "allowed caps: %" GST_PTR_FORMAT, allowed);
 
   structure = gst_caps_get_structure (allowed, 0);
 

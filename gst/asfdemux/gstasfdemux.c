@@ -2614,7 +2614,7 @@ gst_asf_demux_parse_data (GstASFDemux * demux)
 
       data_left = (guint64) gst_adapter_available (demux->adapter);
 
-      GST_DEBUG ("STATE_HEADER, avail=%u:", data_left);
+      GST_DEBUG ("STATE_HEADER, avail=%u", (guint) data_left);
 
       data = (guint8 *) gst_adapter_peek (demux->adapter, data_left);
 

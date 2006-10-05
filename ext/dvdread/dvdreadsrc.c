@@ -525,8 +525,8 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
       lang_code[0] = '\0';
     }
 
-    GST_INFO_OBJECT (src, "[%02d] Subtitle %02d: lang='%s', format=%d",
-        src->title + 1, i, lang_code);
+    GST_INFO_OBJECT (src, "[%02d] Subtitle %02d: lang='%s', type=%d",
+        src->title + 1, i, lang_code, u->type);
   }
 
   src->title_lang_event_pending =
@@ -1051,7 +1051,7 @@ gst_dvd_read_src_handle_seek_event (GstDvdReadSrc * src, GstEvent * event)
     if (new_off < 0 || new_off >= src->num_angles) {
       GST_OBJECT_UNLOCK (src);
       GST_DEBUG_OBJECT (src, "invalid angle %d, only %d available",
-          src->num_angles);
+          src->num_angles, src->num_angles);
       return FALSE;
     }
     src->angle = (gint) new_off;

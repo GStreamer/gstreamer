@@ -617,7 +617,7 @@ gst_mad_src_query (GstPad * pad, GstQuery * query)
             GST_TIME_ARGS (total));
       } else {
         GST_LOG_OBJECT (mad, "duration=%" G_GINT64_FORMAT " (%s)",
-            gst_format_get_name (req_format));
+            total, gst_format_get_name (req_format));
       }
       break;
     }
@@ -1348,7 +1348,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     /* append the chunk to process to our internal temporary buffer */
-    GST_LOG ("tempbuffer size %d, copying %d bytes from incoming buffer",
+    GST_LOG ("tempbuffer size %ld, copying %d bytes from incoming buffer",
         mad->tempsize, tocopy);
     memcpy (mad->tempbuffer + mad->tempsize, data, tocopy);
     mad->tempsize += tocopy;
@@ -1377,7 +1377,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
       GST_LOG ("decoding the header now");
       if (mad_header_decode (&mad->frame.header, &mad->stream) == -1) {
         if (mad->stream.error == MAD_ERROR_BUFLEN) {
-          GST_LOG ("not enough data in tempbuffer (%d), breaking to get more",
+          GST_LOG ("not enough data in tempbuffer (%ld), breaking to get more",
               mad->tempsize);
           break;
         } else {
@@ -1394,7 +1394,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
         /* not enough data, need to wait for next buffer? */
         if (mad->stream.error == MAD_ERROR_BUFLEN) {
           if (mad->stream.next_frame == mad_input_buffer) {
-            GST_LOG ("not enough data in tempbuffer (%d), breaking to get more",
+            GST_LOG
+                ("not enough data in tempbuffer (%ld), breaking to get more",
                 mad->tempsize);
             break;
           } else {

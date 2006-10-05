@@ -815,9 +815,9 @@ gst_rmdemux_loop (GstPad * pad)
       GST_OBJECT_UNLOCK (rmdemux);
       return;
     } else {
-      GST_DEBUG_OBJECT (rmdemux,
-          "Unable to pull %d bytes at offset %p (pull_range returned %d, state is %d)",
-          (int) size, rmdemux->offset, ret, GST_STATE (rmdemux));
+      GST_DEBUG_OBJECT (rmdemux, "Unable to pull %d bytes at offset 0x%08x "
+          "(pull_range returned flow %s, state is %d)", (gint) size,
+          rmdemux->offset, gst_flow_get_name (ret), GST_STATE (rmdemux));
       goto need_pause;
     }
   }
@@ -1944,7 +1944,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
 
   if ((rmdemux->offset + packet_size) <= stream->seek_offset) {
     GST_DEBUG_OBJECT (rmdemux,
-        "Stream %d is skipping: seek_offset=%d, offset=%d, packet_size",
+        "Stream %d is skipping: seek_offset=%d, offset=%d, packet_size=%u",
         stream->id, stream->seek_offset, rmdemux->offset, packet_size);
     cret = GST_FLOW_OK;
     goto beach;

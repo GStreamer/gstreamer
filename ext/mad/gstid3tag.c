@@ -1243,7 +1243,7 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
       gst_buffer_unref (buffer);
       if (tag->parse_mode != GST_ID3_TAG_PARSE_ANY) {
         /* seek to beginning */
-        GST_LOG_OBJECT (tag, "seeking back to beginning (offset %d)",
+        GST_LOG_OBJECT (tag, "seeking back to beginning (offset %ld)",
             tag->v2tag_size);
         gst_id3_tag_set_state (tag, GST_ID3_TAG_STATE_SEEKING_TO_NORMAL);
         if (!gst_pad_push_event (tag->sinkpad,
@@ -1276,7 +1276,7 @@ gst_id3_tag_chain (GstPad * pad, GstBuffer * buffer)
       /* Collect a large enough chunk to read the tag */
       if (GST_BUFFER_SIZE (buffer) < tag->v2tag_size) {
         GST_DEBUG_OBJECT (tag,
-            "Not enough data to read ID3v2. Need %d have %d, waiting for more",
+            "Not enough data to read ID3v2. Need %ld have %d, waiting for more",
             tag->v2tag_size, GST_BUFFER_SIZE (buffer));
         tag->buffer = buffer;
         return GST_FLOW_OK;
