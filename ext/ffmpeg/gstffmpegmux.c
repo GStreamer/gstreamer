@@ -553,6 +553,9 @@ gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
+  case GST_STATE_CHANGE_PAUSED_TO_READY:
+    gst_collect_pads_stop (ffmpegmux->collect);
+    break;
     default:
       break;
   }
@@ -563,7 +566,6 @@ gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_collect_pads_stop (ffmpegmux->collect);
       if (ffmpegmux->tags) {
         gst_tag_list_free (ffmpegmux->tags);
         ffmpegmux->tags = NULL;

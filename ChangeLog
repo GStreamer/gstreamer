@@ -1,3 +1,10 @@
+2006-10-05  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_change_state):
+	We need to stop the collectpads in PAUSED->READY BEFORE chaining up to
+	the parent class change_state. Else we end up in a locking behaviour
+	with the sink pads stream locks.
+
 2006-10-04  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_averror),
