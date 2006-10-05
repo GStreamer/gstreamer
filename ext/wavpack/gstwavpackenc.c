@@ -354,7 +354,7 @@ gst_wavpack_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
       !(gst_structure_get_int (structure, "depth", &depth) ||
           depth != enc->width)) {
     GST_ELEMENT_ERROR (enc, LIBRARY, INIT, (NULL),
-        ("got invalid caps: %", GST_PTR_FORMAT, caps));
+        ("got invalid caps: %" GST_PTR_FORMAT, caps));
     gst_object_unref (enc);
     return FALSE;
   }
@@ -367,7 +367,7 @@ gst_wavpack_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
 
   if (!gst_pad_set_caps (enc->srcpad, caps)) {
     GST_ELEMENT_ERROR (enc, LIBRARY, INIT, (NULL),
-        ("setting caps failed: %", GST_PTR_FORMAT, caps));
+        ("setting caps failed: %" GST_PTR_FORMAT, caps));
     gst_caps_unref (caps);
     gst_object_unref (enc);
     return FALSE;
