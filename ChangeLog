@@ -1,3 +1,9 @@
+2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_get_stream):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_setcaps):
+	  Printf format fixes.
+
 2006-10-05  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_seek):

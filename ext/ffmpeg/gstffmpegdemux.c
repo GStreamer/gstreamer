@@ -120,7 +120,7 @@ gst_ffmpegdemux_src_convert (GstPad * pad,
     gint64 src_value, GstFormat * dest_fmt, gint64 * dest_value);
 #endif
 static gboolean
-gst_ffmpegdemux_send_event (GstElement * element, GstEvent *event);
+gst_ffmpegdemux_send_event (GstElement * element, GstEvent * event);
 static GstStateChangeReturn
 gst_ffmpegdemux_change_state (GstElement * element, GstStateChange transition);
 
@@ -314,7 +314,8 @@ gst_ffmpegdemux_push_event (GstFFMpegDemux * demux, GstEvent * event)
 
 /* set flags on all streams */
 static void
-gst_ffmpegdemux_set_flags (GstFFMpegDemux * demux, gboolean discont, gboolean eos)
+gst_ffmpegdemux_set_flags (GstFFMpegDemux * demux, gboolean discont,
+    gboolean eos)
 {
   GstFFStream *s;
   gint n;
@@ -337,14 +338,14 @@ gst_ffmpegdemux_is_eos (GstFFMpegDemux * demux)
   for (n = 0; n < MAX_STREAMS; n++) {
     if ((s = demux->streams[n])) {
       if (!s->eos)
-	return FALSE;
+        return FALSE;
     }
   }
   return TRUE;
 }
 
 static gboolean
-gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment *segment)
+gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment * segment)
 {
   gboolean ret;
   gint seekret;
@@ -355,7 +356,7 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment *segment)
 
   /* find default index and fail if none is present */
   index = av_find_default_stream_index (demux->context);
-  GST_LOG_OBJECT (demux, "default stream index %d", index); 
+  GST_LOG_OBJECT (demux, "default stream index %d", index);
   if (index < 0)
     return FALSE;
 
@@ -368,8 +369,8 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment *segment)
   /* convert target to ffmpeg time */
   fftarget = gst_ffmpeg_time_gst_to_ff (target, stream->time_base);
 
-  GST_LOG_OBJECT (demux, "do seek to time %" GST_TIME_FORMAT, 
-		  GST_TIME_ARGS (target));
+  GST_LOG_OBJECT (demux, "do seek to time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (target));
 
   /* if we need to land on a keyframe, try to do so, we don't try to do a 
    * keyframe seek if we are not absolutely sure we have an index.*/
@@ -377,10 +378,11 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment *segment)
     gint keyframeidx;
 
     GST_LOG_OBJECT (demux, "looking for keyframe in ffmpeg for time %"
-		    GST_TIME_FORMAT, GST_TIME_ARGS (target));
+        GST_TIME_FORMAT, GST_TIME_ARGS (target));
 
     /* search in the index for the previous keyframe */
-    keyframeidx = av_index_search_timestamp (stream, fftarget, AVSEEK_FLAG_BACKWARD);
+    keyframeidx =
+        av_index_search_timestamp (stream, fftarget, AVSEEK_FLAG_BACKWARD);
 
     GST_LOG_OBJECT (demux, "keyframeidx: %d", keyframeidx);
 
@@ -389,8 +391,8 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment *segment)
       target = gst_ffmpeg_time_ff_to_gst (fftarget, stream->time_base);
 
       GST_LOG_OBJECT (demux,
-          "Found a keyframe at ffmpeg idx: %d timestamp :%"GST_TIME_FORMAT, 
-	  keyframeidx, GST_TIME_ARGS (target));
+          "Found a keyframe at ffmpeg idx: %d timestamp :%" GST_TIME_FORMAT,
+          keyframeidx, GST_TIME_ARGS (target));
     }
   }
 
@@ -398,7 +400,9 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment *segment)
       "About to call av_seek_frame (context, %d, %lld, 0) for time %"
       GST_TIME_FORMAT, index, fftarget, GST_TIME_ARGS (target));
 
-  if ((seekret = av_seek_frame (demux->context, index, fftarget, AVSEEK_FLAG_BACKWARD)) < 0)
+  if ((seekret =
+          av_seek_frame (demux->context, index, fftarget,
+              AVSEEK_FLAG_BACKWARD)) < 0)
     goto seek_failed;
 
   GST_DEBUG_OBJECT (demux, "seek success, returned %d", seekret);
@@ -418,7 +422,7 @@ seek_failed:
 }
 
 static gboolean
-gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent *event)
+gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
 {
   gboolean res;
   gdouble rate;
@@ -467,8 +471,7 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent *event)
     GST_OBJECT_UNLOCK (demux);
     gst_pad_push_event (demux->sinkpad, gst_event_new_flush_start ());
     gst_ffmpegdemux_push_event (demux, gst_event_new_flush_start ());
-  }
-  else {
+  } else {
     gst_pad_pause_task (demux->sinkpad);
   }
 
@@ -512,12 +515,14 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent *event)
     /* we are running the current segment and doing a non-flushing seek,
      * close the segment first based on the last_stop. */
     GST_DEBUG_OBJECT (demux, "closing running segment %" G_GINT64_FORMAT
-        " to %" G_GINT64_FORMAT, demux->segment.start, demux->segment.last_stop);
+        " to %" G_GINT64_FORMAT, demux->segment.start,
+        demux->segment.last_stop);
 
     gst_ffmpegdemux_push_event (demux,
         gst_event_new_new_segment (TRUE,
             demux->segment.rate, demux->segment.format,
-            demux->segment.start, demux->segment.last_stop, demux->segment.time));
+            demux->segment.start, demux->segment.last_stop,
+            demux->segment.time));
   }
   /* if successfull seek, we update our real segment and push
    * out the new segment. */
@@ -537,8 +542,8 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent *event)
     gst_ffmpegdemux_push_event (demux,
         gst_event_new_new_segment (FALSE,
             demux->segment.rate, demux->segment.format,
-            demux->segment.last_stop, demux->segment.stop, 
-	    demux->segment.time));
+            demux->segment.last_stop, demux->segment.stop,
+            demux->segment.time));
   }
 
   /* Mark discont on all srcpads and remove eos */
@@ -605,7 +610,7 @@ gst_ffmpegdemux_src_query_list (GstPad * pad)
 }
 
 static gboolean
-gst_ffmpegdemux_send_event (GstElement * element, GstEvent *event)
+gst_ffmpegdemux_send_event (GstElement * element, GstEvent * event)
 {
   GstFFMpegDemux *demux = (GstFFMpegDemux *) (element);
   gboolean res;
@@ -615,16 +620,16 @@ gst_ffmpegdemux_send_event (GstElement * element, GstEvent *event)
       GST_OBJECT_LOCK (demux);
       if (!demux->opened) {
         GstEvent **event_p;
+
         GST_DEBUG_OBJECT (demux, "caching seek event");
-	event_p = &demux->seek_event;
-	gst_event_replace (event_p, event);
+        event_p = &demux->seek_event;
+        gst_event_replace (event_p, event);
         GST_OBJECT_UNLOCK (demux);
 
-	res = TRUE;
-      }
-      else {
+        res = TRUE;
+      } else {
         GST_OBJECT_UNLOCK (demux);
-	res = gst_ffmpegdemux_perform_seek (demux, event);
+        res = gst_ffmpegdemux_perform_seek (demux, event);
         gst_event_unref (event);
       }
       break;
@@ -632,7 +637,7 @@ gst_ffmpegdemux_send_event (GstElement * element, GstEvent *event)
       res = FALSE;
       break;
   }
-  
+
   return res;
 }
 
@@ -671,7 +676,7 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
         case GST_FORMAT_DEFAULT:
           gst_query_set_position (query, GST_FORMAT_DEFAULT,
               gst_util_uint64_scale (timeposition, avstream->r_frame_rate.num,
-               	GST_SECOND * avstream->r_frame_rate.den));
+                  GST_SECOND * avstream->r_frame_rate.den));
           res = TRUE;
           break;
         case GST_FORMAT_BYTES:
@@ -704,7 +709,7 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
         case GST_FORMAT_DEFAULT:
           gst_query_set_duration (query, GST_FORMAT_DEFAULT,
               gst_util_uint64_scale (timeduration, avstream->r_frame_rate.num,
-               	GST_SECOND * avstream->r_frame_rate.den));
+                  GST_SECOND * avstream->r_frame_rate.den));
           res = TRUE;
           break;
         case GST_FORMAT_BYTES:
@@ -879,7 +884,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   /* ERRORS */
 exists:
   {
-    GST_DEBUG_OBJECT (demux, "Pad existed", avstream->index);
+    GST_DEBUG_OBJECT (demux, "Pad existed (stream %d)", avstream->index);
     return demux->streams[avstream->index];
   }
 unknown_type:
@@ -1039,13 +1044,11 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   if (event) {
     gst_ffmpegdemux_perform_seek (demux, event);
     gst_event_unref (event);
-  }
-  else {
+  } else {
     gst_ffmpegdemux_push_event (demux,
         gst_event_new_new_segment (FALSE,
             demux->segment.rate, demux->segment.format,
-            demux->segment.start, demux->segment.stop, 
-	    demux->segment.time));
+            demux->segment.start, demux->segment.stop, demux->segment.time));
   }
 
   return TRUE;
@@ -1119,7 +1122,9 @@ gst_ffmpegdemux_loop (GstPad * pad)
     goto read_failed;
 
   /* get the stream */
-  stream = gst_ffmpegdemux_get_stream (demux, demux->context->streams[pkt.stream_index]);
+  stream =
+      gst_ffmpegdemux_get_stream (demux,
+      demux->context->streams[pkt.stream_index]);
 
   /* check if we know the stream */
   if (stream->unknown)
@@ -1137,10 +1142,10 @@ gst_ffmpegdemux_loop (GstPad * pad)
   duration = gst_ffmpeg_time_ff_to_gst (pkt.duration, avstream->time_base);
 
   GST_DEBUG_OBJECT (demux,
-      "pkt pts:%"GST_TIME_FORMAT" / size:%d / stream_index:%d / flags:%d / duration:%"
-      GST_TIME_FORMAT" / pos:%lld",
-      GST_TIME_ARGS (timestamp), pkt.size, pkt.stream_index, pkt.flags, 
-      GST_TIME_ARGS (duration), pkt.pos);
+      "pkt pts:%" GST_TIME_FORMAT
+      " / size:%d / stream_index:%d / flags:%d / duration:%" GST_TIME_FORMAT
+      " / pos:%lld", GST_TIME_ARGS (timestamp), pkt.size, pkt.stream_index,
+      pkt.flags, GST_TIME_ARGS (duration), pkt.pos);
 
   /* check start_time */
   if (demux->start_time != -1 && demux->start_time > timestamp)
@@ -1204,22 +1209,20 @@ pause:
 
     if (ret == GST_FLOW_UNEXPECTED) {
       if (demux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-	gint64 stop;
+        gint64 stop;
 
-	if ((stop = demux->segment.stop) == -1)
+        if ((stop = demux->segment.stop) == -1)
           stop = demux->segment.duration;
-		
+
         GST_LOG_OBJECT (demux, "posting segment done");
         gst_element_post_message (GST_ELEMENT (demux),
-          gst_message_new_segment_done (GST_OBJECT (demux),
-              demux->segment.format, stop));
-      }
-      else {
+            gst_message_new_segment_done (GST_OBJECT (demux),
+                demux->segment.format, stop));
+      } else {
         GST_LOG_OBJECT (demux, "pushing eos");
         gst_ffmpegdemux_push_event (demux, gst_event_new_eos ());
       }
-    }
-    else if (GST_FLOW_IS_FATAL (ret)) {
+    } else if (GST_FLOW_IS_FATAL (ret)) {
       GST_ELEMENT_ERROR (demux, STREAM, FAILED,
           ("Internal data stream error."),
           ("streaming stopped, reason %s", gst_flow_get_name (ret)));
@@ -1256,8 +1259,7 @@ drop:
       GST_DEBUG_OBJECT (demux, "we are eos");
       ret = GST_FLOW_UNEXPECTED;
       goto pause;
-    }
-    else {
+    } else {
       GST_DEBUG_OBJECT (demux, "some streams are not yet eos");
       goto done;
     }
@@ -1275,7 +1277,7 @@ gst_ffmpegdemux_sink_activate (GstPad * sinkpad)
 {
   GstFFMpegDemux *demux;
   gboolean res;
-  
+
   demux = (GstFFMpegDemux *) (gst_pad_get_parent (sinkpad));
 
   res = FALSE;
@@ -1293,12 +1295,12 @@ static gboolean
 gst_ffmpegdemux_sink_activate_push (GstPad * sinkpad, gboolean active)
 {
   GstFFMpegDemux *demux;
-  
+
   demux = (GstFFMpegDemux *) (gst_pad_get_parent (sinkpad));
 
   GST_ELEMENT_ERROR (demux, STREAM, NOT_IMPLEMENTED,
-     (NULL),
-     ("failed to activate sinkpad in pull mode, push mode not implemented yet"));
+      (NULL),
+      ("failed to activate sinkpad in pull mode, push mode not implemented yet"));
 
   demux->seekable = FALSE;
   gst_object_unref (demux);
@@ -1311,7 +1313,7 @@ gst_ffmpegdemux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 {
   GstFFMpegDemux *demux;
   gboolean res;
-  
+
   demux = (GstFFMpegDemux *) (gst_pad_get_parent (sinkpad));
 
   if (active) {
@@ -1341,9 +1343,9 @@ gst_ffmpegdemux_change_state (GstElement * element, GstStateChange transition)
 #if 0
       /* test seek in READY here */
       gst_element_send_event (element, gst_event_new_seek (1.0,
-		GST_FORMAT_TIME, GST_SEEK_FLAG_NONE, 
-		GST_SEEK_TYPE_SET, 10 * GST_SECOND,
-		GST_SEEK_TYPE_SET, 13 * GST_SECOND));
+              GST_FORMAT_TIME, GST_SEEK_FLAG_NONE,
+              GST_SEEK_TYPE_SET, 10 * GST_SECOND,
+              GST_SEEK_TYPE_SET, 13 * GST_SECOND));
 #endif
       break;
     default:
@@ -1400,12 +1402,11 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strncmp (in_plugin->name, "image", 5) ||
         !strcmp (in_plugin->name, "mpegvideo") ||
         !strcmp (in_plugin->name, "mjpeg") ||
-	!strcmp (in_plugin->name, "redir"))
+        !strcmp (in_plugin->name, "redir"))
       goto next;
 
     /* no network demuxers */
-    if (!strcmp (in_plugin->name, "sdp") ||
-        !strcmp (in_plugin->name, "rtsp"))
+    if (!strcmp (in_plugin->name, "sdp") || !strcmp (in_plugin->name, "rtsp"))
       goto next;
 
     /* these don't do what one would expect or
@@ -1434,7 +1435,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
       rank = GST_RANK_MARGINAL;
     else
       rank = GST_RANK_NONE;
-    
+
     p = name = g_strdup (in_plugin->name);
     while (*p) {
       if (*p == '.' || *p == ',')
