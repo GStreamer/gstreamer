@@ -201,7 +201,7 @@ gst_trm_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   if (trm->depth != width) {
-    GST_DEBUG_OBJECT (trm, "depth != width (%d != %d)", trm->depth != width);
+    GST_DEBUG_OBJECT (trm, "depth != width (%d != %d)", trm->depth, width);
     goto failure;
   }
 

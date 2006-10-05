@@ -429,7 +429,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   GstClockTime blktime =
       GST_FRAMES_TO_CLOCK_TIME (spectrum->len, spectrum->rate);
 
-  GST_LOG ("transform : %ld bytes", GST_BUFFER_SIZE (in));
+  GST_LOG ("input size: %d bytes", GST_BUFFER_SIZE (in));
 
   gst_adapter_push (spectrum->adapter, gst_buffer_ref (in));
   /* required number of bytes */

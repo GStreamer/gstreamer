@@ -475,7 +475,7 @@ gst_dtsdec_chain (GstPad * pad, GstBuffer * buf)
 {
   GstDtsDec *dts;
   guint8 *data;
-  gint64 size;
+  gint size;
   gint length, flags, sample_rate, bit_rate, frame_length;
   GstFlowReturn result = GST_FLOW_OK;
 

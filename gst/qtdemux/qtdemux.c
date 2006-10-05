@@ -1567,8 +1567,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         /* get fourcc/length, set neededbytes */
         extract_initial_length_and_fourcc ((guint8 *) data, &size, &fourcc);
         GST_DEBUG_OBJECT (demux,
-            "Peeking found [%" GST_FOURCC_FORMAT "] size:%ld",
-            GST_FOURCC_ARGS (fourcc), size);
+            "Peeking found [%" GST_FOURCC_FORMAT "] size: %u",
+            GST_FOURCC_ARGS (fourcc), (guint) size);
         if ((fourcc == GST_MAKE_FOURCC ('m', 'd', 'a', 't'))) {
           if (demux->n_streams > 0) {
             demux->state = QTDEMUX_STATE_MOVIE;
@@ -1719,7 +1719,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         stream->sample_index++;
 
         /* update current offset and figure out size of next buffer */
-        GST_LOG_OBJECT (demux, "bumping offset:%lld up by %lld",
+        GST_LOG_OBJECT (demux, "increasing offset %" G_GUINT64_FORMAT " by %u",
             demux->offset, demux->neededbytes);
         demux->offset += demux->neededbytes;
         GST_LOG_OBJECT (demux, "offset is now %lld", demux->offset);
@@ -2257,7 +2257,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         }
         len = QTDEMUX_GUINT32_GET (buf);
         if (len < 8) {
-          GST_WARNING ("length too short (%d < 8)");
+          GST_WARNING ("length too short (%d < 8)", len);
           break;
         }
         if (len > (end - buf)) {
@@ -2290,7 +2290,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
           }
           len = QTDEMUX_GUINT32_GET (buf);
           if (len < 8) {
-            GST_WARNING ("length too short (%d < 8)");
+            GST_WARNING ("length too short (%d < 8)", len);
             break;
           }
           if (len > (end - buf)) {
@@ -2345,7 +2345,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
           if (len == 0)
             break;
           if (len < 8) {
-            GST_WARNING ("length too short (%d < 8)");
+            GST_WARNING ("length too short (%d < 8)", len);
             break;
           }
           if (len > (end - buf)) {
@@ -2375,7 +2375,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         }
         len = QTDEMUX_GUINT32_GET (buf);
         if (len < 8) {
-          GST_WARNING ("length too short (%d < 8)");
+          GST_WARNING ("length too short (%d < 8)", len);
           break;
         }
         if (len > (end - buf)) {
@@ -2424,7 +2424,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
           if (len == 0)
             break;
           if (len < 8) {
-            GST_WARNING ("length too short (%d < 8)");
+            GST_WARNING ("length too short (%d < 8)", len);
             break;
           }
           if (len > (end - buf)) {
@@ -3335,7 +3335,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     GST_LOG ("stsd len:           %d", len);
 
     stream->fourcc = fourcc = QTDEMUX_FOURCC_GET (stsd->data + 16 + 4);
-    GST_LOG ("stsd type:          %" GST_FOURCC_FORMAT, stream->fourcc);
+    GST_LOG ("stsd type:          %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (stream->fourcc));
 
     offset = 32;
 

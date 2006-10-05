@@ -1,3 +1,13 @@
+2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dts/gstdtsdec.c: (gst_dtsdec_chain):
+	* ext/musicbrainz/gsttrm.c: (gst_trm_setcaps):
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_sink_set_caps):
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_chain), (qtdemux_parse),
+	(qtdemux_parse_trak):
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_transform_ip):
+	  Another batch of printf format fixes.
+
 2006-10-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videocrop/gstvideocrop.c: (gst_video_crop_class_init),
