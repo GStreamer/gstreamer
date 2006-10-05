@@ -234,7 +234,7 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
         self->get_value_array = NULL;
     }
     if (!self->get) {           /* || !self->get_value_array) */
-      GST_WARNING ("incomplete implementation for type %d/%d:'%s'/'%s'",
+      GST_WARNING ("incomplete implementation for type %lu/%lu:'%s'/'%s'",
           self->type, self->base,
           g_type_name (self->type), g_type_name (self->base));
       res = FALSE;

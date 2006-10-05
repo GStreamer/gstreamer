@@ -452,7 +452,7 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
 
         if (read_uint (reader, &x)) {
           plugin->file_size = x;
-          GST_DEBUG ("file_size %d", plugin->file_size);
+          GST_DEBUG ("file_size %" G_GINT64_FORMAT, (gint64) plugin->file_size);
         } else {
           GST_DEBUG ("failed to read size");
         }

@@ -857,9 +857,9 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
       } else {
         GST_INFO_OBJECT (registry, "cached info for %s is stale", filename);
         GST_DEBUG_OBJECT (registry, "mtime %ld != %ld or size %"
-            G_GSIZE_FORMAT " != %"
-            G_GSIZE_FORMAT, plugin->file_mtime, file_status.st_mtime,
-            plugin->file_size, file_status.st_size);
+            G_GINT64_FORMAT " != %"
+            G_GINT64_FORMAT, plugin->file_mtime, file_status.st_mtime,
+            (gint64) plugin->file_size, (gint64) file_status.st_size);
         gst_registry_remove_plugin (gst_registry_get_default (), plugin);
         newplugin = gst_plugin_load_file (filename, NULL);
         if (newplugin) {

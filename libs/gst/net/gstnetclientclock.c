@@ -292,8 +292,8 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
 
 bogus_observation:
   {
-    GST_WARNING_OBJECT (self, "time packet receive time < send time (%",
-        GST_TIME_FORMAT, " < %" GST_TIME_FORMAT ")", GST_TIME_ARGS (local_1),
+    GST_WARNING_OBJECT (self, "time packet receive time < send time (%"
+        GST_TIME_FORMAT " < %" GST_TIME_FORMAT ")", GST_TIME_ARGS (local_1),
         GST_TIME_ARGS (local_2));
     return;
   }

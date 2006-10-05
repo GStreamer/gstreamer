@@ -575,8 +575,7 @@ pre_activate (GstPad * pad, GstActivateMode new_mode)
       break;
     case GST_ACTIVATE_NONE:
       GST_OBJECT_LOCK (pad);
-      GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE NONE, set flushing",
-          new_mode);
+      GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE NONE, set flushing");
       GST_PAD_SET_FLUSHING (pad);
       /* unlock blocked pads so element can resume and stop */
       GST_PAD_BLOCK_SIGNAL (pad);

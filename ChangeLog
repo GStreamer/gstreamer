@@ -1,5 +1,19 @@
 2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstpad.c: (pre_activate):
+	* gst/gstregistry.c: (gst_registry_scan_path_level):
+	* gst/gstregistryxml.c: (load_plugin):
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_set_interpolation_mode):
+	* libs/gst/dataprotocol/dataprotocol.c:
+	(gst_dp_packet_from_event_1_0):
+	* libs/gst/net/gstnetclientclock.c:
+	(gst_net_client_clock_observe_times):
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_create):
+	  Printf fixes.
+
+2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstconfig.h.in:

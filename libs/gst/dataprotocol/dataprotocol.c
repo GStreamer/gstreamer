@@ -545,7 +545,7 @@ gst_dp_packet_from_event_1_0 (const GstEvent * event, GstDPHeaderFlag flags,
     GST_LOG ("event %p has structure, string %s", event, string);
     pl_length = strlen ((gchar *) string) + 1;  /* include trailing 0 */
   } else {
-    GST_LOG ("event %p has no structure");
+    GST_LOG ("event %p has no structure", event);
     pl_length = 0;
   }
 
