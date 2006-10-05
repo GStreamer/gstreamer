@@ -344,6 +344,16 @@ AC_CHECK_LIB(dl, dladdr,
              [Defined if we have dladdr ()]))
 CFLAGS="$save_cflags"
 
+dnl check for inet_aton()
+save_libs="$LIBS"
+AC_CHECK_FUNC(inet_aton, ,
+   AC_CHECK_LIB(nsl, inet_aton, ,
+      AC_CHECK_LIB(socket, inet_aton, ,
+         AC_CHECK_LIB(resolv, inet_aton, ,[AC_DEFINE(NO_INET_ATON, 1, [Define if you have no native inet_aton() function.])]))))
+INET_ATON_LIBS=$LIBS
+AC_SUBST(INET_ATON_LIBS)
+LIBS="$save_libs"
+
 dnl *** checks for dependancy libraries ***
 
 dnl GLib
