@@ -129,8 +129,7 @@ GST_START_TEST (test_unity)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
-  GST_INFO ("expected %+5ld %+5ld  real %+5ld %+5ld", in[0], in[1], res[0],
-      res[1]);
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", in[0], in[1], res[0], res[1]);
   fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 4) == 0);
 
   /* cleanup */
@@ -176,7 +175,7 @@ GST_START_TEST (test_half)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
-  GST_INFO ("expected %+5ld %+5ld  real %+5ld %+5ld", out[0], out[1], res[0],
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], res[0],
       res[1]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 4) == 0);
 
@@ -223,7 +222,7 @@ GST_START_TEST (test_double)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
-  GST_INFO ("expected %+5ld %+5ld  real %+5ld %+5ld", out[0], out[1], res[0],
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], res[0],
       res[1]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 4) == 0);
 
@@ -271,7 +270,7 @@ GST_START_TEST (test_mute)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
-  GST_INFO ("expected %+5ld %+5ld  real %+5ld %+5ld", out[0], out[1], res[0],
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", out[0], out[1], res[0],
       res[1]);
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, 4) == 0);
 
@@ -359,8 +358,7 @@ GST_START_TEST (test_passthrough)
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
   res = (gint16 *) GST_BUFFER_DATA (outbuffer);
-  GST_INFO ("expected %+5ld %+5ld  real %+5ld %+5ld", in[0], in[1], res[0],
-      res[1]);
+  GST_INFO ("expected %+5d %+5d  real %+5d %+5d", in[0], in[1], res[0], res[1]);
   fail_unless (memcmp (GST_BUFFER_DATA (inbuffer), in, 4) == 0);
 
   /* cleanup */

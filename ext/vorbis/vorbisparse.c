@@ -580,8 +580,8 @@ vorbis_parse_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_set_position (query, format, value);
 
-      GST_LOG_OBJECT (parse,
-          "query %u: peer returned granulepos: %llu - we return %llu (format %u)",
+      GST_LOG_OBJECT (parse, "query %p: peer returned granulepos: %"
+          G_GUINT64_FORMAT " - we return %" G_GUINT64_FORMAT " (format %u)",
           query, granulepos, value, format);
 
       break;

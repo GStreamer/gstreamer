@@ -656,7 +656,7 @@ queue_out_of_data (GstElement * queue, GstPlayBaseBin * play_base_bin)
     id = gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (check_queue), queue);
     g_object_set_data (G_OBJECT (queue), "probe", GINT_TO_POINTER (id));
     GST_DEBUG_OBJECT (play_base_bin,
-        "Re-attaching buffering probe to pad %s:%s",
+        "Re-attaching buffering probe to pad %s:%s %p",
         GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
     gst_object_unref (sinkpad);
 

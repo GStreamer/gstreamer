@@ -423,7 +423,7 @@ retry:
   CHECK (snd_pcm_hw_params_get_period_size (params, &alsa->period_size, &dir),
       period_size);
 
-  GST_DEBUG_OBJECT (alsa, "buffer size %u, period size %u", alsa->buffer_size,
+  GST_DEBUG_OBJECT (alsa, "buffer size %lu, period size %lu", alsa->buffer_size,
       alsa->period_size);
 
   return 0;

@@ -171,7 +171,7 @@ gst_alsa_device_property_probe_get_values (GstPropertyProbe * probe,
   array = g_value_array_new (g_list_length (list));
   g_value_init (&value, G_TYPE_STRING);
   for (l = list; l != NULL; l = l->next) {
-    GST_LOG_OBJECT (probe, "Found device: %s", l->data);
+    GST_LOG_OBJECT (probe, "Found device: %s", (gchar *) l->data);
     g_value_take_string (&value, (gchar *) l->data);
     l->data = NULL;
     g_value_array_append (array, &value);

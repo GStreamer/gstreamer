@@ -2248,7 +2248,7 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
       continue;
     }
     if (gst_fdset_fd_has_error (sink->fdset, &client->fd)) {
-      GST_WARNING_OBJECT (sink, "gst_fdset_fd_has_error for %d", client->fd);
+      GST_WARNING_OBJECT (sink, "gst_fdset_fd_has_error for %d", client->fd.fd);
       client->status = GST_CLIENT_STATUS_ERROR;
       gst_multi_fd_sink_remove_client_link (sink, clients);
       continue;

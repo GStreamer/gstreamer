@@ -787,7 +787,7 @@ gst_vorbis_enc_setup (GstVorbisEnc * vorbisenc)
             max_bitrate, vorbisenc->bitrate, min_bitrate) != 0) {
       GST_ERROR_OBJECT (vorbisenc,
           "vorbis_encode_setup_managed "
-          "(c %d, rate %d, max br %ld, br %ld, min br %ld) failed",
+          "(c %d, rate %d, max br %ld, br %d, min br %ld) failed",
           vorbisenc->channels, vorbisenc->frequency, max_bitrate,
           vorbisenc->bitrate, min_bitrate);
       vorbis_info_clear (&vorbisenc->vi);
@@ -1012,8 +1012,8 @@ gst_vorbis_enc_buffer_check_discontinuous (GstVorbisEnc * vorbisenc,
 
     if ((GstClockTimeDiff) (GST_BUFFER_TIMESTAMP (buffer) -
             vorbisenc->expected_ts) > halfsample) {
-      GST_DEBUG_OBJECT (vorbisenc, "Expected TS % " GST_TIME_FORMAT
-          ", buffer TS % " GST_TIME_FORMAT,
+      GST_DEBUG_OBJECT (vorbisenc, "Expected TS %" GST_TIME_FORMAT
+          ", buffer TS %" GST_TIME_FORMAT,
           GST_TIME_ARGS (vorbisenc->expected_ts),
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
       ret = TRUE;

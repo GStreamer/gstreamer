@@ -1,3 +1,37 @@
+2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/alsa/gstalsadeviceprobe.c:
+	(gst_alsa_device_property_probe_get_values):
+	* ext/alsa/gstalsasink.c: (set_hwparams):
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_chain_elem_pad),
+	(gst_ogg_chain_new_stream), (gst_ogg_demux_read_chain):
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_send_headers),
+	(gst_ogg_mux_process_best_pad):
+	* ext/ogg/gstoggparse.c: (gst_ogg_parse_new_stream),
+	(gst_ogg_parse_chain):
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_stream_header):
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_data_packet):
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_setup),
+	(gst_vorbis_enc_buffer_check_discontinuous):
+	* ext/vorbis/vorbisparse.c: (vorbis_parse_src_query):
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render):
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	(gst_cdda_base_src_handle_track_seek):
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_push_full):
+	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_push):
+	* gst/audioresample/resample.c: (resample_input_pushthrough):
+	* gst/playback/gstplaybasebin.c: (queue_out_of_data):
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_handle_clients):
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset),
+	(wavpack_type_find):
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_video_test_src_create):
+	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_destroy),
+	(gst_xvimagesink_check_xshm_calls), (gst_xvimagesink_xvimage_new):
+	* tests/check/elements/volume.c: (GST_START_TEST):
+	  Printf format fixes.
+
 2006-10-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/gsttcp.c: (gst_tcp_gdp_read_caps):

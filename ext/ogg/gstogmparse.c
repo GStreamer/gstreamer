@@ -570,7 +570,7 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
       GST_LOG_OBJECT (ogm, "Type: %s, subtype: 0x%04x, channels: %d, "
           "samplerate: %d, blockalign: %d, bps: %d, caps = %" GST_PTR_FORMAT,
           ogm->hdr.streamtype, codec_id, ogm->hdr.s.audio.channels,
-          ogm->hdr.samples_per_unit, ogm->hdr.s.audio.blockalign,
+          (gint) ogm->hdr.samples_per_unit, ogm->hdr.s.audio.blockalign,
           ogm->hdr.s.audio.avgbytespersec, caps);
       break;
     }

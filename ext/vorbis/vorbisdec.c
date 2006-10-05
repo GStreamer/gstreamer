@@ -997,7 +997,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   if (vd->cur_timestamp != GST_CLOCK_TIME_NONE) {
     GST_BUFFER_TIMESTAMP (out) = vd->cur_timestamp;
     GST_DEBUG_OBJECT (vd,
-        "cur_timestamp: %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT " = % "
+        "cur_timestamp: %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT " = %"
         GST_TIME_FORMAT, GST_TIME_ARGS (vd->cur_timestamp),
         GST_TIME_ARGS (GST_BUFFER_DURATION (out)),
         GST_TIME_ARGS (vd->cur_timestamp + GST_BUFFER_DURATION (out)));

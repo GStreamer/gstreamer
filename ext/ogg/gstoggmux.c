@@ -1118,8 +1118,8 @@ gst_ogg_mux_send_headers (GstOggMux * mux)
       /* if last header, flush page */
       if (hwalk == NULL) {
         GST_LOG_OBJECT (mux,
-            "flushing page as packet %d is first or last packet",
-            pad->packetno);
+            "flushing page as packet %" G_GUINT64_FORMAT " is first or "
+            "last packet", pad->packetno);
         while (ogg_stream_flush (&pad->stream, &page)) {
           GstBuffer *hbuf = gst_ogg_mux_buffer_from_page (mux, &page, FALSE);
 
@@ -1400,7 +1400,7 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
           GST_TIME_FORMAT ") caused new page",
           granulepos, packet.packetno, GST_TIME_ARGS (timestamp));
       GST_LOG_OBJECT (pad->collect.pad,
-          GST_GP_FORMAT " new page %d", ogg_page_granulepos (&page),
+          GST_GP_FORMAT " new page %ld", ogg_page_granulepos (&page),
           pad->stream.pageno);
 
       if (ogg_page_granulepos (&page) == granulepos) {

@@ -926,7 +926,7 @@ gst_ogg_demux_chain_elem_pad (GstOggPad * pad, ogg_packet * packet)
 no_decoder:
   {
     GST_WARNING_OBJECT (ogg,
-        "pad %08x does not have elem_pad, no decoder ?", pad);
+        "pad %p does not have elem_pad, no decoder ?", pad);
     return GST_FLOW_ERROR;
   }
 decoder_error:
@@ -1284,7 +1284,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   GstTagList *list;
   gchar *name;
 
-  GST_DEBUG_OBJECT (chain->ogg, "creating new stream %08x in chain %p",
+  GST_DEBUG_OBJECT (chain->ogg, "creating new stream %08lx in chain %p",
       serialno, chain);
 
   ret = g_object_new (GST_TYPE_OGG_PAD, NULL);
@@ -1304,7 +1304,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
 
   ret->serialno = serialno;
   if (ogg_stream_init (&ret->stream, serialno) != 0) {
-    GST_ERROR ("Could not initialize ogg_stream struct for serial %08x.",
+    GST_ERROR ("Could not initialize ogg_stream struct for serial %08lx.",
         serialno);
     gst_object_unref (ret);
     return NULL;
@@ -1316,7 +1316,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, glong serialno)
   gst_tag_list_free (list);
 
   GST_DEBUG_OBJECT (chain->ogg,
-      "created new ogg src %p for stream with serial %08x", ret, serialno);
+      "created new ogg src %p for stream with serial %08lx", ret, serialno);
 
   g_array_append_val (chain->streams, ret);
 
@@ -2258,7 +2258,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
 
     serial = ogg_page_serialno (&op);
     if (gst_ogg_chain_get_stream (chain, serial) != NULL) {
-      GST_WARNING_OBJECT (ogg, "found serial %08x BOS page twice, ignoring",
+      GST_WARNING_OBJECT (ogg, "found serial %08lx BOS page twice, ignoring",
           serial);
       continue;
     }
@@ -2309,7 +2309,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
       }
       /* the timestamp will be filled in when we submit the pages */
       done &= (pad->start_time != GST_CLOCK_TIME_NONE);
-      GST_LOG_OBJECT (ogg, "done %08x now %d", serial, done);
+      GST_LOG_OBJECT (ogg, "done %08lx now %d", serial, done);
     }
 
     /* we read a page not belonging to the current chain: seek back to the

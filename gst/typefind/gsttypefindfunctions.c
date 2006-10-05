@@ -727,8 +727,8 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
         GST_INFO
             ("audio/mpeg calculated %u  =  %u  *  %u / %u  *  (%u - %u) / %u",
             probability, GST_TYPE_FIND_MAXIMUM, found,
-            GST_MP3_TYPEFIND_TRY_HEADERS, GST_MP3_TYPEFIND_TRY_SYNC, skipped,
-            GST_MP3_TYPEFIND_TRY_SYNC);
+            GST_MP3_TYPEFIND_TRY_HEADERS, GST_MP3_TYPEFIND_TRY_SYNC,
+            (guint) skipped, GST_MP3_TYPEFIND_TRY_SYNC);
         /* make sure we're not id3 tagged */
         head_data = gst_type_find_peek (tf, -128, 3);
         if (head_data && (memcmp (head_data, "TAG", 3) == 0)) {
@@ -906,7 +906,8 @@ wavpack_type_find (GstTypeFind * tf, gpointer unused)
       sublen += 1 + 1;          /* id + length */
     }
     if (sublen > blocksize - offset + 32) {
-      GST_LOG ("chunk length too big (%u > %u)", sublen, blocksize - offset);
+      GST_LOG ("chunk length too big (%u > %" G_GUINT64_FORMAT ")", sublen,
+          blocksize - offset);
       break;
     }
     if ((data[0] & 0x20) == 0) {

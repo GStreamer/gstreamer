@@ -359,8 +359,9 @@ gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
     bclass->set_gst_timestamp (filter, timestamp, out_buf);
 
   /* push it */
-  GST_LOG_OBJECT (filter, "Pushing buffer size %d, timestamp %u",
-      GST_BUFFER_SIZE (out_buf), GST_BUFFER_TIMESTAMP (out_buf));
+  GST_LOG_OBJECT (filter, "Pushing buffer size %d, timestamp %" GST_TIME_FORMAT,
+      GST_BUFFER_SIZE (out_buf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out_buf)));
   ret = gst_pad_push (filter->srcpad, out_buf);
   GST_LOG_OBJECT (filter, "Pushed buffer: %s", gst_flow_get_name (ret));
 

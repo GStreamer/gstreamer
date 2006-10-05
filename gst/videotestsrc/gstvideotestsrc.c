@@ -529,8 +529,8 @@ gst_video_test_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
   g_return_val_if_fail (newsize > 0, GST_FLOW_ERROR);
 
   GST_LOG_OBJECT (src,
-      "creating buffer of %ld bytes with %dx%d image for frame %d", newsize,
-      src->width, src->height, src->n_frames);
+      "creating buffer of %lu bytes with %dx%d image for frame %d", newsize,
+      src->width, src->height, (gint) src->n_frames);
 
 #ifdef USE_PEER_BUFFERALLOC
   res =
@@ -575,7 +575,7 @@ not_negotiated:
   }
 eos:
   {
-    GST_DEBUG_OBJECT (src, "eos: 0 framerate and frame %d", src->n_frames);
+    GST_DEBUG_OBJECT (src, "eos: 0 framerate, frame %d", (gint) src->n_frames);
     return GST_FLOW_UNEXPECTED;
   }
 no_buffer:

@@ -810,7 +810,7 @@ gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT (src, "seeking to track %d", start + 1);
+  GST_DEBUG_OBJECT (src, "seeking to track %" G_GINT64_FORMAT, start + 1);
 
   src->cur_sector = src->tracks[start].start;
   GST_DEBUG_OBJECT (src, "starting at sector %d", src->cur_sector);

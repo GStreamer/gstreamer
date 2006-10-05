@@ -618,7 +618,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       gst_util_uint64_scale_int (render_time, ringbuf->spec.rate, GST_SECOND);
 
   GST_DEBUG_OBJECT (sink, "render time %" GST_TIME_FORMAT
-      ", render offset %llu, samples %lu",
+      ", render offset %llu, samples %u",
       GST_TIME_ARGS (render_time), render_offset, samples);
 
   /* never try to align samples when we are slaved to another clock, just
@@ -651,7 +651,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * non-discont should be aligned by definition. */
   if (G_LIKELY (diff < ringbuf->spec.rate / DIFF_TOLERANCE)) {
     GST_DEBUG_OBJECT (sink,
-        "align with prev sample, %" G_GINT64_FORMAT " < %lu", diff,
+        "align with prev sample, %" G_GINT64_FORMAT " < %d", diff,
         ringbuf->spec.rate / DIFF_TOLERANCE);
     /* just align with previous sample then */
     render_offset = sink->next_sample;

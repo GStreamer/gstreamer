@@ -246,7 +246,7 @@ gst_xvimage_buffer_destroy (GstXvImageBuffer * xvimage)
 #ifdef HAVE_XSHM
   if (xvimagesink->xcontext->use_xshm) {
     if (xvimage->SHMInfo.shmaddr != ((void *) -1)) {
-      GST_DEBUG_OBJECT (xvimagesink, "XServer ShmDetaching from 0x%x id 0x%x\n",
+      GST_DEBUG_OBJECT (xvimagesink, "XServer ShmDetaching from 0x%x id 0x%lx",
           xvimage->SHMInfo.shmid, xvimage->SHMInfo.shmseg);
       XShmDetach (xvimagesink->xcontext->disp, &xvimage->SHMInfo);
       XSync (xvimagesink->xcontext->disp, FALSE);
@@ -463,7 +463,7 @@ gst_xvimagesink_check_xshm_calls (GstXContext * xcontext)
   /* Sync to ensure we see any errors we caused */
   XSync (xcontext->disp, FALSE);
 
-  GST_DEBUG ("XServer ShmAttached to 0x%x, id 0x%x\n", SHMInfo.shmid,
+  GST_DEBUG ("XServer ShmAttached to 0x%x, id 0x%lx", SHMInfo.shmid,
       SHMInfo.shmseg);
 
   if (!error_caught) {
@@ -480,7 +480,7 @@ beach:
   XSetErrorHandler (handler);
 
   if (did_attach) {
-    GST_DEBUG ("XServer ShmDetaching from 0x%x id 0x%x\n",
+    GST_DEBUG ("XServer ShmDetaching from 0x%x id 0x%lx",
         SHMInfo.shmid, SHMInfo.shmseg);
     XShmDetach (xcontext->disp, &SHMInfo);
     XSync (xcontext->disp, FALSE);
@@ -589,7 +589,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     }
 
     XSync (xvimagesink->xcontext->disp, FALSE);
-    GST_DEBUG_OBJECT (xvimagesink, "XServer ShmAttached to 0x%x, id 0x%x\n",
+    GST_DEBUG_OBJECT (xvimagesink, "XServer ShmAttached to 0x%x, id 0x%lx",
         xvimage->SHMInfo.shmid, xvimage->SHMInfo.shmseg);
   } else
 #endif /* HAVE_XSHM */

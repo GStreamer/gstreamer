@@ -147,7 +147,7 @@ gst_ogg_parse_new_stream (GstOggParse * parser, guint32 serialno)
 {
   GstOggStream *ret;
 
-  GST_DEBUG_OBJECT (parser, "creating new stream %08lx", serialno);
+  GST_DEBUG_OBJECT (parser, "creating new stream %08x", serialno);
 
   ret = g_new0 (GstOggStream, 1);
 
@@ -410,8 +410,10 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
       serialno = ogg_page_serialno (&page);
 
       GST_LOG_OBJECT (ogg,
-          "processing ogg page (serial %08lx, pageno %ld, granule pos %llu, "
-          "bos %d, offset %llu-%llu)", serialno, ogg_page_pageno (&page),
+          "processing ogg page (serial %08x, pageno %ld, "
+          "granule pos %" G_GUINT64_FORMAT ", bos %d, offset %"
+          G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT ")",
+          serialno, ogg_page_pageno (&page),
           granule, bos, startoffset, ogg->offset);
 
       if (ogg_page_bos (&page)) {
