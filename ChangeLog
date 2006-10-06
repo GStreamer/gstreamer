@@ -1,5 +1,14 @@
 2006-10-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_init),
+	(gst_multipart_find_pad_by_mime):
+	Activate pads before adding.
+
+	* gst/rtp/gstrtpmp4vdepay.c: (gst_rtp_mp4v_depay_class_init):
+	BOILERPLATE sets parent_class for us.
+
+2006-10-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type),
 	(gst_rtspsrc_class_init), (gst_rtspsrc_init),
 	(gst_rtspsrc_create_stream), (gst_rtspsrc_media_to_caps),

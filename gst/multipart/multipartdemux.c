@@ -220,7 +220,7 @@ gst_multipart_demux_init (GstMultipartDemux * multipart,
   multipart->sinkpad =
       gst_pad_new_from_template (gst_static_pad_template_get
       (&multipart_demux_sink_template_factory), "sink");
-  gst_element_add_pad (GST_ELEMENT (multipart), multipart->sinkpad);
+  gst_element_add_pad (GST_ELEMENT_CAST (multipart), multipart->sinkpad);
   gst_pad_set_chain_function (multipart->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multipart_demux_chain));
 
@@ -290,7 +290,8 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     demux->srcpads = g_slist_prepend (demux->srcpads, mppad);
     demux->numpads++;
 
-    gst_element_add_pad (GST_ELEMENT (demux), pad);
+    gst_pad_set_active (pad, TRUE);
+    gst_element_add_pad (GST_ELEMENT_CAST (demux), pad);
 
     if (created) {
       *created = TRUE;
