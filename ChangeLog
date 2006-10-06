@@ -1,5 +1,11 @@
 2006-10-06  Wim Taymans  <wim@fluendo.com>
 
+	* ext/dv/gstdvdemux.c: (gst_dvdemux_add_pads), (gst_dvdemux_chain):
+	* gst/auparse/gstauparse.c: (gst_au_parse_add_srcpad):
+	Activate pads before adding.
+
+2006-10-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/multipart/multipartdemux.c: (gst_multipart_demux_init),
 	(gst_multipart_find_pad_by_mime):
 	Activate pads before adding.

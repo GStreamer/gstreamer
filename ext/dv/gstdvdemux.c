@@ -306,6 +306,7 @@ gst_dvdemux_add_pads (GstDVDemux * dvdemux)
   gst_pad_set_event_function (dvdemux->videosrcpad,
       GST_DEBUG_FUNCPTR (gst_dvdemux_handle_src_event));
   gst_pad_use_fixed_caps (dvdemux->videosrcpad);
+  gst_pad_set_active (dvdemux->videosrcpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (dvdemux), dvdemux->videosrcpad);
 
   dvdemux->audiosrcpad =
@@ -317,6 +318,7 @@ gst_dvdemux_add_pads (GstDVDemux * dvdemux)
   gst_pad_set_event_function (dvdemux->audiosrcpad,
       GST_DEBUG_FUNCPTR (gst_dvdemux_handle_src_event));
   gst_pad_use_fixed_caps (dvdemux->audiosrcpad);
+  gst_pad_set_active (dvdemux->audiosrcpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (dvdemux), dvdemux->audiosrcpad);
 
   gst_element_no_more_pads (GST_ELEMENT (dvdemux));
@@ -1491,6 +1493,7 @@ gst_dvdemux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstDVDemux *dvdemux;
   GstFlowReturn ret;
+  GstClockTime timestamp;
 
   dvdemux = GST_DVDEMUX (gst_pad_get_parent (pad));
 
@@ -1499,6 +1502,14 @@ gst_dvdemux_chain (GstPad * pad, GstBuffer * buffer)
    * starts after the discontinuity */
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)))
     gst_adapter_clear (dvdemux->adapter);
+
+  /* a timestamp always should be respected */
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    gst_segment_set_last_stop (&dvdemux->time_segment, GST_FORMAT_TIME,
+        timestamp);
+    /* FIXME, adjust frame_offset and other counters */
+  }
 
   /* temporary hack? Can't do this from the state change */
   if (G_UNLIKELY (!dvdemux->videosrcpad))

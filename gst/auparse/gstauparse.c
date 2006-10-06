@@ -197,6 +197,7 @@ gst_au_parse_add_srcpad (GstAuParse * auparse, GstCaps * new_caps)
         GST_DEBUG_FUNCPTR (gst_au_parse_src_event));
 
     gst_pad_use_fixed_caps (auparse->srcpad);
+    gst_pad_set_active (auparse->srcpad, TRUE);
 
     if (auparse->src_caps)
       gst_pad_set_caps (auparse->srcpad, auparse->src_caps);
