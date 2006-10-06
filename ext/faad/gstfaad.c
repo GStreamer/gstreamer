@@ -291,14 +291,21 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
   if ((value = gst_structure_get_value (str, "codec_data"))) {
     guint32 samplerate;
     guint8 channels;
+    guint8 *cdata;
+    guint csize;
 
     /* We have codec data, means packetised stream */
     faad->packetised = TRUE;
-    buf = GST_BUFFER (gst_value_get_mini_object (value));
+    buf = gst_value_get_buffer (value);
+
+    cdata = GST_BUFFER_DATA (buf);
+    csize = GST_BUFFER_SIZE (buf);
+
+    if (csize < 2)
+      goto wrong_length;
 
     /* someone forgot that char can be unsigned when writing the API */
-    if ((gint8) faacDecInit2 (faad->handle,
-            GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), &samplerate,
+    if ((gint8) faacDecInit2 (faad->handle, cdata, csize, &samplerate,
             &channels) < 0)
       goto init_failed;
 
@@ -351,6 +358,11 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
   return TRUE;
 
   /* ERRORS */
+wrong_length:
+  {
+    GST_DEBUG_OBJECT (faad, "codec_data less than 2 bytes long");
+    return FALSE;
+  }
 init_failed:
   {
     GST_DEBUG_OBJECT (faad, "faacDecInit2() failed");
@@ -1028,7 +1040,6 @@ gst_faad_update_caps (GstFaad * faad, faacDecFrameInfo * info)
  * subsequent syncpoints (similar to mp3 typefinding in
  * gst/typefind/) for ADTS because 12 bits isn't very reliable.
  */
-
 static gboolean
 gst_faad_sync (GstBuffer * buf, guint * off)
 {
@@ -1197,6 +1208,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 
   input_data = GST_BUFFER_DATA (buffer);
   input_size = GST_BUFFER_SIZE (buffer);
+
   if (!faad->packetised) {
     if (!gst_faad_sync (buffer, &sync_off)) {
       goto next;
@@ -1262,9 +1274,14 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
     out = faacDecDecode (faad->handle, &info, input_data + skip_bytes,
         input_size - skip_bytes);
 
-    if (info.error) {
+    if (info.error > 0) {
       guint32 rate;
       guint8 ch;
+
+      GST_DEBUG_OBJECT (faad, "decoding error: %s",
+          faacDecGetErrorMessage (info.error));
+
+      goto out;
 
       if (!faad->packetised)
         goto decode_error;
@@ -1303,6 +1320,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 
     if (info.bytesconsumed > input_size)
       info.bytesconsumed = input_size;
+
     input_size -= info.bytesconsumed;
     input_data += info.bytesconsumed;
 
@@ -1336,6 +1354,8 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
         guint bufsize = info.samples * faad->bps;
         guint num_samples = info.samples / faad->channels;
 
+        GST_DEBUG_OBJECT (faad, "decoded %d samples", info.samples);
+
         /* note: info.samples is total samples, not per channel */
         ret =
             gst_pad_alloc_buffer_and_set_caps (faad->srcpad, 0, bufsize,
@@ -1360,8 +1380,8 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
               "pushing buffer, off=%" G_GUINT64_FORMAT ", ts=%" GST_TIME_FORMAT,
               GST_BUFFER_OFFSET (outbuf),
               GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
-          if ((ret = gst_pad_push (faad->srcpad, outbuf)) != GST_FLOW_OK
-              && ret != GST_FLOW_NOT_LINKED)
+          ret = gst_pad_push (faad->srcpad, outbuf);
+          if (ret != GST_FLOW_OK)
             goto out;
         } else
           gst_buffer_unref (outbuf);
@@ -1397,7 +1417,6 @@ init_failed:
     ret = GST_FLOW_ERROR;
     goto out;
   }
-
 init2_failed:
   {
     GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
@@ -1405,7 +1424,6 @@ init2_failed:
     ret = GST_FLOW_ERROR;
     goto out;
   }
-
 decode_error:
   {
     GST_ELEMENT_ERROR (faad, STREAM, DECODE, (NULL),
@@ -1443,8 +1461,10 @@ gst_faad_open_decoder (GstFaad * faad)
 static void
 gst_faad_close_decoder (GstFaad * faad)
 {
-  faacDecClose (faad->handle);
-  faad->handle = NULL;
+  if (faad->handle) {
+    faacDecClose (faad->handle);
+    faad->handle = NULL;
+  }
 }
 
 static GstStateChangeReturn

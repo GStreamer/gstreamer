@@ -1,3 +1,14 @@
+2006-10-06  Wim Taymans  <wim@fluendo.com>
+
+	* ext/faad/gstfaad.c: (gst_faad_setcaps), (gst_faad_chain),
+	(gst_faad_close_decoder):
+	Some cleanups.
+	Added some more debugging.
+	Don't ever ignore unlinked, we're not a demuxer.
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_add_stream):
+	Activate pad before adding it to the element.
+
 2006-10-06  Michael Smith  <msmith@fluendo.com>
 
 	* ext/theora/theoradec.c: (gst_theoradec_reset),

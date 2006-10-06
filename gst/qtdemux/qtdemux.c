@@ -1905,6 +1905,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
 
   GST_DEBUG_OBJECT (qtdemux, "adding pad %s %p to qtdemux %p",
       GST_OBJECT_NAME (stream->pad), stream->pad, qtdemux);
+  gst_pad_set_active (stream->pad, TRUE);
   gst_element_add_pad (GST_ELEMENT (qtdemux), stream->pad);
   if (list) {
     gst_element_found_tags_for_pad (GST_ELEMENT (qtdemux), stream->pad, list);
