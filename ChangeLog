@@ -1,3 +1,9 @@
+2006-10-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstinfo.h:
+	  Those two function declarations do actually belong there, revert
+	  commit from yesterday that turned them intro macros.
+
 2006-10-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	Patch by: Josep Torre Valles <josep@fluendo.com>
