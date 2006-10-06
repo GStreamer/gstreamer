@@ -526,11 +526,12 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    * Get statistics about @fd. This function returns a GValueArray to ease
    * automatic wrapping for bindings.
    *
-   * Returns: a GValueArray with the statistics. The array contains 5 guint64
-   *     values that represent respectively total number of bytes sent, time
-   *     when the client was added, time when the client was disconnected/removed,
-   *     time the client is/was active, last activity time. All times are
-   *     expressed in nanoseconds (GstClockTime).
+   * Returns: a GValueArray with the statistics. The array contains guint64
+   *     values that represent respectively: total number of bytes sent, time
+   *     when the client was added, time when the client was
+   *     disconnected/removed, time the client is/was active, last activity
+   *     time, number of buffers dropped.
+   *     All times are expressed in nanoseconds (GstClockTime).
    */
   gst_multi_fd_sink_signals[SIGNAL_GET_STATS] =
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -814,6 +815,7 @@ gst_multi_fd_sink_clear (GstMultiFdSink * sink)
  * guint64 : disconnect time (in nanoseconds)
  * guint64 : time the client is/was connected (in nanoseconds)
  * guint64 : last activity time (in nanoseconds)
+ * guint64 : buffers dropped due to recovery
  */
 GValueArray *
 gst_multi_fd_sink_get_stats (GstMultiFdSink * sink, int fd)
@@ -858,6 +860,10 @@ gst_multi_fd_sink_get_stats (GstMultiFdSink * sink, int fd)
     g_value_unset (&value);
     g_value_init (&value, G_TYPE_UINT64);
     g_value_set_uint64 (&value, client->last_activity_time);
+    result = g_value_array_append (result, &value);
+    g_value_unset (&value);
+    g_value_init (&value, G_TYPE_UINT64);
+    g_value_set_uint64 (&value, client->dropped_buffers);
     result = g_value_array_append (result, &value);
   }
   CLIENTS_UNLOCK (sink);
@@ -1403,7 +1409,8 @@ find_limits (GstMultiFdSink * sink,
 
     /* take timestamp and save for the base first timestamp */
     if ((time = GST_BUFFER_TIMESTAMP (buf)) != -1) {
-      GST_DEBUG_OBJECT (sink, "Ts %lld on buffer", time);
+      GST_LOG_OBJECT (sink, "Ts %" GST_TIME_FORMAT " on buffer",
+          GST_TIME_ARGS (time));
       if (first == -1)
         first = time;
 
@@ -2000,6 +2007,7 @@ gst_multi_fd_sink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
 
       newpos = gst_multi_fd_sink_recover_client (sink, client);
       if (newpos != client->bufpos) {
+        client->dropped_buffers += client->bufpos - newpos;
         client->bufpos = newpos;
         client->discont = TRUE;
         GST_INFO_OBJECT (sink, "[fd %5d] client %p position reset to %d",

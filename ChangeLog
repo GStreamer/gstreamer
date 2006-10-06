@@ -1,3 +1,10 @@
+2006-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init),
+	(gst_multi_fd_sink_get_stats), (find_limits),
+	(gst_multi_fd_sink_queue_buffer):
+	  API: add dropped_buffers to the get-stats GValueArray
+
 2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/alsa/gstalsadeviceprobe.c:
