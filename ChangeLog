@@ -1,3 +1,14 @@
+2006-10-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	Patch by: Josep Torre Valles <josep@fluendo.com>
+
+	* common/m4/gst-error.m4:
+	Fixed bug #360151.
+	We need to disable warnings on Forte for empty declarations
+	due to gst-indent adding ;s to lines that just use macros
+	where the macro actually doesn't need a ; at end to end
+	statement.
+
 2006-10-06  Wim Taymans  <wim@fluendo.com>
 
 	* plugins/elements/gstfilesink.c: (gst_file_sink_open_file),
