@@ -374,14 +374,18 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
   switch (type) {
     case GST_EVENT_NEWSEGMENT:
     {
-      gint64 soffset, eoffset;
+      gint64 start, stop, pos;
       GstFormat format;
 
-      gst_event_parse_new_segment (event, NULL, NULL, &format, &soffset,
-          &eoffset, NULL);
+      gst_event_parse_new_segment (event, NULL, NULL, &format, &start,
+          &stop, &pos);
 
       if (format == GST_FORMAT_BYTES) {
-        if (!gst_file_sink_do_seek (filesink, (guint64) soffset))
+        /* FIXME, the seek should be performed on the pos field, start/stop are
+         * just boundaries for valid bytes offsets. We should also fill the file
+         * with zeroes if the new position extends the current EOF (sparse streams
+         * and segment accumulation). */
+        if (!gst_file_sink_do_seek (filesink, (guint64) start))
           goto seek_failed;
       } else {
         GST_DEBUG ("Ignored NEWSEGMENT event of format %u (%s)",
