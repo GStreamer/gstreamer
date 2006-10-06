@@ -323,7 +323,7 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
   if (!decode_bin->typefind) {
     g_warning ("can't find typefind element, decodebin will not work");
   } else {
-    GstPad *pad;
+    GstPad *pad, *gpad;
 
     /* add the typefind element */
     if (!gst_bin_add (GST_BIN (decode_bin), decode_bin->typefind)) {
@@ -336,8 +336,9 @@ gst_decode_bin_init (GstDecodeBin * decode_bin)
     pad = gst_element_get_pad (decode_bin->typefind, "sink");
 
     /* ghost the sink pad to ourself */
-    gst_element_add_pad (GST_ELEMENT (decode_bin),
-        gst_ghost_pad_new ("sink", pad));
+    gpad = gst_ghost_pad_new ("sink", pad);
+    gst_pad_set_active (gpad, TRUE);
+    gst_element_add_pad (GST_ELEMENT (decode_bin), gpad);
 
     gst_object_unref (pad);
 
@@ -685,6 +686,7 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
 
     /* make it a ghostpad */
     ghost = gst_ghost_pad_new (padname, pad);
+    gst_pad_set_active (ghost, TRUE);
     gst_element_add_pad (GST_ELEMENT (decode_bin), ghost);
 
     data = g_new0 (PadProbeData, 1);

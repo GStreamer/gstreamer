@@ -1,3 +1,10 @@
+2006-10-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
+	(close_pad_link):
+	* gst/playback/gstplaybasebin.c: (new_decoded_pad_full):
+	Activate dynamic pads before adding them to the element.
+
 2006-10-06  Michael Smith  <msmith@fluendo.com>
 
 	* gst-libs/gst/floatcast/floatcast.h:

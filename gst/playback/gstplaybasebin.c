@@ -1194,7 +1194,9 @@ new_decoded_pad_full (GstElement * element, GstPad * pad, gboolean last,
   }
 
   /* add to stream selector */
-  sinkpad = gst_element_get_pad (group->type[type - 1].selector, "sink%d");
+  sinkpad =
+      gst_element_get_request_pad (group->type[type - 1].selector, "sink%d");
+
   /* make sure we catch unlink signals */
   sig = g_signal_connect (G_OBJECT (sinkpad), "unlinked",
       G_CALLBACK (preroll_unlinked), play_base_bin);
@@ -1203,6 +1205,7 @@ new_decoded_pad_full (GstElement * element, GstPad * pad, gboolean last,
   /* Store a pointer to the stream selector pad for this stream */
   g_object_set_data (G_OBJECT (pad), "pb_sel_pad", sinkpad);
 
+  gst_pad_set_active (sinkpad, TRUE);
   gst_pad_link (pad, sinkpad);
   gst_object_unref (sinkpad);
 
