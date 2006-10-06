@@ -1,3 +1,41 @@
+2006-10-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_proto_get_type),
+	(gst_rtspsrc_class_init), (gst_rtspsrc_init),
+	(gst_rtspsrc_create_stream), (gst_rtspsrc_media_to_caps),
+	(gst_rtspsrc_alloc_udp_ports),
+	(gst_rtspsrc_stream_configure_transport), (find_stream_by_channel),
+	(gst_rtspsrc_push_event), (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_create_transports_string),
+	(gst_rtspsrc_configure_transports), (gst_rtspsrc_open),
+	(gst_rtspsrc_handle_message), (gst_rtspsrc_change_state):
+	* gst/rtsp/gstrtspsrc.h:
+	Rework how the transport string is constructed, try to share channels
+	and udp ports.
+	Make most of the stuff less dependant on RTP as we are also going to use
+	it for RDT.
+	Add support for transport specific session managers.
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_flush):
+	Implement _flush().
+
+	* gst/rtsp/rtspdefs.c: (rtsp_strresult):
+	* gst/rtsp/rtspdefs.h:
+	Add generic error return code.
+
+	* gst/rtsp/rtspext.h:
+	Add support for pluggable tranport strings.
+
+	* gst/rtsp/rtspextwms.c: (rtsp_ext_wms_before_send),
+	(rtsp_ext_wms_after_send), (rtsp_ext_wms_parse_sdp),
+	(rtsp_ext_wms_get_context):
+	Detect WMServer and activate the extension.
+
+	* gst/rtsp/rtsptransport.c: (rtsp_transport_get_mime),
+	(rtsp_transport_get_manager), (rtsp_transport_parse):
+	* gst/rtsp/rtsptransport.h:
+	Added methods to get mime/manager for certain transports.
+
 2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/cairo/gsttimeoverlay.c:

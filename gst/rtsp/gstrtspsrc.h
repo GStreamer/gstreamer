@@ -72,21 +72,6 @@ typedef struct _GstRTSPSrcClass GstRTSPSrcClass;
 #define GST_RTSP_LOOP_WAIT(rtsp)         (g_cond_wait(GST_RTSP_LOOP_GET_COND (rtsp), GST_OBJECT_GET_LOCK (rtsp)))
 #define GST_RTSP_LOOP_SIGNAL(rtsp)       (g_cond_signal(GST_RTSP_LOOP_GET_COND (rtsp)))
 
-/**
- * GstRTSPProto:
- * @GST_RTSP_PROTO_UDP_UNICAST: Use unicast UDP transfer.
- * @GST_RTSP_PROTO_UDP_MULTICAST: Use multicast UDP transfer
- * @GST_RTSP_PROTO_TCP: Use TCP transfer.
- *
- * Flags with allowed protocols for the datatransfer.
- */
-typedef enum
-{
-  GST_RTSP_PROTO_UDP_UNICAST    = (1 << 0),
-  GST_RTSP_PROTO_UDP_MULTICAST  = (1 << 1),
-  GST_RTSP_PROTO_TCP            = (1 << 2),
-} GstRTSPProto;
-
 typedef struct _GstRTSPStream GstRTSPStream;
 
 struct _GstRTSPStream {
@@ -99,21 +84,18 @@ struct _GstRTSPStream {
   GstFlowReturn last_ret;
 
   /* for interleaved mode */
-  gint          rtpchannel;
-  gint          rtcpchannel;
+  gint          channel[2];
   GstCaps      *caps;
+  GstPad       *channelpad[2];
 
-  /* our udp sources for RTP */
-  GstElement   *rtpsrc;
-  GstElement   *rtcpsrc;
+  /* our udp sources */
+  GstElement   *udpsrc[2];
 
   /* our udp sink back to the server */
-  GstElement   *rtcpsink;
+  GstElement   *udpsink;
 
-  /* the RTP decoder */
-  GstElement   *rtpdec;
-  GstPad       *rtpdecrtp;
-  GstPad       *rtpdecrtcp;
+  /* the session manager */
+  GstElement   *sess;
 
   /* state */
   gint          pt;
@@ -132,6 +114,7 @@ struct _GstRTSPSrc {
   GStaticRecMutex *stream_rec_lock;
   GstSegment       segment;
   gboolean         running;
+  gint             free_channel;
 
   /* cond to signal loop */
   GCond           *loop_cond;
@@ -144,7 +127,7 @@ struct _GstRTSPSrc {
   gchar           *location;
   RTSPUrl         *url;
   gchar           *content_base;
-  GstRTSPProto     protocols;
+  RTSPLowerTrans   protocols;
   gboolean         debug;
   guint   	   retry;
   guint64          timeout;

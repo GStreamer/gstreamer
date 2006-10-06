@@ -53,20 +53,21 @@ if (G_UNLIKELY ((res = (stmt)) != RTSP_OK)) goto label
 typedef enum {
   RTSP_OK          =  0,
   /* errors */
-  RTSP_EINVAL      = -1,
-  RTSP_EINTR       = -2,
-  RTSP_ENOMEM      = -3,
-  RTSP_ERESOLV     = -4,
-  RTSP_ENOTIMPL    = -5,
-  RTSP_ESYS        = -6,
-  RTSP_EPARSE      = -7,
-  RTSP_EWSASTART   = -8,
-  RTSP_EWSAVERSION = -9,
-  RTSP_EEOF        = -10,
-  RTSP_ENET        = -11,
-  RTSP_ENOTIP      = -12,
+  RTSP_ERROR       = -1,
+  RTSP_EINVAL      = -2,
+  RTSP_EINTR       = -3,
+  RTSP_ENOMEM      = -4,
+  RTSP_ERESOLV     = -5,
+  RTSP_ENOTIMPL    = -6,
+  RTSP_ESYS        = -7,
+  RTSP_EPARSE      = -8,
+  RTSP_EWSASTART   = -9,
+  RTSP_EWSAVERSION = -10,
+  RTSP_EEOF        = -11,
+  RTSP_ENET        = -12,
+  RTSP_ENOTIP      = -13,
 
-  RTSP_ELAST       = -13,
+  RTSP_ELAST       = -14,
 } RTSPResult;
 
 typedef enum {

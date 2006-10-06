@@ -51,6 +51,7 @@ extern int h_errno;
 static const gchar *rtsp_results[] = {
   "OK",
   /* errors */
+  "Generic error",
   "Invalid parameter specified",
   "Operation interrupted",
   "Out of memory",

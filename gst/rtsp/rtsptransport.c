@@ -50,13 +50,14 @@ typedef struct
   const gchar *name;
   const RTSPTransMode mode;
   const gchar *gst_mime;
+  const gchar *manager;
 } RTSPTransMap;
 
 static const RTSPTransMap transports[] = {
-  {"rtp", RTSP_TRANS_RTP, "application/x-rtp"},
-  {"x-real-rdt", RTSP_TRANS_RDT, "application/x-rdt"},
-  {"x-pn-tng", RTSP_TRANS_RDT, "application/x-rdt"},
-  {NULL, RTSP_TRANS_UNKNOWN, "application/x-unknown"}
+  {"rtp", RTSP_TRANS_RTP, "application/x-rtp", "rtpdec"},
+  {"x-real-rdt", RTSP_TRANS_RDT, "application/x-rdt", NULL},
+  {"x-pn-tng", RTSP_TRANS_RDT, "application/x-rdt", NULL},
+  {NULL, RTSP_TRANS_UNKNOWN, NULL, NULL}
 };
 
 typedef struct
@@ -118,6 +119,36 @@ rtsp_transport_init (RTSPTransport * transport)
   return RTSP_OK;
 }
 
+RTSPResult
+rtsp_transport_get_mime (RTSPTransMode trans, const gchar ** mime)
+{
+  gint i;
+
+  g_return_val_if_fail (mime != NULL, RTSP_EINVAL);
+
+  for (i = 0; transports[i].name; i++)
+    if (transports[i].mode == trans)
+      break;
+  *mime = transports[i].gst_mime;
+
+  return RTSP_OK;
+}
+
+RTSPResult
+rtsp_transport_get_manager (RTSPTransMode trans, const gchar ** manager)
+{
+  gint i;
+
+  g_return_val_if_fail (manager != NULL, RTSP_EINVAL);
+
+  for (i = 0; transports[i].name; i++)
+    if (transports[i].mode == trans)
+      break;
+  *manager = transports[i].manager;
+
+  return RTSP_OK;
+}
+
 static void
 parse_mode (RTSPTransport * transport, gchar * str)
 {
@@ -163,11 +194,11 @@ rtsp_transport_parse (const gchar * str, RTSPTransport * transport)
       if (strstr (split[0], transports[i].name))
         break;
     transport->trans = transports[i].mode;
-    for (i = 1; profiles[i].name; i++)
+    for (i = 0; profiles[i].name; i++)
       if (strstr (split[0], profiles[i].name))
         break;
     transport->profile = profiles[i].profile;
-    for (i = 1; ltrans[i].name; i++)
+    for (i = 0; ltrans[i].name; i++)
       if (strstr (split[0], ltrans[i].name))
         break;
     transport->lower_transport = ltrans[i].ltrans;

@@ -753,3 +753,25 @@ rtsp_connection_free (RTSPConnection * conn)
 
   return RTSP_OK;
 }
+
+RTSPResult
+rtsp_connection_flush (RTSPConnection * conn, gboolean flush)
+{
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
+
+  if (flush) {
+    SEND_COMMAND (conn, CONTROL_STOP);
+  } else {
+    while (TRUE) {
+      gchar command;
+      int res;
+
+      READ_COMMAND (conn, command, res);
+      if (res <= 0) {
+        /* no more commands */
+        break;
+      }
+    }
+  }
+  return RTSP_OK;
+}

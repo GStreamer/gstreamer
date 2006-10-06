@@ -45,6 +45,7 @@
 
 #include <glib.h>
 
+#include "rtsptransport.h"
 #include "sdp.h"
 
 G_BEGIN_DECLS
@@ -64,6 +65,8 @@ struct _RTSPExtensionCtx
 
   RTSPResult (*parse_sdp)      (RTSPExtensionCtx *ctx, SDPMessage *sdp);
   RTSPResult (*setup_media)    (RTSPExtensionCtx *ctx, SDPMedia *media);
+
+  RTSPResult (*get_transports) (RTSPExtensionCtx *ctx, RTSPLowerTrans protocols, gchar **transport);
 
   RTSPResult (*stream_select)  (RTSPExtensionCtx *ctx);
 };

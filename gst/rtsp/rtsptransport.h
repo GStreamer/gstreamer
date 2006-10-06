@@ -85,7 +85,7 @@ typedef struct _RTSPTransport {
   gboolean       append;
   RTSPRange      interleaved;
 
-  /* mulitcast specific */
+  /* multicast specific */
   gint  ttl;
 
   /* UDP specific */
@@ -97,12 +97,15 @@ typedef struct _RTSPTransport {
   
 } RTSPTransport;
 
-RTSPResult      rtsp_transport_new      (RTSPTransport **transport);
-RTSPResult      rtsp_transport_init     (RTSPTransport *transport);
+RTSPResult      rtsp_transport_new          (RTSPTransport **transport);
+RTSPResult      rtsp_transport_init         (RTSPTransport *transport);
 
-RTSPResult      rtsp_transport_parse    (const gchar *str, RTSPTransport *transport);
+RTSPResult      rtsp_transport_parse        (const gchar *str, RTSPTransport *transport);
 
-RTSPResult      rtsp_transport_free     (RTSPTransport *transport);
+RTSPResult      rtsp_transport_get_mime     (RTSPTransMode trans, const gchar **mime);
+RTSPResult      rtsp_transport_get_manager  (RTSPTransMode trans, const gchar **manager);
+
+RTSPResult      rtsp_transport_free         (RTSPTransport *transport);
 
 G_END_DECLS
 

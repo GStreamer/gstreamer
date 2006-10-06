@@ -45,21 +45,71 @@
 #include "gstrtspsrc.h"
 #include "rtspextwms.h"
 
+#define SERVER_PREFIX "WMServer/"
+#define HEADER_PREFIX "data:application/vnd.ms.wms-hdr.asfv1;base64,"
+
 typedef struct _RTSPExtWMSCtx RTSPExtWMSCtx;
 
 struct _RTSPExtWMSCtx
 {
   RTSPExtensionCtx ctx;
+
+  gboolean active;
 };
 
-#define HEADER_PREFIX "data:application/vnd.ms.wms-hdr.asfv1;base64,"
+static RTSPResult
+rtsp_ext_wms_before_send (RTSPExtensionCtx * ctx, RTSPMessage * request)
+{
+  RTSPExtWMSCtx *rext = (RTSPExtWMSCtx *) ctx;
+
+  switch (request->type_data.request.method) {
+    case RTSP_OPTIONS:
+    {
+      /* activate ourselves with the first request */
+      rext->active = TRUE;
+      break;
+    }
+    default:
+      break;
+  }
+  return RTSP_OK;
+}
+
+static RTSPResult
+rtsp_ext_wms_after_send (RTSPExtensionCtx * ctx, RTSPMessage * req,
+    RTSPMessage * resp)
+{
+  RTSPExtWMSCtx *rext = (RTSPExtWMSCtx *) ctx;
+
+  switch (req->type_data.request.method) {
+    case RTSP_OPTIONS:
+    {
+      gchar *server = NULL;
+
+      rtsp_message_get_header (resp, RTSP_HDR_SERVER, &server);
+      if (g_str_has_prefix (server, SERVER_PREFIX))
+        rext->active = TRUE;
+      else
+        rext->active = FALSE;
+      break;
+    }
+    default:
+      break;
+  }
+  return RTSP_OK;
+}
+
 
 static RTSPResult
 rtsp_ext_wms_parse_sdp (RTSPExtensionCtx * ctx, SDPMessage * sdp)
 {
   GstRTSPSrc *src = (GstRTSPSrc *) ctx->src;
+  RTSPExtWMSCtx *rext = (RTSPExtWMSCtx *) ctx;
   gchar *config, *maxps;
   gint i;
+
+  if (!rext->active)
+    return RTSP_OK;
 
   for (i = 0; (config = sdp_message_get_attribute_val_n (sdp, "pgmpu", i)); i++) {
     if (g_str_has_prefix (config, HEADER_PREFIX)) {
@@ -86,9 +136,9 @@ rtsp_ext_wms_parse_sdp (RTSPExtensionCtx * ctx, SDPMessage * sdp)
   /* ERRORS */
 no_config:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("Could not find config SDP field."));
-    return RTSP_ENOTIMPL;
+    GST_DEBUG_OBJECT (src, "Could not find config SDP field, deactivating.");
+    rext->active = FALSE;
+    return RTSP_OK;
   }
 }
 
@@ -99,6 +149,8 @@ rtsp_ext_wms_get_context (void)
 
   res = g_new0 (RTSPExtWMSCtx, 1);
   res->ctx.parse_sdp = rtsp_ext_wms_parse_sdp;
+  res->ctx.before_send = rtsp_ext_wms_before_send;
+  res->ctx.after_send = rtsp_ext_wms_after_send;
 
   return (RTSPExtensionCtx *) res;
 }

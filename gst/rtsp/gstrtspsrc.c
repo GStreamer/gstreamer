@@ -96,6 +96,9 @@
 #include "sdp.h"
 
 #include "rtspextwms.h"
+#ifdef WITH_EXT_REAL
+#include "rtspextreal.h"
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
@@ -109,11 +112,10 @@ GST_ELEMENT_DETAILS ("RTSP packet receiver",
     "Thijs Vermeir <thijs.vermeir@barco.com>\n"
     "Lutz Mueller <lutz@topfrose.de>");
 
-static GstStaticPadTemplate rtptemplate =
-GST_STATIC_PAD_TEMPLATE ("rtp_stream%d",
+static GstStaticPadTemplate rtptemplate = GST_STATIC_PAD_TEMPLATE ("stream%d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("application/x-rtp"));
+    GST_STATIC_CAPS ("application/x-rtp; application/x-rdt"));
 
 enum
 {
@@ -122,7 +124,7 @@ enum
 };
 
 #define DEFAULT_LOCATION        NULL
-#define DEFAULT_PROTOCOLS       GST_RTSP_PROTO_UDP_UNICAST | GST_RTSP_PROTO_UDP_MULTICAST | GST_RTSP_PROTO_TCP
+#define DEFAULT_PROTOCOLS       RTSP_LOWER_TRANS_UDP | RTSP_LOWER_TRANS_UDP_MCAST | RTSP_LOWER_TRANS_TCP
 #define DEFAULT_DEBUG           FALSE
 #define DEFAULT_RETRY           20
 #define DEFAULT_TIMEOUT         5000000
@@ -143,9 +145,9 @@ gst_rtsp_proto_get_type (void)
 {
   static GType rtsp_proto_type = 0;
   static const GFlagsValue rtsp_proto[] = {
-    {GST_RTSP_PROTO_UDP_UNICAST, "UDP Unicast Mode", "udp-unicast"},
-    {GST_RTSP_PROTO_UDP_MULTICAST, "UDP Multicast Mode", "udp-multicast"},
-    {GST_RTSP_PROTO_TCP, "TCP interleaved mode", "tcp"},
+    {RTSP_LOWER_TRANS_UDP, "UDP Unicast Mode", "udp-unicast"},
+    {RTSP_LOWER_TRANS_UDP_MCAST, "UDP Multicast Mode", "udp-multicast"},
+    {RTSP_LOWER_TRANS_TCP, "TCP interleaved mode", "tcp"},
     {0, NULL, NULL},
   };
 
@@ -233,9 +235,9 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_LOCATION, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
-      g_param_spec_flags ("protocols", "Protocols", "Allowed protocols",
-          GST_TYPE_RTSP_PROTO, DEFAULT_PROTOCOLS,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+      g_param_spec_flags ("protocols", "Protocols",
+          "Allowed lower transport protocols", GST_TYPE_RTSP_PROTO,
+          DEFAULT_PROTOCOLS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (gobject_class, PROP_DEBUG,
       g_param_spec_boolean ("debug", "Debug",
@@ -272,6 +274,9 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
 
   /* install WMS extension by default */
   src->extension = rtsp_ext_wms_get_context ();
+#ifdef WITH_EXT_REAL
+  src->extension = rtsp_ext_real_get_context ();
+#endif
   src->extension->src = (gpointer) src;
 }
 
@@ -414,8 +419,9 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
   GST_DEBUG_OBJECT (src, " control: %s", GST_STR_NULL (control_url));
 
   if (control_url != NULL) {
-    /* FIXME, what if the control_url starts with a '/' or a non rtsp: protocol? */
-    /* check absolute/relative URL */
+    /* If the control_url starts with a '/' or a non rtsp: protocol we will most
+     * likely build a URL that the server will fail to understand, this is ok,
+     * we will fail then. */
     if (g_str_has_prefix (control_url, "rtsp://"))
       stream->setup_url = g_strdup (control_url);
     else if (src->content_base)
@@ -565,7 +571,7 @@ gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
       goto no_rtpmap;
   }
 
-  caps = gst_caps_new_simple ("application/x-rtp",
+  caps = gst_caps_new_simple ("application/x-unknown",
       "media", G_TYPE_STRING, media->media, "payload", G_TYPE_INT, pt, NULL);
   s = gst_caps_get_structure (caps, 0);
 
@@ -627,34 +633,34 @@ no_rtpmap:
 }
 
 static gboolean
-gst_rtspsrc_stream_setup_rtp (GstRTSPStream * stream,
+gst_rtspsrc_alloc_udp_ports (GstRTSPStream * stream,
     gint * rtpport, gint * rtcpport)
 {
-  GstStateChangeReturn ret;
   GstRTSPSrc *src;
-  GstElement *tmp, *rtpsrc, *rtcpsrc;
+  GstStateChangeReturn ret;
+  GstElement *tmp, *udpsrc0, *udpsrc1;
   gint tmp_rtp, tmp_rtcp;
   guint count;
 
   src = stream->parent;
 
   tmp = NULL;
-  rtpsrc = NULL;
-  rtcpsrc = NULL;
+  udpsrc0 = NULL;
+  udpsrc1 = NULL;
   count = 0;
 
   /* try to allocate 2 UDP ports, the RTP port should be an even
    * number and the RTCP port should be the next (uneven) port */
 again:
-  rtpsrc = gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0:0", NULL);
-  if (rtpsrc == NULL)
-    goto no_udp_rtp_protocol;
+  udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0:0", NULL);
+  if (udpsrc0 == NULL)
+    goto no_udp_protocol;
 
-  ret = gst_element_set_state (rtpsrc, GST_STATE_PAUSED);
+  ret = gst_element_set_state (udpsrc0, GST_STATE_PAUSED);
   if (ret == GST_STATE_CHANGE_FAILURE)
-    goto start_rtp_failure;
+    goto start_udp_failure;
 
-  g_object_get (G_OBJECT (rtpsrc), "port", &tmp_rtp, NULL);
+  g_object_get (G_OBJECT (udpsrc0), "port", &tmp_rtp, NULL);
   GST_DEBUG_OBJECT (src, "got RTP port %d", tmp_rtp);
 
   /* check if port is even */
@@ -671,7 +677,7 @@ again:
       gst_element_set_state (tmp, GST_STATE_NULL);
       gst_object_unref (tmp);
     }
-    tmp = rtpsrc;
+    tmp = udpsrc0;
     GST_DEBUG_OBJECT (src, "retry %d", count);
     goto again;
   }
@@ -683,50 +689,45 @@ again:
   }
 
   /* allocate port+1 for RTCP now */
-  rtcpsrc = gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0", NULL);
-  if (rtcpsrc == NULL)
+  udpsrc1 = gst_element_make_from_uri (GST_URI_SRC, "udp://0.0.0.0", NULL);
+  if (udpsrc1 == NULL)
     goto no_udp_rtcp_protocol;
 
   /* set port */
   tmp_rtcp = tmp_rtp + 1;
-  g_object_set (G_OBJECT (rtcpsrc), "port", tmp_rtcp, NULL);
+  g_object_set (G_OBJECT (udpsrc1), "port", tmp_rtcp, NULL);
 
   GST_DEBUG_OBJECT (src, "starting RTCP on port %d", tmp_rtcp);
-  ret = gst_element_set_state (rtcpsrc, GST_STATE_PAUSED);
+  ret = gst_element_set_state (udpsrc1, GST_STATE_PAUSED);
   /* FIXME, this could fail if the next port is not free, we
    * should retry with another port then */
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto start_rtcp_failure;
 
   /* all fine, do port check */
-  g_object_get (G_OBJECT (rtpsrc), "port", rtpport, NULL);
-  g_object_get (G_OBJECT (rtcpsrc), "port", rtcpport, NULL);
+  g_object_get (G_OBJECT (udpsrc0), "port", rtpport, NULL);
+  g_object_get (G_OBJECT (udpsrc1), "port", rtcpport, NULL);
 
   /* this should not happen */
   if (*rtpport != tmp_rtp || *rtcpport != tmp_rtcp)
     goto port_error;
 
-  /* configure a timeout */
-  g_object_set (G_OBJECT (rtpsrc), "timeout", src->timeout, NULL);
-
-  /* we manage these elements, we set the caps in configure_transport */
-  stream->rtpsrc = rtpsrc;
-  stream->rtcpsrc = rtcpsrc;
-
-  gst_bin_add (GST_BIN_CAST (src), stream->rtpsrc);
-  gst_bin_add (GST_BIN_CAST (src), stream->rtcpsrc);
+  /* we keep these elements, we configure all in configure_transport when the
+   * server told us to really use the UDP ports. */
+  stream->udpsrc[0] = udpsrc0;
+  stream->udpsrc[1] = udpsrc1;
 
   return TRUE;
 
   /* ERRORS */
-no_udp_rtp_protocol:
+no_udp_protocol:
   {
-    GST_DEBUG_OBJECT (src, "could not get UDP source for RTP");
+    GST_DEBUG_OBJECT (src, "could not get UDP source");
     goto cleanup;
   }
-start_rtp_failure:
+start_udp_failure:
   {
-    GST_DEBUG_OBJECT (src, "could not start UDP source for RTP");
+    GST_DEBUG_OBJECT (src, "could not start UDP source");
     goto cleanup;
   }
 no_ports:
@@ -757,13 +758,13 @@ cleanup:
       gst_element_set_state (tmp, GST_STATE_NULL);
       gst_object_unref (tmp);
     }
-    if (rtpsrc) {
-      gst_element_set_state (rtpsrc, GST_STATE_NULL);
-      gst_object_unref (rtpsrc);
+    if (udpsrc0) {
+      gst_element_set_state (udpsrc0, GST_STATE_NULL);
+      gst_object_unref (udpsrc0);
     }
-    if (rtcpsrc) {
-      gst_element_set_state (rtcpsrc, GST_STATE_NULL);
-      gst_object_unref (rtcpsrc);
+    if (udpsrc1) {
+      gst_element_set_state (udpsrc1, GST_STATE_NULL);
+      gst_object_unref (udpsrc1);
     }
     return FALSE;
   }
@@ -774,115 +775,209 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     RTSPTransport * transport)
 {
   GstRTSPSrc *src;
-  GstPad *pad;
+  GstPad *outpad = NULL;
   GstPadTemplate *template;
   GstStateChangeReturn ret;
   gchar *name;
+  GstStructure *s;
+  const gchar *mime, *manager;
+  RTSPResult res;
 
   src = stream->parent;
 
-  GST_DEBUG ("configuring RTP transport for stream %p", stream);
+  GST_DEBUG_OBJECT (src, "configuring transport for stream %p", stream);
 
-  /* FIXME, the session manager needs to be shared with all the streams */
-  if (!(stream->rtpdec = gst_element_factory_make ("rtpdec", NULL)))
-    goto no_element;
+  s = gst_caps_get_structure (stream->caps, 0);
 
-  /* we manage this element */
-  gst_bin_add (GST_BIN_CAST (src), stream->rtpdec);
+  if ((res = rtsp_transport_get_mime (transport->trans, &mime)) < 0)
+    goto no_mime;
+  if (!mime)
+    goto no_mime;
 
-  ret = gst_element_set_state (stream->rtpdec, GST_STATE_PAUSED);
-  if (ret != GST_STATE_CHANGE_SUCCESS)
-    goto start_rtpdec_failure;
+  GST_DEBUG_OBJECT (src, "setting mime to %s", mime);
+  /* configure the final mime type */
+  gst_structure_set_name (s, mime);
 
-  stream->rtpdecrtp = gst_element_get_pad (stream->rtpdec, "sinkrtp");
-  stream->rtpdecrtcp = gst_element_get_pad (stream->rtpdec, "sinkrtcp");
+  if ((res = rtsp_transport_get_manager (transport->trans, &manager)) < 0)
+    goto no_manager;
+
+  if (manager) {
+    GST_DEBUG_OBJECT (src, "using manager %s", manager);
+    /* FIXME, the session manager needs to be shared with all the streams */
+    if (!(stream->sess = gst_element_factory_make (manager, NULL)))
+      goto no_element;
+
+    /* we manage this element */
+    gst_bin_add (GST_BIN_CAST (src), stream->sess);
+
+    ret = gst_element_set_state (stream->sess, GST_STATE_PAUSED);
+    if (ret != GST_STATE_CHANGE_SUCCESS)
+      goto start_session_failure;
+
+    stream->channelpad[0] = gst_element_get_pad (stream->sess, "sinkrtp");
+    stream->channelpad[1] = gst_element_get_pad (stream->sess, "sinkrtcp");
+  }
 
   if (transport->lower_transport == RTSP_LOWER_TRANS_TCP) {
+    gint i;
+
     /* configure for interleaved delivery, nothing needs to be done
      * here, the loop function will call the chain functions of the
-     * RTP session manager. */
-    stream->rtpchannel = transport->interleaved.min;
-    stream->rtcpchannel = transport->interleaved.max;
-    GST_DEBUG ("stream %p on channels %d-%d", stream,
-        stream->rtpchannel, stream->rtcpchannel);
+     * session manager. */
+    stream->channel[0] = transport->interleaved.min;
+    stream->channel[1] = transport->interleaved.max;
+    GST_DEBUG_OBJECT (src, "stream %p on channels %d-%d", stream,
+        stream->channel[0], stream->channel[1]);
+
+    /* we can remove the allocated UDP ports now */
+    for (i = 0; i < 2; i++) {
+      if (stream->udpsrc[i]) {
+        gst_element_set_state (stream->udpsrc[i], GST_STATE_NULL);
+        gst_object_unref (stream->udpsrc[i]);
+        stream->udpsrc[i] = NULL;
+      }
+    }
+    /* no session manager, send data to srcpad directly */
+    if (!stream->channelpad[0]) {
+      GST_DEBUG_OBJECT (src, "no manager, creating pad");
+
+      name = g_strdup_printf ("stream%d", stream->id);
+      template = gst_static_pad_template_get (&rtptemplate);
+      stream->srcpad = gst_pad_new_from_template (template, name);
+      gst_object_unref (template);
+      g_free (name);
+
+      gst_pad_use_fixed_caps (stream->srcpad);
+      gst_pad_set_caps (stream->srcpad, stream->caps);
+
+      stream->channelpad[0] = gst_object_ref (stream->srcpad);
+      gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
+    } else {
+      GST_DEBUG_OBJECT (src, "using manager source pad");
+      outpad = gst_element_get_pad (stream->sess, "srcrtp");
+    }
   } else {
     /* multicast was selected, create UDP sources and join the multicast
      * group. */
     if (transport->lower_transport == RTSP_LOWER_TRANS_UDP_MCAST) {
       gchar *uri;
 
-      /* creating RTP source */
-      uri =
-          g_strdup_printf ("udp://%s:%d", transport->destination,
-          transport->port.min);
-      stream->rtpsrc = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
-      g_free (uri);
-      if (stream->rtpsrc == NULL)
-        goto no_element;
+      GST_DEBUG_OBJECT (src, "creating UDP sources for multicast");
 
-      /* creating RTCP source */
-      uri =
-          g_strdup_printf ("udp://%s:%d", transport->destination,
-          transport->port.max);
-      stream->rtcpsrc = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
-      g_free (uri);
-      if (stream->rtcpsrc == NULL)
-        goto no_element;
+      /* creating UDP source */
+      if (transport->port.min != -1) {
+        uri = g_strdup_printf ("udp://%s:%d", transport->destination,
+            transport->port.min);
+        stream->udpsrc[0] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
+        g_free (uri);
+        if (stream->udpsrc[0] == NULL)
+          goto no_element;
 
-      /* change state */
-      gst_element_set_state (stream->rtpsrc, GST_STATE_PAUSED);
-      gst_element_set_state (stream->rtcpsrc, GST_STATE_PAUSED);
+        /* change state */
+        gst_element_set_state (stream->udpsrc[0], GST_STATE_PAUSED);
+      }
 
-      /* we manage these elements */
-      gst_bin_add (GST_BIN_CAST (src), stream->rtpsrc);
-      gst_bin_add (GST_BIN_CAST (src), stream->rtcpsrc);
+      /* creating another UDP source */
+      if (transport->port.max != -1) {
+        uri = g_strdup_printf ("udp://%s:%d", transport->destination,
+            transport->port.max);
+        stream->udpsrc[1] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
+        g_free (uri);
+        if (stream->udpsrc[1] == NULL)
+          goto no_element;
+
+        gst_element_set_state (stream->udpsrc[1], GST_STATE_PAUSED);
+      }
     }
 
-    /* set caps */
-    g_object_set (G_OBJECT (stream->rtpsrc), "caps", stream->caps, NULL);
+    /* we manage the UDP elements now. For unicast, the UDP sources where
+     * allocated in the stream when we suggested a transport. */
+    if (stream->udpsrc[0]) {
+      GstPad *pad;
 
-    /* configure for UDP delivery, we need to connect the UDP pads to
-     * the RTP session plugin. */
-    pad = gst_element_get_pad (stream->rtpsrc, "src");
-    gst_pad_link (pad, stream->rtpdecrtp);
-    gst_object_unref (pad);
+      gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[0]);
 
-    pad = gst_element_get_pad (stream->rtcpsrc, "src");
-    gst_pad_link (pad, stream->rtpdecrtcp);
-    gst_object_unref (pad);
+      GST_DEBUG_OBJECT (src, "setting up UDP source");
+
+      /* set caps */
+      g_object_set (G_OBJECT (stream->udpsrc[0]), "caps", stream->caps, NULL);
+
+      /* configure a timeout on the UDP port */
+      g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", src->timeout,
+          NULL);
+
+      if (stream->channelpad[0]) {
+        GST_DEBUG_OBJECT (src, "connecting UDP source 0 to manager");
+        /* configure for UDP delivery, we need to connect the UDP pads to
+         * the session plugin. */
+        pad = gst_element_get_pad (stream->udpsrc[0], "src");
+        gst_pad_link (pad, stream->channelpad[0]);
+        gst_object_unref (pad);
+
+        outpad = gst_element_get_pad (stream->sess, "srcrtp");
+      } else {
+        GST_DEBUG_OBJECT (src, "using UDP src pad as output");
+        outpad = gst_element_get_pad (stream->udpsrc[0], "src");
+      }
+    }
+
+    if (stream->udpsrc[1]) {
+      gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[1]);
+
+      if (stream->channelpad[1]) {
+        GstPad *pad;
+
+        GST_DEBUG_OBJECT (src, "connecting UDP source 1 to manager");
+
+        pad = gst_element_get_pad (stream->udpsrc[1], "src");
+        gst_pad_link (pad, stream->channelpad[1]);
+        gst_object_unref (pad);
+      }
+    }
   }
 
-  pad = gst_element_get_pad (stream->rtpdec, "srcrtp");
-  if (stream->caps) {
-    gst_pad_use_fixed_caps (pad);
-    gst_pad_set_caps (pad, stream->caps);
+  if (outpad && !stream->srcpad) {
+    GST_DEBUG_OBJECT (src, "creating ghostpad");
+
+    gst_pad_use_fixed_caps (outpad);
+    gst_pad_set_caps (outpad, stream->caps);
+
+    /* create ghostpad */
+    name = g_strdup_printf ("stream%d", stream->id);
+    template = gst_static_pad_template_get (&rtptemplate);
+    stream->srcpad = gst_ghost_pad_new_from_template (name, outpad, template);
+    gst_object_unref (template);
+    g_free (name);
+
+    gst_object_unref (outpad);
+
+    /* and add */
+    gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
   }
-
-  /* create ghostpad */
-  name = g_strdup_printf ("rtp_stream%d", stream->id);
-  template = gst_static_pad_template_get (&rtptemplate);
-  stream->srcpad = gst_ghost_pad_new_from_template (name, pad, template);
-  gst_object_unref (template);
-  g_free (name);
-
-  gst_object_unref (pad);
-
   /* mark pad as ok */
   stream->last_ret = GST_FLOW_OK;
-  /* and add */
-  gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
 
   return TRUE;
 
   /* ERRORS */
+no_mime:
+  {
+    GST_DEBUG_OBJECT (src, "unknown transport");
+    return FALSE;
+  }
+no_manager:
+  {
+    GST_DEBUG_OBJECT (src, "cannot get a session manager");
+    return FALSE;
+  }
 no_element:
   {
     GST_DEBUG_OBJECT (src, "no rtpdec element found");
     return FALSE;
   }
-start_rtpdec_failure:
+start_session_failure:
   {
-    GST_DEBUG_OBJECT (src, "could not start RTP session");
+    GST_DEBUG_OBJECT (src, "could not start session");
     return FALSE;
   }
 }
@@ -892,7 +987,7 @@ find_stream_by_channel (GstRTSPStream * stream, gconstpointer a)
 {
   gint channel = GPOINTER_TO_INT (a);
 
-  if (stream->rtpchannel == channel || stream->rtcpchannel == channel)
+  if (stream->channel[0] == channel || stream->channel[1] == channel)
     return 0;
 
   return -1;
@@ -944,10 +1039,21 @@ gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event)
     if (ostream->srcpad == NULL)
       continue;
 
-    gst_event_ref (event);
-    gst_pad_push_event (ostream->rtpdecrtp, event);
-    gst_event_ref (event);
-    gst_pad_push_event (ostream->rtpdecrtcp, event);
+    if (ostream->channelpad[0]) {
+      gst_event_ref (event);
+      if (GST_PAD_IS_SRC (ostream->channelpad[0]))
+        gst_pad_push_event (ostream->channelpad[0], event);
+      else
+        gst_pad_send_event (ostream->channelpad[0], event);
+    }
+
+    if (ostream->channelpad[1]) {
+      gst_event_ref (event);
+      if (GST_PAD_IS_SRC (ostream->channelpad[1]))
+        gst_pad_push_event (ostream->channelpad[1], event);
+      else
+        gst_pad_send_event (ostream->channelpad[1], event);
+    }
   }
   gst_event_unref (event);
 }
@@ -984,11 +1090,11 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     goto unknown_stream;
 
   stream = (GstRTSPStream *) lstream->data;
-  if (channel == stream->rtpchannel) {
-    outpad = stream->rtpdecrtp;
+  if (channel == stream->channel[0]) {
+    outpad = stream->channelpad[0];
     caps = stream->caps;
-  } else if (channel == stream->rtcpchannel) {
-    outpad = stream->rtpdecrtcp;
+  } else if (channel == stream->channel[1]) {
+    outpad = stream->channelpad[1];
   }
 
   /* take a look at the body to figure out what we have */
@@ -999,7 +1105,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   /* channels are not correct on some servers, do extra check */
   if (data[1] >= 200 && data[1] <= 204) {
     /* hmm RTCP message switch to the RTCP pad of the same stream. */
-    outpad = stream->rtpdecrtcp;
+    outpad = stream->channelpad[1];
   }
 
   /* we have no clue what this is, just ignore then. */
@@ -1027,7 +1133,10 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
       channel);
 
   /* chain to the peer pad */
-  ret = gst_pad_chain (outpad, buf);
+  if (GST_PAD_IS_SINK (outpad))
+    ret = gst_pad_chain (outpad, buf);
+  else
+    ret = gst_pad_push (outpad, buf);
 
   /* combine all stream flows */
   ret = gst_rtspsrc_combine_flows (src, stream, ret);
@@ -1311,6 +1420,136 @@ no_setup:
   }
 }
 
+static RTSPResult
+gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
+    RTSPLowerTrans protocols, gchar ** transports)
+{
+  gchar *result;
+  RTSPResult res;
+
+  *transports = NULL;
+  if (src->extension && src->extension->get_transports)
+    if ((res =
+            src->extension->get_transports (src->extension, protocols,
+                transports)) < 0)
+      goto failed;
+
+  /* extension listed transports, use those */
+  if (*transports != NULL)
+    return RTSP_OK;
+
+  result = g_strdup ("");
+  if (protocols & RTSP_LOWER_TRANS_UDP) {
+    gchar *new;
+
+    GST_DEBUG_OBJECT (src, "adding UDP unicast");
+
+    new =
+        g_strconcat (result, "RTP/AVP/UDP;unicast;client_port=%%u1-%%u2", NULL);
+    g_free (result);
+    result = new;
+  }
+  if (protocols & RTSP_LOWER_TRANS_UDP_MCAST) {
+    gchar *new;
+
+    GST_DEBUG_OBJECT (src, "adding UDP multicast");
+
+    /* we don't have to allocate any UDP ports yet, if the selected transport
+     * turns out to be multicast we can create them and join the multicast
+     * group indicated in the transport reply */
+    new = g_strconcat (result, result[0] ? "," : "",
+        "RTP/AVP/UDP;multicast", NULL);
+    g_free (result);
+    result = new;
+  }
+  if (protocols & RTSP_LOWER_TRANS_TCP) {
+    gchar *new;
+
+    GST_DEBUG_OBJECT (src, "adding TCP");
+
+    new = g_strconcat (result, result[0] ? "," : "",
+        "RTP/AVP/TCP;unicast;interleaved=%%i1-%%i2", NULL);
+    g_free (result);
+    result = new;
+  }
+  *transports = result;
+
+  return RTSP_OK;
+
+  /* ERRORS */
+failed:
+  {
+    return res;
+  }
+}
+
+static RTSPResult
+gst_rtspsrc_configure_transports (GstRTSPStream * stream, gchar ** transports)
+{
+  GstRTSPSrc *src;
+  gint nr_udp, nr_int;
+  gchar *next, *p;
+  gint rtpport = 0, rtcpport = 0;
+  GString *str;
+
+  src = stream->parent;
+
+  /* find number of placeholders first */
+  if (strstr (*transports, "%%i2"))
+    nr_int = 2;
+  else if (strstr (*transports, "%%i1"))
+    nr_int = 1;
+  else
+    nr_int = 0;
+
+  if (strstr (*transports, "%%u2"))
+    nr_udp = 2;
+  else if (strstr (*transports, "%%u1"))
+    nr_udp = 1;
+  else
+    nr_udp = 0;
+
+  if (nr_udp == 0 && nr_int == 0)
+    goto done;
+
+  if (nr_udp > 0) {
+    if (!gst_rtspsrc_alloc_udp_ports (stream, &rtpport, &rtcpport))
+      goto failed;
+  }
+
+  str = g_string_new ("");
+  p = *transports;
+  while ((next = strstr (p, "%%"))) {
+    g_string_append_len (str, p, next - p);
+    if (next[2] == 'u') {
+      if (next[3] == '1')
+        g_string_append_printf (str, "%d", rtpport);
+      else if (next[3] == '2')
+        g_string_append_printf (str, "%d", rtcpport);
+    }
+    if (next[2] == 'i') {
+      if (next[3] == '1')
+        g_string_append_printf (str, "%d", src->free_channel);
+      else if (next[3] == '2')
+        g_string_append_printf (str, "%d", src->free_channel + 1);
+    }
+
+    p = next + 4;
+  }
+
+  g_free (*transports);
+  *transports = g_string_free (str, FALSE);
+
+done:
+  return RTSP_OK;
+
+  /* ERRORS */
+failed:
+  {
+    return RTSP_ERROR;
+  }
+}
+
 static gboolean
 gst_rtspsrc_open (GstRTSPSrc * src)
 {
@@ -1321,7 +1560,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   guint size;
   gint i, n_streams;
   SDPMessage sdp = { 0 };
-  GstRTSPProto protocols;
+  RTSPLowerTrans protocols;
   GstRTSPStream *stream = NULL;
   gchar *respcont = NULL;
 
@@ -1396,8 +1635,8 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   if (src->extension && src->extension->parse_sdp)
     src->extension->parse_sdp (src->extension, &sdp);
 
-  /* we initially allow all configured protocols. based on the replies from the
-   * server we narrow them down. */
+  /* we initially allow all configured lower transports. based on the
+   * replies from the server we narrow them down. */
   protocols = src->protocols;
 
   /* setup streams */
@@ -1440,54 +1679,15 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     if (res < 0)
       goto create_request_failed;
 
-    transports = g_strdup ("");
-    if (protocols & GST_RTSP_PROTO_UDP_UNICAST) {
-      gchar *new;
-      gint rtpport, rtcpport;
-      gchar *trxparams;
+    /* create a string with all the transports */
+    res = gst_rtspsrc_create_transports_string (src, protocols, &transports);
+    if (res < 0)
+      goto setup_transport_failed;
 
-      /* allocate two UDP ports */
-      if (!gst_rtspsrc_stream_setup_rtp (stream, &rtpport, &rtcpport))
-        goto setup_rtp_failed;
-
-      GST_DEBUG_OBJECT (src, "setting up RTP ports %d-%d", rtpport, rtcpport);
-
-      trxparams = g_strdup_printf ("client_port=%d-%d", rtpport, rtcpport);
-      new = g_strconcat (transports, "RTP/AVP/UDP;unicast;", trxparams, NULL);
-      g_free (trxparams);
-      g_free (transports);
-      transports = new;
-    }
-    if (protocols & GST_RTSP_PROTO_UDP_MULTICAST) {
-      gchar *new;
-
-      GST_DEBUG_OBJECT (src, "setting up MULTICAST");
-
-      /* we don't hav to allocate any UDP ports yet, if the selected transport
-       * turns out to be multicast we can create them and join the multicast
-       * group indicated in the transport reply */
-      new =
-          g_strconcat (transports, transports[0] ? "," : "",
-          "RTP/AVP/UDP;multicast", NULL);
-      g_free (transports);
-      transports = new;
-    }
-    if (protocols & GST_RTSP_PROTO_TCP) {
-      gchar *new, *interleaved;
-      gint channel;
-
-      GST_DEBUG_OBJECT (src, "setting up TCP");
-
-      /* the channels for this stream is by default the next available number */
-      channel = i * 2;
-      interleaved = g_strdup_printf ("interleaved=%d-%d", channel, channel + 1);
-      new =
-          g_strconcat (transports, transports[0] ? "," : "",
-          "RTP/AVP/TCP;unicast;", interleaved, NULL);
-      g_free (interleaved);
-      g_free (transports);
-      transports = new;
-    }
+    /* replace placeholders with real values */
+    res = gst_rtspsrc_configure_transports (stream, &transports);
+    if (res < 0)
+      goto setup_transport_failed;
 
     /* select transport, copy is made when adding to header */
     rtsp_message_add_header (&request, RTSP_HDR_TRANSPORT, transports);
@@ -1506,7 +1706,8 @@ gst_rtspsrc_open (GstRTSPSrc * src)
         goto no_transport;
 
       /* parse transport */
-      rtsp_transport_parse (resptrans, &transport);
+      if (rtsp_transport_parse (resptrans, &transport) != RTSP_OK)
+        continue;
 
       /* update allowed transports for other streams. once the transport of
        * one stream has been determined, we make sure that all other streams
@@ -1514,18 +1715,24 @@ gst_rtspsrc_open (GstRTSPSrc * src)
       switch (transport.lower_transport) {
         case RTSP_LOWER_TRANS_TCP:
           GST_DEBUG_OBJECT (src, "stream %d as TCP interleaved", i);
-          protocols = GST_RTSP_PROTO_TCP;
+          protocols = RTSP_LOWER_TRANS_TCP;
           src->interleaved = TRUE;
+          /* update free channels */
+          src->free_channel =
+              MAX (transport.interleaved.min, src->free_channel);
+          src->free_channel =
+              MAX (transport.interleaved.max, src->free_channel);
+          src->free_channel++;
           break;
         case RTSP_LOWER_TRANS_UDP_MCAST:
           /* only allow multicast for other streams */
           GST_DEBUG_OBJECT (src, "stream %d as UDP multicast", i);
-          protocols = GST_RTSP_PROTO_UDP_MULTICAST;
+          protocols = RTSP_LOWER_TRANS_UDP_MCAST;
           break;
         case RTSP_LOWER_TRANS_UDP:
           /* only allow unicast for other streams */
           GST_DEBUG_OBJECT (src, "stream %d as UDP unicast", i);
-          protocols = GST_RTSP_PROTO_UDP_UNICAST;
+          protocols = RTSP_LOWER_TRANS_UDP;
           break;
         default:
           GST_DEBUG_OBJECT (src, "stream %d unknown transport %d", i,
@@ -1612,10 +1819,10 @@ wrong_content_type:
         ("Server does not support SDP, got %s.", respcont));
     goto cleanup_error;
   }
-setup_rtp_failed:
+setup_transport_failed:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
-        ("Could not setup rtp."));
+        ("Could not setup transport."));
     goto cleanup_error;
   }
 no_transport:
@@ -1843,7 +2050,8 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
         GST_DEBUG_OBJECT (bin, "timeout on UDP port");
         gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_RECONNECT);
         /* FIXME, we post an error message now to inform the user
-         * that nothing happened. It's most likely a firewall thing. */
+         * that nothing happened. It's most likely a firewall thing. Ideally we
+         * notify the thread and redo the setup with only TCP. */
         GST_ELEMENT_ERROR (rtspsrc, RESOURCE, READ, (NULL),
             ("Could not receive any UDP packets for %.4f seconds, maybe your "
                 "firewall is blocking it.",
@@ -1870,13 +2078,20 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* the first free channel for interleaved mode */
+      rtspsrc->free_channel = 0;
       rtspsrc->interleaved = FALSE;
       gst_segment_init (&rtspsrc->segment, GST_FORMAT_TIME);
       if (!gst_rtspsrc_open (rtspsrc))
         goto open_failed;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      rtsp_connection_flush (rtspsrc->connection, FALSE);
       gst_rtspsrc_play (rtspsrc);
+      break;
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      rtsp_connection_flush (rtspsrc->connection, TRUE);
       break;
     default:
       break;
