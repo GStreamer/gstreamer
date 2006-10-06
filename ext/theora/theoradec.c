@@ -1189,14 +1189,13 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
     dec->last_timestamp = -1;
   }
 
-  if (packet.bytes < 1)
-    goto wrong_size;
-
   GST_DEBUG_OBJECT (dec, "header=%02x packetno=%lld, outtime=%" GST_TIME_FORMAT,
-      packet.packet[0], packet.packetno, GST_TIME_ARGS (dec->last_timestamp));
+      packet.bytes ? packet.packet[0] : -1, packet.packetno,
+      GST_TIME_ARGS (dec->last_timestamp));
 
-  /* switch depending on packet type */
-  if (packet.packet[0] & 0x80) {
+  /* switch depending on packet type. A zero byte packet is always a data
+   * packet; we don't dereference it in that case. */
+  if (packet.bytes && packet.packet[0] & 0x80) {
     if (dec->have_header) {
       GST_WARNING_OBJECT (GST_OBJECT (dec), "Ignoring header");
       goto done;
@@ -1215,15 +1214,6 @@ done:
   gst_buffer_unref (buf);
 
   return result;
-
-  /* ERRORS */
-wrong_size:
-  {
-    GST_WARNING_OBJECT (dec, "received empty packet");
-    dec->discont = TRUE;
-    result = GST_FLOW_OK;
-    goto done;
-  }
 }
 
 static GstStateChangeReturn

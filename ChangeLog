@@ -1,3 +1,9 @@
+2006-10-06  Michael Smith  <msmith@fluendo.com>
+
+	* ext/theora/theoradec.c: (theora_dec_chain):
+	  Zero byte theora packets are valid and well-defined; don't warn on
+	  them.
+
 2006-10-06  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_class_init),
