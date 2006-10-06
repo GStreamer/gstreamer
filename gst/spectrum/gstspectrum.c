@@ -355,7 +355,6 @@ static GstFlowReturn
 gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 {
   GstSpectrum *spectrum = GST_SPECTRUM (trans);
-  gint16 *samples;
   gint wanted;
   gint i, j, k;
   gint32 acc;
@@ -373,9 +372,10 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   /* FIXME: 4.0 was 2.0 before, but that include the mirrored spectrum */
   step = (gfloat) spectrum->len / (spectrum->bands * 4.0);
 
-  while (gst_adapter_available (spectrum->adapter) > wanted) {
+  while (gst_adapter_available (spectrum->adapter) >= wanted) {
+    const gint16 *samples;
 
-    samples = (gint16 *) gst_adapter_take (spectrum->adapter, wanted);
+    samples = (const gint16 *) gst_adapter_peek (spectrum->adapter, wanted);
 
     for (i = 0, j = 0; i < spectrum->len; i++) {
       for (k = 0, acc = 0; k < spectrum->channels; k++)
@@ -413,6 +413,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       }
       spectrum->num_frames = 0;
     }
+
+    gst_adapter_flush (spectrum->adapter, wanted);
   }
 
   return GST_FLOW_OK;
