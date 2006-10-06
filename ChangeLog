@@ -1,3 +1,8 @@
+2006-10-06  Michael Smith  <msmith@fluendo.com>
+
+	* gst-libs/gst/floatcast/floatcast.h:
+	  Fix obviously-bogus macros; use the correct types.
+
 2006-10-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:

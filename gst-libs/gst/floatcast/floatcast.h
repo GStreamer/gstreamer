@@ -101,8 +101,8 @@ GDOUBLE_SWAP_LE_BE(gdouble in)
 #endif /* !G_LITTLE_ENDIAN && !G_BIG_ENDIAN */
 
 #define GFLOAT_FROM_LE(val)  (GFLOAT_TO_LE (val))
-#define GFLOAT_FROM_BE(val)  (GDOUBLE_TO_BE (val))
-#define GDOUBLE_FROM_LE(val) (GFLOAT_TO_LE (val))
+#define GFLOAT_FROM_BE(val)  (GFLOAT_TO_BE (val))
+#define GDOUBLE_FROM_LE(val) (GDOUBLE_TO_LE (val))
 #define GDOUBLE_FROM_BE(val) (GDOUBLE_TO_BE (val))
 
 G_END_DECLS
