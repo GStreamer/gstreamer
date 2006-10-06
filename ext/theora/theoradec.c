@@ -141,15 +141,25 @@ gst_theoradec_init (GstTheoraExpDec * dec, GstTheoraExpDecClass * g_class)
 static void
 gst_theoradec_reset (GstTheoraExpDec * dec)
 {
+  GList *walk;
+
   dec->need_keyframe = TRUE;
   dec->last_timestamp = -1;
   dec->granulepos = -1;
+  dec->discont = TRUE;
+  dec->frame_nr = -1;
   gst_segment_init (&dec->segment, GST_FORMAT_TIME);
 
   GST_OBJECT_LOCK (dec);
   dec->proportion = 1.0;
   dec->earliest_time = -1;
   GST_OBJECT_UNLOCK (dec);
+
+  for (walk = dec->queued; walk; walk = g_list_next (walk)) {
+    gst_buffer_unref (GST_BUFFER_CAST (walk->data));
+  }
+  g_list_free (dec->queued);
+  dec->queued = NULL;
 }
 
 static gint64
@@ -170,6 +180,8 @@ theora_get_query_types (GstPad * pad)
 {
   static const GstQueryType theora_src_query_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    GST_QUERY_CONVERT,
     0
   };
 
@@ -380,7 +392,7 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
                   granulepos, &my_format, &time)))
         goto error;
 
-      time = (time - dec->segment.start) + dec->segment.time;
+      time = gst_segment_to_stream_time (&dec->segment, GST_FORMAT_TIME, time);
 
       GST_LOG_OBJECT (dec,
           "query %p: our time: %" GST_TIME_FORMAT, query, GST_TIME_ARGS (time));
@@ -397,10 +409,19 @@ theora_dec_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     case GST_QUERY_DURATION:
+    {
       /* forward to peer for total */
-      if (!(res = gst_pad_query (GST_PAD_PEER (dec->sinkpad), query)))
+      GstPad *peer;
+
+      if (!(peer = gst_pad_get_peer (dec->sinkpad)))
+        goto error;
+
+      res = gst_pad_query (peer, query);
+      gst_object_unref (peer);
+      if (!res)
         goto error;
       break;
+    }
     case GST_QUERY_CONVERT:
     {
       GstFormat src_fmt, dest_fmt;
@@ -482,6 +503,7 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
           &stop_type, &stop);
+      gst_event_unref (event);
 
       /* we have to ask our peer to seek to time here as we know
        * nothing about how to generate a granulepos from the src
@@ -514,17 +536,18 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
 
       /* we cannot randomly skip frame decoding since we don't have
        * B frames. we can however use the timestamp and diff to not
-       * push late frames. */
+       * push late frames. This would let us save the time for copying and
+       * cropping the frame. */
       GST_OBJECT_LOCK (dec);
       dec->proportion = proportion;
       dec->earliest_time = timestamp + diff;
       GST_OBJECT_UNLOCK (dec);
 
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (dec->sinkpad, event);
       break;
     }
     default:
-      res = gst_pad_event_default (pad, event);
+      res = gst_pad_event_default (dec->sinkpad, event);
       break;
   }
 done:
@@ -536,7 +559,6 @@ done:
 convert_error:
   {
     GST_DEBUG_OBJECT (dec, "could not convert format");
-    gst_event_unref (event);
     goto done;
   }
 }
@@ -566,11 +588,11 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
     {
       gboolean update;
       GstFormat format;
-      gdouble rate;
+      gdouble rate, arate;
       gint64 start, stop, time;
 
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
 
       /* we need TIME and a positive rate */
       if (format != GST_FORMAT_TIME)
@@ -580,8 +602,8 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
         goto newseg_wrong_rate;
 
       /* now configure the values */
-      gst_segment_set_newsegment (&dec->segment, update,
-          rate, format, start, stop, time);
+      gst_segment_set_newsegment_full (&dec->segment, update,
+          rate, arate, format, start, stop, time);
 
       /* and forward */
       ret = gst_pad_push_event (dec->srcpad, event);
@@ -600,18 +622,16 @@ done:
 newseg_wrong_format:
   {
     GST_DEBUG_OBJECT (dec, "received non TIME newsegment");
+    gst_event_unref (event);
     goto done;
   }
 newseg_wrong_rate:
   {
     GST_DEBUG_OBJECT (dec, "negative rates not supported yet");
+    gst_event_unref (event);
     goto done;
   }
 }
-
-#define ROUND_UP_2(x) (((x) + 1) & ~1)
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
-#define ROUND_UP_8(x) (((x) + 7) & ~7)
 
 static GstFlowReturn
 theora_handle_comment_packet (GstTheoraExpDec * dec, ogg_packet * packet)
@@ -650,7 +670,7 @@ theora_handle_comment_packet (GstTheoraExpDec * dec, ogg_packet * packet)
         GST_TAG_NOMINAL_BITRATE, dec->info.target_bitrate, NULL);
   }
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (dec), dec->srcpad, list);
+  gst_element_found_tags_for_pad (GST_ELEMENT_CAST (dec), dec->srcpad, list);
 
   return GST_FLOW_OK;
 }
@@ -688,8 +708,8 @@ theora_handle_type_packet (GstTheoraExpDec * dec, ogg_packet * packet)
 
   /* add black borders to make width/height/offsets even. we need this because
    * we cannot express an offset to the peer plugin. */
-  dec->width = ROUND_UP_2 (dec->info.pic_width + (dec->info.pic_x & 1));
-  dec->height = ROUND_UP_2 (dec->info.pic_height + (dec->info.pic_y & 1));
+  dec->width = GST_ROUND_UP_2 (dec->info.pic_width + (dec->info.pic_x & 1));
+  dec->height = GST_ROUND_UP_2 (dec->info.pic_height + (dec->info.pic_y & 1));
   dec->offset_x = dec->info.pic_x & ~1;
   dec->offset_y = dec->info.pic_y & ~1;
 
@@ -753,6 +773,7 @@ theora_handle_header_packet (GstTheoraExpDec * dec, ogg_packet * packet)
   if (ret < 0)
     goto header_read_error;
 
+  /* We can never get here unless we have at least a one-byte packet */
   switch (packet->packet[0]) {
     case 0x81:
       res = theora_handle_comment_packet (dec, packet);
@@ -780,11 +801,55 @@ header_read_error:
   }
 }
 
+/* returns TRUE if buffer is within segment, else FALSE.
+ * if buffer is on segment border, its timestamp and duration will be clipped */
+static gboolean
+clip_buffer (GstTheoraExpDec * dec, GstBuffer * buf)
+{
+  gboolean res = TRUE;
+  GstClockTime in_ts, in_dur, stop;
+  gint64 cstart, cstop;
+
+  in_ts = GST_BUFFER_TIMESTAMP (buf);
+  in_dur = GST_BUFFER_DURATION (buf);
+
+  GST_LOG_OBJECT (dec,
+      "timestamp:%" GST_TIME_FORMAT " , duration:%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (in_ts), GST_TIME_ARGS (in_dur));
+
+  /* can't clip without TIME segment */
+  if (dec->segment.format != GST_FORMAT_TIME)
+    goto beach;
+
+  /* we need a start time */
+  if (!GST_CLOCK_TIME_IS_VALID (in_ts))
+    goto beach;
+
+  /* generate valid stop, if duration unknown, we have unknown stop */
+  stop =
+      GST_CLOCK_TIME_IS_VALID (in_dur) ? (in_ts + in_dur) : GST_CLOCK_TIME_NONE;
+
+  /* now clip */
+  if (!(res = gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
+              in_ts, stop, &cstart, &cstop)))
+    goto beach;
+
+  /* update timestamp and possibly duration if the clipped stop time is valid */
+  GST_BUFFER_TIMESTAMP (buf) = cstart;
+  if (GST_CLOCK_TIME_IS_VALID (cstop))
+    GST_BUFFER_DURATION (buf) = cstop - cstart;
+
+beach:
+  GST_LOG_OBJECT (dec, "%sdropping", (res ? "not " : ""));
+  return res;
+}
+
+
 /* FIXME, this needs to be moved to the demuxer */
 static GstFlowReturn
 theora_dec_push (GstTheoraExpDec * dec, GstBuffer * buf)
 {
-  GstFlowReturn result;
+  GstFlowReturn result = GST_FLOW_OK;
   GstClockTime outtime = GST_BUFFER_TIMESTAMP (buf);
 
   if (outtime == GST_CLOCK_TIME_NONE) {
@@ -809,14 +874,32 @@ theora_dec_push (GstTheoraExpDec * dec, GstBuffer * buf)
 
         GST_DEBUG_OBJECT (dec, "patch buffer %lld %lld", size, time);
         GST_BUFFER_TIMESTAMP (buffer) = time;
+
+        if (dec->discont) {
+          GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+          dec->discont = FALSE;
+        }
+
         /* ignore the result.. */
-        gst_pad_push (dec->srcpad, buffer);
+        if (clip_buffer (dec, buffer))
+          gst_pad_push (dec->srcpad, buffer);
+        else
+          gst_buffer_unref (buffer);
         size--;
       }
       g_list_free (dec->queued);
       dec->queued = NULL;
     }
-    result = gst_pad_push (dec->srcpad, buf);
+
+    if (dec->discont) {
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      dec->discont = FALSE;
+    }
+
+    if (clip_buffer (dec, buf))
+      result = gst_pad_push (dec->srcpad, buf);
+    else
+      gst_buffer_unref (buf);
   }
 
   return result;
@@ -838,7 +921,7 @@ theora_handle_422_image (GstTheoraExpDec * dec, th_ycbcr_buffer yuv,
   width = dec->width;
   height = dec->height;
 
-  stride = ROUND_UP_2 (width) * 2;
+  stride = GST_ROUND_UP_2 (width) * 2;
 
   out_size = stride * height;
 
@@ -855,7 +938,7 @@ theora_handle_422_image (GstTheoraExpDec * dec, th_ycbcr_buffer yuv,
    *
    * Do the interleaving... Note that this is kinda messed up if our width is
    * odd. In that case, we can't represent it properly in YUY2, so we just
-   * pad out to even in that case (this is why we have ROUND_UP_2() above).
+   * pad out to even in that case (this is why we have GST_ROUND_UP_2() above).
    */
   {
     guchar *src_y;
@@ -901,9 +984,9 @@ theora_handle_422_image (GstTheoraExpDec * dec, th_ycbcr_buffer yuv,
     }
   }
 
-  /* FIXME, frame_nr not correct */
   GST_BUFFER_OFFSET (out) = dec->frame_nr;
-  dec->frame_nr++;
+  if (dec->frame_nr != -1)
+    dec->frame_nr++;
   GST_BUFFER_OFFSET_END (out) = dec->frame_nr;
   GST_BUFFER_DURATION (out) =
       gst_util_uint64_scale_int (GST_SECOND, dec->info.fps_denominator,
@@ -1011,8 +1094,8 @@ theora_handle_420_image (GstTheoraExpDec * dec, th_ycbcr_buffer yuv,
   /* should get the stride from the caps, for now we round up to the nearest
    * multiple of 4 because some element needs it. chroma needs special 
    * treatment, see videotestsrc. */
-  stride_y = ROUND_UP_4 (width);
-  stride_uv = ROUND_UP_8 (width) / 2;
+  stride_y = GST_ROUND_UP_4 (width);
+  stride_uv = GST_ROUND_UP_8 (width) / 2;
 
   out_size = stride_y * height + stride_uv * cheight * 2;
 
@@ -1035,7 +1118,7 @@ theora_handle_420_image (GstTheoraExpDec * dec, th_ycbcr_buffer yuv,
     guchar *dest_y, *src_y;
     guchar *dest_u, *src_u;
     guchar *dest_v, *src_v;
-    guint offset_u, offset_v;
+    gint offset_u, offset_v;
 
     dest_y = GST_BUFFER_DATA (out);
     dest_u = dest_y + stride_y * height;
@@ -1095,28 +1178,33 @@ theora_handle_data_packet (GstTheoraExpDec * dec, ogg_packet * packet,
   GstFlowReturn result;
   ogg_int64_t gp;
 
-  if (!dec->have_header)
+  if (G_UNLIKELY (!dec->have_header))
     goto not_initialized;
 
   if (th_packet_iskeyframe (packet)) {
     dec->need_keyframe = FALSE;
-  } else if (dec->need_keyframe) {
+  } else if (G_UNLIKELY (dec->need_keyframe)) {
     goto dropping;
   }
 
   /* this does the decoding */
-  if (th_decode_packetin (dec->dec, packet, &gp))
+  if (G_UNLIKELY (th_decode_packetin (dec->dec, packet, &gp)))
     goto decode_error;
 
   if (outtime != -1) {
     gboolean need_skip;
+    GstClockTime qostime;
+
+    /* QoS is done on running time */
+    qostime = gst_segment_to_running_time (&dec->segment, GST_FORMAT_TIME,
+        outtime);
 
     GST_OBJECT_LOCK (dec);
     /* check for QoS, don't perform the last steps of getting and
      * pushing the buffers that are known to be late. */
     /* FIXME, we can also entirely skip decoding if the next valid buffer is 
      * known to be after a keyframe (using the granule_shift) */
-    need_skip = dec->earliest_time != -1 && outtime <= dec->earliest_time;
+    need_skip = dec->earliest_time != -1 && qostime <= dec->earliest_time;
     GST_OBJECT_UNLOCK (dec);
 
     if (need_skip)
@@ -1125,11 +1213,11 @@ theora_handle_data_packet (GstTheoraExpDec * dec, ogg_packet * packet,
 
   /* this does postprocessing and set up the decoded frame
    * pointers in our yuv variable */
-  if (th_decode_ycbcr_out (dec->dec, yuv) < 0)
+  if (G_UNLIKELY (th_decode_ycbcr_out (dec->dec, yuv) < 0))
     goto no_yuv;
 
-  if ((yuv[0].width != dec->info.frame_width) ||
-      (yuv[0].height != dec->info.frame_height))
+  if (G_UNLIKELY ((yuv[0].width != dec->info.frame_width) ||
+          (yuv[0].height != dec->info.frame_height)))
     goto wrong_dimensions;
 
   if (dec->info.pixel_fmt == TH_PF_420) {
@@ -1154,11 +1242,14 @@ not_initialized:
 dropping:
   {
     GST_WARNING_OBJECT (dec, "dropping frame because we need a keyframe");
+    dec->discont = TRUE;
     return GST_FLOW_OK;
   }
 dropping_qos:
   {
-    dec->frame_nr++;
+    if (dec->frame_nr != -1)
+      dec->frame_nr++;
+    dec->discont = TRUE;
     GST_WARNING_OBJECT (dec, "dropping frame because of QoS");
     return GST_FLOW_OK;
   }
@@ -1188,14 +1279,17 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
   GstTheoraExpDec *dec;
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
+  gboolean isheader;
 
   dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
 
   /* resync on DISCONT */
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
+    GST_DEBUG_OBJECT (dec, "Received DISCONT buffer");
     dec->need_keyframe = TRUE;
     dec->last_timestamp = -1;
     dec->granulepos = -1;
+    dec->discont = TRUE;
   }
 
   GST_DEBUG ("Offset end is %d, k-g-s %d", (int) (GST_BUFFER_OFFSET_END (buf)),
@@ -1223,16 +1317,27 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG_OBJECT (dec, "Granulepos unknown");
       dec->last_timestamp = GST_CLOCK_TIME_NONE;
     }
+    if (dec->last_timestamp == GST_CLOCK_TIME_NONE &&
+        GST_BUFFER_TIMESTAMP_IS_VALID (buf))
+      dec->last_timestamp = GST_BUFFER_TIMESTAMP (buf);
+
   } else {
     GST_DEBUG_OBJECT (dec, "Granulepos not usable: no headers seen");
     dec->last_timestamp = -1;
   }
 
+  /* A zero-byte packet is a valid data packet, meaning 'duplicate frame' */
+  if (packet.bytes > 0 && packet.packet[0] & 0x80)
+    isheader = TRUE;
+  else
+    isheader = FALSE;
+
   GST_DEBUG_OBJECT (dec, "header=%d packetno=%lld, outtime=%" GST_TIME_FORMAT,
-      packet.packet[0], packet.packetno, GST_TIME_ARGS (dec->last_timestamp));
+      packet.bytes ? packet.packet[0] : -1, packet.packetno,
+      GST_TIME_ARGS (dec->last_timestamp));
 
   /* switch depending on packet type */
-  if (packet.packet[0] & 0x80) {
+  if (isheader) {
     if (dec->have_header) {
       GST_WARNING_OBJECT (GST_OBJECT (dec), "Ignoring header");
       goto done;
@@ -1286,6 +1391,7 @@ theora_dec_change_state (GstElement * element, GstStateChange transition)
 
       th_comment_clear (&dec->comment);
       th_info_clear (&dec->info);
+      gst_theoradec_reset (dec);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

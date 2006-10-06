@@ -76,6 +76,7 @@ struct _GstTheoraExpDec
   gint output_bpp;
 
   int frame_nr;
+  gboolean discont;
 
   GList *queued;
 

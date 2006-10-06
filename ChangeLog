@@ -1,3 +1,18 @@
+2006-10-06  Michael Smith  <msmith@fluendo.com>
+
+	* ext/theora/theoradec.c: (gst_theoradec_reset),
+	(theora_get_query_types), (theora_dec_src_query),
+	(theora_dec_src_event), (theora_dec_sink_event),
+	(theora_handle_comment_packet), (theora_handle_type_packet),
+	(theora_handle_header_packet), (clip_buffer), (theora_dec_push),
+	(theora_handle_422_image), (theora_handle_420_image),
+	(theora_handle_data_packet), (theora_dec_chain),
+	(theora_dec_change_state):
+	* ext/theora/theoradec.h:
+	  Port lots of changes from theoradec to theoraexpdec.
+	  This catches this plugin up to theoradec. Note that duplicate frames
+	  are broken in theoradec at the moment.
+
 2006-10-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_transform_ip):
