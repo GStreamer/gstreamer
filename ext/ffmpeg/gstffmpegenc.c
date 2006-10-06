@@ -242,6 +242,10 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
     ffmpegenc->gop_size = DEFAULT_VIDEO_GOP_SIZE;
     ffmpegenc->rtp_payload_size = 0;
 
+    ffmpegenc->lmin = 2;
+    ffmpegenc->lmax = 31;
+    ffmpegenc->max_key_interval = 0;
+
     gst_ffmpeg_cfg_set_defaults (ffmpegenc);
   } else if (oclass->in_plugin->type == CODEC_TYPE_AUDIO) {
     gst_pad_set_chain_function (ffmpegenc->sinkpad, gst_ffmpegenc_chain_audio);

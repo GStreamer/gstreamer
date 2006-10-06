@@ -1,3 +1,10 @@
+2006-10-06  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_init):
+	Properly initialize ->lmin, ->lmax and ->max_key_interval so we don't
+	end up passing completely bogus data to the AVCodecContext.
+	Fixes #355584
+
 2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_get_stream):
