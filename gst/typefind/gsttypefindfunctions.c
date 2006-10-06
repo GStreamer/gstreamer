@@ -728,7 +728,7 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
             ("audio/mpeg calculated %u  =  %u  *  %u / %u  *  (%u - %"
             G_GUINT64_FORMAT ") / %u", probability, GST_TYPE_FIND_MAXIMUM,
             found, GST_MP3_TYPEFIND_TRY_HEADERS, GST_MP3_TYPEFIND_TRY_SYNC,
-            (guint) skipped, GST_MP3_TYPEFIND_TRY_SYNC);
+            (guint64) skipped, GST_MP3_TYPEFIND_TRY_SYNC);
         /* make sure we're not id3 tagged */
         head_data = gst_type_find_peek (tf, -128, 3);
         if (head_data && (memcmp (head_data, "TAG", 3) == 0)) {

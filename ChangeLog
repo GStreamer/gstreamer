@@ -1,5 +1,11 @@
 2006-10-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset),
+	(mpeg1_parse_header), (mpeg1_sys_type_find):
+	printf fix.
+
+2006-10-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_init),
 	(close_pad_link):
 	* gst/playback/gstplaybasebin.c: (new_decoded_pad_full):
