@@ -725,9 +725,9 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
           probability /= 2;
 
         GST_INFO
-            ("audio/mpeg calculated %u  =  %u  *  %u / %u  *  (%u - %u) / %u",
-            probability, GST_TYPE_FIND_MAXIMUM, found,
-            GST_MP3_TYPEFIND_TRY_HEADERS, GST_MP3_TYPEFIND_TRY_SYNC,
+            ("audio/mpeg calculated %u  =  %u  *  %u / %u  *  (%u - %"
+            G_GUINT64_FORMAT ") / %u", probability, GST_TYPE_FIND_MAXIMUM,
+            found, GST_MP3_TYPEFIND_TRY_HEADERS, GST_MP3_TYPEFIND_TRY_SYNC,
             (guint) skipped, GST_MP3_TYPEFIND_TRY_SYNC);
         /* make sure we're not id3 tagged */
         head_data = gst_type_find_peek (tf, -128, 3);
@@ -1047,9 +1047,12 @@ mpeg1_parse_header (GstTypeFind * tf, guint64 offset)
   }
 
   if (data[0] != 0 || data[1] != 0 || data[2] != 1) {
+    GST_LOG ("no sync");
     return 0;
   }
   offset += 4;
+
+  GST_LOG ("sync %02x", data[3]);
 
   switch (data[3]) {
     case 0xBA:                 /* pack header */
@@ -1063,8 +1066,10 @@ mpeg1_parse_header (GstTypeFind * tf, guint64 offset)
       if ((data[0] & 0xF1) != 0x21 ||
           (data[2] & 0x01) != 0x01 ||
           (data[4] & 0x01) != 0x01 ||
-          (data[5] & 0x80) != 0x80 || (data[7] & 0x01) != 0x01)
+          (data[5] & 0x80) != 0x80 || (data[7] & 0x01) != 0x01) {
+        GST_LOG ("wrong marker bits");
         return 0;
+      }
       break;
 
     case 0xB9:                 /* ISO end code */
@@ -1086,12 +1091,16 @@ mpeg1_parse_header (GstTypeFind * tf, guint64 offset)
       }
       /* check marker bits */
       if ((data[0] & 0x80) != 0x80 ||
-          (data[2] & 0x01) != 0x01 || (data[4] & 0x20) != 0x20)
+          (data[2] & 0x01) != 0x01 || (data[4] & 0x20) != 0x20) {
+        GST_LOG ("wrong marker bits");
         return 0;
+      }
       /* check stream marker bits */
       for (offset = 6; offset < (size - 6); offset += 3) {
-        if (data[offset] <= 0xBB || (data[offset + 1] & 0xC0) != 0xC0)
+        if (data[offset] <= 0xBB || (data[offset + 1] & 0xC0) != 0xC0) {
+          GST_LOG ("wrong marker bits");
           return 0;
+        }
       }
       break;
 
@@ -1155,6 +1164,7 @@ mpeg1_sys_type_find (GstTypeFind * tf, gpointer unused)
       }
       g_assert (found <= GST_MPEG_TYPEFIND_TRY_HEADERS);
       if (found == GST_MPEG_TYPEFIND_TRY_HEADERS || packet_size == 1) {
+        GST_LOG ("suggesting mpeg1 system steeam");
         caps = gst_caps_copy (MPEG_SYS_CAPS);
         gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
             G_TYPE_INT, 1, NULL);

@@ -1,3 +1,13 @@
+2006-10-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_change_state):
+	Also call parent state change function to activate pads.
+
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset),
+	(mpeg1_parse_header), (mpeg1_sys_type_find):
+	Add some more debug info in mpeg typefinding.
+
 2006-10-06  Michael Smith  <msmith@fluendo.com>
 
 	* ext/theora/theoradec.c: (theora_dec_chain):

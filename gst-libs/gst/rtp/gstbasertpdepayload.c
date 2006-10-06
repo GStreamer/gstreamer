@@ -593,6 +593,7 @@ gst_base_rtp_depayload_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstBaseRTPDepayload *filter;
+  GstStateChangeReturn ret;
 
   filter = GST_BASE_RTP_DEPAYLOAD (element);
 
@@ -613,6 +614,8 @@ gst_base_rtp_depayload_change_state (GstElement * element,
       break;
   }
 
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
@@ -624,7 +627,7 @@ gst_base_rtp_depayload_change_state (GstElement * element,
     default:
       break;
   }
-  return GST_STATE_CHANGE_SUCCESS;
+  return ret;
 
   /* ERRORS */
 wrong_thread:
