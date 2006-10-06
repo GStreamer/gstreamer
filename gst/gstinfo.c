@@ -755,7 +755,7 @@ gst_debug_add_log_function (GstLogFunction func, gpointer data)
 static gint
 gst_debug_compare_log_function_by_func (gconstpointer entry, gconstpointer func)
 {
-  gpointer entryfunc = ((LogFuncEntry *) entry)->func;
+  gpointer entryfunc = (gpointer) (((LogFuncEntry *) entry)->func);
 
   return (entryfunc < func) ? -1 : (entryfunc > func) ? 1 : 0;
 }
@@ -810,7 +810,7 @@ gst_debug_remove_log_function (GstLogFunction func)
 
   removals =
       gst_debug_remove_with_compare_func
-      (gst_debug_compare_log_function_by_func, func);
+      (gst_debug_compare_log_function_by_func, (gpointer) func);
   GST_DEBUG ("removed log function %p %d times from log function list", func,
       removals);
 
@@ -1212,7 +1212,6 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr ptr)
 /* This function MUST NOT return NULL */
      const gchar *_gst_debug_nameof_funcptr (GstDebugFuncPtr func)
 {
-  gpointer ptr = (gpointer) func;
   gchar *ptrname;
 
 #ifdef HAVE_DLADDR
@@ -1224,7 +1223,7 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr ptr)
 
   g_static_mutex_lock (&__dbg_functions_mutex);
   if (G_LIKELY (__gst_function_pointers)) {
-    ptrname = g_hash_table_lookup (__gst_function_pointers, ptr);
+    ptrname = g_hash_table_lookup (__gst_function_pointers, (gpointer) func);
     g_static_mutex_unlock (&__dbg_functions_mutex);
     if (G_LIKELY (ptrname))
       return ptrname;
@@ -1234,17 +1233,17 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr ptr)
   /* we need to create an entry in the hash table for this one so we don't leak
    * the name */
 #ifdef HAVE_DLADDR
-  if (dladdr (ptr, &dlinfo) && dlinfo.dli_sname) {
+  if (dladdr ((gpointer) func, &dlinfo) && dlinfo.dli_sname) {
     gchar *name = g_strdup (dlinfo.dli_sname);
 
-    _gst_debug_register_funcptr (ptr, name);
+    _gst_debug_register_funcptr (func, name);
     return name;
   } else
 #endif
   {
-    gchar *name = g_strdup_printf ("%p", ptr);
+    gchar *name = g_strdup_printf ("%p", (gpointer) func);
 
-    _gst_debug_register_funcptr (ptr, name);
+    _gst_debug_register_funcptr (func, name);
     return name;
   }
 }

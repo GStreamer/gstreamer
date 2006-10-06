@@ -1856,8 +1856,8 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
   gboolean done;
 
   /* we don't need to take the STATE_LOCK, it is already taken */
-  current = GST_STATE_TRANSITION_CURRENT (transition);
-  next = GST_STATE_TRANSITION_NEXT (transition);
+  current = (GstState) GST_STATE_TRANSITION_CURRENT (transition);
+  next = (GstState) GST_STATE_TRANSITION_NEXT (transition);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
       "changing state of children from %s to %s",

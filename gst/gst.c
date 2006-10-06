@@ -129,9 +129,9 @@ extern gint _gst_trace_on;
 
 /* defaults */
 #ifdef HAVE_FORK
-#define DEFAULT_FORK TRUE;
+#define DEFAULT_FORK TRUE
 #else
-#define DEFAULT_FORK FALSE;
+#define DEFAULT_FORK FALSE
 #endif /* HAVE_FORK */
 
 /* set to TRUE when segfaults need to be left as is, FIXME, this variable is
@@ -284,43 +284,49 @@ gst_init_get_option_group (void)
   GOptionGroup *group;
   const static GOptionEntry gst_args[] = {
     {"gst-version", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-        parse_goption_arg, N_("Print the GStreamer version"), NULL},
+        (gpointer) parse_goption_arg, N_("Print the GStreamer version"), NULL},
     {"gst-fatal-warnings", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-        parse_goption_arg, N_("Make all warnings fatal"), NULL},
+        (gpointer) parse_goption_arg, N_("Make all warnings fatal"), NULL},
 #ifndef GST_DISABLE_GST_DEBUG
     {"gst-debug-help", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-          parse_goption_arg, N_("Print available debug categories and exit"),
+          (gpointer) parse_goption_arg,
+          N_("Print available debug categories and exit"),
         NULL},
-    {"gst-debug-level", 0, 0, G_OPTION_ARG_CALLBACK, parse_goption_arg,
+    {"gst-debug-level", 0, 0, G_OPTION_ARG_CALLBACK,
+          (gpointer) parse_goption_arg,
           N_("Default debug level from 1 (only error) to 5 (anything) or "
               "0 for no output"),
         N_("LEVEL")},
-    {"gst-debug", 0, 0, G_OPTION_ARG_CALLBACK, parse_goption_arg,
+    {"gst-debug", 0, 0, G_OPTION_ARG_CALLBACK, (gpointer) parse_goption_arg,
           N_("Comma-separated list of category_name:level pairs to set "
               "specific levels for the individual categories. Example: "
               "GST_AUTOPLUG:5,GST_ELEMENT_*:3"),
         N_("LIST")},
     {"gst-debug-no-color", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-        parse_goption_arg, N_("Disable colored debugging output"), NULL},
+        (gpointer) parse_goption_arg, N_("Disable colored debugging output"),
+          NULL},
     {"gst-debug-disable", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-        parse_goption_arg, N_("Disable debugging"), NULL},
+        (gpointer) parse_goption_arg, N_("Disable debugging"), NULL},
 #endif
     {"gst-plugin-spew", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-          parse_goption_arg, N_("Enable verbose plugin loading diagnostics"),
+          (gpointer) parse_goption_arg,
+          N_("Enable verbose plugin loading diagnostics"),
         NULL},
-    {"gst-plugin-path", 0, 0, G_OPTION_ARG_CALLBACK, parse_goption_arg,
+    {"gst-plugin-path", 0, 0, G_OPTION_ARG_CALLBACK,
+          (gpointer) parse_goption_arg,
         N_("Colon-separated paths containing plugins"), N_("PATHS")},
-    {"gst-plugin-load", 0, 0, G_OPTION_ARG_CALLBACK, parse_goption_arg,
+    {"gst-plugin-load", 0, 0, G_OPTION_ARG_CALLBACK,
+          (gpointer) parse_goption_arg,
           N_("Comma-separated list of plugins to preload in addition to the "
               "list stored in environment variable GST_PLUGIN_PATH"),
         N_("PLUGINS")},
     {"gst-disable-segtrap", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-          parse_goption_arg,
+          (gpointer) parse_goption_arg,
           N_("Disable trapping of segmentation faults during plugin loading"),
         NULL},
     {"gst-disable-registry-fork", 0, G_OPTION_FLAG_NO_ARG,
           G_OPTION_ARG_CALLBACK,
-          parse_goption_arg,
+          (gpointer) parse_goption_arg,
           N_("Disable the use of fork() while scanning the registry"),
         NULL},
     {NULL}

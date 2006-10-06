@@ -1201,7 +1201,10 @@ guint
 gst_class_signal_connect (GstObjectClass * klass,
     const gchar * name, gpointer func, gpointer func_data)
 {
-  return g_signal_connect (klass->signal_object, name, func, func_data);
+  /* [0.11] func parameter needs to be changed to a GCallback *
+   * doing so now would be an API break. */
+  return g_signal_connect (klass->signal_object, name, G_CALLBACK (func),
+      func_data);
 }
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY

@@ -1935,7 +1935,7 @@ gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
   GstStateChange transition;
 
   GST_OBJECT_LOCK (element);
-  old_ret = GST_STATE_RETURN (element);
+  old_ret = (GstState) GST_STATE_RETURN (element);
   GST_STATE_RETURN (element) = ret;
   pending = GST_STATE_PENDING (element);
 
@@ -1954,7 +1954,7 @@ gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
     goto complete;
 
   next = GST_STATE_GET_NEXT (current, pending);
-  transition = GST_STATE_TRANSITION (current, next);
+  transition = (GstStateChange) GST_STATE_TRANSITION (current, next);
 
   GST_STATE_NEXT (element) = next;
   /* mark busy */
@@ -2178,7 +2178,7 @@ gst_element_set_state_func (GstElement * element, GstState state)
   if (current != next)
     GST_STATE_RETURN (element) = GST_STATE_CHANGE_ASYNC;
 
-  transition = GST_STATE_TRANSITION (current, next);
+  transition = (GstStateChange) GST_STATE_TRANSITION (current, next);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
       "%s: setting state from %s to %s",
@@ -2223,7 +2223,7 @@ gst_element_change_state (GstElement * element, GstStateChange transition)
   oclass = GST_ELEMENT_GET_CLASS (element);
 
   /* start with the current state. */
-  current = GST_STATE_TRANSITION_CURRENT (transition);
+  current = (GstState) GST_STATE_TRANSITION_CURRENT (transition);
   next = GST_STATE_TRANSITION_NEXT (transition);
 
   /* call the state change function so it can set the state */
@@ -2431,7 +2431,7 @@ gst_element_change_state_func (GstElement * element, GstStateChange transition)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), GST_STATE_CHANGE_FAILURE);
 
-  state = GST_STATE_TRANSITION_CURRENT (transition);
+  state = (GstState) GST_STATE_TRANSITION_CURRENT (transition);
   next = GST_STATE_TRANSITION_NEXT (transition);
 
   /* if the element already is in the given state, we just return success */

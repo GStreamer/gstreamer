@@ -2,6 +2,33 @@
 
 	Patch by: Josep Torre Valles <josep@fluendo.com>
 
+	* gst/gst.c: (gst_init_get_option_group):
+	Fix empty declaration and type mismatch.
+	* gst/gstbin.c: (gst_bin_change_state_func):
+	Fix type mismatch.
+	* gst/gstelement.c: (gst_element_continue_state),
+	(gst_element_set_state_func), (gst_element_change_state),
+	(gst_element_change_state_func):
+	Fix type mismatches.
+	* gst/gstinfo.c: (gst_debug_compare_log_function_by_func),
+	(gst_debug_remove_log_function), (_gst_debug_nameof_funcptr):
+	Cast as appropriate.
+	* gst/gstobject.c: (gst_class_signal_connect):
+	Cast as appropriate.  The function pointer parameter really
+	has the wrong type but would break API if we change it.
+	* gst/gstquery.c:
+	Fix redefinition of _FILE_OFFSET_BITS caused on Solaris wrt
+	order of including string.h.
+	* gst/gstutils.c: (gst_element_state_get_name):
+	Remove unreachable line.
+	* gst/gstxml.c: (gst_xml_parse_doc):
+	Fix type mismatch.
+	All these caught by Forte.
+
+2006-10-06  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	Patch by: Josep Torre Valles <josep@fluendo.com>
+
 	* common/m4/gst-error.m4:
 	Fixed bug #360151.
 	We need to disable warnings on Forte for empty declarations

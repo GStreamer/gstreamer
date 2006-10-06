@@ -271,7 +271,7 @@ gst_xml_parse_doc (GstXML * xml, xmlDocPtr doc, const guchar * root)
   }
 
   gst_class_signal_connect (GST_OBJECT_CLASS (G_OBJECT_GET_CLASS (xml)),
-      "object_loaded", gst_xml_object_loaded, xml);
+      "object_loaded", (gpointer) gst_xml_object_loaded, xml);
 
   xml->ns = ns;
 
