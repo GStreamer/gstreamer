@@ -82,6 +82,8 @@
  *  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)),
  *      win);
  *   
+ *  gst_message_unref (message);
+ *   
  *  return GST_BUS_DROP;
  * }
  * ...

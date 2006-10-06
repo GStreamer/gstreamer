@@ -1,3 +1,8 @@
+2006-10-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/interfaces/xoverlay.c:
+	  Unref message in doc-example (spotted by Robert McQueen)
+
 2006-10-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset),
