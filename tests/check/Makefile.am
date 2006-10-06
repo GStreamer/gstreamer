@@ -52,6 +52,7 @@ VALGRIND_TESTS_DISABLE = \
 
 check_PROGRAMS = \
 	$(check_mpeg2enc)  \
+	elements/rganalysis \
 	elements/videocrop \
 	$(check_wavpack)
 

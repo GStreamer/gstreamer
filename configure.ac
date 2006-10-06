@@ -82,6 +82,7 @@ GST_PLUGINS_ALL="\
   h264parse \
   modplug \
   nsf \
+  replaygain \
   spectrum \
   speed \
   qtdemux \
@@ -787,6 +788,7 @@ gst/h264parse/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
 gst/nsf/Makefile
+gst/replaygain/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile
 gst/qtdemux/Makefile

@@ -7,6 +7,14 @@ GstDfbVideoSinkClass
 </SECTION>
 
 <SECTION>
+<FILE>element-rganalysis</FILE>
+GstRgAnalysis
+<TITLE>rganalysis</TITLE>
+<SUBSECTION Standard>
+GstRgAnalysisClass
+</SECTION>
+
+<SECTION>
 <FILE>element-trm</FILE>
 GstTRM
 <TITLE>trm</TITLE>

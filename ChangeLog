@@ -1,3 +1,50 @@
+2006-10-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: René Stadler  <mail at renestadler de>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* gst/replaygain/Makefile.am:
+	* gst/replaygain/gstrganalysis.c: (gst_rg_analysis_base_init),
+	(gst_rg_analysis_class_init), (gst_rg_analysis_init),
+	(gst_rg_analysis_set_property), (gst_rg_analysis_get_property),
+	(gst_rg_analysis_start), (gst_rg_analysis_set_caps),
+	(gst_rg_analysis_transform_ip), (gst_rg_analysis_event),
+	(gst_rg_analysis_stop), (gst_rg_analysis_handle_tags),
+	(gst_rg_analysis_handle_eos), (gst_rg_analysis_track_result),
+	(gst_rg_analysis_album_result), (plugin_init):
+	* gst/replaygain/gstrganalysis.h:
+	* gst/replaygain/rganalysis.c: (yule_filter), (butter_filter),
+	(apply_filters), (reset_filters), (accumulator_add),
+	(accumulator_clear), (accumulator_result), (rg_analysis_new),
+	(rg_analysis_set_sample_rate), (rg_analysis_destroy),
+	(rg_analysis_analyze_mono_float),
+	(rg_analysis_analyze_stereo_float),
+	(rg_analysis_analyze_mono_int16),
+	(rg_analysis_analyze_stereo_int16), (rg_analysis_analyze),
+	(rg_analysis_track_result), (rg_analysis_album_result),
+	(rg_analysis_reset_album), (rg_analysis_reset):
+	* gst/replaygain/rganalysis.h:
+	  Add ReplayGain analysis element (#357069).
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/rganalysis.c: (get_expected_gain),
+	(setup_rganalysis), (cleanup_rganalysis), (set_playing_state),
+	(send_eos_event), (send_tag_event), (poll_eos), (poll_tags),
+	(fail_unless_track_gain), (fail_unless_track_peak),
+	(fail_unless_album_gain), (fail_unless_album_peak),
+	(fail_if_track_tags), (fail_if_album_tags),
+	(fail_unless_num_tracks), (test_buffer_const_float_mono),
+	(test_buffer_const_float_stereo), (test_buffer_const_int16_mono),
+	(test_buffer_const_int16_stereo), (test_buffer_square_float_mono),
+	(test_buffer_square_float_stereo), (test_buffer_square_int16_mono),
+	(test_buffer_square_int16_stereo), (push_buffer), (GST_START_TEST),
+	(rganalysis_suite), (main):
+	  Unit tests for the new replaygain element.
+
 2006-10-06  Wim Taymans  <wim@fluendo.com>
 
 	* ext/faad/gstfaad.c: (gst_faad_setcaps), (gst_faad_chain),
