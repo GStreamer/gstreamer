@@ -92,14 +92,6 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true")
     );
 
-/*
-static GstStaticPadTemplate src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
-*/
-
 /* Spectrum properties */
 enum
 {
@@ -118,14 +110,6 @@ static void gst_spectrum_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_spectrum_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
-/*
-static gboolean gst_spectrum_set_sink_caps (GstPad * pad, GstCaps * caps);
-static GstCaps *gst_spectrum_get_sink_caps (GstPad * pad);
-static GstFlowReturn gst_spectrum_chain (GstPad * pad, GstBuffer * buffer);
-static GstStateChangeReturn gst_spectrum_change_state (GstElement * element,
-    GstStateChange transition);
-*/
 static gboolean gst_spectrum_set_caps (GstBaseTransform * trans, GstCaps * in,
     GstCaps * out);
 static gboolean gst_spectrum_start (GstBaseTransform * trans);
@@ -196,19 +180,6 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
 static void
 gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
 {
-  /*
-     spectrum->sinkpad =
-     gst_pad_new_from_static_template (&sink_template_factory, "sink");
-     gst_pad_set_chain_function (spectrum->sinkpad, gst_spectrum_chain);
-     gst_pad_set_setcaps_function (spectrum->sinkpad, gst_spectrum_set_sink_caps);
-     gst_pad_set_getcaps_function (spectrum->sinkpad, gst_spectrum_get_sink_caps);
-     gst_element_add_pad (GST_ELEMENT (spectrum), spectrum->sinkpad);
-
-     spectrum->srcpad =
-     gst_pad_new_from_static_template (&src_template_factory, "src");
-     gst_element_add_pad (GST_ELEMENT (spectrum), spectrum->srcpad);
-   */
-
   spectrum->adapter = gst_adapter_new ();
 
   spectrum->interval = GST_SECOND / 10;
@@ -298,41 +269,6 @@ gst_spectrum_get_property (GObject * object, guint prop_id,
       break;
   }
 }
-
-/*
-static gboolean
-gst_spectrum_set_sink_caps (GstPad * pad, GstCaps * caps)
-{
-  GstSpectrum *spectrum = GST_SPECTRUM (gst_pad_get_parent (pad));
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
-  gboolean ret;
-
-  ret = gst_structure_get_int (structure, "channels", &spectrum->channels);
-  GST_INFO ("Got channels = %d", spectrum->channels);
-
-  gst_object_unref (spectrum);
-
-  return ret;
-}
-
-static GstCaps *
-gst_spectrum_get_sink_caps (GstPad * pad)
-{
-  GstSpectrum *spectrum = GST_SPECTRUM (gst_pad_get_parent (pad));
-  GstCaps *res;
-  GstStructure *structure;
-
-  res = gst_caps_copy (gst_pad_get_pad_template_caps (spectrum->sinkpad));
-  if (spectrum->channels) {
-    structure = gst_caps_get_structure (res, 0);
-    gst_structure_set (structure, "channels", G_TYPE_INT, spectrum->channels,
-        NULL);
-    GST_INFO ("Fixate channels = %d", spectrum->channels);
-  }
-  gst_object_unref (spectrum);
-  return res;
-}
-*/
 
 static gboolean
 gst_spectrum_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
@@ -429,7 +365,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   GstClockTime blktime =
       GST_FRAMES_TO_CLOCK_TIME (spectrum->len, spectrum->rate);
 
-  GST_LOG ("input size: %d bytes", GST_BUFFER_SIZE (in));
+  GST_LOG_OBJECT (spectrum, "input size: %d bytes", GST_BUFFER_SIZE (in));
 
   gst_adapter_push (spectrum->adapter, gst_buffer_ref (in));
   /* required number of bytes */
@@ -439,7 +375,6 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   while (gst_adapter_available (spectrum->adapter) > wanted) {
 
-    GST_LOG ("  adapter loop");
     samples = (gint16 *) gst_adapter_take (spectrum->adapter, wanted);
 
     for (i = 0, j = 0; i < spectrum->len; i++) {
@@ -448,14 +383,10 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       spectrum->re[i] = (gint16) (acc / spectrum->channels);
     }
 
-    GST_LOG ("  fft");
-
     gst_spectrum_window (spectrum->re, spectrum->len);
     gst_spectrum_fix_fft (spectrum->re, spectrum->im, spectrum->base, FALSE);
     gst_spectrum_fix_loud (spectrum->loud, spectrum->re, spectrum->im,
         spectrum->len, 0);
-
-    GST_LOG ("  resampling");
 
     /* resample to requested number of bands */
     for (i = 0, pos = 0.0; i < spectrum->bands; i++, pos += step) {
@@ -470,8 +401,6 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
         spect[i] = 0;
     }
 
-    GST_LOG ("  send message?");
-    //ret = gst_pad_push (spectrum->srcpad, outbuf);
     spectrum->num_frames += spectrum->len;
     endtime += blktime;
     /* do we need to message ? */
@@ -480,7 +409,6 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       if (spectrum->message) {
         GstMessage *m = gst_spectrum_message_new (spectrum, endtime);
 
-        GST_LOG ("  sending message");
         gst_element_post_message (GST_ELEMENT (spectrum), m);
       }
       spectrum->num_frames = 0;
@@ -489,42 +417,6 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   return GST_FLOW_OK;
 }
-
-/*
-static GstStateChangeReturn
-gst_spectrum_change_state (GstElement * element, GstStateChange transition)
-{
-  GstSpectrum *spectrum = GST_SPECTRUM (element);
-  GstStateChangeReturn ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_adapter_clear (spectrum->adapter);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-
-  return ret;
-}
-*/
 
 static gboolean
 plugin_init (GstPlugin * plugin)
