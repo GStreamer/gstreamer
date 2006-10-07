@@ -1100,10 +1100,8 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
       break;
     default:
       ret = gst_pad_event_default (pad, event);
-      goto beach;
   }
 
-beach:
   gst_object_unref (overlay);
 
   return ret;

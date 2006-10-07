@@ -1,3 +1,11 @@
+2006-10-07  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_text_event): 
+	Useless goto.
+	* tests/examples/seek/seek.c: (do_seek),
+	(rate_spinbutton_changed_cb), (main): Add a rate spinbutton in
+	seek example to experiment with rates != 1.0 (reverse playback !)
+
 2006-10-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/interfaces/xoverlay.c:

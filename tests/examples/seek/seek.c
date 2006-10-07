@@ -17,6 +17,7 @@ static gboolean loop_seek = FALSE;
 static gboolean flush_seek = TRUE;
 static gboolean scrub = TRUE;
 static gboolean play_scrub = FALSE;
+static gdouble rate = 1.0;
 
 static GstElement *pipeline;
 static gint64 position;
@@ -1070,7 +1071,7 @@ do_seek (GtkWidget * widget)
   if (loop_seek)
     flags |= GST_SEEK_FLAG_SEGMENT;
 
-  s_event = gst_event_new_seek (1.0,
+  s_event = gst_event_new_seek (rate,
       GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
 
   GST_DEBUG ("seek to %" GST_TIME_FORMAT, GST_TIME_ARGS (real));
@@ -1277,7 +1278,11 @@ play_scrub_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 {
   play_scrub = gtk_toggle_button_get_active (button);
 }
-
+static void
+rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
+{
+  rate = gtk_spin_button_get_value (button);
+}
 static void
 segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
@@ -1371,7 +1376,8 @@ main (int argc, char **argv)
   GtkWidget *window, *hbox, *vbox, *flagtable;
   GtkWidget *play_button, *pause_button, *stop_button;
   GtkWidget *accurate_checkbox, *key_checkbox, *loop_checkbox, *flush_checkbox;
-  GtkWidget *scrub_checkbox, *play_scrub_checkbox;
+  GtkWidget *scrub_checkbox, *play_scrub_checkbox, *rate_spinbutton;
+  GtkWidget *rate_label;
   GtkTooltips *tips;
   GOptionEntry options[] = {
     {"stats", 's', 0, G_OPTION_ARG_NONE, &stats,
@@ -1419,7 +1425,7 @@ main (int argc, char **argv)
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   hbox = gtk_hbox_new (FALSE, 0);
   vbox = gtk_vbox_new (FALSE, 0);
-  flagtable = gtk_table_new (3, 2, FALSE);
+  flagtable = gtk_table_new (4, 2, FALSE);
   gtk_container_set_border_width (GTK_CONTAINER (vbox), 3);
 
   /* media controls */
@@ -1434,6 +1440,8 @@ main (int argc, char **argv)
   flush_checkbox = gtk_check_button_new_with_label ("Flush");
   scrub_checkbox = gtk_check_button_new_with_label ("Scrub");
   play_scrub_checkbox = gtk_check_button_new_with_label ("Play Scrub");
+  rate_spinbutton = gtk_spin_button_new_with_range (-10, 10, 0.1);
+  rate_label = gtk_label_new ("Rate");
 
   gtk_tooltips_set_tip (tips, accurate_checkbox,
       "accurate position is requested, this might be considerably slower for some formats",
@@ -1444,12 +1452,16 @@ main (int argc, char **argv)
   gtk_tooltips_set_tip (tips, loop_checkbox, "loop playback", NULL);
   gtk_tooltips_set_tip (tips, flush_checkbox, "flush pipeline after seeking",
       NULL);
+  gtk_tooltips_set_tip (tips, rate_spinbutton, "define the playback rate, "
+      "negative value trigger reverse playback", NULL);
   /* FIXME: describe these */
   gtk_tooltips_set_tip (tips, scrub_checkbox, "???", NULL);
   gtk_tooltips_set_tip (tips, play_scrub_checkbox, "???", NULL);
 
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (flush_checkbox), TRUE);
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (scrub_checkbox), TRUE);
+
+  gtk_spin_button_set_value (GTK_SPIN_BUTTON (rate_spinbutton), rate);
 
   /* seek bar */
   adjustment =
@@ -1481,6 +1493,9 @@ main (int argc, char **argv)
   gtk_table_attach_defaults (GTK_TABLE (flagtable), scrub_checkbox, 1, 2, 1, 2);
   gtk_table_attach_defaults (GTK_TABLE (flagtable), play_scrub_checkbox, 2, 3,
       1, 2);
+  gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_label, 3, 4, 0, 1);
+  gtk_table_attach_defaults (GTK_TABLE (flagtable), rate_spinbutton, 3, 4, 1,
+      2);
   gtk_box_pack_start (GTK_BOX (vbox), hscale, TRUE, TRUE, 2);
 
   /* connect things ... */
@@ -1502,6 +1517,8 @@ main (int argc, char **argv)
       G_CALLBACK (scrub_toggle_cb), pipeline);
   g_signal_connect (G_OBJECT (play_scrub_checkbox), "toggled",
       G_CALLBACK (play_scrub_toggle_cb), pipeline);
+  g_signal_connect (G_OBJECT (rate_spinbutton), "value_changed",
+      G_CALLBACK (rate_spinbutton_changed_cb), pipeline);
 
   g_signal_connect (G_OBJECT (window), "destroy", gtk_main_quit, NULL);
 
