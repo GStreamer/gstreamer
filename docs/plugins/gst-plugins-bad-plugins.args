@@ -1,71 +1,521 @@
 <ARG>
-<NAME>GstDfbVideoSink::surface</NAME>
-<TYPE>gpointer</TYPE>
-<RANGE></RANGE>
-<FLAGS>w</FLAGS>
-<NICK>Surface</NICK>
-<BLURB>The target surface for video.</BLURB>
-<DEFAULT></DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstDfbVideoSink::brightness</NAME>
+<NAME>AlsaSPDIFSink::card</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,65535]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Brightness</NICK>
-<BLURB>The brightness of the video.</BLURB>
-<DEFAULT>32768</DEFAULT>
+<NICK>Card</NICK>
+<BLURB>ALSA card number for the SPDIF device to use.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstDfbVideoSink::contrast</NAME>
+<NAME>GstPitch::pitch</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pitch</NICK>
+<BLURB>Audio stream pitch.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPitch::rate</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Rate</NICK>
+<BLURB>Audio stream rate.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPitch::tempo</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tempo</NICK>
+<BLURB>Audio stream tempo.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::averaging-period</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,65535]</RANGE>
+<RANGE>[-1,100]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Contrast</NICK>
-<BLURB>The contrast of the video.</BLURB>
-<DEFAULT>32768</DEFAULT>
+<NICK>Averaging Period</NICK>
+<BLURB>[CBR] Number of frames for which XviD averages bitrate.</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstDfbVideoSink::hue</NAME>
+<NAME>GstXvidEnc::bframe-threshold</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,65535]</RANGE>
+<RANGE>[-255,255]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Hue</NICK>
-<BLURB>The hue of the video.</BLURB>
-<DEFAULT>32768</DEFAULT>
+<NICK>B-Frame Threshold</NICK>
+<BLURB>Higher threshold yields more chance that B-frame is used.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstDfbVideoSink::saturation</NAME>
+<NAME>GstXvidEnc::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,65535]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Saturation</NICK>
-<BLURB>The saturation of the video.</BLURB>
-<DEFAULT>32768</DEFAULT>
+<NICK>Bitrate</NICK>
+<BLURB>[CBR|PASS2] Target video bitrate (bps).</BLURB>
+<DEFAULT>1800000</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstDfbVideoSink::vsync</NAME>
+<NAME>GstXvidEnc::bquant-offset</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,200]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-quantizer offset</NICK>
+<BLURB>Offset in B-frame quantizer computation.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::bquant-ratio</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,200]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-quantizer ratio</NICK>
+<BLURB>Ratio in B-frame quantizer computation.</BLURB>
+<DEFAULT>150</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::buffer</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer Size</NICK>
+<BLURB>[CBR] Size of the video buffers.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::cartoon</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Vertical synchronisation</NICK>
-<BLURB>Wait for next vertical sync to draw frames.</BLURB>
+<NICK>Cartoon Material</NICK>
+<BLURB>Adjust thresholds for flat looking cartoons.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::closed-gop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Closed GOP</NICK>
+<BLURB>Closed GOP.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::container-frame-overhead</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Container Frame Overhead</NICK>
+<BLURB>[PASS2] Average container overhead per frame.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::curve-compression-high</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Curve Compression High</NICK>
+<BLURB>[PASS2] Shrink factor for upper part of bitrate curve.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::curve-compression-low</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Curve Compression Low</NICK>
+<BLURB>[PASS2] Growing factor for lower part of bitrate curve.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::flow-control-strength</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flow Control Strength</NICK>
+<BLURB>[PASS2] Overflow control strength per frame.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::gmc</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Global Motion Compensation</NICK>
+<BLURB>Allow generation of Sprite Frames for Pan/Zoom/Rotating images.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::greyscale</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Disable Chroma</NICK>
+<BLURB>Do not write chroma data in encoded video.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::hqacpred</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>High quality AC prediction</NICK>
+<BLURB>Enable high quality AC prediction.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstDfbVideoSink::pixel-aspect-ratio</NAME>
+<NAME>GstXvidEnc::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced Material</NICK>
+<BLURB>Enable for interlaced video material.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::keyframe-boost</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keyframe boost</NICK>
+<BLURB>[PASS2] Bitrate boost for keyframes.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::keyframe-reduction</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keyframe Reduction</NICK>
+<BLURB>[PASS2] Keyframe size reduction in % of those within threshold.</BLURB>
+<DEFAULT>20</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::keyframe-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keyframe Threshold</NICK>
+<BLURB>[PASS2] Distance between keyframes not to be subject to reduction.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::lumimasking</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Lumimasking</NICK>
+<BLURB>Enable lumimasking - apply more compression to dark or bright areas.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::max-bframes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max B-Frames</NICK>
+<BLURB>Maximum B-frames in a row.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::max-bquant</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Quant B-Frames</NICK>
+<BLURB>Upper bound for B-frame quantization.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::max-iquant</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Quant I-Frames</NICK>
+<BLURB>Upper bound for I-frame quantization.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::max-key-interval</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -100</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. Key Interval</NICK>
+<BLURB>Maximum number of frames between two keyframes (< 0 is in sec).</BLURB>
+<DEFAULT>-10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::max-overflow-degradation</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Overflow Degradation</NICK>
+<BLURB>[PASS2] Amount in % that flow control can decrease frame size compared to ideal curve.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::max-overflow-improvement</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Overflow Improvement</NICK>
+<BLURB>[PASS2] Amount in % that flow control can increase frame size compared to ideal curve.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::max-pquant</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Quant P-Frames</NICK>
+<BLURB>Upper bound for P-frame quantization.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::me-chroma</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ME Chroma</NICK>
+<BLURB>Enable use of Chroma planes for Motion Estimation.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::me-quarterpel</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ME Quarterpel</NICK>
+<BLURB>Use quarter pixel precision for motion vector search.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::me-vhq</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,4]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ME DCT/Frequency</NICK>
+<BLURB>Extent in which to use DCT to minimize encoding length.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::min-bquant</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min Quant B-Frames</NICK>
+<BLURB>Lower bound for B-frame quantization.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::min-iquant</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min Quant I-Frames</NICK>
+<BLURB>Lower bound for I-frame quantization.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::min-pquant</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min Quant P-Frames</NICK>
+<BLURB>Lower bound for P-frame quantization.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::motion</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,6]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ME Quality</NICK>
+<BLURB>Quality of Motion Estimation.</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::pass</NAME>
+<TYPE>GstXvidEncPasses</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding pass/type</NICK>
+<BLURB>Encoding pass/type.</BLURB>
+<DEFAULT>Constant Bitrate Encoding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::profile</NAME>
+<TYPE>GstXvidEncProfiles</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Profile</NICK>
+<BLURB>XviD/MPEG-4 encoding profile.</BLURB>
+<DEFAULT>UNP</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::quant-type</NAME>
+<TYPE>GstXvidEncQuantTypes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Type</NICK>
+<BLURB>Quantizer type.</BLURB>
+<DEFAULT>H263 quantization</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::quantizer</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[2,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer</NICK>
+<BLURB>[QUANT] Quantizer to apply for constant quantizer mode.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::reaction-delay-factor</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reaction Delay Factor</NICK>
+<BLURB>[CBR] Reaction delay factor.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::statsfile</NAME>
 <TYPE>gchararray</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Pixel Aspect Ratio</NICK>
-<BLURB>The pixel aspect ratio of the device.</BLURB>
-<DEFAULT>"1/1"</DEFAULT>
+<NICK>Statistics Filename</NICK>
+<BLURB>[PASS1|PASS2] Filename to store data for 2-pass encoding.</BLURB>
+<DEFAULT>"xvid-stats.log"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvidEnc::trellis</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Trellis Quantization</NICK>
+<BLURB>Enable Trellis Quantization.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::bitrate</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,9.6e+06]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate</NICK>
+<BLURB>Try to encode with this average bitrate (bits/sec). This enables lossy encoding! A value smaller than 24000.0 disables this.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::bits-per-sample</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,24]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bits per sample</NICK>
+<BLURB>Try to encode with this amount of bits per sample. This enables lossy encoding! A value smaller than 2.0 disables this.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::correction-mode</NAME>
+<TYPE>GstWavpackEncCorrectionMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Correction file mode</NICK>
+<BLURB>Use this mode for correction file creation. Only works in lossy mode!.</BLURB>
+<DEFAULT>Create no correction file (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::extra-processing</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Extra processing</NICK>
+<BLURB>Extra encode processing.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::joint-stereo-mode</NAME>
+<TYPE>GstWavpackEncJSMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Joint-Stereo mode</NICK>
+<BLURB>Use this joint-stereo mode.</BLURB>
+<DEFAULT>auto (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::md5</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>MD5</NICK>
+<BLURB>Store MD5 hash of raw samples within the file.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::mode</NAME>
+<TYPE>GstWavpackEncMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding mode</NICK>
+<BLURB>Speed versus compression tradeoff.</BLURB>
+<DEFAULT>Default</DEFAULT>
 </ARG>
 
 <ARG>
@@ -79,23 +529,440 @@
 </ARG>
 
 <ARG>
-<NAME>GstSpeed::speed</NAME>
-<TYPE>gfloat</TYPE>
-<RANGE>[0.1,40]</RANGE>
-<FLAGS>rwx</FLAGS>
-<NICK>speed</NICK>
-<BLURB>speed.</BLURB>
-<DEFAULT>1</DEFAULT>
+<NAME>GstNeonhttpSrc::location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>The location. In the form:
+			http://a.com/file.txt - default port '80' 
+			http://a.com:80/file.txt 
+			a.com/file.txt - defualt scheme 'HTTP' 
+			https://a.com/file.txt - default port '443' 
+			http:///file.txt - default host 'localhost'.</BLURB>
+<DEFAULT>""</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstMMS::blocksize</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[0,65536]</RANGE>
+<NAME>GstNeonhttpSrc::proxy</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>blocksize</NICK>
-<BLURB>How many bytes should be read at once.</BLURB>
-<DEFAULT>2048</DEFAULT>
+<NICK>Proxy</NICK>
+<BLURB>The proxy. In the form myproxy.mycompany.com:8080. 
+			If nothing is passed g_getenv("http_proxy") will be used 
+			If that http_proxy enviroment var isn't define no proxy is used.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNeonhttpSrc::uri</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Uri</NICK>
+<BLURB>The location in form of a URI (deprecated; use location).</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTRM::proxy-address</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>proxy address</NICK>
+<BLURB>proxy address.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTRM::proxy-port</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>proxy port</NICK>
+<BLURB>proxy port.</BLURB>
+<DEFAULT>8080</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::altscan-mpeg2</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alt. MPEG-2 scan</NICK>
+<BLURB>Alternate MPEG-2 block scanning. Disabling this might make buggy players play SVCD streams.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::aspect</NAME>
+<TYPE>GstMpeg2encAspect</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aspect</NICK>
+<BLURB>Display aspect ratio.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::b-per-refframe</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B per ref. frame</NICK>
+<BLURB>Number of B frames between each I/P frame.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,10240]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate</NICK>
+<BLURB>Compressed video bitrate (kbps).</BLURB>
+<DEFAULT>1125</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::bufsize</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[20,4000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Decoder buf. size</NICK>
+<BLURB>Target decoders video buffer size (kB) (default depends on format).</BLURB>
+<DEFAULT>46</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::closed-gop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Closed GOP</NICK>
+<BLURB>All Group-of-Pictures are closed (for multi-angle DVDs).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::constraints</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constraints</NICK>
+<BLURB>Use strict video resolution and bitrate checks.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::correct-svcd-hds</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Correct SVCD hor. size</NICK>
+<BLURB>Force SVCD width to 480 instead of 540/720.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::dualprime</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dual Prime Motion Estimation</NICK>
+<BLURB>Dual Prime Motion Estimation Mode for MPEG-2 I/P-frame only streams.  Quite some players do not support this.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::dummy-svcd-sof</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dummy SVCD SOF</NICK>
+<BLURB>Generate dummy SVCD scan-data (for vcdimager).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::force-b-b-p</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force B-B-P</NICK>
+<BLURB>Force two B frames between I/P frames when closing GOP boundaries.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::format</NAME>
+<TYPE>GstMpeg2encFormat</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Format</NICK>
+<BLURB>Encoding profile format.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::framerate</NAME>
+<TYPE>GstMpeg2encFramerate</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Framerate</NICK>
+<BLURB>Output framerate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::interlace-mode</NAME>
+<TYPE>GstMpeg2encInterlaceMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlace mode</NICK>
+<BLURB>MPEG-2 motion estimation and encoding modes.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::intra-dc-prec</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[8,11]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra. DC precision</NICK>
+<BLURB>Number of bits precision for DC (base colour) in MPEG-2 blocks.</BLURB>
+<DEFAULT>9</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::keep-hf</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keep HF</NICK>
+<BLURB>Maximize high-frequency resolution (for high-quality sources).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::max-gop-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,250]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. GOP size</NICK>
+<BLURB>Maximal size per Group-of-Pictures (-1=default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::min-gop-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,250]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Min. GOP size</NICK>
+<BLURB>Minimal size per Group-of-Pictures (-1=default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::motion-search-radius</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,32]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion search radius</NICK>
+<BLURB>Motion compensation search radius.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::non-video-bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,10240]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Non-video bitrate</NICK>
+<BLURB>Assumed bitrate of non-video for sequence splitting (kbps).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::norm</NAME>
+<TYPE>GstMpeg2encVideoNorm</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Norm</NICK>
+<BLURB>Tag output for specific video norm.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::playback-field-order</NAME>
+<TYPE>GstMpeg2encPlaybackFieldOrders</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Playback field order</NICK>
+<BLURB>Force specific playback field order.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::pulldown-3-2</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>3-2 pull down</NICK>
+<BLURB>Generate header flags for 3-2 pull down 24fps movies.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::quant-matrix</NAME>
+<TYPE>GstMpeg2encQuantisationMatrix</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quant. matrix</NICK>
+<BLURB>Quantisation matrix to use for encoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::quant-reduction-max-var</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,2500]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. quant. reduction variance</NICK>
+<BLURB>Maximal luma variance below which quantisation boost is used.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::quantisation</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantisation</NICK>
+<BLURB>Quantisation factor (0=default, 1=best, 31=worst).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::quantisation-reduction</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-4,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantisation reduction</NICK>
+<BLURB>Max. quantisation reduction for highly active blocks.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::reduce-hf</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,2]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reduce HF</NICK>
+<BLURB>How much to reduce high-frequency resolution (by increasing quantisation).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::reduction-2x2</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,4]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>2x2 reduction</NICK>
+<BLURB>Reduction factor for 2x2 subsampled candidate motion estimates (1=max. quality, 4=max. speed).</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::reduction-4x4</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,4]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>4x4 reduction</NICK>
+<BLURB>Reduction factor for 4x4 subsampled candidate motion estimates (1=max. quality, 4=max. speed).</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::sequence-header-every-gop</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sequence hdr. every GOP</NICK>
+<BLURB>Include a sequence header in every GOP.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::sequence-length</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,10240]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sequence length</NICK>
+<BLURB>Place a sequence boundary after each <num> MB (0=disable).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::unit-coeff-elim</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-40,40]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Unit coefficience elimination</NICK>
+<BLURB>How agressively small-unit picture blocks should be skipped.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMpeg2enc::vcd-still-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,512]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>VCD stills size</NICK>
+<BLURB>Size of VCD stills (in kB).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBz2dec::buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer size</NICK>
+<BLURB>Buffer size.</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBz2dec::first-buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Size of first buffer</NICK>
+<BLURB>Size of first buffer (used to determine the mime type of the uncompressed data).</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBz2enc::block-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,9]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block size</NICK>
+<BLURB>Block size.</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBz2enc::buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer size</NICK>
+<BLURB>Buffer size.</BLURB>
+<DEFAULT>1024</DEFAULT>
 </ARG>
 
 <ARG>
@@ -106,46 +973,6 @@
 <NICK>location</NICK>
 <BLURB>Host URL to connect to. Accepted are mms://, mmsu://, mmst:// URL types.</BLURB>
 <DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstXvidEnc::bitrate</NAME>
-<TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Bitrate</NICK>
-<BLURB>Target video bitrate (kbps).</BLURB>
-<DEFAULT>512</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstXvidEnc::buffer-size</NAME>
-<TYPE>gulong</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Buffer Size</NICK>
-<BLURB>Size of the video buffers.</BLURB>
-<DEFAULT></DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstXvidEnc::max-key-interval</NAME>
-<TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Max. Key Interval</NICK>
-<BLURB>Maximum number of frames between two keyframes.</BLURB>
-<DEFAULT>-1</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstXvidEnc::profile</NAME>
-<TYPE>GstXvidEncProfiles</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Profile</NICK>
-<BLURB>XviD/MPEG-4 encoding profile.</BLURB>
-<DEFAULT>S_L0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -219,43 +1046,73 @@
 </ARG>
 
 <ARG>
-<NAME>GstBz2dec::buffer-size</NAME>
-<TYPE>guint</TYPE>
-<RANGE>>= 1</RANGE>
+<NAME>GstDfbVideoSink::brightness</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Buffer size</NICK>
-<BLURB>Buffer size.</BLURB>
-<DEFAULT>1024</DEFAULT>
+<NICK>Brightness</NICK>
+<BLURB>The brightness of the video.</BLURB>
+<DEFAULT>32768</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstBz2dec::first-buffer-size</NAME>
-<TYPE>guint</TYPE>
-<RANGE>>= 1</RANGE>
+<NAME>GstDfbVideoSink::contrast</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Size of first buffer</NICK>
-<BLURB>Size of first buffer (used to determine the mime type of the uncompressed data).</BLURB>
-<DEFAULT>1024</DEFAULT>
+<NICK>Contrast</NICK>
+<BLURB>The contrast of the video.</BLURB>
+<DEFAULT>32768</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstBz2enc::block-size</NAME>
-<TYPE>guint</TYPE>
-<RANGE>[1,9]</RANGE>
+<NAME>GstDfbVideoSink::hue</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Block size</NICK>
-<BLURB>Block size.</BLURB>
-<DEFAULT>6</DEFAULT>
+<NICK>Hue</NICK>
+<BLURB>The hue of the video.</BLURB>
+<DEFAULT>32768</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstBz2enc::buffer-size</NAME>
-<TYPE>guint</TYPE>
-<RANGE>>= 1</RANGE>
+<NAME>GstDfbVideoSink::pixel-aspect-ratio</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Buffer size</NICK>
-<BLURB>Buffer size.</BLURB>
-<DEFAULT>1024</DEFAULT>
+<NICK>Pixel Aspect Ratio</NICK>
+<BLURB>The pixel aspect ratio of the device.</BLURB>
+<DEFAULT>"1/1"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDfbVideoSink::saturation</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Saturation</NICK>
+<BLURB>The saturation of the video.</BLURB>
+<DEFAULT>32768</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDfbVideoSink::surface</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Surface</NICK>
+<BLURB>The target surface for video.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDfbVideoSink::vsync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Vertical synchronisation</NICK>
+<BLURB>Wait for next vertical sync to draw frames.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -269,6 +1126,86 @@
 </ARG>
 
 <ARG>
+<NAME>GstRgAnalysis::forced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force processing</NICK>
+<BLURB>Analyze streams even when ReplayGain tags exist.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgAnalysis::num-tracks</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of album tracks</NICK>
+<BLURB>Number of remaining tracks in the album.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgAnalysis::reference-level</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reference level</NICK>
+<BLURB>Reference level in dB (83.0 for original proposal).</BLURB>
+<DEFAULT>89</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNsfDec::filter</NAME>
+<TYPE>GstNsfFilter</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>filter</NICK>
+<BLURB>filter.</BLURB>
+<DEFAULT>NSF_FILTER_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstNsfDec::tune</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>tune</NICK>
+<BLURB>tune.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGDPPay::crc-header</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CRC Header</NICK>
+<BLURB>Calculate and store a CRC checksum on the header.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGDPPay::crc-payload</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CRC Payload</NICK>
+<BLURB>Calculate and store a CRC checksum on the payload.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGDPPay::version</NAME>
+<TYPE>GstDPVersion</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Version</NICK>
+<BLURB>Version of the GStreamer Data Protocol.</BLURB>
+<DEFAULT>GDP Version 1.0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstFreeze::max-buffers</NAME>
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
@@ -279,100 +1216,93 @@
 </ARG>
 
 <ARG>
-<NAME>GstNeonhttpSrc::iradio-genre</NAME>
-<TYPE>gchararray</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>iradio-genre</NICK>
-<BLURB>Genre of the stream.</BLURB>
-<DEFAULT>NULL</DEFAULT>
+<NAME>GstVideoCrop::bottom</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bottom</NICK>
+<BLURB>Pixels to crop at bottom.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstNeonhttpSrc::iradio-mode</NAME>
+<NAME>GstVideoCrop::left</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Left</NICK>
+<BLURB>Pixels to crop at left.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoCrop::right</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Right</NICK>
+<BLURB>Pixels to crop at right.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoCrop::top</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Top</NICK>
+<BLURB>Pixels to crop at top.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeed::speed</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.1,40]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>speed</NICK>
+<BLURB>speed.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpectrum::bands</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bands</NICK>
+<BLURB>number of frequency bands.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpectrum::interval</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interval</NICK>
+<BLURB>Interval of time between message posts (in nanoseconds).</BLURB>
+<DEFAULT>100000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpectrum::message</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>iradio-mode</NICK>
-<BLURB>Enable internet radio mode (extraction of shoutcast/icecast metadata).</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstNeonhttpSrc::iradio-name</NAME>
-<TYPE>gchararray</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>iradio-name</NICK>
-<BLURB>Name of the stream.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstNeonhttpSrc::iradio-url</NAME>
-<TYPE>gchararray</TYPE>
-<RANGE></RANGE>
-<FLAGS>r</FLAGS>
-<NICK>iradio-url</NICK>
-<BLURB>Homepage URL for radio stream.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstNeonhttpSrc::location</NAME>
-<TYPE>gchararray</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Location</NICK>
-<BLURB>The location. In the form:
-			http://a.com/file.txt - default port '80' 
-			http://a.com:80/file.txt 
-			a.com/file.txt - defualt scheme 'HTTP' 
-			https://a.com/file.txt - default port '443' 
-			http:///file.txt - default host 'localhost'.</BLURB>
-<DEFAULT>""</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstNeonhttpSrc::proxy</NAME>
-<TYPE>gchararray</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Proxy</NICK>
-<BLURB>The proxy. In the form myproxy.mycompany.com:8080. 
-			If nothing is passed g_getenv("http_proxy") will be used 
-			If that http_proxy enviroment var isn't define no proxy is used.</BLURB>
-<DEFAULT>""</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstNeonhttpSrc::uri</NAME>
-<TYPE>gchararray</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Uri</NICK>
-<BLURB>The location in form of a URI (deprecated; use location).</BLURB>
-<DEFAULT>""</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstNeonhttpSrc::user-agent</NAME>
-<TYPE>gchararray</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>User-Agent</NICK>
-<BLURB>The User-Agent used for connection.</BLURB>
-<DEFAULT>"neonhttpsrc"</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstV4l2Src::use-fixed-fps</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Use Fixed FPS</NICK>
-<BLURB>Drop/Insert frames to reach a certain FPS (TRUE) or adapt FPS to suit the number of frabbed frames.</BLURB>
+<NICK>Message</NICK>
+<BLURB>Post a level message for each passed interval.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpectrum::threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE><= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB>db threshold for result, maps to 0.</BLURB>
+<DEFAULT>-60</DEFAULT>
 </ARG>
 
 <ARG>
@@ -496,22 +1426,92 @@
 </ARG>
 
 <ARG>
-<NAME>GstTRM::proxy-address</NAME>
-<TYPE>gchararray</TYPE>
-<RANGE></RANGE>
+<NAME>GstBPWSinc::length</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>proxy address</NICK>
-<BLURB>proxy address.</BLURB>
-<DEFAULT>NULL</DEFAULT>
+<NICK>Length</NICK>
+<BLURB>N such that the filter length = 2N + 1.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>
-<NAME>GstTRM::proxy-port</NAME>
-<TYPE>guint</TYPE>
-<RANGE>[1,65535]</RANGE>
+<NAME>GstBPWSinc::lower-frequency</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,0.5]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>proxy port</NICK>
-<BLURB>proxy port.</BLURB>
-<DEFAULT>8080</DEFAULT>
+<NICK>Lower Frequency</NICK>
+<BLURB>Cut-off lower frequency (relative to sample rate).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBPWSinc::upper-frequency</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,0.5]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Upper Frequency</NICK>
+<BLURB>Cut-off upper frequency (relative to sample rate).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLPWSinc::frequency</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,0.5]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Frequency</NICK>
+<BLURB>Cut-off Frequency relative to sample rate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLPWSinc::length</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Length</NICK>
+<BLURB>N such that the filter length = 2N + 1.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIIR::A</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>A</NICK>
+<BLURB>A filter coefficient.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIIR::B</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B</NICK>
+<BLURB>B filter coefficient.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIIR::gain</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Gain</NICK>
+<BLURB>Filter gain.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIIR::stages</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stages</NICK>
+<BLURB>Number of filter stages.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 

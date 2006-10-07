@@ -8,19 +8,63 @@ GObject
     GstElement
       GstBin
         GstPipeline
-      GstQueue
       GstBaseSink
+        AlsaSPDIFSink
         GstVideoSink
+          GstSDLVideoSink
           GstDfbVideoSink
-      GstBaseTransform
-        GstVideoCrop
-      GstTRM
+          GstGLImageSink
+        GstBaseAudioSink
+          GstAudioSink
+            GstSDLAudioSink
+      GstSpcDec
+      GstPitch
+      GstXvidEnc
+      GstXvidDec
+      GstWavpackParse
       GstWavpackDec
       GstWavpackEnc
-      GstWavpackParse
+      GstSwfdec
+      GstBaseSrc
+        GstPushSrc
+          GstNeonhttpSrc
+          GstMMS
+      GstTRM
+      GstMusepackDec
+      GstMpeg2enc
+      GstBz2enc
+      GstBz2dec
+      GstGSMEnc
+      GstGSMDec
+      GstFaad
+      GstFaac
+      GstDtsDec
+      GstBaseTransform
+        GstRgAnalysis
+        GstVideoCrop
+        GstSpectrum
+        GstIIR
+        GstLPWSinc
+        GstBPWSinc
+      GstNsfDec
+      GstH264Parse
+      GstXingMux
+      GstGDPDepay
+      GstGDPPay
+      GstFreeze
+      GstTtaParse
+      GstTtaDec
+      GstSpeed
+      GstQTDemux
+      GstModPlug
+      GstCDXAParse
     GstPlugin
     GstRegistry
     GstPadTemplate
   GstSignalObject
 GInterface
   GstChildProxy
+  GstURIHandler
+  GstImplementsInterface
+  GstXOverlay
+  GstNavigation

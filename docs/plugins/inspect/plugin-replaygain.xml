@@ -1,0 +1,20 @@
+<plugin>
+  <name>replaygain</name>
+  <description>ReplayGain analysis</description>
+  <filename>../../gst/replaygain/.libs/libgstreplaygain.so</filename>
+  <basename>libgstreplaygain.so</basename>
+  <version>0.10.3.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>rganalysis</name>
+      <longname>ReplayGain analysis</longname>
+      <class>Filter/Analyzer/Audio</class>
+      <description>Perform the ReplayGain analysis</description>
+      <author>René Stadler &lt;mail@renestadler.de&gt;</author>
+    </element>
+  </elements>
+</plugin>

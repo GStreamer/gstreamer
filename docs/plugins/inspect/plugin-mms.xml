@@ -1,0 +1,20 @@
+<plugin>
+  <name>mms</name>
+  <description>Microsoft Multi Media Server streaming protocol support</description>
+  <filename>../../ext/libmms/.libs/libgstmms.so</filename>
+  <basename>libgstmms.so</basename>
+  <version>0.10.3.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer</package>
+  <origin>http://gstreamer.net/</origin>
+  <elements>
+    <element>
+      <name>mmssrc</name>
+      <longname>MMS streaming source</longname>
+      <class>Source/Network</class>
+      <description>Receive data streamed via MSFT Multi Media Server protocol</description>
+      <author>Maciej Katafiasz &lt;mathrick@users.sourceforge.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

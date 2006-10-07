@@ -1,3 +1,6 @@
 GstBin GstChildProxy
 GstPipeline GstChildProxy
-GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
+GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
+GstDfbVideoSink GstImplementsInterface GstNavigation
+GstNeonhttpSrc GstURIHandler
+GstMMS GstURIHandler

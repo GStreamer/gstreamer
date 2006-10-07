@@ -1,0 +1,20 @@
+<plugin>
+  <name>spcdec</name>
+  <description>OpenSPC Audio Decoder</description>
+  <filename>../../ext/spc/.libs/libgstspc.so</filename>
+  <basename>libgstspc.so</basename>
+  <version>0.10.3.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>spcdec</name>
+      <longname>OpenSPC SPC decoder</longname>
+      <class>Codec/Audio/Decoder</class>
+      <description>Uses OpenSPC to emulate an SPC processor</description>
+      <author>Chris Lee &lt;clee@kde.org&gt;</author>
+    </element>
+  </elements>
+</plugin>

@@ -28,7 +28,7 @@
       <longname>WavePack parser</longname>
       <class>Codec/Demuxer/Audio</class>
       <description>Parses Wavpack files</description>
-      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+      <author>Arwed v. Merkatz &lt;v.merkatz@gmx.net&gt;, Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
     </element>
   </elements>
 </plugin>

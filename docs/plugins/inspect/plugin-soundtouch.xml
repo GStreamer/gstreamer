@@ -1,0 +1,20 @@
+<plugin>
+  <name>soundtouch</name>
+  <description>Audio Pitch Controller</description>
+  <filename>../../ext/soundtouch/.libs/libgstpitch.so</filename>
+  <basename>libgstpitch.so</basename>
+  <version>0.10.3.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>pitch</name>
+      <longname>Pitch controller</longname>
+      <class>Filter/Converter/Audio</class>
+      <description>Control the pitch of an audio stream</description>
+      <author>Wouter Paesen &lt;wouter@kangaroot.net&gt;</author>
+    </element>
+  </elements>
+</plugin>

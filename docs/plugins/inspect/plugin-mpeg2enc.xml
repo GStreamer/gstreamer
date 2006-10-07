@@ -1,0 +1,21 @@
+<plugin>
+  <name>mpeg2enc</name>
+  <description>High-quality MPEG-1/2 video encoder</description>
+  <filename>../../ext/mpeg2enc/.libs/libgstmpeg2enc.so</filename>
+  <basename>libgstmpeg2enc.so</basename>
+  <version>0.10.3.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mpeg2enc</name>
+      <longname>mpeg2enc video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>High-quality MPEG-1/2 video encoder</description>
+      <author>Andrew Stevens &lt;andrew.stevens@nexgo.de&gt;
+    Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+  </elements>
+</plugin>
