@@ -215,7 +215,25 @@ GST_START_TEST (test_date_tags)
 
 GST_END_TEST;
 
-Suite *
+GST_START_TEST (test_type)
+{
+  GstTagList *taglist;
+
+  taglist = gst_tag_list_new ();
+  fail_unless (GST_IS_TAG_LIST (taglist));
+  fail_unless (gst_is_tag_list (taglist));
+  gst_tag_list_free (taglist);
+
+  /* this isn't okay */
+  ASSERT_CRITICAL (fail_if (gst_is_tag_list (NULL)));
+
+  /* this however should be fine */
+  fail_if (GST_IS_TAG_LIST (NULL));
+}
+
+GST_END_TEST;
+
+static Suite *
 gst_tag_suite (void)
 {
   Suite *s = suite_create ("GstTag");
@@ -224,6 +242,7 @@ gst_tag_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_merge);
   tcase_add_test (tc_chain, test_date_tags);
+  tcase_add_test (tc_chain, test_type);
 
   return s;
 }

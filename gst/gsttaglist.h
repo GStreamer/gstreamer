@@ -82,7 +82,7 @@ typedef enum {
  */
 typedef GstStructure GstTagList;
 #define GST_TAG_LIST(x)       ((GstTagList *) (x))
-#define GST_IS_TAG_LIST(x)    (gst_is_tag_list (GST_TAG_LIST (x)))
+#define GST_IS_TAG_LIST(x)    ((x) != NULL && gst_is_tag_list (GST_TAG_LIST (x)))
 #define GST_TYPE_TAG_LIST     (gst_tag_list_get_type ())
 
 /**

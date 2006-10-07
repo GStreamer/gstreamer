@@ -1,5 +1,14 @@
 2006-10-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gsttaglist.c: (gst_is_tag_list):
+	* gst/gsttaglist.h:
+	  Minor fixes to GST_IS_TAG_LIST and gst_is_tag_list().
+
+	* tests/check/gst/gsttag.c: (GST_START_TEST), (gst_tag_suite):
+	  Small test for the above.
+
+2006-10-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gsttaglist.h:
 	  Less tabs, more spaces.
 

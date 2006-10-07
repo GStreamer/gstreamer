@@ -479,9 +479,11 @@ gst_tag_list_new (void)
 gboolean
 gst_is_tag_list (gconstpointer p)
 {
+  GstStructure *s = (GstStructure *) p;
+
   g_return_val_if_fail (p != NULL, FALSE);
 
-  return ((GstStructure *) p)->name == gst_tag_list_quark;
+  return (GST_IS_STRUCTURE (s) && s->name == gst_tag_list_quark);
 }
 typedef struct
 {
