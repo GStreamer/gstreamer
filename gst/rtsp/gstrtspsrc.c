@@ -851,6 +851,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
       gst_pad_set_caps (stream->srcpad, stream->caps);
 
       stream->channelpad[0] = gst_object_ref (stream->srcpad);
+      gst_pad_set_active (stream->srcpad, TRUE);
       gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
     } else {
       GST_DEBUG_OBJECT (src, "using manager source pad");
@@ -952,6 +953,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     gst_object_unref (outpad);
 
     /* and add */
+    gst_pad_set_active (stream->srcpad, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
   }
   /* mark pad as ok */

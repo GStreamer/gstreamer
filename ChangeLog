@@ -1,3 +1,8 @@
+2006-10-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_transport):
+	  Activate pads before adding them to the source.
+
 2006-10-06  Wim Taymans  <wim@fluendo.com>
 
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_add_pads), (gst_dvdemux_chain):
