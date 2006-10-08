@@ -156,7 +156,12 @@ gst_x_overlay_base_init (gpointer g_class)
 void
 gst_x_overlay_set_xwindow_id (GstXOverlay * overlay, gulong xwindow_id)
 {
-  GstXOverlayClass *klass = GST_X_OVERLAY_GET_CLASS (overlay);
+  GstXOverlayClass *klass;
+
+  g_return_if_fail (overlay != NULL);
+  g_return_if_fail (GST_IS_X_OVERLAY (overlay));
+
+  klass = GST_X_OVERLAY_GET_CLASS (overlay);
 
   if (klass->set_xwindow_id) {
     klass->set_xwindow_id (overlay, xwindow_id);
@@ -224,7 +229,11 @@ gst_x_overlay_prepare_xwindow_id (GstXOverlay * overlay)
 void
 gst_x_overlay_expose (GstXOverlay * overlay)
 {
-  GstXOverlayClass *klass = GST_X_OVERLAY_GET_CLASS (overlay);
+  GstXOverlayClass *klass;
+
+  g_return_if_fail (overlay != NULL);
+
+  klass = GST_X_OVERLAY_GET_CLASS (overlay);
 
   if (klass->expose) {
     klass->expose (overlay);

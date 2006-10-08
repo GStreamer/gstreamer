@@ -1,3 +1,9 @@
+2006-10-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/interfaces/xoverlay.c:
+	(gst_x_overlay_set_xwindow_id), (gst_x_overlay_expose):
+	  Some more guards against invalid input.
+
 2006-10-07  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_text_event): 
