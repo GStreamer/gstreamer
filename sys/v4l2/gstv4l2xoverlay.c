@@ -47,11 +47,6 @@ struct _GstV4l2Xv
 GST_DEBUG_CATEGORY_STATIC (v4l2xv_debug);
 #define GST_CAT_DEFAULT v4l2xv_debug
 
-static void gst_v4l2_xoverlay_set_xwindow_id (GstV4l2Object * v4l2object,
-    XID xwindow_id);
-
-
-
 void
 gst_v4l2_xoverlay_interface_init (GstXOverlayClass * klass)
 {
@@ -193,7 +188,7 @@ idle_refresh (gpointer data)
   return FALSE;
 }
 
-static void
+void
 gst_v4l2_xoverlay_set_xwindow_id (GstV4l2Object * v4l2object, XID xwindow_id)
 {
   GstV4l2Xv *v4l2xv;

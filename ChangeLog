@@ -1,3 +1,9 @@
+2006-10-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/v4l2/gstv4l2xoverlay.c:
+	* sys/v4l2/gstv4l2xoverlay.h:
+	Fix build as per the patch in #338818 comment 36.
+
 2006-10-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_transport):
