@@ -58,14 +58,6 @@
 GST_DEBUG_CATEGORY_STATIC (ncc_debug);
 #define GST_CAT_DEFAULT (ncc_debug)
 
-/* #define DEBUGGING_ENABLED */
-
-#ifdef DEBUGGING_ENABLED
-#define DEBUG(x, args...) g_print (x "\n", ##args)
-#else
-#define DEBUG(x, args...)       /* nop */
-#endif
-
 /* the select call is also performed on the control sockets, that way
  * we can send special commands to unblock or restart the select call */
 #define CONTROL_RESTART        'R'      /* restart the select call */
@@ -389,7 +381,7 @@ gst_net_client_clock_thread (gpointer data)
           break;
         }
 
-        DEBUG ("control message: '%c'", command);
+        GST_LOG_OBJECT (self, "control message: '%c'", command);
         switch (command) {
           case CONTROL_STOP:
             /* break out of the select loop */
@@ -407,13 +399,13 @@ gst_net_client_clock_thread (gpointer data)
       continue;
     } else if (ret == 0) {
       /* timed out, let's send another packet */
-      DEBUG ("timed out %c", 0x32);
+      GST_DEBUG_OBJECT (self, "timed out");
 
       packet = gst_net_time_packet_new (NULL);
 
       packet->local_time = gst_clock_get_internal_time (GST_CLOCK (self));
 
-      DEBUG ("sending packet, local time = %" GST_TIME_FORMAT,
+      GST_DEBUG_OBJECT (self, "sending packet, local time = %" GST_TIME_FORMAT,
           GST_TIME_ARGS (packet->local_time));
       gst_net_time_packet_send (packet, self->sock,
           (struct sockaddr *) self->servaddr, sizeof (struct sockaddr_in));
@@ -434,10 +426,13 @@ gst_net_client_clock_thread (gpointer data)
       if (!packet)
         goto receive_error;
 
-      DEBUG ("got packet back %c", 0x32);
-      DEBUG ("local_1 = %" GST_TIME_FORMAT, GST_TIME_ARGS (packet->local_time));
-      DEBUG ("remote = %" GST_TIME_FORMAT, GST_TIME_ARGS (packet->remote_time));
-      DEBUG ("local_2 = %" GST_TIME_FORMAT, GST_TIME_ARGS (new_local));
+      GST_LOG_OBJECT (self, "got packet back");
+      GST_LOG_OBJECT (self, "local_1 = %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (packet->local_time));
+      GST_LOG_OBJECT (self, "remote = %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (packet->remote_time));
+      GST_LOG_OBJECT (self, "local_2 = %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (new_local));
 
       /* observe_times will reset the timeout */
       gst_net_client_clock_observe_times (self, packet->local_time,
