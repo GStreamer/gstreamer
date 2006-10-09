@@ -1,3 +1,27 @@
+2006-10-09  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-qos.txt:
+	Fix typo.
+
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	Update seek event docs regarding negative rates.
+	Rename @cur to @start. 
+
+	* gst/gstsegment.c: (gst_segment_set_seek):
+	* gst/gstsegment.h:
+	Update set_seek docs regarding negative rates.
+	Correctly update last_stop to @stop when dealing with negative
+	rates.
+	Rename @cur to @start. 
+
+	* tests/check/gst/gstpad.c: (GST_START_TEST):
+	Activate pads before trying to use them.
+
+	* tests/check/gst/gstsegment.c: (GST_START_TEST),
+	(gst_segment_suite):
+	Add simple check for segments and negative rates.
+
 2006-10-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsttaglist.c: (gst_tag_list_is_empty):

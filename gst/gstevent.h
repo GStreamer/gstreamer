@@ -411,11 +411,11 @@ void		gst_event_parse_qos		(GstEvent *event, gdouble *proportion, GstClockTimeDi
 						 GstClockTime *timestamp);
 /* seek event */
 GstEvent*	gst_event_new_seek		(gdouble rate, GstFormat format, GstSeekFlags flags,
-						 GstSeekType cur_type, gint64 cur,
+						 GstSeekType start_type, gint64 start,
 						 GstSeekType stop_type, gint64 stop);
 void		gst_event_parse_seek		(GstEvent *event, gdouble *rate, GstFormat *format,
 		                                 GstSeekFlags *flags,
-						 GstSeekType *cur_type, gint64 *cur,
+						 GstSeekType *start_type, gint64 *start,
 						 GstSeekType *stop_type, gint64 *stop);
 /* navigation event */
 GstEvent*	gst_event_new_navigation	(GstStructure *structure);

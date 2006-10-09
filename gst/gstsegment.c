@@ -172,11 +172,11 @@ gst_segment_init (GstSegment * segment, GstFormat format)
  * gst_segment_set_duration:
  * @segment: a #GstSegment structure.
  * @format: the format of the segment.
- * @duration: the duration of the segment info.
+ * @duration: the duration of the segment info or -1 if unknown.
  *
  * Set the duration of the segment to @duration. This function is mainly
  * used by elements that perform seeking and know the total duration of the
- * segment.
+ * segment. 
  * 
  * This field should be set to allow seeking requests relative to the
  * duration.
@@ -226,19 +226,31 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
  * @rate: the rate of the segment.
  * @format: the format of the segment.
  * @flags: the seek flags for the segment
- * @cur_type: the seek method
- * @cur: the seek start value
+ * @start_type: the seek method
+ * @start: the seek start value
  * @stop_type: the seek method
  * @stop: the seek stop value
  * @update: boolean holding whether start or stop were updated.
  *
- * Update the segment structure with the field values of a seek event.
+ * Update the segment structure with the field values of a seek event (see
+ * gst_event_new_seek()).
  *
- * After calling this method, the segment field last_stop will contain
- * the requested new position in the segment. If the cur_type is different
- * from GST_SEEK_TYPE_NONE, the current position is not updated and 
- * streaming should continue from the last position, possibly with
- * updated rate, flags or stop position.
+ * After calling this method, the segment field last_stop and time will
+ * contain the requested new position in the segment. The new requested
+ * position in the segment depends on @rate and @start_type and @stop_type. 
+ *
+ * For positive @rate, the new position in the segment is the new @segment
+ * start field when it was updated with a @start_type different from
+ * #GST_SEEK_TYPE_NONE. If no update was performed on @segment start position
+ * (#GST_SEEK_TYPE_NONE), @start is ignored and @segment last_stop is
+ * unmodified.
+ *
+ * For negative @rate, the new position in the segment is the new @segment
+ * stop field when it was updated with a @stop_type different from
+ * #GST_SEEK_TYPE_NONE. If no stop was previously configured in the segment, the
+ * duration of the segment will be used to update the stop position.
+ * If no update was performed on @segment stop position (#GST_SEEK_TYPE_NONE),
+ * @stop is ignored and @segment last_stop is unmodified.
  *
  * The applied rate of the segment will be set to 1.0 by default.
  * If the caller can apply a rate change, it should update @segment
@@ -247,7 +259,7 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
 void
 gst_segment_set_seek (GstSegment * segment, gdouble rate,
     GstFormat format, GstSeekFlags flags,
-    GstSeekType cur_type, gint64 cur,
+    GstSeekType start_type, gint64 start,
     GstSeekType stop_type, gint64 stop, gboolean * update)
 {
   gboolean update_stop, update_start;
@@ -263,35 +275,35 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
   update_stop = update_start = TRUE;
 
   /* start is never invalid */
-  switch (cur_type) {
+  switch (start_type) {
     case GST_SEEK_TYPE_NONE:
       /* no update to segment */
-      cur = segment->start;
+      start = segment->start;
       update_start = FALSE;
       break;
     case GST_SEEK_TYPE_SET:
-      /* cur holds desired position */
+      /* start holds desired position */
       break;
     case GST_SEEK_TYPE_CUR:
-      /* add cur to currently configure segment */
-      cur = segment->start + cur;
+      /* add start to currently configure segment */
+      start = segment->start + start;
       break;
     case GST_SEEK_TYPE_END:
       if (segment->duration != -1) {
-        /* add cur to total length */
-        cur = segment->duration + cur;
+        /* add start to total length */
+        start = segment->duration + start;
       } else {
         /* no update if duration unknown */
-        cur = segment->start;
+        start = segment->start;
         update_start = FALSE;
       }
       break;
   }
   /* bring in sane range */
   if (segment->duration != -1)
-    cur = CLAMP (cur, 0, segment->duration);
+    start = CLAMP (start, 0, segment->duration);
   else
-    cur = MAX (cur, 0);
+    start = MAX (start, 0);
 
   /* stop can be -1 if we have not configured a stop. */
   switch (stop_type) {
@@ -328,15 +340,18 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
 
   /* we can't have stop before start */
   if (stop != -1)
-    g_return_if_fail (cur <= stop);
+    g_return_if_fail (start <= stop);
 
   segment->rate = rate;
   segment->abs_rate = ABS (rate);
   segment->applied_rate = 1.0;
   segment->flags = flags;
-  segment->start = cur;
-  if (update_start) {
-    segment->last_stop = cur;
+  segment->start = start;
+  if (update_start && rate > 0.0) {
+    segment->last_stop = start;
+  }
+  if (update_stop && rate < 0.0) {
+    segment->last_stop = stop;
   }
   segment->time = segment->last_stop;
   segment->stop = stop;

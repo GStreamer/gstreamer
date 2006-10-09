@@ -333,9 +333,21 @@ GST_START_TEST (test_push_linked)
   fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
 
+  buffer = gst_buffer_new ();
+#if 0
+  /* FIXME, new pad should be flushing */
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_WRONG_STATE);
+  gst_buffer_ref (buffer);
+  fail_unless (gst_pad_chain (sink, buffer) == GST_FLOW_WRONG_STATE);
+#endif
+
+  /* activate pads */
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (sink, TRUE);
+
   /* test */
   /* pushing on a linked pad will drop the ref to the buffer */
-  buffer = gst_buffer_new ();
   gst_buffer_ref (buffer);
   fail_unless (gst_pad_push (src, buffer) == GST_FLOW_OK);
   ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 2);

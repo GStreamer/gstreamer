@@ -380,6 +380,43 @@ GST_START_TEST (segment_seek_size)
 
 GST_END_TEST;
 
+GST_START_TEST (segment_seek_reverse)
+{
+  GstSegment segment;
+  gboolean update;
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_segment_set_duration (&segment, GST_FORMAT_BYTES, 200);
+
+  /* configure segment to stop 100 */
+  gst_segment_set_seek (&segment, -1.0,
+      GST_FORMAT_BYTES,
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, 100, &update);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 100);
+  fail_unless (segment.last_stop == 100);
+
+  /* update */
+  gst_segment_set_seek (&segment, -1.0,
+      GST_FORMAT_BYTES,
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_SET, 10, GST_SEEK_TYPE_CUR, -20, &update);
+  fail_unless (segment.start == 10);
+  fail_unless (segment.stop == 80);
+  fail_unless (segment.last_stop == 80);
+
+  gst_segment_set_seek (&segment, -1.0,
+      GST_FORMAT_BYTES,
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_SET, 20, GST_SEEK_TYPE_NONE, 0, &update);
+  fail_unless (segment.start == 20);
+  fail_unless (segment.stop == 80);
+  fail_unless (segment.last_stop == 80);
+}
+
+GST_END_TEST;
+
 /* mess with the segment structure in the bytes format */
 GST_START_TEST (segment_newsegment_open)
 {
@@ -1289,6 +1326,7 @@ gst_segment_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, segment_seek_nosize);
   tcase_add_test (tc_chain, segment_seek_size);
+  tcase_add_test (tc_chain, segment_seek_reverse);
   tcase_add_test (tc_chain, segment_newsegment_open);
   tcase_add_test (tc_chain, segment_newsegment_closed);
   tcase_add_test (tc_chain, segment_newsegment_streamtime);

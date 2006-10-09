@@ -83,7 +83,7 @@ void         gst_segment_set_last_stop       (GstSegment *segment, GstFormat for
 
 void         gst_segment_set_seek            (GstSegment *segment, gdouble rate,
                                               GstFormat format, GstSeekFlags flags,
-                                              GstSeekType cur_type, gint64 cur,
+                                              GstSeekType start_type, gint64 start,
                                               GstSeekType stop_type, gint64 stop,
                                               gboolean *update);
 

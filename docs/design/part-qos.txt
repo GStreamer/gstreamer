@@ -32,9 +32,9 @@ The QoS event travels upstream and contains the following fields:
 
  - timestamp:  The timestamp on the buffer that generated the QoS
                event. These timestamps are expressed in total running time in
-	       the sink so that the value is every increasing.
+	       the sink so that the value is ever increasing.
 
- - jitter:     The difference of that timestamp against the currentl clock time.
+ - jitter:     The difference of that timestamp against the current clock time.
                Negative values mean the timestamp was on time. Positive values
 	       indicate the timestamp was late by that amount.
 

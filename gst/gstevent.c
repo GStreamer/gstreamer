@@ -785,33 +785,34 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  * @rate: The new playback rate
  * @format: The format of the seek values
  * @flags: The optional seek flags
- * @cur_type: The type and flags for the new current position
- * @cur: The value of the new current position
+ * @start_type: The type and flags for the new start position
+ * @start: The value of the new start position
  * @stop_type: The type and flags for the new stop position
  * @stop: The value of the new stop position
  *
  * Allocate a new seek event with the given parameters.
  *
- * The seek event configures playback of the pipeline from
- * @cur to @stop at the speed given in @rate, also called a playback segment.
- * The @cur and @stop values are expressed in format @format.
+ * The seek event configures playback of the pipeline between @start to @stop
+ * at the speed given in @rate, also called a playback segment.
+ * The @start and @stop values are expressed in @format.
  *
  * A @rate of 1.0 means normal playback rate, 2.0 means double speed.
  * Negatives values means backwards playback. A value of 0.0 for the
  * rate is not allowed and should be accomplished instead by PAUSING the
  * pipeline.
  *
- * A pipeline has a default playback segment configured with a current
- * position of 0, a stop position of the total duration of the stream(s) and
- * a rate of 1.0. The currently configured playback segment can be queried
- * with #GST_QUERY_SEGMENT. 
+ * A pipeline has a default playback segment configured with a start
+ * position of 0, a stop position of -1 and a rate of 1.0. The currently
+ * configured playback segment can be queried with #GST_QUERY_SEGMENT. 
  *
- * @cur_type and @stop_type specify how to adjust the current and stop
- * time, relative or absolute to the last configured playback segment. A type
- * of #GST_SEEK_TYPE_NONE means that the position should not be updated.
+ * @start_type and @stop_type specify how to adjust the currently configured 
+ * start and stop fields in @segment. Adjustments can be made relative or
+ * absolute to the last configured values. A type of #GST_SEEK_TYPE_NONE means
+ * that the position should not be updated.
  *
- * Updating the @cur position will actually move the current playback position
- * to that new position. 
+ * When the rate is positive and @start has been updated, playback will start
+ * from the newly configured start position. For negative rates, playback will
+ * start from the newly configured stop position.
  *
  * It is not possible to seek relative to the current playback position, to do
  * this, PAUSE the pipeline, query the current playback position with
