@@ -447,7 +447,7 @@ could_not_stat:
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
-static guint
+static GstURIType
 gst_fd_src_uri_get_type (void)
 {
   return GST_URI_SRC;

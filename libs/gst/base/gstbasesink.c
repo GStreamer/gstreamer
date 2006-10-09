@@ -1913,7 +1913,7 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
     GstBuffer * buf)
 {
   GstFlowReturn result;
-  GstClockTime start = -1, end = -1;
+  GstClockTime start = GST_CLOCK_TIME_NONE, end = GST_CLOCK_TIME_NONE;
   GstSegment *clip_segment;
 
   if (G_UNLIKELY (basesink->flushing))

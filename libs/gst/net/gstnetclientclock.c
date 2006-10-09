@@ -407,7 +407,7 @@ gst_net_client_clock_thread (gpointer data)
       continue;
     } else if (ret == 0) {
       /* timed out, let's send another packet */
-      DEBUG ("timed out");
+      DEBUG ("timed out %c", 0x32);
 
       packet = gst_net_time_packet_new (NULL);
 
@@ -434,7 +434,7 @@ gst_net_client_clock_thread (gpointer data)
       if (!packet)
         goto receive_error;
 
-      DEBUG ("got packet back");
+      DEBUG ("got packet back %c", 0x32);
       DEBUG ("local_1 = %" GST_TIME_FORMAT, GST_TIME_ARGS (packet->local_time));
       DEBUG ("remote = %" GST_TIME_FORMAT, GST_TIME_ARGS (packet->remote_time));
       DEBUG ("local_2 = %" GST_TIME_FORMAT, GST_TIME_ARGS (new_local));

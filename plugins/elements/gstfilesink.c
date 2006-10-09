@@ -508,7 +508,7 @@ gst_file_sink_stop (GstBaseSink * basesink)
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
-static guint
+static GstURIType
 gst_file_sink_uri_get_type (void)
 {
   return GST_URI_SINK;

@@ -1028,7 +1028,7 @@ gst_file_src_stop (GstBaseSrc * basesrc)
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
-static guint
+static GstURIType
 gst_file_src_uri_get_type (void)
 {
   return GST_URI_SRC;

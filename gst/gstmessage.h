@@ -84,7 +84,7 @@ typedef enum
   GST_MESSAGE_SEGMENT_START     = (1 << 16),
   GST_MESSAGE_SEGMENT_DONE      = (1 << 17),
   GST_MESSAGE_DURATION          = (1 << 18),
-  GST_MESSAGE_ANY               = ~0
+  GST_MESSAGE_ANY               = G_MAXINT
 } GstMessageType;
 
 #include <gst/gstminiobject.h>
