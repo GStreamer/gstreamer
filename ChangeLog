@@ -1,5 +1,11 @@
 2006-10-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* gst/gstmessage.h:
+	Revert change from earlier wrt GST_MESSAGE_TYPE_ANY having
+	a value that doesn't fit on enumeration.
+
+2006-10-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* libs/gst/net/gstnetclientclock.c: (gst_net_client_clock_thread):
 	Remove local debugging system and use Gstreamer's instead.
 
