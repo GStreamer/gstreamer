@@ -1,6 +1,14 @@
 2006-10-09  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	Set the rank of all demuxers for which we:
+	_ Have no alternate demuxer,
+	_ And are know not to crash like madmans,
+	to GST_RANK_MARGINAL
+
+2006-10-09  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
 	Disable the amr ffmpeg typefind function, it conflicts with
 	gsttypefindfunctions' implementation.
 

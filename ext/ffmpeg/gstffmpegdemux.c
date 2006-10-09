@@ -1433,7 +1433,35 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     /* Set the rank of demuxers know to work to MARGINAL.
      * Set demuxers for which we already have another implementation to NONE
      * Set All others to NONE*/
-    if (!strcmp (in_plugin->name, "flv"))
+    if (!strcmp (in_plugin->name, "flv") ||
+	!strcmp (in_plugin->name, "wsvqa") ||
+	!strcmp (in_plugin->name, "wsaud") ||
+	!strcmp (in_plugin->name, "wc3movie") ||
+	!strcmp (in_plugin->name, "voc") ||
+	!strcmp (in_plugin->name, "tta") ||
+	!strcmp (in_plugin->name, "swf") ||
+	!strcmp (in_plugin->name, "sol") ||
+	!strcmp (in_plugin->name, "smk") ||
+	!strcmp (in_plugin->name, "vmd") ||
+	!strcmp (in_plugin->name, "film_cpk") ||
+	!strcmp (in_plugin->name, "ingenient") ||
+	!strcmp (in_plugin->name, "psxstr") ||
+	!strcmp (in_plugin->name, "nuv") ||
+	!strcmp (in_plugin->name, "nut") ||
+	!strcmp (in_plugin->name, "nsv") ||
+	!strcmp (in_plugin->name, "mxf") ||
+	!strcmp (in_plugin->name, "mmf") ||
+	!strcmp (in_plugin->name, "mm") ||
+	!strcmp (in_plugin->name, "ipmovie") ||
+	!strcmp (in_plugin->name, "RoQ") ||
+	!strcmp (in_plugin->name, "idcin") ||
+	!strcmp (in_plugin->name, "gxf") ||
+	!strcmp (in_plugin->name, "ffm") ||
+	!strcmp (in_plugin->name, "ea") ||
+	!strcmp (in_plugin->name, "daud") ||
+	!strcmp (in_plugin->name, "avs") ||
+	!strcmp (in_plugin->name, "aiff") ||
+	!strcmp (in_plugin->name, "4xm"))
       rank = GST_RANK_MARGINAL;
     else
       rank = GST_RANK_NONE;
