@@ -470,7 +470,7 @@ gst_tag_list_new (void)
 
 /**
  * gst_tag_list_is_empty:
- * @taglist: A #GstTagList.
+ * @list: A #GstTagList.
  *
  * Checks if the given taglist is empty.
  *
@@ -479,12 +479,12 @@ gst_tag_list_new (void)
  * Since: 0.10.11
  */
 gboolean
-gst_tag_list_is_empty (const GstTagList * taglist)
+gst_tag_list_is_empty (const GstTagList * list)
 {
-  g_return_val_if_fail (taglist != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_TAG_LIST (taglist), FALSE);
+  g_return_val_if_fail (list != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
 
-  return (gst_structure_n_fields ((GstStructure *) taglist) == 0);
+  return (gst_structure_n_fields ((GstStructure *) list) == 0);
 }
 
 /**

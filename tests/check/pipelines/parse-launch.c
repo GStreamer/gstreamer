@@ -512,6 +512,8 @@ gst_parse_test_element_change_state (GstElement * element,
 
     ghost = gst_ghost_pad_new ("src", pad);
     fail_if (ghost == NULL, "Failed to create ghost pad");
+    /* activate and add */
+    gst_pad_set_active (ghost, TRUE);
     gst_element_add_pad (GST_ELEMENT (src), ghost);
     gst_object_unref (pad);
   }

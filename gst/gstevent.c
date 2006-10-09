@@ -823,31 +823,31 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  */
 GstEvent *
 gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
-    GstSeekType cur_type, gint64 cur, GstSeekType stop_type, gint64 stop)
+    GstSeekType start_type, gint64 start, GstSeekType stop_type, gint64 stop)
 {
   g_return_val_if_fail (rate != 0.0, NULL);
 
   if (format == GST_FORMAT_TIME) {
     GST_CAT_INFO (GST_CAT_EVENT,
         "creating seek rate %lf, format TIME, flags %d, "
-        "cur_type %d, cur %" GST_TIME_FORMAT ", "
+        "start_type %d, start %" GST_TIME_FORMAT ", "
         "stop_type %d, stop %" GST_TIME_FORMAT,
-        rate, flags, cur_type, GST_TIME_ARGS (cur),
+        rate, flags, start_type, GST_TIME_ARGS (start),
         stop_type, GST_TIME_ARGS (stop));
   } else {
     GST_CAT_INFO (GST_CAT_EVENT,
         "creating seek rate %lf, format %d, flags %d, "
-        "cur_type %d, cur %" G_GINT64_FORMAT ", "
+        "start_type %d, start %" G_GINT64_FORMAT ", "
         "stop_type %d, stop %" G_GINT64_FORMAT,
-        rate, format, flags, cur_type, cur, stop_type, stop);
+        rate, format, flags, start_type, start, stop_type, stop);
   }
 
   return gst_event_new_custom (GST_EVENT_SEEK,
       gst_structure_new ("GstEventSeek", "rate", G_TYPE_DOUBLE, rate,
           "format", GST_TYPE_FORMAT, format,
           "flags", GST_TYPE_SEEK_FLAGS, flags,
-          "cur_type", GST_TYPE_SEEK_TYPE, cur_type,
-          "cur", G_TYPE_INT64, cur,
+          "cur_type", GST_TYPE_SEEK_TYPE, start_type,
+          "cur", G_TYPE_INT64, start,
           "stop_type", GST_TYPE_SEEK_TYPE, stop_type,
           "stop", G_TYPE_INT64, stop, NULL));
 }
@@ -858,8 +858,8 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
  * @rate: result location for the rate
  * @format: result location for the stream format
  * @flags:  result location for the #GstSeekFlags
- * @cur_type: result location for the #GstSeekType of the current position
- * @cur: result location for the current postion expressed in @format
+ * @start_type: result location for the #GstSeekType of the start position
+ * @start: result location for the start postion expressed in @format
  * @stop_type:  result location for the #GstSeekType of the stop position
  * @stop: result location for the stop postion expressed in @format
  *
@@ -867,8 +867,8 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
  */
 void
 gst_event_parse_seek (GstEvent * event, gdouble * rate,
-    GstFormat * format, GstSeekFlags * flags, GstSeekType * cur_type,
-    gint64 * cur, GstSeekType * stop_type, gint64 * stop)
+    GstFormat * format, GstSeekFlags * flags, GstSeekType * start_type,
+    gint64 * start, GstSeekType * stop_type, gint64 * stop)
 {
   const GstStructure *structure;
 
@@ -882,11 +882,11 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate,
     *format = g_value_get_enum (gst_structure_get_value (structure, "format"));
   if (flags)
     *flags = g_value_get_flags (gst_structure_get_value (structure, "flags"));
-  if (cur_type)
-    *cur_type =
+  if (start_type)
+    *start_type =
         g_value_get_enum (gst_structure_get_value (structure, "cur_type"));
-  if (cur)
-    *cur = g_value_get_int64 (gst_structure_get_value (structure, "cur"));
+  if (start)
+    *start = g_value_get_int64 (gst_structure_get_value (structure, "cur"));
   if (stop_type)
     *stop_type =
         g_value_get_enum (gst_structure_get_value (structure, "stop_type"));

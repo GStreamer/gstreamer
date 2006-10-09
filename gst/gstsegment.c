@@ -312,7 +312,7 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
       update_stop = FALSE;
       break;
     case GST_SEEK_TYPE_SET:
-      /* stop folds required value */
+      /* stop holds required value */
       break;
     case GST_SEEK_TYPE_CUR:
       if (segment->stop != -1)
@@ -353,7 +353,7 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
   if (update_stop && rate < 0.0) {
     segment->last_stop = stop;
   }
-  segment->time = segment->last_stop;
+  segment->time = start;
   segment->stop = stop;
 
   if (update)

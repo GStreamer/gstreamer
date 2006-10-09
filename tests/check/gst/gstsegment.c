@@ -395,6 +395,7 @@ GST_START_TEST (segment_seek_reverse)
       GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, 100, &update);
   fail_unless (segment.start == 0);
   fail_unless (segment.stop == 100);
+  fail_unless (segment.time == 0);
   fail_unless (segment.last_stop == 100);
 
   /* update */
@@ -404,6 +405,7 @@ GST_START_TEST (segment_seek_reverse)
       GST_SEEK_TYPE_SET, 10, GST_SEEK_TYPE_CUR, -20, &update);
   fail_unless (segment.start == 10);
   fail_unless (segment.stop == 80);
+  fail_unless (segment.time == 10);
   fail_unless (segment.last_stop == 80);
 
   gst_segment_set_seek (&segment, -1.0,
@@ -412,6 +414,7 @@ GST_START_TEST (segment_seek_reverse)
       GST_SEEK_TYPE_SET, 20, GST_SEEK_TYPE_NONE, 0, &update);
   fail_unless (segment.start == 20);
   fail_unless (segment.stop == 80);
+  fail_unless (segment.time == 20);
   fail_unless (segment.last_stop == 80);
 }
 

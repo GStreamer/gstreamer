@@ -1,5 +1,24 @@
 2006-10-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstevent.c: (gst_event_new_seek), (gst_event_parse_seek):
+	Rename some more @cur to @start to fix docs. 
+
+	* gst/gstsegment.c: (gst_segment_set_seek):
+	Fix typo.
+	time and start must always stay in sync as defined in design doc.
+
+	* gst/gsttaglist.c: (gst_tag_list_is_empty):
+	Rename param to fix docs.
+
+	* tests/check/gst/gstsegment.c: (GST_START_TEST):
+	Check that start and time are in sync.
+
+	* tests/check/pipelines/parse-launch.c:
+	(gst_parse_test_element_change_state):
+	Activate pad before adding to the element.
+
+2006-10-09  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-qos.txt:
 	Fix typo.
 
