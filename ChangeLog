@@ -1,3 +1,10 @@
+2006-10-09  Edgard Lima <edgard.lima@indt.org.br>
+
+	Patch by: Renato Filho <renato.filho@indt.org.br>
+	
+	* gst/typefind/gsttypefindfunctions.c:
+	Added typefind functions to video/x-nuv media.
+	
 2006-10-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/interfaces/xoverlay.c:

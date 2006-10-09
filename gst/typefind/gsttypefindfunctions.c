@@ -2238,6 +2238,29 @@ au_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+
+/*** video/x-nuv ***/
+
+/* NOTE: we cannot replace this function with TYPE_FIND_REGISTER_START_WITH,
+ * as it is only possible to register one typefind factory per 'name'
+ * (which is in this case the caps), and the first one would be replaced by
+ * the second one. */
+static GstStaticCaps nuv_caps = GST_STATIC_CAPS ("video/x-nuv");
+
+#define NUV_CAPS (gst_static_caps_get(&nuv_caps))
+static void
+nuv_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 11);
+
+  if (data) {
+    if (memcmp (data, "MythTVVideo", 11) == 0
+        || memcmp (data, "NuppelVideo", 11) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, NUV_CAPS);
+    }
+  }
+}
+
 /*** audio/x-paris ***/
 /* NOTE: do not replace this function with two TYPE_FIND_REGISTER_START_WITH */
 static GstStaticCaps paris_caps = GST_STATIC_CAPS ("audio/x-paris");
@@ -2372,6 +2395,8 @@ G_BEGIN_DECLS{                                                          \
   }                                                                     \
 }G_END_DECLS
 
+
+
 /*** plugin initialization ***/
 
 #define TYPE_FIND_REGISTER(plugin,name,rank,func,ext,caps,priv,notify) \
@@ -2463,6 +2488,7 @@ plugin_init (GstPlugin * plugin)
   };
   static gchar *flv_exts[] = { "flv", NULL };
   static gchar *m4v_exts[] = { "m4v", NULL };
+  static gchar *nuv_exts[] = { "nuv", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
@@ -2516,6 +2542,8 @@ plugin_init (GstPlugin * plugin)
       NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg4", GST_RANK_PRIMARY,
       mpeg4_video_type_find, m4v_exts, MPEG_VIDEO_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/x-nuv", GST_RANK_SECONDARY,
+      nuv_type_find, nuv_exts, NUV_CAPS, NULL, NULL);
 
   /* ISO formats */
   TYPE_FIND_REGISTER (plugin, "audio/x-m4a", GST_RANK_PRIMARY, m4a_type_find,
