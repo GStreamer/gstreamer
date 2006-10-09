@@ -135,6 +135,7 @@ gboolean               gst_tag_is_fixed        (const gchar * tag);
 GstTagList * gst_tag_list_new               (void);
 gboolean     gst_is_tag_list                (gconstpointer p);
 GstTagList * gst_tag_list_copy              (const GstTagList * list);
+gboolean     gst_tag_list_is_empty          (const GstTagList * list);
 void         gst_tag_list_insert            (GstTagList       * into,
                                              const GstTagList * from,
                                              GstTagMergeMode    mode);

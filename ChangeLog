@@ -1,3 +1,13 @@
+2006-10-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsttaglist.c: (gst_tag_list_is_empty):
+	* gst/gsttaglist.h:
+	* docs/gst/gstreamer-sections.txt:
+	  API: add gst_tag_list_is_empty() (#360467).
+
+	* tests/check/gst/gsttag.c: (GST_START_TEST):
+	  And a test case.
+
 2006-10-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/gstmessage.h:

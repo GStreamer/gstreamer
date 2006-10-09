@@ -1831,6 +1831,7 @@ gst_tag_get_flag
 gst_tag_is_fixed
 gst_tag_list_new
 gst_is_tag_list
+gst_tag_list_is_empty
 gst_tag_list_copy
 gst_tag_list_insert
 gst_tag_list_merge

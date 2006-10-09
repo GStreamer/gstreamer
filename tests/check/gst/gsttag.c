@@ -229,6 +229,14 @@ GST_START_TEST (test_type)
 
   /* this however should be fine */
   fail_if (GST_IS_TAG_LIST (NULL));
+
+  /* check gst_tag_list_is_empty */
+  ASSERT_CRITICAL (gst_tag_list_is_empty (NULL));
+  taglist = gst_tag_list_new ();
+  fail_unless (gst_tag_list_is_empty (taglist));
+  gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, "JD", NULL);
+  fail_if (gst_tag_list_is_empty (taglist));
+  gst_tag_list_free (taglist);
 }
 
 GST_END_TEST;

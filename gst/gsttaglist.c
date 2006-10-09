@@ -469,6 +469,25 @@ gst_tag_list_new (void)
 }
 
 /**
+ * gst_tag_list_is_empty:
+ * @taglist: A #GstTagList.
+ *
+ * Checks if the given taglist is empty.
+ *
+ * Returns: TRUE if the taglist is empty, otherwise FALSE.
+ *
+ * Since: 0.10.11
+ */
+gboolean
+gst_tag_list_is_empty (const GstTagList * taglist)
+{
+  g_return_val_if_fail (taglist != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_TAG_LIST (taglist), FALSE);
+
+  return (gst_structure_n_fields ((GstStructure *) taglist) == 0);
+}
+
+/**
  * gst_is_tag_list:
  * @p: Object that might be a taglist
  *
