@@ -1425,7 +1425,9 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "mpeg") ||
         !strcmp (in_plugin->name, "wav") ||
         !strcmp (in_plugin->name, "au") ||
-        !strcmp (in_plugin->name, "tta") || !strcmp (in_plugin->name, "rm"))
+        !strcmp (in_plugin->name, "tta") ||
+	!strcmp (in_plugin->name, "rm") ||
+	!strcmp (in_plugin->name, "amr"))
       register_typefind_func = FALSE;
 
     /* Set the rank of demuxers know to work to MARGINAL.
