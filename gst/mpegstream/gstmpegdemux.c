@@ -341,9 +341,11 @@ gst_mpeg_demux_get_video_stream (GstMPEGDemux * mpeg_demux,
           CORE, NEGOTIATION, (NULL), ("failed to set caps"));
       gst_caps_unref (str->caps);
       str->caps = NULL;
+      gst_pad_set_active (str->pad, TRUE);
       gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
       return str;
     }
+    gst_pad_set_active (str->pad, TRUE);
     gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
 
     /* Store the current values. */
@@ -409,9 +411,11 @@ gst_mpeg_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
           CORE, NEGOTIATION, (NULL), ("failed to set caps"));
       gst_caps_unref (str->caps);
       str->caps = NULL;
+      gst_pad_set_active (str->pad, TRUE);
       gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
       return str;
     }
+    gst_pad_set_active (str->pad, TRUE);
     gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
 
     /* stream metadata */
@@ -441,6 +445,7 @@ gst_mpeg_demux_get_private_stream (GstMPEGDemux * mpeg_demux,
     CLASS (mpeg_demux)->init_stream (mpeg_demux, type, str, stream_nr, name,
         CLASS (mpeg_demux)->private_template);
     g_free (name);
+    gst_pad_set_active (str->pad, TRUE);
     gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
 
     mpeg_demux->private_stream[stream_nr] = str;

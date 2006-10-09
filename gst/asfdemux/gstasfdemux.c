@@ -152,7 +152,12 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment (event, NULL, NULL, &newsegment_format,
           &newsegment_start, NULL, NULL);
 
-      g_assert (newsegment_format == GST_FORMAT_BYTES);
+      if (newsegment_format != GST_FORMAT_BYTES) {
+        GST_WARNING_OBJECT (demux, "newsegment format not BYTES, ignoring");
+        gst_event_unref (event);
+        break;
+      }
+
       g_assert (newsegment_start >= 0);
 
       GST_OBJECT_LOCK (demux);
@@ -869,6 +874,7 @@ gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
 
   ++demux->num_streams;
 
+  gst_pad_set_active (src_pad, TRUE);
   gst_element_add_pad (GST_ELEMENT (demux), src_pad);
 }
 
@@ -2387,7 +2393,7 @@ gst_asf_demux_process_segment (GstASFDemux * demux,
 
     time_start = segment_info.frag_offset;
     segment_info.frag_offset = 0;
-    segment_info.frag_timestamp = time_start;
+    segment_info.frag_timestamp = time_start;   /* was: demux->timestamp */
   }
 
   GST_DEBUG ("multiple = %u, compressed = %u",

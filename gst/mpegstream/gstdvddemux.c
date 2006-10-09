@@ -654,6 +654,7 @@ gst_dvd_demux_get_audio_stream (GstMPEGDemux * mpeg_demux,
       GST_DEBUG_OBJECT (mpeg_demux, "adding pad %s with language = %s",
           GST_PAD_NAME (str->pad), (lang_code) ? lang_code : "(unknown)");
 
+      gst_pad_set_active (str->pad, TRUE);
       gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
 
       if (codec || lang_code) {
@@ -735,6 +736,7 @@ gst_dvd_demux_get_subpicture_stream (GstMPEGDemux * mpeg_demux,
     }
 
     if (add_pad) {
+      gst_pad_set_active (str->pad, TRUE);
       gst_element_add_pad (GST_ELEMENT (mpeg_demux), str->pad);
 
       if (dvd_demux->langcodes) {

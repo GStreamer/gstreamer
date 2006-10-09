@@ -1,3 +1,15 @@
+2006-10-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_sink_event),
+	(gst_asf_demux_setup_pad), (gst_asf_demux_process_segment):
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_get_audio_stream),
+	(gst_dvd_demux_get_subpicture_stream):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_get_video_stream),
+	(gst_mpeg_demux_get_audio_stream),
+	(gst_mpeg_demux_get_private_stream):
+	  Active pads before adding them to the running element. Don't assert
+	  on non-BYTE format newsegment events in asfdemux.
+
 2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_goto_title),
