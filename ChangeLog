@@ -1,5 +1,17 @@
 2006-10-09  Edward Hervey  <edward@fluendo.com>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps),
+	(gst_ffmpeg_formatid_get_codecids):
+	Added proper mime types for mxf and gxf formats.
+	Added known configuration for asf muxer. Implies allowing the ffmpeg asf
+	muxer to take WMV and WMA.
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_chain):
+	Most demuxers/formats don't give keyframe information on encoded
+	audio streams. We therefore don't discard them, and use the clipping
+	functionnality to drop the decoded buffers we didn't need.
+
+2006-10-09  Edward Hervey  <edward@fluendo.com>
+
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
 	Set the rank of all demuxers for which we:
 	_ Have no alternate demuxer,

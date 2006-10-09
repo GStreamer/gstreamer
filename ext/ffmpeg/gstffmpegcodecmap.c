@@ -1620,6 +1620,10 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_from_string ("image/gif");
   } else if (!strcmp (format_name, "ogg")) {
     caps = gst_caps_from_string ("application/ogg");
+  } else if (!strcmp (format_name, "mxf")) {
+    caps = gst_caps_from_string ("application/mxf");
+  } else if (!strcmp (format_name, "gxf")) {
+    caps = gst_caps_from_string ("application/gxf");
   } else if (!strcmp (format_name, "yuv4mpegpipe")) {
     caps = gst_caps_new_simple ("application/x-yuv4mpeg",
 				"y4mversion", G_TYPE_INT, 1,
@@ -1687,6 +1691,12 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
 
     *video_codec_list = flv_video_list;
     *audio_codec_list = flv_audio_list;
+  } else if (!strcmp (format_name, "asf")) {
+    static enum CodecID asf_video_list[] = { CODEC_ID_WMV1, CODEC_ID_WMV2, CODEC_ID_NONE };
+    static enum CodecID asf_audio_list[] = { CODEC_ID_WMAV1, CODEC_ID_WMAV2, CODEC_ID_NONE };
+
+    *video_codec_list = asf_video_list;
+    *audio_codec_list = asf_audio_list;    
   } else {
     GST_LOG ("Format %s not found", format_name);
     return FALSE;

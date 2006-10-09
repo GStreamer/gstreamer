@@ -1791,10 +1791,13 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
     ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
   }
 
+  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
   /* do early keyframe check pretty bad to rely on the keyframe flag in the
    * source for this as it might not even be parsed (UDP/file/..).  */
   if (G_UNLIKELY (ffmpegdec->waiting_for_key)) {
-    if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DELTA_UNIT))
+    if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_DELTA_UNIT) &&
+	oclass->in_plugin->type != CODEC_TYPE_AUDIO)
       goto skip_keyframe;
 
     GST_DEBUG_OBJECT (ffmpegdec, "got keyframe");
@@ -1807,8 +1810,6 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %d, ts:%" GST_TIME_FORMAT ", dur:%"GST_TIME_FORMAT, 
       GST_BUFFER_SIZE (inbuf), GST_TIME_ARGS (pending_timestamp), GST_TIME_ARGS (pending_duration)); 
-
-  oclass = (GstFFMpegDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   /* parse cache joining. If there is cached data, its timestamp will be what we
    * send to the parse. */
