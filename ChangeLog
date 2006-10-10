@@ -1,3 +1,12 @@
+2006-10-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (extract_initial_length_and_fourcc),
+	(gst_qtdemux_loop_state_header):
+	  Printf format fixes.
+
+	* sys/dvb/gstdvbsrc.c:
+	  Use "_stdint.h".
+
 2006-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/Makefile.am:

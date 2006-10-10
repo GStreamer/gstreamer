@@ -32,7 +32,7 @@
 #include <error.h>
 #include <errno.h>
 #include <string.h>
-#include <stdint.h>
+#include "_stdint.h"
 
 #define _XOPEN_SOURCE 500
 #include <unistd.h>
