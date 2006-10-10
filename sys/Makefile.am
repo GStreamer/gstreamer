@@ -28,6 +28,12 @@ else
 GL_DIR=
 endif
 
-SUBDIRS = $(GL_DIR)
+if USE_DVB
+DVB_DIR=dvb
+else
+DVB_DIR=
+endif
+
+SUBDIRS = $(GL_DIR) $(DVB_DIR)
 
 DIST_SUBDIRS = glsink dvb

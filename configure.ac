@@ -701,6 +701,13 @@ GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
   AC_SUBST(WAVPACK_LIBS)
 ])
 
+dnl *** dvb ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_DVB, true)
+GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
+  AC_MSG_CHECKING([Checking for up to date dvb installation])
+  AC_CHECK_HEADER(linux/dvb/frontend.h, [HAVE_DVB="yes"], [HAVE_DVB="no"])
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -729,6 +736,7 @@ AM_CONDITIONAL(USE_SWFDEC, false)
 AM_CONDITIONAL(USE_THEORADEC, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_WAVPACK, false)
+AM_CONDITIONAL(USE_DVB, false)
 
 fi dnl of EXT plugins
 

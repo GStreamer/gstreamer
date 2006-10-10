@@ -1,4 +1,10 @@
 2006-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	Add dvb detection and allow dvbsrc to be built.
+
+2006-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 	
 	* configure.ac:
 	* sys/Makefile.am:
