@@ -185,7 +185,7 @@ uri_type_find (GstTypeFind * tf, gpointer unused)
 
 /*** application/xml **********************************************************/
 
-#define XML_BUFFER_SIZE 256
+#define XML_BUFFER_SIZE 16
 #define XML_INC_BUFFER {                                                \
   pos++;                                                                \
   if (pos == XML_BUFFER_SIZE) {                                         \

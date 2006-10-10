@@ -1,3 +1,11 @@
+2006-10-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Ferenc Gerlits  <fgerlits at gmail com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  Recognise XML files and XML-like files shorter than 256 bytes as
+	  well (fixes #359237).
+
 2006-10-09  Edgard Lima <edgard.lima@indt.org.br>
 
 	Patch by: Renato Filho <renato.filho@indt.org.br>
