@@ -805,6 +805,22 @@ gst_riff_create_audio_caps (guint16 codec_id,
         *codec_name = g_strdup ("A-law audio");
       break;
 
+    case GST_RIFF_WAVE_FORMAT_WMS:
+      caps = gst_caps_new_simple ("audio/x-wms", NULL);
+      if (strf != NULL) {
+        gst_caps_set_simple (caps,
+            "bitrate", G_TYPE_INT, strf->av_bps * 8,
+            "width", G_TYPE_INT, strf->size,
+            "depth", G_TYPE_INT, strf->size, NULL);
+      } else {
+        gst_caps_set_simple (caps,
+            "bitrate", GST_TYPE_INT_RANGE, 0, G_MAXINT, NULL);
+      }
+      if (codec_name)
+        *codec_name = g_strdup ("Windows Media Audio Speech");
+      block_align = TRUE;
+      break;
+
     case GST_RIFF_WAVE_FORMAT_MULAW:
       if (strf != NULL) {
         if (strf->size != 8) {
@@ -1173,6 +1189,7 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_AAC,
     GST_RIFF_WAVE_FORMAT_ALAW,
     GST_RIFF_WAVE_FORMAT_MULAW,
+    GST_RIFF_WAVE_FORMAT_WMS,
     GST_RIFF_WAVE_FORMAT_ADPCM,
     GST_RIFF_WAVE_FORMAT_DVI_ADPCM,
     GST_RIFF_WAVE_FORMAT_WMAV1,

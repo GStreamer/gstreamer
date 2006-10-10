@@ -280,6 +280,7 @@ typedef struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_WAVE_FORMAT_IBM_CVSD       (0x0005)
 #define GST_RIFF_WAVE_FORMAT_ALAW           (0x0006)
 #define GST_RIFF_WAVE_FORMAT_MULAW          (0x0007)
+#define GST_RIFF_WAVE_FORMAT_WMS            (0x000a) /* WMS Windows Media Audio Speech */
 #define GST_RIFF_WAVE_FORMAT_OKI_ADPCM      (0x0010)
 #define GST_RIFF_WAVE_FORMAT_DVI_ADPCM      (0x0011)
 #define GST_RIFF_WAVE_FORMAT_DIGISTD        (0x0015)
