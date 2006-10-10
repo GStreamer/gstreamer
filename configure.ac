@@ -799,6 +799,7 @@ gst-libs/Makefile
 gst-libs/gst/Makefile
 sys/Makefile
 sys/glsink/Makefile
+sys/dvb/Makefile
 examples/Makefile
 examples/directfb/Makefile
 ext/amrwb/amrwb-code/Makefile

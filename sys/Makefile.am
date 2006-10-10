@@ -30,4 +30,4 @@ endif
 
 SUBDIRS = $(GL_DIR)
 
-DIST_SUBDIRS = glsink
+DIST_SUBDIRS = glsink dvb

@@ -1,0 +1,19 @@
+Gstreamer DVB Source
+
+GstDvbSrc makes it possible to view Digital TV with gstreamer.
+
+
+Try:
+
+     gst-launch dvbsrc freq=11954 pol=h srate=27500 pids=210:220
+           ! flutsdemux es-pids=210:220 name=demux !  queue ! mpeg2dec ! 
+	     xvimagesink }
+           demux. ! queue ! mad ! osssink
+
+
+
+to view the German 3Sat telestation from the Astra 1 19.2E satellite.
+
+DVB-C is untested, feedback is welcomed.
+
+gstdvbtv is not yet ported to 0.10

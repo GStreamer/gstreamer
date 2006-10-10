@@ -1,3 +1,24 @@
+2006-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+	
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/dvb/AUTHORS:
+	* sys/dvb/Makefile.am:
+	* sys/dvb/README:
+	* sys/dvb/dvb-api/Makefile.am:
+	* sys/dvb/dvb-api/audio.h:
+	* sys/dvb/dvb-api/ca.h:
+	* sys/dvb/dvb-api/dmx.h:
+	* sys/dvb/dvb-api/frontend.h:
+	* sys/dvb/dvb-api/net.h:
+	* sys/dvb/dvb-api/osd.h:
+	* sys/dvb/dvb-api/version.h:
+	* sys/dvb/dvb-api/video.h:
+	* sys/dvb/gstdvbsrc.c: 
+	* sys/dvb/gstdvbsrc.h:
+	Initial import of dvbsrc.
+	Currently won't be built.
+
 2006-10-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_init),
