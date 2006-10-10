@@ -1050,7 +1050,7 @@ extract_initial_length_and_fourcc (guint8 * data, guint64 * plength,
   guint32 fourcc;
 
   length = GST_READ_UINT32_BE (data);
-  GST_DEBUG ("length %08x", length);
+  GST_DEBUG ("length %08" G_GINT64_MODIFIER "x", length);
   fourcc = GST_READ_UINT32_LE (data + 4);
   GST_DEBUG ("atom type %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
 
@@ -1103,8 +1103,8 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
         goto beach;
       if (length != GST_BUFFER_SIZE (moov)) {
         GST_WARNING_OBJECT (qtdemux,
-            "We got less than expected (received %d, wanted %d)",
-            GST_BUFFER_SIZE (moov), length);
+            "We got less than expected (received %u, wanted %u)",
+            GST_BUFFER_SIZE (moov), (guint) length);
         ret = GST_FLOW_ERROR;
         goto beach;
       }
