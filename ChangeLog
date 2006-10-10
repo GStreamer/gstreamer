@@ -1,5 +1,14 @@
 2006-10-10  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Sebastien Cote <sebas642 at yahoo dot ca>
+
+	* gst/gstpad.c: (gst_pad_get_caps_unlocked),
+	(gst_pad_save_thyself):
+	Update some docs.
+	Write pad direction in XML output. Fixes #345496.
+
+2006-10-10  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: René Stadler <mail at renestadler dot de>
 
 	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist),

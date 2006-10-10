@@ -1027,7 +1027,7 @@ gst_pad_set_blocked (GstPad * pad, gboolean blocked)
  *
  * Checks if the pad is blocked or not. This function returns the
  * last requested state of the pad. It is not certain that the pad
- * is actually blocked at this point.
+ * is actually blocking at this point (see gst_pad_is_blocking()).
  *
  * Returns: TRUE if the pad is blocked.
  *
@@ -1946,8 +1946,8 @@ gst_pad_get_caps_unlocked (GstPad * pad)
               " which are not a real subset of its template caps %"
               GST_PTR_FORMAT, result, templ_caps);
           g_warning
-              ("pad %s:%s returned caps that are not a real subset of its template caps",
-              GST_DEBUG_PAD_NAME (pad));
+              ("pad %s:%s returned caps which are not a real "
+              "subset of its template caps", GST_DEBUG_PAD_NAME (pad));
           temp = gst_caps_intersect (templ_caps, result);
           gst_caps_unref (result);
           result = temp;
@@ -3124,6 +3124,15 @@ gst_pad_save_thyself (GstObject * object, xmlNodePtr parent)
 
   xmlNewChild (parent, NULL, (xmlChar *) "name",
       (xmlChar *) GST_PAD_NAME (pad));
+
+  if (GST_PAD_IS_SRC (pad)) {
+    xmlNewChild (parent, NULL, (xmlChar *) "direction", (xmlChar *) "source");
+  } else if (GST_PAD_IS_SINK (pad)) {
+    xmlNewChild (parent, NULL, (xmlChar *) "direction", (xmlChar *) "sink");
+  } else {
+    xmlNewChild (parent, NULL, (xmlChar *) "direction", (xmlChar *) "unknown");
+  }
+
   if (GST_PAD_PEER (pad) != NULL) {
     gchar *content;
 
