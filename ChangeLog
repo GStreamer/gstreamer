@@ -1,3 +1,9 @@
+2006-10-10  Julien MOUTTE  <julien@moutte.net>
+
+	* tests/examples/seek/seek.c: (do_seek),
+	(rate_spinbutton_changed_cb): When changing spinbutton we try
+	to change the rate on the fly.
+
 2006-10-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/riff/riff-ids.h:

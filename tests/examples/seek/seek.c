@@ -1071,8 +1071,13 @@ do_seek (GtkWidget * widget)
   if (loop_seek)
     flags |= GST_SEEK_FLAG_SEGMENT;
 
-  s_event = gst_event_new_seek (rate,
-      GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
+  if (rate >= 0) {
+    s_event = gst_event_new_seek (rate,
+        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
+  } else {
+    s_event = gst_event_new_seek (rate,
+        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, real);
+  }
 
   GST_DEBUG ("seek to %" GST_TIME_FORMAT, GST_TIME_ARGS (real));
 
@@ -1281,7 +1286,30 @@ play_scrub_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 static void
 rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
 {
+  gboolean res = FALSE;
+  GstEvent *s_event;
+  GstSeekFlags flags;
+
   rate = gtk_spin_button_get_value (button);
+
+  flags = 0;
+  if (flush_seek)
+    flags |= GST_SEEK_FLAG_FLUSH;
+  if (loop_seek)
+    flags |= GST_SEEK_FLAG_SEGMENT;
+
+  s_event = gst_event_new_seek (rate,
+      GST_FORMAT_TIME, flags, GST_SEEK_TYPE_NONE, 0, GST_SEEK_TYPE_NONE, 0);
+
+  res = send_event (s_event);
+
+  if (res) {
+    if (flush_seek) {
+      gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
+      gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, SEEK_TIMEOUT);
+    }
+  } else
+    g_print ("seek failed\n");
 }
 static void
 segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
