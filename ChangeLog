@@ -1,5 +1,18 @@
 2006-10-10  Wim Taymans  <wim@fluendo.com>
 
+	* gst/realmedia/rdtdepay.c: (gst_rdt_depay_base_init),
+	(gst_rdt_depay_init), (gst_rdt_depay_setcaps),
+	(gst_rdt_depay_chain), (gst_rdt_depay_change_state):
+	Change caps to x-rdt, because it's not x-rtp.
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream),
+	(gst_rmdemux_parse_mdpr), (gst_rmdemux_parse_packet),
+	(gst_rmdemux_plugin_init):
+	Activate pad before adding to the element.
+	Return the combined stream return values after pad_alloc.
+
+2006-10-10  Wim Taymans  <wim@fluendo.com>
+
 	* ext/mpeg2dec/gstmpeg2dec.c: (handle_slice):
 	* ext/mpeg2dec/gstmpeg2dec.h:
 	Add some debugging to timestamp handling.

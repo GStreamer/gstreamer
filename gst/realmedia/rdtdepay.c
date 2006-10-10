@@ -58,7 +58,7 @@ static GstStaticPadTemplate gst_rdt_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp, "
+    GST_STATIC_CAPS ("application/x-rdt, "
         "media = (string) \"application\", "
         "clock-rate = (int) [1, MAX ], "
         "encoding-name = (string) \"x-real-rdt\""

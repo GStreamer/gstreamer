@@ -1411,7 +1411,8 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
     GST_DEBUG_OBJECT (rmdemux, "adding pad %s with caps %" GST_PTR_FORMAT
         ", stream_id=%d", GST_PAD_NAME (stream->pad), stream_caps, stream->id);
-    gst_element_add_pad (GST_ELEMENT (rmdemux), stream->pad);
+    gst_pad_set_active (stream->pad, TRUE);
+    gst_element_add_pad (GST_ELEMENT_CAST (rmdemux), stream->pad);
 
     gst_pad_push_event (stream->pad,
         gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, (gint64) 0,
@@ -1955,7 +1956,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
 
   cret = gst_rmdemux_combine_flows (rmdemux, stream, ret);
   if (ret != GST_FLOW_OK)
-    goto beach;
+    goto alloc_failed;
 
   memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, packet_size);
   GST_BUFFER_TIMESTAMP (buffer) = timestamp;
@@ -1980,6 +1981,11 @@ unknown_stream:
     GST_WARNING_OBJECT (rmdemux, "No stream for stream id %d in parsing "
         "data packet", id);
     return GST_FLOW_OK;
+  }
+alloc_failed:
+  {
+    GST_DEBUG_OBJECT (rmdemux, "pad alloc returned %d", ret);
+    return cret;
   }
 }
 
