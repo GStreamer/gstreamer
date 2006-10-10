@@ -1,3 +1,12 @@
+2006-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	Patch by: Josep Torre Valles <josep@fluendo.com>
+
+	* gst/Makefile.am:
+	Cast values when making gstenumtypes.h.  This pacifies Forte
+	so it doesn't warn about the ~0 as GST_MESSAGE_ANY not fitting
+	in the enumeration.
+
 2006-10-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstevent.c: (gst_event_new_seek), (gst_event_parse_seek):

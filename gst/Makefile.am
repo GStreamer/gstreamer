@@ -233,10 +233,10 @@ gstenumtypes.h: $(gst_headers)
 
 gstenumtypes.c: $(gst_headers)
 	glib-mkenums \
-	--fhead "#include \"gst_private.h\"\n#include <gst/gst.h>" \
+	--fhead "#include \"gst_private.h\"\n#include <gst/gst.h>\n#define C_ENUM(v) ((gint) v)\n#define C_FLAGS(v) ((guint) v)\n " \
 	--fprod "\n/* enumerations from \"@filename@\" */" \
 	--vhead "static void\nregister_@enum_name@ (GType* id)\n{\n  static const G@Type@Value values[] = {"     \
-	--vprod "    { @VALUENAME@, \"@VALUENAME@\", \"@valuenick@\" }," \
+	--vprod "    { C_@TYPE@(@VALUENAME@), \"@VALUENAME@\", \"@valuenick@\" }," \
 	--vtail "    { 0, NULL, NULL }\n  };\n  *id = g_@type@_register_static (\"@EnumName@\", values);\n}\nGType\n@enum_name@_get_type (void)\n{\n  static GType id;\n  static GOnce once = G_ONCE_INIT;\n\n  g_once (&once, (GThreadFunc)register_@enum_name@, &id);\n  return id;\n}\n" \
 	$^ > gstenumtypes.c
 
