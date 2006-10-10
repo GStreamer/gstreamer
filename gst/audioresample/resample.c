@@ -114,7 +114,7 @@ resample_add_input_data (ResampleState * r, void *data, int size,
 
   buffer = audioresample_buffer_new_with_data (data, size);
   buffer->free = resample_buffer_free;
-  buffer->priv2 = free_func;
+  buffer->priv2 = (void *) free_func;
   buffer->priv = closure;
 
   audioresample_buffer_queue_push (r->queue, buffer);
