@@ -774,12 +774,19 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   time = GST_CLOCK_TIME_NONE;
 
 #if MPEG2_RELEASE < MPEG2_VERSION(0,4,0)
-  if (picture->flags & PIC_FLAG_PTS)
+  if (picture->flags & PIC_FLAG_PTS) {
     time = MPEG_TIME_TO_GST_TIME (picture->pts);
+    GST_DEBUG_OBJECT (mpeg2dec, "picture pts %" G_GUINT64_FORMAT
+        ", time %" GST_TIME_FORMAT, picture->pts, GST_TIME_ARGS (time));
+  }
 #else
-  if (picture->flags & PIC_FLAG_TAGS)
-    time = MPEG_TIME_TO_GST_TIME ((GstClockTime) (picture->
-            tag2) << 32 | picture->tag);
+  if (picture->flags & PIC_FLAG_TAGS) {
+    guint64 pts = (((guint64) picture->tag2) << 32) | picture->tag;
+
+    time = MPEG_TIME_TO_GST_TIME (pts);
+    GST_DEBUG_OBJECT (mpeg2dec, "picture tags %" G_GUINT64_FORMAT
+        ", time %" GST_TIME_FORMAT, pts, GST_TIME_ARGS (time));
+  }
 #endif
 
   if (time == GST_CLOCK_TIME_NONE) {
