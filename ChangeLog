@@ -1,5 +1,24 @@
 2006-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* sys/dvb/Makefile.am:
+	* sys/dvb/dvb-api/Makefile.am:
+	* sys/dvb/dvb-api/audio.h:
+	* sys/dvb/dvb-api/ca.h:
+	* sys/dvb/dvb-api/dmx.h:
+	* sys/dvb/dvb-api/frontend.h:
+	* sys/dvb/dvb-api/net.h:
+	* sys/dvb/dvb-api/osd.h:
+	* sys/dvb/dvb-api/version.h:
+	* sys/dvb/dvb-api/video.h:
+	Remove these files, not needed use system files.
+	* sys/dvb/gstdvbsrc.c: (gst_dvbsrc_set_property),
+	(gst_dvbsrc_create), (gst_dvbsrc_output_frontend_stats),
+	(gst_dvbsrc_tune):
+	Fix warnings, uint16_t etc. is in stdint.h.
+	Use system includes not our local ones.
+
+2006-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* configure.ac:
 	* sys/Makefile.am:
 	Add dvb detection and allow dvbsrc to be built.

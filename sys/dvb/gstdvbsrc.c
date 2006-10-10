@@ -32,12 +32,13 @@
 #include <error.h>
 #include <errno.h>
 #include <string.h>
+#include <stdint.h>
 
 #define _XOPEN_SOURCE 500
 #include <unistd.h>
 
-#include "dvb-api/frontend.h"
-#include "dvb-api/dmx.h"
+#include <linux/dvb/frontend.h>
+#include <linux/dvb/dmx.h>
 
 GST_DEBUG_CATEGORY_STATIC (gstdvbsrc_debug);
 #define GST_CAT_DEFAULT (gstdvbsrc_debug)
@@ -104,6 +105,8 @@ enum
   ARG_DVBSRC_TUNE,
   ARG_DVBSRC_INVERSION
 };
+
+static void gst_dvbsrc_output_frontend_stats (GstDvbSrc * src);
 
 #define GST_TYPE_DVBSRC_CODE_RATE (gst_dvbsrc_code_rate_get_type ())
 static GType
@@ -855,9 +858,6 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
 
       /* Every now and then signal signal quality */
       if (quality_signal_rate == 100) {
-        guint16 strength = 0;
-        guint16 snr = 0;
-
         gst_dvbsrc_output_frontend_stats (object);
         quality_signal_rate = 0;
       } else {
