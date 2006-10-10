@@ -1,5 +1,15 @@
 2006-10-10  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: René Stadler <mail at renestadler dot de>
+
+	* libs/gst/controller/gstcontroller.c: (gst_controller_new_valist),
+	(gst_controller_new_list), (_gst_controller_dispose),
+	(_gst_controller_finalize), (_gst_controller_class_init):
+	Take ref to controlled object so that it cannot disappear. 
+	Fixes #357432.
+
+2006-10-10  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/check/gstcheck.c: (gst_check_setup_src_pad),
 	(gst_check_teardown_src_pad), (gst_check_setup_sink_pad),
 	(gst_check_teardown_sink_pad):

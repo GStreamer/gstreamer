@@ -483,7 +483,7 @@ gst_controller_new_valist (GObject * object, va_list var_args)
         /* if we don't have a controller object yet, now is the time to create one */
         if (!self) {
           self = g_object_new (GST_TYPE_CONTROLLER, NULL);
-          self->object = object;
+          self->object = g_object_ref (object);
           /* store the controller */
           g_object_set_qdata (object, __gst_controller_key, self);
           ref_existing = FALSE;
@@ -545,7 +545,7 @@ gst_controller_new_list (GObject * object, GList * list)
         /* if we don't have a controller object yet, now is the time to create one */
         if (!self) {
           self = g_object_new (GST_TYPE_CONTROLLER, NULL);
-          self->object = object;
+          self->object = g_object_ref (object);
           /* store the controller */
           g_object_set_qdata (object, __gst_controller_key, self);
         } else {
@@ -1186,25 +1186,43 @@ _gst_controller_set_property (GObject * object, guint property_id,
 }
 
 static void
+_gst_controller_dispose (GObject * object)
+{
+  GstController *self = GST_CONTROLLER (object);
+
+  if (self->object != NULL) {
+    g_mutex_lock (self->lock);
+    /* free list of properties */
+    if (self->properties) {
+      GList *node;
+
+      for (node = self->properties; node; node = g_list_next (node)) {
+        GstControlledProperty *prop = node->data;
+
+        g_signal_handler_disconnect (self->object, prop->notify_handler_id);
+        gst_controlled_property_free (prop);
+      }
+      g_list_free (self->properties);
+      self->properties = NULL;
+    }
+
+    /* remove controller from object's qdata list */
+    g_object_set_qdata (self->object, __gst_controller_key, NULL);
+    g_object_unref (self->object);
+    self->object = NULL;
+    g_mutex_unlock (self->lock);
+  }
+
+  if (G_OBJECT_CLASS (parent_class)->dispose)
+    (G_OBJECT_CLASS (parent_class)->dispose) (object);
+}
+
+static void
 _gst_controller_finalize (GObject * object)
 {
   GstController *self = GST_CONTROLLER (object);
-  GList *node;
-  GstControlledProperty *prop;
 
-  /* free list of properties */
-  if (self->properties) {
-    for (node = self->properties; node; node = g_list_next (node)) {
-      prop = node->data;
-      g_signal_handler_disconnect (self->object, prop->notify_handler_id);
-      gst_controlled_property_free (prop);
-    }
-    g_list_free (self->properties);
-    self->properties = NULL;
-  }
   g_mutex_free (self->lock);
-  /* remove controller from objects qdata list */
-  g_object_set_qdata (self->object, __gst_controller_key, NULL);
 
   if (G_OBJECT_CLASS (parent_class)->finalize)
     (G_OBJECT_CLASS (parent_class)->finalize) (object);
@@ -1231,6 +1249,7 @@ _gst_controller_class_init (GstControllerClass * klass)
 
   gobject_class->set_property = _gst_controller_set_property;
   gobject_class->get_property = _gst_controller_get_property;
+  gobject_class->dispose = _gst_controller_dispose;
   gobject_class->finalize = _gst_controller_finalize;
 
   __gst_controller_key = g_quark_from_string ("gst::controller");
