@@ -560,7 +560,7 @@ queue_deadlock_check (GstElement * queue, GstPlayBaseBin * play_base_bin)
 
     /* bytes limit is removed, we cannot deadlock anymore */
     g_signal_handlers_disconnect_by_func (queue,
-        G_CALLBACK (queue_deadlock_check), play_base_bin);
+        (gpointer) queue_deadlock_check, play_base_bin);
   } else {
     GST_DEBUG_OBJECT (play_base_bin, "no deadlock");
   }
@@ -598,7 +598,7 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
 
   /* we disconnect the signal so that we don't get called for every buffer. */
   g_signal_handlers_disconnect_by_func (queue,
-      G_CALLBACK (queue_threshold_reached), play_base_bin);
+      (gpointer) queue_threshold_reached, play_base_bin);
 
   /* now place the limits at the low threshold. When we hit this limit, the
    * underrun signal will be called. The underrun signal is always connected. */

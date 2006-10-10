@@ -249,7 +249,7 @@ gst_stream_info_dispose (GObject * object)
         GST_PAD_CAST (stream_info->object));
     if (parent != NULL) {
       g_signal_handlers_disconnect_by_func (parent,
-          G_CALLBACK (stream_info_change_state), stream_info);
+          (gpointer) stream_info_change_state, stream_info);
       gst_object_unref (parent);
     }
 

@@ -478,7 +478,7 @@ gst_video_rate_swap_prev (GstVideoRate * videorate, GstBuffer * buffer,
   videorate->prev_ts = time;
 }
 
-static GstFlowReturn
+static gboolean
 gst_video_rate_event (GstPad * pad, GstEvent * event)
 {
   GstVideoRate *videorate;

@@ -339,7 +339,7 @@ gst_gnome_vfs_src_finalize (GObject * object)
  * URI interface support.
  */
 
-static guint
+static GstURIType
 gst_gnome_vfs_src_uri_get_type (void)
 {
   return GST_URI_SRC;

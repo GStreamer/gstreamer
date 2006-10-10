@@ -1,3 +1,47 @@
+2006-10-10  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	Patch by: Josep Torre Valles <josep@fluendo.com>
+
+	* ext/gnomevfs/gstgnomevfssink.c:
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	Fix URI interface implementation return type.
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_set_property):
+	Fix what looks like a copy/paste issue when assigning values.
+	* gst-libs/gst/audio/gstaudiofiltertemplate.c:
+	(gst_audio_filter_template_get_type):
+	Cast to prevent Forte warnings.
+	* gst-libs/gst/cdda/gstcddabasesrc.c: (gst_cdda_base_src_create):
+	Fix URI interface implementation return type.
+	gst_pad_query_position requires a signed integer pointer as
+	3rd parameter, GstClockTime is unsigned.
+	* gst/audioconvert/audioconvert.c:
+	Fix integer overflow when treated as signed.
+	* gst/audioresample/resample.c: (resample_add_input_data):
+	Cast to prevent warnings on Forte.
+	* gst/ffmpegcolorspace/imgconvert.c: (build_rgb_palette):
+	Fix integer overflow when treated as signed.
+	* gst/ffmpegcolorspace/imgconvert_template.h:
+	Fix integer overflow when treated as signed. RGBA_OUT shifts bits.
+	* gst/playback/gstdecodebin.c: (queue_filled_cb),
+	(cleanup_decodebin):
+	Who initialises a guint to -1!
+	Cast function pointers to prevent warnings on Forte.
+	* gst/playback/gstplaybasebin.c: (queue_deadlock_check),
+	(queue_threshold_reached):
+	Cast function pointers correctly to prevent warnings on Forte.
+	* gst/playback/gststreaminfo.c: (gst_stream_info_dispose):
+	Cast function pointers correctly to prevent warnings on Forte.
+	* gst/subparse/gstssaparse.c: (gst_ssa_parse_setcaps):
+	Obvious change to unsigned, 0xEF > max signed char.
+	* gst/tcp/gstmultifdsink.c: (get_buffers_max), (count_burst_unit):
+	GstClockTime is unsigned, initialise correctly.
+	* gst/tcp/gsttcp.c: (gst_tcp_socket_write):
+	Cast so pointer arithemetic doesn't cause warnings on Forte.
+	* gst/videorate/gstvideorate.c:
+	Use correct return value.
+	* tests/examples/seek/scrubby.c:
+	GstClockTime is unsigned, initialise correctly.
+
 2006-10-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Ferenc Gerlits  <fgerlits at gmail com>

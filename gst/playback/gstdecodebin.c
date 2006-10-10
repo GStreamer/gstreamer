@@ -1161,7 +1161,7 @@ queue_filled_cb (GstElement * queue, GstDecodeBin * decode_bin)
    * we need to enlarge @queue */
   for (tmp = decode_bin->queues; tmp; tmp = g_list_next (tmp)) {
     GstElement *aqueue = GST_ELEMENT (tmp->data);
-    guint levelbytes = -1;
+    guint levelbytes = 0;
 
     if (aqueue != queue) {
       g_object_get (G_OBJECT (aqueue), "current-level-bytes", &levelbytes,
@@ -1503,7 +1503,8 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
 
   typefind_pad = gst_element_get_pad (decode_bin->typefind, "src");
   if (GST_IS_PAD (typefind_pad)) {
-    g_signal_handlers_block_by_func (typefind_pad, unlinked, decode_bin);
+    g_signal_handlers_block_by_func (typefind_pad, (gpointer) unlinked,
+        decode_bin);
   }
 
   elem_it = gst_bin_iterate_elements (GST_BIN (decode_bin));
@@ -1514,7 +1515,8 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
       case GST_ITERATOR_OK:
         if (element != decode_bin->typefind && element != decode_bin->fakesink) {
           GST_DEBUG_OBJECT (element, "removing autoplugged element");
-          g_signal_handlers_disconnect_by_func (element, unlinked, decode_bin);
+          g_signal_handlers_disconnect_by_func (element, (gpointer) unlinked,
+              decode_bin);
           gst_element_set_state (element, GST_STATE_NULL);
           gst_bin_remove (GST_BIN (decode_bin), element);
         }
@@ -1562,7 +1564,8 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
   gst_iterator_free (gpad_it);
 
   if (GST_IS_PAD (typefind_pad)) {
-    g_signal_handlers_unblock_by_func (typefind_pad, unlinked, decode_bin);
+    g_signal_handlers_unblock_by_func (typefind_pad, (gpointer) unlinked,
+        decode_bin);
     gst_object_unref (typefind_pad);
   }
 }

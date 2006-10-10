@@ -108,7 +108,7 @@ gst_audio_filter_template_get_type (void)
       NULL,
       gst_audio_filter_template_class_init,
       NULL,
-      gst_audio_filter_template_init,
+      (gpointer) gst_audio_filter_template_init,
       sizeof (GstAudioFilterTemplate),
       0,
       NULL,

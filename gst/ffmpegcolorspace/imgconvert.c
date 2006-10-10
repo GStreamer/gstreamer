@@ -1468,7 +1468,7 @@ build_rgb_palette (uint8_t * palette, int has_alpha)
   for (r = 0; r < 6; r++) {
     for (g = 0; g < 6; g++) {
       for (b = 0; b < 6; b++) {
-        pal[i++] = (0xff << 24) | (pal_value[r] << 16) |
+        pal[i++] = (0xffU << 24) | (pal_value[r] << 16) |
             (pal_value[g] << 8) | pal_value[b];
       }
     }

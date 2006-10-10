@@ -107,7 +107,7 @@ gst_tcp_socket_write (int socket, const void *buf, size_t count)
   size_t bytes_written = 0;
 
   while (bytes_written < count) {
-    ssize_t wrote = send (socket, buf + bytes_written,
+    ssize_t wrote = send (socket, (const char *) buf + bytes_written,
         count - bytes_written, MSG_NOSIGNAL);
 
     if (wrote <= 0) {

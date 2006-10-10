@@ -583,7 +583,7 @@ gst_gnome_vfs_sink_render (GstBaseSink * basesink, GstBuffer * buf)
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
-static guint
+static GstURIType
 gst_gnome_vfs_sink_uri_get_type (void)
 {
   return GST_URI_SINK;

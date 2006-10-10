@@ -32,7 +32,7 @@
 #define INT2FLOAT(i) (4.6566128752457969e-10 * ((gfloat)i))
 
 /* sign bit in the intermediate format */
-#define SIGNED  (1<<31)
+#define SIGNED  (1U<<31)
 
 /*** 
  * unpack code

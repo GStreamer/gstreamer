@@ -1293,7 +1293,7 @@ get_buffers_max (GstMultiFdSink * sink, gint64 max)
       int i;
       int len;
       gint64 diff;
-      GstClockTime first = -1;
+      GstClockTime first = GST_CLOCK_TIME_NONE;
 
       len = sink->bufqueue->len;
 
@@ -1492,7 +1492,7 @@ count_burst_unit (GstMultiFdSink * sink, gint * min_idx, GstUnitType min_unit,
 {
   gint bytes_min = -1, buffers_min = -1;
   gint bytes_max = -1, buffers_max = -1;
-  GstClockTime time_min = -1, time_max = -1;
+  GstClockTime time_min = GST_CLOCK_TIME_NONE, time_max = GST_CLOCK_TIME_NONE;
 
   assign_value (min_unit, min_value, &bytes_min, &buffers_min, &time_min);
   assign_value (max_unit, max_value, &bytes_max, &buffers_max, &time_max);

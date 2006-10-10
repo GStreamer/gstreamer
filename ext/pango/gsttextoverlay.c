@@ -576,11 +576,11 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       const gchar *s = g_value_get_string (value);
 
       if (s && g_ascii_strcasecmp (s, "left") == 0)
-        overlay->valign = GST_TEXT_OVERLAY_HALIGN_LEFT;
+        overlay->halign = GST_TEXT_OVERLAY_HALIGN_LEFT;
       else if (s && g_ascii_strcasecmp (s, "center") == 0)
-        overlay->valign = GST_TEXT_OVERLAY_HALIGN_CENTER;
+        overlay->halign = GST_TEXT_OVERLAY_HALIGN_CENTER;
       else if (s && g_ascii_strcasecmp (s, "right") == 0)
-        overlay->valign = GST_TEXT_OVERLAY_HALIGN_RIGHT;
+        overlay->halign = GST_TEXT_OVERLAY_HALIGN_RIGHT;
       else
         g_warning ("Invalid value '%s' for textoverlay property 'halign'",
             GST_STR_NULL (s));

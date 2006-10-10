@@ -138,7 +138,7 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
   GstSsaParse *parse = GST_SSA_PARSE (GST_PAD_PARENT (sinkpad));
   const GValue *val;
   GstStructure *s;
-  const gchar bom_utf8[] = { 0xEF, 0xBB, 0xBF };
+  const guchar bom_utf8[] = { 0xEF, 0xBB, 0xBF };
   GstBuffer *priv;
   gchar *data;
   guint size;

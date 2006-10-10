@@ -35,7 +35,7 @@ static guint schanged_id = 0;
 #define UPDATE_INTERVAL 500
 
 gdouble prev_range = -1.0;
-GstClockTime prev_time = -1;
+GstClockTime prev_time = GST_CLOCK_TIME_NONE;
 gdouble cur_range;
 GstClockTime cur_time;
 GstClockTimeDiff diff;

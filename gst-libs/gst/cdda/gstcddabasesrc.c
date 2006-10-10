@@ -884,7 +884,7 @@ gst_cdda_base_src_handle_event (GstBaseSrc * basesrc, GstEvent * event)
   return ret;
 }
 
-static guint
+static GstURIType
 gst_cdda_base_src_uri_get_type (void)
 {
   return GST_URI_SRC;
@@ -1481,6 +1481,7 @@ gst_cdda_base_src_stop (GstBaseSrc * basesrc)
   return TRUE;
 }
 
+
 static GstFlowReturn
 gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 {
@@ -1489,8 +1490,10 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   GstBuffer *buf;
   GstFormat format;
   gboolean eos;
-  gint64 position = GST_CLOCK_TIME_NONE;
-  gint64 duration = GST_CLOCK_TIME_NONE;
+
+  GstClockTime position = GST_CLOCK_TIME_NONE;
+  GstClockTime duration = GST_CLOCK_TIME_NONE;
+  gint64 qry_position;
 
   g_assert (klass->read_sector != NULL);
 
@@ -1544,12 +1547,14 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   }
 
   format = GST_FORMAT_TIME;
-  if (gst_pad_query_position (GST_BASE_SRC_PAD (src), &format, &position)) {
+  if (gst_pad_query_position (GST_BASE_SRC_PAD (src), &format, &qry_position)) {
+    position = (GstClockTime) qry_position;
+
     gint64 next_ts = 0;
 
     ++src->cur_sector;
     if (gst_pad_query_position (GST_BASE_SRC_PAD (src), &format, &next_ts)) {
-      duration = next_ts - position;
+      duration = (GstClockTime) (next_ts - qry_position);
     }
     --src->cur_sector;
   }
