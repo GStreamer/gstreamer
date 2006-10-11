@@ -74,7 +74,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Dump</NICK>
-<BLURB>Dump produced bytes to stdout.</BLURB>
+<BLURB>Dump buffer contents to stdout.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -214,7 +214,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Dump</NICK>
-<BLURB>Dump received bytes to stdout.</BLURB>
+<BLURB>Dump buffer contents to stdout.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -364,7 +364,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Dump</NICK>
-<BLURB>Dump buffer contents.</BLURB>
+<BLURB>Dump buffer contents to stdout.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -543,8 +543,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
-<NICK>has-chain</NICK>
-<BLURB>has-chain.</BLURB>
+<NICK>Has Chain</NICK>
+<BLURB>If the element can operate in push mode.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -553,8 +553,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
-<NICK>has-sink-loop</NICK>
-<BLURB>has-sink-loop.</BLURB>
+<NICK>Has Sink Loop</NICK>
+<BLURB>If the element can operate in pull mode.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -563,8 +563,8 @@
 <TYPE>gchararray</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
-<NICK>last_message</NICK>
-<BLURB>last_message.</BLURB>
+<NICK>Last Message</NICK>
+<BLURB>The message describing current status.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -573,8 +573,8 @@
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>r</FLAGS>
-<NICK>num-src-pads</NICK>
-<BLURB>num-src-pads.</BLURB>
+<NICK>Num Src Pads</NICK>
+<BLURB>The number of source pads.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -583,8 +583,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
-<NICK>silent</NICK>
-<BLURB>silent.</BLURB>
+<NICK>Silent</NICK>
+<BLURB>Don't produce last_message events.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 

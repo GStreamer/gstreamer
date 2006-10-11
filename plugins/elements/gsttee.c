@@ -52,6 +52,12 @@ GST_ELEMENT_DETAILS ("Tee pipe fitting",
     "Erik Walthinsen <omega@cse.ogi.edu>, "
     "Wim \"Tim\" Taymans <wim@fluendo.com>");
 
+#define DEFAULT_PROP_NUM_SRC_PADS	0
+#define DEFAULT_PROP_HAS_SINK_LOOP	FALSE
+#define DEFAULT_PROP_HAS_CHAIN		TRUE
+#define DEFAULT_PROP_SILENT		TRUE
+#define DEFAULT_PROP_LAST_MESSAGE	NULL
+
 enum
 {
   PROP_0,
@@ -75,6 +81,7 @@ GST_BOILERPLATE_FULL (GstTee, gst_tee, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 static GstPad *gst_tee_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * unused);
+static void gst_tee_release_pad (GstElement * element, GstPad * pad);
 
 static void gst_tee_finalize (GObject * object);
 static void gst_tee_set_property (GObject * object, guint prop_id,
@@ -83,6 +90,8 @@ static void gst_tee_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_tee_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn gst_tee_buffer_alloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf);
 static void gst_tee_loop (GstPad * pad);
 static gboolean gst_tee_sink_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_tee_sink_activate_pull (GstPad * pad, gboolean active);
@@ -126,23 +135,29 @@ gst_tee_class_init (GstTeeClass * klass)
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_tee_get_property);
 
   g_object_class_install_property (gobject_class, PROP_NUM_SRC_PADS,
-      g_param_spec_int ("num-src-pads", "num-src-pads", "num-src-pads",
-          0, G_MAXINT, 0, G_PARAM_READABLE));
+      g_param_spec_int ("num-src-pads", "Num Src Pads",
+          "The number of source pads", 0, G_MAXINT, DEFAULT_PROP_NUM_SRC_PADS,
+          G_PARAM_READABLE));
   g_object_class_install_property (gobject_class, PROP_HAS_SINK_LOOP,
-      g_param_spec_boolean ("has-sink-loop", "has-sink-loop", "has-sink-loop",
-          FALSE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+      g_param_spec_boolean ("has-sink-loop", "Has Sink Loop",
+          "If the element can operate in pull mode (unimplemented)",
+          DEFAULT_PROP_HAS_SINK_LOOP, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_HAS_CHAIN,
-      g_param_spec_boolean ("has-chain", "has-chain", "has-chain",
-          TRUE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+      g_param_spec_boolean ("has-chain", "Has Chain",
+          "If the element can operate in push mode", DEFAULT_PROP_HAS_CHAIN,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_SILENT,
-      g_param_spec_boolean ("silent", "silent", "silent",
-          TRUE, G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
+      g_param_spec_boolean ("silent", "Silent",
+          "Don't produce last_message events", DEFAULT_PROP_SILENT,
+          G_PARAM_CONSTRUCT | G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_LAST_MESSAGE,
-      g_param_spec_string ("last_message", "last_message", "last_message",
-          NULL, G_PARAM_READABLE));
+      g_param_spec_string ("last_message", "Last Message",
+          "The message describing current status", DEFAULT_PROP_LAST_MESSAGE,
+          G_PARAM_READABLE));
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_tee_request_new_pad);
+  gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_tee_release_pad);
 }
 
 static void
@@ -153,6 +168,8 @@ gst_tee_init (GstTee * tee, GstTeeClass * g_class)
       GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
   gst_pad_set_getcaps_function (tee->sinkpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+  gst_pad_set_bufferalloc_function (tee->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_tee_buffer_alloc));
   gst_element_add_pad (GST_ELEMENT (tee), tee->sinkpad);
 
   tee->last_message = NULL;
@@ -180,23 +197,71 @@ gst_tee_request_new_pad (GstElement * element, GstPadTemplate * templ,
   gchar *name;
   GstPad *srcpad;
   GstTee *tee;
+  GstActivateMode mode;
+  gboolean res;
 
   tee = GST_TEE (element);
 
   GST_OBJECT_LOCK (tee);
   name = g_strdup_printf ("src%d", tee->pad_counter++);
-  GST_OBJECT_UNLOCK (tee);
 
   srcpad = gst_pad_new_from_template (templ, name);
   g_free (name);
+
+  if (tee->allocpad == NULL)
+    tee->allocpad = srcpad;
+
+  mode = tee->sink_mode;
+  GST_OBJECT_UNLOCK (tee);
+
+  /* activate the pad in the right mode */
+  if (mode == GST_ACTIVATE_PULL)
+    res = gst_pad_activate_pull (srcpad, TRUE);
+  if (mode == GST_ACTIVATE_PUSH)
+    res = gst_pad_activate_push (srcpad, TRUE);
+  else
+    res = TRUE;
+
+  if (!res)
+    goto activate_failed;
 
   gst_pad_set_setcaps_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_setcaps));
   gst_pad_set_getcaps_function (srcpad,
       GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
-  gst_element_add_pad (GST_ELEMENT (tee), srcpad);
+  gst_element_add_pad (GST_ELEMENT_CAST (tee), srcpad);
 
   return srcpad;
+
+  /* ERRORS */
+activate_failed:
+  {
+    GST_OBJECT_LOCK (tee);
+    GST_DEBUG_OBJECT (tee, "warning failed to activate request pad");
+    if (tee->allocpad == srcpad)
+      tee->allocpad = NULL;
+    gst_object_unref (srcpad);
+    GST_OBJECT_LOCK (tee);
+    return NULL;
+  }
+}
+
+static void
+gst_tee_release_pad (GstElement * element, GstPad * pad)
+{
+  GstTee *tee;
+
+  tee = GST_TEE (element);
+
+  GST_OBJECT_LOCK (tee);
+  if (tee->allocpad == pad)
+    tee->allocpad = NULL;
+  GST_OBJECT_UNLOCK (tee);
+
+  /* deactivate the pad before removing */
+  gst_pad_set_active (pad, FALSE);
+
+  gst_element_remove_pad (GST_ELEMENT_CAST (tee), pad);
 }
 
 static void
@@ -253,6 +318,31 @@ gst_tee_get_property (GObject * object, guint prop_id, GValue * value,
       break;
   }
   GST_OBJECT_UNLOCK (tee);
+}
+
+static GstFlowReturn
+gst_tee_buffer_alloc (GstPad * pad, guint64 offset, guint size,
+    GstCaps * caps, GstBuffer ** buf)
+{
+  GstTee *tee;
+  GstFlowReturn res;
+  GstPad *allocpad;
+
+  tee = GST_TEE (GST_PAD_PARENT (pad));
+
+  GST_OBJECT_LOCK (tee);
+  if ((allocpad = tee->allocpad))
+    gst_object_ref (allocpad);
+  GST_OBJECT_UNLOCK (tee);
+
+  if (allocpad) {
+    res = gst_pad_alloc_buffer (allocpad, offset, size, caps, buf);
+    gst_object_unref (allocpad);
+  } else {
+    res = GST_FLOW_OK;
+    *buf = NULL;
+  }
+  return res;
 }
 
 typedef struct
@@ -380,13 +470,23 @@ gst_tee_sink_activate_push (GstPad * pad, gboolean active)
 
   tee = GST_TEE (GST_OBJECT_PARENT (pad));
 
+  GST_OBJECT_LOCK (tee);
   tee->sink_mode = active && GST_ACTIVATE_PUSH;
 
-  if (active) {
-    g_return_val_if_fail (tee->has_chain, FALSE);
-  }
+  if (active && !tee->has_chain)
+    goto no_chain;
+  GST_OBJECT_UNLOCK (tee);
 
   return TRUE;
+
+  /* ERRORS */
+no_chain:
+  {
+    GST_OBJECT_UNLOCK (tee);
+    GST_ELEMENT_ERROR (tee, CORE, FAILED, (NULL),
+        ("Tee cannot operate in push mode, set ::has-chain to TRUE."));
+    return FALSE;
+  }
 }
 
 /* won't be called until we implement an activate function */
@@ -394,15 +494,30 @@ static gboolean
 gst_tee_sink_activate_pull (GstPad * pad, gboolean active)
 {
   GstTee *tee;
+  gboolean res;
 
   tee = GST_TEE (GST_OBJECT_PARENT (pad));
 
+  GST_OBJECT_LOCK (tee);
   tee->sink_mode = active && GST_ACTIVATE_PULL;
 
   if (active) {
-    g_return_val_if_fail (tee->has_sink_loop, FALSE);
-    return gst_pad_start_task (pad, (GstTaskFunction) gst_tee_loop, pad);
+    if (!tee->has_sink_loop)
+      goto no_loop;
+    GST_OBJECT_UNLOCK (tee);
+    res = gst_pad_start_task (pad, (GstTaskFunction) gst_tee_loop, pad);
   } else {
-    return gst_pad_stop_task (pad);
+    GST_OBJECT_UNLOCK (tee);
+    res = gst_pad_stop_task (pad);
+  }
+  return res;
+
+  /* ERRORS */
+no_loop:
+  {
+    GST_OBJECT_UNLOCK (tee);
+    GST_ELEMENT_ERROR (tee, CORE, FAILED, (NULL),
+        ("Tee cannot operate in pull mode, set ::has-sink-loop to TRUE."));
+    return FALSE;
   }
 }

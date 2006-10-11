@@ -229,7 +229,8 @@ gst_system_clock_obtain (void)
  *
  * It waits on each of them and fires the callback when the timeout occurs.
  *
- * When an entry in the queue was canceled, it is simply skipped.
+ * When an entry in the queue was canceled before we wait for it, it is
+ * simply skipped.
  *
  * When waiting for an entry, it can become canceled, in that case we don't
  * call the callback but move to the next item in the queue.

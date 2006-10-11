@@ -1,3 +1,26 @@
+2006-10-11  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/gstreamer-plugins.args:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* docs/plugins/inspect/plugin-coreindexers.xml:
+	Update element args.
+
+	* gst/gstsystemclock.c:
+	Small comment update.
+
+	* plugins/elements/gsttee.c: (gst_tee_class_init), (gst_tee_init),
+	(gst_tee_request_new_pad), (gst_tee_release_pad),
+	(gst_tee_buffer_alloc), (gst_tee_sink_activate_push),
+	(gst_tee_sink_activate_pull):
+	* plugins/elements/gsttee.h:
+	Some tee loving:
+	Add default property defines.
+	Implement release pad function.
+	Give properties better blubs etc.
+	Activate pads before adding them to a running tee.
+	Do simple buffer_alloc on the first requested pad.
+	Post error when activation fails.
+
 2006-10-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (ensure_current_registry_forking):

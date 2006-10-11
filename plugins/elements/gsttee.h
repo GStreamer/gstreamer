@@ -49,19 +49,20 @@ typedef struct _GstTeeClass 	GstTeeClass;
  * Opaque #GstTee data structure.
  */
 struct _GstTee {
-  GstElement element;
+  GstElement      element;
 
   /*< private >*/
-  GstPad *sinkpad;
+  GstPad         *sinkpad;
+  GstPad         *allocpad;
+  gint            pad_counter;
 
-  gboolean silent;
-  gboolean has_chain;
-  gboolean has_sink_loop;
-  gint pad_counter;
-  guint64 offset;
+  gboolean        has_chain;
+  gboolean        has_sink_loop;
+  gboolean        silent;
+  gchar          *last_message;
+
+  guint64         offset;
   GstActivateMode sink_mode;
-
-  gchar    *last_message;
 };
 
 struct _GstTeeClass {
