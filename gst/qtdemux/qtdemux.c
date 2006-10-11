@@ -4353,7 +4353,11 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
     case GST_MAKE_FOURCC ('d', 'v', 'c', 'p'):
     case GST_MAKE_FOURCC ('d', 'v', 'c', ' '):
     case GST_MAKE_FOURCC ('d', 'v', 's', 'd'):
+    case GST_MAKE_FOURCC ('D', 'V', 'S', 'D'):
+    case GST_MAKE_FOURCC ('d', 'v', 'c', 's'):
+    case GST_MAKE_FOURCC ('D', 'V', 'C', 'S'):
     case GST_MAKE_FOURCC ('d', 'v', '2', '5'):
+    case GST_MAKE_FOURCC ('d', 'v', 'p', 'p'):
       _codec ("DV Video");
       return gst_caps_from_string ("video/x-dv, systemstream=(boolean)false");
     case GST_MAKE_FOURCC ('s', 'm', 'c', ' '):
