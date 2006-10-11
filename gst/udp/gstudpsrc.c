@@ -177,6 +177,7 @@ static GstFlowReturn gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf);
 static gboolean gst_udpsrc_start (GstBaseSrc * bsrc);
 static gboolean gst_udpsrc_stop (GstBaseSrc * bsrc);
 static gboolean gst_udpsrc_unlock (GstBaseSrc * bsrc);
+static void gst_udpsrc_finalize (GObject * object);
 
 static void gst_udpsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -224,6 +225,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
 
   gobject_class->set_property = gst_udpsrc_set_property;
   gobject_class->get_property = gst_udpsrc_get_property;
+  gobject_class->finalize = gst_udpsrc_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PORT,
       g_param_spec_int ("port", "Port",
@@ -276,6 +278,21 @@ gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
 
   udpsrc->control_sock[0] = -1;
   udpsrc->control_sock[1] = -1;
+}
+
+static void
+gst_udpsrc_finalize (GObject * object)
+{
+  GstUDPSrc *udpsrc;
+
+  udpsrc = GST_UDPSRC (object);
+
+  if (udpsrc->caps)
+    gst_caps_unref (udpsrc->caps);
+  g_free (udpsrc->multi_group);
+  g_free (udpsrc->uri);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
@@ -408,8 +425,8 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   pktdata = g_malloc (readsize);
   pktsize = readsize;
 
-  len = sizeof (struct sockaddr);
   while (TRUE) {
+    len = sizeof (struct sockaddr);
     ret = recvfrom (udpsrc->sock, pktdata, pktsize,
         0, (struct sockaddr *) &tmpaddr, &len);
     if (ret < 0) {
@@ -503,11 +520,12 @@ gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri)
 
   return TRUE;
 
+  /* ERRORS */
 wrong_protocol:
   {
     g_free (protocol);
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("error parsing uri %s: wrong protocol", uri));
+        ("error parsing uri %s: wrong protocol (%s != udp)", uri, protocol));
     return FALSE;
   }
 }
@@ -652,8 +670,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     src->myaddr.sin_addr.s_addr = INADDR_ANY;
 
     GST_DEBUG_OBJECT (src, "binding on port %d", src->port);
-    if ((ret =
-            bind (src->sock, (struct sockaddr *) &src->myaddr,
+    if ((ret = bind (src->sock, (struct sockaddr *) &src->myaddr,
                 sizeof (src->myaddr))) < 0)
       goto bind_error;
   }
@@ -661,8 +678,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   if (inet_aton (src->multi_group, &(src->multi_addr.imr_multiaddr))) {
     if (src->multi_addr.imr_multiaddr.s_addr) {
       src->multi_addr.imr_interface.s_addr = INADDR_ANY;
-      if ((ret =
-              setsockopt (src->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+      if ((ret = setsockopt (src->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP,
                   &src->multi_addr, sizeof (src->multi_addr))) < 0)
         goto membership;
     }
@@ -695,8 +711,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     GST_DEBUG_OBJECT (src, "could not get udp buffer size");
 
   bc_val = 1;
-  if ((ret =
-          setsockopt (src->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
+  if ((ret = setsockopt (src->sock, SOL_SOCKET, SO_BROADCAST, &bc_val,
               sizeof (bc_val))) < 0)
     goto no_broadcast;
 

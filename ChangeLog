@@ -1,3 +1,12 @@
+2006-10-11  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Sebastien Cote <sebas642 at yahoo dot ca>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init),
+	(gst_udpsrc_finalize), (gst_udpsrc_create), (gst_udpsrc_set_uri),
+	(gst_udpsrc_start):
+	Fix some leaks in caps and uris. Fixes #361252.
+
 2006-10-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/wavparse/Makefile.am:
