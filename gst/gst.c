@@ -303,8 +303,8 @@ gst_init_get_option_group (void)
               "GST_AUTOPLUG:5,GST_ELEMENT_*:3"),
         N_("LIST")},
     {"gst-debug-no-color", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
-        (gpointer) parse_goption_arg, N_("Disable colored debugging output"),
-          NULL},
+          (gpointer) parse_goption_arg, N_("Disable colored debugging output"),
+        NULL},
     {"gst-debug-disable", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
         (gpointer) parse_goption_arg, N_("Disable debugging"), NULL},
 #endif
@@ -738,7 +738,9 @@ ensure_current_registry_forking (GstRegistry * default_registry,
 
     /* write a result byte to the pipe */
     res_byte = res ? '1' : '0';
-    write (pfd[1], &res_byte, 1);
+    if (write (pfd[1], &res_byte, 1) != 1 || close (pfd[1]) != 0) {
+      /* could not write to pipe, probably means parent has exited before us */
+    }
     _exit (0);
   } else {
     int ret;
