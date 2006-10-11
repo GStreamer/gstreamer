@@ -1,5 +1,6 @@
-/* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer simple deinterlacing plugin
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,53 +18,44 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_DEINTERLACE_H__
 #define __GST_DEINTERLACE_H__
 
-
 #include <gst/gst.h>
-/* #include <gst/meta/audioraw.h> */
+#include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_DEINTERLACE \
-  (gst_deinterlace_get_type())
-#define GST_DEINTERLACE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DEINTERLACE,GstDeInterlace))
-#define GST_DEINTERLACE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DEINTERLACE,GstDeInterlaceClass))
-#define GST_DEINTERLACE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_DEINTERLACE,GstDeInterlaceClass))
-#define GST_IS_DEINTERLACE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DEINTERLACE))
-#define GST_IS_DEINTERLACE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DEINTERLACE))
+#define GST_TYPE_DEINTERLACE            (gst_deinterlace_get_type())
+#define GST_DEINTERLACE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DEINTERLACE,GstDeinterlace))
+#define GST_DEINTERLACE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DEINTERLACE,GstDeinterlaceClass))
+#define GST_IS_DEINTERLACE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DEINTERLACE))
+#define GST_IS_DEINTERLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DEINTERLACE))
 
-typedef struct _GstDeInterlace GstDeInterlace;
-typedef struct _GstDeInterlaceClass GstDeInterlaceClass;
+typedef struct _GstDeinterlace GstDeinterlace;
+typedef struct _GstDeinterlaceClass GstDeinterlaceClass;
 
-struct _GstDeInterlace {
-  GstElement element;
+struct _GstDeinterlace {
+  GstBaseTransform basetransform;
 
-  GstPad *sinkpad, *srcpad;
+  gint         width;
+  gint         height;
 
-  gint width, height;
+  gboolean     show_deinterlaced_area_only;
+  gboolean     blend;
+  gint         threshold_blend; /* here we start blending */
+  gint         threshold;       /* here we start interpolating TODO FIXME */
+  gint         edge_detect;
 
-  gboolean show_deinterlaced_area_only;
-  gboolean blend;
-  gint threshold_blend; /* here we start blending */
-  gint threshold;         /* here we start interpolating TODO FIXME */
-  gint edge_detect;
-
-  gint picsize;
-  guchar *src;
-
+  gint         picsize;
+  guchar      *src;
 };
 
-struct _GstDeInterlaceClass {
-  GstElementClass parent_class;
+struct _GstDeinterlaceClass {
+  GstBaseTransformClass basetransformclass;
 };
+
+GType   gst_deinterlace_get_type (void);
 
 G_END_DECLS
 

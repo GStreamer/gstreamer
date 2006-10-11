@@ -1,5 +1,6 @@
-/* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer simple deinterlacing plugin
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,40 +23,33 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <string.h>
-#include <gst/gst.h>
-#include <gst/video/video.h>
 #include "gstdeinterlace.h"
+#include <gst/video/video.h>
 
 /* these macros are adapted from videotestsrc, paint_setup_I420() */
-#define ROUND_UP_2(x)  (((x)+1)&~1)
-#define ROUND_UP_4(x)  (((x)+3)&~3)
-#define ROUND_UP_8(x)  (((x)+7)&~7)
-
-#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (ROUND_UP_4(width))
-#define GST_VIDEO_I420_U_ROWSTRIDE(width) (ROUND_UP_8(width)/2)
-#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
+#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
+#define GST_VIDEO_I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
+#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
 
 #define GST_VIDEO_I420_Y_OFFSET(w,h) (0)
-#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*ROUND_UP_2(h)))
-#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
+#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
-#define GST_VIDEO_I420_SIZE(w,h) (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*ROUND_UP_2(h)/2))
+#define GST_VIDEO_I420_SIZE(w,h) (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
 
 /* elementfactory information */
 static const GstElementDetails deinterlace_details =
 GST_ELEMENT_DETAILS ("Deinterlace",
     "Filter/Effect/Video",
     "Deinterlace video",
-    "Wim Taymans <wim.taymans@chello.be>");
+    "Wim Taymans <wim@fluendo.com>");
 
-
-/* Filter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
+#define DEFAULT_DI_AREA_ONLY  FALSE
+#define DEFAULT_BLEND         FALSE
+#define DEFAULT_THRESHOLD     50
+#define DEFAULT_EDGE_DETECT   25
 
 enum
 {
@@ -66,61 +60,32 @@ enum
   ARG_EDGE_DETECT
 };
 
-static GstStaticPadTemplate deinterlace_src_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
     );
 
-static GstStaticPadTemplate deinterlace_sink_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("I420"))
     );
 
-static GType gst_deinterlace_get_type (void);
-
-static void gst_deinterlace_base_init (gpointer g_class);
-static void gst_deinterlace_class_init (GstDeInterlaceClass * klass);
-static void gst_deinterlace_init (GstDeInterlace * filter);
+GST_BOILERPLATE (GstDeinterlace, gst_deinterlace, GstBaseTransform,
+    GST_TYPE_BASE_TRANSFORM);
 
 static void gst_deinterlace_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_deinterlace_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
-static void gst_deinterlace_chain (GstPad * pad, GstData * _data);
-
-static GstElementClass *parent_class = NULL;
-
-/*static guint gst_filter_signals[LAST_SIGNAL] = { 0 }; */
-
-static GType
-gst_deinterlace_get_type (void)
-{
-  static GType deinterlace_type = 0;
-
-  if (!deinterlace_type) {
-    static const GTypeInfo deinterlace_info = {
-      sizeof (GstDeInterlaceClass),
-      gst_deinterlace_base_init,
-      NULL,
-      (GClassInitFunc) gst_deinterlace_class_init,
-      NULL,
-      NULL,
-      sizeof (GstDeInterlace),
-      0,
-      (GInstanceInitFunc) gst_deinterlace_init,
-    };
-
-    deinterlace_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstDeInterlace",
-        &deinterlace_info, 0);
-  }
-  return deinterlace_type;
-}
+static GstFlowReturn gst_deinterlace_transform_ip (GstBaseTransform * trans,
+    GstBuffer * buf);
+static gboolean gst_deinterlace_stop (GstBaseTransform * trans);
+static gboolean gst_deinterlace_set_caps (GstBaseTransform * trans,
+    GstCaps * incaps, GstCaps * outcaps);
+static GstCaps *gst_deinterlace_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * incaps);
 
 static void
 gst_deinterlace_base_init (gpointer g_class)
@@ -128,109 +93,117 @@ gst_deinterlace_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&deinterlace_src_factory));
+      gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&deinterlace_sink_factory));
+      gst_static_pad_template_get (&sink_factory));
 
   gst_element_class_set_details (element_class, &deinterlace_details);
 }
 
 static void
-gst_deinterlace_class_init (GstDeInterlaceClass * klass)
+gst_deinterlace_class_init (GstDeinterlaceClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
+  GstBaseTransformClass *basetransform_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DI_ONLY, g_param_spec_boolean ("di_area_only", "di_area_only", "di_area_only", TRUE, G_PARAM_READWRITE));        /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BLEND, g_param_spec_boolean ("blend", "blend", "blend", TRUE, G_PARAM_READWRITE));       /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_THRESHOLD, g_param_spec_int ("threshold", "threshold", "threshold", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EDGE_DETECT, g_param_spec_int ("edge_detect", "edge_detect", "edge_detect", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));  /* CHECKME */
+  basetransform_class = (GstBaseTransformClass *) klass;
 
   gobject_class->set_property = gst_deinterlace_set_property;
   gobject_class->get_property = gst_deinterlace_get_property;
-}
-static GstCaps *
-gst_deinterlace_getcaps (GstPad * pad)
-{
-  GstDeInterlace *filter;
-  GstPad *otherpad;
 
-  filter = GST_DEINTERLACE (gst_pad_get_parent (pad));
+  g_object_class_install_property (gobject_class, ARG_DI_ONLY,
+      g_param_spec_boolean ("di-area-only", "di-area-only", "di-area-only",
+          DEFAULT_DI_AREA_ONLY, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_BLEND,
+      g_param_spec_boolean ("blend", "blend", "blend", DEFAULT_BLEND,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_THRESHOLD,
+      g_param_spec_int ("threshold", "threshold", "threshold", G_MININT,
+          G_MAXINT, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_EDGE_DETECT,
+      g_param_spec_int ("edge-detect", "edge-detect", "edge-detect", G_MININT,
+          G_MAXINT, 0, G_PARAM_READWRITE));
 
-  otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
-
-  return gst_pad_get_allowed_caps (otherpad);
-}
-
-static GstPadLinkReturn
-gst_deinterlace_link (GstPad * pad, const GstCaps * caps)
-{
-  GstDeInterlace *filter;
-  GstStructure *structure;
-  GstPadLinkReturn ret;
-  GstPad *otherpad;
-
-  filter = GST_DEINTERLACE (gst_pad_get_parent (pad));
-
-  otherpad = (pad == filter->srcpad) ? filter->sinkpad : filter->srcpad;
-
-  ret = gst_pad_try_set_caps (otherpad, caps);
-  if (GST_PAD_LINK_FAILED (ret)) {
-    return ret;
-  }
-
-  structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "width", &filter->width);
-  gst_structure_get_int (structure, "height", &filter->height);
-
-  if (filter->picsize != GST_VIDEO_I420_SIZE (filter->width, filter->height)) {
-    if (filter->src)
-      g_free (filter->src);
-    filter->picsize = GST_VIDEO_I420_SIZE (filter->width, filter->height);
-    filter->src = g_malloc (filter->picsize);
-  }
-
-  return GST_PAD_LINK_OK;
+  basetransform_class->transform_ip =
+      GST_DEBUG_FUNCPTR (gst_deinterlace_transform_ip);
+  basetransform_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_deinterlace_transform_caps);
+  basetransform_class->stop = GST_DEBUG_FUNCPTR (gst_deinterlace_stop);
+  basetransform_class->set_caps = GST_DEBUG_FUNCPTR (gst_deinterlace_set_caps);
 }
 
 static void
-gst_deinterlace_init (GstDeInterlace * filter)
+gst_deinterlace_init (GstDeinterlace * filter, GstDeinterlaceClass * klass)
 {
-  filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&deinterlace_sink_factory), "sink");
-  gst_pad_set_chain_function (filter->sinkpad, gst_deinterlace_chain);
-  gst_pad_set_link_function (filter->sinkpad, gst_deinterlace_link);
-  gst_pad_set_getcaps_function (filter->sinkpad, gst_deinterlace_getcaps);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
-
-  filter->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&deinterlace_src_factory), "src");
-  gst_pad_set_link_function (filter->srcpad, gst_deinterlace_link);
-  gst_pad_set_getcaps_function (filter->srcpad, gst_deinterlace_getcaps);
-  gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
-
-  filter->show_deinterlaced_area_only = FALSE;
-  filter->blend = FALSE;
+  filter->show_deinterlaced_area_only = DEFAULT_DI_AREA_ONLY;
+  filter->blend = DEFAULT_BLEND;
+  filter->threshold = DEFAULT_THRESHOLD;
+  filter->edge_detect = DEFAULT_EDGE_DETECT;
   /*filter->threshold_blend = 0;  */
-  filter->threshold = 50;
-  filter->edge_detect = 25;
 
   filter->src = NULL;
   filter->picsize = 0;
 }
 
-static void
-gst_deinterlace_chain (GstPad * pad, GstData * _data)
+static gboolean
+gst_deinterlace_stop (GstBaseTransform * trans)
 {
-  GstBuffer *buf = gst_buffer_copy_on_write (GST_BUFFER (_data));
-  GstDeInterlace *filter;
+  GstDeinterlace *filter;
+
+  filter = GST_DEINTERLACE (trans);
+
+  g_free (filter->src);
+  filter->src = NULL;
+  filter->picsize = 0;
+  filter->width = 0;
+  filter->height = 0;
+
+  return TRUE;
+}
+
+static GstCaps *
+gst_deinterlace_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * incaps)
+{
+  return gst_caps_ref (incaps);
+}
+
+static gboolean
+gst_deinterlace_set_caps (GstBaseTransform * trans, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  GstDeinterlace *filter;
+  GstStructure *s;
+
+  filter = GST_DEINTERLACE (trans);
+
+  g_assert (gst_caps_is_equal_fixed (incaps, outcaps));
+
+  s = gst_caps_get_structure (incaps, 0);
+  if (!gst_structure_get_int (s, "width", &filter->width) ||
+      !gst_structure_get_int (s, "height", &filter->height)) {
+    return FALSE;
+  }
+
+  GST_LOG_OBJECT (filter, "width x height = %d x %d", filter->width,
+      filter->height);
+
+  if (filter->picsize != GST_VIDEO_I420_SIZE (filter->width, filter->height)) {
+    filter->picsize = GST_VIDEO_I420_SIZE (filter->width, filter->height);
+    g_free (filter->src);       /* free + alloc avoids memcpy */
+    filter->src = g_malloc0 (filter->picsize);
+    GST_LOG_OBJECT (filter, "temp buffer size %d", filter->picsize);
+  }
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_deinterlace_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
+{
+  GstDeinterlace *filter;
+  gboolean bShowDeinterlacedAreaOnly;
   gint y0, y1, y2, y3;
   guchar *psrc1, *psrc2, *psrc3, *pdst1, *yuvptr, *src;
   gint iInterlaceValue0, iInterlaceValue1, iInterlaceValue2;
@@ -241,22 +214,22 @@ gst_deinterlace_chain (GstPad * pad, GstData * _data)
   gint iThreshold;
   gint iEdgeDetect;
   gint width, height;
-  gboolean bShowDeinterlacedAreaOnly;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  /* g_assert (gst_buffer_is_writable (buf)); */
 
-  filter = GST_DEINTERLACE (gst_pad_get_parent (pad));
+  filter = GST_DEINTERLACE (trans);
 
+  GST_OBJECT_LOCK (filter);
   bBlend = filter->blend;
   iThreshold = filter->threshold;
   iEdgeDetect = filter->edge_detect;
+  bShowDeinterlacedAreaOnly = filter->show_deinterlaced_area_only;
+  GST_OBJECT_UNLOCK (filter);
+
   width = filter->width;
   height = filter->height;
   src = filter->src;
   yuvptr = GST_BUFFER_DATA (buf);
-  bShowDeinterlacedAreaOnly = filter->show_deinterlaced_area_only;
 
   memcpy (filter->src, yuvptr, filter->picsize);
 
@@ -269,7 +242,7 @@ gst_deinterlace_chain (GstPad * pad, GstData * _data)
   y_src = src;
 
   iThreshold = iThreshold * iThreshold * 4;
-  /* We don't want an integer overflow in the  interlace calculation. */
+  /* We don't want an integer overflow in the interlace calculation. */
   if (iEdgeDetect > 180)
     iEdgeDetect = 180;
   iEdgeDetect = iEdgeDetect * iEdgeDetect;
@@ -337,19 +310,18 @@ gst_deinterlace_chain (GstPad * pad, GstData * _data)
     }
   }
 
-  gst_pad_push (filter->srcpad, GST_DATA (buf));
+  return GST_FLOW_OK;
 }
 
 static void
 gst_deinterlace_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstDeInterlace *filter;
-
-  g_return_if_fail (GST_IS_DEINTERLACE (object));
+  GstDeinterlace *filter;
 
   filter = GST_DEINTERLACE (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case ARG_DI_ONLY:
       filter->show_deinterlaced_area_only = g_value_get_boolean (value);
@@ -364,20 +336,21 @@ gst_deinterlace_set_property (GObject * object, guint prop_id,
       filter->edge_detect = g_value_get_int (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static void
 gst_deinterlace_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstDeInterlace *filter;
-
-  g_return_if_fail (GST_IS_DEINTERLACE (object));
+  GstDeinterlace *filter;
 
   filter = GST_DEINTERLACE (object);
 
+  GST_OBJECT_LOCK (filter);
   switch (prop_id) {
     case ARG_DI_ONLY:
       g_value_set_boolean (value, filter->show_deinterlaced_area_only);
@@ -395,6 +368,7 @@ gst_deinterlace_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (filter);
 }
 
 static gboolean
@@ -409,6 +383,6 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "deinterlace",
-    "Deinterlace video", plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME,
+    "gstinterlace",
+    "Deinterlace video", plugin_init, PACKAGE_VERSION, "LGPL", GST_PACKAGE_NAME,
     GST_PACKAGE_ORIGIN);

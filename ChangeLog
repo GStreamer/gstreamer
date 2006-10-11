@@ -1,3 +1,16 @@
+2006-10-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/deinterlace/Makefile.am:
+	* gst/deinterlace/gstdeinterlace.c: (gst_deinterlace_base_init),
+	(gst_deinterlace_class_init), (gst_deinterlace_init),
+	(gst_deinterlace_stop), (gst_deinterlace_transform_caps),
+	(gst_deinterlace_set_caps), (gst_deinterlace_transform_ip),
+	(gst_deinterlace_set_property), (gst_deinterlace_get_property):
+	* gst/deinterlace/gstdeinterlace.h:
+	  Port simple deinterlacer from 0.8. Use at your own risk, don't blame
+	  me for anything it does or does not do to your precious pictures.
+
 2006-10-11  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
