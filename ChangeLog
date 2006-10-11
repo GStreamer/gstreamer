@@ -1,3 +1,12 @@
+2006-10-11  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* plugins/elements/gstqueue.c: (gst_queue_chain):
+	Recheck queue filledness after signalling the overrun when we're about
+	to leak downstream because we released the lock when emitting the signal
+	and the queue could be empty again. Fixes #352345.
+
 2006-10-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/controller/gstcontroller.c: (gst_controller_new_list):

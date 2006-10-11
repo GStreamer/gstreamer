@@ -654,6 +654,13 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
         GList *item;
         GstMiniObject *leak = NULL;
 
+        if (!gst_queue_is_filled (queue)) {
+          /* Queue was emptied while we sent out the signal, so no need to drop */
+          GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
+              "queue emptied while emitting signal, not leaking buffer");
+          break;
+        }
+
         GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
             "queue is full, leaking buffer on downstream end");
 
