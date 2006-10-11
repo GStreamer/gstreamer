@@ -858,6 +858,84 @@ GST_START_TEST (controller_misc)
 
 GST_END_TEST;
 
+GST_START_TEST (controller_refcount_new_list)
+{
+  GstController *ctrl, *ctrl2;
+  GstElement *elem;
+  GList *list = NULL;
+
+  gst_controller_init (NULL, NULL);
+
+  /* that property should exist and should be controllable */
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+  list = g_list_append (NULL, "ulong");
+  ctrl = gst_controller_new_list (G_OBJECT (elem), list);
+  fail_unless (ctrl != NULL, NULL);
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  fail_unless (G_OBJECT (ctrl)->ref_count == 1);
+  g_list_free (list);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+
+  /* try the same property twice, make sure the refcount is still 1 */
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+  list = g_list_append (NULL, "ulong");
+  list = g_list_append (list, "ulong");
+  ctrl = gst_controller_new_list (G_OBJECT (elem), list);
+  fail_unless (ctrl != NULL, NULL);
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  fail_unless (G_OBJECT (ctrl)->ref_count == 1);
+  g_list_free (list);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+
+  /* try two properties, make sure the refcount is still 1 */
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+  list = g_list_append (NULL, "ulong");
+  list = g_list_append (list, "boolean");
+  ctrl = gst_controller_new_list (G_OBJECT (elem), list);
+  fail_unless (ctrl != NULL, NULL);
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  fail_unless (G_OBJECT (ctrl)->ref_count == 1);
+  g_list_free (list);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+
+  /* try _new_list with existing controller */
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  list = g_list_append (NULL, "ulong");
+  ctrl2 = gst_controller_new_list (G_OBJECT (elem), list);
+  fail_unless (ctrl2 != NULL, NULL);
+  fail_unless (ctrl == ctrl2, NULL);
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  fail_unless (G_OBJECT (ctrl)->ref_count == 2);
+  g_list_free (list);
+  g_object_unref (ctrl);
+  g_object_unref (ctrl2);
+  gst_object_unref (elem);
+
+  /* try _new_list first and then _new */
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+  list = g_list_append (NULL, "ulong");
+  ctrl = gst_controller_new_list (G_OBJECT (elem), list);
+  fail_unless (ctrl != NULL, NULL);
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  ctrl2 = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl2 != NULL, NULL);
+  fail_unless (ctrl == ctrl2, NULL);
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  fail_unless (G_OBJECT (ctrl)->ref_count == 2);
+  g_list_free (list);
+  g_object_unref (ctrl);
+  g_object_unref (ctrl2);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_controller_suite (void)
 {
@@ -866,6 +944,7 @@ gst_controller_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_add_test (tc, controller_init);
+  tcase_add_test (tc, controller_refcount_new_list);
   tcase_add_test (tc, controller_new_fail1);
   tcase_add_test (tc, controller_new_fail2);
   tcase_add_test (tc, controller_new_fail3);

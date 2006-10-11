@@ -1,3 +1,14 @@
+2006-10-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/controller/gstcontroller.c: (gst_controller_new_list):
+	  Fix refcounting here too, just like we did for _new_valist() a few
+	  days ago (#357180) (thanks to René Stadler). Also remove all those
+	  'Since: 0.9' from the gtk-doc blobs.
+
+	* tests/check/libs/controller.c: (controller_refcount_new_list),
+	(gst_controller_suite):
+	  Unit test for the above.
+
 2006-10-10  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sebastien Cote <sebas642 at yahoo dot ca>

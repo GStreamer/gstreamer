@@ -448,7 +448,6 @@ gst_controller_find_controlled_property (GstController * self,
  * Creates a new GstController for the given object's properties
  *
  * Returns: the new controller.
- * Since: 0.9
  */
 GstController *
 gst_controller_new_valist (GObject * object, va_list var_args)
@@ -520,13 +519,13 @@ gst_controller_new_valist (GObject * object, va_list var_args)
  * Creates a new GstController for the given object's properties
  *
  * Returns: the new controller.
- * Since: 0.9
  */
 GstController *
 gst_controller_new_list (GObject * object, GList * list)
 {
   GstController *self;
   GstControlledProperty *prop;
+  gboolean ref_existing = TRUE;
   gchar *name;
   GList *node;
 
@@ -548,14 +547,23 @@ gst_controller_new_list (GObject * object, GList * list)
           self->object = g_object_ref (object);
           /* store the controller */
           g_object_set_qdata (object, __gst_controller_key, self);
+          ref_existing = FALSE;
         } else {
-          g_object_ref (self);
-          GST_INFO ("returning existing controller");
+          /* only want one single _ref(), even for multiple properties */
+          if (ref_existing) {
+            g_object_ref (self);
+            ref_existing = FALSE;
+            GST_INFO ("returning existing controller");
+          }
         }
         self->properties = g_list_prepend (self->properties, prop);
       }
     } else {
       GST_WARNING ("trying to control property again");
+      if (ref_existing) {
+        g_object_ref (self);
+        ref_existing = FALSE;
+      }
     }
   }
 
@@ -572,7 +580,6 @@ gst_controller_new_list (GObject * object, GList * list)
  * Creates a new GstController for the given object's properties
  *
  * Returns: the new controller.
- * Since: 0.9
  */
 GstController *
 gst_controller_new (GObject * object, ...)
@@ -597,7 +604,6 @@ gst_controller_new (GObject * object, ...)
  * Removes the given object properties from the controller
  *
  * Returns: %FALSE if one of the given property isn't handled by the controller, %TRUE otherwise
- * Since: 0.9
  */
 gboolean
 gst_controller_remove_properties_valist (GstController * self, va_list var_args)
@@ -632,7 +638,6 @@ gst_controller_remove_properties_valist (GstController * self, va_list var_args)
  * Removes the given object properties from the controller
  *
  * Returns: %FALSE if one of the given property isn't handled by the controller, %TRUE otherwise
- * Since: 0.9
  */
 gboolean
 gst_controller_remove_properties_list (GstController * self, GList * list)
@@ -670,7 +675,6 @@ gst_controller_remove_properties_list (GstController * self, GList * list)
  * Removes the given object properties from the controller
  *
  * Returns: %FALSE if one of the given property isn't handled by the controller, %TRUE otherwise
- * Since: 0.9
  */
 gboolean
 gst_controller_remove_properties (GstController * self, ...)
@@ -697,7 +701,6 @@ gst_controller_remove_properties (GstController * self, ...)
  * Set the value of given controller-handled property at a certain time.
  *
  * Returns: FALSE if the values couldn't be set (ex : properties not handled by controller), TRUE otherwise
- * Since: 0.9
  */
 gboolean
 gst_controller_set (GstController * self, gchar * property_name,
@@ -750,7 +753,6 @@ gst_controller_set (GstController * self, gchar * property_name,
  * Sets multiple timed values at once.
  *
  * Returns: %FALSE if the values couldn't be set (ex : properties not handled by controller), %TRUE otherwise
- * Since: 0.9
  */
 
 gboolean
@@ -799,7 +801,6 @@ gst_controller_set_from_list (GstController * self, gchar * property_name,
  * time.
  *
  * Returns: %FALSE if the values couldn't be unset (ex : properties not handled by controller), %TRUE otherwise
- * Since: 0.9
  */
 gboolean
 gst_controller_unset (GstController * self, gchar * property_name,
@@ -872,7 +873,6 @@ gst_controller_unset_all (GstController * self, gchar * property_name)
  * time.
  *
  * Returns: the GValue of the property at the given time, or %NULL if the property isn't handled by the controller
- * Since: 0.9
  */
 GValue *
 gst_controller_get (GstController * self, gchar * property_name,
@@ -904,7 +904,6 @@ gst_controller_get (GstController * self, gchar * property_name,
  * Free the list after done with it.
  *
  * Returns: a copy of the list, or %NULL if the property isn't handled by the controller
- * Since: 0.9
  */
 const GList *
 gst_controller_get_all (GstController * self, gchar * property_name)
@@ -934,7 +933,6 @@ gst_controller_get_all (GstController * self, gchar * property_name)
  *
  * Returns: %TRUE if the controller values could be applied to the object
  * properties, %FALSE otherwise
- * Since: 0.9
  */
 gboolean
 gst_controller_sync_values (GstController * self, GstClockTime timestamp)
@@ -1005,7 +1003,6 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
  * The type of the values in the array are the same as the property's type.
  *
  * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
- * Since: 0.9
  */
 gboolean
 gst_controller_get_value_arrays (GstController * self,
@@ -1037,7 +1034,6 @@ gst_controller_get_value_arrays (GstController * self,
  * The type of the values in the array are the same as the property's type.
  *
  * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
- * Since: 0.9
  */
 gboolean
 gst_controller_get_value_array (GstController * self, GstClockTime timestamp,
@@ -1080,7 +1076,6 @@ gst_controller_get_value_array (GstController * self, GstClockTime timestamp,
  * Sets the given interpolation mode on the given property.
  *
  * Returns: %TRUE if the property is handled by the controller, %FALSE otherwise
- * Since: 0.9
  */
 gboolean
 gst_controller_set_interpolation_mode (GstController * self,
