@@ -1,3 +1,13 @@
+2006-10-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_add_srcpad):
+	* gst/icydemux/gsticydemux.c: (gst_icydemux_add_srcpad):
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_add_srcpad):
+	  Activate pad before adding it to the already-running element.
+
+	* tests/check/elements/icydemux.c: (icydemux_found_pad):
+	  Activate newly-created pad too.
+
 2006-10-11  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sebastien Cote <sebas642 at yahoo dot ca>

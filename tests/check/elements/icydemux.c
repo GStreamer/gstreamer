@@ -101,8 +101,8 @@ icydemux_found_pad (GstElement * src, GstPad * pad, gpointer data)
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Failed to link pads");
   gst_object_unref (srcpad);
-
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 2);
+  gst_pad_set_active (sinkpad, TRUE);
 }
 
 static GstElement *

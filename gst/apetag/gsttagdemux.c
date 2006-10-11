@@ -329,6 +329,7 @@ gst_tag_demux_add_srcpad (GstTagDemux * tagdemux, GstCaps * new_caps)
         tagdemux->priv->src_caps);
 
     gst_object_ref (tagdemux->priv->srcpad);
+    gst_pad_set_active (tagdemux->priv->srcpad, TRUE);
     if (!(gst_element_add_pad (GST_ELEMENT (tagdemux), tagdemux->priv->srcpad)))
       return FALSE;
     gst_element_no_more_pads (GST_ELEMENT (tagdemux));
