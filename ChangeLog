@@ -1,3 +1,24 @@
+2006-10-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/URLS:
+	Added some other URL.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_loop_udp),
+	(gst_rtspsrc_handle_request), (gst_rtspsrc_send),
+	(gst_rtspsrc_open), (gst_rtspsrc_play),
+	(gst_rtspsrc_handle_message), (gst_rtspsrc_change_state):
+	* gst/rtsp/gstrtspsrc.h:
+	Work on fallback to TCP connection when the UDP socket times out.
+	Handler server requests, just reply with OK for now.
+
+	* gst/rtsp/rtspdefs.c: (rtsp_strresult):
+	* gst/rtsp/rtspdefs.h:
+	Added some more Real extension headers.
+
+	* gst/rtsp/rtspurl.c: (rtsp_url_parse):
+	Fix parsing of urls with a ':' that is not part of the hostname:port
+	part of the url.
+
 2006-10-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_add_srcpad):

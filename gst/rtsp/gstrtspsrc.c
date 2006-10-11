@@ -95,6 +95,10 @@
 #include "gstrtspsrc.h"
 #include "sdp.h"
 
+#if 0
+#define WITH_EXT_REAL
+#endif
+
 #include "rtspextwms.h"
 #ifdef WITH_EXT_REAL
 #include "rtspextreal.h"
@@ -172,6 +176,11 @@ static void gst_rtspsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtspsrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
+static gboolean gst_rtspsrc_open (GstRTSPSrc * src);
+static gboolean gst_rtspsrc_play (GstRTSPSrc * src);
+static gboolean gst_rtspsrc_pause (GstRTSPSrc * src);
+static gboolean gst_rtspsrc_close (GstRTSPSrc * src);
 
 static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
     const gchar * uri);
@@ -1207,9 +1216,12 @@ need_pause:
 static void
 gst_rtspsrc_loop_udp (GstRTSPSrc * src)
 {
+  gboolean restart = FALSE;
+
   GST_OBJECT_LOCK (src);
   if (src->loop_cmd == CMD_STOP)
     goto stopping;
+
   while (src->loop_cmd == CMD_WAIT) {
     GST_DEBUG_OBJECT (src, "waiting");
     GST_RTSP_LOOP_WAIT (src);
@@ -1220,9 +1232,42 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   if (src->loop_cmd == CMD_RECONNECT) {
     /* FIXME, when we get here we have to reconnect using tcp */
     src->loop_cmd = CMD_WAIT;
+    restart = TRUE;
   }
   GST_OBJECT_UNLOCK (src);
 
+  if (restart) {
+    gst_rtspsrc_pause (src);
+
+    if (src->task) {
+      /* stop task, we cannot join as this would deadlock */
+      gst_task_stop (src->task);
+      /* and free the task so that _close will not stop/join it again. */
+      gst_object_unref (GST_OBJECT (src->task));
+      src->task = NULL;
+    }
+    gst_rtspsrc_close (src);
+
+    /* see if we have TCP left to try */
+    if (src->cur_protocols & RTSP_LOWER_TRANS_TCP) {
+      /* We post a warning message now to inform the user
+       * that nothing happened. It's most likely a firewall thing. */
+      GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
+          ("Could not receive any UDP packets for %.4f seconds, maybe your "
+              "firewall is blocking it. Retrying using a TCP connection.",
+              (gdouble) src->timeout / 1000000));
+      /* we can try only TCP now */
+      src->cur_protocols = RTSP_LOWER_TRANS_TCP;
+      gst_rtspsrc_open (src);
+      gst_rtspsrc_play (src);
+    } else {
+      src->cur_protocols = 0;
+      /* no transport possible, post an error */
+      GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+          ("Could not receive any UDP packets for %.4f seconds, maybe your "
+              "firewall is blocking it.", (gdouble) src->timeout / 1000000));
+    }
+  }
   return;
 
   /* ERRORS */
@@ -1251,6 +1296,36 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
     gst_rtspsrc_loop_interleaved (src);
   else
     gst_rtspsrc_loop_udp (src);
+}
+
+static RTSPResult
+gst_rtspsrc_handle_request (GstRTSPSrc * src, RTSPMessage * request)
+{
+  RTSPMessage response = { 0 };
+  RTSPResult res;
+
+  res = rtsp_message_init_response (&response, RTSP_STS_OK, "OK", request);
+  if (res < 0)
+    goto send_error;
+
+  if (src->debug)
+    rtsp_message_dump (&response);
+
+  if ((res = rtsp_connection_send (src->connection, &response)) < 0)
+    goto send_error;
+
+  return RTSP_OK;
+
+  /* ERRORS */
+send_error:
+  {
+    gchar *str = rtsp_strresult (res);
+
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+        ("Could not send message. (%s)", str));
+    g_free (str);
+    return res;
+  }
 }
 
 /**
@@ -1287,11 +1362,27 @@ gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
   if ((res = rtsp_connection_send (src->connection, request)) < 0)
     goto send_error;
 
+next:
   if ((res = rtsp_connection_receive (src->connection, response)) < 0)
     goto receive_error;
 
   if (src->debug)
     rtsp_message_dump (response);
+
+  switch (response->type) {
+    case RTSP_MESSAGE_REQUEST:
+      /* FIXME, handle server request, reply with OK, for now */
+      if ((res = gst_rtspsrc_handle_request (src, response)) < 0)
+        goto handle_request_failed;
+      goto next;
+    case RTSP_MESSAGE_RESPONSE:
+      /* ok, a response is good */
+      break;
+    default:
+    case RTSP_MESSAGE_DATA:
+      /* get next response */
+      goto next;
+  }
 
   thecode = response->type_data.response.code;
   /* if the caller wanted the result code, we store it. Else we check if it's
@@ -1330,6 +1421,11 @@ receive_error:
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not receive message. (%s)", str));
     g_free (str);
+    return FALSE;
+  }
+handle_request_failed:
+  {
+    /* ERROR was posted */
     return FALSE;
   }
 error_response:
@@ -1566,6 +1662,11 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   GstRTSPStream *stream = NULL;
   gchar *respcont = NULL;
 
+  /* reset our state */
+  src->free_channel = 0;
+  src->interleaved = FALSE;
+  gst_segment_init (&src->segment, GST_FORMAT_TIME);
+
   /* can't continue without a valid url */
   if (G_UNLIKELY (src->url == NULL))
     goto no_url;
@@ -1639,7 +1740,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   /* we initially allow all configured lower transports. based on the
    * replies from the server we narrow them down. */
-  protocols = src->protocols;
+  protocols = src->cur_protocols;
 
   /* setup streams */
   n_streams = sdp_message_medias_len (&sdp);
@@ -1952,7 +2053,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   if (res < 0)
     goto create_request_failed;
 
-  rtsp_message_add_header (&request, RTSP_HDR_RANGE, "npt=0.000-");
+  rtsp_message_add_header (&request, RTSP_HDR_RANGE, "npt=0-");
 
   if (!gst_rtspsrc_send (src, &request, &response, NULL))
     goto send_error;
@@ -2051,13 +2152,6 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
       if (gst_structure_has_name (s, "GstUDPSrcTimeout")) {
         GST_DEBUG_OBJECT (bin, "timeout on UDP port");
         gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_RECONNECT);
-        /* FIXME, we post an error message now to inform the user
-         * that nothing happened. It's most likely a firewall thing. Ideally we
-         * notify the thread and redo the setup with only TCP. */
-        GST_ELEMENT_ERROR (rtspsrc, RESOURCE, READ, (NULL),
-            ("Could not receive any UDP packets for %.4f seconds, maybe your "
-                "firewall is blocking it.",
-                (gdouble) rtspsrc->timeout / 1000000));
         return;
       }
     }
@@ -2080,15 +2174,13 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      /* the first free channel for interleaved mode */
-      rtspsrc->free_channel = 0;
-      rtspsrc->interleaved = FALSE;
-      gst_segment_init (&rtspsrc->segment, GST_FORMAT_TIME);
+      rtspsrc->cur_protocols = rtspsrc->protocols;
       if (!gst_rtspsrc_open (rtspsrc))
         goto open_failed;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       rtsp_connection_flush (rtspsrc->connection, FALSE);
+      /* copy configuerd protocols */
       gst_rtspsrc_play (rtspsrc);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:

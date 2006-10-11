@@ -155,7 +155,17 @@ typedef enum {
   RTSP_HDR_CLIENT_CHALLENGE,    /* ClientChallenge */
   RTSP_HDR_REAL_CHALLENGE1,     /* RealChallenge1 */
   RTSP_HDR_REAL_CHALLENGE2,     /* RealChallenge2 */
+  RTSP_HDR_REAL_CHALLENGE3,     /* RealChallenge3 */
   RTSP_HDR_SUBSCRIBE,           /* Subscribe */
+  RTSP_HDR_ALERT,               /* Alert */
+  RTSP_HDR_CLIENT_ID,           /* ClientID */
+  RTSP_HDR_COMPANY_ID,          /* CompanyID */
+  RTSP_HDR_GUID,                /* GUID */
+  RTSP_HDR_REGION_DATA,         /* RegionData */
+  RTSP_HDR_MAX_ASM_WIDTH,       /* SupportsMaximumASMBandwidth */
+  RTSP_HDR_LANGUAGE,            /* Language */
+  RTSP_HDR_PLAYER_START_TIME,   /* PlayerStarttime */
+
 
 } RTSPHeaderField;
 

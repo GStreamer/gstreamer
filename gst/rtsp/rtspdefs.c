@@ -128,7 +128,16 @@ static const gchar *rtsp_headers[] = {
   "ClientChallenge",            /* ClientChallenge */
   "RealChallenge1",             /* RealChallenge1 */
   "RealChallenge2",             /* RealChallenge2 */
+  "RealChallenge3",             /* RealChallenge3 */
   "Subscribe",                  /* Subscribe */
+  "Alert",                      /* Alert */
+  "ClientID",                   /* ClientID */
+  "CompanyID",                  /* CompanyID */
+  "GUID",                       /* GUID */
+  "RegionData",                 /* RegionData */
+  "SupportsMaximumASMBandwidth",        /* SupportsMaximumASMBandwidth */
+  "Language",                   /* Language */
+  "PlayerStarttime",            /* PlayerStarttime */
 
   NULL
 };

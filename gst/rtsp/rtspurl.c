@@ -95,6 +95,11 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
   }
 
   col = strstr (p, ":");
+  /* we have a ':' and a slash but the ':' is after the slash, it's not really
+   * part of the hostname */
+  if (col && slash && col >= slash)
+    col = NULL;
+
   if (col) {
     res->host = g_strndup (p, col - p);
     p = col + 1;

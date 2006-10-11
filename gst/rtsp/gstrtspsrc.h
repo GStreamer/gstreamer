@@ -124,13 +124,17 @@ struct _GstRTSPSrc {
   GList           *streams;
   GstStructure    *props;
 
+  /* properties */
   gchar           *location;
   RTSPUrl         *url;
-  gchar           *content_base;
   RTSPLowerTrans   protocols;
   gboolean         debug;
   guint   	   retry;
   guint64          timeout;
+
+  /* state */
+  gchar           *content_base;
+  RTSPLowerTrans   cur_protocols;
 
   /* supported methods */
   gint             methods;
