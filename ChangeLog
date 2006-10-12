@@ -1,5 +1,27 @@
 2006-10-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/speex/gstspeex.c: (plugin_init):
+	* ext/speex/gstspeexenc.c: (gst_speex_enc_get_formats),
+	(gst_speex_enc_setup_interfaces), (gst_speex_enc_base_init),
+	(gst_speex_enc_class_init), (gst_speex_enc_finalize),
+	(gst_speex_enc_sink_setcaps), (gst_speex_enc_convert_src),
+	(gst_speex_enc_convert_sink), (gst_speex_enc_get_query_types),
+	(gst_speex_enc_src_query), (gst_speex_enc_sink_query),
+	(gst_speex_enc_init), (gst_speex_enc_create_metadata_buffer),
+	(gst_speex_enc_set_last_msg), (gst_speex_enc_setup),
+	(gst_speex_enc_buffer_from_data), (gst_speex_enc_push_buffer),
+	(gst_speex_enc_set_header_on_caps), (gst_speex_enc_sinkevent),
+	(gst_speex_enc_chain), (gst_speex_enc_get_property),
+	(gst_speex_enc_set_property), (gst_speex_enc_change_state):
+	* ext/speex/gstspeexenc.h:
+	  Miscellaneous clean-ups, among other things: speexenc => enc to
+	  enhance code readability; change speexenc => speex_enc; in chain
+	  function unref input buffer in case of error; take reference in
+	  event function; use boilerplate macro; use gst_pad_query_peer_*
+	  convenience functions.
+
+2006-10-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/speex/gstspeexenc.c: (gst_speexenc_finalize),
 	(gst_speexenc_set_last_msg), (gst_speexenc_setup),
 	(gst_speexenc_set_header_on_caps):

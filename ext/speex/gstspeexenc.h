@@ -1,4 +1,4 @@
-/* GStreamer
+/* GStreamer Speex Encoder
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -18,8 +18,8 @@
  */
 
 
-#ifndef __GST_SPEEXENC_H__
-#define __GST_SPEEXENC_H__
+#ifndef __GST_SPEEX_ENC_H__
+#define __GST_SPEEX_ENC_H__
 
 
 #include <gst/gst.h>
@@ -30,26 +30,26 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SPEEXENC \
-  (gst_speexenc_get_type())
-#define GST_SPEEXENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SPEEXENC,GstSpeexEnc))
-#define GST_SPEEXENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SPEEXENC,GstSpeexEncClass))
-#define GST_IS_SPEEXENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SPEEXENC))
-#define GST_IS_SPEEXENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SPEEXENC))
+#define GST_TYPE_SPEEX_ENC \
+  (gst_speex_enc_get_type())
+#define GST_SPEEX_ENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SPEEX_ENC,GstSpeexEnc))
+#define GST_SPEEX_ENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SPEEX_ENC,GstSpeexEncClass))
+#define GST_IS_SPEEX_ENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SPEEX_ENC))
+#define GST_IS_SPEEX_ENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SPEEX_ENC))
 
 #define MAX_FRAME_SIZE 2000*2
 #define MAX_FRAME_BYTES 2000
 
 typedef enum
 {
-  GST_SPEEXENC_MODE_AUTO,
-  GST_SPEEXENC_MODE_UWB,
-  GST_SPEEXENC_MODE_WB,
-  GST_SPEEXENC_MODE_NB,
+  GST_SPEEX_ENC_MODE_AUTO,
+  GST_SPEEX_ENC_MODE_UWB,
+  GST_SPEEX_ENC_MODE_WB,
+  GST_SPEEX_ENC_MODE_NB
 } GstSpeexMode;
 
 typedef struct _GstSpeexEnc GstSpeexEnc;
@@ -117,7 +117,7 @@ struct _GstSpeexEncClass {
   void (*frame_encoded) (GstElement *element);
 };
 
-GType gst_speexenc_get_type(void);
+GType gst_speex_enc_get_type (void);
 
 G_END_DECLS
 

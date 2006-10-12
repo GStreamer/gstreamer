@@ -82,7 +82,7 @@ enum
 
 #if 0
 static const GstFormat *
-gst_speexenc_get_formats (GstPad * pad)
+gst_speex_enc_get_formats (GstPad * pad)
 {
   static const GstFormat src_formats[] = {
     GST_FORMAT_BYTES,
@@ -100,61 +100,35 @@ gst_speexenc_get_formats (GstPad * pad)
 }
 #endif
 
-static void gst_speexenc_base_init (gpointer g_class);
-static void gst_speexenc_class_init (GstSpeexEncClass * klass);
-static void gst_speexenc_init (GstSpeexEnc * speexenc);
-static void gst_speexenc_finalize (GObject * object);
+static void gst_speex_enc_finalize (GObject * object);
 
-static gboolean gst_speexenc_sinkevent (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_speexenc_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_speexenc_setup (GstSpeexEnc * speexenc);
+static gboolean gst_speex_enc_sinkevent (GstPad * pad, GstEvent * event);
+static GstFlowReturn gst_speex_enc_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_speex_enc_setup (GstSpeexEnc * enc);
 
-static void gst_speexenc_get_property (GObject * object, guint prop_id,
+static void gst_speex_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_speexenc_set_property (GObject * object, guint prop_id,
+static void gst_speex_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static GstStateChangeReturn gst_speexenc_change_state (GstElement * element,
+static GstStateChangeReturn gst_speex_enc_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_speexenc_get_type (void)
+static void
+gst_speex_enc_setup_interfaces (GType speexenc_type)
 {
-  static GType speexenc_type = 0;
+  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
 
-  if (!speexenc_type) {
-    static const GTypeInfo speexenc_info = {
-      sizeof (GstSpeexEncClass),
-      gst_speexenc_base_init,
-      NULL,
-      (GClassInitFunc) gst_speexenc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstSpeexEnc),
-      0,
-      (GInstanceInitFunc) gst_speexenc_init,
-    };
-    static const GInterfaceInfo tag_setter_info = {
-      NULL,
-      NULL,
-      NULL
-    };
+  g_type_add_interface_static (speexenc_type, GST_TYPE_TAG_SETTER,
+      &tag_setter_info);
 
-    speexenc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstSpeexEnc", &speexenc_info,
-        0);
-
-    g_type_add_interface_static (speexenc_type, GST_TYPE_TAG_SETTER,
-        &tag_setter_info);
-
-    GST_DEBUG_CATEGORY_INIT (speexenc_debug, "speexenc", 0, "Speex encoder");
-  }
-  return speexenc_type;
+  GST_DEBUG_CATEGORY_INIT (speexenc_debug, "speexenc", 0, "Speex encoder");
 }
 
+GST_BOILERPLATE_FULL (GstSpeexEnc, gst_speex_enc, GstElement, GST_TYPE_ELEMENT,
+    gst_speex_enc_setup_interfaces);
+
 static void
-gst_speexenc_base_init (gpointer g_class)
+gst_speex_enc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -166,7 +140,7 @@ gst_speexenc_base_init (gpointer g_class)
 }
 
 static void
-gst_speexenc_class_init (GstSpeexEncClass * klass)
+gst_speex_enc_class_init (GstSpeexEncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -174,8 +148,8 @@ gst_speexenc_class_init (GstSpeexEncClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  gobject_class->set_property = gst_speexenc_set_property;
-  gobject_class->get_property = gst_speexenc_get_property;
+  gobject_class->set_property = gst_speex_enc_set_property;
+  gobject_class->get_property = gst_speex_enc_get_property;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_QUALITY,
       g_param_spec_float ("quality", "Quality", "Encoding quality",
@@ -209,62 +183,57 @@ gst_speexenc_class_init (GstSpeexEncClass * klass)
       g_param_spec_string ("last-message", "last-message",
           "The last status message", NULL, G_PARAM_READABLE));
 
-  parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_speexenc_finalize);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_speex_enc_finalize);
 
   gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_speexenc_change_state);
+      GST_DEBUG_FUNCPTR (gst_speex_enc_change_state);
 }
 
 static void
-gst_speexenc_finalize (GObject * object)
+gst_speex_enc_finalize (GObject * object)
 {
-  GstSpeexEnc *speexenc;
+  GstSpeexEnc *enc;
 
-  speexenc = GST_SPEEXENC (object);
+  enc = GST_SPEEX_ENC (object);
 
-  g_free (speexenc->last_message);
-  g_object_unref (speexenc->adapter);
+  g_free (enc->last_message);
+  g_object_unref (enc->adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
-gst_speexenc_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_speex_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstSpeexEnc *speexenc;
+  GstSpeexEnc *enc;
   GstStructure *structure;
 
-  speexenc = GST_SPEEXENC (gst_pad_get_parent (pad));
-  speexenc->setup = FALSE;
+  enc = GST_SPEEX_ENC (GST_PAD_PARENT (pad));
+  enc->setup = FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (structure, "channels", &speexenc->channels);
-  gst_structure_get_int (structure, "rate", &speexenc->rate);
+  gst_structure_get_int (structure, "channels", &enc->channels);
+  gst_structure_get_int (structure, "rate", &enc->rate);
 
-  gst_speexenc_setup (speexenc);
+  gst_speex_enc_setup (enc);
 
-  gst_object_unref (speexenc);
-
-  return speexenc->setup;
+  return enc->setup;
 }
 
 static gboolean
-gst_speexenc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
+gst_speex_enc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
-  GstSpeexEnc *speexenc;
+  GstSpeexEnc *enc;
   gint64 avg;
 
-  speexenc = GST_SPEEXENC (GST_PAD_PARENT (pad));
+  enc = GST_SPEEX_ENC (GST_PAD_PARENT (pad));
 
-  if (speexenc->samples_in == 0 ||
-      speexenc->bytes_out == 0 || speexenc->rate == 0)
+  if (enc->samples_in == 0 || enc->bytes_out == 0 || enc->rate == 0)
     return FALSE;
 
-  avg = (speexenc->bytes_out * speexenc->rate) / (speexenc->samples_in);
+  avg = (enc->bytes_out * enc->rate) / (enc->samples_in);
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
@@ -292,17 +261,17 @@ gst_speexenc_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
 }
 
 static gboolean
-gst_speexenc_convert_sink (GstPad * pad, GstFormat src_format,
+gst_speex_enc_convert_sink (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
   guint scale = 1;
   gint bytes_per_sample;
-  GstSpeexEnc *speexenc;
+  GstSpeexEnc *enc;
 
-  speexenc = GST_SPEEXENC (GST_PAD_PARENT (pad));
+  enc = GST_SPEEX_ENC (GST_PAD_PARENT (pad));
 
-  bytes_per_sample = speexenc->channels * 2;
+  bytes_per_sample = enc->channels * 2;
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
@@ -314,7 +283,7 @@ gst_speexenc_convert_sink (GstPad * pad, GstFormat src_format,
           break;
         case GST_FORMAT_TIME:
         {
-          gint byterate = bytes_per_sample * speexenc->rate;
+          gint byterate = bytes_per_sample * enc->rate;
 
           if (byterate == 0)
             return FALSE;
@@ -331,9 +300,9 @@ gst_speexenc_convert_sink (GstPad * pad, GstFormat src_format,
           *dest_value = src_value * bytes_per_sample;
           break;
         case GST_FORMAT_TIME:
-          if (speexenc->rate == 0)
+          if (enc->rate == 0)
             return FALSE;
-          *dest_value = src_value * GST_SECOND / speexenc->rate;
+          *dest_value = src_value * GST_SECOND / enc->rate;
           break;
         default:
           res = FALSE;
@@ -345,7 +314,7 @@ gst_speexenc_convert_sink (GstPad * pad, GstFormat src_format,
           scale = bytes_per_sample;
           /* fallthrough */
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value * scale * speexenc->rate / GST_SECOND;
+          *dest_value = src_value * scale * enc->rate / GST_SECOND;
           break;
         default:
           res = FALSE;
@@ -358,27 +327,25 @@ gst_speexenc_convert_sink (GstPad * pad, GstFormat src_format,
 }
 
 static const GstQueryType *
-gst_speexenc_get_query_types (GstPad * pad)
+gst_speex_enc_get_query_types (GstPad * pad)
 {
-  static const GstQueryType gst_speexenc_src_query_types[] = {
+  static const GstQueryType gst_speex_enc_src_query_types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
     GST_QUERY_CONVERT,
     0
   };
 
-  return gst_speexenc_src_query_types;
+  return gst_speex_enc_src_query_types;
 }
 
 static gboolean
-gst_speexenc_src_query (GstPad * pad, GstQuery * query)
+gst_speex_enc_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
-  GstSpeexEnc *speexenc;
-  GstPad *peerpad;
+  GstSpeexEnc *enc;
 
-  speexenc = GST_SPEEXENC (gst_pad_get_parent (pad));
-  peerpad = gst_pad_get_peer (GST_PAD (speexenc->sinkpad));
+  enc = GST_SPEEX_ENC (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -387,16 +354,18 @@ gst_speexenc_src_query (GstPad * pad, GstQuery * query)
       gint64 pos, val;
 
       gst_query_parse_position (query, &req_fmt, NULL);
-      if ((res = gst_pad_query_position (peerpad, &req_fmt, &val))) {
+      if ((res = gst_pad_query_peer_position (enc->sinkpad, &req_fmt, &val))) {
         gst_query_set_position (query, req_fmt, val);
         break;
       }
 
       fmt = GST_FORMAT_TIME;
-      if (!(res = gst_pad_query_position (peerpad, &fmt, &pos)))
+      if (!(res = gst_pad_query_peer_position (enc->sinkpad, &fmt, &pos)))
         break;
 
-      if ((res = gst_pad_query_convert (peerpad, fmt, pos, &req_fmt, &val)))
+      if ((res =
+              gst_pad_query_peer_convert (enc->sinkpad, fmt, pos, &req_fmt,
+                  &val)))
         gst_query_set_position (query, req_fmt, val);
 
       break;
@@ -407,16 +376,18 @@ gst_speexenc_src_query (GstPad * pad, GstQuery * query)
       gint64 dur, val;
 
       gst_query_parse_duration (query, &req_fmt, NULL);
-      if ((res = gst_pad_query_duration (peerpad, &req_fmt, &val))) {
+      if ((res = gst_pad_query_peer_duration (enc->sinkpad, &req_fmt, &val))) {
         gst_query_set_duration (query, req_fmt, val);
         break;
       }
 
       fmt = GST_FORMAT_TIME;
-      if (!(res = gst_pad_query_duration (peerpad, &fmt, &dur)))
+      if (!(res = gst_pad_query_peer_duration (enc->sinkpad, &fmt, &dur)))
         break;
 
-      if ((res = gst_pad_query_convert (peerpad, fmt, dur, &req_fmt, &val))) {
+      if ((res =
+              gst_pad_query_peer_convert (enc->sinkpad, fmt, dur, &req_fmt,
+                  &val))) {
         gst_query_set_duration (query, req_fmt, val);
       }
       break;
@@ -427,7 +398,7 @@ gst_speexenc_src_query (GstPad * pad, GstQuery * query)
       gint64 src_val, dest_val;
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      if (!(res = gst_speexenc_convert_src (pad, src_fmt, src_val, &dest_fmt,
+      if (!(res = gst_speex_enc_convert_src (pad, src_fmt, src_val, &dest_fmt,
                   &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -439,18 +410,19 @@ gst_speexenc_src_query (GstPad * pad, GstQuery * query)
   }
 
 error:
-  gst_object_unref (peerpad);
-  gst_object_unref (speexenc);
+
+  gst_object_unref (enc);
+
   return res;
 }
 
 static gboolean
-gst_speexenc_sink_query (GstPad * pad, GstQuery * query)
+gst_speex_enc_sink_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
-  GstSpeexEnc *speexenc;
+  GstSpeexEnc *enc;
 
-  speexenc = GST_SPEEXENC (GST_PAD_PARENT (pad));
+  enc = GST_SPEEX_ENC (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONVERT:
@@ -460,7 +432,7 @@ gst_speexenc_sink_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (!(res =
-              gst_speexenc_convert_sink (pad, src_fmt, src_val, &dest_fmt,
+              gst_speex_enc_convert_sink (pad, src_fmt, src_val, &dest_fmt,
                   &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -476,46 +448,48 @@ error:
 }
 
 static void
-gst_speexenc_init (GstSpeexEnc * speexenc)
+gst_speex_enc_init (GstSpeexEnc * enc, GstSpeexEncClass * klass)
 {
-  speexenc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_element_add_pad (GST_ELEMENT (speexenc), speexenc->sinkpad);
-  gst_pad_set_event_function (speexenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_speexenc_sinkevent));
-  gst_pad_set_chain_function (speexenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_speexenc_chain));
-  gst_pad_set_setcaps_function (speexenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_speexenc_sink_setcaps));
-  gst_pad_set_query_function (speexenc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_speexenc_sink_query));
+  enc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
+  gst_element_add_pad (GST_ELEMENT (enc), enc->sinkpad);
+  gst_pad_set_event_function (enc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_speex_enc_sinkevent));
+  gst_pad_set_chain_function (enc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_speex_enc_chain));
+  gst_pad_set_setcaps_function (enc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_speex_enc_sink_setcaps));
+  gst_pad_set_query_function (enc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_speex_enc_sink_query));
 
-  speexenc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_query_function (speexenc->srcpad,
-      GST_DEBUG_FUNCPTR (gst_speexenc_src_query));
-  gst_pad_set_query_type_function (speexenc->srcpad,
-      GST_DEBUG_FUNCPTR (gst_speexenc_get_query_types));
-  gst_element_add_pad (GST_ELEMENT (speexenc), speexenc->srcpad);
+  enc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
+  gst_pad_set_query_function (enc->srcpad,
+      GST_DEBUG_FUNCPTR (gst_speex_enc_src_query));
+  gst_pad_set_query_type_function (enc->srcpad,
+      GST_DEBUG_FUNCPTR (gst_speex_enc_get_query_types));
+  gst_element_add_pad (GST_ELEMENT (enc), enc->srcpad);
 
-  speexenc->channels = -1;
-  speexenc->rate = -1;
+  enc->channels = -1;
+  enc->rate = -1;
 
-  speexenc->quality = DEFAULT_QUALITY;
-  speexenc->bitrate = DEFAULT_BITRATE;
-  speexenc->vbr = DEFAULT_VBR;
-  speexenc->abr = DEFAULT_ABR;
-  speexenc->vad = DEFAULT_VAD;
-  speexenc->dtx = DEFAULT_DTX;
-  speexenc->complexity = DEFAULT_COMPLEXITY;
-  speexenc->nframes = DEFAULT_NFRAMES;
+  enc->quality = DEFAULT_QUALITY;
+  enc->bitrate = DEFAULT_BITRATE;
+  enc->vbr = DEFAULT_VBR;
+  enc->abr = DEFAULT_ABR;
+  enc->vad = DEFAULT_VAD;
+  enc->dtx = DEFAULT_DTX;
+  enc->complexity = DEFAULT_COMPLEXITY;
+  enc->nframes = DEFAULT_NFRAMES;
 
-  speexenc->setup = FALSE;
-  speexenc->header_sent = FALSE;
+  /* FIXME: what about enc->mode? */
 
-  speexenc->adapter = gst_adapter_new ();
+  enc->setup = FALSE;
+  enc->header_sent = FALSE;
+
+  enc->adapter = gst_adapter_new ();
 }
 
 static GstBuffer *
-gst_speexenc_create_metadata_buffer (GstSpeexEnc * enc)
+gst_speex_enc_create_metadata_buffer (GstSpeexEnc * enc)
 {
   const GstTagList *user_tags;
   GstTagList *merged_tags;
@@ -545,7 +519,7 @@ gst_speexenc_create_metadata_buffer (GstSpeexEnc * enc)
 }
 
 static void
-gst_speexenc_set_last_msg (GstSpeexEnc * enc, const gchar * msg)
+gst_speex_enc_set_last_msg (GstSpeexEnc * enc, const gchar * msg)
 {
   g_free (enc->last_message);
   enc->last_message = g_strdup (msg);
@@ -554,156 +528,150 @@ gst_speexenc_set_last_msg (GstSpeexEnc * enc, const gchar * msg)
 }
 
 static gboolean
-gst_speexenc_setup (GstSpeexEnc * speexenc)
+gst_speex_enc_setup (GstSpeexEnc * enc)
 {
-  speexenc->setup = FALSE;
+  enc->setup = FALSE;
 
-  switch (speexenc->mode) {
-    case GST_SPEEXENC_MODE_UWB:
-      speexenc->speex_mode = (SpeexMode *) & speex_uwb_mode;
+  switch (enc->mode) {
+    case GST_SPEEX_ENC_MODE_UWB:
+      enc->speex_mode = (SpeexMode *) & speex_uwb_mode;
       break;
-    case GST_SPEEXENC_MODE_WB:
-      speexenc->speex_mode = (SpeexMode *) & speex_wb_mode;
+    case GST_SPEEX_ENC_MODE_WB:
+      enc->speex_mode = (SpeexMode *) & speex_wb_mode;
       break;
-    case GST_SPEEXENC_MODE_NB:
-      speexenc->speex_mode = (SpeexMode *) & speex_nb_mode;
+    case GST_SPEEX_ENC_MODE_NB:
+      enc->speex_mode = (SpeexMode *) & speex_nb_mode;
       break;
-    case GST_SPEEXENC_MODE_AUTO:
+    case GST_SPEEX_ENC_MODE_AUTO:
       /* fall through */
     default:
       break;
   }
 
-  if (speexenc->rate > 25000) {
-    if (speexenc->mode == GST_SPEEXENC_MODE_AUTO) {
-      speexenc->speex_mode = (SpeexMode *) & speex_uwb_mode;
+  if (enc->rate > 25000) {
+    if (enc->mode == GST_SPEEX_ENC_MODE_AUTO) {
+      enc->speex_mode = (SpeexMode *) & speex_uwb_mode;
     } else {
-      if (speexenc->speex_mode != &speex_uwb_mode) {
-        gst_speexenc_set_last_msg (speexenc,
+      if (enc->speex_mode != &speex_uwb_mode) {
+        gst_speex_enc_set_last_msg (enc,
             "Warning: suggest to use ultra wide band mode for this rate");
       }
     }
-  } else if (speexenc->rate > 12500) {
-    if (speexenc->mode == GST_SPEEXENC_MODE_AUTO) {
-      speexenc->speex_mode = (SpeexMode *) & speex_wb_mode;
+  } else if (enc->rate > 12500) {
+    if (enc->mode == GST_SPEEX_ENC_MODE_AUTO) {
+      enc->speex_mode = (SpeexMode *) & speex_wb_mode;
     } else {
-      if (speexenc->speex_mode != &speex_wb_mode) {
-        gst_speexenc_set_last_msg (speexenc,
+      if (enc->speex_mode != &speex_wb_mode) {
+        gst_speex_enc_set_last_msg (enc,
             "Warning: suggest to use wide band mode for this rate");
       }
     }
   } else {
-    if (speexenc->mode == GST_SPEEXENC_MODE_AUTO) {
-      speexenc->speex_mode = (SpeexMode *) & speex_nb_mode;
+    if (enc->mode == GST_SPEEX_ENC_MODE_AUTO) {
+      enc->speex_mode = (SpeexMode *) & speex_nb_mode;
     } else {
-      if (speexenc->speex_mode != &speex_nb_mode) {
-        gst_speexenc_set_last_msg (speexenc,
+      if (enc->speex_mode != &speex_nb_mode) {
+        gst_speex_enc_set_last_msg (enc,
             "Warning: suggest to use narrow band mode for this rate");
       }
     }
   }
 
-  if (speexenc->rate != 8000 && speexenc->rate != 16000
-      && speexenc->rate != 32000) {
-    gst_speexenc_set_last_msg (speexenc,
+  if (enc->rate != 8000 && enc->rate != 16000 && enc->rate != 32000) {
+    gst_speex_enc_set_last_msg (enc,
         "Warning: speex is optimized for 8, 16 and 32 KHz");
   }
 
-  speex_init_header (&speexenc->header, speexenc->rate, 1,
-      speexenc->speex_mode);
-  speexenc->header.frames_per_packet = speexenc->nframes;
-  speexenc->header.vbr = speexenc->vbr;
-  speexenc->header.nb_channels = speexenc->channels;
+  speex_init_header (&enc->header, enc->rate, 1, enc->speex_mode);
+  enc->header.frames_per_packet = enc->nframes;
+  enc->header.vbr = enc->vbr;
+  enc->header.nb_channels = enc->channels;
 
   /*Initialize Speex encoder */
-  speexenc->state = speex_encoder_init (speexenc->speex_mode);
+  enc->state = speex_encoder_init (enc->speex_mode);
 
-  speex_encoder_ctl (speexenc->state, SPEEX_GET_FRAME_SIZE,
-      &speexenc->frame_size);
-  speex_encoder_ctl (speexenc->state, SPEEX_SET_COMPLEXITY,
-      &speexenc->complexity);
-  speex_encoder_ctl (speexenc->state, SPEEX_SET_SAMPLING_RATE, &speexenc->rate);
+  speex_encoder_ctl (enc->state, SPEEX_GET_FRAME_SIZE, &enc->frame_size);
+  speex_encoder_ctl (enc->state, SPEEX_SET_COMPLEXITY, &enc->complexity);
+  speex_encoder_ctl (enc->state, SPEEX_SET_SAMPLING_RATE, &enc->rate);
 
-  if (speexenc->vbr)
-    speex_encoder_ctl (speexenc->state, SPEEX_SET_VBR_QUALITY,
-        &speexenc->quality);
+  if (enc->vbr)
+    speex_encoder_ctl (enc->state, SPEEX_SET_VBR_QUALITY, &enc->quality);
   else {
-    gint tmp = floor (speexenc->quality);
+    gint tmp = floor (enc->quality);
 
-    speex_encoder_ctl (speexenc->state, SPEEX_SET_QUALITY, &tmp);
+    speex_encoder_ctl (enc->state, SPEEX_SET_QUALITY, &tmp);
   }
-  if (speexenc->bitrate) {
-    if (speexenc->quality >= 0.0 && speexenc->vbr) {
-      gst_speexenc_set_last_msg (speexenc,
+  if (enc->bitrate) {
+    if (enc->quality >= 0.0 && enc->vbr) {
+      gst_speex_enc_set_last_msg (enc,
           "Warning: bitrate option is overriding quality");
     }
-    speex_encoder_ctl (speexenc->state, SPEEX_SET_BITRATE, &speexenc->bitrate);
+    speex_encoder_ctl (enc->state, SPEEX_SET_BITRATE, &enc->bitrate);
   }
-  if (speexenc->vbr) {
+  if (enc->vbr) {
     gint tmp = 1;
 
-    speex_encoder_ctl (speexenc->state, SPEEX_SET_VBR, &tmp);
-  } else if (speexenc->vad) {
+    speex_encoder_ctl (enc->state, SPEEX_SET_VBR, &tmp);
+  } else if (enc->vad) {
     gint tmp = 1;
 
-    speex_encoder_ctl (speexenc->state, SPEEX_SET_VAD, &tmp);
+    speex_encoder_ctl (enc->state, SPEEX_SET_VAD, &tmp);
   }
 
-  if (speexenc->dtx) {
+  if (enc->dtx) {
     gint tmp = 1;
 
-    speex_encoder_ctl (speexenc->state, SPEEX_SET_DTX, &tmp);
+    speex_encoder_ctl (enc->state, SPEEX_SET_DTX, &tmp);
   }
 
-  if (speexenc->dtx && !(speexenc->vbr || speexenc->abr || speexenc->vad)) {
-    gst_speexenc_set_last_msg (speexenc,
+  if (enc->dtx && !(enc->vbr || enc->abr || enc->vad)) {
+    gst_speex_enc_set_last_msg (enc,
         "Warning: dtx is useless without vad, vbr or abr");
-  } else if ((speexenc->vbr || speexenc->abr) && (speexenc->vad)) {
-    gst_speexenc_set_last_msg (speexenc,
+  } else if ((enc->vbr || enc->abr) && (enc->vad)) {
+    gst_speex_enc_set_last_msg (enc,
         "Warning: vad is already implied by vbr or abr");
   }
 
-  if (speexenc->abr) {
-    speex_encoder_ctl (speexenc->state, SPEEX_SET_ABR, &speexenc->abr);
+  if (enc->abr) {
+    speex_encoder_ctl (enc->state, SPEEX_SET_ABR, &enc->abr);
   }
 
-  speex_encoder_ctl (speexenc->state, SPEEX_GET_LOOKAHEAD,
-      &speexenc->lookahead);
+  speex_encoder_ctl (enc->state, SPEEX_GET_LOOKAHEAD, &enc->lookahead);
 
-  speexenc->setup = TRUE;
+  enc->setup = TRUE;
 
   return TRUE;
 }
 
 /* prepare a buffer for transmission */
 static GstBuffer *
-gst_speexenc_buffer_from_data (GstSpeexEnc * speexenc, guchar * data,
+gst_speex_enc_buffer_from_data (GstSpeexEnc * enc, guchar * data,
     gint data_len, guint64 granulepos)
 {
   GstBuffer *outbuf;
 
   outbuf = gst_buffer_new_and_alloc (data_len);
   memcpy (GST_BUFFER_DATA (outbuf), data, data_len);
-  GST_BUFFER_OFFSET (outbuf) = speexenc->bytes_out;
+  GST_BUFFER_OFFSET (outbuf) = enc->bytes_out;
   GST_BUFFER_OFFSET_END (outbuf) = granulepos;
 
-  GST_DEBUG ("encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
+  GST_LOG_OBJECT (enc, "encoded buffer of %d bytes", GST_BUFFER_SIZE (outbuf));
   return outbuf;
 }
 
 
 /* push out the buffer and do internal bookkeeping */
 static GstFlowReturn
-gst_speexenc_push_buffer (GstSpeexEnc * speexenc, GstBuffer * buffer)
+gst_speex_enc_push_buffer (GstSpeexEnc * enc, GstBuffer * buffer)
 {
-  speexenc->bytes_out += GST_BUFFER_SIZE (buffer);
+  enc->bytes_out += GST_BUFFER_SIZE (buffer);
 
-  return gst_pad_push (speexenc->srcpad, buffer);
+  return gst_pad_push (enc->srcpad, buffer);
 
 }
 
 static GstCaps *
-gst_speexenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
+gst_speex_enc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
     GstBuffer * buf2)
 {
   GstStructure *structure = NULL;
@@ -743,16 +711,16 @@ gst_speexenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
 
 
 static gboolean
-gst_speexenc_sinkevent (GstPad * pad, GstEvent * event)
+gst_speex_enc_sinkevent (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstSpeexEnc *speexenc;
+  GstSpeexEnc *enc;
 
-  speexenc = GST_SPEEXENC (GST_PAD_PARENT (pad));
+  enc = GST_SPEEX_ENC (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      speexenc->eos = TRUE;
+      enc->eos = TRUE;
       res = gst_pad_event_default (pad, event);
       break;
     case GST_EVENT_TAG:
@@ -760,11 +728,9 @@ gst_speexenc_sinkevent (GstPad * pad, GstEvent * event)
       GstTagList *list;
 
       gst_event_parse_tag (event, &list);
-      if (speexenc->tags) {
-        gst_tag_list_insert (speexenc->tags, list,
-            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (speexenc)));
-      } else {
-        g_assert_not_reached ();
+      if (enc->tags) {
+        gst_tag_list_insert (enc->tags, list,
+            gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (enc)));
       }
       res = gst_pad_event_default (pad, event);
       break;
@@ -773,22 +739,25 @@ gst_speexenc_sinkevent (GstPad * pad, GstEvent * event)
       res = gst_pad_event_default (pad, event);
       break;
   }
+
+  gst_object_unref (enc);
+
   return res;
 }
 
 
 static GstFlowReturn
-gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
+gst_speex_enc_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstSpeexEnc *speexenc;
+  GstSpeexEnc *enc;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  speexenc = GST_SPEEXENC (GST_PAD_PARENT (pad));
+  enc = GST_SPEEX_ENC (GST_PAD_PARENT (pad));
 
-  if (!speexenc->setup)
+  if (!enc->setup)
     goto not_setup;
 
-  if (!speexenc->header_sent) {
+  if (!enc->header_sent) {
     /* Speex streams begin with two headers; the initial header (with
        most of the codec setup parameters) which is mandated by the Ogg
        bitstream spec.  The second header holds any comment fields.
@@ -801,103 +770,103 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
     gint data_len;
 
     /* create header buffer */
-    data = (guint8 *) speex_header_to_packet (&speexenc->header, &data_len);
-    buf1 = gst_speexenc_buffer_from_data (speexenc, data, data_len, 0);
+    data = (guint8 *) speex_header_to_packet (&enc->header, &data_len);
+    buf1 = gst_speex_enc_buffer_from_data (enc, data, data_len, 0);
     free (data);
 
     /* create comment buffer */
-    buf2 = gst_speexenc_create_metadata_buffer (speexenc);
+    buf2 = gst_speex_enc_create_metadata_buffer (enc);
 
     /* mark and put on caps */
-    caps = gst_pad_get_caps (speexenc->srcpad);
-    caps = gst_speexenc_set_header_on_caps (caps, buf1, buf2);
+    caps = gst_pad_get_caps (enc->srcpad);
+    caps = gst_speex_enc_set_header_on_caps (caps, buf1, buf2);
 
     /* negotiate with these caps */
     GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, caps);
-    gst_pad_set_caps (speexenc->srcpad, caps);
+    gst_pad_set_caps (enc->srcpad, caps);
 
     gst_buffer_set_caps (buf1, caps);
     gst_buffer_set_caps (buf2, caps);
     gst_caps_unref (caps);
 
     /* push out buffers */
-    ret = gst_speexenc_push_buffer (speexenc, buf1);
+    ret = gst_speex_enc_push_buffer (enc, buf1);
 
     if (ret != GST_FLOW_OK) {
       gst_buffer_unref (buf2);
       goto done;
     }
 
-    ret = gst_speexenc_push_buffer (speexenc, buf2);
+    ret = gst_speex_enc_push_buffer (enc, buf2);
 
     if (ret != GST_FLOW_OK)
       goto done;
 
-    speex_bits_reset (&speexenc->bits);
+    speex_bits_reset (&enc->bits);
 
-    speexenc->header_sent = TRUE;
+    enc->header_sent = TRUE;
   }
 
   {
-    gint frame_size = speexenc->frame_size;
-    gint bytes = frame_size * 2 * speexenc->channels;
+    gint frame_size = enc->frame_size;
+    gint bytes = frame_size * 2 * enc->channels;
 
     /* push buffer to adapter */
-    gst_adapter_push (speexenc->adapter, buf);
+    gst_adapter_push (enc->adapter, buf);
+    buf = NULL;
 
-    while (gst_adapter_available (speexenc->adapter) >= bytes) {
+    while (gst_adapter_available (enc->adapter) >= bytes) {
       gint16 *data;
       gint i;
       gint outsize, written;
       GstBuffer *outbuf;
 
-      data = (gint16 *) gst_adapter_peek (speexenc->adapter, bytes);
+      data = (gint16 *) gst_adapter_peek (enc->adapter, bytes);
 
-      for (i = 0; i < frame_size * speexenc->channels; i++) {
-        speexenc->input[i] = (gfloat) data[i];
+      for (i = 0; i < frame_size * enc->channels; i++) {
+        enc->input[i] = (gfloat) data[i];
       }
-      gst_adapter_flush (speexenc->adapter, bytes);
+      gst_adapter_flush (enc->adapter, bytes);
 
-      speexenc->samples_in += frame_size;
+      enc->samples_in += frame_size;
 
-      if (speexenc->channels == 2) {
-        speex_encode_stereo (speexenc->input, frame_size, &speexenc->bits);
+      if (enc->channels == 2) {
+        speex_encode_stereo (enc->input, frame_size, &enc->bits);
       }
-      speex_encode (speexenc->state, speexenc->input, &speexenc->bits);
+      speex_encode (enc->state, enc->input, &enc->bits);
 
-      speexenc->frameno++;
+      enc->frameno++;
 
-      if ((speexenc->frameno % speexenc->nframes) != 0)
+      if ((enc->frameno % enc->nframes) != 0)
         continue;
 
-      speex_bits_insert_terminator (&speexenc->bits);
-      outsize = speex_bits_nbytes (&speexenc->bits);
+      speex_bits_insert_terminator (&enc->bits);
+      outsize = speex_bits_nbytes (&enc->bits);
 
-      ret = gst_pad_alloc_buffer_and_set_caps (speexenc->srcpad,
-          GST_BUFFER_OFFSET_NONE, outsize, GST_PAD_CAPS (speexenc->srcpad),
-          &outbuf);
+      ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
+          GST_BUFFER_OFFSET_NONE, outsize, GST_PAD_CAPS (enc->srcpad), &outbuf);
 
       if ((GST_FLOW_OK != ret))
         goto done;
 
-      written = speex_bits_write (&speexenc->bits,
+      written = speex_bits_write (&enc->bits,
           (gchar *) GST_BUFFER_DATA (outbuf), outsize);
       g_assert (written == outsize);
-      speex_bits_reset (&speexenc->bits);
+      speex_bits_reset (&enc->bits);
 
       GST_BUFFER_TIMESTAMP (outbuf) =
-          gst_util_uint64_scale_int (speexenc->frameno * frame_size -
-          speexenc->lookahead, GST_SECOND, speexenc->rate);
+          gst_util_uint64_scale_int (enc->frameno * frame_size -
+          enc->lookahead, GST_SECOND, enc->rate);
       GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (frame_size,
-          GST_SECOND, speexenc->rate);
+          GST_SECOND, enc->rate);
       /* set gp time and granulepos; see gst-plugins-base/ext/ogg/README */
       GST_BUFFER_OFFSET_END (outbuf) =
-          ((speexenc->frameno + 1) * frame_size - speexenc->lookahead);
+          ((enc->frameno + 1) * frame_size - enc->lookahead);
       GST_BUFFER_OFFSET (outbuf) =
           gst_util_uint64_scale_int (GST_BUFFER_OFFSET_END (outbuf), GST_SECOND,
-          speexenc->rate);
+          enc->rate);
 
-      ret = gst_speexenc_push_buffer (speexenc, outbuf);
+      ret = gst_speex_enc_push_buffer (enc, outbuf);
 
       if ((GST_FLOW_OK != ret) && (GST_FLOW_NOT_LINKED != ret))
         goto done;
@@ -905,13 +874,17 @@ gst_speexenc_chain (GstPad * pad, GstBuffer * buf)
   }
 
 done:
+
+  if (buf)
+    gst_buffer_unref (buf);
+
   return ret;
 
   /* ERRORS */
 not_setup:
   {
     gst_buffer_unref (buf);
-    GST_ELEMENT_ERROR (speexenc, CORE, NEGOTIATION, (NULL),
+    GST_ELEMENT_ERROR (enc, CORE, NEGOTIATION, (NULL),
         ("encoder not initialized (input is not audio?)"));
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
@@ -921,42 +894,40 @@ not_setup:
 
 
 static void
-gst_speexenc_get_property (GObject * object, guint prop_id, GValue * value,
+gst_speex_enc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstSpeexEnc *speexenc;
+  GstSpeexEnc *enc;
 
-  g_return_if_fail (GST_IS_SPEEXENC (object));
-
-  speexenc = GST_SPEEXENC (object);
+  enc = GST_SPEEX_ENC (object);
 
   switch (prop_id) {
     case ARG_QUALITY:
-      g_value_set_float (value, speexenc->quality);
+      g_value_set_float (value, enc->quality);
       break;
     case ARG_BITRATE:
-      g_value_set_int (value, speexenc->bitrate);
+      g_value_set_int (value, enc->bitrate);
       break;
     case ARG_VBR:
-      g_value_set_boolean (value, speexenc->vbr);
+      g_value_set_boolean (value, enc->vbr);
       break;
     case ARG_ABR:
-      g_value_set_int (value, speexenc->abr);
+      g_value_set_int (value, enc->abr);
       break;
     case ARG_VAD:
-      g_value_set_boolean (value, speexenc->vad);
+      g_value_set_boolean (value, enc->vad);
       break;
     case ARG_DTX:
-      g_value_set_boolean (value, speexenc->dtx);
+      g_value_set_boolean (value, enc->dtx);
       break;
     case ARG_COMPLEXITY:
-      g_value_set_int (value, speexenc->complexity);
+      g_value_set_int (value, enc->complexity);
       break;
     case ARG_NFRAMES:
-      g_value_set_int (value, speexenc->nframes);
+      g_value_set_int (value, enc->nframes);
       break;
     case ARG_LAST_MESSAGE:
-      g_value_set_string (value, speexenc->last_message);
+      g_value_set_string (value, enc->last_message);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -965,39 +936,37 @@ gst_speexenc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_speexenc_set_property (GObject * object, guint prop_id,
+gst_speex_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstSpeexEnc *speexenc;
+  GstSpeexEnc *enc;
 
-  g_return_if_fail (GST_IS_SPEEXENC (object));
-
-  speexenc = GST_SPEEXENC (object);
+  enc = GST_SPEEX_ENC (object);
 
   switch (prop_id) {
     case ARG_QUALITY:
-      speexenc->quality = g_value_get_float (value);
+      enc->quality = g_value_get_float (value);
       break;
     case ARG_BITRATE:
-      speexenc->bitrate = g_value_get_int (value);
+      enc->bitrate = g_value_get_int (value);
       break;
     case ARG_VBR:
-      speexenc->vbr = g_value_get_boolean (value);
+      enc->vbr = g_value_get_boolean (value);
       break;
     case ARG_ABR:
-      speexenc->abr = g_value_get_int (value);
+      enc->abr = g_value_get_int (value);
       break;
     case ARG_VAD:
-      speexenc->vad = g_value_get_boolean (value);
+      enc->vad = g_value_get_boolean (value);
       break;
     case ARG_DTX:
-      speexenc->dtx = g_value_get_boolean (value);
+      enc->dtx = g_value_get_boolean (value);
       break;
     case ARG_COMPLEXITY:
-      speexenc->complexity = g_value_get_int (value);
+      enc->complexity = g_value_get_int (value);
       break;
     case ARG_NFRAMES:
-      speexenc->nframes = g_value_get_int (value);
+      enc->nframes = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1006,19 +975,19 @@ gst_speexenc_set_property (GObject * object, guint prop_id,
 }
 
 static GstStateChangeReturn
-gst_speexenc_change_state (GstElement * element, GstStateChange transition)
+gst_speex_enc_change_state (GstElement * element, GstStateChange transition)
 {
-  GstSpeexEnc *speexenc = GST_SPEEXENC (element);
+  GstSpeexEnc *enc = GST_SPEEX_ENC (element);
   GstStateChangeReturn res;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      speexenc->tags = gst_tag_list_new ();
+      enc->tags = gst_tag_list_new ();
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      speex_bits_init (&speexenc->bits);
-      speexenc->frameno = 0;
-      speexenc->samples_in = 0;
+      speex_bits_init (&enc->bits);
+      enc->frameno = 0;
+      enc->samples_in = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* fall through */
@@ -1027,22 +996,24 @@ gst_speexenc_change_state (GstElement * element, GstStateChange transition)
   }
 
   res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (res == GST_STATE_CHANGE_FAILURE)
+    return res;
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      speexenc->setup = FALSE;
-      speexenc->header_sent = FALSE;
-      if (speexenc->state) {
-        speex_encoder_destroy (speexenc->state);
-        speexenc->state = NULL;
+      enc->setup = FALSE;
+      enc->header_sent = FALSE;
+      if (enc->state) {
+        speex_encoder_destroy (enc->state);
+        enc->state = NULL;
       }
-      speex_bits_destroy (&speexenc->bits);
+      speex_bits_destroy (&enc->bits);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_tag_list_free (speexenc->tags);
-      speexenc->tags = NULL;
+      gst_tag_list_free (enc->tags);
+      enc->tags = NULL;
     default:
       break;
   }

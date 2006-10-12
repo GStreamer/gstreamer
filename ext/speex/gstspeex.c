@@ -30,7 +30,7 @@ plugin_init (GstPlugin * plugin)
 {
 
   if (!gst_element_register (plugin, "speexenc", GST_RANK_NONE,
-          GST_TYPE_SPEEXENC))
+          GST_TYPE_SPEEX_ENC))
     return FALSE;
 
   if (!gst_element_register (plugin, "speexdec", GST_RANK_PRIMARY,
