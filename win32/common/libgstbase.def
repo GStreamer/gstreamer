@@ -20,6 +20,8 @@ EXPORTS
 	gst_base_src_is_live
 	gst_base_src_set_format
 	gst_base_src_set_live
+	gst_base_src_wait_playing
+	gst_base_src_wait_preroll
 	gst_base_transform_get_type
 	gst_base_transform_is_in_place
 	gst_base_transform_is_passthrough

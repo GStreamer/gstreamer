@@ -77,6 +77,7 @@ EXPORTS
 	gst_caps_is_fixed
 	gst_caps_is_subset
 	gst_caps_make_writable
+	gst_caps_merge
 	gst_caps_new_any
 	gst_caps_new_empty
 	gst_caps_new_full
@@ -274,6 +275,7 @@ EXPORTS
 	gst_ghost_pad_get_type
 	gst_ghost_pad_new
 	gst_ghost_pad_new_no_target
+	gst_ghost_pad_new_from_template
 	gst_ghost_pad_set_target
 	gst_implements_interface_cast
 	gst_implements_interface_check
@@ -325,6 +327,7 @@ EXPORTS
 	gst_message_get_structure
 	gst_message_get_type
 	gst_message_new_application
+	gst_message_new_buffering
 	gst_message_new_clock_lost
 	gst_message_new_clock_provide
 	gst_message_new_custom
@@ -339,6 +342,7 @@ EXPORTS
 	gst_message_new_state_dirty
 	gst_message_new_tag
 	gst_message_new_warning
+	gst_message_parse_buffering
 	gst_message_parse_clock_lost
 	gst_message_parse_clock_provide
 	gst_message_parse_duration
@@ -411,6 +415,7 @@ EXPORTS
 	gst_pad_get_type
 	gst_pad_is_active
 	gst_pad_is_blocked
+	gst_pad_is_blocking
 	gst_pad_is_linked
 	gst_pad_link
 	gst_pad_link_return_get_type
@@ -609,6 +614,8 @@ EXPORTS
 	gst_structure_has_field
 	gst_structure_has_field_typed
 	gst_structure_has_name
+	gst_structure_id_set
+	gst_structure_id_set_valist
 	gst_structure_n_fields
 	gst_structure_new
 	gst_structure_new_valist
@@ -646,6 +653,7 @@ EXPORTS
 	gst_tag_list_get_uint_index
 	gst_tag_list_get_value_index
 	gst_tag_list_insert
+	gst_tag_list_is_empty
 	gst_tag_list_merge
 	gst_tag_list_new
 	gst_tag_merge_mode_get_type
