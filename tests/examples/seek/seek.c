@@ -1073,7 +1073,7 @@ do_seek (GtkWidget * widget)
 
   if (rate >= 0) {
     s_event = gst_event_new_seek (rate,
-        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE, 0);
+        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_SET, -1);
   } else {
     s_event = gst_event_new_seek (rate,
         GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, real);
@@ -1142,8 +1142,6 @@ start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
   }
 
-  set_update_scale (FALSE);
-
   if (changed_id == 0 && flush_seek && scrub) {
     changed_id = gtk_signal_connect (GTK_OBJECT (hscale),
         "value_changed", G_CALLBACK (seek_cb), pipeline);
@@ -1175,7 +1173,6 @@ stop_seek (GtkWidget * widget, gpointer user_data)
       gst_element_set_state (pipeline, GST_STATE_PLAYING);
     }
   }
-  set_update_scale (TRUE);
 
   return FALSE;
 }
@@ -1191,7 +1188,6 @@ play_cb (GtkButton * button, gpointer data)
     if (ret == GST_STATE_CHANGE_FAILURE)
       goto failed;
 
-    set_update_scale (TRUE);
     state = GST_STATE_PLAYING;
   }
   return;
@@ -1213,7 +1209,6 @@ pause_cb (GtkButton * button, gpointer data)
     if (ret == GST_STATE_CHANGE_FAILURE)
       goto failed;
 
-    set_update_scale (FALSE);
     state = GST_STATE_PAUSED;
   }
   return;
@@ -1236,7 +1231,6 @@ stop_cb (GtkButton * button, gpointer data)
       goto failed;
 
     gtk_adjustment_set_value (adjustment, 0.0);
-    set_update_scale (FALSE);
 
     state = GST_STATE_READY;
   }
@@ -1283,6 +1277,7 @@ play_scrub_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 {
   play_scrub = gtk_toggle_button_get_active (button);
 }
+
 static void
 rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
 {
@@ -1298,8 +1293,15 @@ rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
   if (loop_seek)
     flags |= GST_SEEK_FLAG_SEGMENT;
 
-  s_event = gst_event_new_seek (rate,
-      GST_FORMAT_TIME, flags, GST_SEEK_TYPE_NONE, 0, GST_SEEK_TYPE_NONE, 0);
+  if (rate >= 0) {
+    s_event = gst_event_new_seek (rate,
+        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, position,
+        GST_SEEK_TYPE_SET, -1);
+  } else {
+    s_event = gst_event_new_seek (rate,
+        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET,
+        position);
+  }
 
   res = send_event (s_event);
 
@@ -1311,6 +1313,7 @@ rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
   } else
     g_print ("seek failed\n");
 }
+
 static void
 segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
@@ -1353,6 +1356,27 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   }
 }
 
+static void
+msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+{
+  const GstStructure *s;
+
+  s = gst_message_get_structure (message);
+
+  /* We only care about state changed on the pipeline */
+  if (s && GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (pipeline)) {
+    GstState old, new, pending;
+
+    gst_message_parse_state_changed (message, &old, &new, &pending);
+
+    /* When state of the pipeline changes to playing we start updating scale */
+    if (new == GST_STATE_PLAYING) {
+      set_update_scale (TRUE);
+    } else {
+      set_update_scale (FALSE);
+    }
+  }
+}
 
 typedef struct
 {
@@ -1578,6 +1602,8 @@ main (int argc, char **argv)
         pipeline);
     g_signal_connect (bus, "message::segment-done",
         (GCallback) message_received, pipeline);
+    g_signal_connect (bus, "message::state-changed",
+        (GCallback) msg_state_changed, pipeline);
     g_signal_connect (bus, "message::segment-done", (GCallback) segment_done,
         pipeline);
   }
