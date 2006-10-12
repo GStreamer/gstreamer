@@ -189,10 +189,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\gst\glib-compat.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\gst\parse\grammar.tab.c"
 				>
 			</File>
@@ -314,6 +310,10 @@
 			</File>
 			<File
 				RelativePath="..\..\gst\gstpluginfeature.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\gst\gstquark.c"
 				>
 			</File>
 			<File

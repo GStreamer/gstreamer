@@ -1,5 +1,13 @@
 2006-10-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* win32/vs6/libgstreamer.dsp:
+	* win32/vs7/libgstreamer.vcproj:
+	* win32/vs8/libgstreamer.vcproj:
+	  Don't reference glib-compat.c which is currently not used and not
+	  disted; add gstquark.c which was recently added. Fixes #361730.
+
+2006-10-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* win32/common/libgstbase.def:
 	* win32/common/libgstcontroller.def:
 	* win32/common/libgstreamer.def:

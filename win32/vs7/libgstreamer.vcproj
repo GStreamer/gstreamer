@@ -131,9 +131,6 @@ copy /y &quot;$(TargetPath)&quot; c:\gstreamer\bin
 				RelativePath="..\common\dirent.c">
 			</File>
 			<File
-				RelativePath="..\..\gst\glib-compat.c">
-			</File>
-			<File
 				RelativePath="..\..\gst\parse\grammar.tab.c">
 			</File>
 			<File
@@ -225,6 +222,9 @@ copy /y &quot;$(TargetPath)&quot; c:\gstreamer\bin
 			</File>
 			<File
 				RelativePath="..\..\gst\gstpluginfeature.c">
+			</File>
+			<File
+				RelativePath="..\..\gst\gstquark.c">
 			</File>
 			<File
 				RelativePath="..\..\gst\gstquery.c">

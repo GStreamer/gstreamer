@@ -108,10 +108,6 @@ SOURCE=..\common\dirent.c
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\gst\glib-compat.c"
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\gst\parse\grammar.tab.c
 # End Source File
 # Begin Source File
@@ -233,6 +229,10 @@ SOURCE=..\..\gst\gstplugin.c
 # Begin Source File
 
 SOURCE=..\..\gst\gstpluginfeature.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\gstquark.c
 # End Source File
 # Begin Source File
 
