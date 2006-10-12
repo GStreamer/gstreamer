@@ -1,4 +1,4 @@
-/* GStreamer
+/* GStreamer Speex Encoder
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -224,6 +224,7 @@ gst_speexenc_finalize (GObject * object)
 
   speexenc = GST_SPEEXENC (object);
 
+  g_free (speexenc->last_message);
   g_object_unref (speexenc->adapter);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -543,6 +544,15 @@ gst_speexenc_create_metadata_buffer (GstSpeexEnc * enc)
   return comments;
 }
 
+static void
+gst_speexenc_set_last_msg (GstSpeexEnc * enc, const gchar * msg)
+{
+  g_free (enc->last_message);
+  enc->last_message = g_strdup (msg);
+  GST_WARNING_OBJECT (enc, "%s", msg);
+  g_object_notify (G_OBJECT (enc), "last-message");
+}
+
 static gboolean
 gst_speexenc_setup (GstSpeexEnc * speexenc)
 {
@@ -569,10 +579,8 @@ gst_speexenc_setup (GstSpeexEnc * speexenc)
       speexenc->speex_mode = (SpeexMode *) & speex_uwb_mode;
     } else {
       if (speexenc->speex_mode != &speex_uwb_mode) {
-        speexenc->last_message =
-            g_strdup_printf
-            ("Warning: suggest to use ultra wide band mode for this rate");
-        g_object_notify (G_OBJECT (speexenc), "last_message");
+        gst_speexenc_set_last_msg (speexenc,
+            "Warning: suggest to use ultra wide band mode for this rate");
       }
     }
   } else if (speexenc->rate > 12500) {
@@ -580,10 +588,8 @@ gst_speexenc_setup (GstSpeexEnc * speexenc)
       speexenc->speex_mode = (SpeexMode *) & speex_wb_mode;
     } else {
       if (speexenc->speex_mode != &speex_wb_mode) {
-        speexenc->last_message =
-            g_strdup_printf
-            ("Warning: suggest to use wide band mode for this rate");
-        g_object_notify (G_OBJECT (speexenc), "last_message");
+        gst_speexenc_set_last_msg (speexenc,
+            "Warning: suggest to use wide band mode for this rate");
       }
     }
   } else {
@@ -591,19 +597,16 @@ gst_speexenc_setup (GstSpeexEnc * speexenc)
       speexenc->speex_mode = (SpeexMode *) & speex_nb_mode;
     } else {
       if (speexenc->speex_mode != &speex_nb_mode) {
-        speexenc->last_message =
-            g_strdup_printf
-            ("Warning: suggest to use narrow band mode for this rate");
-        g_object_notify (G_OBJECT (speexenc), "last_message");
+        gst_speexenc_set_last_msg (speexenc,
+            "Warning: suggest to use narrow band mode for this rate");
       }
     }
   }
 
   if (speexenc->rate != 8000 && speexenc->rate != 16000
       && speexenc->rate != 32000) {
-    speexenc->last_message =
-        g_strdup_printf ("Warning: speex is optimized for 8, 16 and 32 KHz");
-    g_object_notify (G_OBJECT (speexenc), "last_message");
+    gst_speexenc_set_last_msg (speexenc,
+        "Warning: speex is optimized for 8, 16 and 32 KHz");
   }
 
   speex_init_header (&speexenc->header, speexenc->rate, 1,
@@ -631,9 +634,8 @@ gst_speexenc_setup (GstSpeexEnc * speexenc)
   }
   if (speexenc->bitrate) {
     if (speexenc->quality >= 0.0 && speexenc->vbr) {
-      speexenc->last_message =
-          g_strdup_printf ("Warning: bitrate option is overriding quality");
-      g_object_notify (G_OBJECT (speexenc), "last_message");
+      gst_speexenc_set_last_msg (speexenc,
+          "Warning: bitrate option is overriding quality");
     }
     speex_encoder_ctl (speexenc->state, SPEEX_SET_BITRATE, &speexenc->bitrate);
   }
@@ -654,13 +656,11 @@ gst_speexenc_setup (GstSpeexEnc * speexenc)
   }
 
   if (speexenc->dtx && !(speexenc->vbr || speexenc->abr || speexenc->vad)) {
-    speexenc->last_message =
-        g_strdup_printf ("Warning: dtx is useless without vad, vbr or abr");
-    g_object_notify (G_OBJECT (speexenc), "last_message");
+    gst_speexenc_set_last_msg (speexenc,
+        "Warning: dtx is useless without vad, vbr or abr");
   } else if ((speexenc->vbr || speexenc->abr) && (speexenc->vad)) {
-    speexenc->last_message =
-        g_strdup_printf ("Warning: vad is already implied by vbr or abr");
-    g_object_notify (G_OBJECT (speexenc), "last_message");
+    gst_speexenc_set_last_msg (speexenc,
+        "Warning: vad is already implied by vbr or abr");
   }
 
   if (speexenc->abr) {
@@ -707,6 +707,7 @@ gst_speexenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
     GstBuffer * buf2)
 {
   GstStructure *structure = NULL;
+  GstBuffer *buf;
   GValue array = { 0 };
   GValue value = { 0 };
 
@@ -723,11 +724,15 @@ gst_speexenc_set_header_on_caps (GstCaps * caps, GstBuffer * buf1,
   /* put buffers in a fixed list */
   g_value_init (&array, GST_TYPE_ARRAY);
   g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, buf1);
+  buf = gst_buffer_copy (buf1);
+  gst_value_set_buffer (&value, buf);
+  gst_buffer_unref (buf);
   gst_value_array_append_value (&array, &value);
   g_value_unset (&value);
   g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, buf2);
+  buf = gst_buffer_copy (buf2);
+  gst_value_set_buffer (&value, buf);
+  gst_buffer_unref (buf);
   gst_value_array_append_value (&array, &value);
   gst_structure_set_value (structure, "streamheader", &array);
   g_value_unset (&value);

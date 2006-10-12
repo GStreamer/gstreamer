@@ -1,3 +1,10 @@
+2006-10-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/speex/gstspeexenc.c: (gst_speexenc_finalize),
+	(gst_speexenc_set_last_msg), (gst_speexenc_setup),
+	(gst_speexenc_set_header_on_caps):
+	  Fix some mem leaks.
+
 2006-10-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/URLS:
