@@ -202,6 +202,9 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
   basertppayload->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   basertppayload->max_ptime = DEFAULT_MAX_PTIME;
 
+  basertppayload->media = NULL;
+  basertppayload->encoding_name = NULL;
+
   basertppayload->clock_rate = 0;
 }
 
@@ -218,6 +221,11 @@ gst_basertppayload_finalize (GObject * object)
   basertppayload->ssrc_rand = NULL;
   g_rand_free (basertppayload->ts_rand);
   basertppayload->ts_rand = NULL;
+
+  g_free (basertppayload->media);
+  basertppayload->media = NULL;
+  g_free (basertppayload->encoding_name);
+  basertppayload->encoding_name = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

@@ -1,3 +1,11 @@
+2006-10-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastien Cote  <sebas642 at yahoo.ca>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_init),
+	(gst_basertppayload_finalize):
+	  Fix two small memory leaks (#361456).
+
 2006-10-10  Julien MOUTTE  <julien@moutte.net>
 
 	* tests/examples/seek/seek.c: (do_seek),
