@@ -179,7 +179,7 @@ _gst_library_errors_init (void)
           "to this error." FILE_A_BUG));
   TABLE (t, LIBRARY, INIT, N_("Could not initialize supporting library."));
   TABLE (t, LIBRARY, SHUTDOWN, N_("Could not close supporting library."));
-  TABLE (t, LIBRARY, SETTINGS, N_("Could not close supporting library."));
+  TABLE (t, LIBRARY, SETTINGS, N_("Could not configure supporting library."));
 
   return t;
 }

@@ -1,3 +1,9 @@
+2006-10-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsterror.c: (_gst_library_errors_init):
+	  Fix error message for GST_LIBRARY_ERROR_SETTINGS (feel free to come
+	  up with something better).
+
 2006-10-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* win32/vs6/libgstreamer.dsp:
