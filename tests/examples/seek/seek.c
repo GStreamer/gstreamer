@@ -1137,6 +1137,8 @@ start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
   if (event->type != GDK_BUTTON_PRESS)
     return FALSE;
 
+  set_update_scale (FALSE);
+
   if (state == GST_STATE_PLAYING && flush_seek && scrub) {
     GST_DEBUG ("start scrub seek, PAUSE");
     gst_element_set_state (pipeline, GST_STATE_PAUSED);

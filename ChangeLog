@@ -1,3 +1,10 @@
+2006-10-13  Julien MOUTTE  <julien@moutte.net>
+
+	* tests/examples/seek/seek.c: (do_seek), (start_seek),
+	(rate_spinbutton_changed_cb), (msg_state_changed): Stop the scale
+	updater when we start grabing the slider. Don't wait for the
+	pipeline to be PAUSED.
+
 2006-10-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/interfaces/mixer.c: (gst_mixer_list_tracks),
