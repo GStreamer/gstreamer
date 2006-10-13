@@ -1,5 +1,11 @@
 2006-10-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/lame/gstlame.c: (gst_lame_set_property):
+	  Round up not allowed bitrates to the next higher allowed one
+	  (Closes: #361140).
+
+2006-10-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
