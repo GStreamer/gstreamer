@@ -1,3 +1,13 @@
+2006-10-13  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	(gst_ffmpeg_formatid_get_codecids):
+	Added some codec mappings for dv and mov muxers.
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_getcaps),
+	(gst_ffmpegenc_register):
+	Don't attempt to add caps to a NULL caps.
+	Add video/x-raw-gray to the input raw video types.
+
 2006-10-09  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps),

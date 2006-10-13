@@ -1697,6 +1697,28 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
 
     *video_codec_list = asf_video_list;
     *audio_codec_list = asf_audio_list;    
+  } else if (!strcmp (format_name, "dv")) {
+    static enum CodecID dv_video_list[] = { CODEC_ID_DVVIDEO, CODEC_ID_NONE };
+    static enum CodecID dv_audio_list[] = { CODEC_ID_PCM_S16LE, CODEC_ID_NONE };
+
+    *video_codec_list = dv_video_list;
+    *audio_codec_list = dv_audio_list;    
+  } else if (!strcmp (format_name, "mov")) {
+    static enum CodecID mov_video_list[] = {
+      CODEC_ID_SVQ1, CODEC_ID_SVQ3, CODEC_ID_MPEG4, CODEC_ID_H263,
+      CODEC_ID_H264, CODEC_ID_DVVIDEO,
+      CODEC_ID_NONE
+    };
+    static enum CodecID mov_audio_list[] = { 
+      CODEC_ID_PCM_MULAW, CODEC_ID_PCM_ALAW, CODEC_ID_ADPCM_IMA_QT,
+      CODEC_ID_MACE3, CODEC_ID_MACE6, CODEC_ID_AAC,
+      CODEC_ID_AMR_NB, CODEC_ID_AMR_WB,
+      CODEC_ID_PCM_S16BE, CODEC_ID_PCM_S16LE, 
+      CODEC_ID_MP3, CODEC_ID_NONE
+    };
+
+    *video_codec_list = mov_video_list;
+    *audio_codec_list = mov_audio_list;    
   } else {
     GST_LOG ("Format %s not found", format_name);
     return FALSE;

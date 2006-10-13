@@ -323,14 +323,20 @@ gst_ffmpegenc_getcaps (GstPad * pad)
   _shut_up_I_am_probing = TRUE;
 #endif
   for (pixfmt = 0; pixfmt < PIX_FMT_NB; pixfmt++) {
+    GstCaps * tmpcaps;
+
     ctx->pix_fmt = pixfmt;
     if (gst_ffmpeg_avcodec_open (ctx, oclass->in_plugin) >= 0 &&
         ctx->pix_fmt == pixfmt) {
       ctx->width = -1;
       if (!caps)
         caps = gst_caps_new_empty ();
-      gst_caps_append (caps,
-          gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type, ctx));
+      tmpcaps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type, ctx);
+      if (tmpcaps)
+	gst_caps_append (caps, tmpcaps);
+      else
+	GST_LOG_OBJECT (ffmpegenc, "Couldn't get caps for oclass->in_plugin->name:%s",
+			oclass->in_plugin->name);
       gst_ffmpeg_avcodec_close (ctx);
     }
     if (ctx->priv_data)
@@ -939,7 +945,7 @@ gst_ffmpegenc_register (GstPlugin * plugin)
     /* first make sure we've got a supported type */
     srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE);
     if (in_plugin->type == CODEC_TYPE_VIDEO) {
-      sinkcaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
+      sinkcaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray");
     } else {
       sinkcaps = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
     }
