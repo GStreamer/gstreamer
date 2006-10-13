@@ -351,7 +351,10 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
     segment->last_stop = start;
   }
   if (update_stop && rate < 0.0) {
-    segment->last_stop = stop;
+    if (stop == -1)
+      segment->last_stop = segment->duration;
+    else
+      segment->last_stop = stop;
   }
   segment->time = start;
   segment->stop = stop;

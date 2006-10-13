@@ -1,5 +1,11 @@
 2006-10-13  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstsegment.c: (gst_segment_set_seek):
+	When seeking to stop -1, set last_stop (current position) to the
+	duration of the segment.
+
+2006-10-13  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstelement.h:
 	Clarify _NO_PREROLL a bit more.
 
