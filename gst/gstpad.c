@@ -1665,43 +1665,50 @@ static gboolean
 gst_pad_link_check_hierarchy (GstPad * src, GstPad * sink)
 {
   GstObject *psrc, *psink;
-  gboolean res = TRUE;
 
   psrc = GST_OBJECT_PARENT (src);
   psink = GST_OBJECT_PARENT (sink);
 
   /* if one of the pads has no parent, we allow the link */
-  if (psrc && psink) {
-    /* if the parents are the same, we have a loop */
-    if (G_UNLIKELY (psrc == psink))
-      goto same_parents;
+  if (G_UNLIKELY (psrc == NULL || psink == NULL))
+    goto no_parent;
 
-    /* if they both have a parent, we check the grandparents */
-    psrc = gst_object_get_parent (psrc);
-    psink = gst_object_get_parent (psink);
+  /* if the parents are the same, we have a loop */
+  if (G_UNLIKELY (psrc == psink))
+    goto same_parents;
 
-    if (G_UNLIKELY (psrc != psink)) {
-      /* if they have grandparents but they are not the same */
-      GST_CAT_DEBUG (GST_CAT_CAPS,
-          "pads have different grandparents %" GST_PTR_FORMAT " and %"
-          GST_PTR_FORMAT, psrc, psink);
-      res = FALSE;
-    }
-    if (psrc)
-      gst_object_unref (psrc);
-    if (psink)
-      gst_object_unref (psink);
-  }
-done:
-  return res;
+  /* if they both have a parent, we check the grandparents. We can not lock
+   * the parent because we hold on the child (pad) and the locking order is
+   * parent >> child. */
+  psrc = GST_OBJECT_PARENT (psrc);
+  psink = GST_OBJECT_PARENT (psink);
+
+  /* if they have grandparents but they are not the same */
+  if (G_UNLIKELY (psrc != psink))
+    goto wrong_grandparents;
+
+  return TRUE;
 
   /* ERRORS */
+no_parent:
+  {
+    GST_CAT_DEBUG (GST_CAT_CAPS,
+        "one of the pads has no parent %" GST_PTR_FORMAT " and %"
+        GST_PTR_FORMAT, psrc, psink);
+    return TRUE;
+  }
 same_parents:
   {
     GST_CAT_DEBUG (GST_CAT_CAPS, "pads have same parent %" GST_PTR_FORMAT,
         psrc);
-    res = FALSE;
-    goto done;
+    return FALSE;
+  }
+wrong_grandparents:
+  {
+    GST_CAT_DEBUG (GST_CAT_CAPS,
+        "pads have different grandparents %" GST_PTR_FORMAT " and %"
+        GST_PTR_FORMAT, psrc, psink);
+    return FALSE;
   }
 }
 
@@ -3203,8 +3210,8 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
  *   the pad block happens.
  *
  * During the actual blocking state, the GST_PAD_BLOCKING flag is set.
- * The GST_PAD_BLOCKING flag is unset when the GST_PAD_FLUSHING flag is
- * unset. This is to know whether the pad was blocking when GST_PAD_FLUSHING
+ * The GST_PAD_BLOCKING flag is unset when the pad was unblocked without a
+ * flush. This is to know whether the pad was blocking when GST_PAD_FLUSHING
  * was set.
  *
  * MT safe.
@@ -3242,6 +3249,10 @@ handle_pad_block (GstPad * pad)
     GST_OBJECT_UNLOCK (pad);
     callback (pad, TRUE, user_data);
     GST_OBJECT_LOCK (pad);
+
+    /* we released the lock, recheck flushing */
+    if (GST_PAD_IS_FLUSHING (pad))
+      goto flushing;
   } else {
     /* no callback, signal the thread that is doing a GCond wait
      * if any. */
@@ -3252,9 +3263,6 @@ handle_pad_block (GstPad * pad)
    * then could have made the pad unblock so we need to check the blocking
    * condition again.   */
   while (GST_PAD_IS_BLOCKED (pad)) {
-    if (GST_PAD_IS_FLUSHING (pad))
-      goto flushing;
-
     /* now we block the streaming thread. It can be unlocked when we 
      * deactivate the pad (which will also set the FLUSHING flag) or
      * when the pad is unblocked. A flushing event will also unblock
@@ -3267,11 +3275,11 @@ handle_pad_block (GstPad * pad)
     /* see if we got unlocked by a flush or not */
     if (GST_PAD_IS_FLUSHING (pad))
       goto flushing;
-  }
 
-  /* If we made it here we either never blocked, or were unblocked because we
-   * weren't flushing, it is therefore safe to remove the BLOCKING flag */
-  GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKING);
+    /* If we made it here we were unblocked and not flushing, remove the
+     * blocking flag now. */
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKING);
+  }
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "got unblocked");
 
@@ -3883,24 +3891,21 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       GST_PAD_UNSET_FLUSHING (pad);
 
-      /* If pad was blocking on something when the pad received flush-start, we
-       * don't forward the flush-stop event either. */
+      /* If pad was blocking on something when the pad received flush-start, the 
+       * BLOCKING flag was never cleared. we don't forward the flush-stop event
+       * either then but unset the blocking flag. */
       if (G_UNLIKELY (GST_PAD_IS_BLOCKING (pad))) {
         GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKING);
         GST_LOG_OBJECT (pad,
             "Pad was previously blocking, not forwarding flush-stop");
         goto flushed;
       }
-      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKING);
       break;
     default:
-      if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
-        if (GST_PAD_IS_FLUSHING (pad))
+      while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
+        /* block the event as long as the pad is blocked */
+        if (handle_pad_block (pad) != GST_FLOW_OK)
           goto flushed;
-        while (GST_PAD_IS_BLOCKED (pad))
-          /* else block the event as long as the pad is blocked */
-          if (handle_pad_block (pad) != GST_FLOW_OK)
-            goto flushed;
       }
       break;
   }
@@ -3942,7 +3947,6 @@ not_linked:
     GST_OBJECT_UNLOCK (pad);
     return FALSE;
   }
-
 flushed:
   {
     GST_DEBUG_OBJECT (pad,
@@ -4049,7 +4053,7 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
         goto flushing;
 
       if (serialized) {
-        /* lock order: STREAM_LOCK, LOCK */
+        /* lock order: STREAM_LOCK, LOCK, recheck flushing. */
         GST_OBJECT_UNLOCK (pad);
         GST_PAD_STREAM_LOCK (pad);
         need_unlock = TRUE;

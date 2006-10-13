@@ -2326,7 +2326,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
     case GST_FORMAT_TIME:
     {
       GstClockTime now, base;
-      gint64 time, accum;
+      gint64 time, accum, duration;
       gdouble rate;
       gint64 last;
 
@@ -2361,6 +2361,11 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       else
         time = 0;
 
+      if (GST_CLOCK_TIME_IS_VALID (basesink->segment.stop))
+        duration = basesink->segment.stop - basesink->segment.start;
+      else
+        duration = 0;
+
       base = GST_ELEMENT_CAST (basesink)->base_time;
       accum = basesink->segment.accum;
       rate = basesink->segment.rate * basesink->segment.applied_rate;
@@ -2379,7 +2384,11 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
        * rate and applied rate. */
       base += accum;
       base = MIN (now, base);
-      /* for negative rate this will count back from the segment time */
+
+      /* for negative rates we need to count back from from the segment
+       * duration. */
+      if (rate < 0.0)
+        time += duration;
       *cur = time + gst_guint64_to_gdouble (now - base) * rate;
 
       /* never report more than last seen position */

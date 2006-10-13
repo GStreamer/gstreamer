@@ -1,3 +1,21 @@
+2006-10-13  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstelement.h:
+	Clarify _NO_PREROLL a bit more.
+
+	* gst/gstevent.c:
+	Fix docs.
+
+	* gst/gstpad.c: (gst_pad_link_check_hierarchy),
+	(gst_pad_get_caps_unlocked), (gst_pad_save_thyself),
+	(handle_pad_block), (gst_pad_push_event), (gst_pad_send_event):
+	Patch by: Yves Lefebvre <ivanohe at abacom dot com> Fix possible deadlock
+	due to wrong locking order. Fixes #361769.
+	Remove some redundant/misplaced checks in pad_block.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_position):
+	For negative rates, count backwards from the duration.
+
 2006-10-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsterror.c: (_gst_library_errors_init):

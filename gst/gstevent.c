@@ -492,7 +492,7 @@ gst_event_parse_new_segment (GstEvent * event, gboolean * update,
  *
  * @start cannot be -1, @stop can be -1. If there
  * is a valid @stop given, it must be greater or equal the @start, including 
- * when the indicated playback @rate is < 0
+ * when the indicated playback @rate is < 0.
  *
  * The @applied_rate value provides information about any rate adjustment that
  * has already been made to the timestamps and content on the buffers of the 
