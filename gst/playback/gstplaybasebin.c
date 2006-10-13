@@ -1205,7 +1205,6 @@ new_decoded_pad_full (GstElement * element, GstPad * pad, gboolean last,
   /* Store a pointer to the stream selector pad for this stream */
   g_object_set_data (G_OBJECT (pad), "pb_sel_pad", sinkpad);
 
-  gst_pad_set_active (sinkpad, TRUE);
   gst_pad_link (pad, sinkpad);
   gst_object_unref (sinkpad);
 

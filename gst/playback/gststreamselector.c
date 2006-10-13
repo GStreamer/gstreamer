@@ -354,11 +354,11 @@ gst_stream_selector_request_new_pad (GstElement * element,
 
   GST_LOG_OBJECT (sel, "Creating new pad %d", sel->nb_sinkpads);
 
+  GST_OBJECT_LOCK (sel);
   name = g_strdup_printf ("sink%d", sel->nb_sinkpads++);
   sinkpad = gst_pad_new_from_template (templ, name);
   g_free (name);
 
-  GST_OBJECT_LOCK (sel);
   if (sel->active_sinkpad == NULL)
     sel->active_sinkpad = gst_object_ref (sinkpad);
   GST_OBJECT_UNLOCK (sel);
@@ -372,6 +372,7 @@ gst_stream_selector_request_new_pad (GstElement * element,
   gst_pad_set_bufferalloc_function (sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_selector_bufferalloc));
 
+  gst_pad_set_active (sinkpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (sel), sinkpad);
 
   return sinkpad;
