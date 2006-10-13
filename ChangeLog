@@ -1,3 +1,13 @@
+2006-10-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/interfaces/mixer.c: (gst_mixer_list_tracks),
+	(gst_mixer_set_volume), (gst_mixer_get_volume),
+	(gst_mixer_set_mute), (gst_mixer_set_option),
+	(gst_mixer_get_option), (gst_mixer_mute_toggled),
+	(gst_mixer_record_toggled), (gst_mixer_volume_changed),
+	(gst_mixer_option_changed):
+	  Guard mixer interface functions against bogus arguments.
+
 2006-10-12  Julien MOUTTE  <julien@moutte.net>
 
 	* tests/examples/seek/seek.c: (do_seek), (start_seek), (stop_seek),
