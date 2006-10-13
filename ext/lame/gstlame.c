@@ -625,6 +625,25 @@ gst_lame_init (GstLame * lame)
   GST_DEBUG_OBJECT (lame, "done initializing");
 }
 
+#define CHECK_AND_FIXUP_BITRATE(obj,pspec,rate) \
+G_STMT_START {                                                            \
+  gint ___rate = rate;                                                    \
+  if (rate <= 64 && (rate % 8) != 0) {                                    \
+    ___rate = GST_ROUND_UP_8 (rate);                                      \
+  } else if (rate <= 128 && (rate % 16) != 0) {                           \
+    ___rate = GST_ROUND_UP_16 (rate);                                     \
+  } else if (rate <= 256 && (rate % 32) != 0) {                           \
+    ___rate = GST_ROUND_UP_32 (rate);                                     \
+  } else if (rate <= 320 && (rate % 64) != 0) {                           \
+    ___rate = GST_ROUND_UP_64 (rate);                                     \
+  }                                                                       \
+  if (___rate != rate) {                                                  \
+    GST_WARNING_OBJECT (obj, "Bitrate %d not allowed for property '%s', " \
+        "changing to %d", rate, g_param_spec_get_name (pspec), ___rate);  \
+    rate = ___rate;                                                       \
+  }                                                                       \
+} G_STMT_END
+
 static void
 gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
@@ -636,6 +655,7 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case ARG_BITRATE:
       lame->bitrate = g_value_get_int (value);
+      CHECK_AND_FIXUP_BITRATE (object, pspec, lame->bitrate);
       break;
     case ARG_COMPRESSION_RATIO:
       lame->compression_ratio = g_value_get_float (value);
@@ -684,12 +704,15 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case ARG_VBR_MIN_BITRATE:
       lame->vbr_min_bitrate = g_value_get_int (value);
+      CHECK_AND_FIXUP_BITRATE (object, pspec, lame->vbr_min_bitrate);
       break;
     case ARG_VBR_MAX_BITRATE:
       lame->vbr_max_bitrate = g_value_get_int (value);
+      CHECK_AND_FIXUP_BITRATE (object, pspec, lame->vbr_max_bitrate);
       break;
     case ARG_VBR_HARD_MIN:
       lame->vbr_hard_min = g_value_get_int (value);
+      CHECK_AND_FIXUP_BITRATE (object, pspec, lame->vbr_hard_min);
       break;
     case ARG_LOWPASS_FREQ:
       lame->lowpass_freq = g_value_get_int (value);
