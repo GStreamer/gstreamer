@@ -1,3 +1,9 @@
+2006-10-13  Julien MOUTTE  <julien@moutte.net>
+
+	* tests/examples/seek/seek.c: (do_seek), (start_seek),
+	(rate_spinbutton_changed_cb), (segment_done), (msg_state_changed):
+	Segment seeking needs to use the rate and set stop to -1.
+
 2006-10-13  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
