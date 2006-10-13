@@ -3,10 +3,10 @@
   <description>Demuxes and muxes audio and video in Microsofts ASF format</description>
   <filename>../../gst/asfdemux/.libs/libgstasf.so</filename>
   <basename>libgstasf.so</basename>
-  <version>0.10.4</version>
+  <version>0.10.4.1</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins source release</package>
+  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,13 @@
       <class>Codec/Demuxer</class>
       <description>Demultiplexes ASF Streams</description>
       <author>Owen Fraser-Green &lt;owen@discobabe.net&gt;</author>
+    </element>
+    <element>
+      <name>rtpasfdepay</name>
+      <longname>RTP ASF packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts ASF streams from RTP</description>
+      <author>Tim-Philipp Müller &lt;tim centricular net&gt;</author>
     </element>
   </elements>
 </plugin>

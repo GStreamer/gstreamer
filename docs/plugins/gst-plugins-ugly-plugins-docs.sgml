@@ -12,6 +12,8 @@
 
   <chapter>
     <title>gst-plugins-ugly Elements</title>
+    <xi:include href="xml/element-lame.xml" />
+    <xi:include href="xml/element-mad.xml" />
   </chapter>
 
   <chapter>

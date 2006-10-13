@@ -82,6 +82,7 @@ IGNORE_CFILES =
 #	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.c 
 
 EXTRA_HFILES = \
+	$(top_srcdir)/ext/lame/gstlame.h \
 	$(top_srcdir)/ext/mad/gstmad.h
 
 # Images to copy into HTML directory.

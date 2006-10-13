@@ -6,4 +6,11 @@ GstMad
 GstMadClass
 </SECTION>
 
+<SECTION>
+<FILE>element-lame</FILE>
+GstLame
+<TITLE>lame</TITLE>
+<SUBSECTION Standard>
+GstLameClass
+</SECTION>
 

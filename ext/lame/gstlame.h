@@ -42,9 +42,15 @@ G_BEGIN_DECLS
 typedef struct _GstLame GstLame;
 typedef struct _GstLameClass GstLameClass;
 
+/**
+ * GstLame:
+ *
+ * Opaque data structure.
+ */
 struct _GstLame {
   GstElement element;
-  /* pads */
+
+  /*< private >*/
   GstPad *srcpad, *sinkpad;
 
   gint samplerate;
