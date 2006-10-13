@@ -19,6 +19,57 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-lame
+ * @short_description: an encoder that encodes audio to MPEG-1 layer 3 (mp3)
+ * @see_also: mad, vorbisenc
+ *
+ * <refsect2>
+ * <para>
+ * This element encodes raw integer audio into an MPEG-1 layer 3 (MP3) stream.
+ * Note that <ulink url="http://en.wikipedia.org/wiki/MP3">MP3</ulink> is not
+ * a free format, there are licensing and patent issues to take into
+ * consideration. See <ulink url="http://www.vorbis.com/">Ogg/Vorbis</ulink>
+ * for a royalty free (and often higher quality) alternative.
+ * </para>
+ * <title>Writing metadata (tags)</title>
+ * <para>
+ * Whilst the lame encoder element does claim to implement the GstTagSetter
+ * interface, it does so only for backwards compatibility reasons. Tag writing
+ * has been removed from lame. Use external elements like id3v2mux or apev2mux
+ * to add tags to your MP3 streams. The same goes for XING headers: use the
+ * xingmux element to add XING headers to your VBR mp3 file.
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * Encode a test sine signal to MP3.
+ * </para>
+ * <programlisting>
+ * gst-launch -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! lame ! filesink location=sine.mp3
+ * </programlisting>
+ * <para>
+ * Record from a sound card using ALSA and encode to MP3
+ * </para>
+ * <programlisting>
+ * gst-launch -v alsasrc ! audioconvert ! lame bitrate=192 ! filesink location=alsasrc.mp3
+ * </programlisting>
+ * <para>
+ * Transcode from a .wav file to MP3 (the id3v2mux element is optional):
+ * </para>
+ * <programlisting>
+ * gst-launch -v filesrc location=music.wav ! decodebin ! audioconvert ! audioresample ! lame bitrate=192 ! id3v2mux ! filesink location=music.mp3
+ * </programlisting>
+ * <para>
+ * Encode Audio CD track 5 to MP3:
+ * </para>
+ * <programlisting>
+ * gst-launch -v cdda://5 ! audioconvert ! lame bitrate=192 ! filesink location=track5.mp3
+ * </programlisting>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-10-13 (0.10.4)
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -315,7 +366,9 @@ gst_lame_class_init (GstLameClass * klass)
   gobject_class->finalize = gst_lame_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BITRATE,
-      g_param_spec_int ("bitrate", "Bitrate (kb/s)", "Bitrate in kbit/sec",
+      g_param_spec_int ("bitrate", "Bitrate (kb/s)",
+          "Bitrate in kbit/sec (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, "
+          "112, 128, 160, 192, 224, 256 or 320)",
           8, 320, 128, G_PARAM_READWRITE));
   /* compression ratio set to 0.0 by default otherwise it overrides the bitrate setting */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
@@ -331,10 +384,10 @@ gst_lame_class_init (GstLameClass * klass)
       g_param_spec_enum ("mode", "Mode", "Encoding mode", GST_TYPE_LAME_MODE, 0,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FORCE_MS,
-      g_param_spec_boolean ("force_ms", "Force ms",
+      g_param_spec_boolean ("force-ms", "Force ms",
           "Force ms_stereo on all frames", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FREE_FORMAT,
-      g_param_spec_boolean ("free_format", "Free format",
+      g_param_spec_boolean ("free-format", "Free format",
           "Produce a free format bitstream", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_COPYRIGHT,
       g_param_spec_boolean ("copyright", "Copyright", "Mark as copyright", TRUE,
@@ -343,78 +396,82 @@ gst_lame_class_init (GstLameClass * klass)
       g_param_spec_boolean ("original", "Original", "Mark as non-original",
           TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ERROR_PROTECTION,
-      g_param_spec_boolean ("error_protection", "Error protection",
+      g_param_spec_boolean ("error-protection", "Error protection",
           "Adds 16 bit checksum to every frame", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PADDING_TYPE,
-      g_param_spec_enum ("padding_type", "Padding type", "Padding type",
+      g_param_spec_enum ("padding-type", "Padding type", "Padding type",
           GST_TYPE_LAME_PADDING, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EXTENSION,
       g_param_spec_boolean ("extension", "Extension", "Extension", TRUE,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STRICT_ISO,
-      g_param_spec_boolean ("strict_iso", "Strict ISO",
+      g_param_spec_boolean ("strict-iso", "Strict ISO",
           "Comply as much as possible to ISO MPEG spec", TRUE,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      ARG_DISABLE_RESERVOIR, g_param_spec_boolean ("disable_reservoir",
+      ARG_DISABLE_RESERVOIR, g_param_spec_boolean ("disable-reservoir",
           "Disable reservoir", "Disable the bit reservoir", TRUE,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR,
       g_param_spec_enum ("vbr", "VBR", "Specify bitrate mode",
           GST_TYPE_LAME_VBRMODE, vbr_off, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_QUALITY,
-      g_param_spec_enum ("vbr_quality", "VBR Quality", "VBR Quality",
+      g_param_spec_enum ("vbr-quality", "VBR Quality", "VBR Quality",
           GST_TYPE_LAME_QUALITY, 5, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MEAN_BITRATE,
-      g_param_spec_int ("vbr_mean_bitrate", "VBR mean bitrate",
-          "Specify mean bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
+      g_param_spec_int ("vbr-mean-bitrate", "VBR mean bitrate",
+          "Specify mean VBR bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MIN_BITRATE,
-      g_param_spec_int ("vbr_min_bitrate", "VBR min bitrate",
-          "Specify min bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
+      g_param_spec_int ("vbr-min-bitrate", "VBR min bitrate",
+          "Specify minimum VBR bitrate (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, "
+          "112, 128, 160, 192, 224, 256 or 320)",
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MAX_BITRATE,
-      g_param_spec_int ("vbr_max_bitrate", "VBR max bitrate",
-          "Specify max bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
+      g_param_spec_int ("vbr-max-bitrate", "VBR max bitrate",
+          "Specify maximum VBR bitrate (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, "
+          "112, 128, 160, 192, 224, 256 or 320)",
+          0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_HARD_MIN,
-      g_param_spec_int ("vbr_hard_min", "VBR hard min",
+      g_param_spec_int ("vbr-hard-min", "VBR hard min",
           "Specify hard min bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOWPASS_FREQ,
-      g_param_spec_int ("lowpass_freq", "Lowpass freq",
+      g_param_spec_int ("lowpass-freq", "Lowpass freq",
           "frequency(kHz), lowpass filter cutoff above freq", 0, 50000, 0,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOWPASS_WIDTH,
-      g_param_spec_int ("lowpass_width", "Lowpass width",
+      g_param_spec_int ("lowpass-width", "Lowpass width",
           "frequency(kHz) - default 15% of lowpass freq", 0, G_MAXINT, 0,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HIGHPASS_FREQ,
-      g_param_spec_int ("highpass_freq", "Highpass freq",
+      g_param_spec_int ("highpass-freq", "Highpass freq",
           "frequency(kHz), highpass filter cutoff below freq", 0, 50000, 0,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HIGHPASS_WIDTH,
-      g_param_spec_int ("highpass_width", "Highpass width",
+      g_param_spec_int ("highpass-width", "Highpass width",
           "frequency(kHz) - default 15% of highpass freq", 0, G_MAXINT, 0,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_ONLY,
-      g_param_spec_boolean ("ath_only", "ATH only",
+      g_param_spec_boolean ("ath-only", "ATH only",
           "Ignore GPSYCHO completely, use ATH only", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_SHORT,
-      g_param_spec_boolean ("ath_short", "ATH short",
+      g_param_spec_boolean ("ath-short", "ATH short",
           "Ignore GPSYCHO for short blocks, use ATH only", TRUE,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NO_ATH,
-      g_param_spec_boolean ("no_ath", "No ath",
+      g_param_spec_boolean ("no-ath", "No ath",
           "turns ATH down to a flat noise floor", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ATH_LOWER,
-      g_param_spec_int ("ath_lower", "ATH lower", "lowers ATH by x dB",
+      g_param_spec_int ("ath-lower", "ATH lower", "lowers ATH by x dB",
           G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CWLIMIT,
       g_param_spec_int ("cwlimit", "Cwlimit",
           "Compute tonality up to freq (in kHz) default 8.8717", 0, 50000, 0,
           G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ALLOW_DIFF_SHORT,
-      g_param_spec_boolean ("allow_diff_short", "Allow diff short",
+      g_param_spec_boolean ("allow-diff-short", "Allow diff short",
           "Allow diff short", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_NO_SHORT_BLOCKS,
-      g_param_spec_boolean ("no_short_blocks", "No short blocks",
+      g_param_spec_boolean ("no-short-blocks", "No short blocks",
           "Do not use short blocks", TRUE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_EMPHASIS,
       g_param_spec_boolean ("emphasis", "Emphasis", "Emphasis", TRUE,
