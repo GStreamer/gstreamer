@@ -22,8 +22,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include "string.h"
 #include "gstlame.h"
+#include "gst/gst-i18n-plugin.h"
 
 #ifdef lame_set_preset
 #define GST_LAME_PRESET
@@ -438,7 +440,7 @@ gst_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   GstCaps *othercaps;
 
-  lame = GST_LAME (gst_pad_get_parent (pad));
+  lame = GST_LAME (GST_PAD_PARENT (pad));
   structure = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_int (structure, "rate", &lame->samplerate))
@@ -446,7 +448,7 @@ gst_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_structure_get_int (structure, "channels", &lame->num_channels))
     goto no_channels;
 
-  GST_DEBUG_OBJECT (lame, "sink_setcaps, setting up lame");
+  GST_DEBUG_OBJECT (lame, "setting up lame");
   if (!gst_lame_setup (lame))
     goto setup_failed;
 
@@ -465,36 +467,29 @@ gst_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
   /* and use these caps */
   gst_pad_set_caps (lame->srcpad, othercaps);
   gst_caps_unref (othercaps);
-  gst_object_unref (lame);
 
   return TRUE;
 
 no_rate:
   {
-    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
-        ("no rate specified in input"));
-    gst_object_unref (lame);
+    GST_ERROR_OBJECT (lame, "input caps have no sample rate field");
     return FALSE;
   }
 no_channels:
   {
-    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
-        ("no channels specified in input"));
-    gst_object_unref (lame);
+    GST_ERROR_OBJECT (lame, "input caps have no channels field");
     return FALSE;
   }
 zero_output_rate:
   {
-    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
-        ("lame decided on a zero sample rate"));
-    gst_object_unref (lame);
+    GST_ELEMENT_ERROR (lame, LIBRARY, SETTINGS, (NULL),
+        ("LAME decided on a zero sample rate"));
     return FALSE;
   }
 setup_failed:
   {
-    GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
-        ("could not initialize encoder (wrong parameters?)"));
-    gst_object_unref (lame);
+    GST_ELEMENT_ERROR (lame, LIBRARY, SETTINGS,
+        (_("Failed to configure LAME encoder. Check your encoding parameters.")), ("Failed to configure LAME encoder. Check your encoding parameters."));
     return FALSE;
   }
 }
@@ -578,8 +573,6 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
   GstLame *lame;
-
-  g_return_if_fail (GST_IS_LAME (object));
 
   lame = GST_LAME (object);
 
@@ -695,8 +688,6 @@ gst_lame_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstLame *lame;
-
-  g_return_if_fail (GST_IS_LAME (object));
 
   lame = GST_LAME (object);
 
@@ -884,7 +875,7 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
   guint8 *data;
   guint size;
 
-  lame = GST_LAME (gst_pad_get_parent (pad));
+  lame = GST_LAME (GST_PAD_PARENT (pad));
 
   GST_LOG_OBJECT (lame, "entered chain");
 
@@ -918,11 +909,12 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
       2 * lame->samplerate * lame->num_channels);
 
   if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE &&
-      GST_BUFFER_DURATION (buf) != duration)
+      GST_BUFFER_DURATION (buf) != duration) {
     GST_DEBUG_OBJECT (lame, "incoming buffer had incorrect duration %"
         GST_TIME_FORMAT "outgoing buffer will have correct duration %"
         GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_TIME_ARGS (duration));
+  }
 
   if (lame->last_ts == GST_CLOCK_TIME_NONE) {
     lame->last_ts = GST_BUFFER_TIMESTAMP (buf);
@@ -951,13 +943,15 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (lame->srcpad));
 
     result = gst_pad_push (lame->srcpad, outbuf);
+    if (result != GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (lame, "flow return: %s", gst_flow_get_name (result));
+    }
 
     lame->last_ts = GST_CLOCK_TIME_NONE;
   } else {
     g_free (mp3_data);
     result = GST_FLOW_OK;
   }
-  gst_object_unref (lame);
 
   return result;
 
@@ -967,7 +961,6 @@ not_setup:
     gst_buffer_unref (buf);
     GST_ELEMENT_ERROR (lame, CORE, NEGOTIATION, (NULL),
         ("encoder not initialized (input is not audio?)"));
-    gst_object_unref (lame);
     return GST_FLOW_ERROR;
   }
 }
@@ -1096,15 +1089,22 @@ gst_lame_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (debug, "lame", 0, "lame mp3 encoder");
+
+#ifdef ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
+
   if (!gst_element_register (plugin, "lame", GST_RANK_NONE, GST_TYPE_LAME))
     return FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (debug, "lame", 0, "lame mp3 encoder");
   return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "lame",
-    "Encode MP3's with LAME",
+    "Encode MP3s with LAME",
     plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

@@ -2,4 +2,5 @@
 # ext/dvdnav/dvdnavsrc.c
 
 ext/dvdread/dvdreadsrc.c
+ext/lame/gstlame.c
 gst/asfdemux/gstasfdemux.c

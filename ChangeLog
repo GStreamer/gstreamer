@@ -1,3 +1,12 @@
+2006-10-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/lame/gstlame.c: (gst_lame_sink_setcaps),
+	(gst_lame_set_property), (gst_lame_get_property), (gst_lame_chain),
+	(plugin_init):
+	* po/POTFILES.in:
+	  Add i18n magic to lame plugin. Throw decent error message when we
+	  fail to setup the encoder (#361140, 361151); misc. minor clean-ups.
+
 2006-10-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/realmedia/rdtdepay.c: (gst_rdt_depay_base_init),
