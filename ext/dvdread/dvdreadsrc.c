@@ -432,8 +432,10 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
 {
   GstStructure *s;
   gchar lang_code[3] = { '\0', '\0', '\0' }, *t;
+  pgc_t *pgc0;
   gint title_set_nr;
   gint num_titles;
+  gint pgn0, pgc0_id;
   gint i;
 
   /* make sure our title number is valid */
@@ -489,9 +491,18 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
   s = gst_structure_new ("application/x-gst-dvd",
       "event", G_TYPE_STRING, "dvd-lang-codes", NULL);
 
+  /* so we can filter out invalid/unused streams (same for all chapters) */
+  cur_title_get_chapter_pgc (src, 0, &pgn0, &pgc0_id, &pgc0);
+
   /* audio */
   for (i = 0; i < src->vts_file->vtsi_mat->nr_of_vts_audio_streams; i++) {
-    const audio_attr_t *a = &src->vts_file->vtsi_mat->vts_audio_attr[i];
+    const audio_attr_t *a;
+
+    /* audio stream present? */
+    if (pgc0 != NULL && (pgc0->audio_control[i] & 0x8000) == 0)
+      continue;
+
+    a = &src->vts_file->vtsi_mat->vts_audio_attr[i];
 
     t = g_strdup_printf ("audio-%d-format", i);
     gst_structure_set (s, t, G_TYPE_INT, (int) a->audio_format, NULL);
@@ -513,7 +524,13 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
 
   /* subtitle */
   for (i = 0; i < src->vts_file->vtsi_mat->nr_of_vts_subp_streams; i++) {
-    const subp_attr_t *u = &src->vts_file->vtsi_mat->vts_subp_attr[i];
+    const subp_attr_t *u;
+
+    /* subpicture stream present? */
+    if (pgc0 != NULL && (pgc0->subp_control[i] & 0x80000000) == 0)
+      continue;
+
+    u = &src->vts_file->vtsi_mat->vts_subp_attr[i];
 
     if (u->type) {
       t = g_strdup_printf ("subtitle-%d-language", i);

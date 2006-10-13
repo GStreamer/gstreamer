@@ -1,5 +1,12 @@
 2006-10-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_goto_title):
+	  Don't announce audio or subtitle streams that aren't really present,
+	  it makes dvddemux create pads that will never carry any data, which
+	  is not good.
+
+2006-10-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/lame/gstlame.c: (gst_lame_set_property):
 	  Round up not allowed bitrates to the next higher allowed one
 	  (Closes: #361140).
