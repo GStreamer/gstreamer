@@ -1,3 +1,11 @@
+2006-10-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Marcus Granado  <mrc dot gran at gmail com>
+
+	* win32/vs8/grammar.vcproj:
+	  Error out with a warning if glib-genmarshal.exe is not in path,
+	  instead of creating bogus gstmarshal.[ch] files. Fixes #361720.
+
 2006-10-13  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstsegment.c: (gst_segment_set_seek):

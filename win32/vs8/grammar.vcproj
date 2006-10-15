@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="grammar"
 	ProjectGUID="{6D7EB3D4-7E91-4D98-80EA-28A8F2E365F7}"
 	RootNamespace="grammar"
@@ -134,7 +134,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="if exist ..\..\gst\gstmarshal.c goto HEADER&#x0D;&#x0A;echo #include &quot;glib-object.h&quot; &gt; gstmarshal.c.tmp&#x0D;&#x0A;echo #include &quot;gstmarshal.h&quot; &gt;&gt; gstmarshal.c.tmp&#x0D;&#x0A;glib-genmarshal --body --prefix=gst_marshal ..\..\gst\gstmarshal.list &gt;&gt; gstmarshal.c.tmp&#x0D;&#x0A;move gstmarshal.c.tmp ..\..\gst\gstmarshal.c&#x0D;&#x0A;:HEADER&#x0D;&#x0A;if exist ..\..\gst\gstmarshal.h goto END&#x0D;&#x0A;echo #include &quot;gst/gstconfig.h&quot; &gt; gstmarshal.h.tmp&#x0D;&#x0A;glib-genmarshal --header --prefix=gst_marshal ..\..\gst\gstmarshal.list &gt;&gt; gstmarshal.h.tmp&#x0D;&#x0A;move gstmarshal.h.tmp ..\..\gst\gstmarshal.h&#x0D;&#x0A;:END&#x0D;&#x0A;"
+					CommandLine="glib-genmarshal &gt; NUL 2&gt; NUL&#x0D;&#x0A;if %errorlevel% == 9009 goto NOGLIBGENMARSHAL &#x0D;&#x0A;rem resets errorlevel to 0 because it is 1 now:&#x0D;&#x0A;dir &gt; NUL&#x0D;&#x0A;&#x0D;&#x0A;if exist ..\..\gst\gstmarshal.c goto HEADER&#x0D;&#x0A;echo #include &quot;glib-object.h&quot; &gt; gstmarshal.c.tmp&#x0D;&#x0A;echo #include &quot;gstmarshal.h&quot; &gt;&gt; gstmarshal.c.tmp&#x0D;&#x0A;glib-genmarshal --body --prefix=gst_marshal ..\..\gst\gstmarshal.list &gt;&gt; gstmarshal.c.tmp&#x0D;&#x0A;move gstmarshal.c.tmp ..\..\gst\gstmarshal.c&#x0D;&#x0A;:HEADER&#x0D;&#x0A;if exist ..\..\gst\gstmarshal.h goto END&#x0D;&#x0A;echo #include &quot;gst/gstconfig.h&quot; &gt; gstmarshal.h.tmp&#x0D;&#x0A;glib-genmarshal --header --prefix=gst_marshal ..\..\gst\gstmarshal.list &gt;&gt; gstmarshal.h.tmp&#x0D;&#x0A;move gstmarshal.h.tmp ..\..\gst\gstmarshal.h&#x0D;&#x0A;goto END&#x0D;&#x0A;&#x0D;&#x0A;:NOGLIBGENMARSHAL&#x0D;&#x0A;echo ERROR %errorlevel%&#x0D;&#x0A;echo ### YOU DO NOT HAVE GLIB-GENMARSHAL.EXE IN YOUR PATH.&#x0D;&#x0A;echo ### INSTALL GLIB-DEV AND/OR MAKE SURE IT IS IN YOUR PATH!&#x0D;&#x0A;&#x0D;&#x0A;:END&#x0D;&#x0A;&#x0D;&#x0A;"
 					Outputs="gstmarshal.tmp"
 				/>
 			</FileConfiguration>
@@ -143,7 +143,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="if exist ..\..\gst\gstmarshal.c goto HEADER&#x0D;&#x0A;echo #include &quot;glib-object.h&quot; &gt; gstmarshal.c.tmp&#x0D;&#x0A;echo #include &quot;gstmarshal.h&quot; &gt;&gt; gstmarshal.c.tmp&#x0D;&#x0A;glib-genmarshal --body --prefix=gst_marshal ..\..\gst\gstmarshal.list &gt;&gt; gstmarshal.c.tmp&#x0D;&#x0A;move gstmarshal.c.tmp ..\..\gst\gstmarshal.c&#x0D;&#x0A;:HEADER&#x0D;&#x0A;if exist ..\..\gst\gstmarshal.h goto END&#x0D;&#x0A;echo #include &quot;gst/gstconfig.h&quot; &gt; gstmarshal.h.tmp&#x0D;&#x0A;glib-genmarshal --header --prefix=gst_marshal ..\..\gst\gstmarshal.list &gt;&gt; gstmarshal.h.tmp&#x0D;&#x0A;move gstmarshal.h.tmp ..\..\gst\gstmarshal.h&#x0D;&#x0A;:END&#x0D;&#x0A;"
+					CommandLine="glib-genmarshal &gt; NUL 2&gt; NUL&#x0D;&#x0A;if %errorlevel% == 9009 goto NOGLIBGENMARSHAL &#x0D;&#x0A;rem resets errorlevel to 0 because it is 1 now:&#x0D;&#x0A;dir &gt; NUL&#x0D;&#x0A;&#x0D;&#x0A;if exist ..\..\gst\gstmarshal.c goto HEADER&#x0D;&#x0A;echo #include &quot;glib-object.h&quot; &gt; gstmarshal.c.tmp&#x0D;&#x0A;echo #include &quot;gstmarshal.h&quot; &gt;&gt; gstmarshal.c.tmp&#x0D;&#x0A;glib-genmarshal --body --prefix=gst_marshal ..\..\gst\gstmarshal.list &gt;&gt; gstmarshal.c.tmp&#x0D;&#x0A;move gstmarshal.c.tmp ..\..\gst\gstmarshal.c&#x0D;&#x0A;:HEADER&#x0D;&#x0A;if exist ..\..\gst\gstmarshal.h goto END&#x0D;&#x0A;echo #include &quot;gst/gstconfig.h&quot; &gt; gstmarshal.h.tmp&#x0D;&#x0A;glib-genmarshal --header --prefix=gst_marshal ..\..\gst\gstmarshal.list &gt;&gt; gstmarshal.h.tmp&#x0D;&#x0A;move gstmarshal.h.tmp ..\..\gst\gstmarshal.h&#x0D;&#x0A;goto END&#x0D;&#x0A;&#x0D;&#x0A;:NOGLIBGENMARSHAL&#x0D;&#x0A;echo ERROR %errorlevel%&#x0D;&#x0A;echo ### YOU DO NOT HAVE GLIB-GENMARSHAL.EXE IN YOUR PATH.&#x0D;&#x0A;echo ### INSTALL GLIB-DEV AND/OR MAKE SURE IT IS IN YOUR PATH!&#x0D;&#x0A;&#x0D;&#x0A;:END&#x0D;&#x0A;&#x0D;&#x0A;"
 					Outputs="gstmarshal.tmp"
 				/>
 			</FileConfiguration>
