@@ -135,22 +135,22 @@ static gboolean gst_rmdemux_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_rmdemux_perform_seek (GstRMDemux * rmdemux,
     GstEvent * event);
 
-static void gst_rmdemux_parse__rmf (GstRMDemux * rmdemux, const void *data,
+static void gst_rmdemux_parse__rmf (GstRMDemux * rmdemux, const guint8 * data,
     int length);
-static void gst_rmdemux_parse_prop (GstRMDemux * rmdemux, const void *data,
+static void gst_rmdemux_parse_prop (GstRMDemux * rmdemux, const guint8 * data,
     int length);
 static void gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux,
-    const void *data, int length);
-static guint gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const void *data,
+    const guint8 * data, int length);
+static guint gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const guint8 * data,
     int length);
-static void gst_rmdemux_parse_data (GstRMDemux * rmdemux, const void *data,
+static void gst_rmdemux_parse_data (GstRMDemux * rmdemux, const guint8 * data,
     int length);
-static void gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const void *data,
+static void gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const guint8 * data,
     int length);
 static GstFlowReturn gst_rmdemux_parse_packet (GstRMDemux * rmdemux,
-    const void *data, guint16 version, guint16 length);
-static void gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux, const void *data,
-    int length);
+    const guint8 * data, guint16 version, guint16 length);
+static void gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux,
+    const guint8 * data, int length);
 static void gst_rmdemux_stream_clear_cached_subpackets (GstRMDemux * rmdemux,
     GstRMDemuxStream * stream);
 static GstRMDemuxStream *gst_rmdemux_get_stream_by_id (GstRMDemux * rmdemux,
@@ -1444,14 +1444,14 @@ re_skip_pascal_string (const guint8 * ptr)
 }
 
 static void
-gst_rmdemux_parse__rmf (GstRMDemux * rmdemux, const void *data, int length)
+gst_rmdemux_parse__rmf (GstRMDemux * rmdemux, const guint8 * data, int length)
 {
   GST_LOG_OBJECT (rmdemux, "file_version: %d", RMDEMUX_GUINT32_GET (data));
   GST_LOG_OBJECT (rmdemux, "num_headers: %d", RMDEMUX_GUINT32_GET (data + 4));
 }
 
 static void
-gst_rmdemux_parse_prop (GstRMDemux * rmdemux, const void *data, int length)
+gst_rmdemux_parse_prop (GstRMDemux * rmdemux, const guint8 * data, int length)
 {
   GST_LOG_OBJECT (rmdemux, "max bitrate: %d", RMDEMUX_GUINT32_GET (data));
   GST_LOG_OBJECT (rmdemux, "avg bitrate: %d", RMDEMUX_GUINT32_GET (data + 4));
@@ -1477,7 +1477,7 @@ gst_rmdemux_parse_prop (GstRMDemux * rmdemux, const void *data, int length)
 }
 
 static void
-gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
+gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
 {
   GstRMDemuxStream *stream;
   char *stream1_type_string;
@@ -1679,7 +1679,7 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const void *data, int length)
 }
 
 static guint
-gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const void *data, int length)
+gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const guint8 * data, int length)
 {
   int n;
   int id;
@@ -1699,7 +1699,8 @@ gst_rmdemux_parse_indx (GstRMDemux * rmdemux, const void *data, int length)
 }
 
 static void
-gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux, const void *data, int length)
+gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux, const guint8 * data,
+    int length)
 {
   int i;
   int n;
@@ -1726,7 +1727,7 @@ gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux, const void *data, int length)
 }
 
 static void
-gst_rmdemux_parse_data (GstRMDemux * rmdemux, const void *data, int length)
+gst_rmdemux_parse_data (GstRMDemux * rmdemux, const guint8 * data, int length)
 {
   rmdemux->n_chunks = RMDEMUX_GUINT32_GET (data);
   rmdemux->data_offset = RMDEMUX_GUINT32_GET (data + 4);
@@ -1736,7 +1737,7 @@ gst_rmdemux_parse_data (GstRMDemux * rmdemux, const void *data, int length)
 }
 
 static void
-gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const void *data, int length)
+gst_rmdemux_parse_cont (GstRMDemux * rmdemux, const guint8 * data, int length)
 {
   GstTagList *tags;
 
@@ -1901,7 +1902,7 @@ gst_rmdemux_handle_scrambled_packet (GstRMDemux * rmdemux,
 }
 
 static GstFlowReturn
-gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const void *data,
+gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const guint8 * data,
     guint16 version, guint16 length)
 {
   guint16 id;

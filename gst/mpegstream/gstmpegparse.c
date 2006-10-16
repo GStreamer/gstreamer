@@ -104,7 +104,7 @@ static GstClockTime gst_mpeg_parse_adjust_ts (GstMPEGParse * mpeg_parse,
 
 static GstFlowReturn gst_mpeg_parse_send_buffer (GstMPEGParse * mpeg_parse,
     GstBuffer * buffer, GstClockTime time);
-static GstFlowReturn gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse,
+static gboolean gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse,
     GstEvent * event);
 static gboolean gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse,
     GstEvent * event);

@@ -143,7 +143,7 @@ ac3_crc_validate (ac3_crc_state * state)
 void
 ac3p_init (ac3_padder * padder)
 {
-  const char sync[4] = { 0xF8, 0x72, 0x4E, 0x1F };
+  const guint8 sync[4] = { 0xF8, 0x72, 0x4E, 0x1F };
 
   padder->state = AC3P_STATE_SYNC1;
 
