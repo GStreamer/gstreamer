@@ -1,3 +1,9 @@
+2006-10-16  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/part-trickmodes.txt:
+	* gst/gstevent.c:
+	Update some docs regarding reverse playback.
+
 2006-10-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Marcus Granado  <mrc dot gran at gmail com>

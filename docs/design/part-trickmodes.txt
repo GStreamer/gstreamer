@@ -160,27 +160,42 @@ For backwards playback the following rules apply:
 
 For plugins the following rules apply:
    
- - A source plugin sends data in chunks starting from the last chunk of the file. 
-   The actual bytes are not reversed.
+ - A source plugin sends data in chunks starting from the last chunk of the
+   file. The actual bytes are not reversed. Each chunk that is not forward
+   continuous with the previous chunk is marked with a DISCONT flag.
 
  - A demuxer accumulates the chunks. As soon as a keyframe is found, everything
    starting from the keyframe up to the accumulated data is sent downstream.
    Timestamps on the buffers are set starting from the stop position to start,
-   effectively going backwards.
+   effectively going backwards. Chunks are marked with DISCONT when they are not
+   forward continuous with the previous buffer.
 
- - A decoder decodes and accumulates all frames. If a new keyframe or EOS is received, 
-   all accumulated frames are sent downsteam in reverse. 
+ - A video decoder decodes and accumulates all decoded frames. If a buffer with
+   a DISCONT, accumulate NEWSEGMENT or EOS is received, all accumulated frames
+   are sent downsteam in reverse.
 
- - A sink reverses (for audio) and retimestamps (audio, video) the buffers before
-   playing them back. Retimestamping occurs relative to the stop position, making
-   the timestamps increase again and suitable for synchronizing against the clock.
+ - An audio decoder decodes and accumulates all decoded audio. If a buffer with
+   a DISCONT, accumulate NEWSEGMENT or EOS is received, all accumulated audio
+   is sent downstream in reverse order. Some audio codecs need the previous
+   data buffer to decode the current one, in that case, the previous DISCONT
+   buffer needs to be combined with the last non-DISCONT buffer to generate the
+   last bit of output.
 
- - for transcoding, audio and video resamplers can be used to reverse, resample and
-   retimestamp the buffers.
+ - A sink reverses (for audio) and retimestamps (audio, video) the buffers
+   before playing them back. Retimestamping occurs relative to the stop
+   position, making the timestamps increase again and suitable for synchronizing
+   against the clock.
+   Audio sinks also have to perform simple resampling before playing the
+   samples.
+
+ - for transcoding, audio and video resamplers can be used to reverse, resample
+   and retimestamp the buffers. Any rate adjustments performed on the media must
+   be added to the applied_rate and subtracted from the rate members in the
+   NEWSEGMENT event.
 
 Notes:
 
- - The clock keeps running forward.
- - backwards playback potentially uses a lot of memory as frames and undecoded data
-   gets buffered.
+ - The clock/stream_time keeps running forward.
+ - backwards playback potentially uses a lot of memory as frames and undecoded
+   data gets buffered.
 

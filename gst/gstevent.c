@@ -811,8 +811,11 @@ gst_event_parse_qos (GstEvent * event, gdouble * proportion,
  * that the position should not be updated.
  *
  * When the rate is positive and @start has been updated, playback will start
- * from the newly configured start position. For negative rates, playback will
- * start from the newly configured stop position.
+ * from the newly configured start position. 
+ *
+ * For negative rates, playback will start from the newly configured stop
+ * position (if any). If the stop position if updated, it must be different from
+ * -1 for negative rates.
  *
  * It is not possible to seek relative to the current playback position, to do
  * this, PAUSE the pipeline, query the current playback position with
