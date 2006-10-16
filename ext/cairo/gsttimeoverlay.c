@@ -186,7 +186,7 @@ gst_cairo_time_overlay_transform (GstBaseTransform * trans, GstBuffer * in,
   int i, j;
   unsigned char *image;
   cairo_text_extents_t extents;
-  gpointer dest, src;
+  guint8 *dest, *src;
   cairo_surface_t *font_surface;
   cairo_t *text_cairo;
   GstFlowReturn ret = GST_FLOW_OK;

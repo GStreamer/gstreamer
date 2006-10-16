@@ -501,7 +501,7 @@ gst_flac_enc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
   flacenc = GST_FLAC_ENC (client_data);
 
   if (flacenc->stopped)
-    return FLAC__STREAM_ENCODER_OK;
+    return FLAC__SEEKABLE_STREAM_ENCODER_SEEK_STATUS_OK;
 
   event = gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_BYTES,
       absolute_byte_offset, GST_BUFFER_OFFSET_NONE, 0);
@@ -525,7 +525,7 @@ gst_flac_enc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
 
   flacenc->offset = absolute_byte_offset;
 
-  return FLAC__STREAM_ENCODER_OK;
+  return FLAC__SEEKABLE_STREAM_ENCODER_SEEK_STATUS_OK;
 }
 
 static FLAC__StreamEncoderWriteStatus
@@ -585,7 +585,7 @@ gst_flac_enc_tell_callback (const FLAC__SeekableStreamEncoder * encoder,
 
   *absolute_byte_offset = flacenc->offset;
 
-  return FLAC__STREAM_ENCODER_OK;
+  return FLAC__SEEKABLE_STREAM_ENCODER_TELL_STATUS_OK;
 }
 
 static gboolean

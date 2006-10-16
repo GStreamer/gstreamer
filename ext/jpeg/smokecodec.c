@@ -36,15 +36,7 @@
 #include "smokecodec.h"
 #include "smokeformat.h"
 
-#ifndef WIN32
-//#define DEBUG(a...)   printf( a );
-#define DEBUG(a,...)
-#else
 #include <gst/gstinfo.h>
-#define DEBUG GST_DEBUG
-#endif
-
-
 
 struct _SmokeCodecInfo
 {
@@ -297,14 +289,14 @@ find_best_size (int blocks, unsigned int *width, unsigned int *height)
   w = sqchng;
   h = sqchng;
 
-  DEBUG ("guess: %d %d\n", w, h);
+  GST_DEBUG ("guess: %d %d", w, h);
 
   free = w * h - blocks;
   best = free;
   bestw = w;
 
   while (w < 256) {
-    DEBUG ("current: %d %d\n", w, h);
+    GST_DEBUG ("current: %d %d", w, h);
     if (free < best) {
       best = free;
       bestw = w;
@@ -468,7 +460,7 @@ smokecodec_encode (SmokeCodecInfo * info,
   STORE16 (out, IDX_NUM_BLOCKS, blocks);
   out[IDX_FLAGS] = (flags & 0xff);
 
-  DEBUG ("blocks %d, encoding %d\n", blocks, encoding);
+  GST_DEBUG ("blocks %d, encoding %d", blocks, encoding);
 
   info->jdest.next_output_byte = &out[blocks * 2 + OFFS_PICT];
   info->jdest.free_in_buffer = (*outsize) - OFFS_PICT;
@@ -479,7 +471,7 @@ smokecodec_encode (SmokeCodecInfo * info,
     if (!(flags & SMOKECODEC_KEYFRAME))
       find_best_size (encoding, &blocks_w, &blocks_h);
 
-    DEBUG ("best: %d %d\n", blocks_w, blocks_h);
+    GST_DEBUG ("best: %d %d", blocks_w, blocks_h);
 
     info->cinfo.image_width = blocks_w * DCTSIZE * 2;
     info->cinfo.image_height = blocks_h * DCTSIZE * 2;
@@ -492,9 +484,9 @@ smokecodec_encode (SmokeCodecInfo * info,
               info->minquality) * blocks) / max;
     }
 
-    DEBUG ("set q %d %d %d\n", quality, encoding, max);
+    GST_DEBUG ("set q %d %d %d", quality, encoding, max);
     jpeg_set_quality (&info->cinfo, quality, TRUE);
-    DEBUG ("start\n");
+    GST_DEBUG ("start");
     jpeg_start_compress (&info->cinfo, TRUE);
 
     for (i = 0; i < encoding; i++) {
@@ -523,11 +515,11 @@ smokecodec_encode (SmokeCodecInfo * info,
       put (ip, op, DCTSIZE, DCTSIZE, width / 2, 256 * DCTSIZE);
 
       if ((i % blocks_w) == (blocks_w - 1) || (i == encoding - 1)) {
-        DEBUG ("write %d\n", pos);
+        GST_DEBUG ("write %d", pos);
         jpeg_write_raw_data (&info->cinfo, info->line, 2 * DCTSIZE);
       }
     }
-    DEBUG ("finish\n");
+    GST_DEBUG ("finish");
     jpeg_finish_compress (&info->cinfo);
   }
 
@@ -535,7 +527,7 @@ smokecodec_encode (SmokeCodecInfo * info,
   STORE16 (out, IDX_SIZE, size);
 
   *outsize = size + blocks * 2 + OFFS_PICT;
-  DEBUG ("outsize %d\n", *outsize);
+  GST_DEBUG ("outsize %d", *outsize);
 
   // and decode in reference frame again
   if (info->refdec) {
@@ -596,7 +588,7 @@ smokecodec_parse_header (SmokeCodecInfo * info,
   if (info->width != *width ||
       info->height != *height ||
       info->fps_num != *fps_num || info->fps_denom != *fps_denom) {
-    DEBUG ("new width: %d %d\n", *width, *height);
+    GST_DEBUG ("new width: %d %d", *width, *height);
 
     info->reference = realloc (info->reference, 3 * ((*width) * (*height)) / 2);
     info->width = *width;
@@ -627,7 +619,7 @@ smokecodec_decode (SmokeCodecInfo * info,
       &fps_num, &fps_denom);
 
   READ16 (in, IDX_NUM_BLOCKS, blocks);
-  DEBUG ("blocks %d\n", blocks);
+  GST_DEBUG ("blocks %d", blocks);
 
   if (flags & SMOKECODEC_KEYFRAME)
     decoding = width / (DCTSIZE * 2) * height / (DCTSIZE * 2);
@@ -638,9 +630,9 @@ smokecodec_decode (SmokeCodecInfo * info,
     info->jsrc.next_input_byte = &in[blocks * 2 + OFFS_PICT];
     info->jsrc.bytes_in_buffer = insize - (blocks * 2 + OFFS_PICT);
 
-    DEBUG ("header %02x %d\n", in[blocks * 2 + OFFS_PICT], insize);
+    GST_DEBUG ("header %02x %d", in[blocks * 2 + OFFS_PICT], insize);
     res = jpeg_read_header (&info->dinfo, TRUE);
-    DEBUG ("header %d %d %d\n", res, info->dinfo.image_width,
+    GST_DEBUG ("header %d %d %d", res, info->dinfo.image_width,
         info->dinfo.image_height);
 
     blocks_w = info->dinfo.image_width / (2 * DCTSIZE);
@@ -649,7 +641,7 @@ smokecodec_decode (SmokeCodecInfo * info,
     info->dinfo.output_width = info->dinfo.image_width;
     info->dinfo.output_height = info->dinfo.image_height;
 
-    DEBUG ("start\n");
+    GST_DEBUG ("start");
     info->dinfo.do_fancy_upsampling = FALSE;
     info->dinfo.do_block_smoothing = FALSE;
     info->dinfo.out_color_space = JCS_YCbCr;
@@ -660,10 +652,10 @@ smokecodec_decode (SmokeCodecInfo * info,
     blockptr = 0;
 
     for (i = 0; i < blocks_h; i++) {
-      DEBUG ("read\n");
+      GST_DEBUG ("read");
       jpeg_read_raw_data (&info->dinfo, info->line, 2 * DCTSIZE);
 
-      DEBUG ("copy %d\n", blocks_w);
+      GST_DEBUG ("copy %d", blocks_w);
       for (j = 0; j < blocks_w; j++) {
         int pos;
         int x, y;
@@ -676,7 +668,7 @@ smokecodec_decode (SmokeCodecInfo * info,
         x = pos % (width / (DCTSIZE * 2));
         y = pos / (width / (DCTSIZE * 2));
 
-        DEBUG ("block %d %d %d\n", pos, x, y);
+        GST_DEBUG ("block %d %d %d", pos, x, y);
 
         ip = info->compbuf[0] + j * (DCTSIZE * 2);
         op = info->reference + (x * (DCTSIZE * 2)) +
@@ -693,20 +685,20 @@ smokecodec_decode (SmokeCodecInfo * info,
             (y * DCTSIZE * width / 2);
         put (ip, op, DCTSIZE, DCTSIZE, 256 * DCTSIZE, width / 2);
 
-        DEBUG ("block done %d %d %d\n", pos, x, y);
+        GST_DEBUG ("block done %d %d %d", pos, x, y);
         blockptr++;
         if (blockptr >= decoding)
           break;
       }
     }
-    DEBUG ("finish\n");
+    GST_DEBUG ("finish");
     jpeg_finish_decompress (&info->dinfo);
   }
 
-  DEBUG ("copy\n");
+  GST_DEBUG ("copy");
   if (out != info->reference)
     memcpy (out, info->reference, 3 * (width * height) / 2);
-  DEBUG ("copy done\n");
+  GST_DEBUG ("copy done");
 
   return SMOKECODEC_OK;
 }

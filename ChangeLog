@@ -1,3 +1,30 @@
+2006-10-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Josep Torra Valles  <josep at fluendo com>
+
+	* ext/cairo/gsttimeoverlay.c: (gst_cairo_time_overlay_transform):
+	* ext/esd/esdsink.c: (gst_esdsink_write):
+	* ext/flac/gstflacdec.c: (gst_flac_dec_length),
+	(gst_flac_dec_read_seekable), (gst_flac_dec_chain),
+	(gst_flac_dec_send_newsegment):
+	* ext/flac/gstflacenc.c: (gst_flac_enc_seek_callback),
+	(gst_flac_enc_tell_callback):
+	* ext/jpeg/smokecodec.c: (find_best_size), (smokecodec_encode),
+	(smokecodec_parse_header), (smokecodec_decode):
+	* gst/avi/gstavimux.c: (gst_avi_mux_write_avix_index):
+	* gst/debug/efence.c: (gst_fenced_buffer_alloc):
+	* gst/goom/Makefile.am:
+	* gst/goom/gstgoom.c:
+	* gst/icydemux/gsticydemux.c: (gst_icydemux_typefind_or_forward):
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_read):
+	* gst/udp/gstudpsink.c:
+	* gst/udp/gstudpsrc.c:
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_change_state):
+	* sys/sunaudio/gstsunaudiomixertrack.h:
+	  Fix a bunch of problems discovered by the Forte compiler, mostly type
+	  mixups and pointer arithmetics with void pointers. Fixes #362603.
+
 2006-10-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/speex/gstspeex.c: (plugin_init):

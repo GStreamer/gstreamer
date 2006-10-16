@@ -642,11 +642,11 @@ gst_flac_dec_length (const FLAC__SeekableStreamDecoder * decoder,
   flacdec = GST_FLAC_DEC (client_data);
 
   if (!(peer = gst_pad_get_peer (flacdec->sinkpad)))
-    return FLAC__SEEKABLE_STREAM_DECODER_TELL_STATUS_ERROR;
+    return FLAC__SEEKABLE_STREAM_DECODER_LENGTH_STATUS_ERROR;
   gst_pad_query_duration (peer, &fmt, &len);
   gst_object_unref (peer);
   if (fmt != GST_FORMAT_BYTES || len == -1)
-    return FLAC__SEEKABLE_STREAM_DECODER_TELL_STATUS_ERROR;
+    return FLAC__SEEKABLE_STREAM_DECODER_LENGTH_STATUS_ERROR;
 
   *length = len;
 
@@ -696,7 +696,7 @@ gst_flac_dec_read_seekable (const FLAC__SeekableStreamDecoder * decoder,
 
   if (gst_pad_pull_range (flacdec->sinkpad, flacdec->offset, *bytes,
           &buf) != GST_FLOW_OK)
-    return FLAC__SEEKABLE_STREAM_DECODER_READ_ERROR;
+    return FLAC__SEEKABLE_STREAM_DECODER_READ_STATUS_ERROR;
 
   GST_DEBUG ("Read %d bytes at %" G_GUINT64_FORMAT,
       GST_BUFFER_SIZE (buf), flacdec->offset);
@@ -1101,7 +1101,7 @@ gst_flac_dec_sink_event (GstPad * pad, GstEvent * event)
 static GstFlowReturn
 gst_flac_dec_chain (GstPad * pad, GstBuffer * buf)
 {
-  FLAC__SeekableStreamDecoderState s;
+  FLAC__StreamDecoderState s;
   GstFlacDec *dec;
   gboolean got_audio_frame;
 
@@ -1486,7 +1486,7 @@ gst_flac_dec_send_newsegment (GstFlacDec * flacdec, gboolean update)
 {
   GstSegment *s = &flacdec->segment;
   GstFormat target_format = GST_FORMAT_TIME;
-  gint64 stop_time = GST_CLOCK_TIME_NONE;
+  gint64 stop_time = -1;
   gint64 start_time = 0;
 
   /* segment is in DEFAULT format, but we want to send a TIME newsegment */

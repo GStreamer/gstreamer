@@ -62,7 +62,7 @@ typedef struct _GstSunAudioMixerTrackClass {
 } GstSunAudioMixerTrackClass;
 
 GType		gst_sunaudiomixer_track_get_type	(void);
-GstMixerTrack*	gst_sunaudiomixer_track_new		(gint track_num, gint max_chans, gint flags);
+GstMixerTrack*	gst_sunaudiomixer_track_new		(GstSunAudioTrackType track_num, gint max_chans, gint flags);
 
 G_END_DECLS
 

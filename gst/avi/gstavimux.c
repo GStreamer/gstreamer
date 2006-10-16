@@ -1109,7 +1109,7 @@ gst_avi_mux_write_avix_index (GstAviMux * avimux, guchar * code,
       /* msb is set if not (!) keyframe */
       GST_WRITE_UINT32_LE (buffdata + 4, GUINT32_FROM_LE (entry->size)
           | (GUINT32_FROM_LE (entry->flags)
-              & GST_RIFF_IF_KEYFRAME ? 0 : 1 << 31));
+              & GST_RIFF_IF_KEYFRAME ? 0 : 1U << 31));
       buffdata += 8;
     }
     i--;

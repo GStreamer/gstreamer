@@ -200,7 +200,7 @@ gst_udpsink_get_property (GObject * object, guint prop_id, GValue * value,
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
-static guint
+static GstURIType
 gst_udpsink_uri_get_type (void)
 {
   return GST_URI_SINK;

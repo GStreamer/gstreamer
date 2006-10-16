@@ -95,8 +95,8 @@ static GstFlowReturn gst_goom_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_goom_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_goom_sink_event (GstPad * pad, GstEvent * event);
 
-static GstPadLinkReturn gst_goom_sink_setcaps (GstPad * pad, GstCaps * caps);
-static GstPadLinkReturn gst_goom_src_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_goom_sink_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_goom_src_setcaps (GstPad * pad, GstCaps * caps);
 
 static GstElementClass *parent_class = NULL;
 

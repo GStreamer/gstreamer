@@ -1964,10 +1964,6 @@ gst_wavparse_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret;
   GstWavParse *wav = GST_WAVPARSE (element);
 
-  GST_DEBUG_OBJECT (wav, "changing state %s - %s",
-      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
-      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
-
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;

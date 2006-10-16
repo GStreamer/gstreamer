@@ -838,7 +838,7 @@ gst_udpsrc_stop (GstBaseSrc * bsrc)
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
-static guint
+static GstURIType
 gst_udpsrc_uri_get_type (void)
 {
   return GST_URI_SRC;

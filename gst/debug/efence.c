@@ -473,7 +473,7 @@ gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
   fenced_buffer->length = alloc_size - page_size;
 #else
   mprotect (region, page_size, PROT_NONE);
-  mprotect (region + alloc_size - page_size, page_size, PROT_NONE);
+  mprotect ((char *) region + alloc_size - page_size, page_size, PROT_NONE);
 
   fenced_buffer->region = region;
   fenced_buffer->length = alloc_size;
@@ -487,9 +487,9 @@ gst_fenced_buffer_alloc (GstBuffer * buffer, unsigned int length,
     /* Align to top of region, but force alignment to 4 bytes */
     offset = alloc_size - page_size - length;
     offset &= ~0x3;
-    return region + offset;
+    return (void *) ((char *) region + offset);
   } else {
-    return region + page_size;
+    return (void *) ((char *) region + page_size);
   }
 }
 

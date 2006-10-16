@@ -2222,7 +2222,7 @@ open_failed:
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
-static guint
+static GstURIType
 gst_rtspsrc_uri_get_type (void)
 {
   return GST_URI_SRC;

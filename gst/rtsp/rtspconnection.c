@@ -40,6 +40,10 @@
  * SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
@@ -58,6 +62,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif
+
+#ifdef HAVE_FIONREAD_IN_SYS_FILIO
+#include <sys/filio.h>
 #endif
 
 #include "rtspconnection.h"
@@ -542,7 +550,7 @@ rtsp_connection_read (RTSPConnection * conn, gpointer data, guint size)
         goto read_error;
     } else {
       toread -= bytes;
-      data += bytes;
+      data = (char *) data + bytes;
     }
   }
   return RTSP_OK;

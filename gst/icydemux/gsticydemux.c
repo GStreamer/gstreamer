@@ -429,7 +429,7 @@ gst_icydemux_typefind_or_forward (GstICYDemux * icydemux, GstBuffer * buf)
   if (icydemux->typefinding) {
     GstBuffer *tf_buf;
     GstCaps *caps;
-    guint prob;
+    GstTypeFindProbability prob;
 
     if (icydemux->typefind_buf) {
       icydemux->typefind_buf = gst_buffer_join (icydemux->typefind_buf, buf);

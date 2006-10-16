@@ -403,7 +403,7 @@ gst_esdsink_write (GstAudioSink * asink, gpointer data, guint length)
       goto write_error;
 
     to_write -= done;
-    data += done;
+    data = (char *) data + done;
   }
   return length;
 
