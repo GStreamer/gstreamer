@@ -14,8 +14,8 @@ import sys
 import cairo
 
 FONT_NAME = "Bitstream Vera Sans"
-FONT_SIZE = 9
-PIXELS_PER_SECOND = 1000
+FONT_SIZE = 8
+PIXELS_PER_SECOND = 1700
 PIXELS_PER_LINE = 12
 PLOT_WIDTH = 1400
 TIME_SCALE_WIDTH = 20
@@ -25,7 +25,7 @@ LOG_MARKER_WIDTH = 20
 BACKGROUND_COLOR = (0, 0, 0)
 
 # assumes GST_DEBUG_LOG_COLOR=1
-mark_regex = re.compile (r'^(\d:\d\d:\d\d\.\d+) \d+ 0x[0-9a-f]+ [A-Z]+ +([a-zA-Z_]+ )(.*)')
+mark_regex = re.compile (r'^(\d:\d\d:\d\d\.\d+) +\d+ 0?x?[0-9a-f]+ [A-Z]+ +([a-zA-Z_]+ )(.*)')
 mark_timestamp_group = 1
 mark_program_group = 2
 mark_log_group = 3
@@ -74,17 +74,7 @@ palette = [
 
 class SyscallParser:
     def __init__ (self):
-        self.pending_execs = []
         self.syscalls = []
-
-    def search_pending_execs (self, search_pid):
-        n = len (self.pending_execs)
-        for i in range (n):
-            (pid, timestamp, command) = self.pending_execs[i]
-            if pid == search_pid:
-                return (i, timestamp, command)
-
-        return (None, None, None)
 
     def add_line (self, str):
         m = mark_regex.search (str)
@@ -102,7 +92,8 @@ class SyscallParser:
                 program_hash = program.__hash__ ()
                 s.colors = palette[program_hash % len (palette)]
                 self.syscalls.append (s)
-
+        else:
+            print 'No log in %s' % str
             return
 
 def parse_strace(filename):

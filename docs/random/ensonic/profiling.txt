@@ -1,28 +1,15 @@
 $Id$
 
-= core profiling =
+= profiling =
 
-* scheduler keeps a list of usecs the process function of each element was
-  running
-* process functions are: loop, chain, get
-* scheduler keeps a sum of all times
-* each gst-element has a profile_percentage field
+== what information is interesting? ==
+* pipeline throughoutput
+  if we know the cpu-load for a given datastream, we could extrapolate what the
+  system can handle
+  -> qos profiling
+* load distribution
+  which element causes which cpu load/memory usage
 
-* when going to play
-  * scheduler sets sum and all usecs in the list to 0
-* when handling an element
-  * remember old usecs t_old
-  * take time t1
-  * call elements processing function
-  * take time t2
-  * t_new=t2-t1
-  * sum+=(t_new-t_old)
-  * profile_percentage=t_new/sum;
-  * should the percentage be averaged?
-     * profile_percentage=(profile_percentage+(t_new/sum))/2.0;
-
-* the profile_percentage shows how much CPU time the element uses in relation
-  to the whole pipeline
 
 = qos profiling =
 
@@ -45,15 +32,46 @@ $Id$
 * idea2: query data (via gst-launch)
   * add -r, --report option to gst-launch
   * send duration to get total number of frames (GST_FORMAT_DEFAULT for video is frames)
-  * during playing we need to somehow listen to/capture/intercept QOS-events to record
-    'streamtime,proportion' pairs
+  * during playing we need to capture QOS-events to record 'streamtime,proportion' pairs
+    gst_pad_add_event_probe(video_sink->sink_pad,handler,data)
+  * during playback we like to know when an elemnt drops frames
+    what about elements sending a qos_action message?
   * after EOS, send qos-queries to each element in the pipeline
     * qos-query will return:
       number of frames rendered
       number of frames dropped
     * print a nice table with the results
+      * QOS stats first
+      * list of 'streamtime,proportion' pairs
     
   + robust
   + also available to application
   - changes in core
+
+= core profiling =
+
+* scheduler keeps a list of usecs the process function of each element was
+  running
+* process functions are: loop, chain, get, they are driven by gst_pad_push() and
+  gst_pad_pull_range()
+* scheduler keeps a sum of all times
+* each gst-element has a profile_percentage field
+
+* when going to play
+  * scheduler sets sum and all usecs in the list to 0
+* when handling an element
+  * remember old usecs t_old
+  * take time t1
+  * call elements processing function
+  * take time t2
+  * t_new=t2-t1
+  * sum+=(t_new-t_old)
+  * profile_percentage=t_new/sum;
+  * should the percentage be averaged?
+     * profile_percentage=(profile_percentage+(t_new/sum))/2.0;
+
+* the profile_percentage shows how much CPU time the element uses in relation
+  to the whole pipeline
+
+* check get_rusage() based cpu usage detection in buzztard
 

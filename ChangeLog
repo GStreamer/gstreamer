@@ -1,3 +1,14 @@
+2006-10-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/design/part-live-source.txt:
+	  describe howto handle latency
+	
+	* docs/random/ensonic/profiling.txt:
+	  more ideas
+
+	* tools/gst-plot-timeline.py:
+	  fix log parsing for solaris, remove unused function
+
 2006-10-16  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-trickmodes.txt:

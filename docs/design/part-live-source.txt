@@ -38,7 +38,10 @@ time the data was captured. Normally it will take some time to capture
 the first sample of data and the last sample. This means that when the
 buffer arrives at the sink, it will already be late and will be dropped.
 
-The latency is the time it takes to construct one buffer of data.
+The latency is the time it takes to construct one buffer of data. This latency
+could be exposed by latency queries.
 
-
-
+Theses latency queries need to be done by the managing pipeline for all sinks.
+They can only be done after the meassurements have been taken (all are
+prerolled). Thus in pipeline:state_changed:PAUSED_TO_PLAYING we need
+get the max-latency and set this as a sync-offset in all sinks.
