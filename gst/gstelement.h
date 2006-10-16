@@ -145,21 +145,21 @@ typedef enum {
  * Given a current state @cur and a next state @next, calculate the associated
  * #GstStateChange transition.
  */
-#define GST_STATE_TRANSITION(cur,next)		(((cur)<<3)|(next))
+#define GST_STATE_TRANSITION(cur,next)		((GstStateChange)(((cur)<<3)|(next)))
 /**
  * GST_STATE_TRANSITION_CURRENT:
  * @trans: A #GstStateChange
  *
  * Given a state transition @trans, extract the current #GstState.
  */
-#define GST_STATE_TRANSITION_CURRENT(trans)	((trans)>>3)
+#define GST_STATE_TRANSITION_CURRENT(trans)	((GstState)((trans)>>3))
 /**
  * GST_STATE_TRANSITION_NEXT:
  * @trans: A #GstStateChange
  *
  * Given a state transition @trans, extract the next #GstState.
  */
-#define GST_STATE_TRANSITION_NEXT(trans)	((trans)&0x7)
+#define GST_STATE_TRANSITION_NEXT(trans)	((GstState)((trans)&0x7))
 
 /**
  * GstStateChange:
