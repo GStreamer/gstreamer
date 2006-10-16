@@ -1,3 +1,9 @@
+2006-10-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.defs:
+	  Don't use 'interface' as variable name, MingW doesn't like that
+	  (fixes #359375).
+
 2006-10-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/pygstiterator.c: (pygst_iterator_new):
