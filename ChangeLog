@@ -1,3 +1,11 @@
+2006-10-17  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gstdecodebin.c: (get_our_ghost_pad),
+	(remove_element_chain):
+	Don't return a pad from get_our_ghost_pad unless it is actually the
+	one we want.
+	Change a cast in remove_element_chain slightly.
+
 2006-10-13  Julien MOUTTE  <julien@moutte.net>
 
 	* tests/examples/seek/seek.c: (do_seek), (start_seek),

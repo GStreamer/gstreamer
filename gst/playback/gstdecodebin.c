@@ -974,6 +974,7 @@ get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
   /* our ghostpads are the sourcepads */
   pad_it = gst_element_iterate_src_pads (GST_ELEMENT (decode_bin));
   while (!done) {
+    db_pad = NULL;
     switch (gst_iterator_next (pad_it, (gpointer) & db_pad)) {
       case GST_ITERATOR_OK:
         GST_DEBUG_OBJECT (decode_bin, "looking at pad %s:%s",
@@ -1072,10 +1073,10 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
       GstObject *parent = gst_pad_get_parent (peer);
 
       if (parent) {
-        GstElement *grandparent = GST_ELEMENT (gst_object_get_parent (parent));
+        GstObject *grandparent = gst_object_get_parent (parent);
 
-        if (grandparent) {
-          if (grandparent != GST_ELEMENT (decode_bin)) {
+        if (grandparent != NULL) {
+          if (GST_ELEMENT (grandparent) != GST_ELEMENT (decode_bin)) {
             GST_DEBUG_OBJECT (decode_bin, "dead end pad %s:%s parent %s",
                 GST_DEBUG_PAD_NAME (peer), GST_OBJECT_NAME (grandparent));
           } else {
