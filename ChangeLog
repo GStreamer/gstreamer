@@ -1,5 +1,10 @@
 2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/gst/gstreamer-sections.txt:
+	  Forgot this one, makes gtk-doc shut up.
+
+2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Peter Kjellerstedt <pkj at axis com>
 
 	* gst/gstobject.h:

@@ -1139,7 +1139,7 @@ GST_OBJECT_CLASS_CAST
 <SUBSECTION Private>
 gst_object_get_type
 gst_object_flags_get_type
-xmlNodePtr
+GstXmlNodePtr
 </SECTION>
 
 
