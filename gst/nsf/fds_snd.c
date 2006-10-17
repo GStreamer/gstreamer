@@ -23,6 +23,7 @@
 ** $Id$
 */
 
+#include <stdio.h>
 #include "types.h"
 #include "nes_apu.h"
 #include "fds_snd.h"
@@ -66,7 +67,7 @@ fds_shutdown (void)
 
 static apu_memwrite fds_memwrite[] = {
   {0x4040, 0x4092, fds_write},
-  {-1, -1, NULL}
+  {(uint32) - 1, (uint32) - 1, NULL}
 };
 
 apuext_t fds_ext = {
@@ -80,6 +81,15 @@ apuext_t fds_ext = {
 
 /*
 ** $Log$
+** Revision 1.2  2006/10/17 11:04:14  tpm
+** Patch by: Josep Torra Valles  <josep at fluendo com>
+** * gst/nsf/fds_snd.c:
+** * gst/nsf/mmc5_snd.c:
+** * gst/nsf/nsf.c:
+** * gst/nsf/vrc7_snd.c:
+** * gst/nsf/vrcvisnd.c:
+** Fix some things the Forte compiler warns about (#362626).
+**
 ** Revision 1.1  2006/07/13 15:07:28  wtay
 ** Based on patches by: Johan Dahlin <johan at gnome dot org>
 ** Ronald Bultje <rbultje at ronald dot bitfreak dot net>

@@ -23,6 +23,7 @@
 ** $Id$
 */
 
+#include <stdio.h>
 #include "types.h"
 #include "vrcvisnd.h"
 #include "nes_apu.h"
@@ -174,7 +175,7 @@ static apu_memwrite vrcvi_memwrite[] = {
   {0x9000, 0x9002, vrcvi_write},        /* vrc6 */
   {0xA000, 0xA002, vrcvi_write},
   {0xB000, 0xB002, vrcvi_write},
-  {-1, -1, NULL}
+  {(uint32) - 1, (uint32) - 1, NULL}
 };
 
 apuext_t vrcvi_ext = {
@@ -188,6 +189,15 @@ apuext_t vrcvi_ext = {
 
 /*
 ** $Log$
+** Revision 1.2  2006/10/17 11:04:14  tpm
+** Patch by: Josep Torra Valles  <josep at fluendo com>
+** * gst/nsf/fds_snd.c:
+** * gst/nsf/mmc5_snd.c:
+** * gst/nsf/nsf.c:
+** * gst/nsf/vrc7_snd.c:
+** * gst/nsf/vrcvisnd.c:
+** Fix some things the Forte compiler warns about (#362626).
+**
 ** Revision 1.1  2006/07/13 15:07:28  wtay
 ** Based on patches by: Johan Dahlin <johan at gnome dot org>
 ** Ronald Bultje <rbultje at ronald dot bitfreak dot net>

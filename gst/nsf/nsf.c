@@ -79,14 +79,14 @@ nsf_bankswitch (uint32 address, uint8 value)
 static nes6502_memread default_readhandler[] = {
   {0x0800, 0x1FFF, read_mirrored_ram},
   {0x4000, 0x4017, apu_read},
-  {-1, -1, NULL}
+  {(uint32) - 1, (uint32) - 1, NULL}
 };
 
 static nes6502_memwrite default_writehandler[] = {
   {0x0800, 0x1FFF, write_mirrored_ram},
   {0x4000, 0x4017, apu_write},
   {0x5FF6, 0x5FFF, nsf_bankswitch},
-  {-1, -1, NULL}
+  {(uint32) - 1, (uint32) - 1, NULL}
 };
 
 static uint8
@@ -585,6 +585,15 @@ nsf_setfilter (nsf_t * nsf, int filter_type)
 
 /*
 ** $Log$
+** Revision 1.4  2006/10/17 11:04:14  tpm
+** Patch by: Josep Torra Valles  <josep at fluendo com>
+** * gst/nsf/fds_snd.c:
+** * gst/nsf/mmc5_snd.c:
+** * gst/nsf/nsf.c:
+** * gst/nsf/vrc7_snd.c:
+** * gst/nsf/vrcvisnd.c:
+** Fix some things the Forte compiler warns about (#362626).
+**
 ** Revision 1.3  2006/07/19 11:43:50  tpm
 ** * gst/nsf/nsf.c: (nsf_load):
 ** Really fix compilation. Apparently it's not enough to

@@ -1,5 +1,16 @@
 2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Josep Torra Valles  <josep at fluendo com>
+
+	* gst/nsf/fds_snd.c:
+	* gst/nsf/mmc5_snd.c:
+	* gst/nsf/nsf.c:
+	* gst/nsf/vrc7_snd.c:
+	* gst/nsf/vrcvisnd.c:
+	  Fix some things the Forte compiler warns about (#362626).
+
+2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_moov), (qtdemux_parse),
 	(qtdemux_node_dump_foreach), (qtdemux_dump_mvhd),
 	(qtdemux_dump_tkhd), (qtdemux_dump_elst), (qtdemux_dump_mdhd),
