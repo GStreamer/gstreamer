@@ -427,10 +427,17 @@ gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   oss = GST_OSSSINK (asink);
 
+  /* we opened non-blocking so that we can detect if the device is available
+   * without hanging forever. We now want to remove the non-blocking flag. */
   mode = fcntl (oss->fd, F_GETFL);
   mode &= ~O_NONBLOCK;
-  if (fcntl (oss->fd, F_SETFL, mode) == -1)
-    goto non_block;
+  if (fcntl (oss->fd, F_SETFL, mode) == -1) {
+    /* some drivers do no support unsetting the non-blocking flag, try to
+     * close/open the device then. This is racy but we error out properly. */
+    gst_oss_sink_close (asink);
+    if ((oss->fd = open (oss->device, O_WRONLY, 0)) == -1)
+      goto non_block;
+  }
 
   tmp = gst_oss_sink_get_format (spec->format);
   if (tmp == 0)
@@ -458,7 +465,6 @@ gst_oss_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 
   spec->bytes_per_sample = (spec->width / 8) * spec->channels;
   oss->bytes_per_sample = (spec->width / 8) * spec->channels;
-  memset (spec->silence_sample, 0, spec->bytes_per_sample);
 
   GST_DEBUG_OBJECT (oss, "got segsize: %d, segtotal: %d, value: %08x",
       spec->segsize, spec->segtotal, tmp);
