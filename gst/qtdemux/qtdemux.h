@@ -37,6 +37,8 @@ G_BEGIN_DECLS
 #define GST_IS_QTDEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QTDEMUX))
 
+#define GST_QT_DEMUX_CAST(obj) ((GstQTDemux *)(obj))
+
 #define GST_QTDEMUX_MAX_STREAMS         8
 
 typedef struct _GstQTDemux GstQTDemux;
