@@ -1,5 +1,14 @@
 2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_set_wp_config):
+	* ext/wavpack/gstwavpackparse.c:
+	(gst_wavpack_parse_create_src_pad):
+	* gst/nuvdemux/gstnuvdemux.c: (gst_nuv_demux_create_pads):
+	* tests/check/elements/wavpackparse.c: (wavpackparse_found_pad):
+	  Activate pads before adding them to running element.
+
+2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Josep Torra Valles  <josep at fluendo com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_sink_event),

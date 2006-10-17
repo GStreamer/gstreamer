@@ -442,6 +442,7 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
         GST_WARNING_OBJECT (enc, "setting correction caps failed");
       } else {
         gst_pad_use_fixed_caps (enc->wvcsrcpad);
+        gst_pad_set_active (enc->wvcsrcpad, TRUE);
         gst_element_add_pad (GST_ELEMENT (enc), enc->wvcsrcpad);
         enc->wp_config->flags |= CONFIG_CREATE_WVC;
         if (enc->correction_mode == 2) {

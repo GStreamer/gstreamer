@@ -424,6 +424,7 @@ gst_nuv_demux_create_pads (GstNuvDemux * nuv)
 
     gst_pad_set_event_function (nuv->src_video_pad,
         gst_nuv_demux_handle_src_event);
+    gst_pad_set_active (nuv->src_video_pad, TRUE);
     gst_element_add_pad (GST_ELEMENT (nuv), nuv->src_video_pad);
     gst_caps_unref (video_caps);
   }
@@ -443,6 +444,7 @@ gst_nuv_demux_create_pads (GstNuvDemux * nuv)
     gst_pad_use_fixed_caps (nuv->src_audio_pad);
     gst_pad_set_active (nuv->src_audio_pad, TRUE);
     gst_pad_set_caps (nuv->src_audio_pad, audio_caps);
+    gst_pad_set_active (nuv->src_audio_pad, TRUE);
     gst_element_add_pad (GST_ELEMENT (nuv), nuv->src_audio_pad);
 
     gst_pad_set_event_function (nuv->src_audio_pad,
