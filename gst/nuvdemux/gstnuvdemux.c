@@ -123,7 +123,7 @@ _gdouble_swap_le_be (gdouble * d)
   return u.d;
 }
 
-#define READ_DOUBLE_FROM_LE(d) (_gdouble_swap_le_be(d))
+#define READ_DOUBLE_FROM_LE(d) (_gdouble_swap_le_be((gdouble* ) d))
 #else /* G_BYTE_ORDER != G_BIG_ENDIAN */
 #define READ_DOUBLE_FROM_LE(d) *((gdouble* ) (d))
 #endif /* G_BYTE_ORDER != G_BIG_ENDIAN */

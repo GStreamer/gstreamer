@@ -1,5 +1,10 @@
 2006-10-17  Edgard Lima <edgard.lima@indt.org.br>
 
+	* gst/nuvdemux/gstnuvdemux.c:
+	Just a cast to make it compile oos big_endian systems.
+
+2006-10-17  Edgard Lima <edgard.lima@indt.org.br>
+
 	Patch by: Renato Filho <renato.filho@indt.org.br> and Rosfran Borges
 	<rosfran.borges@indt.org.br>
 
