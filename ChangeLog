@@ -1,3 +1,9 @@
+2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstbuffer.h:
+	  Fix gst_buffer_replace() macro to avoid gst_mini_object_replace()-related
+	  type-punned pointer warnings.
+
 2006-10-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstelement.h:
