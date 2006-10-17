@@ -1,3 +1,15 @@
+2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Josep Torra Valles  <josep at fluendo com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_handle_sink_event),
+	(next_entry_size), (qtdemux_inflate), (qtdemux_parse_moov),
+	(qtdemux_parse_tree), (qtdemux_parse_trak), (qtdemux_tag_add_str),
+	(qtdemux_tag_add_num), (qtdemux_tag_add_date),
+	(qtdemux_tag_add_gnre):
+	  Make compile with Forte compiler, mostly don't do pointer arithmetic
+	  with void pointers (#362626).
+
 2006-10-17  Edgard Lima <edgard.lima@indt.org.br>
 
 	* gst/nuvdemux/gstnuvdemux.c:
