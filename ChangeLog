@@ -1,3 +1,13 @@
+2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/interfaces/tuner.c: (gst_tuner_list_channels),
+	(gst_tuner_set_channel), (gst_tuner_get_channel),
+	(gst_tuner_list_norms), (gst_tuner_set_norm), (gst_tuner_get_norm),
+	(gst_tuner_set_frequency), (gst_tuner_get_frequency),
+	(gst_tuner_signal_strength), (gst_tuner_find_norm_by_name),
+	(gst_tuner_find_channel_by_name):
+	  Fix some function guards, add some more function guards.
+
 2006-10-17  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gstdecodebin.c: (get_our_ghost_pad),
