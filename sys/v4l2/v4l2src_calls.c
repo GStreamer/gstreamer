@@ -728,7 +728,7 @@ gst_v4l2src_set_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
   GstV4l2Object *v4l2object = v4l2src->v4l2object;
   struct v4l2_streamparm stream;
 
-  GST_LOG_OBJECT (v4l2src, "setting fps %d, %d", *fps_n, *fps_d);
+  GST_LOG_OBJECT (v4l2src, "setting fps %d / %d", *fps_n, *fps_d);
 
   memset (&stream, 0x00, sizeof (struct v4l2_streamparm));
   stream.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -738,16 +738,16 @@ gst_v4l2src_set_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
   if (!(stream.parm.capture.capability & V4L2_CAP_TIMEPERFRAME))
     goto no_timeperframe;
 
-  stream.parm.capture.timeperframe.denominator = *fps_n;
-  stream.parm.capture.timeperframe.numerator = *fps_d;
+  stream.parm.capture.timeperframe.numerator = *fps_n;
+  stream.parm.capture.timeperframe.denominator = *fps_d;
 
   if (ioctl (v4l2object->video_fd, VIDIOC_S_PARM, &stream) < 0)
     goto sparm_failed;
 
-  *fps_n = stream.parm.capture.timeperframe.denominator;
-  *fps_d = stream.parm.capture.timeperframe.numerator;
+  *fps_n = stream.parm.capture.timeperframe.numerator;
+  *fps_d = stream.parm.capture.timeperframe.denominator;
 
-  GST_LOG_OBJECT (v4l2src, "fps set to %d, %d", *fps_n, *fps_d);
+  GST_LOG_OBJECT (v4l2src, "fps set to %d / %d", *fps_n, *fps_d);
 
   return TRUE;
 
@@ -796,8 +796,8 @@ gst_v4l2src_get_fps (GstV4l2Src * v4l2src, guint * fps_n, guint * fps_d)
   }
 
   /* Note: V4L2 gives us the frame interval, we need the frame rate */
-  *fps_n = stream.parm.capture.timeperframe.denominator;
-  *fps_d = stream.parm.capture.timeperframe.numerator;
+  *fps_n = stream.parm.capture.timeperframe.numerator;
+  *fps_d = stream.parm.capture.timeperframe.denominator;
 
   GST_DEBUG_OBJECT (v4l2src,
       "frame rate returned by G_PARM: %d/%d fps", *fps_n, *fps_d);
