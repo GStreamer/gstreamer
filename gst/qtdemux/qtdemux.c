@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY_STATIC (qtdemux_debug);
 #define QTDEMUX_FP16_GET(a)     ((GST_READ_UINT16_BE(a))/256.0)
 #define QTDEMUX_FOURCC_GET(a)   (GST_READ_UINT32_LE(a))
 
-#define QTDEMUX_GUINT64_GET(a) ((((guint64)QTDEMUX_GUINT32_GET(a))<<32)|QTDEMUX_GUINT32_GET(((void *)a)+4))
+#define QTDEMUX_GUINT64_GET(a) ((((guint64)QTDEMUX_GUINT32_GET(a))<<32)|QTDEMUX_GUINT32_GET(((guint8 *)a)+4))
 
 typedef struct _QtNode QtNode;
 typedef struct _QtNodeType QtNodeType;
@@ -61,7 +61,7 @@ typedef struct _QtDemuxSample QtDemuxSample;
 struct _QtNode
 {
   guint32 type;
-  gpointer data;
+  guint8 *data;
   gint len;
 };
 
@@ -70,7 +70,7 @@ struct _QtNodeType
   guint32 fourcc;
   const gchar *name;
   gint flags;
-  void (*dump) (GstQTDemux * qtdemux, void *buffer, int depth);
+  void (*dump) (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 };
 
 struct _QtDemuxSample
@@ -374,8 +374,9 @@ static gboolean qtdemux_sink_activate_pull (GstPad * sinkpad, gboolean active);
 static gboolean qtdemux_sink_activate_push (GstPad * sinkpad, gboolean active);
 static gboolean gst_qtdemux_handle_sink_event (GstPad * pad, GstEvent * event);
 
-static void qtdemux_parse_moov (GstQTDemux * qtdemux, void *buffer, int length);
-static void qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer,
+static void qtdemux_parse_moov (GstQTDemux * qtdemux, guint8 * buffer,
+    int length);
+static void qtdemux_parse (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
     int length);
 static const QtNodeType *qtdemux_type_get (guint32 fourcc);
 static void qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node);
@@ -1915,23 +1916,39 @@ qtdemux_sink_activate_push (GstPad * sinkpad, gboolean active)
   return TRUE;
 }
 
-static void qtdemux_dump_mvhd (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_tkhd (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_elst (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_mdhd (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_hdlr (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_vmhd (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_dref (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_stsd (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_stts (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_stss (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_stsc (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_stsz (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_stco (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_co64 (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_dcom (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_cmvd (GstQTDemux * qtdemux, void *buffer, int depth);
-static void qtdemux_dump_unknown (GstQTDemux * qtdemux, void *buffer,
+static void qtdemux_dump_mvhd (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_tkhd (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_elst (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_mdhd (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_hdlr (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_vmhd (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_dref (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_stsd (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_stts (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_stss (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_stsc (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_stsz (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_stco (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_co64 (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_dcom (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_cmvd (GstQTDemux * qtdemux, guint8 * buffer,
+    int depth);
+static void qtdemux_dump_unknown (GstQTDemux * qtdemux, guint8 * buffer,
     int depth);
 
 static const QtNodeType qt_node_types[] = {
@@ -2074,7 +2091,7 @@ qtdemux_inflate (void *z_buffer, int z_length, int length)
 }
 
 static void
-qtdemux_parse_moov (GstQTDemux * qtdemux, void *buffer, int length)
+qtdemux_parse_moov (GstQTDemux * qtdemux, guint8 * buffer, int length)
 {
   GNode *cmov;
 
@@ -2095,13 +2112,13 @@ qtdemux_parse_moov (GstQTDemux * qtdemux, void *buffer, int length)
             'b')) {
       int uncompressed_length;
       int compressed_length;
-      void *buf;
+      guint8 *buf;
 
       uncompressed_length = QTDEMUX_GUINT32_GET (cmvd->data + 8);
       compressed_length = QTDEMUX_GUINT32_GET (cmvd->data + 4) - 12;
       GST_LOG ("length = %d", uncompressed_length);
 
-      buf = qtdemux_inflate (cmvd->data + 12, compressed_length,
+      buf = (guint8 *) qtdemux_inflate (cmvd->data + 12, compressed_length,
           uncompressed_length);
 
       qtdemux->moov_node_compressed = qtdemux->moov_node;
@@ -2115,12 +2132,12 @@ qtdemux_parse_moov (GstQTDemux * qtdemux, void *buffer, int length)
 }
 
 static void
-qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
+qtdemux_parse (GstQTDemux * qtdemux, GNode * node, guint8 * buffer, int length)
 {
   guint32 fourcc;
   guint32 node_length;
   const QtNodeType *type;
-  void *end;
+  guint8 *end;
 
   GST_LOG ("qtdemux_parse buffer %p length %d", buffer, length);
 
@@ -2136,7 +2153,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
       GST_FOURCC_ARGS (fourcc), node_length);
 
   if (type->flags & QT_CONTAINER) {
-    void *buf;
+    guint8 *buf;
     guint32 len;
 
     buf = buffer + 8;
@@ -2166,7 +2183,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
     }
   } else {
     if (fourcc == FOURCC_stsd) {
-      void *buf;
+      guint8 *buf;
       guint32 len;
 
       GST_DEBUG_OBJECT (qtdemux,
@@ -2197,7 +2214,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         buf += len;
       }
     } else if (fourcc == FOURCC_mp4a) {
-      void *buf;
+      guint8 *buf;
       guint32 len;
       guint32 version;
 
@@ -2233,7 +2250,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         GST_WARNING ("unhandled mp4a version 0x%08x", version);
       }
     } else if (fourcc == FOURCC_mp4v) {
-      void *buf;
+      guint8 *buf;
       guint32 len;
       guint32 version;
       int tlen;
@@ -2286,7 +2303,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         }
       }
     } else if (fourcc == FOURCC_meta) {
-      void *buf;
+      guint8 *buf;
       guint32 len;
 
       buf = buffer + 12;
@@ -2315,7 +2332,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
         buf += len;
       }
     } else if (fourcc == FOURCC_SVQ3) {
-      void *buf;
+      guint8 *buf;
       guint32 len;
       guint32 version;
       int tlen;
@@ -2368,7 +2385,7 @@ qtdemux_parse (GstQTDemux * qtdemux, GNode * node, void *buffer, int length)
 #if 0
     if (fourcc == FOURCC_cmvd) {
       int uncompressed_length;
-      void *buf;
+      guint8 *buf;
 
       uncompressed_length = QTDEMUX_GUINT32_GET (buffer + 8);
       GST_LOG ("length = %d", uncompressed_length);
@@ -2414,9 +2431,9 @@ qtdemux_type_get (guint32 fourcc)
 }
 
 static gboolean
-qtdemux_node_dump_foreach (GNode * node, gpointer data)
+qtdemux_node_dump_foreach (GNode * node, gpointer qtdemux)
 {
-  void *buffer = node->data;
+  guint8 *buffer = (guint8 *) node->data;
   guint32 node_length;
   guint32 fourcc;
   const QtNodeType *type;
@@ -2432,7 +2449,7 @@ qtdemux_node_dump_foreach (GNode * node, gpointer data)
       depth, "", GST_FOURCC_ARGS (fourcc), node_length, type->name);
 
   if (type->dump)
-    type->dump (data, buffer, depth);
+    type->dump (GST_QT_DEMUX_CAST (qtdemux), buffer, depth);
 
   return FALSE;
 }
@@ -2445,7 +2462,7 @@ qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node)
 }
 
 static void
-qtdemux_dump_mvhd (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_mvhd (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
@@ -2476,7 +2493,7 @@ qtdemux_dump_mvhd (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_tkhd (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_tkhd (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
@@ -2499,7 +2516,7 @@ qtdemux_dump_tkhd (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_elst (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_elst (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   int i;
   int n;
@@ -2520,7 +2537,7 @@ qtdemux_dump_elst (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_mdhd (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_mdhd (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
@@ -2540,7 +2557,7 @@ qtdemux_dump_mdhd (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_hdlr (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_hdlr (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
@@ -2560,7 +2577,7 @@ qtdemux_dump_hdlr (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_vmhd (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_vmhd (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   GST_LOG ("%*s  version/flags: %08x", depth, "",
       QTDEMUX_GUINT32_GET (buffer + 8));
@@ -2569,7 +2586,7 @@ qtdemux_dump_vmhd (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_dref (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_dref (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   int n;
   int i;
@@ -2591,7 +2608,7 @@ qtdemux_dump_dref (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_stsd (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_stsd (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   int i;
   int n;
@@ -2646,7 +2663,7 @@ qtdemux_dump_stsd (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_stts (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_stts (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   int i;
   int n;
@@ -2669,7 +2686,7 @@ qtdemux_dump_stts (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_stss (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_stss (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   int i;
   int n;
@@ -2690,7 +2707,7 @@ qtdemux_dump_stss (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_stsc (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_stsc (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   int i;
   int n;
@@ -2715,7 +2732,7 @@ qtdemux_dump_stsc (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_stsz (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_stsz (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   //int i;
   int n;
@@ -2743,7 +2760,7 @@ qtdemux_dump_stsz (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_stco (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_stco (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   int i;
   int n;
@@ -2763,7 +2780,7 @@ qtdemux_dump_stco (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_co64 (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_co64 (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   //int i;
   int n;
@@ -2786,20 +2803,20 @@ qtdemux_dump_co64 (GstQTDemux * qtdemux, void *buffer, int depth)
 }
 
 static void
-qtdemux_dump_dcom (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_dcom (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   GST_LOG ("%*s  compression type: %" GST_FOURCC_FORMAT, depth, "",
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET (buffer + 8)));
 }
 
 static void
-qtdemux_dump_cmvd (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_cmvd (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   GST_LOG ("%*s  length: %d", depth, "", QTDEMUX_GUINT32_GET (buffer + 8));
 }
 
 static void
-qtdemux_dump_unknown (GstQTDemux * qtdemux, void *buffer, int depth)
+qtdemux_dump_unknown (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   int len;
 
@@ -2815,12 +2832,12 @@ static GNode *
 qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc)
 {
   GNode *child;
-  void *buffer;
+  guint8 *buffer;
   guint32 child_fourcc;
 
   for (child = g_node_first_child (node); child;
       child = g_node_next_sibling (child)) {
-    buffer = child->data;
+    buffer = (guint8 *) child->data;
 
     child_fourcc = GST_READ_UINT32_LE (buffer);
     GST_LOG ("First chunk of buffer %p is [%" GST_FOURCC_FORMAT "]",
@@ -2841,12 +2858,12 @@ static GNode *
 qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc)
 {
   GNode *child;
-  void *buffer;
+  guint8 *buffer;
   guint32 child_fourcc;
 
   for (child = g_node_next_sibling (node); child;
       child = g_node_next_sibling (child)) {
-    buffer = child->data;
+    buffer = (guint8 *) child->data;
 
     child_fourcc = GST_READ_UINT32_LE (buffer + 4);
 
