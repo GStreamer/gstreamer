@@ -42,7 +42,9 @@ G_BEGIN_DECLS
 /* make sure we don't change the object size but still make it compile
  * without libxml */
 #ifdef GST_DISABLE_LOADSAVE_REGISTRY
-#define xmlNodePtr	gpointer
+#define GstXmlNodePtr	gpointer
+#else
+#define GstXmlNodePtr	xmlNodePtr
 #endif
 
 /**
@@ -253,15 +255,15 @@ struct _GstObjectClass {
   GStaticRecMutex *lock;
 
   /* signals */
-  void		(*parent_set)		(GstObject *object, GstObject *parent);
-  void		(*parent_unset)		(GstObject *object, GstObject *parent);
-  void		(*object_saved)		(GstObject *object, xmlNodePtr parent);
-  void 		(*deep_notify)   	(GstObject *object, GstObject *orig, GParamSpec *pspec);
+  void          (*parent_set)       (GstObject * object, GstObject * parent);
+  void          (*parent_unset)     (GstObject * object, GstObject * parent);
+  void          (*object_saved)     (GstObject * object, GstXmlNodePtr parent);
+  void          (*deep_notify)      (GstObject * object, GstObject * orig, GParamSpec * pspec);
 
   /*< public >*/
   /* virtual methods for subclasses */
-  xmlNodePtr	(*save_thyself)		(GstObject *object, xmlNodePtr parent);
-  void		(*restore_thyself)	(GstObject *object, xmlNodePtr self);
+  GstXmlNodePtr (*save_thyself)     (GstObject * object, GstXmlNodePtr parent);
+  void          (*restore_thyself)  (GstObject * object, GstXmlNodePtr self);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -301,8 +303,8 @@ gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
 /* load/save */
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
-xmlNodePtr	gst_object_save_thyself		(GstObject *object, xmlNodePtr parent);
-void		gst_object_restore_thyself	(GstObject *object, xmlNodePtr self);
+GstXmlNodePtr   gst_object_save_thyself    (GstObject *object, GstXmlNodePtr parent);
+void            gst_object_restore_thyself (GstObject *object, GstXmlNodePtr self);
 #else
 #if defined _GNUC_ && _GNUC_ >= 3
 #pragma GCC poison gst_object_save_thyself
@@ -317,9 +319,9 @@ guint		gst_class_signal_connect	(GstObjectClass	*klass,
 						 gpointer	 func_data);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
-void		gst_class_signal_emit_by_name	(GstObject	*object,
-		                                 const gchar	*name,
-						 xmlNodePtr 	 self);
+void        gst_class_signal_emit_by_name   (GstObject     * object,
+                                             const gchar   * name,
+                                             GstXmlNodePtr   self);
 #else
 #if defined _GNUC_ && _GNUC_ >= 3
 #pragma GCC poison gst_class_signal_emit_by_name

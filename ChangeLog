@@ -1,5 +1,17 @@
 2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Peter Kjellerstedt <pkj at axis com>
+
+	* gst/gstobject.h:
+	  Don't define xmlNodePtr to gpointer if the core was built with
+	  --disable-loadsave and --disable-registry, this will break
+	  applications that want to use libxml2 but are buildling against a
+	  core that doesn't use libxml2. Use an intermediary type GstXmlNodePtr
+	  instead so we don't have to mess with the libxml2 namespace
+	  (#361675).
+
+2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstbuffer.h:
 	  Fix gst_buffer_replace() macro to avoid gst_mini_object_replace()-related
 	  type-punned pointer warnings.
