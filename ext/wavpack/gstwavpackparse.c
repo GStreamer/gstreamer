@@ -831,6 +831,7 @@ gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
   gst_pad_use_fixed_caps (wvparse->srcpad);
 
   gst_object_ref (wvparse->srcpad);
+  gst_pad_set_active (wvparse->srcpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (wvparse), wvparse->srcpad);
   gst_element_no_more_pads (GST_ELEMENT (wvparse));
 

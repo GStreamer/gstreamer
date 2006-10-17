@@ -77,6 +77,7 @@ wavpackparse_found_pad (GstElement * src, GstPad * pad, gpointer data)
   gst_pad_set_chain_function (mysinkpad, gst_check_chain_func);
   fail_unless (gst_pad_link (srcpad, mysinkpad) == GST_PAD_LINK_OK,
       "Failed to link pads");
+  gst_pad_set_active (mysinkpad, TRUE);
   gst_object_unref (srcpad);
 }
 
