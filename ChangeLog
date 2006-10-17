@@ -1,3 +1,15 @@
+2006-10-17  Edgard Lima <edgard.lima@indt.org.br>
+
+	Patch by: Renato Filho <renato.filho@indt.org.br> and Rosfran Borges
+	<rosfran.borges@indt.org.br>
+
+	* configure.ac:
+	* gst/nuvdemux/:
+	* gst/nuvdemux/Makefile.am:
+	* gst/nuvdemux/gstnuvdemux.c:
+	* gst/nuvdemux/gstnuvdemux.h:
+	Created new element nuvdemux.
+	
 2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Josep Torra Valles  <josep at fluendo com>

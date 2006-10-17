@@ -81,6 +81,7 @@ GST_PLUGINS_ALL="\
   filter \
   freeze \
   h264parse \
+  nuvdemux \
   modplug \
   nsf \
   replaygain \
@@ -796,6 +797,7 @@ gst/filter/Makefile
 gst/freeze/Makefile
 gst/h264parse/Makefile
 gst/modplug/Makefile
+gst/nuvdemux/Makefile
 gst/modplug/libmodplug/Makefile
 gst/nsf/Makefile
 gst/replaygain/Makefile
