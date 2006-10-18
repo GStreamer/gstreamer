@@ -1,3 +1,25 @@
+2006-10-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_event), (gst_base_audio_sink_render):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	Extract rate from the NEWSEGMENT event.
+	Use commit_full to also take rate adjustment into account when writing
+	samples to the ringbuffer.
+	
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ring_buffer_commit_full), (gst_ring_buffer_commit),
+	(gst_ring_buffer_read):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Added _commit_full() to also take rate into account.
+	Use simple interpolation algorithm to resample audio.
+	API: gst_ring_buffer_commit_full()
+
+	* tests/examples/seek/scrubby.c: (speed_cb), (do_seek):
+	* tests/examples/seek/seek.c: (segment_done):
+	Don't try to seek with 0.0 rate, just pause instead.
+	Remove bogus debug line.
+
 2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (subbin_startup_sync_msg),

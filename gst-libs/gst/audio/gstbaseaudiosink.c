@@ -441,6 +441,32 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       /* now wait till we played everything */
       gst_base_audio_sink_drain (sink);
       break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gdouble rate;
+      GValue src = { 0 };
+      GValue dst = { 0 };
+
+      /* we only need the rate */
+      gst_event_parse_new_segment_full (event, NULL, &rate, NULL, NULL,
+          NULL, NULL, NULL);
+
+      g_value_init (&src, G_TYPE_DOUBLE);
+      g_value_set_double (&src, rate);
+      g_value_init (&dst, GST_TYPE_FRACTION);
+      g_value_transform (&src, &dst);
+      g_value_unset (&src);
+
+      sink->abidata.ABI.rate_num = gst_value_get_fraction_numerator (&dst);
+      sink->abidata.ABI.rate_denom = gst_value_get_fraction_denominator (&dst);
+      sink->abidata.ABI.rate_accum = 0;
+
+      GST_DEBUG_OBJECT (sink, "set rate to %f = %d / %d", rate,
+          sink->abidata.ABI.rate_num, sink->abidata.ABI.rate_denom);
+
+      g_value_unset (&dst);
+      break;
+    }
     default:
       break;
   }
@@ -513,9 +539,10 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   guint size;
   guint samples, written;
   gint bps;
-  gdouble crate = 1.0;
   GstClockTime crate_num;
   GstClockTime crate_denom;
+  gint rate_num;
+  gint rate_denom;
   GstClockTime cinternal, cexternal;
   GstClock *clock;
   gboolean sync;
@@ -544,6 +571,9 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GST_DEBUG_OBJECT (sink,
       "time %" GST_TIME_FORMAT ", offset %llu, start %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time), in_offset, GST_TIME_ARGS (bsink->segment.start));
+
+  rate_num = sink->abidata.ABI.rate_num;
+  rate_denom = sink->abidata.ABI.rate_denom;
 
   /* if not valid timestamp or we can't clip or sync, try to play
    * sample ASAP */
@@ -606,12 +636,17 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     goto no_sync;
   }
 
-  gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
-      &crate_num, &crate_denom);
-
   /* bring buffer timestamp to running time */
   render_time =
       gst_segment_to_running_time (&bsink->segment, GST_FORMAT_TIME, time);
+  GST_DEBUG_OBJECT (sink, "running time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (render_time));
+
+  /* get calibration parameters to compensate for speed and offset differences
+   * when we are slaved */
+  gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
+      &crate_num, &crate_denom);
+
   /* add base time to get absolute clock time */
   render_time +=
       (gst_element_get_base_time (GST_ELEMENT_CAST (bsink)) - cexternal) +
@@ -621,7 +656,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       gst_util_uint64_scale_int (render_time, ringbuf->spec.rate, GST_SECOND);
 
   GST_DEBUG_OBJECT (sink, "render time %" GST_TIME_FORMAT
-      ", render offset %llu, samples %u",
+      ", render offset %" G_GUINT64_FORMAT ", samples %u",
       GST_TIME_ARGS (render_time), render_offset, samples);
 
   /* never try to align samples when we are slaved to another clock, just
@@ -646,7 +681,10 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
   /* now try to align the sample to the previous one */
-  diff = ABS ((gint64) render_offset - (gint64) sink->next_sample);
+  if (render_offset >= sink->next_sample)
+    diff = render_offset - sink->next_sample;
+  else
+    diff = sink->next_sample - render_offset;
 
   /* we tollerate half a second diff before we start resyncing. This
    * should be enough to compensate for various rounding errors in the timestamp
@@ -659,6 +697,8 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     /* just align with previous sample then */
     render_offset = sink->next_sample;
   } else {
+    /* bring sample diff to seconds for error message */
+    diff = gst_util_uint64_scale_int (diff, GST_SECOND, ringbuf->spec.rate);
     /* timestamps drifted apart from previous samples too much, we need to
      * resync. We log this as an element warning. */
     GST_ELEMENT_WARNING (sink, CORE, CLOCK,
@@ -669,23 +709,47 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
 no_align:
-  /* crate contains diff against the clock we are using in the pipeline. */
-  crate =
-      gst_guint64_to_gdouble (crate_num) / gst_guint64_to_gdouble (crate_denom);
-  GST_DEBUG_OBJECT (sink,
-      "internal %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT ", rate %g",
-      cinternal, cexternal, crate);
+  /* check if we have a clock rate adjustment to do */
+  if (crate_num != 1 || crate_num != 1) {
+    gint64 num, denom;
+
+    /* make clock rate fit in int */
+    while ((crate_num | crate_denom) > G_MAXINT) {
+      crate_num /= 2;
+      crate_denom /= 2;
+    }
+    /* full 64bit multiplication */
+    num = ((gint64) crate_denom) * rate_num;
+    denom = ((gint64) crate_num) * rate_denom;
+
+    /* make result fit in int again */
+    while ((num | denom) > G_MAXINT) {
+      num /= 2;
+      denom /= 2;
+    }
+    rate_num = num;
+    rate_denom = denom;
+
+    GST_DEBUG_OBJECT (sink,
+        "clock rate: internal %" G_GUINT64_FORMAT ", %" G_GUINT64_FORMAT
+        " %d/%d", cinternal, cexternal, rate_num, rate_denom);
+  }
 
 no_sync:
-  /* clip length based on rate */
-  samples = MIN (samples, samples / (crate * bsink->segment.abs_rate));
 
-  /* the next sample should be current sample and its length */
-  sink->next_sample = render_offset + samples;
+  /* the next sample should be current sample and its length, this will be
+   * updated as we write samples to the ringbuffer. */
+  sink->next_sample = render_offset;
+
+  GST_DEBUG_OBJECT (sink, "rendering at %" G_GUINT64_FORMAT, sink->next_sample);
 
   do {
-    written = gst_ring_buffer_commit (ringbuf, render_offset, data, samples);
-    GST_DEBUG_OBJECT (sink, "wrote %u of %u", written, samples);
+    written =
+        gst_ring_buffer_commit_full (ringbuf, &sink->next_sample, data, samples,
+        rate_num, rate_denom, &sink->abidata.ABI.rate_accum);
+
+    GST_DEBUG_OBJECT (sink, "wrote %u of %u, resampled %" G_GUINT64_FORMAT,
+        written, samples, sink->next_sample - render_offset);
     /* if we wrote all, we're done */
     if (written == samples)
       break;
@@ -694,10 +758,12 @@ no_sync:
     if (gst_base_sink_wait_preroll (bsink) != GST_FLOW_OK)
       goto stopping;
 
-    render_offset += written;
     samples -= written;
     data += written * bps;
   } while (TRUE);
+
+  GST_DEBUG_OBJECT (sink, "next sample expected at %" G_GUINT64_FORMAT,
+      sink->next_sample);
 
   if (GST_CLOCK_TIME_IS_VALID (stop) && stop >= bsink->segment.stop) {
     GST_DEBUG_OBJECT (sink,

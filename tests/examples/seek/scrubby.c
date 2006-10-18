@@ -177,6 +177,9 @@ speed_cb (GtkWidget * widget)
   GST_DEBUG ("speed change");
   cur_speed = gtk_range_get_value (GTK_RANGE (widget));
 
+  if (cur_speed == 0.0)
+    return;
+
   s_event = gst_event_new_seek (cur_speed,
       GST_FORMAT_TIME, 0, GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_NONE, -1);
 
@@ -265,6 +268,8 @@ do_seek (GtkWidget * widget, gboolean flush, gboolean segment)
     stop = tmp;
   }
 
+  if (rate == 0.0)
+    return TRUE;
 
   GST_DEBUG ("seek to %" GST_TIME_FORMAT " -- %" GST_TIME_FORMAT ", rate %lf"
       " on element %s",

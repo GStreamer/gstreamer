@@ -1330,8 +1330,6 @@ segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   event = gst_event_new_seek (rate,
       GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, -1);
 
-  GST_DEBUG ("segmeent seek to start");
-
   res = send_event (event);
   if (!res) {
     g_print ("segment seek failed\n");
