@@ -44,13 +44,17 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate gst_rtp_pcma_pay_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_PCMA_STRING ", "
-        "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMA\" ")
+        "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMA\"; "
+        "application/x-rtp, "
+        "media = (string) \"audio\", "
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMA\"")
     );
 
 static gboolean gst_rtp_pcma_pay_setcaps (GstBaseRTPPayload * payload,

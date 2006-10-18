@@ -1,5 +1,18 @@
 2006-10-18  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Ville Syrjala <ville dot syrjala at movial dot fi>
+
+	* gst/rtp/gstrtpgsmpay.c:
+	* gst/rtp/gstrtph263pay.c:
+	* gst/rtp/gstrtpmpapay.c:
+	* gst/rtp/gstrtppcmapay.c: (gst_rtp_pcma_pay_flush),
+	(gst_rtp_pcma_pay_handle_buffer):
+	* gst/rtp/gstrtppcmupay.c: (gst_rtp_pcmu_pay_flush):
+	Add static payload numbers in addition to the dynamic ones.
+	Fixes #361639.
+
+2006-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_lower_trans_get_type),
 	(gst_rtspsrc_class_init), (gst_rtspsrc_loop_interleaved),
 	(gst_rtspsrc_loop_udp), (gst_rtspsrc_open),
