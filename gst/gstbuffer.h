@@ -378,7 +378,7 @@ GstBuffer*      gst_buffer_make_metadata_writable (GstBuffer *buf);
  */
 #define		gst_buffer_replace(obuf,nbuf) \
 G_STMT_START {						                      \
-  GstBuffer **___obufaddr = (obuf);                       \
+  GstBuffer **___obufaddr = (GstBuffer **)(obuf);         \
   gst_mini_object_replace ((GstMiniObject **)___obufaddr, \
       GST_MINI_OBJECT_CAST (nbuf));                       \
 } G_STMT_END

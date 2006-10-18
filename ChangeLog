@@ -1,3 +1,10 @@
+2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstbuffer.h:
+	  Add an explicit cast to GstBuffer** to keep old code that added an
+	  explicit cast to GstMiniObject** for gst_mini_object_replace()
+	  compiling without warning.
+
 2006-10-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstvalue.c: (gst_value_set_date), (gst_date_copy):
