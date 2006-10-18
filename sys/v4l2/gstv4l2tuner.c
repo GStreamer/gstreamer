@@ -141,15 +141,6 @@ gst_v4l2_tuner_list_channels (GstV4l2Object * v4l2object)
   return v4l2object->channels;
 }
 
-void
-gst_v4l2_tuner_set_channel_and_notify (GstV4l2Object * v4l2object,
-    GstTunerChannel * channel)
-{
-  if (gst_v4l2_tuner_set_channel (v4l2object, channel)) {
-    g_object_notify (G_OBJECT (v4l2object->element), "channel");
-  }
-}
-
 gboolean
 gst_v4l2_tuner_set_channel (GstV4l2Object * v4l2object,
     GstTunerChannel * channel)

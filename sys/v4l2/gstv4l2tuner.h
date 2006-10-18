@@ -84,8 +84,6 @@ GType gst_v4l2_tuner_norm_get_type (void);
 
 /* channels */
 const GList*      gst_v4l2_tuner_list_channels            (GstV4l2Object * v4l2object);
-void              gst_v4l2_tuner_set_channel_and_notify   (GstV4l2Object * v4l2object,
-		                                           GstTunerChannel * channel);
 GstTunerChannel*  gst_v4l2_tuner_get_channel              (GstV4l2Object * v4l2object);
 gboolean          gst_v4l2_tuner_set_channel              (GstV4l2Object * v4l2object,
 		                                           GstTunerChannel * channel);
@@ -118,11 +116,11 @@ interface_as_function ## _tuner_list_channels (GstTuner * mixer)                
 }                                                                                     \
                                                                                       \
 static void                                                                           \
-interface_as_function ## _tuner_set_channel_and_notify (GstTuner * mixer,             \
-                                                        GstTunerChannel * channel)    \
+interface_as_function ## _tuner_set_channel (GstTuner * mixer,                        \
+                                             GstTunerChannel * channel)               \
 {                                                                                     \
   Type *this = (Type*) mixer;                                                         \
-  gst_v4l2_tuner_set_channel_and_notify (this->v4l2object, channel);                  \
+  gst_v4l2_tuner_set_channel (this->v4l2object, channel);                             \
 }                                                                                     \
 static GstTunerChannel *                                                              \
 interface_as_function ## _tuner_get_channel (GstTuner * mixer)                        \
@@ -180,7 +178,7 @@ interface_as_function ## _tuner_interface_init (GstTunerClass * klass)          
 {                                                                                     \
   /* default virtual functions */                                                     \
   klass->list_channels = interface_as_function ## _tuner_list_channels;               \
-  klass->set_channel = interface_as_function ## _tuner_set_channel_and_notify;        \
+  klass->set_channel = interface_as_function ## _tuner_set_channel;                   \
   klass->get_channel = interface_as_function ## _tuner_get_channel;                   \
                                                                                       \
   klass->list_norms = interface_as_function ## _tuner_list_norms;                     \

@@ -1,3 +1,13 @@
+2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Fredrik Persson  <frepe at broadband net>
+
+	* sys/v4l2/gstv4l2tuner.c:
+	* sys/v4l2/gstv4l2tuner.h:
+	  Fix _set_channel(): remove useless g_object_notify() for "channel"
+	  property that doesn't exist any longer and therefore now also
+	  useless redirect (#338818).
+
 2006-10-17  Wim Taymans  <wim@fluendo.com>
 
 	* sys/oss/gstosssink.c: (gst_oss_sink_prepare):
