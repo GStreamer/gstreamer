@@ -1,6 +1,6 @@
 2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
 
-	Patch by: Fredrik Persson  <frepe at broadband net>
+	Patch by: Fredrik Persson  <frepe at bredband net>
 
 	* sys/v4l2/gstv4l2tuner.c:
 	* sys/v4l2/gstv4l2tuner.h:
