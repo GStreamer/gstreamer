@@ -211,7 +211,6 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
     gint64 position)
 {
   g_return_if_fail (segment != NULL);
-  g_return_if_fail (position != -1);
 
   if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;

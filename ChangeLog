@@ -2,6 +2,12 @@
 
 	* gst/gstsegment.c: (gst_segment_set_last_stop),
 	(gst_segment_set_seek), (gst_segment_set_newsegment_full):
+	Relax arg checking again, -1 is allowed.
+
+2006-10-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstsegment.c: (gst_segment_set_last_stop),
+	(gst_segment_set_seek), (gst_segment_set_newsegment_full):
 	_set_last_stop() must be with a value != -1
 	A _TYPE_SET to -1 means seek to 0.
 	Calc last_stop correctly for negative rates.
