@@ -1,3 +1,9 @@
+2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/subparse/gstsubparse.c:
+	(gst_sub_parse_data_format_autodetect):
+	  Don't require subrip (.srt) files to start with a chunk number of 1.
+
 2006-10-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
