@@ -1835,6 +1835,8 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
     play_base_bin->pending++;
 
     if (!play_base_bin->is_stream) {
+      GstStateChangeReturn sret;
+
       /* either when the queues are filled or when the decoder element
        * has no more dynamic streams, the cond is unlocked. We can remove
        * the signal handlers then
@@ -1847,25 +1849,31 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
        * to commit the subtitle group using an extra flag. */
       play_base_bin->subtitle_done = FALSE;
 
-      gst_element_set_state (subbin, GST_STATE_PAUSED);
+      sret = gst_element_set_state (subbin, GST_STATE_PAUSED);
+      if (sret != GST_STATE_CHANGE_FAILURE) {
+        GROUP_LOCK (play_base_bin);
+        GST_DEBUG ("waiting for subtitle to complete...");
+        while (!play_base_bin->subtitle_done)
+          GROUP_WAIT (play_base_bin);
+        GST_DEBUG ("group done !");
+        GROUP_UNLOCK (play_base_bin);
 
-      GROUP_LOCK (play_base_bin);
-      GST_DEBUG ("waiting for subtitle to complete...");
-      while (!play_base_bin->subtitle_done)
-        GROUP_WAIT (play_base_bin);
-      GST_DEBUG ("group done !");
-      GROUP_UNLOCK (play_base_bin);
+        if (!play_base_bin->building_group ||
+            play_base_bin->building_group->type[GST_STREAM_TYPE_TEXT -
+                1].npads == 0) {
 
-      if (!play_base_bin->building_group ||
-          play_base_bin->building_group->type[GST_STREAM_TYPE_TEXT - 1].npads ==
-          0) {
-
-        GST_DEBUG ("No subtitle found - ignoring");
+          GST_DEBUG ("No subtitle found - ignoring");
+          gst_element_set_state (subbin, GST_STATE_NULL);
+          gst_object_unref (play_base_bin->subtitle);
+          play_base_bin->subtitle = NULL;
+        } else {
+          GST_DEBUG_OBJECT (play_base_bin, "Subtitle set-up successful");
+        }
+      } else {
+        GST_WARNING_OBJECT (play_base_bin, "Failed to start subtitle bin");
         gst_element_set_state (subbin, GST_STATE_NULL);
         gst_object_unref (play_base_bin->subtitle);
         play_base_bin->subtitle = NULL;
-      } else {
-        GST_DEBUG_OBJECT (play_base_bin, "Subtitle set-up successful");
       }
     }
   }
