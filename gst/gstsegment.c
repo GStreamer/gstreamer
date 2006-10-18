@@ -211,6 +211,7 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
     gint64 position)
 {
   g_return_if_fail (segment != NULL);
+  g_return_if_fail (position != -1);
 
   if (G_UNLIKELY (segment->format == GST_FORMAT_UNDEFINED))
     segment->format = format;
@@ -282,7 +283,9 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
       update_start = FALSE;
       break;
     case GST_SEEK_TYPE_SET:
-      /* start holds desired position */
+      /* start holds desired position, map -1 to the start */
+      if (start == -1)
+        start = 0;
       break;
     case GST_SEEK_TYPE_CUR:
       /* add start to currently configure segment */
@@ -351,10 +354,14 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
     segment->last_stop = start;
   }
   if (update_stop && rate < 0.0) {
-    if (stop == -1)
-      segment->last_stop = segment->duration;
-    else
+    if (stop != -1)
       segment->last_stop = stop;
+    else {
+      if (segment->duration != -1)
+        segment->last_stop = segment->duration;
+      else
+        segment->last_stop = 0;
+    }
   }
   segment->time = start;
   segment->stop = stop;
@@ -428,7 +435,10 @@ gst_segment_set_newsegment_full (GstSegment * segment, gboolean update,
   if (update) {
     /* an update to the current segment is done, elapsed time is
      * difference between the old start and new start. */
-    duration = start - segment->start;
+    if (start > segment->start)
+      duration = start - segment->start;
+    else
+      duration = 0;
   } else {
     /* the new segment has to be aligned with the old segment.
      * We first update the accumulated time of the previous
