@@ -57,6 +57,7 @@ check_PROGRAMS = \
 	elements/gdpdepay \
 	elements/gdppay \
 	elements/multifdsink \
+	elements/playbin \
 	elements/videorate \
 	elements/videotestsrc \
 	elements/volume \
@@ -111,6 +112,9 @@ elements_audioconvert_LDADD = \
 
 elements_gdpdepay_LDADD = $(GST_GDP_LIBS) $(LDADD)
 elements_gdppay_LDADD = $(GST_GDP_LIBS) $(LDADD)
+
+elements_playbin_LDADD = $(GST_BASE_LIBS) $(LDADD)
+elements_playbin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_volume_LDADD = \
 	$(GST_BASE_LIBS) \

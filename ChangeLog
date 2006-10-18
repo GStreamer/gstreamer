@@ -1,5 +1,20 @@
 2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/playbin.c: (GST_START_TEST),
+	(gst_red_video_src_uri_get_type),
+	(gst_red_video_src_uri_get_protocols),
+	(gst_red_video_src_uri_get_uri), (gst_red_video_src_uri_set_uri),
+	(gst_red_video_src_uri_handler_init),
+	(gst_red_video_src_init_type), (gst_red_video_src_base_init),
+	(gst_red_video_src_create), (gst_red_video_src_class_init),
+	(gst_red_video_src_init), (plugin_init), (playbin_suite):
+	  Some small and basic unit tests for playbin; not very useful yet,
+	  but at least a start.
+
+2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstplaybin.c: (setup_sinks):
 	  The old pad activation spiel.
 
