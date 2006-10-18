@@ -1785,6 +1785,25 @@ remove_source (GstPlayBaseBin * bin)
   }
 }
 
+static GstBusSyncReply
+subbin_startup_sync_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
+{
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+    GstPlayBaseBin *play_base_bin;
+
+    play_base_bin = GST_PLAY_BASE_BIN (user_data);
+    if (!play_base_bin->subtitle_done) {
+      GST_WARNING_OBJECT (play_base_bin, "error starting up subtitle bin: %"
+          GST_PTR_FORMAT, msg);
+      play_base_bin->subtitle_done = TRUE;
+      GST_DEBUG_OBJECT (play_base_bin, "signal group done");
+      GROUP_SIGNAL (play_base_bin);
+      GST_DEBUG_OBJECT (play_base_bin, "signaled group done");
+    }
+  }
+  return GST_BUS_PASS;
+}
+
 /* construct and run the source and decoder elements until we found
  * all the streams or until a preroll queue has been filled.
 */
@@ -1851,12 +1870,24 @@ setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
 
       sret = gst_element_set_state (subbin, GST_STATE_PAUSED);
       if (sret != GST_STATE_CHANGE_FAILURE) {
+        GstBus *bus;
+
+        /* since subbin is still a stand-alone bin, we need to add a custom bus
+         * to intercept error messages, so we can stop waiting and continue */
+        bus = gst_bus_new ();
+        gst_element_set_bus (subbin, bus);
+        gst_bus_set_sync_handler (bus, subbin_startup_sync_msg, play_base_bin);
+
         GROUP_LOCK (play_base_bin);
         GST_DEBUG ("waiting for subtitle to complete...");
         while (!play_base_bin->subtitle_done)
           GROUP_WAIT (play_base_bin);
         GST_DEBUG ("group done !");
         GROUP_UNLOCK (play_base_bin);
+
+        gst_bus_set_sync_handler (bus, NULL, NULL);
+        gst_element_set_bus (subbin, NULL);
+        gst_object_unref (bus);
 
         if (!play_base_bin->building_group ||
             play_base_bin->building_group->type[GST_STREAM_TYPE_TEXT -

@@ -1,5 +1,16 @@
 2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybasebin.c: (subbin_startup_sync_msg),
+	(setup_source):
+	  Catch async errors when starting up the subtitle bin, so we can
+	  stop waiting and continue with the main film instead of hanging
+	  forever. Fixes #339366.
+
+	* tests/check/elements/playbin.c: (playbin_suite):
+	  Enable unit test for the above.
+
+2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/Makefile.am:
 	* tests/check/elements/.cvsignore:
 	* tests/check/elements/playbin.c: (GST_START_TEST),

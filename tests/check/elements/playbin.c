@@ -69,7 +69,6 @@ GST_START_TEST (test_sink_usage_video_only_stream)
 
 GST_END_TEST;
 
-#if 0
 /* this tests async error handling when setting up the subbin */
 GST_START_TEST (test_suburi_error_unknowntype)
 {
@@ -101,7 +100,6 @@ GST_START_TEST (test_suburi_error_unknowntype)
 }
 
 GST_END_TEST;
-#endif
 
 GST_START_TEST (test_suburi_error_invalidfile)
 {
@@ -285,9 +283,12 @@ GST_PLUGIN_DEFINE_STATIC
     GST_VERSION_MINOR,
     "playbin-test-elements",
     "static elements for the playbin unit test",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+
 #endif /* GST_DISABLE_LOADSAVE_REGISTRY */
-     static Suite *playbin_suite (void)
+
+static Suite *
+playbin_suite (void)
 {
   Suite *s = suite_create ("playbin");
   TCase *tc_chain = tcase_create ("general");
@@ -298,7 +299,7 @@ GST_PLUGIN_DEFINE_STATIC
   tcase_add_test (tc_chain, test_sink_usage_video_only_stream);
   tcase_add_test (tc_chain, test_suburi_error_wrongproto);
   tcase_add_test (tc_chain, test_suburi_error_invalidfile);
-  /* tcase_add_test (tc_chain, test_suburi_error_unknowntype); */
+  tcase_add_test (tc_chain, test_suburi_error_unknowntype);
 #endif
 
   return s;
