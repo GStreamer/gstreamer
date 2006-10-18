@@ -1,3 +1,8 @@
+2006-10-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstvalue.c: (gst_value_set_date), (gst_date_copy):
+	  check for validity of dates
+
 2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:

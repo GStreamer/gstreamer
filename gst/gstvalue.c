@@ -3726,6 +3726,7 @@ void
 gst_value_set_date (GValue * value, const GDate * date)
 {
   g_return_if_fail (G_VALUE_TYPE (value) == GST_TYPE_DATE);
+  g_return_if_fail (g_date_valid (date));
 
   g_value_set_boxed (value, date);
 }
@@ -3750,6 +3751,11 @@ static gpointer
 gst_date_copy (gpointer boxed)
 {
   const GDate *date = (const GDate *) boxed;
+
+  if (!g_date_valid (date)) {
+    GST_WARNING ("invalid GDate");
+    return NULL;
+  }
 
   return g_date_new_julian (g_date_get_julian (date));
 }
