@@ -1,5 +1,10 @@
 2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybin.c: (setup_sinks):
+	  The old pad activation spiel.
+
+2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstplaybasebin.c: (setup_source):
 	  Don't hang forever if the subbin already fails to start up in 
 	  the state change to PAUSED (#339366).

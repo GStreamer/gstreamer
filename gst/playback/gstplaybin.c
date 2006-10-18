@@ -1552,11 +1552,13 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
           goto beach;
         }
 
+        gst_pad_set_active (ghost, TRUE);
         if (gst_element_add_pad (GST_ELEMENT_CAST (grandparent), ghost)) {
           gst_object_unref (textsrcpad);
           textsrcpad = gst_object_ref (ghost);
         } else {
           GST_WARNING_OBJECT (ghost, "failed adding ghost pad on subtitle-bin");
+          gst_pad_set_active (ghost, FALSE);
           gst_object_unref (ghost);
           gst_object_unref (textsrcpad);
           textsrcpad = NULL;
