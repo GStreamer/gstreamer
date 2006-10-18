@@ -143,6 +143,10 @@ gst_sub_parse_dispose (GObject * object)
     g_free (subparse->encoding);
     subparse->encoding = NULL;
   }
+  if (subparse->textbuf) {
+    g_string_free (subparse->textbuf, TRUE);
+    subparse->textbuf = NULL;
+  }
   sami_context_deinit (&subparse->state);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
@@ -933,9 +937,11 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* format detection will init the parser state */
-      self->offset = self->next_offset = 0;
+      self->offset = 0;
+      self->next_offset = 0;
       self->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
       self->valid_utf8 = TRUE;
+      g_string_truncate (self->textbuf, 0);
       break;
     default:
       break;

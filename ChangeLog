@@ -1,5 +1,11 @@
 2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/subparse/gstsubparse.c: (gst_sub_parse_dispose),
+	(gst_sub_parse_change_state):
+	  Fix memleak; clear subparse->textbuf n state change function.
+
+2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/subparse/gstsubparse.c:
 	(gst_sub_parse_data_format_autodetect):
 	  Don't require subrip (.srt) files to start with a chunk number of 1.
