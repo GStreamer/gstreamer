@@ -810,6 +810,8 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   } else {
     GST_DEBUG_OBJECT (wav, "doing seek without event");
     flags = 0;
+    cur_type = GST_SEEK_TYPE_SET;
+    stop_type = GST_SEEK_TYPE_SET;
   }
 
   flush = flags & GST_SEEK_FLAG_FLUSH;
@@ -837,8 +839,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
     stop = seeksegment.duration;
 
   GST_DEBUG_OBJECT (wav, "cur_type =%d", cur_type);
-  if ((cur_type != GST_SEEK_TYPE_NONE) &&
-      (seeksegment.last_stop != GST_CLOCK_TIME_NONE)) {
+  if ((cur_type != GST_SEEK_TYPE_NONE)) {
     wav->offset =
         gst_util_uint64_scale_int (seeksegment.last_stop, wav->bps, GST_SECOND);
     GST_LOG_OBJECT (wav, "offset=%" G_GUINT64_FORMAT, wav->offset);
@@ -847,12 +848,11 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
     wav->offset += wav->datastart;
     GST_LOG_OBJECT (wav, "offset=%" G_GUINT64_FORMAT, wav->offset);
   } else {
-    GST_DEBUG_OBJECT (wav, "last_stop == -1");
-    wav->offset = wav->datastart;
-    GST_LOG_OBJECT (wav, "offset=%" G_GUINT64_FORMAT, wav->offset);
+    GST_LOG_OBJECT (wav, "continue from offset=%" G_GUINT64_FORMAT,
+        wav->offset);
   }
 
-  if (stop != GST_CLOCK_TIME_NONE) {
+  if (stop_type != GST_SEEK_TYPE_NONE) {
     wav->end_offset = gst_util_uint64_scale_int (stop, wav->bps, GST_SECOND);
     GST_LOG_OBJECT (wav, "end_offset=%" G_GUINT64_FORMAT, wav->end_offset);
     wav->end_offset -= (wav->end_offset % wav->bytes_per_sample);
@@ -860,17 +860,15 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
     wav->end_offset += wav->datastart;
     GST_LOG_OBJECT (wav, "end_offset=%" G_GUINT64_FORMAT, wav->end_offset);
   } else {
-    GST_DEBUG_OBJECT (wav, "stop == -1");
-    wav->end_offset = wav->datasize + wav->datastart;
-    GST_LOG_OBJECT (wav, "end_offset=%" G_GUINT64_FORMAT, wav->end_offset);
+    GST_LOG_OBJECT (wav, "continue to end_offset=%" G_GUINT64_FORMAT,
+        wav->end_offset);
   }
 
   /* make sure filesize is not exceeded due to rounding errors or so,
    * same precaution as in _stream_headers */
   bformat = GST_FORMAT_BYTES;
-  if (gst_pad_query_peer_duration (wav->sinkpad, &bformat, &upstream_size)) {
+  if (gst_pad_query_peer_duration (wav->sinkpad, &bformat, &upstream_size))
     wav->end_offset = MIN (wav->end_offset, upstream_size);
-  }
 
   wav->offset = MIN (wav->offset, wav->end_offset);
   wav->dataleft = wav->end_offset - wav->offset;
@@ -889,12 +887,14 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
       /* we are running the current segment and doing a non-flushing seek,
        * close the segment first based on the last_stop. */
       GST_DEBUG_OBJECT (wav, "closing running segment %" G_GINT64_FORMAT
-          " to %" G_GINT64_FORMAT, wav->segment.start, wav->segment.last_stop);
+          " to %" G_GINT64_FORMAT, wav->segment.accum, wav->segment.last_stop);
 
       gst_pad_push_event (wav->srcpad,
           gst_event_new_new_segment (TRUE,
               wav->segment.rate, wav->segment.format,
-              wav->segment.start, wav->segment.last_stop, wav->segment.time));
+              wav->segment.accum, wav->segment.last_stop, wav->segment.accum));
+
+      seeksegment.accum = wav->segment.last_stop;
     }
   }
 
@@ -908,14 +908,15 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
 
   /* now send the newsegment */
   GST_DEBUG_OBJECT (wav, "Sending newsegment from %" G_GINT64_FORMAT
-      " to %" G_GINT64_FORMAT, wav->segment.start, stop);
+      " to %" G_GINT64_FORMAT, wav->segment.last_stop, stop);
 
   /* store the newsegment event so it can be sent from the streaming thread. */
   if (wav->newsegment)
     gst_event_unref (wav->newsegment);
   wav->newsegment =
       gst_event_new_new_segment (FALSE, wav->segment.rate,
-      wav->segment.format, wav->segment.last_stop, stop, wav->segment.time);
+      wav->segment.format, wav->segment.last_stop, stop,
+      wav->segment.last_stop);
 
   wav->segment_running = TRUE;
   if (!wav->streaming) {
@@ -1446,7 +1447,8 @@ iterate_adapter:
    * amounts of data regardless of the playback rate */
   desired =
       MIN (gst_guint64_to_gdouble (wav->dataleft),
-      MAX_BUFFER_SIZE * ABS (wav->segment.rate));
+      MAX_BUFFER_SIZE * wav->segment.abs_rate);
+
   if (desired >= wav->blockalign && wav->blockalign > 0)
     desired -= (desired % wav->blockalign);
 

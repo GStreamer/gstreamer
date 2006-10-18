@@ -1,3 +1,9 @@
+2006-10-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
+	(gst_wavparse_stream_data):
+	Fix seeking some more, mostly for speed changes.
+
 2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Fredrik Persson  <frepe at bredband net>
