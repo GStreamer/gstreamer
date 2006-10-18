@@ -204,7 +204,7 @@ typedef struct _GstClockClass	GstClockClass;
  * @clock: The clock that triggered the callback
  * @time: The time it was triggered
  * @id: The #GstClockID that expired
- * @user_data: user data passed in the async_wait call
+ * @user_data: user data passed in the gst_clock_id_wait_async() function
  *
  * The function prototype of the callback.
  *

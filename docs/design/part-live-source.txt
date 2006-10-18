@@ -41,7 +41,17 @@ buffer arrives at the sink, it will already be late and will be dropped.
 The latency is the time it takes to construct one buffer of data. This latency
 could be exposed by latency queries.
 
-Theses latency queries need to be done by the managing pipeline for all sinks.
-They can only be done after the meassurements have been taken (all are
-prerolled). Thus in pipeline:state_changed:PAUSED_TO_PLAYING we need
-get the max-latency and set this as a sync-offset in all sinks.
+Theses latency queries could to be done by the managing pipeline for all sinks.
+In that case they can only be done after the meassurements have been taken (all
+are prerolled). Thus in pipeline:state_changed:PAUSED_TO_PLAYING we need
+get the max-latency and set this as a sync-offset in all sinks. The problem is
+that in a live pipeline, we set the pipeline to PLAYING before waiting for the
+sinks to preroll.
+
+Another possibility would be to configure a fixed latency in a pipeline that
+would automatically be configured on any sink in the case of a NO_PREROLL
+element. For decoupled elements this is practically the only viable way to
+introduce enough latency that does not starve the sinks.
+
+The current latency can also be measured in the sinks and the pipeline could
+optimize it to the lowest possible latency.
