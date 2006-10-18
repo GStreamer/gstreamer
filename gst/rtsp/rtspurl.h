@@ -46,19 +46,20 @@
 #include <glib.h>
 
 #include <rtspdefs.h>
+#include <rtsptransport.h>
 
 G_BEGIN_DECLS
 
 #define RTSP_DEFAULT_PORT       554
 
 typedef struct _RTSPUrl {
-  RTSPProto   protocol;
-  RTSPFamily  family;
-  gchar      *user;
-  gchar      *passwd;
-  gchar      *host;
-  guint16     port;
-  gchar      *abspath;
+  RTSPLowerTrans  transports;
+  RTSPFamily      family;
+  gchar          *user;
+  gchar          *passwd;
+  gchar          *host;
+  guint16         port;
+  gchar          *abspath;
 } RTSPUrl;
 
 RTSPResult      rtsp_url_parse          (const gchar *urlstr, RTSPUrl **url);

@@ -120,9 +120,6 @@ rtsp_connection_create (RTSPUrl * url, RTSPConnection ** conn)
   g_return_val_if_fail (url != NULL, RTSP_EINVAL);
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
 
-  if (url->protocol != RTSP_PROTO_TCP)
-    return RTSP_ENOTIMPL;
-
   newconn = g_new (RTSPConnection, 1);
 
 #ifdef G_OS_WIN32

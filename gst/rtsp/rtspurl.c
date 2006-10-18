@@ -49,6 +49,8 @@
 #define RTSP_PROTO_LEN  7
 #define RTSPU_PROTO     "rtspu://"
 #define RTSPU_PROTO_LEN 8
+#define RTSPT_PROTO     "rtspt://"
+#define RTSPT_PROTO_LEN 8
 
 /* format is rtsp[u]://[user:passwd@]host[:port]/abspath */
 
@@ -65,11 +67,16 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
 
   p = (gchar *) urlstr;
   if (g_str_has_prefix (p, RTSP_PROTO)) {
-    res->protocol = RTSP_PROTO_TCP;
+    res->transports =
+        RTSP_LOWER_TRANS_TCP | RTSP_LOWER_TRANS_UDP |
+        RTSP_LOWER_TRANS_UDP_MCAST;
     p += RTSP_PROTO_LEN;
   } else if (g_str_has_prefix (p, RTSPU_PROTO)) {
-    res->protocol = RTSP_PROTO_UDP;
+    res->transports = RTSP_LOWER_TRANS_UDP | RTSP_LOWER_TRANS_UDP_MCAST;
     p += RTSPU_PROTO_LEN;
+  } else if (g_str_has_prefix (p, RTSPT_PROTO)) {
+    res->transports = RTSP_LOWER_TRANS_TCP;
+    p += RTSPT_PROTO_LEN;
   } else
     goto invalid;
 

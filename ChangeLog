@@ -1,5 +1,19 @@
 2006-10-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_lower_trans_get_type),
+	(gst_rtspsrc_class_init), (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_loop_udp), (gst_rtspsrc_open),
+	(gst_rtspsrc_uri_get_protocols), (gst_rtspsrc_uri_set_uri):
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_create):
+	* gst/rtsp/rtspdefs.h:
+	* gst/rtsp/rtspurl.c: (rtsp_url_parse):
+	* gst/rtsp/rtspurl.h:
+	Reuse already existing enum for lower transport.
+	Add rtspt and rtspu protocols.
+	Send redirect to rtspt when udp times out.
+
+2006-10-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
 	(gst_wavparse_stream_data):
 	Fix seeking some more, mostly for speed changes.

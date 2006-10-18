@@ -143,22 +143,23 @@ enum
   PROP_TIMEOUT,
 };
 
-#define GST_TYPE_RTSP_PROTO (gst_rtsp_proto_get_type())
+#define GST_TYPE_RTSP_LOWER_TRANS (gst_rtsp_lower_trans_get_type())
 static GType
-gst_rtsp_proto_get_type (void)
+gst_rtsp_lower_trans_get_type (void)
 {
-  static GType rtsp_proto_type = 0;
-  static const GFlagsValue rtsp_proto[] = {
+  static GType rtsp_lower_trans_type = 0;
+  static const GFlagsValue rtsp_lower_trans[] = {
     {RTSP_LOWER_TRANS_UDP, "UDP Unicast Mode", "udp-unicast"},
     {RTSP_LOWER_TRANS_UDP_MCAST, "UDP Multicast Mode", "udp-multicast"},
     {RTSP_LOWER_TRANS_TCP, "TCP interleaved mode", "tcp"},
     {0, NULL, NULL},
   };
 
-  if (!rtsp_proto_type) {
-    rtsp_proto_type = g_flags_register_static ("GstRTSPProto", rtsp_proto);
+  if (!rtsp_lower_trans_type) {
+    rtsp_lower_trans_type =
+        g_flags_register_static ("GstRTSPLowerTrans", rtsp_lower_trans);
   }
-  return rtsp_proto_type;
+  return rtsp_lower_trans_type;
 }
 
 static void gst_rtspsrc_base_init (gpointer g_class);
@@ -245,7 +246,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
       g_param_spec_flags ("protocols", "Protocols",
-          "Allowed lower transport protocols", GST_TYPE_RTSP_PROTO,
+          "Allowed lower transport protocols", GST_TYPE_RTSP_LOWER_TRANS,
           DEFAULT_PROTOCOLS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (gobject_class, PROP_DEBUG,
@@ -1170,8 +1171,10 @@ receive_error:
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not receive message. (%s)", str));
     g_free (str);
+
     if (src->debug)
       rtsp_message_dump (&response);
+
     rtsp_message_unset (&response);
     ret = GST_FLOW_UNEXPECTED;
     goto need_pause;
@@ -1250,6 +1253,8 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
 
     /* see if we have TCP left to try */
     if (src->cur_protocols & RTSP_LOWER_TRANS_TCP) {
+      gchar *url, *pos;
+
       /* We post a warning message now to inform the user
        * that nothing happened. It's most likely a firewall thing. */
       GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
@@ -1258,14 +1263,23 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
               (gdouble) src->timeout / 1000000));
       /* we can try only TCP now */
       src->cur_protocols = RTSP_LOWER_TRANS_TCP;
-      gst_rtspsrc_open (src);
-      gst_rtspsrc_play (src);
+
+      pos = strstr (src->location, "://");
+      if (!pos)
+        goto weird_url;
+
+      url = g_strdup_printf ("rtspt://%s", pos + 3);
+
+      gst_element_post_message (GST_ELEMENT_CAST (src),
+          gst_message_new_element (GST_OBJECT_CAST (src),
+              gst_structure_new ("redirect",
+                  "new-location", G_TYPE_STRING, url, NULL)));
+      g_free (url);
     } else {
       src->cur_protocols = 0;
-      /* no transport possible, post an error */
+      /* no transport possible, post an error and stop */
       GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-          ("Could not receive any UDP packets for %.4f seconds, maybe your "
-              "firewall is blocking it.", (gdouble) src->timeout / 1000000));
+          ("Could not connect to server, no protocols left"));
     }
   }
   return;
@@ -1276,6 +1290,12 @@ stopping:
     GST_OBJECT_UNLOCK (src);
     src->running = FALSE;
     gst_task_pause (src->task);
+    return;
+  }
+weird_url:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("Could not redirect, location %s is invalid", src->location));
     return;
   }
 }
@@ -1738,9 +1758,9 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   if (src->extension && src->extension->parse_sdp)
     src->extension->parse_sdp (src->extension, &sdp);
 
-  /* we initially allow all configured lower transports. based on the
-   * replies from the server we narrow them down. */
-  protocols = src->cur_protocols;
+  /* we initially allow all configured lower transports. based on the URL
+   * transports and the replies from the server we narrow them down. */
+  protocols = src->url->transports & src->cur_protocols;
 
   /* setup streams */
   n_streams = sdp_message_medias_len (&sdp);
@@ -2230,7 +2250,7 @@ gst_rtspsrc_uri_get_type (void)
 static gchar **
 gst_rtspsrc_uri_get_protocols (void)
 {
-  static gchar *protocols[] = { "rtsp", NULL };
+  static gchar *protocols[] = { "rtsp", "rtspu", "rtspt", NULL };
 
   return protocols;
 }
@@ -2267,6 +2287,8 @@ gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   src->url = newurl;
   g_free (src->location);
   src->location = g_strdup (uri);
+  if (!g_str_has_prefix (src->location, "rtsp://"))
+    memmove (src->location + 4, src->location + 5, strlen (src->location) - 4);
 
   GST_DEBUG_OBJECT (src, "set uri: %s", GST_STR_NULL (uri));
 

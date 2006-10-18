@@ -71,11 +71,6 @@ typedef enum {
 } RTSPResult;
 
 typedef enum {
-  RTSP_PROTO_TCP,
-  RTSP_PROTO_UDP,
-} RTSPProto;
-
-typedef enum {
   RTSP_FAM_NONE,
   RTSP_FAM_INET,
   RTSP_FAM_INET6,
