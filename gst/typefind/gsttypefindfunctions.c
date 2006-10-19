@@ -2317,6 +2317,34 @@ msdos_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** application/x-mmsh ***/
+
+static GstStaticCaps mmsh_caps = GST_STATIC_CAPS ("application/x-mmsh");
+
+#define MMSH_CAPS gst_static_caps_get(&mmsh_caps)
+
+/* This is to recognise mssh-over-http */
+static void
+mmsh_type_find (GstTypeFind * tf, gpointer unused)
+{
+  static const guint8 asf_marker[16] = { 0x30, 0x26, 0xb2, 0x75, 0x8e, 0x66,
+    0xcf, 0x11, 0xa6, 0xd9, 0x00, 0xaa, 0x00, 0x62, 0xce, 0x6c
+  };
+
+  guint8 *data;
+
+  data = gst_type_find_peek (tf, 0, 2 + 2 + 4 + 2 + 2 + 16);
+  if (data && data[0] == 0x24 && data[1] == 0x48 &&
+      GST_READ_UINT16_LE (data + 2) > 2 + 2 + 4 + 2 + 2 + 16 &&
+      memcmp (data + 2 + 2 + 4 + 2 + 2, asf_marker, 16) == 0) {
+    GstCaps *caps = gst_caps_copy (MMSH_CAPS);
+
+    gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
+    gst_caps_unref (caps);
+    return;
+  }
+}
+
 /*** generic typefind for streams that have some data at a specific position***/
 typedef struct
 {
@@ -2680,6 +2708,8 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_PRIMARY, NULL, "KW-DIRAC", 8, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "multipart/x-mixed-replace", GST_RANK_SECONDARY,
       multipart_type_find, NULL, MULTIPART_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/x-mmsh", GST_RANK_SECONDARY,
+      mmsh_type_find, NULL, MMSH_CAPS, NULL, NULL);
   return TRUE;
 }
 
