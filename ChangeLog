@@ -1,5 +1,14 @@
 2006-10-19  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/subparse.c: (buffer_from_static_string),
+	(setup_subparse), (teardown_subparse), (test_srt_do_test),
+	(GST_START_TEST), (subparse_suite):
+	  Add very simple unit test for subparse.
+
+2006-10-19  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/subparse/gstsubparse.c: (strip_trailing_newlines),
 	(parse_subrip):
 	  Strip trailing newlines from subtitle text output.

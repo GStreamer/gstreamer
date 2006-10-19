@@ -14,3 +14,4 @@ vorbisdec
 ffmpegcolorspace
 vorbistag
 playbin
+subparse
