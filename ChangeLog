@@ -1,3 +1,9 @@
+2006-10-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/subparse/gstsubparse.c: (strip_trailing_newlines),
+	(parse_subrip):
+	  Strip trailing newlines from subtitle text output.
+
 2006-10-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/subparse/gstsubparse.c: (gst_sub_parse_dispose),

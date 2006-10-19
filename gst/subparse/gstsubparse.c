@@ -476,6 +476,20 @@ parse_mdvdsub (ParserState * state, const gchar * line)
   return ret;
 }
 
+static void
+strip_trailing_newlines (gchar * txt)
+{
+  if (txt) {
+    guint len;
+
+    len = strlen (txt);
+    while (len > 1 && txt[len - 1] == '\n') {
+      txt[len - 1] = '\0';
+      --len;
+    }
+  }
+}
+
 /* we want to escape text in general, but retain basic markup like
  * <i></i>, <u></u>, and <b></b>. The easiest and safest way is to
  * just unescape a white list of allowed markups again after
@@ -572,6 +586,7 @@ parse_subrip (ParserState * state, const gchar * line)
         g_string_truncate (state->buf, 0);
         state->state = 0;
         subrip_unescape_formatting (ret);
+        strip_trailing_newlines (ret);
         return ret;
       }
       return NULL;
