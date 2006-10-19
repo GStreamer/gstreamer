@@ -765,11 +765,14 @@ again:
     /* we loop until we're out of this cell */
     src->cur_pack = src->cur_pgc->cell_playback[src->cur_cell].first_sector;
     src->new_cell = FALSE;
+    GST_DEBUG_OBJECT (src, "Starting new cell %d @ pack %d", src->cur_cell,
+        src->cur_pack);
   }
 
   if (src->cur_pack >= src->cur_pgc->cell_playback[src->cur_cell].last_sector) {
     src->new_cell = TRUE;
-    GST_LOG_OBJECT (src, "Beyond last sector, go to next cell");
+    GST_LOG_OBJECT (src, "Beyond last sector for cell %d, going to next cell",
+        src->cur_cell);
     return GST_DVD_READ_AGAIN;
   }
 
@@ -781,6 +784,7 @@ nav_retry:
     goto read_error;
 
   if (!gst_dvd_read_src_is_nav_pack (oneblock)) {
+    GST_LOG_OBJECT (src, "Skipping nav packet @ pack %d", src->cur_pack);
     src->cur_pack++;
     goto nav_retry;
   }
@@ -792,7 +796,7 @@ nav_retry:
   /* determine where we go next. These values are the ones we
    * mostly care about */
   next_ilvu_start = src->cur_pack + dsi_pack.sml_agli.data[angle].address;
-  cur_output_size = dsi_pack.dsi_gi.vobu_ea;
+  cur_output_size = dsi_pack.dsi_gi.vobu_ea + 1;
 
   /* If we're not at the end of this cell, we can determine the next
    * VOBU to display using the VOBU_SRI information section of the
@@ -805,14 +809,16 @@ nav_retry:
   if (dsi_pack.vobu_sri.next_vobu != SRI_END_OF_CELL) {
     next_vobu = src->cur_pack + (dsi_pack.vobu_sri.next_vobu & 0x7fffffff);
   } else {
-    next_vobu = src->cur_pack + cur_output_size + 1;
+    next_vobu = src->cur_pgc->cell_playback[src->cur_cell].last_sector + 1;
   }
 
   g_assert (cur_output_size < 1024);
-  ++src->cur_pack;
 
   /* create the buffer (TODO: use buffer pool?) */
   buf = gst_buffer_new_and_alloc (cur_output_size * DVD_VIDEO_LB_LEN);
+
+  GST_LOG_OBJECT (src, "Going to read %u sectors @ pack %d", cur_output_size,
+      src->cur_pack);
 
   /* read in and output cursize packs */
   len = DVDReadBlocks (src->dvd_title, src->cur_pack, cur_output_size,
