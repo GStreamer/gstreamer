@@ -1,5 +1,13 @@
 2006-10-20  Michael Smith  <msmith@fluendo.com>
 
+	* gst/tcp/gstmultifdsink.c:
+	(gst_multi_fd_sink_client_queue_buffer):
+	  If caps change, then update the client's idea of the caps so that we
+	  don't end up re-sending streamheaders for every single buffer after
+	  the caps change.
+
+2006-10-20  Michael Smith  <msmith@fluendo.com>
+
 	* ext/ogg/gstoggparse.c: (gst_ogg_parse_dispose),
 	(gst_ogg_parse_append_header), (gst_ogg_parse_chain):
 	  Set caps on pushed buffers; fix up refcounting of caps objects.

@@ -1166,6 +1166,9 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
         }
       }
     }
+    /* Replace the old caps */
+    gst_caps_unref (client->caps);
+    client->caps = gst_caps_ref (caps);
   }
 
   if (G_UNLIKELY (send_streamheader)) {
