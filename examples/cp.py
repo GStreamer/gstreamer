@@ -26,15 +26,27 @@
 
 import sys
 
+import gobject
+gobject.threads_init()
+
+import pygst
+pygst.require('0.10')
 import gst
+
+
+mainloop = gobject.MainLoop()
+
+def on_eos(bus, msg):
+   mainloop.quit()
 
 def filter(input, output):
    "A GStreamer copy pipeline which can add arbitrary filters"
 
    # create a new bin to hold the elements
    bin = gst.parse_launch('filesrc name=source ! ' +
-                          'statistics silent=false buffer-update-freq=1 ' +
-                          'update_on_eos=true ! ' +
+                          # This 'statistics' element is depreciated in 0.10
+                          #'statistics silent=false buffer-update-freq=1 ' +
+                          #'update_on_eos=true ! ' +
                           'filesink name=sink')
    filesrc = bin.get_by_name('source')
    filesrc.set_property('location', input)
@@ -42,12 +54,15 @@ def filter(input, output):
    filesink = bin.get_by_name('sink')
    filesink.set_property('location', output)
 
+   bus = bin.get_bus()
+   bus.add_signal_watch()
+   bus.connect('message::eos', on_eos)
+
    # start playing
-   bin.set_state(gst.STATE_PLAYING);
+   bin.set_state(gst.STATE_PLAYING)
 
    try:
-      while bin.iterate():
-         pass
+      mainloop.run()
    except KeyboardInterrupt:
       pass
 

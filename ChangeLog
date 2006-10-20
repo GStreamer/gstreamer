@@ -1,3 +1,14 @@
+2006-10-20  Edward Hervey  <edward@fluendo.com>
+
+	* examples/audioconcat.py:
+	* examples/cp.py:
+	Port to 0.10 by Jason Gerard DeRose <jderose@jasonderose.org>
+	Closes #362290 and #362272
+	* examples/bps.py:
+	Indentation fixes by Jason Gerard DeRose <jderose@jasonderose.org>
+	Closes #362011
+	Also small fix for Usage string
+
 2006-10-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.defs:

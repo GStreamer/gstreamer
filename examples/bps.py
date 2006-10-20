@@ -111,8 +111,8 @@ def main(args):
     
     buffers = int(args[1])
     if buffers < 1:
-	print 'buffers must be higher than 0'
-	return
+        print 'buffers must be higher than 0'
+        return
 
     bps.run(buffers)
 
