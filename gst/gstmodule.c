@@ -249,6 +249,9 @@ init_gst (void)
      PyModule_AddStringConstant (m, "TAG_IMAGE", GST_TAG_IMAGE);
 #if ((GST_VERSION_MICRO >= 7) || (GST_VERSION_MICRO == 6 && GST_VERSION_NANO > 0 ))
      PyModule_AddStringConstant (m, "TAG_PREVIEW_IMAGE", GST_TAG_PREVIEW_IMAGE);
+#if ((GST_VERSION_MICRO >= 10) || (GST_VERSION_MICRO == 9 && GST_VERSION_NANO > 0 ))
+     PyModule_AddStringConstant (m, "TAG_EXTENDED_COMMENT", GST_TAG_EXTENDED_COMMENT);
+#endif
 #endif
 #endif
 

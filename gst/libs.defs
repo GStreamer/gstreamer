@@ -286,7 +286,24 @@
   )
 )
 
-(define-function controller_init
+(define-function object_get_control_rate
+  (c-name "gst_object_get_control_rate")
+  (return-type "guint")
+  (parameters
+    '("GObject*" "object")
+  )
+)
+
+(define-function object_set_control_rate
+  (c-name "gst_object_set_control_rate")
+  (return-type "none")
+  (parameters
+    '("GObject*" "object")
+    '("guint" "control_rate")
+  )
+)
+
+(define-function gst_controller_init
   (c-name "gst_controller_init")
   (return-type "gboolean")
   (parameters
@@ -304,7 +321,16 @@
   (return-type "none")
 )
 
-(define-function dp_crc
+(define-function dp_packetizer_new
+  (c-name "gst_dp_packetizer_new")
+  (is-constructor-of "GstDpPacketizer")
+  (return-type "GstDPPacketizer*")
+  (parameters
+    '("GstDPVersion" "version")
+  )
+)
+
+(define-function gst_dp_crc
   (c-name "gst_dp_crc")
   (return-type "guint16")
   (parameters

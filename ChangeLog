@@ -1,5 +1,21 @@
 2006-10-20  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst-0.10.10.ignore:
+	Added symbols added in 0.10.10
+	* gst/gst-0.10.6.ignore:
+	gst_dp_packetizer_new() addition
+	* gst/gst.defs:
+	Updated API for 0.10.10 symbols
+	* gst/gstmodule.c: (init_gst):
+	Added GST_TAG_EXTENDED_COMMENT which appeared in 0.10.10
+	* gst/libs.defs:
+	Added gst_dp_packetizer_new() which was added in 0.10.6. It still won't
+	work because GstDPPacketizer is a pointer. It needs to have a GBoxed
+	definition in order to be used properly within gst-python.
+	Also added controller-related additions
+
+2006-10-20  Edward Hervey  <edward@fluendo.com>
+
 	* configure.ac:
 	* gst/Makefile.am:
 	* gst/gst-0.10.11.ignore:

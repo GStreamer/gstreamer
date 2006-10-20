@@ -711,6 +711,24 @@
   )
 )
 
+(define-method merge
+  (of-object "GstCaps")
+  (c-name "gst_caps_merge")
+  (return-type "none")
+  (parameters
+   '("GstCaps*" "caps2")
+  )
+)
+
+(define-method merge_structure
+  (of-object "GstCaps")
+  (c-name "gst_caps_merge_structure")
+  (return-type "none")
+  (parameters
+   '("GstStructure*" "structure")
+  )
+)
+
 (define-function caps_load_thyself
   (c-name "gst_caps_load_thyself")
   (return-type "GstCaps*")
@@ -933,6 +951,15 @@
   (return-type "GstClockReturn")
   (parameters
    '("GstClockEntry*" "entry")
+  )
+)
+
+(define-virtual wait_jitter
+  (of-object "GstClock")
+  (return-type "GstClockReturn")
+  (parameters
+   '("GstClockEntry*" "entry")
+   '("GstClockTimeDiff*" "jitter")
   )
 )
 
