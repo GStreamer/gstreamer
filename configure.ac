@@ -38,6 +38,8 @@ AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
 GST_REQ=0.10.4
+LIBOIL_MAJORMINOR=0.3
+LIBOIL_REQ=0.3.6
 
 dnl *** autotools stuff ****
 
@@ -103,6 +105,16 @@ GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
 
 AC_MSG_NOTICE(Using GStreamer Core Plugins in $GST_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
+
+dnl liboil is required
+PKG_CHECK_MODULES(LIBOIL, liboil-$LIBOIL_MAJORMINOR >= $LIBOIL_REQ, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+if test "x$HAVE_LIBOIL" != "xyes"
+then
+  AC_ERROR([liboil-$LIBOIL_REQ or later is required])
+fi
+
+AC_SUBST(LIBOIL_CFLAGS)
+AC_SUBST(LIBOIL_LIBS)
 
 dnl *** set variables based on configure arguments ***
 

@@ -1,3 +1,31 @@
+2006-10-20  Mark Nauwelaerts <manauw@skynet.be>
+
+	Reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	postproc filters need liboil to detect the cpu architecture
+	* ext/libpostproc/Makefile.am:
+	Update for liboil requirement, libpostproc being moved around in
+	ffmpeg mirror, and removal of unused header file.
+	* ext/libpostproc/gstpostproc.h:
+	Header file not needed anymore
+	* ext/libpostproc/gstpostproc.c: (gst_pp_scope_get_type),
+	(change_context), (append), (change_mode),
+	(gst_post_proc_base_init), (gst_post_proc_class_init),
+	(gst_post_proc_init), (gst_post_proc_dispose),
+	(gst_post_proc_setcaps), (gst_post_proc_transform_ip),
+	(gst_post_proc_set_property), (gst_post_proc_get_property),
+	(gst_post_proc_deblock_set_property),
+	(gst_post_proc_deblock_get_property),
+	(gst_post_proc_tmpnoise_set_property),
+	(gst_post_proc_tmpnoise_get_property),
+	(gst_post_proc_autolevels_set_property),
+	(gst_post_proc_autolevels_get_property),
+	(gst_post_proc_forcequant_set_property),
+	(gst_post_proc_forcequant_get_property), (gst_post_proc_register),
+	(plugin_init):
+	Port of postprocessing elements to 0.10.
+
 2006-10-13  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c:
