@@ -1,3 +1,11 @@
+2006-10-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/random/ensonic/distributed.txt:
+	  add some ideas about doing distributed processing
+
+	* docs/random/ensonic/profiling.txt:
+	  get_rusage look promising
+
 2006-10-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/manual/basics-helloworld.xml:

@@ -1,0 +1,32 @@
+$Id$
+
+= distributed gstreamer pipelines =
+
+The idea is to have a proxy element for remote elements so that you can treat
+the whole pipeline as a local one. The proxy element creates the real instance
+by talking to GOD (GStreamer Object Daemon, GObject Daemon, ...) on the
+respective machine.
+
+At runtime when the proxy-element receives data it sends it to the remote
+element and after processing it gets it back and forwards it to the element.
+The challenge is to optimize links when multiple conected elements are on the
+same remote machine so that the data gets passed directly there.
+
+== proxy creation ==
+
+In addition to
+GstElement* gst_element_factory_make        (const gchar *factoryname,
+                                             const gchar *name);
+
+we need:
+GstElement* gst_element_factory_make_remote (const gchar *factoryname,
+                                             const gchar *name,
+                                             GstRemoteFactory *remote);
+
+and some API to get a remote factory handle via hostname lookup, ip address
+lookup or even zeroconf (avahi).
+
+== issues / thoughts ==
+
+* we need to distribute the clock
+

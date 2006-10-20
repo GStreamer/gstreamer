@@ -74,4 +74,5 @@ $Id$
   to the whole pipeline
 
 * check get_rusage() based cpu usage detection in buzztard
+  this together with pad_probes could gives us decent application level profiles
 
