@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- * Copyright (c) 2004 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2004 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
+ * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -528,6 +529,71 @@ subrip_unescape_formatting (gchar * txt)
   }
 }
 
+/* we only allow <i>, <u> and <b>, so let's take a simple approach. This code
+ * assumes the input has been escaped and subrip_unescape_formatting() has then
+ * been run over the input! This function adds missing closing markup tags and
+ * removes broken closing tags for tags that have never been opened. */
+static void
+subrip_fix_up_markup (gchar ** p_txt)
+{
+  gchar *cur, *next_tag;
+  gchar open_tags[32];
+  guint num_open_tags = 0;
+
+  g_assert (*p_txt != NULL);
+
+  cur = *p_txt;
+  while (*cur != '\0') {
+    next_tag = strchr (cur, '<');
+    if (next_tag == NULL)
+      break;
+    ++next_tag;
+    switch (*next_tag) {
+      case '/':{
+        ++next_tag;
+        if (num_open_tags == 0 || open_tags[num_open_tags - 1] != *next_tag) {
+          GST_LOG ("broken input, closing tag '%c' is not open", *next_tag);
+          g_memmove (next_tag - 2, next_tag + 2, strlen (next_tag + 2) + 1);
+          next_tag -= 2;
+        } else {
+          /* it's all good, closing tag which is open */
+          --num_open_tags;
+        }
+        break;
+      }
+      case 'i':
+      case 'b':
+      case 'u':
+        if (num_open_tags == G_N_ELEMENTS (open_tags))
+          return;               /* something dodgy is going on, stop parsing */
+        open_tags[num_open_tags] = *next_tag;
+        ++num_open_tags;
+        break;
+      default:
+        GST_ERROR ("unexpected tag '%c' (%s)", *next_tag, next_tag);
+        g_assert_not_reached ();
+        break;
+    }
+    cur = next_tag;
+  }
+
+  if (num_open_tags > 0) {
+    GString *s;
+
+    s = g_string_new (*p_txt);
+    while (num_open_tags > 0) {
+      GST_LOG ("adding missing closing tag '%c'", open_tags[num_open_tags - 1]);
+      g_string_append_c (s, '<');
+      g_string_append_c (s, '/');
+      g_string_append_c (s, open_tags[num_open_tags - 1]);
+      g_string_append_c (s, '>');
+      --num_open_tags;
+    }
+    g_free (*p_txt);
+    *p_txt = g_string_free (s, FALSE);
+  }
+}
+
 static gchar *
 parse_subrip (ParserState * state, const gchar * line)
 {
@@ -587,6 +653,7 @@ parse_subrip (ParserState * state, const gchar * line)
         state->state = 0;
         subrip_unescape_formatting (ret);
         strip_trailing_newlines (ret);
+        subrip_fix_up_markup (&ret);
         return ret;
       }
       return NULL;
@@ -818,12 +885,15 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
     if (subtitle) {
       guint subtitle_len = strlen (subtitle);
 
+      /* +1 for terminating NUL character */
       ret = gst_pad_alloc_buffer_and_set_caps (self->srcpad,
-          GST_BUFFER_OFFSET_NONE, subtitle_len,
+          GST_BUFFER_OFFSET_NONE, subtitle_len + 1,
           GST_PAD_CAPS (self->srcpad), &buf);
 
       if (ret == GST_FLOW_OK) {
-        memcpy (GST_BUFFER_DATA (buf), subtitle, subtitle_len);
+        /* copy terminating NUL character as well */
+        memcpy (GST_BUFFER_DATA (buf), subtitle, subtitle_len + 1);
+        GST_BUFFER_SIZE (buf) = subtitle_len;
         GST_BUFFER_TIMESTAMP (buf) = self->state.start_time;
         GST_BUFFER_DURATION (buf) = self->state.duration;
 

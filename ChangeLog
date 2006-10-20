@@ -1,3 +1,16 @@
+2006-10-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/subparse/gstsubparse.c: (subrip_fix_up_markup),
+	(parse_subrip), (handle_buffer):
+	  Add missing closing tags for markup and fix broken markup,
+	  otherwise pango won't render anything (fixes #357531). Also,
+	  make sure the text we send out is always NUL-terminated
+	  (better safe than sorry etc.).
+
+	* tests/check/elements/subparse.c: (test_srt_do_test),
+	(test_srt):
+	  Some more tests for .srt incl. tests for the above stuff.
+
 2006-10-20  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_put):
