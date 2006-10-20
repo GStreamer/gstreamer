@@ -1,3 +1,14 @@
+2006-10-20 Jason Gerard DeRose <jderose@jasonderose.org>
+	
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* examples/decodebin.py:
+	* examples/gst123:
+	* examples/vorbisplay.py:
+	Removed gst123 and vorbisplay examples which weren't working with
+	0.10, and replaced them with decodebin.py
+	Closes #362183 and #362202
+
 2006-10-20  Edward Hervey  <edward@fluendo.com>
 
 	* examples/audioconcat.py:
