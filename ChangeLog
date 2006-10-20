@@ -1,5 +1,10 @@
 2006-10-20  Edward Hervey  <edward@fluendo.com>
 
+	* configure.ac:
+	0.10.5.2 pre-release
+
+2006-10-20  Edward Hervey  <edward@fluendo.com>
+
 	* gst/gst-0.10.10.ignore:
 	Added symbols added in 0.10.10
 	* gst/gst-0.10.6.ignore:
