@@ -89,6 +89,8 @@ struct _GstOggParse
   gboolean last_page_not_bos;   /* Set if we've seen a non-BOS page */
 
   ogg_sync_state sync;          /* Ogg page synchronisation */
+
+  GstCaps *caps;                /* Our src caps */
 };
 
 struct _GstOggParseClass
@@ -269,6 +271,11 @@ gst_ogg_parse_dispose (GObject * object)
   ogg_sync_clear (&ogg->sync);
   gst_ogg_parse_delete_all_streams (ogg);
 
+  if (ogg->caps) {
+    gst_caps_unref (ogg->caps);
+    ogg->caps = NULL;
+  }
+
   if (G_OBJECT_CLASS (parent_class)->dispose)
     G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -302,11 +309,13 @@ static void
 gst_ogg_parse_append_header (GValue * array, GstBuffer * buf)
 {
   GValue value = { 0 };
+  /* We require a copy to avoid circular refcounts */
+  GstBuffer *buffer = gst_buffer_copy (buf);
 
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 
   g_value_init (&value, GST_TYPE_BUFFER);
-  gst_value_set_buffer (&value, buf);
+  gst_value_set_buffer (&value, buffer);
   gst_value_array_append_value (array, &value);
   g_value_unset (&value);
 
@@ -548,7 +557,9 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
 
             g_value_unset (&array);
 
-//            gst_caps_free(caps);
+            if (ogg->caps)
+              gst_caps_unref (ogg->caps);
+            ogg->caps = caps;
 
             GST_LOG_OBJECT (ogg, "Set \"streamheader\" caps with %d buffers "
                 "(one per page)", count);
@@ -556,9 +567,11 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
             /* Now, we do the same thing, but push buffers... */
             for (l = ogg->oggstreams; l != NULL; l = l->next) {
               GstOggStream *stream = (GstOggStream *) l->data;
+              GstBuffer *buf = GST_BUFFER (stream->headers->data);
 
-              result = gst_pad_push (ogg->srcpad,
-                  GST_BUFFER (stream->headers->data));
+              gst_buffer_set_caps (buf, caps);
+
+              result = gst_pad_push (ogg->srcpad, buf);
               if (result != GST_FLOW_OK)
                 return result;
             }
@@ -567,8 +580,11 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               int j;
 
               for (j = 1; j < g_slist_length (stream->headers); j++) {
-                result = gst_pad_push (ogg->srcpad,
-                    GST_BUFFER (g_slist_nth_data (stream->headers, j)));
+                GstBuffer *buf =
+                    GST_BUFFER (g_slist_nth_data (stream->headers, j));
+                gst_buffer_set_caps (buf, caps);
+
+                result = gst_pad_push (ogg->srcpad, buf);
                 if (result != GST_FLOW_OK)
                   return result;
               }
@@ -597,6 +613,7 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
                 GstBuffer *buf;
 
                 buf = GST_BUFFER (k->data);
+                gst_buffer_set_caps (buf, caps);
                 result = gst_pad_push (ogg->srcpad, buf);
                 if (result != GST_FLOW_OK)
                   return result;
@@ -607,11 +624,14 @@ gst_ogg_parse_chain (GstPad * pad, GstBuffer * buffer)
               stream->unknown_pages = NULL;
             }
 
+            gst_buffer_set_caps (pagebuffer, caps);
+
             result = gst_pad_push (ogg->srcpad, GST_BUFFER (pagebuffer));
             if (result != GST_FLOW_OK)
               return result;
           } else {
             /* Normal data page, submit buffer */
+            gst_buffer_set_caps (pagebuffer, ogg->caps);
             result = gst_pad_push (ogg->srcpad, GST_BUFFER (pagebuffer));
             if (result != GST_FLOW_OK)
               return result;
