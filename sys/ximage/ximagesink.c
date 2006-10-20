@@ -628,12 +628,19 @@ static void
 gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
 {
   GstVideoRectangle src, dst, result;
+  gboolean draw_border = FALSE;
 
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
 
   /* We take the flow_lock. If expose is in there we don't want to run
      concurrently from the data flow thread */
   g_mutex_lock (ximagesink->flow_lock);
+
+  /* Draw borders when displaying the first frame. After this
+     draw borders only on expose event. */
+  if (!ximagesink->cur_image) {
+    draw_border = TRUE;
+  }
 
   /* Store a reference to the last image we put, lose the previous one */
   if (ximage && ximagesink->cur_image != ximage) {
@@ -648,6 +655,7 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
 
   /* Expose sends a NULL image, we take the latest frame */
   if (!ximage) {
+    draw_border = TRUE;
     if (ximagesink->cur_image) {
       ximage = ximagesink->cur_image;
     } else {
@@ -667,8 +675,10 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
 
   g_mutex_lock (ximagesink->x_lock);
 
-  gst_ximagesink_xwindow_draw_borders (ximagesink, ximagesink->xwindow, result);
-
+  if (draw_border) {
+    gst_ximagesink_xwindow_draw_borders (ximagesink, ximagesink->xwindow,
+        result);
+  }
 #ifdef HAVE_XSHM
   if (ximagesink->xcontext->use_xshm) {
     GST_LOG_OBJECT (ximagesink,
