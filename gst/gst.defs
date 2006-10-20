@@ -1967,8 +1967,8 @@
     '("gdouble" "rate")
     '("GstFormat" "format")
     '("GstSeekFlags" "flags")
-    '("GstSeekType" "cur_type")
-    '("gint64" "cur")
+    '("GstSeekType" "start_type")
+    '("gint64" "start")
     '("GstSeekType" "stop_type")
     '("gint64" "stop")
   )
@@ -1982,8 +1982,8 @@
     '("gdouble*" "rate")
     '("GstFormat*" "format")
     '("GstSeekFlags*" "flags")
-    '("GstSeekType*" "cur_type")
-    '("gint64*" "cur")
+    '("GstSeekType*" "start_type")
+    '("gint64*" "start")
     '("GstSeekType*" "stop_type")
     '("gint64*" "stop")
   )
@@ -2833,6 +2833,15 @@
   )
 )
 
+(define-function gst_message_new_buffering
+  (c-name "gst_message_new_buffering")
+  (return-type "GstMessage*")
+  (parameters
+    '("GstObject*" "src")
+    '("gint" "percent")
+  )
+)
+
 (define-function message_new_state_changed
   (c-name "gst_message_new_state_changed")
   (return-type "GstMessage*")
@@ -2975,6 +2984,15 @@
   (return-type "none")
   (parameters
     '("GstTagList**" "tag_list")
+  )
+)
+
+(define-method parse_buffering
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_buffering")
+  (return-type "none")
+  (parameters
+    '("gint*" "percent")
   )
 )
 
@@ -3278,9 +3296,9 @@
 (define-method save_thyself
   (of-object "GstObject")
   (c-name "gst_object_save_thyself")
-  (return-type "xmlNodePtr")
+  (return-type "GstXmlNodePtr")
   (parameters
-    '("xmlNodePtr" "parent")
+    '("GstXmlNodePtr" "parent")
   )
 )
 
@@ -3289,7 +3307,7 @@
   (c-name "gst_object_restore_thyself")
   (return-type "none")
   (parameters
-    '("xmlNodePtr" "self")
+    '("GstXmlNodePtr" "self")
   )
 )
 
@@ -3310,15 +3328,15 @@
   (parameters
     '("GstObject*" "object")
     '("const-gchar*" "name")
-    '("xmlNodePtr" "self")
+    '("GstXmlNodePtr" "self")
   )
 )
 
 (define-virtual save_thyself
   (of-object "GstObject")
-  (return-type "xmlNodePtr")
+  (return-type "GstXmlNodePtr")
   (parameters
-   '("xmlNodePtr" "parent")
+   '("GstXmlNodePtr" "parent")
   )
 )
 
@@ -3326,7 +3344,7 @@
   (of-object "GstObject")
   (return-type "none")
   (parameters
-   '("xmlNodePtr" "self")
+   '("GstXmlNodePtr" "self")
   )
 )
 
@@ -3983,7 +4001,7 @@
   (c-name "gst_pad_load_and_link")
   (return-type "none")
   (parameters
-    '("xmlNodePtr" "self")
+    '("GstXmlNodePtr" "self")
     '("GstObject*" "parent")
   )
 )
@@ -4865,8 +4883,8 @@
     '("gdouble" "rate")
     '("GstFormat" "format")
     '("GstSeekFlags" "flags")
-    '("GstSeekType" "cur_type")
-    '("gint64" "cur")
+    '("GstSeekType" "start_type")
+    '("gint64" "start")
     '("GstSeekType" "stop_type")
     '("gint64" "stop")
     '("gboolean*" "update")
@@ -5469,6 +5487,12 @@
   (c-name "gst_tag_list_copy")
   (return-type "GstTagList*")
   (caller-owns-return #t)
+)
+
+(define-method is_empty
+  (of-object "GstTagList")
+  (c-name "gst_tag_list_is_empty")
+  (return-type "gboolean")
 )
 
 (define-method insert

@@ -147,3 +147,28 @@ _wrap_gst_bin_tp_iter(PyGObject *self)
 {
     return _wrap_gst_bin_iterate_elements(self);
 }
+%%
+override GstBin__do_handle_message kwargs
+static PyObject *
+_wrap_GstBin__do_handle_message(PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    gpointer klass;
+    static char *kwlist[] = { "self", "message", NULL };
+    PyGObject *self;
+    PyGstMiniObject *message;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!O!:GstBin.handle_message", kwlist, &PyGstBin_Type, &self, &PyGstMessage_Type, &message))
+        return NULL;
+    klass = g_type_class_ref(pyg_type_from_object(cls));
+    if (GST_BIN_CLASS(klass)->handle_message) {
+	    gst_mini_object_ref (message->obj);
+	    GST_BIN_CLASS(klass)->handle_message(GST_BIN(self->obj), GST_MESSAGE(message->obj));
+    } else {
+        PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBin.handle_message not implemented");
+        g_type_class_unref(klass);
+        return NULL;
+    }
+    g_type_class_unref(klass);
+    Py_INCREF(Py_None);
+    return Py_None;
+}

@@ -117,7 +117,6 @@ _pygst_element_check_error (GstElement *element)
   return TRUE;
 }
 
-#ifdef pyg_register_class_init
 PyTypeObject PyGstPadTemplate_Type;
 static int
 add_templates (gpointer gclass, PyObject *templates)
@@ -198,7 +197,6 @@ _pygst_element_init (gpointer gclass, PyTypeObject *pyclass)
 
   return 0;
 }
-#endif
 
 static PyObject *
 pygst_debug_log (PyObject *pyobject, PyObject *string, GstDebugLevel level,
@@ -253,10 +251,7 @@ include
 %%
 init
 {
-/* FIXME: new in pygtk-2.6 */
-#ifdef pyg_register_class_init
     pyg_register_class_init (GST_TYPE_ELEMENT, _pygst_element_init);
-#endif
     if (!pygst_value_init())
         return;
     gst_controller_init(NULL, NULL);

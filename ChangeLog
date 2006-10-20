@@ -1,5 +1,24 @@
 2006-10-20  Edward Hervey  <edward@fluendo.com>
 
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-0.10.11.ignore:
+	* gst/gstversion.override.in:
+	Added ignore files for 0.10.11 gstreamer core
+	* gst/base.defs:
+	Updated API for base libs
+	* gst/gst.defs:
+	Updated API for core
+	* gst/gst.override:
+	remove #ifdef for methods which weren't available in versions of pygtk
+	we don't support anymore.
+	* gst/gstbase.override:
+	Added overrides for GstBaseSink::get_times() virtual method
+	* gst/gstbin.override:
+	Added override for GstBin::handle_message() virtual method
+
+2006-10-20  Edward Hervey  <edward@fluendo.com>
+
 	* examples/Makefile.am:
 	Remove gst123 and vorbisplay.py from sources, and add decodebin.py
 
