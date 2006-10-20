@@ -8,13 +8,12 @@ examples_DATA = 	\
 	f2f.py		\
 	filesrc.py	\
 	fvumeter.py	\
-	gst123		\
 	gstfile.py	\
 	play.py		\
 	pipeline-tester \
 	remuxer.py	\
 	sinkelement.py  \
-	vorbisplay.py	\
-	vumeter.py
+	vumeter.py	\
+	decodebin.py
 
 EXTRA_DIST = $(examples_DATA)
