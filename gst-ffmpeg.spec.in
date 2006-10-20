@@ -6,7 +6,7 @@
 
 Name: 		%{gstreamer}-ffmpeg
 Version: 	@VERSION@
-Release:	@GST_FFMPEG_VERSION_RELEASE@	
+Release:	@PACKAGE_VERSION_RELEASE@	
 Summary: 	GStreamer Streaming-media framework plug-in using FFmpeg.
 
 Group: 		Libraries/Multimedia
@@ -18,6 +18,8 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:  	%{gstreamer} >= 0.9.7
 BuildRequires: 	%{gstreamer}-devel >= 0.9.7
+BuildRequires: 	%{gstreamer}-plugins-base-devel >= 0.9.7
+BuildRequires: 	liboil-devel >= 0.3.6
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -36,7 +38,7 @@ multimedia formats.
 %build
 %configure
 
-make %{?_smp_mflags}
+make %{?_smp_mflags} CFLAGS=-Wno-error
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -56,6 +58,7 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-, root, root, -)
 %doc AUTHORS COPYING README
 %{_libdir}/gstreamer-%{gst_majorminor}/libgstffmpeg.so
+%{_libdir}/gstreamer-%{gst_majorminor}/libgstpostproc.so
 
 %changelog
 * Wed Oct 05 2004 Christian Schaller <christian at fluendo dot com>
