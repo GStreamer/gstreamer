@@ -2,6 +2,7 @@
 adder
 alsa
 audioconvert
+audiorate
 audioresample
 audiotestsrc
 gdpdepay

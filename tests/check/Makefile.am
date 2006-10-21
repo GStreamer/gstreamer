@@ -81,6 +81,7 @@ VALGRIND_TO_FIX = \
 
 # these tests don't even pass
 noinst_PROGRAMS = \
+	elements/audiorate \
 	elements/ffmpegcolorspace
 
 AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS)
@@ -110,6 +111,9 @@ elements_alsa_LDADD = \
 elements_audioconvert_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
 	$(LDADD)
+
+elements_audiorate_LDADD =  $(LDADD)
+elements_audiorate_CFLAGS = $(CFLAGS) $(AM_CFLAGS)
 
 elements_gdpdepay_LDADD = $(GST_GDP_LIBS) $(LDADD)
 elements_gdppay_LDADD = $(GST_GDP_LIBS) $(LDADD)

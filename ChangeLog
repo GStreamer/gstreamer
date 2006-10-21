@@ -1,3 +1,12 @@
+2006-10-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/audiorate.c: (probe_cb), (got_buf),
+	(do_perfect_stream_test), (GST_START_TEST), (audiorate_suite):
+	  Add some basic unit tests for audiorate. Disabled at the moment
+	  since it doesn't pass yet (see bug #363119).
+
 2006-10-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/subparse/gstsubparse.c: (subrip_fix_up_markup),
