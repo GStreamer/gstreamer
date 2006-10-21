@@ -1,3 +1,13 @@
+2006-10-21  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* gst/multifilesink/Makefile.am:
+	* gst/multifilesink/gstmultifilesink.c:
+	* gst/multifilesink/gstmultifilesink.h:
+	  I copied over filesink a while ago and modified it to work
+	  as multifilesink.  Might as well check it in.  This could
+	  use some work before being declared useful.
+
 2006-10-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_set_wp_config):

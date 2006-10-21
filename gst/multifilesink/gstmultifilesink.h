@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2000 Wim Taymans <wtay@chello.be>
  *
- * gstmultifilesink.h: 
+ * gstfilesink.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,60 +21,51 @@
  */
 
 
-#ifndef __GST_MULTIFILESINK_H__
-#define __GST_MULTIFILESINK_H__
+#ifndef __GST_MULTI_FILE_SINK_H__
+#define __GST_MULTI_FILE_SINK_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
 
 G_BEGIN_DECLS
 
-
-#define GST_TYPE_MULTIFILESINK \
-  (gst_multifilesink_get_type())
-#define GST_MULTIFILESINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTIFILESINK,GstMultiFileSink))
-#define GST_FILESINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTIFILESINK,GstMultiFileSinkClass))
-#define GST_IS_MULTIFILESINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTIFILESINK))
-#define GST_IS_MULTIFILESINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIFILESINK))
+#define GST_TYPE_MULTI_FILE_SINK \
+  (gst_multi_file_sink_get_type())
+#define GST_MULTI_FILE_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTI_FILE_SINK,GstMultiFileSink))
+#define GST_MULTI_FILE_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTI_FILE_SINK,GstMultiFileSinkClass))
+#define GST_IS_MULTI_FILE_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTI_FILE_SINK))
+#define GST_IS_MULTI_FILE_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTI_FILE_SINK))
 
 typedef struct _GstMultiFileSink GstMultiFileSink;
 typedef struct _GstMultiFileSinkClass GstMultiFileSinkClass;
 
-typedef enum {
-  GST_MULTIFILESINK_OPEN        = (GST_ELEMENT_FLAG_LAST << 0),
-  GST_MULTIFILESINK_NEWFILE     = (GST_ELEMENT_FLAG_LAST << 1),
-
-  GST_MULTIFILESINK_FLAG_LAST   = (GST_ELEMENT_FLAG_LAST << 4)
-} GstMultiFileSinkFlags;
-
+/**
+ * GstMultiFileSink:
+ *
+ * Opaque #GstMultiFileSink structure.
+ */
 struct _GstMultiFileSink {
-  GstElement element;
+  GstBaseSink parent;
 
+  /*< private >*/
   gchar *filename;
   gchar *uri;
-  gint curfileindex;
-  gchar* curfilename;
-  gint numfiles;
-  FILE *file;
+  int index;
 
-  guint64 data_written;
-
-  GSList *streamheader; /* GSList of GstBuffers to use as streamheader */
+  //gboolean seekable;
+  //guint64 data_written;
 };
 
 struct _GstMultiFileSinkClass {
-  GstElementClass parent_class;
-
-  /* signals */
-  void (*handoff) (GstElement *element, GstPad *pad);
-  void (*newfile) (GstElement *element);
+  GstBaseSinkClass parent_class;
 };
 
-GType gst_multifilesink_get_type(void);
+GType gst_multi_file_sink_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_MULTIFILESINK_H__ */
+#endif /* __GST_MULTI_FILE_SINK_H__ */
