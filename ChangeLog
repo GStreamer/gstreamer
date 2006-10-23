@@ -1,3 +1,12 @@
+2006-10-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/elements/audiorate.c: (test_injector_base_init),
+	(test_injector_class_init), (test_injector_chain),
+	(test_injector_init), (probe_cb), (do_perfect_stream_test),
+	(GST_START_TEST), (audiorate_suite):
+	  More tests for audiorate: inject buffers to check behaviour when
+	  buffers overlap.
+
 2006-10-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:

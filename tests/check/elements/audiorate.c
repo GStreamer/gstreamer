@@ -24,11 +24,152 @@
 
 #include <gst/check/gstcheck.h>
 
+/* helper element to insert additional buffers overlapping with previous ones */
+
+static gdouble injector_inject_probability = 0.0;
+
+typedef GstElement TestInjector;
+typedef GstElementClass TestInjectorClass;
+
+GST_BOILERPLATE (TestInjector, test_injector, GstElement, GST_TYPE_ELEMENT);
+
+#define INJECTOR_CAPS \
+  "audio/x-raw-float, "                                  \
+    "rate = (int) [ 1, MAX ], "                          \
+    "channels = (int) [ 1, 8 ], "                        \
+    "endianness = (int) BYTE_ORDER, "                    \
+    "width = (int) 32;"                                  \
+  "audio/x-raw-int, "                                    \
+    "rate = (int) [ 1, MAX ], "                          \
+    "channels = (int) [ 1, 8 ], "                        \
+    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
+    "width = (int) { 8, 16, 32 }, "                      \
+    "depth = (int) [ 1, 32 ], "                          \
+    "signed = (boolean) { true, false }"
+
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (INJECTOR_CAPS));
+
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (INJECTOR_CAPS));
+
+static void
+test_injector_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+}
+
+static void
+test_injector_class_init (TestInjectorClass * klass)
+{
+  /* nothing to do here */
+}
+
+static GstFlowReturn
+test_injector_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstFlowReturn ret;
+  GstPad *srcpad;
+
+  srcpad = gst_element_get_pad (GST_ELEMENT (GST_PAD_PARENT (pad)), "src");
+
+  /* since we're increasing timestamp/offsets, push this one first */
+  GST_LOG (" passing buffer   [t=%" GST_TIME_FORMAT "-%" GST_TIME_FORMAT
+      "], offset=%" G_GINT64_FORMAT ", offset_end=%" G_GINT64_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf)),
+      GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf));
+
+  gst_buffer_ref (buf);
+
+  ret = gst_pad_push (srcpad, buf);
+
+  if (g_random_double () < injector_inject_probability) {
+    GstBuffer *ibuf;
+
+    ibuf = gst_buffer_copy (buf);
+
+    if (GST_BUFFER_OFFSET_IS_VALID (buf) &&
+        GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
+      guint64 delta;
+
+      delta = GST_BUFFER_OFFSET_END (buf) - GST_BUFFER_OFFSET (buf);
+      GST_BUFFER_OFFSET (ibuf) += delta / 4;
+      GST_BUFFER_OFFSET_END (ibuf) += delta / 4;
+    } else {
+      GST_BUFFER_OFFSET (ibuf) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_OFFSET_END (ibuf) = GST_BUFFER_OFFSET_NONE;
+    }
+
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf) &&
+        GST_BUFFER_DURATION_IS_VALID (buf)) {
+      GstClockTime delta;
+
+      delta = GST_BUFFER_DURATION (buf);
+      GST_BUFFER_TIMESTAMP (ibuf) += delta / 4;
+    } else {
+      GST_BUFFER_TIMESTAMP (ibuf) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_DURATION (ibuf) = GST_CLOCK_TIME_NONE;
+    }
+
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (ibuf) ||
+        GST_BUFFER_OFFSET_IS_VALID (ibuf)) {
+      GST_LOG ("injecting buffer [t=%" GST_TIME_FORMAT "-%" GST_TIME_FORMAT
+          "], offset=%" G_GINT64_FORMAT ", offset_end=%" G_GINT64_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (ibuf)),
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (ibuf) +
+              GST_BUFFER_DURATION (ibuf)), GST_BUFFER_OFFSET (ibuf),
+          GST_BUFFER_OFFSET_END (ibuf));
+
+      if (gst_pad_push (srcpad, ibuf) != GST_FLOW_OK) {
+        /* ignore return value */
+      }
+    } else {
+      GST_WARNING ("couldn't inject buffer, no incoming timestamps or offsets");
+      gst_buffer_unref (ibuf);
+    }
+  }
+
+  gst_buffer_unref (buf);
+
+  return ret;
+}
+
+static void
+test_injector_init (TestInjector * injector, TestInjectorClass * klass)
+{
+  GstPad *pad;
+
+  pad = gst_pad_new_from_static_template (&sink_template, "sink");
+  gst_pad_set_chain_function (pad, test_injector_chain);
+  gst_pad_set_getcaps_function (pad, gst_pad_proxy_getcaps);
+  gst_pad_set_setcaps_function (pad, gst_pad_proxy_setcaps);
+  gst_element_add_pad (GST_ELEMENT (injector), pad);
+
+  pad = gst_pad_new_from_static_template (&src_template, "src");
+  gst_pad_set_getcaps_function (pad, gst_pad_proxy_getcaps);
+  gst_pad_set_setcaps_function (pad, gst_pad_proxy_setcaps);
+  gst_element_add_pad (GST_ELEMENT (injector), pad);
+}
+
 static gboolean
 probe_cb (GstPad * pad, GstBuffer * buf, gdouble * drop_probability)
 {
   if (g_random_double () < *drop_probability) {
-    GST_LOG ("dropping buffer");
+    GST_LOG ("dropping buffer [t=%" GST_TIME_FORMAT "-%" GST_TIME_FORMAT "], "
+        "offset=%" G_GINT64_FORMAT ", offset_end=%" G_GINT64_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf)),
+        GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf));
     return FALSE;               /* drop buffer */
   }
 
@@ -42,9 +183,10 @@ got_buf (GstElement * fakesink, GstBuffer * buf, GstPad * pad, GList ** p_bufs)
 }
 
 static void
-do_perfect_stream_test (guint rate, guint width, gdouble drop_probability)
+do_perfect_stream_test (guint rate, guint width, gdouble drop_probability,
+    gdouble inject_probability)
 {
-  GstElement *pipe, *src, *conv, *filter, *audiorate, *sink;
+  GstElement *pipe, *src, *conv, *filter, *injector, *audiorate, *sink;
   GstMessage *msg;
   GstCaps *caps;
   GstPad *srcpad;
@@ -59,6 +201,7 @@ do_perfect_stream_test (guint rate, guint width, gdouble drop_probability)
       drop_probability * 100.0, caps);
 
   g_assert (drop_probability >= 0.0 && drop_probability <= 1.0);
+  g_assert (inject_probability >= 0.0 && inject_probability <= 1.0);
   g_assert (width > 0 && (width % 8) == 0);
 
   pipe = gst_pipeline_new ("pipeline");
@@ -77,7 +220,11 @@ do_perfect_stream_test (guint rate, guint width, gdouble drop_probability)
 
   g_object_set (filter, "caps", caps, NULL);
 
-  srcpad = gst_element_get_pad (filter, "src");
+  injector_inject_probability = inject_probability;
+
+  injector = GST_ELEMENT (g_object_new (test_injector_get_type (), NULL));
+
+  srcpad = gst_element_get_pad (injector, "src");
   fail_unless (srcpad != NULL);
   gst_pad_add_buffer_probe (srcpad, G_CALLBACK (probe_cb), &drop_probability);
   gst_object_unref (srcpad);
@@ -92,8 +239,9 @@ do_perfect_stream_test (guint rate, guint width, gdouble drop_probability)
 
   g_signal_connect (sink, "handoff", G_CALLBACK (got_buf), &bufs);
 
-  gst_bin_add_many (GST_BIN (pipe), src, conv, filter, audiorate, sink, NULL);
-  gst_element_link_many (src, conv, filter, audiorate, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipe), src, conv, filter, injector, audiorate,
+      sink, NULL);
+  gst_element_link_many (src, conv, filter, injector, audiorate, sink, NULL);
 
   fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_PLAYING),
       GST_STATE_CHANGE_ASYNC);
@@ -157,8 +305,8 @@ GST_START_TEST (test_perfect_stream_drop0)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
-    do_perfect_stream_test (rates[i], 8, 0.0);
-    do_perfect_stream_test (rates[i], 16, 0.0);
+    do_perfect_stream_test (rates[i], 8, 0.0, 0.0);
+    do_perfect_stream_test (rates[i], 16, 0.0, 0.0);
   }
 }
 
@@ -169,8 +317,8 @@ GST_START_TEST (test_perfect_stream_drop10)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
-    do_perfect_stream_test (rates[i], 8, 0.10);
-    do_perfect_stream_test (rates[i], 16, 0.10);
+    do_perfect_stream_test (rates[i], 8, 0.10, 0.0);
+    do_perfect_stream_test (rates[i], 16, 0.10, 0.0);
   }
 }
 
@@ -181,8 +329,8 @@ GST_START_TEST (test_perfect_stream_drop50)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
-    do_perfect_stream_test (rates[i], 8, 0.50);
-    do_perfect_stream_test (rates[i], 16, 0.50);
+    do_perfect_stream_test (rates[i], 8, 0.50, 0.0);
+    do_perfect_stream_test (rates[i], 16, 0.50, 0.0);
   }
 }
 
@@ -193,12 +341,50 @@ GST_START_TEST (test_perfect_stream_drop90)
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
-    do_perfect_stream_test (rates[i], 8, 0.90);
-    do_perfect_stream_test (rates[i], 16, 0.90);
+    do_perfect_stream_test (rates[i], 8, 0.90, 0.0);
+    do_perfect_stream_test (rates[i], 16, 0.90, 0.0);
   }
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_perfect_stream_inject10)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
+    do_perfect_stream_test (rates[i], 8, 0.0, 0.10);
+    do_perfect_stream_test (rates[i], 16, 0.0, 0.10);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_perfect_stream_inject90)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
+    do_perfect_stream_test (rates[i], 8, 0.0, 0.90);
+    do_perfect_stream_test (rates[i], 16, 0.0, 0.90);
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_perfect_stream_drop45_inject25)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (rates); ++i) {
+    do_perfect_stream_test (rates[i], 8, 0.45, 0.25);
+    do_perfect_stream_test (rates[i], 16, 0.45, 0.25);
+  }
+}
+
+GST_END_TEST;
+
+/* TODO: also do all tests with channels=1 and channels=2 */
 
 static Suite *
 audiorate_suite (void)
@@ -212,6 +398,9 @@ audiorate_suite (void)
   tcase_add_test (tc_chain, test_perfect_stream_drop10);
   tcase_add_test (tc_chain, test_perfect_stream_drop50);
   tcase_add_test (tc_chain, test_perfect_stream_drop90);
+  tcase_add_test (tc_chain, test_perfect_stream_inject10);
+  tcase_add_test (tc_chain, test_perfect_stream_inject90);
+  tcase_add_test (tc_chain, test_perfect_stream_drop45_inject25);
 
   return s;
 }
