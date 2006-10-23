@@ -1,5 +1,22 @@
 2006-10-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/subparse/Makefile.am:
+	* gst/subparse/gstsubparse.c:
+	(gst_sub_parse_data_format_autodetect),
+	(gst_sub_parse_format_autodetect), (handle_buffer),
+	(gst_sub_parse_chain), (gst_subparse_type_find), (plugin_init):
+	* gst/subparse/gstsubparse.h:
+	* gst/subparse/tmplayerparse.c: (tmplayer_parse_line),
+	(parse_tmplayer):
+	* gst/subparse/tmplayerparse.h:
+	  Add support for TMPlayer-type subtitles (#362845).
+
+	* tests/check/elements/subparse.c: (test_tmplayer_do_test),
+	(GST_START_TEST), (subparse_suite):
+	  Add some basic unit tests for the above.
+
+2006-10-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/elements/audiorate.c: (test_injector_base_init),
 	(test_injector_class_init), (test_injector_chain),
 	(test_injector_init), (probe_cb), (do_perfect_stream_test),

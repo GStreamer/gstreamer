@@ -23,6 +23,9 @@
 
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY_EXTERN (sub_parse_debug);
+#define GST_CAT_DEFAULT sub_parse_debug
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_SUBPARSE \
@@ -46,7 +49,8 @@ typedef enum
   GST_SUB_PARSE_FORMAT_MDVDSUB = 1,
   GST_SUB_PARSE_FORMAT_SUBRIP = 2,
   GST_SUB_PARSE_FORMAT_MPSUB = 3,
-  GST_SUB_PARSE_FORMAT_SAMI = 4
+  GST_SUB_PARSE_FORMAT_SAMI = 4,
+  GST_SUB_PARSE_FORMAT_TMPLAYER = 5
 } GstSubParseFormat;
 
 typedef struct {

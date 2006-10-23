@@ -202,6 +202,199 @@ GST_START_TEST (test_srt)
 
 GST_END_TEST;
 
+static void
+test_tmplayer_do_test (SubParseInputChunk * input, guint num)
+{
+  guint n;
+
+  setup_subparse ();
+
+  for (n = 0; n < num; ++n) {
+    GstBuffer *buf;
+
+    buf = buffer_from_static_string (input[n].in);
+    fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  }
+
+  gst_pad_push_event (mysrcpad, gst_event_new_eos ());
+
+  fail_unless_equals_int (g_list_length (buffers), num);
+
+  for (n = 0; n < num; ++n) {
+    const GstStructure *buffer_caps_struct;
+    GstBuffer *buf;
+    gchar *out;
+    guint out_size;
+
+    buf = g_list_nth_data (buffers, n);
+    fail_unless (buf != NULL);
+    fail_unless (GST_BUFFER_TIMESTAMP_IS_VALID (buf), NULL);
+    fail_unless (GST_BUFFER_DURATION_IS_VALID (buf), NULL);
+    fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (buf), input[n].from_ts);
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf),
+        input[n].to_ts - input[n].from_ts);
+    out = (gchar *) GST_BUFFER_DATA (buf);
+    out_size = GST_BUFFER_SIZE (buf);
+    /* shouldn't have trailing newline characters */
+    fail_if (out_size > 0 && out[out_size - 1] == '\n');
+    /* shouldn't include NUL-terminator in data size */
+    fail_if (out_size > 0 && out[out_size - 1] == '\0');
+    /* but should still have a  NUL-terminator behind the declared data */
+    fail_unless_equals_int (out[out_size], '\0');
+    /* make sure out string matches expected string */
+    fail_unless_equals_string (out, input[n].out);
+    /* check caps */
+    fail_unless (GST_BUFFER_CAPS (buf) != NULL);
+    buffer_caps_struct = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+    fail_unless_equals_string (gst_structure_get_name (buffer_caps_struct),
+        "text/plain");
+  }
+
+  teardown_subparse ();
+}
+
+GST_START_TEST (test_tmplayer_multiline)
+{
+  static SubParseInputChunk tmplayer_multiline_input[] = {
+    {
+          "00:00:10,1=This is the Earth at a time\n"
+          "00:00:10,2=when the dinosaurs roamed...\n" "00:00:13,1=\n",
+          10 * GST_SECOND, 13 * GST_SECOND,
+        "This is the Earth at a time\nwhen the dinosaurs roamed..."}, {
+          "00:00:14,1=a lush and fertile planet.\n" "00:00:16,1=\n",
+          14 * GST_SECOND, 16 * GST_SECOND,
+        "a lush and fertile planet."}
+  };
+
+  test_tmplayer_do_test (tmplayer_multiline_input,
+      G_N_ELEMENTS (tmplayer_multiline_input));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_tmplayer_multiline_with_bogus_lines)
+{
+  static SubParseInputChunk tmplayer_multiline_b_input[] = {
+    {
+          "00:00:10,1=This is the Earth at a time\n"
+          "Yooboo wabahablablahuguug bogus line hello test 1-2-3-4\n"
+          "00:00:10,2=when the dinosaurs roamed...\n" "00:00:13,1=\n",
+          10 * GST_SECOND, 13 * GST_SECOND,
+        "This is the Earth at a time\nwhen the dinosaurs roamed..."}, {
+          "00:00:14,1=a lush and fertile planet.\n" "00:00:16,1=\n",
+          14 * GST_SECOND, 16 * GST_SECOND,
+        "a lush and fertile planet."}
+  };
+
+  test_tmplayer_do_test (tmplayer_multiline_b_input,
+      G_N_ELEMENTS (tmplayer_multiline_b_input));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_tmplayer_style1)
+{
+  static SubParseInputChunk tmplayer_style1_input[] = {
+    {
+          "00:00:10:This is the Earth at a time|when the dinosaurs roamed...\n"
+          "00:00:13:\n",
+          10 * GST_SECOND, 13 * GST_SECOND,
+        "This is the Earth at a time\nwhen the dinosaurs roamed..."}, {
+          "00:00:14:a lush and fertile planet.\n" "00:00:16:\n",
+          14 * GST_SECOND, 16 * GST_SECOND,
+        "a lush and fertile planet."}
+  };
+
+  test_tmplayer_do_test (tmplayer_style1_input,
+      G_N_ELEMENTS (tmplayer_style1_input));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_tmplayer_style2)
+{
+  static SubParseInputChunk tmplayer_style2_input[] = {
+    {
+          "00:00:10=This is the Earth at a time|when the dinosaurs roamed...\n"
+          "00:00:13=\n",
+          10 * GST_SECOND, 13 * GST_SECOND,
+        "This is the Earth at a time\nwhen the dinosaurs roamed..."}, {
+          "00:00:14=a lush and fertile planet.\n" "00:00:16=\n",
+          14 * GST_SECOND, 16 * GST_SECOND,
+        "a lush and fertile planet."}
+  };
+
+  test_tmplayer_do_test (tmplayer_style2_input,
+      G_N_ELEMENTS (tmplayer_style2_input));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_tmplayer_style3)
+{
+  static SubParseInputChunk tmplayer_style3_input[] = {
+    {
+          "0:00:10:This is the Earth at a time|when the dinosaurs roamed...\n"
+          "0:00:13:\n",
+          10 * GST_SECOND, 13 * GST_SECOND,
+        "This is the Earth at a time\nwhen the dinosaurs roamed..."}, {
+          "0:00:14:a lush and fertile planet.\n" "0:00:16:\n",
+          14 * GST_SECOND, 16 * GST_SECOND,
+        "a lush and fertile planet."}
+  };
+
+  test_tmplayer_do_test (tmplayer_style3_input,
+      G_N_ELEMENTS (tmplayer_style3_input));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_tmplayer_style4)
+{
+  static SubParseInputChunk tmplayer_style4_input[] = {
+    {
+          "0:00:10=This is the Earth at a time|when the dinosaurs roamed...\n"
+          "0:00:13=\n",
+          10 * GST_SECOND, 13 * GST_SECOND,
+        "This is the Earth at a time\nwhen the dinosaurs roamed..."}, {
+          "0:00:14=a lush and fertile planet.\n" "0:00:16=\n",
+          14 * GST_SECOND, 16 * GST_SECOND,
+        "a lush and fertile planet."}
+  };
+
+  test_tmplayer_do_test (tmplayer_style4_input,
+      G_N_ELEMENTS (tmplayer_style4_input));
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_tmplayer_style4_with_bogus_lines)
+{
+  static SubParseInputChunk tmplayer_style4b_input[] = {
+    {
+          "0:00:10=This is the Earth at a time|when the dinosaurs roamed...\n"
+          "# This is a bogus line with a comment and should just be skipped\n"
+          "0:00:13=\n",
+          10 * GST_SECOND, 13 * GST_SECOND,
+        "This is the Earth at a time\nwhen the dinosaurs roamed..."}, {
+          "0:00:14=a lush and fertile planet.\n"
+          "                                                            \n"
+          "0:00:16=\n",
+          14 * GST_SECOND, 16 * GST_SECOND,
+        "a lush and fertile planet."}
+  };
+
+  test_tmplayer_do_test (tmplayer_style4b_input,
+      G_N_ELEMENTS (tmplayer_style4b_input));
+}
+
+GST_END_TEST;
+
+/* TODO:
+ *  - add/modify tests so that lines aren't dogfed to the parsers in complete
+ *    lines or sets of complete lines, but rather in random chunks
+ */
+
 static Suite *
 subparse_suite (void)
 {
@@ -211,7 +404,13 @@ subparse_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_srt);
-
+  tcase_add_test (tc_chain, test_tmplayer_multiline);
+  tcase_add_test (tc_chain, test_tmplayer_multiline_with_bogus_lines);
+  tcase_add_test (tc_chain, test_tmplayer_style1);
+  tcase_add_test (tc_chain, test_tmplayer_style2);
+  tcase_add_test (tc_chain, test_tmplayer_style3);
+  tcase_add_test (tc_chain, test_tmplayer_style4);
+  tcase_add_test (tc_chain, test_tmplayer_style4_with_bogus_lines);
   return s;
 }
 

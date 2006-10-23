@@ -31,9 +31,9 @@
 #include "gstsubparse.h"
 #include "gstssaparse.h"
 #include "samiparse.h"
+#include "tmplayerparse.h"
 
-GST_DEBUG_CATEGORY_STATIC (sub_parse_debug);
-#define GST_CAT_DEFAULT sub_parse_debug
+GST_DEBUG_CATEGORY (sub_parse_debug);
 
 #define DEFAULT_ENCODING   NULL
 
@@ -62,7 +62,8 @@ GST_ELEMENT_DETAILS ("Subtitle parser",
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-sami")
+    GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-sami; "
+        "application/x-subtitle-tmplayer")
     );
 #else
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -754,6 +755,7 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
   static gboolean need_init_regexps = TRUE;
   static regex_t mdvd_rx;
   static regex_t subrip_rx;
+  guint n1, n2, n3;
 
   /* initialize the regexps used the first time around */
   if (need_init_regexps) {
@@ -788,6 +790,15 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
       strstr (match_str, "<sami>") != NULL) {
     GST_LOG ("SAMI (time based) format detected");
     return GST_SUB_PARSE_FORMAT_SAMI;
+  }
+  /* we're boldly assuming the first subtitle appears within the first hour */
+  if (sscanf (match_str, "0:%02u:%02u:", &n1, &n2) == 2 ||
+      sscanf (match_str, "0:%02u:%02u=", &n1, &n2) == 2 ||
+      sscanf (match_str, "00:%02u:%02u:", &n1, &n2) == 2 ||
+      sscanf (match_str, "00:%02u:%02u=", &n1, &n2) == 2 ||
+      sscanf (match_str, "00:%02u:%02u,%u=", &n1, &n2, &n3) == 3) {
+    GST_LOG ("TMPlayer (time based) format detected");
+    return GST_SUB_PARSE_FORMAT_TMPLAYER;
   }
 
   GST_DEBUG ("no subtitle format detected");
@@ -826,6 +837,9 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
       self->parse_line = parse_sami;
       sami_context_init (&self->state);
       return gst_caps_new_simple ("text/x-pango-markup", NULL);
+    case GST_SUB_PARSE_FORMAT_TMPLAYER:
+      self->parse_line = parse_tmplayer;
+      return gst_caps_new_simple ("text/plain", NULL);
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
     default:
       GST_DEBUG ("no subtitle format detected");
@@ -878,7 +892,7 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
     /* Set segment on our parser state machine */
     self->state.segment = self->segment;
     /* Now parse the line, out of segment lines will just return NULL */
-    GST_DEBUG ("Parsing line '%s'", line);
+    GST_LOG_OBJECT (self, "Parsing line '%s'", line);
     subtitle = self->parse_line (&self->state, line);
     g_free (line);
 
@@ -900,7 +914,7 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
         gst_segment_set_last_stop (self->segment, GST_FORMAT_TIME,
             self->state.start_time);
 
-        GST_DEBUG ("Sending text '%s', %" GST_TIME_FORMAT " + %"
+        GST_DEBUG_OBJECT (self, "Sending text '%s', %" GST_TIME_FORMAT " + %"
             GST_TIME_FORMAT, subtitle, GST_TIME_ARGS (self->state.start_time),
             GST_TIME_ARGS (self->state.duration));
 
@@ -924,8 +938,7 @@ gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf)
   GstFlowReturn ret;
   GstSubParse *self;
 
-  GST_DEBUG ("gst_sub_parse_chain");
-  self = GST_SUBPARSE (gst_pad_get_parent (sinkpad));
+  self = GST_SUBPARSE (GST_PAD_PARENT (sinkpad));
 
   /* Push newsegment if needed */
   if (self->need_segment) {
@@ -937,8 +950,6 @@ gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf)
   }
 
   ret = handle_buffer (self, buf);
-
-  gst_object_unref (self);
 
   return ret;
 }
@@ -1052,11 +1063,16 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
  * Typefind support.
  */
 
+/* FIXME 0.11: these caps are ugly, use app/x-subtitle + type field or so;
+ * also, give different  subtitle formats really different types */
+static GstStaticCaps tmp_caps =
+GST_STATIC_CAPS ("application/x-subtitle-tmplayer");
 static GstStaticCaps smi_caps = GST_STATIC_CAPS ("application/x-subtitle-sami");
 static GstStaticCaps sub_caps = GST_STATIC_CAPS ("application/x-subtitle");
 
 #define SUB_CAPS (gst_static_caps_get (&sub_caps))
 #define SAMI_CAPS (gst_static_caps_get (&smi_caps))
+#define TMP_CAPS (gst_static_caps_get (&tmp_caps))
 
 static void
 gst_subparse_type_find (GstTypeFind * tf, gpointer private)
@@ -1091,6 +1107,10 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
       GST_DEBUG ("SAMI (time-based) format detected");
       caps = SAMI_CAPS;
       break;
+    case GST_SUB_PARSE_FORMAT_TMPLAYER:
+      GST_DEBUG ("TMPlayer (time based) format detected");
+      caps = TMP_CAPS;
+      break;
     default:
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
       GST_DEBUG ("no subtitle format detected");
@@ -1104,7 +1124,9 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  static gchar *sub_exts[] = { "srt", "sub", "mpsub", "mdvd", "smi", NULL };
+  static gchar *sub_exts[] = { "srt", "sub", "mpsub", "mdvd", "smi", "txt",
+    NULL
+  };
 
   GST_DEBUG_CATEGORY_INIT (sub_parse_debug, "subparse", 0, ".sub parser");
 
