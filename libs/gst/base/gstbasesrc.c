@@ -1781,6 +1781,8 @@ gst_base_src_start (GstBaseSrc * basesrc)
     /* only update the size when operating in bytes, subclass is supposed
      * to set duration in the start method for other formats */
     gst_segment_set_duration (&basesrc->segment, GST_FORMAT_BYTES, size);
+  } else {
+    size = -1;
   }
 
   GST_DEBUG_OBJECT (basesrc,
