@@ -83,6 +83,14 @@ void    gst_video_test_src_green        (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
 void    gst_video_test_src_blue         (GstVideoTestSrc * v,
                                          unsigned char *dest, int w, int h);
+void    gst_video_test_src_checkers1    (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_checkers2    (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_checkers4    (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
+void    gst_video_test_src_checkers8    (GstVideoTestSrc * v,
+                                         unsigned char *dest, int w, int h);
 
 extern struct fourcc_list_struct fourcc_list[];
 extern int n_fourccs;

@@ -745,6 +745,162 @@ gst_video_test_src_blue (GstVideoTestSrc * v, guchar * dest, int w, int h)
   gst_video_test_src_unicolor (v, dest, w, h, vts_colors + COLOR_BLUE);
 }
 
+void
+gst_video_test_src_checkers1 (GstVideoTestSrc * v, guchar * dest, int w, int h)
+{
+  int x, y;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  for (y = 0; y < h; y++) {
+    p->color = vts_colors + COLOR_GREEN;
+    p->paint_hline (p, 0, y, w);
+    for (x = (y % 2); x < w; x += 2) {
+      p->color = vts_colors + COLOR_RED;
+      p->paint_hline (p, x, y, 1);
+    }
+  }
+}
+
+void
+gst_video_test_src_checkers2 (GstVideoTestSrc * v, guchar * dest, int w, int h)
+{
+  int x, y;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  p->color = vts_colors + COLOR_GREEN;
+  for (y = 0; y < h; y++) {
+    p->paint_hline (p, 0, y, w);
+  }
+
+  for (y = 0; y < h; y += 2) {
+    for (x = ((y % 4) == 0) ? 0 : 2; x < w; x += 4) {
+      guint len = (x < (w - 1)) ? 2 : (w - x);
+
+      p->color = vts_colors + COLOR_RED;
+      p->paint_hline (p, x, y + 0, len);
+      if (G_LIKELY ((y + 1) < h)) {
+        p->paint_hline (p, x, y + 1, len);
+      }
+    }
+  }
+}
+
+void
+gst_video_test_src_checkers4 (GstVideoTestSrc * v, guchar * dest, int w, int h)
+{
+  int x, y;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  p->color = vts_colors + COLOR_GREEN;
+  for (y = 0; y < h; y++) {
+    p->paint_hline (p, 0, y, w);
+  }
+
+  for (y = 0; y < h; y += 4) {
+    for (x = ((y % 8) == 0) ? 0 : 4; x < w; x += 8) {
+      guint len = (x < (w - 3)) ? 4 : (w - x);
+
+      p->color = vts_colors + COLOR_RED;
+      p->paint_hline (p, x, y + 0, len);
+      if (G_LIKELY ((y + 1) < h)) {
+        p->paint_hline (p, x, y + 1, len);
+        if (G_LIKELY ((y + 2) < h)) {
+          p->paint_hline (p, x, y + 2, len);
+          if (G_LIKELY ((y + 3) < h)) {
+            p->paint_hline (p, x, y + 3, len);
+          }
+        }
+      }
+    }
+  }
+}
+
+void
+gst_video_test_src_checkers8 (GstVideoTestSrc * v, guchar * dest, int w, int h)
+{
+  int x, y;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  p->color = vts_colors + COLOR_GREEN;
+  for (y = 0; y < h; y++) {
+    p->paint_hline (p, 0, y, w);
+  }
+
+  for (y = 0; y < h; y += 8) {
+    for (x = ((GST_ROUND_UP_8 (y) % 16) == 0) ? 0 : 8; x < w; x += 16) {
+      guint len = (x < (w - 7)) ? 8 : (w - x);
+
+      p->color = vts_colors + COLOR_RED;
+      p->paint_hline (p, x, y + 0, len);
+      if (G_LIKELY ((y + 1) < h)) {
+        p->paint_hline (p, x, y + 1, len);
+        if (G_LIKELY ((y + 2) < h)) {
+          p->paint_hline (p, x, y + 2, len);
+          if (G_LIKELY ((y + 3) < h)) {
+            p->paint_hline (p, x, y + 3, len);
+            if (G_LIKELY ((y + 4) < h)) {
+              p->paint_hline (p, x, y + 4, len);
+              if (G_LIKELY ((y + 5) < h)) {
+                p->paint_hline (p, x, y + 5, len);
+                if (G_LIKELY ((y + 6) < h)) {
+                  p->paint_hline (p, x, y + 6, len);
+                  if (G_LIKELY ((y + 7) < h)) {
+                    p->paint_hline (p, x, y + 7, len);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 static void
 paint_setup_I420 (paintinfo * p, unsigned char *dest)
 {

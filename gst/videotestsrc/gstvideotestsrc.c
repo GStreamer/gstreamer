@@ -109,6 +109,10 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_RED, "Red", "red"},
     {GST_VIDEO_TEST_SRC_GREEN, "Green", "green"},
     {GST_VIDEO_TEST_SRC_BLUE, "Blue", "blue"},
+    {GST_VIDEO_TEST_SRC_CHECKERS1, "Checkers 1px", "checkers-1"},
+    {GST_VIDEO_TEST_SRC_CHECKERS2, "Checkers 2px", "checkers-2"},
+    {GST_VIDEO_TEST_SRC_CHECKERS4, "Checkers 4px", "checkers-4"},
+    {GST_VIDEO_TEST_SRC_CHECKERS8, "Checkers 8px", "checkers-8"},
     {0, NULL, NULL}
   };
 
@@ -226,6 +230,18 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
       break;
     case GST_VIDEO_TEST_SRC_BLUE:
       videotestsrc->make_image = gst_video_test_src_blue;
+      break;
+    case GST_VIDEO_TEST_SRC_CHECKERS1:
+      videotestsrc->make_image = gst_video_test_src_checkers1;
+      break;
+    case GST_VIDEO_TEST_SRC_CHECKERS2:
+      videotestsrc->make_image = gst_video_test_src_checkers2;
+      break;
+    case GST_VIDEO_TEST_SRC_CHECKERS4:
+      videotestsrc->make_image = gst_video_test_src_checkers4;
+      break;
+    case GST_VIDEO_TEST_SRC_CHECKERS8:
+      videotestsrc->make_image = gst_video_test_src_checkers8;
       break;
     default:
       g_assert_not_reached ();

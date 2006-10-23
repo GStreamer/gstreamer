@@ -1,5 +1,17 @@
 2006-10-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/videotestsrc/gstvideotestsrc.c:
+	(gst_video_test_src_pattern_get_type),
+	(gst_video_test_src_set_pattern):
+	* gst/videotestsrc/gstvideotestsrc.h:
+	* gst/videotestsrc/videotestsrc.c: (gst_video_test_src_checkers1),
+	(gst_video_test_src_checkers2), (gst_video_test_src_checkers4),
+	(gst_video_test_src_checkers8):
+	* gst/videotestsrc/videotestsrc.h:
+	  Add a bunch of exciting new checkers patterns.
+
+2006-10-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/subparse/Makefile.am:
 	* gst/subparse/gstsubparse.c:
 	(gst_sub_parse_data_format_autodetect),

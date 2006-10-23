@@ -46,6 +46,10 @@ G_BEGIN_DECLS
  * @GST_VIDEO_TEST_SRC_RED: A red image
  * @GST_VIDEO_TEST_SRC_GREEN: A green image
  * @GST_VIDEO_TEST_SRC_BLUE: A blue image
+ * @GST_VIDEO_TEST_SRC_CHECKERS1: Checkers pattern (1px)
+ * @GST_VIDEO_TEST_SRC_CHECKERS2: Checkers pattern (2px)
+ * @GST_VIDEO_TEST_SRC_CHECKERS4: Checkers pattern (4px)
+ * @GST_VIDEO_TEST_SRC_CHECKERS8: Checkers pattern (8px)
  *
  * The test pattern to produce.
  */
@@ -56,7 +60,11 @@ typedef enum {
   GST_VIDEO_TEST_SRC_WHITE,
   GST_VIDEO_TEST_SRC_RED,
   GST_VIDEO_TEST_SRC_GREEN,
-  GST_VIDEO_TEST_SRC_BLUE
+  GST_VIDEO_TEST_SRC_BLUE,
+  GST_VIDEO_TEST_SRC_CHECKERS1,
+  GST_VIDEO_TEST_SRC_CHECKERS2,
+  GST_VIDEO_TEST_SRC_CHECKERS4,
+  GST_VIDEO_TEST_SRC_CHECKERS8
 } GstVideoTestSrcPattern;
 
 typedef struct _GstVideoTestSrc GstVideoTestSrc;
@@ -69,6 +77,8 @@ typedef struct _GstVideoTestSrcClass GstVideoTestSrcClass;
  */
 struct _GstVideoTestSrc {
   GstPushSrc element;
+
+  /*< private >*/
 
   /* type of output */
   GstVideoTestSrcPattern pattern_type;
