@@ -1,5 +1,17 @@
 2006-10-23  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-events.txt:
+	Update some docs.
+
+	* docs/design/part-block.txt:
+	* gst/gstpad.c: (gst_pad_is_blocking), (handle_pad_block),
+	(gst_pad_push_event):
+	Revert BLOCKING patch, it tries to be smart without really having a
+	clear idea what or how. So, now we discard all FLUSHING events again on
+	a blocking pad. Should fix gnonlin again.
+
+2006-10-23  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Sergey Scobich <sergey dot scobich at gmail dot com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_wait_playing),

@@ -1068,9 +1068,7 @@ gst_pad_is_blocking (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), result);
 
   GST_OBJECT_LOCK (pad);
-
   /* the blocking flag is only valid if the pad is not flushing */
-
   result = GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_BLOCKING) &&
       !GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLUSHING);
   GST_OBJECT_UNLOCK (pad);
@@ -3210,9 +3208,7 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
  *   the pad block happens.
  *
  * During the actual blocking state, the GST_PAD_BLOCKING flag is set.
- * The GST_PAD_BLOCKING flag is unset when the pad was unblocked without a
- * flush. This is to know whether the pad was blocking when GST_PAD_FLUSHING
- * was set.
+ * The GST_PAD_BLOCKING flag is unset when the pad was unblocked.
  *
  * MT safe.
  */
@@ -3271,14 +3267,11 @@ handle_pad_block (GstPad * pad)
         "Waiting to be unblocked or set flushing");
     GST_OBJECT_FLAG_SET (pad, GST_PAD_BLOCKING);
     GST_PAD_BLOCK_WAIT (pad);
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKING);
 
-    /* see if we got unlocked by a flush or not */
+    /* see if we got unblocked by a flush or not */
     if (GST_PAD_IS_FLUSHING (pad))
       goto flushing;
-
-    /* If we made it here we were unblocked and not flushing, remove the
-     * blocking flag now. */
-    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKING);
   }
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "got unblocked");
@@ -3880,10 +3873,12 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_START:
       GST_PAD_SET_FLUSHING (pad);
 
-      if (G_UNLIKELY (GST_PAD_IS_BLOCKING (pad))) {
+      if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
         /* flush start will have set the FLUSHING flag and will then
          * unlock all threads doing a GCond wait on the blocking pad. This
          * will typically unblock the STREAMING thread blocked on a pad. */
+        GST_LOG_OBJECT (pad, "Pad is blocked, not forwarding flush-start, "
+            "doing block signal.");
         GST_PAD_BLOCK_SIGNAL (pad);
         goto flushed;
       }
@@ -3891,13 +3886,9 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       GST_PAD_UNSET_FLUSHING (pad);
 
-      /* If pad was blocking on something when the pad received flush-start, the 
-       * BLOCKING flag was never cleared. we don't forward the flush-stop event
-       * either then but unset the blocking flag. */
-      if (G_UNLIKELY (GST_PAD_IS_BLOCKING (pad))) {
-        GST_OBJECT_FLAG_UNSET (pad, GST_PAD_BLOCKING);
-        GST_LOG_OBJECT (pad,
-            "Pad was previously blocking, not forwarding flush-stop");
+      /* if we are blocked, flush away the FLUSH_STOP event */
+      if (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad))) {
+        GST_LOG_OBJECT (pad, "Pad is blocked, not forwarding flush-stop");
         goto flushed;
       }
       break;

@@ -69,19 +69,9 @@ Flushing
  is blocking somewhere downstream, the callback is not called or the sync block
  does not return.
 
- In order for the block to happen, a FLUSH_START needs to be:
- _ either sent directly on the downstream blocking element/pad so that it
-   release the stream lock, and it gives a chance for the elem1.src pad to
-   block.
- _ A FLUSH_START is sent downstream from an upstream element, causing all the
-   pads down to the blocking element/pad (including elem1.src) to go to the
-   FLUSHING state. A FLUSH_STOP can now be sent downstream, causing all the
-   pads down to the previously blocking element to unset their FLUSHING state.
-   The next push will then properly block on elem1.src.
-
- In this case, the pads have to be careful when handling the FLUSH events
- forwarding. Those events should only be forwarded downstream is the BLOCKED
- pad was previously BLOCKING.
+ In order for the block to happen, a FLUSH_START needs to be sent directly on
+ the downstream blocking element/pad so that it releases the stream lock, and it
+ gives a chance for the elem1.src pad to block.
 
 
 Use cases:
