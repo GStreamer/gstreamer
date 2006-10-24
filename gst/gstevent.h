@@ -253,7 +253,8 @@ typedef enum {
  *		       faster but less accurate.
  * @GST_SEEK_FLAG_SEGMENT: perform a segment seek.
  *
- * Flags to be used with gst_element_seek() or gst_event_new_seek()
+ * Flags to be used with gst_element_seek() or gst_event_new_seek(). All flags
+ * can be used together.
  *
  * A non flushing seek might take some time to perform as the currently
  * playing data in the pipeline will not be cleared.

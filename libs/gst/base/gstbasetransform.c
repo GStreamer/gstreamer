@@ -1263,6 +1263,9 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
 
       trans->have_newsegment = TRUE;
 
+      gst_segment_set_newsegment_full (&trans->segment, update, rate, arate,
+          format, start, stop, time);
+
       if (format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (trans, "received TIME NEW_SEGMENT %" GST_TIME_FORMAT
             " -- %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT
@@ -1278,9 +1281,6 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
             trans->segment.start, trans->segment.stop,
             trans->segment.time, trans->segment.accum);
       }
-
-      gst_segment_set_newsegment_full (&trans->segment, update, rate, arate,
-          format, start, stop, time);
       break;
     }
     default:

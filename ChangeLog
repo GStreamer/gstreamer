@@ -1,3 +1,13 @@
+2006-10-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstevent.h:
+	Add small comment.
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_sink_eventfunc):
+	Debug segment values *after* updating them as this is more
+	interesting.
+
 2006-10-23  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-events.txt:
