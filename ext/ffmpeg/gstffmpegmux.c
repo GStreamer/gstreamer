@@ -374,16 +374,31 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       }
       /* set framerate for audio */
       if (st->codec->codec_type == CODEC_TYPE_AUDIO) {
-        GstBuffer *buffer;
-
-        buffer = gst_collect_pads_peek (ffmpegmux->collect,
-                     (GstCollectData *)collect_pad);
-        if (buffer) {
-          st->codec->frame_size =
-              st->codec->sample_rate *
-              GST_BUFFER_DURATION (buffer) / GST_SECOND;
-          gst_buffer_unref (buffer);
-        }
+	switch (st->codec->codec_id) {
+	case CODEC_ID_PCM_S16LE:
+	case CODEC_ID_PCM_S16BE:
+	case CODEC_ID_PCM_U16LE:
+	case CODEC_ID_PCM_U16BE:
+	case CODEC_ID_PCM_S8:
+	case CODEC_ID_PCM_U8:
+	  st->codec->frame_size = 1;
+	  break;
+	default:
+	  {
+	    GstBuffer *buffer;
+	    
+	    /* FIXME : This doesn't work for RAW AUDIO...
+	    * in fact I'm wondering if it even works for any kind of audio... */
+	    buffer = gst_collect_pads_peek (ffmpegmux->collect,
+					    (GstCollectData *)collect_pad);
+	    if (buffer) {
+	      st->codec->frame_size =
+		st->codec->sample_rate *
+		GST_BUFFER_DURATION (buffer) / GST_SECOND;
+	      gst_buffer_unref (buffer);
+	    }
+	  }
+	}
       }
     }
 
@@ -521,7 +536,7 @@ next_pad:
       pkt.flags |= PKT_FLAG_KEY;
 
     if (GST_BUFFER_DURATION_IS_VALID (buf))
-      pkt.duration = GST_BUFFER_DURATION (buf) * AV_TIME_BASE / GST_SECOND;
+      pkt.duration = gst_util_uint64_scale_int(GST_BUFFER_DURATION (buf), AV_TIME_BASE, GST_SECOND);
     else
       pkt.duration = 0;
     av_write_frame (ffmpegmux->context, &pkt);
