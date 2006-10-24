@@ -1,3 +1,8 @@
+2006-10-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-ffmpeg.spec.in:
+	  Build with -O1 by default since otherwise assembler breaks
+
 2006-10-24  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcfg.c:
@@ -10,12 +15,6 @@
 	(gst_ffmpegenc_init):
 	Use EPZS (Enhanced Predictive Zonal Search) as the default motion
 	estimation method, since it's the best quality to speed compromise.
-
-2006-10-20  Thomas Vander Stichele  <thomas at apestaart dot org>
-
-	reviewed by: <delete if not using a buddy>
-
-	* gst-ffmpeg.spec.in:
 
 2006-10-20  Mark Nauwelaerts <manauw@skynet.be>
 

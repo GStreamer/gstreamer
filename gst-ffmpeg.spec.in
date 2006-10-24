@@ -38,7 +38,7 @@ multimedia formats.
 %build
 %configure
 
-make %{?_smp_mflags} CFLAGS=-Wno-error
+make %{?_smp_mflags} CFLAGS="-Wno-error -O1"
 
 %install
 rm -rf $RPM_BUILD_ROOT
