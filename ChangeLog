@@ -1,3 +1,16 @@
+2006-10-24  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcfg.c:
+	FLV is in fact h263 and can take the same parameters as other mpeg
+	derivatives.
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid):
+	Add pixel format to video/x-dv,systemstream=False
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_class_init),
+	(gst_ffmpegenc_init):
+	Use EPZS (Enhanced Predictive Zonal Search) as the default motion
+	estimation method, since it's the best quality to speed compromise.
+
 2006-10-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	reviewed by: <delete if not using a buddy>

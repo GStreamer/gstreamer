@@ -188,7 +188,7 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
             DEFAULT_VIDEO_GOP_SIZE, G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ME_METHOD,
         g_param_spec_enum ("me_method", "ME Method", "Motion Estimation Method",
-            GST_TYPE_ME_METHOD, ME_LOG, G_PARAM_READWRITE));
+            GST_TYPE_ME_METHOD, ME_EPZS, G_PARAM_READWRITE));
     g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
         g_param_spec_ulong ("buffer_size", "Buffer Size",
             "Size of the video buffers", 0, G_MAXULONG, 0, G_PARAM_READWRITE));
@@ -238,6 +238,7 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
     gst_pad_set_event_function (ffmpegenc->sinkpad, gst_ffmpegenc_event_video);
 
     ffmpegenc->bitrate = DEFAULT_VIDEO_BITRATE;
+    ffmpegenc->me_method = ME_EPZS;
     ffmpegenc->buffer_size = 512 * 1024;
     ffmpegenc->gop_size = DEFAULT_VIDEO_GOP_SIZE;
     ffmpegenc->rtp_payload_size = 0;

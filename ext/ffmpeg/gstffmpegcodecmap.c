@@ -398,9 +398,41 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_DVVIDEO:
-      caps = gst_ff_vid_caps_new (context, "video/x-dv",
-          "systemstream", G_TYPE_BOOLEAN, FALSE,
-          NULL);
+      {
+	if (encode && context) {
+	  guint32 fourcc;
+
+	  switch (context->pix_fmt) {
+	  case PIX_FMT_YUV422:
+	    fourcc = GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
+	    break;
+	  case PIX_FMT_YUV420P:
+	    fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
+	    break;
+	  case PIX_FMT_YUV411P:
+	    fourcc = GST_MAKE_FOURCC ('Y', '4', '1', 'B');
+	    break;
+	  case PIX_FMT_YUV422P:
+	    fourcc = GST_MAKE_FOURCC ('Y', '4', '2', 'B');
+	    break;
+	  case PIX_FMT_YUV410P:
+	    fourcc = GST_MAKE_FOURCC ('Y', 'U', 'V', '9');
+	    break;
+	  default:
+	    GST_WARNING ("Couldnt' find fourcc for pixfmt %d, defaulting to I420", context->pix_fmt);
+	    fourcc = GST_MAKE_FOURCC ('I', '4', '2', '0');
+	    break;
+	  }
+	  caps = gst_ff_vid_caps_new (context, "video/x-dv",
+				      "systemstream", G_TYPE_BOOLEAN, FALSE,
+				      "format", GST_TYPE_FOURCC, fourcc,
+				      NULL);
+	} else {
+	  caps = gst_ff_vid_caps_new (context, "video/x-dv",
+				      "systemstream", G_TYPE_BOOLEAN, FALSE,
+				      NULL);
+	}
+      }
       break;
 
     case CODEC_ID_WMAV1:
@@ -1531,6 +1563,34 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
       gst_structure_get_int (str, "samplesize", &context->bits_per_sample);
       break;
 
+  case CODEC_ID_DVVIDEO:
+    {
+      guint32 fourcc;
+      
+      if (gst_structure_get_fourcc (str, "format", &fourcc))
+	switch (fourcc) {
+	case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+	  context->pix_fmt = PIX_FMT_YUV422;
+	  break;
+	case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+	  context->pix_fmt = PIX_FMT_YUV420P;
+	  break;
+	case GST_MAKE_FOURCC ('Y', '4', '1', 'B'):
+	  context->pix_fmt = PIX_FMT_YUV411P;
+	  break;
+	case GST_MAKE_FOURCC ('Y', '4', '2', 'B'):
+	  context->pix_fmt = PIX_FMT_YUV422P;
+	  break;
+	case GST_MAKE_FOURCC ('Y', 'U', 'V', '9'):
+	  context->pix_fmt = PIX_FMT_YUV410P;
+	  break;
+	default:
+	  GST_WARNING ("couldn't convert fourcc %"GST_FOURCC_FORMAT" to a pixel format",
+		       GST_FOURCC_ARGS(fourcc));
+	  break;
+	}
+    }
+    
     default:
       break;
   }
