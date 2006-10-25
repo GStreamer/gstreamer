@@ -845,11 +845,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_AMR_NB:
-      caps = gst_ff_aud_caps_new (context, "audio/x-amr-nb", NULL);
+      caps = gst_ff_aud_caps_new (context, "audio/AMR", NULL);
       break;
 
     case CODEC_ID_AMR_WB:
-      caps = gst_ff_aud_caps_new (context, "audio/x-amr-wb", NULL);
+      caps = gst_ff_aud_caps_new (context, "audio/AMR-WB", NULL);
       break;
 
     case CODEC_ID_RA_144:
@@ -2228,10 +2228,10 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
           break;
       }
     }
-  } else if (!strcmp (mimetype, "audio/x-amrnb")) {
+  } else if (!strcmp (mimetype, "audio/AMR")) {
     audio = TRUE;
     id = CODEC_ID_AMR_NB;
-  } else if (!strcmp (mimetype, "audio/x-amrwb")) {
+  } else if (!strcmp (mimetype, "audio/AMR-WB")) {
     id = CODEC_ID_AMR_WB;
     audio = TRUE;
   } else if (!strcmp (mimetype, "video/x-h264")) {

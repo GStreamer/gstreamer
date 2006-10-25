@@ -867,6 +867,8 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
 
   demux->streams[avstream->index] = stream;
 
+  /* activate and add */
+  gst_pad_set_active (pad, TRUE);
   gst_element_add_pad (GST_ELEMENT (demux), pad);
 
   /* metadata */
