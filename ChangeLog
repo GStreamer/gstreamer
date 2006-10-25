@@ -1,3 +1,9 @@
+2006-10-25  Edward Hervey  <edward@fluendo.com>
+
+	* libs/gst/base/gstbasetransform.c: (gst_base_transform_chain):
+	Don't push the buffer if it's empty.
+	Closes #363095
+
 2006-10-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstevent.h:
