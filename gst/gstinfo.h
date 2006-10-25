@@ -887,7 +887,7 @@ GST_LOG (const char *format, ...)
 
 typedef	void (* GstDebugFuncPtr)	(void);
 void	_gst_debug_register_funcptr	(GstDebugFuncPtr	func,
-					 gchar *		ptrname);
+					 const gchar *		ptrname);
 G_CONST_RETURN gchar *
 	_gst_debug_nameof_funcptr	(GstDebugFuncPtr	func);
 

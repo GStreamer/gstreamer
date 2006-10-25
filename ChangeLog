@@ -1,3 +1,11 @@
+2006-10-25  David Schleef  <ds@schleef.org>
+
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	  Change name parameter of _gst_debug_register_funcptr to const
+	  to reflect the constness of its use in the function as well
+	  as to quiet a gcc warning.
+
 2006-10-25  Edward Hervey  <edward@fluendo.com>
 
 	* libs/gst/base/gstbasetransform.c: (gst_base_transform_chain):

@@ -1249,7 +1249,7 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr ptr)
 }
 
 void
-_gst_debug_register_funcptr (GstDebugFuncPtr func, gchar * ptrname)
+_gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
 {
   gpointer ptr = (gpointer) func;
 
