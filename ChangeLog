@@ -1,3 +1,13 @@
+2006-10-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/riff-read.c: (freeform_string_to_utf8),
+	(gst_riff_parse_info):
+	  If strings in INFO chunk are not UTF-8, do something similar to
+	  what we do for ID3v1 tags: check a number of environment variables
+	  (GST_AVI_TAG_ENCODING, GST_RIFF_TAG_ENCODING, GST_TAG_ENCODING) for
+	  character sets to try, otherwise try the current locale and/or fall
+	  back on ISO-8859-1. Fixes #360552.
+
 2006-10-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videotestsrc/gstvideotestsrc.c:

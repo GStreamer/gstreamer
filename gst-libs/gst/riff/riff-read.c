@@ -577,6 +577,78 @@ too_small:
   }
 }
 
+static gchar *
+freeform_string_to_utf8 (const gchar * data, gint size, const gchar ** env_vars)
+{
+  const gchar *env = NULL;
+  gsize bytes_read;
+  gchar *utf8 = NULL;
+
+  g_return_val_if_fail (data != NULL, NULL);
+
+  if (size < 0)
+    size = strlen (data);
+
+  /* Should we try the charsets specified
+   * via environment variables FIRST ? */
+  if (g_utf8_validate (data, size, NULL))
+    return g_strndup (data, size);
+
+  while ((env == NULL || *env == '\0') && env_vars && *env_vars != NULL) {
+    env = g_getenv (*env_vars);
+    ++env_vars;
+  }
+
+  /* Try charsets specified via the environment */
+  if (env != NULL && *env != '\0') {
+    gchar **c, **csets;
+
+    csets = g_strsplit (env, G_SEARCHPATH_SEPARATOR_S, -1);
+
+    for (c = csets; c && *c; ++c) {
+      if ((utf8 = g_convert (data, size, "UTF-8", *c, &bytes_read, NULL, NULL))) {
+        if (bytes_read == size) {
+          g_strfreev (csets);
+          goto beach;
+        }
+        g_free (utf8);
+        utf8 = NULL;
+      }
+    }
+
+    g_strfreev (csets);
+  }
+
+  /* Try current locale (if not UTF-8) */
+  if (!g_get_charset (&env)) {
+    if ((utf8 = g_locale_to_utf8 (data, size, &bytes_read, NULL, NULL))) {
+      if (bytes_read == size) {
+        goto beach;
+      }
+      g_free (utf8);
+      utf8 = NULL;
+    }
+  }
+
+  /* Try ISO-8859-1 */
+  utf8 = g_convert (data, size, "UTF-8", "ISO-8859-1", &bytes_read, NULL, NULL);
+  if (utf8 != NULL && bytes_read == size) {
+    goto beach;
+  }
+
+  g_free (utf8);
+  return NULL;
+
+beach:
+
+  g_strchomp (utf8);
+  if (utf8 && utf8[0] != '\0')
+    return utf8;
+
+  g_free (utf8);
+  return NULL;
+}
+
 /**
  * gst_riff_parse_info:
  * @element: caller element (used for debugging/error).
@@ -595,9 +667,7 @@ gst_riff_parse_info (GstElement * element,
   guint size, tsize;
   guint32 tag;
   const gchar *type;
-  gchar *name;
   GstTagList *taglist;
-  gboolean have_tags = FALSE;
 
   g_return_if_fail (_taglist != NULL);
   g_return_if_fail (buf != NULL);
@@ -700,17 +770,19 @@ gst_riff_parse_info (GstElement * element,
         break;
     }
 
-    if (type) {
-      if (data[0] != '\0') {
-        /* read, NULL-terminate */
-        name = g_new (gchar, tsize + 1);
-        name[tsize] = '\0';
-        memcpy (name, data, tsize);
+    if (type != NULL && data[0] != '\0') {
+      static const gchar *env_vars[] = { "GST_AVI_TAG_ENCODING",
+        "GST_RIFF_TAG_ENCODING", "GST_TAG_ENCODING", NULL
+      };
+      gchar *val;
 
-        /* add to list */
-        have_tags = TRUE;
-        gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, type, name, NULL);
-        g_free (name);
+      val = freeform_string_to_utf8 ((gchar *) data, tsize, env_vars);
+
+      if (val) {
+        gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, type, val, NULL);
+        g_free (val);
+      } else {
+        GST_WARNING_OBJECT (element, "could not extract %s tag", type);
       }
     }
 
@@ -718,7 +790,7 @@ gst_riff_parse_info (GstElement * element,
     size -= tsize;
   }
 
-  if (have_tags) {
+  if (!gst_tag_list_is_empty (taglist)) {
     *_taglist = taglist;
   } else {
     *_taglist = NULL;
