@@ -1,3 +1,13 @@
+2006-10-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gststructure.c: (gst_structure_id_set_value):
+	  If someone tries to set a non-UTF8 string field on a structure,
+	  don't just print a warning, but also ignore the request and do
+	  not change/add that field to the structure.
+
+	* tests/check/gst/gsttag.c: (GST_START_TEST), (gst_tag_suite):
+	  Test for the above.
+
 2006-10-25  David Schleef  <ds@schleef.org>
 
 	* gst/gstinfo.c:

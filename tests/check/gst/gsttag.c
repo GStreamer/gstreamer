@@ -241,6 +241,25 @@ GST_START_TEST (test_type)
 
 GST_END_TEST;
 
+GST_START_TEST (test_set_non_utf8_string)
+{
+  GstTagList *taglist;
+  guint8 foobar[2] = { 0xff, 0x00 };    /* not UTF-8 */
+
+  taglist = gst_tag_list_new ();
+  fail_unless (taglist != NULL);
+
+  ASSERT_WARNING (gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND,
+          GST_TAG_ARTIST, (gchar *) foobar, NULL));
+
+  /* That string field with a non-UTF8 string should not have been added */
+  fail_unless (gst_tag_list_is_empty (taglist));
+
+  gst_tag_list_free (taglist);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_tag_suite (void)
 {
@@ -251,6 +270,7 @@ gst_tag_suite (void)
   tcase_add_test (tc_chain, test_merge);
   tcase_add_test (tc_chain, test_date_tags);
   tcase_add_test (tc_chain, test_type);
+  tcase_add_test (tc_chain, test_set_non_utf8_string);
 
   return s;
 }

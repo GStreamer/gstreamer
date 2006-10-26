@@ -400,6 +400,7 @@ gst_structure_id_set_value (GstStructure * structure,
     if (s != NULL && !g_utf8_validate (s, -1, NULL)) {
       g_warning ("Trying to set string field '%s' on structure, but string is "
           "not valid UTF-8. Please file a bug.", g_quark_to_string (field));
+      return;
     }
   }
 #endif
