@@ -1,3 +1,12 @@
+2006-10-26  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_getcaps),
+	(gst_ffmpegenc_setcaps), (gst_ffmpegenc_register):
+	MPEG4 standard does not accept framerates with a denominator greater
+	than (1<<16 - 1) (according to the ffmpeg encoder...).
+	We therefore scale down the framerate.
+	Small indentation fixes using gst-indent.
+
 2006-10-25  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
