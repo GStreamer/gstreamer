@@ -329,7 +329,7 @@ gst_nuv_demux_frame_header_load (GstNuvDemux * nuv, nuv_frame_header ** h_ret)
 
   h->i_timecode = GST_READ_UINT32_LE (&data[4]);
   h->i_length = GST_READ_UINT32_LE (&data[8]);
-  GST_DEBUG_OBJECT (nuv, "frame hdr: t=%c c=%c k=%d f=0x%x timecode=%u l=%u",
+  GST_DEBUG_OBJECT (nuv, "frame hdr: t=%c c=%c k=%d f=0x%x timecode=%d l=%d",
       h->i_type,
       h->i_compression ? h->i_compression : ' ',
       h->i_keyframe ? h->i_keyframe : ' ',
@@ -426,6 +426,7 @@ gst_nuv_demux_create_pads (GstNuvDemux * nuv)
         gst_nuv_demux_handle_src_event);
     gst_pad_set_active (nuv->src_video_pad, TRUE);
     gst_element_add_pad (GST_ELEMENT (nuv), nuv->src_video_pad);
+
     gst_caps_unref (video_caps);
   }
 
@@ -449,6 +450,7 @@ gst_nuv_demux_create_pads (GstNuvDemux * nuv)
 
     gst_pad_set_event_function (nuv->src_audio_pad,
         gst_nuv_demux_handle_src_event);
+
     gst_caps_unref (audio_caps);
   }
 
@@ -478,16 +480,22 @@ gst_nuv_demux_stream_data (GstNuvDemux * nuv)
   if (h->i_type == 'R')
     goto done;
 
-  ret = gst_nuv_demux_read_bytes (nuv, h->i_length, TRUE, &buf);
-  if (ret != GST_FLOW_OK) {
-    return ret;
+  if (h->i_length > 0) {
+    ret = gst_nuv_demux_read_bytes (nuv, h->i_length, TRUE, &buf);
+    if (ret != GST_FLOW_OK)
+      return ret;
+
+    if (h->i_timecode > 0)
+      GST_BUFFER_TIMESTAMP (buf) = h->i_timecode * GST_MSECOND;
   }
 
-  GST_BUFFER_TIMESTAMP (buf) = h->i_timecode * GST_MSECOND;
 
   switch (h->i_type) {
     case 'V':
     {
+      if (h->i_length == 0)
+        break;
+
       GST_BUFFER_OFFSET (buf) = nuv->video_offset;
       gst_buffer_set_caps (buf, GST_PAD_CAPS (nuv->src_video_pad));
       ret = gst_pad_push (nuv->src_video_pad, buf);
@@ -496,6 +504,9 @@ gst_nuv_demux_stream_data (GstNuvDemux * nuv)
     }
     case 'A':
     {
+      if (h->i_length == 0)
+        break;
+
       GST_BUFFER_OFFSET (buf) = nuv->audio_offset;
       gst_buffer_set_caps (buf, GST_PAD_CAPS (nuv->src_audio_pad));
       ret = gst_pad_push (nuv->src_audio_pad, buf);
@@ -507,18 +518,22 @@ gst_nuv_demux_stream_data (GstNuvDemux * nuv)
       switch (h->i_compression) {
         case 'V':
           gst_pad_push_event (nuv->src_video_pad,
-              gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
+              gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, 0, -1,
+                  h->i_timecode));
           break;
         case 'A':
           gst_pad_push_event (nuv->src_audio_pad,
               gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
-
           break;
         default:
           break;
       }
-      break;
     }
+    default:
+      if (buf != NULL)
+        gst_buffer_unref (buf);
+
+      break;
   }
 
 done:

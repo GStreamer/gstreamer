@@ -92,9 +92,9 @@ typedef struct
                            0x02: gauss 5 pixel (8,1,1,1,1)/12
                            0x04: cartoon filter */
 
-    guint32 i_timecode;     /* ms */
+    gint i_timecode;     /* ms */
 
-    guint32 i_length;       /* V,A,T: length of following data
+    gint i_length;       /* V,A,T: length of following data
                            S: length of packet correl */
 } nuv_frame_header;
 
