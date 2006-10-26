@@ -1,6 +1,11 @@
 2006-10-25  David Schleef  <ds@schleef.org>
 
 	* gst/gstinfo.c:
+	  g_hash_table_insert() needs a cast to a non-const pointer duh.
+
+2006-10-25  David Schleef  <ds@schleef.org>
+
+	* gst/gstinfo.c:
 	* gst/gstinfo.h:
 	  Change name parameter of _gst_debug_register_funcptr to const
 	  to reflect the constness of its use in the function as well

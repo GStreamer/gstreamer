@@ -1258,7 +1258,7 @@ _gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
   if (!__gst_function_pointers)
     __gst_function_pointers = g_hash_table_new (g_direct_hash, g_direct_equal);
   if (!g_hash_table_lookup (__gst_function_pointers, ptr))
-    g_hash_table_insert (__gst_function_pointers, ptr, ptrname);
+    g_hash_table_insert (__gst_function_pointers, ptr, (gpointer) ptrname);
 
   g_static_mutex_unlock (&__dbg_functions_mutex);
 }
