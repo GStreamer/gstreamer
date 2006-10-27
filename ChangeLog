@@ -1,5 +1,12 @@
 2006-10-27  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstghostpad.c: (gst_proxy_pad_do_acceptcaps),
+	(gst_ghost_pad_new_full):
+	Make acceptcaps return TRUE when we don't have a target, just like
+	setcaps does.
+
+2006-10-27  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasetransform.c: (gst_base_transform_chain):
 	Revert previous commit, 0 sized buffers are allowed. Reopens #363095.
 

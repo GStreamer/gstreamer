@@ -265,11 +265,15 @@ static gboolean
 gst_proxy_pad_do_acceptcaps (GstPad * pad, GstCaps * caps)
 {
   GstPad *target = gst_proxy_pad_get_target (pad);
-  gboolean res = FALSE;
+  gboolean res;
 
   if (target) {
     res = gst_pad_accept_caps (target, caps);
     gst_object_unref (target);
+  } else {
+    /* We don't have a target, we return TRUE and we assume that any future
+     * target will be able to deal with any configured caps. */
+    res = TRUE;
   }
 
   return res;
@@ -827,6 +831,7 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
         g_object_new (GST_TYPE_PROXY_PAD, "name", NULL,
         "direction", otherdir, NULL);
   }
+  /* GST_PAD_UNSET_FLUSHING (internal); */
 
   /* Set directional padfunctions for internal pad */
   if (dir == GST_PAD_SRC) {
