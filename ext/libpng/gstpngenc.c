@@ -150,7 +150,6 @@ gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   GstCaps *pcaps;
   gboolean ret = TRUE;
-  GstPad *opeer;
 
   pngenc = GST_PNGENC (gst_pad_get_parent (pad));
 
@@ -160,22 +159,20 @@ gst_pngenc_setcaps (GstPad * pad, GstCaps * caps)
   fps = gst_structure_get_value (structure, "framerate");
   gst_structure_get_int (structure, "bpp", &pngenc->bpp);
 
-  opeer = gst_pad_get_peer (pngenc->srcpad);
-  if (opeer) {
-    pcaps = gst_caps_new_simple ("image/png",
-        "width", G_TYPE_INT, pngenc->width,
-        "height", G_TYPE_INT, pngenc->height, NULL);
-    structure = gst_caps_get_structure (pcaps, 0);
-    gst_structure_set_value (structure, "framerate", fps);
+  if (pngenc->bpp == 32)
+    pngenc->stride = pngenc->width * 4;
+  else
+    pngenc->stride = GST_ROUND_UP_4 (pngenc->width * 3);
 
-    if (gst_pad_accept_caps (opeer, pcaps)) {
-      gst_pad_set_caps (pngenc->srcpad, pcaps);
-    } else
-      ret = FALSE;
-    gst_caps_unref (pcaps);
-    gst_object_unref (opeer);
-  }
+  pcaps = gst_caps_new_simple ("image/png",
+      "width", G_TYPE_INT, pngenc->width,
+      "height", G_TYPE_INT, pngenc->height, NULL);
+  structure = gst_caps_get_structure (pcaps, 0);
+  gst_structure_set_value (structure, "framerate", fps);
 
+  ret = gst_pad_set_caps (pngenc->srcpad, pcaps);
+
+  gst_caps_unref (pcaps);
   gst_object_unref (pngenc);
 
   return ret;
@@ -306,9 +303,10 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
   png_set_write_fn (pngenc->png_struct_ptr, pngenc,
       (png_rw_ptr) user_write_data, user_flush_data);
 
-  for (row_index = 0; row_index < pngenc->height; row_index++)
+  for (row_index = 0; row_index < pngenc->height; row_index++) {
     row_pointers[row_index] = GST_BUFFER_DATA (buf) +
-        (row_index * pngenc->png_info_ptr->rowbytes);
+        (row_index * pngenc->stride);
+  }
 
   png_write_info (pngenc->png_struct_ptr, pngenc->png_info_ptr);
   png_write_image (pngenc->png_struct_ptr, row_pointers);
@@ -320,6 +318,7 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
   png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp) NULL);
   gst_buffer_stamp (pngenc->buffer_out, buf);
   gst_buffer_unref (buf);
+  gst_buffer_set_caps (pngenc->buffer_out, GST_PAD_CAPS (pngenc->srcpad));
 
   if ((ret = gst_pad_push (pngenc->srcpad, pngenc->buffer_out)) != GST_FLOW_OK)
     goto done;
@@ -334,15 +333,7 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
     gst_pad_push_event (pngenc->srcpad, event);
     ret = GST_FLOW_UNEXPECTED;
   }
-/*  else if (pngenc->newmedia) { */
-/*     /\* send new media discont *\/ */
-/*     GstEvent *newmedia_event; */
 
-/*     newmedia_event = */
-/*         gst_event_new_discontinuous (TRUE, GST_FORMAT_TIME, (gint64) 0, */
-/*         GST_FORMAT_UNDEFINED); */
-/*     ret = gst_pad_push (pngenc->srcpad, GST_DATA (newmedia_event)); */
-/*   } */
 done:
   GST_DEBUG_OBJECT (pngenc, "END, ret:%d", ret);
 

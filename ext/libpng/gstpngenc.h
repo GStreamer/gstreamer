@@ -51,6 +51,7 @@ struct _GstPngEnc
   gint width;
   gint height;
   gint bpp;
+  gint stride;
   guint compression_level;
 
   gboolean snapshot;

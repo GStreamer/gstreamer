@@ -1,3 +1,11 @@
+2006-10-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/libpng/gstpngenc.c: (gst_pngenc_setcaps), (gst_pngenc_chain):
+	* ext/libpng/gstpngenc.h:
+	Fix strides. Fixes #364856.
+	Cleanup capsnego.
+	Set caps on outgoing buffers.
+
 2006-10-18  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Ville Syrjala <ville dot syrjala at movial dot fi>
