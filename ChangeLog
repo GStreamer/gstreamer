@@ -3,7 +3,7 @@
 	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_release_pad):
-	Remove the pad from the element in release_pad.
+	Remove the pad from the element in release_pad. Fixes #364812.
 
 2006-10-27  Tim-Philipp Müller  <tim at centricular dot net>
 
