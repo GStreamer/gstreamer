@@ -1,5 +1,11 @@
 2006-10-27  Wim Taymans  <wim@fluendo.com>
 
+	* gst/volume/gstvolume.c: (volume_transform_ip):
+	Use stream time to synchronize volume property instead of rather random
+	timestamps. This is needed when gnonlin does its time shifting.
+
+2006-10-27  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_release_pad):

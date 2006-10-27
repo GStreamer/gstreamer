@@ -481,6 +481,11 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   /* FIXME: subdivide GST_BUFFER_SIZE into small chunks for smooth fades */
   timestamp = GST_BUFFER_TIMESTAMP (outbuf);
+  timestamp =
+      gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
+
+  GST_DEBUG_OBJECT (base, "sync to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     gst_object_sync_values (G_OBJECT (this), timestamp);
