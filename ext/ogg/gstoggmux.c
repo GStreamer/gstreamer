@@ -469,6 +469,7 @@ gst_ogg_mux_release_pad (GstElement * element, GstPad * pad)
   GST_OBJECT_UNLOCK (ogg_mux->collect);
 
   gst_collect_pads_remove_pad (ogg_mux->collect, pad);
+  gst_element_remove_pad (element, pad);
 }
 
 /* handle events */
