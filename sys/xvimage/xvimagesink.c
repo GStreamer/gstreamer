@@ -2794,9 +2794,10 @@ gst_xvimagesink_get_type (void)
     g_type_add_interface_static (xvimagesink_type, GST_TYPE_COLOR_BALANCE,
         &colorbalance_info);
 
-    /* make sure type is registered and not at runtime as this is not
-     * threadsafe */
-    gst_xvimage_buffer_get_type ();
+    /* register type and create class in a more safe place instead of at
+     * runtime since the type registration and class creation is not
+     * threadsafe. */
+    g_type_class_ref (gst_xvimage_buffer_get_type ());
   }
 
   return xvimagesink_type;

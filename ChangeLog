@@ -1,3 +1,11 @@
+2006-10-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_get_type):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_type):
+	  Explicitly create our custom buffer classes at a thread-safe
+	  location as well, since g_type_class_ref() doesn't seem to be
+	  entirely thread-safe either (#365501; also see #349410).
+
 2006-10-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-read.c: (freeform_string_to_utf8),
