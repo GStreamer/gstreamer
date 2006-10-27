@@ -1544,8 +1544,7 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
 
   /* outbuf can be NULL, this means a dropped buffer */
   if (outbuf != NULL) {
-    /* if output buffer is empty, we don't push it out */
-    if ((ret == GST_FLOW_OK) && (GST_BUFFER_SIZE (outbuf) > 0))
+    if ((ret == GST_FLOW_OK))
       ret = gst_pad_push (trans->srcpad, outbuf);
     else
       gst_buffer_unref (outbuf);

@@ -1,3 +1,8 @@
+2006-10-27  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasetransform.c: (gst_base_transform_chain):
+	Revert previous commit, 0 sized buffers are allowed. Reopens #363095.
+
 2006-10-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gststructure.c: (gst_structure_id_set_value):
