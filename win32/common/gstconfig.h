@@ -115,6 +115,21 @@
  */
 #define GST_PTR_FORMAT "p"
 
+/**
+ * GST_SEGMENT_FORMAT:
+ *
+ * printf format type used to debug GStreamer segments.
+ * This can only be used on pointers to GstSegment structures.
+ *
+ * Since: 0.10.10
+ */
+#define GST_SEGMENT_FORMAT "p"
+
+/* whether or not GST_PTR_FORMAT or GST_SEGMENT_FORMAT are using
+ * the printf extension mechanism. This is for internal use in our
+ * header files so we know whether we can use G_GNUC_PRINTF or not */
+#undef GST_USING_PRINTF_EXTENSION
+
 /* whether or not the CPU supports unaligned access */
 #define GST_HAVE_UNALIGNED_ACCESS 1
 

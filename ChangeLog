@@ -1,3 +1,9 @@
+2006-10-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* win32/common/gstconfig.h:
+	  Add GST_SEGMENT_FORMAT and GST_USING_PRINTF_EXTENSION to the
+	  hand-made win32 gstconfig.h. Fixes #366321.
+
 2006-10-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstghostpad.c: (gst_proxy_pad_do_acceptcaps),
