@@ -173,7 +173,7 @@ GstPad connection
 
 When two pads are connected get_caps is called on both pads to get their caps.
 Then the intersection between those caps is made, this will give us all the
-possible media types that can flow trough this pad connection. Optionally the
+possible media types that can flow through this pad connection. Optionally the
 application can provide additional caps, the pad intersection is also made with
 the application caps. 
 

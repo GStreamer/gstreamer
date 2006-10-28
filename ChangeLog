@@ -1,3 +1,13 @@
+2006-10-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Kjartan Maraas  <kmaraas at gnome org>
+
+	* docs/design/part-MT-refcounting.txt:
+	* docs/random/wtay/capsnego2-docs:
+	* gst/gstclock.c:
+	* gst/gstxml.c:
+	  Typo fixes (#366212).
+
 2006-10-28  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sergey Scobich <sergey dot scobich at gmail dot com>
@@ -4398,7 +4408,7 @@
 	(gst_base_sink_get_position_last),
 	(gst_base_sink_get_position_paused), (gst_base_sink_change_state):
 	Convert and store timestamps in stream time and running time, the
-	raw timestamps are not usefull, also document this better.
+	raw timestamps are not useful, also document this better.
 	Use different window sizes for good and bad QoS observations so
 	we react to badness a little quicker.
 	Keep track of the amount of rendered and dropped buffers.
@@ -12894,7 +12904,7 @@
 	* gst/gstobject.c: (gst_object_has_ancestor):
 	* gst/gstobject.h:
 	gst_object_has_ancestor() copied from gstbin.c as it is a
-	usefull function.
+	useful function.
 
 	* tests/instantiate/create.c: (create_all_elements):
 	* tests/lat.c: (handoff_src), (handoff_sink):

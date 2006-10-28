@@ -170,7 +170,7 @@ Objects
   taking a _ref() before adding it to the bin. The reason being that after the
   _bin_add() call disposing the bin also destroys the element.
 
-  Taking ownership of an object happens trough the process of "sinking" the
+  Taking ownership of an object happens through the process of "sinking" the
   object. the _sink() method on an object will decrease the refcount of the
   object if the FLOATING flag is set. The act of taking ownership of an object
   is then performed as a _ref() followed by a _sink() call on the object.

@@ -86,7 +86,7 @@
  * slaved to another #GstClock with the gst_clock_set_master(). The clock will
  * then automatically be synchronized to this master clock by repeadedly
  * sampling the master clock and the slave clock and recalibrating the slave
- * clock with gst_clock_set_calibration(). This feature is mostly usefull for
+ * clock with gst_clock_set_calibration(). This feature is mostly useful for
  * plugins that have an internal clock but must operate with another clock
  * selected by the #GstPipeline.  They can track the offset and rate difference
  * of their internal clock relative to the master clock by using the

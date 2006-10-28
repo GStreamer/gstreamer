@@ -396,7 +396,7 @@ gst_xml_get_topelements (GstXML * xml)
 /**
  * gst_xml_get_element:
  * @xml: The GstXML to get the element from
- * @name: The name of element to retreive
+ * @name: The name of element to retrieve
  *
  * This function is used to get a pointer to the GstElement corresponding
  * to name in the pipeline description. You would use this if you have
