@@ -1,3 +1,8 @@
+2006-10-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/audioresample/gstaudioresample.c: (gst_audioresample_init):
+	  Another typo fix (#366212).
+
 2006-10-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/volume/gstvolume.c: (volume_transform_ip):
@@ -3812,7 +3817,7 @@
 	* gst/playback/test.c: (main):
 	* gst/playback/test5.c: (dump_element_stats):
 	* gst/playback/test6.c: (main):
-	  free cpas using gst_caps_unref, don't leak caps-strings
+	  free caps using gst_caps_unref, don't leak caps-strings
 
 2006-05-01  Tim-Philipp Müller  <tim at centricular dot net>
 

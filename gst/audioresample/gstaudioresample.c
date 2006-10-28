@@ -190,7 +190,7 @@ gst_audioresample_init (GstAudioresample * audioresample,
   trans = GST_BASE_TRANSFORM (audioresample);
 
   /* buffer alloc passthrough is too impossible. FIXME, it
-   * is trivial in the passtrough case. */
+   * is trivial in the passthrough case. */
   gst_pad_set_bufferalloc_function (trans->sinkpad, NULL);
 
   audioresample->filter_length = DEFAULT_FILTERLEN;
