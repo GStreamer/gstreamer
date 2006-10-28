@@ -1611,6 +1611,61 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
 };
 
 
+/*** image/x-quicktime ***/
+
+static GstStaticCaps qtif_caps = GST_STATIC_CAPS ("image/x-quicktime");
+
+#define QTIF_CAPS gst_static_caps_get(&qtif_caps)
+
+/* how many atoms we check before we give up */
+#define QTIF_MAXROUNDS 25
+
+static void
+qtif_type_find (GstTypeFind * tf, gpointer unused)
+{
+  const guint8 *data;
+  gboolean found_idsc = FALSE;
+  gboolean found_idat = FALSE;
+  guint64 offset = 0;
+  guint rounds = 0;
+
+  while ((data = gst_type_find_peek (tf, offset, 8)) != NULL) {
+    guint64 size;
+
+    size = GST_READ_UINT32_BE (data);
+    if (size == 1) {
+      const guint8 *sizedata;
+
+      sizedata = gst_type_find_peek (tf, offset + 8, 8);
+      if (sizedata == NULL)
+        break;
+
+      size = GST_READ_UINT64_BE (sizedata);
+    }
+    if (size < 8)
+      break;
+
+    if (STRNCMP (data + 4, "idsc", 4) == 0)
+      found_idsc = TRUE;
+    if (STRNCMP (data + 4, "idat", 4) == 0)
+      found_idat = TRUE;
+
+    if (found_idsc && found_idat) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, QTIF_CAPS);
+      return;
+    }
+
+    offset += size;
+    if (++rounds > QTIF_MAXROUNDS)
+      break;
+  }
+
+  if (found_idsc || found_idat) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, QTIF_CAPS);
+    return;
+  }
+};
+
 /*** audio/x-mod ***/
 
 static GstStaticCaps mod_caps = GST_STATIC_CAPS ("audio/x-mod");
@@ -2464,6 +2519,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *mpeg_ts_exts[] = { "ts", NULL };
   static gchar *ogg_exts[] = { "anx", "ogg", "ogm", NULL };
   static gchar *qt_exts[] = { "mov", NULL };
+  static gchar *qtif_exts[] = { "qif", "qtif", "qti", NULL };
   static gchar *rm_exts[] = { "ra", "ram", "rm", "rmvb", NULL };
   static gchar *swf_exts[] = { "swf", "swfl", NULL };
   static gchar *utf8_exts[] = { "txt", NULL };
@@ -2580,6 +2636,8 @@ plugin_init (GstPlugin * plugin)
       q3gp_type_find, q3gp_exts, Q3GP_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/quicktime", GST_RANK_SECONDARY,
       qt_type_find, qt_exts, QT_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "image/x-quicktime", GST_RANK_SECONDARY,
+      qtif_type_find, qtif_exts, QTIF_CAPS, NULL, NULL);
 
   TYPE_FIND_REGISTER (plugin, "text/html", GST_RANK_SECONDARY, html_type_find,
       html_exts, HTML_CAPS, NULL, NULL);

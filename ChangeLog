@@ -1,5 +1,11 @@
 2006-10-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/typefind/gsttypefindfunctions.c: (qtif_type_find),
+	(plugin_init):
+	  Add typefinder for QuickTime Image Files (see #366156).
+
+2006-10-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/audioresample/gstaudioresample.c: (gst_audioresample_init):
 	  Another typo fix (#366212).
 
