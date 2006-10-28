@@ -107,7 +107,9 @@
 #ifdef HAVE_FORK
 #include <sys/wait.h>
 #endif /* HAVE_FORK */
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 #include "gst-i18n-lib.h"
 #include <locale.h>             /* for LC_ALL */

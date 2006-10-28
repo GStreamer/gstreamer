@@ -657,6 +657,7 @@ EXPORTS
 	gst_tag_list_merge
 	gst_tag_list_new
 	gst_tag_merge_mode_get_type
+	gst_tag_merge_use_first
 	gst_tag_register
 	gst_tag_setter_get_tag_list
 	gst_tag_setter_get_tag_merge_mode
