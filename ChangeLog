@@ -1,3 +1,14 @@
+2006-10-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_parse_file_header),
+	(gst_avi_demux_stream_init_push), (gst_avi_demux_parse_stream),
+	(gst_avi_demux_stream_header_push), (gst_avi_demux_stream_data),
+	(gst_avi_demux_chain):
+	Fix position query for audio. also fixes timestamps in streaming
+	mode and bug #364958.
+	Small cleanups.
+
 2006-10-27  Wim Taymans  <wim@fluendo.com>
 
 	* ext/libpng/gstpngenc.c: (gst_pngenc_setcaps), (gst_pngenc_chain):
