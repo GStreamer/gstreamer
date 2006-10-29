@@ -435,10 +435,8 @@ gst_dtsdec_handle_frame (GstDtsDec * dts, guint8 * data,
     result = gst_pad_alloc_buffer_and_set_caps (dts->srcpad, 0,
         (SAMPLE_WIDTH / 8) * 256 * num_c, GST_PAD_CAPS (dts->srcpad), &out);
 
-    if (result != GST_FLOW_OK) {
-      GST_ELEMENT_ERROR (dts, RESOURCE, FAILED, (NULL), ("Out of memory"));
-      goto done;
-    }
+    if (result != GST_FLOW_OK)
+      break;
 
     GST_BUFFER_TIMESTAMP (out) = dts->current_ts;
     GST_BUFFER_DURATION (out) = GST_SECOND * 256 / dts->sample_rate;
@@ -457,15 +455,9 @@ gst_dtsdec_handle_frame (GstDtsDec * dts, guint8 * data,
     /* push on */
     result = gst_pad_push (dts->srcpad, out);
 
-    if (result != GST_FLOW_OK) {
-      gst_buffer_unref (out);
-      goto done;
-    }
-
-
+    if (result != GST_FLOW_OK)
+      break;
   }
-
-done:
 
   return result;
 }

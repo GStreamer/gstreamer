@@ -1,3 +1,10 @@
+2006-10-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/dts/gstdtsdec.c: (gst_dtsdec_handle_frame):
+	  Fix flow handling and buffer refcounting (gst_pad_push() takes
+	  ownership of the buffer passed to it, the buffer does not have
+	  to be unreffed no matter what flow value gst_pad_push() returns).
+
 2006-10-26  Edgard Lima <edgard.lima@indt.org.br>
 
 	Patch by: Renato Filho <renato.filho@indt.org.br> 
