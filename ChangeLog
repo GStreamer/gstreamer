@@ -1,3 +1,14 @@
+2006-10-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Michal Benes  <michal dot benes at itonis tv>
+
+	* gst/matroska/matroska-demux.c: (gst_matroska_demux_encoding_cmp),
+	(gst_matroska_demux_read_track_encodings),
+	(gst_matroska_decode_buffer):
+	  Fix several issues with encoded/compressed/encrypted/signed tracks;
+	  also, remove superfluous newline characters from some debug
+	  statements. (#366155)
+
 2006-10-30  Wim Taymans  <wim@fluendo.com>
 
 	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_getcaps):
