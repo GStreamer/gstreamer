@@ -325,7 +325,7 @@ void            gst_debug_unset_threshold_for_name  (const gchar * name);
 #define GST_DEBUG_CATEGORY_EXTERN(cat) extern GstDebugCategory *cat
 #else
 #define GST_DEBUG_CATEGORY_EXTERN(cat) \
-  extern _declspec (dllimport) GstDebugCategory *cat;
+  extern __declspec (dllimport) GstDebugCategory *cat;
 #endif
 
 /**

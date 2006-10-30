@@ -1,3 +1,10 @@
+2006-10-30  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: gorshkov <gorshkov at oghma dot on dot ca>
+
+	* gst/gstinfo.h:
+	_declspec should be __declspec (two underscores, not one). Fixes 366572.
+
 2006-10-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Kjartan Maraas  <kmaraas at gnome org>
