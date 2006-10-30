@@ -1,3 +1,9 @@
+2006-10-30  Michael Smith  <msmith@fluendo.com>
+
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_update_fd):
+	  Get the arguments to lseek() the right way around.
+	  Fixes 367677.
+
 2006-10-30  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: gorshkov <gorshkov at oghma dot on dot ca>

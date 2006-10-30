@@ -204,7 +204,7 @@ gst_fd_src_update_fd (GstFdSrc * src)
     goto not_seekable;
 
   /* Try a seek of 0 bytes offset to check for seekability */
-  if (lseek (src->fd, SEEK_CUR, 0) < 0)
+  if (lseek (src->fd, 0, SEEK_CUR) < 0)
     goto not_seekable;
 
   src->seekable_fd = TRUE;
