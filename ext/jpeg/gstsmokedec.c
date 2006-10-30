@@ -51,6 +51,10 @@ enum
 static void gst_smokedec_base_init (gpointer g_class);
 static void gst_smokedec_class_init (GstSmokeDec * klass);
 static void gst_smokedec_init (GstSmokeDec * smokedec);
+static void gst_smokedec_finalize (GObject * object);
+
+static GstStateChangeReturn
+gst_smokedec_change_state (GstElement * element, GstStateChange transition);
 
 static GstFlowReturn gst_smokedec_chain (GstPad * pad, GstBuffer * buf);
 
@@ -114,11 +118,18 @@ gst_smokedec_base_init (gpointer g_class)
 static void
 gst_smokedec_class_init (GstSmokeDec * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
+  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class->finalize = gst_smokedec_finalize;
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_smokedec_change_state);
 
   GST_DEBUG_CATEGORY_INIT (smokedec_debug, "smokedec", 0, "Smoke decoder");
 }
@@ -140,15 +151,17 @@ gst_smokedec_init (GstSmokeDec * smokedec)
   gst_pad_use_fixed_caps (smokedec->srcpad);
   gst_element_add_pad (GST_ELEMENT (smokedec), smokedec->srcpad);
 
-  /* reset the initial video state */
-  smokedec->format = -1;
-  smokedec->width = -1;
-  smokedec->height = -1;
-  smokedec->fps_num = -1;
-  smokedec->fps_denom = -1;
-  smokedec->next_time = 0;
-
   smokecodec_decode_new (&smokedec->info);
+}
+
+static void
+gst_smokedec_finalize (GObject * object)
+{
+  GstSmokeDec *dec = GST_SMOKEDEC (object);
+
+  smokecodec_info_free (dec->info);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstFlowReturn
@@ -170,6 +183,9 @@ gst_smokedec_chain (GstPad * pad, GstBuffer * buf)
   data = GST_BUFFER_DATA (buf);
   size = GST_BUFFER_SIZE (buf);
   time = GST_BUFFER_TIMESTAMP (buf);
+
+  if (size < 1)
+    goto too_small;
 
   GST_LOG_OBJECT (smokedec, "got buffer of %lu bytes", size);
 
@@ -208,7 +224,6 @@ gst_smokedec_chain (GstPad * pad, GstBuffer * buf)
     gst_caps_unref (caps);
   }
 
-
   if (smokedec->need_keyframe) {
     if (!(flags & SMOKECODEC_KEYFRAME))
       goto keyframe_skip;
@@ -216,13 +231,12 @@ gst_smokedec_chain (GstPad * pad, GstBuffer * buf)
     smokedec->need_keyframe = FALSE;
   }
 
-  outbuf = gst_buffer_new ();
-  outsize = GST_BUFFER_SIZE (outbuf) = width * height + width * height / 2;
-  outdata = g_malloc (outsize);
-  GST_BUFFER_DATA (outbuf) = outdata;
-  GST_BUFFER_MALLOCDATA (outbuf) = outdata;
+  outsize = width * height + width * height / 2;
+  outbuf = gst_buffer_new_and_alloc (outsize);
+  outdata = GST_BUFFER_DATA (outbuf);
 
-  GST_BUFFER_DURATION (outbuf) = GST_SECOND * fps_denom / fps_num;
+  GST_BUFFER_DURATION (outbuf) =
+      gst_util_uint64_scale_int (GST_SECOND, fps_denom, fps_num);
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buf);
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (smokedec->srcpad));
 
@@ -234,7 +248,10 @@ gst_smokedec_chain (GstPad * pad, GstBuffer * buf)
     }
   }
   GST_BUFFER_TIMESTAMP (outbuf) = time;
-  smokedec->next_time = time + GST_BUFFER_DURATION (outbuf);
+  if (time != -1)
+    smokedec->next_time = time + GST_BUFFER_DURATION (outbuf);
+  else
+    smokedec->next_time = -1;
 
   smokeret = smokecodec_decode (smokedec->info, data, size, outdata);
   if (smokeret != SMOKECODEC_OK)
@@ -250,6 +267,13 @@ done:
   return ret;
 
   /* ERRORS */
+too_small:
+  {
+    GST_ELEMENT_ERROR (smokedec, STREAM, DECODE,
+        (NULL), ("Input buffer too small"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 header_error:
   {
     GST_ELEMENT_ERROR (smokedec, STREAM, DECODE,
@@ -270,4 +294,39 @@ decode_error:
     ret = GST_FLOW_ERROR;
     goto done;
   }
+}
+
+static GstStateChangeReturn
+gst_smokedec_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstSmokeDec *dec;
+
+  dec = GST_SMOKEDEC (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* reset the initial video state */
+      dec->format = -1;
+      dec->width = -1;
+      dec->height = -1;
+      dec->fps_num = -1;
+      dec->fps_denom = -1;
+      dec->next_time = 0;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret != GST_STATE_CHANGE_SUCCESS)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }

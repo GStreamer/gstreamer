@@ -1,5 +1,19 @@
 2006-10-30  Wim Taymans  <wim@fluendo.com>
 
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_getcaps):
+	* ext/jpeg/gstsmokedec.c: (gst_smokedec_class_init),
+	(gst_smokedec_init), (gst_smokedec_finalize), (gst_smokedec_chain),
+	(gst_smokedec_change_state):
+	* ext/jpeg/gstsmokeenc.c: (gst_smokeenc_class_init),
+	(gst_smokeenc_init), (gst_smokeenc_finalize),
+	(gst_smokeenc_getcaps), (gst_smokeenc_setcaps),
+	(gst_smokeenc_resync), (gst_smokeenc_chain),
+	(gst_smokeenc_set_property), (gst_smokeenc_get_property),
+	(gst_smokeenc_change_state):
+	Various cleanups, capsnego and leak fixes.
+
+2006-10-30  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Mark Nauwelaerts  <manauw at skynet be>
 
 	* gst/videomixer/videomixer.c: (gst_videomixer_update_queues):

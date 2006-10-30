@@ -264,12 +264,19 @@ gst_jpegenc_getcaps (GstPad * pad)
   /* we want to proxy properties like width, height and framerate from the
      other end of the element */
   otherpad = (pad == jpegenc->srcpad) ? jpegenc->sinkpad : jpegenc->srcpad;
-  caps = gst_pad_get_allowed_caps (otherpad);
+
+  caps = gst_pad_peer_get_caps (otherpad);
+  if (caps == NULL)
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+  else
+    caps = gst_caps_make_writable (caps);
+
   if (pad == jpegenc->srcpad) {
     name = "image/jpeg";
   } else {
     name = "video/x-raw-yuv";
   }
+
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
 
