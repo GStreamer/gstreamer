@@ -125,7 +125,7 @@ struct _GstVideoMixerPad
 {
   GstPad parent;                /* subclass the pad */
 
-  guint64 queued;
+  gint64 queued;
 
   guint in_width, in_height;
   gint fps_n;
@@ -1036,7 +1036,7 @@ gst_videomixer_update_queues (GstVideoMixer * mix)
     if (mixcol->buffer != NULL && GST_CLOCK_TIME_IS_VALID (pad->queued)) {
       pad->queued -= interval;
       GST_DEBUG_OBJECT (pad, "queued now %lld", pad->queued);
-      if (pad->queued == 0) {
+      if (pad->queued <= 0) {
         GST_DEBUG ("unreffing buffer");
         gst_buffer_unref (mixcol->buffer);
         mixcol->buffer = NULL;
