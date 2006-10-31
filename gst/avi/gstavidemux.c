@@ -475,12 +475,12 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
               demux->avih->tot_frames * GST_USECOND;
 
           if (stream->is_vbr) {
-            pos = gst_util_uint64_scale_int (xlen, stream->current_frame,
+            pos = gst_util_uint64_scale (xlen, stream->current_frame,
                 stream->total_frames);
             GST_DEBUG_OBJECT (demux, "VBR perc convert frame %u, time %"
                 GST_TIME_FORMAT, stream->current_frame, GST_TIME_ARGS (pos));
           } else {
-            pos = gst_util_uint64_scale_int (xlen, stream->current_byte,
+            pos = gst_util_uint64_scale (xlen, stream->current_byte,
                 stream->total_bytes);
             GST_DEBUG_OBJECT (demux, "CBR perc convert bytes %" G_GUINT64_FORMAT
                 ", time %" GST_TIME_FORMAT, stream->current_byte,
