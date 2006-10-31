@@ -1,3 +1,10 @@
+2006-10-31  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_duration),
+	(gst_qtdemux_handle_src_query), (qtdemux_parse_tree),
+	(qtdemux_parse_trak):
+	Handle unbounded length streams a bit better. Fixes #367696.
+
 2006-10-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dts/gstdtsdec.c: (gst_dtsdec_handle_frame):
