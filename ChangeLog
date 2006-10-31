@@ -1,3 +1,16 @@
+2006-10-31  Michael Smith  <msmith@fluendo.com>
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_add_full),
+	(gst_multi_fd_sink_remove), (gst_multi_fd_sink_clear),
+	(gst_multi_fd_sink_get_stats),
+	(gst_multi_fd_sink_remove_client_link),
+	(gst_multi_fd_sink_queue_buffer),
+	(gst_multi_fd_sink_handle_clients):
+	* gst/tcp/gstmultifdsink.h:
+	  Make using the remove or clear signals threadsafe.
+	  Make calling get-stats with an invalid fd not segfault.
+	  Fixes 368273.
+
 2006-10-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/Makefile.am:

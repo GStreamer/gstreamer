@@ -688,6 +688,7 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
   client->burst_max_unit = max_unit;
   client->burst_max_value = max_value;
   client->sync_method = sync_method;
+  client->currently_removing = FALSE;
 
   /* update start time */
   g_get_current_time (&now);
@@ -706,6 +707,7 @@ gst_multi_fd_sink_add_full (GstMultiFdSink * sink, int fd,
   /* we can add the fd now */
   clink = sink->clients = g_list_prepend (sink->clients, client);
   g_hash_table_insert (sink->fd_hash, &client->fd.fd, clink);
+  sink->clients_cookie++;
 
   /* set the socket to non blocking */
   res = fcntl (fd, F_SETFL, O_NONBLOCK);
@@ -775,27 +777,44 @@ gst_multi_fd_sink_remove (GstMultiFdSink * sink, int fd)
   if (clink != NULL) {
     GstTCPClient *client = (GstTCPClient *) clink->data;
 
+    if (client->status != GST_CLIENT_STATUS_OK) {
+      GST_INFO_OBJECT (sink,
+          "[fd %5d] Client already disconnecting with status %d",
+          fd, client->status);
+      goto done;
+    }
+
     client->status = GST_CLIENT_STATUS_REMOVED;
     gst_multi_fd_sink_remove_client_link (sink, clink);
     SEND_COMMAND (sink, CONTROL_RESTART);
   } else {
     GST_WARNING_OBJECT (sink, "[fd %5d] no client with this fd found!", fd);
   }
+
+done:
   CLIENTS_UNLOCK (sink);
 }
 
-/* can be called both through the signal (ie from any thread) or when stopping,
- * after the writing thread has shut down */
+/* can be called both through the signal (i.e. from any thread) or when 
+ * stopping, after the writing thread has shut down */
 void
 gst_multi_fd_sink_clear (GstMultiFdSink * sink)
 {
   GList *clients, *next;
+  guint32 cookie;
 
   GST_DEBUG_OBJECT (sink, "clearing all clients");
 
   CLIENTS_LOCK (sink);
+restart:
+  cookie = sink->clients_cookie;
   for (clients = sink->clients; clients; clients = next) {
     GstTCPClient *client;
+
+    if (cookie != sink->clients_cookie) {
+      GST_DEBUG_OBJECT (sink, "cookie changed while removing all clients");
+      goto restart;
+    }
 
     client = (GstTCPClient *) clients->data;
     next = g_list_next (clients);
@@ -826,6 +845,9 @@ gst_multi_fd_sink_get_stats (GstMultiFdSink * sink, int fd)
 
   CLIENTS_LOCK (sink);
   clink = g_hash_table_lookup (sink->fd_hash, &fd);
+  if (clink == NULL)
+    goto noclient;
+
   client = (GstTCPClient *) clink->data;
   if (client != NULL) {
     GValue value = { 0 };
@@ -866,6 +888,8 @@ gst_multi_fd_sink_get_stats (GstMultiFdSink * sink, int fd)
     g_value_set_uint64 (&value, client->dropped_buffers);
     result = g_value_array_append (result, &value);
   }
+
+noclient:
   CLIENTS_UNLOCK (sink);
 
   /* python doesn't like a NULL pointer yet */
@@ -879,7 +903,7 @@ gst_multi_fd_sink_get_stats (GstMultiFdSink * sink, int fd)
 
 /* should be called with the clientslock helt.
  * Note that we don't close the fd as we didn't open it in the first
- * place. An application should connect to the client-removed signal and
+ * place. An application should connect to the client-fd-removed signal and
  * close the fd itself.
  */
 static void
@@ -893,6 +917,13 @@ gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink, GList * link)
   fclass = GST_MULTI_FD_SINK_GET_CLASS (sink);
 
   fd = client->fd.fd;
+
+  if (client->currently_removing) {
+    GST_WARNING_OBJECT (sink, "[fd %5d] client is already being removed", fd);
+    return;
+  } else {
+    client->currently_removing = TRUE;
+  }
 
   /* FIXME: if we keep track of ip we can log it here and signal */
   switch (client->status) {
@@ -958,6 +989,7 @@ gst_multi_fd_sink_remove_client_link (GstMultiFdSink * sink, GList * link)
    * and take a shortcut when it did not change between unlocking and locking
    * our mutex. For now we just walk the list again. */
   sink->clients = g_list_remove (sink->clients, client);
+  sink->clients_cookie++;
 
   if (fclass->removed)
     fclass->removed (sink, client->fd.fd);
@@ -1972,6 +2004,7 @@ gst_multi_fd_sink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
   GTimeVal nowtv;
   GstClockTime now;
   gint max_buffers, soft_max_buffers;
+  guint cookie;
 
   g_get_current_time (&nowtv);
   now = GST_TIMEVAL_TO_TIME (nowtv);
@@ -1995,8 +2028,16 @@ gst_multi_fd_sink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
 
   /* then loop over the clients and update the positions */
   max_buffer_usage = 0;
+
+restart:
+  cookie = sink->clients_cookie;
   for (clients = sink->clients; clients; clients = next) {
     GstTCPClient *client;
+
+    if (cookie != sink->clients_cookie) {
+      GST_DEBUG_OBJECT (sink, "Clients cookie outdated, restarting");
+      goto restart;
+    }
 
     client = (GstTCPClient *) clients->data;
     next = g_list_next (clients);
@@ -2031,10 +2072,11 @@ gst_multi_fd_sink_queue_buffer (GstMultiFdSink * sink, GstBuffer * buf)
       /* remove the client, the fd set will be cleared and the select thread
        * will be signaled */
       client->status = GST_CLIENT_STATUS_SLOW;
-      gst_multi_fd_sink_remove_client_link (sink, clients);
       /* set client to invalid position while being removed */
       client->bufpos = -1;
+      gst_multi_fd_sink_remove_client_link (sink, clients);
       need_signal = TRUE;
+      continue;
     } else if (client->bufpos == 0 || client->new_connection) {
       /* can send data to this client now. need to signal the select thread that
        * the fd_set changed */
@@ -2134,6 +2176,7 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
   GList *clients, *next;
   gboolean try_again;
   GstMultiFdSinkClass *fclass;
+  guint cookie;
 
   fclass = GST_MULTI_FD_SINK_GET_CLASS (sink);
 
@@ -2157,11 +2200,18 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
         /* ok, so one or more of the fds is invalid. We loop over them to find
          * the ones that give an error to the F_GETFL fcntl. */
         CLIENTS_LOCK (sink);
+      restart:
+        cookie = sink->clients_cookie;
         for (clients = sink->clients; clients; clients = next) {
           GstTCPClient *client;
           int fd;
           long flags;
           int res;
+
+          if (cookie != sink->clients_cookie) {
+            GST_DEBUG_OBJECT (sink, "Cookie changed finding bad fd");
+            goto restart;
+          }
 
           client = (GstTCPClient *) clients->data;
           next = g_list_next (clients);
@@ -2242,8 +2292,16 @@ gst_multi_fd_sink_handle_clients (GstMultiFdSink * sink)
 
   /* Check the clients */
   CLIENTS_LOCK (sink);
+
+restart2:
+  cookie = sink->clients_cookie;
   for (clients = sink->clients; clients; clients = next) {
     GstTCPClient *client;
+
+    if (sink->clients_cookie != cookie) {
+      GST_DEBUG_OBJECT (sink, "Restarting loop, cookie out of date");
+      goto restart2;
+    }
 
     client = (GstTCPClient *) clients->data;
     next = g_list_next (clients);

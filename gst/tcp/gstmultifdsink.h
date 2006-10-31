@@ -155,6 +155,8 @@ typedef struct {
   gboolean caps_sent;
   gboolean new_connection;
 
+  gboolean currently_removing;
+
   /* method to sync client when connecting */
   GstSyncMethod sync_method;
   GstUnitType   burst_min_unit;
@@ -193,6 +195,7 @@ struct _GstMultiFdSink {
   GStaticRecMutex clientslock;  /* lock to protect the clients list */
   GList *clients;       /* list of clients we are serving */
   GHashTable *fd_hash;  /* index on fd to client */
+  guint clients_cookie; /* Cookie to detect changes to the clients list */
 
   GstFDSetMode mode;
   GstFDSet *fdset;
