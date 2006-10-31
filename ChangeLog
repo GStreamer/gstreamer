@@ -1,5 +1,13 @@
 2006-10-31  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpilbcpay.c: (gst_rtpilbcpay_init),
+	(gst_rtpilbcpay_setcaps):
+	Fix and activate ILBC pay and depayloaders. Fixes #368162.
+
+2006-10-31  Wim Taymans  <wim@fluendo.com>
+
 	* ext/speex/gstspeexdec.c: (speex_dec_convert),
 	(speex_dec_sink_event), (speex_dec_chain_parse_header):
 	Some small cleanups, use _scale.

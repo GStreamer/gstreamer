@@ -106,7 +106,7 @@ gst_rtpilbcpay_init (GstRTPILBCPay * rtpilbcpay, GstRTPILBCPayClass * klass)
   rtpilbcpay->mode = -1;
 
   /* tell basertpaudiopayload that this is a frame based codec */
-  gst_basertpaudiopayload_set_frame_based (basertpaudiopayload);
+  gst_base_rtp_audio_payload_set_frame_based (basertpaudiopayload);
 }
 
 static gboolean
@@ -134,7 +134,7 @@ gst_rtpilbcpay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
     gst_basertppayload_set_options (basertppayload, "audio", TRUE, "iLBC",
         8000);
     /* set options for this frame based audio codec */
-    gst_basertpaudiopayload_set_frame_options (basertpaudiopayload,
+    gst_base_rtp_audio_payload_set_frame_options (basertpaudiopayload,
         mode, mode == 30 ? 50 : 38);
   } else {
     return FALSE;
