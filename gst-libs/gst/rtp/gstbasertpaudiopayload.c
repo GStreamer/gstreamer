@@ -81,7 +81,7 @@ struct _GstBaseRTPAudioPayloadPrivate
 };
 
 #define GST_BASE_RTP_AUDIO_PAYLOAD_GET_PRIVATE(o) \
-  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_BASE_RTP_AUDIO_PAYLOAD, \
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_BASE_RTP_AUDIO_PAYLOAD, \
                                 GstBaseRTPAudioPayloadPrivate))
 
 static void gst_base_rtp_audio_payload_finalize (GObject * object);
@@ -137,7 +137,8 @@ static void
 gst_base_rtp_audio_payload_init (GstBaseRTPAudioPayload * basertpaudiopayload,
     GstBaseRTPAudioPayloadClass * klass)
 {
-  basertpaudiopayload->priv = GST_BASE_RTP_AUDIO_PAYLOAD_GET_PRIVATE (self);
+  basertpaudiopayload->priv =
+      GST_BASE_RTP_AUDIO_PAYLOAD_GET_PRIVATE (basertpaudiopayload);
 
   basertpaudiopayload->base_ts = 0;
 
