@@ -558,6 +558,22 @@ gst_qtdemux_get_src_query_types (GstPad * pad)
 }
 
 static gboolean
+gst_qtdemux_get_duration (GstQTDemux * qtdemux, gint64 * duration)
+{
+  gboolean res = TRUE;
+
+  *duration = GST_CLOCK_TIME_NONE;
+
+  if (qtdemux->duration != 0) {
+    if (qtdemux->duration != G_MAXINT32 && qtdemux->timescale != 0) {
+      *duration = gst_util_uint64_scale_int (qtdemux->duration,
+          GST_SECOND, qtdemux->timescale);
+    }
+  }
+  return res;
+}
+
+static gboolean
 gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = FALSE;
@@ -572,15 +588,13 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     case GST_QUERY_DURATION:
-      if (qtdemux->duration != 0 && qtdemux->timescale != 0) {
-        gint64 duration;
+    {
+      gint64 duration;
 
-        duration = gst_util_uint64_scale_int (qtdemux->duration,
-            GST_SECOND, qtdemux->timescale);
+      res = gst_qtdemux_get_duration (qtdemux, &duration);
 
-        gst_query_set_duration (query, GST_FORMAT_TIME, duration);
-        res = TRUE;
-      }
+      gst_query_set_duration (query, GST_FORMAT_TIME, duration);
+    }
       break;
     default:
       res = FALSE;
@@ -3145,12 +3159,10 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   GST_INFO_OBJECT (qtdemux, "timescale: %d", qtdemux->timescale);
   GST_INFO_OBJECT (qtdemux, "duration: %d", qtdemux->duration);
 
-  if (qtdemux->timescale != 0 && qtdemux->duration != 0) {
+  if (TRUE) {
     gint64 duration;
 
-    duration = gst_util_uint64_scale_int (qtdemux->duration,
-        GST_SECOND, qtdemux->timescale);
-
+    gst_qtdemux_get_duration (qtdemux, &duration);
     gst_segment_set_duration (&qtdemux->segment, GST_FORMAT_TIME, duration);
   }
 
@@ -3242,7 +3254,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GST_LOG ("track timescale: %d", stream->timescale);
   GST_LOG ("track duration: %d", stream->duration);
 
-  {
+  if (qtdemux->duration != G_MAXINT32 && stream->duration != G_MAXINT32) {
     guint64 tdur1, tdur2;
 
     /* don't overflow */
