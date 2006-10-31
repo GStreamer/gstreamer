@@ -1,3 +1,8 @@
+2006-10-31  Wim Taymans  <wim@fluendo.com>
+
+	* gst-plugins-base.spec.in:
+	spec new .h file. Fixes #368310.
+
 2006-10-31  Michael Smith  <msmith@fluendo.com>
 
 	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_add_full),
