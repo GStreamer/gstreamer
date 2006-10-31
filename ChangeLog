@@ -1,5 +1,11 @@
 2006-10-31  Wim Taymans  <wim@fluendo.com>
 
+	* ext/speex/gstspeexdec.c: (speex_dec_convert),
+	(speex_dec_sink_event), (speex_dec_chain_parse_header):
+	Some small cleanups, use _scale.
+
+2006-10-31  Wim Taymans  <wim@fluendo.com>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query):
 	Use higher precision scale function.
 

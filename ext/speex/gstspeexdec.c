@@ -221,7 +221,9 @@ speex_dec_convert (GstPad * pad,
         case GST_FORMAT_BYTES:
           scale = sizeof (float) * dec->header->nb_channels;
         case GST_FORMAT_DEFAULT:
-          *dest_value = scale * (src_value * dec->header->rate / GST_SECOND);
+          *dest_value =
+              gst_util_uint64_scale_int (scale * src_value, dec->header->rate,
+              GST_SECOND);
           break;
         default:
           res = FALSE;
@@ -234,7 +236,9 @@ speex_dec_convert (GstPad * pad,
           *dest_value = src_value * sizeof (float) * dec->header->nb_channels;
           break;
         case GST_FORMAT_TIME:
-          *dest_value = src_value * GST_SECOND / dec->header->rate;
+          *dest_value =
+              gst_util_uint64_scale_int (src_value, GST_SECOND,
+              dec->header->rate);
           break;
         default:
           res = FALSE;
@@ -247,8 +251,8 @@ speex_dec_convert (GstPad * pad,
           *dest_value = src_value / (sizeof (float) * dec->header->nb_channels);
           break;
         case GST_FORMAT_TIME:
-          *dest_value = src_value * GST_SECOND /
-              (dec->header->rate * sizeof (float) * dec->header->nb_channels);
+          *dest_value = gst_util_uint64_scale_int (src_value, GST_SECOND,
+              dec->header->rate * sizeof (float) * dec->header->nb_channels);
           break;
         default:
           res = FALSE;
@@ -440,12 +444,12 @@ speex_dec_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:{
       GstFormat format;
-      gdouble rate;
+      gdouble rate, arate;
       gint64 start, stop, time;
       gboolean update;
 
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
 
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
@@ -454,8 +458,8 @@ speex_dec_sink_event (GstPad * pad, GstEvent * event)
         goto newseg_wrong_rate;
 
       /* now configure the values */
-      gst_segment_set_newsegment (&dec->segment, update,
-          rate, GST_FORMAT_TIME, start, stop, time);
+      gst_segment_set_newsegment_full (&dec->segment, update,
+          rate, arate, GST_FORMAT_TIME, start, stop, time);
 
       dec->granulepos = -1;
 
@@ -500,29 +504,18 @@ speex_dec_chain_parse_header (GstSpeexDec * dec, GstBuffer * buf)
   dec->header = speex_packet_to_header ((char *) GST_BUFFER_DATA (buf),
       GST_BUFFER_SIZE (buf));
 
-  if (!dec->header) {
-    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-        (NULL), ("couldn't read header"));
-    return GST_FLOW_ERROR;
-  }
+  if (!dec->header)
+    goto no_header;
 
-  if (dec->header->mode >= SPEEX_NB_MODES) {
-    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-        (NULL),
-        ("Mode number %d does not (yet/any longer) exist in this version",
-            dec->header->mode));
-    return GST_FLOW_ERROR;
-  }
+  if (dec->header->mode >= SPEEX_NB_MODES)
+    goto mode_too_old;
 
   dec->mode = (SpeexMode *) speex_mode_list[dec->header->mode];
 
   /* initialize the decoder */
   dec->state = speex_decoder_init (dec->mode);
-  if (!dec->state) {
-    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
-        (NULL), ("couldn't initialize decoder"));
-    return GST_FLOW_ERROR;
-  }
+  if (!dec->state)
+    goto init_failed;
 
   speex_decoder_ctl (dec->state, SPEEX_SET_ENH, &dec->enh);
   speex_decoder_ctl (dec->state, SPEEX_GET_FRAME_SIZE, &dec->frame_size);
@@ -549,13 +542,40 @@ speex_dec_chain_parse_header (GstSpeexDec * dec, GstBuffer * buf)
       "endianness", G_TYPE_INT, G_BYTE_ORDER,
       "width", G_TYPE_INT, 16, "depth", G_TYPE_INT, 16, NULL);
 
-  if (!gst_pad_set_caps (dec->srcpad, caps)) {
-    gst_caps_unref (caps);
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
+  if (!gst_pad_set_caps (dec->srcpad, caps))
+    goto nego_failed;
 
   gst_caps_unref (caps);
   return GST_FLOW_OK;
+
+  /* ERRORS */
+no_header:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+        (NULL), ("couldn't read header"));
+    return GST_FLOW_ERROR;
+  }
+mode_too_old:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+        (NULL),
+        ("Mode number %d does not (yet/any longer) exist in this version",
+            dec->header->mode));
+    return GST_FLOW_ERROR;
+  }
+init_failed:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+        (NULL), ("couldn't initialize decoder"));
+    return GST_FLOW_ERROR;
+  }
+nego_failed:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+        (NULL), ("couldn't negotiate format"));
+    gst_caps_unref (caps);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstFlowReturn
