@@ -128,7 +128,7 @@ static const guint32 gst_v4l2_formats[] = {
 GST_IMPLEMENT_V4L2_PROBE_METHODS (GstV4l2SrcClass, gst_v4l2src);
 GST_IMPLEMENT_V4L2_COLOR_BALANCE_METHODS (GstV4l2Src, gst_v4l2src);
 GST_IMPLEMENT_V4L2_TUNER_METHODS (GstV4l2Src, gst_v4l2src);
-#ifdef HAVE_XVIDEO
+#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
 GST_IMPLEMENT_V4L2_XOVERLAY_METHODS (GstV4l2Src, gst_v4l2src);
 #endif
 GST_IMPLEMENT_V4L2_VIDORIENT_METHODS (GstV4l2Src, gst_v4l2src);
@@ -138,7 +138,7 @@ gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
 {
   GstV4l2Object *v4l2object = GST_V4L2SRC (iface)->v4l2object;
 
-#ifdef HAVE_XVIDEO
+#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
   g_assert (iface_type == GST_TYPE_TUNER ||
       iface_type == GST_TYPE_X_OVERLAY ||
       iface_type == GST_TYPE_COLOR_BALANCE ||
@@ -152,7 +152,7 @@ gst_v4l2src_iface_supported (GstImplementsInterface * iface, GType iface_type)
   if (v4l2object->video_fd == -1)
     return FALSE;
 
-#ifdef HAVE_XVIDEO
+#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
   if (iface_type == GST_TYPE_X_OVERLAY && !GST_V4L2_IS_OVERLAY (v4l2object))
     return FALSE;
 #endif
@@ -182,7 +182,7 @@ gst_v4l2src_init_interfaces (GType type)
     NULL,
     NULL,
   };
-#ifdef HAVE_XVIDEO
+#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
   static const GInterfaceInfo v4l2_xoverlay_info = {
     (GInterfaceInitFunc) gst_v4l2src_xoverlay_interface_init,
     NULL,
@@ -208,7 +208,7 @@ gst_v4l2src_init_interfaces (GType type)
   g_type_add_interface_static (type,
       GST_TYPE_IMPLEMENTS_INTERFACE, &v4l2iface_info);
   g_type_add_interface_static (type, GST_TYPE_TUNER, &v4l2_tuner_info);
-#ifdef HAVE_XVIDEO
+#if 0                           /* overlay is still not implemented #ifdef HAVE_XVIDEO */
   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &v4l2_xoverlay_info);
 #endif
   g_type_add_interface_static (type,
@@ -762,7 +762,7 @@ static gboolean
 gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 {
   GstV4l2Src *v4l2src;
-  gint w, h;
+  gint w = 0, h = 0;
   GstStructure *structure;
   struct v4l2_fmtdesc *format;
   const GValue *framerate;
@@ -908,14 +908,16 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
 read_error:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC,
-        (_("Error read()ing %d bytes on device %s."),
+        (_("Error read()ing %d bytes on device '%s'."),
             buffersize, v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
     gst_buffer_unref (*buf);
     return GST_FLOW_ERROR;
   }
 short_read:
   {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC, (NULL),
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SYNC,
+        (_("Error reading from device '%s'"),
+            v4l2src->v4l2object->videodev),
         ("Error read()ing a buffer on device %s: got only %d bytes instead of expected %d.",
             v4l2src->v4l2object->videodev, amount, buffersize));
     gst_buffer_unref (*buf);

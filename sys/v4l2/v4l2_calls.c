@@ -99,8 +99,10 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         break;                  /* end of enumeration */
       else {
         GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-            (_("Failed to get %d in channel enumeration for %s."),
-                n, v4l2object->videodev), GST_ERROR_SYSTEM);
+            (_("Failed to query attributes of input %d in device %s"),
+                n, v4l2object->videodev),
+            ("Failed to get %d in input enumeration for %s. (%d - %s)",
+                n, v4l2object->videodev, errno, strerror (errno)));
         return FALSE;
       }
     }
@@ -121,7 +123,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       vtun.index = input.tuner;
       if (ioctl (v4l2object->video_fd, VIDIOC_G_TUNER, &vtun) < 0) {
         GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-            (_("Failed to get tuner %d settings on %s."),
+            (_("Failed to get setting of tuner &d on device '%s'."),
                 input.tuner, v4l2object->videodev), GST_ERROR_SYSTEM);
         g_object_unref (G_OBJECT (channel));
         return FALSE;
@@ -161,8 +163,10 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         break;                  /* end of enumeration */
       else {
         GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-            (_("Failed to get %d in norm enumeration for %s."),
-                n, v4l2object->videodev), GST_ERROR_SYSTEM);
+            (_("Failed to query norm on device '%s'."),
+                v4l2object->videodev),
+            ("Failed to get attributes for norm %d on devide '%s'. (%d - %s)",
+                n, v4l2object->videodev, errno, strerror (errno)));
         return FALSE;
       }
     }
@@ -207,8 +211,10 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
           break;
       } else {
         GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-            (_("Failed to get %d in control enumeration for %s."),
-                n, v4l2object->videodev), GST_ERROR_SYSTEM);
+            (_("Failed getting controls attributes on device '%s."),
+                v4l2object->videodev),
+            ("Failed querying control %d on device '%s'. (%d - %s)",
+                n, v4l2object->videodev, errno, strerror (errno)));
         return FALSE;
       }
     }
@@ -276,8 +282,10 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
             break;              /* end of enumeration */
           else {
             GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-                (_("Failed to get %d in menu enumeration for %s"),
-                    n, v4l2object->videodev), GST_ERROR_SYSTEM);
+                (_("Failed getting controls attributes on device '%s."),
+                    v4l2object->videodev),
+                ("Failed to get %d in menu enumeration for %s. (%d - %s)",
+                    n, v4l2object->videodev, errno, strerror (errno)));
             return FALSE;
           }
         }
@@ -406,14 +414,14 @@ no_device:
 not_open:
   {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, OPEN_READ_WRITE,
-        (_("Could not open device \"%s\" for reading and writing."),
+        (_("Could not open device '%s' for reading and writing."),
             v4l2object->videodev), GST_ERROR_SYSTEM);
     goto error;
   }
 not_capture:
   {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
-        (_("Device \"%s\" is not a capture device."),
+        (_("Device '%s' is not a capture device."),
             v4l2object->videodev),
         ("Capabilities: 0x%x", v4l2object->vcap.capabilities));
     goto error;
@@ -508,8 +516,8 @@ gst_v4l2_set_norm (GstV4l2Object * v4l2object, v4l2_std_id norm)
 std_failed:
   {
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to set norm 0x%llx for device %s: %s."),
-            norm, v4l2object->videodev), GST_ERROR_SYSTEM);
+        (_("Failed to set norm for device '%s'."),
+            v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
 }
@@ -545,7 +553,7 @@ gst_v4l2_get_frequency (GstV4l2Object * v4l2object,
 freq_failed:
   {
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to get current tuner frequency for device %s."),
+        (_("Failed to get current tuner frequency for device '%s'."),
             v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -586,7 +594,7 @@ gst_v4l2_set_frequency (GstV4l2Object * v4l2object,
 freq_failed:
   {
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to set current tuner frequency for device %s to %lu."),
+        (_("Failed to set current tuner frequency for device '%s' to %lu Hz."),
             v4l2object->videodev, frequency), GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -620,7 +628,7 @@ gst_v4l2_signal_strength (GstV4l2Object * v4l2object,
 tuner_failed:
   {
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to get signal strength for device %s."),
+        (_("Failed to get signal strength for device '%s'."),
             v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -656,7 +664,7 @@ gst_v4l2_get_attribute (GstV4l2Object * v4l2object,
 ctrl_failed:
   {
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to get value for control %d on device %s."),
+        (_("Failed to get value for control %d on device '%s'."),
             attribute_num, v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -691,7 +699,7 @@ gst_v4l2_set_attribute (GstV4l2Object * v4l2object,
 ctrl_failed:
   {
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to set value %d for control %d on device %s."),
+        (_("Failed to set value %d for control %d on device '%s'."),
             value, attribute_num, v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
@@ -718,7 +726,7 @@ gst_v4l2_get_input (GstV4l2Object * v4l2object, gint * input)
 input_failed:
   {
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to get current input on device %s."),
+        (_("Failed to get current input on device '%s'."),
             v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
