@@ -33,7 +33,7 @@ static const GstElementDetails gst_ogg_demux_details =
 GST_ELEMENT_DETAILS ("Ogg demuxer",
     "Codec/Demuxer",
     "demux ogg streams (info about ogg: http://xiph.org)",
-    "Wim Taymand <wim@fluendo.com>");
+    "Wim Taymans <wim@fluendo.com>");
 
 #define CHUNKSIZE (8500)        /* this is out of vorbisfile */
 #define SKELETON_FISHEAD_SIZE 64

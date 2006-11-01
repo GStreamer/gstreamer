@@ -29,8 +29,6 @@ extern gboolean gst_ogm_parse_plugin_init (GstPlugin * plugin);
 extern gboolean gst_ogg_parse_plugin_init (GstPlugin * plugin);
 extern gboolean gst_ogg_avi_parse_plugin_init (GstPlugin * plugin);
 
-GST_DEBUG_CATEGORY (vorbisdec_debug);
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
