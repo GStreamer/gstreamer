@@ -1,3 +1,19 @@
+2006-11-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sergey Scobich  <sergey dot scobich at gmail com>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	(gst_directdrawsink_window_thread),
+	(gst_directdrawsink_create_default_window):
+	* sys/directdraw/gstdirectdrawsink.h:
+	* sys/directsound/gstdirectsoundsink.c:
+	  Wait until the window is created before using it; guard unistd.h
+	  includes with HAVE_UNISTD_H. (#366523)
+
+	* win32/vs8/libgstdirectdraw.vcproj:
+	* win32/vs8/libgstdirectsound.vcproj:
+	  Update project files.
+
 2006-10-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_duration),

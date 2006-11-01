@@ -28,7 +28,9 @@
 
 #include <fcntl.h>
 #include <errno.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (directdrawsink_debug);
@@ -1366,6 +1368,8 @@ gst_directdrawsink_window_thread (GstDirectDrawSink * ddrawsink)
   if (ddrawsink->video_window == NULL)
     return FALSE;
 
+  ReleaseSemaphore (ddrawsink->window_created_signal, 1, NULL);
+
   /*start message loop processing our default window messages */
   while (1) {
     MSG msg;
@@ -1381,15 +1385,27 @@ gst_directdrawsink_window_thread (GstDirectDrawSink * ddrawsink)
 static gboolean
 gst_directdrawsink_create_default_window (GstDirectDrawSink * ddrawsink)
 {
+  ddrawsink->window_created_signal = CreateSemaphore (NULL, 0, 1, NULL);
+  if (ddrawsink->window_created_signal == NULL)
+    return FALSE;
+
   ddrawsink->window_thread = g_thread_create (
       (GThreadFunc) gst_directdrawsink_window_thread, ddrawsink, TRUE, NULL);
 
   if (ddrawsink->window_thread == NULL)
-    return FALSE;
+    goto failed;
 
-  /*TODO:wait for the window to be created with timeout */
+  /* wait maximum 10 seconds for windows creating */
+  if (WaitForSingleObject (ddrawsink->window_created_signal,
+          10000) != WAIT_OBJECT_0)
+    goto failed;
 
+  CloseHandle (ddrawsink->window_created_signal);
   return TRUE;
+
+failed:
+  CloseHandle (ddrawsink->window_created_signal);
+  return FALSE;
 }
 
 static gboolean

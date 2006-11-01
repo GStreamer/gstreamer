@@ -27,7 +27,9 @@
 
 #include <fcntl.h>
 #include <errno.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (directsoundsink_debug);

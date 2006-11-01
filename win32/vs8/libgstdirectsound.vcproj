@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="libgstdirectsound"
 	ProjectGUID="{566A2EB9-984C-4027-86DD-EDC7B390C679}"
 	Keyword="Win32Proj"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dsound.lib dxerr9.lib libgstaudio-0.10.lib libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib"
+				AdditionalDependencies="dsound.lib dxerr9.lib libgstaudio-0.10.lib libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib user32.lib"
 				OutputFile="$(OutDir)/libgstdirectsound.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/vs8/$(ConfigurationName);../../../gst-plugins-base/win32/vs8/$(ConfigurationName)"
@@ -141,7 +141,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="dsound.lib dxerr9.lib libgstaudio-0.10.lib libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib"
+				AdditionalDependencies="dsound.lib dxerr9.lib libgstaudio-0.10.lib libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib user32.lib"
 				OutputFile="$(OutDir)/libgstdirectsound.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/vs8/$(ConfigurationName);../../../gst-plugins-base/win32/vs8/$(ConfigurationName)"
