@@ -104,6 +104,7 @@ struct _GstDirectDrawSink
 
   /*handle of the video window */
   HWND video_window;
+  HANDLE window_created_signal;
   gboolean resize_window;
 
   /*video properties */
