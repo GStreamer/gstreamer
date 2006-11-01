@@ -60,11 +60,6 @@
 #include "gst/riff/riff-media.h"
 #include <gst/gst-i18n-plugin.h>
 
-/* FIXME: remove again when we depend on -base >= 0.10.9.1 */
-#ifndef GST_RIFF_TAG_fact
-#define GST_RIFF_TAG_fact GST_MAKE_FOURCC ('f','a','c','t')
-#endif
-
 GST_DEBUG_CATEGORY_STATIC (wavparse_debug);
 #define GST_CAT_DEFAULT (wavparse_debug)
 

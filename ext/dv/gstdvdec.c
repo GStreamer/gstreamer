@@ -311,21 +311,20 @@ gst_dvdec_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_NEWSEGMENT:{
       gboolean update;
-      gdouble rate;
+      gdouble rate, applied_rate;
       GstFormat format;
       gint64 start, stop, position;
 
-      /* Once -good depends on core >= 0.10.6, use newsegment_full */
-      gst_event_parse_new_segment (event, &update, &rate, &format,
-          &start, &stop, &position);
+      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+          &format, &start, &stop, &position);
 
       GST_DEBUG_OBJECT (dvdec, "Got NEWSEGMENT [%" GST_TIME_FORMAT
           " - %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "]",
           GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
           GST_TIME_ARGS (position));
 
-      gst_segment_set_newsegment (dvdec->segment, update, rate, format,
-          start, stop, position);
+      gst_segment_set_newsegment_full (dvdec->segment, update, rate,
+          applied_rate, format, start, stop, position);
       break;
     }
     default:

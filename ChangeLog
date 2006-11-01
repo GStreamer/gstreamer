@@ -1,3 +1,17 @@
+2006-11-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/id3v2frames.c: (parse_picture_frame):
+	  We require a -base more recent than 0.10.9, so it's safe to use
+	  GST_TYPE_TAG_IMAGE_TYPE unconditionally now.
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_sink_event):
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_sink_event):
+	  Use _newsegment_full() now that we depend on a recent enough core.
+
+	* gst/wavparse/gstwavparse.c:
+	  Remove cruft that we don't need any longer now that we depend on
+	  a recent enough -base.
+
 2006-10-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/Makefile.am:

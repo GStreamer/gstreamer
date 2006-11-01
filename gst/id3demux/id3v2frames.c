@@ -513,14 +513,11 @@ parse_picture_frame (ID3TagsWorking * work)
   }
 
   if (image && image_caps) {
-    /* FIXME: remove #ifdef once we depend on -base >= 0.10.9 */
-#ifdef GST_TYPE_TAG_IMAGE_TYPE
     if (pic_type > 0x14)
       pic_type = GST_TAG_IMAGE_TYPE_UNDEFINED;
     gst_structure_set (gst_caps_get_structure (image_caps, 0),
         "image-type", GST_TYPE_TAG_IMAGE_TYPE,
         (GstTagImageType) pic_type, NULL);
-#endif
 
     gst_buffer_set_caps (image, image_caps);
     gst_caps_unref (image_caps);
