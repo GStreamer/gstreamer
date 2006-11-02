@@ -163,6 +163,8 @@ gst_theora_dec_init (GstTheoraDec * dec, GstTheoraDecClass * g_class)
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 
   dec->crop = THEORA_DEF_CROP;
+  dec->gather = NULL;
+  dec->decode = NULL;
   dec->queued = NULL;
 }
 
@@ -681,9 +683,6 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
-      if (rate <= 0.0)
-        goto newseg_wrong_rate;
-
       /* now configure the values */
       gst_segment_set_newsegment_full (&dec->segment, update,
           rate, arate, format, start, stop, time);
@@ -705,12 +704,6 @@ done:
 newseg_wrong_format:
   {
     GST_DEBUG_OBJECT (dec, "received non TIME newsegment");
-    gst_event_unref (event);
-    goto done;
-  }
-newseg_wrong_rate:
-  {
-    GST_DEBUG_OBJECT (dec, "negative rates not supported yet");
     gst_event_unref (event);
     goto done;
   }
@@ -1150,16 +1143,13 @@ no_buffer:
 }
 
 static GstFlowReturn
-theora_dec_chain (GstPad * pad, GstBuffer * buf)
+theora_dec_chain_forward (GstTheoraDec * dec, gboolean discont, GstBuffer * buf)
 {
-  GstTheoraDec *dec;
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
 
-  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
-
   /* resync on DISCONT */
-  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
+  if (G_UNLIKELY (discont)) {
     GST_DEBUG_OBJECT (dec, "received DISCONT buffer");
     dec->need_keyframe = TRUE;
     dec->last_timestamp = -1;
@@ -1209,11 +1199,171 @@ done:
   /* interpolate granule pos */
   dec->granulepos = _inc_granulepos (dec, dec->granulepos);
 
-  gst_object_unref (dec);
-
   gst_buffer_unref (buf);
 
   return result;
+}
+
+/* For reverse playback we use a technique that can be used for
+ * any keyframe based video codec.
+ *
+ * Input:
+ *  Buffer decoding order:  7  8  9  4  5  6  1  2  3  EOS
+ *  Keyframe flag:                      K        K
+ *  Discont flag:           D        D        D
+ *
+ * - Each Discont marks a discont in the decoding order.
+ * - The keyframes mark where we can start decoding.
+ *
+ * First we prepend incomming buffers to the gather queue, whenever we receive
+ * a discont, we flush out the gather queue.
+ *
+ * The above data will be accumulated in the gather queue like this:
+ *
+ *   gather queue:  9  8  7
+ *                        D
+ *
+ * Whe buffer 4 is received (with a DISCONT), we flush the gather queue like
+ * this:
+ *
+ *   while (gather)
+ *     take head of queue and prepend to decode queue.
+ *     if we copied a keyframe, decode the decode queue.
+ *
+ * After we flushed the gather queue, we add 4 to the (now empty) gather queue.
+ * We get the following situation:
+ *
+ *  gather queue:    4
+ *  decode queue:    7  8  9
+ *
+ * After we received 5 (Keyframe) and 6:
+ *
+ *  gather queue:    6  5  4
+ *  decode queue:    7  8  9
+ *
+ * When we receive 1 (DISCONT) which triggers a flush of the gather queue:
+ *
+ *   Copy head of the gather queue (6) to decode queue:
+ *
+ *    gather queue:    5  4
+ *    decode queue:    6  7  8  9
+ *
+ *   Copy head of the gather queue (5) to decode queue. This is a keyframe so we
+ *   can start decoding.
+ *
+ *    gather queue:    4
+ *    decode queue:    5  6  7  8  9
+ *
+ *   Decode frames in decode queue, store raw decoded data in output queue, we
+ *   can take the head of the decode queue and prepend the decoded result in the
+ *   output queue:
+ *
+ *    gather queue:    4
+ *    decode queue:    
+ *    output queue:    9  8  7  6  5
+ *
+ *   Now output all the frames in the output queue, picking a frame from the
+ *   head of the queue.
+ *
+ *   Copy head of the gather queue (4) to decode queue, we flushed the gather
+ *   queue an can now store input buffer in the gather queue:
+ *
+ *    gather queue:    1
+ *    decode queue:    4
+ *
+ *  When we receive EOS, the queue looks like:
+ *
+ *    gather queue:    3  2  1
+ *    decode queue:    4
+ *
+ *  Fill decode queue, first keyframe we copy is 2:
+ *
+ *    gather queue:    1
+ *    decode queue:    2  3  4
+ *
+ *  Decoded output:
+ *
+ *    gather queue:    1
+ *    decode queue:    
+ *    output queue:    4  3  2
+ *
+ *  Leftover buffer 1 cannot be decoded and must be discarded.
+ */
+static GstFlowReturn
+theora_dec_flush_decode (GstTheoraDec * dec)
+{
+  GstFlowReturn res = GST_FLOW_OK;
+
+  while (dec->decode) {
+    GstBuffer *buf = GST_BUFFER_CAST (dec->decode->data);
+
+    /* FIXME, decode buffer, prepend to output queue */
+    gst_buffer_unref (buf);
+
+    dec->decode = g_list_delete_link (dec->decode, dec->decode);
+  }
+  while (dec->queued) {
+    GstBuffer *buf = GST_BUFFER_CAST (dec->queued->data);
+
+    /* iterate ouput queue an push downstream */
+    res = gst_pad_push (dec->srcpad, buf);
+
+    dec->queued = g_list_delete_link (dec->queued, dec->queued);
+  }
+
+  return res;
+}
+
+static GstFlowReturn
+theora_dec_chain_reverse (GstTheoraDec * dec, gboolean discont, GstBuffer * buf)
+{
+  GstFlowReturn res = GST_FLOW_OK;
+
+  /* if we have a discont, move buffers to the decode list */
+  if (discont) {
+    while (dec->gather) {
+      GstBuffer *buf;
+      guint8 *data;
+
+      buf = GST_BUFFER_CAST (dec->gather->data);
+      /* remove from the gather list */
+      dec->gather = g_list_delete_link (dec->gather, dec->gather);
+      /* copy to decode queue */
+      dec->decode = g_list_prepend (dec->decode, buf);
+
+      /* if we copied a keyframe, flush and decode the decode queue */
+      data = GST_BUFFER_DATA (buf);
+      if ((data[0] & 0x40) == 0)
+        res = theora_dec_flush_decode (dec);
+    }
+  }
+
+  /* add buffer to gather queue */
+  dec->gather = g_list_prepend (dec->gather, buf);
+
+  return res;
+}
+
+static GstFlowReturn
+theora_dec_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstTheoraDec *dec;
+  GstFlowReturn res;
+  gboolean discont;
+
+  dec = GST_THEORA_DEC (gst_pad_get_parent (pad));
+
+  /* peel of DISCONT flag */
+  discont = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT);
+
+  if (dec->segment.rate > 0.0)
+    res = theora_dec_chain_forward (dec, discont, buf);
+  else
+    res = theora_dec_chain_reverse (dec, discont, buf);
+
+  gst_object_unref (dec);
+
+  return res;
 }
 
 static GstStateChangeReturn

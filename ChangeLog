@@ -1,3 +1,13 @@
+2006-11-02  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/gsttheoradec.h:
+	* ext/theora/theoradec.c: (gst_theora_dec_init),
+	(theora_dec_sink_event), (theora_dec_chain_forward),
+	(theora_dec_flush_decode), (theora_dec_chain_reverse),
+	(theora_dec_chain):
+	Document and partially implement an algorithm for doing reverse playback
+	of theora video.
+
 2006-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sergey Scobich  <sergey.scobich at gmail com>

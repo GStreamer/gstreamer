@@ -74,7 +74,13 @@ struct _GstTheoraDec
 
   gboolean crop;
 
+  /* list of buffers that need timestamps */
   GList *queued;
+  /* list of raw output buffers */
+  GList *output;
+  /* gather/decode queues for reverse playback */
+  GList *gather;
+  GList *decode;
 
   /* segment info */ /* with STREAM_LOCK */
   GstSegment segment;
