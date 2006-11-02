@@ -1,5 +1,10 @@
 2006-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* plugins/elements/gstfilesrc.c: (gst_file_src_create_mmap):
+	  Printf fixes for PPC/OSX, take two (#369366).
+
+2006-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Based on patch by: Jan David Mol  <j.j.d.mol at tudelft nl>
 
 	* plugins/elements/gstfilesink.c: (gst_file_sink_class_init):

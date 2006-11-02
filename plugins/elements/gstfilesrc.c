@@ -705,9 +705,9 @@ gst_file_src_create_mmap (GstFileSrc * src, guint64 offset, guint length,
 
       off_t nextmap = offset - (offset % src->mapsize);
 
-      GST_LOG_OBJECT (src,
-          "read buf %llu+%d in new mapbuf at %llu+%d, mapping and subbuffering",
-          offset, readsize, nextmap, src->mapsize);
+      GST_LOG_OBJECT (src, "read buf %" G_GUINT64_FORMAT "+%d in new mapbuf "
+          "at %" G_GUINT64_FORMAT "+%d, mapping and subbuffering",
+          offset, (gint) readsize, (guint64) nextmap, (gint) src->mapsize);
       /* first, we're done with the old mapbuf */
       gst_buffer_unref (src->mapbuf);
       mapsize = src->mapsize;
@@ -715,7 +715,7 @@ gst_file_src_create_mmap (GstFileSrc * src, guint64 offset, guint length,
       /* double the mapsize as long as the readsize is smaller */
       while (readsize + offset > nextmap + mapsize) {
         GST_LOG_OBJECT (src, "readsize smaller then mapsize %08x %d",
-            readsize, (int) mapsize);
+            (guint) readsize, (gint) mapsize);
         mapsize <<= 1;
       }
       /* create a new one */
