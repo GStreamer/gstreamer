@@ -620,6 +620,7 @@ static GstStaticCaps mp3_caps = GST_STATIC_CAPS ("audio/mpeg, "
 #define GST_MP3_TYPEFIND_TRY_HEADERS (5)
 #define GST_MP3_TYPEFIND_TRY_SYNC (GST_TYPE_FIND_MAXIMUM * 100) /* 10kB */
 #define GST_MP3_TYPEFIND_SYNC_SIZE (2048)
+#define GST_MP3_WRONG_HEADER (10)
 
 static void
 mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
@@ -631,6 +632,7 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
   guint64 skipped;
   gint last_free_offset = -1;
   gint last_free_framelen = -1;
+  gboolean headerstart = TRUE;
 
   *found_layer = 0;
   *found_prob = 0;
@@ -685,6 +687,10 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
             last_free_framelen = -1;
           }
 
+          /* Mark the fact that we didn't find a valid header at the beginning */
+          if (found == 0)
+            headerstart = FALSE;
+
           GST_LOG ("%d. header at offset %" G_GUINT64_FORMAT
               " (0x%" G_GINT64_MODIFIER "x) was not an mp3 header "
               "(possibly-free: %s)", found + 1, start_off + offset,
@@ -719,6 +725,9 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
             (GST_MP3_TYPEFIND_TRY_SYNC - skipped) /
             GST_MP3_TYPEFIND_TRY_HEADERS / GST_MP3_TYPEFIND_TRY_SYNC;
 
+        if (!headerstart
+            && ((probability - GST_MP3_WRONG_HEADER) > GST_TYPE_FIND_MINIMUM))
+          probability -= GST_MP3_WRONG_HEADER;
         if (probability < GST_TYPE_FIND_MINIMUM)
           probability = GST_TYPE_FIND_MINIMUM;
         if (start_off > 0)

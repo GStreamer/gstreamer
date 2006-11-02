@@ -1,3 +1,10 @@
+2006-11-02  Edward Hervey  <edward@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset):
+	Lower the probability of mp3 typefinding functions if we don't find a
+	valid mp3 header at the start of the file.
+	Closes #369482
+
 2006-11-02  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/gsttheoradec.h:
