@@ -1,3 +1,14 @@
+2006-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: Jan David Mol  <j.j.d.mol at tudelft nl>
+
+	* plugins/elements/gstfilesink.c: (gst_file_sink_class_init):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_class_init),
+	(gst_file_src_map_small_region), (gst_file_src_create_mmap):
+	  Printf fixes for gsize parameters on PPC/OSX (#369366). Also,
+	  don't cast to long long for portability reasons, but use
+	  GLib's types instead.
+
 2006-10-30  Michael Smith  <msmith@fluendo.com>
 
 	* plugins/elements/gstfdsrc.c: (gst_fd_src_update_fd):

@@ -140,7 +140,8 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_file_sink_event);
 
   if (sizeof (off_t) < 8) {
-    GST_LOG ("No large file support, sizeof (off_t) = %u", sizeof (off_t));
+    GST_LOG ("No large file support, sizeof (off_t) = %" G_GSIZE_FORMAT "!",
+        sizeof (off_t));
   }
 }
 

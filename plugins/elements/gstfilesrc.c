@@ -260,7 +260,8 @@ gst_file_src_class_init (GstFileSrcClass * klass)
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_file_src_create);
 
   if (sizeof (off_t) < 8) {
-    GST_LOG ("No large file support, sizeof (off_t) = %u!", sizeof (off_t));
+    GST_LOG ("No large file support, sizeof (off_t) = %" G_GSIZE_FORMAT "!",
+        sizeof (off_t));
   }
 }
 
@@ -590,8 +591,8 @@ gst_file_src_map_small_region (GstFileSrc * src, off_t offset, size_t size)
   guint pagesize;
 
   GST_LOG_OBJECT (src,
-      "attempting to map a small buffer at %llu+%d",
-      (unsigned long long) offset, (gint) size);
+      "attempting to map a small buffer at %" G_GUINT64_FORMAT "+%d",
+      (guint64) offset, (gint) size);
 
   pagesize = src->pagesize;
 
@@ -607,8 +608,8 @@ gst_file_src_map_small_region (GstFileSrc * src, off_t offset, size_t size)
     mapsize = ((size + mod + pagesize - 1) / pagesize) * pagesize;
 
     GST_LOG_OBJECT (src,
-        "not on page boundaries, resizing to map to %llu+%d",
-        (unsigned long long) mapbase, (gint) mapsize);
+        "not on page boundaries, resizing to map to %" G_GUINT64_FORMAT "+%d",
+        (guint64) mapbase, (gint) mapsize);
 
     map = gst_file_src_map_region (src, mapbase, mapsize, FALSE);
     if (map == NULL)
@@ -651,18 +652,17 @@ gst_file_src_create_mmap (GstFileSrc * src, guint64 offset, guint length,
     /* if the end is before the mapend, the buffer is in current mmap region... */
     /* ('cause by definition if readend is in the buffer, so's readstart) */
     if (readend <= mapend) {
-      GST_LOG_OBJECT (src,
-          "read buf %llu+%d lives in current mapbuf %lld+%d, creating subbuffer of mapbuf",
-          offset, (int) readsize, mapstart, mapsize);
+      GST_LOG_OBJECT (src, "read buf %" G_GUINT64_FORMAT "+%u lives in "
+          "current mapbuf %u+%u, creating subbuffer of mapbuf",
+          offset, (guint) readsize, (guint) mapstart, (guint) mapsize);
       buf = gst_buffer_create_sub (src->mapbuf, offset - mapstart, readsize);
       GST_BUFFER_OFFSET (buf) = offset;
 
       /* if the start actually is within the current mmap region, map an overlap buffer */
     } else if (offset < mapend) {
-      GST_LOG_OBJECT (src,
-          "read buf %llu+%d starts in mapbuf %d+%d but ends outside, creating new mmap",
-          (unsigned long long) offset, (gint) readsize, (gint) mapstart,
-          (gint) mapsize);
+      GST_LOG_OBJECT (src, "read buf %" G_GUINT64_FORMAT "+%u starts in "
+          "mapbuf %u+%u but ends outside, creating new mmap",
+          offset, (guint) readsize, (guint) mapstart, (guint) mapsize);
       buf = gst_file_src_map_small_region (src, offset, readsize);
       if (buf == NULL)
         goto could_not_mmap;
@@ -676,10 +676,9 @@ gst_file_src_create_mmap (GstFileSrc * src, guint64 offset, guint length,
     /* either the read buffer overlaps the start of the mmap region */
     /* or the read buffer fully contains the current mmap region    */
     /* either way, it's really not relevant, we just create a new region anyway */
-    GST_LOG_OBJECT (src,
-        "read buf %llu+%d starts before mapbuf %d+%d, but overlaps it",
-        (unsigned long long) offset, (gint) readsize, (gint) mapstart,
-        (gint) mapsize);
+    GST_LOG_OBJECT (src, "read buf %" G_GUINT64_FORMAT "+%d starts before "
+        "mapbuf %d+%d, but overlaps it", (guint64) offset, (gint) readsize,
+        (gint) mapstart, (gint) mapsize);
     buf = gst_file_src_map_small_region (src, offset, readsize);
     if (buf == NULL)
       goto could_not_mmap;
