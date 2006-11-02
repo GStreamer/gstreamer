@@ -1,7 +1,7 @@
 
 /* Generated data (by glib-mkenums) */
 
-#include <interfaces.h>
+#include "interfaces.h"
 
 /* enumerations from "colorbalance.h" */
 GType

@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="libgstriff"
 	ProjectGUID="{3D36330F-1F68-44F6-A712-803E819A3DCD}"
 	Keyword="Win32Proj"
@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../gstreamer"
+				AdditionalIncludeDirectories="../../../gstreamer,../../gst-libs"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBGSTRIFF_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -121,7 +121,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="../../../gstreamer"
+				AdditionalIncludeDirectories="../../../gstreamer,../../gst-libs"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBGSTRIFF_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"

@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="libgstvorbis"
 	ProjectGUID="{4F2E05FD-F87C-4325-8C2A-C1EEA21A483F}"
 	Keyword="Win32Proj"
@@ -197,6 +197,10 @@
 			</File>
 			<File
 				RelativePath="..\..\ext\vorbis\vorbisparse.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ext\vorbis\vorbistag.c"
 				>
 			</File>
 		</Filter>

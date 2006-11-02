@@ -1,3 +1,23 @@
+2006-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sergey Scobich  <sergey.scobich at gmail com>
+
+	* win32/common/config.h:
+	* win32/common/interfaces-enumtypes.c:
+	* win32/common/libgsttag.def:
+	* win32/vs8/gst-plugins-base.sln:
+	* win32/vs8/libgstaudioresample.vcproj:
+	* win32/vs8/libgstinterfaces.vcproj:
+	* win32/vs8/libgstogg.vcproj:
+	* win32/vs8/libgstriff.vcproj:
+	* win32/vs8/libgsttag.vcproj:
+	* win32/vs8/libgsttheora.vcproj:
+	* win32/vs8/libgstvideoscale.vcproj:
+	* win32/vs8/libgstvorbis.vcproj:
+	  Misc. VS8 build fixes: fix syntax in config.h, add missing entries
+	  to libgsttag.def; add missing dependencies for some vs8 projects;
+	  re-arrange placement of .def files in vs8 projects (#366334).
+
 2006-11-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ogg/gstogg.c:

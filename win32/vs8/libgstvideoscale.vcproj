@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="libgstvideoscale"
 	ProjectGUID="{557CB36F-7F92-4B43-973D-05C6BF0A6414}"
 	Keyword="Win32Proj"
@@ -60,7 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib"
+				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib liboil-0.3-0.lib"
 				OutputFile="$(OutDir)/libgstvideoscale.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/vs8/$(ConfigurationName)"
@@ -138,7 +138,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib"
+				AdditionalDependencies="libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib liboil-0.3-0.lib"
 				OutputFile="$(OutDir)/libgstvideoscale.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../gstreamer/win32/vs8/$(ConfigurationName)"

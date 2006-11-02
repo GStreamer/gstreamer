@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="libgstogg"
 	ProjectGUID="{51E1F9C4-091E-43A0-97C1-E1B68700A5AF}"
 	Keyword="Win32Proj"
@@ -185,6 +185,10 @@
 			>
 			<File
 				RelativePath="..\..\ext\ogg\gstogg.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ext\ogg\gstoggaviparse.c"
 				>
 			</File>
 			<File

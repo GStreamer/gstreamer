@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="libgstinterfaces"
 	ProjectGUID="{CF1687EC-9097-4A86-B7FB-C1ECF9E27EA4}"
 	Keyword="Win32Proj"
@@ -195,6 +195,10 @@
 			</File>
 			<File
 				RelativePath="..\..\gst-libs\gst\interfaces\colorbalancechannel.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\gst-libs\gst\interfaces\interfaces-enumtypes.c"
 				>
 			</File>
 			<File

@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="libgstaudioresample"
 	ProjectGUID="{0EE3173E-FCD3-4EC6-A28F-5AE5CE7196AC}"
 	Keyword="Win32Proj"
@@ -185,10 +185,6 @@
 			>
 			<File
 				RelativePath="..\..\gst\audioresample\buffer.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\gst\audioresample\debug.c"
 				>
 			</File>
 			<File
