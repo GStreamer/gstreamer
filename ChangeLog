@@ -1,3 +1,15 @@
+2006-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge <slomo at circular-chaos.org>
+
+	* configure.ac:
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_mode_get_type),
+	(gst_wavpack_enc_correction_mode_get_type),
+	(gst_wavpack_enc_joint_stereo_mode_get_type),
+	(gst_wavpack_enc_init), (gst_wavpack_enc_set_wp_config):
+	  Fix enum nicks; only emit no-more-pads once; add support for very
+	  fast encoding mode in upcoming 4.40.0 release (#369539).
+
 2006-11-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sergey Scobich  <sergey dot scobich at gmail com>

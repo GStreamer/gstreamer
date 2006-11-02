@@ -148,7 +148,7 @@ static GstStaticPadTemplate wvcsrc_factory = GST_STATIC_PAD_TEMPLATE ("wvcsrc",
     GST_STATIC_CAPS ("audio/x-wavpack-correction, " "framed = (boolean) TRUE")
     );
 
-#define DEFAULT_MODE 1
+#define DEFAULT_MODE 2
 #define GST_TYPE_WAVPACK_ENC_MODE (gst_wavpack_enc_mode_get_type ())
 static GType
 gst_wavpack_enc_mode_get_type (void)
@@ -157,9 +157,17 @@ gst_wavpack_enc_mode_get_type (void)
 
   if (qtype == 0) {
     static const GEnumValue values[] = {
-      {0, "Fast Compression", "0"},
-      {1, "Default", "1"},
-      {2, "High Compression", "2"},
+#if 0
+      /* Very Fast Compression is not supported yet, but will be supported
+       * in future wavpack versions */
+      {0, "Very Fast Compression", "veryfast"},
+#endif
+      {1, "Fast Compression", "fast"},
+      {2, "Normal Compression", "normal"},
+      {3, "High Compression", "high"},
+#ifndef WAVPACK_OLD_API
+      {4, "Very High Compression", "veryhigh"},
+#endif
       {0, NULL, NULL}
     };
 
@@ -177,9 +185,9 @@ gst_wavpack_enc_correction_mode_get_type (void)
 
   if (qtype == 0) {
     static const GEnumValue values[] = {
-      {0, "Create no correction file (default)", "0"},
-      {1, "Create correction file", "1"},
-      {2, "Create optimized correction file", "2"},
+      {0, "Create no correction file", "off"},
+      {1, "Create correction file", "on"},
+      {2, "Create optimized correction file", "optimized"},
       {0, NULL, NULL}
     };
 
@@ -197,9 +205,9 @@ gst_wavpack_enc_joint_stereo_mode_get_type (void)
 
   if (qtype == 0) {
     static const GEnumValue values[] = {
-      {0, "auto (default)", "0"},
-      {1, "left/right", "1"},
-      {2, "mid/side", "2"},
+      {0, "auto", "auto"},
+      {1, "left/right", "leftright"},
+      {2, "mid/side", "midside"},
       {0, NULL, NULL}
     };
 
@@ -320,12 +328,12 @@ gst_wavpack_enc_init (GstWavpackEnc * enc, GstWavpackEncClass * gclass)
   enc->wvc_id->wavpack_enc = enc;
 
   /* set default values of params */
-  enc->mode = 1;
+  enc->mode = DEFAULT_MODE;
   enc->bitrate = 0.0;
-  enc->correction_mode = 0;
+  enc->correction_mode = DEFAULT_CORRECTION_MODE;
   enc->md5 = FALSE;
   enc->extra_processing = FALSE;
-  enc->joint_stereo_mode = 0;
+  enc->joint_stereo_mode = DEFAULT_JS_MODE;
 }
 
 static void
@@ -402,14 +410,26 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
 
   /* Encoding mode */
   switch (enc->mode) {
+#if 0
     case 0:
+      enc->wp_config->flags |= CONFIG_VERY_FAST_FLAG;
       enc->wp_config->flags |= CONFIG_FAST_FLAG;
       break;
-    case 1:                    /* default */
+#endif
+    case 1:
+      enc->wp_config->flags |= CONFIG_FAST_FLAG;
       break;
-    case 2:
+    case 2:                    /* default */
+      break;
+    case 3:
       enc->wp_config->flags |= CONFIG_HIGH_FLAG;
       break;
+#ifndef WAVPACK_OLD_API
+    case 4:
+      enc->wp_config->flags |= CONFIG_HIGH_FLAG;
+      enc->wp_config->flags |= CONFIG_VERY_HIGH_FLAG;
+      break;
+#endif
   }
 
   /* Bitrate, enables lossy mode */
@@ -432,8 +452,6 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
       /* try to add correction src pad, don't set correction mode on failure */
       GstCaps *caps = gst_caps_new_simple ("audio/x-wavpack-correction",
           "framed", G_TYPE_BOOLEAN, TRUE, NULL);
-
-      gst_element_no_more_pads (GST_ELEMENT (enc));
 
       GST_DEBUG_OBJECT (enc, "Adding correction pad with caps %"
           GST_PTR_FORMAT, caps);
