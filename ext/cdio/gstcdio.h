@@ -22,7 +22,7 @@
 #define __GST_CDIO_H__
 
 #include <gst/gst.h>
-#include <cdio/version.h>
+#include <cdio/cdio.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_cdio_debug);
 #define GST_CAT_DEFAULT gst_cdio_debug
@@ -38,6 +38,10 @@ void     gst_cdio_add_cdtext_field (GstObject      * src,
                                     GstTagList    ** p_tags);
 
 #endif
+
+GstTagList  * gst_cdio_get_cdtext  (GstObject      * src,
+                                    CdIo           * cdio,
+                                    track_t          track);
 
 #endif /* __GST_CDIO_H__ */
 

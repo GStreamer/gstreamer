@@ -209,40 +209,6 @@ notcdio_track_is_audio_track (const CdIo * p_cdio, track_t i_track)
   return (cdio_get_track_format (p_cdio, i_track) == TRACK_FORMAT_AUDIO);
 }
 
-#if (LIBCDIO_VERSION_NUM >= 76)
-
-static GstTagList *
-gst_cdio_cdda_src_get_cdtext (GstCdioCddaSrc * src, track_t i_track)
-{
-  GstTagList *tags = NULL;
-  GstObject *obj;
-  cdtext_t *t;
-
-  t = cdio_get_cdtext (src->cdio, i_track);
-  if (t == NULL) {
-    GST_DEBUG_OBJECT (src, "no CD-TEXT for track %u", i_track);
-    return NULL;
-  }
-
-  obj = GST_OBJECT (src);
-  gst_cdio_add_cdtext_field (obj, t, CDTEXT_PERFORMER, GST_TAG_ARTIST, &tags);
-  gst_cdio_add_cdtext_field (obj, t, CDTEXT_TITLE, GST_TAG_TITLE, &tags);
-
-  return tags;
-}
-
-#else
-
-static GstTagList *
-gst_cdio_cdda_src_get_cdtext (GstCdioCddaSrc * src, track_t i_track)
-{
-  GST_DEBUG_OBJECT (src, "This libcdio version (%u) does not support "
-      "CDTEXT (want >= 76)", LIBCDIO_VERSION_NUM);
-  return NULL;
-}
-
-#endif
-
 static gboolean
 gst_cdio_cdda_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
 {
@@ -305,7 +271,8 @@ gst_cdio_cdda_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
      * the right thing here (for cddb id calculations etc. as well) */
     track.start = cdio_get_track_lsn (src->cdio, i + first_track);
     track.end = track.start + len_sectors - 1;  /* -1? */
-    track.tags = gst_cdio_cdda_src_get_cdtext (src, i + first_track);
+    track.tags = gst_cdio_get_cdtext (GST_OBJECT (src), src->cdio,
+        i + first_track);
 
     gst_cdda_base_src_add_track (GST_CDDA_BASE_SRC (src), &track);
   }

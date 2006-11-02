@@ -58,6 +58,34 @@ gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext,
   GST_DEBUG_OBJECT (src, "CD-TEXT: %s = %s", gst_tag, txt);
 }
 
+GstTagList *
+gst_cdio_get_cdtext (GstObject * src, CdIo * cdio, track_t track)
+{
+  GstTagList *tags = NULL;
+  cdtext_t *t;
+
+  t = cdio_get_cdtext (cdio, track);
+  if (t == NULL) {
+    GST_DEBUG_OBJECT (src, "no CD-TEXT for track %u", track);
+    return NULL;
+  }
+
+  gst_cdio_add_cdtext_field (src, t, CDTEXT_PERFORMER, GST_TAG_ARTIST, &tags);
+  gst_cdio_add_cdtext_field (src, t, CDTEXT_TITLE, GST_TAG_TITLE, &tags);
+
+  return tags;
+}
+
+#else
+
+GstTagList *
+gst_cdio_get_cdtext (GstObject * src, CdIo * cdio, track_t track)
+{
+  GST_DEBUG_OBJECT (src, "This libcdio version (%u) does not support "
+      "CDTEXT (want >= 76)", LIBCDIO_VERSION_NUM);
+  return NULL;
+}
+
 #endif
 
 static void
