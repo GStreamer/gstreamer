@@ -1048,7 +1048,7 @@ gst_type_find_suggest_handler (gpointer data, guint probability, const GstCaps *
 
     args = Py_BuildValue ("(OIN)", 
 			  PyTuple_GetItem(py_data, 0),
-			  probability, pyg_boxed_new (GST_TYPE_CAPS, (GstCaps*) caps, FALSE, TRUE));
+			  probability, pyg_boxed_new (GST_TYPE_CAPS, (GstCaps*) caps, TRUE, TRUE));
     if (!args)
 	goto beach;
 

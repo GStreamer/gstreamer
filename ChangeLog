@@ -1,3 +1,8 @@
+2006-11-03  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.override:
+	Use a copy of the caps.
+
 2006-10-20  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:
