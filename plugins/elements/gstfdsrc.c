@@ -192,26 +192,34 @@ gst_fd_src_update_fd (GstFdSrc * src)
 {
   struct stat stat_results;
 
-  src->fd = src->new_fd;
-  GST_INFO_OBJECT (src, "Updating to fd %d", src->fd);
-  g_free (src->uri);
-  src->uri = g_strdup_printf ("fd://%d", src->fd);
+  if (src->fd != src->new_fd) {
+    GST_INFO_OBJECT (src, "Updating to fd %d", src->new_fd);
 
-  if (fstat (src->fd, &stat_results) < 0)
-    goto not_seekable;
+    src->fd = src->new_fd;
 
-  if (!S_ISREG (stat_results.st_mode))
-    goto not_seekable;
+    g_free (src->uri);
+    src->uri = g_strdup_printf ("fd://%d", src->fd);
 
-  /* Try a seek of 0 bytes offset to check for seekability */
-  if (lseek (src->fd, 0, SEEK_CUR) < 0)
-    goto not_seekable;
+    if (fstat (src->fd, &stat_results) < 0)
+      goto not_seekable;
 
-  src->seekable_fd = TRUE;
+    if (!S_ISREG (stat_results.st_mode))
+      goto not_seekable;
+
+    /* Try a seek of 0 bytes offset to check for seekability */
+    if (lseek (src->fd, 0, SEEK_CUR) < 0)
+      goto not_seekable;
+
+    GST_INFO_OBJECT (src, "marking fd %d as seekable", src->fd);
+    src->seekable_fd = TRUE;
+  }
   return;
 
 not_seekable:
-  src->seekable_fd = FALSE;
+  {
+    GST_INFO_OBJECT (src, "marking fd %d as NOT seekable", src->fd);
+    src->seekable_fd = FALSE;
+  }
 }
 
 static gboolean
@@ -341,6 +349,8 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
       gchar command;
       int res;
 
+      GST_LOG_OBJECT (src, "reading command");
+
       READ_COMMAND (src, command, res);
       if (res < 0) {
         GST_LOG_OBJECT (src, "no more commands");
@@ -359,6 +369,7 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   do {
     readbytes = read (src->fd, GST_BUFFER_DATA (buf), blocksize);
+    GST_LOG_OBJECT (src, "read %d", readbytes);
   } while (readbytes == -1 && errno == EINTR);  /* retry if interrupted */
 
   if (readbytes < 0)

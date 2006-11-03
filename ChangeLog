@@ -1,3 +1,10 @@
+2006-11-03  Wim Taymans  <wim@fluendo.com>
+
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_update_fd),
+	(gst_fd_src_create):
+	Add some debugging. 
+	Only update fd when it's different from the old.
+
 2006-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gstfilesrc.c: (gst_file_src_create_mmap):
