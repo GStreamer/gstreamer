@@ -1292,19 +1292,40 @@ static GstStaticCaps mpeg4_video_caps = GST_STATIC_CAPS ("video/mpeg, "
 static void
 mpeg4_video_type_find (GstTypeFind * tf, gpointer unused)
 {
-  /* Header is a video object start code followed by a video object layer
-   * start code. The last byte of this 8-byte header can be from 0x20 - 0x2F */
-  static const guint8 header[] = { 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01 };
+  /* Header consists of: a series of start codes (00 00 01 xx), some with 
+   * associated data.
+   * Optionally, we start with a visual_object_sequence_start_code, followed by
+   * (optionally) visual_object_start_code), then the mandatory 
+   * video_object_start_code and video_object_layer_start_code)
+   */
   guint8 *data = NULL;
+  int offset = 0;
+  gboolean seen_vos = FALSE;
 
-  data = gst_type_find_peek (tf, 0, 8);
+  while (TRUE) {
+    data = gst_type_find_peek (tf, offset, 4);
+    if (data && data[0] == 0 && data[1] == 0 && data[2] == 1) {
+      int sc = data[3];
 
-  if (data && memcmp (data, header, 7) == 0 &&
-      data[7] >= 0x20 && data[7] <= 0x2F) {
-    GstCaps *caps = gst_caps_copy (MPEG4_VIDEO_CAPS);
+      if (sc == 0xB0)           /* visual_object_sequence_start_code */
+        offset += 5;
+      else if (sc == 0xB5)      /* visual_object_start_code */
+        offset += 5;
+      else if (sc >= 0x00 && sc <= 0x1F) {      /* video_object_start_code */
+        offset += 4;
+        seen_vos = TRUE;
+      } else if (sc >= 0x20 && sc <= 0x2F) {    /* video_object_layer_start_code */
+        if (seen_vos) {
+          GstCaps *caps = gst_caps_copy (MPEG4_VIDEO_CAPS);
 
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
-    gst_caps_unref (caps);
+          gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
+          gst_caps_unref (caps);
+          return;
+        }
+      } else
+        return;
+    } else
+      return;
   }
 }
 

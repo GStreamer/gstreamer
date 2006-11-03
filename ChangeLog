@@ -1,3 +1,8 @@
+2006-11-03  Michael Smith  <msmith@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (mpeg4_video_type_find):
+	  Recognise more mpeg4 elementary video streams.
+
 2006-11-02  Edward Hervey  <edward@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset):
