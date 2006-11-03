@@ -1,5 +1,17 @@
 2006-11-03  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
+
+	* gst/gstpad.c: (gst_pad_init), (pre_activate),
+	(gst_pad_set_blocked_async), (gst_pad_acceptcaps_default),
+	(gst_pad_accept_caps), (handle_pad_block), (gst_pad_push_event):
+	Some small cleanups. Improve debugging.
+	* gst/gstpad.h:
+	Signal all waiting threads with a broadcast instead of just one.
+	Fixes #369942.
+
+2006-11-03  Wim Taymans  <wim@fluendo.com>
+
 	* plugins/elements/gstfdsrc.c: (gst_fd_src_update_fd),
 	(gst_fd_src_create):
 	Add some debugging. 

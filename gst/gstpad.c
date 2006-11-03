@@ -352,8 +352,12 @@ gst_pad_init (GstPad * pad)
   pad->do_buffer_signals = 0;
   pad->do_event_signals = 0;
 
+#if 0
+  GST_PAD_SET_FLUSHING (pad);
+#else
   /* FIXME, should be set flushing initially, see #339326 */
   GST_PAD_UNSET_FLUSHING (pad);
+#endif
 
   pad->preroll_lock = g_mutex_new ();
   pad->preroll_cond = g_cond_new ();
@@ -578,7 +582,7 @@ pre_activate (GstPad * pad, GstActivateMode new_mode)
       GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE NONE, set flushing");
       GST_PAD_SET_FLUSHING (pad);
       /* unlock blocked pads so element can resume and stop */
-      GST_PAD_BLOCK_SIGNAL (pad);
+      GST_PAD_BLOCK_BROADCAST (pad);
       GST_OBJECT_UNLOCK (pad);
       break;
   }
@@ -977,10 +981,9 @@ gst_pad_set_blocked_async (GstPad * pad, gboolean blocked,
     pad->block_callback = callback;
     pad->block_data = user_data;
 
-    if (callback) {
-      GST_PAD_BLOCK_SIGNAL (pad);
-    } else {
-      GST_PAD_BLOCK_SIGNAL (pad);
+    GST_PAD_BLOCK_BROADCAST (pad);
+    if (!callback) {
+      /* no callback, wait for the unblock to happen */
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "waiting for unblock");
       GST_PAD_BLOCK_WAIT (pad);
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "unblocked");
@@ -2169,16 +2172,26 @@ gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
   gboolean result = FALSE;
 
   allowed = gst_pad_get_caps (pad);
-  if (allowed) {
-    intersect = gst_caps_intersect (allowed, caps);
+  if (!allowed)
+    goto nothing_allowed;
 
-    result = !gst_caps_is_empty (intersect);
+  intersect = gst_caps_intersect (allowed, caps);
 
-    gst_caps_unref (allowed);
-    gst_caps_unref (intersect);
-  }
+  result = !gst_caps_is_empty (intersect);
+  if (!result)
+    GST_DEBUG_OBJECT (pad, "intersection gave empty caps");
+
+  gst_caps_unref (allowed);
+  gst_caps_unref (intersect);
 
   return result;
+
+  /* ERRORS */
+nothing_allowed:
+  {
+    GST_DEBUG_OBJECT (pad, "no caps allowed on the pad");
+    return FALSE;
+  }
 }
 
 /**
@@ -2217,14 +2230,17 @@ gst_pad_accept_caps (GstPad * pad, GstCaps * caps)
   if (G_LIKELY (acceptfunc)) {
     /* we can call the function */
     result = acceptfunc (pad, caps);
+    GST_DEBUG_OBJECT (pad, "acceptfunc returned %d", result);
   } else {
     /* Only null if the element explicitly unset it */
     result = gst_pad_acceptcaps_default (pad, caps);
+    GST_DEBUG_OBJECT (pad, "default acceptcaps returned %d", result);
   }
   return result;
 
 is_same_caps:
   {
+    GST_DEBUG_OBJECT (pad, "pad had same caps");
     GST_OBJECT_UNLOCK (pad);
     return TRUE;
   }
@@ -3252,7 +3268,7 @@ handle_pad_block (GstPad * pad)
   } else {
     /* no callback, signal the thread that is doing a GCond wait
      * if any. */
-    GST_PAD_BLOCK_SIGNAL (pad);
+    GST_PAD_BLOCK_BROADCAST (pad);
   }
 
   /* OBJECT_LOCK could have been released when we did the callback, which
@@ -3287,7 +3303,7 @@ handle_pad_block (GstPad * pad)
     GST_OBJECT_LOCK (pad);
   } else {
     /* we need to signal the thread waiting on the GCond */
-    GST_PAD_BLOCK_SIGNAL (pad);
+    GST_PAD_BLOCK_BROADCAST (pad);
   }
 
   gst_object_unref (pad);
@@ -3879,7 +3895,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
          * will typically unblock the STREAMING thread blocked on a pad. */
         GST_LOG_OBJECT (pad, "Pad is blocked, not forwarding flush-start, "
             "doing block signal.");
-        GST_PAD_BLOCK_SIGNAL (pad);
+        GST_PAD_BLOCK_BROADCAST (pad);
         goto flushed;
       }
       break;
