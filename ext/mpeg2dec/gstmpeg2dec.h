@@ -99,7 +99,7 @@ struct _GstMpeg2dec {
   gint           size;
   gint           u_offs;
   gint           v_offs;
-  guint8        *dummybuf[3];
+  guint8        *dummybuf[4];
 
   
   guint64        offset;

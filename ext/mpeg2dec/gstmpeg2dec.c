@@ -26,6 +26,10 @@
 
 #include "gstmpeg2dec.h"
 
+/* libmpeg2 needs a 16-byte aligned buffer start address. This rounds the
+ * given pointer up to a multiply of 16 */
+#define ALIGN_16(p) ((void *)(((uintptr_t)(p) + 15) & ~((uintptr_t)15)))
+
 /* mpeg2dec changed a struct name after 0.3.1, here's a workaround */
 /* mpeg2dec also only defined MPEG2_RELEASE after 0.3.1
    #if MPEG2_RELEASE < MPEG2_VERSION(0,3,2)
@@ -258,8 +262,8 @@ gst_mpeg2dec_finalize (GObject * object)
     mpeg2dec->decoder = NULL;
   }
   clear_buffers (mpeg2dec);
-  g_free (mpeg2dec->dummybuf[0]);
-  mpeg2dec->dummybuf[0] = NULL;
+  g_free (mpeg2dec->dummybuf[3]);
+  mpeg2dec->dummybuf[3] = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -468,9 +472,14 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset,
   guint8 *buf[3];
   GstFlowReturn ret = GST_FLOW_OK;
 
-  ret = gst_mpeg2dec_alloc_sized_buf (mpeg2dec, mpeg2dec->size, &outbuf);
+  ret = gst_mpeg2dec_alloc_sized_buf (mpeg2dec, mpeg2dec->size + 16, &outbuf);
   if (ret != GST_FLOW_OK)
     goto no_buffer;
+
+  /* 16byte-align the buffer start address. As u_offs and v_offs are
+   * divideable by 16 without a rest it's only needed for the start */
+  GST_BUFFER_DATA (outbuf) = ALIGN_16 (GST_BUFFER_DATA (outbuf));
+  GST_BUFFER_SIZE (outbuf) = mpeg2dec->size;
 
   buf[0] = GST_BUFFER_DATA (outbuf);
   buf[1] = buf[0] + mpeg2dec->u_offs;
@@ -589,9 +598,13 @@ gst_mpeg2dec_negotiate_format (GstMpeg2dec * mpeg2dec)
 static void
 init_dummybuf (GstMpeg2dec * mpeg2dec)
 {
-  g_free (mpeg2dec->dummybuf[0]);
+  g_free (mpeg2dec->dummybuf[3]);
 
-  mpeg2dec->dummybuf[0] = g_malloc (mpeg2dec->size);
+  /* 16byte-align the buffer start address. As u_offs and v_offs are
+   * divideable by 16 without a rest it's only needed for the start.
+   * dummybuf[3] contains the malloc'ed address for free'ing later */
+  mpeg2dec->dummybuf[3] = g_malloc0 (mpeg2dec->size + 15);
+  mpeg2dec->dummybuf[0] = ALIGN_16 (mpeg2dec->dummybuf[3]);
   mpeg2dec->dummybuf[1] = mpeg2dec->dummybuf[0] + mpeg2dec->u_offs;
   mpeg2dec->dummybuf[2] = mpeg2dec->dummybuf[0] + mpeg2dec->v_offs;
 }

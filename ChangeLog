@@ -1,3 +1,13 @@
+2006-11-03  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Sebastian Droege <slomo at ubuntu dot com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_finalize),
+	(gst_mpeg2dec_alloc_buffer), (init_dummybuf), (handle_slice):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	libmpeg2 requires its output buffers to start at a 16byte aligned
+	address or the altivec optimizations will explode.
+
 2006-10-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/dvdreadsrc.c: (gst_dvd_read_src_read):
