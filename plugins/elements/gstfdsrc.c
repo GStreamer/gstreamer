@@ -321,7 +321,7 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstFdSrc *src;
   GstBuffer *buf;
-  glong readbytes;
+  gssize readbytes;
   guint blocksize;
 
 #ifndef HAVE_WIN32
@@ -369,7 +369,7 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   do {
     readbytes = read (src->fd, GST_BUFFER_DATA (buf), blocksize);
-    GST_LOG_OBJECT (src, "read %d", readbytes);
+    GST_LOG_OBJECT (src, "read %" G_GSSIZE_FORMAT, readbytes);
   } while (readbytes == -1 && errno == EINTR);  /* retry if interrupted */
 
   if (readbytes < 0)

@@ -1,5 +1,10 @@
 2006-11-03  Wim Taymans  <wim@fluendo.com>
 
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_create):
+	Get the type and printf conversion specifiers right.
+
+2006-11-03  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
 
 	* gst/gstpad.c: (gst_pad_init), (pre_activate),
