@@ -6,3 +6,4 @@
 # sys/dxr3/dxr3videosink.c
 
 gst/qtdemux/qtdemux.c
+sys/dvb/gstdvbsrc.c

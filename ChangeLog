@@ -1,3 +1,22 @@
+2006-11-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/POTFILES.in:
+	  add dvbsrc
+	* sys/dvb/gstdvbsrc.c: (gst_dvbsrc_class_init), (gst_dvbsrc_init),
+	(gst_dvbsrc_set_property), (gst_dvbsrc_get_property),
+	(gst_dvbsrc_open_frontend), (gst_dvbsrc_open_dvr),
+	(gst_dvbsrc_finalize), (read_device), (gst_dvbsrc_create),
+	(gst_dvbsrc_start), (gst_dvbsrc_frontend_status),
+	(gst_dvbsrc_tune), (gst_dvbsrc_unset_pes_filters),
+	(gst_dvbsrc_set_pes_filter):
+	* sys/dvb/gstdvbsrc.h:
+	  adapter-prefix is a terrible name for a device, so replace it.
+	  strerror should be used immediately after the syscall related to it.
+	  Actually throw a reasonable GST_ELEMENT_ERROR if we fail to open
+	  (pretty easy to trigger by opening the same device twice).
+	  Use _OBJECT macros where it makes sense.
+	  This element is going to need some work before it moves.
+
 2006-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sebastian Dröge <slomo at circular-chaos.org>

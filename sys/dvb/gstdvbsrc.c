@@ -40,6 +40,8 @@
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
 
+#include "../../gst-libs/gst/gst-i18n-plugin.h"
+
 GST_DEBUG_CATEGORY_STATIC (gstdvbsrc_debug);
 #define GST_CAT_DEFAULT (gstdvbsrc_debug)
 
@@ -89,7 +91,7 @@ static GstElementDetails dvbsrc_details = {
 enum
 {
   ARG_0,
-  ARG_DVBSRC_ADAPTER_PREFIX,
+  ARG_DVBSRC_DEVICE,
   ARG_DVBSRC_DISEQC_SRC,
   ARG_DVBSRC_FREQ,
   ARG_DVBSRC_POL,
@@ -257,7 +259,6 @@ gst_dvbsrc_inversion_get_type (void)
   return dvbsrc_inversion_type;
 }
 
-static void gst_dvbsrc_dispose (GObject * object);
 static void gst_dvbsrc_finalize (GObject * object);
 static void gst_dvbsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -330,7 +331,6 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   gobject_class->set_property = gst_dvbsrc_set_property;
   gobject_class->get_property = gst_dvbsrc_get_property;
-  gobject_class->dispose = gst_dvbsrc_dispose;
   gobject_class->finalize = gst_dvbsrc_finalize;
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dvbsrc_start);
@@ -341,11 +341,10 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
 
   gstpushsrc_class->create = gst_dvbsrc_create;
 
-  g_object_class_install_property (gobject_class, ARG_DVBSRC_ADAPTER_PREFIX,
-      g_param_spec_string ("adapter-prefix",
-          "adapter-prefix",
-          "The adapter prefix. e.g. /dev/dvb/adapter0",
-          "/dev/dvb/adapter0", G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_DVBSRC_DEVICE,
+      g_param_spec_string ("device",
+          "device",
+          "The device directory", "/dev/dvb/adapter0", G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_FREQ,
       g_param_spec_int ("freq",
@@ -439,7 +438,7 @@ gst_dvbsrc_init (GstDvbSrc * object, GstDvbSrcClass * klass)
 {
   int i = 0;
 
-  GST_INFO ("gst_dvbsrc_init");
+  GST_INFO_OBJECT (object, "gst_dvbsrc_init");
 
   /* We are a live source */
   gst_base_src_set_live (GST_BASE_SRC (object), TRUE);
@@ -455,11 +454,10 @@ gst_dvbsrc_init (GstDvbSrc * object, GstDvbSrcClass * klass)
   object->pids[0] = 8192;
 
   /* Setting standard devices */
-  object->adapter_prefix = g_strdup (DEFAULT_ADAPTER_PREFIX);
-  object->frontend_dev =
-      g_strconcat (object->adapter_prefix, "/frontend0", NULL);
-  object->demux_dev = g_strconcat (object->adapter_prefix, "/demux0", NULL);
-  object->dvr_dev = g_strconcat (object->adapter_prefix, "/dvr0", NULL);
+  object->device = g_strdup (DEFAULT_DEVICE);
+  object->frontend_dev = g_strconcat (object->device, "/frontend0", NULL);
+  object->demux_dev = g_strconcat (object->device, "/demux0", NULL);
+  object->dvr_dev = g_strconcat (object->device, "/dvr0", NULL);
 
   object->sym_rate = DEFAULT_SYMBOL_RATE;
   object->diseqc_src = DEFAULT_DISEQC_SRC;
@@ -479,36 +477,35 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
   object = GST_DVBSRC (_object);
 
   switch (prop_id) {
-    case ARG_DVBSRC_ADAPTER_PREFIX:
+    case ARG_DVBSRC_DEVICE:
     {
       char delim_str[] = "/\0";
 
-      if (object->adapter_prefix != NULL)
-        g_free (object->adapter_prefix);
-      object->adapter_prefix = g_value_dup_string (value);
+      if (object->device != NULL)
+        g_free (object->device);
+      object->device = g_value_dup_string (value);
 
-      if (g_str_has_suffix (object->adapter_prefix, "/"))
+      if (g_str_has_suffix (object->device, "/"))
         delim_str[0] = '\0';
 
       object->frontend_dev =
-          g_strconcat (object->adapter_prefix, delim_str, "frontend0", NULL);
+          g_strconcat (object->device, delim_str, "frontend0", NULL);
       object->demux_dev =
-          g_strconcat (object->adapter_prefix, delim_str, "demux0", NULL);
-      object->dvr_dev =
-          g_strconcat (object->adapter_prefix, delim_str, "dvr0", NULL);
+          g_strconcat (object->device, delim_str, "demux0", NULL);
+      object->dvr_dev = g_strconcat (object->device, delim_str, "dvr0", NULL);
     }
-      GST_INFO ("Set Property: ARG_DVBSRC_ADAPTER_PREFIX");
+      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_DEVICE");
       break;
     case ARG_DVBSRC_DISEQC_SRC:
       if (object->diseqc_src != g_value_get_int (value)) {
         object->diseqc_src = g_value_get_int (value);
         object->send_diseqc = TRUE;
       }
-      GST_INFO ("Set Property: ARG_DVBSRC_DISEQC_ID");
+      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_DISEQC_ID");
       break;
     case ARG_DVBSRC_FREQ:
       object->freq = g_value_get_int (value);
-      GST_INFO ("Set Property: ARG_DVBSRC_FREQ");
+      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_FREQ");
       break;
     case ARG_DVBSRC_POL:
     {
@@ -518,7 +515,7 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
       if (s != NULL)
         object->pol = (s[0] == 'h' || s[0] == 'H') ? DVB_POL_H : DVB_POL_V;
     }
-      GST_INFO ("Set Property: ARG_DVBSRC_POL");
+      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_POL");
       break;
     case ARG_DVBSRC_PIDS:
     {
@@ -528,13 +525,13 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
       gchar **pids;
       char **tmp;
 
-      GST_INFO ("Set Property: ARG_DVBSRC_PIDS");
+      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_PIDS");
       pid_string = g_value_dup_string (value);
       tmp = pids = g_strsplit (pid_string, ":", MAX_FILTERS);
       while (*pids != NULL && pid_count < MAX_FILTERS) {
         pid = strtol (*pids, NULL, 0);
         if (pid > 0 && pid <= 8192) {
-          GST_INFO ("Parsed Pid: %d\n", pid);
+          GST_INFO_OBJECT (object, "Parsed Pid: %d\n", pid);
           object->pids[pid_count] = pid;
           pid_count++;
         }
@@ -545,7 +542,7 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
       break;
     case ARG_DVBSRC_SYM_RATE:
       object->sym_rate = g_value_get_int (value);
-      GST_INFO ("Set Property: ARG_DVBSRC_SYM_RATE to value %d",
+      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_SYM_RATE to value %d",
           g_value_get_int (value));
       break;
 
@@ -574,7 +571,7 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
       object->inversion = g_value_get_enum (value);
       break;
     case ARG_DVBSRC_TUNE:
-      GST_INFO ("Set Property: ARG_DVBSRC_TUNE");
+      GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_TUNE");
       /* if we are in paused/playing state tune now, otherwise in ready to paused state change */
       if (gst_element_get_state
           (GST_ELEMENT (object), NULL, NULL,
@@ -601,8 +598,8 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
   object = GST_DVBSRC (_object);
 
   switch (prop_id) {
-    case ARG_DVBSRC_ADAPTER_PREFIX:
-      g_value_set_string (value, object->adapter_prefix);
+    case ARG_DVBSRC_DEVICE:
+      g_value_set_string (value, object->device);
       break;
     case ARG_DVBSRC_FREQ:
       g_value_set_int (value, object->freq);
@@ -643,22 +640,36 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object)
   struct dvb_frontend_info fe_info;
   char *adapter_desc = NULL;
 
-  GST_INFO ("Using frontend: %s", object->frontend_dev);
-  GST_INFO ("Using dvr:  %s", object->dvr_dev);
+  GST_INFO_OBJECT (object, "Using frontend device: %s", object->frontend_dev);
+  GST_INFO_OBJECT (object, "Using dvr device:  %s", object->dvr_dev);
 
   /* open frontend */
   if ((object->fd_frontend = open (object->frontend_dev, O_RDWR)) < 0) {
+    switch (errno) {
+      case ENOENT:
+        GST_ELEMENT_ERROR (object, RESOURCE, NOT_FOUND,
+            (_("Device \"%s\" does not exist."), object->frontend_dev), (NULL));
+        break;
+      default:
+        GST_ELEMENT_ERROR (object, RESOURCE, OPEN_READ_WRITE,
+            (_("Could not open frontend device \"%s\"."), object->frontend_dev),
+            GST_ERROR_SYSTEM);
+        break;
+    }
+
     close (object->fd_dvr);
-    g_warning ("Could not open frontend: %s, %s", object->frontend_dev,
-        strerror (errno));
+
     return FALSE;
   }
 
   if (ioctl (object->fd_frontend, FE_GET_INFO, &fe_info) < 0) {
+    GST_ELEMENT_ERROR (object, RESOURCE, SETTINGS,
+        (_("Could not get settings from frontend device \"%s\"."),
+            object->frontend_dev), GST_ERROR_SYSTEM);
+
     close (object->fd_dvr);
     close (object->fd_frontend);
 
-    g_warning ("Unable to get frontend info: %s", strerror (errno));
     return FALSE;
   }
 
@@ -680,7 +691,7 @@ gst_dvbsrc_open_frontend (GstDvbSrc * object)
   /*g_signal_emit (G_OBJECT (object), gst_dvbsrc_signals[ADAPTER_TYPE_SIGNAL],
      0, object->adapter_type); */
 
-  GST_INFO ("DVB card: %s ", fe_info.name);
+  GST_INFO_OBJECT (object, "DVB card: %s ", fe_info.name);
   return TRUE;
 }
 
@@ -689,26 +700,25 @@ gst_dvbsrc_open_dvr (GstDvbSrc * object)
 {
   /* open DVR */
   if ((object->fd_dvr = open (object->dvr_dev, O_RDONLY | O_NONBLOCK)) < 0) {
-    g_warning ("Could not open dvr device: %s", object->dvr_dev);
+    switch (errno) {
+      case ENOENT:
+        GST_ELEMENT_ERROR (object, RESOURCE, NOT_FOUND,
+            (_("Device \"%s\" does not exist."), object->dvr_dev), (NULL));
+        break;
+      default:
+        GST_ELEMENT_ERROR (object, RESOURCE, OPEN_READ,
+            (_("Could not open file \"%s\" for reading."), object->dvr_dev),
+            GST_ERROR_SYSTEM);
+        break;
+    }
     return FALSE;
   }
-  GST_INFO ("Setting buffer size");
+  GST_INFO_OBJECT (object, "Setting buffer size");
   if (ioctl (object->fd_dvr, DMX_SET_BUFFER_SIZE, 1024 * 1024) < 0) {
-    GST_INFO ("DMX_SET_BUFFER_SIZE failed");
+    GST_INFO_OBJECT (object, "DMX_SET_BUFFER_SIZE failed");
     return FALSE;
   }
   return TRUE;
-}
-
-static void
-gst_dvbsrc_dispose (GObject * _object)
-{
-  GstDvbSrc *object;
-
-  GST_DEBUG ("gst_dvbsrc_dispose");
-
-  g_return_if_fail (GST_IS_DVBSRC (_object));
-  object = GST_DVBSRC (_object);
 }
 
 static void
@@ -716,7 +726,7 @@ gst_dvbsrc_finalize (GObject * _object)
 {
   GstDvbSrc *object;
 
-  GST_DEBUG ("gst_dvbsrc_finalize");
+  GST_DEBUG_OBJECT (_object, "gst_dvbsrc_finalize");
 
   g_return_if_fail (GST_IS_DVBSRC (_object));
   object = GST_DVBSRC (_object);
@@ -754,9 +764,11 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "dvbsrc",
-    "DVB Source", plugin_init, VERSION, "LGPL", "", "University of Paderborn")
+    "DVB Source", plugin_init, VERSION, "LGPL", "", "University of Paderborn");
 
-     static GstBuffer *read_device (int fd, const char *fd_name, int size)
+
+static GstBuffer *
+read_device (int fd, const char *fd_name, int size)
 {
   int count = 0;
   struct pollfd pfd[1];
@@ -845,7 +857,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
 
   if (object->fd_dvr > -1) {
     /* --- Read TS from DVR device --- */
-    GST_DEBUG ("Reading from DVR device");
+    GST_DEBUG_OBJECT (object, "Reading from DVR device");
     *buf = read_device (object->fd_dvr, object->dvr_dev, buffer_size);
     if (*buf != NULL) {
       GstCaps *caps;
@@ -864,7 +876,7 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
         quality_signal_rate++;
       }
     } else {
-      GST_DEBUG ("Failed to read from device");
+      GST_DEBUG_OBJECT (object, "Failed to read from device");
     }
   }
 
@@ -884,7 +896,7 @@ gst_dvbsrc_start (GstBaseSrc * bsrc)
     return FALSE;
   }
   if (!gst_dvbsrc_open_dvr (src)) {
-    GST_ERROR ("\nNot able to open dvr_device");
+    GST_ERROR_OBJECT (src, "Not able to open dvr_device");
     return FALSE;
   }
 
@@ -948,19 +960,20 @@ gst_dvbsrc_frontend_status (GstDvbSrc * object)
   fe_status_t status = 0;
   gint i;
 
-  GST_INFO ("gst_dvbsrc_frontend_status\n");
+  GST_INFO_OBJECT (object, "gst_dvbsrc_frontend_status\n");
 
   if (object->fd_frontend < 0) {
-    GST_ERROR ("Trying to get frontend status from not opened device!");
+    GST_ERROR_OBJECT (object,
+        "Trying to get frontend status from not opened device!");
     return FALSE;
   } else
-    GST_INFO ("fd-frontend: %d", object->fd_frontend);
+    GST_INFO_OBJECT (object, "fd-frontend: %d", object->fd_frontend);
 
   for (i = 0; i < 15; i++) {
     usleep (1000000);
-    GST_INFO (".");
+    GST_INFO_OBJECT (object, ".");
     if (ioctl (object->fd_frontend, FE_READ_STATUS, &status) == -1) {
-      GST_ERROR ("Failed reading frontend status.");
+      GST_ERROR_OBJECT (object, "Failed reading frontend status.");
       return FALSE;
     }
     gst_dvbsrc_output_frontend_stats (object);
@@ -970,7 +983,8 @@ gst_dvbsrc_frontend_status (GstDvbSrc * object)
   }
 
   if (!(status & FE_HAS_LOCK)) {
-    GST_INFO ("Not able to lock to the signal on the given frequency.\n");
+    GST_INFO_OBJECT (object,
+        "Not able to lock to the signal on the given frequency.\n");
     return FALSE;
   } else
     return TRUE;
@@ -1047,11 +1061,11 @@ gst_dvbsrc_tune (GstDvbSrc * object)
    * - then tell the MPEG decoder to start
    * - before tuning: first stop the MPEG decoder, then stop all filters  
    */
-  GST_INFO ("gst_dvbsrc_tune");
+  GST_INFO_OBJECT (object, "gst_dvbsrc_tune");
 
   if (object->fd_frontend < 0) {
     /* frontend not opened yet, tune later */
-    GST_INFO ("Frontend not open: tuning later");
+    GST_INFO_OBJECT (object, "Frontend not open: tuning later");
     return FALSE;
   }
 
@@ -1077,7 +1091,8 @@ gst_dvbsrc_tune (GstDvbSrc * object)
         feparams.frequency = freq;
         object->tone = SEC_TONE_OFF;
       }
-      GST_INFO ("tuning DVB-S to L-Band:%u, Pol:%d, srate=%u, 22kHz=%s",
+      GST_INFO_OBJECT (object,
+          "tuning DVB-S to L-Band:%u, Pol:%d, srate=%u, 22kHz=%s",
           feparams.frequency, object->pol, sym_rate,
           object->tone == SEC_TONE_ON ? "on" : "off");
 
@@ -1099,7 +1114,7 @@ gst_dvbsrc_tune (GstDvbSrc * object)
           g_warning ("Error setting tone: %s", strerror (errno));
         }
       } else {
-        GST_DEBUG ("Sending DISEqC");
+        GST_DEBUG_OBJECT (object, "Sending DISEqC");
         diseqc (object->fd_frontend, object->diseqc_src, voltage, object->tone);
         /* Once diseqc source is set, do not set it again until
          * app decides to change it */
@@ -1118,10 +1133,10 @@ gst_dvbsrc_tune (GstDvbSrc * object)
       feparams.u.ofdm.hierarchy_information = object->hierarchy_information;
       feparams.inversion = object->inversion;
 
-      GST_INFO ("tuning DVB-T to %d Hz\n", freq);
+      GST_INFO_OBJECT (object, "tuning DVB-T to %d Hz\n", freq);
       break;
     case FE_QAM:
-      GST_INFO ("Tuning DVB-C to %d, srate=%d", freq, sym_rate);
+      GST_INFO_OBJECT (object, "Tuning DVB-C to %d, srate=%d", freq, sym_rate);
       feparams.frequency = freq;
       feparams.inversion = INVERSION_OFF;
       feparams.u.qam.fec_inner = FEC_AUTO;
@@ -1151,7 +1166,7 @@ gst_dvbsrc_unset_pes_filters (GstDvbSrc * object)
 {
   int i = 0;
 
-  GST_INFO ("clearing PES filter");
+  GST_INFO_OBJECT (object, "clearing PES filter");
 
   for (i = 0; i < MAX_FILTERS; i++) {
     if (object->fd_filters[i] == -1)
@@ -1168,7 +1183,7 @@ gst_dvbsrc_set_pes_filter (GstDvbSrc * object)
   int pid, i;
   struct dmx_pes_filter_params pes_filter;
 
-  GST_INFO ("Setting PES filter");
+  GST_INFO_OBJECT (object, "Setting PES filter");
 
   for (i = 0; i < MAX_FILTERS; i++) {
     if (object->pids[i] == 0)
@@ -1190,8 +1205,8 @@ gst_dvbsrc_set_pes_filter (GstDvbSrc * object)
     pes_filter.pes_type = DMX_PES_OTHER;
     pes_filter.flags = DMX_IMMEDIATE_START;
 
-    GST_INFO ("Setting pes-filter, pid = %d, type = %d", pes_filter.pid,
-        pes_filter.pes_type);
+    GST_INFO_OBJECT (object, "Setting pes-filter, pid = %d, type = %d",
+        pes_filter.pid, pes_filter.pes_type);
 
     if (ioctl (*fd, DMX_SET_PES_FILTER, &pes_filter) < 0)
       g_warning ("Error setting PES filter on %s: %s", object->demux_dev,

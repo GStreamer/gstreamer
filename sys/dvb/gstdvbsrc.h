@@ -22,9 +22,9 @@ extern "C"
 #define IPACKS 2048
 #define TS_SIZE 188
 #define IN_SIZE TS_SIZE*10
-#define MAX_ATTEMPTS 10         // limit timeouts for poll
+#define MAX_ATTEMPTS 10         /* limit timeouts for poll */
 
-#define DEFAULT_ADAPTER_PREFIX "/dev/dvb/adapter0"
+#define DEFAULT_DEVICE "/dev/dvb/adapter0"
 #define DEFAULT_SYMBOL_RATE 0
 #define DEFAULT_BUFFER_SIZE  8192
 #define DEFAULT_DISEQC_SRC -1   /* disabled */
@@ -57,7 +57,7 @@ extern "C"
 
     int adapter_type;
 
-    char *adapter_prefix;
+    char *device;       /* the device directory with the sub-devices */
     char *frontend_dev;
     char *dvr_dev;
     char *demux_dev;
