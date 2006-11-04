@@ -1,3 +1,9 @@
+2006-11-03  David Schleef  <ds@schleef.org>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggmux.c:
+	  Add/remove KW-DIRAC header here, since it is ogg-specific.
+
 2006-11-03  Michael Smith  <msmith@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (mpeg4_video_type_find):

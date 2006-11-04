@@ -1092,6 +1092,10 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     }
   }
 
+  if (granule != -1 && memcmp (packet->packet, "KW-DIRAC", 8) == 0) {
+    return GST_FLOW_OK;
+  }
+
   /* no start time known, stream to internal plugin to
    * get time. always stream to the skeleton decoder */
   if (pad->start_time == GST_CLOCK_TIME_NONE || pad->is_skeleton) {
