@@ -975,8 +975,8 @@ open_failed:
         break;
       default:
         GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-            (_("Could not open file \"%s\" for reading: %s."), src->filename,
-                strerror (errno)), GST_ERROR_SYSTEM);
+            (_("Could not open file \"%s\" for reading."), src->filename),
+            GST_ERROR_SYSTEM);
         break;
     }
     return FALSE;

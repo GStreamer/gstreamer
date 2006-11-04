@@ -124,6 +124,9 @@ CHECKLIST
     - message strings need to be marked for translation 
     - should be short, well-written, clear
     - in particular, should *not* contain debug info, strerror, errno, ...
+      No, really ! NO STRERROR, NO ERRNO.  If you are too lazy to provide
+      the user of your library with a nice experience, put your crap in
+      the debug string
 
 - Decision should be made if it should go into good (LGPL license,
   LGPL dependencies, no patent issues) or ugly

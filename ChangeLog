@@ -1,3 +1,9 @@
+2006-11-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_start):
+	  I'm considering shooting the next person to put strerror stuff
+	  in the translateable part of the message.
+
 2006-11-03  Wim Taymans  <wim@fluendo.com>
 
 	* plugins/elements/gstfdsrc.c: (gst_fd_src_create):
