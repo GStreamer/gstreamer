@@ -1,0 +1,26 @@
+Interface:
+- type (string like caps) channels/x-mpegts-pat
+- GstStructure to describe the what the list is, name, where from etc. (how many entries you can select, if multiple tried, first one picked)
+- method to list entries (channels)
+- method to get current entries
+- method to set list of entries
+- each entry contains an id (32 bit int say), GstStructure (with additional stuff)
+
+signals to say when entry list changes
+        to say when current entry changes
+
+So for a transport stream, this interface would be exported and it could contain a list of interfaces...eg it would export PAT, and PAT list would contain interfaces in the GstStructure for the PMT.
+
+dvbsrc -> list of frequencies
+flutsdemux -> list of programs (PAT) and list of PMT streams per program
+
+get list of frequencies, select frequency
+get list of programs, select programs
+get list of streams, select streams
+
+only give program details in PAT list, when we have seen the PMT for that program.
+
+possibly another interface to select multiple list interfaces from an element. (interface selector interface)
+
+--
+other option is to tag
