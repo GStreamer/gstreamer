@@ -1,5 +1,11 @@
 2006-11-06  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/random/ensonic/distributed.txt:
+	* docs/random/ensonic/profiling.txt:
+	  more ideas
+
+2006-11-06  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	  add new API and fix the build
 	  

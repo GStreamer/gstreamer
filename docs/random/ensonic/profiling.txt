@@ -73,6 +73,26 @@ $Id$
 * the profile_percentage shows how much CPU time the element uses in relation
   to the whole pipeline
 
+== rusage + pad-probes =
 * check get_rusage() based cpu usage detection in buzztard
   this together with pad_probes could gives us decent application level profiles
+* 1:1 elements are easy to handle, n:1, 1:m and n:m type elemnts are tricky
+  
+  // result data
+  struct {
+    beg_min,beg_max;
+    end_min,end_max;
+  } profile_data;
+
+  // install probes
+  gst_bin_iterate_elements(pipeline)
+    gst_element_iterate_pads(element)
+      if (gst_pad_get_direction(pad)==GST_PAD_SRC)
+        gst_pad_add_buffer_probe(pad,end_timer,profile_data)
+      else
+        gst_pad_add_buffer_probe(pad,beg_timer,profile_data)
+
+  // listen to bus state-change messages to
+  // * reset counters on NULL_TO_READY
+  // * print results on READY_TO_NULL
 

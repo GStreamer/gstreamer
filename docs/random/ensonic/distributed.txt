@@ -26,7 +26,17 @@ GstElement* gst_element_factory_make_remote (const gchar *factoryname,
 and some API to get a remote factory handle via hostname lookup, ip address
 lookup or even zeroconf (avahi).
 
+== remote server ==
+
+The remote server manages pipelines with elements that are bound to the proxies.
+Each pipeline has an id, that refers to the client+the clients pipeline address.
+Proxyelements supply the client. pipeline address pair when creating remote
+elements.
+
 == issues / thoughts ==
 
 * we need to distribute the clock
+* is dataprotocol-library useful to send events, data, property- and state-
+  changes
+* we need to sync the remote pipelines with the main-pipeline
 
