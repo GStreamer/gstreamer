@@ -1,5 +1,10 @@
 2006-11-06  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/gst/gsttag.c:
+	  relicence (okay with author=company)
+
+2006-11-06  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstpad.c: (gst_pad_event_default_dispatch),
 	(gst_pad_push_event):
 	  Enhance debug and improve docs
