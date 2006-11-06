@@ -1,3 +1,10 @@
+2006-11-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Peter Kjellerstedt <pkj at axis com>
+
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_create):
+	  Another printf fix (#371493).
+
 2006-11-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/gst/gsttag.c:

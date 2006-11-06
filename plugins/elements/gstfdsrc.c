@@ -383,7 +383,7 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
   src->curoffset += readbytes;
 
-  GST_LOG_OBJECT (psrc, "Read buffer of size %ld", readbytes);
+  GST_LOG_OBJECT (psrc, "Read buffer of size %" G_GSSIZE_FORMAT, readbytes);
 
   /* we're done, return the buffer */
   *outbuf = buf;
