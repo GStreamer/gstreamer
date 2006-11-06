@@ -490,6 +490,7 @@ gst_element_abort_state
 gst_element_continue_state
 gst_element_lost_state
 gst_element_state_get_name
+gst_element_state_change_return_get_name
 gst_element_sync_state_with_parent
 
 <SUBSECTION element-tags>
@@ -1339,6 +1340,7 @@ GST_PAD_IS_SINK
 
 GST_PAD_IS_IN_GETCAPS
 GST_PAD_MODE_ACTIVATE
+GST_PAD_BLOCK_BROADCAST
 GST_PAD_BLOCK_GET_COND
 GST_PAD_BLOCK_SIGNAL
 GST_PAD_BLOCK_WAIT

@@ -987,7 +987,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
  *
  * Returns: a string with the name of the state.
  */
-const gchar *
+G_CONST_RETURN gchar *
 gst_element_state_get_name (GstState state)
 {
   switch (state) {
@@ -1032,6 +1032,55 @@ gst_element_state_get_name (GstState state)
 #endif
   }
 }
+
+/**
+ * gst_element_state_change_return_get_name:
+ * @state_ret: a #GstStateChangeReturn to get the name of.
+ *
+ * Gets a string representing the given state change result.
+ *
+ * Returns: a string with the name of the state change result.
+ */
+G_CONST_RETURN gchar *
+gst_element_state_change_return_get_name (GstStateChangeReturn state_ret)
+{
+  switch (state_ret) {
+#ifdef GST_DEBUG_COLOR
+    case GST_STATE_CHANGE_FAILURE:
+      return "\033[01;31mFAILURE\033[00m";
+      break;
+    case GST_STATE_CHANGE_SUCCESS:
+      return "\033[01;32mSUCCESS\033[00m";
+      break;
+    case GST_STATE_CHANGE_ASYNC:
+      return "\033[01;33mASYNC\033[00m";
+      break;
+    case GST_STATE_CHANGE_NO_PREROLL:
+      return "\033[01;34mNO PREROLL\033[00m";
+      break;
+    default:
+      /* This is a memory leak */
+      return g_strdup_printf ("\033[01;35;41mUNKNOWN!\033[00m(%d)", state_ret);
+#else
+    case GST_STATE_CHANGE_FAILURE:
+      return "FAILURE";
+      break;
+    case GST_STATE_CHANGE_SUCCESS:
+      return "SUCCESS";
+      break;
+    case GST_STATE_CHANGE_ASYNC:
+      return "ASYNC";
+      break;
+    case GST_STATE_CHANGE_NO_PREROLL:
+      return "NO PREROLL";
+      break;
+    default:
+      /* This is a memory leak */
+      return g_strdup_printf ("UNKNOWN!(%d)", state_ret);
+#endif
+  }
+}
+
 
 /**
  * gst_element_factory_can_src_caps :

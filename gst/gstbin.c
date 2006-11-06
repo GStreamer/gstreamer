@@ -1417,7 +1417,8 @@ done:
       goto unknown_state;
   }
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "bin RETURN is now %d", ret);
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "bin RETURN is now %s",
+      gst_element_state_change_return_get_name (ret));
 
   return;
 

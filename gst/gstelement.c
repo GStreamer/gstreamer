@@ -1558,8 +1558,8 @@ void gst_element_message_full
   }
   gst_element_post_message (element, message);
 
-  GST_CAT_INFO_OBJECT (GST_CAT_ERROR_SYSTEM, element, "posted message: %s",
-      sent_text);
+  GST_CAT_INFO_OBJECT (GST_CAT_ERROR_SYSTEM, element, "posted %s message: %s",
+      (type == GST_MESSAGE_ERROR ? "error" : "warning"), sent_text);
 
   /* cleanup */
   g_error_free (gerror);
@@ -1774,9 +1774,10 @@ done:
     *pending = GST_STATE_PENDING (element);
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-      "state current: %s, pending: %s, result: %d",
+      "state current: %s, pending: %s, result: %s",
       gst_element_state_get_name (GST_STATE (element)),
-      gst_element_state_get_name (GST_STATE_PENDING (element)), ret);
+      gst_element_state_get_name (GST_STATE_PENDING (element)),
+      gst_element_state_change_return_get_name (ret));
   GST_OBJECT_UNLOCK (element);
 
   return ret;
@@ -2146,10 +2147,11 @@ gst_element_set_state_func (GstElement * element, GstState state)
   GST_STATE_PENDING (element) = state;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
-      "current %s, old_pending %s, next %s, old return %d",
+      "current %s, old_pending %s, next %s, old return %s",
       gst_element_state_get_name (current),
       gst_element_state_get_name (old_pending),
-      gst_element_state_get_name (next), old_ret);
+      gst_element_state_get_name (next),
+      gst_element_state_change_return_get_name (old_ret));
 
   /* if the element was busy doing a state change, we just update the
    * target state, it'll get to it async then. */
@@ -2194,7 +2196,8 @@ gst_element_set_state_func (GstElement * element, GstState state)
 
   GST_STATE_UNLOCK (element);
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "returned %d", ret);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "returned %s",
+      gst_element_state_change_return_get_name (ret));
 
   return ret;
 

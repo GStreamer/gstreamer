@@ -1,3 +1,17 @@
+2006-11-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	  add new API and fix the build
+	  
+	* gst/gstbin.c: (gst_bin_recalc_state):
+	* gst/gstelement.c: (gst_element_message_full),
+	(gst_element_get_state_func), (gst_element_set_state_func):
+	  use new API and improve logging
+	
+	* gst/gstutils.c: (gst_element_state_change_return_get_name):
+	* gst/gstutils.h:
+	  API: add function to get StateChangereturn names to improve logs 
+
 2006-11-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* plugins/elements/gstfilesrc.c: (gst_file_src_start):
