@@ -44,6 +44,10 @@ struct _GstRtpVorbisPay
 {
   GstBaseRTPPayload payload;
 
+  /* the headers */
+  gboolean      need_headers;
+  GList        *headers;
+
   /* queues of buffers along with some stats. */
   GstBuffer    *packet;
   guint         payload_pos;
@@ -53,6 +57,9 @@ struct _GstRtpVorbisPay
   guint8        payload_VDT;
   guint         payload_pkts;
   GstClockTime  payload_duration;
+
+  gint          rate;
+  gint          channels;
 };
 
 struct _GstRtpVorbisPayClass

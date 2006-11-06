@@ -123,6 +123,8 @@ gst_rtp_vorbis_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 
   rtpvorbispay = GST_RTP_VORBIS_PAY (basepayload);
 
+  rtpvorbispay->need_headers = TRUE;
+
   return TRUE;
 }
 
@@ -205,12 +207,125 @@ gst_rtp_vorbis_pay_flush_packet (GstRtpVorbisPay * rtpvorbispay)
 }
 
 static gboolean
+gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
+{
+  GstRtpVorbisPay *rtpvorbispay = GST_RTP_VORBIS_PAY (basepayload);
+  GList *walk;
+  guint length;
+  gchar *cstr, *configuration;
+  guint8 *data;
+  guint32 ident;
+  GValue v = { 0 };
+  GstBuffer *config;
+
+  GST_DEBUG_OBJECT (rtpvorbispay, "finish headers");
+
+  if (!rtpvorbispay->headers)
+    goto no_headers;
+
+  /* we need exactly 2 header packets */
+  if (g_list_length (rtpvorbispay->headers) != 2)
+    goto no_headers;
+
+  /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                     Number of packed headers                  |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                          Packed header                        |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                          Packed header                        |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                          ....                                 |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   *
+   * We only construct a config containing 1 packed header like this:
+   *
+   *  0                   1                   2                   3
+   *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                   Ident                       |              ..
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * ..   length     |              Identification Header           ..
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * ..                    Identification Header                     |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                          Setup Header                        ..
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * ..                         Setup Header                         |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   *
+   */
+
+  /* count the size of the headers first */
+  length = 0;
+  for (walk = rtpvorbispay->headers; walk; walk = g_list_next (walk)) {
+    GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+
+    length += GST_BUFFER_SIZE (buf);
+  }
+
+  /* total config length is the size of the headers + 2 bytes length +
+   * 3 bytes for the ident */
+  config = gst_buffer_new_and_alloc (length + 2 + 3);
+  data = GST_BUFFER_DATA (config);
+
+  /* we generate a random ident for this configuration */
+  ident = g_random_int ();
+
+  /* take lower 3 bytes */
+  data[0] = ident & 0xff;
+  data[1] = (ident >> 8) & 0xff;
+  data[2] = (ident >> 16) & 0xff;
+
+  data[3] = (length >> 8) & 0xff;
+  data[4] = length & 0xff;
+
+  /* copy header data */
+  data += 5;
+  for (walk = rtpvorbispay->headers; walk; walk = g_list_next (walk)) {
+    GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+
+    memcpy (data, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+    data += GST_BUFFER_SIZE (buf);
+  }
+
+  /* serialize buffer to base16 */
+  g_value_init (&v, GST_TYPE_BUFFER);
+  gst_value_take_buffer (&v, config);
+  configuration = gst_value_serialize (&v);
+
+  /* configure payloader settings */
+  cstr = g_strdup_printf ("%d", rtpvorbispay->channels);
+  gst_basertppayload_set_options (basepayload, "audio", TRUE, "vorbis",
+      rtpvorbispay->rate);
+  gst_basertppayload_set_outcaps (basepayload, "encoding-params", G_TYPE_STRING,
+      cstr, "configuration", G_TYPE_STRING, configuration,
+      /* don't set the defaults 
+       */
+      NULL);
+  g_free (cstr);
+  g_free (configuration);
+  g_value_unset (&v);
+
+  return TRUE;
+
+  /* ERRORS */
+no_headers:
+  {
+    GST_DEBUG_OBJECT (rtpvorbispay, "finish headers");
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_rtp_vorbis_pay_parse_id (GstBaseRTPPayload * basepayload, guint8 * data,
     guint size)
 {
+  GstRtpVorbisPay *rtpvorbispay = GST_RTP_VORBIS_PAY (basepayload);
   guint8 channels;
   gint32 rate, version;
-  gchar *cstr;
 
   if (G_UNLIKELY (size < 16))
     goto too_short;
@@ -229,14 +344,9 @@ gst_rtp_vorbis_pay_parse_id (GstBaseRTPPayload * basepayload, guint8 * data,
   if (G_UNLIKELY ((rate = GST_READ_UINT32_LE (data)) < 1))
     goto invalid_rate;
 
-  cstr = g_strdup_printf ("%d", channels);
-  gst_basertppayload_set_options (basepayload, "audio", TRUE, "vorbis", rate);
-  gst_basertppayload_set_outcaps (basepayload,
-      "encoding-params", G_TYPE_STRING, cstr,
-      /* don't set the defaults 
-       */
-      NULL);
-  g_free (cstr);
+  /* all fine, store the values */
+  rtpvorbispay->channels = channels;
+  rtpvorbispay->rate = rate;
 
   return TRUE;
 
@@ -313,13 +423,34 @@ gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     } else if (data[0] == 5)
       /* setup */
       VDT = 1;
-    else if (data[0] == 3)
+    else if (data[0] == 3) {
+      /* comment */
       VDT = 2;
-    else
+    } else
       goto unknown_header;
   } else
     /* data */
     VDT = 0;
+
+  if (rtpvorbispay->need_headers) {
+    /* we need to collect the headers and construct a config string from them */
+    if (VDT == 2) {
+      GST_DEBUG_OBJECT (rtpvorbispay,
+          "discard comment packet while collecting headers");
+      ret = GST_FLOW_OK;
+      goto done;
+    } else if (VDT != 0) {
+      GST_DEBUG_OBJECT (rtpvorbispay, "collecting header");
+      /* append header to the list of headers */
+      rtpvorbispay->headers = g_list_append (rtpvorbispay->headers, buffer);
+      ret = GST_FLOW_OK;
+      goto done;
+    } else {
+      if (!gst_rtp_vorbis_pay_finish_headers (basepayload))
+        goto header_error;
+      rtpvorbispay->need_headers = FALSE;
+    }
+  }
 
   /* size increases with packet length and 2 bytes size eader. */
   newduration = rtpvorbispay->payload_duration;
@@ -402,6 +533,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
         rtpvorbispay->payload_duration += duration;
     }
   }
+done:
   return ret;
 
   /* ERRORS */
@@ -418,7 +550,13 @@ parse_id_failed:
 unknown_header:
   {
     GST_ELEMENT_WARNING (rtpvorbispay, STREAM, DECODE,
-        ("Ignoring unknown header received"), (NULL));
+        (NULL), ("Ignoring unknown header received"));
+    return GST_FLOW_OK;
+  }
+header_error:
+  {
+    GST_ELEMENT_WARNING (rtpvorbispay, STREAM, DECODE,
+        (NULL), ("Error initializing header config"));
     return GST_FLOW_OK;
   }
 }

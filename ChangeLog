@@ -1,3 +1,12 @@
+2006-11-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpvorbispay.c: (gst_rtp_vorbis_pay_setcaps),
+	(gst_rtp_vorbis_pay_finish_headers), (gst_rtp_vorbis_pay_parse_id),
+	(gst_rtp_vorbis_pay_handle_buffer):
+	* gst/rtp/gstrtpvorbispay.h:
+        Generate a valid configuration string in the caps based on the
+        vorbis headers.
+
 2006-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/cdio/gstcdio.c: (gst_cdio_get_cdtext):
