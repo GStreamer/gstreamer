@@ -227,8 +227,8 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
         GST_LOG ("transfered %d bytes of %d from segment %d", written, left,
             readseg);
         if (written < 0 || written > left) {
-          GST_WARNING ("error writing data (reason: %s), skipping segment\n",
-              strerror (errno));
+          GST_WARNING ("error writing data (reason: %s), skipping segment",
+              g_strerror (errno));
           break;
         }
         left -= written;

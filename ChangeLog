@@ -1,3 +1,9 @@
+2006-11-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/gstaudiosink.c: (audioringbuffer_thread_func):
+	* gst-libs/gst/audio/gstaudiosrc.c: (audioringbuffer_thread_func):
+	  Use g_strerror instead of strerror so we get UTF-8.
+
 2006-11-03  David Schleef  <ds@schleef.org>
 
 	* ext/ogg/gstoggdemux.c:

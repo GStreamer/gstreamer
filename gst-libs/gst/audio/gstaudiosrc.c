@@ -223,8 +223,8 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
         read = readfunc (src, readptr + read, left);
         GST_DEBUG ("transfered %d bytes", read);
         if (read < 0 || read > left) {
-          GST_WARNING ("error reading data (reason: %s), skipping segment\n",
-              strerror (errno));
+          GST_WARNING ("error reading data (reason: %s), skipping segment",
+              g_strerror (errno));
           break;
         }
         left -= read;
