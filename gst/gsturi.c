@@ -377,7 +377,9 @@ gst_uri_get_protocol (const gchar * uri)
  * @uri: an URI string
  * @protocol: a protocol string (e.g. "http")
  *
- * Returns TRUE if the protocol of a given valid URI matches @protocol.
+ * Checks if the protocol of a given valid URI matches @protocol.
+ *
+ * Returns: %TRUE if the protocol matches.
  *
  * Since: 0.10.4
  */

@@ -2874,8 +2874,8 @@ gst_pad_event_default_dispatch (GstPad * pad, GstEvent * event)
   GList *orig, *pads;
   gboolean result;
 
-  GST_INFO_OBJECT (pad, "Sending event %p to all internally linked pads",
-      event);
+  GST_INFO_OBJECT (pad, "Sending event %p (%s) to all internally linked pads",
+      event, GST_EVENT_TYPE_NAME (event));
 
   result = (GST_PAD_DIRECTION (pad) == GST_PAD_SINK);
 
@@ -3929,13 +3929,15 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   if (peerpad == NULL)
     goto not_linked;
 
-  GST_LOG_OBJECT (pad, "sending event to peerpad %" GST_PTR_FORMAT, peerpad);
+  GST_LOG_OBJECT (pad, "sending event %s to peerpad %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), peerpad);
   gst_object_ref (peerpad);
   GST_OBJECT_UNLOCK (pad);
 
   result = gst_pad_send_event (peerpad, event);
 
-  GST_LOG_OBJECT (pad, "sent event to peerpad %" GST_PTR_FORMAT, peerpad);
+  GST_LOG_OBJECT (pad, "sent event %s to peerpad %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), peerpad);
   gst_object_unref (peerpad);
 
   return result;
@@ -4162,10 +4164,10 @@ gst_pad_get_element_private (GstPad * pad)
  *
  * Starts a task that repeadedly calls @func with @data. This function
  * is nostly used in the pad activation function to start the
- * dataflow. This function will automatically acquire the STREAM_LOCK of
- * the pad before calling @func.
+ * dataflow. This function will automatically acquire the #GST_PAD_STREAM_LOCK
+ * of the pad before calling @func.
  *
- * Returns: a TRUE if the task could be started.
+ * Returns: a %TRUE if the task could be started.
  */
 gboolean
 gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
