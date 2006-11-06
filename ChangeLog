@@ -1,5 +1,14 @@
 2006-11-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstplugin.c: (gst_plugin_load_file):
+	* plugins/elements/gstfilesrc.c: (gst_mmap_buffer_finalize),
+	(gst_file_src_map_region), (gst_file_src_start):
+	* plugins/indexers/gstfileindex.c: (gst_file_index_load),
+	(gst_file_index_commit):
+	  Use g_strerror() instead of strerror() - we want UTF-8.
+
+2006-11-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Peter Kjellerstedt <pkj at axis com>
 
 	* plugins/elements/gstfdsrc.c: (gst_fd_src_create):

@@ -395,7 +395,7 @@ gst_file_index_load (GstFileIndex * index)
         g_free (path);
         if (fd < 0) {
           GST_ERROR_OBJECT (index,
-              "Can't open '%s': %s", path, strerror (errno));
+              "Can't open '%s': %s", path, g_strerror (errno));
           continue;
         }
 
@@ -441,7 +441,7 @@ gst_file_index_load (GstFileIndex * index)
         close (fd);
         if (array_data == MAP_FAILED) {
           GST_ERROR_OBJECT (index,
-              "mmap %s failed: %s", path, strerror (errno));
+              "mmap %s failed: %s", path, g_strerror (errno));
           continue;
         }
 
@@ -601,7 +601,8 @@ gst_file_index_commit (GstIndex * _index, gint _writer_id)
       (GHFunc) _file_index_id_save_xml, writers);
 
   if (mkdir (index->location, 0777) && errno != EEXIST) {
-    GST_ERROR_OBJECT (index, "mkdir %s: %s", index->location, strerror (errno));
+    GST_ERROR_OBJECT (index, "mkdir %s: %s", index->location,
+        g_strerror (errno));
     return;
   }
 

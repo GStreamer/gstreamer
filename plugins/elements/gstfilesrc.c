@@ -513,13 +513,13 @@ gst_mmap_buffer_finalize (GstMmapBuffer * mmap_buffer)
 #ifdef MADV_DONTNEED
   /* madvise to tell the kernel what to do with it */
   if (madvise (data, size, MADV_DONTNEED) < 0) {
-    GST_WARNING_OBJECT (src, "warning: madvise failed: %s", strerror (errno));
+    GST_WARNING_OBJECT (src, "warning: madvise failed: %s", g_strerror (errno));
   }
 #endif
 
   /* now unmap the memory */
   if (munmap (data, size) < 0) {
-    GST_WARNING_OBJECT (src, "warning: munmap failed: %s", strerror (errno));
+    GST_WARNING_OBJECT (src, "warning: munmap failed: %s", g_strerror (errno));
   }
 
   /* cast to unsigned long, since there's no gportable way to print
@@ -558,7 +558,8 @@ gst_file_src_map_region (GstFileSrc * src, off_t offset, size_t size,
   if (src->sequential) {
     /* madvise to tell the kernel what to do with it */
     if (madvise (mmapregion, size, MADV_SEQUENTIAL) < 0) {
-      GST_WARNING_OBJECT (src, "warning: madvise failed: %s", strerror (errno));
+      GST_WARNING_OBJECT (src, "warning: madvise failed: %s",
+          g_strerror (errno));
     }
   }
 #endif
@@ -577,7 +578,7 @@ mmap_failed:
     if (!testonly) {
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
           ("mmap (0x%08lx, %d, 0x%llx) failed: %s",
-              (gulong) size, src->fd, offset, strerror (errno)));
+              (gulong) size, src->fd, offset, g_strerror (errno)));
     }
     return NULL;
   }
@@ -946,7 +947,7 @@ gst_file_src_start (GstBaseSrc * basesrc)
 
     if (res < 0) {
       GST_LOG_OBJECT (src, "disabling seeking, not in mmap mode and lseek "
-          "failed: %s", strerror (errno));
+          "failed: %s", g_strerror (errno));
       src->seekable = FALSE;
     } else {
       src->seekable = TRUE;

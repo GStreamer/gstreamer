@@ -403,8 +403,8 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "problem accessing file");
     g_set_error (error,
         GST_PLUGIN_ERROR,
-        GST_PLUGIN_ERROR_MODULE, "Problem accessing file %s: %s\n", filename,
-        strerror (errno));
+        GST_PLUGIN_ERROR_MODULE, "Problem accessing file %s: %s", filename,
+        g_strerror (errno));
     goto return_error;
   }
 
