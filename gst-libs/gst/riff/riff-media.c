@@ -55,6 +55,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
   GstCaps *caps = NULL;
   GstBuffer *palette = NULL;
 
+  GST_DEBUG ("video fourcc %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (codec_fcc));
+
   switch (codec_fcc) {
     case GST_MAKE_FOURCC ('D', 'I', 'B', ' '):{
       gint bpp = (strf && strf->bit_cnt != 0) ? strf->bit_cnt : 8;
@@ -174,58 +176,68 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     case GST_MAKE_FOURCC ('h', '2', '6', '3'):
     case GST_MAKE_FOURCC ('i', '2', '6', '3'):
     case GST_MAKE_FOURCC ('U', '2', '6', '3'):
-      caps = gst_caps_new_simple ("video/x-h263", NULL);
+      caps = gst_caps_new_simple ("video/x-h263",
+          "variant", G_TYPE_STRING, "itu", NULL);
       if (codec_name)
         *codec_name = g_strdup ("ITU H.26n");
       break;
 
     case GST_MAKE_FOURCC ('L', '2', '6', '3'):
-      caps = gst_caps_new_simple ("video/x-h263", NULL);
+      /* http://www.leadcodecs.com/Codecs/LEAD-H263.htm */
+      caps = gst_caps_new_simple ("video/x-h263",
+          "variant", G_TYPE_STRING, "lead", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Lead H.263");
       break;
 
     case GST_MAKE_FOURCC ('M', '2', '6', '3'):
     case GST_MAKE_FOURCC ('m', '2', '6', '3'):
-      caps = gst_caps_new_simple ("video/x-h263", NULL);
+      caps = gst_caps_new_simple ("video/x-h263",
+          "variant", G_TYPE_STRING, "microsoft", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Microsoft H.263");
       break;
 
     case GST_MAKE_FOURCC ('V', 'D', 'O', 'W'):
-      caps = gst_caps_new_simple ("video/x-h263", NULL);
+      caps = gst_caps_new_simple ("video/x-h263",
+          "variant", G_TYPE_STRING, "vdolive", NULL);
       if (codec_name)
         *codec_name = g_strdup ("VDOLive");
       break;
 
     case GST_MAKE_FOURCC ('V', 'I', 'V', 'O'):
-      caps = gst_caps_new_simple ("video/x-h263", NULL);
+      caps = gst_caps_new_simple ("video/x-h263",
+          "variant", G_TYPE_STRING, "vivo", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Vivo H.263");
       break;
 
     case GST_MAKE_FOURCC ('x', '2', '6', '3'):
-      caps = gst_caps_new_simple ("video/x-h263", NULL);
+      caps = gst_caps_new_simple ("video/x-h263",
+          "variant", G_TYPE_STRING, "xirlink", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Xirlink H.263");
       break;
 
       /* apparently not standard H.263...? */
     case GST_MAKE_FOURCC ('I', '2', '6', '3'):
-      caps = gst_caps_new_simple ("video/x-intel-h263", NULL);
+      caps = gst_caps_new_simple ("video/x-intel-h263",
+          "variant", G_TYPE_STRING, "intel", NULL);
       if (codec_name)
         *codec_name = g_strdup ("Intel H.263");
       break;
 
     case GST_MAKE_FOURCC ('H', '2', '6', '4'):
     case GST_MAKE_FOURCC ('h', '2', '6', '4'):
-      caps = gst_caps_new_simple ("video/x-h264", NULL);
+      caps = gst_caps_new_simple ("video/x-h264",
+          "variant", G_TYPE_STRING, "itu", NULL);
       if (codec_name)
         *codec_name = g_strdup ("ITU H.264");
       break;
 
     case GST_MAKE_FOURCC ('V', 'S', 'S', 'H'):
-      caps = gst_caps_new_simple ("video/x-h264", NULL);
+      caps = gst_caps_new_simple ("video/x-h264",
+          "variant", G_TYPE_STRING, "videosoft", NULL);
       if (codec_name)
         *codec_name = g_strdup ("VideoSoft H.264");
       break;
@@ -1124,12 +1136,15 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('D', 'X', '5', '0'),
     GST_MAKE_FOURCC ('F', 'L', 'V', '1'),
     GST_MAKE_FOURCC ('H', '2', '6', '3'),
+    GST_MAKE_FOURCC ('H', '2', '6', '4'),
     GST_MAKE_FOURCC ('H', 'F', 'Y', 'U'),
     GST_MAKE_FOURCC ('I', '2', '6', '3'),
     GST_MAKE_FOURCC ('I', '4', '2', '0'),
     GST_MAKE_FOURCC ('I', 'V', '3', '2'),
     GST_MAKE_FOURCC ('I', 'V', '4', '1'),
     GST_MAKE_FOURCC ('I', 'V', '5', '0'),
+    GST_MAKE_FOURCC ('L', '2', '6', '3'),
+    GST_MAKE_FOURCC ('M', '2', '6', '3'),
     GST_MAKE_FOURCC ('M', '4', 'S', '2'),
     GST_MAKE_FOURCC ('M', 'J', 'P', 'G'),
     GST_MAKE_FOURCC ('M', 'P', '4', '2'),
@@ -1147,8 +1162,11 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('U', 'L', 'T', 'I'),
     GST_MAKE_FOURCC ('V', 'C', 'R', '1'),
     GST_MAKE_FOURCC ('V', 'C', 'R', '2'),
+    GST_MAKE_FOURCC ('V', 'D', 'O', 'W'),
+    GST_MAKE_FOURCC ('V', 'I', 'V', 'O'),
     GST_MAKE_FOURCC ('V', 'M', 'n', 'c'),
     GST_MAKE_FOURCC ('V', 'P', '3', ' '),
+    GST_MAKE_FOURCC ('V', 'S', 'S', 'H'),
     GST_MAKE_FOURCC ('W', 'M', 'V', '1'),
     GST_MAKE_FOURCC ('W', 'M', 'V', '2'),
     GST_MAKE_FOURCC ('W', 'M', 'V', '3'),
@@ -1159,7 +1177,8 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('Z', 'L', 'I', 'B'),
     GST_MAKE_FOURCC ('c', 'v', 'i', 'd'),
     GST_MAKE_FOURCC ('h', '2', '6', '4'),
-    GST_MAKE_FOURCC ('m', 's', 'v', 'c')
+    GST_MAKE_FOURCC ('m', 's', 'v', 'c'),
+    GST_MAKE_FOURCC ('x', '2', '6', '3')
         /* FILL ME */
   };
   guint i;

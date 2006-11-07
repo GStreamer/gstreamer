@@ -1,3 +1,9 @@
+2006-11-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
+	(gst_riff_create_video_template_caps):
+	  add h263/h264 variants to the caps, Fixes #363118
+
 2006-11-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/gstaudiosink.c: (audioringbuffer_thread_func):
