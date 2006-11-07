@@ -887,12 +887,11 @@ plugin_init (GstPlugin *plugin)
           <row>
             <entry>video/x-h263</entry>
             <entry>H-263 video.</entry>
-            <entry></entry>
-            <entry></entry>
-            <entry></entry>
+            <entry>variant</entry>
+            <entry>string</entry>
+            <entry>itu, lead, microsoft, vdolive, vivo, xirlink </entry>
             <entry>
-              There are currently no specific properties defined or needed for
-              this type.
+              Vendor specific variant of the format. 'itu' is the standard.
             </entry>
           </row>
 
@@ -901,12 +900,11 @@ plugin_init (GstPlugin *plugin)
           <row>
             <entry>video/x-h264</entry>
             <entry>H-264 video.</entry>
-            <entry></entry>
-            <entry></entry>
-            <entry></entry>
+            <entry>variant</entry>
+            <entry>string</entry>
+            <entry>itu, videosoft</entry>
             <entry>
-              There are currently no specific properties defined or needed for
-              this type.
+              Vendor specific variant of the format. 'itu' is the standard.
             </entry>
           </row>
 
@@ -934,6 +932,19 @@ plugin_init (GstPlugin *plugin)
             <entry>3</entry>
             <entry>
               Version of the Indeo codec used to encode this stream.
+            </entry>
+          </row>
+
+          <!-- ############ type ############# -->
+
+          <row>
+            <entry>video/x-intel-h263</entry>
+            <entry>H-263 video.</entry>
+            <entry>variant</entry>
+            <entry>string</entry>
+            <entry>intel</entry>
+            <entry>
+              Vendor specific variant of the format.
             </entry>
           </row>
 
