@@ -292,6 +292,14 @@ class Discoverer(gst.Pipeline):
         pad.info("adding queue->fakesink")
         fakesink = gst.element_factory_make("fakesink")
         queue = gst.element_factory_make("queue")
+        # we want the queue to buffer up to 2 seconds of data before outputting
+        # This enables us to cope with formats that don't create their source
+        # pads straight away, but instead wait for the first buffer of that
+        # stream.
+        queue.props.min_threshold_time = 1 * gst.SECOND
+        queue.props.max_size_time = 2 * gst.SECOND
+        queue.props.max_size_buffers = 0
+        queue.props.max_size_bytes = 0
         self.add(fakesink, queue)
         queue.link(fakesink)
         sinkpad = fakesink.get_pad("sink")

@@ -1,3 +1,11 @@
+2006-11-07  Edward Hervey  <edward@fluendo.com>
+
+	* gst/extend/discoverer.py: Make the queue buffer up 1s of data before
+	outputting to the sinks. This should give time for some demuxers like
+	mpegdemux or fluasfdemux to discover a bit more about the muxed
+	stream and add the correct pads.
+	Fixes #371969
+
 2006-11-07  Andy Wingo  <wingo@pobox.com>
 
 	* examples/Makefile.am (examples_DATA): 
