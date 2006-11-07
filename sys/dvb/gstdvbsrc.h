@@ -22,7 +22,6 @@ extern "C"
 #define IPACKS 2048
 #define TS_SIZE 188
 #define IN_SIZE TS_SIZE*10
-#define MAX_ATTEMPTS 10         /* limit timeouts for poll */
 
 #define DEFAULT_DEVICE "/dev/dvb/adapter0"
 #define DEFAULT_SYMBOL_RATE 0

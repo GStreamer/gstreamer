@@ -1,3 +1,12 @@
+2006-11-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/gstdvbsrc.c: (read_device), (gst_dvbsrc_create),
+	(gst_dvbsrc_output_frontend_stats), (gst_dvbsrc_tune),
+	(gst_dvbsrc_set_pes_filter):
+	* sys/dvb/gstdvbsrc.h:
+	Force PAT to always be in the filter.
+	Try to continue reading after failing 10 times.
+
 2006-11-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/POTFILES.in:

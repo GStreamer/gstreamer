@@ -73,7 +73,7 @@ static GstElementDetails dvbsrc_details = {
  * </para>
  * <para>
  * <programlisting>
- * gst-launch dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8MHz freq=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 pids=256:257 ! flutsdemux crc-check=false name=demux es-pids=256:257 ! queue max-size-buffers=0 max-size-time=0 ! flumpeg2vdec ! xvimagesink sync=false demux. ! queue max-size-buffers=0 max-size-time=0 ! flump3dec ! alsasink sync=false
+ * gst-launch dvbsrc modulation="QAM 64" trans-mode=8k bandwidth=8 freq=514000000 code-rate-lp=AUTO code-rate-hp=2/3 guard=4  hierarchy=0 pids=256:257 ! flutsdemux crc-check=false name=demux es-pids=256:257 ! queue max-size-buffers=0 max-size-time=0 ! flumpeg2vdec ! xvimagesink sync=false demux. ! queue max-size-buffers=0 max-size-time=0 ! flump3dec ! alsasink sync=false
  * </programlisting>
  * This pipeline captures a partial transport stream from dvb card 0 that is a DVB-T card for a program at tuned frequency 514000000 and pids of 256:257 with other parameters as seen in the pipeline and outputs the program with the pids 256 and 257.  The reason the sinks have to be set to
  * have sync=false is due to bug #340482.
@@ -773,7 +773,7 @@ read_device (int fd, const char *fd_name, int size)
   int count = 0;
   struct pollfd pfd[1];
   int ret_val = 0;
-  int attempts = 0;
+  guint attempts = 0;
   const int TIMEOUT = 100;
 
   GstBuffer *buf = gst_buffer_new_and_alloc (size);
@@ -797,12 +797,11 @@ read_device (int fd, const char *fd_name, int size)
         if (tmp < 0) {
           GST_WARNING ("Unable to read from device: %s (%d)", fd_name, errno);
           attempts += 1;
-          if (attempts == MAX_ATTEMPTS) {
+          if (attempts % 10 == 0) {
             GST_WARNING
-                ("Unable to read from device after too many attempts: %s",
-                fd_name);
-
-            goto fail;
+                ("Unable to read from device after %u attempts: %s",
+                attempts, fd_name);
+            gst_dvbsrc_output_frontend_stats (src);
           }
 
         } else
@@ -814,9 +813,10 @@ read_device (int fd, const char *fd_name, int size)
       attempts += 1;
       GST_INFO ("Reading from device %s timedout (%d)", fd_name, attempts);
 
-      if (attempts == MAX_ATTEMPTS) {
-        GST_WARNING ("Unable to read from device: %s (%d)", fd_name, errno);
-        goto fail;
+      if (attempts % 10 == 0) {
+        GST_WARNING ("Unable to read after %u attempts from device: %s (%d)",
+            attempts, fd_name, errno);
+        gst_dvbsrc_output_frontend_stats (src);
       }
     } else if (errno == -EINTR) {       // poll interrupted
       ;
@@ -826,13 +826,6 @@ read_device (int fd, const char *fd_name, int size)
 
   GST_BUFFER_SIZE (buf) = count;
   GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
-  goto end;
-
-fail:
-  gst_buffer_unref (buf);
-  buf = NULL;
-
-end:
   return buf;
 }
 
@@ -846,8 +839,10 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
   GstDvbSrc *object = NULL;
 
   g_return_val_if_fail (GST_IS_DVBSRC (element), GST_FLOW_ERROR);
-  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
   object = GST_DVBSRC (element);
+  GST_LOG ("buf: 0x%x fd_dvr: %d", buf, object->fd_dvr);
+
+  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
   //g_object_get(G_OBJECT(object), "blocksize", &buffer_size, NULL);
   buffer_size = DEFAULT_BUFFER_SIZE;
 
@@ -1187,7 +1182,7 @@ gst_dvbsrc_set_pes_filter (GstDvbSrc * object)
 
   for (i = 0; i < MAX_FILTERS; i++) {
     if (object->pids[i] == 0)
-      continue;
+      break;
 
     fd = &object->fd_filters[i];
     pid = object->pids[i];
@@ -1209,7 +1204,32 @@ gst_dvbsrc_set_pes_filter (GstDvbSrc * object)
         pes_filter.pid, pes_filter.pes_type);
 
     if (ioctl (*fd, DMX_SET_PES_FILTER, &pes_filter) < 0)
-      g_warning ("Error setting PES filter on %s: %s", object->demux_dev,
-          strerror (errno));
+      GST_WARNING_OBJECT (object, "Error setting PES filter on %s: %s",
+          object->demux_dev, strerror (errno));
   }
+  /* always have PAT in the filter if we haven't used all our filter slots */
+  if (object->pids[0] != 8192 && i < MAX_FILTERS) {
+    /* pid 8192 means get whole ts */
+    pes_filter.pid = 0;
+    pes_filter.input = DMX_IN_FRONTEND;
+    pes_filter.output = DMX_OUT_TS_TAP;
+    pes_filter.pes_type = DMX_PES_OTHER;
+    pes_filter.flags = DMX_IMMEDIATE_START;
+
+    fd = &object->fd_filters[i];
+    close (*fd);
+    if ((*fd = open (object->demux_dev, O_RDWR)) < 0) {
+      GST_WARNING_OBJECT ("Error opening demuxer: %s (%s)",
+          strerror (errno), object->demux_dev);
+    } else {
+      GST_INFO_OBJECT (object, "Setting pes-filter, pid = %d, type = %d",
+          pes_filter.pid, pes_filter.pes_type);
+
+      if (ioctl (*fd, DMX_SET_PES_FILTER, &pes_filter) < 0)
+        GST_WARNING_OBJECT (object, "Error setting PES filter on %s: %s",
+            object->demux_dev, strerror (errno));
+    }
+  }
+
+
 }
