@@ -8,6 +8,7 @@ examples_DATA = 	\
 	f2f.py		\
 	filesrc.py	\
 	fvumeter.py	\
+	gst-discover	\
 	gstfile.py	\
 	play.py		\
 	pipeline-tester \

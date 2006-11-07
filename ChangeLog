@@ -1,3 +1,9 @@
+2006-11-07  Andy Wingo  <wingo@pobox.com>
+
+	* examples/Makefile.am (examples_DATA): 
+	* examples/gst-discover: New tool, runs the discoverer on a file
+	and prints out what we get.
+
 2006-11-03  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.override:
