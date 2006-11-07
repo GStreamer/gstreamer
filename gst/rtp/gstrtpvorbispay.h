@@ -56,6 +56,7 @@ struct _GstRtpVorbisPay
   guint8        payload_F;
   guint8        payload_VDT;
   guint         payload_pkts;
+  GstClockTime  payload_timestamp;
   GstClockTime  payload_duration;
 
   gint          rate;

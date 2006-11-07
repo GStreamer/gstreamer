@@ -40,12 +40,20 @@ G_BEGIN_DECLS
 typedef struct _GstRtpVorbisDepay GstRtpVorbisDepay;
 typedef struct _GstRtpVorbisDepayClass GstRtpVorbisDepayClass;
 
+typedef struct _GstRtpVorbisConfig {
+  guint32  ident;
+  GList   *headers;
+} GstRtpVorbisConfig;
+
 struct _GstRtpVorbisDepay
 {
   GstBaseRTPDepayload parent;
 
-  GstAdapter *adapter;
-  gboolean    assembling;
+  GList              *configs;
+  GstRtpVorbisConfig *config;
+
+  GstAdapter         *adapter;
+  gboolean            assembling;
 };
 
 struct _GstRtpVorbisDepayClass

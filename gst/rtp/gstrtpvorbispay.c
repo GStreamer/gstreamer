@@ -139,14 +139,14 @@ gst_rtp_vorbis_pay_reset_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT)
   payload_len = gst_rtp_buffer_get_payload_len (rtpvorbispay->packet);
   rtpvorbispay->payload_left = payload_len - 4;
   rtpvorbispay->payload_duration = 0;
-  rtpvorbispay->payload_ident = 0;
   rtpvorbispay->payload_F = 0;
   rtpvorbispay->payload_VDT = VDT;
   rtpvorbispay->payload_pkts = 0;
 }
 
 static void
-gst_rtp_vorbis_pay_init_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT)
+gst_rtp_vorbis_pay_init_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT,
+    GstClockTime timestamp)
 {
   GST_DEBUG_OBJECT (rtpvorbispay, "starting new packet, VDT: %d", VDT);
 
@@ -158,6 +158,7 @@ gst_rtp_vorbis_pay_init_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT)
       gst_rtp_buffer_new_allocate_len (GST_BASE_RTP_PAYLOAD_MTU
       (rtpvorbispay), 0, 0);
   gst_rtp_vorbis_pay_reset_packet (rtpvorbispay, VDT);
+  GST_BUFFER_TIMESTAMP (rtpvorbispay->packet) = timestamp;
 }
 
 static GstFlowReturn
@@ -266,24 +267,31 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
     length += GST_BUFFER_SIZE (buf);
   }
 
-  /* total config length is the size of the headers + 2 bytes length +
-   * 3 bytes for the ident */
-  config = gst_buffer_new_and_alloc (length + 2 + 3);
+  /* total config length is 4 bytes header number + size of the
+   *  headers + 2 bytes length + 3 bytes for the ident */
+  config = gst_buffer_new_and_alloc (length + 4 + 2 + 3);
   data = GST_BUFFER_DATA (config);
 
+  /* number of packed headers, we only pack 1 header */
+  data[0] = 0;
+  data[1] = 0;
+  data[2] = 0;
+  data[3] = 1;
+
   /* we generate a random ident for this configuration */
-  ident = g_random_int ();
+  ident = rtpvorbispay->payload_ident = g_random_int ();
 
   /* take lower 3 bytes */
-  data[0] = ident & 0xff;
-  data[1] = (ident >> 8) & 0xff;
-  data[2] = (ident >> 16) & 0xff;
+  data[4] = (ident >> 16) & 0xff;
+  data[5] = (ident >> 8) & 0xff;
+  data[6] = ident & 0xff;
 
-  data[3] = (length >> 8) & 0xff;
-  data[4] = length & 0xff;
+  /* store length minus the length of the fixed vorbis header */
+  data[7] = ((length - 30) >> 8) & 0xff;
+  data[8] = (length - 30) & 0xff;
 
   /* copy header data */
-  data += 5;
+  data += 9;
   for (walk = rtpvorbispay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
 
@@ -302,7 +310,8 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
       rtpvorbispay->rate);
   gst_basertppayload_set_outcaps (basepayload, "encoding-params", G_TYPE_STRING,
       cstr, "configuration", G_TYPE_STRING, configuration,
-      /* don't set the defaults 
+      "delivery-method", G_TYPE_STRING, "inline",
+      /* don't set the other defaults 
        */
       NULL);
   g_free (cstr);
@@ -393,7 +402,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint size, newsize;
   guint8 *data;
   guint packet_len;
-  GstClockTime duration, newduration;
+  GstClockTime duration, newduration, timestamp;
   gboolean flush;
   guint8 VDT;
   guint plen;
@@ -405,6 +414,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
   duration = GST_BUFFER_DURATION (buffer);
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   GST_DEBUG_OBJECT (rtpvorbispay, "size %u, duration %" GST_TIME_FORMAT,
       size, GST_TIME_ARGS (duration));
@@ -471,8 +481,9 @@ gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     ret = gst_rtp_vorbis_pay_flush_packet (rtpvorbispay);
 
   /* create new packet if we must */
-  if (!rtpvorbispay->packet)
-    gst_rtp_vorbis_pay_init_packet (rtpvorbispay, VDT);
+  if (!rtpvorbispay->packet) {
+    gst_rtp_vorbis_pay_init_packet (rtpvorbispay, VDT, timestamp);
+  }
 
   payload = gst_rtp_buffer_get_payload (rtpvorbispay->packet);
   ppos = payload + rtpvorbispay->payload_pos;
@@ -521,7 +532,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       if (size > 0) {
         /* start new packet and get pointers. VDT stays the same. */
         gst_rtp_vorbis_pay_init_packet (rtpvorbispay,
-            rtpvorbispay->payload_VDT);
+            rtpvorbispay->payload_VDT, timestamp);
         payload = gst_rtp_buffer_get_payload (rtpvorbispay->packet);
         ppos = payload + rtpvorbispay->payload_pos;
       }

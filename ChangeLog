@@ -1,5 +1,31 @@
 2006-11-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/Makefile.am:
+        We depend on gsttag to generate the vorbis comments.
+
+	* gst/rtp/gstrtpvorbisdepay.c:
+	(gst_rtp_vorbis_depay_parse_configuration),
+	(gst_rtp_vorbis_depay_setcaps),
+	(gst_rtp_vorbis_depay_switch_codebook),
+	(gst_rtp_vorbis_depay_process):
+	* gst/rtp/gstrtpvorbisdepay.h:
+	Parse configuration string in the depayloader.
+	Implement selecting and switching to a new codebook.
+	Receiving vorbis over RTP now works.
+
+	* gst/rtp/gstrtpvorbispay.c: (gst_rtp_vorbis_pay_reset_packet),
+	(gst_rtp_vorbis_pay_init_packet),
+	(gst_rtp_vorbis_pay_finish_headers),
+	(gst_rtp_vorbis_pay_handle_buffer):
+	* gst/rtp/gstrtpvorbispay.h:
+	Set timestamps on outgoing buffers and RTP packets.
+	Fix configuration string, prepend number of Packet headers.
+	Fix encoding of ident string.
+	Add delivery-method to caps.
+	Streaming vorbis over RTP now works.
+
+2006-11-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpvorbispay.c: (gst_rtp_vorbis_pay_setcaps),
 	(gst_rtp_vorbis_pay_finish_headers), (gst_rtp_vorbis_pay_parse_id),
 	(gst_rtp_vorbis_pay_handle_buffer):

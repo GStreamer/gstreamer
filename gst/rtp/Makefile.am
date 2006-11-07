@@ -41,6 +41,7 @@ endif
 
 libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
+                -lgsttag-@GST_MAJORMINOR@ \
                 -lgstrtp-@GST_MAJORMINOR@ $(WINSOCK2_LIBS)
 libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 

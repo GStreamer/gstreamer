@@ -21,6 +21,7 @@
 #  include "config.h"
 #endif
 
+#include <gst/tag/tag.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
 #include <string.h>
@@ -74,6 +75,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-vorbis")
     );
+
+/* 30 bytes for the vorbis identification packet length */
+#define VORBIS_ID_LEN	30
 
 GST_BOILERPLATE (GstRtpVorbisDepay, gst_rtp_vorbis_depay, GstBaseRTPDepayload,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
@@ -147,19 +151,170 @@ gst_rtp_vorbis_depay_finalize (GObject * object)
 }
 
 static gboolean
+gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
+    const gchar * configuration)
+{
+  GValue v = { 0 };
+  GstBuffer *buf;
+  guint32 num_headers;
+  guint8 *data;
+  guint size;
+  gint i;
+
+  /* deserialize base16 to buffer */
+  g_value_init (&v, GST_TYPE_BUFFER);
+  if (!gst_value_deserialize (&v, configuration))
+    goto wrong_configuration;
+
+  buf = gst_value_get_buffer (&v);
+  gst_buffer_ref (buf);
+  g_value_unset (&v);
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  GST_DEBUG_OBJECT (rtpvorbisdepay, "config size %u", size);
+
+  /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                     Number of packed headers                  |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                          Packed header                        |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                          Packed header                        |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                          ....                                 |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   */
+  if (size < 4)
+    goto too_small;
+
+  num_headers = GST_READ_UINT32_BE (data);
+  size -= 4;
+  data += 4;
+
+  GST_DEBUG_OBJECT (rtpvorbisdepay, "have %u headers", num_headers);
+
+  /*  0                   1                   2                   3
+   *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                   Ident                       |              ..
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * ..   length     |              Identification Header           ..
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * ..                    Identification Header                     |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |                          Setup Header                        ..
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * ..                         Setup Header                         |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   *
+   */
+  for (i = 0; i < num_headers; i++) {
+    guint32 ident;
+    guint16 length;
+    GstRtpVorbisConfig *conf;
+    GstTagList *list;
+
+    if (size < 5)
+      goto too_small;
+
+    ident = (data[0] << 16) | (data[1] << 8) | data[2];
+    length = (data[3] << 8) | data[4];
+    size -= 5;
+    data += 5;
+
+    GST_DEBUG_OBJECT (rtpvorbisdepay, "header %d, ident %08x, length %u", i,
+        ident, length);
+
+    if (size < length + VORBIS_ID_LEN)
+      goto too_small;
+
+    GST_DEBUG_OBJECT (rtpvorbisdepay, "preparing headers");
+
+    conf = g_new0 (GstRtpVorbisConfig, 1);
+    conf->ident = ident;
+
+    buf = gst_buffer_new_and_alloc (VORBIS_ID_LEN);
+    memcpy (GST_BUFFER_DATA (buf), data, VORBIS_ID_LEN);
+    conf->headers = g_list_append (conf->headers, buf);
+    data += VORBIS_ID_LEN;
+    size -= VORBIS_ID_LEN;
+
+    /* create a dummy comment */
+    list = gst_tag_list_new ();
+    buf =
+        gst_tag_list_to_vorbiscomment_buffer (list, (guint8 *) "\003vorbis", 7,
+        "Vorbis RTP depayloader");
+    conf->headers = g_list_append (conf->headers, buf);
+    gst_tag_list_free (list);
+
+    buf = gst_buffer_new_and_alloc (length);
+    memcpy (GST_BUFFER_DATA (buf), data, length);
+    conf->headers = g_list_append (conf->headers, buf);
+    data += length;
+    size -= length;
+
+    rtpvorbisdepay->configs = g_list_append (rtpvorbisdepay->configs, conf);
+  }
+
+  return TRUE;
+
+  /* ERRORS */
+wrong_configuration:
+  {
+    GST_DEBUG_OBJECT (rtpvorbisdepay, "error parsing configuration");
+    return FALSE;
+  }
+too_small:
+  {
+    GST_DEBUG_OBJECT (rtpvorbisdepay, "configuration too small");
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstStructure *structure;
   GstRtpVorbisDepay *rtpvorbisdepay;
   GstCaps *srccaps;
+  const gchar *delivery_method;
+  const gchar *configuration;
   gint clock_rate;
 
   rtpvorbisdepay = GST_RTP_VORBIS_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
 
+  /* get clockrate */
   if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
     goto no_rate;
+
+  /* see how the configuration parameters will be transmitted */
+  delivery_method = gst_structure_get_string (structure, "delivery-method");
+  if (delivery_method == NULL)
+    goto no_delivery_method;
+
+  if (g_strcasecmp (delivery_method, "inline")) {
+    /* configure string is in the caps */
+  } else if (g_strcasecmp (delivery_method, "in_band")) {
+    /* headers will (also) be transmitted in the RTP packets */
+  } else if (g_str_has_prefix (delivery_method, "out_band/")) {
+    /* some other method of header delivery. */
+    goto unsupported_delivery_method;
+  } else
+    goto unsupported_delivery_method;
+
+  /* read and parse configuration string */
+  configuration = gst_structure_get_string (structure, "configuration");
+  if (configuration == NULL)
+    goto no_configuration;
+
+  if (!gst_rtp_vorbis_depay_parse_configuration (rtpvorbisdepay, configuration))
+    goto invalid_configuration;
 
   /* caps seem good, configure element */
   depayload->clock_rate = clock_rate;
@@ -171,11 +326,68 @@ gst_rtp_vorbis_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   return TRUE;
 
+  /* ERRORS */
+unsupported_delivery_method:
+  {
+    GST_ERROR_OBJECT (rtpvorbisdepay,
+        "unsupported delivery-method \"%s\" specified", delivery_method);
+    return FALSE;
+  }
+no_delivery_method:
+  {
+    GST_ERROR_OBJECT (rtpvorbisdepay, "no delivery-method specified");
+    return FALSE;
+  }
+no_configuration:
+  {
+    GST_ERROR_OBJECT (rtpvorbisdepay, "no configuration specified");
+    return FALSE;
+  }
+invalid_configuration:
+  {
+    GST_ERROR_OBJECT (rtpvorbisdepay, "invalid configuration specified");
+    return FALSE;
+  }
 no_rate:
   {
     GST_ERROR_OBJECT (rtpvorbisdepay, "no clock-rate specified");
     return FALSE;
   }
+}
+
+static gboolean
+gst_rtp_vorbis_depay_switch_codebook (GstRtpVorbisDepay * rtpvorbisdepay,
+    guint32 ident)
+{
+  GList *walk;
+  gboolean res = FALSE;
+
+  for (walk = rtpvorbisdepay->configs; walk; walk = g_list_next (walk)) {
+    GstRtpVorbisConfig *conf = (GstRtpVorbisConfig *) walk->data;
+
+    if (conf->ident == ident) {
+      GList *headers;
+
+      /* FIXME, remove pads, create new pad.. */
+
+      /* push out all the headers */
+      for (headers = conf->headers; headers; headers = g_list_next (headers)) {
+        GstBuffer *header = GST_BUFFER_CAST (headers->data);
+
+        gst_buffer_ref (header);
+        gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpvorbisdepay),
+            header);
+      }
+      /* remember the current config */
+      rtpvorbisdepay->config = conf;
+      res = TRUE;
+    }
+  }
+  if (!res) {
+    /* we don't know about the headers, figure out an alternative method for
+     * getting the codebooks. FIXME, fail for now. */
+  }
+  return res;
 }
 
 static GstBuffer *
@@ -228,7 +440,21 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   packets = (header & 0xf);
 
   if (VDT == 0) {
-    /* FIXME, if we have a raw payload, we need the codebook for the ident */
+    gboolean do_switch = FALSE;
+
+    /* we have a raw payload, find the codebook for the ident */
+    if (!rtpvorbisdepay->config) {
+      /* we don't have an active codebook, find the codebook and
+       * activate it */
+      do_switch = TRUE;
+    } else if (rtpvorbisdepay->config->ident != ident) {
+      /* codebook changed */
+      do_switch = TRUE;
+    }
+    if (do_switch) {
+      if (!gst_rtp_vorbis_depay_switch_codebook (rtpvorbisdepay, ident))
+        goto switch_failed;
+    }
   }
 
   /* skip header */
@@ -352,13 +578,19 @@ no_output:
 bad_packet:
   {
     GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,
-        ("Packet did not validate"), (NULL));
+        (NULL), ("Packet did not validate"));
+    return NULL;
+  }
+switch_failed:
+  {
+    GST_ELEMENT_ERROR (rtpvorbisdepay, STREAM, DECODE,
+        (NULL), ("Could not switch codebooks"));
     return NULL;
   }
 packet_short:
   {
     GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,
-        ("Packet was too short (%d < 4)", payload_len), (NULL));
+        (NULL), ("Packet was too short (%d < 4)", payload_len));
     return NULL;
   }
 ignore_reserved:
@@ -369,7 +601,7 @@ ignore_reserved:
 length_short:
   {
     GST_ELEMENT_WARNING (rtpvorbisdepay, STREAM, DECODE,
-        ("Packet contains invalid data"), (NULL));
+        (NULL), ("Packet contains invalid data"));
     return NULL;
   }
 }
