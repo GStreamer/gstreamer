@@ -801,7 +801,6 @@ read_device (int fd, const char *fd_name, int size)
             GST_WARNING
                 ("Unable to read from device after %u attempts: %s",
                 attempts, fd_name);
-            gst_dvbsrc_output_frontend_stats (src);
           }
 
         } else
@@ -816,7 +815,6 @@ read_device (int fd, const char *fd_name, int size)
       if (attempts % 10 == 0) {
         GST_WARNING ("Unable to read after %u attempts from device: %s (%d)",
             attempts, fd_name, errno);
-        gst_dvbsrc_output_frontend_stats (src);
       }
     } else if (errno == -EINTR) {       // poll interrupted
       ;

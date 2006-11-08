@@ -1,3 +1,10 @@
+2006-11-08  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/gstdvbsrc.c: (read_device):
+	Do not call output_frontend_stats from a method that does not
+	have the gstdvbsrc object.
+	This fixes the build, sorry guys!
+
 2006-11-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c: (read_device), (gst_dvbsrc_create),
