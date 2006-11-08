@@ -36,7 +36,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpvorbispay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_vorbispay_details =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Codec/Payloader/Network",
     "Payload-encode Vorbis audio into RTP packets (draft-01 RFC XXXX)",
     "Wim Taymans <wim@fluendo.com>");
@@ -430,12 +430,12 @@ gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       if (G_UNLIKELY (!gst_rtp_vorbis_pay_parse_id (basepayload, data, size)))
         goto parse_id_failed;
       VDT = 1;
-    } else if (data[0] == 5)
-      /* setup */
-      VDT = 1;
-    else if (data[0] == 3) {
+    } else if (data[0] == 3) {
       /* comment */
       VDT = 2;
+    } else if (data[0] == 5) {
+      /* setup */
+      VDT = 1;
     } else
       goto unknown_header;
   } else

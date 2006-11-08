@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpvorbisdepay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_vorbis_depay_details =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Codec/Depayloader/Network",
     "Extracts Vorbis Audio from RTP packets (draft-01 of RFC XXXX)",
     "Wim Taymans <wim@fluendo.com>");

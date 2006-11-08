@@ -1,4 +1,11 @@
-2006-11-08  Christian F.K. Schaller  <set EMAIL_ADDRESS environment variable>
+2006-11-08  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpvorbisdepay.c:
+	* gst/rtp/gstrtpvorbispay.c: (gst_rtp_vorbis_pay_handle_buffer):
+	Fix description.
+	Small cleanup in the payloader.
+
+2006-11-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtp.c: (plugin_init):
