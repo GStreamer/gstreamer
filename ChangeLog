@@ -1,5 +1,11 @@
 2006-11-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/examples/typefind/typefind.c: (type_found), (main):
+	  Make typefind element example work again (#371894); add a
+	  license header.
+
+2006-11-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/random/draft-missing-plugins.txt:
 	  Commit initial draft about how to deal with missing plugins,
 	  needs work (API too).

@@ -1,20 +1,38 @@
+/* GStreamer typefind element example
+ * Copyright (C) <2005> Stefan Kost
+ * Copyright (C) <2006> Tim-Philipp Müller
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
 #include <gst/gst.h>
 
 static void
-type_found (GstElement * typefind, const GstCaps * caps)
+type_found (GstElement * typefind, guint probability, const GstCaps * caps,
+    gpointer user_data)
 {
-  xmlDocPtr doc;
-  xmlNodePtr parent;
+  gchar *xml, *caps_str;
 
-  doc = xmlNewDoc ((xmlChar *) "1.0");
-  doc->xmlRootNode = xmlNewDocNode (doc, NULL, (xmlChar *) "Capabilities",
-      NULL);
+  caps_str = gst_caps_to_string (caps);
+  xml = g_markup_printf_escaped ("<?xml version=\"1.0\"?>\n<Capabilities>\n"
+      " <Caps1>%s</Caps1>\n</Capabilities>", caps_str);
+  g_free (caps_str);
 
-  parent = xmlNewChild (doc->xmlRootNode, NULL, (xmlChar *) "Caps1", NULL);
-  /* FIXME */
-  //gst_caps_save_thyself (caps, parent);
-
-  xmlDocDump (stdout, doc);
+  g_print ("%s\n", xml);
+  g_free (xml);
 }
 
 static void
@@ -56,7 +74,7 @@ event_loop (GstElement * pipe)
 int
 main (int argc, char *argv[])
 {
-  GstElement *bin, *filesrc, *typefind;
+  GstElement *pipeline, *filesrc, *typefind, *sink;
 
   gst_init (&argc, &argv);
 
@@ -65,9 +83,9 @@ main (int argc, char *argv[])
     exit (-1);
   }
 
-  /* create a new bin to hold the elements */
-  bin = gst_pipeline_new ("bin");
-  g_assert (bin != NULL);
+  /* create a new pipeline to hold the elements */
+  pipeline = gst_pipeline_new ("pipeline");
+  g_assert (pipeline != NULL);
 
   /* create a file reader */
   filesrc = gst_element_factory_make ("filesrc", "file_source");
@@ -77,23 +95,28 @@ main (int argc, char *argv[])
   typefind = gst_element_factory_make ("typefind", "typefind");
   g_assert (typefind != NULL);
 
-  /* add objects to the main pipeline */
-  gst_bin_add (GST_BIN (bin), filesrc);
-  gst_bin_add (GST_BIN (bin), typefind);
+  sink = gst_element_factory_make ("fakesink", "sink");
+  g_assert (sink != NULL);
 
-  g_signal_connect (G_OBJECT (typefind), "have_type",
+  /* add objects to the main pipeline */
+  gst_bin_add (GST_BIN (pipeline), filesrc);
+  gst_bin_add (GST_BIN (pipeline), typefind);
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  g_signal_connect (G_OBJECT (typefind), "have-type",
       G_CALLBACK (type_found), NULL);
 
-  gst_element_link (filesrc, typefind);
+  gst_element_link_many (filesrc, typefind, sink, NULL);
 
   /* start playing */
-  gst_element_set_state (bin, GST_STATE_PLAYING);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   /* Run event loop listening for bus messages until EOS or ERROR */
-  event_loop (bin);
+  event_loop (pipeline);
 
   /* stop the bin */
-  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
 
   exit (0);
 }
