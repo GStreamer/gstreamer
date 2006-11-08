@@ -1,3 +1,9 @@
+2006-11-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/random/draft-missing-plugins.txt:
+	  Commit initial draft about how to deal with missing plugins,
+	  needs work (API too).
+
 2006-11-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/pwg/advanced-types.xml:
