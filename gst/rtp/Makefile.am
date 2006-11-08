@@ -28,6 +28,8 @@ libgstrtp_la_SOURCES = \
 	gstrtpspeexdepay.c \
 	gstrtpspeexpay.c \
 	gstrtpsv3vdepay.c \
+	gstrtptheoradepay.c \
+	gstrtptheorapay.c \
 	gstrtpvorbisdepay.c \
 	gstrtpvorbispay.c
 	
@@ -74,5 +76,7 @@ noinst_HEADERS =			\
 		 gstrtpspeexdepay.h	\
 		 gstrtpspeexpay.h	\
 		 gstrtpsv3vdepay.h	\
+	 	 gstrtptheoradepay.h    \
+	 	 gstrtptheorapay.h      \
 	 	 gstrtpvorbisdepay.h    \
 	 	 gstrtpvorbispay.h

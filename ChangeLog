@@ -1,7 +1,34 @@
+2006-11-08  Christian F.K. Schaller  <set EMAIL_ADDRESS environment variable>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtptheoradepay.c: (gst_rtp_theora_depay_base_init),
+	(gst_rtp_theora_depay_class_init), (gst_rtp_theora_depay_init),
+	(gst_rtp_theora_depay_finalize),
+	(gst_rtp_theora_depay_parse_configuration),
+	(gst_rtp_theora_depay_setcaps),
+	(gst_rtp_theora_depay_switch_codebook),
+	(gst_rtp_theora_depay_process),
+	(gst_rtp_theora_depay_set_property),
+	(gst_rtp_theora_depay_get_property),
+	(gst_rtp_theora_depay_change_state),
+	(gst_rtp_theora_depay_plugin_init):
+	* gst/rtp/gstrtptheoradepay.h:
+	* gst/rtp/gstrtptheorapay.c: (gst_rtp_theora_pay_base_init),
+	(gst_rtp_theora_pay_class_init), (gst_rtp_theora_pay_init),
+	(gst_rtp_theora_pay_setcaps), (gst_rtp_theora_pay_reset_packet),
+	(gst_rtp_theora_pay_init_packet),
+	(gst_rtp_theora_pay_flush_packet),
+	(gst_rtp_theora_pay_finish_headers), (gst_rtp_theora_pay_parse_id),
+	(gst_rtp_theora_pay_handle_buffer),
+	(gst_rtp_theora_pay_plugin_init):
+	* gst/rtp/gstrtptheorapay.h:
+	Add theora pay/depayloaders.
+
 2006-11-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/Makefile.am:
-        We depend on gsttag to generate the vorbis comments.
+	We depend on gsttag to generate the vorbis comments.
 
 	* gst/rtp/gstrtpvorbisdepay.c:
 	(gst_rtp_vorbis_depay_parse_configuration),
