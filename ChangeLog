@@ -1,3 +1,11 @@
+2006-11-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/random/draft-missing-plugins.txt:
+	  Update: use element message instead of adding a new message
+	  type to the core; don't provide GStreamer API to initiate the
+	  plugin download, just provide API to compose the strings needed
+	  and let an external libgimmestuff handle the rest.
+
 2006-11-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tools/gst-inspect.c: (print_element_properties_info):

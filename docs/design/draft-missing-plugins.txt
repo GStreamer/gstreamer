@@ -7,16 +7,15 @@ A three step process:
 
 1) GStreamer level
 
- - a new GstMessage type to report missing plugins:
+ - elements will use a "missing-plugin" element message to report missing
+   plugins, with the following fields set:
 
-  GST_MESSAGE_MISSING_PLUGIN
-   type: (string) { "urisource", "urisink", "decoder", "encoder", "element", ...
-   detail: (string) { ANY }    ex: "mms, "mmsh", "audio/x-mp3,rate=48000,..."
-   name: (string) { ANY }      ex: "MMS protocol handler",..   
-
-  =====> FIXME: really add a message type? Why not an element message? <=====
-  --- The reason for not adding a core message type is that the autopluggers
-  --- will post the element and the core is not intersted in this at all.
+     - type: (string) { "urisource", "urisink", "decoder", "encoder", "element" }
+         (we do not distinguish between demuxer/decoders/parsers etc.)
+     - detail: (string) or (caps) depending on the type { ANY }
+         ex: "mms, "mmsh", "audio/x-mp3,rate=48000,..."
+     - name: (string) { ANY }
+         ex: "MMS protocol handler",..
 
  - missing uri handler 
   
@@ -26,7 +25,7 @@ A three step process:
   able to instantiate an element for that uri (gst_element_make_from_uri()
   returns NULL).
 
-  Playbin will post a GST_MESSAGE_MISSING_PLUGIN message with the type set to 
+  Playbin will post a "missing-plugin" element message with the type set to 
   "urisource", detail set to "mms". Optionally the friendly name can be filled
   in as well.
 
@@ -43,20 +42,21 @@ A three step process:
  - missing demuxer
 
   Typically after running typefind on the data we determine the type of the 
-  file. If there is no plugin found for the type, a GST_MESSAGE_PLUGIN_MISSING
-  is posted by decodebin with the following fields: Type set to "decoder",
-  detail set to the caps for witch no plugin was found. Optionally the friendly
-  name can be filled in as well.
+  file. If there is no plugin found for the type, a "missing-plugin" element
+  message is posted by decodebin with the following fields: Type set to
+  "decoder", detail set to the caps for witch no plugin was found. Optionally
+  the friendly name can be filled in as well.
 
  - missing decoder 
 
   The demuxer will dynamically create new pads with specific caps while it 
   figures out the contents of the container format. Decodebin tries to find the
   decoders for these formats in the registry. If there is no decoder found, a
-  MISSING_PLUGIN is posted by decodebin with the following fields: Type set to
-  "decoder", detail set to the caps for which no plugin was found. Optionally
-  the friendly name can be filled in as well. There is no distinction made
-  between the missing demuxer and decoder at the application level.
+  "missing-plugin" element message is posted by decodebin with the following
+  fields: Type set to "decoder", detail set to the caps for which no plugin
+  was found. Optionally the friendly name can be filled in as well. There is
+  no distinction made between the missing demuxer and decoder at the
+  application level.
 
  - missing element
 
@@ -64,10 +64,10 @@ A three step process:
   their decoding pipeline. These elements are typically colorspace, sample rate,
   audio sinks,... Their presence on the system is required for the functionality
   of decodebin. It is typically a package dependency error if they are not
-  present but in case of a corrupted system the following PLUGIN_MISSING message
-  will be emitted: type set to "element", detail set to the element factory name
-  and the friendly name optionally set to a description of the element's
-  functionality in the decoding pipeline.
+  present but in case of a corrupted system the following "missing-plugin"
+  element message will be emitted: type set to "element", detail set to the
+  element factory name and the friendly name optionally set to a description
+  of the element's functionality in the decoding pipeline.
 
  Except for reporting the missing plugins, no further policy is enforced at the
  GStreamer level. It is up to the application to decide whether a missing
@@ -76,13 +76,13 @@ A three step process:
 
 2) application level
 
- The application's job is to listen for the MISSING_PLUGIN messages and to
- decide on a policy to handle them. Following cases exist:
+ The application's job is to listen for the "missing-plugin" element messages
+ and to decide on a policy to handle them. Following cases exist:
 
  - partially missing plugins
 
  The application will be able to complete a state change to PAUSED but there 
- will be a MISSING_PLUGIN message on the GstBus. 
+ will be a "missing-plugin" element message on the GstBus. 
 
  This means that it will be possible to play back part of the media file but not
  all of it. 
@@ -104,82 +104,53 @@ A three step process:
  playback stopped (before it could reach PAUSED). This happens because none of
  the streams is connected to a decoder.
 
- The application can then see that there are a set of MISSING_PLUGIN messages on
- the GstBus and can decide to trigger the download procedure. It does that
- by calling gst_install_missing_plugins() which is documented above, passing
- the MISSING_PLUGIN messages collected.
+ The application can then see that there are a set of "missing-plugin" element
+ messages on the GstBus and can decide to trigger the download procedure. It
+ does that as described in the following section.
 
 
 3) Plugin download stage
 
- In addition, a thin callback API will be added to GStreamer to initiate
- plugin download and receive feedback about whether the plugin download
- succeeded (in full or partially) or failed.
+  At this point the application has
+    - collected one or more "missing-plugin" element messages
+    - made a decision that additional plugins should be installed
 
-   struct GstMissingPluginHandler {
-     /* This function must be blocking; the function is implemented by an
-      * external library (chosen by the application) */
-     gboolean (*install_plugins) (const gchar ** missing_ids, GError ** error, gpointer handler_data);
+  It will call a GStreamer utility function to convert each "missing-plugin"
+  message into an identifier string describing the missing capability.
 
-     /*< private >*/
-     gpointer   padding[GST_PADDING];
-   };
+  The application will then pass these strings to an external libgimmecodec
+  to initiate the download. Error handling and progress reporting etc. will
+  all be handled using libgimmecodec's API.
 
-   typedef void (GstMissingPluginInstallResultFunc *) (const GError * error,
-                                                       gpointer       user_data);
-
-   /* The GstMissingPluginHandler struct is provided by some helper library
-    * which implements the IPC details; this function does not block and will
-    * return immediately; the result_callback function will be called when the
-    * IPC implementation has finished (this might happen from the context of
-    * another thread, it is the responsibility of the application to take care
-    * of locking or marshalling the result back into the main thread in a
-    * thread-safe manner */
-   gboolean gst_install_missing_plugins (const GstMissingPluginHandler    * handler,
-                                         gpointer                           handler_data,
-                                         GList                            * messages,
-                                         GstMissingPluginInstallResultFunc  result_callback,
-                                         gpointer                           result_callback_data,
-                                         GError                          ** error);
-
-    =====> FIXME: progress function? (+ make API better) <=========
-
-  gst_install_missing_plugins() takes a GList of PLUGIN_MISSING messages and
-  a GstMissingPluginHandler structure which specifies the implementation of
-  the IPC mechanism. It will transform each PLUGIN_MISSING message into an
-  ID string that among other things identifies the type of missing capability.
-  Mapping this ID to packages and downloading and installing packages is the
-  responsibility of the external IPC system.
-
-  The gst_install_missing_plugins() callback will initiate a re-scan
-  of the available plugins before calling the result_callback with a
-  positive result.
+  When new plugins have been installed, the application will have to initiate
+  a re-scan of the GStreamer plugin registry.
 
 
-  Format of the (UTF-8) string ID passed to the external installer system:
-    The string is made up of several fields, separated by '|' characters.
-    The fields are:
+4) Format of the (UTF-8) string ID passed to the external installer system
 
-      - plugin system identifier, ie. gstreamer.net
-      - plugin system version, e.g. 0.10
-      - application identifier, e.g. totem
-      - human-readable localised description of the required component,
-        e.g. "Vorbis audio decoder"
-      - identifier string for the required component, e.g.
-           - urisource-$(PROTOCOL_REQUIRED)
-               e.g. urisource-http or urisource-mms
-           - element-$(ELEMENT_REQUIRED),
-               e.g. element-ffmpegcolorspace
-           - decoder-$(CAPS_REQUIRED)
-               e.g. decoder-audio/x-vorbis or decoder-application/ogg
-           - encoder-$(CAPS_REQUIRED)
-               e.g. encoder-audio/x-vorbis
+  The string is made up of several fields, separated by '|' characters.
+  The fields are:
 
-    An entire ID string might then look like this, for example:
+    - plugin system identifier, ie. gstreamer.net
+    - plugin system version, e.g. 0.10
+    - application identifier, e.g. totem
+    - human-readable localised description of the required component,
+      e.g. "Vorbis audio decoder"
+    - identifier string for the required component, e.g.
+         - urisource-$(PROTOCOL_REQUIRED)
+             e.g. urisource-http or urisource-mms
+         - element-$(ELEMENT_REQUIRED),
+             e.g. element-ffmpegcolorspace
+         - decoder-$(CAPS_REQUIRED)
+             e.g. decoder-audio/x-vorbis or decoder-application/ogg
+         - encoder-$(CAPS_REQUIRED)
+             e.g. encoder-audio/x-vorbis
 
-      gstreamer.net|0.10|totem|Vorbis audio decoder|decoder-audio/x-vorbis
+  An entire ID string might then look like this, for example:
+
+    gstreamer.net|0.10|totem|Vorbis audio decoder|decoder-audio/x-vorbis
  
-    The human-readable description string will come from a new utility
-    library that yet to be added to gst-plugins-base and which can then also
-    be used by demuxers to find out the codec names for taglists from given
-    caps in a unified and consistent way.
+  The human-readable description string will come from a new utility
+  library that yet to be added to gst-plugins-base and which can then also
+  be used by demuxers to find out the codec names for taglists from given
+  caps in a unified and consistent way.
