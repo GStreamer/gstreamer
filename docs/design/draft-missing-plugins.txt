@@ -5,7 +5,7 @@ We only discuss playback pipelines for now.
 
 A three step process:
 
-1) gstreamer level
+1) GStreamer level
 
  - a new GstMessage type to report missing plugins:
 
@@ -15,6 +15,8 @@ A three step process:
    name: (string) { ANY }      ex: "MMS protocol handler",..   
 
   =====> FIXME: really add a message type? Why not an element message? <=====
+  --- The reason for not adding a core message type is that the autopluggers
+  --- will post the element and the core is not intersted in this at all.
 
  - missing uri handler 
   
@@ -31,7 +33,7 @@ A three step process:
  - missing typefind function
 
   We don't recognize the type of the file, this should normally not happen
-  because all the typefinders are in the basic gstreamer installation.
+  because all the typefinders are in the basic GStreamer installation.
   There is not much useful information we can give about how to resolve this 
   issue. It is possible to use the first N bytes of the data to determine the
   type (and needed plugin) on the server. We don't explore this option in this
@@ -67,9 +69,48 @@ A three step process:
   and the friendly name optionally set to a description of the element's
   functionality in the decoding pipeline.
 
- Except for reported the missing plugins, no further policy is enforced at the
- gstreamer level. It is up to the application to decide whether a missing
+ Except for reporting the missing plugins, no further policy is enforced at the
+ GStreamer level. It is up to the application to decide whether a missing
  plugin constitutes a problem or not.
+
+
+2) application level
+
+ The application's job is to listen for the MISSING_PLUGIN messages and to
+ decide on a policy to handle them. Following cases exist:
+
+ - partially missing plugins
+
+ The application will be able to complete a state change to PAUSED but there 
+ will be a MISSING_PLUGIN message on the GstBus. 
+
+ This means that it will be possible to play back part of the media file but not
+ all of it. 
+
+ For example: suppose we have an .avi file with mp3 audio and divx video. If we 
+ have the mp3 audio decoder but not the divx video decoder, it will be possible
+ to play only the audio part but not the video part. For an audio playback
+ application, this is not a problem but a video player might want to decide on:
+
+   - require the use to install the additionally required plugins. 
+   - inform the user that only the audio will be played back
+   - ask the user if it should download the additional codec or only play the 
+     audio part.
+   - ...
+
+ - completely unplayable stream
+
+ The application will receive an ERROR message from GStreamer informing it that
+ playback stopped (before it could reach PAUSED). This happens because none of
+ the streams is connected to a decoder.
+
+ The application can then see that there are a set of MISSING_PLUGIN messages on
+ the GstBus and can decide to trigger the download procedure. It does that
+ by calling gst_install_missing_plugins() which is documented above, passing
+ the MISSING_PLUGIN messages collected.
+
+
+3) Plugin download stage
 
  In addition, a thin callback API will be added to GStreamer to initiate
  plugin download and receive feedback about whether the plugin download
@@ -78,7 +119,7 @@ A three step process:
    struct GstMissingPluginHandler {
      /* This function must be blocking; the function is implemented by an
       * external library (chosen by the application) */
-     gboolean (*install_plugins) (const gchar ** missing_ids, GError ** error);
+     gboolean (*install_plugins) (const gchar ** missing_ids, GError ** error, gpointer handler_data);
 
      /*< private >*/
      gpointer   padding[GST_PADDING];
@@ -95,6 +136,7 @@ A three step process:
     * of locking or marshalling the result back into the main thread in a
     * thread-safe manner */
    gboolean gst_install_missing_plugins (const GstMissingPluginHandler    * handler,
+                                         gpointer                           handler_data,
                                          GList                            * messages,
                                          GstMissingPluginInstallResultFunc  result_callback,
                                          gpointer                           result_callback_data,
@@ -141,40 +183,3 @@ A three step process:
     library that yet to be added to gst-plugins-base and which can then also
     be used by demuxers to find out the codec names for taglists from given
     caps in a unified and consistent way.
-
-
-
-2) application level
-
- The application's job is to listen for the MISSING_PLUGIN messages and to
- decide on a policy to handle them.
-
- - partially missing plugins
-
- The application will be able to complete a state change to PAUSED but there 
- will be a MISSING_PLUGIN message on the GstBus. 
-
- This means that it will be possible to play back part of the media file but not
- all of it. 
-
- For example: suppose we have an .avi file with mp3 audio and divx video. If we 
- have the mp3 audio decoder but not the divx video decoder, it will be possible
- to play only the audio part but not the video part. For an audio playback
- application, this is not a problem but a video player might want to decide on:
-
-   - require the use to install the additionally required plugins. 
-   - inform the user that only the audio will be played back
-   - ask the user if it should download the additional codec or only play the 
-     audio part.
-   - ...
-
- - completely unplayable stream
-
- The application will receive an ERROR message from gstreamer informing it that
- playback stopped (before it could reach PAUSED).
-
- The application can then see that there are a set of MISSING_PLUGIN messages on
- the GstBus and can decide to trigger the download procedure. It does that
- by calling gst_install_missing_plugins() which is documented above, passing
- the MISSING_PLUGIN messages collected.
-

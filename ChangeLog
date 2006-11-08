@@ -1,3 +1,8 @@
+2006-11-08  Christian F.K. Schaller  <set EMAIL_ADDRESS environment variable>
+
+	* docs/random/draft-missing-plugins.txt:
+	More small fixes.
+
 2006-11-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/examples/typefind/typefind.c: (type_found), (main):
