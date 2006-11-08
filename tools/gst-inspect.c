@@ -509,6 +509,8 @@ print_element_properties_info (GstElement * element)
           } else {
             n_print ("%-23.23s Pointer.", "");
           }
+        } else if (param->value_type == G_TYPE_VALUE_ARRAY) {
+          n_print ("%-23.23s Array of GValues", "");
         } else {
           n_print ("%-23.23s Unknown type %ld \"%s\"", "", param->value_type,
               g_type_name (param->value_type));
