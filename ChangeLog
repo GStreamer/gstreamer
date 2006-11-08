@@ -1,3 +1,9 @@
+2006-11-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/flx/gstflxdec.c: (gst_flxdec_class_init):
+	  fix categorisation, make short desc more explicit, remove unused code
+	  Fixes #372021
+
 2006-11-08  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpL16depay.c:

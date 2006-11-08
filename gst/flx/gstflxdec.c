@@ -16,6 +16,18 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-flxdec
+ *
+ * <refsect2>
+ * <para>
+ * This element decodes fli/flc/flx-video into raw video
+ * </refsect2>
+ */
+/*
+ * http://www.coolutils.com/Formats/FLI
+ * http://woodshole.er.usgs.gov/operations/modeling/flc.html
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -34,21 +46,9 @@ GST_DEBUG_CATEGORY_STATIC (flxdec_debug);
 /* flx element information */
 static const GstElementDetails flxdec_details =
 GST_ELEMENT_DETAILS ("FLX audio decoder",
-    "Codec/Decoder/Audio",
-    "FLX decoder",
+    "Codec/Decoder/Video",
+    "FLC/FLI/FLX video decoder",
     "Sepp Wijnands <mrrazz@garbage-coderz.net>, Zeeshan Ali <zeenix@gmail.com>");
-
-/* Flx signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0
-};
 
 /* input */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -77,12 +77,6 @@ static GstStateChangeReturn gst_flxdec_change_state (GstElement * element,
 static gboolean gst_flxdec_src_query_handler (GstPad * pad, GstQuery * query);
 static gboolean gst_flxdec_src_event_handler (GstPad * pad, GstEvent * event);
 static gboolean gst_flxdec_sink_event_handler (GstPad * pad, GstEvent * event);
-
-static void gst_flxdec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_flxdec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 
 static void flx_decode_color (GstFlxDec *, guchar *, guchar *, gint);
 static void flx_decode_brun (GstFlxDec *, guchar *, guchar *);
@@ -141,9 +135,6 @@ gst_flxdec_class_init (GstFlxDecClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   GST_DEBUG_CATEGORY_INIT (flxdec_debug, "flxdec", 0, "FLX video decoder");
-
-  gobject_class->set_property = gst_flxdec_set_property;
-  gobject_class->get_property = gst_flxdec_get_property;
 
   gstelement_class->change_state = gst_flxdec_change_state;
 }
@@ -679,37 +670,6 @@ gst_flxdec_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-static void
-gst_flxdec_set_property (GObject * object, guint prop_id, const GValue * value,
-    GParamSpec * pspec)
-{
-  GstFlxDec *flxdec;
-
-  g_return_if_fail (GST_IS_FLXDEC (object));
-  flxdec = GST_FLXDEC (object);
-
-  switch (prop_id) {
-    default:
-      break;
-  }
-}
-
-static void
-gst_flxdec_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstFlxDec *flxdec;
-
-  g_return_if_fail (GST_IS_FLXDEC (object));
-  flxdec = GST_FLXDEC (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -720,5 +680,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "flxdec",
-    "FLX video decoder",
+    "FLC/FLI/FLX video decoder",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
