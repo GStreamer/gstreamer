@@ -36,7 +36,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_amrdepay_details =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Codec/Depayloader/Network",
     "Extracts AMR audio from RTP packets (RFC 3267)",
     "Wim Taymans <wim@fluendo.com>");

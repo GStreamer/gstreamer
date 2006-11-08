@@ -28,7 +28,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_mp2tdepay_details =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Codec/Depayloader/Network",
     "Extracts MPEG2 TS from RTP packets (RFC 2250)",
     "Wim Taymans <wim@fluendo.com>");

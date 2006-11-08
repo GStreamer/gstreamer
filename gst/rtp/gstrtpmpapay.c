@@ -29,7 +29,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_mpapay_details =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP packet payloader",
     "Codec/Payloader/Network",
     "Payload MPEG audio as RTP packets (RFC 2038)",
     "Wim Taymans <wim@fluendo.com>");

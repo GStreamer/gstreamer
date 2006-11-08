@@ -29,7 +29,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_speex_pay_details =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP packet payloader",
     "Codec/Payloader/Network",
     "Payload-encodes Speex audio into a RTP packet",
     "Edgard Lima <edgard.lima@indt.org.br>");

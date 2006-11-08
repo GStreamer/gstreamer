@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpamrpay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_amrpay_details =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP packet payloader",
     "Codec/Payloader/Network",
     "Payload-encode AMR audio into RTP packets (RFC 3267)",
     "Wim Taymans <wim@fluendo.com>");

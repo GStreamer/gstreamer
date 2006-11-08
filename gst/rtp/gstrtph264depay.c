@@ -28,7 +28,7 @@
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h264depay_details =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Codec/Depayloader/Network",
     "Extracts H264 video from RTP packets (RFC 3984)",
     "Wim Taymans <wim@fluendo.com>");

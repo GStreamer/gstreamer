@@ -145,7 +145,7 @@ typedef struct _GstH263PictureLayer
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h263pay_details =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP packet payloader",
     "Codec/Payloader/Network",
     "Payload-encodes H263 video in RTP packets (RFC 2190)",
     "Neil Stratford <neils@vipadia.com>");

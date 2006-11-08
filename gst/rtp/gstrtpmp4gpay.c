@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpmp4gpay_debug);
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_mp4gpay_details =
-GST_ELEMENT_DETAILS ("RTP packet parser",
+GST_ELEMENT_DETAILS ("RTP packet payloader",
     "Codec/Payloader/Network",
     "Payload MPEG4 elementary streams as RTP packets (RFC 3640)",
     "Wim Taymans <wim@fluendo.com>");

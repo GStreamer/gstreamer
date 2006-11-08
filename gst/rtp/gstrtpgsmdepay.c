@@ -28,7 +28,7 @@
 
 /* elementfactory information */
 static GstElementDetails gst_rtp_gsmdepay_details = {
-  "RTP packet parser",
+  "RTP packet depayloader",
   "Codec/Depayloader/Network",
   "Extracts GSM audio from RTP packets",
   "Zeeshan Ali <zeenix@gmail.com>"
