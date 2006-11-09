@@ -1,3 +1,12 @@
+2006-11-09  Christian F.K. Schaller  <set EMAIL_ADDRESS environment variable>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_page),
+	(gst_ogg_demux_get_prev_page), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_handle_page), (gst_ogg_demux_chain),
+	(gst_ogg_demux_loop_forward), (gst_ogg_demux_loop_reverse),
+	(gst_ogg_demux_loop):
+	Implement first stab at reverse playback.
+
 2006-11-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps),
