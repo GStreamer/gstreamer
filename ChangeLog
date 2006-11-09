@@ -1,5 +1,13 @@
 2006-11-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/examples/adapter/Makefile.am:
+	* tests/examples/adapter/adapter_test.c: (run_test_take),
+	(run_test_take_buffer), (run_tests), (main):
+
+	Add new files from the previous commit
+
+2006-11-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* Makefile.am:
 	* configure.ac:
 	* libs/gst/base/gstadapter.c: (gst_adapter_clear),
