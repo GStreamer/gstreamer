@@ -15,7 +15,8 @@ always_dirs = \
 	helloworld			\
 	manual                          \
 	metadata                        \
-	queue
+	queue				\
+	adapter
 
 #appreader
 #cutter

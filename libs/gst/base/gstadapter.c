@@ -180,6 +180,7 @@ gst_adapter_clear (GstAdapter * adapter)
   g_slist_foreach (adapter->buflist, (GFunc) gst_mini_object_unref, NULL);
   g_slist_free (adapter->buflist);
   adapter->buflist = NULL;
+  adapter->buflist_end = NULL;
   adapter->size = 0;
   adapter->skip = 0;
   adapter->assembled_len = 0;
@@ -200,9 +201,43 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
   g_return_if_fail (GST_IS_BUFFER (buf));
 
   adapter->size += GST_BUFFER_SIZE (buf);
-  /* FIXME, _append does not scale. Note: merging buffers at this
-   * point is premature. */
-  adapter->buflist = g_slist_append (adapter->buflist, buf);
+
+  /* Note: merging buffers at this point is premature. */
+  if (G_UNLIKELY (adapter->buflist == NULL)) {
+    adapter->buflist = adapter->buflist_end = g_slist_append (NULL, buf);
+  } else {
+    /* Otherwise append to the end, and advance our end pointer */
+    adapter->buflist_end = g_slist_append (adapter->buflist_end, buf);
+    adapter->buflist_end = g_slist_next (adapter->buflist_end);
+  }
+}
+
+/* Internal function that copies data into the given buffer, size must be 
+ * bigger than the first buffer */
+static void
+gst_adapter_peek_into (GstAdapter * adapter, guint8 * data, guint size)
+{
+  GstBuffer *cur;
+  GSList *cur_list;
+  guint copied, to_copy;
+
+  /* The first buffer might be partly consumed, so need to handle
+   * 'skipped' bytes. */
+  cur = adapter->buflist->data;
+  copied = to_copy = MIN (GST_BUFFER_SIZE (cur) - adapter->skip, size);
+  memcpy (data, GST_BUFFER_DATA (cur) + adapter->skip, copied);
+  data += copied;
+
+  cur_list = g_slist_next (adapter->buflist);
+  while (copied < size) {
+    g_assert (cur_list);
+    cur = cur_list->data;
+    cur_list = g_slist_next (cur_list);
+    to_copy = MIN (GST_BUFFER_SIZE (cur), size - copied);
+    memcpy (data, GST_BUFFER_DATA (cur), to_copy);
+    data += to_copy;
+    copied += to_copy;
+  }
 }
 
 /**
@@ -230,8 +265,6 @@ const guint8 *
 gst_adapter_peek (GstAdapter * adapter, guint size)
 {
   GstBuffer *cur;
-  GSList *cur_list;
-  guint copied;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
   g_return_val_if_fail (size > 0, NULL);
@@ -251,27 +284,20 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
   if (GST_BUFFER_SIZE (cur) >= size + adapter->skip)
     return GST_BUFFER_DATA (cur) + adapter->skip;
 
+  /* FIXME, optimize further - we may be able to efficiently
+   * merge buffers in our pool to gather a big enough chunk to 
+   * return it from the head buffer directly */
+
   if (adapter->assembled_size < size) {
     adapter->assembled_size = (size / DEFAULT_SIZE + 1) * DEFAULT_SIZE;
     GST_DEBUG_OBJECT (adapter, "setting size of internal buffer to %u",
         adapter->assembled_size);
-    adapter->assembled_data =
-        g_realloc (adapter->assembled_data, adapter->assembled_size);
+    g_free (adapter->assembled_data);
+    adapter->assembled_data = g_malloc (adapter->assembled_size);
   }
   adapter->assembled_len = size;
-  copied = GST_BUFFER_SIZE (cur) - adapter->skip;
-  memcpy (adapter->assembled_data, GST_BUFFER_DATA (cur) + adapter->skip,
-      copied);
 
-  cur_list = g_slist_next (adapter->buflist);
-  while (copied < size) {
-    g_assert (cur_list);
-    cur = cur_list->data;
-    cur_list = g_slist_next (cur_list);
-    memcpy (adapter->assembled_data + copied, GST_BUFFER_DATA (cur),
-        MIN (GST_BUFFER_SIZE (cur), size - copied));
-    copied = MIN (size, copied + GST_BUFFER_SIZE (cur));
-  }
+  gst_adapter_peek_into (adapter, adapter->assembled_data, size);
 
   return adapter->assembled_data;
 }
@@ -304,7 +330,10 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
       /* can skip whole buffer */
       flush -= GST_BUFFER_SIZE (cur) - adapter->skip;
       adapter->skip = 0;
-      adapter->buflist = g_slist_remove (adapter->buflist, cur);
+      adapter->buflist =
+          g_slist_delete_link (adapter->buflist, adapter->buflist);
+      if (G_UNLIKELY (adapter->buflist == NULL))
+        adapter->buflist_end = NULL;
       gst_buffer_unref (cur);
     } else {
       adapter->skip += flush;
@@ -328,20 +357,27 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
 guint8 *
 gst_adapter_take (GstAdapter * adapter, guint nbytes)
 {
-  const guint8 *cdata;
   guint8 *data;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
   g_return_val_if_fail (nbytes > 0, NULL);
 
-  GST_LOG_OBJECT (adapter, "taking %u bytes", nbytes);
-
-  cdata = gst_adapter_peek (adapter, nbytes);
-  if (!cdata)
+  /* we don't have enough data, return NULL. This is unlikely
+   * as one usually does an _available() first instead of peeking a
+   * random size. */
+  if (G_UNLIKELY (nbytes > adapter->size))
     return NULL;
 
   data = g_malloc (nbytes);
-  memcpy (data, cdata, nbytes);
+
+  /* we have enough assembled data, copy from there */
+  if (adapter->assembled_len >= nbytes) {
+    GST_LOG_OBJECT (adapter, "taking %u bytes already assembled", nbytes);
+    memcpy (data, adapter->assembled_data, nbytes);
+  } else {
+    GST_LOG_OBJECT (adapter, "taking %u bytes by collection", nbytes);
+    gst_adapter_peek_into (adapter, data, nbytes);
+  }
 
   gst_adapter_flush (adapter, nbytes);
 
@@ -355,8 +391,8 @@ gst_adapter_take (GstAdapter * adapter, guint nbytes)
  *
  * Returns a #GstBuffer containing the first @nbytes bytes of the
  * @adapter. The returned bytes will be flushed from the adapter.
- * This function is potentially more performant that gst_adapter_take() 
- * since it can reuse the memory in the pushed buffer by subbuffering
+ * This function is potentially more performant than gst_adapter_take() 
+ * since it can reuse the memory in pushed buffers by subbuffering
  * or merging.
  *
  * Caller owns returned value. gst_buffer_unref() after usage.
@@ -370,6 +406,7 @@ GstBuffer *
 gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
 {
   GstBuffer *buffer;
+  GstBuffer *cur;
   guint8 *data;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
@@ -377,7 +414,23 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
 
   GST_LOG_OBJECT (adapter, "taking buffer of %u bytes", nbytes);
 
-  /* FIXME, optimize me */
+  /* we don't have enough data, return NULL. This is unlikely
+   * as one usually does an _available() first instead of peeking a
+   * random size. */
+  if (G_UNLIKELY (nbytes > adapter->size))
+    return NULL;
+
+  /* our head buffer has enough data left, return it */
+  cur = adapter->buflist->data;
+  if (GST_BUFFER_SIZE (cur) >= nbytes + adapter->skip) {
+    GST_LOG_OBJECT (adapter, "providing buffer via sub-buffer", nbytes);
+    buffer = gst_buffer_create_sub (cur, adapter->skip, nbytes);
+
+    gst_adapter_flush (adapter, nbytes);
+
+    return buffer;
+  }
+
   data = gst_adapter_take (adapter, nbytes);
   if (data == NULL)
     return NULL;
@@ -412,10 +465,12 @@ gst_adapter_available (GstAdapter * adapter)
  * gst_adapter_available_fast:
  * @adapter: a #GstAdapter
  *
- * Gets the maximum number of bytes available without the need to do expensive
- * operations (like copying the data into a temporary buffer).
+ * Gets the maximum number of bytes that are immediately available without
+ * requiring any expensive operations (like copying the data into a 
+ * temporary buffer).
  *
- * Returns: number of bytes available in @adapter without expensive operations
+ * Returns: number of bytes that are available in @adapter without expensive 
+ * operations
  */
 guint
 gst_adapter_available_fast (GstAdapter * adapter)

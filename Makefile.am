@@ -50,7 +50,7 @@ clean-bbg:
 GCOV_DIRS=gst libs
 
 ## .PHONY so it always rebuilds it
-.PHONY: coverage-report.txt test-coverage-report.html
+.PHONY: coverage-report.txt test-coverage-report.html lcov
 
 coverage-report.txt:
 	BBG_FILES=`find $(GCOV_DIRS) -name "*.bbg"` ;			  \

@@ -1,3 +1,25 @@
+2006-11-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* libs/gst/base/gstadapter.c: (gst_adapter_clear),
+	(gst_adapter_push), (gst_adapter_peek_into), (gst_adapter_peek),
+	(gst_adapter_flush), (gst_adapter_take), (gst_adapter_take_buffer):
+	* libs/gst/base/gstadapter.h:
+	* tests/check/libs/adapter.c: (create_and_fill_adapter),
+	(GST_START_TEST), (gst_adapter_suite):
+	* tests/examples/Makefile.am:
+	Do some optimisation work in GstAdapter to avoid copies in more cases.
+	It could still do slightly better by merging buffers when
+	gst_buffer_is_span_fast is true, but is already faster. 
+
+	Also, avoid traversing a single-linked list to append each incoming 
+	buffer inside the adapter.
+
+	Add simple test app that times the adapter behaviour in different
+	situations, and extend the unit test to check that bytes enter and
+	exit the adapter in their original order.
+
 2006-11-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/random/draft-missing-plugins.txt:

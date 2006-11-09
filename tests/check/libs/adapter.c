@@ -171,6 +171,79 @@ GST_START_TEST (test_take3)
 
 GST_END_TEST;
 
+static GstAdapter *
+create_and_fill_adapter ()
+{
+  GstAdapter *adapter;
+  gint i, j;
+
+  adapter = gst_adapter_new ();
+  fail_unless (adapter != NULL);
+
+  for (i = 0; i < 10000; i += 4) {
+    GstBuffer *buf = gst_buffer_new_and_alloc (sizeof (guint32) * 4);
+    guint8 *data;
+
+    fail_unless (buf != NULL);
+    data = GST_BUFFER_DATA (buf);
+
+    for (j = 0; j < 4; j++) {
+      GST_WRITE_UINT32_LE (data, i + j);
+      data += sizeof (guint32);
+    }
+    gst_adapter_push (adapter, buf);
+  }
+
+  return adapter;
+}
+
+/* Fill a buffer with a sequence of 32 bit ints and read them back out,
+ * checking that they're still in the right order */
+GST_START_TEST (test_take_order)
+{
+  GstAdapter *adapter;
+  int i = 0;
+
+  adapter = create_and_fill_adapter ();
+  while (gst_adapter_available (adapter) >= sizeof (guint32)) {
+    guint8 *data = gst_adapter_take (adapter, sizeof (guint32));
+
+    fail_unless (GST_READ_UINT32_LE (data) == i);
+    i++;
+    g_free (data);
+  }
+  fail_unless (gst_adapter_available (adapter) == 0,
+      "Data was left in the adapter");
+
+  g_object_unref (adapter);
+}
+
+GST_END_TEST;
+
+/* Fill a buffer with a sequence of 32 bit ints and read them back out
+ * using take_buffer, checking that they're still in the right order */
+GST_START_TEST (test_take_buf_order)
+{
+  GstAdapter *adapter;
+  int i = 0;
+
+  adapter = create_and_fill_adapter ();
+  while (gst_adapter_available (adapter) >= sizeof (guint32)) {
+    GstBuffer *buf = gst_adapter_take_buffer (adapter, sizeof (guint32));
+
+    fail_unless (GST_READ_UINT32_LE (GST_BUFFER_DATA (buf)) == i);
+    i++;
+
+    gst_buffer_unref (buf);
+  }
+  fail_unless (gst_adapter_available (adapter) == 0,
+      "Data was left in the adapter");
+
+  g_object_unref (adapter);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_adapter_suite (void)
 {
@@ -184,6 +257,8 @@ gst_adapter_suite (void)
   tcase_add_test (tc_chain, test_take1);
   tcase_add_test (tc_chain, test_take2);
   tcase_add_test (tc_chain, test_take3);
+  tcase_add_test (tc_chain, test_take_order);
+  tcase_add_test (tc_chain, test_take_buf_order);
 
   return s;
 }

@@ -60,7 +60,10 @@ struct _GstAdapter {
   guint		assembled_size;
   guint		assembled_len;
 
-  gpointer _gst_reserved[GST_PADDING];
+  /* Remember where the end of our buffer list is to
+   * speed up the push */
+  GSList *buflist_end;
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstAdapterClass {

@@ -499,6 +499,7 @@ tests/benchmarks/Makefile
 tests/check/Makefile
 tests/misc/Makefile
 tests/examples/Makefile
+tests/examples/adapter/Makefile
 tests/examples/controller/Makefile
 tests/examples/helloworld/Makefile
 tests/examples/launch/Makefile
