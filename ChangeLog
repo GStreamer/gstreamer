@@ -1,5 +1,10 @@
 2006-11-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/examples/adapter/.cvsignore:
+	Ignore build file as commanded by the build-bot
+
+2006-11-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* tests/examples/adapter/Makefile.am:
 	* tests/examples/adapter/adapter_test.c: (run_test_take),
 	(run_test_take_buffer), (run_tests), (main):
