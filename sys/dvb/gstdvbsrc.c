@@ -275,7 +275,7 @@ static gboolean gst_dvbsrc_is_seekable (GstBaseSrc * bsrc);
 static gboolean gst_dvbsrc_get_size (GstBaseSrc * src, guint64 * size);
 
 static gboolean gst_dvbsrc_tune (GstDvbSrc * object);
-static void gst_dvbsrc_set_pes_filter (GstDvbSrc * object);
+static void gst_dvbsrc_set_pes_filters (GstDvbSrc * object);
 static void gst_dvbsrc_unset_pes_filters (GstDvbSrc * object);
 
 static gboolean gst_dvbsrc_frontend_status (GstDvbSrc * object);
@@ -538,6 +538,13 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
         pids++;
       }
       g_strfreev (tmp);
+      /* if we are in playing, then set filters now */
+      GST_INFO_OBJECT (object, "checking if playing for setting pes filters");
+      if (GST_ELEMENT (object)->current_state == GST_STATE_PLAYING) {
+        GST_INFO_OBJECT (object, "Setting pes filters now");
+        gst_dvbsrc_set_pes_filters (object);
+      }
+
     }
       break;
     case ARG_DVBSRC_SYM_RATE:
@@ -1148,7 +1155,7 @@ gst_dvbsrc_tune (GstDvbSrc * object)
   }
 
   /* set pid filters */
-  gst_dvbsrc_set_pes_filter (object);
+  gst_dvbsrc_set_pes_filters (object);
 
   return TRUE;
 }
@@ -1170,7 +1177,7 @@ gst_dvbsrc_unset_pes_filters (GstDvbSrc * object)
 }
 
 static void
-gst_dvbsrc_set_pes_filter (GstDvbSrc * object)
+gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
 {
   int *fd;
   int pid, i;

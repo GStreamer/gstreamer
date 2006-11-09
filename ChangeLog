@@ -1,3 +1,11 @@
+2006-11-09  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/gstdvbsrc.c: (gst_dvbsrc_set_property)
+	(gst_dvbsrc_create), (gst_dvbsrc_output_frontend_stats),
+	(gst_dvbsrc_tune), (gst_dvbsrc_set_pes_filters):
+	Rename set_pes_filter to set_pes_filters for consistency.
+	Do run-time pid filtering.
+
 2006-11-08  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c: (read_device):
