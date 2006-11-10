@@ -184,8 +184,8 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
         break;
       default:
         GST_WARNING_OBJECT (v4l2src,
-            (_("Grabbing frame got interrupted on %s. No expected reason."),
-                v4l2src->v4l2object->videodev));
+            "Grabbing frame got interrupted on %s. No expected reason.",
+            v4l2src->v4l2object->videodev);
         break;
     }
 
