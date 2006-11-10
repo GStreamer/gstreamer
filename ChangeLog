@@ -1,5 +1,10 @@
 2006-11-10  David Schleef  <ds@schleef.org>
 
+	* gst/multifile/Makefile.am:
+	  Let's not depend on a file that doesn't exist.
+
+2006-11-10  David Schleef  <ds@schleef.org>
+
 	* gst/multifilesink/Makefile.am:
 	* gst/multifilesink/gstmultifilesink.c:
 	* gst/multifilesink/gstmultifilesink.h:
