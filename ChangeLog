@@ -1,4 +1,9 @@
-2006-11-09  Christian F.K. Schaller  <set EMAIL_ADDRESS environment variable>
+2006-11-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gststreamselector.c: (gst_stream_selector_dispose):
+	  Don't unref a NULL pad.
+
+2006-11-09  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_page),
 	(gst_ogg_demux_get_prev_page), (gst_ogg_demux_perform_seek),

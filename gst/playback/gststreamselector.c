@@ -167,7 +167,10 @@ gst_stream_selector_dispose (GObject * object)
 {
   GstStreamSelector *sel = GST_STREAM_SELECTOR (object);
 
-  gst_object_unref (sel->active_sinkpad);
+  if (sel->active_sinkpad) {
+    gst_object_unref (sel->active_sinkpad);
+    sel->active_sinkpad = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
