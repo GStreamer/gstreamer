@@ -1,3 +1,10 @@
+2006-11-10  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* libs/gst/base/gstadapter.c: (gst_adapter_flush),
+	(gst_adapter_take_buffer):
+	Fix format string to use all its arguments.
+	Remove useless >= check on a guint
+
 2006-11-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/examples/adapter/.cvsignore:

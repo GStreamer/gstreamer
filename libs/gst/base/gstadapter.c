@@ -318,7 +318,6 @@ gst_adapter_flush (GstAdapter * adapter, guint flush)
   GstBuffer *cur;
 
   g_return_if_fail (GST_IS_ADAPTER (adapter));
-  g_return_if_fail (flush >= 0);
   g_return_if_fail (flush <= adapter->size);
 
   GST_LOG_OBJECT (adapter, "flushing %u bytes", flush);
@@ -423,7 +422,8 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
   /* our head buffer has enough data left, return it */
   cur = adapter->buflist->data;
   if (GST_BUFFER_SIZE (cur) >= nbytes + adapter->skip) {
-    GST_LOG_OBJECT (adapter, "providing buffer via sub-buffer", nbytes);
+    GST_LOG_OBJECT (adapter, "providing buffer of %d bytes via sub-buffer",
+        nbytes);
     buffer = gst_buffer_create_sub (cur, adapter->skip, nbytes);
 
     gst_adapter_flush (adapter, nbytes);
