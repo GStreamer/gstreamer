@@ -1,5 +1,13 @@
 2006-11-10  David Schleef  <ds@schleef.org>
 
+	* gst/multifilesink/Makefile.am:
+	* gst/multifilesink/gstmultifilesink.c:
+	* gst/multifilesink/gstmultifilesink.h:
+	* gst/multifilesink/multifilesink.vcproj:
+	  Remove the old one.
+
+2006-11-10  David Schleef  <ds@schleef.org>
+
 	* configure.ac:
 	* gst/multifile/Makefile.am:
 	* gst/multifile/gstmultifile.c:
