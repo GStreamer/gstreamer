@@ -11,3 +11,4 @@ EXPORTS
 	gst_tag_to_id3_tag
 	gst_tag_to_vorbis_comments
 	gst_tag_to_vorbis_tag
+	gst_vorbis_tag_add
