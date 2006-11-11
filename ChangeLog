@@ -1,5 +1,13 @@
 2006-11-10  David Schleef  <ds@schleef.org>
 
+	* configure.ac:
+	* gst/videoparse/Makefile.am:
+	* gst/videoparse/gstvideoparse.c:
+	  A little pluggy to make sense out of the random chunks we get
+	  from multifilesrc.
+
+2006-11-10  David Schleef  <ds@schleef.org>
+
 	* gst/multifile/Makefile.am:
 	  Let's not depend on a file that doesn't exist.
 

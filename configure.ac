@@ -91,6 +91,7 @@ GST_PLUGINS_ALL="\
   qtdemux \
   tta \
   videocrop \
+  videoparse \
   xingheader \
   "
 
@@ -808,6 +809,7 @@ gst/speed/Makefile
 gst/qtdemux/Makefile
 gst/tta/Makefile
 gst/videocrop/Makefile
+gst/videoparse/Makefile
 gst/xingheader/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
