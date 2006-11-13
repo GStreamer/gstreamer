@@ -109,13 +109,17 @@ gst_mp3parse_get_type (void)
   return mp3parse_type;
 }
 
-static guint mp3types_bitrates[2][3][16] =
-    { {{0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448,},
-    {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384,},
-    {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320,}},
-{{0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256,},
-    {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160,},
-    {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160,}},
+static guint mp3types_bitrates[2][3][16] = {
+  {
+        {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448,},
+        {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384,},
+        {0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320,}
+      },
+  {
+        {0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256,},
+        {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160,},
+        {0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160,}
+      },
 };
 
 static guint mp3types_freqs[3][3] = { {44100, 48000, 32000},
@@ -240,6 +244,8 @@ gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
 {
   mp3parse->skip = 0;
   mp3parse->resyncing = TRUE;
+  mp3parse->next_ts = -1;
+  mp3parse->last_ts = -1;
 
   gst_adapter_clear (mp3parse->adapter);
 
@@ -296,11 +302,8 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment (event, NULL, NULL, &format, NULL, NULL,
           NULL);
 
-      if (format != GST_FORMAT_TIME)
-        mp3parse->next_ts = 0;
-      else
-        /* we will be receiving timestamps */
-        mp3parse->next_ts = -1;
+      mp3parse->next_ts = -1;
+      mp3parse->last_ts = -1;
       break;
     }
     default:
@@ -331,11 +334,10 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    GST_DEBUG_OBJECT (mp3parse, "Using incoming timestamp of %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timestamp));
+  /* If we don't yet have a next timestamp, and this is valid, use it */
+  if (!GST_CLOCK_TIME_IS_VALID (mp3parse->next_ts) &&
+      GST_CLOCK_TIME_IS_VALID (timestamp))
     mp3parse->next_ts = timestamp;
-  }
 
   gst_adapter_push (mp3parse->adapter, buf);
 
@@ -441,8 +443,6 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
           GST_DEBUG_OBJECT (mp3parse, "pushing buffer of %d bytes",
               GST_BUFFER_SIZE (outbuf));
 
-          GST_BUFFER_TIMESTAMP (outbuf) = mp3parse->next_ts;
-
           /* see http://www.codeproject.com/audio/MPEGAudioInfo.asp */
           if (mp3parse->layer == 1)
             spf = 384;
@@ -456,7 +456,17 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
           }
           GST_BUFFER_DURATION (outbuf) = spf * GST_SECOND / mp3parse->rate;
 
-          mp3parse->next_ts += GST_BUFFER_DURATION (outbuf);
+          if (GST_CLOCK_TIME_IS_VALID (mp3parse->next_ts)) {
+            GST_BUFFER_TIMESTAMP (outbuf) = mp3parse->next_ts;
+            mp3parse->next_ts = GST_CLOCK_TIME_NONE;
+          } else if (GST_CLOCK_TIME_IS_VALID (mp3parse->last_ts)) {
+            GST_BUFFER_TIMESTAMP (outbuf) = mp3parse->last_ts +
+                GST_BUFFER_DURATION (outbuf);
+          } else {
+            GST_BUFFER_TIMESTAMP (outbuf) = 0;
+          }
+
+          mp3parse->last_ts = GST_BUFFER_TIMESTAMP (outbuf);
 
           gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mp3parse->srcpad));
 

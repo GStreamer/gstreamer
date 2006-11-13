@@ -46,6 +46,7 @@ struct _GstMPEGAudioParse {
 
   GstPad *sinkpad,*srcpad;
 
+  GstClockTime last_ts;
   GstClockTime next_ts;
 
   GstAdapter *adapter;
