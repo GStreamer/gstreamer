@@ -87,6 +87,8 @@ GST_BOILERPLATE (GstVorbisDec, gst_vorbis_dec, GstElement, GST_TYPE_ELEMENT);
 static void vorbis_dec_finalize (GObject * object);
 static gboolean vorbis_dec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn vorbis_dec_chain (GstPad * pad, GstBuffer * buffer);
+static GstFlowReturn vorbis_dec_chain_forward (GstVorbisDec * vd,
+    gboolean discont, GstBuffer * buffer);
 static GstStateChangeReturn vorbis_dec_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -523,12 +525,9 @@ vorbis_dec_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
-      /* we need time and a positive rate for now */
+      /* we need time for now */
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
-
-      if (rate <= 0.0)
-        goto newseg_wrong_rate;
 
       GST_DEBUG_OBJECT (dec,
           "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
@@ -563,11 +562,6 @@ done:
 newseg_wrong_format:
   {
     GST_DEBUG_OBJECT (dec, "received non TIME newsegment");
-    goto done;
-  }
-newseg_wrong_rate:
-  {
-    GST_DEBUG_OBJECT (dec, "negative rates not supported yet");
     goto done;
   }
 }
@@ -862,7 +856,7 @@ clipped:
 }
 
 static GstFlowReturn
-vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
+vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
 {
   GstFlowReturn result;
   gint64 outoffset = GST_BUFFER_OFFSET (buf);
@@ -927,6 +921,16 @@ vorbis_dec_push (GstVorbisDec * dec, GstBuffer * buf)
 }
 
 static GstFlowReturn
+vorbis_dec_push_reverse (GstVorbisDec * dec, GstBuffer * buf)
+{
+  GstFlowReturn result = GST_FLOW_OK;
+
+  dec->queued = g_list_prepend (dec->queued, buf);
+
+  return result;
+}
+
+static GstFlowReturn
 vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
 {
   float **pcm;
@@ -983,18 +987,12 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
       vd->vi.channels);
 
   GST_BUFFER_SIZE (out) = size;
-  GST_BUFFER_OFFSET (out) = vd->granulepos;
-  if (vd->granulepos != -1) {
-    GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
-    GST_BUFFER_TIMESTAMP (out) =
-        gst_util_uint64_scale_int (vd->granulepos, GST_SECOND, vd->vi.rate);
-  } else {
-    GST_BUFFER_TIMESTAMP (out) = -1;
-  }
+
   /* this should not overflow */
   GST_BUFFER_DURATION (out) = sample_count * GST_SECOND / vd->vi.rate;
 
   if (vd->cur_timestamp != GST_CLOCK_TIME_NONE) {
+    /* we have incomming timestamps */
     GST_BUFFER_TIMESTAMP (out) = vd->cur_timestamp;
     GST_DEBUG_OBJECT (vd,
         "cur_timestamp: %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT " = %"
@@ -1005,12 +1003,25 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
     GST_BUFFER_OFFSET (out) = GST_CLOCK_TIME_TO_FRAMES (vd->cur_timestamp,
         vd->vi.rate);
     GST_BUFFER_OFFSET_END (out) = GST_BUFFER_OFFSET (out) + sample_count;
+  } else {
+    /* we have incomming granulepos */
+    GST_BUFFER_OFFSET (out) = vd->granulepos;
+    if (vd->granulepos != -1) {
+      GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
+      GST_BUFFER_TIMESTAMP (out) =
+          gst_util_uint64_scale_int (vd->granulepos, GST_SECOND, vd->vi.rate);
+    } else {
+      GST_BUFFER_TIMESTAMP (out) = -1;
+    }
   }
 
   if (vd->granulepos != -1)
     vd->granulepos += sample_count;
 
-  result = vorbis_dec_push (vd, out);
+  if (vd->segment.rate >= 0.0)
+    result = vorbis_dec_push_forward (vd, out);
+  else
+    result = vorbis_dec_push_reverse (vd, out);
 
 done:
   vorbis_synthesis_read (&vd->vd, sample_count);
@@ -1050,27 +1061,12 @@ wrong_samples:
 }
 
 static GstFlowReturn
-vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
+vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer, gboolean eos)
 {
-  GstVorbisDec *vd;
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
   GstClockTime timestamp;
   guint64 offset_end;
-
-  vd = GST_VORBIS_DEC (gst_pad_get_parent (pad));
-
-  /* resync on DISCONT */
-  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))) {
-    GST_DEBUG_OBJECT (vd, "received DISCONT buffer");
-    vd->granulepos = -1;
-    vd->cur_timestamp = GST_CLOCK_TIME_NONE;
-    vd->prev_timestamp = GST_CLOCK_TIME_NONE;
-#ifdef HAVE_VORBIS_SYNTHESIS_RESTART
-    vorbis_synthesis_restart (&vd->vd);
-#endif
-    vd->discont = TRUE;
-  }
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   offset_end = GST_BUFFER_OFFSET_END (buffer);
@@ -1099,7 +1095,7 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
    * Yes there is, keep one packet at all times and only push out when
    * you receive a new one.  Implement this.
    */
-  packet.e_o_s = 0;
+  packet.e_o_s = (eos ? 1 : 0);
 
   if (G_UNLIKELY (packet.bytes < 1))
     goto wrong_size;
@@ -1121,9 +1117,6 @@ vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
   GST_DEBUG_OBJECT (vd, "offset end: %" G_GUINT64_FORMAT, offset_end);
 
 done:
-  gst_buffer_unref (buffer);
-  gst_object_unref (vd);
-
   return result;
 
   /* ERRORS */
@@ -1134,6 +1127,232 @@ wrong_size:
     vd->discont = TRUE;
     goto done;
   }
+}
+
+/* 
+ * Input:
+ *  Buffer decoding order:  7  8  9  4  5  6  3  1  2  EOS
+ *  Discont flag:           D        D        D  D
+ *
+ * - Each Discont marks a discont in the decoding order.
+ *
+ * for vorbis, each buffer is a keyframe when we have the previous
+ * buffer. This means that to decode buffer 7, we need buffer 6, which
+ * arrives out of order.
+ *
+ * we first gather buffers in the gather queue until we get a DISCONT. We 
+ * prepend each incomming buffer so that they are in reversed order.
+ *   
+ *    gather queue:    9  8  7
+ *    decode queue:    
+ *    output queue:    
+ *
+ * When a DISCONT is received (buffer 4), we move the gather queue to the 
+ * decode queue. This simply done be taking the head of the gather queue
+ * and prepending it to the decode queue. This yields:
+ * 
+ *    gather queue:    
+ *    decode queue:    7  8  9
+ *    output queue:    
+ *
+ * Then we decode each buffer in the decode queue in order and put the output
+ * buffer in the output queue. The first buffer (7) will not produce and output
+ * because it needs the previous buffer (6) which did not arrive yet. This
+ * yields:
+ *
+ *    gather queue:    
+ *    decode queue:    7  8  9
+ *    output queue:    8  9
+ *
+ * Then we remove the consumed buffers from the decode queue. Buffer 7 is not
+ * completely consumed, we need to keep it around for when we receive buffer 
+ * 6. This yields:
+ *
+ *    gather queue:    
+ *    decode queue:    7 
+ *    output queue:    9  8
+ *
+ * Then we accumulate more buffers:
+ *
+ *    gather queue:    6  5  4
+ *    decode queue:    7
+ *    output queue:    
+ *
+ * prepending to the decode queue on DISCONT yields:
+ *
+ *    gather queue:   
+ *    decode queue:    4  5  6  7
+ *    output queue:    
+ *
+ * after decoding and keeping buffer 4:
+ *
+ *    gather queue:   
+ *    decode queue:    4 
+ *    output queue:    7  6  5 
+ *
+ * Etc..
+ */
+static GstFlowReturn
+vorbis_dec_flush_decode (GstVorbisDec * dec)
+{
+  GstFlowReturn res = GST_FLOW_OK;
+  GList *walk;
+
+  walk = dec->decode;
+
+  GST_DEBUG_OBJECT (dec, "flushing buffers to decoder");
+
+  while (walk) {
+    GList *next;
+    GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+
+    GST_DEBUG_OBJECT (dec, "decoding buffer %p, ts %" GST_TIME_FORMAT,
+        buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+    next = g_list_next (walk);
+
+    /* decode buffer, prepend to output queue */
+    res = vorbis_dec_decode_buffer (dec, buf, next == NULL);
+
+    /* if we generated output, we can discard the buffer, else we
+     * keep it in the queue */
+    if (dec->queued) {
+      GST_DEBUG_OBJECT (dec, "decoded buffer to %p", dec->queued->data);
+      dec->decode = g_list_delete_link (dec->decode, walk);
+      gst_buffer_unref (buf);
+    } else {
+      GST_DEBUG_OBJECT (dec, "buffer did not decode, keeping");
+    }
+    walk = next;
+  }
+  if (dec->granulepos != -1) {
+    GstClockTime endts;
+
+    endts =
+        gst_util_uint64_scale_int (dec->granulepos, GST_SECOND, dec->vi.rate);
+
+    GST_DEBUG_OBJECT (dec, "we have granulepos %" G_GUINT64_FORMAT ", ts %"
+        GST_TIME_FORMAT, dec->granulepos, GST_TIME_ARGS (endts));
+
+    while (dec->queued) {
+      GstBuffer *buf;
+      guint sample_count;
+
+      buf = GST_BUFFER_CAST (dec->queued->data);
+
+      sample_count =
+          GST_BUFFER_SIZE (buf) / (dec->vi.channels * sizeof (float));
+
+      GST_BUFFER_OFFSET_END (buf) = dec->granulepos;
+      endts =
+          gst_util_uint64_scale_int (dec->granulepos, GST_SECOND, dec->vi.rate);
+      dec->granulepos -= sample_count;
+      GST_BUFFER_OFFSET (buf) = dec->granulepos;
+      GST_BUFFER_TIMESTAMP (buf) =
+          gst_util_uint64_scale_int (dec->granulepos, GST_SECOND, dec->vi.rate);
+      GST_BUFFER_DURATION (buf) = endts - GST_BUFFER_TIMESTAMP (buf);
+
+      /* clip, this will unref the buffer in case of clipping */
+      if (vorbis_do_clip (dec, buf)) {
+        GST_DEBUG_OBJECT (dec, "clipped buffer %p", buf);
+        gst_buffer_unref (buf);
+        goto next;
+      }
+
+      if (dec->discont) {
+        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+        dec->discont = FALSE;
+      }
+      GST_DEBUG_OBJECT (dec, "pushing buffer %p, samples %u, "
+          "ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT,
+          buf, sample_count, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+
+      res = gst_pad_push (dec->srcpad, buf);
+    next:
+      dec->queued = g_list_delete_link (dec->queued, dec->queued);
+    }
+  } else {
+    GST_DEBUG_OBJECT (dec, "we don't have a granulepos yet, delayed push");
+  }
+
+  return res;
+}
+
+static GstFlowReturn
+vorbis_dec_chain_reverse (GstVorbisDec * vd, gboolean discont, GstBuffer * buf)
+{
+  GstFlowReturn result = GST_FLOW_OK;
+
+  /* if we have a discont, move buffers to the decode list */
+  if (G_UNLIKELY (discont)) {
+    GST_DEBUG_OBJECT (vd, "received discont");
+    while (vd->gather) {
+      GstBuffer *gbuf;
+
+      gbuf = GST_BUFFER_CAST (vd->gather->data);
+      /* remove from the gather list */
+      vd->gather = g_list_delete_link (vd->gather, vd->gather);
+      /* copy to decode queue */
+      vd->decode = g_list_prepend (vd->decode, gbuf);
+    }
+    /* flush and decode the decode queue */
+    result = vorbis_dec_flush_decode (vd);
+  }
+
+  GST_DEBUG_OBJECT (vd, "gathering buffer %p, size %u", buf,
+      GST_BUFFER_SIZE (buf));
+  /* add buffer to gather queue */
+  vd->gather = g_list_prepend (vd->gather, buf);
+
+  return result;
+}
+
+static GstFlowReturn
+vorbis_dec_chain_forward (GstVorbisDec * vd, gboolean discont,
+    GstBuffer * buffer)
+{
+  GstFlowReturn result;
+
+  result = vorbis_dec_decode_buffer (vd, buffer, FALSE);
+
+  gst_buffer_unref (buffer);
+
+  return result;
+
+}
+
+static GstFlowReturn
+vorbis_dec_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstVorbisDec *vd;
+  GstFlowReturn result = GST_FLOW_OK;
+  gboolean discont;
+
+  vd = GST_VORBIS_DEC (gst_pad_get_parent (pad));
+
+  discont = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+
+  /* resync on DISCONT */
+  if (G_UNLIKELY (discont)) {
+    GST_DEBUG_OBJECT (vd, "received DISCONT buffer");
+    vd->granulepos = -1;
+    vd->cur_timestamp = GST_CLOCK_TIME_NONE;
+    vd->prev_timestamp = GST_CLOCK_TIME_NONE;
+#ifdef HAVE_VORBIS_SYNTHESIS_RESTART
+    vorbis_synthesis_restart (&vd->vd);
+#endif
+    vd->discont = TRUE;
+  }
+
+  if (vd->segment.rate >= 0.0)
+    result = vorbis_dec_chain_forward (vd, discont, buffer);
+  else
+    result = vorbis_dec_chain_reverse (vd, discont, buffer);
+
+  gst_object_unref (vd);
+
+  return result;
 }
 
 static GstStateChangeReturn

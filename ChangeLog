@@ -1,5 +1,15 @@
 2006-11-13  Wim Taymans  <wim@fluendo.com>
 
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_sink_event),
+	(vorbis_dec_push_forward), (vorbis_dec_push_reverse),
+	(vorbis_handle_data_packet), (vorbis_dec_decode_buffer),
+	(vorbis_dec_flush_decode), (vorbis_dec_chain_reverse),
+	(vorbis_dec_chain_forward), (vorbis_dec_chain):
+	* ext/vorbis/vorbisdec.h:
+	First stab at vorbis reverse playback.
+
+2006-11-13  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
 	(gst_base_audio_sink_event), (gst_base_audio_sink_render):
 	* gst-libs/gst/audio/gstbaseaudiosink.h:

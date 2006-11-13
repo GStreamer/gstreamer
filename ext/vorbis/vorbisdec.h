@@ -48,29 +48,35 @@ typedef struct _GstVorbisDecClass GstVorbisDecClass;
  * Opaque data structure.
  */
 struct _GstVorbisDec {
-  GstElement            element;
+  GstElement        element;
 
-  GstPad *              sinkpad;
-  GstPad *              srcpad;
+  GstPad           *sinkpad;
+  GstPad           *srcpad;
 
-  vorbis_dsp_state      vd;
-  vorbis_info           vi;
-  vorbis_comment        vc;
-  vorbis_block          vb;
-  guint64               granulepos;
+  vorbis_dsp_state  vd;
+  vorbis_info       vi;
+  vorbis_comment    vc;
+  vorbis_block      vb;
+  guint64           granulepos;
 
-  gboolean              initialized;
+  gboolean          initialized;
 
-  GList                 *queued;
+  /* list of buffers that need timestamps */
+  GList            *queued;
+  /* list of raw output buffers */
+  GList            *output;
+  /* gather/decode queues for reverse playback */
+  GList            *gather;
+  GList            *decode;
 
-  GstSegment		segment;
-  gboolean		discont;
+  GstSegment        segment;
+  gboolean          discont;
 
-  GstClockTime          cur_timestamp; /* only used with non-ogg container formats */
-  GstClockTime          prev_timestamp; /* only used with non-ogg container formats */
+  GstClockTime      cur_timestamp; /* only used with non-ogg container formats */
+  GstClockTime      prev_timestamp; /* only used with non-ogg container formats */
 
-  GList			*pendingevents;
-  GstTagList		*taglist;
+  GList            *pendingevents;
+  GstTagList       *taglist;
 };
 
 struct _GstVorbisDecClass {
