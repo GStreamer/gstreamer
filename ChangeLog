@@ -1,3 +1,16 @@
+2006-11-13  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_event), (gst_base_audio_sink_render):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	Make the clock sync code more accurate wrt resampling and playback
+	at different rates.
+	
+	* gst-libs/gst/audio/gstringbuffer.c:
+	(gst_ring_buffer_commit_full), (gst_ring_buffer_commit):
+	* gst-libs/gst/audio/gstringbuffer.h:
+	Use better algorithm to interpolate sample rates. 
+
 2006-11-13  Michael Smith  <msmith@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_page):

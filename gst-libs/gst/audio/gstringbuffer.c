@@ -1181,77 +1181,84 @@ G_STMT_START {					\
   /* simple copy */				\
   if (!skip)					\
     memcpy (d, s, towrite);			\
-  *sample += towrite / bps;			\
+  in_samples -= towrite / bps;			\
+  out_samples -= towrite / bps;			\
   s += towrite;					\
   GST_DEBUG ("copy %u bytes", towrite);		\
 } G_STMT_END
 
+/* in_samples >= out_samples, rate > 1.0 */
 #define FWD_UP_SAMPLES(s,se,d,de) 	 	\
 G_STMT_START {					\
-  guint8 *ds = d;				\
+  guint8 *sb = s, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
       memcpy (d, s, bps);			\
     s += bps;					\
-    *accum += denom;				\
-    while (*accum > 0) {			\
-      *accum -= num;				\
+    *accum += outr;				\
+    if ((*accum << 1) >= inr) {			\
+      *accum -= inr;				\
       d += bps;					\
     }						\
   }						\
-  *sample += (d - ds) / bps;			\
-  GST_DEBUG ("fwd_up %u bytes", d - ds);	\
+  in_samples -= (s - sb)/bps;			\
+  out_samples -= (d - db)/bps;			\
+  GST_DEBUG ("fwd_up end %d/%d",*accum,*toprocess);	\
 } G_STMT_END
 
+/* out_samples > in_samples, for rates smaller than 1.0 */
 #define FWD_DOWN_SAMPLES(s,se,d,de) 	 	\
 G_STMT_START {					\
-  guint8 *ds = d;				\
+  guint8 *sb = s, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
       memcpy (d, s, bps);			\
     d += bps;					\
-    *accum -= num;				\
-    while (*accum < 0) {			\
-      *accum += denom;				\
+    *accum += inr;				\
+    if ((*accum << 1) >= outr) {		\
+      *accum -= outr;				\
       s += bps;					\
     }						\
   }						\
-  *sample += (d - ds) / bps;			\
-  GST_DEBUG ("fwd_down %u bytes", d - ds);	\
+  in_samples -= (s - sb)/bps;			\
+  out_samples -= (d - db)/bps;			\
+  GST_DEBUG ("fwd_down end %d/%d",*accum,*toprocess);	\
 } G_STMT_END
 
 #define REV_UP_SAMPLES(s,se,d,de) 	 	\
 G_STMT_START {					\
-  guint8 *ds = d;				\
+  guint8 *sb = se, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
       memcpy (d, se, bps);			\
     se -= bps;					\
-    *accum += denom;				\
-    while (*accum > 0) {			\
-      *accum += num;				\
+    *accum += outr;				\
+    while ((*accum << 1) >= inr) {		\
+      *accum -= inr;				\
       d += bps;					\
     }						\
   }						\
-  *sample += (d - ds) / bps;			\
-  GST_DEBUG ("rev_up %u bytes", d - ds);	\
+  in_samples -= (sb - se)/bps;			\
+  out_samples -= (d - db)/bps;			\
+  GST_DEBUG ("rev_up end %d/%d",*accum,*toprocess);	\
 } G_STMT_END
 
 #define REV_DOWN_SAMPLES(s,se,d,de) 	 	\
 G_STMT_START {					\
-  guint8 *ds = d;				\
+  guint8 *sb = se, *db = d;			\
   while (s <= se && d < de) {			\
     if (!skip)					\
       memcpy (d, se, bps);			\
     d += bps;					\
-    *accum += num;				\
-    while (*accum < 0) {			\
-      *accum += denom;				\
+    *accum += inr;				\
+    while ((*accum << 1) >= outr) {		\
+      *accum -= outr;				\
       se -= bps;				\
     }						\
   }						\
-  *sample += (d - ds) / bps;			\
-  GST_DEBUG ("rev_down %u bytes", d - ds);	\
+  in_samples -= (sb - se)/bps;			\
+  out_samples -= (d - db)/bps;			\
+  GST_DEBUG ("rev_down end %d/%d",*accum,*toprocess);	\
 } G_STMT_END
 
 /**
@@ -1259,9 +1266,8 @@ G_STMT_START {					\
  * @buf: the #GstRingBuffer to commit
  * @sample: the sample position of the data
  * @data: the data to commit
- * @len: the number of samples in the data to commit
- * @num: the numerator of the speed
- * @denom: the denominator of the speed
+ * @in_samples: the number of samples in the data to commit
+ * @out_sampled: the number of samples to write to the ringbuffer
  * @accum: accumulator for rate conversion.
  *
  * Commit @len samples pointed to by @data to the ringbuffer @buf. 
@@ -1276,9 +1282,6 @@ G_STMT_START {					\
  * @len does not need to be a multiple of the segment size of the ringbuffer (if
  * @num and @denom are both 1) although it is recommended for optimal performance. 
  *
- * @sample will be updated with the next position in the ringbuffer. This
- * position will take into account any resampling done when writing the samples.
- *
  * Returns: The number of samples written to the ringbuffer or -1 on error. The
  * number of samples written can be less than @len when @buf was interrupted
  * with a flush or stop.
@@ -1289,28 +1292,43 @@ G_STMT_START {					\
  */
 guint
 gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
-    guchar * data, guint len, gint num, gint denom, gint * accum)
+    guchar * data, gint in_samples, gint out_samples, gint * accum)
 {
   gint segdone;
   gint segsize, segtotal, bps, sps;
   guint8 *dest, *data_end;
   gint writeseg, sampleoff;
+  gint *toprocess;
+  gint inr, outr;
+  gboolean reverse;
 
-  if (G_UNLIKELY (len == 0))
+  if (G_UNLIKELY (in_samples == 0 || out_samples == 0))
     return 0;
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), -1);
   g_return_val_if_fail (buf->data != NULL, -1);
   g_return_val_if_fail (data != NULL, -1);
-  g_return_val_if_fail (denom != 0, -1);
 
   dest = GST_BUFFER_DATA (buf->data);
   segsize = buf->spec.segsize;
   segtotal = buf->spec.segtotal;
   bps = buf->spec.bytes_per_sample;
   sps = buf->samples_per_seg;
-  /* data_end points to the last sample we have to write, not past it. */
-  data_end = data + (bps * (len - 1));
+
+  reverse = out_samples < 0;
+  out_samples = ABS (out_samples);
+
+  if (in_samples >= out_samples)
+    toprocess = &in_samples;
+  else
+    toprocess = &out_samples;
+
+  inr = in_samples - 1;
+  outr = out_samples - 1;
+
+  /* data_end points to the last sample we have to write, not past it. This is
+   * needed to properly handle reverse playback: it points to the last sample. */
+  data_end = data + (bps * inr);
 
   /* figure out the segment and the offset inside the segment where
    * the first sample should be written. */
@@ -1318,7 +1336,7 @@ gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
   sampleoff = (*sample % sps) * bps;
 
   /* write out all samples */
-  while (data <= data_end) {
+  while (*toprocess > 0) {
     gint avail;
     guint8 *d, *d_end;
     gint ws;
@@ -1359,26 +1377,27 @@ gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
 
     /* we can write now */
     ws = writeseg % segtotal;
-    avail = segsize - sampleoff;
+    avail = MIN (segsize - sampleoff, bps * out_samples);
 
     d = dest + (ws * segsize) + sampleoff;
     d_end = d + avail;
+    *sample += avail / bps;
 
     GST_DEBUG_OBJECT (buf, "write @%p seg %d, sps %d, off %d, avail %d",
         dest + ws * segsize, ws, sps, sampleoff, avail);
 
-    if (G_LIKELY (num == 1 && denom == 1)) {
+    if (G_LIKELY (inr == outr && !reverse)) {
       /* no rate conversion, simply copy samples */
       FWD_SAMPLES (data, data_end, d, d_end);
-    } else if (num >= 0) {
-      if (num >= denom)
+    } else if (!reverse) {
+      if (inr >= outr)
         /* forward speed up */
         FWD_UP_SAMPLES (data, data_end, d, d_end);
       else
         /* forward slow down */
         FWD_DOWN_SAMPLES (data, data_end, d, d_end);
     } else {
-      if (-num >= denom)
+      if (inr >= outr)
         /* reverse speed up */
         REV_UP_SAMPLES (data, data_end, d, d_end);
       else
@@ -1390,9 +1409,11 @@ gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
     writeseg++;
     sampleoff = 0;
   }
+  /* we consumed all samples here */
+  data = data_end + bps;
 
 done:
-  return (len - 1) - ((data_end - data) / bps);
+  return inr - ((data_end - data) / bps);
 
   /* ERRORS */
 not_started:
@@ -1422,9 +1443,9 @@ gst_ring_buffer_commit (GstRingBuffer * buf, guint64 sample, guchar * data,
     guint len)
 {
   guint res;
-  guint64 spos = sample;
+  guint64 samplep = sample;
 
-  res = gst_ring_buffer_commit_full (buf, &spos, data, len, 1, 1, NULL);
+  res = gst_ring_buffer_commit_full (buf, &samplep, data, len, len, NULL);
 
   return res;
 }

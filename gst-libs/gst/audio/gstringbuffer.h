@@ -337,9 +337,10 @@ void            gst_ring_buffer_clear_all       (GstRingBuffer *buf);
 /* commit samples */
 guint           gst_ring_buffer_commit          (GstRingBuffer *buf, guint64 sample, 
                                                  guchar *data, guint len);
-guint           gst_ring_buffer_commit_full     (GstRingBuffer *buf, guint64 *sample, 
-                                                 guchar *data, guint len,
-						 gint num, gint denom, gint *accum);
+guint           gst_ring_buffer_commit_full     (GstRingBuffer * buf, guint64 *sample,
+		                                 guchar * data, gint in_samples, 
+						 gint out_samples, gint * accum);
+
 /* read samples */
 guint           gst_ring_buffer_read            (GstRingBuffer *buf, guint64 sample, 
                                                  guchar *data, guint len);
