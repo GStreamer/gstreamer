@@ -1,3 +1,13 @@
+2006-11-13  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_page):
+	  Improve a debug line slightly.
+
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_plugin_init):
+	  Call gst_riff_init() in plugin_init, to avoid getting errors from
+	  the debug system (unrelated changes to another plugin made this turn
+	  up; not sure why).
+
 2006-11-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sergey Scobich  <sergery.scobich at gmail com>

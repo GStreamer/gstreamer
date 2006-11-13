@@ -1229,7 +1229,9 @@ choked:
   }
 could_not_submit:
   {
-    GST_WARNING_OBJECT (ogg, "could not submit packet, error: %d", result);
+    GST_WARNING_OBJECT (ogg,
+        "could not submit packet for stream %08x, error: %d", pad->serialno,
+        result);
     gst_ogg_pad_reset (pad);
     return result;
   }

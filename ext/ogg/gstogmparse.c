@@ -27,6 +27,7 @@
 #include <gst/gst.h>
 #include <gst/tag/tag.h>
 #include <gst/riff/riff-media.h>
+#include <gst/riff/riff-read.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_ogm_parse_debug);
 #define GST_CAT_DEFAULT gst_ogm_parse_debug
@@ -939,6 +940,8 @@ gst_ogm_parse_change_state (GstElement * element, GstStateChange transition)
 gboolean
 gst_ogm_parse_plugin_init (GstPlugin * plugin)
 {
+  gst_riff_init ();
+
   GST_DEBUG_CATEGORY_INIT (gst_ogm_parse_debug, "ogmparse", 0, "ogm parser");
 
   return gst_element_register (plugin, "ogmaudioparse", GST_RANK_PRIMARY,
