@@ -23,26 +23,21 @@
 
 
 #include <gst/gst.h>
-/* #include <gst/meta/audioraw.h> */
 
+G_BEGIN_DECLS
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-
-#define GST_TYPE_Y4MENCODE \
-  (gst_y4mencode_get_type())
-#define GST_Y4MENCODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_Y4MENCODE,GstY4mEncode))
-#define GST_Y4MENCODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_Y4MENCODE,GstY4mEncodeClass))
-#define GST_Y4MENCODE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_Y4MENCODE,GstY4mEncodeClass))
-#define GST_IS_Y4MENCODE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_Y4MENCODE))
-#define GST_IS_Y4MENCODE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_Y4MENCODE))
+#define GST_TYPE_Y4M_ENCODE \
+  (gst_y4m_encode_get_type())
+#define GST_Y4M_ENCODE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_Y4M_ENCODE, GstY4mEncode))
+#define GST_Y4M_ENCODE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_Y4M_ENCODE, GstY4mEncodeClass))
+#define GST_Y4M_ENCODE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_Y4M_ENCODE, GstY4mEncodeClass))
+#define GST_IS_Y4M_ENCODE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_Y4M_ENCODE))
+#define GST_IS_Y4M_ENCODE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_Y4M_ENCODE))
 
 typedef struct _GstY4mEncode GstY4mEncode;
 typedef struct _GstY4mEncodeClass GstY4mEncodeClass;
@@ -52,22 +47,21 @@ struct _GstY4mEncode {
 
   GstPad *sinkpad,*srcpad;
 
+  /* caps information */
   gint width, height;
-  gfloat fps_idx;
+  gint fps_num, fps_den;
+  gint par_num, par_den;
 
-  gboolean init;
-
+  /* state information */
+  gboolean header;
 };
 
 struct _GstY4mEncodeClass {
   GstElementClass parent_class;
 };
 
-GType gst_y4mencode_get_type(void);
+GType gst_y4m_encode_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
+G_END_DECLS
 
 #endif /* __GST_Y4MENCODE_H__ */

@@ -1,3 +1,21 @@
+2006-11-13  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
+	* configure.ac:
+	Enable cdaudio and y4m.
+
+	* gst/y4m/Makefile.am:
+	* gst/y4m/gsty4mencode.c: (gst_y4m_encode_base_init),
+	(gst_y4m_encode_class_init), (gst_y4m_encode_init),
+	(gst_y4m_encode_reset), (gst_y4m_encode_setcaps),
+	(gst_y4m_encode_get_stream_header),
+	(gst_y4m_encode_get_frame_header), (gst_y4m_encode_chain),
+	(gst_y4m_encode_set_property), (gst_y4m_encode_get_property),
+	(gst_y4m_encode_change_state), (plugin_init):
+	* gst/y4m/gsty4mencode.h:
+	Port of y4mencode to 0.10. 
+
 2006-11-10  David Schleef  <ds@schleef.org>
 
 	* configure.ac:
