@@ -1,3 +1,16 @@
+2006-11-13  Michael Smith  <msmith@fluendo.com>
+
+	* gst/mpegaudioparse/Makefile.am:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(mp3_type_frame_length_from_header), (gst_mp3parse_class_init),
+	(gst_mp3parse_reset), (gst_mp3parse_init), (gst_mp3parse_dispose),
+	(gst_mp3parse_sink_event), (gst_mp3parse_chain), (head_check),
+	(gst_mp3parse_change_state), (plugin_init):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	  Bring mp3parse into the 21st century.
+	  Use its own debug category, use gstadapter, format nicely to 80
+	  columns, and fix incorrect handling of 32 kHz and less files.
+
 2006-11-03  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sebastian Droege <slomo at ubuntu dot com>

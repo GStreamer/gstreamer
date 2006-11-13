@@ -23,6 +23,7 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -45,13 +46,16 @@ struct _GstMPEGAudioParse {
 
   GstPad *sinkpad,*srcpad;
 
-  guint64       last_ts;
+  GstClockTime next_ts;
 
-  GstBuffer *partialbuf;        /* previous buffer (if carryover) */
+  GstAdapter *adapter;
+
   guint skip; /* number of frames to skip */
-  guint bit_rate;
+  guint bit_rate; /* in kbps */
   gint channels, rate, layer;
-  gboolean in_flush;
+
+  gboolean resyncing; /* True when attempting to resync (stricter checks are
+                         performed) */
 };
 
 struct _GstMPEGAudioParseClass {

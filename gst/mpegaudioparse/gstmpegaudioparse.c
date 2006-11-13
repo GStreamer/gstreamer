@@ -17,12 +17,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*#define GST_DEBUG_ENABLED */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 #include "gstmpegaudioparse.h"
 
+GST_DEBUG_CATEGORY_STATIC (mp3parse_debug);
+#define GST_CAT_DEFAULT mp3parse_debug
 
 /* elementfactory information */
 static GstElementDetails mp3parse_details = {
@@ -70,8 +71,9 @@ static void gst_mp3parse_init (GstMPEGAudioParse * mp3parse);
 static gboolean gst_mp3parse_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_mp3parse_chain (GstPad * pad, GstBuffer * buffer);
 
-static int head_check (unsigned long head);
+static int head_check (GstMPEGAudioParse * mp3parse, unsigned long head);
 
+static void gst_mp3parse_dispose (GObject * object);
 static void gst_mp3parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_mp3parse_get_property (GObject * object, guint prop_id,
@@ -122,8 +124,9 @@ static guint mp3types_freqs[3][3] = { {44100, 48000, 32000},
 };
 
 static inline guint
-mp3_type_frame_length_from_header (guint32 header, guint * put_layer,
-    guint * put_channels, guint * put_bitrate, guint * put_samplerate)
+mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
+    guint * put_layer, guint * put_channels, guint * put_bitrate,
+    guint * put_samplerate)
 {
   guint length;
   gulong mode, samplerate, bitrate, layer, channels, padding;
@@ -160,9 +163,10 @@ mp3_type_frame_length_from_header (guint32 header, guint * put_layer,
       break;
   }
 
-  GST_DEBUG ("Calculated mp3 frame length of %u bytes", length);
-  GST_DEBUG ("samplerate = %lu, bitrate = %lu, layer = %lu, channels = %lu",
-      samplerate, bitrate, layer, channels);
+  GST_DEBUG_OBJECT (mp3parse, "Calculated mp3 frame length of %u bytes",
+      length);
+  GST_DEBUG_OBJECT (mp3parse, "samplerate = %lu, bitrate = %lu, layer = %lu, "
+      "channels = %lu", samplerate, bitrate, layer, channels);
 
   if (put_layer)
     *put_layer = layer;
@@ -175,32 +179,6 @@ mp3_type_frame_length_from_header (guint32 header, guint * put_layer,
 
   return length;
 }
-
-/*
- * The chance that random data is identified as a valid mp3 header is 63 / 2^18
- * (0.024%) per try. This makes the function for calculating false positives
- *   1 - (1 - ((63 / 2 ^18) ^ GST_MP3_TYPEFIND_MIN_HEADERS)) ^ buffersize)
- * This has the following probabilities of false positives:
- * bufsize                MIN_HEADERS
- * (bytes)      1       2       3       4
- * 4096         62.6%    0.02%   0%      0%
- * 16384        98%      0.09%   0%      0%
- * 1 MiB       100%      5.88%   0%      0%
- * 1 GiB       100%    100%      1.44%   0%
- * 1 TiB       100%    100%    100%      0.35%
- * This means that the current choice (3 headers by most of the time 4096 byte
- * buffers is pretty safe for now.
- *
- * The max. size of each frame is 1440 bytes, which means that for N frames
- * to be detected, we need 1440 * GST_MP3_TYPEFIND_MIN_HEADERS + 3 of data.
- * Assuming we step into the stream right after the frame header, this
- * means we need 1440 * (GST_MP3_TYPEFIND_MIN_HEADERS + 1) - 1 + 3 bytes
- * of data (5762) to always detect any mp3.
- */
-
-/* increase this value when this function finds too many false positives */
-#define GST_MP3_TYPEFIND_MIN_HEADERS 3
-#define GST_MP3_TYPEFIND_MIN_DATA (1440 * (GST_MP3_TYPEFIND_MIN_HEADERS + 1) - 1 + 3)
 
 static GstCaps *
 mp3_caps_create (guint layer, guint channels, guint bitrate, guint samplerate)
@@ -245,6 +223,7 @@ gst_mp3parse_class_init (GstMPEGAudioParseClass * klass)
 
   gobject_class->set_property = gst_mp3parse_set_property;
   gobject_class->get_property = gst_mp3parse_get_property;
+  gobject_class->dispose = gst_mp3parse_dispose;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SKIP,
       g_param_spec_int ("skip", "skip", "skip",
@@ -254,6 +233,17 @@ gst_mp3parse_class_init (GstMPEGAudioParseClass * klass)
           G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
 
   gstelement_class->change_state = gst_mp3parse_change_state;
+}
+
+static void
+gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
+{
+  mp3parse->skip = 0;
+  mp3parse->resyncing = TRUE;
+
+  gst_adapter_clear (mp3parse->adapter);
+
+  mp3parse->rate = mp3parse->channels = mp3parse->layer = -1;
 }
 
 static void
@@ -271,13 +261,23 @@ gst_mp3parse_init (GstMPEGAudioParse * mp3parse)
       (&mp3_src_template), "src");
   gst_pad_use_fixed_caps (mp3parse->srcpad);
   gst_element_add_pad (GST_ELEMENT (mp3parse), mp3parse->srcpad);
-  /*gst_pad_set_type_id(mp3parse->srcpad, mp3frametype); */
 
-  mp3parse->partialbuf = NULL;
-  mp3parse->skip = 0;
-  mp3parse->in_flush = FALSE;
+  mp3parse->adapter = gst_adapter_new ();
 
-  mp3parse->rate = mp3parse->channels = mp3parse->layer = -1;
+  gst_mp3parse_reset (mp3parse);
+}
+
+static void
+gst_mp3parse_dispose (GObject * object)
+{
+  GstMPEGAudioParse *mp3parse = GST_MP3PARSE (object);
+
+  if (mp3parse->adapter) {
+    g_object_unref (mp3parse->adapter);
+    mp3parse->adapter = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean
@@ -297,10 +297,10 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
           NULL);
 
       if (format != GST_FORMAT_TIME)
-        mp3parse->last_ts = 0;
+        mp3parse->next_ts = 0;
       else
         /* we will be receiving timestamps */
-        mp3parse->last_ts = -1;
+        mp3parse->next_ts = -1;
       break;
     }
     default:
@@ -313,109 +313,107 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
-/* FIXME, use adapter */
 static GstFlowReturn
 gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 {
   GstMPEGAudioParse *mp3parse;
-  guchar *data;
-  glong size, offset = 0;
+  const guchar *data;
   guint32 header;
   int bpf;
   GstBuffer *outbuf;
   GstClockTime timestamp;
+  guint available;
 
   mp3parse = GST_MP3PARSE (gst_pad_get_parent (pad));
 
-  GST_DEBUG ("mp3parse: received buffer of %d bytes", GST_BUFFER_SIZE (buf));
+  GST_DEBUG_OBJECT (mp3parse, "received buffer of %d bytes",
+      GST_BUFFER_SIZE (buf));
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
+
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    mp3parse->last_ts = timestamp;
+    GST_DEBUG_OBJECT (mp3parse, "Using incoming timestamp of %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+    mp3parse->next_ts = timestamp;
   }
 
-  /* if we have something left from the previous frame */
-  if (mp3parse->partialbuf) {
-    GstBuffer *newbuf;
+  gst_adapter_push (mp3parse->adapter, buf);
 
-    newbuf = gst_buffer_merge (mp3parse->partialbuf, buf);
-    /* and the one we received.. */
-    gst_buffer_unref (buf);
-    gst_buffer_unref (mp3parse->partialbuf);
-    mp3parse->partialbuf = newbuf;
-  } else {
-    mp3parse->partialbuf = buf;
-  }
-
-  size = GST_BUFFER_SIZE (mp3parse->partialbuf);
-  data = GST_BUFFER_DATA (mp3parse->partialbuf);
-
-  /* while we still have bytes left -4 for the header */
-  while (offset < size - 4) {
-    int skipped = 0;
-
-    GST_DEBUG ("mp3parse: offset %ld, size %ld ", offset, size);
+  /* while we still have at least 4 bytes (for the header) available */
+  while (gst_adapter_available (mp3parse->adapter) >= 4) {
 
     /* search for a possible start byte */
-    for (; ((offset < size - 4) && (data[offset] != 0xff)); offset++)
-      skipped++;
-    if (skipped) {
-      GST_DEBUG ("mp3parse: **** now at %ld skipped %d bytes", offset, skipped);
+    data = gst_adapter_peek (mp3parse->adapter, 4);
+    if (*data != 0xff) {
+      /* It'd be nice to make this efficient, but it's ok for now; this is only
+       * when resyncing
+       */
+      mp3parse->resyncing = TRUE;
+      gst_adapter_flush (mp3parse->adapter, 1);
+      continue;
     }
+
+    available = gst_adapter_available (mp3parse->adapter);
+
     /* construct the header word */
-    header = GST_READ_UINT32_BE (data + offset);
+    header = GST_READ_UINT32_BE (data);
     /* if it's a valid header, go ahead and send off the frame */
-    if (head_check (header)) {
+    if (head_check (mp3parse, header)) {
       guint bitrate = 0, layer = 0, rate = 0, channels = 0;
 
-      if (!(bpf = mp3_type_frame_length_from_header (header, &layer,
+      if (!(bpf = mp3_type_frame_length_from_header (mp3parse, header, &layer,
                   &channels, &bitrate, &rate))) {
         g_error ("Header failed internal error");
       }
 
-      /********************************************************************************
+      /*************************************************************************
       * robust seek support
-      * - This performs additional frame validation if the in_flush flag is set
+      * - This performs additional frame validation if the resyncing flag is set
       *   (indicating a discontinuous stream).
-      * - The current frame header is not accepted as valid unless the NEXT frame
-      *   header has the same values for most fields.  This significantly increases
-      *   the probability that we aren't processing random data.
+      * - The current frame header is not accepted as valid unless the NEXT 
+      *   frame header has the same values for most fields.  This significantly
+      *   increases the probability that we aren't processing random data.
       * - It is not clear if this is sufficient for robust seeking of Layer III
-      *   streams which utilize the concept of a "bit reservoir" by borrow bitrate
-      *   from previous frames.  In this case, seeking may be more complicated because
-      *   the frames are not independently coded.
-      ********************************************************************************/
-      if (mp3parse->in_flush) {
+      *   streams which utilize the concept of a "bit reservoir" by borrowing
+      *   bitrate from previous frames.  In this case, seeking may be more 
+      *   complicated because the frames are not independently coded.
+      *************************************************************************/
+      if (mp3parse->resyncing) {
         guint32 header2;
+        const guint8 *data2;
 
-        if ((size - offset) < (bpf + 4)) {
-          if (mp3parse->in_flush)
-            break;
-        }
-        /* wait until we have the the entire current frame as well as the next frame header */
-        header2 = GST_READ_UINT32_BE (data + offset + bpf);
-        GST_DEBUG ("mp3parse: header=%08X, header2=%08X, bpf=%d",
+        /* wait until we have the the entire current frame as well as the next 
+         * frame header */
+        if (available < bpf + 4)
+          break;
+
+        data2 = gst_adapter_peek (mp3parse->adapter, bpf + 4);
+        header2 = GST_READ_UINT32_BE (data2 + bpf);
+        GST_DEBUG_OBJECT (mp3parse, "header=%08X, header2=%08X, bpf=%d",
             (unsigned int) header, (unsigned int) header2, bpf);
 
 /* mask the bits which are allowed to differ between frames */
 #define HDRMASK ~((0xF << 12)  /* bitrate */ | \
                   (0x1 <<  9)  /* padding */ | \
-                  (0x3 <<  4))  /*mode extension */
+                  (0x3 <<  4))  /* mode extension */
 
-        if ((header2 & HDRMASK) != (header & HDRMASK)) {        /* require 2 matching headers in a row */
-          GST_DEBUG
-              ("mp3parse: next header doesn't match (header=%08X, header2=%08X, bpf=%d)",
+        /* require 2 matching headers in a row */
+        if ((header2 & HDRMASK) != (header & HDRMASK)) {
+          GST_DEBUG_OBJECT (mp3parse, "next header doesn't match "
+              "(header=%08X, header2=%08X, bpf=%d)",
               (unsigned int) header, (unsigned int) header2, bpf);
-          offset++;             /* This frame is invalid.  Start looking for a valid frame at the next position in the stream */
+          /* This frame is invalid.  Start looking for a valid frame at the 
+           * next position in the stream */
+          mp3parse->resyncing = TRUE;
+          gst_adapter_flush (mp3parse->adapter, 1);
           continue;
         }
-
       }
 
       /* if we don't have the whole frame... */
-      if ((size - offset) < bpf) {
-        GST_DEBUG ("mp3parse: partial buffer needed %ld < %d ", (size - offset),
-            bpf);
+      if (available < bpf) {
+        GST_DEBUG_OBJECT (mp3parse, "insufficient data available, need "
+            "%d bytes, have %d", bpf, available);
         break;
       } else {
         if (channels != mp3parse->channels ||
@@ -433,16 +431,17 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
           mp3parse->bit_rate = bitrate;
         }
 
-        outbuf = gst_buffer_create_sub (mp3parse->partialbuf, offset, bpf);
+        outbuf = gst_adapter_take_buffer (mp3parse->adapter, bpf);
 
-        offset += bpf;
-        if (mp3parse->skip == 0) {
-          gint spf;             /* samples fer frame */
+        if (!mp3parse->skip) {
+          gint spf;             /* samples per frame */
 
-          GST_DEBUG ("mp3parse: pushing buffer of %d bytes",
+          mp3parse->resyncing = FALSE;
+
+          GST_DEBUG_OBJECT (mp3parse, "pushing buffer of %d bytes",
               GST_BUFFER_SIZE (outbuf));
 
-          GST_BUFFER_TIMESTAMP (outbuf) = mp3parse->last_ts;
+          GST_BUFFER_TIMESTAMP (outbuf) = mp3parse->next_ts;
 
           /* see http://www.codeproject.com/audio/MPEGAudioInfo.asp */
           if (mp3parse->layer == 1)
@@ -450,45 +449,31 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
           else if (mp3parse->layer == 2)
             spf = 1152;
           else {
-            if (mp3parse->rate < 32100)
+            if (mp3parse->rate < 16000)
               spf = 576;
             else
               spf = 1152;
           }
           GST_BUFFER_DURATION (outbuf) = spf * GST_SECOND / mp3parse->rate;
 
-          mp3parse->last_ts += GST_BUFFER_DURATION (outbuf);
+          mp3parse->next_ts += GST_BUFFER_DURATION (outbuf);
 
           gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mp3parse->srcpad));
 
           gst_pad_push (mp3parse->srcpad, outbuf);
 
         } else {
-          GST_DEBUG ("mp3parse: skipping buffer of %d bytes",
+          GST_DEBUG_OBJECT (mp3parse, "skipping buffer of %d bytes",
               GST_BUFFER_SIZE (outbuf));
           gst_buffer_unref (outbuf);
           mp3parse->skip--;
         }
       }
     } else {
-      offset++;
-      GST_DEBUG ("mp3parse: *** wrong header, skipping byte (FIXME?)");
+      mp3parse->resyncing = TRUE;
+      gst_adapter_flush (mp3parse->adapter, 1);
+      GST_DEBUG_OBJECT (mp3parse, "wrong header, skipping byte");
     }
-  }
-  /* if we have processed this block and there are still */
-  /* bytes left not in a partial block, copy them over. */
-  if (size - offset > 0) {
-    glong remainder = (size - offset);
-
-    GST_DEBUG ("mp3parse: partial buffer needed %ld for trailing bytes",
-        remainder);
-
-    outbuf = gst_buffer_create_sub (mp3parse->partialbuf, offset, remainder);
-    gst_buffer_unref (mp3parse->partialbuf);
-    mp3parse->partialbuf = outbuf;
-  } else {
-    gst_buffer_unref (mp3parse->partialbuf);
-    mp3parse->partialbuf = NULL;
   }
 
   gst_object_unref (mp3parse);
@@ -497,44 +482,44 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 }
 
 static gboolean
-head_check (unsigned long head)
+head_check (GstMPEGAudioParse * mp3parse, unsigned long head)
 {
-  GST_DEBUG ("checking mp3 header 0x%08lx", head);
+  GST_DEBUG_OBJECT (mp3parse, "checking mp3 header 0x%08lx", head);
   /* if it's not a valid sync */
   if ((head & 0xffe00000) != 0xffe00000) {
-    GST_DEBUG ("invalid sync");
+    GST_DEBUG_OBJECT (mp3parse, "invalid sync");
     return FALSE;
   }
   /* if it's an invalid MPEG version */
   if (((head >> 19) & 3) == 0x1) {
-    GST_DEBUG ("invalid MPEG version");
+    GST_DEBUG_OBJECT (mp3parse, "invalid MPEG version");
     return FALSE;
   }
   /* if it's an invalid layer */
   if (!((head >> 17) & 3)) {
-    GST_DEBUG ("invalid layer");
+    GST_DEBUG_OBJECT (mp3parse, "invalid layer");
     return FALSE;
   }
   /* if it's an invalid bitrate */
   if (((head >> 12) & 0xf) == 0x0) {
-    GST_DEBUG ("invalid bitrate");
+    GST_DEBUG_OBJECT (mp3parse, "invalid bitrate");
     return FALSE;
   }
   if (((head >> 12) & 0xf) == 0xf) {
-    GST_DEBUG ("invalid bitrate");
+    GST_DEBUG_OBJECT (mp3parse, "invalid bitrate");
     return FALSE;
   }
   /* if it's an invalid samplerate */
   if (((head >> 10) & 0x3) == 0x3) {
-    GST_DEBUG ("invalid samplerate");
+    GST_DEBUG_OBJECT (mp3parse, "invalid samplerate");
     return FALSE;
   }
   if ((head & 0xffff0000) == 0xfffe0000) {
-    GST_DEBUG ("invalid sync");
+    GST_DEBUG_OBJECT (mp3parse, "invalid sync");
     return FALSE;
   }
   if (head & 0x00000002) {
-    GST_DEBUG ("invalid emphasis");
+    GST_DEBUG_OBJECT (mp3parse, "invalid emphasis");
     return FALSE;
   }
 
@@ -584,22 +569,21 @@ gst_mp3parse_get_property (GObject * object, guint prop_id, GValue * value,
 static GstStateChangeReturn
 gst_mp3parse_change_state (GstElement * element, GstStateChange transition)
 {
-  GstMPEGAudioParse *src;
+  GstMPEGAudioParse *mp3parse;
   GstStateChangeReturn result;
 
-  src = GST_MP3PARSE (element);
+  mp3parse = GST_MP3PARSE (element);
+
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      src->channels = -1;
-      src->rate = -1;
-      src->layer = -1;
+      gst_mp3parse_reset (mp3parse);
       break;
     default:
       break;
   }
 
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   return result;
 }
@@ -607,6 +591,8 @@ gst_mp3parse_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (mp3parse_debug, "mp3parse", 0, "MP3 Parser");
+
   return gst_element_register (plugin, "mp3parse",
       GST_RANK_NONE, GST_TYPE_MP3PARSE);
 }
