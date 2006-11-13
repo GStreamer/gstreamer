@@ -1,3 +1,17 @@
+2006-11-13  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Mark Nauwelaerts  <manauw at skynet be>
+
+	* gst/videomixer/videomixer.c:
+	(gst_videomixer_set_master_geometry),
+	(gst_videomixer_pad_sink_setcaps), (gst_videomixer_class_init),
+	(gst_videomixer_collect_free), (gst_videomixer_reset),
+	(gst_videomixer_init), (gst_videomixer_finalize),
+	(gst_videomixer_request_new_pad), (gst_videomixer_release_pad),
+	(gst_videomixer_collected), (gst_videomixer_change_state):
+	Fix memleak by unref'ing collectpads instance (when finalizing)
+	Implement releasing a request pad. Fixes #374479.
+
 2006-11-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sergey Scobich  <sergey.scobich at gmail com>

@@ -296,6 +296,7 @@ struct _GstVideoMixer
 
   gint in_width, in_height;
   gint out_width, out_height;
+  gboolean setcaps;
 
   GstVideoMixerBackground background;
 
@@ -307,6 +308,48 @@ struct _GstVideoMixerClass
 {
   GstElementClass parent_class;
 };
+
+static void
+gst_videomixer_set_master_geometry (GstVideoMixer * mix)
+{
+  GSList *walk;
+  gint width = 0, height = 0, fps_n = 0, fps_d = 0;
+  GstVideoMixerPad *master = NULL;
+
+  walk = mix->sinkpads;
+  while (walk) {
+    GstVideoMixerPad *mixpad = GST_VIDEO_MIXER_PAD (walk->data);
+
+    walk = g_slist_next (walk);
+
+    /* Biggest input geometry will be our output geometry */
+    width = MAX (width, mixpad->in_width);
+    height = MAX (height, mixpad->in_height);
+
+    /* If mix framerate < mixpad framerate, using fractions */
+    GST_DEBUG_OBJECT (mix, "comparing framerate %d/%d to mixpad's %d/%d",
+        fps_n, fps_d, mixpad->fps_n, mixpad->fps_d);
+    if ((!fps_n && !fps_d) ||
+        ((gint64) fps_n * mixpad->fps_d < (gint64) mixpad->fps_n * fps_d)) {
+      fps_n = mixpad->fps_n;
+      fps_d = mixpad->fps_d;
+      GST_DEBUG_OBJECT (mixpad, "becomes the master pad");
+      master = mixpad;
+    }
+  }
+
+  /* set results */
+  if (mix->master != master || mix->in_width != width
+      || mix->in_height != height || mix->fps_n != fps_n
+      || mix->fps_d != fps_d) {
+    mix->setcaps = TRUE;
+    mix->master = master;
+    mix->in_width = width;
+    mix->in_height = height;
+    mix->fps_n = fps_n;
+    mix->fps_d = fps_d;
+  }
+}
 
 static gboolean
 gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
@@ -343,21 +386,7 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
   mixpad->xpos = 0;
   mixpad->ypos = 0;
 
-  /* Biggest input geometry will be our output geometry */
-  mix->in_width = MAX (mix->in_width, mixpad->in_width);
-  mix->in_height = MAX (mix->in_height, mixpad->in_height);
-
-  /* If mix framerate < mixpad framerate, using fractions */
-  GST_DEBUG_OBJECT (mix, "comparing mix framerate %d/%d to mixpad's %d/%d",
-      mix->fps_n, mix->fps_d, mixpad->fps_n, mixpad->fps_d);
-  if ((!mix->fps_n && !mix->fps_d) ||
-      ((gint64) mix->fps_n * mixpad->fps_d <
-          (gint64) mixpad->fps_n * mix->fps_d)) {
-    mix->fps_n = mixpad->fps_n;
-    mix->fps_d = mixpad->fps_d;
-    GST_DEBUG_OBJECT (mixpad, "becomes the master pad");
-    mix->master = mixpad;
-  }
+  gst_videomixer_set_master_geometry (mix);
 
   ret = TRUE;
 
@@ -460,6 +489,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
 static void gst_videomixer_base_init (gpointer g_class);
 static void gst_videomixer_class_init (GstVideoMixerClass * klass);
 static void gst_videomixer_init (GstVideoMixer * videomixer);
+static void gst_videomixer_finalize (GObject * object);
 
 static GstCaps *gst_videomixer_getcaps (GstPad * pad);
 
@@ -467,6 +497,7 @@ static GstFlowReturn gst_videomixer_collected (GstCollectPads * pads,
     GstVideoMixer * mix);
 static GstPad *gst_videomixer_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
+static void gst_videomixer_release_pad (GstElement * element, GstPad * pad);
 static void gst_videomixer_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_videomixer_get_property (GObject * object, guint prop_id,
@@ -527,6 +558,8 @@ gst_videomixer_class_init (GstVideoMixerClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_videomixer_finalize);
+
   gobject_class->get_property = gst_videomixer_get_property;
   gobject_class->set_property = gst_videomixer_set_property;
 
@@ -535,8 +568,47 @@ gst_videomixer_class_init (GstVideoMixerClass * klass)
           GST_TYPE_VIDEO_MIXER_BACKGROUND,
           DEFAULT_BACKGROUND, G_PARAM_READWRITE));
 
-  gstelement_class->request_new_pad = gst_videomixer_request_new_pad;
-  gstelement_class->change_state = gst_videomixer_change_state;
+  gstelement_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_videomixer_request_new_pad);
+  gstelement_class->release_pad =
+      GST_DEBUG_FUNCPTR (gst_videomixer_release_pad);
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_videomixer_change_state);
+}
+
+static void
+gst_videomixer_collect_free (GstCollectData * collect)
+{
+  GstVideoMixerCollect *mixcol;
+
+  mixcol = (GstVideoMixerCollect *) collect;
+
+  if (mixcol->buffer) {
+    gst_buffer_unref (mixcol->buffer);
+    mixcol->buffer = NULL;
+  }
+}
+
+static void
+gst_videomixer_reset (GstVideoMixer * mix)
+{
+  GSList *walk;
+
+  mix->in_width = 0;
+  mix->in_height = 0;
+  mix->out_width = 0;
+  mix->out_height = 0;
+  mix->fps_n = mix->fps_d = 0;
+  mix->setcaps = FALSE;
+
+  /* clean up collect data */
+  walk = mix->collect->data;
+  while (walk) {
+    GstCollectData *data = (GstCollectData *) walk->data;
+
+    gst_videomixer_collect_free (data);
+    walk = g_slist_next (walk);
+  }
 }
 
 static void
@@ -547,20 +619,30 @@ gst_videomixer_init (GstVideoMixer * mix)
   mix->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
-  gst_pad_set_getcaps_function (GST_PAD (mix->srcpad), gst_videomixer_getcaps);
+  gst_pad_set_getcaps_function (GST_PAD (mix->srcpad),
+      GST_DEBUG_FUNCPTR (gst_videomixer_getcaps));
   gst_element_add_pad (GST_ELEMENT (mix), mix->srcpad);
 
   mix->collect = gst_collect_pads_new ();
   mix->background = DEFAULT_BACKGROUND;
-  mix->in_width = 0;
-  mix->in_height = 0;
-  mix->out_width = 0;
-  mix->out_height = 0;
-  mix->fps_n = mix->fps_d = 0;
 
   gst_collect_pads_set_function (mix->collect,
       (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_videomixer_collected),
       mix);
+
+  /* initialize variables */
+  gst_videomixer_reset (mix);
+
+}
+
+static void
+gst_videomixer_finalize (GObject * object)
+{
+  GstVideoMixer *mix = GST_VIDEO_MIXER (object);
+
+  gst_object_unref (mix->collect);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
@@ -637,7 +719,7 @@ gst_videomixer_request_new_pad (GstElement * element,
         gst_collect_pads_add_pad (mix->collect, GST_PAD (mixpad),
         sizeof (GstVideoMixerCollect));
 
-    /* Keep track of eachother */
+    /* Keep track of each other */
     mixcol->mixpad = mixpad;
     mixpad->mixcol = mixcol;
 
@@ -649,10 +731,42 @@ gst_videomixer_request_new_pad (GstElement * element,
     return NULL;
   }
 
-  /* dd the pad to the element */
+  /* add the pad to the element */
   gst_element_add_pad (element, GST_PAD (mixpad));
 
   return GST_PAD (mixpad);
+}
+
+
+static void
+gst_videomixer_release_pad (GstElement * element, GstPad * pad)
+{
+  GstVideoMixer *mix = NULL;
+  GSList *walk = NULL;
+
+  mix = GST_VIDEO_MIXER (element);
+
+  walk = mix->collect->data;
+  while (walk) {
+    GstCollectData *data = (GstCollectData *) walk->data;
+    GstVideoMixerCollect *mixcol = (GstVideoMixerCollect *) data;
+    GstVideoMixerPad *mixpad = mixcol->mixpad;
+
+    walk = g_slist_next (walk);
+
+    if (mixpad == GST_VIDEO_MIXER_PAD (pad)) {
+      /* found it, remove from all sorts of lists */
+      mix->sinkpads = g_slist_remove (mix->sinkpads, pad);
+      gst_videomixer_collect_free (data);
+      gst_collect_pads_remove_pad (mix->collect, pad);
+      gst_element_remove_pad (element, pad);
+      /* determine possibly new geometry and master */
+      gst_videomixer_set_master_geometry (mix);
+      return;
+    }
+  }
+
+  g_warning ("Unknown pad %s", GST_PAD_NAME (pad));
 }
 
 #define BLEND_NORMAL(Y1,U1,V1,Y2,U2,V2,alpha,Y,U,V)     \
@@ -1141,7 +1255,8 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
   outsize = ROUND_UP_2 (mix->in_width) * ROUND_UP_2 (mix->in_height) * 4;
 
   /* If geometry has changed we need to set new caps on the buffer */
-  if (mix->in_width != mix->out_width || mix->in_height != mix->out_height) {
+  if (mix->in_width != mix->out_width || mix->in_height != mix->out_height
+      || mix->setcaps) {
     GstCaps *newcaps = NULL;
 
     newcaps = gst_caps_make_writable
@@ -1153,6 +1268,7 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
 
     mix->out_width = mix->in_width;
     mix->out_height = mix->in_height;
+    mix->setcaps = FALSE;
 
     ret =
         gst_pad_alloc_buffer_and_set_caps (mix->srcpad, GST_BUFFER_OFFSET_NONE,
@@ -1237,6 +1353,7 @@ gst_videomixer_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_videomixer_reset (mix);
       GST_LOG ("starting collectpads");
       gst_collect_pads_start (mix->collect);
       break;
