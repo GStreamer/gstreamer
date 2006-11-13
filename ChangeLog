@@ -1,5 +1,12 @@
 2006-11-13  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Mark Nauwelaerts <manauw at skynet dot be>
+
+	* gst/gstpad.c:
+	Fix documentation for gst_pad_dispatcher. Fixes #374475.
+
+2006-11-13  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Jonathan Matthew <jonathan at kaolin dot wh9 dot net>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_update_length):

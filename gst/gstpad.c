@@ -2950,8 +2950,8 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
  * @dispatch: the #GstDispatcherFunction to call.
  * @data: gpointer user data passed to the dispatcher function.
  *
- * Invokes the given dispatcher function on all pads that are
- * internally linked to the given pad.
+ * Invokes the given dispatcher function on each respective peer of
+ * all pads that are internally linked to the given pad.
  * The GstPadDispatcherFunction should return TRUE when no further pads
  * need to be processed.
  *
