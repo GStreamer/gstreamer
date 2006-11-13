@@ -1,3 +1,11 @@
+2006-11-13  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Jonathan Matthew <jonathan at kaolin dot wh9 dot net>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_update_length):
+	Store new length in segment duration so we don't keep on calling the
+	potentially expensize get_size() call. Fixes #370865.
+
 2006-11-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sergey Scobich  <sergery.scobich at gmail com>

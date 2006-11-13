@@ -1281,7 +1281,10 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
     if (G_UNLIKELY (offset + *length >= maxsize)) {
       /* see if length of the file changed */
       if (bclass->get_size)
-        bclass->get_size (src, &size);
+        if (!bclass->get_size (src, &size))
+          size = -1;
+
+      gst_segment_set_duration (&src->segment, GST_FORMAT_BYTES, size);
 
       /* make sure we don't exceed the configured segment stop
        * if it was set */
@@ -1297,6 +1300,7 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length)
       /* else we can clip to the end */
       if (G_UNLIKELY (offset + *length >= maxsize))
         *length = maxsize - offset;
+
     }
   }
 
