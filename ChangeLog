@@ -1,3 +1,10 @@
+2006-11-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/dvb/gstdvbsrc.c: (gst_dvbsrc_create):
+	* sys/dvb/gstdvbsrc.h:
+	  Fix minor printf format issue; remove overly paranoid checks in
+	  create function; fix GObject boilerplate macros.
+
 2006-11-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_duration),

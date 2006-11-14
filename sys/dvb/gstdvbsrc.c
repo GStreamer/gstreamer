@@ -837,17 +837,14 @@ read_device (int fd, const char *fd_name, int size)
 static GstFlowReturn
 gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
 {
-  static int quality_signal_rate = 0;
+  static int quality_signal_rate = 0;   /* FIXME: move into object struct? */
   gint buffer_size;
   GstFlowReturn retval = GST_FLOW_ERROR;
+  GstDvbSrc *object;
 
-  GstDvbSrc *object = NULL;
-
-  g_return_val_if_fail (GST_IS_DVBSRC (element), GST_FLOW_ERROR);
   object = GST_DVBSRC (element);
-  GST_LOG ("buf: 0x%x fd_dvr: %d", buf, object->fd_dvr);
+  GST_LOG ("fd_dvr: %d", object->fd_dvr);
 
-  g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
   //g_object_get(G_OBJECT(object), "blocksize", &buffer_size, NULL);
   buffer_size = DEFAULT_BUFFER_SIZE;
 

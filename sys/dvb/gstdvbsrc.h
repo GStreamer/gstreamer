@@ -5,11 +5,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif                          /* __cplusplus */
-
+G_BEGIN_DECLS
 
   typedef enum
   {
@@ -36,10 +32,10 @@ extern "C"
 #define GST_DVBSRC(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVBSRC,GstDvbSrc))
 #define GST_DVBSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DVBSRC,GstDvbSrc))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DVBSRC,GstDvbSrcClass))
 #define GST_IS_DVBSRC(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DVBSRC))
-#define GST_IS_DVBSRC_CLASS(obj) \
+#define GST_IS_DVBSRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVBSRC))
 
   typedef struct _GstDvbSrc GstDvbSrc;
@@ -95,8 +91,6 @@ extern "C"
 
   GType gst_dvbsrc_get_type (void);
 
-#ifdef __cplusplus
-}
-#endif                          /* __cplusplus */
+G_END_DECLS
 
 #endif                          /* __GST_DVBSRC_H__ */
