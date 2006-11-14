@@ -1,3 +1,11 @@
+2006-11-14  Wim Taymans  <wim@fluendo.com>
+
+	* ext/lame/gstlame.c: (gst_lame_sink_event), (gst_lame_chain),
+	(gst_lame_change_state):
+	* ext/lame/gstlame.h:
+	Make lame timestamp flushed eos buffer by some additional timestamp
+	accounting. Fixes #374760.
+
 2006-11-13  Michael Smith  <msmith@fluendo.com>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
