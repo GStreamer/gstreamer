@@ -1,5 +1,11 @@
 2006-11-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_duration),
+	(gst_qtdemux_handle_src_query), (qtdemux_parse_trak):
+	Don't parse extra sample params for raw pcm. Fixes #374914.
+
+2006-11-14  Wim Taymans  <wim@fluendo.com>
+
 	* tests/check/elements/.cvsignore:
 	Add cdaudio to ignore.
 
