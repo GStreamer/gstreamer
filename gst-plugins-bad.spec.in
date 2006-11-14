@@ -78,10 +78,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %postun
 
-%files -f gst-plugins-bad-%{majorminor}
+%files
 
 %defattr(-, root, root)
 %doc AUTHORS COPYING README REQUIREMENTS
+%{_datadir}/locale
 
 # non-core plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstqtdemux.so
@@ -91,11 +92,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstfreeze.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmodplug.so
 %{_libdir}/gstreamer-%{majorminor}/libgstxingheader.so
-%{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
 %{_libdir}/gstreamer-%{majorminor}/libgsth264parse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspectrum.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstnsf.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideocrop.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdvbsrc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstreplaygain.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmultifilesink.so
+%{_libdir}/gstreamer-%{majorminor}/libgstnuvdemux.so
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
@@ -112,6 +118,9 @@ rm -rf $RPM_BUILD_ROOT
 @USE_IVORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstivorbis.so
 @USE_NEON_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstneonhttpsrc.so
 @USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsaspdif.so
+@USE_MUSEPACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmusepack.so
+@USE_GSM_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
+@USE_DTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdtsdec.so
 
 %changelog
 * Sun Nov 27 2005 Thomas Vander Stichele <thomas at apestaart dot org>
