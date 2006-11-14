@@ -470,8 +470,8 @@ gst_riff_parse_strf_auds (GstElement * element,
     len = GST_READ_UINT16_LE (&GST_BUFFER_DATA (buf)[16]);
     if (len + 2 + sizeof (gst_riff_strf_auds) > bufsize) {
       GST_WARNING_OBJECT (element,
-          "Extradata indicated %d bytes, but only %d available",
-          len, bufsize - 2 - sizeof (gst_riff_strf_auds));
+          "Extradata indicated %d bytes, but only %" G_GSSIZE_FORMAT
+          " available", len, bufsize - 2 - sizeof (gst_riff_strf_auds));
       len = bufsize - 2 - sizeof (gst_riff_strf_auds);
     }
     if (len)
@@ -499,7 +499,7 @@ gst_riff_parse_strf_auds (GstElement * element,
 too_small:
   {
     GST_ERROR_OBJECT (element,
-        "Too small strf_auds (%d available, %d needed)",
+        "Too small strf_auds (%d available, %" G_GSSIZE_FORMAT " needed)",
         bufsize, sizeof (gst_riff_strf_auds));
     gst_buffer_unref (buf);
     return FALSE;
@@ -570,7 +570,7 @@ gst_riff_parse_strf_iavs (GstElement * element,
 too_small:
   {
     GST_ERROR_OBJECT (element,
-        "Too small strf_iavs (%d available, %d needed)",
+        "Too small strf_iavs (%d available, %" G_GSSIZE_FORMAT " needed)",
         GST_BUFFER_SIZE (buf), sizeof (gst_riff_strf_iavs));
     gst_buffer_unref (buf);
     return FALSE;

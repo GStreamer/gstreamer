@@ -353,7 +353,8 @@ convert_encoding (GstSubParse * self, const gchar * str, gsize len)
         NULL, NULL, NULL);
   }
 
-  GST_LOG_OBJECT (self, "successfully converted %d characters from %s to UTF-8"
+  GST_LOG_OBJECT (self,
+      "successfully converted %" G_GSIZE_FORMAT " characters from %s to UTF-8"
       "%s", len, encoding, (err) ? " , using ISO-8859-15 as fallback" : "");
 
   return ret;

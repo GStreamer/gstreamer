@@ -345,7 +345,8 @@ gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
 
   SHMInfo.shmid = shmget (IPC_PRIVATE, size, IPC_CREAT | 0777);
   if (SHMInfo.shmid == -1) {
-    GST_WARNING ("could not get shared memory of %d bytes", size);
+    GST_WARNING ("could not get shared memory of %" G_GSIZE_FORMAT " bytes",
+        size);
     goto beach;
   }
 
@@ -439,7 +440,8 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
 
     /* we have to use the returned bytes_per_line for our shm size */
     ximage->size = ximage->ximage->bytes_per_line * ximage->ximage->height;
-    GST_LOG_OBJECT (ximagesink, "XShm image size is %d, width %d, stride %d",
+    GST_LOG_OBJECT (ximagesink,
+        "XShm image size is %" G_GSIZE_FORMAT ", width %d, stride %d",
         ximage->size, ximage->width, ximage->ximage->bytes_per_line);
 
     ximage->SHMInfo.shmid = shmget (IPC_PRIVATE, ximage->size,
@@ -449,7 +451,8 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
       GST_ELEMENT_ERROR (ximagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               ximage->width, ximage->height),
-          ("could not get shared memory of %d bytes", ximage->size));
+          ("could not get shared memory of %" G_GSIZE_FORMAT " bytes",
+              ximage->size));
       goto beach;
     }
 

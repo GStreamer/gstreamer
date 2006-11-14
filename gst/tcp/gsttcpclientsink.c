@@ -266,7 +266,7 @@ write_error:
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, WRITE,
         (_("Error while sending data to \"%s:%d\"."), sink->host, sink->port),
-        ("Only %d of %d bytes written: %s",
+        ("Only %" G_GSIZE_FORMAT " of %u bytes written: %s",
             wrote, GST_BUFFER_SIZE (buf), g_strerror (errno)));
     return GST_FLOW_ERROR;
   }

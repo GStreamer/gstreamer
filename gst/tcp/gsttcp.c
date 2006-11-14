@@ -119,7 +119,7 @@ gst_tcp_socket_write (int socket, const void *buf, size_t count)
   if (bytes_written < 0)
     GST_WARNING ("error while writing");
   else
-    GST_LOG ("wrote %d bytes succesfully", bytes_written);
+    GST_LOG ("wrote %" G_GSIZE_FORMAT " bytes succesfully", bytes_written);
   return bytes_written;
 }
 
@@ -209,7 +209,7 @@ read_error:
 short_read:
   {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
-        ("short read: wanted %d bytes, got %d", num_to_read, n));
+        ("short read: wanted %d bytes, got %" G_GSSIZE_FORMAT, num_to_read, n));
     return GST_FLOW_ERROR;
   }
 }
@@ -311,7 +311,8 @@ read_error:
 short_read:
   {
     GST_ELEMENT_ERROR (this, RESOURCE, READ, (NULL),
-        ("short read: wanted %d bytes, got %d", readsize, bytes_read));
+        ("short read: wanted %d bytes, got %" G_GSSIZE_FORMAT, readsize,
+            bytes_read));
     gst_buffer_unref (*buf);
     *buf = NULL;
     return GST_FLOW_ERROR;
@@ -424,7 +425,8 @@ gst_tcp_gdp_read_caps (GstElement * this, int socket, int cancel_fd,
   payload_length = gst_dp_header_payload_length (header);
   payload = g_malloc (payload_length);
 
-  GST_LOG_OBJECT (this, "Reading %d bytes for caps packet payload",
+  GST_LOG_OBJECT (this,
+      "Reading %" G_GSIZE_FORMAT " bytes for caps packet payload",
       payload_length);
 
   ret = gst_tcp_socket_read (this, socket, payload, payload_length, cancel_fd);
@@ -515,7 +517,7 @@ write_error:
     if (fatal)
       GST_ELEMENT_ERROR (this, RESOURCE, WRITE,
           (_("Error while sending data to \"%s:%d\"."), host, port),
-          ("Only %d of %d bytes written: %s",
+          ("Only %" G_GSIZE_FORMAT " of %u bytes written: %s",
               wrote, GST_BUFFER_SIZE (buffer), g_strerror (errno)));
     return FALSE;
   }
@@ -567,7 +569,7 @@ write_header_error:
     if (fatal)
       GST_ELEMENT_ERROR (this, RESOURCE, WRITE,
           (_("Error while sending gdp header data to \"%s:%d\"."), host, port),
-          ("Only %d of %d bytes written: %s",
+          ("Only %" G_GSIZE_FORMAT " of %u bytes written: %s",
               wrote, length, g_strerror (errno)));
     return FALSE;
   }
@@ -576,7 +578,7 @@ write_payload_error:
     if (fatal)
       GST_ELEMENT_ERROR (this, RESOURCE, WRITE,
           (_("Error while sending gdp payload data to \"%s:%d\"."), host, port),
-          ("Only %d of %d bytes written: %s",
+          ("Only %" G_GSIZE_FORMAT " of %u bytes written: %s",
               wrote, length, g_strerror (errno)));
     return FALSE;
   }

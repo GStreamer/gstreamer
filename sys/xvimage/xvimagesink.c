@@ -547,7 +547,8 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
 
     /* we have to use the returned data_size for our shm size */
     xvimage->size = xvimage->xvimage->data_size;
-    GST_LOG_OBJECT (xvimagesink, "XShm image size is %d", xvimage->size);
+    GST_LOG_OBJECT (xvimagesink, "XShm image size is %" G_GSIZE_FORMAT,
+        xvimage->size);
 
     xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
         IPC_CREAT | 0777);
@@ -556,7 +557,8 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
       GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
           ("Failed to create output image buffer of %dx%d pixels",
               xvimage->width, xvimage->height),
-          ("could not get shared memory of %d bytes", xvimage->size));
+          ("could not get shared memory of %" G_GSIZE_FORMAT " bytes",
+              xvimage->size));
       goto beach_unlocked;
     }
 

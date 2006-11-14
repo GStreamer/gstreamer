@@ -1,3 +1,21 @@
+2006-11-14  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Jan David Mol <j dot j dot d dot mol at tudelft dot nl>
+
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_parse_strf_auds),
+	(gst_riff_parse_strf_iavs):
+	* gst/subparse/gstsubparse.c: (convert_encoding):
+	* gst/tcp/gstmultifdsink.c:
+	(gst_multi_fd_sink_handle_client_write):
+	* gst/tcp/gsttcp.c: (gst_tcp_socket_write), (gst_tcp_socket_read),
+	(gst_tcp_read_buffer), (gst_tcp_gdp_read_caps),
+	(gst_tcp_gdp_write_buffer), (gst_tcp_gdp_write_caps):
+	* gst/tcp/gsttcpclientsink.c: (gst_tcp_client_sink_render):
+	* sys/ximage/ximagesink.c: (gst_ximagesink_check_xshm_calls),
+	(gst_ximagesink_ximage_new):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new):
+	Various gsize and gssize printf fixes. Fixes #372507.
+
 2006-11-13  Wim Taymans  <wim@fluendo.com>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_sink_event),

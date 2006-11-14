@@ -764,7 +764,7 @@ gst_multi_fd_sink_add (GstMultiFdSink * sink, int fd)
       sink->def_burst_unit, sink->def_burst_value, sink->def_burst_unit, -1);
 }
 
-/* "remove" signal implemntation */
+/* "remove" signal implementation */
 void
 gst_multi_fd_sink_remove (GstMultiFdSink * sink, int fd)
 {
@@ -1886,7 +1886,8 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
         if (wrote < maxsize) {
           /* partial write means that the client cannot read more and we should
            * stop sending more */
-          GST_LOG_OBJECT (sink, "partial write on %d of %d bytes", fd, wrote);
+          GST_LOG_OBJECT (sink,
+              "partial write on %d of %" G_GSSIZE_FORMAT " bytes", fd, wrote);
           client->bufoffset += wrote;
           more = FALSE;
         } else {
