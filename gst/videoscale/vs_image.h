@@ -28,55 +28,51 @@
 #ifndef __VS_IMAGE_H__
 #define __VS_IMAGE_H__
 
-#include <glib.h>
-
-G_BEGIN_DECLS
+#include <stdint.h>
 
 typedef struct _VSImage VSImage;
 
 struct _VSImage {
-  guint8 *pixels;
+  uint8_t *pixels;
   int width;
   int height;
   int stride;
 };
 
 void vs_image_scale_nearest_RGBA (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 void vs_image_scale_linear_RGBA (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 
 void vs_image_scale_nearest_RGB (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 void vs_image_scale_linear_RGB (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 
 void vs_image_scale_nearest_YUYV (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 void vs_image_scale_linear_YUYV (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 
 void vs_image_scale_nearest_UYVY (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 void vs_image_scale_linear_UYVY (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 
 void vs_image_scale_nearest_Y (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 void vs_image_scale_linear_Y (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 
 void vs_image_scale_nearest_RGB565 (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 void vs_image_scale_linear_RGB565 (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 
 void vs_image_scale_nearest_RGB555 (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
+    uint8_t *tmpbuf);
 void vs_image_scale_linear_RGB555 (const VSImage *dest, const VSImage *src,
-    guint8 *tmpbuf);
-
-G_END_DECLS
+    uint8_t *tmpbuf);
 
 #endif
 

@@ -1,3 +1,17 @@
+2006-11-14  David Schleef  <ds@schleef.org>
+
+	* gst/videoscale/Makefile.am:
+	* gst/videoscale/gstvideoscale.c:
+	* gst/videoscale/gstvideoscale.h:
+	* gst/videoscale/vs_4tap.c:
+	* gst/videoscale/vs_4tap.h:
+	* gst/videoscale/vs_image.c:
+	* gst/videoscale/vs_image.h:
+	* gst/videoscale/vs_scanline.c:
+	* gst/videoscale/vs_scanline.h:
+	  Add a 4-tap image scaler.  Theoretically looks much prettier.
+	  The tap calculation could use some improvement.
+
 2006-11-14  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Jan David Mol <j dot j dot d dot mol at tudelft dot nl>

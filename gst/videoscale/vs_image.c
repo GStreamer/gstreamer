@@ -25,7 +25,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <glib.h>
 #include <string.h>
 
 #include "vs_scanline.h"
@@ -37,7 +36,7 @@
 
 void
 vs_image_scale_nearest_RGBA (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
@@ -65,13 +64,13 @@ vs_image_scale_nearest_RGBA (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
   int x_increment;
-  guint8 *tmp1;
-  guint8 *tmp2;
+  uint8_t *tmp1;
+  uint8_t *tmp2;
   int y1;
   int y2;
   int i;
@@ -153,7 +152,7 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_nearest_RGB (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
@@ -181,13 +180,13 @@ vs_image_scale_nearest_RGB (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_linear_RGB (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
   int x_increment;
-  guint8 *tmp1;
-  guint8 *tmp2;
+  uint8_t *tmp1;
+  uint8_t *tmp2;
   int y1;
   int y2;
   int i;
@@ -270,7 +269,7 @@ vs_image_scale_linear_RGB (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_nearest_YUYV (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
@@ -300,13 +299,13 @@ vs_image_scale_nearest_YUYV (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_linear_YUYV (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
   int x_increment;
-  guint8 *tmp1;
-  guint8 *tmp2;
+  uint8_t *tmp1;
+  uint8_t *tmp2;
   int y1;
   int y2;
   int i;
@@ -388,7 +387,7 @@ vs_image_scale_linear_YUYV (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_nearest_UYVY (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
@@ -418,13 +417,13 @@ vs_image_scale_nearest_UYVY (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_linear_UYVY (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
   int x_increment;
-  guint8 *tmp1;
-  guint8 *tmp2;
+  uint8_t *tmp1;
+  uint8_t *tmp2;
   int y1;
   int y2;
   int i;
@@ -506,7 +505,7 @@ vs_image_scale_linear_UYVY (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_nearest_Y (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
@@ -534,13 +533,13 @@ vs_image_scale_nearest_Y (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
   int x_increment;
-  guint8 *tmp1;
-  guint8 *tmp2;
+  uint8_t *tmp1;
+  uint8_t *tmp2;
   int y1;
   int y2;
   int i;
@@ -623,7 +622,7 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_nearest_RGB565 (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
@@ -651,13 +650,13 @@ vs_image_scale_nearest_RGB565 (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_linear_RGB565 (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
   int x_increment;
-  guint8 *tmp1;
-  guint8 *tmp2;
+  uint8_t *tmp1;
+  uint8_t *tmp2;
   int y1;
   int y2;
   int i;
@@ -740,7 +739,7 @@ vs_image_scale_linear_RGB565 (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_nearest_RGB555 (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
@@ -768,13 +767,13 @@ vs_image_scale_nearest_RGB555 (const VSImage * dest, const VSImage * src,
 
 void
 vs_image_scale_linear_RGB555 (const VSImage * dest, const VSImage * src,
-    guint8 * tmpbuf)
+    uint8_t * tmpbuf)
 {
   int acc;
   int y_increment;
   int x_increment;
-  guint8 *tmp1;
-  guint8 *tmp2;
+  uint8_t *tmp1;
+  uint8_t *tmp2;
   int y1;
   int y2;
   int i;

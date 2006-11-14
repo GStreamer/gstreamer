@@ -28,12 +28,11 @@
 #include "vs_scanline.h"
 
 #include <liboil/liboil.h>
-#include <glib.h>
 
 /* greyscale, i.e., single componenet */
 
 void
-vs_scanline_downsample_Y (guint8 * dest, guint8 * src, int n)
+vs_scanline_downsample_Y (uint8_t * dest, uint8_t * src, int n)
 {
   int i;
 
@@ -43,7 +42,7 @@ vs_scanline_downsample_Y (guint8 * dest, guint8 * src, int n)
 }
 
 void
-vs_scanline_resample_nearest_Y (guint8 * dest, guint8 * src, int n,
+vs_scanline_resample_nearest_Y (uint8_t * dest, uint8_t * src, int n,
     int *accumulator, int increment)
 {
   int acc = *accumulator;
@@ -63,7 +62,7 @@ vs_scanline_resample_nearest_Y (guint8 * dest, guint8 * src, int n,
 }
 
 void
-vs_scanline_resample_linear_Y (guint8 * dest, guint8 * src, int n,
+vs_scanline_resample_linear_Y (uint8_t * dest, uint8_t * src, int n,
     int *accumulator, int increment)
 {
   uint32_t vals[2];
@@ -77,28 +76,19 @@ vs_scanline_resample_linear_Y (guint8 * dest, guint8 * src, int n,
 }
 
 void
-vs_scanline_merge_linear_Y (guint8 * dest, guint8 * src1, guint8 * src2,
+vs_scanline_merge_linear_Y (uint8_t * dest, uint8_t * src1, uint8_t * src2,
     int n, int x)
 {
-  /* FIXME after liboil-0.3.7 is released */
-#ifdef oil_merge_linear_u8
   uint32_t value = x >> 8;
 
   oil_merge_linear_u8 (dest, src1, src2, &value, n);
-#else
-  int i;
-
-  for (i = 0; i < n; i++) {
-    dest[i] = (src1[i] * (65536 - x) + src2[i] * x) >> 16;
-  }
-#endif
 }
 
 
 /* RGBA */
 
 void
-vs_scanline_downsample_RGBA (guint8 * dest, guint8 * src, int n)
+vs_scanline_downsample_RGBA (uint8_t * dest, uint8_t * src, int n)
 {
   int i;
 
@@ -111,7 +101,7 @@ vs_scanline_downsample_RGBA (guint8 * dest, guint8 * src, int n)
 }
 
 void
-vs_scanline_resample_nearest_RGBA (guint8 * dest, guint8 * src, int n,
+vs_scanline_resample_nearest_RGBA (uint8_t * dest, uint8_t * src, int n,
     int *accumulator, int increment)
 {
   int acc = *accumulator;
@@ -134,7 +124,7 @@ vs_scanline_resample_nearest_RGBA (guint8 * dest, guint8 * src, int n,
 }
 
 void
-vs_scanline_resample_linear_RGBA (guint8 * dest, guint8 * src, int n,
+vs_scanline_resample_linear_RGBA (uint8_t * dest, uint8_t * src, int n,
     int *accumulator, int increment)
 {
   uint32_t vals[2];
@@ -142,26 +132,26 @@ vs_scanline_resample_linear_RGBA (guint8 * dest, guint8 * src, int n,
   vals[0] = *accumulator;
   vals[1] = increment;
 
-  oil_resample_linear_argb ((guint32 *) dest, (guint32 *) src, n, vals);
+  oil_resample_linear_argb ((uint32_t *) dest, (uint32_t *) src, n, vals);
 
   *accumulator = vals[0];
 }
 
 void
-vs_scanline_merge_linear_RGBA (guint8 * dest, guint8 * src1, guint8 * src2,
+vs_scanline_merge_linear_RGBA (uint8_t * dest, uint8_t * src1, uint8_t * src2,
     int n, int x)
 {
   uint32_t value = x >> 8;
 
-  oil_merge_linear_argb ((guint32 *) dest, (guint32 *) src1, (guint32 *) src2,
-      &value, n);
+  oil_merge_linear_argb ((uint32_t *) dest, (uint32_t *) src1,
+      (uint32_t *) src2, &value, n);
 }
 
 
 /* RGB */
 
 void
-vs_scanline_downsample_RGB (guint8 * dest, guint8 * src, int n)
+vs_scanline_downsample_RGB (uint8_t * dest, uint8_t * src, int n)
 {
   int i;
 
@@ -173,7 +163,7 @@ vs_scanline_downsample_RGB (guint8 * dest, guint8 * src, int n)
 }
 
 void
-vs_scanline_resample_nearest_RGB (guint8 * dest, guint8 * src, int n,
+vs_scanline_resample_nearest_RGB (uint8_t * dest, uint8_t * src, int n,
     int *accumulator, int increment)
 {
   int acc = *accumulator;
@@ -195,7 +185,7 @@ vs_scanline_resample_nearest_RGB (guint8 * dest, guint8 * src, int n,
 }
 
 void
-vs_scanline_resample_linear_RGB (guint8 * dest, guint8 * src, int n,
+vs_scanline_resample_linear_RGB (uint8_t * dest, uint8_t * src, int n,
     int *accumulator, int increment)
 {
   int acc = *accumulator;
@@ -217,25 +207,12 @@ vs_scanline_resample_linear_RGB (guint8 * dest, guint8 * src, int n,
 }
 
 void
-vs_scanline_merge_linear_RGB (guint8 * dest, guint8 * src1, guint8 * src2,
+vs_scanline_merge_linear_RGB (uint8_t * dest, uint8_t * src1, uint8_t * src2,
     int n, int x)
 {
-#ifdef oil_merge_linear_u8
   uint32_t value = x >> 8;
 
   oil_merge_linear_u8 (dest, src1, src2, &value, n * 3);
-#else
-  int i;
-
-  for (i = 0; i < n; i++) {
-    dest[3 * i + 0] =
-        (src1[3 * i + 0] * (65536 - x) + src2[3 * i + 0] * x) >> 16;
-    dest[3 * i + 1] =
-        (src1[3 * i + 1] * (65536 - x) + src2[3 * i + 1] * x) >> 16;
-    dest[3 * i + 2] =
-        (src1[3 * i + 2] * (65536 - x) + src2[3 * i + 2] * x) >> 16;
-  }
-#endif
 }
 
 
@@ -245,7 +222,7 @@ vs_scanline_merge_linear_RGB (guint8 * dest, guint8 * src1, guint8 * src2,
 /* increment is per Y pixel */
 
 void
-vs_scanline_downsample_YUYV (guint8 * dest, guint8 * src, int n)
+vs_scanline_downsample_YUYV (uint8_t * dest, uint8_t * src, int n)
 {
   int i;
 
@@ -258,7 +235,7 @@ vs_scanline_downsample_YUYV (guint8 * dest, guint8 * src, int n)
 }
 
 void
-vs_scanline_resample_nearest_YUYV (guint8 * dest, guint8 * src, int n,
+vs_scanline_resample_nearest_YUYV (uint8_t * dest, uint8_t * src, int n,
     int *accumulator, int increment)
 {
   int acc = *accumulator;
@@ -288,7 +265,7 @@ vs_scanline_resample_nearest_YUYV (guint8 * dest, guint8 * src, int n,
 }
 
 void
-vs_scanline_resample_linear_YUYV (guint8 * dest, guint8 * src, int n,
+vs_scanline_resample_linear_YUYV (uint8_t * dest, uint8_t * src, int n,
     int *accumulator, int increment)
 {
   int acc = *accumulator;
@@ -320,7 +297,7 @@ vs_scanline_resample_linear_YUYV (guint8 * dest, guint8 * src, int n,
 }
 
 void
-vs_scanline_merge_linear_YUYV (guint8 * dest, guint8 * src1, guint8 * src2,
+vs_scanline_merge_linear_YUYV (uint8_t * dest, uint8_t * src1, uint8_t * src2,
     int n, int x)
 {
   int i;
@@ -344,7 +321,7 @@ vs_scanline_merge_linear_YUYV (guint8 * dest, guint8 * src1, guint8 * src2,
 /* increment is per Y pixel */
 
 void
-vs_scanline_downsample_UYVY (guint8 * dest, guint8 * src, int n)
+vs_scanline_downsample_UYVY (uint8_t * dest, uint8_t * src, int n)
 {
   int i;
 
@@ -357,7 +334,7 @@ vs_scanline_downsample_UYVY (guint8 * dest, guint8 * src, int n)
 }
 
 void
-vs_scanline_resample_nearest_UYVY (guint8 * dest, guint8 * src, int n,
+vs_scanline_resample_nearest_UYVY (uint8_t * dest, uint8_t * src, int n,
     int *accumulator, int increment)
 {
   int acc = *accumulator;
@@ -387,7 +364,7 @@ vs_scanline_resample_nearest_UYVY (guint8 * dest, guint8 * src, int n,
 }
 
 void
-vs_scanline_resample_linear_UYVY (guint8 * dest, guint8 * src, int n,
+vs_scanline_resample_linear_UYVY (uint8_t * dest, uint8_t * src, int n,
     int *accumulator, int increment)
 {
   int acc = *accumulator;
@@ -419,19 +396,19 @@ vs_scanline_resample_linear_UYVY (guint8 * dest, guint8 * src, int n,
 }
 
 void
-vs_scanline_merge_linear_UYVY (guint8 * dest, guint8 * src1, guint8 * src2,
+vs_scanline_merge_linear_UYVY (uint8_t * dest, uint8_t * src1, uint8_t * src2,
     int n, int x)
 {
   uint32_t value = x >> 8;
 
-  oil_merge_linear_argb ((guint32 *) dest, (guint32 *) src1, (guint32 *) src2,
-      &value, n);
+  oil_merge_linear_argb ((uint32_t *) dest, (uint32_t *) src1,
+      (uint32_t *) src2, &value, n);
 }
 
 
 /* RGB565 */
 
-/* note that src and dest are guint16, and thus endian dependent */
+/* note that src and dest are uint16_t, and thus endian dependent */
 
 #define RGB565_R(x) (((x)&0xf800)>>8 | ((x)&0xf800)>>13)
 #define RGB565_G(x) (((x)&0x07e0)>>3 | ((x)&0x07e0)>>9)
@@ -442,10 +419,10 @@ vs_scanline_merge_linear_UYVY (guint8 * dest, guint8 * src1, guint8 * src2,
 
 
 void
-vs_scanline_downsample_RGB565 (guint8 * dest_u8, guint8 * src_u8, int n)
+vs_scanline_downsample_RGB565 (uint8_t * dest_u8, uint8_t * src_u8, int n)
 {
-  guint16 *dest = (guint16 *) dest_u8;
-  guint16 *src = (guint16 *) src_u8;
+  uint16_t *dest = (uint16_t *) dest_u8;
+  uint16_t *src = (uint16_t *) src_u8;
   int i;
 
   for (i = 0; i < n; i++) {
@@ -457,11 +434,11 @@ vs_scanline_downsample_RGB565 (guint8 * dest_u8, guint8 * src_u8, int n)
 }
 
 void
-vs_scanline_resample_nearest_RGB565 (guint8 * dest_u8, guint8 * src_u8, int n,
+vs_scanline_resample_nearest_RGB565 (uint8_t * dest_u8, uint8_t * src_u8, int n,
     int *accumulator, int increment)
 {
-  guint16 *dest = (guint16 *) dest_u8;
-  guint16 *src = (guint16 *) src_u8;
+  uint16_t *dest = (uint16_t *) dest_u8;
+  uint16_t *src = (uint16_t *) src_u8;
   int acc = *accumulator;
   int i;
   int j;
@@ -479,11 +456,11 @@ vs_scanline_resample_nearest_RGB565 (guint8 * dest_u8, guint8 * src_u8, int n,
 }
 
 void
-vs_scanline_resample_linear_RGB565 (guint8 * dest_u8, guint8 * src_u8, int n,
+vs_scanline_resample_linear_RGB565 (uint8_t * dest_u8, uint8_t * src_u8, int n,
     int *accumulator, int increment)
 {
-  guint16 *dest = (guint16 *) dest_u8;
-  guint16 *src = (guint16 *) src_u8;
+  uint16_t *dest = (uint16_t *) dest_u8;
+  uint16_t *src = (uint16_t *) src_u8;
   int acc = *accumulator;
   int i;
   int j;
@@ -504,12 +481,12 @@ vs_scanline_resample_linear_RGB565 (guint8 * dest_u8, guint8 * src_u8, int n,
 }
 
 void
-vs_scanline_merge_linear_RGB565 (guint8 * dest_u8, guint8 * src1_u8,
-    guint8 * src2_u8, int n, int x)
+vs_scanline_merge_linear_RGB565 (uint8_t * dest_u8, uint8_t * src1_u8,
+    uint8_t * src2_u8, int n, int x)
 {
-  guint16 *dest = (guint16 *) dest_u8;
-  guint16 *src1 = (guint16 *) src1_u8;
-  guint16 *src2 = (guint16 *) src2_u8;
+  uint16_t *dest = (uint16_t *) dest_u8;
+  uint16_t *src1 = (uint16_t *) src1_u8;
+  uint16_t *src2 = (uint16_t *) src2_u8;
   int i;
 
   for (i = 0; i < n; i++) {
@@ -523,7 +500,7 @@ vs_scanline_merge_linear_RGB565 (guint8 * dest_u8, guint8 * src1_u8,
 
 /* RGB555 */
 
-/* note that src and dest are guint16, and thus endian dependent */
+/* note that src and dest are uint16_t, and thus endian dependent */
 
 #define RGB555_R(x) (((x)&0x7c00)>>8 | ((x)&0x7c00)>>13)
 #define RGB555_G(x) (((x)&0x03e0)>>3 | ((x)&0x03e0)>>9)
@@ -534,10 +511,10 @@ vs_scanline_merge_linear_RGB565 (guint8 * dest_u8, guint8 * src1_u8,
 
 
 void
-vs_scanline_downsample_RGB555 (guint8 * dest_u8, guint8 * src_u8, int n)
+vs_scanline_downsample_RGB555 (uint8_t * dest_u8, uint8_t * src_u8, int n)
 {
-  guint16 *dest = (guint16 *) dest_u8;
-  guint16 *src = (guint16 *) src_u8;
+  uint16_t *dest = (uint16_t *) dest_u8;
+  uint16_t *src = (uint16_t *) src_u8;
   int i;
 
   for (i = 0; i < n; i++) {
@@ -549,11 +526,11 @@ vs_scanline_downsample_RGB555 (guint8 * dest_u8, guint8 * src_u8, int n)
 }
 
 void
-vs_scanline_resample_nearest_RGB555 (guint8 * dest_u8, guint8 * src_u8, int n,
+vs_scanline_resample_nearest_RGB555 (uint8_t * dest_u8, uint8_t * src_u8, int n,
     int *accumulator, int increment)
 {
-  guint16 *dest = (guint16 *) dest_u8;
-  guint16 *src = (guint16 *) src_u8;
+  uint16_t *dest = (uint16_t *) dest_u8;
+  uint16_t *src = (uint16_t *) src_u8;
   int acc = *accumulator;
   int i;
   int j;
@@ -571,11 +548,11 @@ vs_scanline_resample_nearest_RGB555 (guint8 * dest_u8, guint8 * src_u8, int n,
 }
 
 void
-vs_scanline_resample_linear_RGB555 (guint8 * dest_u8, guint8 * src_u8, int n,
+vs_scanline_resample_linear_RGB555 (uint8_t * dest_u8, uint8_t * src_u8, int n,
     int *accumulator, int increment)
 {
-  guint16 *dest = (guint16 *) dest_u8;
-  guint16 *src = (guint16 *) src_u8;
+  uint16_t *dest = (uint16_t *) dest_u8;
+  uint16_t *src = (uint16_t *) src_u8;
   int acc = *accumulator;
   int i;
   int j;
@@ -596,12 +573,12 @@ vs_scanline_resample_linear_RGB555 (guint8 * dest_u8, guint8 * src_u8, int n,
 }
 
 void
-vs_scanline_merge_linear_RGB555 (guint8 * dest_u8, guint8 * src1_u8,
-    guint8 * src2_u8, int n, int x)
+vs_scanline_merge_linear_RGB555 (uint8_t * dest_u8, uint8_t * src1_u8,
+    uint8_t * src2_u8, int n, int x)
 {
-  guint16 *dest = (guint16 *) dest_u8;
-  guint16 *src1 = (guint16 *) src1_u8;
-  guint16 *src2 = (guint16 *) src2_u8;
+  uint16_t *dest = (uint16_t *) dest_u8;
+  uint16_t *src1 = (uint16_t *) src1_u8;
+  uint16_t *src2 = (uint16_t *) src2_u8;
   int i;
 
   for (i = 0; i < n; i++) {

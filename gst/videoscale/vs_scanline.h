@@ -28,46 +28,43 @@
 #ifndef __VS_SCANLINE_H__
 #define __VS_SCANLINE_H__
 
-#include <glib.h>
+#include <stdint.h>
 
-G_BEGIN_DECLS
+void vs_scanline_downsample_Y (uint8_t *dest, uint8_t *src, int n);
+void vs_scanline_resample_nearest_Y (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_resample_linear_Y (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_merge_linear_Y (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_Y (guint8 *dest, guint8 *src, int n);
-void vs_scanline_resample_nearest_Y (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_Y (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_Y (guint8 *dest, guint8 *src1, guint8 *src2, int n, int x);
+void vs_scanline_downsample_RGBA (uint8_t *dest, uint8_t *src, int n);
+void vs_scanline_resample_nearest_RGBA (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_resample_linear_RGBA (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_merge_linear_RGBA (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_RGBA (guint8 *dest, guint8 *src, int n);
-void vs_scanline_resample_nearest_RGBA (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_RGBA (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_RGBA (guint8 *dest, guint8 *src1, guint8 *src2, int n, int x);
+void vs_scanline_downsample_RGB (uint8_t *dest, uint8_t *src, int n);
+void vs_scanline_resample_nearest_RGB (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_resample_linear_RGB (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_merge_linear_RGB (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_RGB (guint8 *dest, guint8 *src, int n);
-void vs_scanline_resample_nearest_RGB (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_RGB (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_RGB (guint8 *dest, guint8 *src1, guint8 *src2, int n, int x);
+void vs_scanline_downsample_YUYV (uint8_t *dest, uint8_t *src, int n);
+void vs_scanline_resample_nearest_YUYV (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_resample_linear_YUYV (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_merge_linear_YUYV (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_YUYV (guint8 *dest, guint8 *src, int n);
-void vs_scanline_resample_nearest_YUYV (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_YUYV (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_YUYV (guint8 *dest, guint8 *src1, guint8 *src2, int n, int x);
+void vs_scanline_downsample_UYVY (uint8_t *dest, uint8_t *src, int n);
+void vs_scanline_resample_nearest_UYVY (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_resample_linear_UYVY (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_merge_linear_UYVY (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_UYVY (guint8 *dest, guint8 *src, int n);
-void vs_scanline_resample_nearest_UYVY (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_UYVY (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_UYVY (guint8 *dest, guint8 *src1, guint8 *src2, int n, int x);
+void vs_scanline_downsample_RGB565 (uint8_t *dest, uint8_t *src, int n);
+void vs_scanline_resample_nearest_RGB565 (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_resample_linear_RGB565 (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_merge_linear_RGB565 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_RGB565 (guint8 *dest, guint8 *src, int n);
-void vs_scanline_resample_nearest_RGB565 (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_RGB565 (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_RGB565 (guint8 *dest, guint8 *src1, guint8 *src2, int n, int x);
+void vs_scanline_downsample_RGB555 (uint8_t *dest, uint8_t *src, int n);
+void vs_scanline_resample_nearest_RGB555 (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_resample_linear_RGB555 (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);
+void vs_scanline_merge_linear_RGB555 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_RGB555 (guint8 *dest, guint8 *src, int n);
-void vs_scanline_resample_nearest_RGB555 (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_RGB555 (guint8 *dest, guint8 *src, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_RGB555 (guint8 *dest, guint8 *src1, guint8 *src2, int n, int x);
-
-G_END_DECLS
 
 #endif
 

@@ -3,7 +3,8 @@ plugin_LTLIBRARIES = libgstvideoscale.la
 libgstvideoscale_la_SOURCES = \
 	gstvideoscale.c \
 	vs_image.c \
-	vs_scanline.c
+	vs_scanline.c \
+	vs_4tap.c
 
 libgstvideoscale_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(LIBOIL_CFLAGS)
 libgstvideoscale_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
@@ -14,4 +15,5 @@ libgstvideoscale_la_LIBADD = \
 noinst_HEADERS = \
 	gstvideoscale.h \
 	vs_image.h \
-	vs_scanline.h
+	vs_scanline.h \
+	vs_4tap.h

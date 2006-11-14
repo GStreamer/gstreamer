@@ -45,12 +45,14 @@ GST_DEBUG_CATEGORY_EXTERN (video_scale_debug);
  * GstVideoScaleMethod:
  * @GST_VIDEO_SCALE_NEAREST: use nearest neighbour scaling (fast and ugly)
  * @GST_VIDEO_SCALE_BILINEAR: use bilinear scaling (slower but prettier).
+ * @GST_VIDEO_SCALE_4TAP: use a 4-tap filter for scaling (slow).
  *
  * The videoscale method to use.
  */
 typedef enum {
   GST_VIDEO_SCALE_NEAREST,
   GST_VIDEO_SCALE_BILINEAR,
+  GST_VIDEO_SCALE_4TAP
 } GstVideoScaleMethod;
 
 typedef struct _GstVideoScale GstVideoScale;

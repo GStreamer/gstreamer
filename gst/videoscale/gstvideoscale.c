@@ -67,6 +67,7 @@
 
 #include "gstvideoscale.h"
 #include "vs_image.h"
+#include "vs_4tap.h"
 
 
 /* debug variable definition */
@@ -141,6 +142,7 @@ gst_video_scale_method_get_type (void)
   static const GEnumValue video_scale_methods[] = {
     {GST_VIDEO_SCALE_NEAREST, "Nearest Neighbour", "nearest-neighbour"},
     {GST_VIDEO_SCALE_BILINEAR, "Bilinear", "bilinear"},
+    {GST_VIDEO_SCALE_4TAP, "4-tap", "4-tap"},
     {0, NULL, NULL},
   };
 
@@ -513,7 +515,7 @@ gst_video_scale_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   if (videoscale->tmp_buf)
     g_free (videoscale->tmp_buf);
 
-  videoscale->tmp_buf = g_malloc (videoscale->dest.stride * 2);
+  videoscale->tmp_buf = g_malloc (videoscale->dest.stride * 4);
 
   /* FIXME: par */
   GST_DEBUG_OBJECT (videoscale, "from=%dx%d, size %d -> to=%dx%d, size %d",
@@ -681,7 +683,7 @@ gst_video_scale_prepare_image (gint format, GstBuffer * buf,
       img_u->pixels = img->pixels + GST_ROUND_UP_2 (img->height) * img->stride;
       img_u->height = GST_ROUND_UP_2 (img->height) / 2;
       img_u->width = GST_ROUND_UP_2 (img->width) / 2;
-      img_u->stride = GST_ROUND_UP_4 (img->stride / 2);
+      img_u->stride = GST_ROUND_UP_4 (img_u->width);
       memcpy (img_v, img_u, sizeof (*img_v));
       img_v->pixels = img_u->pixels + img_u->height * img_u->stride;
       break;
@@ -789,8 +791,6 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
         case GST_VIDEO_SCALE_I420:
         case GST_VIDEO_SCALE_YV12:
           vs_image_scale_linear_Y (dest, src, videoscale->tmp_buf);
-          //memset (dest_u.pixels, 128, dest_u.stride * dest_u.height);
-          //memset (dest_v.pixels, 128, dest_v.stride * dest_v.height);
           vs_image_scale_linear_Y (&dest_u, &src_u, videoscale->tmp_buf);
           vs_image_scale_linear_Y (&dest_v, &src_v, videoscale->tmp_buf);
           break;
@@ -799,6 +799,18 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
           break;
         case GST_VIDEO_SCALE_RGB555:
           vs_image_scale_linear_RGB555 (dest, src, videoscale->tmp_buf);
+          break;
+        default:
+          goto unsupported;
+      }
+      break;
+    case GST_VIDEO_SCALE_4TAP:
+      switch (videoscale->format) {
+        case GST_VIDEO_SCALE_I420:
+        case GST_VIDEO_SCALE_YV12:
+          vs_image_scale_4tap_Y (dest, src, videoscale->tmp_buf);
+          vs_image_scale_4tap_Y (&dest_u, &src_u, videoscale->tmp_buf);
+          vs_image_scale_4tap_Y (&dest_v, &src_v, videoscale->tmp_buf);
           break;
         default:
           goto unsupported;
@@ -879,6 +891,8 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (video_scale_debug, "videoscale", 0,
       "videoscale element");
+
+  vs_4tap_init ();
 
   return TRUE;
 }
