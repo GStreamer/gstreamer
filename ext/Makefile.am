@@ -40,11 +40,11 @@ else
 BZ2_DIR=
 endif
 
-# if USE_CDAUDIO
-# CDAUDIO_DIR=cdaudio
-# else
+if USE_CDAUDIO
+CDAUDIO_DIR=cdaudio
+else
 CDAUDIO_DIR=
-# endif
+endif
 
 # if USE_DIRAC
 # DIRAC_DIR=dirac

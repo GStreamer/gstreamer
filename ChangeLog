@@ -1,5 +1,11 @@
 2006-11-14  Wim Taymans  <wim@fluendo.com>
 
+	* configure.ac:
+	* ext/Makefile.am:
+	Fix cdaudio build.
+
+2006-11-14  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Mark Nauwelaerts <manauw at skynet be>
 
 	* tests/check/Makefile.am:

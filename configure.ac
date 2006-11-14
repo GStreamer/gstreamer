@@ -319,6 +319,14 @@ GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
 #  AC_SUBST(CAIRO_LIBS)
 #])
 
+dnl *** cdaudio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_CDAUDIO, true)
+GST_CHECK_FEATURE(CDAUDIO, [cdaudio], cdaudio, [
+  GST_CHECK_CONFIGPROG(CDAUDIO, libcdaudio-config)
+  AC_SUBST(CDAUDIO_CFLAGS)
+  AC_SUBST(CDAUDIO_LIBS)
+])
+
 dnl **** DirectFB ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
 GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
