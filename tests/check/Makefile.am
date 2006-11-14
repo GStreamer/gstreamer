@@ -54,7 +54,8 @@ check_PROGRAMS = \
 	$(check_mpeg2enc)  \
 	elements/rganalysis \
 	elements/videocrop \
-	$(check_wavpack)
+	$(check_wavpack)   \
+	elements/y4menc
 
 TESTS = $(check_PROGRAMS)
 
