@@ -2051,15 +2051,21 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
 {
   gst_avi_index_entry *entry;
   avi_stream_context *stream;
-  guint32 avih_init_frames;
-  guint32 init_frames;
   gint i;
   GList *one;
+
+#if 0
+  guint32 avih_init_frames;
+  guint32 init_frames;
   GstFormat fmt = GST_FORMAT_TIME;
+#endif
   gint64 delay = 0;
 
   GST_LOG_OBJECT (avi, "Starting index massage");
 
+  /* the init_frames have no real meaning except to indicate how much
+   * audio preroll there is to fill up the audio device */
+#if 0
   avih_init_frames = avi->avih->init_frames;
 
   /* init frames, add constant delay for each index entry */
@@ -2086,6 +2092,7 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
         entry->ts += delay;
     }
   }
+#endif
 
   GST_LOG_OBJECT (avi, "I'm now going to cut large chunks into smaller pieces");
 

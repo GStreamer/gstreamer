@@ -1,3 +1,9 @@
+2006-11-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_massage_index):
+	Disable init_frames delay timestamp adjustment, it does not
+	seem to be needed at all. Fixes #369621.
+
 2006-11-13  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Mark Nauwelaerts  <manauw at skynet be>
