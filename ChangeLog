@@ -1,5 +1,7 @@
 2006-11-14  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
 	* ext/lame/gstlame.c: (gst_lame_sink_event), (gst_lame_chain),
 	(gst_lame_change_state):
 	* ext/lame/gstlame.h:
