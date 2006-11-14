@@ -1,5 +1,7 @@
 2006-11-14  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
 	* tests/check/Makefile.am:
 	* tests/check/elements/y4menc.c: (setup_y4menc), (cleanup_y4menc),
 	(GST_START_TEST), (y4menc_suite), (main):
