@@ -28,7 +28,7 @@
 #ifndef __VS_SCANLINE_H__
 #define __VS_SCANLINE_H__
 
-#include <stdint.h>
+#include <liboil/liboil-stdint.h>
 
 void vs_scanline_downsample_Y (uint8_t *dest, uint8_t *src, int n);
 void vs_scanline_resample_nearest_Y (uint8_t *dest, uint8_t *src, int n, int *accumulator, int increment);

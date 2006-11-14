@@ -1,5 +1,18 @@
 2006-11-14  David Schleef  <ds@schleef.org>
 
+	* configure.ac:
+	  Bump liboil requirement to 0.3.8.
+	* gst-libs/gst/riff/riff-media.c:
+	  Add Dirac fourcc.
+	* gst/videoscale/vs_image.h:
+	* gst/videoscale/vs_scanline.h:
+	  Use liboil's stdint.h.
+	* gst/videotestsrc/videotestsrc.c:
+	  Remove liboil related ifdef's, since they aren't needed now, and
+	  won't work with future versions.
+
+2006-11-14  David Schleef  <ds@schleef.org>
+
 	* gst/videoscale/Makefile.am:
 	* gst/videoscale/gstvideoscale.c:
 	* gst/videoscale/gstvideoscale.h:

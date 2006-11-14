@@ -215,10 +215,10 @@ dnl GLib is required
 GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
-PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.6, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.8, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 if test "x$HAVE_LIBOIL" != "xyes"
 then
-  AC_ERROR([liboil-0.3.6 or later is required])
+  AC_ERROR([liboil-0.3.8 or later is required])
 fi
 
 dnl checks for gstreamer

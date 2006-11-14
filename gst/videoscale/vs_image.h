@@ -28,7 +28,7 @@
 #ifndef __VS_IMAGE_H__
 #define __VS_IMAGE_H__
 
-#include <stdint.h>
+#include <liboil/liboil-stdint.h>
 
 typedef struct _VSImage VSImage;
 

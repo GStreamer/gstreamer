@@ -577,6 +577,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("VMWare NC Video");
       break;
 
+    case GST_MAKE_FOURCC ('d', 'r', 'a', 'c'):
+      caps = gst_caps_new_simple ("video/x-dirac", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Dirac");
+      break;
+
     default:
       GST_WARNING ("Unknown video fourcc %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));

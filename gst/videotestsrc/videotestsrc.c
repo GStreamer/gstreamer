@@ -916,7 +916,6 @@ paint_setup_I420 (paintinfo * p, unsigned char *dest)
 static void
 paint_hline_I420 (paintinfo * p, int x, int y, int w)
 {
-#ifdef oil_splat_u8_ns
   int x1 = x / 2;
   int x2 = (x + w) / 2;
   int offset = y * p->ystride;
@@ -925,7 +924,6 @@ paint_hline_I420 (paintinfo * p, int x, int y, int w)
   oil_splat_u8_ns (p->yp + offset + x, &p->color->Y, w);
   oil_splat_u8_ns (p->up + offset1 + x1, &p->color->U, x2 - x1);
   oil_splat_u8_ns (p->vp + offset1 + x1, &p->color->V, x2 - x1);
-#endif
 }
 
 static void
@@ -1045,7 +1043,6 @@ paint_setup_Y41B (paintinfo * p, unsigned char *dest)
 static void
 paint_hline_Y41B (paintinfo * p, int x, int y, int w)
 {
-#ifdef oil_splat_u8_ns
   int x1 = x / 4;
   int x2 = (x + w) / 4;
   int offset = y * p->ystride;
@@ -1054,7 +1051,6 @@ paint_hline_Y41B (paintinfo * p, int x, int y, int w)
   oil_splat_u8_ns (p->yp + offset + x, &p->color->Y, w);
   oil_splat_u8_ns (p->up + offset1 + x1, &p->color->U, x2 - x1);
   oil_splat_u8_ns (p->vp + offset1 + x1, &p->color->V, x2 - x1);
-#endif
 }
 
 static void
@@ -1072,7 +1068,6 @@ paint_setup_Y42B (paintinfo * p, unsigned char *dest)
 static void
 paint_hline_Y42B (paintinfo * p, int x, int y, int w)
 {
-#ifdef oil_splat_u8_ns
   int x1 = x / 2;
   int x2 = (x + w) / 2;
   int offset = y * p->ystride;
@@ -1081,7 +1076,6 @@ paint_hline_Y42B (paintinfo * p, int x, int y, int w)
   oil_splat_u8_ns (p->yp + offset + x, &p->color->Y, w);
   oil_splat_u8_ns (p->up + offset1 + x1, &p->color->U, x2 - x1);
   oil_splat_u8_ns (p->vp + offset1 + x1, &p->color->V, x2 - x1);
-#endif
 }
 
 static void
@@ -1096,11 +1090,9 @@ paint_setup_Y800 (paintinfo * p, unsigned char *dest)
 static void
 paint_hline_Y800 (paintinfo * p, int x, int y, int w)
 {
-#ifdef oil_splat_u8_ns
   int offset = y * p->ystride;
 
   oil_splat_u8_ns (p->yp + offset + x, &p->color->Y, w);
-#endif
 }
 
 #if 0
@@ -1182,7 +1174,6 @@ paint_setup_YUV9 (paintinfo * p, unsigned char *dest)
 static void
 paint_hline_YUV9 (paintinfo * p, int x, int y, int w)
 {
-#ifdef oil_splat_u8_ns
   int x1 = x / 4;
   int x2 = (x + w) / 4;
   int offset = y * p->ystride;
@@ -1191,7 +1182,6 @@ paint_hline_YUV9 (paintinfo * p, int x, int y, int w)
   oil_splat_u8_ns (p->yp + offset + x, &p->color->Y, w);
   oil_splat_u8_ns (p->up + offset1 + x1, &p->color->U, x2 - x1);
   oil_splat_u8_ns (p->vp + offset1 + x1, &p->color->V, x2 - x1);
-#endif
 }
 
 static void
