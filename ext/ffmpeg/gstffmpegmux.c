@@ -156,14 +156,19 @@ gst_ffmpegmux_base_init (gpointer g_class)
   /* pad templates */
   srctempl = gst_pad_template_new ("src", GST_PAD_SRC,
       GST_PAD_ALWAYS, params->srccaps);
-  audiosinktempl = gst_pad_template_new ("audio_%d",
-      GST_PAD_SINK, GST_PAD_REQUEST, params->audiosinkcaps);
-  videosinktempl = gst_pad_template_new ("video_%d",
-      GST_PAD_SINK, GST_PAD_REQUEST, params->videosinkcaps);
-
   gst_element_class_add_pad_template (element_class, srctempl);
-  gst_element_class_add_pad_template (element_class, videosinktempl);
-  gst_element_class_add_pad_template (element_class, audiosinktempl);
+
+  if (params->audiosinkcaps) {
+    audiosinktempl = gst_pad_template_new ("audio_%d",
+        GST_PAD_SINK, GST_PAD_REQUEST, params->audiosinkcaps);
+    gst_element_class_add_pad_template (element_class, audiosinktempl);
+  }
+
+  if (params->videosinkcaps) {
+    videosinktempl = gst_pad_template_new ("video_%d",
+        GST_PAD_SINK, GST_PAD_REQUEST, params->videosinkcaps);
+    gst_element_class_add_pad_template (element_class, videosinktempl);
+  }
 
   klass->in_plugin = params->in_plugin;
 }

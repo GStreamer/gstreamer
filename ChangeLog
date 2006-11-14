@@ -1,3 +1,15 @@
+2006-11-14  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	(gst_ffmpeg_formatid_get_codecids), (gst_ffmpeg_caps_to_codecid):
+	  Add mmf to _get_codecids, so we can use the mmf muxer.
+	  Use "audio/x-adpcm" rather than the dubious looking "x-adpcm" as our
+	  caps type for the adpcm variants.
+
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_base_init):
+	  Allow muxers that allow either only audio or only video, needed for
+	  mmf (audio only).
+
 2006-10-26  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_getcaps),

@@ -1779,6 +1779,11 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
 
     *video_codec_list = mov_video_list;
     *audio_codec_list = mov_audio_list;    
+  } else if (!strcmp (format_name, "mmf")) {
+    static enum CodecID mmf_audio_list[] = { 
+      CODEC_ID_ADPCM_YAMAHA};
+    *video_codec_list = NULL;
+    *audio_codec_list = mmf_audio_list;
   } else {
     GST_LOG ("Format %s not found", format_name);
     return FALSE;
@@ -2089,7 +2094,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       id = CODEC_ID_FFV1;
       video = TRUE;
     }
-  } else if (!strcmp (mimetype, "x-adpcm")) {
+  } else if (!strcmp (mimetype, "audio/x-adpcm")) {
     const gchar *layout;
 
     layout = gst_structure_get_string (structure, "layout");
