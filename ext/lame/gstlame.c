@@ -898,6 +898,21 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
         size = lame_encode_flush (lame->lgf, GST_BUFFER_DATA (buf), 7200);
 
         if (size > 0) {
+          gint64 duration;
+
+          duration = gst_util_uint64_scale_int (size, GST_SECOND,
+              2 * lame->samplerate * lame->num_channels);
+
+          if (lame->last_ts == GST_CLOCK_TIME_NONE) {
+            lame->last_ts = lame->eos_ts;
+            lame->last_duration = duration;
+          } else {
+            lame->last_duration += duration;
+          }
+
+          GST_BUFFER_TIMESTAMP (buf) = lame->last_ts;
+          GST_BUFFER_DURATION (buf) = lame->last_duration;
+          lame->last_ts = GST_CLOCK_TIME_NONE;
           GST_BUFFER_SIZE (buf) = size;
           GST_DEBUG_OBJECT (lame, "pushing final packet of %u bytes", size);
           gst_buffer_set_caps (buf, GST_PAD_CAPS (lame->srcpad));
@@ -1027,6 +1042,10 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG_OBJECT (lame, "flow return: %s", gst_flow_get_name (result));
     }
 
+    if (GST_CLOCK_TIME_IS_VALID (lame->last_ts))
+      lame->eos_ts = lame->last_ts + lame->last_duration;
+    else
+      lame->eos_ts = GST_CLOCK_TIME_NONE;
     lame->last_ts = GST_CLOCK_TIME_NONE;
   } else {
     g_free (mp3_data);
@@ -1148,6 +1167,7 @@ gst_lame_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       lame->last_ts = GST_CLOCK_TIME_NONE;
+      lame->eos_ts = GST_CLOCK_TIME_NONE;
       break;
     default:
       break;
