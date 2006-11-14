@@ -3431,14 +3431,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     if (compression_id == 0xfffe)
       stream->sampled = TRUE;
 
+    /* first assume uncompressed audio */
+    stream->bytes_per_sample = samplesize / 8;
+    stream->samples_per_frame = stream->n_channels;
+    stream->bytes_per_frame = stream->n_channels * stream->bytes_per_sample;
+    stream->samples_per_packet = stream->samples_per_frame;
+    stream->bytes_per_packet = stream->bytes_per_sample;
+
     offset = 52;
     if (version == 0x00000000) {
-      stream->bytes_per_sample = samplesize / 8;
-      stream->samples_per_frame = stream->n_channels;
-      stream->bytes_per_frame = stream->n_channels * stream->bytes_per_sample;
-      stream->samples_per_packet = stream->samples_per_frame;
-      stream->bytes_per_packet = stream->bytes_per_sample;
-
       /* Yes, these have to be hard-coded */
       if (fourcc == GST_MAKE_FOURCC ('M', 'A', 'C', '6')) {
         stream->samples_per_packet = 6;
@@ -3470,19 +3471,21 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         stream->samples_per_frame = 1 * stream->n_channels;
       }
     } else if (version == 0x00010000) {
-      stream->samples_per_packet = QTDEMUX_GUINT32_GET (stsd_data + offset);
-      stream->bytes_per_packet = QTDEMUX_GUINT32_GET (stsd_data + offset + 4);
-      stream->bytes_per_frame = QTDEMUX_GUINT32_GET (stsd_data + offset + 8);
-      stream->bytes_per_sample = QTDEMUX_GUINT32_GET (stsd_data + offset + 12);
-
-      GST_LOG ("samples/packet:   %d", stream->samples_per_packet);
-      GST_LOG ("bytes/packet:     %d", stream->bytes_per_packet);
-      GST_LOG ("bytes/frame:      %d", stream->bytes_per_frame);
-      GST_LOG ("bytes/sample:     %d", stream->bytes_per_sample);
-
       if (fourcc != GST_MAKE_FOURCC ('t', 'w', 'o', 's') &&
           fourcc != GST_MAKE_FOURCC ('s', 'o', 'w', 't') &&
           fourcc != GST_MAKE_FOURCC ('r', 'a', 'w', ' ')) {
+        /* only parse extra decoding config for non-pcm audio */
+        stream->samples_per_packet = QTDEMUX_GUINT32_GET (stsd_data + offset);
+        stream->bytes_per_packet = QTDEMUX_GUINT32_GET (stsd_data + offset + 4);
+        stream->bytes_per_frame = QTDEMUX_GUINT32_GET (stsd_data + offset + 8);
+        stream->bytes_per_sample =
+            QTDEMUX_GUINT32_GET (stsd_data + offset + 12);
+
+        GST_LOG ("samples/packet:   %d", stream->samples_per_packet);
+        GST_LOG ("bytes/packet:     %d", stream->bytes_per_packet);
+        GST_LOG ("bytes/frame:      %d", stream->bytes_per_frame);
+        GST_LOG ("bytes/sample:     %d", stream->bytes_per_sample);
+
         if (!stream->sampled) {
           stream->samples_per_frame = (stream->bytes_per_frame /
               stream->bytes_per_packet) * stream->samples_per_packet;
