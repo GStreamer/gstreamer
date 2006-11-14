@@ -285,6 +285,7 @@ DIST_SUBDIRS= \
 	alsaspdif \
 	amrwb \
 	bz2 \
+	cdaudio \
 	directfb \
 	faac \
 	faad \

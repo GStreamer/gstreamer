@@ -1,5 +1,10 @@
 2006-11-14  Wim Taymans  <wim@fluendo.com>
 
+	* ext/Makefile.am:
+	dist cdaudio dir.
+
+2006-11-14  Wim Taymans  <wim@fluendo.com>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	Fix cdaudio build.
