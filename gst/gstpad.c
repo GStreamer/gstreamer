@@ -3878,7 +3878,7 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   g_return_val_if_fail (event != NULL, FALSE);
   g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
 
-  GST_LOG_OBJECT (pad, "event:%s", GST_EVENT_TYPE_NAME (event));
+  GST_LOG_OBJECT (pad, "event: %s", GST_EVENT_TYPE_NAME (event));
 
   GST_OBJECT_LOCK (pad);
 
@@ -3936,8 +3936,8 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
 
   result = gst_pad_send_event (peerpad, event);
 
-  GST_LOG_OBJECT (pad, "sent event %s to peerpad %" GST_PTR_FORMAT,
-      GST_EVENT_TYPE_NAME (event), peerpad);
+  /* Note: we gave away ownership of the event at this point */
+  GST_LOG_OBJECT (pad, "sent event to peerpad %" GST_PTR_FORMAT, peerpad);
   gst_object_unref (peerpad);
 
   return result;

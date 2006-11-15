@@ -1,3 +1,9 @@
+2006-11-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstpad.c: (gst_pad_push_event):
+	  Can't access event structure after giving away ownership of
+	  the event.
+
 2006-11-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/ensonic/embedded.txt:
@@ -22,7 +28,7 @@
 
 2006-11-10  Tim-Philipp Müller  <tim at centricular dot net>
 
-	Patch by: Sergey Scobich  <sergery.scobich at gmail com>
+	Patch by: Sergey Scobich  <sergey.scobich at gmail com>
 
 	* win32/common/libgstreamer.def:
 	  Add two missing symbols (#366492).
