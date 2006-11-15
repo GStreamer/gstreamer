@@ -23,7 +23,7 @@
  * SECTION:element-wavpackenc
  *
  * <refsect2>
- * Wavpackenc encodes raw audio into a framed Wavpack stream.
+ * WavpackEnc encodes raw audio into a framed Wavpack stream.
  * <ulink url="http://www.wavpack.com/">Wavpack</ulink> is an open-source
  * audio codec that features both lossless and lossy encoding.
  * <title>Example launch line</title>
@@ -148,7 +148,15 @@ static GstStaticPadTemplate wvcsrc_factory = GST_STATIC_PAD_TEMPLATE ("wvcsrc",
     GST_STATIC_CAPS ("audio/x-wavpack-correction, " "framed = (boolean) TRUE")
     );
 
-#define DEFAULT_MODE 2
+enum
+{
+  GST_WAVPACK_ENC_MODE_VERY_FAST = 0,
+  GST_WAVPACK_ENC_MODE_FAST,
+  GST_WAVPACK_ENC_MODE_DEFAULT,
+  GST_WAVPACK_ENC_MODE_HIGH,
+  GST_WAVPACK_ENC_MODE_VERY_HIGH
+};
+
 #define GST_TYPE_WAVPACK_ENC_MODE (gst_wavpack_enc_mode_get_type ())
 static GType
 gst_wavpack_enc_mode_get_type (void)
@@ -176,7 +184,13 @@ gst_wavpack_enc_mode_get_type (void)
   return qtype;
 }
 
-#define DEFAULT_CORRECTION_MODE 0
+enum
+{
+  GST_WAVPACK_CORRECTION_MODE_OFF = 0,
+  GST_WAVPACK_CORRECTION_MODE_ON,
+  GST_WAVPACK_CORRECTION_MODE_OPTIMIZED
+};
+
 #define GST_TYPE_WAVPACK_ENC_CORRECTION_MODE (gst_wavpack_enc_correction_mode_get_type ())
 static GType
 gst_wavpack_enc_correction_mode_get_type (void)
@@ -196,7 +210,13 @@ gst_wavpack_enc_correction_mode_get_type (void)
   return qtype;
 }
 
-#define DEFAULT_JS_MODE 0
+enum
+{
+  GST_WAVPACK_JS_MODE_AUTO = 0,
+  GST_WAVPACK_JS_MODE_LEFT_RIGHT,
+  GST_WAVPACK_JS_MODE_MID_SIDE
+};
+
 #define GST_TYPE_WAVPACK_ENC_JOINT_STEREO_MODE (gst_wavpack_enc_joint_stereo_mode_get_type ())
 static GType
 gst_wavpack_enc_joint_stereo_mode_get_type (void)
@@ -221,7 +241,7 @@ GST_BOILERPLATE (GstWavpackEnc, gst_wavpack_enc, GstElement, GST_TYPE_ELEMENT);
 static void
 gst_wavpack_enc_base_init (gpointer klass)
 {
-  static GstElementDetails element_details = {
+  static const GstElementDetails element_details = {
     "Wavpack audio encoder",
     "Codec/Encoder/Audio",
     "Encodes audio with the Wavpack lossless/lossy audio codec",
@@ -265,7 +285,8 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
   g_object_class_install_property (gobject_class, ARG_MODE,
       g_param_spec_enum ("mode", "Encoding mode",
           "Speed versus compression tradeoff.",
-          GST_TYPE_WAVPACK_ENC_MODE, DEFAULT_MODE, G_PARAM_READWRITE));
+          GST_TYPE_WAVPACK_ENC_MODE, GST_WAVPACK_ENC_MODE_DEFAULT,
+          G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BITRATE,
       g_param_spec_double ("bitrate", "Bitrate",
           "Try to encode with this average bitrate (bits/sec). "
@@ -279,7 +300,7 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
   g_object_class_install_property (gobject_class, ARG_CORRECTION_MODE,
       g_param_spec_enum ("correction-mode", "Correction file mode",
           "Use this mode for correction file creation. Only works in lossy mode!",
-          GST_TYPE_WAVPACK_ENC_CORRECTION_MODE, DEFAULT_CORRECTION_MODE,
+          GST_TYPE_WAVPACK_ENC_CORRECTION_MODE, GST_WAVPACK_CORRECTION_MODE_OFF,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MD5,
       g_param_spec_boolean ("md5", "MD5",
@@ -291,7 +312,40 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
   g_object_class_install_property (gobject_class, ARG_JOINT_STEREO_MODE,
       g_param_spec_enum ("joint-stereo-mode", "Joint-Stereo mode",
           "Use this joint-stereo mode.", GST_TYPE_WAVPACK_ENC_JOINT_STEREO_MODE,
-          DEFAULT_JS_MODE, G_PARAM_READWRITE));
+          GST_WAVPACK_JS_MODE_AUTO, G_PARAM_READWRITE));
+}
+
+static void
+gst_wavpack_enc_reset (GstWavpackEnc * enc)
+{
+  /* close and free everything stream related if we already did something */
+  if (enc->wp_context) {
+    WavpackCloseFile (enc->wp_context);
+    enc->wp_context = NULL;
+  }
+  if (enc->wp_config) {
+    g_free (enc->wp_config);
+    enc->wp_config = NULL;
+  }
+  if (enc->first_block) {
+    g_free (enc->first_block);
+    enc->first_block = NULL;
+  }
+  enc->first_block_size = 0;
+  if (enc->md5_context) {
+    g_free (enc->md5_context);
+    enc->md5_context = NULL;
+  }
+
+  /* reset the last returns to GST_FLOW_OK. This is only set to something else
+   * while WavpackPackSamples() or more specific gst_wavpack_enc_push_block()
+   * so not valid anymore */
+  enc->srcpad_last_return = enc->wvcsrcpad_last_return = GST_FLOW_OK;
+
+  /* reset stream information */
+  enc->samplerate = 0;
+  enc->width = 0;
+  enc->channels = 0;
 }
 
 static void
@@ -314,11 +368,8 @@ gst_wavpack_enc_init (GstWavpackEnc * enc, GstWavpackEncClass * gclass)
   enc->wp_config = NULL;
   enc->wp_context = NULL;
   enc->first_block = NULL;
-  enc->first_block_size = 0;
   enc->md5_context = NULL;
-  enc->samplerate = 0;
-  enc->width = 0;
-  enc->channels = 0;
+  gst_wavpack_enc_reset (enc);
 
   enc->wv_id = g_new0 (GstWavpackEncWriteID, 1);
   enc->wv_id->correction = FALSE;
@@ -328,12 +379,12 @@ gst_wavpack_enc_init (GstWavpackEnc * enc, GstWavpackEncClass * gclass)
   enc->wvc_id->wavpack_enc = enc;
 
   /* set default values of params */
-  enc->mode = DEFAULT_MODE;
+  enc->mode = GST_WAVPACK_ENC_MODE_DEFAULT;
   enc->bitrate = 0.0;
-  enc->correction_mode = DEFAULT_CORRECTION_MODE;
+  enc->correction_mode = GST_WAVPACK_CORRECTION_MODE_OFF;
   enc->md5 = FALSE;
   enc->extra_processing = FALSE;
-  enc->joint_stereo_mode = DEFAULT_JS_MODE;
+  enc->joint_stereo_mode = GST_WAVPACK_JS_MODE_AUTO;
 }
 
 static void
@@ -411,21 +462,21 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
   /* Encoding mode */
   switch (enc->mode) {
 #if 0
-    case 0:
+    case GST_WAVPACK_ENC_MODE_VERY_FAST:
       enc->wp_config->flags |= CONFIG_VERY_FAST_FLAG;
       enc->wp_config->flags |= CONFIG_FAST_FLAG;
       break;
 #endif
-    case 1:
+    case GST_WAVPACK_ENC_MODE_FAST:
       enc->wp_config->flags |= CONFIG_FAST_FLAG;
       break;
-    case 2:                    /* default */
+    case GST_WAVPACK_ENC_MODE_DEFAULT:
       break;
-    case 3:
+    case GST_WAVPACK_ENC_MODE_HIGH:
       enc->wp_config->flags |= CONFIG_HIGH_FLAG;
       break;
 #ifndef WAVPACK_OLD_API
-    case 4:
+    case GST_WAVPACK_ENC_MODE_VERY_HIGH:
       enc->wp_config->flags |= CONFIG_HIGH_FLAG;
       enc->wp_config->flags |= CONFIG_VERY_HIGH_FLAG;
       break;
@@ -445,7 +496,7 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
 
   /* Correction Mode, only in lossy mode */
   if (enc->wp_config->flags & CONFIG_HYBRID_FLAG) {
-    if (enc->correction_mode > 0) {
+    if (enc->correction_mode > GST_WAVPACK_CORRECTION_MODE_OFF) {
       enc->wvcsrcpad =
           gst_pad_new_from_static_template (&wvcsrc_factory, "wvcsrc");
 
@@ -463,14 +514,14 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
         gst_pad_set_active (enc->wvcsrcpad, TRUE);
         gst_element_add_pad (GST_ELEMENT (enc), enc->wvcsrcpad);
         enc->wp_config->flags |= CONFIG_CREATE_WVC;
-        if (enc->correction_mode == 2) {
+        if (enc->correction_mode == GST_WAVPACK_CORRECTION_MODE_OPTIMIZED) {
           enc->wp_config->flags |= CONFIG_OPTIMIZE_WVC;
         }
       }
       gst_caps_unref (caps);
     }
   } else {
-    if (enc->correction_mode > 0) {
+    if (enc->correction_mode > GST_WAVPACK_CORRECTION_MODE_OFF) {
       enc->correction_mode = 0;
       GST_WARNING_OBJECT (enc, "setting correction mode only has "
           "any effect if a bitrate is provided.");
@@ -492,13 +543,13 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
 
   /* Joint stereo mode */
   switch (enc->joint_stereo_mode) {
-    case 0:                    /* default */
+    case GST_WAVPACK_JS_MODE_AUTO:
       break;
-    case 1:
+    case GST_WAVPACK_JS_MODE_LEFT_RIGHT:
       enc->wp_config->flags |= CONFIG_JOINT_OVERRIDE;
       enc->wp_config->flags &= ~CONFIG_JOINT_STEREO;
       break;
-    case 2:
+    case GST_WAVPACK_JS_MODE_MID_SIDE:
       enc->wp_config->flags |= (CONFIG_JOINT_OVERRIDE | CONFIG_JOINT_STEREO);
       break;
   }
@@ -804,7 +855,9 @@ gst_wavpack_enc_change_state (GstElement * element, GstStateChange transition)
        * as they're only set to something else in WavpackPackSamples() or more
        * specific gst_wavpack_enc_push_block() and nothing happened there yet */
       enc->srcpad_last_return = enc->wvcsrcpad_last_return = GST_FLOW_OK;
+      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     default:
       break;
@@ -816,29 +869,7 @@ gst_wavpack_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      /* close and free everything stream related */
-      if (enc->wp_context) {
-        WavpackCloseFile (enc->wp_context);
-        enc->wp_context = NULL;
-      }
-      if (enc->wp_config) {
-        g_free (enc->wp_config);
-        enc->wp_config = NULL;
-      }
-      if (enc->first_block) {
-        g_free (enc->first_block);
-        enc->first_block = NULL;
-        enc->first_block_size = 0;
-      }
-      if (enc->md5_context) {
-        g_free (enc->md5_context);
-        enc->md5_context = NULL;
-      }
-
-      /* reset the last returns to GST_FLOW_OK. This is only set to something else
-       * while WavpackPackSamples() or more specific gst_wavpack_enc_push_block()
-       * so not valid anymore */
-      enc->srcpad_last_return = enc->wvcsrcpad_last_return = GST_FLOW_OK;
+      gst_wavpack_enc_reset (enc);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
