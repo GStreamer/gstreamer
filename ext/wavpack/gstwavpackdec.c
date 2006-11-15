@@ -25,7 +25,7 @@
  * SECTION:element-wavpackdec
  *
  * <refsect2>
- * wavpackdec decodes framed (for example by the wavpackparse element)
+ * WavpackDec decodes framed (for example by the WavpackParse element)
  * Wavpack streams and decodes them to raw audio.
  * <ulink url="http://www.wavpack.com/">Wavpack</ulink> is an open-source
  * audio codec that features both lossless and lossy encoding.
@@ -116,6 +116,22 @@ gst_wavpack_dec_class_init (GstWavpackDecClass * klass)
 }
 
 static void
+gst_wavpack_dec_reset (GstWavpackDec * dec)
+{
+  dec->wv_id.buffer = NULL;
+  dec->wv_id.position = dec->wv_id.length = 0;
+
+  dec->error_count = 0;
+
+  dec->channels = 0;
+  dec->sample_rate = 0;
+  dec->width = 0;
+  dec->depth = 0;
+
+  gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
+}
+
+static void
 gst_wavpack_dec_init (GstWavpackDec * dec, GstWavpackDecClass * gklass)
 {
   dec->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
@@ -132,17 +148,7 @@ gst_wavpack_dec_init (GstWavpackDec * dec, GstWavpackDecClass * gklass)
   dec->context = NULL;
   dec->stream_reader = gst_wavpack_stream_reader_new ();
 
-  dec->wv_id.buffer = NULL;
-  dec->wv_id.position = dec->wv_id.length = 0;
-
-  dec->error_count = 0;
-
-  dec->channels = 0;
-  dec->sample_rate = 0;
-  dec->width = 0;
-  dec->depth = 0;
-
-  gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
+  gst_wavpack_dec_reset (dec);
 }
 
 static void
@@ -453,7 +459,6 @@ gst_wavpack_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -471,13 +476,8 @@ gst_wavpack_dec_change_state (GstElement * element, GstStateChange transition)
         WavpackCloseFile (dec->context);
         dec->context = NULL;
       }
-      dec->wv_id.buffer = NULL;
-      dec->wv_id.position = 0;
-      dec->wv_id.length = 0;
-      dec->channels = 0;
-      dec->sample_rate = 0;
-      dec->width = 0;
-      dec->depth = 0;
+
+      gst_wavpack_dec_reset (dec);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

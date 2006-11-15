@@ -25,9 +25,11 @@
  * SECTION:element-wavpackparse
  *
  * <refsect2>
- * Wavpackparse takes raw, unframed Wavpack streams and splits them into
+ * WavpackParse takes raw, unframed Wavpack streams and splits them into
  * single Wavpack chunks with information like bit depth and the position
  * in the stream.
+ * <ulink url="http://www.wavpack.com/">Wavpack</ulink> is an open-source
+ * audio codec that features both lossless and lossy encoding.
  * <title>Example launch line</title>
  * <para>
  * <programlisting>

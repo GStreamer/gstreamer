@@ -1,3 +1,18 @@
+2006-11-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_reset),
+	(gst_wavpack_dec_init), (gst_wavpack_dec_change_state):
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_base_init),
+	(gst_wavpack_enc_class_init), (gst_wavpack_enc_reset),
+	(gst_wavpack_enc_init), (gst_wavpack_enc_set_wp_config),
+	(gst_wavpack_enc_change_state):
+	* ext/wavpack/gstwavpackparse.c:
+	  Some small clean-ups: use enums instead of hard-coded numbers,
+	  const-ify element details, re-factor some code into _reset()
+	  functions (#352605).
+
 2006-11-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/dvb/gstdvbsrc.c: (gst_dvbsrc_create):
