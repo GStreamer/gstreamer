@@ -76,6 +76,8 @@ static GstStaticPadTemplate videosink_templ =
         "image/jpeg, "
         COMMON_VIDEO_CAPS "; "
         "video/x-theora; "
+        "video/x-dirac, "
+        COMMON_VIDEO_CAPS "; "
         "video/x-raw-yuv, "
         "format = (fourcc) { YUY2, I420 }, " COMMON_VIDEO_CAPS)
     );
@@ -497,7 +499,8 @@ skip_details:
       ||!strcmp (mimetype, "video/x-huffyuv")
       || !strcmp (mimetype, "video/x-divx")
       || !strcmp (mimetype, "video/x-dv")
-      || !strcmp (mimetype, "video/x-h263")) {
+      || !strcmp (mimetype, "video/x-h263")
+      || !strcmp (mimetype, "video/x-dirac")) {
     BITMAPINFOHEADER *bih;
     const GValue *codec_data;
     gint size = sizeof (BITMAPINFOHEADER);
@@ -534,6 +537,8 @@ skip_details:
           GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("DX50"));
           break;
       }
+    } else if (!strcmp (mimetype, "video/x-dirac")) {
+      GST_WRITE_UINT32_LE (&bih->bi_compression, GST_STR_FOURCC ("drac"));
     }
 
     /* process codec private/initialization data, if any */
