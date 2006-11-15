@@ -1,3 +1,16 @@
+2006-11-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_init):
+	  Fix minor memleak when creating pads from static pad templates (#369627).
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/mpeg2dec.c: (setup_mpeg2dec),
+	(cleanup_mpeg2dec), (GST_START_TEST), (mpeg2dec_suite), (main):
+	  Add unit tests for mpeg2dec (#369627).
+
 2006-11-14  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Mark Nauwelaerts <manauw at skynet be>

@@ -23,8 +23,15 @@ else
 AMRNB =
 endif
 
+if USE_MPEG2DEC
+MPEG2DEC = elements/mpeg2dec
+else
+MPEG2DEC =
+endif
+
 check_PROGRAMS = \
-	$(AMRNB)
+	$(AMRNB) \
+	$(MPEG2DEC)
 
 # these tests don't even pass
 noinst_PROGRAMS =

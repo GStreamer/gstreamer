@@ -215,8 +215,7 @@ gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
 {
   /* create the sink and src pads */
   mpeg2dec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&sink_template_factory), "sink");
+      gst_pad_new_from_static_template (&sink_template_factory, "sink");
   gst_pad_set_chain_function (mpeg2dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_mpeg2dec_chain));
 #if 0
@@ -228,8 +227,7 @@ gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->sinkpad);
 
   mpeg2dec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&src_template_factory), "src");
+      gst_pad_new_from_static_template (&src_template_factory, "src");
   gst_pad_set_event_function (mpeg2dec->srcpad,
       GST_DEBUG_FUNCPTR (gst_mpeg2dec_src_event));
   gst_pad_set_query_type_function (mpeg2dec->srcpad,
@@ -241,8 +239,8 @@ gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
 
 #ifdef enable_user_data
   mpeg2dec->userdatapad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&user_data_template_factory), "user_data");
+      gst_pad_new_from_static_template (&user_data_template_factory,
+      "user_data");
   gst_element_add_pad (GST_ELEMENT (mpeg2dec), mpeg2dec->userdatapad);
 #endif
 
