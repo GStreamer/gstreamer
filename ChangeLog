@@ -1,3 +1,11 @@
+2006-11-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_change_state):
+	  clear xv when going to NULL, remove // commented non-existant proto
+
+	* tests/examples/seek/seek.c: (main):
+	  add missing tooltip description for scrub and play_scrub
+
 2006-11-14  David Schleef  <ds@schleef.org>
 
 	* configure.ac:

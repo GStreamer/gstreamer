@@ -1507,8 +1507,10 @@ main (int argc, char **argv)
   gtk_tooltips_set_tip (tips, rate_spinbutton, "define the playback rate, "
       "negative value trigger reverse playback", NULL);
   /* FIXME: describe these */
-  gtk_tooltips_set_tip (tips, scrub_checkbox, "???", NULL);
-  gtk_tooltips_set_tip (tips, play_scrub_checkbox, "???", NULL);
+  gtk_tooltips_set_tip (tips, scrub_checkbox, "show images while seeking",
+      NULL);
+  gtk_tooltips_set_tip (tips, play_scrub_checkbox, "play video while seeking",
+      NULL);
 
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (flush_checkbox), TRUE);
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (scrub_checkbox), TRUE);

@@ -156,8 +156,6 @@ static gint gst_xvimagesink_get_format_from_caps (GstXvImageSink * xvimagesink,
     GstCaps * caps);
 static void gst_xvimagesink_expose (GstXOverlay * overlay);
 
-//static void gst_xvimagesink_send_pending_navigation (GstXvImageSink * xvimagesink);
-
 /* ElementFactory information */
 static const GstElementDetails gst_xvimagesink_details =
 GST_ELEMENT_DETAILS ("Video sink",
@@ -1972,6 +1970,7 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
       gst_xvimagesink_imagepool_clear (xvimagesink);
 
       if (xvimagesink->xwindow) {
+        gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
         gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
         xvimagesink->xwindow = NULL;
       }
