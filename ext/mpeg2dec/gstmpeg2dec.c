@@ -46,18 +46,6 @@ typedef gint mpeg2_state_t;
 GST_DEBUG_CATEGORY_STATIC (mpeg2dec_debug);
 #define GST_CAT_DEFAULT (mpeg2dec_debug)
 
-/* table with framerates expressed as fractions */
-static const gint fpss[][2] = { {24000, 1001},
-{24, 1}, {25, 1}, {30000, 1001},
-{30, 1}, {50, 1}, {60000, 1001},
-{60, 1}, {0, 1}
-};
-
-/* frame periods */
-static const guint frame_periods[] = {
-  1126125, 1125000, 1080000, 900900, 900000, 540000, 450450, 450000, 0
-};
-
 /* elementfactory information */
 static const GstElementDetails gst_mpeg2dec_details =
 GST_ELEMENT_DETAILS ("mpeg1 and mpeg2 video decoder",
@@ -94,7 +82,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "format = (fourcc) { YV12, I420, Y42B }, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
-        "framerate = (fraction) { 24000/1001, 24/1, 25/1, 30000/1001, 30/1, 50/1, 60000/1001, 60/1 }")
+        "framerate = (fraction) [ 0/1, 2147483647/1 ]")
     );
 
 static void gst_mpeg2dec_base_init (gpointer g_class);
@@ -610,7 +598,6 @@ init_dummybuf (GstMpeg2dec * mpeg2dec)
 static GstFlowReturn
 handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 {
-  gint i;
   GstFlowReturn ret = GST_FLOW_OK;
 
   mpeg2dec->width = info->sequence->picture_width;
@@ -621,13 +608,9 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   mpeg2dec->decoded_height = info->sequence->height;
   mpeg2dec->total_frames = 0;
 
-  /* find framerate */
-  for (i = 0; i < 9; i++) {
-    if (info->sequence->frame_period == frame_periods[i]) {
-      mpeg2dec->fps_n = fpss[i][0];
-      mpeg2dec->fps_d = fpss[i][1];
-    }
-  }
+  /* set framerate */
+  mpeg2dec->fps_n = 27000000;
+  mpeg2dec->fps_d = info->sequence->frame_period;
   mpeg2dec->frame_period = info->sequence->frame_period * GST_USECOND / 27;
 
   GST_DEBUG_OBJECT (mpeg2dec,

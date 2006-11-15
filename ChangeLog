@@ -1,3 +1,10 @@
+2006-11-15  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Jan Arne Petersen <jpetersen at jpetersen dot org>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (handle_sequence), (handle_slice):
+	Simplify the framerate code and support more framerates. Fixes #361584.
+
 2006-11-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sebastian Dröge  <slomo@circular-chaos.org>
