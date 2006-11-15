@@ -1,3 +1,15 @@
+2006-11-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/rtspconnection.c: (read_body):
+	Don't set a data pointer to NULL and a size > 0 when we deal
+	with empty packets.
+
+	* gst/rtsp/rtspmessage.c: (rtsp_message_new_response),
+	(rtsp_message_init_response), (rtsp_message_init_data),
+	(rtsp_message_unset), (rtsp_message_free),
+	(rtsp_message_take_body):
+	Check that we can't create invalid empty packets. 
+
 2006-11-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Mark Nauwelaerts  <manauw at skynet be>

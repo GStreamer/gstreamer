@@ -588,8 +588,10 @@ read_body (RTSPConnection * conn, glong content_length, RTSPMessage * msg)
 
   RTSP_CHECK (rtsp_connection_read (conn, body, content_length), read_error);
 
+  content_length += 1;
+
 done:
-  rtsp_message_take_body (msg, (guint8 *) body, content_length + 1);
+  rtsp_message_take_body (msg, (guint8 *) body, content_length);
 
   return RTSP_OK;
 

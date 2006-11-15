@@ -219,6 +219,7 @@ RTSPResult
 rtsp_message_take_body (RTSPMessage * msg, guint8 * data, guint size)
 {
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (data != NULL || size == 0, RTSP_EINVAL);
 
   if (msg->body)
     g_free (msg->body);
