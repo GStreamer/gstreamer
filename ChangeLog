@@ -1,3 +1,9 @@
+2006-11-15  Michael Smith  <msmith@fluendo.com>
+
+	* gst/extend/discoverer.py:
+	  Avoid buffering infinite amounts of decoded data if a decoder is
+	  feeding us data without a duration (or with bad duration values).
+
 2006-11-07  Edward Hervey  <edward@fluendo.com>
 
 	* gst/extend/discoverer.py: Make the queue buffer up 1s of data before

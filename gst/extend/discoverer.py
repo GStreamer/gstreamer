@@ -109,7 +109,7 @@ class Discoverer(gst.Pipeline):
         self._success = False
 
         self._timeoutid = 0
-        
+
         if not os.path.isfile(filename):
             self.finished = True
             return
@@ -298,8 +298,19 @@ class Discoverer(gst.Pipeline):
         # stream.
         queue.props.min_threshold_time = 1 * gst.SECOND
         queue.props.max_size_time = 2 * gst.SECOND
-        queue.props.max_size_buffers = 0
         queue.props.max_size_bytes = 0
+
+        # If durations are bad on the buffers (common for video decoders), we'll
+        # never reach the min_threshold_time or max_size_time. So, set a large 
+        # max size in buffers, and if reached, disable the min_threshold_time.
+        # This ensures we don't fail to discover with various ffmpeg 
+        # demuxers/decoders that provide bogus (or no) duration.
+        queue.props.max_size_buffers = 100
+        def _disable_min_threshold_cb(queue):
+            queue.props.min_threshold_time = 0
+            queue.disconnect(signal_id)
+        signal_id = queue.connect('overrun', _disable_min_threshold_cb)
+
         self.add(fakesink, queue)
         queue.link(fakesink)
         sinkpad = fakesink.get_pad("sink")
