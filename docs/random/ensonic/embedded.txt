@@ -1,0 +1,20 @@
+$ID$
+
+= embedded =
+
+== index handling ==
+
+For avidemux I currently have a big patch doing memory optimized index handling.
+It basically thins out the index to save memory. Right now it only keeps index
+entries marked with the avi keyframe flag.
+
+In gstreamer core we have some indexing objects. They are curently used nowhere.
+The idea is to use them and to make the index strategy plugable or configurable
+at run time.
+
+The challenge is then to rewrite muxers and demuxers to use them instead of the
+built in index logic.
+
+This way the different requirements of desktop and embedded platforms could be
+encapsulated in the indexer strategy.
+

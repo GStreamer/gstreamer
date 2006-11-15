@@ -1,3 +1,10 @@
+2006-11-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/random/ensonic/embedded.txt:
+	* docs/random/ensonic/profiling.txt:
+	* docs/random/ensonic/receipies.txt:
+	  more thinking
+
 2006-11-13  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Mark Nauwelaerts <manauw at skynet dot be>

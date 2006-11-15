@@ -76,7 +76,12 @@ $Id$
 == rusage + pad-probes =
 * check get_rusage() based cpu usage detection in buzztard
   this together with pad_probes could gives us decent application level profiles
-* 1:1 elements are easy to handle, n:1, 1:m and n:m type elemnts are tricky
+* different elements
+  * 1:1 elements are easy to handle
+  * 0:1 elements need a start timer
+  * 1:0 elements need a end timer
+  * n:1, 1:m and n:m type elemnts are tricky
+    adapter based elements might have a fluctuating usage in addition
   
   // result data
   struct {
