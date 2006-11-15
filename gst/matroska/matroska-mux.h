@@ -86,6 +86,7 @@ typedef struct _GstMatroskaMux {
   /* pads */
   GstPad        *srcpad;
   GstCollectPads *collect;
+  GstPadEventFunction collect_event;
   GstEbmlWrite *ebml_write;
 
   guint          num_streams,
@@ -114,7 +115,7 @@ typedef struct _GstMatroskaMux {
   guint64        segment_pos,
                  seekhead_pos,
                  cues_pos,
-                 /* tags_pos, */
+                 tags_pos,
                  info_pos,
                  tracks_pos,
                  duration_pos,
@@ -129,6 +130,9 @@ typedef struct _GstMatroskaMux {
   /* meta-seek info */
   GstMatroskaMetaSeekIndex *meta_index;
   guint          num_meta_indexes;
+
+  /* tags */
+  GstTagList     *tags;
 } GstMatroskaMux;
 
 typedef struct _GstMatroskaMuxClass {

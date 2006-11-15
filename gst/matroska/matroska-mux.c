@@ -123,8 +123,10 @@ GST_STATIC_PAD_TEMPLATE ("subtitle_%d",
 
 static GArray *used_uids;
 
-GST_BOILERPLATE (GstMatroskaMux, gst_matroska_mux, GstElement,
-    GST_TYPE_ELEMENT);
+static void gst_matroska_mux_add_interfaces (GType type);
+
+GST_BOILERPLATE_FULL (GstMatroskaMux, gst_matroska_mux, GstElement,
+    GST_TYPE_ELEMENT, gst_matroska_mux_add_interfaces);
 
 /* Matroska muxer destructor */
 static void gst_matroska_mux_finalize (GObject * object);
@@ -138,6 +140,7 @@ static gboolean gst_matroska_mux_handle_src_event (GstPad * pad,
     GstEvent * event);
 static GstPad *gst_matroska_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
+static void gst_matroska_mux_release_pad (GstElement * element, GstPad * pad);
 
 /* gst internal change state handler */
 static GstStateChangeReturn
@@ -159,6 +162,14 @@ static gboolean theora_streamheader_to_codecdata (const GValue * streamheader,
     GstMatroskaTrackContext * context);
 static gboolean vorbis_streamheader_to_codecdata (const GValue * streamheader,
     GstMatroskaTrackContext * context);
+
+static void
+gst_matroska_mux_add_interfaces (GType type)
+{
+  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
+
+  g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
+}
 
 static void
 gst_matroska_mux_base_init (gpointer g_class)
@@ -209,6 +220,7 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
 
   gstelement_class->change_state = gst_matroska_mux_change_state;
   gstelement_class->request_new_pad = gst_matroska_mux_request_new_pad;
+  gstelement_class->release_pad = gst_matroska_mux_release_pad;
 }
 
 
@@ -295,6 +307,33 @@ gst_matroska_mux_create_uid (void)
   return uid;
 }
 
+/**
+ * gst_matroska_pad_free:
+ * @collect_pad: the #GstMatroskaPad
+ *
+ * Release resources of a matroska collect pad.
+ */
+static void
+gst_matroska_pad_free (GstMatroskaPad * collect_pad)
+{
+  /* free track information */
+  if (collect_pad->track != NULL) {
+    g_free (collect_pad->track->codec_id);
+    g_free (collect_pad->track->codec_name);
+    g_free (collect_pad->track->name);
+    g_free (collect_pad->track->language);
+    g_free (collect_pad->track->codec_priv);
+    g_free (collect_pad->track);
+    collect_pad->track = NULL;
+  }
+
+  /* free cached buffer */
+  if (collect_pad->buffer != NULL) {
+    gst_buffer_unref (collect_pad->buffer);
+    collect_pad->buffer = NULL;
+  }
+}
+
 
 /**
  * gst_matroska_mux_reset:
@@ -322,22 +361,8 @@ gst_matroska_mux_reset (GstElement * element)
     collect_pad = (GstMatroskaPad *) walk->data;
     thepad = collect_pad->collect.pad;
 
-    /* free track information */
-    if (collect_pad->track != NULL) {
-      g_free (collect_pad->track->codec_id);
-      g_free (collect_pad->track->codec_name);
-      g_free (collect_pad->track->name);
-      g_free (collect_pad->track->language);
-      g_free (collect_pad->track->codec_priv);
-      g_free (collect_pad->track);
-      collect_pad->track = NULL;
-    }
-
-    /* free cached buffer */
-    if (collect_pad->buffer != NULL) {
-      gst_buffer_unref (collect_pad->buffer);
-      collect_pad->buffer = NULL;
-    }
+    /* free collect pad resources */
+    gst_matroska_pad_free (collect_pad);
 
     /* remove from collectpads */
     gst_collect_pads_remove_pad (mux->collect, thepad);
@@ -378,6 +403,12 @@ gst_matroska_mux_reset (GstElement * element)
   mux->num_meta_indexes = 0;
   g_free (mux->meta_index);
   mux->meta_index = NULL;
+
+  /* reset tags */
+  if (mux->tags) {
+    gst_tag_list_free (mux->tags);
+    mux->tags = NULL;
+  }
 }
 
 /**
@@ -405,6 +436,56 @@ gst_matroska_mux_handle_src_event (GstPad * pad, GstEvent * event)
   }
 
   return gst_pad_event_default (pad, event);
+}
+
+/**
+ * gst_matroska_mux_handle_sink_event:
+ * @pad: Pad which received the event.
+ * @event: Received event.
+ *
+ * handle events - informational ones like tags
+ *
+ * Returns: #TRUE on success.
+ */
+static gboolean
+gst_matroska_mux_handle_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstMatroskaTrackContext *context;
+  GstMatroskaPad *collect_pad;
+  GstMatroskaMux *mux;
+  GstTagList *list;
+  gboolean ret;
+
+  mux = GST_MATROSKA_MUX (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+      gst_event_parse_tag (event, &list);
+      collect_pad = (GstMatroskaPad *) gst_pad_get_element_private (pad);
+      g_assert (collect_pad);
+      context = collect_pad->track;
+      g_assert (context);
+      /* FIXME ?
+       * strictly speaking, the incoming language code may only be 639-1, so not
+       * 639-2 according to matroska specs, but it will have to do for now */
+      gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &context->language);
+
+      if (mux->tags) {
+        gst_tag_list_insert (mux->tags, list, GST_TAG_MERGE_PREPEND);
+      } else {
+        mux->tags = gst_tag_list_copy (list);
+      }
+
+      break;
+    default:
+      break;
+  }
+
+  /* now GstCollectPads can take care of the rest, e.g. EOS */
+  ret = mux->collect_event (pad, event);
+  gst_object_unref (mux);
+
+  return ret;
 }
 
 
@@ -1034,10 +1115,54 @@ gst_matroska_mux_request_new_pad (GstElement * element,
   collect_pad->track = context;
   collect_pad->buffer = NULL;
 
+  /* FIXME: hacked way to override/extend the event function of
+   * GstCollectPads; because it sets its own event function giving the
+   * element no access to events.
+   * TODO GstCollectPads should really give its 'users' a clean chance to
+   * properly handle events that are not meant for collectpads itself.
+   * Perhaps a callback or so, though rejected (?) in #340060.
+   * This would allow (clean) transcoding of info from demuxer/streams
+   * to another muxer */
+  mux->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (newpad);
+  gst_pad_set_event_function (newpad,
+      GST_DEBUG_FUNCPTR (gst_matroska_mux_handle_sink_event));
+
   gst_pad_set_setcaps_function (newpad, setcapsfunc);
   gst_element_add_pad (element, newpad);
 
   return newpad;
+}
+
+/**
+ * gst_matroska_mux_release_pad:
+ * @element: #GstMatroskaMux.
+ * @pad: Pad to release.
+ *
+ * Release a previously requested pad.
+*/
+static void
+gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
+{
+  GstMatroskaMux *mux;
+  GSList *walk;
+
+  mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
+
+  for (walk = mux->collect->data; walk; walk = g_slist_next (walk)) {
+    GstCollectData *cdata = (GstCollectData *) walk->data;
+    GstMatroskaPad *collect_pad = (GstMatroskaPad *) cdata;
+
+    if (cdata->pad == pad) {
+      if (collect_pad->duration > mux->duration)
+        mux->duration = collect_pad->duration;
+      gst_matroska_pad_free (collect_pad);
+      gst_collect_pads_remove_pad (mux->collect, pad);
+      gst_element_remove_pad (element, pad);
+      return;
+    }
+  }
+
+  g_warning ("%s: unknown pad %s", GST_FUNCTION, GST_PAD_NAME (pad));
 }
 
 
@@ -1064,6 +1189,10 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
   if (context->default_duration) {
     gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TRACKDEFAULTDURATION,
         context->default_duration);
+  }
+  if (context->language) {
+    gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_TRACKLANGUAGE,
+        context->language);
   }
 
   /* type-specific stuff */
@@ -1148,9 +1277,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     GST_MATROSKA_ID_TRACKS,
     GST_MATROSKA_ID_CUES,
     GST_MATROSKA_ID_SEEKHEAD,
-#if 0
     GST_MATROSKA_ID_TAGS,
-#endif
     0
   };
   guint64 master, child;
@@ -1257,6 +1384,56 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   gst_ebml_write_flush_cache (ebml);
 }
 
+static void
+gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
+    gpointer data)
+{
+  struct
+  {
+    gchar *matroska_tagname;
+    gchar *gstreamer_tagname;
+  }
+  tag_conv[] = {
+    {
+    GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}, {
+    GST_MATROSKA_TAG_ID_AUTHOR, GST_TAG_ARTIST}, {
+    GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
+    GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
+    GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {
+    GST_MATROSKA_TAG_ID_DATE, GST_TAG_DATE}, {
+    GST_MATROSKA_TAG_ID_ISRC, GST_TAG_ISRC}, {
+    GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}
+  };
+  GstEbmlWrite *ebml = (GstEbmlWrite *) data;
+  guint i;
+  guint64 simpletag_master;
+
+  for (i = 0; i < G_N_ELEMENTS (tag_conv); i++) {
+    const gchar *tagname_gst = tag_conv[i].gstreamer_tagname;
+    const gchar *tagname_mkv = tag_conv[i].matroska_tagname;
+
+    if (strcmp (tagname_gst, tag) == 0) {
+      GValue src = { 0, };
+      GValue dest = { 0, };
+
+      if (!gst_tag_list_copy_value (&src, list, tag))
+        break;
+      g_value_init (&dest, G_TYPE_STRING);
+      g_value_transform (&src, &dest);
+      g_value_unset (&src);
+
+      simpletag_master = gst_ebml_write_master_start (ebml,
+          GST_MATROSKA_ID_SIMPLETAG);
+      gst_ebml_write_ascii (ebml, GST_MATROSKA_ID_TAGNAME, tagname_mkv);
+      gst_ebml_write_utf8 (ebml, GST_MATROSKA_ID_TAGSTRING,
+          g_value_get_string (&dest));
+      gst_ebml_write_master_finish (ebml, simpletag_master);
+      g_value_unset (&dest);
+      break;
+    }
+  }
+}
+
 
 /**
  * gst_matroska_mux_finish:
@@ -1271,6 +1448,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   guint64 pos;
   guint64 duration = 0;
   GSList *collected;
+  GstTagList *tags;
 
   /* finish last cluster */
   if (mux->cluster) {
@@ -1328,7 +1506,21 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
   }
   gst_ebml_write_flush_cache (ebml);
 
-  /* FIXME: tags */
+  /* tags */
+  tags = gst_tag_list_merge (gst_tag_setter_get_tag_list (GST_TAG_SETTER (mux)),
+      mux->tags, GST_TAG_MERGE_APPEND);
+
+  if (tags != NULL) {
+    guint64 master_tags, master_tag;
+
+    mux->tags_pos = ebml->pos;
+    master_tags = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAGS);
+    master_tag = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_TAG);
+    gst_tag_list_foreach (tags, gst_matroska_mux_write_simple_tag, ebml);
+    gst_ebml_write_master_finish (ebml, master_tag);
+    gst_ebml_write_master_finish (ebml, master_tags);
+    gst_tag_list_free (tags);
+  }
 
   /* update seekhead. We know that:
    * - a seekhead contains 4 entries.
@@ -1366,13 +1558,22 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 26);
     gst_ebml_write_seek (ebml, my_pos);
   }
-#if 0
-  gst_ebml_replace_uint (ebml, mux->seekhead_pos + 116,
-      mux->tags_pos - mux->segment_master);
-#endif
+  if (tags != NULL) {
+    gst_ebml_replace_uint (ebml, mux->seekhead_pos + 144,
+        mux->tags_pos - mux->segment_master);
+  } else {
+    /* void'ify */
+    guint64 my_pos = ebml->pos;
+
+    gst_ebml_write_seek (ebml, mux->seekhead_pos + 124);
+    gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 26);
+    gst_ebml_write_seek (ebml, my_pos);
+  }
 
   /* update duration */
   /* first get the overall duration */
+  /* a released track may have left a duration in here */
+  duration = mux->duration;
   for (collected = mux->collect->data; collected;
       collected = g_slist_next (collected)) {
     GstMatroskaPad *collect_pad;
