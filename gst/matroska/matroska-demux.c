@@ -1147,6 +1147,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
         caps = gst_caps_new_simple ("application/x-matroska-unknown", NULL);
         break;
     }
+    gst_caps_set_simple (caps, "codec-id", G_TYPE_STRING, context->codec_id,
+        NULL);
   }
 
   /* the pad in here */
@@ -3642,6 +3644,8 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
 
 /*
  * Some AAC specific code... *sigh*
+ * FIXME: maybe we should use '15' and code the sample rate explicitly
+ * if the sample rate doesn't match the predefined rates exactly? (tpm)
  */
 
 static gint
@@ -3781,24 +3785,49 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       caps = gst_riff_create_audio_caps (auds->format, NULL, auds, NULL,
           NULL, codec_name);
     }
-  } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG2,
-          strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG2)) ||
-      !strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG4,
-          strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG4))) {
+  } else if (g_str_has_prefix (codec_id, "A_AAC")) {
     GstBuffer *priv = NULL;
     gint mpegversion = -1;
     gint rate_idx, profile;
-    guint8 *data;
+    guint8 *data = NULL;
 
-    /* make up decoderspecificdata */
-    priv = gst_buffer_new_and_alloc (5);
-    data = GST_BUFFER_DATA (priv);
-    rate_idx = aac_rate_idx (audiocontext->samplerate);
-    profile = aac_profile_idx (codec_id);
+    /* unspecified AAC profile with opaque private codec data */
+    if (strcmp (codec_id, "A_AAC") == 0) {
+      if (context->codec_priv_size >= 2) {
+        guint obj_type, freq_index, explicit_freq_bytes = 0;
 
-    data[0] = ((profile + 1) << 3) | ((rate_idx & 0xE) >> 1);
-    data[1] = ((rate_idx & 0x1) << 7) | (audiocontext->channels << 3);
-    GST_BUFFER_SIZE (priv) = 2;
+        codec_id = GST_MATROSKA_CODEC_ID_AUDIO_MPEG4;
+        freq_index = (GST_READ_UINT16_BE (context->codec_priv) & 0x780) >> 7;
+        obj_type = (GST_READ_UINT16_BE (context->codec_priv) & 0xF800) >> 11;
+        if (freq_index == 15)
+          explicit_freq_bytes = 3;
+        GST_DEBUG ("obj_type = %u, freq_index = %u", obj_type, freq_index);
+        priv = gst_buffer_new_and_alloc (context->codec_priv_size);
+        memcpy (GST_BUFFER_DATA (priv), context->codec_priv,
+            context->codec_priv_size);
+        /* assume SBR if samplerate <= 24kHz */
+        if (obj_type == 5 || (freq_index >= 6 && freq_index != 15) ||
+            (context->codec_priv_size == (5 + explicit_freq_bytes))) {
+          audiocontext->samplerate *= 2;
+        }
+      } else {
+        GST_WARNING ("Opaque A_AAC codec ID, but no codec private data");
+        /* just try this and see what happens ... */
+        codec_id = GST_MATROSKA_CODEC_ID_AUDIO_MPEG4;
+      }
+    }
+
+    /* make up decoder-specific data if it is not supplied */
+    if (priv == NULL) {
+      priv = gst_buffer_new_and_alloc (5);
+      data = GST_BUFFER_DATA (priv);
+      rate_idx = aac_rate_idx (audiocontext->samplerate);
+      profile = aac_profile_idx (codec_id);
+
+      data[0] = ((profile + 1) << 3) | ((rate_idx & 0xE) >> 1);
+      data[1] = ((rate_idx & 0x1) << 7) | (audiocontext->channels << 3);
+      GST_BUFFER_SIZE (priv) = 2;
+    }
 
     if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_MPEG2,
             strlen (GST_MATROSKA_CODEC_ID_AUDIO_MPEG2))) {
