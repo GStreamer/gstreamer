@@ -1,3 +1,8 @@
+2006-11-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/spc/gstspc.c: (spc_play):
+	  Fix build with disabled gst-debug.
+
 2006-11-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sebastian Dröge  <slomo@circular-chaos.org>

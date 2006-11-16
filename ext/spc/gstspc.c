@@ -231,9 +231,8 @@ spc_play (GstPad * pad)
   OSPC_Run (-1, (short *) GST_BUFFER_DATA (out), 1600 * 4);
 
   if ((flow_return = gst_pad_push (spc->srcpad, out)) != GST_FLOW_OK) {
-    const gchar *reason = gst_flow_get_name (flow_return);
-
-    GST_DEBUG_OBJECT (spc, "pausing task, reason %s", reason);
+    GST_DEBUG_OBJECT (spc, "pausing task, reason %s",
+        gst_flow_get_name (flow_return));
 
     gst_pad_pause_task (pad);
 
