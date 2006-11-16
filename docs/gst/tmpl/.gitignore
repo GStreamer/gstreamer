@@ -1,2 +1,3 @@
 *.bak
 unused-build.stamp
+gstreamer-unused.sgml
