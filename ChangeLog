@@ -1,3 +1,11 @@
+2006-11-16  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: Ville Syrjala <ville.syrjala@movial.fi>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid):
+	  Specify H.263 variant and version in the caps (fixes #361636)
+
 2006-11-14  Michael Smith  <msmith@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c:

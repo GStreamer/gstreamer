@@ -204,16 +204,25 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_H263:
-      caps = gst_ff_vid_caps_new (context, "video/x-h263", NULL);
+      if (encode) {
+        caps = gst_ff_vid_caps_new (context, "video/x-h263",
+            "variant", G_TYPE_STRING, "itu",
+            "h263version", G_TYPE_STRING, "h263", NULL);
+      } else {
+        caps = gst_ff_vid_caps_new (context, "video/x-h263",
+            "variant", G_TYPE_STRING, "itu", NULL);
+      }
       break;
 
     case CODEC_ID_H263P:
       caps = gst_ff_vid_caps_new (context, "video/x-h263", 
-          "variant", G_TYPE_STRING, "h263p", NULL);
+          "variant", G_TYPE_STRING, "itu",
+          "h263version", G_TYPE_STRING, "h263p", NULL);
       break;
 
     case CODEC_ID_H263I:
-      caps = gst_ff_vid_caps_new (context, "video/x-intel-h263", NULL);
+      caps = gst_ff_vid_caps_new (context, "video/x-intel-h263",
+          "variant", G_TYPE_STRING, "intel", NULL);
       break;
 
     case CODEC_ID_H261:
@@ -1874,7 +1883,11 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     id = CODEC_ID_DVAUDIO;
     audio = TRUE;
   } else if (!strcmp (mimetype, "video/x-h263")) {
-    id = CODEC_ID_H263;         /* or H263P */
+    const gchar *h263version = gst_structure_get_string (structure, "h263version");
+    if (h263version && !strcmp (h263version, "h263p"))
+      id = CODEC_ID_H263P;
+    else
+      id = CODEC_ID_H263;
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-intel-h263")) {
     id = CODEC_ID_H263I;
