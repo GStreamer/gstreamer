@@ -17,6 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <stdlib.h>
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -58,6 +60,7 @@ struct _GstAudioRate
 
   /* audio state */
   guint64 next_offset;
+  guint64 next_ts;
 
   gboolean discont;
 
@@ -207,6 +210,7 @@ static void
 gst_audio_rate_reset (GstAudioRate * audiorate)
 {
   audiorate->next_offset = -1;
+  audiorate->next_ts = -1;
   audiorate->discont = TRUE;
   gst_segment_init (&audiorate->sink_segment, GST_FORMAT_UNDEFINED);
   gst_segment_init (&audiorate->src_segment, GST_FORMAT_TIME);
@@ -327,6 +331,7 @@ gst_audio_rate_sink_event (GstPad * pad, GstEvent * event)
          * sample offset. We mark the offsets as invalid so that the _chain
          * function will perform this calculation. */
         audiorate->next_offset = -1;
+        audiorate->next_ts = -1;
       }
 
       /* we accept all formats */
@@ -498,9 +503,20 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     GST_DEBUG_OBJECT (audiorate, "resync to offset %" G_GINT64_FORMAT, pos);
 
     audiorate->next_offset = pos;
+    audiorate->next_ts = gst_util_uint64_scale_int (audiorate->next_offset,
+        GST_SECOND, audiorate->rate);
   }
 
   audiorate->in++;
+
+  static guint64 nextts = 0;
+
+#define LLABS(a) ((gint64)(a) < 0 ? -(a):(a))
+  if (nextts != GST_BUFFER_TIMESTAMP (buf) && LLABS (GST_BUFFER_TIMESTAMP (buf) - nextts) > 21000)      /* 21 us,  ~1 sample */
+    GST_DEBUG_OBJECT (audiorate, "Expected %lld, got %lld! --> %lld", nextts,
+        GST_BUFFER_TIMESTAMP (buf),
+        LLABS (GST_BUFFER_TIMESTAMP (buf) - nextts));
+  nextts = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
 
   in_time = GST_BUFFER_TIMESTAMP (buf);
   in_size = GST_BUFFER_SIZE (buf);
@@ -538,14 +554,21 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     /* FIXME, 0 might not be the silence byte for the negotiated format. */
     memset (GST_BUFFER_DATA (fill), 0, fillsize);
 
-    GST_LOG_OBJECT (audiorate, "inserting %lld samples", fillsamples);
+    GST_DEBUG_OBJECT (audiorate, "inserting %lld samples", fillsamples);
 
-    GST_BUFFER_DURATION (fill) = in_duration * fillsize / in_size;
-    GST_BUFFER_TIMESTAMP (fill) = in_time - GST_BUFFER_DURATION (fill);
     GST_BUFFER_OFFSET (fill) = audiorate->next_offset;
-    GST_BUFFER_OFFSET_END (fill) = in_offset;
+    audiorate->next_offset += fillsamples;
+    GST_BUFFER_OFFSET_END (fill) = audiorate->next_offset;
 
-    /* we created this buffer to filla gap */
+    /* Use next timestamp, then calculate following timestamp based on in_offset
+     * to get duration. Neccesary complexity to get 'perfect' streams */
+    GST_BUFFER_TIMESTAMP (fill) = audiorate->next_ts;
+    audiorate->next_ts = gst_util_uint64_scale_int (in_offset,
+        GST_SECOND, audiorate->rate);
+    GST_BUFFER_DURATION (fill) = audiorate->next_ts -
+        GST_BUFFER_TIMESTAMP (fill);
+
+    /* we created this buffer to fill a gap */
     GST_BUFFER_FLAG_SET (fill, GST_BUFFER_FLAG_GAP);
     /* set discont if it's pending, this is mostly done for the first buffer and
      * after a flushing seek */
@@ -570,7 +593,7 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
       audiorate->drop += drop;
 
-      GST_LOG_OBJECT (audiorate, "dropping %lld samples", drop);
+      GST_DEBUG_OBJECT (audiorate, "dropping %lld samples", drop);
 
       /* we can drop the buffer completely */
       gst_buffer_unref (buf);
@@ -590,13 +613,6 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       leftsize = in_size - truncsize;
 
       trunc = gst_buffer_create_sub (buf, truncsize, leftsize);
-      GST_BUFFER_DURATION (trunc) = in_duration * leftsize / in_size;
-      GST_BUFFER_TIMESTAMP (trunc) =
-          in_time + in_duration - GST_BUFFER_DURATION (trunc);
-      GST_BUFFER_OFFSET (trunc) = audiorate->next_offset;
-      GST_BUFFER_OFFSET_END (trunc) = in_offset_end;
-
-      GST_LOG_OBJECT (audiorate, "truncating %lld samples", truncsamples);
 
       gst_buffer_unref (buf);
       buf = trunc;
@@ -606,6 +622,17 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
       audiorate->drop += truncsamples;
     }
   }
+
+  /* Now calculate parameters for whichever buffer (either the original
+   * or truncated one) we're pushing. */
+  GST_BUFFER_OFFSET (buf) = audiorate->next_offset;
+  GST_BUFFER_OFFSET_END (buf) = in_offset_end;
+
+  GST_BUFFER_TIMESTAMP (buf) = audiorate->next_ts;
+  audiorate->next_ts = gst_util_uint64_scale_int (in_offset_end,
+      GST_SECOND, audiorate->rate);
+  GST_BUFFER_DURATION (buf) = audiorate->next_ts - GST_BUFFER_TIMESTAMP (buf);
+
   if (audiorate->discont) {
     /* we need to output a discont buffer, do so now */
     GST_DEBUG_OBJECT (audiorate, "marking DISCONT on output buffer");

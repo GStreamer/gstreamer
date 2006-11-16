@@ -52,6 +52,7 @@ check_PROGRAMS = \
 	$(check_theora) \
 	elements/adder	\
 	elements/audioconvert \
+	elements/audiorate \
 	elements/audioresample \
 	elements/audiotestsrc \
 	elements/gdpdepay \
@@ -81,7 +82,6 @@ VALGRIND_TO_FIX = \
 
 # these tests don't even pass
 noinst_PROGRAMS = \
-	elements/audiorate \
 	elements/ffmpegcolorspace
 
 AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS)

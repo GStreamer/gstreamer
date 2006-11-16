@@ -1,3 +1,14 @@
+2006-11-16  Michael Smith  <msmith@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_reset),
+	(gst_audio_rate_sink_event), (gst_audio_rate_chain):
+	  Fix audiorate, so that it accurately sets offsets and timestamps.
+	  Doesn't change the fundamental algorithmic decisions; so should be
+	  safe.
+
+	* tests/check/Makefile.am:
+	  Enable audiorate test now that it passes.
+
 2006-11-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_change_state):
