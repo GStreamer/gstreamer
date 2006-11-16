@@ -1897,7 +1897,7 @@ gst_avi_demux_stream_scan (GstAviDemux * avi,
 
   while (1) {
     gint stream_nr;
-    guint size;
+    guint size = 0;
     gint64 tmpts, tmpnextts;
 
     res = gst_avi_demux_next_data_buffer (avi, &pos, &tag, &size);
