@@ -154,7 +154,8 @@ static GstStaticPadTemplate gst_rtp_h263_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h263")
+    GST_STATIC_CAPS ("video/x-h263, "
+        "variant = (string) \"itu\", " "h263version = (string) \"h263\"")
     );
 
 static GstStaticPadTemplate gst_rtp_h263_pay_src_template =

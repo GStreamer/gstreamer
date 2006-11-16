@@ -50,7 +50,8 @@ static GstStaticPadTemplate gst_rtp_h263p_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h263")
+    GST_STATIC_CAPS ("video/x-h263, "
+        "variant = (string) \"itu\", " "h263version = (string) \"h263p\"")
     );
 
 static GstStaticPadTemplate gst_rtp_h263p_depay_sink_template =
