@@ -1,3 +1,17 @@
+2006-11-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videotestsrc/Makefile.am:
+	* tests/check/Makefile.am:
+	  Make sure our checks and the videotestsrc plugin link against the
+	  local uninstalled gst libs and not any installed gst libs that
+	  might happen to exist as well.
+
+	* tests/check/elements/adder.c: (message_received),
+	(test_event_message_received), (test_play_twice_message_received):
+	* tests/check/elements/ffmpegcolorspace.c: (GST_START_TEST):
+	  Fix compiler warnings when compiling against core with disabled
+	  debugging system.
+
 2006-11-16  Michael Smith  <msmith@fluendo.com>
 
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_reset),

@@ -300,8 +300,6 @@ GST_START_TEST (test_rgb_to_rgb)
 
   for (l = conversions; l != NULL; l = l->next) {
     RGBConversion *conv = (RGBConversion *) l->data;
-    RGBFormat *from = &conv->from_fmt;
-    RGBFormat *to = &conv->to_fmt;
 
     /* does videotestsrc support the from_caps? */
     if (!gst_caps_is_subset (conv->from_caps, template_caps)) {
@@ -313,6 +311,12 @@ GST_START_TEST (test_rgb_to_rgb)
     /* caps are supported, let's run some tests then ... */
     for (p = 0; p < G_N_ELEMENTS (test_patterns); ++p) {
       GstStateChangeReturn state_ret;
+      RGBFormat *from = &conv->from_fmt;
+      RGBFormat *to = &conv->to_fmt;
+
+      /* trick compiler into thinking from is used, might throw warning
+       * otherwise if the debugging system is disabled */
+      fail_unless (from != NULL);
 
       gst_element_set_state (pipeline, GST_STATE_NULL);
 

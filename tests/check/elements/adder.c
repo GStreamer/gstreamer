@@ -37,11 +37,8 @@ static GMainLoop *main_loop;
 static void
 message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
 {
-  GstObject *object = GST_MESSAGE_SRC (message);
-
-  GST_INFO ("bus message from \"%s\" (%s): ",
-      GST_STR_NULL (GST_ELEMENT_NAME (object)),
-      gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+  GST_INFO ("bus message from \"%" GST_PTR_FORMAT "\": %" GST_PTR_FORMAT,
+      GST_MESSAGE_SRC (message), message);
 
   switch (message->type) {
     case GST_MESSAGE_EOS:
@@ -71,11 +68,8 @@ static void
 test_event_message_received (GstBus * bus, GstMessage * message,
     GstPipeline * bin)
 {
-  GstObject *object = GST_MESSAGE_SRC (message);
-
-  GST_INFO ("bus message from \"%s\" (%s): ",
-      GST_STR_NULL (GST_ELEMENT_NAME (object)),
-      gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+  GST_INFO ("bus message from \"%" GST_PTR_FORMAT "\": %" GST_PTR_FORMAT,
+      GST_MESSAGE_SRC (message), message);
 
   switch (message->type) {
     case GST_MESSAGE_SEGMENT_DONE:
@@ -176,12 +170,10 @@ static void
 test_play_twice_message_received (GstBus * bus, GstMessage * message,
     GstPipeline * bin)
 {
-  GstObject *object = GST_MESSAGE_SRC (message);
   gboolean res;
 
-  GST_INFO ("bus message from \"%s\" (%s): ",
-      GST_STR_NULL (GST_ELEMENT_NAME (object)),
-      gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+  GST_INFO ("bus message from \"%" GST_PTR_FORMAT "\": %" GST_PTR_FORMAT,
+      GST_MESSAGE_SRC (message), message);
 
   switch (message->type) {
     case GST_MESSAGE_SEGMENT_DONE:

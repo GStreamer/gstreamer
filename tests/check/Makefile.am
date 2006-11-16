@@ -92,13 +92,24 @@ VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-base.supp
 
+libs_audio_CFLAGS = \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
 libs_audio_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) \
 	$(LDADD)
+
+libs_cddabasesrc_CFLAGS = \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
 
 libs_cddabasesrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) \
 	$(LDADD)
 
 libs_tag_LDADD = \
@@ -108,8 +119,14 @@ elements_alsa_LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
+elements_audioconvert_CFLAGS = \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
 elements_audioconvert_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) \
 	$(LDADD)
 
 elements_audiorate_LDADD =  $(LDADD)
@@ -140,15 +157,26 @@ elements_vorbistag_CFLAGS = \
 	$(VORBIS_CFLAGS) \
 	$(CFLAGS) $(AM_CFLAGS)
 
+libs_video_CFLAGS = \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
 libs_video_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) \
 	$(LDADD)
 
 pipelines_oggmux_LDADD = $(LDADD) $(OGG_LIBS)
 pipelines_oggmux_CFLAGS = $(AM_CFLAGS) $(OGG_CFLAGS)
 
+pipelines_simple_launch_lines_CFLAGS = \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
 pipelines_simple_launch_lines_LDADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) \
 	$(LDADD)
 
 EXTRA_DIST = gst-plugins-base.supp
