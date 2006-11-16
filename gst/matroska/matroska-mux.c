@@ -218,9 +218,12 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
           "This parameter determines what matroska features can be used.",
           1, 2, 1, G_PARAM_READWRITE));
 
-  gstelement_class->change_state = gst_matroska_mux_change_state;
-  gstelement_class->request_new_pad = gst_matroska_mux_request_new_pad;
-  gstelement_class->release_pad = gst_matroska_mux_release_pad;
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_matroska_mux_change_state);
+  gstelement_class->request_new_pad =
+      GST_DEBUG_FUNCPTR (gst_matroska_mux_request_new_pad);
+  gstelement_class->release_pad =
+      GST_DEBUG_FUNCPTR (gst_matroska_mux_release_pad);
 }
 
 
@@ -1128,6 +1131,7 @@ gst_matroska_mux_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_matroska_mux_handle_sink_event));
 
   gst_pad_set_setcaps_function (newpad, setcapsfunc);
+  gst_pad_set_active (newpad, TRUE);
   gst_element_add_pad (element, newpad);
 
   return newpad;

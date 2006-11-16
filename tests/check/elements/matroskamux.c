@@ -65,6 +65,7 @@ setup_src_pad (GstElement * element,
   srcpad = gst_pad_new_from_static_template (template, "src");
   fail_if (srcpad == NULL, "Could not create a srcpad");
   ASSERT_OBJECT_REFCOUNT (srcpad, "srcpad", 1);
+  gst_pad_set_active (srcpad, TRUE);
 
   sinkpad = gst_element_get_pad (element, "audio_%d");
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
@@ -117,6 +118,7 @@ setup_sink_pad (GstElement * element, GstStaticPadTemplate * template,
   sinkpad = gst_pad_new_from_static_template (template, "sink");
 
   fail_if (sinkpad == NULL, "Could not create a sinkpad");
+  gst_pad_set_active (sinkpad, TRUE);
 
   srcpad = gst_element_get_pad (element, "src");
   fail_if (srcpad == NULL, "Could not get source pad from %s",
@@ -213,7 +215,8 @@ GST_START_TEST (test_ebml_header)
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
   num_buffers = g_list_length (buffers);
-  fail_unless (num_buffers >= 5);
+  fail_unless (num_buffers >= 5,
+      "expected at least 5 buffers, but got only %d", num_buffers);
 
   for (i = 0; i < num_buffers; ++i) {
     outbuffer = GST_BUFFER (buffers->data);
@@ -331,7 +334,7 @@ GST_START_TEST (test_block_group)
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
   num_buffers = g_list_length (buffers);
 
   for (i = 0; i < num_buffers; ++i) {

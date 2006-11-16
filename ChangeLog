@@ -1,5 +1,15 @@
 2006-11-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/matroska/matroska-mux.c: (gst_matroska_mux_class_init),
+	(gst_matroska_mux_request_new_pad):
+	  Use GST_DEBUG_FUNCPTR; activate request pad before returning it.
+
+	* tests/check/elements/matroskamux.c: (setup_src_pad),
+	(setup_sink_pad), (GST_START_TEST):
+	Activate pads before using them.
+
+2006-11-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_scan):
 	  Initialise variable to get rid of bogus compiler warning.
 
