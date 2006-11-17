@@ -1,5 +1,9 @@
 2006-11-16  David Schleef  <ds@schleef.org>
 
+	* gst/librfb/rfbdecoder.c: Fixes for 64-bit architectures.
+
+2006-11-16  David Schleef  <ds@schleef.org>
+
 	* gst/librfb/gstrfbsrc.h:  Oops, add this file.
 
 2006-11-16  David Schleef  <ds@schleef.org>

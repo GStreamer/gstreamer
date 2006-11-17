@@ -77,10 +77,10 @@ rfb_decoder_use_file_descriptor (RfbDecoder * decoder, gint fd)
   decoder->fd = fd;
 
   decoder->bytestream->get_buffer = rfb_socket_get_buffer;
-  decoder->bytestream->user_data = (void *) fd;
+  decoder->bytestream->user_data = GINT_TO_POINTER (fd);
 
   decoder->send_data = rfb_socket_send_buffer;
-  decoder->buffer_handler_data = (void *) fd;
+  decoder->buffer_handler_data = GINT_TO_POINTER (fd);
 }
 
 gboolean
@@ -396,7 +396,7 @@ static RfbBuffer *
 rfb_socket_get_buffer (gint length, gpointer user_data)
 {
   RfbBuffer *buffer;
-  gint fd = (gint) user_data;
+  gint fd = GPOINTER_TO_INT (user_data);
   gint ret;
 
   buffer = rfb_buffer_new ();
@@ -420,7 +420,7 @@ rfb_socket_get_buffer (gint length, gpointer user_data)
 static gint
 rfb_socket_send_buffer (guint8 * buffer, gint length, gpointer user_data)
 {
-  gint fd = (gint) user_data;
+  gint fd = GPOINTER_TO_INT (user_data);
   gint ret;
 
   // g_print ("calling write(%d, %p, %d)\n", fd, buffer, length);
