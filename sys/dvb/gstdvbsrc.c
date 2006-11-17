@@ -1076,17 +1076,13 @@ gst_dvbsrc_tune (GstDvbSrc * object)
         // this must be an absolute frequency
         if (freq < SLOF) {
           feparams.frequency = (freq - LOF1);
-          if (object->tone < 0)
-            object->tone = SEC_TONE_OFF;
         } else {
           feparams.frequency = (freq - LOF2);
-          if (object->tone < 0)
-            object->tone = SEC_TONE_ON;
+          object->tone = SEC_TONE_ON;
         }
       } else {
         // this is an L-Band frequency
         feparams.frequency = freq;
-        object->tone = SEC_TONE_OFF;
       }
       GST_INFO_OBJECT (object,
           "tuning DVB-S to L-Band:%u, Pol:%d, srate=%u, 22kHz=%s",
