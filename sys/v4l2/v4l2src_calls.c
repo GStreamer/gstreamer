@@ -537,8 +537,6 @@ gst_v4l2src_capture_start (GstV4l2Src * v4l2src)
   gint type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
   GST_DEBUG_OBJECT (v4l2src, "starting the capturing");
-
-  GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
   GST_V4L2_CHECK_ACTIVE (v4l2src->v4l2object);
 
   v4l2src->quit = FALSE;
@@ -574,8 +572,12 @@ gst_v4l2src_capture_stop (GstV4l2Src * v4l2src)
 
   GST_DEBUG_OBJECT (v4l2src, "stopping capturing");
 
-  GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
-  GST_V4L2_CHECK_ACTIVE (v4l2src->v4l2object);
+  if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object)) {
+    goto done;
+  }
+  if (!GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
+    goto done;
+  }
 
   if (v4l2src->breq.memory != 0) {
     /* we actually need to sync on all queued buffers but not
@@ -583,6 +585,8 @@ gst_v4l2src_capture_stop (GstV4l2Src * v4l2src)
     if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_STREAMOFF, &type) < 0)
       goto streamoff_failed;
   }
+
+done:
 
   /* make an optional pending wait stop */
   v4l2src->quit = TRUE;
@@ -629,8 +633,12 @@ gst_v4l2src_capture_deinit (GstV4l2Src * v4l2src)
 
   GST_DEBUG_OBJECT (v4l2src, "deinitting capture system");
 
-  GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
-  GST_V4L2_CHECK_ACTIVE (v4l2src->v4l2object);
+  if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object)) {
+    return TRUE;
+  }
+  if (!GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
+    return TRUE;
+  }
 
   if (v4l2src->pool) {
     /* free the buffers */
@@ -657,8 +665,8 @@ gst_v4l2src_capture_deinit (GstV4l2Src * v4l2src)
      * they get auto-dequeued.
      */
     if (try_reinit) {
-      if (!gst_v4l2src_capture_start (v4l2src) ||
-          !gst_v4l2src_capture_stop (v4l2src)) {
+      gst_v4l2src_capture_start (v4l2src);
+      if (!gst_v4l2src_capture_stop (v4l2src)) {
         GST_DEBUG_OBJECT (v4l2src, "failed reinit device");
         return FALSE;
       }

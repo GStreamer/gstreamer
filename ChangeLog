@@ -1,3 +1,8 @@
+2006-11-17  Edgard Lima <edgard.lima@indt.org.br>
+
+	* sys/v4l2/v4l2src_calls.c:
+	Fix capture_deinit.
+
 2006-11-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/matroska-mux.c: (gst_matroska_mux_class_init),
