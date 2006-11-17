@@ -952,7 +952,7 @@ gst_ffmpegenc_register (GstPlugin * plugin)
 
     /* name */
     if (!gst_ffmpeg_get_codecid_longname (in_plugin->id)) {
-      g_warning ("Add encoder %s (%d) please", in_plugin->name, in_plugin->id);
+      GST_INFO ("Add encoder %s (%d) please", in_plugin->name, in_plugin->id);
       goto next;
     }
 
