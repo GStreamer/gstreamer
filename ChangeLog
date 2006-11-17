@@ -1,5 +1,9 @@
 2006-11-16  David Schleef  <ds@schleef.org>
 
+	* gst/librfb/gstrfbsrc.h:  Oops, add this file.
+
+2006-11-16  David Schleef  <ds@schleef.org>
+
 	Patch by: Andre Moreira Magalhaes <andrunko@gmail.com>
 
 	* configure.ac:
