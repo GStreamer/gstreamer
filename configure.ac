@@ -81,6 +81,7 @@ GST_PLUGINS_ALL="\
   filter \
   freeze \
   h264parse \
+  librfb \
   nuvdemux \
   modplug \
   multifile \
@@ -807,6 +808,7 @@ gst/deinterlace/Makefile
 gst/filter/Makefile
 gst/freeze/Makefile
 gst/h264parse/Makefile
+gst/librfb/Makefile
 gst/modplug/Makefile
 gst/nuvdemux/Makefile
 gst/modplug/libmodplug/Makefile

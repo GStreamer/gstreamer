@@ -1,3 +1,22 @@
+2006-11-16  David Schleef  <ds@schleef.org>
+
+	Patch by: Andre Moreira Magalhaes <andrunko@gmail.com>
+
+	* configure.ac:
+	* gst/librfb/Makefile.am:
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/rfb.c:
+	* gst/librfb/rfb.h:
+	* gst/librfb/rfbbuffer.c:
+	* gst/librfb/rfbbuffer.h:
+	* gst/librfb/rfbbytestream.c:
+	* gst/librfb/rfbbytestream.h:
+	* gst/librfb/rfbcontext.h:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+	* gst/librfb/rfbutil.h:
+	  Port librfb to 0.10 (#376106).
+
 2006-11-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/spc/gstspc.c: (spc_play):

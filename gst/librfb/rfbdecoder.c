@@ -1,3 +1,8 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "rfbdecoder.h"
 
 #include <rfb.h>
 #include <unistd.h>
@@ -7,100 +12,21 @@
 #include <arpa/inet.h>
 #include <errno.h>
 
+#define RFB_GET_UINT32(ptr) GUINT32_FROM_BE (*(guint32 *)(ptr))
+#define RFB_GET_UINT16(ptr) GUINT16_FROM_BE (*(guint16 *)(ptr))
+#define RFB_GET_UINT8(ptr) (*(guint8 *)(ptr))
+
+#define RFB_SET_UINT32(ptr, val) (*(guint32 *)(ptr) = GUINT32_TO_BE (val))
+#define RFB_SET_UINT16(ptr, val) (*(guint16 *)(ptr) = GUINT16_TO_BE (val))
+#define RFB_SET_UINT8(ptr, val) (*(guint8 *)(ptr) = val)
 
 #if 0
 struct _RfbSocketPrivate
 {
-  int fd;
+  gint fd;
   sockaddr sa;
 }
 #endif
-
-
-static RfbBuffer *
-rfb_socket_get_buffer (int length, gpointer user_data)
-{
-  RfbBuffer *buffer;
-  int fd = (int) user_data;
-  int ret;
-
-  buffer = rfb_buffer_new ();
-
-  buffer->data = g_malloc (length);
-  buffer->free_data = (void *) g_free;
-
-  g_print ("calling read(%d, %p, %d)\n", fd, buffer->data, length);
-  ret = read (fd, buffer->data, length);
-  if (ret <= 0) {
-    g_critical ("read: %s", strerror (errno));
-    rfb_buffer_free (buffer);
-    return NULL;
-  }
-
-  buffer->length = ret;
-
-  return buffer;
-}
-
-static int
-rfb_socket_send_buffer (guint8 * buffer, int length, gpointer user_data)
-{
-  int fd = (int) user_data;
-  int ret;
-
-  g_print ("calling write(%d, %p, %d)\n", fd, buffer, length);
-  ret = write (fd, buffer, length);
-  if (ret < 0) {
-    g_critical ("write: %s", strerror (errno));
-    return 0;
-  }
-
-  g_assert (ret == length);
-
-  return ret;
-}
-
-
-RfbDecoder *
-rfb_decoder_new (void)
-{
-  RfbDecoder *decoder = g_new0 (RfbDecoder, 1);
-
-  decoder->bytestream = rfb_bytestream_new ();
-
-  return decoder;
-}
-
-void
-rfb_decoder_use_file_descriptor (RfbDecoder * decoder, int fd)
-{
-  g_return_if_fail (decoder != NULL);
-  g_return_if_fail (!decoder->inited);
-  g_return_if_fail (fd >= 0);
-
-  decoder->bytestream->get_buffer = rfb_socket_get_buffer;
-  decoder->bytestream->user_data = (void *) fd;
-
-  decoder->send_data = rfb_socket_send_buffer;
-  decoder->buffer_handler_data = (void *) fd;
-}
-
-void
-rfb_decoder_connect_tcp (RfbDecoder * decoder, char *addr, unsigned int port)
-{
-  int fd;
-  struct sockaddr_in sa;
-
-  fd = socket (PF_INET, SOCK_STREAM, 0);
-
-  sa.sin_family = AF_INET;
-  sa.sin_port = htons (port);
-  inet_pton (AF_INET, addr, &sa.sin_addr);
-  connect (fd, (struct sockaddr *) &sa, sizeof (struct sockaddr));
-
-  rfb_decoder_use_file_descriptor (decoder, fd);
-}
-
 
 static gboolean rfb_decoder_state_wait_for_protocol_version (RfbDecoder *
     decoder);
@@ -115,35 +41,156 @@ static gboolean rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder *
     decoder);
 static gboolean rfb_decoder_state_set_colour_map_entries (RfbDecoder * decoder);
 static gboolean rfb_decoder_state_server_cut_text (RfbDecoder * decoder);
+static RfbBuffer *rfb_socket_get_buffer (gint length, gpointer user_data);
+static gint rfb_socket_send_buffer (guint8 * buffer, gint length,
+    gpointer user_data);
+
+RfbDecoder *
+rfb_decoder_new (void)
+{
+  RfbDecoder *decoder = g_new0 (RfbDecoder, 1);
+
+  decoder->fd = -1;
+  decoder->bytestream = rfb_bytestream_new ();
+
+  return decoder;
+}
+
+void
+rfb_decoder_free (RfbDecoder * decoder)
+{
+  g_return_if_fail (decoder != NULL);
+
+  rfb_bytestream_free (decoder->bytestream);
+  if (decoder->fd >= 0)
+    close (decoder->fd);
+}
+
+void
+rfb_decoder_use_file_descriptor (RfbDecoder * decoder, gint fd)
+{
+  g_return_if_fail (decoder != NULL);
+  g_return_if_fail (decoder->fd == -1);
+  g_return_if_fail (!decoder->inited);
+  g_return_if_fail (fd >= 0);
+
+  decoder->fd = fd;
+
+  decoder->bytestream->get_buffer = rfb_socket_get_buffer;
+  decoder->bytestream->user_data = (void *) fd;
+
+  decoder->send_data = rfb_socket_send_buffer;
+  decoder->buffer_handler_data = (void *) fd;
+}
+
+gboolean
+rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * addr, guint port)
+{
+  gint fd;
+  struct sockaddr_in sa;
+
+  g_return_val_if_fail (decoder != NULL, FALSE);
+  g_return_val_if_fail (decoder->fd == -1, FALSE);
+  g_return_val_if_fail (addr != NULL, FALSE);
+
+  fd = socket (PF_INET, SOCK_STREAM, 0);
+  if (fd == -1)
+    return FALSE;
+
+  sa.sin_family = AF_INET;
+  sa.sin_port = htons (port);
+  inet_pton (AF_INET, addr, &sa.sin_addr);
+  if (connect (fd, (struct sockaddr *) &sa, sizeof (struct sockaddr)) == -1) {
+    close (fd);
+    return FALSE;
+  }
+
+  rfb_decoder_use_file_descriptor (decoder, fd);
+  return TRUE;
+}
 
 gboolean
 rfb_decoder_iterate (RfbDecoder * decoder)
 {
   g_return_val_if_fail (decoder != NULL, FALSE);
+  g_return_val_if_fail (decoder->fd != -1, FALSE);
 
   if (decoder->state == NULL) {
     decoder->state = rfb_decoder_state_wait_for_protocol_version;
   }
-
-  g_print ("iterating...\n");
+  // g_print ("iterating...\n");
 
   return decoder->state (decoder);
 }
 
-#define RFB_GET_UINT32(ptr) GUINT32_FROM_BE (*(guint32 *)(ptr))
-#define RFB_GET_UINT16(ptr) GUINT16_FROM_BE (*(guint16 *)(ptr))
-#define RFB_GET_UINT8(ptr) (*(guint8 *)(ptr))
+gint
+rfb_decoder_send (RfbDecoder * decoder, guint8 * buffer, gint len)
+{
+  g_return_val_if_fail (decoder != NULL, 0);
+  g_return_val_if_fail (decoder->fd != -1, 0);
+  g_return_val_if_fail (buffer != NULL, 0);
 
-#define RFB_SET_UINT32(ptr, val) (*(guint32 *)(ptr) = GUINT32_TO_BE (val))
-#define RFB_SET_UINT16(ptr, val) (*(guint16 *)(ptr) = GUINT16_TO_BE (val))
-#define RFB_SET_UINT8(ptr, val) (*(guint8 *)(ptr) = val)
+  return decoder->send_data (buffer, len, decoder->buffer_handler_data);
+}
+
+void
+rfb_decoder_send_update_request (RfbDecoder * decoder,
+    gboolean incremental, gint x, gint y, gint width, gint height)
+{
+  guint8 data[10];
+
+  g_return_if_fail (decoder != NULL);
+  g_return_if_fail (decoder->fd != -1);
+
+  data[0] = 3;
+  data[1] = incremental;
+  RFB_SET_UINT16 (data + 2, x);
+  RFB_SET_UINT16 (data + 4, y);
+  RFB_SET_UINT16 (data + 6, width);
+  RFB_SET_UINT16 (data + 8, height);
+
+  rfb_decoder_send (decoder, data, 10);
+}
+
+void
+rfb_decoder_send_key_event (RfbDecoder * decoder, guint key, gboolean down_flag)
+{
+  guint8 data[8];
+
+  g_return_if_fail (decoder != NULL);
+  g_return_if_fail (decoder->fd != -1);
+
+  data[0] = 4;
+  data[1] = down_flag;
+  RFB_SET_UINT16 (data + 2, 0);
+  RFB_SET_UINT32 (data + 4, key);
+
+  rfb_decoder_send (decoder, data, 8);
+}
+
+void
+rfb_decoder_send_pointer_event (RfbDecoder * decoder,
+    gint button_mask, gint x, gint y)
+{
+  guint8 data[6];
+
+  g_return_if_fail (decoder != NULL);
+  g_return_if_fail (decoder->fd != -1);
+
+  data[0] = 5;
+  data[1] = button_mask;
+  RFB_SET_UINT16 (data + 2, x);
+  RFB_SET_UINT16 (data + 4, y);
+
+  rfb_decoder_send (decoder, data, 6);
+}
 
 static gboolean
 rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
 {
   RfbBuffer *buffer;
   guint8 *data;
-  int ret;
+  gint ret;
 
   ret = rfb_bytestream_read (decoder->bytestream, &buffer, 12);
   if (ret < 12)
@@ -152,10 +199,10 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
   data = buffer->data;
 
   g_assert (memcmp (buffer->data, "RFB 003.00", 10) == 0);
-  g_print ("\"%.11s\"\n", buffer->data);
+  // g_print ("\"%.11s\"\n", buffer->data);
   rfb_buffer_free (buffer);
 
-  rfb_decoder_send (decoder, "RFB 003.003\n", 12);
+  rfb_decoder_send (decoder, (guint8 *) "RFB 003.003\n", 12);
 
   decoder->state = rfb_decoder_state_wait_for_security;
 
@@ -166,14 +213,14 @@ static gboolean
 rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
 {
   RfbBuffer *buffer;
-  int ret;
+  gint ret;
 
   ret = rfb_bytestream_read (decoder->bytestream, &buffer, 4);
   if (ret < 4)
     return FALSE;
 
   decoder->security_type = RFB_GET_UINT32 (buffer->data);
-  g_print ("security = %d\n", decoder->security_type);
+  // g_print ("security = %d\n", decoder->security_type);
 
   rfb_buffer_free (buffer);
 
@@ -198,7 +245,7 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
 {
   RfbBuffer *buffer;
   guint8 *data;
-  int ret;
+  gint ret;
   guint32 name_length;
 
   ret = rfb_bytestream_peek (decoder->bytestream, &buffer, 24);
@@ -220,8 +267,8 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
   decoder->green_shift = RFB_GET_UINT8 (data + 15);
   decoder->blue_shift = RFB_GET_UINT8 (data + 16);
 
-  g_print ("width: %d\n", decoder->width);
-  g_print ("height: %d\n", decoder->height);
+  // g_print ("width: %d\n", decoder->width);
+  // g_print ("height: %d\n", decoder->height);
 
   name_length = RFB_GET_UINT32 (data + 20);
   rfb_buffer_free (buffer);
@@ -230,8 +277,8 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
   if (ret < 24 + name_length)
     return FALSE;
 
-  decoder->name = g_strndup ((char *) (buffer->data) + 24, name_length);
-  g_print ("name: %s\n", decoder->name);
+  decoder->name = g_strndup ((gchar *) (buffer->data) + 24, name_length);
+  // g_print ("name: %s\n", decoder->name);
   rfb_buffer_free (buffer);
 
   decoder->state = rfb_decoder_state_normal;
@@ -244,8 +291,8 @@ static gboolean
 rfb_decoder_state_normal (RfbDecoder * decoder)
 {
   RfbBuffer *buffer;
-  int ret;
-  int message_type;
+  gint ret;
+  gint message_type;
 
   ret = rfb_bytestream_read (decoder->bytestream, &buffer, 1);
   message_type = RFB_GET_UINT8 (buffer->data);
@@ -277,7 +324,7 @@ static gboolean
 rfb_decoder_state_framebuffer_update (RfbDecoder * decoder)
 {
   RfbBuffer *buffer;
-  int ret;
+  gint ret;
 
   ret = rfb_bytestream_read (decoder->bytestream, &buffer, 3);
 
@@ -291,10 +338,10 @@ static gboolean
 rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
 {
   RfbBuffer *buffer;
-  int ret;
-  int x, y, w, h;
-  int encoding;
-  int size;
+  gint ret;
+  gint x, y, w, h;
+  gint encoding;
+  gint size;
 
   ret = rfb_bytestream_peek (decoder->bytestream, &buffer, 12);
   if (ret < 12)
@@ -345,53 +392,45 @@ rfb_decoder_state_server_cut_text (RfbDecoder * decoder)
   return FALSE;
 }
 
-
-void
-rfb_decoder_send_update_request (RfbDecoder * decoder,
-    gboolean incremental, int x, int y, int width, int height)
+static RfbBuffer *
+rfb_socket_get_buffer (gint length, gpointer user_data)
 {
-  guint8 data[10];
+  RfbBuffer *buffer;
+  gint fd = (gint) user_data;
+  gint ret;
 
-  data[0] = 3;
-  data[1] = incremental;
-  RFB_SET_UINT16 (data + 2, x);
-  RFB_SET_UINT16 (data + 4, y);
-  RFB_SET_UINT16 (data + 6, width);
-  RFB_SET_UINT16 (data + 8, height);
+  buffer = rfb_buffer_new ();
 
-  rfb_decoder_send (decoder, data, 10);
+  buffer->data = g_malloc (length);
+  buffer->free_data = (void *) g_free;
+
+  // g_print ("calling read(%d, %p, %d)\n", fd, buffer->data, length);
+  ret = read (fd, buffer->data, length);
+  if (ret <= 0) {
+    g_critical ("read: %s", strerror (errno));
+    rfb_buffer_free (buffer);
+    return NULL;
+  }
+
+  buffer->length = ret;
+
+  return buffer;
 }
 
-void
-rfb_decoder_send_key_event (RfbDecoder * decoder, unsigned int key,
-    gboolean down_flag)
+static gint
+rfb_socket_send_buffer (guint8 * buffer, gint length, gpointer user_data)
 {
-  guint8 data[8];
+  gint fd = (gint) user_data;
+  gint ret;
 
-  data[0] = 4;
-  data[1] = down_flag;
-  RFB_SET_UINT16 (data + 2, 0);
-  RFB_SET_UINT32 (data + 4, key);
+  // g_print ("calling write(%d, %p, %d)\n", fd, buffer, length);
+  ret = write (fd, buffer, length);
+  if (ret < 0) {
+    g_critical ("write: %s", strerror (errno));
+    return 0;
+  }
 
-  rfb_decoder_send (decoder, data, 8);
-}
+  g_assert (ret == length);
 
-void
-rfb_decoder_send_pointer_event (RfbDecoder * decoder,
-    int button_mask, int x, int y)
-{
-  guint8 data[6];
-
-  data[0] = 5;
-  data[1] = button_mask;
-  RFB_SET_UINT16 (data + 2, x);
-  RFB_SET_UINT16 (data + 4, y);
-
-  rfb_decoder_send (decoder, data, 6);
-}
-
-int
-rfb_decoder_send (RfbDecoder * decoder, guint8 * buffer, int len)
-{
-  return decoder->send_data (buffer, len, decoder->buffer_handler_data);
+  return ret;
 }

@@ -1,11 +1,13 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
-#include <rfbbuffer.h>
+#include "rfbbuffer.h"
 
 RfbBuffer *
 rfb_buffer_new (void)
 {
   return g_new0 (RfbBuffer, 1);
-
 }
 
 RfbBuffer *
@@ -22,6 +24,7 @@ rfb_buffer_new_and_alloc (int len)
 void
 rfb_buffer_free (RfbBuffer * buffer)
 {
-  buffer->free_data (buffer->data, buffer->buffer_private);
+  g_return_if_fail (buffer != NULL);
 
+  buffer->free_data (buffer->data, buffer->buffer_private);
 }

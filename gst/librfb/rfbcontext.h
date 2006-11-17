@@ -1,40 +1,37 @@
-
 #ifndef _LIBRFB_RFBCONTEXT_H_
 #define _LIBRFB_RFBCONTEXT_H_
 
-G_BEGIN_DECLS
-
 #include <glib.h>
+
+G_BEGIN_DECLS
 
 typedef struct _RfbContext
 {
   RfbConnection *connection;
 
   guint8 *buffer1;
-  void *buffer1_alloc;
-  unsigned int buffer1_len;
+  gpointer buffer1_alloc;
+  guint buffer1_len;
 
   guint8 *buffer2;
-  void *buffer2_alloc;
-  unsigned int buffer2_len;
+  gpointer buffer2_alloc;
+  guint buffer2_len;
 
-  char *name;
+  gchar *name;
 } RfbContext;
 
 typedef struct _RfbRect
 {
   RfbContext *context;
 
-  unsigned int x_pos;
-  unsigned int y_pos;
-  unsigned int width;
-  unsigned int height;
-  unsigned int encoding_type;
+  guint x_pos;
+  guint y_pos;
+  guint width;
+  guint height;
+  guint encoding_type;
 
-  char *data;
+  gchar *data;
 } RfbRect;
-
-
 
 G_END_DECLS
 
