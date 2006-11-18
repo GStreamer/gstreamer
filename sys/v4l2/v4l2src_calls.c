@@ -645,11 +645,12 @@ gst_v4l2src_capture_deinit (GstV4l2Src * v4l2src)
     for (i = 0; i < v4l2src->breq.count; i++) {
       if (g_atomic_int_dec_and_test (&v4l2src->pool->buffers[i].refcount)) {
         if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_DQBUF,
-                &v4l2src->pool->buffers[i].buffer) < 0)
+                &v4l2src->pool->buffers[i].buffer) < 0) {
           GST_DEBUG_OBJECT (v4l2src,
               "Could not dequeue buffer on uninitialization."
               "system error: %s. Will try reinit instead", g_strerror (errno));
-        try_reinit = TRUE;
+          try_reinit = TRUE;
+        }
       }
     }
     if (g_atomic_int_dec_and_test (&v4l2src->pool->refcount)) {
