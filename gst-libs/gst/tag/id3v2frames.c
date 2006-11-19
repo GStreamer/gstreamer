@@ -73,6 +73,10 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
   gchar *tag_str = NULL;
   GArray *tag_fields = NULL;
 
+#ifdef HAVE_ZLIB
+  guint8 *uncompressed_data = NULL;
+#endif
+
   /* Check that the frame id is valid */
   for (i = 0; i < 5 && work->frame_id[i] != '\0'; i++) {
     if (!g_ascii_isalnum (work->frame_id[i])) {
@@ -121,22 +125,23 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     uLongf destSize = work->parse_size;
     Bytef *dest, *src;
 
-    work->parse_data = g_malloc (work->parse_size);
-    g_return_val_if_fail (work->parse_data != NULL, FALSE);
+    uncompressed_data = g_malloc (work->parse_size);
 
-    dest = (Bytef *) work->parse_data;
+    dest = (Bytef *) uncompressed_data;
     src = (Bytef *) frame_data;
 
     if (uncompress (dest, &destSize, src, frame_data_size) != Z_OK) {
-      g_free (work->parse_data);
+      g_free (uncompressed_data);
       return FALSE;
     }
     if (destSize != work->parse_size) {
       GST_WARNING
           ("Decompressing ID3v2 frame %s did not produce expected size %d bytes (got %lu)",
           tag_name, work->parse_size, destSize);
+      g_free (uncompressed_data);
       return FALSE;
     }
+    work->parse_data = uncompressed_data;
 #else
     GST_WARNING ("Compressed ID3v2 tag frame could not be decompressed"
         " because gstid3demux was compiled without zlib support");
@@ -167,9 +172,13 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
     /* Unique file identifier */
     tag_str = parse_unique_file_identifier (work, &tag_name);
   }
-
-  if (work->frame_flags & ID3V2_FRAME_FORMAT_COMPRESSION)
-    g_free (work->parse_data);
+#ifdef HAVE_ZLIB
+  if (work->frame_flags & ID3V2_FRAME_FORMAT_COMPRESSION) {
+    g_free (uncompressed_data);
+    uncompressed_data = NULL;
+    work->parse_data = frame_data;
+  }
+#endif
 
   if (tag_str != NULL) {
     /* g_print ("Tag %s value %s\n", tag_name, tag_str); */
