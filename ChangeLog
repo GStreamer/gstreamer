@@ -1,3 +1,10 @@
+2006-11-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.h:
+	  Fix GstBaseRTPAudioPayload structure so the whole GObject
+	  inheritance business actually works (parent class instance structure
+	  must always come first in the derived class instance structure).
+
 2006-11-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videotestsrc/Makefile.am:

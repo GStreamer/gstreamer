@@ -45,9 +45,9 @@ typedef struct _GstBaseRTPAudioPayloadPrivate GstBaseRTPAudioPayloadPrivate;
 
 struct _GstBaseRTPAudioPayload
 {
-  GstBaseRTPAudioPayloadPrivate *priv;
-
   GstBaseRTPPayload payload;
+
+  GstBaseRTPAudioPayloadPrivate *priv;
 
   GstClockTime base_ts;
   gint frame_size;
