@@ -1,3 +1,12 @@
+2006-11-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame):
+	Make sure that g_free always gets called on the same pointer that was 
+	returned by g_malloc.  Fixes #376594.
+	Do not leak memory if decompressed size is wrong.
+	Remove unneeded check of return value of g_malloc.
+	Patch by: René Stadler <mail@renestadler.de>
+
 2006-11-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_capture_deinit):
