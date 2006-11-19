@@ -1,6 +1,11 @@
 2006-11-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* po/POTFILES.in:
+	  ... but better exclude files that aren't disted.
+
+2006-11-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* po/POTFILES.in:
 	  Add v4l2 source files to list of files with translations, so the
 	  strings are actually extracted (however bad they still may be).
 
