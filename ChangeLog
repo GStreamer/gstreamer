@@ -1,3 +1,23 @@
+2006-11-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_base_init),
+	(gst_dvd_demux_class_init), (gst_dvd_demux_combine_flows),
+	(gst_dvd_demux_send_subbuffer):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_class_init),
+	(gst_mpeg_demux_init_stream), (gst_mpeg_demux_parse_packet),
+	(gst_mpeg_demux_parse_pes), (gst_mpeg_demux_combine_flows),
+	(gst_mpeg_demux_send_subbuffer):
+	* gst/mpegstream/gstmpegdemux.h:
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_process_event),
+	(gst_mpeg_parse_chain):
+	  Fix flow value combination; this fixes playbin/totem locking up if
+	  a VobSub file is specified as subtitle file (#334322). Flow value
+	  combination should only happen once we are fairly sure we've got all
+	  pads that are available for now. Since there isn't a well-specified
+	  time when this is the case in MPEG, we'll just assume this is the
+	  case once there has been a certain number of packets for each
+	  stream we've found so far.
+
 2006-11-15  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Jan Arne Petersen <jpetersen at jpetersen dot org>

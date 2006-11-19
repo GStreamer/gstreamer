@@ -139,8 +139,6 @@ static void gst_dvd_demux_base_init (gpointer klass);
 static void gst_dvd_demux_init (GstDVDDemux * dvd_demux,
     GstDVDDemuxClass * klass);
 
-static GstFlowReturn gst_dvd_demux_send_buffer (GstMPEGParse * mpeg_parse,
-    GstBuffer * buffer, GstClockTime time);
 static gboolean gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse,
     GstEvent * event);
 
@@ -167,6 +165,9 @@ static GstFlowReturn gst_dvd_demux_send_subbuffer
     GstMPEGStream * outstream,
     GstBuffer * buffer, GstClockTime timestamp, guint offset, guint size);
 
+static GstFlowReturn gst_dvd_demux_combine_flows (GstMPEGDemux * mpegdemux,
+    GstMPEGStream * stream, GstFlowReturn flow);
+
 static void gst_dvd_demux_set_cur_audio
     (GstDVDDemux * dvd_demux, gint stream_nr);
 static void gst_dvd_demux_set_cur_subpicture
@@ -192,7 +193,7 @@ gst_dvd_demux_base_init (gpointer klass)
   GstMPEGDemuxClass *demux_class = GST_MPEG_DEMUX_CLASS (klass);
   GstDVDDemuxClass *dvd_demux_class = GST_DVD_DEMUX_CLASS (klass);
 
-  mpeg_parse_class->send_buffer = gst_dvd_demux_send_buffer;
+  mpeg_parse_class->send_buffer = NULL;
   mpeg_parse_class->process_event = gst_dvd_demux_process_event;
 
   /* sink pad */
@@ -245,6 +246,7 @@ gst_dvd_demux_class_init (GstDVDDemuxClass * klass)
   mpeg_demux_class->get_audio_stream = gst_dvd_demux_get_audio_stream;
   mpeg_demux_class->get_video_stream = gst_dvd_demux_get_video_stream;
   mpeg_demux_class->send_subbuffer = gst_dvd_demux_send_subbuffer;
+  mpeg_demux_class->combine_flows = gst_dvd_demux_combine_flows;
   mpeg_demux_class->process_private = gst_dvd_demux_process_private;
   mpeg_demux_class->synchronise_pads = gst_dvd_demux_synchronise_pads;
   mpeg_demux_class->sync_stream_to_time = gst_dvd_demux_sync_stream_to_time;
@@ -286,15 +288,6 @@ gst_dvd_demux_init (GstDVDDemux * dvd_demux, GstDVDDemuxClass * klass)
   dvd_demux->segment_filter = TRUE;
 
   dvd_demux->langcodes = NULL;
-}
-
-
-static GstFlowReturn
-gst_dvd_demux_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
-    GstClockTime time)
-{
-  gst_buffer_unref (buffer);
-  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -918,6 +911,60 @@ gst_dvd_demux_process_private (GstMPEGDemux * mpeg_demux,
   return ret;
 }
 
+/* random magic value */
+#define MIN_BUFS_FOR_NO_MORE_PADS 100
+
+static GstFlowReturn
+gst_dvd_demux_combine_flows (GstMPEGDemux * mpegdemux, GstMPEGStream * stream,
+    GstFlowReturn flow)
+{
+  GstDVDDemux *demux = (GstDVDDemux *) mpegdemux;
+  gint i;
+
+  /* store the value */
+  stream->last_flow = flow;
+
+  /* if it's success we can return the value right away */
+  if (GST_FLOW_IS_SUCCESS (flow))
+    goto done;
+
+  /* any other error that is not-linked can be returned right
+   * away */
+  if (flow != GST_FLOW_NOT_LINKED) {
+    GST_DEBUG_OBJECT (demux, "flow %s on pad %" GST_PTR_FORMAT,
+        gst_flow_get_name (flow), stream->pad);
+    goto done;
+  }
+
+  /* let parent class check for anything non-not-linked for its streams */
+  flow =
+      GST_MPEG_DEMUX_CLASS (parent_class)->combine_flows (mpegdemux, stream,
+      flow);
+  if (flow != GST_FLOW_NOT_LINKED)
+    goto done;
+
+  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
+  for (i = 0; i < GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS; i++) {
+    if (demux->subpicture_stream[i] != NULL) {
+      flow = demux->subpicture_stream[i]->last_flow;
+      /* some other return value (must be SUCCESS but we can return
+       * other values as well) */
+      if (flow != GST_FLOW_NOT_LINKED)
+        goto done;
+      if (demux->subpicture_stream[i]->buffers_sent < MIN_BUFS_FOR_NO_MORE_PADS) {
+        flow = GST_FLOW_OK;
+        goto done;
+      }
+    }
+  }
+  /* if we get here, all other pads were unlinked and we return
+   * NOT_LINKED then */
+  GST_DEBUG_OBJECT (demux, "all pads combined have not-linked flow");
+
+done:
+  return flow;
+}
+
 static GstFlowReturn
 gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
     GstMPEGStream * outstream, GstBuffer * buffer,
@@ -987,9 +1034,21 @@ gst_dvd_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
     gst_buffer_set_caps (outbuf, outstream->caps);
 
     ret = gst_pad_push (outpad, outbuf);
+
+    /* this was one of the current_foo pads, which is shadowing one of the
+     * foo_%02d pads, so since we keep track of the last flow value in the
+     * stream structure we need to combine the OK/NOT_LINKED flows here
+     * (because both pads share the same stream structure) */
+    if ((ret == GST_FLOW_NOT_LINKED && outstream->last_flow == GST_FLOW_OK) ||
+        (ret == GST_FLOW_OK && outstream->last_flow == GST_FLOW_NOT_LINKED)) {
+      outstream->last_flow = GST_FLOW_OK;
+      ret = GST_FLOW_OK;
+    }
   }
 
   gst_buffer_unref (buffer);
+
+  ret = DEMUX_CLASS (dvd_demux)->combine_flows (mpeg_demux, outstream, ret);
 
   return ret;
 }

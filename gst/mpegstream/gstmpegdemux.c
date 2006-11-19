@@ -92,9 +92,6 @@ GST_BOILERPLATE_FULL (GstMPEGDemux, gst_mpeg_demux, GstMPEGParse,
 
 static void gst_mpeg_demux_class_init (GstMPEGDemuxClass * klass);
 
-static GstFlowReturn gst_mpeg_demux_send_buffer (GstMPEGParse * mpeg_parse,
-    GstBuffer * buffer, GstClockTime time);
-
 static GstPad *gst_mpeg_demux_new_output_pad (GstMPEGDemux * mpeg_demux,
     const gchar * name, GstPadTemplate * temp);
 static void gst_mpeg_demux_init_stream (GstMPEGDemux * mpeg_demux,
@@ -120,6 +117,8 @@ static GstFlowReturn gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse,
 static GstFlowReturn gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
     GstMPEGStream * outstream, GstBuffer * buffer,
     GstClockTime timestamp, guint offset, guint size);
+static GstFlowReturn gst_mpeg_demux_combine_flows (GstMPEGDemux * mpeg_demux,
+    GstMPEGStream * stream, GstFlowReturn flow);
 static GstFlowReturn gst_mpeg_demux_process_private (GstMPEGDemux * mpeg_demux,
     GstBuffer * buffer,
     guint stream_nr, GstClockTime timestamp, guint headerlen, guint datalen);
@@ -190,7 +189,7 @@ gst_mpeg_demux_class_init (GstMPEGDemuxClass * klass)
   mpeg_parse_class->parse_syshead = gst_mpeg_demux_parse_syshead;
   mpeg_parse_class->parse_packet = gst_mpeg_demux_parse_packet;
   mpeg_parse_class->parse_pes = gst_mpeg_demux_parse_pes;
-  mpeg_parse_class->send_buffer = gst_mpeg_demux_send_buffer;
+  mpeg_parse_class->send_buffer = NULL;
 
   klass->new_output_pad = gst_mpeg_demux_new_output_pad;
   klass->init_stream = gst_mpeg_demux_init_stream;
@@ -198,6 +197,7 @@ gst_mpeg_demux_class_init (GstMPEGDemuxClass * klass)
   klass->get_audio_stream = gst_mpeg_demux_get_audio_stream;
   klass->get_private_stream = gst_mpeg_demux_get_private_stream;
   klass->send_subbuffer = gst_mpeg_demux_send_subbuffer;
+  klass->combine_flows = gst_mpeg_demux_combine_flows;
   klass->process_private = gst_mpeg_demux_process_private;
   klass->synchronise_pads = gst_mpeg_demux_synchronise_pads;
   klass->sync_stream_to_time = gst_mpeg_demux_sync_stream_to_time;
@@ -227,14 +227,6 @@ gst_mpeg_demux_init (GstMPEGDemux * mpeg_demux, GstMPEGDemuxClass * klass)
   mpeg_demux->max_gap_tolerance = GST_CLOCK_TIME_NONE;
 
   mpeg_demux->last_pts = -1;
-}
-
-static GstFlowReturn
-gst_mpeg_demux_send_buffer (GstMPEGParse * mpeg_parse, GstBuffer * buffer,
-    GstClockTime time)
-{
-  gst_buffer_unref (buffer);
-  return GST_FLOW_OK;
 }
 
 static gint
@@ -291,6 +283,9 @@ gst_mpeg_demux_init_stream (GstMPEGDemux * mpeg_demux,
 
   str->cur_ts = 0;
   str->scr_offs = 0;
+
+  str->last_flow = GST_FLOW_OK;
+  str->buffers_sent = 0;
 }
 
 static GstMPEGStream *
@@ -712,12 +707,12 @@ done:
   if (id == 0xBD) {
     /* Private stream 1. */
     GST_DEBUG_OBJECT (mpeg_demux, "we have a private 1 packet");
-    CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 0, timestamp,
+    ret = CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 0, timestamp,
         headerlen, datalen);
   } else if (id == 0xBF) {
     /* Private stream 2. */
     GST_DEBUG_OBJECT (mpeg_demux, "we have a private 2 packet");
-    CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 1, timestamp,
+    ret = CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 1, timestamp,
         headerlen, datalen);
   } else if (id >= 0xC0 && id <= 0xDF) {
     /* Audio. */
@@ -855,13 +850,13 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   if (id == 0xBD) {
     /* Private stream 1. */
     GST_DEBUG_OBJECT (mpeg_demux, "we have a private 1 packet");
-    CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 0, timestamp,
-        headerlen, datalen);
+    ret = CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 0,
+        timestamp, headerlen, datalen);
   } else if (id == 0xBF) {
     /* Private stream 2. */
     GST_DEBUG_OBJECT (mpeg_demux, "we have a private 2 packet");
-    CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 1, timestamp,
-        headerlen, datalen);
+    ret = CLASS (mpeg_demux)->process_private (mpeg_demux, buffer, 1,
+        timestamp, headerlen, datalen);
   } else if (id >= 0xC0 && id <= 0xDF) {
     /* Audio. */
     GST_DEBUG_OBJECT (mpeg_demux, "we have an audio packet");
@@ -884,6 +879,78 @@ gst_mpeg_demux_parse_pes (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   }
 
   return ret;
+}
+
+/* random magic value */
+#define MIN_BUFS_FOR_NO_MORE_PADS 100
+
+static GstFlowReturn
+gst_mpeg_demux_combine_flows (GstMPEGDemux * demux, GstMPEGStream * stream,
+    GstFlowReturn flow)
+{
+  gint i;
+
+  /* store the value */
+  stream->last_flow = flow;
+
+  /* if it's success we can return the value right away */
+  if (GST_FLOW_IS_SUCCESS (flow))
+    goto done;
+
+  /* any other error that is not-linked can be returned right
+   * away */
+  if (flow != GST_FLOW_NOT_LINKED) {
+    GST_DEBUG_OBJECT (demux, "flow %s on pad %" GST_PTR_FORMAT,
+        gst_flow_get_name (flow), stream->pad);
+    goto done;
+  }
+
+  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
+  for (i = 0; i < GST_MPEG_DEMUX_NUM_VIDEO_STREAMS; i++) {
+    if (demux->video_stream[i] != NULL) {
+      flow = demux->video_stream[i]->last_flow;
+      /* some other return value (must be SUCCESS but we can return
+       * other values as well) */
+      if (flow != GST_FLOW_NOT_LINKED)
+        goto done;
+      if (demux->video_stream[i]->buffers_sent < MIN_BUFS_FOR_NO_MORE_PADS) {
+        flow = GST_FLOW_OK;
+        goto done;
+      }
+    }
+  }
+  for (i = 0; i < GST_MPEG_DEMUX_NUM_AUDIO_STREAMS; i++) {
+    if (demux->audio_stream[i] != NULL) {
+      flow = demux->audio_stream[i]->last_flow;
+      /* some other return value (must be SUCCESS but we can return
+       * other values as well) */
+      if (flow != GST_FLOW_NOT_LINKED)
+        goto done;
+      if (demux->audio_stream[i]->buffers_sent < MIN_BUFS_FOR_NO_MORE_PADS) {
+        flow = GST_FLOW_OK;
+        goto done;
+      }
+    }
+  }
+  for (i = 0; i < GST_MPEG_DEMUX_NUM_PRIVATE_STREAMS; i++) {
+    if (demux->private_stream[i] != NULL) {
+      flow = demux->private_stream[i]->last_flow;
+      /* some other return value (must be SUCCESS but we can return
+       * other values as well) */
+      if (flow != GST_FLOW_NOT_LINKED)
+        goto done;
+      if (demux->private_stream[i]->buffers_sent < MIN_BUFS_FOR_NO_MORE_PADS) {
+        flow = GST_FLOW_OK;
+        goto done;
+      }
+    }
+  }
+  /* if we get here, all other pads were unlinked and we return
+   * NOT_LINKED then */
+  GST_DEBUG_OBJECT (demux, "all pads combined have not-linked flow");
+
+done:
+  return flow;
 }
 
 static GstFlowReturn
@@ -927,6 +994,9 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + offset;
   ret = gst_pad_push (outstream->pad, outbuf);
+  GST_LOG ("flow on %s: %s", GST_PAD_NAME (outstream->pad),
+      gst_flow_get_name (ret));
+  ++outstream->buffers_sent;
 
   if (GST_CLOCK_TIME_IS_VALID (mpeg_demux->max_gap) &&
       GST_CLOCK_TIME_IS_VALID (mpeg_parse->current_ts) &&
@@ -935,6 +1005,8 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
         mpeg_parse->current_ts - mpeg_demux->max_gap,
         mpeg_parse->current_ts - mpeg_demux->max_gap_tolerance);
   }
+
+  ret = CLASS (mpeg_demux)->combine_flows (mpeg_demux, outstream, ret);
 
   return ret;
 }

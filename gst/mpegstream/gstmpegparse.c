@@ -407,6 +407,9 @@ gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
       gst_mpeg_packetize_flush_cache (mpeg_parse->packetize);
       break;
     }
+    case GST_EVENT_EOS:
+      GST_DEBUG_OBJECT (mpeg_parse, "EOS");
+      /* fall through to default handler */
     default:
       if (CLASS (mpeg_parse)->send_event) {
         ret = CLASS (mpeg_parse)->send_event (mpeg_parse, event);
@@ -684,8 +687,8 @@ gst_mpeg_parse_event (GstPad * pad, GstEvent * event)
 static GstFlowReturn
 gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (gst_pad_get_parent (pad));
-  GstFlowReturn result = GST_FLOW_ERROR;
+  GstMPEGParse *mpeg_parse = GST_MPEG_PARSE (GST_PAD_PARENT (pad));
+  GstFlowReturn result;
   guint id;
   gboolean mpeg2;
   GstClockTime time;
@@ -704,10 +707,10 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
     if (result == GST_FLOW_RESEND) {
       /* there was not enough data in packetizer cache */
       result = GST_FLOW_OK;
-      goto done;
+      break;
     }
     if (result != GST_FLOW_OK)
-      goto done;
+      break;
 
     id = GST_MPEG_PACKETIZE_ID (mpeg_parse->packetize);
     mpeg2 = GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize);
@@ -749,7 +752,7 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
       GST_DEBUG_OBJECT (mpeg_parse, "waiting for SCR");
       gst_buffer_unref (buffer);
       result = GST_FLOW_OK;
-      goto done;
+      break;
     }
 
     /* Update the byte count. */
@@ -768,7 +771,7 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
         GST_ELEMENT_ERROR (mpeg_parse, CORE, NEGOTIATION, (NULL), (NULL));
         gst_buffer_unref (buffer);
         result = GST_FLOW_ERROR;
-        goto done;
+        break;
       }
     }
 
@@ -819,13 +822,11 @@ gst_mpeg_parse_chain (GstPad * pad, GstBuffer * buffer)
           ", total since SCR: %" G_GINT64_FORMAT ", br: %" G_GINT64_FORMAT
           ", next SCR: %" G_GINT64_FORMAT, size, bss, br, mpeg_parse->next_scr);
     }
-  } while (!GST_FLOW_IS_FATAL (result));
+  } while (GST_FLOW_IS_SUCCESS (result));
 
-done:
-  gst_object_unref (mpeg_parse);
-
-  if (result == GST_FLOW_NOT_LINKED)
-    result = GST_FLOW_OK;
+  if (result != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (mpeg_parse, "flow: %s", gst_flow_get_name (result));
+  }
 
   return result;
 }

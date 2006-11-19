@@ -88,14 +88,16 @@ typedef struct _GstMPEGDemuxClass GstMPEGDemuxClass;
 
 /* Information associated to a single MPEG stream. */
 struct _GstMPEGStream {
-  gint          type;
-  gint          number;
-  GstPad        *pad;
-  GstCaps	*caps;
-  gint          index_id;
-  gint          size_bound;
-  GstClockTime  cur_ts;
-  GstClockTimeDiff scr_offs;
+  gint              type;
+  gint              number;
+  GstPad           *pad;
+  GstCaps          *caps;
+  gint              index_id;
+  gint              size_bound;
+  GstClockTime      cur_ts;
+  GstClockTimeDiff  scr_offs;
+  GstFlowReturn     last_flow;
+  guint             buffers_sent;
 };
 
 /* Extended structure to hold additional information for video
@@ -182,6 +184,10 @@ struct _GstMPEGDemuxClass {
                                           guint offset,
                                           guint size);
 
+
+  GstFlowReturn (*combine_flows)        (GstMPEGDemux  *mpeg_demux,
+                                         GstMPEGStream *stream,
+                                         GstFlowReturn  flow);
 
   GstFlowReturn (*process_private)      (GstMPEGDemux *mpeg_demux,
                                          GstBuffer *buffer,
