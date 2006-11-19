@@ -49,6 +49,7 @@ typedef enum
   VIDEO_BOX_FILL_BLACK,
   VIDEO_BOX_FILL_GREEN,
   VIDEO_BOX_FILL_BLUE,
+  VIDEO_BOX_FILL_LAST
 }
 GstVideoBoxFill;
 
@@ -102,8 +103,8 @@ enum
   PROP_BOTTOM,
   PROP_FILL_TYPE,
   PROP_ALPHA,
-  PROP_BORDER_ALPHA,
-  /* FILL ME */
+  PROP_BORDER_ALPHA
+      /* FILL ME */
 };
 
 static GstStaticPadTemplate gst_video_box_src_template =
@@ -212,10 +213,11 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
           "Alpha value of the border", 0.0, 1.0, DEFAULT_BORDER_ALPHA,
           G_PARAM_READWRITE));
 
-  trans_class->transform_caps = gst_video_box_transform_caps;
-  trans_class->set_caps = gst_video_box_set_caps;
-  trans_class->get_unit_size = gst_video_box_get_unit_size;
-  trans_class->transform = gst_video_box_transform;
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_video_box_transform_caps);
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_box_set_caps);
+  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (gst_video_box_get_unit_size);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_box_transform);
 
   GST_DEBUG_CATEGORY_INIT (videobox_debug, "videobox", 0,
       "Resizes a video by adding borders or cropping");
@@ -464,9 +466,9 @@ gst_video_box_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   return TRUE;
 }
 
-static int yuv_colors_Y[] = { 16, 150, 29 };
-static int yuv_colors_U[] = { 128, 46, 255 };
-static int yuv_colors_V[] = { 128, 21, 107 };
+static const guint8 yuv_colors_Y[VIDEO_BOX_FILL_LAST] = { 16, 150, 29 };
+static const guint8 yuv_colors_U[VIDEO_BOX_FILL_LAST] = { 128, 46, 255 };
+static const guint8 yuv_colors_V[VIDEO_BOX_FILL_LAST] = { 128, 21, 107 };
 
 static void
 gst_video_box_copy_plane_i420 (GstVideoBox * video_box, guint8 * src,

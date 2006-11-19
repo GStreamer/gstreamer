@@ -1,3 +1,9 @@
+2006-11-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videobox/gstvideobox.c: (gst_video_box_class_init):
+	  Minor clean-ups: const-ify static array, remove trailing comma from
+	  last enum (gcc-2.9x trips over that), use GST_DEBUG_FUNCPTR.
+
 2006-11-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame):
