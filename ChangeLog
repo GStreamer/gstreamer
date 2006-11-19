@@ -1,5 +1,11 @@
 2006-11-19  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* po/POTFILES.in:
+	  Add v4l2 source files to list of files with translations, so the
+	  strings are actually extracted (however bad they still may be).
+
+2006-11-19  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/videobox/gstvideobox.c: (gst_video_box_class_init):
 	  Minor clean-ups: const-ify static array, remove trailing comma from
 	  last enum (gcc-2.9x trips over that), use GST_DEBUG_FUNCPTR.
