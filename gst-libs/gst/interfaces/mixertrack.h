@@ -74,11 +74,15 @@ struct _GstMixerTrack {
   GObject            parent;
 
   gchar             *label;
-  /* FIXME: flags should be guint32. Change in 0.9 */
+
+  /* FIXME 0.11: flags should be guint32 */
   GstMixerTrackFlags flags;
+
   gint               num_channels;
   gint               min_volume;
   gint               max_volume;
+
+  /* FIXME 0.11: add padding */
 };
 
 struct _GstMixerTrackClass {

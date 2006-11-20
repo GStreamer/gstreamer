@@ -1,3 +1,8 @@
+2006-11-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/interfaces/mixertrack.h:
+	  Add FIXME so we can add some padding here in 0.11
+
 2006-11-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.h:
