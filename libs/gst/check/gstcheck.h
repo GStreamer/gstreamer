@@ -83,13 +83,24 @@ gst_check_message_error (msg, GST_MESSAGE_ERROR,		\
 /***
  * wrappers for START_TEST and END_TEST
  */
+#if CHECK_MAJOR_VERSION >= 0 && CHECK_MINOR_VERSION >= 9 && CHECK_MICRO_VERSION >= 4
 #define GST_START_TEST(__testname) \
-static void __testname (void)\
+static void __testname (int __i__)\
 {\
   GST_DEBUG ("test start"); \
   tcase_fn_start (""# __testname, __FILE__, __LINE__);
 
 #define GST_END_TEST END_TEST
+#else
+#define GST_START_TEST(__testname) \
+static void __testname ()\
+{\
+  GST_DEBUG ("test start"); \
+  tcase_fn_start (""# __testname, __FILE__, __LINE__);
+
+#define GST_END_TEST END_TEST
+#endif
+
 
 /* additional fail macros */
 #define fail_unless_equals_int(a, b)					\
