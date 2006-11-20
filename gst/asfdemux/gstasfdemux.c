@@ -902,7 +902,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
   /* Swallow up any left over data and set up the 
    * standard properties from the header info */
   if (size_left) {
-    GST_WARNING ("Audio header contains %d bytes of "
+    GST_INFO_OBJECT (demux, "Audio header contains %d bytes of "
         "codec specific data", size_left);
 
     gst_asf_demux_get_buffer (&extradata, size_left, p_data, p_size);

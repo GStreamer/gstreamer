@@ -1,3 +1,9 @@
+2006-11-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_add_audio_stream):
+	  The availability of extra codec data isn't something that
+	  warrants debug messages at WARNING level (see #376958).
+
 2006-11-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_base_init),
