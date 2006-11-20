@@ -229,14 +229,14 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       depth = 32;
       endianness = G_BIG_ENDIAN;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-      r_mask = 0x000000ff;
+      r_mask = 0x00ff0000;
       g_mask = 0x0000ff00;
-      b_mask = 0x00ff0000;
+      b_mask = 0x000000ff;
       a_mask = 0xff000000;
 #else
-      r_mask = 0xff000000;
+      r_mask = 0x0000ff00;
       g_mask = 0x00ff0000;
-      b_mask = 0x0000ff00;
+      b_mask = 0xff000000;
       a_mask = 0x000000ff;
 #endif
       break;
@@ -254,7 +254,6 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       g_mask = 0x0000ff00;
       b_mask = 0x000000ff;
       a_mask = 0xff000000;
-
 #endif
       break;
     case PIX_FMT_YUV410P:

@@ -1,3 +1,9 @@
+2006-11-20  Wim Taymans  <wim@fluendo.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps):
+	Fix RGBA32 caps. Fixes #357038.
+
 2006-11-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/interfaces/mixertrack.h:
