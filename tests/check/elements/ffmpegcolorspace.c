@@ -426,7 +426,7 @@ ffmpegcolorspace_suite (void)
      * during which it causes SIGILLs etc. to be fired */
     g_setenv ("OIL_CPU_FLAGS", "0", 0);
     /* test_rgb_formats takes a bit longer, so increase timeout */
-    tcase_set_timeout (tc_chain, 5 * 60);
+    tcase_set_timeout (tc_chain, 10 * 60);
   }
 #endif
 

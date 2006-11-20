@@ -1,3 +1,11 @@
+2006-11-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/ffmpegcolorspace.c:
+	(ffmpegcolorspace_suite):
+	  Enable ffmpegcolorspace test now that the RGBA32 issue is fixed
+	  (for now not for valgrinding though, since it takes too long).
+
 2006-11-20  Wim Taymans  <wim@fluendo.com>
 
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:

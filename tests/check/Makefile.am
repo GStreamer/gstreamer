@@ -55,6 +55,7 @@ check_PROGRAMS = \
 	elements/audiorate \
 	elements/audioresample \
 	elements/audiotestsrc \
+	elements/ffmpegcolorspace \
 	elements/gdpdepay \
 	elements/gdppay \
 	elements/multifdsink \
@@ -74,15 +75,16 @@ check_PROGRAMS = \
 # TORTURE_TO_FIX = \
 #       elements/adder
 
+# ffmpegcolorspace takes too long, so disabled for now
 VALGRIND_TO_FIX = \
 	elements/alsa \
 	elements/audioresample \
+	elements/ffmpegcolorspace \
 	generic/states \
 	libs/video
 
 # these tests don't even pass
-noinst_PROGRAMS = \
-	elements/ffmpegcolorspace
+noinst_PROGRAMS =
 
 AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS)
 LDADD = $(GST_LIBS) $(GST_CHECK_LIBS)
