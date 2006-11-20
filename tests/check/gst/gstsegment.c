@@ -581,10 +581,10 @@ GST_START_TEST (segment_newsegment_streamtime)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 100);
   fail_unless (result == 100);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
-  fail_unless (result == -1);
+  fail_unless (result == 200);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 
@@ -635,10 +635,10 @@ GST_START_TEST (segment_newsegment_streamtime)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 600);
   fail_unless (result == 100);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 700);
-  fail_unless (result == -1);
+  fail_unless (result == 200);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 800);
   fail_unless (result == -1);
 
@@ -664,10 +664,10 @@ GST_START_TEST (segment_newsegment_streamtime)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 600);
   fail_unless (result == 300);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 700);
-  fail_unless (result == -1);
+  fail_unless (result == 400);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 800);
   fail_unless (result == -1);
 }
@@ -712,10 +712,10 @@ GST_START_TEST (segment_newsegment_streamtime_rate)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 150);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
-  fail_unless (result == -1);
+  fail_unless (result == 200);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 
@@ -740,10 +740,10 @@ GST_START_TEST (segment_newsegment_streamtime_rate)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 250);
   fail_unless (result == 150);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
-  fail_unless (result == -1);
+  fail_unless (result == 200);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 400);
   fail_unless (result == -1);
 
@@ -784,10 +784,10 @@ GST_START_TEST (segment_newsegment_streamtime_rate)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
   fail_unless (result == 300);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
-  fail_unless (result == -1);
+  fail_unless (result == 400);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 400);
   fail_unless (result == -1);
 }
@@ -835,10 +835,10 @@ GST_START_TEST (segment_newsegment_streamtime_applied_rate)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 50);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
-  fail_unless (result == -1);
+  fail_unless (result == 0);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 
@@ -876,10 +876,10 @@ GST_START_TEST (segment_newsegment_streamtime_applied_rate)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 300);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
-  fail_unless (result == -1);
+  fail_unless (result == 400);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 
@@ -917,10 +917,10 @@ GST_START_TEST (segment_newsegment_streamtime_applied_rate)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 100);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
-  fail_unless (result == -1);
+  fail_unless (result == 0);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 
@@ -959,10 +959,10 @@ GST_START_TEST (segment_newsegment_streamtime_applied_rate)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 0);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
-  fail_unless (result == -1);
+  fail_unless (result == 0);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 }
@@ -1011,10 +1011,10 @@ GST_START_TEST (segment_newsegment_streamtime_applied_rate_rate)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 300);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
-  fail_unless (result == -1);
+  fail_unless (result == 400);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 
@@ -1052,10 +1052,10 @@ GST_START_TEST (segment_newsegment_streamtime_applied_rate_rate)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 50);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
-  fail_unless (result == -1);
+  fail_unless (result == 0);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 
@@ -1093,10 +1093,10 @@ GST_START_TEST (segment_newsegment_streamtime_applied_rate_rate)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 50);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
-  fail_unless (result == -1);
+  fail_unless (result == 0);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 
@@ -1133,10 +1133,10 @@ GST_START_TEST (segment_newsegment_streamtime_applied_rate_rate)
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 150);
   fail_unless (result == 300);
 
-  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 200);
-  fail_unless (result == -1);
+  fail_unless (result == 400);
 
+  /* outside of the segment */
   result = gst_segment_to_stream_time (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 }
@@ -1178,10 +1178,11 @@ GST_START_TEST (segment_newsegment_runningtime)
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 100);
   fail_unless (result == 100);
 
-  /* outside of the segment */
+  /* at edge is exactly the segment duration */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 200);
-  fail_unless (result == -1);
+  fail_unless (result == 200);
 
+  /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 300);
   fail_unless (result == -1);
 
@@ -1236,10 +1237,10 @@ GST_START_TEST (segment_newsegment_runningtime)
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 600);
   fail_unless (result == 400);
 
-  /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 700);
-  fail_unless (result == -1);
+  fail_unless (result == 500);
 
+  /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 800);
   fail_unless (result == -1);
 
@@ -1268,10 +1269,10 @@ GST_START_TEST (segment_newsegment_runningtime)
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 600);
   fail_unless (result == 600);
 
-  /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 700);
-  fail_unless (result == -1);
+  fail_unless (result == 500);
 
+  /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 800);
   fail_unless (result == -1);
 
@@ -1301,10 +1302,10 @@ GST_START_TEST (segment_newsegment_runningtime)
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 600);
   fail_unless (result == 750);
 
-  /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 700);
-  fail_unless (result == -1);
+  fail_unless (result == 700);
 
+  /* outside of the segment */
   result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 800);
   fail_unless (result == -1);
 

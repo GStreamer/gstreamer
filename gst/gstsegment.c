@@ -512,7 +512,7 @@ gst_segment_to_stream_time (GstSegment * segment, GstFormat format,
     g_return_val_if_fail (segment->format == format, -1);
 
   /* outside of the segment boundary stop */
-  if (G_UNLIKELY (segment->stop != -1 && position >= segment->stop))
+  if (G_UNLIKELY (segment->stop != -1 && position > segment->stop))
     return -1;
 
   /* before the segment boundary */
@@ -589,7 +589,7 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
 
   if (segment->rate > 0.0) {
     /* outside of the segment boundary stop */
-    if (G_UNLIKELY (segment->stop != -1 && position >= segment->stop))
+    if (G_UNLIKELY (segment->stop != -1 && position > segment->stop))
       return -1;
 
     /* bring to uncorrected position in segment */
@@ -597,7 +597,7 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
   } else {
     /* cannot continue if no stop position set or outside of
      * the segment. */
-    if (G_UNLIKELY (segment->stop == -1 || position >= segment->stop))
+    if (G_UNLIKELY (segment->stop == -1 || position > segment->stop))
       return -1;
 
     /* bring to uncorrected position in segment */
