@@ -135,7 +135,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_SPEEX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstspeex.so
 @USE_GCONF_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgconfelements.so
 @USE_HAL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsthalelements.so
-# @USE_LADSPA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
+@USE_LADSPA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
 @USE_SHOUT2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstshout2.so
 @USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so
 @USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdv.so
