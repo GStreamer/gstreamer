@@ -1,3 +1,12 @@
+2006-11-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/Makefile.am:
+	* docs/libs/gstreamer-libs.types:
+	  add types of base classes to enable gobject specific stuff in the docs
+
+	* docs/random/ensonic/embedded.txt:
+	  more ideas about isolating platform specific things
+
 2006-11-20  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sebastian Droege <slomo at ubuntu dot com>

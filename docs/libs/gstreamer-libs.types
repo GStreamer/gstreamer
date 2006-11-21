@@ -1,4 +1,18 @@
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 
+#include <gst/controller/gstcontroller.h>
 gst_controller_get_type
+
+#include <gst/base/gstadapter.h>
+gst_adapter_get_type
+#include <gst/base/gstbasesrc.h>
+gst_base_src_get_type
+#include <gst/base/gstbasesink.h>
+gst_base_sink_get_type
+#include <gst/base/gstbasetransform.h>
+gst_base_transform_get_type
+#include <gst/base/gstcollectpads.h>
+gst_collect_pads_get_type
+#include <gst/base/gstpushsrc.h>
+gst_push_src_get_type
+

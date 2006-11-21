@@ -1,9 +1,8 @@
-$ID$
+$Id$
 
 = embedded =
 
 == index handling ==
-
 For avidemux I currently have a big patch doing memory optimized index handling.
 It basically thins out the index to save memory. Right now it only keeps index
 entries marked with the avi keyframe flag.
@@ -17,4 +16,19 @@ built in index logic.
 
 This way the different requirements of desktop and embedded platforms could be
 encapsulated in the indexer strategy.
+
+== ranking ==
+Autopluggers like playbin and decodebin use the element caps plus static ranks
+to create piplines.
+The rank of an elemnt right now refers to the quality/maturity of the element.
+Elements with higher rank should be functionaly more complete. If we have
+multiple elements that are feature complete there is a draw.
+
+There are more decission criteria thinkable:
+* ressource usage (CPU, memory)
+* license (proprietary, open source)
+* quality (in terms of the audio/image quality)
+
+One problem of taking criteria like quality and performance into account when
+autoplugging, is that elemnts might have options to control them.
 
