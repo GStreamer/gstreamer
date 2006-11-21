@@ -447,21 +447,22 @@ gst_mpeg2dec_alloc_sized_buf (GstMpeg2dec * mpeg2dec, guint size,
      * and if it fails only a single time create our own buffers from
      * there on below that are correctly aligned */
     if (((uintptr_t) GST_BUFFER_DATA (*obuf)) % 16 == 0) {
-      GST_DEBUG_OBJECT (mpeg2dec, "return 16 byte aligned buffer");
+      GST_LOG_OBJECT (mpeg2dec, "return 16 byte aligned buffer");
       return ret;
     }
 
     GST_DEBUG_OBJECT (mpeg2dec,
-        "can get 16 byte aligned buffers, creating our own ones");
+        "can't get 16 byte aligned buffers, creating our own ones");
     gst_buffer_unref (*obuf);
     mpeg2dec->can_allocate_aligned = FALSE;
   }
 
   /* can't use gst_pad_alloc_buffer() here because the output buffer will
-   * be cropped and basetransform-based elements will complain about
-   * the wrong unit size when not operating in passthrough mode */
+   * either be cropped later or be bigger than expected (for the alignment),
+   * and basetransform-based elements will complain about the wrong unit size
+   * when not operating in passthrough mode */
   *obuf = gst_buffer_new_and_alloc (size + 15);
-  GST_BUFFER_DATA (*obuf) = ALIGN_16 (GST_BUFFER_DATA (*obuf));
+  GST_BUFFER_DATA (*obuf) = (guint8 *) ALIGN_16 (GST_BUFFER_DATA (*obuf));
   GST_BUFFER_SIZE (*obuf) = size;
   gst_buffer_set_caps (*obuf, GST_PAD_CAPS (mpeg2dec->srcpad));
 

@@ -1,3 +1,9 @@
+2006-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_alloc_sized_buf):
+	  Cosmetic changes: fix misleading debug statement, update
+	  comment, add cast.
+
 2006-11-21  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sebastian Dröge  <slomo@circular-chaos.org>
