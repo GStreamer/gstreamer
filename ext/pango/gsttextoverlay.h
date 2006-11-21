@@ -78,12 +78,17 @@ struct _GstTextOverlay {
     GstPad                  *srcpad;
 
     GstSegment              *segment;
+    GstSegment               text_segment;
     GstBuffer               *text_buffer;
     gboolean                text_linked;
     gboolean                video_flushing;
     gboolean                text_flushing;
-  
-    GCond                   *cond;  /* to signal removal of data */
+    gboolean                text_eos;
+
+    GCond                   *cond;  /* to signal removal of a queued text
+                                     * buffer, arrival of a text buffer,
+                                     * a text segment update, or a change
+                                     * in status (e.g. shutdown, flushing) */
 
     gint                     width;
     gint                     height;

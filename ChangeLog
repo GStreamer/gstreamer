@@ -1,5 +1,31 @@
 2006-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_init),
+	(gst_text_overlay_text_pad_unlink), (gst_text_overlay_text_event),
+	(gst_text_overlay_video_event), (gst_text_overlay_pop_text),
+	(gst_text_overlay_text_chain), (gst_text_overlay_video_chain),
+	(gst_text_overlay_change_state):
+	* ext/pango/gsttextoverlay.h:
+	  Some textoverlay fixes: for one, in the video chain function,
+	  actually wait for a text buffer to come in if there is none at the
+	  moment and there should be one; also, deal more gracefully with
+	  incoming buffers that do not have a timestamp or duration; discard
+	  text buffer when not needed any longer. Fixes #341681.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/textoverlay.c:
+	(notgst_check_setup_src_pad2), (notgst_check_teardown_src_pad2),
+	(setup_textoverlay), (buffer_is_all_black), (create_black_buffer),
+	(create_text_buffer), (cleanup_textoverlay), (GST_START_TEST),
+	(test_video_waits_for_text_send_text_newsegment_thread),
+	(test_video_waits_for_text_shutdown_element),
+	(test_render_continuity_push_video_buffers_thread),
+	(textoverlay_suite):
+	  Add some unit tests for textoverlay.
+
+2006-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset):
 	  Avoid integer underflow when the found probability for mp3 is
 	  smaller than the 'penalty' we subtract if there's not a clean

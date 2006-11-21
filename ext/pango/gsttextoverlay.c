@@ -2,6 +2,7 @@
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David Schleef <ds@schleef.org>
  * Copyright (C) <2006> Julien Moutte <julien@moutte.net>
+ * Copyright (C) <2006> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -71,6 +72,7 @@
  * </refsect2>
  */
 
+/* FIXME: alloc segment as part of instance struct */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -461,6 +463,7 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   overlay->text_linked = FALSE;
   overlay->video_flushing = FALSE;
   overlay->text_flushing = FALSE;
+  overlay->text_eos = FALSE;
   overlay->cond = g_cond_new ();
   overlay->segment = gst_segment_new ();
   if (overlay->segment) {
@@ -1053,6 +1056,8 @@ gst_text_overlay_text_pad_unlink (GstPad * pad)
   GST_DEBUG_OBJECT (overlay, "Text pad unlinked");
 
   overlay->text_linked = FALSE;
+
+  gst_segment_init (&overlay->text_segment, GST_FORMAT_UNDEFINED);
 }
 
 static gboolean
@@ -1063,14 +1068,38 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
 
   overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
 
-  GST_DEBUG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
+  GST_LOG_OBJECT (pad, "received event %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-      /* We just ignore those events from the text pad */
+    case GST_EVENT_NEWSEGMENT:{
+      GstFormat fmt;
+      gboolean update;
+      gdouble rate, applied_rate;
+      gint64 cur, stop, time;
+
+      overlay->text_eos = FALSE;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+          &fmt, &cur, &stop, &time);
+
+      if (fmt == GST_FORMAT_TIME) {
+        GST_OBJECT_LOCK (overlay);
+        gst_segment_set_newsegment_full (&overlay->text_segment, update, rate,
+            applied_rate, GST_FORMAT_TIME, cur, stop, time);
+        GST_DEBUG_OBJECT (overlay, "TEXT SEGMENT now: %" GST_SEGMENT_FORMAT,
+            &overlay->text_segment);
+        GST_OBJECT_UNLOCK (overlay);
+      }
       gst_event_unref (event);
       ret = TRUE;
+
+      /* wake up the video chain, it might be waiting for a text buffer or
+       * a text segment update */
+      GST_OBJECT_LOCK (overlay);
+      GST_TEXT_OVERLAY_BROADCAST (overlay);
+      GST_OBJECT_UNLOCK (overlay);
       break;
+    }
     case GST_EVENT_FLUSH_STOP:
       GST_OBJECT_LOCK (overlay);
       overlay->text_flushing = FALSE;
@@ -1089,17 +1118,18 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_EOS:
       GST_OBJECT_LOCK (overlay);
-      /* We use flushing to make sure we return WRONG_STATE */
-      /* FIXME, after EOS a _pad_push() returns _UNEXPECTED */
       overlay->text_flushing = TRUE;
-      /* We don't signal anything here because we want to keep the last queued
-         buffer until video pad receives EOS or discard the buffer */
+      overlay->text_eos = TRUE;
+      /* wake up the video chain, it might be waiting for a text buffer or
+       * a text segment update */
+      GST_TEXT_OVERLAY_BROADCAST (overlay);
       GST_OBJECT_UNLOCK (overlay);
       gst_event_unref (event);
       ret = TRUE;
       break;
     default:
       ret = gst_pad_event_default (pad, event);
+      break;
   }
 
   gst_object_unref (overlay);
@@ -1148,6 +1178,7 @@ gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_START:
       GST_OBJECT_LOCK (overlay);
       overlay->video_flushing = TRUE;
+      GST_TEXT_OVERLAY_BROADCAST (overlay);
       GST_OBJECT_UNLOCK (overlay);
       ret = gst_pad_event_default (pad, event);
       break;
@@ -1173,6 +1204,16 @@ gst_text_overlay_pop_text (GstTextOverlay * overlay)
   g_return_if_fail (GST_IS_TEXT_OVERLAY (overlay));
 
   if (overlay->text_buffer) {
+    /* update text_segment's last stop */
+    if (overlay->text_segment.format == GST_FORMAT_TIME &&
+        GST_BUFFER_TIMESTAMP_IS_VALID (overlay->text_buffer)) {
+      overlay->text_segment.last_stop =
+          GST_BUFFER_TIMESTAMP (overlay->text_buffer);
+      if (GST_BUFFER_DURATION_IS_VALID (overlay->text_buffer)) {
+        overlay->text_segment.last_stop +=
+            GST_BUFFER_DURATION (overlay->text_buffer);
+      }
+    }
     GST_DEBUG_OBJECT (overlay, "releasing text buffer %p",
         overlay->text_buffer);
     gst_buffer_unref (overlay->text_buffer);
@@ -1194,15 +1235,29 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
   gboolean in_seg = FALSE;
   gint64 clip_start = 0, clip_stop = 0;
 
-  overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  overlay = GST_TEXT_OVERLAY (GST_PAD_PARENT (pad));
 
   GST_OBJECT_LOCK (overlay);
+
+  if (overlay->text_eos) {
+    GST_OBJECT_UNLOCK (overlay);
+    ret = GST_FLOW_UNEXPECTED;
+    GST_LOG_OBJECT (overlay, "text EOS");
+    goto beach;
+  }
 
   if (overlay->text_flushing) {
     GST_OBJECT_UNLOCK (overlay);
     ret = GST_FLOW_WRONG_STATE;
+    GST_LOG_OBJECT (overlay, "text flushing");
     goto beach;
   }
+
+  GST_LOG_OBJECT (overlay, "%" GST_SEGMENT_FORMAT "  BUFFER: ts=%"
+      GST_TIME_FORMAT ", end=%" GST_TIME_FORMAT, overlay->segment,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer) +
+          GST_BUFFER_DURATION (buffer)));
 
   in_seg = gst_segment_clip (overlay->segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (buffer),
@@ -1229,12 +1284,14 @@ gst_text_overlay_text_chain (GstPad * pad, GstBuffer * buffer)
     overlay->text_buffer = buffer;
     /* That's a new text buffer we need to render */
     overlay->need_render = TRUE;
+
+    /* in case the video chain is waiting for a text buffer, wake it up */
+    GST_TEXT_OVERLAY_BROADCAST (overlay);
   }
 
   GST_OBJECT_UNLOCK (overlay);
 
 beach:
-  gst_object_unref (overlay);
 
   return ret;
 }
@@ -1242,152 +1299,247 @@ beach:
 static GstFlowReturn
 gst_text_overlay_video_chain (GstPad * pad, GstBuffer * buffer)
 {
+  GstTextOverlayClass *klass;
+  GstTextOverlay *overlay;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstTextOverlay *overlay = NULL;
   gboolean in_seg = FALSE;
-  gint64 clip_start = 0, clip_stop = 0;
-  GstTextOverlayClass *klass = NULL;
+  gint64 start, stop, clip_start = 0, clip_stop = 0;
+  gchar *text = NULL;
 
-  overlay = GST_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  overlay = GST_TEXT_OVERLAY (GST_PAD_PARENT (pad));
   klass = GST_TEXT_OVERLAY_GET_CLASS (overlay);
+
+  if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
+    goto missing_timestamp;
+
+  /* ignore buffers that are outside of the current segment */
+  start = GST_BUFFER_TIMESTAMP (buffer);
+
+  if (!GST_BUFFER_DURATION_IS_VALID (buffer)) {
+    stop = GST_CLOCK_TIME_NONE;
+  } else {
+    stop = start + GST_BUFFER_DURATION (buffer);
+  }
+
+  GST_LOG_OBJECT (overlay, "%" GST_SEGMENT_FORMAT "  BUFFER: ts=%"
+      GST_TIME_FORMAT ", end=%" GST_TIME_FORMAT, overlay->segment,
+      GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+
+  /* segment_clip() will adjust start unconditionally to segment_start if
+   * no stop time is provided, so handle this ourselves */
+  if (stop == GST_CLOCK_TIME_NONE && start < overlay->segment->start)
+    goto out_of_segment;
+
+  in_seg = gst_segment_clip (overlay->segment, GST_FORMAT_TIME, start, stop,
+      &clip_start, &clip_stop);
+
+  if (!in_seg)
+    goto out_of_segment;
+
+  /* if the buffer is only partially in the segment, fix up stamps */
+  if (clip_start != start || (stop != -1 && clip_stop != stop)) {
+    GST_DEBUG_OBJECT (overlay, "clipping buffer timestamp/duration to segment");
+    buffer = gst_buffer_make_metadata_writable (buffer);
+    GST_BUFFER_TIMESTAMP (buffer) = clip_start;
+    if (stop != -1)
+      GST_BUFFER_DURATION (buffer) = clip_stop - clip_start;
+  }
+
+  /* now, after we've done the clipping, fix up end time if there's no
+   * duration (we only use those estimated values internally though, we
+   * don't want to set bogus values on the buffer itself) */
+  if (stop == -1) {
+    GstStructure *s;
+    gint fps_num, fps_denom;
+
+    s = gst_caps_get_structure (GST_PAD_CAPS (pad), 0);
+    if (gst_structure_get_fraction (s, "framerate", &fps_num, &fps_denom)) {
+      GST_DEBUG_OBJECT (overlay, "estimating duration based on framerate");
+      stop = start + gst_util_uint64_scale_int (GST_SECOND, fps_denom, fps_num);
+    } else {
+      GST_WARNING_OBJECT (overlay, "no duration, assuming minimal duration");
+      stop = start + 1;         /* we need to assume some interval */
+    }
+  }
+
+wait_for_text_buf:
 
   GST_OBJECT_LOCK (overlay);
 
-  if (overlay->video_flushing) {
-    GST_OBJECT_UNLOCK (overlay);
-    ret = GST_FLOW_WRONG_STATE;
-    goto beach;
-  }
+  if (overlay->video_flushing)
+    goto flushing;
 
-  in_seg = gst_segment_clip (overlay->segment, GST_FORMAT_TIME,
-      GST_BUFFER_TIMESTAMP (buffer),
-      GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer),
-      &clip_start, &clip_stop);
-
-  if (in_seg) {
-    gchar *text = NULL;
-
-    GST_BUFFER_TIMESTAMP (buffer) = clip_start;
-    GST_BUFFER_DURATION (buffer) = clip_stop - clip_start;
-
-    /* Text pad not linked, rendering internal text */
-    if (!overlay->text_linked) {
-      if (klass->get_text) {
-        text = klass->get_text (overlay, buffer);
-      } else {
-        text = g_strdup (overlay->default_text);
-      }
-
-      GST_DEBUG_OBJECT (overlay, "Text pad not linked, rendering default "
-          "text: '%s'", GST_STR_NULL (text));
-
-      GST_OBJECT_UNLOCK (overlay);
-
-      if (text != NULL && *text != '\0') {
-        /* Render and push */
-        gst_text_overlay_render_text (overlay, text, -1);
-        ret = gst_text_overlay_push_frame (overlay, buffer);
-      } else {
-        /* Invalid or empty string */
-        ret = gst_pad_push (overlay->srcpad, buffer);
-      }
+  /* Text pad not linked, rendering internal text */
+  if (!overlay->text_linked) {
+    if (klass->get_text) {
+      text = klass->get_text (overlay, buffer);
     } else {
-      if (overlay->text_buffer) {
-        gboolean pop_text = FALSE;
-        gint64 text_end = 0;
+      text = g_strdup (overlay->default_text);
+    }
 
-        /* if the text buffer isn't stamped right, pop it off the
-         * queue and display it for the current video frame only */
-        if (GST_BUFFER_TIMESTAMP (overlay->text_buffer) == GST_CLOCK_TIME_NONE
-            || GST_BUFFER_DURATION (overlay->text_buffer) ==
-            GST_CLOCK_TIME_NONE) {
-          GST_WARNING_OBJECT (overlay,
-              "Got text buffer with invalid time " "stamp or duration");
-          gst_buffer_stamp (overlay->text_buffer, buffer);
+    GST_LOG_OBJECT (overlay, "Text pad not linked, rendering default "
+        "text: '%s'", GST_STR_NULL (text));
+
+    GST_OBJECT_UNLOCK (overlay);
+
+    if (text != NULL && *text != '\0') {
+      /* Render and push */
+      gst_text_overlay_render_text (overlay, text, -1);
+      ret = gst_text_overlay_push_frame (overlay, buffer);
+    } else {
+      /* Invalid or empty string */
+      ret = gst_pad_push (overlay->srcpad, buffer);
+    }
+  } else {
+    /* Text pad linked, check if we have a text buffer queued */
+    if (overlay->text_buffer) {
+      gboolean pop_text = FALSE;
+      gint64 text_start, text_end;
+
+      /* if the text buffer isn't stamped right, pop it off the
+       * queue and display it for the current video frame only */
+      if (!GST_BUFFER_TIMESTAMP_IS_VALID (overlay->text_buffer) ||
+          !GST_BUFFER_DURATION_IS_VALID (overlay->text_buffer)) {
+        GST_WARNING_OBJECT (overlay,
+            "Got text buffer with invalid timestamp or duration");
+        text_start = start;
+        text_end = stop;
+        pop_text = TRUE;
+      } else {
+        text_start = GST_BUFFER_TIMESTAMP (overlay->text_buffer);
+        text_end = text_start + GST_BUFFER_DURATION (overlay->text_buffer);
+      }
+
+      GST_LOG_OBJECT (overlay, "T: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (text_start), GST_TIME_ARGS (text_end));
+      GST_LOG_OBJECT (overlay, "V: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+
+      /* Text too old or in the future */
+      if (text_end <= start) {
+        /* text buffer too old, get rid of it and do nothing  */
+        GST_LOG_OBJECT (overlay, "text buffer too old, popping");
+        pop_text = FALSE;
+        gst_text_overlay_pop_text (overlay);
+        GST_OBJECT_UNLOCK (overlay);
+        goto wait_for_text_buf;
+      } else if (stop <= text_start) {
+        GST_LOG_OBJECT (overlay, "text in future, pushing video buf");
+        GST_OBJECT_UNLOCK (overlay);
+        /* Push the video frame */
+        ret = gst_pad_push (overlay->srcpad, buffer);
+      } else {
+        gchar *in_text;
+        gsize in_size;
+
+        in_text = (gchar *) GST_BUFFER_DATA (overlay->text_buffer);
+        in_size = GST_BUFFER_SIZE (overlay->text_buffer);
+
+        /* g_markup_escape_text() absolutely requires valid UTF8 input, it
+         * might crash otherwise. We don't fall back on GST_SUBTITLE_ENCODING
+         * here on purpose, this is something that needs fixing upstream */
+        if (!g_utf8_validate (in_text, in_size, NULL)) {
+          const gchar *end = NULL;
+
+          GST_WARNING_OBJECT (overlay, "received invalid UTF-8");
+          in_text = g_strndup (in_text, in_size);
+          while (!g_utf8_validate (in_text, in_size, &end) && end)
+            *((gchar *) end) = '*';
+        }
+
+        /* Get the string */
+        if (overlay->have_pango_markup) {
+          text = g_strndup (in_text, in_size);
+        } else {
+          text = g_markup_escape_text (in_text, in_size);
+        }
+
+        if (text != NULL && *text != '\0') {
+          gint text_len = strlen (text);
+
+          while (text_len > 0 && (text[text_len - 1] == '\n' ||
+                  text[text_len - 1] == '\r')) {
+            --text_len;
+          }
+          GST_DEBUG_OBJECT (overlay, "Rendering text '%*s'", text_len, text);
+          gst_text_overlay_render_text (overlay, text, text_len);
+        } else {
+          GST_DEBUG_OBJECT (overlay, "No text to render (empty buffer)");
+          gst_text_overlay_render_text (overlay, " ", 1);
+        }
+
+        if (in_text != (gchar *) GST_BUFFER_DATA (overlay->text_buffer))
+          g_free (in_text);
+
+        GST_OBJECT_UNLOCK (overlay);
+        ret = gst_text_overlay_push_frame (overlay, buffer);
+
+        if (text_end <= stop) {
+          GST_LOG_OBJECT (overlay, "text buffer not needed any longer");
           pop_text = TRUE;
         }
-
-        text_end = GST_BUFFER_TIMESTAMP (overlay->text_buffer) +
-            GST_BUFFER_DURATION (overlay->text_buffer);
-
-        /* Text too old or in the future */
-        if ((text_end < clip_start) ||
-            (clip_stop < GST_BUFFER_TIMESTAMP (overlay->text_buffer))) {
-          if (text_end < clip_start) {
-            /* Get rid of it, if it's too old only */
-            pop_text = FALSE;
-            gst_text_overlay_pop_text (overlay);
-          }
-          GST_OBJECT_UNLOCK (overlay);
-          /* Push the video frame */
-          ret = gst_pad_push (overlay->srcpad, buffer);
-        } else {
-          gchar *in_text;
-          gsize in_size;
-
-          in_text = (gchar *) GST_BUFFER_DATA (overlay->text_buffer);
-          in_size = GST_BUFFER_SIZE (overlay->text_buffer);
-
-          /* g_markup_escape_text() absolutely requires valid UTF8 input, it
-           * might crash otherwise. We don't fall back on GST_SUBTITLE_ENCODING
-           * here on purpose, this is something that needs fixing upstream */
-          if (!g_utf8_validate (in_text, in_size, NULL)) {
-            const gchar *end = NULL;
-
-            GST_WARNING_OBJECT (overlay, "received invalid UTF-8");
-            in_text = g_strndup (in_text, in_size);
-            while (!g_utf8_validate (in_text, in_size, &end) && end)
-              *((gchar *) end) = '*';
-          }
-
-          /* Get the string */
-          if (overlay->have_pango_markup) {
-            text = g_strndup (in_text, in_size);
-          } else {
-            text = g_markup_escape_text (in_text, in_size);
-          }
-
-          if (text != NULL && *text != '\0') {
-            gint text_len = strlen (text);
-
-            while (text_len > 0 && (text[text_len - 1] == '\n' ||
-                    text[text_len - 1] == '\r')) {
-              --text_len;
-            }
-            GST_DEBUG_OBJECT (overlay, "Rendering text '%*s'", text_len, text);
-            gst_text_overlay_render_text (overlay, text, text_len);
-          } else {
-            GST_DEBUG_OBJECT (overlay, "No text to render (empty buffer)");
-            gst_text_overlay_render_text (overlay, " ", 1);
-          }
-
-          if (in_text != (gchar *) GST_BUFFER_DATA (overlay->text_buffer))
-            g_free (in_text);
-
-          GST_OBJECT_UNLOCK (overlay);
-          ret = gst_text_overlay_push_frame (overlay, buffer);
-        }
-      } else {
-        /* No text to overlay, push the frame as is */
+      }
+      if (pop_text) {
+        GST_OBJECT_LOCK (overlay);
+        gst_text_overlay_pop_text (overlay);
         GST_OBJECT_UNLOCK (overlay);
+      }
+    } else {
+      gboolean wait_for_text_buf = TRUE;
+
+      if (overlay->text_eos)
+        wait_for_text_buf = FALSE;
+
+      /* Text pad linked, but no text buffer available - what now? */
+      if (overlay->text_segment.format == GST_FORMAT_TIME) {
+        if (GST_BUFFER_TIMESTAMP (buffer) < overlay->text_segment.start ||
+            GST_BUFFER_TIMESTAMP (buffer) < overlay->text_segment.last_stop) {
+          wait_for_text_buf = FALSE;
+        }
+      }
+
+      if (wait_for_text_buf) {
+        GST_DEBUG_OBJECT (overlay, "no text buffer, need to wait for one");
+        GST_TEXT_OVERLAY_WAIT (overlay);
+        GST_DEBUG_OBJECT (overlay, "resuming");
+        GST_OBJECT_UNLOCK (overlay);
+        goto wait_for_text_buf;
+      } else {
+        GST_OBJECT_UNLOCK (overlay);
+        GST_LOG_OBJECT (overlay, "no need to wait for a text buffer");
         ret = gst_pad_push (overlay->srcpad, buffer);
       }
     }
-
-    g_free (text);
-
-    /* Update last_stop */
-    gst_segment_set_last_stop (overlay->segment, GST_FORMAT_TIME, clip_start);
-  } else {                      /* Out of segment */
-    GST_OBJECT_UNLOCK (overlay);
-    GST_DEBUG_OBJECT (overlay, "buffer out of segment discarding");
-    gst_buffer_unref (buffer);
   }
 
-beach:
-  gst_object_unref (overlay);
+  g_free (text);
+
+  /* Update last_stop */
+  gst_segment_set_last_stop (overlay->segment, GST_FORMAT_TIME, clip_start);
 
   return ret;
+
+missing_timestamp:
+  {
+    GST_WARNING_OBJECT (overlay, "buffer without timestamp, discarding");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
+
+flushing:
+  {
+    GST_OBJECT_UNLOCK (overlay);
+    GST_DEBUG_OBJECT (overlay, "flushing, discarding buffer");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_WRONG_STATE;
+  }
+
+out_of_segment:
+  {
+    GST_DEBUG_OBJECT (overlay, "buffer out of segment, discarding");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
 }
 
 static GstStateChangeReturn
@@ -1397,11 +1549,12 @@ gst_text_overlay_change_state (GstElement * element, GstStateChange transition)
   GstTextOverlay *overlay = GST_TEXT_OVERLAY (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_OBJECT_LOCK (overlay);
       overlay->text_flushing = TRUE;
+      overlay->video_flushing = TRUE;
+      /* pop_text will broadcast on the GCond and thus also make the video
+       * chain exit if it's waiting for a text buffer */
       gst_text_overlay_pop_text (overlay);
       GST_OBJECT_UNLOCK (overlay);
       break;
@@ -1414,6 +1567,12 @@ gst_text_overlay_change_state (GstElement * element, GstStateChange transition)
     return ret;
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_OBJECT_LOCK (overlay);
+      overlay->text_flushing = FALSE;
+      overlay->video_flushing = FALSE;
+      GST_OBJECT_UNLOCK (overlay);
+      break;
     default:
       break;
   }

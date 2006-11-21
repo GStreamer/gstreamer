@@ -5,6 +5,7 @@ audioconvert
 audiorate
 audioresample
 audiotestsrc
+decodebin
 gdpdepay
 gdppay
 multifdsink
@@ -12,6 +13,8 @@ videorate
 videotestsrc
 volume
 vorbisdec
+typefindfunctions
+textoverlay
 ffmpegcolorspace
 vorbistag
 playbin

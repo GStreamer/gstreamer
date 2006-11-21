@@ -33,6 +33,12 @@ else
 check_ogg = 
 endif
 
+if USE_PANGO
+check_pango = elements/textoverlay
+else
+check_pango = 
+endif
+
 if USE_VORBIS
 check_vorbis = elements/vorbisdec pipelines/vorbisenc elements/vorbistag
 else
@@ -48,6 +54,7 @@ endif
 check_PROGRAMS = \
 	$(check_alsa) \
 	$(check_ogg) \
+	$(check_pango) \
 	$(check_vorbis) \
 	$(check_theora) \
 	elements/adder	\
@@ -142,6 +149,9 @@ elements_playbin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_subparse_LDADD =  $(LDADD)
 elements_subparse_CFLAGS = $(CFLAGS) $(AM_CFLAGS)
+
+elements_textoverlay_LDADD = $(GST_BASE_LIBS) $(LDADD)
+elements_textoverlay_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_volume_LDADD = \
 	$(GST_BASE_LIBS) \
