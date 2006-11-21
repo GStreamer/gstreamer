@@ -104,6 +104,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmultifile.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrfbsrc.so
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
