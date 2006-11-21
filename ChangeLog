@@ -1,3 +1,14 @@
+2006-11-21  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_init),
+	(gst_mpeg2dec_reset), (gst_mpeg2dec_alloc_sized_buf),
+	(gst_mpeg2dec_alloc_buffer), (init_dummybuf), (handle_slice):
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	Align buffers to a 16 byte boundary so the altivec optimisations
+	don't crash. Fixes #327350.
+
 2006-11-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_add_audio_stream):

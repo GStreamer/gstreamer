@@ -111,6 +111,7 @@ struct _GstMpeg2dec {
   gint           index_id;
   
   gint           error_count;
+  gboolean       can_allocate_aligned;
 
   /* QoS stuff */ /* with LOCK*/
   gdouble        proportion;

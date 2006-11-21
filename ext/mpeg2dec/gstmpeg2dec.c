@@ -26,8 +26,7 @@
 
 #include "gstmpeg2dec.h"
 
-/* libmpeg2 needs a 16-byte aligned buffer start address. This rounds the
- * given pointer up to a multiply of 16 */
+/* 16byte-aligns a buffer for libmpeg2 */
 #define ALIGN_16(p) ((void *)(((uintptr_t)(p) + 15) & ~((uintptr_t)15)))
 
 /* mpeg2dec changed a struct name after 0.3.1, here's a workaround */
@@ -233,6 +232,7 @@ gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
 #endif
 
   mpeg2dec->error_count = 0;
+  mpeg2dec->can_allocate_aligned = TRUE;
 
   /* initialize the mpeg2dec acceleration */
 }
@@ -268,6 +268,7 @@ gst_mpeg2dec_reset (GstMpeg2dec * mpeg2dec)
   mpeg2dec->next_time = -1;
   mpeg2dec->offset = 0;
   mpeg2dec->error_count = 0;
+  mpeg2dec->can_allocate_aligned = TRUE;
   mpeg2_reset (mpeg2dec->decoder, 1);
 }
 
@@ -432,22 +433,39 @@ static GstFlowReturn
 gst_mpeg2dec_alloc_sized_buf (GstMpeg2dec * mpeg2dec, guint size,
     GstBuffer ** obuf)
 {
-  GstFlowReturn ret;
+  if (mpeg2dec->can_allocate_aligned
+      && mpeg2dec->decoded_width == mpeg2dec->width
+      && mpeg2dec->decoded_height == mpeg2dec->height) {
+    GstFlowReturn ret;
 
-  if (mpeg2dec->decoded_width == mpeg2dec->width &&
-      mpeg2dec->decoded_height == mpeg2dec->height) {
     ret = gst_pad_alloc_buffer_and_set_caps (mpeg2dec->srcpad,
         GST_BUFFER_OFFSET_NONE, size, GST_PAD_CAPS (mpeg2dec->srcpad), obuf);
-  } else {
-    /* can't use gst_pad_alloc_buffer() here because the output buffer will
-     * be cropped and basetransform-based elements will complain about
-     * the wrong unit size when not operating in passthrough mode */
-    *obuf = gst_buffer_new_and_alloc (size);
-    gst_buffer_set_caps (*obuf, GST_PAD_CAPS (mpeg2dec->srcpad));
-    ret = GST_FLOW_OK;
+    if (ret != GST_FLOW_OK)
+      return ret;
+
+    /* libmpeg2 needs 16 byte aligned buffers... test for this here
+     * and if it fails only a single time create our own buffers from
+     * there on below that are correctly aligned */
+    if (((uintptr_t) GST_BUFFER_DATA (*obuf)) % 16 == 0) {
+      GST_DEBUG_OBJECT (mpeg2dec, "return 16 byte aligned buffer");
+      return ret;
+    }
+
+    GST_DEBUG_OBJECT (mpeg2dec,
+        "can get 16 byte aligned buffers, creating our own ones");
+    gst_buffer_unref (*obuf);
+    mpeg2dec->can_allocate_aligned = FALSE;
   }
 
-  return ret;
+  /* can't use gst_pad_alloc_buffer() here because the output buffer will
+   * be cropped and basetransform-based elements will complain about
+   * the wrong unit size when not operating in passthrough mode */
+  *obuf = gst_buffer_new_and_alloc (size + 15);
+  GST_BUFFER_DATA (*obuf) = ALIGN_16 (GST_BUFFER_DATA (*obuf));
+  GST_BUFFER_SIZE (*obuf) = size;
+  gst_buffer_set_caps (*obuf, GST_PAD_CAPS (mpeg2dec->srcpad));
+
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -458,14 +476,9 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, gint64 offset,
   guint8 *buf[3];
   GstFlowReturn ret = GST_FLOW_OK;
 
-  ret = gst_mpeg2dec_alloc_sized_buf (mpeg2dec, mpeg2dec->size + 16, &outbuf);
+  ret = gst_mpeg2dec_alloc_sized_buf (mpeg2dec, mpeg2dec->size, &outbuf);
   if (ret != GST_FLOW_OK)
     goto no_buffer;
-
-  /* 16byte-align the buffer start address. As u_offs and v_offs are
-   * divideable by 16 without a rest it's only needed for the start */
-  GST_BUFFER_DATA (outbuf) = ALIGN_16 (GST_BUFFER_DATA (outbuf));
-  GST_BUFFER_SIZE (outbuf) = mpeg2dec->size;
 
   buf[0] = GST_BUFFER_DATA (outbuf);
   buf[1] = buf[0] + mpeg2dec->u_offs;
@@ -586,9 +599,7 @@ init_dummybuf (GstMpeg2dec * mpeg2dec)
 {
   g_free (mpeg2dec->dummybuf[3]);
 
-  /* 16byte-align the buffer start address. As u_offs and v_offs are
-   * divideable by 16 without a rest it's only needed for the start.
-   * dummybuf[3] contains the malloc'ed address for free'ing later */
+  /* libmpeg2 needs 16 byte aligned buffers... care for this here */
   mpeg2dec->dummybuf[3] = g_malloc0 (mpeg2dec->size + 15);
   mpeg2dec->dummybuf[0] = ALIGN_16 (mpeg2dec->dummybuf[3]);
   mpeg2dec->dummybuf[1] = mpeg2dec->dummybuf[0] + mpeg2dec->u_offs;
