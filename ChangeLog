@@ -1,3 +1,10 @@
+2006-11-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (mp3_type_find_at_offset):
+	  Avoid integer underflow when the found probability for mp3 is
+	  smaller than the 'penalty' we subtract if there's not a clean
+	  mp3 header sync at offset 0.
+
 2006-11-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:

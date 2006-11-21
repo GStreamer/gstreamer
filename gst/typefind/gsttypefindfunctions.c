@@ -726,7 +726,7 @@ mp3_type_find_at_offset (GstTypeFind * tf, guint64 start_off,
             GST_MP3_TYPEFIND_TRY_HEADERS / GST_MP3_TYPEFIND_TRY_SYNC;
 
         if (!headerstart
-            && ((probability - GST_MP3_WRONG_HEADER) > GST_TYPE_FIND_MINIMUM))
+            && probability > (GST_TYPE_FIND_MINIMUM + GST_MP3_WRONG_HEADER))
           probability -= GST_MP3_WRONG_HEADER;
         if (probability < GST_TYPE_FIND_MINIMUM)
           probability = GST_TYPE_FIND_MINIMUM;
