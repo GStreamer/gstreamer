@@ -1,3 +1,16 @@
+2006-11-22  Michael Smith  <msmith@fluendo.com>
+
+	* ext/theora/gsttheoraenc.h:
+	* ext/theora/theoraenc.c: (gst_theora_enc_init),
+	(theora_enc_reset), (theora_enc_clear), (theora_enc_sink_setcaps),
+	(theora_buffer_from_packet), (theora_enc_is_discontinuous),
+	(theora_enc_chain), (theora_enc_change_state):
+	  Mark discontinuities of > 3/4 of a frame, reinit encoder.
+
+	* tests/check/pipelines/theoraenc.c: (check_buffer_granulepos),
+	(GST_START_TEST), (theoraenc_suite):
+	  Enable discontinuity test, fix it.
+
 2006-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_init),

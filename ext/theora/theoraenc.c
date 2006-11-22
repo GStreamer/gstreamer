@@ -292,6 +292,7 @@ gst_theora_enc_init (GstTheoraEnc * enc, GstTheoraEncClass * g_class)
   GST_DEBUG_OBJECT (enc,
       "keyframe_frequency_force is %d, granule shift is %d",
       enc->info.keyframe_frequency_force, enc->granule_shift);
+  enc->expected_ts = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -305,6 +306,26 @@ theora_enc_finalize (GObject * object)
   theora_info_clear (&enc->info);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+theora_enc_reset (GstTheoraEnc * enc)
+{
+  theora_clear (&enc->state);
+  theora_encode_init (&enc->state, &enc->info);
+}
+
+static void
+theora_enc_clear (GstTheoraEnc * enc)
+{
+  enc->packetno = 0;
+  enc->bytes_out = 0;
+  enc->granulepos_offset = 0;
+  enc->timestamp_offset = 0;
+
+  enc->next_ts = GST_CLOCK_TIME_NONE;
+  enc->next_discont = FALSE;
+  enc->expected_ts = GST_CLOCK_TIME_NONE;
 }
 
 static gboolean
@@ -374,7 +395,7 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
       "keyframe_frequency_force is %d, granule shift is %d",
       enc->info.keyframe_frequency_force, enc->granule_shift);
 
-  theora_encode_init (&enc->state, &enc->info);
+  theora_enc_reset (enc);
 
   gst_object_unref (enc);
 
@@ -417,6 +438,11 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
 
   GST_BUFFER_TIMESTAMP (buf) = timestamp + enc->timestamp_offset;
   GST_BUFFER_DURATION (buf) = duration;
+
+  if (enc->next_discont) {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    enc->next_discont = FALSE;
+  }
 
   /* the second most significant bit of the first data byte is cleared
    * for keyframes */
@@ -541,6 +567,34 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_push_event (enc->srcpad, event);
   }
   return res;
+}
+
+static gboolean
+theora_enc_is_discontinuous (GstTheoraEnc * enc, GstBuffer * buffer)
+{
+  GstClockTime ts = GST_BUFFER_TIMESTAMP (buffer);
+  GstClockTimeDiff max_diff;
+
+  /* Allow 3/4 a frame off */
+  max_diff = (enc->info.fps_denominator * GST_SECOND * 3) /
+      (enc->info.fps_numerator * 4);
+
+  if (ts != GST_CLOCK_TIME_NONE && enc->expected_ts != GST_CLOCK_TIME_NONE) {
+    if ((GstClockTimeDiff) (ts - enc->expected_ts) > max_diff) {
+      GST_DEBUG_OBJECT (enc, "Incoming TS %" GST_TIME_FORMAT
+          " exceeds expected value %" GST_TIME_FORMAT
+          " by too much, marking discontinuity",
+          GST_TIME_ARGS (ts), GST_TIME_ARGS (enc->expected_ts));
+      return TRUE;
+    }
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)))
+    enc->expected_ts = ts + GST_BUFFER_DURATION (buffer);
+  else
+    enc->expected_ts = GST_CLOCK_TIME_NONE;
+
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -784,6 +838,16 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       buffer = newbuf;
     }
 
+    if (theora_enc_is_discontinuous (enc, buffer)) {
+      theora_enc_reset (enc);
+      enc->granulepos_offset =
+          gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buffer), enc->fps_n,
+          GST_SECOND * enc->fps_d);
+      enc->timestamp_offset = GST_BUFFER_TIMESTAMP (buffer);
+      enc->next_ts = 0;
+      enc->next_discont = TRUE;
+    }
+
     res = theora_encode_YUVin (&enc->state, &yuv);
 
     ret = GST_FLOW_OK;
@@ -863,6 +927,8 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
       theora_clear (&enc->state);
       theora_comment_clear (&enc->comment);
       theora_info_clear (&enc->info);
+
+      theora_enc_clear (enc);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

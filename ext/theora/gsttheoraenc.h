@@ -93,6 +93,9 @@ struct _GstTheoraEnc
   gint fps_n, fps_d;
   GstClockTime next_ts;
 
+  GstClockTime expected_ts;
+  gboolean next_discont;
+
   guint packetno;
   guint64 bytes_out;
   guint64 granulepos_offset;

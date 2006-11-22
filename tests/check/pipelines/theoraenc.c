@@ -62,6 +62,7 @@ static void
 check_buffer_granulepos (GstBuffer * buffer, gint64 granulepos)
 {
   GstClockTime clocktime;
+  int framecount;
 
   fail_unless (GST_BUFFER_OFFSET_END (buffer) == granulepos,
       "expected granulepos %" G_GUINT64_FORMAT
@@ -70,8 +71,10 @@ check_buffer_granulepos (GstBuffer * buffer, gint64 granulepos)
 
   /* contrary to what we record as TIMESTAMP, we can use OFFSET to check
    * the granulepos correctly here */
-  clocktime = gst_util_uint64_scale (GST_BUFFER_OFFSET_END (buffer), GST_SECOND,
-      FRAMERATE);
+  framecount = GST_BUFFER_OFFSET_END (buffer);
+  framecount = granulepos >> GRANULEPOS_SHIFT;
+  framecount += granulepos & ((1 << GRANULEPOS_SHIFT) - 1);
+  clocktime = gst_util_uint64_scale (framecount, GST_SECOND, FRAMERATE);
 
   fail_unless (clocktime == GST_BUFFER_OFFSET (buffer),
       "expected OFFSET set to clocktime %" GST_TIME_FORMAT
@@ -287,7 +290,6 @@ GST_START_TEST (test_continuity)
 
 GST_END_TEST;
 
-#if 0
 static gboolean
 drop_second_data_buffer (GstPad * droppad, GstBuffer * buffer, gpointer unused)
 {
@@ -301,7 +303,6 @@ GST_START_TEST (test_discontinuity)
   gchar *pipe_str;
   GstBuffer *buffer;
   GError *error = NULL;
-  GstClockTime timestamp;
   guint drop_id;
 
   pipe_str = g_strdup_printf ("videotestsrc"
@@ -336,7 +337,8 @@ GST_START_TEST (test_discontinuity)
     gst_object_unref (sink);
   }
 
-  drop_id = gst_pad_add_buffer_probe (droppad, drop_second_data_buffer, NULL);
+  drop_id = gst_pad_add_buffer_probe (droppad,
+      G_CALLBACK (drop_second_data_buffer), NULL);
   gst_buffer_straw_start_pipeline (bin, pad);
 
   /* header packets should have timestamp == NONE, granulepos 0 */
@@ -374,7 +376,9 @@ GST_START_TEST (test_discontinuity)
     /* check discontinuity with the next buffer */
     buffer = gst_buffer_straw_get_buffer (bin, pad);
     check_buffer_duration (buffer, GST_SECOND / 10);
-    check_buffer_granulepos (buffer, 2);
+    /* After a discont, we'll always get a keyframe, so this one should be 
+     * 2<<GRANULEPOS_SHIFT */
+    check_buffer_granulepos (buffer, 2 << GRANULEPOS_SHIFT);
     check_buffer_is_header (buffer, FALSE);
     fail_unless (GST_BUFFER_IS_DISCONT (buffer),
         "expected discontinuous buffer yo");
@@ -390,7 +394,6 @@ GST_START_TEST (test_discontinuity)
 }
 
 GST_END_TEST;
-#endif /* 0 */
 
 #endif /* #ifndef GST_DISABLE_PARSE */
 
@@ -405,9 +408,7 @@ theoraenc_suite (void)
 #ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_granulepos_offset);
   tcase_add_test (tc_chain, test_continuity);
-#if 0
   tcase_add_test (tc_chain, test_discontinuity);
-#endif /* 0 */
 #endif
 
   return s;
