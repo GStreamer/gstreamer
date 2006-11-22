@@ -21,7 +21,7 @@ def main():
 
     control = gst.Controller(src, "freq", "volume")
     control.set_interpolation_mode("volume", gst.INTERPOLATE_LINEAR)
-    control.set_interpolation_mode("volume", gst.INTERPOLATE_LINEAR)
+    control.set_interpolation_mode("freq", gst.INTERPOLATE_LINEAR)
 
     control.set("volume", 0, 0.0)
     control.set("volume", 2 * gst.SECOND, 1.0)

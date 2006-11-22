@@ -1,5 +1,12 @@
 2006-11-22  Edward Hervey  <edward@fluendo.com>
 
+	* examples/audio-controller.py:
+	Fix example, use proper property name. Doesn't change anything to the
+	way it used to work, but since it's an example it should be done
+	properly.
+
+2006-11-22  Edward Hervey  <edward@fluendo.com>
+
 	* codegen/override.py:
 	Fix the lookup of override files in the specified search directories.
 	* gst/Makefile.am:
