@@ -4,7 +4,7 @@ remove-potcdate.sin
 stamp-po
 POTFILES
 cat-id-tbl.c
-gst-plugins-*.pot
+*.pot
 Makefile.in.in
 Makevars.template
 Rules-quot
@@ -13,4 +13,4 @@ en@boldquot.header
 en@quot.header
 insert-header.sin
 quot.sed
-
+.pot

@@ -1,3 +1,8 @@
+2006-11-22  Edward Hervey  <edward@fluendo.com>
+
+	* po/.cvsignore:
+	We never put .pot files in cvs. Let's ignore them all.
+
 2006-11-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* po/POTFILES.in:
