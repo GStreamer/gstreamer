@@ -294,7 +294,6 @@ main (int argc, char **argv)
   gchar *desc;
   GOptionContext *ctx;
   GError *err = NULL;
-  int nextopt;
 
   /* detect stuff */
   dir = get_dir_of_binary (argv[0]);

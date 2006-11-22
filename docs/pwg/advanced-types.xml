@@ -885,13 +885,21 @@ plugin_init (GstPlugin *plugin)
           <!-- ############ type ############# -->
 
           <row>
-            <entry>video/x-h263</entry>
-            <entry>H-263 video.</entry>
+            <entry morerows="1">video/x-h263</entry>
+            <entry morerows="1">H-263 video.</entry>
             <entry>variant</entry>
             <entry>string</entry>
             <entry>itu, lead, microsoft, vdolive, vivo, xirlink </entry>
             <entry>
               Vendor specific variant of the format. 'itu' is the standard.
+            </entry>
+          </row>
+          <row>
+            <entry>h263version</entry>
+            <entry>string</entry>
+            <entry>h263, h263p, h263pp</entry>
+            <entry>
+              Enhanced versions of the h263 codec.
             </entry>
           </row>
 

@@ -1,3 +1,11 @@
+2006-11-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/pwg/advanced-types.xml:
+	  add more missing type details
+
+	* tools/gst-run.c: (main):
+	  remove unused variable
+
 2006-11-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/libs/Makefile.am:
