@@ -1,3 +1,13 @@
+2006-11-22  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/override.py:
+	Fix the lookup of override files in the specified search directories.
+	* gst/Makefile.am:
+	Don't distribute gstversion.override
+	Fixup .defs => .c make instructions
+	All the above fixes the cases where you're building in a directory
+	different from the source directory.
+
 2006-11-15  Michael Smith  <msmith@fluendo.com>
 
 	* gst/extend/discoverer.py:

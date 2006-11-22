@@ -44,7 +44,7 @@ class Overrides:
         self.defines = {}
         self.functions = {}
 	self.newstyle_constructors = {}
-        self.path = path
+        self.path = [os.path.abspath(x) for x in path]
 	if filename:
             self.handle_file(filename)
 
@@ -54,15 +54,16 @@ class Overrides:
         fp = None
         for path in self.path:
             os.chdir(oldpath)
-            os.chdir(os.path.abspath(path))
+            os.chdir(path)
             try:
                 fp = open(filename, 'r')
+                break
             except:
-                continue
+                os.chdir(oldpath)
         if not fp:
             raise Exception, "Couldn't find file %s" % filename
         
-        dirname = os.path.dirname(os.path.abspath(filename))
+        dirname = path
 
         if dirname != oldpath:
             os.chdir(dirname)

@@ -51,7 +51,6 @@ _gst_la_SOURCES = 		\
 nodist__gst_la_SOURCES = gst.c
 GST_OVERRIDES = 		\
 	gst.override 		\
-	gstversion.override	\
 	gstbin.override 	\
 	gstbuffer.override 	\
 	gstbus.override		\
@@ -87,13 +86,13 @@ EXTRA_DIST += $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES)
 interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) $(GEN_FILES)
 
 .defs.c: 
-	(cd $(srcdir) \
-	&& python $(top_srcdir)/codegen/codegen.py \
+	($(PYTHON) $(top_srcdir)/codegen/codegen.py \
 		--load-types $(srcdir)/arg-types.py \
 		--register $(srcdir)/gst-types.defs \
-		--override $*.override \
+		--override $(srcdir)/$*.override \
 		--extendpath $(top_builddir)/gst/ \
-		--prefix py$* $*.defs) > gen-$*.c \
+		--extendpath $(srcdir)/ \
+		--prefix py$* $<) > gen-$*.c \
 	&& cp gen-$*.c $*.c \
 	&& rm -f gen-$*.c
 
