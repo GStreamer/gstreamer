@@ -1,3 +1,10 @@
+2006-11-23  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_page),
+	(gst_ogg_demux_chain):
+	Don't just ignore return values from _pad_push().
+	Small debug improvements.
+
 2006-11-23  Michael Smith  <msmith@fluendo.com>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_process_best_pad):

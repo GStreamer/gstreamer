@@ -1193,17 +1193,22 @@ gst_ogg_pad_submit_page (GstOggPad * pad, ogg_page * page)
   if (ogg_stream_pagein (&pad->stream, page) != 0)
     goto choked;
 
+  if (ogg_page_continued (page))
+    GST_LOG_OBJECT (ogg, "have continued page");
+
   while (!done) {
     ret = ogg_stream_packetout (&pad->stream, &packet);
-    GST_LOG_OBJECT (ogg, "packetout gave %d", ret);
     switch (ret) {
       case 0:
+        GST_LOG_OBJECT (ogg, "packetout done");
         done = TRUE;
         break;
       case -1:
+        GST_LOG_OBJECT (ogg, "packetout discont");
         gst_ogg_chain_mark_discont (pad->chain);
         break;
       case 1:
+        GST_LOG_OBJECT (ogg, "packetout gave packet of size %u", packet.bytes);
         result = gst_ogg_pad_submit_packet (pad, &packet);
         if (GST_FLOW_IS_FATAL (result))
           goto could_not_submit;
@@ -2728,7 +2733,7 @@ gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
     if (ret == -1) {
       /* discontinuity in the pages */
     } else {
-      gst_ogg_demux_handle_page (ogg, &page);
+      result = gst_ogg_demux_handle_page (ogg, &page);
     }
   }
   return result;
