@@ -1,3 +1,10 @@
+2006-11-23  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_process_best_pad):
+	  If our incoming buffer is marked as DISCONT, then increment the page
+	  number (so that the discontinuity is marked in the final ogg
+	  bitstream) and flush the previous page.
+
 2006-11-22  Michael Smith  <msmith@fluendo.com>
 
 	* ext/theora/gsttheoraenc.h:
