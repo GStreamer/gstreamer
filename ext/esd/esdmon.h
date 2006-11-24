@@ -69,8 +69,7 @@ struct _GstEsdmonClass {
   GstElementClass parent_class;
 };
 
-GType gst_esdmon_get_type(void);
-gboolean gst_esdmon_factory_init(GstPlugin *plugin);
+GType gst_esdmon_get_type (void);
 
 G_END_DECLS
 
