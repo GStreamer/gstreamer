@@ -668,13 +668,6 @@ gst_polypsink_class_init (gpointer g_class, gpointer class_data)
 }
 
 
-gboolean
-gst_polypsink_factory_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "polypsink", GST_RANK_NONE,
-      GST_TYPE_POLYPSINK);
-}
-
 GType
 gst_polypsink_get_type (void)
 {

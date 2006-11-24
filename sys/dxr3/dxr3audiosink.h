@@ -105,8 +105,7 @@ struct _Dxr3AudioSinkClass {
 };
 
 
-extern GType    dxr3audiosink_get_type          (void);
-extern gboolean dxr3audiosink_factory_init      (GstPlugin *plugin);
+extern GType    dxr3audiosink_get_type (void);
 
 G_END_DECLS
 

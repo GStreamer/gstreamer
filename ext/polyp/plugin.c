@@ -12,7 +12,8 @@ plugin_init (GstPlugin * plugin)
   if (!gst_library_load ("gstaudio"))
     return FALSE;
 
-  if (!(gst_polypsink_factory_init (plugin)))
+  if (!(gst_element_register (plugin, "polypsink", GST_RANK_NONE,
+              GST_TYPE_POLYPSINK)))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (polyp_debug, "polyp", 0, "Polypaudio elements");

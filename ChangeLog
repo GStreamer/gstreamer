@@ -1,3 +1,14 @@
+2006-11-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/audiofile/gstafsink.c:
+	* ext/polyp/plugin.c: (plugin_init):
+	* ext/polyp/polypsink.c:
+	* ext/polyp/polypsink.h:
+	* sys/dxr3/dxr3audiosink.h:
+	* sys/dxr3/dxr3spusink.h:
+	* sys/dxr3/dxr3videosink.h:
+	  remove obsolete _factory_init protos and functions
+
 2006-11-19  Michael Smith  <msmith@fluendo.com>
 
 	* gst/librfb/Makefile.am:

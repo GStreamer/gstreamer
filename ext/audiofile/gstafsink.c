@@ -488,16 +488,3 @@ gst_afsink_handle_event (GstPad * pad, GstEvent * event)
 
   return TRUE;
 }
-
-/*
-gboolean
-gst_afsink_factory_init (GstElementFactory *factory)
-{
-  GstPadTemplate *sink_pt;
-  sink_pt = afsink_sink_factory();
-  gst_element_factory_add_pad_template (factory, sink_pt);
-    
-  return TRUE;  
-
-}
-*/

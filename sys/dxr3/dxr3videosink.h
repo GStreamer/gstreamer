@@ -89,8 +89,7 @@ struct _Dxr3VideoSinkClass {
 };
 
 
-extern GType    dxr3videosink_get_type          (void);
-extern gboolean dxr3videosink_factory_init      (GstPlugin *plugin);
+extern GType    dxr3videosink_get_type (void);
 
 G_END_DECLS
 

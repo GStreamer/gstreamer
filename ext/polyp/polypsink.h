@@ -51,8 +51,7 @@ struct _GstPolypSinkClass {
     GstElementClass parent_class;
 };
 
-GType gst_polypsink_get_type(void);
-gboolean gst_polypsink_factory_init(GstPlugin *plugin);
+GType gst_polypsink_get_type (void);
 
 G_END_DECLS
 

@@ -79,8 +79,7 @@ struct _Dxr3SpuSinkClass {
 };
 
 
-extern GType    dxr3spusink_get_type            (void);
-extern gboolean dxr3spusink_factory_init        (GstPlugin *plugin);
+extern GType    dxr3spusink_get_type (void);
 
 G_END_DECLS
 
