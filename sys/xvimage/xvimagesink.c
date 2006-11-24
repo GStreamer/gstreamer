@@ -2088,7 +2088,7 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   }
 
   GST_DEBUG_OBJECT (xvimagesink, "buffer alloc requested with caps %"
-      GST_PTR_FORMAT "intersecting with our caps %" GST_PTR_FORMAT, caps,
+      GST_PTR_FORMAT ", intersecting with our caps %" GST_PTR_FORMAT, caps,
       xvimagesink->xcontext->caps);
 
   /* Check the caps against our xcontext */
@@ -2130,8 +2130,8 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
 
       if (gst_caps_is_empty (intersection)) {
         GST_WARNING_OBJECT (xvimagesink, "we were requested a buffer with "
-            "caps %" GST_PTR_FORMAT "but our xcontext caps %" GST_PTR_FORMAT
-            "are completely incompatible with those caps", new_caps,
+            "caps %" GST_PTR_FORMAT ", but our xcontext caps %" GST_PTR_FORMAT
+            " are completely incompatible with those caps", new_caps,
             xvimagesink->xcontext->caps);
         gst_caps_unref (new_caps);
         ret = GST_FLOW_UNEXPECTED;
