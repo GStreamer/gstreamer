@@ -1,3 +1,12 @@
+2006-11-24  Wim Taymans  <wim@fluendo.com>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_push_forward),
+	(vorbis_handle_data_packet), (vorbis_dec_decode_buffer),
+	(vorbis_dec_flush_decode):
+	Small cleanups.
+	Don't try to add invalid timestamps.
+	Clipping will unref the buffer.
+
 2006-11-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/adder/gstadder.h:

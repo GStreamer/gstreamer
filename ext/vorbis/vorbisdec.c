@@ -914,6 +914,7 @@ vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       dec->discont = FALSE;
     }
+
     result = gst_pad_push (dec->srcpad, buf);
   }
 
@@ -937,6 +938,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   guint sample_count;
   GstBuffer *out;
   GstFlowReturn result;
+  GstClockTime timestamp = -1;
   gint size;
 
   if (!vd->initialized)
@@ -991,9 +993,12 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   /* this should not overflow */
   GST_BUFFER_DURATION (out) = sample_count * GST_SECOND / vd->vi.rate;
 
+  if (packet->granulepos != -1)
+    vd->granulepos = packet->granulepos - sample_count;
+
   if (vd->cur_timestamp != GST_CLOCK_TIME_NONE) {
     /* we have incomming timestamps */
-    GST_BUFFER_TIMESTAMP (out) = vd->cur_timestamp;
+    timestamp = vd->cur_timestamp;
     GST_DEBUG_OBJECT (vd,
         "cur_timestamp: %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT " = %"
         GST_TIME_FORMAT, GST_TIME_ARGS (vd->cur_timestamp),
@@ -1008,12 +1013,13 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
     GST_BUFFER_OFFSET (out) = vd->granulepos;
     if (vd->granulepos != -1) {
       GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
-      GST_BUFFER_TIMESTAMP (out) =
+      timestamp =
           gst_util_uint64_scale_int (vd->granulepos, GST_SECOND, vd->vi.rate);
     } else {
-      GST_BUFFER_TIMESTAMP (out) = -1;
+      timestamp = -1;
     }
   }
+  GST_BUFFER_TIMESTAMP (out) = timestamp;
 
   if (vd->granulepos != -1)
     vd->granulepos += sample_count;
@@ -1025,6 +1031,10 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
 
 done:
   vorbis_synthesis_read (&vd->vd, sample_count);
+
+  GST_DEBUG_OBJECT (vd,
+      "decoded %d bytes into %d samples, ts %" GST_TIME_FORMAT, packet->bytes,
+      sample_count, GST_TIME_ARGS (timestamp));
 
   /* granulepos is the last sample in the packet */
   if (packet->granulepos != -1)
@@ -1113,8 +1123,6 @@ vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer, gboolean eos)
   } else {
     result = vorbis_handle_data_packet (vd, &packet);
   }
-
-  GST_DEBUG_OBJECT (vd, "offset end: %" G_GUINT64_FORMAT, offset_end);
 
 done:
   return result;
@@ -1255,7 +1263,6 @@ vorbis_dec_flush_decode (GstVorbisDec * dec)
       /* clip, this will unref the buffer in case of clipping */
       if (vorbis_do_clip (dec, buf)) {
         GST_DEBUG_OBJECT (dec, "clipped buffer %p", buf);
-        gst_buffer_unref (buf);
         goto next;
       }
 
