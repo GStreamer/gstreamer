@@ -116,8 +116,7 @@ struct _GstAudioTestSrcClass {
   GstBaseSrcClass parent_class;
 };
 
-GType gst_audio_test_src_get_type(void);
-gboolean gst_audio_test_src_factory_init (GstElementFactory *factory);
+GType gst_audio_test_src_get_type (void);
 
 G_END_DECLS
 

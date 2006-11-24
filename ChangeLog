@@ -1,5 +1,11 @@
 2006-11-24  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/adder/gstadder.h:
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+	  remove obsolete _factory_init protos
+
+2006-11-24  Stefan Kost  <ensonic@users.sf.net>
+
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_buffer_alloc):
 	  Fix spacing in debug message.
 
