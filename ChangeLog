@@ -1,5 +1,14 @@
 2006-11-24  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_page_copy), (gst_ogg_page_free),
+	(gst_ogg_pad_init), (gst_ogg_pad_dispose), (gst_ogg_pad_reset),
+	(gst_ogg_pad_stream_out), (gst_ogg_pad_submit_page),
+	(gst_ogg_chain_reset), (gst_ogg_demux_perform_seek):
+	Some cleanups.
+	Handle continued pages in reverse mode.
+
+2006-11-24  Wim Taymans  <wim@fluendo.com>
+
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_push_forward),
 	(vorbis_handle_data_packet), (vorbis_dec_decode_buffer),
 	(vorbis_dec_flush_decode):

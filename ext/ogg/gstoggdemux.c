@@ -51,6 +51,28 @@ GST_DEBUG_CATEGORY_STATIC (gst_ogg_demux_debug);
 GST_DEBUG_CATEGORY_STATIC (gst_ogg_demux_setup_debug);
 #define GST_CAT_DEFAULT gst_ogg_demux_debug
 
+static ogg_page *
+gst_ogg_page_copy (ogg_page * page)
+{
+  ogg_page *p = g_new0 (ogg_page, 1);
+
+  /* make a copy of the page */
+  p->header = g_memdup (page->header, page->header_len);
+  p->header_len = page->header_len;
+  p->body = g_memdup (page->body, page->body_len);
+  p->body_len = page->body_len;
+
+  return p;
+}
+
+static void
+gst_ogg_page_free (ogg_page * page)
+{
+  g_free (page->header);
+  g_free (page->body);
+  g_free (page);
+}
+
 #define GST_TYPE_OGG_PAD (gst_ogg_pad_get_type())
 #define GST_OGG_PAD(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_OGG_PAD, GstOggPad))
 #define GST_OGG_PAD_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_OGG_PAD, GstOggPad))
@@ -138,6 +160,7 @@ struct _GstOggPad
   GstClockTime first_time;      /* the timestamp of the second page or granuletime of first page */
 
   ogg_stream_state stream;
+  GList *continued;
 
   gboolean discont;
   GstFlowReturn last_ret;       /* last return of _pad_push() */
@@ -301,6 +324,7 @@ gst_ogg_pad_init (GstOggPad * pad)
   pad->first_time = GST_CLOCK_TIME_NONE;
 
   pad->have_type = FALSE;
+  pad->continued = NULL;
   pad->headers = NULL;
 }
 
@@ -328,6 +352,11 @@ gst_ogg_pad_dispose (GObject * object)
   g_list_foreach (pad->headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (pad->headers);
   pad->headers = NULL;
+
+  /* clear continued pages */
+  g_list_foreach (pad->continued, (GFunc) gst_ogg_page_free, NULL);
+  g_list_free (pad->continued);
+  pad->continued = NULL;
 
   ogg_stream_reset (&pad->stream);
 
@@ -535,7 +564,13 @@ static void
 gst_ogg_pad_reset (GstOggPad * pad)
 {
   ogg_stream_reset (&pad->stream);
-  /* FIXME: need a discont here */
+
+  /* clear continued pages */
+  g_list_foreach (pad->continued, (GFunc) gst_ogg_page_free, NULL);
+  g_list_free (pad->continued);
+  pad->continued = NULL;
+
+  pad->last_ret = GST_FLOW_OK;
 }
 
 /* the filter function for selecting the elements we can use in
@@ -1176,27 +1211,22 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
   return ret;
 }
 
-/* submit a page to an oggpad, this function will then submit all
- * the packets in the page.
+/* flush at most @npackets from the stream layer. All packets if 
+ * @npackets is 0;
  */
 static GstFlowReturn
-gst_ogg_pad_submit_page (GstOggPad * pad, ogg_page * page)
+gst_ogg_pad_stream_out (GstOggPad * pad, gint npackets)
 {
-  ogg_packet packet;
-  int ret;
-  gboolean done = FALSE;
   GstFlowReturn result = GST_FLOW_OK;
+  gboolean done = FALSE;
   GstOggDemux *ogg;
 
-  ogg = GST_OGG_DEMUX (GST_PAD_PARENT (pad));
-
-  if (ogg_stream_pagein (&pad->stream, page) != 0)
-    goto choked;
-
-  if (ogg_page_continued (page))
-    GST_LOG_OBJECT (ogg, "have continued page");
+  ogg = pad->ogg;
 
   while (!done) {
+    int ret;
+    ogg_packet packet;
+
     ret = ogg_stream_packetout (&pad->stream, &packet);
     switch (ret) {
       case 0:
@@ -1220,7 +1250,98 @@ gst_ogg_pad_submit_page (GstOggPad * pad, ogg_page * page)
         gst_ogg_pad_reset (pad);
         break;
     }
+    if (npackets > 0) {
+      npackets--;
+      done = (npackets == 0);
+    }
   }
+  return result;
+
+  /* ERRORS */
+could_not_submit:
+  {
+    GST_WARNING_OBJECT (ogg,
+        "could not submit packet for stream %08x, error: %d", pad->serialno,
+        result);
+    gst_ogg_pad_reset (pad);
+    return result;
+  }
+}
+
+/* submit a page to an oggpad, this function will then submit all
+ * the packets in the page.
+ */
+static GstFlowReturn
+gst_ogg_pad_submit_page (GstOggPad * pad, ogg_page * page)
+{
+  GstFlowReturn result = GST_FLOW_OK;
+  GstOggDemux *ogg;
+  gboolean continued = FALSE;
+
+  ogg = pad->ogg;
+
+  if (ogg->segment.rate < 0.0) {
+    gint npackets;
+
+    continued = ogg_page_continued (page);
+
+    /* number of completed packets in the page */
+    npackets = ogg_page_packets (page);
+    if (!continued) {
+      /* page is not continued so it contains at least one packet start */
+      if (npackets == 0)
+        npackets = 1;
+    }
+    GST_LOG_OBJECT (ogg, "continued: %d, %d packets", continued, npackets);
+
+    if (npackets == 0) {
+      GST_LOG_OBJECT (ogg, "no decodable packets, we need a previous page");
+      goto done;
+    }
+  }
+
+  if (ogg_stream_pagein (&pad->stream, page) != 0)
+    goto choked;
+
+  /* flush all packets in the stream layer */
+  result = gst_ogg_pad_stream_out (pad, 0);
+
+  if (pad->continued) {
+    ogg_packet packet;
+
+    /* now send the continued pages to the stream layer */
+    while (pad->continued) {
+      ogg_page *p = (ogg_page *) pad->continued->data;
+
+      GST_LOG_OBJECT (ogg, "submitting continued page %p", p);
+      if (ogg_stream_pagein (&pad->stream, p) != 0)
+        goto choked;
+
+      pad->continued = g_list_delete_link (pad->continued, pad->continued);
+
+      /* free the page */
+      gst_ogg_page_free (p);
+    }
+
+    GST_LOG_OBJECT (ogg, "flushing last continued packet");
+    /* flush 1 continued packet in the stream layer */
+    result = gst_ogg_pad_stream_out (pad, 1);
+
+    /* flush all remaining packets, we pushed them in the previous round.
+     * We don't use _reset() because we still want to get the discont when
+     * we submit a next page. */
+    while (ogg_stream_packetout (&pad->stream, &packet) != 0);
+  }
+
+done:
+  /* keep continued pages (only in reverse mode) */
+  if (continued) {
+    ogg_page *p = gst_ogg_page_copy (page);
+
+    GST_LOG_OBJECT (ogg, "keeping continued page %p", p);
+    pad->continued = g_list_prepend (pad->continued, p);
+  }
+
   return result;
 
 choked:
@@ -1231,14 +1352,6 @@ choked:
     gst_ogg_pad_reset (pad);
     /* we continue to recover */
     return GST_FLOW_OK;
-  }
-could_not_submit:
-  {
-    GST_WARNING_OBJECT (ogg,
-        "could not submit packet for stream %08x, error: %d", pad->serialno,
-        result);
-    gst_ogg_pad_reset (pad);
-    return result;
   }
 }
 
@@ -1285,6 +1398,18 @@ gst_ogg_chain_mark_discont (GstOggChain * chain)
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
     pad->discont = TRUE;
+  }
+}
+
+static void
+gst_ogg_chain_reset (GstOggChain * chain)
+{
+  gint i;
+
+  for (i = 0; i < chain->streams->len; i++) {
+    GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
+
+    gst_ogg_pad_reset (pad);
   }
 }
 
@@ -2072,13 +2197,8 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
      * make sure the streaming thread is not messing with the stream */
     for (i = 0; i < ogg->chains->len; i++) {
       GstOggChain *chain = g_array_index (ogg->chains, GstOggChain *, i);
-      gint j;
 
-      for (j = 0; j < chain->streams->len; j++) {
-        GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, j);
-
-        ogg_stream_reset (&pad->stream);
-      }
+      gst_ogg_chain_reset (chain);
     }
   }
 
