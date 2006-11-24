@@ -1,3 +1,21 @@
+2006-11-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_index_entry_for_time),
+	(gst_avi_demux_src_convert), (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_peek_chunk), (gst_avi_demux_parse_subindex),
+	(gst_avi_demux_read_subindexes_push),
+	(gst_avi_demux_read_subindexes_pull), (gst_avi_demux_parse_stream),
+	(gst_avi_demux_parse_index), (gst_avi_demux_stream_index),
+	(gst_avi_demux_sync), (gst_avi_demux_next_data_buffer),
+	(gst_avi_demux_massage_index),
+	(gst_avi_demux_calculate_durations_from_index),
+	(gst_avi_demux_stream_header_pull), (gst_avi_demux_do_seek),
+	(gst_avi_demux_handle_seek), (gst_avi_demux_process_next_entry),
+	(gst_avi_demux_stream_data), (gst_avi_demux_loop):
+	  remove dead code, tweak debugs statements, add comments, use
+	  _uint64_scale instead _uint64_scale_int when using guint64 values,
+	  small optimizations, reflow some error handling
+
 2006-11-22  Edward Hervey  <edward@fluendo.com>
 
 	* po/.cvsignore:
