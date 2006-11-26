@@ -1,3 +1,18 @@
+2006-11-26  Wim Taymans  <wim@fluendo.com>
+
+	* ext/theora/theoradec.c: (gst_theora_dec_reset),
+	(theora_dec_push_forward), (theora_dec_push_reverse),
+	(theora_handle_data_packet), (theora_dec_decode_buffer),
+	(theora_dec_flush_decode), (theora_dec_chain_reverse),
+	(theora_dec_chain_forward), (theora_dec_chain):
+	Implement reverse playback.
+
+	* ext/vorbis/vorbisdec.c: (gst_vorbis_dec_reset),
+	(vorbis_dec_decode_buffer), (vorbis_dec_flush_decode),
+	(vorbis_dec_chain_forward):
+	Clear buffers used for reverse playback in _reset.
+	No need to set the eos flag, we clip samples using the segment.
+
 2006-11-24  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_page_copy), (gst_ogg_page_free),

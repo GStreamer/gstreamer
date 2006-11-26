@@ -189,23 +189,22 @@ vorbis_dec_finalize (GObject * object)
 static void
 gst_vorbis_dec_reset (GstVorbisDec * dec)
 {
-  GList *walk;
-
   dec->cur_timestamp = GST_CLOCK_TIME_NONE;
   dec->prev_timestamp = GST_CLOCK_TIME_NONE;
   dec->granulepos = -1;
   dec->discont = TRUE;
   gst_segment_init (&dec->segment, GST_FORMAT_TIME);
 
-  for (walk = dec->queued; walk; walk = g_list_next (walk)) {
-    gst_buffer_unref (GST_BUFFER_CAST (walk->data));
-  }
+  g_list_foreach (dec->queued, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (dec->queued);
   dec->queued = NULL;
-
-  for (walk = dec->pendingevents; walk; walk = g_list_next (walk)) {
-    gst_event_unref (GST_EVENT_CAST (walk->data));
-  }
+  g_list_foreach (dec->gather, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (dec->gather);
+  dec->gather = NULL;
+  g_list_foreach (dec->decode, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (dec->decode);
+  dec->decode = NULL;
+  g_list_foreach (dec->pendingevents, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (dec->pendingevents);
   dec->pendingevents = NULL;
 
@@ -1071,7 +1070,7 @@ wrong_samples:
 }
 
 static GstFlowReturn
-vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer, gboolean eos)
+vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer)
 {
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
@@ -1105,7 +1104,7 @@ vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer, gboolean eos)
    * Yes there is, keep one packet at all times and only push out when
    * you receive a new one.  Implement this.
    */
-  packet.e_o_s = (eos ? 1 : 0);
+  packet.e_o_s = 0;
 
   if (G_UNLIKELY (packet.bytes < 1))
     goto wrong_size;
@@ -1220,7 +1219,7 @@ vorbis_dec_flush_decode (GstVorbisDec * dec)
     next = g_list_next (walk);
 
     /* decode buffer, prepend to output queue */
-    res = vorbis_dec_decode_buffer (dec, buf, next == NULL);
+    res = vorbis_dec_decode_buffer (dec, buf);
 
     /* if we generated output, we can discard the buffer, else we
      * keep it in the queue */
@@ -1282,7 +1281,6 @@ vorbis_dec_flush_decode (GstVorbisDec * dec)
   } else {
     GST_DEBUG_OBJECT (dec, "we don't have a granulepos yet, delayed push");
   }
-
   return res;
 }
 
@@ -1321,7 +1319,7 @@ vorbis_dec_chain_forward (GstVorbisDec * vd, gboolean discont,
 {
   GstFlowReturn result;
 
-  result = vorbis_dec_decode_buffer (vd, buffer, FALSE);
+  result = vorbis_dec_decode_buffer (vd, buffer);
 
   gst_buffer_unref (buffer);
 

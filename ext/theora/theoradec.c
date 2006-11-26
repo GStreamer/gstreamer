@@ -171,8 +171,6 @@ gst_theora_dec_init (GstTheoraDec * dec, GstTheoraDecClass * g_class)
 static void
 gst_theora_dec_reset (GstTheoraDec * dec)
 {
-  GList *walk;
-
   dec->need_keyframe = TRUE;
   dec->last_timestamp = -1;
   dec->granulepos = -1;
@@ -185,11 +183,15 @@ gst_theora_dec_reset (GstTheoraDec * dec)
   dec->earliest_time = -1;
   GST_OBJECT_UNLOCK (dec);
 
-  for (walk = dec->queued; walk; walk = g_list_next (walk)) {
-    gst_buffer_unref (GST_BUFFER_CAST (walk->data));
-  }
+  g_list_foreach (dec->queued, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (dec->queued);
   dec->queued = NULL;
+  g_list_foreach (dec->gather, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (dec->gather);
+  dec->gather = NULL;
+  g_list_foreach (dec->decode, (GFunc) gst_mini_object_unref, NULL);
+  g_list_free (dec->decode);
+  dec->decode = NULL;
 }
 
 static int
@@ -902,7 +904,7 @@ beach:
 
 /* FIXME, this needs to be moved to the demuxer */
 static GstFlowReturn
-theora_dec_push (GstTheoraDec * dec, GstBuffer * buf)
+theora_dec_push_forward (GstTheoraDec * dec, GstBuffer * buf)
 {
   GstFlowReturn result = GST_FLOW_OK;
   GstClockTime outtime = GST_BUFFER_TIMESTAMP (buf);
@@ -952,6 +954,15 @@ theora_dec_push (GstTheoraDec * dec, GstBuffer * buf)
     else
       gst_buffer_unref (buf);
   }
+  return result;
+}
+
+static GstFlowReturn
+theora_dec_push_reverse (GstTheoraDec * dec, GstBuffer * buf)
+{
+  GstFlowReturn result = GST_FLOW_OK;
+
+  dec->queued = g_list_prepend (dec->queued, buf);
 
   return result;
 }
@@ -1091,7 +1102,10 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
       dec->info.fps_numerator);
   GST_BUFFER_TIMESTAMP (out) = outtime;
 
-  result = theora_dec_push (dec, out);
+  if (dec->segment.rate >= 0.0)
+    result = theora_dec_push_forward (dec, out);
+  else
+    result = theora_dec_push_reverse (dec, out);
 
   return result;
 
@@ -1143,19 +1157,10 @@ no_buffer:
 }
 
 static GstFlowReturn
-theora_dec_chain_forward (GstTheoraDec * dec, gboolean discont, GstBuffer * buf)
+theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
 {
   ogg_packet packet;
   GstFlowReturn result = GST_FLOW_OK;
-
-  /* resync on DISCONT */
-  if (G_UNLIKELY (discont)) {
-    GST_DEBUG_OBJECT (dec, "received DISCONT buffer");
-    dec->need_keyframe = TRUE;
-    dec->last_timestamp = -1;
-    dec->granulepos = -1;
-    dec->discont = TRUE;
-  }
 
   /* make ogg_packet out of the buffer */
   packet.packet = GST_BUFFER_DATA (buf);
@@ -1198,8 +1203,6 @@ theora_dec_chain_forward (GstTheoraDec * dec, gboolean discont, GstBuffer * buf)
 done:
   /* interpolate granule pos */
   dec->granulepos = _inc_granulepos (dec, dec->granulepos);
-
-  gst_buffer_unref (buf);
 
   return result;
 }
@@ -1297,7 +1300,13 @@ theora_dec_flush_decode (GstTheoraDec * dec)
   while (dec->decode) {
     GstBuffer *buf = GST_BUFFER_CAST (dec->decode->data);
 
-    /* FIXME, decode buffer, prepend to output queue */
+    GST_DEBUG_OBJECT (dec, "decoding buffer %p, ts %" GST_TIME_FORMAT,
+        buf, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
+    /* decode buffer, prepend to output queue */
+    res = theora_dec_decode_buffer (dec, buf);
+
+    /* don't need it anymore now */
     gst_buffer_unref (buf);
 
     dec->decode = g_list_delete_link (dec->decode, dec->decode);
@@ -1320,28 +1329,46 @@ theora_dec_chain_reverse (GstTheoraDec * dec, gboolean discont, GstBuffer * buf)
   GstFlowReturn res = GST_FLOW_OK;
 
   /* if we have a discont, move buffers to the decode list */
-  if (discont) {
+  if (G_UNLIKELY (discont)) {
+    GST_DEBUG_OBJECT (dec, "received discont,gathering buffers");
     while (dec->gather) {
-      GstBuffer *buf;
+      GstBuffer *gbuf;
       guint8 *data;
 
-      buf = GST_BUFFER_CAST (dec->gather->data);
+      gbuf = GST_BUFFER_CAST (dec->gather->data);
       /* remove from the gather list */
       dec->gather = g_list_delete_link (dec->gather, dec->gather);
       /* copy to decode queue */
-      dec->decode = g_list_prepend (dec->decode, buf);
+      dec->decode = g_list_prepend (dec->decode, gbuf);
 
       /* if we copied a keyframe, flush and decode the decode queue */
-      data = GST_BUFFER_DATA (buf);
-      if ((data[0] & 0x40) == 0)
+      data = GST_BUFFER_DATA (gbuf);
+      if ((data[0] & 0x40) == 0) {
+        GST_DEBUG_OBJECT (dec, "copied keyframe");
         res = theora_dec_flush_decode (dec);
+      }
     }
   }
 
   /* add buffer to gather queue */
+  GST_DEBUG_OBJECT (dec, "gathering buffer %p, size %u", buf,
+      GST_BUFFER_SIZE (buf));
   dec->gather = g_list_prepend (dec->gather, buf);
 
   return res;
+}
+
+static GstFlowReturn
+theora_dec_chain_forward (GstTheoraDec * dec, gboolean discont,
+    GstBuffer * buffer)
+{
+  GstFlowReturn result;
+
+  result = theora_dec_decode_buffer (dec, buffer);
+
+  gst_buffer_unref (buffer);
+
+  return result;
 }
 
 static GstFlowReturn
@@ -1355,6 +1382,15 @@ theora_dec_chain (GstPad * pad, GstBuffer * buf)
 
   /* peel of DISCONT flag */
   discont = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT);
+
+  /* resync on DISCONT */
+  if (G_UNLIKELY (discont)) {
+    GST_DEBUG_OBJECT (dec, "received DISCONT buffer");
+    dec->need_keyframe = TRUE;
+    dec->last_timestamp = -1;
+    dec->granulepos = -1;
+    dec->discont = TRUE;
+  }
 
   if (dec->segment.rate > 0.0)
     res = theora_dec_chain_forward (dec, discont, buf);
