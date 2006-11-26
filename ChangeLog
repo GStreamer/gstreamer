@@ -1,3 +1,11 @@
+2006-11-26  Michael Smith  <msmith@fluendo.com>
+
+	* ext/theora/theoradec.c: (theora_dec_src_query),
+	(theora_dec_src_event), (theora_handle_data_packet),
+	(theora_dec_chain):
+	  Send events on the right pads, since they don't work very well if
+	  you send them in the wrong direction.
+
 2006-11-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/audiofile/gstafsink.c:

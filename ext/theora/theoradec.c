@@ -543,11 +543,11 @@ theora_dec_src_event (GstPad * pad, GstEvent * event)
       dec->earliest_time = timestamp + diff;
       GST_OBJECT_UNLOCK (dec);
 
-      res = gst_pad_event_default (dec->sinkpad, event);
+      res = gst_pad_event_default (pad, event);
       break;
     }
     default:
-      res = gst_pad_event_default (dec->sinkpad, event);
+      res = gst_pad_event_default (pad, event);
       break;
   }
 done:
