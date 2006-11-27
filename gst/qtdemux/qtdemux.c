@@ -3235,10 +3235,12 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       QTDEMUX_GUINT32_GET ((guint8 *) tkhd->data + 8));
 
   mdia = qtdemux_tree_get_child_by_type (trak, FOURCC_mdia);
-  g_assert (mdia);
+  if (mdia == NULL)
+    goto corrupt_file;
 
   mdhd = qtdemux_tree_get_child_by_type (mdia, FOURCC_mdhd);
-  g_assert (mdhd);
+  if (mdhd == NULL)
+    goto corrupt_file;
 
   /* new streams always need a discont */
   stream = g_new0 (QtDemuxStream, 1);
@@ -3276,7 +3278,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   }
 
   hdlr = qtdemux_tree_get_child_by_type (mdia, FOURCC_hdlr);
-  g_assert (hdlr);
+  if (hdlr == NULL)
+    goto corrupt_file;
 
   GST_LOG ("track type: %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (QTDEMUX_FOURCC_GET ((guint8 *) hdlr->data + 12)));
@@ -3286,13 +3289,16 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       GST_FOURCC_ARGS (stream->subtype));
 
   minf = qtdemux_tree_get_child_by_type (mdia, FOURCC_minf);
-  g_assert (minf);
+  if (minf == NULL)
+    goto corrupt_file;
 
   stbl = qtdemux_tree_get_child_by_type (minf, FOURCC_stbl);
-  g_assert (stbl);
+  if (stbl == NULL)
+    goto corrupt_file;
 
   stsd = qtdemux_tree_get_child_by_type (stbl, FOURCC_stsd);
-  g_assert (stsd);
+  if (stsd == NULL)
+    goto corrupt_file;
   stsd_data = (const guint8 *) stsd->data;
 
   if (stream->subtype == FOURCC_vide) {
@@ -3607,20 +3613,24 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   /* sample to chunk */
   stsc = qtdemux_tree_get_child_by_type (stbl, FOURCC_stsc);
-  g_assert (stsc);
+  if (stsc == NULL)
+    goto corrupt_file;
   stsc_data = (const guint8 *) stsc->data;
   /* sample size */
   stsz = qtdemux_tree_get_child_by_type (stbl, FOURCC_stsz);
-  g_assert (stsz);
+  if (stsz == NULL)
+    goto corrupt_file;
   stsz_data = (const guint8 *) stsz->data;
   /* chunk offsets */
   stco = qtdemux_tree_get_child_by_type (stbl, FOURCC_stco);
   co64 = qtdemux_tree_get_child_by_type (stbl, FOURCC_co64);
-  g_assert (stco || co64);
+  if (stco == NULL && co64 == NULL)
+    goto corrupt_file;
   stco_data = (const guint8 *) stco->data;
   /* sample time */
   stts = qtdemux_tree_get_child_by_type (stbl, FOURCC_stts);
-  g_assert (stts);
+  if (stts == NULL)
+    goto corrupt_file;
   /* sample sync, can be NULL */
   stss = qtdemux_tree_get_child_by_type (stbl, FOURCC_stss);
 
@@ -3895,6 +3905,12 @@ done3:
   return;
 
 /* ERRORS */
+corrupt_file:
+  {
+    GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
+        (_("This file is corrupt and cannot be played.")), (NULL));
+    return;
+  }
 error_encrypted:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DECODE,
