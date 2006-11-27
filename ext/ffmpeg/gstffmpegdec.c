@@ -487,9 +487,21 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
     case CODEC_ID_MPEG4:
     case CODEC_ID_MJPEG:
     case CODEC_ID_MP3:
-    case CODEC_ID_H264:
       GST_LOG_OBJECT (ffmpegdec, "not using parser, blacklisted codec");
       ffmpegdec->pctx = NULL;
+      break;
+    case CODEC_ID_H264:
+      /* For H264, only use a parser if there is no context data, if there is, 
+       * we're talking AVC */
+      if (ffmpegdec->context->extradata_size == 0) {
+        GST_LOG_OBJECT (ffmpegdec, "H264 with no extradata, creating parser");
+        ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
+      }
+      else {
+        GST_LOG_OBJECT (ffmpegdec, 
+            "H264 with extradata implies framed data - not using parser");
+        ffmpegdec->pctx = NULL;
+      }
       break;
     default:
       GST_LOG_OBJECT (ffmpegdec, "Using parser");
@@ -1871,17 +1883,22 @@ gst_ffmpegdec_chain (GstPad * pad, GstBuffer * inbuf)
       GST_LOG_OBJECT (ffmpegdec,
             "parser returned res %d and size %d", res, size);
 
-      /* if there is no output, we must break and wait for more data. also the
-       * timestamp in the context is not updated. */
-      if (size == 0)
-        break;
-
-      GST_LOG_OBJECT (ffmpegdec, "consuming %d bytes. Next ts at %d, ffpts:%"G_GINT64_FORMAT,
-		      size, left, ffmpegdec->pctx->pts);
+      GST_LOG_OBJECT (ffmpegdec, "consuming %d bytes. Next ts at %d, ffpts:%"
+          G_GINT64_FORMAT, size, left, ffmpegdec->pctx->pts);
 
       /* there is output, set pointers for next round. */
-      bsize -= size;
-      bdata += size;
+      bsize -= res;
+      bdata += res;
+
+      /* if there is no output, we must break and wait for more data. also the
+       * timestamp in the context is not updated. */
+      if (size == 0) {
+        if(bsize>0)
+           continue;
+        else
+           break;
+      }
+
       if (left <= size) {
         left = 0;
 	/* activate the pending timestamp/duration and mark it invalid */

@@ -1,3 +1,13 @@
+2006-11-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
+	(gst_ffmpegdec_chain):
+	  When H264 is presented without codec_data, use a parser to frame it
+	  by assuming that no codec_data implies it is unpacketised.
+
+	  Always use the return value from the parser to advance the input
+	  buffer position.
+
 2006-11-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_register):
