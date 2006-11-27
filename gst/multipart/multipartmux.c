@@ -434,7 +434,8 @@ gst_multipart_mux_queue_pads (GstMultipartMux * mux)
  *
  * 1) find a pad to pull on, this is done by pulling on all pads and
  *    looking at the buffers to decide which one should be muxed first.
- * 2) push buffer on best pad, go to 1
+ * 2) create a new buffer for the header
+ * 3) push both buffers on best pad, go to 1
  */
 static GstFlowReturn
 gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
@@ -442,11 +443,10 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   GstMultipartPad *best;
   GstFlowReturn ret = GST_FLOW_OK;
   gchar *header = NULL;
-  size_t newlen, headerlen;
-  GstBuffer *newbuf = NULL;
+  size_t headerlen;
+  GstBuffer *headerbuf = NULL;
+  GstBuffer *databuf = NULL;
   GstStructure *structure = NULL;
-  guint8 *data;
-  guint datasize;
 
   GST_DEBUG_OBJECT (mux, "all pads are collected");
 
@@ -485,42 +485,39 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
     goto beach;
   }
 
-  header = g_strdup_printf ("--%s\nContent-type: %s\n\n",
-      mux->boundary, gst_structure_get_name (structure));
-
-  datasize = GST_BUFFER_SIZE (best->buffer);
-
+  header = g_strdup_printf ("\r\n--%s\r\nContent-Type: %s\r\n"
+      "Content-Length: %u\r\n\r\n",
+      mux->boundary, gst_structure_get_name (structure),
+      GST_BUFFER_SIZE (best->buffer));
   headerlen = strlen (header);
-  /* header, data, trailing \n */
-  newlen = headerlen + datasize + 1;
 
-  ret =
-      gst_pad_alloc_buffer_and_set_caps (mux->srcpad, GST_BUFFER_OFFSET_NONE,
-      newlen, GST_PAD_CAPS (mux->srcpad), &newbuf);
+  ret = gst_pad_alloc_buffer_and_set_caps (mux->srcpad, GST_BUFFER_OFFSET_NONE,
+      headerlen, GST_PAD_CAPS (mux->srcpad), &headerbuf);
   if (ret != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (mux, "failed allocating a %d bytes buffer", newlen);
+    GST_WARNING_OBJECT (mux, "failed allocating a %d bytes buffer", headerlen);
     g_free (header);
     goto beach;
   }
 
-  data = GST_BUFFER_DATA (newbuf);
-
-  memcpy (data, header, headerlen);
-  memcpy (data + headerlen, GST_BUFFER_DATA (best->buffer), datasize);
-
-  /* trailing \n */
-  data[headerlen + datasize] = '\n';
-
-  gst_buffer_stamp (newbuf, best->buffer);
-  GST_BUFFER_OFFSET (newbuf) = mux->offset;
-
+  memcpy (GST_BUFFER_DATA (headerbuf), header, headerlen);
   g_free (header);
 
-  mux->offset += newlen;
+  databuf = gst_buffer_make_metadata_writable (best->buffer);
+  gst_buffer_set_caps (databuf, GST_PAD_CAPS (mux->srcpad));
 
-  gst_pad_push (mux->srcpad, newbuf);
+  gst_buffer_stamp (headerbuf, databuf);
 
-  gst_buffer_unref (best->buffer);
+  GST_BUFFER_OFFSET (headerbuf) = mux->offset;
+  mux->offset += headerlen;
+  GST_DEBUG_OBJECT (mux, "pushing %u bytes header buffer", headerlen);
+  gst_pad_push (mux->srcpad, headerbuf);
+
+  GST_BUFFER_OFFSET (databuf) = mux->offset;
+  mux->offset += GST_BUFFER_SIZE (databuf);
+  GST_DEBUG_OBJECT (mux, "pushing %u bytes data buffer",
+      GST_BUFFER_SIZE (databuf));
+  gst_pad_push (mux->srcpad, databuf);
+
   best->buffer = NULL;
 
 beach:
