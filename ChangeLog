@@ -3,9 +3,9 @@
 	Patch by: Jonas Holmberg <jonas dot holmberg at axis dot com>
 
 	* gst/multipart/multipartmux.c: (gst_multipart_mux_collected):
-	Push header in a separate buffer instead of memcpy:ing all data
-	Change LF => CRLF in headers
-	Move trailing LF to header
+	Push header in a separate buffer instead of memcpy:ing all data.
+	Change LF => CRLF in headers.
+	Move trailing LF to header. Fixes #379792.
 
 2006-11-27  Wim Taymans  <wim@fluendo.com>
 
