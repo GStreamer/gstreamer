@@ -174,7 +174,8 @@ gst_rtp_mpa_depay_chain (GstPad * pad, GstBuffer * buf)
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
 
-    frag_offset = (payload[2] << 8) | payload[3];
+    if (payload_len <= 4)
+      goto empty_packet;
 
     /* strip off header
      *
@@ -184,6 +185,8 @@ gst_rtp_mpa_depay_chain (GstPad * pad, GstBuffer * buf)
      * |             MBZ               |          Frag_offset          |
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
+    frag_offset = (payload[2] << 8) | payload[3];
+
     payload_len -= 4;
     payload += 4;
 
@@ -195,7 +198,8 @@ gst_rtp_mpa_depay_chain (GstPad * pad, GstBuffer * buf)
 
     memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
 
-    GST_DEBUG ("gst_rtp_mpa_depay_chain: pushing buffer of size %d",
+    GST_DEBUG_OBJECT (rtpmpadepay,
+        "gst_rtp_mpa_depay_chain: pushing buffer of size %d",
         GST_BUFFER_SIZE (outbuf));
 
     gst_buffer_unref (buf);
@@ -209,15 +213,21 @@ gst_rtp_mpa_depay_chain (GstPad * pad, GstBuffer * buf)
 
 bad_packet:
   {
-    GST_DEBUG ("Packet did not validate");
+    GST_DEBUG_OBJECT (rtpmpadepay, "Packet did not validate");
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 bad_payload:
   {
-    GST_DEBUG ("Unexpected payload type %u", pt);
+    GST_DEBUG_OBJECT (rtpmpadepay, "Unexpected payload type %u", pt);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
+  }
+empty_packet:
+  {
+    GST_DEBUG_OBJECT (rtpmpadepay, "Empty payload");
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
   }
 }
 

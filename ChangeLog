@@ -1,3 +1,8 @@
+2006-11-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpmpadepay.c: (gst_rtp_mpa_depay_chain):
+	Small buffer overflow fix and improve debugging.
+
 2006-11-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/esd/esdmon.h:
