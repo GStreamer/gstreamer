@@ -149,13 +149,19 @@ gst_cacasink_class_init (GstCACASinkClass * klass)
   gobject_class->get_property = gst_cacasink_get_property;
   gstelement_class->change_state = gst_cacasink_change_state;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_WIDTH, g_param_spec_int ("screen-width", "screen_width", "screen_width", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));       /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_HEIGHT, g_param_spec_int ("screen-height", "screen_height", "screen_height", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));   /* CHECKME */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_WIDTH,
+      g_param_spec_int ("screen-width", "Screen Width",
+          "The width of the screen", 0, G_MAXINT, GST_CACA_DEFAULT_SCREEN_WIDTH,
+          G_PARAM_READABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SCREEN_HEIGHT,
+      g_param_spec_int ("screen-height", "Screen Height",
+          "The height of the screen", 0, G_MAXINT,
+          GST_CACA_DEFAULT_SCREEN_HEIGHT, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DITHER,
       g_param_spec_enum ("dither", "Dither Type", "Set type of Dither",
           GST_TYPE_CACADITHER, CACA_DITHERING_NONE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ANTIALIASING,
-      g_param_spec_boolean ("anti-aliasing", "Anti-Aliasing",
+      g_param_spec_boolean ("anti-aliasing", "Anti Aliasing",
           "Enables Anti-Aliasing", TRUE, G_PARAM_READWRITE));
 
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_cacasink_setcaps);

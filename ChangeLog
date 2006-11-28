@@ -1,5 +1,14 @@
 2006-11-28  Wim Taymans  <wim@fluendo.com>
 
+	* ext/libcaca/gstcacasink.c: (gst_cacasink_class_init):
+	Fix width and height properties.
+
+	* ext/libcaca/gstcacasink.h:
+	Fix compilation on newer libcaca that require us to include a new
+	header. Fixes #379918.
+
+2006-11-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_open):
 	* gst/rtsp/gstrtspsrc.h:
 	* gst/rtsp/rtspext.h:

@@ -26,6 +26,9 @@
 #include <gst/video/video.h>
 
 #include <caca.h>
+#ifdef CACA_API_VERSION_1
+#   include <caca0.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
