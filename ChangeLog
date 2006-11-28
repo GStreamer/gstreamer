@@ -1,3 +1,43 @@
+2006-11-28  Edward Hervey  <edward@fluendo.com>
+
+	* libs/gst/base/Makefile.am:
+	* libs/gst/base/gstdataqueue.c: (gst_data_queue_get_type),
+	(gst_data_queue_base_init), (gst_data_queue_class_init),
+	(gst_data_queue_init), (gst_data_queue_new),
+	(gst_data_queue_cleanup), (gst_data_queue_finalize),
+	(gst_data_queue_locked_flush), (gst_data_queue_locked_is_empty),
+	(gst_data_queue_locked_is_full), (gst_data_queue_flush),
+	(gst_data_queue_is_empty), (gst_data_queue_is_full),
+	(gst_data_queue_set_flushing), (gst_data_queue_push),
+	(gst_data_queue_pop), (gst_data_queue_drop_head),
+	(gst_data_queue_set_property), (gst_data_queue_get_property):
+	* libs/gst/base/gstdataqueue.h:
+	New GstDataQueue object for threadsafe queueing. Most useful for
+	elements that need some queueing functionnality.
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	Insert documentation for GstDataQueue
+	* plugins/elements/Makefile.am:
+	* plugins/elements/gstelements.c:
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_base_init),
+	(gst_multi_queue_class_init), (gst_multi_queue_init),
+	(gst_multi_queue_finalize), (gst_multi_queue_set_property),
+	(gst_multi_queue_get_property), (gst_multi_queue_request_new_pad),
+	(gst_multi_queue_release_pad), (gst_single_queue_push_one),
+	(gst_multi_queue_item_destroy), (gst_multi_queue_item_new),
+	(gst_multi_queue_loop), (gst_multi_queue_chain),
+	(gst_multi_queue_sink_activate_push), (gst_multi_queue_sink_event),
+	(gst_multi_queue_getcaps), (gst_multi_queue_bufferalloc),
+	(gst_multi_queue_src_activate_push), (gst_multi_queue_acceptcaps),
+	(gst_multi_queue_src_event), (gst_multi_queue_src_query),
+	(wake_up_next_non_linked), (compute_next_non_linked),
+	(single_queue_overrun_cb), (single_queue_underrun_cb),
+	(single_queue_check_full), (gst_single_queue_new):
+	* plugins/elements/gstmultiqueue.h:
+	New multiqueue element, using GstDataQueue. Used for queuing multiple
+	streams.
+	Closes #344639 and #347785
+
 2006-11-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/pwg/advanced-types.xml:

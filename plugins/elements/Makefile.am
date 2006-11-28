@@ -28,7 +28,8 @@ libgstcoreelements_la_SOURCES =	\
 	gstidentity.c		\
 	gstqueue.c		\
 	gsttee.c		\
-	gsttypefindelement.c
+	gsttypefindelement.c	\
+	gstmultiqueue.c
 
 libgstcoreelements_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstcoreelements_la_LIBADD = \
@@ -47,7 +48,8 @@ noinst_HEADERS =		\
 	gstidentity.h		\
 	gstqueue.h		\
 	gsttee.h		\
-	gsttypefindelement.h
+	gsttypefindelement.h	\
+	gstmultiqueue.h
 
 EXTRA_DIST = gstfdsrc.c \
 	     gstfdsink.c

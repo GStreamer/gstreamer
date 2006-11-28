@@ -11,6 +11,7 @@
 <!ENTITY GstCollectPads SYSTEM "xml/gstcollectpads.xml">
 <!ENTITY GstPushSrc SYSTEM "xml/gstpushsrc.xml">
 <!ENTITY GstTypeFindHelper SYSTEM "xml/gsttypefindhelper.xml">
+<!ENTITY GstDataQueue SYSTEM "xml/gstdataqueue.xml">
 
 <!ENTITY GstCheck SYSTEM "xml/gstcheck.xml">
 <!ENTITY GstCheckBufferStraw SYSTEM "xml/gstcheckbufferstraw.xml">
@@ -59,6 +60,7 @@
       &GstAdapter;
       &GstCollectPads;
       &GstTypeFindHelper;
+      &GstDataQueue;
     </chapter>
 
     <chapter id="gstreamer-control">

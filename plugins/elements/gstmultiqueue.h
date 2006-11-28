@@ -1,0 +1,88 @@
+/* GStreamer
+ * Copyright (C) 2006 Edward Hervey <edward@fluendo.com>
+ *
+ * gstmultiqueue.h:
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+
+#ifndef __GST_MULTI_QUEUE_H__
+#define __GST_MULTI_QUEUE_H__
+
+#include <gst/gst.h>
+#include <gst/base/gstdataqueue.h>
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_MULTI_QUEUE \
+  (gst_multi_queue_get_type())
+#define GST_MULTI_QUEUE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTI_QUEUE,GstMultiQueue))
+#define GST_MULTI_QUEUE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTI_QUEUE,GstMultiQueueClass))
+#define GST_IS_MULTI_QUEUE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTI_QUEUE))
+#define GST_IS_MULTI_QUEUE_CLASS(obj) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTI_QUEUE))
+
+typedef struct _GstMultiQueue GstMultiQueue;
+typedef struct _GstMultiQueueClass GstMultiQueueClass;
+
+/**
+ * GstMultiQueue:
+ *
+ * Opaque #GstMultiQueue structure.
+ */
+struct _GstMultiQueue {
+  GstElement element;
+
+  /* number of queues */
+  guint	nbqueues;
+
+  /* The list of individual queues */
+  GList *queues;
+
+  GstDataQueueSize  max_size, extra_size;
+
+  guint32  counter;	/* incoming object counter */
+  guint32  highid;	/* contains highest id of last outputted object */
+
+  GMutex * qlock;	/* Global queue lock (vs object lock or individual */
+			/* queues lock). Protects nbqueues, queues, global */
+			/* GstMultiQueueSize, counter and highid */
+
+  gint nextnotlinked;	/* ID of the next queue not linked (-1 : none) */
+  
+  gpointer _gst_reserved[GST_PADDING_LARGE];
+};
+
+struct _GstMultiQueueClass {
+  GstElementClass parent_class;
+
+  /* signals emitted when ALL queues are either full or empty */
+  void (*underrun)	(GstMultiQueue *queue);
+  void (*overrun)	(GstMultiQueue *queue);
+
+  gpointer _gst_reserved[GST_PADDING_LARGE];
+};
+
+GType gst_multi_queue_get_type (void);
+
+G_END_DECLS
+
+
+#endif /* __GST_MULTI_QUEUE_H__ */

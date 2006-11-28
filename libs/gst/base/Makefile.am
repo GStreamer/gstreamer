@@ -9,7 +9,8 @@ libgstbase_@GST_MAJORMINOR@_la_SOURCES = \
 	gstbasetransform.c	\
 	gstcollectpads.c	\
 	gstpushsrc.c		\
-	gsttypefindhelper.c
+	gsttypefindhelper.c	\
+	gstdataqueue.c
 
 libgstbase_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
 libgstbase_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS)
@@ -25,7 +26,8 @@ libgstbase_@GST_MAJORMINOR@include_HEADERS =	\
 	gstbasetransform.h	\
 	gstcollectpads.h	\
 	gstpushsrc.h		\
-	gsttypefindhelper.h	
+	gsttypefindhelper.h	\
+	gstdataqueue.h
 
 CLEANFILES = *.gcno *.gcda *.gcov
 

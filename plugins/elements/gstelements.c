@@ -37,6 +37,7 @@
 #include "gstqueue.h"
 #include "gsttee.h"
 #include "gsttypefindelement.h"
+#include "gstmultiqueue.h"
 
 struct _elements_entry
 {
@@ -63,6 +64,7 @@ static struct _elements_entry _elements[] = {
   {"filesink", GST_RANK_PRIMARY, gst_file_sink_get_type},
   {"tee", GST_RANK_NONE, gst_tee_get_type},
   {"typefind", GST_RANK_NONE, gst_type_find_element_get_type},
+  {"multiqueue", GST_RANK_NONE, gst_multi_queue_get_type},
   {NULL, 0},
 };
 
