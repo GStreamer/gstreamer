@@ -494,6 +494,27 @@ fill_buffer (GstPlayBaseBin * play_base_bin, gint percent)
 }
 
 static gboolean
+check_queue_event (GstPad * pad, GstEvent * event, gpointer user_data)
+{
+  GstElement *queue = GST_ELEMENT_CAST (user_data);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      GST_DEBUG ("EOS event, mark EOS");
+      g_object_set_data (G_OBJECT (queue), "eos", "1");
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      GST_DEBUG ("FLUSH_STOP event, remove EOS");
+      g_object_set_data (G_OBJECT (queue), "eos", NULL);
+      break;
+    default:
+      GST_DEBUG ("uninteresting event");
+      break;
+  }
+  return TRUE;
+}
+
+static gboolean
 check_queue (GstPad * pad, GstBuffer * data, gpointer user_data)
 {
   GstElement *queue = GST_ELEMENT_CAST (user_data);
@@ -600,10 +621,19 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
   g_signal_handlers_disconnect_by_func (queue,
       (gpointer) queue_threshold_reached, play_base_bin);
 
-  /* now place the limits at the low threshold. When we hit this limit, the
-   * underrun signal will be called. The underrun signal is always connected. */
-  g_object_set (queue, "min-threshold-time", play_base_bin->queue_min_threshold,
-      NULL);
+  data = g_object_get_data (G_OBJECT (queue), "eos");
+  if (data) {
+    GST_DEBUG_OBJECT (play_base_bin, "disable min threshold time, we are EOS");
+    g_object_set (queue, "min-threshold-time", (guint64) 0, NULL);
+  } else {
+    /* now place the limits at the low threshold. When we hit this limit, the
+     * underrun signal will be called. The underrun signal is always connected. */
+    GST_DEBUG_OBJECT (play_base_bin,
+        "setting min threshold time to %" G_GUINT64_FORMAT,
+        play_base_bin->queue_min_threshold);
+    g_object_set (queue, "min-threshold-time",
+        play_base_bin->queue_min_threshold, NULL);
+  }
 
   /* we remove the probe now because we don't need it anymore to give progress
    * about the buffering. */
@@ -643,6 +673,9 @@ queue_out_of_data (GstElement * queue, GstPlayBaseBin * play_base_bin)
    * handler. */
   g_signal_connect (G_OBJECT (queue), "running",
       G_CALLBACK (queue_threshold_reached), play_base_bin);
+  GST_DEBUG_OBJECT (play_base_bin,
+      "setting min threshold time to %" G_GUINT64_FORMAT,
+      (guint64) play_base_bin->queue_threshold);
   g_object_set (queue, "min-threshold-time",
       (guint64) play_base_bin->queue_threshold, NULL);
 
@@ -759,14 +792,21 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     g_signal_connect (G_OBJECT (preroll), "overrun",
         G_CALLBACK (queue_deadlock_check), play_base_bin);
 
+    /* attach pointer to playbasebin */
+    g_object_set_data (G_OBJECT (preroll), "pbb", play_base_bin);
+
     /* give updates on queue size */
     sinkpad = gst_element_get_pad (preroll, "sink");
     id = gst_pad_add_buffer_probe (sinkpad, G_CALLBACK (check_queue), preroll);
     GST_DEBUG_OBJECT (play_base_bin, "Attaching probe to pad %s:%s (%p)",
         GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
     gst_object_unref (sinkpad);
-    g_object_set_data (G_OBJECT (preroll), "pbb", play_base_bin);
     g_object_set_data (G_OBJECT (preroll), "probe", GINT_TO_POINTER (id));
+
+    /* catch eos and flush events so that we can ignore underruns */
+    id = gst_pad_add_event_probe (sinkpad, G_CALLBACK (check_queue_event),
+        preroll);
+    g_object_set_data (G_OBJECT (preroll), "eos_probe", GINT_TO_POINTER (id));
 
     /* When we connect this queue, it will start running and immediatly
      * fire an underrun. */
@@ -776,8 +816,8 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
     queue_out_of_data (preroll, play_base_bin);
   }
 
+  /* listen for EOS so we can switch groups when one ended. */
   preroll_pad = gst_element_get_pad (preroll, "src");
-  /* listen for EOS */
   gst_pad_add_event_probe (preroll_pad, G_CALLBACK (probe_triggered), info);
   gst_object_unref (preroll_pad);
 

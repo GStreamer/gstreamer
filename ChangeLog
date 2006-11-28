@@ -1,3 +1,11 @@
+2006-11-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c: (check_queue_event),
+	(queue_threshold_reached), (queue_out_of_data),
+	(gen_preroll_element):
+	Add event probe to see when EOS is in a queue and we can disable the
+	underrun signals. Fixes #357577.
+
 2006-11-28  Edward Hervey  <edward@fluendo.com>
 
 	* gst/playback/Makefile.am:
