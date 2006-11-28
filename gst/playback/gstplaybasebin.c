@@ -1373,7 +1373,7 @@ static const gchar *stream_uris[] = { "http://", "mms://", "mmsh://",
 };
 
 /* blacklisted URIs, we know they will always fail. */
-static const gchar *blacklisted_uris[] = { NULL };
+static const gchar *blacklisted_uris[] = { "rtsp://", NULL };
 
 /* mime types that we don't consider to be media types */
 static const gchar *no_media_mimes[] = {
@@ -1808,7 +1808,7 @@ subbin_startup_sync_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
  * all the streams or until a preroll queue has been filled.
 */
 static gboolean
-setup_source (GstPlayBaseBin * play_base_bin, gchar ** new_location)
+setup_source (GstPlayBaseBin * play_base_bin)
 {
   GstElement *subbin = NULL;
   gboolean is_raw, have_out, is_dynamic;
@@ -2414,13 +2414,12 @@ gst_play_base_bin_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   GstPlayBaseBin *play_base_bin;
-  gchar *new_location = NULL;
 
   play_base_bin = GST_PLAY_BASE_BIN (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (!setup_source (play_base_bin, &new_location))
+      if (!setup_source (play_base_bin))
         goto source_failed;
       break;
     default:

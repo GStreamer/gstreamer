@@ -1,3 +1,10 @@
+2006-11-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c: (setup_source),
+	(gst_play_base_bin_change_state):
+	Disable rtsp:// uris for the release, it's not good enough yet.
+	Remove unused var.
+
 2006-11-26  Wim Taymans  <wim@fluendo.com>
 
 	* ext/theora/theoradec.c: (gst_theora_dec_reset),
