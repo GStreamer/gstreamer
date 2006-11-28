@@ -1,3 +1,8 @@
+2006-11-28  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	0.10.5.3 pre-release
+
 2006-11-22  Edward Hervey  <edward@fluendo.com>
 
 	* examples/audio-controller.py:
