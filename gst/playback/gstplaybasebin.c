@@ -1317,7 +1317,10 @@ setup_subtitle (GstPlayBaseBin * play_base_bin, gchar * sub_uri)
   if (!source)
     goto unknown_uri;
 
-  subdecodebin = gst_element_factory_make ("decodebin", "subtitle-decoder");
+  if (g_getenv ("USE_DECODEBIN2"))
+    subdecodebin = gst_element_factory_make ("decodebin2", "subtitle-decoder");
+  else
+    subdecodebin = gst_element_factory_make ("decodebin", "subtitle-decoder");
   g_signal_connect (subdecodebin, "element-added",
       G_CALLBACK (decodebin_element_added_cb), play_base_bin);
   g_signal_connect (subdecodebin, "element-removed",
@@ -1728,7 +1731,10 @@ make_decoder (GstPlayBaseBin * play_base_bin)
   GstElement *decoder;
 
   /* now create the decoder element */
-  decoder = gst_element_factory_make ("decodebin", NULL);
+  if (g_getenv ("USE_DECODEBIN2"))
+    decoder = gst_element_factory_make ("decodebin2", NULL);
+  else
+    decoder = gst_element_factory_make ("decodebin", NULL);
   if (!decoder)
     goto no_decodebin;
 

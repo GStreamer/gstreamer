@@ -1,3 +1,38 @@
+2006-11-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst/playback/Makefile.am:
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_get_type),
+	(_gst_boolean_accumulator), (gst_decode_bin_class_init),
+	(gst_decode_bin_factory_filter), (compare_ranks), (print_feature),
+	(gst_decode_bin_init), (gst_decode_bin_dispose),
+	(gst_decode_bin_finalize), (gst_decode_bin_set_property),
+	(gst_decode_bin_get_property), (gst_decode_bin_set_caps),
+	(gst_decode_bin_get_caps), (gst_decode_bin_autoplug_continue),
+	(gst_decode_bin_autoplug_sort), (analyze_new_pad), (connect_pad),
+	(connect_element), (expose_pad), (type_found),
+	(pad_added_group_cb), (pad_removed_group_cb),
+	(no_more_pads_group_cb), (pad_added_cb), (pad_removed_cb),
+	(no_more_pads_cb), (find_compatibles), (is_demuxer_element),
+	(are_raw_caps), (multi_queue_overrun_cb),
+	(multi_queue_underrun_cb), (gst_decode_group_new),
+	(get_current_group), (group_demuxer_event_probe),
+	(gst_decode_group_control_demuxer_pad),
+	(gst_decode_group_control_source_pad),
+	(gst_decode_group_check_if_blocked),
+	(gst_decode_group_check_if_drained), (gst_decode_group_expose),
+	(gst_decode_group_hide), (gst_decode_group_free),
+	(gst_decode_group_set_complete), (source_pad_blocked_cb),
+	(source_pad_event_probe), (gst_decode_pad_new), (add_fakesink),
+	(remove_fakesink), (find_sink_pad), (gst_decode_bin_change_state),
+	(plugin_init):
+	New decodebin2 element.
+	Closes #370092
+	* gst/playback/gstplay-marshal.list:
+	Added marshallers for new signals in decodebin2
+	* gst/playback/gstplaybasebin.c: (setup_subtitle), (make_decoder):
+	Use decodebin2 if *and only if* the USE_DECODEBIN2 environment variable
+	is set.
+
 2006-11-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (setup_source),
