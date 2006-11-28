@@ -1,5 +1,14 @@
 2006-11-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybasebin.c: (check_queue_event):
+	Improve debug.
+
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_transform_caps):
+	Fix width and height range from 16 - 4096 to 1 - MAXINT, just like the
+	padtemplate caps. Refixes #357577.
+
+2006-11-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstplaybasebin.c: (check_queue_event),
 	(queue_threshold_reached), (queue_out_of_data),
 	(gen_preroll_element):

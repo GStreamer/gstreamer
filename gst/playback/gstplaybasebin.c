@@ -508,7 +508,7 @@ check_queue_event (GstPad * pad, GstEvent * event, gpointer user_data)
       g_object_set_data (G_OBJECT (queue), "eos", NULL);
       break;
     default:
-      GST_DEBUG ("uninteresting event");
+      GST_DEBUG ("uninteresting event %s", GST_EVENT_TYPE_NAME (event));
       break;
   }
   return TRUE;

@@ -350,8 +350,8 @@ gst_video_scale_transform_caps (GstBaseTransform * trans,
   structure = gst_caps_get_structure (ret, 0);
 
   gst_structure_set (structure,
-      "width", GST_TYPE_INT_RANGE, 16, 4096,
-      "height", GST_TYPE_INT_RANGE, 16, 4096, NULL);
+      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
   /* if pixel aspect ratio, make a range of it */
   if ((par = gst_structure_get_value (structure, "pixel-aspect-ratio"))) {
