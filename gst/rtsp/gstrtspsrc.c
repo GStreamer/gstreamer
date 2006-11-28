@@ -1770,6 +1770,14 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     /* create stream from the media, can never return NULL */
     stream = gst_rtspsrc_create_stream (src, &sdp, i);
 
+    /* see if we need to configure this stream */
+    if (src->extension && src->extension->configure_stream) {
+      if (!src->extension->configure_stream (src->extension, stream)) {
+        GST_DEBUG_OBJECT (src, "skipping stream %d, disabled by extension", i);
+        continue;
+      }
+    }
+
     /* merge/overwrite global caps */
     if (stream->caps) {
       guint j, num;
@@ -1791,8 +1799,10 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     }
 
     /* skip setup if we have no URL for it */
-    if (stream->setup_url == NULL)
+    if (stream->setup_url == NULL) {
+      GST_DEBUG_OBJECT (src, "skipping stream %d, no setup", i);
       continue;
+    }
 
     GST_DEBUG_OBJECT (src, "doing setup of stream %d with %s", i,
         stream->setup_url);

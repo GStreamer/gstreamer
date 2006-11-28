@@ -50,7 +50,6 @@ G_BEGIN_DECLS
 
 #include "gstrtsp.h"
 #include "rtsp.h"
-#include "rtspext.h"
 
 #define GST_TYPE_RTSPSRC \
   (gst_rtspsrc_get_type())
@@ -73,6 +72,8 @@ typedef struct _GstRTSPSrcClass GstRTSPSrcClass;
 #define GST_RTSP_LOOP_SIGNAL(rtsp)       (g_cond_signal(GST_RTSP_LOOP_GET_COND (rtsp)))
 
 typedef struct _GstRTSPStream GstRTSPStream;
+
+#include "rtspext.h"
 
 struct _GstRTSPStream {
   gint          id;

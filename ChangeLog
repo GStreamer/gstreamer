@@ -1,3 +1,14 @@
+2006-11-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_open):
+	* gst/rtsp/gstrtspsrc.h:
+	* gst/rtsp/rtspext.h:
+	* gst/rtsp/rtspextwms.c: (rtsp_ext_wms_configure_stream),
+	(rtsp_ext_wms_get_context):
+	Add method so that extensions can choose to disable the setup of
+	a stream.
+	Make the WMS extension skip setup of x-wms-rtx streams. Fixes #377792.
+
 2006-11-27  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Jonas Holmberg <jonas dot holmberg at axis dot com>

@@ -142,6 +142,25 @@ no_config:
   }
 }
 
+static gboolean
+rtsp_ext_wms_configure_stream (RTSPExtensionCtx * ctx, GstRTSPStream * stream)
+{
+  GstRTSPSrc *src = (GstRTSPSrc *) ctx->src;
+  GstStructure *s;
+  const gchar *encoding;
+
+  s = gst_caps_get_structure (stream->caps, 0);
+  encoding = gst_structure_get_string (s, "encoding-name");
+
+  GST_DEBUG_OBJECT (src, "%" GST_PTR_FORMAT " encoding-name: %s", stream->caps,
+      encoding);
+
+  if (!strcmp (encoding, "x-wms-rtx"))
+    return FALSE;
+
+  return TRUE;
+}
+
 RTSPExtensionCtx *
 rtsp_ext_wms_get_context (void)
 {
@@ -151,6 +170,7 @@ rtsp_ext_wms_get_context (void)
   res->ctx.parse_sdp = rtsp_ext_wms_parse_sdp;
   res->ctx.before_send = rtsp_ext_wms_before_send;
   res->ctx.after_send = rtsp_ext_wms_after_send;
+  res->ctx.configure_stream = rtsp_ext_wms_configure_stream;
 
   return (RTSPExtensionCtx *) res;
 }

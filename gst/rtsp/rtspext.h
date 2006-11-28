@@ -45,6 +45,7 @@
 
 #include <glib.h>
 
+#include "gstrtspsrc.h"
 #include "rtsptransport.h"
 #include "sdp.h"
 
@@ -58,17 +59,19 @@ struct _RTSPExtensionCtx
   gchar      *name;
   gpointer   *src;
 
-  gboolean   (*detect_server)  (RTSPExtensionCtx *ctx, RTSPMessage *resp);
+  gboolean   (*detect_server)    (RTSPExtensionCtx *ctx, RTSPMessage *resp);
 
-  RTSPResult (*before_send)    (RTSPExtensionCtx *ctx, RTSPMessage *req);
-  RTSPResult (*after_send)     (RTSPExtensionCtx *ctx, RTSPMessage *req, RTSPMessage *resp);
+  RTSPResult (*before_send)      (RTSPExtensionCtx *ctx, RTSPMessage *req);
+  RTSPResult (*after_send)       (RTSPExtensionCtx *ctx, RTSPMessage *req, RTSPMessage *resp);
 
-  RTSPResult (*parse_sdp)      (RTSPExtensionCtx *ctx, SDPMessage *sdp);
-  RTSPResult (*setup_media)    (RTSPExtensionCtx *ctx, SDPMedia *media);
+  RTSPResult (*parse_sdp)        (RTSPExtensionCtx *ctx, SDPMessage *sdp);
+  RTSPResult (*setup_media)      (RTSPExtensionCtx *ctx, SDPMedia *media);
 
-  RTSPResult (*get_transports) (RTSPExtensionCtx *ctx, RTSPLowerTrans protocols, gchar **transport);
+  gboolean   (*configure_stream) (RTSPExtensionCtx *ctx, GstRTSPStream *stream);
 
-  RTSPResult (*stream_select)  (RTSPExtensionCtx *ctx);
+  RTSPResult (*get_transports)   (RTSPExtensionCtx *ctx, RTSPLowerTrans protocols, gchar **transport);
+
+  RTSPResult (*stream_select)    (RTSPExtensionCtx *ctx);
 };
 
 RTSPExtensionCtx*     	rtsp_extension_detect    	(RTSPMessage *resp);
