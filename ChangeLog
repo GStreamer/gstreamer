@@ -1,3 +1,9 @@
+2006-11-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstvalue.c: (gst_value_compare_fraction):
+	If someone is foolish enough to compare 2 fractions with denominator =
+	0, return UNORDERED rather than aborting.
+
 2006-11-28  Edward Hervey  <edward@fluendo.com>
 
 	* libs/gst/base/Makefile.am:

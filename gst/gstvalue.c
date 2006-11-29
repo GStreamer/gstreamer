@@ -3706,7 +3706,6 @@ gst_value_compare_fraction (const GValue * value1, const GValue * value2)
   /* new_num_1 == new_num_2 implies that both denominators must have 
    * been 0, beause otherwise simplification would have caught the
    * equivalence */
-  g_assert_not_reached ();
   return GST_VALUE_UNORDERED;
 }
 
