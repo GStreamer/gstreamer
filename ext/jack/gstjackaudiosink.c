@@ -196,28 +196,30 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
   if (gst_ring_buffer_prepare_read (buf, &readseg, &readptr, &len)) {
     flen = len / channels;
 
+    /* the number of samples must be exactly the segment size */
     if (nframes * sizeof (sample_t) != flen)
       goto wrong_size;
 
-    /* copy samples */
     GST_DEBUG ("copy %d frames: %p, %d bytes, %d channels", nframes, readptr,
         flen, channels);
     data = (sample_t *) readptr;
 
-    /* copy and interleave into target buffers */
+    /* the samples in the ringbuffer have the channels interleaved, we need to
+     * deinterleave into the jack target buffers */
     for (i = 0; i < nframes; i++) {
       for (j = 0; j < channels; j++) {
         buffers[j][i] = *data++;
       }
     }
 
-    /* clear written samples */
+    /* clear written samples in the ringbuffer */
     gst_ring_buffer_clear (buf, readseg);
 
     /* we wrote one segment */
     gst_ring_buffer_advance (buf, 1);
   } else {
-    /* write silence to all buffers */
+    /* We are not allowed to read from the ringbuffer, write silence to all
+     * jack output buffers */
     for (i = 0; i < channels; i++) {
       memset (buffers[i], 0, nframes * sizeof (sample_t));
     }
