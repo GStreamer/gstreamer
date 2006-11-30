@@ -485,7 +485,7 @@ gst_rg_analysis_event (GstBaseTransform * base, GstEvent * event)
       break;
   }
 
-  return TRUE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->event (base, event);
 }
 
 static gboolean

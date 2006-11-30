@@ -1,5 +1,12 @@
 2006-11-30  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: René Stadler  <mail at renestadler de>
+
+	* gst/replaygain/gstrganalysis.c: (gst_rg_analysis_event):
+	  Call the base class handler.  Fixes #380610.
+
+2006-11-30  Wim Taymans  <wim@fluendo.com>
+
 	* ext/Makefile.am:
 	Fix build.
 
