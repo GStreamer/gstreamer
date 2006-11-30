@@ -92,7 +92,7 @@ gst_v4l2src_fill_format_list (GstV4l2Src * v4l2src)
 failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("Failed to enumerate possible video formats device '%s' can work with"), v4l2src->v4l2object->videodev), ("Failed to get number %d in pixelformat enumeration for %s. (%d - %s)", n, v4l2src->v4l2object->videodev, errno, strerror (errno)));
+        (_("Failed to enumerate possible video formats device '%s' can work with"), v4l2src->v4l2object->videodev), ("Failed to get number %d in pixelformat enumeration for %s. (%d - %s)", n, v4l2src->v4l2object->videodev, errno, g_strerror (errno)));
     g_free (format);
     return FALSE;
   }
@@ -126,12 +126,12 @@ gst_v4l2src_queue_frame (GstV4l2Src * v4l2src, guint i)
 
   if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QBUF,
           &v4l2src->pool->buffers[i].buffer) < 0)
-    goto failed;
+    goto qbuf_failed;
 
   return TRUE;
 
   /* ERRORS */
-failed:
+qbuf_failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, WRITE,
         (_("Could not exchange data with device '%s'."),
@@ -150,8 +150,9 @@ failed:
 gint
 gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
 {
+#define NUM_TRIALS 100
   struct v4l2_buffer buffer;
-  gint32 trials = 100;
+  gint32 trials = NUM_TRIALS;
 
   memset (&buffer, 0x00, sizeof (buffer));
   buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -160,7 +161,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
     /* if the sync() got interrupted, we can retry */
     switch (errno) {
       case EAGAIN:
-        GST_DEBUG_OBJECT (v4l2src,
+        GST_WARNING_OBJECT (v4l2src,
             "Non-blocking I/O has been selected using O_NONBLOCK and"
             " no buffer was in the outgoing queue. device %s",
             v4l2src->v4l2object->videodev);
@@ -170,7 +171,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
       case ENOMEM:
         goto nomem;
       case EIO:
-        GST_DEBUG_OBJECT (v4l2src,
+        GST_WARNING_OBJECT (v4l2src,
             "VIDIOC_DQBUF failed due to an internal error."
             " Can also indicate temporary problems like signal loss."
             " Note the driver might dequeue an (empty) buffer despite"
@@ -178,7 +179,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
             " device %s", v4l2src->v4l2object->videodev);
         break;
       case EINTR:
-        GST_DEBUG_OBJECT (v4l2src,
+        GST_WARNING_OBJECT (v4l2src,
             "could not sync on a buffer on device %s",
             v4l2src->v4l2object->videodev);
         break;
@@ -189,10 +190,12 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
         break;
     }
 
+    /* check nr. of attempts to capture */
     if (--trials == -1) {
       goto too_many_trials;
     } else {
-      ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QBUF, &buffer);
+      if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QBUF, &buffer) < 0)
+        goto qbuf_failed;
       memset (&buffer, 0x00, sizeof (buffer));
       buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       buffer.memory = v4l2src->breq.memory;
@@ -226,8 +229,17 @@ too_many_trials:
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
         (_("Failed trying to get video frames from device '%s'."),
             v4l2src->v4l2object->videodev),
-        (_("Failed after 100 tries. device %s."),
-            v4l2src->v4l2object->videodev));
+        (_("Failed after %d tries. device %s. system error: %s"),
+            NUM_TRIALS, v4l2src->v4l2object->videodev, g_strerror (errno)));
+    return -1;
+  }
+qbuf_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, WRITE,
+        (_("Could not exchange data with device '%s'."),
+            v4l2src->v4l2object->videodev),
+        ("Error queueing buffer on device %s. system error: %s",
+            v4l2src->v4l2object->videodev, g_strerror (errno)));
     return -1;
   }
 }
@@ -260,7 +272,7 @@ fmt_failed:
         (_("Failed querying in which video format device '%s' is working with"),
             v4l2src->v4l2object->videodev),
         ("Failed VIDIOC_G_FMT for %s. (%d - %s)",
-            v4l2src->v4l2object->videodev, errno, strerror (errno)));
+            v4l2src->v4l2object->videodev, errno, g_strerror (errno)));
     return FALSE;
   }
 }
@@ -346,7 +358,7 @@ fmt_failed:
             v4l2src->v4l2object->videodev),
         ("Failed to set pixelformat to %s @ %dx%d for device %s. (%d - %s)",
             fmt->description, *width, *height,
-            v4l2src->v4l2object->videodev, errno, strerror (errno)));
+            v4l2src->v4l2object->videodev, errno, g_strerror (errno)));
     return FALSE;
   }
 pixfmt_failed:
@@ -356,7 +368,7 @@ pixfmt_failed:
             v4l2src->v4l2object->videodev),
         ("Failed to set pixelformat to %s @ %dx%d for device %s. (%d - %s)",
             fmt->description, *width, *height,
-            v4l2src->v4l2object->videodev, errno, strerror (errno)));
+            v4l2src->v4l2object->videodev, errno, g_strerror (errno)));
     return FALSE;
   }
 fail:
@@ -484,7 +496,7 @@ broken_driver:
         (_("The driver of device '%s' is broken."),
             v4l2src->v4l2object->videodev),
         ("no supported read capability from %s. (%d - %s)",
-            v4l2src->v4l2object->videodev, errno, strerror (errno)));
+            v4l2src->v4l2object->videodev, errno, g_strerror (errno)));
     return FALSE;
   }
 no_buffers:
@@ -494,7 +506,7 @@ no_buffers:
             v4l2src->v4l2object->videodev),
         ("we received %d from device '%s', we want at least %d. (%d - %s))",
             v4l2src->breq.count, v4l2src->v4l2object->videodev,
-            GST_V4L2_MIN_BUFFERS, errno, strerror (errno)));
+            GST_V4L2_MIN_BUFFERS, errno, g_strerror (errno)));
     v4l2src->breq.count = buffers;
     return FALSE;
   }
@@ -504,7 +516,7 @@ querybuf_failed:
         (_("Could not get properties of data comming from device '%s'"),
             v4l2src->v4l2object->videodev),
         ("Failed querying buffer properties. (%d - %s)",
-            errno, strerror (errno)));
+            errno, g_strerror (errno)));
     gst_v4l2src_capture_deinit (v4l2src);
     return FALSE;
   }
@@ -513,7 +525,7 @@ mmap_failed:
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
         (_("Could not map memory in device '%s'."),
             v4l2src->v4l2object->videodev),
-        ("mmap failed. (%d - %s)", errno, strerror (errno)));
+        ("mmap failed. (%d - %s)", errno, g_strerror (errno)));
     gst_v4l2src_capture_deinit (v4l2src);
     buffer->start = 0;
     return FALSE;
@@ -927,8 +939,9 @@ gst_v4l2src_buffer_finalize (GstV4l2SrcBuffer * v4l2src_buffer)
     GST_LOG ("freeing buffer %p (nr. %d)", buf, buf->buffer.index);
 
     if (!g_atomic_int_dec_and_test (&buf->refcount)) {
-      /* we're still in use, add to queue again 
-         note: this might fail because the device is already stopped (race) */
+      /* we're still in use, add to queue again
+       * note: this might fail because the device is already stopped (race)
+       */
       if (ioctl (buf->pool->video_fd, VIDIOC_QBUF, &buf->buffer) < 0)
         GST_INFO ("readding to queue failed, assuming video device is stopped");
     }
