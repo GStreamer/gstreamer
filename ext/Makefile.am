@@ -106,11 +106,11 @@ else
  IVORBIS_DIR=
 endif
 
-# if USE_JACK
-# JACK_DIR=jack
-# else
+if USE_JACK
+JACK_DIR=jack
+else
 JACK_DIR=
-# endif
+endif
 
 # if USE_LCS
 # LCS_DIR=lcs

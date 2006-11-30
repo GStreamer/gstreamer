@@ -490,6 +490,14 @@ GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
   AC_SUBST(IVORBIS_CFLAGS)
 ])
 
+dnl *** Jack ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
+GST_CHECK_FEATURE(JACK, Jack, jack, [
+  PKG_CHECK_MODULES(JACK, jack >= 0.29.0, HAVE_JACK="yes", HAVE_JACK="no")
+  AC_SUBST(JACK_CFLAGS)
+  AC_SUBST(JACK_LIBS)
+])
+
 dnl *** libmms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
 GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
@@ -842,6 +850,7 @@ ext/faac/Makefile
 ext/faad/Makefile
 ext/gsm/Makefile
 ext/ivorbis/Makefile
+ext/jack/Makefile
 ext/libmms/Makefile
 ext/Makefile
 ext/mpeg2enc/Makefile

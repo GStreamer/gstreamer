@@ -1,3 +1,28 @@
+2006-11-30  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/jack/Makefile.am:
+	* ext/jack/gstjack.c: (plugin_init):
+	* ext/jack/gstjack.h:
+	* ext/jack/gstjackaudiosink.c: (gst_jack_ring_buffer_get_type),
+	(gst_jack_ring_buffer_class_init), (jack_process_cb),
+	(jack_sample_rate_cb), (jack_buffer_size_cb), (jack_shutdown_cb),
+	(gst_jack_ring_buffer_init), (gst_jack_ring_buffer_dispose),
+	(gst_jack_ring_buffer_finalize),
+	(gst_jack_ring_buffer_open_device),
+	(gst_jack_ring_buffer_close_device),
+	(gst_jack_ring_buffer_acquire), (gst_jack_ring_buffer_release),
+	(gst_jack_ring_buffer_start), (gst_jack_ring_buffer_pause),
+	(gst_jack_ring_buffer_stop), (gst_jack_ring_buffer_delay),
+	(gst_jack_connect_get_type), (gst_jack_audio_sink_base_init),
+	(gst_jack_audio_sink_class_init), (gst_jack_audio_sink_init),
+	(gst_jack_audio_sink_set_property),
+	(gst_jack_audio_sink_get_property), (gst_jack_audio_sink_getcaps),
+	(gst_jack_audio_sink_create_ringbuffer):
+	* ext/jack/gstjackaudiosink.h:
+	  Added fully functional jackaudiosink.
+
 2006-11-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_duration),
