@@ -1,5 +1,15 @@
 2006-11-30  Wim Taymans  <wim@fluendo.com>
 
+	* ext/Makefile.am:
+	Fix build.
+
+	* ext/jack/gstjackaudiosink.c: (jack_process_cb),
+	(jack_sample_rate_cb), (jack_buffer_size_cb), (jack_shutdown_cb),
+	(gst_jack_ring_buffer_acquire):
+	Small cleanups.
+
+2006-11-30  Wim Taymans  <wim@fluendo.com>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/jack/Makefile.am:

@@ -291,6 +291,7 @@ DIST_SUBDIRS= \
 	faad \
 	gsm \
 	ivorbis \
+	jack \
 	libmms \
 	dts \
 	divx \
