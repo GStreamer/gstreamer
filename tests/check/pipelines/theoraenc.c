@@ -383,6 +383,15 @@ GST_START_TEST (test_discontinuity)
     fail_unless (GST_BUFFER_IS_DISCONT (buffer),
         "expected discontinuous buffer yo");
     gst_buffer_unref (buffer);
+
+    /* Then the buffer after that should be continuous */
+    buffer = gst_buffer_straw_get_buffer (bin, pad);
+    fail_if (GST_BUFFER_IS_DISCONT (buffer), "expected continuous buffer yo");
+    /* plain division because I know the answer is exact */
+    check_buffer_duration (buffer, GST_SECOND / 10);
+    check_buffer_granulepos (buffer, (2 << GRANULEPOS_SHIFT) + 1);
+    check_buffer_is_header (buffer, FALSE);
+    gst_buffer_unref (buffer);
   }
 
   gst_buffer_straw_stop_pipeline (bin, pad);

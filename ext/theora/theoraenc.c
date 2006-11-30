@@ -574,6 +574,7 @@ theora_enc_is_discontinuous (GstTheoraEnc * enc, GstBuffer * buffer)
 {
   GstClockTime ts = GST_BUFFER_TIMESTAMP (buffer);
   GstClockTimeDiff max_diff;
+  gboolean ret = FALSE;
 
   /* Allow 3/4 a frame off */
   max_diff = (enc->info.fps_denominator * GST_SECOND * 3) /
@@ -585,7 +586,7 @@ theora_enc_is_discontinuous (GstTheoraEnc * enc, GstBuffer * buffer)
           " exceeds expected value %" GST_TIME_FORMAT
           " by too much, marking discontinuity",
           GST_TIME_ARGS (ts), GST_TIME_ARGS (enc->expected_ts));
-      return TRUE;
+      ret = TRUE;
     }
   }
 
@@ -594,7 +595,7 @@ theora_enc_is_discontinuous (GstTheoraEnc * enc, GstBuffer * buffer)
   else
     enc->expected_ts = GST_CLOCK_TIME_NONE;
 
-  return FALSE;
+  return ret;
 }
 
 static GstFlowReturn

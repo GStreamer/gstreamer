@@ -1,3 +1,14 @@
+2006-11-30  Michael Smith  <msmith@fluendo.com>
+
+	* tests/check/pipelines/theoraenc.c: (check_buffer_granulepos),
+	(GST_START_TEST):
+	  It would be very bad if, after a discont buffer, we thought every
+	  single following buffer was also discont. So, add to the test to
+	  ensure that this isn't the case.
+	  
+	* ext/theora/theoraenc.c: (theora_enc_is_discontinuous):
+	  ... it was the case. So fix it.
+
 2006-11-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (check_queue_event):
