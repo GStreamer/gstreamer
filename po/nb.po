@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-09-05 18:16+0200\n"
+"POT-Creation-Date: 2006-12-01 00:04+0100\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -122,79 +122,88 @@ msgstr "Kunne ikke lukke VFS-fil «%s»."
 msgid "Error while writing to file \"%s\"."
 msgstr "Feil under lukking av fil «%s»."
 
-#: ext/ogg/gstoggdemux.c:2904
+#: ext/ogg/gstoggdemux.c:3104
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1267
-msgid "RTSP streams cannot be played yet."
+#: gst/playback/gstplaybasebin.c:1380
+#, c-format
+msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1567
-msgid "No URI specified to play from."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:1573
+#: gst/playback/gstplaybasebin.c:1390 gst/playback/gstplaybasebin.c:1507
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1577
+#: gst/playback/gstplaybasebin.c:1484
+msgid "No URI specified to play from."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1490
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1584
+#: gst/playback/gstplaybasebin.c:1496
+msgid "RTSP streams cannot be played yet."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1807
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1657
+#: gst/playback/gstplaybasebin.c:2018
+msgid "Source element is invalid."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:2094
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1662
+#: gst/playback/gstplaybasebin.c:2099
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1666
+#: gst/playback/gstplaybasebin.c:2103
 #, fuzzy
 msgid "This is not a media file"
 msgstr "Enhet «%s» kan ikke fange data."
 
-#: gst/playback/gstplaybasebin.c:1671
+#: gst/playback/gstplaybasebin.c:2108
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:831
+#: gst/playback/gstplaybin.c:887
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:874 gst/playback/gstplaybin.c:883
-#: gst/playback/gstplaybin.c:1041 gst/playback/gstplaybin.c:1050
-#: gst/playback/gstplaybin.c:1153
+#: gst/playback/gstplaybin.c:894 gst/playback/gstplaybin.c:903
+#: gst/playback/gstplaybin.c:1085 gst/playback/gstplaybin.c:1094
+#: gst/playback/gstplaybin.c:1210 gst/playback/gstplaybin.c:1218
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:1007
+#: gst/playback/gstplaybin.c:1079
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
-#: gst/tcp/gsttcp.c:517 gst/tcp/gsttcpclientsink.c:268
+#: gst/tcp/gsttcp.c:519 gst/tcp/gsttcpclientsink.c:268
 #, fuzzy, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Feil under lukking av fil «%s»."
 
-#: gst/tcp/gsttcp.c:569
+#: gst/tcp/gsttcp.c:571
 #, fuzzy, c-format
 msgid "Error while sending gdp header data to \"%s:%d\"."
 msgstr "Feil under lukking av fil «%s»."
 
-#: gst/tcp/gsttcp.c:578
+#: gst/tcp/gsttcp.c:580
 #, c-format
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr ""
@@ -204,56 +213,56 @@ msgstr ""
 msgid "Connection to %s:%d refused."
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:56
+#: gst-libs/gst/tag/tags.c:57
 msgid "track ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:56
+#: gst-libs/gst/tag/tags.c:57
 msgid "MusicBrainz track ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:58
+#: gst-libs/gst/tag/tags.c:59
 msgid "artist ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:58
+#: gst-libs/gst/tag/tags.c:59
 msgid "MusicBrainz artist ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:60
+#: gst-libs/gst/tag/tags.c:61
 msgid "album ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:60
+#: gst-libs/gst/tag/tags.c:61
 msgid "MusicBrainz album ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:63
+#: gst-libs/gst/tag/tags.c:64
 msgid "album artist ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:63
+#: gst-libs/gst/tag/tags.c:64
 msgid "MusicBrainz album artist ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:65
+#: gst-libs/gst/tag/tags.c:66
 msgid "track TRM ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:65
+#: gst-libs/gst/tag/tags.c:66
 msgid "MusicBrainz TRM ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:68
+#: gst-libs/gst/tag/tags.c:69
 msgid "artist sortname"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:68
+#: gst-libs/gst/tag/tags.c:69
 msgid "MusicBrainz artist sortname"
 msgstr ""
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1389
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1422
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1382
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1415
 msgid "This CD has no audio tracks"
 msgstr ""
 
