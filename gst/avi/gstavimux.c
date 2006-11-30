@@ -136,7 +136,7 @@ static GstStaticPadTemplate video_sink_factory =
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
         "framerate = (fraction) [ 0, MAX ], "
-        "mpegversion = (int) 1, "
+        "mpegversion = (int) { 1, 2, 4}, "
         "systemstream = (boolean) FALSE; "
         "video/x-h263, "
         "width = (int) [ 16, 4096 ], "
