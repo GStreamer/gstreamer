@@ -188,6 +188,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\gst\videoscale\vs_4tap.c"
+				>
+			</File>
+			<File
 				RelativePath="..\..\gst\videoscale\vs_image.c"
 				>
 			</File>

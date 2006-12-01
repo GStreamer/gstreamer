@@ -169,10 +169,10 @@
 #undef HAVE_SYS_SOCKET_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#undef HAVE_SYS_STAT_H
+#undef HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H
+#undef HAVE_SYS_TYPES_H 1
 
 /* support for features: theoradec theoraenc */
 #undef HAVE_THEORA
@@ -208,16 +208,16 @@
 #define PACKAGE_BUGREPORT "http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "GStreamer Base Plug-ins"
+#undef PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.10.1"
+#undef PACKAGE_STRING "GStreamer Base Plug-ins 0.10.10.2"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "gst-plugins-base"
+#undef PACKAGE_TARNAME "gst-plugins-base"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.10.1"
+#undef PACKAGE_VERSION "0.10.10.2"
 
 /* directory where plugins are located */
 #undef PLUGINDIR
@@ -241,7 +241,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.10.1"
+#define VERSION "0.10.10.2"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

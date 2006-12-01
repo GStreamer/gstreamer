@@ -37,6 +37,14 @@
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #define CLAMP(x,a,b) MAX(MIN((x),(b)),(a))
 
+#ifndef M_PI
+#define M_PI  3.14159265358979323846
+#endif
+
+#ifdef WIN32
+#define rint(x) (floor((x)+0.5))
+#endif
+
 int16_t vs_4tap_taps[256][4];
 
 double
