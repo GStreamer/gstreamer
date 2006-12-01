@@ -1,3 +1,9 @@
+2006-12-01  Edward Hervey  <edward@fluendo.com>
+
+	* gst/common.h:
+	* gst/gstpad.override:
+	Add implementation of gst.Pad.set_setcaps_function().
+
 2006-11-28  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

@@ -80,6 +80,7 @@ free_pad_private (gpointer data)
   INVALIDATE_CLOSURE (private->chain_function)
   INVALIDATE_CLOSURE (private->get_function)
   INVALIDATE_CLOSURE (private->getcaps_function)
+  INVALIDATE_CLOSURE (private->setcaps_function)
 #undef INVALIDATE_CLOSURE
 }
 
@@ -345,6 +346,54 @@ _wrap_gst_pad_set_event_function (PyGObject *self,
 {
     SET_PAD_CLOSURE (self, args, 
 		     kwargs, event_function)
+}
+
+%%
+override gst_pad_set_setcaps_function kwargs
+
+static void EXCEPTION_HANDLER
+handle_setcaps_function_exception (GValue *ret, guint n, const GValue *params)
+{
+  GstElement *element = GST_ELEMENT (gst_pad_get_parent (g_value_get_object (&params[0])));
+  
+  if (!_pygst_element_check_error (element)) {
+    g_assert_not_reached (); /* only returns FALSE when there's no error */
+  }
+}
+
+static gboolean
+call_setcaps_function (GstPad *pad, GstCaps *caps)
+{
+    GClosure *closure;
+    GValue ret = { 0, };
+    GValue args[2] = { { 0, }, { 0, } };
+    gboolean bool;
+    
+    g_value_init (&ret, G_TYPE_BOOLEAN);
+    g_value_set_boolean (&ret, FALSE);
+    g_value_init (&args[0], GST_TYPE_PAD);
+    g_value_init (&args[1], GST_TYPE_CAPS);
+    g_value_set_object (&args[0], pad);
+    gst_value_set_caps (&args[1], (const GstCaps*) caps);
+    closure = pad_private(pad)->setcaps_function;
+    
+    g_closure_invoke (closure, &ret, 2, args, NULL);
+
+    bool = g_value_get_boolean (&ret);
+
+    g_value_unset (&ret);
+    g_value_unset (&args[0]);
+    g_value_unset (&args[1]);
+    return bool;
+}
+
+static PyObject*
+_wrap_gst_pad_set_setcaps_function (PyGObject *self,
+                  PyObject  *args,
+                  PyObject  *kwargs)
+{
+    SET_PAD_CLOSURE (self, args, 
+		     kwargs, setcaps_function)
 }
 
 %%
