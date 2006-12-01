@@ -5,3 +5,6 @@ win32/vs6/libgstdirectdraw.dsp
 win32/vs6/libgstdirectsound.dsp
 win32/vs6/libgstneon.dsp
 win32/vs6/libgstqtdemux.dsp
+win32/vs8/gst-plugins-bad.sln
+win32/vs8/libgstdirectdraw.vcproj
+win32/vs8/libgstdirectsound.vcproj
