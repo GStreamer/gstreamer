@@ -639,6 +639,7 @@ EXPORTS
 	gst_tag_list_add
 	gst_tag_list_add_values
 	gst_tag_list_copy
+	gst_tag_list_copy_value
 	gst_tag_list_foreach
 	gst_tag_list_free
 	gst_tag_list_get_char

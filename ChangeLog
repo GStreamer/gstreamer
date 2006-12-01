@@ -1,3 +1,14 @@
+2006-12-01  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* win32/common/libgstbase.def:
+	* win32/common/libgstreamer.def:
+	* win32/vs8/libgstbase.vcproj:
+	* win32/vs8/libgstcoreelements.vcproj:
+	* win32/vs8/libgstreamer.vcproj:
+	Fix compilation on win32 under VS8
+	Patch by: Sergey Scobich <sergey dot scobich at gmail dot com>
+	Partially fixes #381175
+
 2006-11-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstvalue.c: (gst_value_compare_fraction):

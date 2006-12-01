@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="libgstreamer"
 	ProjectGUID="{F987873B-2B88-4B1B-B627-F70DF4F91E49}"
 	Keyword="Win32Proj"

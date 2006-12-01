@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="libgstcoreelements"
 	ProjectGUID="{62D7358C-6880-40EA-93FF-21B69376C7F0}"
 	Keyword="Win32Proj"
@@ -211,6 +211,10 @@
 			</File>
 			<File
 				RelativePath="..\..\plugins\elements\gstidentity.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\plugins\elements\gstmultiqueue.c"
 				>
 			</File>
 			<File
