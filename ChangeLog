@@ -1,3 +1,10 @@
+2006-12-01  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* win32/MANIFEST:
+	Fix compilation on win32 under VS8
+	Patch by: Sergey Scobich <sergey dot scobich at gmail dot com>
+	Partially fixes #381175
+
 2006-11-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavimux.c:
