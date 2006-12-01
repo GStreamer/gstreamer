@@ -509,15 +509,6 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
 
   audiorate->in++;
 
-  static guint64 nextts = 0;
-
-#define LLABS(a) ((gint64)(a) < 0 ? -(a):(a))
-  if (nextts != GST_BUFFER_TIMESTAMP (buf) && LLABS (GST_BUFFER_TIMESTAMP (buf) - nextts) > 21000)      /* 21 us,  ~1 sample */
-    GST_DEBUG_OBJECT (audiorate, "Expected %lld, got %lld! --> %lld", nextts,
-        GST_BUFFER_TIMESTAMP (buf),
-        LLABS (GST_BUFFER_TIMESTAMP (buf) - nextts));
-  nextts = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
-
   in_time = GST_BUFFER_TIMESTAMP (buf);
   in_size = GST_BUFFER_SIZE (buf);
   in_samples = in_size / audiorate->bytes_per_sample;

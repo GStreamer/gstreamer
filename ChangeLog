@@ -1,3 +1,9 @@
+2006-12-01  Michael Smith  <msmith@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain):
+	  Delete bad debug code.
+	  Fixes #381219
+
 2006-12-01  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/videoscale/vs_4tap.c:
