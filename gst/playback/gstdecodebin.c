@@ -713,8 +713,6 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     GList *to_try;
 
     /* if the caps has many types, we need to delay */
-    /* FIXME, implement delay. Listen to the ::caps property change on the pad
-     * and continue to link. */
     if (gst_caps_get_size (caps) != 1)
       goto many_types;
 
@@ -745,21 +743,17 @@ unknown_type:
   }
 dont_know_yet:
   {
-    /* FIXME, actually wait */
-    GST_LOG_OBJECT (pad, "type is not known yet, implement delayed linking");
-    g_signal_emit (G_OBJECT (decode_bin),
-        gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, pad, caps);
-    return;
+    GST_LOG_OBJECT (pad, "type is not known yet");
+    goto setup_caps_delay;
   }
 many_types:
   {
-    /* FIXME, actually wait */
-    GST_LOG_OBJECT (pad, "many possible types, implement delayed linking!");
+    GST_LOG_OBJECT (pad, "many possible types");
     goto setup_caps_delay;
   }
 setup_caps_delay:
   {
-    GST_LOG_OBJECT (pad, "many possible types, delay link");
+    GST_LOG_OBJECT (pad, "setting up a delayed link");
     dynamic_create (element, pad, decode_bin);
     return;
   }

@@ -1,3 +1,25 @@
+2006-12-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (close_pad_link):
+	Fix #382223, add more dynamic caps handling.
+
+2006-12-04  Wim Taymans  <wim@fluendo.com>
+
+	reviewed by: <delete if not using a buddy>
+
+	* gst-libs/gst/audio/gstringbuffer.h:
+	* gst-libs/gst/netbuffer/gstnetbuffer.c: (gst_netbuffer_init),
+	(gst_netaddress_set_ip4_interface),
+	(gst_netaddress_set_ip6_interface), (gst_netaddress_set_loopback),
+	(gst_netaddress_set_ttl), (gst_netaddress_get_ip4_interface),
+	(gst_netaddress_get_ip6_interface), (gst_netaddress_get_loopback),
+	(gst_netaddress_get_ttl):
+	* gst-libs/gst/netbuffer/gstnetbuffer.h:
+	* gst/playback/gstdecodebin.c: (close_pad_link):
+	* tests/examples/seek/seek.c: (end_scrub), (end_seek), (do_seek),
+	(seek_cb), (stop_seek), (rate_spinbutton_changed_cb):
+	* win32/common/config.h:
+
 2006-12-01  Michael Smith  <msmith@fluendo.com>
 
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain):
