@@ -1,3 +1,11 @@
+=== release 0.10.6 ===
+
+2006-12-04  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* NEWS:
+	  releasing 0.10.6, "You're not very subtle, but you are effective"
+
 2006-12-01  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

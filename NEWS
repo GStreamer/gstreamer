@@ -1,4 +1,26 @@
-This is GStreamer Python Bindings 0.10.5, "My Little Poney wants some Funk"
+This is GStreamer Python Bindings 0.10.6, ""You're not very subtle, but you are 
+effective"
+
+Changes since 0.10.5:
+
+      * Can now build without requiring pygtk and its dependencies
+      * installation fixes
+
+Bugs fixed since 0.10.5:
+
+      * 355150 : Expose GST_PARAM_CONTROLLABLE in the bindings
+      * 343980 : import gst crash python
+      * 346190 : allow build/install without pygtk (ie pygobject)
+      * 349623 : Build failure due to "discards qualifiers from pointer ta...
+      * 359375 : variable 'interface' results in syntax error with MingW
+      * 362011 : [patch] Indentation typo in examples/bps.py
+      * 362183 : Please remove examples/gst123
+      * 362202 : [patch] A replacement of examples/vorbisplay.py for 0.10
+      * 362272 : [patch] Ports examples/audioconcat.py to 0.10
+      * 362290 : [patch] Ports examples/cp.py to 0.10
+      * 371969 : [Discoverer] Issues with demuxers that don't create pads ...
+      * 348416 : remuxer example should use normal seek
+      * 349107 : gst.BaseSrc can't negotiate with ffmpegcolorspace
 
 Changes since 0.10.4:
 
