@@ -682,14 +682,6 @@
 
 2006-04-19  Andy Wingo  <wingo@pobox.com>
 
-<<<<<<< ChangeLog
-	* gst/gstpad.override (pad_block_callback_marshal) 
-	(_wrap_gst_pad_set_blocked_async): Fix refcounting problems and
-	indent.
-
-2006-04-19  Andy Wingo  <wingo@pobox.com>
-
-=======
 	* gst/arg-types.py (GstCapsArg.write_const_param) 
 	(GstCapsArg.write_param): If there is a default value, initialize
 	the py_caps variable to NULL. PyArgs_Parse* doesn't touch c
@@ -702,7 +694,6 @@
 
 2006-04-19  Andy Wingo  <wingo@pobox.com>
 
->>>>>>> 1.447
 	* examples/remuxer.py: Another code dump. I know it breaks the
 	freeze but it's just a wee example :)
 
