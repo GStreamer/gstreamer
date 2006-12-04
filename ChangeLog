@@ -1,3 +1,9 @@
+2006-12-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* HACKING:
+	Update the hacking info with information about how to prepare
+	your quilt setup to hack on the ffmpeg checkout
+
 2006-11-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
