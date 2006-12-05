@@ -384,27 +384,59 @@ gst_decode_bin_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static GstDynamic *
-dynamic_create (GstElement * element, GstPad * pad, GstDecodeBin * decode_bin)
+struct DynFind
+{
+  GstElement *elem;
+  GstPad *pad;
+};
+
+static gint
+find_dynamic (GstDynamic * dyn, struct DynFind *info)
+{
+  if (dyn->element == info->elem && dyn->pad == info->pad)
+    return 0;
+  return 1;
+}
+
+/* Add either an element (for dynamic pads/pad-added watching) or a
+ * pad (for delayed caps/notify::caps watching) to the dynamic list,
+ * taking care to ignore repeat entries so we don't end up handling a
+ * pad twice, for example */
+static void
+dynamic_add (GstElement * element, GstPad * pad, GstDecodeBin * decode_bin)
 {
   GstDynamic *dyn;
+  struct DynFind find_info;
+  GList *found;
 
-  GST_DEBUG_OBJECT (element, "dynamic create");
+  g_return_if_fail (element != NULL || pad != NULL);
+
+  /* do a search that this entry doesn't already exist */
+  find_info.elem = element;
+  find_info.pad = pad;
+  found = g_list_find_custom (decode_bin->dynamics, &find_info,
+      (GCompareFunc) find_dynamic);
+  if (found != NULL)
+    goto exit;
 
   /* take refs */
-
   dyn = g_new0 (GstDynamic, 1);
   dyn->element = element;
   dyn->pad = pad;
   dyn->decode_bin = gst_object_ref (decode_bin);
   if (element) {
+    GST_DEBUG_OBJECT (decode_bin, "dynamic create for element %"
+        GST_PTR_FORMAT, element);
+
     gst_object_ref (element);
     dyn->np_sig_id = g_signal_connect (G_OBJECT (element), "pad-added",
         G_CALLBACK (new_pad), dyn);
     dyn->nmp_sig_id = g_signal_connect (G_OBJECT (element), "no-more-pads",
         G_CALLBACK (no_more_pads), dyn);
-  }
-  if (pad) {
+  } else {
+    GST_DEBUG_OBJECT (decode_bin, "dynamic create for pad %" GST_PTR_FORMAT,
+        pad);
+
     gst_object_ref (pad);
     dyn->caps_sig_id = g_signal_connect (G_OBJECT (pad), "notify::caps",
         G_CALLBACK (new_caps), dyn);
@@ -413,7 +445,15 @@ dynamic_create (GstElement * element, GstPad * pad, GstDecodeBin * decode_bin)
   /* and add this element to the dynamic elements */
   decode_bin->dynamics = g_list_prepend (decode_bin->dynamics, dyn);
 
-  return dyn;
+  return;
+exit:
+  if (element) {
+    GST_DEBUG_OBJECT (decode_bin, "Dynamic element already added: %"
+        GST_PTR_FORMAT, element);
+  } else {
+    GST_DEBUG_OBJECT (decode_bin, "Dynamic pad already added: %"
+        GST_PTR_FORMAT, pad);
+  }
 }
 
 static void
@@ -754,7 +794,7 @@ many_types:
 setup_caps_delay:
   {
     GST_LOG_OBJECT (pad, "setting up a delayed link");
-    dynamic_create (element, pad, decode_bin);
+    dynamic_add (NULL, pad, decode_bin);
     return;
   }
 }
@@ -1296,23 +1336,61 @@ is_our_kid (GstElement * e, GstDecodeBin * decode_bin)
   return ret;
 }
 
-static gint
-find_dynamic (GstDynamic * dyn, GstElement * elem)
+static gboolean
+elem_is_dynamic (GstElement * element, GstDecodeBin * decode_bin)
 {
-  return (dyn->element == elem ? 0 : 1);
+  GList *pads;
+
+  /* loop over all the padtemplates */
+  for (pads = GST_ELEMENT_GET_CLASS (element)->padtemplates; pads;
+      pads = g_list_next (pads)) {
+    GstPadTemplate *templ = GST_PAD_TEMPLATE (pads->data);
+    const gchar *templ_name;
+
+    /* we are only interested in source pads */
+    if (GST_PAD_TEMPLATE_DIRECTION (templ) != GST_PAD_SRC)
+      continue;
+
+    templ_name = GST_PAD_TEMPLATE_NAME_TEMPLATE (templ);
+    GST_DEBUG_OBJECT (decode_bin, "got a source pad template %s", templ_name);
+
+    /* figure out what kind of pad this is */
+    switch (GST_PAD_TEMPLATE_PRESENCE (templ)) {
+      case GST_PAD_SOMETIMES:
+      {
+        /* try to get the pad to see if it is already created or
+         * not */
+        GstPad *pad = gst_element_get_pad (element, templ_name);
+
+        if (pad) {
+          GST_DEBUG_OBJECT (decode_bin, "got the pad for sometimes template %s",
+              templ_name);
+          gst_object_unref (pad);
+        } else {
+          GST_DEBUG_OBJECT (decode_bin,
+              "did not get the sometimes pad of template %s", templ_name);
+          /* we have an element that will create dynamic pads */
+          return TRUE;
+        }
+        break;
+      }
+      default:
+        /* Don't care about ALWAYS or REQUEST pads */
+        break;
+    }
+  }
+  return FALSE;
 }
 
 /* This function will be called when a pad is disconnected for some reason */
 static void
 unlinked (GstPad * pad, GstPad * peerpad, GstDecodeBin * decode_bin)
 {
-  GstDynamic *dyn;
   GstElement *element, *peer;
 
   /* inactivate pad */
   gst_pad_set_active (pad, GST_ACTIVATE_NONE);
 
-  element = gst_pad_get_parent_element (pad);
   peer = gst_pad_get_parent_element (peerpad);
 
   if (!is_our_kid (peer, decode_bin))
@@ -1324,15 +1402,16 @@ unlinked (GstPad * pad, GstPad * peerpad, GstDecodeBin * decode_bin)
   /* remove all elements linked to the peerpad */
   remove_element_chain (decode_bin, peerpad);
 
-  /* if an element removes two pads, then we don't want this twice */
-  if (g_list_find_custom (decode_bin->dynamics, element,
-          (GCompareFunc) find_dynamic) != NULL)
-    goto exit;
+  /* Re-add as a dynamic element if needed, via close_link */
+  element = gst_pad_get_parent_element (pad);
+  if (element) {
+    if (elem_is_dynamic (element, decode_bin))
+      dynamic_add (element, NULL, decode_bin);
 
-  dyn = dynamic_create (element, NULL, decode_bin);
+    gst_object_unref (element);
+  }
 
 exit:
-  gst_object_unref (element);
   gst_object_unref (peer);
 }
 
@@ -1410,13 +1489,11 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
     }
   }
   if (dynamic) {
-    GstDynamic *dyn;
-
     GST_DEBUG_OBJECT (decode_bin, "got a dynamic element here");
     /* ok, this element has dynamic pads, set up the signal handlers to be
      * notified of them */
 
-    dyn = dynamic_create (element, NULL, decode_bin);
+    dynamic_add (element, NULL, decode_bin);
   }
 
   /* Check if this is an element with more than 1 pad. If this element
