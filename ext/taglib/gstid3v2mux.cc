@@ -381,7 +381,8 @@ add_id3v2frame_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
             GST_PTR_FORMAT, version, i, num_tags, GST_BUFFER_SIZE (buf), s);
 
         frame = factory->createFrame (bytes, (TagLib::uint) version);
-        id3v2tag->addFrame (frame);
+        if (frame)
+          id3v2tag->addFrame (frame);
       }
     }
   }

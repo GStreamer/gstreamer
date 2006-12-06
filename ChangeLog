@@ -1,5 +1,13 @@
 2006-12-06  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/taglib/gstid3v2mux.cc:
+	Don't attempt to write a NULL frame into the ID3 tag set when the 
+	createFrame method returned NULL.
+	Fixes: #381857
+	Patch by: Jonathan Matthew <jonathan at 0kaolin wh9 net >
+
+2006-12-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/apetag/gstapedemux.c: (ape_demux_parse_tags):
 	Use g_strtod() instead of sscanf to parse doubles, so that it will
 	try parsing in the C locale if the current locale fails.
