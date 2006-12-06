@@ -364,9 +364,8 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
   mix = GST_VIDEO_MIXER (gst_pad_get_parent (pad));
   mixpad = GST_VIDEO_MIXER_PAD (pad);
 
-  if (!mixpad) {
+  if (!mixpad)
     goto beach;
-  }
 
   GST_DEBUG_OBJECT (mixpad, "setcaps triggered");
 
@@ -382,9 +381,6 @@ gst_videomixer_pad_sink_setcaps (GstPad * pad, GstCaps * vscaps)
 
   mixpad->in_width = in_width;
   mixpad->in_height = in_height;
-
-  mixpad->xpos = 0;
-  mixpad->ypos = 0;
 
   gst_videomixer_set_master_geometry (mix);
 
