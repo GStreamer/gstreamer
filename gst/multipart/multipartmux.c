@@ -66,6 +66,7 @@ typedef struct
   GstCollectData collect;       /* we extend the CollectData */
 
   GstBuffer *buffer;            /* the queued buffer for this pad */
+  GstClockTime timestamp;       /* its timestamp */
 }
 GstMultipartPad;
 
@@ -366,12 +367,12 @@ gst_multipart_mux_compare_pads (GstMultipartMux * multipart_mux,
     return -1;
 
   /* no timestamp on old buffer, it must go first */
-  oldtime = GST_BUFFER_TIMESTAMP (old->buffer);
+  oldtime = old->timestamp;
   if (oldtime == GST_CLOCK_TIME_NONE)
     return -1;
 
   /* no timestamp on new buffer, it must go first */
-  newtime = GST_BUFFER_TIMESTAMP (new->buffer);
+  newtime = new->timestamp;
   if (newtime == GST_CLOCK_TIME_NONE)
     return 1;
 
@@ -410,10 +411,11 @@ gst_multipart_mux_queue_pads (GstMultipartMux * mux)
 
       buf = gst_collect_pads_pop (mux->collect, data);
 
-      /* Adjust timestamp with segment_start and preroll */
-      if (buf) {
-        GST_BUFFER_TIMESTAMP (buf) -= data->segment.start;
-      }
+      /* Store timestamp with segment_start and preroll */
+      if (buf && GST_BUFFER_TIMESTAMP_IS_VALID (buf))
+        pad->timestamp = GST_BUFFER_TIMESTAMP (buf) - data->segment.start;
+      else
+        pad->timestamp = GST_CLOCK_TIME_NONE;
 
       pad->buffer = buf;
     }
