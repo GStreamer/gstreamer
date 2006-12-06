@@ -1,3 +1,15 @@
+2006-12-06  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Rob Taylor <robtaylor at floopily dot org>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_start):
+	If using multicast in udpsrc, bind to the multicast address rather than
+	IN_ADDR_ANY.
+	This allows the simultanous use of multiple udpsrcs listening on
+	different multicat addresses. Without this all udpsrcs will receive all
+	packets from all subscribed multicast addresses.
+	Fixes #383001.
+
 2006-12-06  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/taglib/gstid3v2mux.cc:

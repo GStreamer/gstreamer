@@ -652,8 +652,11 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   fcntl (WRITE_SOCKET (src), F_SETFL, O_NONBLOCK);
 #endif
 
+  if (!inet_aton (src->multi_group, &(src->multi_addr.imr_multiaddr)))
+    src->multi_addr.imr_multiaddr.s_addr = 0;
+
   if (src->sock == -1) {
-    if ((ret = socket (AF_INET, SOCK_DGRAM, 0)) < 0)
+    if ((ret = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
       goto no_socket;
 
     src->sock = ret;
@@ -667,7 +670,11 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     memset (&src->myaddr, 0, sizeof (src->myaddr));
     src->myaddr.sin_family = AF_INET;   /* host byte order */
     src->myaddr.sin_port = htons (src->port);   /* short, network byte order */
-    src->myaddr.sin_addr.s_addr = INADDR_ANY;
+
+    if (src->multi_addr.imr_multiaddr.s_addr)
+      src->myaddr.sin_addr.s_addr = src->multi_addr.imr_multiaddr.s_addr;
+    else
+      src->myaddr.sin_addr.s_addr = INADDR_ANY;
 
     GST_DEBUG_OBJECT (src, "binding on port %d", src->port);
     if ((ret = bind (src->sock, (struct sockaddr *) &src->myaddr,
@@ -675,13 +682,12 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
       goto bind_error;
   }
 
-  if (inet_aton (src->multi_group, &(src->multi_addr.imr_multiaddr))) {
-    if (src->multi_addr.imr_multiaddr.s_addr) {
-      src->multi_addr.imr_interface.s_addr = INADDR_ANY;
-      if ((ret = setsockopt (src->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-                  &src->multi_addr, sizeof (src->multi_addr))) < 0)
-        goto membership;
-    }
+  if (src->multi_addr.imr_multiaddr.s_addr) {
+    src->multi_addr.imr_interface.s_addr = INADDR_ANY;
+    if ((ret =
+            setsockopt (src->sock, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+                &src->multi_addr, sizeof (src->multi_addr))) < 0)
+      goto membership;
   }
 
   len = sizeof (my_addr);
