@@ -1,3 +1,9 @@
+2006-12-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/generic/libavcodec-locking.c: (GST_START_TEST):
+	Fix the filter caps string for the test. Limit it to 10 fps, which
+	means encoding ~ 50 frames before timeout
+
 2006-12-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* HACKING:

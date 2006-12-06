@@ -100,13 +100,13 @@ GST_START_TEST (test_libavcodec_locks)
   gint i;
 
   for (i=0; i<NUM_SINKS; i++)
-    sink[i] = g_strdup_printf (" t.src%d ! queue ! ffenc_mpeg4 ! ffdec_mpeg4 ! fakesink", i);
+    sink[i] = g_strdup_printf (" t.src%d ! queue ! ffenc_mpeg4 ! ffdec_mpeg4 ! fakesink sync=true", i);
   
   sink [NUM_SINKS] = NULL;
   
   sinks = g_strjoinv (" ", sink);
   
-  s = g_strdup_printf ("videotestsrc ! video/x-raw-yuv,format:fourcc=I420,width=320,height=240 ! tee name=t %s", sinks);
+  s = g_strdup_printf ("videotestsrc ! video/x-raw-yuv,format=(fourcc)I420,width=320,height=240,framerate=(fraction)10/1 ! tee name=t %s", sinks);
   
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
