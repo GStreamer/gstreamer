@@ -493,7 +493,7 @@ GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
 dnl *** Jack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
 GST_CHECK_FEATURE(JACK, Jack, jack, [
-  PKG_CHECK_MODULES(JACK, jack >= 0.29.0, HAVE_JACK="yes", HAVE_JACK="no")
+  PKG_CHECK_MODULES(JACK, jack >= 0.99.10, HAVE_JACK="yes", HAVE_JACK="no")
   AC_SUBST(JACK_CFLAGS)
   AC_SUBST(JACK_LIBS)
 ])

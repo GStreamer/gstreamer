@@ -1,3 +1,9 @@
+2006-12-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	Update the Jack requirement to the version where I think options_t
+	appeared
+
 2006-12-01  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* win32/MANIFEST:
