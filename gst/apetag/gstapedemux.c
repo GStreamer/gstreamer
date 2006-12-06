@@ -278,11 +278,14 @@ ape_demux_parse_tags (const guint8 * data, gint size)
         }
         case G_TYPE_DOUBLE:{
           gdouble v_double;
+          gchar *endptr;
 
-          if (sscanf (val, "%lf", &v_double) == 1) {
+          v_double = g_strtod (val, &endptr);
+          if (endptr != val) {
             g_value_init (&v, G_TYPE_DOUBLE);
             g_value_set_double (&v, v_double);
           }
+
           break;
         }
         default:{

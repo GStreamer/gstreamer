@@ -1,3 +1,11 @@
+2006-12-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/apetag/gstapedemux.c: (ape_demux_parse_tags):
+	Use g_strtod() instead of sscanf to parse doubles, so that it will
+	try parsing in the C locale if the current locale fails.
+	Fixes: #382982
+	Patch by: Sebastian Dröge  <mail at slomosnail de >
+
 2006-12-01  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* win32/MANIFEST:
