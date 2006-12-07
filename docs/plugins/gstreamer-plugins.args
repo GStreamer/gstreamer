@@ -554,7 +554,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Has Sink Loop</NICK>
-<BLURB>If the element can operate in pull mode.</BLURB>
+<BLURB>If the element can operate in pull mode (unimplemented).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -626,5 +626,65 @@
 <NICK>fd</NICK>
 <BLURB>An open file descriptor to write to.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiQueue::extra-size-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Extra Size (buffers)</NICK>
+<BLURB>Amount of buffers the queues can grow if one of them is empty (0=disable).</BLURB>
+<DEFAULT>200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiQueue::extra-size-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Extra Size (kB)</NICK>
+<BLURB>Amount of data the queues can grow if one of them is empty (bytes, 0=disable).</BLURB>
+<DEFAULT>10485760</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiQueue::extra-size-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Extra Size (ns)</NICK>
+<BLURB>Amount of time the queues can grow if one of them is empty (in ns, 0=disable).</BLURB>
+<DEFAULT>1000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiQueue::max-size-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (buffers)</NICK>
+<BLURB>Max. number of buffers in the queue (0=disable).</BLURB>
+<DEFAULT>200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiQueue::max-size-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (kB)</NICK>
+<BLURB>Max. amount of data in the queue (bytes, 0=disable).</BLURB>
+<DEFAULT>10485760</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiQueue::max-size-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. size (ns)</NICK>
+<BLURB>Max. amount of data in the queue (in ns, 0=disable).</BLURB>
+<DEFAULT>1000000000</DEFAULT>
 </ARG>
 

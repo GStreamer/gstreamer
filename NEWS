@@ -1,4 +1,61 @@
-This is GStreamer 0.10.10, "Pais"
+This is GStreamer 0.10.11, "Love never runs on time"
+
+Bugs fixed since 0.10.10:
+
+      * 363095 : [BaseTransform] Outputs empty buffers
+      * 353301 : aborts in _get_element_by_uri(), probably due to buggy el...
+      * 344639 : Separate threadsafe queuing functionnality in a separate ...
+      * 347785 : [multiqueue] New multiple input-output queue
+      * 352827 : re-negotiation issues with dynamic pipelines and level or...
+      * 357180 : [libs] gst_controller_new* functions don't increase refco...
+      * 318031 : gstreamer should use gmodule-no-export in its .pc file
+      * 340878 : Registry doesn't discard removed plugin features
+      * 345496 : No GstPadDirection in files created by GstXml
+      * 356910 : Basesrc gst_base_src_activate_push not calling base_src_s...
+      * 357593 : Generated gst-element-check.m4 installed from $(srcdir)
+      * 358436 : #include is missing in gstghostpad.c and gstquery.c
+      * 358999 : [PATCH] [GstPad] Flushing on blocked pads not handled cor...
+      * 359850 : Compiling issues on sparc with Forte
+      * 360151 : Fixes compiling with forte: disable warning as error for ...
+      * 360173 : Fixes compiling with forte: warning clean up (part 1)
+      * 360467 : [API] add gst_tag_list_is_empty ()
+      * 360860 : Fixes compiling with forte: warning clean up (part 2)
+      * 361675 : Allow applications to use libxml2 and GStreamer even if  ...
+      * 361720 : grammar project: error generating gstmarshal.c and gstmar...
+      * 361730 : wrong source file list in VC8 project
+      * 361732 : " win32\common\libgstreamer.def " lacks 'gst_caps_merge' entry
+      * 361769 : Deadlock in gstpad.c 
+      * 364388 : size variable is not always initialized in gst_base_src_s...
+      * 366321 : GST_SEGMENT_FORMAT not defined on windows
+      * 370865 : [basesrc] update segment duration in gst_base_src_update_...
+      * 371493 : Incomplete change of printf conversion specifiers in gstr...
+      * 374475 : [PATCH] minor doc typo
+      * 377332 : [PATCH] Warning with check > = 0.9.4
+      * 357617 : [libs] gst_controller_set_from_list can return without un...
+      * 358737 : _gst_event_copy sets the wrong parent_refcount on the chi...
+      * 366212 : Fix some misspellings in gstreamer core
+      * 369366 : MacOSX printf fixes for CVS
+      * 371894 : tests/examples/typefind is broken  
+      * 355499 : ensure_current_registry_forking()  fails if zombie alread...
+      * 352345 : Small race condition in the queue element
+      * 357432 : [libs] GstController needs to keep controlled objects alive
+      * 358613 : sink- > file is never reset for filesink elements, even tho...
+      * 366286 : [PATCH] fix compilation on Windows
+      * 366572 : Bad declaration in headerfile
+      * 367677 : [fdsrc] skips the first byte
+      * 369942 : [PATCH] unblocking blocked pad does not release all block...
+
+API added since 0.10.10:
+
+      * gst_element_state_change_return_get_name
+      * gst_tag_list_is_empty
+      * gst_pad_is_blocking()
+      * GST_PAD_IS_BLOCKING() macro
+      * GST_PAD_BLOCKING GstPadFlag
+      * gst_base_src_wait_playing
+      * gst_base_sink_wait_preroll
+      * gst_message_new_buffering
+      * gst_message_parse_buffering
 
 Bugs fixed since 0.10.9:
      

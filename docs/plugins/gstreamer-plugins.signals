@@ -79,3 +79,17 @@ guint  arg1
 GstCaps *arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstMultiQueue::overrun</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
+GstMultiQueue *gstmultiqueue
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstMultiQueue::underrun</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
+GstMultiQueue *gstmultiqueue
+</SIGNAL>
+

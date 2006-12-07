@@ -1,3 +1,10 @@
+=== release 0.10.11 ===
+
+2006-12-06  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.11, "Love never runs on time"
+
 2006-12-01  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* win32/common/libgstbase.def:

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.10 "Pais"
+Release notes for GStreamer 0.10.11 "Love never runs on time"
         
 
 
@@ -14,7 +14,7 @@ It is, however, parallel installable with the 0.8.x series.
 
 
 The 0.10.x series has been reworked for threadsafety.  It also features
-various feature additions and enchancements.
+various feature additions and enhancements.
 
 
 This module, gstreamer, only contains core functionality.
@@ -37,55 +37,60 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Parallel installability with 0.8.x series
-      * Threadsafe design and API
+      * Base sink classes now fully support reverse playback modes
+      * Optimisations and bug-fixes
+      * Documentation improvements
+      * New API for network buffering
+      * Reduction in exported DLL symbols
+      * Pad blocking now works correctly
+      * Introduction of the MultiQueue object for building queue-like objects
+      * Many other bug-fixes and enhancements
 
 Bugs fixed in this release
      
-      * 349180 : gst_parse_launch is not reentrant (or recursively callable)
-      * 348455 : [filesrc] should not use mmap() by default, since it migh...
-      * 340674 : marry gst-debugs & plot-timeline.py
-      * 350449 : [GstBaseTransform] buffer_alloc should alway try downstream
-      * 352580 : implement proper caps merging
-      * 345444 : Linking to an audioconvert (pad-added callback) multiple ...
-      * 347293 : GstValueList comparison is flawed
-      * 347311 : element_unlink leaks its iterator wich will leak the src ...
-      * 348179 : gst_parse_lauch is not reentrant
-      * 348354 : failure in bison version detection breaks build
-      * 350419 : API: GST_SEGMENT_FORMAT printf extension for GstSegments
-      * 350879 : [init] Mark gstreamer as being initialized during registr...
-      * 350935 : API: add GST_TAG_EXTENDED_COMMENT
-      * 353976 : asssertion about element sanity in gst_registry_xml_write...
-      * 350432 : micro-optimising quarks
-      * 341029 : Ghostpads internal and target should be linked from the b...
-      * 345295 : [PATCH] gstreamer/libs/gst/net for Windows
-      * 347756 : Allow --disable-trace without --disable-parse
-      * 347794 : Do not reset SIGSEGV handler when --gst-disable-segtrap i...
-      * 348918 : application should decide whether or not to use fork() to...
-      * 349943 : [QOS] documentation/code mismatch
-      * 351768 : Unwanted concurent buffer modifications
-      * 352958 : pad_alloc_buffer and stream lock
-      * 353121 : gst_query_new_segment should initialize all structure fields
-      * 353122 : gst_element_get_bus refs the bus unconditionally
-      * 347385 : [ghostpad] gst_ghost_pad_new_from_template() method
-      * 348677 : Upgrade to 0.10.9 breaks existing applications (failed se...
-
-API changed in this release
-     
-- API additions:
-    
-* gst_segtrap_is_enabled
-* gst_segtrap_set_enabled
-* gst_registry_fork_is_enabled
-* gst_registry_fork_set_enabled
-* gst_ghost_pad_new_from_template
-* gst_ghost_pad_new_no_target_from_template
-* gst_caps_merge
-* GST_TAG_EXTENDED_COMMENT
-* GstClockCLass:wait_jitter
-* GST_SEGMENT_FORMAT
-* gst_structure_id_set
-* gst_structure_id_set_valist
+      * 363095 : [BaseTransform] Outputs empty buffers
+      * 353301 : aborts in _get_element_by_uri(), probably due to buggy el...
+      * 344639 : Separate threadsafe queuing functionnality in a separate ...
+      * 347785 : [multiqueue] New multiple input-output queue
+      * 352827 : re-negotiation issues with dynamic pipelines and level or...
+      * 357180 : [libs] gst_controller_new* functions don't increase refco...
+      * 318031 : gstreamer should use gmodule-no-export in its .pc file
+      * 340878 : Registry doesn't discard removed plugin features
+      * 345496 : No GstPadDirection in files created by GstXml
+      * 356910 : Basesrc gst_base_src_activate_push not calling base_src_s...
+      * 357593 : Generated gst-element-check.m4 installed from $(srcdir)
+      * 358436 : #include is missing in gstghostpad.c and gstquery.c
+      * 358999 : [PATCH] [GstPad] Flushing on blocked pads not handled cor...
+      * 359850 : Compiling issues on sparc with Forte
+      * 360151 : Fixes compiling with forte: disable warning as error for ...
+      * 360173 : Fixes compiling with forte: warning clean up (part 1)
+      * 360467 : [API] add gst_tag_list_is_empty ()
+      * 360860 : Fixes compiling with forte: warning clean up (part 2)
+      * 361675 : Allow applications to use libxml2 and GStreamer even if  ...
+      * 361720 : grammar project: error generating gstmarshal.c and gstmar...
+      * 361730 : wrong source file list in VC8 project
+      * 361732 :  " win32\common\libgstreamer.def " lacks 'gst_caps_merge' entry
+      * 361769 : Deadlock in gstpad.c
+      * 364388 : size variable is not always initialized in gst_base_src_s...
+      * 366321 : GST_SEGMENT_FORMAT not defined on windows
+      * 370865 : [basesrc] update segment duration in gst_base_src_update_...
+      * 371493 : Incomplete change of printf conversion specifiers in gstr...
+      * 374475 : [PATCH] minor doc typo
+      * 377332 : [PATCH] Warning with check > = 0.9.4
+      * 381175 : [PATCH] fix vs8 compilation
+      * 357617 : [libs] gst_controller_set_from_list can return without un...
+      * 358737 : _gst_event_copy sets the wrong parent_refcount on the chi...
+      * 366212 : Fix some misspellings in gstreamer core
+      * 369366 : MacOSX printf fixes for CVS
+      * 371894 : tests/examples/typefind is broken
+      * 355499 : ensure_current_registry_forking()  fails if zombie alread...
+      * 352345 : Small race condition in the queue element
+      * 357432 : [libs] GstController needs to keep controlled objects alive
+      * 358613 : sink- > file is never reset for filesink elements, even tho...
+      * 366286 : [PATCH] fix compilation on Windows
+      * 366572 : Bad declaration in headerfile
+      * 367677 : [fdsrc] skips the first byte
+      * 369942 : [PATCH] unblocking blocked pad does not release all block...
 
 Download
 
@@ -120,16 +125,31 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * Andy Wingo
+      * Alessandro Decina
       * Antoine Tremblay
+      * Christian F.K. Schaller
+      * David Schleef
       * Edward Hervey
+      * Jan David Mol
       * Jan Schmidt
-      * Marc-Andre Lureau
+      * Jonathan Matthew
+      * Josep Torre Valles
+      * Kjartan Maraas
+      * Marcus Granado
+      * Mark Nauwelaerts
       * Michael Smith
       * Peter Kjellerstedt
+      * René Stadler
+      * Sebastian Droege
+      * Sebastien Cote
+      * Sergey Scobich
+      * Sjoerd Simons
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Torsten Schoenfeld
       * Wim Taymans
+      * Yves Lefebvre
+      * Zaheer Abbas Merali
+      * gorshkov
+      * mrcgran
  
