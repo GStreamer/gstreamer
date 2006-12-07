@@ -133,6 +133,13 @@
  *     </para></listitem>
  *   </varlistentry>
  *   <varlistentry>
+ *     <term>GST_QUERY_POSITION</term>
+ *     <listitem><para>The query is sent to all sink elements in the bin and the
+ *     MAXIMUM of all values is returned. If no sinks are available in the bin,
+ *     the query fails.
+ *     </para></listitem>
+ *   </varlistentry>
+ *   <varlistentry>
  *     <term>OTHERS</term>
  *     <listitem><para>the query is forwarded to all sink elements, the result
  *     of the first sink that answers the query successfully is returned. If no
@@ -2523,7 +2530,9 @@ gst_bin_query (GstElement * element, GstQuery * query)
 done:
   gst_iterator_free (iter);
 
-/* exit: */
+#ifdef DURATION_CACHING
+exit:
+#endif
   GST_DEBUG_OBJECT (bin, "query %p result %d", query, res);
 
   return res;
