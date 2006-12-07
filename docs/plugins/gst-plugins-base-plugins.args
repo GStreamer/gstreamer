@@ -401,7 +401,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-max</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers max</NICK>
 <BLURB>max number of buffers to queue for a client (-1 = no limit).</BLURB>
@@ -421,7 +421,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-soft-max</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers soft max</NICK>
 <BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
@@ -511,7 +511,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-min</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers min</NICK>
 <BLURB>min number of buffers to queue (-1 = as few as possible).</BLURB>
@@ -541,7 +541,7 @@
 <ARG>
 <NAME>GstMultiFdSink::bytes-min</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bytes min</NICK>
 <BLURB>min number of bytes to queue (-1 = as little as possible).</BLURB>
@@ -551,7 +551,7 @@
 <ARG>
 <NAME>GstMultiFdSink::time-min</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Time min</NICK>
 <BLURB>min number of time to queue (-1 = as little as possible).</BLURB>
@@ -571,7 +571,7 @@
 <ARG>
 <NAME>GstMultiFdSink::units-max</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Units max</NICK>
 <BLURB>max number of units to queue (-1 = no limit).</BLURB>
@@ -581,7 +581,7 @@
 <ARG>
 <NAME>GstMultiFdSink::units-soft-max</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Units soft max</NICK>
 <BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
@@ -721,7 +721,7 @@
 <ARG>
 <NAME>GstVorbisEnc::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,250001]</RANGE>
+<RANGE>[G_MAXULONG,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Target Bitrate</NICK>
 <BLURB>Attempt to encode at a bitrate averaging this (in bps). This uses the bitrate management engine, and is not recommended for most users. Quality is a better alternative. (-1 == disabled).</BLURB>
@@ -751,7 +751,7 @@
 <ARG>
 <NAME>GstVorbisEnc::max-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,250001]</RANGE>
+<RANGE>[G_MAXULONG,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum Bitrate</NICK>
 <BLURB>Specify a maximum bitrate (in bps). Useful for streaming applications. (-1 == disabled).</BLURB>
@@ -761,7 +761,7 @@
 <ARG>
 <NAME>GstVorbisEnc::min-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,250001]</RANGE>
+<RANGE>[G_MAXULONG,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Minimum Bitrate</NICK>
 <BLURB>Specify a minimum bitrate (in bps). Useful for encoding for a fixed-size channel. (-1 == disabled).</BLURB>
@@ -1541,7 +1541,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Read speed</NICK>
 <BLURB>Read from device at specified speed.</BLURB>
@@ -1551,7 +1551,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::search-overlap</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,75]</RANGE>
+<RANGE>[G_MAXULONG,75]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Search overlap</NICK>
 <BLURB>Force minimum overlap search during verification to n sectors.</BLURB>
@@ -1606,5 +1606,15 @@
 <NICK>Version</NICK>
 <BLURB>Version of the GStreamer Data Protocol.</BLURB>
 <DEFAULT>GDP Version 1.0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecodeBin2::caps</NAME>
+<TYPE>GstCaps</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps</NICK>
+<BLURB>The caps on which to stop decoding.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 

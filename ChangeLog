@@ -1,3 +1,10 @@
+=== release 0.10.11 ===
+
+2006-12-06  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.11, "Dumb things"
+
 2006-12-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gstdecodebin.c: (find_dynamic), (dynamic_add),

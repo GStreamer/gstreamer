@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.10 "Chorizo"
+Release notes for GStreamer Base Plug-ins 0.10.11 "Dumb things"
         
 
 
@@ -54,48 +54,72 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Parallel installability with 0.8.x series
-      * Threadsafe design and API
-      * New elements: gdppay, gdpdepay
+      * This release requires GStreamer core 0.10.11 or higher
+      * Improved buffering during network playback
+      * Support for reverse playback of Ogg/Vorbis/Theora
+      * Reverse playback support in the audio sinks
+      * The Ogg muxer now produces correct streams in all cases
+      * Support libvisual 0.4
+      * Improvements in RTP support
+      * Support retagging of Vorbis files
+      * Introduction of the decodebin2 element
+      * Many other bug fixes and improvements
 
 Bugs fixed in this release
      
-      * 343787 : The adder cannot handle when multiple elements tries to l...
-      * 336075 : ALSA emu10k1 mixer tracks are wrongly classified as playb...
-      * 349105 : crash with playbin and resizing screen
-      * 342494 : [v4l] Query " device-name " even if device is not open
-      * 342680 : [adder] seeking with multiple ogg files fails to work
-      * 345188 : [alsa] can't handle more than 8 channels
-      * 347091 : converting vorbis comments to GstTagLists is lossy
-      * 348157 : Changed " Change Device " menu behaviour in gnome-volume-co...
-      * 348916 : [typefind] add multipart/x-mixed-replace typefinder
-      * 350157 : [riff] riff parser can't detect dts audio stream
-      * 350655 : [oggdemux] should process seeking queries
-      * 350900 : [adder] should not clamp floating point values
-      * 351426 : API: add gst_tag_parse_extended_comment
-      * 351502 : g_value_set_string leaks
-      * 351742 : [vorbisenc] discontinuity detection too sensitive, might ...
-      * 353658 : [videotestsrc] doesn't round strides correctly for YVYU
-      * 354594 : multifdsink doesn't work reliably with sync-method = 'nex...
-      * 351790 : [ogmparse] crash parsing video stream on x86-64
-      * 140139 : [avidemux] can't play broken avi with ogg (not vorbis) au...
-      * 347783 : [PLUGIN-MOVE] GDP elements should be moved
-      * 347918 : Internal data flow error in udpsrc
-      * 349656 : jitterbuffer in GstBaseRtp fails to handle rtp seqnum rol...
-      * 350784 : element alsamixer doesn't respect asoundrc
-      * 351308 : [netbuffer] build fails with gkt-doc critical warnings
-      * 353234 : audiorate preserves DISCONT on buffers
-      * 353912 : Add cmml caps to oggmux
+      * 360552 : [riff] [avi] extracts non-UTF8 metadata
+      * 365501 : [x/xvimagesink] race condition when creating first image ...
+      * 339366 : [playbin] hangs if suburi file type cannot be determined
+      * 355914 : libvisual causes xvimagesink:  assertion `GST_CAPS_REFCOU...
+      * 363118 : gst_riff_create_video_caps() should also store variant in...
+      * 363607 : xvimagesink xwindow_draw_border() slowness
+      * 336301 : [playbin] can't handle RTSP source
+      * 337026 : oggmux doesn't set EOS properly
+      * 337031 : vorbisdec outputs too much data
+      * 340049 : New BaseRTPAudioPayloader class to -base
+      * 348264 : Theora encoding, Ogg muxing don't handle discontinuities
+      * 354773 : xvimage assumes that XV_COLORKEY can be set in RGB888 format
+      * 355917 : libvisual plugin is broken
+      * 355935 : multifdsink doesn't allow setting maximums (soft, hard) i...
+      * 357038 : [ffmpegcolorspace] RGBA handling broken
+      * 357215 : [playbin] buffering notification not quite right yet
+      * 357289 : [riff] riff parser can't detect aac audio stream
+      * 357404 : [playbin] Linking can fail silently
+      * 357531 : [subparse] problem if markup is not closed
+      * 357577 : [playbin] regression: buffering still images broken
+      * 357591 : Avoid compiler warning with uclibc and -Werror
+      * 357613 : XvStopVideo in xvimagesink
+      * 357800 : [libvisual] doesn't pass audio data to libvisual 0.4.0 co...
+      * 359580 : tcpserversink and dataprotocol assert for multipart streams
+      * 361095 : Fixes compiling with forte: warning clean up (part 3)
+      * 361456 : [basertppayload] Memory leak
+      * 361634 : sink- > ringbuffer NULL in BaseAudioSink's setcaps()
+      * 361984 : [subparse] doesn't accept .srt file that doesn't start wi...
+      * 366334 : [PATCH] Windows vs8 fixes
+      * 368273 : Using the remove signal on multifdsink is not threadsafe
+      * 368310 : include file  gstbasertpaudiopayload.h not included for r...
+      * 369482 : [typefind] MPEG system streams get recognized as mp3 files
+      * 370092 : [PATCH] Decodebin v2 : Implementation
+      * 377183 : regression: no eos when playing ogg vorbis files
+      * 381219 : bad debugging code left in audiorate
+      * 382223 : [decodebin] more delayed linking
+      * 382269 : Typefind detects mpeg video clip as audio/mpeg
+      * 335635 : Add an Ogg/Vorbis retagging element
+      * 341681 : [textoverlay] flickering with continuously timestamped text
+      * 342228 : [alsa] Recognize " Front " as a Master channel
+      * 357330 : [subparse] some sami parser minor but enhanced patch
+      * 357532 : [gsttag] vorbistag doesn't handle dates that include time...
+      * 359237 : [typefinding] doesn't recognize XML files shorter than 25...
+      * 362845 : [subparse] add support for tmplayer format
+      * 357977 : [videorate] new segment start is not respected
+      * 364812 : [PATCH] oggmux release pad does not remove pad
+      * 364856 : pngenc stride problems
+      * 372507 : Mac build fixes
 
 API changed in this release
      
 - API additions:
     
-* gst_rtp_buffer_get_payload_subbuffer()
-* gst_tag_parse_extended_comment()
-* GstPlayBin::connection-speed
-* GstTheoraParse::synchronization-points
-* GST_AUDIO_CHANNEL_POSITION_NONE
 
 Download
 
@@ -125,22 +149,28 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Dessina
-      * Andy Wingo
+      * 
+      * David Schleef
+      * Edgard Lima
       * Edward Hervey
-      * Iain Holmes
-      * James Livingston
+      * Ferenc Gerlits
+      * James "Doc" Livingston
+      * Jan David Mol
       * Jan Schmidt
-      * Jens Granseuer
-      * Kai Vehmanen
-      * Marcel Moreaux
-      * Martin Szulecki
+      * Jonathan Matthew
+      * Josep Torre Valles
+      * Julien MOUTTE
+      * Mark Nauwelaerts
       * Michael Smith
-      * Sjoerd Simons
+      * Peter Kjellerstedt
+      * Renato Filho
+      * Sebastien Cote
+      * Sergey Scobich
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Viktor Peters
+      * Ville Syrjala
       * Wim Taymans
       * Young-Ho Cha
+      * Zaheer Abbas Merali
  

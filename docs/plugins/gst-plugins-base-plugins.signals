@@ -138,3 +138,46 @@ GstCdParanoiaSrc *gstcdparanoiasrc
 gint  arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstDecodeBin2::autoplug-continue</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin2 *gstdecodebin2
+GstCaps *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin2::autoplug-sort</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin2 *gstdecodebin2
+GstCaps *arg1
+gpointer  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin2::new-decoded-pad</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin2 *gstdecodebin2
+GstPad *arg1
+gboolean  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin2::removed-decoded-pad</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin2 *gstdecodebin2
+GstPad *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin2::unknown-type</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin2 *gstdecodebin2
+GstPad *arg1
+GstCaps *arg2
+</SIGNAL>
+

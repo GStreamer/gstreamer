@@ -3,10 +3,10 @@
   <description>libvisual visualization plugins</description>
   <filename>../../ext/libvisual/.libs/libgstlibvisual.so</filename>
   <basename>libgstlibvisual.so</basename>
-  <version>0.10.10.1</version>
+  <version>0.10.11</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins CVS/prerelease</package>
+  <package>GStreamer Base Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -21,13 +21,6 @@
       <longname>libvisual libvisual corona plugin plugin v.0.1</longname>
       <class>Visualization</class>
       <description>Libvisual corona plugin</description>
-      <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
-    </element>
-    <element>
-      <name>libvisual_gforce</name>
-      <longname>libvisual libvisual G-Force plugin plugin v.0.1.0</longname>
-      <class>Visualization</class>
-      <description>Libvisual G-Force plugin</description>
       <author>Benjamin Otte &lt;otte@gnome.org&gt;</author>
     </element>
     <element>
