@@ -1097,6 +1097,7 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   print_signal_info (element);
   print_children_info (element);
 
+  gst_object_unref (factory);
   if (_name[0] != '\0')
     g_free (_name);
 

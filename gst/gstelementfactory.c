@@ -379,14 +379,18 @@ gst_element_factory_create (GstElementFactory * factory, const gchar * name)
 
   /* create an instance of the element, cast so we don't assert on NULL */
   element = GST_ELEMENT_CAST (g_object_new (factory->type, NULL));
-  if (element == NULL)
+  if (G_UNLIKELY (element == NULL))
     goto no_element;
 
   /* fill in the pointer to the factory in the element class. The
-   * class will not be unreffed currently. */
+   * class will not be unreffed currently. 
+   * FIXME: This isn't safe and may leak a refcount on the factory if 2 threads
+   * create the first instance of an element at the same moment */
   oclass = GST_ELEMENT_GET_CLASS (element);
-  if (oclass->elementfactory == NULL)
+  if (G_UNLIKELY (oclass->elementfactory == NULL))
     oclass->elementfactory = factory;
+  else
+    gst_object_unref (factory);
 
   if (name)
     gst_object_set_name (GST_OBJECT (element), name);
@@ -404,11 +408,13 @@ load_failed:
 no_type:
   {
     GST_WARNING_OBJECT (factory, "factory has no type");
+    gst_object_unref (factory);
     return NULL;
   }
 no_element:
   {
     GST_WARNING_OBJECT (factory, "could not create element");
+    gst_object_unref (factory);
     return NULL;
   }
 }

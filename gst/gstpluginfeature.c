@@ -107,7 +107,7 @@ gst_plugin_feature_load (GstPluginFeature * feature)
   GST_DEBUG ("loading plugin for feature %p; '%s'", feature,
       GST_PLUGIN_FEATURE_NAME (feature));
   if (feature->loaded)
-    return feature;
+    return gst_object_ref (feature);
 
   GST_DEBUG ("loading plugin %s", feature->plugin_name);
   plugin = gst_plugin_load_by_name (feature->plugin_name);
