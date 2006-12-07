@@ -17,6 +17,36 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-smpte
+ * @short_description: Takes to video frames and applies an SMPTE transition 
+ * effect on them.
+ *
+ * <refsect2>
+ * <para>
+ * smpte can accept I420 video streams with the same width, height and
+ * framerate. The two incomming buffers are blended together using an effect
+ * specific alpha mask. 
+ * </para>
+ * <para>
+ * The depth property defines the presision in bits of the mask. A higher
+ * presision will create a mask with smoother gradients in order to avoid
+ * banding.
+ * </para>
+ * <title>Sample pipelines</title>
+ * <para>
+ * Here is a pipeline to demonstrate the smpte transition :
+ * <programlisting>
+ * gst-launch -v videotestsrc pattern=1 ! smpte name=s border=20000 type=234
+ * duration=2000000000 ! ffmpegcolorspace ! ximagesink videotestsrc ! s.
+ * </programlisting>
+ * This shows a pinwheel transition a from a snow videotestsrc to an smpte
+ * pattern videotestsrc. The transition will take 2 seconds to complete. The
+ * edges of the transition are smoothed with a 20000 big border.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -24,6 +54,9 @@
 #include "gstsmpte.h"
 #include <gst/video/video.h>
 #include "paint.h"
+
+GST_DEBUG_CATEGORY_STATIC (gst_smpte_debug);
+#define GST_CAT_DEFAULT gst_smpte_debug
 
 /* elementfactory information */
 static const GstElementDetails smpte_details =
@@ -64,13 +97,21 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_PROP_TYPE	1
+#define DEFAULT_PROP_BORDER	0
+#define DEFAULT_PROP_DEPTH	16
+#define DEFAULT_PROP_FPS	0.
+#define DEFAULT_PROP_DURATION	GST_SECOND
+
 enum
 {
-  ARG_0,
-  ARG_TYPE,
-  ARG_BORDER,
-  ARG_DEPTH,
-  ARG_FPS
+  PROP_0,
+  PROP_TYPE,
+  PROP_BORDER,
+  PROP_DEPTH,
+  PROP_FPS,
+  PROP_DURATION,
+  PROP_LAST,
 };
 
 #define GST_TYPE_SMPTE_TRANSITION_TYPE (gst_smpte_transition_type_get_type())
@@ -118,6 +159,9 @@ static void gst_smpte_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_smpte_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
+static GstStateChangeReturn gst_smpte_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
 
@@ -177,20 +221,27 @@ gst_smpte_class_init (GstSMPTEClass * klass)
 
   _gst_mask_init ();
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TYPE,
       g_param_spec_enum ("type", "Type", "The type of transition to use",
-          GST_TYPE_SMPTE_TRANSITION_TYPE, 1, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_FPS,
+          GST_TYPE_SMPTE_TRANSITION_TYPE, DEFAULT_PROP_TYPE,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FPS,
       g_param_spec_float ("fps", "FPS",
-          "Frames per second if no input files are given", 0., G_MAXFLOAT, 25.,
-          G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BORDER,
+          "Frames per second if no input files are given (deprecated)", 0.,
+          G_MAXFLOAT, DEFAULT_PROP_FPS, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BORDER,
       g_param_spec_int ("border", "Border",
-          "The border width of the transition", 0, G_MAXINT, 0,
-          G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_DEPTH,
+          "The border width of the transition", 0, G_MAXINT,
+          DEFAULT_PROP_BORDER, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DEPTH,
       g_param_spec_int ("depth", "Depth", "Depth of the mask in bits", 1, 24,
-          16, G_PARAM_READWRITE));
+          DEFAULT_PROP_DEPTH, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DURATION,
+      g_param_spec_uint64 ("duration", "Duration",
+          "Duration of the transition effect in nanoseconds", 0, G_MAXUINT64,
+          DEFAULT_PROP_DURATION, G_PARAM_READWRITE));
+
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_smpte_change_state);
 }
 
 /*                        wht  yel  cya  grn  mag  red  blu  blk   -I    Q */
@@ -246,15 +297,24 @@ gst_smpte_setcaps (GstPad * pad, GstCaps * caps)
 
   ret = gst_structure_get_int (structure, "width", &smpte->width);
   ret &= gst_structure_get_int (structure, "height", &smpte->height);
-  ret &= gst_structure_get_double (structure, "framerate", &smpte->fps);
+  ret &= gst_structure_get_fraction (structure, "framerate",
+      &smpte->fps_num, &smpte->fps_denom);
   if (!ret)
     return FALSE;
 
-  gst_smpte_update_mask (smpte, smpte->type, smpte->depth, smpte->width,
+  /* for backward compat, we store these here */
+  smpte->fps = ((gdouble) smpte->fps_num) / smpte->fps_denom;
+
+  /* figure out the duration in frames */
+  smpte->end_position = gst_util_uint64_scale (smpte->duration,
+      smpte->fps_num, GST_SECOND * smpte->fps_denom);
+
+  GST_DEBUG_OBJECT (smpte, "duration: %d frames", smpte->end_position);
+
+  ret = gst_smpte_update_mask (smpte, smpte->type, smpte->depth, smpte->width,
       smpte->height);
 
-  /* forward to the next plugin */
-  return TRUE;
+  return ret;
 }
 
 static void
@@ -284,16 +344,22 @@ gst_smpte_init (GstSMPTE * smpte)
   gst_collect_pads_add_pad (smpte->collect, smpte->sinkpad2,
       sizeof (GstCollectData));
 
-  smpte->width = 320;
-  smpte->height = 200;
-  smpte->fps = 25.;
-  smpte->duration = 512;
+  smpte->fps = DEFAULT_PROP_FPS;
+  smpte->type = DEFAULT_PROP_TYPE;
+  smpte->border = DEFAULT_PROP_BORDER;
+  smpte->depth = DEFAULT_PROP_DEPTH;
+  smpte->duration = DEFAULT_PROP_DURATION;
+  smpte->fps_num = 0;
+  smpte->fps_denom = 1;
+}
+
+static void
+gst_smpte_reset (GstSMPTE * smpte)
+{
+  smpte->width = -1;
+  smpte->height = -1;
   smpte->position = 0;
-  smpte->type = 1;
-  smpte->border = 0;
-  smpte->depth = 16;
-  gst_smpte_update_mask (smpte, smpte->type, smpte->depth, smpte->width,
-      smpte->height);
+  smpte->end_position = 0;
 }
 
 static void
@@ -345,7 +411,11 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
   GstBuffer *in1 = NULL, *in2 = NULL;
   GSList *collected;
 
-  ts = smpte->position * GST_SECOND / smpte->fps;
+  if (smpte->fps_num == 0)
+    goto not_negotiated;
+
+  ts = gst_util_uint64_scale_int (smpte->position * GST_SECOND,
+      smpte->fps_denom, smpte->fps_num);
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
     GstCollectData *data;
@@ -359,15 +429,17 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
   }
 
   if (in1 == NULL) {
+    /* if no input, make picture black */
     in1 = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3);
     fill_i420 (GST_BUFFER_DATA (in1), smpte->width, smpte->height, 7);
   }
   if (in2 == NULL) {
+    /* if no input, make picture white */
     in2 = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3);
     fill_i420 (GST_BUFFER_DATA (in2), smpte->width, smpte->height, 0);
   }
 
-  if (smpte->position < smpte->duration) {
+  if (smpte->position < smpte->end_position) {
     outbuf = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3);
 
     /* set caps if not done yet */
@@ -378,10 +450,15 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
           gst_caps_copy (gst_static_caps_get (&gst_smpte_src_template.
               static_caps));
       gst_caps_set_simple (caps, "width", G_TYPE_INT, smpte->width, "height",
-          G_TYPE_INT, smpte->height, "framerate", G_TYPE_DOUBLE, smpte->fps,
-          NULL);
+          G_TYPE_INT, smpte->height, "framerate", GST_TYPE_FRACTION,
+          smpte->fps_num, smpte->fps_denom, NULL);
 
       gst_pad_set_caps (smpte->srcpad, caps);
+
+      gst_pad_push_event (smpte->srcpad,
+          gst_event_new_new_segment_full (FALSE,
+              1.0, 1.0, GST_FORMAT_TIME, 0, -1, 0));
+
     }
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (smpte->srcpad));
 
@@ -391,7 +468,7 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
         smpte->mask, smpte->width, smpte->height,
         smpte->border,
         ((1 << smpte->depth) + smpte->border) *
-        smpte->position / smpte->duration);
+        smpte->position / smpte->end_position);
 
   } else {
     outbuf = in2;
@@ -408,6 +485,14 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
   GST_BUFFER_TIMESTAMP (outbuf) = ts;
 
   return gst_pad_push (smpte->srcpad, outbuf);
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (smpte, CORE, NEGOTIATION, (NULL),
+        ("No input format negotiated"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static void
@@ -419,28 +504,21 @@ gst_smpte_set_property (GObject * object, guint prop_id,
   smpte = GST_SMPTE (object);
 
   switch (prop_id) {
-    case ARG_TYPE:
-    {
-      gint type = g_value_get_enum (value);
-
-      gst_smpte_update_mask (smpte, type, smpte->depth,
-          smpte->width, smpte->height);
+    case PROP_TYPE:
+      smpte->type = g_value_get_enum (value);
       break;
-    }
-    case ARG_BORDER:
+    case PROP_BORDER:
       smpte->border = g_value_get_int (value);
       break;
-    case ARG_FPS:
+    case PROP_FPS:
       smpte->fps = g_value_get_float (value);
       break;
-    case ARG_DEPTH:
-    {
-      gint depth = g_value_get_int (value);
-
-      gst_smpte_update_mask (smpte, smpte->type, depth,
-          smpte->width, smpte->height);
+    case PROP_DEPTH:
+      smpte->depth = g_value_get_int (value);
       break;
-    }
+    case PROP_DURATION:
+      smpte->duration = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -456,19 +534,20 @@ gst_smpte_get_property (GObject * object, guint prop_id,
   smpte = GST_SMPTE (object);
 
   switch (prop_id) {
-    case ARG_TYPE:
-      if (smpte->mask) {
-        g_value_set_enum (value, smpte->mask->type);
-      }
+    case PROP_TYPE:
+      g_value_set_enum (value, smpte->type);
       break;
-    case ARG_FPS:
+    case PROP_FPS:
       g_value_set_float (value, smpte->fps);
       break;
-    case ARG_BORDER:
+    case PROP_BORDER:
       g_value_set_int (value, smpte->border);
       break;
-    case ARG_DEPTH:
+    case PROP_DEPTH:
       g_value_set_int (value, smpte->depth);
+      break;
+    case PROP_DURATION:
+      g_value_set_uint64 (value, smpte->duration);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -476,10 +555,46 @@ gst_smpte_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstStateChangeReturn
+gst_smpte_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstSMPTE *smpte;
+
+  smpte = GST_SMPTE (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_smpte_reset (smpte);
+      GST_LOG_OBJECT (smpte, "starting collectpads");
+      gst_collect_pads_start (smpte->collect);
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_LOG_OBJECT (smpte, "stopping collectpads");
+      gst_collect_pads_stop (smpte->collect);
+      break;
+    default:
+      break;
+  }
+
+  ret = parent_class->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_smpte_reset (smpte);
+      break;
+    default:
+      break;
+  }
+  return ret;
+}
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_smpte_debug, "smpte", 0,
+      "SMPTE transition effect");
+
   return gst_element_register (plugin, "smpte", GST_RANK_NONE, GST_TYPE_SMPTE);
 }
 

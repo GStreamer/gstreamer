@@ -1,3 +1,23 @@
+2006-12-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/smpte/gstmask.h:
+	* gst/smpte/gstsmpte.c: (gst_smpte_class_init),
+	(gst_smpte_setcaps), (gst_smpte_init), (gst_smpte_reset),
+	(gst_smpte_collected), (gst_smpte_set_property),
+	(gst_smpte_get_property), (gst_smpte_change_state), (plugin_init):
+	* gst/smpte/gstsmpte.h:
+	Port to 0.10 some more. 
+	Added duration property to specify the duration of the transition.
+	Make framerate a fraction.
+	Deprecate fps property, we only use negotiated fps.
+	Added docs.
+	Fix collectpad usage.
+	Reset state in READY.
+	Send NEWSEGMENT event.
+	Fix racy updates of object properties.
+	Added debug category.
+	Fixes #383323.
+
 2006-12-06  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>

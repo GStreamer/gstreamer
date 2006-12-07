@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 
+G_BEGIN_DECLS
+
 #include "gstmask.h"
 
 #define GST_TYPE_SMPTE \
@@ -43,23 +45,29 @@ typedef struct _GstSMPTEClass GstSMPTEClass;
 struct _GstSMPTE {
   GstElement     element;
 
+  /* pads */
+  GstPad        *srcpad,
+                *sinkpad1,
+                *sinkpad2;
+  GstCollectPads *collect;
+
+  /* properties */
+  gint           type;
+  gint           border;
+  gint           depth;
+  guint64        duration;
+
+  /* negotiated format */
   gint           format;
   gint           width;
   gint           height;
   gdouble        fps;
+  gint           fps_num;
+  gint           fps_denom;
 
-  gint           duration;
+  /* state of the effect */
   gint           position;
-
-  GstPad        *srcpad,
-                *sinkpad1,
-                *sinkpad2;
-
-  GstCollectPads *collect;
-
-  gint           type;
-  gint           border;
-  gint           depth;
+  gint           end_position;
   GstMask       *mask;
 };
 
@@ -67,4 +75,5 @@ struct _GstSMPTEClass {
   GstElementClass parent_class;
 };
 
+G_END_DECLS
 #endif /* __GST_SMPTE_H__ */

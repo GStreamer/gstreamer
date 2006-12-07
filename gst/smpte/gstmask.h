@@ -23,7 +23,6 @@
 
 #include <gst/gst.h>
 
-
 typedef struct _GstMask GstMask;
 typedef struct _GstMaskDefinition GstMaskDefinition;
 
