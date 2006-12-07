@@ -1796,6 +1796,8 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
     {
       GstFlowReturn ret;
 
+      GST_DEBUG_OBJECT (basesink, "newsegment %p", event);
+
       basesink->have_newsegment = TRUE;
 
       /* the new segment is a non prerollable item and does not block anything,
@@ -1815,6 +1817,8 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       if (bclass->event)
         bclass->event (basesink, event);
 
+      GST_DEBUG_OBJECT (basesink, "flush-start %p", event);
+
       /* make sure we are not blocked on the clock also clear any pending
        * eos state. */
       gst_base_sink_set_flushing (basesink, pad, TRUE);
@@ -1828,7 +1832,6 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
        * prerolled buffer */
       basesink->playing_async = TRUE;
       gst_element_lost_state (GST_ELEMENT_CAST (basesink));
-      GST_DEBUG_OBJECT (basesink, "event unref %p %p", basesink, event);
       GST_PAD_STREAM_UNLOCK (pad);
 
       gst_event_unref (event);
@@ -1836,6 +1839,8 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       if (bclass->event)
         bclass->event (basesink, event);
+
+      GST_DEBUG_OBJECT (basesink, "flush-stop %p", event);
 
       /* unset flushing so we can accept new data */
       gst_base_sink_set_flushing (basesink, pad, FALSE);
@@ -1846,7 +1851,6 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
           GST_FORMAT_UNDEFINED);
       basesink->have_newsegment = FALSE;
 
-      GST_DEBUG_OBJECT (basesink, "event unref %p %p", basesink, event);
       gst_event_unref (event);
       break;
     default:
