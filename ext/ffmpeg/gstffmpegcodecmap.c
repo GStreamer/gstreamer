@@ -1774,7 +1774,8 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
     *audio_codec_list = dv_audio_list;    
   } else if (!strcmp (format_name, "mov")) {
     static enum CodecID mov_video_list[] = {
-      CODEC_ID_SVQ1, CODEC_ID_SVQ3, CODEC_ID_MPEG4, CODEC_ID_H263,
+      CODEC_ID_SVQ1, CODEC_ID_SVQ3, CODEC_ID_MPEG4, 
+      CODEC_ID_H263, CODEC_ID_H263P,
       CODEC_ID_H264, CODEC_ID_DVVIDEO,
       CODEC_ID_NONE
     };
