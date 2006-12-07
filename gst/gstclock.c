@@ -412,9 +412,8 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
   GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
       "done waiting entry %p, res: %d", id, res);
 
-  if (entry->type == GST_CLOCK_ENTRY_PERIODIC) {
-    entry->time += entry->interval;
-  }
+  if (entry->type == GST_CLOCK_ENTRY_PERIODIC)
+    entry->time = requested + entry->interval;
 
   if (clock->stats)
     gst_clock_update_stats (clock);

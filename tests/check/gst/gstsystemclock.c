@@ -65,6 +65,29 @@ error_callback (GstClock * clock, GstClockTime time,
   return FALSE;
 }
 
+static gboolean
+store_callback (GstClock * clock, GstClockTime time,
+    GstClockID id, gpointer user_data)
+{
+  GstClockID *store_id = user_data;
+
+  g_message ("unlocked async id %p\n", id);
+  *store_id = id;
+  return FALSE;
+}
+
+static gboolean
+notify_callback (GstClock * clock, GstClockTime time,
+    GstClockID id, gpointer user_data)
+{
+  gboolean *ret = (gboolean *) user_data;
+
+  if (ret != NULL)
+    *ret = TRUE;
+
+  return FALSE;
+}
+
 GST_START_TEST (test_single_shot)
 {
   GstClock *clock;
@@ -190,6 +213,78 @@ GST_START_TEST (test_periodic_shot)
 }
 
 GST_END_TEST
+GST_START_TEST (test_async_order)
+{
+  GstClock *clock;
+  GstClockID id1, id2, last_id = NULL;
+  GstClockTime base;
+  GstClockReturn result;
+
+  clock = gst_system_clock_obtain ();
+  fail_unless (clock != NULL, "Could not create instance of GstSystemClock");
+
+  gst_clock_debug (clock);
+  base = gst_clock_get_time (clock);
+
+  id1 = gst_clock_new_single_shot_id (clock, base + 2 * TIME_UNIT);
+  id2 = gst_clock_new_single_shot_id (clock, base + 1 * TIME_UNIT);
+  result = gst_clock_id_wait_async (id1, store_callback, &last_id);
+  fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
+  g_usleep (TIME_UNIT / (2 * 1000));
+  result = gst_clock_id_wait_async (id2, store_callback, &last_id);
+  fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
+  g_usleep (TIME_UNIT / 1000);
+  fail_unless (last_id == id2, "Expected notification for id2 to come first");
+  g_usleep (TIME_UNIT / 1000);
+  fail_unless (last_id == id1, "Missing notification for id1");
+  gst_clock_id_unref (id1);
+  gst_clock_id_unref (id2);
+}
+
+GST_END_TEST
+GST_START_TEST (test_periodic_multi)
+{
+  GstClock *clock;
+  GstClockID clock_id;
+  GstClockTime base;
+  GstClockReturn result;
+  gboolean got_callback = FALSE;
+
+  clock = gst_system_clock_obtain ();
+  fail_unless (clock != NULL, "Could not create instance of GstSystemClock");
+
+  gst_clock_debug (clock);
+  base = gst_clock_get_time (clock);
+
+  clock_id = gst_clock_new_periodic_id (clock, base + TIME_UNIT, TIME_UNIT);
+  gst_clock_id_wait (clock_id, NULL);
+  fail_unless (gst_clock_get_time (clock) >= base + TIME_UNIT);
+  fail_unless (gst_clock_get_time (clock) < base + 2 * TIME_UNIT);
+
+  /* now perform a concurrent wait and wait_async */
+
+  result = gst_clock_id_wait_async (clock_id, notify_callback, &got_callback);
+  fail_unless (result == GST_CLOCK_OK, "Async waiting did not return OK");
+  fail_unless (got_callback == FALSE);
+  result = gst_clock_id_wait (clock_id, NULL);
+  fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
+  fail_unless (gst_clock_get_time (clock) >= base + 2 * TIME_UNIT);
+  /* give the async thread some time to call our callback: */
+  g_usleep (TIME_UNIT / (10 * 1000));
+  fail_unless (got_callback == TRUE, "got no async callback (1)");
+  fail_unless (gst_clock_get_time (clock) < base + 3 * TIME_UNIT);
+  got_callback = FALSE;
+
+  result = gst_clock_id_wait (clock_id, NULL);
+  fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
+  fail_unless (gst_clock_get_time (clock) >= base + 3 * TIME_UNIT);
+  /* give the async thread some time to call our callback: */
+  g_usleep (TIME_UNIT / (10 * 1000));
+  fail_unless (got_callback == TRUE, "got no async callback (2)");
+  fail_unless (gst_clock_get_time (clock) < base + 4 * TIME_UNIT);
+}
+
+GST_END_TEST
 GST_START_TEST (test_diff)
 {
   GstClockTime time1[] =
@@ -213,6 +308,8 @@ gst_systemclock_suite (void)
   tcase_add_test (tc_chain, test_signedness);
   tcase_add_test (tc_chain, test_single_shot);
   tcase_add_test (tc_chain, test_periodic_shot);
+  tcase_add_test (tc_chain, test_periodic_multi);
+  tcase_add_test (tc_chain, test_async_order);
   tcase_add_test (tc_chain, test_diff);
 
   return s;

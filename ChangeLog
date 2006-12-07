@@ -1,5 +1,25 @@
 2006-12-07  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: René Stadler <mail at renestadler dot de>
+
+	* gst/gstclock.c: (gst_clock_id_wait):
+	Make period ids add the interval to the origial requested time instead
+	of the possibly updated time which can be wrong when there are multiple
+	waiters for the same id. Fixes #382592.
+
+	* gst/gstsystemclock.c: (gst_system_clock_async_thread),
+	(gst_system_clock_id_wait_jitter_unlocked),
+	(gst_system_clock_id_wait_jitter):
+	Fix restart in the async notify thread when an async entry is added to
+	the front of the list. Fixes #381492. 
+
+	* tests/check/gst/gstsystemclock.c: (store_callback),
+	(notify_callback), (GST_START_TEST), (gst_systemclock_suite):
+	Added test for multiple async waits.
+	Added test for async wait order.
+
+2006-12-07  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_query):
 	Add some more docs about the POSITION query.
 

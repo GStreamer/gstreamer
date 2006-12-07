@@ -58,7 +58,8 @@ static guint64 gst_system_clock_get_resolution (GstClock * clock);
 static GstClockReturn gst_system_clock_id_wait_jitter (GstClock * clock,
     GstClockEntry * entry, GstClockTimeDiff * jitter);
 static GstClockReturn gst_system_clock_id_wait_jitter_unlocked
-    (GstClock * clock, GstClockEntry * entry, GstClockTimeDiff * jitter);
+    (GstClock * clock, GstClockEntry * entry, GstClockTimeDiff * jitter,
+    gboolean restart);
 static GstClockReturn gst_system_clock_id_wait_async (GstClock * clock,
     GstClockEntry * entry);
 static void gst_system_clock_id_unschedule (GstClock * clock,
@@ -249,6 +250,7 @@ gst_system_clock_async_thread (GstClock * clock)
   /* now enter our (almost) infinite loop */
   while (!sysclock->stopping) {
     GstClockEntry *entry;
+    GstClockTime requested;
     GstClockReturn res;
 
     /* check if something to be done */
@@ -270,10 +272,12 @@ gst_system_clock_async_thread (GstClock * clock)
       goto next_entry;
     }
 
+    requested = entry->time;
+
     /* now wait for the entry, we already hold the lock */
     res =
         gst_system_clock_id_wait_jitter_unlocked (clock, (GstClockID) entry,
-        NULL);
+        NULL, FALSE);
 
     switch (res) {
       case GST_CLOCK_UNSCHEDULED:
@@ -295,7 +299,7 @@ gst_system_clock_async_thread (GstClock * clock)
         }
         if (entry->type == GST_CLOCK_ENTRY_PERIODIC) {
           /* adjust time now */
-          entry->time += entry->interval;
+          entry->time = requested + entry->interval;
           /* and resort the list now */
           clock->entries =
               g_list_sort (clock->entries, gst_clock_id_compare_func);
@@ -366,7 +370,7 @@ gst_system_clock_get_resolution (GstClock * clock)
  */
 static GstClockReturn
 gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
-    GstClockEntry * entry, GstClockTimeDiff * jitter)
+    GstClockEntry * entry, GstClockTimeDiff * jitter, gboolean restart)
 {
   GstClockTime entryt, real, now, target;
   GstClockTimeDiff diff;
@@ -429,6 +433,9 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
          * continue our while loop. */
         if (entry->status == GST_CLOCK_UNSCHEDULED)
           break;
+        /* else restart if we must */
+        if (!restart)
+          break;
       }
     }
   } else if (diff == 0) {
@@ -446,7 +453,7 @@ gst_system_clock_id_wait_jitter (GstClock * clock, GstClockEntry * entry,
   GstClockReturn ret;
 
   GST_OBJECT_LOCK (clock);
-  ret = gst_system_clock_id_wait_jitter_unlocked (clock, entry, jitter);
+  ret = gst_system_clock_id_wait_jitter_unlocked (clock, entry, jitter, FALSE);
   GST_OBJECT_UNLOCK (clock);
 
   return ret;
