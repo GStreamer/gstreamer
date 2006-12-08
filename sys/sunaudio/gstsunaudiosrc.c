@@ -46,6 +46,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stropts.h>
+#include <sys/mixer.h>
 
 #include "gstsunaudiosrc.h"
 
@@ -241,11 +242,12 @@ static gboolean
 gst_sunaudiosrc_open (GstAudioSrc * asrc)
 {
   GstSunAudioSrc *sunaudiosrc = GST_SUNAUDIO_SRC (asrc);
-  int fd, ret;
+  int fd, ret, err;
 
-  fd = open (sunaudiosrc->device, O_RDWR | O_NONBLOCK);
+  fd = open (sunaudiosrc->device, O_RDONLY);
+  err = ioctl (fd, AUDIO_MIXER_MULTIPLE_OPEN);
 
-  if (fd == -1) {
+  if (fd == -1 || err == -1) {
     GST_ELEMENT_ERROR (sunaudiosrc, RESOURCE, OPEN_READ, (NULL),
         ("can't open connection to Sun Audio device %s", sunaudiosrc->device));
 
