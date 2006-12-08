@@ -168,6 +168,7 @@ gst_audio_panorama_init (GstAudioPanorama * filter,
     GstAudioPanoramaClass * klass)
 {
   filter->panorama = 0;
+  filter->width = 0;
 }
 
 static void
@@ -253,7 +254,7 @@ gst_audio_panorama_set_caps (GstBaseTransform * base, GstCaps * incaps,
   GstAudioPanorama *filter = GST_AUDIO_PANORAMA (base);
   const GstStructure *structure;
   gboolean ret;
-  gint channels;
+  gint channels, width;
   const gchar *fmt;
 
   /*GST_INFO ("incaps are %" GST_PTR_FORMAT, incaps); */
@@ -262,6 +263,12 @@ gst_audio_panorama_set_caps (GstBaseTransform * base, GstCaps * incaps,
   ret = gst_structure_get_int (structure, "channels", &channels);
   if (!ret)
     goto no_channels;
+
+  ret = gst_structure_get_int (structure, "width", &width);
+  if (!ret)
+    goto no_width;
+  filter->width = width / 8;
+
 
   fmt = gst_structure_get_name (structure);
 
@@ -296,6 +303,9 @@ gst_audio_panorama_set_caps (GstBaseTransform * base, GstCaps * incaps,
 
 no_channels:
   GST_DEBUG ("no channels in caps");
+  return ret;
+no_width:
+  GST_DEBUG ("no width in caps");
   return ret;
 }
 
@@ -434,7 +444,7 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstAudioPanorama *filter = GST_AUDIO_PANORAMA (base);
-  guint num_samples = GST_BUFFER_SIZE (outbuf) / (2 * sizeof (gint16));
+  guint num_samples = GST_BUFFER_SIZE (outbuf) / (2 * filter->width);
 
   if (!gst_buffer_is_writable (outbuf))
     return GST_FLOW_OK;

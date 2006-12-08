@@ -45,6 +45,7 @@ struct _GstAudioPanorama {
   
   /* < private > */
   GstAudioPanoramaProcessFunc process;
+  gint width;
 };
 
 struct _GstAudioPanoramaClass {

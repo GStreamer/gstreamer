@@ -1,3 +1,12 @@
+2006-12-08  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Sebastian Dröge  <mail at slomosnail de >
+
+	* gst/audiofx/audiopanorama.c: (gst_audio_panorama_init),
+	(gst_audio_panorama_set_caps), (gst_audio_panorama_transform):
+	* gst/audiofx/audiopanorama.h:
+	Fix audiopanorame with float samples. Fixes #383726.
+
 2006-12-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_reset):
