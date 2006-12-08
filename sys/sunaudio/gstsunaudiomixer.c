@@ -86,7 +86,7 @@ gst_sunaudiomixer_change_state (GstElement * element, GstStateChange transition)
         if (audiodev == NULL) {
           this->mixer = gst_sunaudiomixer_ctrl_new ("/dev/audioctl");
         } else {
-          gchar *device = g_strdup_printf ("/dev/%sctl", audiodev);
+          gchar *device = g_strdup_printf ("%sctl", audiodev);
 
           this->mixer = gst_sunaudiomixer_ctrl_new (device);
           g_free (device);
