@@ -398,5 +398,45 @@ gst_sunaudiosrc_delay (GstAudioSrc * asrc)
 static void
 gst_sunaudiosrc_reset (GstAudioSrc * asrc)
 {
-  return;
+  /* Get current values */
+  GstSunAudioSrc *sunaudiosrc = GST_SUNAUDIO_SRC (asrc);
+  audio_info_t ainfo;
+  int ret;
+
+  ret = ioctl (sunaudiosrc->fd, AUDIO_GETINFO, &ainfo);
+  if (ret == -1) {
+    /*
+     * Should never happen, but if we couldn't getinfo, then no point
+     * trying to setinfo
+     */
+    GST_ELEMENT_ERROR (sunaudiosrc, RESOURCE, SETTINGS, (NULL), ("%s",
+            strerror (errno)));
+    return;
+  }
+
+  /*
+   * Pause the audio - so audio stops playing immediately rather than
+   * waiting for the ringbuffer to empty.
+   */
+  ainfo.record.pause = !NULL;
+  ret = ioctl (sunaudiosrc->fd, AUDIO_SETINFO, &ainfo);
+  if (ret == -1) {
+    GST_ELEMENT_ERROR (sunaudiosrc, RESOURCE, SETTINGS, (NULL), ("%s",
+            strerror (errno)));
+  }
+
+  /* Flush the audio */
+  ret = ioctl (sunaudiosrc->fd, I_FLUSH, FLUSHR);
+  if (ret == -1) {
+    GST_ELEMENT_ERROR (sunaudiosrc, RESOURCE, SETTINGS, (NULL), ("%s",
+            strerror (errno)));
+  }
+
+  /* unpause the audio */
+  ainfo.record.pause = NULL;
+  ret = ioctl (sunaudiosrc->fd, AUDIO_SETINFO, &ainfo);
+  if (ret == -1) {
+    GST_ELEMENT_ERROR (sunaudiosrc, RESOURCE, SETTINGS, (NULL), ("%s",
+            strerror (errno)));
+  }
 }

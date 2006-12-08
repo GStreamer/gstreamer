@@ -42,6 +42,7 @@
 
 #include <fcntl.h>
 #include <string.h>
+#include <stropts.h>
 #include <unistd.h>
 #include <sys/mman.h>
 
@@ -390,4 +391,45 @@ gst_sunaudiosink_delay (GstAudioSink * asink)
 static void
 gst_sunaudiosink_reset (GstAudioSink * asink)
 {
+  /* Get current values */
+  GstSunAudioSink *sunaudiosink = GST_SUNAUDIO_SINK (asink);
+  audio_info_t ainfo;
+  int ret;
+
+  ret = ioctl (sunaudiosink->fd, AUDIO_GETINFO, &ainfo);
+  if (ret == -1) {
+    /*
+     * Should never happen, but if we couldn't getinfo, then no point
+     * trying to setinfo
+     */
+    GST_ELEMENT_ERROR (sunaudiosink, RESOURCE, SETTINGS, (NULL), ("%s",
+            strerror (errno)));
+    return;
+  }
+
+  /*
+   * Pause the audio - so audio stops playing immediately rather than
+   * waiting for the ringbuffer to empty.
+   */
+  ainfo.play.pause = !NULL;
+  ret = ioctl (sunaudiosink->fd, AUDIO_SETINFO, &ainfo);
+  if (ret == -1) {
+    GST_ELEMENT_ERROR (sunaudiosink, RESOURCE, SETTINGS, (NULL), ("%s",
+            strerror (errno)));
+  }
+
+  /* Flush the audio */
+  ret = ioctl (sunaudiosink->fd, I_FLUSH, FLUSHW);
+  if (ret == -1) {
+    GST_ELEMENT_ERROR (sunaudiosink, RESOURCE, SETTINGS, (NULL), ("%s",
+            strerror (errno)));
+  }
+
+  /* unpause the audio */
+  ainfo.play.pause = NULL;
+  ret = ioctl (sunaudiosink->fd, AUDIO_SETINFO, &ainfo);
+  if (ret == -1) {
+    GST_ELEMENT_ERROR (sunaudiosink, RESOURCE, SETTINGS, (NULL), ("%s",
+            strerror (errno)));
+  }
 }
