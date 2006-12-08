@@ -1,3 +1,13 @@
+2006-12-08  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: René Stadler  <mail at renestadler de>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_duration),
+	(gst_qtdemux_handle_src_query), (qtdemux_parse_trak),
+	(qtdemux_audio_caps):
+	Fix caps for 24 bit raw PCM audio (2).
+	Fixes #383471.
+
 2006-12-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_duration),
