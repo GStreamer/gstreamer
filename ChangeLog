@@ -15,7 +15,7 @@
 
 	Implement reset functions to unblock the src/sink more quickly on 
 	state change requests.
-	Patch by: Padraig O'Briain <padraig dot obriain at sun dot com>
+	Patch by: Brian Cameron <brian dot cameron at sun com>
 
 2006-12-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
