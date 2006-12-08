@@ -4486,7 +4486,7 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       /* FIXME */
       return gst_caps_from_string ("audio/x-raw-int, "
           "width = (int) 24, "
-          "depth = (int) 32, "
+          "depth = (int) 24, "
           "endianness = (int) BIG_ENDIAN, " "signed = (boolean) true");
     case GST_MAKE_FOURCC ('i', 'n', '3', '2'):
       _codec ("Raw 32-bit PCM audio");
