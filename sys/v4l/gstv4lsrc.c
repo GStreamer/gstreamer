@@ -231,9 +231,9 @@ gst_v4lsrc_fixate (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (v4lsrc, "targetting %dx%d", targetwidth, targetheight);
 
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
-    structure = gst_caps_get_structure (caps, i);
     const GValue *v;
 
+    structure = gst_caps_get_structure (caps, i);
     gst_structure_fixate_field_nearest_int (structure, "width", targetwidth);
     gst_structure_fixate_field_nearest_int (structure, "height", targetheight);
     gst_structure_fixate_field_nearest_fraction (structure, "framerate", 15, 2);

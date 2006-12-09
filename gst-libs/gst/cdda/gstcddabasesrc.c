@@ -1548,9 +1548,9 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 
   format = GST_FORMAT_TIME;
   if (gst_pad_query_position (GST_BASE_SRC_PAD (src), &format, &qry_position)) {
-    position = (GstClockTime) qry_position;
-
     gint64 next_ts = 0;
+
+    position = (GstClockTime) qry_position;
 
     ++src->cur_sector;
     if (gst_pad_query_position (GST_BASE_SRC_PAD (src), &format, &next_ts)) {

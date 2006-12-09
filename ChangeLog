@@ -1,3 +1,14 @@
+2006-12-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Jens Granseuer <jensgr at gmx net>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c: (gst_cdda_base_src_create):
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	(gst_base_rtp_audio_payload_handle_frame_based_buffer),
+	(gst_base_rtp_audio_payload_handle_sample_based_buffer):
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_fixate):
+	  Declare variables at the beginning of a block. Fixes #383195.
+
 2006-12-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

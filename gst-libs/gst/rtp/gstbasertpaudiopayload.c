@@ -322,6 +322,8 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
   /* as long as we have full frames */
   /* this loop will push all available buffers till the last frame */
   while (available >= frame_size) {
+    gfloat ts_inc;
+
     /* we need to see how many frames we can get based on maximum MTU, maximum
      * ptime and the number of bytes available */
     payload_len = MIN (MIN (
@@ -336,7 +338,7 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
     ret = gst_base_rtp_audio_payload_push (basepayload, data, payload_len,
         basertpaudiopayload->base_ts);
 
-    gfloat ts_inc = (payload_len * frame_duration) / frame_size;
+    ts_inc = (payload_len * frame_duration) / frame_size;
 
     ts_inc = ts_inc * GST_MSECOND;
     basertpaudiopayload->base_ts += ts_inc;
@@ -414,6 +416,8 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
   /* as long as we have full frames */
   /* this loop will use all available data until the last byte */
   while (available) {
+    gfloat num, datarate;
+
     /* we need to see how many frames we can get based on maximum MTU, maximum
      * ptime and the number of bytes available */
     payload_len = MIN (MIN (
@@ -428,8 +432,8 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
     ret = gst_base_rtp_audio_payload_push (basepayload, data, payload_len,
         basertpaudiopayload->base_ts);
 
-    gfloat num = payload_len;
-    gfloat datarate = (sample_size * basepayload->clock_rate);
+    num = payload_len;
+    datarate = (sample_size * basepayload->clock_rate);
 
     basertpaudiopayload->base_ts +=
         /* payload_len (bytes) * nsecs/sec / datarate (bytes*sec) */
