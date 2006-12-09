@@ -47,7 +47,20 @@ struct _GstSunAudioSink {
   audio_device_t dev;
   audio_info_t info;
 
-  gint   bytes_per_sample;
+  /* Number of segments the ringbuffer is configured for */
+  guint segtotal;
+  guint segtotal_samples;
+
+  /* Number of segments written to the device */
+  gint segs_written;
+  /* Number of samples written to the device */
+  gint samples_written;
+  guint bytes_per_sample;
+
+  /* mutex and gconf used to control the write method */
+  GMutex *write_mutex;
+  GCond *sleep_cond;
+  gboolean flushing;
 };
 
 struct _GstSunAudioSinkClass {

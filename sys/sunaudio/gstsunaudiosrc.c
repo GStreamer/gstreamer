@@ -50,6 +50,9 @@
 
 #include "gstsunaudiosrc.h"
 
+GST_DEBUG_CATEGORY_EXTERN (sunaudio_debug);
+#define GST_CAT_DEFAULT sunaudio_debug
+
 static GstElementDetails plugin_details =
 GST_ELEMENT_DETAILS ("Sun Audio Source",
     "Source/Audio",

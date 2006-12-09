@@ -35,6 +35,9 @@
 #include "gstsunaudiomixerctrl.h"
 #include "gstsunaudiomixertrack.h"
 
+GST_DEBUG_CATEGORY_EXTERN (sunaudio_debug);
+#define GST_CAT_DEFAULT sunaudio_debug
+
 #define SCALE_FACTOR 2.55       /* 255/100 */
 
 static gboolean

@@ -1,3 +1,31 @@
+2006-12-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	* sys/sunaudio/gstsunaudiosrc.c:
+
+        Use the sunaudio debug category.
+
+	* sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_finalize),
+	(gst_sunaudiosink_class_init), (gst_sunaudiosink_init),
+	(gst_sunaudiosink_set_property), (gst_sunaudiosink_get_property),
+	(gst_sunaudiosink_open), (gst_sunaudiosink_close),
+	(gst_sunaudiosink_prepare), (gst_sunaudio_sink_do_delay),
+	(gst_sunaudiosink_write), (gst_sunaudiosink_delay),
+	(gst_sunaudiosink_reset):
+	* sys/sunaudio/gstsunaudiosink.h:
+
+	Uses the sunaudio debug category for all debug output
+ 	Implements the _delay() callback to synchronise video playback better
+ 	Change the segtotal and segsize values back to the parent class 
+          defaults (taken from buffer_time and latency_times of 200ms and 10ms 
+          respectively)
+	Measure the samples written to the device vs. played.
+	Keep track of segments in the device by writing empty eof frames, and
+	sleep using a GCond when we get too far ahead and risk overrunning the
+	sink's ringbuffer.
+
+	Fixes: #360673
+
 2006-12-08  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sebastian Dröge  <mail at slomosnail de >
