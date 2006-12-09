@@ -286,7 +286,9 @@ GST_START_TEST (test_message_state_changed_children)
    * preroll */
   ASSERT_OBJECT_REFCOUNT (src, "src", 3);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 3);
-  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);
+  /* 2 or 3 is valid, because the pipeline might still be posting 
+   * its state_change message */
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "pipeline", 2, 3);
 
   pop_messages (bus, 3);
   fail_if ((gst_bus_pop (bus)) != NULL);

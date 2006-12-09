@@ -1,5 +1,13 @@
 2006-12-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/check/gst/gstbin.c: (GST_START_TEST):
+	It is acceptable to have a refcount of 2 or 3 at this point in the
+	test, because the pipeline might be just posting its state_change
+	message. The next line then waits for that message to appear using
+	bus_poll, so that should be fine too.
+
+2006-12-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/gst.c: (ensure_current_registry_forking):
 	Ignore EINTR when reading from the child registry pipe.
 	Explicitly ignore the return value from close, since it makes no
