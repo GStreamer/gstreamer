@@ -280,7 +280,11 @@ ape_demux_parse_tags (const guint8 * data, gint size)
           gdouble v_double;
           gchar *endptr;
 
-          v_double = g_strtod (val, &endptr);
+          /* floating point strings can be "4,123" or "4.123" depending on
+           * the locale. We need to be able to parse and read either version
+           * no matter what our current locale is */
+          g_strdelimit (val, ",", '.');
+          v_double = g_ascii_strtod (val, &endptr);
           if (endptr != val) {
             g_value_init (&v, G_TYPE_DOUBLE);
             g_value_set_double (&v, v_double);

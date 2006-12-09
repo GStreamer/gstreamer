@@ -1,3 +1,15 @@
+2006-12-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge  <mail at slomosnail de>
+
+	* gst/apetag/gstapedemux.c: (ape_demux_parse_tags):
+	  We need to be able to read and parse any possible floating point string
+	  format ("1,234" or "1.234") irrespective of the current locale. g_strod()
+	  will parse the former only in certain locales though, so we really need
+	  to canonicalise the separator to '.' and then use g_ascii_strtod() to
+	  make sure we can parse either version at all times.
+	  Fixes #382982 for real.
+
 2006-12-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/sunaudio/gstsunaudiomixerctrl.c:
