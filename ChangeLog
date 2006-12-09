@@ -1,3 +1,25 @@
+2006-12-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gst.c: (ensure_current_registry_forking):
+	Ignore EINTR when reading from the child registry pipe.
+	Explicitly ignore the return value from close, since it makes no
+	difference.
+
+	* gst/gstminiobject.c: (gst_mini_object_ref),
+	(gst_mini_object_unref):
+	When debugging refcounts, check GST_IS_MINI_OBJECT and warn.
+
+	* gst/gstregistry.c: (_priv_gst_registry_remove_cache_plugins):
+	When removing cached plugins, remove their features too, so they're
+	not visible after they've disappeared.
+
+	* gst/gstutils.c: (prepare_link_maybe_ghosting):
+	In the unlikely case that we are linking pads with no parents, don't
+	crash trying to get the non-existent parent bin.
+
+	* gst/parse/grammar.y:
+	Output debug in the PIPELINE category
+
 2005-03-08  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: René Stadler <mail at renestadler dot de>

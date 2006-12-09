@@ -940,6 +940,7 @@ _priv_gst_registry_remove_cache_plugins (GstRegistry * registry)
       GST_DEBUG_OBJECT (registry, "removing cached plugin \"%s\"",
           GST_STR_NULL (plugin->filename));
       registry->plugins = g_list_delete_link (registry->plugins, g);
+      gst_registry_remove_features_for_plugin_unlocked (registry, plugin);
       gst_object_unref (plugin);
       changed = TRUE;
     }

@@ -250,8 +250,9 @@ gst_mini_object_ref (GstMiniObject * mini_object)
    * function might resurect an object
    g_return_val_if_fail (mini_object->refcount > 0, NULL);
    */
-
 #ifdef DEBUG_REFCOUNT
+  g_return_val_if_fail (GST_IS_MINI_OBJECT (mini_object), NULL);
+
   GST_CAT_LOG (GST_CAT_REFCOUNTING, "%p ref %d->%d",
       mini_object,
       GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object),
@@ -295,6 +296,8 @@ gst_mini_object_unref (GstMiniObject * mini_object)
   g_return_if_fail (mini_object->refcount > 0);
 
 #ifdef DEBUG_REFCOUNT
+  g_return_if_fail (GST_IS_MINI_OBJECT (mini_object));
+
   GST_CAT_LOG (GST_CAT_REFCOUNTING, "%p unref %d->%d",
       mini_object,
       GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object),

@@ -1262,6 +1262,17 @@ prepare_link_maybe_ghosting (GstPad ** src, GstPad ** sink,
   e1 = GST_OBJECT_PARENT (*src);
   e2 = GST_OBJECT_PARENT (*sink);
 
+  if (G_UNLIKELY (e1 == NULL)) {
+    GST_WARNING ("Trying to ghost a pad that doesn't have a parent: %"
+        GST_PTR_FORMAT, *src);
+    return FALSE;
+  }
+  if (G_UNLIKELY (e2 == NULL)) {
+    GST_WARNING ("Trying to ghost a pad that doesn't have a parent: %"
+        GST_PTR_FORMAT, *sink);
+    return FALSE;
+  }
+
   if (GST_OBJECT_PARENT (e1) == GST_OBJECT_PARENT (e2)) {
     GST_CAT_INFO (GST_CAT_PADS, "%s and %s in same bin, no need for ghost pads",
         GST_OBJECT_NAME (e1), GST_OBJECT_NAME (e2));
@@ -1274,9 +1285,8 @@ prepare_link_maybe_ghosting (GstPad ** src, GstPad ** sink,
   /* we need to setup some ghost pads */
   root = find_common_root (e1, e2);
   if (!root) {
-    g_warning
-        ("Trying to connect elements that don't share a common ancestor: %s and %s\n",
-        GST_ELEMENT_NAME (e1), GST_ELEMENT_NAME (e2));
+    g_warning ("Trying to connect elements that don't share a common "
+        "ancestor: %s and %s", GST_ELEMENT_NAME (e1), GST_ELEMENT_NAME (e2));
     return FALSE;
   }
 

@@ -281,7 +281,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
 
   if (gst_child_proxy_lookup (GST_OBJECT (element), value, &target, &pspec)) { 
     value_type = G_PARAM_SPEC_VALUE_TYPE (pspec); 
-    GST_LOG ("parsing property %s as a %s", pspec->name,
+    GST_CAT_LOG (GST_CAT_PIPELINE, "parsing property %s as a %s", pspec->name,
       g_type_name (value_type));
     g_value_init (&v, value_type);
     if (!gst_value_deserialize (&v, pos))

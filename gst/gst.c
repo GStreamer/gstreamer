@@ -699,6 +699,7 @@ ensure_current_registry_forking (GstRegistry * default_registry,
 #ifdef HAVE_FORK
   pid_t pid;
   int pfd[2];
+  int ret;
 
   /* We fork here, and let the child read and possibly rebuild the registry.
    * After that, the parent will re-read the freshly generated registry. */
@@ -725,7 +726,7 @@ ensure_current_registry_forking (GstRegistry * default_registry,
     gchar res_byte;
 
     /* this is the child. Close the read pipe */
-    close (pfd[0]);
+    (void) close (pfd[0]);
 
     GST_DEBUG ("child reading registry cache");
     res =
@@ -740,20 +741,26 @@ ensure_current_registry_forking (GstRegistry * default_registry,
 
     /* write a result byte to the pipe */
     res_byte = res ? '1' : '0';
-    if (write (pfd[1], &res_byte, 1) != 1 || close (pfd[1]) != 0) {
-      /* could not write to pipe, probably means parent has exited before us */
-    }
+    do {
+      ret = write (pfd[1], &res_byte, 1);
+    } while (ret == -1 && errno == EINTR);
+    /* if ret == -1 now, we could not write to pipe, probably 
+     * means parent has exited before us */
+    (void) close (pfd[1]);
+
     _exit (0);
   } else {
-    int ret;
     gchar res_byte;
 
     /* parent. Close write pipe */
-    close (pfd[1]);
+    (void) close (pfd[1]);
 
     /* Wait for result from the pipe */
     GST_DEBUG ("Waiting for data from child");
-    ret = read (pfd[0], &res_byte, 1);
+    do {
+      ret = read (pfd[0], &res_byte, 1);
+    } while (ret == -1 && errno == EINTR);
+
     if (ret == -1) {
       g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
           _("Error re-scanning registry %s: %s"),
@@ -761,7 +768,7 @@ ensure_current_registry_forking (GstRegistry * default_registry,
       close (pfd[0]);
       return FALSE;
     }
-    close (pfd[0]);
+    (void) close (pfd[0]);
 
     /* Wait to ensure the child is reaped, but ignore the result */
     GST_DEBUG ("parent waiting on child");
