@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-08-08 13:20+0200\n"
+"POT-Creation-Date: 2006-12-10 19:24+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -20,8 +20,8 @@ msgstr ""
 msgid "Could not open DVD"
 msgstr ""
 
-#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:577
-#: ext/dvdread/dvdreadsrc.c:584
+#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
+#: ext/dvdread/dvdreadsrc.c:601
 #, fuzzy, c-format
 msgid "Could not open DVD title %d"
 msgstr "Не могу да затворим ВСД датотеку „%s“."
@@ -31,14 +31,18 @@ msgstr "Не могу да затворим ВСД датотеку „%s“."
 msgid "Failed to go to chapter %d of DVD title %d"
 msgstr ""
 
-#: ext/dvdread/dvdreadsrc.c:591
+#: ext/dvdread/dvdreadsrc.c:608
 #, c-format
 msgid ""
 "Could not open DVD title %d. Interactive titles are not supported by this "
 "element"
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:1931
+#: ext/lame/gstlame.c:549
+msgid "Failed to configure LAME encoder. Check your encoding parameters."
+msgstr ""
+
+#: gst/asfdemux/gstasfdemux.c:1944
 msgid "This file is encrypted and cannot be played."
 msgstr ""
 
