@@ -317,13 +317,10 @@ gst_modplug_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_position (query, &format, NULL);
       if (format == GST_FORMAT_TIME) {
-        gfloat fpos;
         gint64 pos;
 
-        fpos = ((float) (modplug->song_length *
-                modplug->mSoundFile->GetCurrentPos ()) /
-            (float) modplug->mSoundFile->GetMaxPosition ());
-        pos = (gint64) (fpos * GST_SECOND);
+        pos = (modplug->song_length * modplug->mSoundFile->GetCurrentPos ());
+        pos /= modplug->mSoundFile->GetMaxPosition ();
         gst_query_set_position (query, format, pos);
         res = TRUE;
       }
