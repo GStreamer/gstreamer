@@ -1,3 +1,9 @@
+2006-12-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_prepare):
+	  Ignore the buffer_time the sound device reports. Turns out it is 
+	  sometimes completely bogus and we're better off without it.
+
 2006-12-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/matroska-demux.c: (gst_matroska_demux_add_stream),

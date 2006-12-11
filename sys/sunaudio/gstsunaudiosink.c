@@ -406,8 +406,14 @@ gst_sunaudiosink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
             strerror (errno)));
     return FALSE;
   }
+#if 0
+  /* We don't actually use the buffer_size from the sound device, because
+   * it seems it's just bogus sometimes */
   sunaudiosink->segtotal = spec->segtotal =
       ainfo.play.buffer_size / spec->segsize;
+#else
+  sunaudiosink->segtotal = spec->segtotal;
+#endif
   sunaudiosink->segtotal_samples =
       spec->segtotal * spec->segsize / spec->bytes_per_sample;
 
