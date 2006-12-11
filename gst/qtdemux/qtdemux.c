@@ -3134,9 +3134,34 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
 
         rdrf = qtdemux_tree_get_child_by_type (rmda, FOURCC_rdrf);
         if (rdrf) {
-          ref.location = g_strdup ((gchar *) rdrf->data + 20);
-          GST_LOG ("New location: %s", ref.location);
-          redirects = g_list_prepend (redirects, g_memdup (&ref, sizeof (ref)));
+          guint32 ref_type;
+          guint8 *ref_data;
+
+          ref_type = GST_READ_UINT32_LE ((guint8 *) rdrf->data + 12);
+          ref_data = (guint8 *) rdrf->data + 20;
+          if (ref_type == GST_MAKE_FOURCC ('a', 'l', 'i', 's')) {
+            guint record_len, record_version, fn_len;
+
+            /* MacOSX alias record, google for alias-layout.txt */
+            record_len = GST_READ_UINT16_BE (ref_data + 4);
+            record_version = GST_READ_UINT16_BE (ref_data + 4 + 2);
+            fn_len = GST_READ_UINT8 (ref_data + 50);
+            if (record_len > 50 && record_version == 2 && fn_len > 0) {
+              ref.location = g_strndup ((gchar *) ref_data + 51, fn_len);
+            }
+          } else if (ref_type == GST_MAKE_FOURCC ('u', 'r', 'l', ' ')) {
+            ref.location = g_strdup ((gchar *) ref_data);
+          } else {
+            GST_DEBUG ("unknown rdrf reference type %" GST_FOURCC_FORMAT,
+                GST_FOURCC_ARGS (ref_type));
+          }
+          if (ref.location != NULL) {
+            GST_INFO ("New location: %s", ref.location);
+            redirects =
+                g_list_prepend (redirects, g_memdup (&ref, sizeof (ref)));
+          } else {
+            GST_WARNING ("Failed to extract redirect location from rdrf atom");
+          }
         }
 
         /* look for others */
