@@ -1,3 +1,9 @@
+2006-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/running.xml:
+	  Document GST_REGISTRY_FORK and GST_DEBUG_NO_COLOR
+	  environment variables.
+
 2006-12-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/gst/gstbin.c: (GST_START_TEST):

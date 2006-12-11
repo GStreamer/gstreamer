@@ -165,6 +165,33 @@ to <option>*:5</option>
 
 </formalpara>
 
+<formalpara id="GST_DEBUG_NO_COLOR">
+  <title><envar>GST_DEBUG_NO_COLOR</envar></title>
+
+  <para>
+Set this environment variable to any value ("1" typically) to switch off
+colouring in GST_DEBUG output. This has the same effect as specifying the
+--gst-debug-no-color command line option to well-behaved GStreamer
+applications (ie. those that pass command-line options correctly to GStreamer).
+This is particularly useful to reduce the size of debug output and also allows
+for the output to be compressed much better than with colours turned on.
+  </para>
+
+</formalpara>
+
+<formalpara id="GST_REGISTRY_FORK">
+  <title><envar>GST_REGISTRY_FORK</envar></title>
+
+  <para>
+Set this environment variable to "no" to prevent GStreamer from forking on
+startup in order to update the plugin registry. This is useful for debugging
+purposes, but should not be used under normal circumstances, since it means
+that plugins may be loaded into memory even if they are not needed by the
+application.
+  </para>
+
+</formalpara>
+
 </refsect2>
 
 </refsect1>
