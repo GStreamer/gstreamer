@@ -292,8 +292,9 @@ typedef struct _GstMatroskaTrackContext {
 typedef struct _GstMatroskaTrackVideoContext {
   GstMatroskaTrackContext parent;
 
-  guint         pixel_width, pixel_height,
-                display_width, display_height;
+  guint         pixel_width, pixel_height;
+  guint         display_width, display_height;
+  gdouble       default_fps;
   GstMatroskaEyeMode eye_mode;
   GstMatroskaAspectRatioMode asr_mode;
   guint32       fourcc;

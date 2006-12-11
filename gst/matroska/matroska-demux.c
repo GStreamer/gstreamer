@@ -660,7 +660,9 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux)
                 res = FALSE;
                 break;
               }
-              context->default_duration = GST_SECOND * (1. / num);
+              context->default_duration =
+                  gst_gdouble_to_guint64 ((gdouble) GST_SECOND * (1.0 / num));
+              videocontext->default_fps = num;
               break;
             }
 
@@ -3615,14 +3617,26 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
             videocontext->display_height * videocontext->pixel_width, NULL);
       }
 
-      if (context->default_duration > 0) {
-        GValue fps_double = { 0 };
-        GValue fps_fraction = { 0 };
+      if (videocontext->default_fps > 0.0) {
+        GValue fps_double = { 0, };
+        GValue fps_fraction = { 0, };
 
         g_value_init (&fps_double, G_TYPE_DOUBLE);
         g_value_init (&fps_fraction, GST_TYPE_FRACTION);
-        g_value_set_double (&fps_double,
-            gst_guint64_to_gdouble (GST_SECOND / context->default_duration));
+        g_value_set_double (&fps_double, videocontext->default_fps);
+        g_value_transform (&fps_double, &fps_fraction);
+
+        gst_structure_set_value (structure, "framerate", &fps_fraction);
+        g_value_unset (&fps_double);
+        g_value_unset (&fps_fraction);
+      } else if (context->default_duration > 0) {
+        GValue fps_double = { 0, };
+        GValue fps_fraction = { 0, };
+
+        g_value_init (&fps_double, G_TYPE_DOUBLE);
+        g_value_init (&fps_fraction, GST_TYPE_FRACTION);
+        g_value_set_double (&fps_double, (gdouble) GST_SECOND * 1.0 /
+            gst_guint64_to_gdouble (context->default_duration));
         g_value_transform (&fps_double, &fps_fraction);
 
         gst_structure_set_value (structure, "framerate", &fps_fraction);
