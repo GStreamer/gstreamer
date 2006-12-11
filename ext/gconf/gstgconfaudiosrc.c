@@ -102,7 +102,7 @@ gst_gconf_audio_src_init (GstGConfAudioSrc * src,
   src->client = gconf_client_get_default ();
   gconf_client_add_dir (src->client, GST_GCONF_DIR,
       GCONF_CLIENT_PRELOAD_RECURSIVE, NULL);
-  gconf_client_notify_add (src->client,
+  src->gconf_notify_id = gconf_client_notify_add (src->client,
       GST_GCONF_DIR "/" GST_GCONF_AUDIOSRC_KEY,
       cb_toggle_element, src, NULL, NULL);
 }
@@ -113,6 +113,11 @@ gst_gconf_audio_src_dispose (GObject * object)
   GstGConfAudioSrc *src = GST_GCONF_AUDIO_SRC (object);
 
   if (src->client) {
+    if (src->gconf_notify_id) {
+      gconf_client_notify_remove (src->client, src->gconf_notify_id);
+      src->gconf_notify_id = 0;
+    }
+
     g_object_unref (G_OBJECT (src->client));
     src->client = NULL;
   }
@@ -126,6 +131,7 @@ gst_gconf_audio_src_dispose (GObject * object)
 static gboolean
 do_toggle_element (GstGConfAudioSrc * src)
 {
+  GstState cur, next;
   GstPad *targetpad;
   gchar *new_gconf_str;
 
@@ -137,6 +143,19 @@ do_toggle_element (GstGConfAudioSrc * src)
     GST_DEBUG_OBJECT (src, "GConf key was updated, but it didn't change");
     return TRUE;
   }
+
+  GST_OBJECT_LOCK (src);
+  cur = GST_STATE (src);
+  next = GST_STATE_PENDING (src);
+  GST_OBJECT_UNLOCK (src);
+
+  if (cur >= GST_STATE_READY || next == GST_STATE_PAUSED) {
+    GST_DEBUG_OBJECT (src, "already running, ignoring GConf change");
+    return TRUE;
+  }
+
+  GST_DEBUG_OBJECT (src, "GConf key changed: '%s' to '%s'",
+      GST_STR_NULL (src->gconf_str), GST_STR_NULL (new_gconf_str));
 
   g_free (src->gconf_str);
   src->gconf_str = new_gconf_str;

@@ -1,3 +1,14 @@
+2006-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gconf/gstgconfaudiosrc.c: (gst_gconf_audio_src_init),
+	(gst_gconf_audio_src_dispose), (do_toggle_element):
+	* ext/gconf/gstgconfaudiosrc.h:
+	  Remove gconf notify hook when the gconfaudiosrc element is
+	  destroyed, otherwise the callback may be called on an
+	  already-destroyed instance and bad things happen. Should fix
+	  #378184.
+	  Also ignore gconf key changes when the source is already running.
+
 2006-12-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sebastian Dröge  <mail at slomosnail de>

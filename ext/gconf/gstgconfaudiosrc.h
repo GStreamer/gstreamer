@@ -40,6 +40,8 @@ typedef struct _GstGConfAudioSrc {
   GstElement *kid;
   GstPad *pad;
 
+  guint gconf_notify_id;
+
   /* Current gconf string */
   gchar *gconf_str;
 } GstGConfAudioSrc;
