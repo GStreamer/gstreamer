@@ -1,3 +1,9 @@
+2006-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_tree):
+	  Fix non-working redirects from inetfilm.com (handle 'alis' reference
+	  data type as well). Fixes #378613.
+
 2006-12-11  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Jonathan Matthew <jonathan at kaolin wh9 net>).
