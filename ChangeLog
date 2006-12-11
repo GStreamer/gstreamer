@@ -1,3 +1,8 @@
+2006-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/interfaces.defs:
+	  GstColorBalanceChannel is a GObject, not a GstObject. Fixes #383805.
+
 2006-12-04  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

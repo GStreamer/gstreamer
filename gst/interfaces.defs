@@ -17,7 +17,7 @@
 
 (define-object ColorBalanceChannel
   (in-module "Gst")
-  (parent "GstObject")
+  (parent "GObject")
   (c-name "GstColorBalanceChannel")
   (gtype-id "GST_TYPE_COLOR_BALANCE_CHANNEL")
   (fields
