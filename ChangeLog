@@ -7,7 +7,7 @@
 	  header instead of assuming it is always 16 (also read it from the
 	  right position) (#384989). For version 4 and 5 streams, check that
 	  the specified extra codec data size doesn't make us read beyond the
-	  chunk boundary (#384989).
+	  chunk boundary (#384996).
 
 2006-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
