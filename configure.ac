@@ -272,6 +272,9 @@ AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 AC_CHECK_HEADERS([process.h])
 
+dnl Check for sys/utsname.h for uname
+AC_CHECK_HEADERS([sys/utsname.h])
+
 dnl *** checks for types/defines ***
 
 dnl *** checks for structures ***

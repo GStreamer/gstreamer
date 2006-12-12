@@ -107,6 +107,9 @@
 #ifdef HAVE_FORK
 #include <sys/wait.h>
 #endif /* HAVE_FORK */
+#ifdef HAVE_SYS_UTSNAME_H
+#include <sys/utsname.h>
+#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -541,6 +544,19 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
    * So give some useful info about GStreamer here */
   GST_INFO ("Initializing GStreamer Core Library version %s", VERSION);
   GST_INFO ("Using library installed in %s", LIBDIR);
+
+  /* Print some basic system details if possible (OS/architecture) */
+#ifdef HAVE_SYS_UTSNAME_H
+  {
+    struct utsname sys_details;
+
+    if (uname (&sys_details) == 0) {
+      GST_INFO ("%s %s %s %s %s", sys_details.sysname,
+          sys_details.nodename, sys_details.release, sys_details.version,
+          sys_details.machine);
+    }
+  }
+#endif
 
   return TRUE;
 }

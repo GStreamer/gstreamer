@@ -1,3 +1,10 @@
+2006-12-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/gst.c: (init_pre):
+	  Add some basic system details such as OS and architecture
+	  to the debug output if possible, courtesy of uname().
+
 2006-12-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/running.xml:
