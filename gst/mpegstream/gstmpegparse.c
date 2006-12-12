@@ -515,7 +515,7 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
         scr - mpeg_parse->current_scr);
 
     buf += 6;
-    new_rate = (GUINT32_FROM_BE ((*(guint32 *) buf)) & 0xfffffc00) >> 10;
+    new_rate = (GUINT32_FROM_BE (buf) & 0xfffffc00) >> 10;
   } else {
     scr = ((guint64) scr1 & 0x0e000000) << 5;
     scr |= ((guint64) scr1 & 0x00fffe00) << 6;

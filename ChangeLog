@@ -1,3 +1,11 @@
+2006-12-12  David Schleef  <ds@schleef.org>
+
+	* gst/mpegstream/gstmpegparse.c: Fix unaligned load that loads
+	  from the dereferenced integer, not the pointer itself.  Fixes
+	  #385192.
+
+	  I'm takin ur cheese!
+
 2006-12-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Based on patch by: Roland Kay  <roland.kay at ox compsoc net>
