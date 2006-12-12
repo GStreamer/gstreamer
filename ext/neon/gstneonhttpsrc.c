@@ -344,6 +344,8 @@ gst_neonhttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   if (G_UNLIKELY (read < 0))
     goto read_error;
 
+  GST_LOG_OBJECT (src, "returning %u bytes", GST_BUFFER_SIZE (*outbuf));
+
 done:
   return ret;
 
@@ -411,8 +413,6 @@ send_request_and_redirect (GstNeonhttpSrc * src, gboolean do_redir)
   gint res;
   gint http_status = 0;
 
-  const gchar *redir = g_strdup ("");
-
   guint request_count = 0;
 
 #ifndef GST_DISABLE_GST_DEBUG
@@ -454,6 +454,8 @@ send_request_and_redirect (GstNeonhttpSrc * src, gboolean do_redir)
        * Reload the HTTP request with a new URI value */
       http_status = ne_get_status (src->request)->code;
       if (http_status == 302) {
+        const gchar *redir;
+
         /* the new URI value to go when redirecting can be found on the 'Location' HTTP header */
         redir = ne_get_response_header (src->request, "Location");
         if (redir != NULL) {

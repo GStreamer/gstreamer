@@ -2,6 +2,19 @@
 
 	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_create),
 	(send_request_and_redirect):
+	  Fix minor mem leak in redirect code.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/neonhttpsrc.c: (handoff_cb),
+	(GST_START_TEST), (neonhttpsrc_suite):
+	* tests/check/gst-plugins-bad.supp:
+	  Add super-basic unit test for #384140.
+
+2006-12-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_create),
+	(send_request_and_redirect):
 	  Set offset on buffers pushed out (id3demux gets confused if the
 	  first buffer does not have an offset of 0). Fixes #384140.
 

@@ -1,0 +1,9 @@
+{
+   <suppression for libneon-25.5dfsg5 on tpm's edgy/x86>
+   Memcheck:Param
+   socketcall.sendto(msg)
+   fun:sendto
+   fun:getaddrinfo
+   fun:ne_addr_resolve
+   fun:ne_begin_request
+}

@@ -32,6 +32,12 @@ else
 check_mpeg2enc =
 endif
 
+if USE_NEON
+check_neon = elements/neonhttpsrc
+else
+check_neon = 
+endif
+
 if USE_WAVPACK
 check_wavpack = \
        elements/wavpackparse \
@@ -52,6 +58,7 @@ VALGRIND_TESTS_DISABLE = \
 
 check_PROGRAMS = \
 	$(check_mpeg2enc)  \
+	$(check_neon)      \
 	elements/rganalysis \
 	elements/videocrop \
 	$(check_wavpack)   \
