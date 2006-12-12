@@ -1,5 +1,12 @@
 2006-12-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_create),
+	(send_request_and_redirect):
+	  Set offset on buffers pushed out (id3demux gets confused if the
+	  first buffer does not have an offset of 0). Fixes #384140.
+
+2006-12-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_class_init),
 	(gst_neonhttp_src_create), (send_request_and_redirect),
 	(gst_neonhttp_src_start), (oom_callback):

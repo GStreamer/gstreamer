@@ -333,7 +333,7 @@ gst_neonhttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   /* Create the buffer. */
   ret = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (basesrc),
-      GST_BUFFER_OFFSET_NONE, basesrc->blocksize,
+      basesrc->segment.last_stop, basesrc->blocksize,
       src->icy_caps ? src->icy_caps :
       GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)), outbuf);
 
@@ -478,6 +478,8 @@ send_request_and_redirect (GstNeonhttpSrc * src, gboolean do_redir)
           && do_redir ? "Redirecting to" :
           "WILL NOT redirect, try it again with a different URI; an alternative is",
           src->uri.host);
+      /* FIXME: when not redirecting automatically, shouldn't we post a
+       * redirect element message on the bus? */
     }
 #ifndef GST_DISABLE_GST_DEBUG
     if (src->neon_http_msgs_dbg)
