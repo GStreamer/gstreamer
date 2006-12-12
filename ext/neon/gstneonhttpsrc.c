@@ -199,11 +199,11 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
           "Enable Neon HTTP debug messages", FALSE, G_PARAM_READWRITE));
 #endif
 
-  gstbasesrc_class->start = gst_neonhttp_src_start;
-  gstbasesrc_class->stop = gst_neonhttp_src_stop;
-  gstbasesrc_class->get_size = gst_neonhttp_src_get_size;
+  gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_neonhttp_src_start);
+  gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_neonhttp_src_stop);
+  gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_neonhttp_src_get_size);
 
-  gstpush_src_class->create = gst_neonhttp_src_create;
+  gstpush_src_class->create = GST_DEBUG_FUNCPTR (gst_neonhttp_src_create);
 
   GST_DEBUG_CATEGORY_INIT (neonhttpsrc_debug, "neonhttpsrc", 0,
       "NEON HTTP Client Source");
@@ -320,20 +320,22 @@ static GstFlowReturn
 gst_neonhttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstNeonhttpSrc *src;
+  GstBaseSrc *basesrc;
   GstFlowReturn ret;
   int read;
 
   src = GST_NEONHTTP_SRC (psrc);
+  basesrc = GST_BASE_SRC_CAST (psrc);
 
   /* The caller should know the number of bytes and not read beyond EOS. */
   if (G_UNLIKELY (src->eos))
     goto eos;
 
   /* Create the buffer. */
-  ret = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (GST_BASE_SRC (psrc)),
-      GST_BUFFER_OFFSET_NONE, GST_BASE_SRC (psrc)->blocksize,
+  ret = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (basesrc),
+      GST_BUFFER_OFFSET_NONE, basesrc->blocksize,
       src->icy_caps ? src->icy_caps :
-      GST_PAD_CAPS (GST_BASE_SRC_PAD (GST_BASE_SRC (psrc))), outbuf);
+      GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)), outbuf);
 
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto done;
@@ -460,7 +462,7 @@ send_request_and_redirect (GstNeonhttpSrc * src, gboolean do_redir)
 #ifndef GST_DISABLE_GST_DEBUG
           if (src->neon_http_msgs_dbg)
             GST_LOG_OBJECT (src,
-                "--> Got HTTP Status Code %d; Using 'Location' header [%s]\n",
+                "--> Got HTTP Status Code %d; Using 'Location' header [%s]",
                 http_status, src->uri.host);
 #endif
         }
@@ -471,7 +473,7 @@ send_request_and_redirect (GstNeonhttpSrc * src, gboolean do_redir)
     /* if - NE_OK */
     ++request_count;
     if (http_status == 302) {
-      GST_WARNING_OBJECT (src, "%s %s.\n",
+      GST_WARNING_OBJECT (src, "%s %s.",
           (request_count < MAX_HTTP_REDIRECTS_NUMBER)
           && do_redir ? "Redirecting to" :
           "WILL NOT redirect, try it again with a different URI; an alternative is",
@@ -479,7 +481,7 @@ send_request_and_redirect (GstNeonhttpSrc * src, gboolean do_redir)
     }
 #ifndef GST_DISABLE_GST_DEBUG
     if (src->neon_http_msgs_dbg)
-      GST_LOG_OBJECT (src, "--> request_count = %d\n", request_count);
+      GST_LOG_OBJECT (src, "--> request_count = %d", request_count);
 #endif
 
     /* do the redirect, go back to send another HTTP request now using the 'Location' */
@@ -503,7 +505,7 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
     if (res == HTTP_SOCKET_ERROR) {
 #ifndef GST_DISABLE_GST_DEBUG
       if (src->neon_http_msgs_dbg) {
-        GST_ERROR_OBJECT (src, "HTTP Request failed when opening socket!\n");
+        GST_ERROR_OBJECT (src, "HTTP Request failed when opening socket!");
       }
 #endif
       goto init_failed;
@@ -511,14 +513,14 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
 #ifndef GST_DISABLE_GST_DEBUG
       if (src->neon_http_msgs_dbg) {
         GST_ERROR_OBJECT (src,
-            "Proxy Server URI is invalid to the HTTP Request!\n");
+            "Proxy Server URI is invalid to the HTTP Request!");
       }
 #endif
       goto wrong_proxy;
     } else {
 #ifndef GST_DISABLE_GST_DEBUG
       if (src->neon_http_msgs_dbg) {
-        GST_ERROR_OBJECT (src, "HTTP Request failed, error unrecognized!\n");
+        GST_ERROR_OBJECT (src, "HTTP Request failed, error unrecognized!");
       }
 #endif
       goto begin_req_failed;
@@ -977,7 +979,7 @@ gst_neonhttp_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 static void
 oom_callback ()
 {
-  GST_ERROR ("memory exeception in neon\n");
+  GST_ERROR ("memory exeception in neon");
 }
 
 void
