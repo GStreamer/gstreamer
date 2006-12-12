@@ -1,3 +1,14 @@
+2006-12-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: Roland Kay  <roland.kay at ox compsoc net>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_parse_mdpr):
+	  For version 4 streams, read the extra codec data size from the
+	  header instead of assuming it is always 16 (also read it from the
+	  right position) (#384989). For version 4 and 5 streams, check that
+	  the specified extra codec data size doesn't make us read beyond the
+	  chunk boundary (#384989).
+
 2006-11-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_alloc_sized_buf):

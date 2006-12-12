@@ -1605,8 +1605,15 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
           stream->sample_width = RMDEMUX_GUINT16_GET (data + offset + 52);
           stream->n_channels = RMDEMUX_GUINT16_GET (data + offset + 54);
           stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 62);
-          stream->extra_data_size = 16;
-          stream->extra_data = (guint8 *) data + offset + 71;
+          stream->extra_data_size = RMDEMUX_GUINT32_GET (data + offset + 69);
+          GST_DEBUG_OBJECT (rmdemux, "%u bytes of extra codec data",
+              stream->extra_data_size);
+          if (length - (offset + 73) >= stream->extra_data_size) {
+            stream->extra_data = (guint8 *) data + offset + 73;
+          } else {
+            GST_WARNING_OBJECT (rmdemux, "codec data runs beyond MDPR chunk");
+            stream->extra_data_size = 0;
+          }
           break;
         case 5:
           stream->flavor = RMDEMUX_GUINT16_GET (data + offset + 22);
@@ -1619,7 +1626,14 @@ gst_rmdemux_parse_mdpr (GstRMDemux * rmdemux, const guint8 * data, int length)
           stream->n_channels = RMDEMUX_GUINT16_GET (data + offset + 60);
           stream->fourcc = RMDEMUX_FOURCC_GET (data + offset + 66);
           stream->extra_data_size = RMDEMUX_GUINT32_GET (data + offset + 74);
-          stream->extra_data = (guint8 *) data + offset + 78;
+          GST_DEBUG_OBJECT (rmdemux, "%u bytes of extra codec data",
+              stream->extra_data_size);
+          if (length - (offset + 78) >= stream->extra_data_size) {
+            stream->extra_data = (guint8 *) data + offset + 78;
+          } else {
+            GST_WARNING_OBJECT (rmdemux, "codec data runs beyond MDPR chunk");
+            stream->extra_data_size = 0;
+          }
           break;
         default:{
           GST_WARNING_OBJECT (rmdemux, "Unhandled audio stream version %d",
