@@ -458,6 +458,8 @@ gst_tag_demux_chain_parse_tag (GstTagDemux * demux, GstBuffer * collect)
   guint tagsize = 0;
   guint available;
 
+  g_assert (gst_buffer_is_metadata_writable (collect));
+
   klass = GST_TAG_DEMUX_CLASS (G_OBJECT_GET_CLASS (demux));
 
   /* If we receive a buffer that's from the middle of the file, 
@@ -484,6 +486,12 @@ gst_tag_demux_chain_parse_tag (GstTagDemux * demux, GstBuffer * collect)
     GST_DEBUG_OBJECT (demux, "Could not identify start tag");
     demux->priv->state = GST_TAG_DEMUX_TYPEFINDING;
     return;
+  }
+
+  /* need to set offset of first buffer to 0 or trimming won't work */
+  if (!GST_BUFFER_OFFSET_IS_VALID (collect)) {
+    GST_WARNING_OBJECT (demux, "Fixing up first buffer without offset");
+    GST_BUFFER_OFFSET (collect) = 0;
   }
 
   GST_DEBUG_OBJECT (demux, "Identified tag, size = %u bytes", tagsize);
@@ -550,6 +558,8 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
 
   switch (demux->priv->state) {
     case GST_TAG_DEMUX_READ_START_TAG:
+      demux->priv->collect =
+          gst_buffer_make_metadata_writable (demux->priv->collect);
       gst_tag_demux_chain_parse_tag (demux, demux->priv->collect);
       if (demux->priv->state != GST_TAG_DEMUX_TYPEFINDING)
         break;

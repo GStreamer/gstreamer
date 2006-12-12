@@ -1,3 +1,14 @@
+2006-12-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_chain_parse_tag),
+	(gst_tag_demux_chain):
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain):
+	  In streaming mode, if the first buffer we get doesn't have an
+	  offset, fix it up to be 0, otherwise trimming won't work later on
+	  and we'll be typefinding application/x-id3, which may result in
+	  decodebin plugging an endless number of id3demux elements as a
+	  consequence. Fixes #385031.
+	  
 2006-12-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/sunaudio/gstsunaudiosink.c: (gst_sunaudiosink_prepare):

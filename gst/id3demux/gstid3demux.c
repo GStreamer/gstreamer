@@ -46,6 +46,7 @@
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/gst-i18n-plugin.h>
 #include <gst/tag/tag.h>
+#include <string.h>
 
 #include "gstid3demux.h"
 #include "id3tags.h"
@@ -418,9 +419,21 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
 
   switch (id3demux->state) {
     case GST_ID3DEMUX_READID3V2:
+      if (GST_BUFFER_SIZE (id3demux->collect) < 3)
+        break;                  /* Go get more data first */
+
+      /* need to set offset of first buffer to 0 or trimming won't work */
+      if (!GST_BUFFER_OFFSET_IS_VALID (id3demux->collect) &&
+          memcmp (GST_BUFFER_DATA (id3demux->collect), "ID3", 3) == 0) {
+        GST_WARNING_OBJECT (id3demux, "Fixing up first buffer without offset");
+        id3demux->collect =
+            gst_buffer_make_metadata_writable (id3demux->collect);
+        GST_BUFFER_OFFSET (id3demux->collect) = 0;
+      }
+
       /* If we receive a buffer that's from the middle of the file, 
        * we can't read tags so move to typefinding */
-      if (GST_BUFFER_OFFSET_IS_VALID (id3demux->collect) &&
+      if (!GST_BUFFER_OFFSET_IS_VALID (id3demux->collect) ||
           GST_BUFFER_OFFSET (id3demux->collect) != 0) {
         GST_DEBUG_OBJECT (id3demux,
             "Received buffer with non-zero offset %" G_GINT64_FORMAT
