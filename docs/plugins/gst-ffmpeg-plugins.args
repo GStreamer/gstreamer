@@ -55,7 +55,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -105,7 +105,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -155,7 +155,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -205,7 +205,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -255,7 +255,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -305,7 +305,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -316,6 +316,566 @@
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::b-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Factor</NICK>
+<BLURB>Factor in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::b-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Offset</NICK>
+<BLURB>Offset in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::bitrate-tolerance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate Tolerance</NICK>
+<BLURB>Number of bits the bitstream is allowed to diverge from the reference.</BLURB>
+<DEFAULT>8000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::chroma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Chroma Elimination Threshold</NICK>
+<BLURB>Chroma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::dark-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Darkness Masking</NICK>
+<BLURB>Darkness Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::dct-algo</NAME>
+<TYPE>GstFFMpegDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DCT Algorithm</NICK>
+<BLURB>DCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::flags</NAME>
+<TYPE>GstFFMpegFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::i-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Factor</NICK>
+<BLURB>Factor in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::i-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Offset</NICK>
+<BLURB>Offset in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::idct-algo</NAME>
+<TYPE>GstFFMpegIDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IDCT Algorithm</NICK>
+<BLURB>IDCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::ildct-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced DCT Compare Function</NICK>
+<BLURB>Interlaced DCT Compare Function.</BLURB>
+<DEFAULT>VSAD</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::inter-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Inter Quantizer Bias</NICK>
+<BLURB>Inter Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced Material</NICK>
+<BLURB>Interlaced Material.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::intra-dc-precision</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra DC precision</NICK>
+<BLURB>Precision of the Intra DC coefficient - 8.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::intra-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra Quantizer Bias</NICK>
+<BLURB>Intra Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::last-predictor-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Last Predictor Count</NICK>
+<BLURB>Amount of previous Motion Vector predictors.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::lmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Lagrange Multiplier</NICK>
+<BLURB>Maximum Lagrange Multiplier.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::lmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Lagrange Multiplier</NICK>
+<BLURB>Minimum Lagrange Multiplier.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::luma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma Elimination Threshold</NICK>
+<BLURB>Luma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::lumi-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luminance Masking</NICK>
+<BLURB>Luminance Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::max-bframes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max B-Frames</NICK>
+<BLURB>Maximum B-frames in a row.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::max-key-interval</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -100</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Key Interval</NICK>
+<BLURB>Maximum number of frames between two keyframes (< 0 is in sec).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::max-qdiff</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer Difference</NICK>
+<BLURB>Maximum Quantizer Difference between frames.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::mb-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Compare Function</NICK>
+<BLURB>Macroblok Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::mb-decision</NAME>
+<TYPE>GstFFMpegEncMBDecision</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Decision</NICK>
+<BLURB>Macroblok Decision Mode.</BLURB>
+<DEFAULT>Use method set by mb-cmp</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::mb-qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum MB Quantizer</NICK>
+<BLURB>Maximum MB Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::mb-qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum MB Quantizer</NICK>
+<BLURB>Minimum MB Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::me-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Compare Function</NICK>
+<BLURB>Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::me-pre-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Compare Function</NICK>
+<BLURB>Motion Estimation Pre Pass Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::me-range</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Range</NICK>
+<BLURB>Motion Estimation search range in subpel units.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::me-sub-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subpixel Motion Estimation Compare Function</NICK>
+<BLURB>Subpixel Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::me-subpel-quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Subpixel Quality</NICK>
+<BLURB>Motion Estimation Subpixel Refinement Quality.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::noise-reduction</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Reduction</NICK>
+<BLURB>Noise Reduction Strength.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::p-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>P Block Masking</NICK>
+<BLURB>P Block  Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::pass</NAME>
+<TYPE>GstFFMpegEncPass</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding pass/type</NICK>
+<BLURB>Encoding pass/type.</BLURB>
+<DEFAULT>Constant Bitrate Encoding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::pre-dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::pre-me</NAME>
+<TYPE>GstFFMpegEncPreME</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pre Pass for Motion Estimation</NICK>
+<BLURB>Pre Pass for Motion Estimation.</BLURB>
+<DEFAULT>Only after I-frames</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::qblur</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Smoothing</NICK>
+<BLURB>Quantizer Smoothing over time.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::qcompress</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Change</NICK>
+<BLURB>Quantizer Change between easy and hard scenes.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer</NICK>
+<BLURB>Maximum Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Quantizer</NICK>
+<BLURB>Minimum Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::quant-type</NAME>
+<TYPE>GstFFMpegEncQuantTypes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Type</NICK>
+<BLURB>Quantizer Type.</BLURB>
+<DEFAULT>H263 quantization</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::quantizer</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,30]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constant Quantizer</NICK>
+<BLURB>Constant Quantizer.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::rc-buffer-aggressivity</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Aggressivity</NICK>
+<BLURB>Ratecontrol Buffer Aggressivity.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::rc-buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Size</NICK>
+<BLURB>Decoder bitstream buffer size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::rc-eq</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Equation</NICK>
+<BLURB>Ratecontrol Equation.</BLURB>
+<DEFAULT>"tex^qComp"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::rc-initial-cplx</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1e+07]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Initial Complexity for Pass 1 Ratecontrol</NICK>
+<BLURB>Initial Complexity for Pass 1 Ratecontrol.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::rc-max-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Maximum Bitrate</NICK>
+<BLURB>Ratecontrol Maximum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::rc-min-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Minimum Bitrate</NICK>
+<BLURB>Ratecontrol Minimum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::rc-qmod-amp</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Mod</NICK>
+<BLURB>Ratecontrol Mod.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::rc-qmod-freq</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,0]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Freq</NICK>
+<BLURB>Ratecontrol Freq.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::rc-qsquish</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Limiting Method</NICK>
+<BLURB>0 means limit by clipping, otherwise use nice continuous function.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::spatial-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spatial Complexity Masking</NICK>
+<BLURB>Spatial Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::statsfile</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Statistics Filename</NICK>
+<BLURB>Filename to store data for 2-pass encoding.</BLURB>
+<DEFAULT>"stats.log"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_flv::temporal-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporal Complexity Masking</NICK>
+<BLURB>Temporal Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -355,7 +915,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -405,7 +965,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -455,7 +1015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -466,6 +1026,566 @@
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::b-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Factor</NICK>
+<BLURB>Factor in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::b-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Offset</NICK>
+<BLURB>Offset in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::bitrate-tolerance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate Tolerance</NICK>
+<BLURB>Number of bits the bitstream is allowed to diverge from the reference.</BLURB>
+<DEFAULT>8000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::chroma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Chroma Elimination Threshold</NICK>
+<BLURB>Chroma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::dark-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Darkness Masking</NICK>
+<BLURB>Darkness Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::dct-algo</NAME>
+<TYPE>GstFFMpegDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DCT Algorithm</NICK>
+<BLURB>DCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::flags</NAME>
+<TYPE>GstFFMpegFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::i-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Factor</NICK>
+<BLURB>Factor in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::i-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Offset</NICK>
+<BLURB>Offset in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::idct-algo</NAME>
+<TYPE>GstFFMpegIDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IDCT Algorithm</NICK>
+<BLURB>IDCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::ildct-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced DCT Compare Function</NICK>
+<BLURB>Interlaced DCT Compare Function.</BLURB>
+<DEFAULT>VSAD</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::inter-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Inter Quantizer Bias</NICK>
+<BLURB>Inter Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced Material</NICK>
+<BLURB>Interlaced Material.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::intra-dc-precision</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra DC precision</NICK>
+<BLURB>Precision of the Intra DC coefficient - 8.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::intra-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra Quantizer Bias</NICK>
+<BLURB>Intra Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::last-predictor-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Last Predictor Count</NICK>
+<BLURB>Amount of previous Motion Vector predictors.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::lmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Lagrange Multiplier</NICK>
+<BLURB>Maximum Lagrange Multiplier.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::lmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Lagrange Multiplier</NICK>
+<BLURB>Minimum Lagrange Multiplier.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::luma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma Elimination Threshold</NICK>
+<BLURB>Luma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::lumi-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luminance Masking</NICK>
+<BLURB>Luminance Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::max-bframes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max B-Frames</NICK>
+<BLURB>Maximum B-frames in a row.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::max-key-interval</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -100</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Key Interval</NICK>
+<BLURB>Maximum number of frames between two keyframes (< 0 is in sec).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::max-qdiff</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer Difference</NICK>
+<BLURB>Maximum Quantizer Difference between frames.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::mb-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Compare Function</NICK>
+<BLURB>Macroblok Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::mb-decision</NAME>
+<TYPE>GstFFMpegEncMBDecision</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Decision</NICK>
+<BLURB>Macroblok Decision Mode.</BLURB>
+<DEFAULT>Use method set by mb-cmp</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::mb-qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum MB Quantizer</NICK>
+<BLURB>Maximum MB Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::mb-qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum MB Quantizer</NICK>
+<BLURB>Minimum MB Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::me-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Compare Function</NICK>
+<BLURB>Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::me-pre-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Compare Function</NICK>
+<BLURB>Motion Estimation Pre Pass Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::me-range</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Range</NICK>
+<BLURB>Motion Estimation search range in subpel units.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::me-sub-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subpixel Motion Estimation Compare Function</NICK>
+<BLURB>Subpixel Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::me-subpel-quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Subpixel Quality</NICK>
+<BLURB>Motion Estimation Subpixel Refinement Quality.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::noise-reduction</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Reduction</NICK>
+<BLURB>Noise Reduction Strength.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::p-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>P Block Masking</NICK>
+<BLURB>P Block  Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::pass</NAME>
+<TYPE>GstFFMpegEncPass</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding pass/type</NICK>
+<BLURB>Encoding pass/type.</BLURB>
+<DEFAULT>Constant Bitrate Encoding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::pre-dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::pre-me</NAME>
+<TYPE>GstFFMpegEncPreME</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pre Pass for Motion Estimation</NICK>
+<BLURB>Pre Pass for Motion Estimation.</BLURB>
+<DEFAULT>Only after I-frames</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::qblur</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Smoothing</NICK>
+<BLURB>Quantizer Smoothing over time.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::qcompress</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Change</NICK>
+<BLURB>Quantizer Change between easy and hard scenes.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer</NICK>
+<BLURB>Maximum Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Quantizer</NICK>
+<BLURB>Minimum Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::quant-type</NAME>
+<TYPE>GstFFMpegEncQuantTypes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Type</NICK>
+<BLURB>Quantizer Type.</BLURB>
+<DEFAULT>H263 quantization</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::quantizer</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,30]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constant Quantizer</NICK>
+<BLURB>Constant Quantizer.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::rc-buffer-aggressivity</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Aggressivity</NICK>
+<BLURB>Ratecontrol Buffer Aggressivity.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::rc-buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Size</NICK>
+<BLURB>Decoder bitstream buffer size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::rc-eq</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Equation</NICK>
+<BLURB>Ratecontrol Equation.</BLURB>
+<DEFAULT>"tex^qComp"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::rc-initial-cplx</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1e+07]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Initial Complexity for Pass 1 Ratecontrol</NICK>
+<BLURB>Initial Complexity for Pass 1 Ratecontrol.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::rc-max-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Maximum Bitrate</NICK>
+<BLURB>Ratecontrol Maximum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::rc-min-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Minimum Bitrate</NICK>
+<BLURB>Ratecontrol Minimum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::rc-qmod-amp</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Mod</NICK>
+<BLURB>Ratecontrol Mod.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::rc-qmod-freq</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,0]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Freq</NICK>
+<BLURB>Ratecontrol Freq.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::rc-qsquish</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Limiting Method</NICK>
+<BLURB>0 means limit by clipping, otherwise use nice continuous function.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::spatial-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spatial Complexity Masking</NICK>
+<BLURB>Spatial Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::statsfile</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Statistics Filename</NICK>
+<BLURB>Filename to store data for 2-pass encoding.</BLURB>
+<DEFAULT>"stats.log"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_mpeg4::temporal-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporal Complexity Masking</NICK>
+<BLURB>Temporal Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -505,7 +1625,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -516,6 +1636,566 @@
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::b-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Factor</NICK>
+<BLURB>Factor in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::b-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Offset</NICK>
+<BLURB>Offset in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::bitrate-tolerance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate Tolerance</NICK>
+<BLURB>Number of bits the bitstream is allowed to diverge from the reference.</BLURB>
+<DEFAULT>8000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::chroma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Chroma Elimination Threshold</NICK>
+<BLURB>Chroma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::dark-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Darkness Masking</NICK>
+<BLURB>Darkness Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::dct-algo</NAME>
+<TYPE>GstFFMpegDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DCT Algorithm</NICK>
+<BLURB>DCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::flags</NAME>
+<TYPE>GstFFMpegFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::i-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Factor</NICK>
+<BLURB>Factor in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::i-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Offset</NICK>
+<BLURB>Offset in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::idct-algo</NAME>
+<TYPE>GstFFMpegIDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IDCT Algorithm</NICK>
+<BLURB>IDCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::ildct-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced DCT Compare Function</NICK>
+<BLURB>Interlaced DCT Compare Function.</BLURB>
+<DEFAULT>VSAD</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::inter-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Inter Quantizer Bias</NICK>
+<BLURB>Inter Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced Material</NICK>
+<BLURB>Interlaced Material.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::intra-dc-precision</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra DC precision</NICK>
+<BLURB>Precision of the Intra DC coefficient - 8.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::intra-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra Quantizer Bias</NICK>
+<BLURB>Intra Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::last-predictor-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Last Predictor Count</NICK>
+<BLURB>Amount of previous Motion Vector predictors.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::lmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Lagrange Multiplier</NICK>
+<BLURB>Maximum Lagrange Multiplier.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::lmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Lagrange Multiplier</NICK>
+<BLURB>Minimum Lagrange Multiplier.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::luma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma Elimination Threshold</NICK>
+<BLURB>Luma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::lumi-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luminance Masking</NICK>
+<BLURB>Luminance Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::max-bframes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max B-Frames</NICK>
+<BLURB>Maximum B-frames in a row.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::max-key-interval</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -100</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Key Interval</NICK>
+<BLURB>Maximum number of frames between two keyframes (< 0 is in sec).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::max-qdiff</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer Difference</NICK>
+<BLURB>Maximum Quantizer Difference between frames.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::mb-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Compare Function</NICK>
+<BLURB>Macroblok Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::mb-decision</NAME>
+<TYPE>GstFFMpegEncMBDecision</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Decision</NICK>
+<BLURB>Macroblok Decision Mode.</BLURB>
+<DEFAULT>Use method set by mb-cmp</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::mb-qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum MB Quantizer</NICK>
+<BLURB>Maximum MB Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::mb-qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum MB Quantizer</NICK>
+<BLURB>Minimum MB Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::me-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Compare Function</NICK>
+<BLURB>Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::me-pre-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Compare Function</NICK>
+<BLURB>Motion Estimation Pre Pass Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::me-range</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Range</NICK>
+<BLURB>Motion Estimation search range in subpel units.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::me-sub-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subpixel Motion Estimation Compare Function</NICK>
+<BLURB>Subpixel Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::me-subpel-quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Subpixel Quality</NICK>
+<BLURB>Motion Estimation Subpixel Refinement Quality.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::noise-reduction</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Reduction</NICK>
+<BLURB>Noise Reduction Strength.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::p-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>P Block Masking</NICK>
+<BLURB>P Block  Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::pass</NAME>
+<TYPE>GstFFMpegEncPass</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding pass/type</NICK>
+<BLURB>Encoding pass/type.</BLURB>
+<DEFAULT>Constant Bitrate Encoding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::pre-dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::pre-me</NAME>
+<TYPE>GstFFMpegEncPreME</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pre Pass for Motion Estimation</NICK>
+<BLURB>Pre Pass for Motion Estimation.</BLURB>
+<DEFAULT>Only after I-frames</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::qblur</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Smoothing</NICK>
+<BLURB>Quantizer Smoothing over time.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::qcompress</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Change</NICK>
+<BLURB>Quantizer Change between easy and hard scenes.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer</NICK>
+<BLURB>Maximum Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Quantizer</NICK>
+<BLURB>Minimum Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::quant-type</NAME>
+<TYPE>GstFFMpegEncQuantTypes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Type</NICK>
+<BLURB>Quantizer Type.</BLURB>
+<DEFAULT>H263 quantization</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::quantizer</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,30]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constant Quantizer</NICK>
+<BLURB>Constant Quantizer.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::rc-buffer-aggressivity</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Aggressivity</NICK>
+<BLURB>Ratecontrol Buffer Aggressivity.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::rc-buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Size</NICK>
+<BLURB>Decoder bitstream buffer size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::rc-eq</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Equation</NICK>
+<BLURB>Ratecontrol Equation.</BLURB>
+<DEFAULT>"tex^qComp"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::rc-initial-cplx</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1e+07]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Initial Complexity for Pass 1 Ratecontrol</NICK>
+<BLURB>Initial Complexity for Pass 1 Ratecontrol.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::rc-max-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Maximum Bitrate</NICK>
+<BLURB>Ratecontrol Maximum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::rc-min-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Minimum Bitrate</NICK>
+<BLURB>Ratecontrol Minimum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::rc-qmod-amp</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Mod</NICK>
+<BLURB>Ratecontrol Mod.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::rc-qmod-freq</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,0]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Freq</NICK>
+<BLURB>Ratecontrol Freq.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::rc-qsquish</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Limiting Method</NICK>
+<BLURB>0 means limit by clipping, otherwise use nice continuous function.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::spatial-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spatial Complexity Masking</NICK>
+<BLURB>Spatial Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::statsfile</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Statistics Filename</NICK>
+<BLURB>Filename to store data for 2-pass encoding.</BLURB>
+<DEFAULT>"stats.log"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v1::temporal-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporal Complexity Masking</NICK>
+<BLURB>Temporal Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -555,7 +2235,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -566,6 +2246,566 @@
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::b-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Factor</NICK>
+<BLURB>Factor in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::b-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Offset</NICK>
+<BLURB>Offset in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::bitrate-tolerance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate Tolerance</NICK>
+<BLURB>Number of bits the bitstream is allowed to diverge from the reference.</BLURB>
+<DEFAULT>8000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::chroma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Chroma Elimination Threshold</NICK>
+<BLURB>Chroma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::dark-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Darkness Masking</NICK>
+<BLURB>Darkness Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::dct-algo</NAME>
+<TYPE>GstFFMpegDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DCT Algorithm</NICK>
+<BLURB>DCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::flags</NAME>
+<TYPE>GstFFMpegFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::i-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Factor</NICK>
+<BLURB>Factor in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::i-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Offset</NICK>
+<BLURB>Offset in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::idct-algo</NAME>
+<TYPE>GstFFMpegIDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IDCT Algorithm</NICK>
+<BLURB>IDCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::ildct-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced DCT Compare Function</NICK>
+<BLURB>Interlaced DCT Compare Function.</BLURB>
+<DEFAULT>VSAD</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::inter-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Inter Quantizer Bias</NICK>
+<BLURB>Inter Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced Material</NICK>
+<BLURB>Interlaced Material.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::intra-dc-precision</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra DC precision</NICK>
+<BLURB>Precision of the Intra DC coefficient - 8.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::intra-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra Quantizer Bias</NICK>
+<BLURB>Intra Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::last-predictor-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Last Predictor Count</NICK>
+<BLURB>Amount of previous Motion Vector predictors.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::lmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Lagrange Multiplier</NICK>
+<BLURB>Maximum Lagrange Multiplier.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::lmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Lagrange Multiplier</NICK>
+<BLURB>Minimum Lagrange Multiplier.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::luma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma Elimination Threshold</NICK>
+<BLURB>Luma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::lumi-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luminance Masking</NICK>
+<BLURB>Luminance Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::max-bframes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max B-Frames</NICK>
+<BLURB>Maximum B-frames in a row.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::max-key-interval</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -100</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Key Interval</NICK>
+<BLURB>Maximum number of frames between two keyframes (< 0 is in sec).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::max-qdiff</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer Difference</NICK>
+<BLURB>Maximum Quantizer Difference between frames.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::mb-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Compare Function</NICK>
+<BLURB>Macroblok Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::mb-decision</NAME>
+<TYPE>GstFFMpegEncMBDecision</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Decision</NICK>
+<BLURB>Macroblok Decision Mode.</BLURB>
+<DEFAULT>Use method set by mb-cmp</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::mb-qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum MB Quantizer</NICK>
+<BLURB>Maximum MB Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::mb-qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum MB Quantizer</NICK>
+<BLURB>Minimum MB Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::me-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Compare Function</NICK>
+<BLURB>Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::me-pre-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Compare Function</NICK>
+<BLURB>Motion Estimation Pre Pass Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::me-range</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Range</NICK>
+<BLURB>Motion Estimation search range in subpel units.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::me-sub-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subpixel Motion Estimation Compare Function</NICK>
+<BLURB>Subpixel Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::me-subpel-quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Subpixel Quality</NICK>
+<BLURB>Motion Estimation Subpixel Refinement Quality.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::noise-reduction</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Reduction</NICK>
+<BLURB>Noise Reduction Strength.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::p-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>P Block Masking</NICK>
+<BLURB>P Block  Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::pass</NAME>
+<TYPE>GstFFMpegEncPass</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding pass/type</NICK>
+<BLURB>Encoding pass/type.</BLURB>
+<DEFAULT>Constant Bitrate Encoding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::pre-dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::pre-me</NAME>
+<TYPE>GstFFMpegEncPreME</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pre Pass for Motion Estimation</NICK>
+<BLURB>Pre Pass for Motion Estimation.</BLURB>
+<DEFAULT>Only after I-frames</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::qblur</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Smoothing</NICK>
+<BLURB>Quantizer Smoothing over time.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::qcompress</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Change</NICK>
+<BLURB>Quantizer Change between easy and hard scenes.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer</NICK>
+<BLURB>Maximum Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Quantizer</NICK>
+<BLURB>Minimum Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::quant-type</NAME>
+<TYPE>GstFFMpegEncQuantTypes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Type</NICK>
+<BLURB>Quantizer Type.</BLURB>
+<DEFAULT>H263 quantization</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::quantizer</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,30]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constant Quantizer</NICK>
+<BLURB>Constant Quantizer.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::rc-buffer-aggressivity</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Aggressivity</NICK>
+<BLURB>Ratecontrol Buffer Aggressivity.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::rc-buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Size</NICK>
+<BLURB>Decoder bitstream buffer size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::rc-eq</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Equation</NICK>
+<BLURB>Ratecontrol Equation.</BLURB>
+<DEFAULT>"tex^qComp"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::rc-initial-cplx</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1e+07]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Initial Complexity for Pass 1 Ratecontrol</NICK>
+<BLURB>Initial Complexity for Pass 1 Ratecontrol.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::rc-max-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Maximum Bitrate</NICK>
+<BLURB>Ratecontrol Maximum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::rc-min-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Minimum Bitrate</NICK>
+<BLURB>Ratecontrol Minimum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::rc-qmod-amp</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Mod</NICK>
+<BLURB>Ratecontrol Mod.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::rc-qmod-freq</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,0]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Freq</NICK>
+<BLURB>Ratecontrol Freq.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::rc-qsquish</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Limiting Method</NICK>
+<BLURB>0 means limit by clipping, otherwise use nice continuous function.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::spatial-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spatial Complexity Masking</NICK>
+<BLURB>Spatial Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::statsfile</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Statistics Filename</NICK>
+<BLURB>Filename to store data for 2-pass encoding.</BLURB>
+<DEFAULT>"stats.log"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4v2::temporal-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporal Complexity Masking</NICK>
+<BLURB>Temporal Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -605,7 +2845,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -616,6 +2856,566 @@
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::b-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Factor</NICK>
+<BLURB>Factor in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::b-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>B-Quantizer Offset</NICK>
+<BLURB>Offset in B-Frame Quantizer Computation.</BLURB>
+<DEFAULT>1.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::bitrate-tolerance</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate Tolerance</NICK>
+<BLURB>Number of bits the bitstream is allowed to diverge from the reference.</BLURB>
+<DEFAULT>8000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::chroma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Chroma Elimination Threshold</NICK>
+<BLURB>Chroma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::dark-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Darkness Masking</NICK>
+<BLURB>Darkness Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::dct-algo</NAME>
+<TYPE>GstFFMpegDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DCT Algorithm</NICK>
+<BLURB>DCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::flags</NAME>
+<TYPE>GstFFMpegFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::i-quant-factor</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-31,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Factor</NICK>
+<BLURB>Factor in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0.8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::i-quant-offset</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>I-Quantizer Offset</NICK>
+<BLURB>Offset in P-Frame Quantizer Computation.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::idct-algo</NAME>
+<TYPE>GstFFMpegIDCTAlgo</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>IDCT Algorithm</NICK>
+<BLURB>IDCT Algorithm.</BLURB>
+<DEFAULT>Automatically select a good one</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::ildct-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced DCT Compare Function</NICK>
+<BLURB>Interlaced DCT Compare Function.</BLURB>
+<DEFAULT>VSAD</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::inter-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Inter Quantizer Bias</NICK>
+<BLURB>Inter Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::interlaced</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Interlaced Material</NICK>
+<BLURB>Interlaced Material.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::intra-dc-precision</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra DC precision</NICK>
+<BLURB>Precision of the Intra DC coefficient - 8.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::intra-quant-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1000000,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Intra Quantizer Bias</NICK>
+<BLURB>Intra Quantizer Bias.</BLURB>
+<DEFAULT>999999</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::last-predictor-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Last Predictor Count</NICK>
+<BLURB>Amount of previous Motion Vector predictors.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::lmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Lagrange Multiplier</NICK>
+<BLURB>Maximum Lagrange Multiplier.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::lmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Lagrange Multiplier</NICK>
+<BLURB>Minimum Lagrange Multiplier.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::luma-elim-threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-99,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luma Elimination Threshold</NICK>
+<BLURB>Luma Single Coefficient Elimination Threshold.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::lumi-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Luminance Masking</NICK>
+<BLURB>Luminance Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::max-bframes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max B-Frames</NICK>
+<BLURB>Maximum B-frames in a row.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::max-key-interval</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -100</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Key Interval</NICK>
+<BLURB>Maximum number of frames between two keyframes (< 0 is in sec).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::max-qdiff</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer Difference</NICK>
+<BLURB>Maximum Quantizer Difference between frames.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::mb-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Compare Function</NICK>
+<BLURB>Macroblok Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::mb-decision</NAME>
+<TYPE>GstFFMpegEncMBDecision</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Macroblock Decision</NICK>
+<BLURB>Macroblok Decision Mode.</BLURB>
+<DEFAULT>Use method set by mb-cmp</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::mb-qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum MB Quantizer</NICK>
+<BLURB>Maximum MB Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::mb-qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum MB Quantizer</NICK>
+<BLURB>Minimum MB Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::me-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Compare Function</NICK>
+<BLURB>Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::me-pre-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Compare Function</NICK>
+<BLURB>Motion Estimation Pre Pass Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::me-range</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Range</NICK>
+<BLURB>Motion Estimation search range in subpel units.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::me-sub-cmp</NAME>
+<TYPE>GstFFMpegCMPFunction</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subpixel Motion Estimation Compare Function</NICK>
+<BLURB>Subpixel Motion Estimation Compare Function.</BLURB>
+<DEFAULT>Sum of Absolute Differences</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::me-subpel-quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Subpixel Quality</NICK>
+<BLURB>Motion Estimation Subpixel Refinement Quality.</BLURB>
+<DEFAULT>8</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::noise-reduction</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Reduction</NICK>
+<BLURB>Noise Reduction Strength.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::p-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>P Block Masking</NICK>
+<BLURB>P Block  Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::pass</NAME>
+<TYPE>GstFFMpegEncPass</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding pass/type</NICK>
+<BLURB>Encoding pass/type.</BLURB>
+<DEFAULT>Constant Bitrate Encoding</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::pre-dia-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-2000,2000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Estimation Pre Pass Diamond Size/Shape</NICK>
+<BLURB>Motion Estimation Diamond Size/Shape.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::pre-me</NAME>
+<TYPE>GstFFMpegEncPreME</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pre Pass for Motion Estimation</NICK>
+<BLURB>Pre Pass for Motion Estimation.</BLURB>
+<DEFAULT>Only after I-frames</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::qblur</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Smoothing</NICK>
+<BLURB>Quantizer Smoothing over time.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::qcompress</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Change</NICK>
+<BLURB>Quantizer Change between easy and hard scenes.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::qmax</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum Quantizer</NICK>
+<BLURB>Maximum Quantizer.</BLURB>
+<DEFAULT>31</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::qmin</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,31]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum Quantizer</NICK>
+<BLURB>Minimum Quantizer.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::quant-type</NAME>
+<TYPE>GstFFMpegEncQuantTypes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quantizer Type</NICK>
+<BLURB>Quantizer Type.</BLURB>
+<DEFAULT>H263 quantization</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::quantizer</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,30]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Constant Quantizer</NICK>
+<BLURB>Constant Quantizer.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::rc-buffer-aggressivity</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Aggressivity</NICK>
+<BLURB>Ratecontrol Buffer Aggressivity.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::rc-buffer-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Buffer Size</NICK>
+<BLURB>Decoder bitstream buffer size.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::rc-eq</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Equation</NICK>
+<BLURB>Ratecontrol Equation.</BLURB>
+<DEFAULT>"tex^qComp"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::rc-initial-cplx</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1e+07]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Initial Complexity for Pass 1 Ratecontrol</NICK>
+<BLURB>Initial Complexity for Pass 1 Ratecontrol.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::rc-max-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Maximum Bitrate</NICK>
+<BLURB>Ratecontrol Maximum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::rc-min-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Minimum Bitrate</NICK>
+<BLURB>Ratecontrol Minimum Bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::rc-qmod-amp</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Mod</NICK>
+<BLURB>Ratecontrol Mod.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::rc-qmod-freq</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,0]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Freq</NICK>
+<BLURB>Ratecontrol Freq.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::rc-qsquish</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,99]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratecontrol Limiting Method</NICK>
+<BLURB>0 means limit by clipping, otherwise use nice continuous function.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::spatial-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Spatial Complexity Masking</NICK>
+<BLURB>Spatial Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::statsfile</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Statistics Filename</NICK>
+<BLURB>Filename to store data for 2-pass encoding.</BLURB>
+<DEFAULT>"stats.log"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_msmpeg4::temporal-cplx-masking</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[-1,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Temporal Complexity Masking</NICK>
+<BLURB>Temporal Complexity Masking.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -655,7 +3455,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -705,7 +3505,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -755,7 +3555,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -805,7 +3605,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -855,7 +3655,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -905,7 +3705,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -955,7 +3755,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1005,7 +3805,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1055,7 +3855,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1105,7 +3905,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1155,7 +3955,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1205,7 +4005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1216,6 +4016,16 @@
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_huffyuv::prediction-method</NAME>
+<TYPE>GstFFMpegEncPredMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Prediction Method</NICK>
+<BLURB>Prediction Method.</BLURB>
+<DEFAULT>Left</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1255,7 +4065,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1266,6 +4076,16 @@
 <NICK>RTP Payload Size</NICK>
 <BLURB>Target GOB length.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffenc_ffvhuff::prediction-method</NAME>
+<TYPE>GstFFMpegEncPredMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Prediction Method</NICK>
+<BLURB>Prediction Method.</BLURB>
+<DEFAULT>Left</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1305,7 +4125,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1355,7 +4175,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1405,7 +4225,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1455,7 +4275,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1505,7 +4325,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ME Method</NICK>
 <BLURB>Motion Estimation Method.</BLURB>
-<DEFAULT>2</DEFAULT>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4016,5 +6836,765 @@
 <NICK>Bit Rate</NICK>
 <BLURB>Target Audio Bitrate.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_default::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_default::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_default::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_forcequant::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_forcequant::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_forcequant::quantizer</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force Quantizer</NICK>
+<BLURB>Quantizer to use (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_forcequant::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_tmpnoise::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_tmpnoise::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_tmpnoise::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_tmpnoise::threshold-1</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold One</NICK>
+<BLURB>Higher values mean stronger filtering (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_tmpnoise::threshold-2</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold Two</NICK>
+<BLURB>Higher values mean stronger filtering (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_tmpnoise::threshold-3</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold Three</NICK>
+<BLURB>Higher values mean stronger filtering (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_lowpass5::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_lowpass5::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_lowpass5::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_ffmpegdeint::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_ffmpegdeint::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_ffmpegdeint::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_mediandeint::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_mediandeint::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_mediandeint::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_cubicipoldeint::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_cubicipoldeint::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_cubicipoldeint::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_linipoldeint::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_linipoldeint::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_linipoldeint::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_linblenddeint::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_linblenddeint::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_linblenddeint::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_autolevels::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_autolevels::fully-range</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fully Range</NICK>
+<BLURB>Stretch luminance to (0-255).</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_autolevels::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_autolevels::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_dering::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_dering::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_dering::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_avdeblock::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_avdeblock::difference</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Difference Factor</NICK>
+<BLURB>Higher values mean more deblocking (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_avdeblock::flatness</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flatness Threshold</NICK>
+<BLURB>Lower values mean more deblocking (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_avdeblock::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_avdeblock::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_ahdeblock::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_ahdeblock::difference</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Difference Factor</NICK>
+<BLURB>Higher values mean more deblocking (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_ahdeblock::flatness</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flatness Threshold</NICK>
+<BLURB>Lower values mean more deblocking (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_ahdeblock::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_ahdeblock::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_x1vdeblock::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_x1vdeblock::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_x1vdeblock::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_x1hdeblock::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_x1hdeblock::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_x1hdeblock::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_vdeblock::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_vdeblock::difference</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Difference Factor</NICK>
+<BLURB>Higher values mean more deblocking (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_vdeblock::flatness</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flatness Threshold</NICK>
+<BLURB>Lower values mean more deblocking (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_vdeblock::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_vdeblock::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_hdeblock::autoq</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>AutoQ</NICK>
+<BLURB>Automatically switch filter off if CPU too slow.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_hdeblock::difference</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Difference Factor</NICK>
+<BLURB>Higher values mean more deblocking (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_hdeblock::flatness</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flatness Threshold</NICK>
+<BLURB>Lower values mean more deblocking (-1 = pp default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_hdeblock::quality</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Quality level of filter (higher is better).</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>postproc_hdeblock::scope</NAME>
+<TYPE>GstPostProcPPScope</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scope</NICK>
+<BLURB>Operate on chrominance and/or luminance.</BLURB>
+<DEFAULT>Chrominance and Luminance filtering</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_flashsv::lowres</NAME>
+<TYPE>GstFFMpegDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_flashsv::skip-frame</NAME>
+<TYPE>GstFFMpegDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_cavs::lowres</NAME>
+<TYPE>GstFFMpegDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_cavs::skip-frame</NAME>
+<TYPE>GstFFMpegDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6f::lowres</NAME>
+<TYPE>GstFFMpegDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6f::skip-frame</NAME>
+<TYPE>GstFFMpegDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6::lowres</NAME>
+<TYPE>GstFFMpegDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp6::skip-frame</NAME>
+<TYPE>GstFFMpegDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp5::lowres</NAME>
+<TYPE>GstFFMpegDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vp5::skip-frame</NAME>
+<TYPE>GstFFMpegDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vc1::lowres</NAME>
+<TYPE>GstFFMpegDecLowres</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low resolution</NICK>
+<BLURB>At which resolution to decode images.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>ffdec_vc1::skip-frame</NAME>
+<TYPE>GstFFMpegDecSkipFrame</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip frames</NICK>
+<BLURB>Which types of frames to skip during decoding.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

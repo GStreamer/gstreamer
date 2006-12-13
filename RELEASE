@@ -1,5 +1,5 @@
 
-GStreamer: Release notes for GStreamer FFmpeg Plug-ins 0.10.1 "Late Train"
+Release notes for GStreamer FFmpeg Plug-ins 0.10.2 "At the edge of Taymans"
         
 
 The GStreamer team is proud to announce a new release
@@ -30,38 +30,50 @@ contains a set of less supported plug-ins that haven't passed the
 
 
 
+Note: There is a known small regression in this release, playing some 
+H264 videos with unusual widths on some machines.
+
   
+
 Features of this release
     
+      * Updated FFmpeg snapshot with many more formats
+      * Vastly improved playback
+      * Ported the muxer support from GStreamer 0.8
+      * Expose more encoder settings as element properties
+      * Post-processing elements ported
+      * QoS support for slow cpus
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * ffvideoscale ported
-      * ffdeinterlace ported
-      * demuxer wrapper works pull-based
-      * disabled mpeg2 video and mp3 audio autoplugging
-      * fixes for Indeo3, PNG, smc, H264 HD, H263, FLV1, G2
 
 Bugs fixed in this release
-    
-      * 162833 : [ffdemux_mp3] ffmpeg mp3 decoder miss seeking
-      * 311272 : Reading mpeg-ts stream from standard input does not work
-      * 319248 : configure script doesn't accept --with-pkg-config-path ar...
-      * 320238 : Fails to build under powerpc
-      * 322254 : avcodec_open()/close() aren't thread-safe
-      * 323286 : [ffdec_cinepak] chef.avi causes gstreamer to hang in preroll
-      * 326372 : Indeo AVI files do not play with 0.10
-      * 326704 : [ffdec] Memory leak when joining pcache
-      * 327028 : MS Video 1 palettized AVI doesn't work
-      * 327224 : ffdeinterlace port to 0.10
-      * 327861 : [ffmpegenc] FFMpeg audio encoders do not set caps to buffers
-      * 329963 : gstreamer CVS doesn't work with ffmpeg codecs
-      * 330634 : Wrap the ffmpeg demuxers
-      * 331209 : [ffdec_h264] seeking in " IntoTheBlue_Cin_AVC.mp4 " crashes...
-      * 332072 : Too fast playback of h263p encoded file
-      * 332557 : FFmpeg video scale port to 0.10
-      * 332995 : segfault in ffmpeg enc
-      * 333001 : Memory leak in ffmpegenc
-      * 324209 : [CVE-2005-4048] avcodec_default_get_buffer heap overflow
+     
+      * 331323 : [ffdec_mp3] crashing while playing mp3
+      * 332339 : FFmpeg muxers port to 0.10
+      * 324279 : add build infrastructure for tests
+      * 324366 : gst-ffmpeg doesn't support --disable-encoders
+      * 327257 : playing mpeg video hangs
+      * 338928 : [ffdemux_aac] shouldn't be autoplugged, as it can't work ...
+      * 339042 : expose Apple Quick Draw decoder
+      * 341234 : Totem SIGABRTs when trying to play 3gp
+      * 341715 : 'Element doesn't implement handling of this stream. Pleas...
+      * 341738 : WMV/WMA8 movie stutters, gets audio out of sync
+      * 343604 : [ffmpeg]: Support two passes encoding
+      * 343951 : patch for win32+vs6
+      * 347984 : Internal GStreamer error in ffdec_mpeg4
+      * 348031 : rtpdepay does not add framerate capability
+      * 351437 : [PATCH] ffmpeg postproc ported to 0.10
+      * 351791 : Crashes playing crasher.nsv
+      * 355584 : gst-ffmpeg / ffenc_flv generates unusable files
+      * 359545 : ffdemux_mpegts broken
+      * 361636 : h263 variant not specified with CODEC_ID_H263
+      * 363365 : Please update the ffmpeg snapshot
+      * 364956 : Caps incompatibilities for AMR
+      * 383009 : CVE-2006-4800 4xm buffer overflow
+      * 344583 : [PATCH] ffmpegenc to support/expose more avcodec properties
+      * 351415 : (some) ffenc produce garbled results
+      * 352579 : [avidemux] cane toad movie: sometimes no audio after seek
+      * 378796 : broken ffmux_mov
 
 Download
 
@@ -91,19 +103,20 @@ Applications
   
 Contributors to this release
     
+      * 
       * Andy Wingo
-      * Christian Schaller
       * Edgard Lima
       * Edward Hervey
-      * Fabrizio Gennari
+      * J^
       * Jan Schmidt
-      * Josef Zlomek
-      * Loïc Minier
       * Luca Ognibene
+      * Mark Nauwelaerts
       * Michael Smith
       * Michal Benes
-      * Sebastien Cote
+      * Sebastien Moutte
+      * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Ville Syrjala
       * Wim Taymans
  

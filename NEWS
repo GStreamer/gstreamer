@@ -1,4 +1,48 @@
-This is GStreamer FFmpeg Plug-ins 0.10.1, "Late Train"
+This is GStreamer FFmpeg Plug-ins 0.10.2, "At the edge of Taymans"
+
+Note: There is a known small regression in this release, playing some
+H264 videos with unusual widths on some machines.
+
+Changes since 0.10.1:
+    
+      * Updated FFmpeg snapshot with many more formats
+      * Vastly improved playback
+      * Ported the muxer support from GStreamer 0.8
+      * Expose more encoder settings as element properties
+      * Post-processing elements ported
+      * QoS support for slow cpus
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+
+Bugs fixed in since 0.10.1:
+     
+      * 331323 : [ffdec_mp3] crashing while playing mp3
+      * 332339 : FFmpeg muxers port to 0.10
+      * 324279 : add build infrastructure for tests
+      * 324366 : gst-ffmpeg doesn't support --disable-encoders
+      * 327257 : playing mpeg video hangs
+      * 338928 : [ffdemux_aac] shouldn't be autoplugged, as it can't work ...
+      * 339042 : expose Apple Quick Draw decoder
+      * 341234 : Totem SIGABRTs when trying to play 3gp
+      * 341715 : 'Element doesn't implement handling of this stream. Pleas...
+      * 341738 : WMV/WMA8 movie stutters, gets audio out of sync
+      * 343604 : [ffmpeg]: Support two passes encoding
+      * 343951 : patch for win32+vs6
+      * 347984 : Internal GStreamer error in ffdec_mpeg4
+      * 348031 : rtpdepay does not add framerate capability
+      * 351437 : [PATCH] ffmpeg postproc ported to 0.10
+      * 351791 : Crashes playing crasher.nsv
+      * 355584 : gst-ffmpeg / ffenc_flv generates unusable files
+      * 359545 : ffdemux_mpegts broken
+      * 361636 : h263 variant not specified with CODEC_ID_H263
+      * 363365 : Please update the ffmpeg snapshot
+      * 364956 : Caps incompatibilities for AMR
+      * 383009 : CVE-2006-4800 4xm buffer overflow
+      * 344583 : [PATCH] ffmpegenc to support/expose more avcodec properties
+      * 351415 : (some) ffenc produce garbled results
+      * 352579 : [avidemux] cane toad movie: sometimes no audio after seek
+      * 378796 : broken ffmux_mov
+
 
 Changes since 0.10.0:
 

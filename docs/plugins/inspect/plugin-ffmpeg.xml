@@ -3,7 +3,7 @@
   <description>All FFMPEG codecs</description>
   <filename>../../ext/ffmpeg/.libs/libgstffmpeg.so</filename>
   <basename>libgstffmpeg.so</basename>
-  <version>0.10.1</version>
+  <version>0.10.2</version>
   <license>LGPL</license>
   <source>gst-ffmpeg</source>
   <package>FFMpeg</package>
@@ -199,6 +199,13 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
     </element>
     <element>
+      <name>ffdec_cavs</name>
+      <longname>FFMPEG Chinese AVS Video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG cavs decoder</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
       <name>ffdec_cinepak</name>
       <longname>FFMPEG Cinepak video decoder</longname>
       <class>Codec/Decoder/Video</class>
@@ -252,6 +259,13 @@
       <longname>FFMPEG FLAC lossless audio decoder</longname>
       <class>Codec/Decoder/Audio</class>
       <description>FFMPEG flac decoder</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_flashsv</name>
+      <longname>FFMPEG Flash Screen Video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG flashsv decoder</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
     </element>
     <element>
@@ -529,7 +543,7 @@
     </element>
     <element>
       <name>ffdec_qdraw</name>
-      <longname>FFMPEG Applet Quickdraw video decoder</longname>
+      <longname>FFMPEG Apple Quickdraw video decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>FFMPEG qdraw decoder</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
@@ -689,10 +703,10 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
     </element>
     <element>
-      <name>ffdec_vc9</name>
+      <name>ffdec_vc1</name>
       <longname>FFMPEG Microsoft Video Codec v1 decoder</longname>
       <class>Codec/Decoder/Video</class>
-      <description>FFMPEG vc9 decoder</description>
+      <description>FFMPEG vc1 decoder</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
     </element>
     <element>
@@ -721,6 +735,27 @@
       <longname>FFMPEG VP3 video decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>FFMPEG vp3 decoder</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_vp5</name>
+      <longname>FFMPEG VP5 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG vp5 decoder</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_vp6</name>
+      <longname>FFMPEG VP6 video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG vp6 decoder</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_vp6f</name>
+      <longname>FFMPEG VP6 Flash video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG vp6f decoder</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
     </element>
     <element>
@@ -756,6 +791,13 @@
       <longname>FFMPEG Windows Media Video v8 decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>FFMPEG wmv2 decoder</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffdec_wmv3</name>
+      <longname>FFMPEG Windows Media Video v9 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>FFMPEG wmv3 decoder</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
     </element>
     <element>
@@ -819,287 +861,308 @@
       <longname>FFMPEG 4X Technologies format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG 4X Technologies format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_RoQ</name>
       <longname>FFMPEG Id RoQ format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Id RoQ format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
-    </element>
-    <element>
-      <name>ffdemux_aac</name>
-      <longname>FFMPEG ADTS AAC demuxer</longname>
-      <class>Codec/Demuxer</class>
-      <description>FFMPEG ADTS AAC demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_aiff</name>
       <longname>FFMPEG Audio IFF demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Audio IFF demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+    </element>
+    <element>
+      <name>ffdemux_amr</name>
+      <longname>FFMPEG 3gpp amr file format demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>FFMPEG 3gpp amr file format demuxer</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_asf</name>
       <longname>FFMPEG asf format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG asf format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_au</name>
       <longname>FFMPEG SUN AU Format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG SUN AU Format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_avi</name>
       <longname>FFMPEG avi format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG avi format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_avs</name>
       <longname>FFMPEG avs format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG avs format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_daud</name>
       <longname>FFMPEG D-Cinema audio format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG D-Cinema audio format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_dv</name>
       <longname>FFMPEG DV video format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG DV video format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_ea</name>
       <longname>FFMPEG Electronic Arts Multimedia Format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Electronic Arts Multimedia Format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_ffm</name>
       <longname>FFMPEG ffm format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG ffm format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_film_cpk</name>
       <longname>FFMPEG Sega FILM/CPK format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Sega FILM/CPK format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_flic</name>
       <longname>FFMPEG FLI/FLC/FLX animation format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG FLI/FLC/FLX animation format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_flv</name>
       <longname>FFMPEG flv format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG flv format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_gif</name>
       <longname>FFMPEG gif format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG gif format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+    </element>
+    <element>
+      <name>ffdemux_gxf</name>
+      <longname>FFMPEG GXF format demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>FFMPEG GXF format demuxer</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_idcin</name>
       <longname>FFMPEG Id CIN format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Id CIN format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_ingenient</name>
       <longname>FFMPEG Ingenient MJPEG demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Ingenient MJPEG demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_ipmovie</name>
       <longname>FFMPEG Interplay MVE format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Interplay MVE format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_matroska</name>
       <longname>FFMPEG Matroska file format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Matroska file format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_mm</name>
       <longname>FFMPEG American Laser Games MM format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG American Laser Games MM format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_mmf</name>
       <longname>FFMPEG mmf format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG mmf format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
-      <name>ffdemux_mov_mp4_m4a_3gp_3g2</name>
-      <longname>FFMPEG QuickTime/MPEG4 format demuxer</longname>
+      <name>ffdemux_mov_mp4_m4a_3gp_3g2_mj2</name>
+      <longname>FFMPEG QuickTime/MPEG4/Motion JPEG 2000 format demuxer</longname>
       <class>Codec/Demuxer</class>
-      <description>FFMPEG QuickTime/MPEG4 format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <description>FFMPEG QuickTime/MPEG4/Motion JPEG 2000 format demuxer</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_mp3</name>
       <longname>FFMPEG MPEG audio demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG MPEG audio demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_mpeg</name>
       <longname>FFMPEG MPEG PS format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG MPEG PS format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_mpegts</name>
       <longname>FFMPEG MPEG2 transport stream format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG MPEG2 transport stream format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+    </element>
+    <element>
+      <name>ffdemux_mxf</name>
+      <longname>FFMPEG MXF format demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>FFMPEG MXF format demuxer</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_nsv</name>
       <longname>FFMPEG NullSoft Video format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG NullSoft Video format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_nut</name>
       <longname>FFMPEG nut format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG nut format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
-      <name>ffdemux_ogg</name>
-      <longname>FFMPEG Ogg demuxer</longname>
+      <name>ffdemux_nuv</name>
+      <longname>FFMPEG NuppelVideo format demuxer</longname>
       <class>Codec/Demuxer</class>
-      <description>FFMPEG Ogg demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <description>FFMPEG NuppelVideo format demuxer</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_psxstr</name>
       <longname>FFMPEG Sony Playstation STR format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Sony Playstation STR format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_rm</name>
       <longname>FFMPEG rm format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG rm format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+    </element>
+    <element>
+      <name>ffdemux_smk</name>
+      <longname>FFMPEG Smacker Video demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>FFMPEG Smacker Video demuxer</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_sol</name>
       <longname>FFMPEG Sierra SOL Format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Sierra SOL Format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_swf</name>
       <longname>FFMPEG Flash format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Flash format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_tta</name>
       <longname>FFMPEG true-audio demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG true-audio demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_vmd</name>
       <longname>FFMPEG Sierra VMD format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Sierra VMD format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_voc</name>
       <longname>FFMPEG Creative Voice File format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Creative Voice File format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_wav</name>
       <longname>FFMPEG wav format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG wav format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_wc3movie</name>
       <longname>FFMPEG Wing Commander III movie format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Wing Commander III movie format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_wsaud</name>
       <longname>FFMPEG Westwood Studios audio format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Westwood Studios audio format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_wsvqa</name>
       <longname>FFMPEG Westwood Studios VQA format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG Westwood Studios VQA format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffdemux_yuv4mpegpipe</name>
       <longname>FFMPEG YUV4MPEG pipe format demuxer</longname>
       <class>Codec/Demuxer</class>
       <description>FFMPEG YUV4MPEG pipe format demuxer</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
     </element>
     <element>
       <name>ffenc_ac3</name>
@@ -1463,6 +1526,90 @@
       <longname>FFMPEG Windows Media Video v8 encoder</longname>
       <class>Codec/Encoder/Video</class>
       <description>FFMPEG wmv2 encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_3g2</name>
+      <longname>FFMPEG 3g2 Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG 3g2 Muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_3gp</name>
+      <longname>FFMPEG 3gp Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG 3gp Muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_amr</name>
+      <longname>FFMPEG amr Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG amr Muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_asf</name>
+      <longname>FFMPEG asf Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG asf Muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_dv</name>
+      <longname>FFMPEG dv Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG dv Muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_flv</name>
+      <longname>FFMPEG flv Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG flv Muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_mmf</name>
+      <longname>FFMPEG mmf Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG mmf Muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_mov</name>
+      <longname>FFMPEG mov Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG mov Muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_mp4</name>
+      <longname>FFMPEG mp4 Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG mp4 Muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_mpeg</name>
+      <longname>FFMPEG mpeg Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG mpeg Muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_mpegts</name>
+      <longname>FFMPEG mpegts Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG mpegts Muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+    </element>
+    <element>
+      <name>ffmux_vob</name>
+      <longname>FFMPEG vob Muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>FFMPEG vob Muxer</description>
       <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
     </element>
     <element>
