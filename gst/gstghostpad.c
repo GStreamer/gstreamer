@@ -49,6 +49,8 @@
 
 #include "gstghostpad.h"
 
+#define GST_CAT_DEFAULT GST_CAT_PADS
+
 #define GST_TYPE_PROXY_PAD              (gst_proxy_pad_get_type ())
 #define GST_IS_PROXY_PAD(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_PROXY_PAD))
 #define GST_IS_PROXY_PAD_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PROXY_PAD))

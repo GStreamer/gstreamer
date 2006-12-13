@@ -1,3 +1,9 @@
+2006-12-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstghostpad.c:
+	  Log ghostpad debug stuff to the GST_PADS category as well rather
+	  than just to the default category.
+
 2006-12-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
