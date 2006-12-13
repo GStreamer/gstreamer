@@ -3632,9 +3632,14 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->sampled = TRUE;
     stream->n_channels = 1;
     stream->rate = 8000;
-  }
-  if (stream->fourcc == GST_MAKE_FOURCC ('m', 'p', '4', 'a'))
+  } else if (stream->fourcc == GST_MAKE_FOURCC ('s', 'a', 'w', 'b')) {
+    /* force mono 16000 Hz for AMR-WB */
     stream->sampled = TRUE;
+    stream->n_channels = 1;
+    stream->rate = 16000;
+  } else if (stream->fourcc == GST_MAKE_FOURCC ('m', 'p', '4', 'a')) {
+    stream->sampled = TRUE;
+  }
 
   /* sample to chunk */
   stsc = qtdemux_tree_get_child_by_type (stbl, FOURCC_stsc);
@@ -4580,6 +4585,9 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('s', 'a', 'm', 'r'):
       _codec ("AMR audio");
       return gst_caps_new_simple ("audio/AMR", NULL);
+    case GST_MAKE_FOURCC ('s', 'a', 'w', 'b'):
+      _codec ("AMR-WB audio");
+      return gst_caps_new_simple ("audio/AMR-WB", NULL);
     case GST_MAKE_FOURCC ('i', 'm', 'a', '4'):
       _codec ("Quicktime IMA ADPCM");
       return gst_caps_new_simple ("audio/x-adpcm",
