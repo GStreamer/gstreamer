@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plug-ins 0.10.4 "Metal Molly"
+Release notes for GStreamer Ugly Plug-ins 0.10.5 "She said"
         
 
 The GStreamer team is proud to announce a new release
@@ -52,39 +52,38 @@ contains a set of less supported plug-ins that haven't passed the
 
 
   
+
 Features of this release
     
-      * Parallel installability with 0.8.x series
+      * Improved asf playback
+      * Fixes to MPEG demuxer
+      * Improved Real playback
+      * Fix crasher bugs in the MPEG video decoder
+      * DVD-read-src improvements
+      * mp3 parser fixes
       * Threadsafe design and API
 
 Bugs fixed in this release
-    
-      * 329184 : [lame] remove tag writing support
-      * 345694 : [dvdreadsrc] crash with 'who wants to be a millionnaire' ...
-      * 349035 : [asfdemux] should error out on encrypted WMV stream
-      * 341677 : massive memory leak with mpeg2 video in AVI
-      * 321609 : [mpegstream] flush packetizer cache on discontinuities
-      * 323658 : [id3mux] Changing of ID3 tags is broken in gstreamer
-      * 335288 : Totem Crashes on Certain .mpg Files
-      * 336550 : [asfdemux] only first video frames are displayed with som...
-      * 336824 : [mad] returns incorrect duration to queries in BYTES format
-      * 337834 : [dvddemux] seeking in DVDs doesn't work
-      * 339287 : [lame] segfault if EOS before setcaps
-      * 340594 : [mad] does not publish supported query formats
-      * 340710 : [lame] typo in event handler
-      * 341254 : [asfdemux] gst_tag_list_get_string_index assertion
-      * 342222 : [amrnb] can't play AMR Narrowband from cellphone (S.E. W800)
-      * 342594 : [mad] should send new-segment before pad_alloc_buffer
-      * 343763 : [asfdemux] broken audio and unrecognised 2nd audio stream
-      * 345184 : [mpeg2dec] crash with video with pixel_width and pixel_he...
-      * 347029 : Minor mistake in comment
-      * 347292 : [rmdemux] Realaudio files with 'cook' audio 'stutter'
-      * 348786 : lame put lots of 0's at start of mp3
-      * 350044 : [dvdsubdec] outputs buffers with negative durations
-      * 350895 : [dvdreadsrc] wrong use of debugging causes fatal warning
-      * 343627 : Add QoS to mpeg2dec
-      * 344667 : [siddec] sounds very broken
-      * 350554 : [patch] assertation failed trying to play .ac3 files
+     
+      * 361584 : [mpeg2dec] framerate=0/0 on caps leads to crash
+      * 162417 : [mpeg] movie skips
+      * 340433 : [dvdread] fails to play certain DVDs with playbin and Totem
+      * 348002 : AC3 5.1 foreground movie sound cannot be heard in Totem/g...
+      * 350761 : [a52dec] Select output format based on peer element caps
+      * 350778 : [mpegdemux] Send update newsegments
+      * 356004 : [mpeg2dec] memory corruption
+      * 361140 : [lame] lame bitrate=196 errors out in setup
+      * 362639 : Fixes compiling with forte: warning clean up (part 6)
+      * 369627 : [mpeg2dec] unit test addition and memleak fix
+      * 374760 : [PATCH] last buffer sent by lame may not have (valid) tim...
+      * 374914 : this mp4 video doesn't play correctly (codec problem)
+      * 384447 : totem crashes while trying to play dvd on ppc
+      * 385192 : mpegparse accesses random memory
+      * 334322 : [mpegdemux] playbin freezes with VobSub subtitles
+      * 384989 : misparsing of Real Media mux leads to buffer overrun
+      * 384996 : Tailored or broken Real Media mux file crashes RM demuxer
+      * 327350 : [mpeg2dec] altivec crashes on misaligned buffers
+      * 350723 : [mad] Wrong output buffer timestamping
 
 Download
 
@@ -114,23 +113,20 @@ Applications
   
 Contributors to this release
     
-      * Alexander Lancaster
-      * Andres Salomon
-      * Ed Catmur
-      * Edward Hervey
-      * Fabrizio Gennari
-      * Frédéric Riss
-      * Grzegorz Lukasik
-      * James "Doc" Livingston
+      * David Schleef
+      * Jan Arne Petersen
       * Jan Schmidt
-      * Lutz Müller
-      * Maciej Katafiasz
-      * Michael Dominic K.
+      * Josep Torra Valles
+      * Mark Nauwelaerts
+      * Martin Zlomek
       * Michael Smith
-      * Sebastien Moutte
+      * Michal Benes
+      * Roland Kay
+      * Sebastian Droege
+      * Sebastian Dröge
       * Stefan Kost
       * Thomas Vander Stichele
       * Tim-Philipp Müller
       * Wim Taymans
-      * Zaheer Abbas Merali
+      * Yves Lefebvre
  

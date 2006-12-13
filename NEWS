@@ -1,4 +1,35 @@
-This is GStreamer Ugly Plug-ins 0.10.4, "Metal Molly".
+This is GStreamer Ugly Plug-ins 0.10.5 "She said"
+
+Changes since 0.10.4:
+    
+      * Improved asf playback
+      * Fixes to MPEG demuxer
+      * Improved Real playback
+      * Fix crasher bugs in the MPEG video decoder
+      * DVD-read-src improvements
+      * mp3 parser fixes
+
+Bugs fixed since 0.10.4:
+     
+      * 361584 : [mpeg2dec] framerate=0/0 on caps leads to crash
+      * 162417 : [mpeg] movie skips
+      * 340433 : [dvdread] fails to play certain DVDs with playbin and Totem
+      * 348002 : AC3 5.1 foreground movie sound cannot be heard in Totem/g...
+      * 350761 : [a52dec] Select output format based on peer element caps
+      * 350778 : [mpegdemux] Send update newsegments
+      * 356004 : [mpeg2dec] memory corruption
+      * 361140 : [lame] lame bitrate=196 errors out in setup
+      * 362639 : Fixes compiling with forte: warning clean up (part 6)
+      * 369627 : [mpeg2dec] unit test addition and memleak fix
+      * 374760 : [PATCH] last buffer sent by lame may not have (valid) tim...
+      * 374914 : this mp4 video doesn't play correctly (codec problem)
+      * 384447 : totem crashes while trying to play dvd on ppc
+      * 385192 : mpegparse accesses random memory
+      * 334322 : [mpegdemux] playbin freezes with VobSub subtitles
+      * 384989 : misparsing of Real Media mux leads to buffer overrun
+      * 384996 : Tailored or broken Real Media mux file crashes RM demuxer
+      * 327350 : [mpeg2dec] altivec crashes on misaligned buffers
+      * 350723 : [mad] Wrong output buffer timestamping
 
 Bugs fixed since 0.10.3:
     
