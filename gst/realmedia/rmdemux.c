@@ -660,6 +660,7 @@ gst_rmdemux_reset (GstRMDemux * rmdemux)
     gst_element_remove_pad (GST_ELEMENT (rmdemux), rmdemux->streams[n]->pad);
     if (rmdemux->streams[n]->subpackets)
       g_ptr_array_free (rmdemux->streams[n]->subpackets, TRUE);
+    g_free (rmdemux->streams[n]->index);
     g_free (rmdemux->streams[n]);
     rmdemux->streams[n] = NULL;
   }

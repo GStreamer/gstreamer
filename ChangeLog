@@ -1,5 +1,12 @@
 2006-12-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Roland Kay  <roland.kay at ox compsoc net>
+
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_reset):
+	  Don't leak stream index (#385292).
+
+2006-12-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Based on patch by: Roland Kay  <roland.kay at ox compsoc net>
 
 	* ext/lame/gstlame.c: (gst_lame_init), (gst_lame_chain),
