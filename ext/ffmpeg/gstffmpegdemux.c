@@ -26,7 +26,9 @@
 #include <string.h>
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avformat.h>
+#ifdef HAVE_AVI_H
 #include <avi.h>
+#endif
 #else
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/avi.h>

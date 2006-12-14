@@ -1,3 +1,18 @@
+2006-12-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/libpostproc/Makefile.am:
+	* ext/libpostproc/gstpostproc.c:
+
+	Allow building against an external FFMpeg install. Fixes: #363363
+	Patch by: Josselin Mouette <joss at debian dot org>
+	When built against an external install, the plugin description will
+	say "system install" instead of "local snapshot"
+
 2006-12-14  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

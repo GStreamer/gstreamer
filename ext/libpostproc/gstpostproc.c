@@ -30,11 +30,9 @@
 
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
-#include <version.h>
-#include <libpostproc/postprocess.h>
+#include <postprocess.h>
 #else
 #include <ffmpeg/avcodec.h>
-#include <ffmpeg/version.h>
 #include <ffmpeg/libpostproc/postprocess.h>
 #endif
 
@@ -897,8 +895,8 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "postproc",
-    "postprocessing elements",
+    "postprocessing elements (" FFMPEG_SOURCE ")",
     plugin_init,
-    FFMPEG_VERSION, "GPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
+    PACKAGE_VERSION, "GPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
 
 
