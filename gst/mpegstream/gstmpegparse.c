@@ -492,8 +492,8 @@ gst_mpeg_parse_parse_packhead (GstMPEGParse * mpeg_parse, GstBuffer * buffer)
   buf = GST_BUFFER_DATA (buffer);
   buf += 4;
 
-  scr1 = GUINT32_FROM_BE (*(guint32 *) buf);
-  scr2 = GUINT32_FROM_BE (*(guint32 *) (buf + 4));
+  scr1 = GST_READ_UINT32_BE (buf);
+  scr2 = GST_READ_UINT32_BE (buf + 4);
 
   /* Extract the SCR and rate values from the header. */
   if (GST_MPEG_PACKETIZE_IS_MPEG2 (mpeg_parse->packetize)) {
