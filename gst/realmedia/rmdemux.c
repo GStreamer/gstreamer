@@ -1727,6 +1727,13 @@ gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux, const guint8 * data,
   if (rmdemux->index_stream == NULL)
     return;
 
+  /* don't parse the index a second time when operating pull-based and
+   * reaching the end of the file */
+  if (rmdemux->index_stream->index_length > 0) {
+    GST_DEBUG_OBJECT (rmdemux, "Already have an index for this stream");
+    return;
+  }
+
   index = g_malloc (sizeof (GstRMDemuxIndex) * n);
   rmdemux->index_stream->index = index;
   rmdemux->index_stream->index_length = n;
