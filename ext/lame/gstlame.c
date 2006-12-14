@@ -572,6 +572,11 @@ gst_lame_init (GstLame * lame)
 
   /* create an encoder state so we can ask about defaults */
   lame->lgf = lame_init ();
+  if (lame->lgf == NULL)
+    goto init_error;
+
+  if (lame_init_params (lame->lgf) < 0)
+    goto init_error;
 
   lame->samplerate = 44100;
   lame->num_channels = 2;
@@ -623,6 +628,19 @@ gst_lame_init (GstLame * lame)
   lame->lgf = NULL;
 
   GST_DEBUG_OBJECT (lame, "done initializing");
+  lame->init_error = FALSE;
+  return;
+
+/* ERRORS */
+init_error:
+  {
+    GST_ERROR_OBJECT (lame, "error initializing");
+    lame->init_error = TRUE;
+    if (lame->lgf) {
+      lame_close (lame->lgf);
+      lame->lgf = NULL;
+    }
+  }
 }
 
 #define CHECK_AND_FIXUP_BITRATE(obj,pspec,rate) \
@@ -974,6 +992,9 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
 
   GST_LOG_OBJECT (lame, "entered chain");
 
+  if (lame->init_error)
+    goto init_error;
+
   if (!lame->setup)
     goto not_setup;
 
@@ -1062,6 +1083,12 @@ not_setup:
         ("encoder not initialized (input is not audio?)"));
     return GST_FLOW_ERROR;
   }
+init_error:
+  {
+    gst_buffer_unref (buf);
+    GST_ELEMENT_ERROR (lame, LIBRARY, INIT, (NULL), (NULL));
+    return GST_FLOW_ERROR;
+  }
 }
 
 /* set up the encoder state */
@@ -1087,6 +1114,9 @@ gst_lame_setup (GstLame * lame)
   }
 
   lame->lgf = lame_init ();
+
+  if (lame->lgf == NULL)
+    return FALSE;
 
   /* let lame choose a default samplerate */
   lame_set_out_samplerate (lame->lgf, 0);

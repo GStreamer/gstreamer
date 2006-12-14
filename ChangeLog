@@ -1,3 +1,13 @@
+2006-12-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: Roland Kay  <roland.kay at ox compsoc net>
+
+	* ext/lame/gstlame.c: (gst_lame_init), (gst_lame_chain),
+	(gst_lame_setup):
+	* ext/lame/gstlame.h:
+	  Fix leak (by calling lame_init_params() before lame_close()); handle
+	  NULL return from lame_init() more gracefully. Fixes #385311.
+
 2006-12-14  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

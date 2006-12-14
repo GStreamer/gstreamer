@@ -53,6 +53,8 @@ struct _GstLame {
   /*< private >*/
   GstPad *srcpad, *sinkpad;
 
+  gboolean init_error; /* an error occured in the instance init function */
+
   gint samplerate;
   gint num_channels;
   gboolean setup;
