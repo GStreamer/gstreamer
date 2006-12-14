@@ -1,3 +1,11 @@
+2006-12-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c: (init_pre), (init_post):
+	  init_pre() and init_post() might be called via our GOptionGroup or
+	  from gst_init(), and we should skip both of them if we've already
+	  been initialised, otherwise we will init some things twice or add
+	  two default log functions.
+
 2006-12-13  Edward Hervey  <edward@fluendo.com>
 
 	* docs/manual/basics-bus.xml:

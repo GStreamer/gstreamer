@@ -502,6 +502,11 @@ static gboolean
 init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     GError ** error)
 {
+  if (gst_initialized) {
+    GST_DEBUG ("already initialized");
+    return TRUE;
+  }
+
   /* GStreamer was built against a GLib >= 2.8 and is therefore not doing
    * the refcount hack. Check that it isn't being run against an older GLib */
   if (glib_major_version < 2 ||
@@ -874,6 +879,11 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 #ifndef GST_DISABLE_TRACE
   GstTrace *gst_trace;
 #endif /* GST_DISABLE_TRACE */
+
+  if (gst_initialized) {
+    GST_DEBUG ("already initialized");
+    return TRUE;
+  }
 
   llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
   g_log_set_handler (g_log_domain_gstreamer, llf, debug_log_handler, NULL);
