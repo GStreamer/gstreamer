@@ -167,6 +167,9 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
   src = (guint32 *) GST_BUFFER_DATA (in);
   dest = (guint32 *) GST_BUFFER_DATA (out);
 
+  if (G_UNLIKELY (filter->planetable == NULL))
+    return GST_FLOW_WRONG_STATE;
+
   if (filter->planetable[filter->current_plane])
     gst_buffer_unref (filter->planetable[filter->current_plane]);
 
@@ -196,6 +199,9 @@ static void
 gst_quarktv_planetable_clear (GstQuarkTV * filter)
 {
   gint i;
+
+  if (filter->planetable == NULL)
+    return;
 
   for (i = 0; i < filter->planes; i++) {
     if (GST_IS_BUFFER (filter->planetable[i])) {

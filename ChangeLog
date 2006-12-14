@@ -1,3 +1,9 @@
+2006-12-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/effectv/gstquark.c: (gst_quarktv_transform),
+	(gst_quarktv_planetable_clear):
+	  Add some NULL pointer checks (possibly related to #385623).
+
 2006-12-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_chain_parse_tag),
