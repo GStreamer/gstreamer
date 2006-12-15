@@ -128,6 +128,11 @@ static GstStateChangeReturn gst_element_set_state_func (GstElement * element,
     GstState state);
 static void gst_element_set_bus_func (GstElement * element, GstBus * bus);
 
+static gboolean gst_element_default_send_event (GstElement * element,
+    GstEvent * event);
+static gboolean gst_element_default_query (GstElement * element,
+    GstQuery * query);
+
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_element_save_thyself (GstObject * object,
     xmlNodePtr parent);
@@ -219,6 +224,8 @@ gst_element_class_init (GstElementClass * klass)
   klass->set_state = GST_DEBUG_FUNCPTR (gst_element_set_state_func);
   klass->get_state = GST_DEBUG_FUNCPTR (gst_element_get_state_func);
   klass->set_bus = GST_DEBUG_FUNCPTR (gst_element_set_bus_func);
+  klass->query = GST_DEBUG_FUNCPTR (gst_element_default_query);
+  klass->send_event = GST_DEBUG_FUNCPTR (gst_element_default_send_event);
   klass->numpadtemplates = 0;
 
   klass->elementfactory = NULL;
@@ -695,8 +702,9 @@ no_direction:
  * gst_element_release_request_pad() function instead.
  *
  * Pads are not automatically deactivated so elements should perform the needed
- * steps to deactivate the pad in case this pad is removed in the PAUSED or PLAYING
- * state. See gst_pad_set_active() for more information about deactivating pads.
+ * steps to deactivate the pad in case this pad is removed in the PAUSED or
+ * PLAYING state. See gst_pad_set_active() for more information about
+ * deactivating pads.
  *
  * The pad and the element should be unlocked when calling this function.
  *
@@ -1221,6 +1229,32 @@ wrong_direction:
   }
 }
 
+static gboolean
+gst_element_default_send_event (GstElement * element, GstEvent * event)
+{
+  gboolean result = FALSE;
+  GstPad *pad;
+
+  pad = GST_EVENT_IS_DOWNSTREAM (event) ?
+      gst_element_get_random_pad (element, TRUE, GST_PAD_SRC) :
+      gst_element_get_random_pad (element, TRUE, GST_PAD_SINK);
+
+  if (pad) {
+    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+        "pushing %s event to random %s pad %s:%s",
+        GST_EVENT_TYPE_NAME (event),
+        (GST_PAD_DIRECTION (pad) == GST_PAD_SRC ? "src" : "sink"),
+        GST_DEBUG_PAD_NAME (pad));
+
+    result = gst_pad_push_event (pad, event);
+    gst_object_unref (pad);
+  } else {
+    GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "can't send %s event on element %s",
+        GST_EVENT_TYPE_NAME (event), GST_ELEMENT_NAME (element));
+  }
+  return result;
+}
+
 /**
  * gst_element_send_event:
  * @element: a #GstElement to send the event to.
@@ -1253,23 +1287,7 @@ gst_element_send_event (GstElement * element, GstEvent * event)
         GST_EVENT_TYPE_NAME (event), GST_ELEMENT_NAME (element));
     result = oclass->send_event (element, event);
   } else {
-    GstPad *pad = GST_EVENT_IS_DOWNSTREAM (event) ?
-        gst_element_get_random_pad (element, TRUE, GST_PAD_SRC) :
-        gst_element_get_random_pad (element, TRUE, GST_PAD_SINK);
-
-    if (pad) {
-      GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-          "pushing %s event to random %s pad %s:%s",
-          GST_EVENT_TYPE_NAME (event),
-          (GST_PAD_DIRECTION (pad) == GST_PAD_SRC ? "src" : "sink"),
-          GST_DEBUG_PAD_NAME (pad));
-
-      result = gst_pad_push_event (pad, event);
-      gst_object_unref (pad);
-    } else {
-      GST_CAT_INFO (GST_CAT_ELEMENT_PADS, "can't send %s event on element %s",
-          GST_EVENT_TYPE_NAME (event), GST_ELEMENT_NAME (element));
-    }
+    result = gst_element_default_send_event (element, event);
   }
   return result;
 }
@@ -1352,6 +1370,33 @@ gst_element_get_query_types (GstElement * element)
   return result;
 }
 
+static gboolean
+gst_element_default_query (GstElement * element, GstQuery * query)
+{
+  gboolean result = FALSE;
+  GstPad *pad;
+
+  pad = gst_element_get_random_pad (element, FALSE, GST_PAD_SRC);
+  if (pad) {
+    result = gst_pad_query (pad, query);
+
+    gst_object_unref (pad);
+  } else {
+    pad = gst_element_get_random_pad (element, TRUE, GST_PAD_SINK);
+    if (pad) {
+      GstPad *peer = gst_pad_get_peer (pad);
+
+      if (peer) {
+        result = gst_pad_query (peer, query);
+
+        gst_object_unref (peer);
+      }
+      gst_object_unref (pad);
+    }
+  }
+  return result;
+}
+
 /**
  * gst_element_query:
  * @element: a #GstElement to perform the query on.
@@ -1383,25 +1428,7 @@ gst_element_query (GstElement * element, GstQuery * query)
         GST_ELEMENT_NAME (element));
     result = oclass->query (element, query);
   } else {
-    GstPad *pad = gst_element_get_random_pad (element, FALSE, GST_PAD_SRC);
-
-    if (pad) {
-      result = gst_pad_query (pad, query);
-
-      gst_object_unref (pad);
-    } else {
-      pad = gst_element_get_random_pad (element, TRUE, GST_PAD_SINK);
-      if (pad) {
-        GstPad *peer = gst_pad_get_peer (pad);
-
-        if (peer) {
-          result = gst_pad_query (peer, query);
-
-          gst_object_unref (peer);
-        }
-        gst_object_unref (pad);
-      }
-    }
+    result = gst_element_default_query (element, query);
   }
   return result;
 }

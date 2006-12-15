@@ -1,5 +1,13 @@
 2006-12-15  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstelement.c: (gst_element_class_init),
+	(gst_element_default_send_event), (gst_element_send_event),
+	(gst_element_default_query), (gst_element_query):
+	Expose default element send_event and query handling as vmethods that
+	subclasses can chain up to.
+
+2006-12-15  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstelement.c: (gst_element_set_state_func):
 	Small documentation fixes.
 
