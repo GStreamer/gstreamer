@@ -186,15 +186,15 @@ if test "x$with_system_ffmpeg" = "xyes"; then
   CPPFLAGS="$saved_CPPFLAGS"
   AC_DEFINE([FFMPEG_SOURCE], ["system install"], [Describes where the FFmpeg libraries come from.])
 else
-  FFMPEG_CFLAGS='-I $(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
-                 -I $(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
-                 -I $(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec'
-  FFMPEG_LIBS='$(top_builddir)/gst-libs/ext/ffmpeg/libavformat/libavformat.la'
-  POSTPROC_CFLAGS='-I $(top_srcdir)/gst-libs/ext/ffmpeg/libpostproc \
-                   -I $(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
-                   -I $(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
-                   -I $(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec'
-  POSTPROC_LIBS='$(top_builddir)/gst-libs/ext/ffmpeg/libavcodec/libavcodec.la'
+  FFMPEG_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
+                 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
+                 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec"
+  FFMPEG_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libavformat/libavformat.la"
+  POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libpostproc \
+                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
+                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
+                   -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec"
+  POSTPROC_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libavcodec/libavcodec.la"
   FFMPEG_SUBDIRS=gst-libs
   AC_DEFINE(HAVE_AVI_H)
   AC_DEFINE([FFMPEG_SOURCE], ["local snapshot"], [Describes where the FFmpeg libraries come from.])
