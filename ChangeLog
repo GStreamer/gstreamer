@@ -1,5 +1,10 @@
 2006-12-15  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstelement.c: (gst_element_set_state_func):
+	Small documentation fixes.
+
+2006-12-15  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/draft-latency.txt:
 	Checked in draft for handling latency in pipelines.
 

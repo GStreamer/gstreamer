@@ -261,7 +261,7 @@ gst_element_init (GstElement * element)
  * @object: a #GObject that signalled the error.
  * @orig: the #GstObject that initiated the error.
  * @error: the GError.
- * @debug: an additional debug information string, or NULL.
+ * @debug: an additional debug information string, or %NULL.
  *
  * A default error signal callback to attach to an element.
  * The user data passed to the g_signal_connect is ignored.
@@ -367,7 +367,7 @@ gst_element_provides_clock (GstElement * element)
  * <note>An element is only required to provide a clock in the PAUSED
  * state. Some elements can provide a clock in other states.</note>
  *
- * Returns: the GstClock provided by the element or NULL
+ * Returns: the GstClock provided by the element or %NULL
  * if no clock could be provided.  Unref after usage.
  *
  * MT safe.
@@ -557,7 +557,7 @@ gst_element_set_index (GstElement * element, GstIndex * index)
  *
  * Gets the index from the element.
  *
- * Returns: a #GstIndex or NULL when no index was set on the
+ * Returns: a #GstIndex or %NULL when no index was set on the
  * element. unref after usage.
  *
  * MT safe.
@@ -819,7 +819,7 @@ pad_compare_name (GstPad * pad1, const gchar * name)
  * Retrieves a pad from @element by name. This version only retrieves
  * already-existing (i.e. 'static') pads.
  *
- * Returns: the requested #GstPad if found, otherwise NULL. unref after
+ * Returns: the requested #GstPad if found, otherwise %NULL. unref after
  * usage.
  *
  * MT safe.
@@ -880,7 +880,7 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * request pads. The pad should be released with 
  * gst_element_release_request_pad().
  *
- * Returns: requested #GstPad if found, otherwise NULL. Release after usage.
+ * Returns: requested #GstPad if found, otherwise %NULL. Release after usage.
  */
 GstPad *
 gst_element_get_request_pad (GstElement * element, const gchar * name)
@@ -1133,7 +1133,7 @@ gst_element_class_get_pad_template_list (GstElementClass * element_class)
  * that has subclasses, make sure to pass the g_class parameter of the
  * #GInstanceInitFunc here.</note>
  *
- * Returns: the #GstPadTemplate with the given name, or NULL if none was found.
+ * Returns: the #GstPadTemplate with the given name, or %NULL if none was found.
  * No unreferencing is necessary.
  */
 GstPadTemplate *
@@ -1457,11 +1457,11 @@ no_bus:
 
 /**
  * _gst_element_error_printf:
- * @format: the printf-like format to use, or NULL
+ * @format: the printf-like format to use, or %NULL
  *
  * This function is only used internally by the gst_element_error() macro.
  *
- * Returns: a newly allocated string, or NULL if the format was NULL or ""
+ * Returns: a newly allocated string, or %NULL if the format was %NULL or ""
  *
  * MT safe.
  */
@@ -1489,9 +1489,9 @@ _gst_element_error_printf (const gchar * format, ...)
  * @domain:   the GStreamer GError domain this message belongs to
  * @code:     the GError code belonging to the domain
  * @text:     an allocated text string to be used as a replacement for the
- *            default message connected to code, or NULL
+ *            default message connected to code, or %NULL
  * @debug:    an allocated debug message to be used as a replacement for the
- *            default debugging information, or NULL
+ *            default debugging information, or %NULL
  * @file:     the source code file where the error was generated
  * @function: the source code function where the error was generated
  * @line:     the source code line where the error was generated
@@ -2141,6 +2141,7 @@ gst_element_set_state_func (GstElement * element, GstState state)
   current = GST_STATE (element);
   next = GST_STATE_NEXT (element);
   old_pending = GST_STATE_PENDING (element);
+  /* increment state cookie so that we can track each state change */
   element->state_cookie++;
 
   /* this is the (new) state we should go to */
