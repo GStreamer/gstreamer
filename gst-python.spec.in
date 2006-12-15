@@ -55,7 +55,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc AUTHORS COPYING ChangeLog NEWS README
+%doc AUTHORS COPYING ChangeLog NEWS README gst-python.doap
 %dir %{_libdir}/python?.?/site-packages/gst-%{majorminor}
 %{_libdir}/python?.?/site-packages/pygst.pth
 %{_libdir}/python?.?/site-packages/pygst.py
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/gst-python-%{majorminor}.pc
 
 %changelog
+* Fri Dec 15 2006 Thomas Vander Stichele <thomas at apestaart dot org>
+- add doap file
+
 * Tue Dec 20 2005 Thomas Vander Stichele <thomas at apestaart dot org>
 - updated spec file
 

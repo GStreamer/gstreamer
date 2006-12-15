@@ -5,7 +5,7 @@ EXTRA_DIST = \
 	pygst.py.in \
 	gst-python.spec.in \
 	gst-python.spec \
-	RELEASE
+	RELEASE gst-python.doap
 
 BUILT_SOURCES = pygst.py
 CLEANFILES = pygst.py pygst.pyc
