@@ -4,7 +4,7 @@ SUBDIRS = $(FFMPEG_SUBDIRS) ext docs common tests
 
 EXTRA_DIST = \
 	gst-ffmpeg.spec depcomp \
-	AUTHORS COPYING NEWS README ChangeLog
+	AUTHORS COPYING NEWS README ChangeLog gst-ffmpeg.doap
 
 ACLOCAL_AMFLAGS = -I common/m4
 

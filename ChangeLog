@@ -1,3 +1,10 @@
+2006-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* gst-ffmpeg.doap:
+	* gst-ffmpeg.spec.in:
+	  add doap file
+
 2006-12-15  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* Makefile.am:
