@@ -1,0 +1,82 @@
+<Project
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns="http://usefulinc.com/ns/doap#"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/"
+  xmlns:admin="http://webns.net/mvcb/">
+
+ <name>GStreamer Bad Plug-ins</name>
+ <shortname>gst-plugins-bad</shortname>
+ <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gst-plugins-bad.html" />
+ <created>2005-09-06</created>
+ <shortdesc xml:lang="en">
+a set of lower-quality plug-ins that need some love.
+</shortdesc>
+ <description xml:lang="en">
+GStreamer Bad Plug-ins is a set of plug-ins that aren't up to par compared to
+the rest. They might be close to being good quality, but they're missing
+something - be it a good code review, some documentation, a set of tests, a
+real live maintainer, or some actual wide use.
+ </description>
+ <category></category>
+ <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-plugins-bad" />
+ <screenshots></screenshots>
+ <mailing-list rdf:resource="http://lists.sourceforge.net/lists/listinfo/gstreamer-devel/" />
+ <programming-language>C</programming-language>
+ <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl"/>
+ <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
+
+ <repository>
+   <CVSRepository>
+     <anon-root>:pserver:anonymous@cvs.freedesktop.org:/cvs/gstreamer</anon-root>
+     <module>gst-plugins-bad</module>
+     <browse rdf:resource="http://webcvs.freedesktop.org/gstreamer/gst-plugins-bad/" />
+   </CVSRepository>
+ </repository> 
+
+ <release>
+  <Version>
+   <revision>0.10.3</revision>
+   <branch>0.10</branch>
+   <name>Petition to request permission</name>
+   <created>2006-05-04</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-0.10.3.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-0.10.3.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.1</revision>
+   <branch>0.10</branch>
+   <name>Slimy - yet satisfying</name>
+   <created>2006-02-20</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-0.10.1.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-0.10.1.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.0</revision>
+   <branch>0.10</branch>
+   <name>Camembert</name>
+   <created>2005-12-05</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-0.10.0.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-0.10.0.tar.gz" />
+  </Version>
+ </release>
+
+ <maintainer>
+  <foaf:Person>
+     <foaf:name>Wim Taymans</foaf:name>
+     <foaf:mbox_sha1sum>0d93fde052812d51a05fd86de9bdbf674423daa2</foaf:mbox_sha1sum>
+  </foaf:Person>
+ </maintainer>
+ <maintainer>
+  <foaf:Person>
+     <foaf:name>Thomas Vander Stichele</foaf:name>
+  </foaf:Person>
+ </maintainer>
+
+</Project>

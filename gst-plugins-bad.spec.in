@@ -57,7 +57,7 @@ quality, even though they might work.
 %configure
 
 make %{?_smp_mflags}
-                                                                                
+
 %install
 rm -rf $RPM_BUILD_ROOT
 
@@ -74,15 +74,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%post
-
-%postun
-
-%files
-
+%files -f gst-plugins-bad-%{majorminor}.lang
 %defattr(-, root, root)
-%doc AUTHORS COPYING README REQUIREMENTS
-%{_datadir}/locale
+%doc AUTHORS COPYING README REQUIREMENTS gst-plugins-bad.doap
 
 # non-core plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstqtdemux.so
@@ -126,6 +120,10 @@ rm -rf $RPM_BUILD_ROOT
 @USE_DTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdtsdec.so
 
 %changelog
+* Fri Dec 15 2006 Thomas Vander Stichele <thomas at apestaart dot org>
+- add doap file
+- more cleanup
+
 * Sun Nov 27 2005 Thomas Vander Stichele <thomas at apestaart dot org>
 - redone for split
 

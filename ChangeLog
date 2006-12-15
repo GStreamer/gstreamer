@@ -1,3 +1,10 @@
+2006-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* gst-plugins-bad.doap:
+	* gst-plugins-bad.spec.in:
+	  add doap file
+
 2006-12-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/libmms/gstmms.c: (gst_mms_create):
