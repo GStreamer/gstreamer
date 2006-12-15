@@ -227,18 +227,25 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   gdouble rate;
   gint64 cur, stop;
   gint64 seek_offset;
+  gint64 seek_time;
   guint64 seek_packet;
+
+  if (demux->seekable == FALSE || demux->packet_size == 0 ||
+      demux->num_packets == 0 || demux->play_time == 0) {
+    GST_LOG_OBJECT (demux, "stream is not seekable");
+    return FALSE;
+  }
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
 
   if (format != GST_FORMAT_TIME) {
-    GST_LOG ("seeking is only supported in TIME format");
+    GST_LOG_OBJECT (demux, "seeking is only supported in TIME format");
     return FALSE;
   }
 
   if (rate <= 0.0) {
-    GST_LOG ("backward playback is not supported yet");
+    GST_LOG_OBJECT (demux, "backward playback is not supported yet");
     return FALSE;
   }
 
@@ -260,30 +267,23 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   GST_DEBUG ("trying to seek to time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (segment.start));
 
-  if (demux->packet_size > 0) {
-    gint64 seek_time = segment.start;
+  seek_time = segment.start;
 
-    /* Hackety hack, this sucks. We just seek to an earlier position
-     *  and let the sinks throw away the stuff before the segment start */
-    if (flush && (accurate || keyunit_sync)) {
-      seek_time -= 5 * GST_SECOND;
-      if (seek_time < 0)
-        seek_time = 0;
-    }
-
-    seek_packet = demux->num_packets * seek_time / demux->play_time;
-
-    if (seek_packet > demux->num_packets)
-      seek_packet = demux->num_packets;
-
-    seek_offset = seek_packet * demux->packet_size + demux->data_offset;
-    /* demux->next_byte_offset will be set via newsegment event */
-  } else {
-    /* FIXME */
-    g_message ("IMPLEMENT ME: seeking for packet_size == 0 (asfdemux)");
-    ret = FALSE;
-    goto done;
+  /* Hackety hack, this sucks. We just seek to an earlier position
+   *  and let the sinks throw away the stuff before the segment start */
+  if (flush && (accurate || keyunit_sync)) {
+    seek_time -= 5 * GST_SECOND;
+    if (seek_time < 0)
+      seek_time = 0;
   }
+
+  seek_packet = demux->num_packets * seek_time / demux->play_time;
+
+  if (seek_packet > demux->num_packets)
+    seek_packet = demux->num_packets;
+
+  seek_offset = seek_packet * demux->packet_size + demux->data_offset;
+  /* demux->next_byte_offset will be set via newsegment event */
 
   GST_LOG ("seeking to byte offset %" G_GINT64_FORMAT, seek_offset);
 
@@ -1407,6 +1407,9 @@ gst_asf_demux_process_data (GstASFDemux * demux, guint64 object_size,
   demux->packet = 0;
   demux->num_packets = data_object.packets;
 
+  if (demux->num_packets == 0)
+    demux->seekable = FALSE;
+
   /* minus object header and data object header */
   demux->data_size =
       object_size - ASF_DEMUX_OBJECT_HEADER_SIZE - (16 + 8 + 1 + 1);
@@ -1451,22 +1454,40 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 ** p_data,
     guint64 * p_size)
 {
   asf_obj_file object;
+  gboolean broadcast;
 
   /* Get the rest of the header's header */
   if (!gst_asf_demux_get_obj_file (&object, p_data, p_size))
     return ASF_FLOW_NEED_MORE_DATA;
+
+  broadcast = !!(object.flags & 0x01);
+  demux->seekable = !!(object.flags & 0x02);
+
+  GST_DEBUG_OBJECT (demux, "flags::broadcast = %d", broadcast);
+  GST_DEBUG_OBJECT (demux, "flags::seekable  = %d", demux->seekable);
+
+  if (broadcast) {
+    /* these fields are invalid if the broadcast flag is set */
+    object.play_time = 0;
+    object.file_size = 0;
+  }
 
   if (object.min_pktsize == object.max_pktsize) {
     demux->packet_size = object.max_pktsize;
   } else {
     demux->packet_size = (guint32) - 1;
     GST_WARNING ("Non-const packet size, seeking disabled");
+    demux->seekable = FALSE;
   }
 
   /* FIXME: do we need object.send_time as well? what is it? */
 
   demux->play_time = (guint64) object.play_time * (GST_SECOND / 10000000);
   demux->preroll = object.preroll;
+
+  if (demux->play_time == 0)
+    demux->seekable = FALSE;
+
   GST_DEBUG_OBJECT (demux,
       "play_time %" GST_TIME_FORMAT " preroll %" GST_TIME_FORMAT,
       GST_TIME_ARGS (demux->play_time), GST_TIME_ARGS (demux->preroll));
@@ -2788,6 +2809,24 @@ gst_asf_demux_handle_src_query (GstPad * pad, GstQuery * query)
       break;
     }
 
+    case GST_QUERY_SEEKING:{
+      GstFormat format;
+
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      if (format == GST_FORMAT_TIME) {
+        gint64 duration;
+
+        GST_OBJECT_LOCK (demux);
+        duration = demux->segment.duration;
+        GST_OBJECT_UNLOCK (demux);
+
+        gst_query_set_seeking (query, GST_FORMAT_TIME, demux->seekable,
+            0, duration);
+        res = TRUE;
+      }
+      break;
+    }
+
     default:
       res = gst_pad_query_default (pad, query);
       break;
@@ -2838,6 +2877,7 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       g_slist_free (demux->ext_stream_props);
       demux->ext_stream_props = NULL;
       memset (demux->stream, 0, sizeof (demux->stream));
+      demux->seekable = FALSE;
       break;
     }
     default:

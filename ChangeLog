@@ -1,3 +1,14 @@
+2006-12-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_handle_seek_event),
+	(gst_asf_demux_process_data), (gst_asf_demux_process_file),
+	(gst_asf_demux_handle_src_query), (gst_asf_demux_change_state):
+	* gst/asfdemux/gstasfdemux.h:
+	  Don't crash in the seek event handling code when playtime is 0,
+	  as may be the case with live streams (#386218). Implement SEEKING
+	  query so applications can query seekability without second-guessing
+	  based on whether we have a duration or not.
+
 2006-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

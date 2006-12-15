@@ -116,6 +116,8 @@ struct _GstASFDemux {
   guint64              preroll;
   guint64              pts;
 
+  gboolean             seekable;
+
   /* expected byte offset of next buffer to be received by chain
    * function. Used to calculate the current byte offset into the
    * file from the adapter state and the data parser state */
