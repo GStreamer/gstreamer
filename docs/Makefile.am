@@ -8,7 +8,7 @@ SUBDIRS = $(GTK_DOC_DIRS)
 DIST_SUBDIRS = plugins
 
 EXTRA_DIST = \
-        version.entities.in
+	version.entities.in
 
 upload:
 	@if test "x$(SUBDIRS)" != x; then for a in $(SUBDIRS); do cd $$a; make upload; cd ..; done; fi

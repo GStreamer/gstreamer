@@ -17,7 +17,7 @@ clean-local: clean-local-check
 
 check_PROGRAMS = \
 	generic/libavcodec-locking
-    
+
 VALGRIND_TO_FIX = \
 	generic/libavcodec-locking
 
