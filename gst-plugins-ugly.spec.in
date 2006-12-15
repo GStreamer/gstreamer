@@ -90,13 +90,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%post
-
-%postun
-
 %files -f gst-plugins-ugly-%{majorminor}.lang
 %defattr(-, root, root, -)
-%doc AUTHORS COPYING README REQUIREMENTS
+%doc AUTHORS COPYING README REQUIREMENTS gst-plugins-ugly.doap
 %{_libdir}/gstreamer-%{majorminor}/libgstasf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdlpcmdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstiec958.so
@@ -116,5 +112,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_datadir}/gtk-doc/html/gst-plugins-ugly-plugins-%{majorminor}/*
 
 %changelog
+* Fri Dec 15 2006 Thomas Vander Stichele <thomas at apestaart dot org>
+- further cleanup
+- add .doap file
+
 * Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
 - clean out for split into ugly

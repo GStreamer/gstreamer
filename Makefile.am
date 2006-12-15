@@ -6,7 +6,7 @@ SUBDIRS = \
 EXTRA_DIST = \
 	gst-plugins-ugly.spec depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
-	ChangeLog autogen.sh
+	ChangeLog gst-plugins-ugly.doap autogen.sh
 
 DISTCLEANFILES = _stdint.h
 
