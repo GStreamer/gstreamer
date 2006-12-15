@@ -608,29 +608,52 @@ error:
 static gboolean
 gst_rmdemux_src_query (GstPad * pad, GstQuery * query)
 {
-  gboolean res = TRUE;
+  gboolean res = FALSE;
   GstRMDemux *rmdemux;
 
-  rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
+  rmdemux = GST_RMDEMUX (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-      GST_DEBUG_OBJECT (rmdemux, "src_query position");
-      gst_query_set_position (query, GST_FORMAT_TIME, -1);
       GST_DEBUG_OBJECT (rmdemux, "Position query: no idea from demuxer!");
-      res = FALSE;
       break;
-    case GST_QUERY_DURATION:
-      GST_DEBUG_OBJECT (rmdemux, "src_query duration");
-      gst_query_set_duration (query, GST_FORMAT_TIME, rmdemux->duration);
-      GST_DEBUG_OBJECT (rmdemux, "duration set to %" G_GINT64_FORMAT,
-          rmdemux->duration);
+    case GST_QUERY_DURATION:{
+      GstFormat fmt;
+
+      gst_query_parse_duration (query, &fmt, NULL);
+      if (fmt == GST_FORMAT_TIME) {
+        GST_OBJECT_LOCK (rmdemux);
+        if (G_LIKELY (rmdemux->running)) {
+          gst_query_set_duration (query, GST_FORMAT_TIME, rmdemux->duration);
+          GST_DEBUG_OBJECT (rmdemux, "duration set to %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (rmdemux->duration));
+          res = TRUE;
+        }
+        GST_OBJECT_UNLOCK (rmdemux);
+      }
       break;
+    }
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      if (fmt == GST_FORMAT_TIME) {
+        GST_OBJECT_LOCK (rmdemux);
+        if (G_LIKELY (rmdemux->running)) {
+          gst_query_set_seeking (query, GST_FORMAT_TIME, rmdemux->seekable,
+              0, rmdemux->duration);
+          res = TRUE;
+        }
+        GST_OBJECT_UNLOCK (rmdemux);
+      }
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, query);
       break;
   }
 
+  gst_object_unref (rmdemux);
   return res;
 }
 
@@ -640,6 +663,7 @@ gst_rmdemux_src_query_types (GstPad * pad)
   static const GstQueryType query_types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
+    GST_QUERY_SEEKING,
     0
   };
 

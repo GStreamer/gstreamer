@@ -1,5 +1,11 @@
 2006-12-15  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_src_query),
+	(gst_rmdemux_src_query_types):
+	  Implement SEEKING query, make query function thread-safe.
+
+2006-12-15  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_descramble_dnet_audio):
 	  Use alignment-safe macros here too (subbuffers ...); guard against
 	  hypothetical memory access beyond our given buffer in the case
