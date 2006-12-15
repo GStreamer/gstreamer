@@ -1,0 +1,170 @@
+<Project
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xmlns="http://usefulinc.com/ns/doap#"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/"
+  xmlns:admin="http://webns.net/mvcb/">
+
+ <name>GStreamer Base Plug-ins</name>
+ <shortname>gst-plugins-base</shortname>
+ <homepage rdf:resource="http://gstreamer.freedesktop.org/modules/gst-plugins-base.html" />
+ <created>2005-06-17</created>
+ <shortdesc xml:lang="en">
+a basic collection of elements
+ </shortdesc>
+ <description xml:lang="en">
+GStreamer Base Plug-ins is a well-groomed and well-maintained collection of
+GStreamer plug-ins and elements, spanning the range of possible types of
+elements one would want to write for GStreamer.  It also contains helper
+libraries and base classes useful for writing elements.
+A wide range of video and audio decoders, encoders, and filters are included.
+</description>
+ <category></category>
+ <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&amp;component=gst-plugins-base" />
+ <screenshots></screenshots>
+ <mailing-list rdf:resource="http://lists.sourceforge.net/lists/listinfo/gstreamer-devel/" />
+ <programming-language>C</programming-language>
+ <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl"/>
+ <download-page rdf:resource="http://gstreamer.freedesktop.org/download/" />
+
+ <repository>
+   <CVSRepository>
+     <anon-root>:pserver:anonymous@cvs.freedesktop.org:/cvs/gstreamer</anon-root>
+     <module>gst-plugins-base</module>
+     <browse rdf:resource="http://webcvs.freedesktop.org/gstreamer/gst-plugins-base/" />
+   </CVSRepository>
+ </repository> 
+
+ <release>
+  <Version>
+   <revision>0.10.11</revision>
+   <branch>0.10</branch>
+   <name>Dumb things</name>
+   <created>2006-12-06</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.11.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.11.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.10</revision>
+   <branch>0.10</branch>
+   <name>Chorizo</name>
+   <created>2006-09-14</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.10.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.10.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.9</revision>
+   <branch>0.10</branch>
+   <name>I walk the line</name>
+   <created>2006-07-14</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.9.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.9.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.8</revision>
+   <branch>0.10</branch>
+   <name>Moar gij zie mij nie</name>
+   <created>2006-05-14</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.8.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.8.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.7</revision>
+   <branch>0.10</branch>
+   <name>Leave the gun</name>
+   <created>2006-05-14</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.7.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.7.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.6</revision>
+   <branch>0.10</branch>
+   <name>Chao</name>
+   <created>2006-04-28</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.6.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.6.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.5</revision>
+   <branch>0.10</branch>
+   <name>Net</name>
+   <created>2006-03-13</created>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.4</revision>
+   <branch>0.10</branch>
+   <name>Power</name>
+   <created>2006-03-10</created>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.3</revision>
+   <branch>0.10</branch>
+   <name>Under Pressure</name>
+   <created>2006-02-09</created>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.2</revision>
+   <branch>0.10</branch>
+   <name>Then the devil is six</name>
+   <created>2006-01-16</created>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.1</revision>
+   <branch>0.10</branch>
+   <name>Dobro Dedek</name>
+   <created>2005-12-23</created>
+  </Version>
+ </release>
+
+ <release>
+  <Version>
+   <revision>0.10.0</revision>
+   <branch>0.10</branch>
+   <name>Mont-d'or</name>
+   <created>2005-12-05</created>
+  </Version>
+ </release>
+
+ <maintainer>
+  <foaf:Person>
+     <foaf:name>Wim Taymans</foaf:name>
+     <foaf:mbox_sha1sum>0d93fde052812d51a05fd86de9bdbf674423daa2</foaf:mbox_sha1sum>
+  </foaf:Person>
+ </maintainer>
+ <maintainer>
+  <foaf:Person>
+     <foaf:name>Thomas Vander Stichele</foaf:name>
+  </foaf:Person>
+ </maintainer>
+
+</Project>

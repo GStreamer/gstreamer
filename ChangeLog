@@ -1,3 +1,10 @@
+2006-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* gst-plugins-base.doap:
+	* gst-plugins-base.spec.in:
+	  add doap file
+
 2006-12-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Jens Granseuer <jensgr at gmx net>

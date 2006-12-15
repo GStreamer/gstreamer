@@ -61,13 +61,9 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%post
-
-%postun
-
 %files -f gst-plugins-base-%{majorminor}.lang
 %defattr(-, root, root)
-%doc AUTHORS COPYING README REQUIREMENTS
+%doc AUTHORS COPYING README REQUIREMENTS gst-plugins-base.doap
 
 # helper programs
 %{_bindir}/gst-visualise-%{majorminor}
@@ -184,6 +180,10 @@ GStreamer Plugins Base library development and header files.
 %doc %{_datadir}/gtk-doc/html/gst-plugins-base-plugins-%{majorminor}
 
 %changelog
+* Fri Dec 15 2006 Thomas Vander Stichele <thomas at apestaart dot org>
+- add doap file
+- cleanups
+
 * Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
 - clean up a little
 
