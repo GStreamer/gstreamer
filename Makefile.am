@@ -32,7 +32,7 @@ debug:
 EXTRA_DIST = \
 	gst-plugins-good.spec depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
-	ChangeLog autogen.sh \
+	ChangeLog gst-plugins-good.doap autogen.sh \
 	$(win32)
 
 DISTCLEANFILES = _stdint.h

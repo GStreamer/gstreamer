@@ -77,9 +77,13 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+%post
+@USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
+@USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas > /dev/null
+
 %files -f gst-plugins-good-%{majorminor}.lang
 %defattr(-, root, root)
-%doc AUTHORS COPYING README REQUIREMENTS
+%doc AUTHORS COPYING README REQUIREMENTS gst-plugins-good.doap
 
 # non-core plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstalaw.so
@@ -145,12 +149,6 @@ rm -rf $RPM_BUILD_ROOT
 # schema files
 @USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas
 
-%post
-@USE_GCONF_TRUE@export GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`
-@USE_GCONF_TRUE@gconftool-2 --makefile-install-rule %{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas > /dev/null
-
-%postun
-                                                                               
 %changelog
 * Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
 - clean up for splitup
