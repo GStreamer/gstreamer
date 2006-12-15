@@ -206,6 +206,9 @@ gst_collect_pads_set_function (GstCollectPads * pads,
  * You specify a size for the returned #GstCollectData structure
  * so that you can use it to store additional information.
  *
+ * The pad will be automatically activated in push mode when @pads is
+ * started.
+ *
  * Returns: a new #GstCollectData to identify the new pad. Or NULL
  *   if wrong parameters are supplied.
  *
@@ -240,6 +243,9 @@ gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads_chain));
   gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads_event));
   gst_pad_set_element_private (pad, data);
+  /* activate the pad when needed */
+  if (pads->started)
+    gst_pad_set_active (pad, TRUE);
   pads->abidata.ABI.pad_cookie++;
   GST_COLLECT_PADS_PAD_UNLOCK (pads);
 
@@ -262,6 +268,8 @@ find_pad (GstCollectData * data, GstPad * pad)
  * Remove a pad from the collection of collect pads. This function will also
  * free the #GstCollectData and all the resources that were allocated with 
  * gst_collect_pads_add_pad().
+ *
+ * The pad will be deactivated automatically when @pads is stopped.
  *
  * Returns: %TRUE if the pad could be removed.
  *
@@ -297,6 +305,10 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
   /* FIXME, check that freeing the private data does not causes
    * crashes in the streaming thread */
   gst_pad_set_element_private (pad, NULL);
+
+  /* deactivate the pad when needed */
+  if (!pads->started)
+    gst_pad_set_active (pad, FALSE);
 
   /* backward compat, also remove from data if stopped */
   if (!pads->started) {
