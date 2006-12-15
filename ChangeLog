@@ -1,3 +1,10 @@
+2006-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* gstreamer.doap:
+	* gstreamer.spec.in:
+	  adding .doap file
+
 2006-12-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (init_pre), (init_post):

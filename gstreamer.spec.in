@@ -33,8 +33,6 @@ BuildRequires: 	gcc
 BuildRequires: 	gettext
 BuildRequires: 	zlib-devel
 BuildRequires:  popt > 1.6
-Requires(pre):	/sbin/ldconfig
-Requires(post):	/sbin/ldconfig
 
 ### documentation requirements
 BuildRequires:  python2
@@ -117,18 +115,17 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 # Create empty cache directory
 mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{majorminor}
-                                                                                
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%post
-/sbin/ldconfig
+%post -p /sbin/ldconfig
 
 %postun -p /sbin/ldconfig
 
 %files -f gstreamer-%{majorminor}.lang
 %defattr(-, root, root, -)
-# %doc AUTHORS COPYING ABOUT-NLS README RELEASE MAINTAINERS ChangeLog CHANGES-0.9 DOCBUILDING INSTALL
+%doc AUTHORS COPYING README RELEASE MAINTAINERS ChangeLog gstreamer.doap
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstbase-%{majorminor}.so.*
 %{_libdir}/libgstcontroller-%{majorminor}.so.*
@@ -198,6 +195,10 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_datadir}/gtk-doc/html/gstreamer-plugins-%{majorminor}
                                                                                 
 %changelog
+* Fri Dec 15 2006 Thomas Vander Stichele <thomas at apestaart dot org>
+- add doap file
+- further cleanups
+
 * Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
 - clean up a little
 
@@ -332,4 +333,3 @@ rm -rf $RPM_BUILD_ROOT
 
 * Sun Jan 30 2000 Erik Walthinsen <omega@cse.ogi.edu>
 - first draft of spec file
-
