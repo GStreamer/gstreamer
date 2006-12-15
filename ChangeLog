@@ -1,5 +1,13 @@
 2006-12-15  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstelement.c: (gst_element_add_pad):
+	* gst/gstghostpad.c: (gst_ghost_pad_new_full):
+	* gst/gstpad.c: (gst_pad_init):
+	Set pads to FLUSHING when they are created. Check, warn and fix when a
+	demuxer adds an inactive pad to itself when running. Fixes #339326.
+
+2006-12-15  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstelement.c: (gst_element_class_init),
 	(gst_element_default_send_event), (gst_element_send_event),
 	(gst_element_default_query), (gst_element_query):

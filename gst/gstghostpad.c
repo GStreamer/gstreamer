@@ -833,7 +833,7 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
         g_object_new (GST_TYPE_PROXY_PAD, "name", NULL,
         "direction", otherdir, NULL);
   }
-  /* GST_PAD_UNSET_FLUSHING (internal); */
+  GST_PAD_UNSET_FLUSHING (internal);
 
   /* Set directional padfunctions for internal pad */
   if (dir == GST_PAD_SRC) {
