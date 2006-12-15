@@ -1,0 +1,313 @@
+Latency
+-------
+
+The latency is the time it takes for a sample captured at timestamp 0 to reach the
+sink. This time is measured against the clock in the pipeline. For pipelines
+where the only elements that synchronize against the clock are the sinks, the
+latency is always 0 since no other element is delaying the buffer.
+
+For pipelines with live sources, a latency is introduced, mostly because of the
+way a live source works. Consider an audio source, it will start capturing the
+first sample at time 0. If the source pushes buffers with 44100 samples at a
+time at 44100Hz it will have collected the buffer at second 1.
+Since the timestamp of the buffer is 0 and the time of the clock is now >= 1
+second, the sink will drop this buffer because it is too late.
+Without an latency compensation in the sink, all buffers will be dropped.
+
+The situation becomes more complex in the presence of:
+
+ - 2 live sources connected to 2 live sinks with different latencies
+    * audio/video capture with synchronized live preview.
+    * added latencies due to effects (delays, resamplers...)
+ - 1 live source connected to 2 live sinks
+    * firewire DV
+    * RTP, with added latencies because of jitter buffers.
+ - mixed live source and non-live source scenarios.
+    * synchronized audio capture with non-live playback. (overdubs,..)
+ - clock slaving in the sinks due to the live sources providing their own
+   clocks.
+
+To perform the needed latency corrections in the above scenarios, we must
+develop an algorithm to calculate a global latency for the pipeline. The
+algorithm must be extensible so that it can optimize the latency at runtime. 
+It must also be possible to disable or tune the algorithm based on specific
+application needs (required minimal latency).
+
+
+Pipelines without latency compensation
+--------------------------------------
+
+We show some examples to demonstrate the problem of latency in typical
+capture pipelines.
+
+- Example 1
+
+  An audio capture/playback pipeline.
+
+   asrc: audio source, provides a clock
+   asink audio sink, provides a clock
+
+   .--------------------------.
+   | pipeline                 |
+   | .------.      .-------.  |
+   | | asrc |      | asink |  |
+   | |     src -> sink     |  |
+   | '------'      '-------'  |
+   '--------------------------'
+
+ NULL->READY:
+  asink: NULL->READY: probes device, returns SUCCESS 
+  asrc: NULL->READY:  probes device, returns SUCCESS
+
+ READY->PAUSED:
+  asink: READY:->PAUSED open device, returns ASYNC 
+  asrc: READY->PAUSED:  open device, returns NO_PREROLL
+
+  * Since the source is a live source, it will only produce data in the
+    PLAYING state. To note this fact, it returns NO_PREROLL from the state change
+    function.
+  * This sink returns ASYNC because it can only complete the state change to
+    PAUSED when it receives the first buffer.
+
+  At this point the pipeline is not processing data and the clock is not
+  running. Unless a new action is performed on the pipeline, this situation will
+  never change.
+
+ PAUSED->PLAYING:
+  asrc clock selected because it is the most upstream clock provider.
+  asink: PAUSED:->PLAYING, returns ASYNC because it is not prerolled 
+  asrc: PAUSED->PLAYING: sets pending state to PLAYING, returns ASYNC. The sink
+                         will commit state to PLAYING when it prerolls.
+
+  * since the sink is still performing a state change from READY -> PAUSED, it
+    remains ASYNC. The pending state will be set to PLAYING.
+  * The clock starts running as soon as all the elements have been set to
+    PLAYING.
+  * the source is a live source with a latency. Since it is synchronized with
+    the clock, it will produce a buffer with timestamp 0 and duration D after
+    time D, ie. it will only be able to produce the last sample of the buffer
+    (with timestamp D) at time D. This latency depends on the size of the
+    buffer.
+  * the sink will receive the buffer with timestamp 0 at time >= D. At this
+    point the buffer is too late already and might be dropped. This state of
+    constantly dropping data will not change unless a constant latency
+    correction is added to the incomming buffer timestamps.
+
+  The problem is due to the fact that the sink is set to (pending) PLAYING
+  without being prerolled, which only happens in live pipelines. 
+
+- Example 2
+
+  An audio/video capture/playback pipeline. We capture both audio and video and
+  have them played back synchronized again.
+
+   asrc: audio source, provides a clock
+   asink audio sink, provides a clock
+   vsrc: video source
+   vsink video sink
+
+   .--------------------------.
+   | pipeline                 |
+   | .------.      .-------.  |
+   | | asrc |      | asink |  |
+   | |     src -> sink     |  |
+   | '------'      '-------'  |
+   | .------.      .-------.  |
+   | | vsrc |      | vsink |  |
+   | |     src -> sink     |  |
+   | '------'      '-------'  |
+   '--------------------------'
+
+  The state changes happen in the same way as example 1. Both sinks end up with
+  pending state of PLAYING and a return value of ASYNC until they receive the
+  first buffer.
+
+  For audio and video to be played in sync, both sinks must compensate for the
+  latency of its source but must also use exactly the same latency correction.  
+
+  Suppose asrc has a latency of 20ms and vsrc a latency of 33ms, the total
+  latency in the pipeline has to be at least 33ms. This also means that the
+  pipeline must have at least a 33 - 20 = 13ms buffering on the audio stream or
+  else the audio src will underrun while the audiosink waits for the previous
+  sample to play.
+
+- Example 3
+
+  An example of the combination of a non-live (file) and a live source (vsrc) 
+  connected to live sinks (vsink, sink). 
+
+   .--------------------------.
+   | pipeline                 |
+   | .------.      .-------.  |
+   | | file |      | sink  |  |
+   | |     src -> sink     |  |
+   | '------'      '-------'  |
+   | .------.      .-------.  |
+   | | vsrc |      | vsink |  |
+   | |     src -> sink     |  |
+   | '------'      '-------'  |
+   '--------------------------'
+
+  The state changes happen in the same way as example 1. Except sink will be
+  able to preroll (commit its state to PAUSED).
+
+  In this case sink will have no latency but vsink will. The total latency
+  should be that of vsink.
+
+  Note that because of the presence of a live source (vsrc), the pipeline can be
+  set to playing before sink is able to preroll. Without compensation for the
+  live source, this might lead to synchronisation problems because the latency
+  should be configured in the element before it can go to PLAYING.
+
+
+- Example 4
+
+  An example of the combination of a non-live and a live source. The non-live
+  source is connected to a live sink and the live source to a non-live sink.
+
+   .--------------------------.
+   | pipeline                 |
+   | .------.      .-------.  |
+   | | file |      | sink  |  |
+   | |     src -> sink     |  |
+   | '------'      '-------'  |
+   | .------.      .-------.  |
+   | | vsrc |      | files |  |
+   | |     src -> sink     |  |
+   | '------'      '-------'  |
+   '--------------------------'
+
+  The state changes happen in the same way as example 3. Sink will be
+  able to preroll (commit its state to PAUSED). files will not be able to
+  preroll.
+
+  sink will have no latency since it is not connected to a live source. files
+  does not do synchronisation so it does not care about latency.
+
+  The total latency in the pipeline is 0. The vsrc captures in sync with the
+  playback in sink.
+
+  As in example 3, sink can only be set to PLAYING after it successfully
+  prerolled.
+
+
+State Changes revised
+---------------------
+
+As a first step in a generic solution we propose to modify the state changes so
+that no sink is set to PLAYING before it is prerolled.
+
+In order to do this, the pipeline (at the GstBin level) keeps track of all
+elements that require preroll (the ones that return ASYNC from the state
+change). It keeps a GST_MESSAGE_NEED_PREROLL internally for those elements.
+
+When the pipeline did not receive a NO_PREROLL state change return from any
+element, it can forget about the NEED_PREROLL messages because the state change
+to PLAYING will proceed when all elements commited their state when they are
+prerolled.
+
+When the pipeline received a NO_PREROLL state change return from an element, it
+keeps the NEED_PREROLL messages.
+
+When an ASYNC element prerolls, it commits its state to PAUSED and posts a
+PREROLLED message. The element does not yet move to its pending state (which is
+PLAYING for a live pipeline) but proceeds with blocking in the preroll state.
+The pipeline notices this PREROLLED message and matches it with the
+NEED_PREROLL message it cached for the corresponding element.
+
+When all NEED_PREROLL messages are matched with a PREROLLED message, the
+pipeline proceeds with setting the PREROLLED sinks to their pending state.
+The base time of the element was already set by the pipeline when it changed the
+nonprerolled element to PLAYING. This operation has to be performed in the
+separate async state change thread (like the one currently used for going from
+PAUSED->PLAYING in a non-live pipeline).
+
+implications:
+
+ - the current async_play vmethod in basesink can be deprecated since we now
+   always call the state change function when going from PAUSED->PLAYING
+
+
+Latency compensation
+--------------------
+
+As an extension to the revised state changes we can perform latency calculation
+and compensation before we proceed to the PLAYING state. 
+
+To the PREROLLED message posted by the sinks when then go to PAUSED we add the
+following fields:
+
+  - (boolean) live 
+  - (boolean) upstream-live 
+  - (int_range) latency  (min and max latency in microseconds, could also be 
+                          expressed as int_list)
+
+When the pipeline collected all PREROLLED messages it can calculate the global
+latency as follows:
+
+  - if no message has live, latency = 0 (no sink syncs against the clock)
+  - if no message has upstream-live, latency = 0 (no live source)
+
+  - latency = MAX (MIN (all latencies)) 
+  - if MIN (MAX (all latencies) < latency we have an impossible situation.
+
+The sinks gather this information with a LATENCY query upstream. Intermediate
+elements pass the query upstream and add the amount of latency they add to the
+result.
+
+
+ex1:
+  sink1: [20 - 20]
+  sink2: [33 - 40]
+
+  MAX (20, 33) = 33
+  MIN (20, 40) = 20 < 33 -> impossible
+
+ex2:
+  sink1: [20 - 50]
+  sink2: [33 - 40]
+
+  MAX (20, 33) = 33
+  MIN (50, 40) = 40 >= 33 -> latency = 33
+
+The latency is set on the pipeline by sending a SET_LATENCY event to the sinks
+that posted the PREROLLED message. This event configures the total latency on
+the sinks. The sink forwards this SET_LATENCY event upstream so that
+intermediate elements can configure themselves as well.
+
+After this step, the pipeline continues setting the pending state on the sinks.
+
+A sink adds the latency value received in the SET_LATENCY event, to
+the times used for synchronizing against the clock. This will effectively
+delay the rendering of the buffer with the latency.
+
+
+Flushing a playing pipeline
+---------------------------
+
+Using the new state change mechanism we can implement resynchronisation after an
+uncontrolled FLUSH in (part of) a pipeline. Indeed, when a flush is performed on
+a PLAYING live element, a new base time must be distributed to this element.
+
+A flush in a pipeline can happen in the following cases:
+
+ - flushing seek in the pipeline
+    - performed by the application on the pipeline
+    - performed by the application on and element
+ - flush preformed by an element
+    - after receiving a navigation event (DVD, ...)
+
+When a playing sink is flushed by a FLUSH_START event, a LOST_PLAYING message is
+posted and kept by the parent bin. When the element prerolls, it posts a
+PREROLLED message. 
+
+When all LOST_PLAYING messages are matched with a PREROLLED message, the bin
+will capture a new base time from the clock and will bring all the prerolled
+sinks back to playing after setting the new base time on them. It's also
+possible to add additional latency calculations. 
+
+The difference with the NEED_PREROLL/PREROLLED and LOST_PLAYING/PREROLLED
+message pair is that the latter makes the pipeline acquire a new base time for
+the PREROLLED elements.
+
+
