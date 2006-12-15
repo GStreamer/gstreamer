@@ -1869,18 +1869,19 @@ gst_rmdemux_descramble_dnet_audio (GstRMDemux * rmdemux,
     GstRMDemuxStream * stream)
 {
   GstBuffer *buf;
-  guint16 *data, *end;
+  guint8 *data, *end;
 
   buf = g_ptr_array_index (stream->subpackets, 0);
   g_ptr_array_index (stream->subpackets, 0) = NULL;
   g_ptr_array_set_size (stream->subpackets, 0);
 
   /* descramble is a bit of a misnomer, it's just byte-order swapped AC3 .. */
-  data = (guint16 *) GST_BUFFER_DATA (buf);
-  end = (guint16 *) (GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf));
-  while (data < end) {
-    *data = GUINT16_SWAP_LE_BE (*data);
-    ++data;
+  data = GST_BUFFER_DATA (buf);
+  end = GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
+  while ((data + 1) < end) {
+    /* byte-swap in an alignment-safe way */
+    GST_WRITE_UINT16_BE (data, GST_READ_UINT16_LE (data));
+    data += sizeof (guint16);
   }
 
   return gst_pad_push (stream->pad, buf);
