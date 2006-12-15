@@ -239,7 +239,7 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   data = GST_BUFFER_DATA (*buf);
   GST_BUFFER_SIZE (*buf) = 0;
-  GST_DEBUG ("reading %d bytes", blocksize);
+  GST_LOG_OBJECT (mmssrc, "reading %d bytes", blocksize);
   if (mmssrc->connection) {
     result = mms_read (NULL, mmssrc->connection, (char *) data, blocksize);
   } else {
@@ -259,8 +259,8 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   }
   GST_BUFFER_SIZE (*buf) = result;
 
-  GST_DEBUG ("Returning buffer with offset %" G_GINT64_FORMAT " and size %u",
-      GST_BUFFER_OFFSET (*buf), GST_BUFFER_SIZE (*buf));
+  GST_LOG_OBJECT (mmssrc, "Returning buffer with offset %" G_GINT64_FORMAT
+      " and size %u", GST_BUFFER_OFFSET (*buf), GST_BUFFER_SIZE (*buf));
 
   gst_buffer_set_caps (*buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (mmssrc)));
 
@@ -268,7 +268,7 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
 
 eos:
   {
-    GST_DEBUG ("EOS");
+    GST_DEBUG_OBJECT (mmssrc, "EOS");
     gst_buffer_unref (*buf);
     *buf = NULL;
     return GST_FLOW_UNEXPECTED;
