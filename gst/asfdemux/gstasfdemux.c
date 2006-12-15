@@ -2734,6 +2734,7 @@ gst_asf_demux_get_src_query_types (GstPad * pad)
   static const GstQueryType types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
+    GST_QUERY_SEEKING,
     0
   };
 
