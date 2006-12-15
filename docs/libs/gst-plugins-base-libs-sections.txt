@@ -744,17 +744,17 @@ gst_riff_strh
 GstBaseRTPAudioPayload
 GstBaseRTPAudioPayloadClass
 
-gst_basertpaudiopayload_set_frame_based
-gst_basertpaudiopayload_set_frame_options
-gst_basertpaudiopayload_set_sample_based
-gst_basertpaudiopayload_set_sample_options
+gst_base_rtp_audio_payload_set_frame_based
+gst_base_rtp_audio_payload_set_frame_options
+gst_base_rtp_audio_payload_set_sample_based
+gst_base_rtp_audio_payload_set_sample_options
 <SUBSECTION Standard>
 GST_TYPE_BASE_RTP_AUDIO_PAYLOAD
 GST_BASE_RTP_AUDIO_PAYLOAD
 GST_BASE_RTP_AUDIO_PAYLOAD_CLASS
 GST_IS_BASE_RTP_AUDIO_PAYLOAD
 GST_IS_BASE_RTP_AUDIO_PAYLOAD_CLASS
-gst_basertpaudiopayload_get_type
+gst_base_rtp_audio_payload_get_type
 </SECTION>
 
 <SECTION>
@@ -992,7 +992,6 @@ gst_video_filter_get_type
 GstVideoSink
 GstVideoSinkClass
 GstVideoRectangle
-GST_VIDEO_SINK_CLOCK
 GST_VIDEO_SINK_HEIGHT
 GST_VIDEO_SINK_PAD
 GST_VIDEO_SINK_WIDTH
@@ -1000,6 +999,7 @@ gst_video_sink_center_rect
 <SUBSECTION Standard>
 GST_TYPE_VIDEO_SINK
 GST_VIDEO_SINK
+GST_VIDEO_SINK_CAST
 GST_VIDEO_SINK_CLASS
 GST_VIDEO_SINK_GET_CLASS
 GST_IS_VIDEO_SINK

@@ -38,11 +38,27 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VIDEO_SINK))
 #define GST_VIDEO_SINK_GET_CLASS(klass) \
   (G_TYPE_INSTANCE_GET_CLASS ((klass), GST_TYPE_VIDEO_SINK, GstVideoSinkClass))
-  
-#define GST_VIDEO_SINK_PAD GST_BASE_SINK_PAD
-#define GST_VIDEO_SINK_CLOCK GST_BASE_SINK_CLOCK
-#define GST_VIDEO_SINK_WIDTH(obj) (GST_VIDEO_SINK (obj)->width)
-#define GST_VIDEO_SINK_HEIGHT(obj) (GST_VIDEO_SINK (obj)->height)
+
+/**
+ * GST_VIDEO_SINK_CAST:
+ * @obj: a #GstVideoSink or derived object
+ *
+ * Cast @obj to a #GstVideoSink without runtime type check.
+ *
+ * Since: 0.10.12
+ */
+#define GST_VIDEO_SINK_CAST(obj)  ((GstVideoSink *) (obj))
+
+/**
+ * GST_VIDEO_SINK_PAD:
+ * @obj: a #GstVideoSink
+ *
+ * Get the sink #GstPad of @obj.
+ */
+#define GST_VIDEO_SINK_PAD(obj) GST_BASE_SINK_PAD(obj)
+
+#define GST_VIDEO_SINK_WIDTH(obj) (GST_VIDEO_SINK_CAST (obj)->width)
+#define GST_VIDEO_SINK_HEIGHT(obj) (GST_VIDEO_SINK_CAST (obj)->height)
   
 typedef struct _GstVideoSink GstVideoSink;
 typedef struct _GstVideoSinkClass GstVideoSinkClass;

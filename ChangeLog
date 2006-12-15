@@ -1,3 +1,16 @@
+2006-12-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	  Small docs fixes/updates.
+
+	* gst-libs/gst/video/gstvideosink.h:
+	  Remove nonfunctional GST_VIDEO_SINK_CLOCK macro which is a leftover
+	  from the 0.9 days (GST_BASE_SINK_CLOCK, which it points to, was
+	  removed from the base sink API between 0.9.6 and 0.9.7).
+	  API: add GST_VIDEO_SINK_CAST and use it for the height/width
+	  accessor macros, so we don't do a runtime GObject type check every
+	  time we use them.
+
 2006-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:
