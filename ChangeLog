@@ -1,3 +1,17 @@
+2006-12-16  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/videomixer/videomixer.c: (gst_videomixer_pad_set_property),
+	(gst_videomixer_set_master_geometry),
+	(gst_videomixer_pad_sink_setcaps), (gst_videomixer_collect_free),
+	(gst_videomixer_reset), (gst_videomixer_init),
+	(gst_videomixer_finalize), (gst_videomixer_request_new_pad),
+	(gst_videomixer_release_pad), (gst_videomixer_collected),
+	(gst_videomixer_change_state):
+	Introduce some locking around the videomixer state so that it does not
+	crash when adding/removing pads. Fixes #383043.
+
 2006-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
