@@ -1,5 +1,11 @@
 2006-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* plugins/elements/gstidentity.c: (gst_identity_check_perfect):
+	  Print additional debug info when the stream isn't perfectly
+	  timestamped; don't try to use invalid durations.
+
+2006-12-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/design/Makefile.am:
 	  Dist new design docs.
 

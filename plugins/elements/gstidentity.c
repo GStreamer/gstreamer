@@ -318,15 +318,22 @@ gst_identity_check_perfect (GstIdentity * identity, GstBuffer * buf)
   /* invalid timestamp drops us out of check.  FIXME: maybe warn ? */
   if (timestamp != GST_CLOCK_TIME_NONE) {
     /* check if we had a previous buffer to compare to */
-    if (identity->prev_timestamp != GST_CLOCK_TIME_NONE) {
-      guint64 offset;
+    if (identity->prev_timestamp != GST_CLOCK_TIME_NONE &&
+        identity->prev_duration != GST_CLOCK_TIME_NONE) {
+      guint64 offset, t_expected;
+      gint64 dt;
 
-      if (identity->prev_timestamp + identity->prev_duration != timestamp) {
+      t_expected = identity->prev_timestamp + identity->prev_duration;
+      dt = timestamp - t_expected;
+      if (dt != 0) {
         GST_WARNING_OBJECT (identity,
             "Buffer not time-contiguous with previous one: " "prev ts %"
             GST_TIME_FORMAT ", prev dur %" GST_TIME_FORMAT ", new ts %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (identity->prev_timestamp),
-            GST_TIME_ARGS (identity->prev_duration), GST_TIME_ARGS (timestamp));
+            GST_TIME_FORMAT " (expected ts %" GST_TIME_FORMAT ", delta=%c%"
+            GST_TIME_FORMAT ")", GST_TIME_ARGS (identity->prev_timestamp),
+            GST_TIME_ARGS (identity->prev_duration), GST_TIME_ARGS (timestamp),
+            GST_TIME_ARGS (t_expected), (dt < 0) ? '-' : '+',
+            GST_TIME_ARGS ((dt < 0) ? (GstClockTime) (-dt) : dt));
       }
 
       offset = GST_BUFFER_OFFSET (buf);
@@ -336,7 +343,11 @@ gst_identity_check_perfect (GstIdentity * identity, GstBuffer * buf)
             "prev offset_end %" G_GINT64_FORMAT ", new offset %"
             G_GINT64_FORMAT, identity->prev_offset_end, offset);
       }
+    } else {
+      GST_DEBUG_OBJECT (identity, "can't check time-contiguity, no timestamp "
+          "and/or duration were set on previous buffer");
     }
+
     /* update prev values */
     identity->prev_timestamp = timestamp;
     identity->prev_duration = GST_BUFFER_DURATION (buf);
