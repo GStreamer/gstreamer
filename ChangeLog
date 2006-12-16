@@ -1,3 +1,10 @@
+2006-12-16  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/argtypes.py:
+	* gst/arg-types.py:
+	Move GstIterator ArgType definition and usage for the codegenerator
+	to gst/arg-types.py. It has nothing to do in the codegenerator code.
+
 2006-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

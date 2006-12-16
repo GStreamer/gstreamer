@@ -140,6 +140,11 @@ class GstCapsArg(ArgType):
             raise RuntimeError, "write_return not implemented for %s" % ptype
 		info.codeafter.append('    return pyg_boxed_new (GST_TYPE_CAPS, ret, '+copyval+', TRUE);')
 
+class GstIteratorArg(ArgType):
+	def write_return(self, ptype, ownsreturn, info):
+		info.varlist.add('GstIterator', '*ret')
+		info.codeafter.append('    return pygst_iterator_new(ret);')
+
 class GstMiniObjectParam(Parameter):
 
     def get_c_type(self):
@@ -319,6 +324,7 @@ matcher.register('xmlDocPtr', XmlDocArg())
 matcher.register('GstCaps', GstCapsArg()) #FIXME: does this work?
 matcher.register('GstCaps*', GstCapsArg()) #FIXME: does this work?
 matcher.register('const-GstCaps*', GstCapsArg())
+matcher.register('GstIterator*', GstIteratorArg())
 
 arg = PointerArg('gpointer', 'G_TYPE_POINTER')
 matcher.register('GstClockID', arg)
