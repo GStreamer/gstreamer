@@ -1,3 +1,10 @@
+2006-12-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Make sure libcaca can actually be used instead of just checking for
+	  /usr/bin/caca-config, so we don't wrongly try to build cacasink when
+	  cross-compiling (fixes #384587).
+
 2006-12-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* Makefile.am:

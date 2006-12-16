@@ -611,9 +611,16 @@ GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
 dnl *** libcaca ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
 GST_CHECK_FEATURE(LIBCACA, [libcaca coloured ASCII art], cacasink, [
-  GST_CHECK_CONFIGPROG(LIBCACA, caca-config)
-  AC_SUBST(LIBCACA_CFLAGS)
-  AC_SUBST(LIBCACA_LIBS)
+  GST_PKG_CHECK_MODULES(LIBCACA, caca)
+  dnl only newer versions of libcaca ship caca.pc, so try caca-config as well
+  if test "x$HAVE_LIBCACA" != "xyes"; then
+    GST_CHECK_CONFIGPROG(LIBCACA, caca-config)
+    dnl see if it compilation works too, might not if we are cross-compiling
+    if test "x$HAVE_LIBCACA" = "xyes"; then
+      AC_CHECK_LIB([caca], [caca_init], [HAVE_LIBCACA=yes],
+                   [HAVE_LIBCACA=no], [$LIBCACA_LIBS])
+    fi
+  fi
 ])
 
 dnl *** libdv ***
