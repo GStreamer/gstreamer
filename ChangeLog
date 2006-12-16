@@ -1,3 +1,15 @@
+2006-12-16  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* libs/gst/base/gstcollectpads.c: (ref_data), (unref_data),
+	(gst_collect_pads_add_pad), (gst_collect_pads_remove_pad),
+	(gst_collect_pads_stop), (gst_collect_pads_event),
+	(gst_collect_pads_chain):
+	* libs/gst/base/gstcollectpads.h:
+	Add refcounting to the collectpads data so we can track when it's safe
+	to free the data. Fixes #383382.
+
 2006-12-15  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_add_pad),

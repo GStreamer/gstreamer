@@ -192,6 +192,30 @@ gst_collect_pads_set_function (GstCollectPads * pads,
   GST_OBJECT_UNLOCK (pads);
 }
 
+static void
+ref_data (GstCollectData * data)
+{
+  g_assert (data != NULL);
+
+  g_atomic_int_inc (&(data->abidata.ABI.refcount));
+}
+
+static void
+unref_data (GstCollectData * data)
+{
+  g_assert (data != NULL);
+  g_assert (data->abidata.ABI.refcount > 0);
+
+  if (!g_atomic_int_dec_and_test (&(data->abidata.ABI.refcount)))
+    return;
+
+  g_object_unref (data->pad);
+  if (data->buffer) {
+    gst_buffer_unref (data->buffer);
+  }
+  g_free (data);
+}
+
 /**
  * gst_collect_pads_add_pad:
  * @pads: the collectspads to use
@@ -236,13 +260,16 @@ gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
   data->abidata.ABI.flushing = FALSE;
   data->abidata.ABI.new_segment = FALSE;
   data->abidata.ABI.eos = FALSE;
+  data->abidata.ABI.refcount = 1;
 
   GST_COLLECT_PADS_PAD_LOCK (pads);
+  GST_OBJECT_LOCK (pad);
+  gst_pad_set_element_private (pad, data);
+  GST_OBJECT_UNLOCK (pad);
   pads->abidata.ABI.pad_list =
       g_slist_append (pads->abidata.ABI.pad_list, data);
   gst_pad_set_chain_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads_chain));
   gst_pad_set_event_function (pad, GST_DEBUG_FUNCPTR (gst_collect_pads_event));
-  gst_pad_set_element_private (pad, data);
   /* activate the pad when needed */
   if (pads->started)
     gst_pad_set_active (pad, TRUE);
@@ -302,13 +329,9 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
   /* clear the stuff we configured */
   gst_pad_set_chain_function (pad, NULL);
   gst_pad_set_event_function (pad, NULL);
-  /* FIXME, check that freeing the private data does not causes
-   * crashes in the streaming thread */
+  GST_OBJECT_LOCK (pad);
   gst_pad_set_element_private (pad, NULL);
-
-  /* deactivate the pad when needed */
-  if (!pads->started)
-    gst_pad_set_active (pad, FALSE);
+  GST_OBJECT_UNLOCK (pad);
 
   /* backward compat, also remove from data if stopped */
   if (!pads->started) {
@@ -325,13 +348,15 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
   pads->abidata.ABI.pad_cookie++;
 
   /* clean and free the collect data */
-  gst_object_unref (data->pad);
-  if (data->buffer)
-    gst_buffer_unref (data->buffer);
-  g_free (data);
+  unref_data (data);
 
   /* signal waiters because something changed */
   GST_COLLECT_PADS_BROADCAST (pads);
+
+  /* deactivate the pad when needed */
+  if (!pads->started)
+    gst_pad_set_active (pad, FALSE);
+
   GST_COLLECT_PADS_PAD_UNLOCK (pads);
 
   return TRUE;
@@ -561,7 +586,7 @@ gst_collect_pads_stop (GstCollectPads * pads)
   }
 
   GST_COLLECT_PADS_PAD_UNLOCK (pads);
-  /* Wake them up so then can end the chain functions. */
+  /* Wake them up so they can end the chain functions. */
   GST_COLLECT_PADS_BROADCAST (pads);
 
   GST_OBJECT_UNLOCK (pads);
@@ -904,9 +929,12 @@ gst_collect_pads_event (GstPad * pad, GstEvent * event)
   GstCollectPads *pads;
 
   /* some magic to get the managing collect_pads */
+  GST_OBJECT_LOCK (pad);
   data = (GstCollectData *) gst_pad_get_element_private (pad);
   if (G_UNLIKELY (data == NULL))
-    goto not_ours;
+    goto pad_removed;
+  ref_data (data);
+  GST_OBJECT_UNLOCK (pad);
 
   res = TRUE;
 
@@ -1014,12 +1042,14 @@ forward:
   res = gst_pad_event_default (pad, event);
 
 done:
+  unref_data (data);
   return res;
 
   /* ERRORS */
-not_ours:
+pad_removed:
   {
-    GST_WARNING ("not our pad");
+    GST_DEBUG ("%s got removed from collectpads", GST_OBJECT_NAME (pad));
+    GST_OBJECT_UNLOCK (pad);
     return FALSE;
   }
 }
@@ -1042,15 +1072,17 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
   GST_DEBUG ("Got buffer for pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   /* some magic to get the managing collect_pads */
+  GST_OBJECT_LOCK (pad);
   data = (GstCollectData *) gst_pad_get_element_private (pad);
   if (G_UNLIKELY (data == NULL))
-    goto not_ours;
+    goto no_data;
+  ref_data (data);
+  GST_OBJECT_UNLOCK (pad);
 
   pads = data->collect;
   size = GST_BUFFER_SIZE (buffer);
 
   GST_OBJECT_LOCK (pads);
-
   /* if not started, bail out */
   if (G_UNLIKELY (!pads->started))
     goto not_started;
@@ -1091,13 +1123,22 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
     if (data->buffer == NULL)
       break;
 
+    /* Check if we got removed in the mean time, FIXME, this is racy.
+     * Between this check and the _WAIT, the pad could be removed which will
+     * makes us hang in the _WAIT. */
+    GST_OBJECT_LOCK (pad);
+    if (G_UNLIKELY (gst_pad_get_element_private (pad) == NULL))
+      goto pad_removed;
+    GST_OBJECT_UNLOCK (pad);
+
     GST_DEBUG ("Pad %s:%s has a buffer queued, waiting",
         GST_DEBUG_PAD_NAME (pad));
 
     /* wait to be collected, this must happen from another thread triggered
      * by the _chain function of another pad. We release the lock so we
      * can get stopped or flushed as well. We can however not get EOS
-     * because we still hold the STREAM_LOCK. */
+     * because we still hold the STREAM_LOCK. 
+     */
     GST_COLLECT_PADS_WAIT (pads);
 
     GST_DEBUG ("Pad %s:%s resuming", GST_DEBUG_PAD_NAME (pad));
@@ -1113,19 +1154,24 @@ gst_collect_pads_chain (GstPad * pad, GstBuffer * buffer)
 
 unlock_done:
   GST_OBJECT_UNLOCK (pads);
-
-done:
+  unref_data (data);
   gst_buffer_unref (buffer);
-
   return ret;
 
-  /* ERRORS */
-not_ours:
+pad_removed:
   {
-    /* pretty fatal this one, can't post an error though... */
-    GST_WARNING ("not our pad");
-    ret = GST_FLOW_ERROR;
-    goto done;
+    GST_WARNING ("%s got removed from collectpads", GST_OBJECT_NAME (pad));
+    GST_OBJECT_UNLOCK (pad);
+    ret = GST_FLOW_NOT_LINKED;
+    goto unlock_done;
+  }
+  /* ERRORS */
+no_data:
+  {
+    GST_DEBUG ("%s got removed from collectpads", GST_OBJECT_NAME (pad));
+    GST_OBJECT_UNLOCK (pad);
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_LINKED;
   }
 not_started:
   {
