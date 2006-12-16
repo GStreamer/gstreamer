@@ -62,6 +62,7 @@ check_PROGRAMS = \
 	elements/audiorate \
 	elements/audioresample \
 	elements/audiotestsrc \
+	elements/decodebin \
 	elements/ffmpegcolorspace \
 	elements/gdpdepay \
 	elements/gdppay \
@@ -146,6 +147,9 @@ elements_gdppay_LDADD = $(GST_GDP_LIBS) $(LDADD)
 
 elements_playbin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_playbin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+
+elements_decodebin_LDADD = $(GST_BASE_LIBS) $(LDADD)
+elements_decodebin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_subparse_LDADD =  $(LDADD)
 elements_subparse_CFLAGS = $(CFLAGS) $(AM_CFLAGS)

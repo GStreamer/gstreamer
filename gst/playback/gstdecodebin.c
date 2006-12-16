@@ -1541,6 +1541,18 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
 
   GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
+  /* special-case text/plain: we only want to accept it as a raw type if it
+   * comes from a subtitel parser element or a demuxer, but not if it is the
+   * type of the entire stream, in which case we just want to error out */
+  if (typefind == decode_bin->typefind &&
+      gst_structure_has_name (gst_caps_get_structure (caps, 0), "text/plain")) {
+    gst_element_no_more_pads (GST_ELEMENT (decode_bin));
+    /* we can't handle this type of stream */
+    GST_ELEMENT_ERROR (decode_bin, STREAM, WRONG_TYPE, (NULL),
+        ("decodebin cannot decode plain text files"));
+    goto shutting_down;
+  }
+
   /* autoplug the new pad with the caps that the signal gave us. */
   pad = gst_element_get_pad (typefind, "src");
   close_pad_link (typefind, pad, caps, decode_bin, FALSE);
