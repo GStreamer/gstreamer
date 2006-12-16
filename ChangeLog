@@ -1,5 +1,10 @@
 2006-12-16  Edward Hervey  <edward@fluendo.com>
 
+	* testsuite/test_pad.py:
+	Activate pads before using them.
+
+2006-12-16  Edward Hervey  <edward@fluendo.com>
+
 	* RELEASE:
 	Commit 0.10.6 RELEASE file. Better late than never :(
 

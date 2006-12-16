@@ -84,6 +84,8 @@ class PadPushLinkedTest(TestCase):
         self.src.set_caps(caps)
         self.sink.set_caps(caps)
         self.sink.set_chain_function(self._chain_func)
+        self.src.set_active(True)
+        self.sink.set_active(True)
         self.src.link(self.sink)
         self.buffers = []
 
@@ -161,6 +163,8 @@ class PadPushEventLinkedTest(TestCase):
         self.src.set_caps(caps)
         self.sink.set_caps(caps)
         self.sink.set_chain_function(self._chain_func)
+        self.src.set_active(True)
+        self.sink.set_active(True)
         self.src.link(self.sink)
         self.events = []
 
@@ -255,6 +259,8 @@ class PadPushProbeLinkTest(TestCase):
         caps = gst.caps_from_string("foo/bar")
         self.src.set_caps(caps)
         self.sink.set_caps(caps)
+        self.src.set_active(True)
+        self.sink.set_active(True)
         self.sink.set_chain_function(self._chain_func)
         self.buffers = []
 
