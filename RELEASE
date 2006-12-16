@@ -1,5 +1,6 @@
 
-Release notes for GStreamer Python bindings 0.10.4 "Alegre"
+Release notes for GStreamer Python bindings 0.10.6 "You're not very subtle, but
+you are effective"
         
 
 
@@ -18,21 +19,24 @@ Features of this release
     
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * Conditional compile of core API additions
-      * wrapped gst.BaseSrc and gst.PushSrc
+      * Can now build without requiring pygtk and its dependencies
+      * installation fixes
 
 Bugs fixed in this release
     
-      * 339010 : segfault/undefined behavior with optional GstCaps args
-      * 337876 : TagList does not retreive tags by key if 2 or more tags w...
-
-API changed in this release
-     
-
-- API additions:
-    
-* gst.get_gst_version()
-* gst.get_pygst_version()
+      * 355150 : Expose GST_PARAM_CONTROLLABLE in the bindings
+      * 343980 : import gst crash python
+      * 346190 : allow build/install without pygtk (ie pygobject)
+      * 349623 : Build failure due to "discards qualifiers from pointer ta...
+      * 359375 : variable 'interface' results in syntax error with MingW
+      * 362011 : [patch] Indentation typo in examples/bps.py
+      * 362183 : Please remove examples/gst123
+      * 362202 : [patch] A replacement of examples/vorbisplay.py for 0.10
+      * 362272 : [patch] Ports examples/audioconcat.py to 0.10
+      * 362290 : [patch] Ports examples/cp.py to 0.10
+      * 371969 : [Discoverer] Issues with demuxers that don't create pads ...
+      * 348416 : remuxer example should use normal seek
+      * 349107 : gst.BaseSrc can't negotiate with ffmpegcolorspace
 
 Download
 
@@ -63,8 +67,11 @@ Applications
 Contributors to this release
     
       * Andy Wingo
-      * David I. Lehn
       * Edward Hervey
-      * Stefan Kost
+      * Jan Schmidt
+      * Jason Gerard DeRose
+      * Michael Smith
+      * Rene Stadler
       * Thomas Vander Stichele
- 
+      * Tim-Philipp M�ller
+
