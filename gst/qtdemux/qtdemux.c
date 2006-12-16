@@ -551,6 +551,7 @@ gst_qtdemux_get_src_query_types (GstPad * pad)
   static const GstQueryType src_types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
+    GST_QUERY_SEEKING,
     0
   };
 
@@ -587,17 +588,37 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstQuery * query)
         res = TRUE;
       }
       break;
-    case GST_QUERY_DURATION:
-    {
-      gint64 duration;
+    case GST_QUERY_DURATION:{
+      GstFormat fmt;
 
-      res = gst_qtdemux_get_duration (qtdemux, &duration);
+      gst_query_parse_duration (query, &fmt, NULL);
+      if (fmt == GST_FORMAT_TIME) {
+        gint64 duration = -1;
 
-      gst_query_set_duration (query, GST_FORMAT_TIME, duration);
-    }
+        gst_qtdemux_get_duration (qtdemux, &duration);
+        if (duration > 0) {
+          gst_query_set_duration (query, GST_FORMAT_TIME, duration);
+          res = TRUE;
+        }
+      }
       break;
+    }
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      if (fmt == GST_FORMAT_TIME) {
+        gint64 duration = -1;
+
+        gst_qtdemux_get_duration (qtdemux, &duration);
+        gst_query_set_seeking (query, GST_FORMAT_TIME, qtdemux->pullbased,
+            0, duration);
+        res = TRUE;
+      }
+      break;
+    }
     default:
-      res = FALSE;
+      res = gst_pad_query_default (pad, query);
       break;
   }
 
@@ -971,7 +992,12 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      res = gst_qtdemux_do_seek (qtdemux, pad, event);
+      if (qtdemux->pullbased) {
+        res = gst_qtdemux_do_seek (qtdemux, pad, event);
+      } else {
+        GST_DEBUG_OBJECT (qtdemux, "cannot seek in streaming mode");
+        res = FALSE;
+      }
       break;
     default:
       res = FALSE;
