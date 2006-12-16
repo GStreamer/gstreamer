@@ -1786,6 +1786,13 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
   GstDecodeBin *dbin = GST_DECODE_BIN (element);
 
   switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      /* catch fatal errors that may have occured in the init function */
+      if (dbin->typefind == NULL || dbin->fakesink == NULL) {
+        GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL), (NULL));
+        return GST_STATE_CHANGE_FAILURE;
+      }
+      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
       add_fakesink (dbin);
       break;

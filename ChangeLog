@@ -1,3 +1,10 @@
+2006-12-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstdecodebin.c: (gst_decode_bin_change_state):
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_change_state):
+	  Refuse to change state to READY when we failed to create any of the
+	  required elements in our instance init function.
+
 2006-12-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:

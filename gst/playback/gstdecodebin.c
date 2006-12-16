@@ -1655,6 +1655,11 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       decode_bin->numpads = 0;
       decode_bin->numwaiting = 0;
       decode_bin->dynamics = NULL;
+      /* catch fatal errors that may have occured in the init function */
+      if (decode_bin->typefind == NULL || decode_bin->fakesink == NULL) {
+        GST_ELEMENT_ERROR (decode_bin, CORE, MISSING_PLUGIN, (NULL), (NULL));
+        return GST_STATE_CHANGE_FAILURE;
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_OBJECT_LOCK (decode_bin);
@@ -1677,6 +1682,8 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
