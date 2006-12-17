@@ -1,5 +1,11 @@
 2006-12-16  David Schleef  <ds@schleef.org>
 
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  Decent effort at porting to 0.10.  Needs cleanup on OS/X.
+
+2006-12-16  David Schleef  <ds@schleef.org>
+
 	Patch by: Vijay Santhanam <vijay santhanam gmail com>
 
 	* sys/osxvideo/Makefile.am:
