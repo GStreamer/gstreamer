@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-03 23:45+0200\n"
+"POT-Creation-Date: 2006-12-17 20:37+0100\n"
 "PO-Revision-Date: 2004-10-04 15:54+0200\n"
 "Last-Translator: Kjartan Maraas <kmaraas@broadpark.no>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -14,50 +14,39 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: sys/v4l2/v4l2_calls.c:57
-#, c-format
-msgid "Error getting capabilities '%s': %d, %s\n"
+#: gst/qtdemux/qtdemux.c:3967
+msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:398
-#, c-format
-msgid "Cannot identify '%s': %d, %s\n"
+#: gst/qtdemux/qtdemux.c:3973
+msgid "This file is encrypted and cannot be played."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:404
+#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
 #, c-format
-msgid "It isn't a device '%s': %d, %s\n"
-msgstr ""
+msgid "Device \"%s\" does not exist."
+msgstr "Enhet «%s» eksisterer ikke."
 
-#: sys/v4l2/v4l2_calls.c:415
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
-
-#: sys/v4l2/v4l2_calls.c:429
-#, c-format
-msgid "Device \"%s\" is not a capture device."
-msgstr "Enhet «%s» kan ikke fange data."
-
-#: sys/v4l2/v4l2src_calls.c:127
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr ""
-
-#: sys/v4l2/v4l2src_calls.c:303
+#: sys/dvb/gstdvbsrc.c:662
 #, fuzzy, c-format
-msgid "Could not get buffers from device \"%s\"."
+msgid "Could not open frontend device \"%s\"."
 msgstr "Kunne ikke konfigurere lydenhet «%s»."
 
-#: sys/v4l2/v4l2src_calls.c:315
-#, c-format
-msgid "the driver of device \"%s\" is broken."
-msgstr ""
-
-#: sys/v4l2/v4l2src_calls.c:325
+#: sys/dvb/gstdvbsrc.c:674
 #, fuzzy, c-format
-msgid "Could not get enough buffers from device \"%s\"."
+msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kunne ikke konfigurere lydenhet «%s»."
+
+#: sys/dvb/gstdvbsrc.c:717
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Kunne ikke åpne filen «%s» for lesing."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
+
+#~ msgid "Device \"%s\" is not a capture device."
+#~ msgstr "Enhet «%s» kan ikke fange data."
 
 #~ msgid "No filename specified."
 #~ msgstr "Ingen filnavn oppgitt."
@@ -70,12 +59,6 @@ msgstr "Kunne ikke konfigurere lydenhet «%s»."
 
 #~ msgid "Error closing file \"%s\"."
 #~ msgstr "Feil under lukking av fil «%s»."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Kunne ikke åpne filen «%s» for lesing."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Enhet «%s» eksisterer ikke."
 
 #~ msgid "Volume"
 #~ msgstr "Volum"

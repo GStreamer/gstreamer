@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-03 23:45+0200\n"
+"POT-Creation-Date: 2006-12-17 20:37+0100\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -16,50 +16,45 @@ msgstr ""
 "Plural-Forms: nplurals=3;    plural=n%10==1 && n%100!=11 ? 0 :  (n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: sys/v4l2/v4l2_calls.c:57
-#, c-format
-msgid "Error getting capabilities '%s': %d, %s\n"
+#: gst/qtdemux/qtdemux.c:3967
+msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:398
-#, c-format
-msgid "Cannot identify '%s': %d, %s\n"
+#: gst/qtdemux/qtdemux.c:3973
+msgid "This file is encrypted and cannot be played."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:404
+#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
 #, c-format
-msgid "It isn't a device '%s': %d, %s\n"
-msgstr ""
+msgid "Device \"%s\" does not exist."
+msgstr "Не постоји уређај „%s“."
 
-#: sys/v4l2/v4l2_calls.c:415
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
+#: sys/dvb/gstdvbsrc.c:662
+#, fuzzy, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "Не могу да затворим управљачки уређај „%s“."
 
-#: sys/v4l2/v4l2_calls.c:429
-#, c-format
-msgid "Device \"%s\" is not a capture device."
-msgstr "Уређај „%s“ не представља уређај за снимање."
-
-#: sys/v4l2/v4l2src_calls.c:127
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "Не могу да пишем на видео уређај „%s“."
-
-#: sys/v4l2/v4l2src_calls.c:303
-#, c-format
-msgid "Could not get buffers from device \"%s\"."
-msgstr "Не могу да примим бафере са уређаја „%s“."
-
-#: sys/v4l2/v4l2src_calls.c:315
-#, c-format
-msgid "the driver of device \"%s\" is broken."
-msgstr ""
-
-#: sys/v4l2/v4l2src_calls.c:325
-#, c-format
-msgid "Could not get enough buffers from device \"%s\"."
+#: sys/dvb/gstdvbsrc.c:674
+#, fuzzy, c-format
+msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Не могу да примим довољно бафера са уређаја „%s“."
+
+#: sys/dvb/gstdvbsrc.c:717
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Не могу да отворим датотеку „%s“ ради читања."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
+
+#~ msgid "Device \"%s\" is not a capture device."
+#~ msgstr "Уређај „%s“ не представља уређај за снимање."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "Не могу да пишем на видео уређај „%s“."
+
+#~ msgid "Could not get buffers from device \"%s\"."
+#~ msgstr "Не могу да примим бафере са уређаја „%s“."
 
 #~ msgid "No filename specified."
 #~ msgstr "Име датотеке није задато."
@@ -85,9 +80,6 @@ msgstr "Не могу да примим довољно бафера са уре�
 #~ msgid "Could not close audio device \"%s\"."
 #~ msgstr "Не могу да отворим радио уређај '%s'"
 
-#~ msgid "Could not close control device \"%s\"."
-#~ msgstr "Не могу да затворим управљачки уређај „%s“."
-
 #~ msgid "Could not open video device \"%s\" for writing."
 #~ msgstr "Не могу да отворим видео уређај „%s“ ради уписа."
 
@@ -97,9 +89,6 @@ msgstr "Не могу да примим довољно бафера са уре�
 #~ msgid "Error closing file \"%s\"."
 #~ msgstr "Грешка при затварању датотеке „%s“."
 
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Не могу да отворим датотеку „%s“ ради читања."
-
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."
 
@@ -108,9 +97,6 @@ msgstr "Не могу да примим довољно бафера са уре�
 
 #~ msgid "Could not access device \"%s\", check its permissions."
 #~ msgstr "Не могу да приступим уређају „%s“, проверите његова овлашћења."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Не постоји уређај „%s“."
 
 #~ msgid "Could not open device \"%s\" for writing."
 #~ msgstr "Не могу да отворим уређај „%s“ ради уписа."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-03 23:45+0200\n"
+"POT-Creation-Date: 2006-12-17 20:37+0100\n"
 "PO-Revision-Date: 2004-11-07 19:11+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -15,50 +15,45 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: sys/v4l2/v4l2_calls.c:57
-#, c-format
-msgid "Error getting capabilities '%s': %d, %s\n"
+#: gst/qtdemux/qtdemux.c:3967
+msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:398
-#, c-format
-msgid "Cannot identify '%s': %d, %s\n"
+#: gst/qtdemux/qtdemux.c:3973
+msgid "This file is encrypted and cannot be played."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:404
+#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
 #, c-format
-msgid "It isn't a device '%s': %d, %s\n"
-msgstr ""
+msgid "Device \"%s\" does not exist."
+msgstr "Il device «%s» non esiste."
 
-#: sys/v4l2/v4l2_calls.c:415
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Impossibile aprire il device «%s» in lettura e scrittura."
+#: sys/dvb/gstdvbsrc.c:662
+#, fuzzy, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "Impossibile chiudere il device di controllo «%s»."
 
-#: sys/v4l2/v4l2_calls.c:429
-#, c-format
-msgid "Device \"%s\" is not a capture device."
-msgstr "Il device «%s» non è un device di cattura."
-
-#: sys/v4l2/v4l2src_calls.c:127
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "Impossibile scrivere sul device «%s»."
-
-#: sys/v4l2/v4l2src_calls.c:303
-#, c-format
-msgid "Could not get buffers from device \"%s\"."
-msgstr "Impossibile ottenere dei buffer dal device «%s»."
-
-#: sys/v4l2/v4l2src_calls.c:315
-#, c-format
-msgid "the driver of device \"%s\" is broken."
-msgstr ""
-
-#: sys/v4l2/v4l2src_calls.c:325
-#, c-format
-msgid "Could not get enough buffers from device \"%s\"."
+#: sys/dvb/gstdvbsrc.c:674
+#, fuzzy, c-format
+msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Impossibile ottenere abbastanza buffer dal device «%s»."
+
+#: sys/dvb/gstdvbsrc.c:717
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Impossibile aprire il file «%s» in lettura."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Impossibile aprire il device «%s» in lettura e scrittura."
+
+#~ msgid "Device \"%s\" is not a capture device."
+#~ msgstr "Il device «%s» non è un device di cattura."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "Impossibile scrivere sul device «%s»."
+
+#~ msgid "Could not get buffers from device \"%s\"."
+#~ msgstr "Impossibile ottenere dei buffer dal device «%s»."
 
 #~ msgid "No filename specified."
 #~ msgstr "Nessun nome di file specificato."
@@ -84,9 +79,6 @@ msgstr "Impossibile ottenere abbastanza buffer dal device «%s»."
 #~ msgid "Could not close audio device \"%s\"."
 #~ msgstr "Impossibile chiudere il device audio «%s»."
 
-#~ msgid "Could not close control device \"%s\"."
-#~ msgstr "Impossibile chiudere il device di controllo «%s»."
-
 #~ msgid "Could not open video device \"%s\" for writing."
 #~ msgstr "Impossibile aprire il device video «%s» in scrittura."
 
@@ -95,9 +87,6 @@ msgstr "Impossibile ottenere abbastanza buffer dal device «%s»."
 
 #~ msgid "Error closing file \"%s\"."
 #~ msgstr "Errore nel chiudere il file «%s»."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Impossibile aprire il file «%s» in lettura."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr ""
@@ -108,9 +97,6 @@ msgstr "Impossibile ottenere abbastanza buffer dal device «%s»."
 
 #~ msgid "Could not access device \"%s\", check its permissions."
 #~ msgstr "Impossibile accedere al device «%s», verificare i suoi permessi."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Il device «%s» non esiste."
 
 #~ msgid "Could not open device \"%s\" for writing."
 #~ msgstr "Impossibile aprire il device «%s» in scrittura."

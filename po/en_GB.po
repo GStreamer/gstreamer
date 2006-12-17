@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-03 23:45+0200\n"
+"POT-Creation-Date: 2006-12-17 20:37+0100\n"
 "PO-Revision-Date: 2004-04-26 10:41-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -14,50 +14,45 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: sys/v4l2/v4l2_calls.c:57
-#, c-format
-msgid "Error getting capabilities '%s': %d, %s\n"
+#: gst/qtdemux/qtdemux.c:3967
+msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:398
-#, c-format
-msgid "Cannot identify '%s': %d, %s\n"
+#: gst/qtdemux/qtdemux.c:3973
+msgid "This file is encrypted and cannot be played."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:404
+#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
 #, c-format
-msgid "It isn't a device '%s': %d, %s\n"
-msgstr ""
+msgid "Device \"%s\" does not exist."
+msgstr "Device \"%s\" does not exist."
 
-#: sys/v4l2/v4l2_calls.c:415
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "Could not open device \"%s\" for reading and writing."
+#: sys/dvb/gstdvbsrc.c:662
+#, fuzzy, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "Could not close control device \"%s\"."
 
-#: sys/v4l2/v4l2_calls.c:429
-#, c-format
-msgid "Device \"%s\" is not a capture device."
-msgstr "Device \"%s\" is not a capture device."
-
-#: sys/v4l2/v4l2src_calls.c:127
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "Could not write to device \"%s\"."
-
-#: sys/v4l2/v4l2src_calls.c:303
-#, c-format
-msgid "Could not get buffers from device \"%s\"."
-msgstr "Could not get buffers from device \"%s\"."
-
-#: sys/v4l2/v4l2src_calls.c:315
-#, c-format
-msgid "the driver of device \"%s\" is broken."
-msgstr ""
-
-#: sys/v4l2/v4l2src_calls.c:325
-#, c-format
-msgid "Could not get enough buffers from device \"%s\"."
+#: sys/dvb/gstdvbsrc.c:674
+#, fuzzy, c-format
+msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Could not get enough buffers from device \"%s\"."
+
+#: sys/dvb/gstdvbsrc.c:717
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Could not open file \"%s\" for reading."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "Could not open device \"%s\" for reading and writing."
+
+#~ msgid "Device \"%s\" is not a capture device."
+#~ msgstr "Device \"%s\" is not a capture device."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "Could not write to device \"%s\"."
+
+#~ msgid "Could not get buffers from device \"%s\"."
+#~ msgstr "Could not get buffers from device \"%s\"."
 
 #~ msgid "No filename specified."
 #~ msgstr "No filename specified."
@@ -83,9 +78,6 @@ msgstr "Could not get enough buffers from device \"%s\"."
 #~ msgid "Could not close audio device \"%s\"."
 #~ msgstr "Could not close audio device \"%s\"."
 
-#~ msgid "Could not close control device \"%s\"."
-#~ msgstr "Could not close control device \"%s\"."
-
 #~ msgid "Could not open video device \"%s\" for writing."
 #~ msgstr "Could not open video device \"%s\" for writing."
 
@@ -95,9 +87,6 @@ msgstr "Could not get enough buffers from device \"%s\"."
 #~ msgid "Error closing file \"%s\"."
 #~ msgstr "Error closing file \"%s\"."
 
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Could not open file \"%s\" for reading."
-
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "No or invalid input audio, AVI stream will be corrupt."
 
@@ -106,9 +95,6 @@ msgstr "Could not get enough buffers from device \"%s\"."
 
 #~ msgid "Could not access device \"%s\", check its permissions."
 #~ msgstr "Could not access device \"%s\", check its permissions."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Device \"%s\" does not exist."
 
 #~ msgid "Could not open device \"%s\" for writing."
 #~ msgstr "Could not open device \"%s\" for writing."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-05-03 23:45+0200\n"
+"POT-Creation-Date: 2006-12-17 20:37+0100\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -16,50 +16,45 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.0.2\n"
 
-#: sys/v4l2/v4l2_calls.c:57
-#, c-format
-msgid "Error getting capabilities '%s': %d, %s\n"
+#: gst/qtdemux/qtdemux.c:3967
+msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:398
-#, c-format
-msgid "Cannot identify '%s': %d, %s\n"
+#: gst/qtdemux/qtdemux.c:3973
+msgid "This file is encrypted and cannot be played."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:404
+#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
 #, c-format
-msgid "It isn't a device '%s': %d, %s\n"
-msgstr ""
+msgid "Device \"%s\" does not exist."
+msgstr "\"%s\" avadanlığı mövcud deyil."
 
-#: sys/v4l2/v4l2_calls.c:415
-#, c-format
-msgid "Could not open device \"%s\" for reading and writing."
-msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
+#: sys/dvb/gstdvbsrc.c:662
+#, fuzzy, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
 
-#: sys/v4l2/v4l2_calls.c:429
-#, c-format
-msgid "Device \"%s\" is not a capture device."
-msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
-
-#: sys/v4l2/v4l2src_calls.c:127
-#, c-format
-msgid "Could not write to device \"%s\"."
-msgstr "\"%s\" avadanlığına yazıla bilmədi."
-
-#: sys/v4l2/v4l2src_calls.c:303
-#, c-format
-msgid "Could not get buffers from device \"%s\"."
-msgstr "\"%s\" avadanlığından bufferlər alına bilmədi."
-
-#: sys/v4l2/v4l2src_calls.c:315
-#, c-format
-msgid "the driver of device \"%s\" is broken."
-msgstr ""
-
-#: sys/v4l2/v4l2src_calls.c:325
-#, c-format
-msgid "Could not get enough buffers from device \"%s\"."
+#: sys/dvb/gstdvbsrc.c:674
+#, fuzzy, c-format
+msgid "Could not get settings from frontend device \"%s\"."
 msgstr "\"%s\" avadanlığından kifayət qədər bufferlər alına bilmədi."
+
+#: sys/dvb/gstdvbsrc.c:717
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
+
+#~ msgid "Could not open device \"%s\" for reading and writing."
+#~ msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
+
+#~ msgid "Device \"%s\" is not a capture device."
+#~ msgstr "\"%s\" avadanlığı capture avadanlığı deyil."
+
+#~ msgid "Could not write to device \"%s\"."
+#~ msgstr "\"%s\" avadanlığına yazıla bilmədi."
+
+#~ msgid "Could not get buffers from device \"%s\"."
+#~ msgstr "\"%s\" avadanlığından bufferlər alına bilmədi."
 
 #~ msgid "No filename specified."
 #~ msgstr "Fayl adı verilməyib."
@@ -85,9 +80,6 @@ msgstr "\"%s\" avadanlığından kifayət qədər bufferlər alına bilmədi."
 #~ msgid "Could not close audio device \"%s\"."
 #~ msgstr "\"%s\" audio avadanlığı bağlana bilmədi."
 
-#~ msgid "Could not close control device \"%s\"."
-#~ msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
-
 #~ msgid "Could not open video device \"%s\" for writing."
 #~ msgstr "\"%s\" video avadanlığı yazma üçün açıla bilmədi."
 
@@ -97,9 +89,6 @@ msgstr "\"%s\" avadanlığından kifayət qədər bufferlər alına bilmədi."
 #~ msgid "Error closing file \"%s\"."
 #~ msgstr "\"%s\" faylı bağlana bilmədi."
 
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "\"%s\" faylı oxuma üçün açıla bilmədi."
-
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Səhv ya da olmayan audio girişi, AVI yayımı pozulacaqdır."
 
@@ -108,9 +97,6 @@ msgstr "\"%s\" avadanlığından kifayət qədər bufferlər alına bilmədi."
 
 #~ msgid "Could not access device \"%s\", check its permissions."
 #~ msgstr "\"%s\" avadanlığına yetişə bilmədi, səlahiyyətlərini yoxlayın."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "\"%s\" avadanlığı mövcud deyil."
 
 #~ msgid "Could not open device \"%s\" for writing."
 #~ msgstr "\"%s\" avadanlığı yazma üçün açıla bilmədi."
