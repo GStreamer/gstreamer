@@ -967,7 +967,7 @@
 
 2006-09019  Edgard Lima <edgard.lima@indt.org.br>
 
-	Patch by: deadchip <internalerror@gmail.com> and
+	Patch by: Milosz Derezynski <internalerror@gmail.com> and
 		  Rosfran Borges <rosfran.borges@indt.org.br>
 
 	* ext/neon/Makefile.am:
@@ -1460,7 +1460,8 @@
 
 2006-08-04  Edgard Lima <edgard.lima@indt.org.br>
 
-	Patch by: rosfran dot borges at indt dot org dot br
+	Patch by: Rosfran Borges <rosfran dot borges at indt dot org dot
+	br>
 
 	* ext/neon/gstneonhttpsrc.c:
 	* ext/neon/gstneonhttpsrc.h:
@@ -1473,7 +1474,8 @@
 
 2006-08-03  Tim-Philipp Müller  <tim at centricular dot net>
 
-	Patch by:  cascardo at holoscopio dot com
+	Patch by: Thadeu Lima de Souza Cascardo <cascardo at holoscopio dot
+	com>
 
 	* ext/Makefile.am:
 	  Use right variables when USE_SPC is defined.
