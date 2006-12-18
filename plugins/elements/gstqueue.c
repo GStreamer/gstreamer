@@ -26,16 +26,21 @@
  * SECTION:element-queue
  * @short_description: Simple asynchronous data queue.
  *
- * Data is queued till max_level buffers have been stored. Any subsequent
- * buffers sent to this filter will block until free space becomes available in
- * the buffer. The queue will create a new thread on the source pad to
- * decouple the processing on sink and source pad.
+ * Data is queued till the amount of buffers specified by
+ * #GstQueue:max-size-buffers have been stored. Any subsequent buffers sent to
+ * this filter will block until free space becomes available in the buffer.
+ * The queue will create a new thread on the source pad to decouple the
+ * processing on sink and source pad.
  *
- * You can query how many buffers are queued with the level argument.
+ * You can query how many buffers are queued by reading the
+ * #GstQueue:current-level-buffers property.
  *
- * The default queue length is set to 100.
+ * The default queue length is set to 100 buffers.
  *
- * The queue blocks by default.
+ * As said earlier, the queue blocks by default. Alternatively one can set the
+ * #GstQueue:leaky property to specify that it should leak new or old
+ * buffers. Two signals - #GstQueue::overrun and #GstQueue::underrun inform
+ * about this.
  */
 
 #include "gst/gst_private.h"
@@ -176,8 +181,9 @@ queue_leaky_get_type (void)
   static GType queue_leaky_type = 0;
   static const GEnumValue queue_leaky[] = {
     {GST_QUEUE_NO_LEAK, "Not Leaky", "no"},
-    {GST_QUEUE_LEAK_UPSTREAM, "Leaky on Upstream", "upstream"},
-    {GST_QUEUE_LEAK_DOWNSTREAM, "Leaky on Downstream", "downstream"},
+    {GST_QUEUE_LEAK_UPSTREAM, "Leaky on upstream (new buffers)", "upstream"},
+    {GST_QUEUE_LEAK_DOWNSTREAM, "Leaky on downstream (old buffers)",
+          "downstream"},
     {0, NULL, NULL},
   };
 
