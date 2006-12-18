@@ -382,25 +382,26 @@ gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
     GstStructure *s;
     gint sample_rate;
 
+    GST_DEBUG_OBJECT (pad, "got caps %" GST_PTR_FORMAT, caps);
+
     s = gst_caps_get_structure (caps, 0);
     if (!gst_structure_get_int (s, "rate", &sample_rate)) {
       GST_WARNING ("got no sample-rate");
       goto impossible;
-    } else {
-      GST_DEBUG_OBJECT (self, "Got rate=%d", sample_rate);
     }
+
+    GST_DEBUG_OBJECT (self, "Got rate=%d", sample_rate);
 
     if (GST_SIGNAL_PROCESSOR_IS_RUNNING (self))
       gst_signal_processor_stop (self);
     if (GST_SIGNAL_PROCESSOR_IS_INITIALIZED (self))
       gst_signal_processor_cleanup (self);
 
-    if (!gst_signal_processor_setup (self, sample_rate)) {
+    if (!gst_signal_processor_setup (self, sample_rate))
       goto start_failed;
-    } else {
-      self->sample_rate = sample_rate;
-      gst_caps_replace (&self->caps, caps);
-    }
+
+    self->sample_rate = sample_rate;
+    gst_caps_replace (&self->caps, caps);
   } else {
     GST_DEBUG_OBJECT (self, "skipping, have caps already");
   }
@@ -449,6 +450,16 @@ gst_signal_processor_event (GstPad * pad, GstEvent * event)
   if (bclass->event)
     bclass->event (self, event);
 
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      /* clear errors now */
+      self->flow_state = GST_FLOW_OK;
+      break;
+    default:
+      break;
+  }
   ret = gst_pad_event_default (pad, event);
 
   gst_object_unref (self);
