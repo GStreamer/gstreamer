@@ -1,3 +1,9 @@
+2006-12-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):
+	  Fix crash dereferencing NULL pointer if there's no stco atom.
+	  Fixes #387122.
+
 2006-12-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/wavpack/gstwavpackenc.h:

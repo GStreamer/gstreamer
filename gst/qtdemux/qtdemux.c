@@ -3682,7 +3682,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   co64 = qtdemux_tree_get_child_by_type (stbl, FOURCC_co64);
   if (stco == NULL && co64 == NULL)
     goto corrupt_file;
-  stco_data = (const guint8 *) stco->data;
+  if (stco)
+    stco_data = (const guint8 *) stco->data;
+  else
+    stco_data = NULL;
   /* sample time */
   stts = qtdemux_tree_get_child_by_type (stbl, FOURCC_stts);
   if (stts == NULL)
