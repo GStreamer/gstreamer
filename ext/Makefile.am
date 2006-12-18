@@ -112,6 +112,12 @@ else
 JACK_DIR=
 endif
 
+if USE_LADSPA
+LADSPA_DIR = ladspa
+else
+LADSPA_DIR =
+endif
+
 # if USE_LCS
 # LCS_DIR=lcs
 # else
@@ -258,6 +264,7 @@ SUBDIRS=\
 	$(HERMES_DIR) \
 	$(IVORBIS_DIR) \
 	$(JACK_DIR) \
+	$(LADSPA_DIR) \
 	$(LCS_DIR) \
 	$(LIBFAME_DIR) \
 	$(LIBMMS_DIR) \
@@ -291,6 +298,7 @@ DIST_SUBDIRS= \
 	faad \
 	gsm \
 	ivorbis \
+	ladspa \
 	jack \
 	libmms \
 	dts \

@@ -1,5 +1,13 @@
 2006-12-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/ladspa/*:
+	  Move LADPSA plugin from -good for the release, as it's not quite
+	  ready to be enabled by default in the -good module yet.
+
+2006-12-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_chain),
 	(gst_qtdemux_add_stream):
 	  Don't output g_warning for an unsupported format, just send a

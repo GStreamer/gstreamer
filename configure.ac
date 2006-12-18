@@ -498,6 +498,12 @@ GST_CHECK_FEATURE(JACK, Jack, jack, [
   AC_SUBST(JACK_LIBS)
 ])
 
+dnl *** ladspa ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
+GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
+  AC_CHECK_HEADER(ladspa.h, HAVE_LADSPA="yes", HAVE_LADSPA="no")
+])
+
 dnl *** libmms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
 GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
@@ -747,6 +753,7 @@ AM_CONDITIONAL(USE_FAAC, false)
 AM_CONDITIONAL(USE_FAAD, false)
 AM_CONDITIONAL(USE_GSM, false)
 AM_CONDITIONAL(USE_IVORBIS, false)
+AM_CONDITIONAL(USE_LADSPA, false)
 AM_CONDITIONAL(USE_LIBMMS, false)
 AM_CONDITIONAL(USE_MUSEPACK, false)
 AM_CONDITIONAL(USE_MUSICBRAINZ, false)
@@ -851,6 +858,7 @@ ext/faad/Makefile
 ext/gsm/Makefile
 ext/ivorbis/Makefile
 ext/jack/Makefile
+ext/ladspa/Makefile
 ext/libmms/Makefile
 ext/Makefile
 ext/mpeg2enc/Makefile
