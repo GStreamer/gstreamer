@@ -1965,6 +1965,10 @@
           cleanup -unused.txt to make it useful, add previously missing docs
 
 	* ext/Makefile.am:
+	  Quietly (accidentally) enable LADSPA for building by default, 
+	  despite the fact that it doesn't meet the plugin checklist.
+	    -- Added by Jan Schmidt 18 Dec 2006
+
 	* ext/esd/esdmon.c:
 	* ext/esd/esdsink.c:
 	* ext/esd/gstesd.c: (plugin_init):
