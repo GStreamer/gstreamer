@@ -1,3 +1,11 @@
+2006-12-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/wavpack/gstwavpackenc.h:
+	Use local copy of md5.h, as it disappeared in recent wavpack
+	installs.
+	Patch by: Sebastian Dröge <slomo at ubuntu dot com>
+	Fixes: #387076
+
 2006-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_src_query_types),

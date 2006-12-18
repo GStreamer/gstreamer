@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 
 #include <wavpack/wavpack.h>
-#include <wavpack/md5.h>
+#include "md5.h"
 
 G_BEGIN_DECLS
 
