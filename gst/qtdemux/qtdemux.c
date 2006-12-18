@@ -1678,15 +1678,13 @@ next_entry_size (GstQTDemux * demux)
 }
 
 static void
-gst_qtdemux_post_buffering (GstQTDemux * demux, gint num, gint denom)
+gst_qtdemux_post_progress (GstQTDemux * demux, gint num, gint denom)
 {
   gint perc = (gint) ((gdouble) num * 100.0 / (gdouble) denom);
 
   gst_element_post_message (GST_ELEMENT_CAST (demux),
-      gst_message_new_custom (GST_MESSAGE_BUFFERING,
-          GST_OBJECT_CAST (demux),
-          gst_structure_new ("GstMessageBuffering",
-              "buffer-percent", G_TYPE_INT, perc, NULL)));
+      gst_message_new_element (GST_OBJECT_CAST (demux),
+          gst_structure_new ("progress", "percent", G_TYPE_INT, perc, NULL)));
 }
 
 /* FIXME, unverified after edit list updates */
@@ -1801,7 +1799,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         demux->offset += demux->neededbytes;
         demux->neededbytes = 16;
         demux->state = QTDEMUX_STATE_INITIAL;
-        gst_qtdemux_post_buffering (demux, 1, 1);
+        gst_qtdemux_post_progress (demux, 1, 1);
 
         break;
       }
@@ -1895,7 +1893,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
   /* when buffering movie data, at least show user something is happening */
   if (ret == GST_FLOW_OK && demux->state == QTDEMUX_STATE_BUFFER_MDAT &&
       gst_adapter_available (demux->adapter) <= demux->neededbytes) {
-    gst_qtdemux_post_buffering (demux, gst_adapter_available (demux->adapter),
+    gst_qtdemux_post_progress (demux, gst_adapter_available (demux->adapter),
         demux->neededbytes);
   }
 
