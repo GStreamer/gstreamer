@@ -1861,11 +1861,16 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
             stream->samples[stream->sample_index].duration;
 
         /* send buffer */
-        GST_LOG_OBJECT (demux,
-            "Pushing buffer with time %" GST_TIME_FORMAT " on pad %p",
-            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)), stream->pad);
-        gst_buffer_set_caps (outbuf, stream->caps);
-        ret = gst_pad_push (stream->pad, outbuf);
+        if (stream->pad) {
+          GST_LOG_OBJECT (demux,
+              "Pushing buffer with time %" GST_TIME_FORMAT " on pad %p",
+              GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)), stream->pad);
+          gst_buffer_set_caps (outbuf, stream->caps);
+          ret = gst_pad_push (stream->pad, outbuf);
+        } else {
+          gst_buffer_unref (outbuf);
+          ret = GST_FLOW_OK;
+        }
 
         /* combine flows */
         ret = gst_qtdemux_combine_flows (demux, stream, ret);
@@ -2983,7 +2988,11 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
             GST_TYPE_BUFFER, palette, NULL);
         gst_buffer_unref (palette);
       } else if (palette_count != 0) {
-        g_warning ("unsupported palette depth %d", palette_count);
+        GST_ELEMENT_WARNING (qtdemux, STREAM, NOT_IMPLEMENTED,
+            (NULL), ("Unsupported palette depth %d. Ignoring stream.", depth));
+
+        gst_object_unref (stream->pad);
+        stream->pad = NULL;
       }
     }
     qtdemux->n_video_streams++;
