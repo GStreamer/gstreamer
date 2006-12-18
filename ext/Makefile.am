@@ -58,11 +58,11 @@ else
 JPEG_DIR =
 endif
 
-if USE_LADSPA
-LADSPA_DIR = ladspa
-else
+#if USE_LADSPA
+#LADSPA_DIR = ladspa
+#else
 LADSPA_DIR =
-endif
+#endif
 
 if USE_LIBCACA
 LIBCACA_DIR = libcaca

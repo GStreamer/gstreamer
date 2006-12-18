@@ -1,3 +1,9 @@
+2006-12-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	Disable LADPSA, as it has moved to the -bad module for the duration.
+
 2006-12-18  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ladspa/gstsignalprocessor.c: (gst_signal_processor_setcaps),
