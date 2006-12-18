@@ -1,3 +1,14 @@
+2006-12-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_post_progress),
+	(gst_qtdemux_chain):
+	  Don't post BUFFERING messages in streaming mode if the stream
+	  headers are behind the movie data; instead, post "progress" element
+	  messages as a temporary solution. Apps might get confused and do
+	  silly things to the pipeline state if they see buffering messages
+	  from different sources and don't realize they come from different
+	  sources (#387160).
+
 2006-12-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
