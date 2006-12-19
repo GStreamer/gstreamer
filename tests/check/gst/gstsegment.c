@@ -38,6 +38,7 @@ GST_START_TEST (segment_seek_nosize)
       GST_SEEK_TYPE_SET, 100, GST_SEEK_TYPE_NONE, -1, &update);
   fail_unless (segment.start == 100);
   fail_unless (segment.stop == -1);
+  fail_unless (update == TRUE);
 
   /* configure segment to stop relative, should not do anything since 
    * size is unknown. */
@@ -47,6 +48,7 @@ GST_START_TEST (segment_seek_nosize)
       GST_SEEK_TYPE_NONE, 200, GST_SEEK_TYPE_CUR, -100, &update);
   fail_unless (segment.start == 100);
   fail_unless (segment.stop == -1);
+  fail_unless (update == FALSE);
 
   /* do some clipping on the open range */
   /* completely outside */
@@ -113,7 +115,9 @@ GST_START_TEST (segment_seek_nosize)
       GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 300, &update);
   fail_unless (segment.start == 200);
   fail_unless (segment.stop == 300);
+  fail_unless (update == TRUE);
 
+  update = FALSE;
   /* add 100 to start (to 300), set stop to 200, this is not allowed. 
    * nothing should be updated in the segment. A g_warning is
    * emited. */
@@ -123,7 +127,10 @@ GST_START_TEST (segment_seek_nosize)
           GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 200, &update));
   fail_unless (segment.start == 200);
   fail_unless (segment.stop == 300);
+  /* update didn't change */
+  fail_unless (update == FALSE);
 
+  update = TRUE;
   /* seek relative to end, should not do anything since size is
    * unknown. */
   gst_segment_set_seek (&segment, 1.0,
@@ -132,6 +139,7 @@ GST_START_TEST (segment_seek_nosize)
       GST_SEEK_TYPE_END, -300, GST_SEEK_TYPE_END, -100, &update);
   fail_unless (segment.start == 200);
   fail_unless (segment.stop == 300);
+  fail_unless (update == FALSE);
 
   /* completely outside */
   res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 0, 50, &cstart, &cstop);
@@ -219,6 +227,7 @@ GST_START_TEST (segment_seek_size)
       GST_SEEK_TYPE_SET, 100, GST_SEEK_TYPE_NONE, -1, &update);
   fail_unless (segment.start == 100);
   fail_unless (segment.stop == -1);
+  fail_unless (update == TRUE);
 
   /* configure segment to stop relative, does not update stop
    * since we did not set it before. */
@@ -228,6 +237,7 @@ GST_START_TEST (segment_seek_size)
       GST_SEEK_TYPE_NONE, 200, GST_SEEK_TYPE_CUR, -100, &update);
   fail_unless (segment.start == 100);
   fail_unless (segment.stop == -1);
+  fail_unless (update == FALSE);
 
   /* do some clipping on the open range */
   /* completely outside */
@@ -303,6 +313,7 @@ GST_START_TEST (segment_seek_size)
       GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 200, &update);
   fail_unless (segment.start == 200);
   fail_unless (segment.stop == 200);
+  fail_unless (update == TRUE);
 
   /* seek relative to end */
   gst_segment_set_seek (&segment, 1.0,
@@ -311,6 +322,7 @@ GST_START_TEST (segment_seek_size)
       GST_SEEK_TYPE_END, -100, GST_SEEK_TYPE_END, -20, &update);
   fail_unless (segment.start == 100);
   fail_unless (segment.stop == 180);
+  fail_unless (update == TRUE);
 
   /* completely outside */
   res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 0, 50, &cstart, &cstop);
@@ -397,6 +409,7 @@ GST_START_TEST (segment_seek_reverse)
   fail_unless (segment.stop == 100);
   fail_unless (segment.time == 0);
   fail_unless (segment.last_stop == 100);
+  fail_unless (update == TRUE);
 
   /* update */
   gst_segment_set_seek (&segment, -1.0,
@@ -407,6 +420,7 @@ GST_START_TEST (segment_seek_reverse)
   fail_unless (segment.stop == 80);
   fail_unless (segment.time == 10);
   fail_unless (segment.last_stop == 80);
+  fail_unless (update == TRUE);
 
   gst_segment_set_seek (&segment, -1.0,
       GST_FORMAT_BYTES,
@@ -416,6 +430,7 @@ GST_START_TEST (segment_seek_reverse)
   fail_unless (segment.stop == 80);
   fail_unless (segment.time == 20);
   fail_unless (segment.last_stop == 80);
+  fail_unless (update == TRUE);
 }
 
 GST_END_TEST;
