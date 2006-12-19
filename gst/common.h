@@ -43,6 +43,9 @@ typedef struct {
 	GClosure *get_function; 
 	GClosure *getcaps_function; 
 	GClosure *setcaps_function; 
+	GClosure *activate_function;
+	GClosure *activatepull_function;
+	GClosure *activatepush_function;
 } PyGstPadPrivate;
 
 typedef struct {

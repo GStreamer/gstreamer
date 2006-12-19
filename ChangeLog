@@ -1,3 +1,19 @@
+2006-12-19  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	Update API definitions.
+	* gst/common.h:
+	* gst/gstpad.override:
+	Add wrapper functions for settings activate, activatepull and
+	activatepush functions on pads.
+	* gst/gst.override:
+	Wrapper for gst_segment_set_seek() and gst_segment_clip()
+	Remove global ignore for *_init(), allows gst_segment_init() to be
+	properly code-generated.
+	* testsuite/Makefile.am:
+	* testsuite/test_segment.py:
+	Add unit test for gst.Segment object.
+
 2006-12-16  Edward Hervey  <edward@fluendo.com>
 
 	* testsuite/test_pad.py:

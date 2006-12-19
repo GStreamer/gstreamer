@@ -81,6 +81,9 @@ free_pad_private (gpointer data)
   INVALIDATE_CLOSURE (private->get_function)
   INVALIDATE_CLOSURE (private->getcaps_function)
   INVALIDATE_CLOSURE (private->setcaps_function)
+  INVALIDATE_CLOSURE (private->activate_function)
+  INVALIDATE_CLOSURE (private->activatepull_function)
+  INVALIDATE_CLOSURE (private->activatepush_function)
 #undef INVALIDATE_CLOSURE
 }
 
@@ -395,7 +398,144 @@ _wrap_gst_pad_set_setcaps_function (PyGObject *self,
     SET_PAD_CLOSURE (self, args, 
 		     kwargs, setcaps_function)
 }
+%%
+override gst_pad_set_activate_function kwargs
 
+static void EXCEPTION_HANDLER
+handle_activate_function_exception (GValue * ret, guint n, const GValue * params)
+{
+  GstElement *element = GST_ELEMENT (gst_pad_get_parent (g_value_get_object (&params[0])));
+  
+  if (!_pygst_element_check_error (element)) {
+    g_assert_not_reached (); /* only returns FALSE when there's no error */
+  }
+}
+
+static gboolean
+call_activate_function (GstPad * pad)
+{
+    GClosure * closure;
+    GValue ret = { 0, };
+    GValue args[1] = { {0, }};
+    gboolean bool;
+
+    g_value_init (&ret, G_TYPE_BOOLEAN);
+    g_value_set_boolean (&ret, FALSE);
+    g_value_init(&args[0], GST_TYPE_PAD);
+    g_value_set_object (&args[0], pad);
+    closure = pad_private(pad)->activate_function;
+
+    g_closure_invoke (closure, &ret, 1, args, NULL);
+    
+    bool = g_value_get_boolean (&ret);
+
+    g_value_unset (&ret);
+    g_value_unset (&args[0]);
+    
+    return bool;
+}
+
+static PyObject *
+_wrap_gst_pad_set_activate_function (PyGObject *self,
+				     PyObject *args,
+				     PyObject *kwargs)
+{
+    SET_PAD_CLOSURE (self, args, kwargs, activate_function)
+}
+%%
+override gst_pad_set_activatepull_function kwargs
+
+static void EXCEPTION_HANDLER
+handle_activatepull_function_exception (GValue * ret, guint n, const GValue * params)
+{
+  GstElement *element = GST_ELEMENT (gst_pad_get_parent (g_value_get_object (&params[0])));
+  
+  if (!_pygst_element_check_error (element)) {
+    g_assert_not_reached (); /* only returns FALSE when there's no error */
+  }
+}
+
+static gboolean
+call_activatepull_function (GstPad * pad, gboolean active)
+{
+    GClosure * closure;
+    GValue ret = { 0, };
+    GValue args[2] = { {0, }, {0, } };
+    gboolean bool;
+
+    g_value_init (&ret, G_TYPE_BOOLEAN);
+    g_value_set_boolean (&ret, FALSE);
+    g_value_init (&args[0], GST_TYPE_PAD);
+    g_value_set_object (&args[0], pad);
+    g_value_init (&args[1], G_TYPE_BOOLEAN);
+    g_value_set_boolean (&args[1], active);
+    closure = pad_private(pad)->activatepull_function;
+
+    g_closure_invoke (closure, &ret, 2, args, NULL);
+
+    bool = g_value_get_boolean (&ret);
+    
+    g_value_unset (&ret);
+    g_value_unset (&args[0]);
+    g_value_unset (&args[1]);
+
+    return bool;
+}
+
+static PyObject *
+_wrap_gst_pad_set_activatepull_function (PyGObject *self,
+					 PyObject *args,
+					 PyObject *kwargs)
+{
+    SET_PAD_CLOSURE (self, args, kwargs, activatepull_function);
+}
+%%
+override gst_pad_set_activatepush_function kwargs
+
+static void EXCEPTION_HANDLER
+handle_activatepush_function_exception (GValue * ret, guint n, const GValue * params)
+{
+  GstElement *element = GST_ELEMENT (gst_pad_get_parent (g_value_get_object (&params[0])));
+  
+  if (!_pygst_element_check_error (element)) {
+    g_assert_not_reached (); /* only returns FALSE when there's no error */
+  }
+}
+
+static gboolean
+call_activatepush_function (GstPad * pad, gboolean active)
+{
+    GClosure * closure;
+    GValue ret = { 0, };
+    GValue args[2] = { {0, }, {0, }};
+    gboolean bool;
+
+    g_value_init (&ret, G_TYPE_BOOLEAN);
+    g_value_set_boolean (&ret, FALSE);
+    g_value_init (&args[0], GST_TYPE_PAD);
+    g_value_set_object (&args[0], pad);
+    g_value_init (&args[1], G_TYPE_BOOLEAN);
+    g_value_set_boolean (&args[1], active);
+    closure = pad_private(pad)->activatepush_function;
+
+    g_closure_invoke (closure, &ret, 2, args, NULL);
+
+    bool = g_value_get_boolean (&ret);
+    
+    g_value_unset (&ret);
+    g_value_unset (&args[0]);
+    g_value_unset (&args[1]);
+
+    return bool;
+}
+
+static PyObject *
+_wrap_gst_pad_set_activatepush_function (PyGObject *self,
+					 PyObject *args,
+					 PyObject *kwargs)
+{
+    SET_PAD_CLOSURE (self, args, kwargs, activatepush_function);
+}
 %%
 override-slot GstPad.tp_repr
 static PyObject *

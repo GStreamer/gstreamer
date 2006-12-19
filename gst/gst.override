@@ -272,7 +272,6 @@ ignore-glob
   *_valist
   *_ref
   *_unref
-  *_init
   *_deinit
   *_full
   gst_class_*
@@ -927,6 +926,30 @@ _wrap_gst_clock_get_calibration (PyGObject * self)
     return ret;
 }
 %%
+override gst_clock_add_observation kwargs
+static PyObject *
+_wrap_gst_clock_add_observation (PyGObject *self, PyObject * args, PyObject * kwargs)
+{
+    static char *kwlist[] = { "slave", "master", NULL};
+    GstClockTime master, slave;
+    gdouble squared = 1.0;
+    PyObject *py_ret;
+    gboolean ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "KK:GstClock.add_observation",
+				     kwlist, &master, &slave))
+	return NULL;
+    
+    ret = gst_clock_add_observation (GST_CLOCK (self->obj), master, slave,
+				     &squared);
+
+    py_ret = PyList_New(2);
+    PyList_SetItem(py_ret, 0, PyBool_FromLong(ret));
+    PyList_SetItem(py_ret, 1, PyFloat_FromDouble(squared));
+    return py_ret;
+}
+
+%%
 override gst_type_find_helper_for_buffer kwargs
 static PyObject *
 _wrap_gst_type_find_helper_for_buffer (PyObject *self, PyObject *args, PyObject *kwargs)
@@ -1127,4 +1150,71 @@ _wrap_gst_type_find_new (PyObject *self, PyObject *args, PyObject *kwargs)
     GST_DEBUG ("poeut : %p", pytypefind);
 
     return pytypefind;
+}
+%%
+override gst_segment_set_seek kwargs
+static PyObject *
+_wrap_gst_segment_set_seek (PyObject * self, PyObject * args, PyObject * kwargs)
+{
+    static char *kwlist[] = { "rate", "format", "flags", "start_type", "start",
+			      "stop_type", "stop", NULL };
+    GstSeekType start_type, stop_type;
+    PyObject *py_format = NULL, *py_flags = NULL, *py_start_type = NULL;
+    PyObject *py_stop_type = NULL, *py_ret;
+    double rate;
+    GstFormat format;
+    gint64 start, stop;
+    GstSeekFlags flags;
+    gboolean update = FALSE;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"dOOOLOL:GstSegment.set_seek",
+				     kwlist, &rate, &py_format, &py_flags,
+				     &py_start_type, &start, &py_stop_type,
+				     &stop))
+        return NULL;
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, py_format, (gint *)&format))
+        return NULL;
+    if (pyg_flags_get_value(GST_TYPE_SEEK_FLAGS, py_flags, (gint *)&flags))
+        return NULL;
+    if (pyg_enum_get_value(GST_TYPE_SEEK_TYPE, py_start_type, (gint *)&start_type))
+        return NULL;
+    if (pyg_enum_get_value(GST_TYPE_SEEK_TYPE, py_stop_type, (gint *)&stop_type))
+        return NULL;
+    pyg_begin_allow_threads;
+    gst_segment_set_seek(pyg_boxed_get(self, GstSegment), rate, format, flags,
+			 start_type, start, stop_type, stop, &update);
+    pyg_end_allow_threads;
+    py_ret = PyBool_FromLong(update);
+    return py_ret;
+}
+%%
+override gst_segment_clip kwargs
+static PyObject *
+_wrap_gst_segment_clip (PyObject * self, PyObject * args, PyObject * kwargs)
+{
+    static char *kwlist[] = { "format", "start", "stop", NULL};
+    GstFormat format;
+    gint64 start, stop;
+    gint64 cstart = -1;
+    gint64 cstop = -1;
+    gboolean ret;
+    PyObject *py_ret, *py_format;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OLL:GstSegment.clip",
+				     kwlist, &py_format, &start, &stop))
+	return NULL;
+    if (pyg_enum_get_value(GST_TYPE_FORMAT, py_format, (gint *)&format))
+	return NULL;
+    pyg_begin_allow_threads;
+    ret = gst_segment_clip (pyg_boxed_get(self, GstSegment), format, start, stop,
+			    &cstart, &cstop);
+    pyg_end_allow_threads;
+
+    /* Returns gboolean ret, gint64 clip_start, gint64 clip_stop */
+    py_ret = PyList_New(3);
+    PyList_SetItem(py_ret, 0, PyBool_FromLong(ret));
+    PyList_SetItem(py_ret, 1, PyLong_FromLongLong(cstart));
+    PyList_SetItem(py_ret, 2, PyLong_FromLongLong(cstop));
+
+    return py_ret;
 }

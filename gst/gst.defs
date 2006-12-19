@@ -6512,6 +6512,14 @@
   (return-type "const-gchar*")
 )
 
+(define-function state_change_return_get_name
+  (c-name "gst_element_state_change_return_get_name")
+  (return-type "const-gchar*")
+  (parameters
+    '("GstStateChangeReturn" "state_ret")
+  )
+)
+
 (define-method link
   (of-object "GstElement")
   (c-name "gst_element_link")

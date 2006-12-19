@@ -31,6 +31,7 @@ tests =  \
         test_pipeline.py \
         test_registry.py \
         test_struct.py \
+	test_segment.py \
 	test_xml.py
 
 check-local: testhelper.la
