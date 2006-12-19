@@ -46,7 +46,7 @@
       behaviour.      
     </para>
     <programlisting>
-  controller = g_object_control_properties(object, "prop1", "prop2",...);
+  controller = gst_object_control_properties(object, "prop1", "prop2",...);
     </programlisting>
     <para>
       Next we can select an interpolation mode. This mode controls how inbetween

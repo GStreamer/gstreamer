@@ -1,3 +1,8 @@
+2006-12-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/advanced-dparams.xml:
+	  Fix typo (g_object_control_properties() doesn't exist).
+
 2006-12-19  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstsegment.c: (gst_segment_set_seek):
