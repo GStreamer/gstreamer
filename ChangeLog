@@ -1,3 +1,14 @@
+2006-12-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c:
+	  Docs typo fix.
+
+	* plugins/elements/gstqueue.c: (gst_queue_class_init),
+	(gst_queue_init):
+	  Fix incorrect documentation and flesh it out a bit more.
+	  Set default values for the max properties on the GParamSpec as well,
+	  so it shows up correctly in gst-inspect.
+
 2006-12-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* plugins/elements/gstqueue.c: (queue_leaky_get_type):

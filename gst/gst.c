@@ -603,7 +603,7 @@ static GstPluginDesc plugin_desc = {
  * @registry_file: registry filename
  * @write_changes: write registry if it has changed?
  *
- * Scans for registry changes and evntualy updates the registry cache. 
+ * Scans for registry changes and eventually updates the registry cache. 
  *
  * Return: %TRUE if the registry could be updated
  */

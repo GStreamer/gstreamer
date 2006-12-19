@@ -26,21 +26,34 @@
  * SECTION:element-queue
  * @short_description: Simple asynchronous data queue.
  *
- * Data is queued till the amount of buffers specified by
- * #GstQueue:max-size-buffers have been stored. Any subsequent buffers sent to
- * this filter will block until free space becomes available in the buffer.
+ * Data is queued until one of the limits specified by the
+ * #GstQueue:max-size-buffers, #GstQueue:max-size-bytes and/or
+ * #GstQueue:max-size-time properties has been reached. Any attempt to push
+ * more buffers into the queue will block the pushing thread until more space
+ * becomes available.
+ *
  * The queue will create a new thread on the source pad to decouple the
  * processing on sink and source pad.
  *
  * You can query how many buffers are queued by reading the
- * #GstQueue:current-level-buffers property.
+ * #GstQueue:current-level-buffers property. You can track changes
+ * by connecting to the notify::current-level-buffers signal (which
+ * like all signals will be emitted from the streaming thread). The same
+ * applies to the #GstQueue:current-level-time and
+ * #GstQueue:current-level-bytes properties.
  *
- * The default queue length is set to 100 buffers.
+ * The default queue size limits are 200 buffers, 10MB of data, or
+ * one second worth of data, whichever is reached first.
  *
- * As said earlier, the queue blocks by default. Alternatively one can set the
- * #GstQueue:leaky property to specify that it should leak new or old
- * buffers. Two signals - #GstQueue::overrun and #GstQueue::underrun inform
- * about this.
+ * As said earlier, the queue blocks by default when one of the specified
+ * maximums (bytes, time, buffers) has been reached. You can set the
+ * #GstQueue:leaky property to specify that instead of blocking it should
+ * leak (drop) new or old buffers.
+ *
+ * The #GstQueue::underrun signal is emitted when the queue has less data than
+ * the specified minimum thresholds require (by default: when the queue is
+ * empty). The #GstQueue::overrun signal is emitted when the queue is filled
+ * up. Both signals are emitted from the context of the streaming thread.
  */
 
 #include "gst/gst_private.h"
@@ -114,6 +127,11 @@ enum
   /* FILL ME */
 };
 
+/* default property values */
+#define DEFAULT_MAX_SIZE_BUFFERS  200   /* 200 buffers */
+#define DEFAULT_MAX_SIZE_BYTES    (10 * 1024 * 1024)    /* 10 MB       */
+#define DEFAULT_MAX_SIZE_TIME     GST_SECOND    /* 1 second    */
+
 #define GST_QUEUE_MUTEX_LOCK(q) G_STMT_START {                          \
   GST_CAT_LOG_OBJECT (queue_dataflow, q,                                \
       "locking qlock from thread %p",                                   \
@@ -183,7 +201,7 @@ queue_leaky_get_type (void)
     {GST_QUEUE_NO_LEAK, "Not Leaky", "no"},
     {GST_QUEUE_LEAK_UPSTREAM, "Leaky on upstream (new buffers)", "upstream"},
     {GST_QUEUE_LEAK_DOWNSTREAM, "Leaky on downstream (old buffers)",
-          "downstream"},
+        "downstream"},
     {0, NULL, NULL},
   };
 
@@ -305,15 +323,15 @@ gst_queue_class_init (GstQueueClass * klass)
   g_object_class_install_property (gobject_class, ARG_MAX_SIZE_BYTES,
       g_param_spec_uint ("max-size-bytes", "Max. size (kB)",
           "Max. amount of data in the queue (bytes, 0=disable)",
-          0, G_MAXUINT, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_MAX_SIZE_BYTES, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MAX_SIZE_BUFFERS,
       g_param_spec_uint ("max-size-buffers", "Max. size (buffers)",
           "Max. number of buffers in the queue (0=disable)",
-          0, G_MAXUINT, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_MAX_SIZE_BUFFERS, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MAX_SIZE_TIME,
       g_param_spec_uint64 ("max-size-time", "Max. size (ns)",
           "Max. amount of data in the queue (in ns, 0=disable)",
-          0, G_MAXUINT64, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT64, DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_MIN_THRESHOLD_BYTES,
       g_param_spec_uint ("min-threshold-bytes", "Min. threshold (kB)",
@@ -377,9 +395,9 @@ gst_queue_init (GstQueue * queue)
   queue->cur_level.buffers = 0; /* no content */
   queue->cur_level.bytes = 0;   /* no content */
   queue->cur_level.time = 0;    /* no content */
-  queue->max_size.buffers = 200;        /* 200 buffers */
-  queue->max_size.bytes = 10 * 1024 * 1024;     /* 10 MB */
-  queue->max_size.time = GST_SECOND;    /* 1 s. */
+  queue->max_size.buffers = DEFAULT_MAX_SIZE_BUFFERS;
+  queue->max_size.bytes = DEFAULT_MAX_SIZE_BYTES;
+  queue->max_size.time = DEFAULT_MAX_SIZE_TIME;
   queue->min_threshold.buffers = 0;     /* no threshold */
   queue->min_threshold.bytes = 0;       /* no threshold */
   queue->min_threshold.time = 0;        /* no threshold */
