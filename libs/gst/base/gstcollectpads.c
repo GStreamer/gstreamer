@@ -481,7 +481,7 @@ gst_collect_pads_set_flushing_unlocked (GstCollectPads * pads,
  *
  * Change the flushing state of all the pads in the collection. No pad
  * is able to accept anymore data when @flushing is %TRUE. Calling this
- * function with @flushing %TRUE makes @pads accept data again.
+ * function with @flushing %FALSE makes @pads accept data again.
  *
  * MT safe.
  *
@@ -684,7 +684,7 @@ gst_collect_pads_clear (GstCollectPads * pads, GstCollectData * data)
  * This function should be called with @pads LOCK held, such as
  * in the callback.
  *
- * Returns: The maximum number of bytes queued on all pad. This function
+ * Returns: The maximum number of bytes queued on all pads. This function
  * returns 0 if a pad has no queued buffer.
  *
  * MT safe.
