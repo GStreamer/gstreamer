@@ -1,3 +1,9 @@
+2006-12-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (vivo_type_find),
+	(plugin_init):
+	  Add typefinder for VIVO files (my christmas present to the 90s).
+
 2006-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstdecodebin.c: (type_found):
