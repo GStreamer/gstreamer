@@ -1,3 +1,11 @@
+2006-12-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_caps_to_smpfmt):
+	  The "signed" field in raw audio caps is of boolean type, trying to
+	  extract the value with _get_int() will fail (fix to keep in sync with
+	  the copy in gst-ffmpeg)
+
 2006-12-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/elements/audioresample.c: (cleanup_audioresample):

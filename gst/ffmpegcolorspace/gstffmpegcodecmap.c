@@ -472,7 +472,7 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
 
   if (gst_structure_get_int (structure, "width", &width) &&
       gst_structure_get_int (structure, "depth", &depth) &&
-      gst_structure_get_int (structure, "signed", &signedness) &&
+      gst_structure_get_boolean (structure, "signed", &signedness) &&
       gst_structure_get_int (structure, "endianness", &endianness)) {
     if (width == 16 && depth == 16 &&
         endianness == G_BYTE_ORDER && signedness == TRUE) {
