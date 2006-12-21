@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.28 2006/12/17 20:19:43 thaytan Exp $
+# $Id: sv.po,v 1.29 2006/12/21 15:40:31 thaytan Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-12-17 20:37+0100\n"
+"POT-Creation-Date: 2006-12-19 16:56+0100\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -16,11 +16,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/qtdemux/qtdemux.c:3967
+#: gst/qtdemux/qtdemux.c:3977
 msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:3973
+#: gst/qtdemux/qtdemux.c:3983
 msgid "This file is encrypted and cannot be played."
 msgstr ""
 

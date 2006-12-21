@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-12-17 20:37+0100\n"
+"POT-Creation-Date: 2006-12-19 16:56+0100\n"
 "PO-Revision-Date: 2004-08-05 16:26+0200\n"
 "Last-Translator: Elros Cyriatan <cyriatan@fastmail.fm>\n"
 "Language-Team: Dutch <vertaling@nl.linux.org>\n"
@@ -15,11 +15,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: gst/qtdemux/qtdemux.c:3967
+#: gst/qtdemux/qtdemux.c:3977
 msgid "This file is corrupt and cannot be played."
 msgstr ""
 
-#: gst/qtdemux/qtdemux.c:3973
+#: gst/qtdemux/qtdemux.c:3983
 msgid "This file is encrypted and cannot be played."
 msgstr ""
 
