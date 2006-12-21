@@ -128,8 +128,6 @@ cleanup_panorama (GstElement * panorama)
   g_list_free (buffers);
   buffers = NULL;
 
-  gst_pad_set_active (mysrcpad, FALSE);
-  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (panorama);
   gst_check_teardown_sink_pad (panorama);
   gst_check_teardown_element (panorama);

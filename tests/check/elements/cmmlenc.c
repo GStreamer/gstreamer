@@ -161,8 +161,6 @@ setup_cmmlenc ()
   cmmlenc = gst_check_setup_element ("cmmlenc");
   srcpad = gst_check_setup_src_pad (cmmlenc, &srctemplate, NULL);
   sinkpad = gst_check_setup_sink_pad (cmmlenc, &sinktemplate, NULL);
-  gst_pad_set_active (srcpad, TRUE);
-  gst_pad_set_active (sinkpad, TRUE);
 
   bus = gst_bus_new ();
   gst_element_set_bus (cmmlenc, bus);
@@ -191,8 +189,6 @@ teardown_cmmlenc ()
   gst_object_unref (bus);
 
   GST_DEBUG ("teardown_cmmlenc");
-  gst_pad_set_active (srcpad, FALSE);
-  gst_pad_set_active (sinkpad, FALSE);
   gst_check_teardown_src_pad (cmmlenc);
   gst_check_teardown_sink_pad (cmmlenc);
   gst_check_teardown_element (cmmlenc);

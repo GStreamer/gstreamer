@@ -121,8 +121,6 @@ setup_avimux (GstStaticPadTemplate * srctemplate, gchar * sinkname)
   avimux = gst_check_setup_element ("avimux");
   mysrcpad = setup_src_pad (avimux, srctemplate, NULL, sinkname);
   mysinkpad = gst_check_setup_sink_pad (avimux, &sinktemplate, NULL);
-  gst_pad_set_active (mysrcpad, TRUE);
-  gst_pad_set_active (mysinkpad, TRUE);
 
   return avimux;
 }
@@ -133,8 +131,6 @@ cleanup_avimux (GstElement * avimux, gchar * sinkname)
   GST_DEBUG ("cleanup_avimux");
   gst_element_set_state (avimux, GST_STATE_NULL);
 
-  gst_pad_set_active (mysrcpad, FALSE);
-  gst_pad_set_active (mysinkpad, FALSE);
   teardown_src_pad (avimux, sinkname);
   gst_check_teardown_sink_pad (avimux);
   gst_check_teardown_element (avimux);

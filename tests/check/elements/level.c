@@ -72,8 +72,6 @@ setup_level ()
   level = gst_check_setup_element ("level");
   mysrcpad = gst_check_setup_src_pad (level, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (level, &sinktemplate, NULL);
-  gst_pad_set_active (mysrcpad, TRUE);
-  gst_pad_set_active (mysinkpad, TRUE);
 
   return level;
 }
@@ -83,8 +81,6 @@ cleanup_level (GstElement * level)
 {
   GST_DEBUG ("cleanup_level");
 
-  gst_pad_set_active (mysrcpad, FALSE);
-  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (level);
   gst_check_teardown_sink_pad (level);
   gst_check_teardown_element (level);
