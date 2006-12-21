@@ -1,3 +1,10 @@
+=== release 0.10.5 ===
+
+2006-12-21  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.5, "The Path of Thorns"
+
 2006-12-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/elements/audiopanorama.c: (cleanup_panorama):

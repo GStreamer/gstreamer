@@ -3,12 +3,327 @@
   <description>All LADSPA plugins</description>
   <filename>../../ext/ladspa/.libs/libgstladspa.so</filename>
   <basename>libgstladspa.so</basename>
-  <version>0.10.2.1</version>
+  <version>0.10.4.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
+    <element>
+      <name>ladspa-AmpIII</name>
+      <longname>CAPS: AmpIII - Tube amp emulation</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: AmpIII - Tube amp emulation</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-AmpIV</name>
+      <longname>CAPS: AmpIV - Tube amp emulation + tone controls</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: AmpIV - Tube amp emulation + tone controls</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-AmpV</name>
+      <longname>CAPS: AmpV - Refined tube amp emulation</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: AmpV - Refined tube amp emulation</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-CEO</name>
+      <longname>CAPS: CEO - Chief Executive Oscillator</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>CAPS: CEO - Chief Executive Oscillator</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-CabinetI</name>
+      <longname>CAPS: CabinetI - Loudspeaker cabinet emulation</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: CabinetI - Loudspeaker cabinet emulation</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-CabinetII</name>
+      <longname>CAPS: CabinetII - Refined loudspeaker cabinet emulation</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: CabinetII - Refined loudspeaker cabinet emulation</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Chorus1</name>
+      <longname>Chorus1 - Based on CSound orchestra by Sean Costello</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Chorus1 - Based on CSound orchestra by Sean Costello</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Chorus2</name>
+      <longname>Chorus2 - Based on CSound orchestra by Sean Costello</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Chorus2 - Based on CSound orchestra by Sean Costello</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-ChorusI</name>
+      <longname>CAPS: ChorusI - Mono chorus/flanger</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: ChorusI - Mono chorus/flanger</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-ChorusII</name>
+      <longname>CAPS: ChorusII - Mono chorus/flanger modulated by a fractal</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: ChorusII - Mono chorus/flanger modulated by a fractal</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Click</name>
+      <longname>CAPS: Click - Metronome</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>CAPS: Click - Metronome</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Clip</name>
+      <longname>CAPS: Clip - Hard clipper, 8x oversampled</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: Clip - Hard clipper, 8x oversampled</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Compress</name>
+      <longname>CAPS: Compress - Mono compressor</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: Compress - Mono compressor</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;, Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Dirac</name>
+      <longname>CAPS: Dirac - One-sample impulse generator</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>CAPS: Dirac - One-sample impulse generator</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Eq</name>
+      <longname>CAPS: Eq - 10-band 'analogue' equalizer</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: Eq - 10-band 'analogue' equalizer</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-HRTF</name>
+      <longname>CAPS: HRTF - Head-related transfer function at elevation 0</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: HRTF - Head-related transfer function at elevation 0</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-JVRev</name>
+      <longname>CAPS: JVRev - Stanford-style reverb from STK</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: JVRev - Stanford-style reverb from STK</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Lorenz</name>
+      <longname>CAPS: Lorenz - The sound of a Lorenz attractor</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>CAPS: Lorenz - The sound of a Lorenz attractor</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Mvchpf-1</name>
+      <longname>Mvchpf-1   Digital implementation of the VC HP filter invented by R.A. Moog</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mvchpf-1   Digital implementation of the VC HP filter invented by R.A. Moog</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@skynet.be&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Mvclpf-1</name>
+      <longname>Mvclpf-1   Digital implementation of the VC filter invented by R.A.Moog</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mvclpf-1   Digital implementation of the VC filter invented by R.A.Moog</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Mvclpf-2</name>
+      <longname>Mvclpf-2   Digital implementation of the VC filter invented by R.A.Moog</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mvclpf-2   Digital implementation of the VC filter invented by R.A.Moog</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Mvclpf-3</name>
+      <longname>Mvclpf-3   Digital implementation of the VC filter invented by R.A.Moog</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mvclpf-3   Digital implementation of the VC filter invented by R.A.Moog</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Mvclpf-4</name>
+      <longname>Mvclpf-4   Digital implementation of the VC filter invented by R.A.Moog</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mvclpf-4   Digital implementation of the VC filter invented by R.A.Moog</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Pan</name>
+      <longname>CAPS: Pan - Pan and width</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: Pan - Pan and width</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Parametric1</name>
+      <longname>4-band parametric filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>4-band parametric filter</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Phaser1</name>
+      <longname>Phaser1 - Similar to CSound's phaser1 by Sean Costello</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Phaser1 - Similar to CSound's phaser1 by Sean Costello</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Phaser1+LFO</name>
+      <longname>Phaser1 with LFO</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Phaser1 with LFO</description>
+      <author>Fons Adriaensen &lt;fons.adriaensen@alcatel.be&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-PhaserI</name>
+      <longname>CAPS: PhaserI - Mono phaser</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: PhaserI - Mono phaser</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-PhaserII</name>
+      <longname>CAPS: PhaserII - Mono phaser modulated by a Lorenz fractal</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: PhaserII - Mono phaser modulated by a Lorenz fractal</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Plate</name>
+      <longname>CAPS: Plate - Versatile plate reverb</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: Plate - Versatile plate reverb</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Plate2x2</name>
+      <longname>CAPS: Plate2x2 - Versatile plate reverb, stereo inputs</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: Plate2x2 - Versatile plate reverb, stereo inputs</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-PreampIII</name>
+      <longname>CAPS: PreampIII - Tube preamp emulation</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: PreampIII - Tube preamp emulation</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-PreampIV</name>
+      <longname>CAPS: PreampIV - Tube preamp emulation + tone controls</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: PreampIV - Tube preamp emulation + tone controls</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Roessler</name>
+      <longname>CAPS: Roessler - The sound of a Roessler attractor</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>CAPS: Roessler - The sound of a Roessler attractor</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Scape</name>
+      <longname>CAPS: Scape - Stereo delay + Filters</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: Scape - Stereo delay + Filters</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-Sin</name>
+      <longname>CAPS: Sin - Sine wave generator</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>CAPS: Sin - Sine wave generator</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-StereoChorusI</name>
+      <longname>CAPS: StereoChorusI - Stereo chorus/flanger</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: StereoChorusI - Stereo chorus/flanger</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-StereoChorusII</name>
+      <longname>CAPS: StereoChorusII - Stereo chorus/flanger modulated by a fractal</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: StereoChorusII - Stereo chorus/flanger modulated by a fractal</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-SweepVFI</name>
+      <longname>CAPS: SweepVFI - Resonant filter, f swept by a Lorenz fractal</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: SweepVFI - Resonant filter, f swept by a Lorenz fractal</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-SweepVFII</name>
+      <longname>CAPS: SweepVFII - Resonant filter, f and Q swept by a Lorenz fractal</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>CAPS: SweepVFII - Resonant filter, f and Q swept by a Lorenz fractal</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-VCOd</name>
+      <longname>CAPS: VCOd - Double VCO with detune and hard sync options</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>CAPS: VCOd - Double VCO with detune and hard sync options</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-VCOs</name>
+      <longname>CAPS: VCOs - Virtual 'analogue' oscillator</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>CAPS: VCOs - Virtual 'analogue' oscillator</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-White</name>
+      <longname>CAPS: White - White noise generator</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>CAPS: White - White noise generator</description>
+      <author>Tim Goetze &lt;tim@quitte.de&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-adenv</name>
+      <longname>Percussive AD Envelope</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Percussive AD Envelope</description>
+      <author>Loki Davison &lt;ltdav1[at]student.monash.edu.au&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-adenv-lvl</name>
+      <longname>Percussive AD Envelope with levels</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Percussive AD Envelope with levels</description>
+      <author>Loki Davison &lt;ltdav1[at]student.monash.edu.au&gt;</author>
+    </element>
     <element>
       <name>ladspa-adsr</name>
       <longname>ADSR Envelope</longname>
@@ -269,6 +584,20 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
     </element>
     <element>
+      <name>ladspa-comp-aa</name>
+      <longname>Comparison (AA)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Comparison (AA)</description>
+      <author>Thorsten Wilms</author>
+    </element>
+    <element>
+      <name>ladspa-comp-ac</name>
+      <longname>Comparison (AC)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Comparison (AC)</description>
+      <author>Thorsten Wilms</author>
+    </element>
+    <element>
       <name>ladspa-compress-peak</name>
       <longname>Simple Compressor (Peak Envelope Tracking)</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
@@ -304,6 +633,13 @@
       <author>Mike Rawes &lt;mike_rawes[at]yahoo.co.uk&gt;</author>
     </element>
     <element>
+      <name>ladspa-dahdsr-fexp</name>
+      <longname>DAHDSR Envelope full exp, adr</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>DAHDSR Envelope full exp, adr</description>
+      <author>Loki Davison &lt;ltdav1[at]student.monash.edu.au&gt;</author>
+    </element>
+    <element>
       <name>ladspa-dahdsr-g+t-audio</name>
       <longname>DAHDSR Envelope with Gate and Trigger (Audio-Rate Inputs)</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
@@ -316,6 +652,13 @@
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>DAHDSR Envelope with Gate and Trigger (Control Inputs)</description>
       <author>Mike Rawes &lt;mike_rawes[at]yahoo.co.uk&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-dahdsr-hexp</name>
+      <longname>DAHDSR Envelope linear attack exp dr</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>DAHDSR Envelope linear attack exp dr</description>
+      <author>Loki Davison &lt;ltdav1[at]student.monash.edu.au&gt;</author>
     </element>
     <element>
       <name>ladspa-dcRemove</name>
@@ -521,6 +864,13 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
     </element>
     <element>
+      <name>ladspa-fast-xfade</name>
+      <longname>Fast Crossfade</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Fast Crossfade</description>
+      <author>Thorsten Wilms</author>
+    </element>
+    <element>
       <name>ladspa-fastLookaheadLimiter</name>
       <longname>Fast Lookahead limiter</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
@@ -631,6 +981,13 @@
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Foldover distortion</description>
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-formant-vc</name>
+      <longname>Formant Filter (CR vowel)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Formant Filter (CR vowel)</description>
+      <author>Dave Robillard</author>
     </element>
     <element>
       <name>ladspa-fourByFourPole</name>
@@ -757,6 +1114,20 @@
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Simple High Pass Filter</description>
       <author>Richard Furse (LADSPA example plugins)</author>
+    </element>
+    <element>
+      <name>ladspa-hz-voct-ar</name>
+      <longname>Hz to V/Oct Converter (AR)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Hz to V/Oct Converter (AR)</description>
+      <author>Dave Robillard</author>
+    </element>
+    <element>
+      <name>ladspa-hz-voct-cr</name>
+      <longname>Hz to V/Oct Converter (CR)</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>Hz to V/Oct Converter (CR)</description>
+      <author>Dave Robillard</author>
     </element>
     <element>
       <name>ladspa-identity-audio</name>
@@ -934,6 +1305,20 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
     </element>
     <element>
+      <name>ladspa-mux-ar</name>
+      <longname>Multiplexer (AR)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Multiplexer (AR)</description>
+      <author>Thorsten Wilms</author>
+    </element>
+    <element>
+      <name>ladspa-mux-cr</name>
+      <longname>Multiplexer (CR)</longname>
+      <class>Sink/Audio/LADSPA</class>
+      <description>Multiplexer (CR)</description>
+      <author>Thorsten Wilms</author>
+    </element>
+    <element>
       <name>ladspa-noise-source-white</name>
       <longname>Noise Source (White)</longname>
       <class>Source/Audio/LADSPA</class>
@@ -1053,6 +1438,34 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
     </element>
     <element>
+      <name>ladspa-power</name>
+      <longname>Power (AR)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Power (AR)</description>
+      <author>Thorsten Wilms</author>
+    </element>
+    <element>
+      <name>ladspa-power-cr</name>
+      <longname>Power (CR)</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>Power (CR)</description>
+      <author>Thorsten Wilms</author>
+    </element>
+    <element>
+      <name>ladspa-prob-switch-ar</name>
+      <longname>Probability Switch (AR Controls)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Probability Switch (AR Controls)</description>
+      <author>Loki Davison</author>
+    </element>
+    <element>
+      <name>ladspa-prob-switch-cr</name>
+      <longname>Probability Switch (CR Controls)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Probability Switch (CR Controls)</description>
+      <author>Loki Davison</author>
+    </element>
+    <element>
       <name>ladspa-product-iaia-oa</name>
       <longname>Signal Product (IAIA)</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
@@ -1149,6 +1562,20 @@
       <class>Source/Audio/LADSPA</class>
       <description>Random Wave Generator (FCSC)</description>
       <author>Mike Rawes &lt;mike_rawes[at]yahoo.co.uk&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-range-trans-ar</name>
+      <longname>Range Translator (AR Controls)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Range Translator (AR Controls)</description>
+      <author>Dave Robillard</author>
+    </element>
+    <element>
+      <name>ladspa-range-trans-cr</name>
+      <longname>Range Translator (CR Controls)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Range Translator (CR Controls)</description>
+      <author>Dave Robillard</author>
     </element>
     <element>
       <name>ladspa-rateShifter</name>
@@ -1298,6 +1725,20 @@
       <author>Mike Rawes &lt;mike_rawes[at]yahoo.co.uk&gt;</author>
     </element>
     <element>
+      <name>ladspa-sh-ar</name>
+      <longname>Sample and Hold (AR Threshold)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Sample and Hold (AR Threshold)</description>
+      <author>Thorsten Wilms</author>
+    </element>
+    <element>
+      <name>ladspa-sh-cr</name>
+      <longname>Sample and Hold (CR Threshold)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Sample and Hold (CR Threshold)</description>
+      <author>Thorsten Wilms</author>
+    </element>
+    <element>
       <name>ladspa-shaper</name>
       <longname>Wave shaper</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
@@ -1310,6 +1751,20 @@
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Signal sifter</description>
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-signal-abs-ar</name>
+      <longname>Signal Absolute value, negative or positive (AR Controls)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Signal Absolute value, negative or positive (AR Controls)</description>
+      <author>Loki Davison</author>
+    </element>
+    <element>
+      <name>ladspa-signal-abs-cr</name>
+      <longname>Signal Absolute value, negative or positive (CR Controls)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Signal Absolute value, negative or positive (CR Controls)</description>
+      <author>Loki Davison</author>
     </element>
     <element>
       <name>ladspa-sinCos</name>
@@ -1368,6 +1823,34 @@
       <author>CMT (http://www.ladspa.org/cmt, plugin by Nathaniel Virgo)</author>
     </element>
     <element>
+      <name>ladspa-slew-limiter-ra</name>
+      <longname>Slew limiter (RA)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Slew limiter (RA)</description>
+      <author>Lars Luthman &lt;larsl@users.sourceforge.net&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-slew-limiter-rc</name>
+      <longname>Slew limiter (RC)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Slew limiter (RC)</description>
+      <author>Lars Luthman &lt;larsl@users.sourceforge.net&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-slide-ta</name>
+      <longname>Slide (TA)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Slide (TA)</description>
+      <author>Lars Luthman &lt;larsl@users.sourceforge.net&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-slide-tc</name>
+      <longname>Slide (TC)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Slide (TC)</description>
+      <author>Lars Luthman &lt;larsl@users.sourceforge.net&gt;</author>
+    </element>
+    <element>
       <name>ladspa-smoothDecimate</name>
       <longname>Smooth Decimator</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
@@ -1394,6 +1877,13 @@
       <class>Source/Audio/LADSPA</class>
       <description>Bandlimited Square Oscillator (FC)</description>
       <author>Mike Rawes &lt;mike_rawes[at]yahoo.co.uk&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-ssm-masher</name>
+      <longname>Masher</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Masher</description>
+      <author>Dave Griffiths</author>
     </element>
     <element>
       <name>ladspa-stepMuxer</name>
@@ -1711,6 +2201,69 @@
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
     </element>
     <element>
+      <name>ladspa-vcf-bp1</name>
+      <longname>Bandpass Filter I</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Bandpass Filter I</description>
+      <author>LADSPA code by Matthias Nagorni, Filter formula by Robert Bristow-Johnson</author>
+    </element>
+    <element>
+      <name>ladspa-vcf-bp2</name>
+      <longname>Bandpass Filter II</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Bandpass Filter II</description>
+      <author>LADSPA code by Matthias Nagorni, Filter formula by Robert Bristow-Johnson</author>
+    </element>
+    <element>
+      <name>ladspa-vcf-hp</name>
+      <longname>Highpass Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Highpass Filter</description>
+      <author>LADSPA code by Matthias Nagorni, Filter formula by Robert Bristow-Johnson</author>
+    </element>
+    <element>
+      <name>ladspa-vcf-hshelf</name>
+      <longname>High Shelf Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>High Shelf Filter</description>
+      <author>LADSPA code by Matthias Nagorni, Filter formula by Robert Bristow-Johnson</author>
+    </element>
+    <element>
+      <name>ladspa-vcf-lp</name>
+      <longname>Lowpass Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Lowpass Filter</description>
+      <author>LADSPA code by Matthias Nagorni, Filter formula by Robert Bristow-Johnson</author>
+    </element>
+    <element>
+      <name>ladspa-vcf-lshelf</name>
+      <longname>Low Shelf Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Low Shelf Filter</description>
+      <author>LADSPA code by Matthias Nagorni, Filter formula by Robert Bristow-Johnson</author>
+    </element>
+    <element>
+      <name>ladspa-vcf-notch</name>
+      <longname>Notch Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Notch Filter</description>
+      <author>LADSPA code by Matthias Nagorni, Filter formula by Robert Bristow-Johnson</author>
+    </element>
+    <element>
+      <name>ladspa-vcf-peakeq</name>
+      <longname>Peaking EQ Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Peaking EQ Filter</description>
+      <author>LADSPA code by Matthias Nagorni, Filter formula by Robert Bristow-Johnson</author>
+    </element>
+    <element>
+      <name>ladspa-vcf-reslp</name>
+      <longname>Resonant Lowpass Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Resonant Lowpass Filter</description>
+      <author>LADSPA code by Matthias Nagorni, Filter formula by Paul Kellett</author>
+    </element>
+    <element>
       <name>ladspa-vcf303</name>
       <longname>VCF 303</longname>
       <class>Filter/Effect/Audio/LADSPA</class>
@@ -1730,6 +2283,13 @@
       <class>Filter/Effect/Audio/LADSPA</class>
       <description>Wave Terrain Oscillator</description>
       <author>Steve Harris &lt;steve@plugin.org.uk&gt;</author>
+    </element>
+    <element>
+      <name>ladspa-wg-mesh-cr</name>
+      <longname>Simple waveguide mesh (CR Controls)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Simple waveguide mesh (CR Controls)</description>
+      <author>Loki Davison</author>
     </element>
     <element>
       <name>ladspa-wshape-sine</name>

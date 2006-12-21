@@ -3,10 +3,10 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.10.4.1</version>
+  <version>0.10.5</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -18,14 +18,14 @@
     </element>
     <element>
       <name>rtpamrdepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts AMR audio from RTP packets (RFC 3267)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpamrpay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload-encode AMR audio into RTP packets (RFC 3267)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
@@ -39,7 +39,7 @@
     </element>
     <element>
       <name>rtpgsmdepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts GSM audio from RTP packets</description>
       <author>Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
@@ -53,140 +53,168 @@
     </element>
     <element>
       <name>rtph263pay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload-encodes H263 video in RTP packets (RFC 2190)</description>
       <author>Neil Stratford &lt;neils@vipadia.com&gt;</author>
     </element>
     <element>
       <name>rtph263pdepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts H263+ video from RTP packets (RFC 2429)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtph263ppay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload-encodes H263+ video in RTP packets (RFC 2429)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtph264depay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts H264 video from RTP packets (RFC 3984)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
+      <name>rtpilbcdepay</name>
+      <longname>RTP iLBC packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts iLBC audio from RTP packets</description>
+      <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;</author>
+    </element>
+    <element>
+      <name>rtpilbcpay</name>
+      <longname>RTP Payloader for iLBC Audio</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Packetize iLBC audio streams into RTP packets</description>
+      <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;</author>
+    </element>
+    <element>
       <name>rtpmp2tdepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts MPEG2 TS from RTP packets (RFC 2250)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpmp4gdepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts MPEG4 elementary streams from RTP packets (RFC 3640)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpmp4gpay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload MPEG4 elementary streams as RTP packets (RFC 3640)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpmp4vdepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts MPEG4 video from RTP packets (RFC 3016)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpmp4vpay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload MPEG4 video as RTP packets (RFC 3016)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpmpadepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts MPEG audio from RTP packets (RFC 2038)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpmpapay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload MPEG audio as RTP packets (RFC 2038)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtppcmadepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts PCMA audio from RTP packets</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
     </element>
     <element>
       <name>rtppcmapay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload-encodes PCMA audio into a RTP packet</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
     </element>
     <element>
       <name>rtppcmudepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts PCMU audio from RTP packets</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Zeeshan Ali &lt;zeenix@gmail.com&gt;</author>
     </element>
     <element>
       <name>rtppcmupay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload-encodes PCMU audio into a RTP packet</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
     </element>
     <element>
       <name>rtpspeexdepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts Speex audio from RTP packets</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
     </element>
     <element>
       <name>rtpspeexpay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet payloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload-encodes Speex audio into a RTP packet</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;</author>
     </element>
     <element>
       <name>rtpsv3vdepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts SVQ3 video from RTP packets (no RFC)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
+      <name>rtptheoradepay</name>
+      <longname>RTP packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts Theora video from RTP packets (draft-01 of RFC XXXX)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtptheorapay</name>
+      <longname>RTP packet depayloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload-encode Theora video into RTP packets (draft-01 RFC XXXX)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
       <name>rtpvorbisdepay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts Vorbis Audio from RTP packets (draft-01 of RFC XXXX)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpvorbispay</name>
-      <longname>RTP packet parser</longname>
+      <longname>RTP packet depayloader</longname>
       <class>Codec/Payloader/Network</class>
       <description>Payload-encode Vorbis audio into RTP packets (draft-01 RFC XXXX)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
