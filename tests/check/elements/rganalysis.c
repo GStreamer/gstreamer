@@ -187,6 +187,8 @@ cleanup_rganalysis (GstElement * element)
   /* The bus owns references to the element: */
   gst_element_set_bus (element, NULL);
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (element);
   gst_check_teardown_sink_pad (element);
   gst_check_teardown_element (element);

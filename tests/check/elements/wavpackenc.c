@@ -62,6 +62,8 @@ setup_wavpackenc ()
   wavpackenc = gst_check_setup_element ("wavpackenc");
   mysrcpad = gst_check_setup_src_pad (wavpackenc, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (wavpackenc, &sinktemplate, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
 
   fail_unless (gst_element_set_state (wavpackenc,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -82,6 +84,8 @@ cleanup_wavpackenc (GstElement * wavpackenc)
 
   gst_element_set_state (wavpackenc, GST_STATE_NULL);
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (wavpackenc);
   gst_check_teardown_sink_pad (wavpackenc);
   gst_check_teardown_element (wavpackenc);
