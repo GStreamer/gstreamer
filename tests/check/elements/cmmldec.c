@@ -136,6 +136,8 @@ setup_cmmldec ()
   cmmldec = gst_check_setup_element ("cmmldec");
   srcpad = gst_check_setup_src_pad (cmmldec, &srctemplate, NULL);
   sinkpad = gst_check_setup_sink_pad (cmmldec, &sinktemplate, NULL);
+  gst_pad_set_active (srcpad, TRUE);
+  gst_pad_set_active (sinkpad, TRUE);
 
   bus = gst_bus_new ();
   gst_element_set_bus (cmmldec, bus);
@@ -161,6 +163,8 @@ teardown_cmmldec ()
   gst_object_unref (bus);
 
   GST_DEBUG ("teardown_cmmldec");
+  gst_pad_set_active (srcpad, FALSE);
+  gst_pad_set_active (sinkpad, FALSE);
   gst_check_teardown_src_pad (cmmldec);
   gst_check_teardown_sink_pad (cmmldec);
   gst_check_teardown_element (cmmldec);
