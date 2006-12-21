@@ -53,7 +53,10 @@ static void
 queue_underrun (GstElement * queue, gpointer user_data)
 {
   GST_DEBUG ("queue underrun");
+  g_mutex_lock (check_mutex);
   underrun_count++;
+  g_cond_signal (check_cond);
+  g_mutex_unlock (check_mutex);
 }
 
 GstElement *
@@ -99,12 +102,13 @@ GST_START_TEST (test_non_leaky_underrun)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  /* do we need to wait here a little */
-  usleep (100);
-   /**/ GST_DEBUG ("running");
+  GST_DEBUG ("running");
+  g_mutex_lock (check_mutex);
+  g_cond_wait (check_cond, check_mutex);
+  g_mutex_unlock (check_mutex);
 
   fail_unless (overrun_count == 0);
-  fail_unless (underrun_count > 0);
+  fail_unless (underrun_count == 1);
 
   fail_unless (buffer == NULL);
 

@@ -1,5 +1,11 @@
 2006-12-21  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/elements/queue.c: (queue_overrun), (queue_underrun),
+	(GST_START_TEST):
+	  fix race in underrun test
+
+2006-12-21  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/check/elements/.cvsignore:
 	  ignore more
 
