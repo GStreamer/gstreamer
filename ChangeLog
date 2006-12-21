@@ -1,17 +1,5 @@
 2006-12-21  Stefan Kost  <ensonic@users.sf.net>
 
-	* tests/check/elements/mpeg2enc.c: (setup_mpeg2enc)
-	(cleanup_mpeg2enc):
-	* tests/check/elements/rganalysis.c: (cleanup_rganalysis):
-	* tests/check/elements/wavpackdec.c: (setup_wavpackdec),
-	(cleanup_wavpackdec):
-	* tests/check/elements/wavpackenc.c: (setup_wavpackenc),
-	(cleanup_wavpackenc):
-	* tests/check/elements/y4menc.c: (setup_y4menc), (cleanup_y4menc):
-	  revert my freeze breakage
-
-2006-12-21  Stefan Kost  <ensonic@users.sf.net>
-
 	* tests/check/elements/mpeg2enc.c: (setup_mpeg2enc),
 	(cleanup_mpeg2enc):
 	* tests/check/elements/rganalysis.c: (cleanup_rganalysis):
