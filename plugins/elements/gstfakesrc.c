@@ -596,7 +596,7 @@ gst_fake_src_prepare_buffer (GstFakeSrc * src, GstBuffer * buf)
       guint8 *ptr = GST_BUFFER_DATA (buf);
 
       for (i = GST_BUFFER_SIZE (buf); i; i--) {
-        *ptr++ = (gint8) ((255.0) * rand () / (RAND_MAX));
+        *ptr++ = g_random_int_range (0, 256);
       }
       break;
     }
@@ -660,10 +660,7 @@ gst_fake_src_get_size (GstFakeSrc * src)
       size = src->sizemax;
       break;
     case FAKE_SRC_SIZETYPE_RANDOM:
-      size =
-          src->sizemin +
-          (guint8) (((gfloat) src->sizemax) * rand () / (RAND_MAX +
-              (gfloat) src->sizemin));
+      size = g_random_int_range (src->sizemin, src->sizemax);
       break;
     case FAKE_SRC_SIZETYPE_EMPTY:
     default:

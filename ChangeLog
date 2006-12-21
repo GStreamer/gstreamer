@@ -1,3 +1,9 @@
+2006-12-21  David Schleef  <ds@schleef.org>
+
+	* plugins/elements/gstfakesrc.c:
+	  Use g_random_int_range(), since it produces better random
+	  numbers in a range than almost-correct floating point code.
+
 2006-12-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/check/gstcheck.c: (gst_check_setup_src_pad),
