@@ -108,6 +108,8 @@ cleanup_audioresample (GstElement * audioresample)
   fail_unless (gst_element_set_state (audioresample,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to NULL");
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (audioresample);
   gst_check_teardown_sink_pad (audioresample);
   gst_check_teardown_element (audioresample);
