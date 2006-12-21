@@ -1,4 +1,97 @@
-This is GStreamer Bad Plug-ins 0.10.3, "Petition to request permission"
+This is GStreamer Bad Plug-ins 0.10.4, "Black Bugs"
+
+Changes since 0.10.3:
+
+      * V4L2 source element moved to Good plugins
+      * Many improvements in Quicktime playback
+      * Xvid encoding and decoding improvements
+      * FAAD decoder fixes
+      * New element: alsaspdifsink for IEC958 output
+      * Spectrum FFT analysis element ported
+      * New element: h264parse. H.264 Parser
+      * Fixes in bz2 support
+      * New element: theoraexpdec. Libtheoraexp based Theora decoder
+      * New element: wavpackenc. Wavpack decoder
+      * Improvements in the libneon based http source
+      * gstfilter ported to 0.10
+      * mpeg2enc ported to 0.10
+      * New element: nsfdec. NSF decoder
+      * New element: spcdec. libopenspc based SPC decoder
+      * videocrop ported/re-written from 0.8
+      * cdaudio element ported to 0.10
+      * New element: rganalysis. ReplayGain analysis element
+      * New element: dvbsrc. DVB source element (disabled by default)
+      * deinterlace (Simple deinterlacer) ported from 0.8
+      * New element: nuvdemux. NUV video demuxer
+      * Fixes in the DirectDraw output elements
+      * New elements: multifilesrc, multifilesink
+      * y4mencode ported from 0.8
+      * rfbsrc, librfb based capture source ported from 0.8
+      * New element: jackaudiosink. JACK audio output element
+      * Many other fixes and improvements
+
+Bugs fixed since 0.10.3:
+
+      * 379261 : crash in Movie Player: Trying to play a partial...
+      * 151192 : [PATCH] nsf decoder
+      * 124580 : [jacksink] plugin needs a maintainer/love/to be updated
+      * 330632 : [qtdemux] MP3 stream in MP4 container not playable
+      * 335507 : [FAAD] blur_warhammer.mp4 movie doesn't transcode
+      * 339462 : [PATCH] xvid plugin to support more capabilities of XviD ...
+      * 340638 : New plugin: h264 parse element
+      * 341231 : [qtdemux] [faad] audio in some superman trailers doesn't ...
+      * 341461 : gst-plugins-bad missing -no-undefined again
+      * 341563 : [faad] fails to decode middle of file, should just skip o...
+      * 343031 : v4l2src caps negotion is faulty
+      * 343131 : [wavpack] add wavpack encoder
+      * 343184 : [mpeg2enc] ported to 0.10
+      * 343866 : cygwin fixes
+      * 344472 : [wavpackdec] should post audio codec tag and extract bitrate
+      * 344821 : [pitch] controllable properties
+      * 344944 : AAC Support crashes with some files
+      * 345182 : [neonhttpsrc] fails to compile with libneon 0.26.x
+      * 345336 : modplug plugin doesn't work on AMD64
+      * 345653 : [videocrop] port to 0.10, support all common formats
+      * 346853 : [PATCH] ported gstfilter elements to 0.10
+      * 347079 : [qtdemux] plugin doesn't decode Year
+      * 347443 : [wavpack] port parser/decoder to official API and random ...
+      * 347935 : [nsf] warning when building RPM
+      * 348220 : New libopenspc-based SPC playback plugin
+      * 348976 : [xviddec] crashes after invalid unit size warning
+      * 350399 : [qtdemux] extract multiple redirect locations and require...
+      * 350741 : [faac] Wrong bitrate set
+      * 351495 : [wavpackparse] add support for push-based mode
+      * 351557 : [wavpackparse] resync in push mode if sync was lost
+      * 357069 : [rganalysis] New element: ReplayGain analysis
+      * 357212 : [glimagesink] crashes if no DISPLAY
+      * 361260 : New element: nuvdemux
+      * 362626 : Fixes compiling with forte: warning clean up (part 5)
+      * 376106 : Port rfbsrc to gst 0.10
+      * 378613 : [qtdemux] non-working redirect ('alis' redirect reference...
+      * 382203 : ladspa element needs to be enabled
+      * 384294 : [modplug] returns position query results in attoseconds
+      * 385048 : [qtdemux] Crash on a mp4 file in qtdemux_parse_trak
+      * 385788 : [SECURITY] buffer overflows in modplug
+      * 387076 : [wavpack] Wrong include
+      * 387122 : [qtdemux] regression: crash in parse_trak
+      * 387160 : [qtdemux] posts buffering message which can cause hangs
+      * 351659 : [wavpackparse] fix resync in push mode, implement it in p...
+      * 351663 : [wavpackenc] doesn't set correct caps on source pad
+      * 352476 : [wavpack] documentation, unit tests, memleak fix
+      * 366523 : [directdraw] fix playback and vs8 fixes
+      * 369539 : [wavpackenc] More sensible values for GstEnums, don't sen...
+      * 384140 : [neonhttpsrc] id3demux autoplug loop streaming mp3 with I...
+      * 387137 : Regression: qtdemux paletted image handling
+      * 349916 : [gdp] raw audio saved in gdp, when depayloading  complain...
+      * 346723 : gstneonhttpsrc fails for URL
+      * 347439 : [qtdemux] seeks poorly in files with slideshows
+      * 349204 : [gdp] raw audio saved in gdp does not depayload correctly
+      * 351825 : [qtdemux] doesn't set proper caps for RGB video
+      * 367696 : [qtdemux] No support for QuickTime Animation (RLE).
+      * 372243 : [PATCH] yuv4mpeg (v2) encoder ported to 0.10
+      * 380610 : [rganalysis] Incorrect event handling
+      * 383471 : cannot link 1 ch raw 24-bit PCM audio
+      * 344987 : [PATCH] [dvbsrc] [ts-tools] gstreamer 0.10 port
 
 There was no 0.10.2 release
 
