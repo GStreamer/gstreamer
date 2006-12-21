@@ -1,3 +1,12 @@
+2006-12-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/elements/.cvsignore:
+	  ignore more
+
+	* tests/check/elements/queue.c: (queue_overrun), (queue_underrun),
+	(GST_START_TEST):
+	  try to narrow test failure
+
 2006-12-21  David Schleef  <ds@schleef.org>
 
 	* plugins/elements/gstfakesrc.c:

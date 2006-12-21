@@ -146,13 +146,16 @@ GST_START_TEST (test_non_leaky_overrun)
   /* pushing gives away my reference ... */
   gst_pad_push (mysrcpad, buffer1);
 
+  GST_DEBUG ("added 1st");
+  fail_unless (overrun_count == 0);
+  fail_unless (underrun_count == 0);
+
   buffer2 = gst_buffer_new_and_alloc (4);
   ASSERT_BUFFER_REFCOUNT (buffer2, "buffer", 1);
   /* pushing gives away my reference ... */
   gst_pad_push (mysrcpad, buffer2);
 
-  GST_DEBUG ("filled");
-
+  GST_DEBUG ("added 2nd");
   fail_unless (overrun_count == 0);
   fail_unless (underrun_count == 0);
 

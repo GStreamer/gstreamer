@@ -2,6 +2,7 @@
 fakesrc
 fakesink
 fdsrc
-identity
 filesrc
+identity
+queue
 *.check.xml
