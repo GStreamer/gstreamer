@@ -96,6 +96,8 @@ cleanup_volume (GstElement * volume)
   g_list_free (buffers);
   buffers = NULL;
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (volume);
   gst_check_teardown_sink_pad (volume);
   gst_check_teardown_element (volume);

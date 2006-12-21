@@ -76,6 +76,7 @@ cleanup_videotestsrc (GstElement * videotestsrc)
   g_list_free (buffers);
   buffers = NULL;
 
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (videotestsrc);
   gst_check_teardown_element (videotestsrc);
 }

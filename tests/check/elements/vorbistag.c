@@ -98,6 +98,8 @@ setup_vorbistag (void)
   vorbistag = gst_check_setup_element ("vorbistag");
   mysrcpad = gst_check_setup_src_pad (vorbistag, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (vorbistag, &sinktemplate, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
 
   return vorbistag;
 }
@@ -108,6 +110,8 @@ cleanup_vorbistag (GstElement * vorbistag)
   GST_DEBUG ("cleanup_vorbistag");
   gst_element_set_state (vorbistag, GST_STATE_NULL);
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (vorbistag);
   gst_check_teardown_sink_pad (vorbistag);
   gst_check_teardown_element (vorbistag);

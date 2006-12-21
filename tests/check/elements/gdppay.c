@@ -71,6 +71,8 @@ setup_gdppay ()
   gdppay = gst_check_setup_element ("gdppay");
   mysrcpad = gst_check_setup_src_pad (gdppay, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (gdppay, &sinktemplate, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
 
   return gdppay;
 }
@@ -80,6 +82,8 @@ cleanup_gdppay (GstElement * gdppay)
 {
   GST_DEBUG ("cleanup_gdppay");
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (gdppay);
   gst_check_teardown_sink_pad (gdppay);
   gst_check_teardown_element (gdppay);

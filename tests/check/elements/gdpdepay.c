@@ -72,6 +72,8 @@ setup_gdpdepay ()
   gdpdepay = gst_check_setup_element ("gdpdepay");
   mysrcpad = gst_check_setup_src_pad (gdpdepay, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (gdpdepay, &sinktemplate, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
 
   return gdpdepay;
 }
@@ -81,6 +83,8 @@ cleanup_gdpdepay (GstElement * gdpdepay)
 {
   GST_DEBUG ("cleanup_gdpdepay");
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (gdpdepay);
   gst_check_teardown_sink_pad (gdpdepay);
   gst_check_teardown_element (gdpdepay);

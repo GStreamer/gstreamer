@@ -1,3 +1,21 @@
+2006-12-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/elements/audioresample.c: (cleanup_audioresample):
+	* tests/check/elements/audiotestsrc.c: (cleanup_audiotestsrc):
+	* tests/check/elements/gdpdepay.c: (setup_gdpdepay),
+	(cleanup_gdpdepay):
+	* tests/check/elements/gdppay.c: (setup_gdppay), (cleanup_gdppay):
+	* tests/check/elements/subparse.c: (teardown_subparse):
+	* tests/check/elements/textoverlay.c: (cleanup_textoverlay):
+	* tests/check/elements/videorate.c: (cleanup_videorate):
+	* tests/check/elements/videotestsrc.c: (cleanup_videotestsrc):
+	* tests/check/elements/volume.c: (cleanup_volume):
+	* tests/check/elements/vorbisdec.c: (setup_vorbisdec),
+	(cleanup_vorbisdec):
+	* tests/check/elements/vorbistag.c: (setup_vorbistag),
+	(cleanup_vorbistag):
+	  consistent pad (de)activation
+
 2006-12-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/typefind/gsttypefindfunctions.c: (plugin_init):

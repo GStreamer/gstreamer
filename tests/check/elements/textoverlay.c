@@ -255,6 +255,8 @@ cleanup_textoverlay (GstElement * textoverlay)
 
   gst_element_set_state (textoverlay, GST_STATE_NULL);
   gst_element_get_state (textoverlay, NULL, NULL, GST_CLOCK_TIME_NONE);
+  gst_pad_set_active (myvideosrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   notgst_check_teardown_src_pad2 (textoverlay, "video_sink");
   if (mytextsrcpad) {
     notgst_check_teardown_src_pad2 (textoverlay, "text_sink");

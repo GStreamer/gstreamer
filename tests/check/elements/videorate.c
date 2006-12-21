@@ -110,6 +110,8 @@ cleanup_videorate (GstElement * videorate)
 
   gst_element_set_state (videorate, GST_STATE_NULL);
   gst_element_get_state (videorate, NULL, NULL, GST_CLOCK_TIME_NONE);
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (videorate);
   gst_check_teardown_sink_pad (videorate);
   gst_check_teardown_element (videorate);

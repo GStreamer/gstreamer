@@ -72,6 +72,8 @@ setup_vorbisdec ()
   vorbisdec = gst_check_setup_element ("vorbisdec");
   mysrcpad = gst_check_setup_src_pad (vorbisdec, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (vorbisdec, &sinktemplate, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
 
   return vorbisdec;
 }
@@ -82,6 +84,8 @@ cleanup_vorbisdec (GstElement * vorbisdec)
   GST_DEBUG ("cleanup_vorbisdec");
   gst_element_set_state (vorbisdec, GST_STATE_NULL);
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (vorbisdec);
   gst_check_teardown_sink_pad (vorbisdec);
   gst_check_teardown_element (vorbisdec);

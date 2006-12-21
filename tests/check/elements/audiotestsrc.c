@@ -69,6 +69,7 @@ cleanup_audiotestsrc (GstElement * audiotestsrc)
   g_list_free (buffers);
   buffers = NULL;
 
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (audiotestsrc);
   gst_check_teardown_element (audiotestsrc);
 }

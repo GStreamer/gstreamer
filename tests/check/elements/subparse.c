@@ -125,6 +125,8 @@ teardown_subparse (void)
   g_list_free (buffers);
   buffers = NULL;
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (subparse);
   gst_check_teardown_src_pad (subparse);
   gst_check_teardown_element (subparse);
