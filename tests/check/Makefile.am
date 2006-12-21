@@ -25,9 +25,6 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
 clean-local: clean-local-check
 
-# checks to fix
-#	gst/gstplugin
-
 if GST_DISABLE_PARSE
 PARSE_CHECKS =
 else
@@ -56,9 +53,9 @@ REGISTRY_CHECKS =				\
 	gst/gstutils				\
 	generic/sinks				\
 	elements/fakesink			\
-	elements/fakesrc			\
+	elements/fakesrc				\
 	elements/fdsrc		          	\
-	elements/filesrc	          	\
+	elements/filesrc	          		\
 	elements/identity			\
 	libs/basesrc				\
 	libs/controller				\
@@ -66,37 +63,38 @@ REGISTRY_CHECKS =				\
 	pipelines/stress
 endif
 
-check_PROGRAMS =				\
+check_PROGRAMS =					\
 	gst/gstabi			     	\
-        gst/gstbuffer				\
-        gst/gstbus				\
-	gst/gstcaps     			\
-	gst/gstinfo		 			\
-	gst/gstiterator 			\
+	gst/gstbuffer				\
+	gst/gstbus				\
+	gst/gstcaps     				\
+	gst/gstinfo		 		\
+	gst/gstiterator 				\
 	gst/gstmessage	 			\
 	gst/gstminiobject 			\
 	gst/gstobject				\
 	gst/gstpad				\
 	gst/gstsegment				\
 	gst/gstsystemclock			\
-	gst/gststructure			\
+	gst/gststructure				\
 	gst/gsttag				\
 	gst/gsttask				\
 	gst/gstvalue				\
-	$(LOADSAVE_CHECKS)          \
+	$(LOADSAVE_CHECKS)          		\
 	generic/states				\
 	$(PARSE_CHECKS)				\
 	$(REGISTRY_CHECKS)			\
 	libs/libsabi				\
-	libs/gdp				\
+	libs/gdp					\
 	libs/adapter				\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider
 
 # failing tests
+# queue : seems to work with installed gstcheck
 noinst_PROGRAMS =				\
 	gst/gstpipeline                           \
-	libs/collectpads			\
+	libs/collectpads				\
 	elements/queue
 
 TESTS = $(check_PROGRAMS)

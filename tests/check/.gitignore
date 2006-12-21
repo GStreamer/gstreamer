@@ -1,2 +1,4 @@
-test-registry.xml
+test-registry.reg
 *.gcno
+*.gcda
+
