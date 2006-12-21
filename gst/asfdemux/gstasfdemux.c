@@ -1240,6 +1240,9 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 ** p_data,
    *   WM/EncodingTime
    *   WM/MCDI
    *   IsVBR
+   *
+   * We might want to read WM/TrackNumber and use atoi() if we don't have
+   * WM/Track
    */
 
   GstTagList *taglist;

@@ -1,3 +1,16 @@
+2006-12-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	(gst_asf_demux_get_gst_tag_from_tag_name),
+	(gst_asf_demux_process_ext_content_desc):
+	  add a comment about a future change
+	
+	* tests/check/elements/amrnbenc.c: (setup_amrnbenc),
+	(cleanup_amrnbenc):
+	* tests/check/elements/mpeg2dec.c: (setup_mpeg2dec),
+	(cleanup_mpeg2dec):
+	   consistent pad (de)activation
+
 2006-12-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_get_src_query_types):
