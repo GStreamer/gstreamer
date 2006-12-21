@@ -1347,8 +1347,6 @@ setup_mpeg2dec ()
   mpeg2dec = gst_check_setup_element ("mpeg2dec");
   mysrcpad = gst_check_setup_src_pad (mpeg2dec, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (mpeg2dec, &sinktemplate, NULL);
-  gst_pad_set_active (mysrcpad, TRUE);
-  gst_pad_set_active (mysinkpad, TRUE);
 
   return mpeg2dec;
 }
@@ -1359,8 +1357,6 @@ cleanup_mpeg2dec (GstElement * mpeg2dec)
   GST_DEBUG ("cleanup_mpeg2dec");
   gst_element_set_state (mpeg2dec, GST_STATE_NULL);
 
-  gst_pad_set_active (mysrcpad, FALSE);
-  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (mpeg2dec);
   gst_check_teardown_sink_pad (mpeg2dec);
   gst_check_teardown_element (mpeg2dec);

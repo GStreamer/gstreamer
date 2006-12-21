@@ -77,8 +77,6 @@ setup_amrnbenc ()
   amrnbenc = gst_check_setup_element ("amrnbenc");
   srcpad = gst_check_setup_src_pad (amrnbenc, &srctemplate, NULL);
   sinkpad = gst_check_setup_sink_pad (amrnbenc, &sinktemplate, NULL);
-  gst_pad_set_active (mysrcpad, TRUE);
-  gst_pad_set_active (mysinkpad, TRUE);
 
   bus = gst_bus_new ();
   gst_element_set_bus (amrnbenc, bus);
@@ -106,8 +104,6 @@ cleanup_amrnbenc (GstElement * amrnbenc)
   gst_object_unref (bus);
 
   GST_DEBUG ("cleanup_amrnbenc");
-  gst_pad_set_active (mysrcpad, FALSE);
-  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (amrnbenc);
   gst_check_teardown_sink_pad (amrnbenc);
   gst_check_teardown_element (amrnbenc);
