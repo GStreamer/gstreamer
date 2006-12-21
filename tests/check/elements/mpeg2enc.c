@@ -83,6 +83,8 @@ setup_mpeg2enc ()
   mpeg2enc = gst_check_setup_element ("mpeg2enc");
   mysrcpad = gst_check_setup_src_pad (mpeg2enc, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (mpeg2enc, &sinktemplate, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
 
   /* need to know when we are eos */
   gst_pad_set_event_function (mysinkpad, test_sink_event);
@@ -100,6 +102,8 @@ cleanup_mpeg2enc (GstElement * mpeg2enc)
   GST_DEBUG ("cleanup_mpeg2enc");
   gst_element_set_state (mpeg2enc, GST_STATE_NULL);
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (mpeg2enc);
   gst_check_teardown_sink_pad (mpeg2enc);
   gst_check_teardown_element (mpeg2enc);
