@@ -62,6 +62,7 @@ setup_fakesrc ()
 void
 cleanup_fakesrc (GstElement * fakesrc)
 {
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (fakesrc);
   gst_check_teardown_element (fakesrc);
 }

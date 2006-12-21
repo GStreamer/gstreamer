@@ -77,6 +77,8 @@ cleanup_identity (GstElement * identity)
 {
   GST_DEBUG ("cleanup_identity");
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (identity);
   gst_check_teardown_sink_pad (identity);
   gst_check_teardown_element (identity);

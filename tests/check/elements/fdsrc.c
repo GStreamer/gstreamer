@@ -65,6 +65,7 @@ setup_fdsrc ()
 void
 cleanup_fdsrc (GstElement * fdsrc)
 {
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (fdsrc);
   gst_check_teardown_element (fdsrc);
 }

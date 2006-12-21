@@ -1,6 +1,6 @@
 include $(top_srcdir)/common/check.mak
 
-CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.xml
+CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.reg
 
 GST_TOOLS_DIR = $(top_builddir)/tools
 
@@ -59,6 +59,7 @@ REGISTRY_CHECKS =				\
 	elements/fdsrc		          	\
 	elements/filesrc	          	\
 	elements/identity			\
+	elements/queue			\
 	libs/basesrc				\
 	libs/controller				\
 	libs/typefindhelper			\

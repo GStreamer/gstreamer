@@ -63,6 +63,7 @@ setup_filesrc ()
 void
 cleanup_filesrc (GstElement * filesrc)
 {
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (filesrc);
   gst_check_teardown_element (filesrc);
 }
