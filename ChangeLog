@@ -1,3 +1,11 @@
+2006-12-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	Back to CVS
+
+	* gst-plugins-bad.doap:
+	Add release section for 0.10.4
+
 === release 0.10.4 ===
 
 2006-12-21  Jan Schmidt <thaytan@mad.scientist.com>
