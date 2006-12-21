@@ -1,5 +1,18 @@
 2006-12-21  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/design/part-states.txt:
+	  two tiny additional comments
+	
+	* gst/gststructure.c:
+	  doc fixing
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/queue.c: (queue_overrun), (queue_underrun),
+	(GST_START_TEST):
+	  disable test for now, unless it gets fixed
+
+2006-12-21  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/check/elements/queue.c: (queue_overrun), (queue_underrun),
 	(GST_START_TEST):
 	  fix race in underrun test

@@ -1016,9 +1016,9 @@ gst_structure_get_boolean (const GstStructure * structure,
  * given field.  Caller is responsible for making sure the field exists
  * and has the correct type.
  *
- * Returns: TRUE if the value could be set correctly. If there was no field
+ * Returns: %TRUE if the value could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain an int, this function
- * returns FALSE.
+ * returns %FALSE.
  */
 gboolean
 gst_structure_get_int (const GstStructure * structure,

@@ -29,13 +29,14 @@ State transitions
 the following state changes are possible:
 
  NULL -> READY
-   - The element must check if the resources it needs are available. 
-     Audiosinks typically try to probe the device.
+   - The element must check if the resources it needs are available.
+     Device sinks and -sources typically try to probe the device to constain
+     their caps.
 
  READY -> PAUSED
    - The element opens the device and prepares itself for PLAYING.
-   - the element pads are activated in order to receive data in PAUSED. 
-     streaming threads are started.
+   - the element pads are activated in order to receive data in PAUSED.
+     Streaming threads are started.
    - some elements might need to return ASYNC and complete the state change
      when they have enough information. It is a requirement for sinks to
      return ASYNC and complete the state change when they receive the first

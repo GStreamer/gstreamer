@@ -59,7 +59,6 @@ REGISTRY_CHECKS =				\
 	elements/fdsrc		          	\
 	elements/filesrc	          	\
 	elements/identity			\
-	elements/queue			\
 	libs/basesrc				\
 	libs/controller				\
 	libs/typefindhelper			\
@@ -95,8 +94,9 @@ check_PROGRAMS =				\
 
 # failing tests
 noinst_PROGRAMS =				\
+	gst/gstpipeline                           \
 	libs/collectpads			\
-	gst/gstpipeline
+	elements/queue
 
 TESTS = $(check_PROGRAMS)
 

@@ -98,11 +98,13 @@ GST_START_TEST (test_non_leaky_underrun)
   gst_pad_set_active (mysinkpad, TRUE);
   g_object_set (G_OBJECT (queue), "max-size-buffers", 2, NULL);
 
+  GST_DEBUG ("starting");
+
   fail_unless (gst_element_set_state (queue,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  GST_DEBUG ("running");
+  /* FIXME: there seems to be a race here */
   g_mutex_lock (check_mutex);
   g_cond_wait (check_cond, check_mutex);
   g_mutex_unlock (check_mutex);
@@ -139,11 +141,11 @@ GST_START_TEST (test_non_leaky_overrun)
   gst_pad_set_active (mysrcpad, TRUE);
   g_object_set (G_OBJECT (queue), "max-size-buffers", 2, NULL);
 
+  GST_DEBUG ("starting");
+
   fail_unless (gst_element_set_state (queue,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
-
-  GST_DEBUG ("running");
 
   buffer1 = gst_buffer_new_and_alloc (4);
   ASSERT_BUFFER_REFCOUNT (buffer1, "buffer", 1);
