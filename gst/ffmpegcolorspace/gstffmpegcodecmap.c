@@ -224,6 +224,34 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       b_mask = 0x000000ff;
 #endif
       break;
+    case PIX_FMT_xRGB32:
+      bpp = 32;
+      depth = 24;
+      endianness = G_BIG_ENDIAN;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+      r_mask = 0xff000000;
+      g_mask = 0x00ff0000;
+      b_mask = 0x0000ff00;
+#else
+      r_mask = 0x000000ff;
+      g_mask = 0x0000ff00;
+      b_mask = 0x00ff0000;
+#endif
+      break;
+    case PIX_FMT_BGRx32:
+      bpp = 32;
+      depth = 24;
+      endianness = G_BIG_ENDIAN;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+      r_mask = 0x000000ff;
+      g_mask = 0x0000ff00;
+      b_mask = 0x00ff0000;
+#else
+      r_mask = 0xff000000;
+      g_mask = 0x00ff0000;
+      b_mask = 0x0000ff00;
+#endif
+      break;
     case PIX_FMT_RGBA32:
       bpp = 32;
       depth = 32;
@@ -581,6 +609,20 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
               if (rmask == 0x00ff0000)
 #endif
                 context->pix_fmt = PIX_FMT_BGR32;
+
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+              if (rmask == 0xff000000)
+#else
+              if (rmask == 0x000000ff)
+#endif
+                context->pix_fmt = PIX_FMT_xRGB32;
+
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+              if (rmask == 0x000000ff)
+#else
+              if (rmask == 0xff000000)
+#endif
+                context->pix_fmt = PIX_FMT_BGRx32;
             }
             break;
           case 24:
@@ -730,6 +772,8 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
     case PIX_FMT_RGBA32:
     case PIX_FMT_BGR32:
     case PIX_FMT_BGRA32:
+    case PIX_FMT_xRGB32:
+    case PIX_FMT_BGRx32:
       stride = width * 4;
       size = stride * height;
       picture->data[0] = ptr;

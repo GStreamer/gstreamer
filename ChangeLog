@@ -1,3 +1,16 @@
+2006-12-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/ffmpegcolorspace/avcodec.h:
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_pixfmt),
+	(gst_ffmpegcsp_avpicture_fill):
+	* gst/ffmpegcolorspace/imgconvert.c: (img_convert),
+	(img_get_alpha_info):
+	Add 2 new caps arrangements, for 24-bit RGB and BGR in 32-bits, but at the
+	other end of the word. Fixes: #387073.
+
+	Add some inconsequential branch hints in a couple of places.
+
 2006-12-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
