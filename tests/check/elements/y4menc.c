@@ -58,6 +58,8 @@ setup_y4menc ()
   y4menc = gst_check_setup_element ("y4menc");
   mysrcpad = gst_check_setup_src_pad (y4menc, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (y4menc, &sinktemplate, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
 
   return y4menc;
 }
@@ -68,6 +70,8 @@ cleanup_y4menc (GstElement * y4menc)
   GST_DEBUG ("cleanup_y4menc");
   gst_element_set_state (y4menc, GST_STATE_NULL);
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (y4menc);
   gst_check_teardown_sink_pad (y4menc);
   gst_check_teardown_element (y4menc);

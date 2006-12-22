@@ -69,6 +69,8 @@ setup_wavpackdec ()
   wavpackdec = gst_check_setup_element ("wavpackdec");
   mysrcpad = gst_check_setup_src_pad (wavpackdec, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (wavpackdec, &sinktemplate, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
 
   return wavpackdec;
 }
@@ -79,6 +81,8 @@ cleanup_wavpackdec (GstElement * wavpackdec)
   GST_DEBUG ("cleanup_wavpackdec");
   gst_element_set_state (wavpackdec, GST_STATE_NULL);
 
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (wavpackdec);
   gst_check_teardown_sink_pad (wavpackdec);
   gst_check_teardown_element (wavpackdec);
