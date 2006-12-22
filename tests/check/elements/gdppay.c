@@ -82,11 +82,16 @@ cleanup_gdppay (GstElement * gdppay)
 {
   GST_DEBUG ("cleanup_gdppay");
 
-  gst_pad_set_active (mysrcpad, FALSE);
+  if (mysrcpad)
+    gst_pad_set_active (mysrcpad, FALSE);
+  if (myshsrcpad)
+    gst_pad_set_active (myshsrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_src_pad (gdppay);
   gst_check_teardown_sink_pad (gdppay);
   gst_check_teardown_element (gdppay);
+  mysrcpad = NULL;
+  myshsrcpad = NULL;
 }
 
 GST_START_TEST (test_audio)
@@ -220,6 +225,8 @@ setup_gdppay_streamheader ()
   gdppay = gst_check_setup_element ("gdppay");
   myshsrcpad = gst_check_setup_src_pad (gdppay, &shsrctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (gdppay, &sinktemplate, NULL);
+  gst_pad_set_active (myshsrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
 
   return gdppay;
 }

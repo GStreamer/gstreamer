@@ -1,3 +1,12 @@
+2006-12-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/elements/gdpdepay.c: (cleanup_gdpdepay),
+	(setup_gdpdepay_streamheader):
+	* tests/check/elements/gdppay.c: (cleanup_gdppay),
+	(setup_gdppay_streamheader):
+	  Fix the dp tests, but activating the pads for the streamheader tests
+	  too and cleaning up conditionaly
+
 2006-12-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/ffmpegcolorspace/avcodec.h:
