@@ -2,6 +2,12 @@
 
 	* tests/check/elements/amrnbenc.c: (setup_amrnbenc),
 	(cleanup_amrnbenc):
+	  and fix compilation of this test
+
+2006-12-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/elements/amrnbenc.c: (setup_amrnbenc),
+	(cleanup_amrnbenc):
 	* tests/check/elements/mpeg2dec.c: (setup_mpeg2dec),
 	(cleanup_mpeg2dec):
 	  re-apply as it was -bad and not -ugly that is frozen, doh
