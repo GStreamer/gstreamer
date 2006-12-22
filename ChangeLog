@@ -1,3 +1,11 @@
+2006-12-22 Edgard Lima <edgard.lima@indt.org.br>
+
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/neon/gstneonhttpsrc.h:
+	Added seek support.
+	Patch by: Andre Moreira Magalhaes <andrunko@gmail.com>
+	Fixes: #375264.
+
 2006-12-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/elements/mpeg2enc.c: (setup_mpeg2enc),

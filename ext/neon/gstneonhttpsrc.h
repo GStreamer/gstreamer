@@ -1,5 +1,7 @@
 /* GStreamer
  * Copyright (C) <2005> Edgard Lima <edgard.lima@indt.org.br>
+ * Copyright (C) <2006> Rosfran Borges <rosfran.borges@indt.org.br>
+ * Copyright (C) <2006> Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -69,6 +71,9 @@ struct _GstNeonhttpSrc {
 
   /* enable Neon HTTP debug messages */
   gboolean neon_http_msgs_dbg;
+
+  gint64 read_position;
+  gboolean seekable;
 };
 
 struct _GstNeonhttpSrcClass {
