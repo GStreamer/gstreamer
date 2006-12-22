@@ -1,3 +1,14 @@
+2006-12-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/elements/audiopanorama.c: (cleanup_panorama):
+	* tests/check/elements/avimux.c: (setup_avimux), (cleanup_avimux):
+	* tests/check/elements/cmmldec.c: (setup_cmmldec),
+	(teardown_cmmldec):
+	* tests/check/elements/cmmlenc.c: (setup_cmmlenc),
+	(teardown_cmmlenc):
+	* tests/check/elements/level.c: (setup_level), (cleanup_level):
+	  reapply consistent pad (de)activation
+
 2006-12-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
