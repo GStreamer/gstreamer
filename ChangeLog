@@ -1,5 +1,10 @@
 2006-12-24  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* sys/ximage/gstximagesrc.c: (composite_pixel):
+	  Fix presumably copy'n'pasto for 16bpp depth.
+
+2006-12-24  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/matroska/matroska-mux.c:
 	(gst_matroska_mux_audio_pad_setcaps):
 	  The "signed" field in audio caps is of boolean type, trying to use

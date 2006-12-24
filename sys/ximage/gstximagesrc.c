@@ -265,7 +265,7 @@ composite_pixel (GstXContext * xcontext, guchar * dest, guchar * src)
       color = *dest;
       break;
     case 16:
-      color = GUINT16_FROM_LE (*(guint32 *) (dest));
+      color = GUINT16_FROM_LE (*(guint16 *) (dest));
       break;
     case 32:
       color = GUINT32_FROM_LE (*(guint32 *) (dest));
