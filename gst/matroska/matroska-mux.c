@@ -105,10 +105,15 @@ static GstStaticPadTemplate audiosink_templ =
         "audio/x-vorbis, "
         COMMON_AUDIO_CAPS "; "
         "audio/x-raw-int, "
-        "width = (int) { 8, 16, 24 }, "
-        "depth = (int) { 8, 16, 24 }, "
+        "width = (int) 8, "
+        "depth = (int) 8, "
+        "signed = (boolean) false, "
+        COMMON_AUDIO_CAPS ";"
+        "audio/x-raw-int, "
+        "width = (int) 16, "
+        "depth = (int) 16, "
         "endianness = (int) { BIG_ENDIAN, LITTLE_ENDIAN }, "
-        "signed = (boolean) { true, false }, "
+        "signed = (boolean) true, "
         COMMON_AUDIO_CAPS ";"
         "audio/x-tta, "
         "width = (int) { 8, 16, 24 }, "
@@ -984,15 +989,29 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     gint endianness, width, depth;
     gboolean signedness;
 
-    if (!gst_structure_get_int (structure, "endianness", &endianness) ||
-        !gst_structure_get_int (structure, "width", &width) ||
+    if (!gst_structure_get_int (structure, "width", &width) ||
         !gst_structure_get_int (structure, "depth", &depth) ||
-        !gst_structure_get_int (structure, "signed", &signedness))
+        !gst_structure_get_boolean (structure, "signed", &signedness)) {
+      GST_DEBUG_OBJECT (mux, "broken caps, width/depth/signed field missing");
       return FALSE;
+    }
 
-    if (width != depth ||
-        (width == 8 && signedness) || (width == 16 && !signedness))
+    if (depth > 8 &&
+        !gst_structure_get_int (structure, "endianness", &endianness)) {
+      GST_DEBUG_OBJECT (mux, "broken caps, no endianness specified");
       return FALSE;
+    }
+
+    if (width != depth) {
+      GST_DEBUG_OBJECT (mux, "width must be same as depth!");
+      return FALSE;
+    }
+
+    /* where is this spec'ed out? (tpm) */
+    if ((width == 8 && signedness) || (width == 16 && !signedness)) {
+      GST_DEBUG_OBJECT (mux, "8-bit PCM must be unsigned, 16-bit PCM signed");
+      return FALSE;
+    }
 
     audiocontext->bitdepth = depth;
     if (endianness == G_BIG_ENDIAN)
