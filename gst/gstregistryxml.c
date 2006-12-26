@@ -594,7 +594,14 @@ gst_registry_save_escaped (GstRegistry * registry, char *prefix, char *tag,
   gboolean ret = TRUE;
 
   if (value) {
-    gchar *v = g_markup_escape_text (value, strlen (value));
+    gchar *v;
+
+    if (g_utf8_validate (value, -1, NULL)) {
+      v = g_markup_escape_text (value, -1);
+    } else {
+      g_warning ("Invalid UTF-8 while saving registry tag '%s'", tag);
+      v = g_strdup ("[ERROR: invalid UTF-8]");
+    }
 
     ret = gst_registry_save (registry, "%s<%s>%s</%s>\n", prefix, tag, v, tag);
     g_free (v);

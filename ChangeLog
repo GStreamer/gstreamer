@@ -1,3 +1,10 @@
+2006-12-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstregistryxml.c: (gst_registry_save_escaped):
+	  Make sure we don't pass non-UTF-8 strings to g_markup_escape(),
+	  since that can lead to random memory corruptions and crashes
+	  (may or may not be related to #383244, #386711, and #386711).
+
 2006-12-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/.cvsignore:
