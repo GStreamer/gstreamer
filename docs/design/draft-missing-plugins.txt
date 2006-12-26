@@ -102,7 +102,10 @@ A three step process:
 
  The application will receive an ERROR message from GStreamer informing it that
  playback stopped (before it could reach PAUSED). This happens because none of
- the streams is connected to a decoder.
+ the streams is connected to a decoder. The error code and domain should be one
+ of the following in this case:
+    - GST_CORE_ERROR_MISSING_PLUGIN (domain: GST_CORE_ERROR)
+    - GST_STREAM_ERROR_CODEC_NOT_FOUND (domain: GST_STREAM_ERROR)
 
  The application can then see that there are a set of "missing-plugin" element
  messages on the GstBus and can decide to trigger the download procedure. It
@@ -131,11 +134,25 @@ A three step process:
   The string is made up of several fields, separated by '|' characters.
   The fields are:
 
-    - plugin system identifier, ie. gstreamer.net
-    - plugin system version, e.g. 0.10
-    - application identifier, e.g. totem
+    - plugin system identifier, ie. "gstreamer.net"
+      This identifier determines the format of the rest of the detail string.
+      Automatic plugin installers should not process detail strings with
+      unknown identifiers. This allows other plugin-based libraries to use
+      the same mechanism for their automatic plugin installation needs, or
+      for the format to be changed should it turn out to be insufficient.
+
+    - plugin system version, e.g. "0.10"
+      This is required so that when there is a GStreamer-0.12 or GStreamer-1.0
+      at somem point in future, the different major versions can still co-exist
+      and use the same plugin install mechanism in the same way.
+
+    - application identifier, e.g. "totem"
+      This may also be in the form of "pid/12345" if the program name can't
+      be obtained for some reason.
+
     - human-readable localised description of the required component,
       e.g. "Vorbis audio decoder"
+
     - identifier string for the required component, e.g.
          - urisource-$(PROTOCOL_REQUIRED)
              e.g. urisource-http or urisource-mms
@@ -146,11 +163,21 @@ A three step process:
          - encoder-$(CAPS_REQUIRED)
              e.g. encoder-audio/x-vorbis
 
+    - optional further fields not yet specified
+
+
   An entire ID string might then look like this, for example:
 
     gstreamer.net|0.10|totem|Vorbis audio decoder|decoder-audio/x-vorbis
+
+  Plugin installers parsing this ID string should expect further fields also
+  separated by '|' symbols and either ignore them, warn the user, or error
+  out when encountering them.
  
   The human-readable description string will come from a new utility
   library that yet to be added to gst-plugins-base and which can then also
   be used by demuxers to find out the codec names for taglists from given
   caps in a unified and consistent way.
+
+  There will also be API for applications to create these detail strings from
+  a given missing-plugin message.

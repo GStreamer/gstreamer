@@ -1,5 +1,10 @@
 2006-12-26  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/random/draft-missing-plugins.txt:
+	  Some small additions and clarifications.
+
+2006-12-26  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstregistryxml.c: (gst_registry_save_escaped):
 	  Make sure we don't pass non-UTF-8 strings to g_markup_escape(),
 	  since that can lead to random memory corruptions and crashes
