@@ -1769,6 +1769,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_DEBUG_OBJECT (xvimagesink, "intersection returned %" GST_PTR_FORMAT,
       intersection);
   if (gst_caps_is_empty (intersection)) {
+    gst_caps_unref (intersection);
     return FALSE;
   }
 
