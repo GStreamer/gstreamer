@@ -231,7 +231,7 @@ gst_cdda_base_src_get_type
 
 <SECTION>
 <FILE>gstfloatcast</FILE>
-<INCLUDE>gst/floatcase/floatcast.h</INCLUDE>
+<INCLUDE>gst/floatcast/floatcast.h</INCLUDE>
 GDOUBLE_FROM_BE
 GDOUBLE_FROM_LE
 GDOUBLE_TO_BE

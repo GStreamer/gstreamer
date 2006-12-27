@@ -1,5 +1,10 @@
 2006-12-27  Julien MOUTTE  <julien@moutte.net>
 
+	* docs/libs/gst-plugins-base-libs-sections.txt: Fix a documentation
+	typo. Fixes: #390063.
+
+2006-12-27  Julien MOUTTE  <julien@moutte.net>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_setcaps):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_setcaps): Plug a
 	caps leak.
