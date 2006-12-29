@@ -449,12 +449,14 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
           else if (mp3parse->layer == 2)
             spf = 1152;
           else {
-            if (mp3parse->rate < 16000)
+            /* Any sample_rate < 32000 indicates MPEG-2 or MPEG-2.5 */
+            if (mp3parse->rate < 32000)
               spf = 576;
             else
               spf = 1152;
           }
-          GST_BUFFER_DURATION (outbuf) = spf * GST_SECOND / mp3parse->rate;
+          GST_BUFFER_DURATION (outbuf) =
+              gst_util_uint64_scale (GST_SECOND, spf, mp3parse->rate);
 
           if (GST_CLOCK_TIME_IS_VALID (mp3parse->next_ts)) {
             GST_BUFFER_TIMESTAMP (outbuf) = mp3parse->next_ts;

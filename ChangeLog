@@ -1,3 +1,11 @@
+2006-12-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain):
+	  All sample-rates < 32khz come from the LSF extensions, which only
+	  use 1 granule. Fixes parsing of 22.05khz, 24khz and 16khz files.
+
+	  Use gst_util_uint64_scale because we can.
+
 2006-12-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/elements/amrnbenc.c: (setup_amrnbenc),
