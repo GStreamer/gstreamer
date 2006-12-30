@@ -513,6 +513,11 @@ gst_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
   out_samplerate = lame_get_out_samplerate (lame->lgf);
   if (out_samplerate == 0)
     goto zero_output_rate;
+  if (out_samplerate != lame->samplerate) {
+    GST_WARNING_OBJECT (lame,
+        "output samplerate %d is different from incoming samplerate %d",
+        out_samplerate, lame->samplerate);
+  }
 
   othercaps =
       gst_caps_new_simple ("audio/mpeg",
@@ -1019,7 +1024,7 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
   }
 
   GST_LOG_OBJECT (lame, "encoded %d bytes of audio to %d bytes of mp3",
-      GST_BUFFER_SIZE (buf), mp3_size);
+      size, mp3_size);
 
   duration = gst_util_uint64_scale_int (size, GST_SECOND,
       2 * lame->samplerate * lame->num_channels);
@@ -1027,7 +1032,7 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
   if (GST_BUFFER_DURATION (buf) != GST_CLOCK_TIME_NONE &&
       GST_BUFFER_DURATION (buf) != duration) {
     GST_DEBUG_OBJECT (lame, "incoming buffer had incorrect duration %"
-        GST_TIME_FORMAT "outgoing buffer will have correct duration %"
+        GST_TIME_FORMAT ", outgoing buffer will have correct duration %"
         GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_TIME_ARGS (duration));
   }
