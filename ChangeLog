@@ -1,3 +1,10 @@
+2006-12-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/elements/videocrop.c: (GST_START_TEST),
+	(videocrop_test_cropping_init_context):
+	  When we can't create an element needed for the test, print a message
+	  detailing which element it actually is that's missing (#390673).
+
 2006-12-22 Edgard Lima <edgard.lima@indt.org.br>
 
 	* ext/neon/gstneonhttpsrc.c:

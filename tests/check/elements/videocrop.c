@@ -77,11 +77,11 @@ GST_START_TEST (test_unit_sizes)
   gint i;
 
   videocrop = gst_element_factory_make ("videocrop", "videocrop");
-  fail_unless (videocrop != NULL);
+  fail_unless (videocrop != NULL, "Failed to create videocrop element");
   vcrop_klass = GST_BASE_TRANSFORM_GET_CLASS (videocrop);
 
   csp = gst_element_factory_make ("ffmpegcolorspace", "csp");
-  fail_unless (csp != NULL);
+  fail_unless (csp != NULL, "Failed to create ffmpegcolorspace element");
   csp_klass = GST_BASE_TRANSFORM_GET_CLASS (csp);
 
   caps_list = video_crop_get_test_caps (videocrop);
@@ -176,13 +176,13 @@ videocrop_test_cropping_init_context (GstVideoCropTestContext * ctx)
   ctx->pipeline = gst_pipeline_new ("pipeline");
   fail_unless (ctx->pipeline != NULL);
   ctx->src = gst_element_factory_make ("videotestsrc", "src");
-  fail_unless (ctx->src != NULL);
+  fail_unless (ctx->src != NULL, "Failed to create videotestsrc element");
   ctx->filter = gst_element_factory_make ("capsfilter", "filter");
-  fail_unless (ctx->filter != NULL);
+  fail_unless (ctx->filter != NULL, "Failed to create capsfilter element");
   ctx->crop = gst_element_factory_make ("videocrop", "crop");
-  fail_unless (ctx->crop != NULL);
+  fail_unless (ctx->crop != NULL, "Failed to create videocrop element");
   ctx->sink = gst_element_factory_make ("fakesink", "sink");
-  fail_unless (ctx->sink != NULL);
+  fail_unless (ctx->sink != NULL, "Failed to create fakesink element");
 
   gst_bin_add_many (GST_BIN (ctx->pipeline), ctx->src, ctx->filter,
       ctx->crop, ctx->sink, NULL);
