@@ -1,3 +1,8 @@
+2007-01-01  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	Only build the plugin on 32bit x86 architectures.
+
 2007-01-01  Lutz Mueller <lutz@topfrose.de>
 
 	reviewed by: Edward Hervey  <edward@fluendo.com>
