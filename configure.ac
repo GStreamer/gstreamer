@@ -623,6 +623,7 @@ tests/examples/seek/Makefile
 tests/examples/volume/Makefile
 tests/icles/Makefile
 docs/Makefile
+docs/design/Makefile
 docs/libs/Makefile
 docs/plugins/Makefile
 docs/version.entities

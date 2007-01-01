@@ -10,10 +10,11 @@ else
 PLUGIN_DOCS_DIRS =
 endif
 
-SUBDIRS = $(GTK_DOC_DIRS) $(PLUGIN_DOCS_DIRS)
-DIST_SUBDIRS = libs plugins
+SUBDIRS = design $(GTK_DOC_DIRS) $(PLUGIN_DOCS_DIRS)
+DIST_SUBDIRS = design libs plugins
 
 EXTRA_DIST = \
+	design-audiosinks.txt \
         version.entities.in
 
 upload:

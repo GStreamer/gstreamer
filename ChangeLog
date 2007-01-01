@@ -1,3 +1,10 @@
+2007-01-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* docs/Makefile.am:
+	* docs/design/Makefile.am:
+	  Dist design docs.
+
 2006-12-27  Julien MOUTTE  <julien@moutte.net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt: Fix a documentation
