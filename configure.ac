@@ -95,6 +95,7 @@ GST_PLUGINS_ALL="\
   videoparse \
   xingheader \
   y4m \
+  real \
   "
 
 AC_SUBST(GST_PLUGINS_ALL)
@@ -837,6 +838,7 @@ gst/tta/Makefile
 gst/videocrop/Makefile
 gst/videoparse/Makefile
 gst/xingheader/Makefile
+gst/real/Makefile
 gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile

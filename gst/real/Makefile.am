@@ -1,0 +1,7 @@
+plugin_LTLIBRARIES = libgstreal.la 
+
+libgstreal_la_SOURCES = gstreal.c
+
+libgstreal_la_CFLAGS = $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstreal_la_LIBADD = $(GST_BASE_LIBS)
+libgstreal_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

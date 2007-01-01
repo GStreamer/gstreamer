@@ -1,3 +1,20 @@
+2007-01-01  Lutz Mueller <lutz@topfrose.de>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* gst/real/Makefile.am:
+	* gst/real/gstreal.c: (gst_realdec_alloc_buffer),
+	(gst_realdec_decode), (gst_realdec_chain),
+	(gst_realdec_activate_push), (gst_realdec_setcaps),
+	(gst_realdec_init), (gst_realdec_base_init),
+	(gst_realdec_change_state), (gst_realdec_finalize),
+	(gst_realdec_set_property), (gst_realdec_get_property),
+	(gst_realdec_class_init), (plugin_init):
+	New plugin for decoding RealVideo Streams using the x86 32bit
+	shared libraries.
+	Closes #354174
+
 2006-12-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/elements/videocrop.c: (GST_START_TEST),
