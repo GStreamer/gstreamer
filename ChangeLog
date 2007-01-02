@@ -1,3 +1,10 @@
+2007-01-01  David Schleef  <ds@schleef.org>
+
+	* gst/gstplugin.c:
+	  Restore the previous signal handler for SIGSEGV instead of
+	  setting to default, since we may have stolen it away from
+	  someone.  (i.e., Mono)
+
 2006-12-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/random/draft-missing-plugins.txt:

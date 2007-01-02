@@ -270,6 +270,8 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
 }
 
 #ifndef HAVE_WIN32
+static struct sigaction oldaction;
+
 /*
  * _gst_plugin_fault_handler_restore:
  * segfault handler restorer
@@ -277,16 +279,12 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
 static void
 _gst_plugin_fault_handler_restore (void)
 {
-  struct sigaction action;
-
-  /* if asked to leave segfaults alone, just return */
-  if (_gst_disable_segtrap)
+  if (!_gst_plugin_fault_handler_is_setup)
     return;
 
-  memset (&action, 0, sizeof (action));
-  action.sa_handler = SIG_DFL;
+  _gst_plugin_fault_handler_is_setup = FALSE;
 
-  sigaction (SIGSEGV, &action, NULL);
+  sigaction (SIGSEGV, &oldaction, NULL);
 }
 
 /*
@@ -331,10 +329,12 @@ _gst_plugin_fault_handler_setup (void)
   if (_gst_plugin_fault_handler_is_setup)
     return;
 
+  _gst_plugin_fault_handler_is_setup = TRUE;
+
   memset (&action, 0, sizeof (action));
   action.sa_handler = _gst_plugin_fault_handler_sighandler;
 
-  sigaction (SIGSEGV, &action, NULL);
+  sigaction (SIGSEGV, &action, &oldaction);
 }
 #else
 static void
