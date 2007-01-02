@@ -547,7 +547,7 @@ gst_value_serialize_list (const GValue * value)
 static gboolean
 gst_value_deserialize_list (GValue * dest, const gchar * s)
 {
-  g_warning ("unimplemented");
+  g_warning ("gst_value_deserialize_list: unimplemented");
   return FALSE;
 }
 
@@ -560,7 +560,7 @@ gst_value_serialize_array (const GValue * value)
 static gboolean
 gst_value_deserialize_array (GValue * dest, const gchar * s)
 {
-  g_warning ("unimplemented");
+  g_warning ("gst_value_deserialize_array: unimplemented");
   return FALSE;
 }
 
