@@ -1,3 +1,12 @@
+2007-01-02  Lutz Mueller <lutz@topfrose.de>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* gst/real/gstreal.c:
+	(gst_realdec_setcaps): Use codec_data supplied in caps.
+	(gst_realdec_get_property): Correctly return default path.
+	(gst_realdec_class_init): Remove unused state_change method.
+
 2007-01-01  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

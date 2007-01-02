@@ -515,6 +515,7 @@ gst_realdec_setcaps (GstPad * pad, GstCaps * caps)
   gint version, res;
   gchar data[36];
   gboolean bres;
+  const GValue *v;
 
   if (!gst_structure_get_int (s, "rmversion", &version) ||
       !gst_structure_get_int (s, "width", (gint *) & dec->width) ||
@@ -567,21 +568,24 @@ gst_realdec_setcaps (GstPad * pad, GstCaps * caps)
   if (res)
     goto could_not_initialize;
 
-  if (((dec->version == GST_REAL_DEC_VERSION_2) ||
-          (dec->version == GST_REAL_DEC_VERSION_3)) &&
-      (dec->format >= 0x20200002)) {
-    guint32 msg[15];
+  if ((v = gst_structure_get_value (s, "codec_data"))) {
+    GstBuffer *buf = g_value_peek_pointer (v);
+    guint32 *msg = g_new0 (guint32, 11 + GST_BUFFER_SIZE (buf));
+    guint i;
 
+    if (!msg)
+      goto could_not_allocate;
     msg[0] = 0x24;
     msg[1] = 1 + ((dec->subformat >> 16) & 7);
     msg[2] = (guint32) & msg[9];
     msg[9] = dec->width;
     msg[10] = dec->height;
-    msg[11] = 0xf0;
-    msg[12] = 0xb0;
-    msg[13] = 0xa0;
-    msg[14] = 0x80;
+    for (i = 0; i < GST_BUFFER_SIZE (buf); i++)
+      msg[i + 11] = 4 * GST_BUFFER_DATA (buf)[i];
     res = dec->custom_message (msg, dec->context);
+    g_free (msg);
+    if (res)
+      goto could_not_send_message;
   }
 
   caps = gst_caps_new_simple ("video/x-raw-yuv",
@@ -625,7 +629,24 @@ could_not_initialize:
   {
     dlclose (dec->handle);
     dec->handle = NULL;
-    GST_DEBUG_OBJECT (dec, "Initialization of REAL driver failed (%i).");
+    GST_DEBUG_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
+    return FALSE;
+  }
+
+could_not_allocate:
+  {
+    dlclose (dec->handle);
+    dec->handle = NULL;
+    GST_DEBUG_OBJECT (dec, "Could not allocate memory.");
+    return FALSE;
+  }
+
+could_not_send_message:
+  {
+    dlclose (dec->handle);
+    dec->handle = NULL;
+    GST_DEBUG_OBJECT (dec, "Failed to send custom message needed for "
+        "initialization (%i).", res);
     return FALSE;
   }
 
@@ -664,21 +685,6 @@ gst_realdec_base_init (gpointer g_class)
   gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&snk_t));
   gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&src_t));
   gst_element_class_set_details (ec, &realdec_details);
-}
-
-static GstStateChangeReturn
-gst_realdec_change_state (GstElement * element, GstStateChange transition)
-{
-  GstStateChangeReturn ret;
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  switch (transition) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
-    default:
-      break;
-  }
-  return ret;
 }
 
 static void
@@ -755,13 +761,16 @@ gst_realdec_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PATH_RV20:
-      g_value_set_string (value, dec->path_rv20);
+      g_value_set_string (value, dec->path_rv20 ? dec->path_rv20 :
+          DEFAULT_PATH_RV20);
       break;
     case PROP_PATH_RV30:
-      g_value_set_string (value, dec->path_rv30);
+      g_value_set_string (value, dec->path_rv30 ? dec->path_rv30 :
+          DEFAULT_PATH_RV30);
       break;
     case PROP_PATH_RV40:
-      g_value_set_string (value, dec->path_rv40);
+      g_value_set_string (value, dec->path_rv40 ? dec->path_rv40 :
+          DEFAULT_PATH_RV40);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -772,14 +781,11 @@ gst_realdec_get_property (GObject * object, guint prop_id,
 static void
 gst_realdec_class_init (GstRealDecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->set_property = gst_realdec_set_property;
   object_class->get_property = gst_realdec_get_property;
   object_class->finalize = gst_realdec_finalize;
-
-  element_class->change_state = gst_realdec_change_state;
 
   g_object_class_install_property (object_class, PROP_PATH_RV20,
       g_param_spec_string ("path_rv20", "Path to rv20 driver",
