@@ -1,3 +1,10 @@
+2007-01-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* tests/examples/Makefile.am:
+	  Compile adapter test/example only if the required headers are
+	  available (fixes #391915).
+
 2007-01-01  David Schleef  <ds@schleef.org>
 
 	* gst/gstplugin.c:

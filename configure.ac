@@ -268,8 +268,17 @@ AC_HEADER_STDC
 
 dnl Check for ucontext.h
 AC_CHECK_HEADERS([ucontext.h])
+
+dnl Check for sys/socket.h
 AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
+
+dnl check for sys/times.h for tests/examples/adapter/
+AC_CHECK_HEADERS([sys/times.h], HAVE_SYS_TIMES_H=yes)
+AC_CHECK_HEADERS([unistd.h], HAVE_UNISTD_H=yes)
+AM_CONDITIONAL(HAVE_SYS_TIMES_H_AND_UNISTD_H, test "x$HAVE_SYS_TIMES_H" = "xyes" -a "x$HAVE_UNISTD_H" = "xyes")
+
+dnl Check for process.h for getpid() on win32
 AC_CHECK_HEADERS([process.h])
 
 dnl Check for sys/utsname.h for uname
