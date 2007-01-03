@@ -280,6 +280,42 @@ GST_CHECK_FEATURE(X, [X libraries and plugins],
   CPPFLAGS="$ac_cppflags_save"
 ])
 
+dnl DirectDraw
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTDRAW, true)
+GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
+  HAVE_DIRECTDRAW="no"
+  AC_CHECK_HEADERS(windows.h ddraw.h, have_ddraw_headers="yes", have_ddraw_headers="no")
+  if test "x$have_ddraw_headers" = "xyes" ; then
+    save_LIBS="$LIBS"
+    LIBS="$LIBS -lddraw -lgdi32"
+    AC_MSG_CHECKING(for DirectDraw LDFLAGS)
+    AC_LINK_IFELSE([
+#include <windows.h>
+#include <ddraw.h>
+
+int main ()
+{
+  GetStockObject(0);
+  DirectDrawCreate(NULL, NULL, NULL);
+
+  return 0;
+}
+],
+      HAVE_DIRECTDRAW="yes",
+      HAVE_DIRECTDRAW="no")
+    AC_MSG_RESULT($HAVE_DIRECTDRAW)
+    LIBS=$save_LIBS
+  fi
+
+  if test "x$HAVE_DIRECTDRAW" = "xyes";  then
+    dnl this is much more than we want
+    DIRECTDRAW_LIBS="-lddraw -lgdi32"
+    AC_SUBST(DIRECTDRAW_CFLAGS)
+    AC_SUBST(DIRECTDRAW_LIBS)
+  fi
+  AC_SUBST(HAVE_DIRECTDRAW)
+])
+
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !
 
@@ -851,6 +887,7 @@ gst-libs/gst/Makefile
 sys/Makefile
 sys/glsink/Makefile
 sys/dvb/Makefile
+sys/directdraw/Makefile
 examples/Makefile
 examples/directfb/Makefile
 ext/amrwb/amrwb-code/Makefile

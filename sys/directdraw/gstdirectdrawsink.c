@@ -168,6 +168,7 @@ gst_ddrawvideosink_get_format_from_caps (GstCaps * caps,
   return ret;
 }
 
+/*
 static GstCaps *
 gst_ddrawvideosink_get_caps_from_format (DDPIXELFORMAT pixel_format)
 {
@@ -201,6 +202,7 @@ gst_ddrawvideosink_get_caps_from_format (DDPIXELFORMAT pixel_format)
 
   return caps;
 }
+*/
 
 static void
 gst_directdrawsink_center_rect (RECT src, RECT dst, RECT * result)
@@ -241,7 +243,7 @@ gst_directdrawsink_center_rect (RECT src, RECT dst, RECT * result)
   }
 
   GST_CAT_INFO (directdrawsink_debug,
-      "source is %dx%d dest is %dx%d, result is %dx%d with x,y %dx%d",
+      "source is %ldx%ld dest is %ldx%ld, result is %ldx%ld with x,y %ldx%ld",
       src_width, src_height, dst_width, dst_heigth,
       result->right - result->left, result->bottom - result->top, result->left,
       result->right);
@@ -1189,8 +1191,7 @@ gst_directdrawsink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
               "IDirectDrawSurface_Blt returned %s", DDErrorString (hRes));
         else
           GST_CAT_INFO (directdrawsink_debug,
-              "allocated surface was blit to our primary",
-              DDErrorString (hRes));
+              "allocated surface was blit to our primary");
       }
     }
   }
@@ -1212,7 +1213,7 @@ gst_directdrawsink_setup_ddraw (GstDirectDrawSink * ddrawsink)
   /*UUID IDirectDraw7_ID;
 
      //IDirectDraw_QueryInterface()
-     /*create an instance of the ddraw object 
+     create an instance of the ddraw object 
      hRes = DirectDrawCreateEx (DDCREATE_EMULATIONONLY, (void**)&ddrawsink->ddraw_object,
      (REFIID)IID_IDirectDraw7, NULL);
    */
@@ -1679,7 +1680,7 @@ gst_directdrawsink_surface_create (GstDirectDrawSink * ddrawsink,
 
     if (surf_lock_desc.lPitch != pitch) {
       GST_CAT_INFO (directdrawsink_debug,
-          "DDraw stride/pitch %d isn't as expected value %d, let's continue allocating buffer.",
+          "DDraw stride/pitch %ld isn't as expected value %d, let's continue allocating buffer.",
           surf_lock_desc.lPitch, pitch);
 
       /*Unlock the surface as we will change it to use system memory with a GStreamer compatible pitch */
@@ -1688,7 +1689,7 @@ gst_directdrawsink_surface_create (GstDirectDrawSink * ddrawsink,
     }
 
     GST_CAT_INFO (directdrawsink_debug,
-        "allocating a surface of %d bytes (stride=%d)\n", size,
+        "allocating a surface of %d bytes (stride=%ld)\n", size,
         surf_lock_desc.lPitch);
     GST_BUFFER_DATA (surface) = surf_lock_desc.lpSurface;
     GST_BUFFER_SIZE (surface) = surf_lock_desc.lPitch * surface->height;
@@ -1718,7 +1719,9 @@ gst_directdrawsink_surface_create (GstDirectDrawSink * ddrawsink,
   /* Keep a ref to our sink */
   surface->ddrawsink = gst_object_ref (ddrawsink);
 
-beach:
+  /*
+     beach:
+   */
   return surface;
 }
 

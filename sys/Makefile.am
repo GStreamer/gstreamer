@@ -34,6 +34,12 @@ else
 DVB_DIR=
 endif
 
-SUBDIRS = $(GL_DIR) $(DVB_DIR)
+if USE_DIRECTDRAW
+DIRECTDRAW_DIR=directdraw
+else
+DIRECTDRAW_DIR=
+endif
 
-DIST_SUBDIRS = glsink dvb
+SUBDIRS = $(GL_DIR) $(DVB_DIR) $(DIRECTDRAW_DIR)
+
+DIST_SUBDIRS = glsink dvb directdraw

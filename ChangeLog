@@ -1,5 +1,23 @@
 2007-01-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Vincent Torri  <vtorri at univ-evry fr>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/directdraw/Makefile.am:
+	  Add directdrawsink to build and dist it, so it gets built when
+	  compiling with MingW on win32 and the required headers and libraries
+	  are available (fixes: #392313).
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	(gst_directdrawsink_center_rect), (gst_directdrawsink_show_frame),
+	(gst_directdrawsink_setup_ddraw),
+	(gst_directdrawsink_surface_create):
+	  Comment out some unused things and fix some printf format issues in
+	  order to avoid warnings when buildling with MingW (#392313).
+
+2007-01-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Jens Granseuer  <jensgr at gmx net>
 
 	* ext/xvid/gstxvidenc.c: (gst_xvidenc_encode),
