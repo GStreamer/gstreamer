@@ -806,8 +806,10 @@ gst_xvidenc_encode (GstXvidEnc * xvidenc, GstBuffer * buf,
     gst_buffer_unref (outbuf);
     return NULL;
   } else if (ret > 0) {         /* make sub-buffer */
+    GstBuffer *sub;
+
     GST_DEBUG_OBJECT (xvidenc, "xvid produced output of size %d", ret);
-    GstBuffer *sub = gst_buffer_create_sub (outbuf, 0, ret);
+    sub = gst_buffer_create_sub (outbuf, 0, ret);
 
     /* parent no longer needed, will go away with child buffer */
     gst_buffer_unref (outbuf);
@@ -1059,10 +1061,10 @@ gst_xvidenc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
   GstXvidEnc *xvidenc;
+  guint offset;
 
   g_return_if_fail (GST_IS_XVIDENC (object));
   xvidenc = GST_XVIDENC (object);
-  guint offset;
 
   if (prop_id > xvidenc_prop_count) {
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

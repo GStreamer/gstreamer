@@ -212,6 +212,13 @@ lpwsinc_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   GstLPWSinc *this = GST_LPWSINC (base);
   GstClockTime timestamp;
 
+  gfloat *src;
+  gfloat *input;
+  int residue_samples;
+  gint input_samples;
+  gint total_samples;
+  int i, j;
+
   /* don't process data in passthrough-mode */
   if (gst_base_transform_is_passthrough (base))
     return GST_FLOW_OK;
@@ -221,13 +228,6 @@ lpwsinc_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     gst_object_sync_values (G_OBJECT (this), timestamp);
-
-  gfloat *src;
-  gfloat *input;
-  int residue_samples;
-  gint input_samples;
-  gint total_samples;
-  int i, j;
 
   /* FIXME: out of laziness, we copy the left-over bit from last buffer
    * together with the incoming buffer to a new buffer to make the loop

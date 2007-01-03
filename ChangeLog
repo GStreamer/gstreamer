@@ -1,3 +1,19 @@
+2007-01-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Jens Granseuer  <jensgr at gmx net>
+
+	* ext/xvid/gstxvidenc.c: (gst_xvidenc_encode),
+	(gst_xvidenc_get_property):
+	* gst/filter/gstbpwsinc.c: (bpwsinc_transform_ip):
+	* gst/filter/gstfilter.c: (plugin_init):
+	* gst/filter/gstiir.c: (iir_transform_ip):
+	* gst/filter/gstlpwsinc.c: (lpwsinc_transform_ip):
+	* gst/modplug/gstmodplug.cc:
+	* gst/nuvdemux/gstnuvdemux.c: (gst_nuv_demux_header_load),
+	(gst_nuv_demux_stream_extend_header):
+	  Fix build with gcc-2.x (declare variables at the beginning of a
+	  block etc.). Fixes #391971.
+
 2007-01-02  Lutz Mueller <lutz@topfrose.de>
 
 	reviewed by: Edward Hervey  <edward@fluendo.com>

@@ -217,7 +217,7 @@ gst_modplug_class_init (GstModPlugClass * klass)
           "noise reduction", DEFAULT_NOISE_REDUCTION,
           (GParamFlags) G_PARAM_READWRITE));
 
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_modplug_change_state);
+  gstelement_class->change_state = gst_modplug_change_state;
 }
 
 static void

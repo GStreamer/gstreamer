@@ -231,12 +231,14 @@ static GstFlowReturn
 gst_nuv_demux_header_load (GstNuvDemux * nuv, nuv_header ** h_ret)
 {
   GstBuffer *buffer = NULL;
-  GstFlowReturn res = gst_nuv_demux_read_bytes (nuv, 72, TRUE, &buffer);
+  GstFlowReturn res;
+  nuv_header *h;
 
+  res = gst_nuv_demux_read_bytes (nuv, 72, TRUE, &buffer);
   if (res != GST_FLOW_OK)
     return res;
 
-  nuv_header *h = g_new0 (nuv_header, 1);
+  h = g_new0 (nuv_header, 1);
 
   memcpy (h->id, buffer->data, 12);
   memcpy (h->version, buffer->data + 12, 5);
@@ -622,9 +624,10 @@ gst_nuv_demux_stream_extend_header (GstNuvDemux * nuv)
   }
 
   if (buf->data[0] == 'X') {
+    nuv_frame_header *h = NULL;
+
     gst_buffer_unref (buf);
     buf = NULL;
-    nuv_frame_header *h = NULL;
 
     res = gst_nuv_demux_frame_header_load (nuv, &h);
     if (res != GST_FLOW_OK)

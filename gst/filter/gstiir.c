@@ -178,6 +178,9 @@ iir_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   GstIIR *this = GST_IIR (base);
   GstClockTime timestamp;
 
+  gfloat *src;
+  int i;
+
   /* don't process data in passthrough-mode */
   if (gst_base_transform_is_passthrough (base))
     return GST_FLOW_OK;
@@ -187,9 +190,6 @@ iir_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     gst_object_sync_values (G_OBJECT (this), timestamp);
-
-  gfloat *src;
-  int i;
 
   src = (gfloat *) GST_BUFFER_DATA (outbuf);
 
