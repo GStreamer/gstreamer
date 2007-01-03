@@ -1,3 +1,10 @@
+2007-01-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	* tests/check/libs/tag.c: (GST_START_TEST):
+	  Add vorbistag <=> GStreamer tag mapping for GST_TAG_LOCATION
+	  (fixes #392070).
+
 2007-01-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

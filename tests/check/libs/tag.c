@@ -246,6 +246,7 @@ GST_START_TEST (test_vorbis_tags)
   gst_vorbis_tag_add (list, "COPYRIGHT", "Copyfoo");
   gst_vorbis_tag_add (list, "DESCRIPTION", "Descoo");
   gst_vorbis_tag_add (list, "LICENSE", "Licoo");
+  gst_vorbis_tag_add (list, "LOCATION", "Bristol, UK");
   gst_vorbis_tag_add (list, "ORGANIZATION", "Orgoo");
   gst_vorbis_tag_add (list, "GENRE", "Goo");
   gst_vorbis_tag_add (list, "CONTACT", "Coo");
@@ -265,13 +266,13 @@ GST_START_TEST (test_vorbis_tags)
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_COPYRIGHT, "Copyfoo");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_DESCRIPTION, "Descoo");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LICENSE, "Licoo");
+  ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LOCATION, "Bristol, UK");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ORGANIZATION, "Orgoo");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_GENRE, "Goo");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_CONTACT, "Coo");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_COMMENT,
       "Peroxysulfid stroodles the brain");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_COMMENT, "Stroodle is good");
-
   ASSERT_TAG_LIST_HAS_UINT (list, GST_TAG_TRACK_NUMBER, 5);
   ASSERT_TAG_LIST_HAS_UINT (list, GST_TAG_TRACK_COUNT, 77);
   ASSERT_TAG_LIST_HAS_UINT (list, GST_TAG_ALBUM_VOLUME_NUMBER, 1);
