@@ -95,7 +95,7 @@ static GHashTable *enc_global_plugins;
 static void gst_ffmpegenc_class_init (GstFFMpegEncClass * klass);
 static void gst_ffmpegenc_base_init (GstFFMpegEncClass * klass);
 static void gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc);
-static void gst_ffmpegenc_dispose (GObject * object);
+static void gst_ffmpegenc_finalize (GObject * object);
 
 static gboolean gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps);
 static GstCaps *gst_ffmpegenc_getcaps (GstPad * pad);
@@ -208,7 +208,7 @@ gst_ffmpegenc_class_init (GstFFMpegEncClass * klass)
 
   gstelement_class->change_state = gst_ffmpegenc_change_state;
 
-  gobject_class->dispose = gst_ffmpegenc_dispose;
+  gobject_class->finalize = gst_ffmpegenc_finalize;
 }
 
 static void
@@ -259,7 +259,7 @@ gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc)
 }
 
 static void
-gst_ffmpegenc_dispose (GObject * object)
+gst_ffmpegenc_finalize (GObject * object)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) object;
 
@@ -276,7 +276,7 @@ gst_ffmpegenc_dispose (GObject * object)
   g_queue_free (ffmpegenc->delay);
   g_free (ffmpegenc->filename);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *

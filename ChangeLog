@@ -1,3 +1,11 @@
+2007-01-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_class_init),
+	(gst_ffmpegenc_finalize):
+	  Turn dispose function into finalize function to avoid double-frees
+	  and potential crashes caused by them in some circumstances.
+	  Fixes #392395.
+
 2006-12-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_to_smpfmt):
