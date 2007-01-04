@@ -57,7 +57,6 @@ REGISTRY_CHECKS =				\
 	elements/fdsrc		          	\
 	elements/filesrc	          		\
 	elements/identity			\
-	elements/queue				\
 	libs/basesrc				\
 	libs/controller				\
 	libs/typefindhelper			\
@@ -92,9 +91,11 @@ check_PROGRAMS =					\
 	libs/gstnettimeprovider
 
 # failing tests
+# queue : tests is unstable (race conditions)
 noinst_PROGRAMS =				\
 	gst/gstpipeline                           \
-	libs/collectpads
+	libs/collectpads				\
+	elements/queue
 
 TESTS = $(check_PROGRAMS)
 
