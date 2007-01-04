@@ -16,7 +16,7 @@ libgstplaybin_la_SOURCES = \
 	gststreamselector.c
 
 nodist_libgstplaybin_la_SOURCES = $(built_sources)
-libgstplaybin_la_CFLAGS = $(GST_CFLAGS)
+libgstplaybin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstplaybin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstplaybin_la_LIBADD = $(GST_LIBS)
 

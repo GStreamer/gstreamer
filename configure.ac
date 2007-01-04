@@ -519,6 +519,8 @@ dnl *** finalize CFLAGS, LDFLAGS, LIBS
 dnl Overview:
 dnl GST_OPTION_CFLAGS:  common flags for profiling, debugging, errors, ...
 dnl GST_*:              flags shared by built objects to link against GStreamer
+dnl GST_PLUGINS_BASE_CFLAGS: to link internally against the plugins base libs
+dnl                          (compare to other modules) or for i18n
 dnl GST_ALL_LDFLAGS:    linker flags shared by all
 dnl GST_LIB_LDFLAGS:    additional linker flags for all libaries
 dnl GST_LT_LDFLAGS:     library versioning of our libraries
@@ -540,11 +542,15 @@ AC_SUBST(GST_OPTION_CFLAGS)
 dnl our libraries need to be versioned correctly
 AC_SUBST(GST_LT_LDFLAGS)
 
-dnl FIXME: do we want to rename to GST_ALL_* ?
+dnl GST_PLUGINS_BASE_CFLAGS
 dnl prefer internal headers to already installed ones
 dnl also add builddir include for enumtypes and marshal
+GST_PLUGINS_BASE_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs"
+AC_SUBST(GST_PLUGINS_BASE_CFLAGS)
+
+dnl FIXME: do we want to rename to GST_ALL_* ?
 dnl add GST_OPTION_CFLAGS, but overridable
-GST_CFLAGS="-I\$(top_srcdir)/gst-libs -I\$(top_builddir)/gst-libs $GST_CFLAGS \$(GST_OPTION_CFLAGS)"
+GST_CFLAGS="$GST_CFLAGS \$(GST_OPTION_CFLAGS)"
 AC_SUBST(GST_CFLAGS)
 dnl add GCOV libs because libtool strips -fprofile-arcs -ftest-coverage
 GST_LIBS="$GST_LIBS \$(GCOV_LIBS)"

@@ -1,3 +1,36 @@
+2007-01-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  split out GST_CFLAGS into GST_PLUGINS_BASE_CFLAGS and GST_CFLAGS
+	  so that GST_BASE_CFLAGS can go inbetween them, making sure
+	  we use uninstalled gst-libs headers
+	* docs/libs/Makefile.am:
+	* ext/alsa/Makefile.am:
+	* ext/cdparanoia/Makefile.am:
+	* ext/gnomevfs/Makefile.am:
+	* ext/libvisual/Makefile.am:
+	* ext/ogg/Makefile.am:
+	* ext/theora/Makefile.am:
+	* ext/vorbis/Makefile.am:
+	* gst-libs/gst/audio/Makefile.am:
+	* gst-libs/gst/cdda/Makefile.am:
+	* gst-libs/gst/interfaces/Makefile.am:
+	* gst-libs/gst/riff/Makefile.am:
+	* gst-libs/gst/rtp/Makefile.am:
+	* gst-libs/gst/tag/Makefile.am:
+	* gst/adder/Makefile.am:
+	* gst/audioconvert/Makefile.am:
+	* gst/audiorate/Makefile.am:
+	* gst/audioresample/Makefile.am:
+	* gst/playback/Makefile.am:
+	* gst/tcp/Makefile.am:
+	* gst/videoscale/Makefile.am:
+	* gst/volume/Makefile.am:
+	* sys/ximage/Makefile.am:
+	* sys/xvimage/Makefile.am:
+	* tests/icles/Makefile.am:
+	  adapt
+
 2007-01-04  Julien MOUTTE  <julien@moutte.net>
 
 	* gst-libs/gst/interfaces/xoverlay.c:

@@ -6,7 +6,7 @@ libgstvideoscale_la_SOURCES = \
 	vs_scanline.c \
 	vs_4tap.c
 
-libgstvideoscale_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(LIBOIL_CFLAGS)
+libgstvideoscale_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(LIBOIL_CFLAGS)
 libgstvideoscale_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideoscale_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_MAJORMINOR).la \

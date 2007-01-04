@@ -3,7 +3,7 @@ plugin_LTLIBRARIES = libgstvorbis.la
 libgstvorbis_la_SOURCES = vorbis.c \
 	vorbisdec.c vorbisenc.c vorbisparse.c vorbistag.c
 
-libgstvorbis_la_CFLAGS = $(GST_CFLAGS) $(VORBIS_CFLAGS) 
+libgstvorbis_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(VORBIS_CFLAGS) 
 ## AM_PATH_VORBIS also sets VORBISENC_LIBS
 libgstvorbis_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \

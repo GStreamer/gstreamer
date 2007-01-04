@@ -6,7 +6,7 @@ libgstaudioconvert_la_SOURCES = \
 	gstchannelmix.c \
 	plugin.c
 
-libgstaudioconvert_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
+libgstaudioconvert_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstaudioconvert_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaudioconvert_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \

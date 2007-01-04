@@ -11,7 +11,7 @@ libgstalsa_la_SOURCES = \
 	gstalsasrc.c \
 	gstalsa.c
 
-libgstalsa_la_CFLAGS = $(GST_CFLAGS) $(ALSA_CFLAGS)
+libgstalsa_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(ALSA_CFLAGS)
 libgstalsa_la_LIBADD = \
 	$(ALSA_LIBS) \
   $(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la 	\
