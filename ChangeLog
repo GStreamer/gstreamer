@@ -1,3 +1,16 @@
+2007-01-04  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* ext/amrwb/Makefile.am:
+	* ext/amrwb/amrwb-code/Makefile.am:
+	* ext/amrwb/amrwb-code/run.sh:
+	* gst-libs/Makefile.am:
+	* gst-libs/ext/Makefile.am:
+	* gst-libs/ext/amrwb/Makefile.am:
+	* gst-libs/ext/amrwb/README:
+	  Move amrwb code getting and building to gst-libs/ext/amrwb
+	  Adapt everything else to match.
+
 2007-01-04  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/directfb/dfbvideosink.c:

@@ -367,10 +367,10 @@ GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
 dnl *** amrwb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
 GST_CHECK_FEATURE(AMRWB, [amrwb code], amrwb, [
-  if test -f "ext/amrwb/amrwb-code/readme.txt"; then
+  if test -f "gst-libs/ext/amrwb/26204-600.zip"; then
     HAVE_AMRWB="yes"
   else
-    AC_MSG_WARN(Not amrwb code found. See README at ext/amrwb/)
+    AC_MSG_WARN(amrwb code zipfile not found. See README at ext/amrwb/)
     HAVE_AMRWB="no"
   fi
   AC_SUBST(HAVE_AMRWB)
@@ -915,6 +915,8 @@ gst/real/Makefile
 gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
+gst-libs/ext/Makefile
+gst-libs/ext/amrwb/Makefile
 sys/Makefile
 sys/glsink/Makefile
 sys/dvb/Makefile
@@ -922,7 +924,6 @@ sys/directdraw/Makefile
 sys/directsound/Makefile
 examples/Makefile
 examples/directfb/Makefile
-ext/amrwb/amrwb-code/Makefile
 ext/amrwb/Makefile
 ext/alsaspdif/Makefile
 ext/bz2/Makefile
