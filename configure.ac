@@ -284,12 +284,10 @@ dnl DirectDraw
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTDRAW, true)
 GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
   HAVE_DIRECTDRAW="no"
-  AC_CHECK_HEADERS(windows.h ddraw.h, have_ddraw_headers="yes", have_ddraw_headers="no")
-  if test "x$have_ddraw_headers" = "xyes" ; then
-    save_LIBS="$LIBS"
-    LIBS="$LIBS -lddraw -lgdi32"
-    AC_MSG_CHECKING(for DirectDraw LDFLAGS)
-    AC_LINK_IFELSE([
+  save_LIBS="$LIBS"
+  LIBS="$LIBS -lddraw -lgdi32"
+  AC_MSG_CHECKING(for DirectDraw LDFLAGS)
+  AC_LINK_IFELSE([
 #include <windows.h>
 #include <ddraw.h>
 
@@ -301,11 +299,10 @@ int main ()
   return 0;
 }
 ],
-      HAVE_DIRECTDRAW="yes",
-      HAVE_DIRECTDRAW="no")
-    AC_MSG_RESULT($HAVE_DIRECTDRAW)
-    LIBS=$save_LIBS
-  fi
+    [HAVE_DIRECTDRAW="yes"],
+    [HAVE_DIRECTDRAW="no"])
+  AC_MSG_RESULT($HAVE_DIRECTDRAW)
+  LIBS=$save_LIBS
 
   if test "x$HAVE_DIRECTDRAW" = "xyes";  then
     dnl this is much more than we want
@@ -314,6 +311,40 @@ int main ()
     AC_SUBST(DIRECTDRAW_LIBS)
   fi
   AC_SUBST(HAVE_DIRECTDRAW)
+])
+
+dnl DirectSound
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTSOUND, true)
+GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound plug-in], directsoundsink, [
+  HAVE_DIRECTSOUND="no"
+  save_LIBS="$LIBS"
+  LIBS="$LIBS -ldsound -ldxerr9"
+  AC_MSG_CHECKING(for DirectSound LDFLAGS)
+  AC_LINK_IFELSE([
+#include <windows.h>
+#include <dxerr9.h>
+#include <dsound.h>
+
+int main ()
+{
+  DXGetErrorString9 (0);
+  DirectSoundCreate(NULL, NULL, NULL);
+
+  return 0;
+}
+],
+    [HAVE_DIRECTSOUND="yes"],
+    [HAVE_DIRECTSOUND="no"])
+  AC_MSG_RESULT($HAVE_DIRECTSOUND)
+  LIBS=$save_LIBS
+
+  if test "x$HAVE_DIRECTSOUND" = "xyes";  then
+    dnl this is much more than we want
+    DIRECTSOUND_LIBS="-ldsound -ldxerr9"
+    AC_SUBST(DIRECTSOUND_CFLAGS)
+    AC_SUBST(DIRECTSOUND_LIBS)
+  fi
+  AC_SUBST(HAVE_DIRECTSOUND)
 ])
 
 dnl *** ext plug-ins ***
@@ -888,6 +919,7 @@ sys/Makefile
 sys/glsink/Makefile
 sys/dvb/Makefile
 sys/directdraw/Makefile
+sys/directsound/Makefile
 examples/Makefile
 examples/directfb/Makefile
 ext/amrwb/amrwb-code/Makefile

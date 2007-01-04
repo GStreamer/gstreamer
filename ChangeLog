@@ -1,3 +1,19 @@
+2007-01-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Vincent Torri  <vtorri at univ-evry fr>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/directsound/Makefile.am:
+	* sys/directsound/gstdirectsoundsink.c:
+	(gst_directsoundsink_reset):
+	  Add directsoundsink to build and dist it, so it gets built when
+	  compiling with MingW on win32 and the required headers and libraries
+	  are available (fixes: #392638). Also simplify DirectDraw check a bit.
+
+	* tests/check/elements/.cvsignore:
+	  Fix CVS ignore for neonhttpsrc test binary.
+
 2007-01-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Vincent Torri  <vtorri at univ-evry fr>

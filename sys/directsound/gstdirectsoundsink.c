@@ -485,7 +485,7 @@ gst_directsoundsink_reset (GstAudioSink * asink)
 {
   /*not tested for seeking */
   GstDirectSoundSink *dsoundsink;
-  LPBYTE pLockedBuffer = NULL;
+  LPVOID pLockedBuffer = NULL;
   DWORD dwSizeBuffer = 0;
 
   dsoundsink = GST_DIRECTSOUND_SINK (asink);

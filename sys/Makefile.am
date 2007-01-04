@@ -40,6 +40,12 @@ else
 DIRECTDRAW_DIR=
 endif
 
-SUBDIRS = $(GL_DIR) $(DVB_DIR) $(DIRECTDRAW_DIR)
+if USE_DIRECTSOUND
+DIRECTSOUND_DIR=directsound
+else
+DIRECTSOUND_DIR=
+endif
 
-DIST_SUBDIRS = glsink dvb directdraw
+SUBDIRS = $(GL_DIR) $(DVB_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR)
+
+DIST_SUBDIRS = glsink dvb directdraw directsound
