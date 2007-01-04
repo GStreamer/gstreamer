@@ -1,3 +1,10 @@
+2007-01-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/queue.c: (queue_overrun), (queue_underrun),
+	(GST_START_TEST), (queue_suite):
+	  enable queue test again, add tests for the leaky behaviour
+
 2007-01-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

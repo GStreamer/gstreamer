@@ -57,6 +57,7 @@ REGISTRY_CHECKS =				\
 	elements/fdsrc		          	\
 	elements/filesrc	          		\
 	elements/identity			\
+	elements/queue				\
 	libs/basesrc				\
 	libs/controller				\
 	libs/typefindhelper			\
@@ -91,11 +92,9 @@ check_PROGRAMS =					\
 	libs/gstnettimeprovider
 
 # failing tests
-# queue : seems to work with installed gstcheck
 noinst_PROGRAMS =				\
 	gst/gstpipeline                           \
-	libs/collectpads				\
-	elements/queue
+	libs/collectpads
 
 TESTS = $(check_PROGRAMS)
 

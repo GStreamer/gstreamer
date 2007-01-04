@@ -104,7 +104,6 @@ GST_START_TEST (test_non_leaky_underrun)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  /* FIXME: there seems to be a race here */
   g_mutex_lock (check_mutex);
   g_cond_wait (check_cond, check_mutex);
   g_mutex_unlock (check_mutex);
@@ -184,6 +183,152 @@ GST_START_TEST (test_non_leaky_overrun)
 
 GST_END_TEST;
 
+/* set queue size to 2 buffers
+ * push 2 buffers
+ * check over/underuns
+ * push 1 more buffer
+ * check over/underuns again
+ * check which buffer was leaked
+ */
+GST_START_TEST (test_leaky_upstream)
+{
+  GstElement *queue;
+  GstBuffer *buffer1, *buffer2, *buffer3;
+  GstBuffer *buffer;
+
+  queue = setup_queue ();
+  mysrcpad = gst_check_setup_src_pad (queue, &srctemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (queue, &sinktemplate, NULL);
+  g_object_set (G_OBJECT (queue), "max-size-buffers", 2, "leaky", 1, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+
+  GST_DEBUG ("starting");
+
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  buffer1 = gst_buffer_new_and_alloc (4);
+  ASSERT_BUFFER_REFCOUNT (buffer1, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, buffer1);
+
+  GST_DEBUG ("added 1st");
+  fail_unless (overrun_count == 0);
+  fail_unless (underrun_count == 0);
+
+  buffer2 = gst_buffer_new_and_alloc (4);
+  ASSERT_BUFFER_REFCOUNT (buffer2, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, buffer2);
+
+  GST_DEBUG ("added 2nd");
+  fail_unless (overrun_count == 0);
+  fail_unless (underrun_count == 0);
+
+  buffer3 = gst_buffer_new_and_alloc (4);
+  ASSERT_BUFFER_REFCOUNT (buffer3, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, gst_buffer_ref (buffer3));
+
+  /* start the src-task briefly leak buffer3 */
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  g_mutex_lock (check_mutex);
+  g_cond_wait (check_cond, check_mutex);
+  g_mutex_unlock (check_mutex);
+
+  gst_pad_set_active (mysinkpad, FALSE);
+
+  GST_DEBUG ("stopping");
+
+  fail_unless (g_list_length (buffers) > 0);
+  buffer = g_list_first (buffers)->data;
+  fail_unless (buffer == buffer1);
+  ASSERT_BUFFER_REFCOUNT (buffer3, "buffer", 1);
+
+  /* it still triggers overrun when leaking */
+  fail_unless (overrun_count == 1);
+
+  /* cleanup */
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_buffer_unref (buffer3);
+  gst_check_teardown_src_pad (queue);
+  gst_check_teardown_sink_pad (queue);
+  cleanup_queue (queue);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_leaky_downstream)
+{
+  GstElement *queue;
+  GstBuffer *buffer1, *buffer2, *buffer3;
+  GstBuffer *buffer;
+
+  queue = setup_queue ();
+  mysrcpad = gst_check_setup_src_pad (queue, &srctemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (queue, &sinktemplate, NULL);
+  g_object_set (G_OBJECT (queue), "max-size-buffers", 2, "leaky", 2, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+
+  GST_DEBUG ("starting");
+
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  buffer1 = gst_buffer_new_and_alloc (4);
+  ASSERT_BUFFER_REFCOUNT (buffer1, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, gst_buffer_ref (buffer1));
+
+  GST_DEBUG ("added 1st");
+  fail_unless (overrun_count == 0);
+  fail_unless (underrun_count == 0);
+
+  buffer2 = gst_buffer_new_and_alloc (4);
+  ASSERT_BUFFER_REFCOUNT (buffer2, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, buffer2);
+
+  GST_DEBUG ("added 2nd");
+  fail_unless (overrun_count == 0);
+  fail_unless (underrun_count == 0);
+
+  buffer3 = gst_buffer_new_and_alloc (4);
+  ASSERT_BUFFER_REFCOUNT (buffer3, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, buffer3);
+
+  /* start the src-task briefly and leak buffer1 */
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  g_mutex_lock (check_mutex);
+  g_cond_wait (check_cond, check_mutex);
+  g_mutex_unlock (check_mutex);
+
+  gst_pad_set_active (mysinkpad, FALSE);
+
+  GST_DEBUG ("stopping");
+
+  fail_unless (g_list_length (buffers) > 0);
+  buffer = g_list_first (buffers)->data;
+  fail_unless (buffer == buffer2);
+  ASSERT_BUFFER_REFCOUNT (buffer1, "buffer", 1);
+
+  /* it still triggers overrun when leaking */
+  fail_unless (overrun_count == 1);
+
+  /* cleanup */
+  gst_pad_set_active (mysrcpad, FALSE);
+  gst_buffer_unref (buffer1);
+  gst_check_teardown_src_pad (queue);
+  gst_check_teardown_sink_pad (queue);
+  cleanup_queue (queue);
+}
+
+GST_END_TEST;
 
 Suite *
 queue_suite (void)
@@ -194,6 +339,8 @@ queue_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_non_leaky_underrun);
   tcase_add_test (tc_chain, test_non_leaky_overrun);
+  tcase_add_test (tc_chain, test_leaky_upstream);
+  tcase_add_test (tc_chain, test_leaky_downstream);
 
   return s;
 }
