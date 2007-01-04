@@ -188,7 +188,8 @@ enum
   ARG_DISPLAY,
   ARG_SYNCHRONOUS,
   ARG_PIXEL_ASPECT_RATIO,
-  ARG_FORCE_ASPECT_RATIO
+  ARG_FORCE_ASPECT_RATIO,
+  ARG_HANDLE_EVENTS
       /* FILL ME */
 };
 
@@ -829,9 +830,11 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
    * ConfigureNotify. This takes away flickering of video when resizing. */
   XSetWindowBackgroundPixmap (xvimagesink->xcontext->disp, xwindow->win, None);
 
-  XSelectInput (xvimagesink->xcontext->disp, xwindow->win, ExposureMask |
-      StructureNotifyMask | PointerMotionMask | KeyPressMask |
-      KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
+  if (xvimagesink->handle_events) {
+    XSelectInput (xvimagesink->xcontext->disp, xwindow->win, ExposureMask |
+        StructureNotifyMask | PointerMotionMask | KeyPressMask |
+        KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
+  }
 
   xwindow->gc = XCreateGC (xvimagesink->xcontext->disp,
       xwindow->win, 0, &values);
@@ -2374,9 +2377,11 @@ gst_xvimagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
     xwindow->width = attr.width;
     xwindow->height = attr.height;
     xwindow->internal = FALSE;
-    XSelectInput (xvimagesink->xcontext->disp, xwindow->win, ExposureMask |
-        StructureNotifyMask | PointerMotionMask | KeyPressMask |
-        KeyReleaseMask);
+    if (xvimagesink->handle_events) {
+      XSelectInput (xvimagesink->xcontext->disp, xwindow->win, ExposureMask |
+          StructureNotifyMask | PointerMotionMask | KeyPressMask |
+          KeyReleaseMask);
+    }
 
     xwindow->gc = XCreateGC (xvimagesink->xcontext->disp,
         xwindow->win, 0, NULL);
@@ -2401,10 +2406,41 @@ gst_xvimagesink_expose (GstXOverlay * overlay)
 }
 
 static void
+gst_xvimagesink_set_event_handling (GstXOverlay * overlay,
+    gboolean handle_events)
+{
+  GstXvImageSink *xvimagesink = GST_XVIMAGESINK (overlay);
+
+  xvimagesink->handle_events = handle_events;
+
+  if (!xvimagesink->xwindow)
+    return;
+
+  g_mutex_lock (xvimagesink->x_lock);
+
+  if (handle_events) {
+    if (xvimagesink->xwindow->internal) {
+      XSelectInput (xvimagesink->xcontext->disp, xvimagesink->xwindow->win,
+          ExposureMask | StructureNotifyMask | PointerMotionMask |
+          KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
+    } else {
+      XSelectInput (xvimagesink->xcontext->disp, xvimagesink->xwindow->win,
+          ExposureMask | StructureNotifyMask | PointerMotionMask |
+          KeyPressMask | KeyReleaseMask);
+    }
+  } else {
+    XSelectInput (xvimagesink->xcontext->disp, xvimagesink->xwindow->win, 0);
+  }
+
+  g_mutex_unlock (xvimagesink->x_lock);
+}
+
+static void
 gst_xvimagesink_xoverlay_init (GstXOverlayClass * iface)
 {
   iface->set_xwindow_id = gst_xvimagesink_set_xwindow_id;
   iface->expose = gst_xvimagesink_expose;
+  iface->handle_events = gst_xvimagesink_set_event_handling;
 }
 
 static const GList *
@@ -2552,6 +2588,10 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
     case ARG_FORCE_ASPECT_RATIO:
       xvimagesink->keep_aspect = g_value_get_boolean (value);
       break;
+    case ARG_HANDLE_EVENTS:
+      gst_xvimagesink_set_event_handling (GST_X_OVERLAY (xvimagesink),
+          g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2593,6 +2633,9 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
       break;
     case ARG_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, xvimagesink->keep_aspect);
+      break;
+    case ARG_HANDLE_EVENTS:
+      g_value_set_boolean (value, xvimagesink->handle_events);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2662,6 +2705,7 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
   xvimagesink->synchronous = FALSE;
   xvimagesink->running = FALSE;
   xvimagesink->keep_aspect = FALSE;
+  xvimagesink->handle_events = TRUE;
   xvimagesink->par = NULL;
 }
 
@@ -2718,6 +2762,10 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
   g_object_class_install_property (gobject_class, ARG_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio", "Force aspect ratio",
           "When enabled, scaling will respect original aspect ratio", FALSE,
+          G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_HANDLE_EVENTS,
+      g_param_spec_boolean ("handle-events", "Handle XEvents",
+          "When enabled, XEvents will be selected and handled", TRUE,
           G_PARAM_READWRITE));
 
   gobject_class->finalize = gst_xvimagesink_finalize;

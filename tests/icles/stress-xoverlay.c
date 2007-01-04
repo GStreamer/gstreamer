@@ -93,16 +93,37 @@ move_window (GstPipeline * pipeline)
   return TRUE;
 }
 
+static gboolean
+toggle_events (GstXOverlay * ov)
+{
+  static gboolean events_toggled;
+
+  gst_x_overlay_handle_events (ov, events_toggled);
+
+  if (events_toggled) {
+    g_print ("Events are handled\n");
+    events_toggled = FALSE;
+  } else {
+    g_print ("Events are NOT handled\n");
+    events_toggled = TRUE;
+  }
+
+  return TRUE;
+}
+
 static GstBusSyncReply
 create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   XGCValues values;
   const GstStructure *s;
+  GstXOverlay *ov = NULL;
 
   s = gst_message_get_structure (message);
   if (!gst_structure_has_name (s, "prepare-xwindow-id")) {
     return GST_BUS_PASS;
   }
+
+  ov = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
 
   g_print ("Creating our own window\n");
 
@@ -116,10 +137,11 @@ create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 
   XSync (disp, FALSE);
 
-  gst_x_overlay_set_xwindow_id (GST_X_OVERLAY (GST_MESSAGE_SRC (message)), win);
+  gst_x_overlay_set_xwindow_id (ov, win);
 
   g_timeout_add (50, (GSourceFunc) resize_window, pipeline);
   g_timeout_add (50, (GSourceFunc) move_window, pipeline);
+  g_timeout_add (2000, (GSourceFunc) toggle_events, ov);
 
   return GST_BUS_DROP;
 }

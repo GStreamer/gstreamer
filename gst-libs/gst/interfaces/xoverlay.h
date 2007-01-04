@@ -51,9 +51,12 @@ typedef struct _GstXOverlayClass {
                            gulong       xwindow_id);
 
   void (* expose)         (GstXOverlay *overlay);
+  
+  void (* handle_events)  (GstXOverlay *overlay,
+                           gboolean     handle_events);  
 
   /*< private >*/
-  gpointer                 _gst_reserved[GST_PADDING];
+  gpointer                 _gst_reserved[GST_PADDING - 1];
 } GstXOverlayClass;
 
 GType   gst_x_overlay_get_type          (void);
@@ -62,6 +65,9 @@ GType   gst_x_overlay_get_type          (void);
 void gst_x_overlay_set_xwindow_id     (GstXOverlay *overlay, gulong xwindow_id);
 
 void gst_x_overlay_expose             (GstXOverlay *overlay);
+
+void gst_x_overlay_handle_events      (GstXOverlay *overlay,
+                                       gboolean     handle_events);
 
 /* public methods to dispatch bus messages */
 void gst_x_overlay_got_xwindow_id     (GstXOverlay *overlay, gulong xwindow_id);

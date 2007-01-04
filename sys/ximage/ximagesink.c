@@ -164,7 +164,8 @@ enum
   PROP_DISPLAY,
   PROP_SYNCHRONOUS,
   PROP_PIXEL_ASPECT_RATIO,
-  PROP_FORCE_ASPECT_RATIO
+  PROP_FORCE_ASPECT_RATIO,
+  PROP_HANDLE_EVENTS
       /* FILL ME */
 };
 
@@ -771,9 +772,11 @@ gst_ximagesink_xwindow_new (GstXImageSink * ximagesink, gint width, gint height)
      ConfigureNotify. This takes away flickering of video when resizing. */
   XSetWindowBackgroundPixmap (ximagesink->xcontext->disp, xwindow->win, None);
 
-  XSelectInput (ximagesink->xcontext->disp, xwindow->win, ExposureMask |
-      StructureNotifyMask | PointerMotionMask | KeyPressMask |
-      KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
+  if (ximagesink->handle_events) {
+    XSelectInput (ximagesink->xcontext->disp, xwindow->win, ExposureMask |
+        StructureNotifyMask | PointerMotionMask | KeyPressMask |
+        KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
+  }
 
   xwindow->gc = XCreateGC (ximagesink->xcontext->disp, xwindow->win,
       0, &values);
@@ -1817,9 +1820,11 @@ gst_ximagesink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
     xwindow->width = attr.width;
     xwindow->height = attr.height;
     xwindow->internal = FALSE;
-    XSelectInput (ximagesink->xcontext->disp, xwindow->win, ExposureMask |
-        StructureNotifyMask | PointerMotionMask | KeyPressMask |
-        KeyReleaseMask);
+    if (ximagesink->handle_events) {
+      XSelectInput (ximagesink->xcontext->disp, xwindow->win, ExposureMask |
+          StructureNotifyMask | PointerMotionMask | KeyPressMask |
+          KeyReleaseMask);
+    }
 
     xwindow->gc = XCreateGC (ximagesink->xcontext->disp, xwindow->win, 0, NULL);
     g_mutex_unlock (ximagesink->x_lock);
@@ -1843,10 +1848,41 @@ gst_ximagesink_expose (GstXOverlay * overlay)
 }
 
 static void
+gst_ximagesink_set_event_handling (GstXOverlay * overlay,
+    gboolean handle_events)
+{
+  GstXImageSink *ximagesink = GST_XIMAGESINK (overlay);
+
+  ximagesink->handle_events = handle_events;
+
+  if (!ximagesink->xwindow)
+    return;
+
+  g_mutex_lock (ximagesink->x_lock);
+
+  if (handle_events) {
+    if (ximagesink->xwindow->internal) {
+      XSelectInput (ximagesink->xcontext->disp, ximagesink->xwindow->win,
+          ExposureMask | StructureNotifyMask | PointerMotionMask |
+          KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
+    } else {
+      XSelectInput (ximagesink->xcontext->disp, ximagesink->xwindow->win,
+          ExposureMask | StructureNotifyMask | PointerMotionMask |
+          KeyPressMask | KeyReleaseMask);
+    }
+  } else {
+    XSelectInput (ximagesink->xcontext->disp, ximagesink->xwindow->win, 0);
+  }
+
+  g_mutex_unlock (ximagesink->x_lock);
+}
+
+static void
 gst_ximagesink_xoverlay_init (GstXOverlayClass * iface)
 {
   iface->set_xwindow_id = gst_ximagesink_set_xwindow_id;
   iface->expose = gst_ximagesink_expose;
+  iface->handle_events = gst_ximagesink_set_event_handling;
 }
 
 /* =========================================== */
@@ -1902,6 +1938,10 @@ gst_ximagesink_set_property (GObject * object, guint prop_id,
       }
     }
       break;
+    case PROP_HANDLE_EVENTS:
+      gst_ximagesink_set_event_handling (GST_X_OVERLAY (ximagesink),
+          g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1931,6 +1971,9 @@ gst_ximagesink_get_property (GObject * object, guint prop_id,
     case PROP_PIXEL_ASPECT_RATIO:
       if (ximagesink->par)
         g_value_transform (ximagesink->par, value);
+      break;
+    case PROP_HANDLE_EVENTS:
+      g_value_set_boolean (value, ximagesink->handle_events);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1994,6 +2037,7 @@ gst_ximagesink_init (GstXImageSink * ximagesink)
 
   ximagesink->synchronous = FALSE;
   ximagesink->keep_aspect = FALSE;
+  ximagesink->handle_events = TRUE;
 }
 
 static void
@@ -2038,6 +2082,10 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_PIXEL_ASPECT_RATIO,
       g_param_spec_string ("pixel-aspect-ratio", "Pixel Aspect Ratio",
           "The pixel aspect ratio of the device", "1/1", G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_HANDLE_EVENTS,
+      g_param_spec_boolean ("handle-events", "Handle XEvents",
+          "When enabled, XEvents will be selected and handled", TRUE,
+          G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_ximagesink_change_state;
 

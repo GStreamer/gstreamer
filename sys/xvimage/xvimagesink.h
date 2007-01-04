@@ -209,6 +209,7 @@ struct _GstXvImageBuffer {
  * debugging purpose only)
  * @keep_aspect: used to remember if reverse negotiation scaling should respect
  * aspect ratio
+ * @handle_events: used to know if we should handle select XEvents or not
  * @brightness: used to store the user settings for color balance brightness
  * @contrast: used to store the user settings for color balance contrast
  * @hue: used to store the user settings for color balance hue
@@ -247,6 +248,7 @@ struct _GstXvImageSink {
   
   gboolean synchronous;
   gboolean keep_aspect;
+  gboolean handle_events;
   
   gint brightness;
   gint contrast;

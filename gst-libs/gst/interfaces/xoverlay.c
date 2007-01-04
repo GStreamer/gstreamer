@@ -239,3 +239,28 @@ gst_x_overlay_expose (GstXOverlay * overlay)
     klass->expose (overlay);
   }
 }
+
+/**
+ * gst_x_overlay_handle_events:
+ * @overlay: a #GstXOverlay to expose.
+ * @handle_events: a #gboolean indicating if events should be handled or not.
+ *
+ * Tell an overlay that it should handle events from the window system. These
+ * events are forwared upstream as navigation events. In some window system,
+ * events are not propagated in the window hierarchy if a client is listening
+ * for them. This method allows you to disable events handling completely
+ * from the XOverlay.
+ */
+void
+gst_x_overlay_handle_events (GstXOverlay * overlay, gboolean handle_events)
+{
+  GstXOverlayClass *klass;
+
+  g_return_if_fail (overlay != NULL);
+
+  klass = GST_X_OVERLAY_GET_CLASS (overlay);
+
+  if (klass->handle_events) {
+    klass->handle_events (overlay, handle_events);
+  }
+}

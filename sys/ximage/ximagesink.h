@@ -179,6 +179,7 @@ struct _GstXImageBuffer {
  * debugging purpose only)
  * @keep_aspect: used to remember if reverse negotiation scaling should respect
  * aspect ratio
+ * @handle_events: used to know if we should handle select XEvents or not
  *
  * The #GstXImageSink data structure.
  */
@@ -211,6 +212,7 @@ struct _GstXImageSink {
 
   gboolean synchronous;
   gboolean keep_aspect;
+  gboolean handle_events;
 };
 
 struct _GstXImageSinkClass {
