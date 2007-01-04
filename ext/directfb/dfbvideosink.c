@@ -1942,7 +1942,6 @@ gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
   GstDfbVideoSink *dfbvideosink = GST_DFBVIDEOSINK (navigation);
   GstEvent *event;
   GstVideoRectangle src, dst, result;
-  gint width, height;
   double x, y;
   GstPad *pad = NULL;
 
@@ -2366,6 +2365,11 @@ gst_dfbvideosink_get_type (void)
       NULL,
       NULL,
     };
+    static const GInterfaceInfo colorbalance_info = {
+      (GInterfaceInitFunc) gst_dfbvideosink_colorbalance_init,
+      NULL,
+      NULL,
+    };
 
     dfbvideosink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
         "GstDfbVideoSink", &dfbvideosink_info, 0);
@@ -2374,6 +2378,8 @@ gst_dfbvideosink_get_type (void)
         GST_TYPE_IMPLEMENTS_INTERFACE, &iface_info);
     g_type_add_interface_static (dfbvideosink_type, GST_TYPE_NAVIGATION,
         &navigation_info);
+    g_type_add_interface_static (dfbvideosink_type, GST_TYPE_COLOR_BALANCE,
+        &colorbalance_info);
   }
 
   return dfbvideosink_type;

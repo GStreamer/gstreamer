@@ -1,3 +1,15 @@
+2007-01-04  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/directfb/dfbvideosink.c:
+	(gst_dfbvideosink_navigation_send_event),
+	(gst_dfbvideosink_get_type):
+	* ext/sdl/sdlaudiosink.c: (gst_sdlaudio_sink_open):
+	* ext/sdl/sdlvideosink.c: (gst_sdlvideosink_setcaps),
+	(gst_sdlvideosink_show_frame),
+	(gst_sdlvideosink_navigation_send_event):
+	* ext/sdl/sdlvideosink.h: Fix various compiler warnings that 
+	reveal potential bugs.
+
 2007-01-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Vincent Torri  <vtorri at univ-evry fr>

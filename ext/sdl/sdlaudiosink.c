@@ -35,11 +35,6 @@ GST_ELEMENT_DETAILS ("SDL audio sink",
 
 static void gst_sdlaudio_sink_dispose (GObject * object);
 
-static void gst_sdlaudio_sink_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static void gst_sdlaudio_sink_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-
 static GstCaps *gst_sdlaudio_sink_getcaps (GstBaseSink * bsink);
 
 static gboolean gst_sdlaudio_sink_open (GstAudioSink * asink);
@@ -258,7 +253,6 @@ static gboolean
 gst_sdlaudio_sink_open (GstAudioSink * asink)
 {
   GstSDLAudioSink *sdlaudio;
-  int mode;
 
   sdlaudio = GST_SDLAUDIOSINK (asink);
 

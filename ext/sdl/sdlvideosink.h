@@ -75,7 +75,7 @@ struct _GstSDLVideoSinkClass {
 
 };
 
-GType gst_sdlsink_get_type(void);
+GType gst_sdlvideosink_get_type(void);
 
 G_END_DECLS
 

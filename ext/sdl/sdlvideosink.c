@@ -717,7 +717,6 @@ static gboolean
 gst_sdlvideosink_setcaps (GstBaseSink * bsink, GstCaps * vscapslist)
 {
   GstSDLVideoSink *sdlvideosink;
-  guint32 format;
   GstStructure *structure;
   gboolean res = TRUE;
 
@@ -746,7 +745,6 @@ gst_sdlvideosink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 {
 
   GstSDLVideoSink *sdlvideosink;
-  SDL_Event sdl_event;
 
   sdlvideosink = GST_SDLVIDEOSINK (bsink);
 
@@ -948,7 +946,6 @@ gst_sdlvideosink_navigation_send_event (GstNavigation * navigation,
   GstSDLVideoSink *sdlvideosink = GST_SDLVIDEOSINK (navigation);
   GstEvent *event;
   GstVideoRectangle src, dst, result;
-  gint width, height;
   double x, y;
   GstPad *pad = NULL;
 
