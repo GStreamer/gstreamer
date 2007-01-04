@@ -424,6 +424,11 @@ gst_esdsink_delay (GstAudioSink * asink)
 
   latency = esd_get_latency (esdsink->ctrl_fd);
 
+  if (latency == (guint) - 1) {
+    GST_WARNING_OBJECT (asink, "couldn't get latency");
+    return 0;
+  }
+
   /* latency is measured in samples at a rate of 44100, this 
    * cannot overflow. */
   latency = latency * G_GINT64_CONSTANT (44100) / esdsink->rate;
