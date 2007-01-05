@@ -627,6 +627,7 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
     if (current_caps && caps && !gst_caps_is_equal (current_caps, caps)) {
       GST_WARNING_OBJECT (ogm, "Already an existing pad %s:%s",
           GST_DEBUG_PAD_NAME (ogm->srcpad));
+      gst_pad_set_active (ogm->srcpad, FALSE);
       gst_element_remove_pad (GST_ELEMENT (ogm), ogm->srcpad);
       ogm->srcpad = NULL;
     } else {
@@ -640,6 +641,7 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
     ogm->srcpad = gst_pad_new_from_template (ogm->srcpadtempl, "src");
     gst_pad_use_fixed_caps (ogm->srcpad);
     gst_pad_set_caps (ogm->srcpad, caps);
+    gst_pad_set_active (ogm->srcpad, TRUE);
     gst_element_add_pad (GST_ELEMENT (ogm), ogm->srcpad);
     GST_INFO_OBJECT (ogm, "Added pad %s:%s with caps %" GST_PTR_FORMAT,
         GST_DEBUG_PAD_NAME (ogm->srcpad), caps);
@@ -921,6 +923,7 @@ gst_ogm_parse_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       if (ogm->srcpad) {
+        gst_pad_set_active (ogm->srcpad, FALSE);
         gst_element_remove_pad (element, ogm->srcpad);
         ogm->srcpad = NULL;
       }

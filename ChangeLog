@@ -1,3 +1,9 @@
+2007-01-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/ogg/gstogmparse.c: (gst_ogm_parse_stream_header),
+	(gst_ogm_parse_change_state):
+	Activate pads before adding them to the element.
+
 2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/examples/seek/scrubby.c: (main):
