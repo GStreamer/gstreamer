@@ -76,7 +76,10 @@
  *       N_("Output tags (also known as metadata)"), NULL},
  *   {NULL}
  *  };
- *  ctx = g_option_context_new ("gst-launch");
+ *  // must initialise the threading system before using any other GLib funtion
+ *  if (!g_thread_supported ())
+ *    g_thread_init (NULL);
+ *  ctx = g_option_context_new ("[ADDITIONAL ARGUMENTS]");
  *  g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
  *  g_option_context_add_group (ctx, gst_init_get_option_group ());
  *  if (!g_option_context_parse (ctx, &amp;argc, &amp;argv, &amp;err)) {
@@ -279,8 +282,11 @@ parse_debug_list (const gchar * list)
  * This function is useful if you want to integrate GStreamer with other
  * libraries that use GOption (see g_option_context_add_group() ).
  *
- * Returns: a pointer to GStreamer's option group. Should be dereferenced
- * after use.
+ * If you use this function, you should make sure you initialise the GLib
+ * threading system as one of the very first things in your program
+ * (see the example at the beginning of this section).
+ *
+ * Returns: a pointer to GStreamer's option group.
  */
 
 GOptionGroup *
@@ -337,6 +343,20 @@ gst_init_get_option_group (void)
     {NULL}
   };
 
+  /* The GLib threading system must be initialised before calling any other
+   * GLib function according to the documentation; if the application hasn't
+   * called gst_init() yet or initialised the threading system otherwise, we
+   * better issue a warning here (since chances are high that the application
+   * has already called other GLib functions such as g_option_context_new() */
+  if (!g_thread_supported ()) {
+    g_warning ("The GStreamer function gst_init_get_option_group() was\n"
+        "\tcalled, but the GLib threading system has not been initialised\n"
+        "\tyet, something that must happen before any other GLib function\n"
+        "\tis called. The application needs to be fixed accordingly, please\n"
+        "\tfile a bug against this application.");
+    g_thread_init (NULL);
+  }
+
   group = g_option_group_new ("gst", _("GStreamer Options"),
       _("Show GStreamer Options"), NULL, NULL);
   g_option_group_set_parse_hooks (group, (GOptionParseFunc) init_pre,
@@ -361,6 +381,10 @@ gst_init_get_option_group (void)
  * for some reason.  If you want your program to fail fatally,
  * use gst_init() instead.
  *
+ * This function should be called before calling any other GLib functions. If
+ * this is not an option, your program must initialise the GLib thread system
+ * using g_thread_init() before any other GLib functions are called.
+ *
  * Returns: %TRUE if GStreamer could be initialized.
  */
 gboolean
@@ -369,6 +393,9 @@ gst_init_check (int *argc, char **argv[], GError ** err)
   GOptionGroup *group;
   GOptionContext *ctx;
   gboolean res;
+
+  if (!g_thread_supported ())
+    g_thread_init (NULL);
 
   GST_INFO ("initializing GStreamer");
 
@@ -402,6 +429,10 @@ gst_init_check (int *argc, char **argv[], GError ** err)
  *
  * Initializes the GStreamer library, setting up internal path lists,
  * registering built-in elements, and loading standard plugins.
+ *
+ * This function should be called before calling any other GLib functions. If
+ * this is not an option, your program must initialise the GLib thread system
+ * using g_thread_init() before any other GLib functions are called.
  *
  * <note><para>
  * This function will terminate your program if it was unable to initialize
@@ -519,12 +550,8 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   g_type_init ();
 
-  if (g_thread_supported ()) {
-    /* somebody already initialized threading */
-  } else {
-    g_thread_init (NULL);
-  }
   /* we need threading to be enabled right here */
+  g_assert (g_thread_supported ());
   _gst_debug_init ();
 
 #ifdef ENABLE_NLS

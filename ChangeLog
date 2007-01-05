@@ -1,5 +1,25 @@
 2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gst.c: (gst_init_get_option_group), (gst_init_check),
+	(init_pre):
+	  Call g_thread_init() first thing in gst_init() / gst_check_init().
+	  When initialisation is done via gst_init_get_option_group() and
+	  GOption parsing, issue a warning if the GLib thread system has not
+	  been initialised yet by the time gst_init_get_option_group() is
+	  called, as it's quite likely other GLib functions such as
+	  g_option_context_new() have been called already then, and
+	  g_thread_init() must be called before any other GLib function. The
+	  application in question must be fixed in that case, since memory
+	  corruption might happen otherwise.
+	  We issue the warning because even if the GLib folks decide to work
+	  around the problem on their end in future, this is still an issue
+	  with all GLib versions >= 2.10.0, so we should warn until we depend
+	  on a GLib version we know to be safe.
+	  Update documentation as well.
+	  Closes bug #391278.
+
+2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tools/gst-inspect.c: (main):
 	* tools/gst-launch.c: (main):
 	* tools/gst-typefind.c: (main):
