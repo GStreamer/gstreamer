@@ -1,3 +1,9 @@
+2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_activate_push):
+	  Change some GST_ERROR_OBJECT that aren't really errors to
+	  GST_WARNING_OBJECT in order to reduce terminal spam.
+
 2007-01-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/Makefile.am:

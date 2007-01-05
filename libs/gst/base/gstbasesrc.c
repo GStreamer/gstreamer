@@ -1930,12 +1930,12 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
   /* ERRORS */
 no_push_activation:
   {
-    GST_ERROR_OBJECT (basesrc, "Subclass disabled push-mode activation");
+    GST_WARNING_OBJECT (basesrc, "Subclass disabled push-mode activation");
     return FALSE;
   }
 error_start:
   {
-    GST_ERROR_OBJECT (basesrc, "Failed to start in push mode");
+    GST_WARNING_OBJECT (basesrc, "Failed to start in push mode");
     return FALSE;
   }
 seek_failed:
