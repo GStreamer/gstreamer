@@ -1,5 +1,11 @@
 2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/examples/seek/scrubby.c: (main):
+	* tests/examples/seek/seek.c: (main):
+	  Call g_thread_init() first thing in main() (see #391278).
+
+2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/Makefile.am:
 	* tests/check/libs/.cvsignore:
 	* tests/check/libs/netbuffer.c: (GST_START_TEST),
