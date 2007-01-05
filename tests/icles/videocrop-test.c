@@ -153,6 +153,9 @@ main (int argc, char **argv)
   GstCaps *filter_caps = NULL;
   GList *caps_list, *l;
 
+  if (!g_thread_supported ())
+    g_thread_init (NULL);
+
   /* command line option parsing */
   ctx = g_option_context_new ("");
   g_option_context_add_group (ctx, gst_init_get_option_group ());
@@ -162,8 +165,6 @@ main (int argc, char **argv)
     g_error ("Error parsing command line options: %s", opt_err->message);
     return -1;
   }
-
-  gst_init (&argc, &argv);
 
   GST_DEBUG_CATEGORY_INIT (videocrop_test_debug, "videocroptest", 0, "vctest");
 

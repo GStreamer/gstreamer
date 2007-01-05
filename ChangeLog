@@ -1,5 +1,11 @@
 2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/icles/videocrop-test.c: (main):
+	  Call g_thread_init() right at the beginning. Remove superfluous
+	  gst_init() - we've already been inited via the GOption stuff.
+
+2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Don't compile rfbsource if we don't have sys/socket.h.
 	  Should fix compilation on MingW.
