@@ -321,9 +321,9 @@ void            gst_debug_unset_threshold_for_name  (const gchar * name);
  * Declares a GstDebugCategory variable as extern. Use in header files.
  * This macro expands to nothing if debugging is disabled.
  */
-#ifndef WIN32
+#ifndef _MSC_VER
 #define GST_DEBUG_CATEGORY_EXTERN(cat) extern GstDebugCategory *cat
-#else
+#else /* _MSC_VER */
 #define GST_DEBUG_CATEGORY_EXTERN(cat) \
   extern __declspec (dllimport) GstDebugCategory *cat;
 #endif

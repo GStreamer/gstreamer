@@ -191,14 +191,14 @@
  * On Windows, this exports the plugin definition from the DLL.
  * On other platforms, this gets defined as a no-op.
  */
-#if defined(WIN32) && (!defined(__MINGW32__))
+#ifdef _MSC_VER
 #define GST_PLUGIN_EXPORT __declspec(dllexport) extern
 #ifdef GST_EXPORTS
 #define GST_EXPORT __declspec(dllexport) extern
 #else
 #define GST_EXPORT __declspec(dllimport) extern
 #endif
-#else /* not WIN32 */
+#else /* not _MSC_VER */
 #define GST_PLUGIN_EXPORT
 #define GST_EXPORT extern
 #endif

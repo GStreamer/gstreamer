@@ -55,9 +55,9 @@ void _priv_gst_registry_cleanup (void);
 
 #ifndef GST_DISABLE_GST_DEBUG
 
-#ifndef WIN32
+#ifndef _MSC_VER
 #define IMPORT_SYMBOL
-#else
+#else /* _MSC_VER */
 #ifndef LIBGSTREAMER_EXPORTS
 #define IMPORT_SYMBOL __declspec(dllimport)
 #else
