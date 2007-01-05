@@ -231,6 +231,17 @@ if test "x$HAVE_CPU_I386" != "xyes" || test "xHAVE_CPU_X86_64" = "xyes"; then
   AC_MSG_WARN([Not building real plugin, only works on 32bit x86 platforms])
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | sed 's/real//g'`
 fi
+
+dnl disable gst plugins we might not be able to build on this
+dnl platform: librfb (ugly but minimally invasive)
+dnl FIXME: maybe move to sys, or make work with winsock2
+AC_CHECK_HEADERS([sys/socket.h], HAVE_SYS_SOCKET_H=yes)
+AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
+
+if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
+  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/librfb//`
+fi
+
 AC_SUBST(GST_PLUGINS_SELECTED)
 
 

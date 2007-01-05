@@ -1,3 +1,9 @@
+2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Don't compile rfbsource if we don't have sys/socket.h.
+	  Should fix compilation on MingW.
+
 2007-01-04  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
