@@ -821,6 +821,17 @@ GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
   AC_CHECK_HEADER(linux/dvb/frontend.h, [HAVE_DVB="yes"], [HAVE_DVB="no"])
 ])
 
+dnl *** qtdemux prefers to have zlib ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ZLIB, true)
+GST_CHECK_FEATURE(ZLIB, [zlib support for qtdemux],, [
+  GST_CHECK_LIBHEADER(ZLIB,
+    z, uncompress,, zlib.h, [
+    HAVE_ZLIB="yes"
+    ZLIB_LIBS="-lz"
+    AC_SUBST(ZLIB_LIBS)
+  ])
+])
+
 else
 
 dnl not building plugins with external dependencies,
@@ -851,6 +862,7 @@ AM_CONDITIONAL(USE_THEORADEC, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_WAVPACK, false)
 AM_CONDITIONAL(USE_DVB, false)
+AM_CONDITIONAL(USE_ZLIB, false)
 
 fi dnl of EXT plugins
 

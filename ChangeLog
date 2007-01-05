@@ -1,3 +1,13 @@
+2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/qtdemux/Makefile.am:
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_moov):
+	  Check for zlib and if available pass it explicitly to the linker
+	  when linking qtdemux. If not available (or --disable-external has
+	  been specified!), disable the bits in qtdemux that use it. Fixes
+	  build on MingW (#392856).
+
 2007-01-05  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:
