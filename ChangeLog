@@ -1,3 +1,8 @@
+2007-01-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/extend/discoverer.py:
+	  No shebang line needed since there is no main code.
+
 2006-12-19  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gst.defs:

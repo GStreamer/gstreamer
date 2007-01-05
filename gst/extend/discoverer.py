@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- Mode: Python -*-
 # vi:si:et:sw=4:sts=4:ts=4
 
@@ -111,6 +110,7 @@ class Discoverer(gst.Pipeline):
         self._timeoutid = 0
 
         if not os.path.isfile(filename):
+            self.debug("File '%s' does not exist, finished" % filename)
             self.finished = True
             return
         
