@@ -583,6 +583,9 @@ main (int argc, char *argv[])
   textdomain (GETTEXT_PACKAGE);
 #endif
 
+  if (!g_thread_supported ())
+    g_thread_init (NULL);
+
   gst_alloc_trace_set_flags_all (GST_ALLOC_TRACE_LIVE);
 
   ctx = g_option_context_new ("PIPELINE-DESCRIPTION");

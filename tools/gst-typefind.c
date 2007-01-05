@@ -153,6 +153,9 @@ main (int argc, char *argv[])
   textdomain (GETTEXT_PACKAGE);
 #endif
 
+  if (!g_thread_supported ())
+    g_thread_init (NULL);
+
   ctx = g_option_context_new ("FILES");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());

@@ -1,5 +1,14 @@
 2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tools/gst-inspect.c: (main):
+	* tools/gst-launch.c: (main):
+	* tools/gst-typefind.c: (main):
+	* tools/gst-xmlinspect.c: (main):
+	  Call g_thread_init() really really early, before any other GLib
+	  function (see #342564 and recent discussion on gtk-devel-list).
+
+2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Vincent Torri  <vtorri at univ-evry dot fr>
 
 	* gst/gst_private.h:
