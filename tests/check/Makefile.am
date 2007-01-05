@@ -103,6 +103,7 @@ VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-base.supp
 
 libs_audio_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 
@@ -113,6 +114,7 @@ libs_audio_LDADD = \
 	$(LDADD)
 
 libs_cddabasesrc_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 
@@ -122,14 +124,22 @@ libs_cddabasesrc_LDADD = \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
+libs_tag_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
 libs_tag_LDADD = \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la $(LDADD)
+
+elements_alsa_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
 
 elements_alsa_LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
 elements_audioconvert_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 
@@ -140,7 +150,7 @@ elements_audioconvert_LDADD = \
 	$(LDADD)
 
 elements_audiorate_LDADD =  $(LDADD)
-elements_audiorate_CFLAGS = $(CFLAGS) $(AM_CFLAGS)
+elements_audiorate_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 
 elements_gdpdepay_LDADD = $(GST_GDP_LIBS) $(LDADD)
 elements_gdppay_LDADD = $(GST_GDP_LIBS) $(LDADD)
@@ -162,6 +172,7 @@ elements_volume_LDADD = \
 	$(LDADD)
 
 elements_volume_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 
@@ -170,10 +181,12 @@ elements_vorbistag_LDADD = \
 	$(LDADD)
 
 elements_vorbistag_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(VORBIS_CFLAGS) \
 	$(CFLAGS) $(AM_CFLAGS)
 
 libs_video_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 
