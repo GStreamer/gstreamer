@@ -16,6 +16,11 @@ libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 libgstffmpeg_la_LIBADD = $(FFMPEG_LIBS) $(GST_BASE_LIBS)
 libgstffmpeg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
+if HAVE_FFMPEG_UNINSTALLED
+libgstffmpeg_la_DEPENDENCIES = $(FFMPEG_LIBS)
+endif
+
+
 noinst_HEADERS = \
 	gstffmpeg.h \
 	gstffmpegcodecmap.h \

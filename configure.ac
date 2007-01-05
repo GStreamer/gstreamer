@@ -171,8 +171,7 @@ AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
 
 dnl *** configure external libs ***
 
-AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, 1,
-                   [Defined if building against uninstalled FFmpeg source])
+HAVE_FFMPEG_UNINSTALLED=1
 
 AC_ARG_WITH(system-ffmpeg,
             [AC_HELP_STRING([--with-system-ffmpeg], [use system FFmpeg libraries])])
@@ -185,6 +184,8 @@ if test "x$with_system_ffmpeg" = "xyes"; then
   AC_CHECK_HEADERS([avi.h])
   CPPFLAGS="$saved_CPPFLAGS"
   AC_DEFINE([FFMPEG_SOURCE], ["system install"], [Describes where the FFmpeg libraries come from.])
+  HAVE_FFMPEG_UNINSTALLED=0
+  AC_MSG_NOTICE([Using system-installed FFMpeg code])
 else
   FFMPEG_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
@@ -200,10 +201,15 @@ else
   AC_DEFINE([FFMPEG_SOURCE], ["local snapshot"], [Describes where the FFmpeg libraries come from.])
   ac_configure_args="$ac_configure_args --disable-v4l --disable-audio-oss --disable-dv1394 --disable-vhook --disable-ffmpeg --disable-ffserver --disable-ffplay --disable-sdltest --enable-pp"
   AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg)
+  AC_MSG_NOTICE([Using included FFMpeg code])
 fi
 AC_SUBST(FFMPEG_CFLAGS)
 AC_SUBST(FFMPEG_LIBS)
 AC_SUBST(FFMPEG_SUBDIRS)
+
+AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, $HAVE_FFMPEG_UNINSTALLED,
+                   [Defined if building against uninstalled FFmpeg source])
+AM_CONDITIONAL(HAVE_FFMPEG_UNINSTALLED, test x$HAVE_FFMPEG_UNINSTALLED = x1)
 
 AC_CONFIG_FILES(
 Makefile

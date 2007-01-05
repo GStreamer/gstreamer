@@ -1,3 +1,12 @@
+2007-01-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  actually properly define HAVE_FFMPEG_UNINSTALLED
+	  also use it as a conditional
+	* ext/ffmpeg/Makefile.am:
+	  add a dep on the internal lib so the plugin gets rebuilt on
+	  code changes to the ffmpeg lib
+
 2007-01-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_class_init),
