@@ -226,8 +226,8 @@ if test "x$HAVE_CXX" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | sed 's/modplug//g'`
 fi
 
-dnl real plugin only works on 32bit x86 for the time being.
-if test "x$HAVE_CPU_I386" != "xyes" || test "xHAVE_CPU_X86_64" = "xyes"; then
+dnl real plugin only works on i386 and x86_64 for the time being.
+if test "x$HAVE_CPU_I386" != "xyes" || test "xHAVE_CPU_X86_64" != "xyes"; then
   AC_MSG_WARN([Not building real plugin, only works on 32bit x86 platforms])
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | sed 's/real//g'`
 fi

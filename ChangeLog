@@ -1,3 +1,25 @@
+2007-01-05  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	Real video .so are now also available for x86_64, so we can build the
+	Real plugin on i386 AND x86_64.
+	* gst/real/Makefile.am:
+	* gst/real/gstreal.c: (plugin_init):
+	New plugin file for real .so wrapper plugins.
+	* gst/real/gstrealvideodec.c: (gst_real_video_dec_alloc_buffer),
+	(gst_real_video_dec_decode), (gst_real_video_dec_chain),
+	(gst_real_video_dec_activate_push), (gst_real_video_dec_setcaps),
+	(open_library), (close_library), (gst_real_video_dec_init),
+	(gst_real_video_dec_base_init), (gst_real_video_dec_finalize),
+	(gst_real_video_dec_set_property),
+	(gst_real_video_dec_get_property), (gst_real_video_dec_class_init):
+	* gst/real/gstrealvideodec.h:
+	Moved RealVideo element to separate file
+	Cleaned up code some more.
+	Make it work on x86_64.
+	Try several possible locations for .so
+	Separate opening/closing libraries in separate functions.
+
 2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/icles/videocrop-test.c: (main):
