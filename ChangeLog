@@ -1,6 +1,15 @@
 2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:
+	* tests/check/libs/.cvsignore:
+	* tests/check/libs/netbuffer.c: (GST_START_TEST),
+	(netbuffer_suite):
+	  Add test for GstNetBuffer + gst_buffer_copy(). Disabled
+	  for the time being, since it's broken, see #393099.
+
+2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
 	  Update to use GST_PLUGINS_BASE_CFLAGS as well.
 
 2007-01-04  Thomas Vander Stichele  <thomas at apestaart dot org>

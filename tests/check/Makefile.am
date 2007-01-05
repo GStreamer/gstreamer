@@ -92,7 +92,7 @@ VALGRIND_TO_FIX = \
 	libs/video
 
 # these tests don't even pass
-noinst_PROGRAMS =
+noinst_PROGRAMS = libs/netbuffer
 
 AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS)
 LDADD = $(GST_LIBS) $(GST_CHECK_LIBS)
@@ -122,6 +122,13 @@ libs_cddabasesrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) \
+	$(LDADD)
+
+libs_netbuffer_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+libs_netbuffer_LDADD = \
+	$(top_builddir)/gst-libs/gst/netbuffer/libgstnetbuffer-@GST_MAJORMINOR@.la \
 	$(LDADD)
 
 libs_tag_CFLAGS = \
