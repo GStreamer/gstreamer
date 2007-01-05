@@ -29,7 +29,10 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <zlib.h>
+
+#ifdef HAVE_ZLIB
+# include <zlib.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (qtdemux_debug);
 #define GST_CAT_DEFAULT qtdemux_debug
@@ -2086,6 +2089,7 @@ static const QtNodeType qt_node_types[] = {
 };
 static int n_qt_node_types = sizeof (qt_node_types) / sizeof (qt_node_types[0]);
 
+#ifdef HAVE_ZLIB
 
 static void *
 qtdemux_zalloc (void *opaque, unsigned int items, unsigned int size)
@@ -2135,6 +2139,8 @@ qtdemux_inflate (void *z_buffer, int z_length, int length)
   return buffer;
 }
 
+#endif /* HAVE_ZLIB */
+
 static void
 qtdemux_parse_moov (GstQTDemux * qtdemux, guint8 * buffer, int length)
 {
@@ -2147,32 +2153,41 @@ qtdemux_parse_moov (GstQTDemux * qtdemux, guint8 * buffer, int length)
 
   cmov = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_cmov);
   if (cmov) {
+    guint32 method;
     GNode *dcom;
     GNode *cmvd;
 
     dcom = qtdemux_tree_get_child_by_type (cmov, FOURCC_dcom);
     cmvd = qtdemux_tree_get_child_by_type (cmov, FOURCC_cmvd);
 
-    if (QTDEMUX_FOURCC_GET ((guint8 *) dcom->data + 8) == GST_MAKE_FOURCC ('z',
-            'l', 'i', 'b')) {
-      int uncompressed_length;
-      int compressed_length;
-      guint8 *buf;
+    method = QTDEMUX_FOURCC_GET ((guint8 *) dcom->data + 8);
+    switch (method) {
+#ifdef HAVE_ZLIB
+      case GST_MAKE_FOURCC ('z', 'l', 'i', 'b'):{
+        int uncompressed_length;
+        int compressed_length;
+        guint8 *buf;
 
-      uncompressed_length = QTDEMUX_GUINT32_GET ((guint8 *) cmvd->data + 8);
-      compressed_length = QTDEMUX_GUINT32_GET ((guint8 *) cmvd->data + 4) - 12;
-      GST_LOG ("length = %d", uncompressed_length);
+        uncompressed_length = QTDEMUX_GUINT32_GET ((guint8 *) cmvd->data + 8);
+        compressed_length =
+            QTDEMUX_GUINT32_GET ((guint8 *) cmvd->data + 4) - 12;
+        GST_LOG ("length = %d", uncompressed_length);
 
-      buf =
-          (guint8 *) qtdemux_inflate ((guint8 *) cmvd->data + 12,
-          compressed_length, uncompressed_length);
+        buf =
+            (guint8 *) qtdemux_inflate ((guint8 *) cmvd->data + 12,
+            compressed_length, uncompressed_length);
 
-      qtdemux->moov_node_compressed = qtdemux->moov_node;
-      qtdemux->moov_node = g_node_new (buf);
+        qtdemux->moov_node_compressed = qtdemux->moov_node;
+        qtdemux->moov_node = g_node_new (buf);
 
-      qtdemux_parse (qtdemux, qtdemux->moov_node, buf, uncompressed_length);
-    } else {
-      GST_LOG ("unknown header compression type");
+        qtdemux_parse (qtdemux, qtdemux->moov_node, buf, uncompressed_length);
+        break;
+      }
+#endif /* HAVE_ZLIB */
+      default:
+        GST_WARNING_OBJECT (qtdemux, "unknown or unhandled header compression "
+            "type %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (method));
+        break;
     }
   }
 }
