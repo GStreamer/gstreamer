@@ -1,3 +1,11 @@
+2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_stream_out):
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_data_packet):
+	* gst/playback/gstdecodebin2.c:
+	(gst_decode_group_check_if_blocked):
+	  Printf format and missing argument fixes.
+
 2007-01-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/ogg/gstogmparse.c: (gst_ogm_parse_stream_header),

@@ -1392,7 +1392,7 @@ gst_decode_group_check_if_blocked (GstDecodeGroup * group)
   GList *tmp;
   gboolean blocked = TRUE;
 
-  GST_LOG ("group : %p");
+  GST_LOG ("group : %p", group);
 
   /* 1. don't do anything if group is not complete */
   if (!group->complete) {

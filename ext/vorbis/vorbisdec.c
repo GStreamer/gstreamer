@@ -1032,7 +1032,7 @@ done:
   vorbis_synthesis_read (&vd->vd, sample_count);
 
   GST_DEBUG_OBJECT (vd,
-      "decoded %d bytes into %d samples, ts %" GST_TIME_FORMAT, packet->bytes,
+      "decoded %ld bytes into %d samples, ts %" GST_TIME_FORMAT, packet->bytes,
       sample_count, GST_TIME_ARGS (timestamp));
 
   /* granulepos is the last sample in the packet */

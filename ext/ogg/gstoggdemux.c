@@ -1238,7 +1238,7 @@ gst_ogg_pad_stream_out (GstOggPad * pad, gint npackets)
         gst_ogg_chain_mark_discont (pad->chain);
         break;
       case 1:
-        GST_LOG_OBJECT (ogg, "packetout gave packet of size %u", packet.bytes);
+        GST_LOG_OBJECT (ogg, "packetout gave packet of size %ld", packet.bytes);
         result = gst_ogg_pad_submit_packet (pad, &packet);
         if (GST_FLOW_IS_FATAL (result))
           goto could_not_submit;
