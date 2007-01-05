@@ -25,5 +25,6 @@ libgstmatroska_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_LIBS) \
-	-lgstriff-@GST_MAJORMINOR@
+	-lgstriff-@GST_MAJORMINOR@ \
+	$(ZLIB_LIBS)
 libgstmatroska_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
