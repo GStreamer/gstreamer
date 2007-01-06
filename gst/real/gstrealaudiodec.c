@@ -362,7 +362,11 @@ gst_real_audio_dec_finalize (GObject * object)
 
   if (dec->context) {
     dec->funcs.RACloseCodec (dec->context);
-    dec->funcs.RAFreeDecoder (dec->context);
+    /* Calling RAFreeDecoder seems to randomly cause SEGFAULTs.
+     * All other implementation (xine, mplayer) have also got this function call
+     * commented. So until we know more, we comment it too. */
+
+    /*     dec->funcs.RAFreeDecoder (dec->context); */
     dec->context = NULL;
   }
   if (dec->handle) {

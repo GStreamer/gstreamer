@@ -1,5 +1,12 @@
 2007-01-06  Edward Hervey  <edward@fluendo.com>
 
+	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_finalize):
+	Don't call the RAFreeDecoder since it randomly causes segfaults.
+	* gst/real/gstrealaudiodec.h:
+	indent properly.
+
+2007-01-06  Edward Hervey  <edward@fluendo.com>
+
 	Patch by: Lutz Mueller <lutz@topfrose.de>
 	
 	* gst/real/gstrealvideodec.c: (gst_real_video_dec_decode),

@@ -25,7 +25,6 @@
 #include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_REAL_AUDIO_DEC (gst_real_audio_dec_get_type())
 #define GST_REAL_AUDIO_DEC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_REAL_AUDIO_DEC,GstRealAudioDec))
 #define GST_REAL_AUDIO_DEC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_REAL_AUDIO_DEC,GstRealAudioDecClass))
@@ -33,8 +32,9 @@ G_BEGIN_DECLS
 typedef struct _GstRealAudioDec GstRealAudioDec;
 typedef struct _GstRealAudioDecClass GstRealAudioDecClass;
 
-GType gst_real_audio_dec_get_type (void) G_GNUC_CONST;
+GType
+gst_real_audio_dec_get_type (void)
+    G_GNUC_CONST;
 
 G_END_DECLS
-
 #endif /* __GST_REAL_AUDIO_DEC_H__ */
