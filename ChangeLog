@@ -1,3 +1,10 @@
+2007-01-06  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.c (gst_pad_get_range, gst_pad_pull_range): Set caps
+	on the pads if necessary, as in push()/chain(). Update docs.
+	Shouldn't affect existing pull() usage as it is currently only
+	being used on buffers without caps.
+
 2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (gst_init_get_option_group), (gst_init_check),

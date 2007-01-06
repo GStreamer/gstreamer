@@ -3691,6 +3691,11 @@ not_connected:
  * installed (see gst_pad_set_getrange_function()) this function returns
  * #GST_FLOW_NOT_SUPPORTED.
  *
+ * This function will call gst_pad_set_caps() on @pad if the pull is successful
+ * and the caps on @buffer differ from what is already set on @pad, as is done
+ * in gst_pad_push(). This could cause the function to return
+ * #GST_FLOW_NOT_NEGOTIATED if the caps could not be set.
+ *
  * Returns: a #GstFlowReturn from the pad.
  *
  * MT safe.
@@ -3734,6 +3739,25 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
 
   GST_PAD_STREAM_UNLOCK (pad);
 
+  if (G_LIKELY (ret == GST_FLOW_OK)) {
+    GstCaps *caps;
+    gboolean caps_changed;
+
+    GST_OBJECT_LOCK (pad);
+    /* Before pushing the buffer to the peer pad, ensure that caps 
+     * are set on this pad */
+    caps = GST_BUFFER_CAPS (*buffer);
+    caps_changed = caps && caps != GST_PAD_CAPS (pad);
+    GST_OBJECT_UNLOCK (pad);
+
+    /* we got a new datatype from the pad, it had better handle it */
+    if (G_UNLIKELY (caps_changed)) {
+      GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
+      if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, TRUE)))
+        goto not_negotiated;
+    }
+  }
+
   return ret;
 
   /* ERRORS */
@@ -3762,6 +3786,14 @@ dropping:
     *buffer = NULL;
     return GST_FLOW_UNEXPECTED;
   }
+not_negotiated:
+  {
+    gst_buffer_unref (*buffer);
+    *buffer = NULL;
+    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "getrange returned buffer then refused to accept the caps");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 
@@ -3781,6 +3813,11 @@ dropping:
  * function returns the result of gst_pad_get_range() on the peer pad.
  * See gst_pad_get_range() for a list of return values and for the
  * semantics of the arguments of this function.
+ *
+ * This function will call gst_pad_set_caps() on @pad if the pull is successful
+ * and the caps on @buffer differ from what is already set on @pad, as is done
+ * in gst_pad_chain(). This could cause the function to return
+ * #GST_FLOW_NOT_NEGOTIATED if the caps could not be set.
  *
  * Returns: a #GstFlowReturn from the peer pad.
  * When this function returns #GST_FLOW_OK, @buffer will contain a valid
@@ -3827,6 +3864,26 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
     if (!gst_pad_emit_have_data_signal (pad, GST_MINI_OBJECT (*buffer)))
       goto dropping;
   }
+
+  if (G_LIKELY (ret == GST_FLOW_OK)) {
+    GstCaps *caps;
+    gboolean caps_changed;
+
+    GST_OBJECT_LOCK (pad);
+    /* Before pushing the buffer to the peer pad, ensure that caps 
+     * are set on this pad */
+    caps = GST_BUFFER_CAPS (*buffer);
+    caps_changed = caps && caps != GST_PAD_CAPS (pad);
+    GST_OBJECT_UNLOCK (pad);
+
+    /* we got a new datatype on the pad, see if it can handle it */
+    if (G_UNLIKELY (caps_changed)) {
+      GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
+      if (G_UNLIKELY (!gst_pad_configure_sink (pad, caps)))
+        goto not_negotiated;
+    }
+  }
+
   return ret;
 
   /* ERROR recovery here */
@@ -3844,6 +3901,14 @@ dropping:
     gst_buffer_unref (*buffer);
     *buffer = NULL;
     return GST_FLOW_UNEXPECTED;
+  }
+not_negotiated:
+  {
+    gst_buffer_unref (*buffer);
+    *buffer = NULL;
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pulled buffer but pad did not accept the caps");
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 
