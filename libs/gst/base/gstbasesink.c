@@ -274,15 +274,17 @@ static void gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
 static gboolean gst_base_sink_set_flushing (GstBaseSink * basesink,
     GstPad * pad, gboolean flushing);
+static gboolean gst_base_sink_activate_pull (GstBaseSink * basesink,
+    gboolean active);
 
 static GstStateChangeReturn gst_base_sink_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstFlowReturn gst_base_sink_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_base_sink_loop (GstPad * pad);
-static gboolean gst_base_sink_activate (GstPad * pad);
-static gboolean gst_base_sink_activate_push (GstPad * pad, gboolean active);
-static gboolean gst_base_sink_activate_pull (GstPad * pad, gboolean active);
+static gboolean gst_base_sink_pad_activate (GstPad * pad);
+static gboolean gst_base_sink_pad_activate_push (GstPad * pad, gboolean active);
+static gboolean gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active);
 static gboolean gst_base_sink_event (GstPad * pad, GstEvent * event);
 
 /* check if an object was too late */
@@ -344,6 +346,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_set_caps);
   klass->buffer_alloc = GST_DEBUG_FUNCPTR (gst_base_sink_buffer_alloc);
   klass->get_times = GST_DEBUG_FUNCPTR (gst_base_sink_get_times);
+  klass->activate_pull = GST_DEBUG_FUNCPTR (gst_base_sink_activate_pull);
 }
 
 static GstCaps *
@@ -432,11 +435,11 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   gst_pad_set_bufferalloc_function (basesink->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_sink_pad_buffer_alloc));
   gst_pad_set_activate_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_activate));
+      GST_DEBUG_FUNCPTR (gst_base_sink_pad_activate));
   gst_pad_set_activatepush_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_activate_push));
+      GST_DEBUG_FUNCPTR (gst_base_sink_pad_activate_push));
   gst_pad_set_activatepull_function (basesink->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_base_sink_activate_pull));
+      GST_DEBUG_FUNCPTR (gst_base_sink_pad_activate_pull));
   gst_pad_set_event_function (basesink->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_sink_event));
   gst_pad_set_chain_function (basesink->sinkpad,
@@ -2118,20 +2121,24 @@ gst_base_sink_set_flushing (GstBaseSink * basesink, GstPad * pad,
 }
 
 static gboolean
-gst_base_sink_deactivate (GstBaseSink * basesink, GstPad * pad)
+gst_base_sink_activate_pull (GstBaseSink * basesink, gboolean active)
 {
   gboolean result;
 
-  gst_base_sink_set_flushing (basesink, pad, TRUE);
-
-  /* step 2, make sure streaming finishes */
-  result = gst_pad_stop_task (pad);
+  if (active) {
+    /* start task */
+    result = gst_pad_start_task (basesink->sinkpad,
+        (GstTaskFunction) gst_base_sink_loop, basesink->sinkpad);
+  } else {
+    /* step 2, make sure streaming finishes */
+    result = gst_pad_stop_task (basesink->sinkpad);
+  }
 
   return result;
 }
 
 static gboolean
-gst_base_sink_activate (GstPad * pad)
+gst_base_sink_pad_activate (GstPad * pad)
 {
   gboolean result = FALSE;
   GstBaseSink *basesink;
@@ -2165,7 +2172,7 @@ gst_base_sink_activate (GstPad * pad)
 }
 
 static gboolean
-gst_base_sink_activate_push (GstPad * pad, gboolean active)
+gst_base_sink_pad_activate_push (GstPad * pad, gboolean active)
 {
   gboolean result;
   GstBaseSink *basesink;
@@ -2185,7 +2192,8 @@ gst_base_sink_activate_push (GstPad * pad, gboolean active)
       g_warning ("Internal GStreamer activation error!!!");
       result = FALSE;
     } else {
-      result = gst_base_sink_deactivate (basesink, pad);
+      gst_base_sink_set_flushing (basesink, pad, TRUE);
+      result = TRUE;
       basesink->pad_mode = GST_ACTIVATE_NONE;
     }
   }
@@ -2197,12 +2205,14 @@ gst_base_sink_activate_push (GstPad * pad, gboolean active)
 
 /* this won't get called until we implement an activate function */
 static gboolean
-gst_base_sink_activate_pull (GstPad * pad, gboolean active)
+gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
 {
   gboolean result = FALSE;
   GstBaseSink *basesink;
+  GstBaseSinkClass *bclass;
 
   basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   if (active) {
     if (!basesink->can_activate_pull) {
@@ -2228,9 +2238,7 @@ gst_base_sink_activate_pull (GstPad * pad, gboolean active)
           /* set the pad mode before starting the task so that it's in the
              correct state for the new thread... */
           basesink->pad_mode = GST_ACTIVATE_PULL;
-          result =
-              gst_pad_start_task (pad, (GstTaskFunction) gst_base_sink_loop,
-              pad);
+          result = gst_base_sink_activate_pull (basesink, TRUE);
           /* but if starting the thread fails, set it back */
           if (!result)
             basesink->pad_mode = GST_ACTIVATE_NONE;
@@ -2247,7 +2255,9 @@ gst_base_sink_activate_pull (GstPad * pad, gboolean active)
       g_warning ("Internal GStreamer activation error!!!");
       result = FALSE;
     } else {
-      result = gst_base_sink_deactivate (basesink, pad);
+      result = gst_base_sink_set_flushing (basesink, pad, TRUE);
+      if (bclass->activate_pull)
+        result &= bclass->activate_pull (basesink, FALSE);
       basesink->pad_mode = GST_ACTIVATE_NONE;
     }
   }

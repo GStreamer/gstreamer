@@ -1,5 +1,19 @@
 2007-01-06  Andy Wingo  <wingo@pobox.com>
 
+	* libs/gst/base/gstbasesink.h: New GstBaseSinkClass vmethod,
+	activate_pull(), providing for a way to specialize the process of
+	spawning a thread to pull on the sink pad. There is a default
+	implementation.
+
+	* libs/gst/base/gstbasesink.c (gst_base_sink_pad_activate_pull)
+	(gst_base_sink_pad_activate_push, gst_base_sink_pad_activate)
+	(gst_base_sink_init): Renamed pad activation functions (inserting
+	"_pad" in their names). Refactor to use the new activate_pull
+	vmethod, as appropriate.
+	(gst_base_sink_class_init, gst_base_sink_activate_pull): Set the
+	default activate_pull function to start a task pulling from the
+	sink pad, as before.
+
 	* gst/gstpad.c (gst_pad_get_range, gst_pad_pull_range): Set caps
 	on the pads if necessary, as in push()/chain(). Update docs.
 	Shouldn't affect existing pull() usage as it is currently only

@@ -121,6 +121,12 @@ struct _GstBaseSink {
  * @async_play: Subclasses should override this when they need to perform
  *              special processing when changing to the PLAYING state
  *              asynchronously.  Called with the OBJECT_LOCK held.
+ * @activate_pull: Subclasses should override this when they can provide an
+ *                 alternate method of spawning a thread to drive the pipeline
+ *                 in pull mode. Should start or stop the pulling thread,
+ *                 depending on the value of the "active" argument. Called after
+ *                 actually activating the sink pad in pull mode. The default
+ *                 implementation starts a task on the sink pad.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At the minimum, the render method should be overridden to
@@ -160,8 +166,11 @@ struct _GstBaseSinkClass {
   /* when an ASYNC state change to PLAYING happens */ /* with LOCK */
   GstStateChangeReturn (*async_play)   (GstBaseSink *sink);
 
+  /* start or stop a pulling thread */
+  gboolean	(*activate_pull)(GstBaseSink *sink, gboolean active);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE-1];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-2];
 };
 
 GType gst_base_sink_get_type(void);
