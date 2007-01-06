@@ -1,3 +1,10 @@
+2007-01-06  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	Properly detect the two architectures on which the real plugin can be
+	built.
+	Fixes #393622
+
 2007-01-06  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ladspa/gstsignalprocessor.c
