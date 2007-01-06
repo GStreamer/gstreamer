@@ -1,3 +1,17 @@
+2007-01-06  Andy Wingo  <wingo@pobox.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c
+	(gst_base_audio_sink_class_init)
+	(gst_base_audio_sink_init): 
+	(gst_base_audio_sink_activate_pull): Add an activate_pull function
+	to baseaudiosink, and tell basesink that we can work in pull mode.
+	This way the ring buffer thread drives the pipeline directly, if
+	pull mode is possible. There is some lingering nastiness regarding
+	capsnego, however.
+	(gst_base_audio_sink_callback): Implement the callback to pull
+	data. This interface is a bit light, though -- it should get a
+	GstFlowReturn return value at least.
+
 2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_stream_out):

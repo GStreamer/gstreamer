@@ -85,6 +85,8 @@ static GstStateChangeReturn gst_base_audio_sink_async_play (GstBaseSink *
     basesink);
 static GstStateChangeReturn gst_base_audio_sink_change_state (GstElement *
     element, GstStateChange transition);
+static gboolean gst_base_audio_sink_activate_pull (GstBaseSink * basesink,
+    gboolean active);
 
 static GstClock *gst_base_audio_sink_provide_clock (GstElement * elem);
 static GstClockTime gst_base_audio_sink_get_time (GstClock * clock,
@@ -155,6 +157,8 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_base_audio_sink_setcaps);
   gstbasesink_class->async_play =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_async_play);
+  gstbasesink_class->activate_pull =
+      GST_DEBUG_FUNCPTR (gst_base_audio_sink_activate_pull);
 }
 
 static void
@@ -167,6 +171,9 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
 
   baseaudiosink->provided_clock = gst_audio_clock_new ("clock",
       (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
+
+  GST_BASE_SINK (baseaudiosink)->can_activate_push = TRUE;
+  GST_BASE_SINK (baseaudiosink)->can_activate_pull = TRUE;
 }
 
 static void
@@ -810,11 +817,80 @@ gst_base_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
   return buffer;
 }
 
+static gboolean
+gst_base_audio_sink_activate_pull (GstBaseSink * basesink, gboolean active)
+{
+  gboolean ret;
+  GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (basesink);
+
+  if (active) {
+    GstCaps *sinkcaps, *peercaps, *caps;
+
+    gst_ring_buffer_set_callback (sink->ringbuffer,
+        gst_base_audio_sink_callback, sink);
+
+    /* need to spawn a thread to start pulling. that's the ring buffer thread,
+       which is started in ring_buffer_acquire(), which is called due to a sink
+       setcaps(). So we need to setcaps, which is tough because we don't know
+       exactly what caps we'll be getting. We can guess, though, and that's as
+       good as we're going to get without the user telling us explicitly e.g.
+       via a capsfilter before the sink. */
+    sinkcaps = gst_pad_get_caps (basesink->sinkpad);
+    peercaps = gst_pad_peer_get_caps (basesink->sinkpad);
+    caps = gst_caps_intersect (sinkcaps, peercaps);
+    gst_caps_unref (sinkcaps);
+    gst_caps_unref (peercaps);
+    gst_caps_truncate (caps);
+    gst_pad_fixate_caps (basesink->sinkpad, caps);
+
+    GST_DEBUG_OBJECT (sink, "initializing pull-mode ringbuffer with caps %"
+        GST_PTR_FORMAT, caps);
+    ret = gst_pad_set_caps (basesink->sinkpad, caps);
+    gst_caps_unref (caps);
+  } else {
+    gst_ring_buffer_set_callback (sink->ringbuffer, NULL, NULL);
+    /* stop thread */
+    ret = gst_ring_buffer_release (sink->ringbuffer);
+  }
+
+  return ret;
+}
+
 static void
 gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
     gpointer user_data)
 {
-  /* GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (data); */
+  GstBaseSink *basesink;
+  GstBaseAudioSink *sink;
+  GstBuffer *buf;
+  GstFlowReturn ret;
+
+  basesink = GST_BASE_SINK (data);
+  sink = GST_BASE_AUDIO_SINK (data);
+
+  /* would be nice to arrange for pad_alloc_buffer to return data -- as it is we
+     will copy twice, once into data, once into DMA */
+  GST_LOG_OBJECT (basesink, "pulling %d bytes to fill audio buffer", len);
+  ret = gst_pad_pull_range (basesink->sinkpad, basesink->offset, len, &buf);
+  if (ret != GST_FLOW_OK)
+    goto error;
+
+  if (len != GST_BUFFER_SIZE (buf)) {
+    GST_INFO_OBJECT (basesink, "short read pulling from sink pad: %d<%d",
+        len, GST_BUFFER_SIZE (buf));
+    len = MIN (GST_BUFFER_SIZE (buf), len);
+  }
+
+  memcpy (data, GST_BUFFER_DATA (buf), len);
+
+  return;
+
+error:
+  {
+    GST_WARNING_OBJECT (basesink, "Got flow error but can't return it: %d",
+        ret);
+    return;
+  }
 }
 
 /* should be called with the LOCK */
@@ -884,8 +960,6 @@ gst_base_audio_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (sink->ringbuffer == NULL) {
         sink->ringbuffer = gst_base_audio_sink_create_ringbuffer (sink);
-        gst_ring_buffer_set_callback (sink->ringbuffer,
-            gst_base_audio_sink_callback, sink);
       }
       if (!gst_ring_buffer_open_device (sink->ringbuffer))
         goto open_failed;
