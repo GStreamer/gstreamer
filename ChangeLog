@@ -1,5 +1,14 @@
 2007-01-06  Andy Wingo  <wingo@pobox.com>
 
+	* ext/ladspa/gstsignalprocessor.c
+	(gst_signal_processor_ouija_caps): Move around in the source
+	file...
+	(gst_signal_processor_prepare, gst_signal_processor_do_pulls):
+	Call ouija_caps in prepare() instead of do_pulls(), a bit earlier.
+	This allows us to have caps when we do the pad_alloc_buffer().
+	(gst_pad_alloc_buffer_and_set_caps): Use self->caps instead of the
+	pad caps, which might not be set yet.
+
 	* ext/ladspa/gstsignalprocessor.c: 
 	(gst_signal_processor_add_pad_from_template)
 	(gst_signal_processor_fixate): Add a fixate function, to assist in

@@ -478,6 +478,32 @@ gst_signal_processor_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static void
+gst_signal_processor_ouija_caps (GstSignalProcessor * self)
+{
+  GstElement *element;
+  GstPad *srcpad;
+  GstCaps *srccaps, *peercaps, *caps;
+
+  /* we have no sink pads, no way to know what caps we should be producing.
+     guess! */
+
+  element = GST_ELEMENT (self);
+  g_return_if_fail (element->sinkpads == NULL);
+  g_return_if_fail (element->srcpads != NULL);
+  srcpad = GST_PAD (element->srcpads->data);
+
+  srccaps = gst_pad_get_caps (srcpad);
+  peercaps = gst_pad_peer_get_caps (srcpad);
+  caps = gst_caps_intersect (srccaps, peercaps);
+  gst_caps_unref (srccaps);
+  gst_caps_unref (peercaps);
+  gst_caps_truncate (caps);
+  gst_pad_fixate_caps (srcpad, caps);
+  gst_signal_processor_setcaps (srcpad, caps);
+  gst_caps_unref (caps);
+}
+
 static guint
 gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
 {
@@ -526,6 +552,10 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
     }
   }
 
+  if (!self->caps)
+    gst_signal_processor_ouija_caps (self);
+  g_return_val_if_fail (GST_SIGNAL_PROCESSOR_IS_RUNNING (self), 0);
+
   /* now allocate for any remaining outputs */
   while (srcs) {
     GstSignalProcessorPad *srcpad;
@@ -535,7 +565,7 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
 
     ret =
         gst_pad_alloc_buffer_and_set_caps (GST_PAD (srcpad), -1,
-        samples_avail * sizeof (gfloat), GST_PAD_CAPS (srcpad), &srcpad->pen);
+        samples_avail * sizeof (gfloat), self->caps, &srcpad->pen);
 
     if (ret != GST_FLOW_OK) {
       self->flow_state = ret;
@@ -591,7 +621,6 @@ gst_signal_processor_process (GstSignalProcessor * self, guint nframes)
 
   g_return_if_fail (self->pending_in == 0);
   g_return_if_fail (self->pending_out == 0);
-  g_return_if_fail (GST_SIGNAL_PROCESSOR_IS_RUNNING (self));
 
   elem = GST_ELEMENT (self);
 
@@ -673,32 +702,6 @@ gst_signal_processor_flush (GstSignalProcessor * self)
 }
 
 static void
-gst_signal_processor_ouija_caps (GstSignalProcessor * self)
-{
-  GstElement *element;
-  GstPad *srcpad;
-  GstCaps *srccaps, *peercaps, *caps;
-
-  /* we have no sink pads, no way to know what caps we should be producing.
-     guess! */
-
-  element = GST_ELEMENT (self);
-  g_return_if_fail (element->sinkpads == NULL);
-  g_return_if_fail (element->srcpads != NULL);
-  srcpad = GST_PAD (element->srcpads->data);
-
-  srccaps = gst_pad_get_caps (srcpad);
-  peercaps = gst_pad_peer_get_caps (srcpad);
-  caps = gst_caps_intersect (srccaps, peercaps);
-  gst_caps_unref (srccaps);
-  gst_caps_unref (peercaps);
-  gst_caps_truncate (caps);
-  gst_pad_fixate_caps (srcpad, caps);
-  gst_signal_processor_setcaps (srcpad, caps);
-  gst_caps_unref (caps);
-}
-
-static void
 gst_signal_processor_do_pulls (GstSignalProcessor * self, guint nframes)
 {
   GList *sinkpads;
@@ -734,9 +737,6 @@ gst_signal_processor_do_pulls (GstSignalProcessor * self, guint nframes)
       gst_signal_processor_pen_buffer (self, GST_PAD (spad), buf);
     }
   }
-
-  if (!self->caps)
-    gst_signal_processor_ouija_caps (self);
 
   if (self->pending_in != 0) {
     g_critical ("Something wierd happened...");
