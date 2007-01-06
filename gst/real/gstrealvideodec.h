@@ -42,6 +42,17 @@ enum _GstRealVideoDecVersion
   GST_REAL_VIDEO_DEC_VERSION_4 = 4
 };
 
+typedef struct {
+  gpointer handle;
+
+  guint32 (*custom_message) (gpointer, gpointer);
+  guint32 (*free) (gpointer);
+  guint32 (*init) (gpointer, gpointer);
+  guint32 (*transform) (gchar *, gchar *, gpointer, gpointer, gpointer);
+
+  gpointer context;
+} GstRealVideoDecHooks;
+
 struct _GstRealVideoDec
 {
   GstElement parent;
@@ -59,14 +70,7 @@ struct _GstRealVideoDec
   guint16 next_seq, last_seq;
 
   /* Hooks */
-  gpointer handle;
-    guint32 (*custom_message) (gpointer, gpointer);
-    guint32 (*free) (gpointer);
-    guint32 (*init) (gpointer, gpointer);
-    guint32 (*transform) (gchar *, gchar *, gpointer, gpointer, gpointer);
-
-  /* Used by the REAL library. */
-  gpointer context;
+  GstRealVideoDecHooks hooks;
 
   /* State */
   GstAdapter *adapter;

@@ -69,8 +69,9 @@ enum
 GST_BOILERPLATE (GstRealVideoDec, gst_real_video_dec, GstElement,
     GST_TYPE_ELEMENT);
 
-static gboolean open_library (GstRealVideoDec * dec);
-static void close_library (GstRealVideoDec * dec);
+static gboolean open_library (GstRealVideoDec * dec,
+    GstRealVideoDecHooks * hooks, GstRealVideoDecVersion version);
+static void close_library (GstRealVideoDecHooks hooks);
 
 typedef struct
 {
@@ -352,9 +353,9 @@ gst_real_video_dec_decode (GstRealVideoDec * dec, GstBuffer * in, guint offset)
     tin.timestamp = GST_BUFFER_TIMESTAMP (out);
     data = gst_adapter_take (dec->adapter, dec->length);
 
-    result = dec->transform (
+    result = dec->hooks.transform (
         (gchar *) data,
-        (gchar *) GST_BUFFER_DATA (out), &tin, &tout, dec->context);
+        (gchar *) GST_BUFFER_DATA (out), &tin, &tout, dec->hooks.context);
 
     g_free (data);
     if (result)
@@ -489,36 +490,37 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstRealVideoDec *dec = GST_REAL_VIDEO_DEC (GST_PAD_PARENT (pad));
   GstStructure *s = gst_caps_get_structure (caps, 0);
-  gint version, res;
+  gint version, res, width, height, format, subformat;
+  gint framerate_num, framerate_denom;
   gchar data[36];
   gboolean bres;
   const GValue *v;
+  GstRealVideoDecHooks hooks = { 0, 0, 0, 0, 0, 0 };
 
   if (!gst_structure_get_int (s, "rmversion", &version) ||
-      !gst_structure_get_int (s, "width", (gint *) & dec->width) ||
-      !gst_structure_get_int (s, "height", (gint *) & dec->height) ||
-      !gst_structure_get_int (s, "format", &dec->format) ||
-      !gst_structure_get_int (s, "subformat", &dec->subformat) ||
-      !gst_structure_get_fraction (s, "framerate", &dec->framerate_num,
-          &dec->framerate_denom))
+      !gst_structure_get_int (s, "width", (gint *) & width) ||
+      !gst_structure_get_int (s, "height", (gint *) & height) ||
+      !gst_structure_get_int (s, "format", &format) ||
+      !gst_structure_get_int (s, "subformat", &subformat) ||
+      !gst_structure_get_fraction (s, "framerate", &framerate_num,
+          &framerate_denom))
     goto missing_keys;
-  dec->version = version;
 
   GST_LOG_OBJECT (dec, "Setting version to %d", version);
 
-  if (!open_library (dec))
+  if (!open_library (dec, &hooks, version))
     return FALSE;
 
   /* Initialize REAL driver. */
   GST_WRITE_UINT16_LE (data + 0, 11);
-  GST_WRITE_UINT16_LE (data + 2, dec->width);
-  GST_WRITE_UINT16_LE (data + 4, dec->height);
+  GST_WRITE_UINT16_LE (data + 2, width);
+  GST_WRITE_UINT16_LE (data + 4, height);
   GST_WRITE_UINT16_LE (data + 6, 0);
   GST_WRITE_UINT32_LE (data + 8, 0);
-  GST_WRITE_UINT32_LE (data + 12, dec->subformat);
+  GST_WRITE_UINT32_LE (data + 12, subformat);
   GST_WRITE_UINT32_LE (data + 16, 0);
-  GST_WRITE_UINT32_LE (data + 20, dec->format);
-  res = dec->init (&data, &dec->context);
+  GST_WRITE_UINT32_LE (data + 20, format);
+  res = hooks.init (&data, &hooks.context);
   if (res)
     goto could_not_initialize;
 
@@ -544,16 +546,16 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
       goto could_not_allocate;
 
     msg.type = 0x24;
-    msg.msg = 1 + ((dec->subformat >> 16) & 7);
+    msg.msg = 1 + ((subformat >> 16) & 7);
     msg.data = msgdata;
     for (i = 0; i < 6; i++)
       msg.extra[i] = 0;
-    msgdata[0] = dec->width;
-    msgdata[1] = dec->height;
+    msgdata[0] = width;
+    msgdata[1] = height;
     for (i = 0; i < GST_BUFFER_SIZE (buf); i++)
       msgdata[i + 2] = 4 * GST_BUFFER_DATA (buf)[i];
 
-    res = dec->custom_message (&msg, dec->context);
+    res = hooks.custom_message (&msg, hooks.context);
 
     g_free (msgdata);
     if (res)
@@ -562,12 +564,22 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
 
   caps = gst_caps_new_simple ("video/x-raw-yuv",
       "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
-      "framerate", GST_TYPE_FRACTION, dec->framerate_num, dec->framerate_denom,
-      "width", G_TYPE_INT, dec->width, "height", G_TYPE_INT, dec->height, NULL);
+      "framerate", GST_TYPE_FRACTION, framerate_num, framerate_denom,
+      "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
   bres = gst_pad_set_caps (GST_PAD (dec->src), caps);
   gst_caps_unref (caps);
   if (!bres)
     goto could_not_set_caps;
+
+  close_library (dec->hooks);
+  dec->hooks = hooks;
+  dec->version = version;
+  dec->width = width;
+  dec->height = height;
+  dec->format = format;
+  dec->subformat = subformat;
+  dec->framerate_num = framerate_num;
+  dec->framerate_denom = framerate_denom;
 
   return TRUE;
 
@@ -579,24 +591,21 @@ missing_keys:
 
 could_not_initialize:
   {
-    dlclose (dec->handle);
-    dec->handle = NULL;
+    close_library (hooks);
     GST_DEBUG_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
     return FALSE;
   }
 
 could_not_allocate:
   {
-    dlclose (dec->handle);
-    dec->handle = NULL;
+    close_library (hooks);
     GST_DEBUG_OBJECT (dec, "Could not allocate memory.");
     return FALSE;
   }
 
 could_not_send_message:
   {
-    dlclose (dec->handle);
-    dec->handle = NULL;
+    close_library (hooks);
     GST_DEBUG_OBJECT (dec, "Failed to send custom message needed for "
         "initialization (%i).", res);
     return FALSE;
@@ -604,8 +613,7 @@ could_not_send_message:
 
 could_not_set_caps:
   {
-    dlclose (dec->handle);
-    dec->handle = NULL;
+    close_library (hooks);
     GST_DEBUG_OBJECT (dec, "Could not convince peer to accept dimensions "
         "%i x %i.", dec->width, dec->height);
     return FALSE;
@@ -615,20 +623,20 @@ could_not_set_caps:
 /* Attempts to open the correct library for the configured version */
 
 static gboolean
-open_library (GstRealVideoDec * dec)
+open_library (GstRealVideoDec * dec, GstRealVideoDecHooks * hooks,
+    GstRealVideoDecVersion version)
 {
   gchar *path = NULL;
 
   GST_DEBUG_OBJECT (dec,
-      "Attempting to open shared library for real video version %d",
-      dec->version);
+      "Attempting to open shared library for real video version %d", version);
 
   /* FIXME : Search for the correct library in various places if dec->path_rv20
    *  isn't set explicitely !
    * Library names can also be different (ex : drv30.so vs drvc.so)
    */
 
-  switch (dec->version) {
+  switch (version) {
     case GST_REAL_VIDEO_DEC_VERSION_2:
     {
       if (dec->path_rv20)
@@ -669,27 +677,26 @@ open_library (GstRealVideoDec * dec)
       goto unknown_version;
   }
 
-  /* First close any open library */
-  close_library (dec);
-
-  dec->handle = dlopen (path, RTLD_LAZY);
-  if (!dec->handle)
+  hooks->handle = dlopen (path, RTLD_LAZY);
+  if (!hooks->handle)
     goto could_not_open;
 
   /* First try opening legacy symbols */
-  dec->custom_message = dlsym (dec->handle, "RV20toYUV420CustomMessage");
-  dec->free = dlsym (dec->handle, "RV20toYUV420Free");
-  dec->init = dlsym (dec->handle, "RV20toYUV420Init");
-  dec->transform = dlsym (dec->handle, "RV20toYUV420Transform");
+  hooks->custom_message = dlsym (hooks->handle, "RV20toYUV420CustomMessage");
+  hooks->free = dlsym (hooks->handle, "RV20toYUV420Free");
+  hooks->init = dlsym (hooks->handle, "RV20toYUV420Init");
+  hooks->transform = dlsym (hooks->handle, "RV20toYUV420Transform");
 
-  if (!(dec->custom_message && dec->free && dec->init && dec->transform)) {
+  if (!(hooks->custom_message && hooks->free && hooks->init
+          && hooks->transform)) {
     /* Else try loading new symbols */
-    dec->custom_message = dlsym (dec->handle, "RV40toYUV420CustomMessage");
-    dec->free = dlsym (dec->handle, "RV40toYUV420Free");
-    dec->init = dlsym (dec->handle, "RV40toYUV420Init");
-    dec->transform = dlsym (dec->handle, "RV40toYUV420Transform");
+    hooks->custom_message = dlsym (hooks->handle, "RV40toYUV420CustomMessage");
+    hooks->free = dlsym (hooks->handle, "RV40toYUV420Free");
+    hooks->init = dlsym (hooks->handle, "RV40toYUV420Init");
+    hooks->transform = dlsym (hooks->handle, "RV40toYUV420Transform");
 
-    if (!(dec->custom_message && dec->free && dec->init && dec->transform))
+    if (!(hooks->custom_message && hooks->free && hooks->init
+            && hooks->transform))
       goto could_not_load;
   }
 
@@ -699,13 +706,13 @@ no_known_libraries:
   {
     GST_ELEMENT_ERROR (dec, LIBRARY, INIT,
         ("Couldn't find a realvideo shared library for version %d",
-            dec->version), (NULL));
+            version), (NULL));
     return FALSE;
   }
 
 unknown_version:
   {
-    GST_ERROR_OBJECT (dec, "Cannot handle version %i.", dec->version);
+    GST_ERROR_OBJECT (dec, "Cannot handle version %i.", version);
     return FALSE;
   }
 
@@ -717,28 +724,20 @@ could_not_open:
 
 could_not_load:
   {
-    close_library (dec);
+    close_library (*hooks);
     GST_ERROR_OBJECT (dec, "Could not load all symbols.");
     return FALSE;
   }
 }
 
 static void
-close_library (GstRealVideoDec * dec)
+close_library (GstRealVideoDecHooks hooks)
 {
-  if (dec->context && dec->free) {
-    dec->free (dec->context);
-    dec->context = NULL;
-  }
+  if (hooks.context && hooks.free)
+    hooks.free (hooks.context);
 
-  dec->custom_message = NULL;
-  dec->free = NULL;
-  dec->init = NULL;
-  dec->transform = NULL;
-
-  if (dec->handle)
-    dlclose (dec->handle);
-  dec->handle = NULL;
+  if (hooks.handle)
+    dlclose (hooks.handle);
 }
 
 static void
@@ -779,7 +778,8 @@ gst_real_video_dec_finalize (GObject * object)
     dec->adapter = NULL;
   }
 
-  close_library (dec);
+  close_library (dec->hooks);
+  memset (&dec->hooks, 0, sizeof (dec->hooks));
 
   if (dec->path_rv20) {
     g_free (dec->path_rv20);
