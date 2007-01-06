@@ -1,3 +1,25 @@
+2007-01-06  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ladspa/gstsignalprocessor.c: 
+	(gst_signal_processor_add_pad_from_template)
+	(gst_signal_processor_fixate): Add a fixate function, to assist in
+	pathological ladspa-sine-fcac ! fakesink can-activate-pull=true
+	cases.
+	(gst_signal_processor_prepare, gst_signal_processor_process): Add
+	nframes args so that getrange can tell ladspa how many frames to
+	process.
+	(gst_signal_processor_ouija_caps): setcaps needs to be called
+	before processing, which normally happens when chaining a buffer
+	to a pad. However in getrange mode with no sinks we need to check
+	explicitly for this condition, guess some caps to use, and use
+	those to setcaps(). Hence this mystical function.
+	(gst_signal_processor_do_pulls): Pull in bytes, not samples.
+	Divine the caps if necessary.
+	(gst_signal_processor_getrange): Interpret the length as bytes,
+	not samples.
+	(gst_signal_processor_chain): nframes=G_MAXUINT, will be limited
+	by incoming buffer sizes.
+
 2007-01-06  Edward Hervey  <edward@fluendo.com>
 
 	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_finalize):
