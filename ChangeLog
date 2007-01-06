@@ -1,3 +1,19 @@
+2007-01-06  Edward Hervey  <edward@fluendo.com>
+
+	Patch by: Lutz Mueller <lutz@topfrose.de>
+	
+	* gst/real/Makefile.am:
+	* gst/real/gstreal.c: (plugin_init):
+	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_chain),
+	(gst_real_audio_dec_setcaps), (gst_real_audio_dec_init),
+	(gst_real_audio_dec_base_init), (gst_real_audio_dec_change_state),
+	(gst_real_audio_dec_finalize), (gst_real_audio_dec_set_property),
+	(gst_real_audio_dec_get_property), (gst_real_audio_dec_class_init):
+	* gst/real/gstrealaudiodec.h:
+	Added RealAudio wrapper elementfactory.
+	Modified structures so it can also work on x86_64 using the
+	adequate .so .
+
 2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

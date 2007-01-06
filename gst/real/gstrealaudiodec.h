@@ -1,7 +1,7 @@
-/* Real wrapper plugin
+/* GStreamer
  *
- * Copyright (C) Edward Hervey <bilboed@bilboed.com>
- * 
+ * Copyright (C) 2006 Lutz Mueller <lutz@topfrose.de>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -18,25 +18,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef __GST_REAL_AUDIO_DEC_H__
+#define __GST_REAL_AUDIO_DEC_H__
 
-#include "gstrealvideodec.h"
-#include "gstrealaudiodec.h"
+#include <gst/gst.h>
+#include <gst/audio/audio.h>
 
-static gboolean
-plugin_init (GstPlugin * p)
-{
-  if (!gst_element_register (p, "realvideodec", GST_RANK_PRIMARY,
-          GST_TYPE_REAL_VIDEO_DEC))
-    return FALSE;
-  if (!gst_element_register (p, "realaudiodec", GST_RANK_PRIMARY,
-          GST_TYPE_REAL_AUDIO_DEC))
-    return FALSE;
-  return TRUE;
-}
+G_BEGIN_DECLS
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, "real",
-    "Decode REAL streams",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+#define GST_TYPE_REAL_AUDIO_DEC (gst_real_audio_dec_get_type())
+#define GST_REAL_AUDIO_DEC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_REAL_AUDIO_DEC,GstRealAudioDec))
+#define GST_REAL_AUDIO_DEC_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_REAL_AUDIO_DEC,GstRealAudioDecClass))
+
+typedef struct _GstRealAudioDec GstRealAudioDec;
+typedef struct _GstRealAudioDecClass GstRealAudioDecClass;
+
+GType gst_real_audio_dec_get_type (void) G_GNUC_CONST;
+
+G_END_DECLS
+
+#endif /* __GST_REAL_AUDIO_DEC_H__ */
