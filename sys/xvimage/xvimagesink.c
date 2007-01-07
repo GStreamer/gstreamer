@@ -189,7 +189,8 @@ enum
   ARG_SYNCHRONOUS,
   ARG_PIXEL_ASPECT_RATIO,
   ARG_FORCE_ASPECT_RATIO,
-  ARG_HANDLE_EVENTS
+  ARG_HANDLE_EVENTS,
+  ARG_ADAPTOR
       /* FILL ME */
 };
 
@@ -1139,6 +1140,28 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
   }
 }
 
+static void
+gst_lookup_xv_port_from_adaptor (GstXContext * xcontext,
+    XvAdaptorInfo * adaptors, int adaptor_no)
+{
+  gint j;
+
+  /* Do we support XvImageMask ? */
+  if (!(adaptors[adaptor_no].type & XvImageMask))
+    return;
+
+  /* We found such an adaptor, looking for an available port */
+  for (j = 0; j < adaptors[adaptor_no].num_ports && !xcontext->xv_port_id; j++) {
+    /* We try to grab the port */
+    if (Success == XvGrabPort (xcontext->disp, adaptors[adaptor_no].base_id + j,
+            0)) {
+      xcontext->xv_port_id = adaptors[adaptor_no].base_id + j;
+      GST_DEBUG ("XV Adaptor %s with %ld ports", adaptors[adaptor_no].name,
+          adaptors[adaptor_no].num_ports);
+    }
+  }
+}
+
 /* This function generates a caps with all supported format by the first
    Xv grabable port we find. We store each one of the supported formats in a
    format list and append the format to a newly created caps that we return
@@ -1182,27 +1205,24 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
   GST_DEBUG ("Found %u XV adaptor(s)", nb_adaptors);
 
-  /* Now search for an adaptor that supports XvImageMask */
-  for (i = 0; i < nb_adaptors && !xcontext->xv_port_id; i++) {
-    if (adaptors[i].type & XvImageMask) {
-      gint j;
-
-      /* We found such an adaptor, looking for an available port */
-      for (j = 0; j < adaptors[i].num_ports && !xcontext->xv_port_id; j++) {
-        /* We try to grab the port */
-        if (Success == XvGrabPort (xcontext->disp, adaptors[i].base_id + j, 0)) {
-          xcontext->xv_port_id = adaptors[i].base_id + j;
-        }
-      }
-    }
-
-    GST_DEBUG ("XV Adaptor %s with %ld ports", adaptors[i].name,
-        adaptors[i].num_ports);
-
+  if (xvimagesink->adaptor_no >= 0 && xvimagesink->adaptor_no < nb_adaptors) {
+    /* Find xv port from user defined adaptor */
+    gst_lookup_xv_port_from_adaptor (xcontext, adaptors,
+        xvimagesink->adaptor_no);
   }
+
+  if (!xcontext->xv_port_id) {
+    /* Now search for an adaptor that supports XvImageMask */
+    for (i = 0; i < nb_adaptors && !xcontext->xv_port_id; i++) {
+      gst_lookup_xv_port_from_adaptor (xcontext, adaptors, i);
+      xvimagesink->adaptor_no = i;
+    }
+  }
+
   XvFreeAdaptorInfo (adaptors);
 
   if (!xcontext->xv_port_id) {
+    xvimagesink->adaptor_no = -1;
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, BUSY,
         ("Could not initialise Xv output"), ("No port available"));
     return NULL;
@@ -2642,6 +2662,9 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
       gst_xvimagesink_set_event_handling (GST_X_OVERLAY (xvimagesink),
           g_value_get_boolean (value));
       break;
+    case ARG_ADAPTOR:
+      xvimagesink->adaptor_no = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2686,6 +2709,9 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
       break;
     case ARG_HANDLE_EVENTS:
       g_value_set_boolean (value, xvimagesink->handle_events);
+      break;
+    case ARG_ADAPTOR:
+      g_value_set_int (value, xvimagesink->adaptor_no);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2732,6 +2758,7 @@ static void
 gst_xvimagesink_init (GstXvImageSink * xvimagesink)
 {
   xvimagesink->display_name = NULL;
+  xvimagesink->adaptor_no = -1;
   xvimagesink->xcontext = NULL;
   xvimagesink->xwindow = NULL;
   xvimagesink->xvimage = NULL;
@@ -2817,6 +2844,9 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
       g_param_spec_boolean ("handle-events", "Handle XEvents",
           "When enabled, XEvents will be selected and handled", TRUE,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_ADAPTOR,
+      g_param_spec_int ("adaptor", "Adaptor number",
+          "The number of the video adaptor", -1, 1000, 0, G_PARAM_READWRITE));
 
   gobject_class->finalize = gst_xvimagesink_finalize;
 

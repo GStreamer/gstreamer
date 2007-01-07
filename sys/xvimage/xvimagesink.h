@@ -225,6 +225,7 @@ struct _GstXvImageSink {
   GstVideoSink videosink;
 
   char *display_name;
+  gint adaptor_no;
 
   GstXContext *xcontext;
   GstXWindow *xwindow;
