@@ -136,6 +136,10 @@ SOURCE=..\..\plugins\elements\gstidentity.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\plugins\elements\gstmultiqueue.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\plugins\elements\gstqueue.c
 # End Source File
 # Begin Source File

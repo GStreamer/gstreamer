@@ -646,6 +646,7 @@ EXPORTS
 	gst_tag_list_get_date
 	gst_tag_list_get_date_index
 	gst_tag_list_get_double_index
+	gst_tag_list_get_int
 	gst_tag_list_get_string
 	gst_tag_list_get_string_index
 	gst_tag_list_get_tag_size

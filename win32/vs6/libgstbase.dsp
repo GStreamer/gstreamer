@@ -124,6 +124,10 @@ SOURCE=..\..\libs\gst\base\gstcollectpads.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\libs\gst\base\gstdataqueue.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\libs\gst\base\gstpushsrc.c
 # End Source File
 # Begin Source File

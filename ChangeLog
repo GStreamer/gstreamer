@@ -1,3 +1,12 @@
+2007-01-07  Sébastien Moutte  <sebastien@moutte.net>
+
+	* win32/common/libgstreamer.def: 
+	  Add new exported function.
+	* win32/vs6/libgstbase.dsp: 
+	  Add gstdataqueue.c to the build.
+	* win32/vs6/libgstcoreelements.dsp:
+	  Add gstmultiqueue.c to the build.
+	
 2007-01-06  Andy Wingo  <wingo@pobox.com>
 
 	* libs/gst/base/gstbasesink.h: New GstBaseSinkClass vmethod,
