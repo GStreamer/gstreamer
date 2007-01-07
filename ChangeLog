@@ -1,3 +1,13 @@
+2007-01-07  Sébastien Moutte  <sebastien@moutte.net>
+
+	* gst/cutter/gstcutter.c: (gst_cutter_chain):
+	  Use gst_guint64_to_gdouble for conversion.
+	* win32/vs6/libgstmatroska.dsp:
+	  Add zlib to the link.
+	* win32/vs6/libgstvideobox.dsp:
+	  Update liboil library name (project is linked to 
+	  liboil-0.3-0.lib now).
+	  
 2007-01-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/Makefile.am:

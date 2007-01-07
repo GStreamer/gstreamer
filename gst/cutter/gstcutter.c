@@ -261,7 +261,9 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
    * if not, reset
    */
   GST_LOG_OBJECT (filter, "buffer stats: NMS %f, RMS %f, audio length %f", NMS,
-      RMS, (gdouble) gst_audio_duration_from_pad_buffer (filter->sinkpad, buf));
+      RMS,
+      gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer (filter->
+              sinkpad, buf)));
   if (RMS < filter->threshold_level)
     filter->silent_run_length +=
         gst_guint64_to_gdouble (gst_audio_duration_from_pad_buffer (filter->
