@@ -33,7 +33,7 @@
 static GMainLoop *loop;
 
 static Display *disp;
-static Window root, win;
+static Window root, win = 0;
 static GC gc;
 static gint width = 320, height = 240, x = 0, y = 0;
 static gint disp_width, disp_height;
@@ -111,21 +111,12 @@ toggle_events (GstXOverlay * ov)
   return TRUE;
 }
 
-static GstBusSyncReply
-create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+static gboolean
+cycle_window (GstXOverlay * ov)
 {
   XGCValues values;
-  const GstStructure *s;
-  GstXOverlay *ov = NULL;
-
-  s = gst_message_get_structure (message);
-  if (!gst_structure_has_name (s, "prepare-xwindow-id")) {
-    return GST_BUS_PASS;
-  }
-
-  ov = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
-
-  g_print ("Creating our own window\n");
+  Window old_win = win;
+  GC old_gc = gc;
 
   win = XCreateSimpleWindow (disp, root, 0, 0, width, height, 0, 0, 0);
 
@@ -139,8 +130,35 @@ create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 
   gst_x_overlay_set_xwindow_id (ov, win);
 
+  if (old_win) {
+    XDestroyWindow (disp, old_win);
+    XFreeGC (disp, old_gc);
+    XSync (disp, FALSE);
+  }
+
+  return TRUE;
+}
+
+static GstBusSyncReply
+create_window (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+{
+  const GstStructure *s;
+  GstXOverlay *ov = NULL;
+
+  s = gst_message_get_structure (message);
+  if (!gst_structure_has_name (s, "prepare-xwindow-id")) {
+    return GST_BUS_PASS;
+  }
+
+  ov = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
+
+  g_print ("Creating our own window\n");
+
+  cycle_window (ov);
+
   g_timeout_add (50, (GSourceFunc) resize_window, pipeline);
   g_timeout_add (50, (GSourceFunc) move_window, pipeline);
+  g_timeout_add (100, (GSourceFunc) cycle_window, ov);
   g_timeout_add (2000, (GSourceFunc) toggle_events, ov);
 
   return GST_BUS_DROP;

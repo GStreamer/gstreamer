@@ -1,3 +1,24 @@
+2007-01-07  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximage_buffer_finalize),
+	(gst_ximagesink_handle_xerror), (gst_ximagesink_ximage_new),
+	(gst_ximagesink_ximage_destroy), (gst_ximagesink_ximage_put),
+	(gst_ximagesink_handle_xevents), (gst_ximagesink_setcaps),
+	(gst_ximagesink_change_state), (gst_ximagesink_set_xwindow_id),
+	(gst_ximagesink_expose), (gst_ximagesink_set_event_handling):
+	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_destroy),
+	(gst_xvimage_buffer_finalize), (gst_xvimagesink_handle_xerror),
+	(gst_xvimagesink_xvimage_new), (gst_xvimagesink_xvimage_put),
+	(gst_xvimagesink_handle_xevents), (gst_xvimagesink_setcaps),
+	(gst_xvimagesink_change_state), (gst_xvimagesink_set_xwindow_id),
+	(gst_xvimagesink_expose), (gst_xvimagesink_set_event_handling):
+	Use flow_lock much more to protect every access to xwindow.
+	Try to catch erros while creating images in case some drivers are
+	just generating an XError when the requested image is too big.
+	Should fix : #354698, #384008, #384060.
+	* tests/icles/stress-xoverlay.c: (cycle_window), (create_window):
+	Implement some stress testing of setting window xid.
+
 2007-01-07  Sébastien Moutte  <sebastien@moutte.net>
 
 	* win32/common/libgsaudio.def:
