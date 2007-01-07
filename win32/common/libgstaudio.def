@@ -5,5 +5,7 @@ EXPORTS
 	gst_audio_is_buffer_framed
 	gst_audio_set_channel_positions
 	gst_audio_sink_get_type
+	gst_audio_src_get_type
 	gst_base_audio_sink_get_type
+	
 	

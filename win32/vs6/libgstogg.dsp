@@ -108,6 +108,10 @@ SOURCE=..\..\ext\ogg\gstogg.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\ext\ogg\gstoggaviparse.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\ext\ogg\gstoggdemux.c
 # End Source File
 # Begin Source File

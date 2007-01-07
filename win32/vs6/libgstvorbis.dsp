@@ -118,6 +118,10 @@ SOURCE=..\..\ext\vorbis\vorbisenc.c
 
 SOURCE=..\..\ext\vorbis\vorbisparse.c
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\ext\vorbis\vorbistag.c
+# End Source File
 # End Group
 # Begin Group "Header Files"
 

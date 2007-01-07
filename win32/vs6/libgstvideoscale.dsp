@@ -108,6 +108,10 @@ SOURCE=..\..\gst\videoscale\gstvideoscale.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\gst\videoscale\vs_4tap.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\videoscale\vs_image.c
 # End Source File
 # Begin Source File
