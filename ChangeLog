@@ -1,3 +1,14 @@
+2007-01-07  Sébastien Moutte  <sebastien@moutte.net>
+	
+	* Makefile.am:
+	  Add win32/MANIFEST to EXTRA_DIST so win32 files will
+	  be include in the next release.
+	* win32/MANIFEST:
+	  Add manifest to win32 files in next releases.
+	* win32/vs6/gst_ffmpeg.dsw:
+	* win32/vs6/libgstffmpeg.dsp:
+	  Add project files for VS6.
+
 2007-01-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
