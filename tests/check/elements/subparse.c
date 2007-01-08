@@ -24,6 +24,8 @@
 
 #include <gst/check/gstcheck.h>
 
+#include <string.h>
+
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -205,7 +207,7 @@ GST_START_TEST (test_srt)
 GST_END_TEST;
 
 static void
-test_tmplayer_do_test (SubParseInputChunk * input, guint num)
+do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
 {
   guint n;
 
@@ -249,10 +251,22 @@ test_tmplayer_do_test (SubParseInputChunk * input, guint num)
     fail_unless (GST_BUFFER_CAPS (buf) != NULL);
     buffer_caps_struct = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
     fail_unless_equals_string (gst_structure_get_name (buffer_caps_struct),
-        "text/plain");
+        media_type);
   }
 
   teardown_subparse ();
+}
+
+static void
+test_tmplayer_do_test (SubParseInputChunk * input, guint num)
+{
+  do_test (input, num, "text/plain");
+}
+
+static void
+test_microdvd_do_test (SubParseInputChunk * input, guint num)
+{
+  do_test (input, num, "text/x-pango-markup");
 }
 
 GST_START_TEST (test_tmplayer_multiline)
@@ -392,6 +406,30 @@ GST_START_TEST (test_tmplayer_style4_with_bogus_lines)
 
 GST_END_TEST;
 
+GST_START_TEST (test_microdvd_with_fps)
+{
+  static SubParseInputChunk microdvd_input[] = {
+    {
+          "{1}{1}12.500\n{100}{200}- Hi, Eddie.|- Hiya, Scotty.\n",
+          8 * GST_SECOND, 16 * GST_SECOND,
+        "<span>- Hi, Eddie.</span>\n<span>- Hiya, Scotty.</span>"}, {
+          "{1250}{1350}- Cold enough for you?|- Well, I'm only faintly alive. "
+          "It's 25 below\n",
+          100 * GST_SECOND, 108 * GST_SECOND,
+        "<span>- Cold enough for you?</span>\n"
+          "<span>- Well, I&apos;m only faintly alive. It&apos;s 25 below</span>"}
+  };
+
+  test_microdvd_do_test (microdvd_input, G_N_ELEMENTS (microdvd_input));
+
+  /* and the same with ',' instead of '.' as floating point divider */
+  microdvd_input[0].in =
+      "{1}{1}12,500\n{100}{200}- Hi, Eddie.|- Hiya, Scotty.\n";
+  test_microdvd_do_test (microdvd_input, G_N_ELEMENTS (microdvd_input));
+}
+
+GST_END_TEST;
+
 /* TODO:
  *  - add/modify tests so that lines aren't dogfed to the parsers in complete
  *    lines or sets of complete lines, but rather in random chunks
@@ -413,6 +451,7 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_tmplayer_style3);
   tcase_add_test (tc_chain, test_tmplayer_style4);
   tcase_add_test (tc_chain, test_tmplayer_style4_with_bogus_lines);
+  tcase_add_test (tc_chain, test_microdvd_with_fps);
   return s;
 }
 

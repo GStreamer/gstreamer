@@ -396,10 +396,6 @@ parse_mdvdsub (ParserState * state, const gchar * line)
   guint start_frame, end_frame;
   gint64 clip_start = 0, clip_stop = 0;
   gboolean in_seg = FALSE;
-
-  /* FIXME: hardcoded for now, but detecting the correct value is
-   * not going to be easy, I suspect... */
-  const double frames_per_sec = 24000 / 1001.;
   GString *markup;
   gchar *ret;
 
@@ -414,8 +410,32 @@ parse_mdvdsub (ParserState * state, const gchar * line)
     return NULL;
   }
 
-  state->start_time = (start_frame - 1000) / frames_per_sec * GST_SECOND;
-  state->duration = (end_frame - start_frame) / frames_per_sec * GST_SECOND;
+  /* skip the {%u}{%u} part */
+  line = strchr (line, '}') + 1;
+  line = strchr (line, '}') + 1;
+
+  /* see if there's a first line with a framerate */
+  if (state->fps == 0.0 && start_frame == 1 && end_frame == 1) {
+    gchar *rest, *end = NULL;
+
+    rest = g_strdup (line);
+    g_strdelimit (rest, ",", '.');
+    state->fps = g_ascii_strtod (rest, &end);
+    if (end == rest)
+      state->fps = 0.0;
+    GST_INFO ("framerate from file: %f ('%s')", state->fps, rest);
+    g_free (rest);
+    return NULL;
+  }
+
+  if (state->fps == 0.0) {
+    /* FIXME: hardcoded for now, is there a better way/assumption? */
+    state->fps = 24000.0 / 1001.0;
+    GST_INFO ("no framerate specified, assuming %f", state->fps);
+  }
+
+  state->start_time = start_frame / state->fps * GST_SECOND;
+  state->duration = (end_frame - start_frame) / state->fps * GST_SECOND;
 
   /* Check our segment start/stop */
   in_seg = gst_segment_clip (state->segment, GST_FORMAT_TIME,
@@ -429,10 +449,6 @@ parse_mdvdsub (ParserState * state, const gchar * line)
   } else {
     return NULL;
   }
-
-  /* skip the {%u}{%u} part */
-  line = strchr (line, '}') + 1;
-  line = strchr (line, '}') + 1;
 
   markup = g_string_new (NULL);
   while (1) {

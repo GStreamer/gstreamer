@@ -1,3 +1,17 @@
+2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/subparse/gstsubparse.c: (parse_mdvdsub):
+	* gst/subparse/gstsubparse.h:
+	  Remove spurious 1000 subtrahend when calculating the timestamp from
+	  the frame number and the frame rate . Also, use the frames/second
+	  value specified in the first line of the file, if one is specified
+	  there. Should fix #357503.
+
+	* tests/check/elements/subparse.c: (do_test),
+	(test_tmplayer_do_test), (test_microdvd_do_test), (GST_START_TEST),
+	(subparse_suite):
+	  Add some basic unit tests for the microdvd subtitle format.
+
 2007-01-07  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_destroy),

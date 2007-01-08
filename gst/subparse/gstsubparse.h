@@ -60,6 +60,7 @@ typedef struct {
   guint64  duration;
   GstSegment *segment;
   gpointer user_data;
+  gdouble  fps;          /* used by microdvd parser */
 } ParserState;
 
 typedef gchar* (*Parser) (ParserState *state, const gchar *line);
