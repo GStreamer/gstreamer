@@ -23,8 +23,10 @@
 #  include "config.h"
 #endif
 
-#include <valgrind/valgrind.h>
-#include <valgrind/memcheck.h>
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+# include <valgrind/memcheck.h>
+#endif
 
 #include <gst/check/gstcheck.h>
 
@@ -329,7 +331,9 @@ GST_START_TEST (leaking_fail_pipes)
     g_print ("Trying pipe: %s\n", *s);
     expected_fail_pipe (*s);
 #endif
+#ifdef HAVE_VALGRIND
     VALGRIND_DO_LEAK_CHECK;
+#endif
   }
 }
 

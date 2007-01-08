@@ -1,3 +1,15 @@
+2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstregistry.c: (gst_registry_scan_path_level):
+	  Plugin extension on HP-UX is .sl, add that to the list of approved
+	  plugin extensions (see #393796).
+
+	* tests/check/gst/gstpad.c: (GST_START_TEST):
+	  ulong => gulong. Fixes compilation with HP-UX compiler.
+
+	* tests/check/pipelines/parse-launch.c: (GST_START_TEST):
+	  Fix compilation if valgrind headers are not available.
+
 2007-01-07  Sébastien Moutte  <sebastien@moutte.net>
 
 	* win32/common/libgstreamer.def: 

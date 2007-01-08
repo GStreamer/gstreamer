@@ -811,6 +811,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
       continue;
     }
     if (!g_str_has_suffix (filename, ".so") &&
+        !g_str_has_suffix (filename, ".sl") &&
         !g_str_has_suffix (filename, ".dll") &&
         !g_str_has_suffix (filename, ".dynlib")) {
       GST_LOG_OBJECT (registry,

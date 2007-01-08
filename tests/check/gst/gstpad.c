@@ -310,7 +310,7 @@ GST_START_TEST (test_push_linked)
   GstPadLinkReturn plr;
   GstCaps *caps;
   GstBuffer *buffer;
-  ulong id;
+  gulong id;
 
   /* setup */
   sink = gst_pad_new ("sink", GST_PAD_SINK);
