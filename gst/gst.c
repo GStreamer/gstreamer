@@ -499,8 +499,6 @@ load_plugin_func (gpointer data, gpointer user_data)
       GST_WARNING ("Failed to load plugin: \"%s\"", filename);
     }
   }
-
-  g_free (data);
 }
 
 static void
@@ -651,10 +649,8 @@ scan_and_update_registry (GstRegistry * default_registry,
     GST_INFO ("Scanning plugin path: \"%s\"", (gchar *) l->data);
     /* CHECKME: add changed |= here as well? */
     gst_registry_scan_path (default_registry, (gchar *) l->data);
-    g_free (l->data);
   }
-  g_list_free (plugin_paths);
-  plugin_paths = NULL;
+  /* keep plugin_paths around in case a re-scan is forced later on */
 
   /* GST_PLUGIN_PATH specifies a list of directories to scan for
    * additional plugins.  These take precedence over the system plugins */
@@ -961,12 +957,10 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
     return FALSE;
 #endif /* GST_DISABLE_REGISTRY */
 
-  /* if we need to preload plugins */
-  if (preload_plugins) {
-    g_slist_foreach (preload_plugins, load_plugin_func, NULL);
-    g_slist_free (preload_plugins);
-    preload_plugins = NULL;
-  }
+  /* if we need to preload plugins, do so now */
+  g_slist_foreach (preload_plugins, load_plugin_func, NULL);
+  /* keep preload_plugins around in case a re-scan is forced later on */
+
 #ifndef GST_DISABLE_TRACE
   _gst_trace_on = 0;
   if (_gst_trace_on) {
@@ -1174,6 +1168,14 @@ gst_deinit (void)
     return;
   }
 
+  g_slist_foreach (preload_plugins, (GFunc) g_free, NULL);
+  g_slist_free (preload_plugins);
+  preload_plugins = NULL;
+
+  g_list_foreach (plugin_paths, (GFunc) g_free, NULL);
+  g_list_free (plugin_paths);
+  plugin_paths = NULL;
+
   clock = gst_system_clock_obtain ();
   gst_object_unref (clock);
   gst_object_unref (clock);
@@ -1306,4 +1308,56 @@ gst_registry_fork_set_enabled (gboolean enabled)
 #ifdef HAVE_FORK
   _gst_enable_registry_fork = enabled;
 #endif /* HAVE_FORK */
+}
+
+
+/**
+ * gst_update_registry:
+ *
+ * Forces GStreamer to re-scan its plugin paths and update the default
+ * plugin registry.
+ *
+ * Applications will almost never need to call this function, it is only
+ * useful if the application knows new plugins have been installed (or old
+ * ones removed) since the start of the application (or, to be precise, the
+ * first call to gst_init()) and the application wants to make use of any
+ * newly-installed plugins without restarting the application.
+ *
+ * Applications should assume that the registry update is neither atomic nor
+ * thread-safe and should therefore not have any dynamic pipelines running
+ * (including the playbin and decodebin elements) and should also not create
+ * any elements or access the GStreamer registry while the update is in
+ * progress.
+ *
+ * Note that this function may block for a significant amount of time.
+ *
+ * Returns: %TRUE if the registry has been updated successfully (does not
+ *          imply that there were changes), otherwise %FALSE.
+ *
+ * Since: 0.10.12
+ */
+gboolean
+gst_update_registry (void)
+{
+  gboolean res = FALSE;
+
+#ifndef GST_DISABLE_REGISTRY
+  GError *err = NULL;
+
+  res = ensure_current_registry (&err);
+  if (err) {
+    GST_WARNING ("registry update failed: %s", err->message);
+    g_error_free (err);
+  } else {
+    GST_LOG ("registry update succeeded");
+  }
+
+  if (preload_plugins) {
+    g_slist_foreach (preload_plugins, load_plugin_func, NULL);
+  }
+#else
+  GST_WARNING ("registry update failed: %s", "registry disabled");
+#endif /* GST_DISABLE_REGISTRY */
+
+  return res;
 }

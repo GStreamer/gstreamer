@@ -29,6 +29,7 @@ gst_segtrap_is_enabled
 gst_segtrap_set_enabled
 gst_registry_fork_is_enabled
 gst_registry_fork_set_enabled
+gst_update_registry
 <SUBSECTION Private>
 GST_QUARK
 GstQuarkId

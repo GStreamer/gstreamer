@@ -16,6 +16,7 @@ gstobject
 gstpad
 gstpipeline
 gstplugin
+gstregistry
 gstsegment
 gststructure
 gstsystemclock

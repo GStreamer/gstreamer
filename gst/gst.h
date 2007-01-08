@@ -91,6 +91,8 @@ void            gst_segtrap_set_enabled         (gboolean enabled);
 gboolean        gst_registry_fork_is_enabled    (void);
 void            gst_registry_fork_set_enabled   (gboolean enabled);
 
+gboolean        gst_update_registry (void);
+
 G_END_DECLS
 
 #endif /* __GST_H__ */

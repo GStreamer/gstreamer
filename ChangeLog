@@ -1,5 +1,18 @@
 2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gst.c: (load_plugin_func), (scan_and_update_registry),
+	(init_post), (gst_deinit), (gst_update_registry):
+	* gst/gst.h:
+	  API: add gst_update_registry() (#391296).
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/gstregistry.c:
+	* tests/check/gst/.cvsignore:
+	  Simple unit test for the above.
+
+2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstregistry.c: (gst_registry_scan_path_level):
 	  Plugin extension on HP-UX is .sl, add that to the list of approved
 	  plugin extensions (see #393796).
