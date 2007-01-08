@@ -1,5 +1,15 @@
 2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Günter Thelen  <daedalus dot inc at gmx net>
+
+	* gst/typefind/gsttypefindfunctions.c: (flac_type_find),
+	(plugin_init):
+	  Add typefinder for flac-in-ogg in conformance with the ogg-mapping
+	  on flac.sf.net (there appear to be other versions of the first
+	  ogg page in the wild) (#391365).
+
+2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Check if localtime_r() is available.
 

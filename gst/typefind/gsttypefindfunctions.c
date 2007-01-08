@@ -401,6 +401,29 @@ tta_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** audio/x-flac ***/
+static GstStaticCaps flac_caps = GST_STATIC_CAPS ("audio/x-flac");
+
+#define FLAC_CAPS (gst_static_caps_get(&flac_caps))
+
+static void
+flac_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data;
+
+  data = gst_type_find_peek (tf, 0, 5);
+  if (G_LIKELY (data)) {
+    /* standard flac */
+    if (memcmp (data, "fLaC", 4) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, FLAC_CAPS);
+    }
+    /* flac-in-ogg, see http://flac.sourceforge.net/ogg_mapping.html */
+    else if (memcmp (data, "\177FLAC\001", 6) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, FLAC_CAPS);
+    }
+  }
+}
+
 /*** audio/mpeg version 2, 4 ***/
 
 static GstStaticCaps aac_caps = GST_STATIC_CAPS ("audio/mpeg, "
@@ -2665,8 +2688,6 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-vcd", GST_RANK_PRIMARY,
       cdxa_exts, "\000\377\377\377\377\377\377\377\377\377\377\000", 12,
       GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-flac", GST_RANK_PRIMARY,
-      flac_exts, "fLaC", 4, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "video/x-fli", GST_RANK_MARGINAL, flx_type_find,
       flx_exts, FLX_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-id3v2", GST_RANK_PRIMARY + 3,
@@ -2795,6 +2816,8 @@ plugin_init (GstPlugin * plugin)
       zip_exts, "PK\003\004", 4, GST_TYPE_FIND_LIKELY);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-compress",
       GST_RANK_SECONDARY, compress_exts, "\037\235", 2, GST_TYPE_FIND_LIKELY);
+  TYPE_FIND_REGISTER (plugin, "audio/x-flac", GST_RANK_PRIMARY,
+      flac_type_find, flac_exts, FLAC_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-vorbis", GST_RANK_PRIMARY,
       vorbis_type_find, NULL, VORBIS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-theora", GST_RANK_PRIMARY,
