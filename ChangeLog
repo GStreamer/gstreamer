@@ -1,5 +1,14 @@
 2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	  Check if localtime_r() is available.
+
+	* ext/pango/gstclockoverlay.c: (gst_clock_overlay_render_time):
+	  If localtime_r() is not available, fall back to localtime(). Should
+	  fix build on MingW (#393310).
+
+2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/subparse/gstsubparse.c: (parse_mdvdsub):
 	* gst/subparse/gstsubparse.h:
 	  Remove spurious 1000 subtrahend when calculating the timestamp from

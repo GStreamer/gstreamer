@@ -76,14 +76,22 @@ GST_BOILERPLATE (GstClockOverlay, gst_clock_overlay, GstTextOverlay,
 static gchar *
 gst_clock_overlay_render_time (GstClockOverlay * overlay)
 {
-  struct tm t;
+  struct tm dummy, *t;
   time_t now;
 
   now = time (NULL);
-  if (localtime_r (&now, &t) == NULL)
+
+#ifdef HAVE_LOCALTIME_R
+  t = localtime_r (&now, &dummy);
+#else
+  /* on win32 this apparently returns a per-thread struct which would be fine */
+  t = localtime (&now);
+#endif
+
+  if (t == NULL)
     return g_strdup ("--:--:--");
 
-  return g_strdup_printf ("%02u:%02u:%02u", t.tm_hour, t.tm_min, t.tm_sec);
+  return g_strdup_printf ("%02u:%02u:%02u", t->tm_hour, t->tm_min, t->tm_sec);
 }
 
 /* Called with lock held */
