@@ -420,7 +420,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   if ((ret = IOCTL_SOCKET (udpsrc->sock, FIONREAD, &readsize)) < 0)
     goto ioctl_failed;
 
-  GST_LOG_OBJECT (udpsrc, "ioctl says %d bytes available", readsize);
+  GST_LOG_OBJECT (udpsrc, "ioctl says %d bytes available", (int) readsize);
 
   pktdata = g_malloc (readsize);
   pktsize = readsize;
@@ -447,7 +447,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   gst_buffer_set_caps (GST_BUFFER_CAST (outbuf), udpsrc->caps);
 
-  GST_LOG_OBJECT (udpsrc, "read %d bytes", readsize);
+  GST_LOG_OBJECT (udpsrc, "read %d bytes", (int) readsize);
 
   *buf = GST_BUFFER_CAST (outbuf);
 

@@ -192,7 +192,7 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
   GST_DEBUG_CATEGORY_INIT (jpeg_dec_debug, "jpegdec", 0, "JPEG decoder");
 }
 
-static gboolean
+static boolean
 gst_jpeg_dec_fill_input_buffer (j_decompress_ptr cinfo)
 {
 /*
@@ -230,7 +230,7 @@ gst_jpeg_dec_skip_input_data (j_decompress_ptr cinfo, glong num_bytes)
   }
 }
 
-static gboolean
+static boolean
 gst_jpeg_dec_resync_to_restart (j_decompress_ptr cinfo, gint desired)
 {
   GST_DEBUG ("resync_to_start");

@@ -186,7 +186,7 @@ gst_jpegenc_init_destination (j_compress_ptr cinfo)
   GST_DEBUG ("gst_jpegenc_chain: init_destination");
 }
 
-static gboolean
+static boolean
 gst_jpegenc_flush_destination (j_compress_ptr cinfo)
 {
   GST_DEBUG ("gst_jpegenc_chain: flush_destination: buffer too small !!!");

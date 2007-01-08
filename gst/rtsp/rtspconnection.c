@@ -50,7 +50,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
-#include <sys/ioctl.h>
 
 /* we include this here to get the G_OS_* defines */
 #include <glib.h>
@@ -58,6 +57,7 @@
 #ifdef G_OS_WIN32
 #include <winsock2.h>
 #else
+#include <sys/ioctl.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -90,8 +90,10 @@ G_STMT_START {                                  \
 } G_STMT_END
 
 #ifdef G_OS_WIN32
+#define IOCTL_SOCKET ioctlsocket
 #define CLOSE_SOCKET(sock) closesocket(sock);
 #else
+#define IOCTL_SOCKET ioctl
 #define CLOSE_SOCKET(sock) close(sock);
 #endif
 
@@ -489,7 +491,12 @@ rtsp_connection_read (RTSPConnection * conn, gpointer data, guint size)
   fd_set readfds;
   guint toread;
   gint retval;
+
+#ifndef G_OS_WIN32
   gint avail;
+#else
+  gulong avail;
+#endif
 
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
   g_return_val_if_fail (data != NULL, RTSP_EINVAL);
@@ -501,7 +508,7 @@ rtsp_connection_read (RTSPConnection * conn, gpointer data, guint size)
 
   /* if the call fails, just go in the select.. it should not fail. Else if
    * there is enough data to read, skip the select call al together.*/
-  if (ioctl (conn->fd, FIONREAD, &avail) < 0)
+  if (IOCTL_SOCKET (conn->fd, FIONREAD, &avail) < 0)
     avail = 0;
   else if (avail >= toread)
     goto do_read;

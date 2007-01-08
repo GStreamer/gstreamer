@@ -72,7 +72,7 @@ smokecodec_init_destination (j_compress_ptr cinfo)
 {
 }
 
-static int
+static boolean
 smokecodec_flush_destination (j_compress_ptr cinfo)
 {
   return 1;
@@ -88,7 +88,7 @@ smokecodec_init_source (j_decompress_ptr cinfo)
 {
 }
 
-static int
+static boolean
 smokecodec_fill_input_buffer (j_decompress_ptr cinfo)
 {
   return 1;
@@ -99,7 +99,7 @@ smokecodec_skip_input_data (j_decompress_ptr cinfo, long num_bytes)
 {
 }
 
-static int
+static boolean
 smokecodec_resync_to_restart (j_decompress_ptr cinfo, int desired)
 {
   return 1;

@@ -1,3 +1,20 @@
+2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Vincent Torri  <vtorri at univ-evry fr>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/jpeg/gstjpegenc.c:
+	* ext/jpeg/smokecodec.c:
+	  These libjpeg callbacks should return a 'boolean' (unsigned char
+	  apparently) and not a 'gboolean' (which maps to gint). Fixes
+	  warnings when compiling with MingW (#393427).
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_read):
+	  Use ioctlsocket on win32.
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):
+	  Some printf format fixes for win32.
+
 2007-01-07  Sébastien Moutte  <sebastien@moutte.net>
 
 	* gst/cutter/gstcutter.c: (gst_cutter_chain):
