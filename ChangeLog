@@ -1,3 +1,8 @@
+2007-01-08  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_me_method_get_type):
+	Make the name of the motion-estimation method enum values meaningful.
+
 2007-01-07  Sébastien Moutte  <sebastien@moutte.net>
 	
 	* Makefile.am:

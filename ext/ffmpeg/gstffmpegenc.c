@@ -74,12 +74,12 @@ gst_ffmpegenc_me_method_get_type (void)
 {
   static GType ffmpegenc_me_method_type = 0;
   static GEnumValue ffmpegenc_me_methods[] = {
-    {ME_ZERO, "0", "zero"},
-    {ME_FULL, "1", "full"},
-    {ME_LOG, "2", "logarithmic"},
-    {ME_PHODS, "3", "phods"},
-    {ME_EPZS, "4", "epzs"},
-    {ME_X1, "5", "x1"},
+    {ME_ZERO, "None (Very low quality)", "zero"},
+    {ME_FULL, "Full (Slow, unmaintained)", "full"},
+    {ME_LOG, "Logarithmic (Low quality, unmaintained)", "logarithmic"},
+    {ME_PHODS, "phods (Low quality, unmaintained)", "phods"},
+    {ME_EPZS, "EPZS (Best quality, Fast)", "epzs"},
+    {ME_X1, "X1 (Experimental)", "x1"},
     {0, NULL, NULL},
   };
   if (!ffmpegenc_me_method_type) {
