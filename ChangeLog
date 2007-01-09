@@ -1,5 +1,27 @@
 2007-01-09  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_get_palette),
+	(gst_ffmpeg_set_palette), (gst_ff_vid_caps_new),
+	(gst_ff_aud_caps_new), (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_smpfmt_to_caps),
+	(gst_ffmpeg_codectype_to_caps), (gst_ffmpeg_caps_to_pixfmt),
+	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_formatid_to_caps),
+	(gst_ffmpeg_formatid_get_codecids), (gst_ffmpeg_caps_to_codecid),
+	(gst_ffmpeg_init_pix_fmt_info), (gst_ffmpeg_avpicture_fill),
+	(gst_ffmpeg_img_convert):
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_getcaps),
+	(gst_ffmpegenc_register):
+
+	Use codecid as extra parameter when getting caps.
+	Restrict H263 caps to allowed sizes for better negotiation.
+	MP4/3gp can contain AMR-WB as well.
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	Indent.
+
+2007-01-09  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
 	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_negotiate),
 	(get_output_buffer), (gst_ffmpegdec_video_frame),

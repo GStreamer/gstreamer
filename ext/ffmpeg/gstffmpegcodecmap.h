@@ -44,7 +44,8 @@ gst_ffmpeg_codecid_to_caps   (enum CodecID    codec_id,
 
 GstCaps *
 gst_ffmpeg_codectype_to_caps (enum CodecType  codec_type,
-                              AVCodecContext *context);
+                              AVCodecContext *context, 
+			      enum CodecID codec_id);
 
 /*
  * caps_to_codecid () transforms a GstCaps that belongs to

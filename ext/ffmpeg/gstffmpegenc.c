@@ -332,7 +332,8 @@ gst_ffmpegenc_getcaps (GstPad * pad)
       ctx->width = -1;
       if (!caps)
         caps = gst_caps_new_empty ();
-      tmpcaps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type, ctx);
+      tmpcaps = gst_ffmpeg_codectype_to_caps (oclass->in_plugin->type, ctx,
+          oclass->in_plugin->id);
       if (tmpcaps)
         gst_caps_append (caps, tmpcaps);
       else
@@ -959,11 +960,11 @@ gst_ffmpegenc_register (GstPlugin * plugin)
     /* first make sure we've got a supported type */
     srccaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, TRUE);
     if (in_plugin->type == CODEC_TYPE_VIDEO) {
-      sinkcaps =
-          gst_caps_from_string
+      sinkcaps = gst_caps_from_string
           ("video/x-raw-rgb; video/x-raw-yuv; video/x-raw-gray");
     } else {
-      sinkcaps = gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL);
+      sinkcaps =
+          gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL, in_plugin->id);
     }
     if (!sinkcaps || !srccaps)
       goto next;
