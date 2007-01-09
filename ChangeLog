@@ -1,3 +1,8 @@
+2007-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Require core CVS HEAD for Andy's basesrc/sink API additions.
+
 2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Günter Thelen  <daedalus dot inc at gmx net>
