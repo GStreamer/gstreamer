@@ -27,12 +27,13 @@
  * Demuxes an .avi file into raw or compressed audio and/or video streams.
  * </para>
  * <para>
- * This element currently only supports pull-based scheduling. 
+ * This element supports both push and pull-based scheduling, depending on the
+ * capabilities of the upstream elements. 
  * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch filesrc test.avi ! avidemux name=demux  demux.audio_00 ! decodebin ! audioconvert ! audioresample ! autoaudiosink   demux.video_00 ! queue ! decodebin ! ffmpegcolorspace ! videoscale ! autovideosink
+ * gst-launch filesrc location=test.avi ! avidemux name=demux  demux.audio_00 ! decodebin ! audioconvert ! audioresample ! autoaudiosink   demux.video_00 ! queue ! decodebin ! ffmpegcolorspace ! videoscale ! autovideosink
  * </programlisting>
  * Play (parse and decode) an .avi file and try to output it to
  * an automatically detected soundcard and videosink. If the AVI file contains
@@ -41,6 +42,7 @@
  * </para>
  * </refsect2>
  *
+ * Last reviewed on 2006-12-29 (0.10.6)
  */
 
 #ifdef HAVE_CONFIG_H

@@ -1,5 +1,10 @@
 2007-01-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/avi/gstavidemux.c:
+	Fix docs.
+
+2007-01-09  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtp.c: (plugin_init):
 	* gst/rtp/gstrtpmpvdepay.c: (gst_rtp_mpv_depay_base_init),
