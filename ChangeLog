@@ -1,5 +1,54 @@
 2007-01-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* configure.ac:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/utils/Makefile.am:
+	* gst-libs/gst/utils/base-utils.c: (gst_base_utils_init):
+	* gst-libs/gst/utils/base-utils.h:
+	* gst-libs/gst/utils/descriptions.c: (format_info_get_desc),
+	(find_format_info), (caps_are_rtp_caps),
+	(gst_base_utils_get_source_description),
+	(gst_base_utils_get_sink_description),
+	(gst_base_utils_get_decoder_description),
+	(gst_base_utils_get_encoder_description),
+	(gst_base_utils_get_element_description),
+	(gst_base_utils_add_codec_description_to_tag_list),
+	(gst_base_utils_get_codec_description), (gst_base_utils_list_all):
+	* gst-libs/gst/utils/descriptions.h:
+	* gst-libs/gst/utils/missing-plugins.c:
+	(missing_structure_get_type), (copy_and_clean_caps),
+	(gst_missing_uri_source_message_new),
+	(gst_missing_uri_sink_message_new),
+	(gst_missing_element_message_new),
+	(gst_missing_decoder_message_new),
+	(gst_missing_encoder_message_new),
+	(missing_structure_get_string_detail),
+	(missing_structure_get_caps_detail),
+	(gst_missing_plugin_message_get_installer_detail),
+	(gst_missing_plugin_message_get_description),
+	(gst_is_missing_plugin_message):
+	* gst-libs/gst/utils/missing-plugins.h:
+	  API: add new libgstbaseutils library with functions
+	  - to create and parse missing-plugins messages
+	  - that provide (translated) descriptions for caps/decoders/sources/etc.
+	  Closes #392393.
+
+	* pkgconfig/gstreamer-plugins-base-uninstalled.pc.in:
+	* pkgconfig/gstreamer-plugins-base.pc.in:
+	  Add new lib.
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	  Generate docs for new lib and API.
+
+	* tests/check/Makefile.am:
+	* tests/check/libs/.cvsignore:
+	* tests/check/libs/utils.c: (missing_msg_check_getters),
+	(GST_START_TEST), (libgstbaseutils_suite):
+	  Add some basic unit tests.
+
+2007-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/ogg/Makefile.am:
 	  Dist gstoggdemux.h to fix 'make distcheck'.
 

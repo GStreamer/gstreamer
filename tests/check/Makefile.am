@@ -78,6 +78,7 @@ check_PROGRAMS = \
 	libs/cddabasesrc \
 	libs/tag \
 	libs/video \
+	libs/utils \
 	pipelines/simple-launch-lines
 
 # TORTURE_TO_FIX = \
@@ -137,10 +138,15 @@ libs_tag_CFLAGS = \
 libs_tag_LDADD = \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la $(LDADD)
 
+libs_utils_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+libs_utils_LDADD = \
+	$(top_builddir)/gst-libs/gst/utils/libgstbaseutils-@GST_MAJORMINOR@.la $(LDADD)
+
 elements_alsa_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(AM_CFLAGS)
-
 elements_alsa_LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
 	$(LDADD)

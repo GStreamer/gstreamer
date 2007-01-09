@@ -1,0 +1,447 @@
+/* GStreamer unit tests for libgstbaseutils
+ *
+ * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#include <gst/check/gstcheck.h>
+#include <gst/utils/base-utils.h>
+#include <unistd.h>
+
+static void
+missing_msg_check_getters (GstMessage * msg)
+{
+  gchar *str;
+
+  str = gst_missing_plugin_message_get_installer_detail (msg);
+  fail_unless (str != NULL);
+  fail_unless (*str != '\0');
+  fail_unless (g_str_has_prefix (str, "gstreamer.net|"));
+  g_free (str);
+
+  str = gst_missing_plugin_message_get_description (msg);
+  fail_unless (str != NULL);
+  fail_unless (*str != '\0');
+  g_free (str);
+}
+
+GST_START_TEST (test_base_utils_post_missing_messages)
+{
+  GstElement *pipeline;
+  GstStructure *s;
+  GstMessage *msg;
+  GstCaps *caps;
+  GstBus *bus;
+
+  gst_base_utils_init ();
+
+  pipeline = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (pipeline);
+
+  /* first, test common assertion failure cases */
+  ASSERT_CRITICAL (msg = gst_missing_uri_source_message_new (NULL, "http"););
+  ASSERT_CRITICAL (gst_missing_uri_source_message_new (pipeline, NULL));
+
+  ASSERT_CRITICAL (gst_missing_uri_sink_message_new (NULL, "http"));
+  ASSERT_CRITICAL (gst_missing_uri_sink_message_new (pipeline, NULL));
+
+  ASSERT_CRITICAL (gst_missing_element_message_new (NULL, "rgbfyltr"));
+  ASSERT_CRITICAL (gst_missing_element_message_new (pipeline, NULL));
+
+  caps = gst_caps_new_simple ("audio/x-dontexist", NULL);
+
+  ASSERT_CRITICAL (gst_missing_decoder_message_new (NULL, caps));
+  ASSERT_CRITICAL (gst_missing_decoder_message_new (pipeline, NULL));
+
+  ASSERT_CRITICAL (gst_missing_encoder_message_new (NULL, caps));
+  ASSERT_CRITICAL (gst_missing_encoder_message_new (pipeline, NULL));
+
+  gst_caps_unref (caps);
+
+  /* URI source (with existing protocol) */
+  msg = gst_missing_uri_source_message_new (pipeline, "http");
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  fail_unless (msg->structure != NULL);
+  s = msg->structure;
+  fail_unless (gst_structure_has_name (s, "missing-plugin"));
+  fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "type"), "urisource");
+  fail_unless (gst_structure_has_field_typed (s, "detail", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "detail"), "http");
+  missing_msg_check_getters (msg);
+  gst_message_unref (msg);
+
+  /* URI sink (with existing protocol) */
+  msg = gst_missing_uri_sink_message_new (pipeline, "smb");
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  fail_unless (msg->structure != NULL);
+  s = msg->structure;
+  fail_unless (gst_structure_has_name (s, "missing-plugin"));
+  fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "type"), "urisink");
+  fail_unless (gst_structure_has_field_typed (s, "detail", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "detail"), "smb");
+  missing_msg_check_getters (msg);
+  gst_message_unref (msg);
+
+  /* URI source (with bogus protocol) */
+  msg = gst_missing_uri_source_message_new (pipeline, "chchck");
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  fail_unless (msg->structure != NULL);
+  s = msg->structure;
+  fail_unless (gst_structure_has_name (s, "missing-plugin"));
+  fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "type"), "urisource");
+  fail_unless (gst_structure_has_field_typed (s, "detail", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "detail"), "chchck");
+  missing_msg_check_getters (msg);
+  gst_message_unref (msg);
+
+  /* URI sink (with bogus protocol) */
+  msg = gst_missing_uri_sink_message_new (pipeline, "chchck");
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  fail_unless (msg->structure != NULL);
+  s = msg->structure;
+  fail_unless (gst_structure_has_name (s, "missing-plugin"));
+  fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "type"), "urisink");
+  fail_unless (gst_structure_has_field_typed (s, "detail", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "detail"), "chchck");
+  missing_msg_check_getters (msg);
+  gst_message_unref (msg);
+
+  /* element */
+  msg = gst_missing_element_message_new (pipeline, "foobar");
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  fail_unless (msg->structure != NULL);
+  s = msg->structure;
+  fail_unless (gst_structure_has_name (s, "missing-plugin"));
+  fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "type"), "element");
+  fail_unless (gst_structure_has_field_typed (s, "detail", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "detail"), "foobar");
+  missing_msg_check_getters (msg);
+  gst_message_unref (msg);
+
+  /* create bogus caps that don't exist */
+  caps = gst_caps_new_simple ("do/x-not", "exist", G_TYPE_BOOLEAN, FALSE, NULL);
+
+  /* decoder (with unknown caps) */
+  msg = gst_missing_decoder_message_new (pipeline, caps);
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  fail_unless (msg->structure != NULL);
+  s = msg->structure;
+  fail_unless (gst_structure_has_name (s, "missing-plugin"));
+  fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "type"), "decoder");
+  fail_unless (gst_structure_has_field_typed (s, "detail", GST_TYPE_CAPS));
+  missing_msg_check_getters (msg);
+  gst_message_unref (msg);
+
+  /* encoder (with unknown caps) */
+  msg = gst_missing_encoder_message_new (pipeline, caps);
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  fail_unless (msg->structure != NULL);
+  s = msg->structure;
+  fail_unless (gst_structure_has_name (s, "missing-plugin"));
+  fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "type"), "encoder");
+  fail_unless (gst_structure_has_field_typed (s, "detail", GST_TYPE_CAPS));
+  missing_msg_check_getters (msg);
+  gst_message_unref (msg);
+
+  gst_caps_unref (caps);
+
+  /* create caps that exist */
+  caps = gst_caps_new_simple ("video/x-matroska", NULL);
+  /* decoder (with known caps) */
+  msg = gst_missing_decoder_message_new (pipeline, caps);
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  fail_unless (msg->structure != NULL);
+  s = msg->structure;
+  fail_unless (gst_structure_has_name (s, "missing-plugin"));
+  fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "type"), "decoder");
+  fail_unless (gst_structure_has_field_typed (s, "detail", GST_TYPE_CAPS));
+  fail_unless (gst_structure_has_field_typed (s, "name", G_TYPE_STRING));
+  fail_unless (gst_structure_get_string (s, "name") != NULL);
+  missing_msg_check_getters (msg);
+  gst_message_unref (msg);
+
+  /* encoder (with known caps) */
+  msg = gst_missing_encoder_message_new (pipeline, caps);
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  fail_unless (msg->structure != NULL);
+  s = msg->structure;
+  fail_unless (gst_structure_has_name (s, "missing-plugin"));
+  fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "type"), "encoder");
+  fail_unless (gst_structure_has_field_typed (s, "detail", GST_TYPE_CAPS));
+  fail_unless (gst_structure_has_field_typed (s, "name", G_TYPE_STRING));
+  fail_unless (gst_structure_get_string (s, "name") != NULL);
+  missing_msg_check_getters (msg);
+  gst_message_unref (msg);
+
+  gst_caps_unref (caps);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+  gst_object_unref (bus);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_base_utils_init)
+{
+  /* should be fine to call multiple times */
+  gst_base_utils_init ();
+  gst_base_utils_init ();
+  gst_base_utils_init ();
+  gst_base_utils_init ();
+}
+
+GST_END_TEST;
+
+static const gchar *caps_strings[] = {
+  /* formats with static descriptions */
+  "application/ogg", "application/vnd.rn-realmedia", "video/x-fli",
+  "video/x-flv", "video/x-matroska", "video/x-ms-asf", "video/x-msvideo",
+  "video/x-quicktime", "video/quicktime", "audio/x-ac3", "audio/ac3",
+  "audio/x-private-ac3", "audio/x-private1-ac3", "audio/x-adpcm",
+  "audio/aiff", "audio/x-alaw", "audio/amr", "audio/AMR", "audio/AMR-WB",
+  "audio/iLBC-sh", "audio/ms-gsm", "audio/qcelp", "audio/x-adpcm",
+  "audio/x-aiff", "audio/x-alac", "audio/x-amr-nb-sh", "audio/x-amr-wb-sh",
+  "audio/x-au", "audio/x-cinepak", "audio/x-dpcm", "audio/x-dts",
+  "audio/x-dv", "audio/x-flac", "audio/x-gsm", "audio/x-iec958",
+  "audio/x-iLBC", "audio/x-ircam", "audio/x-lpcm", "audio/x-private1-lpcm",
+  "audio/x-m4a", "audio/x-mod", "audio/x-mulaw", "audio/x-musepack",
+  "audio/x-nist", "audio/x-nsf", "audio/x-paris", "audio/x-qdm2",
+  "audio/x-ralf-mpeg4-generic", "audio/x-sds", "audio/x-shorten",
+  "audio/x-sid", "audio/x-sipro", "audio/x-spc", "audio/x-speex",
+  "audio/x-svx", "audio/x-tta", "audio/x-ttafile",
+  "audio/x-vnd.sony.atrac3", "audio/x-vorbis", "audio/x-voc", "audio/x-w64",
+  "audio/x-wav", "audio/x-wavpack", "audio/x-wavpack-correction",
+  "audio/x-wms", "audio/x-voxware", "video/sp5x", "video/vivo",
+  "video/x-3ivx", "video/x-4xm", "video/x-apple-video", "video/x-camtasia",
+  "video/x-cdxa", "video/x-cinepak", "video/x-cirrus-logic-accupak",
+  "video/x-compressed-yuv", "video/x-dirac", "video/x-dvd-subpicture",
+  "video/x-ffv", "video/x-flash-screen", "video/x-flash-video",
+  "video/x-h261", "video/x-huffyuv", "video/x-intel-h263", "video/x-jpeg",
+  "video/x-mjpeg", "video/x-mjpeg-b", "video/mpegts", "video/x-mng",
+  "video/x-mszh", "video/x-msvideocodec", "video/x-mve", "video/x-nut",
+  "video/x-nuv", "video/x-qdrw", "video/x-raw-gray", "video/x-smc",
+  "video/x-smoke", "video/x-tarkin", "video/x-theora", "video/x-rle",
+  "video/x-ultimotion", "video/x-vcd", "video/x-vmnc", "video/x-vp3",
+  "video/x-vp5", "video/x-vp6", "video/x-vp6-flash", "video/x-vp7",
+  "video/x-xvid", "video/x-zlib", "image/bmp", "image/x-bmp",
+  "image/x-MS-bmp", "image/gif", "image/jpeg", "image/jng", "image/png",
+  "image/pbm", "image/ppm", "image/svg+xml", "image/tiff",
+  "image/x-cmu-raster", "image/x-icon", "image/x-xcf", "image/x-pixmap",
+  "image/x-xpixmap", "image/x-quicktime", "image/x-sun-raster",
+  "image/x-tga", "video/x-dv", "video/x-dv",
+  /* some RTP formats */
+  "application/x-rtp, media=(string)video, encoding-name=(string)TimVCodec",
+  "application/x-rtp, media=(string)audio, encoding-name=(string)TimACodec",
+  "application/x-rtp, media=(string)application, encoding-name=(string)TimMux",
+  "application/x-rtp, media=(string)woohoo, encoding-name=(string)TPM",
+  /* incomplete RTP formats */
+  "application/x-rtp, media=(string)woohoo",
+  "application/x-rtp, encoding-name=(string)TPM",
+  "application/x-rtp, media=(string)woohoo",
+  /* formats with dynamic descriptions */
+  "audio/mpeg, mpegversion=(int)4",
+  "audio/mpeg, mpegversion=(int)1, layer=(int)1",
+  "audio/mpeg, mpegversion=(int)1, layer=(int)2",
+  "audio/mpeg, mpegversion=(int)1, layer=(int)3",
+  "audio/mpeg, mpegversion=(int)1, layer=(int)99",
+  "audio/mpeg, mpegversion=(int)99",
+  "video/mpeg, mpegversion=(int)2, systemstream=(boolean)TRUE",
+  "video/mpeg, systemstream=(boolean)FALSE",
+  "video/mpeg, mpegversion=(int)2",
+  "video/mpeg, mpegversion=(int)1, systemstream=(boolean)FALSE",
+  "video/mpeg, mpegversion=(int)2, systemstream=(boolean)FALSE",
+  "video/mpeg, mpegversion=(int)4, systemstream=(boolean)FALSE",
+  "video/mpeg, mpegversion=(int)99, systemstream=(boolean)TRUE",
+  "video/mpeg, mpegversion=(int)99, systemstream=(boolean)FALSE",
+  "video/mpeg",
+  "video/x-indeo, indeoversion=(int)3",
+  "video/x-indeo, indeoversion=(int)5",
+  "video/x-indeo",
+  "video/x-wmv, wmvversion=(int)1",
+  "video/x-wmv, wmvversion=(int)2",
+  "video/x-wmv, wmvversion=(int)3",
+  "video/x-wmv, wmvversion=(int)99",
+  "video/x-wmv",
+  "audio/x-wma, wmaversion=(int)1",
+  "audio/x-wma, wmaversion=(int)2",
+  "audio/x-wma, wmaversion=(int)3",
+  "audio/x-wma, wmaversion=(int)99",
+  "audio/x-wma",
+  "video/x-divx, divxversion=(int)3",
+  "video/x-divx, divxversion=(int)4",
+  "video/x-divx, divxversion=(int)5",
+  "video/x-divx, divxversion=(int)99",
+  "video/x-divx",
+  "video/x-svq, svqversion=(int)1",
+  "video/x-svq, svqversion=(int)3",
+  "video/x-svq, svqversion=(int)99",
+  "video/x-svq",
+  "video/x-h264, variant=(string)itu",
+  "video/x-h264, variant=(string)videosoft",
+  "video/x-h264, variant=(string)foobar",
+  "video/x-h264",
+  "video/x-h263, variant=(string)itu",
+  "video/x-h263, variant=(string)lead",
+  "video/x-h263, variant=(string)microsoft",
+  "video/x-h263, variant=(string)vdolive",
+  "video/x-h263, variant=(string)vivo",
+  "video/x-h263, variant=(string)xirlink",
+  "video/x-h263, variant=(string)foobar",
+  "video/x-h263",
+  "video/x-msmpeg, msmpegversion=(int)41",
+  "video/x-msmpeg, msmpegversion=(int)42",
+  "video/x-msmpeg, msmpegversion=(int)43",
+  "video/x-msmpeg, msmpegversion=(int)99",
+  "video/x-msmpeg",
+  "video/x-pn-realvideo, rmversion=(int)1",
+  "video/x-pn-realvideo, rmversion=(int)2",
+  "video/x-pn-realvideo, rmversion=(int)3",
+  "video/x-pn-realvideo, rmversion=(int)4",
+  "video/x-pn-realvideo, rmversion=(int)99",
+  "video/x-pn-realvideo",
+  "audio/x-pn-realaudio, raversion=(int)1",
+  "audio/x-pn-realaudio, raversion=(int)2",
+  "audio/x-pn-realaudio, raversion=(int)99",
+  "audio/x-pn-realaudio",
+  "audio/x-mace, maceversion=(int)3",
+  "audio/x-mace, maceversion=(int)6",
+  "audio/x-mace, maceversion=(int)99",
+  "audio/x-mace",
+  "video/x-truemotion, trueversion=(int)1",
+  "video/x-truemotion, trueversion=(int)2",
+  "video/x-truemotion, trueversion=(int)99",
+  "video/x-truemotion",
+  "video/x-asus, asusversion=(int)1",
+  "video/x-asus, asusversion=(int)2",
+  "video/x-asus, asusversion=(int)99",
+  "video/x-asus",
+  "video/x-xan, wcversion=(int)1",
+  "video/x-xan, wcversion=(int)99",
+  "video/x-xan",
+  "video/x-ati-vcr, vcrversion=(int)1",
+  "video/x-ati-vcr, vcrversion=(int)2",
+  "video/x-ati-vcr, vcrversion=(int)99",
+  "video/x-ati-vcr",
+  /* raw audio */
+  "audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)44100, channels=(int)2",
+  "audio/x-raw-float, rate=(int)22050, channels=(int)2, endianness=(int)1234, width=(int)32",
+  /* raw video */
+  "video/x-raw-rgb, bpp=(int)16, endianness=(int)1234, depth=(int)16, red_mask=(int)63488, green_mask=(int)2016, blue_mask=(int)31, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1",
+  "video/x-raw-yuv, format=(fourcc)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1",
+  /* and a made-up format */
+  "video/x-tpm"
+};
+
+GST_START_TEST (test_base_utils_get_codec_description)
+{
+  gint i;
+
+  gst_base_utils_init ();
+
+  for (i = 0; i < G_N_ELEMENTS (caps_strings); ++i) {
+    GstCaps *caps;
+    gchar *desc;
+
+    caps = gst_caps_from_string (caps_strings[i]);
+    fail_unless (caps != NULL, "could not create caps from string '%s'",
+        caps_strings[i]);
+    GST_LOG ("Caps %s:", caps_strings[i]);
+    desc = gst_base_utils_get_codec_description (caps);
+    fail_unless (desc != NULL);
+    GST_LOG (" - codec   : %s", desc);
+    g_free (desc);
+    desc = gst_base_utils_get_decoder_description (caps);
+    fail_unless (desc != NULL);
+    GST_LOG (" - decoder : %s", desc);
+    g_free (desc);
+    desc = gst_base_utils_get_encoder_description (caps);
+    fail_unless (desc != NULL);
+    GST_LOG (" - encoder : %s", desc);
+    g_free (desc);
+    gst_caps_unref (caps);
+  }
+}
+
+GST_END_TEST;
+GST_START_TEST (test_base_utils_taglist_add_codec_info)
+{
+  GstTagList *list;
+  GstCaps *caps;
+
+  gst_base_utils_init ();
+  list = gst_tag_list_new ();
+  caps = gst_caps_new_simple ("video/x-theora", NULL);
+  ASSERT_CRITICAL (fail_if
+      (gst_base_utils_add_codec_description_to_tag_list (NULL,
+              GST_TAG_VIDEO_CODEC, caps)));
+  ASSERT_CRITICAL (fail_if
+      (gst_base_utils_add_codec_description_to_tag_list (list, NULL, caps)));
+  ASSERT_CRITICAL (fail_if
+      (gst_base_utils_add_codec_description_to_tag_list (list, "asdfa", caps)));
+  ASSERT_CRITICAL (fail_if
+      (gst_base_utils_add_codec_description_to_tag_list (list,
+              GST_TAG_IMAGE, caps)));
+  ASSERT_CRITICAL (fail_if
+      (gst_base_utils_add_codec_description_to_tag_list (list,
+              GST_TAG_VIDEO_CODEC, NULL)));
+  /* FIXME: do something here */
+  fail_unless (gst_base_utils_add_codec_description_to_tag_list (list,
+          GST_TAG_VIDEO_CODEC, caps));
+  fail_if (gst_tag_list_is_empty (list));
+  gst_tag_list_free (list);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+static Suite *
+libgstbaseutils_suite (void)
+{
+  Suite *s = suite_create ("base utils library");
+  TCase *tc_chain = tcase_create ("general");
+
+  suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_base_utils_init);
+  tcase_add_test (tc_chain, test_base_utils_post_missing_messages);
+  tcase_add_test (tc_chain, test_base_utils_taglist_add_codec_info);
+  tcase_add_test (tc_chain, test_base_utils_get_codec_description);
+  return s;
+}
+
+GST_CHECK_MAIN (libgstbaseutils);

@@ -45,6 +45,10 @@
 <!ENTITY GstTag SYSTEM "xml/gsttag.xml">
 <!ENTITY GstTagVorbis SYSTEM "xml/gsttagvorbis.xml">
 <!ENTITY GstTagID3 SYSTEM "xml/gsttagid3.xml">
+<!-- utils -->
+<!ENTITY GstBaseUtils SYSTEM "xml/gstbaseutils.xml">
+<!ENTITY GstBaseUtilsDescriptions SYSTEM "xml/gstbaseutilsdescriptions.xml">
+<!ENTITY GstBaseUtilsMissingPlugins SYSTEM "xml/gstbaseutilsmissingplugins.xml">
 <!-- video -->
 <!ENTITY GstVideo SYSTEM "xml/gstvideo.xml">
 <!ENTITY GstVideoFilter SYSTEM "xml/gstvideofilter.xml">
@@ -171,6 +175,19 @@
       &GstTag;
       &GstTagVorbis;
       &GstTagID3;
+    </chapter>
+
+    <chapter id="gstreamer-base-utils">
+      <title>Base Utils Library</title>
+      <para>
+        This library should be linked to by getting cflags and libs from
+        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>-lgstbaseutils-&GST_MAJORMINOR;</filename> to the library
+        flags.
+      </para>
+      &GstBaseUtils;
+      &GstBaseUtilsDescriptions;
+      &GstBaseUtilsMissingPlugins;
     </chapter>
 
     <chapter id="gstreamer-video">

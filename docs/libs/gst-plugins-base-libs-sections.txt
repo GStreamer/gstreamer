@@ -917,6 +917,43 @@ gst_tag_from_id3_user_tag
 gst_tag_to_id3_tag
 </SECTION>
 
+# base utils
+
+<SECTION>
+<FILE>gstbaseutils</FILE>
+<INCLUDE>gst/utils/base-utils.h</INCLUDE>
+<SUBSECTION>
+gst_base_utils_init
+</SECTION>
+
+<SECTION>
+<FILE>gstbaseutilsmissingplugins</FILE>
+<INCLUDE>gst/utils/missing-plugins.h</INCLUDE>
+<SUBSECTION>
+gst_missing_plugin_message_get_installer_detail
+gst_missing_plugin_message_get_description
+gst_is_missing_plugin_message
+<SUBSECTION>
+gst_missing_decoder_message_new
+gst_missing_encoder_message_new
+gst_missing_uri_source_message_new
+gst_missing_uri_sink_message_new
+gst_missing_element_message_new
+</SECTION>
+
+<SECTION>
+<FILE>gstbaseutilsdescriptions</FILE>
+<INCLUDE>gst/utils/descriptions.h</INCLUDE>
+<SUBSECTION>
+gst_base_utils_get_source_description
+gst_base_utils_get_sink_description
+gst_base_utils_get_decoder_description
+gst_base_utils_get_encoder_description
+gst_base_utils_get_element_description
+<SUBSECTION>
+gst_base_utils_add_codec_description_to_tag_list
+gst_base_utils_get_codec_description
+</SECTION>
 
 # video
 
