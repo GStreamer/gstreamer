@@ -1,3 +1,8 @@
+2007-01-09  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_remove_pad):
+	unref data at the end when we are done with the pad.
+
 2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:

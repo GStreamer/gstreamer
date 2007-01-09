@@ -347,15 +347,15 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
       g_slist_delete_link (pads->abidata.ABI.pad_list, list);
   pads->abidata.ABI.pad_cookie++;
 
-  /* clean and free the collect data */
-  unref_data (data);
-
   /* signal waiters because something changed */
   GST_COLLECT_PADS_BROADCAST (pads);
 
   /* deactivate the pad when needed */
   if (!pads->started)
     gst_pad_set_active (pad, FALSE);
+
+  /* clean and free the collect data */
+  unref_data (data);
 
   GST_COLLECT_PADS_PAD_UNLOCK (pads);
 
