@@ -1,5 +1,19 @@
 2007-01-09  Wim Taymans  <wim@fluendo.com>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins-sections.txt:
+	* ext/ogg/gstoggdemux.c: (gst_ogg_page_copy), (gst_ogg_page_free),
+	(gst_ogg_pad_query_types), (gst_ogg_pad_submit_page),
+	(gst_ogg_chain_reset), (gst_ogg_chain_new_stream),
+	(gst_ogg_demux_perform_seek):
+	* ext/ogg/gstoggdemux.h:
+	Added docs.
+	Add some more comments.
+	Small cleanups.
+
+2007-01-09  Wim Taymans  <wim@fluendo.com>
+
 	* ext/theora/theoradec.c:
 	* ext/vorbis/vorbisdec.c:
 	* gst-libs/gst/audio/gstringbuffer.c:

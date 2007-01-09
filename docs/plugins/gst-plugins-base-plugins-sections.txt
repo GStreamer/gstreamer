@@ -217,6 +217,16 @@ gst_gnome_vfs_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-oggdemux</FILE>
+<TITLE>oggdemux</TITLE>
+GstOggDemux
+<SUBSECTION Standard>
+GST_OGG_DEMUX
+GST_OGG_DEMUX_CLASS
+GstOggDemuxClass
+</SECTION>
+
+<SECTION>
 <FILE>element-playbin</FILE>
 <TITLE>playbin</TITLE>
 GstPlayBin
