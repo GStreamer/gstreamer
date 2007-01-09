@@ -1,3 +1,11 @@
+2007-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ogg/Makefile.am:
+	  Dist gstoggdemux.h to fix 'make distcheck'.
+
+	* sys/v4l/Makefile.am:
+	  Fix 'make distcheck' even more.
+
 2007-01-09  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/Makefile.am:
