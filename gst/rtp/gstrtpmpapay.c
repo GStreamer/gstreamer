@@ -48,7 +48,7 @@ static GstStaticPadTemplate gst_rtp_mpa_pay_src_template =
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_MPA_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"MPA\"; "
+        "clock-rate = (int) 90000; "
         "application/x-rtp, "
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "

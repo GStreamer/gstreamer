@@ -138,18 +138,14 @@ gst_rtp_h263p_depay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-// only on the sink
 gboolean
 gst_rtp_h263p_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 {
 
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  gint clock_rate = 90000;      // default
+  gint clock_rate = 90000;      /* default */
 
-  if (gst_structure_has_field (structure, "clock-rate")) {
-    gst_structure_get_int (structure, "clock-rate", &clock_rate);
-  }
-
+  gst_structure_get_int (structure, "clock-rate", &clock_rate);
   filter->clock_rate = clock_rate;
 
   return TRUE;
@@ -163,17 +159,10 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstRtpH263PDepay *rtph263pdepay;
   GstBuffer *outbuf;
 
-  /* GstRTPPayload pt; */
-
   rtph263pdepay = GST_RTP_H263P_DEPAY (depayload);
 
   if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
-
-  /*
-     if ((pt = gst_rtp_buffer_get_payload_type (buf)) != 0)
-     goto bad_payload;
-   */
 
   {
     gint payload_len;
@@ -249,29 +238,16 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
 
       gst_adapter_push (rtph263pdepay->adapter, outbuf);
-
     }
-
   }
-
   return NULL;
 
 bad_packet:
   {
     GST_ELEMENT_WARNING (rtph263pdepay, STREAM, DECODE,
         ("Packet did not validate"), (NULL));
-
     return NULL;
   }
-  /*
-     bad_payload:
-     {
-     GST_DEBUG ("Unexpected payload type %u", pt);
-
-     gst_buffer_unref (buf);
-     return GST_FLOW_ERROR;
-     }
-   */
 }
 
 static void

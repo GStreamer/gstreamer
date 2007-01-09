@@ -1,3 +1,40 @@
+2007-01-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpmpvdepay.c: (gst_rtp_mpv_depay_base_init),
+	(gst_rtp_mpv_depay_class_init), (gst_rtp_mpv_depay_init),
+	(gst_rtp_mpv_depay_setcaps), (gst_rtp_mpv_depay_process),
+	(gst_rtp_mpv_depay_set_property), (gst_rtp_mpv_depay_get_property),
+	(gst_rtp_mpv_depay_change_state), (gst_rtp_mpv_depay_plugin_init):
+	* gst/rtp/gstrtpmpvdepay.h:
+	  Added RFC 2250 MPEG Video Depayloader.
+
+	* gst/rtp/gstrtpL16depay.h:
+	* gst/rtp/gstrtph263pdepay.c: (gst_rtp_h263p_depay_setcaps),
+	(gst_rtp_h263p_depay_process):
+	Fix Header file. Small cleanups.
+
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_class_init),
+	(gst_rtp_mp4g_depay_init), (gst_rtp_mp4g_depay_finalize),
+	(gst_rtp_mp4g_depay_process), (gst_rtp_mp4g_depay_change_state):
+	* gst/rtp/gstrtpmp4vdepay.c: (gst_rtp_mp4v_depay_class_init),
+	(gst_rtp_mp4v_depay_init), (gst_rtp_mp4v_depay_finalize),
+	(gst_rtp_mp4v_depay_setcaps), (gst_rtp_mp4v_depay_process),
+	(gst_rtp_mp4v_depay_change_state):
+	Remove usused code. Remove Adapter from state Change. Added debug.
+
+	* gst/rtp/gstrtpmpadepay.c: (gst_rtp_mpa_depay_base_init),
+	(gst_rtp_mpa_depay_class_init), (gst_rtp_mpa_depay_init),
+	(gst_rtp_mpa_depay_setcaps), (gst_rtp_mpa_depay_process):
+	* gst/rtp/gstrtpmpadepay.h:
+	Subclass base depayloader.
+	Added debug.
+	Support static payload type assignment as well.
+
+	* gst/rtp/gstrtpmpapay.c:
+	Fix caps.
+
 2007-01-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Vincent Torri  <vtorri at univ-evry fr>

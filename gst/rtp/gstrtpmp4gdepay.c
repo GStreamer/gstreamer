@@ -46,7 +46,6 @@ enum
 enum
 {
   ARG_0,
-  ARG_FREQUENCY
 };
 
 static GstStaticPadTemplate gst_rtp_mp4g_depay_src_template =
@@ -92,6 +91,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 GST_BOILERPLATE (GstRtpMP4GDepay, gst_rtp_mp4g_depay, GstBaseRTPDepayload,
     GST_TYPE_BASE_RTP_DEPAYLOAD);
 
+static void gst_rtp_mp4g_depay_finalize (GObject * object);
+
 static gboolean gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload,
     GstCaps * caps);
 static GstBuffer *gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload,
@@ -132,13 +133,14 @@ gst_rtp_mp4g_depay_class_init (GstRtpMP4GDepayClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gstbasertpdepayload_class->process = gst_rtp_mp4g_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_mp4g_depay_setcaps;
-
+  gobject_class->finalize = gst_rtp_mp4g_depay_finalize;
   gobject_class->set_property = gst_rtp_mp4g_depay_set_property;
   gobject_class->get_property = gst_rtp_mp4g_depay_get_property;
 
   gstelement_class->change_state = gst_rtp_mp4g_depay_change_state;
+
+  gstbasertpdepayload_class->process = gst_rtp_mp4g_depay_process;
+  gstbasertpdepayload_class->set_caps = gst_rtp_mp4g_depay_setcaps;
 
   GST_DEBUG_CATEGORY_INIT (rtpmp4gdepay_debug, "rtpmp4gdepay", 0,
       "MP4-generic RTP Depayloader");
@@ -148,6 +150,20 @@ static void
 gst_rtp_mp4g_depay_init (GstRtpMP4GDepay * rtpmp4gdepay,
     GstRtpMP4GDepayClass * klass)
 {
+  rtpmp4gdepay->adapter = gst_adapter_new ();
+}
+
+static void
+gst_rtp_mp4g_depay_finalize (GObject * object)
+{
+  GstRtpMP4GDepay *rtpmp4gdepay;
+
+  rtpmp4gdepay = GST_RTP_MP4G_DEPAY (object);
+
+  g_object_unref (rtpmp4gdepay->adapter);
+  rtpmp4gdepay->adapter = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -299,14 +315,13 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       return NULL;
     }
   }
-
   return NULL;
 
+  /* ERRORS */
 bad_packet:
   {
     GST_ELEMENT_WARNING (rtpmp4gdepay, STREAM, DECODE,
-        ("Packet did not validate"), (NULL));
-
+        ("Packet did not validate."), (NULL));
     return NULL;
   }
 }
@@ -351,9 +366,6 @@ gst_rtp_mp4g_depay_change_state (GstElement * element,
   rtpmp4gdepay = GST_RTP_MP4G_DEPAY (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      rtpmp4gdepay->adapter = gst_adapter_new ();
-      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (rtpmp4gdepay->adapter);
       break;
@@ -364,10 +376,6 @@ gst_rtp_mp4g_depay_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      g_object_unref (rtpmp4gdepay->adapter);
-      rtpmp4gdepay->adapter = NULL;
-      break;
     default:
       break;
   }
