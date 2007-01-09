@@ -3,6 +3,11 @@
 	* docs/design/draft-latency.txt:
 	Updates.
 
+2007-01-09  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/draft-latency.txt:
+	Updates.
+
 	* gst/gstelement.h:
 	* gst/gststructure.c:
 	* gst/gsttrace.c:

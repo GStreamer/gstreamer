@@ -199,26 +199,26 @@ that no sink is set to PLAYING before it is prerolled.
 
 In order to do this, the pipeline (at the GstBin level) keeps track of all
 elements that require preroll (the ones that return ASYNC from the state
-change). It keeps a GST_MESSAGE_NEED_PREROLL internally for those elements.
+change). It keeps a custom GstBinState GST_MESSAGE_ELEMENT internally for
+those elements.
 
 When the pipeline did not receive a NO_PREROLL state change return from any
-element, it can forget about the NEED_PREROLL messages because the state change
+element, it can forget about the GstBinState messages because the state change
 to PLAYING will proceed when all elements commited their state when they are
-prerolled.
+prerolled automatically.
 
 When the pipeline received a NO_PREROLL state change return from an element, it
-keeps the NEED_PREROLL messages.
+keeps the ELEMENT messages. The pipeline will not change the state of the
+elements that are still doing an ASYNC state change.
 
 When an ASYNC element prerolls, it commits its state to PAUSED and posts a
-PREROLLED message. The element does not yet move to its pending state (which is
-PLAYING for a live pipeline) but proceeds with blocking in the preroll state.
-The pipeline notices this PREROLLED message and matches it with the
-NEED_PREROLL message it cached for the corresponding element.
+PREROLLED message. The pipeline notices this PREROLLED message and matches it
+with the GstBinState message it cached for the corresponding element. 
 
-When all NEED_PREROLL messages are matched with a PREROLLED message, the
+When all GstBinState messages are matched with a PREROLLED message, the
 pipeline proceeds with setting the PREROLLED sinks to their pending state.
 The base time of the element was already set by the pipeline when it changed the
-nonprerolled element to PLAYING. This operation has to be performed in the
+nopreroll element to PLAYING. This operation has to be performed in the
 separate async state change thread (like the one currently used for going from
 PAUSED->PLAYING in a non-live pipeline).
 
@@ -240,7 +240,7 @@ following fields:
   - (boolean) live 
   - (boolean) upstream-live 
   - (int_range) latency  (min and max latency in microseconds, could also be 
-                          expressed as int_list)
+                          expressed as int_list or min/max fields)
 
 When the pipeline collected all PREROLLED messages it can calculate the global
 latency as follows:
@@ -277,9 +277,9 @@ intermediate elements can configure themselves as well.
 
 After this step, the pipeline continues setting the pending state on the sinks.
 
-A sink adds the latency value received in the SET_LATENCY event, to
+A sink adds the latency value, received in the SET_LATENCY event, to
 the times used for synchronizing against the clock. This will effectively
-delay the rendering of the buffer with the latency.
+delay the rendering of the buffer with the required latency.
 
 
 Flushing a playing pipeline
@@ -298,13 +298,17 @@ A flush in a pipeline can happen in the following cases:
     - after receiving a navigation event (DVD, ...)
 
 When a playing sink is flushed by a FLUSH_START event, a LOST_PREROLL message is
-posted and kept by the parent bin. When the element prerolls, it posts a
-PREROLLED message. 
+posted by the element. As part of the message, the state of the element is
+included. The element also goes to a pending PAUSED state.
+
+The message is kept in a GstBinState message by the parent bin. When the element
+prerolls, it posts a PREROLLED message. 
 
 When all LOST_PREROLL messages are matched with a PREROLLED message, the bin
 will capture a new base time from the clock and will bring all the prerolled
-sinks back to playing after setting the new base time on them. It's also
-possible to add additional latency calculations. 
+sinks back to playing (their pending state) after setting the new base time on
+them. It's also possible to perform additional latency calculations and
+adjustments before doing this. 
 
 The difference with the NEED_PREROLL/PREROLLED and LOST_PREROLL/PREROLLED
 message pair is that the latter makes the pipeline acquire a new base time for
