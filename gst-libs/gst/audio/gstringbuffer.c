@@ -20,7 +20,7 @@
 /**
  * SECTION:gstringbuffer
  * @short_description: Base class for audio ringbuffer implementations
- * @see_also: gstbaseaudiosink
+ * @see_also: #GstBaseAudioSink, #GstAudioSink
  *
  * <refsect2>
  * <para>
@@ -1267,23 +1267,29 @@ G_STMT_START {					\
  * @sample: the sample position of the data
  * @data: the data to commit
  * @in_samples: the number of samples in the data to commit
- * @out_sampled: the number of samples to write to the ringbuffer
+ * @out_samples: the number of samples to write to the ringbuffer
  * @accum: accumulator for rate conversion.
  *
- * Commit @len samples pointed to by @data to the ringbuffer @buf. 
+ * Commit @in_samples samples pointed to by @data to the ringbuffer @buf. 
  *
- * @num and @denom define the rate conversion to perform on the the samples in
- * @data. For negative rates, @num must be negative and @denom positive.
+ * @in_samples and @out_samples define the rate conversion to perform on the the
+ * samples in @data. For negative rates, @out_samples must be negative and
+ * @in_samples positive.
  *
- * When @num is positive, the first sample will be written at position @sample
- * in the ringbuffer. When @num is negative, the last sample will be written to
+ * When @out_samples is positive, the first sample will be written at position @sample
+ * in the ringbuffer. When @out_samples is negative, the last sample will be written to
  * @sample in reverse order.
  *
- * @len does not need to be a multiple of the segment size of the ringbuffer (if
- * @num and @denom are both 1) although it is recommended for optimal performance. 
+ * @out_samples does not need to be a multiple of the segment size of the ringbuffer
+ * although it is recommended for optimal performance. 
+ *
+ * @accum will hold a temporary accumulator used in rate conversion and should be
+ * set to 0 when this function is first called. In case the commit operation is
+ * interrupted, one can resume the processing by passing the previously returned
+ * @accum value back to this function.
  *
  * Returns: The number of samples written to the ringbuffer or -1 on error. The
- * number of samples written can be less than @len when @buf was interrupted
+ * number of samples written can be less than @out_samples when @buf was interrupted
  * with a flush or stop.
  *
  * Since: 0.10.11.
@@ -1430,8 +1436,8 @@ not_started:
  * @data: the data to commit
  * @len: the number of samples in the data to commit
  *
- * Same as gst_ring_buffer_commit_full() but with a num, denom of 1, ignoring
- * accum.
+ * Same as gst_ring_buffer_commit_full() but with a in_samples and out_samples
+ * equal to @len, ignoring accum.
  *
  * Returns: The number of samples written to the ringbuffer or -1 on
  * error.

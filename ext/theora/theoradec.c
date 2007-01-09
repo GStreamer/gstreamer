@@ -1269,7 +1269,7 @@ done:
  *   head of the queue.
  *
  *   Copy head of the gather queue (4) to decode queue, we flushed the gather
- *   queue an can now store input buffer in the gather queue:
+ *   queue and can now store input buffer in the gather queue:
  *
  *    gather queue:    1
  *    decode queue:    4

@@ -795,7 +795,7 @@ gst_rtp_buffer_get_payload_subbuffer (GstBuffer * buffer, guint offset,
  * @buffer: the buffer
  *
  * Create a buffer of the payload of the RTP packet in @buffer. This function
- * will internally create a subbuffer of @buffer so that a memcopy can be
+ * will internally create a subbuffer of @buffer so that a memcpy can be
  * avoided.
  *
  * Returns: A new buffer with the data of the payload.
@@ -836,7 +836,7 @@ gst_rtp_buffer_get_payload_len (GstBuffer * buffer)
  * @buffer: the buffer
  *
  * Get a pointer to the payload data in @buffer. This pointer is valid as long
- * as a reference to @buffer is helt.
+ * as a reference to @buffer is held.
  *
  * Returns: A pointer to the payload data in @buffer.
  */

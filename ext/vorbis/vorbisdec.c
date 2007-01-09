@@ -1155,7 +1155,7 @@ wrong_size:
  *    output queue:    
  *
  * When a DISCONT is received (buffer 4), we move the gather queue to the 
- * decode queue. This simply done be taking the head of the gather queue
+ * decode queue. This is simply done be taking the head of the gather queue
  * and prepending it to the decode queue. This yields:
  * 
  *    gather queue:    
@@ -1169,7 +1169,7 @@ wrong_size:
  *
  *    gather queue:    
  *    decode queue:    7  8  9
- *    output queue:    8  9
+ *    output queue:    9  8
  *
  * Then we remove the consumed buffers from the decode queue. Buffer 7 is not
  * completely consumed, we need to keep it around for when we receive buffer 

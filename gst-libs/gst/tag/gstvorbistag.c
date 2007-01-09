@@ -81,7 +81,7 @@ static const GstTagEntryMatch tag_matches[] = {
  * gst_tag_from_vorbis_tag:
  * @vorbis_tag: vorbiscomment tag to convert to GStreamer tag
  *
- * Looks up the GStreamer tag for a vorbiscommment tag.
+ * Looks up the GStreamer tag for a vorbiscomment tag.
  *
  * Returns: The corresponding GStreamer tag or NULL if none exists.
  */
@@ -110,9 +110,9 @@ gst_tag_from_vorbis_tag (const gchar * vorbis_tag)
  * gst_tag_to_vorbis_tag:
  * @gst_tag: GStreamer tag to convert to vorbiscomment tag
  *
- * Looks up the vorbiscommment tag for a GStreamer tag.
+ * Looks up the vorbiscomment tag for a GStreamer tag.
  *
- * Returns: The corresponding vorbiscommment tag or NULL if none exists.
+ * Returns: The corresponding vorbiscomment tag or NULL if none exists.
  */
 G_CONST_RETURN gchar *
 gst_tag_to_vorbis_tag (const gchar * gst_tag)

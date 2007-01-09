@@ -193,7 +193,7 @@ struct _GstRingBufferSpec
   
   guint64  latency_time;        /* the required/actual latency time */
   guint64  buffer_time;         /* the required/actual time of the buffer */
-  gint     segsize;             /* size of one buffer segement */
+  gint     segsize;             /* size of one buffer segment in bytes */
   gint     segtotal;            /* total number of segments */
 
   /* out */
