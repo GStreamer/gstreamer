@@ -18,7 +18,9 @@ libgstplaybin_la_SOURCES = \
 nodist_libgstplaybin_la_SOURCES = $(built_sources)
 libgstplaybin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstplaybin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstplaybin_la_LIBADD = $(GST_LIBS)
+libgstplaybin_la_LIBADD = \
+	$(top_builddir)/gst-libs/gst/utils/libgstbaseutils-@GST_MAJORMINOR@.la \
+	$(GST_LIBS)
 
 libgstdecodebin_la_SOURCES = gstdecodebin.c
 nodist_libgstdecodebin_la_SOURCES = $(built_sources)

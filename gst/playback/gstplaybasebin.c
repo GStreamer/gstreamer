@@ -27,6 +27,8 @@
 #include "gststreamselector.h"
 #include "gstplay-marshal.h"
 
+#include <gst/utils/base-utils.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_play_base_bin_debug);
 #define GST_CAT_DEFAULT gst_play_base_bin_debug
 
@@ -911,6 +913,27 @@ add_stream (GstPlayBaseGroup * group, GstStreamInfo * info)
   }
 }
 
+static gboolean
+string_arr_has_str (const gchar * values[], const gchar * value)
+{
+  if (values && value) {
+    while (*values != NULL) {
+      if (strcmp (value, *values) == 0)
+        return TRUE;
+      ++values;
+    }
+  }
+  return FALSE;
+}
+
+/* mime types we are not handling on purpose right now, don't post a
+ * missing-plugin message for these */
+static const gchar *blacklisted_mimes[] = {
+  "video/x-dvd-subpicture", NULL
+};
+
+#define IS_BLACKLISTED_MIME(type) (string_arr_has_str(blacklisted_mimes,type))
+
 /*
  * signal fired when an unknown stream is found. We create a new
  * UNKNOWN streaminfo object.
@@ -919,14 +942,28 @@ static void
 unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
     GstPlayBaseBin * play_base_bin)
 {
-  gchar *capsstr;
+  const gchar *type_name;
   GstStreamInfo *info;
   GstPlayBaseGroup *group;
 
-  capsstr = gst_caps_to_string (caps);
-  GST_DEBUG_OBJECT (play_base_bin, "don't know how to handle %s", capsstr);
-  /* FIXME, g_message() ? */
-  g_message ("don't know how to handle %s", capsstr);
+  type_name = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  if (type_name && !IS_BLACKLISTED_MIME (type_name)) {
+    GstMessage *msg;
+    gchar *capsstr;
+
+    capsstr = gst_caps_to_string (caps);
+    GST_DEBUG_OBJECT (play_base_bin, "don't know how to handle %s", capsstr);
+    /* FIXME, g_message() ? */
+    g_message ("don't know how to handle %s", capsstr);
+    g_free (capsstr);
+
+    msg = gst_missing_decoder_message_new (GST_ELEMENT (play_base_bin), caps);
+    gst_element_post_message (GST_ELEMENT_CAST (play_base_bin), msg);
+  } else {
+    /* don't spew stuff to the terminal or send message if it's blacklisted */
+    GST_DEBUG_OBJECT (play_base_bin, "media type %s not handled on purpose, "
+        "not posting a missing-plugin message on the bus", type_name);
+  }
 
   GROUP_LOCK (play_base_bin);
 
@@ -939,8 +976,6 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
   add_stream (group, info);
 
   GROUP_UNLOCK (play_base_bin);
-
-  g_free (capsstr);
 }
 
 /* add a streaminfo that indicates that the stream is handled by the
@@ -1386,7 +1421,7 @@ unknown_uri:
     gchar *prot = gst_uri_get_protocol (sub_uri);
 
     if (prot) {
-      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, FAILED,
+      GST_ELEMENT_ERROR (play_base_bin, CORE, MISSING_PLUGIN,
           (_("No URI handler implemented for \"%s\"."), prot), (NULL));
       g_free (prot);
     } else
@@ -1503,7 +1538,13 @@ no_source:
     /* whoops, could not create the source element, dig a little deeper to
      * figure out what might be wrong. */
     if (prot) {
-      GST_ELEMENT_ERROR (play_base_bin, RESOURCE, FAILED,
+      GstElement *this = GST_ELEMENT_CAST (play_base_bin);
+      GstMessage *msg;
+
+      msg = gst_missing_uri_source_message_new (this, prot);
+      gst_element_post_message (this, msg);
+
+      GST_ELEMENT_ERROR (play_base_bin, CORE, MISSING_PLUGIN,
           (_("No URI handler implemented for \"%s\"."), prot), (NULL));
       g_free (prot);
     } else

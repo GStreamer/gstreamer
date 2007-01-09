@@ -1,5 +1,27 @@
 2007-01-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/Makefile.am:
+	* gst/playback/gstplaybasebin.c: (string_arr_has_str),
+	(unknown_type), (setup_subtitle), (gen_source_element):
+	* gst/playback/gstplaybin.c: (plugin_init):
+	  Post missing-plugin messages on the bus for missing sources and
+	  missing decoders/demuxers/depayloaders; fix error code used when
+	  we're missing an URI handler source; for media types that we are not
+	  handling on purpose at the moment, don't print "don't know how to
+	  handle xyz" messages to the terminal or post missing-plugin
+	  messages on the bus.
+
+	* tests/check/elements/playbin.c: (create_playbin),
+	(GST_START_TEST), (gst_codec_src_uri_get_type),
+	(gst_codec_src_uri_get_protocols), (gst_codec_src_uri_get_uri),
+	(gst_codec_src_uri_set_uri), (gst_codec_src_uri_handler_init),
+	(gst_codec_src_init_type), (gst_codec_src_base_init),
+	(gst_codec_src_create), (gst_codec_src_class_init),
+	(gst_codec_src_init), (plugin_init), (playbin_suite):
+	  Add some tests for the missing-plugin stuff.
+
+2007-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	* gst-libs/gst/Makefile.am:
 	* gst-libs/gst/utils/Makefile.am:
