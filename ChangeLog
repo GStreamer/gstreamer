@@ -1,3 +1,8 @@
+2007-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/real/Makefile.am:
+	  Fix build (add LIBS and CFLAGS for gst-plugins-base stuff).
+
 2007-01-07  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac: 
