@@ -1,3 +1,13 @@
+2007-01-09  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
+	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_negotiate),
+	(get_output_buffer), (gst_ffmpegdec_video_frame),
+	(clip_audio_buffer), (gst_ffmpegdec_audio_frame),
+	(gst_ffmpegdec_frame), (gst_ffmpegdec_chain),
+	(gst_ffmpegdec_register):
+	Use caps to clip output images. Fixes #341736
+
 2007-01-08  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_me_method_get_type):
