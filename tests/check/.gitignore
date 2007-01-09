@@ -1,4 +1,4 @@
-test-registry.reg
+test-registry.*
 *.gcno
 *.gcda
 

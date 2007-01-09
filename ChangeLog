@@ -1,3 +1,8 @@
+2007-01-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/.cvsignore:
+	  Ignore test-registry.xml as well.
+
 2007-01-09  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_remove_pad):
