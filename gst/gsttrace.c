@@ -248,7 +248,7 @@ static GList *_gst_alloc_tracers = NULL;
 /**
  * gst_alloc_trace_available:
  *
- * Check if alloc tracing was commiled into the core
+ * Check if alloc tracing was compiled into the core
  *
  * Returns: TRUE if the core was compiled with alloc
  * tracing enabled.

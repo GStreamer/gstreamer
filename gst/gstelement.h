@@ -254,7 +254,7 @@ typedef enum
 
 /**
  * GST_ELEMENT_ERROR:
- * @el:     the element that throws the error
+ * @el:     the element that generates the error
  * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstGError)
  * @code:   error code defined for that domain (see #GstGError)
  * @text:   the message to display (format string and args enclosed in
@@ -263,7 +263,7 @@ typedef enum
             enclosed in parentheses)
  *
  * Utility function that elements can use in case they encountered a fatal
- * data processing error. The pipeline will throw an error signal and the
+ * data processing error. The pipeline will post an error message and the
  * application will be requested to stop further media processing.
  */
 #define GST_ELEMENT_ERROR(el, domain, code, text, debug)		\
@@ -281,7 +281,7 @@ G_STMT_START {								\
 
 /**
  * GST_ELEMENT_WARNING:
- * @el:     the element that throws the error
+ * @el:     the element that generates the warning
  * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstGError)
  * @code:   error code defined for that domain (see #GstGError)
  * @text:   the message to display (format string and args enclosed in
@@ -290,7 +290,7 @@ G_STMT_START {								\
             enclosed in parentheses)
  *
  * Utility function that elements can use in case they encountered a non-fatal
- * data processing problem. The pipeline will throw a warning signal and the
+ * data processing problem. The pipeline will post a warning message and the
  * application will be informed.
  */
 #define GST_ELEMENT_WARNING(el, domain, code, text, debug)		\

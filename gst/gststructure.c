@@ -890,8 +890,8 @@ gst_structure_foreach (const GstStructure * structure,
  * @user_data: private data
  *
  * Calls the provided function once for each field in the #GstStructure. In
- * contrast to gst_structure_foreach(), the function may modify the fields. The
- * structure must be mutable.
+ * contrast to gst_structure_foreach(), the function may modify but not delete the
+ * fields. The structure must be mutable.
  *
  * Returns: TRUE if the supplied function returns TRUE For each of the fields,
  * FALSE otherwise.

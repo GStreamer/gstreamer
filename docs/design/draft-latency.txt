@@ -293,20 +293,20 @@ A flush in a pipeline can happen in the following cases:
 
  - flushing seek in the pipeline
     - performed by the application on the pipeline
-    - performed by the application on and element
+    - performed by the application on an element
  - flush preformed by an element
     - after receiving a navigation event (DVD, ...)
 
-When a playing sink is flushed by a FLUSH_START event, a LOST_PLAYING message is
+When a playing sink is flushed by a FLUSH_START event, a LOST_PREROLL message is
 posted and kept by the parent bin. When the element prerolls, it posts a
 PREROLLED message. 
 
-When all LOST_PLAYING messages are matched with a PREROLLED message, the bin
+When all LOST_PREROLL messages are matched with a PREROLLED message, the bin
 will capture a new base time from the clock and will bring all the prerolled
 sinks back to playing after setting the new base time on them. It's also
 possible to add additional latency calculations. 
 
-The difference with the NEED_PREROLL/PREROLLED and LOST_PLAYING/PREROLLED
+The difference with the NEED_PREROLL/PREROLLED and LOST_PREROLL/PREROLLED
 message pair is that the latter makes the pipeline acquire a new base time for
 the PREROLLED elements.
 
