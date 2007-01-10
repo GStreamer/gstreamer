@@ -7,6 +7,7 @@
 	(gst_ffmpegdemux_loop):
 	Check the aggregated return value of pushes downstream to figure out if
 	we really need to stop the task or not.
+	Fixes #394075
 
 2007-01-09  Wim Taymans  <wim@fluendo.com>
 
