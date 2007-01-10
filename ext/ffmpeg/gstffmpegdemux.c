@@ -52,6 +52,7 @@ struct _GstFFStream
   GstClockTime last_ts;
   gboolean discont;
   gboolean eos;
+  GstFlowReturn last_flow;
 };
 
 struct _GstFFMpegDemux
@@ -510,9 +511,14 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
 
   /* and prepare to continue streaming */
   if (flush) {
+    gint n;
     /* send flush stop, peer will accept data and events again. We
      * are not yet providing data as we still have the STREAM_LOCK. */
     gst_ffmpegdemux_push_event (demux, gst_event_new_flush_stop ());
+    for (n = 0; n < MAX_STREAMS; ++n) {
+      if (demux->streams[n])
+        demux->streams[n]->last_flow = GST_FLOW_OK;
+    }
   } else if (res && demux->running) {
     /* we are running the current segment and doing a non-flushing seek,
      * close the segment first based on the last_stop. */
@@ -785,6 +791,34 @@ gst_ffmpegdemux_src_convert (GstPad * pad,
 }
 #endif
 
+static GstFlowReturn
+gst_ffmpegdemux_aggregated_flow (GstFFMpegDemux * demux)
+{
+  gint n;
+  GstFlowReturn res = GST_FLOW_OK;
+  gboolean have_ok = FALSE;
+
+  for (n = 0; n < MAX_STREAMS; n++) {
+    GstFFStream *s = demux->streams[n];
+
+    if (s) {
+      res = MIN (res, s->last_flow);
+
+      if (GST_FLOW_IS_SUCCESS (s->last_flow))
+        have_ok = TRUE;
+    }
+  }
+
+  /* NOT_LINKED is OK, if at least one pad is linked */
+  if (res == GST_FLOW_NOT_LINKED && have_ok)
+    res = GST_FLOW_OK;
+
+  GST_DEBUG_OBJECT (demux, "Returning aggregated value of %s",
+      gst_flow_get_name (res));
+
+  return res;
+}
+
 static GstFFStream *
 gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
 {
@@ -814,6 +848,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   stream->discont = TRUE;
   stream->avstream = avstream;
   stream->last_ts = GST_CLOCK_TIME_NONE;
+  stream->last_flow = GST_FLOW_OK;
 
   switch (ctx->codec_type) {
     case CODEC_TYPE_VIDEO:
@@ -1195,7 +1230,15 @@ gst_ffmpegdemux_loop (GstPad * pad)
       "Sending out buffer time:%" GST_TIME_FORMAT " size:%d",
       GST_TIME_ARGS (timestamp), GST_BUFFER_SIZE (outbuf));
 
-  ret = gst_pad_push (srcpad, outbuf);
+  ret = stream->last_flow = gst_pad_push (srcpad, outbuf);
+
+  /* if a pad is in e.g. WRONG_STATE, we want to pause to unlock the STREAM_LOCK */
+  if ((ret != GST_FLOW_OK)
+       && ((ret = gst_ffmpegdemux_aggregated_flow (demux)) != GST_FLOW_OK)) {
+    GST_WARNING_OBJECT (demux, "stream_movi flow: %s / %s",
+        gst_flow_get_name (stream->last_flow), gst_flow_get_name (ret));
+    goto pause;
+  }
 
 done:
   /* can destroy the packet now */

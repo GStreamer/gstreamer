@@ -1,3 +1,13 @@
+2007-01-10  Edward Hervey  <edward@fluendo.com>
+
+	Patch by: Mark Nauwelaerts <manauw@skynet.be>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_perform_seek),
+	(gst_ffmpegdemux_aggregated_flow), (gst_ffmpegdemux_get_stream),
+	(gst_ffmpegdemux_loop):
+	Check the aggregated return value of pushes downstream to figure out if
+	we really need to stop the task or not.
+
 2007-01-09  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_get_palette),
