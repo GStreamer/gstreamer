@@ -1,3 +1,8 @@
+2007-01-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gstfilesink.c:
+	  Include <stdio.h> for fseeko().
+
 2007-01-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstevent.c:

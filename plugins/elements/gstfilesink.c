@@ -35,6 +35,7 @@
 #include "../../gst/gst-i18n-lib.h"
 
 #include <gst/gst.h>
+#include <stdio.h>              /* for fseeko() */
 #include <errno.h>
 #include "gstfilesink.h"
 #include <string.h>
@@ -43,7 +44,6 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
