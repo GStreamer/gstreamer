@@ -20,16 +20,16 @@
 
 /**
  * SECTION:gstaudiopanorama
- * @short_description: audio strereo pan effect
+ * @short_description: audio stereo pan effect
  *
  * <refsect2>
  * Stereo panorama effect with controllable pan position.
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch audiotestsrc wave=saw ! audiopanorama panorama=-100 ! alsasink
- * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiopanorama panorama=-100 ! alsasink
- * gst-launch audiotestsrc wave=saw ! audioconvert ! audiopanorama panorama=-100 ! audioconvert ! alsasink
+ * gst-launch audiotestsrc wave=saw ! audiopanorama panorama=-1.00 ! alsasink
+ * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiopanorama panorama=-1.00 ! alsasink
+ * gst-launch audiotestsrc wave=saw ! audioconvert ! audiopanorama panorama=-1.00 ! audioconvert ! alsasink
  * </programlisting>
  * </para>
  * </refsect2>

@@ -1,3 +1,11 @@
+2007-01-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge <slomo ubuntu com>
+
+	* docs/plugins/Makefile.am:
+	* gst/audiofx/audiopanorama.c:
+	  Some small docs fixes (#394851).
+
 2007-01-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/avi/gstavidemux.c:
