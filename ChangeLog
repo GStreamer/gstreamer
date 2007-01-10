@@ -1,3 +1,9 @@
+2007-01-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	Reserve LATENCY event.
+
 2007-01-09  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/draft-latency.txt:

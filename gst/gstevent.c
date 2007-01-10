@@ -115,6 +115,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_QOS, "qos", 0},
   {GST_EVENT_SEEK, "seek", 0},
   {GST_EVENT_NAVIGATION, "navigation", 0},
+  {GST_EVENT_SET_LATENCY, "set-latency", 0},
   {GST_EVENT_CUSTOM_UPSTREAM, "custom-upstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM, "custom-downstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM_OOB, "custom-downstream-oob", 0},
@@ -359,11 +360,11 @@ gst_event_get_structure (GstEvent * event)
  * gst_pad_pull_range(). Any event (except a #GST_EVENT_FLUSH_STOP) received
  * on a flushing pad will return %FALSE immediatly.
  *
- * Elements unlock and blocking functions and exit their streaming functions
- * as fast as possible.
+ * Elements should unlock any blocking functions and exit their streaming
+ * functions as fast as possible when this event is received.
  *
- * This event is typically generated after a seek to minimize the latency
- * after the seek.
+ * This event is typically generated after a seek to flush out all queued data
+ * in the pipeline so that the new media is played as soon as possible.
  *
  * Returns: A new flush start event.
  */
@@ -407,7 +408,7 @@ gst_event_new_flush_stop (void)
  * which will then post the #GST_MESSAGE_EOS on the bus after they have
  * finished playing any buffered data.
  *
- * When all sinks have posted an EOS message, the EOS message is
+ * When all sinks have posted an EOS message, an EOS message is
  * forwarded to the application.
  *
  * Returns: The new EOS event.
