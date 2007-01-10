@@ -1,3 +1,61 @@
+2007-01-10  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
+	* gst/rtsp/COPYING.MIT:
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_create_stream),
+	(gst_rtspsrc_stream_free), (gst_rtspsrc_cleanup),
+	(gst_rtspsrc_alloc_udp_ports), (pad_unblocked), (pad_blocked),
+	(gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_activate_streams), (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_loop_udp), (gst_rtspsrc_send),
+	(gst_rtspsrc_parse_methods),
+	(gst_rtspsrc_create_transports_string),
+	(gst_rtspsrc_prepare_transports), (gst_rtspsrc_setup_streams),
+	(gst_rtspsrc_open), (gst_rtspsrc_close):
+	* gst/rtsp/gstrtspsrc.h:
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_create),
+	(rtsp_connection_connect), (rtsp_connection_send), (read_line),
+	(parse_request_line), (parse_line), (rtsp_connection_read),
+	(rtsp_connection_close):
+	* gst/rtsp/rtspdefs.c: (rtsp_init_status), (rtsp_strresult),
+	(rtsp_method_as_text), (rtsp_header_as_text),
+	(rtsp_status_as_text), (rtsp_find_header_field),
+	(rtsp_find_method):
+	* gst/rtsp/rtspdefs.h:
+	* gst/rtsp/rtspextwms.c: (rtsp_ext_wms_after_send),
+	(rtsp_ext_wms_configure_stream):
+	* gst/rtsp/rtspmessage.c: (rtsp_message_new), (rtsp_message_init),
+	(rtsp_message_new_request), (rtsp_message_init_request),
+	(rtsp_message_new_response), (rtsp_message_init_response),
+	(rtsp_message_init_data), (rtsp_message_unset),
+	(rtsp_message_free), (rtsp_message_add_header),
+	(rtsp_message_get_header), (rtsp_message_set_body),
+	(rtsp_message_get_body), (dump_mem), (rtsp_message_dump):
+	* gst/rtsp/rtspmessage.h:
+	* gst/rtsp/sdpmessage.c: (sdp_message_get_attribute_val_n),
+	(sdp_media_get_attribute_val_n), (read_string), (read_string_del),
+	(sdp_parse_line), (sdp_message_parse_buffer), (print_media),
+	(sdp_message_dump):
+	Allow url to be NULL to be able to use it for server connections.
+	Can now send responses as well as requests.
+	No longer hangs in an endless loop if EOF is received.
+	Can now convert a status code to a text string.
+	Return RTSP_HDR_INVALID for unknown headers.
+	Return RTSP_INVALID for unknown methods.
+	Copy CSeq and Session headers from the request.
+	Only free memory corresponding to the currently set message type.
+	Added const to function arguments as appropriate.
+	Avoid a compiler warning when initializing nmedia.
+	Use guint rather than gint to avoid compiler warnings.
+	Fix crasher in wms extension.
+	Factor out stream setup from open_connection.
+	Delay activation of streams when actual data is received from the
+	server, this prepares us to do proper protocol switching.
+	Added new license.
+	Fixes #380895.
+
+
 2007-01-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sebastian Dröge <slomo ubuntu com>

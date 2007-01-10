@@ -95,9 +95,8 @@
 #include "gstrtspsrc.h"
 #include "sdp.h"
 
-#if 0
-#define WITH_EXT_REAL
-#endif
+/* define for experimental real support */
+#undef WITH_EXT_REAL
 
 #include "rtspextwms.h"
 #ifdef WITH_EXT_REAL
@@ -165,6 +164,11 @@ gst_rtsp_lower_trans_get_type (void)
 static void gst_rtspsrc_base_init (gpointer g_class);
 static void gst_rtspsrc_finalize (GObject * object);
 
+static void gst_rtspsrc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_rtspsrc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
 static void gst_rtspsrc_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 static GstCaps *gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media);
@@ -172,11 +176,6 @@ static GstCaps *gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media);
 static GstStateChangeReturn gst_rtspsrc_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message);
-
-static void gst_rtspsrc_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_rtspsrc_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 
 static gboolean gst_rtspsrc_open (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_play (GstRTSPSrc * src);
@@ -186,6 +185,7 @@ static gboolean gst_rtspsrc_close (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
     const gchar * uri);
 
+static gboolean gst_rtspsrc_activate_streams (GstRTSPSrc * src);
 static void gst_rtspsrc_loop (GstRTSPSrc * src);
 
 /* commands we send to out loop to notify it of events */
@@ -397,6 +397,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
   /* we mark the pad as not linked, we will mark it as OK when we add the pad to
    * the element. */
   stream->last_ret = GST_FLOW_NOT_LINKED;
+  stream->added = FALSE;
   stream->id = src->numstreams++;
 
   /* we must have a payload. No payload means we cannot create caps */
@@ -448,21 +449,74 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
   return stream;
 }
 
-#if 0
 static void
-gst_rtspsrc_free_stream (GstRTSPSrc * src, GstRTSPStream * stream)
+gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
 {
-  if (stream->caps) {
+  gint i;
+
+  GST_DEBUG_OBJECT (src, "free stream %p", stream);
+
+  if (stream->caps)
     gst_caps_unref (stream->caps);
-  }
+
   g_free (stream->setup_url);
 
-  src->streams = g_list_remove (src->streams, stream);
-  src->numstreams--;
+  for (i = 0; i < 2; i++) {
+    GstElement *udpsrc = stream->udpsrc[i];
 
+    if (udpsrc) {
+      GstPad *pad;
+
+      /* unlink the pad */
+      pad = gst_element_get_pad (udpsrc, "src");
+      if (stream->channelpad[i]) {
+        gst_pad_unlink (pad, stream->channelpad[i]);
+        gst_object_unref (stream->channelpad[i]);
+        stream->channelpad[i] = NULL;
+      }
+
+      gst_element_set_state (udpsrc, GST_STATE_NULL);
+      gst_bin_remove (GST_BIN_CAST (src), udpsrc);
+      gst_object_unref (stream->udpsrc[i]);
+      stream->udpsrc[i] = NULL;
+    }
+  }
+  if (stream->sess) {
+    gst_element_set_state (stream->sess, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (src), stream->sess);
+    stream->sess = NULL;
+  }
+  if (stream->srcpad) {
+    gst_pad_set_active (stream->srcpad, FALSE);
+    if (stream->added) {
+      gst_element_remove_pad (GST_ELEMENT_CAST (src), stream->srcpad);
+      stream->added = FALSE;
+    }
+    stream->srcpad = NULL;
+  }
   g_free (stream);
 }
-#endif
+
+static void
+gst_rtspsrc_cleanup (GstRTSPSrc * src)
+{
+  GList *walk;
+
+  GST_DEBUG_OBJECT (src, "cleanup");
+
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+
+    gst_rtspsrc_stream_free (src, stream);
+  }
+  g_list_free (src->streams);
+  src->streams = NULL;
+  src->numstreams = 0;
+  if (src->props)
+    gst_structure_free (src->props);
+  src->props = NULL;
+}
+
 
 #define PARSE_INT(p, del, res)          \
 G_STMT_START {                          \
@@ -724,8 +778,12 @@ again:
 
   /* we keep these elements, we configure all in configure_transport when the
    * server told us to really use the UDP ports. */
-  stream->udpsrc[0] = udpsrc0;
-  stream->udpsrc[1] = udpsrc1;
+  stream->udpsrc[0] = gst_object_ref (udpsrc0);
+  stream->udpsrc[1] = gst_object_ref (udpsrc1);
+
+  /* they are ours now */
+  gst_object_sink (udpsrc0);
+  gst_object_sink (udpsrc1);
 
   return TRUE;
 
@@ -780,6 +838,44 @@ cleanup:
   }
 }
 
+static void
+pad_unblocked (GstPad * pad, gboolean blocked, GstRTSPSrc * src)
+{
+}
+
+static void
+pad_blocked (GstPad * pad, gboolean blocked, GstRTSPSrc * src)
+{
+  GST_DEBUG_OBJECT (src, "pad %s:%s blocked, activating streams",
+      GST_DEBUG_PAD_NAME (pad));
+
+  gst_pad_set_blocked_async (pad, FALSE, (GstPadBlockCallback) pad_unblocked,
+      src);
+
+  /* activate the streams */
+  GST_OBJECT_LOCK (src);
+  if (!src->need_activate)
+    goto was_ok;
+
+  src->need_activate = FALSE;
+  GST_OBJECT_UNLOCK (src);
+
+  gst_rtspsrc_activate_streams (src);
+
+  return;
+
+was_ok:
+  {
+    GST_OBJECT_UNLOCK (src);
+    return;
+  }
+}
+
+/* sets up all elements needed for streaming over the specified transport.
+ * Does not yet expose the element pads, this will be done when there is actuall
+ * dataflow detected, which might never happen when UDP is blocked in a
+ * firewall, for example.
+ */
 static gboolean
 gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     RTSPTransport * transport)
@@ -799,15 +895,17 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
 
   s = gst_caps_get_structure (stream->caps, 0);
 
+  /* get the proper mime type for this stream now */
   if ((res = rtsp_transport_get_mime (transport->trans, &mime)) < 0)
     goto no_mime;
   if (!mime)
     goto no_mime;
 
-  GST_DEBUG_OBJECT (src, "setting mime to %s", mime);
   /* configure the final mime type */
+  GST_DEBUG_OBJECT (src, "setting mime to %s", mime);
   gst_structure_set_name (s, mime);
 
+  /* find a manager */
   if ((res = rtsp_transport_get_manager (transport->trans, &manager)) < 0)
     goto no_manager;
 
@@ -824,6 +922,8 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     if (ret != GST_STATE_CHANGE_SUCCESS)
       goto start_session_failure;
 
+    /* we stream directly to the manager, FIXME, pad names should not be
+     * hardcoded. */
     stream->channelpad[0] = gst_element_get_pad (stream->sess, "sinkrtp");
     stream->channelpad[1] = gst_element_get_pad (stream->sess, "sinkrtcp");
   }
@@ -847,22 +947,24 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
         stream->udpsrc[i] = NULL;
       }
     }
+
     /* no session manager, send data to srcpad directly */
     if (!stream->channelpad[0]) {
       GST_DEBUG_OBJECT (src, "no manager, creating pad");
 
+      /* create a new pad we will use to stream to */
       name = g_strdup_printf ("stream%d", stream->id);
       template = gst_static_pad_template_get (&rtptemplate);
-      stream->srcpad = gst_pad_new_from_template (template, name);
+      stream->channelpad[0] = gst_pad_new_from_template (template, name);
       gst_object_unref (template);
       g_free (name);
 
-      gst_pad_use_fixed_caps (stream->srcpad);
-      gst_pad_set_caps (stream->srcpad, stream->caps);
+      /* set caps and activate */
+      gst_pad_use_fixed_caps (stream->channelpad[0]);
+      gst_pad_set_caps (stream->channelpad[0], stream->caps);
+      gst_pad_set_active (stream->channelpad[0], TRUE);
 
-      stream->channelpad[0] = gst_object_ref (stream->srcpad);
-      gst_pad_set_active (stream->srcpad, TRUE);
-      gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
+      outpad = gst_object_ref (stream->channelpad[0]);
     } else {
       GST_DEBUG_OBJECT (src, "using manager source pad");
       outpad = gst_element_get_pad (stream->sess, "srcrtp");
@@ -884,6 +986,10 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
         if (stream->udpsrc[0] == NULL)
           goto no_element;
 
+        /* take ownership */
+        gst_object_ref (stream->udpsrc[0]);
+        gst_object_sink (stream->udpsrc[0]);
+
         /* change state */
         gst_element_set_state (stream->udpsrc[0], GST_STATE_PAUSED);
       }
@@ -897,6 +1003,10 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
         if (stream->udpsrc[1] == NULL)
           goto no_element;
 
+        /* take ownership */
+        gst_object_ref (stream->udpsrc[0]);
+        gst_object_sink (stream->udpsrc[0]);
+
         gst_element_set_state (stream->udpsrc[1], GST_STATE_PAUSED);
       }
     }
@@ -904,8 +1014,6 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     /* we manage the UDP elements now. For unicast, the UDP sources where
      * allocated in the stream when we suggested a transport. */
     if (stream->udpsrc[0]) {
-      GstPad *pad;
-
       gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[0]);
 
       GST_DEBUG_OBJECT (src, "setting up UDP source");
@@ -913,22 +1021,31 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
       /* set caps */
       g_object_set (G_OBJECT (stream->udpsrc[0]), "caps", stream->caps, NULL);
 
-      /* configure a timeout on the UDP port */
+      /* configure a timeout on the UDP port. When the timeout message is
+       * posted, we assume UDP transport is not possible. We reconnect using TCP
+       * if we can. */
       g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", src->timeout,
           NULL);
+
+      /* get output pad of the UDP source. */
+      outpad = gst_element_get_pad (stream->udpsrc[0], "src");
+
+      /* configure pad block on the pad. As soon as there is dataflow on the
+       * UDP source, we know that UDP is not blocked by a firewall and we can
+       * configure all the streams to let the application autoplug decoders. */
+      gst_pad_set_blocked_async (outpad, TRUE,
+          (GstPadBlockCallback) pad_blocked, src);
 
       if (stream->channelpad[0]) {
         GST_DEBUG_OBJECT (src, "connecting UDP source 0 to manager");
         /* configure for UDP delivery, we need to connect the UDP pads to
          * the session plugin. */
-        pad = gst_element_get_pad (stream->udpsrc[0], "src");
-        gst_pad_link (pad, stream->channelpad[0]);
-        gst_object_unref (pad);
-
+        gst_pad_link (outpad, stream->channelpad[0]);
+        gst_object_unref (outpad);
+        /* the real output pad is that of the session manager */
         outpad = gst_element_get_pad (stream->sess, "srcrtp");
       } else {
         GST_DEBUG_OBJECT (src, "using UDP src pad as output");
-        outpad = gst_element_get_pad (stream->udpsrc[0], "src");
       }
     }
 
@@ -947,13 +1064,14 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     }
   }
 
-  if (outpad && !stream->srcpad) {
+  if (outpad) {
     GST_DEBUG_OBJECT (src, "creating ghostpad");
 
     gst_pad_use_fixed_caps (outpad);
     gst_pad_set_caps (outpad, stream->caps);
 
-    /* create ghostpad */
+    /* create ghostpad, don't add just yet, this will be done when we activate
+     * the stream. */
     name = g_strdup_printf ("stream%d", stream->id);
     template = gst_static_pad_template_get (&rtptemplate);
     stream->srcpad = gst_ghost_pad_new_from_template (name, outpad, template);
@@ -961,10 +1079,6 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     g_free (name);
 
     gst_object_unref (outpad);
-
-    /* and add */
-    gst_pad_set_active (stream->srcpad, TRUE);
-    gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
   }
   /* mark pad as ok */
   stream->last_ret = GST_FLOW_OK;
@@ -992,6 +1106,35 @@ start_session_failure:
     GST_DEBUG_OBJECT (src, "could not start session");
     return FALSE;
   }
+}
+
+/* Adds the source pads of all configured streams to the element.
+ * This code is performed when we detected dataflow.
+ *
+ * We detect dataflow from either the _loop function or with pad probes on the
+ * udp sources.
+ */
+static gboolean
+gst_rtspsrc_activate_streams (GstRTSPSrc * src)
+{
+  GList *walk;
+
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+
+    gst_pad_set_active (stream->srcpad, TRUE);
+    /* add the pad */
+    if (!stream->added) {
+      gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
+      stream->added = TRUE;
+    }
+  }
+
+  /* if we got here all was configured. We have dynamic pads so we notify that
+   * we are done */
+  gst_element_no_more_pads (GST_ELEMENT_CAST (src));
+
+  return TRUE;
 }
 
 static gint
@@ -1144,6 +1287,11 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "pushing data of size %d on channel %d", size,
       channel);
 
+  if (src->need_activate) {
+    gst_rtspsrc_activate_streams (src);
+    src->need_activate = FALSE;
+  }
+
   /* chain to the peer pad */
   if (GST_PAD_IS_SINK (outpad))
     ret = gst_pad_chain (outpad, buf);
@@ -1239,49 +1387,45 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   }
   GST_OBJECT_UNLOCK (src);
 
-  if (restart) {
-    gst_rtspsrc_pause (src);
+  /* no need to restart, we're done */
+  if (!restart)
+    goto done;
 
-    if (src->task) {
-      /* stop task, we cannot join as this would deadlock */
-      gst_task_stop (src->task);
-      /* and free the task so that _close will not stop/join it again. */
-      gst_object_unref (GST_OBJECT (src->task));
-      src->task = NULL;
-    }
-    gst_rtspsrc_close (src);
+  /* We post a warning message now to inform the user
+   * that nothing happened. It's most likely a firewall thing. */
+  GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
+      ("Could not receive any UDP packets for %.4f seconds, maybe your "
+          "firewall is blocking it. Retrying using a TCP connection.",
+          (gdouble) src->timeout / 1000000));
+  /* we can try only TCP now */
+  src->cur_protocols = RTSP_LOWER_TRANS_TCP;
 
-    /* see if we have TCP left to try */
-    if (src->cur_protocols & RTSP_LOWER_TRANS_TCP) {
-      gchar *url, *pos;
+  /* pause to prepare for a restart */
+  gst_rtspsrc_pause (src);
 
-      /* We post a warning message now to inform the user
-       * that nothing happened. It's most likely a firewall thing. */
-      GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
-          ("Could not receive any UDP packets for %.4f seconds, maybe your "
-              "firewall is blocking it. Retrying using a TCP connection.",
-              (gdouble) src->timeout / 1000000));
-      /* we can try only TCP now */
-      src->cur_protocols = RTSP_LOWER_TRANS_TCP;
-
-      pos = strstr (src->location, "://");
-      if (!pos)
-        goto weird_url;
-
-      url = g_strdup_printf ("rtspt://%s", pos + 3);
-
-      gst_element_post_message (GST_ELEMENT_CAST (src),
-          gst_message_new_element (GST_OBJECT_CAST (src),
-              gst_structure_new ("redirect",
-                  "new-location", G_TYPE_STRING, url, NULL)));
-      g_free (url);
-    } else {
-      src->cur_protocols = 0;
-      /* no transport possible, post an error and stop */
-      GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-          ("Could not connect to server, no protocols left"));
-    }
+  if (src->task) {
+    /* stop task, we cannot join as this would deadlock */
+    gst_task_stop (src->task);
+    /* and free the task so that _close will not stop/join it again. */
+    gst_object_unref (GST_OBJECT (src->task));
+    src->task = NULL;
   }
+  /* close and cleanup our state */
+  gst_rtspsrc_close (src);
+
+  /* see if we have TCP left to try */
+  if (!(src->cur_protocols & RTSP_LOWER_TRANS_TCP))
+    goto no_protocols;
+
+  /* open new connection using tcp */
+  if (!gst_rtspsrc_open (src))
+    goto open_failed;
+
+  /* start playback */
+  if (!gst_rtspsrc_play (src))
+    goto play_failed;
+
+done:
   return;
 
   /* ERRORS */
@@ -1292,10 +1436,22 @@ stopping:
     gst_task_pause (src->task);
     return;
   }
-weird_url:
+no_protocols:
   {
+    src->cur_protocols = 0;
+    /* no transport possible, post an error and stop */
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-        ("Could not redirect, location %s is invalid", src->location));
+        ("Could not connect to server, no protocols left"));
+    return;
+  }
+open_failed:
+  {
+    GST_DEBUG_OBJECT (src, "open failed");
+    return;
+  }
+play_failed:
+  {
+    GST_DEBUG_OBJECT (src, "play failed");
     return;
   }
 }
@@ -1414,10 +1570,8 @@ next:
 
   /* store new content base if any */
   rtsp_message_get_header (response, RTSP_HDR_CONTENT_BASE, &content_base);
-  if (content_base) {
-    g_free (src->content_base);
-    src->content_base = g_strdup (content_base);
-  }
+  g_free (src->content_base);
+  src->content_base = g_strdup (content_base);
 
   if (src->extension && src->extension->after_send)
     src->extension->after_send (src->extension, request, response);
@@ -1509,7 +1663,7 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
     method = rtsp_find_method (stripped);
 
     /* keep bitfield of supported methods */
-    if (method != -1)
+    if (method != RTSP_INVALID)
       src->methods |= method;
   }
   g_strfreev (options);
@@ -1556,6 +1710,7 @@ gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
   if (*transports != NULL)
     return RTSP_OK;
 
+  /* the default RTSP transports */
   result = g_strdup ("");
   if (protocols & RTSP_LOWER_TRANS_UDP) {
     gchar *new;
@@ -1602,7 +1757,7 @@ failed:
 }
 
 static RTSPResult
-gst_rtspsrc_configure_transports (GstRTSPStream * stream, gchar ** transports)
+gst_rtspsrc_prepare_transports (GstRTSPStream * stream, gchar ** transports)
 {
   GstRTSPSrc *src;
   gint nr_udp, nr_int;
@@ -1669,6 +1824,193 @@ failed:
 }
 
 static gboolean
+gst_rtspsrc_setup_streams (GstRTSPSrc * src)
+{
+  GList *walk;
+  RTSPResult res;
+  RTSPMessage request = { 0 };
+  RTSPMessage response = { 0 };
+  GstRTSPStream *stream = NULL;
+  RTSPLowerTrans protocols;
+
+  /* we initially allow all configured lower transports. based on the URL
+   * transports and the replies from the server we narrow them down. */
+  protocols = src->url->transports & src->cur_protocols;
+
+  /* reset some state */
+  src->free_channel = 0;
+  src->interleaved = FALSE;
+
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    gchar *transports;
+
+    stream = (GstRTSPStream *) walk->data;
+
+    /* see if we need to configure this stream */
+    if (src->extension && src->extension->configure_stream) {
+      if (!src->extension->configure_stream (src->extension, stream)) {
+        GST_DEBUG_OBJECT (src, "skipping stream %p, disabled by extension",
+            stream);
+        continue;
+      }
+    }
+
+    /* merge/overwrite global caps */
+    if (stream->caps) {
+      guint j, num;
+      GstStructure *s;
+
+      s = gst_caps_get_structure (stream->caps, 0);
+
+      num = gst_structure_n_fields (src->props);
+      for (j = 0; j < num; j++) {
+        const gchar *name;
+        const GValue *val;
+
+        name = gst_structure_nth_field_name (src->props, j);
+        val = gst_structure_get_value (src->props, name);
+        gst_structure_set_value (s, name, val);
+
+        GST_DEBUG_OBJECT (src, "copied %s", name);
+      }
+    }
+
+    /* skip setup if we have no URL for it */
+    if (stream->setup_url == NULL) {
+      GST_DEBUG_OBJECT (src, "skipping stream %p, no setup", stream);
+      continue;
+    }
+
+    GST_DEBUG_OBJECT (src, "doing setup of stream %p with %s", stream,
+        stream->setup_url);
+
+    /* create a string with all the transports */
+    res = gst_rtspsrc_create_transports_string (src, protocols, &transports);
+    if (res < 0)
+      goto setup_transport_failed;
+
+    /* replace placeholders with real values, this function will optionally
+     * allocate UDP ports and other info needed to execute the setup request */
+    res = gst_rtspsrc_prepare_transports (stream, &transports);
+    if (res < 0)
+      goto setup_transport_failed;
+
+    /* create SETUP request */
+    res = rtsp_message_init_request (&request, RTSP_SETUP, stream->setup_url);
+    if (res < 0)
+      goto create_request_failed;
+
+    /* select transport, copy is made when adding to header so we can free it. */
+    rtsp_message_add_header (&request, RTSP_HDR_TRANSPORT, transports);
+    g_free (transports);
+
+    if (!gst_rtspsrc_send (src, &request, &response, NULL))
+      goto send_error;
+
+    /* parse response transport */
+    {
+      gchar *resptrans = NULL;
+      RTSPTransport transport = { 0 };
+
+      rtsp_message_get_header (&response, RTSP_HDR_TRANSPORT, &resptrans);
+      if (!resptrans)
+        goto no_transport;
+
+      /* parse transport */
+      if (rtsp_transport_parse (resptrans, &transport) != RTSP_OK)
+        continue;
+
+      /* update allowed transports for other streams. once the transport of
+       * one stream has been determined, we make sure that all other streams
+       * are configured in the same way */
+      switch (transport.lower_transport) {
+        case RTSP_LOWER_TRANS_TCP:
+          GST_DEBUG_OBJECT (src, "stream %p as TCP interleaved", stream);
+          protocols = RTSP_LOWER_TRANS_TCP;
+          src->interleaved = TRUE;
+          /* update free channels */
+          src->free_channel =
+              MAX (transport.interleaved.min, src->free_channel);
+          src->free_channel =
+              MAX (transport.interleaved.max, src->free_channel);
+          src->free_channel++;
+          break;
+        case RTSP_LOWER_TRANS_UDP_MCAST:
+          /* only allow multicast for other streams */
+          GST_DEBUG_OBJECT (src, "stream %p as UDP multicast", stream);
+          protocols = RTSP_LOWER_TRANS_UDP_MCAST;
+          break;
+        case RTSP_LOWER_TRANS_UDP:
+          /* only allow unicast for other streams */
+          GST_DEBUG_OBJECT (src, "stream %p as UDP unicast", stream);
+          protocols = RTSP_LOWER_TRANS_UDP;
+          break;
+        default:
+          GST_DEBUG_OBJECT (src, "stream %p unknown transport %d", stream,
+              transport.lower_transport);
+          break;
+      }
+
+      if (!stream->container || !src->interleaved) {
+        /* now configure the stream with the selected transport */
+        if (!gst_rtspsrc_stream_configure_transport (stream, &transport)) {
+          GST_DEBUG_OBJECT (src,
+              "could not configure stream %p transport, skipping stream",
+              stream);
+        }
+      }
+      /* clean up our transport struct */
+      rtsp_transport_init (&transport);
+    }
+  }
+  if (src->extension && src->extension->stream_select)
+    src->extension->stream_select (src->extension);
+
+  /* we need to activate the streams when we detect activity */
+  src->need_activate = TRUE;
+
+  return TRUE;
+
+  /* ERRORS */
+create_request_failed:
+  {
+    gchar *str = rtsp_strresult (res);
+
+    GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
+        ("Could not create request. (%s)", str));
+    g_free (str);
+    goto cleanup_error;
+  }
+setup_transport_failed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Could not setup transport."));
+    goto cleanup_error;
+  }
+send_error:
+  {
+    gchar *str = rtsp_strresult (res);
+
+    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
+        ("Could not send message. (%s)", str));
+    g_free (str);
+    goto cleanup_error;
+  }
+no_transport:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
+        ("Server did not select transport."));
+    goto cleanup_error;
+  }
+cleanup_error:
+  {
+    rtsp_message_unset (&request);
+    rtsp_message_unset (&response);
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_rtspsrc_open (GstRTSPSrc * src)
 {
   RTSPResult res;
@@ -1678,13 +2020,10 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   guint size;
   gint i, n_streams;
   SDPMessage sdp = { 0 };
-  RTSPLowerTrans protocols;
   GstRTSPStream *stream = NULL;
   gchar *respcont = NULL;
 
   /* reset our state */
-  src->free_channel = 0;
-  src->interleaved = FALSE;
   gst_segment_init (&src->segment, GST_FORMAT_TIME);
 
   /* can't continue without a valid url */
@@ -1758,139 +2097,14 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   if (src->extension && src->extension->parse_sdp)
     src->extension->parse_sdp (src->extension, &sdp);
 
-  /* we initially allow all configured lower transports. based on the URL
-   * transports and the replies from the server we narrow them down. */
-  protocols = src->url->transports & src->cur_protocols;
-
-  /* setup streams */
+  /* create streams */
   n_streams = sdp_message_medias_len (&sdp);
   for (i = 0; i < n_streams; i++) {
-    gchar *transports;
-
-    /* create stream from the media, can never return NULL */
     stream = gst_rtspsrc_create_stream (src, &sdp, i);
-
-    /* see if we need to configure this stream */
-    if (src->extension && src->extension->configure_stream) {
-      if (!src->extension->configure_stream (src->extension, stream)) {
-        GST_DEBUG_OBJECT (src, "skipping stream %d, disabled by extension", i);
-        continue;
-      }
-    }
-
-    /* merge/overwrite global caps */
-    if (stream->caps) {
-      guint j, num;
-      GstStructure *s;
-
-      s = gst_caps_get_structure (stream->caps, 0);
-
-      num = gst_structure_n_fields (src->props);
-      for (j = 0; j < num; j++) {
-        const gchar *name;
-        const GValue *val;
-
-        name = gst_structure_nth_field_name (src->props, j);
-        val = gst_structure_get_value (src->props, name);
-        gst_structure_set_value (s, name, val);
-
-        GST_DEBUG_OBJECT (src, "copied %s", name);
-      }
-    }
-
-    /* skip setup if we have no URL for it */
-    if (stream->setup_url == NULL) {
-      GST_DEBUG_OBJECT (src, "skipping stream %d, no setup", i);
-      continue;
-    }
-
-    GST_DEBUG_OBJECT (src, "doing setup of stream %d with %s", i,
-        stream->setup_url);
-
-    /* create SETUP request */
-    res = rtsp_message_init_request (&request, RTSP_SETUP, stream->setup_url);
-    if (res < 0)
-      goto create_request_failed;
-
-    /* create a string with all the transports */
-    res = gst_rtspsrc_create_transports_string (src, protocols, &transports);
-    if (res < 0)
-      goto setup_transport_failed;
-
-    /* replace placeholders with real values */
-    res = gst_rtspsrc_configure_transports (stream, &transports);
-    if (res < 0)
-      goto setup_transport_failed;
-
-    /* select transport, copy is made when adding to header */
-    rtsp_message_add_header (&request, RTSP_HDR_TRANSPORT, transports);
-    g_free (transports);
-
-    if (!gst_rtspsrc_send (src, &request, &response, NULL))
-      goto send_error;
-
-    /* parse response transport */
-    {
-      gchar *resptrans = NULL;
-      RTSPTransport transport = { 0 };
-
-      rtsp_message_get_header (&response, RTSP_HDR_TRANSPORT, &resptrans);
-      if (!resptrans)
-        goto no_transport;
-
-      /* parse transport */
-      if (rtsp_transport_parse (resptrans, &transport) != RTSP_OK)
-        continue;
-
-      /* update allowed transports for other streams. once the transport of
-       * one stream has been determined, we make sure that all other streams
-       * are configured in the same way */
-      switch (transport.lower_transport) {
-        case RTSP_LOWER_TRANS_TCP:
-          GST_DEBUG_OBJECT (src, "stream %d as TCP interleaved", i);
-          protocols = RTSP_LOWER_TRANS_TCP;
-          src->interleaved = TRUE;
-          /* update free channels */
-          src->free_channel =
-              MAX (transport.interleaved.min, src->free_channel);
-          src->free_channel =
-              MAX (transport.interleaved.max, src->free_channel);
-          src->free_channel++;
-          break;
-        case RTSP_LOWER_TRANS_UDP_MCAST:
-          /* only allow multicast for other streams */
-          GST_DEBUG_OBJECT (src, "stream %d as UDP multicast", i);
-          protocols = RTSP_LOWER_TRANS_UDP_MCAST;
-          break;
-        case RTSP_LOWER_TRANS_UDP:
-          /* only allow unicast for other streams */
-          GST_DEBUG_OBJECT (src, "stream %d as UDP unicast", i);
-          protocols = RTSP_LOWER_TRANS_UDP;
-          break;
-        default:
-          GST_DEBUG_OBJECT (src, "stream %d unknown transport %d", i,
-              transport.lower_transport);
-          break;
-      }
-
-      if (!stream->container || !src->interleaved) {
-        /* now configure the stream with the transport */
-        if (!gst_rtspsrc_stream_configure_transport (stream, &transport)) {
-          GST_DEBUG_OBJECT (src,
-              "could not configure stream %d transport, skipping stream", i);
-        }
-      }
-
-      /* clean up our transport struct */
-      rtsp_transport_init (&transport);
-    }
   }
-  if (src->extension && src->extension->stream_select)
-    src->extension->stream_select (src->extension);
 
-  /* if we got here all was configured. We have dynamic pads so we notify that
-   * we are done */
-  gst_element_no_more_pads (GST_ELEMENT_CAST (src));
+  /* setup streams */
+  gst_rtspsrc_setup_streams (src);
 
   /* clean up any messages */
   rtsp_message_unset (&request);
@@ -1952,18 +2166,6 @@ wrong_content_type:
         ("Server does not support SDP, got %s.", respcont));
     goto cleanup_error;
   }
-setup_transport_failed:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
-        ("Could not setup transport."));
-    goto cleanup_error;
-  }
-no_transport:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
-        ("Server did not select transport."));
-    goto cleanup_error;
-  }
 cleanup_error:
   {
     rtsp_message_unset (&request);
@@ -2017,6 +2219,13 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "closing connection...");
   if ((res = rtsp_connection_close (src->connection)) < 0)
     goto close_failed;
+
+  /* free connection */
+  rtsp_connection_free (src->connection);
+  src->connection = NULL;
+
+  /* cleanup */
+  gst_rtspsrc_cleanup (src);
 
   return TRUE;
 

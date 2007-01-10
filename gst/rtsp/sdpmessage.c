@@ -322,7 +322,7 @@ DEFINE_ARRAY_P_GETTER (attribute, attributes, SDPAttribute);
 gchar *
 sdp_message_get_attribute_val_n (SDPMessage * msg, gchar * key, guint nth)
 {
-  gint i;
+  guint i;
 
   for (i = 0; i < msg->attributes->len; i++) {
     SDPAttribute *attr;
@@ -423,7 +423,7 @@ sdp_media_get_attribute (SDPMedia * media, guint idx)
 gchar *
 sdp_media_get_attribute_val_n (SDPMedia * media, gchar * key, guint nth)
 {
-  gint i;
+  guint i;
 
   for (i = 0; i < media->attributes->len; i++) {
     SDPAttribute *attr;
@@ -454,9 +454,9 @@ sdp_media_get_format (SDPMedia * media, guint idx)
 }
 
 static void
-read_string (gchar * dest, gint size, gchar ** src)
+read_string (gchar * dest, guint size, gchar ** src)
 {
-  gint idx;
+  guint idx;
 
   idx = 0;
   /* skip spaces */
@@ -473,9 +473,9 @@ read_string (gchar * dest, gint size, gchar ** src)
 }
 
 static void
-read_string_del (gchar * dest, gint size, gchar del, gchar ** src)
+read_string_del (gchar * dest, guint size, gchar del, gchar ** src)
 {
-  gint idx;
+  guint idx;
 
   idx = 0;
   /* skip spaces */
@@ -582,7 +582,7 @@ sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
     case 'm':
     {
       gchar *slash;
-      SDPMedia nmedia = { 0 };
+      SDPMedia nmedia = {.media = NULL };
 
       c->state = SDP_MEDIA;
       sdp_media_init (&nmedia);
@@ -622,7 +622,7 @@ sdp_message_parse_buffer (guint8 * data, guint size, SDPMessage * msg)
   SDPContext c;
   gchar type;
   gchar buffer[MAX_LINE_LEN];
-  gint idx = 0;
+  guint idx = 0;
 
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
   g_return_val_if_fail (data != NULL, RTSP_EINVAL);
@@ -672,7 +672,7 @@ print_media (SDPMedia * media)
   g_print ("   num_ports:   '%d'\n", media->num_ports);
   g_print ("   proto:       '%s'\n", media->proto);
   if (media->fmts->len > 0) {
-    gint i;
+    guint i;
 
     g_print ("   formats:\n");
     for (i = 0; i < media->fmts->len; i++) {
@@ -684,7 +684,7 @@ print_media (SDPMedia * media)
   g_print ("    type:       '%s'\n", media->key.type);
   g_print ("    data:       '%s'\n", media->key.data);
   if (media->attributes->len > 0) {
-    gint i;
+    guint i;
 
     g_print ("   attributes:\n");
     for (i = 0; i < media->attributes->len; i++) {
@@ -714,7 +714,7 @@ sdp_message_dump (SDPMessage * msg)
   g_print (" uri:           '%s'\n", msg->uri);
 
   if (msg->emails->len > 0) {
-    gint i;
+    guint i;
 
     g_print (" emails:\n");
     for (i = 0; i < msg->emails->len; i++) {
@@ -722,7 +722,7 @@ sdp_message_dump (SDPMessage * msg)
     }
   }
   if (msg->phones->len > 0) {
-    gint i;
+    guint i;
 
     g_print (" phones:\n");
     for (i = 0; i < msg->phones->len; i++) {
@@ -739,7 +739,7 @@ sdp_message_dump (SDPMessage * msg)
   g_print ("  type:         '%s'\n", msg->key.type);
   g_print ("  data:         '%s'\n", msg->key.data);
   if (msg->attributes->len > 0) {
-    gint i;
+    guint i;
 
     g_print (" attributes:\n");
     for (i = 0; i < msg->attributes->len; i++) {
@@ -749,7 +749,7 @@ sdp_message_dump (SDPMessage * msg)
     }
   }
   if (msg->medias->len > 0) {
-    gint i;
+    guint i;
 
     g_print (" medias:\n");
     for (i = 0; i < msg->medias->len; i++) {

@@ -119,7 +119,6 @@ rtsp_connection_create (RTSPUrl * url, RTSPConnection ** conn)
   gint ret;
   RTSPConnection *newconn;
 
-  g_return_val_if_fail (url != NULL, RTSP_EINVAL);
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
 
   newconn = g_new (RTSPConnection, 1);
@@ -139,6 +138,7 @@ rtsp_connection_create (RTSPUrl * url, RTSPConnection ** conn)
 #endif
 
   newconn->url = url;
+  newconn->fd = -1;
   newconn->cseq = 0;
   newconn->session_id[0] = 0;
   newconn->state = RTSP_STATE_INIT;
@@ -169,6 +169,8 @@ rtsp_connection_connect (RTSPConnection * conn)
   RTSPUrl *url;
 
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (conn->url != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (conn->fd < 0, RTSP_EINVAL);
 
   url = conn->url;
 
@@ -252,11 +254,23 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
 
   str = g_string_new ("");
 
-  /* create request string, add CSeq */
-  g_string_append_printf (str, "%s %s RTSP/1.0\r\n"
-      "CSeq: %d\r\n",
-      rtsp_method_as_text (message->type_data.request.method),
-      message->type_data.request.uri, conn->cseq);
+  switch (message->type) {
+    case RTSP_MESSAGE_REQUEST:
+      /* create request string, add CSeq */
+      g_string_append_printf (str, "%s %s RTSP/1.0\r\n"
+          "CSeq: %d\r\n",
+          rtsp_method_as_text (message->type_data.request.method),
+          message->type_data.request.uri, conn->cseq++);
+      break;
+    case RTSP_MESSAGE_RESPONSE:
+      /* create response string */
+      g_string_append_printf (str, "RTSP/1.0 %d %s\r\n",
+          message->type_data.response.code, message->type_data.response.reason);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
 
   /* append session id if we have one */
   if (conn->session_id[0] != '\0') {
@@ -300,8 +314,6 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
   }
   g_string_free (str, TRUE);
 
-  conn->cseq++;
-
   return RTSP_OK;
 
 #ifdef G_OS_WIN32
@@ -328,14 +340,16 @@ write_error:
 static RTSPResult
 read_line (gint fd, gchar * buffer, guint size)
 {
-  gint idx;
+  guint idx;
   gchar c;
   gint r;
 
   idx = 0;
   while (TRUE) {
     r = read (fd, &c, 1);
-    if (r < 1) {
+    if (r == 0) {
+      goto eof;
+    } else if (r < 0) {
       if (errno != EAGAIN && errno != EINTR)
         goto read_error;
     } else {
@@ -352,6 +366,10 @@ read_line (gint fd, gchar * buffer, guint size)
 
   return RTSP_OK;
 
+eof:
+  {
+    return RTSP_EEOF;
+  }
 read_error:
   {
     return RTSP_ESYS;
@@ -435,7 +453,7 @@ parse_request_line (gchar * buffer, RTSPMessage * msg)
 
   read_string (methodstr, sizeof (methodstr), &bptr);
   method = rtsp_find_method (methodstr);
-  if (method == -1)
+  if (method == RTSP_INVALID)
     goto wrong_method;
 
   read_string (urlstr, sizeof (urlstr), &bptr);
@@ -476,7 +494,7 @@ parse_line (gchar * buffer, RTSPMessage * msg)
   bptr++;
 
   field = rtsp_find_header_field (key);
-  if (field != -1) {
+  if (field != RTSP_HDR_INVALID) {
     while (g_ascii_isspace (*bptr))
       bptr++;
     rtsp_message_add_header (msg, field, bptr);
@@ -737,6 +755,7 @@ rtsp_connection_close (RTSPConnection * conn)
   gint res;
 
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (conn->fd >= 0, RTSP_EINVAL);
 
   res = CLOSE_SOCKET (conn->fd);
 #ifdef G_OS_WIN32

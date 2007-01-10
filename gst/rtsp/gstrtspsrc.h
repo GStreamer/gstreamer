@@ -78,11 +78,12 @@ typedef struct _GstRTSPStream GstRTSPStream;
 struct _GstRTSPStream {
   gint          id;
 
-  GstRTSPSrc   *parent;
+  GstRTSPSrc   *parent; /* parent, no extra ref to parent is taken */
 
   /* pad we expose or NULL when it does not have an actual pad */
   GstPad       *srcpad;
   GstFlowReturn last_ret;
+  gboolean      added;
 
   /* for interleaved mode */
   gint          channel[2];
@@ -124,6 +125,7 @@ struct _GstRTSPSrc {
   gint             numstreams;
   GList           *streams;
   GstStructure    *props;
+  gboolean         need_activate;
 
   /* properties */
   gchar           *location;
@@ -141,8 +143,6 @@ struct _GstRTSPSrc {
   gint             methods;
 
   RTSPConnection  *connection;
-  RTSPMessage     *request;
-  RTSPMessage     *response;
 
   RTSPExtensionCtx *extension;
 };

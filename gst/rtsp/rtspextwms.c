@@ -87,7 +87,7 @@ rtsp_ext_wms_after_send (RTSPExtensionCtx * ctx, RTSPMessage * req,
       gchar *server = NULL;
 
       rtsp_message_get_header (resp, RTSP_HDR_SERVER, &server);
-      if (g_str_has_prefix (server, SERVER_PREFIX))
+      if (server && g_str_has_prefix (server, SERVER_PREFIX))
         rext->active = TRUE;
       else
         rext->active = FALSE;
@@ -152,9 +152,13 @@ rtsp_ext_wms_configure_stream (RTSPExtensionCtx * ctx, GstRTSPStream * stream)
   s = gst_caps_get_structure (stream->caps, 0);
   encoding = gst_structure_get_string (s, "encoding-name");
 
+  if (!encoding)
+    return TRUE;
+
   GST_DEBUG_OBJECT (src, "%" GST_PTR_FORMAT " encoding-name: %s", stream->caps,
       encoding);
 
+  /* rtx streams do not need to be configured */
   if (!strcmp (encoding, "x-wms-rtx"))
     return FALSE;
 

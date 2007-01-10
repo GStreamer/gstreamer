@@ -82,27 +82,53 @@ typedef struct _RTSPMessage
 
 } RTSPMessage;
 
-RTSPResult      rtsp_message_new_request        (RTSPMessage **msg, RTSPMethod method, gchar *uri);
-RTSPResult      rtsp_message_init_request       (RTSPMessage *msg, RTSPMethod method, gchar *uri);
+RTSPResult      rtsp_message_new                (RTSPMessage **msg);
+RTSPResult      rtsp_message_init               (RTSPMessage *msg);
 
-RTSPResult      rtsp_message_new_response       (RTSPMessage **msg, RTSPStatusCode code, gchar *reason, 
-                                                 RTSPMessage *request);
-RTSPResult      rtsp_message_init_response      (RTSPMessage *msg, RTSPStatusCode code, gchar *reason, 
-                                                 RTSPMessage *request);
-RTSPResult      rtsp_message_init_data          (RTSPMessage *msg, gint channel);
+RTSPResult      rtsp_message_new_request        (RTSPMessage **msg,
+                                                 RTSPMethod method,
+                                                 const gchar *uri);
+RTSPResult      rtsp_message_init_request       (RTSPMessage *msg,
+                                                 RTSPMethod method,
+                                                 const gchar *uri);
+
+RTSPResult      rtsp_message_new_response       (RTSPMessage **msg,
+                                                 RTSPStatusCode code,
+                                                 const gchar *reason,
+                                                 const RTSPMessage *request);
+RTSPResult      rtsp_message_init_response      (RTSPMessage *msg,
+                                                 RTSPStatusCode code,
+                                                 const gchar *reason,
+                                                 const RTSPMessage *request);
+
+RTSPResult      rtsp_message_init_data          (RTSPMessage *msg,
+                                                 gint channel);
 
 RTSPResult      rtsp_message_unset              (RTSPMessage *msg);
 RTSPResult      rtsp_message_free               (RTSPMessage *msg);
 
 
-RTSPResult      rtsp_message_add_header         (RTSPMessage *msg, RTSPHeaderField field, gchar *value);
-RTSPResult      rtsp_message_remove_header      (RTSPMessage *msg, RTSPHeaderField field);
-RTSPResult      rtsp_message_get_header         (RTSPMessage *msg, RTSPHeaderField field, gchar **value);
+RTSPResult      rtsp_message_add_header         (RTSPMessage *msg,
+                                                 RTSPHeaderField field,
+                                                 const gchar *value);
+RTSPResult      rtsp_message_remove_header      (RTSPMessage *msg,
+                                                 RTSPHeaderField field);
+RTSPResult      rtsp_message_get_header         (const RTSPMessage *msg,
+                                                 RTSPHeaderField field,
+                                                 gchar **value);
 
-RTSPResult      rtsp_message_set_body           (RTSPMessage *msg, guint8 *data, guint size);
-RTSPResult      rtsp_message_take_body          (RTSPMessage *msg, guint8 *data, guint size);
-RTSPResult      rtsp_message_get_body           (RTSPMessage *msg, guint8 **data, guint *size);
-RTSPResult      rtsp_message_steal_body         (RTSPMessage *msg, guint8 **data, guint *size);
+RTSPResult      rtsp_message_set_body           (RTSPMessage *msg,
+                                                 const guint8 *data,
+                                                 guint size);
+RTSPResult      rtsp_message_take_body          (RTSPMessage *msg,
+                                                 guint8 *data,
+                                                 guint size);
+RTSPResult      rtsp_message_get_body           (const RTSPMessage *msg,
+                                                 guint8 **data,
+                                                 guint *size);
+RTSPResult      rtsp_message_steal_body         (RTSPMessage *msg,
+                                                 guint8 **data,
+                                                 guint *size);
 
 RTSPResult      rtsp_message_dump               (RTSPMessage *msg);
 

@@ -57,7 +57,7 @@ static const gchar *rtsp_results[] = {
   "Out of memory",
   "Cannot resolve host",
   "Function not implemented",
-  "System error: '%s'",
+  "System error: %s",
   "Parse error",
   "Error on WSAStartup",
   "Windows sockets are not version 0x202",
@@ -142,11 +142,14 @@ static const gchar *rtsp_headers[] = {
   NULL
 };
 
-#define DEF_STATUS(c,t)
+#define DEF_STATUS(c, t) \
+  g_hash_table_insert (statuses, GUINT_TO_POINTER(c), t)
 
-void
+GHashTable *
 rtsp_init_status (void)
 {
+  GHashTable *statuses = g_hash_table_new (NULL, NULL);
+
   DEF_STATUS (RTSP_STS_CONTINUE, "Continue");
   DEF_STATUS (RTSP_STS_OK, "OK");
   DEF_STATUS (RTSP_STS_CREATED, "Created");
@@ -196,6 +199,8 @@ rtsp_init_status (void)
   DEF_STATUS (RTSP_STS_RTSP_VERSION_NOT_SUPPORTED,
       "RTSP Version not supported");
   DEF_STATUS (RTSP_STS_OPTION_NOT_SUPPORTED, "Option not supported");
+
+  return statuses;
 }
 
 gchar *
@@ -229,7 +234,7 @@ rtsp_method_as_text (RTSPMethod method)
 {
   gint i;
 
-  if (method == 0)
+  if (method == RTSP_INVALID)
     return NULL;
 
   i = 0;
@@ -243,19 +248,21 @@ rtsp_method_as_text (RTSPMethod method)
 const gchar *
 rtsp_header_as_text (RTSPHeaderField field)
 {
-  return rtsp_headers[field];
+  if (field == RTSP_HDR_INVALID)
+    return NULL;
+  else
+    return rtsp_headers[field - 1];
 }
 
 const gchar *
 rtsp_status_as_text (RTSPStatusCode code)
 {
-  return NULL;
-}
+  static GHashTable *statuses;
 
-const gchar *
-rtsp_status_to_string (RTSPStatusCode code)
-{
-  return NULL;
+  if (G_UNLIKELY (statuses == NULL))
+    statuses = rtsp_init_status ();
+
+  return g_hash_table_lookup (statuses, GUINT_TO_POINTER (code));
 }
 
 RTSPHeaderField
@@ -265,10 +272,10 @@ rtsp_find_header_field (gchar * header)
 
   for (idx = 0; rtsp_headers[idx]; idx++) {
     if (g_ascii_strcasecmp (rtsp_headers[idx], header) == 0) {
-      return idx;
+      return idx + 1;
     }
   }
-  return -1;
+  return RTSP_HDR_INVALID;
 }
 
 RTSPMethod
@@ -281,5 +288,5 @@ rtsp_find_method (gchar * method)
       return (1 << idx);
     }
   }
-  return -1;
+  return RTSP_INVALID;
 }

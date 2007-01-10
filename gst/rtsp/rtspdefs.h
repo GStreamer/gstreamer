@@ -100,6 +100,8 @@ typedef enum {
 } RTSPMethod;
 
 typedef enum {
+  RTSP_HDR_INVALID,
+
   /*
    * R = Request
    * r = response
@@ -217,7 +219,6 @@ gchar*          rtsp_strresult          (RTSPResult result);
 const gchar*    rtsp_method_as_text     (RTSPMethod method);
 const gchar*    rtsp_header_as_text     (RTSPHeaderField field);
 const gchar*    rtsp_status_as_text     (RTSPStatusCode code);
-const gchar*    rtsp_status_to_string   (RTSPStatusCode code);
 
 RTSPHeaderField rtsp_find_header_field  (gchar *header);
 RTSPMethod      rtsp_find_method        (gchar *method);

@@ -41,10 +41,41 @@
  * SOFTWARE.
  */
 
+#include <string.h>
+
 #include "rtspmessage.h"
 
 RTSPResult
-rtsp_message_new_request (RTSPMessage ** msg, RTSPMethod method, gchar * uri)
+rtsp_message_new (RTSPMessage ** msg)
+{
+  RTSPMessage *newmsg;
+
+  g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
+
+  newmsg = g_new0 (RTSPMessage, 1);
+
+  *msg = newmsg;
+
+  return rtsp_message_init (newmsg);
+}
+
+RTSPResult
+rtsp_message_init (RTSPMessage * msg)
+{
+  g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
+
+  rtsp_message_unset (msg);
+
+  msg->type = RTSP_MESSAGE_INVALID;
+  msg->hdr_fields =
+      g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
+
+  return RTSP_OK;
+}
+
+RTSPResult
+rtsp_message_new_request (RTSPMessage ** msg, RTSPMethod method,
+    const gchar * uri)
 {
   RTSPMessage *newmsg;
 
@@ -59,10 +90,11 @@ rtsp_message_new_request (RTSPMessage ** msg, RTSPMethod method, gchar * uri)
 }
 
 RTSPResult
-rtsp_message_init_request (RTSPMessage * msg, RTSPMethod method, gchar * uri)
+rtsp_message_init_request (RTSPMessage * msg, RTSPMethod method,
+    const gchar * uri)
 {
-  g_return_val_if_fail (uri != NULL, RTSP_EINVAL);
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (uri != NULL, RTSP_EINVAL);
 
   rtsp_message_unset (msg);
 
@@ -77,13 +109,11 @@ rtsp_message_init_request (RTSPMessage * msg, RTSPMethod method, gchar * uri)
 
 RTSPResult
 rtsp_message_new_response (RTSPMessage ** msg, RTSPStatusCode code,
-    gchar * reason, RTSPMessage * request)
+    const gchar * reason, const RTSPMessage * request)
 {
   RTSPMessage *newmsg;
 
-  g_return_val_if_fail (reason != NULL, RTSP_EINVAL);
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
-  g_return_val_if_fail (request != NULL, RTSP_EINVAL);
 
   newmsg = g_new0 (RTSPMessage, 1);
 
@@ -94,12 +124,14 @@ rtsp_message_new_response (RTSPMessage ** msg, RTSPStatusCode code,
 
 RTSPResult
 rtsp_message_init_response (RTSPMessage * msg, RTSPStatusCode code,
-    gchar * reason, RTSPMessage * request)
+    const gchar * reason, const RTSPMessage * request)
 {
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
-  g_return_val_if_fail (reason != NULL, RTSP_EINVAL);
 
   rtsp_message_unset (msg);
+
+  if (reason == NULL)
+    reason = rtsp_status_as_text (code);
 
   msg->type = RTSP_MESSAGE_RESPONSE;
   msg->type_data.response.code = code;
@@ -108,7 +140,25 @@ rtsp_message_init_response (RTSPMessage * msg, RTSPStatusCode code,
       g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
 
   if (request) {
-    /* FIXME copy headers */
+    gchar *header;
+
+    if (rtsp_message_get_header (request, RTSP_HDR_CSEQ, &header) == RTSP_OK) {
+      rtsp_message_add_header (msg, RTSP_HDR_CSEQ, header);
+    }
+
+    if (rtsp_message_get_header (request, RTSP_HDR_SESSION, &header) == RTSP_OK) {
+      char *pos;
+
+      header = g_strdup (header);
+      if ((pos = strchr (header, ';'))) {
+        *pos = '\0';
+      }
+      g_strchomp (header);
+      rtsp_message_add_header (msg, RTSP_HDR_SESSION, header);
+      g_free (header);
+    }
+
+    /* FIXME copy more headers? */
   }
 
   return RTSP_OK;
@@ -132,22 +182,28 @@ rtsp_message_unset (RTSPMessage * msg)
 {
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
-  msg->type = RTSP_MESSAGE_INVALID;
-  msg->type_data.request.method = RTSP_INVALID;
-  g_free (msg->type_data.request.uri);
-  msg->type_data.request.uri = NULL;
-
-  msg->type_data.response.code = RTSP_STS_INVALID;
-  g_free (msg->type_data.response.reason);
-  msg->type_data.response.reason = NULL;
+  switch (msg->type) {
+    case RTSP_MESSAGE_INVALID:
+      break;
+    case RTSP_MESSAGE_REQUEST:
+      g_free (msg->type_data.request.uri);
+      break;
+    case RTSP_MESSAGE_RESPONSE:
+      g_free (msg->type_data.response.reason);
+      break;
+    case RTSP_MESSAGE_DATA:
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
 
   if (msg->hdr_fields != NULL)
     g_hash_table_destroy (msg->hdr_fields);
-  msg->hdr_fields = NULL;
 
   g_free (msg->body);
-  msg->body = NULL;
-  msg->body_size = 0;
+
+  memset (msg, 0, sizeof *msg);
 
   return RTSP_OK;
 }
@@ -168,7 +224,7 @@ rtsp_message_free (RTSPMessage * msg)
 
 RTSPResult
 rtsp_message_add_header (RTSPMessage * msg, RTSPHeaderField field,
-    gchar * value)
+    const gchar * value)
 {
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
   g_return_val_if_fail (value != NULL, RTSP_EINVAL);
@@ -190,25 +246,25 @@ rtsp_message_remove_header (RTSPMessage * msg, RTSPHeaderField field)
 }
 
 RTSPResult
-rtsp_message_get_header (RTSPMessage * msg, RTSPHeaderField field,
+rtsp_message_get_header (const RTSPMessage * msg, RTSPHeaderField field,
     gchar ** value)
 {
   gchar *val;
 
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
-  g_return_val_if_fail (value != NULL, RTSP_EINVAL);
 
   val = g_hash_table_lookup (msg->hdr_fields, GINT_TO_POINTER (field));
   if (val == NULL)
     return RTSP_ENOTIMPL;
 
-  *value = val;
+  if (value)
+    *value = val;
 
   return RTSP_OK;
 }
 
 RTSPResult
-rtsp_message_set_body (RTSPMessage * msg, guint8 * data, guint size)
+rtsp_message_set_body (RTSPMessage * msg, const guint8 * data, guint size)
 {
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
@@ -231,7 +287,7 @@ rtsp_message_take_body (RTSPMessage * msg, guint8 * data, guint size)
 }
 
 RTSPResult
-rtsp_message_get_body (RTSPMessage * msg, guint8 ** data, guint * size)
+rtsp_message_get_body (const RTSPMessage * msg, guint8 ** data, guint * size)
 {
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
   g_return_val_if_fail (data != NULL, RTSP_EINVAL);
@@ -260,7 +316,7 @@ rtsp_message_steal_body (RTSPMessage * msg, guint8 ** data, guint * size)
 }
 
 static void
-dump_mem (guint8 * mem, gint size)
+dump_mem (guint8 * mem, guint size)
 {
   guint i, j;
   GString *string = g_string_sized_new (50);
@@ -309,7 +365,7 @@ rtsp_message_dump (RTSPMessage * msg)
 
   switch (msg->type) {
     case RTSP_MESSAGE_REQUEST:
-      g_print ("request message %p\n", msg);
+      g_print ("RTSP request message %p\n", msg);
       g_print (" request line:\n");
       g_print ("   method: '%s'\n",
           rtsp_method_as_text (msg->type_data.request.method));
@@ -321,7 +377,7 @@ rtsp_message_dump (RTSPMessage * msg)
       dump_mem (data, size);
       break;
     case RTSP_MESSAGE_RESPONSE:
-      g_print ("response message %p\n", msg);
+      g_print ("RTSP response message %p\n", msg);
       g_print (" status line:\n");
       g_print ("   code:   '%d'\n", msg->type_data.response.code);
       g_print ("   reason: '%s'\n", msg->type_data.response.reason);
@@ -332,7 +388,7 @@ rtsp_message_dump (RTSPMessage * msg)
       dump_mem (data, size);
       break;
     case RTSP_MESSAGE_DATA:
-      g_print ("data message %p\n", msg);
+      g_print ("RTSP data message %p\n", msg);
       g_print (" channel: '%d'\n", msg->type_data.data.channel);
       g_print (" size:    '%d'\n", msg->body_size);
       rtsp_message_get_body (msg, &data, &size);
