@@ -152,9 +152,11 @@ _wrap_GstBaseSrc__do_create (PyObject *cls, PyObject *args, PyObject *kwargs)
         return NULL;
 
     klass = g_type_class_ref(pyg_type_from_object(cls));
-    if (GST_BASE_SRC_CLASS(klass)->create)
+    if (GST_BASE_SRC_CLASS(klass)->create) {
+	pyg_begin_allow_threads;
       flow = GST_BASE_SRC_CLASS(klass)->create(GST_BASE_SRC(self->obj), offset, size, &buffer);
-    else {
+      pyg_end_allow_threads;
+    } else {
       PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBaseSrc.set_caps not implemented");
       g_type_class_unref(klass);
       return NULL;
@@ -247,9 +249,11 @@ _wrap_GstBaseSrc__do_get_size (PyObject *cls, PyObject *args, PyObject *kwargs)
 				     kwlist, &PyGstBaseSrc_Type, &self))
 	return NULL;
     klass = g_type_class_ref(pyg_type_from_object(cls));
-    if (GST_BASE_SRC_CLASS(klass)->get_size)
+    if (GST_BASE_SRC_CLASS(klass)->get_size) {
+      pyg_begin_allow_threads;
       ret = GST_BASE_SRC_CLASS(klass)->get_size(GST_BASE_SRC(self->obj), &size);
-    else {
+      pyg_end_allow_threads;
+    } else {
       PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBaseSrc.get_size not implemented");
       g_type_class_unref(klass);
       return NULL;
@@ -338,11 +342,13 @@ _wrap_GstBaseSrc__do_get_times (PyObject *cls, PyObject *args, PyObject *kwargs)
 				     &PyGstBuffer_Type, &py_buffer))
 	return NULL;
     klass = g_type_class_ref(pyg_type_from_object(cls));
-    if (GST_BASE_SRC_CLASS(klass)->get_times)
+    if (GST_BASE_SRC_CLASS(klass)->get_times) {
+	pyg_begin_allow_threads;
 	GST_BASE_SRC_CLASS(klass)->get_times(GST_BASE_SRC(self->obj),
 					     GST_BUFFER(py_buffer->obj),
 					     &start, &end);
-    else {
+	pyg_end_allow_threads;
+    } else {
       PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBaseSrc.get_times not implemented");
       g_type_class_unref(klass);
       return NULL;
@@ -432,10 +438,12 @@ _wrap_GstPushSrc__do_create (PyObject *cls, PyObject *args, PyObject *kwargs)
 				     kwlist, &PyGstPushSrc_Type, &self))
 	return NULL;
     klass = g_type_class_ref(pyg_type_from_object(cls));
-    if (GST_PUSH_SRC_CLASS(klass)->create)
+    if (GST_PUSH_SRC_CLASS(klass)->create) {
+	pyg_begin_allow_threads;
 	flow = GST_PUSH_SRC_CLASS(klass)->create(GST_PUSH_SRC(self->obj),
 						 (GstBuffer**) &buffer);
-    else {
+	pyg_end_allow_threads;
+    } else {
       PyErr_SetString(PyExc_NotImplementedError, "virtual method GstPushSrc.create not implemented");
       g_type_class_unref(klass);
       return NULL;
@@ -537,9 +545,11 @@ _wrap_GstBaseTransform__do_get_unit_size (PyObject *cls, PyObject *args, PyObjec
 				     kwlist, &PyGstBaseTransform_Type, &self, &PyGstCaps_Type, &caps))
 	return NULL;
     klass = g_type_class_ref(pyg_type_from_object(cls));
-    if (GST_BASE_TRANSFORM_CLASS(klass)->get_unit_size)
+    if (GST_BASE_TRANSFORM_CLASS(klass)->get_unit_size) {
+      pyg_begin_allow_threads;
       ret = GST_BASE_TRANSFORM_CLASS(klass)->get_unit_size(GST_BASE_TRANSFORM(self->obj), GST_CAPS(caps->obj), &size);
-    else {
+      pyg_end_allow_threads;
+    } else {
       PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBaseTransform.get_unit_size not implemented");
       g_type_class_unref(klass);
       return NULL;
@@ -628,11 +638,13 @@ _wrap_GstBaseSink__do_get_times (PyObject *cls, PyObject *args, PyObject *kwargs
 				     &PyGstBuffer_Type, &py_buffer))
 	return NULL;
     klass = g_type_class_ref(pyg_type_from_object(cls));
-    if (GST_BASE_SINK_CLASS(klass)->get_times)
+    if (GST_BASE_SINK_CLASS(klass)->get_times) {
+	pyg_begin_allow_threads;
 	GST_BASE_SINK_CLASS(klass)->get_times(GST_BASE_SINK(self->obj),
 					      GST_BUFFER(py_buffer->obj),
 					      &start, &end);
-    else {
+	pyg_end_allow_threads;
+    } else {
       PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBaseSink.get_times not implemented");
       g_type_class_unref(klass);
       return NULL;

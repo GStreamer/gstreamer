@@ -162,7 +162,9 @@ _wrap_GstBin__do_handle_message(PyObject *cls, PyObject *args, PyObject *kwargs)
     klass = g_type_class_ref(pyg_type_from_object(cls));
     if (GST_BIN_CLASS(klass)->handle_message) {
 	    gst_mini_object_ref (message->obj);
+	    pyg_begin_allow_threads;
 	    GST_BIN_CLASS(klass)->handle_message(GST_BIN(self->obj), GST_MESSAGE(message->obj));
+	    pyg_end_allow_threads;
     } else {
         PyErr_SetString(PyExc_NotImplementedError, "virtual method GstBin.handle_message not implemented");
         g_type_class_unref(klass);

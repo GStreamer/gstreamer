@@ -1,3 +1,12 @@
+2007-01-10  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/codegen.py:
+	When chaining up to the parent class methods from python to C, we need
+	to allow threads (i.e. release the GIL).
+	* gst/gstbase.override:
+	* gst/gstbin.override:
+	Modify __do_*() overrides in the same way as above.
+
 2007-01-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/extend/discoverer.py:
