@@ -1,5 +1,8 @@
 2007-01-10  Andy Wingo  <wingo@pobox.com>
 
+	* docs/design/part-negotiation.txt: Fix a typo, add a couple
+	notes.
+	
 	* docs/design/part-negotiation.txt: Update with, um, one way that
 	pull-mode negotiation might work?
 

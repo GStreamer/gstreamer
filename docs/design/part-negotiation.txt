@@ -216,7 +216,7 @@ cases have different negotiation requirements:
    that feeds it. However the caps are not completely specified; at some
    point the user has to intervene to choose the sample rate, at least.
    This can be done externally to gstreamer, as in the jack elements, or
-   internally via a capsnego, as is customary with live sources.
+   internally via a capsfilter, as is customary with live sources.
 
 Given that sinks potentially need the input of sources, as in the RTP
 case and at least as a filter in the synthesis case, there must be a
@@ -238,3 +238,11 @@ produce.
 
 If the sink element could not set caps on its peer(s), it should post an
 error message on the bus indicating that negotiation was not possible.
+
+In this way all src pads are negotiated before data starts flowing, so
+all getrange() requests have a defined meaning for the number of bytes
+being pulled.
+
+(Now we get to questions: set caps on the sink pads at the same time or
+no? Does it matter? Does gst_pad_get_range() set caps? Does
+pull_range()? What happens when caps changes? Can caps change?)
