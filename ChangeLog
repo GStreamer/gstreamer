@@ -1,3 +1,13 @@
+2007-01-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (dynamic_add), (close_pad_link),
+	(is_demuxer_element), (new_caps):
+	* gst/playback/gstplaybasebin.c: (source_new_pad):
+	Fix the case where we try to ref a NULL element when we delay a link
+	because of unfixed caps.
+	Set the state of autoplugged decodebins to PAUSED.
+	RTSP now works in playbin, we can remove it from the blacklist.
+
 2007-01-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/Makefile.am:

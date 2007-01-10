@@ -409,7 +409,7 @@ dynamic_add (GstElement * element, GstPad * pad, GstDecodeBin * decode_bin)
   struct DynFind find_info;
   GList *found;
 
-  g_return_if_fail (element != NULL || pad != NULL);
+  g_return_if_fail (element != NULL);
 
   /* do a search that this entry doesn't already exist */
   find_info.elem = element;
@@ -421,25 +421,21 @@ dynamic_add (GstElement * element, GstPad * pad, GstDecodeBin * decode_bin)
 
   /* take refs */
   dyn = g_new0 (GstDynamic, 1);
-  dyn->element = element;
-  dyn->pad = pad;
+  dyn->element = gst_object_ref (element);
   dyn->decode_bin = gst_object_ref (decode_bin);
-  if (element) {
+  if (pad) {
+    dyn->pad = gst_object_ref (pad);
+    GST_DEBUG_OBJECT (decode_bin, "dynamic create for pad %" GST_PTR_FORMAT,
+        pad);
+    dyn->caps_sig_id = g_signal_connect (G_OBJECT (pad), "notify::caps",
+        G_CALLBACK (new_caps), dyn);
+  } else {
     GST_DEBUG_OBJECT (decode_bin, "dynamic create for element %"
         GST_PTR_FORMAT, element);
-
-    gst_object_ref (element);
     dyn->np_sig_id = g_signal_connect (G_OBJECT (element), "pad-added",
         G_CALLBACK (new_pad), dyn);
     dyn->nmp_sig_id = g_signal_connect (G_OBJECT (element), "no-more-pads",
         G_CALLBACK (no_more_pads), dyn);
-  } else {
-    GST_DEBUG_OBJECT (decode_bin, "dynamic create for pad %" GST_PTR_FORMAT,
-        pad);
-
-    gst_object_ref (pad);
-    dyn->caps_sig_id = g_signal_connect (G_OBJECT (pad), "notify::caps",
-        G_CALLBACK (new_caps), dyn);
   }
 
   /* and add this element to the dynamic elements */
@@ -794,7 +790,7 @@ many_types:
 setup_caps_delay:
   {
     GST_LOG_OBJECT (pad, "setting up a delayed link");
-    dynamic_add (NULL, pad, decode_bin);
+    dynamic_add (element, pad, decode_bin);
     return;
   }
 }
@@ -814,7 +810,7 @@ is_demuxer_element (GstElement * srcelement)
   klass = gst_element_factory_get_klass (srcfactory);
 
   /* Can't be a demuxer unless it has Demux in the klass name */
-  if (!strstr (klass, "Demux"))
+  if (klass == NULL || !strstr (klass, "Demux"))
     return FALSE;
 
   /* Walk the src pad templates and count how many the element
@@ -1311,7 +1307,7 @@ no_more_pads (GstElement * element, GstDynamic * dynamic)
 static void
 new_caps (GstPad * pad, GParamSpec * unused, GstDynamic * dynamic)
 {
-  GST_DEBUG_OBJECT (dynamic->decode_bin, "delayed link triggered\n");
+  GST_DEBUG_OBJECT (dynamic->decode_bin, "delayed link triggered");
 
   new_pad (dynamic->element, pad, dynamic);
 

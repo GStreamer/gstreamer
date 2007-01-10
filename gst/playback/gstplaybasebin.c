@@ -1451,7 +1451,7 @@ static const gchar *stream_uris[] = { "http://", "mms://", "mmsh://",
 };
 
 /* blacklisted URIs, we know they will always fail. */
-static const gchar *blacklisted_uris[] = { "rtsp://", NULL };
+static const gchar *blacklisted_uris[] = { NULL };
 
 /* mime types that we don't consider to be media types */
 static const gchar *no_media_mimes[] = {
@@ -1579,6 +1579,8 @@ source_new_pad (GstElement * element, GstPad * pad, GstPlayBaseBin * bin)
   /* and link to decoder */
   if (!gst_element_link (bin->source, decoder))
     goto could_not_link;
+
+  gst_element_set_state (decoder, GST_STATE_PAUSED);
 
   return;
 
