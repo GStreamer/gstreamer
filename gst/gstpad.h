@@ -825,7 +825,7 @@ GstCaps *		gst_pad_peer_get_caps			(GstPad * pad);
 gboolean		gst_pad_peer_accept_caps		(GstPad * pad, GstCaps *caps);
 
 /* capsnego for connected pads */
-GstCaps *		gst_pad_get_allowed_caps		(GstPad * srcpad);
+GstCaps *		gst_pad_get_allowed_caps		(GstPad * pad);
 GstCaps *		gst_pad_get_negotiated_caps		(GstPad * pad);
 
 /* data passing functions to peer */

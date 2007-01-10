@@ -1,10 +1,24 @@
 Negotiation
 -----------
 
-Negotiation happens when elements want to push buffers and need to decide
-on the format. This is called downstream negotiation because the upstream
-element decides the format for the downstream element. This is the most
-common case.
+Capabilities negotiation is the process of deciding on an adequate
+format for dataflow within a GStreamer pipeline. Ideally, negotiation
+(also known as "capsnego") transfers information from those parts of the
+pipeline that have information to those parts of the pipeline that are
+flexible, constrained by those parts of the pipeline that are not
+flexible.
+
+GStreamer's two scheduling modes, push mode and pull mode, lend
+themselves to different mechanisms to acheive this goal. As it is more
+common we describe push mode negotiation first.
+
+Push-mode negotiation
+---------------------
+
+Pussh-mode negotiation happens when elements want to push buffers and
+need to decide on the format. This is called downstream negotiation
+because the upstream element decides the format for the downstream
+element. This is the most common case.
 
 Negotiation can also happen when a downstream element wants to receive 
 another data format from an upstream element. This is called upstream
@@ -152,4 +166,75 @@ videotestsrc ! queue ! xvimagesink
   - queue contains buffers with different types.
 
    
+Pull-mode negotiation
+---------------------
 
+A pipeline in pull mode has different negotiation needs than one
+activated in push mode. Push mode is optimized for two use cases:
+
+ * Playback of media files, in which the demuxers and the decoders are
+   the points from which format information should disseminate to the
+   rest of the pipeline; and
+
+ * Recording from live sources, in which users are accustomed to putting
+   a capsfilter directly after the source element; thus the caps
+   information flow proceeds from the user, through the potential caps
+   of the source, to the sinks of the pipeline.
+
+In contrast, pull mode has other typical use cases:
+
+ * Playback from a lossy source, such as RTP, in which more knowledge
+   about the latency of the pipeline can increase quality; or
+
+ * Audio synthesis, in which audio APIs are tuned to producing only the
+   necessary number of samples, typically driven by a hardware interrupt
+   to fill a DMA buffer or a Jack[0] port buffer.
+
+ * Low-latency effects processing, whereby filters should be applied as
+   data is transferred from a ring buffer to a sink instead of
+   beforehand. For example, instead of using the internal alsasink
+   ringbuffer thread in push-mode wavsrc ! volume ! alsasink, placing
+   the volume inside the sound card writer thread via wavsrc !
+   audioringbuffer ! volume ! alsasink.
+
+[0] http://jackit.sf.net
+
+The problem with push mode is that the sink has to know the format in
+order to know how many bytes to pull via gst_pad_pull_range(). This
+means that before pulling, the sink must initiate negotation to decide
+on a format.
+
+Recalling the principles of capsnego, whereby information must flow from
+those that have it to those that do not, we see that the two named use
+cases have different negotiation requirements:
+
+ * RTP and low-latency playback are both like the normal playback case,
+   in which information flows downstream.
+
+ * In audio synthesis, the part of the pipeline that has the most
+   information is the sink, constrained by the capabilities of the graph
+   that feeds it. However the caps are not completely specified; at some
+   point the user has to intervene to choose the sample rate, at least.
+   This can be done externally to gstreamer, as in the jack elements, or
+   internally via a capsnego, as is customary with live sources.
+
+Given that sinks potentially need the input of sources, as in the RTP
+case and at least as a filter in the synthesis case, there must be a
+negotiation phase before the pull thread is activated.
+
+[ok at this point i'm a bit at a loss about how it should go]
+
+This negotiation phase is initiated by the sink, after it succeeds in
+calling gst_pad_activate_pull(), but before it spawns a thread to start
+pulling. The sink will call gst_pad_get_allowed_caps() on the its sink
+pad and fixate if necessary to determine the flow caps. It then calls
+gst_pad_set_caps on its sink pad's peer, to configure the upstream
+elements.
+
+A typical element will implement a setcaps() function on its src pads
+that proxies the setcaps() to all peers of its sink pads. This way, when
+getrange() is called on a pad, it knows what format it is being asked to
+produce.
+
+If the sink element could not set caps on its peer(s), it should post an
+error message on the bus indicating that negotiation was not possible.

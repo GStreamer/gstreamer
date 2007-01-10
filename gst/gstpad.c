@@ -2475,40 +2475,41 @@ gst_pad_get_peer (GstPad * pad)
 
 /**
  * gst_pad_get_allowed_caps:
- * @srcpad: a #GstPad, it must a a source pad.
+ * @pad: a #GstPad.
  *
  * Gets the capabilities of the allowed media types that can flow through
- * @srcpad and its peer. The pad must be a source pad.
- * The caller must free the resulting caps.
+ * @pad and its peer.
  *
- * Returns: the allowed #GstCaps of the pad link.  Free the caps when
- * you no longer need it. This function returns NULL when the @srcpad has no
- * peer.
+ * The allowed capabilities is calculated as the intersection of the results of
+ * calling gst_pad_get_caps() on @pad and its peer. The caller owns a reference
+ * on the resulting caps.
+ *
+ * Returns: the allowed #GstCaps of the pad link. Unref the caps when you no
+ * longer need it. This function returns NULL when @pad has no peer.
  *
  * MT safe.
  */
 GstCaps *
-gst_pad_get_allowed_caps (GstPad * srcpad)
+gst_pad_get_allowed_caps (GstPad * pad)
 {
   GstCaps *mycaps;
   GstCaps *caps;
   GstCaps *peercaps;
   GstPad *peer;
 
-  g_return_val_if_fail (GST_IS_PAD (srcpad), NULL);
-  g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  GST_OBJECT_LOCK (srcpad);
+  GST_OBJECT_LOCK (pad);
 
-  peer = GST_PAD_PEER (srcpad);
+  peer = GST_PAD_PEER (pad);
   if (G_UNLIKELY (peer == NULL))
     goto no_peer;
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_PROPERTIES, srcpad, "getting allowed caps");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PROPERTIES, pad, "getting allowed caps");
 
   gst_object_ref (peer);
-  GST_OBJECT_UNLOCK (srcpad);
-  mycaps = gst_pad_get_caps (srcpad);
+  GST_OBJECT_UNLOCK (pad);
+  mycaps = gst_pad_get_caps (pad);
 
   peercaps = gst_pad_get_caps (peer);
   gst_object_unref (peer);
@@ -2517,15 +2518,15 @@ gst_pad_get_allowed_caps (GstPad * srcpad)
   gst_caps_unref (peercaps);
   gst_caps_unref (mycaps);
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, srcpad, "allowed caps %" GST_PTR_FORMAT,
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "allowed caps %" GST_PTR_FORMAT,
       caps);
 
   return caps;
 
 no_peer:
   {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_PROPERTIES, srcpad, "no peer");
-    GST_OBJECT_UNLOCK (srcpad);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PROPERTIES, pad, "no peer");
+    GST_OBJECT_UNLOCK (pad);
 
     return NULL;
   }

@@ -1,3 +1,13 @@
+2007-01-10  Andy Wingo  <wingo@pobox.com>
+
+	* docs/design/part-negotiation.txt: Update with, um, one way that
+	pull-mode negotiation might work?
+
+	* gst/gstpad.h: 
+	* gst/gstpad.c (gst_pad_get_allowed_caps): Remove the restriction
+	that the pad must be a src pad; makes sense to call it the other
+	way in pull mode, and the logic is symmetric anyway.
+
 2007-01-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gstfilesink.c:
