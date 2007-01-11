@@ -1,5 +1,14 @@
 2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_mode_get_type),
+	(gst_wavpack_enc_correction_mode_get_type),
+	(gst_wavpack_enc_joint_stereo_mode_get_type):
+	  Minor clean-up: use enum values instead of hardcoded constants (#395536).
+
+2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/mve/gstmvedemux.c: (gst_mve_demux_get_src_query_types),
 	(gst_mve_demux_handle_src_query), (gst_mve_demux_handle_src_event),
 	(gst_mve_add_stream):

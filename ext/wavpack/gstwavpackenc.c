@@ -168,13 +168,13 @@ gst_wavpack_enc_mode_get_type (void)
 #if 0
       /* Very Fast Compression is not supported yet, but will be supported
        * in future wavpack versions */
-      {0, "Very Fast Compression", "veryfast"},
+      {GST_WAVPACK_ENC_MODE_VERY_FAST, "Very Fast Compression", "veryfast"},
 #endif
-      {1, "Fast Compression", "fast"},
-      {2, "Normal Compression", "normal"},
-      {3, "High Compression", "high"},
+      {GST_WAVPACK_ENC_MODE_FAST, "Fast Compression", "fast"},
+      {GST_WAVPACK_ENC_MODE_DEFAULT, "Normal Compression", "normal"},
+      {GST_WAVPACK_ENC_MODE_HIGH, "High Compression", "high"},
 #ifndef WAVPACK_OLD_API
-      {4, "Very High Compression", "veryhigh"},
+      {GST_WAVPACK_ENC_MODE_VERY_HIGH, "Very High Compression", "veryhigh"},
 #endif
       {0, NULL, NULL}
     };
@@ -199,9 +199,10 @@ gst_wavpack_enc_correction_mode_get_type (void)
 
   if (qtype == 0) {
     static const GEnumValue values[] = {
-      {0, "Create no correction file", "off"},
-      {1, "Create correction file", "on"},
-      {2, "Create optimized correction file", "optimized"},
+      {GST_WAVPACK_CORRECTION_MODE_OFF, "Create no correction file", "off"},
+      {GST_WAVPACK_CORRECTION_MODE_ON, "Create correction file", "on"},
+      {GST_WAVPACK_CORRECTION_MODE_OPTIMIZED,
+          "Create optimized correction file", "optimized"},
       {0, NULL, NULL}
     };
 
@@ -225,9 +226,9 @@ gst_wavpack_enc_joint_stereo_mode_get_type (void)
 
   if (qtype == 0) {
     static const GEnumValue values[] = {
-      {0, "auto", "auto"},
-      {1, "left/right", "leftright"},
-      {2, "mid/side", "midside"},
+      {GST_WAVPACK_JS_MODE_AUTO, "auto", "auto"},
+      {GST_WAVPACK_JS_MODE_LEFT_RIGHT, "left/right", "leftright"},
+      {GST_WAVPACK_JS_MODE_MID_SIDE, "mid/side", "midside"},
       {0, NULL, NULL}
     };
 
