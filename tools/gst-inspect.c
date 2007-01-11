@@ -1104,13 +1104,149 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   return 0;
 }
 
+
+static void
+print_plugin_automatic_install_info_codecs (GstElementFactory * factory)
+{
+  GstPadDirection direction;
+  const gchar *type_name;
+  const gchar *klass;
+  const GList *static_templates, *l;
+  GstCaps *caps = NULL;
+  guint i, num;
+
+  klass = gst_element_factory_get_klass (factory);
+  g_return_if_fail (klass != NULL);
+
+  if (strstr (klass, "Codec/") == NULL)
+    return;
+
+  if (strstr (klass, "Demuxer") ||
+      strstr (klass, "Decoder") ||
+      strstr (klass, "Depay") || strstr (klass, "Parser")) {
+    type_name = "decoder";
+    direction = GST_PAD_SINK;
+  } else if (strstr (klass, "Muxer") ||
+      strstr (klass, "Encoder") || strstr (klass, "Pay")) {
+    type_name = "encoder";
+    direction = GST_PAD_SRC;
+  } else {
+    g_printerr ("Unhandled Codec klass: %s\n", klass);
+    return;
+  }
+
+  /* decoder/demuxer sink pads should always be static and there should only
+   * be one, the same applies to encoders/muxers and source pads */
+  static_templates = gst_element_factory_get_static_pad_templates (factory);
+  for (l = static_templates; l != NULL; l = l->next) {
+    GstStaticPadTemplate *tmpl = NULL;
+
+    tmpl = (GstStaticPadTemplate *) l->data;
+    if (tmpl->direction == direction) {
+      caps = gst_static_pad_template_get_caps (tmpl);
+      break;
+    }
+  }
+
+  if (caps == NULL) {
+    g_printerr ("Couldn't find static pad template for %s '%s'\n",
+        type_name, GST_PLUGIN_FEATURE_NAME (factory));
+    return;
+  }
+
+  caps = gst_caps_make_writable (caps);
+  num = gst_caps_get_size (caps);
+  for (i = 0; i < num; ++i) {
+    GstStructure *s;
+    gchar *s_str;
+
+    s = gst_caps_get_structure (caps, i);
+    /* remove fields that are almost always just MIN-MAX of some sort
+     * in order to make the caps look less messy */
+    gst_structure_remove_field (s, "pixel-aspect-ratio");
+    gst_structure_remove_field (s, "framerate");
+    gst_structure_remove_field (s, "channels");
+    gst_structure_remove_field (s, "width");
+    gst_structure_remove_field (s, "height");
+    gst_structure_remove_field (s, "rate");
+    gst_structure_remove_field (s, "depth");
+    gst_structure_remove_field (s, "clock-rate");
+    s_str = gst_structure_to_string (s);
+    g_print ("%s-%s\n", type_name, s_str);
+    g_free (s_str);
+  }
+  gst_caps_unref (caps);
+}
+
+static void
+print_plugin_automatic_install_info_protocols (GstElementFactory * factory)
+{
+  gchar **protocols, **p;
+
+  protocols = gst_element_factory_get_uri_protocols (factory);
+  if (protocols != NULL && *protocols != NULL) {
+    switch (gst_element_factory_get_uri_type (factory)) {
+      case GST_URI_SINK:
+        for (p = protocols; *p != NULL; ++p)
+          g_print ("urisink-%s\n", *p);
+        break;
+      case GST_URI_SRC:
+        for (p = protocols; *p != NULL; ++p)
+          g_print ("urisource-%s\n", *p);
+        break;
+      default:
+        break;
+    }
+    g_strfreev (protocols);
+  }
+}
+
+static void
+print_plugin_automatic_install_info (GstPlugin * plugin)
+{
+  const gchar *plugin_name;
+  GList *features, *l;
+
+  plugin_name = gst_plugin_get_name (plugin);
+
+  /* not interested in typefind factories, only element factories */
+  features = gst_registry_get_feature_list (gst_registry_get_default (),
+      GST_TYPE_ELEMENT_FACTORY);
+
+  for (l = features; l != NULL; l = l->next) {
+    GstPluginFeature *feature;
+
+    feature = GST_PLUGIN_FEATURE (l->data);
+
+    /* only interested in the ones that are in the plugin we just loaded */
+    if (g_str_equal (plugin_name, feature->plugin_name)) {
+      GstElementFactory *factory;
+
+      g_print ("element-%s\n", gst_plugin_feature_get_name (feature));
+
+      factory = GST_ELEMENT_FACTORY (feature);
+      print_plugin_automatic_install_info_protocols (factory);
+      print_plugin_automatic_install_info_codecs (factory);
+    }
+  }
+
+  g_list_foreach (features, (GFunc) gst_object_unref, NULL);
+  g_list_free (features);
+}
+
 int
 main (int argc, char *argv[])
 {
   gboolean print_all = FALSE;
+  gboolean print_aii = FALSE;
   GOptionEntry options[] = {
     {"print-all", 'a', 0, G_OPTION_ARG_NONE, &print_all,
         N_("Print all elements"), NULL},
+    {"print-plugin-auto-install-info", '\0', 0, G_OPTION_ARG_NONE, &print_aii,
+        N_("Print a machine-parsable list of features the specified plugin "
+              "provides.\n                                       "
+              "Useful in connection with external automatic plugin "
+              "installation mechanisms"), NULL},
     GST_TOOLS_GOPTION_VERSION,
     {NULL}
   };
@@ -1167,8 +1303,12 @@ main (int argc, char *argv[])
 
       /* if there is such a plugin, print out info */
       if (plugin) {
-        print_plugin_info (plugin);
-        print_plugin_features (plugin);
+        if (print_aii) {
+          print_plugin_automatic_install_info (plugin);
+        } else {
+          print_plugin_info (plugin);
+          print_plugin_features (plugin);
+        }
       } else {
         GError *error = NULL;
 
@@ -1176,8 +1316,12 @@ main (int argc, char *argv[])
           plugin = gst_plugin_load_file (arg, &error);
 
           if (plugin) {
-            print_plugin_info (plugin);
-            print_plugin_features (plugin);
+            if (print_aii) {
+              print_plugin_automatic_install_info (plugin);
+            } else {
+              print_plugin_info (plugin);
+              print_plugin_features (plugin);
+            }
           } else {
             g_print (_("Could not load plugin file: %s\n"), error->message);
             g_error_free (error);

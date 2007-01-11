@@ -1,3 +1,14 @@
+2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/gst-inspect.c:
+	(print_plugin_automatic_install_info_codecs),
+	(print_plugin_automatic_install_info_protocols),
+	(print_plugin_automatic_install_info), (main):
+	Add --print-plugin-auto-install-info option to gst-inspect, so we can
+	introspect plugin files and get machine-parsable output that corresponds
+	to the last bit of the missing-plugin installer string (small gotcha:
+	doesn't take into account ranks).
+
 2007-01-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
