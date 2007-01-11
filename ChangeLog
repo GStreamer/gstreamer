@@ -1,5 +1,14 @@
 2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/mve/gstmvedemux.c: (gst_mve_demux_get_src_query_types),
+	(gst_mve_demux_handle_src_query), (gst_mve_demux_handle_src_event),
+	(gst_mve_add_stream):
+	  Support SEEKING query (bad news now delivered properly!); add event
+	  function to source pads to make sure seeks aren't propagated
+	  upstream, even if they aren't handled.
+
+2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Jens Granseuer  <jensgr at gmx net>
 
 	* configure.ac:

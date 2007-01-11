@@ -147,6 +147,7 @@ gst_mve_demux_get_src_query_types (GstPad * pad)
 {
   static const GstQueryType src_types[] = {
     GST_QUERY_POSITION,
+    GST_QUERY_SEEKING,
     0
   };
 
@@ -177,6 +178,21 @@ gst_mve_demux_handle_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_SEEKING:{
+      GstFormat format;
+
+      gst_query_parse_seeking (query, &format, NULL, NULL, NULL);
+      if (format == GST_FORMAT_TIME) {
+        gst_query_set_seeking (query, GST_FORMAT_TIME, FALSE, 0, -1);
+        res = TRUE;
+      }
+      break;
+    }
+    case GST_QUERY_DURATION:{
+      /* FIXME: really should implement/estimate this somehow */
+      res = FALSE;
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, query);
       break;
@@ -184,6 +200,25 @@ gst_mve_demux_handle_src_query (GstPad * pad, GstQuery * query)
 
   return res;
 }
+
+static gboolean
+gst_mve_demux_handle_src_event (GstPad * pad, GstEvent * event)
+{
+  gboolean res;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      GST_DEBUG ("seeking not supported");
+      res = FALSE;
+      break;
+    default:
+      res = gst_pad_event_default (pad, event);
+      break;
+  }
+
+  return res;
+}
+
 
 static GstStateChangeReturn
 gst_mve_demux_change_state (GstElement * element, GstStateChange transition)
@@ -230,6 +265,8 @@ gst_mve_add_stream (GstMveDemux * mve, GstMveDemuxStream * stream,
         GST_DEBUG_FUNCPTR (gst_mve_demux_get_src_query_types));
     gst_pad_set_query_function (stream->pad,
         GST_DEBUG_FUNCPTR (gst_mve_demux_handle_src_query));
+    gst_pad_set_event_function (stream->pad,
+        GST_DEBUG_FUNCPTR (gst_mve_demux_handle_src_event));
     gst_pad_set_element_private (stream->pad, stream);
 
     GST_DEBUG_OBJECT (mve, "adding pad %s", GST_PAD_NAME (stream->pad));
