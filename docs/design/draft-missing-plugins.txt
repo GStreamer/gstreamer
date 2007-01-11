@@ -1,6 +1,9 @@
 What to do when a plugin is missing
 ===================================
 
+The mechanism and API described in this document requires GStreamer core and
+gst-plugins-base versions >= 0.10.12.
+
 We only discuss playback pipelines for now.
 
 A three step process:
@@ -111,6 +114,9 @@ A three step process:
  messages on the GstBus and can decide to trigger the download procedure. It
  does that as described in the following section.
 
+ "missing-plugin" element messages can be identified using the function
+ gst_is_missing_plugin_message().
+
 
 3) Plugin download stage
 
@@ -119,14 +125,17 @@ A three step process:
     - made a decision that additional plugins should be installed
 
   It will call a GStreamer utility function to convert each "missing-plugin"
-  message into an identifier string describing the missing capability.
+  message into an identifier string describing the missing capability. This is
+  done using the function gst_missing_plugin_message_get_installer_detail().
 
-  The application will then pass these strings to an external libgimmecodec
-  to initiate the download. Error handling and progress reporting etc. will
-  all be handled using libgimmecodec's API.
+  The application will then pass these strings to the external libgimme-codec
+  library [0] to initiate the download. Error handling and progress reporting
+  etc. will all be handled using libgimmecodec's API.
 
   When new plugins have been installed, the application will have to initiate
-  a re-scan of the GStreamer plugin registry.
+  a re-scan of the GStreamer plugin registry using gst_update_registry().
+
+  [0] http://desrt.mcmaster.ca/code/libgimme-codec/
 
 
 4) Format of the (UTF-8) string ID passed to the external installer system
@@ -174,10 +183,50 @@ A three step process:
   separated by '|' symbols and either ignore them, warn the user, or error
   out when encountering them.
  
-  The human-readable description string will come from a new utility
-  library that yet to be added to gst-plugins-base and which can then also
-  be used by demuxers to find out the codec names for taglists from given
+  The human-readable description string is provided by the libgstbaseutils
+  library that can be found in gst-plugins-base versions >= 0.10.12 and can
+  also be used by demuxers to find out the codec names for taglists from given
   caps in a unified and consistent way.
 
-  There will also be API for applications to create these detail strings from
-  a given missing-plugin message.
+  Applications can create these detail strings using the function
+  gst_missing_plugin_message_get_installer_detail() on a given missing-plugin
+  message.
+
+
+5) Using missing-plugin messages for error reporting:
+
+  Missing-plugin messages are also useful for error reporting purposes, either
+  in the case where the application does not support libgimme-codec, or the
+  external installer is not available or not able to install the required
+  plugins.
+
+  When creating error messages, applications may use the function
+  gst_missing_plugin_message_get_description() to obtain a possibly translated
+  description from each missing-plugin message (e.g. "Matroska demuxer" or
+  "Theora video depayloader"). This can be used to report to the user exactly
+  what it is that is missing.
+
+
+6) Notes for packagers
+
+ - An easy way to introspect plugin .so files is:
+
+     $ gst-inspect --print-plugin-auto-install-info /path/to/libgstfoo.so
+
+   The output will be something like:
+
+     decoder-audio/x-vorbis
+     element-vorbisdec
+     element-vorbisenc
+     element-vorbisparse
+     element-vorbistag
+     encoder-audio/x-vorbis
+
+ - when introspecting, keep in mind that there are GStreamer plugins that
+   in turn load external plugins. Examples of these are pitfdll, ladspa, or
+   the GStreamer libvisual plugin. Those plugins will only announce elements
+   for the currently installed external plugins at the time of introspection!
+   With the exception of pitfdll, this is not really relevant to the playback
+   case, but may become an issue in future when applications like buzztard,
+   jokosher or pitivi start requestion elements by name, for example ladspa
+   effect elements or so.

@@ -1,5 +1,13 @@
 2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/random/draft-missing-plugins.txt:
+	  Some additions: mention new API that is supposed to be used at the
+	  various stages; short blob about new gst-inspect introspection
+	  option; mention potential future problem with plugins that have
+	  a dynamic list of elements (such as ladspa, pitfdll, libvisual).
+
+2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tools/gst-inspect.c:
 	(print_plugin_automatic_install_info_codecs),
 	(print_plugin_automatic_install_info_protocols),
