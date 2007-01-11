@@ -1728,7 +1728,7 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_from_string ("application/gxf");
   } else if (!strcmp (format_name, "yuv4mpegpipe")) {
     caps = gst_caps_new_simple ("application/x-yuv4mpeg",
-        "y4mversion", G_TYPE_INT, 1, NULL);
+        "y4mversion", G_TYPE_INT, 2, NULL);
   } else {
     gchar *name;
 

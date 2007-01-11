@@ -1,3 +1,11 @@
+2007-01-11  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Mark Nauwelaerts <manauw@skynet.be>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_formatid_to_caps):
+	Internally, ffmpeg (demuxer) expects YUV4MPEG version 2, this patch sets
+	the caps correctly. Fixes #394071.
+
 2007-01-10  Edward Hervey  <edward@fluendo.com>
 
 	Patch by: Mark Nauwelaerts <manauw@skynet.be>
