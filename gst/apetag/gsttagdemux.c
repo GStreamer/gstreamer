@@ -1197,6 +1197,8 @@ gst_tag_demux_read_range (GstTagDemux * demux,
 
     /* this should only happen in streaming mode */
     g_assert (*buffer != NULL);
+
+    gst_buffer_set_caps (*buffer, demux->priv->src_caps);
   }
 
   return ret;

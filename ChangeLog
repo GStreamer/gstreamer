@@ -1,3 +1,10 @@
+2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_read_range):
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_read_range):
+	  Set correct caps on outgoing pulled buffers, or things blow up
+	  after recent core changes.
+
 2007-01-11  Wim Taymans  <wim@fluendo.com>
 
 	Based on patch by: Jonas Holmberg <jonas dot holmberg at axis dot com>

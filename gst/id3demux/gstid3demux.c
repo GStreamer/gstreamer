@@ -977,6 +977,8 @@ gst_id3demux_read_range (GstID3Demux * id3demux,
 
     /* this should only happen in streaming mode */
     g_assert (*buffer != NULL);
+
+    gst_buffer_set_caps (*buffer, id3demux->src_caps);
   }
 
   return ret;
