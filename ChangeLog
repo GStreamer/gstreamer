@@ -1,3 +1,17 @@
+2007-01-11  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gst.defs:
+	Add declaration of gst_object_set_property so we can use our MT-safe
+	version of set_property().
+	* gst/gstobject.override:
+	Implement a MT-safe version of g_object_set_property for GstObject.
+	The problem is that currently g_object_set_property is called in
+	pygobject with the GIL lock taken. This can cause deadlocks.
+	Remove this hack once bug #395048 is fixed in pygobject and we depend on
+	the fixed version.
+	Thanks to Lord Wingo of the "realm.py haters club" for proposing the
+	idea.
+
 2007-01-10  Edward Hervey  <edward@fluendo.com>
 
 	* codegen/codegen.py:

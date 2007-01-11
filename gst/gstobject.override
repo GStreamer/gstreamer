@@ -70,3 +70,83 @@ _wrap_gst_object_tp_str (PyObject * self)
   g_free (path);
   return ret;
 }
+%%
+override gst_object_set_property args
+
+/*
+ * REMOVE THE FOLLOWING CODE, once pygobject has fixed the issue of not
+ * releasing the GIL when calling g_object_set_property.
+ * 
+ * See bug #395048 : set_property() doesn't release the GIL
+ **/
+
+static gboolean
+set_property_from_pspec(GObject *obj,
+			char *attr_name,
+			GParamSpec *pspec,
+			PyObject *pvalue)
+{
+    GValue value = { 0, };
+
+    if (pspec->flags & G_PARAM_CONSTRUCT_ONLY) {
+	PyErr_Format(PyExc_TypeError,
+		     "property '%s' can only be set in constructor",
+		     attr_name);
+	return FALSE;
+    }	
+
+    if (!(pspec->flags & G_PARAM_WRITABLE)) {
+	PyErr_Format(PyExc_TypeError,
+		     "property '%s' is not writable", attr_name);
+	return FALSE;
+    }	
+
+    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE(pspec));
+    if (pyg_param_gvalue_from_pyobject(&value, pvalue, pspec) < 0) {
+	PyErr_SetString(PyExc_TypeError,
+			"could not convert argument to correct param type");
+	return FALSE;
+    }
+
+    pyg_begin_allow_threads;
+    g_object_set_property(obj, attr_name, &value);
+    pyg_end_allow_threads;
+
+    g_value_unset(&value);
+    
+    return TRUE;
+}
+
+static PyObject *
+_wrap_gst_object_set_property(PyGObject *self, PyObject *args)
+{
+    gchar *param_name;
+    GParamSpec *pspec;
+    PyObject *pvalue;
+
+    if (!PyArg_ParseTuple(args, "sO:gst.Object.set_property", &param_name,
+			  &pvalue))
+      return NULL;
+    
+    if (!GST_IS_OBJECT (self->obj)) {
+      PyErr_Format (PyExc_TypeError,
+		    "object at %p of type %s is not initialized",
+		    self, self->ob_type->tp_name);
+      return NULL;
+    }
+    
+    pspec = g_object_class_find_property(G_OBJECT_GET_CLASS(self->obj),
+					 param_name);
+    if (!pspec) {
+	PyErr_Format(PyExc_TypeError,
+		     "object of type `%s' does not have property `%s'",
+		     g_type_name(G_OBJECT_TYPE(self->obj)), param_name);
+	return NULL;
+    }
+    
+    if (!set_property_from_pspec(self->obj, param_name, pspec, pvalue))
+	return NULL;
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}

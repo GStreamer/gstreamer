@@ -3269,6 +3269,12 @@
   (return-type "none")
 )
 
+(define-method set_property
+  (of-object "GstObject")
+  (c-name "gst_object_set_property")
+  (return-type "none")
+)
+
 (define-function object_default_deep_notify
   (c-name "gst_object_default_deep_notify")
   (return-type "none")
