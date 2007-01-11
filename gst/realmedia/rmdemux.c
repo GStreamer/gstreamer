@@ -26,9 +26,12 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
+
 #include "rmdemux.h"
 #include "rdtdepay.h"
 #include "rmutils.h"
+#include "rademux.h"
+
 #include <string.h>
 #include <ctype.h>
 #include <zlib.h>
@@ -1405,6 +1408,9 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   rmdemux->n_streams++;
   GST_LOG_OBJECT (rmdemux, "n_streams is now %d", rmdemux->n_streams);
 
+  GST_LOG ("stream->pad = %p, stream_caps = %" GST_PTR_FORMAT, stream->pad,
+      stream_caps);
+
   if (stream->pad && stream_caps) {
 
     GST_LOG_OBJECT (rmdemux, "%d bytes of extra data for stream %s",
@@ -1893,21 +1899,12 @@ gst_rmdemux_descramble_dnet_audio (GstRMDemux * rmdemux,
     GstRMDemuxStream * stream)
 {
   GstBuffer *buf;
-  guint8 *data, *end;
 
   buf = g_ptr_array_index (stream->subpackets, 0);
   g_ptr_array_index (stream->subpackets, 0) = NULL;
   g_ptr_array_set_size (stream->subpackets, 0);
 
-  /* descramble is a bit of a misnomer, it's just byte-order swapped AC3 .. */
-  data = GST_BUFFER_DATA (buf);
-  end = GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
-  while ((data + 1) < end) {
-    /* byte-swap in an alignment-safe way */
-    GST_WRITE_UINT16_BE (data, GST_READ_UINT16_LE (data));
-    data += sizeof (guint16);
-  }
-
+  buf = gst_rm_utils_descramble_dnet_buffer (buf);
   return gst_pad_push (stream->pad, buf);
 }
 
@@ -2037,11 +2034,13 @@ alloc_failed:
   }
 }
 
-gboolean
+static gboolean
 gst_rmdemux_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rmdemux",
-      GST_RANK_PRIMARY, GST_TYPE_RMDEMUX);
+      GST_RANK_PRIMARY, GST_TYPE_RMDEMUX) &&
+      gst_element_register (plugin, "rademux",
+      GST_RANK_SECONDARY, GST_TYPE_REAL_AUDIO_DEMUX);
 }
 
 

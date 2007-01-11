@@ -1,3 +1,14 @@
+2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/realmedia/Makefile.am:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rademux.h:
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_add_stream),
+	(gst_rmdemux_descramble_dnet_audio), (gst_rmdemux_plugin_init):
+	* gst/realmedia/rmutils.c: (gst_rm_utils_descramble_dnet_buffer):
+	* gst/realmedia/rmutils.h:
+	  Add demuxer for RealAudio files (#349779).
+
 2007-01-07  Sébastien Moutte  <sebastien@moutte.net>
 	
 	* Makefile.am:

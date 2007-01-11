@@ -120,3 +120,21 @@ gst_rm_utils_read_tags (const guint8 * data, guint datalen,
   gst_tag_list_free (tags);
   return NULL;
 }
+
+GstBuffer *
+gst_rm_utils_descramble_dnet_buffer (GstBuffer * buf)
+{
+  guint8 *data, *end;
+
+  buf = gst_buffer_make_writable (buf);
+
+  /* dnet = byte-order swapped AC3 */
+  data = GST_BUFFER_DATA (buf);
+  end = GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
+  while ((data + 1) < end) {
+    /* byte-swap in an alignment-safe way */
+    GST_WRITE_UINT16_BE (data, GST_READ_UINT16_LE (data));
+    data += sizeof (guint16);
+  }
+  return buf;
+}
