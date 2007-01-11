@@ -161,9 +161,6 @@ GST_START_TEST (test_get_allowed_caps)
   ASSERT_CRITICAL (gst_pad_get_allowed_caps ((GstPad *) buffer));
   gst_buffer_unref (buffer);
 
-  sink = gst_pad_new ("sink", GST_PAD_SINK);
-  ASSERT_CRITICAL (gst_pad_get_allowed_caps (sink));
-
   src = gst_pad_new ("src", GST_PAD_SRC);
   fail_if (src == NULL);
   caps = gst_pad_get_allowed_caps (src);
@@ -171,6 +168,7 @@ GST_START_TEST (test_get_allowed_caps)
 
   caps = gst_caps_from_string ("foo/bar");
 
+  sink = gst_pad_new ("sink", GST_PAD_SINK);
   gst_pad_set_caps (src, caps);
   gst_pad_set_caps (sink, caps);
   ASSERT_CAPS_REFCOUNT (caps, "caps", 3);
