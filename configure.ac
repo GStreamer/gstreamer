@@ -191,6 +191,23 @@ if test "x$USE_POISONING" = xyes; then
     [Define if we should poison deallocated memory])
 fi
 
+dnl Use binary registry
+AC_ARG_ENABLE(binary-registry,
+  AC_HELP_STRING([--enable-binary-registry],
+    [enable experimental binary registry]),
+  [
+    case "${enableval}" in
+      yes) USE_BINARY_REGISTRY=yes ;;
+      no)  USE_BINARY_REGISTRY=no ;;
+      *)   AC_MSG_ERROR(bad value ${enableval} for --enable-binary-registry) ;;
+    esac
+  ], 
+  [USE_BINARY_REGISTRY=no]) dnl Default value
+if test "x$USE_BINARY_REGISTRY" = xyes; then
+  AC_DEFINE(USE_BINARY_REGISTRY, 1,
+    [Define if we should use binary registry instead xml registry])
+fi
+
 dnl *** checks for platform ***
 
 dnl * hardware/architecture *

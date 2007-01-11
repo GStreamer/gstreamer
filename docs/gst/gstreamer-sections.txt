@@ -1649,6 +1649,8 @@ gst_registry_find_plugin
 gst_registry_find_feature
 gst_registry_lookup_feature
 gst_registry_scan_path
+gst_registry_binary_read_cache
+gst_registry_binary_write_cache
 gst_registry_xml_read_cache
 gst_registry_xml_write_cache
 gst_registry_lookup
@@ -1672,6 +1674,9 @@ GST_IS_REGISTRY_CLASS
 GST_REGISTRY_GET_CLASS
 GST_TYPE_REGISTRY
 <SUBSECTION Private>
+GST_MAGIC_BINARY_REGISTRY_LEN
+GST_MAGIC_BINARY_REGISTRY_STR
+GST_MAGIC_BINARY_VERSION_LEN
 gst_registry_get_type
 </SECTION>
 

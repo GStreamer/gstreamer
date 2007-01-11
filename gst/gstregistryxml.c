@@ -249,7 +249,7 @@ load_feature (xmlTextReaderPtr reader)
   feature_name =
       (gchar *) xmlTextReaderGetAttribute (reader, BAD_CAST "typename");
 
-  GST_DEBUG ("loading feature");
+  GST_LOG ("loading feature");
 
   if (!feature_name)
     return NULL;
@@ -480,10 +480,9 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
  * @registry: a #GstRegistry
  * @location: a filename
  *
- * Read the contents of the XML cache file at location 
- * @location into @registry.
+ * Read the contents of the XML cache file at @location into @registry.
  *
- * Returns: TRUE on success.
+ * Returns: %TRUE on success.
  */
 gboolean
 gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
@@ -573,7 +572,7 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
   seconds = g_timer_elapsed (timer, NULL);
   g_timer_destroy (timer);
 
-  GST_INFO ("loaded %s in %f seconds", location, seconds);
+  GST_INFO ("loaded %s in %lf seconds", location, seconds);
 
   if (mapped)
     g_mapped_file_free (mapped);

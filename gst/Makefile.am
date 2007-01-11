@@ -9,7 +9,7 @@ endif
 if GST_DISABLE_REGISTRY
 GST_REGISTRY_SRC = 
 else
-GST_REGISTRY_SRC = gstregistryxml.c
+GST_REGISTRY_SRC = gstregistryxml.c gstregistrybinary.c
 endif
 
 if GST_DISABLE_PARSE
@@ -210,6 +210,7 @@ noinst_HEADERS = 		\
 	gst-i18n-lib.h		\
 	gst-i18n-app.h		\
 	gstquark.h		\
+	gstregistrybinary.h     \
 	gst_private.h
 
 gstmarshal.h: gstmarshal.list

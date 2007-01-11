@@ -1,3 +1,28 @@
+2007-01-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/Makefile.am:
+	* gst/gstregistry.c: (gst_registry_lookup_feature_locked),
+	(gst_registry_lookup_locked):
+	* gst/gstregistry.h:
+	* gst/gstregistrybinary.c: (gst_registry_binary_write),
+	(gst_registry_binary_initialize_magic),
+	(gst_registry_binary_save_string),
+	(gst_registry_binary_save_pad_template),
+	(gst_registry_binary_save_feature),
+	(gst_registry_binary_save_plugin),
+	(gst_registry_binary_write_cache),
+	(gst_registry_binary_check_magic),
+	(gst_registry_binary_load_pad_template),
+	(gst_registry_binary_load_feature),
+	(gst_registry_binary_load_plugin),
+	(gst_registry_binary_read_cache):
+	* gst/gstregistrybinary.h:
+	* gst/gstregistryxml.c: (load_feature),
+	(gst_registry_xml_read_cache):
+	  commit binary registry (disabled by default, see #359653)
+
 2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/gst/gstpad.c: (test_get_allowed_caps):

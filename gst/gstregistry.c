@@ -684,6 +684,7 @@ gst_registry_lookup_feature_locked (GstRegistry * registry, const char *name)
   if (G_UNLIKELY (name == NULL))
     return NULL;
 
+  /* FIXME: use GTree speed up lookups */
   for (g = registry->features; g; g = g_list_next (g)) {
     feature = GST_PLUGIN_FEATURE_CAST (g->data);
     if (feature->name && strcmp (name, feature->name) == 0) {
@@ -734,6 +735,7 @@ gst_registry_lookup_locked (GstRegistry * registry, const char *filename)
     return NULL;
 
   basename = g_path_get_basename (filename);
+  /* FIXME: use GTree speed up lookups */
   for (g = registry->plugins; g; g = g_list_next (g)) {
     plugin = GST_PLUGIN_CAST (g->data);
     if (plugin->basename && strcmp (basename, plugin->basename) == 0) {
