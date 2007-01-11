@@ -1,3 +1,10 @@
+2007-01-11  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Lutz Mueller <lutz at topfrose dot de>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_activate_streams):
+	Check for stream pad before activating. 
+
 2007-01-10  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Peter Kjellerstedt  <pkj at axis com>

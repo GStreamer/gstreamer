@@ -1122,11 +1122,13 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
 
-    gst_pad_set_active (stream->srcpad, TRUE);
-    /* add the pad */
-    if (!stream->added) {
-      gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
-      stream->added = TRUE;
+    if (stream->srcpad) {
+      gst_pad_set_active (stream->srcpad, TRUE);
+      /* add the pad */
+      if (!stream->added) {
+        gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
+        stream->added = TRUE;
+      }
     }
   }
 
