@@ -795,6 +795,15 @@ handoff (GstElement * identity, GstBuffer * frame, gpointer data)
   }
 }
 
+static void
+post_missing_element_message (GstPlayBin * playbin, const gchar * name)
+{
+  GstMessage *msg;
+
+  msg = gst_missing_element_message_new (GST_ELEMENT_CAST (playbin), name);
+  gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
+}
+
 /* make the element (bin) that contains the elements needed to perform
  * video display. We connect a handoff signal to identity so that we
  * can grab snapshots. Identity's sinkpad is ghosted to vbin.
@@ -882,8 +891,7 @@ gen_video_element (GstPlayBin * play_bin)
   /* ERRORS */
 no_sinks:
   {
-    /* FIXME: this warrants adding a CORE error category for missing
-     * elements/plugins */
+    post_missing_element_message (play_bin, "autovideosink");
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Both autovideosink and xvimagesink elements are missing.")),
         (NULL));
@@ -891,6 +899,7 @@ no_sinks:
   }
 no_colorspace:
   {
+    post_missing_element_message (play_bin, "ffmpegcolorspace");
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "ffmpegcolorspace"), (NULL));
@@ -900,6 +909,7 @@ no_colorspace:
 
 no_videoscale:
   {
+    post_missing_element_message (play_bin, "videoscale");
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "videoscale"), ("possibly a liboil version mismatch?"));
@@ -987,6 +997,7 @@ gen_text_element (GstPlayBin * play_bin)
   /* ERRORS */
 no_overlay:
   {
+    post_missing_element_message (play_bin, "textoverlay");
     GST_WARNING_OBJECT (play_bin,
         "No overlay (pango) element, subtitles disabled");
     return vbin;
@@ -1076,12 +1087,14 @@ gen_audio_element (GstPlayBin * play_bin)
   /* ERRORS */
 no_sinks:
   {
+    post_missing_element_message (play_bin, "autoaudiosink");
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Both autoaudiosink and alsasink elements are missing.")), (NULL));
     return NULL;
   }
 no_audioconvert:
   {
+    post_missing_element_message (play_bin, "audioconvert");
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "audioconvert"), ("possibly a liboil version mismatch?"));
@@ -1091,6 +1104,7 @@ no_audioconvert:
 
 no_audioresample:
   {
+    post_missing_element_message (play_bin, "audioresample");
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "audioresample"), ("possibly a liboil version mismatch?"));
@@ -1207,6 +1221,7 @@ gen_vis_element (GstPlayBin * play_bin)
   /* ERRORS */
 no_audioconvert:
   {
+    post_missing_element_message (play_bin, "audioconvert");
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "audioconvert"), ("possibly a liboil version mismatch?"));
@@ -1215,6 +1230,7 @@ no_audioconvert:
   }
 no_goom:
   {
+    post_missing_element_message (play_bin, "goom");
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "goom"), (NULL));

@@ -1,3 +1,11 @@
+2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybin.c: (post_missing_element_message),
+	(gen_video_element), (gen_text_element), (gen_audio_element),
+	(gen_vis_element):
+	  Post missing-plugin messages also when we error out because
+	  converters, textoverlay or auto*sinks are missing (#161922).
+
 2007-01-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (dynamic_add), (close_pad_link),
