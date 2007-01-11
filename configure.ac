@@ -86,6 +86,7 @@ GST_PLUGINS_ALL="\
   nuvdemux \
   modplug \
   multifile \
+  mve \
   nsf \
   replaygain \
   spectrum \
@@ -924,10 +925,11 @@ gst/h264parse/Makefile
 gst/interleave/Makefile
 gst/librfb/Makefile
 gst/modplug/Makefile
-gst/nuvdemux/Makefile
 gst/modplug/libmodplug/Makefile
 gst/multifile/Makefile
+gst/mve/Makefile
 gst/nsf/Makefile
+gst/nuvdemux/Makefile
 gst/replaygain/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile

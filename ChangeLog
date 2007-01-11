@@ -1,3 +1,26 @@
+2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Jens Granseuer  <jensgr at gmx net>
+
+	* configure.ac:
+	* gst/mve/Makefile.am:
+	* gst/mve/TODO:
+	* gst/mve/gstmve.c:
+	* gst/mve/gstmvedemux.c:
+	* gst/mve/gstmvedemux.h:
+	* gst/mve/gstmvemux.c:
+	* gst/mve/gstmvemux.h:
+	* gst/mve/mve.h:
+	* gst/mve/mveaudiodec.c:
+	* gst/mve/mveaudioenc.c:
+	* gst/mve/mvevideodec16.c:
+	* gst/mve/mvevideodec8.c:
+	* gst/mve/mvevideoenc16.c:
+	* gst/mve/mvevideoenc8.c:
+	  Add Interplay MVE format demuxer/decoder and muxer/encoder. Demuxer
+	  doesn't support seeking yet, but seems to work fine otherwise.
+	  Closes #348973.
+
 2007-01-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/real/Makefile.am:

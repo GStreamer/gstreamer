@@ -1,0 +1,5 @@
+MVE TODO:
+ - seeking support
+ - split out decoders from demuxer into separate elements
+ - split out encoders from muxer into separate elements
+
