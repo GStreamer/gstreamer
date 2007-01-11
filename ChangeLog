@@ -1,5 +1,16 @@
 2007-01-11  Wim Taymans  <wim@fluendo.com>
 
+	Based on patch by: Jonas Holmberg <jonas dot holmberg at axis dot com>
+
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_init),
+	(gst_multipart_mux_request_new_pad),
+	(gst_multipart_mux_queue_pads), (gst_multipart_mux_collected),
+	(gst_multipart_mux_change_state):
+	Return FLOW errors ASAP. Fixes #394977.
+	Misc cleanups.
+
+2007-01-11  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Lutz Mueller <lutz at topfrose dot de>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_activate_streams):

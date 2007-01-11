@@ -226,7 +226,6 @@ gst_multipart_mux_init (GstMultipartMux * multipart_mux)
   gst_element_add_pad (GST_ELEMENT (multipart_mux), multipart_mux->srcpad);
 
   multipart_mux->boundary = g_strdup (DEFAULT_BOUNDARY);
-  multipart_mux->negotiated = FALSE;
 
   multipart_mux->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (multipart_mux->collect,
@@ -319,7 +318,7 @@ gst_multipart_mux_request_new_pad (GstElement * element,
   /* setup some pad functions */
   gst_pad_set_link_function (newpad, gst_multipart_mux_sinkconnect);
 
-  /* dd the pad to the element */
+  /* add the pad to the element */
   gst_element_add_pad (element, newpad);
 
   return newpad;
@@ -454,16 +453,11 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
 
   /* queue buffers on all pads; find a buffer with the lowest timestamp */
   best = gst_multipart_mux_queue_pads (mux);
-  if (best && !best->buffer)
-    goto beach;
-
-  /* EOS */
-  if (!best) {
-    GST_DEBUG_OBJECT (mux, "Pushing EOS");
-    gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
-    ret = GST_FLOW_WRONG_STATE;
-    goto beach;
-  }
+  if (!best)
+    /* EOS */
+    goto eos;
+  else if (!best->buffer)
+    goto buffer_error;
 
   /* If not negotiated yet set caps on src pad */
   if (!mux->negotiated) {
@@ -472,20 +466,15 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
     newcaps = gst_caps_new_simple ("multipart/x-mixed-replace",
         "boundary", G_TYPE_STRING, mux->boundary, NULL);
 
-    if (gst_pad_set_caps (mux->srcpad, newcaps)) {
-      mux->negotiated = TRUE;
-    } else {
-      GST_ELEMENT_ERROR (mux, CORE, NEGOTIATION, (NULL), (NULL));
-      ret = GST_FLOW_UNEXPECTED;
-      goto beach;
-    }
+    if (!gst_pad_set_caps (mux->srcpad, newcaps))
+      goto nego_error;
+
+    mux->negotiated = TRUE;
   }
 
   structure = gst_caps_get_structure (GST_BUFFER_CAPS (best->buffer), 0);
-  if (!structure) {
-    GST_WARNING_OBJECT (mux, "no caps on the incoming buffer %p", best->buffer);
-    goto beach;
-  }
+  if (!structure)
+    goto no_caps;
 
   header = g_strdup_printf ("\r\n--%s\r\nContent-Type: %s\r\n"
       "Content-Length: %u\r\n\r\n",
@@ -495,35 +484,78 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
 
   ret = gst_pad_alloc_buffer_and_set_caps (mux->srcpad, GST_BUFFER_OFFSET_NONE,
       headerlen, GST_PAD_CAPS (mux->srcpad), &headerbuf);
-  if (ret != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (mux, "failed allocating a %d bytes buffer", headerlen);
-    g_free (header);
-    goto beach;
-  }
+  if (ret != GST_FLOW_OK)
+    goto alloc_failed;
 
   memcpy (GST_BUFFER_DATA (headerbuf), header, headerlen);
   g_free (header);
 
-  databuf = gst_buffer_make_metadata_writable (best->buffer);
-  gst_buffer_set_caps (databuf, GST_PAD_CAPS (mux->srcpad));
-
-  gst_buffer_stamp (headerbuf, databuf);
-
+  gst_buffer_stamp (headerbuf, best->buffer);
   GST_BUFFER_OFFSET (headerbuf) = mux->offset;
   mux->offset += headerlen;
+
   GST_DEBUG_OBJECT (mux, "pushing %u bytes header buffer", headerlen);
-  gst_pad_push (mux->srcpad, headerbuf);
+  ret = gst_pad_push (mux->srcpad, headerbuf);
+  if (ret != GST_FLOW_OK)
+    /* push always takes ownership of the buffer, even after an error, so we
+     * don't need to unref headerbuf here. */
+    goto beach;
 
-  GST_BUFFER_OFFSET (databuf) = mux->offset;
-  mux->offset += GST_BUFFER_SIZE (databuf);
-  GST_DEBUG_OBJECT (mux, "pushing %u bytes data buffer",
-      GST_BUFFER_SIZE (databuf));
-  gst_pad_push (mux->srcpad, databuf);
-
+  /* take best->buffer, we don't need to unref it later as we will push it
+   * now. */
+  databuf = gst_buffer_make_metadata_writable (best->buffer);
   best->buffer = NULL;
 
+  gst_buffer_set_caps (databuf, GST_PAD_CAPS (mux->srcpad));
+  GST_BUFFER_OFFSET (databuf) = mux->offset;
+  mux->offset += GST_BUFFER_SIZE (databuf);
+
+  GST_DEBUG_OBJECT (mux, "pushing %u bytes data buffer",
+      GST_BUFFER_SIZE (databuf));
+  ret = gst_pad_push (mux->srcpad, databuf);
+
 beach:
+  if (best && best->buffer) {
+    gst_buffer_unref (best->buffer);
+    best->buffer = NULL;
+  }
   return ret;
+
+  /* ERRORS */
+buffer_error:
+  {
+    /* There is a best but no buffer, this is not quite right.. */
+    GST_ELEMENT_ERROR (mux, STREAM, FAILED, (NULL), ("internal muxing error"));
+    ret = GST_FLOW_ERROR;
+    goto beach;
+  }
+eos:
+  {
+    GST_DEBUG_OBJECT (mux, "Pushing EOS");
+    gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
+    ret = GST_FLOW_UNEXPECTED;
+    goto beach;
+  }
+nego_error:
+  {
+    GST_WARNING_OBJECT (mux, "failed to set caps");
+    GST_ELEMENT_ERROR (mux, CORE, NEGOTIATION, (NULL), (NULL));
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto beach;
+  }
+no_caps:
+  {
+    GST_WARNING_OBJECT (mux, "no caps on the incoming buffer %p", best->buffer);
+    GST_ELEMENT_ERROR (mux, CORE, NEGOTIATION, (NULL), (NULL));
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto beach;
+  }
+alloc_failed:
+  {
+    GST_WARNING_OBJECT (mux, "failed allocating a %d bytes buffer", headerlen);
+    g_free (header);
+    goto beach;
+  }
 }
 
 static void
@@ -572,11 +604,9 @@ gst_multipart_mux_change_state (GstElement * element, GstStateChange transition)
   multipart_mux = GST_MULTIPART_MUX (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      multipart_mux->negotiated = FALSE;
-      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       multipart_mux->offset = 0;
+      multipart_mux->negotiated = FALSE;
       GST_DEBUG_OBJECT (multipart_mux, "starting collect pads");
       gst_collect_pads_start (multipart_mux->collect);
       break;
