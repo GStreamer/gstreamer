@@ -37,7 +37,7 @@ G_BEGIN_DECLS
 #define GST_IS_QTDEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_QTDEMUX))
 
-#define GST_QT_DEMUX_CAST(obj) ((GstQTDemux *)(obj))
+#define GST_QTDEMUX_CAST(obj) ((GstQTDemux *)(obj))
 
 #define GST_QTDEMUX_MAX_STREAMS         8
 
@@ -52,9 +52,9 @@ struct _GstQTDemux {
   GstPad *sinkpad;
 
   QtDemuxStream *streams[GST_QTDEMUX_MAX_STREAMS];
-  gint n_streams;
-  gint n_video_streams;
-  gint n_audio_streams;
+  gint     n_streams;
+  gint     n_video_streams;
+  gint     n_audio_streams;
 
   GNode *moov_node;
   GNode *moov_node_compressed;
@@ -80,7 +80,6 @@ struct _GstQTDemux {
   GstTagList *tag_list;
 
   /* track stuff */
-
   guint64 last_ts;
 
   /* configured playback region */
