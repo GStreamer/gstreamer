@@ -38,6 +38,7 @@ BuildRequires:  gcc-c++
 @USE_LIBMMS_TRUE@Requires: libmms >= 0.1
 @USE_OPENGL_TRUE@Requires: mesa-libGL
 @USE_WAVPACK_TRUE@Requires: wavpack-devel >= 4.32
+@USE_MYTHTV_TRUE@Requires: gmyth-0.1
 
 %description
 GStreamer is a streaming media framework, based on graphs of filters which
@@ -118,6 +119,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_MUSEPACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmusepack.so
 @USE_GSM_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 @USE_DTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdtsdec.so
+@USE_MYTHTV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmythtvsrc.so
 
 %changelog
 * Fri Dec 15 2006 Thomas Vander Stichele <thomas at apestaart dot org>

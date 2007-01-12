@@ -702,6 +702,17 @@ GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz tag generation], musicbrainz, [
   AC_SUBST(MUSICBRAINZ_LIBS)
 ])
 
+dnl *** MythTV ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_MYTHTV, true)
+GST_CHECK_FEATURE(MYTHTV, [MythTV client plugins], mythtvsrc, [
+  PKG_CHECK_MODULES(GMYTH, gmyth-0.1 >= 0.1.0.3, HAVE_MYTHTV="yes", [
+    HAVE_MYTHTV="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(GMYTH_CFLAGS)
+  AC_SUBST(GMYTH_LIBS)
+])
+
 dnl *** neon ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
 GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
@@ -855,6 +866,7 @@ AM_CONDITIONAL(USE_LADSPA, false)
 AM_CONDITIONAL(USE_LIBMMS, false)
 AM_CONDITIONAL(USE_MUSEPACK, false)
 AM_CONDITIONAL(USE_MUSICBRAINZ, false)
+AM_CONDITIONAL(USE_MYTHTV, false)
 AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_SDL, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
@@ -969,6 +981,7 @@ ext/Makefile
 ext/mpeg2enc/Makefile
 ext/musepack/Makefile
 ext/musicbrainz/Makefile
+ext/mythtv/Makefile
 ext/neon/Makefile
 ext/sdl/Makefile
 ext/soundtouch/Makefile

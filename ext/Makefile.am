@@ -160,6 +160,12 @@ else
 MUSICBRAINZ_DIR=
 endif
 
+if USE_MYTHTV
+MYTHTV_DIR=mythtv
+else
+MYTHTV_DIR=
+endif
+
 # if USE_NAS
 # NAS_DIR=nas
 # else
@@ -272,6 +278,7 @@ SUBDIRS=\
 	$(MPLEX_DIR) \
 	$(MUSEPACK_DIR) \
 	$(MUSICBRAINZ_DIR) \
+	$(MYTHTV_DIR) \
 	$(NAS_DIR) \
 	$(NEON_DIR) \
 	$(POLYP_DIR) \
@@ -306,6 +313,7 @@ DIST_SUBDIRS= \
 	mpeg2enc \
 	musepack \
 	musicbrainz \
+	mythtv \
 	neon \
 	sdl \
 	soundtouch \
