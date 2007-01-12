@@ -1,3 +1,14 @@
+2007-01-12  Andy Wingo  <wingo@pobox.com>
+
+	* ext/ladspa/gstsignalprocessor.c (gst_signal_processor_fixate)
+	(gst_signal_processor_ouija_caps, gst_signal_processor_prepare):
+	Remove fixate/ouija stuff, thankfully, due to the new
+	part-negotiation.txt pull-mode negotiation scheme.
+	(gst_signal_processor_setcaps_pull)
+	(gst_signal_processor_setcaps): Implement upstream set_caps pull
+	proxying for pull mode. Now this works: ladspa-sine-fcac !
+	audioconvert ! alsasink.
+
 2007-01-12  Edgard Lima <edgard.lima@indt.org.br>
 
 	Patch by: Rosfran Borges <rosfran.borges@indt.org.br>

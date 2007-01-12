@@ -156,7 +156,6 @@ static GstFlowReturn gst_signal_processor_getrange (GstPad * pad,
 static GstFlowReturn gst_signal_processor_chain (GstPad * pad,
     GstBuffer * buffer);
 static gboolean gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps);
-static void gst_signal_processor_fixate (GstPad * pad, GstCaps * caps);
 
 
 static void
@@ -199,8 +198,6 @@ gst_signal_processor_add_pad_from_template (GstSignalProcessor * self,
 
   gst_pad_set_setcaps_function (new,
       GST_DEBUG_FUNCPTR (gst_signal_processor_setcaps));
-  gst_pad_set_fixatecaps_function (new,
-      GST_DEBUG_FUNCPTR (gst_signal_processor_fixate));
 
   if (templ->direction == GST_PAD_SINK) {
     GST_DEBUG ("added new sink pad");
@@ -373,11 +370,61 @@ gst_signal_processor_cleanup (GstSignalProcessor * self)
 }
 
 static gboolean
+gst_signal_processor_setcaps_pull (GstSignalProcessor * self, GstPad * pad,
+    GstCaps * caps)
+{
+  if (GST_PAD_IS_SRC (pad)) {
+    GList *l;
+
+    for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next)
+      if (!gst_pad_set_caps (GST_PAD (l->data), caps))
+        goto src_setcaps_failed;
+  } else {
+    GstPad *peer;
+    gboolean res;
+
+    peer = gst_pad_get_peer (pad);
+    if (!peer)
+      goto unlinked_sink;
+
+    res = gst_pad_set_caps (peer, caps);
+    gst_object_unref (peer);
+
+    if (!res)
+      goto peer_setcaps_failed;
+  }
+
+  return TRUE;
+
+src_setcaps_failed:
+  {
+    /* not logging, presumably the sink pad already logged */
+    return FALSE;
+  }
+unlinked_sink:
+  {
+    GST_WARNING_OBJECT (self, "unlinked sink pad %" GST_PTR_FORMAT ", I wonder "
+        "how we passed activate_pull()", pad);
+    return FALSE;
+  }
+peer_setcaps_failed:
+  {
+    GST_INFO_OBJECT (self, "peer of %" GST_PTR_FORMAT " did not accept caps",
+        pad);
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_signal_processor_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstSignalProcessor *self;
 
   self = GST_SIGNAL_PROCESSOR (gst_pad_get_parent (pad));
+
+  if (self->mode == GST_ACTIVATE_PULL && !gst_caps_is_equal (caps, self->caps)
+      && !gst_signal_processor_setcaps_pull (self, pad, caps))
+    goto setcaps_pull_failed;
 
   /* the whole processor has one caps; if the sample rate changes, let subclass
      implementations know */
@@ -430,20 +477,17 @@ start_failed:
     gst_object_unref (self);
     return FALSE;
   }
+setcaps_pull_failed:
+  {
+    gst_object_unref (self);
+    return FALSE;
+  }
 impossible:
   {
     g_critical ("something impossible happened");
     gst_object_unref (self);
     return FALSE;
   }
-}
-
-static void
-gst_signal_processor_fixate (GstPad * pad, GstCaps * caps)
-{
-  /* last-ditch attempt at sanity */
-  gst_structure_fixate_field_nearest_int
-      (gst_caps_get_structure (caps, 0), "rate", 44100);
 }
 
 static gboolean
@@ -476,32 +520,6 @@ gst_signal_processor_event (GstPad * pad, GstEvent * event)
   gst_object_unref (self);
 
   return ret;
-}
-
-static void
-gst_signal_processor_ouija_caps (GstSignalProcessor * self)
-{
-  GstElement *element;
-  GstPad *srcpad;
-  GstCaps *srccaps, *peercaps, *caps;
-
-  /* we have no sink pads, no way to know what caps we should be producing.
-     guess! */
-
-  element = GST_ELEMENT (self);
-  g_return_if_fail (element->sinkpads == NULL);
-  g_return_if_fail (element->srcpads != NULL);
-  srcpad = GST_PAD (element->srcpads->data);
-
-  srccaps = gst_pad_get_caps (srcpad);
-  peercaps = gst_pad_peer_get_caps (srcpad);
-  caps = gst_caps_intersect (srccaps, peercaps);
-  gst_caps_unref (srccaps);
-  gst_caps_unref (peercaps);
-  gst_caps_truncate (caps);
-  gst_pad_fixate_caps (srcpad, caps);
-  gst_signal_processor_setcaps (srcpad, caps);
-  gst_caps_unref (caps);
 }
 
 static guint
@@ -552,8 +570,6 @@ gst_signal_processor_prepare (GstSignalProcessor * self, guint nframes)
     }
   }
 
-  if (!self->caps)
-    gst_signal_processor_ouija_caps (self);
   g_return_val_if_fail (GST_SIGNAL_PROCESSOR_IS_RUNNING (self), 0);
 
   /* now allocate for any remaining outputs */
