@@ -1,5 +1,14 @@
 2007-01-12  Andy Wingo  <wingo@pobox.com>
 
+	* gst/gstpad.c (gst_pad_activate_pull): Refuse to activate unlinked
+	sink pads in pull mode. In addition to being correct, fixes
+	filesrc ! decodebin ! identity ! fakesink.
+	(gst_pad_get_range, gst_pad_pull_range): Don't call
+	gst_pad_set_caps() if the caps changes; instead error out with
+	GST_FLOW_NOT_NEGOTIATED, as discussed in part-negotiation.txt.
+
+2007-01-12  Andy Wingo  <wingo@pobox.com>
+
 	* docs/design/part-negotiation.txt: Update with more policy.
 
 2007-01-12  Tim-Philipp Müller  <tim at centricular dot net>

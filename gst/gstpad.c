@@ -737,6 +737,8 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
       if (G_UNLIKELY (!gst_pad_activate_pull (peer, active)))
         goto peer_failed;
       gst_object_unref (peer);
+    } else {
+      goto not_linked;
     }
   } else {
     if (G_UNLIKELY (GST_PAD_GETRANGEFUNC (pad) == NULL))
@@ -781,6 +783,12 @@ peer_failed:
         "activate_pull on peer (%s:%s) failed", GST_DEBUG_PAD_NAME (peer));
     GST_OBJECT_UNLOCK (peer);
     gst_object_unref (peer);
+    return FALSE;
+  }
+not_linked:
+  {
+    GST_CAT_INFO_OBJECT (GST_CAT_PADS, pad, "can't activate unlinked sink "
+        "pad in pull mode");
     return FALSE;
   }
 failure:
@@ -3692,10 +3700,8 @@ not_connected:
  * installed (see gst_pad_set_getrange_function()) this function returns
  * #GST_FLOW_NOT_SUPPORTED.
  *
- * This function will call gst_pad_set_caps() on @pad if the pull is successful
- * and the caps on @buffer differ from what is already set on @pad, as is done
- * in gst_pad_push(). This could cause the function to return
- * #GST_FLOW_NOT_NEGOTIATED if the caps could not be set.
+ * @buffer's caps must either be unset or the same as what is already configured
+ * on @pad. Renegotiation within a running pull-mode pipeline is not supported.
  *
  * Returns: a #GstFlowReturn from the pad.
  *
@@ -3751,12 +3757,10 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
     caps_changed = caps && caps != GST_PAD_CAPS (pad);
     GST_OBJECT_UNLOCK (pad);
 
-    /* we got a new datatype from the pad, it had better handle it */
-    if (G_UNLIKELY (caps_changed)) {
-      GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
-      if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, TRUE)))
-        goto not_negotiated;
-    }
+    /* we got a new datatype from the pad not supported in a running pull-mode
+     * pipeline */
+    if (G_UNLIKELY (caps_changed))
+      goto not_negotiated;
   }
 
   return ret;
@@ -3791,8 +3795,8 @@ not_negotiated:
   {
     gst_buffer_unref (*buffer);
     *buffer = NULL;
-    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "getrange returned buffer then refused to accept the caps");
+    GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
+        "getrange returned buffer of different caps");
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
@@ -3815,10 +3819,8 @@ not_negotiated:
  * See gst_pad_get_range() for a list of return values and for the
  * semantics of the arguments of this function.
  *
- * This function will call gst_pad_set_caps() on @pad if the pull is successful
- * and the caps on @buffer differ from what is already set on @pad, as is done
- * in gst_pad_chain(). This could cause the function to return
- * #GST_FLOW_NOT_NEGOTIATED if the caps could not be set.
+ * @buffer's caps must either be unset or the same as what is already configured
+ * on @pad. Renegotiation within a running pull-mode pipeline is not supported.
  *
  * Returns: a #GstFlowReturn from the peer pad.
  * When this function returns #GST_FLOW_OK, @buffer will contain a valid
@@ -3878,11 +3880,8 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
     GST_OBJECT_UNLOCK (pad);
 
     /* we got a new datatype on the pad, see if it can handle it */
-    if (G_UNLIKELY (caps_changed)) {
-      GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
-      if (G_UNLIKELY (!gst_pad_configure_sink (pad, caps)))
-        goto not_negotiated;
-    }
+    if (G_UNLIKELY (caps_changed))
+      goto not_negotiated;
   }
 
   return ret;
@@ -3907,8 +3906,8 @@ not_negotiated:
   {
     gst_buffer_unref (*buffer);
     *buffer = NULL;
-    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
-        "pulled buffer but pad did not accept the caps");
+    GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pullrange returned buffer of different caps");
     return GST_FLOW_NOT_NEGOTIATED;
   }
 }
