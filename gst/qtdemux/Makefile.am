@@ -6,4 +6,9 @@ libgstqtdemux_la_LIBADD = $(GST_BASE_LIBS) $(ZLIB_LIBS)
 libgstqtdemux_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS} 
 libgstqtdemux_la_SOURCES = qtdemux.c qtdemux_types.c qtdemux_dump.c
 
-noinst_HEADERS = qtdemux.h qtdemux_types.h qtdemux_dump.h
+noinst_HEADERS = \
+	qtdemux.h        \
+	qtdemux_types.h  \
+	qtdemux_dump.h   \
+	qtdemux_fourcc.h \
+	qtpalette.h
