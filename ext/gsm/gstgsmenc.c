@@ -150,7 +150,7 @@ gst_gsmenc_init (GstGSMEnc * gsmenc)
 
   gsmenc->state = gsm_create ();
 
-  /* turn on WAV49 handling */
+  /* turn off WAV49 handling */
   use_wav49 = 0;
   gsm_option (gsmenc->state, GSM_OPT_WAV49, &use_wav49);
 

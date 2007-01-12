@@ -1,5 +1,10 @@
 2007-01-12  Wim Taymans  <wim@fluendo.com>
 
+	* ext/gsm/gstgsmenc.c: (gst_gsmenc_init):
+	Fix typo in docs.
+
+2007-01-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/qtdemux/Makefile.am:
 	* gst/qtdemux/qtdemux.c: (extract_initial_length_and_fourcc),
 	(gst_qtdemux_loop_state_header), (gst_qtdemux_combine_flows),
