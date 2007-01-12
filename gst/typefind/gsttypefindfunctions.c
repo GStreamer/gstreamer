@@ -1479,7 +1479,7 @@ aiff_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
-/*** audio/x-aiff ***/
+/*** audio/x-svx ***/
 
 static GstStaticCaps svx_caps = GST_STATIC_CAPS ("audio/x-svx");
 
