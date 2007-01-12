@@ -142,6 +142,8 @@ struct _GstBaseSrc {
  *   cycles. The default implementation will open and close the resource 
  *   to find out whether get_range is supported, and that is usually 
  *   undesirable. 
+ * @fixate: Called during negotation if caps need fixating. Implement instead of
+ *   setting a fixate function on the source pad.
  */
 struct _GstBaseSrcClass {
   GstElementClass parent_class;
@@ -199,8 +201,11 @@ struct _GstBaseSrcClass {
    * undesirable. */
   gboolean      (*check_get_range) (GstBaseSrc *src);
 
+  /* called if, in negotation, caps need fixating */
+  void		(*fixate)	(GstBaseSrc *src, GstCaps *caps);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 3];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 4];
 };
 
 GType gst_base_src_get_type (void);

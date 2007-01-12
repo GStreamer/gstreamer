@@ -230,6 +230,8 @@ struct _GstBaseTransformPrivate
   gboolean qos_enabled;
   gdouble proportion;
   GstClockTime earliest_time;
+
+  GstActivateMode pad_mode;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -398,6 +400,7 @@ gst_base_transform_init (GstBaseTransform * trans,
   trans->priv->qos_enabled = DEFAULT_PROP_QOS;
   trans->cache_caps1 = NULL;
   trans->cache_caps2 = NULL;
+  trans->priv->pad_mode = GST_ACTIVATE_NONE;
 
   trans->passthrough = FALSE;
   if (bclass->transform == NULL) {
@@ -810,6 +813,14 @@ gst_base_transform_setcaps (GstPad * pad, GstCaps * caps)
 
   /* we know this will work, we implement the setcaps */
   gst_pad_set_caps (otherpad, othercaps);
+
+  if (pad == trans->srcpad && trans->priv->pad_mode == GST_ACTIVATE_PULL) {
+    ret &= gst_pad_set_caps (otherpeer, othercaps);
+    if (!ret) {
+      GST_INFO_OBJECT (trans, "otherpeer setcaps(%" GST_PTR_FORMAT ") failed",
+          othercaps);
+    }
+  }
 
 done:
   if (otherpeer)
@@ -1604,7 +1615,12 @@ gst_base_transform_sink_activate_push (GstPad * pad, gboolean active)
   if (active) {
     if (bclass->start)
       result = bclass->start (trans);
+    if (result)
+      trans->priv->pad_mode = GST_ACTIVATE_PUSH;
+  } else {
+    trans->priv->pad_mode = GST_ACTIVATE_NONE;
   }
+
   gst_object_unref (trans);
 
   return result;
@@ -1625,7 +1641,12 @@ gst_base_transform_src_activate_pull (GstPad * pad, gboolean active)
   if (active) {
     if (result && bclass->start)
       result &= bclass->start (trans);
+    if (result)
+      trans->priv->pad_mode = GST_ACTIVATE_PULL;
+  } else {
+    trans->priv->pad_mode = GST_ACTIVATE_NONE;
   }
+
   gst_object_unref (trans);
 
   return result;

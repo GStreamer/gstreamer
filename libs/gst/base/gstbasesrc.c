@@ -269,6 +269,7 @@ gst_base_src_get_type (void)
 }
 static GstCaps *gst_base_src_getcaps (GstPad * pad);
 static gboolean gst_base_src_setcaps (GstPad * pad, GstCaps * caps);
+static void gst_base_src_fixate (GstPad * pad, GstCaps * caps);
 
 static gboolean gst_base_src_activate_push (GstPad * pad, gboolean active);
 static gboolean gst_base_src_activate_pull (GstPad * pad, gboolean active);
@@ -391,6 +392,8 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
       GST_DEBUG_FUNCPTR (gst_base_src_pad_get_range));
   gst_pad_set_getcaps_function (pad, GST_DEBUG_FUNCPTR (gst_base_src_getcaps));
   gst_pad_set_setcaps_function (pad, GST_DEBUG_FUNCPTR (gst_base_src_setcaps));
+  gst_pad_set_fixatecaps_function (pad,
+      GST_DEBUG_FUNCPTR (gst_base_src_fixate));
 
   /* hold pointer to pad */
   basesrc->srcpad = pad;
@@ -576,6 +579,21 @@ gst_base_src_getcaps (GstPad * pad)
     }
   }
   return caps;
+}
+
+static void
+gst_base_src_fixate (GstPad * pad, GstCaps * caps)
+{
+  GstBaseSrcClass *bclass;
+  GstBaseSrc *bsrc;
+
+  bsrc = GST_BASE_SRC (gst_pad_get_parent (pad));
+  bclass = GST_BASE_SRC_GET_CLASS (bsrc);
+
+  if (bclass->fixate)
+    bclass->fixate (bsrc, caps);
+
+  gst_object_unref (bsrc);
 }
 
 static gboolean

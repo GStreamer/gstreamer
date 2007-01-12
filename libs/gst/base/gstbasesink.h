@@ -108,25 +108,26 @@ struct _GstBaseSink {
  * @set_caps: Notify subclass of changed caps
  * @buffer_alloc: Subclasses can override to perform custom buffer allocations
  * @get_times: Called to get the start and end times for synchronising
- *             the passed buffer to the clock
+ *     the passed buffer to the clock
  * @start: Start processing. Ideal for opening resources in the subclass
  * @stop: Stop processing. Subclasses should use this to close resources.
  * @unlock: Unlock any pending access to the resource. Subclasses should
- *          unblock any blocked function ASAP
+ *     unblock any blocked function ASAP
  * @event: Override this to handle events arriving on the sink pad
  * @preroll: Called to present the preroll buffer if desired
  * @render: Called when a buffer should be presented or output, at the
- *          correct moment if the #GstBaseSink has been set to sync to
- *          the clock.
+ *     correct moment if the #GstBaseSink has been set to sync to the clock.
  * @async_play: Subclasses should override this when they need to perform
- *              special processing when changing to the PLAYING state
- *              asynchronously.  Called with the OBJECT_LOCK held.
+ *     special processing when changing to the PLAYING state asynchronously.
+ *     Called with the OBJECT_LOCK held.
  * @activate_pull: Subclasses should override this when they can provide an
- *                 alternate method of spawning a thread to drive the pipeline
- *                 in pull mode. Should start or stop the pulling thread,
- *                 depending on the value of the "active" argument. Called after
- *                 actually activating the sink pad in pull mode. The default
- *                 implementation starts a task on the sink pad.
+ *     alternate method of spawning a thread to drive the pipeline in pull mode.
+ *     Should start or stop the pulling thread, depending on the value of the
+ *     "active" argument. Called after actually activating the sink pad in pull
+ *     mode. The default implementation starts a task on the sink pad.
+ * @fixate: Only useful in pull mode, this vmethod will be called in response to
+ *     gst_pad_fixate_caps() being called on the sink pad. Implement if you have
+ *     ideas about what should be the default values for the caps you support.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At the minimum, the render method should be overridden to
@@ -169,8 +170,11 @@ struct _GstBaseSinkClass {
   /* start or stop a pulling thread */
   gboolean	(*activate_pull)(GstBaseSink *sink, gboolean active);
 
+  /* fixate sink caps during pull-mode negotiation */
+  void		(*fixate)	(GstBaseSink *sink, GstCaps *caps);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE-2];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-3];
 };
 
 GType gst_base_sink_get_type(void);

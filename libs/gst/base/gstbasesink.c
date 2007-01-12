@@ -274,7 +274,7 @@ static void gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end);
 static gboolean gst_base_sink_set_flushing (GstBaseSink * basesink,
     GstPad * pad, gboolean flushing);
-static gboolean gst_base_sink_activate_pull (GstBaseSink * basesink,
+static gboolean gst_base_sink_default_activate_pull (GstBaseSink * basesink,
     gboolean active);
 
 static GstStateChangeReturn gst_base_sink_change_state (GstElement * element,
@@ -346,7 +346,8 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   klass->set_caps = GST_DEBUG_FUNCPTR (gst_base_sink_set_caps);
   klass->buffer_alloc = GST_DEBUG_FUNCPTR (gst_base_sink_buffer_alloc);
   klass->get_times = GST_DEBUG_FUNCPTR (gst_base_sink_get_times);
-  klass->activate_pull = GST_DEBUG_FUNCPTR (gst_base_sink_activate_pull);
+  klass->activate_pull =
+      GST_DEBUG_FUNCPTR (gst_base_sink_default_activate_pull);
 }
 
 static GstCaps *
@@ -380,17 +381,44 @@ gst_base_sink_pad_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstBaseSinkClass *bclass;
   GstBaseSink *bsink;
-  gboolean res = FALSE;
+  gboolean res = TRUE;
 
   bsink = GST_BASE_SINK (gst_pad_get_parent (pad));
   bclass = GST_BASE_SINK_GET_CLASS (bsink);
 
-  if (bclass->set_caps)
+  if (bsink->pad_mode == GST_ACTIVATE_PULL) {
+    GstPad *peer = gst_pad_get_peer (pad);
+
+    if (peer)
+      res = gst_pad_set_caps (peer, caps);
+    else
+      res = FALSE;
+
+    if (!res)
+      GST_DEBUG_OBJECT (bsink, "peer setcaps() failed");
+  }
+
+  if (res && bclass->set_caps)
     res = bclass->set_caps (bsink, caps);
 
   gst_object_unref (bsink);
 
   return res;
+}
+
+static void
+gst_base_sink_pad_fixate (GstPad * pad, GstCaps * caps)
+{
+  GstBaseSinkClass *bclass;
+  GstBaseSink *bsink;
+
+  bsink = GST_BASE_SINK (gst_pad_get_parent (pad));
+  bclass = GST_BASE_SINK_GET_CLASS (bsink);
+
+  if (bclass->fixate)
+    bclass->fixate (bsink, caps);
+
+  gst_object_unref (bsink);
 }
 
 static GstFlowReturn
@@ -432,6 +460,8 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
       GST_DEBUG_FUNCPTR (gst_base_sink_pad_getcaps));
   gst_pad_set_setcaps_function (basesink->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_sink_pad_setcaps));
+  gst_pad_set_fixatecaps_function (basesink->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_base_sink_pad_fixate));
   gst_pad_set_bufferalloc_function (basesink->sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_sink_pad_buffer_alloc));
   gst_pad_set_activate_function (basesink->sinkpad,
@@ -2121,7 +2151,7 @@ gst_base_sink_set_flushing (GstBaseSink * basesink, GstPad * pad,
 }
 
 static gboolean
-gst_base_sink_activate_pull (GstBaseSink * basesink, gboolean active)
+gst_base_sink_default_activate_pull (GstBaseSink * basesink, gboolean active)
 {
   gboolean result;
 
@@ -2203,6 +2233,48 @@ gst_base_sink_pad_activate_push (GstPad * pad, gboolean active)
   return result;
 }
 
+static gboolean
+gst_base_sink_negotiate_pull (GstBaseSink * basesink)
+{
+  GstCaps *caps;
+  GstPad *pad;
+
+  GST_OBJECT_LOCK (basesink);
+  pad = basesink->sinkpad;
+  gst_object_ref (pad);
+  GST_OBJECT_UNLOCK (basesink);
+
+  caps = gst_pad_get_allowed_caps (pad);
+  if (gst_caps_is_empty (caps))
+    goto no_caps_possible;
+
+  caps = gst_caps_make_writable (caps);
+  gst_pad_fixate_caps (pad, caps);
+
+  if (!gst_pad_set_caps (pad, caps))
+    goto could_not_set_caps;
+
+  gst_caps_unref (caps);
+  gst_object_unref (pad);
+
+  return TRUE;
+
+no_caps_possible:
+  {
+    GST_INFO_OBJECT (basesink, "Pipeline could not agree on caps");
+    GST_DEBUG_OBJECT (basesink, "get_allowed_caps() returned EMPTY");
+    gst_object_unref (pad);
+    return FALSE;
+  }
+could_not_set_caps:
+  {
+    GST_INFO_OBJECT (basesink, "Could not set caps: %" GST_PTR_FORMAT, caps);
+    gst_caps_unref (caps);
+    gst_object_unref (pad);
+    return FALSE;
+  }
+}
+
 /* this won't get called until we implement an activate function */
 static gboolean
 gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
@@ -2236,9 +2308,15 @@ gst_base_sink_pad_activate_pull (GstPad * pad, gboolean active)
           basesink->have_newsegment = TRUE;
 
           /* set the pad mode before starting the task so that it's in the
-             correct state for the new thread... */
+             correct state for the new thread. also the sink set_caps function
+             checks this */
           basesink->pad_mode = GST_ACTIVATE_PULL;
-          result = gst_base_sink_activate_pull (basesink, TRUE);
+          if ((result = gst_base_sink_negotiate_pull (basesink))) {
+            if (bclass->activate_pull)
+              result = bclass->activate_pull (basesink, TRUE);
+            else
+              result = FALSE;
+          }
           /* but if starting the thread fails, set it back */
           if (!result)
             basesink->pad_mode = GST_ACTIVATE_NONE;
