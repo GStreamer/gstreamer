@@ -276,11 +276,10 @@ static gboolean gst_base_transform_src_activate_pull (GstPad * pad,
     gboolean active);
 static gboolean gst_base_transform_sink_activate_push (GstPad * pad,
     gboolean active);
+static gboolean gst_base_transform_activate (GstBaseTransform * trans,
+    gboolean active);
 static gboolean gst_base_transform_get_unit_size (GstBaseTransform * trans,
     GstCaps * caps, guint * size);
-
-static GstStateChangeReturn gst_base_transform_change_state (GstElement *
-    element, GstStateChange transition);
 
 static gboolean gst_base_transform_src_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_transform_src_eventfunc (GstBaseTransform * trans,
@@ -322,10 +321,8 @@ static void
 gst_base_transform_class_init (GstBaseTransformClass * klass)
 {
   GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
-  gstelement_class = GST_ELEMENT_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GstBaseTransformPrivate));
 
@@ -341,9 +338,6 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
           DEFAULT_PROP_QOS, G_PARAM_READWRITE));
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_transform_finalize);
-
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_base_transform_change_state);
 
   klass->passthrough_on_same_caps = FALSE;
   klass->event = GST_DEBUG_FUNCPTR (gst_base_transform_sink_eventfunc);
@@ -1602,24 +1596,64 @@ gst_base_transform_get_property (GObject * object, guint prop_id,
   }
 }
 
+/* not a vmethod of anything, just an internal method */
+static gboolean
+gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
+{
+  GstBaseTransformClass *bclass;
+  gboolean result = TRUE;
+
+  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+
+  if (active) {
+    if (trans->priv->pad_mode == GST_ACTIVATE_NONE && bclass->start)
+      result &= bclass->start (trans);
+
+    GST_OBJECT_LOCK (trans);
+
+    if (GST_PAD_CAPS (trans->sinkpad) && GST_PAD_CAPS (trans->srcpad))
+      trans->have_same_caps =
+          gst_caps_is_equal (GST_PAD_CAPS (trans->sinkpad),
+          GST_PAD_CAPS (trans->srcpad)) || trans->passthrough;
+    else
+      trans->have_same_caps = trans->passthrough;
+    GST_DEBUG_OBJECT (trans, "have_same_caps %d", trans->have_same_caps);
+    trans->negotiated = FALSE;
+    trans->have_newsegment = FALSE;
+    gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
+    trans->priv->proportion = 1.0;
+    trans->priv->earliest_time = -1;
+
+    GST_OBJECT_UNLOCK (trans);
+  } else {
+    trans->have_same_caps = FALSE;
+    /* We can only reset the passthrough mode if the instance told us to 
+       handle it in configure_caps */
+    if (bclass->passthrough_on_same_caps) {
+      gst_base_transform_set_passthrough (trans, FALSE);
+    }
+    gst_caps_replace (&trans->cache_caps1, NULL);
+    gst_caps_replace (&trans->cache_caps2, NULL);
+
+    if (trans->priv->pad_mode != GST_ACTIVATE_NONE && bclass->stop)
+      result &= bclass->stop (trans);
+  }
+
+  return result;
+}
+
 static gboolean
 gst_base_transform_sink_activate_push (GstPad * pad, gboolean active)
 {
   gboolean result = TRUE;
   GstBaseTransform *trans;
-  GstBaseTransformClass *bclass;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
-  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
-  if (active) {
-    if (bclass->start)
-      result = bclass->start (trans);
-    if (result)
-      trans->priv->pad_mode = GST_ACTIVATE_PUSH;
-  } else {
-    trans->priv->pad_mode = GST_ACTIVATE_NONE;
-  }
+  result = gst_base_transform_activate (trans, active);
+
+  if (result)
+    trans->priv->pad_mode = active ? GST_ACTIVATE_PUSH : GST_ACTIVATE_NONE;
 
   gst_object_unref (trans);
 
@@ -1631,86 +1665,18 @@ gst_base_transform_src_activate_pull (GstPad * pad, gboolean active)
 {
   gboolean result = FALSE;
   GstBaseTransform *trans;
-  GstBaseTransformClass *bclass;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
-  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   result = gst_pad_activate_pull (trans->sinkpad, active);
 
-  if (active) {
-    if (result && bclass->start)
-      result &= bclass->start (trans);
-    if (result)
-      trans->priv->pad_mode = GST_ACTIVATE_PULL;
-  } else {
-    trans->priv->pad_mode = GST_ACTIVATE_NONE;
-  }
+  if (result)
+    result &= gst_base_transform_activate (trans, active);
+
+  if (result)
+    trans->priv->pad_mode = active ? GST_ACTIVATE_PULL : GST_ACTIVATE_NONE;
 
   gst_object_unref (trans);
-
-  return result;
-}
-
-static GstStateChangeReturn
-gst_base_transform_change_state (GstElement * element,
-    GstStateChange transition)
-{
-  GstBaseTransform *trans;
-  GstBaseTransformClass *bclass;
-  GstStateChangeReturn result;
-
-  trans = GST_BASE_TRANSFORM (element);
-  bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
-
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_OBJECT_LOCK (trans);
-      if (GST_PAD_CAPS (trans->sinkpad) && GST_PAD_CAPS (trans->srcpad))
-        trans->have_same_caps =
-            gst_caps_is_equal (GST_PAD_CAPS (trans->sinkpad),
-            GST_PAD_CAPS (trans->srcpad)) || trans->passthrough;
-      else
-        trans->have_same_caps = trans->passthrough;
-      GST_DEBUG_OBJECT (trans, "have_same_caps %d", trans->have_same_caps);
-      trans->negotiated = FALSE;
-      trans->have_newsegment = FALSE;
-      gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
-      trans->priv->proportion = 1.0;
-      trans->priv->earliest_time = -1;
-      GST_OBJECT_UNLOCK (trans);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      trans->have_same_caps = FALSE;
-      /* We can only reset the passthrough mode if the instance told us to 
-         handle it in configure_caps */
-      if (bclass->passthrough_on_same_caps) {
-        gst_base_transform_set_passthrough (trans, FALSE);
-      }
-      gst_caps_replace (&trans->cache_caps1, NULL);
-      gst_caps_replace (&trans->cache_caps2, NULL);
-      if (bclass->stop)
-        result = bclass->stop (trans);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
 
   return result;
 }

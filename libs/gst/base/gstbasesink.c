@@ -2249,6 +2249,7 @@ gst_base_sink_negotiate_pull (GstBaseSink * basesink)
     goto no_caps_possible;
 
   caps = gst_caps_make_writable (caps);
+  gst_caps_truncate (caps);
   gst_pad_fixate_caps (pad, caps);
 
   if (gst_caps_is_any (caps)) {
