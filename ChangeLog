@@ -1,5 +1,15 @@
 2007-01-12  Wim Taymans  <wim@fluendo.com>
 
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* docs/plugins/inspect/plugin-qtdemux.xml:
+	Activate docs for jack, sdl and qtdemux.
+
+2007-01-12  Wim Taymans  <wim@fluendo.com>
+
 	* ext/jack/gstjackaudiosink.c: (jack_sample_rate_cb),
 	(jack_buffer_size_cb), (jack_shutdown_cb),
 	(gst_jack_ring_buffer_acquire):

@@ -7,11 +7,44 @@ GstDfbVideoSinkClass
 </SECTION>
 
 <SECTION>
+<FILE>element-jackaudiosink</FILE>
+GstJackAudioSink
+GstJackConnect
+<TITLE>jackaudiosink</TITLE>
+<SUBSECTION Standard>
+GstJackAudioSinkClass
+</SECTION>
+
+<SECTION>
+<FILE>element-qtdemux</FILE>
+GstQTDemux
+<TITLE>qtdemux</TITLE>
+<SUBSECTION Standard>
+GstQTDemuxClass
+</SECTION>
+
+<SECTION>
 <FILE>element-rganalysis</FILE>
 GstRgAnalysis
 <TITLE>rganalysis</TITLE>
 <SUBSECTION Standard>
 GstRgAnalysisClass
+</SECTION>
+
+<SECTION>
+<FILE>element-sdlaudiosink</FILE>
+GstSDLAudioSink
+<TITLE>sdlaudiosink</TITLE>
+<SUBSECTION Standard>
+GstSDLAudioSinkClass
+</SECTION>
+
+<SECTION>
+<FILE>element-sdlvideosink</FILE>
+GstSDLVideoSink
+<TITLE>sdlvideosink</TITLE>
+<SUBSECTION Standard>
+GstSDLVideoSinkClass
 </SECTION>
 
 <SECTION>
@@ -36,7 +69,6 @@ GstWavpackDec
 <TITLE>wavpackdec</TITLE>
 <SUBSECTION Standard>
 GstWavpackDecClass
-
 </SECTION>
 
 <SECTION>

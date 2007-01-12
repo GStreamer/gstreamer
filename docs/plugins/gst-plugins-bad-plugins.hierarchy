@@ -9,55 +9,61 @@ GObject
       GstBin
         GstPipeline
       GstBaseSink
-        AlsaSPDIFSink
-        GstVideoSink
-          GstSDLVideoSink
-          GstDfbVideoSink
-          GstGLImageSink
         GstBaseAudioSink
+          GstJackAudioSink
           GstAudioSink
             GstSDLAudioSink
-      GstSpcDec
-      GstPitch
-      GstXvidEnc
-      GstXvidDec
-      GstWavpackParse
-      GstWavpackDec
-      GstWavpackEnc
-      GstSwfdec
+        GstVideoSink
+          GstGLImageSink
+          GstSDLVideoSink
+          GstDfbVideoSink
+        GstMultiFileSink
+        AlsaSPDIFSink
+      GstQTDemux
       GstBaseSrc
         GstPushSrc
+          GstDvbSrc
+          GstMultiFileSrc
+          GstRfbSrc
           GstNeonhttpSrc
           GstMMS
-      GstTRM
-      GstMusepackDec
-      GstMpeg2enc
-      GstBz2enc
-      GstBz2dec
-      GstGSMEnc
-      GstGSMDec
-      GstFaad
-      GstFaac
-      GstDtsDec
+      GstVideoParse
+      GstNuvDemux
       GstBaseTransform
+        GstVideoFilter
+          GstVideoSignal
         GstRgAnalysis
         GstVideoCrop
         GstSpectrum
         GstIIR
         GstLPWSinc
         GstBPWSinc
-      GstNsfDec
+        GstDeinterlace
       GstH264Parse
       GstXingMux
-      GstGDPDepay
-      GstGDPPay
       GstFreeze
+      GstY4mEncode
       GstTtaParse
       GstTtaDec
       GstSpeed
-      GstQTDemux
       GstModPlug
+      GstNsfDec
       GstCDXAParse
+      GstPitch
+      GstWavpackParse
+      GstWavpackDec
+      GstWavpackEnc
+      GstAmrwbDec
+      GstAmrwbParse
+      GstAmrwbEnc
+      GstTRM
+      GstBz2enc
+      GstBz2dec
+      GstGSMEnc
+      GstGSMDec
+      GstFaad
+      GstFaac
+      GstCDAudio
     GstPlugin
     GstRegistry
     GstPadTemplate

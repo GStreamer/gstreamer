@@ -5,3 +5,11 @@
 GstXvidEnc *gstxvidenc
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstCDAudio::track-change</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstCDAudio *gstcdaudio
+gint  arg1
+</SIGNAL>
+
