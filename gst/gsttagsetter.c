@@ -167,12 +167,13 @@ gst_tag_setter_merge_tags (GstTagSetter * setter, const GstTagList * list,
 
   g_return_if_fail (GST_IS_TAG_SETTER (setter));
   g_return_if_fail (GST_TAG_MODE_IS_VALID (mode));
+  g_return_if_fail (GST_IS_TAG_LIST (list));
 
   data = gst_tag_setter_get_data (setter);
   if (!data->list) {
     data->list = gst_tag_list_copy (list);
   } else {
-    gst_tag_list_merge (data->list, list, mode);
+    gst_tag_list_insert (data->list, list, mode);
   }
 }
 

@@ -1,5 +1,16 @@
 2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: René Stadler <mail at renestadler dot de>
+
+	* gst/gsttagsetter.c: (gst_tag_setter_merge_tags):
+	  gst_tag_list_merge() returns a new list, so it's not the best idea
+	  to ingore its return value. Effectively meant that tags could only
+	  be merged on a GstTagSetter once using _merge_tags(). Fixes #395554.
+	  Also add function guard to require a non-NULL taglist as input (has
+	  always been so due to gst_tag_list_copy(), just making it explicit).
+
+2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/random/draft-missing-plugins.txt:
 	  Some additions: mention new API that is supposed to be used at the
 	  various stages; short blob about new gst-inspect introspection
