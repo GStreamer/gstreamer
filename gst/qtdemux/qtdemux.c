@@ -233,7 +233,7 @@ static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 fourcc, const guint8 * data, int len,
     const gchar ** codec_name);
 
-static GType
+GType
 gst_qtdemux_get_type (void)
 {
   static GType qtdemux_type = 0;
@@ -267,6 +267,7 @@ gst_qtdemux_base_init (GstQTDemuxClass * klass)
       gst_static_pad_template_get (&gst_qtdemux_audiosrc_template));
   gst_element_class_set_details (element_class, &gst_qtdemux_details);
 
+  GST_DEBUG_CATEGORY_INIT (qtdemux_debug, "qtdemux", 0, "qtdemux plugin");
 }
 
 static void
@@ -3954,23 +3955,3 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
   }
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-#ifdef ENABLE_NLS
-  setlocale (LC_ALL, "");
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-#endif /* ENABLE_NLS */
-
-  GST_DEBUG_CATEGORY_INIT (qtdemux_debug, "qtdemux", 0, "qtdemux plugin");
-
-  return gst_element_register (plugin, "qtdemux",
-      GST_RANK_PRIMARY, GST_TYPE_QTDEMUX);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "qtdemux",
-    "Quicktime stream demuxer",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
