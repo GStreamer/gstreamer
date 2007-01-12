@@ -1,5 +1,11 @@
 2007-01-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/audio/mixerutils.h:
+	  Add G_BEGIN_DECLS and G_END_DECLS guards so these helpers can be
+	  used when compiling with c++ compilers as well.
+
+2007-01-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/typefind/gsttypefindfunctions.c:
 	  Fix comment.
 

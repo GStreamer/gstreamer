@@ -23,6 +23,8 @@
 #include <gst/gst.h>
 #include <gst/interfaces/mixer.h>
 
+G_BEGIN_DECLS
+
 /**
  * GstAudioMixerFilterFunc:
  * @mixer: a #GstElement implementing the #GstMixer interface
@@ -42,5 +44,7 @@ typedef gboolean (*GstAudioMixerFilterFunc) (GstMixer * mixer, gpointer user_dat
 GList * gst_audio_default_registry_mixer_filter (GstAudioMixerFilterFunc  filter_func,
                                                  gboolean                 first,
                                                  gpointer                 user_data);
+
+G_END_DECLS
 
 #endif /* __GST_AUDIO_MIXERUTILS_H__ */
