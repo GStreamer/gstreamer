@@ -68,6 +68,8 @@ rm -rf $RPM_BUILD_ROOT
 # helper programs
 %{_bindir}/gst-visualise-%{majorminor}
 %{_mandir}/man1/gst-visualise-%{majorminor}*
+%{_libdir}/libgstbaseutils-0.10.so.0
+%{_libdir}/libgstbaseutils-0.10.so.0.8.0
 
 # libraries
 %{_libdir}/libgstinterfaces-%{majorminor}.so.*
@@ -84,6 +86,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioconvert.so
 %{_libdir}/gstreamer-%{majorminor}/libgstffmpegcolorspace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdecodebin.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdecodebin2.so
 %{_libdir}/gstreamer-%{majorminor}/libgstplaybin.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttypefindfunctions.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideotestsrc.so
@@ -163,6 +166,10 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/cdda/gstcddabasesrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/mixerutils.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/videoorientation.h
+%{_includedir}/gstreamer-%{majorminor}/gst/utils/base-utils.h
+%{_includedir}/gstreamer-%{majorminor}/gst/utils/descriptions.h
+%{_includedir}/gstreamer-%{majorminor}/gst/utils/missing-plugins.h
+%{_libdir}/libgstbaseutils-0.10.so
 %{_libdir}/libgstaudio-%{majorminor}.so
 %{_libdir}/libgstriff-%{majorminor}.so
 %{_libdir}/libgsttag-%{majorminor}.so
