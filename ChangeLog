@@ -1,5 +1,11 @@
 2007-01-12  Andy Wingo  <wingo@pobox.com>
 
+	* libs/gst/base/gstbasesink.c (gst_base_sink_negotiate_pull):
+	Don't set_caps() if the result of fixating is ANY, as it's not
+	supported, and not necessary in the case of a link with no
+	template caps on either side. Fixes tests/check/libs/basesrc in
+	some pull-mode tests.
+	
 	* libs/gst/base/gstbasetransform.c (_GstBaseTransformPrivate):
 	(gst_base_transform_init, gst_base_transform_sink_activate_push)
 	(gst_base_transform_src_activate_pull): 

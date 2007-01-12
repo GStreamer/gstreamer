@@ -2251,8 +2251,15 @@ gst_base_sink_negotiate_pull (GstBaseSink * basesink)
   caps = gst_caps_make_writable (caps);
   gst_pad_fixate_caps (pad, caps);
 
-  if (!gst_pad_set_caps (pad, caps))
-    goto could_not_set_caps;
+  if (gst_caps_is_any (caps)) {
+    GST_DEBUG_OBJECT (basesink, "caps were ANY after fixating, "
+        "allowing pull()");
+    /* neither side has template caps in this case, so they are prepared for
+       pull() without setcaps() */
+  } else {
+    if (!gst_pad_set_caps (pad, caps))
+      goto could_not_set_caps;
+  }
 
   gst_caps_unref (caps);
   gst_object_unref (pad);
