@@ -95,7 +95,15 @@ copy_and_clean_caps (const GstCaps * caps)
   gst_structure_remove_field (s, "palette_data");
   gst_structure_remove_field (s, "pixel-aspect-ratio");
   gst_structure_remove_field (s, "framerate");
-  /* maybe remove width/height too? */
+  gst_structure_remove_field (s, "leaf_size");
+  gst_structure_remove_field (s, "packet_size");
+  /* decoders/encoders almost always handle the usual width/height/channel/rate
+   * range (and if we don't remove this then the app will have a much harder
+   * time blacklisting formats it has unsuccessfully tried to install before) */
+  gst_structure_remove_field (s, "width");
+  gst_structure_remove_field (s, "height");
+  gst_structure_remove_field (s, "channels");
+  gst_structure_remove_field (s, "rate");
 
   return ret;
 }
