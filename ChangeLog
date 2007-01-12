@@ -1,4 +1,14 @@
-2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
+2007-01-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/.cvsignore:
+	* tests/check/gst/gsttagsetter.c: (gst_dummy_enc_add_interfaces),
+	(gst_dummy_enc_base_init), (gst_dummy_enc_class_init),
+	(gst_dummy_enc_init), (tag_list_foreach), (tag_setter_list_length),
+	(GST_START_TEST), (gst_tag_setter_suite):
+	  Add minimal unit test for beforementioned GstTagSetter bug.
+
+2007-01-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: René Stadler <mail at renestadler dot de>
 

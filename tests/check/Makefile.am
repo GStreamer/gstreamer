@@ -79,6 +79,7 @@ check_PROGRAMS =					\
 	gst/gstsystemclock			\
 	gst/gststructure				\
 	gst/gsttag				\
+	gst/gsttagsetter		\
 	gst/gsttask				\
 	gst/gstvalue				\
 	$(LOADSAVE_CHECKS)          		\

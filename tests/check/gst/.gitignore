@@ -21,6 +21,7 @@ gstsegment
 gststructure
 gstsystemclock
 gsttag
+gsttagsetter
 gstutils
 gstvalue
 gstquery
