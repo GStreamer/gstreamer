@@ -20,29 +20,45 @@
  */
 
 /**
- * SECTION:gstjacksink
+ * SECTION:element-jackaudiosink
  * @short_description: JACK audio sink
  * @see_also: #GstBaseAudioSink, #GstRingBuffer
  *
+ * <refsect2>
+ * <para>
  * A Sink that outputs data to Jack ports. 
- *
- * It will create N Jack ports named out_<num> where <num> is starting from 1.
+ * </para>
+ * <para>
+ * It will create N Jack ports named out_&lt;num&gt; where &lt;num&gt; is starting from 1.
  * Each port corresponds to a gstreamer channel.
- *
+ * </para>
+ * <para>
  * The samplerate as exposed on the caps is always the same as the samplerate of
  * the jack server.
- *
+ * </para>
+ * <para>
  * When the ::connect property is set to auto, this element will try to connect
  * each output port to a random physical jack input pin. In this mode, the sink
  * will expose the number of physical channels on its pad caps. 
- *
+ * </para>
+ * <para>
  * When the ::connect property is set to none, the element will accept any
  * number of input channels and will create (but not connect) an output port for
  * each channel.
- *
+ * </para>
+ * <para>
  * The element will generate an error when the Jack server is shut down when it
  * was PAUSED or PLAYING. This element does not support dynamic rate and buffer
  * size changes at runtime.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch audiotestsrc ! jackaudiosink
+ * </programlisting>
+ * Play a sine wave to using jack.
+ * </para>
+ * </refsect2>
  *
  * Last reviewed on 2006-11-30 (0.10.4)
  */
@@ -394,9 +410,9 @@ gst_jack_ring_buffer_close_device (GstRingBuffer * buf)
 /* allocate a buffer and setup resources to process the audio samples of
  * the format as specified in @spec.
  *
- * We allocate N jack ports for each channel. If we are asked to automatically
- * make a connection with physical ports, we connect as many ports as there are
- * physical ports, leaving leftover ports unconnected.
+ * We allocate N jack ports, one for each channel. If we are asked to
+ * automatically make a connection with physical ports, we connect as many
+ * ports as there are physical ports, leaving leftover ports unconnected.
  *
  * It is assumed that samplerate and number of channels are acceptable since our
  * getcaps method will always provide correct values. If unacceptable caps are

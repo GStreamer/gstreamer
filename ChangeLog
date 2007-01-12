@@ -1,5 +1,13 @@
 2007-01-12  Wim Taymans  <wim@fluendo.com>
 
+	* ext/jack/gstjackaudiosink.c: (jack_sample_rate_cb),
+	(jack_buffer_size_cb), (jack_shutdown_cb),
+	(gst_jack_ring_buffer_acquire):
+	* ext/jack/gstjackaudiosink.h:
+	Improve docs.
+
+2007-01-12  Wim Taymans  <wim@fluendo.com>
+
 	* ext/gsm/gstgsmenc.c: (gst_gsmenc_init):
 	Fix typo in docs.
 
