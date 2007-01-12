@@ -1,3 +1,18 @@
+2007-01-12  Andy Wingo  <wingo@pobox.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c
+	(gst_base_audio_sink_fixate): Implement, stolen from baseaudiosrc.
+	(gst_base_audio_sink_activate_pull): Remove the handwavey nego
+	stuff, as the base class handles this now. Actually tell the ring
+	buffer to start.
+	(gst_base_audio_sink_callback): Cast the ring buffer correctly.
+	How did this work before? Maybe I'm not as awesome a programmer as
+	I think.
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c
+	(gst_base_audio_src_fixate): Rework as a basesrc vmethod instead
+	of a pad function.
+
 2007-01-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/utils/missing-plugins.c: (copy_and_clean_caps):

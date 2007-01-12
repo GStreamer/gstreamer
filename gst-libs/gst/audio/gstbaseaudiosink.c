@@ -104,6 +104,7 @@ static void gst_base_audio_sink_get_times (GstBaseSink * bsink,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static gboolean gst_base_audio_sink_setcaps (GstBaseSink * bsink,
     GstCaps * caps);
+static void gst_base_audio_sink_fixate (GstBaseSink * bsink, GstCaps * caps);
 
 /* static guint gst_base_audio_sink_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -155,6 +156,7 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
   gstbasesink_class->get_times =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_get_times);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_base_audio_sink_setcaps);
+  gstbasesink_class->fixate = GST_DEBUG_FUNCPTR (gst_base_audio_sink_fixate);
   gstbasesink_class->async_play =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_async_play);
   gstbasesink_class->activate_pull =
@@ -373,6 +375,32 @@ acquire_error:
     GST_DEBUG_OBJECT (sink, "could not acquire ringbuffer");
     return FALSE;
   }
+}
+
+static void
+gst_base_audio_sink_fixate (GstBaseSink * bsink, GstCaps * caps)
+{
+  GstStructure *s;
+  gint width, depth;
+
+  s = gst_caps_get_structure (caps, 0);
+
+  /* fields for all formats */
+  gst_structure_fixate_field_nearest_int (s, "rate", 44100);
+  gst_structure_fixate_field_nearest_int (s, "channels", 2);
+  gst_structure_fixate_field_nearest_int (s, "width", 16);
+
+  /* fields for int */
+  if (gst_structure_has_field (s, "depth")) {
+    gst_structure_get_int (s, "width", &width);
+    /* round width to nearest multiple of 8 for the depth */
+    depth = GST_ROUND_UP_8 (width);
+    gst_structure_fixate_field_nearest_int (s, "depth", depth);
+  }
+  if (gst_structure_has_field (s, "signed"))
+    gst_structure_fixate_field_boolean (s, "signed", TRUE);
+  if (gst_structure_has_field (s, "endianness"))
+    gst_structure_fixate_field_nearest_int (s, "endianness", G_BYTE_ORDER);
 }
 
 static void
@@ -824,29 +852,9 @@ gst_base_audio_sink_activate_pull (GstBaseSink * basesink, gboolean active)
   GstBaseAudioSink *sink = GST_BASE_AUDIO_SINK (basesink);
 
   if (active) {
-    GstCaps *sinkcaps, *peercaps, *caps;
-
     gst_ring_buffer_set_callback (sink->ringbuffer,
         gst_base_audio_sink_callback, sink);
-
-    /* need to spawn a thread to start pulling. that's the ring buffer thread,
-       which is started in ring_buffer_acquire(), which is called due to a sink
-       setcaps(). So we need to setcaps, which is tough because we don't know
-       exactly what caps we'll be getting. We can guess, though, and that's as
-       good as we're going to get without the user telling us explicitly e.g.
-       via a capsfilter before the sink. */
-    sinkcaps = gst_pad_get_caps (basesink->sinkpad);
-    peercaps = gst_pad_peer_get_caps (basesink->sinkpad);
-    caps = gst_caps_intersect (sinkcaps, peercaps);
-    gst_caps_unref (sinkcaps);
-    gst_caps_unref (peercaps);
-    gst_caps_truncate (caps);
-    gst_pad_fixate_caps (basesink->sinkpad, caps);
-
-    GST_DEBUG_OBJECT (sink, "initializing pull-mode ringbuffer with caps %"
-        GST_PTR_FORMAT, caps);
-    ret = gst_pad_set_caps (basesink->sinkpad, caps);
-    gst_caps_unref (caps);
+    ret = gst_ring_buffer_start (sink->ringbuffer);
   } else {
     gst_ring_buffer_set_callback (sink->ringbuffer, NULL, NULL);
     /* stop thread */
@@ -865,8 +873,8 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
   GstBuffer *buf;
   GstFlowReturn ret;
 
-  basesink = GST_BASE_SINK (data);
-  sink = GST_BASE_AUDIO_SINK (data);
+  basesink = GST_BASE_SINK (user_data);
+  sink = GST_BASE_AUDIO_SINK (user_data);
 
   /* would be nice to arrange for pad_alloc_buffer to return data -- as it is we
      will copy twice, once into data, once into DMA */

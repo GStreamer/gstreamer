@@ -67,8 +67,6 @@ static void gst_base_audio_src_set_property (GObject * object, guint prop_id,
 static void gst_base_audio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_base_audio_src_fixate (GstPad * pad, GstCaps * caps);
-
 static GstStateChangeReturn gst_base_audio_src_change_state (GstElement *
     element, GstStateChange transition);
 
@@ -86,6 +84,7 @@ static gboolean gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event);
 static void gst_base_audio_src_get_times (GstBaseSrc * bsrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static gboolean gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
+static void gst_base_audio_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 /* static guint gst_base_audio_src_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -136,6 +135,7 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_base_audio_src_create);
   gstbasesrc_class->check_get_range =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_check_get_range);
+  gstbasesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_base_audio_src_fixate);
 }
 
 static void
@@ -150,9 +150,6 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
 
   baseaudiosrc->clock = gst_audio_clock_new ("clock",
       (GstAudioClockGetTimeFunc) gst_base_audio_src_get_time, baseaudiosrc);
-
-  gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (baseaudiosrc),
-      gst_base_audio_src_fixate);
 
   /* we are always a live source */
   gst_base_src_set_live (GST_BASE_SRC (baseaudiosrc), TRUE);
@@ -292,7 +289,7 @@ gst_base_audio_src_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_base_audio_src_fixate (GstPad * pad, GstCaps * caps)
+gst_base_audio_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstStructure *s;
   gint width, depth;
