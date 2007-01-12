@@ -1,3 +1,41 @@
+2007-01-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/Makefile.am:
+	* gst/qtdemux/qtdemux.c: (extract_initial_length_and_fourcc),
+	(gst_qtdemux_loop_state_header), (gst_qtdemux_combine_flows),
+	(gst_qtdemux_loop_state_movie), (gst_qtdemux_loop),
+	(gst_qtdemux_chain), (qtdemux_sink_activate_pull),
+	(qtdemux_inflate), (qtdemux_parse_moov), (qtdemux_parse_container),
+	(qtdemux_parse_node), (qtdemux_tree_get_child_by_type),
+	(qtdemux_tree_get_sibling_by_type), (gst_qtdemux_add_stream),
+	(qtdemux_parse_samples), (qtdemux_parse_segments),
+	(qtdemux_parse_trak), (qtdemux_tag_add_str), (qtdemux_tag_add_num),
+	(qtdemux_tag_add_date), (qtdemux_tag_add_gnre),
+	(qtdemux_parse_udta), (qtdemux_redirects_sort_func),
+	(qtdemux_process_redirects), (qtdemux_parse_redirects),
+	(qtdemux_parse_tree), (gst_qtdemux_handle_esds),
+	(qtdemux_video_caps), (qtdemux_audio_caps):
+	* gst/qtdemux/qtdemux.h:
+	* gst/qtdemux/qtdemux_dump.c: (qtdemux_dump_mvhd),
+	(qtdemux_dump_tkhd), (qtdemux_dump_elst), (qtdemux_dump_mdhd),
+	(qtdemux_dump_hdlr), (qtdemux_dump_vmhd), (qtdemux_dump_dref),
+	(qtdemux_dump_stsd), (qtdemux_dump_stts), (qtdemux_dump_stss),
+	(qtdemux_dump_stsc), (qtdemux_dump_stsz), (qtdemux_dump_stco),
+	(qtdemux_dump_co64), (qtdemux_dump_dcom), (qtdemux_dump_cmvd),
+	(qtdemux_dump_unknown), (qtdemux_node_dump_foreach),
+	(qtdemux_node_dump):
+	* gst/qtdemux/qtdemux_dump.h:
+	* gst/qtdemux/qtdemux_fourcc.h:
+	* gst/qtdemux/qtdemux_types.c: (qtdemux_type_get):
+	* gst/qtdemux/qtdemux_types.h:
+	* gst/qtdemux/qtpalette.h:
+	Cleanup and refactor to make the code more readable.
+	Move debugging/tables into separate files.
+	Add 2/4/16 color palletee support.
+	Fix raw 15 bit RGB handling.
+	Use more FOURCC constants.
+	Add some docs.
+
 2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sebastian Dröge  <slomo@circular-chaos.org>
