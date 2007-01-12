@@ -91,6 +91,8 @@ struct _GstQTDemuxClass {
   GstElementClass parent_class;
 };
 
+GType gst_qtdemux_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_QTDEMUX_H__ */

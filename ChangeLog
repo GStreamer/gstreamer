@@ -1,3 +1,23 @@
+2007-01-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/Makefile.am:
+	* gst/qtdemux/gstrtpxqtdepay.c: (gst_rtp_xqt_depay_base_init),
+	(gst_rtp_xqt_depay_class_init), (gst_rtp_xqt_depay_init),
+	(gst_rtp_xqt_depay_finalize), (gst_rtp_quicktime_parse_sd),
+	(gst_rtp_xqt_depay_setcaps), (gst_rtp_xqt_depay_process),
+	(gst_rtp_xqt_depay_set_property), (gst_rtp_xqt_depay_get_property),
+	(gst_rtp_xqt_depay_change_state), (gst_rtp_xqt_depay_plugin_init):
+	* gst/qtdemux/gstrtpxqtdepay.h:
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_base_init),
+	(gst_qtdemux_loop_state_header), (gst_qtdemux_loop),
+	(qtdemux_parse_moov), (qtdemux_parse_container),
+	(qtdemux_parse_node), (gst_qtdemux_add_stream),
+	(qtdemux_parse_trak), (qtdemux_audio_caps):
+	* gst/qtdemux/qtdemux.h:
+	* gst/qtdemux/quicktime.c: (plugin_init):
+	Add X-QT depayloader that will eventually share code with the demuxer.
+	Make new plugin entry point with quicktime releated stuff.
+
 2007-01-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/Makefile.am:
