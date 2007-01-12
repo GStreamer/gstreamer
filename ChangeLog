@@ -1,3 +1,7 @@
+2007-01-12  Andy Wingo  <wingo@pobox.com>
+
+	* docs/design/part-negotiation.txt: Update with more policy.
+
 2007-01-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/check/gstbufferstraw.h:

@@ -169,6 +169,9 @@ videotestsrc ! queue ! xvimagesink
 Pull-mode negotiation
 ---------------------
 
+Rationale
+.........
+
 A pipeline in pull mode has different negotiation needs than one
 activated in push mode. Push mode is optimized for two use cases:
 
@@ -199,7 +202,7 @@ In contrast, pull mode has other typical use cases:
 
 [0] http://jackit.sf.net
 
-The problem with push mode is that the sink has to know the format in
+The problem with pull mode is that the sink has to know the format in
 order to know how many bytes to pull via gst_pad_pull_range(). This
 means that before pulling, the sink must initiate negotation to decide
 on a format.
@@ -220,29 +223,46 @@ cases have different negotiation requirements:
 
 Given that sinks potentially need the input of sources, as in the RTP
 case and at least as a filter in the synthesis case, there must be a
-negotiation phase before the pull thread is activated.
+negotiation phase before the pull thread is activated. Also, given the
+low latency offered by pull mode, we want to avoid capsnego from within
+the pulling thread, in case it causes us to miss our scheduling
+deadlines.
 
-[ok at this point i'm a bit at a loss about how it should go]
+The time to do capsnego, then, is after activate_pull() has succeeded,
+but before the sink has spawned the pulling thread. Because of the
+latency concerns just mentioned, capsnego does not occur in the pulling
+thread.
 
-This negotiation phase is initiated by the sink, after it succeeds in
-calling gst_pad_activate_pull(), but before it spawns a thread to start
-pulling. The sink will call gst_pad_get_allowed_caps() on the its sink
-pad and fixate if necessary to determine the flow caps. It then calls
-gst_pad_set_caps on its sink pad's peer, to configure the upstream
-elements.
 
-A typical element will implement a setcaps() function on its src pads
-that proxies the setcaps() to all peers of its sink pads. This way, when
-getrange() is called on a pad, it knows what format it is being asked to
-produce.
+Mechanism
+.........
 
-If the sink element could not set caps on its peer(s), it should post an
-error message on the bus indicating that negotiation was not possible.
+The sink initiates the negotiation process by intersecting the results
+of gst_pad_get_caps() on its sink pad and its peer src pad. This is the
+operation performed by gst_pad_get_allowed_caps(). In the simple
+passthrough case, the peer pad's getcaps() function should return the
+intersection of calling get_allowed_caps() on all of its sink pads. In
+this way the sink element knows the capabilities of the entire pipeline.
 
-In this way all src pads are negotiated before data starts flowing, so
-all getrange() requests have a defined meaning for the number of bytes
-being pulled.
+The sink element then fixates the resulting caps, if necessary,
+resulting in the flow caps. It notifies the pipeline of the caps by
+calling gst_pad_set_caps() on its sink pad. Sink pads should proxy the
+setcaps() to their peer src pads. In the simple passthrough case, src
+pads' setcaps() functions proxy the setcaps() to all of their sink pads,
+which then set_caps() on their peers, and so the entire pipeline becomes
+configured before dataflow has started. All pads have fixed caps.
 
-(Now we get to questions: set caps on the sink pads at the same time or
-no? Does it matter? Does gst_pad_get_range() set caps? Does
-pull_range()? What happens when caps changes? Can caps change?)
+If the sink element could not set caps on its sink pad, it should post
+an error message on the bus indicating that negotiation was not
+possible.
+
+In this way all pads are negotiated before data starts flowing, so all
+getrange() requests have a defined meaning for the number of bytes being
+pulled.
+
+During dataflow, gst_pad_pull_range() checks the caps on the pulled
+buffer. If they are different from the sink pad's caps, it will return
+GST_FLOW_NOT_NEGOTIATED. Because of the low-latency requirements,
+changing caps in an activate pull-mode pipeline is not supported, as it
+might require e.g. the sound card to reconfigure its hardware buffers,
+and start capsnego again.
