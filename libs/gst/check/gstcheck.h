@@ -31,6 +31,8 @@
 
 #include <gst/gst.h>
 
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (check_debug);
 #define GST_CAT_DEFAULT check_debug
 
@@ -289,8 +291,6 @@ fail_unless (gst_element_set_state (element,			\
   state) == ret,						\
   "could not change state to " #state);
 
-#endif /* __GST_CHECK_H__ */
-
 #define GST_CHECK_MAIN(name)					\
 int main (int argc, char **argv)				\
 {								\
@@ -298,3 +298,7 @@ int main (int argc, char **argv)				\
   gst_check_init (&argc, &argv);				\
   return gst_check_run_suite (s, # name, __FILE__);		\
 }
+
+G_END_DECLS
+
+#endif /* __GST_CHECK_H__ */

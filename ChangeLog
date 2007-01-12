@@ -1,5 +1,12 @@
 2007-01-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* libs/gst/check/gstbufferstraw.h:
+	* libs/gst/check/gstcheck.h:
+	  Add G_BEGIN_DECLS and G_END_DECLS. Move GST_CHECK_MAIN where it
+	  belongs.
+
+2007-01-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/Makefile.am:
 	* tests/check/gst/.cvsignore:
 	* tests/check/gst/gsttagsetter.c: (gst_dummy_enc_add_interfaces),
