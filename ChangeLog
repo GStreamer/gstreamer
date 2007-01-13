@@ -1,3 +1,9 @@
+2007-01-13  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstpad.c (gst_pad_get_range, gst_pad_pull_range): Allow
+	getrange() to return buffers with other caps, while we fix
+	demuxers and typefind, or otherwise change part-negotiation.txt.
+
 2007-01-12  Andy Wingo  <wingo@pobox.com>
 
 	* libs/gst/base/gstbasetransform.c (gst_base_transform_activate):

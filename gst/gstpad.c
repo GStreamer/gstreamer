@@ -3793,11 +3793,21 @@ dropping:
   }
 not_negotiated:
   {
+    /* ideally we want to use the commented-out code, but currently demuxers and
+     * typefind do not follow part-negotiation.txt. When switching into pull
+     * mode, typefind should probably return the found caps from getcaps(), and
+     * demuxers should do the setcaps(). */
+
+#if 0
     gst_buffer_unref (*buffer);
     *buffer = NULL;
     GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
         "getrange returned buffer of different caps");
     return GST_FLOW_NOT_NEGOTIATED;
+#endif
+    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "getrange returned buffer of different caps");
+    return ret;
   }
 }
 
@@ -3904,11 +3914,21 @@ dropping:
   }
 not_negotiated:
   {
+    /* ideally we want to use the commented-out code, but currently demuxers and
+     * typefind do not follow part-negotiation.txt. When switching into pull
+     * mode, typefind should probably return the found caps from getcaps(), and
+     * demuxers should do the setcaps(). */
+
+#if 0
     gst_buffer_unref (*buffer);
     *buffer = NULL;
     GST_CAT_WARNING_OBJECT (GST_CAT_SCHEDULING, pad,
         "pullrange returned buffer of different caps");
     return GST_FLOW_NOT_NEGOTIATED;
+#endif
+    GST_CAT_DEBUG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "pullrange returned buffer of different caps");
+    return ret;
   }
 }
 
