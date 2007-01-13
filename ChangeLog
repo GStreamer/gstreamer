@@ -1,3 +1,25 @@
+2007-01-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastian Dröge <slomo circular-chaos org>
+
+	* gst/audiofx/audiopanorama.c:
+	(gst_audio_panorama_method_get_type),
+	(gst_audio_panorama_class_init), (gst_audio_panorama_init),
+	(gst_audio_panorama_set_process_function),
+	(gst_audio_panorama_set_property),
+	(gst_audio_panorama_get_property), (gst_audio_panorama_set_caps),
+	(gst_audio_panorama_transform_m2s_int_simple),
+	(gst_audio_panorama_transform_s2s_int_simple),
+	(gst_audio_panorama_transform_m2s_float_simple),
+	(gst_audio_panorama_transform_s2s_float_simple):
+	* gst/audiofx/audiopanorama.h:
+	  Add 'method' property and provide a simple (non-psychoacustic)
+	  processing method (#394859).
+
+	* tests/check/elements/audiopanorama.c: (GST_START_TEST),
+	(panorama_suite):
+	  Tests for new method.
+
 2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_read_range):

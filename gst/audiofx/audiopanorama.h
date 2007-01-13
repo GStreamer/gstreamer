@@ -45,7 +45,10 @@ struct _GstAudioPanorama {
   
   /* < private > */
   GstAudioPanoramaProcessFunc process;
+  gint channels;
+  gboolean format_float;
   gint width;
+  gint method;
 };
 
 struct _GstAudioPanoramaClass {

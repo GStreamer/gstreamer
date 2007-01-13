@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2006 Stefan Kost <ensonic@users.sf.net>
+ * Copyright (C) 2006 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,13 +24,15 @@
  * @short_description: audio stereo pan effect
  *
  * <refsect2>
- * Stereo panorama effect with controllable pan position.
+ * Stereo panorama effect with controllable pan position. One can choose between the default psychoacoustic panning method,
+ * which keeps the same perceived loudness, and a simple panning method that just controls the volume on one channel.
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
  * gst-launch audiotestsrc wave=saw ! audiopanorama panorama=-1.00 ! alsasink
  * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiopanorama panorama=-1.00 ! alsasink
  * gst-launch audiotestsrc wave=saw ! audioconvert ! audiopanorama panorama=-1.00 ! audioconvert ! alsasink
+ * gst-launch audiotestsrc wave=saw ! audioconvert ! audiopanorama method=simple panorama=-0.50 ! audioconvert ! alsasink
  * </programlisting>
  * </para>
  * </refsect2>
@@ -64,8 +67,34 @@ enum
 enum
 {
   PROP_0,
-  PROP_PANORAMA
+  PROP_PANORAMA,
+  PROP_METHOD
 };
+
+enum
+{
+  METHOD_PSYCHOACOUSTIC,
+  METHOD_SIMPLE
+};
+
+#define GST_TYPE_AUDIO_PANORAMA_METHOD (gst_audio_panorama_method_get_type ())
+static GType
+gst_audio_panorama_method_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {METHOD_PSYCHOACOUSTIC, "Psychoacoustic Panning (default)",
+          "psychoacoustic"},
+      {METHOD_SIMPLE, "Simple Panning", "simple"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstAudioPanoramaMethod", values);
+  }
+  return gtype;
+}
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -122,6 +151,15 @@ static void gst_audio_panorama_transform_m2s_float (GstAudioPanorama * filter,
 static void gst_audio_panorama_transform_s2s_float (GstAudioPanorama * filter,
     gfloat * idata, gfloat * odata, guint num_samples);
 
+static void gst_audio_panorama_transform_m2s_int_simple (GstAudioPanorama *
+    filter, gint16 * idata, gint16 * odata, guint num_samples);
+static void gst_audio_panorama_transform_s2s_int_simple (GstAudioPanorama *
+    filter, gint16 * idata, gint16 * odata, guint num_samples);
+static void gst_audio_panorama_transform_m2s_float_simple (GstAudioPanorama *
+    filter, gfloat * idata, gfloat * odata, guint num_samples);
+static void gst_audio_panorama_transform_s2s_float_simple (GstAudioPanorama *
+    filter, gfloat * idata, gfloat * odata, guint num_samples);
+
 static GstFlowReturn gst_audio_panorama_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
 
@@ -152,6 +190,20 @@ gst_audio_panorama_class_init (GstAudioPanoramaClass * klass)
       g_param_spec_float ("panorama", "Panorama",
           "Position in stereo panorama (-1.0 left -> 1.0 right)", -1.0, 1.0,
           0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+  /**
+   * GstAudioPanorama:method
+   *
+   * Panning method: psychoacoustic mode keeps the same perceived loudness,
+   * while simple mode just controls the volume of one channel.
+   *
+   * Since: 0.10.6
+   **/
+  g_object_class_install_property (gobject_class, PROP_METHOD,
+      g_param_spec_enum ("method", "Panning method",
+          "Psychoacoustic mode keeps same perceived loudness, "
+          "simple mode just controls volume of one channel.",
+          GST_TYPE_AUDIO_PANORAMA_METHOD, METHOD_PSYCHOACOUSTIC,
+          G_PARAM_READWRITE));
 
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_panorama_get_unit_size);
@@ -168,7 +220,67 @@ gst_audio_panorama_init (GstAudioPanorama * filter,
     GstAudioPanoramaClass * klass)
 {
   filter->panorama = 0;
+  filter->method = METHOD_PSYCHOACOUSTIC;
   filter->width = 0;
+  filter->channels = 0;
+  filter->format_float = FALSE;
+  filter->process = NULL;
+}
+
+static gboolean
+gst_audio_panorama_set_process_function (GstAudioPanorama * filter)
+{
+  gboolean ret;
+
+  /* set processing function */
+  switch (filter->channels) {
+    case 1:
+      if (!filter->format_float) {
+        if (filter->method == METHOD_SIMPLE) {
+          filter->process = (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_m2s_int_simple;
+        } else {
+          filter->process = (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_m2s_int;
+        }
+      } else {
+        if (filter->method == METHOD_SIMPLE) {
+          filter->process = (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_m2s_float_simple;
+        } else {
+          filter->process = (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_m2s_float;
+        }
+      }
+      ret = TRUE;
+      break;
+    case 2:
+      if (!filter->format_float) {
+        if (filter->method == METHOD_SIMPLE) {
+          filter->process = (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_s2s_int_simple;
+        } else {
+          filter->process = (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_s2s_int;
+        }
+      } else {
+        if (filter->method == METHOD_SIMPLE) {
+          filter->process = (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_s2s_float_simple;
+        } else {
+          filter->process = (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_s2s_float;
+        }
+      }
+      ret = TRUE;
+      break;
+    default:
+      ret = FALSE;
+      filter->process = NULL;
+      break;
+  }
+
+  return ret;
 }
 
 static void
@@ -180,6 +292,10 @@ gst_audio_panorama_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PANORAMA:
       filter->panorama = g_value_get_float (value);
+      break;
+    case PROP_METHOD:
+      filter->method = g_value_get_enum (value);
+      gst_audio_panorama_set_process_function (filter);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -196,6 +312,9 @@ gst_audio_panorama_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PANORAMA:
       g_value_set_float (value, filter->panorama);
+      break;
+    case PROP_METHOD:
+      g_value_set_enum (value, filter->method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -254,13 +373,13 @@ gst_audio_panorama_set_caps (GstBaseTransform * base, GstCaps * incaps,
   GstAudioPanorama *filter = GST_AUDIO_PANORAMA (base);
   const GstStructure *structure;
   gboolean ret;
-  gint channels, width;
+  gint width;
   const gchar *fmt;
 
   /*GST_INFO ("incaps are %" GST_PTR_FORMAT, incaps); */
 
   structure = gst_caps_get_structure (incaps, 0);
-  ret = gst_structure_get_int (structure, "channels", &channels);
+  ret = gst_structure_get_int (structure, "channels", &filter->channels);
   if (!ret)
     goto no_channels;
 
@@ -269,36 +388,19 @@ gst_audio_panorama_set_caps (GstBaseTransform * base, GstCaps * incaps,
     goto no_width;
   filter->width = width / 8;
 
-
   fmt = gst_structure_get_name (structure);
+  if (!strcmp (fmt, "audio/x-raw-int"))
+    filter->format_float = FALSE;
+  else
+    filter->format_float = TRUE;
 
-  GST_DEBUG ("try to process %s input with %d channels", fmt, channels);
+  GST_DEBUG ("try to process %s input with %d channels", fmt, filter->channels);
 
-  /* set processing function */
-  switch (channels) {
-    case 1:
-      if (!strcmp (fmt, "audio/x-raw-int"))
-        filter->process = (GstAudioPanoramaProcessFunc)
-            gst_audio_panorama_transform_m2s_int;
-      else
-        filter->process = (GstAudioPanoramaProcessFunc)
-            gst_audio_panorama_transform_m2s_float;
-      ret = TRUE;
-      break;
-    case 2:
-      if (!strcmp (fmt, "audio/x-raw-int"))
-        filter->process = (GstAudioPanoramaProcessFunc)
-            gst_audio_panorama_transform_s2s_int;
-      else
-        filter->process = (GstAudioPanoramaProcessFunc)
-            gst_audio_panorama_transform_s2s_float;
-      ret = TRUE;
-      break;
-    default:
-      filter->process = NULL;
-      ret = FALSE;
-      GST_WARNING ("can't process input with %d channels", channels);
-  }
+  ret = gst_audio_panorama_set_process_function (filter);
+
+  if (!ret)
+    GST_WARNING ("can't process input with %d channels", filter->channels);
+
   return ret;
 
 no_channels:
@@ -309,6 +411,7 @@ no_width:
   return ret;
 }
 
+/* psychoacoustic processing functions */
 static void
 gst_audio_panorama_transform_m2s_int (GstAudioPanorama * filter, gint16 * idata,
     gint16 * odata, guint num_samples)
@@ -434,6 +537,98 @@ gst_audio_panorama_transform_s2s_float (GstAudioPanorama * filter,
 
     *odata++ = lival * llpan + rival * lrpan;
     *odata++ = lival * rlpan + rival * rrpan;
+  }
+}
+
+/* simple processing functions */
+static void
+gst_audio_panorama_transform_m2s_int_simple (GstAudioPanorama * filter,
+    gint16 * idata, gint16 * odata, guint num_samples)
+{
+  guint i;
+  gdouble val;
+  glong lval, rval;
+
+  for (i = 0; i < num_samples; i++) {
+    val = (gdouble) * idata++;
+
+    if (filter->panorama > 0.0) {
+      lval = (glong) (val * (1.0 - filter->panorama));
+      rval = (glong) val;
+    } else {
+      lval = (glong) val;
+      rval = (glong) (val * (1.0 + filter->panorama));
+    }
+
+    *odata++ = (gint16) CLAMP (lval, G_MININT16, G_MAXINT16);
+    *odata++ = (gint16) CLAMP (rval, G_MININT16, G_MAXINT16);
+  }
+}
+
+static void
+gst_audio_panorama_transform_s2s_int_simple (GstAudioPanorama * filter,
+    gint16 * idata, gint16 * odata, guint num_samples)
+{
+  guint i;
+  glong lval, rval;
+  gdouble lival, rival;
+
+  for (i = 0; i < num_samples; i++) {
+    lival = (gdouble) * idata++;
+    rival = (gdouble) * idata++;
+
+    if (filter->panorama > 0.0) {
+      lval = (glong) (lival * (1.0 - filter->panorama));
+      rval = (glong) rival;
+    } else {
+      lval = (glong) lival;
+      rval = (glong) (rival * (1.0 + filter->panorama));
+    }
+
+    *odata++ = (gint16) CLAMP (lval, G_MININT16, G_MAXINT16);
+    *odata++ = (gint16) CLAMP (rval, G_MININT16, G_MAXINT16);
+  }
+}
+
+static void
+gst_audio_panorama_transform_m2s_float_simple (GstAudioPanorama * filter,
+    gfloat * idata, gfloat * odata, guint num_samples)
+{
+  guint i;
+  gfloat val;
+
+
+  for (i = 0; i < num_samples; i++) {
+    val = *idata++;
+
+    if (filter->panorama > 0.0) {
+      *odata++ = val * (1.0 - filter->panorama);
+      *odata++ = val;
+    } else {
+      *odata++ = val;
+      *odata++ = val * (1.0 + filter->panorama);
+    }
+  }
+}
+
+static void
+gst_audio_panorama_transform_s2s_float_simple (GstAudioPanorama * filter,
+    gfloat * idata, gfloat * odata, guint num_samples)
+{
+  guint i;
+  gfloat lival, rival;
+
+  for (i = 0; i < num_samples; i++) {
+    lival = *idata++;
+    rival = *idata++;
+
+    if (filter->panorama > 0.0) {
+      *odata++ = lival * (1.0 - filter->panorama);
+      *odata++ = rival;
+    } else {
+      *odata++ = lival;
+      *odata++ = rival * (1.0 + filter->panorama);
+    }
   }
 }
 
