@@ -143,6 +143,7 @@ gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
     pad = gst_pad_new_from_static_template (&src_template, name);
     g_free (name);
     gst_pad_set_caps (pad, caps);
+    gst_pad_use_fixed_caps (pad);
     GST_PAD_UNSET_FLUSHING (pad);
     gst_element_add_pad (GST_ELEMENT (self), pad);
   }
@@ -154,22 +155,21 @@ static void
 gst_deinterleave_remove_pads (GstDeinterleave * self)
 {
   GstElement *elem;
-  GList *sinks, *l;
+  GList *srcs, *l;
 
   elem = GST_ELEMENT (self);
 
   GST_INFO_OBJECT (self, "remove_pads()");
 
-  sinks = g_list_copy (elem->sinkpads);
+  srcs = g_list_copy (elem->srcpads);
 
-  for (l = sinks; l; l = l->next)
-    /* force set_caps when going to RUNNING, see note in set_caps */
+  for (l = srcs; l; l = l->next)
     gst_element_remove_pad (elem, GST_PAD (l->data));
 
   gst_pad_set_caps (self->sink, NULL);
   gst_caps_replace (&self->sinkcaps, NULL);
 
-  g_list_free (sinks);
+  g_list_free (srcs);
 }
 
 static gboolean
@@ -248,6 +248,12 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
       goto alloc_buffer_failed;
     if (buffers_out[i] && GST_BUFFER_SIZE (buffers_out[i]) != bufsize)
       goto alloc_buffer_bad_size;
+
+    if (buffers_out[i]) {
+      GST_BUFFER_TIMESTAMP (buffers_out[i]) = GST_BUFFER_TIMESTAMP (buf);
+      GST_BUFFER_OFFSET (buffers_out[i]) = GST_BUFFER_OFFSET (buf);
+      GST_BUFFER_DURATION (buffers_out[i]) = GST_BUFFER_DURATION (buf);
+    }
   }
 
   /* do the thing */
