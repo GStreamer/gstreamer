@@ -135,7 +135,9 @@ static GstPad *gst_interleave_request_new_pad (GstElement * element,
 static GstFlowReturn gst_interleave_getrange (GstPad * pad,
     guint64 offset, guint length, GstBuffer ** buffer);
 static GstFlowReturn gst_interleave_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_interleave_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_interleave_src_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_interleave_sink_setcaps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_interleave_src_getcaps (GstPad * pad);
 
 
 static const GstElementDetails details =
@@ -173,6 +175,7 @@ static void
 gst_interleave_init (GstInterleave * self, GstInterleaveClass * klass)
 {
   self->pending_in = 0;
+  self->mode = GST_ACTIVATE_NONE;
 
   self->src = gst_pad_new_from_static_template (&src_template, "src");
 
@@ -180,6 +183,10 @@ gst_interleave_init (GstInterleave * self, GstInterleaveClass * klass)
       GST_DEBUG_FUNCPTR (gst_interleave_getrange));
   gst_pad_set_activatepull_function (self->src,
       GST_DEBUG_FUNCPTR (gst_interleave_src_activate_pull));
+  gst_pad_set_setcaps_function (self->src,
+      GST_DEBUG_FUNCPTR (gst_interleave_src_setcaps));
+  gst_pad_set_getcaps_function (self->src,
+      GST_DEBUG_FUNCPTR (gst_interleave_src_getcaps));
 
   gst_element_add_pad (GST_ELEMENT (self), self->src);
 }
@@ -197,7 +204,7 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GST_INTERLEAVE_PAD (new)->channel = self->channels++;
 
   gst_pad_set_setcaps_function (new,
-      GST_DEBUG_FUNCPTR (gst_interleave_setcaps));
+      GST_DEBUG_FUNCPTR (gst_interleave_sink_setcaps));
 
   gst_pad_set_chain_function (new, GST_DEBUG_FUNCPTR (gst_interleave_chain));
   gst_pad_set_activatepush_function (new,
@@ -226,39 +233,146 @@ gst_interleave_unset_caps (GstInterleave * self)
 }
 
 static gboolean
-gst_interleave_setcaps (GstPad * pad, GstCaps * caps)
+gst_interleave_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstInterleave *self;
 
   self = GST_INTERLEAVE (gst_pad_get_parent (pad));
 
-  if (self->sinkcaps && !gst_caps_is_equal (caps, self->sinkcaps)) {
-    goto cannot_change_caps_dog;
-  } else {
-    GST_DEBUG_OBJECT (self, "got caps: %" GST_PTR_FORMAT, caps);
-    gst_caps_replace (&self->sinkcaps, caps);
-  }
+  if (self->sinkcaps && !gst_caps_is_equal (caps, self->sinkcaps))
+    goto cannot_change_caps;
 
-  {
+  if (self->mode == GST_ACTIVATE_PULL) {
+    GstPad *peer;
+
+    if ((peer = gst_pad_get_peer (pad))) {
+      gboolean res = gst_pad_set_caps (peer, caps);
+
+      gst_object_unref (peer);
+      if (!res)
+        goto peer_did_not_accept;
+    }
+  } else {
     GstCaps *srccaps;
-    GstStructure *s;
+    gboolean res;
 
     srccaps = gst_caps_copy (caps);
-    s = gst_caps_get_structure (srccaps, 0);
-    gst_structure_set (s, "channels", G_TYPE_INT, self->channels, NULL);
-    gst_pad_set_caps (self->src, srccaps);
+    gst_structure_set (gst_caps_get_structure (srccaps, 0), "channels",
+        G_TYPE_INT, self->channels, NULL);
+
+    res = gst_pad_set_caps (self->src, srccaps);
     gst_caps_unref (srccaps);
+
+    if (!res)
+      goto src_did_not_accept;
+  }
+
+  if (!self->sinkcaps)
+    gst_caps_replace (&self->sinkcaps, caps);
+
+  return TRUE;
+
+cannot_change_caps:
+  {
+    GST_DEBUG_OBJECT (self, "caps of %" GST_PTR_FORMAT " already set, can't "
+        "change", self->sinkcaps);
+    return FALSE;
+  }
+peer_did_not_accept:
+  {
+    GST_DEBUG_OBJECT (self, "peer did not accept setcaps()");
+    return FALSE;
+  }
+src_did_not_accept:
+  {
+    GST_DEBUG_OBJECT (self, "src did not accept setcaps()");
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_interleave_src_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstInterleave *self;
+  gint channels;
+
+  self = GST_INTERLEAVE (gst_pad_get_parent (pad));
+
+  if (!gst_structure_get_int (gst_caps_get_structure (caps, 0), "channels",
+          &channels))
+    goto impossible;
+
+  if (channels != self->channels)
+    goto wrong_num_channels;
+
+  if (self->mode == GST_ACTIVATE_PULL) {
+    GstCaps *sinkcaps;
+    GList *l;
+
+    sinkcaps = gst_caps_copy (caps);
+    gst_structure_set (gst_caps_get_structure (sinkcaps, 0), "channels",
+        G_TYPE_INT, 1, NULL);
+
+    for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next)
+      if (!gst_pad_set_caps (GST_PAD (l->data), sinkcaps))
+        goto sinks_did_not_accept;
+
+    gst_caps_unref (sinkcaps);
   }
 
   gst_object_unref (self);
 
   return TRUE;
 
-cannot_change_caps_dog:
+impossible:
   {
+    g_warning ("caps didn't have channels property, how is this possible");
     gst_object_unref (self);
     return FALSE;
   }
+wrong_num_channels:
+  {
+    GST_INFO_OBJECT (self, "bad number of channels (%d != %d)",
+        self->channels, channels);
+    gst_object_unref (self);
+    return FALSE;
+  }
+sinks_did_not_accept:
+  {
+    /* assume they already logged */
+    gst_object_unref (self);
+    return FALSE;
+  }
+}
+
+static GstCaps *
+gst_interleave_src_getcaps (GstPad * pad)
+{
+  GstInterleave *self;
+  GList *l;
+  GstCaps *ret;
+
+  self = GST_INTERLEAVE (gst_pad_get_parent (pad));
+
+  ret = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+
+  for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next) {
+    GstCaps *sinkcaps, *oldcaps;
+
+    oldcaps = ret;
+    sinkcaps = gst_pad_get_caps (GST_PAD (l->data));
+    ret = gst_caps_intersect (sinkcaps, oldcaps);
+    gst_caps_unref (oldcaps);
+    gst_caps_unref (sinkcaps);
+  }
+
+  if (self->channels)
+    gst_structure_set (gst_caps_get_structure (ret, 0), "channels", G_TYPE_INT,
+        self->channels, NULL);
+
+  gst_object_unref (self);
+
+  return ret;
 }
 
 static void
@@ -325,6 +439,8 @@ gst_interleave_process (GstInterleave * self, guint nframes, GstBuffer ** buf)
 
   if (GST_BUFFER_SIZE (*buf) != bufsize)
     goto alloc_buffer_bad_size;
+
+  gst_buffer_set_caps (*buf, GST_PAD_CAPS (self->src));
 
   /* do the thing */
   for (sinks = elem->sinkpads, i = 0; sinks; sinks = sinks->next, i++) {
@@ -567,7 +683,7 @@ gst_interleave_src_activate_pull (GstPad * pad, gboolean active)
 
       if (GST_ELEMENT (self)->sinkpads) {
         for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next)
-          result &= gst_pad_activate_pull (pad, active);
+          result &= gst_pad_activate_pull (GST_PAD (l->data), active);
       } else {
         /* nobody has requested pads, seems i am operating in delayed-request
            push mode */
@@ -588,7 +704,7 @@ gst_interleave_src_activate_pull (GstPad * pad, gboolean active)
       GList *l;
 
       for (l = GST_ELEMENT (self)->sinkpads; l; l = l->next)
-        result &= gst_pad_activate_pull (pad, active);
+        result &= gst_pad_activate_pull (GST_PAD (l->data), active);
       if (result)
         self->mode = GST_ACTIVATE_NONE;
       result = TRUE;

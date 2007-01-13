@@ -1,3 +1,17 @@
+2007-01-13  Andy Wingo  <wingo@pobox.com>
+
+	* gst/interleave/interleave.c (gst_interleave_init): Init the
+	activation mode properly.
+	(gst_interleave_src_setcaps, gst_interleave_src_getcaps)
+	(gst_interleave_init): Set a setcaps and getcaps function on the
+	src pad, so that we can implement pull-mode negotiation.
+	(gst_interleave_sink_setcaps): Renamed from
+	gst_interleave_setcaps, as it only does the sink logic now.
+	Implement both for pull-mode and push-mode.
+	(gst_interleave_process): Set caps on our outgoing buffer.
+	(gst_interleave_src_activate_pull): Fix some more bogus casts.
+	What is up with this.
+
 2007-01-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mythtv/gstmythtvsrc.c: (do_read_request_response),
