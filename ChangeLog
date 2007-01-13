@@ -1,3 +1,15 @@
+2007-01-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/mythtv/gstmythtvsrc.c: (do_read_request_response),
+	(gst_mythtv_src_create), (gst_mythtv_src_get_position),
+	(gst_mythtv_src_do_seek), (gst_mythtv_src_start),
+	(gst_mythtv_src_next_program_chain), (gst_mythtv_src_get_size),
+	(gst_mythtv_src_handle_event), (gst_mythtv_src_handle_query),
+	(gst_mythtv_src_change_state), (gst_mythtv_src_set_property),
+	(gst_mythtv_src_uri_get_type):
+	  Clean up a bit, mostly the debug statements; fix deadlock in
+	  _set_property() in the error cases; fix up query function.
+
 2007-01-12  Andy Wingo  <wingo@pobox.com>
 
 	* ext/ladspa/gstsignalprocessor.c (gst_signal_processor_fixate)
@@ -19,7 +31,7 @@
 	* ext/mythtv/Makefile.am:
 	* ext/mythtv/gstmythtvsrc.c:
 	* ext/mythtv/gstmythtvsrc.h:
-	MythTV client source plugin created.
+	MythTV client source plugin created (#354451).
 
 2007-01-12  Wim Taymans  <wim@fluendo.com>
 
