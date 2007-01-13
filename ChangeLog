@@ -1,5 +1,12 @@
 2007-01-13  Andy Wingo  <wingo@pobox.com>
 
+	* gst/interleave/deinterleave.c (gst_deinterleave_add_new_pads):
+	Use fixed caps on src pads.
+	(gst_deinterleave_remove_pads): Remove src pads, not sink pads. I
+	seem to have reverse midas disease!
+	(gst_deinterleave_process): Proxy timestamps, offsets, durations,
+	and set caps on outgoing buffers. Fixes #395597, I think.
+
 	* gst/interleave/interleave.c (gst_interleave_init): Init the
 	activation mode properly.
 	(gst_interleave_src_setcaps, gst_interleave_src_getcaps)
