@@ -1,3 +1,24 @@
+2007-01-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
+	* gst/avi/gstavimux.c: (gst_avi_mux_finalize),
+	(gst_avi_mux_pad_reset), (gst_avi_mux_reset), (gst_avi_mux_init),
+	(gst_avi_mux_vidsink_set_caps), (gst_avi_mux_audsink_set_caps),
+	(gst_avi_mux_request_new_pad), (gst_avi_mux_release_pad),
+	(gst_avi_mux_riff_get_avi_header),
+	(gst_avi_mux_riff_get_avix_header), (gst_avi_mux_riff_get_header),
+	(gst_avi_mux_write_avix_index), (gst_avi_mux_add_index),
+	(gst_avi_mux_bigfile), (gst_avi_mux_start_file),
+	(gst_avi_mux_stop_file), (gst_avi_mux_handle_event),
+	(gst_avi_mux_do_buffer), (gst_avi_mux_do_one_buffer),
+	(gst_avi_mux_change_state):
+	* gst/avi/gstavimux.h:
+	* tests/check/elements/avimux.c: (teardown_src_pad):
+	  Add support for more than one audio stream; write better AVIX
+	  header; refactor code a bit; don't announce vorbis caps on our audio
+	  sink pads since we don't support it anyway. Closes #379298.
+
 2007-01-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sebastian Dröge <slomo circular-chaos org>

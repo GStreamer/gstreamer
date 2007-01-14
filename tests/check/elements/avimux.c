@@ -100,8 +100,9 @@ teardown_src_pad (GstElement * element, gchar * sinkname)
 
   gst_pad_unlink (srcpad, sinkpad);
 
-  /* after unlinking, pad refs held by 1) avimux and 2) us (through _get) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  /* after unlinking, pad refs still held by
+   * 1) avimux and 2) collectpads and 3) us (through _get) */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
   gst_object_unref (sinkpad);
   /* one more ref is held by element itself */
 

@@ -52,6 +52,54 @@ typedef struct _gst_avi_superindex_entry {
   guint32 duration;
 } gst_avi_superindex_entry;
 
+typedef struct _GstAviPad {
+  /* do not extend, link to it */
+  /* is NULL if original sink request pad has been removed */
+  GstCollectData *collect;
+
+  /* type */
+  gboolean is_video;
+  gboolean connected;
+
+  /* chunk tag */
+  gchar *tag;
+
+  /* stream header */
+  gst_riff_strh hdr;
+
+  /* odml super indexes */
+  gst_avi_superindex_entry idx[GST_AVI_SUPERINDEX_COUNT];
+  gint idx_index;
+  gchar *idx_tag;
+} GstAviPad;
+
+typedef struct _GstAviVideoPad {
+  GstAviPad parent;
+
+  /* stream format */
+  gst_riff_strf_vids vids;
+  /* extra data */
+  GstBuffer *vids_codec_data;
+
+} GstAviVideoPad;
+
+typedef struct _GstAviAudioPad {
+  GstAviPad parent;
+
+  /* stream format */
+  gst_riff_strf_auds auds;
+  /* audio info for bps calculation */
+  guint32 audio_size;
+  guint64 audio_time;
+
+} GstAviAudioPad;
+
+typedef struct _GstAviCollectData {
+  /* extend the CollectData */
+  GstCollectData collect;
+
+  GstAviPad      *avipad;
+} GstAviCollectData;
 
 typedef struct _GstAviMux GstAviMux;
 typedef struct _GstAviMuxClass GstAviMuxClass;
@@ -61,14 +109,15 @@ struct _GstAviMux {
 
   /* pads */
   GstPad              *srcpad;
-  GstCollectData      *audiocollectdata;
-  gboolean             audio_pad_connected;
-  GstCollectData      *videocollectdata;
-  gboolean             video_pad_connected;
+  /* sinkpads, video first */
+  GSList              *sinkpads;
+  /* video restricted to 1 pad */
+  guint               video_pads, audio_pads;
   GstCollectPads      *collect;
   GstPadEventFunction  collect_event;
 
   /* the AVI header */
+  /* still some single stream video data in mux struct */
   gst_riff_avih avi_hdr;
   /* total number of (video) frames */
   guint32 total_frames;
@@ -80,25 +129,16 @@ struct _GstAviMux {
   /* num (video) frames in the AVI/AVIX block */
   guint32 num_frames, numx_frames;
   /* size of hdrl list, including tag as usual */
-  guint32 header_size;
+
+  /* total size of extra codec data */
+  guint32 codec_data_size;
+  /* state info */
   gboolean write_header;
   gboolean restart;
-  guint32 audio_size;
-  guint64 audio_time;
-
-  /* video header */
-  gst_riff_strh vids_hdr;
-  gst_riff_strf_vids vids;
-  GstBuffer *vids_codec_data;
-
-  /* audio header */
-  gst_riff_strh auds_hdr;
-  gst_riff_strf_auds auds;
 
   /* tags */
   GstTagList *tags;
   GstTagList *tags_snap;
-  guint32 tag_size;
 
   /* information about the AVI index ('idx') */
   gst_riff_index_entry *idx;
@@ -107,11 +147,6 @@ struct _GstAviMux {
   guint32 idx_offset;
   /* size of idx1 chunk (including! chunk header and size bytes) */
   guint32 idx_size;
-
-  /* odml super indexes */
-  gst_avi_superindex_entry *vids_idx;
-  gst_avi_superindex_entry *auds_idx;
-  gint vids_idx_index, auds_idx_index;
 
   /* are we a big file already? */
   gboolean is_bigfile;
