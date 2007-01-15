@@ -1,3 +1,9 @@
+2007-01-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/tag/gstid3tag.c:
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  Use new beats-per-minute tag from core.
+
 2007-01-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* po/POTFILES.in:

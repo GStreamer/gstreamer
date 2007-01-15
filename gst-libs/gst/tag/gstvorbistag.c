@@ -41,6 +41,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * see http://xiph.org/ogg/vorbis/doc/v-comment.html
+ */
 static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_TITLE, "TITLE"},
   {GST_TAG_VERSION, "VERSION"},
@@ -74,6 +77,10 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_LANGUAGE_CODE, "LANGUAGE"},
   {GST_TAG_CDDA_MUSICBRAINZ_DISCID, "MUSICBRAINZ_DISCID"},
   {GST_TAG_CDDA_CDDB_DISCID, "DISCID"},
+  /* some incidence that this makes sense:
+   * http://mail.kde.org/pipermail/amarok/2006-May/000090.html
+   */
+  {GST_TAG_BEATS_PER_MINUTE, "BPM"},
   {NULL, NULL}
 };
 

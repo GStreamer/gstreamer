@@ -206,6 +206,7 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_ISRC, "TSRC"},
   {GST_TAG_IMAGE, "APIC"},
   {GST_TAG_ENCODER, "TSSE"},
+  {GST_TAG_BEATS_PER_MINUTE, "TBPM"},
   {NULL, NULL}
 };
 
