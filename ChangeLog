@@ -1,3 +1,9 @@
+2007-01-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* po/POTFILES.in:
+	  Add new files with translatable strings, so they actually make it
+	  into the template file one day.
+
 2007-01-12  Andy Wingo  <wingo@pobox.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c
