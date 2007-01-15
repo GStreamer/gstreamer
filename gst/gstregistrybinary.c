@@ -23,11 +23,13 @@
 
 /* FIXME:
  * - Add random key to libgstreamer during build and only accept registry,
- *   if key matches
+ *   if key matches (or is the version check enough)
  * - handle cases where we can't mmap
  * - keep registry binary blob and reference strings
  *   (need const flags in GstPlugin, etc.)
  * - why do we collect a list of binary chunks and not write immediately
+ *   - because we need to process subchunks, before we can set e.g. nr_of_items
+ *     in parnt chunk
  * - need more robustness
  *   - don't parse beyond mem-block size
  *   - include md5-sum ?
@@ -131,6 +133,26 @@ gst_registry_binary_save_string (GList ** list, gchar * str)
 }
 
 /*
+ * gst_registry_binary_save_data:
+ *
+ * Store some data in a binary chunk.
+ *
+ * Returns: the initialized chunk
+ */
+inline static GstBinaryChunk *
+gst_registry_binary_make_data (gpointer data, gulong size)
+{
+  GstBinaryChunk *chunk;
+
+  chunk = g_malloc (sizeof (GstBinaryChunk));
+  chunk->data = data;
+  chunk->size = size;
+  chunk->flags = GST_BINARY_REGISTRY_FLAG_NONE;
+  chunk->align = TRUE;
+  return chunk;
+}
+
+/*
  * gst_registry_binary_save_pad_template:
  *
  * Store pad_templates in binary chunks.
@@ -145,12 +167,7 @@ gst_registry_binary_save_pad_template (GList ** list,
   GstBinaryChunk *chk;
 
   pt = g_malloc (sizeof (GstBinaryPadTemplate));
-  chk = g_malloc (sizeof (GstBinaryChunk));
-
-  chk->data = pt;
-  chk->size = sizeof (GstBinaryPadTemplate);
-  chk->flags = GST_BINARY_REGISTRY_FLAG_NONE;
-  chk->align = TRUE;
+  chk = gst_registry_binary_make_data (pt, sizeof (GstBinaryPadTemplate));
 
   pt->presence = template->presence;
   pt->direction = template->direction;
@@ -186,18 +203,43 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
   }
 
   pf = g_malloc (sizeof (GstBinaryPluginFeature));
-  chk = g_malloc (sizeof (GstBinaryChunk));
-
-  chk->data = pf;
-  chk->size = sizeof (GstBinaryPluginFeature);
-  chk->flags = GST_BINARY_REGISTRY_FLAG_NONE;
-  chk->align = TRUE;
+  chk = gst_registry_binary_make_data (pf, sizeof (GstBinaryPluginFeature));
 
   pf->rank = feature->rank;
-  pf->npadtemplates = pf->ninterfaces = pf->nuritypes = 0;
+  pf->npadtemplates = pf->ninterfaces = pf->nuriprotocols = 0;
 
   if (GST_IS_ELEMENT_FACTORY (feature)) {
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
+
+    /* save interfaces */
+    for (walk = factory->interfaces; walk;
+        walk = g_list_next (walk), pf->ninterfaces++) {
+      gst_registry_binary_save_string (list, (gchar *) walk->data);
+    }
+    GST_DEBUG ("Saved %d Interfaces", pf->ninterfaces);
+    /* save uritypes */
+    if (GST_URI_TYPE_IS_VALID (factory->uri_type)) {
+      if (factory->uri_protocols) {
+        GstBinaryChunk *subchk;
+        gchar **protocol;
+
+        subchk =
+            gst_registry_binary_make_data (&factory->uri_type,
+            sizeof (factory->uri_type));
+        subchk->flags = GST_BINARY_REGISTRY_FLAG_CONST;
+
+        protocol = factory->uri_protocols;
+        while (*protocol) {
+          gst_registry_binary_save_string (list, *protocol++);
+          pf->nuriprotocols++;
+        }
+        *list = g_list_prepend (*list, subchk);
+        GST_DEBUG ("Saved %d UriTypes", pf->nuriprotocols);
+      } else {
+        g_warning ("GStreamer feature '%s' is URI handler but does not provide"
+            " any protocols it can handle", feature->name);
+      }
+    }
 
     /* save pad-templates */
     for (walk = factory->staticpadtemplates; walk;
@@ -215,15 +257,20 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
     gst_registry_binary_save_string (list, factory->details.description);
     gst_registry_binary_save_string (list, factory->details.klass);
     gst_registry_binary_save_string (list, factory->details.longname);
+  } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
+    /* FIXME: save typefind */
   }
+#ifndef GST_DISABLE_INDEX
+  else if (GST_IS_INDEX_FACTORY (feature)) {
+    /* FIXME: save indexers */
+  }
+#endif
 
   /* pack plugin feature strings */
   gst_registry_binary_save_string (list, feature->name);
   gst_registry_binary_save_string (list, (gchar *) type_name);
 
   *list = g_list_prepend (*list, chk);
-
-  /* FIXME: save interfaces and uritypes */
   return TRUE;
 
   /* Errors */
@@ -249,12 +296,7 @@ gst_registry_binary_save_plugin (GList ** list, GstRegistry * registry,
   GList *walk;
 
   pe = g_malloc (sizeof (GstBinaryPluginElement));
-  chk = g_malloc (sizeof (GstBinaryChunk));
-
-  chk->data = pe;
-  chk->size = sizeof (GstBinaryPluginElement);
-  chk->flags = GST_BINARY_REGISTRY_FLAG_NONE;
-  chk->align = TRUE;
+  chk = gst_registry_binary_make_data (pe, sizeof (GstBinaryPluginElement));
 
   pe->file_size = plugin->file_size;
   pe->file_mtime = plugin->file_mtime;
@@ -502,7 +544,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
 {
   GstBinaryPluginFeature *pf;
   GstPluginFeature *feature;
-  gchar *type_name;
+  gchar *type_name = NULL, *str;
   GType type;
   guint i;
 
@@ -557,26 +599,47 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
         goto fail;
       }
     }
+
+    /* load uritypes */
+    if (pf->nuriprotocols) {
+      GST_DEBUG ("Reading %d UriTypes at address %p", pf->nuriprotocols, *in);
+
+      align32 (*in);
+      factory->uri_type = *((guint *) * in);
+      *in += sizeof (factory->uri_type);
+      //unpack_element(*in, &factory->uri_type, factory->uri_type);
+
+      factory->uri_protocols = g_new0 (gchar *, pf->nuriprotocols + 1);
+      for (i = 0; i < pf->nuriprotocols; i++) {
+        unpack_string (*in, str);
+        factory->uri_protocols[i] = str;
+      }
+    }
+    /* load interfaces */
+    GST_DEBUG ("Reading %d Interfaces at address %p", pf->ninterfaces, *in);
+    for (i = 0; i < pf->ninterfaces; i++) {
+      unpack_string (*in, str);
+      __gst_element_factory_add_interface (factory, str);
+      g_free (str);
+    }
+  } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
+    /* FIXME: load typefind */
   }
+#ifndef GST_DISABLE_INDEX
+  else if (GST_IS_INDEX_FACTORY (feature)) {
+    /* FIXME: load indexers */
+  }
+#endif
 
   gst_registry_add_feature (registry, feature);
   GST_DEBUG ("Added feature %s", feature->name);
 
-  /* FIXME: handle interfaces and uritypes */
-#if 0
-  for (i = 0; i < pf->ninterfaces; i++) {
-    // read string
-    __gst_element_factory_add_interface (factory, s);
-  }
-  for (i = 0; i < pf->nuritypes; i++) {
-    // read string
-    add_to_char_array (&factory->uri_protocols, s);
-  }
-#endif
+  g_free (type_name);
   return TRUE;
 
   /* Errors */
 fail:
+  g_free (type_name);
   if (GST_IS_OBJECT (feature))
     gst_object_unref (feature);
   else
@@ -717,7 +780,6 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
     GST_INFO ("No binary plugins structure to read");
     return TRUE;                /* empty file, this is not an error */
   }
-
 
   for (;
       ((size_t) in + sizeof (GstBinaryPluginElement)) <

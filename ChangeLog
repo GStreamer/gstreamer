@@ -1,3 +1,20 @@
+2007-01-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_write),
+	(gst_registry_binary_initialize_magic),
+	(gst_registry_binary_save_string), (gst_registry_binary_make_data),
+	(gst_registry_binary_save_pad_template),
+	(gst_registry_binary_save_feature),
+	(gst_registry_binary_save_plugin),
+	(gst_registry_binary_write_cache),
+	(gst_registry_binary_check_magic),
+	(gst_registry_binary_load_pad_template),
+	(gst_registry_binary_load_feature),
+	(gst_registry_binary_load_plugin),
+	(gst_registry_binary_read_cache):
+	* gst/gstregistrybinary.h:
+	  use glib types, cleanup comments, impement interfaces and uri-types
+
 2007-01-13  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstpad.c (gst_pad_get_range, gst_pad_pull_range): Allow

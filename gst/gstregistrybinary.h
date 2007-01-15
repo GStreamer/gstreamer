@@ -81,8 +81,8 @@
 
 typedef struct _GstBinaryRegistryMagic
 {
-  char magic[GST_MAGIC_BINARY_REGISTRY_LEN];
-  char version[GST_MAGIC_BINARY_VERSION_LEN];
+  gchar magic[GST_MAGIC_BINARY_REGISTRY_LEN];
+  gchar version[GST_MAGIC_BINARY_VERSION_LEN];
 } GstBinaryRegistryMagic;
 
 /*
@@ -94,76 +94,67 @@ enum {
   GST_BINARY_REGISTRY_FLAG_CONST = 1
 };
 
-/* GstBinaryChunk:
+/*
+ * GstBinaryChunk:
  *
  * Header for binary blobs
  */
 typedef struct _GstBinaryChunk
 {
-  void *data;
-  unsigned int size;
-  unsigned int flags;
+  gpointer data;
+  guint size;
+  guint flags;
   gboolean align;
 } GstBinaryChunk;
 
-/* A structure containing (staticely) every information needed for a plugin
-**
-** Notes :
-** "nfeatures" is used to say how many GstBinaryPluginFeature structures we will have 
-** right after the structure itself.
-*/
+/*
+ * GstBinaryPluginElement:
+ *
+ * @nfeatures: says how many GstBinaryPluginFeature structures we will have
+ * right after the structure itself.
+ *
+ * A structure containing (staticely) every information needed for a plugin
+ */
 
 typedef struct _GstBinaryPluginElement
 {
-  unsigned long file_size;
-  unsigned long file_mtime;
+  gulong file_size;
+  gulong file_mtime;
 
-  unsigned int nfeatures;
+  guint nfeatures;
 } GstBinaryPluginElement;
 
 
-/* A structure containing the plugin features
-**
-** Note :
-** "npadtemplates" is used to store the number of GstBinaryPadTemplate structures following the structure itself.
-** "ninterfaces" is used to store the number of GstBinaryInterface structures following the structure itself.
-** "nuritypes" is used to store the number of GstBinaryUriType structures following the structure itself.
-*/
+/*
+ * GstBinaryPluginFeature:
+ * @npadtemplates: stores the number of GstBinaryPadTemplate structures
+ * following the structure
+ * @ninterfaces: stores the number of interface names following the structure
+ * @nuriprotocols: stores the number of protocol strings following the structure
+ *
+ * A structure containing the plugin features
+ */
 typedef struct _GstBinaryPluginFeature
 {
-  unsigned long rank;
+  gulong rank;
 
-  unsigned int npadtemplates;
-  unsigned int ninterfaces;
-  unsigned int nuritypes;
+  guint npadtemplates;
+  guint ninterfaces;
+  guint nuriprotocols;
 } GstBinaryPluginFeature;
 
 
-/* 
-** A structure containing the static pad templates of a plugin feature 
-*/
+/*
+ * GstBinaryPadTemplate:
+ *
+ * A structure containing the static pad templates of a plugin feature 
+ */
 typedef struct _GstBinaryPadTemplate
 {
-  int direction;	               /* Either 0:"sink" or 1:"src" */
+  guint direction;	               /* Either 0:"sink" or 1:"src" */
   GstPadPresence presence;
 } GstBinaryPadTemplate;
 
-/*
-** A very simple structure defining the plugin feature interface string
-*/
-//#define GST_BINARY_REGISTRY_INTERFACE_INTERFACE_LEN (512)
-typedef struct _GstBinaryInterface
-{
-  //char interface[GST_BINARY_REGISTRY_INTERFACE_INTERFACE_LEN];
-  unsigned long size;
-} GstBinaryInterface;
-
-/* Uri Type */
-typedef struct _GstBinaryUriType
-{
-  GstURIType type;              /* GST_URI_SINK / GST_URI_SRC */
-  unsigned long nuriprotocols;
-} GstBinaryUriType;
 
 /* Function prototypes */
 gboolean gst_registry_binary_write_cache(GstRegistry *registry, const char *location);
