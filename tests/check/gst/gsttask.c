@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2005 Thomas Vander Stichele <thomas at apestaart dot org>
  *
- * gstelement.c: Unit test for GstElement
+ * gsttask.c: Unit test for GstTask
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

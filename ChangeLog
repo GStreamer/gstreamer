@@ -1,5 +1,10 @@
 2007-01-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/gst/gsttask.c:
+	  Fix header comment.
+
+2007-01-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gsttaglist.c: (_gst_tag_initialize):
 	  Change tag type from STRING to DOUBLE. Apply ChangeLog surgery for my
 	  previous two entries.
