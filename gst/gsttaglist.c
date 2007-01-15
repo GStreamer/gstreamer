@@ -213,7 +213,7 @@ _gst_tag_initialize (void)
       _("image"), _("image related to this stream"), gst_tag_merge_use_first);
   gst_tag_register (GST_TAG_PREVIEW_IMAGE, GST_TAG_FLAG_META, GST_TYPE_BUFFER,
       _("preview image"), _("preview image related to this stream"), NULL);
-  gst_tag_register (GST_TAG_BEATS_PER_MINUTE, GST_TAG_FLAG_META, G_TYPE_STRING,
+  gst_tag_register (GST_TAG_BEATS_PER_MINUTE, GST_TAG_FLAG_META, G_TYPE_DOUBLE,
       _("beats per minute"), _("number of beats per minute in audio"), NULL);
 
 }

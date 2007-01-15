@@ -1,9 +1,15 @@
 2007-01-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gsttaglist.c: (_gst_tag_initialize):
+	  Change tag type from STRING to DOUBLE. Apply ChangeLog surgery for my
+	  previous two entries.
+
+2007-01-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gsttaglist.c: (_gst_tag_initialize):
 	* gst/gsttaglist.h:
-	  add tag support for beat-per-minute
+	  Add tag support for beat-per-minute.
 
 2007-01-15  Stefan Kost  <ensonic@users.sf.net>
 
@@ -20,7 +26,7 @@
 	(gst_registry_binary_load_plugin),
 	(gst_registry_binary_read_cache):
 	* gst/gstregistrybinary.h:
-	  use glib types, cleanup comments, impement interfaces and uri-types
+	  Use glib types, cleanup comments, impement interfaces and uri-types.
 
 2007-01-13  Andy Wingo  <wingo@pobox.com>
 
