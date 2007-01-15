@@ -1616,7 +1616,7 @@ gst_query_new_segment
 gst_query_set_segment
 gst_query_parse_segment
 
-<SUBSECTION Standard>
+SUBSECTION Standard>
 GstQueryClass
 GST_QUERY
 GST_IS_QUERY
@@ -1827,6 +1827,7 @@ GST_TAG_ALBUM_PEAK
 GST_TAG_LANGUAGE_CODE
 GST_TAG_IMAGE
 GST_TAG_PREVIEW_IMAGE
+GST_TAG_BEATS_PER_MINUTE
 
 gst_tag_register
 gst_tag_merge_use_first

@@ -518,6 +518,14 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  * Since: 0.10.7
  */
 #define GST_TAG_PREVIEW_IMAGE          "preview-image"
+/**
+ * GST_TAG_BEATS_PER_MINUTE:
+ *
+ * number of beats per minute in audio
+ *
+ * Since: 0.10.11
+ */
+#define GST_TAG_BEATS_PER_MINUTE       "beats-per-minute"
 
 G_END_DECLS
 
