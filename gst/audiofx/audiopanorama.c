@@ -73,8 +73,9 @@ enum
 
 enum
 {
-  METHOD_PSYCHOACOUSTIC,
-  METHOD_SIMPLE
+  METHOD_PSYCHOACOUSTIC = 0,
+  METHOD_SIMPLE,
+  NUM_METHODS
 };
 
 #define GST_TYPE_AUDIO_PANORAMA_METHOD (gst_audio_panorama_method_get_type ())
@@ -163,6 +164,27 @@ static void gst_audio_panorama_transform_s2s_float_simple (GstAudioPanorama *
 static GstFlowReturn gst_audio_panorama_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
 
+
+/* Table with processing functions: [channels][format][method] */
+static GstAudioPanoramaProcessFunc panorama_process_functions[2][2][2] = {
+  {
+        {(GstAudioPanoramaProcessFunc) gst_audio_panorama_transform_m2s_int,
+            (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_m2s_int_simple},
+        {(GstAudioPanoramaProcessFunc) gst_audio_panorama_transform_m2s_float,
+            (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_m2s_float_simple}
+      },
+  {
+        {(GstAudioPanoramaProcessFunc) gst_audio_panorama_transform_s2s_int,
+            (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_s2s_int_simple},
+        {(GstAudioPanoramaProcessFunc) gst_audio_panorama_transform_s2s_float,
+            (GstAudioPanoramaProcessFunc)
+              gst_audio_panorama_transform_s2s_float_simple}
+      }
+};
+
 /* GObject vmethod implementations */
 
 static void
@@ -194,7 +216,8 @@ gst_audio_panorama_class_init (GstAudioPanoramaClass * klass)
    * GstAudioPanorama:method
    *
    * Panning method: psychoacoustic mode keeps the same perceived loudness,
-   * while simple mode just controls the volume of one channel.
+   * while simple mode just controls the volume of one channel. It's merely
+   * a matter of taste which method should be chosen. 
    *
    * Since: 0.10.6
    **/
@@ -230,57 +253,24 @@ gst_audio_panorama_init (GstAudioPanorama * filter,
 static gboolean
 gst_audio_panorama_set_process_function (GstAudioPanorama * filter)
 {
-  gboolean ret;
+  gint channel_index, format_index, method_index;
 
   /* set processing function */
-  switch (filter->channels) {
-    case 1:
-      if (!filter->format_float) {
-        if (filter->method == METHOD_SIMPLE) {
-          filter->process = (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_m2s_int_simple;
-        } else {
-          filter->process = (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_m2s_int;
-        }
-      } else {
-        if (filter->method == METHOD_SIMPLE) {
-          filter->process = (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_m2s_float_simple;
-        } else {
-          filter->process = (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_m2s_float;
-        }
-      }
-      ret = TRUE;
-      break;
-    case 2:
-      if (!filter->format_float) {
-        if (filter->method == METHOD_SIMPLE) {
-          filter->process = (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_s2s_int_simple;
-        } else {
-          filter->process = (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_s2s_int;
-        }
-      } else {
-        if (filter->method == METHOD_SIMPLE) {
-          filter->process = (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_s2s_float_simple;
-        } else {
-          filter->process = (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_s2s_float;
-        }
-      }
-      ret = TRUE;
-      break;
-    default:
-      ret = FALSE;
-      filter->process = NULL;
-      break;
+  channel_index = filter->channels - 1;
+  if (channel_index > 1 || channel_index < 0) {
+    filter->process = NULL;
+    return FALSE;
   }
 
-  return ret;
+  format_index = (filter->format_float) ? 1 : 0;
+
+  method_index = filter->method;
+  if (method_index >= NUM_METHODS || method_index < 0)
+    method_index = METHOD_PSYCHOACOUSTIC;
+
+  filter->process =
+      panorama_process_functions[channel_index][format_index][method_index];
+  return TRUE;
 }
 
 static void

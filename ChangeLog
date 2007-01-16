@@ -1,3 +1,12 @@
+2007-01-16  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: Sebastian Dröge <slomo circular-chaos org>
+
+	* gst/audiofx/audiopanorama.c: (gst_audio_panorama_class_init),
+	(gst_audio_panorama_set_process_function):
+	  Use a function array for process methods, add more docs and define the
+	  startindex of enums.
+
 2007-01-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Mark Nauwelaerts <manauw at skynet be>
