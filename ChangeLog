@@ -1,5 +1,14 @@
 2007-01-16  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/examples/seek/seek.c: (set_scale), (update_scale),
+	(do_seek), (stop_seek), (pause_cb), (stop_cb), (loop_toggle_cb),
+	(rate_spinbutton_changed_cb), (msg_eos), (msg_segment_done),
+	(main):
+	  Allow to toggle looping while it plays. Fix callback prototype. Clean
+	  up code a bit more. Add copyright header.
+
+2007-01-16  Stefan Kost  <ensonic@users.sf.net>
+
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support):
 	  Red and blue mask was swapped (spotted by Dan Williams).
 

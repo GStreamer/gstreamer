@@ -1,3 +1,29 @@
+/* GStreamer
+ *
+ * seek.c: seeking sample application
+ *
+ * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
+ *               2006 Stefan Kost <ensonic@users.sf.net>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+/* FIXME: remove #if 0 code
+ * FIXME: is the flush_seek part after sending the seek still needed?
+ *
+ */
 #include <stdlib.h>
 #include <glib.h>
 #include <gtk/gtk.h>
@@ -20,15 +46,15 @@ static gboolean play_scrub = FALSE;
 static gdouble rate = 1.0;
 
 static GstElement *pipeline;
-static gint64 position;
-static gint64 duration;
+static gint64 position = -1;
+static gint64 duration = -1;
 static GtkAdjustment *adjustment;
 static GtkWidget *hscale;
 static gboolean stats = FALSE;
 static gboolean elem_seek = FALSE;
 static gboolean verbose = FALSE;
 
-static GstState state;
+static GstState state = GST_STATE_NULL;
 static guint update_id = 0;
 static guint seek_timeout_id = 0;
 static gulong changed_id;
@@ -958,15 +984,29 @@ query_positions_pads ()
   }
 }
 
+static gboolean start_seek (GtkWidget * widget, GdkEventButton * event,
+    gpointer user_data);
+static gboolean stop_seek (GtkWidget * widget, GdkEventButton * event,
+    gpointer user_data);
+
+static void
+set_scale (gdouble value)
+{
+  g_signal_handlers_block_by_func (hscale, start_seek, pipeline);
+  g_signal_handlers_block_by_func (hscale, stop_seek, pipeline);
+  gtk_adjustment_set_value (adjustment, value);
+  g_signal_handlers_unblock_by_func (hscale, start_seek, pipeline);
+  g_signal_handlers_unblock_by_func (hscale, stop_seek, pipeline);
+  gtk_widget_queue_draw (hscale);
+}
+
 static gboolean
 update_scale (gpointer data)
 {
-  GstFormat format;
+  GstFormat format = GST_FORMAT_TIME;
 
   position = 0;
   duration = 0;
-
-  format = GST_FORMAT_TIME;
 
   if (elem_seek) {
     if (seekable_elements) {
@@ -996,8 +1036,7 @@ update_scale (gpointer data)
     duration = position;
 
   if (duration > 0) {
-    gtk_adjustment_set_value (adjustment, position * 100.0 / duration);
-    gtk_widget_queue_draw (hscale);
+    set_scale (position * 100.0 / duration);
   }
 
   return TRUE;
@@ -1076,10 +1115,12 @@ do_seek (GtkWidget * widget)
         GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_SET, -1);
   } else {
     s_event = gst_event_new_seek (rate,
-        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, real);
+        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
+        GST_SEEK_TYPE_SET, real);
   }
 
-  GST_DEBUG ("seek to %" GST_TIME_FORMAT, GST_TIME_ARGS (real));
+  GST_DEBUG ("seek with rate %lf to %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT,
+      rate, GST_TIME_ARGS (real), GST_TIME_ARGS (duration));
 
   res = send_event (s_event);
 
@@ -1153,7 +1194,7 @@ start_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 }
 
 static gboolean
-stop_seek (GtkWidget * widget, gpointer user_data)
+stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
 {
   if (changed_id) {
     g_signal_handler_disconnect (GTK_OBJECT (hscale), changed_id);
@@ -1203,9 +1244,9 @@ failed:
 static void
 pause_cb (GtkButton * button, gpointer data)
 {
-  GstStateChangeReturn ret;
-
   if (state != GST_STATE_PAUSED) {
+    GstStateChangeReturn ret;
+
     g_print ("PAUSE pipeline\n");
     ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
     if (ret == GST_STATE_CHANGE_FAILURE)
@@ -1224,15 +1265,15 @@ failed:
 static void
 stop_cb (GtkButton * button, gpointer data)
 {
-  GstStateChangeReturn ret;
-
   if (state != GST_STATE_READY) {
+    GstStateChangeReturn ret;
+
     g_print ("READY pipeline\n");
     ret = gst_element_set_state (pipeline, GST_STATE_READY);
     if (ret == GST_STATE_CHANGE_FAILURE)
       goto failed;
 
-    gtk_adjustment_set_value (adjustment, 0.0);
+    set_scale (0.0);
 
     state = GST_STATE_READY;
   }
@@ -1260,6 +1301,9 @@ static void
 loop_toggle_cb (GtkToggleButton * button, GstPipeline * pipeline)
 {
   loop_seek = gtk_toggle_button_get_active (button);
+  if (state == GST_STATE_PLAYING) {
+    do_seek (hscale);
+  }
 }
 
 static void
@@ -1301,9 +1345,11 @@ rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
         GST_SEEK_TYPE_SET, -1);
   } else {
     s_event = gst_event_new_seek (rate,
-        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET,
-        position);
+        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
+        GST_SEEK_TYPE_SET, position);
   }
+
+  GST_DEBUG ("rate changed to %lf", rate);
 
   res = send_event (s_event);
 
@@ -1314,26 +1360,6 @@ rate_spinbutton_changed_cb (GtkSpinButton * button, GstPipeline * pipeline)
     }
   } else
     g_print ("seek failed\n");
-}
-
-static void
-segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
-{
-  GstEvent *event;
-  GstSeekFlags flags;
-  gboolean res;
-
-  flags = 0;
-  if (loop_seek)
-    flags |= GST_SEEK_FLAG_SEGMENT;
-
-  event = gst_event_new_seek (rate,
-      GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, -1);
-
-  res = send_event (event);
-  if (!res) {
-    g_print ("segment seek failed\n");
-  }
 }
 
 static void
@@ -1357,6 +1383,23 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 }
 
 static void
+msg_eos (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+{
+  GstStateChangeReturn ret;
+
+  GST_DEBUG ("position is %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
+
+  g_print ("READY pipeline\n");
+  ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    g_print ("READY failed\n");
+
+  set_scale (0.0);
+
+  state = GST_STATE_READY;
+}
+
+static void
 msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   const GstStructure *s;
@@ -1376,6 +1419,51 @@ msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
       set_update_scale (FALSE);
     }
   }
+}
+
+static void
+msg_segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
+{
+  GstEvent *s_event;
+  GstSeekFlags flags;
+  gboolean res;
+  GstFormat format;
+
+  GST_DEBUG ("position is %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
+  format = GST_FORMAT_TIME;
+  gst_message_parse_segment_done (message, &format, &position);
+  GST_DEBUG ("end of segment at %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
+
+  set_update_scale (FALSE);
+
+  flags = GST_SEEK_FLAG_SEGMENT;
+  if (flush_seek)
+    flags |= GST_SEEK_FLAG_FLUSH;
+
+  if (rate >= 0) {
+    s_event = gst_event_new_seek (rate,
+        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
+        GST_SEEK_TYPE_SET, duration);
+  } else {
+    s_event = gst_event_new_seek (rate,
+        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, duration,
+        GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0));
+  }
+
+  GST_DEBUG ("restart loop with rate %lf to 0 / %" GST_TIME_FORMAT,
+      rate, GST_TIME_ARGS (duration));
+
+  res = send_event (s_event);
+  if (res) {
+    if (flush_seek) {
+      gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
+      gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, SEEK_TIMEOUT);
+    }
+  } else
+    g_print ("segment seek failed\n");
+
+  position = 0;
+  set_update_scale (TRUE);
 }
 
 typedef struct
@@ -1509,7 +1597,6 @@ main (int argc, char **argv)
       NULL);
   gtk_tooltips_set_tip (tips, rate_spinbutton, "define the playback rate, "
       "negative value trigger reverse playback", NULL);
-  /* FIXME: describe these */
   gtk_tooltips_set_tip (tips, scrub_checkbox, "show images while seeking",
       NULL);
   gtk_tooltips_set_tip (tips, play_scrub_checkbox, "play video while seeking",
@@ -1592,7 +1679,12 @@ main (int argc, char **argv)
     bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
     gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
-//    g_signal_connect (bus, "message::state-changed", (GCallback) message_received, pipeline);
+    g_signal_connect (bus, "message::eos", (GCallback) msg_eos, pipeline);
+    g_signal_connect (bus, "message::state-changed",
+        (GCallback) msg_state_changed, pipeline);
+    g_signal_connect (bus, "message::segment-done",
+        (GCallback) msg_segment_done, pipeline);
+
     g_signal_connect (bus, "message::new-clock", (GCallback) message_received,
         pipeline);
     g_signal_connect (bus, "message::error", (GCallback) message_received,
@@ -1607,10 +1699,10 @@ main (int argc, char **argv)
         pipeline);
     g_signal_connect (bus, "message::segment-done",
         (GCallback) message_received, pipeline);
-    g_signal_connect (bus, "message::state-changed",
-        (GCallback) msg_state_changed, pipeline);
-    g_signal_connect (bus, "message::segment-done", (GCallback) segment_done,
-        pipeline);
+    /*g_signal_connect (bus, "message::state-changed",
+       (GCallback) message_received, pipeline);
+     */
+
   }
   gtk_main ();
 
