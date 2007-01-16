@@ -280,16 +280,27 @@ gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes)
     }
     fail_unless (ok, "failed ABI check");
   } else {
-    if (g_getenv ("GST_ABI")) {
+    const gchar *fn;
+
+    if ((fn = g_getenv ("GST_ABI"))) {
+      GError *err = NULL;
+      GString *s;
       gint i;
 
-      g_print ("\nGstCheckABIStruct list[] = {\n");
+      s = g_string_new ("\nGstCheckABIStruct list[] = {\n");
       for (i = 0; list[i].name; i++) {
-        g_print ("  {\"%s\", sizeof (%s), %d},\n", list[i].name, list[i].name,
-            list[i].size);
+        g_string_append_printf (s, "  {\"%s\", sizeof (%s), %d},\n",
+            list[i].name, list[i].name, list[i].size);
       }
-      g_print ("  {NULL, 0, 0}\n");
-      g_print ("};\n");
+      g_string_append (s, "  {NULL, 0, 0}\n");
+      g_string_append (s, "};\n");
+      if (!g_file_set_contents (fn, s->str, s->len, &err)) {
+        g_print ("%s", s->str);
+        g_printerr ("\nFailed to write ABI information: %s\n", err->message);
+      } else {
+        g_print ("\nWrote ABI information to '%s'.\n", fn);
+      }
+      g_string_free (s, TRUE);
     } else {
       g_print ("No structure size list was generated for this architecture.\n");
       g_print ("Run with GST_ABI environment variable set to output header.\n");

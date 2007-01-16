@@ -1,3 +1,9 @@
+2007-01-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/check/gstcheck.c: (gst_check_abi_list):
+	  Actually write ABI structs to the file specified in the GST_ABI
+	  environment variable, as the message we print claims we would.
+
 2007-01-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/gst/gsttask.c:
