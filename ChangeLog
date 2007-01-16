@@ -1,3 +1,11 @@
+2007-01-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	* gst-libs/gst/tag/gstvorbistag.c:
+	(gst_tag_list_to_vorbiscomment_buffer):
+	* gst/typefind/gsttypefindfunctions.c: (vorbis_type_find):
+	  Fix potentially unaligned access (#397207).
+
 2007-01-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/seek/seek.c: (set_scale), (update_scale),

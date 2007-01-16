@@ -2104,7 +2104,7 @@ vorbis_type_find (GstTypeFind * tf, gpointer private)
       return;
     data++;
     /* 4 byte samplerate must be != 0 */
-    if (*((guint32 *) data) == 0)
+    if (GST_READ_UINT32_LE (data) == 0)
       return;
     data += 16;
     /* blocksize checks */

@@ -516,12 +516,12 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
     memcpy (data, id_data, id_data_length);
     data += id_data_length;
   }
-  *((guint32 *) data) = GUINT32_TO_LE (vendor_len);
+  GST_WRITE_UINT32_LE (data, vendor_len);
   data += 4;
   memcpy (data, vendor_string, vendor_len);
   data += vendor_len;
   l = my_data.entries = g_list_reverse (my_data.entries);
-  *((guint32 *) data) = GUINT32_TO_LE (my_data.count);
+  GST_WRITE_UINT32_LE (data, my_data.count);
   data += 4;
   for (i = 0; i < my_data.count; i++) {
     guint size;
@@ -531,7 +531,7 @@ gst_tag_list_to_vorbiscomment_buffer (const GstTagList * list,
     cur = l->data;
     l = g_list_next (l);
     size = strlen (cur);
-    *((guint32 *) data) = GUINT32_TO_LE (size);
+    GST_WRITE_UINT32_LE (data, size);
     data += 4;
     memcpy (data, cur, size);
     data += size;

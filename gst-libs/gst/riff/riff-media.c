@@ -631,12 +631,16 @@ gst_riff_create_video_caps (guint32 codec_fcc,
           GST_BUFFER_SIZE (palette));
 
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
-      gint n;
-      guint32 *data = (guint32 *) GST_BUFFER_DATA (copy);
+      {
+        guint8 *data = GST_BUFFER_DATA (copy);
+        gint n;
 
-      /* own endianness */
-      for (n = 0; n < num_colors; n++)
-        data[n] = GUINT32_FROM_LE (data[n]);
+        /* own endianness */
+        for (n = 0; n < num_colors; n++) {
+          GST_WRITE_UINT32_BE (data, GST_READ_UINT32_LE (data));
+          data += sizeof (guint32);
+        }
+      }
 #endif
       gst_caps_set_simple (caps, "palette_data", GST_TYPE_BUFFER, copy, NULL);
       gst_buffer_unref (copy);
