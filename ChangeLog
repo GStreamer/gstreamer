@@ -1,3 +1,11 @@
+2007-01-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/gst/gstabi.c:
+	* tests/check/gst/struct_hppa.h:
+	* tests/check/libs/libsabi.c:
+	* tests/check/libs/struct_hppa.h:
+	  Add ABI structs for HPPA (see #393796).
+
 2007-01-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/check/gstcheck.c: (gst_check_abi_list):
