@@ -163,6 +163,51 @@ _wrap_gst_mixer_options_get_values (PyGObject *self)
 }
 
 %%
+override gst_mixer_set_volume kwargs
+static PyObject *
+_wrap_gst_mixer_set_volume (PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "track", "volumes", NULL };
+    PyGObject *track;
+    PyObject *py_tuple;
+    gint *volumes = NULL;
+    gint channels;
+    int i;
+    PyObject *ret;
+
+    if (!PyArg_ParseTupleAndKeywords (args, kwargs, "O!O:GstMixer.set_volume",
+        kwlist, &PyGstMixerTrack_Type, &track, &py_tuple))
+      return NULL;
+
+    g_object_get (GST_MIXER_TRACK (track->obj), "num-channels", &channels,
+      NULL);
+
+    if (channels != PyTuple_Size (py_tuple)) {
+      PyErr_Format (PyExc_TypeError,
+          "Track channel count %d != volume tuple size %d",
+          channels, PyTuple_Size (py_tuple));
+      return NULL;
+    }
+
+    Py_INCREF(Py_None);
+    ret = Py_None;
+
+    if (channels == 0)
+      return ret;
+
+    volumes = g_malloc (channels * sizeof (gint));
+    for (i = 0; i < channels; ++i) {
+      volumes[i] = PyInt_AsLong (PyTuple_GET_ITEM (py_tuple, i));
+    }
+    gst_mixer_set_volume (GST_MIXER (self->obj), GST_MIXER_TRACK (track->obj),
+          volumes);
+
+    g_free (volumes);
+
+    return ret;
+}
+
+%%
 override gst_mixer_get_volume kwargs
 static PyObject *
 _wrap_gst_mixer_get_volume (PyGObject *self, PyObject *args, PyObject *kwargs)

@@ -1,5 +1,11 @@
 2007-01-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* examples/mixer.py:
+	* gst/interfaces.override:
+	  wrap mixer set_volume, use tuple to match get_volume
+
+2007-01-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/pygstexception.c: (element_not_found_error_init),
 	(pygst_exceptions_register_classes):
 	* gst/pygstexception.h:
