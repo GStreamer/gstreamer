@@ -227,7 +227,10 @@ AC_SUBST(GST_PLUGINS_BASE_CFLAGS)
 
 dnl check for pygobject
 PKG_CHECK_MODULES(PYGOBJECT, pygobject-2.0 >= $PYGOBJECT_REQ,
-  HAVE_PYGOBJECT="yes", HAVE_PYGOBJECT="no")
+  [
+    HAVE_PYGOBJECT="yes"
+    AC_MSG_RESULT([yes])
+  ], HAVE_PYGOBJECT="no")
 
 if test "x$HAVE_PYGOBJECT" = "xno"; then
   dnl If we don't have pygobject, then check for pygtk
@@ -237,6 +240,15 @@ if test "x$HAVE_PYGOBJECT" = "xno"; then
   PYGOBJECT_CFLAGS="\$(PYGTK_CFLAGS)"
 fi
 AC_SUBST(PYGOBJECT_CFLAGS)
+
+dnl FIXME: check for a pygobject with a correct pyg_param_gvalue_from_pyobject
+PKG_CHECK_MODULES(PYGOBJECT_2_12, pygobject-2.0 >= 2.11.1,
+  [
+    HAVE_PYGOBJECT_2_12="yes"
+    AC_MSG_RESULT([yes])
+    AC_DEFINE_UNQUOTED(HAVE_PYGOBJECT_2_12, 1,
+      [Defined if we have a 2.12 series pygobject])
+  ], HAVE_PYGOBJECT_2_12="no")
 
 dnl define an ERROR_CFLAGS Makefile variable
 GST_SET_ERROR_CFLAGS($GST_CVS)

@@ -102,6 +102,14 @@ set_property_from_pspec(GObject *obj,
     }	
 
     g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE(pspec));
+/* FIXME: bug in pygtk 2.8 series; see
+http://svn.gnome.org/viewcvs/pygobject/trunk/gobject/pygobject.h?rev=566&r1=564&r2=566 */
+
+#ifndef PYGOBJECT_2_12
+#undef pyg_param_gvalue_from_pyobject
+#define pyg_param_gvalue_from_pyobject (_PyGObject_API->gvalue_from_param_pyobject)
+#endif
+
     if (pyg_param_gvalue_from_pyobject(&value, pvalue, pspec) < 0) {
 	PyErr_SetString(PyExc_TypeError,
 			"could not convert argument to correct param type");

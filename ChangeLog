@@ -1,5 +1,13 @@
 2007-01-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* configure.ac:
+	  fix use of PKG_CHECK_MODULES
+	  check for a pygobject of at least 2.11 for a value_from_pyobject fix
+	* gst/gstobject.override:
+	  use it
+
+2007-01-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/extend/discoverer.py:
 	  this is a module, not a program, so don't require versions
 
