@@ -1105,7 +1105,7 @@ gst_mythtv_src_set_property (GObject * object, guint prop_id,
     {
       if (!g_value_get_string (value)) {
         GST_WARNING ("location property cannot be NULL");
-        goto done;
+        break;
       }
 
       if (mythtvsrc->uri_name != NULL) {
@@ -1147,7 +1147,7 @@ gst_mythtv_src_set_property (GObject * object, guint prop_id,
     {
       if (!g_value_get_string (value)) {
         GST_WARNING ("MythTV Live chainid property cannot be NULL");
-        goto done;
+        break;
       }
 
       if (mythtvsrc->live_chain_id != NULL) {
@@ -1167,7 +1167,6 @@ gst_mythtv_src_set_property (GObject * object, guint prop_id,
       break;
   }
 
-done:
   GST_OBJECT_UNLOCK (mythtvsrc);
 }
 
