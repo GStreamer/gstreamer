@@ -1,3 +1,16 @@
+2007-01-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/Makefile.am:
+	* gst/playback/gstdecodebin.c: (close_pad_link):
+	* gst/playback/gstdecodebin2.c: (analyze_new_pad):
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
+	(gst_play_base_bin_handle_message_func), (unknown_type):
+	  Let decodebin be the element to post missing-plugin messages for
+	  missing decoders (rather than playbin); make playbin implement
+	  GstBin::handle_message so we can suppress missing-plugin messages
+	  for types we're not handling on purpose (don't want to bring up an
+	  installer in those cases).
+
 2007-01-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):

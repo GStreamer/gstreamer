@@ -69,6 +69,8 @@ static void gst_play_base_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
 static void gst_play_base_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
+static void gst_play_base_bin_handle_message_func (GstBin * bin,
+    GstMessage * msg);
 
 static GstStateChangeReturn gst_play_base_bin_change_state (GstElement *
     element, GstStateChange transition);
@@ -195,6 +197,9 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_base_bin_dispose);
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_base_bin_finalize);
+
+  gstbin_klass->handle_message =
+      GST_DEBUG_FUNCPTR (gst_play_base_bin_handle_message_func);
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_base_bin_change_state);
@@ -934,6 +939,27 @@ static const gchar *blacklisted_mimes[] = {
 
 #define IS_BLACKLISTED_MIME(type) (string_arr_has_str(blacklisted_mimes,type))
 
+static void
+gst_play_base_bin_handle_message_func (GstBin * bin, GstMessage * msg)
+{
+  if (gst_is_missing_plugin_message (msg)) {
+    gchar *detail;
+    guint i;
+
+    detail = gst_missing_plugin_message_get_installer_detail (msg);
+    for (i = 0; detail != NULL && blacklisted_mimes[i] != NULL; ++i) {
+      if (strstr (detail, "|decoder-") && strstr (detail, blacklisted_mimes[i])) {
+        GST_LOG_OBJECT (bin, "suppressing message %" GST_PTR_FORMAT, msg);
+        gst_message_unref (msg);
+        g_free (detail);
+        return;
+      }
+    }
+    g_free (detail);
+  }
+  GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
+}
+
 /*
  * signal fired when an unknown stream is found. We create a new
  * UNKNOWN streaminfo object.
@@ -948,7 +974,6 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
 
   type_name = gst_structure_get_name (gst_caps_get_structure (caps, 0));
   if (type_name && !IS_BLACKLISTED_MIME (type_name)) {
-    GstMessage *msg;
     gchar *capsstr;
 
     capsstr = gst_caps_to_string (caps);
@@ -956,9 +981,6 @@ unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
     /* FIXME, g_message() ? */
     g_message ("don't know how to handle %s", capsstr);
     g_free (capsstr);
-
-    msg = gst_missing_decoder_message_new (GST_ELEMENT (play_base_bin), caps);
-    gst_element_post_message (GST_ELEMENT_CAST (play_base_bin), msg);
   } else {
     /* don't spew stuff to the terminal or send message if it's blacklisted */
     GST_DEBUG_OBJECT (play_base_bin, "media type %s not handled on purpose, "

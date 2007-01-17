@@ -28,6 +28,7 @@
 
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/utils/base-utils.h>
 
 #include "gstplay-marshal.h"
 
@@ -691,9 +692,13 @@ unknown_type:
     GST_LOG_OBJECT (pad, "Unknown type, firing signal");
     g_signal_emit (G_OBJECT (dbin),
         gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, pad, caps);
+
     /* Check if there are no pending groups, if so, remove fakesink */
     if (dbin->groups == NULL)
       remove_fakesink (dbin);
+
+    gst_element_post_message (GST_ELEMENT_CAST (dbin),
+        gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps));
     return;
   }
 

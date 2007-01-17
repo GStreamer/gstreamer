@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include <gst/gst.h>
+#include <gst/utils/base-utils.h>
 
 #include "gstplay-marshal.h"
 
@@ -775,6 +776,9 @@ unknown_type:
     GST_LOG_OBJECT (pad, "unknown type found, fire signal");
     g_signal_emit (G_OBJECT (decode_bin),
         gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, pad, caps);
+
+    gst_element_post_message (GST_ELEMENT_CAST (decode_bin),
+        gst_missing_decoder_message_new (GST_ELEMENT_CAST (decode_bin), caps));
     return;
   }
 dont_know_yet:
