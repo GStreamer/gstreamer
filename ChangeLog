@@ -1,5 +1,16 @@
 2007-01-17  Edward Hervey  <edward@fluendo.com>
 
+	* plugins/elements/gstmultiqueue.c: (gst_single_queue_new):
+	When dynamically creating single queues, activate sinkpad before adding
+	it.
+	We should be doing the same thing for the source pad, but we can't
+	since it would call a method which needs the parent to be set in order
+	to work propertly. Instead of activating the source pad, we just unset
+	the flushing flag, which is the minimal requirement for adding a pad
+	to an element in a state greater than READY.
+
+2007-01-17  Edward Hervey  <edward@fluendo.com>
+
 	* docs/faq/gst-uninstalled:
 	Add DYLD_LIBRARY_PATH declarations so we can also use this script on
 	Mac OS X.

@@ -983,8 +983,7 @@ gst_single_queue_new (GstMultiQueue * mqueue)
 
   sq->mqueue = mqueue;
   sq->srcresult = GST_FLOW_OK;
-  sq->queue =
-      gst_data_queue_new ((GstDataQueueCheckFullFunction)
+  sq->queue = gst_data_queue_new ((GstDataQueueCheckFullFunction)
       single_queue_check_full, sq);
 
   sq->nextid = -1;
@@ -1033,7 +1032,10 @@ gst_single_queue_new (GstMultiQueue * mqueue)
   gst_pad_set_element_private (sq->sinkpad, (gpointer) sq);
   gst_pad_set_element_private (sq->srcpad, (gpointer) sq);
 
+  gst_pad_set_active (sq->sinkpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (mqueue), sq->sinkpad);
+
+  GST_OBJECT_FLAG_UNSET (sq->srcpad, GST_PAD_FLUSHING);
   gst_element_add_pad (GST_ELEMENT (mqueue), sq->srcpad);
 
   gst_pad_set_active (sq->srcpad, TRUE);
