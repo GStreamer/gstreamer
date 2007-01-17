@@ -29,6 +29,7 @@ extern PyObject *PyGstExc_AddError;
 extern PyObject *PyGstExc_RemoveError;
 extern PyObject *PyGstExc_QueryError;
 extern PyObject *PyGstExc_PluginNotFoundError;
+extern PyObject *PyGstExc_ElementNotFoundError;
 
 void pygst_exceptions_register_classes(PyObject *d);
 

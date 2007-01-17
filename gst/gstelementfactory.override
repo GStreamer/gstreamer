@@ -35,7 +35,7 @@ _wrap_gst_element_factory_make(PyObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
     ret = gst_element_factory_make(factoryname, name);
     if (ret == NULL) {
-        PyErr_SetString(PyGstExc_PluginNotFoundError, factoryname);
+        PyErr_SetString(PyGstExc_ElementNotFoundError, factoryname);
         return NULL;
     }
     py_ret = pygobject_new((GObject *)ret);

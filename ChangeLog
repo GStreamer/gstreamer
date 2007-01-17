@@ -1,5 +1,16 @@
 2007-01-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/pygstexception.c: (element_not_found_error_init),
+	(pygst_exceptions_register_classes):
+	* gst/pygstexception.h:
+	  gst.element_factory_make should raise ElementNotFoundError.
+	  Subclass it from PluginNotFoundError so we can add it compatibly
+	  and remove the wrong one later.
+	* gst/gstelementfactory.override:
+	  raise ElementNotFoundError
+
+2007-01-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/interfaces.defs:
 	* gst/interfaces.override:
 	  wrap mixer get_volume
