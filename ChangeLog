@@ -1,5 +1,10 @@
 2007-01-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/extend/discoverer.py:
+	  this is a module, not a program, so don't require versions
+
+2007-01-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  check for stuff added in gst-pb 0.10.11
 	* gst/Makefile.am:
