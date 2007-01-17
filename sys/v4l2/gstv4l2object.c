@@ -244,20 +244,6 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class)
   g_object_class_install_property (gobject_class, PROP_FLAGS,
       g_param_spec_flags ("flags", "Flags", "Device type flags",
           GST_TYPE_V4L2_DEVICE_FLAGS, DEFAULT_PROP_FLAGS, G_PARAM_READABLE));
-/* FIXME norm, channel, frequency are part of the tuner interface, so they
-   should be removed from the properties
-  g_object_class_install_property (gobject_class, PROP_NORM,
-      g_param_spec_string ("norm", "Norm", "Standard norm to use",
-          DEFAULT_PROP_NORM, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, PROP_CHANNEL,
-      g_param_spec_string ("channel", "Channel",
-          "Input/output channel to switch to", DEFAULT_PROP_CHANNEL,
-          G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, PROP_FREQUENCY,
-      g_param_spec_ulong ("frequency", "Frequency",
-          "Frequency to tune to (in Hz)", 0, G_MAXULONG, DEFAULT_PROP_FREQUENCY,
-          G_PARAM_READWRITE));
-*/
 }
 
 GstV4l2Object *
@@ -314,6 +300,7 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
       g_free (v4l2object->videodev);
       v4l2object->videodev = g_value_dup_string (value);
       break;
+#if 0
     case PROP_NORM:
       if (GST_V4L2_IS_OPEN (v4l2object)) {
         GstTuner *tuner = GST_TUNER (v4l2object->element);
@@ -363,6 +350,7 @@ gst_v4l2_object_set_property_helper (GstV4l2Object * v4l2object,
         v4l2object->frequency = g_value_get_ulong (value);
       }
       break;
+#endif
     default:
       return FALSE;
       break;
@@ -407,15 +395,6 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
       g_value_set_flags (value, flags);
       break;
     }
-    case PROP_NORM:
-      g_value_set_string (value, v4l2object->norm);
-      break;
-    case PROP_CHANNEL:
-      g_value_set_string (value, v4l2object->channel);
-      break;
-    case PROP_FREQUENCY:
-      g_value_set_ulong (value, v4l2object->frequency);
-      break;
     default:
       return FALSE;
       break;
@@ -441,9 +420,6 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
       g_free (v4l2object->norm);
       v4l2object->norm = g_strdup (norm->label);
       gst_tuner_norm_changed (tuner, norm);
-/* FIXME: remove
-      g_object_notify (G_OBJECT (v4l2object->element), "norm");
-*/
     }
   }
 
@@ -458,9 +434,6 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
     g_free (v4l2object->channel);
     v4l2object->channel = g_strdup (channel->label);
     gst_tuner_channel_changed (tuner, channel);
-/* FIXME: remove
-    g_object_notify (G_OBJECT (v4l2object->element), "channel");
-*/
   }
 
   if (GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
@@ -472,9 +445,6 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
         /* guess */
         gst_tuner_set_frequency (tuner, channel, 1000);
       } else {
-/* FIXME: remove
-        g_object_notify (G_OBJECT (v4l2object->element), "frequency");
-*/
       }
     }
   }

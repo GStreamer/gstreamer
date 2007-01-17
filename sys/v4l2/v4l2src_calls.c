@@ -150,7 +150,7 @@ qbuf_failed:
 gint
 gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
 {
-#define NUM_TRIALS 100
+#define NUM_TRIALS 50
   struct v4l2_buffer buffer;
   gint32 trials = NUM_TRIALS;
 
@@ -158,6 +158,12 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
   buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   buffer.memory = v4l2src->breq.memory;
   while (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_DQBUF, &buffer) < 0) {
+
+    GST_LOG_OBJECT (v4l2src,
+        "problem grabbing frame %ld (ix=%ld), trials=%ld, pool-ct=%d, buf.flags=%d",
+        buffer.sequence, buffer.index, trials, v4l2src->pool->refcount,
+        buffer.flags);
+
     /* if the sync() got interrupted, we can retry */
     switch (errno) {
       case EAGAIN:
@@ -169,14 +175,31 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
       case EINVAL:
         goto einval;
       case ENOMEM:
-        goto nomem;
+        goto enomem;
       case EIO:
-        GST_WARNING_OBJECT (v4l2src,
+        GST_INFO_OBJECT (v4l2src,
             "VIDIOC_DQBUF failed due to an internal error."
             " Can also indicate temporary problems like signal loss."
             " Note the driver might dequeue an (empty) buffer despite"
             " returning an error, or even stop capturing."
             " device %s", v4l2src->v4l2object->videodev);
+        /* have we de-queued a buffer ? */
+        if (!(buffer.flags & (V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_DONE))) {
+          /* this fails
+             if ((buffer.index >= 0) && (buffer.index < v4l2src->breq.count)) {
+             GST_DEBUG_OBJECT (v4l2src, "reenqueing buffer (ix=%ld)", buffer.index);
+             gst_v4l2src_queue_frame (v4l2src, buffer.index);
+             }
+             else {
+           */
+          GST_DEBUG_OBJECT (v4l2src, "reenqueing buffer");
+          if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QBUF, &buffer) < 0) {
+            GST_WARNING_OBJECT (v4l2src,
+                "Error queueing buffer on device %s. system error: %s",
+                v4l2src->v4l2object->videodev, g_strerror (errno));
+          }
+          /*} */
+        }
         break;
       case EINTR:
         GST_WARNING_OBJECT (v4l2src,
@@ -194,15 +217,14 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
     if (--trials == -1) {
       goto too_many_trials;
     } else {
-      if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QBUF, &buffer) < 0)
-        goto qbuf_failed;
       memset (&buffer, 0x00, sizeof (buffer));
       buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       buffer.memory = v4l2src->breq.memory;
     }
   }
 
-  GST_LOG_OBJECT (v4l2src, "grabbed frame %d", buffer.index);
+  GST_LOG_OBJECT (v4l2src, "grabbed frame %ld (ix=%ld), pool-ct=%d",
+      buffer.sequence, buffer.index, v4l2src->pool->refcount);
 
   return buffer.index;
 
@@ -218,7 +240,7 @@ einval:
             v4l2src->v4l2object->videodev));
     return -1;
   }
-nomem:
+enomem:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
         (_("Failed trying to get video frames from device '%s'. Not enough memory."), v4l2src->v4l2object->videodev), (_("insufficient memory to enqueue a user pointer buffer. device %s."), v4l2src->v4l2object->videodev));
@@ -231,15 +253,6 @@ too_many_trials:
             v4l2src->v4l2object->videodev),
         (_("Failed after %d tries. device %s. system error: %s"),
             NUM_TRIALS, v4l2src->v4l2object->videodev, g_strerror (errno)));
-    return -1;
-  }
-qbuf_failed:
-  {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, WRITE,
-        (_("Could not exchange data with device '%s'."),
-            v4l2src->v4l2object->videodev),
-        ("Error queueing buffer on device %s. system error: %s",
-            v4l2src->v4l2object->videodev, g_strerror (errno)));
     return -1;
   }
 }
@@ -390,7 +403,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
   guint buffers;
   GstV4l2Buffer *buffer;
 
-  GST_DEBUG_OBJECT (v4l2src, "initting the capture system");
+  GST_DEBUG_OBJECT (v4l2src, "initializing the capture system");
 
   GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2src->v4l2object);
@@ -398,10 +411,8 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
   /* request buffer info */
   buffers = v4l2src->breq.count;
 
-  if (v4l2src->breq.count > GST_V4L2_MAX_BUFFERS)
-    v4l2src->breq.count = GST_V4L2_MAX_BUFFERS;
-  else if (v4l2src->breq.count < GST_V4L2_MIN_BUFFERS)
-    v4l2src->breq.count = GST_V4L2_MIN_BUFFERS;
+  v4l2src->breq.count = CLAMP (v4l2src->breq.count, GST_V4L2_MIN_BUFFERS,
+      GST_V4L2_MAX_BUFFERS);
 
   v4l2src->breq.type = v4l2src->format.type;
   if (v4l2src->v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
@@ -429,7 +440,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
       goto no_buffers;
 
     if (v4l2src->breq.count != buffers)
-      g_object_notify (G_OBJECT (v4l2src), "num_buffers");
+      g_object_notify (G_OBJECT (v4l2src), "queue-size");
 
     GST_INFO_OBJECT (v4l2src,
         "Got %d buffers (%" GST_FOURCC_FORMAT ") of size %d KB",
@@ -532,6 +543,11 @@ mmap_failed:
   }
 queue_failed:
   {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
+        (_("Could not enqueue buffers in device '%s'."),
+            v4l2src->v4l2object->videodev),
+        ("enqueing buffer %d/%d failed. (%d - %s)",
+            n, v4l2src->breq.count, errno, g_strerror (errno)));
     gst_v4l2src_capture_deinit (v4l2src);
     return FALSE;
   }
@@ -549,6 +565,7 @@ gst_v4l2src_capture_start (GstV4l2Src * v4l2src)
   gint type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
   GST_DEBUG_OBJECT (v4l2src, "starting the capturing");
+  //GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
   GST_V4L2_CHECK_ACTIVE (v4l2src->v4l2object);
 
   v4l2src->quit = FALSE;
@@ -680,7 +697,8 @@ gst_v4l2src_capture_deinit (GstV4l2Src * v4l2src)
     if (try_reinit) {
       gst_v4l2src_capture_start (v4l2src);
       if (!gst_v4l2src_capture_stop (v4l2src)) {
-        GST_DEBUG_OBJECT (v4l2src, "failed reinit device");
+        /* stop throws an element-error on failure */
+        GST_WARNING_OBJECT (v4l2src, "failed reinit device");
         return FALSE;
       }
     }

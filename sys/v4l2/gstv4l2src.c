@@ -58,7 +58,6 @@ GST_ELEMENT_DETAILS ("Video (video4linux2/raw) Source",
     "Ronald Bultje <rbultje@ronald.bitfreak.net>,"
     " Edgard Lima <edgard.lima@indt.org.br>");
 
-
 GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
@@ -66,6 +65,7 @@ enum
 {
   PROP_0,
   V4L2_STD_OBJECT_PROPS,
+  PROP_QUEUE_SIZE
 };
 
 static const guint32 gst_v4l2_formats[] = {
@@ -274,6 +274,11 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   gobject_class->get_property = gst_v4l2src_get_property;
 
   gst_v4l2_object_install_properties_helper (gobject_class);
+  g_object_class_install_property (gobject_class, PROP_QUEUE_SIZE,
+      g_param_spec_uint ("queue-size", "Queue size",
+          "Number of buffers to be enqueud in the driver",
+          GST_V4L2_MIN_BUFFERS, GST_V4L2_MAX_BUFFERS, GST_V4L2_MIN_BUFFERS,
+          G_PARAM_READWRITE));
 
   basesrc_class->get_caps = gst_v4l2src_get_caps;
   basesrc_class->set_caps = gst_v4l2src_set_caps;
@@ -289,6 +294,7 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
   v4l2src->v4l2object = gst_v4l2_object_new (GST_ELEMENT (v4l2src),
       gst_v4l2_get_input, gst_v4l2_set_input, gst_v4l2src_update_fps);
 
+  /* number of buffers requested */
   v4l2src->breq.count = 0;
 
   v4l2src->formats = NULL;
@@ -332,6 +338,9 @@ gst_v4l2src_set_property (GObject * object,
   if (!gst_v4l2_object_set_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
+      case PROP_QUEUE_SIZE:
+        v4l2src->breq.count = g_value_get_uint (value);
+        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -352,6 +361,9 @@ gst_v4l2src_get_property (GObject * object,
   if (!gst_v4l2_object_get_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
+      case PROP_QUEUE_SIZE:
+        g_value_set_uint (value, v4l2src->breq.count);
+        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -776,6 +788,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 
   /* make sure we stop capturing and dealloc buffers */
   if (GST_V4L2_IS_ACTIVE (v4l2src->v4l2object)) {
+    /* both will throw an element-error on failure */
     if (!gst_v4l2src_capture_stop (v4l2src))
       return FALSE;
     if (!gst_v4l2src_capture_deinit (v4l2src))
@@ -786,6 +799,8 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 
   /* we want our own v4l2 type of fourcc codes */
   if (!(format = gst_v4l2_caps_to_v4l2fourcc (v4l2src, structure))) {
+    GST_DEBUG_OBJECT (v4l2src, "can't get capture format from caps %"
+        GST_PTR_FORMAT, caps);
     return FALSE;
   }
 

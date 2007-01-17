@@ -105,16 +105,12 @@ struct _GstV4l2ObjectClassHelper {
   GList *devices;
 };
 
-GType gst_v4l2_object_get_type(void);
+GType gst_v4l2_object_get_type (void);
 
-#define V4L2_STD_OBJECT_PROPS			\
-    PROP_DEVICE,				\
-    PROP_DEVICE_NAME,				\
-    PROP_FLAGS,					\
-    PROP_NORM,					\
-    PROP_CHANNEL,					\
-    PROP_FREQUENCY
-
+#define V4L2_STD_OBJECT_PROPS		\
+    PROP_DEVICE,			\
+    PROP_DEVICE_NAME,			\
+    PROP_FLAGS
 
 /* create/destroy */
 GstV4l2Object *	gst_v4l2_object_new 		 (GstElement * element,
