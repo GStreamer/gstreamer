@@ -784,3 +784,99 @@
 )
 
 
+;; -*- scheme -*-
+; object definitions ...
+;; Enumerations and flags ...
+
+
+;; From videoorientation.h
+
+;;
+;; interface definitions ...
+;;
+
+(define-interface VideoOrientation
+   (in-module "Gst")
+   (c-name "GstVideoOrientation")
+   (gtype-id "GST_TYPE_VIDEO_ORIENTATION")
+   (vtable "GstVideoOrientationClass")
+)
+
+(define-function gst_video_orientation_get_type
+  (c-name "gst_video_orientation_get_type")
+  (return-type "GType")
+)
+
+(define-method get_hflip
+  (of-object "GstVideoOrientation")
+  (c-name "gst_video_orientation_get_hflip")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean*" "flip")
+  )
+)
+
+(define-method get_vflip
+  (of-object "GstVideoOrientation")
+  (c-name "gst_video_orientation_get_vflip")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean*" "flip")
+  )
+)
+
+(define-method get_hcenter
+  (of-object "GstVideoOrientation")
+  (c-name "gst_video_orientation_get_hcenter")
+  (return-type "gboolean")
+  (parameters
+    '("gint*" "center")
+  )
+)
+
+(define-method get_vcenter
+  (of-object "GstVideoOrientation")
+  (c-name "gst_video_orientation_get_vcenter")
+  (return-type "gboolean")
+  (parameters
+    '("gint*" "center")
+  )
+)
+
+(define-method set_hflip
+  (of-object "GstVideoOrientation")
+  (c-name "gst_video_orientation_set_hflip")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean" "flip")
+  )
+)
+
+(define-method set_vflip
+  (of-object "GstVideoOrientation")
+  (c-name "gst_video_orientation_set_vflip")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean" "flip")
+  )
+)
+
+(define-method set_hcenter
+  (of-object "GstVideoOrientation")
+  (c-name "gst_video_orientation_set_hcenter")
+  (return-type "gboolean")
+  (parameters
+    '("gint" "center")
+  )
+)
+
+(define-method set_vcenter
+  (of-object "GstVideoOrientation")
+  (c-name "gst_video_orientation_set_vcenter")
+  (return-type "gboolean")
+  (parameters
+    '("gint" "center")
+  )
+)
+
+
