@@ -1,5 +1,14 @@
 2007-01-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/interfaces.defs:
+	* gst/interfaces.override:
+	  wrap mixer get_volume
+	* examples/Makefile.am:
+	* examples/mixer.py:
+	  add an example using it
+
+2007-01-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	  fix use of PKG_CHECK_MODULES
 	  check for a pygobject of at least 2.11 for a value_from_pyobject fix
