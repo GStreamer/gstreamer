@@ -1,3 +1,10 @@
+2007-01-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gsttaglist.h:
+	* gst/gsttagsetter.c:
+	Add more docs regarding tag merge-modes and when to send tags. Fix 'since'
+	statement for new tag.
+
 2007-01-17  Edward Hervey  <edward@fluendo.com>
 
 	* plugins/elements/gstmultiqueue.c: (gst_single_queue_new):

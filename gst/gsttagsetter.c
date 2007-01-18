@@ -36,7 +36,10 @@
  * <para>
  * If you just want to retrieve metadata in your application then all you
  * need to do is watch for tag messages on your pipeline's bus. This
- * interface is only for setting metadata, not for extracting it.
+ * interface is only for setting metadata, not for extracting it. To set tags
+ * from the application, find tagsetter elements and set tags using e.g.
+ * gst_tag_setter_merge_tags() or gst_tag_setter_add_tags(). The application
+ * should do that before the element goes to %GST_STATE_PAUSED.
  * </para>
  * <para>
  * Elements implementing the #GstTagSetter interface often have to merge

@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 /**
  * GstTagMergeMode:
  * @GST_TAG_MERGE_UNDEFINED: undefined merge mode
- * @GST_TAG_MERGE_REPLACE_ALL: replace all tags
+ * @GST_TAG_MERGE_REPLACE_ALL: replace all tags (clear list and append)
  * @GST_TAG_MERGE_REPLACE: replace tags
  * @GST_TAG_MERGE_APPEND: append tags
  * @GST_TAG_MERGE_PREPEND: prepend tags
@@ -39,7 +39,72 @@ G_BEGIN_DECLS
  * @GST_TAG_MERGE_KEEP_ALL: keep all existing tags
  * @GST_TAG_MERGE_COUNT: the number of merge modes
  *
- * The different tag merging modes.
+ * The different tag merging modes are basically replace, overwrite and append,
+ * but they can be seen from two directions.
+ * Given two taglists: A - the one that are supplied to
+ * gst_tag_setter_merge_tags() or gst_tag_setter_add_tags() and B - the tags
+ * already in the element, how are the tags merged? In the table below this is
+ * shown for the cases that a tag exists in the list (A) or does not exists (!A)
+ * and combination thereof.
+ *
+ * <table frame="all" colsep="1" rowsep="1">
+ *   <title>merge mode</title>
+ *   <tgroup cols='5' align='left'>
+ *     <thead>
+ *       <row>
+ *         <entry>merge mode</entry>
+ *         <entry>A + B</entry>
+ *         <entry>A + !B</entry>
+ *         <entry>!A + B</entry>
+ *         <entry>!A + !B</entry>
+ *       </row>
+ *     </thead>
+ *     <tbody>
+ *       <row>
+ *         <entry>REPLACE_ALL</entry>
+ *         <entry>B</entry>
+ *         <entry>-</entry>
+ *         <entry>B</entry>
+ *         <entry>-</entry>
+ *       </row>
+ *       <row>
+ *         <entry>REPLACE</entry>
+ *         <entry>B</entry>
+ *         <entry>A</entry>
+ *         <entry>B</entry>
+ *         <entry>-</entry>
+ *       </row>
+ *       <row>
+ *         <entry>APPEND</entry>
+ *         <entry>A, B</entry>
+ *         <entry>A</entry>
+ *         <entry>B</entry>
+ *         <entry>-</entry>
+ *       </row>
+ *       <row>
+ *         <entry>PREPEND</entry>
+ *         <entry>B, A</entry>
+ *         <entry>A</entry>
+ *         <entry>B</entry>
+ *         <entry>-</entry>
+ *       </row>
+ *       <row>
+ *         <entry>KEEP</entry>
+ *         <entry>A</entry>
+ *         <entry>A</entry>
+ *         <entry>B</entry>
+ *         <entry>-</entry>
+ *       </row>
+ *       <row>
+ *         <entry>KEEP_ALL</entry>
+ *         <entry>A</entry>
+ *         <entry>A</entry>
+ *         <entry>-</entry>
+ *         <entry>-</entry>
+ *       </row>
+ *     </tbody>
+ *   </tgroup>
+ * </table>
  */
 typedef enum {
   GST_TAG_MERGE_UNDEFINED,
@@ -523,7 +588,7 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  *
  * number of beats per minute in audio
  *
- * Since: 0.10.11
+ * Since: 0.10.12
  */
 #define GST_TAG_BEATS_PER_MINUTE       "beats-per-minute"
 
