@@ -1,5 +1,12 @@
 2007-01-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/smpte/gstsmpte.c: (gst_smpte_init):
+	  Proxy getcaps on sink pads too, so that we either end up with the
+	  same dimensions on all pads or error out if that's not possible
+	  (seems to work even!). Fixes #398086, I think.
+
+2007-01-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins.args:
 	* docs/plugins/gst-plugins-good-plugins.hierarchy:
