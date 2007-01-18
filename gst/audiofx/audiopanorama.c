@@ -20,7 +20,7 @@
  */
 
 /**
- * SECTION:gstaudiopanorama
+ * SECTION:element-audiopanorama
  * @short_description: audio stereo pan effect
  *
  * <refsect2>

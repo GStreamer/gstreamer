@@ -1,3 +1,8 @@
+2007-01-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiofx/audiopanorama.c:
+	  Fix doc section name (Fixes #397946)
+
 2007-01-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/v4l2/gstv4l2object.c:
