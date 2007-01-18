@@ -17,18 +17,6 @@
 
 2007-01-16  Stefan Kost  <ensonic@users.sf.net>
 
-	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),
-	(gst_avi_demux_parse_index), (gst_avi_demux_stream_index),
-	(gst_avi_demux_sync), (gst_avi_demux_next_data_buffer),
-	(gst_avi_demux_stream_scan), (gst_avi_demux_massage_index),
-	(gst_avi_demux_calculate_durations_from_index),
-	(gst_avi_demux_push_event), (gst_avi_demux_stream_header_pull),
-	(gst_avi_demux_handle_seek), (gst_avi_demux_stream_data),
-	(gst_avi_demux_loop):
-	  Fix hanging when demuxing fuzzed file (#397229). Add some more debug.
-
-2007-01-16  Stefan Kost  <ensonic@users.sf.net>
-
 	Patch by: Sebastian Dröge <slomo circular-chaos org>
 
 	* gst/audiofx/audiopanorama.c: (gst_audio_panorama_class_init),
