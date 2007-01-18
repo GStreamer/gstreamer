@@ -1,3 +1,8 @@
+2007-01-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/audioconvert/gstchannelmix.c:
+	  Remove compatibility cruft for prehistoric GLib versions.
+
 2007-01-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/Makefile.am:
