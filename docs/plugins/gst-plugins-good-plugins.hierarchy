@@ -47,6 +47,7 @@ GObject
       GstDVDec
       GstCairoTextOverlay
       GstBaseTransform
+        GstAudioPanorama
         GstCairoTimeOverlay
         GstVideoFilter
           GstVideoBalance
