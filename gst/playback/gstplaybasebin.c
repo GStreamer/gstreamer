@@ -1443,8 +1443,17 @@ unknown_uri:
     gchar *prot = gst_uri_get_protocol (sub_uri);
 
     if (prot) {
+      gchar *desc;
+
+      gst_element_post_message (GST_ELEMENT (play_base_bin),
+          gst_missing_uri_source_message_new (GST_ELEMENT (play_base_bin),
+              prot));
+
+      desc = gst_base_utils_get_source_description (prot);
       GST_ELEMENT_ERROR (play_base_bin, CORE, MISSING_PLUGIN,
-          (_("No URI handler implemented for \"%s\"."), prot), (NULL));
+          (_("A %s plugin is required to play this stream, but not installed."),
+              desc), ("No URI handler to handle sub_uri: %s", sub_uri));
+      g_free (desc);
       g_free (prot);
     } else
       goto invalid_uri;
@@ -1560,14 +1569,17 @@ no_source:
     /* whoops, could not create the source element, dig a little deeper to
      * figure out what might be wrong. */
     if (prot) {
-      GstElement *this = GST_ELEMENT_CAST (play_base_bin);
-      GstMessage *msg;
+      gchar *desc;
 
-      msg = gst_missing_uri_source_message_new (this, prot);
-      gst_element_post_message (this, msg);
+      gst_element_post_message (GST_ELEMENT (play_base_bin),
+          gst_missing_uri_source_message_new (GST_ELEMENT (play_base_bin),
+              prot));
 
+      desc = gst_base_utils_get_source_description (prot);
       GST_ELEMENT_ERROR (play_base_bin, CORE, MISSING_PLUGIN,
-          (_("No URI handler implemented for \"%s\"."), prot), (NULL));
+          (_("A %s plugin is required to play this stream, but not installed."),
+              desc), ("No URI handler for %s", prot));
+      g_free (desc);
       g_free (prot);
     } else
       goto invalid_uri;
@@ -2552,7 +2564,9 @@ gst_play_base_bin_change_state (GstElement * element, GstStateChange transition)
 
       finish_source (play_base_bin);
       break;
+      /* clean-up in both cases, READY=>NULL clean-up is if there was an error */
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       play_base_bin->need_rebuild = TRUE;
       remove_decoders (play_base_bin);
       remove_groups (play_base_bin);

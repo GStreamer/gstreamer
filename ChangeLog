@@ -1,5 +1,19 @@
 2007-01-19  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybasebin.c: (setup_subtitle),
+	(gen_source_element), (gst_play_base_bin_change_state):
+	  Attempt at a better error message in case we don't have the required
+	  URI handler installed; post missing-plugin message also when we're
+	  missing an URI handler for the subtitle URI; clean up properly also
+	  when an error occurs and we never made it to PAUSED state.
+
+	* tests/check/elements/playbin.c: (GST_START_TEST),
+	(playbin_suite):
+	  Check that we're also getting a missing-plugin messsage for a
+	  missing subtitle URI handler (and clean up properly).
+
+2007-01-19  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstplaybasebin.c: (analyse_source), (setup_source):
 	  Plug a few reference leaks.
 

@@ -238,6 +238,58 @@ GST_START_TEST (test_missing_urisource_handler)
 
 GST_END_TEST;
 
+GST_START_TEST (test_missing_suburisource_handler)
+{
+  GstStructure *s;
+  GstMessage *msg;
+  GstElement *playbin;
+  GError *err = NULL;
+  GstBus *bus;
+
+  playbin = create_playbin ("file:///does/not/exis.t");
+
+  g_object_set (playbin, "suburi", "cookie://withahint.of/cinnamon", NULL);
+
+  fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_READY),
+      GST_STATE_CHANGE_SUCCESS);
+  fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_PAUSED),
+      GST_STATE_CHANGE_FAILURE);
+
+  /* there should be at least a missing-plugin message on the bus now and an
+   * error message; the missing-plugin message should be first */
+  bus = gst_element_get_bus (playbin);
+
+  msg = gst_bus_poll (bus, GST_MESSAGE_ELEMENT | GST_MESSAGE_ERROR, -1);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  fail_unless (msg->structure != NULL);
+  s = msg->structure;
+  fail_unless (gst_structure_has_name (s, "missing-plugin"));
+  fail_unless (gst_structure_has_field_typed (s, "detail", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "detail"), "cookie");
+  fail_unless (gst_structure_has_field_typed (s, "type", G_TYPE_STRING));
+  fail_unless_equals_string (gst_structure_get_string (s, "type"), "urisource");
+  gst_message_unref (msg);
+
+  msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, -1);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ERROR);
+
+  /* make sure the error is a CORE MISSING_PLUGIN one */
+  gst_message_parse_error (msg, &err, NULL);
+  fail_unless (err != NULL);
+  fail_unless (err->domain == GST_CORE_ERROR, "error has wrong error domain "
+      "%s instead of core-error-quark", g_quark_to_string (err->domain));
+  fail_unless (err->code == GST_CORE_ERROR_MISSING_PLUGIN, "error has wrong "
+      "code %u instead of GST_CORE_ERROR_MISSING_PLUGIN", err->code);
+  g_error_free (err);
+  gst_message_unref (msg);
+  gst_object_unref (bus);
+
+  gst_element_set_state (playbin, GST_STATE_NULL);
+  gst_object_unref (playbin);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_missing_primary_decoder)
 {
   GstStructure *s;
@@ -536,6 +588,7 @@ playbin_suite (void)
   tcase_add_test (tc_chain, test_suburi_error_invalidfile);
   tcase_add_test (tc_chain, test_suburi_error_unknowntype);
   tcase_add_test (tc_chain, test_missing_urisource_handler);
+  tcase_add_test (tc_chain, test_missing_suburisource_handler);
   tcase_add_test (tc_chain, test_missing_primary_decoder);
 
   /* one day we might also want to have the following checks:
