@@ -1029,27 +1029,41 @@ static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
                                           (((guint8 *)(data))[3] == 0xC0) || \
                                           (((guint8 *)(data))[3] == 0xBD)))
 
+#define MPEG2_MAX_PROBE_LENGTH 4096     /* 4kB (random value) */
+
 static void
 mpeg2_sys_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data = gst_type_find_peek (tf, 0, 5);
-  gint mpegversion;
+  guint8 *data;
+  gint mpegversion, len;
 
-  if (data && IS_MPEG_PACK_HEADER (data)) {
-    if ((data[4] & 0xC0) == 0x40) {
-      /* type 2 */
+  len = MPEG2_MAX_PROBE_LENGTH * 2;
+  do {
+    len = len / 2;
+    data = gst_type_find_peek (tf, 0, 5 + len);
+  } while (data == NULL && len >= 32);
+
+  if (!data)
+    return;
+
+  while (len > 0) {
+    if (IS_MPEG_PACK_HEADER (data)) {
+      if ((data[4] & 0xC0) == 0x40) {
+        /* type 2 */
+        mpegversion = 2;
+        goto suggest;
+      } else if ((data[4] & 0xF0) == 0x20) {
+        mpegversion = 1;
+        goto suggest;
+      }
+    } else if (IS_MPEG_PES_HEADER (data)) {
+      /* PES stream */
       mpegversion = 2;
       goto suggest;
-    } else if ((data[4] & 0xF0) == 0x20) {
-      mpegversion = 1;
-      goto suggest;
     }
-  } else if (data && IS_MPEG_PES_HEADER (data)) {
-    /* PES stream */
-    mpegversion = 2;
-    goto suggest;
+    ++data;
+    --len;
   }
-
   return;
 suggest:
   {

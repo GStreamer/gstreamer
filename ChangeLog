@@ -1,3 +1,10 @@
+2007-01-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/typefind/gsttypefindfunctions.c: (mpeg2_sys_type_find):
+	  Small mpeg2 system stream typefinding improvement: make typefinder
+	  probe a bit into the stream instead of just looking for a marker
+	  at the beginning. Fixes #397810.
+
 2007-01-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/audioconvert/gstchannelmix.c:
