@@ -1,5 +1,10 @@
 2007-01-19  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybasebin.c: (analyse_source), (setup_source):
+	  Plug a few reference leaks.
+
+2007-01-19  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/typefind/gsttypefindfunctions.c: (mpeg2_sys_type_find):
 	  Lower probability a bit if the marker isn't right at the start,
 	  to decrease the chance of false positives.

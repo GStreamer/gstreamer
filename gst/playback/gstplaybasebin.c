@@ -1756,7 +1756,7 @@ analyse_source (GstPlayBaseBin * play_base_bin, gboolean * is_raw,
 
   pads_iter = gst_element_iterate_src_pads (play_base_bin->source);
   while (!done) {
-    GstPad *pad;
+    GstPad *pad = NULL;
 
     switch (gst_iterator_next (pads_iter, (gpointer) & pad)) {
       case GST_ITERATOR_ERROR:
@@ -1777,13 +1777,18 @@ analyse_source (GstPlayBaseBin * play_base_bin, gboolean * is_raw,
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */
-        if (!has_all_raw_caps (pad, is_raw))
+        if (!has_all_raw_caps (pad, is_raw)) {
+          gst_object_unref (pad);
           break;
+        }
 
         /* caps on source pad are all raw, we can add the pad */
-        if (*is_raw)
+        if (*is_raw) {
           new_decoded_pad_full (play_base_bin->source, pad, FALSE,
               play_base_bin, FALSE);
+        }
+
+        gst_object_unref (pad);
         break;
     }
   }
@@ -2018,6 +2023,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
         play_base_bin->subtitle = NULL;
       }
     }
+    gst_object_unref (db);
   }
   /* see if the source element emits raw audio/video all by itself,
    * if so, we can create streams for the pads and be done with it.
