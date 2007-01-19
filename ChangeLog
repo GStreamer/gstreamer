@@ -1,5 +1,15 @@
 2007-01-19  Edward Hervey  <edward@fluendo.com>
 
+	* gst/smpte/gstsmpte.c: (fill_i420), (gst_smpte_collected):
+	Ignore previous commit, that was only valid for widths and heights
+	that are multiples of 4.
+	Copy over size/stride macros from jpegdec. This allows the element
+	to work with any width,height...
+	... but puts in evidence that the actual transformations only work
+	with width/height that are multiples of 4.
+
+2007-01-19  Edward Hervey  <edward@fluendo.com>
+
 	* gst/smpte/gstsmpte.c: (gst_smpte_collected):
 	Allocate buffers of the right size.
 	The proper size of a I420 buffer in bytes is:

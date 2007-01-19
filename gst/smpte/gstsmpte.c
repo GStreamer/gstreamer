@@ -114,6 +114,17 @@ enum
   PROP_LAST,
 };
 
+#define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
+#define I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
+#define I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
+
+#define I420_Y_OFFSET(w,h) (0)
+#define I420_U_OFFSET(w,h) (I420_Y_OFFSET(w,h)+(I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
+#define I420_V_OFFSET(w,h) (I420_U_OFFSET(w,h)+(I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
+
+#define I420_SIZE(w,h)     (I420_V_OFFSET(w,h)+(I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
+
+
 #define GST_TYPE_SMPTE_TRANSITION_TYPE (gst_smpte_transition_type_get_type())
 static GType
 gst_smpte_transition_type_get_type (void)
@@ -252,10 +263,11 @@ static int v_colors[] = { 128, 155, 0, 21, 235, 255, 107, 128, 128, 255 };
 static void
 fill_i420 (guint8 * data, gint width, gint height, gint color)
 {
-  gint size = width * height, size4 = size >> 2;
+  gint size = I420_Y_ROWSTRIDE (width) * GST_ROUND_UP_2 (height);
+  gint size4 = size >> 2;
   guint8 *yp = data;
-  guint8 *up = data + size;
-  guint8 *vp = data + size + size4;
+  guint8 *up = data + I420_U_OFFSET (width, height);
+  guint8 *vp = data + I420_V_OFFSET (width, height);
 
   memset (yp, y_colors[color], size);
   memset (up, u_colors[color], size4);
@@ -436,17 +448,17 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
 
   if (in1 == NULL) {
     /* if no input, make picture black */
-    in1 = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3 / 2);
+    in1 = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
     fill_i420 (GST_BUFFER_DATA (in1), smpte->width, smpte->height, 7);
   }
   if (in2 == NULL) {
     /* if no input, make picture white */
-    in2 = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3 / 2);
+    in2 = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
     fill_i420 (GST_BUFFER_DATA (in2), smpte->width, smpte->height, 0);
   }
 
   if (smpte->position < smpte->end_position) {
-    outbuf = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3 / 2);
+    outbuf = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
 
     /* set caps if not done yet */
     if (!GST_PAD_CAPS (smpte->srcpad)) {
