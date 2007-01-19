@@ -1,3 +1,13 @@
+2007-01-19  Edward Hervey  <edward@fluendo.com>
+
+	* gst/smpte/gstsmpte.c: (gst_smpte_collected):
+	Allocate buffers of the right size.
+	The proper size of a I420 buffer in bytes is:
+	
+	    width * height * 3
+	    ------------------
+	            2
+
 2007-01-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/smpte/gstsmpte.c: (gst_smpte_init):

@@ -436,17 +436,17 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
 
   if (in1 == NULL) {
     /* if no input, make picture black */
-    in1 = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3);
+    in1 = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3 / 2);
     fill_i420 (GST_BUFFER_DATA (in1), smpte->width, smpte->height, 7);
   }
   if (in2 == NULL) {
     /* if no input, make picture white */
-    in2 = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3);
+    in2 = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3 / 2);
     fill_i420 (GST_BUFFER_DATA (in2), smpte->width, smpte->height, 0);
   }
 
   if (smpte->position < smpte->end_position) {
-    outbuf = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3);
+    outbuf = gst_buffer_new_and_alloc (smpte->width * smpte->height * 3 / 2);
 
     /* set caps if not done yet */
     if (!GST_PAD_CAPS (smpte->srcpad)) {
