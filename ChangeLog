@@ -1,3 +1,11 @@
+2007-01-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/smpte/gstsmpte.c: (gst_smpte_collected):
+	  Some more sanity checks to make sure the input formats match and the
+	  input pads are actually negotiated, in case someone tries to feed
+	  buffers from fakesrc or filesrc. Fixes #398299.
+	  Also const-ify an array, just because we can.
+
 2007-01-19  Edward Hervey  <edward@fluendo.com>
 
 	* gst/smpte/gstsmpte.c: (fill_i420), (gst_smpte_collected):

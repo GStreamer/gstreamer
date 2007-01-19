@@ -255,10 +255,10 @@ gst_smpte_class_init (GstSMPTEClass * klass)
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_smpte_change_state);
 }
 
-/*                        wht  yel  cya  grn  mag  red  blu  blk   -I    Q */
-static int y_colors[] = { 255, 226, 179, 150, 105, 76, 29, 16, 16, 0 };
-static int u_colors[] = { 128, 0, 170, 46, 212, 85, 255, 128, 0, 128 };
-static int v_colors[] = { 128, 155, 0, 21, 235, 255, 107, 128, 128, 255 };
+/*                              wht  yel  cya  grn  mag  red  blu  blk   -I    Q */
+static const int y_colors[] = { 255, 226, 179, 150, 105, 76, 29, 16, 16, 0 };
+static const int u_colors[] = { 128, 0, 170, 46, 212, 85, 255, 128, 0, 128 };
+static const int v_colors[] = { 128, 155, 0, 21, 235, 255, 107, 128, 128, 255 };
 
 static void
 fill_i420 (guint8 * data, gint width, gint height, gint color)
@@ -429,7 +429,10 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
   GstBuffer *in1 = NULL, *in2 = NULL;
   GSList *collected;
 
-  if (smpte->fps_num == 0)
+  if (G_UNLIKELY (smpte->fps_num == 0))
+    goto not_negotiated;
+
+  if (!GST_PAD_CAPS (smpte->sinkpad1) || !GST_PAD_CAPS (smpte->sinkpad2))
     goto not_negotiated;
 
   ts = gst_util_uint64_scale_int (smpte->position * GST_SECOND,
@@ -456,6 +459,9 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
     in2 = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
     fill_i420 (GST_BUFFER_DATA (in2), smpte->width, smpte->height, 0);
   }
+
+  if (GST_BUFFER_SIZE (in1) != GST_BUFFER_SIZE (in2))
+    goto input_formats_do_not_match;
 
   if (smpte->position < smpte->end_position) {
     outbuf = gst_buffer_new_and_alloc (I420_SIZE (smpte->width, smpte->height));
@@ -510,6 +516,13 @@ not_negotiated:
     GST_ELEMENT_ERROR (smpte, CORE, NEGOTIATION, (NULL),
         ("No input format negotiated"));
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+input_formats_do_not_match:
+  {
+    GST_ELEMENT_ERROR (smpte, CORE, NEGOTIATION, (NULL),
+        ("input formats don't match: %" GST_PTR_FORMAT " vs. %" GST_PTR_FORMAT,
+            GST_PAD_CAPS (smpte->sinkpad1), GST_PAD_CAPS (smpte->sinkpad2)));
+    return GST_FLOW_ERROR;
   }
 }
 
