@@ -1034,7 +1034,7 @@ static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
 static void
 mpeg2_sys_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data;
+  guint8 *data, *data0;
   gint mpegversion, len;
 
   len = MPEG2_MAX_PROBE_LENGTH * 2;
@@ -1046,6 +1046,7 @@ mpeg2_sys_type_find (GstTypeFind * tf, gpointer unused)
   if (!data)
     return;
 
+  data0 = data;
   while (len > 0) {
     if (IS_MPEG_PACK_HEADER (data)) {
       if ((data[4] & 0xC0) == 0x40) {
@@ -1071,7 +1072,11 @@ suggest:
 
     gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
         G_TYPE_INT, mpegversion, NULL);
-    gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, caps);
+    /* lower probability if the marker isn't right at the start */
+    if (data0 == data)
+      gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, caps);
+    else
+      gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE - 10, caps);
     gst_caps_unref (caps);
   }
 };
