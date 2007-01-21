@@ -1,3 +1,10 @@
+2007-01-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
+	* gst/gstpad.c:
+	  Fix two docs typoes (#399094).
+
 2007-01-19  Edward Hervey  <edward@fluendo.com>
 
 	* docs/faq/gst-uninstalled:
