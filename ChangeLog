@@ -1,3 +1,9 @@
+2007-01-22  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_handle_xevents):
+	Lock that X Call as well. Fixes #397673.
+
 2007-01-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/typefind/gsttypefindfunctions.c: (mpeg4_video_type_find):

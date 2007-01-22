@@ -962,8 +962,10 @@ gst_ximagesink_handle_xevents (GstXImageSink * ximagesink)
            events for interactivity/navigation */
         GST_DEBUG ("ximagesink key %d pressed over window at %d,%d",
             e.xkey.keycode, e.xkey.x, e.xkey.x);
+        g_mutex_lock (ximagesink->x_lock);
         keysym = XKeycodeToKeysym (ximagesink->xcontext->disp,
             e.xkey.keycode, 0);
+        g_mutex_unlock (ximagesink->x_lock);
         if (keysym != NoSymbol) {
           gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
               e.type == KeyPress ?
