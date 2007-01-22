@@ -2639,7 +2639,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
   /* the header consists of a 'hdrl' LIST tag */
   res = gst_riff_read_chunk (element, avi->sinkpad, &avi->offset, &tag, &buf);
   if (res != GST_FLOW_OK)
-    return res;
+    goto pull_range_failed;
   else if (tag != GST_RIFF_TAG_LIST)
     goto no_list;
   else if (GST_BUFFER_SIZE (buf) < 4)
@@ -2658,7 +2658,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
     /* read new chunk */
     res = gst_riff_read_chunk (element, avi->sinkpad, &avi->offset, &tag, &buf);
     if (res != GST_FLOW_OK)
-      return res;
+      goto pull_range_failed;
     else if (tag != GST_RIFF_TAG_LIST)
       goto no_list;
     else if (GST_BUFFER_SIZE (buf) < 4)
@@ -2673,7 +2673,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
   else if (!gst_avi_demux_parse_avih (element, sub, &avi->avih))
     goto invalid_avih;
 
-  GST_DEBUG_OBJECT (avi, "AVI header ok, reading elemnts from header");
+  GST_DEBUG_OBJECT (avi, "AVI header ok, reading elements from header");
 
   /* now, read the elements from the header until the end */
   while (gst_riff_parse_chunk (element, buf, &offset, &tag, &sub)) {
@@ -2745,9 +2745,8 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
 
     res = gst_pad_pull_range (avi->sinkpad, avi->offset, 12, &buf);
     if (res != GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (avi, "pull_ranged returned %s",
-          gst_flow_get_name (res));
-      return res;
+      GST_DEBUG_OBJECT (avi, "pull_range failure while looking for tags");
+      goto pull_range_failed;
     } else if (GST_BUFFER_SIZE (buf) < 12) {
       GST_DEBUG_OBJECT (avi, "got %d bytes which is less than 12 bytes",
           GST_BUFFER_SIZE (buf));
@@ -2769,9 +2768,8 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
               gst_riff_read_chunk (element, avi->sinkpad, &avi->offset, &tag,
               &buf);
           if (res != GST_FLOW_OK) {
-            GST_DEBUG_OBJECT (avi, "read_chunk returned %s",
-                gst_flow_get_name (res));
-            return res;
+            GST_DEBUG_OBJECT (avi, "couldn't read INFO chunk");
+            goto pull_range_failed;
           }
 
           sub = gst_buffer_create_sub (buf, 4, GST_BUFFER_SIZE (buf) - 4);
@@ -2891,6 +2889,12 @@ no_index:
 
     GST_ELEMENT_ERROR (avi, STREAM, NOT_IMPLEMENTED, (NULL),
         ("Could not get/create index"));
+    return GST_FLOW_ERROR;
+  }
+pull_range_failed:
+  {
+    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),
+        ("pull_range flow reading header: %s", gst_flow_get_name (res)));
     return GST_FLOW_ERROR;
   }
 }

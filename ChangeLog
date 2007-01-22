@@ -1,3 +1,9 @@
+2007-01-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_header_pull):
+	  Error out properly when pull_range fails while we're reading the
+	  headers, instead of just pausing the task silently. Fixes #399338.
+
 2007-01-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/smpte/gstsmpte.c: (gst_smpte_collected):
