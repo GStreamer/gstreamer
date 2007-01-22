@@ -1,3 +1,8 @@
+2007-01-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	  Camtasia caps apparently need a bpp field (#398875).
+
 2007-01-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (setup_subtitle),
