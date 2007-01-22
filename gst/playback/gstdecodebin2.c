@@ -175,6 +175,9 @@ struct _GstDecodeGroup
   gboolean blocked;             /* TRUE if all endpads are blocked */
   gboolean complete;            /* TRUE if we are not expecting anymore streams 
                                  * on this group */
+  gulong overrunsig;
+  gulong underrunsig;
+
   GList *endpads;               /* List of GstDecodePad of source pads to be exposed */
   GList *ghosts;                /* List of GstGhostPad for the endpads */
 };
@@ -1258,9 +1261,9 @@ gst_decode_group_new (GstDecodeBin * dbin)
   group->complete = FALSE;
   group->endpads = NULL;
 
-  g_signal_connect (G_OBJECT (mq), "overrun",
+  group->overrunsig = g_signal_connect (G_OBJECT (mq), "overrun",
       G_CALLBACK (multi_queue_overrun_cb), group);
-  g_signal_connect (G_OBJECT (mq), "underrun",
+  group->underrunsig = g_signal_connect (G_OBJECT (mq), "underrun",
       G_CALLBACK (multi_queue_underrun_cb), group);
 
   gst_bin_add (GST_BIN (dbin), group->multiqueue);
@@ -1287,6 +1290,8 @@ get_current_group (GstDecodeBin * dbin)
   for (tmp = dbin->groups; tmp; tmp = g_list_next (tmp)) {
     GstDecodeGroup *this = (GstDecodeGroup *) tmp->data;
 
+    GST_LOG_OBJECT (dbin, "group %p, complete:%d", this, this->complete);
+
     if (!this->complete) {
       group = this;
       break;
@@ -1306,7 +1311,9 @@ group_demuxer_event_probe (GstPad * pad, GstEvent * event,
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     GST_DEBUG_OBJECT (group->dbin,
         "Got EOS on group input pads, exposing group if it wasn't before");
+    DECODE_BIN_LOCK (group->dbin);
     gst_decode_group_expose (group);
+    DECODE_BIN_UNLOCK (group->dbin);
   }
   return TRUE;
 }
@@ -1548,6 +1555,10 @@ gst_decode_group_expose (GstDecodeGroup * group)
   remove_fakesink (group->dbin);
 
   group->exposed = TRUE;
+
+  GST_LOG_OBJECT (group->dbin, "signalling no-more-pads");
+  gst_element_no_more_pads (GST_ELEMENT (group->dbin));
+
   GST_LOG_OBJECT (group->dbin, "Group %p exposed", group);
   return TRUE;
 }
@@ -1581,6 +1592,60 @@ gst_decode_group_hide (GstDecodeGroup * group)
 }
 
 static void
+deactivate_free_recursive (GstDecodeGroup * group, GstElement * element)
+{
+  GstIterator *it;
+  GstIteratorResult res;
+  gpointer point;
+
+  GST_LOG ("element:%s", GST_ELEMENT_NAME (element));
+
+  /* call on downstream elements */
+  it = gst_element_iterate_src_pads (element);
+
+restart:
+
+  while (1) {
+    res = gst_iterator_next (it, &point);
+    switch (res) {
+      case GST_ITERATOR_DONE:
+        goto done;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (it);
+        goto restart;
+      case GST_ITERATOR_ERROR:
+      {
+        GST_WARNING ("Had an error while iterating source pads of element: %s",
+            GST_ELEMENT_NAME (element));
+        goto beach;
+      }
+      case GST_ITERATOR_OK:
+      {
+        GstPad *pad = GST_PAD (point);
+        GstPad *peerpad = NULL;
+
+        if ((peerpad = gst_pad_get_peer (pad))) {
+          GstElement *peerelement = GST_ELEMENT (gst_pad_get_parent (peerpad));
+
+          if (peerelement)
+            deactivate_free_recursive (group, peerelement);
+        }
+      }
+        break;
+      default:
+        break;
+    }
+  }
+
+done:
+  gst_element_set_state (element, GST_STATE_NULL);
+  gst_bin_remove (GST_BIN (group->dbin), element);
+
+beach:
+  return;
+}
+
+static void
 gst_decode_group_free (GstDecodeGroup * group)
 {
   GList *tmp;
@@ -1596,6 +1661,13 @@ gst_decode_group_free (GstDecodeGroup * group)
   }
   g_list_free (group->endpads);
   group->endpads = NULL;
+
+  /* disconnect signal handlers on multiqueue */
+  g_signal_handler_disconnect (group->multiqueue, group->underrunsig);
+  g_signal_handler_disconnect (group->multiqueue, group->overrunsig);
+
+  /* remove all elements */
+  deactivate_free_recursive (group, group->multiqueue);
 
   GROUP_MUTEX_UNLOCK (group);
 

@@ -1,3 +1,14 @@
+2007-01-22  Edward Hervey  <edward@fluendo.com>
+
+	* gst/playback/gstdecodebin2.c: (gst_decode_group_new),
+	(get_current_group), (group_demuxer_event_probe),
+	(gst_decode_group_expose), (deactivate_free_recursive),
+	(gst_decode_group_free):
+	Cleanups.
+	Don't forget to emit 'no-more-pads' once a group is exposed.
+	Cleanup elements from a DecodeGroup once we remove it.
+	Protect call to gst_decode_group_expose() with the decodebin lock.
+
 2007-01-22  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents):
