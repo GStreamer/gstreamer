@@ -767,7 +767,7 @@ gst_multi_queue_src_activate_push (GstPad * pad, gboolean active)
   gboolean result = FALSE;
 
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);
-  mq = (GstMultiQueue *) gst_pad_get_parent (pad);
+  mq = sq->mqueue;
 
   GST_LOG ("SingleQueue %d", sq->id);
 
@@ -793,7 +793,6 @@ gst_multi_queue_src_activate_push (GstPad * pad, gboolean active)
     gst_data_queue_set_flushing (sq->queue, FALSE);
   }
 
-  gst_object_unref (mq);
   return result;
 }
 
@@ -1032,14 +1031,11 @@ gst_single_queue_new (GstMultiQueue * mqueue)
   gst_pad_set_element_private (sq->sinkpad, (gpointer) sq);
   gst_pad_set_element_private (sq->srcpad, (gpointer) sq);
 
-  gst_pad_set_active (sq->sinkpad, TRUE);
-  gst_element_add_pad (GST_ELEMENT (mqueue), sq->sinkpad);
-
-  GST_OBJECT_FLAG_UNSET (sq->srcpad, GST_PAD_FLUSHING);
+  gst_pad_set_active (sq->srcpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (mqueue), sq->srcpad);
 
-  gst_pad_set_active (sq->srcpad, TRUE);
   gst_pad_set_active (sq->sinkpad, TRUE);
+  gst_element_add_pad (GST_ELEMENT (mqueue), sq->sinkpad);
 
   GST_DEBUG_OBJECT (mqueue, "GstSingleQueue [%d] created and pads added",
       sq->id);

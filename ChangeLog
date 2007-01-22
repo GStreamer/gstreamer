@@ -1,3 +1,11 @@
+2007-01-22  Edward Hervey  <edward@fluendo.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	(gst_multi_queue_src_activate_push), (gst_single_queue_new):
+	Remove previous hack of unsetting the flushing flag for the source pad
+	instead of activating it. Instead, fix the source pad activate function
+	so that it no longer depends on having a parent set or not.
+
 2007-01-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Carlos Sanmartin Dominguez <csanmartin@igalia.com>
