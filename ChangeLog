@@ -1,3 +1,10 @@
+2007-01-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Carlos Sanmartin Dominguez <csanmartin@igalia.com>
+
+	* docs/manual/basics-bus.xml:
+	  Fix example code, gst_element_unref() doesn't exist any longer.
+
 2007-01-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Mark Nauwelaerts <manauw at skynet be>

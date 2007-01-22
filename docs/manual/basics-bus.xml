@@ -126,7 +126,7 @@ main (gint   argc,
 
   /* clean up */
   gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_element_unref (pipeline);
+  gst_object_unref (pipeline);
   g_main_loop_unref (loop)
 
   return 0;
