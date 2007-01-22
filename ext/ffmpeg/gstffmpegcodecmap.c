@@ -669,6 +669,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_TSCC:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-camtasia", NULL);
+      if (context) {
+        gst_caps_set_simple (caps,
+            "depth", G_TYPE_INT, (gint) context->bits_per_sample, NULL);
+      } else {
+        gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 8, 32, NULL);
+      }
       break;
 
     case CODEC_ID_PNG:
@@ -1571,11 +1577,16 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
     case CODEC_ID_MSRLE:
     case CODEC_ID_QTRLE:
+    case CODEC_ID_TSCC:
     {
       gint depth;
 
-      if (gst_structure_get_int (str, "depth", &depth))
+      if (gst_structure_get_int (str, "depth", &depth)) {
         context->bits_per_sample = depth;
+      } else {
+        GST_WARNING ("No depth field in caps %" GST_PTR_FORMAT, caps);
+      }
+
     }
       break;
 
