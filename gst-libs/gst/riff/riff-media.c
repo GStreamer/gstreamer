@@ -523,10 +523,10 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     case GST_MAKE_FOURCC ('T', 'S', 'C', 'C'):
     case GST_MAKE_FOURCC ('t', 's', 'c', 'c'):{
       if (strf) {
-        gint bpp = (strf->bit_cnt != 0) ? (gint) strf->bit_cnt : 24;
+        gint depth = (strf->bit_cnt != 0) ? (gint) strf->bit_cnt : 24;
 
-        caps = gst_caps_new_simple ("video/x-camtasia", "bpp", G_TYPE_INT,
-            bpp, NULL);
+        caps = gst_caps_new_simple ("video/x-camtasia", "depth", G_TYPE_INT,
+            depth, NULL);
       } else {
         /* template caps */
         caps = gst_caps_new_simple ("video/x-camtasia", NULL);
