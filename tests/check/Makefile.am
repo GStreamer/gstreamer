@@ -74,6 +74,7 @@ check_PROGRAMS = \
 	elements/volume \
 	generic/clock-selection \
 	generic/states \
+	gst/typefindfunctions \
 	libs/audio \
 	libs/cddabasesrc \
 	libs/tag \
@@ -197,6 +198,9 @@ elements_vorbistag_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(VORBIS_CFLAGS) \
 	$(CFLAGS) $(AM_CFLAGS)
+
+gst_typefindfunctions_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+gst_typefindfunctions_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
 libs_video_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \

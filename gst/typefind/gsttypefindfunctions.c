@@ -1363,7 +1363,8 @@ mpeg4_video_type_find (GstTypeFind * tf, gpointer unused)
           gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
           gst_caps_unref (caps);
           return;
-        }
+        } else
+          return;
       } else
         return;
     } else

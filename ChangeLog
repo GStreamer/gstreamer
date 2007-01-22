@@ -1,5 +1,17 @@
 2007-01-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/typefind/gsttypefindfunctions.c: (mpeg4_video_type_find):
+	  Don't go into an endless loop if the file starts with 00 00 01 2X,
+	  like quicktime redirect files might. Fixes #396042.
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/.cvsignore:
+	* tests/check/gst/typefindfunctions.c: (GST_START_TEST),
+	(typefindfunctions_suite):
+	  Add unit test for the above.
+
+2007-01-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
 	  On second thought, use "depth" field rather than "bpp" field.
 
