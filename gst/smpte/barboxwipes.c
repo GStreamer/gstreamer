@@ -32,14 +32,14 @@ enum
   TRIGANLE_LINEAR = 4
 };
 
-static gint boxes_1b[][7] = {
+static const gint boxes_1b[][7] = {
 #define WIPE_B1_1       0
   {BOX_VERTICAL, 0, 0, 0, 1, 1, 1},
 #define WIPE_B1_2       1
   {BOX_HORIZONTAL, 0, 0, 0, 1, 1, 1}
 };
 
-static gint boxes_2b[][7 * 2] = {
+static const gint boxes_2b[][7 * 2] = {
 #define WIPE_B2_21      0
   {BOX_VERTICAL, 0, 0, 1, 1, 2, 0,
       BOX_VERTICAL, 1, 0, 0, 2, 2, 1},
@@ -48,7 +48,7 @@ static gint boxes_2b[][7 * 2] = {
       BOX_HORIZONTAL, 0, 1, 0, 2, 2, 1},
 };
 
-static gint box_clock_1b[][1 * 10] = {
+static const gint box_clock_1b[][1 * 10] = {
 #define WIPE_B1_241     0
   {BOX_CLOCK, 0, 0, 0, 1, 0, 0, 0, 1, 1},
 #define WIPE_B1_242     1
@@ -60,7 +60,7 @@ static gint box_clock_1b[][1 * 10] = {
 };
 
 #define WIPE_B2_221     0
-static gint box_clock_2b[][2 * 10] = {
+static const gint box_clock_2b[][2 * 10] = {
 #define WIPE_B2_221     0
   {BOX_CLOCK, 1, 0, 0, 2, 0, 0, 1, 2, 1,
       BOX_CLOCK, 1, 0, 0, 1, 2, 1, 0, 0, 2},
@@ -105,7 +105,7 @@ static gint box_clock_2b[][2 * 10] = {
       BOX_CLOCK, 2, 2, 0, 2, 1, 0, 0, 2, 1},
 };
 
-static gint box_clock_4b[][4 * 10] = {
+static const gint box_clock_4b[][4 * 10] = {
 #define WIPE_B4_201     0
   {BOX_CLOCK, 1, 1, 0, 1, 0, 0, 2, 1, 1,
         BOX_CLOCK, 1, 1, 0, 2, 1, 1, 1, 2, 2,
@@ -183,7 +183,7 @@ static gint box_clock_4b[][4 * 10] = {
       BOX_CLOCK, 2, 1, 0, 1, 1, 0, 2, 2, 1},
 };
 
-static gint box_clock_8b[][8 * 10] = {
+static const gint box_clock_8b[][8 * 10] = {
 #define WIPE_B8_261     0
   {BOX_CLOCK, 2, 1, 0, 2, 2, 0, 4, 1, 1,
         BOX_CLOCK, 2, 1, 0, 4, 1, 1, 2, 0, 2,
@@ -222,7 +222,7 @@ static gint box_clock_8b[][8 * 10] = {
       BOX_CLOCK, 3, 2, 0, 3, 4, 1, 2, 2, 2},
 };
 
-static gint triangles_2t[][2 * 9] = {
+static const gint triangles_2t[][2 * 9] = {
   /* 3 -> 6 */
 #define WIPE_T2_3       0
   {0, 0, 0, 0, 1, 1, 1, 1, 1,
@@ -256,7 +256,7 @@ static gint triangles_2t[][2 * 9] = {
       2, 0, 0, 2, 2, 0, 0, 2, 1},
 };
 
-static gint triangles_3t[][3 * 9] = {
+static const gint triangles_3t[][3 * 9] = {
   /* 23 -> 26 */
 #define WIPE_T3_23      0
   {0, 0, 1, 1, 0, 0, 0, 2, 1,
@@ -276,7 +276,7 @@ static gint triangles_3t[][3 * 9] = {
       0, 1, 0, 0, 2, 1, 2, 2, 1},
 };
 
-static gint triangles_4t[][4 * 9] = {
+static const gint triangles_4t[][4 * 9] = {
 #define WIPE_T4_61      0
   {0, 0, 1, 1, 0, 0, 1, 2, 1,
         0, 0, 1, 0, 2, 2, 1, 2, 1,
@@ -324,7 +324,7 @@ static gint triangles_4t[][4 * 9] = {
       2, 0, 1, 1, 1, 0, 2, 2, 1},
 };
 
-static gint triangles_8t[][8 * 9] = {
+static const gint triangles_8t[][8 * 9] = {
   /* 7 */
 #define WIPE_T8_7       0
   {0, 0, 0, 1, 0, 1, 1, 1, 1,
@@ -373,7 +373,7 @@ static gint triangles_8t[][8 * 9] = {
       2, 1, 0, 1, 2, 0, 2, 2, 1},
 };
 
-static gint triangles_16t[][16 * 9] = {
+static const gint triangles_16t[][16 * 9] = {
   /* 8 */
 #define WIPE_T16_8      0
   {0, 0, 1, 2, 0, 1, 1, 1, 0,
@@ -398,14 +398,14 @@ typedef struct _GstWipeConfig GstWipeConfig;
 
 struct _GstWipeConfig
 {
-  gint *objects;
+  const gint *objects;
   gint nobjects;
   gint xscale;
   gint yscale;
   gint cscale;
 };
 
-static GstWipeConfig wipe_config[] = {
+static const GstWipeConfig wipe_config[] = {
 #define WIPE_CONFIG_1   0
   {boxes_1b[WIPE_B1_1], 1, 0, 0, 0},    /* 1 */
 #define WIPE_CONFIG_2   WIPE_CONFIG_1+1
@@ -554,8 +554,8 @@ static GstWipeConfig wipe_config[] = {
 static void
 gst_wipe_boxes_draw (GstMask * mask)
 {
-  GstWipeConfig *config = mask->user_data;
-  gint *impacts = config->objects;
+  const GstWipeConfig *config = mask->user_data;
+  const gint *impacts = config->objects;
   gint width = (mask->width >> config->xscale);
   gint height = (mask->height >> config->yscale);
   gint depth = (1 << mask->bpp) >> config->cscale;
@@ -565,22 +565,35 @@ gst_wipe_boxes_draw (GstMask * mask)
   for (i = 0; i < config->nobjects; i++) {
     switch (impacts[0]) {
       case BOX_VERTICAL:
+        /* vbox does not draw last pixels */
         gst_smpte_paint_vbox (mask->data, mask->width,
             impacts[1] * width, impacts[2] * height, impacts[3] * depth,
             impacts[4] * width, impacts[5] * height, impacts[6] * depth);
         impacts += 7;
         break;
       case BOX_HORIZONTAL:
+        /* hbox does not draw last pixels */
         gst_smpte_paint_hbox (mask->data, mask->width,
             impacts[1] * width, impacts[2] * height, impacts[3] * depth,
             impacts[4] * width, impacts[5] * height, impacts[6] * depth);
         impacts += 7;
       case BOX_CLOCK:
+      {
+        gint x0, y0, x1, y1, x2, y2;
+
+        /* make sure not to draw outside the area */
+        x0 = MIN (impacts[1] * width, mask->width - 1);
+        y0 = MIN (impacts[2] * height, mask->height - 1);
+        x1 = MIN (impacts[4] * width, mask->width - 1);
+        y1 = MIN (impacts[5] * height, mask->height - 1);
+        x2 = MIN (impacts[7] * width, mask->width - 1);
+        y2 = MIN (impacts[8] * height, mask->height - 1);
+
         gst_smpte_paint_box_clock (mask->data, mask->width,
-            impacts[1] * width, impacts[2] * height, impacts[3] * depth,
-            impacts[4] * width, impacts[5] * height, impacts[6] * depth,
-            impacts[7] * width, impacts[8] * height, impacts[9] * depth);
+            x0, y0, impacts[3] * depth, x1, y1, impacts[6] * depth,
+            x2, y2, impacts[9] * depth);
         impacts += 10;
+      }
       default:
         break;
     }
@@ -590,18 +603,27 @@ gst_wipe_boxes_draw (GstMask * mask)
 static void
 gst_wipe_triangles_clock_draw (GstMask * mask)
 {
-  GstWipeConfig *config = mask->user_data;
-  gint *impacts = config->objects;
+  const GstWipeConfig *config = mask->user_data;
+  const gint *impacts = config->objects;
   gint width = (mask->width >> config->xscale);
   gint height = (mask->height >> config->yscale);
   gint depth = (1 << mask->bpp) >> config->cscale;
   gint i;
 
   for (i = 0; i < config->nobjects; i++) {
+    gint x0, y0, x1, y1, x2, y2;
+
+    /* make sure not to draw outside the area */
+    x0 = MIN (impacts[0] * width, mask->width - 1);
+    y0 = MIN (impacts[1] * height, mask->height - 1);
+    x1 = MIN (impacts[3] * width, mask->width - 1);
+    y1 = MIN (impacts[4] * height, mask->height - 1);
+    x2 = MIN (impacts[6] * width, mask->width - 1);
+    y2 = MIN (impacts[7] * height, mask->height - 1);
+
     gst_smpte_paint_triangle_clock (mask->data, mask->width,
-        impacts[0] * width, impacts[1] * height, impacts[2] * depth,
-        impacts[3] * width, impacts[4] * height, impacts[5] * depth,
-        impacts[6] * width, impacts[7] * height, impacts[8] * depth);
+        x0, y0, impacts[2] * depth, x1, y1, impacts[5] * depth,
+        x2, y2, impacts[8] * depth);
     impacts += 9;
   }
 }
@@ -609,8 +631,8 @@ gst_wipe_triangles_clock_draw (GstMask * mask)
 static void
 gst_wipe_triangles_draw (GstMask * mask)
 {
-  GstWipeConfig *config = mask->user_data;
-  gint *impacts = config->objects;
+  const GstWipeConfig *config = mask->user_data;
+  const gint *impacts = config->objects;
   gint width = (mask->width >> config->xscale);
   gint height = (mask->height >> config->yscale);
   gint depth = (1 << mask->bpp) >> config->cscale;
@@ -618,15 +640,24 @@ gst_wipe_triangles_draw (GstMask * mask)
   gint i;
 
   for (i = 0; i < config->nobjects; i++) {
+    gint x0, y0, x1, y1, x2, y2;
+
+    /* make sure not to draw outside the area */
+    x0 = MIN (impacts[0] * width, mask->width - 1);
+    y0 = MIN (impacts[1] * height, mask->height - 1);
+    x1 = MIN (impacts[3] * width, mask->width - 1);
+    y1 = MIN (impacts[4] * height, mask->height - 1);
+    x2 = MIN (impacts[6] * width, mask->width - 1);
+    y2 = MIN (impacts[7] * height, mask->height - 1);
+
     gst_smpte_paint_triangle_linear (mask->data, mask->width,
-        impacts[0] * width, impacts[1] * height, impacts[2] * depth,
-        impacts[3] * width, impacts[4] * height, impacts[5] * depth,
-        impacts[6] * width, impacts[7] * height, impacts[8] * depth);
+        x0, y0, impacts[2] * depth, x1, y1, impacts[5] * depth,
+        x2, y2, impacts[8] * depth);
     impacts += 9;
   }
 }
 
-static GstMaskDefinition definitions[] = {
+static const GstMaskDefinition definitions[] = {
   {1, "bar-wipe-lr",
         "A bar moves from left to right",
         gst_wipe_boxes_draw, _gst_mask_default_destroy,

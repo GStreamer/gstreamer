@@ -31,17 +31,17 @@ typedef void            (*GstMaskDestroyFunc)           (GstMask *mask);
 
 struct _GstMaskDefinition {
   gint                   type;
-  gchar                 *short_name;
-  gchar                 *long_name;
+  const gchar           *short_name;
+  const gchar           *long_name;
   GstMaskDrawFunc        draw_func;
   GstMaskDestroyFunc     destroy_func;
-  gpointer               user_data;
+  gconstpointer          user_data;
 };
 
 struct _GstMask {
   gint                   type;
   guint32               *data;
-  gpointer               user_data;
+  gconstpointer          user_data;
 
   gint                   width;
   gint                   height;
@@ -51,7 +51,7 @@ struct _GstMask {
 };
 
 void                    _gst_mask_init                  (void);
-void                    _gst_mask_register              (GstMaskDefinition *definition);
+void                    _gst_mask_register              (const GstMaskDefinition *definition);
 
 void                    _gst_mask_default_destroy       (GstMask *mask);
 

@@ -1,3 +1,16 @@
+2007-01-23  Wim Taymans  <wim@fluendo.com>
+
+	* gst/smpte/barboxwipes.c: (gst_wipe_boxes_draw),
+	(gst_wipe_triangles_clock_draw), (gst_wipe_triangles_draw):
+	* gst/smpte/gstmask.c: (_gst_mask_register):
+	* gst/smpte/gstmask.h:
+	* gst/smpte/gstsmpte.c: (gst_smpte_update_mask):
+	* gst/smpte/paint.c: (gst_smpte_paint_hbox), (draw_bresenham_line),
+	(gst_smpte_paint_triangle_clock):
+	constify some static structs.
+	Don't update the mask if nothing changed to the params.
+	Make sure we never draw outside of the picture. Fixes #398325.
+
 2007-01-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_stream_header_pull):

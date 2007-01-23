@@ -280,6 +280,13 @@ gst_smpte_update_mask (GstSMPTE * smpte, gint type, gint depth, gint width,
 {
   GstMask *newmask;
 
+  if (smpte->mask) {
+    if (smpte->type == type &&
+        smpte->depth == depth &&
+        smpte->width == width && smpte->height == height)
+      return TRUE;
+  }
+
   newmask = gst_mask_factory_new (type, depth, width, height);
   if (newmask) {
     if (smpte->mask) {

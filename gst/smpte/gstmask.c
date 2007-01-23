@@ -41,10 +41,11 @@ gst_mask_compare (GstMaskDefinition * def1, GstMaskDefinition * def2)
 }
 
 void
-_gst_mask_register (GstMaskDefinition * definition)
+_gst_mask_register (const GstMaskDefinition * definition)
 {
   masks =
-      g_list_insert_sorted (masks, definition, (GCompareFunc) gst_mask_compare);
+      g_list_insert_sorted (masks, (gpointer) definition,
+      (GCompareFunc) gst_mask_compare);
 }
 
 const GList *

@@ -65,8 +65,6 @@ gst_smpte_paint_hbox (guint32 * dest, gint stride,
   g_assert (width > 0);
   g_assert (height > 0);
 
-  g_print ("vbox: %d %d %d %d %d %d\n", x0, y0, c0, x1, y1, c1);
-
   dest = dest + y0 * stride + x0;
 
   for (i = 0; i < height; i++) {
@@ -219,10 +217,12 @@ static void
 draw_bresenham_line (guint32 * dest, gint stride,
     gint x0, gint y0, gint x1, gint y1, guint32 col)
 {
-  gint dx = abs (x1 - x0);
-  gint dy = abs (y1 - y0);
+  gint dx, dy;
   gint x_incr, y_incr;
   gint i, dpr, dpru, P, indep;
+
+  dx = abs (x1 - x0);
+  dy = abs (y1 - y0);
 
   dest = dest + y0 * stride + x0;
 
@@ -301,6 +301,9 @@ gst_smpte_paint_triangle_clock (guint32 * dest, gint stride,
       draw_bresenham_line (dest, stride,
           x0, y0, i, y1, (c2 * angle + c1 * (1.0 - angle)));
     }
+  } else {
+    g_warning ("paint triangle clock: not supported");
+    return;
   }
 }
 
