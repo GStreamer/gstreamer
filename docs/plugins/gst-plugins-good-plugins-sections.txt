@@ -38,6 +38,16 @@ GST_AUDIO_PANORAMA_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-audioinvert</FILE>
+GstAudioInvert
+<TITLE>audioinvert</TITLE>
+<SUBSECTION Standard>
+GstAudioInvertClass
+GST_AUDIO_INVERT
+GST_AUDIO_INVERT_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-autoaudiosink</FILE>
 GstAutoAudioSink
 <TITLE>autoaudiosink</TITLE>

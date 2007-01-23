@@ -10,6 +10,13 @@
   <origin>http://gstreamer.net/</origin>
   <elements>
     <element>
+      <name>audioinvert</name>
+      <longname>AudioInvert</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Swaps upper and lower half of audio samples</description>
+      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+    </element>
+    <element>
       <name>audiopanorama</name>
       <longname>AudioPanorama</longname>
       <class>Filter/Effect/Audio</class>

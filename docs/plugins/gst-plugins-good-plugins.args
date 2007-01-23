@@ -16638,3 +16638,13 @@
 <DEFAULT>Psychoacoustic Panning (default)</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstAudioInvert::degree</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Degree</NICK>
+<BLURB>Degree of inversion.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+

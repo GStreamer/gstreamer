@@ -1,3 +1,30 @@
+2007-01-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	reviewed by: Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiofx/Makefile.am:
+	* gst/audiofx/audiofx.c: (plugin_init):
+	* gst/audiofx/audioinvert.c: (gst_audio_invert_base_init),
+	(gst_audio_invert_class_init), (gst_audio_invert_init),
+	(gst_audio_invert_set_property), (gst_audio_invert_get_property),
+	(gst_audio_invert_set_caps), (gst_audio_invert_transform_int),
+	(gst_audio_invert_transform_float),
+	(gst_audio_invert_transform_ip):
+	* gst/audiofx/audioinvert.h:
+	Add new audiofx element "audioinvert". This element swaps the upper
+	and lower half of samples and can be used for example for a
+	wide-stereo effect. Fixes #396057
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	Add docs for the audioinvert element and add them to the build system.
+	* tests/check/Makefile.am:
+	* tests/check/elements/audioinvert.c: (setup_invert),
+	(cleanup_invert), (GST_START_TEST), (invert_suite), (main):
+	Add unit test suite for the audioinvert element.
+
 2007-01-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_parse_int),
