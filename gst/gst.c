@@ -352,8 +352,10 @@ gst_init_get_option_group (void)
     g_warning ("The GStreamer function gst_init_get_option_group() was\n"
         "\tcalled, but the GLib threading system has not been initialised\n"
         "\tyet, something that must happen before any other GLib function\n"
-        "\tis called. The application needs to be fixed accordingly, please\n"
-        "\tfile a bug against this application.");
+        "\tis called. The application needs to be fixed so that it calls\n"
+        "\t   if (!g_thread_supported ()) g_thread_init(NULL);\n"
+        "\tas very first thing in its main() function. Please file a bug\n"
+        "\tagainst this application.");
     g_thread_init (NULL);
   }
 

@@ -1,3 +1,10 @@
+2007-01-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c: (gst_init_get_option_group):
+	  Make warning about late g_thread_init() calls a bit more explicit,
+	  so that it's more obvious to application developers what they need
+	  to do if a user files a bug against their application.
+
 2007-01-22  Edward Hervey  <edward@fluendo.com>
 
 	* plugins/elements/gstmultiqueue.c:
