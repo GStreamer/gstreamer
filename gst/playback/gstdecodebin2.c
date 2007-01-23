@@ -492,8 +492,11 @@ gst_decode_bin_dispose (GObject * object)
 static void
 gst_decode_bin_finalize (GObject * object)
 {
+  GstDecodeBin *decode_bin;
 
-  /* FILLME */
+  decode_bin = GST_DECODE_BIN (object);
+
+  g_mutex_free (decode_bin->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

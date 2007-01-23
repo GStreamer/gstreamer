@@ -1,3 +1,17 @@
+2007-01-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_finalize):
+	  Don't leak mutex.
+
+	* tests/check/elements/playbin.c:
+	(test_sink_usage_video_only_stream),
+	(test_suburi_error_unknowntype), (test_suburi_error_invalidfile),
+	(test_suburi_error_wrongproto), (test_missing_urisource_handler),
+	(test_missing_suburisource_handler),
+	(test_missing_primary_decoder), (playbin_suite):
+	  Run all tests once with decodebin and once with decodebin2.
+	  One test does not pass yet with decodebin2.
+
 2007-01-23  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ogg/gstoggmux.c: (all_pads_eos), (gst_ogg_mux_collected):

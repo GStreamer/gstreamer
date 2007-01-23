@@ -28,8 +28,21 @@
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
 
+#define DEFINE_TEST(func) \
+    static void func (void);                            \
+    \
+    GST_START_TEST(func ## _decodebin1)                  \
+    { g_unsetenv("USE_DECODEBIN2"); func(); }            \
+    GST_END_TEST;                                        \
+    \
+    GST_START_TEST(func ## _decodebin2)                  \
+    { g_setenv("USE_DECODEBIN2", "1", TRUE); func(); }   \
+    GST_END_TEST;
+
+DEFINE_TEST (test_sink_usage_video_only_stream)
+
 /* make sure the audio sink is not touched for video-only streams */
-GST_START_TEST (test_sink_usage_video_only_stream)
+     static void test_sink_usage_video_only_stream (void)
 {
   GstElement *playbin, *fakevideosink, *fakeaudiosink;
   GstState cur_state, pending_state;
@@ -67,10 +80,10 @@ GST_START_TEST (test_sink_usage_video_only_stream)
   gst_object_unref (playbin);
 }
 
-GST_END_TEST;
-
 /* this tests async error handling when setting up the subbin */
-GST_START_TEST (test_suburi_error_unknowntype)
+DEFINE_TEST (test_suburi_error_unknowntype)
+
+     static void test_suburi_error_unknowntype (void)
 {
   GstElement *playbin, *fakesink;
 
@@ -99,9 +112,9 @@ GST_START_TEST (test_suburi_error_unknowntype)
   gst_object_unref (playbin);
 }
 
-GST_END_TEST;
+DEFINE_TEST (test_suburi_error_invalidfile)
 
-GST_START_TEST (test_suburi_error_invalidfile)
+     static void test_suburi_error_invalidfile (void)
 {
   GstElement *playbin, *fakesink;
 
@@ -129,9 +142,9 @@ GST_START_TEST (test_suburi_error_invalidfile)
   gst_object_unref (playbin);
 }
 
-GST_END_TEST;
+DEFINE_TEST (test_suburi_error_wrongproto)
 
-GST_START_TEST (test_suburi_error_wrongproto)
+     static void test_suburi_error_wrongproto (void)
 {
   GstElement *playbin, *fakesink;
 
@@ -159,8 +172,6 @@ GST_START_TEST (test_suburi_error_wrongproto)
   gst_object_unref (playbin);
 }
 
-GST_END_TEST;
-
 static GstElement *
 create_playbin (const gchar * uri)
 {
@@ -187,7 +198,9 @@ create_playbin (const gchar * uri)
   return playbin;
 }
 
-GST_START_TEST (test_missing_urisource_handler)
+DEFINE_TEST (test_missing_urisource_handler)
+
+     static void test_missing_urisource_handler (void)
 {
   GstStructure *s;
   GstMessage *msg;
@@ -236,9 +249,9 @@ GST_START_TEST (test_missing_urisource_handler)
   gst_object_unref (playbin);
 }
 
-GST_END_TEST;
+DEFINE_TEST (test_missing_suburisource_handler)
 
-GST_START_TEST (test_missing_suburisource_handler)
+     static void test_missing_suburisource_handler (void)
 {
   GstStructure *s;
   GstMessage *msg;
@@ -288,9 +301,8 @@ GST_START_TEST (test_missing_suburisource_handler)
   gst_object_unref (playbin);
 }
 
-GST_END_TEST;
-
-GST_START_TEST (test_missing_primary_decoder)
+DEFINE_TEST (test_missing_primary_decoder)
+     static void test_missing_primary_decoder (void)
 {
   GstStructure *s;
   GstMessage *msg;
@@ -336,8 +348,6 @@ GST_START_TEST (test_missing_primary_decoder)
   gst_element_set_state (playbin, GST_STATE_NULL);
   gst_object_unref (playbin);
 }
-
-GST_END_TEST;
 
 /*** redvideo:// source ***/
 
@@ -574,6 +584,7 @@ GST_PLUGIN_DEFINE_STATIC
 
 #endif /* GST_DISABLE_LOADSAVE_REGISTRY */
 
+
 static Suite *
 playbin_suite (void)
 {
@@ -583,13 +594,26 @@ playbin_suite (void)
   suite_add_tcase (s, tc_chain);
 
 #ifndef GST_DISABLE_LOADSAVE_REGISTRY
-  tcase_add_test (tc_chain, test_sink_usage_video_only_stream);
-  tcase_add_test (tc_chain, test_suburi_error_wrongproto);
-  tcase_add_test (tc_chain, test_suburi_error_invalidfile);
-  tcase_add_test (tc_chain, test_suburi_error_unknowntype);
-  tcase_add_test (tc_chain, test_missing_urisource_handler);
-  tcase_add_test (tc_chain, test_missing_suburisource_handler);
-  tcase_add_test (tc_chain, test_missing_primary_decoder);
+  /* with the old decodebin */
+  tcase_add_test (tc_chain, test_sink_usage_video_only_stream_decodebin1);
+  tcase_add_test (tc_chain, test_suburi_error_wrongproto_decodebin1);
+  tcase_add_test (tc_chain, test_suburi_error_invalidfile_decodebin1);
+  tcase_add_test (tc_chain, test_suburi_error_unknowntype_decodebin1);
+  tcase_add_test (tc_chain, test_missing_urisource_handler_decodebin1);
+  tcase_add_test (tc_chain, test_missing_suburisource_handler_decodebin1);
+  tcase_add_test (tc_chain, test_missing_primary_decoder_decodebin1);
+
+  /* and again with decodebin2 */
+  if (0) {
+    /* THIS TEST DOES NOT PASS WITH DECODEBIN2 */
+    tcase_add_test (tc_chain, test_missing_primary_decoder_decodebin2);
+  }
+  tcase_add_test (tc_chain, test_sink_usage_video_only_stream_decodebin2);
+  tcase_add_test (tc_chain, test_suburi_error_wrongproto_decodebin2);
+  tcase_add_test (tc_chain, test_suburi_error_invalidfile_decodebin2);
+  tcase_add_test (tc_chain, test_suburi_error_unknowntype_decodebin2);
+  tcase_add_test (tc_chain, test_missing_urisource_handler_decodebin2);
+  tcase_add_test (tc_chain, test_missing_suburisource_handler_decodebin2);
 
   /* one day we might also want to have the following checks:
    * tcase_add_test (tc_chain, test_missing_secondary_decoder_one_fatal);
