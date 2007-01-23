@@ -2269,7 +2269,16 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
     gint ret;
 
     ret = gst_ogg_demux_get_next_page (ogg, &op, -1);
-    if (ret < 0 || !ogg_page_bos (&op))
+    if (ret < 0) {
+      GST_WARNING_OBJECT (ogg, "problem reading BOS page: ret=%d", ret);
+      if (chain) {
+        gst_ogg_chain_free (chain);
+        chain = NULL;
+      }
+      break;
+    }
+
+    if (!ogg_page_bos (&op))
       break;
 
     if (chain == NULL) {

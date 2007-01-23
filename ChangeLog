@@ -1,5 +1,11 @@
 2007-01-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_read_chain):
+	  Error out properly if we get an error from libogg while reading the
+	  BOS page(s). Fixes crash parsing 'fuzzed' ogg file (#399340).
+
+2007-01-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstdecodebin2.c: (gst_decode_bin_finalize):
 	  Don't leak mutex.
 
