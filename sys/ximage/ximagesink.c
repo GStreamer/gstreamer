@@ -967,11 +967,14 @@ gst_ximagesink_handle_xevents (GstXImageSink * ximagesink)
             e.xkey.keycode, 0);
         g_mutex_unlock (ximagesink->x_lock);
         if (keysym != NoSymbol) {
+          char *key_str = NULL;
+
           g_mutex_lock (ximagesink->x_lock);
-          gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
-              e.type == KeyPress ?
-              "key-press" : "key-release", XKeysymToString (keysym));
+          key_str = XKeysymToString (keysym);
           g_mutex_unlock (ximagesink->x_lock);
+          gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
+              e.type == KeyPress ? "key-press" : "key-release", key_str);
+
         } else {
           gst_navigation_send_key_event (GST_NAVIGATION (ximagesink),
               e.type == KeyPress ? "key-press" : "key-release", "unknown");
