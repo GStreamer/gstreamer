@@ -1,5 +1,12 @@
 2007-01-23  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_parse_int),
+	(gst_rtp_mp4g_depay_setcaps), (gst_rtp_mp4g_depay_process):
+	Parse config params as string and int.
+	Parse and use AU header length
+
+2007-01-23  Wim Taymans  <wim@fluendo.com>
+
 	* gst/smpte/barboxwipes.c: (gst_wipe_boxes_draw),
 	(gst_wipe_triangles_clock_draw), (gst_wipe_triangles_draw):
 	* gst/smpte/gstmask.c: (_gst_mask_register):

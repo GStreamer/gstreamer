@@ -166,6 +166,22 @@ gst_rtp_mp4g_depay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static gint
+gst_rtp_mp4g_depay_parse_int (GstStructure * structure, const gchar * field,
+    gint def)
+{
+  const gchar *str;
+  gint res;
+
+  if ((str = gst_structure_get_string (structure, field)))
+    return atoi (str);
+
+  if (gst_structure_get_int (structure, field, &res))
+    return res;
+
+  return def;
+}
+
 static gboolean
 gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
@@ -198,37 +214,23 @@ gst_rtp_mp4g_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     goto unknown_media;
 
   /* these values are optional and have a default value of 0 (no header) */
-  if (!gst_structure_get_int (structure, "sizelength", &someint))
-    someint = 0;
-  rtpmp4gdepay->sizelength = someint;
-
-  if (!gst_structure_get_int (structure, "indexlength", &someint))
-    someint = 0;
-  rtpmp4gdepay->indexlength = someint;
-
-  if (!gst_structure_get_int (structure, "indexlength", &someint))
-    someint = 0;
-  rtpmp4gdepay->indexdeltalength = someint;
-
-  if (!gst_structure_get_int (structure, "ctsdeltalength", &someint))
-    someint = 0;
-  rtpmp4gdepay->ctsdeltalength = someint;
-
-  if (!gst_structure_get_int (structure, "dtsdeltalength", &someint))
-    someint = 0;
-  rtpmp4gdepay->dtsdeltalength = someint;
-
-  if (!gst_structure_get_int (structure, "randomaccessindication", &someint))
-    someint = 0;
+  rtpmp4gdepay->sizelength =
+      gst_rtp_mp4g_depay_parse_int (structure, "sizelength", 0);
+  rtpmp4gdepay->indexlength =
+      gst_rtp_mp4g_depay_parse_int (structure, "indexlength", 0);
+  rtpmp4gdepay->indexdeltalength =
+      gst_rtp_mp4g_depay_parse_int (structure, "indexdeltalength", 0);
+  rtpmp4gdepay->ctsdeltalength =
+      gst_rtp_mp4g_depay_parse_int (structure, "ctsdeltalength", 0);
+  rtpmp4gdepay->dtsdeltalength =
+      gst_rtp_mp4g_depay_parse_int (structure, "dtsdeltalength", 0);
+  someint =
+      gst_rtp_mp4g_depay_parse_int (structure, "randomaccessindication", 0);
   rtpmp4gdepay->randomaccessindication = someint > 0 ? 1 : 0;
-
-  if (!gst_structure_get_int (structure, "streamstateindication", &someint))
-    someint = 0;
-  rtpmp4gdepay->streamstateindication = someint;
-
-  if (!gst_structure_get_int (structure, "auxiliarydatasizelength", &someint))
-    someint = 0;
-  rtpmp4gdepay->auxiliarydatasizelength = someint;
+  rtpmp4gdepay->streamstateindication =
+      gst_rtp_mp4g_depay_parse_int (structure, "streamstateindication", 0);
+  rtpmp4gdepay->auxiliarydatasizelength =
+      gst_rtp_mp4g_depay_parse_int (structure, "auxiliarydatasizelength", 0);
 
   /* get config string */
   if ((str = gst_structure_get_string (structure, "config"))) {
@@ -277,13 +279,38 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     gint payload_len;
     guint8 *payload;
     guint32 timestamp;
+    guint AU_headers_len;
+    guint AU_size, AU_index;
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
 
-    /* skip header */
-    payload += 4;
-    payload_len -= 4;
+    if (rtpmp4gdepay->sizelength > 0) {
+      /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- .. -+-+-+-+-+-+-+-+-+-+
+       * |AU-headers-length|AU-header|AU-header|      |AU-header|padding|
+       * |                 |   (1)   |   (2)   |      |   (n) * | bits  |
+       * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- .. -+-+-+-+-+-+-+-+-+-+
+       *
+       * The lenght is 2 bytes and contains the length of the following
+       * AU-headers in bits.
+       */
+      AU_headers_len = (payload[0] << 8) | payload[1];
+
+      /* skip header */
+      payload += 2;
+      payload_len -= 2;
+
+      /* FIXME, use bits */
+      AU_size = ((payload[0] << 8) | payload[1]) >> 3;
+      AU_index = payload[1] & 0x7;
+
+      GST_DEBUG_OBJECT (rtpmp4gdepay, "len, %d, size %d, index %d",
+          AU_headers_len, AU_size, AU_index);
+
+      /* skip special headers */
+      payload += (AU_headers_len + 7) / 8;
+      payload_len = AU_size;
+    }
 
     timestamp = gst_rtp_buffer_get_timestamp (buf);
 
@@ -304,8 +331,8 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
           gst_adapter_take (rtpmp4gdepay->adapter, avail);
       GST_BUFFER_DATA (outbuf) = GST_BUFFER_MALLOCDATA (outbuf);
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
-      GST_BUFFER_TIMESTAMP (outbuf) =
-          timestamp * GST_SECOND / depayload->clock_rate;
+      GST_BUFFER_TIMESTAMP (outbuf) = gst_util_uint64_scale_int
+          (timestamp, GST_SECOND, depayload->clock_rate);
 
       GST_DEBUG ("gst_rtp_mp4g_depay_chain: pushing buffer of size %d",
           GST_BUFFER_SIZE (outbuf));
