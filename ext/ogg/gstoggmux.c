@@ -1491,6 +1491,35 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
   return GST_FLOW_OK;
 }
 
+/** all_pads_eos:
+ *
+ * Checks if all pads are EOS'd by peeking.
+ *
+ * Returns TRUE if all pads are EOS.
+ */
+static gboolean
+all_pads_eos (GstCollectPads * pads)
+{
+  GSList *walk;
+  gboolean alleos = TRUE;
+
+  walk = pads->data;
+  while (walk) {
+    GstBuffer *buf;
+    GstCollectData *data = (GstCollectData *) walk->data;
+
+    buf = gst_collect_pads_peek (pads, data);
+    if (buf) {
+      alleos = FALSE;
+      gst_buffer_unref (buf);
+      goto beach;
+    }
+    walk = walk->next;
+  }
+beach:
+  return alleos;
+}
+
 /* This function is called when there is data on all pads.
  * 
  * It finds a pad to pull on, this is done by looking at the buffers
@@ -1506,8 +1535,11 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
 {
   GstOggPad *best;
   GstFlowReturn ret;
+  gint activebefore;
 
   GST_LOG_OBJECT (ogg_mux, "collected");
+
+  activebefore = ogg_mux->active_pads;
 
   /* queue buffers on all pads; find a buffer with the lowest timestamp */
   best = gst_ogg_mux_queue_pads (ogg_mux);
@@ -1522,18 +1554,26 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
 
   ret = gst_ogg_mux_process_best_pad (ogg_mux, best);
 
-  /* if all the pads have been removed, flush all pending data */
-  if ((ret == GST_FLOW_OK) && (ogg_mux->active_pads == 0)) {
-    GST_LOG_OBJECT (ogg_mux, "no pads remaining, flushing data");
+  if (ogg_mux->active_pads < activebefore) {
+    /* If the active pad count went down, this mean at least one pad has gone
+     * EOS. Since CollectPads only calls _collected() once when all pads are
+     * EOS, and our code doesn't _pop() from all pads we need to check that by
+     * peeking on all pads, else we won't be called again and the muxing will
+     * not terminate (push out EOS). */
 
-    do {
-      best = gst_ogg_mux_queue_pads (ogg_mux);
-      if (best)
-        ret = gst_ogg_mux_process_best_pad (ogg_mux, best);
-    } while ((ret == GST_FLOW_OK) && (best != NULL));
+    /* if all the pads have been removed, flush all pending data */
+    if ((ret == GST_FLOW_OK) && all_pads_eos (pads)) {
+      GST_LOG_OBJECT (ogg_mux, "no pads remaining, flushing data");
 
-    GST_DEBUG_OBJECT (ogg_mux, "Pushing EOS");
-    gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
+      do {
+        best = gst_ogg_mux_queue_pads (ogg_mux);
+        if (best)
+          ret = gst_ogg_mux_process_best_pad (ogg_mux, best);
+      } while ((ret == GST_FLOW_OK) && (best != NULL));
+
+      GST_DEBUG_OBJECT (ogg_mux, "Pushing EOS");
+      gst_pad_push_event (ogg_mux->srcpad, gst_event_new_eos ());
+    }
   }
 
   return ret;

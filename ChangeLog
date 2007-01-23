@@ -1,3 +1,11 @@
+2007-01-23  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ogg/gstoggmux.c: (all_pads_eos), (gst_ogg_mux_collected):
+	Fix the cases where oggmux doesn't properly figure out that all
+	sinkpads have gone EOS, and therefore doesn't push out the remaining
+	buffers and the final EOS event.
+	Fixes #363379
+
 2007-01-23  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents):
