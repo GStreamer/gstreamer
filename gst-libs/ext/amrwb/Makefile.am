@@ -52,8 +52,8 @@ download:
 	exit 1
 
 enc_acelp.c: 26204-600.zip
-	unzip $^
-	unzip 26204-600_ANSI-C_source_code.zip
+	unzip -u $^
+	unzip -u 26204-600_ANSI-C_source_code.zip
 	mv c-code/* .
 	rm -rf c-code/ 26204-600_ANSI-C_source_code.zip makefile.gcc
 	echo "" >> typedef.h # to remove compilation warning (no newline at end of file)
