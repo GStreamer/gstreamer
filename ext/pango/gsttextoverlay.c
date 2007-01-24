@@ -721,11 +721,14 @@ gst_text_overlay_src_event (GstPad * pad, GstEvent * event)
       }
       break;
     default:
-      gst_event_ref (event);
-      ret = gst_pad_push_event (overlay->video_sinkpad, event);
       if (overlay->text_linked) {
-        ret = gst_pad_push_event (overlay->text_sinkpad, event);
+        gst_event_ref (event);
+        ret = gst_pad_push_event (overlay->video_sinkpad, event);
+        gst_pad_push_event (overlay->text_sinkpad, event);
+      } else {
+        ret = gst_pad_push_event (overlay->video_sinkpad, event);
       }
+      break;
   }
 
 beach:
@@ -1120,6 +1123,7 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
       GST_OBJECT_LOCK (overlay);
       overlay->text_flushing = TRUE;
       overlay->text_eos = TRUE;
+      GST_INFO_OBJECT (overlay, "EOS");
       /* wake up the video chain, it might be waiting for a text buffer or
        * a text segment update */
       GST_TEXT_OVERLAY_BROADCAST (overlay);

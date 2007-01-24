@@ -10,3 +10,12 @@
    fun:theora_encode_YUVin
 }
 
+# Suppression for pango on ubuntu edgy/x86 and textoverlay test
+{
+   <pango>
+   Memcheck:Param
+   access(pathname)
+   fun:access
+   fun:pango_config_key_get
+   fun:pango_find_map
+}

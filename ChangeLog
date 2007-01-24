@@ -1,3 +1,13 @@
+2007-01-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_src_event),
+	(gst_text_overlay_text_event):
+	  Don't unnecessarily ref (and then leak) upstream events if the text
+	  pad is not linked. Fixes #399948.
+
+	* tests/check/gst-plugins-base.supp:
+	  Add suppression for pango on edgy/x86 for textoverlay test.
+
 2007-01-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstrtpbuffer.h:
