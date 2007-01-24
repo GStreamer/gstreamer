@@ -841,6 +841,7 @@ cleanup:
 static void
 pad_unblocked (GstPad * pad, gboolean blocked, GstRTSPSrc * src)
 {
+  GST_DEBUG_OBJECT (src, "pad %s:%s unblocked", GST_DEBUG_PAD_NAME (pad));
 }
 
 static void
@@ -848,9 +849,6 @@ pad_blocked (GstPad * pad, gboolean blocked, GstRTSPSrc * src)
 {
   GST_DEBUG_OBJECT (src, "pad %s:%s blocked, activating streams",
       GST_DEBUG_PAD_NAME (pad));
-
-  gst_pad_set_blocked_async (pad, FALSE, (GstPadBlockCallback) pad_unblocked,
-      src);
 
   /* activate the streams */
   GST_OBJECT_LOCK (src);
@@ -862,12 +860,17 @@ pad_blocked (GstPad * pad, gboolean blocked, GstRTSPSrc * src)
 
   gst_rtspsrc_activate_streams (src);
 
+unblock:
+  /* now unblock and let it stream */
+  gst_pad_set_blocked_async (pad, FALSE, (GstPadBlockCallback) pad_unblocked,
+      src);
+
   return;
 
 was_ok:
   {
     GST_OBJECT_UNLOCK (src);
-    return;
+    goto unblock;
   }
 }
 

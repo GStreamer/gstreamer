@@ -1,5 +1,11 @@
 2007-01-24  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (pad_unblocked), (pad_blocked):
+	Unblock pads after adding the pads to the element so that autopluggers
+	get a change to link something. Possibly fixes #395688.
+
+2007-01-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpamrdepay.c:
 	* gst/rtp/gstrtpgsmdepay.c:
 	* gst/rtp/gstrtph263pdepay.c:
