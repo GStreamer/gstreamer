@@ -584,17 +584,15 @@ gst_asf_demux_get_string (gchar ** p_str, guint16 * p_strlen,
 }
 
 
-static gboolean
+static void
 gst_asf_demux_get_guid (ASFGuid * guid, guint8 ** p_data, guint64 * p_size)
 {
-  if (*p_size < 4 * sizeof (guint32))
-    return FALSE;
+  g_assert (*p_size >= 4 * sizeof (guint32));
 
   guid->v1 = gst_asf_demux_get_uint32 (p_data, p_size);
   guid->v2 = gst_asf_demux_get_uint32 (p_data, p_size);
   guid->v3 = gst_asf_demux_get_uint32 (p_data, p_size);
   guid->v4 = gst_asf_demux_get_uint32 (p_data, p_size);
-  return TRUE;
 }
 
 static gboolean
@@ -905,6 +903,7 @@ gst_asf_demux_add_audio_stream (GstASFDemux * demux,
     GST_INFO_OBJECT (demux, "Audio header contains %d bytes of "
         "codec specific data", size_left);
 
+    g_assert (size_left <= *p_size);
     gst_asf_demux_get_buffer (&extradata, size_left, p_data, p_size);
   }
 
@@ -967,6 +966,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
   /* Now try some gstreamer formatted MIME types (from gst_avi_demux_strf_vids) */
   if (size_left) {
     GST_LOG ("Video header has %d bytes of codec specific data", size_left);
+    g_assert (size_left <= *p_size);
     gst_asf_demux_get_buffer (&extradata, size_left, p_data, p_size);
   }
 
@@ -1273,15 +1273,18 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 ** p_data,
     if (!gst_asf_demux_get_string (&name, &name_len, p_data, p_size))
       goto not_enough_data;
 
-    if (*p_size < 2)
+    if (*p_size < 2) {
+      g_free (name);
       goto not_enough_data;
-
+    }
     /* Descriptor Value Data Type */
     datatype = gst_asf_demux_get_uint16 (p_data, p_size);
 
     /* Descriptor Value (not really a string, but same thing reading-wise) */
-    if (!gst_asf_demux_get_string (&value, &value_len, p_data, p_size))
+    if (!gst_asf_demux_get_string (&value, &value_len, p_data, p_size)) {
+      g_free (name);
       goto not_enough_data;
+    }
 
     gst_tag_name = gst_asf_demux_get_gst_tag_from_tag_name (name, name_len);
     if (gst_tag_name != NULL) {
@@ -1396,6 +1399,9 @@ gst_asf_demux_process_data (GstASFDemux * demux, guint64 object_size,
     guint8 ** p_data, guint64 * p_size)
 {
   asf_obj_data data_object;
+  guint64 size_at_start;
+
+  size_at_start = *p_size;
 
   /* Get the rest of the header */
   if (!gst_asf_demux_get_obj_data (&data_object, p_data, p_size))
@@ -1414,6 +1420,7 @@ gst_asf_demux_process_data (GstASFDemux * demux, guint64 object_size,
     demux->seekable = FALSE;
 
   /* minus object header and data object header */
+  g_assert (size_at_start - *p_size == (16 + 8 + 1 + 1));
   demux->data_size =
       object_size - ASF_DEMUX_OBJECT_HEADER_SIZE - (16 + 8 + 1 + 1);
   demux->data_offset = gst_asf_demux_get_current_offset (demux, *p_data);
@@ -1679,6 +1686,8 @@ gst_asf_demux_process_language_list (GstASFDemux * demux, guint8 ** p_data,
   for (i = 0; i < demux->num_languages; ++i) {
     guint8 len, *data = NULL;
 
+    if (*p_size < 1)
+      goto not_enough_data;
     len = gst_asf_demux_get_uint8 (p_data, p_size);
     if (gst_asf_demux_get_bytes (&data, len, p_data, p_size)) {
       gchar *utf8;
@@ -1693,10 +1702,19 @@ gst_asf_demux_process_language_list (GstASFDemux * demux, guint8 ** p_data,
       GST_DEBUG ("[%u] %s", i, GST_STR_NULL (utf8));
       demux->languages[i] = utf8;
       g_free (data);
+    } else {
+      goto not_enough_data;
     }
   }
 
   return GST_FLOW_OK;
+
+not_enough_data:
+  {
+    g_free (demux->languages);
+    demux->languages = NULL;
+    return ASF_FLOW_NEED_MORE_DATA;
+  }
 }
 
 static GstFlowReturn
@@ -1712,7 +1730,7 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint obj_size,
   guint8 *data_start = *p_data;
   guint i;
 
-  if (*p_size < 88)
+  if (*p_size < 8 + 8 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 2 + 2 + 8 + 2 + 2)      /*64 */
     return ASF_FLOW_NEED_MORE_DATA;
 
   esp.start_time = gst_asf_demux_get_uint64 (p_data, p_size);
@@ -1749,9 +1767,11 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint obj_size,
     guint16 stream_lang_idx;
     gchar *stream_name = NULL;
 
+    if (*p_size < 2)
+      return ASF_FLOW_NEED_MORE_DATA;
     stream_lang_idx = gst_asf_demux_get_uint16 (p_data, p_size);
     if (!gst_asf_demux_get_string (&stream_name, NULL, p_data, p_size))
-      return GST_FLOW_ERROR;
+      return ASF_FLOW_NEED_MORE_DATA;
     GST_INFO ("stream name %d: %s", i, GST_STR_NULL (stream_name));
     g_free (stream_name);       /* TODO: store names in struct */
   }
@@ -1762,12 +1782,14 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint obj_size,
     guint32 sys_info_len;
 
     if (!gst_asf_demux_skip_bytes (16 + 2, p_data, p_size) || *p_size < 4)
-      return GST_FLOW_ERROR;
+      return ASF_FLOW_NEED_MORE_DATA;
 
+    if (*p_size < 4)
+      return ASF_FLOW_NEED_MORE_DATA;
     sys_info_len = gst_asf_demux_get_uint32 (p_data, p_size);
     GST_LOG ("payload systems info len = %u", sys_info_len);
     if (!gst_asf_demux_skip_bytes (sys_info_len, p_data, p_size))
-      return GST_FLOW_ERROR;
+      return ASF_FLOW_NEED_MORE_DATA;
   }
 
   GST_LOG ("bytes read: %u/%u", (guint) (*p_data - data_start), obj_size);
@@ -1777,17 +1799,17 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint obj_size,
     goto done;
 
   /* get size of the stream object */
-  if (!gst_asf_demux_get_object_header (demux, &obj_id, &len, p_data, p_size) ||
-      obj_id != ASF_OBJ_STREAM || len > (10 * 1024 * 1024)) {
+  if (!gst_asf_demux_get_object_header (demux, &obj_id, &len, p_data, p_size))
+    return ASF_FLOW_NEED_MORE_DATA;
+  if (obj_id != ASF_OBJ_STREAM || len > (10 * 1024 * 1024))
     return GST_FLOW_ERROR;
-  }
 
   len -= ASF_DEMUX_OBJECT_HEADER_SIZE;
 
   /* process this stream object later after all the other 'normal' ones
    * have been processed (since the others are more important/non-hidden) */
   if (!gst_asf_demux_get_bytes (&data, (guint) len, p_data, p_size))
-    return GST_FLOW_ERROR;
+    return ASF_FLOW_NEED_MORE_DATA;
 
   esp.stream_obj_data = data;
   esp.stream_obj_len = len;
@@ -2371,6 +2393,18 @@ gst_asf_demux_process_segment (GstASFDemux * demux,
   }
 #endif
 
+  {
+    const guint lengths[4] = { 0, 1, 2, 4 };
+    guint needed;
+
+    needed = lengths[packet_info->seqtype]
+        + lengths[packet_info->fragoffsettype]
+        + lengths[packet_info->replicsizetype];
+
+    if (*p_size < needed)
+      return ASF_FLOW_NEED_MORE_DATA;
+  }
+
   segment_info.sequence =
       gst_asf_demux_get_var_length (packet_info->seqtype, p_data, p_size);
   segment_info.frag_offset =
@@ -2409,6 +2443,8 @@ gst_asf_demux_process_segment (GstASFDemux * demux,
     if (replic_size == 1) {
       /* It's compressed */
       segment_info.compressed = TRUE;
+      if (*p_size < 1)
+        return ASF_FLOW_NEED_MORE_DATA;
       time_delta = gst_asf_demux_get_uint8 (p_data, p_size);
       GST_DEBUG ("time_delta = %u", time_delta);
     } else {
@@ -2424,6 +2460,11 @@ gst_asf_demux_process_segment (GstASFDemux * demux,
       packet_info->multiple, segment_info.compressed);
 
   if (packet_info->multiple) {
+    const guint lengths[4] = { 0, 1, 2, 4 };
+
+    if (*p_size < lengths[packet_info->segsizetype])
+      return ASF_FLOW_NEED_MORE_DATA;
+
     frag_size = gst_asf_demux_get_var_length (packet_info->segsizetype,
         p_data, p_size);
   } else {
@@ -2439,6 +2480,8 @@ gst_asf_demux_process_segment (GstASFDemux * demux,
 
   if (segment_info.compressed) {
     while (frag_size > 0) {
+      if (*p_size < 1)
+        return ASF_FLOW_NEED_MORE_DATA;
       byte = gst_asf_demux_get_uint8 (p_data, p_size);
       packet_info->size_left--;
       segment_info.chunk_size = byte;
@@ -2468,7 +2511,6 @@ gst_asf_demux_process_segment (GstASFDemux * demux,
         ret = GST_FLOW_ERROR;
 */
         return ASF_FLOW_NEED_MORE_DATA;
-        break;
       }
     }
   } else {
@@ -2514,7 +2556,7 @@ gst_asf_demux_handle_data (GstASFDemux * demux, guint8 ** p_data,
   }
 
   if (*p_size < 1) {
-    GST_WARNING ("unexpected end of data");
+    GST_WARNING ("unexpected end of data");     /* unexpected, why? */
     return ASF_FLOW_NEED_MORE_DATA;
   }
 
@@ -2540,6 +2582,18 @@ gst_asf_demux_handle_data (GstASFDemux * demux, guint8 ** p_data,
   property = gst_asf_demux_get_uint8 (p_data, p_size);
 
   packet_info.multiple = ((flags & 0x01) == 0x01);
+
+  {
+    const guint lengths[4] = { 0, 1, 2, 4 };
+    guint needed;
+
+    needed = lengths[(flags >> 5) & 0x03]
+        + lengths[(flags >> 3) & 0x03]
+        + lengths[(flags >> 1) & 0x03];
+
+    if (*p_size < needed)
+      return ASF_FLOW_NEED_MORE_DATA;
+  }
 
   packet_length =
       gst_asf_demux_get_var_length ((flags >> 5) & 0x03, p_data, p_size);
@@ -2575,8 +2629,12 @@ gst_asf_demux_handle_data (GstASFDemux * demux, guint8 ** p_data,
 
   /* Are there multiple payloads? */
   if (packet_info.multiple) {
-    guint8 multi_flags = gst_asf_demux_get_uint8 (p_data, p_size);
+    guint8 multi_flags;
 
+    if (*p_size < 1)
+      return ASF_FLOW_NEED_MORE_DATA;
+
+    multi_flags = gst_asf_demux_get_uint8 (p_data, p_size);
     packet_info.segsizetype = (multi_flags >> 6) & 0x03;
     num_segments = multi_flags & 0x3f;
   } else {

@@ -1,3 +1,19 @@
+2007-01-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Xavier B. <xavierb gmail com>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_get_guid),
+	(gst_asf_demux_add_audio_stream), (gst_asf_demux_add_video_stream),
+	(gst_asf_demux_process_ext_content_desc),
+	(gst_asf_demux_process_data),
+	(gst_asf_demux_process_language_list),
+	(gst_asf_demux_process_ext_stream_props),
+	(gst_asf_demux_process_segment), (gst_asf_demux_handle_data):
+	  Guard places where we assume that a certain amount of data is
+	  available better against less data being available (should fix
+	  infamous assertion crasher bug #336370). Also fixes a small
+	  memory leak.
+
 2007-01-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/realmedia/Makefile.am:
