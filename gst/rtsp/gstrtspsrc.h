@@ -92,6 +92,7 @@ struct _GstRTSPStream {
 
   /* our udp sources */
   GstElement   *udpsrc[2];
+  GstPad       *blockedpad;
 
   /* our udp sink back to the server */
   GstElement   *udpsink;

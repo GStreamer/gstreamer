@@ -1,5 +1,14 @@
 2007-01-24  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (pad_blocked),
+	(gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_activate_streams), (gst_rtspsrc_loop_udp):
+	* gst/rtsp/gstrtspsrc.h:
+	Only unblock the udp pads when we linked and activated them all.
+	Fixes #395688.
+
+2007-01-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtp.c: (plugin_init):
 	* gst/rtp/gstrtpac3depay.c: (gst_rtp_ac3_depay_base_init),

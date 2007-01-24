@@ -860,17 +860,12 @@ pad_blocked (GstPad * pad, gboolean blocked, GstRTSPSrc * src)
 
   gst_rtspsrc_activate_streams (src);
 
-unblock:
-  /* now unblock and let it stream */
-  gst_pad_set_blocked_async (pad, FALSE, (GstPadBlockCallback) pad_unblocked,
-      src);
-
   return;
 
 was_ok:
   {
     GST_OBJECT_UNLOCK (src);
-    goto unblock;
+    return;
   }
 }
 
@@ -994,7 +989,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
         gst_object_sink (stream->udpsrc[0]);
 
         /* change state */
-        gst_element_set_state (stream->udpsrc[0], GST_STATE_PAUSED);
+        gst_element_set_state (stream->udpsrc[0], GST_STATE_READY);
       }
 
       /* creating another UDP source */
@@ -1010,7 +1005,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
         gst_object_ref (stream->udpsrc[0]);
         gst_object_sink (stream->udpsrc[0]);
 
-        gst_element_set_state (stream->udpsrc[1], GST_STATE_PAUSED);
+        gst_element_set_state (stream->udpsrc[1], GST_STATE_READY);
       }
     }
 
@@ -1032,6 +1027,9 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
 
       /* get output pad of the UDP source. */
       outpad = gst_element_get_pad (stream->udpsrc[0], "src");
+
+      /* save it so we can unblock */
+      stream->blockedpad = outpad;
 
       /* configure pad block on the pad. As soon as there is dataflow on the
        * UDP source, we know that UDP is not blocked by a firewall and we can
@@ -1138,6 +1136,17 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
   /* if we got here all was configured. We have dynamic pads so we notify that
    * we are done */
   gst_element_no_more_pads (GST_ELEMENT_CAST (src));
+
+  /* unblock all pads */
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+
+    if (stream->blockedpad) {
+      gst_pad_set_blocked_async (stream->blockedpad, FALSE,
+          (GstPadBlockCallback) pad_unblocked, src);
+      stream->blockedpad = NULL;
+    }
+  }
 
   return TRUE;
 }
@@ -1388,7 +1397,10 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   if (src->loop_cmd == CMD_RECONNECT) {
     /* FIXME, when we get here we have to reconnect using tcp */
     src->loop_cmd = CMD_WAIT;
-    restart = TRUE;
+
+    /* only restart when the pads were not yet activated, else we were
+     * streaming over UDP */
+    restart = src->need_activate;
   }
   GST_OBJECT_UNLOCK (src);
 
