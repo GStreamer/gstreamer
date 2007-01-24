@@ -1,3 +1,19 @@
+2007-01-24  Edward Hervey  <edward@fluendo.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	(gst_multi_queue_loop):
+	Small fix.
+	(single_queue_overrun_cb), (single_queue_underrun_cb),
+	(single_queue_check_full), (gst_single_queue_new):
+	Implement single queue growth system.
+	This uses the extra-size properties, and will grow single queues by
+	that much if one goes full whereas there are others empty. This is
+	called extra-mode in the code.
+	When a single queue's levels go back below the initial max-size
+	limits, it is no longer in extra-mode. This is to ensure we don't
+	consume too much memory.
+	Fixes #399875
+
 2007-01-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (gst_init_get_option_group):
