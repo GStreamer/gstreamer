@@ -47,7 +47,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
-        "payload = (int) [ 96, 127 ], "
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"vorbis\""
         /* All required parameters
          *

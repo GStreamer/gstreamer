@@ -59,7 +59,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"X-SV3V-ES\"")
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) 90000, "
+        "encoding-name = (string) { \"X-SV3V-ES\", \"X-SorensonVideo\" }")
     );
 
 GST_BOILERPLATE (GstRtpSV3VDepay, gst_rtp_sv3v_depay, GstBaseRTPDepayload,

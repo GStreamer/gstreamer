@@ -55,18 +55,22 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate gst_rtp_mp2t_depay_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
-        "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"MP2T-ES\""
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"MP2T-ES\";"
         /* All optional parameters
          *
          * "profile-level-id=[1,MAX]"
          * "config=" 
          */
-    )
+        "application/x-rtp, "
+        "media = (string) \"video\", "
+        "payload = (int) " GST_RTP_PAYLOAD_MP2T_STRING ", "
+        "clock-rate = (int) [1, MAX ]")
     );
 
 GST_BOILERPLATE (GstRtpMP2TDepay, gst_rtp_mp2t_depay, GstBaseRTPDepayload,

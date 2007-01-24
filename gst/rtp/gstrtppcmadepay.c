@@ -47,12 +47,17 @@ enum
 };
 
 static GstStaticPadTemplate gst_rtp_pcma_depay_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", "
-        "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMA\"")
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) 8000, " "encoding-name = (string) \"PCMA\";"
+        "application/x-rtp, "
+        "media = (string) \"audio\", "
+        "payload = (int) " GST_RTP_PAYLOAD_PCMA_STRING ", "
+        "clock-rate = (int) 8000")
     );
 
 static GstStaticPadTemplate gst_rtp_pcma_depay_src_template =

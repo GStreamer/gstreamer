@@ -1,3 +1,33 @@
+2007-01-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpamrdepay.c:
+	* gst/rtp/gstrtpgsmdepay.c:
+	* gst/rtp/gstrtph263pdepay.c:
+	* gst/rtp/gstrtph263ppay.c:
+	* gst/rtp/gstrtph264depay.c:
+	* gst/rtp/gstrtpilbcdepay.c:
+	* gst/rtp/gstrtpmp2tdepay.c:
+	* gst/rtp/gstrtpmp4gdepay.c:
+	* gst/rtp/gstrtpmp4gpay.c:
+	* gst/rtp/gstrtpmp4vdepay.c: (gst_rtp_mp4v_depay_class_init):
+	* gst/rtp/gstrtpmp4vpay.c:
+	* gst/rtp/gstrtpmpadepay.c: (gst_rtp_mpa_depay_class_init),
+	(gst_rtp_mpa_depay_init), (gst_rtp_mpa_depay_setcaps),
+	(gst_rtp_mpa_depay_process):
+	* gst/rtp/gstrtpmpvdepay.c: (gst_rtp_mpv_depay_class_init),
+	(gst_rtp_mpv_depay_init), (gst_rtp_mpv_depay_process):
+	* gst/rtp/gstrtppcmadepay.c:
+	* gst/rtp/gstrtppcmudepay.c:
+	* gst/rtp/gstrtpspeexdepay.c:
+	* gst/rtp/gstrtpspeexpay.c:
+	* gst/rtp/gstrtpsv3vdepay.c:
+	* gst/rtp/gstrtptheoradepay.c:
+	* gst/rtp/gstrtptheorapay.c:
+	* gst/rtp/gstrtpvorbisdepay.c:
+	* gst/rtp/gstrtpvorbispay.c:
+	Fix caps with payload numbers.
+	Add some fixed payload numbers to caps when possible.
+
 2007-01-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	reviewed by: Stefan Kost  <ensonic@users.sf.net>

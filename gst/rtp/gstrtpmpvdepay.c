@@ -52,7 +52,7 @@ static GstStaticPadTemplate gst_rtp_mpv_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/mpeg")
+    GST_STATIC_CAPS ("video/mpeg, systemstream = (boolean) FALSE")
     );
 
 static GstStaticPadTemplate gst_rtp_mpv_depay_sink_template =
@@ -61,6 +61,7 @@ static GstStaticPadTemplate gst_rtp_mpv_depay_sink_template =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 90000, " "encoding-name = (string) \"MPV\";"
         "application/x-rtp, "
         "media = (string) \"video\", "
