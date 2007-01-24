@@ -89,15 +89,13 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS_ANY);
 
 static GstStaticPadTemplate gst_rtp_xqt_depay_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
-        "media = (string) \"video\", clock-rate = (int) [1, MAX], "
-        "encoding-name = (string) \"X-QT\";"
-        "application/x-rtp, "
-        "media = (string) \"video\", clock-rate = (int) [1, MAX], "
-        "encoding-name = (string) \"X-QUICKTIME\"")
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "media = (string) { \"audio\", \"video\" }, clock-rate = (int) [1, MAX], "
+        "encoding-name = (string) { \"X-QT\", \"X-QUICKTIME\" }")
     );
 
 GST_BOILERPLATE (GstRtpXQTDepay, gst_rtp_xqt_depay, GstBaseRTPDepayload,
