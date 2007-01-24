@@ -22,6 +22,7 @@
 #endif
 
 #include "gstrtpdepay.h"
+#include "gstrtpac3depay.h"
 #include "gstrtpilbcdepay.h"
 #include "gstrtpilbcpay.h"
 #include "gstrtppcmupay.h"
@@ -57,6 +58,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_rtp_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_ac3_depay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_ilbc_pay_plugin_init (plugin))

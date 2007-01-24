@@ -3,6 +3,7 @@ plugin_LTLIBRARIES = libgstrtp.la
 libgstrtp_la_SOURCES = \
 	gstrtp.c \
 	gstrtpdepay.c \
+	gstrtpac3depay.c \
 	gstrtpilbcdepay.c \
 	gstrtpilbcpay.c \
 	gstrtpmpadepay.c \
@@ -32,7 +33,7 @@ libgstrtp_la_SOURCES = \
 	gstrtptheoradepay.c \
 	gstrtptheorapay.c \
 	gstrtpvorbisdepay.c \
-	gstrtpvorbispay.c
+	gstrtpvorbispay.c 
 	
 #gstrtpL16pay.c gstrtpL16depay.c
 
@@ -51,6 +52,7 @@ libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 noinst_HEADERS =			\
 		 gstrtpL16depay.h 	\
 		 gstrtpL16pay.h 	\
+	         gstrtpac3depay.h 	\
 		 gstrtpamrdepay.h 	\
 		 gstrtpamrpay.h 	\
 		 gstrtpilbcdepay.h      \

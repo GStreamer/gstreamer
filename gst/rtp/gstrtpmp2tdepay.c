@@ -138,7 +138,6 @@ gst_rtp_mp2t_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   GstStructure *structure;
   GstRtpMP2TDepay *rtpmp2tdepay;
-  GstCaps *srccaps;
   gint clock_rate = 90000;      /* default */
 
   rtpmp2tdepay = GST_RTP_MP2T_DEPAY (depayload);
@@ -150,10 +149,6 @@ gst_rtp_mp2t_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   }
 
   depayload->clock_rate = clock_rate;
-
-  srccaps = gst_caps_new_simple ("video/mpegts",
-      "systemstream", G_TYPE_BOOLEAN, TRUE,
-      "packetsize", G_TYPE_INT, 188, NULL);
 
   return TRUE;
 }

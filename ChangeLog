@@ -1,3 +1,18 @@
+2007-01-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpac3depay.c: (gst_rtp_ac3_depay_base_init),
+	(gst_rtp_ac3_depay_class_init), (gst_rtp_ac3_depay_init),
+	(gst_rtp_ac3_depay_setcaps), (gst_rtp_ac3_depay_process),
+	(gst_rtp_ac3_depay_set_property), (gst_rtp_ac3_depay_get_property),
+	(gst_rtp_ac3_depay_change_state), (gst_rtp_ac3_depay_plugin_init):
+	* gst/rtp/gstrtpac3depay.h:
+	Added simple AC3 depayloader (RFC 4184).
+
+	* gst/rtp/gstrtpmp2tdepay.c: (gst_rtp_mp2t_depay_setcaps):
+	Fix a leak.
+
 2007-01-24  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	reviewed by: Stefan Kost  <ensonic@users.sf.net>
