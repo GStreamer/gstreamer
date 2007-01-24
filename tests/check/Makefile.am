@@ -35,6 +35,7 @@ check_PROGRAMS = \
 	$(check_annodex) \
 	elements/audiopanorama \
 	elements/audioinvert \
+	elements/audioamplify \
 	elements/avimux \
 	elements/level \
 	elements/matroskamux \

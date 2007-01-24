@@ -77,6 +77,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/apetag/gstapedemux.h \
 	$(top_srcdir)/gst/audiofx/audiopanorama.h \
 	$(top_srcdir)/gst/audiofx/audioinvert.h \
+	$(top_srcdir)/gst/audiofx/audioamplify.h \
 	$(top_srcdir)/gst/autodetect/gstautoaudiosink.h \
 	$(top_srcdir)/gst/autodetect/gstautovideosink.h \
 	$(top_srcdir)/gst/avi/gstavidemux.h \

@@ -1,3 +1,39 @@
+2007-01-24  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	reviewed by: Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiofx/Makefile.am:
+	* gst/audiofx/audioamplify.c:
+	(gst_audio_amplify_clipping_method_get_type),
+	(gst_audio_amplify_base_init), (gst_audio_amplify_class_init),
+	(gst_audio_amplify_init), (gst_audio_amplify_set_process_function),
+	(gst_audio_amplify_set_property), (gst_audio_amplify_get_property),
+	(gst_audio_amplify_set_caps),
+	(gst_audio_amplify_transform_int_clip),
+	(gst_audio_amplify_transform_int_wrap_negative),
+	(gst_audio_amplify_transform_int_wrap_positive),
+	(gst_audio_amplify_transform_float_clip),
+	(gst_audio_amplify_transform_float_wrap_negative),
+	(gst_audio_amplify_transform_float_wrap_positive),
+	(gst_audio_amplify_transform_ip):
+	* gst/audiofx/audioamplify.h:
+	* gst/audiofx/audiofx.c: (plugin_init):
+	Add new element "audioamplify". This allows scaling of raw audio
+	samples, similar to the "volume" element, but provides different modes
+	for clipping and allows unlimited amplification. It's mainly targeted
+	for creative sound design and not as a replacement of the "volume"
+	element. Fixes #397162
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	Add docs for audioamplify and integrate them into the build system
+	* tests/check/Makefile.am:
+	* tests/check/elements/audioamplify.c: (setup_amplify),
+	(cleanup_amplify), (GST_START_TEST), (amplify_suite), (main):
+	Add fairly extensive unit test suite for audioamplify
+
 2007-01-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (pad_unblocked), (pad_blocked):

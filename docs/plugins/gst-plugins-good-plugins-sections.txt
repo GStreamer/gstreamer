@@ -48,6 +48,16 @@ GST_AUDIO_INVERT_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-audioamplify</FILE>
+GstAudioAmplify
+<TITLE>audioamplify</TITLE>
+<SUBSECTION Standard>
+GstAudioAmplifyClass
+GST_AUDIO_AMPLIFY
+GST_AUDIO_AMPLIFY_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-autoaudiosink</FILE>
 GstAutoAudioSink
 <TITLE>autoaudiosink</TITLE>

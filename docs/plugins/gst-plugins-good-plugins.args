@@ -16648,3 +16648,23 @@
 <DEFAULT>0</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstAudioAmplify::amplification</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Amplification</NICK>
+<BLURB>Factor of amplification.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioAmplify::clipping-method</NAME>
+<TYPE>GstAudioPanoramaClippingMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Clipping method</NICK>
+<BLURB>Selects how to handle values higher than the maximum.</BLURB>
+<DEFAULT>Normal Clipping (default)</DEFAULT>
+</ARG>
+

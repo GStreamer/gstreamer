@@ -27,6 +27,7 @@
 
 #include "audiopanorama.h"
 #include "audioinvert.h"
+#include "audioamplify.h"
 
 /* entry point to initialize the plug-in
  * initialize the plug-in itself
@@ -42,7 +43,9 @@ plugin_init (GstPlugin * plugin)
   return (gst_element_register (plugin, "audiopanorama", GST_RANK_NONE,
           GST_TYPE_AUDIO_PANORAMA) &&
       gst_element_register (plugin, "audioinvert", GST_RANK_NONE,
-          GST_TYPE_AUDIO_INVERT));
+          GST_TYPE_AUDIO_INVERT) &&
+      gst_element_register (plugin, "audioamplify", GST_RANK_NONE,
+          GST_TYPE_AUDIO_AMPLIFY));
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

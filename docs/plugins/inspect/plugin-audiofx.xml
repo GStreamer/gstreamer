@@ -10,6 +10,13 @@
   <origin>http://gstreamer.net/</origin>
   <elements>
     <element>
+      <name>audioamplify</name>
+      <longname>AudioAmplify</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Amplifies an audio stream by a given factor</description>
+      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+    </element>
+    <element>
       <name>audioinvert</name>
       <longname>AudioInvert</longname>
       <class>Filter/Effect/Audio</class>
