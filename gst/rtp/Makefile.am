@@ -21,6 +21,8 @@ libgstrtp_la_SOURCES = \
 	gstrtph263ppay.c \
 	gstrtph263pay.c \
 	gstrtph264depay.c \
+        gstrtpL16depay.c \
+        gstrtpL16pay.c \
 	gstasteriskh263.c \
 	gstrtpmp2tdepay.c \
 	gstrtpmp4vdepay.c \
@@ -35,7 +37,6 @@ libgstrtp_la_SOURCES = \
 	gstrtpvorbisdepay.c \
 	gstrtpvorbispay.c 
 	
-#gstrtpL16pay.c gstrtpL16depay.c
 
 if HAVE_WINSOCK2_H
 WINSOCK2_LIBS = -lws2_32

@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,45 +17,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_RTP_L16_PAY_H__
 #define __GST_RTP_L16_PAY_H__
 
 #include <gst/gst.h>
+#include <gst/rtp/gstbasertppayload.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
-/* Definition of structure storing data for this element. */
-typedef struct _GstRtpL16Pay GstRtpL16Pay;
-struct _GstRtpL16Pay
-{
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
-  guint frequency;
-  guint channels;
-
-  /* the timestamp of the next frame */
-  guint64 next_time;
-  /* the interval between frames */
-  guint64 time_interval;
-  
-  guint32 ssrc;
-  guint16 seq;
-};
-
-/* Standard definition defining a class for this element. */
-typedef struct _GstRtpL16PayClass GstRtpL16PayClass;
-struct _GstRtpL16PayClass
-{
-  GstElementClass parent_class;
-};
-
-/* Standard macros for defining types for this element.  */
 #define GST_TYPE_RTP_L16_PAY \
-  (gst_rtpL16pay_get_type())
+  (gst_rtp_L16_pay_get_type())
 #define GST_RTP_L16_PAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_L16_PAY,GstRtpL16Pay))
 #define GST_RTP_L16_PAY_CLASS(klass) \
@@ -65,8 +37,26 @@ struct _GstRtpL16PayClass
 #define GST_IS_RTP_L16_PAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_L16_PAY))
 
-gboolean gst_rtpL16pay_plugin_init (GstPlugin * plugin);
+typedef struct _GstRtpL16Pay GstRtpL16Pay;
+typedef struct _GstRtpL16PayClass GstRtpL16PayClass;
+
+struct _GstRtpL16Pay
+{
+  GstBaseRTPPayload payload;
+
+  GstAdapter *adapter;
+
+  gint rate;
+  gint channels;
+};
+
+struct _GstRtpL16PayClass
+{
+  GstBaseRTPPayloadClass parent_class;
+};
+
+gboolean gst_rtp_L16_pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
-#endif                          /* __GST_RTP_L16_PAY_H__ */
+#endif /* __GST_RTP_L16_PAY_H__ */

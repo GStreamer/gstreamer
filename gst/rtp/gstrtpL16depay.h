@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+ * Copyright (C) <2007> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,14 +21,13 @@
 #define __GST_RTP_L16_DEPAY_H__
 
 #include <gst/gst.h>
-#include "rtp-packet.h"
-#include "gstrtp-common.h"
+#include <gst/rtp/gstbasertpdepayload.h>
 
 G_BEGIN_DECLS
 
 /* Standard macros for defining types for this element.  */
 #define GST_TYPE_RTP_L16_DEPAY \
-  (gst_rtp_L16depay_get_type())
+  (gst_rtp_L16_depay_get_type())
 #define GST_RTP_L16_DEPAY(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_L16_DEPAY,GstRtpL16Depay))
 #define GST_RTP_L16_DEPAY_CLASS(klass) \
@@ -44,24 +43,19 @@ typedef struct _GstRtpL16DepayClass GstRtpL16DepayClass;
 /* Definition of structure storing data for this element. */
 struct _GstRtpL16Depay
 {
-  GstElement element;
+  GstBaseRTPDepayload depayload;
 
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
-  guint frequency;
+  guint rate;
   guint channels;
-
-  rtp_payload_t payload_type;
 };
 
 /* Standard definition defining a class for this element. */
 struct _GstRtpL16DepayClass
 {
-  GstElementClass parent_class;
+  GstBaseRTPDepayloadClass parent_class;
 };
 
-gboolean gst_rtp_L16depay_plugin_init (GstPlugin * plugin);
+gboolean gst_rtp_L16_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 

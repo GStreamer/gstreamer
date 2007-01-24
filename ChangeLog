@@ -1,5 +1,25 @@
 2007-01-24  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16_depay_base_init),
+	(gst_rtp_L16_depay_class_init), (gst_rtp_L16_depay_init),
+	(gst_rtp_L16_depay_parse_int), (gst_rtp_L16_depay_setcaps),
+	(gst_rtp_L16_depay_process), (gst_rtp_L16_depay_set_property),
+	(gst_rtp_L16_depay_get_property), (gst_rtp_L16_depay_change_state),
+	(gst_rtp_L16_depay_plugin_init):
+	* gst/rtp/gstrtpL16depay.h:
+	* gst/rtp/gstrtpL16pay.c: (gst_rtp_L16_pay_get_type),
+	(gst_rtp_L16_pay_base_init), (gst_rtp_L16_pay_class_init),
+	(gst_rtp_L16_pay_init), (gst_rtp_L16_pay_finalize),
+	(gst_rtp_L16_pay_setcaps), (gst_rtp_L16_pay_handle_buffer),
+	(gst_rtp_L16_pay_plugin_init):
+	* gst/rtp/gstrtpL16pay.h:
+	Port and enable raw audio payloader/depayloader. Needs a bit more work
+	on the payloader side.
+
+2007-01-24  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (pad_blocked),
 	(gst_rtspsrc_stream_configure_transport),
 	(gst_rtspsrc_activate_streams), (gst_rtspsrc_loop_udp):
