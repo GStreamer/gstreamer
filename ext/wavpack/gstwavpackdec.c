@@ -90,9 +90,9 @@ static void
 gst_wavpack_dec_base_init (gpointer klass)
 {
   static const GstElementDetails plugin_details =
-      GST_ELEMENT_DETAILS ("WavePack audio decoder",
+      GST_ELEMENT_DETAILS ("Wavpack audio decoder",
       "Codec/Decoder/Audio",
-      "Decode Wavpack audio data",
+      "Decodes Wavpack audio data",
       "Arwed v. Merkatz <v.merkatz@gmx.net>, "
       "Sebastian Dröge <slomo@circular-chaos.org>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
