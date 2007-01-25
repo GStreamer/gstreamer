@@ -343,14 +343,17 @@ gst_wavpack_parse_src_query (GstPad * pad, GstQuery * query)
         gboolean seekable;
         gint64 duration = -1;
 
-        gst_pad_query_duration (pad, &format, &duration);
+        /* only fails if we didn't read the headers yet and can't say
+         * anything about our seeking capabilities */
+        if (!gst_pad_query_duration (pad, &format, &duration))
+          break;
 
         /* can't seek in streaming mode yet */
         GST_OBJECT_LOCK (parse);
-        seekable = (parse->adapter != NULL);
+        seekable = (parse->adapter == NULL);
         GST_OBJECT_UNLOCK (parse);
 
-        gst_query_set_seeking (query, GST_FORMAT_TIME, seekable, 0, duration);
+        gst_query_set_seeking (query, format, seekable, 0, duration);
         ret = TRUE;
       }
       break;

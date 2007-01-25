@@ -1,5 +1,13 @@
 2007-01-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_src_query):
+	Fix the SEEKING query. We can seek if we are in pull mode, not the
+	other way around. Also set the correct format in the seeking query and
+	handle the case where the headers are not read yet and we can't say
+	anything about our seeking capabilities.
+	
+2007-01-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_base_init):
 	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_base_init):
 	Fix spelling in 2 places: It's called Wavpack, not WavePack.
