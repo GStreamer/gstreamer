@@ -1,3 +1,9 @@
+2007-01-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_base_init):
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_base_init):
+	Fix spelling in 2 places: It's called Wavpack, not WavePack.
+
 2007-01-25  Edward Hervey  <edward@fluendo.com>
 
 	* gst/multifile/gstmultifilesink.c:

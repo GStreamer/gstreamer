@@ -96,7 +96,7 @@ static void
 gst_wavpack_parse_base_init (gpointer klass)
 {
   static const GstElementDetails plugin_details =
-      GST_ELEMENT_DETAILS ("WavePack parser",
+      GST_ELEMENT_DETAILS ("Wavpack parser",
       "Codec/Demuxer/Audio",
       "Parses Wavpack files",
       "Arwed v. Merkatz <v.merkatz@gmx.net>, "
