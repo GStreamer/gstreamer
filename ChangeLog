@@ -1,3 +1,13 @@
+2007-01-25  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: David Schleef <ds at schleef dot org>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstadapter.c: (gst_adapter_copy):
+	* libs/gst/base/gstadapter.h:
+	API: gst_adapter_copy() that can reduce the amount of memcpy when
+	getting data from the adapter. Fixes #388201.
+
 2007-01-25  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_read_cache):

@@ -78,6 +78,8 @@ GstAdapter *		gst_adapter_new			(void);
 void			gst_adapter_clear		(GstAdapter *adapter);
 void			gst_adapter_push		(GstAdapter *adapter, GstBuffer* buf);
 const guint8 *		gst_adapter_peek      		(GstAdapter *adapter, guint size);
+void    		gst_adapter_copy      		(GstAdapter *adapter, guint8 *dest,
+                                                         guint offset, guint size);
 void			gst_adapter_flush		(GstAdapter *adapter, guint flush);
 guint8*			gst_adapter_take		(GstAdapter *adapter, guint nbytes);
 GstBuffer*		gst_adapter_take_buffer		(GstAdapter *adapter, guint nbytes);

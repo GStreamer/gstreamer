@@ -303,6 +303,58 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
 }
 
 /**
+ * gst_adapter_copy:
+ * @adapter: a #GstAdapter
+ * @dest: the memory where to copy to
+ * @offset: the bytes offset in the adapter to start from
+ * @size: the number of bytes to copy
+ *
+ * Copies @size bytes of data starting at @offset out of the buffers
+ * contained in @GstAdapter into an array @dest provided by the caller.
+ *
+ * The array @dest should be large enough to contain @size bytes.
+ * The user should check that the adapter has (@offset + @size) bytes
+ * available before calling this function.
+ *
+ * Since: 0.10.12
+ */
+void
+gst_adapter_copy (GstAdapter * adapter, guint8 * dest, guint offset, guint size)
+{
+  GSList *g;
+  int skip;
+
+  g_return_if_fail (GST_IS_ADAPTER (adapter));
+  g_return_if_fail (size > 0);
+
+  /* we don't have enough data, return. This is unlikely
+   * as one usually does an _available() first instead of copying a
+   * random size. */
+  if (G_UNLIKELY (offset + size > adapter->size))
+    return;
+
+  skip = adapter->skip;
+  for (g = adapter->buflist; g && size > 0; g = g_slist_next (g)) {
+    GstBuffer *buf;
+
+    buf = g->data;
+    if (offset < GST_BUFFER_SIZE (buf) - skip) {
+      int n;
+
+      n = MIN (GST_BUFFER_SIZE (buf) - skip - offset, size);
+      memcpy (dest, GST_BUFFER_DATA (buf) + skip + offset, n);
+
+      dest += n;
+      offset = 0;
+      size -= n;
+    } else {
+      offset -= GST_BUFFER_SIZE (buf) - skip;
+    }
+    skip = 0;
+  }
+}
+
+/**
  * gst_adapter_flush:
  * @adapter: a #GstAdapter
  * @flush: the number of bytes to flush
