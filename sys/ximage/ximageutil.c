@@ -78,7 +78,8 @@ ximageutil_check_xshm_calls (GstXContext * xcontext)
 
   SHMInfo.shmid = shmget (IPC_PRIVATE, size, IPC_CREAT | 0777);
   if (SHMInfo.shmid == -1) {
-    GST_WARNING ("could not get shared memory of %d bytes", size);
+    GST_WARNING ("could not get shared memory of %" G_GSIZE_FORMAT " bytes",
+        size);
     goto beach;
   }
 

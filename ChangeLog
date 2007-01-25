@@ -1,3 +1,10 @@
+2007-01-25  Edward Hervey  <edward@fluendo.com>
+
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_collected):
+	* sys/ximage/ximageutil.c: (ximageutil_check_xshm_calls):
+	Use G_GSIZE_FORMAT in print statements for portability.
+	Fixes build on macosx.
+
 2007-01-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/Makefile.am:

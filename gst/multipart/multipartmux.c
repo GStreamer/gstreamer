@@ -494,7 +494,8 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   GST_BUFFER_OFFSET (headerbuf) = mux->offset;
   mux->offset += headerlen;
 
-  GST_DEBUG_OBJECT (mux, "pushing %u bytes header buffer", headerlen);
+  GST_DEBUG_OBJECT (mux, "pushing %" G_GSIZE_FORMAT " bytes header buffer",
+      headerlen);
   ret = gst_pad_push (mux->srcpad, headerbuf);
   if (ret != GST_FLOW_OK)
     /* push always takes ownership of the buffer, even after an error, so we
@@ -552,7 +553,8 @@ no_caps:
   }
 alloc_failed:
   {
-    GST_WARNING_OBJECT (mux, "failed allocating a %d bytes buffer", headerlen);
+    GST_WARNING_OBJECT (mux,
+        "failed allocating a %" G_GSIZE_FORMAT " bytes buffer", headerlen);
     g_free (header);
     goto beach;
   }
