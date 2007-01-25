@@ -496,7 +496,14 @@ gst_decode_bin_finalize (GObject * object)
 
   decode_bin = GST_DECODE_BIN (object);
 
-  g_mutex_free (decode_bin->lock);
+  if (decode_bin->lock) {
+    DECODE_BIN_LOCK (decode_bin);
+    GST_DEBUG_OBJECT (object, "About to free mutex from stream %p",
+        g_thread_self ());
+    DECODE_BIN_UNLOCK (decode_bin);
+    g_mutex_free (decode_bin->lock);
+    decode_bin->lock = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1251,8 +1258,8 @@ gst_decode_group_new (GstDecodeBin * dbin)
   }
 
   g_object_set (G_OBJECT (mq),
-      "max-size-bytes", 1 * 1024 * 1024,
-      "max-size-time", G_GINT64_CONSTANT (0), "max-size-buffers", 0, NULL);
+      "max-size-bytes", 2 * 1024 * 1024,
+      "max-size-time", 5 * GST_SECOND, "max-size-buffers", 0, NULL);
 
   group = g_new0 (GstDecodeGroup, 1);
   group->lock = g_mutex_new ();
@@ -1400,6 +1407,8 @@ gst_decode_group_control_source_pad (GstDecodeGroup * group, GstPad * pad)
  * Call this when one of the pads blocked status has changed.
  * If the group is complete and blocked, the group will be marked as blocked
  * and will ghost/expose all pads on decodebin if the group is the current one.
+ *
+ * MT safe
  */
 static void
 gst_decode_group_check_if_blocked (GstDecodeGroup * group)
@@ -1674,7 +1683,7 @@ gst_decode_group_free (GstDecodeGroup * group)
 
   GROUP_MUTEX_UNLOCK (group);
 
-  g_free (group->lock);
+  g_mutex_free (group->lock);
   g_free (group);
 }
 
