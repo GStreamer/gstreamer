@@ -144,7 +144,8 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
   gstbasesrc_class->get_caps = gst_multi_file_src_getcaps;
 
   if (sizeof (off_t) < 8) {
-    GST_LOG ("No large file support, sizeof (off_t) = %u", sizeof (off_t));
+    GST_LOG ("No large file support, sizeof (off_t) = %" G_GSIZE_FORMAT,
+        sizeof (off_t));
   }
 }
 
