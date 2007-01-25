@@ -99,6 +99,9 @@
 #define FREE_CAPS(caps) g_free (caps)
 #endif
 
+/* lock to protect multiple invocations of static caps to caps conversion */
+G_LOCK_DEFINE_STATIC (static_caps_lock);
+
 static void gst_caps_transform_to_string (const GValue * src_value,
     GValue * dest_value);
 static gboolean gst_caps_from_string_inplace (GstCaps * caps,
@@ -302,6 +305,10 @@ _gst_caps_free (GstCaps * caps)
 #ifdef USE_POISONING
   memset (caps, 0xff, sizeof (GstCaps));
 #endif
+
+#ifdef DEBUG_REFCOUNT
+  GST_CAT_LOG (GST_CAT_CAPS, "freeing caps %p", caps);
+#endif
   FREE_CAPS (caps);
 }
 
@@ -427,18 +434,48 @@ gst_static_caps_get (GstStaticCaps * static_caps)
 
   caps = (GstCaps *) static_caps;
 
-  if (caps->type == 0) {
-    if (G_UNLIKELY (static_caps->string == NULL))
+  /* refcount is 0 when we need to convert */
+  if (G_UNLIKELY (g_atomic_int_get (&caps->refcount) == 0)) {
+    const char *string;
+    GstCaps temp;
+
+    G_LOCK (static_caps_lock);
+    /* check if other thread already updated */
+    if (G_UNLIKELY (g_atomic_int_get (&caps->refcount) > 0))
+      goto done;
+
+    string = static_caps->string;
+
+    if (G_UNLIKELY (string == NULL))
       goto no_string;
 
-    caps->type = GST_TYPE_CAPS;
-    /* initialize the caps to a refcount of 1 so the caps can be writable... */
-    gst_atomic_int_set (&caps->refcount, 1);
-    caps->structs = g_ptr_array_new ();
+    GST_CAT_LOG (GST_CAT_CAPS, "creating %p", static_caps);
+
+    /* we construct the caps on the stack, then copy over the struct into our
+     * real caps, refcount last. We do this because we must leave the refcount
+     * of the result caps to 0 so that other threads don't run away with the
+     * caps while we are constructing it. */
+    temp.type = GST_TYPE_CAPS;
+    temp.structs = g_ptr_array_new ();
+
+    /* initialize the caps to a refcount of 1 so the caps can be writable for
+     * the next statement */
+    gst_atomic_int_set (&temp.refcount, 1);
 
     /* convert to string */
-    if (G_UNLIKELY (!gst_caps_from_string_inplace (caps, static_caps->string)))
-      g_critical ("Could not convert static caps \"%s\"", static_caps->string);
+    if (G_UNLIKELY (!gst_caps_from_string_inplace (&temp, string)))
+      g_critical ("Could not convert static caps \"%s\"", string);
+
+    /* now copy stuff over to the real caps. */
+    caps->type = temp.type;
+    caps->flags = temp.flags;
+    caps->structs = temp.structs;
+    /* and bump the refcount so other threads can now read */
+    gst_atomic_int_set (&caps->refcount, 1);
+
+    GST_CAT_LOG (GST_CAT_CAPS, "created %p", static_caps);
+  done:
+    G_UNLOCK (static_caps_lock);
   }
   /* ref the caps, makes it not writable */
   gst_caps_ref (caps);
@@ -448,7 +485,8 @@ gst_static_caps_get (GstStaticCaps * static_caps)
   /* ERRORS */
 no_string:
   {
-    g_warning ("static caps string is NULL");
+    G_UNLOCK (static_caps_lock);
+    g_warning ("static caps %p string is NULL", static_caps);
     return NULL;
   }
 }

@@ -1,5 +1,12 @@
 2007-01-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstcaps.c: (_gst_caps_free), (gst_static_caps_get):
+	Add some refcount debugging.
+	Make gst_static_caps_get threadsafe, which is needed when autoplugging
+	in multiple streaming threads.
+
+2007-01-25  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: David Schleef <ds at schleef dot org>
 
 	* docs/libs/gstreamer-libs-sections.txt:
