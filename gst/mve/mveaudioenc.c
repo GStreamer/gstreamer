@@ -105,7 +105,7 @@ mve_compress_audio (guint8 * dest, const guint8 * src, guint16 len,
     }
 
     if (G_UNLIKELY (abs (real_res - s) > 32767)) {
-      GST_ERROR ("sign loss left unfixed in audio stream, deviation:%ld",
+      GST_ERROR ("sign loss left unfixed in audio stream, deviation:%d",
           real_res - s);
       return -1;
     }

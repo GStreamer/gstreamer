@@ -379,7 +379,7 @@ gst_mve_video_create_buffer (GstMveDemux * mve, guint8 version,
   }
 
   GST_DEBUG_OBJECT (mve,
-      "allocating video buffer, w:%ld, h:%ld, n:%ld, true_color:%ld", w, h, n,
+      "allocating video buffer, w:%u, h:%u, n:%u, true_color:%u", w, h, n,
       true_color);
 
   /* we need a buffer to keep the last 2 frames, since those may be
@@ -423,7 +423,7 @@ gst_mve_video_palette (GstMveDemux * mve, const guint8 * data, guint16 len)
 
   start = GST_READ_UINT16_LE (data);
   count = GST_READ_UINT16_LE (data + 2);
-  GST_DEBUG_OBJECT (mve, "found palette start:%ld, count:%ld", start, count);
+  GST_DEBUG_OBJECT (mve, "found palette start:%u, count:%u", start, count);
 
   /* need more bytes */
   if (len < count * 3)
@@ -536,7 +536,7 @@ gst_mve_video_code_map (GstMveDemux * mve, const guint8 * data, guint16 len)
     return GST_FLOW_ERROR;
   }
 
-  GST_DEBUG_OBJECT (mve, "found code map, size:%ld", len);
+  GST_DEBUG_OBJECT (mve, "found code map, size:%u", len);
 
   /* decoding is done in 8x8 blocks using 4-bit opcodes */
   min = (mve->video_stream->width * mve->video_stream->height) / (8 * 8 * 2);
@@ -687,8 +687,8 @@ gst_mve_audio_init (GstMveDemux * mve, guint8 version, const guint8 * data,
   stream->compression = ((version > 0) && (flags & MVE_AUDIO_COMPRESSED)) ?
       TRUE : FALSE;
 
-  GST_DEBUG_OBJECT (mve, "audio init, sample_rate:%ld, channels:%ld, "
-      "bits_per_sample:%ld, compression:%ld, buffer:%ld",
+  GST_DEBUG_OBJECT (mve, "audio init, sample_rate:%d, channels:%d, "
+      "bits_per_sample:%d, compression:%d, buffer:%u",
       stream->sample_rate, stream->n_channels,
       stream->sample_size, stream->compression, requested_buffer);
 
@@ -779,7 +779,7 @@ gst_mve_audio_data (GstMveDemux * mve, guint8 type, const guint8 * data,
       GST_BUFFER_DURATION (buf) = duration;
       GST_BUFFER_OFFSET_END (buf) = s->offset + n_samples;
 
-      GST_DEBUG_OBJECT (mve, "created audio buffer, size:%ld, stream_mask:%lx",
+      GST_DEBUG_OBJECT (mve, "created audio buffer, size:%u, stream_mask:%x",
           size, stream_mask);
 
       *output = buf;
@@ -824,7 +824,7 @@ gst_mve_timer_create (GstMveDemux * mve, const guint8 * data, guint16 len,
   t_rate = GST_READ_UINT32_LE (data);
   t_subdiv = GST_READ_UINT16_LE (data + 4);
 
-  GST_DEBUG_OBJECT (mve, "found timer:%ldx%d", t_rate, t_subdiv);
+  GST_DEBUG_OBJECT (mve, "found timer:%ux%u", t_rate, t_subdiv);
   mve->frame_duration = t_rate * t_subdiv * GST_USECOND;
 
   /* now really start rolling... */
@@ -984,7 +984,7 @@ gst_mve_demux_chain (GstPad * sinkpad, GstBuffer * inbuf)
 
   gst_adapter_push (mve->adapter, inbuf);
 
-  GST_DEBUG_OBJECT (mve, "queuing buffer, needed:%ld, available:%ld",
+  GST_DEBUG_OBJECT (mve, "queuing buffer, needed:%d, available:%u",
       mve->needed_bytes, gst_adapter_available (mve->adapter));
 
   while ((gst_adapter_available (mve->adapter) >= mve->needed_bytes) &&
@@ -1044,7 +1044,7 @@ gst_mve_demux_chain (GstPad * sinkpad, GstBuffer * inbuf)
           /* send buffer */
           GST_DEBUG_OBJECT (mve,
               "pushing buffer with time %" GST_TIME_FORMAT
-              " (%ld bytes) on pad %s",
+              " (%u bytes) on pad %s",
               GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
               GST_BUFFER_SIZE (outbuf), GST_PAD_NAME (stream->pad));
 

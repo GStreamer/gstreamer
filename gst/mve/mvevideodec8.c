@@ -48,7 +48,7 @@ ipvideo_copy_block (const GstMveDemuxStream * s, unsigned char *frame,
     GST_ERROR ("frame offset < 0 (%ld)", frame_offset);
     return -1;
   } else if (G_UNLIKELY (frame_offset > s->max_block_offset)) {
-    GST_ERROR ("frame offset above limit (%ld > %ld)",
+    GST_ERROR ("frame offset above limit (%ld > %u)",
         frame_offset, s->max_block_offset);
     return -1;
   }

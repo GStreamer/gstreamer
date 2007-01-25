@@ -931,7 +931,7 @@ gst_mve_mux_push_chunk (GstMveMux * mvemux)
 
   if (size > G_MAXUINT16) {
     GST_ELEMENT_ERROR (mvemux, STREAM, ENCODE, (NULL),
-        ("encoding frame %d failed: maximum block size exceeded (%lu)",
+        ("encoding frame %d failed: maximum block size exceeded (%u)",
             mvemux->video_frames + 1, size));
     return GST_FLOW_ERROR;
   }

@@ -1,3 +1,22 @@
+2007-01-25  Edward Hervey  <edward@fluendo.com>
+
+	* gst/multifile/gstmultifilesink.c:
+	(gst_multi_file_sink_class_init):
+	* gst/multifile/gstmultifilesrc.c: (gst_multi_file_src_class_init):
+	* gst/mve/gstmvedemux.c: (gst_mve_video_create_buffer),
+	(gst_mve_video_palette), (gst_mve_video_code_map),
+	(gst_mve_audio_init), (gst_mve_audio_data), (gst_mve_timer_create),
+	(gst_mve_demux_chain):
+	* gst/mve/gstmvemux.c: (gst_mve_mux_push_chunk):
+	* gst/mve/mveaudioenc.c: (mve_compress_audio):
+	* gst/mve/mvevideodec16.c: (ipvideo_copy_block):
+	* gst/mve/mvevideodec8.c: (ipvideo_copy_block):
+	* gst/mve/mvevideoenc16.c: (mve_encode_frame16):
+	* gst/mve/mvevideoenc8.c: (mve_encode_frame8):
+	Use proper print statements.
+	Fixes build on mac os x.
+	<wingo> oo look at me my name is edward i'm hacking on macos wooo
+
 2007-01-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/gstrtpxqtdepay.c:

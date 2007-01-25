@@ -1638,7 +1638,7 @@ mve_encode_frame8 (GstMveMux * mve, GstBuffer * frame, const guint32 * palette,
   }
 
   /* find best solution with size constraints */
-  GST_DEBUG_OBJECT (mve, "encoded frame %u in %ld bytes (lossless)",
+  GST_DEBUG_OBJECT (mve, "encoded frame %u in %u bytes (lossless)",
       mve->video_frames + 1, encoded_size);
 
 #if 0
@@ -1691,7 +1691,7 @@ mve_encode_frame8 (GstMveMux * mve, GstBuffer * frame, const guint32 * palette,
 
       goto done;
     }
-    GST_DEBUG_OBJECT (mve, "compressed frame %u to %ld bytes (lossy)",
+    GST_DEBUG_OBJECT (mve, "compressed frame %u to %u bytes (lossy)",
         mve->video_frames + 1, encoded_size);
   }
 
