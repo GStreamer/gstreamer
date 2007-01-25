@@ -1,5 +1,10 @@
 2007-01-25  Wim Taymans  <wim@fluendo.com>
 
+	* configure.ac:
+	Bump required -core/-base to CVS
+
+2007-01-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpL16pay.c: (gst_rtp_L16_pay_setcaps),
 	(gst_rtp_L16_pay_flush), (gst_rtp_L16_pay_handle_buffer):
 	* gst/rtp/gstrtpL16pay.h:
