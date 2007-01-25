@@ -1,3 +1,8 @@
+2007-01-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_get_property):
+	  Make getting the current frame thread-safe.
+
 2007-01-25  Edward Hervey  <edward@fluendo.com>
 
 	* gst/playback/gstdecodebin2.c: (gst_decode_bin_finalize),

@@ -759,9 +759,13 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_VOLUME:
       g_value_set_double (value, play_bin->volume);
       break;
-    case ARG_FRAME:
-      gst_value_set_mini_object (value, GST_MINI_OBJECT (play_bin->frame));
+    case ARG_FRAME:{
+      GstBuffer *cur_frame = NULL;
+
+      gst_buffer_replace (&cur_frame, play_bin->frame);
+      gst_value_take_buffer (value, cur_frame);
       break;
+    }
     case ARG_CONNECTION_SPEED:
       g_value_set_uint (value, play_bin->connection_speed / 1000);
       break;
