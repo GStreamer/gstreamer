@@ -473,6 +473,7 @@ static void
 gst_decode_bin_dispose (GObject * object)
 {
   GstDecodeBin *decode_bin;
+  GList *tmp;
 
   decode_bin = GST_DECODE_BIN (object);
 
@@ -481,6 +482,19 @@ gst_decode_bin_dispose (GObject * object)
   decode_bin->factories = NULL;
 
   /* FILLME */
+
+  if (decode_bin->activegroup) {
+    gst_decode_group_free (decode_bin->activegroup);
+    decode_bin->activegroup = NULL;
+  }
+
+  /* remove groups */
+  for (tmp = decode_bin->groups; tmp; tmp = g_list_next (tmp)) {
+    GstDecodeGroup *group = (GstDecodeGroup *) tmp->data;
+
+    gst_decode_group_free (group);
+  }
+
   if (decode_bin->caps)
     gst_caps_unref (decode_bin->caps);
   decode_bin->caps = NULL;
@@ -497,10 +511,6 @@ gst_decode_bin_finalize (GObject * object)
   decode_bin = GST_DECODE_BIN (object);
 
   if (decode_bin->lock) {
-    DECODE_BIN_LOCK (decode_bin);
-    GST_DEBUG_OBJECT (object, "About to free mutex from stream %p",
-        g_thread_self ());
-    DECODE_BIN_UNLOCK (decode_bin);
     g_mutex_free (decode_bin->lock);
     decode_bin->lock = NULL;
   }
@@ -1501,20 +1511,17 @@ gst_decode_group_expose (GstDecodeGroup * group)
 
   if (group->dbin->activegroup) {
     GST_DEBUG_OBJECT (group->dbin, "A group is already active and exposed");
-    DECODE_BIN_UNLOCK (group->dbin);
     return TRUE;
   }
 
   if (group->dbin->activegroup == group) {
     GST_WARNING ("Group %p is already exposed", group);
-    DECODE_BIN_UNLOCK (group->dbin);
     return TRUE;
   }
 
   if (!group->dbin->groups
       || (group != (GstDecodeGroup *) group->dbin->groups->data)) {
     GST_WARNING ("Group %p is not the first group to expose", group);
-    DECODE_BIN_UNLOCK (group->dbin);
     return FALSE;
   }
 
@@ -1637,10 +1644,12 @@ restart:
         GstPad *peerpad = NULL;
 
         if ((peerpad = gst_pad_get_peer (pad))) {
-          GstElement *peerelement = GST_ELEMENT (gst_pad_get_parent (peerpad));
+          GstObject *parent = gst_pad_get_parent (peerpad);
 
-          if (peerelement)
-            deactivate_free_recursive (group, peerelement);
+          if (parent && GST_IS_ELEMENT (parent))
+            deactivate_free_recursive (group, GST_ELEMENT (parent));
+          if (parent)
+            gst_object_unref (parent);
         }
       }
         break;
@@ -1654,6 +1663,8 @@ done:
   gst_bin_remove (GST_BIN (group->dbin), element);
 
 beach:
+  gst_iterator_free (it);
+
   return;
 }
 
