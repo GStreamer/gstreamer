@@ -782,21 +782,19 @@ static void
 handoff (GstElement * identity, GstBuffer * frame, gpointer data)
 {
   GstPlayBin *play_bin = GST_PLAY_BIN (data);
-  GstBuffer **frame_p = &play_bin->frame;
-
-  gst_mini_object_replace ((GstMiniObject **) frame_p,
-      GST_MINI_OBJECT_CAST (frame));
 
   /* applications need to know the buffer caps,
    * make sure they are always set on the frame */
-  if (GST_BUFFER_CAPS (play_bin->frame) == NULL) {
+  if (GST_BUFFER_CAPS (frame) == NULL) {
     GstPad *pad;
 
     if ((pad = gst_element_get_pad (identity, "sink"))) {
-      gst_buffer_set_caps (play_bin->frame, GST_PAD_CAPS (pad));
+      gst_buffer_set_caps (frame, GST_PAD_CAPS (pad));
       gst_object_unref (pad);
     }
   }
+
+  gst_buffer_replace (&play_bin->frame, frame);
 }
 
 static void

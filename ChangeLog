@@ -1,5 +1,12 @@
 2007-01-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybin.c: (handoff):
+	  Fix up caps on the frame buffer before we save it and potentially
+	  make it accessible to other threads via g_object_get; also use
+	  gst_buffer_replace() instead of gst_mini_object_replace().
+
+2007-01-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gstplaybin.c: (gst_play_bin_get_property):
 	  Make getting the current frame thread-safe.
 
