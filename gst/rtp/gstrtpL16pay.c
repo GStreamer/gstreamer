@@ -179,6 +179,9 @@ gst_rtp_L16_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
   gst_basertppayload_set_outcaps (basepayload,
       "channels", G_TYPE_INT, channels, "rate", G_TYPE_INT, rate, NULL);
 
+  rtpL16pay->rate = rate;
+  rtpL16pay->channels = channels;
+
   return TRUE;
 
   /* ERRORS */
@@ -195,41 +198,78 @@ no_channels:
 }
 
 static GstFlowReturn
-gst_rtp_L16_pay_handle_buffer (GstBaseRTPPayload * basepayload,
-    GstBuffer * buffer)
+gst_rtp_L16_pay_flush (GstRtpL16Pay * rtpL16pay, guint len)
 {
-  GstRtpL16Pay *rtpL16pay;
-  GstFlowReturn ret;
-  guint size, payload_len;
   GstBuffer *outbuf;
-  guint8 *payload, *data;
-  GstClockTime timestamp;
-  guint packet_len, mtu;
-
-  rtpL16pay = GST_RTP_L16_PAY (basepayload);
-  mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpL16pay);
-
-  size = GST_BUFFER_SIZE (buffer);
-  data = GST_BUFFER_DATA (buffer);
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
-
-  GST_DEBUG_OBJECT (basepayload, "got %d bytes", size);
-
-  payload_len = size;
-
-  /* get packet len to check against MTU */
-  packet_len = gst_rtp_buffer_calc_packet_len (payload_len, 0, 0);
+  guint8 *payload;
+  GstFlowReturn ret;
+  guint samples;
+  GstClockTime duration;
 
   /* now alloc output buffer */
-  outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+  outbuf = gst_rtp_buffer_new_allocate (len, 0, 0);
 
   /* get payload, this is now writable */
   payload = gst_rtp_buffer_get_payload (outbuf);
 
-  gst_buffer_unref (buffer);
+  /* copy and flush data out of adapter into the RTP payload */
+  gst_adapter_copy (rtpL16pay->adapter, payload, 0, len);
+  gst_adapter_flush (rtpL16pay->adapter, len);
 
-  ret = gst_basertppayload_push (basepayload, outbuf);
+  samples = len / (2 * rtpL16pay->channels);
+  duration = gst_util_uint64_scale_int (samples, GST_SECOND, rtpL16pay->rate);
 
+  GST_BUFFER_TIMESTAMP (outbuf) = rtpL16pay->first_ts;
+  GST_BUFFER_DURATION (outbuf) = duration;
+
+  /* increase count (in ts) of data pushed to basertppayload */
+  if (GST_CLOCK_TIME_IS_VALID (rtpL16pay->first_ts))
+    rtpL16pay->first_ts += duration;
+
+  ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpL16pay), outbuf);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_rtp_L16_pay_handle_buffer (GstBaseRTPPayload * basepayload,
+    GstBuffer * buffer)
+{
+  GstRtpL16Pay *rtpL16pay;
+  GstFlowReturn ret = GST_FLOW_OK;
+  guint payload_len;
+  GstClockTime timestamp, duration;
+  guint mtu, avail;
+
+  rtpL16pay = GST_RTP_L16_PAY (basepayload);
+  mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpL16pay);
+
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+
+  if (GST_BUFFER_IS_DISCONT (buffer))
+    gst_adapter_clear (rtpL16pay->adapter);
+
+  avail = gst_adapter_available (rtpL16pay->adapter);
+  if (avail == 0) {
+    rtpL16pay->first_ts = timestamp;
+  }
+
+  /* push buffer in adapter */
+  gst_adapter_push (rtpL16pay->adapter, buffer);
+
+  /* get payload len for MTU */
+  payload_len = gst_rtp_buffer_calc_payload_len (mtu, 0, 0);
+
+  /* flush complete MTU while we have enough data in the adapter */
+  while (avail >= payload_len) {
+    /* flush payload_len bytes */
+    ret = gst_rtp_L16_pay_flush (rtpL16pay, payload_len);
+    if (ret != GST_FLOW_OK)
+      break;
+
+    avail = gst_adapter_available (rtpL16pay->adapter);
+  }
   return ret;
 }
 

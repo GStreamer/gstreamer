@@ -44,7 +44,8 @@ struct _GstRtpL16Pay
 {
   GstBaseRTPPayload payload;
 
-  GstAdapter *adapter;
+  GstAdapter  *adapter;
+  GstClockTime first_ts;
 
   gint rate;
   gint channels;
