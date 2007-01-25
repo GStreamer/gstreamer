@@ -610,6 +610,7 @@ gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
   gchar *name = NULL;
   gint rate = -1;
   gchar *params = NULL;
+  gchar *tmp1, *tmp2;
   GstStructure *s;
 
   /* dynamic payloads need rtpmap */
@@ -635,18 +636,26 @@ gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
       goto no_rtpmap;
   }
 
+  tmp1 = g_ascii_strdown (media->media, -1);
   caps = gst_caps_new_simple ("application/x-unknown",
-      "media", G_TYPE_STRING, media->media, "payload", G_TYPE_INT, pt, NULL);
+      "media", G_TYPE_STRING, tmp1, "payload", G_TYPE_INT, pt, NULL);
+  g_free (tmp1);
   s = gst_caps_get_structure (caps, 0);
 
   if (rate != -1)
     gst_structure_set (s, "clock-rate", G_TYPE_INT, rate, NULL);
 
-  if (name != NULL)
-    gst_structure_set (s, "encoding-name", G_TYPE_STRING, name, NULL);
+  if (name != NULL) {
+    tmp1 = g_ascii_strup (name, -1);
+    gst_structure_set (s, "encoding-name", G_TYPE_STRING, tmp1, NULL);
+    g_free (tmp1);
+  }
 
-  if (params != NULL)
-    gst_structure_set (s, "encoding-params", G_TYPE_STRING, params, NULL);
+  if (params != NULL) {
+    tmp1 = g_ascii_strdown (params, -1);
+    gst_structure_set (s, "encoding-params", G_TYPE_STRING, tmp1, NULL);
+    g_free (tmp1);
+  }
 
   /* parse optional fmtp: field */
   if ((fmtp = sdp_media_get_attribute_val (media, "fmtp"))) {
@@ -680,8 +689,11 @@ gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
         }
         /* strip the key of spaces */
         key = g_strstrip (pairs[i]);
-
-        gst_structure_set (s, key, G_TYPE_STRING, val, NULL);
+        tmp1 = g_ascii_strdown (key, -1);
+        tmp2 = g_ascii_strdown (val, -1);
+        gst_structure_set (s, tmp1, G_TYPE_STRING, tmp2, NULL);
+        g_free (tmp1);
+        g_free (tmp2);
       }
       g_strfreev (pairs);
     }

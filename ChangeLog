@@ -1,5 +1,12 @@
 2007-01-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_media_to_caps),
+	(gst_rtspsrc_activate_streams):
+	Convert SDP fields to upper/lowercase following the rules in the SDP to
+	caps document. 
+
+2007-01-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/README:
 	* gst/rtp/gstrtpilbcdepay.c:
 	* gst/rtp/gstrtpilbcpay.c:
