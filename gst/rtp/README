@@ -13,6 +13,7 @@ The following fields can or must (*) be specified in the structure:
 
  * media: (String) [ "audio", "video", "application", "data", "control" ]
      Defined in RFC 2327 in the SDP media announcement field.
+     Converted to lower case.
 
  * payload: (int) [0, 127]
      For audio and video, these will normally be a media payload type as 
@@ -34,14 +35,16 @@ The following fields can or must (*) be specified in the structure:
 
    encoding-name: (String) ANY
      typically second part of the mime type. ex. MP4V-ES. only required if
-     payload type >= 96
+     payload type >= 96. Converted to upper case.
 
    encoding-params: (String) ANY
      extra encoding parameters (as in the SDP a=rtpmap: field). only required
      if different from the default of the encoding-name.
+     Converted to lower-case.
      
    Optional parameters as key/value pairs, media type specific. The value type
-   should be of type G_TYPE_STRING.
+   should be of type G_TYPE_STRING. The key and value are converted to lower-case.
+   A parameter with no value is converted to <param>=1.
 
  Example:
 
@@ -137,10 +140,10 @@ Some gst-launch lines:
     ssrc=(guint)1162703703, clock-base=(guint)816135835, seqnum-base=(guint)9294,
     profile-level-id=(string)3, config=(string)000001b003000001b50900000100000001200086c5d4c307d314043c1463000001b25876694430303334
     /pipeline0/udpsink1.sink: caps = application/x-rtp, media=(string)audio,
-    payload=(int)96, clock-rate=(int)44100, encoding-name=(string)mpeg4-generic,
+    payload=(int)96, clock-rate=(int)44100, encoding-name=(string)MPEG4-GENERIC,
     ssrc=(guint)3246149898, clock-base=(guint)4134514058, seqnum-base=(guint)57633,
     encoding-params=(string)2, streamtype=(string)5, profile-level-id=(string)1,
-    mode=(string)AAC-hbr, config=(string)1210, sizelength=(string)13,
+    mode=(string)aac-hbr, config=(string)1210, sizelength=(string)13,
     indexlength=(string)3, indexdeltalength=(string)3
     ....
 
@@ -153,9 +156,9 @@ Some gst-launch lines:
       config=(string)000001b003000001b50900000100000001200086c5d4c307d314043c1463000001b25876694430303334"
       ! rtpmp4vdepay ! ffdec_mpeg4 ! xvimagesink sync=false 
      udpsrc port=5002 caps="application/x-rtp, media=(string)audio, payload=(int)96,
-      clock-rate=(int)44100, encoding-name=(string)mpeg4-generic, ssrc=(guint)3246149898,
+      clock-rate=(int)44100, encoding-name=(string)MPEG4-GENERIC, ssrc=(guint)3246149898,
       clock-base=(guint)4134514058, seqnum-base=(guint)57633, encoding-params=(string)2,
-      streamtype=(string)5, profile-level-id=(string)1, mode=(string)AAC-hbr,
+      streamtype=(string)5, profile-level-id=(string)1, mode=(string)aac-hbr,
       config=(string)1210, sizelength=(string)13, indexlength=(string)3,
       indexdeltalength=(string)3" 
       ! rtpmp4gdepay ! faad ! alsasink sync=false

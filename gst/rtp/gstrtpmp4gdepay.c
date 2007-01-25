@@ -65,12 +65,12 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "media = (string) { \"video\", \"audio\", \"application\" }, "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) [1, MAX ], "
-        "encoding-name = (string) \"mpeg4-generic\", "
+        "encoding-name = (string) \"MPEG4-GENERIC\", "
         /* required string params */
         "streamtype = (string) { \"4\", \"5\" }, "      /* 4 = video, 5 = audio */
         /* "profile-level-id = (string) [1,MAX], " */
         /* "config = (string) [1,MAX]" */
-        "mode = (string) { \"generic\", \"CELP-cbr\", \"CELP-vbr\", \"AAC-lbr\", \"AAC-hbr\" } "
+        "mode = (string) { \"generic\", \"celp-cbr\", \"celp-vbr\", \"aac-lbr\", \"aac-hbr\" } "
         /* Optional general parameters */
         /* "objecttype = (string) [1,MAX], " */
         /* "constantsize = (string) [1,MAX], " *//* constant size of each AU */

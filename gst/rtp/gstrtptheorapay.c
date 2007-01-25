@@ -50,7 +50,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"theora\""
+        "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"THEORA\""
         /* All required parameters
          *
          * "sampling = (string) { "YCbCr-4:2:0", "YCbCr-4:2:2", "YCbCr-4:4:4" } "

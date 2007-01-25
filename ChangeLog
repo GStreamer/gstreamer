@@ -1,5 +1,23 @@
 2007-01-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/README:
+	* gst/rtp/gstrtpilbcdepay.c:
+	* gst/rtp/gstrtpilbcpay.c:
+	* gst/rtp/gstrtpmp4gdepay.c:
+	* gst/rtp/gstrtpmp4gpay.c:
+	* gst/rtp/gstrtpspeexdepay.c:
+	* gst/rtp/gstrtpspeexpay.c:
+	* gst/rtp/gstrtpsv3vdepay.c:
+	* gst/rtp/gstrtptheoradepay.c:
+	* gst/rtp/gstrtptheorapay.c:
+	* gst/rtp/gstrtpvorbisdepay.c:
+	* gst/rtp/gstrtpvorbispay.c:
+	Fix case of encoding-name and key/value pairs to match the document.
+	This is to make interoperation with SDP case-insensitive as required by
+	the relevant RFCs.
+
+2007-01-25  Wim Taymans  <wim@fluendo.com>
+
 	* configure.ac:
 	Bump required -core/-base to CVS
 

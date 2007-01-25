@@ -50,7 +50,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 8000, "
-        "encoding-name = (string) \"iLBC\", " "mode = (int) {20, 30}")
+        "encoding-name = (string) \"ILBC\", " "mode = (int) {20, 30}")
     );
 
 static gboolean gst_rtpilbcpay_setcaps (GstBaseRTPPayload * payload,

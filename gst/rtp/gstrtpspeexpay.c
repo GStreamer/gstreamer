@@ -49,7 +49,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate =  (int) 8000, "
-        "encoding-name = (string) \"speex\", "
+        "encoding-name = (string) \"SPEEX\", "
         "encoding-params = (string) \"1\"")
     );
 

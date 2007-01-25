@@ -56,7 +56,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"theora\""
+        "clock-rate = (int) [1, MAX ], " "encoding-name = (string) \"THEORA\""
         /* All required parameters 
          *
          * "encoding-params = (string) <num channels>"
