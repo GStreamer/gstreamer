@@ -943,7 +943,7 @@ gst_file_src_start (GstBaseSrc * basesrc)
   {
     /* If not in mmap mode, we need to check if the underlying file is
      * seekable. */
-    off_t res = lseek (src->fd, 0, SEEK_CUR);
+    off_t res = lseek (src->fd, 0, SEEK_END);
 
     if (res < 0) {
       GST_LOG_OBJECT (src, "disabling seeking, not in mmap mode and lseek "
@@ -952,6 +952,7 @@ gst_file_src_start (GstBaseSrc * basesrc)
     } else {
       src->seekable = TRUE;
     }
+    lseek (src->fd, 0, SEEK_SET);
   }
 
   /* We can only really do seeking on regular files - for other file types, we

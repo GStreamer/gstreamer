@@ -1,3 +1,13 @@
+2007-01-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Jindrich Makovicka <jindrich.makovick at itonis dot tv>
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_start):
+	If not using mmap'ed files try to seek to the end instead of the
+	start to determine whether we can seek at all. This fixes the case
+	of 2GB+ files over NFS, where seeks in the first 2GB can succeed but
+	seeks for everything afterwards fail. Fixes #400656
+
 2007-01-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstcaps.c: (_gst_caps_free), (gst_static_caps_get):
