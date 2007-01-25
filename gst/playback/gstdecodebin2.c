@@ -54,6 +54,7 @@ typedef struct _GstDecodeBin GstDecodeBin;
 typedef struct _GstDecodeBinClass GstDecodeBinClass;
 
 #define GST_TYPE_DECODE_BIN             (gst_decode_bin_get_type())
+#define GST_DECODE_BIN_CAST(obj)        ((GstDecodeBin*)(obj))
 #define GST_DECODE_BIN(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DECODE_BIN,GstDecodeBin))
 #define GST_DECODE_BIN_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DECODE_BIN,GstDecodeBinClass))
 #define GST_IS_DECODE_BIN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DECODE_BIN))
@@ -146,7 +147,7 @@ static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
     GST_LOG_OBJECT (dbin,						\
 		    "locking from thread %p",				\
 		    g_thread_self ());					\
-    g_mutex_lock (dbin->lock);						\
+    g_mutex_lock (GST_DECODE_BIN_CAST(dbin)->lock);			\
     GST_LOG_OBJECT (dbin,						\
 		    "locked from thread %p",				\
 		    g_thread_self ());					\
@@ -156,7 +157,7 @@ static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
     GST_LOG_OBJECT (dbin,						\
 		    "unlocking from thread %p",				\
 		    g_thread_self ());					\
-    g_mutex_unlock (dbin->lock);					\
+    g_mutex_unlock (GST_DECODE_BIN_CAST(dbin)->lock);			\
 } G_STMT_END
 
 /* GstDecodeGroup
@@ -481,8 +482,6 @@ gst_decode_bin_dispose (GObject * object)
     gst_plugin_feature_list_free (decode_bin->factories);
   decode_bin->factories = NULL;
 
-  /* FILLME */
-
   if (decode_bin->activegroup) {
     gst_decode_group_free (decode_bin->activegroup);
     decode_bin->activegroup = NULL;
@@ -494,6 +493,8 @@ gst_decode_bin_dispose (GObject * object)
 
     gst_decode_group_free (group);
   }
+  g_list_free (decode_bin->groups);
+  decode_bin->groups = NULL;
 
   if (decode_bin->caps)
     gst_caps_unref (decode_bin->caps);

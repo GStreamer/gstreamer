@@ -1,3 +1,10 @@
+2007-01-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_dispose):
+	  Cast lock macro parameters to make sure we're actually accessing the
+	  lock member at the right class level. Free list itself in _dispose()
+	  as well and NULL it in case dispose gets called multiple times.
+
 2007-01-25  Edward Hervey  <edward@fluendo.com>
 
 	* gst/playback/gstdecodebin2.c:
