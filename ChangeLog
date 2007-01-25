@@ -1,3 +1,8 @@
+2007-01-25  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_read_cache):
+	In print statements, "%x" is for guint. Fixes build on macosx.
+
 2007-01-24  Edward Hervey  <edward@fluendo.com>
 
 	* plugins/elements/gstmultiqueue.c:
