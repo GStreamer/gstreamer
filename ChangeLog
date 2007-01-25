@@ -1,3 +1,8 @@
+2007-01-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c: (remove_source):
+	Don't try to disconnect a signal from a finalized object.
+
 2007-01-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstdecodebin2.c: (gst_decode_bin_dispose):
