@@ -1,5 +1,11 @@
 2007-01-26  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/pwg/building-testapp.xml:
+	  Add some audioconverts and audioresample to the pipeline, and some
+	  more comments and error handling.
+
+2007-01-26  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/manual/manual.xml:
 	* docs/pwg/pwg.xml:
 	  Fix typo (#400987).
