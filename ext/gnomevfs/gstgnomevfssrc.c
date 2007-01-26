@@ -854,14 +854,15 @@ open_failed:
     gst_gnome_vfs_src_pop_callbacks (src);
 
     if (res == GNOME_VFS_ERROR_NOT_FOUND ||
+        res == GNOME_VFS_ERROR_HOST_NOT_FOUND ||
         res == GNOME_VFS_ERROR_SERVICE_NOT_AVAILABLE) {
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
-          ("Could not open vfs file \"%s\" for reading: %s",
-              filename, gnome_vfs_result_to_string (res)));
+          ("Could not open vfs file \"%s\" for reading: %s (%d)",
+              filename, gnome_vfs_result_to_string (res), res));
     } else {
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
-          ("Could not open vfs file \"%s\" for reading: %s",
-              filename, gnome_vfs_result_to_string (res)));
+          ("Could not open vfs file \"%s\" for reading: %s (%d)",
+              filename, gnome_vfs_result_to_string (res), res));
     }
     g_free (filename);
     return FALSE;

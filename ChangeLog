@@ -1,3 +1,9 @@
+2007-01-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_start):
+	  Map a gnome-vfs HOST_NOT_FOUND error into a GStreamer NOT_FOUND
+	  error code as well.
+
 2007-01-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (remove_source):
