@@ -2,6 +2,8 @@
 ignore
    gst_segtrap_is_enabled
    gst_segtrap_set_enabled
+   gst_registry_fork_is_enabled
+   gst_registry_fork_set_enabled
    gst_ghost_pad_new_from_template
    gst_ghost_pad_new_no_target_from_template
    gst_object_set_control_rate

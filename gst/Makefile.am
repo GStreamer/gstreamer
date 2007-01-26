@@ -30,6 +30,7 @@ versioned_overrides = \
 	gst-0.10.7.ignore	\
 	gst-0.10.10.ignore	\
 	gst-0.10.11.ignore 	\
+	gst-0.10.12.ignore 	\
 	gst-pb-0.10.11.ignore
 
 INCLUDES = $(PYTHON_INCLUDES)

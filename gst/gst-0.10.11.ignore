@@ -5,4 +5,5 @@ ignore
    gst_base_sink_wait_preroll
    gst_base_src_wait_playing
    gst_tag_list_is_empty
+   gst_element_state_change_return_get_name
 %%

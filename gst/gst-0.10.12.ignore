@@ -1,0 +1,5 @@
+%%
+ignore
+   gst_update_registry
+   gst_adapter_copy
+%%

@@ -64,6 +64,25 @@
     '("gboolean" "enabled")
   )
 )
+
+(define-function registry_fork_is_enabled
+  (c-name "gst_registry_fork_is_enabled")
+  (return-type "gboolean")
+)
+
+(define-function registry_fork_set_enabled
+  (c-name "gst_registry_fork_set_enabled")
+  (return-type "none")
+  (parameters
+    '("gboolean" "enabled")
+  )
+)
+
+(define-function update_registry
+  (c-name "gst_update_registry")
+  (return-type "gboolean")
+)
+
 (define-function get_gst_version
   (c-name "gst_get_gst_version")
   (return-type "none")

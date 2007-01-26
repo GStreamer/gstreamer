@@ -1,3 +1,21 @@
+2007-01-26  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gstversion.override.in:
+	* gst/gst-0.10.12.ignore:
+	Add ignore file for 0.10.12 API additions
+	* gst/gst.defs:
+	* gst/base.defs:
+	* gst/gst-types.defs:
+	Add new API definitions
+	* gst/gst-0.10.10.ignore:
+	* gst/gst-0.10.11.ignore:
+	Fixup ignore files.
+	* testsuite/test_segment.py:
+	The update return value is uncertain and will soon be deprecated, don't
+	check against it anymore.
+
 2007-01-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* examples/mixer.py:

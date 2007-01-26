@@ -39,7 +39,8 @@ class SegmentTest(TestCase):
                                   gst.SEEK_TYPE_NONE, 200,
                                   gst.SEEK_TYPE_CUR, -100)
 
-        self.assertEquals(update, False)
+        # the update flag is deprecated, we cannot check for proper behaviour.
+        #self.assertEquals(update, False)
         self.assertEquals(segment.start, 100)
         self.assertEquals(segment.stop, -1)
 

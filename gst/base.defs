@@ -87,6 +87,17 @@
   )
 )
 
+(define-method copy
+  (of-object "GstAdapter")
+  (c-name "gst_adapter_copy")
+  (return-type "none")
+  (parameters
+    '("guint8*" "dest")
+    '("guint" "offset")
+    '("guint" "size")
+  )
+)
+
 (define-method flush
   (of-object "GstAdapter")
   (c-name "gst_adapter_flush")

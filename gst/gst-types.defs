@@ -534,6 +534,7 @@
     '("qos" "GST_EVENT_QOS")
     '("seek" "GST_EVENT_SEEK")
     '("navigation" "GST_EVENT_NAVIGATION")
+    '("set-latency" "GST_EVENT_SET_LATENCY")
     '("custom-upstream" "GST_EVENT_CUSTOM_UPSTREAM")
     '("custom-downstream" "GST_EVENT_CUSTOM_DOWNSTREAM")
     '("custom-downstream-oob" "GST_EVENT_CUSTOM_DOWNSTREAM_OOB")
