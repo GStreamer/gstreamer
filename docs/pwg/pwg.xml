@@ -60,7 +60,7 @@
     <title>Introduction</title>
     <partintro>
       <para><!-- synchronize with AppDevMan -->
-        &GStreamer; is an exremely powerful and versatile framework for creating
+        &GStreamer; is an extremely powerful and versatile framework for creating
         streaming media applications. Many of the virtues of the &GStreamer;
         framework come from its modularity: &GStreamer; can seamlessly
         incorporate new plugin modules. But because modularity and power often
