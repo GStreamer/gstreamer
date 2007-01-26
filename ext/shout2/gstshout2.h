@@ -54,7 +54,8 @@ struct _GstShout2send {
   gchar *url;
   gboolean connected;
   gchar *songmetadata;
-
+  gchar *songartist;
+  gchar *songtitle;
   guint16 audio_format;
 
   GstTagList* tags;

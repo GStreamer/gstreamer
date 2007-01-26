@@ -256,14 +256,21 @@ gst_shout2send_init (GstShout2send * shout2send)
   shout2send->audio_format = SHOUT_FORMAT_VORBIS;
   shout2send->connected = FALSE;
   shout2send->songmetadata = NULL;
+  shout2send->songartist = NULL;
+  shout2send->songtitle = NULL;
+
 }
 
 static void
 set_shout_metadata (const GstTagList * list, const gchar * tag,
     gpointer user_data)
 {
-  char **shout_metadata = (char **) user_data;
-  gchar *value, *temp;
+  GstShout2send *shout2send = (GstShout2send *) user_data;
+  char **shout_metadata = &(shout2send->songmetadata);
+  char **song_artist = &(shout2send->songartist);
+  char **song_title = &(shout2send->songtitle);
+
+  gchar *value;
 
   GST_DEBUG ("tag: %s being added", tag);
   if (strcmp (tag, GST_TAG_ARTIST) == 0) {
@@ -272,15 +279,11 @@ set_shout_metadata (const GstTagList * list, const gchar * tag,
         GST_DEBUG ("Error reading \"%s\" tag value", tag);
         return;
       }
-      /* shout_metadata should be NULL if title is after artist in  list */
-      if (*shout_metadata == NULL) {
-        *shout_metadata = g_strdup (value);
-      } else {
-        temp = g_strdup_printf ("%s - %s", value, *shout_metadata);
-        g_free (*shout_metadata);
-        *shout_metadata = temp;
-      }
 
+      if (*song_artist != NULL)
+        g_free (*song_artist);
+
+      *song_artist = g_strdup (value);
     }
   } else if (strcmp (tag, GST_TAG_TITLE) == 0) {
     if (gst_tag_get_type (tag) == G_TYPE_STRING) {
@@ -288,16 +291,28 @@ set_shout_metadata (const GstTagList * list, const gchar * tag,
         GST_DEBUG ("Error reading \"%s\" tag value", tag);
         return;
       }
-      /* shout_metadata should be NULL if title is before artist in  list */
-      if (*shout_metadata == NULL) {
-        *shout_metadata = g_strdup (value);
-      } else {
-        temp = g_strdup_printf ("%s - %s", *shout_metadata, value);
-        g_free (*shout_metadata);
-        *shout_metadata = temp;
-      }
+
+      if (*song_title != NULL)
+        g_free (*song_title);
+
+      *song_title = g_strdup (value);
     }
   }
+
+  if (*shout_metadata != NULL)
+    g_free (*shout_metadata);
+
+
+  if (*song_title && *song_artist) {
+    *shout_metadata = g_strdup_printf ("%s - %s", *song_artist, *song_title);
+  } else if (*song_title && *song_artist == NULL) {
+    *shout_metadata = g_strdup_printf ("Unknown - %s", *song_title);
+  } else if (*song_title == NULL && *song_artist) {
+    *shout_metadata = g_strdup_printf ("%s - Unknown", *song_artist);
+  } else {
+    *shout_metadata = g_strdup_printf ("Unknown - Unknown");
+  }
+
   GST_LOG ("shout metadata is now: %s", *shout_metadata);
 }
 
@@ -355,8 +370,8 @@ gst_shout2send_event (GstBaseSink * sink, GstEvent * event)
             list,
             gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (shout2send)));
         /* lets get the artist and song tags */
-        gst_tag_list_foreach ((GstTagList *) shout2send->tags,
-            set_shout_metadata, &shout2send->songmetadata);
+        gst_tag_list_foreach ((GstTagList *) list,
+            set_shout_metadata, shout2send);
         if (shout2send->songmetadata && shout2send->connected) {
           shout_metadata_t *pmetadata;
 

@@ -1,3 +1,12 @@
+2007-01-26  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: charles <charlesg3 at gmail dot com>
+
+	* ext/shout2/gstshout2.c: (gst_shout2send_init),
+	(set_shout_metadata), (gst_shout2send_event):
+	* ext/shout2/gstshout2.h:
+	Properly handle tags in shout2send. Fixes #399825.
+
 2007-01-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_media_to_caps),
