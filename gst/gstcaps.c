@@ -456,6 +456,7 @@ gst_static_caps_get (GstStaticCaps * static_caps)
      * of the result caps to 0 so that other threads don't run away with the
      * caps while we are constructing it. */
     temp.type = GST_TYPE_CAPS;
+    temp.flags = 0;
     temp.structs = g_ptr_array_new ();
 
     /* initialize the caps to a refcount of 1 so the caps can be writable for
