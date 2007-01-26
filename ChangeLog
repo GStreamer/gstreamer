@@ -1,3 +1,11 @@
+2007-01-26  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Mark Nauwelaerts <manauw@skynet.be>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_register):
+	register yuv4mpegpipe demuxer with MARGINAL rank to
+	make it also typically available for auto-plugging. Fixes #399108.
+
 2007-01-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Martin Szulecki  <gnomebugzilla at sukimashita com>

@@ -1506,7 +1506,9 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "ea") ||
         !strcmp (in_plugin->name, "daud") ||
         !strcmp (in_plugin->name, "avs") ||
-        !strcmp (in_plugin->name, "aiff") || !strcmp (in_plugin->name, "4xm"))
+        !strcmp (in_plugin->name, "aiff") || 
+	!strcmp (in_plugin->name, "4xm") || 
+	!strcmp(in_plugin->name, "yuv4mpegpipe"))
       rank = GST_RANK_MARGINAL;
     else
       rank = GST_RANK_NONE;
