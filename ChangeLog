@@ -1,3 +1,19 @@
+2007-01-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_submit_buffer),
+	(gst_ogg_demux_get_data), (gst_ogg_demux_get_next_page),
+	(gst_ogg_demux_get_prev_page), (gst_ogg_demux_do_seek),
+	(gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_bisect_forward_serialno),
+	(gst_ogg_demux_read_chain), (gst_ogg_demux_read_end_chain),
+	(gst_ogg_demux_find_chains), (gst_ogg_demux_handle_page),
+	(gst_ogg_demux_chain), (gst_ogg_demux_combine_flows),
+	(gst_ogg_demux_loop_reverse), (gst_ogg_demux_loop):
+	* ext/ogg/gstoggdemux.h:
+	Properly propagate streaming errors when we are scanning the file for
+	chains so that we don't crash when shut down. Might fix some crashers
+	when quickly switching oggs in RB such as #332503 and #378436.
+
 2007-01-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_start):

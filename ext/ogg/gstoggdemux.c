@@ -59,13 +59,7 @@ GST_ELEMENT_DETAILS ("Ogg demuxer",
 #define SKELETON_FISHEAD_SIZE 64
 #define SKELETON_FISBONE_MIN_SIZE 52
 
-enum
-{
-  OV_EREAD = -1,
-  OV_EFAULT = -2,
-  OV_FALSE = -3,
-  OV_EOF = -4,
-};
+#define GST_FLOW_LIMIT GST_FLOW_CUSTOM_ERROR
 
 GST_DEBUG_CATEGORY_STATIC (gst_ogg_demux_debug);
 GST_DEBUG_CATEGORY_STATIC (gst_ogg_demux_setup_debug);
@@ -1398,8 +1392,9 @@ static void gst_ogg_demux_finalize (GObject * object);
 
 //static const GstEventMask *gst_ogg_demux_get_event_masks (GstPad * pad);
 //static const GstQueryType *gst_ogg_demux_get_query_types (GstPad * pad);
-static GstOggChain *gst_ogg_demux_read_chain (GstOggDemux * ogg);
-static gint gst_ogg_demux_read_end_chain (GstOggDemux * ogg,
+static GstFlowReturn gst_ogg_demux_read_chain (GstOggDemux * ogg,
+    GstOggChain ** chain);
+static GstFlowReturn gst_ogg_demux_read_end_chain (GstOggDemux * ogg,
     GstOggChain * chain);
 
 static gboolean gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event);
@@ -1512,24 +1507,49 @@ gst_ogg_demux_sink_event (GstPad * pad, GstEvent * event)
  *
  * Returns the number of bytes submited.
  */
-static gint
+static GstFlowReturn
 gst_ogg_demux_submit_buffer (GstOggDemux * ogg, GstBuffer * buffer)
 {
   gint size;
   guint8 *data;
   gchar *oggbuffer;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
 
   GST_DEBUG_OBJECT (ogg, "submitting %u bytes", size);
+  if (G_UNLIKELY (size == 0))
+    goto done;
 
   oggbuffer = ogg_sync_buffer (&ogg->sync, size);
+  if (G_UNLIKELY (oggbuffer == NULL))
+    goto no_buffer;
+
   memcpy (oggbuffer, data, size);
-  ogg_sync_wrote (&ogg->sync, size);
+  if (G_UNLIKELY (ogg_sync_wrote (&ogg->sync, size) < 0))
+    goto write_failed;
+
+done:
   gst_buffer_unref (buffer);
 
-  return size;
+  return ret;
+
+  /* ERRORS */
+no_buffer:
+  {
+    GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
+        (NULL), ("failed to get ogg sync buffer"));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+write_failed:
+  {
+    GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
+        (NULL), ("failed to write %d bytes to the sync buffer", size));
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 }
 
 /* in random access mode this code updates the current read position
@@ -1547,15 +1567,12 @@ gst_ogg_demux_seek (GstOggDemux * ogg, gint64 offset)
 
 /* read more data from the current offset and submit to
  * the ogg sync layer.
- *
- * Return number of bytes written or 0 on EOS or -1 on error.
  */
-static gint
+static GstFlowReturn
 gst_ogg_demux_get_data (GstOggDemux * ogg)
 {
   GstFlowReturn ret;
   GstBuffer *buffer;
-  gint size;
 
   GST_LOG_OBJECT (ogg, "get data %" G_GINT64_FORMAT " %" G_GINT64_FORMAT,
       ogg->offset, ogg->length);
@@ -1566,35 +1583,45 @@ gst_ogg_demux_get_data (GstOggDemux * ogg)
   if (ret != GST_FLOW_OK)
     goto error;
 
-  size = gst_ogg_demux_submit_buffer (ogg, buffer);
+  ret = gst_ogg_demux_submit_buffer (ogg, buffer);
 
-  return size;
+  return ret;
 
   /* ERROR */
 eos:
   {
     GST_LOG_OBJECT (ogg, "reached EOS");
-    return 0;
+    return GST_FLOW_UNEXPECTED;
   }
 error:
   {
     GST_WARNING_OBJECT (ogg, "got %d (%s) from pull range", ret,
         gst_flow_get_name (ret));
-    ogg->chain_error = ret;
-    return -1;
+    return ret;
   }
 }
 
 /* Read the next page from the current offset.
  * boundary: number of bytes ahead we allow looking for;
  * -1 if no boundary
- * returns the offset the next page starts at, or OV_FALSE if we couldn't
- * find a new page within the boundary
+ *
+ * @offset will contain the offset the next page starts at when this function
+ * returns GST_FLOW_OK.
+ *
+ * GST_FLOW_UNEXPECTED is returned on EOS.
+ *
+ * GST_FLOW_LIMIT is returned when we did not find a page before the
+ * boundary. If @boundary is -1, this is never returned.
+ *
+ * Any other error returned while retrieving data from the peer is returned as
+ * is.
  */
-static gint64
-gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary)
+static GstFlowReturn
+gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary,
+    gint64 * offset)
 {
   gint64 end_offset = 0;
+  GstFlowReturn ret;
 
   GST_LOG_OBJECT (ogg,
       "get next page, current offset %" G_GINT64_FORMAT ", bytes boundary %"
@@ -1606,37 +1633,34 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary)
   while (TRUE) {
     glong more;
 
-    if (boundary > 0 && ogg->offset >= end_offset) {
-      GST_LOG_OBJECT (ogg,
-          "offset %" G_GINT64_FORMAT " >= end_offset %" G_GINT64_FORMAT,
-          ogg->offset, end_offset);
-      return OV_FALSE;
-    }
+    if (boundary > 0 && ogg->offset >= end_offset)
+      goto boundary_reached;
 
     more = ogg_sync_pageseek (&ogg->sync, og);
 
     GST_LOG_OBJECT (ogg, "pageseek gave %ld", more);
 
     if (more < 0) {
-      GST_LOG_OBJECT (ogg, "skipped %ld bytes", more);
       /* skipped n bytes */
+      GST_LOG_OBJECT (ogg, "skipped %ld bytes", more);
       ogg->offset -= more;
     } else if (more == 0) {
-      gint ret;
-
-      /* send more paramedics */
+      /* we need more data */
       if (boundary == 0)
-        return OV_FALSE;
+        goto boundary_reached;
 
+      GST_LOG_OBJECT (ogg, "need more data");
       ret = gst_ogg_demux_get_data (ogg);
-      if (ret == 0)
-        return OV_EOF;
-      if (ret < 0)
-        return OV_EREAD;
+      if (ret != GST_FLOW_OK)
+        break;
     } else {
+      gint64 res_offset = ogg->offset;
+
       /* got a page.  Return the offset at the page beginning,
          advance the internal offset past the page end */
-      gint64 ret = ogg->offset;
+      if (offset)
+        *offset = res_offset;
+      ret = GST_FLOW_OK;
 
       ogg->offset += more;
       /* need to reset as we do not keep track of the bytes we
@@ -1645,54 +1669,77 @@ gst_ogg_demux_get_next_page (GstOggDemux * ogg, ogg_page * og, gint64 boundary)
 
       GST_LOG_OBJECT (ogg,
           "got page at %" G_GINT64_FORMAT ", serial %08x, end at %"
-          G_GINT64_FORMAT ", granule %" G_GINT64_FORMAT, ret,
+          G_GINT64_FORMAT ", granule %" G_GINT64_FORMAT, res_offset,
           ogg_page_serialno (og), ogg->offset, ogg_page_granulepos (og));
-
-      return ret;
+      break;
     }
+  }
+  GST_LOG_OBJECT (ogg, "returning %d", ret);
+
+  return ret;
+
+  /* ERRORS */
+boundary_reached:
+  {
+    GST_LOG_OBJECT (ogg,
+        "offset %" G_GINT64_FORMAT " >= end_offset %" G_GINT64_FORMAT,
+        ogg->offset, end_offset);
+    return GST_FLOW_LIMIT;
   }
 }
 
 /* from the current offset, find the previous page, seeking backwards
- * until we find the page. */
-static gint64
-gst_ogg_demux_get_prev_page (GstOggDemux * ogg, ogg_page * og)
+ * until we find the page. 
+ */
+static GstFlowReturn
+gst_ogg_demux_get_prev_page (GstOggDemux * ogg, ogg_page * og, gint64 * offset)
 {
+  GstFlowReturn ret;
   gint64 begin = ogg->offset;
   gint64 end = begin;
-  gint64 ret;
-  gint64 offset = -1;
+  gint64 cur_offset = -1;
 
-  while (offset == -1) {
+  while (cur_offset == -1) {
     begin -= CHUNKSIZE;
     if (begin < 0)
       begin = 0;
 
+    /* seek CHUNKSIZE back */
     gst_ogg_demux_seek (ogg, begin);
 
     /* now continue reading until we run out of data, if we find a page
      * start, we save it. It might not be the final page as there could be
      * another page after this one. */
     while (ogg->offset < end) {
-      ret = gst_ogg_demux_get_next_page (ogg, og, end - ogg->offset);
-      if (ret == OV_EREAD)
-        return OV_EREAD;
-      if (ret < 0) {
+      gint64 new_offset;
+
+      ret =
+          gst_ogg_demux_get_next_page (ogg, og, end - ogg->offset, &new_offset);
+      /* we hit the upper limit, offset contains the last page start */
+      if (ret == GST_FLOW_LIMIT)
         break;
-      } else {
-        offset = ret;
-      }
+      /* something went wrong */
+      if (ret == GST_FLOW_UNEXPECTED)
+        new_offset = 0;
+      else if (ret != GST_FLOW_OK)
+        return ret;
+
+      /* offset is next page start */
+      cur_offset = new_offset;
     }
   }
 
   /* we have the offset.  Actually snork and hold the page now */
-  gst_ogg_demux_seek (ogg, offset);
-  ret = gst_ogg_demux_get_next_page (ogg, og, -1);
-  if (ret < 0)
+  gst_ogg_demux_seek (ogg, cur_offset);
+  ret = gst_ogg_demux_get_next_page (ogg, og, -1, NULL);
+  if (ret != GST_FLOW_OK)
     /* this shouldn't be possible */
-    return OV_EFAULT;
+    return ret;
 
-  return offset;
+  if (offset)
+    *offset = cur_offset;
+
+  return ret;
 }
 
 static gboolean
@@ -1815,6 +1862,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
   gint64 best;
   gint64 total;
   gint64 result = 0;
+  GstFlowReturn ret;
   gint i;
 
   /* first find the chain to search in */
@@ -1878,14 +1926,12 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
           "after seek, bisect %" G_GINT64_FORMAT ", begin %" G_GINT64_FORMAT
           ", end %" G_GINT64_FORMAT, bisect, begin, end);
 
-      result = gst_ogg_demux_get_next_page (ogg, &og, end - ogg->offset);
+      ret = gst_ogg_demux_get_next_page (ogg, &og, end - ogg->offset, &result);
       GST_LOG_OBJECT (ogg, "looking for next page returned %" G_GINT64_FORMAT,
           result);
-      if (result == OV_EREAD) {
-        goto seek_error;
-      }
 
-      if (result < 0) {
+      if (ret == GST_FLOW_LIMIT) {
+        /* we hit the upper limit, go back a bit */
         if (bisect <= begin + 1) {
           end = begin;          /* found it */
         } else {
@@ -1898,7 +1944,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
 
           gst_ogg_demux_seek (ogg, bisect);
         }
-      } else {
+      } else if (ret == GST_FLOW_OK) {
         /* found offset of next ogg page */
         gint64 granulepos;
         GstClockTime granuletime;
@@ -1962,7 +2008,8 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, gint64 position, gboolean accurate,
             }
           }
         }
-      }
+      } else
+        goto seek_error;
     }
   }
 
@@ -2096,6 +2143,9 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
     chain = ogg->current_chain;
   }
 
+  if (!chain)
+    goto no_chain;
+
   /* now we have a new position, prepare for streaming again */
   {
     GstEvent *event;
@@ -2164,6 +2214,12 @@ error:
     GST_DEBUG_OBJECT (ogg, "seek failed");
     return FALSE;
   }
+no_chain:
+  {
+    GST_DEBUG_OBJECT (ogg, "no chain to seek in");
+    GST_PAD_STREAM_UNLOCK (ogg->sinkpad);
+    return FALSE;
+  }
 }
 
 /* finds each bitstream link one at a time using a bisection search
@@ -2171,14 +2227,15 @@ error:
  * Recurses for each link so it can alloc the link storage after
  * finding them all, then unroll and fill the cache at the same time 
  */
-static gint
+static GstFlowReturn
 gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
     gint64 begin, gint64 searched, gint64 end, GstOggChain * chain, glong m)
 {
   gint64 endsearched = end;
   gint64 next = end;
   ogg_page og;
-  gint64 ret;
+  GstFlowReturn ret;
+  gint64 offset;
   GstOggChain *nextchain;
 
   GST_LOG_OBJECT (ogg,
@@ -2197,48 +2254,51 @@ gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
     }
 
     gst_ogg_demux_seek (ogg, bisect);
-    ret = gst_ogg_demux_get_next_page (ogg, &og, -1);
-    if (ret == OV_EREAD) {
-      GST_LOG_OBJECT (ogg, "OV_EREAD");
-      return OV_EREAD;
-    }
+    ret = gst_ogg_demux_get_next_page (ogg, &og, -1, &offset);
 
-    if (ret < 0) {
+    if (ret == GST_FLOW_UNEXPECTED) {
       endsearched = bisect;
-    } else {
+    } else if (ret == GST_FLOW_OK) {
       glong serial = ogg_page_serialno (&og);
 
       if (!gst_ogg_chain_has_stream (chain, serial)) {
         endsearched = bisect;
-        next = ret;
+        next = offset;
       } else {
-        searched = ret + og.header_len + og.body_len;
+        searched = offset + og.header_len + og.body_len;
       }
-    }
+    } else
+      return ret;
   }
 
   GST_LOG_OBJECT (ogg, "current chain ends at %" G_GINT64_FORMAT, searched);
 
   chain->end_offset = searched;
-  gst_ogg_demux_read_end_chain (ogg, chain);
+  ret = gst_ogg_demux_read_end_chain (ogg, chain);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   GST_LOG_OBJECT (ogg, "found begin at %" G_GINT64_FORMAT, next);
 
   gst_ogg_demux_seek (ogg, next);
-  nextchain = gst_ogg_demux_read_chain (ogg);
+  ret = gst_ogg_demux_read_chain (ogg, &nextchain);
+  if (ret == GST_FLOW_UNEXPECTED) {
+    nextchain = NULL;
+    ret = GST_FLOW_OK;
+    GST_LOG_OBJECT (ogg, "no next chain");
+  } else if (ret != GST_FLOW_OK)
+    goto done;
 
   if (searched < end && nextchain != NULL) {
     ret = gst_ogg_demux_bisect_forward_serialno (ogg, next, ogg->offset,
         end, nextchain, m + 1);
-
-    if (ret == OV_EREAD) {
-      GST_LOG_OBJECT (ogg, "OV_READ");
-      return OV_EREAD;
-    }
+    if (ret != GST_FLOW_OK)
+      goto done;
   }
   g_array_insert_val (ogg->chains, 0, chain);
 
-  return 0;
+done:
+  return ret;
 }
 
 /* read a chain from the ogg file. This code will
@@ -2250,9 +2310,10 @@ gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
  * decoded the first buffer, we know the timestamp of the first
  * page in the chain.
  */
-static GstOggChain *
-gst_ogg_demux_read_chain (GstOggDemux * ogg)
+static GstFlowReturn
+gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
 {
+  GstFlowReturn ret;
   GstOggChain *chain = NULL;
   gint64 offset = ogg->offset;
   ogg_page op;
@@ -2266,20 +2327,16 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
   while (TRUE) {
     GstOggPad *pad;
     glong serial;
-    gint ret;
 
-    ret = gst_ogg_demux_get_next_page (ogg, &op, -1);
-    if (ret < 0) {
+    ret = gst_ogg_demux_get_next_page (ogg, &op, -1, NULL);
+    if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (ogg, "problem reading BOS page: ret=%d", ret);
-      if (chain) {
-        gst_ogg_chain_free (chain);
-        chain = NULL;
-      }
       break;
     }
-
-    if (!ogg_page_bos (&op))
+    if (!ogg_page_bos (&op)) {
+      GST_WARNING_OBJECT (ogg, "page is not BOS page");
       break;
+    }
 
     if (chain == NULL) {
       chain = gst_ogg_chain_new (ogg);
@@ -2296,10 +2353,15 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
     pad = gst_ogg_chain_new_stream (chain, serial);
     gst_ogg_pad_submit_page (pad, &op);
   }
-  if (chain == NULL) {
+
+  if (ret != GST_FLOW_OK || chain == NULL) {
     GST_WARNING_OBJECT (ogg, "failed to read chain");
-    return NULL;
+    if (chain) {
+      gst_ogg_chain_free (chain);
+    }
+    return ret;
   }
+
   chain->have_bos = TRUE;
   GST_LOG_OBJECT (ogg, "read bos pages, init decoder now");
 
@@ -2317,7 +2379,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
   while (!done) {
     glong serial;
     gboolean known_serial = FALSE;
-    gint ret;
+    GstFlowReturn ret;
 
     serial = ogg_page_serialno (&op);
     done = TRUE;
@@ -2351,8 +2413,8 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
     }
 
     if (!done) {
-      ret = gst_ogg_demux_get_next_page (ogg, &op, -1);
-      if (ret < 0)
+      ret = gst_ogg_demux_get_next_page (ogg, &op, -1, NULL);
+      if (ret != GST_FLOW_OK)
         break;
     }
   }
@@ -2380,13 +2442,17 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg)
 
     pad->mode = GST_OGG_PAD_MODE_STREAMING;
   }
-  return chain;
+
+  if (res_chain)
+    *res_chain = chain;
+
+  return GST_FLOW_OK;
 }
 
 /* read the last pages from the ogg stream to get the final
  * page end_offsets.
  */
-static gint
+static GstFlowReturn
 gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
 {
   gint64 begin = chain->end_offset;
@@ -2394,7 +2460,7 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
   gint64 last_granule = -1;
   GstOggPad *last_pad = NULL;
   GstFormat target;
-  gint64 ret;
+  GstFlowReturn ret;
   gboolean done = FALSE;
   ogg_page og;
   gint i;
@@ -2410,29 +2476,28 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
      * start, we save it. It might not be the final page as there could be
      * another page after this one. */
     while (ogg->offset < end) {
-      ret = gst_ogg_demux_get_next_page (ogg, &og, end - ogg->offset);
-      if (ret == OV_EREAD)
-        return OV_EREAD;
-      if (ret < 0) {
+      ret = gst_ogg_demux_get_next_page (ogg, &og, end - ogg->offset, NULL);
+
+      if (ret == GST_FLOW_LIMIT)
         break;
-      } else {
-        for (i = 0; i < chain->streams->len; i++) {
-          GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
+      if (ret != GST_FLOW_OK)
+        return ret;
 
-          if (pad->is_skeleton)
-            continue;
+      for (i = 0; i < chain->streams->len; i++) {
+        GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
-          if (pad->serialno == ogg_page_serialno (&og)) {
-            gint64 granulepos = ogg_page_granulepos (&og);
+        if (pad->is_skeleton)
+          continue;
 
-            if (last_granule < granulepos) {
-              last_granule = granulepos;
-              last_pad = pad;
-            }
+        if (pad->serialno == ogg_page_serialno (&og)) {
+          gint64 granulepos = ogg_page_granulepos (&og);
 
-            done = TRUE;
-            break;
+          if (last_granule < granulepos) {
+            last_granule = granulepos;
+            last_pad = pad;
           }
+          done = TRUE;
+          break;
         }
       }
     }
@@ -2446,7 +2511,7 @@ gst_ogg_demux_read_end_chain (GstOggDemux * ogg, GstOggChain * chain)
     chain->segment_stop = GST_CLOCK_TIME_NONE;
   }
 
-  return 0;
+  return GST_FLOW_OK;
 }
 
 /* find a pad with a given serial number
@@ -2556,7 +2621,7 @@ gst_ogg_demux_collect_info (GstOggDemux * ogg)
  * last page of the ogg stream, if they match then the ogg file has
  * just one chain, else we do a binary search for all chains.
  */
-static gboolean
+static GstFlowReturn
 gst_ogg_demux_find_chains (GstOggDemux * ogg)
 {
   ogg_page og;
@@ -2565,6 +2630,7 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
   gboolean res;
   gulong serialno;
   GstOggChain *chain;
+  GstFlowReturn ret;
 
   /* get peer to figure out length */
   if ((peer = gst_pad_get_peer (ogg->sinkpad)) == NULL)
@@ -2582,49 +2648,65 @@ gst_ogg_demux_find_chains (GstOggDemux * ogg)
   /* read chain from offset 0, this is the first chain of the
    * ogg file. */
   gst_ogg_demux_seek (ogg, 0);
-  chain = gst_ogg_demux_read_chain (ogg);
-  if (chain == NULL)
+  ret = gst_ogg_demux_read_chain (ogg, &chain);
+  if (ret != GST_FLOW_OK)
     goto no_first_chain;
 
   /* read page from end offset, we use this page to check if its serial
    * number is contained in the first chain. If this is the case then
    * this ogg is not a chained ogg and we can skip the scanning. */
   gst_ogg_demux_seek (ogg, ogg->length);
-  gst_ogg_demux_get_prev_page (ogg, &og);
+  ret = gst_ogg_demux_get_prev_page (ogg, &og, NULL);
+  if (ret != GST_FLOW_OK)
+    goto no_last_page;
+
   serialno = ogg_page_serialno (&og);
 
   if (!gst_ogg_chain_has_stream (chain, serialno)) {
     /* the last page is not in the first stream, this means we should
      * find all the chains in this chained ogg. */
-    gst_ogg_demux_bisect_forward_serialno (ogg, 0, 0, ogg->length, chain, 0);
+    ret =
+        gst_ogg_demux_bisect_forward_serialno (ogg, 0, 0, ogg->length, chain,
+        0);
   } else {
     /* we still call this function here but with an empty range so that
      * we can reuse the setup code in this routine. */
-    gst_ogg_demux_bisect_forward_serialno (ogg, 0, ogg->length, ogg->length,
+    ret =
+        gst_ogg_demux_bisect_forward_serialno (ogg, 0, ogg->length, ogg->length,
         chain, 0);
   }
+  if (ret != GST_FLOW_OK)
+    goto done;
+
+  /* all fine, collect and print */
   gst_ogg_demux_collect_info (ogg);
 
   /* dump our chains and streams */
   gst_ogg_print (ogg);
 
-  return TRUE;
+done:
+  return ret;
 
   /*** error cases ***/
 no_peer:
   {
-    GST_DEBUG_OBJECT (ogg, "we don't have a peer");
-    return FALSE;
+    GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL), ("we don't have a peer"));
+    return GST_FLOW_NOT_LINKED;
   }
 no_length:
   {
-    GST_DEBUG_OBJECT (ogg, "can't get file length");
-    return FALSE;
+    GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL), ("can't get file length"));
+    return GST_FLOW_NOT_SUPPORTED;
   }
 no_first_chain:
   {
-    GST_DEBUG_OBJECT (ogg, "can't get first chain");
-    return FALSE;
+    GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL), ("can't get first chain"));
+    return GST_FLOW_ERROR;
+  }
+no_last_page:
+  {
+    GST_DEBUG_OBJECT (ogg, "can't get last page");
+    return ret;
   }
 }
 
@@ -2712,14 +2794,12 @@ unknown_chain:
   {
     GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
         (NULL), ("unknown ogg chain for serial %08x detected", serialno));
-    gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
     return GST_FLOW_ERROR;
   }
 unknown_pad:
   {
     GST_ELEMENT_ERROR (ogg, STREAM, DECODE,
         (NULL), ("unknown ogg pad for serial %08x detected", serialno));
-    gst_ogg_demux_send_event (ogg, gst_event_new_eos ());
     return GST_FLOW_ERROR;
   }
 }
@@ -2731,15 +2811,15 @@ static GstFlowReturn
 gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstOggDemux *ogg;
-  gint ret = -1;
+  gint ret;
   GstFlowReturn result = GST_FLOW_OK;
 
   ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (pad));
 
   GST_DEBUG_OBJECT (ogg, "chain");
-  gst_ogg_demux_submit_buffer (ogg, buffer);
+  result = gst_ogg_demux_submit_buffer (ogg, buffer);
 
-  while (ret != 0 && result == GST_FLOW_OK) {
+  while (result == GST_FLOW_OK) {
     ogg_page page;
 
     ret = ogg_sync_pageout (&ogg->sync, &page);
@@ -2748,6 +2828,7 @@ gst_ogg_demux_chain (GstPad * pad, GstBuffer * buffer)
       break;
     if (ret == -1) {
       /* discontinuity in the pages */
+      GST_DEBUG_OBJECT (ogg, "discont in page found, continuing");
     } else {
       result = gst_ogg_demux_handle_page (ogg, &page);
     }
@@ -2782,9 +2863,6 @@ gst_ogg_demux_combine_flows (GstOggDemux * ogg, GstOggPad * pad,
 
   /* store the value */
   pad->last_ret = ret;
-  /* if it's success we can return the value right away */
-  if (GST_FLOW_IS_SUCCESS (ret))
-    goto done;
 
   /* any other error that is not-linked can be returned right
    * away */
@@ -2879,11 +2957,9 @@ gst_ogg_demux_loop_reverse (GstOggDemux * ogg)
   }
 
   GST_LOG_OBJECT (ogg, "read page from %" G_GINT64_FORMAT, ogg->offset);
-  offset = gst_ogg_demux_get_prev_page (ogg, &page);
-  if (offset < 0) {
-    ret = GST_FLOW_ERROR;
+  ret = gst_ogg_demux_get_prev_page (ogg, &page, &offset);
+  if (ret != GST_FLOW_OK)
     goto done;
-  }
 
   ogg->offset = offset;
 
@@ -2923,15 +2999,13 @@ gst_ogg_demux_loop (GstOggPad * pad)
   ogg = GST_OGG_DEMUX (GST_OBJECT_PARENT (pad));
 
   if (ogg->need_chains) {
-    gboolean got_chains;
     gboolean res;
 
     /* this is the only place where we write chains and thus need to lock. */
     GST_CHAIN_LOCK (ogg);
-    ogg->chain_error = GST_FLOW_OK;
-    got_chains = gst_ogg_demux_find_chains (ogg);
+    ret = gst_ogg_demux_find_chains (ogg);
     GST_CHAIN_UNLOCK (ogg);
-    if (!got_chains)
+    if (ret != GST_FLOW_OK)
       goto chain_read_failed;
 
     ogg->need_chains = FALSE;
@@ -2964,8 +3038,7 @@ gst_ogg_demux_loop (GstOggPad * pad)
   /* ERRORS */
 chain_read_failed:
   {
-    GST_ELEMENT_ERROR (ogg, STREAM, DEMUX, (NULL), ("could not read chains"));
-    ret = ogg->chain_error;
+    /* error was posted */
     goto pause;
   }
 seek_failed:
