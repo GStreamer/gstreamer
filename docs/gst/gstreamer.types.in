@@ -17,6 +17,7 @@ gst_ghost_pad_get_type
 gst_implements_interface_get_type
 gst_index_factory_get_type
 gst_index_get_type
+gst_registry_get_type
 
 % these are not GObject derived types !
 % gst_mini_object_get_type

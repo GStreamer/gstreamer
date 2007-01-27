@@ -145,10 +145,27 @@ gst_registry_class_init (GstRegistryClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  /**
+   * GstRegistry::plugin-added:
+   * @registry: the registry that emitted the signal
+   * @plugin: the plugin that has been added
+   *
+   * Signals that a plugin has been added to the registry (possibly
+   * replacing a previously-added one by the same name)
+   */
   gst_registry_signals[PLUGIN_ADDED] =
       g_signal_new ("plugin-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRegistryClass, plugin_added), NULL,
       NULL, gst_marshal_VOID__POINTER, G_TYPE_NONE, 1, G_TYPE_POINTER);
+
+  /**
+   * GstRegistry::feature-added:
+   * @registry: the registry that emitted the signal
+   * @feature: the feature that has been added
+   *
+   * Signals that a feature has been added to the registry (possibly
+   * replacing a previously-added one by the same name)
+   */
   gst_registry_signals[FEATURE_ADDED] =
       g_signal_new ("feature-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRegistryClass, feature_added),

@@ -1,3 +1,9 @@
+2007-01-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer.types.in:
+	* gst/gstregistry.c: (gst_registry_class_init):
+	  Document registry signals and make gtk-doc pick them up (#401381).
+
 2007-01-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/building-testapp.xml:
