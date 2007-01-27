@@ -1,3 +1,8 @@
+2007-01-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/icles/videocrop-test.c: (test_with_caps):
+	  Catch errors while the test is running.
+
 2007-01-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_src_query):
