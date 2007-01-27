@@ -34,14 +34,6 @@ GST_DEBUG_CATEGORY_STATIC (videocrop_test_debug);
 #define TIME_PER_TEST   10      /* seconds each format is tested */
 #define FRAMERATE       15      /* frames per second             */
 
-static gboolean
-quit_mainloop (GMainLoop * loop)
-{
-  g_main_loop_quit (loop);
-
-  return FALSE;                 /* once is enough, don't call us again */
-}
-
 typedef struct _CropState
 {
   GstElement *videocrop;
@@ -66,8 +58,10 @@ tick_cb (CropState * state)
 static void
 test_with_caps (GstElement * videocrop, GstCaps * caps)
 {
+  GstClockTime time_run;
+  GstElement *pipeline;
   CropState state;
-  GMainLoop *loop;
+  GstBus *bus;
 
   /* caps must be writable, we can't check that here though */
   g_assert (GST_CAPS_REFCOUNT_VALUE (caps) == 1);
@@ -76,16 +70,42 @@ test_with_caps (GstElement * videocrop, GstCaps * caps)
   state.vcrop = 0;
   state.hcrop = 0;
 
-  loop = g_main_loop_new (NULL, FALSE);
+  pipeline = GST_ELEMENT (gst_element_get_parent (videocrop));
+  g_assert (GST_IS_PIPELINE (pipeline));
 
-  /* quit test after this time (and do it properly for clarity) */
-  g_timeout_add (TIME_PER_TEST * 1000, (GSourceFunc) quit_mainloop, loop);
+  /* at this point the pipeline is in PLAYING state; we only want to capture
+   * errors resulting from our on-the-fly changing of the filtercaps */
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
-  g_timeout_add_full (G_PRIORITY_HIGH, 1000 / FRAMERATE,
-      (GSourceFunc) tick_cb, &state, NULL);
+  time_run = 0;
+  do {
+    GstClockTime wait_time;
+    GstMessage *msg;
 
-  g_main_loop_run (loop);
-  g_main_loop_unref (loop);
+    wait_time = GST_SECOND / FRAMERATE;
+    msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, wait_time);
+
+    if (msg) {
+      GError *err = NULL;
+      gchar *debug = NULL;
+
+      g_assert (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
+      gst_message_parse_error (msg, &err, &debug);
+      g_print ("\n===========> ERROR: %s\n%s\n\n", err->message, debug);
+      g_error_free (err);
+      g_free (debug);
+      gst_message_unref (msg);
+      break;
+    }
+
+    if (!tick_cb (&state))
+      break;
+
+    time_run += wait_time;
+  }
+  while (time_run < (TIME_PER_TEST * GST_SECOND));
+
+  gst_object_unref (bus);
 }
 
 /* return a list of caps where we only need to set
