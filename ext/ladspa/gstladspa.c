@@ -1,6 +1,6 @@
 /* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
- *               <2001> Steve Baker <stevebaker_org@yahoo.co.uk>
+ * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
+ *               2001 Steve Baker <stevebaker_org@yahoo.co.uk>
  *               2003 Andy Wingo <wingo at pobox.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -25,6 +25,7 @@
 #include <string.h>
 #include <math.h>
 #include <gst/audio/audio.h>
+#include <gst/controller/gstcontroller.h>
 
 #include "gstladspa.h"
 #include <ladspa.h>             /* main ladspa sdk include file */
@@ -195,6 +196,8 @@ gst_ladspa_class_get_param_spec (GstLADSPAClass * klass, gint portnum)
   perms = G_PARAM_READABLE;
   if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[portnum]))
     perms |= G_PARAM_WRITABLE | G_PARAM_CONSTRUCT;
+  if (LADSPA_IS_PORT_CONTROL (desc->PortDescriptors[portnum]))
+    perms |= GST_PARAM_CONTROLLABLE;
 
   /* short name for hint descriptor */
   hintdesc = desc->PortRangeHints[portnum].HintDescriptor;

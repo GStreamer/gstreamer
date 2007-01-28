@@ -1,3 +1,9 @@
+2007-01-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/ladspa/Makefile.am:
+	* ext/ladspa/gstladspa.c: (gst_ladspa_class_get_param_spec):
+	  add GstController support to ladspa
+
 2007-01-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Rosfran Borges <rosfran dot borges at idnt org br>
