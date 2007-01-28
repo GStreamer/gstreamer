@@ -244,8 +244,10 @@ gst_video_crop_get_image_details_from_caps (GstVideoCrop * vcrop,
         details->stride = GST_ROUND_UP_4 (width * 2);
         details->size = details->stride * height;
         if (format == GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y')) {
+          /* UYVY = 4:2:2 - [U0 Y0 V0 Y1] [U2 Y2 V2 Y3] [U4 Y4 V4 Y5] */
           details->macro_y_off = 1;
         } else {
+          /* YUYV = 4:2:2 - [Y0 U0 Y1 V0] [Y2 U2 Y3 V2] [Y4 U4 Y5 V4] = YUY2 */
           details->macro_y_off = 0;
         }
         break;
@@ -311,6 +313,8 @@ gst_video_crop_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
   return TRUE;
 }
 
+#define ROUND_DOWN_2(n)  ((n)&(~1))
+
 static void
 gst_video_crop_transform_packed_complex (GstVideoCrop * vcrop,
     GstBuffer * inbuf, GstBuffer * outbuf)
@@ -322,27 +326,25 @@ gst_video_crop_transform_packed_complex (GstVideoCrop * vcrop,
   out_data = GST_BUFFER_DATA (outbuf);
 
   in_data += vcrop->crop_top * vcrop->in.stride;
-  in_data += vcrop->crop_left * vcrop->in.bytes_per_pixel;
+
+  /* rounding down here so we end up at the start of a macro-pixel and not
+   * in the middle of one */
+  in_data += ROUND_DOWN_2 (vcrop->crop_left) * vcrop->in.bytes_per_pixel;
 
   dx = vcrop->out.width * vcrop->out.bytes_per_pixel;
 
+  /* UYVY = 4:2:2 - [U0 Y0 V0 Y1] [U2 Y2 V2 Y3] [U4 Y4 V4 Y5]
+   * YUYV = 4:2:2 - [Y0 U0 Y1 V0] [Y2 U2 Y3 V2] [Y4 U4 Y5 V4] = YUY2 */
   if ((vcrop->crop_left % 2) != 0) {
     for (i = 0; i < vcrop->out.height; ++i) {
       gint j;
 
       memcpy (out_data, in_data, dx);
 
-      /* U/V is horizontally subsampled by a factor of 2, so must fix that up */
-      /* FIXME: this is obviously not quite right */
-      if (vcrop->in.macro_y_off == 0) {
-        for (j = 1; j < vcrop->out.stride; j += 2) {
-          out_data[j] = in_data[j - 1];
-        }
-      } else {
-        for (j = 0; j < vcrop->out.stride /* -2 */ ; j += 2) {
-          out_data[j] = in_data[j + 2];
-        }
-      }
+      /* move just the Y samples one pixel to the left, don't worry about
+       * chroma shift */
+      for (j = vcrop->in.macro_y_off; j < vcrop->out.stride - 2; j += 2)
+        out_data[j] = in_data[j + 2];
 
       in_data += vcrop->in.stride;
       out_data += vcrop->out.stride;
