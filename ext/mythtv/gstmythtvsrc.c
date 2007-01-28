@@ -630,7 +630,7 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
   GstMythtvSrc *src = GST_MYTHTV_SRC (bsrc);
 
   GString *chain_id_local = NULL;
-
+  GMythURI *gmyth_uri = NULL;
   gboolean ret = TRUE;
 
   if (G_UNLIKELY (src->update_prog_chain))
@@ -642,11 +642,19 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
     goto done;
   }
 
+  gmyth_uri = gmyth_uri_new_with_value (src->uri_name);
+
   src->backend_info = gmyth_backend_info_new_with_uri (src->uri_name);
   /* testing UPnP... */
   /* gmyth_backend_info_set_hostname( src->backend_info, NULL ); */
-  if (src->live_tv) {
+  if (src->live_tv || gmyth_uri_is_livetv (gmyth_uri)) {
+    gint ch;
+
     src->spawn_livetv = gmyth_livetv_new ();
+
+    ch = gmyth_uri_get_channel_num (gmyth_uri);
+    if (ch != -1)
+      src->channel_num = ch;
 
     if (src->channel_num != GST_GMYTHTV_CHANNEL_DEFAULT_NUM) {
       if (gmyth_livetv_channel_setup (src->spawn_livetv, src->channel_num,
@@ -684,20 +692,6 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
   }
   /*GST_INFO_OBJECT( src, "uri = %s", src->spawn_livetv->file_transfer); */
 
-  if (src->live_tv == TRUE && ret == TRUE) {
-    /* loop finished, set the max tries variable to zero again... */
-    src->wait_to_transfer = 0;
-
-    while (src->wait_to_transfer++ < GMYTHTV_TRANSFER_MAX_WAITS &&
-        (gmyth_livetv_is_recording (src->spawn_livetv) == FALSE))
-      g_usleep (500);
-
-    /* IS_RECORDING again, just like the MythTV backend does... */
-    gmyth_livetv_is_recording (src->spawn_livetv);
-
-    sleep (9);                  /* FIXME: this is evil (tpm) */
-  }
-
   if (ret == FALSE) {
 #ifndef GST_DISABLE_GST_DEBUG
     if (src->mythtv_msgs_dbg)
@@ -724,6 +718,11 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
           src->content_size, 0));
 
 done:
+  /*if ( gmyth_uri != NULL )
+     {
+     g_object_unref( gmyth_uri );
+     gmyth_uri = NULL;
+     } */
 
   if (chain_id_local != NULL) {
     g_string_free (chain_id_local, TRUE);
@@ -827,17 +826,6 @@ gst_mythtv_src_next_program_chain (GstMythtvSrc * src)
   ret = gmyth_file_transfer_open (src->file_transfer, src->uri_name);
 
   /* sets the Playback monitor connection */
-
-  if (src->live_tv == TRUE && ret == TRUE) {
-    /* loop finished, set the max tries variable to zero again... */
-    src->wait_to_transfer = 0;
-
-    g_usleep (200);
-
-    while (src->wait_to_transfer++ < GMYTHTV_TRANSFER_MAX_WAITS &&
-        (gmyth_livetv_is_recording (src->spawn_livetv) == FALSE))
-      g_usleep (1000);
-  }
 
   /* sets the FileTransfer instance connection (video/audio download) */
 

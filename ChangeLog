@@ -1,3 +1,12 @@
+2007-01-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Rosfran Borges <rosfran dot borges at idnt org br>
+
+	* ext/mythtv/gstmythtvsrc.c: (gst_mythtv_src_start),
+	(gst_mythtv_src_next_program_chain):
+	  Remove sleep calls, they've been moved into the library now ...
+	  (#354451).
+
 2007-01-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/icles/videocrop-test.c: (test_with_caps):
