@@ -1,3 +1,16 @@
+2007-01-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videocrop/gstvideocrop.c:
+	(gst_video_crop_get_image_details_from_caps),
+	(gst_video_crop_transform_packed_complex):
+	  Fix cropping for packed 4:2:2 formats YUYV/YUY2 and UYVY.
+
+	* tests/icles/videocrop-test.c: (check_bus_for_errors),
+	(test_with_caps), (main):
+	  Block streaming thread before changing filter caps while the
+	  pipeline is running so that we don't get random not-negotiated
+	  errors just because GStreamer can't handle that yet.
+
 2007-01-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/ladspa/Makefile.am:

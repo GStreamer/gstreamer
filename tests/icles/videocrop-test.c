@@ -34,41 +34,46 @@ GST_DEBUG_CATEGORY_STATIC (videocrop_test_debug);
 #define TIME_PER_TEST   10      /* seconds each format is tested */
 #define FRAMERATE       15      /* frames per second             */
 
-typedef struct _CropState
-{
-  GstElement *videocrop;
-  guint hcrop;
-  guint vcrop;
-} CropState;
-
 static gboolean
-tick_cb (CropState * state)
+check_bus_for_errors (GstBus * bus, GstClockTime max_wait_time)
 {
-  GST_LOG ("hcrop = %3d, vcrop = %3d", state->vcrop, state->hcrop);
+  GstMessage *msg;
 
-  g_object_set (state->videocrop, "left", state->hcrop,
-      "top", state->vcrop, NULL);
+  msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, max_wait_time);
 
-  ++state->vcrop;
-  ++state->hcrop;
+  if (msg) {
+    GError *err = NULL;
+    gchar *debug = NULL;
 
-  return TRUE;                  /* call us again */
+    g_assert (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
+    gst_message_parse_error (msg, &err, &debug);
+    GST_ERROR ("ERROR: %s [%s]", err->message, debug);
+    g_print ("\n===========> ERROR: %s\n%s\n\n", err->message, debug);
+    g_error_free (err);
+    g_free (debug);
+    gst_message_unref (msg);
+  }
+
+  return (msg != NULL);
 }
 
 static void
-test_with_caps (GstElement * videocrop, GstCaps * caps)
+test_with_caps (GstElement * src, GstElement * videocrop, GstCaps * caps)
 {
   GstClockTime time_run;
   GstElement *pipeline;
-  CropState state;
+  GTimer *timer;
   GstBus *bus;
+  GstPad *pad;
+  guint hcrop;
+  guint vcrop;
 
   /* caps must be writable, we can't check that here though */
   g_assert (GST_CAPS_REFCOUNT_VALUE (caps) == 1);
 
-  state.videocrop = videocrop;
-  state.vcrop = 0;
-  state.hcrop = 0;
+  timer = g_timer_new ();
+  vcrop = 0;
+  hcrop = 0;
 
   pipeline = GST_ELEMENT (gst_element_get_parent (videocrop));
   g_assert (GST_IS_PIPELINE (pipeline));
@@ -77,35 +82,47 @@ test_with_caps (GstElement * videocrop, GstCaps * caps)
    * errors resulting from our on-the-fly changing of the filtercaps */
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
+  /* pad to block */
+  pad = gst_element_get_pad (src, "src");
+
   time_run = 0;
   do {
-    GstClockTime wait_time;
-    GstMessage *msg;
+    GstClockTime wait_time, waited_for_block;
+
+    if (check_bus_for_errors (bus, 0))
+      break;
 
     wait_time = GST_SECOND / FRAMERATE;
-    msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, wait_time);
 
-    if (msg) {
-      GError *err = NULL;
-      gchar *debug = NULL;
+    GST_LOG ("hcrop = %3d, vcrop = %3d", vcrop, hcrop);
 
-      g_assert (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
-      gst_message_parse_error (msg, &err, &debug);
-      g_print ("\n===========> ERROR: %s\n%s\n\n", err->message, debug);
-      g_error_free (err);
-      g_free (debug);
-      gst_message_unref (msg);
-      break;
+    g_timer_reset (timer);
+
+    /* need to block the streaming thread while changing these properties,
+     * otherwise we might get random not-negotiated errors (when caps are
+     * changed in between upstream calling pad_alloc_buffer() and pushing
+     * the processed buffer?) */
+    gst_pad_set_blocked (pad, TRUE);
+    g_object_set (videocrop, "left", hcrop, "top", vcrop, NULL);
+    gst_pad_set_blocked (pad, FALSE);
+
+    waited_for_block = g_timer_elapsed (timer, NULL) * (double) GST_SECOND;
+    /* GST_LOG ("waited: %" GST_TIME_FORMAT ", frame len: %" GST_TIME_FORMAT,
+       GST_TIME_ARGS (waited_for_block), GST_TIME_ARGS (wait_time)); */
+    ++vcrop;
+    ++hcrop;
+
+    if (wait_time > waited_for_block) {
+      g_usleep ((wait_time - waited_for_block) / GST_MSECOND);
     }
-
-    if (!tick_cb (&state))
-      break;
 
     time_run += wait_time;
   }
   while (time_run < (TIME_PER_TEST * GST_SECOND));
 
+  g_timer_destroy (timer);
   gst_object_unref (bus);
+  gst_object_unref (pad);
 }
 
 /* return a list of caps where we only need to set
@@ -313,7 +330,7 @@ main (int argc, char **argv)
       ret = gst_element_get_state (pipeline, NULL, NULL, -1);
 
       if (ret != GST_STATE_CHANGE_FAILURE) {
-        test_with_caps (crop, caps);
+        test_with_caps (src, crop, caps);
       } else {
         g_print ("Format: %s not supported (failed to go to PLAYING)\n", s);
       }
