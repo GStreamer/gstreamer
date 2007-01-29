@@ -1,5 +1,10 @@
 2007-01-29  Wim Taymans  <wim@fluendo.com>
 
+	* tests/check/gst/.cvsignore:
+	Do as buildbot says.
+
+2007-01-29  Wim Taymans  <wim@fluendo.com>
+
 	* ext/libvisual/visual.c: (gst_visual_src_setcaps):
 	Fix strides in libvisual. Gst uses X strides.
 	Inspired by: <ed at catmur dot co dot uk> and 
