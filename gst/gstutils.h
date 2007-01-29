@@ -462,46 +462,101 @@ GST_BOILERPLATE_FULL (type, type_as_function, parent_type,              \
 
 /**
  * GST_ROUND_UP_2:
- * @num: value round up
+ * @num: integer value to round up
  *
  * Make number divideable by two without a rest.
  */
 #define GST_ROUND_UP_2(num)  (((num)+1)&~1)
 /**
  * GST_ROUND_UP_4:
- * @num: value round up
+ * @num: integer value to round up
  *
  * Make number divideable by four without a rest.
  */
 #define GST_ROUND_UP_4(num)  (((num)+3)&~3)
 /**
  * GST_ROUND_UP_8:
- * @num: value round up
+ * @num: integer value to round up
  *
  * Make number divideable by eight without a rest.
  */
 #define GST_ROUND_UP_8(num)  (((num)+7)&~7)
 /**
  * GST_ROUND_UP_16:
- * @num: value round up
+ * @num: integer value to round up
  *
  * Make number divideable by 16 without a rest.
  */
 #define GST_ROUND_UP_16(num) (((num)+15)&~15)
 /**
  * GST_ROUND_UP_32:
- * @num: value round up
+ * @num: integer value to round up
  *
  * Make number divideable by 32 without a rest.
  */
 #define GST_ROUND_UP_32(num) (((num)+31)&~31)
 /**
  * GST_ROUND_UP_64:
- * @num: value round up
+ * @num: integer value to round up
  *
  * Make number divideable by 64 without a rest.
  */
 #define GST_ROUND_UP_64(num) (((num)+63)&~63)
+
+/**
+ * GST_ROUND_DOWN_2:
+ * @num: integer value to round down
+ *
+ * Make number divisible by two without a rest by rounding it down
+ *
+ * Since: 0.10.12
+ */
+#define GST_ROUND_DOWN_2(num)  ((num)&(~1))
+/**
+ * GST_ROUND_DOWN_4:
+ * @num: integer value to round down
+ *
+ * Make number divisible by four without a rest by rounding it down
+ *
+ * Since: 0.10.12
+ */
+#define GST_ROUND_DOWN_4(num)  ((num)&(~3))
+/**
+ * GST_ROUND_DOWN_8:
+ * @num: integer value to round down
+ *
+ * Make number divisible by eight without a rest by rounding it down
+ *
+ * Since: 0.10.12
+ */
+#define GST_ROUND_DOWN_8(num)  ((num)&(~7))
+/**
+ * GST_ROUND_DOWN_16:
+ * @num: integer value to round down
+ *
+ * Make number divisible by 16 without a rest by rounding it down
+ *
+ * Since: 0.10.12
+ */
+#define GST_ROUND_DOWN_16(num) ((num)&(~15))
+/**
+ * GST_ROUND_DOWN_32:
+ * @num: integer value to round down
+ *
+ * Make number divisible by 32 without a rest by rounding it down
+ *
+ * Since: 0.10.12
+ */
+#define GST_ROUND_DOWN_32(num) ((num)&(~31))
+/**
+ * GST_ROUND_DOWN_64:
+ * @num: integer value to round down
+ *
+ * Make number divisible by 64 without a rest by rounding it down
+ *
+ * Since: 0.10.12
+ */
+#define GST_ROUND_DOWN_64(num) ((num)&(~63))
 
 void			gst_object_default_error	(GstObject * source,
 							 GError * error, gchar * debug);

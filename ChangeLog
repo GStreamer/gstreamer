@@ -1,3 +1,9 @@
+2007-01-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstutils.h:
+	  API: add GST_ROUND_DOWN_* macros (#401781).
+
 2007-01-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer.types.in:
