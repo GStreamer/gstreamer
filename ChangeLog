@@ -7,6 +7,7 @@
 	* gst/interfaces.override:
 	If video-orientation interface isn't available, don't include the
 	header.
+	Fixes #401051
 
 2007-01-26  Edward Hervey  <edward@fluendo.com>
 
