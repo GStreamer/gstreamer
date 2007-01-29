@@ -1,3 +1,11 @@
+2007-01-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/theora/theoraenc.c: (theora_enc_chain):
+	  Check return value of theora_encode_header(), or we might try to
+	  allocate a random number of bytes. theora_encode_header() can fail
+	  if libtheora has been compiled with encoding support disabled.
+	  Fixes #398110.
+
 2007-01-29  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/gst/.cvsignore:

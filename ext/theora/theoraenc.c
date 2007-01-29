@@ -626,7 +626,9 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
        libtheora handles the additional Ogg bitstream constraints */
 
     /* first packet will get its own page automatically */
-    theora_encode_header (&enc->state, &op);
+    if (theora_encode_header (&enc->state, &op) != 0)
+      goto encoder_disabled;
+
     ret = theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
         GST_CLOCK_TIME_NONE, &buf1);
     if (ret != GST_FLOW_OK) {
@@ -637,7 +639,9 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     theora_comment_clear (&enc->comment);
     theora_comment_init (&enc->comment);
 
-    theora_encode_comment (&enc->comment, &op);
+    if (theora_encode_comment (&enc->comment, &op) != 0)
+      goto encoder_disabled;
+
     ret = theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
         GST_CLOCK_TIME_NONE, &buf2);
     /* Theora expects us to put this packet buffer into an ogg page,
@@ -652,7 +656,9 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       goto header_buffer_alloc;
     }
 
-    theora_encode_tables (&enc->state, &op);
+    if (theora_encode_tables (&enc->state, &op) != 0)
+      goto encoder_disabled;
+
     ret = theora_buffer_from_packet (enc, &op, GST_CLOCK_TIME_NONE,
         GST_CLOCK_TIME_NONE, &buf3);
     if (ret != GST_FLOW_OK) {
@@ -892,6 +898,13 @@ data_push:
   {
     gst_buffer_unref (buffer);
     return ret;
+  }
+encoder_disabled:
+  {
+    GST_ELEMENT_ERROR (enc, STREAM, ENCODE, (NULL),
+        ("libtheora has been compiled with the encoder disabled"));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_ERROR;
   }
 }
 
