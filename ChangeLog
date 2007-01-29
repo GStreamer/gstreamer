@@ -1,3 +1,9 @@
+2007-01-29  David Schleef  <ds@schleef.org>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  Detect BBCD as video/x-dirac, so we can play raw dirac
+	  streams.
+
 2007-01-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/theora/theoraenc.c: (theora_enc_chain):

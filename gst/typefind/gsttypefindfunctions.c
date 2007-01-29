@@ -2473,6 +2473,27 @@ mmsh_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** video/x-dirac ***/
+
+/* NOTE: we cannot replace this function with TYPE_FIND_REGISTER_START_WITH,
+ * as it is only possible to register one typefind factory per 'name'
+ * (which is in this case the caps), and the first one would be replaced by
+ * the second one. */
+static GstStaticCaps dirac_caps = GST_STATIC_CAPS ("video/x-dirac");
+
+#define DIRAC_CAPS (gst_static_caps_get(&dirac_caps))
+static void
+dirac_type_find (GstTypeFind * tf, gpointer unused)
+{
+  guint8 *data = gst_type_find_peek (tf, 0, 8);
+
+  if (data) {
+    if (memcmp (data, "BBCD", 4) == 0 || memcmp (data, "KW-DIRAC", 8) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, DIRAC_CAPS);
+    }
+  }
+}
+
 /*** video/vivo ***/
 
 static GstStaticCaps vivo_caps = GST_STATIC_CAPS ("video/vivo");
@@ -2873,12 +2894,12 @@ plugin_init (GstPlugin * plugin)
       ar_type_find, ar_exts, AR_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-ms-dos-executable",
       GST_RANK_SECONDARY, msdos_type_find, msdos_exts, MSDOS_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/x-dirac", GST_RANK_PRIMARY,
+      dirac_type_find, NULL, DIRAC_CAPS, NULL, NULL);
 #if 0
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-dirac",
       GST_RANK_PRIMARY, NULL, "BBCD", 4, GST_TYPE_FIND_MAXIMUM);
 #endif
-  TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-dirac",
-      GST_RANK_PRIMARY, NULL, "KW-DIRAC", 8, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER (plugin, "multipart/x-mixed-replace", GST_RANK_SECONDARY,
       multipart_type_find, NULL, MULTIPART_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-mmsh", GST_RANK_SECONDARY,
