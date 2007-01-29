@@ -397,6 +397,7 @@ dnl Check for glib2 without extra fat, useful for the unversioned tool frontends
 PKG_CHECK_MODULES(GLIB_ONLY, glib-2.0 >= $GLIB_REQ)
   
 dnl libxml 2, which is/should be optional (FIXME)
+dnl (FIXME) if we use binary registry, the DISABLE_REGISTRY check need to go
 if test "x$GST_DISABLE_LOADSAVE" = "xyes" && \
    test "x$GST_DISABLE_REGISTRY" = "xyes"
 then

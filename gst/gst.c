@@ -643,8 +643,11 @@ scan_and_update_registry (GstRegistry * default_registry,
   GList *l;
 
   GST_DEBUG ("reading registry cache: %s", registry_file);
+#ifdef USE_BINARY_REGISTRY
+  gst_registry_binary_read_cache (default_registry, registry_file);
+#else
   gst_registry_xml_read_cache (default_registry, registry_file);
-
+#endif
   /* scan paths specified via --gst-plugin-path */
   GST_DEBUG ("scanning paths added via --gst-plugin-path");
   for (l = plugin_paths; l != NULL; l = l->next) {
@@ -715,7 +718,11 @@ scan_and_update_registry (GstRegistry * default_registry,
   }
 
   GST_INFO ("Registry cache changed. Writing new registry cache");
+#ifdef USE_BINARY_REGISTRY
+  if (!gst_registry_binary_write_cache (default_registry, registry_file)) {
+#else
   if (!gst_registry_xml_write_cache (default_registry, registry_file)) {
+#endif
     g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
         _("Error writing registry cache to %s: %s"),
         registry_file, g_strerror (errno));
@@ -830,7 +837,11 @@ ensure_current_registry_forking (GstRegistry * default_registry,
 
     if (res_byte == '1') {
       GST_DEBUG ("Child succeeded. Parent reading registry cache");
+#ifdef USE_BINARY_REGISTRY
+      gst_registry_binary_read_cache (default_registry, registry_file);
+#else
       gst_registry_xml_read_cache (default_registry, registry_file);
+#endif
     } else {
       GST_DEBUG ("Child failed. Parent re-scanning registry, ignoring errors.");
       scan_and_update_registry (default_registry, registry_file, FALSE, NULL);
@@ -851,8 +862,13 @@ ensure_current_registry (GError ** error)
   default_registry = gst_registry_get_default ();
   registry_file = g_strdup (g_getenv ("GST_REGISTRY"));
   if (registry_file == NULL) {
+#ifdef USE_BINARY_REGISTRY
+    registry_file = g_build_filename (g_get_home_dir (),
+        ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".bin", NULL);
+#else
     registry_file = g_build_filename (g_get_home_dir (),
         ".gstreamer-" GST_MAJORMINOR, "registry." HOST_CPU ".xml", NULL);
+#endif
   }
 
   /* first see if forking is enabled */
@@ -987,6 +1003,7 @@ sort_by_category_name (gconstpointer a, gconstpointer b)
   return strcmp (gst_debug_category_get_name ((GstDebugCategory *) a),
       gst_debug_category_get_name ((GstDebugCategory *) b));
 }
+
 static void
 gst_debug_help (void)
 {

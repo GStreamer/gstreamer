@@ -51,7 +51,10 @@ typedef struct _GstElementDetails GstElementDetails;
  * The @klass member can be used by applications to filter elements based 
  * on functionality.
  */
-/* FIXME: need translatable stuff in here (how handle in registry)? */
+/* FIXME: need translatable stuff in here (how handle in registry)?
+ * can't we use _N("long name") in element implementations and use _(longname)
+ * in gst_element_factory_get_longname()
+ */
 struct _GstElementDetails
 {
   /*< public > */
@@ -67,9 +70,9 @@ struct _GstElementDetails
 /**
  * GST_ELEMENT_DETAILS:
  * @longname: long, english name
- * @klass: type of element, as hierarchy
+ * @klass: type of element, as hierarchy with '/' as a delimiter
  * @description: what the element is about
- * @author: who wrote this thing?
+ * @author: who wrote this element
  *
  * Macro to initialize #GstElementDetails.
  */

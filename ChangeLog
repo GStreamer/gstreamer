@@ -1,3 +1,50 @@
+2007-01-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  comment about refining the xml deps
+
+	* docs/manuals.mak:
+	  comments about moving away from jade for docs
+	
+	* gst/gst.c:
+	  recommit the ifdefs to use the binary registry
+	
+	* gst/gstbin.c: (gst_bin_change_state_func):
+	  this break is obsolete
+
+	* gst/gstelementfactory.h:
+	  better GST_ELEMENT_DETAILS docs, add comment about translation
+
+	* gst/gstinfo.h:
+	  remove eol slash
+
+	* gst/gstobject.c: (gst_signal_object_get_type):
+	  add G_UNLIKELY as usual
+
+	* gst/gstpad.c: (gst_pad_event_default):
+	  add fall trhu comment
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_write),
+	(gst_registry_binary_initialize_magic),
+	(gst_registry_binary_save_string),
+	(gst_registry_binary_save_pad_template),
+	(gst_registry_binary_save_feature),
+	(gst_registry_binary_save_plugin),
+	(gst_registry_binary_write_cache),
+	(gst_registry_binary_check_magic),
+	(gst_registry_binary_load_pad_template),
+	(gst_registry_binary_load_feature),
+	(gst_registry_binary_load_plugin),
+	(gst_registry_binary_read_cache):
+	  comment typo and formatting
+
+	* gst/gstutils.c: (gst_element_state_get_name),
+	(gst_element_state_change_return_get_name):
+	  remove obsolete breaks
+
+	* gst/gstvalue.c: (gst_date_get_type), (_gst_value_initialize):
+	  add FIXME 0.11 and remove cpp comment
+
 2007-01-29  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_read_cache):

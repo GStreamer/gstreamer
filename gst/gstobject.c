@@ -1142,7 +1142,7 @@ gst_signal_object_get_type (void)
 {
   static GType signal_object_type = 0;
 
-  if (!signal_object_type) {
+  if (G_UNLIKELY (signal_object_type == 0)) {
     static const GTypeInfo signal_object_info = {
       sizeof (GstSignalObjectClass),
       NULL,

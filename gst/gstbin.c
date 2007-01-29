@@ -1968,7 +1968,6 @@ restart:
         GST_CAT_DEBUG (GST_CAT_STATES, "iterator doing resync");
         gst_iterator_resync (it);
         goto restart;
-        break;
       default:
       case GST_ITERATOR_DONE:
         GST_CAT_DEBUG (GST_CAT_STATES, "iterator done");

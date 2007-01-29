@@ -1,8 +1,8 @@
 /* GStreamer
- * Copyright (C)      2006 Josep Torra <josep@fluendo.com>
- *                    2006 Mathieu Garcia  <matthieu@fluendo.com>
- *		      2006 Stefan Kost <ensonic@sonicpulse.de>
- *                    
+ * Copyright (C) 2006 Josep Torra <josep@fluendo.com>
+ *               2006 Mathieu Garcia <matthieu@fluendo.com>
+ *		         2006,2007 Stefan Kost <ensonic@users.sf.net>
+ *
  * gstregistrybinary.c: GstRegistryBinary object, support routines
  *
  * This library is free software; you can redistribute it and/or
@@ -29,7 +29,7 @@
  *   (need const flags in GstPlugin, etc.)
  * - why do we collect a list of binary chunks and not write immediately
  *   - because we need to process subchunks, before we can set e.g. nr_of_items
- *     in parnt chunk
+ *     in parent chunk
  * - need more robustness
  *   - don't parse beyond mem-block size
  *   - include md5-sum ?

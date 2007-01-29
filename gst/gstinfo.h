@@ -449,7 +449,7 @@ static inline void
 GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
     gpointer object, const char *format, ...)
 {
-  if (G_UNLIKELY (level <= __gst_debug_min)) {						\
+  if (G_UNLIKELY (level <= __gst_debug_min)) {
     va_list varargs;
 
     va_start (varargs, format);

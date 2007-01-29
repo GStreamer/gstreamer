@@ -2941,6 +2941,7 @@ gst_pad_event_default (GstPad * pad, GstEvent * event)
       GST_DEBUG_OBJECT (pad, "pausing task because of eos");
       gst_pad_pause_task (pad);
     }
+      /* fall thru */
     default:
       break;
   }

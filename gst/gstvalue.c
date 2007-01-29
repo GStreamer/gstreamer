@@ -3964,11 +3964,11 @@ gst_date_get_type (void)
   static GType gst_date_type = 0;
 
   if (G_UNLIKELY (gst_date_type == 0)) {
-    /* Not using G_TYPE_DATE here on purpose, even if we could
+    /* FIXME 0.11: we require GLib 2.8 already
+     * Not using G_TYPE_DATE here on purpose, even if we could
      * if GLIB_CHECK_VERSION(2,8,0) was true: we don't want the
      * serialised strings to have different type strings depending
-     * on what version is used, so FIXME when we
-     * require GLib-2.8 */
+     * on what version is used, so FIXME when we require GLib-2.8 */
     gst_date_type = g_boxed_type_register_static ("GstDate",
         (GBoxedCopyFunc) gst_date_copy, (GBoxedFreeFunc) g_date_free);
   }
@@ -3979,8 +3979,6 @@ gst_date_get_type (void)
 void
 _gst_value_initialize (void)
 {
-  //const GTypeFundamentalInfo finfo = { G_TYPE_FLAG_DERIVABLE, };
-
   gst_value_table = g_array_new (FALSE, FALSE, sizeof (GstValueTable));
   gst_value_union_funcs = g_array_new (FALSE, FALSE,
       sizeof (GstValueUnionInfo));
