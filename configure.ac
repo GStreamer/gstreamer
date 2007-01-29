@@ -3,7 +3,7 @@ AC_PREREQ(2.52)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(GStreamer Python Bindings, 0.10.6.1,
+AC_INIT(GStreamer Python Bindings, 0.10.6.2,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-python)
 
@@ -154,6 +154,7 @@ then
     IGNORE_GST_PB_0_10_11="gst-pb-0.10.11.ignore"
   else
     IGNORE_GST_PB_0_10_11=""
+    AC_DEFINE_UNQUOTED(HAVE_VIDEO_ORIENTATION_INTERFACE, 1, [We can use the videoorientation interface])
   fi
 
 
@@ -167,6 +168,7 @@ else
   IGNORE_GST_0_10_11=""
   IGNORE_GST_0_10_12=""
   IGNORE_GST_PB_0_10_11=""
+  AC_DEFINE_UNQUOTED(HAVE_VIDEO_ORIENTATION_INTERFACE, 1, [We can use the videoorientation interface])
 fi
 AC_SUBST(IGNORE_GST_0_10_3)
 AC_SUBST(IGNORE_GST_0_10_4)
@@ -177,6 +179,7 @@ AC_SUBST(IGNORE_GST_0_10_10)
 AC_SUBST(IGNORE_GST_0_10_11)
 AC_SUBST(IGNORE_GST_0_10_12)
 AC_SUBST(IGNORE_GST_PB_0_10_11)
+AC_SUBST(HAVE_VIDEO_ORIENTATION)
 
 dnl check for gstreamer-base; uninstalled is selected preferentially
 PKG_CHECK_MODULES(GST_BASE, gstreamer-base-$GST_MAJORMINOR >= $GST_REQ,

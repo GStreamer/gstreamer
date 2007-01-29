@@ -225,8 +225,8 @@ pygst_debug_log (PyObject *pyobject, PyObject *string, GstDebugLevel level,
     gst_debug_log (python_debug, level, filename, function, lineno, object, "%s", str);
     if (filename)
 	g_free(filename);
-    Py_INCREF (Py_None);
 #endif
+    Py_INCREF (Py_None);
     return Py_None;    
 }
 

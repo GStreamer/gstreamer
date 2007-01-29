@@ -1,3 +1,18 @@
+2007-01-29  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	Check for availability of video-orientation interface
+	* gst/gst.override:
+	don't forget to increment the refcount of Py_None before returning it.
+	* gst/interfaces.override:
+	If video-orientation interface isn't available, don't include the
+	header.
+
+2007-01-26  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	0.10.6.1 pre-release
+	
 2007-01-26  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

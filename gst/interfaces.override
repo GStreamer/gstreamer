@@ -34,7 +34,9 @@ headers
 #include <gst/interfaces/propertyprobe.h>
 #include <gst/interfaces/tuner.h>
 #include <gst/interfaces/mixer.h>
+#ifdef HAVE_VIDEO_ORIENTATION_INTERFACE
 #include <gst/interfaces/videoorientation.h>
+#endif
 
 %%
 modulename gst.interfaces
