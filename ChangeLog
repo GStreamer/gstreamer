@@ -1,5 +1,23 @@
 2007-01-29  Edward Hervey  <edward@fluendo.com>
 
+	* codegen/codegen.py:
+	Don't register interface if it is ignored
+	* configure.ac:
+	GST_PB_MINOR_VERSION doesn't appear by magic, you actually have to
+	parse it from pkg-config !
+	* gst/gst-pb-0.10.11.ignore:
+	Ignore GstVideoOrientation type altogether.
+	* gst/interfaces.override:
+	Include gstversion.override so that non-existent API is properly ignored.
+	Should fix #401051 once and for good now.
+
+2007-01-29  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	0.10.6.2 pre-release
+
+2007-01-29  Edward Hervey  <edward@fluendo.com>
+
 	* configure.ac:
 	Check for availability of video-orientation interface
 	* gst/gst.override:

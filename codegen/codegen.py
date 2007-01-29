@@ -1403,6 +1403,8 @@ def write_registers(parser, overrides, fp):
                  '", ' + pointer.typecode +
                  ', &Py' + pointer.c_name + '_Type);\n')
     for interface in parser.interfaces:
+        if overrides.is_type_ignored(interface.c_name):
+            continue
         fp.write('    pyg_register_interface(d, "' + interface.name +
                  '", '+ interface.typecode + ', &Py' + interface.c_name +
                  '_Type);\n')

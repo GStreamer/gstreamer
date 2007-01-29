@@ -48,6 +48,7 @@ import gst.Element as PyGstElement_Type
 %%
 include
   xoverlay.override
+  gstversion.override
 %%
 ignore-glob
  _*

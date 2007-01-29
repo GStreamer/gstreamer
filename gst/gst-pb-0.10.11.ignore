@@ -9,3 +9,6 @@ ignore
    gst_video_orientation_set_hcenter
    gst_video_orientation_set_vcenter
 %%
+ignore-type
+   GstVideoOrientation
+%%
