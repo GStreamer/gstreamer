@@ -317,7 +317,7 @@ gst_visual_src_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstVisual *visual = GST_VISUAL (gst_pad_get_parent (pad));
   GstStructure *structure;
-  gint depth;
+  gint depth, pitch;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -336,12 +336,12 @@ gst_visual_src_setcaps (GstPad * pad, GstCaps * caps)
   visual_video_set_depth (visual->video,
       visual_video_depth_enum_from_value (depth));
   visual_video_set_dimension (visual->video, visual->width, visual->height);
+  pitch = GST_ROUND_UP_4 (visual->width * visual->video->bpp);
+  visual_video_set_pitch (visual->video, pitch);
   visual_actor_video_negotiate (visual->actor, 0, FALSE, FALSE);
 
   /* precalc some values */
-  visual->outsize =
-      visual->video->height * GST_ROUND_UP_4 (visual->video->width) *
-      visual->video->bpp;
+  visual->outsize = visual->video->height * pitch;
   visual->spf =
       gst_util_uint64_scale_int (visual->rate, visual->fps_d, visual->fps_n);
   visual->duration =
