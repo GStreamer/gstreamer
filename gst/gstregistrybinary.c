@@ -784,8 +784,8 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   for (;
       ((size_t) in + sizeof (GstBinaryPluginElement)) <
       (size_t) contents + size;) {
-    GST_INFO ("reading binary registry %ld(%x)/%ld",
-        (size_t) in - (size_t) contents,
+    GST_INFO ("reading binary registry %" G_GSIZE_FORMAT "(%x)/%"
+        G_GSIZE_FORMAT, (size_t) in - (size_t) contents,
         (guint) ((size_t) in - (size_t) contents), size);
     if (!gst_registry_binary_load_plugin (registry, &in)) {
       GST_ERROR ("Problem while reading binary registry");
