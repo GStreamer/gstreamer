@@ -21,7 +21,7 @@ Requires:         %{gstreamer} >= %{gst_minver}
 BuildRequires:    %{gstreamer}-devel >= %{gst_minver}
 
 BuildRequires:  gcc-c++
-
+@USE_LADSPA_TRUE@BuildRequires: ladspa-devel
 # @USE_AUDIOFILE_TRUE@Requires:      audiofile >= 0.2.1
 # @USE_AUDIOFILE_TRUE@BuildRequires: audiofile-devel >= 0.2.1
 @USE_FAAD_TRUE@BuildRequires:  faad2-devel >= 2.0
@@ -100,6 +100,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrfbsrc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstreal.so
+%{_libdir}/gstreamer-%{majorminor}/libgstinterleave.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmve.so
+
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
@@ -119,6 +123,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_MUSEPACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmusepack.so
 @USE_GSM_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 @USE_DTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdtsdec.so
+@USE_LADSPA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
 @USE_MYTHTV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmythtvsrc.so
 
 %changelog
