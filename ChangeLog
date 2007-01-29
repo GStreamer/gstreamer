@@ -1,3 +1,8 @@
+2007-01-29  Wim Taymans  <wim@fluendo.com>
+
+	* tests/check/elements/.cvsignore:
+	Some more ignores.
+
 2007-01-26  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: charles <charlesg3 at gmail dot com>
