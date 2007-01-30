@@ -620,6 +620,8 @@ gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind)
         "probability is %u which is lower than the required minimum of %u",
         caps, probability, typefind->min_probability);
 
+    gst_caps_replace (&caps, NULL);
+
     if (GST_BUFFER_SIZE (typefind->store) >= TYPE_FIND_MAX_SIZE) {
       GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND, (NULL), (NULL));
       stop_typefinding (typefind);
@@ -636,6 +638,7 @@ gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind)
 
   /* .. and send out the accumulated data */
   stop_typefinding (typefind);
+  gst_caps_unref (caps);
   return GST_FLOW_OK;
 }
 
@@ -768,6 +771,7 @@ gst_type_find_element_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       gst_caps_replace (&typefind->caps, NULL);
       g_list_foreach (typefind->cached_events,
           (GFunc) gst_mini_object_unref, NULL);

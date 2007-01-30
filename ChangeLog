@@ -1,3 +1,11 @@
+2007-01-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_chain_do_typefinding),
+	(gst_type_find_element_change_state):
+	  Don't leak found caps in chain function (no idea why that never
+	  showed up as a leak anywhere).
+
 2007-01-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstplugin.h:
