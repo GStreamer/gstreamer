@@ -411,8 +411,8 @@ set_structure_widths (GstStructure * s, int min, int max)
  * channels, as the latter conversion is not lossless.
  *
  * So, we return, in order (assuming input caps have only one structure; 
- * is this right?):
-*  - input caps with a different format (lossless conversions).
+ * which is enforced by basetransform):
+ *  - input caps with a different format (lossless conversions).
  *  - input caps with a different format (slightly lossy conversions).
  *  - input caps with a different number of channels (very lossy!)
  */
@@ -653,6 +653,9 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
    * sizes */
   if (!(res = audio_convert_get_sizes (&this->ctx, samples, &insize, &outsize)))
     goto error;
+
+  if (insize == 0 || outsize == 0)
+    return GST_FLOW_OK;
 
   /* check in and outsize */
   if (GST_BUFFER_SIZE (inbuf) < insize)
