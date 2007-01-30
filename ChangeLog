@@ -1,3 +1,16 @@
+2007-01-30  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	Check for an Objective C compiler
+	* sys/Makefile.am:
+	* sys/osxvideo/Makefile.am:
+	* sys/osxvideo/cocoawindow.h:
+	* sys/osxvideo/cocoawindow.m:
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	Port of osxvideo plugin to 0.10. Do NOT consider 100% stable !
+	Fixes #402470
+
 2007-01-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videocrop/gstvideocrop.c:

@@ -46,6 +46,12 @@ else
 DIRECTSOUND_DIR=
 endif
 
-SUBDIRS = $(GL_DIR) $(DVB_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR)
+if USE_OSX_VIDEO
+OSX_VIDEO_DIR=osxvideo
+else
+OSX_VIDEO_DIR=
+endif
 
-DIST_SUBDIRS = glsink dvb directdraw directsound
+SUBDIRS = $(GL_DIR) $(DVB_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(OSX_VIDEO_DIR)
+
+DIST_SUBDIRS = glsink dvb directdraw directsound osxvideo

@@ -131,6 +131,8 @@ AC_PROG_CXX
 dnl determine if c++ is available on this system
 AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
 
+AS_PROG_OBJC
+
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
@@ -359,6 +361,24 @@ int main ()
   fi
   AC_SUBST(HAVE_DIRECTSOUND)
 ])
+
+dnl *** OS X video ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_VIDEO, true)
+HAVE_OSX_VIDEO="no"
+GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
+  AC_CHECK_HEADER(OpenGL/gl.h, HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no")
+])
+dnl in case header OpenGL/gl.h is found on other platforms
+case "$host" in
+  *-*darwin*)
+    dnl do nothing
+    ;;
+  *)
+    HAVE_OSX_VIDEO="no"
+    ;;
+esac
+
+
 
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !
@@ -961,6 +981,7 @@ sys/glsink/Makefile
 sys/dvb/Makefile
 sys/directdraw/Makefile
 sys/directsound/Makefile
+sys/osxvideo/Makefile
 examples/Makefile
 examples/directfb/Makefile
 ext/amrwb/Makefile

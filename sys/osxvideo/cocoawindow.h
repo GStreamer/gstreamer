@@ -1,0 +1,79 @@
+/* GStreamer
+ * Copyright (C) 2004 Zaheer Abbas Merali <zaheerabbas at merali dot org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+/* inspiration gained from looking at source of osx video out of xine and vlc 
+ * and is reflected in the code
+ */
+
+#import <Cocoa/Cocoa.h>
+#import <QuickTime/QuickTime.h>
+#import <glib.h>
+
+struct _GstOSXImage;
+
+@interface GstGLView : NSOpenGLView
+{
+    int i_effect;
+    unsigned long pi_texture;
+    float f_x;
+    float f_y;
+    int initDone;
+    char* data;
+    int width, height;
+    BOOL fullscreen;
+    NSOpenGLContext* fullScreenContext; 
+}
+- (void) drawQuad;
+- (void) drawRect: (NSRect) rect;
+- (id) initWithFrame: (NSRect) frame;
+- (void) initTextures;
+- (void) reloadTexture;
+- (void) cleanUp;
+- (void) displayTexture;
+- (char*) getTextureBuffer;
+- (void) setFullScreen: (BOOL) flag;
+- (void) reshape;
+- (void) setVideoSize: (int) w: (int) h;
+
+@end
+
+@interface GstView : NSQuickDrawView {
+    int                        width, height;
+    gboolean isPortSet;
+    void* port;
+/* Quicktime Sequence */
+    ImageSequence qtseqid;
+    ImageDescriptionHandle imgdesc;
+    struct _GstOSXImage* curimg;
+}
+- (void) drawRect: (NSRect) rect;
+- (id) initWithFrame: (NSRect) frame;
+- (void) setVideoSize: (int) w: (int) h;
+- (void) setVideoImage: (GstBuffer*) img;
+@end
+
+@interface GstOSXVideoSinkWindow: NSWindow {
+   int width, height;
+   GstGLView *gstview;
+}
+
+- (void) setContentSize: (NSSize) size;
+- (GstGLView *) gstView;
+- (id)initWithContentRect:(NSRect)contentRect styleMask:(unsigned int)styleMask backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag screen:(NSScreen *)aScreen;
+@end
