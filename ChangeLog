@@ -1,3 +1,11 @@
+2007-01-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_property),
+	(gst_play_base_bin_get_streaminfo_value_array):
+	  Take some locks and make a copy of the streaminfo value array we
+	  maintain while holding the lock, so that the application can
+	  retrieve the stream-info as a value array in a thread-safe way.
+
 2007-01-30  Wim Taymans  <wim@fluendo.com>
 
 	* gst/audioconvert/gstaudioconvert.c:

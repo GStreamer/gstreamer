@@ -75,8 +75,8 @@ static void gst_play_base_bin_handle_message_func (GstBin * bin,
 static GstStateChangeReturn gst_play_base_bin_change_state (GstElement *
     element, GstStateChange transition);
 
-const GList *gst_play_base_bin_get_streaminfo (GstPlayBaseBin * play_base_bin);
-const GValueArray *gst_play_base_bin_get_streaminfo_value_array (GstPlayBaseBin
+static const GList *gst_play_base_bin_get_streaminfo (GstPlayBaseBin * bin);
+static GValueArray *gst_play_base_bin_get_streaminfo_value_array (GstPlayBaseBin
     * play_base_bin);
 static void preroll_remove_overrun (GstElement * element,
     GstPlayBaseBin * play_base_bin);
@@ -2502,8 +2502,10 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
           (gpointer) gst_play_base_bin_get_streaminfo (play_base_bin));
       break;
     case ARG_STREAMINFO_VALUES:{
-      g_value_set_boxed (value,
-          gst_play_base_bin_get_streaminfo_value_array (play_base_bin));
+      GValueArray *copy;
+
+      copy = gst_play_base_bin_get_streaminfo_value_array (play_base_bin);
+      g_value_take_boxed (value, copy);
       break;
     }
     case ARG_SOURCE:
@@ -2594,7 +2596,7 @@ cleanup_groups:
   }
 }
 
-const GList *
+static const GList *
 gst_play_base_bin_get_streaminfo (GstPlayBaseBin * play_base_bin)
 {
   GstPlayBaseGroup *group = get_active_group (play_base_bin);
@@ -2606,15 +2608,18 @@ gst_play_base_bin_get_streaminfo (GstPlayBaseBin * play_base_bin)
   return info;
 }
 
-const GValueArray *
+static GValueArray *
 gst_play_base_bin_get_streaminfo_value_array (GstPlayBaseBin * play_base_bin)
 {
-  GstPlayBaseGroup *group = get_active_group (play_base_bin);
+  GstPlayBaseGroup *group;
   GValueArray *array = NULL;
 
+  GROUP_LOCK (play_base_bin);
+  group = get_active_group (play_base_bin);
   if (group) {
-    array = group->streaminfo_value_array;
+    array = g_value_array_copy (group->streaminfo_value_array);
   }
+  GROUP_UNLOCK (play_base_bin);
 
   return array;
 }
