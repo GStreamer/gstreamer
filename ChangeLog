@@ -1,3 +1,8 @@
+2007-01-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstplugin.h:
+	  Fix and expand GstPluginDesc API docs.
+
 2007-01-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

@@ -101,9 +101,11 @@ typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
  * @origin: URL to provider of plugin
  * @_gst_reserved: private, for later expansion
  *
+ * A plugin should export a variable of this type called plugin_desc. The plugin
+ * loader will use the data provided there to initialize the plugin.
  *
- * A plugins should export a variable of this type called plugin_desc. This plugin
- * loaded will use this variable to initialize the plugin.
+ * The @licence parameter must be one of: LGPL, GPL, QPL, GPL/QPL, MPL,
+ * Proprietary, unknown.
  */
 struct _GstPluginDesc {
   gint major_version;
