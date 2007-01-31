@@ -1,6 +1,11 @@
 2007-01-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/design/draft-klass.txt:
+	  Fix the previous change, this is a list of categories and not a hierarchy.
+
+2007-01-31  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/design/draft-klass.txt:
 	  Add info about how to get a list of used classes.
 
 2007-01-30  Tim-Philipp Müller  <tim at centricular dot net>
