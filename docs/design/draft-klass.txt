@@ -3,7 +3,7 @@ Element Klass definition
 
 Status:
 
-  DRAFT.  
+  DRAFT.
 
 
 Purpose:
@@ -12,11 +12,13 @@ Purpose:
   elements based on specific capabilities or features of the element.
 
   A playback application might want to retrieve all the elements that can be
-  used for visualisation, for example, or a video editor might want to select all
-  video effect filters.
+  used for visualisation, for example, or a video editor might want to select
+  all video effect filters.
 
   The topic of defining the klass of elements should be based on use cases.
-  
+
+  A list of claases that are used in a installation can be generated using:
+  gst-inspect-0.10 -a | grep -ho Class:.* | cut -c8- | sort | uniq
 
 Proposal:
 
