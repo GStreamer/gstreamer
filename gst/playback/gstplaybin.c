@@ -1129,21 +1129,21 @@ link_failed:
  * normal video bin. The video bin is run in a thread to make sure it does
  * not block the audio playback pipeline.
  *
- *  +--------------------------------------------------------------------+
- *  | visbin                                                             |
- *  |      +------+   +--------+   +----------------+                    |
- *  |      | tee  |   | aqueue |   |   abin ...     |                    |
- *  |   +-sink   src-sink     src-sink              |                    |
- *  |   |  |      |   +--------+   +----------------+                    |
- *  |   |  |      |                                                      |
- *  |   |  |      |   +------+   +---------+   +------+   +-----------+  |
- *  |   |  |      |   |vqueue|   |audioconv|   | vis  |   | vbin ...  |  |
- *  |   |  |     src-sink   src-sink      src-sink   src-sink         |  |
- *  |   |  |      |   +------+   +---------+   +------+   +-----------+  |
- *  |   |  |      |                                                      |
- *  |   |  +------+                                                      |
- * sink-+                                                                |
-   +---------------------------------------------------------------------+
+ *  +-----------------------------------------------------------------------+
+ *  | visbin                                                                |
+ *  |      +------+   +--------+   +----------------+                       |
+ *  |      | tee  |   | aqueue |   |   abin ...     |                       |
+ *  |   +-sink   src-sink     src-sink              |                       |
+ *  |   |  |      |   +--------+   +----------------+                       |
+ *  |   |  |      |                                                         |
+ *  |   |  |      |   +------+   +------------+   +------+   +-----------+  |
+ *  |   |  |      |   |vqueue|   | audioconv  |   | vis  |   | vbin ...  |  |
+ *  |   |  |     src-sink   src-sink + samp  src-sink   src-sink         |  |
+ *  |   |  |      |   +------+   +------------+   +------+   +-----------+  |
+ *  |   |  |      |                                                         |
+ *  |   |  +------+                                                         |
+ * sink-+                                                                   |
+   +------------------------------------------------------------------------+
  */
 static GstElement *
 gen_vis_element (GstPlayBin * play_bin)
@@ -1154,6 +1154,8 @@ gen_vis_element (GstPlayBin * play_bin)
   GstElement *asink;
   GstElement *vsink;
   GstElement *conv;
+  GstElement *resamp;
+  GstElement *conv2;
   GstElement *vis;
   GstElement *vqueue, *aqueue;
   GstPad *pad, *rpad;
@@ -1185,6 +1187,16 @@ gen_vis_element (GstPlayBin * play_bin)
     goto no_audioconvert;
   gst_bin_add (GST_BIN_CAST (element), conv);
 
+  resamp = gst_element_factory_make ("audioresample", "aresamp");
+  if (resamp == NULL)
+    goto no_audioresample;
+  gst_bin_add (GST_BIN_CAST (element), resamp);
+
+  conv2 = gst_element_factory_make ("audioconvert", "aconv2");
+  if (conv2 == NULL)
+    goto no_audioconvert;
+  gst_bin_add (GST_BIN_CAST (element), conv2);
+
   if (play_bin->visualisation) {
     gst_object_ref (play_bin->visualisation);
     vis = play_bin->visualisation;
@@ -1196,7 +1208,9 @@ gen_vis_element (GstPlayBin * play_bin)
   gst_bin_add (GST_BIN_CAST (element), vis);
 
   res = gst_element_link_pads (vqueue, "src", conv, "sink");
-  res &= gst_element_link_pads (conv, "src", vis, "sink");
+  res &= gst_element_link_pads (conv, "src", resamp, "sink");
+  res &= gst_element_link_pads (resamp, "src", conv2, "sink");
+  res &= gst_element_link_pads (conv2, "src", vis, "sink");
   res &= gst_element_link_pads (vis, "src", vsink, "sink");
   if (!res)
     goto link_failed;
@@ -1227,6 +1241,15 @@ no_audioconvert:
     GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
             "audioconvert"), ("possibly a liboil version mismatch?"));
+    gst_object_unref (element);
+    return NULL;
+  }
+no_audioresample:
+  {
+    post_missing_element_message (play_bin, "audioresample");
+    GST_ELEMENT_ERROR (play_bin, CORE, MISSING_PLUGIN,
+        (_("Missing element '%s' - check your GStreamer installation."),
+            "audioresample"), (NULL));
     gst_object_unref (element);
     return NULL;
   }

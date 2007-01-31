@@ -1,3 +1,12 @@
+2007-01-31  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gstplaybin.c: (gen_vis_element):
+	  Add audioresample+audioconvert in front of the visualisation
+	  element, so that elements like libvisual 0.4 that don't support all
+	  samplerates can work.
+
+	  Fixes: #402505
+
 2007-01-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_get_property),
