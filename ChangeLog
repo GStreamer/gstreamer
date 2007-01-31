@@ -1,3 +1,12 @@
+=== release 0.10.7 ===
+
+2007-01-31   <>
+
+	* configure.ac:
+	* NEWS:
+	* RELEASE:
+	  releasing 0.10.7, "You want to feel sorry for yourself, don't you ?"
+
 2007-01-29  Edward Hervey  <edward@fluendo.com>
 
 	* codegen/codegen.py:

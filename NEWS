@@ -1,5 +1,12 @@
-This is GStreamer Python Bindings 0.10.6, ""You're not very subtle, but you are 
-effective"
+This is GStreamer Python Bindings 0.10.7, "You want to feel sorry for yourself, Don't you ?"
+
+Changes since 0.10.6:
+      * Threadsafe fix
+
+Bugs fixed since 0.10.6:
+
+      * 383805 : segfault with videobalance
+      * 401051 : Fails to build with gst-plugins-base < 0.10.11
 
 Changes since 0.10.5:
 
