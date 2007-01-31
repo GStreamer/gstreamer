@@ -69,7 +69,7 @@ gst_ladspa_base_init (gpointer g_class)
   GstSignalProcessorClass *gsp_class = GST_SIGNAL_PROCESSOR_CLASS (g_class);
   GstElementDetails *details;
   LADSPA_Descriptor *desc;
-  gint j, sinkcount, srccount;
+  guint j, audio_in_count, audio_out_count, control_in_count, control_out_count;
 
   GST_DEBUG ("base_init %p", g_class);
 
@@ -84,7 +84,9 @@ gst_ladspa_base_init (gpointer g_class)
   /* pad templates */
   gsp_class->num_audio_in = 0;
   gsp_class->num_audio_out = 0;
-  /* control gets set in the class init */
+  /* properties */
+  gsp_class->num_control_in = 0;
+  gsp_class->num_control_out = 0;
 
   for (j = 0; j < desc->PortCount; j++) {
     LADSPA_PortDescriptor p = desc->PortDescriptors[j];
@@ -103,6 +105,11 @@ gst_ladspa_base_init (gpointer g_class)
       else
         gst_signal_processor_class_add_pad_template (gsp_class, name,
             GST_PAD_SRC, gsp_class->num_audio_out++);
+    } else if (LADSPA_IS_PORT_CONTROL (p)) {
+      if (LADSPA_IS_PORT_INPUT (p))
+        gsp_class->num_control_in++;
+      else
+        gsp_class->num_control_out++;
     }
   }
 
@@ -115,26 +122,45 @@ gst_ladspa_base_init (gpointer g_class)
   details->author = g_locale_to_utf8 (desc->Maker, -1, NULL, NULL, NULL);
   if (!details->author)
     details->author = g_strdup ("no author available");
+
   if (gsp_class->num_audio_in == 0)
     details->klass = "Source/Audio/LADSPA";
-  else if (gsp_class->num_audio_out == 0)
-    details->klass = "Sink/Audio/LADSPA";
-  else
+  else if (gsp_class->num_audio_out == 0) {
+    if (gsp_class->num_control_out == 0)
+      details->klass = "Sink/Audio/LADSPA";
+    else
+      details->klass = "Sink/Analyzer/Audio/LADSPA";
+  } else
     details->klass = "Filter/Effect/Audio/LADSPA";
   gst_element_class_set_details (element_class, details);
 
   klass->audio_in_portnums = g_new0 (gint, gsp_class->num_audio_in);
   klass->audio_out_portnums = g_new0 (gint, gsp_class->num_audio_out);
+  klass->control_in_portnums = g_new0 (gint, gsp_class->num_control_in);
+  klass->control_out_portnums = g_new0 (gint, gsp_class->num_control_out);
 
-  sinkcount = srccount = 0;
+  audio_in_count = audio_out_count = control_in_count = control_out_count = 0;
+
   for (j = 0; j < desc->PortCount; j++) {
-    if (LADSPA_IS_PORT_AUDIO (desc->PortDescriptors[j])) {
-      if (LADSPA_IS_PORT_INPUT (desc->PortDescriptors[j]))
-        klass->audio_in_portnums[sinkcount++] = j;
+    LADSPA_PortDescriptor p = desc->PortDescriptors[j];
+
+    if (LADSPA_IS_PORT_AUDIO (p)) {
+      if (LADSPA_IS_PORT_INPUT (p))
+        klass->audio_in_portnums[audio_in_count++] = j;
       else
-        klass->audio_out_portnums[srccount++] = j;
+        klass->audio_out_portnums[audio_out_count++] = j;
+    } else if (LADSPA_IS_PORT_CONTROL (p)) {
+      if (LADSPA_IS_PORT_INPUT (p))
+        klass->control_in_portnums[control_in_count++] = j;
+      else
+        klass->control_out_portnums[control_out_count++] = j;
     }
   }
+
+  g_assert (audio_in_count == gsp_class->num_audio_in);
+  g_assert (audio_out_count == gsp_class->num_audio_out);
+  g_assert (control_in_count == gsp_class->num_control_in);
+  g_assert (control_out_count == gsp_class->num_control_out);
 
   if (!LADSPA_IS_INPLACE_BROKEN (desc->Properties))
     GST_SIGNAL_PROCESSOR_CLASS_SET_CAN_PROCESS_IN_PLACE (klass);
@@ -291,8 +317,7 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
 {
   GObjectClass *gobject_class;
   GstSignalProcessorClass *gsp_class;
-  LADSPA_Descriptor *desc;
-  gint i, control_in_count, control_out_count;
+  gint i;
 
   GST_DEBUG ("class_init %p", klass);
 
@@ -307,39 +332,7 @@ gst_ladspa_class_init (GstLADSPAClass * klass)
   gsp_class->cleanup = gst_ladspa_cleanup;
   gsp_class->process = gst_ladspa_process;
 
-  desc = klass->descriptor;
-  g_assert (desc);
-
-  gsp_class->num_control_in = 0;
-  gsp_class->num_control_out = 0;
-
-  for (i = 0; i < desc->PortCount; i++) {
-    LADSPA_PortDescriptor p = desc->PortDescriptors[i];
-
-    if (!LADSPA_IS_PORT_AUDIO (p)) {
-      if (LADSPA_IS_PORT_INPUT (p))
-        gsp_class->num_control_in++;
-      else
-        gsp_class->num_control_out++;
-    }
-  }
-
-  klass->control_in_portnums = g_new0 (gint, gsp_class->num_control_in);
-  klass->control_out_portnums = g_new0 (gint, gsp_class->num_control_out);
-
-  control_in_count = control_out_count = 0;
-  for (i = 0; i < desc->PortCount; i++) {
-    LADSPA_PortDescriptor p = desc->PortDescriptors[i];
-
-    if (!LADSPA_IS_PORT_AUDIO (p)) {
-      if (LADSPA_IS_PORT_INPUT (p))
-        klass->control_in_portnums[control_in_count++] = i;
-      else
-        klass->control_out_portnums[control_out_count++] = i;
-    }
-  }
-  g_assert (control_in_count == gsp_class->num_control_in);
-  g_assert (control_out_count == gsp_class->num_control_out);
+  /* register properties */
 
   for (i = 0; i < gsp_class->num_control_in; i++) {
     GParamSpec *p;

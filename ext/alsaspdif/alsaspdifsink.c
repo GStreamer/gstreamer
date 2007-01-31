@@ -71,7 +71,7 @@ GST_DEBUG_CATEGORY_STATIC (alsaspdifsink_debug);
 /* ElementFactory information. */
 static GstElementDetails alsaspdifsink_details = {
   "S/PDIF ALSA audiosink",
-  "audio/x-iec958",
+  "Sink/Audio",
   "Feeds audio to S/PDIF interfaces through the ALSA sound driver",
   "Martin Soto <martinsoto@users.sourceforge.net>\n"
       "Michael Smith <msmith@fluendo.com>"

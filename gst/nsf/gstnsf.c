@@ -31,7 +31,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails gst_nsfdec_details =
 GST_ELEMENT_DETAILS ("Nsf decoder",
-    "Codec/Audio/Decoder",
+    "Codec/Decoder/Audio",
     "Using nosefart to decode NSF audio tunes",
     "Johan Dahlin <johan@gnome.org>");
 
