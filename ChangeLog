@@ -1,3 +1,11 @@
+2007-01-31  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_src_query),
+	(gst_wavpack_parse_handle_seek_event),
+	(gst_wavpack_parse_create_src_pad):
+	Fix a off by one that leads to the duration reported as one
+	sample less than it is
+
 2007-01-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/alsaspdif/alsaspdifsink.c:

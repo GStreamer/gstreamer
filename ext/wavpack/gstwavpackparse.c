@@ -276,7 +276,7 @@ gst_wavpack_parse_src_query (GstPad * pad, GstQuery * query)
       rate = parse->samplerate;
       GST_OBJECT_UNLOCK (parse);
 
-      if (len <= 0 || rate == 0) {
+      if (len < 0 || rate == 0) {
         GST_DEBUG_OBJECT (parse, "haven't read header yet");
         break;
       }
@@ -534,15 +534,15 @@ gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
   /* if seek is to something after the end of the stream seek only
    * to the end. this can be caused by rounding errors */
   if (start >= wvparse->total_samples)
-    start = wvparse->total_samples;
-
-  flush = ((seek_flags & GST_SEEK_FLAG_FLUSH) != 0);
+    start = wvparse->total_samples - 1;
 
   if (start < 0) {
     GST_OBJECT_UNLOCK (wvparse);
     GST_DEBUG_OBJECT (wvparse, "Invalid start sample %" G_GINT64_FORMAT, start);
     return FALSE;
   }
+
+  flush = ((seek_flags & GST_SEEK_FLAG_FLUSH) != 0);
 
   /* operate on segment copy until we know the seek worked */
   segment = wvparse->segment;
@@ -795,8 +795,6 @@ gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
         wvparse->total_samples = header->total_samples;
         if (wvparse->total_samples == (int32_t) - 1)
           wvparse->total_samples = 0;
-        else
-          wvparse->total_samples--;
 
         caps = gst_caps_new_simple ("audio/x-wavpack",
             "width", G_TYPE_INT, WavpackGetBitsPerSample (wpc),
