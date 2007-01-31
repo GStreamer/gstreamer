@@ -1,3 +1,9 @@
+2007-01-31  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/real/gstrealaudiodec.c:
+	* gst/real/gstrealvideodec.c:
+	  Fix classification in GstElementDetails.
+
 2007-01-31  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_src_query),

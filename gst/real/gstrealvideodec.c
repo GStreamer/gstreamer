@@ -33,7 +33,7 @@ GST_DEBUG_CATEGORY_STATIC (realvideode_debug);
 
 static GstElementDetails realvideode_details =
 GST_ELEMENT_DETAILS ("RealVideo decoder",
-    "Codec/Decoder", "Decoder for RealVideo streams",
+    "Codec/Decoder/Video", "Decoder for RealVideo streams",
     "Lutz Mueller <lutz@topfrose.de>");
 
 static GstStaticPadTemplate snk_t =

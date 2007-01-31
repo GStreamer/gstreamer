@@ -33,7 +33,7 @@ GST_DEBUG_CATEGORY_STATIC (real_audio_dec_debug);
 
 static GstElementDetails real_audio_dec_details =
 GST_ELEMENT_DETAILS ("RealAudio decoder",
-    "Codec/Decoder", "Decoder for RealAudio streams",
+    "Codec/Decoder/Audio", "Decoder for RealAudio streams",
     "Lutz Mueller <lutz@topfrose.de>");
 
 static GstStaticPadTemplate snk_t =
