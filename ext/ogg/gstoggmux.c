@@ -344,6 +344,23 @@ gst_ogg_mux_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static void
+gst_ogg_mux_ogg_pad_destroy_notify (GstCollectData * data)
+{
+  GstOggPad *oggpad = (GstOggPad *) data;
+  GstBuffer *buf;
+
+  ogg_stream_clear (&oggpad->stream);
+
+  if (oggpad->pagebuffers) {
+    while ((buf = g_queue_pop_head (oggpad->pagebuffers)) != NULL) {
+      gst_buffer_unref (buf);
+    }
+    g_queue_free (oggpad->pagebuffers);
+    oggpad->pagebuffers = NULL;
+  }
+}
+
 static GstPadLinkReturn
 gst_ogg_mux_sinkconnect (GstPad * pad, GstPad * peer)
 {
@@ -401,8 +418,8 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       GstOggPad *oggpad;
 
       oggpad = (GstOggPad *)
-          gst_collect_pads_add_pad (ogg_mux->collect, newpad,
-          sizeof (GstOggPad));
+          gst_collect_pads_add_pad_full (ogg_mux->collect, newpad,
+          sizeof (GstOggPad), gst_ogg_mux_ogg_pad_destroy_notify);
       ogg_mux->active_pads++;
 
       oggpad->serial = serial;
@@ -443,30 +460,8 @@ static void
 gst_ogg_mux_release_pad (GstElement * element, GstPad * pad)
 {
   GstOggMux *ogg_mux;
-  GSList *walk;
 
   ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
-
-  /* Find out GstOggPad in the collect pads info and clean it up */
-
-  GST_OBJECT_LOCK (ogg_mux->collect);
-  for (walk = ogg_mux->collect->data; walk; walk = g_slist_next (walk)) {
-    GstOggPad *oggpad = (GstOggPad *) walk->data;
-    GstCollectData *cdata = (GstCollectData *) walk->data;
-    GstBuffer *buf;
-
-    if (cdata->pad == pad) {
-      ogg_stream_clear (&oggpad->stream);
-
-      while ((buf = g_queue_pop_head (oggpad->pagebuffers)) != NULL) {
-        gst_buffer_unref (buf);
-      }
-
-      g_queue_free (oggpad->pagebuffers);
-      oggpad->pagebuffers = NULL;
-    }
-  }
-  GST_OBJECT_UNLOCK (ogg_mux->collect);
 
   gst_collect_pads_remove_pad (ogg_mux->collect, pad);
   gst_element_remove_pad (element, pad);
