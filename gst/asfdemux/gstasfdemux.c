@@ -195,6 +195,12 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
     }
 
     case GST_EVENT_EOS:{
+      if (demux->state == GST_ASF_DEMUX_STATE_HEADER) {
+        GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
+            (_("This stream contains no data.")),
+            ("got eos and didn't receive a complete header object"));
+        break;
+      }
       GST_OBJECT_LOCK (demux);
       gst_adapter_clear (demux->adapter);
       demux->bytes_needed = 0;
