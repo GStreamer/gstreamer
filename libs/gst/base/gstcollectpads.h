@@ -75,8 +75,6 @@ struct _GstCollectData
       gboolean           new_segment;
       gboolean           eos;
       gint               refcount;
-      /* since 0.10.12 */
-      GstCollectDataDestroyNotify  destroy_notify;
     } ABI;
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING + 0];

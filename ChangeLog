@@ -1,5 +1,17 @@
 2007-02-01  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	reviewed by: Tim-Philipp Müller <tim at centricular dot net>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_finalize),
+	(unref_data), (gst_collect_pads_add_pad_full):
+	* libs/gst/base/gstcollectpads.h:
+	Don't put the previously added destroy notify in the GstCollectData
+	struct as all it's padding is already used and we don't want to break
+	ABI. Instead put in the pad's GObject data for now. This should be
+	cleaned up for 0.11 (#402393).
+
+2007-02-01  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	reviewed by: Wim Taymans <wim@fluendo.com>
 
 	* docs/libs/gstreamer-libs-sections.txt:

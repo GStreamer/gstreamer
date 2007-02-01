@@ -134,15 +134,21 @@ gst_collect_pads_finalize (GObject * object)
   collected = pads->abidata.ABI.pad_list;
   for (; collected; collected = g_slist_next (collected)) {
     GstCollectData *pdata = (GstCollectData *) collected->data;
+    GstCollectDataDestroyNotify destroy_notify;
+
+    /* FIXME: Ugly hack as we can't add more fields to GstCollectData */
+    destroy_notify = (GstCollectDataDestroyNotify)
+        g_object_get_data (G_OBJECT (pdata->pad),
+        "gst-collect-data-destroy-notify");
+
+    if (destroy_notify)
+      destroy_notify (pdata);
 
     if (pdata->pad) {
       GST_DEBUG ("finalize pad %s:%s", GST_DEBUG_PAD_NAME (pdata->pad));
       gst_object_unref (pdata->pad);
       pdata->pad = NULL;
     }
-
-    if (pdata->abidata.ABI.destroy_notify)
-      pdata->abidata.ABI.destroy_notify (pdata);
 
     g_free (pdata);
   }
@@ -207,19 +213,27 @@ ref_data (GstCollectData * data)
 static void
 unref_data (GstCollectData * data)
 {
+  GstCollectDataDestroyNotify destroy_notify;
+
   g_assert (data != NULL);
   g_assert (data->abidata.ABI.refcount > 0);
 
   if (!g_atomic_int_dec_and_test (&(data->abidata.ABI.refcount)))
     return;
 
+  /* FIXME: Ugly hack as we can't add more fields to GstCollectData */
+  destroy_notify = (GstCollectDataDestroyNotify)
+      g_object_get_data (G_OBJECT (data->pad),
+      "gst-collect-data-destroy-notify");
+
+  if (destroy_notify)
+    destroy_notify (data);
+
   g_object_unref (data->pad);
   if (data->buffer) {
     gst_buffer_unref (data->buffer);
   }
 
-  if (data->abidata.ABI.destroy_notify)
-    data->abidata.ABI.destroy_notify (data);
 
   g_free (data);
 }
@@ -310,7 +324,10 @@ gst_collect_pads_add_pad_full (GstCollectPads * pads, GstPad * pad, guint size,
   data->abidata.ABI.new_segment = FALSE;
   data->abidata.ABI.eos = FALSE;
   data->abidata.ABI.refcount = 1;
-  data->abidata.ABI.destroy_notify = destroy_notify;
+
+  /* FIXME: Ugly hack as we can't add more fields to GstCollectData */
+  g_object_set_data (G_OBJECT (pad), "gst-collect-data-destroy-notify",
+      destroy_notify);
 
   GST_COLLECT_PADS_PAD_LOCK (pads);
   GST_OBJECT_LOCK (pad);
