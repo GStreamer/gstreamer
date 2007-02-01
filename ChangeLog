@@ -1,3 +1,8 @@
+2007-02-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* po/sv.po:
+	  Update Swedish translation (#378255).
+
 2007-01-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/design/draft-klass.txt:
