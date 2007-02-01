@@ -140,6 +140,10 @@ gst_collect_pads_finalize (GObject * object)
       gst_object_unref (pdata->pad);
       pdata->pad = NULL;
     }
+
+    if (pdata->abidata.ABI.destroy_notify)
+      pdata->abidata.ABI.destroy_notify (pdata);
+
     g_free (pdata);
   }
   /* Free pads list */
@@ -213,6 +217,10 @@ unref_data (GstCollectData * data)
   if (data->buffer) {
     gst_buffer_unref (data->buffer);
   }
+
+  if (data->abidata.ABI.destroy_notify)
+    data->abidata.ABI.destroy_notify (data);
+
   g_free (data);
 }
 
@@ -233,6 +241,9 @@ unref_data (GstCollectData * data)
  * The pad will be automatically activated in push mode when @pads is
  * started.
  *
+ * This function calls gst_collect_pads_add_pad() passing a value of NULL
+ * for destroy_notify.
+ *
  * Returns: a new #GstCollectData to identify the new pad. Or NULL
  *   if wrong parameters are supplied.
  *
@@ -240,6 +251,44 @@ unref_data (GstCollectData * data)
  */
 GstCollectData *
 gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
+{
+  return gst_collect_pads_add_pad_full (pads, pad, size, NULL);
+}
+
+/**
+ * gst_collect_pads_add_pad_full:
+ * @pads: the collectspads to use
+ * @pad: the pad to add
+ * @size: the size of the returned #GstCollectData structure
+ * @destroy_notify: function to be called before the returned #GstCollectData
+ * structure is freed
+ *
+ * Add a pad to the collection of collect pads. The pad has to be
+ * a sinkpad. The refcount of the pad is incremented. Use
+ * gst_collect_pads_remove_pad() to remove the pad from the collection
+ * again.
+ *
+ * You specify a size for the returned #GstCollectData structure
+ * so that you can use it to store additional information.
+ *
+ * You can also specify a #GstCollectDataDestroyNotify that will be called
+ * just before the #GstCollectData structure is freed. It is passed the
+ * pointer to the structure and should free any custom memory and resources
+ * allocated for it.
+ *
+ * The pad will be automatically activated in push mode when @pads is
+ * started.
+ *
+ * Since: 0.10.12
+ *
+ * Returns: a new #GstCollectData to identify the new pad. Or NULL
+ *   if wrong parameters are supplied.
+ *
+ * MT safe.
+ */
+GstCollectData *
+gst_collect_pads_add_pad_full (GstCollectPads * pads, GstPad * pad, guint size,
+    GstCollectDataDestroyNotify destroy_notify)
 {
   GstCollectData *data;
 
@@ -261,6 +310,7 @@ gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
   data->abidata.ABI.new_segment = FALSE;
   data->abidata.ABI.eos = FALSE;
   data->abidata.ABI.refcount = 1;
+  data->abidata.ABI.destroy_notify = destroy_notify;
 
   GST_COLLECT_PADS_PAD_LOCK (pads);
   GST_OBJECT_LOCK (pad);

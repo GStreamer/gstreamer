@@ -241,9 +241,11 @@ gst_base_transform_get_type
 GstCollectData
 GstCollectPads
 GstCollectPadsFunction
+GstCollectDataDestroyNotify
 gst_collect_pads_new
 gst_collect_pads_set_function
 gst_collect_pads_add_pad
+gst_collect_pads_add_pad_full
 gst_collect_pads_remove_pad
 gst_collect_pads_is_active
 gst_collect_pads_collect

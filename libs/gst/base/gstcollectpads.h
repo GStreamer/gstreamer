@@ -38,6 +38,18 @@ typedef struct _GstCollectPads GstCollectPads;
 typedef struct _GstCollectPadsClass GstCollectPadsClass;
 
 /**
+ * GstCollectDataDestroyNotify:
+ * @data: the #GstCollectData that will be freed
+ *
+ * A function that will be called when the #GstCollectData will be freed.
+ * It is passed the pointer to the structure and should free any custom
+ * memory and resources allocated for it.
+ *
+ * Since: 0.10.12
+ */
+typedef void (*GstCollectDataDestroyNotify) (GstCollectData *data);
+
+/**
  * GstCollectData:
  * @collect: owner #GstCollectPads
  * @pad: #GstPad managed by this data
@@ -63,6 +75,8 @@ struct _GstCollectData
       gboolean           new_segment;
       gboolean           eos;
       gint               refcount;
+      /* since 0.10.12 */
+      GstCollectDataDestroyNotify  destroy_notify;
     } ABI;
     /* adding + 0 to mark ABI change to be undone later */
     gpointer _gst_reserved[GST_PADDING + 0];
@@ -149,6 +163,7 @@ void		gst_collect_pads_set_function 	(GstCollectPads *pads, GstCollectPadsFuncti
 
 /* pad management */
 GstCollectData*	gst_collect_pads_add_pad	(GstCollectPads *pads, GstPad *pad, guint size);
+GstCollectData* gst_collect_pads_add_pad_full   (GstCollectPads *pads, GstPad *pad, guint size, GstCollectDataDestroyNotify destroy_notify);
 gboolean	gst_collect_pads_remove_pad	(GstCollectPads *pads, GstPad *pad);
 gboolean	gst_collect_pads_is_active 	(GstCollectPads *pads, GstPad *pad);
 
