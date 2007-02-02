@@ -311,15 +311,15 @@ Play an AVI movie
 
 .B Network streaming
 
-FIXME: give example pipelines using RTP and network elements.
+Stream video using RTP and network elements.
 
 .B
-        FIXME: pipeline to send file
+        gst\-launch v4l2src ! video/x-raw-yuv,width=128,height=96,format='(fourcc)'UYVY ! ffenc_h263 ! video/x-h263 ! rtph263ppay pt=96 ! udpsink host=192.168.1.1 port=5000 sync=false
 .br
 Use this command on the receiver
 
 .B
-        FIXME: pipeline to receive file
+        gst\-launch udpsrc port=5000 ! application/x-rtp, clock-rate=90000,payload=96 ! rtph263pdepay queue-delay=0 ! ffdec_h263 ! xvimagesink
 .br
 This command would be run on the transmitter
 

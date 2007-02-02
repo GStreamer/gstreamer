@@ -1,3 +1,8 @@
+2007-02-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* tools/gst-launch.1.in:
+	  Give example for network streaming (#351998)
+
 2007-02-02  Wim Taymans  <wim@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:
