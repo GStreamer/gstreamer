@@ -81,8 +81,7 @@ enum
   ARG_0,
   ARG_BANDS,
   ARG_BANDWIDTH,
-  ARG_VALUES
-      /* FILL ME */
+  ARG_BAND_VALUES
 };
 
 static void gst_iir_equalizer_base_init (gpointer g_class);
@@ -176,10 +175,12 @@ gst_iir_equalizer_class_init (gpointer g_class, gpointer class_data)
       g_param_spec_double ("bandwidth", "bandwidth",
           "bandwidth calculated as distance between bands * this value", 0.1,
           5.0, 1.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
-  /* FIXME FIXME FIXME */
-  g_object_class_install_property (gobject_class, ARG_VALUES,
-      g_param_spec_pointer ("values", "values",
-          "expects a gdouble* of values to use for the bands",
+  g_object_class_install_property (gobject_class, ARG_BAND_VALUES,
+      g_param_spec_value_array ("band-values", "band values",
+          "GValueArray holding gdouble values, one for each band with values "
+          "ranging from -1.0 to +1.0",
+          g_param_spec_double ("band-value", "band-value",
+              "Equaliser Band Value", -1.0, 1.0, 0.0, G_PARAM_WRITABLE),
           G_PARAM_WRITABLE));
 
   audio_filter_class->setup = gst_iir_equalizer_setup;
@@ -281,6 +282,7 @@ gst_iir_equalizer_set_property (GObject * object, guint prop_id,
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
 
+  GST_OBJECT_LOCK (equ);
   switch (prop_id) {
     case ARG_BANDS:
       gst_iir_equalizer_compute_frequencies (equ, g_value_get_uint (value));
@@ -298,24 +300,36 @@ gst_iir_equalizer_set_property (GObject * object, guint prop_id,
         }
       }
       break;
-    case ARG_VALUES:
-    {
-      gdouble *new = g_value_get_pointer (value);
-      guint i;
+    case ARG_BAND_VALUES:{
+      GValueArray *arr;
 
-      for (i = 0; i < equ->freq_count; i++) {
-        if (new[i] != equ->values[i]) {
-          equ->values[i] = new[i];
-          setup_filter (equ, &equ->filter[i], arg_to_scale (new[i]),
-              equ->freqs[i] / GST_AUDIO_FILTER (equ)->rate);
+      arr = (GValueArray *) g_value_get_boxed (value);
+      if (arr == NULL) {
+        g_warning ("Application tried to set empty band value array");
+      } else if (arr->n_values != equ->freq_count) {
+        g_warning ("Application tried to set %u band values, but there are "
+            "%u bands", arr->n_values, equ->freq_count);
+      } else {
+        guint i;
+
+        for (i = 0; i < arr->n_values; ++i) {
+          gdouble new_val;
+
+          new_val = g_value_get_double (g_value_array_get_nth (arr, i));
+          if (new_val != equ->values[i]) {
+            equ->values[i] = new_val;
+            setup_filter (equ, &equ->filter[i], arg_to_scale (new_val),
+                equ->freqs[i] / GST_AUDIO_FILTER (equ)->rate);
+          }
         }
       }
-    }
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (equ);
 }
 
 static void
@@ -324,6 +338,7 @@ gst_iir_equalizer_get_property (GObject * object, guint prop_id,
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
 
+  GST_OBJECT_LOCK (equ);
   switch (prop_id) {
     case ARG_BANDS:
       g_value_set_uint (value, equ->freq_count);
@@ -335,6 +350,7 @@ gst_iir_equalizer_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (equ);
 }
 
 /* start of code that is type specific */
@@ -400,8 +416,10 @@ gst_iir_equalizer_filter_inplace (GstAudioFilter * filter, GstBuffer * buf)
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (filter);
 
+  GST_OBJECT_LOCK (equ);
   equ->process (equ, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
       filter->channels);
+  GST_OBJECT_UNLOCK (equ);
 }
 
 static void
