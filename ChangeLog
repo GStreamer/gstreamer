@@ -1,5 +1,15 @@
 2007-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/equalizer/gstiirequalizer.c: (gst_iir_equalizer_class_init),
+	(gst_iir_equalizer_set_property), (gst_iir_equalizer_get_property),
+	(gst_iir_equalizer_filter_inplace):
+	  Rename "values" property to "band-values" and change type into a
+	  GValueArray, so it's more easily bindable and the range of the
+	  values passed in is defined and checked etc.; also do some
+	  locking.
+
+2007-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: James "Doc" Livingston  <doclivingston at gmail com>
 
 	* configure.ac:
