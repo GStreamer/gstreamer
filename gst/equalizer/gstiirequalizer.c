@@ -56,7 +56,7 @@ typedef struct
 
 struct _GstIirEqualizer
 {
-  GstAudiofilter audiofilter;
+  GstAudioFilter audiofilter;
 
   /* properties */
   guint freq_count;
@@ -73,7 +73,7 @@ struct _GstIirEqualizer
 
 struct _GstIirEqualizerClass
 {
-  GstAudiofilterClass audiofilter_class;
+  GstAudioFilterClass audiofilter_class;
 };
 
 enum
@@ -96,11 +96,11 @@ static void gst_iir_equalizer_set_property (GObject * object,
 static void gst_iir_equalizer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static void gst_iir_equalizer_setup (GstAudiofilter * iir_equalizer);
-static void gst_iir_equalizer_filter_inplace (GstAudiofilter *
+static void gst_iir_equalizer_setup (GstAudioFilter * iir_equalizer);
+static void gst_iir_equalizer_filter_inplace (GstAudioFilter *
     iir_equalizer, GstBuffer * buf);
 
-static GstAudiofilterClass *parent_class;
+static GstAudioFilterClass *parent_class;
 
 GType
 gst_iir_equalizer_get_type (void)
@@ -120,7 +120,7 @@ gst_iir_equalizer_get_type (void)
       NULL,
     };
 
-    iir_equalizer_type = g_type_register_static (GST_TYPE_AUDIOFILTER,
+    iir_equalizer_type = g_type_register_static (GST_TYPE_AUDIO_FILTER,
         "GstIirEqualizer", &iir_equalizer_info, 0);
   }
   return iir_equalizer_type;
@@ -145,9 +145,9 @@ gst_iir_equalizer_base_init (gpointer g_class)
       "rate=(int)[1000,MAX], channels=(int)[1,6];"
       "audio/x-raw-float, width=(int)32, endianness=(int)BYTE_ORDER,"
       "rate=(int)[1000,MAX], channels=(int)[1,6]");
-  gst_audiofilter_class_add_pad_templates (GST_AUDIOFILTER_CLASS (g_class),
+  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (g_class),
       caps);
-  gst_caps_free (caps);
+  gst_caps_unref (caps);
 }
 
 static void
@@ -156,12 +156,12 @@ gst_iir_equalizer_class_init (gpointer g_class, gpointer class_data)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstIirEqualizerClass *klass;
-  GstAudiofilterClass *audiofilter_class;
+  GstAudioFilterClass *audio_filter_class;
 
   klass = (GstIirEqualizerClass *) g_class;
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  audiofilter_class = (GstAudiofilterClass *) g_class;
+  audio_filter_class = (GstAudioFilterClass *) g_class;
 
   gobject_class->set_property = gst_iir_equalizer_set_property;
   gobject_class->get_property = gst_iir_equalizer_get_property;
@@ -182,8 +182,8 @@ gst_iir_equalizer_class_init (gpointer g_class, gpointer class_data)
           "expects a gdouble* of values to use for the bands",
           G_PARAM_WRITABLE));
 
-  audiofilter_class->setup = gst_iir_equalizer_setup;
-  audiofilter_class->filter_inplace = gst_iir_equalizer_filter_inplace;
+  audio_filter_class->setup = gst_iir_equalizer_setup;
+  audio_filter_class->filter_inplace = gst_iir_equalizer_filter_inplace;
 }
 
 static void
@@ -239,7 +239,7 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint band_count)
   gdouble *old_values;
   guint old_count, i;
   gdouble step = pow (HIGHEST_FREQ / LOWEST_FREQ, 1.0 / (band_count - 1));
-  GstAudiofilter *audio = GST_AUDIOFILTER (equ);
+  GstAudioFilter *audio = GST_AUDIO_FILTER (equ);
 
   old_count = equ->freq_count;
   equ->freq_count = band_count;
@@ -288,12 +288,12 @@ gst_iir_equalizer_set_property (GObject * object, guint prop_id,
     case ARG_BANDWIDTH:
       if (g_value_get_double (value) != equ->bandwidth) {
         equ->bandwidth = g_value_get_double (value);
-        if (GST_AUDIOFILTER (equ)->rate) {
+        if (GST_AUDIO_FILTER (equ)->rate) {
           guint i;
 
           for (i = 0; i < equ->freq_count; i++) {
             setup_filter (equ, &equ->filter[i], arg_to_scale (equ->values[i]),
-                equ->freqs[i] / GST_AUDIOFILTER (equ)->rate);
+                equ->freqs[i] / GST_AUDIO_FILTER (equ)->rate);
           }
         }
       }
@@ -307,7 +307,7 @@ gst_iir_equalizer_set_property (GObject * object, guint prop_id,
         if (new[i] != equ->values[i]) {
           equ->values[i] = new[i];
           setup_filter (equ, &equ->filter[i], arg_to_scale (new[i]),
-              equ->freqs[i] / GST_AUDIOFILTER (equ)->rate);
+              equ->freqs[i] / GST_AUDIO_FILTER (equ)->rate);
         }
       }
     }
@@ -396,7 +396,7 @@ CREATE_OPTIMIZED_FUNCTIONS (gint16, gint, -32768, 32767);
 CREATE_OPTIMIZED_FUNCTIONS (gfloat, gfloat, -1.0, 1.0);
 
 static void
-gst_iir_equalizer_filter_inplace (GstAudiofilter * filter, GstBuffer * buf)
+gst_iir_equalizer_filter_inplace (GstAudioFilter * filter, GstBuffer * buf)
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (filter);
 
@@ -405,7 +405,7 @@ gst_iir_equalizer_filter_inplace (GstAudiofilter * filter, GstBuffer * buf)
 }
 
 static void
-gst_iir_equalizer_setup (GstAudiofilter * audio)
+gst_iir_equalizer_setup (GstAudioFilter * audio)
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (audio);
 
@@ -424,9 +424,6 @@ gst_iir_equalizer_setup (GstAudiofilter * audio)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_library_load ("gstaudiofilter"))
-    return FALSE;
-
   return gst_element_register (plugin, "equalizer", GST_RANK_NONE,
       GST_TYPE_IIR_EQUALIZER);
 }
@@ -435,4 +432,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "equalizer",
     "GStreamer equalizers",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
