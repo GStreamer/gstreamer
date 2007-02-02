@@ -822,7 +822,8 @@ alsaspdifsink_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "alsaspdifsink", GST_RANK_PRIMARY,
+  /* no rank so it doesn't get autoplugged by autoaudiosink */
+  if (!gst_element_register (plugin, "alsaspdifsink", GST_RANK_NONE,
           GST_TYPE_ALSASPDIFSINK)) {
     return FALSE;
   }

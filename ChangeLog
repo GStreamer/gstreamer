@@ -1,3 +1,10 @@
+2007-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/alsaspdif/alsaspdifsink.c: (plugin_init):
+	  Set rank to NONE so that it doesn't get autoplugged by autoaudiosink
+	  (which didn't happen previously because the klass string didn't
+	  contain anything autoaudiosink was looking for).
+
 2007-01-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/real/gstrealaudiodec.c:
