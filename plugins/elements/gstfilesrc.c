@@ -1062,7 +1062,24 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     return FALSE;
   }
   g_free (protocol);
-  location = gst_uri_get_location (uri);
+
+  /* allow file://localhost/foo/bar by stripping localhost but fail
+   * for every other hostname */
+  if (g_str_has_prefix (uri, "file://localhost/")) {
+    char *tmp;
+
+    /* 16 == strlen ("file://localhost") */
+    tmp = g_strconcat ("file://", uri + 16, NULL);
+    /* we use gst_uri_get_location() although we already have the
+     * "location" with uri + 16 because it provides unescaping */
+    location = gst_uri_get_location (tmp);
+    g_free (tmp);
+  } else if (!g_str_has_prefix (uri, "file:///")) {
+    return FALSE;
+  } else {
+    location = gst_uri_get_location (uri);
+  }
+
   ret = gst_file_src_set_location (src, location);
   g_free (location);
 
