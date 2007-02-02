@@ -557,7 +557,6 @@ gst_query_new_latency (void)
   structure = gst_structure_empty_new ("GstQueryLatency");
   gst_structure_set (structure,
       "live", G_TYPE_BOOLEAN, FALSE,
-      "upstream-live", G_TYPE_BOOLEAN, FALSE,
       "min-latency", G_TYPE_UINT64, (gint64) 0,
       "max-latency", G_TYPE_UINT64, (gint64) - 1, NULL);
 
