@@ -29,86 +29,13 @@
 G_BEGIN_DECLS
 
 
-#define GST_TYPE_SF \
-  (gst_sf_get_type())
-#define GST_SF(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SF,GstSF))
-#define GST_SF_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SF,GstSFClass))
-#define GST_IS_SF(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SF))
-#define GST_IS_SF_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SF))
+#define GST_TYPE_SF_MAJOR_TYPES (gst_sf_major_types_get_type())
+#define GST_TYPE_SF_MINOR_TYPES (gst_sf_minor_types_get_type())
 
-#define GST_TYPE_SFSRC \
-  (gst_sfsrc_get_type())
-#define GST_SFSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SFSRC,GstSF))
-#define GST_SFSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SFSRC,GstSFClass))
-#define GST_IS_SFSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SFSRC))
-#define GST_IS_SFSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SFSRC))
+GType gst_sf_major_types_get_type (void);
+GType gst_sf_minor_types_get_type (void);
 
-#define GST_TYPE_SFSINK \
-  (gst_sfsink_get_type())
-#define GST_SFSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SFSINK,GstSF))
-#define GST_SFSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SFSINK,GstSFClass))
-#define GST_IS_SFSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SFSINK))
-#define GST_IS_SFSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SFSINK))
-
-typedef struct _GstSF GstSF;
-typedef struct _GstSFClass GstSFClass;
-
-typedef enum {
-  GST_SF_OPEN           = (GST_ELEMENT_FLAG_LAST << 0),
-  GST_SF_FLAG_LAST      = (GST_ELEMENT_FLAG_LAST << 2),
-} GstSFlags;
-
-typedef struct {
-  GstPad *pad;
-  gint num;
-  gboolean caps_set;
-} GstSFChannel;
-
-#define GST_SF_CHANNEL(l) ((GstSFChannel*)l->data)
-
-struct _GstSF {
-  GstElement element;
-  GList *channels;
-
-  GstClock *clock, *provided_clock;
-
-  gchar *filename;
-  SNDFILE *file;
-  void *buffer;
-
-  gboolean loop;
-  gboolean create_pads;
-  gint channelcount;
-  gint numchannels;
-  gint format_major;
-  gint format_subtype;
-  gint format;
-
-  gint rate;
-  gint buffer_frames;
-
-  guint64 time;
-};
-
-struct _GstSFClass {
-  GstElementClass parent_class;
-};
-
-GType   gst_sf_get_type         (void);
-GType   gst_sfsrc_get_type      (void);
-GType   gst_sfsink_get_type     (void);
+GType gst_sf_sink_get_type (void);
 
 
 G_END_DECLS

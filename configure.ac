@@ -750,6 +750,14 @@ GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink sdlaudiosink, [
     AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
 ])
 
+dnl *** sndfile ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_SNDFILE, true)
+GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfsrc sfsink, [
+  PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0, HAVE_SNDFILE="yes", HAVE_SNDFILE="no")
+  AC_SUBST(SNDFILE_CFLAGS)
+  AC_SUBST(SNDFILE_LIBS)
+])
+
 dnl *** soundtouch ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SOUNDTOUCH, true)
 GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
@@ -889,6 +897,7 @@ AM_CONDITIONAL(USE_MUSICBRAINZ, false)
 AM_CONDITIONAL(USE_MYTHTV, false)
 AM_CONDITIONAL(USE_NEON, false)
 AM_CONDITIONAL(USE_SDL, false)
+AM_CONDITIONAL(USE_SNDFILE, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
 AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_SWFDEC, false)
@@ -1005,6 +1014,7 @@ ext/musicbrainz/Makefile
 ext/mythtv/Makefile
 ext/neon/Makefile
 ext/sdl/Makefile
+ext/sndfile/Makefile
 ext/soundtouch/Makefile
 ext/spc/Makefile
 ext/swfdec/Makefile

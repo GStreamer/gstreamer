@@ -202,11 +202,11 @@ SHOUT_DIR=
 SMOOTHWAVE_DIR=
 # endif
 
-# if USE_SNDFILE
-# SNDFILE_DIR=sndfile
-# else
+if USE_SNDFILE
+SNDFILE_DIR=sndfile
+else
 SNDFILE_DIR=
-# endif
+endif
 
 if USE_SOUNDTOUCH
 SOUNDTOUCH_DIR=soundtouch
@@ -316,6 +316,7 @@ DIST_SUBDIRS= \
 	mythtv \
 	neon \
 	sdl \
+	sndfile \
 	soundtouch \
 	spc \
 	swfdec \
