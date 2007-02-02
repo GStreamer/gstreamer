@@ -1,5 +1,41 @@
 2007-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/utils/Makefile.am:
+	* gst-libs/gst/utils/base-utils.h:
+	* gst-libs/gst/utils/install-plugins.c:
+	(gst_install_plugins_context_set_xid),
+	(gst_install_plugins_context_new),
+	(gst_install_plugins_context_free),
+	(gst_install_plugins_get_helper),
+	(gst_install_plugins_spawn_child),
+	(gst_install_plugins_return_from_status),
+	(gst_install_plugins_installer_exited),
+	(gst_install_plugins_async), (gst_install_plugins_sync),
+	(gst_install_plugins_return_get_name),
+	(gst_install_plugins_installation_in_progress):
+	* gst-libs/gst/utils/install-plugins.h:
+	  API: add API for applications to initiate installation of missing
+	  plugins, ie. gst_install_plugins_async() primarily.
+	  Based on libgimme-codec by Ryan Lortie.
+
+	* configure.ac:
+	  Add --with-install-plugins-helper configure option so distros can specify
+	  the path of the helper script or program to call when plugin installation
+	  is requested (distros: please do any argument munging in this helper
+	  script instead of patching GStreamer to pass arguments differently
+	  to another program directly).
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	  Build and document new API.
+
+	* tests/check/libs/utils.c: (result_cb),
+	(test_base_utils_install_plugins_do_callout), (GST_START_TEST),
+	(libgstbaseutils_suite):
+	  Some simple checks for the new API.
+
+2007-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/elements/audioconvert.c: (test_float_conversion):
 	  Add small test for 32bit float <=> 64bit float conversion (works
 	  only one way so far, 32=>64 produces structured noise).

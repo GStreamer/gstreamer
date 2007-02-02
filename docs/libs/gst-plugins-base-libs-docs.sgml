@@ -49,6 +49,7 @@
 <!ENTITY GstBaseUtils SYSTEM "xml/gstbaseutils.xml">
 <!ENTITY GstBaseUtilsDescriptions SYSTEM "xml/gstbaseutilsdescriptions.xml">
 <!ENTITY GstBaseUtilsMissingPlugins SYSTEM "xml/gstbaseutilsmissingplugins.xml">
+<!ENTITY GstBaseUtilsInstallPlugins SYSTEM "xml/gstbaseutilsinstallplugins.xml">
 <!-- video -->
 <!ENTITY GstVideo SYSTEM "xml/gstvideo.xml">
 <!ENTITY GstVideoFilter SYSTEM "xml/gstvideofilter.xml">
@@ -188,6 +189,7 @@
       &GstBaseUtils;
       &GstBaseUtilsDescriptions;
       &GstBaseUtilsMissingPlugins;
+      &GstBaseUtilsInstallPlugins;
     </chapter>
 
     <chapter id="gstreamer-video">

@@ -24,7 +24,22 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/utils/base-utils.h>
-#include <unistd.h>
+
+#include <stdio.h>
+#include <glib/gstdio.h>
+#include <glib/gprintf.h>
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>             /* for unlink() */
+#endif
+
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>          /* for fchmod() */
+#endif
+
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>           /* for fchmod() */
+#endif
 
 static void
 missing_msg_check_getters (GstMessage * msg)
@@ -400,6 +415,8 @@ GST_START_TEST (test_base_utils_get_codec_description)
 }
 
 GST_END_TEST;
+
+
 GST_START_TEST (test_base_utils_taglist_add_codec_info)
 {
   GstTagList *list;
@@ -430,6 +447,141 @@ GST_START_TEST (test_base_utils_taglist_add_codec_info)
 }
 
 GST_END_TEST;
+
+static gint marker;
+
+static void
+result_cb (GstInstallPluginsReturn result, gpointer user_data)
+{
+  GST_LOG ("result = %u, user_data = %p", result, user_data);
+
+  fail_unless (user_data == (gpointer) & marker);
+
+  marker = result;
+}
+
+#define FAKE_INSTALL_PLUGINS_HELPER "/tmp/gst-plugins-base-unit-test-helper"
+#define SCRIPT_NO_XID \
+    "#!/bin/sh\n"                                  \
+    "if test x$1 != xdetail1; then exit 21; fi;\n" \
+    "if test x$2 != xdetail2; then exit 22; fi;\n" \
+    "exit 1\n"
+
+#define SCRIPT_WITH_XID \
+    "#!/bin/sh\n"                                  \
+    "if test x$1 != 'x--transient-for=42'; then exit 21; fi;\n"      \
+    "if test x$2 != xdetail1; then exit 22; fi;\n" \
+    "if test x$3 != xdetail2; then exit 23; fi;\n" \
+    "exit 0\n"
+
+/* make sure our script gets called with the right parameters */
+static void
+test_base_utils_install_plugins_do_callout (gchar ** details,
+    GstInstallPluginsContext * ctx, const gchar * script,
+    GstInstallPluginsReturn expected_result)
+{
+#ifdef G_OS_UNIX
+  GstInstallPluginsReturn ret;
+  FILE *f;
+
+  unlink (FAKE_INSTALL_PLUGINS_HELPER);
+
+  f = g_fopen (FAKE_INSTALL_PLUGINS_HELPER, "w");
+  if (f == NULL)
+    return;
+  if (g_fprintf (f, "%s", script) > 0 &&
+      fchmod (fileno (f), S_IRUSR | S_IWUSR | S_IXUSR) == 0) {
+    fclose (f);
+    g_setenv ("GST_INSTALL_PLUGINS_HELPER", FAKE_INSTALL_PLUGINS_HELPER, 1);
+
+    /* test sync callout */
+    ret = gst_install_plugins_sync (details, ctx);
+    fail_unless (ret == GST_INSTALL_PLUGINS_HELPER_MISSING ||
+        ret == expected_result,
+        "gst_install_plugins_sync() failed with unexpected ret %d, which is"
+        "neither HELPER_MISSING NOR %d", ret, expected_result);
+
+    /* test async callout */
+    marker = -333;
+    ret = gst_install_plugins_async (details, ctx, result_cb,
+        (gpointer) & marker);
+    fail_unless (ret == GST_INSTALL_PLUGINS_HELPER_MISSING ||
+        ret == GST_INSTALL_PLUGINS_STARTED_OK,
+        "gst_install_plugins_async() failed with unexpected ret %d", ret);
+    if (ret == GST_INSTALL_PLUGINS_STARTED_OK) {
+      while (marker == -333) {
+        g_usleep (500);
+        g_main_context_iteration (NULL, FALSE);
+      }
+      /* and check that the callback was called with the expected code */
+      fail_unless_equals_int (marker, expected_result);
+    }
+  } else {
+    fclose (f);
+  }
+  unlink (FAKE_INSTALL_PLUGINS_HELPER);
+#endif /* G_OS_UNIX */
+}
+
+GST_START_TEST (test_base_utils_install_plugins)
+{
+  GstInstallPluginsContext *ctx;
+  GstInstallPluginsReturn ret;
+  gchar *details[] = { "detail1", "detail2" };
+
+  ctx = gst_install_plugins_context_new ();
+
+  ASSERT_CRITICAL (ret = gst_install_plugins_sync (NULL, ctx);
+      );
+  ASSERT_CRITICAL (ret =
+      gst_install_plugins_async (NULL, ctx, result_cb, (gpointer) & marker);
+      );
+  ASSERT_CRITICAL (ret =
+      gst_install_plugins_async (details, ctx, NULL, (gpointer) & marker);
+      );
+
+  /* make sure the functions return the right error code if the helper does
+   * not exist */
+  g_setenv ("GST_INSTALL_PLUGINS_HELPER", "/does/not/ex/is.t", 1);
+  ret = gst_install_plugins_sync (details, NULL);
+  fail_unless_equals_int (ret, GST_INSTALL_PLUGINS_HELPER_MISSING);
+
+  marker = -333;
+  ret =
+      gst_install_plugins_async (details, NULL, result_cb, (gpointer) & marker);
+  fail_unless_equals_int (ret, GST_INSTALL_PLUGINS_HELPER_MISSING);
+  /* and check that the callback wasn't called */
+  fail_unless_equals_int (marker, -333);
+
+  /* now make sure our scripts are actually called as expected (if possible) */
+  test_base_utils_install_plugins_do_callout (details, NULL, SCRIPT_NO_XID,
+      GST_INSTALL_PLUGINS_NOT_FOUND);
+
+  /* and again with context */
+  gst_install_plugins_context_set_xid (ctx, 42);
+  test_base_utils_install_plugins_do_callout (details, ctx, SCRIPT_WITH_XID,
+      GST_INSTALL_PLUGINS_SUCCESS);
+
+  /* and free the context now that we don't need it any longer */
+  gst_install_plugins_context_free (ctx);
+
+  /* completely silly test to check gst_install_plugins_return_get_name()
+   * is somewhat well-behaved */
+  {
+    gint i;
+
+    for (i = -99; i < 16738; ++i) {
+      const gchar *s;
+
+      s = gst_install_plugins_return_get_name ((GstInstallPluginsReturn) i);
+      fail_unless (s != NULL);
+      /* GST_LOG ("%5d = %s", i, s); */
+    }
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 libgstbaseutils_suite (void)
 {
@@ -441,6 +593,7 @@ libgstbaseutils_suite (void)
   tcase_add_test (tc_chain, test_base_utils_post_missing_messages);
   tcase_add_test (tc_chain, test_base_utils_taglist_add_codec_info);
   tcase_add_test (tc_chain, test_base_utils_get_codec_description);
+  tcase_add_test (tc_chain, test_base_utils_install_plugins);
   return s;
 }
 

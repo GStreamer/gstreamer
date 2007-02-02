@@ -81,6 +81,28 @@ GST_ARG_WITH_PKG_CONFIG_PATH
 GST_ARG_WITH_PACKAGE_NAME
 GST_ARG_WITH_PACKAGE_ORIGIN
 
+dnl let distro override plugin install helper path
+AC_ARG_WITH(install-plugins-helper,
+  AC_HELP_STRING([--with-install-plugins-helper],
+    [specify path of helper script to call to install plugins]),
+  [
+    case "${withval}" in
+      yes) AC_MSG_ERROR(bad value ${withval} for --with-install-plugins-helper) ;;
+      no)  AC_MSG_ERROR(bad value ${withval} for --with-install-plugins-helper) ;;
+      *)   GST_INSTALL_PLUGINS_HELPER="${withval}" ;;
+    esac
+  ],
+  [
+    dnl Default value
+    AS_AC_EXPAND(GST_INSTALL_PLUGINS_HELPER,${libexecdir}/gst-install-plugins-helper)
+  ]
+)
+AC_MSG_NOTICE(Using $GST_INSTALL_PLUGINS_HELPER as plugin install helper)
+AC_DEFINE_UNQUOTED(GST_INSTALL_PLUGINS_HELPER, "$GST_INSTALL_PLUGINS_HELPER",
+    [plugin install helper script])
+AC_SUBST(GST_INSTALL_PLUGINS_HELPER)
+
+
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
 	adder \
@@ -182,8 +204,8 @@ AC_CHECK_HEADERS([sys/socket.h],
   HAVE_SYS_SOCKET_H="yes", HAVE_SYS_SOCKET_H="no")
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 
-dnl used in gst-libs/gst/utils
-AC_CHECK_HEADERS([process.h])
+dnl used in gst-libs/gst/utils and associated unit test
+AC_CHECK_HEADERS([process.h sys/types.h sys/wait.h sys/stat.h])
 
 dnl ffmpegcolorspace includes _stdint.h
 dnl also, Windows does not have long long

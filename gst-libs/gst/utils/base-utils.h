@@ -24,6 +24,7 @@
 
 #include <gst/utils/descriptions.h>
 #include <gst/utils/missing-plugins.h>
+#include <gst/utils/install-plugins.h>
 
 G_BEGIN_DECLS
 

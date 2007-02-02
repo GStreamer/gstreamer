@@ -942,6 +942,23 @@ gst_missing_element_message_new
 </SECTION>
 
 <SECTION>
+<FILE>gstbaseutilsinstallplugins</FILE>
+<INCLUDE>gst/utils/install-plugins.h</INCLUDE>
+<SUBSECTION>
+GstInstallPluginsReturn
+GstInstallPluginsResultFunc
+gst_install_plugins_async
+gst_install_plugins_sync
+gst_install_plugins_return_get_name
+gst_install_plugins_installation_in_progress
+<SUBSECTION>
+GstInstallPluginsContext
+gst_install_plugins_context_new
+gst_install_plugins_context_free
+gst_install_plugins_context_set_xid
+</SECTION>
+
+<SECTION>
 <FILE>gstbaseutilsdescriptions</FILE>
 <INCLUDE>gst/utils/descriptions.h</INCLUDE>
 <SUBSECTION>
