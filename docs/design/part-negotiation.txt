@@ -9,13 +9,13 @@ flexible, constrained by those parts of the pipeline that are not
 flexible.
 
 GStreamer's two scheduling modes, push mode and pull mode, lend
-themselves to different mechanisms to acheive this goal. As it is more
+themselves to different mechanisms to achieve this goal. As it is more
 common we describe push mode negotiation first.
 
 Push-mode negotiation
 ---------------------
 
-Pussh-mode negotiation happens when elements want to push buffers and
+Push-mode negotiation happens when elements want to push buffers and
 need to decide on the format. This is called downstream negotiation
 because the upstream element decides the format for the downstream
 element. This is the most common case.

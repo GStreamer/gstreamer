@@ -1,3 +1,11 @@
+2007-02-02  Wim Taymans,,,  <wim@fluendo.com>
+
+	* docs/design/draft-latency.txt:
+	Slight redesign to allow for dynamic latency adjustments.
+
+	* docs/design/part-negotiation.txt:
+	Fix some typos.
+
 2007-02-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	reviewed by: Wim Taymans <wim@fluendo.com>

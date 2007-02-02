@@ -12,7 +12,7 @@ first sample at time 0. If the source pushes buffers with 44100 samples at a
 time at 44100Hz it will have collected the buffer at second 1.
 Since the timestamp of the buffer is 0 and the time of the clock is now >= 1
 second, the sink will drop this buffer because it is too late.
-Without an latency compensation in the sink, all buffers will be dropped.
+Without any latency compensation in the sink, all buffers will be dropped.
 
 The situation becomes more complex in the presence of:
 
@@ -225,7 +225,8 @@ PAUSED->PLAYING in a non-live pipeline).
 implications:
 
  - the current async_play vmethod in basesink can be deprecated since we now
-   always call the state change function when going from PAUSED->PLAYING
+   always call the state change function when going from PAUSED->PLAYING. We
+   keep this method however to remain backward compatible.
 
 
 Latency compensation
@@ -234,27 +235,17 @@ Latency compensation
 As an extension to the revised state changes we can perform latency calculation
 and compensation before we proceed to the PLAYING state. 
 
-To the PREROLLED message posted by the sinks when then go to PAUSED we add the
-following fields:
-
-  - (boolean) live 
-  - (boolean) upstream-live 
-  - (int_range) latency  (min and max latency in microseconds, could also be 
-                          expressed as int_list or min/max fields)
-
 When the pipeline collected all PREROLLED messages it can calculate the global
 latency as follows:
 
-  - if no message has live, latency = 0 (no sink syncs against the clock)
-  - if no message has upstream-live, latency = 0 (no live source)
-
-  - latency = MAX (MIN (all latencies)) 
-  - if MIN (MAX (all latencies) < latency we have an impossible situation.
+  - perform a latency query on all sinks.
+  - latency = MAX (all min latencies) 
+  - if MIN (all max latencies) < latency we have an impossible situation and we
+    must generate an error indicating that this pipeline cannot be played.
 
 The sinks gather this information with a LATENCY query upstream. Intermediate
 elements pass the query upstream and add the amount of latency they add to the
 result.
-
 
 ex1:
   sink1: [20 - 20]
@@ -270,16 +261,17 @@ ex2:
   MAX (20, 33) = 33
   MIN (50, 40) = 40 >= 33 -> latency = 33
 
-The latency is set on the pipeline by sending a SET_LATENCY event to the sinks
+The latency is set on the pipeline by sending a LATENCY event to the sinks
 that posted the PREROLLED message. This event configures the total latency on
-the sinks. The sink forwards this SET_LATENCY event upstream so that
+the sinks. The sink forwards this LATENCY event upstream so that
 intermediate elements can configure themselves as well.
 
 After this step, the pipeline continues setting the pending state on the sinks.
 
-A sink adds the latency value, received in the SET_LATENCY event, to
+A sink adds the latency value, received in the LATENCY event, to
 the times used for synchronizing against the clock. This will effectively
-delay the rendering of the buffer with the required latency.
+delay the rendering of the buffer with the required latency. Since this delay is
+the same for all sinks, all sinks will render data relatively synchronised.
 
 
 Flushing a playing pipeline
@@ -306,12 +298,32 @@ prerolls, it posts a PREROLLED message.
 
 When all LOST_PREROLL messages are matched with a PREROLLED message, the bin
 will capture a new base time from the clock and will bring all the prerolled
-sinks back to playing (their pending state) after setting the new base time on
-them. It's also possible to perform additional latency calculations and
-adjustments before doing this. 
+sinks back to PLAYING (or whatever their state was when they posted the
+LOST_PREROLL message) after setting the new base time on them. It's also possible
+to perform additional latency calculations and adjustments before doing this. 
 
 The difference with the NEED_PREROLL/PREROLLED and LOST_PREROLL/PREROLLED
 message pair is that the latter makes the pipeline acquire a new base time for
 the PREROLLED elements.
 
 
+Dynamically adjusting latency
+-----------------------------
+
+An element that want to change the latency in the pipeline can do this by
+posting a LATENCY message on the bus. This message instructs the pipeline to:
+
+ - query the latency in the pipeline (which might now have changed)
+ - redistribute a new global latency to all elements with a LATENCY event.
+
+A use case where the latency in a pipeline can change could be a network element
+that observes an increased inter packet arrival jitter or excessive packet loss
+and decides to increase its internal buffering (and thus the latency). The
+element must post a LATENCY message and perform the additional latency
+adjustments when it receives the LATENCY event from the downstream peer element.
+
+In a similar way can the latency be decreased when network conditions are
+improving again.
+
+Latency adjustments will introduce glitches in playback in the sinks and must
+only be performed in special conditions.
