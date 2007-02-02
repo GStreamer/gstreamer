@@ -639,6 +639,7 @@ gst_event_new_custom
 gst_event_new_eos
 gst_event_new_flush_start
 gst_event_new_flush_stop
+gst_event_new_latency
 gst_event_new_navigation
 gst_event_new_new_segment
 gst_event_new_new_segment_full
@@ -646,6 +647,7 @@ gst_event_new_qos
 gst_event_new_seek
 gst_event_new_tag
 gst_event_parse_buffer_size
+gst_event_parse_latency
 gst_event_parse_new_segment
 gst_event_parse_new_segment_full
 gst_event_parse_qos
@@ -1003,6 +1005,9 @@ gst_message_new_buffering
 gst_message_new_warning
 gst_message_new_duration
 gst_message_new_state_dirty
+gst_message_new_lost_preroll
+gst_message_new_prerolled
+gst_message_new_latency
 gst_message_parse_clock_lost
 gst_message_parse_clock_provide
 gst_message_parse_error
@@ -1014,6 +1019,8 @@ gst_message_parse_tag
 gst_message_parse_buffering
 gst_message_parse_warning
 gst_message_parse_duration
+gst_message_parse_lost_preroll
+gst_message_parse_prerolled
 gst_message_ref
 gst_message_unref
 <SUBSECTION Standard>
@@ -1602,6 +1609,10 @@ gst_query_new_duration
 gst_query_set_duration
 gst_query_parse_duration
 
+gst_query_new_latency
+gst_query_parse_latency
+gst_query_set_latency
+
 gst_query_new_seeking
 gst_query_set_seeking
 gst_query_parse_seeking
@@ -1616,7 +1627,7 @@ gst_query_new_segment
 gst_query_set_segment
 gst_query_parse_segment
 
-SUBSECTION Standard>
+<SUBSECTION Standard>
 GstQueryClass
 GST_QUERY
 GST_IS_QUERY

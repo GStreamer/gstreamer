@@ -80,8 +80,8 @@ typedef struct _GstQueryClass GstQueryClass;
 struct _GstQueryTypeDefinition
 {
   GstQueryType   value;
-  gchar     	*nick;
-  gchar     	*description;
+  gchar  	*nick;
+  gchar  	*description;
   GQuark         quark;
 };
 
@@ -205,6 +205,13 @@ GstQuery*	gst_query_new_duration		(GstFormat format);
 void		gst_query_set_duration		(GstQuery *query, GstFormat format, gint64 duration);
 void		gst_query_parse_duration	(GstQuery *query, GstFormat *format, gint64 *duration);
 
+/* latency query */
+GstQuery*	gst_query_new_latency		(void);
+void		gst_query_set_latency		(GstQuery *query, gboolean live, GstClockTime min_latency,
+		                                 GstClockTime max_latency);
+void		gst_query_parse_latency		(GstQuery *query, gboolean *live, GstClockTime *min_latency, 
+		                                 GstClockTime *max_latency);
+
 /* convert query */
 GstQuery*	gst_query_new_convert		(GstFormat src_format, gint64 value, GstFormat dest_format);
 void		gst_query_set_convert		(GstQuery *query, GstFormat src_format, gint64 src_value,
@@ -218,15 +225,12 @@ void            gst_query_set_segment           (GstQuery *query, gdouble rate, 
 void            gst_query_parse_segment         (GstQuery *query, gdouble *rate, GstFormat *format,
                                                  gint64 *start_value, gint64 *stop_value);
 
-
 /* application specific query */
 GstQuery *	gst_query_new_application 	(GstQueryType type,
                                                  GstStructure *structure);
-
-
 GstStructure *  gst_query_get_structure		(GstQuery *query);
 
-/* moved from old gstqueryutils.h */
+/* seeking query */
 GstQuery*       gst_query_new_seeking           (GstFormat format);
 void            gst_query_set_seeking           (GstQuery *query, GstFormat format,
                                                  gboolean seekable,
@@ -236,7 +240,7 @@ void            gst_query_parse_seeking         (GstQuery *query, GstFormat *for
                                                  gboolean *seekable,
                                                  gint64 *segment_start,
                                                  gint64 *segment_end);
-
+/* formats query */
 GstQuery*       gst_query_new_formats           (void);
 void            gst_query_set_formats           (GstQuery *query, gint n_formats, ...);
 void            gst_query_set_formatsv          (GstQuery *query, gint n_formats, GstFormat *formats);

@@ -1,4 +1,35 @@
-2007-02-02  Wim Taymans,,,  <wim@fluendo.com>
+2007-02-02  Wim Taymans  <wim@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	Add docs for new methods.
+
+	* gst/gstevent.c: (gst_event_new_latency),
+	(gst_event_parse_latency):
+	* gst/gstevent.h:
+	Add new LATENCY event to configure latency in a pipeline.
+	API: gst_event_new_latency
+	API: gst_event_parse_latency
+
+	* gst/gstmessage.c: (gst_message_new_buffering),
+	(gst_message_new_lost_preroll), (gst_message_new_prerolled),
+	(gst_message_new_latency), (gst_message_parse_buffering),
+	(gst_message_parse_lost_preroll):
+	* gst/gstmessage.h:
+	Added messages used in draft-latency.
+	API: gst_message_new_lost_preroll
+	API: gst_message_parse_lost_preroll
+	API: gst_message_new_prerolled
+	API: gst_message_new_latency
+
+	* gst/gstquery.c: (gst_query_new_latency), (gst_query_set_latency),
+	(gst_query_parse_latency):
+	* gst/gstquery.h:
+	Implemented new latency query as in design doc.
+	API: gst_query_new_latency
+	API: gst_query_set_latency
+	API: gst_query_parse_latency
+
+2007-02-02  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/draft-latency.txt:
 	Slight redesign to allow for dynamic latency adjustments.

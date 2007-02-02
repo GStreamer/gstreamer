@@ -115,7 +115,7 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_QOS, "qos", 0},
   {GST_EVENT_SEEK, "seek", 0},
   {GST_EVENT_NAVIGATION, "navigation", 0},
-  {GST_EVENT_SET_LATENCY, "set-latency", 0},
+  {GST_EVENT_LATENCY, "latency", 0},
   {GST_EVENT_CUSTOM_UPSTREAM, "custom-upstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM, "custom-downstream", 0},
   {GST_EVENT_CUSTOM_DOWNSTREAM_OOB, "custom-downstream-oob", 0},
@@ -912,4 +912,53 @@ gst_event_new_navigation (GstStructure * structure)
   g_return_val_if_fail (structure != NULL, NULL);
 
   return gst_event_new_custom (GST_EVENT_NAVIGATION, structure);
+}
+
+/**
+ * gst_event_new_latency:
+ * @latency: the new latency value
+ *
+ * Create a new latency event. The event is sent upstream from the sinks and
+ * notifies elements that they should add an additional @latency to the
+ * timestamps before synchronising against the clock.
+ *
+ * The latency is mostly used in live sinks and is always expressed in
+ * the time format.
+ *
+ * Returns: a new #GstEvent
+ *
+ * Since: 0.10.12
+ */
+GstEvent *
+gst_event_new_latency (GstClockTime latency)
+{
+  GST_CAT_INFO (GST_CAT_EVENT,
+      "creating latency event %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
+
+  return gst_event_new_custom (GST_EVENT_LATENCY,
+      gst_structure_new ("GstEventLatency",
+          "latency", G_TYPE_UINT64, latency, NULL));
+}
+
+/**
+ * gst_event_parse_latency:
+ * @event: The event to query
+ * @latency: A pointer to store the latency in.
+ *
+ * Get the latency in the latency event.
+ *
+ * Since: 0.10.12
+ */
+void
+gst_event_parse_latency (GstEvent * event, GstClockTime * latency)
+{
+  const GstStructure *structure;
+
+  g_return_if_fail (GST_IS_EVENT (event));
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_LATENCY);
+
+  structure = gst_event_get_structure (event);
+  if (latency)
+    *latency =
+        g_value_get_uint64 (gst_structure_get_value (structure, "latency"));
 }

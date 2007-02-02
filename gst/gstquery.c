@@ -537,6 +537,92 @@ gst_query_parse_duration (GstQuery * query, GstFormat * format,
 }
 
 /**
+ * gst_query_new_latency:
+ *
+ * Constructs a new latency query object. 
+ * Use gst_query_unref() when done with it. A latency query is usually performed
+ * by sinks to compensate for additional latency introduced by elements in the
+ * pipeline.
+ *
+ * Returns: A #GstQuery
+ *
+ * Since: 0.10.12
+ */
+GstQuery *
+gst_query_new_latency (void)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_empty_new ("GstQueryLatency");
+  gst_structure_set (structure,
+      "live", G_TYPE_BOOLEAN, FALSE,
+      "upstream-live", G_TYPE_BOOLEAN, FALSE,
+      "min-latency", G_TYPE_UINT64, (gint64) 0,
+      "max-latency", G_TYPE_UINT64, (gint64) - 1, NULL);
+
+  query = gst_query_new (GST_QUERY_LATENCY, structure);
+
+  return query;
+}
+
+/**
+ * gst_query_set_latency:
+ * @query: a #GstQuery
+ * @live: if there is a live element upstream
+ * @min_latency: the minimal latency of the live element
+ * @max_latency: the maximal latency of the live element
+ *
+ * Answer a latency query by setting the requested values in the given format.
+ *
+ * Since: 0.10.12
+ */
+void
+gst_query_set_latency (GstQuery * query, gboolean live,
+    GstClockTime min_latency, GstClockTime max_latency)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY);
+
+  structure = gst_query_get_structure (query);
+  gst_structure_set (structure,
+      "live", G_TYPE_BOOLEAN, live,
+      "min-latency", G_TYPE_UINT64, min_latency,
+      "max-latency", G_TYPE_UINT64, max_latency, NULL);
+}
+
+/**
+ * gst_query_parse_latency:
+ * @query: a #GstQuery
+ * @live: storage for live or NULL 
+ * @min_latency: the storage for the min latency or NULL
+ * @max_latency: the storage for the max latency or NULL
+ *
+ * Parse a latency query answer. 
+ *
+ * Since: 0.10.12
+ */
+void
+gst_query_parse_latency (GstQuery * query, gboolean * live,
+    GstClockTime * min_latency, GstClockTime * max_latency)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY);
+
+  structure = gst_query_get_structure (query);
+  if (live)
+    *live = g_value_get_boolean (gst_structure_get_value (structure, "live"));
+  if (min_latency)
+    *min_latency = g_value_get_uint64 (gst_structure_get_value (structure,
+            "min-latency"));
+  if (max_latency)
+    *max_latency = g_value_get_uint64 (gst_structure_get_value (structure,
+            "max-latency"));
+}
+
+/**
  * gst_query_new_convert:
  * @src_format: the source #GstFormat for the new query
  * @value: the value to convert

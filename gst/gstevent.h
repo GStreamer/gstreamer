@@ -91,7 +91,7 @@ typedef enum {
  * @GST_EVENT_NAVIGATION: Navigation events are usually used for communicating
  *                        user requests, such as mouse or keyboard movements,
  *                        to upstream elements.
- * @GST_EVENT_SET_LATENCY: A request for a new latency adjustment. Since: 0.10.12
+ * @GST_EVENT_LATENCY: Notification of new latency adjustment. Since: 0.10.12
  * @GST_EVENT_CUSTOM_UPSTREAM: Upstream custom event
  * @GST_EVENT_CUSTOM_DOWNSTREAM: Downstream custom event that travels in the
  *                        data flow.
@@ -123,7 +123,7 @@ typedef enum {
   GST_EVENT_QOS			  = GST_EVENT_MAKE_TYPE (15, FLAG(UPSTREAM)),
   GST_EVENT_SEEK		  = GST_EVENT_MAKE_TYPE (16, FLAG(UPSTREAM)),
   GST_EVENT_NAVIGATION		  = GST_EVENT_MAKE_TYPE (17, FLAG(UPSTREAM)),
-  GST_EVENT_SET_LATENCY		  = GST_EVENT_MAKE_TYPE (18, FLAG(UPSTREAM)),
+  GST_EVENT_LATENCY		  = GST_EVENT_MAKE_TYPE (18, FLAG(UPSTREAM)),
 
   /* custom events start here */
   GST_EVENT_CUSTOM_UPSTREAM	  = GST_EVENT_MAKE_TYPE (32, FLAG(UPSTREAM)),
@@ -422,6 +422,10 @@ void		gst_event_parse_seek		(GstEvent *event, gdouble *rate, GstFormat *format,
 						 GstSeekType *stop_type, gint64 *stop);
 /* navigation event */
 GstEvent*	gst_event_new_navigation	(GstStructure *structure);
+
+/* latency event */
+GstEvent*	gst_event_new_latency		(GstClockTime latency);
+void		gst_event_parse_latency		(GstEvent *event, GstClockTime *latency);
 
 G_END_DECLS
 
