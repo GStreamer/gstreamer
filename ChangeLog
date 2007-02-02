@@ -1,3 +1,11 @@
+2007-02-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audioconvert/audioconvert.c: (float), (double),
+	(audio_convert_get_func_index):
+	* gst/audioconvert/gstaudioconvert.c: (set_structure_widths),
+	(make_lossless_changes):
+	  Support for 64-bit float audio in audioconvert (#339837)
+
 2007-02-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Holger Wansing  <linux wansing-online de>

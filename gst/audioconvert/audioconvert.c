@@ -28,8 +28,9 @@
 #include "gstchannelmix.h"
 #include "audioconvert.h"
 
-/* int to float conversion: int2float(i) = 1 / (2^31-1) * i */
+/* int to float/double conversion: int2xxx(i) = 1 / (2^31-1) * i */
 #define INT2FLOAT(i) (4.6566128752457969e-10 * ((gfloat)i))
+#define INT2DOUBLE(i) (4.6566128752457969e-10 * ((gdouble)i))
 
 /* sign bit in the intermediate format */
 #define SIGNED  (1U<<31)
@@ -52,7 +53,7 @@ MAKE_UNPACK_FUNC_NAME (name) (gpointer src, gint32 *dst,                \
   }                                                                     \
 }
 
-/* special unpack code for float */
+/* special unpack code for float/double */
 static void
 MAKE_UNPACK_FUNC_NAME (float) (gpointer src, gint32 * dst,
     gint scale, gint count)
@@ -61,6 +62,21 @@ MAKE_UNPACK_FUNC_NAME (float) (gpointer src, gint32 * dst,
   gdouble temp;
 
   for (; count; count--) {
+    /* blow up to 32 bit */
+    temp = (*p++ * 2147483647.0) + 0.5;
+    *dst++ = (gint32) CLAMP (temp, G_MININT32, G_MAXINT32);
+  }
+}
+
+static void
+MAKE_UNPACK_FUNC_NAME (double) (gpointer src, gint32 * dst,
+    gint scale, gint count)
+{
+  gdouble *p = (gdouble *) src;
+  gdouble temp;
+
+  for (; count; count--) {
+    /* blow up to 32 bit */
     temp = (*p++ * 2147483647.0) + 0.5;
     *dst++ = (gint32) CLAMP (temp, G_MININT32, G_MAXINT32);
   }
@@ -109,7 +125,7 @@ MAKE_PACK_FUNC_NAME (name) (gint32 *src, gpointer dst,                  \
   }                                                                     \
 }
 
-/* special float pack function */
+/* special pack code for float/double */
 static void
 MAKE_PACK_FUNC_NAME (float) (gint32 * src, gpointer dst, gint scale, gint count)
 {
@@ -117,6 +133,17 @@ MAKE_PACK_FUNC_NAME (float) (gint32 * src, gpointer dst, gint scale, gint count)
 
   for (; count; count--) {
     *p++ = INT2FLOAT (*src++);
+  }
+}
+
+static void
+MAKE_PACK_FUNC_NAME (double) (gint32 * src, gpointer dst, gint scale,
+    gint count)
+{
+  gdouble *p = (gdouble *) dst;
+
+  for (; count; count--) {
+    *p++ = INT2DOUBLE (*src++);
   }
 }
 
@@ -161,6 +188,7 @@ static AudioConvertUnpack unpack_funcs[] = {
   MAKE_UNPACK_FUNC_NAME (u32_be),
   MAKE_UNPACK_FUNC_NAME (s32_be),
   MAKE_UNPACK_FUNC_NAME (float),
+  MAKE_UNPACK_FUNC_NAME (double),
 };
 
 static AudioConvertPack pack_funcs[] = {
@@ -181,6 +209,7 @@ static AudioConvertPack pack_funcs[] = {
   MAKE_PACK_FUNC_NAME (u32_be),
   MAKE_PACK_FUNC_NAME (s32_be),
   MAKE_PACK_FUNC_NAME (float),
+  MAKE_PACK_FUNC_NAME (double),
 };
 
 static gint
@@ -193,7 +222,8 @@ audio_convert_get_func_index (AudioConvertFmt * fmt)
     index += fmt->endianness == G_LITTLE_ENDIAN ? 0 : 2;
     index += fmt->sign ? 1 : 0;
   } else {
-    index = 16;
+    /* this is float/double */
+    index = (fmt->width == 32) ? 16 : 17;
   }
   return index;
 }

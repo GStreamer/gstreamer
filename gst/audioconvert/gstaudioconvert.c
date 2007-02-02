@@ -124,6 +124,11 @@ GST_STATIC_CAPS ( \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
     "endianness = (int) BYTE_ORDER, " \
+    "width = (int) 64;" \
+  "audio/x-raw-float, " \
+    "rate = (int) [ 1, MAX ], " \
+    "channels = (int) [ 1, 8 ], " \
+    "endianness = (int) BYTE_ORDER, " \
     "width = (int) 32;" \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
@@ -316,6 +321,30 @@ parse_error:
   }
 }
 
+/* Set widths (a list); multiples of 8 between min and max */
+static void
+set_structure_widths (GstStructure * s, int min, int max)
+{
+  GValue list = { 0 };
+  GValue val = { 0 };
+  int width;
+
+  if (min == max) {
+    gst_structure_set (s, "width", G_TYPE_INT, min, NULL);
+    return;
+  }
+
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&val, G_TYPE_INT);
+  for (width = min; width <= max; width += 8) {
+    g_value_set_int (&val, width);
+    gst_value_list_append_value (&list, &val);
+  }
+  gst_structure_set_value (s, "width", &list);
+  g_value_unset (&val);
+  g_value_unset (&list);
+}
+
 /* Modify the structure so that things that must always have a single
  * value (for float), or can always be losslessly converted (for int), have
  * appropriate values.
@@ -325,10 +354,10 @@ make_lossless_changes (GstStructure * s, gboolean isfloat)
 {
   if (isfloat) {
     /* float doesn't have a depth or signedness field and only supports a
-     * width of 32 and native endianness */
+     * widths of 32/64 and native endianness */
     gst_structure_remove_field (s, "depth");
     gst_structure_remove_field (s, "signed");
-    gst_structure_set (s, "width", G_TYPE_INT, 32, NULL);
+    set_structure_widths (s, 32, 64);
     gst_structure_set (s, "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
   } else {
     /* int supports either endian, and signed or unsigned. GValues are a pain */
@@ -379,30 +408,6 @@ append_with_other_format (GstCaps * caps, GstStructure * s, gboolean isfloat)
     s = make_lossless_changes (s2, TRUE);
     gst_caps_append_structure (caps, s2);
   }
-}
-
-/* Set widths (a list); multiples of 8 between min and max */
-static void
-set_structure_widths (GstStructure * s, int min, int max)
-{
-  GValue list = { 0 };
-  GValue val = { 0 };
-  int width;
-
-  if (min == max) {
-    gst_structure_set (s, "width", G_TYPE_INT, min, NULL);
-    return;
-  }
-
-  g_value_init (&list, GST_TYPE_LIST);
-  g_value_init (&val, G_TYPE_INT);
-  for (width = min; width <= max; width += 8) {
-    g_value_set_int (&val, width);
-    gst_value_list_append_value (&list, &val);
-  }
-  gst_structure_set_value (s, "width", &list);
-  g_value_unset (&val);
-  g_value_unset (&list);
 }
 
 /* Audioconvert can perform all conversions on audio except for resampling. 
