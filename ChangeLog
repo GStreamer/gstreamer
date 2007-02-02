@@ -1,5 +1,11 @@
 2007-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/elements/audioconvert.c: (test_float_conversion):
+	  Add small test for 32bit float <=> 64bit float conversion (works
+	  only one way so far, 32=>64 produces structured noise).
+
+2007-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/audioconvert/gstaudioconvert.c:
 	(set_structure_widths_32_and_64), (make_lossless_changes):
 	  We don't support floats with a width of 40, 48 or 56 bits.

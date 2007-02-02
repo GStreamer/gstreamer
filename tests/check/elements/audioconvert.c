@@ -37,7 +37,7 @@ GstPad *mysrcpad, *mysinkpad;
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
     "endianness = (int) BYTE_ORDER, " \
-    "width = (int) 32;" \
+    "width = (int) { 32, 64 };" \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
@@ -462,6 +462,23 @@ GST_START_TEST (test_float_conversion)
     RUN_CONVERSION ("32 float to 16 signed", in, get_float_caps (1,
             "BYTE_ORDER", 32), out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE)
         );
+  }
+
+  /* 64-bit float <-> 32-bit float */
+  {
+    gdouble in[] = { 0.0, 1.0, -1.0, 0.5, -0.5 };
+    gfloat out[] = { 0.0, 1.0, -1.0, 0.5, -0.5 };
+
+    RUN_CONVERSION ("64 float to 32 float",
+        in, get_float_caps (1, "BYTE_ORDER", 64),
+        out, get_float_caps (1, "BYTE_ORDER", 32));
+
+    /* FIXME: this fails */
+#if 0
+    RUN_CONVERSION ("32 float to 64 float",
+        out, get_float_caps (1, "BYTE_ORDER", 32),
+        in, get_float_caps (1, "BYTE_ORDER", 64));
+#endif
   }
 }
 
