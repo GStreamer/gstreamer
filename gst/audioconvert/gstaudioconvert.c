@@ -345,6 +345,24 @@ set_structure_widths (GstStructure * s, int min, int max)
   g_value_unset (&list);
 }
 
+/* Set widths of 32 bits and 64 bits (as list) */
+static void
+set_structure_widths_32_and_64 (GstStructure * s)
+{
+  GValue list = { 0 };
+  GValue val = { 0 };
+
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&val, G_TYPE_INT);
+  g_value_set_int (&val, 32);
+  gst_value_list_append_value (&list, &val);
+  g_value_set_int (&val, 64);
+  gst_value_list_append_value (&list, &val);
+  gst_structure_set_value (s, "width", &list);
+  g_value_unset (&val);
+  g_value_unset (&list);
+}
+
 /* Modify the structure so that things that must always have a single
  * value (for float), or can always be losslessly converted (for int), have
  * appropriate values.
@@ -357,7 +375,7 @@ make_lossless_changes (GstStructure * s, gboolean isfloat)
      * widths of 32/64 and native endianness */
     gst_structure_remove_field (s, "depth");
     gst_structure_remove_field (s, "signed");
-    set_structure_widths (s, 32, 64);
+    set_structure_widths_32_and_64 (s);
     gst_structure_set (s, "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
   } else {
     /* int supports either endian, and signed or unsigned. GValues are a pain */
