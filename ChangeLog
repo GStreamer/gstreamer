@@ -1,3 +1,17 @@
+2007-02-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: James "Doc" Livingston  <doclivingston at gmail com>
+
+	* configure.ac:
+	* gst/equalizer/Makefile.am:
+	* gst/equalizer/gstiirequalizer.c: (gst_iir_equalizer_get_type),
+	(gst_iir_equalizer_base_init), (gst_iir_equalizer_class_init),
+	(gst_iir_equalizer_compute_frequencies),
+	(gst_iir_equalizer_set_property),
+	(gst_iir_equalizer_filter_inplace), (gst_iir_equalizer_setup),
+	(plugin_init):
+	  Port equalizer plugin to 0.10 (#403572).
+
 2007-02-02  Andy Wingo  <wingo@pobox.com>
 
 	* configure.ac: 

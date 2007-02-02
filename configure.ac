@@ -78,16 +78,18 @@ dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
   cdxaparse \
   deinterlace \
+  equalizer \
   filter \
   freeze \
   h264parse \
   interleave \
   librfb \
-  nuvdemux \
   modplug \
   multifile \
   mve \
   nsf \
+  nuvdemux \
+  real \
   replaygain \
   spectrum \
   speed \
@@ -97,7 +99,6 @@ GST_PLUGINS_ALL="\
   videoparse \
   xingheader \
   y4m \
-  real \
   "
 
 AC_SUBST(GST_PLUGINS_ALL)
@@ -960,6 +961,7 @@ gst-plugins-bad.spec
 gst/Makefile
 gst/cdxaparse/Makefile
 gst/deinterlace/Makefile
+gst/equalizer/Makefile
 gst/filter/Makefile
 gst/freeze/Makefile
 gst/h264parse/Makefile
