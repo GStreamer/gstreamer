@@ -54,7 +54,7 @@ libgstaudiofilterexample_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstaudiofilterexample_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 gstaudiofilterexample.c: $(srcdir)/make_filter $(srcdir)/gstaudiofiltertemplate.c
-	$(srcdir)/make_filter AudiofilterExample $(srcdir)/gstaudiofiltertemplate.c
+	$(srcdir)/make_filter AudioFilterExample $(srcdir)/gstaudiofiltertemplate.c
 
 noinst_PROGRAMS = testchannels
 testchannels_SOURCES = testchannels.c
