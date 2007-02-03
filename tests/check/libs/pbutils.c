@@ -29,16 +29,16 @@
 #include <glib/gstdio.h>
 #include <glib/gprintf.h>
 
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>             /* for unlink() */
-#endif
-
 #ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>          /* for fchmod() */
+#include <sys/types.h>          /* for chmod() and getpid () */
 #endif
 
 #ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>           /* for fchmod() */
+#include <sys/stat.h>           /* for chmod() */
+#endif
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>             /* for unlink() */
 #endif
 
 static void
@@ -460,7 +460,6 @@ result_cb (GstInstallPluginsReturn result, gpointer user_data)
   marker = result;
 }
 
-#define FAKE_INSTALL_PLUGINS_HELPER "/tmp/gst-plugins-base-unit-test-helper"
 #define SCRIPT_NO_XID \
     "#!/bin/sh\n"                                  \
     "if test x$1 != xdetail1; then exit 21; fi;\n" \
@@ -482,44 +481,54 @@ test_base_utils_install_plugins_do_callout (gchar ** details,
 {
 #ifdef G_OS_UNIX
   GstInstallPluginsReturn ret;
-  FILE *f;
+  GError *err = NULL;
+  gchar *path;
 
-  unlink (FAKE_INSTALL_PLUGINS_HELPER);
+  path = g_strdup_printf ("%s/gst-plugins-base-unit-test-helper.%s.%lu",
+      g_get_tmp_dir (), (g_get_user_name ())? g_get_user_name () : "nobody",
+      (gulong) getpid ());
 
-  f = g_fopen (FAKE_INSTALL_PLUGINS_HELPER, "w");
-  if (f == NULL)
-    return;
-  if (g_fprintf (f, "%s", script) > 0 &&
-      fchmod (fileno (f), S_IRUSR | S_IWUSR | S_IXUSR) == 0) {
-    fclose (f);
-    g_setenv ("GST_INSTALL_PLUGINS_HELPER", FAKE_INSTALL_PLUGINS_HELPER, 1);
-
-    /* test sync callout */
-    ret = gst_install_plugins_sync (details, ctx);
-    fail_unless (ret == GST_INSTALL_PLUGINS_HELPER_MISSING ||
-        ret == expected_result,
-        "gst_install_plugins_sync() failed with unexpected ret %d, which is"
-        "neither HELPER_MISSING NOR %d", ret, expected_result);
-
-    /* test async callout */
-    marker = -333;
-    ret = gst_install_plugins_async (details, ctx, result_cb,
-        (gpointer) & marker);
-    fail_unless (ret == GST_INSTALL_PLUGINS_HELPER_MISSING ||
-        ret == GST_INSTALL_PLUGINS_STARTED_OK,
-        "gst_install_plugins_async() failed with unexpected ret %d", ret);
-    if (ret == GST_INSTALL_PLUGINS_STARTED_OK) {
-      while (marker == -333) {
-        g_usleep (500);
-        g_main_context_iteration (NULL, FALSE);
-      }
-      /* and check that the callback was called with the expected code */
-      fail_unless_equals_int (marker, expected_result);
-    }
-  } else {
-    fclose (f);
+  if (!g_file_set_contents (path, script, -1, &err)) {
+    GST_DEBUG ("Failed to write test script to %s: %s", path, err->message);
+    g_error_free (err);
+    goto done;
   }
-  unlink (FAKE_INSTALL_PLUGINS_HELPER);
+
+  if (chmod (path, S_IRUSR | S_IWUSR | S_IXUSR) != 0) {
+    GST_DEBUG ("Could not set mode u+rwx on '%s'", path);
+    goto done;
+  }
+
+  GST_LOG ("setting GST_INSTALL_PLUGINS_HELPER to '%s'", path);
+  g_setenv ("GST_INSTALL_PLUGINS_HELPER", path, 1);
+
+  /* test sync callout */
+  ret = gst_install_plugins_sync (details, ctx);
+  fail_unless (ret == GST_INSTALL_PLUGINS_HELPER_MISSING ||
+      ret == expected_result,
+      "gst_install_plugins_sync() failed with unexpected ret %d, which is"
+      "neither HELPER_MISSING NOR %d", ret, expected_result);
+
+  /* test async callout */
+  marker = -333;
+  ret = gst_install_plugins_async (details, ctx, result_cb,
+      (gpointer) & marker);
+  fail_unless (ret == GST_INSTALL_PLUGINS_HELPER_MISSING ||
+      ret == GST_INSTALL_PLUGINS_STARTED_OK,
+      "gst_install_plugins_async() failed with unexpected ret %d", ret);
+  if (ret == GST_INSTALL_PLUGINS_STARTED_OK) {
+    while (marker == -333) {
+      g_usleep (500);
+      g_main_context_iteration (NULL, FALSE);
+    }
+    /* and check that the callback was called with the expected code */
+    fail_unless_equals_int (marker, expected_result);
+  }
+
+done:
+
+  unlink (path);
+  g_free (path);
 #endif /* G_OS_UNIX */
 }
 

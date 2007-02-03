@@ -1,3 +1,10 @@
+2007-02-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/libs/utils.c:
+	(test_base_utils_install_plugins_do_callout):
+	  Don't hard-code temp directory for test helper; use GLib functions
+	  to write out file and do error checking etc.
+
 2007-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/utils/Makefile.am:
