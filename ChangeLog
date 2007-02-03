@@ -1,5 +1,14 @@
 2007-02-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/utils/install-plugins.c:
+	(gst_install_plugins_spawn_child):
+	* tests/check/libs/utils.c:
+	(test_base_utils_install_plugins_do_callout):
+	  Lowering log level to see why things fail on the p5 build bot;
+	  fix some typos in unit test messages.
+
+2007-02-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/libs/utils.c:
 	(test_base_utils_install_plugins_do_callout):
 	  Don't hard-code temp directory for test helper; use GLib functions

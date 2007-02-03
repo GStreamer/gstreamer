@@ -177,7 +177,7 @@ gst_install_plugins_spawn_child (gchar ** details,
   }
 
   if (!ret) {
-    GST_WARNING ("Error spawning plugin install helper: %s", err->message);
+    GST_ERROR ("Error spawning plugin install helper: %s", err->message);
     g_error_free (err);
   }
 

@@ -506,8 +506,8 @@ test_base_utils_install_plugins_do_callout (gchar ** details,
   ret = gst_install_plugins_sync (details, ctx);
   fail_unless (ret == GST_INSTALL_PLUGINS_HELPER_MISSING ||
       ret == expected_result,
-      "gst_install_plugins_sync() failed with unexpected ret %d, which is"
-      "neither HELPER_MISSING NOR %d", ret, expected_result);
+      "gst_install_plugins_sync() failed with unexpected ret %d, which is "
+      "neither HELPER_MISSING nor %d", ret, expected_result);
 
   /* test async callout */
   marker = -333;
