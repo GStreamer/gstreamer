@@ -1,3 +1,26 @@
+2007-02-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* gst/equalizer/Makefile.am:
+	* gst/equalizer/gstiirequalizer.c: (gst_iir_equalizer_base_init),
+	(gst_iir_equalizer_class_init), (gst_iir_equalizer_init),
+	(setup_filter), (gst_iir_equalizer_compute_frequencies),
+	(gst_iir_equalizer_set_property), (gst_iir_equalizer_get_property),
+	(gst_iir_equalizer_transform_ip), (gst_iir_equalizer_setup),
+	(plugin_init):
+	* gst/equalizer/gstiirequalizer.h:
+	  Fix up to use the newly ported (actually working) GstAudioFilter.
+	  Bump core/base requirements to CVS for this.
+
+	* tests/icles/.cvsignore:
+	* tests/icles/Makefile.am:
+	* tests/icles/equalizer-test.c: (check_bus),
+	(equalizer_set_band_value), (equalizer_set_all_band_values),
+	(equalizer_set_band_value_and_wait),
+	(equalizer_set_all_band_values_and_wait), (do_slider_fiddling),
+	(main):
+	  Add brain-dead interactive test for equalizer.
+
 2007-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/equalizer/gstiirequalizer.c: (gst_iir_equalizer_class_init),

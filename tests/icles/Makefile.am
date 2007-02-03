@@ -16,4 +16,9 @@ videocrop_test_CFLAGS  = $(GST_CFLAGS)
 videocrop_test_LDADD   = $(GST_LIBS)
 videocrop_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_PROGRAMS = $(GST_SOUNDTOUCH_TESTS) videocrop-test
+equalizer_test_SOURCES = equalizer-test.c
+equalizer_test_CFLAGS  = $(GST_CFLAGS)
+equalizer_test_LDADD   = $(GST_LIBS)
+equalizer_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+noinst_PROGRAMS = $(GST_SOUNDTOUCH_TESTS) equalizer-test videocrop-test
