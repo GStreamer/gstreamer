@@ -21,22 +21,14 @@
 #ifndef __GST_AUDIO_FILTER_H__
 #define __GST_AUDIO_FILTER_H__
 
-
 #include <gst/gst.h>
-
+#include <gst/base/gstbasetransform.h>
+#include <gst/audio/gstringbuffer.h>
 
 G_BEGIN_DECLS
 
 typedef struct _GstAudioFilter GstAudioFilter;
 typedef struct _GstAudioFilterClass GstAudioFilterClass;
-
-typedef void (*GstAudioFilterFilterFunc)(GstAudioFilter *filter,
-    GstBuffer *outbuf, GstBuffer *inbuf);
-typedef void (*GstAudioFilterInplaceFilterFunc)(GstAudioFilter *filter,
-    GstBuffer *buffer);
-
-typedef void (*GstAudioFilterSetupFunc) (GstAudioFilter *filter);
-
 
 #define GST_TYPE_AUDIO_FILTER \
   (gst_audio_filter_get_type())
@@ -49,43 +41,48 @@ typedef void (*GstAudioFilterSetupFunc) (GstAudioFilter *filter);
 #define GST_IS_AUDIO_FILTER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_AUDIO_FILTER))
 
+/**
+ * GstAudioFilter:
+ *
+ * Base class for audio filters with the same format for input and output.
+ *
+ * Since: 0.10.12
+ */
 struct _GstAudioFilter {
-  GstElement element;
+  GstBaseTransform basetransform;
 
-  GstPad *sinkpad,*srcpad;
-
-  /* audio state */
-  gboolean inited;
-  gboolean passthru;
-
-  int rate;
-  int width;
-  int channels;
-  int depth;
-
-  int n_samples;
-  int size;
-  int bytes_per_sample;
+  /*< protected >*/
+  GstRingBufferSpec format;   /* currently configured format */
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
+
+/**
+ * GstAudioFilterClass:
+ * @setup: virtual function called whenever the format changes
+ *
+ * In addition to the @setup virtual function, you should also override the
+ * GstBaseTransform::transform and/or GstBaseTransform::transform_ip virtual
+ * function.
+ *
+ * Since: 0.10.12
+ */
 
 struct _GstAudioFilterClass {
-  GstElementClass parent_class;
+  GstBaseTransformClass basetransformclass;
 
-  GstCaps *caps;
-  GstAudioFilterSetupFunc setup;
-  GstAudioFilterInplaceFilterFunc filter_inplace;
-  GstAudioFilterFilterFunc filter;
+  /* virtual function, called whenever the format changes */ 
+  gboolean  (*setup) (GstAudioFilter * filter, GstRingBufferSpec * format);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType gst_audio_filter_get_type(void);
+GType   gst_audio_filter_get_type (void);
 
-void gst_audio_filter_class_add_pad_templates (GstAudioFilterClass *audiofilterclass, const GstCaps *caps);
+void    gst_audio_filter_class_add_pad_templates (GstAudioFilterClass * klass,
+                                                  const GstCaps       * caps);
 
 G_END_DECLS
 

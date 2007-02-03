@@ -1,5 +1,20 @@
 2007-02-03  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/audio/gstaudiofilter.c: (gst_audio_filter_get_type),
+	(gst_audio_filter_class_init), (gst_audio_filter_init),
+	(gst_audio_filter_set_caps),
+	(gst_audio_filter_class_add_pad_templates):
+	* gst-libs/gst/audio/gstaudiofilter.h:
+	  Port GstAudioFilter to 0.10. This change technically breaks
+	  API and ABI (and thus also every library developer's heart),
+	  but seems justifiable on the grounds that the base class was
+	  completely unusable before (ie. would crash immediately when
+	  actually used). Fixes #403963 (and eventually also #403572).
+	  Also document all of this a bit.
+
+2007-02-03  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/utils/install-plugins.c:
 	(gst_install_plugins_spawn_child):
 	* tests/check/libs/utils.c:

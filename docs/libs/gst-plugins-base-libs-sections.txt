@@ -40,9 +40,6 @@ GST_IS_AUDIO_CLOCK_CLASS
 <INCLUDE>gst/audio/gstaudiofilter.h</INCLUDE>
 GstAudioFilter
 GstAudioFilterClass
-GstAudioFilterFilterFunc
-GstAudioFilterInplaceFilterFunc
-GstAudioFilterSetupFunc
 gst_audio_filter_class_add_pad_templates
 <SUBSECTION Standard>
 GST_AUDIO_FILTER

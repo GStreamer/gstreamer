@@ -1,6 +1,7 @@
-/* GStreamer
+/* GStreamer audio filter base class
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David Schleef <ds@schleef.org>
+ * Copyright (C) <2007> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,14 +19,38 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstaudiofilter
+ * @short_description: Base class for simple audio filters
+ *
+ * #GstAudioFilter is a #GstBaseTransform-derived base class for simple audio
+ * filters, ie. those that output the same format that they get as input.
+ *
+ * #GstAudioFilter will parse the input format for you (with error checking)
+ * before calling your setup function. Also, elements deriving from
+ * #GstAudioFilter may use gst_audio_filter_class_add_pad_templates() from
+ * their base_init function to easily configure the set of caps/formats that
+ * the element is able to handle.
+ *
+ * Derived classes should override the GstAudioFilter::setup() and
+ * GstBaseTransform::transform_ip() and/or GstBaseTransform::transform()
+ * virtual functions in their class_init function.
+ *
+ * Since: 0.10.12
+ *
+ * Last reviewed on 2007-02-03 (0.10.11.1)
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-/*#define DEBUG_ENABLED */
 #include "gstaudiofilter.h"
 
 #include <string.h>
+
+GST_DEBUG_CATEGORY_STATIC (audiofilter_dbg);
+#define GST_CAT_DEFAULT audiofilter_dbg
 
 static const GstElementDetails audio_filter_details =
 GST_ELEMENT_DETAILS ("Audio filter base class",
@@ -33,31 +58,12 @@ GST_ELEMENT_DETAILS ("Audio filter base class",
     "Filters audio",
     "David Schleef <ds@schleef.org>");
 
-/* GstAudioFilter signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
-  ARG_0,
-  ARG_METHOD
-      /* FILL ME */
-};
-
 static void gst_audio_filter_base_init (gpointer g_class);
 static void gst_audio_filter_class_init (gpointer g_class, gpointer class_data);
 static void gst_audio_filter_init (GTypeInstance * instance, gpointer g_class);
 
-static void gst_audio_filter_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_audio_filter_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
-static GstFlowReturn gst_audio_filter_chain (GstPad * pad, GstBuffer * buffer);
-GstCaps *gst_audio_filter_class_get_capslist (GstAudioFilterClass * klass);
+static gboolean gst_audio_filter_set_caps (GstBaseTransform * btrans,
+    GstCaps * incaps, GstCaps * outcaps);
 
 static GstElementClass *parent_class = NULL;
 
@@ -67,7 +73,7 @@ gst_audio_filter_get_type (void)
   static GType audio_filter_type = 0;
 
   if (!audio_filter_type) {
-    static const GTypeInfo audio_filter_info = {
+    const GTypeInfo audio_filter_info = {
       sizeof (GstAudioFilterClass),
       gst_audio_filter_base_init,
       NULL,
@@ -79,7 +85,9 @@ gst_audio_filter_get_type (void)
       gst_audio_filter_init,
     };
 
-    audio_filter_type = g_type_register_static (GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (audiofilter_dbg, "audiofilter", 0, "audiofilter");
+
+    audio_filter_type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
         "GstAudioFilter", &audio_filter_info, G_TYPE_FLAG_ABSTRACT);
   }
   return audio_filter_type;
@@ -95,218 +103,80 @@ gst_audio_filter_base_init (gpointer g_class)
 }
 
 static void
-gst_audio_filter_class_init (gpointer g_class, gpointer class_data)
+gst_audio_filter_class_init (gpointer klass, gpointer class_data)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstAudioFilterClass *klass;
-
-  klass = (GstAudioFilterClass *) g_class;
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
+  GstBaseTransformClass *basetrans_class;
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->set_property = gst_audio_filter_set_property;
-  gobject_class->get_property = gst_audio_filter_get_property;
-}
+  basetrans_class = (GstBaseTransformClass *) klass;
 
-static GstPadLinkReturn
-gst_audio_filter_link (GstPad * pad, GstPad * peer)
-{
-  GstAudioFilter *audiofilter;
-
-  //GstPadLinkReturn ret;
-  //GstPadLinkReturn link_ret;
-  //GstStructure *structure;
-  GstAudioFilterClass *audio_filter_class;
-
-  GST_DEBUG ("gst_audio_filter_link");
-  audiofilter = GST_AUDIO_FILTER (gst_pad_get_parent (pad));
-  audio_filter_class =
-      GST_AUDIO_FILTER_CLASS (G_OBJECT_GET_CLASS (audiofilter));
-
-#if 0
-  ret = GST_PAD_LINK_DELAYED;   /* intialise with dummy value */
-  if (pad == audiofilter->srcpad) {
-    link_ret = gst_pad_try_set_caps (audiofilter->sinkpad, caps);
-  } else {
-    link_ret = gst_pad_try_set_caps (audiofilter->srcpad, caps);
-  }
-
-  if (GST_PAD_LINK_FAILED (link_ret)) {
-    gst_object_unref (audiofilter);
-    return link_ret;
-  }
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (strcmp (gst_structure_get_name (structure), "audio/x-raw-int") == 0) {
-    ret = gst_structure_get_int (structure, "depth", &audiofilter->depth);
-    ret &= gst_structure_get_int (structure, "width", &audiofilter->width);
-  } else if (strcmp (gst_structure_get_name (structure), "audio/x-raw-float")
-      == 0) {
-    ret &= gst_structure_get_int (structure, "width", &audiofilter->width);
-  } else {
-    g_assert_not_reached ();
-  }
-  ret &= gst_structure_get_int (structure, "rate", &audiofilter->rate);
-  ret &= gst_structure_get_int (structure, "channels", &audiofilter->channels);
-
-  if (!ret) {
-    gst_object_unref (audiofilter);
-    return GST_PAD_LINK_REFUSED;
-  }
-
-  audiofilter->bytes_per_sample = (audiofilter->width / 8) *
-      audiofilter->channels;
-
-  if (audio_filter_class->setup)
-    (audio_filter_class->setup) (audiofilter);
-#endif
-
-  gst_object_unref (audiofilter);
-  return GST_PAD_LINK_OK;
+  basetrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_audio_filter_set_caps);
 }
 
 static void
 gst_audio_filter_init (GTypeInstance * instance, gpointer g_class)
 {
-  GstAudioFilter *audiofilter = GST_AUDIO_FILTER (instance);
-  GstPadTemplate *pad_template;
+  GstAudioFilter *filter = GST_AUDIO_FILTER (instance);
 
-  GST_DEBUG ("gst_audio_filter_init");
-
-  pad_template =
-      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "sink");
-  g_return_if_fail (pad_template != NULL);
-  audiofilter->sinkpad = gst_pad_new_from_template (pad_template, "sink");
-  gst_element_add_pad (GST_ELEMENT (audiofilter), audiofilter->sinkpad);
-  gst_pad_set_chain_function (audiofilter->sinkpad, gst_audio_filter_chain);
-  gst_pad_set_link_function (audiofilter->sinkpad, gst_audio_filter_link);
-  //gst_pad_set_getcaps_function (audiofilter->sinkpad, gst_pad_proxy_getcaps);
-
-  pad_template =
-      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
-  g_return_if_fail (pad_template != NULL);
-  audiofilter->srcpad = gst_pad_new_from_template (pad_template, "src");
-  gst_element_add_pad (GST_ELEMENT (audiofilter), audiofilter->srcpad);
-  gst_pad_set_link_function (audiofilter->srcpad, gst_audio_filter_link);
-  //gst_pad_set_getcaps_function (audiofilter->srcpad, gst_pad_proxy_getcaps);
-
-  audiofilter->inited = FALSE;
+  /* to make gst_buffer_spec_parse_caps() happy, not used in our case */
+  filter->format.latency_time = GST_SECOND;
 }
 
-static GstFlowReturn
-gst_audio_filter_chain (GstPad * pad, GstBuffer * buffer)
+static gboolean
+gst_audio_filter_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
+    GstCaps * outcaps)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *inbuf = GST_BUFFER (buffer);
-  GstAudioFilter *audiofilter;
-  GstBuffer *outbuf;
-  GstAudioFilterClass *audio_filter_class;
+  GstAudioFilterClass *klass;
+  GstAudioFilter *filter;
+  gboolean ret = TRUE;
 
-  GST_DEBUG ("gst_audio_filter_chain");
+  g_assert (gst_caps_is_equal (incaps, outcaps));
 
-  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  g_return_val_if_fail (inbuf != NULL, GST_FLOW_ERROR);
+  filter = GST_AUDIO_FILTER (btrans);
 
-  audiofilter = GST_AUDIO_FILTER (gst_pad_get_parent (pad));
-  /* g_return_if_fail (audiofilter->inited); */
-  audio_filter_class =
-      GST_AUDIO_FILTER_CLASS (G_OBJECT_GET_CLASS (audiofilter));
+  GST_LOG_OBJECT (filter, "caps: %" GST_PTR_FORMAT, incaps);
 
-  GST_DEBUG ("gst_audio_filter_chain: got buffer of %d bytes in '%s'",
-      GST_BUFFER_SIZE (inbuf), GST_OBJECT_NAME (audiofilter));
-
-  if (audiofilter->passthru) {
-    ret = gst_pad_push (audiofilter->srcpad, buffer);
-    gst_object_unref (audiofilter);
-    return ret;
+  if (!gst_ring_buffer_parse_caps (&filter->format, incaps)) {
+    GST_WARNING_OBJECT (filter, "couldn't parse %" GST_PTR_FORMAT, incaps);
+    return FALSE;
   }
 
-  audiofilter->size = GST_BUFFER_SIZE (inbuf);
-  audiofilter->n_samples = audiofilter->size / audiofilter->bytes_per_sample;
+  klass = GST_AUDIO_FILTER_CLASS (G_OBJECT_GET_CLASS (filter));
 
-  if (gst_buffer_is_writable (buffer)) {
-    if (audio_filter_class->filter_inplace) {
-      (audio_filter_class->filter_inplace) (audiofilter, inbuf);
-      outbuf = inbuf;
-    } else {
-      outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (inbuf));
-      GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
-      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
+  if (klass->setup)
+    ret = klass->setup (filter, &filter->format);
 
-      (audio_filter_class->filter) (audiofilter, outbuf, inbuf);
-      gst_buffer_unref (inbuf);
-    }
-  } else {
-    outbuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (inbuf));
-    GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
-    GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
-    if (audio_filter_class->filter) {
-      (audio_filter_class->filter) (audiofilter, outbuf, inbuf);
-    } else {
-      memcpy (GST_BUFFER_DATA (outbuf), GST_BUFFER_DATA (inbuf),
-          GST_BUFFER_SIZE (inbuf));
-
-      (audio_filter_class->filter_inplace) (audiofilter, outbuf);
-    }
-    gst_buffer_unref (inbuf);
-  }
-
-  ret = gst_pad_push (audiofilter->srcpad, outbuf);
-
-  gst_object_unref (audiofilter);
   return ret;
 }
 
-static void
-gst_audio_filter_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstAudioFilter *src;
-
-  g_return_if_fail (GST_IS_AUDIO_FILTER (object));
-  src = GST_AUDIO_FILTER (object);
-
-  GST_DEBUG ("gst_audio_filter_set_property");
-  switch (prop_id) {
-    default:
-      break;
-  }
-}
-
-static void
-gst_audio_filter_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstAudioFilter *src;
-
-  g_return_if_fail (GST_IS_AUDIO_FILTER (object));
-  src = GST_AUDIO_FILTER (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
+/**
+ * gst_audio_filter_class_add_pad_templates:
+ * @klass: an #GstAudioFilterClass
+ * @allowed_caps: what formats the filter can handle, as #GstCaps
+ *
+ * Convenience function to add pad templates to this element class, with
+ * @allowed_caps as the caps that can be handled.
+ *
+ * This function is usually used from within a GObject base_init function.
+ *
+ * Since: 0.10.12
+ */
 void
-gst_audio_filter_class_add_pad_templates (GstAudioFilterClass *
-    audio_filter_class, const GstCaps * caps)
+gst_audio_filter_class_add_pad_templates (GstAudioFilterClass * klass,
+    const GstCaps * allowed_caps)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (audio_filter_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  audio_filter_class->caps = gst_caps_copy (caps);
+  g_return_if_fail (GST_IS_AUDIO_FILTER_CLASS (klass));
+  g_return_if_fail (allowed_caps != NULL);
+  g_return_if_fail (GST_IS_CAPS (allowed_caps));
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_caps_copy (caps)));
+          gst_caps_copy (allowed_caps)));
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          gst_caps_copy (caps)));
+          gst_caps_copy (allowed_caps)));
 }
