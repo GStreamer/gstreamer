@@ -149,15 +149,25 @@ class TestCase(unittest.TestCase):
         """
         Override me by chaining up to me at the start of your setUp.
         """
-        gst.debug('%s.%s' % (self.__class__.__name__, 
-            self.__testMethodName))
+        # Using private variables is BAD ! this variable changed name in
+        # python 2.5
+        try:
+            methodName = self.__testMethodName
+        except:
+            methodName = self._testMethodName
+        gst.debug('%s.%s' % (self.__class__.__name__, methodName))
         self.gctrack()
 
     def tearDown(self):
         """
         Override me by chaining up to me at the end of your tearDown.
         """
-        gst.debug('%s.%s' % (self.__class__.__name__, 
-            self.__testMethodName))
+        # Using private variables is BAD ! this variable changed name in
+        # python 2.5
+        try:
+            methodName = self.__testMethodName
+        except:
+            methodName = self._testMethodName
+        gst.debug('%s.%s' % (self.__class__.__name__, methodName))
         self.gccollect()
         self.gcverify()
