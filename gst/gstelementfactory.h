@@ -41,7 +41,9 @@ typedef struct _GstElementDetails GstElementDetails;
 /**
  * GstElementDetails:
  * @longname: long, english name
- * @klass: type of element, as an unordered list separated with slashes ('/')
+ * @klass: string describing the type of element, as an unordered list
+ * separated with slashes ('/'). See draft-klass.txt of the design docs
+ * for more details and common types
  * @description: what the element is about
  * @author: who wrote this thing?
  *
@@ -70,7 +72,9 @@ struct _GstElementDetails
 /**
  * GST_ELEMENT_DETAILS:
  * @longname: long, english name
- * @klass: type of element, as hierarchy with '/' as a delimiter
+ * @klass: string describing the type of element, as an unordered list
+ * separated with slashes ('/'). See draft-klass.txt of the design docs
+ * for more details and common types
  * @description: what the element is about
  * @author: who wrote this element
  *

@@ -1,3 +1,9 @@
+2007-02-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstelementfactory.h:
+	  The klass string is not a hierarchy. Add reference to the design doc
+	  for more information and common types.
+
 2007-02-02  Wim Taymans,,,  <wim@fluendo.com>
 
 	* gst/gstquery.c: (gst_query_new_latency):
