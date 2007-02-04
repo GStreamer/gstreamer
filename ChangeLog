@@ -1,3 +1,13 @@
+2007-02-04  Johan Dahlin  <johan@gnome.org>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* gst/interfaces.defs:
+	* gst/interfaces.override:
+	* testsuite/test_interface.py:
+	Fully implement GstPropertyProbe interface, with unit test.
+	Fixes #376996
+
 2007-01-31  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

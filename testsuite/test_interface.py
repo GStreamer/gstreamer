@@ -43,5 +43,32 @@ class FunctionCall(TestCase):
         assert isinstance(element, gst.interfaces.XOverlay)
         element.set_xwindow_id(0L)
         
+class MixerTest(TestCase):
+    def setUp(self):
+        TestCase.setUp(self)
+        self.mixer = gst.element_factory_make('alsasrc', '')
+        assert self.mixer
+
+    def tearDown(self):
+        del self.mixer
+        TestCase.tearDown(self)
+
+    def testGetProperty(self):
+        self.failUnless(self.mixer.probe_get_property('device'))
+        self.assertRaises(ValueError,
+                          self.mixer.probe_get_property, 'non-existent')
+
+    def testGetProperties(self):
+        properties = self.mixer.probe_get_properties()
+        self.failUnless(properties)
+        self.assertEqual(type(properties), list)
+        prop = properties[0]
+        self.assertEqual(prop.name, 'device')
+        self.assertEqual(prop.value_type, gobject.TYPE_STRING)
+
+    def testGetValuesName(self):
+        values = self.mixer.probe_get_values_name('device')
+        self.assertEqual(type(values), list)
+
 if __name__ == "__main__":
     unittest.main()

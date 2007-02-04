@@ -438,13 +438,13 @@
   (return-type "GType")
 )
 
-(define-method get_properties
+(define-method probe_get_properties
   (of-object "GstPropertyProbe")
   (c-name "gst_property_probe_get_properties")
   (return-type "const-GList*")
 )
 
-(define-method get_property
+(define-method probe_get_property
   (of-object "GstPropertyProbe")
   (c-name "gst_property_probe_get_property")
   (return-type "const-GParamSpec*")
@@ -498,7 +498,7 @@
   )
 )
 
-(define-method get_values_name
+(define-method probe_get_values_name
   (of-object "GstPropertyProbe")
   (c-name "gst_property_probe_get_values_name")
   (return-type "GValueArray*")
