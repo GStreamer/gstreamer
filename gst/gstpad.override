@@ -1231,12 +1231,16 @@ _wrap_gst_pad_set_caps(PyGObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O:GstPad.set_caps", kwlist, &py_caps))
         return NULL;
-    caps = pygst_caps_from_pyobject (py_caps, NULL);
-    if (PyErr_Occurred())
-      return NULL;
+    if (py_caps == Py_None) {
+	caps = NULL;
+    } else {
+	caps = pygst_caps_from_pyobject (py_caps, NULL);
+	if (PyErr_Occurred())
+	    return NULL;
+    }
     pyg_begin_allow_threads;
     ret = gst_pad_set_caps(GST_PAD(self->obj), caps);
-    if (ret)
+    if (ret && caps)
 	gst_caps_unref (caps);
     pyg_end_allow_threads;
     return PyBool_FromLong(ret);

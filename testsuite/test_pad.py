@@ -92,9 +92,11 @@ class PadPushLinkedTest(TestCase):
     def tearDown(self):
         self.assertEquals(sys.getrefcount(self.src), 3)
         self.assertEquals(self.src.__gstrefcount__, 1)
+        self.src.set_caps(None)
         del self.src
         self.assertEquals(sys.getrefcount(self.sink), 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
+        self.sink.set_caps(None)
         del self.sink
         TestCase.tearDown(self)
 
@@ -171,9 +173,11 @@ class PadPushEventLinkedTest(TestCase):
     def tearDown(self):
         self.assertEquals(sys.getrefcount(self.src), 3)
         self.assertEquals(self.src.__gstrefcount__, 1)
+        self.src.set_caps(None)
         del self.src
         self.assertEquals(sys.getrefcount(self.sink), 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
+        self.sink.set_caps(None)
         del self.sink
         TestCase.tearDown(self)
 
@@ -267,9 +271,11 @@ class PadPushProbeLinkTest(TestCase):
     def tearDown(self):
         self.assertEquals(sys.getrefcount(self.src), 3)
         self.assertEquals(self.src.__gstrefcount__, 1)
+        self.src.set_caps(None)
         del self.src
         self.assertEquals(sys.getrefcount(self.sink), 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
+        self.sink.set_caps(None)
         del self.sink
         TestCase.tearDown(self)
 

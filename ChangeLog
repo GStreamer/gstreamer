@@ -1,3 +1,13 @@
+2007-02-04  Rene Stadler  <mail@renestadler.de>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstpad.override:
+	Allow removing the negotiated pads of a cap by setting them to None.
+	* testsuite/test_pad.py:
+	Added un-negotian of pads' caps to test above patch.
+	Fixes #363795
+
 2007-02-04  Edward Hervey  <edward@fluendo.com>
 
 	* gst/interfaces.override:
