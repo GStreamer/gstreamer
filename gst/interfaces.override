@@ -307,14 +307,16 @@ _wrap_gst_property_probe_get_values_name (PyGObject *self, PyObject *args)
 						name);
     py_list = PyList_New(0);
 
-    for (i = 0; i < array->n_values; i++) {
-	GValue *value = g_value_array_get_nth(array, i);
-	PyObject *py_value = pyg_value_as_pyobject(value, TRUE);
-        PyList_Append(py_list, py_value);
-        Py_DECREF(py_value);
-
+    if (array) {
+	for (i = 0; i < array->n_values; i++) {
+	    GValue *value = g_value_array_get_nth(array, i);
+	    PyObject *py_value = pyg_value_as_pyobject(value, TRUE);
+	    PyList_Append(py_list, py_value);
+	    Py_DECREF(py_value);
+	    
+	}
+	g_value_array_free(array);
     }
-    g_value_array_free(array);
     
     return py_list;
 }
