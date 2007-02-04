@@ -1,3 +1,9 @@
+2007-02-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/libs/utils.c: (GST_START_TEST):
+	  Fix unit test. Turns out things work much better when you
+	  NULL-terminate string arrays. Should make p5 build bot happy again.
+
 2007-02-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/Makefile.am:
