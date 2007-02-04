@@ -302,6 +302,33 @@ GST_START_TEST (test_vorbis_theora)
 
 GST_END_TEST;
 
+GST_START_TEST (test_simple_cleanup)
+{
+  GstElement *oggmux;
+
+  oggmux = gst_element_factory_make ("oggmux", NULL);
+  gst_object_unref (oggmux);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_request_pad_cleanup)
+{
+  GstElement *oggmux;
+  GstPad *pad;
+
+  oggmux = gst_element_factory_make ("oggmux", NULL);
+  pad = gst_element_get_request_pad (oggmux, "sink_%d");
+  fail_unless (pad != NULL);
+  gst_object_unref (pad);
+  pad = gst_element_get_request_pad (oggmux, "sink_%d");
+  fail_unless (pad != NULL);
+  gst_object_unref (pad);
+  gst_object_unref (oggmux);
+}
+
+GST_END_TEST;
+
 static Suite *
 oggmux_suite (void)
 {
@@ -309,7 +336,6 @@ oggmux_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-
 #ifdef HAVE_VORBIS
   tcase_add_test (tc_chain, test_vorbis);
 #endif
@@ -323,6 +349,8 @@ oggmux_suite (void)
   tcase_add_test (tc_chain, test_theora_vorbis);
 #endif
 
+  tcase_add_test (tc_chain, test_simple_cleanup);
+  tcase_add_test (tc_chain, test_request_pad_cleanup);
   return s;
 }
 
