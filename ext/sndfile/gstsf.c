@@ -108,6 +108,10 @@ plugin_init (GstPlugin * plugin)
           gst_sf_sink_get_type ()))
     return FALSE;
 
+  if (!gst_element_register (plugin, "sfsrc", GST_RANK_NONE,
+          gst_sf_src_get_type ()))
+    return FALSE;
+
   return TRUE;
 }
 

@@ -36,6 +36,7 @@ GType gst_sf_major_types_get_type (void);
 GType gst_sf_minor_types_get_type (void);
 
 GType gst_sf_sink_get_type (void);
+GType gst_sf_src_get_type (void);
 
 
 G_END_DECLS
