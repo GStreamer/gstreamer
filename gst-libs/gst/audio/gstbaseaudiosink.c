@@ -889,6 +889,8 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
     len = MIN (GST_BUFFER_SIZE (buf), len);
   }
 
+  basesink->offset += len;
+
   memcpy (data, GST_BUFFER_DATA (buf), len);
 
   return;

@@ -1,3 +1,10 @@
+2007-02-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c
+	(gst_base_audio_sink_callback): Update basesink->offset so that we
+	pull monotonically increasing offsets instead of, um, seeking back
+	to 0 each time. Fixes alsasrc ! alsasink!
+
 2007-02-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videoscale/gstvideoscale.c:
