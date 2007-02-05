@@ -1,3 +1,9 @@
+2007-02-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videoscale/gstvideoscale.c:
+	  A width and height of 1 makes us crash, so increase minimum size to
+	  2x2 pixels until someone feels like fixing this (#404512).
+
 2007-02-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/pipelines/oggmux.c: (GST_START_TEST), (oggmux_suite):
