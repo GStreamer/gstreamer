@@ -266,6 +266,55 @@ GST_START_TEST (test_coverage)
 
 GST_END_TEST;
 
+GST_START_TEST (test_uri_interface)
+{
+  GstElement *src;
+  gchar *location;
+  GstBus *bus;
+
+  src = setup_filesrc ();
+  bus = gst_bus_new ();
+
+  gst_element_set_bus (src, bus);
+
+  g_object_set (G_OBJECT (src), "location", "/i/do/not/exist", NULL);
+  g_object_get (G_OBJECT (src), "location", &location, NULL);
+  fail_unless_equals_string (location, "/i/do/not/exist");
+  g_free (location);
+
+  location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (src));
+  fail_unless_equals_string (location, "file://%2Fi%2Fdo%2Fnot%2Fexist");
+
+  /* should accept file:///foo/bar URIs */
+  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (src),
+          "file:///foo/bar"));
+  location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (src));
+  fail_unless_equals_string (location, "file://%2Ffoo%2Fbar");
+  g_object_get (G_OBJECT (src), "location", &location, NULL);
+  fail_unless_equals_string (location, "/foo/bar");
+  g_free (location);
+
+  /* should accept file://localhost/foo/bar URIs */
+  fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (src),
+          "file://localhost/foo/baz"));
+  location = (gchar *) gst_uri_handler_get_uri (GST_URI_HANDLER (src));
+  fail_unless_equals_string (location, "file://%2Ffoo%2Fbaz");
+  g_object_get (G_OBJECT (src), "location", &location, NULL);
+  fail_unless_equals_string (location, "/foo/baz");
+  g_free (location);
+
+  /* should fail with other hostnames */
+  fail_if (gst_uri_handler_set_uri (GST_URI_HANDLER (src),
+          "file://hostname/foo/foo"));
+
+  /* cleanup */
+  gst_element_set_bus (src, NULL);
+  gst_object_unref (GST_OBJECT (bus));
+  cleanup_filesrc (src);
+}
+
+GST_END_TEST;
+
 Suite *
 filesrc_suite (void)
 {
@@ -276,6 +325,7 @@ filesrc_suite (void)
   tcase_add_test (tc_chain, test_seeking);
   tcase_add_test (tc_chain, test_pull);
   tcase_add_test (tc_chain, test_coverage);
+  tcase_add_test (tc_chain, test_uri_interface);
 
   return s;
 }

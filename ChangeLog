@@ -1,3 +1,10 @@
+2007-02-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/elements/filesrc.c: (GST_START_TEST),
+	(filesrc_suite):
+	Add unit test for the GstURIHandler interface in filesrc. This also
+	tests the newly added file://localhost/foo/bar support.
+
 2007-02-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstelementfactory.h:
