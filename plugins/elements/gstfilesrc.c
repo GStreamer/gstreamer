@@ -788,8 +788,8 @@ gst_file_src_create_read (GstFileSrc * src, guint64 offset, guint length,
   if (G_UNLIKELY (ret < 0))
     goto could_not_read;
 
-  /* regular files should have given us what we expected */
-  if (G_UNLIKELY ((guint) ret < length && src->is_regular))
+  /* seekable regular files should have given us what we expected */
+  if (G_UNLIKELY ((guint) ret < length && src->seekable))
     goto unexpected_eos;
 
   /* other files should eos if they read 0 and more was requested */

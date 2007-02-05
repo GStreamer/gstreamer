@@ -1,5 +1,14 @@
 2007-02-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Michal Benes <michal dot benes at itonis dot tv>
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_create_read):
+	Correctly generate EOS for non-seekable files. We don't have a total
+	length for them and would get an unexpected end of file if we only
+	special-cased for regular files. (Fixes: #404569)
+
+2007-02-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/elements/filesrc.c: (GST_START_TEST),
 	(filesrc_suite):
 	Add unit test for the GstURIHandler interface in filesrc. This also
