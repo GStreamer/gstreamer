@@ -44,6 +44,8 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <gst/audio/audio.h>
+#include <gst/audio/gstaudiofilter.h>
 #include <gst/controller/gstcontroller.h>
 
 #include "audioinvert.h"
@@ -70,47 +72,33 @@ enum
   PROP_DEGREE
 };
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 32; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true")
-    );
-
-static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX], "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 32; "
-        "audio/x-raw-int, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, "
-        "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true")
-    );
+#define ALLOWED_CAPS \
+    "audio/x-raw-int,"                                                \
+    " depth=(int)16,"                                                 \
+    " width=(int)16,"                                                 \
+    " endianness=(int)BYTE_ORDER,"                                    \
+    " signed=(bool)TRUE,"                                             \
+    " rate=(int)[1,MAX],"                                             \
+    " channels=(int)[1,MAX]; "                                        \
+    "audio/x-raw-float,"                                              \
+    " width=(int)32,"                                                 \
+    " endianness=(int)BYTE_ORDER,"                                    \
+    " rate=(int)[1,MAX],"                                             \
+    " channels=(int)[1,MAX]"
 
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_audio_invert_debug, "audioinvert", 0, "audioinvert element");
 
-GST_BOILERPLATE_FULL (GstAudioInvert, gst_audio_invert, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstAudioInvert, gst_audio_invert, GstAudioFilter,
+    GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
 
 static void gst_audio_invert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_audio_invert_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_audio_invert_set_caps (GstBaseTransform * base,
-    GstCaps * incaps, GstCaps * outcaps);
+static gboolean gst_audio_invert_setup (GstAudioFilter * filter,
+    GstRingBufferSpec * format);
 static GstFlowReturn gst_audio_invert_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 
@@ -125,12 +113,14 @@ static void
 gst_audio_invert_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstCaps *caps;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
   gst_element_class_set_details (element_class, &element_details);
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (klass),
+      caps);
+  gst_caps_unref (caps);
 }
 
 static void
@@ -147,8 +137,8 @@ gst_audio_invert_class_init (GstAudioInvertClass * klass)
           "Degree of inversion", 0.0, 1.0,
           0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
-  GST_BASE_TRANSFORM_CLASS (klass)->set_caps =
-      GST_DEBUG_FUNCPTR (gst_audio_invert_set_caps);
+  GST_AUDIO_FILTER_CLASS (klass)->setup =
+      GST_DEBUG_FUNCPTR (gst_audio_invert_setup);
   GST_BASE_TRANSFORM_CLASS (klass)->transform_ip =
       GST_DEBUG_FUNCPTR (gst_audio_invert_transform_ip);
 }
@@ -195,41 +185,26 @@ gst_audio_invert_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* GstBaseTransform vmethod implementations */
+/* GstAudioFilter vmethod implementations */
 
 static gboolean
-gst_audio_invert_set_caps (GstBaseTransform * base, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_audio_invert_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
   GstAudioInvert *filter = GST_AUDIO_INVERT (base);
-  const GstStructure *structure;
-  gboolean ret;
-  gint width;
-  const gchar *fmt;
+  gboolean ret = TRUE;
 
-  /*GST_INFO ("incaps are %" GST_PTR_FORMAT, incaps); */
-
-  structure = gst_caps_get_structure (incaps, 0);
-
-  ret = gst_structure_get_int (structure, "width", &width);
-  if (!ret)
-    goto no_width;
-  filter->width = width / 8;
-
-
-  fmt = gst_structure_get_name (structure);
-  if (!strcmp (fmt, "audio/x-raw-int"))
+  if (format->type == GST_BUFTYPE_FLOAT && format->width == 32)
+    filter->process = (GstAudioInvertProcessFunc)
+        gst_audio_invert_transform_float;
+  else if (format->type == GST_BUFTYPE_LINEAR && format->width == 16)
     filter->process = (GstAudioInvertProcessFunc)
         gst_audio_invert_transform_int;
   else
-    filter->process = (GstAudioInvertProcessFunc)
-        gst_audio_invert_transform_float;
+    ret = FALSE;
 
-  return TRUE;
+  filter->width = format->width / 8;
 
-no_width:
-  GST_DEBUG ("no width in caps");
-  return FALSE;
+  return ret;
 }
 
 static void
@@ -260,9 +235,7 @@ gst_audio_invert_transform_float (GstAudioInvert * filter,
   }
 }
 
-
-/* this function does the actual processing
- */
+/* GstBaseTransform vmethod implementations */
 static GstFlowReturn
 gst_audio_invert_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {

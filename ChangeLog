@@ -1,3 +1,18 @@
+2007-02-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audiofx/audioamplify.c: (gst_audio_amplify_base_init),
+	(gst_audio_amplify_class_init), (gst_audio_amplify_init),
+	(gst_audio_amplify_set_process_function),
+	(gst_audio_amplify_setup):
+	* gst/audiofx/audioamplify.h:
+	* gst/audiofx/audioinvert.c: (gst_audio_invert_base_init),
+	(gst_audio_invert_class_init), (gst_audio_invert_setup):
+	* gst/audiofx/audioinvert.h:
+	Some small cleanups and port both elements to the new GstAudioFilter
+	base class to save a few lines of common code.
+	* gst/audiofx/Makefile.am:
+	Link against libgstaudio for the above changes
+
 2007-01-29  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/elements/.cvsignore:

@@ -24,6 +24,8 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>
+#include <gst/audio/audio.h>
+#include <gst/audio/gstaudiofilter.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_AUDIO_AMPLIFY            (gst_audio_amplify_get_type())
@@ -39,7 +41,7 @@ typedef void (*GstAudioAmplifyProcessFunc) (GstAudioAmplify *, guint8 *, guint);
 
 struct _GstAudioAmplify
 {
-  GstBaseTransform element;
+  GstAudioFilter audiofilter;
 
   gfloat amplification;
 
@@ -47,12 +49,12 @@ struct _GstAudioAmplify
   GstAudioAmplifyProcessFunc process;
   gint clipping_method;
   gint width;
-  gboolean format_float;
+  gint format_index;
 };
 
 struct _GstAudioAmplifyClass
 {
-  GstBaseTransformClass parent;
+  GstAudioFilterClass parent;
 };
 
 GType gst_audio_amplify_get_type (void);

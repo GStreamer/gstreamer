@@ -11,10 +11,13 @@ libgstaudiofx_la_SOURCES = audiofx.c\
 # flags used to compile this plugin
 libgstaudiofx_la_CFLAGS = $(GST_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_CONTROLLER_CFLAGS)
+	$(GST_CONTROLLER_CFLAGS) \
+	$(GST_PLUGINS_BASE_CFLAGS)
 libgstaudiofx_la_LIBADD = $(GST_LIBS) \
 	$(GST_BASE_LIBS) \
-	$(GST_CONTROLLER_LIBS)
+	$(GST_CONTROLLER_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) \
+	-lgstaudio-$(GST_MAJORMINOR)
 libgstaudiofx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 # headers we need but don't want installed
