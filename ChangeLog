@@ -1,5 +1,12 @@
 2007-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/smpte/gstsmpte.c: (gst_smpte_transition_type_get_type):
+	  Add cast to avoid compiler warnings with older GLib versions
+	  where the nick/name members in GEnumValue are not declared as
+	  constant strings.
+
+2007-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gconf/gconf.c: (gst_gconf_get_key_for_sink_profile),
 	(gst_gconf_render_bin_from_key),
 	(gst_gconf_get_default_audio_sink):
