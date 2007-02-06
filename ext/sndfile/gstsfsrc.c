@@ -25,7 +25,7 @@
 #  include "config.h"
 #endif
 
-#include <gst/gst-i18n-lib.h>
+#include <gst/gst-i18n-plugin.h>
 
 #include "gstsfsrc.h"
 

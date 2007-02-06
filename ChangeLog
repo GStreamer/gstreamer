@@ -1,3 +1,8 @@
+2007-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/sndfile/gstsfsrc.c:
+	  Fix build (installed setup).
+
 2007-02-05  Andy Wingo  <wingo@pobox.com>
 
 	* ext/sndfile/Makefile.am:
