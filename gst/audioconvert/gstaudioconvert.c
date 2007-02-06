@@ -28,6 +28,10 @@
  * Audioconvert converts raw audio buffers between various possible formats.
  * It supports integer to float conversion, width/depth conversion,
  * signedness and endianness conversion.
+ *
+ * Some format conversion are not carried out in an optimal way right now.
+ * E.g. converting from double to float would cause a loss of precission.
+ *
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
