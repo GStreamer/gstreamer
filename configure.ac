@@ -754,7 +754,7 @@ GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink sdlaudiosink, [
 dnl *** sndfile ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SNDFILE, true)
 GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfsrc sfsink, [
-  PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.0, HAVE_SNDFILE="yes", HAVE_SNDFILE="no")
+  PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.16, HAVE_SNDFILE="yes", HAVE_SNDFILE="no")
   AC_SUBST(SNDFILE_CFLAGS)
   AC_SUBST(SNDFILE_LIBS)
 ])
