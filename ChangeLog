@@ -1,6 +1,11 @@
 2007-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/smpte/gstsmpte.c: (gst_smpte_transition_type_get_type):
+	  Let's try this again and use the right cast this time.
+
+2007-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/smpte/gstsmpte.c: (gst_smpte_transition_type_get_type):
 	  Add cast to avoid compiler warnings with older GLib versions
 	  where the nick/name members in GEnumValue are not declared as
 	  constant strings.

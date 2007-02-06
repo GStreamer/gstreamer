@@ -146,8 +146,9 @@ gst_smpte_transition_type_get_type (void)
       definitions = g_list_next (definitions);
 
       smpte_transitions[i].value = definition->type;
-      smpte_transitions[i].value_nick = (const gchar *) definition->short_name;
-      smpte_transitions[i].value_name = (const gchar *) definition->long_name;
+      /* older GLib versions have the two fields as non-const, hence the cast */
+      smpte_transitions[i].value_nick = (gchar *) definition->short_name;
+      smpte_transitions[i].value_name = (gchar *) definition->long_name;
 
       i++;
     }
