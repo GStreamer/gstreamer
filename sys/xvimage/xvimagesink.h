@@ -115,6 +115,8 @@ struct _GstXContext {
   gboolean use_xshm;
 
   XvPortID xv_port_id;
+  guint nb_adaptors;
+  gchar ** adaptors;
   gint im_format;
 
   GList *formats_list;
@@ -225,7 +227,7 @@ struct _GstXvImageSink {
   GstVideoSink videosink;
 
   char *display_name;
-  gint adaptor_no;
+  guint adaptor_no;
 
   GstXContext *xcontext;
   GstXWindow *xwindow;

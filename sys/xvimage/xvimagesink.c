@@ -125,6 +125,7 @@
 #include <gst/interfaces/navigation.h>
 #include <gst/interfaces/xoverlay.h>
 #include <gst/interfaces/colorbalance.h>
+#include <gst/interfaces/propertyprobe.h>
 /* Helper functions */
 #include <gst/video/video.h>
 
@@ -190,7 +191,8 @@ enum
   ARG_PIXEL_ASPECT_RATIO,
   ARG_FORCE_ASPECT_RATIO,
   ARG_HANDLE_EVENTS,
-  ARG_ADAPTOR
+  ARG_DEVICE,
+  ARG_DEVICE_NAME
       /* FILL ME */
 };
 
@@ -1178,7 +1180,6 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
     GstXContext * xcontext)
 {
   gint i;
-  guint nb_adaptors;
   XvAdaptorInfo *adaptors;
   gint nb_formats;
   XvImageFormatValues *formats = NULL;
@@ -1200,7 +1201,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
   /* Then we get adaptors list */
   if (Success != XvQueryAdaptors (xcontext->disp, xcontext->root,
-          &nb_adaptors, &adaptors)) {
+          &xcontext->nb_adaptors, &adaptors)) {
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
         ("Could not initialise Xv output"),
         ("Failed getting XV adaptors list"));
@@ -1209,9 +1210,18 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
   xcontext->xv_port_id = 0;
 
-  GST_DEBUG ("Found %u XV adaptor(s)", nb_adaptors);
+  GST_DEBUG ("Found %u XV adaptor(s)", xcontext->nb_adaptors);
 
-  if (xvimagesink->adaptor_no >= 0 && xvimagesink->adaptor_no < nb_adaptors) {
+  xcontext->adaptors =
+      (gchar **) g_malloc0 (xcontext->nb_adaptors * sizeof (gchar *));
+
+  /* Now fill up our adaptor name array */
+  for (i = 0; i < xcontext->nb_adaptors; i++) {
+    xcontext->adaptors[i] = g_strdup (adaptors[i].name);
+  }
+
+  if (xvimagesink->adaptor_no >= 0 &&
+      xvimagesink->adaptor_no < xcontext->nb_adaptors) {
     /* Find xv port from user defined adaptor */
     gst_lookup_xv_port_from_adaptor (xcontext, adaptors,
         xvimagesink->adaptor_no);
@@ -1219,7 +1229,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
 
   if (!xcontext->xv_port_id) {
     /* Now search for an adaptor that supports XvImageMask */
-    for (i = 0; i < nb_adaptors && !xcontext->xv_port_id; i++) {
+    for (i = 0; i < xcontext->nb_adaptors && !xcontext->xv_port_id; i++) {
       gst_lookup_xv_port_from_adaptor (xcontext, adaptors, i);
       xvimagesink->adaptor_no = i;
     }
@@ -1678,6 +1688,7 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
 {
   GList *formats_list, *channels_list;
   GstXContext *xcontext;
+  gint i = 0;
 
   g_return_if_fail (GST_IS_XVIMAGESINK (xvimagesink));
 
@@ -1727,6 +1738,12 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
   gst_caps_unref (xcontext->caps);
   if (xcontext->last_caps)
     gst_caps_replace (&xcontext->last_caps, NULL);
+
+  for (i = 0; i < xcontext->nb_adaptors; i++) {
+    g_free (xcontext->adaptors[i]);
+  }
+
+  g_free (xcontext->adaptors);
 
   g_free (xcontext->par);
 
@@ -2305,8 +2322,8 @@ beach:
 static gboolean
 gst_xvimagesink_interface_supported (GstImplementsInterface * iface, GType type)
 {
-  g_assert (type == GST_TYPE_NAVIGATION ||
-      type == GST_TYPE_X_OVERLAY || type == GST_TYPE_COLOR_BALANCE);
+  g_assert (type == GST_TYPE_NAVIGATION || type == GST_TYPE_X_OVERLAY ||
+      type == GST_TYPE_COLOR_BALANCE || type == GST_TYPE_PROPERTY_PROBE);
   return TRUE;
 }
 
@@ -2601,6 +2618,113 @@ gst_xvimagesink_colorbalance_init (GstColorBalanceClass * iface)
   iface->get_value = gst_xvimagesink_colorbalance_get_value;
 }
 
+static const GList *
+gst_xvimagesink_probe_get_properties (GstPropertyProbe * probe)
+{
+  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
+  static GList *list = NULL;
+
+  if (!list) {
+    list = g_list_append (NULL, g_object_class_find_property (klass, "device"));
+  }
+
+  return list;
+}
+
+static void
+gst_xvimagesink_probe_probe_property (GstPropertyProbe * probe,
+    guint prop_id, const GParamSpec * pspec)
+{
+  GstXvImageSink *xvimagesink = GST_XVIMAGESINK (probe);
+
+  switch (prop_id) {
+    case ARG_DEVICE:
+      GST_DEBUG_OBJECT (xvimagesink, "probing device list");
+      if (!xvimagesink->xcontext) {
+        GST_DEBUG_OBJECT (xvimagesink, "generating xcontext");
+        xvimagesink->xcontext = gst_xvimagesink_xcontext_get (xvimagesink);
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+}
+
+static gboolean
+gst_xvimagesink_probe_needs_probe (GstPropertyProbe * probe,
+    guint prop_id, const GParamSpec * pspec)
+{
+  GstXvImageSink *xvimagesink = GST_XVIMAGESINK (probe);
+  gboolean ret = FALSE;
+
+  switch (prop_id) {
+    case ARG_DEVICE:
+      if (xvimagesink->xcontext != NULL) {
+        ret = FALSE;
+      } else {
+        ret = TRUE;
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+  return ret;
+}
+
+static GValueArray *
+gst_xvimagesink_probe_get_values (GstPropertyProbe * probe,
+    guint prop_id, const GParamSpec * pspec)
+{
+  GstXvImageSink *xvimagesink = GST_XVIMAGESINK (probe);
+  GValueArray *array = NULL;
+
+  if (G_UNLIKELY (!xvimagesink->xcontext)) {
+    GST_WARNING_OBJECT (xvimagesink, "we don't have any xcontext, can't "
+        "get values");
+    goto beach;
+  }
+
+  switch (prop_id) {
+    case ARG_DEVICE:
+    {
+      guint i;
+      GValue value = { 0 };
+
+      array = g_value_array_new (xvimagesink->xcontext->nb_adaptors);
+      g_value_init (&value, G_TYPE_STRING);
+
+      for (i = 0; i < xvimagesink->xcontext->nb_adaptors; i++) {
+        gchar *adaptor_id_s = g_strdup_printf ("%u", i);
+
+        g_value_set_string (&value, adaptor_id_s);
+        g_value_array_append (array, &value);
+        g_free (adaptor_id_s);
+      }
+      g_value_unset (&value);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+beach:
+  return array;
+}
+
+static void
+gst_xvimagesink_property_probe_interface_init (GstPropertyProbeInterface *
+    iface)
+{
+  iface->get_properties = gst_xvimagesink_probe_get_properties;
+  iface->probe_property = gst_xvimagesink_probe_probe_property;
+  iface->needs_probe = gst_xvimagesink_probe_needs_probe;
+  iface->get_values = gst_xvimagesink_probe_get_values;
+}
+
 /* =========================================== */
 /*                                             */
 /*              Init & Class init              */
@@ -2668,8 +2792,8 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
       gst_xvimagesink_set_event_handling (GST_X_OVERLAY (xvimagesink),
           g_value_get_boolean (value));
       break;
-    case ARG_ADAPTOR:
-      xvimagesink->adaptor_no = g_value_get_int (value);
+    case ARG_DEVICE:
+      xvimagesink->adaptor_no = atoi (g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2716,8 +2840,21 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
     case ARG_HANDLE_EVENTS:
       g_value_set_boolean (value, xvimagesink->handle_events);
       break;
-    case ARG_ADAPTOR:
-      g_value_set_int (value, xvimagesink->adaptor_no);
+    case ARG_DEVICE:
+    {
+      char *adaptor_no_s = g_strdup_printf ("%u", xvimagesink->adaptor_no);
+
+      g_value_set_string (value, adaptor_no_s);
+      g_free (adaptor_no_s);
+      break;
+    }
+    case ARG_DEVICE_NAME:
+      if (xvimagesink->xcontext && xvimagesink->xcontext->adaptors) {
+        g_value_set_string (value,
+            xvimagesink->xcontext->adaptors[xvimagesink->adaptor_no]);
+      } else {
+        g_value_set_string (value, NULL);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2764,7 +2901,7 @@ static void
 gst_xvimagesink_init (GstXvImageSink * xvimagesink)
 {
   xvimagesink->display_name = NULL;
-  xvimagesink->adaptor_no = -1;
+  xvimagesink->adaptor_no = 0;
   xvimagesink->xcontext = NULL;
   xvimagesink->xwindow = NULL;
   xvimagesink->xvimage = NULL;
@@ -2850,9 +2987,12 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
       g_param_spec_boolean ("handle-events", "Handle XEvents",
           "When enabled, XEvents will be selected and handled", TRUE,
           G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_ADAPTOR,
-      g_param_spec_int ("adaptor", "Adaptor number",
-          "The number of the video adaptor", -1, 1000, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_DEVICE,
+      g_param_spec_string ("device", "Adaptor number",
+          "The number of the video adaptor", "0", G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_DEVICE_NAME,
+      g_param_spec_string ("device-name", "Adaptor name",
+          "The name of the video adaptor", NULL, G_PARAM_READABLE));
 
   gobject_class->finalize = gst_xvimagesink_finalize;
 
@@ -2917,7 +3057,11 @@ gst_xvimagesink_get_type (void)
       NULL,
       NULL,
     };
-
+    static const GInterfaceInfo propertyprobe_info = {
+      (GInterfaceInitFunc) gst_xvimagesink_property_probe_interface_init,
+      NULL,
+      NULL,
+    };
     xvimagesink_type = g_type_register_static (GST_TYPE_VIDEO_SINK,
         "GstXvImageSink", &xvimagesink_info, 0);
 
@@ -2929,6 +3073,9 @@ gst_xvimagesink_get_type (void)
         &overlay_info);
     g_type_add_interface_static (xvimagesink_type, GST_TYPE_COLOR_BALANCE,
         &colorbalance_info);
+    g_type_add_interface_static (xvimagesink_type, GST_TYPE_PROPERTY_PROBE,
+        &propertyprobe_info);
+
 
     /* register type and create class in a more safe place instead of at
      * runtime since the type registration and class creation is not

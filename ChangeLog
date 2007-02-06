@@ -1,3 +1,20 @@
+2007-02-06  Julien MOUTTE  <julien@moutte.net>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_handle_xevents),
+	(gst_xvimagesink_get_xv_support), (gst_xvimagesink_xcontext_clear),
+	(gst_xvimagesink_interface_supported),
+	(gst_xvimagesink_probe_get_properties),
+	(gst_xvimagesink_probe_probe_property),
+	(gst_xvimagesink_probe_needs_probe),
+	(gst_xvimagesink_probe_get_values),
+	(gst_xvimagesink_property_probe_interface_init),
+	(gst_xvimagesink_set_property), (gst_xvimagesink_get_property),
+	(gst_xvimagesink_init), (gst_xvimagesink_class_init),
+	(gst_xvimagesink_get_type):
+	* sys/xvimage/xvimagesink.h: Implement PropertyProbe Interface
+	for XVAdaptors so that one can choose the adaptor to use with 
+	gstreamer-properties.
+
 2007-02-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audioconvert/gstaudioconvert.c:
