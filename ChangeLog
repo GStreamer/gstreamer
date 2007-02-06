@@ -1,3 +1,10 @@
+2007-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/gstaudiofilter.c:
+	(gst_audio_filter_class_init), (gst_audio_filter_change_state):
+	  Clear our formats structure and free the caps contained in it when
+	  shutting down.
+
 2007-02-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c

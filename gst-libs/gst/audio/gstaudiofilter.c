@@ -61,7 +61,8 @@ GST_ELEMENT_DETAILS ("Audio filter base class",
 static void gst_audio_filter_base_init (gpointer g_class);
 static void gst_audio_filter_class_init (gpointer g_class, gpointer class_data);
 static void gst_audio_filter_init (GTypeInstance * instance, gpointer g_class);
-
+static GstStateChangeReturn gst_audio_filter_change_state (GstElement * element,
+    GstStateChange transition);
 static gboolean gst_audio_filter_set_caps (GstBaseTransform * btrans,
     GstCaps * incaps, GstCaps * outcaps);
 
@@ -106,21 +107,59 @@ static void
 gst_audio_filter_class_init (gpointer klass, gpointer class_data)
 {
   GstBaseTransformClass *basetrans_class;
+  GstElementClass *gstelement_class;
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gstelement_class = (GstElementClass *) klass;
   basetrans_class = (GstBaseTransformClass *) klass;
 
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_audio_filter_change_state);
   basetrans_class->set_caps = GST_DEBUG_FUNCPTR (gst_audio_filter_set_caps);
 }
 
 static void
 gst_audio_filter_init (GTypeInstance * instance, gpointer g_class)
 {
-  GstAudioFilter *filter = GST_AUDIO_FILTER (instance);
+  /* nothing to do here */
+}
 
-  /* to make gst_buffer_spec_parse_caps() happy, not used in our case */
-  filter->format.latency_time = GST_SECOND;
+/* we override the state change vfunc here instead of GstBaseTransform's stop
+ * vfunc, so GstAudioFilter-derived elements can override ::stop() for their
+ * own purposes without having to worry about chaining up */
+static GstStateChangeReturn
+gst_audio_filter_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret;
+  GstAudioFilter *filter;
+
+  filter = GST_AUDIO_FILTER (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      memset (&filter->format, 0, sizeof (GstRingBufferSpec));
+      /* to make gst_buffer_spec_parse_caps() happy */
+      filter->format.latency_time = GST_SECOND;
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_caps_replace (&filter->format.caps, NULL);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean
