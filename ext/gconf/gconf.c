@@ -27,6 +27,7 @@
 #endif
 
 #include "gconf.h"
+#include "gstgconfelements.h"   /* for debug category */
 
 #ifndef GST_GCONF_DIR
 #error "GST_GCONF_DIR is not defined !"
@@ -77,6 +78,23 @@ gst_gconf_get_string (const gchar * key)
   return value;
 }
 
+const gchar *
+gst_gconf_get_key_for_sink_profile (guint profile)
+{
+  switch (profile) {
+    case GCONF_PROFILE_SOUNDS:
+      return GST_GCONF_AUDIOSINK_KEY;
+    case GCONF_PROFILE_MUSIC:
+      return GST_GCONF_MUSIC_AUDIOSINK_KEY;
+    case GCONF_PROFILE_CHAT:
+      return GST_GCONF_CHAT_AUDIOSINK_KEY;
+    default:
+      break;
+  }
+
+  g_return_val_if_reached (GST_GCONF_AUDIOSINK_KEY);
+}
+
 /**
  * gst_gconf_set_string:
  * @key: a #gchar corresponding to the key you want to set.
@@ -113,6 +131,9 @@ gst_gconf_render_bin_from_key (const gchar * key)
   gchar *value;
 
   value = gst_gconf_get_string (key);
+
+  GST_LOG ("%s = %s", GST_STR_NULL (key), GST_STR_NULL (value));
+
   if (value) {
     GError *err = NULL;
 
@@ -142,27 +163,10 @@ GstElement *
 gst_gconf_get_default_audio_sink (int profile)
 {
   GstElement *ret;
-  gchar *key;
-  const gchar *profile_string;
+  const gchar *key;
 
-  switch (profile) {
-    case GCONF_PROFILE_SOUNDS:
-      profile_string = "";
-      break;
-    case GCONF_PROFILE_MUSIC:
-      profile_string = "music";
-      break;
-    case GCONF_PROFILE_CHAT:
-      profile_string = "chat";
-      break;
-    default:
-      g_return_val_if_reached (NULL);
-  }
-
-  key = g_strdup_printf ("default/%saudiosink", profile_string);
-
+  key = gst_gconf_get_key_for_sink_profile (profile);
   ret = gst_gconf_render_bin_from_key (key);
-  g_free (key);
 
   if (!ret) {
     ret = gst_element_factory_make (DEFAULT_AUDIOSINK, NULL);

@@ -30,10 +30,12 @@
 
 G_BEGIN_DECLS
 
-#define GST_GCONF_AUDIOSRC_KEY  "default/audiosrc"
-#define GST_GCONF_AUDIOSINK_KEY "default/audiosink"
-#define GST_GCONF_VIDEOSRC_KEY  "default/videosrc"
-#define GST_GCONF_VIDEOSINK_KEY "default/videosink"
+#define GST_GCONF_AUDIOSRC_KEY        "default/audiosrc"
+#define GST_GCONF_AUDIOSINK_KEY       "default/audiosink"
+#define GST_GCONF_MUSIC_AUDIOSINK_KEY "default/musicaudiosink"
+#define GST_GCONF_CHAT_AUDIOSINK_KEY  "default/chataudiosink"
+#define GST_GCONF_VIDEOSRC_KEY        "default/videosrc"
+#define GST_GCONF_VIDEOSINK_KEY       "default/videosink"
 
 enum
 {
@@ -45,6 +47,8 @@ enum
 gchar *         gst_gconf_get_string            (const gchar *key);
 void            gst_gconf_set_string            (const gchar *key, 
                                                  const gchar *value);
+
+const gchar *   gst_gconf_get_key_for_sink_profile (guint profile);
 
 GstElement *    gst_gconf_render_bin_from_key           (const gchar *key);
 

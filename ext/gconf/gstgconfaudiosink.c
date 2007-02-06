@@ -136,11 +136,11 @@ get_gconf_key_for_profile (int profile)
 {
   switch (profile) {
     case GCONF_PROFILE_SOUNDS:
-      return GST_GCONF_DIR "/default/audiosink";
+      return GST_GCONF_DIR GST_GCONF_AUDIOSINK_KEY;
     case GCONF_PROFILE_MUSIC:
-      return GST_GCONF_DIR "/default/musicaudiosink";
+      return GST_GCONF_DIR GST_GCONF_MUSIC_AUDIOSINK_KEY;
     case GCONF_PROFILE_CHAT:
-      return GST_GCONF_DIR "/default/chataudiosink";
+      return GST_GCONF_DIR GST_GCONF_CHAT_AUDIOSINK_KEY;
     default:
       g_return_val_if_reached (NULL);
   }
@@ -189,11 +189,17 @@ gst_gconf_audio_sink_dispose (GObject * object)
 static gboolean
 do_toggle_element (GstGConfAudioSink * sink)
 {
+  const gchar *key;
   GstPad *targetpad;
   gchar *new_gconf_str;
   GstState cur, next;
 
-  new_gconf_str = gst_gconf_get_string (GST_GCONF_AUDIOSINK_KEY);
+  key = gst_gconf_get_key_for_sink_profile (sink->profile);
+  new_gconf_str = gst_gconf_get_string (key);
+
+  GST_LOG_OBJECT (sink, "old gconf string: %s", GST_STR_NULL (sink->gconf_str));
+  GST_LOG_OBJECT (sink, "new gconf string: %s", GST_STR_NULL (new_gconf_str));
+
   if (new_gconf_str != NULL && sink->gconf_str != NULL &&
       (strlen (new_gconf_str) == 0 ||
           strcmp (sink->gconf_str, new_gconf_str) == 0)) {
@@ -257,8 +263,6 @@ gst_gconf_audio_sink_set_property (GObject * object, guint prop_id,
 {
   GstGConfAudioSink *sink;
 
-  g_return_if_fail (GST_IS_GCONF_AUDIO_SINK (object));
-
   sink = GST_GCONF_AUDIO_SINK (object);
 
   switch (prop_id) {
@@ -281,8 +285,6 @@ gst_gconf_audio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstGConfAudioSink *sink;
-
-  g_return_if_fail (GST_IS_GCONF_AUDIO_SINK (object));
 
   sink = GST_GCONF_AUDIO_SINK (object);
 
