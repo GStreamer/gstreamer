@@ -1,5 +1,10 @@
 2007-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/modplug/gstmodplug.cc:
+	  Remove superfluous gst_caps_get_structure() call.
+
+2007-02-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Increase required libsndfile version to a version that's known to
 	  have the function sf_write_sync() to make the build bots happy.

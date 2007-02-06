@@ -464,7 +464,6 @@ gst_modplug_load_song (GstModPlug * modplug)
 
   /* negotiate srcpad caps */
   othercaps = gst_pad_get_allowed_caps (modplug->srcpad);
-  structure = gst_caps_get_structure (othercaps, 0);
   newcaps = gst_caps_copy_nth (othercaps, 0);
   gst_caps_unref (othercaps);
   gst_pad_fixate_caps (modplug->srcpad, newcaps);
