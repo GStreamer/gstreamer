@@ -25,13 +25,15 @@
  * SECTION:element-audioconvert
  *
  * <refsect2>
+ * <para>
  * Audioconvert converts raw audio buffers between various possible formats.
  * It supports integer to float conversion, width/depth conversion,
  * signedness and endianness conversion.
- *
+ * </para>
+ * <para>
  * Some format conversion are not carried out in an optimal way right now.
- * E.g. converting from double to float would cause a loss of precission.
- *
+ * E.g. converting from double to float would cause a loss of precision.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>

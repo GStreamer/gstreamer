@@ -1,3 +1,8 @@
+2007-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	  Fix up docs chunk so that gtk-doc doesn't complain, and fix typo.
+
 2007-02-06  Julien MOUTTE  <julien@moutte.net>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_handle_xevents),
