@@ -1,3 +1,9 @@
+2007-02-07  Edward Hervey  <edward@fluendo.com>
+
+	* ext/amrwb/gstamrwbparse.c: (gst_amrwbparse_query):
+	GST_PAD_PARENT doesn't return a GstObject with an incremented refcount.
+	Switched to using gst_pad_get_parent().
+
 2007-02-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/modplug/gstmodplug.cc:

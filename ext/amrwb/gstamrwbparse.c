@@ -148,7 +148,7 @@ gst_amrwbparse_query (GstPad * pad, GstQuery * query)
   GstAmrwbParse *amrwbparse;
   gboolean res = TRUE;
 
-  amrwbparse = GST_AMRWBPARSE (GST_PAD_PARENT (pad));
+  amrwbparse = GST_AMRWBPARSE (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
