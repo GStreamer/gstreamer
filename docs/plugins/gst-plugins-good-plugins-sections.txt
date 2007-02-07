@@ -450,6 +450,20 @@ gst_oss_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-progressreport</FILE>
+GstProgressReport
+<TITLE>progressreport</TITLE>
+<SUBSECTION Standard>
+GstProgressReportClass
+GST_TYPE_PROGRESS_REPORT
+GST_PROGRESS_REPORT
+GST_PROGRESS_REPORT_CLASS
+GST_IS_PROGRESS_REPORT
+GST_IS_PROGRESS_REPORT_CLASS
+gst_progress_report_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rtspsrc</FILE>
 GstRTSPProto
 GstRTSPSrc

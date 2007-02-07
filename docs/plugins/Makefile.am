@@ -82,6 +82,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/autodetect/gstautovideosink.h \
 	$(top_srcdir)/gst/avi/gstavidemux.h \
 	$(top_srcdir)/gst/avi/gstavimux.h \
+	$(top_srcdir)/gst/debug/progressreport.h \
 	$(top_srcdir)/gst/level/gstlevel.h \
 	$(top_srcdir)/gst/goom/gstgoom.h \
 	$(top_srcdir)/gst/id3demux/gstid3demux.h \

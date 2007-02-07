@@ -1,4 +1,4 @@
-/* GStreamer
+/* GStreamer Progress Report Element
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David Schleef <ds@schleef.org>
  * Copyright (C) <2004> Jan Schmidt <thaytan@mad.scientist.com>
@@ -20,48 +20,60 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-progressreport
+ * @short_description: Reports progress
+ * @see_also:
+ *
+ * <refsect2>
+ * <para>
+ * The progressreport element can be put into a pipeline to report progress,
+ * which is done by doing upstream duration and position queries in regular
+ * (real-time) intervals. Both the interval and the prefered query format
+ * can be specified via the "update-freq" and the "format" property.
+ * </para>
+ * <para>
+ * Element messages containing a "progress" structure are posted on the bus
+ * whenever progress has been queried (since gst-plugins-good 0.10.6 only).
+ * </para>
+ * <para>
+ * Since the element was originally designed for debugging purposes, it will
+ * by default also print information about the current progress to the
+ * terminal. This can be prevented by setting the "silent" property to TRUE.
+ * </para>
+ * <para>
+ * This element is most useful in transcoding pipelines or other situations
+ * where just querying the pipeline might not lead to the wanted result. For
+ * progress in TIME format, the element is best placed in a 'raw stream'
+ * section of the pipeline (or after any demuxers/decoders/parsers).
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -m filesrc location=foo.ogg ! decodebin ! progressreport update-freq=1 ! audioconvert ! audioresample ! autoaudiosink
+ * </programlisting>
+ * This shows a progress query where a duration is available.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch -m audiotestsrc ! progressreport update-freq=1 ! audioconvert ! autoaudiosink
+ * </programlisting>
+ * This shows a progress query where no duration is available.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
 
-#define GST_TYPE_PROGRESS_REPORT \
-  (gst_progress_report_get_type())
-#define GST_PROGRESS_REPORT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_PROGRESS_REPORT,GstProgressReport))
-#define GST_PROGRESS_REPORT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_PROGRESS_REPORT,GstProgressReportClass))
-#define GST_IS_PROGRESS_REPORT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PROGRESS_REPORT))
-#define GST_IS_PROGRESS_REPORT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PROGRESS_REPORT))
+#include "progressreport.h"
 
-typedef struct _GstProgressReport GstProgressReport;
-typedef struct _GstProgressReportClass GstProgressReportClass;
-
-struct _GstProgressReport
-{
-  GstBaseTransform basetransform;
-
-  gint update_freq;
-  gboolean silent;
-  GTimeVal start_time;
-  GTimeVal last_report;
-
-  /* Format used for querying. Using a string here because the
-   * format might not be registered yet when the property is set */
-  gchar *format;
-};
-
-struct _GstProgressReportClass
-{
-  GstBaseTransformClass parent_class;
-};
 
 enum
 {
@@ -178,6 +190,37 @@ gst_progress_report_init (GstProgressReport * report,
   report->format = g_strdup (DEFAULT_FORMAT);
 }
 
+static void
+gst_progress_report_post_progress (GstProgressReport * filter,
+    GstFormat format, gint64 current, gint64 total)
+{
+  GstStructure *s = NULL;
+
+  if (current >= 0 && total > 0) {
+    gdouble perc;
+
+    perc = gst_util_guint64_to_gdouble (current) * 100.0 /
+        gst_util_guint64_to_gdouble (total);
+    perc = CLAMP (perc, 0.0, 100.0);
+
+    /* we provide a "percent" field of integer type to stay compatible
+     * with qtdemux, but add a second "percent-double" field for those who
+     * want more precision and are too lazy to calculate it themselves */
+    s = gst_structure_new ("progress", "percent", G_TYPE_INT, (gint) perc,
+        "percent-double", G_TYPE_DOUBLE, perc, "current", G_TYPE_INT64, current,
+        "total", G_TYPE_INT64, total, NULL);
+  } else if (current >= 0) {
+    s = gst_structure_new ("progress", "current", G_TYPE_INT64, current, NULL);
+  }
+
+  if (s) {
+    GST_LOG_OBJECT (filter, "posting progress message: %" GST_PTR_FORMAT, s);
+    gst_structure_set (s, "format", GST_TYPE_FORMAT, format, NULL);
+    /* can't post it right here because we're holding the object lock */
+    filter->pending_msg = gst_message_new_element (GST_OBJECT_CAST (filter), s);
+  }
+}
+
 static gboolean
 gst_progress_report_do_query (GstProgressReport * filter, GstFormat format,
     gint hh, gint mm, gint ss)
@@ -253,6 +296,7 @@ gst_progress_report_do_query (GstProgressReport * filter, GstFormat format,
     }
   }
 
+  gst_progress_report_post_progress (filter, format, cur, total);
   return TRUE;
 }
 
@@ -263,6 +307,7 @@ gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time)
     GST_FORMAT_PERCENT, GST_FORMAT_BUFFERS,
     GST_FORMAT_DEFAULT
   };
+  GstMessage *msg;
   GstFormat format = GST_FORMAT_UNDEFINED;
   gboolean done = FALSE;
   glong run_time;
@@ -297,7 +342,11 @@ gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time)
         GST_OBJECT_NAME (filter), hh, mm, ss);
   }
 
+  msg = filter->pending_msg;
+  filter->pending_msg = NULL;
   GST_OBJECT_UNLOCK (filter);
+
+  gst_element_post_message (GST_ELEMENT_CAST (filter), msg);
 }
 
 static gboolean

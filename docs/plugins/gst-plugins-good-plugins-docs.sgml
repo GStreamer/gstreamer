@@ -44,6 +44,7 @@
     <xi:include href="xml/element-ossmixer.xml" />
     <xi:include href="xml/element-osssink.xml" />
     <xi:include href="xml/element-osssrc.xml" />
+    <xi:include href="xml/element-progressreport.xml" />
     <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-rtpdec.xml" />
     <xi:include href="xml/element-smokedec.xml" />

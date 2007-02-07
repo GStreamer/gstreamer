@@ -6,7 +6,7 @@ endif
 
 plugin_LTLIBRARIES = $(EFENCE_PLUGIN) libgstdebug.la libgstnavigationtest.la 
 
-noinst_HEADERS = efence.h gstnavigationtest.h gstnavseek.h tests.h
+noinst_HEADERS = efence.h gstnavigationtest.h gstnavseek.h progressreport.h tests.h
 
 libgstefence_la_SOURCES = efence.c
 libgstefence_la_CFLAGS = $(GST_CFLAGS)
@@ -24,6 +24,7 @@ libgstdebug_la_SOURCES = \
 	gstdebug.c \
  	breakmydata.c \
  	progressreport.c \
+ 	progressreport.h \
 	gstnavseek.c \
  	tests.c \
  	testplugin.c
