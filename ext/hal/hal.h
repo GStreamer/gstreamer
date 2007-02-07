@@ -31,10 +31,7 @@
 
 G_BEGIN_DECLS
 
-gchar *         gst_hal_get_string            (const gchar *udi);
-
-GstElement *    gst_hal_render_bin_from_udi           (const gchar *udi);
-GstElement *    gst_hal_render_bin_from_description   (const gchar *description);
+GstElement *    gst_hal_render_bin_from_udi (const gchar *udi);
 
 GstElement *    gst_hal_get_audio_sink (const gchar *udi);
 GstElement *    gst_hal_get_audio_src  (const gchar *udi);

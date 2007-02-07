@@ -42,15 +42,13 @@
  * Returns: a newly allocated #gchar string containing the appropriate pipeline
  * for UDI @udi, or NULL in the case of an error..
  */
-gchar *
+static gchar *
 gst_hal_get_string (const gchar * udi)
 {
   DBusConnection *connection;
   DBusError error;
   LibHalContext *ctx;
-  char *type, *string;
-  char *element;
-  int card, device;
+  char *string;
 
   dbus_error_init (&error);
 
@@ -66,23 +64,27 @@ gst_hal_get_string (const gchar * udi)
   string = NULL;
 
   if (libhal_device_query_capability (ctx, udi, "alsa", &error)) {
+    char *type, *element = NULL;
+
     type = libhal_device_get_property_string (ctx, udi, "alsa.type", &error);
-    if (strcmp (type, "playback") == 0) {
+    if (type != NULL && strcmp (type, "playback") == 0) {
       element = "alsasink";
-    } else if (strcmp (type, "capture") == 0) {
+    } else if (type != NULL && strcmp (type, "capture") == 0) {
       element = "alsasrc";
-    } else {
-      element = NULL;
     }
-    card = libhal_device_get_property_int (ctx, udi, "alsa.card", &error);
-    device = libhal_device_get_property_int (ctx, udi, "alsa.device", &error);
-    if (device == 0) {
-      /* handle default device specially to use
-       * dmix, dsnoop, and softvol if appropriate */
-      string = g_strdup_printf ("%s device=default:%d", element, card);
-    } else {
-      string =
-          g_strdup_printf ("%s device=plughw:%d,%d", element, card, device);
+    if (element) {
+      int card, device;
+
+      card = libhal_device_get_property_int (ctx, udi, "alsa.card", &error);
+      device = libhal_device_get_property_int (ctx, udi, "alsa.device", &error);
+      if (device == 0) {
+        /* handle default device specially to use
+         * dmix, dsnoop, and softvol if appropriate */
+        string = g_strdup_printf ("%s device=default:%d", element, card);
+      } else {
+        string =
+            g_strdup_printf ("%s device=plughw:%d,%d", element, card, device);
+      }
     }
   }
 
@@ -90,6 +92,10 @@ gst_hal_get_string (const gchar * udi)
   libhal_ctx_free (ctx);
 
   dbus_error_free (&error);
+
+  if (string == NULL) {
+    GST_WARNING ("Problem parsing HAL ALSA capabilities for udi %s", udi);
+  }
 
   return string;
 }
