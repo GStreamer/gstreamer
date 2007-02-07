@@ -1,5 +1,13 @@
 2007-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/inspect/plugin-rtp.xml:
+	  Update for new elements.
+
+	* gst/debug/progressreport.h:
+	  Commit newly-created header file as well.
+
+2007-02-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:

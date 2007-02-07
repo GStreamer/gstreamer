@@ -17,6 +17,27 @@
       <author>Neil Stratford &lt;neils@vipadia.com&gt;</author>
     </element>
     <element>
+      <name>rtpL16depay</name>
+      <longname>RTP packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts raw audio from RTP packets</description>
+      <author>Zeeshan Ali &lt;zak147@yahoo.com&gt;,Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpL16pay</name>
+      <longname>RTP packet payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload-encode Raw audio into RTP packets (RFC 3551)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpac3depay</name>
+      <longname>RTP packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts AC3 audio from RTP packets (RFC 4184)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
       <name>rtpamrdepay</name>
       <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
