@@ -1,3 +1,16 @@
+2007-02-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: Julien Puydt <julien.puydt at laposte net>
+
+	* ext/alsa/gstalsa.c: (gst_alsa_find_device_name_no_handle),
+	(gst_alsa_find_device_name):
+	* ext/alsa/gstalsa.h:
+	* ext/alsa/gstalsasink.c: (gst_alsasink_get_property):
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_get_property):
+	  Improve device-name detection a bit, especially in the case where
+	  the device is not actually open (#405020, #405024). Move common code
+	  into gstalsa.c instead of duplicating it.
+
 2007-02-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/audioconvert/gstaudioconvert.c:
@@ -144,7 +157,6 @@
 	  Add small test for 32bit float <=> 64bit float conversion (works
 	  only one way so far, 32=>64 produces structured noise).
 
->>>>>>> 1.3137
 2007-02-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/audioconvert/gstaudioconvert.c:

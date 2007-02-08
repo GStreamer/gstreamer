@@ -39,4 +39,9 @@ GstCaps * gst_alsa_probe_supported_formats (GstObject      * obj,
                                             snd_pcm_t      * handle,
                                             const GstCaps  * template_caps);
 
+gchar   * gst_alsa_find_device_name (GstObject        * obj,
+                                     const gchar      * device,
+                                     snd_pcm_t        * handle,
+                                     snd_pcm_stream_t   stream);
+
 #endif /* __GST_ALSA_H__ */

@@ -253,16 +253,9 @@ gst_alsasink_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, sink->device);
       break;
     case PROP_DEVICE_NAME:
-      if (sink->handle) {
-        snd_pcm_info_t *info;
-
-        snd_pcm_info_malloc (&info);
-        snd_pcm_info (sink->handle, info);
-        g_value_set_string (value, snd_pcm_info_get_name (info));
-        snd_pcm_info_free (info);
-      } else {
-        g_value_set_string (value, NULL);
-      }
+      g_value_take_string (value,
+          gst_alsa_find_device_name (GST_OBJECT_CAST (sink),
+              sink->device, sink->handle, SND_PCM_STREAM_PLAYBACK));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

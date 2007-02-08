@@ -389,3 +389,96 @@ subroutine_error:
     return NULL;
   }
 }
+
+static gchar *
+gst_alsa_find_device_name_no_handle (GstObject * obj, const gchar * devcard,
+    gint device_num, snd_pcm_stream_t stream)
+{
+  snd_ctl_card_info_t *info = NULL;
+  snd_ctl_t *ctl = NULL;
+  gchar *ret = NULL;
+  gint dev = -1;
+
+  GST_LOG_OBJECT (obj, "[%s] device=%d", devcard, device_num);
+
+  if (snd_ctl_open (&ctl, devcard, 0) < 0)
+    return NULL;
+
+  snd_ctl_card_info_malloc (&info);
+  if (snd_ctl_card_info (ctl, info) < 0)
+    goto done;
+
+  while (snd_ctl_pcm_next_device (ctl, &dev) == 0 && dev >= 0) {
+    if (dev == device_num) {
+      snd_pcm_info_t *pcminfo;
+
+      snd_pcm_info_malloc (&pcminfo);
+      snd_pcm_info_set_device (pcminfo, dev);
+      snd_pcm_info_set_subdevice (pcminfo, 0);
+      snd_pcm_info_set_stream (pcminfo, stream);
+      if (snd_ctl_pcm_info (ctl, pcminfo) < 0) {
+        snd_pcm_info_free (pcminfo);
+        break;
+      }
+
+      ret = g_strdup (snd_pcm_info_get_name (pcminfo));
+      snd_pcm_info_free (pcminfo);
+      GST_LOG_OBJECT (obj, "name from pcminfo: %s", GST_STR_NULL (ret));
+    }
+  }
+
+  if (ret == NULL) {
+    char *name = NULL;
+    gint card;
+
+    GST_LOG_OBJECT (obj, "no luck so far, trying backup");
+    card = snd_ctl_card_info_get_card (info);
+    snd_card_get_name (card, &name);
+    ret = g_strdup (name);
+    free (name);
+  }
+
+done:
+  snd_ctl_card_info_free (info);
+  snd_ctl_close (ctl);
+
+  return ret;
+}
+
+gchar *
+gst_alsa_find_device_name (GstObject * obj, const gchar * device,
+    snd_pcm_t * handle, snd_pcm_stream_t stream)
+{
+  gchar *ret = NULL;
+
+  if (handle != NULL) {
+    snd_pcm_info_t *info;
+
+    GST_LOG_OBJECT (obj, "Trying to get device name from open handle");
+    snd_pcm_info_malloc (&info);
+    snd_pcm_info (handle, info);
+    ret = g_strdup (snd_pcm_info_get_name (info));
+    snd_pcm_info_free (info);
+  }
+
+  if (ret == NULL && device != NULL) {
+    gchar *dev, *comma;
+    gint devnum;
+
+    GST_LOG_OBJECT (obj, "Trying to get device name from string '%s'", device);
+
+    /* only want name:card bit, but not devices and subdevices */
+    dev = g_strdup (device);
+    if ((comma = strchr (dev, ','))) {
+      *comma = '\0';
+      devnum = atoi (comma + 1);
+      ret = gst_alsa_find_device_name_no_handle (obj, dev, devnum, stream);
+    }
+    g_free (dev);
+  }
+
+  GST_LOG_OBJECT (obj, "Device name for device '%s': %s",
+      GST_STR_NULL (device), GST_STR_NULL (ret));
+
+  return ret;
+}
