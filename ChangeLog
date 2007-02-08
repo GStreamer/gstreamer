@@ -1,3 +1,24 @@
+2007-02-08  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: Wouter Paesen <wouter@blue-gate.be>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/timidity/Makefile.am:
+	* ext/timidity/gsttimidity.c: (gst_timidity_base_init),
+	(gst_timidity_class_init), (gst_timidity_init),
+	(gst_timidity_set_song_options), (gst_timidity_src_convert),
+	(gst_timidity_src_query), (gst_timidity_get_upstream_size),
+	(gst_timidity_get_segment), (gst_timidity_get_new_segment_event),
+	(gst_timidity_src_event), (gst_timidity_activate),
+	(gst_timidity_activatepull), (gst_timidity_allocate_buffer),
+	(gst_timidity_clip_buffer), (gst_timidity_fill_buffer),
+	(gst_timidity_get_buffer), (gst_timidity_loop),
+	(gst_timidity_change_state), (gst_timidity_typefind),
+	(plugin_init):
+	* ext/timidity/gsttimidity.h:
+	  Add timitity midi render plugin (#403992)
+
 2007-02-07  Edward Hervey  <edward@fluendo.com>
 
 	* ext/amrwb/gstamrwbparse.c: (gst_amrwbparse_query):

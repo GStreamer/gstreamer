@@ -178,6 +178,12 @@ else
 NEON_DIR=
 endif
 
+if USE_TIMIDITY
+TIMIDITY_DIR=timidity
+else
+TIMIDITY_DIR=
+endif
+
 # if USE_POLYP
 # POLYP_DIR=polyp
 # else
@@ -231,7 +237,6 @@ THEORA_DIR = theora
 else
 THEORA_DIR =
 endif
-
 
 # if USE_TARKIN
 # TARKIN_DIR=tarkin
@@ -291,6 +296,7 @@ SUBDIRS=\
 	$(SWFDEC_DIR) \
 	$(TARKIN_DIR) \
 	$(THEORA_DIR) \
+	$(TIMIDITY_DIR)
 	$(WAVPACK_DIR) \
 	$(XINE_DIR) \
 	$(XVID_DIR)
@@ -321,5 +327,6 @@ DIST_SUBDIRS= \
 	spc \
 	swfdec \
 	theora \
+	timidity \
 	wavpack \
 	xvid

@@ -745,6 +745,17 @@ GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
   AC_SUBST(NEON_LIBS)
 ])
 
+dnl *** timidity ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_TIMIDITY, true)
+GST_CHECK_FEATURE(TIMIDITY, [timidity midie soft synth plugin], timidity, [
+  PKG_CHECK_MODULES(TIMIDITY, libtimidity, HAVE_TIMIDITY="yes", [
+    HAVE_TIMIDITY="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(TIMIDITY_CFLAGS)
+  AC_SUBST(TIMIDITY_LIBS)
+])
+
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
 GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink sdlaudiosink, [
@@ -1021,6 +1032,7 @@ ext/soundtouch/Makefile
 ext/spc/Makefile
 ext/swfdec/Makefile
 ext/theora/Makefile
+ext/timidity/Makefile
 ext/wavpack/Makefile
 ext/xvid/Makefile
 po/Makefile.in
