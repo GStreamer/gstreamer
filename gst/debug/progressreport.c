@@ -47,6 +47,18 @@
  * progress in TIME format, the element is best placed in a 'raw stream'
  * section of the pipeline (or after any demuxers/decoders/parsers).
  * </para>
+ * <para>
+ * Three more things should be pointed out: firstly, the element will only
+ * query progress when data flow happens. If data flow is stalled for some
+ * reason, no progress messages will be posted. Secondly, there are other
+ * elements (like qtdemux, for example) that may also post "progress" element
+ * messages on the bus. Applications should check the source of any element
+ * messages they receive, if needed. Finally, applications should not take
+ * action on receiving notification of progress being 100%, they should only
+ * take action when they receive an EOS message (since the progress reported
+ * is in reference to an internal point of a pipeline and not the pipeline as
+ * a whole).
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
