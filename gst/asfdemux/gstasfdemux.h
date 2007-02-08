@@ -66,8 +66,7 @@ typedef struct
 
 typedef enum {
   GST_ASF_DEMUX_STATE_HEADER,
-  GST_ASF_DEMUX_STATE_DATA,
-  GST_ASF_DEMUX_STATE_EOS
+  GST_ASF_DEMUX_STATE_DATA
 } GstAsfDemuxState;
 
 #define GST_ASF_DEMUX_NUM_VIDEO_PADS   16
@@ -84,13 +83,6 @@ struct _GstASFDemux {
   GstTagList        *taglist;
   GstAsfDemuxState   state;
   
-  /* The number of bytes needed for the next parsing unit. Set by
-   * parsing functions when they return ASF_FLOW_NEED_MORE_DATA.
-   * if not set after an ASF_FLOW_NEED_MORE_DATA, this indicates 
-   * that we are parsing broken data and want to parse beyond an
-   * object or packet boundary. */ 
-  guint              bytes_needed;
-
   guint64            data_offset;  /* byte offset where packets start    */
   guint64            data_size;    /* total size of packet data in bytes */
   guint64            num_packets;  /* total number of data packets       */
@@ -118,12 +110,6 @@ struct _GstASFDemux {
 
   gboolean             seekable;
 
-  /* expected byte offset of next buffer to be received by chain
-   * function. Used to calculate the current byte offset into the
-   * file from the adapter state and the data parser state */
-  gint64               next_byte_offset;
-
-  
   GstSegment           segment; /* configured play segment */
 
   /* Descrambler settings */

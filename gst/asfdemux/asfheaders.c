@@ -131,6 +131,9 @@ const ASFGuidHash asf_object_guids[] = {
   {ASF_OBJ_SCRIPT_COMMAND, "ASF_OBJ_SCRIPT_COMMAND",
         {0x1efb1a30, 0x11d00b62, 0xa0009ba3, 0xf64803c9}
       },
+  {ASF_OBJ_MARKER, "ASF_OBJ_MARKER",
+        {0xf487cd01, 0x11cfa951, 0xc000e68e, 0x6553200c}
+      },
   {ASF_OBJ_UNDEFINED, "ASF_OBJ_UNDEFINED",
         {0, 0, 0, 0}
       }

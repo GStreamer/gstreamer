@@ -1,3 +1,26 @@
+2007-02-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/asfheaders.c:
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_init),
+	(gst_asf_demux_sink_event), (gst_asf_demux_handle_seek_event),
+	(gst_asf_demux_identify_guid), (asf_demux_peek_object),
+	(gst_asf_demux_chain_headers), (gst_asf_demux_chain),
+	(gst_asf_demux_setup_pad), (gst_asf_demux_process_stream),
+	(gst_asf_demux_process_ext_content_desc),
+	(gst_asf_demux_get_object_header), (gst_asf_demux_process_header),
+	(gst_asf_demux_process_file), (gst_asf_demux_process_comment),
+	(gst_asf_demux_process_bitrate_props_object),
+	(gst_asf_demux_process_header_ext),
+	(gst_asf_demux_process_language_list),
+	(gst_asf_demux_process_ext_stream_props),
+	(gst_asf_demux_process_queued_extended_stream_objects),
+	(gst_asf_demux_process_object), (gst_asf_demux_change_state):
+	* gst/asfdemux/gstasfdemux.h:
+	  Refactor and clean up header parsing and chain function a bit; get
+	  rid of some cruft; make header parsing a tad more robust, fixing
+	  #403188.
+
 2007-02-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_sink_event):
